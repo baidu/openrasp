@@ -6,9 +6,9 @@ RASP 以探针的形式，将保护引擎注入到应用服务中，可在文件
 
 ### 开始使用
 
-请参考[官方文档](http://raspbeta.baidu.com/doc/install/main.html)进行安装和配置
+请参考[官方文档](http://rasp.baidu.com/doc/install/main.html)进行安装和配置
 
-另外，为了方便你对软件进行测试，我们提供了一组测试用例，包含OWASP常见安全漏洞，[点击这里下载](http://raspbeta.baidu.com/doc/install/testcase.html)
+另外，为了方便你对软件进行测试，我们提供了一组测试用例，包含OWASP常见安全漏洞，[点击这里下载](http://rasp.baidu.com/doc/install/testcase.html)
 
 ### 常见问题
 
@@ -26,7 +26,7 @@ RASP 以探针的形式，将保护引擎注入到应用服务中，可在文件
 
 ##### 4. 如何开发一个检测插件?
 
-> 插件由JS实现，我们提供了详细的开发和测试 SDK，具体请参考[插件开发文档](http://raspbeta.baidu.com/doc/dev/main.html)
+> 插件由JS实现，我们提供了详细的开发和测试 SDK，具体请参考[插件开发文档](http://rasp.baidu.com/doc/dev/main.html)
 
 ### 联系我们
 
