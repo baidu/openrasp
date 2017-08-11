@@ -9,7 +9,7 @@ Unlike perimeter control solutions like WAF, OpenRASP directly integrates its pr
 
 See detailed installation instructions [here](http://rasp.baidu.com/doc/install/main.html)
 
-We also provided a few test cases that are corresponding to OWASP TOP 10 attacks, [download here](http://rasp.baidu.com/doc/install/testcase.html)
+We also provide a few test cases that are corresponding to OWASP TOP 10 attacks, [download here](http://rasp.baidu.com/doc/install/testcase.html)
 
 ### FAQ
 
