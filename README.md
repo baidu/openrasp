@@ -2,8 +2,13 @@
 
 ### Introduction
 
-Unlike perimeter control solutions like WAF, OpenRASP directly integrates its protection engine into the application server by instrumentation. It can monitor various events including database queries, file operations and network requests etc.When an attack happens, WAF matches the malicious request with its signatures and blocks it. OpenRASP takes a different approach by hooking sensitive functions and examines/blocks the inputs fed into them. As a result, this examination is context-aware and in-place. It brings in the following benefits:
-1.	Only successful attacks can trigger alarms, resulting in lower false positive and higher detection rate;2.	Detailed stack trace is logged, which makes the forensic analysis easier;3.	Insusceptible to malformed protocol.
+Unlike perimeter control solutions like WAF, OpenRASP directly integrates its protection engine into the application server by instrumentation. It can monitor various events including database queries, file operations and network requests etc.
+
+When an attack happens, WAF matches the malicious request with its signatures and blocks it. OpenRASP takes a different approach by hooking sensitive functions and examines/blocks the inputs fed into them. As a result, this examination is context-aware and in-place. It brings in the following benefits:
+
+1.	Only successful attacks can trigger alarms, resulting in lower false positive and higher detection rate;
+2.	Detailed stack trace is logged, which makes the forensic analysis easier;
+3.	Insusceptible to malformed protocol.
 
 ### Quick Start
 
@@ -16,7 +21,8 @@ We also provide a few test cases that are corresponding to OWASP TOP 10 attacks,
 ##### 1. List of supported web application servers
 
 Only Java based web application servers are supported for now. The support of other web application servers will also be soon included in the coming releases.
-We've fully tested OpenRASP on the following application servers for both Linux and Windows platforms.
+
+We've fully tested OpenRASP on the following application servers for both Linux and Windows platforms.
 
 * Tomcat 6-8
 * JBoss 4.X
@@ -32,7 +38,7 @@ OpenRASP logs alarms in JSON format, which can be easily picked up by LogStash, 
 
 ##### 4. How to develop a new plugin?
 
-A plugin receives a callback when an event occurs. It then determines if the current behavior is malicious and blocks the associated request if necessary.
+A plugin receives a callback when an event occurs. It then determines if the current behavior is malicious or not and blocks the associated request if necessary.
 
 Detailed plugin development instructions can be found [here](http://rasp.baidu.com/doc/dev/main.html)
 
