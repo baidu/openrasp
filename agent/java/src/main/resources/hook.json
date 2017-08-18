@@ -1,0 +1,121 @@
+{
+  "hooks": [
+    {
+      "className": "com/mysql/jdbc/ConnectionImpl",
+      "hookMethods": [
+        "execSQL"
+      ]
+    },
+    {
+      "className": "com/mysql/jdbc/Connection",
+      "hookMethods": [
+        "execSQL"
+      ]
+    },
+    {
+      "className": "com/mysql/cj/jdbc/ConnectionImpl",
+      "hookMethods": [
+        "execSQL"
+      ]
+    },
+    {
+      "className": "com/microsoft/sqlserver/jdbc/SQLServerStatement",
+      "hookMethods": [
+        "doExecuteStatementBatch",
+        "doExecuteStatement"
+      ]
+    },
+    {
+      "className": "com/microsoft/sqlserver/jdbc/SQLServerPreparedStatement",
+      "hookMethods": [
+        "<init>"
+      ]
+    },
+    {
+      "className": "com/microsoft/sqlserver/jdbc/SQLServerStatement$StmtExecCmd",
+      "hookMethods": [
+        "<init>"
+      ]
+    },
+    {
+      "className": "oracle/jdbc/driver/OracleSql",
+      "hookMethods": [
+        "getSqlBytes"
+      ]
+    },
+    {
+      "className": "org/postgresql/core/v3/QueryExecutorImpl",
+      "hookMethods": [
+        "sendOneQuery"
+      ]
+    },
+    {
+      "className": "javax/servlet/http/HttpServlet",
+      "hookMethods": [
+        "service"
+      ]
+    },
+    {
+      "className": "org/apache/jasper/servlet/JspServlet",
+      "hookMethods": [
+        "service"
+      ]
+    },
+    {
+      "className": "weblogic/servlet/jsp/JspBase",
+      "hookMethods": [
+        "service"
+      ]
+    },
+    {
+      "className": "com/tongweb/web/jasper/servlet/JspServlet",
+      "hookMethods": [
+        "service"
+      ]
+    },
+    {
+      "className": "_java/io/FileInputStream",
+      "hookMethods": [
+        "<init>"
+      ]
+    },
+    {
+      "className": "_java/io/FileOutputStream",
+      "hookMethods": [
+        "<init>"
+      ]
+    },
+    {
+      "className": "java/io/File",
+      "hookMethods": [
+        "listFiles"
+      ]
+    },
+    {
+      "className": "_java/io/RandomAccessFile",
+      "hookMethods": [
+        "<init>"
+      ]
+    },
+    {
+      "className": "java/lang/ProcessBuilder",
+      "hookMethods": [
+        "start"
+      ]
+    },
+    {
+      "className": "java/lang/Runnable",
+      "hookMethods": [
+        "run",
+        "<init>"
+      ]
+    },
+    {
+      "className": "java/util/concurrent/Callable",
+      "hookMethods": [
+        "call",
+        "<init>"
+      ]
+    }
+  ]
+}

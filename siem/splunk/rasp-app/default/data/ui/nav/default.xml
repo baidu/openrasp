@@ -1,0 +1,6 @@
+<nav color="#314d5b">
+	<view name="overview" default="true"/>
+	<view name="assets"/>
+	<view name="domain"/>
+	<view name="tracking"/>
+</nav>

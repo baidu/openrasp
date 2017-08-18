@@ -1,0 +1,351 @@
+{
+    "modelName": "RASP_alerts",
+    "displayName": "RASP Alerts",
+    "description": "",
+    "objectSummary": {
+        "Event-Based": 1,
+        "Transaction-Based": 0,
+        "Search-Based": 0
+    },
+    "objects": [
+        {
+            "objectName": "alerts",
+            "displayName": "Alerts",
+            "parentName": "BaseEvent",
+            "fields": [
+                {
+                    "fieldName": "message_extended",
+                    "owner": "alerts",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "message_extended",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "action",
+                    "owner": "alerts",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "action",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "http_user_agent",
+                    "owner": "alerts",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "http_user_agent",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "src_ip",
+                    "owner": "alerts",
+                    "type": "ipv4",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "src_ip",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "status_description",
+                    "owner": "alerts",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "status_description",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "request_content_type",
+                    "owner": "alerts",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "request_content_type",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "response_content_type",
+                    "owner": "alerts",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "response_content_type",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "msg",
+                    "owner": "alerts",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "msg",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "category",
+                    "owner": "alerts",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "category",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "dest_host",
+                    "owner": "alerts",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "dest_host",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "http_method",
+                    "owner": "alerts",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "http_method",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "uri_path",
+                    "owner": "alerts",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "uri_path",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "vendor_severity",
+                    "owner": "alerts",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "vendor_severity",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "signature",
+                    "owner": "alerts",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "signature",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "_time",
+                    "owner": "BaseEvent",
+                    "type": "timestamp",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "_time",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "host",
+                    "owner": "BaseEvent",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "host",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "source",
+                    "owner": "BaseEvent",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "source",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "sourcetype",
+                    "owner": "BaseEvent",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "sourcetype",
+                    "comment": ""
+                }
+            ],
+            "calculations": [
+                {
+                    "outputFields": [
+                        {
+                            "fieldName": "ua_family",
+                            "owner": "alerts",
+                            "type": "string",
+                            "fieldSearch": "",
+                            "required": false,
+                            "multivalue": false,
+                            "hidden": false,
+                            "editable": true,
+                            "displayName": "ua_family",
+                            "comment": "",
+                            "lookupOutputFieldName": "ua_family"
+                        }
+                    ],
+                    "calculationType": "Lookup",
+                    "lookupName": "user_agents",
+                    "comment": "",
+                    "lookupInputs": [
+                        {
+                            "inputField": "http_user_agent",
+                            "lookupField": "http_user_agent"
+                        }
+                    ],
+                    "owner": "alerts",
+                    "calculationID": "tqmfkjkszb1qyodl2ah7rdx6r",
+                    "editable": true
+                },
+                {
+                    "outputFields": [
+                        {
+                            "fieldName": "src_ip_lon",
+                            "owner": "alerts",
+                            "type": "number",
+                            "fieldSearch": "src_ip_lon=*",
+                            "required": true,
+                            "multivalue": false,
+                            "hidden": true,
+                            "editable": true,
+                            "displayName": "src_ip_lon",
+                            "comment": "",
+                            "lookupOutputFieldName": "lon"
+                        },
+                        {
+                            "fieldName": "src_ip_lat",
+                            "owner": "alerts",
+                            "type": "number",
+                            "fieldSearch": "src_ip_lat=*",
+                            "required": true,
+                            "multivalue": false,
+                            "hidden": true,
+                            "editable": true,
+                            "displayName": "src_ip_lat",
+                            "comment": "",
+                            "lookupOutputFieldName": "lat"
+                        },
+                        {
+                            "fieldName": "src_ip_City",
+                            "owner": "alerts",
+                            "type": "string",
+                            "fieldSearch": "src_ip_City=*",
+                            "required": true,
+                            "multivalue": false,
+                            "hidden": true,
+                            "editable": true,
+                            "displayName": "src_ip_City",
+                            "comment": "",
+                            "lookupOutputFieldName": "City"
+                        },
+                        {
+                            "fieldName": "src_ip_Region",
+                            "owner": "alerts",
+                            "type": "string",
+                            "fieldSearch": "src_ip_Region=*",
+                            "required": true,
+                            "multivalue": false,
+                            "hidden": true,
+                            "editable": true,
+                            "displayName": "src_ip_Region",
+                            "comment": "",
+                            "lookupOutputFieldName": "Region"
+                        },
+                        {
+                            "fieldName": "src_ip_Country",
+                            "owner": "alerts",
+                            "type": "string",
+                            "fieldSearch": "src_ip_Country=*",
+                            "required": true,
+                            "multivalue": false,
+                            "hidden": false,
+                            "editable": true,
+                            "displayName": "src_ip_Country",
+                            "comment": "",
+                            "lookupOutputFieldName": "Country"
+                        }
+                    ],
+                    "inputField": "src_ip",
+                    "calculationType": "GeoIP",
+                    "comment": "",
+                    "owner": "alerts",
+                    "calculationID": "l6sc1tjnh4b3utkgvyqa1yvi",
+                    "editable": true
+                }
+            ],
+            "constraints": [
+                {
+                    "search": "sourcetype=\"modsec:audit\" type=\"alert\"",
+                    "owner": "alerts"
+                }
+            ],
+            "lineage": "alerts"
+        }
+    ],
+    "objectNameList": [
+        "alerts"
+    ]
+}

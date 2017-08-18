@@ -1,0 +1,102 @@
+<form>
+  <label>攻击事件</label>
+  <search id="global">
+    <query>`modsec_alert` attack_source="$source_tok$"  target="$target_tok$" url="$url_tok$" attack_params="$attack_params_tok$" server_type="$server_type_tok$" intercept_state="$intercept_state_tok$" attack_type="$attack_type_tok$" plugin_name="$plugin_name_tok$" search attack_source="$source_tok$"  target="$target_tok$" url="$url_tok$" attack_params="$attack_params_tok$" server_type="$server_type_tok$" intercept_state="$intercept_state_tok$" attack_type="$attack_type_tok$" plugin_name="$plugin_name_tok$"  | table _time attack_source  target url attack_params server_type intercept_state attack_type plugin_name</query>
+    <earliest>$time_tok.earliest$</earliest>
+    <latest>$time_tok.latest$</latest>
+  </search>
+  <fieldset submitButton="true" autoRun="true">
+    <input type="time" token="time_tok" searchWhenChanged="true">
+      <label>时间区间</label>
+      <default>
+        <earliest>@m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="text" token="source_tok" searchWhenChanged="true">
+      <label>攻击源</label>
+      <default>*</default>
+      <prefix>*</prefix>
+      <suffix>*</suffix>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="text" token="target_tok" searchWhenChanged="true">
+      <label>被攻击域名</label>
+      <default>*</default>
+      <prefix>*</prefix>
+      <suffix>*</suffix>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="text" token="url_tok" searchWhenChanged="true">
+      <label>URL</label>
+      <default>*</default>
+      <prefix>*</prefix>
+      <suffix>*</suffix>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="text" token="attack_params_tok" searchWhenChanged="true">
+      <label>攻击参数</label>
+      <default>*</default>
+      <prefix>*</prefix>
+      <suffix>*</suffix>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="text" token="server_type_tok" searchWhenChanged="true">
+      <label>应用类型</label>
+      <default>*</default>
+      <prefix>*</prefix>
+      <suffix>*</suffix>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="text" token="intercept_state_tok" searchWhenChanged="true">
+      <label>拦截状态</label>
+      <default>*</default>
+      <prefix>*</prefix>
+      <suffix>*</suffix>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="text" token="attack_type_tok" searchWhenChanged="true">
+      <label>攻击类型</label>
+      <default>*</default>
+      <prefix>*</prefix>
+      <suffix>*</suffix>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="text" token="plugin_name_tok" searchWhenChanged="true">
+      <label>插件名称</label>
+      <default>*</default>
+      <prefix>*</prefix>
+      <suffix>*</suffix>
+      <initialValue>*</initialValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>告警信息</title>
+      <table>
+        <search>
+          <query>| search attack_source="$source_tok$"  target="$target_tok$" 
+url="$url_tok$" 
+attack_params="$attack_params_tok$" 
+server_type="$server_type_tok$"
+intercept_state="$intercept_state_tok$"
+attack_type="$attack_type_tok$" plugin_name="$plugin_name_tok$"  |  eval 攻击时间=strftime(_time, "%Y/%m/%d %H:%M:%S") | table 攻击时间  attack_source target url attack_params server_type intercept_state attack_type plugin_name | rename attack_source as 攻击源 target as 攻击目标 url as URL attack_params as 攻击参数  server_type as 应用类型 intercept_state as 拦截状态 attack_type as 攻击类型 plugin_name as 插件名称</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <option name="count">20</option>
+        <option name="drilldown">cell</option>
+        <drilldown>
+          <link target="_blank">
+            <![CDATA[search?form.action_tok=blocked&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$&q=| search attack_source="$source_tok$"  target="$target_tok$" 
+url="$url_tok$" 
+attack_params="$attack_params_tok$" 
+server_type="$server_type_tok$"
+intercept_state="$intercept_state_tok$"
+attack_type="$attack_type_tok$" plugin_name="$plugin_name_tok$"  |  table _time  attack_source target url attack_params server_type intercept_state attack_type plugin_name | rename attack_source as 攻击源 target as 攻击目标 url as URL attack_params as 攻击参数  server_type as 应用类型 intercept_state as 拦截状态 attack_type as 攻击类型 plugin_name as 插件名称]]>
+          </link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</form>

@@ -1,0 +1,15 @@
+{
+  "name": "openraspjs-official",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run check",
+    "check": "rasp check plugin.js"
+  },
+  "author": "",
+  "license": "BSD",
+  "dependencies": {
+    "openraspjs": "git+ssh://icode.baidu.com:8235/baidu/yunfenxi/openraspjs"
+  }
+}

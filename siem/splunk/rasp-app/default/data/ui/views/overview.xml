@@ -1,0 +1,451 @@
+<form>
+  <label>Overview</label>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="time" token="time_tok" searchWhenChanged="true">
+      <label>Time Picker</label>
+      <default>
+        <earliest>@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <search>
+          <query>| tstats summariesonly=false count from datamodel=RASP_alerts</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x314d5b","0x314d5b"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="underLabel">triggered alerts</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">0</option>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$]]>
+          </link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>| tstats summariesonly=false count from datamodel=RASP_alerts where alerts.action=blocked</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x314d5b","0x314d5b"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="underLabel">blocked requests</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">0</option>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.action_tok=blocked&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$]]>
+          </link>
+        </drilldown>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Top Source IPs</title>
+      <chart>
+        <search>
+          <query>| tstats summariesonly=false count as count from datamodel=RASP_alerts by alerts.src_ip | sort - count | rename alerts.src_ip as "source ip" | head 10</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">log</option>
+        <option name="charting.chart">bar</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="charting.seriesColors">[0xF87217]</option>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.src_ip_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$]]>
+          </link>
+        </drilldown>
+      </chart>
+    </panel>
+    <panel>
+      <title>Top Destination Hosts</title>
+      <chart>
+        <search>
+          <query>| tstats summariesonly=false count as count from datamodel=RASP_alerts by alerts.dest_host | rename alerts.dest_host as site | sort - count | head 10</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">log</option>
+        <option name="charting.chart">bar</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="charting.seriesColors">[0xF87217]</option>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.dest_host_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$]]>
+          </link>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Top Categories</title>
+      <table>
+        <search>
+          <query>| tstats summariesonly=false count as count from datamodel=RASP_alerts by alerts.category | sort - count | rename alerts.category as category | head 10</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.category_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$]]>
+          </link>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <title>Top Signatures</title>
+      <table>
+        <search>
+          <query>| tstats summariesonly=false count from datamodel=RASP_alerts by alerts.signature | sort - count | rename alerts.signature as signature | head 10</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <option name="rowNumbers">false</option>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.signature_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$]]>
+          </link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Top URIs Paths</title>
+      <table>
+        <search>
+          <query>| tstats summariesonly=false count as count from datamodel=RASP_alerts by alerts.uri_path | sort - count | rename alerts.uri_path as "uri path" | head 10</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.url_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$]]>
+          </link>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <title>Top Request Content-Types</title>
+      <table>
+        <search>
+          <query>| tstats summariesonly=false count as count from datamodel=RASP_alerts by alerts.request_content_type | sort - count | rename alerts.request_content_type as "request content type" | head 10</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.request_content_type_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$]]>
+          </link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Action Distribution</title>
+      <chart>
+        <search>
+          <query>| tstats summariesonly=false count as count from datamodel=RASP_alerts by alerts.action | rename alerts.action as action</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.action_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$]]>
+          </link>
+        </drilldown>
+      </chart>
+    </panel>
+    <panel>
+      <title>Top Country Origins</title>
+      <chart>
+        <search>
+          <query>| tstats summariesonly=false count as count from datamodel=RASP_alerts where alerts.src_ip_Country!="" by alerts.src_ip_Country | sort - count | rename alerts.src_ip_Country as Country | head 10</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.chart">bar</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="charting.seriesColors">[0xF87217]</option>
+        <drilldown>
+          <set token="country_tok">$click.value$</set>
+        </drilldown>
+      </chart>
+    </panel>
+    <panel>
+      <title>Severity Distribution</title>
+      <chart>
+        <search>
+          <query>| tstats summariesonly=false count from datamodel=RASP_alerts by alerts.vendor_severity | sort - count | rename alerts.vendor_severity as severity</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.vendor_severity_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$]]>
+          </link>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Top Source IPs For $country_tok$</title>
+      <table depends="$country_tok$">
+        <search>
+          <query>| tstats summariesonly=false count as count from datamodel=RASP_alerts where alerts.src_ip_Country="$country_tok$" by alerts.src_ip | sort - count | rename alerts.src_ip as "source ip"</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>HTTP Method Distribution</title>
+      <chart>
+        <search>
+          <query>| tstats summariesonly=false count as count from datamodel=RASP_alerts by alerts.http_method | sort - count | rename alerts.http_method as method</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <drilldown>
+          <set token="method_tok">$click.value$</set>
+        </drilldown>
+        <option name="charting.chart">pie</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>User-Agent Family Distribution</title>
+      <chart>
+        <search>
+          <query>| tstats summariesonly=false count as count from datamodel=RASP_alerts by alerts.ua_family | sort - count | rename alerts.ua_family as "user-agent family"</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <drilldown>
+          <set token="ua_tok">$click.value$</set>
+        </drilldown>
+        <option name="charting.chart">pie</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>HTTP Response Distribution</title>
+      <chart>
+        <search>
+          <query>| tstats summariesonly=false count as count from datamodel=RASP_alerts by alerts.status_description | sort - count | rename alerts.status_description as "status description"</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <drilldown>
+          <set token="status_description_tok">$click.value$</set>
+        </drilldown>
+        <option name="charting.chart">pie</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>HTTP Method Distribution</title>
+      <table depends="$method_tok$">
+        <search>
+          <query>| tstats summariesonly=false count as count from datamodel=RASP_alerts by alerts.http_method | sort - count | rename alerts.http_method as method</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+      </table>
+    </panel>
+    <panel>
+      <title>User-Agent Family Distribution</title>
+      <table depends="$ua_tok$">
+        <search>
+          <query>| tstats summariesonly=false count as count from datamodel=RASP_alerts by alerts.ua_family | sort - count | rename alerts.ua_family as "user-agent family"</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+      </table>
+    </panel>
+    <panel>
+      <title>HTTP Response Distribution</title>
+      <table depends="$status_description_tok$">
+        <search>
+          <query>| tstats summariesonly=false count as count from datamodel=RASP_alerts by alerts.status_description | sort - count | rename alerts.status_description as "status description"</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+</form>

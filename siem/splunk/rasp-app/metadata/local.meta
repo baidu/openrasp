@@ -1,0 +1,64 @@
+[app/install/install_source_checksum]
+version = 6.5.2
+modtime = 1492516043.639010000
+
+[props/test]
+owner = admin
+version = 6.5.2
+modtime = 1491536402.255392000
+
+[props/RASP-test]
+owner = admin
+version = 6.5.2
+modtime = 1491536804.872226000
+
+[props/rasp_log]
+owner = admin
+version = 6.5.2
+modtime = 1491813561.252405000
+
+[views/overview]
+version = 6.5.2
+modtime = 1492575185.294365000
+
+[inputs/monitor%3A%2F%2F%2Fhome%2Fwork%2Fsiem%2Flogs%2Frasp_2017-04-06.log]
+owner = admin
+version = 6.5.2
+modtime = 1491813938.340331000
+
+[views/tracking]
+version = 6.5.2
+modtime = 1492587480.272893000
+
+[]
+access = read : [ * ], write : [ admin ]
+export = system
+version = 6.5.2
+modtime = 1491996841.939936000
+
+[views/assets]
+version = 6.5.2
+modtime = 1492586071.664650000
+
+[views/domain]
+version = 6.5.2
+modtime = 1492585624.758925000
+
+[savedsearches/testttts]
+access = read : [ * ], write : [ * ]
+export = system
+owner = admin
+version = 6.5.2
+modtime = 1492150352.345970000
+
+[app/ui]
+version = 6.5.2
+modtime = 1492501102.627514000
+
+[app/launcher]
+version = 6.5.2
+modtime = 1492501102.629835000
+
+[app/package/check_for_updates]
+version = 6.5.2
+modtime = 1492501102.630688000

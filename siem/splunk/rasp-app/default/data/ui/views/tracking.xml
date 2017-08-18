@@ -1,0 +1,323 @@
+<form>
+  <label>攻击事件</label>
+  <search id="global">
+    <query>`modsec_alert` src_ip="$src_ip_tok$" request_content_type="$request_content_type_tok$" dest_host="$dest_host_tok$" uri_path="$uri_path_tok$" | mvexpand message_extended | rex field=message_extended "\[severity\s\"(?&lt;rex_vendor_severity&gt;[A-Z]+)\"\]" | rex field=message_extended "(?&lt;rex_message&gt;.+?)\.\s\[" | rex field=message_extended "\[tag\s\"(?:[A-Z\_]+)\/(?&lt;rex_category&gt;[A-Z\_]+)\/(?&lt;rex_signature&gt;[A-Z\_]+)\"\]" | rex field=message_extended "\[id \"(?&lt;rex_rule_id&gt;\d+)\"\]" | rename rex_vendor_severity as vendor_severity rex_message as message rex_category as category rex_signature as signature rex_rule_id as rule_id | eval action=if(message like "Access denied%", "blocked", "allowed") | eval category=lower(category) | eval signature=lower(signature) | fillnull value="N/A" vendor_severity category signature request_content_type rule_id | search signature="$signature_tok$" vendor_severity="$vendor_severity_tok$" action="$action_tok$" rule_id="$rule_id_tok$" category="$category_tok$" signature="$signature_tok$" request_content_type="$request_content_type_tok$" | table _time src_ip dest_host uri_path vendor_severity action http_method http_user_agent status_description category signature request_content_type rule_id</query>
+    <earliest>$time_tok.earliest$</earliest>
+    <latest>$time_tok.latest$</latest>
+  </search>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="time" token="time_tok" searchWhenChanged="true">
+      <label>Time Picker</label>
+      <default>
+        <earliest>@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="text" token="src_ip_tok" searchWhenChanged="true">
+      <label>Source IP</label>
+      <default>*</default>
+      <prefix>*</prefix>
+      <suffix>*</suffix>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="text" token="dest_host_tok" searchWhenChanged="true">
+      <label>Destination Host</label>
+      <default>*</default>
+      <prefix>*</prefix>
+      <suffix>*</suffix>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="text" token="uri_path_tok" searchWhenChanged="true">
+      <label>URI path</label>
+      <default>*</default>
+      <prefix>*</prefix>
+      <suffix>*</suffix>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="dropdown" token="vendor_severity_tok" searchWhenChanged="true">
+      <label>Severity</label>
+      <choice value="*">Any</choice>
+      <choice value="N/A">N/A</choice>
+      <choice value="EMERGENCY">Emergency</choice>
+      <choice value="ALERT">Alert</choice>
+      <choice value="CRITICAL">Critical</choice>
+      <choice value="ERROR">Error</choice>
+      <choice value="WARNING">Warning</choice>
+      <choice value="NOTICE">Notice</choice>
+      <choice value="INFO">Info</choice>
+      <choice value="DEBUG">Debug</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="dropdown" token="action_tok" searchWhenChanged="true">
+      <label>Action</label>
+      <choice value="*">Any</choice>
+      <choice value="allowed">Allowed</choice>
+      <choice value="blocked">Blocked</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="dropdown" token="rule_id_tok" searchWhenChanged="true">
+      <label>Rule ID</label>
+      <choice value="*">Any</choice>
+      <default>*</default>
+      <search>
+        <query>`modsec_alert` | top 0 rule_id | fields rule_id | sort + rule_id</query>
+        <earliest>$time_tok.earliest$</earliest>
+        <latest>$time_tok.latest$</latest>
+      </search>
+      <fieldForLabel>rule_id</fieldForLabel>
+      <fieldForValue>rule_id</fieldForValue>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="dropdown" token="category_tok" searchWhenChanged="true">
+      <label>Category</label>
+      <choice value="*">Any</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <fieldForLabel>category</fieldForLabel>
+      <fieldForValue>category</fieldForValue>
+      <search base="global">
+        <query>top 0 category | fields category | sort + category</query>
+      </search>
+    </input>
+    <input type="dropdown" token="signature_tok" searchWhenChanged="true">
+      <label>Signature</label>
+      <choice value="*">Any</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <fieldForLabel>signature</fieldForLabel>
+      <fieldForValue>signature</fieldForValue>
+      <search base="global">
+        <query>top 0 signature | fields signature | sort + signature</query>
+      </search>
+    </input>
+    <input type="dropdown" token="request_content_type_tok" searchWhenChanged="true">
+      <label>Request Content-Type</label>
+      <choice value="*">Any</choice>
+      <default>*</default>
+      <search base="global">
+        <query>top 0 request_content_type | fields request_content_type | sort + request_content_type</query>
+      </search>
+      <fieldForLabel>request_content_type</fieldForLabel>
+      <fieldForValue>request_content_type</fieldForValue>
+      <initialValue>*</initialValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Alerts</title>
+      <table>
+        <search base="global">
+          <query>table _time src_ip dest_host uri_path vendor_severity action rule_id category signature | sort - _time | rename _time as time src_ip as "source ip" dest_host as site rule_id as "rule id" vendor_severity as severity | convert ctime(time)</query>
+        </search>
+        <option name="drilldown">cell</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Top Source IPs</title>
+      <chart>
+        <search base="global">
+          <query>top src_ip | rename src_ip as "source ip"</query>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.chart">bar</option>
+        <option name="charting.seriesColors">[0xF87217]</option>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.src_ip_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$&form.dest_host_tok=$dest_host_tok$&form.category_tok=$category_tok$&form.signature_tok=$signature_tok$&form.url_tok=$url_tok$&form.request_content_type_tok=$request_content_type_tok$&form.action_tok=$action_tok$&form.vendor_severity_tok=$vendor_severity_tok$]]>
+          </link>
+        </drilldown>
+      </chart>
+    </panel>
+    <panel>
+      <title>Top Destination Host</title>
+      <chart>
+        <search base="global">
+          <query>top dest_host | rename dest_host as site</query>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.chart">bar</option>
+        <option name="charting.seriesColors">[0xF87217]</option>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.dest_host_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$&form.src_ip_tok=$src_ip_tok$&form.category_tok=$category_tok$&form.signature_tok=$signature_tok$&form.url_tok=$url_tok$&form.request_content_type_tok=$request_content_type_tok$&form.action_tok=$action_tok$&form.vendor_severity_tok=$vendor_severity_tok$]]>
+          </link>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Top Categories</title>
+      <table>
+        <search base="global">
+          <query>top category | fields - percent | where NOT like (category, "N/A")</query>
+        </search>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.category_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$&form.dest_host_tok=$dest_host_tok$&form.src_ip_tok=$src_ip_tok$&form.signature_tok=$signature_tok$&form.url_tok=$url_tok$&form.request_content_type_tok=$request_content_type_tok$&form.action_tok=$action_tok$&form.vendor_severity_tok=$vendor_severity_tok$]]>
+          </link>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <title>Top Signatures</title>
+      <table>
+        <search base="global">
+          <query>top signature | fields - percent | where NOT like (signature, "N/A")</query>
+        </search>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.signature_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$&form.dest_host_tok=$dest_host_tok$&form.category_tok=$category_tok$&form.src_ip_tok=$src_ip_tok$&form.url_tok=$url_tok$&form.request_content_type_tok=$request_content_type_tok$&form.action_tok=$action_tok$&form.vendor_severity_tok=$vendor_severity_tok$]]>
+          </link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Top URI Paths</title>
+      <table>
+        <search base="global">
+          <query>top uri_path | fields - percent</query>
+        </search>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.url_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$&form.dest_host_tok=$dest_host_tok$&form.category_tok=$category_tok$&form.signature_tok=$signature_tok$&form.src_ip_tok=$src_ip_tok$&form.request_content_type_tok=$request_content_type_tok$&form.action_tok=$action_tok$&form.vendor_severity_tok=$vendor_severity_tok$]]>
+          </link>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <title>Top Request Content-Types</title>
+      <table>
+        <search base="global">
+          <query>top request_content_type | fields - percent | where NOT like (request_content_type, "N/A") | rename request_content_type as "request content-type"</query>
+        </search>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.request_content_type_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$&form.dest_host_tok=$dest_host_tok$&form.category_tok=$category_tok$&form.signature_tok=$signature_tok$&form.url_tok=$url_tok$&form.src_ip_tok=$src_ip_content_type_tok$&form.action_tok=$action_tok$&form.vendor_severity_tok=$vendor_severity_tok$]]>
+          </link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Action Distribution</title>
+      <chart>
+        <search base="global">
+          <query>top action</query>
+        </search>
+        <option name="charting.chart">pie</option>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.action_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$&form.dest_host_tok=$dest_host_tok$&form.category_tok=$category_tok$&form.signature_tok=$signature_tok$&form.url_tok=$url_tok$&form.request_content_type_tok=$request_content_type_tok$&form.src_ip_tok=$src_ip_tok$&form.vendor_severity_tok=$vendor_severity_tok$]]>
+          </link>
+        </drilldown>
+      </chart>
+    </panel>
+    <panel>
+      <title>Top Country Origins</title>
+      <table>
+        <search base="global">
+          <query>iplocation src_ip | top Country | fields - percent | where NOT like(Country,"")</query>
+        </search>
+        <drilldown>
+          <set token="country_tok">$click.value$</set>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <title>Severity Distribution</title>
+      <chart>
+        <search base="global">
+          <query>top vendor_severity | where NOT like (vendor_severity, "N/A")</query>
+        </search>
+        <option name="charting.chart">pie</option>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.vendor_severity_tok=$click.value$&form.time_tok.earliest=$time_tok.earliest$&form.time_tok.latest=$time_tok.latest$&form.dest_host_tok=$dest_host_tok$&form.category_tok=$category_tok$&form.signature_tok=$signature_tok$&form.url_tok=$url_tok$&form.request_content_type_tok=$request_content_type_tok$&form.action_tok=$action_tok$&form.src_ip_tok=$src_ip_tok$]]>
+          </link>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Top Source IPs For $country_tok$</title>
+      <table depends="$country_tok$">
+        <search base="global">
+          <query>iplocation src_ip | search Country=$country_tok$ | top src_ip | fields - percent | rename src_ip as "source ip"</query>
+        </search>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>HTTP Method Distribution</title>
+      <chart>
+        <search base="global">
+          <query>top http_method</query>
+        </search>
+        <option name="charting.chart">pie</option>
+        <drilldown>
+          <set token="method_tok">$click.value$</set>
+        </drilldown>
+      </chart>
+    </panel>
+    <panel>
+      <title>User-Agent Family Distribution</title>
+      <chart>
+        <search base="global">
+          <query>lookup user_agents http_user_agent | top ua_family | rename ua_family as "user-agent family"</query>
+        </search>
+        <option name="charting.chart">pie</option>
+        <drilldown>
+          <set token="ua_tok">$click.value$</set>
+        </drilldown>
+      </chart>
+    </panel>
+    <panel>
+      <title>HTTP Response Ditribution</title>
+      <chart>
+        <search base="global">
+          <query>top status_description | rename status_description as "status description"</query>
+        </search>
+        <option name="charting.chart">pie</option>
+        <drilldown>
+          <set token="status_description_tok">$click.value$</set>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>HTTP Method Distribution</title>
+      <table depends="$method_tok$">
+        <search base="global">
+          <query>top http_method</query>
+        </search>
+      </table>
+    </panel>
+    <panel>
+      <title>User-Agent Family Distribution</title>
+      <table depends="$ua_tok$">
+        <search base="global">
+          <query>lookup user_agents http_user_agent | top ua_family | rename ua_family as "user-agent family"</query>
+        </search>
+      </table>
+    </panel>
+    <panel>
+      <title>HTTP Response Distribution</title>
+      <table depends="$status_description_tok$">
+        <search base="global">
+          <query>top status_description | rename status_description as "status description"</query>
+        </search>
+      </table>
+    </panel>
+  </row>
+</form>

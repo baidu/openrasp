@@ -1,0 +1,91 @@
+<form>
+  <label>Historical</label>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="time" token="time_tok" searchWhenChanged="true">
+      <label>Time Picker</label>
+      <default>
+        <earliest>@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Signatures</title>
+      <chart>
+        <search>
+          <query>| tstats summariesonly=false prestats=true count from datamodel=RASP_alerts by _time alerts.signature | timechart count by alerts.signature useother=f usenull=f</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.text">time</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.signature_tok=$click.name2$&form.time_tok.earliest=$earliest$&form.time_tok.latest=$latest$]]>
+          </link>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Categories</title>
+      <chart>
+        <search>
+          <query>| tstats summariesonly=false prestats=true count from datamodel=RASP_alerts by _time alerts.category | timechart count by alerts.category useother=f usenull=f</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.text">time</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.chart">line</option>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.category_tok=$click.name2$&form.time_tok.earliest=$earliest$&form.time_tok.latest=$latest$]]>
+          </link>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Actions</title>
+      <chart>
+        <search>
+          <query>| tstats summariesonly=false prestats=true count from datamodel=RASP_alerts by _time alerts.action | timechart count by alerts.action useother=f usenull=f</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.text">time</option>
+        <option name="charting.chart">area</option>
+        <drilldown>
+          <link>
+            <![CDATA[tracking?form.action_tok=$click.name2$&form.time_tok.earliest=$earliest$&form.time_tok.latest=$latest$]]>
+          </link>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>HTTP Responses</title>
+      <chart>
+        <search>
+          <query>| tstats summariesonly=false prestats=true count from datamodel=RASP_alerts by _time alerts.status_description | timechart count by alerts.status_description useother=f usenull=f</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.text">time</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.chart">line</option>
+      </chart>
+    </panel>
+  </row>
+</form>

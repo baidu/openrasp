@@ -1,0 +1,30 @@
+<form>
+  <label>域名</label>
+  <search id="global">
+    <query>`modsec_alert` src_ip="$src_ip_tok$" request_content_type="$request_content_type_tok$" dest_host="$dest_host_tok$" uri_path="$uri_path_tok$" | mvexpand message_extended | rex field=message_extended "\[severity\s\"(?&lt;rex_vendor_severity&gt;[A-Z]+)\"\]" | rex field=message_extended "(?&lt;rex_message&gt;.+?)\.\s\[" | rex field=message_extended "\[tag\s\"(?:[A-Z\_]+)\/(?&lt;rex_category&gt;[A-Z\_]+)\/(?&lt;rex_signature&gt;[A-Z\_]+)\"\]" | rex field=message_extended "\[id \"(?&lt;rex_rule_id&gt;\d+)\"\]" | rename rex_vendor_severity as vendor_severity rex_message as message rex_category as category rex_signature as signature rex_rule_id as rule_id | eval action=if(message like "Access denied%", "blocked", "allowed") | eval category=lower(category) | eval signature=lower(signature) | fillnull value="N/A" vendor_severity category signature request_content_type rule_id | search signature="$signature_tok$" vendor_severity="$vendor_severity_tok$" action="$action_tok$" rule_id="$rule_id_tok$" category="$category_tok$" signature="$signature_tok$" request_content_type="$request_content_type_tok$" | table _time src_ip dest_host uri_path vendor_severity action http_method http_user_agent status_description category signature request_content_type rule_id</query>
+    <earliest>$time_tok.earliest$</earliest>
+    <latest>$time_tok.latest$</latest>
+  </search>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="time" token="time_tok" searchWhenChanged="true">
+      <label>时间区间</label>
+      <default>
+        <earliest>@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>受攻击域名</title>
+      <table>
+        <search>
+          <query>target | chart sparkline count by target | sort -count | rename target as 被攻击域名 sparkline as 攻击趋势 count as 攻击次数</query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <option name="count">20</option>
+      </table>
+    </panel>
+  </row>
+</form>
