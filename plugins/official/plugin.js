@@ -43,7 +43,7 @@ function canonicalPath (path) {
 
 plugin.register('directory', function (params) {
     var path = canonicalPath(params.path)
-    if (path.indexOf('/../../../') !== -1) {
+    if (path.indexOf('/../../../') !== -1 || path.indexOf('\\..\\..\\..\\') !== -1) {
         return {
             action: 'block',
             message: '目录遍历攻击'
@@ -61,7 +61,7 @@ plugin.register('directory', function (params) {
 
 plugin.register('readFile', function (params) {
     var path = canonicalPath(params.path)
-    if (path.indexOf('/../../../') !== -1) {
+    if (path.indexOf('/../../../') !== -1 || path.indexOf('\\..\\..\\..\\') !== -1) {
         return {
             action: 'block',
             message: '目录遍历攻击'
