@@ -92,9 +92,9 @@
     </profiles>
 
     <scm>
-        <connection>scm:git:http://icode.baidu.com/baidu/yunfenxi/rasp</connection>
-        <developerConnection>scm:git:https://icode.baidu.com/baidu/yunfenxi/rasp</developerConnection>
-        <url>http://icode.baidu.com/repo/baidu%2Fyunfenxi%2Frasp/files/develop/tree/</url>
+        <connection>scm:git:https://github.com/baidu/openrasp</connection>
+        <developerConnection>scm:git:https://github.com/baidu/openrasp</developerConnection>
+        <url>https://github.com/baidu/openrasp</url>
     </scm>
 
     <build>

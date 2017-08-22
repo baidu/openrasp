@@ -95,7 +95,7 @@ public class Config {
             this.bodyMaxBytes = Long.parseLong(properties.getProperty("body.maxbytes", DEFAULT_BODYSIZE));
             this.ignoreHooks = properties.getProperty("hooks.ignore", DEFAULT_IGNORE).split(",");
         } catch (FileNotFoundException e) {
-            LOGGER.warn("cannot read config file: " + e.getMessage());
+            LOGGER.warn("Could not find rasp.properties, using default settings: " + e.getMessage());
         } catch (IOException e) {
             LOGGER.warn("cannot load properties file: " + e.getMessage());
         } finally {
