@@ -1,3 +1,9 @@
+//
+// 官方插件仅作为 DEMO
+// 具体检测能力请根据业务来定制~
+// 10月底我们将更新一版算法，以及一些应用的专用插件
+// 
+
 'use strict'
 var plugin = new RASP('offical')
 
