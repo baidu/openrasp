@@ -8,6 +8,7 @@ var clean = {
 
 var xssRegex = /<script|script>|<iframe|iframe>|javascript:(?!(?:history\.(?:go|back)|void\(0\)))/i
 var nameRegex = /\.(jspx?|php[345]?|phtml)\.?$/i
+var ntfsRegex = /::\$(DATA|INDEX)$/i
 var uaRegex = /nessus|sqlmap|nikto|havij|netsparker/i
 var sqlRegex = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
 var sysRegex = /^\/(etc|proc|sys|var\/log)(\/|$)/
@@ -82,7 +83,7 @@ plugin.register('writeFile', function (params) {
 })
 
 plugin.register('fileUpload', function (params) {
-    if (nameRegex.test(params.filename)) {
+    if (nameRegex.test(params.filename) || ntfsRegex.test(params.filename)) {
         return {
             action: 'block',
             message: '尝试上传脚本文件: ' + params.filename
