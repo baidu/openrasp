@@ -5,6 +5,7 @@
 
 	<appender name="CONSOLE" class="com.fuxi.javaagent.log4j.ConsoleAppender">
 	    <layout class="com.fuxi.javaagent.log4j.PatternLayout">
+	    <param name="encoding" value="UTF-8" />
 		<param name="ConversionPattern"
 			value="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n" />
 	    </layout>
@@ -15,6 +16,7 @@
         <param name="File" value="[[TARGET PATH]]/logs/alarm/alarm.log" />
         <param name="Append" value="true" />
         <param name="DatePattern" value="'.'yyyy-MM-dd" />
+        <param name="encoding" value="UTF-8" />
         <layout class="com.fuxi.javaagent.log4j.PatternLayout">
             <param name="ConversionPattern" value="%m%n" />
         </layout>
@@ -25,6 +27,7 @@
         <param name="File" value="[[TARGET PATH]]/logs/plugin/plugin.log" />
         <param name="Append" value="true" />
         <param name="DatePattern" value="'.'yyyy-MM-dd" />
+        <param name="encoding" value="UTF-8" />
         <layout class="com.fuxi.javaagent.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d %-5p [%t][%c] %m" />
         </layout>
@@ -35,6 +38,7 @@
         <param name="File" value="[[TARGET PATH]]/logs/rasp/rasp.log" />
         <param name="Append" value="true" />
         <param name="DatePattern" value="'.'yyyy-MM-dd" />
+        <param name="encoding" value="UTF-8" />
         <layout class="com.fuxi.javaagent.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d %-5p [%t][%c] %m%n" />
         </layout>
