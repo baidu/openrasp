@@ -44,7 +44,7 @@ import java.util.Map;
  * All rights reserved
  * 攻击信息类，主要用于报警
  *
- * @see <a href="http://rasp.baidu.com/doc/setup/log/main.html">document</a>
+ * @see <a href="https://rasp.baidu.com/doc/setup/log/main.html">document</a>
  */
 public class AttackInfo {
     private CheckParameter parameter;
