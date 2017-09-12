@@ -40,6 +40,7 @@ import com.fuxi.javaagent.plugin.CheckScript;
 import com.fuxi.javaagent.plugin.jsplugin.callbacks.JSContext;
 import com.fuxi.javaagent.plugin.jsplugin.callbacks.JSStderr;
 import com.fuxi.javaagent.plugin.jsplugin.callbacks.JSStdout;
+import com.fuxi.javaagent.plugin.jsplugin.callbacks.JSTool;
 import com.fuxi.javaagent.request.AbstractRequest;
 import org.apache.commons.io.IOUtils;
 
@@ -91,8 +92,10 @@ public class JSEngine {
 
         V8Object stdout = new JSStdout(v8);
         V8Object stderr = new JSStderr(v8);
+        V8Object tool = new JSTool(v8);
         v8.add("stdout", stdout);
         v8.add("stderr", stderr);
+        v8.add("tool", tool);
 
         // 加载初始化资源
         try {
