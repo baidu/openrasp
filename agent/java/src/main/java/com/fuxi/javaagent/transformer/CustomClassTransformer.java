@@ -47,6 +47,7 @@ import com.fuxi.javaagent.hook.SQLStatementHook;
 import com.fuxi.javaagent.hook.WeblogicJspBaseHook;
 import com.fuxi.javaagent.hook.XXEHook;
 import com.fuxi.javaagent.hook.JspCompilationContextHook;
+import com.fuxi.javaagent.hook.TomcatStartupHook;
 import com.fuxi.javaagent.config.Config;
 
 import java.lang.instrument.ClassFileTransformer;
@@ -81,6 +82,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new WeblogicJspBaseHook());
         addHook(new XXEHook());
         addHook(new JspCompilationContextHook());
+        addHook(new TomcatStartupHook());
     }
 
     private void addHook(AbstractClassHook hook) {

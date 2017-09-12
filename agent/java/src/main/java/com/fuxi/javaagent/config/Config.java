@@ -32,10 +32,13 @@ package com.fuxi.javaagent.config;
 
 import org.apache.log4j.Logger;
 
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -51,6 +54,7 @@ public class Config {
     private static final String DEFAULT_POOLSIZE = "0";
     private static final String DEFAULT_BODYSIZE = "4096";
     private static final String DEFAULT_IGNORE = "";
+    private static final String DEFAULT_ENFORCE_POLICY = "false";
 
     private static final Logger LOGGER = Logger.getLogger(Config.class.getName());
     private static String baseDirectory;
@@ -59,6 +63,7 @@ public class Config {
     private long v8Timeout;
     private long bodyMaxBytes;
     private String[] ignoreHooks;
+    private boolean enforcePolicy;
 
     // Config是由bootstrap classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
@@ -71,7 +76,12 @@ public class Config {
         if (path.contains("!")) {
             path = path.substring(0, path.indexOf("!"));
         }
-        baseDirectory = new File(path).getParent();
+        try {
+            baseDirectory = URLDecoder.decode(new File(path).getParent(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            LOGGER.warn(e.getMessage());
+            baseDirectory = new File(path).getParent();
+        }
     }
 
     /**
@@ -84,6 +94,7 @@ public class Config {
         this.v8Timeout = Long.parseLong(DEFAULT_V8TIMEOUT);
         this.bodyMaxBytes = Long.parseLong(DEFAULT_BODYSIZE);
         this.ignoreHooks = new String[]{};
+        this.enforcePolicy = Boolean.parseBoolean(DEFAULT_ENFORCE_POLICY);
 
         try {
             input = new FileInputStream(new File(baseDirectory, "conf" + File.separator + "rasp.properties"));
@@ -94,6 +105,7 @@ public class Config {
             this.v8Timeout = Long.parseLong(properties.getProperty("v8.timeout.millis", DEFAULT_V8TIMEOUT));
             this.bodyMaxBytes = Long.parseLong(properties.getProperty("body.maxbytes", DEFAULT_BODYSIZE));
             this.ignoreHooks = properties.getProperty("hooks.ignore", DEFAULT_IGNORE).split(",");
+            this.enforcePolicy = Boolean.parseBoolean(properties.getProperty("security.enforce_policy", DEFAULT_ENFORCE_POLICY));
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find rasp.properties, using default settings: " + e.getMessage());
         } catch (IOException e) {
@@ -184,5 +196,16 @@ public class Config {
      */
     public String[] getIgnoreHooks() {
         return this.ignoreHooks;
+    }
+
+    /**
+     * 是否开启强制安全规范
+     * 如果开启检测有安全风险的情况下将会禁止服务器启动
+     * 如果关闭当有安全风险的情况下通过日志警告
+     *
+     * @return true开启，false关闭
+     */
+    public boolean getEnforcePolicy() {
+        return enforcePolicy;
     }
 }

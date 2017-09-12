@@ -30,13 +30,16 @@
 
 package com.fuxi.javaagent;
 
+import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.exception.SecurityException;
 import com.fuxi.javaagent.plugin.CheckParameter;
 import com.fuxi.javaagent.plugin.PluginManager;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.request.CoyoteRequest;
 import com.fuxi.javaagent.request.HttpServletRequest;
+import com.fuxi.javaagent.request.HttpServletResponse;
 import com.fuxi.javaagent.tool.hook.CustomLockObject;
+import com.fuxi.javaagent.tool.security.tomcat.TomcatSecurityChecker;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -56,6 +59,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @SuppressWarnings("unused")
 public class HookHandler {
+    public static final String OPEN_RASP_HEADER_KEY = "X-Protected-By";
+    public static final String OPEN_RASP_HEADER_VALUE = "OpenRASP";
     private static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
     // 全局开关
     public static AtomicBoolean enableHook = new AtomicBoolean(false);
@@ -66,9 +71,15 @@ public class HookHandler {
             return false;
         }
     };
-    private static ThreadLocal<AbstractRequest> requestCache = new ThreadLocal<AbstractRequest>() {
+    public static ThreadLocal<AbstractRequest> requestCache = new ThreadLocal<AbstractRequest>() {
         @Override
         protected AbstractRequest initialValue() {
+            return null;
+        }
+    };
+    private static ThreadLocal<HttpServletResponse> responseCache = new ThreadLocal<HttpServletResponse>() {
+        @Override
+        protected HttpServletResponse initialValue() {
             return null;
         }
     };
@@ -201,10 +212,12 @@ public class HookHandler {
      * @param response 响应实体
      */
     public static void checkRequest(Object servlet, Object request, Object response) {
-        if (servlet != null && request != null) {
+        if (servlet != null && request != null && !enableCurrThreadHook.get()) {
             // 默认是关闭hook的，只有处理过HTTP request的线程才打开
             enableCurrThreadHook.set(true);
             requestCache.set(new HttpServletRequest(request));
+            responseCache.set(new HttpServletResponse(response));
+            responseCache.get().setHeader(OPEN_RASP_HEADER_KEY, OPEN_RASP_HEADER_VALUE);
             doCheck("request", EMPTY_MAP);
         }
     }
@@ -343,6 +356,19 @@ public class HookHandler {
         }
     }
 
+    /**
+     * tomcat启动时检测安全规范
+     */
+    public static void checkTomcatStartup() {
+        TomcatSecurityChecker checker = new TomcatSecurityChecker();
+        boolean isSafe = checker.check();
+        if (!isSafe) {
+            if (Config.getConfig().getEnforcePolicy()) {
+                throw new SecurityException("Can not startup tomcat:\n" + checker.getFormattedUnsafeMessage());
+            }
+        }
+    }
+
     public static void onInputStreamRead(int ret, Object inputStream) {
         if (ret != -1 && requestCache.get() != null) {
             AbstractRequest request = requestCache.get();
@@ -379,6 +405,14 @@ public class HookHandler {
         }
     }
 
+    private static void handleBlock(CheckParameter parameter) {
+        SecurityException securityException = new SecurityException("Request blocked by OpenRasp");
+        if (responseCache.get() != null) {
+            responseCache.get().sendError();
+        }
+        throw securityException;
+    }
+
     /**
      * 检测插件入口
      *
@@ -391,7 +425,7 @@ public class HookHandler {
             try {
                 CheckParameter parameter = new CheckParameter(type, params, requestCache.get());
                 if (PluginManager.check(parameter)) {
-                    throw new SecurityException("unsafe request: " + parameter);
+                    handleBlock(parameter);
                 }
             } finally {
                 enableCurrThreadHook.set(true);
