@@ -28,48 +28,41 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.tool;
+package com.fuxi.javaagent.plugin.jsplugin.callbacks;
+
+import com.eclipsesource.v8.*;
+import com.fuxi.javaagent.tool.StackTrace;
 
 /**
- * Created by tyy on 3/28/17.
- * 获取栈信息工具类
+ * Created by tyy on 9/12/17.
+ * 提供给js插件的java工具类
  */
-public class StackTrace {
+public class JSTool extends V8Object {
 
-    /**
-     * 获取栈信息
-     * @return 栈信息
-     */
-    public static String getStackTrace() {
+    public static final int V8_STACK_TRACE_MAX_DEPTH = 100;
 
-        Throwable throwable = new Throwable();
-        StackTraceElement[] stackTraceElements = throwable.getStackTrace();
-        StringBuilder retStack = new StringBuilder();
-
-        //此处前几个调用栈都是插件中产生的所以跳过，只显示客户自己的调用栈
-        if (stackTraceElements.length >= 3) {
-            for (int i = 2; i < stackTraceElements.length; i++) {
-                retStack.append(stackTraceElements[i].getClassName() + "@" + stackTraceElements[i].getMethodName()
-                        + "(" + stackTraceElements[i].getLineNumber() + ")" + "\r\n");
+    public JSTool(final V8 v8) {
+        super(v8);
+        V8Function getStackTrace = new V8Function(v8, new JavaCallback() {
+            @Override
+            public Object invoke(V8Object receiver, V8Array parameters) {
+                V8Array stackTrace = new V8Array(v8);
+                StackTraceElement[] stackTraceElements = StackTrace.getStackTraceArray();
+                if (stackTraceElements != null) {
+                    int startIndex = 12;
+                    for (int i = startIndex; i < stackTraceElements.length; i++) {
+                        if (i > V8_STACK_TRACE_MAX_DEPTH + startIndex) {
+                            break;
+                        }
+                        stackTrace.push(stackTraceElements[i].getClassName() + "@" + stackTraceElements[i].getMethodName());
+                    }
+                }
+                return stackTrace;
             }
-        } else {
-            for (int i = 0; i < stackTraceElements.length; i++) {
-                retStack.append(stackTraceElements[i].getClassName() + "@" + stackTraceElements[i].getMethodName()
-                        + "(" + stackTraceElements[i].getLineNumber() + ")" + "\r\n");
-            }
-        }
+        });
+        this.add("getStackTrace", getStackTrace);
+        getStackTrace.release();
 
-        return retStack.toString();
-    }
-
-    /**
-     * 获取原始栈
-     * @return 原始栈
-     */
-    public static StackTraceElement[] getStackTraceArray() {
-
-        Throwable throwable = new Throwable();
-        return throwable.getStackTrace();
     }
 
 }

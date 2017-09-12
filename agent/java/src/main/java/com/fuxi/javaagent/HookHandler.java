@@ -36,6 +36,7 @@ import com.fuxi.javaagent.plugin.PluginManager;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.request.CoyoteRequest;
 import com.fuxi.javaagent.request.HttpServletRequest;
+import com.fuxi.javaagent.tool.StackTrace;
 import com.fuxi.javaagent.tool.hook.CustomLockObject;
 import org.apache.log4j.Logger;
 
@@ -214,6 +215,29 @@ public class HookHandler {
      * 请求结束后不可以在进入任何hook点
      */
     public static void onServiceExit() {
+        enableCurrThreadHook.set(false);
+        requestCache.set(null);
+    }
+
+    /**
+     * 在过滤器中进入的hook点
+     * @param filter 过滤器
+     * @param request 请求实体
+     * @param response 响应实体
+     */
+    public static void checkFilterRequest(Object filter, Object request, Object response){
+        if (filter != null && request != null && !enableCurrThreadHook.get()) {
+            // 默认是关闭hook的，只有处理过HTTP request的线程才打开
+            enableCurrThreadHook.set(true);
+            requestCache.set(new HttpServletRequest(request));
+            doCheck("request", EMPTY_MAP);
+        }
+    }
+
+    /**
+     * ApplicationFilter中doFilter退出hook点
+     */
+    public static void onApplicationFilterExit(){
         enableCurrThreadHook.set(false);
         requestCache.set(null);
     }
