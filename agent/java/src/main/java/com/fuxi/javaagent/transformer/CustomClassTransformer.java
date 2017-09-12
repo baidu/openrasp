@@ -30,23 +30,7 @@
 
 package com.fuxi.javaagent.transformer;
 
-import com.fuxi.javaagent.hook.AbstractClassHook;
-import com.fuxi.javaagent.hook.CoyoteAdapterHook;
-import com.fuxi.javaagent.hook.CoyoteInputStreamHook;
-import com.fuxi.javaagent.hook.DeserializationHook;
-import com.fuxi.javaagent.hook.DiskFileItemHook;
-import com.fuxi.javaagent.hook.FileHook;
-import com.fuxi.javaagent.hook.FileInputStreamHook;
-import com.fuxi.javaagent.hook.FileOutputStreamHook;
-import com.fuxi.javaagent.hook.HttpServletHook;
-import com.fuxi.javaagent.hook.OgnlHook;
-import com.fuxi.javaagent.hook.ProcessBuilderHook;
-import com.fuxi.javaagent.hook.Struts2DispatcherHook;
-import com.fuxi.javaagent.hook.SQLDriverManagerHook;
-import com.fuxi.javaagent.hook.SQLStatementHook;
-import com.fuxi.javaagent.hook.WeblogicJspBaseHook;
-import com.fuxi.javaagent.hook.XXEHook;
-import com.fuxi.javaagent.hook.JspCompilationContextHook;
+import com.fuxi.javaagent.hook.*;
 import com.fuxi.javaagent.config.Config;
 
 import java.lang.instrument.ClassFileTransformer;
@@ -81,6 +65,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new WeblogicJspBaseHook());
         addHook(new XXEHook());
         addHook(new JspCompilationContextHook());
+        addHook(new ApplicationFilterHook());
     }
 
     private void addHook(AbstractClassHook hook) {
