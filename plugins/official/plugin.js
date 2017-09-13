@@ -76,7 +76,7 @@ plugin.register('readFile', function (params) {
         }
     }
 
-    if (sysRegex.test(path)) {
+    if (sysRegex.test(params.realpath)) {
         return {
             action: 'block',
             message: '读取系统文件'
