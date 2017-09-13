@@ -44,7 +44,7 @@ import java.util.Map;
  * All rights reserved
  * 攻击信息类，主要用于报警
  *
- * @see <a href="http://rasp.baidu.com/doc/setup/log/main.html">document</a>
+ * @see <a href="https://rasp.baidu.com/doc/setup/log/main.html">document</a>
  */
 public class AttackInfo {
     private CheckParameter parameter;
@@ -112,7 +112,10 @@ public class AttackInfo {
             String queryString = request.getQueryString();
             info.put("url", requestURL == null ? "" : (queryString != null ? requestURL + "?" + queryString : requestURL));
             // 请求体
-            info.put("body", request.getBody());
+            byte[] requestBody = request.getBody();
+            if(requestBody != null) {
+                info.put("body", new String(requestBody));
+            }
             // 被攻击PATH
             info.put("path", request.getRequestURI());
             // 用户代理

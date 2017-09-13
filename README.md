@@ -12,9 +12,9 @@ When an attack happens, WAF matches the malicious request with its signatures an
 
 ### Quick Start
 
-See detailed installation instructions [here](http://rasp.baidu.com/doc/install/main.html)
+See detailed installation instructions [here](https://rasp.baidu.com/doc/install/main.html)
 
-We also provide a few test cases that are corresponding to OWASP TOP 10 attacks, [download here](http://rasp.baidu.com/doc/install/testcase.html)
+We also provide a few test cases that are corresponding to OWASP TOP 10 attacks, [download here](https://rasp.baidu.com/doc/install/testcase.html)
 
 ### FAQ
 
@@ -40,14 +40,15 @@ OpenRASP logs alarms in JSON format, which can be easily picked up by LogStash, 
 
 A plugin receives a callback when an event occurs. It then determines if the current behavior is malicious or not and blocks the associated request if necessary.
 
-Detailed plugin development instructions can be found [here](http://rasp.baidu.com/doc/dev/main.html)
+Detailed plugin development instructions can be found [here](https://rasp.baidu.com/doc/dev/main.html)
 
 ### Contact
 
-Technical support (Simplified Chinese):
+Technical support:
 
 * [Baidu Security Forum](http://anquan.baidu.com/bbs)
 * [RASP QQ group #1: 259318664](http://shang.qq.com/wpa/qunwpa?idkey=5016bac5431b23316a79efdcd2c4dadd6ef8b99b231e4ed10f1e265573a66e1c)
+* [openrasp-en-discuss Mailing List](https://sourceforge.net/projects/openrasp-en/lists/openrasp-en-discuss)
 
 Business inquires, comments, concenrs and opinions:
 

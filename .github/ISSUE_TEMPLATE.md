@@ -1,15 +1,21 @@
-## 版本信息
+# Bug report
 
-* 操作系统: e.g linux64
-* 应用服务: e.g tomcat/8.0
-* OpenRASP: e.g GitCommit=3da661734e3ad7641cd98e83f32950deaefcacac date=2017-08-14T03:34:41Z)
+To help us debug your issue please explain:
+- What you were trying to do (and why)
+- What happened
+- What you expected to happen
+- Step-by-step reproduction instructions
 
-## 问题描述
+And please include the following information:
+- Operating system type and architecture
+- Application server type and version
+  - For Java based web application servers, provide JDK version
+- OpenRASP version
 
+# Feature Request
 
-
-## 附加信息
-
-e.g 可将 `rasp/logs/` 打包上传
-
+Please replace this section with:
+- a detailed description of your proposed feature
+- the motivation for the feature
+- what alternatives to the feature you have considered
 

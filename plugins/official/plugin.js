@@ -1,3 +1,10 @@
+//
+// 官方插件仅作为 DEMO
+// 具体检测能力请根据业务来定制~
+//
+// 10月底我们将更新一版官方插件，公开一些零规则检测攻击的插件，以及一些应用的专用插件
+// 
+
 'use strict'
 var plugin = new RASP('offical')
 
@@ -8,6 +15,7 @@ var clean = {
 
 var xssRegex = /<script|script>|<iframe|iframe>|javascript:(?!(?:history\.(?:go|back)|void\(0\)))/i
 var nameRegex = /\.(jspx?|php[345]?|phtml)\.?$/i
+var ntfsRegex = /::\$(DATA|INDEX)$/i
 var uaRegex = /nessus|sqlmap|nikto|havij|netsparker/i
 var sqlRegex = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
 var sysRegex = /^\/(etc|proc|sys|var\/log)(\/|$)/
@@ -82,7 +90,7 @@ plugin.register('writeFile', function (params) {
 })
 
 plugin.register('fileUpload', function (params) {
-    if (nameRegex.test(params.filename)) {
+    if (nameRegex.test(params.filename) || ntfsRegex.test(params.filename)) {
         return {
             action: 'block',
             message: '尝试上传脚本文件: ' + params.filename

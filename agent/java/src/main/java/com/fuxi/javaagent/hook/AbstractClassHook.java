@@ -55,7 +55,7 @@ public abstract class AbstractClassHook {
 
     /**
      * hook点所属检测类型．
-     * @see <a href="http://rasp.baidu.com/doc/dev/data.html">http://rasp.baidu.com/doc/dev/data.html</a>
+     * @see <a href="https://rasp.baidu.com/doc/dev/data.html">https://rasp.baidu.com/doc/dev/data.html</a>
      *
      * @return 检测类型
      */

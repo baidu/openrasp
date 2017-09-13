@@ -232,6 +232,23 @@ public class HookHandler {
     }
 
     /**
+     * 在过滤器中进入的hook点
+     * @param filter 过滤器
+     * @param request 请求实体
+     * @param response 响应实体
+     */
+    public static void checkFilterRequest(Object filter, Object request, Object response) {
+        checkRequest(filter, request, response);
+    }
+
+    /**
+     * ApplicationFilter中doFilter退出hook点
+     */
+    public static void onApplicationFilterExit() {
+        onServiceExit();
+    }
+
+    /**
      * 文件读取hook点
      *
      * @param file 文件对象
