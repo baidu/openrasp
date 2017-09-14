@@ -65,6 +65,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new WeblogicJspBaseHook());
         addHook(new XXEHook());
         addHook(new JspCompilationContextHook());
+        addHook(new TomcatStartupHook());
         addHook(new ApplicationFilterHook());
         addHook(new ReflectionHook());
     }

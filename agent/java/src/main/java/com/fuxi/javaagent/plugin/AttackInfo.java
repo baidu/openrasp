@@ -120,6 +120,11 @@ public class AttackInfo {
             info.put("path", request.getRequestURI());
             // 用户代理
             info.put("user_agent", request.getHeader("User-Agent"));
+            // 攻击的 Referrer 头
+            String referer = request.getHeader("Referer");
+            if(referer != null){
+                info.put("referer", referer);
+            }
         }
 
         return info;

@@ -170,7 +170,7 @@ public class JSEngine {
     }
 
     /**
-     * 释放资源，防止类存泄漏
+     * 释放资源，防止内存泄漏
      */
     public synchronized void release() {
         if (RASP != null) {

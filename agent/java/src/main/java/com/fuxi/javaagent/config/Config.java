@@ -32,10 +32,13 @@ package com.fuxi.javaagent.config;
 
 import org.apache.log4j.Logger;
 
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -54,6 +57,7 @@ public class Config {
     private static final String DEFAULT_BODYSIZE = "4096";
     private static final String DEFAULT_REFLECTION_MAX_STACK = "100";
     private static final String DEFAULT_IGNORE = "";
+    private static final String DEFAULT_ENFORCE_POLICY = "false";
     private static final String DEFAULT_REFLECT_MONITOR_METHOD = "java.lang.Runtime.getRuntime,"
             + "java.lang.Runtime.exec,"
             + "java.lang.ProcessBuilder.start";
@@ -66,6 +70,7 @@ public class Config {
     private long v8Timeout;
     private long bodyMaxBytes;
     private String[] ignoreHooks;
+    private boolean enforcePolicy;
     private String[] reflectionMonitorMethod;
 
     // Config是由bootstrap classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
@@ -79,7 +84,12 @@ public class Config {
         if (path.contains("!")) {
             path = path.substring(0, path.indexOf("!"));
         }
-        baseDirectory = new File(path).getParent();
+        try {
+            baseDirectory = URLDecoder.decode(new File(path).getParent(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            LOGGER.warn(e.getMessage());
+            baseDirectory = new File(path).getParent();
+        }
     }
 
     /**
@@ -92,6 +102,7 @@ public class Config {
         this.v8Timeout = Long.parseLong(DEFAULT_V8TIMEOUT);
         this.bodyMaxBytes = Long.parseLong(DEFAULT_BODYSIZE);
         this.ignoreHooks = new String[]{};
+        this.enforcePolicy = Boolean.parseBoolean(DEFAULT_ENFORCE_POLICY);
         this.reflectionMonitorMethod = DEFAULT_REFLECT_MONITOR_METHOD.replace(" ","").split(",");
         this.reflectionMaxStack = Integer.parseInt(DEFAULT_REFLECTION_MAX_STACK);
 
@@ -103,6 +114,7 @@ public class Config {
             this.v8ThreadPoolSize = Integer.parseInt(properties.getProperty("v8.threadpool.size", DEFAULT_POOLSIZE));
             this.v8Timeout = Long.parseLong(properties.getProperty("v8.timeout.millis", DEFAULT_V8TIMEOUT));
             this.bodyMaxBytes = Long.parseLong(properties.getProperty("body.maxbytes", DEFAULT_BODYSIZE));
+            this.enforcePolicy = Boolean.parseBoolean(properties.getProperty("security.enforce_policy", DEFAULT_ENFORCE_POLICY));
             this.ignoreHooks = properties.getProperty("hooks.ignore", DEFAULT_IGNORE).replace(" ","").split(",");
             this.reflectionMonitorMethod = properties.getProperty("reflection.monitor", DEFAULT_REFLECT_MONITOR_METHOD).replace(" ","").split(",");
             this.reflectionMaxStack = Integer.parseInt(properties.getProperty("reflection.maxstack", DEFAULT_REFLECTION_MAX_STACK));
@@ -198,6 +210,17 @@ public class Config {
      */
     public String[] getIgnoreHooks() {
         return this.ignoreHooks;
+    }
+
+    /**
+     * 是否开启强制安全规范
+     * 如果开启检测有安全风险的情况下将会禁止服务器启动
+     * 如果关闭当有安全风险的情况下通过日志警告
+     *
+     * @return true开启，false关闭
+     */
+    public boolean getEnforcePolicy() {
+        return enforcePolicy;
     }
 
     /**
