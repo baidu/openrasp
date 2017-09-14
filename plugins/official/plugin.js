@@ -177,7 +177,7 @@ plugin.register('reflection', function(params) {
 
     params.stack.some(function (method) {
         if (known[method]) {
-            message = known[method]
+            title = known[method]
             return true;
         }
     });
