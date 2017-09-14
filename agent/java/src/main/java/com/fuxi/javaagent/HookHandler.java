@@ -38,6 +38,8 @@ import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.request.CoyoteRequest;
 import com.fuxi.javaagent.request.HttpServletRequest;
 import com.fuxi.javaagent.request.HttpServletResponse;
+import com.fuxi.javaagent.tool.Reflection;
+import com.fuxi.javaagent.tool.StackTrace;
 import com.fuxi.javaagent.tool.hook.CustomLockObject;
 import com.fuxi.javaagent.tool.security.tomcat.TomcatSecurityChecker;
 import org.apache.log4j.Logger;
@@ -233,8 +235,9 @@ public class HookHandler {
 
     /**
      * 在过滤器中进入的hook点
-     * @param filter 过滤器
-     * @param request 请求实体
+     *
+     * @param filter   过滤器
+     * @param request  请求实体
      * @param response 响应实体
      */
     public static void checkFilterRequest(Object filter, Object request, Object response) {
@@ -373,6 +376,7 @@ public class HookHandler {
         }
     }
 
+
     /**
      * tomcat启动时检测安全规范
      */
@@ -382,6 +386,36 @@ public class HookHandler {
         if (!isSafe) {
             if (Config.getConfig().getEnforcePolicy()) {
                 throw new SecurityException("Can not startup tomcat:\n" + checker.getFormattedUnsafeMessage());
+            }
+        }
+    }
+
+    /**
+     * @param method
+     */
+    public static void checkReflection(Object method) {
+        if (enableHook.get() && enableCurrThreadHook.get()) {
+            enableCurrThreadHook.set(false);
+            try {
+                Class reflectClass = (Class) Reflection.invokeMethod(method, "getDeclaringClass", new Class[]{});
+                String reflectClassName = reflectClass.getName();
+                String reflectMethodName = (String) Reflection.invokeMethod(method, "getName", new Class[]{});
+                String absoluteMethodName = reflectClassName + "." + reflectMethodName;
+                String[] reflectMonitorMethod = Config.getConfig().getReflectionMonitorMethod();
+                for (String monitorMethod : reflectMonitorMethod) {
+                    if (monitorMethod.equals(absoluteMethodName)) {
+                        Map<String, Object> params = new HashMap<String, Object>();
+                        List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
+                                Config.getConfig().getReflectionMaxStack());
+                        params.put("clazz", reflectClassName);
+                        params.put("method", reflectMethodName);
+                        params.put("stack", stackInfo);
+                        pluginCheck("reflection", params);
+                        break;
+                    }
+                }
+            } finally {
+                enableCurrThreadHook.set(true);
             }
         }
     }
@@ -440,13 +474,17 @@ public class HookHandler {
         if (enableHook.get() && enableCurrThreadHook.get()) {
             enableCurrThreadHook.set(false);
             try {
-                CheckParameter parameter = new CheckParameter(type, params, requestCache.get());
-                if (PluginManager.check(parameter)) {
-                    handleBlock(parameter);
-                }
+                pluginCheck(type, params);
             } finally {
                 enableCurrThreadHook.set(true);
             }
+        }
+    }
+
+    private static void pluginCheck(String type, Map<String, Object> params) {
+        CheckParameter parameter = new CheckParameter(type, params, requestCache.get());
+        if (PluginManager.check(parameter)) {
+            handleBlock(parameter);
         }
     }
 }

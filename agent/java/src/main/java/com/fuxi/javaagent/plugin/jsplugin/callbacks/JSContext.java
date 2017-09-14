@@ -34,6 +34,7 @@ import com.eclipsesource.v8.*;
 import com.eclipsesource.v8.utils.MemoryManager;
 import com.eclipsesource.v8.utils.V8ObjectUtils;
 import com.fuxi.javaagent.request.AbstractRequest;
+import com.fuxi.javaagent.tool.StackTrace;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -42,9 +43,7 @@ import java.util.Map;
 
 /**
  * Created by lanyuhang on 2017/7/17.
- */
-
-/**
+ *
  * JavaScript环境中请求上下文对象
  *
  * 通过回调在Java环境中获取对应属性
@@ -159,7 +158,6 @@ public class JSContext extends V8Object {
             }
         });
         jsContext.add("getServer", getServer);
-
         V8Function createInstance = (V8Function) v8.executeScript("(function(data){return new Context(data)})");
         jsContext = (V8Object) createInstance.call(v8, new V8Array(v8).push(jsContext));
         this.setPrototype(jsContext);
@@ -169,4 +167,5 @@ public class JSContext extends V8Object {
     public void setJavaContext(AbstractRequest javaContext) {
         this.javaContext = javaContext;
     }
+
 }

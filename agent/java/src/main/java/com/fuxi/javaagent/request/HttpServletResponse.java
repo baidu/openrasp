@@ -89,7 +89,7 @@ public class HttpServletResponse {
             Object printer = Reflection.invokeMethod(response, "getWriter", new Class[]{});
             Reflection.invokeMethod(printer, "print", new Class[]{String.class}, BLOCK_INSERT_SCRIPT);
             Reflection.invokeMethod(printer, "flush", new Class[]{});
-            Reflection.invokeMethod(printer, "flushBuffer", new Class[]{});
+            Reflection.invokeMethod(response, "flushBuffer", new Class[]{});
             Reflection.invokeMethod(printer, "close", new Class[]{});
         }
     }
