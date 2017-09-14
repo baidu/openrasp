@@ -148,3 +148,19 @@ Object.defineProperty(global, 'CheckPointDeserialization', {
     value: CheckPointDeserialization,
     enumerable: true
 });
+
+const CheckPointReflection = class {
+    constructor(data) {
+        this.clazz = data.clazz;
+        this.method = data.method;
+        this.stack = data.stack;
+    }
+
+    static get name() {
+        return 'reflection';
+    }
+};
+Object.defineProperty(global, 'CheckPointReflection', {
+    value: CheckPointReflection,
+    enumerable: true
+});

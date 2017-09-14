@@ -28,41 +28,46 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.plugin.jsplugin.callbacks;
+package com.fuxi.javaagent.hook;
 
-import com.eclipsesource.v8.*;
-import com.fuxi.javaagent.tool.StackTrace;
+
+import com.fuxi.javaagent.HookHandler;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.AdviceAdapter;
+import org.objectweb.asm.commons.Method;
+
 
 /**
- * Created by tyy on 9/12/17.
- * 提供给js插件的java工具类
+ * Created by tyy on 9/13/17.
+ * 反射hook类
  */
-public class JSTool extends V8Object {
+public class ReflectionHook extends AbstractClassHook {
 
-    public static final int V8_STACK_TRACE_MAX_DEPTH = 100;
-
-    public JSTool(final V8 v8) {
-        super(v8);
-        V8Function getStackTrace = new V8Function(v8, new JavaCallback() {
-            @Override
-            public Object invoke(V8Object receiver, V8Array parameters) {
-                V8Array stackTrace = new V8Array(v8);
-                StackTraceElement[] stackTraceElements = StackTrace.getStackTraceArray();
-                if (stackTraceElements != null) {
-                    int startIndex = 12;
-                    for (int i = startIndex; i < stackTraceElements.length; i++) {
-                        if (i > V8_STACK_TRACE_MAX_DEPTH + startIndex) {
-                            break;
-                        }
-                        stackTrace.push(stackTraceElements[i].getClassName() + "@" + stackTraceElements[i].getMethodName());
-                    }
-                }
-                return stackTrace;
-            }
-        });
-        this.add("getStackTrace", getStackTrace);
-        getStackTrace.release();
-
+    @Override
+    public boolean isClassMatched(String className) {
+        return className.equals("java/lang/reflect/Method");
     }
 
+    @Override
+    public String getType() {
+        return "reflection";
+    }
+
+    @Override
+    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
+        if ("invoke".equals(name)) {
+            return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
+                @Override
+                protected void onMethodEnter() {
+                    loadThis();
+                    invokeStatic(Type.getType(HookHandler.class),
+                            new Method("checkReflection",
+                                    "(Ljava/lang/Object;)V"));
+                }
+            };
+        }
+        return mv;
+    }
 }

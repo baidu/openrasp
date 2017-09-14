@@ -42,23 +42,31 @@ import java.util.Properties;
 
 /**
  * Created by tyy on 3/27/17.
- * <p>
  * 项目配置类，通过解析conf/rasp.property文件来加载配置
  * 若没有找到配置文件使用默认值
  */
 public class Config {
+
+    public static final int REFLECTION_STACK_START_INDEX = 0;
+
     private static final String DEFAULT_V8TIMEOUT = "100";
     private static final String DEFAULT_POOLSIZE = "0";
     private static final String DEFAULT_BODYSIZE = "4096";
+    private static final String DEFAULT_REFLECTION_MAX_STACK = "100";
     private static final String DEFAULT_IGNORE = "";
+    private static final String DEFAULT_REFLECT_MONITOR_METHOD = "java.lang.Runtime.getRuntime,"
+            + "java.lang.Runtime.exec,"
+            + "java.lang.ProcessBuilder.start";
 
     private static final Logger LOGGER = Logger.getLogger(Config.class.getName());
     private static String baseDirectory;
 
     private int v8ThreadPoolSize;
+    private int reflectionMaxStack;
     private long v8Timeout;
     private long bodyMaxBytes;
     private String[] ignoreHooks;
+    private String[] reflectionMonitorMethod;
 
     // Config是由bootstrap classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
@@ -84,6 +92,8 @@ public class Config {
         this.v8Timeout = Long.parseLong(DEFAULT_V8TIMEOUT);
         this.bodyMaxBytes = Long.parseLong(DEFAULT_BODYSIZE);
         this.ignoreHooks = new String[]{};
+        this.reflectionMonitorMethod = DEFAULT_REFLECT_MONITOR_METHOD.replace(" ","").split(",");
+        this.reflectionMaxStack = Integer.parseInt(DEFAULT_REFLECTION_MAX_STACK);
 
         try {
             input = new FileInputStream(new File(baseDirectory, "conf" + File.separator + "rasp.properties"));
@@ -93,7 +103,9 @@ public class Config {
             this.v8ThreadPoolSize = Integer.parseInt(properties.getProperty("v8.threadpool.size", DEFAULT_POOLSIZE));
             this.v8Timeout = Long.parseLong(properties.getProperty("v8.timeout.millis", DEFAULT_V8TIMEOUT));
             this.bodyMaxBytes = Long.parseLong(properties.getProperty("body.maxbytes", DEFAULT_BODYSIZE));
-            this.ignoreHooks = properties.getProperty("hooks.ignore", DEFAULT_IGNORE).split(",");
+            this.ignoreHooks = properties.getProperty("hooks.ignore", DEFAULT_IGNORE).replace(" ","").split(",");
+            this.reflectionMonitorMethod = properties.getProperty("reflection.monitor", DEFAULT_REFLECT_MONITOR_METHOD).replace(" ","").split(",");
+            this.reflectionMaxStack = Integer.parseInt(properties.getProperty("reflection.maxstack", DEFAULT_REFLECTION_MAX_STACK));
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find rasp.properties, using default settings: " + e.getMessage());
         } catch (IOException e) {
@@ -117,6 +129,8 @@ public class Config {
         LOGGER.info("v8.threadpool.size: " + v8ThreadPoolSize);
         LOGGER.info("v8.timeout.millis: " + v8Timeout);
         LOGGER.info("hooks.ignore: " + Arrays.toString(this.ignoreHooks));
+        LOGGER.info("reflection.monitor: " + Arrays.toString(this.reflectionMonitorMethod));
+        LOGGER.info("reflection.maxstack: " + reflectionMaxStack);
     }
 
     private static class ConfigHolder {
@@ -185,4 +199,38 @@ public class Config {
     public String[] getIgnoreHooks() {
         return this.ignoreHooks;
     }
+
+    /**
+     * 获取反射监控的方法
+     *
+     * @return 需要监控的反射方法
+     */
+    public String[] getReflectionMonitorMethod() {
+        return reflectionMonitorMethod;
+    }
+
+    /**
+     * 设置反射监控的方法
+     * @param reflectionMonitorMethod 监控的方法
+     */
+    public void setReflectionMonitorMethod(String[] reflectionMonitorMethod) {
+        this.reflectionMonitorMethod = reflectionMonitorMethod;
+    }
+
+    /**
+     * 反射hook点传递给插件栈信息的最大深度
+     * @return 栈信息最大深度
+     */
+    public int getReflectionMaxStack() {
+        return reflectionMaxStack;
+    }
+
+    /**
+     * 设置反射hook点传递给插件栈信息的最大深度
+     * @param reflectionMaxStack 栈信息最大深度
+     */
+    public void setReflectionMaxStack(int reflectionMaxStack) {
+        this.reflectionMaxStack = reflectionMaxStack;
+    }
+
 }
