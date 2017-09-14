@@ -30,6 +30,10 @@
 
 package com.fuxi.javaagent.tool;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
 /**
  * Created by tyy on 3/28/17.
  * 获取栈信息工具类
@@ -38,6 +42,7 @@ public class StackTrace {
 
     /**
      * 获取栈信息
+     *
      * @return 栈信息
      */
     public static String getStackTrace() {
@@ -64,12 +69,25 @@ public class StackTrace {
 
     /**
      * 获取原始栈
+     *
      * @return 原始栈
      */
-    public static StackTraceElement[] getStackTraceArray() {
+    public static List<String> getStackTraceArray(int startIndex, int depth) {
 
+        LinkedList<String> stackTrace = new LinkedList<String>();
         Throwable throwable = new Throwable();
-        return throwable.getStackTrace();
+        StackTraceElement[] stackTraceElements = throwable.getStackTrace();
+
+        if (stackTraceElements != null) {
+            for (int i = startIndex; i < stackTraceElements.length; i++) {
+                if (i > startIndex + depth) {
+                    break;
+                }
+                stackTrace.add(stackTraceElements[i].getClassName() + "." + stackTraceElements[i].getMethodName());
+            }
+        }
+
+        return stackTrace;
     }
 
 }

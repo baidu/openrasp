@@ -66,6 +66,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new XXEHook());
         addHook(new JspCompilationContextHook());
         addHook(new ApplicationFilterHook());
+        addHook(new ReflectionHook());
     }
 
     private void addHook(AbstractClassHook hook) {
