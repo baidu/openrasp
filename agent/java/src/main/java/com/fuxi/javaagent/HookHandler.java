@@ -30,12 +30,14 @@
 
 package com.fuxi.javaagent;
 
+import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.exception.SecurityException;
 import com.fuxi.javaagent.plugin.CheckParameter;
 import com.fuxi.javaagent.plugin.PluginManager;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.request.CoyoteRequest;
 import com.fuxi.javaagent.request.HttpServletRequest;
+import com.fuxi.javaagent.tool.Reflection;
 import com.fuxi.javaagent.tool.StackTrace;
 import com.fuxi.javaagent.tool.hook.CustomLockObject;
 import org.apache.log4j.Logger;
@@ -221,11 +223,12 @@ public class HookHandler {
 
     /**
      * 在过滤器中进入的hook点
-     * @param filter 过滤器
-     * @param request 请求实体
+     *
+     * @param filter   过滤器
+     * @param request  请求实体
      * @param response 响应实体
      */
-    public static void checkFilterRequest(Object filter, Object request, Object response){
+    public static void checkFilterRequest(Object filter, Object request, Object response) {
         if (filter != null && request != null && !enableCurrThreadHook.get()) {
             // 默认是关闭hook的，只有处理过HTTP request的线程才打开
             enableCurrThreadHook.set(true);
@@ -237,7 +240,7 @@ public class HookHandler {
     /**
      * ApplicationFilter中doFilter退出hook点
      */
-    public static void onApplicationFilterExit(){
+    public static void onApplicationFilterExit() {
         enableCurrThreadHook.set(false);
         requestCache.set(null);
     }
@@ -367,6 +370,33 @@ public class HookHandler {
         }
     }
 
+    public static void checkReflection(Object method) {
+        if (enableHook.get() && enableCurrThreadHook.get()) {
+            enableCurrThreadHook.set(false);
+            try {
+                Class reflectClass = (Class) Reflection.invokeMethod(method, "getDeclaringClass", new Class[]{});
+                String reflectClassName = reflectClass.getName();
+                String reflectMethodName = (String) Reflection.invokeMethod(method, "getName", new Class[]{});
+                String absoluteMethodName = reflectClassName + "." + reflectMethodName;
+                String[] reflectMonitorMethod = Config.getConfig().getReflectionMonitorMethod();
+                for (String monitorMethod : reflectMonitorMethod) {
+                    if (monitorMethod.equals(absoluteMethodName)) {
+                        Map<String, Object> params = new HashMap<String, Object>();
+                        List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
+                                Config.getConfig().getReflectionMaxStack());
+                        params.put("clazz", reflectClassName);
+                        params.put("method", reflectMethodName);
+                        params.put("stack", stackInfo);
+                        pluginCheck("reflection", params);
+                        break;
+                    }
+                }
+            } finally {
+                enableCurrThreadHook.set(true);
+            }
+        }
+    }
+
     public static void onInputStreamRead(int ret, Object inputStream) {
         if (ret != -1 && requestCache.get() != null) {
             AbstractRequest request = requestCache.get();
@@ -413,13 +443,17 @@ public class HookHandler {
         if (enableHook.get() && enableCurrThreadHook.get()) {
             enableCurrThreadHook.set(false);
             try {
-                CheckParameter parameter = new CheckParameter(type, params, requestCache.get());
-                if (PluginManager.check(parameter)) {
-                    throw new SecurityException("unsafe request: " + parameter);
-                }
+                pluginCheck(type, params);
             } finally {
                 enableCurrThreadHook.set(true);
             }
+        }
+    }
+
+    private static void pluginCheck(String type, Map<String, Object> params) {
+        CheckParameter parameter = new CheckParameter(type, params, requestCache.get());
+        if (PluginManager.check(parameter)) {
+            throw new SecurityException("unsafe request: " + parameter);
         }
     }
 }

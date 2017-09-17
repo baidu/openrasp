@@ -76,7 +76,7 @@ plugin.register('readFile', function (params) {
         }
     }
 
-    if (sysRegex.test(path)) {
+    if (sysRegex.test(params.realpath)) {
         return {
             action: 'block',
             message: '读取系统文件'
@@ -166,6 +166,26 @@ plugin.register('deserialization', function (params) {
         }
     }
     return clean
+})
+
+plugin.register('reflection', function(params) {
+    var title = '异常的执行流'
+    var known = {
+        'com.thoughtworks.xstream.XStream.unmarshal': 'xstream 反序列化攻击',
+        'org.apache.commons.collections4.functors.InvokerTransformer.transform': 'transformer 反序列化攻击'
+    }
+
+    params.stack.some(function (method) {
+        if (known[method]) {
+            title = known[method]
+            return true;
+        }
+    });
+
+    return {
+        action:  'block',
+        message: title + ':' + params.clazz + '.' + params.method
+    }
 })
 
 plugin.log('初始化成功')
