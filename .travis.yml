@@ -1,0 +1,14 @@
+sudo: required
+language: java
+services: docker
+before_install:
+  - pushd agent/java
+  - mvn clean package -P linux64
+  - cp target/rasp.jar ../../integration-test/rasp/rasp.jar
+  - popd
+install:
+  - pushd integration-test
+  - jar cvf app.war -C app/ .
+  - sudo docker-compose build
+script: 
+  - sudo docker-compose run --rm tester
