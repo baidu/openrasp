@@ -1,0 +1,58 @@
+version: '2'
+
+services:
+  tester:
+    build:
+      context: .
+      dockerfile: Dockerfile.tester
+    depends_on:
+      - tomcat6-jre7
+      - tomcat7-jre7
+      - tomcat8-jre8
+      - jboss4-jre7
+      # - weblogic11-jre6
+      # - weblogic12-jre8
+      - mysql
+      - postgresql
+      - sqlserver
+      - oracle
+  tomcat6-jre7:
+    build:
+      context: .
+      dockerfile: Dockerfile.tomcat6-jre7
+  tomcat7-jre7:
+    build:
+      context: .
+      dockerfile: Dockerfile.tomcat7-jre7
+  tomcat8-jre8:
+    build:
+      context: .
+      dockerfile: Dockerfile.tomcat8-jre8
+  jboss4-jre7:
+    build:
+      context: .
+      dockerfile: Dockerfile.jboss4-jre7
+  # weblogic11-jre6:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.weblogic11-jre6
+  # weblogic12-jre8:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.weblogic12-jre8
+  mysql:
+    build:
+      context: .
+      dockerfile: Dockerfile.mysql5
+  postgresql:
+    build:
+      context: .
+      dockerfile: Dockerfile.postgresql9
+  sqlserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.sqlserver
+  oracle:
+    build:
+      context: .
+      dockerfile: Dockerfile.oracle
