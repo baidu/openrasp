@@ -1,20 +1,20 @@
 /**
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
- *
+ * <p>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * <p>
  * 1. Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- *
+ * <p>
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- *
+ * <p>
  * 3. Neither the name of the copyright holder nor the names of its contributors
  * may be used to endorse or promote products derived from this software without
  * specific prior written permission.
- *
+ * <p>
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -28,23 +28,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.plugin.jsplugin;
+package com.fuxi.javaagent.plugin;
 
-public class JSCleanUpTask extends JSTask<Void> {
+import com.baidu.rasp.TokenGenerator;
+import org.mozilla.javascript.*;
 
-    /**
-     * 释放V8
-     *
-     * @return Void
-     */
+public class JSTokenizeSql extends BaseFunction {
     @Override
-    public Void call() {
-        JSEngine jsEngine = localJSEngine.get();
-        if (jsEngine != null) {
-            localJSEngine.remove();
-            jsEngine.release();
-            jsEngine = null;
+    public Object call(Context cx, Scriptable scope, Scriptable thisObj,
+                       Object[] args) {
+        if (args.length < 1) {
+            return Context.getUndefinedValue();
         }
-        return null;
+        if (!(args[0] instanceof String)) {
+            return Context.getUndefinedValue();
+        }
+        String sql = (String) args[0];
+        String[] result = TokenGenerator.tokenize(sql);
+        return new NativeArray(result);
     }
 }

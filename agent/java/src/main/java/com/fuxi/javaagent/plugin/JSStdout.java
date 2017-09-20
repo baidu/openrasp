@@ -1,20 +1,20 @@
 /**
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
- *
+ * <p>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * <p>
  * 1. Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- *
+ * <p>
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- *
+ * <p>
  * 3. Neither the name of the copyright holder nor the names of its contributors
  * may be used to endorse or promote products derived from this software without
  * specific prior written permission.
- *
+ * <p>
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -28,36 +28,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.plugin.jsplugin;
+package com.fuxi.javaagent.plugin;
 
-import com.eclipsesource.v8.V8;
-import com.fuxi.javaagent.plugin.jsplugin.callbacks.JSContext;
+import org.apache.log4j.Logger;
 
-import java.util.concurrent.Callable;
 
 /**
- * Created by lanyuhang on 2017/7/18.
+ * JavaScript 环境中的 stdout 对象
  */
-
-/**
- * 插件引擎异步任务
- *
- * @param <T>
- */
-public abstract class JSTask<T> implements Callable<T> {
-    public static final ThreadLocal<JSEngine> localJSEngine = JSThread.localJSEngine;
-    public JSEngine jsEngine;
-    public V8 v8;
-    public JSContext jsContext;
-
-    /**
-     * 终止正在执行的插件脚本
-     *
-     * @see V8#terminateExecution()
-     */
-    public void terminateExecution() {
-        if (jsEngine != null) {
-            jsEngine.terminateExecution();
-        }
+public class JSStdout {
+    private static final Logger LOGGER = Logger.getLogger(JSStdout.class.getPackage().getName() + ".log");
+    public void write(Object message) {
+        LOGGER.info(message);
     }
 }

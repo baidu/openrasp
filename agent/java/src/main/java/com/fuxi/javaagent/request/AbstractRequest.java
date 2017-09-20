@@ -221,6 +221,15 @@ public abstract class AbstractRequest {
     }
 
     /**
+     * 返回HTTP request body stream
+     *
+     * @return request body, can be null
+     */
+    public ByteArrayOutputStream getBodyStream() {
+        return bodyOutputStream;
+    }
+
+    /**
      * 返回input stream
      *
      * @return input stream

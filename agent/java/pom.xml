@@ -51,50 +51,12 @@
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.mozilla</groupId>
+            <artifactId>rhino</artifactId>
+            <version>1.7.7.2</version>
+        </dependency>
     </dependencies>
-
-    <profiles>
-        <profile>
-            <id>linux64</id>
-            <properties>
-                <profile-id>linux64</profile-id>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>com.fuxi.javaagent</groupId>
-                    <artifactId>j2v8_linux_x86_64</artifactId>
-                    <version>4.7.1</version>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>win64</id>
-            <properties>
-                <profile-id>win64</profile-id>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>com.eclipsesource.j2v8</groupId>
-                    <artifactId>j2v8_win32_x86_64</artifactId>
-                    <version>4.6.0</version>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>win32</id>
-            <properties>
-                <profile-id>win32</profile-id>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>com.eclipsesource.j2v8</groupId>
-                    <artifactId>j2v8_win32_x86</artifactId>
-                    <version>4.6.0</version>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
 
     <scm>
         <connection>scm:git:https://github.com/baidu/openrasp</connection>
@@ -194,28 +156,6 @@
                     <reportOutputDirectory>../javadocs</reportOutputDirectory>
                     <destDir>rasp-doc</destDir>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <version>1.4.1</version>
-                <executions>
-                    <execution>
-                        <id>enforce-property</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <requireProperty>
-                                    <property>profile-id</property>
-                                    <message>必须有-P参数来指定不同的系统版本，且-P参数值必须是[linux64, win64, win32]中的一个。</message>
-                                </requireProperty>
-                            </rules>
-                            <fail>true</fail>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

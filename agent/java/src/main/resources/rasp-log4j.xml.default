@@ -111,12 +111,7 @@
 		<appender-ref ref="ALARM" />
     </logger>
 	
-	<logger name="com.fuxi.javaagent.plugin.jsplugin.callbacks.JSStdout" additivity="false">
-        <level value="INFO" />
-		<appender-ref ref="PLUGIN" />
-    </logger>
-	
-	<logger name="com.fuxi.javaagent.plugin.jsplugin.callbacks.JSStderr" additivity="false">
+	<logger name="com.fuxi.javaagent.plugin.log" additivity="false">
         <level value="INFO" />
 		<appender-ref ref="PLUGIN" />
     </logger>

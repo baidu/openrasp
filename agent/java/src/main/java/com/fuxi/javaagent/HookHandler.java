@@ -137,7 +137,7 @@ public class HookHandler {
                 params.put("content", "[rasp error:" + e.getMessage() + "]");
             }
 
-            doCheck("fileUpload", params);
+            doCheck(CheckParameter.Type.FILEUPLOAD, params);
         }
     }
 
@@ -156,7 +156,7 @@ public class HookHandler {
                 params.put("realpath", file.getAbsolutePath());
             }
 
-            doCheck("directory", params);
+            doCheck(CheckParameter.Type.DIRECTORY, params);
         }
     }
 
@@ -189,7 +189,7 @@ public class HookHandler {
             params.put("server", server);
             params.put("query", stmt);
 
-            doCheck("sql", params);
+            doCheck(CheckParameter.Type.SQL, params);
         }
     }
 
@@ -233,7 +233,7 @@ public class HookHandler {
                 responseCache.set(responseContainer);
 
                 XXEHook.resetLocalExpandedSystemIds();
-                doCheck("request", EMPTY_MAP);
+                doCheck(CheckParameter.Type.REQUEST, EMPTY_MAP);
             }
         }
     }
@@ -280,7 +280,7 @@ public class HookHandler {
                 e.printStackTrace();
             }
 
-            doCheck("readFile", param);
+            doCheck(CheckParameter.Type.READFILE, param);
         }
     }
 
@@ -293,7 +293,7 @@ public class HookHandler {
         if (command != null && !command.isEmpty()) {
             HashMap<String, Object> param = new HashMap<String, Object>();
             param.put("command", command);
-            doCheck("command", param);
+            doCheck(CheckParameter.Type.COMMAND, param);
         }
     }
 
@@ -307,7 +307,7 @@ public class HookHandler {
             XXEHook.getLocalExpandedSystemIds().add(expandedSystemId);
             HashMap<String, Object> param = new HashMap<String, Object>();
             param.put("entity", expandedSystemId);
-            doCheck("xxe", param);
+            doCheck(CheckParameter.Type.XXE, param);
         }
     }
 
@@ -326,7 +326,7 @@ public class HookHandler {
                 e.printStackTrace();
             }
             param.put("content", "");
-            doCheck("writeFile", param);
+            doCheck(CheckParameter.Type.WRITEFILE, param);
         }
     }
 
@@ -345,7 +345,7 @@ public class HookHandler {
                 params.put("name", file.getName());
                 params.put("realpath", path);
                 params.put("content", new String(writeBytes));
-                doCheck("writeFile", params);
+                doCheck(CheckParameter.Type.WRITEFILE, params);
             }
         }
     }
@@ -371,7 +371,7 @@ public class HookHandler {
         if (expression != null) {
             Map<String, Object> params = new HashMap<String, Object>();
             params.put("expression", expression);
-            doCheck("ognl", params);
+            doCheck(CheckParameter.Type.OGNL, params);
         }
     }
 
@@ -386,7 +386,7 @@ public class HookHandler {
             if (clazz != null) {
                 Map<String, Object> params = new HashMap<String, Object>();
                 params.put("clazz", clazz);
-                doCheck("deserialization", params);
+                doCheck(CheckParameter.Type.DESERIALIZATION, params);
             }
         }
     }
@@ -427,7 +427,7 @@ public class HookHandler {
                         params.put("clazz", reflectClassName);
                         params.put("method", reflectMethodName);
                         params.put("stack", stackInfo);
-                        pluginCheck("reflection", params);
+                        pluginCheck(CheckParameter.Type.REFLECTION, params);
                         break;
                     }
                 }
@@ -487,7 +487,7 @@ public class HookHandler {
      * @param type   检测类型
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
-    private static void doCheck(String type, Map<String, Object> params) {
+    private static void doCheck(CheckParameter.Type type, Map<String, Object> params) {
         if (enableHook.get() && enableCurrThreadHook.get()) {
             enableCurrThreadHook.set(false);
             try {
@@ -498,7 +498,7 @@ public class HookHandler {
         }
     }
 
-    private static void pluginCheck(String type, Map<String, Object> params) {
+    private static void pluginCheck(CheckParameter.Type type, Map<String, Object> params) {
         CheckParameter parameter = new CheckParameter(type, params, requestCache.get());
         if (PluginManager.check(parameter)) {
             handleBlock(parameter);
