@@ -30,6 +30,7 @@
 
 package com.fuxi.javaagent.plugin;
 
+import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.google.gson.Gson;
 
@@ -136,8 +137,7 @@ public class AttackInfo {
         while (trace[i].getClassName().startsWith("com.fuxi.javaagent")) {
             i++;
         }
-        // 只显示最近的５层调用栈
-        return Arrays.copyOfRange(trace, i, Math.min(i + 5, trace.length));
+        return Arrays.copyOfRange(trace, i, Math.min(i + Config.getConfig().getLogMaxStackSize(), trace.length));
     }
 
     private String stringify(StackTraceElement[] trace) {
