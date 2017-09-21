@@ -30,6 +30,7 @@
 
 package com.fuxi.javaagent.plugin;
 
+import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.google.gson.Gson;
 
@@ -97,6 +98,8 @@ public class AttackInfo {
         info.put("intercept_state", result.getResult());
 
         if (request != null) {
+            // 请求ID
+            info.put("request_id", request.getRequestId());
             // 攻击来源IP
             info.put("attack_source", request.getRemoteAddr());
             // 被攻击目标域名
@@ -136,8 +139,7 @@ public class AttackInfo {
         while (trace[i].getClassName().startsWith("com.fuxi.javaagent")) {
             i++;
         }
-        // 只显示最近的５层调用栈
-        return Arrays.copyOfRange(trace, i, Math.min(i + 5, trace.length));
+        return Arrays.copyOfRange(trace, i, Math.min(i + Config.getConfig().getLogMaxStackSize(), trace.length));
     }
 
     private String stringify(StackTraceElement[] trace) {

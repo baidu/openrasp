@@ -61,9 +61,11 @@ public class Config {
     private static final String DEFAULT_REFLECT_MONITOR_METHOD = "java.lang.Runtime.getRuntime,"
             + "java.lang.Runtime.exec,"
             + "java.lang.ProcessBuilder.start";
+    private static final String DEFAULT_LOG_STACK_SIZE = "20";
 
     private static final Logger LOGGER = Logger.getLogger(Config.class.getName());
     private static String baseDirectory;
+
 
     private int v8ThreadPoolSize;
     private int reflectionMaxStack;
@@ -72,6 +74,7 @@ public class Config {
     private String[] ignoreHooks;
     private boolean enforcePolicy;
     private String[] reflectionMonitorMethod;
+    private int logMaxStackSize;
 
     // Config是由bootstrap classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
@@ -105,6 +108,7 @@ public class Config {
         this.enforcePolicy = Boolean.parseBoolean(DEFAULT_ENFORCE_POLICY);
         this.reflectionMonitorMethod = DEFAULT_REFLECT_MONITOR_METHOD.replace(" ","").split(",");
         this.reflectionMaxStack = Integer.parseInt(DEFAULT_REFLECTION_MAX_STACK);
+        this.logMaxStackSize = Integer.parseInt(DEFAULT_LOG_STACK_SIZE);
 
         try {
             input = new FileInputStream(new File(baseDirectory, "conf" + File.separator + "rasp.properties"));
@@ -118,6 +122,7 @@ public class Config {
             this.ignoreHooks = properties.getProperty("hooks.ignore", DEFAULT_IGNORE).replace(" ","").split(",");
             this.reflectionMonitorMethod = properties.getProperty("reflection.monitor", DEFAULT_REFLECT_MONITOR_METHOD).replace(" ","").split(",");
             this.reflectionMaxStack = Integer.parseInt(properties.getProperty("reflection.maxstack", DEFAULT_REFLECTION_MAX_STACK));
+            this.logMaxStackSize = Integer.parseInt(properties.getProperty("log.maxstack", DEFAULT_LOG_STACK_SIZE));
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find rasp.properties, using default settings: " + e.getMessage());
         } catch (IOException e) {
@@ -256,4 +261,11 @@ public class Config {
         this.reflectionMaxStack = reflectionMaxStack;
     }
 
+    public int getLogMaxStackSize() {
+        return logMaxStackSize;
+    }
+
+    public void setLogMaxStackSize(int logMaxStackSize) {
+        this.logMaxStackSize = logMaxStackSize;
+    }
 }
