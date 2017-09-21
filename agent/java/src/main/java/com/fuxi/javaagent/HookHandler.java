@@ -38,7 +38,7 @@ import com.fuxi.javaagent.plugin.PluginManager;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.request.CoyoteRequest;
 import com.fuxi.javaagent.request.HttpServletRequest;
-import com.fuxi.javaagent.request.HttpServletResponse;
+import com.fuxi.javaagent.response.HttpServletResponse;
 import com.fuxi.javaagent.tool.Reflection;
 import com.fuxi.javaagent.tool.StackTrace;
 import com.fuxi.javaagent.tool.hook.CustomLockObject;
@@ -64,6 +64,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class HookHandler {
     public static final String OPEN_RASP_HEADER_KEY = "X-Protected-By";
     public static final String OPEN_RASP_HEADER_VALUE = "OpenRASP";
+    public static final String REQUEST_ID_HEADER_KEY = "X-Request-ID";
     private static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
     // 全局开关
     public static AtomicBoolean enableHook = new AtomicBoolean(false);
@@ -215,14 +216,20 @@ public class HookHandler {
      * @param response 响应实体
      */
     public static void checkRequest(Object servlet, Object request, Object response) {
-        if (servlet != null && request != null && !enableCurrThreadHook.get()) {
-            // 默认是关闭hook的，只有处理过HTTP request的线程才打开
-            enableCurrThreadHook.set(true);
-            requestCache.set(new HttpServletRequest(request));
-            responseCache.set(new HttpServletResponse(response));
-            responseCache.get().setHeader(OPEN_RASP_HEADER_KEY, OPEN_RASP_HEADER_VALUE);
-            XXEHook.resetLocalexpandedSystemIds();
-            doCheck("request", EMPTY_MAP);
+        if (servlet != null && request != null) {
+            if (requestCache.get() == null || requestCache.get().getRequest() != request) {
+                // 默认是关闭hook的，只有处理过HTTP request的线程才打开
+                enableCurrThreadHook.set(true);
+                HttpServletRequest requestContainer = new HttpServletRequest(request);
+                HttpServletResponse responseContainer = new HttpServletResponse(response);
+                responseContainer.setHeader(OPEN_RASP_HEADER_KEY, OPEN_RASP_HEADER_VALUE);
+                responseContainer.setHeader(REQUEST_ID_HEADER_KEY, requestContainer.getRequestId());
+                requestCache.set(requestContainer);
+                responseCache.set(responseContainer);
+
+                XXEHook.resetLocalExpandedSystemIds();
+                doCheck("request", EMPTY_MAP);
+            }
         }
     }
 
@@ -394,7 +401,8 @@ public class HookHandler {
     }
 
     /**
-     * @param method
+     * 反射hook点检测
+     * @param method 反射调用的方法
      */
     public static void checkReflection(Object method) {
         if (enableHook.get() && enableCurrThreadHook.get()) {

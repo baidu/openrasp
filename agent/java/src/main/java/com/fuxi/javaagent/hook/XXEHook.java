@@ -63,7 +63,7 @@ public class XXEHook extends AbstractClassHook {
     /**
      *  重置当前线程已触发检测的expandedSystemIds
      */
-    public static void resetLocalexpandedSystemIds() {
+    public static void resetLocalExpandedSystemIds() {
         localExpandedSystemIds.get().clear();
     }
 

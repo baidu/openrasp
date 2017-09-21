@@ -1,20 +1,20 @@
 /**
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
- * <p>
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * <p>
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * <p>
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * <p>
+ *
  * 3. Neither the name of the copyright holder nor the names of its contributors
  * may be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * <p>
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -28,8 +28,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.request;
+package com.fuxi.javaagent.response;
 
+import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.tool.Reflection;
 
 /**
@@ -41,6 +43,8 @@ public class HttpServletResponse {
     public static final int BLOCK_STATUS_CODE = 400;
     private static final String BLOCK_INSERT_SCRIPT = "</script><script>location.href=\"" +
             "https://rasp.baidu.com/blocked\"</script>";
+    private static final String CONTENT_TYPE_HEADER_KEY = "Content-Type";
+    private static final String CONTENT_TYPE_HTML_VALUE = "text/html";
     private Object response;
 
     /**
@@ -77,21 +81,32 @@ public class HttpServletResponse {
      * 返回异常信息
      */
     public void sendError() {
-        sendErrorScript();
+        if (response != null) {
+            try {
+                setHeader(CONTENT_TYPE_HEADER_KEY, CONTENT_TYPE_HTML_VALUE);
+                Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, BLOCK_STATUS_CODE);
+            } catch (Exception e) {
+                //ignore
+            }
+            sendErrorScript(response);
+        }
     }
 
     /**
      * 发送自定义错误处理脚本
      */
-    private void sendErrorScript() {
-        if (response != null) {
-            Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, BLOCK_STATUS_CODE);
-            Object printer = Reflection.invokeMethod(response, "getWriter", new Class[]{});
-            Reflection.invokeMethod(printer, "print", new Class[]{String.class}, BLOCK_INSERT_SCRIPT);
-            Reflection.invokeMethod(printer, "flush", new Class[]{});
-            Reflection.invokeMethod(response, "flushBuffer", new Class[]{});
-            Reflection.invokeMethod(printer, "close", new Class[]{});
+    private void sendErrorScript(Object response) {
+        String blockUrl = Config.getConfig().getBlockUrl();
+        if (!blockUrl.contains("?")) {
+            String blockParam = "?request_id=" + HookHandler.requestCache.get().getRequestId();
+            blockUrl += blockParam;
         }
+        String script = "</script><script>location.href=\"" + blockUrl + "\"</script>";
+        Object printer = Reflection.invokeMethod(response, "getWriter", new Class[]{});
+        Reflection.invokeMethod(printer, "print", new Class[]{String.class}, script);
+        Reflection.invokeMethod(printer, "flush", new Class[]{});
+        Reflection.invokeMethod(response, "flushBuffer", new Class[]{});
+        Reflection.invokeMethod(printer, "close", new Class[]{});
     }
 
 }
