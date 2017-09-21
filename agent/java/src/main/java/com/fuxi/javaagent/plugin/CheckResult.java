@@ -41,9 +41,12 @@ import java.util.Map;
  */
 public class CheckResult {
 
+    public static final int DEFAULT_CONFIDENCE_VALUE = 0;
+
     private String pluginName;
     private String message;
     private String result;
+    private int confidence;
 
     public String getPluginName() {
         return pluginName;
@@ -57,14 +60,23 @@ public class CheckResult {
         return message;
     }
 
+    public int getConfidence() {
+        return confidence;
+    }
+
     public void setMessage(String message) {
         this.message = message;
     }
 
     public CheckResult(String result, String message, String pluginName) {
+        this(result, message, pluginName, DEFAULT_CONFIDENCE_VALUE);
+    }
+
+    public CheckResult(String result, String message, String pluginName, int confidence) {
         this.message = message;
         this.pluginName = pluginName;
         this.result = result;
+        this.confidence = confidence;
     }
 
     @Override
@@ -73,6 +85,7 @@ public class CheckResult {
         obj.put("pluginName", pluginName);
         obj.put("action", result);
         obj.put("message", message);
+        obj.put("confidence", confidence);
         return new Gson().toJson(obj);
     }
 }

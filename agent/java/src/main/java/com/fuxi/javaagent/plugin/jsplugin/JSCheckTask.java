@@ -81,12 +81,20 @@ public class JSCheckTask extends JSTask<List<CheckResult>> {
             jsContext.setJavaContext(parameter.getRequest());
 
             V8Array jsResults = jsEngine.check(jsType, jsParams, jsContext);
+            CheckResult checkResult = null;
             for (int i = 0; i < jsResults.length(); i++) {
                 V8Object jsResult = jsResults.getObject(i);
+                int confidence = CheckResult.DEFAULT_CONFIDENCE_VALUE;
+                try {
+                    confidence = jsResult.getInteger("confidence");
+                } catch (Exception e) {
+                    //ignore
+                }
                 results.push(new CheckResult(
                         jsResult.getString("action"),
                         jsResult.getString("message"),
-                        jsResult.getString("name")
+                        jsResult.getString("name"),
+                        confidence
                 ));
             }
         } finally {
