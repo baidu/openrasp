@@ -47,7 +47,7 @@
         <!-- maxBurst: max log burst -->
         <!-- refill %refillAmount% available log token amount per %refillInterval% seconds -->
         <!--<filter class="com.fuxi.javaagent.messaging.BurstFilter">-->
-            <!--<param name="maxBurst" value="100000" />-->
+            <!--<param name="maxBurst" value="10000" />-->
             <!--<param name="refillAmount" value="10000" />-->
             <!--<param name="refillInterval" value="10" />-->
         <!--</filter>-->
@@ -64,6 +64,47 @@
             <!--<param name="ConversionPattern" value="%d %-5p [%t][%c] %m%n" />-->
         <!--</layout>-->
     <!--</appender>-->
+
+
+    <!--appender used to post alarm, only support alarm logger-->
+    <!-- Add to alarm logger as appender-ref like this: <appender-ref ref="ALARMHTTPAPPENDER" /> -->
+    <!--format of post json-->
+    <!--{-->
+        <!--"data": [-->
+           <!--{-->
+                <!--"attack_type": "xxe",-->
+                <!--"attack_source": "66.66.66.66",-->
+                <!--"plugin_name": "offical",-->
+                <!--"server_type": "Tomcat",-->
+                <!--...-->
+                <!--"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36"-->
+            <!--},-->
+            <!--...-->
+            <!--{-->
+                <!--"attack_type": "directory",-->
+                <!--"attack_source": "66.66.66.66",-->
+                <!--"plugin_name": "offical",-->
+                <!--"server_type": "Tomcat",-->
+                <!--...-->
+                <!--"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36"-->
+            <!--}-->
+        <!--]-->
+    <!--}-->
+    <!--Parameter Description-->
+    <!--url : the target address to receive the alarm-->
+    <!--connectionTimeout : the number of milliseconds this Connector will wait, after accepting a connection, for the request URI line to be presented.-->
+    <!--readTimeout : the timeout on waiting to read data.-->
+    <!--maxCacheSize : max size of cached alarm logging item-->
+    <!--cacheFlushTime : the time interval for post all the cached logging items-->
+    <!--Recommended to use with the BurstFilter-->
+    <!--<appender name="ALARMHTTPAPPENDER" class="com.fuxi.javaagent.messaging.AlarmHttpAppender">-->
+        <!--<param name="url" value="http://host:port/alarm"/>-->
+        <!--<param name="connectionTimeout" value="10000"/>-->
+        <!--<param name="readTimeout" value="10000"/>-->
+        <!--<param name="maxCacheSize" value="256"/>-->
+        <!--<param name="cacheFlushTime" value="60000"/>-->
+    <!--</appender>-->
+
 
 	<logger name="com.fuxi.javaagent.plugin.alarm" additivity="false">
         <level value="INFO" />
