@@ -32,6 +32,7 @@ package com.fuxi.javaagent;
 
 import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.exception.SecurityException;
+import com.fuxi.javaagent.hook.XXEHook;
 import com.fuxi.javaagent.plugin.CheckParameter;
 import com.fuxi.javaagent.plugin.PluginManager;
 import com.fuxi.javaagent.request.AbstractRequest;
@@ -220,6 +221,7 @@ public class HookHandler {
             requestCache.set(new HttpServletRequest(request));
             responseCache.set(new HttpServletResponse(response));
             responseCache.get().setHeader(OPEN_RASP_HEADER_KEY, OPEN_RASP_HEADER_VALUE);
+            XXEHook.resetLocalexpandedSystemIds();
             doCheck("request", EMPTY_MAP);
         }
     }
@@ -289,7 +291,8 @@ public class HookHandler {
      * @param expandedSystemId
      */
     public static void checkXXE(String expandedSystemId) {
-        if (expandedSystemId != null) {
+        if (expandedSystemId != null && !XXEHook.getLocalExpandedSystemIds().contains(expandedSystemId)) {
+            XXEHook.getLocalExpandedSystemIds().add(expandedSystemId);
             HashMap<String, Object> param = new HashMap<String, Object>();
             param.put("entity", expandedSystemId);
             doCheck("xxe", param);

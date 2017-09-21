@@ -33,6 +33,7 @@ package com.fuxi.javaagent.request;
 import java.io.ByteArrayOutputStream;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by zhuming01 on 6/23/17.
@@ -46,6 +47,7 @@ public abstract class AbstractRequest {
     protected Object inputStream = null;
     protected ByteArrayOutputStream bodyOutputStream = null;
     protected static final int maxBodySize = 4096;
+    protected String requestId;
 
     /**
      * constructor
@@ -63,6 +65,7 @@ public abstract class AbstractRequest {
      */
     public AbstractRequest(Object request) {
         this.request = request;
+        this.requestId = UUID.randomUUID().toString().replace("-", "");
     }
 
     /**
@@ -72,6 +75,15 @@ public abstract class AbstractRequest {
      */
     public void setRequest(Object request) {
         this.request = request;
+    }
+
+    /**
+     * 获取请求Id
+     *
+     * @return 请求Id
+     */
+    public String getRequestId() {
+        return requestId;
     }
 
     /**

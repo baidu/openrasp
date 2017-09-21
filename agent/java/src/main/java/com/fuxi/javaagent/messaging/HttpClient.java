@@ -55,7 +55,6 @@ public class HttpClient {
     public HttpClient() {}
 
     protected void request(String requestUrl, String attackInfoJson, int connectionTimeout, int readTimeout) {
-        System.out.println(requestUrl + "\n" + attackInfoJson + "\n" + connectionTimeout + readTimeout + "\n");
         HttpURLConnection httpURLConnection = null;
         try {
             URL url = new URL(requestUrl);

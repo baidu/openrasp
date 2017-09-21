@@ -98,6 +98,8 @@ public class AttackInfo {
         info.put("intercept_state", result.getResult());
 
         if (request != null) {
+            // 请求ID
+            info.put("request_id", request.getRequestId());
             // 攻击来源IP
             info.put("attack_source", request.getRemoteAddr());
             // 被攻击目标域名
