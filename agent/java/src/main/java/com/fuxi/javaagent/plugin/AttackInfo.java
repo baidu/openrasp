@@ -94,6 +94,8 @@ public class AttackInfo {
         info.put("plugin_name", result.getPluginName());
         // 插件消息
         info.put("plugin_message", result.getMessage());
+        // 插件置信度
+        info.put("plugin_confidence", result.getConfidence());
         // 是否拦截
         info.put("intercept_state", result.getResult());
 
@@ -116,7 +118,7 @@ public class AttackInfo {
             info.put("url", requestURL == null ? "" : (queryString != null ? requestURL + "?" + queryString : requestURL));
             // 请求体
             byte[] requestBody = request.getBody();
-            if(requestBody != null) {
+            if (requestBody != null) {
                 info.put("body", new String(requestBody));
             }
             // 被攻击PATH
@@ -125,7 +127,7 @@ public class AttackInfo {
             info.put("user_agent", request.getHeader("User-Agent"));
             // 攻击的 Referrer 头
             String referer = request.getHeader("Referer");
-            if(referer != null){
+            if (referer != null) {
                 info.put("referer", referer);
             }
         }

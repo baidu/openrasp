@@ -78,6 +78,15 @@ public abstract class AbstractRequest {
     }
 
     /**
+     * 获取请求实体
+     *
+     * @return 请求实体
+     */
+    public Object getRequest() {
+        return this.request;
+    }
+
+    /**
      * 获取请求Id
      *
      * @return 请求Id
@@ -213,6 +222,7 @@ public abstract class AbstractRequest {
 
     /**
      * 返回input stream
+     *
      * @return input stream
      */
     public Object getInputStream() {
@@ -221,6 +231,7 @@ public abstract class AbstractRequest {
 
     /**
      * 设置input stream
+     *
      * @param inputStream input stream
      */
     public void setInputStream(Object inputStream) {

@@ -30,6 +30,7 @@
 
 package com.fuxi.javaagent;
 
+import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.messaging.LogConfig;
 import com.fuxi.javaagent.plugin.PluginManager;
 import com.fuxi.javaagent.tool.JarFileHelper;
@@ -63,7 +64,7 @@ public class Agent {
     public static void premain(String agentArg, Instrumentation inst) {
         try {
             JarFileHelper.addJarToBootstrap(inst);
-            if (!LogConfig.completeLogConfig(JarFileHelper.getLocalJarParentPath())) {
+            if (!loadConfig()) {
                 return;
             }
             readVersion();
@@ -79,6 +80,18 @@ public class Agent {
             System.out.println("init agent fail:" + e.getMessage() + "\n"
                     + "The program continues to run.");
         }
+    }
+
+    /**
+     * 初始化配置
+     *
+     * @return 配置是否成功
+     */
+    private static boolean loadConfig() throws IOException {
+        String baseDir = Config.getConfig().getBaseDirectory();
+        LogConfig.completeLogConfig(baseDir);
+
+        return true;
     }
 
     /**

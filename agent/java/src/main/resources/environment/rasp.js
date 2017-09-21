@@ -26,11 +26,13 @@ const RASP = class {
             } catch (e) {
                 result.message = e.message;
                 result.action = e instanceof Attack ? 'block' : 'log';
+                result.confidence = 0;
             }
             result = typeof(result) === 'object' ? result : {};
             result.action = result.action || 'log';
             result.message = result.message || '';
             result.name = result.name || checkProcess.plugin.name;
+            result.confidence = result.confidence || 0;
             return result;
         });
         return results;

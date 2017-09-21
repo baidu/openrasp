@@ -58,6 +58,7 @@ public class Config {
     private static final String DEFAULT_REFLECTION_MAX_STACK = "100";
     private static final String DEFAULT_IGNORE = "";
     private static final String DEFAULT_ENFORCE_POLICY = "false";
+    private static final String DEFAULT_BLOCK_URL = "https://rasp.baidu.com/blocked";
     private static final String DEFAULT_REFLECT_MONITOR_METHOD = "java.lang.Runtime.getRuntime,"
             + "java.lang.Runtime.exec,"
             + "java.lang.ProcessBuilder.start";
@@ -75,6 +76,8 @@ public class Config {
     private boolean enforcePolicy;
     private String[] reflectionMonitorMethod;
     private int logMaxStackSize;
+
+    private String blockUrl;
 
     // Config是由bootstrap classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
@@ -106,9 +109,10 @@ public class Config {
         this.bodyMaxBytes = Long.parseLong(DEFAULT_BODYSIZE);
         this.ignoreHooks = new String[]{};
         this.enforcePolicy = Boolean.parseBoolean(DEFAULT_ENFORCE_POLICY);
-        this.reflectionMonitorMethod = DEFAULT_REFLECT_MONITOR_METHOD.replace(" ","").split(",");
+        this.reflectionMonitorMethod = DEFAULT_REFLECT_MONITOR_METHOD.replace(" ", "").split(",");
         this.reflectionMaxStack = Integer.parseInt(DEFAULT_REFLECTION_MAX_STACK);
         this.logMaxStackSize = Integer.parseInt(DEFAULT_LOG_STACK_SIZE);
+        this.blockUrl = DEFAULT_BLOCK_URL;
 
         try {
             input = new FileInputStream(new File(baseDirectory, "conf" + File.separator + "rasp.properties"));
@@ -119,10 +123,11 @@ public class Config {
             this.v8Timeout = Long.parseLong(properties.getProperty("v8.timeout.millis", DEFAULT_V8TIMEOUT));
             this.bodyMaxBytes = Long.parseLong(properties.getProperty("body.maxbytes", DEFAULT_BODYSIZE));
             this.enforcePolicy = Boolean.parseBoolean(properties.getProperty("security.enforce_policy", DEFAULT_ENFORCE_POLICY));
-            this.ignoreHooks = properties.getProperty("hooks.ignore", DEFAULT_IGNORE).replace(" ","").split(",");
-            this.reflectionMonitorMethod = properties.getProperty("reflection.monitor", DEFAULT_REFLECT_MONITOR_METHOD).replace(" ","").split(",");
+            this.ignoreHooks = properties.getProperty("hooks.ignore", DEFAULT_IGNORE).replace(" ", "").split(",");
+            this.reflectionMonitorMethod = properties.getProperty("reflection.monitor", DEFAULT_REFLECT_MONITOR_METHOD).replace(" ", "").split(",");
             this.reflectionMaxStack = Integer.parseInt(properties.getProperty("reflection.maxstack", DEFAULT_REFLECTION_MAX_STACK));
             this.logMaxStackSize = Integer.parseInt(properties.getProperty("log.maxstack", DEFAULT_LOG_STACK_SIZE));
+            this.blockUrl = properties.getProperty("block.url", DEFAULT_BLOCK_URL);
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find rasp.properties, using default settings: " + e.getMessage());
         } catch (IOException e) {
@@ -148,6 +153,7 @@ public class Config {
         LOGGER.info("hooks.ignore: " + Arrays.toString(this.ignoreHooks));
         LOGGER.info("reflection.monitor: " + Arrays.toString(this.reflectionMonitorMethod));
         LOGGER.info("reflection.maxstack: " + reflectionMaxStack);
+        LOGGER.info("block.url: " + blockUrl);
     }
 
     private static class ConfigHolder {
@@ -239,6 +245,7 @@ public class Config {
 
     /**
      * 设置反射监控的方法
+     *
      * @param reflectionMonitorMethod 监控的方法
      */
     public void setReflectionMonitorMethod(String[] reflectionMonitorMethod) {
@@ -247,6 +254,7 @@ public class Config {
 
     /**
      * 反射hook点传递给插件栈信息的最大深度
+     *
      * @return 栈信息最大深度
      */
     public int getReflectionMaxStack() {
@@ -255,6 +263,7 @@ public class Config {
 
     /**
      * 设置反射hook点传递给插件栈信息的最大深度
+     *
      * @param reflectionMaxStack 栈信息最大深度
      */
     public void setReflectionMaxStack(int reflectionMaxStack) {
@@ -268,4 +277,23 @@ public class Config {
     public void setLogMaxStackSize(int logMaxStackSize) {
         this.logMaxStackSize = logMaxStackSize;
     }
+
+    /**
+     * 获取拦截自定义页面的url
+     *
+     * @return 拦截页面url
+     */
+    public String getBlockUrl() {
+        return blockUrl;
+    }
+
+    /**
+     * 设置拦截页面url
+     *
+     * @param blockUrl 拦截页面url
+     */
+    public void setBlockUrl(String blockUrl) {
+        this.blockUrl = blockUrl;
+    }
+
 }
