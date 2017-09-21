@@ -10,10 +10,10 @@ var plugin = new RASP('offical')
 
 var clean = {
     action: 'ignore',
-    message: '无风险'
+    message: '无风险',
+    confidence: 0
 }
 
-var xssRegex = /<script|script>|<iframe|iframe>|javascript:(?!(?:history\.(?:go|back)|void\(0\)))/i
 var nameRegex = /\.(jspx?|php[345]?|phtml)\.?$/i
 var ntfsRegex = /::\$(DATA|INDEX)$/i
 var uaRegex = /nessus|sqlmap|nikto|havij|netsparker/i
@@ -54,14 +54,16 @@ plugin.register('directory', function (params) {
     if (path.indexOf('/../../../') !== -1 || path.indexOf('\\..\\..\\..\\') !== -1) {
         return {
             action: 'block',
-            message: '目录遍历攻击'
+            message: '目录遍历攻击',
+            confidence: 90
         }
     }
 
     if (sysRegex.test(path)) {
         return {
             action: 'block',
-            message: '读取系统目录'
+            message: '读取系统目录',
+            confidence: 100
         }
     }
     return clean
@@ -72,20 +74,29 @@ plugin.register('readFile', function (params) {
     if (path.indexOf('/../../../') !== -1 || path.indexOf('\\..\\..\\..\\') !== -1) {
         return {
             action: 'block',
-            message: '目录遍历攻击'
+            message: '目录遍历攻击',
+            confidence: 90
         }
     }
 
     if (sysRegex.test(params.realpath)) {
         return {
             action: 'block',
-            message: '读取系统文件'
+            message: '读取系统文件',
+            confidence: 100
         }
     }
     return clean
 })
 
 plugin.register('writeFile', function (params) {
+    if (nameRegex.test(params.filename) || ntfsRegex.test(params.filename)) {
+        return {
+            action: 'block',
+            message: '尝试上传脚本文件: ' + params.filename,
+            confidence: 90
+        }
+    }
     return clean
 })
 
@@ -93,7 +104,8 @@ plugin.register('fileUpload', function (params) {
     if (nameRegex.test(params.filename) || ntfsRegex.test(params.filename)) {
         return {
             action: 'block',
-            message: '尝试上传脚本文件: ' + params.filename
+            message: '尝试上传脚本文件: ' + params.filename,
+            confidence: 90
         }
     }
     return clean
@@ -103,7 +115,8 @@ plugin.register('sql', function (params, context) {
     if (sqlRegex.test(params.query)) {
         return {
             action: 'block',
-            message: 'SQL 注入攻击'
+            message: 'SQL 注入攻击',
+            confidence: 100
         }
     }
     return clean
@@ -112,7 +125,8 @@ plugin.register('sql', function (params, context) {
 plugin.register('command', function (params) {
     return {
         action: 'block',
-        message: '尝试执行命令'
+        message: '尝试执行命令',
+        confidence: 100
     }
 })
 
@@ -127,14 +141,16 @@ plugin.register('xxe', function (params) {
         if (protocol === 'gopher') {
             return {
                 action: 'block',
-                message: 'SSRF 攻击（gopher 协议)'
+                message: 'SSRF 攻击（gopher 协议)',
+                confidence: 100
             }
         }
 
         if (protocol === 'file') {
             return {
                 action: 'log',
-                message: '尝试读取外部实体 (file 协议)'
+                message: '尝试读取外部实体 (file 协议)',
+                confidence: 90
             }
         }
     }
@@ -147,7 +163,8 @@ plugin.register('ognl', function (params) {
         if (ognlExpression.indexOf(ognlPayloads[index]) > -1) {
             return {
                 action: 'block',
-                message: '尝试ognl远程命令执行'
+                message: '尝试ognl远程命令执行',
+                confidence: 100
             }
         }
 
@@ -161,7 +178,8 @@ plugin.register('deserialization', function (params) {
         if (clazz === deserializationInvalidClazz[index]) {
             return {
                 action: 'block',
-                message: '尝试反序列化攻击'
+                message: '尝试反序列化攻击',
+                confidence: 100
             }
         }
     }
@@ -184,7 +202,8 @@ plugin.register('reflection', function(params) {
 
     return {
         action:  'block',
-        message: title + ':' + params.clazz + '.' + params.method
+        message: title + ':' + params.clazz + '.' + params.method,
+        confidence: 100
     }
 })
 
