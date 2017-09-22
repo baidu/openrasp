@@ -14,11 +14,12 @@ var clean = {
     confidence: 0
 }
 
+var xssRegex  = /<script|script>|<iframe|iframe>|javascript:(?!(?:history\.(?:go|back)|void\(0\)))/i
 var nameRegex = /\.(jspx?|php[345]?|phtml)\.?$/i
 var ntfsRegex = /::\$(DATA|INDEX)$/i
-var uaRegex = /nessus|sqlmap|nikto|havij|netsparker/i
-var sqlRegex = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
-var sysRegex = /^\/(etc|proc|sys|var\/log)(\/|$)/
+var uaRegex   = /nessus|sqlmap|nikto|havij|netsparker/i
+var sqlRegex  = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
+var sysRegex  = /^\/(etc|proc|sys|var\/log)(\/|$)/
 var ognlPayloads = [
     'ognl.OgnlContext',
     'ognl.TypeConverter',
@@ -49,7 +50,7 @@ function canonicalPath (path) {
     return path.replace(/\/\.\//g, '/').replace(/\/+/g, '/')
 }
 
-plugin.register('directory', function (params) {
+plugin.register('directory', function (params, context) {
     var path = canonicalPath(params.path)
     if (path.indexOf('/../../../') !== -1 || path.indexOf('\\..\\..\\..\\') !== -1) {
         return {
@@ -69,7 +70,7 @@ plugin.register('directory', function (params) {
     return clean
 })
 
-plugin.register('readFile', function (params) {
+plugin.register('readFile', function (params, context) {
     var path = canonicalPath(params.path)
     if (path.indexOf('/../../../') !== -1 || path.indexOf('\\..\\..\\..\\') !== -1) {
         return {
@@ -89,7 +90,7 @@ plugin.register('readFile', function (params) {
     return clean
 })
 
-plugin.register('writeFile', function (params) {
+plugin.register('writeFile', function (params, context) {
     if (nameRegex.test(params.filename) || ntfsRegex.test(params.filename)) {
         return {
             action: 'block',
@@ -100,7 +101,7 @@ plugin.register('writeFile', function (params) {
     return clean
 })
 
-plugin.register('fileUpload', function (params) {
+plugin.register('fileUpload', function (params, context) {
     if (nameRegex.test(params.filename) || ntfsRegex.test(params.filename)) {
         return {
             action: 'block',
@@ -122,7 +123,7 @@ plugin.register('sql', function (params, context) {
     return clean
 })
 
-plugin.register('command', function (params) {
+plugin.register('command', function (params, context) {
     return {
         action: 'block',
         message: '尝试执行命令',
@@ -130,7 +131,7 @@ plugin.register('command', function (params) {
     }
 })
 
-plugin.register('xxe', function (params) {
+plugin.register('xxe', function (params, context) {
     var items = params.entity.split('://')
 
     if (items.length >= 2) {
@@ -157,7 +158,7 @@ plugin.register('xxe', function (params) {
     return clean
 })
 
-plugin.register('ognl', function (params) {
+plugin.register('ognl', function (params, context) {
     var ognlExpression = params.expression
     for (var index in ognlPayloads) {
         if (ognlExpression.indexOf(ognlPayloads[index]) > -1) {
@@ -172,7 +173,7 @@ plugin.register('ognl', function (params) {
     return clean
 })
 
-plugin.register('deserialization', function (params) {
+plugin.register('deserialization', function (params, context) {
     var clazz = params.clazz
     for (var index in deserializationInvalidClazz) {
         if (clazz === deserializationInvalidClazz[index]) {
@@ -186,7 +187,7 @@ plugin.register('deserialization', function (params) {
     return clean
 })
 
-plugin.register('reflection', function(params) {
+plugin.register('reflection', function(params, context) {
     var title = '异常的执行流'
     var known = {
         'com.thoughtworks.xstream.XStream.unmarshal': 'xstream 反序列化攻击',
@@ -204,6 +205,34 @@ plugin.register('reflection', function(params) {
         action:  'block',
         message: title + ':' + params.clazz + '.' + params.method,
         confidence: 100
+    }
+})
+
+plugin.register('request', function(params, context) {
+    // xss 检测 DEMO
+    var parameters = context.parameter;
+    var message    = '';
+
+    Object.keys(parameters).some(function (name) {
+        parameters[name].some(function (value) {
+            if (xssRegex.test(value)) {
+                message = 'XSS 攻击: ' + value;
+                return true;
+            }
+        });
+
+        if (message.length) {
+            return true;
+        }
+    });
+
+    if (! message.length) {
+        return clean;
+    }
+
+    return {
+        action: 'block',
+        message: message
     }
 })
 

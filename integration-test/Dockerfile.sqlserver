@@ -1,0 +1,4 @@
+FROM microsoft/mssql-server-linux
+LABEL maintainer="lanyuhang@baidu.com"
+
+ENV ACCEPT_EULA=Y SA_PASSWORD=yourStrong(!)Password
