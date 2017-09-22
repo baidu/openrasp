@@ -206,7 +206,7 @@ plugin.register('request', function(params, context) {
         }
     });
 
-    if (message.length) {
+    if (! message.length) {
         return clean;
     }
 
