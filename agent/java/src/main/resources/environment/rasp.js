@@ -24,9 +24,14 @@ const RASP = class {
             try {
                 result = checkProcess.func(checkParams, checkContext);
             } catch (e) {
-                result.message = e.message;
-                result.action = e instanceof Attack ? 'block' : 'log';
-                result.confidence = 0;
+                if (e instanceof Attack) {
+                    result.action = 'block';
+                    result.message = e.message;
+                } else {
+                    console.log(e.stack);
+                    result.action = 'ignore';
+                    result.message = '';
+                }
             }
             result = typeof(result) === 'object' ? result : {};
             result.action = result.action || 'log';

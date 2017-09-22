@@ -1,0 +1,11 @@
+FROM tutum/jboss:as4
+LABEL maintainer="lanyuhang@baidu.com"
+ENV HOME=/jboss-4.2.3.GA
+COPY ./app.war ${HOME}/server/default/deploy/
+
+COPY ./rasp/ ${HOME}/rasp/
+
+RUN chmod 777 ${HOME}/rasp \
+    && echo "JAVA_OPTS=\"\$JAVA_OPTS -javaagent:${HOME}/rasp/rasp.jar -Dlog4j.rasp.configuration=file://${HOME}/rasp/conf/rasp-log4j.xml\"" >> ${HOME}/bin/run.conf
+
+EXPOSE 8080

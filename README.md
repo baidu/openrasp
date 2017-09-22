@@ -1,4 +1,4 @@
-# OpenRASP
+# OpenRASP [![Build Status](https://www.travis-ci.org/baidu/openrasp.svg?branch=master)](https://www.travis-ci.org/baidu/openrasp)
 
 ### Introduction
 

@@ -1,0 +1,20 @@
+FROM playniuniu/weblogic-base:12.2.1.2
+LABEL maintainer="lanyuhang@baidu.com"
+ENV HOME=/home/oracle/domains/base_domain
+
+ADD ./weblogic12-jre8_base_domain.tar.gz /home/oracle/domains/
+
+COPY ./app.war ${HOME}/autodeploy/
+
+USER root
+COPY ./rasp/ ${HOME}/rasp/
+
+RUN chmod -R 777 ${HOME}/rasp/ \
+    && echo "JAVA_OPTIONS=\"\${JAVA_OPTIONS} -javaagent:${HOME}/rasp/rasp.jar\"" >> ${HOME}/bin/setDomainEnv.sh \
+    && echo "JAVA_OPTIONS=\"\${JAVA_OPTIONS} -Dlog4j.rasp.configuration=file://${HOME}/rasp/conf/rasp-log4j.xml\"" >> ${HOME}/bin/setDomainEnv.sh \
+    && echo "export JAVA_OPTIONS" >> ${HOME}/bin/setDomainEnv.sh
+USER oracle
+
+EXPOSE 8080
+
+CMD ${HOME}/startWebLogic.sh

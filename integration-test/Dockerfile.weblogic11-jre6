@@ -1,0 +1,18 @@
+FROM fengzhou/docker-weblogic-1036
+LABEL maintainer="lanyuhang@baidu.com"
+ENV HOME=/opt/bea/wls1036/user_projects/domains/base_domain
+
+ADD ./weblogic11-jre6_base_domain.tar.gz /opt/bea/wls1036/user_projects/domains/
+
+COPY ./app.war ${HOME}/autodeploy/
+
+COPY ./rasp/ ${HOME}/rasp/
+
+RUN chmod 777 ${HOME}/rasp/ \
+    && echo "JAVA_OPTIONS=\"\${JAVA_OPTIONS} -javaagent:${HOME}/rasp/rasp.jar\"" >> ${HOME}/bin/setDomainEnv.sh \
+    && echo "JAVA_OPTIONS=\"\${JAVA_OPTIONS} -Dlog4j.rasp.configuration=file://${HOME}/rasp/conf/rasp-log4j.xml\"" >> ${HOME}/bin/setDomainEnv.sh \
+    && echo "export JAVA_OPTIONS" >> ${HOME}/bin/setDomainEnv.sh
+
+EXPOSE 8080
+
+CMD ${HOME}/startWebLogic.sh
