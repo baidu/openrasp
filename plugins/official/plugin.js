@@ -188,7 +188,7 @@ plugin.register('reflection', function(params) {
     }
 })
 
-plugin.register('request', function(_, context) {
+plugin.register('request', function(params, context) {
     // xss 检测 DEMO
     var parameters = context.parameter;
     var message    = '';
