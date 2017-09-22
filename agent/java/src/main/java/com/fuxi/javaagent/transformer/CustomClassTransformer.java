@@ -37,6 +37,7 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.HashSet;
+
 import org.apache.log4j.Logger;
 
 /**
@@ -67,6 +68,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new TomcatStartupHook());
         addHook(new ApplicationFilterHook());
         addHook(new ReflectionHook());
+        addHook(new JettyServerTransformer());
     }
 
     private void addHook(AbstractClassHook hook) {
