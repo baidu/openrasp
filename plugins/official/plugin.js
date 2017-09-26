@@ -13,12 +13,12 @@ var clean = {
     message: '无风险'
 }
 
-var xssRegex = /<script|script>|<iframe|iframe>|javascript:(?!(?:history\.(?:go|back)|void\(0\)))/i
+var xssRegex  = /<script|script>|<iframe|iframe>|javascript:(?!(?:history\.(?:go|back)|void\(0\)))/i
 var nameRegex = /\.(jspx?|php[345]?|phtml)\.?$/i
 var ntfsRegex = /::\$(DATA|INDEX)$/i
-var uaRegex = /nessus|sqlmap|nikto|havij|netsparker/i
-var sqlRegex = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
-var sysRegex = /^\/(etc|proc|sys|var\/log)(\/|$)/
+var uaRegex   = /nessus|sqlmap|nikto|havij|netsparker/i
+var sqlRegex  = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
+var sysRegex  = /^\/(etc|proc|sys|var\/log)(\/|$)/
 var ognlPayloads = [
     'ognl.OgnlContext',
     'ognl.TypeConverter',
@@ -185,6 +185,34 @@ plugin.register('reflection', function(params) {
     return {
         action:  'block',
         message: title + ':' + params.clazz + '.' + params.method
+    }
+})
+
+plugin.register('request', function(params, context) {
+    // xss 检测 DEMO
+    var parameters = context.parameter;
+    var message    = '';
+
+    Object.keys(parameters).some(function (name) {
+        parameters[name].some(function (value) {
+            if (xssRegex.test(value)) {
+                message = 'XSS 攻击: ' + value;
+                return true;
+            }
+        });
+
+        if (message.length) {
+            return true;
+        }
+    });
+
+    if (! message.length) {
+        return clean;
+    }
+
+    return {
+        action: 'block',
+        message: message
     }
 })
 

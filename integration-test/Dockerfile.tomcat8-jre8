@@ -1,0 +1,10 @@
+FROM tomcat:8
+LABEL maintainer="lanyuhang@baidu.com"
+ENV HOME=/usr/local/tomcat
+COPY ./app.war ${HOME}/webapps
+
+COPY ./rasp/ ${HOME}/rasp/
+
+ENV JAVA_OPTS "-javaagent:${HOME}/rasp/rasp.jar -Dlog4j.rasp.configuration=file://${HOME}/rasp/conf/rasp-log4j.xml ${JAVA_OPTS}"
+
+EXPOSE 8080

@@ -1,0 +1,4 @@
+FROM wnameless/oracle-xe-11g
+LABEL maintainer="lanyuhang@baidu.com"
+
+ENV ORACLE_ALLOW_REMOTE=true
