@@ -69,6 +69,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new ApplicationFilterHook());
         addHook(new ReflectionHook());
         addHook(new JettyServerTransformer());
+        addHook(new JettyHttpInputHook());
     }
 
     private void addHook(AbstractClassHook hook) {
