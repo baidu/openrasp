@@ -41,10 +41,11 @@ import com.fuxi.javaagent.tool.Reflection;
 public class HttpServletResponse {
 
     public static final int BLOCK_STATUS_CODE = 400;
-    private static final String BLOCK_INSERT_SCRIPT = "</script><script>location.href=\"" +
-            "https://rasp.baidu.com/blocked\"</script>";
     private static final String CONTENT_TYPE_HEADER_KEY = "Content-Type";
+    private static final String TRANSFER_ENCODING_HEADER_KEY = "Transfer-Encoding";
     private static final String CONTENT_TYPE_HTML_VALUE = "text/html";
+    private static final String TRANSFER_ENCODING_HEADER_VALUE = "chunked";
+
     private Object response;
 
     /**
@@ -84,6 +85,7 @@ public class HttpServletResponse {
         if (response != null) {
             try {
                 setHeader(CONTENT_TYPE_HEADER_KEY, CONTENT_TYPE_HTML_VALUE);
+                setHeader(TRANSFER_ENCODING_HEADER_KEY, TRANSFER_ENCODING_HEADER_VALUE);
                 Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, BLOCK_STATUS_CODE);
             } catch (Exception e) {
                 //ignore

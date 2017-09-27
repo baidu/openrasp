@@ -30,6 +30,7 @@
 
 package com.fuxi.javaagent.tool;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -79,5 +80,18 @@ public class Reflection {
     public static String invokeStringMethod(Object object, String methodName, Class[] paramTypes, Object... parameters) {
         Object ret = invokeMethod(object, methodName, paramTypes, parameters);
         return ret != null ? (String) ret : null;
+    }
+
+    /**
+     * 反射获取对象的字段包括私有的
+     *
+     * @param object    被提取字段的对象
+     * @param fieldName 字段名称
+     * @return 字段的值
+     */
+    public static Object getField(Object object, String fieldName) throws NoSuchFieldException, IllegalAccessException {
+        Field field = object.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        return field.get(object);
     }
 }

@@ -210,8 +210,6 @@
                                 <requireProperty>
                                     <property>profile-id</property>
                                     <message>必须有-P参数来指定不同的系统版本，且-P参数值必须是[linux64, win64, win32]中的一个。</message>
-                                    <regex>linux64|win64|win32</regex>
-                                    <regexMessage>The -P parameter must be in [linux64, win64, win32].</regexMessage>
                                 </requireProperty>
                             </rules>
                             <fail>true</fail>

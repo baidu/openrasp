@@ -32,6 +32,7 @@ package com.fuxi.javaagent;
 
 import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.exception.SecurityException;
+import com.fuxi.javaagent.hook.SQLStatementHook;
 import com.fuxi.javaagent.hook.XXEHook;
 import com.fuxi.javaagent.plugin.CheckParameter;
 import com.fuxi.javaagent.plugin.PluginManager;
@@ -178,9 +179,13 @@ public class HookHandler {
      *
      * @param stmt sql语句
      */
-    public static void checkSQL(String server, String stmt) {
+    public static void checkSQL(String server, Object statement, String stmt) {
         if (stmt != null && !stmt.isEmpty()) {
             Map<String, Object> params = new HashMap<String, Object>();
+            String connectionId = SQLStatementHook.getSqlConnectionId(server, statement);
+            if (connectionId != null) {
+                params.put(server + "_connection_id", connectionId);
+            }
             params.put("server", server);
             params.put("query", stmt);
 
