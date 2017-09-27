@@ -38,38 +38,23 @@ import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
 /**
- * Created by zhuming01 on 7/5/17.
- * All rights reserved
+ * Created by tyy on 9/25/17.
+ *
+ * 获取 jetty 请求 body 的 hook 点
  */
-public class CoyoteInputStreamHook extends AbstractClassHook {
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#getType()
-     */
+public class JettyHttpInputHook extends AbstractClassHook {
+    @Override
+    public boolean isClassMatched(String className) {
+        return className.equals("org/eclipse/jetty/server/HttpInput");
+    }
+
     @Override
     public String getType() {
         return "body";
     }
 
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#isClassMatched(String)
-     */
     @Override
-    public boolean isClassMatched(String className) {
-        return "org/apache/catalina/connector/CoyoteInputStream".equals(className);
-    }
-
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#hookMethod(int, String, String, String, String[], MethodVisitor) (String)
-     */
-    @Override
-    protected MethodVisitor hookMethod(int access, final String name, final String desc, String signature,
-                                       String[] exceptions, MethodVisitor mv) {
+    protected MethodVisitor hookMethod(int access, String name, final String desc, String signature, String[] exceptions, MethodVisitor mv) {
         if (name.equals("read")) {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
@@ -80,12 +65,6 @@ public class CoyoteInputStreamHook extends AbstractClassHook {
                             loadThis();
                             invokeStatic(Type.getType(HookHandler.class),
                                     new Method("onInputStreamRead", "(ILjava/lang/Object;)V"));
-                        } else if (desc.equals("([B)I")) {
-                            dup();
-                            loadThis();
-                            loadArg(0);
-                            invokeStatic(Type.getType(HookHandler.class),
-                                    new Method("onInputStreamRead", "(ILjava/lang/Object;[B)V"));
                         } else if (desc.equals("([BII)I")) {
                             dup();
                             loadThis();
