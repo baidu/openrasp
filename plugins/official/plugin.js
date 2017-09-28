@@ -83,7 +83,7 @@ var deserializationInvalidClazz = [
 ]
 
 function canonicalPath (path) {
-    return path.replace(/\/\.\//g, '/').replace(/\/+/g, '/')
+    return path.replace(/\/\.\//g, '/').replace(/\/{2,}/g, '/')
 }
 
 plugin.register('directory', function (params, context) {
