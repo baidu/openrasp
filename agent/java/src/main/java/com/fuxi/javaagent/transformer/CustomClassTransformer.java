@@ -30,14 +30,14 @@
 
 package com.fuxi.javaagent.transformer;
 
-import com.fuxi.javaagent.hook.*;
 import com.fuxi.javaagent.config.Config;
+import com.fuxi.javaagent.hook.*;
+import org.apache.log4j.Logger;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.HashSet;
-import org.apache.log4j.Logger;
 
 /**
  * 自定义类字节码转换器，用于hook类德 方法
@@ -67,6 +67,8 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new TomcatStartupHook());
         addHook(new ApplicationFilterHook());
         addHook(new ReflectionHook());
+        addHook(new JettyServerTransformer());
+        addHook(new JettyHttpInputHook());
     }
 
     private void addHook(AbstractClassHook hook) {

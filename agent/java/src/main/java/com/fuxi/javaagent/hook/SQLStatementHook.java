@@ -1,6 +1,7 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.tool.Reflection;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -14,6 +15,12 @@ import java.util.Arrays;
  * All rights reserved
  */
 public class SQLStatementHook extends AbstractClassHook {
+    public static final String SQL_TYPE_MYSQL = "mysql";
+    public static final String SQL_TYPE_SQLITE = "sqlite";
+    public static final String SQL_TYPE_ORACLE = "oracle";
+    public static final String SQL_TYPE_SQLSERVER = "sqlserver";
+    public static final String SQL_TYPE_PGSQL = "pgsql";
+
     private String type;
     private String[] exceptions;
 
@@ -32,29 +39,29 @@ public class SQLStatementHook extends AbstractClassHook {
         /* MySQL */
         if ("com/mysql/jdbc/StatementImpl".equals(className)
                 || "com/mysql/cj/jdbc/StatementImpl".equals(className)) {
-            this.type = "mysql";
+            this.type = SQL_TYPE_MYSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
 
         /* SQLite */
-        if ("org/sqlite/Stmt".equals(className) 
+        if ("org/sqlite/Stmt".equals(className)
                 || "org/sqlite/jdbc3/JDBC3Statement".equals(className)) {
-            this.type = "sqlite";
+            this.type = SQL_TYPE_SQLITE;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
 
         /* Oracle */
         if ("oracle/jdbc/driver/OracleStatement".equals(className)) {
-            this.type = "oracle";
+            this.type = SQL_TYPE_ORACLE;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
 
         /* SQL Server */
         if ("com/microsoft/sqlserver/jdbc/SQLServerStatement".equals(className)) {
-            this.type = "sqlserver";
+            this.type = SQL_TYPE_SQLSERVER;
             this.exceptions = new String[]{"com/microsoft/sqlserver/jdbc/SQLServerException"};
             return true;
         }
@@ -67,7 +74,7 @@ public class SQLStatementHook extends AbstractClassHook {
                 || "org/postgresql/jdbc3/AbstractJdbc3Statement".equals(className)
                 || "org/postgresql/jdbc3g/AbstractJdbc3gStatement".equals(className)
                 || "org/postgresql/jdbc4/AbstractJdbc4Statement".equals(className)) {
-            this.type = "pgsql";
+            this.type = SQL_TYPE_PGSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
@@ -106,10 +113,30 @@ public class SQLStatementHook extends AbstractClassHook {
             @Override
             protected void onMethodEnter() {
                 push(type);
+                loadThis();
                 loadArg(0);
                 invokeStatic(Type.getType(HookHandler.class),
-                        new Method("checkSQL", "(Ljava/lang/String;Ljava/lang/String;)V"));
+                        new Method("checkSQL", "(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/String;)V"));
             }
         } : mv;
     }
+
+    public static String getSqlConnectionId(String type, Object statement) {
+        String id = null;
+        try {
+            if (type.equals(SQLStatementHook.SQL_TYPE_MYSQL)) {
+                id = Reflection.getField(statement, "connectionId").toString();
+            } else if (type.equals(SQLStatementHook.SQL_TYPE_ORACLE)) {
+                Object connection = Reflection.getField(statement, "connection");
+                id = Reflection.getField(connection, "ociConnectionPoolConnID").toString();
+            } else if (type.equals(SQLStatementHook.SQL_TYPE_SQLSERVER)) {
+                Object connection = Reflection.invokeMethod(statement, "getConnection", new Class[]{});
+                id = Reflection.getField(connection, "clientConnectionId").toString();
+            }
+            return id;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 }
