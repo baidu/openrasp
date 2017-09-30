@@ -36,7 +36,8 @@ import org.apache.log4j.Logger;
 import org.mozilla.javascript.*;
 
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by lanyuhang on 2017/9/25.

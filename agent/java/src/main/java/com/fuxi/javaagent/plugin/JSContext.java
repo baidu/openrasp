@@ -30,7 +30,6 @@
 
 package com.fuxi.javaagent.plugin;
 
-import com.sun.javafx.stage.FocusUngrabEvent;
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;

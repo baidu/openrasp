@@ -31,7 +31,10 @@
 package com.fuxi.javaagent.plugin;
 
 import com.baidu.rasp.TokenGenerator;
-import org.mozilla.javascript.*;
+import org.mozilla.javascript.BaseFunction;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.NativeArray;
+import org.mozilla.javascript.Scriptable;
 
 public class JSTokenizeSql extends BaseFunction {
     @Override
