@@ -260,4 +260,26 @@ public final class HttpServletRequest extends AbstractRequest {
         Matcher m = PATTERN.matcher(serverInfo);
         return m.find() ? m.group(0) : "";
     }
+
+    /**
+     * 增加session条目
+     *
+     * @param key 键
+     * @param value 值
+     */
+    public void setSessionAttribute(String key, String value) {
+        Object session = Reflection.invokeMethod(request, "getSession", EMPTY_CLASS);
+        Reflection.invokeMethod(session, "setAttribute", new Class[]{String.class, Object.class}, key, value);
+    }
+
+    /**
+     * 获取指定键对应session
+     *
+     * @param key 键
+     */
+    public Object getSessionAttribute(String key) {
+        Object session = Reflection.invokeMethod(request, "getSession", EMPTY_CLASS);
+        Object value = Reflection.invokeMethod(session, "getAttribute", new Class[]{String.class}, key);
+        return value;
+    }
 }
