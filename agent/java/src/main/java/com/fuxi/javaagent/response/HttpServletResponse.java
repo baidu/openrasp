@@ -117,6 +117,40 @@ public class HttpServletResponse {
     }
 
     /**
+     * 清除所有 body buffer 缓存
+     *
+     * @return 是否成功
+     */
+    public boolean resetBuffer() {
+        if (response != null) {
+            try {
+                Reflection.invokeMethod(response, "resetBuffer", new Class[]{});
+            } catch (Exception e) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 清除所有 buffer 缓存
+     *
+     * @return 是否成功
+     */
+    public boolean reset() {
+        if (response != null) {
+            try {
+                Reflection.invokeMethod(response, "reset", new Class[]{});
+            } catch (Exception e) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * 返回异常信息
      */
     public void sendError() {
@@ -132,6 +166,7 @@ public class HttpServletResponse {
                 }
                 String script = "</script><script>location.href=\"" + blockUrl + "\"</script>";
 
+                resetBuffer();
                 if (getHeader(CONTENT_LENGTH_HEADER_KEY) != null) {
                     setIntHeader(CONTENT_LENGTH_HEADER_KEY, script.getBytes().length);
                 }
