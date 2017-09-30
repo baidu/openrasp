@@ -1,20 +1,20 @@
 /**
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
- *
+ * <p>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * <p>
  * 1. Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- *
+ * <p>
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- *
+ * <p>
  * 3. Neither the name of the copyright holder nor the names of its contributors
  * may be used to endorse or promote products derived from this software without
  * specific prior written permission.
- *
+ * <p>
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -42,6 +42,7 @@ public class HttpServletResponse {
 
     public static final int BLOCK_STATUS_CODE = 400;
     private static final String CONTENT_TYPE_HEADER_KEY = "Content-Type";
+    private static final String CONTENT_LENGTH_HEADER_KEY = "Content-Length";
     private static final String TRANSFER_ENCODING_HEADER_KEY = "Transfer-Encoding";
     private static final String CONTENT_TYPE_HTML_VALUE = "text/html";
     private static final String TRANSFER_ENCODING_HEADER_VALUE = "chunked";
@@ -67,7 +68,7 @@ public class HttpServletResponse {
     }
 
     /**
-     * 设置响应头
+     * 设置响应头,覆盖原值
      *
      * @param key   响应头名称
      * @param value 响应头值
@@ -79,35 +80,75 @@ public class HttpServletResponse {
     }
 
     /**
+     * 设置数字响应头,覆盖原值
+     *
+     * @param key   响应头名称
+     * @param value 响应头值
+     */
+    public void setIntHeader(String key, int value) {
+        if (response != null) {
+            Reflection.invokeMethod(response, "setIntHeader", new Class[]{String.class, int.class}, key, value);
+        }
+    }
+
+    /**
+     * 设置响应头，不覆盖
+     *
+     * @param key   响应头名称
+     * @param value 响应头值
+     */
+    public void addHeader(String key, String value) {
+        if (response != null) {
+            Reflection.invokeMethod(response, "addHeader", new Class[]{String.class, String.class}, key, value);
+        }
+    }
+
+    /**
+     * 获取响应头
+     *
+     * @param key 响应头名称
+     * @return 响应头值值
+     */
+    public Object getHeader(String key) {
+        if (response != null) {
+            return Reflection.invokeMethod(response, "getHeader", new Class[]{String.class}, key);
+        }
+        return null;
+    }
+
+    /**
      * 返回异常信息
      */
     public void sendError() {
         if (response != null) {
             try {
                 setHeader(CONTENT_TYPE_HEADER_KEY, CONTENT_TYPE_HTML_VALUE);
-                setHeader(TRANSFER_ENCODING_HEADER_KEY, TRANSFER_ENCODING_HEADER_VALUE);
                 Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, BLOCK_STATUS_CODE);
+
+                String blockUrl = Config.getConfig().getBlockUrl();
+                if (!blockUrl.contains("?")) {
+                    String blockParam = "?request_id=" + HookHandler.requestCache.get().getRequestId();
+                    blockUrl += blockParam;
+                }
+                String script = "</script><script>location.href=\"" + blockUrl + "\"</script>";
+
+                if (getHeader(CONTENT_LENGTH_HEADER_KEY) != null) {
+                    setIntHeader(CONTENT_LENGTH_HEADER_KEY, script.getBytes().length);
+                }
+                sendErrorScript(script);
             } catch (Exception e) {
                 //ignore
             }
-            sendErrorScript(response);
         }
     }
 
     /**
      * 发送自定义错误处理脚本
      */
-    private void sendErrorScript(Object response) {
-        String blockUrl = Config.getConfig().getBlockUrl();
-        if (!blockUrl.contains("?")) {
-            String blockParam = "?request_id=" + HookHandler.requestCache.get().getRequestId();
-            blockUrl += blockParam;
-        }
-        String script = "</script><script>location.href=\"" + blockUrl + "\"</script>";
+    private void sendErrorScript(String script) {
         Object printer = Reflection.invokeMethod(response, "getWriter", new Class[]{});
         Reflection.invokeMethod(printer, "print", new Class[]{String.class}, script);
         Reflection.invokeMethod(printer, "flush", new Class[]{});
-        Reflection.invokeMethod(response, "flushBuffer", new Class[]{});
         Reflection.invokeMethod(printer, "close", new Class[]{});
     }
 
