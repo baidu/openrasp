@@ -1,20 +1,20 @@
 /**
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
- *
+ * <p>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * <p>
  * 1. Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- *
+ * <p>
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- *
+ * <p>
  * 3. Neither the name of the copyright holder nor the names of its contributors
  * may be used to endorse or promote products derived from this software without
  * specific prior written permission.
- *
+ * <p>
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -32,22 +32,17 @@ package com.fuxi.javaagent.plugin;
 
 import com.fuxi.javaagent.HookHandler;
 import com.fuxi.javaagent.config.Config;
-import com.fuxi.javaagent.plugin.jsplugin.JSPlugin;
 import com.fuxi.javaagent.tool.filemonitor.FileScanListener;
 import com.fuxi.javaagent.tool.filemonitor.FileScanMonitor;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.log4j.Logger;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.typedarrays.*;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-
+import java.util.*;
 /**
  * Created by tyy on 4/5/17.
  * All rights reserved
@@ -55,35 +50,32 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * PluginManager是一个静态类，封装了插件系统的细节，仅对外层暴露init和check方法
- *
+ * <p>
  * PluginManager内部管理插件系统实例，监控检测脚本文件变化
- *
+ * <p>
  * 必须首先初始化
  */
 public class PluginManager {
     private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
-    private static final Logger ALARM_LOGGER = Logger.getLogger(PluginManager.class.getPackage().getName() + ".alarm");
 
-    private static JSPlugin plugin = null;
+    private static JSContextFactory jsContextFactory = null;
     private static Timer timer = null;
     private static Integer watchId = null;
-    private static ReadWriteLock lock = new ReentrantReadWriteLock();
 
     /**
-     * 整体初始化检测脚本文件监控和插件引擎
+     * 初始化插件引擎
      *
      * @throws Exception
-     * @see #initFileWatcher()
-     * @see #initPlugin()
      */
     public synchronized static void init() throws Exception {
-        initPlugin();
+        jsContextFactory = new JSContextFactory();
+        updatePlugin();
         initFileWatcher();
     }
 
     /**
      * 初始化检测脚本文件监控
-     *
+     * <p>
      * 不调用则不会在运行时自动更新检测脚本
      *
      * @throws Exception
@@ -116,19 +108,10 @@ public class PluginManager {
     }
 
     /**
-     * 初始化插件引擎
-     *
-     * @throws Exception
-     */
-    public synchronized static void initPlugin() throws Exception {
-        updatePlugin();
-    }
-
-    /**
      * 更新插件引擎
-     *
+     * <p>
      * 检测脚本变化时更新
-     *
+     * <p>
      * 当新插件引擎初始化成功之后再替换旧插件引擎
      *
      * @throws Exception
@@ -149,25 +132,17 @@ public class PluginManager {
                 LOGGER.error("", e);
             }
         }
-        JSPlugin newJSPlugin = new JSPlugin(scripts);
-        JSPlugin oldJSPlugin = plugin;
 
-        lock.writeLock().lock();
-        plugin = newJSPlugin;
-        lock.writeLock().unlock();
+        jsContextFactory.setCheckScriptList(scripts);
 
-        if (oldJSPlugin != null) {
-            oldJSPlugin.shutdown();
-            oldJSPlugin = null;
-        }
         HookHandler.enableHook.set(oldValue);
     }
 
     /**
      * 异步更新插件引擎
-     *
+     * <p>
      * 可避免文件系统中脚本文件更新时产生的抖动
-     *
+     * <p>
      * 若产生抖动，可适量增大定时器延时
      */
     private synchronized static void updatePluginAsync() {
@@ -199,34 +174,38 @@ public class PluginManager {
      * @return 如果需要对当前请求进行拦截则返回true, 否则返回false
      */
     public static boolean check(CheckParameter parameter) {
-        boolean block = false;
+        JSContext cx = jsContextFactory.enterAndInitContext();
+        return cx.check(parameter);
+    }
 
-        List<CheckResult> results;
-
-        lock.readLock().lock();
-        if (plugin == null) {
-            return block;
-        }
-        results = plugin.check(parameter);
-        lock.readLock().unlock();
-
-        if (results != null && parameter != null) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(parameter + ", " + results);
-            }
-
-            for (CheckResult result : results) {
-                if (result.getResult().equals("block")) {
-                    block = true;
-                }
-
-                // 输出报警日志
-                if (!result.getResult().equals("ignore")) {
-                    AttackInfo attackInfo = new AttackInfo(parameter, result);
-                    ALARM_LOGGER.info(attackInfo.toString());
-                }
-            }
-        }
-        return block;
+    public static void main(String[] a) throws Exception {
+//        InputStream is;
+//        String name;
+//        String script;
+//        name = "plugin.js";
+//        is = Object.class.getResourceAsStream("/" + name);
+//        script = IOUtils.toString(is, "UTF-8");
+//        jsContextFactory = new JSContextFactory();
+//        List<CheckScript> checkScriptList = new LinkedList<CheckScript>();
+//        checkScriptList.add(new CheckScript("adddd", "asdasdasd.asdas"));
+//        jsContextFactory.setCheckScriptList(checkScriptList);
+//
+//        JSContext cx = jsContextFactory.enterAndInitContext();
+//        Map<String, Object> params = new HashMap<String, Object>();
+//        params.put("path0", "../../../../../");
+//        CheckParameter parameter = new CheckParameter(CheckParameter.Type.DIRECTORY, params, null);
+//        System.out.println(cx.check(parameter));
+        Context cx = Context.enter();
+        cx.setLanguageVersion(Context.VERSION_ES6);
+        Scriptable scope = cx.initStandardObjects();
+        NativeUint8Array buffer = new NativeUint8Array(2);
+        buffer.set(0, 10);
+        scope.put("buffer", scope, buffer);
+        Object obj = cx.evaluateString(scope, "buffer[1]=buffer[0];buffer;", "t", 1, null);
+        System.out.println(obj.getClass().getName());
+        NativeUint8Array arr = (NativeUint8Array) obj;
+        System.out.println(arr.get(0));
+        System.out.println(arr.get(1));
+        System.out.println(arr.getByteLength());
     }
 }

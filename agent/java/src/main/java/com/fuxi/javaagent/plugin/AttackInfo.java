@@ -84,7 +84,7 @@ public class AttackInfo {
         // 攻击时间
         info.put("attack_time", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(createTime));
         // 攻击类型
-        info.put("attack_type", parameter.getType());
+        info.put("attack_type", parameter.getType().toString());
         // 攻击参数
         info.put("attack_params", parameter.getParams());
         // 攻击调用栈
@@ -138,7 +138,7 @@ public class AttackInfo {
     private StackTraceElement[] filter(StackTraceElement[] trace) {
         int i = 0;
         // 去除插件本身调用栈
-        while (trace[i].getClassName().startsWith("com.fuxi.javaagent")) {
+        while (trace[i].getClassName().startsWith("com.fuxi.javaagent") && i < trace.length) {
             i++;
         }
         return Arrays.copyOfRange(trace, i, Math.min(i + Config.getConfig().getLogMaxStackSize(), trace.length));

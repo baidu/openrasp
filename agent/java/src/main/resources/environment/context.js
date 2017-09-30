@@ -3,61 +3,91 @@
  */
 'use strict';
 
-const Context = class {
-    constructor(data) {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Context = function () {
+    function Context(data) {
+        _classCallCheck(this, Context);
+
         Object.assign(this, data);
     }
-    get path() {
-        if (this.getPath) {
-            return this.getPath();
+
+    _createClass(Context, [{
+        key: 'path',
+        get: function get() {
+            if (this.getPath) {
+                return this.getPath();
+            }
         }
-    }
-    get url() {
-        if (this.getUrl) {
-            return this.getUrl();
+    }, {
+        key: 'url',
+        get: function get() {
+            if (this.getUrl) {
+                return this.getUrl();
+            }
         }
-    }
-    get querystring() {
-        if (this.getQuerystring) {
-            return this.getQuerystring();
+    }, {
+        key: 'querystring',
+        get: function get() {
+            if (this.getQuerystring) {
+                return this.getQuerystring();
+            }
         }
-    }
-    get method() {
-        if (this.getMethod) {
-            return this.getMethod();
+    }, {
+        key: 'method',
+        get: function get() {
+            if (this.getMethod) {
+                return this.getMethod();
+            }
         }
-    }
-    get protocol() {
-        if (this.getProtocol) {
-            return this.getProtocol();
+    }, {
+        key: 'protocol',
+        get: function get() {
+            if (this.getProtocol) {
+                return this.getProtocol();
+            }
         }
-    }
-    get header() {
-        if (this.getHeader) {
-            return this.getHeader();
+    }, {
+        key: 'header',
+        get: function get() {
+            if (this.getHeader) {
+                return this.getHeader();
+            }
         }
-    }
-    get parameter() {
-        if (this.getParameter) {
-            return this.getParameter();
+    }, {
+        key: 'parameter',
+        get: function get() {
+            if (this.getParameter) {
+                return this.getParameter();
+            }
         }
-    }
-    get body() {
-        if (this.getBody) {
-            return this.getBody();
+    }, {
+        key: 'body',
+        get: function get() {
+            if (this.getBody) {
+                return this.getBody();
+            }
         }
-    }
-    get remoteAddr() {
-        if (this.getRemoteAddr) {
-            return this.getRemoteAddr();
+    }, {
+        key: 'remoteAddr',
+        get: function get() {
+            if (this.getRemoteAddr) {
+                return this.getRemoteAddr();
+            }
         }
-    }
-    get server() {
-        if (this.getServer) {
-            return this.getServer();
+    }, {
+        key: 'server',
+        get: function get() {
+            if (this.getServer) {
+                return this.getServer();
+            }
         }
-    }
-};
+    }]);
+
+    return Context;
+}();
 
 Object.defineProperty(global, 'Context', {
     value: Context,
