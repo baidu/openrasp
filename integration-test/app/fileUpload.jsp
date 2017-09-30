@@ -4,7 +4,6 @@
 <%@ page import="org.apache.commons.fileupload.servlet.ServletFileUpload" %>
 <%@ page import="java.util.List" %>
 <%
-try {
 	Boolean isMultipart = ServletFileUpload.isMultipartContent(request);
 	if (isMultipart) {
 		DiskFileItemFactory factory = new DiskFileItemFactory();
@@ -15,11 +14,4 @@ try {
             out.println(content);
 		}
 	}
-} catch (Exception e) {
-    if (e.getClass().getName().equals("com.fuxi.javaagent.exception.SecurityException")) {
-        response.sendError(403, e.getMessage());
-    } else {
-        throw e;
-    }
-}
 %>

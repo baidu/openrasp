@@ -10,5 +10,5 @@ RUN npm --silent --progress=false install > /dev/null \
 
 COPY ./tester/ .
 
-CMD sleep 120s \
-  && ./node_modules/.bin/mocha *.test.js -t 10000
+CMD sleep 100s \
+  && ./node_modules/.bin/mocha test.js -t 10000

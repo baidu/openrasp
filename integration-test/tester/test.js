@@ -1,3 +1,4 @@
+
 /**
  * @file test
  */
@@ -12,13 +13,10 @@ chai.should();
 axios.defaults.headers.common['Test-Test'] = 'Test-Test';
 axios.defaults.validateStatus = status => status !== undefined;
 
-const server = require('path').basename(__filename).split('.')[0];
-
-describe(server, function () {
-    this.retries(3);
+describe(process.env['SERVER'] || 'server', function () {
     before(function () {
-        this.timeout(1000 * 60);
-        axios.defaults.baseURL = 'http://' + server + ':8080/app';
+        this.timeout(1000 * 60 * 2);
+        axios.defaults.baseURL = 'http://127.0.0.1:8080/app';
         let chain = Promise.reject();
         let request = () => timeout(2000).then(() => axios.get(''));
         for (let i = 0; i < 30; i++) {
@@ -43,16 +41,16 @@ describe(server, function () {
         return axios.post('fileUpload' + '.jsp?test=a&test=b', form, {
             headers: form.getHeaders()
         }).should.eventually.have.property('data')
-            .match(/unsafe request/);
+            .match(/blocked/);
     });
     let checkPoints = ['command', 'deserialization', 'directory',
-        'ognl', 'readFile', 'request', 'writeFile', 'xxe', 'sqlite', 'mysql',
-        'oracle', 'postgresql', 'sqlserver'];
+        'ognl', 'readFile', 'request', 'writeFile', 'xxe', 'sqlite', 'postgresql',
+        'mysql', 'oracle', 'sqlserver'];
     checkPoints.forEach(point => {
         it(point, function () {
             return axios.get(point + '.jsp?test=a&test=b')
                 .should.eventually.have.property('data')
-                .match(/unsafe request/);
+                .match(/blocked/);
         });
     });
 });

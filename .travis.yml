@@ -1,14 +1,38 @@
 sudo: required
 language: java
-services: docker
+services:
+  - mysql
+  - postgresql
+  - docker
+matrix:
+  include:
+    - jdk: openjdk7
+      env: SERVER=tomcat6
+    - jdk: openjdk7
+      env: SERVER=tomcat7
+    - jdk: openjdk7
+      env: SERVER=jboss4
+    - jdk: openjdk8
+      env: SERVER=tomcat8
+    - jdk: openjdk8
+      env: SERVER=jetty9
+    - jdk: oraclejdk8
+      env: SERVER=tomcat8
+    - jdk: oraclejdk8
+      env: SERVER=jetty9
 before_install:
-  - pushd agent/java
-  - mvn clean package -P linux64
+  - pushd integration-test
+  - bash start-databases.sh
+  - pushd ../agent/java
+  - mvn clean package
   - cp target/rasp.jar ../../integration-test/rasp/rasp.jar
   - popd
-install:
-  - pushd integration-test
+  - pushd tester
+  - npm install --silent --progress=false
+  - popd
   - jar cvf app.war -C app/ .
-  - sudo docker-compose build
-script: 
-  - sudo docker-compose run --rm tester
+install:
+  - bash start-${SERVER}.sh
+  - pushd tester
+script:
+  - travis_retry node_modules/.bin/mocha test.js -t 20000

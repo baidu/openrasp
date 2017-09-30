@@ -1,4 +1,4 @@
-FROM postgres:9
+FROM postgres:9-alpine
 LABEL maintainer="lanyuhang@baidu.com"
 
 ENV POSTGRES_PASSWORD=mysecretpassword

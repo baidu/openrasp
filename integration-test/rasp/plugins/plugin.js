@@ -18,7 +18,7 @@ function checkContext(context) {
     }
     assert(context.method);
     assert(context.protocol === 'http/1.1');
-    assert(context.parameter.test.indexOf('a') !== -1 && context.parameter.test.indexOf('b') !== -1);
+    assert(context.parameter.test[0] === 'a' && context.parameter.test[1] === 'b');
     assert(context.server);
     assert(context.url);
     assert(context.path);
@@ -30,7 +30,9 @@ function checkContext(context) {
 plugin.register('request', function (params, context) {
     plugin.log('request', params);
     if (/request/.test(context.path)) {
-        throw new Attack();
+        return {
+            action: 'block'
+        }
     }
 });
 
@@ -38,7 +40,9 @@ plugin.register('directory', function (params, context) {
     checkContext(context);
     plugin.log('directory', params);
     if (params.path === '/etc') {
-        throw new Attack();
+        return {
+            action: 'block'
+        }
     }
 });
 
@@ -46,7 +50,9 @@ plugin.register('readFile', function (params, context) {
     checkContext(context);
     plugin.log('readFile', params);
     if (params.path === '/etc/passwd') {
-        throw new Attack();
+        return {
+            action: 'block'
+        }
     }
 });
 
@@ -54,7 +60,9 @@ plugin.register('writeFile', function (params, context) {
     checkContext(context);
     plugin.log('writeFile', params);
     if (params.name === 'writeFileTest') {
-        throw new Attack();
+        return {
+            action: 'block'
+        }
     }
 });
 
@@ -62,7 +70,9 @@ plugin.register('fileUpload', function (params, context) {
     checkContext(context);
     plugin.log('fileUpload', params);
     if (context.body) {
-        throw new Attack();
+        return {
+            action: 'block'
+        }
     }
 });
 
@@ -70,7 +80,9 @@ plugin.register('sql', function (params, context) {
     checkContext(context);
     plugin.log('sql', params);
     if (params.query === 'SELECT * FROM user') {
-        throw new Attack();
+        return {
+            action: 'block'
+        }
     }
 });
 
@@ -78,7 +90,9 @@ plugin.register('command', function (params, context) {
     checkContext(context);
     plugin.log('command', params);
     if (params.command[0] === 'pwd') {
-        throw new Attack();
+        return {
+            action: 'block'
+        }
     }
 });
 
@@ -86,7 +100,9 @@ plugin.register('xxe', function (params, context) {
     checkContext(context);
     plugin.log('xxe', params);
     if (params.entity.endsWith('/etc/passwd')) {
-        throw new Attack();
+        return {
+            action: 'block'
+        }
     }
 });
 
@@ -94,7 +110,9 @@ plugin.register('ognl', function (params, context) {
     checkContext(context);
     plugin.log('ognl', params);
     if (params.expression === 'java.lang.Runtime') {
-        throw new Attack();
+        return {
+            action: 'block'
+        }
     }
 });
 
@@ -102,7 +120,9 @@ plugin.register('deserialization', function (params, context) {
     checkContext(context);
     plugin.log('deserialization', params);
     if (params.clazz === 'sun.reflect.annotation.AnnotationInvocationHandler') {
-        throw new Attack();
+        return {
+            action: 'block'
+        }
     }
 });
 
