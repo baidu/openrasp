@@ -94,14 +94,15 @@ public class JSRequestContext extends ScriptableObject {
         if (body == null) {
             return Context.getUndefinedValue();
         }
-        final NativeUint8Array buffer = new NativeUint8Array(body.size());
+        JSContext cx = (JSContext) JSContext.getCurrentContext();
+        final Scriptable buffer = cx.newObject(cx.scope, "Uint8Array");
         try {
             body.writeTo(new OutputStream() {
                 int count = 0;
 
                 @Override
                 public void write(int b) throws IOException {
-                    buffer.set(count++, b);
+                    buffer.put(count++, buffer, b);
                 }
             });
         } catch (Exception e) {
@@ -111,7 +112,8 @@ public class JSRequestContext extends ScriptableObject {
     }
 
     public Object jsGet_header() {
-        Scriptable header = new NativeObject();
+        JSContext cx = (JSContext) JSContext.getCurrentContext();
+        Scriptable header = cx.newObject(cx.scope);
         Enumeration<String> headerNames = javaContext.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String key = headerNames.nextElement();
@@ -122,12 +124,18 @@ public class JSRequestContext extends ScriptableObject {
     }
 
     public Object jsGet_parameter() {
-        Scriptable parameter = new NativeObject();
+        JSContext cx = (JSContext) JSContext.getCurrentContext();
+        Scriptable parameter = cx.newObject(cx.scope);
         Map<String, String[]> parameterMap = javaContext.getParameterMap();
         for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
             String key = entry.getKey();
-            NativeArray value = new NativeArray(entry.getValue());
-            parameter.put(key, parameter, value);
+            String[] value = entry.getValue();
+            int length = value.length;
+            Scriptable arr = cx.newArray(cx.scope, length);
+            for (int i = 0; i < length; i++) {
+                arr.put(i, arr, value[i]);
+            }
+            parameter.put(key, parameter, arr);
         }
         return parameter;
     }
@@ -137,7 +145,8 @@ public class JSRequestContext extends ScriptableObject {
     }
 
     public Object jsGet_server() {
-        Scriptable server = new NativeObject();
+        JSContext cx = (JSContext) JSContext.getCurrentContext();
+        Scriptable server = cx.newObject(cx.scope);
         Map<String, String> serverContext = javaContext.getServerContext();
         for (Map.Entry<String, String> entry : serverContext.entrySet()) {
             String key = entry.getKey();
