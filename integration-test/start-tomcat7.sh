@@ -2,18 +2,18 @@
 
 set +e
 
-wget http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.81/bin/apache-tomcat-7.0.81.tar.gz
+wget -N http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.81/bin/apache-tomcat-7.0.81.tar.gz
 
 tar zxf apache-tomcat-7.0.81.tar.gz
 
-HOME=$(pwd)/apache-tomcat-7.0.81
+SERVER_HOME=$(pwd)/apache-tomcat-7.0.81
 
-cp app.war ${HOME}/webapps/
+cp app.war ${SERVER_HOME}/webapps/
 
-cp -R rasp ${HOME}/
+cp -R rasp ${SERVER_HOME}/
 
-chmod 777 ${HOME}/rasp
+chmod 777 ${SERVER_HOME}/rasp
 
-export JAVA_OPTS="-javaagent:${HOME}/rasp/rasp.jar -Dlog4j.rasp.configuration=file://${HOME}/rasp/conf/rasp-log4j.xml ${JAVA_OPTS}"
+export JAVA_OPTS="-javaagent:${SERVER_HOME}/rasp/rasp.jar -Dlog4j.rasp.configuration=file://${SERVER_HOME}/rasp/conf/rasp-log4j.xml ${JAVA_OPTS}"
 
-sh ${HOME}/bin/startup.sh
+sh ${SERVER_HOME}/bin/startup.sh

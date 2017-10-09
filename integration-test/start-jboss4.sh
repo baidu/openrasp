@@ -2,18 +2,18 @@
 
 set +e
 
-wget http://iweb.dl.sourceforge.net/project/jboss/JBoss/JBoss-4.2.3.GA/jboss-4.2.3.GA.zip
+wget -N http://iweb.dl.sourceforge.net/project/jboss/JBoss/JBoss-4.2.3.GA/jboss-4.2.3.GA.zip
 
 unzip jboss-4.2.3.GA.zip
 
-HOME=$(pwd)/jboss-4.2.3.GA
+SERVER_HOME=$(pwd)/jboss-4.2.3.GA
 
-cp app.war ${HOME}/server/default/deploy/
+cp app.war ${SERVER_HOME}/server/default/deploy/
 
-cp -R rasp ${HOME}/
+cp -R rasp ${SERVER_HOME}/
 
-chmod 777 ${HOME}/rasp
+chmod 777 ${SERVER_HOME}/rasp
 
-export JAVA_OPTS="-javaagent:${HOME}/rasp/rasp.jar -Dlog4j.rasp.configuration=file://${HOME}/rasp/conf/rasp-log4j.xml ${JAVA_OPTS}"
+export JAVA_OPTS="-javaagent:${SERVER_HOME}/rasp/rasp.jar -Dlog4j.rasp.configuration=file://${SERVER_HOME}/rasp/conf/rasp-log4j.xml ${JAVA_OPTS}"
 
-nohup sh ${HOME}/bin/run.sh &
+nohup sh ${SERVER_HOME}/bin/run.sh &

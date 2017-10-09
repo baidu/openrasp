@@ -1,5 +1,9 @@
 sudo: required
 language: java
+cache:
+  yarn: true
+  directories:
+    - $HOME/.m2
 services:
   - mysql
   - postgresql
@@ -23,16 +27,13 @@ matrix:
 before_install:
   - pushd integration-test
   - bash start-databases.sh
-  - pushd ../agent/java
-  - mvn clean package
-  - cp target/rasp.jar ../../integration-test/rasp/rasp.jar
-  - popd
-  - pushd tester
-  - npm install --silent --progress=false
-  - popd
-  - jar cvf app.war -C app/ .
+  - pushd tester && yarn && popd
 install:
+  - bash build-war.sh
+  - bash build-rasp.sh
   - bash start-${SERVER}.sh
   - pushd tester
 script:
   - travis_retry node_modules/.bin/mocha test.js -t 20000
+before_cache:
+  - rm -rf $HOME/.m2/repository/com/fuxi
