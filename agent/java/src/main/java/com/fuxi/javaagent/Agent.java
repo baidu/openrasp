@@ -64,7 +64,7 @@ public class Agent {
     public static void premain(String agentArg, Instrumentation inst) {
         try {
             JarFileHelper.addJarToBootstrap(inst);
-            if (!loadConfig()) {
+            if (!loadConfig(JarFileHelper.getLocalJarParentPath())) {
                 return;
             }
             readVersion();
@@ -87,8 +87,7 @@ public class Agent {
      *
      * @return 配置是否成功
      */
-    private static boolean loadConfig() throws IOException {
-        String baseDir = Config.getConfig().getBaseDirectory();
+    private static boolean loadConfig(String baseDir) throws IOException {
         LogConfig.completeLogConfig(baseDir);
 
         return true;
