@@ -7,7 +7,6 @@ cache:
 services:
   - mysql
   - postgresql
-  - docker
 matrix:
   include:
     - jdk: openjdk7
@@ -26,10 +25,9 @@ matrix:
       env: SERVER=jetty9
 before_install:
   - pushd integration-test
-  - bash start-databases.sh
   - pushd tester && yarn && popd
-install:
   - bash build-war.sh
+install:
   - bash build-rasp.sh
   - bash start-${SERVER}.sh
   - pushd tester
