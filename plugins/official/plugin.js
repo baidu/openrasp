@@ -175,10 +175,10 @@ plugin.register('readFile', function (params, context) {
 })
 
 plugin.register('writeFile', function (params, context) {
-    if (scriptFileRegex.test(params.filename) || ntfsRegex.test(params.filename)) {
+    if (scriptFileRegex.test(params.realpath) || ntfsRegex.test(params.realpath)) {
         return {
             action: 'block',
-            message: '尝试上传脚本文件: ' + params.filename,
+            message: '尝试写入脚本文件: ' + params.realpath,
             confidence: 90
         }
     }
