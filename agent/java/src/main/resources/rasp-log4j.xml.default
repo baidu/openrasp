@@ -29,7 +29,7 @@
         <param name="DatePattern" value="'.'yyyy-MM-dd" />
         <param name="encoding" value="UTF-8" />
         <layout class="com.fuxi.javaagent.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d %-5p [%t][%c] %m" />
+            <param name="ConversionPattern" value="%d %-5p [%t][%c] %m%n" />
         </layout>
     </appender>
 	

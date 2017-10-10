@@ -1,4 +1,7 @@
 /**
+* 手动生成的 shim，去掉了 es6.array，否则会异常
+*/
+/**
  * core-js 2.5.1
  * https://github.com/zloirock/core-js
  * License: http://rock.mit-license.org

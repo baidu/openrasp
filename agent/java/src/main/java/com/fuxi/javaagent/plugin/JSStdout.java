@@ -38,7 +38,11 @@ import org.apache.log4j.Logger;
  */
 public class JSStdout {
     private static final Logger LOGGER = Logger.getLogger(JSStdout.class.getPackage().getName() + ".log");
+
     public void write(Object message) {
+        if (message instanceof String) {
+            message = ((String) message).replaceAll("\n$", "");
+        }
         LOGGER.info(message);
     }
 }
