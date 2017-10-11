@@ -16,7 +16,7 @@ var clean = {
 
 var forcefulBrowsing = {
     dotFiles: /\.(gz|7z|xz|tar|rar|zip|sql|db)$/,    
-    systemFiles: /^\/(etc|proc|sys|var\/log)(\/|$)/,
+    systemFiles: /^\/(proc|sys|var\/log)(\/|$)/,
     unwanted: [
         // user files
         '.DS_Store',
