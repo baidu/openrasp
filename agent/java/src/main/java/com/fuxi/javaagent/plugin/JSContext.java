@@ -31,10 +31,7 @@
 package com.fuxi.javaagent.plugin;
 
 import org.apache.log4j.Logger;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Function;
-import org.mozilla.javascript.NativeObject;
-import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.*;
 
 import java.util.List;
 import java.util.Map;
@@ -84,6 +81,9 @@ public class JSContext extends Context {
             function = checkProcess.getFunction();
             try {
                 tmp = function.call(this, scope, function, functionArgs);
+            } catch (RhinoException e) {
+                LOGGER.info("\n" + e.details() + "\n" + e.getScriptStackTrace());
+                continue;
             } catch (Exception e) {
                 LOGGER.info(e);
                 continue;
