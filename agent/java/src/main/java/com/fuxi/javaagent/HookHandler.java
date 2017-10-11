@@ -275,7 +275,11 @@ public class HookHandler {
             HashMap<String, Object> param = new HashMap<String, Object>();
             param.put("path", file.getPath());
             try {
-                param.put("realpath", file.getCanonicalPath());
+                String path = file.getCanonicalPath();
+                if (path.endsWith(".class")) {
+                    return;
+                }
+                param.put("realpath", path);
             } catch (IOException e) {
                 e.printStackTrace();
             }
