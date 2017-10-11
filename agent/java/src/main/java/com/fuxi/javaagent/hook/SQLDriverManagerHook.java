@@ -71,7 +71,7 @@ public class SQLDriverManagerHook extends AbstractClassHook {
     public MethodVisitor hookMethod(int access, String name, String desc,
                                     String signature, String[] exceptions, MethodVisitor mv) {
         if (name.equals("getConnection") && desc.startsWith("(Ljava/lang/String;Ljava/util/Properties;"
-                + "Ljava/lang/ClassLoader;")) {
+                + "Ljava/lang/Class")) {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
                 protected void onMethodEnter() {
