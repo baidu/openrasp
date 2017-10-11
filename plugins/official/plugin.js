@@ -371,7 +371,7 @@ plugin.register('reflection', function(params, context) {
 
     return {
         action:     'block',
-        message:    title + ':' + params.clazz + '.' + params.method,
+        message:    title + ': ' + params.clazz + '.' + params.method,
         confidence: 100
     }
 })
