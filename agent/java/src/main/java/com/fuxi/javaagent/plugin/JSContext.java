@@ -93,23 +93,23 @@ public class JSContext extends Context {
             }
             result = (ScriptableObject) tmp;
             tmp = result.get("action", result);
-            if (!(tmp instanceof String)) {
+            if (!(tmp instanceof CharSequence)) {
                 continue;
             }
-            action = (String) tmp;
+            action = tmp.toString();
             if (action.equals("ignore")) {
                 continue;
             }
             tmp = result.get("message", result);
-            if (!(tmp instanceof String)) {
+            if (!(tmp instanceof CharSequence)) {
                 tmp = "";
             }
-            message = (String) tmp;
+            message = tmp.toString();
             tmp = result.get("name", result);
-            if (!(tmp instanceof String)) {
+            if (!(tmp instanceof CharSequence)) {
                 tmp = checkProcess.getPluginName();
             }
-            name = (String) tmp;
+            name = tmp.toString();
             tmp = result.get("confidence", result);
             if (!(tmp instanceof Number)) {
                 tmp = new Integer(0);
