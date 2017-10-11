@@ -220,7 +220,20 @@ plugin.register('sql', function (params, context) {
         return match
     }
 
+    // 算法2: 范式对比
+    function algo2(params, context) {
+        return false
+    }
+
     if (algo1(params, context)) {
+        return {
+            action: 'block',
+            message: 'SQL 注入攻击',
+            confidence: 100
+        }
+    }
+    
+    if (algo2(params, context)) {
         return {
             action: 'block',
             message: 'SQL 注入攻击',
