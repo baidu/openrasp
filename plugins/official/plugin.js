@@ -196,9 +196,39 @@ plugin.register('fileUpload', function (params, context) {
     return clean
 })
 
-// [[ 近期调整~ ]]
 plugin.register('sql', function (params, context) {
-    // SQLi 检测 demo
+
+    // 算法1: 匹配用户输入
+    function algo1(params, context) {
+        var tokens = RASP.sql_tokenize(params.query)
+        var match  = false
+
+        Object.keys(context.parameter).some(function (name) {
+            var value = context.parameter[name][0]
+
+            if (value.length <= 10 || params.query.indexOf(value) == -1) {
+                return
+            }
+            
+            var tokens2 = RASP.sql_tokenize(params.query.replace(value, ''))
+            if (tokens.length - tokens2.length > 2) {
+                match = true
+                return true
+            }
+        })
+
+        return match
+    }
+
+    if (algo1(params, context)) {
+        return {
+            action: 'block',
+            message: 'SQL 注入攻击',
+            confidence: 100
+        }
+    }
+
+    // 算法3: 简单正则匹配（即将移除）
     var sqlRegex = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
 
     if (sqlRegex.test(params.query)) {
