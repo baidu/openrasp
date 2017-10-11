@@ -225,7 +225,7 @@ plugin.register('sql', function (params, context) {
     // 算法2: 检查是否为 webshell 调用（提交了完整的SQL查询语句）
     function algo2(params, context) {
         var match = false
-        
+
         Object.keys(context.parameter).some(function (name) {
             var value = context.parameter[name][0]
             if (value == params.query) {
@@ -267,6 +267,33 @@ plugin.register('sql', function (params, context) {
 })
 
 plugin.register('command', function (params, context) {
+    console.log(params.command)
+
+    // 算法1: 简单识别命令执行后门
+    function algo1(params, context) {
+        var match    = false
+        // 存在绕过 ..
+        var full_cmd = params.command.join(' ')
+
+        Object.keys(context.parameter).some(function (name) {
+            if (context.parameter[name][0] == full_cmd) {
+                match = true
+                return true
+            }
+        })
+
+        return match
+    }
+
+    if (algo1(params, context)) {
+        return {
+            action:     'block',
+            message:    '发现命令执行后门',
+            confidence: 100
+        }
+    }
+
+    // 默认禁止命令执行
     return {
         action: 'block',
         message: '尝试执行命令',
@@ -345,8 +372,8 @@ plugin.register('reflection', function(params, context) {
     });
 
     return {
-        action:  'block',
-        message: title + ':' + params.clazz + '.' + params.method,
+        action:     'block',
+        message:    title + ':' + params.clazz + '.' + params.method,
         confidence: 100
     }
 })
