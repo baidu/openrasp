@@ -2,8 +2,6 @@
 // 官方插件仅作为 DEMO
 // 具体检测能力请根据业务来定制~
 //
-// 10月底我们将更新一版官方插件，公开一些零规则检测攻击的插件，以及一些应用的专用插件
-// 
 
 'use strict'
 var plugin = new RASP('offical')
@@ -15,7 +13,7 @@ var clean = {
 }
 
 var forcefulBrowsing = {
-    dotFiles: /\.(gz|7z|xz|tar|rar|zip|sql|db)$/,    
+    dotFiles:    /\.(gz|7z|xz|tar|rar|zip|sql|db)$/,
     systemFiles: /^\/(proc|sys|var\/log)(\/|$)/,
     unwanted: [
         // user files
@@ -51,7 +49,7 @@ var scannerUA = [
 
 var xssRegex        = /<script|script>|<iframe|iframe>|javascript:(?!(?:history\.(?:go|back)|void\(0\)))/i
 var scriptFileRegex = /\.(jspx?|php[345]?|phtml)\.?$/i
-var ntfsRegex       = /::\$(DATA|INDEX)$/i
+var ntfsRegex       = /::\$(DATA|INDEX)$/i // 其他的stream都没啥用
 
 var ognlPayloads = [
     'ognl.OgnlContext',
@@ -82,8 +80,18 @@ var deserializationInvalidClazz = [
     'xalan.internal.xsltc.trax.TemplatesImpl'
 ]
 
+String.prototype.replaceAll = function(token, tokenValue) {
+    var index  = 0;
+    var string = this;
+    do {
+        string = string.replace(token, tokenValue);
+    } while((index = string.indexOf(token, index + 1)) > -1);
+
+    return string
+}
+
 function canonicalPath (path) {
-    return path.replace(/\/\.\//g, '/').replace(/\/{2,}/g, '/')
+    return path.replaceAll('/./', '/').replaceAll('//', '/').replaceAll('//', '/')
 }
 
 plugin.register('directory', function (params, context) {
@@ -141,11 +149,13 @@ plugin.register('readFile', function (params, context) {
         }
     }
 
+    // console.log(params.realpath, params.path)
+
     // 如果使用绝对路径访问敏感文件
     // 判定为 webshell
     if (params.realpath == params.path) {
-        for (var j = 0; j < forcefulBrowsing.absolutePaths; j ++) {
-            if (forcefulBrowsing.absolutePaths[i] == params.realpath) {
+        for (var j = 0; j < forcefulBrowsing.absolutePaths.length; j ++) {
+            if (forcefulBrowsing.absolutePaths[j] == params.realpath) {
                 return {
                     action:  'block',
                     message: '疑似webshell - 尝试读取系统文件: ' + params.realpath
@@ -196,9 +206,63 @@ plugin.register('fileUpload', function (params, context) {
     return clean
 })
 
-// [[ 近期调整~ ]]
 plugin.register('sql', function (params, context) {
-    // SQLi 检测 demo
+
+    // 算法1: 匹配用户输入
+    function algo1(params, context) {
+        var tokens = RASP.sql_tokenize(params.query, params.server)
+        var match  = false
+
+        Object.keys(context.parameter).some(function (name) {
+            var value = context.parameter[name][0]
+
+            if (value.length <= 10 || params.query.indexOf(value) == -1) {
+                return
+            }
+            
+            // 去掉用户输入再次匹配
+            var tokens2 = RASP.sql_tokenize(params.query.replace(value, ''), params.server)
+            if (tokens.length - tokens2.length > 2) {
+                match = true
+                return true
+            }
+        })
+
+        return match
+    }
+
+    // 算法2: 检查是否为 webshell 调用（提交了完整的SQL查询语句）
+    function algo2(params, context) {
+        var match = false
+
+        Object.keys(context.parameter).some(function (name) {
+            var value = context.parameter[name][0]
+            if (value == params.query) {
+                match = true
+                return true
+            }
+        })
+
+        return match
+    }
+
+    if (algo2(params, context)) {
+        return {
+            action:     'block',
+            message:    'SQL 管理器（疑似WebShell）',
+            confidence: 100
+        }
+    }
+
+    if (algo1(params, context)) {
+        return {
+            action:     'block',
+            message:    'SQL 注入攻击',
+            confidence: 100
+        }
+    }    
+
+    // 算法4: 简单正则匹配（即将移除）
     var sqlRegex = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
 
     if (sqlRegex.test(params.query)) {
@@ -212,10 +276,37 @@ plugin.register('sql', function (params, context) {
 })
 
 plugin.register('command', function (params, context) {
+    console.log(params.command)
+
+    // 算法1: 简单识别命令执行后门
+    function algo1(params, context) {
+        var match    = false
+        // 存在绕过 ..
+        var full_cmd = params.command.join(' ')
+
+        Object.keys(context.parameter).some(function (name) {
+            if (context.parameter[name][0] == full_cmd) {
+                match = true
+                return true
+            }
+        })
+
+        return match
+    }
+
+    if (algo1(params, context)) {
+        return {
+            action:     'block',
+            message:    '发现命令执行后门',
+            confidence: 100
+        }
+    }
+
+    // 默认禁止命令执行
     return {
-        action: 'block',
-        message: '尝试执行命令',
-        confidence: 100
+        action:    'block',
+        message:   '尝试执行命令',
+        confidence: 90
     }
 })
 
@@ -227,16 +318,16 @@ plugin.register('xxe', function (params, context) {
 
         if (protocol === 'gopher' || protocol === 'dict') {
             return {
-                action: 'block',
-                message: 'SSRF 攻击 (' + protocol + ' 协议)',
+                action:     'block',
+                message:    'SSRF 攻击 (' + protocol + ' 协议)',
                 confidence: 100
             }
         }
 
         if (protocol === 'file') {
             return {
-                action: 'log',
-                message: '尝试读取外部实体 (file 协议)',
+                action: '   log',
+                message:    '尝试读取外部实体 (file 协议)',
                 confidence: 90
             }
         }
@@ -249,8 +340,8 @@ plugin.register('ognl', function (params, context) {
     for (var index in ognlPayloads) {
         if (ognlExpression.indexOf(ognlPayloads[index]) > -1) {
             return {
-                action: 'block',
-                message: '尝试ognl远程命令执行',
+                action:     'block',
+                message:    '尝试ognl远程命令执行',
                 confidence: 100
             }
         }
@@ -265,8 +356,8 @@ plugin.register('deserialization', function (params, context) {
     for (var index in deserializationInvalidClazz) {
         if (clazz === deserializationInvalidClazz[index]) {
             return {
-                action: 'block',
-                message: '尝试反序列化攻击',
+                action:     'block',
+                message:    '尝试反序列化攻击',
                 confidence: 100
             }
         }
@@ -290,8 +381,8 @@ plugin.register('reflection', function(params, context) {
     });
 
     return {
-        action:  'block',
-        message: title + ':' + params.clazz + '.' + params.method,
+        action:     'block',
+        message:    title + ': ' + params.clazz + '.' + params.method,
         confidence: 100
     }
 })
@@ -318,8 +409,8 @@ plugin.register('request', function(params, context) {
 
     if (foundScanner) {
         return {
-            action:  'block',
-            message: '已知的扫描器UA: ' + scannerUA[i],
+            action:     'block',
+            message:    '已知的扫描器UA: ' + scannerUA[i],
             confidence: 90
         }
     }

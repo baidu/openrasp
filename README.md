@@ -29,11 +29,11 @@ We've fully tested OpenRASP on the following application servers for both Linux 
 
 * Tomcat 6-8
 * JBoss 4.X
-* WebLogic 11/12
+* Jetty 7-9
 
 ##### 2. Performance impact on application servers
 
-We ran multiple intense and long-lasting stress tests prior to release. Even in the worst-case scenario (where the hook point got continuously triggered) the server’s performance was only reduced by 10%
+We ran multiple intense and long-lasting stress tests prior to release. Even in the worst-case scenario (where the hook point got continuously triggered) the server’s performance was only reduced by 5%
 
 ##### 3. Integration with existing SIEM or SOC
 

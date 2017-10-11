@@ -243,7 +243,7 @@ public final class HttpServletRequest extends AbstractRequest {
         serverInfo = serverInfo.toLowerCase();
         if (serverInfo.contains("tomcat")) return "Tomcat";
         if (serverInfo.contains("jboss")) return "JBoss";
-        if (serverInfo.contains("weblogic")) return "WebLogic";
+        if (serverInfo.contains("jetty")) return "Jetty";
         return serverInfo;
     }
 

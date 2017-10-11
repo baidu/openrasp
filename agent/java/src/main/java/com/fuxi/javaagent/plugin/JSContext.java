@@ -31,10 +31,7 @@
 package com.fuxi.javaagent.plugin;
 
 import org.apache.log4j.Logger;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Function;
-import org.mozilla.javascript.NativeObject;
-import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.*;
 
 import java.util.List;
 import java.util.Map;
@@ -71,7 +68,7 @@ public class JSContext extends Context {
         Object tmp;
         CheckProcess checkProcess;
         Function function;
-        NativeObject result;
+        ScriptableObject result;
         String action;
         String message;
         String name;
@@ -84,33 +81,36 @@ public class JSContext extends Context {
             function = checkProcess.getFunction();
             try {
                 tmp = function.call(this, scope, function, functionArgs);
+            } catch (RhinoException e) {
+                LOGGER.info("\n" + e.details() + "\n" + e.getScriptStackTrace());
+                continue;
             } catch (Exception e) {
                 LOGGER.info(e);
                 continue;
             }
-            if (!(tmp instanceof NativeObject)) {
+            if(tmp == Context.getUndefinedValue()) {
                 continue;
             }
-            result = (NativeObject) tmp;
-            tmp = result.get("action");
-            if (!(tmp instanceof String)) {
+            result = (ScriptableObject) tmp;
+            tmp = result.get("action", result);
+            if (!(tmp instanceof CharSequence)) {
                 continue;
             }
-            action = (String) tmp;
+            action = tmp.toString();
             if (action.equals("ignore")) {
                 continue;
             }
-            tmp = result.get("message");
-            if (!(tmp instanceof String)) {
+            tmp = result.get("message", result);
+            if (!(tmp instanceof CharSequence)) {
                 tmp = "";
             }
-            message = (String) tmp;
-            tmp = result.get("name");
-            if (!(tmp instanceof String)) {
+            message = tmp.toString();
+            tmp = result.get("name", result);
+            if (!(tmp instanceof CharSequence)) {
                 tmp = checkProcess.getPluginName();
             }
-            name = (String) tmp;
-            tmp = result.get("confidence");
+            name = tmp.toString();
+            tmp = result.get("confidence", result);
             if (!(tmp instanceof Number)) {
                 tmp = new Integer(0);
             }
