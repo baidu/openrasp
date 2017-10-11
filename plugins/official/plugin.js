@@ -200,7 +200,7 @@ plugin.register('sql', function (params, context) {
 
     // 算法1: 匹配用户输入
     function algo1(params, context) {
-        var tokens = RASP.sql_tokenize(params.query)
+        var tokens = RASP.sql_tokenize(params.query, params.server)
         var match  = false
 
         Object.keys(context.parameter).some(function (name) {
@@ -210,7 +210,8 @@ plugin.register('sql', function (params, context) {
                 return
             }
             
-            var tokens2 = RASP.sql_tokenize(params.query.replace(value, ''))
+            // 去掉用户输入再次匹配
+            var tokens2 = RASP.sql_tokenize(params.query.replace(value, ''), params.server)
             if (tokens.length - tokens2.length > 2) {
                 match = true
                 return true
