@@ -141,11 +141,13 @@ plugin.register('readFile', function (params, context) {
         }
     }
 
+    console.log(params.realpath, params.path)
+
     // 如果使用绝对路径访问敏感文件
     // 判定为 webshell
     if (params.realpath == params.path) {
-        for (var j = 0; j < forcefulBrowsing.absolutePaths; j ++) {
-            if (forcefulBrowsing.absolutePaths[i] == params.realpath) {
+        for (var j = 0; j < forcefulBrowsing.absolutePaths.length; j ++) {
+            if (forcefulBrowsing.absolutePaths[j] == params.realpath) {
                 return {
                     action:  'block',
                     message: '疑似webshell - 尝试读取系统文件: ' + params.realpath
@@ -220,28 +222,38 @@ plugin.register('sql', function (params, context) {
         return match
     }
 
-    // 算法2: 范式对比
+    // 算法2: 检查是否为 webshell 调用（提交了完整的SQL查询语句）
     function algo2(params, context) {
-        return false
+        var match = false
+        
+        Object.keys(context.parameter).some(function (name) {
+            var value = context.parameter[name][0]
+            if (value == params.query) {
+                match = true
+                return true
+            }
+        })
+
+        return match
+    }
+
+    if (algo2(params, context)) {
+        return {
+            action:     'block',
+            message:    'SQL 管理器（疑似WebShell）',
+            confidence: 100
+        }
     }
 
     if (algo1(params, context)) {
         return {
-            action: 'block',
-            message: 'SQL 注入攻击',
+            action:     'block',
+            message:    'SQL 注入攻击',
             confidence: 100
         }
-    }
-    
-    if (algo2(params, context)) {
-        return {
-            action: 'block',
-            message: 'SQL 注入攻击',
-            confidence: 100
-        }
-    }
+    }    
 
-    // 算法3: 简单正则匹配（即将移除）
+    // 算法4: 简单正则匹配（即将移除）
     var sqlRegex = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
 
     if (sqlRegex.test(params.query)) {
@@ -258,7 +270,7 @@ plugin.register('command', function (params, context) {
     return {
         action: 'block',
         message: '尝试执行命令',
-        confidence: 100
+        confidence: 90
     }
 })
 
