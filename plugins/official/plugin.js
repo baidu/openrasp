@@ -80,8 +80,18 @@ var deserializationInvalidClazz = [
     'xalan.internal.xsltc.trax.TemplatesImpl'
 ]
 
+String.prototype.replaceAll = function(token, tokenValue) {
+    var index  = 0;
+    var string = this;
+    do {
+        string = string.replace(token, tokenValue);
+    } while((index = string.indexOf(token, index + 1)) > -1);
+
+    return string
+}
+
 function canonicalPath (path) {
-    return path.replace(/\/\.\//g, '/').replace(/\/{2,}/g, '/')
+    return path.replaceAll('/./', '/').replaceAll('//', '/').replaceAll('//', '/')
 }
 
 plugin.register('directory', function (params, context) {
