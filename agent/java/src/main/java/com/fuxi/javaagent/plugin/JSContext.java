@@ -68,7 +68,7 @@ public class JSContext extends Context {
         Object tmp;
         CheckProcess checkProcess;
         Function function;
-        NativeObject result;
+        ScriptableObject result;
         String action;
         String message;
         String name;
@@ -88,11 +88,11 @@ public class JSContext extends Context {
                 LOGGER.info(e);
                 continue;
             }
-            if (!(tmp instanceof NativeObject)) {
+            if(tmp == Context.getUndefinedValue()) {
                 continue;
             }
-            result = (NativeObject) tmp;
-            tmp = result.get("action");
+            result = (ScriptableObject) tmp;
+            tmp = result.get("action", result);
             if (!(tmp instanceof String)) {
                 continue;
             }
@@ -100,17 +100,17 @@ public class JSContext extends Context {
             if (action.equals("ignore")) {
                 continue;
             }
-            tmp = result.get("message");
+            tmp = result.get("message", result);
             if (!(tmp instanceof String)) {
                 tmp = "";
             }
             message = (String) tmp;
-            tmp = result.get("name");
+            tmp = result.get("name", result);
             if (!(tmp instanceof String)) {
                 tmp = checkProcess.getPluginName();
             }
             name = (String) tmp;
-            tmp = result.get("confidence");
+            tmp = result.get("confidence", result);
             if (!(tmp instanceof Number)) {
                 tmp = new Integer(0);
             }
