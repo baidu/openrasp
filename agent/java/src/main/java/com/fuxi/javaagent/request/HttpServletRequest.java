@@ -282,4 +282,31 @@ public final class HttpServletRequest extends AbstractRequest {
         Object value = Reflection.invokeMethod(session, "getAttribute", new Class[]{String.class}, key);
         return value;
     }
+
+    /**
+     * (none-javadoc)
+     *
+     * @see AbstractRequest#getAppBasePath()
+     */
+    @Override
+    public String getAppBasePath() {
+        try {
+            Object session = Reflection.invokeMethod(request, "getSession", EMPTY_CLASS);
+            Object servletContext = Reflection.invokeMethod(session, "getServletContext", EMPTY_CLASS);
+            Object realPath = Reflection.invokeMethod(servletContext, "getRealPath", new Class[]{String.class}, "/");
+            if (realPath instanceof String) {
+                String rp = (String) realPath;
+                if (rp.endsWith("/")) {
+                    rp = rp.substring(0, rp.length() - 1);
+                }
+                int index = rp.lastIndexOf(System.getProperty("file.separator"));
+                return rp.substring(0, index);
+            } else {
+                return "";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
 }

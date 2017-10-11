@@ -52,7 +52,8 @@ public class JSRequestContext extends ScriptableObject {
             "header",
             "parameter",
             "remoteAddr",
-            "server"
+            "server",
+            "appBasePath"
     };
 
     public JSRequestContext() {
@@ -83,6 +84,10 @@ public class JSRequestContext extends ScriptableObject {
 
     public String jsGet_querystring() {
         return javaContext.getQueryString();
+    }
+
+    public String jsGet_appBasePath() {
+        return javaContext.getAppBasePath();
     }
 
     public String jsGet_protocol() {

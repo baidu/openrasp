@@ -212,6 +212,13 @@ public abstract class AbstractRequest {
     public abstract Map<String, String> getServerContext();
 
     /**
+     * 获取app部署根路径
+     *
+     * @return app部署根路径
+     */
+    public abstract String getAppBasePath();
+
+    /**
      * 返回HTTP request body
      *
      * @return request body, can be null
