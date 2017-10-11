@@ -2,8 +2,6 @@
 // 官方插件仅作为 DEMO
 // 具体检测能力请根据业务来定制~
 //
-// 10月底我们将更新一版官方插件，公开一些零规则检测攻击的插件，以及一些应用的专用插件
-// 
 
 'use strict'
 var plugin = new RASP('offical')
@@ -15,7 +13,7 @@ var clean = {
 }
 
 var forcefulBrowsing = {
-    dotFiles: /\.(gz|7z|xz|tar|rar|zip|sql|db)$/,    
+    dotFiles:    /\.(gz|7z|xz|tar|rar|zip|sql|db)$/,
     systemFiles: /^\/(proc|sys|var\/log)(\/|$)/,
     unwanted: [
         // user files
@@ -51,7 +49,7 @@ var scannerUA = [
 
 var xssRegex        = /<script|script>|<iframe|iframe>|javascript:(?!(?:history\.(?:go|back)|void\(0\)))/i
 var scriptFileRegex = /\.(jspx?|php[345]?|phtml)\.?$/i
-var ntfsRegex       = /::\$(DATA|INDEX)$/i
+var ntfsRegex       = /::\$(DATA|INDEX)$/i // 其他的stream都没啥用
 
 var ognlPayloads = [
     'ognl.OgnlContext',
@@ -141,7 +139,7 @@ plugin.register('readFile', function (params, context) {
         }
     }
 
-    console.log(params.realpath, params.path)
+    // console.log(params.realpath, params.path)
 
     // 如果使用绝对路径访问敏感文件
     // 判定为 webshell
@@ -295,8 +293,8 @@ plugin.register('command', function (params, context) {
 
     // 默认禁止命令执行
     return {
-        action: 'block',
-        message: '尝试执行命令',
+        action:    'block',
+        message:   '尝试执行命令',
         confidence: 90
     }
 })
@@ -309,16 +307,16 @@ plugin.register('xxe', function (params, context) {
 
         if (protocol === 'gopher' || protocol === 'dict') {
             return {
-                action: 'block',
-                message: 'SSRF 攻击 (' + protocol + ' 协议)',
+                action:     'block',
+                message:    'SSRF 攻击 (' + protocol + ' 协议)',
                 confidence: 100
             }
         }
 
         if (protocol === 'file') {
             return {
-                action: 'log',
-                message: '尝试读取外部实体 (file 协议)',
+                action: '   log',
+                message:    '尝试读取外部实体 (file 协议)',
                 confidence: 90
             }
         }
@@ -331,8 +329,8 @@ plugin.register('ognl', function (params, context) {
     for (var index in ognlPayloads) {
         if (ognlExpression.indexOf(ognlPayloads[index]) > -1) {
             return {
-                action: 'block',
-                message: '尝试ognl远程命令执行',
+                action:     'block',
+                message:    '尝试ognl远程命令执行',
                 confidence: 100
             }
         }
@@ -347,8 +345,8 @@ plugin.register('deserialization', function (params, context) {
     for (var index in deserializationInvalidClazz) {
         if (clazz === deserializationInvalidClazz[index]) {
             return {
-                action: 'block',
-                message: '尝试反序列化攻击',
+                action:     'block',
+                message:    '尝试反序列化攻击',
                 confidence: 100
             }
         }
@@ -400,8 +398,8 @@ plugin.register('request', function(params, context) {
 
     if (foundScanner) {
         return {
-            action:  'block',
-            message: '已知的扫描器UA: ' + scannerUA[i],
+            action:     'block',
+            message:    '已知的扫描器UA: ' + scannerUA[i],
             confidence: 90
         }
     }
