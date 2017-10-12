@@ -117,6 +117,8 @@ plugin.register('directory', function (params, context) {
 })
 
 plugin.register('readFile', function (params, context) {
+    console.log('basePath', context.appBasePath)
+
     // 检查是否为成功的目录扫描
     var filename_1 = context.url.replace(/.*\//, '')
     var filename_2 = params.realpath.replace(/.*\//, '')

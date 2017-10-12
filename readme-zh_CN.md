@@ -44,8 +44,8 @@ RASP 技术以探针的形式，将保护引擎注入到应用服务中，能够
 
 在使用软件中发现任何问题，你可以通过邮件、QQ技术讨论群或者论坛的形式进行技术交流
 
+* [RASP 技术讨论群-1: 259318664](http://shang.qq.com/wpa/qunwpa?idkey=5016bac5431b23316a79efdcd2c4dadd6ef8b99b231e4ed10f1e265573a66e1c)
 * [百度安全论坛](http://anquan.baidu.com/bbs)
-* [RASP 技术讨论群 群1: 259318664](http://shang.qq.com/wpa/qunwpa?idkey=5016bac5431b23316a79efdcd2c4dadd6ef8b99b231e4ed10f1e265573a66e1c)
 
 官方合作、OEM 合作申请:
 
