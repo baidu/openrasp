@@ -38,7 +38,7 @@ import java.util.Map;
 
 public class JSContext extends Context {
     private static final Logger LOGGER = Logger.getLogger(JSContext.class.getPackage().getName() + ".log");
-    private static final Logger ALARM_LOGGER = Logger.getLogger(PluginManager.class.getPackage().getName() + ".alarm");
+    public static final Logger ALARM_LOGGER = Logger.getLogger(PluginManager.class.getPackage().getName() + ".alarm");
 
     public Scriptable scope = null;
     public List<List<CheckProcess>> checkPointList = null;

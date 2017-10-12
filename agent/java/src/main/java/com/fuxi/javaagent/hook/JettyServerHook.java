@@ -37,43 +37,25 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
-/**
- * Created by tyy on 9/22/17.
- *
- * jetty请求的hook点
- */
-public class JettyServerTransformer extends AbstractClassHook {
-
-
+public class JettyServerHook extends AbstractClassHook {
     @Override
     public boolean isClassMatched(String className) {
-        return className.equals("org/eclipse/jetty/server/handler/HandlerWrapper");
+        return className.equals("org/eclipse/jetty/server/Server");
     }
 
     @Override
     public String getType() {
-        return "request";
+        return "pre_request";
     }
 
     @Override
     protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
         if (name.equals("handle")) {
-            System.out.println(signature);
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
                 protected void onMethodEnter() {
-                    loadThis();
-                    loadArg(2);
-                    loadArg(3);
-                    invokeStatic(Type.getType(HookHandler.class),
-                            new Method("checkRequest", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
-                }
-
-                @Override
-                protected void onMethodExit(int opcode) {
                     invokeStatic(Type.getType(HookHandler.class),
                             new Method("onServiceExit", "()V"));
-                    super.onMethodExit(opcode);
                 }
             };
         }
