@@ -38,44 +38,41 @@ import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
 /**
- * Created by zhuming01 on 6/23/17.
- * All rights reserved
+ * Created by tyy on 9/22/17.
+ *
+ * jetty请求的hook点
  */
-public class CoyoteAdapterHook extends AbstractClassHook {
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#getType()
-     */
-    @Override
-    public String getType() {
-        return "pre_request";
-    }
+public class JettyServerHandleHook extends AbstractClassHook {
 
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#isClassMatched(String)
-     */
+
     @Override
     public boolean isClassMatched(String className) {
-        return className.endsWith("apache/catalina/connector/CoyoteAdapter");
+        return className.equals("org/eclipse/jetty/server/handler/HandlerWrapper");
     }
 
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#hookMethod(int, String, String, String, String[], MethodVisitor) (String)
-     */
     @Override
-    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions,
-                                       MethodVisitor mv) {
-        if ("service".equals(name)) {
+    public String getType() {
+        return "request";
+    }
+
+    @Override
+    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
+        if (name.equals("handle")) {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
                 protected void onMethodEnter() {
+                    loadThis();
+                    loadArg(2);
+                    loadArg(3);
+                    invokeStatic(Type.getType(HookHandler.class),
+                            new Method("checkRequest", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
+                }
+
+                @Override
+                protected void onMethodExit(int opcode) {
                     invokeStatic(Type.getType(HookHandler.class),
                             new Method("onServiceExit", "()V"));
+                    super.onMethodExit(opcode);
                 }
             };
         }

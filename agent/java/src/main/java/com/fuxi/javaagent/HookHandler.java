@@ -37,7 +37,6 @@ import com.fuxi.javaagent.hook.XXEHook;
 import com.fuxi.javaagent.plugin.CheckParameter;
 import com.fuxi.javaagent.plugin.PluginManager;
 import com.fuxi.javaagent.request.AbstractRequest;
-import com.fuxi.javaagent.request.CoyoteRequest;
 import com.fuxi.javaagent.request.HttpServletRequest;
 import com.fuxi.javaagent.response.HttpServletResponse;
 import com.fuxi.javaagent.tool.Reflection;
@@ -76,6 +75,14 @@ public class HookHandler {
             return false;
         }
     };
+
+    private static ThreadLocal<Boolean> tmpEnableCurrThreadHook = new ThreadLocal<Boolean>() {
+        @Override
+        protected Boolean initialValue() {
+            return false;
+        }
+    };
+
     public static ThreadLocal<AbstractRequest> requestCache = new ThreadLocal<AbstractRequest>() {
         @Override
         protected AbstractRequest initialValue() {
@@ -164,6 +171,7 @@ public class HookHandler {
      * 进入需要屏蔽hook的方法关闭开关
      */
     public static void preShieldHook() {
+        tmpEnableCurrThreadHook.set(enableCurrThreadHook.get());
         disableCurrThreadHook();
     }
 
@@ -171,7 +179,9 @@ public class HookHandler {
      * 退出需要屏蔽hook的方法打开开关
      */
     public static void postShieldHook() {
-        enableCurrThreadHook();
+        if (tmpEnableCurrThreadHook.get()) {
+            enableCurrThreadHook();
+        }
     }
 
     /**
@@ -194,26 +204,6 @@ public class HookHandler {
     }
 
     /**
-     * CoyoteRequest类型请求的进入的hook点
-     *
-     * @param adapter  请求适配器
-     * @param request  请求实体
-     * @param response 响应实体
-     */
-    public static void checkCoyoteAdapterRequest(Object adapter, Object request, Object response) {
-        if (adapter != null && request != null) {
-            requestCache.set(new CoyoteRequest(request));
-        }
-    }
-
-    /**
-     * CoyoteRequest类型的请求退出的hook点
-     */
-    public static void onCoyoteAdapterServiceExit() {
-        requestCache.set(null);
-    }
-
-    /**
      * 请求进入hook点
      *
      * @param servlet  servlet对象
@@ -221,20 +211,19 @@ public class HookHandler {
      * @param response 响应实体
      */
     public static void checkRequest(Object servlet, Object request, Object response) {
-        if (servlet != null && request != null) {
-            if (requestCache.get() == null || requestCache.get().getRequest() != request) {
-                // 默认是关闭hook的，只有处理过HTTP request的线程才打开
-                enableCurrThreadHook.set(true);
-                HttpServletRequest requestContainer = new HttpServletRequest(request);
-                HttpServletResponse responseContainer = new HttpServletResponse(response);
-                responseContainer.setHeader(OPEN_RASP_HEADER_KEY, OPEN_RASP_HEADER_VALUE);
-                responseContainer.setHeader(REQUEST_ID_HEADER_KEY, requestContainer.getRequestId());
-                requestCache.set(requestContainer);
-                responseCache.set(responseContainer);
+        if (servlet != null && request != null && !enableCurrThreadHook.get()) {
+            // 默认是关闭hook的，只有处理过HTTP request的线程才打开
+            enableCurrThreadHook.set(true);
+            HttpServletRequest requestContainer = new HttpServletRequest(request);
+            HttpServletResponse responseContainer = new HttpServletResponse(response);
+            responseContainer.setHeader(OPEN_RASP_HEADER_KEY, OPEN_RASP_HEADER_VALUE);
+            responseContainer.setHeader(REQUEST_ID_HEADER_KEY, requestContainer.getRequestId());
+            requestCache.set(requestContainer);
+            responseCache.set(responseContainer);
 
-                XXEHook.resetLocalExpandedSystemIds();
-                doCheck(CheckParameter.Type.REQUEST, EMPTY_MAP);
-            }
+            XXEHook.resetLocalExpandedSystemIds();
+            doCheck(CheckParameter.Type.REQUEST, EMPTY_MAP);
+
         }
     }
 
@@ -494,17 +483,21 @@ public class HookHandler {
     private static void doCheck(CheckParameter.Type type, Map<String, Object> params) {
         if (enableHook.get() && enableCurrThreadHook.get()) {
             enableCurrThreadHook.set(false);
-            try {
-                pluginCheck(type, params);
-            } finally {
-                enableCurrThreadHook.set(true);
-            }
+            pluginCheck(type, params);
         }
     }
 
     private static void pluginCheck(CheckParameter.Type type, Map<String, Object> params) {
         CheckParameter parameter = new CheckParameter(type, params, requestCache.get());
-        if (PluginManager.check(parameter)) {
+        boolean isBlock = false;
+        try {
+            isBlock = PluginManager.check(parameter);
+        } catch (Exception e) {
+            LOGGER.warn("plugin check error: " + parameter);
+        } finally {
+            enableCurrThreadHook.set(true);
+        }
+        if (isBlock) {
             handleBlock(parameter);
         }
     }

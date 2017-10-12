@@ -43,9 +43,7 @@ public class HttpServletResponse {
     public static final int BLOCK_STATUS_CODE = 400;
     private static final String CONTENT_TYPE_HEADER_KEY = "Content-Type";
     private static final String CONTENT_LENGTH_HEADER_KEY = "Content-Length";
-    private static final String TRANSFER_ENCODING_HEADER_KEY = "Transfer-Encoding";
     private static final String CONTENT_TYPE_HTML_VALUE = "text/html";
-    private static final String TRANSFER_ENCODING_HEADER_VALUE = "chunked";
 
     private Object response;
 
@@ -167,9 +165,7 @@ public class HttpServletResponse {
                 String script = "</script><script>location.href=\"" + blockUrl + "\"</script>";
 
                 resetBuffer();
-                if (getHeader(CONTENT_LENGTH_HEADER_KEY) != null) {
-                    setIntHeader(CONTENT_LENGTH_HEADER_KEY, script.getBytes().length);
-                }
+                setIntHeader(CONTENT_LENGTH_HEADER_KEY, script.getBytes().length);
                 sendErrorScript(script);
             } catch (Exception e) {
                 //ignore

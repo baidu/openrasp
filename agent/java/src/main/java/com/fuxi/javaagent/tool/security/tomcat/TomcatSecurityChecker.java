@@ -31,6 +31,7 @@
 package com.fuxi.javaagent.tool.security.tomcat;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.plugin.JSContext;
 import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
@@ -75,8 +76,8 @@ public class TomcatSecurityChecker {
      */
     public boolean check() {
         try {
-            checkStartUser();
             if (tomcatBaseDir != null) {
+                checkStartUser();
                 checkHttpOnlyIsOpen();
                 checkManagerPassword();
                 checkDefaultApp();
@@ -223,7 +224,7 @@ public class TomcatSecurityChecker {
     }
 
     private void handleSecurityProblem(String message) {
-        LOGGER.warn(getJsonFormattedMessage("tomcat_security_problem", message));
+        JSContext.ALARM_LOGGER.info(getJsonFormattedMessage("tomcat_security_problem", message));
         isSafe = false;
         unsafeMessage.add(message);
     }

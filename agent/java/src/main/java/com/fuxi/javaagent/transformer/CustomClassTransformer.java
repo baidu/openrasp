@@ -55,7 +55,6 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new FileHook());
         addHook(new FileInputStreamHook());
         addHook(new FileOutputStreamHook());
-        addHook(new HttpServletHook());
         addHook(new OgnlHook());
         addHook(new ProcessBuilderHook());
         addHook(new Struts2DispatcherHook());
@@ -67,8 +66,10 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new TomcatStartupHook());
         addHook(new ApplicationFilterHook());
         addHook(new ReflectionHook());
-        addHook(new JettyServerTransformer());
+        addHook(new JettyServerHandleHook());
         addHook(new JettyHttpInputHook());
+        addHook(new JettyServerHook());
+        addHook(new CoyoteAdapterHook());
     }
 
     private void addHook(AbstractClassHook hook) {
