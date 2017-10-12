@@ -50,4 +50,8 @@ public class JSTokenizeSql extends BaseFunction {
         String[] result = TokenGenerator.tokenize(sql);
         return new NativeArray(result);
     }
+    @Override
+    public Object getDefaultValue(Class<?> hint) {
+        return "[Function: sql_tokenize]";
+    }
 }

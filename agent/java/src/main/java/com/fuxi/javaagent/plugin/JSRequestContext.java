@@ -31,8 +31,11 @@
 package com.fuxi.javaagent.plugin;
 
 import com.fuxi.javaagent.request.AbstractRequest;
-import org.mozilla.javascript.*;
-import org.mozilla.javascript.typedarrays.NativeUint8Array;
+import com.fuxi.javaagent.request.HttpServletRequest;
+import org.mozilla.javascript.BaseFunction;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -53,7 +56,8 @@ public class JSRequestContext extends ScriptableObject {
             "parameter",
             "remoteAddr",
             "server",
-            "appBasePath"
+            "appBasePath",
+            "session"
     };
 
     public JSRequestContext() {
@@ -159,6 +163,48 @@ public class JSRequestContext extends ScriptableObject {
             server.put(key, server, value);
         }
         return server;
+    }
+
+    public Object jsGet_session() {
+        if (!(javaContext instanceof HttpServletRequest)) {
+            return Context.getUndefinedValue();
+        }
+        JSContext cx = (JSContext) JSContext.getCurrentContext();
+        Scriptable session = cx.newObject(cx.scope);
+        Object getter = new BaseFunction() {
+            @Override
+            public Object call(Context cx, Scriptable scope, Scriptable thisObj,
+                               Object[] args) {
+                if (args.length < 1 || !(args[0] instanceof String)) {
+                    return null;
+                }
+                return ((HttpServletRequest) javaContext).getSessionAttribute((String) args[0]).toString();
+            }
+
+            @Override
+            public Object getDefaultValue(Class<?> hint) {
+                return "[Function: getSession]";
+            }
+        };
+        Object setter = new BaseFunction() {
+            @Override
+            public Object call(Context cx, Scriptable scope, Scriptable thisObj,
+                               Object[] args) {
+                if (args.length < 2 || !(args[0] instanceof String) || !(args[1] instanceof String)) {
+                    Context.reportError("2333");
+                }
+                ((HttpServletRequest) javaContext).setSessionAttribute((String) args[0], (String) args[1]);
+                return null;
+            }
+
+            @Override
+            public Object getDefaultValue(Class<?> hint) {
+                return "[Function: setSession]";
+            }
+        };
+        ScriptableObject.defineProperty(session, "getSession", getter, ScriptableObject.READONLY);
+        ScriptableObject.defineProperty(session, "setSession", setter, ScriptableObject.READONLY);
+        return session;
     }
 
     @Override
