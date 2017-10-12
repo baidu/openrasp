@@ -55,12 +55,15 @@ public class JSContextFactory extends ContextFactory {
 
     public JSContextFactory() throws Exception {
         Context cx = Context.enter();
+        cx.setLanguageVersion(Context.VERSION_ES6);
+        cx.setOptimizationLevel(9);
         try {
             globalScope = cx.initStandardObjects();
 
             globalScope.defineProperty("global", globalScope, ScriptableObject.READONLY);
 
-            Object jsstdout = Context.javaToJS(new JSStdout(), globalScope);
+            ScriptableObject.defineClass(globalScope, JSStdout.class);
+            Object jsstdout = cx.newObject(globalScope, "Stdout");
             globalScope.defineProperty("stdout", jsstdout, ScriptableObject.READONLY);
             globalScope.defineProperty("stderr", jsstdout, ScriptableObject.READONLY);
 
@@ -92,7 +95,6 @@ public class JSContextFactory extends ContextFactory {
             cx.evaluateString(globalScope, script, name, 1, null);
 
             RASP = (ScriptableObject) ScriptableObject.getProperty(globalScope, "RASP");
-
             RASP.defineProperty("sql_tokenize", new JSTokenizeSql(), ScriptableObject.READONLY);
         } finally {
             Context.exit();
@@ -167,7 +169,7 @@ public class JSContextFactory extends ContextFactory {
         cx.setInstructionObserverThreshold(10 * 1000 * 1000);
         cx.setLanguageVersion(Context.VERSION_ES6);
         // 使用解释执行
-        cx.setOptimizationLevel(-1);
+        cx.setOptimizationLevel(9);
         return cx;
     }
 
