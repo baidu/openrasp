@@ -176,7 +176,7 @@ public class JSRequestContext extends ScriptableObject {
             public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                                Object[] args) {
                 if (args.length < 1 || !(args[0] instanceof String)) {
-                    return null;
+                    throw Context.reportRuntimeError("Error: Invalid Arguments");
                 }
                 return ((HttpServletRequest) javaContext).getSessionAttribute((String) args[0]).toString();
             }
@@ -191,7 +191,7 @@ public class JSRequestContext extends ScriptableObject {
             public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                                Object[] args) {
                 if (args.length < 2 || !(args[0] instanceof String) || !(args[1] instanceof String)) {
-                    Context.reportError("2333");
+                    throw Context.reportRuntimeError("Error: Invalid Arguments");
                 }
                 ((HttpServletRequest) javaContext).setSessionAttribute((String) args[0], (String) args[1]);
                 return null;
