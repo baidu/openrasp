@@ -53,7 +53,8 @@ public class CheckParameter {
         XXE("xxe"),
         OGNL("ognl"),
         DESERIALIZATION("deserialization"),
-        REFLECTION("reflection");
+        REFLECTION("reflection"),
+        WEBDAV("webdav");
 
         String normalName;
         Type(String name) {
