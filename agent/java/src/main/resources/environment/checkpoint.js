@@ -243,3 +243,24 @@ Object.defineProperty(global, 'CheckPointReflection', {
     value: CheckPointReflection,
     enumerable: true
 });
+
+var CheckPointWebdav = function () {
+    function CheckPointWebdav(data) {
+        _classCallCheck(this, CheckPointWebdav);
+
+        this.clazz = data.clazz;
+    }
+
+    _createClass(CheckPointWebdav, null, [{
+        key: 'name',
+        get: function get() {
+            return 'webdav';
+        }
+    }]);
+
+    return CheckPointWebdav;
+}();
+Object.defineProperty(global, 'CheckPointWebdav', {
+    value: CheckPointWebdav,
+    enumerable: true
+});
