@@ -132,6 +132,7 @@ public class JSContextFactory extends ContextFactory {
             cx = (JSContext) enterContext();
         }
         if (cx.pluginTime < pluginTime) {
+            cx.pluginTime = System.currentTimeMillis();
             Scriptable scope = cx.newObject(globalScope);
             scope.setPrototype(globalScope);
             scope.setParentScope(null);
