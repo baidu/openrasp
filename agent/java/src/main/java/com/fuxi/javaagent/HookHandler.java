@@ -490,7 +490,7 @@ public class HookHandler {
     }
 
     private static void handleBlock(CheckParameter parameter) {
-        SecurityException securityException = new SecurityException("Request blocked by OpenRasp");
+        SecurityException securityException = new SecurityException("Request blocked by OpenRASP");
         if (responseCache.get() != null) {
             responseCache.get().sendError();
         }
