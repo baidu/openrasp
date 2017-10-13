@@ -438,18 +438,21 @@ public class HookHandler {
      * @param dest
      */
     public static void checkWebdavCopyResource(Object webdavServlet, String source, String dest) {
-        try {
-            if (webdavServlet != null && source != null && dest != null) {
+        if (webdavServlet != null && source != null && dest != null) {
+            String realPath = null;
+            try {
                 Object servletContext = Reflection.invokeMethod(webdavServlet, "getServletContext", new Class[]{});
-                String realPath = Reflection.invokeStringMethod(servletContext, "getRealPath", new Class[]{String.class}, "/");
+                realPath = Reflection.invokeStringMethod(servletContext, "getRealPath", new Class[]{String.class}, "/");
                 realPath = realPath.endsWith(System.getProperty("file.separator")) ? realPath.substring(0, realPath.length() - 1) : realPath;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            if (realPath != null) {
                 HashMap<String, Object> param = new HashMap<String, Object>();
                 param.put("source", realPath + source);
                 param.put("dest", realPath + dest);
                 doCheck(CheckParameter.Type.WEBDAV, param);
             }
-        } catch (Exception e) {
-
         }
     }
 
