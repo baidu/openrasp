@@ -105,10 +105,13 @@ public class JSContextFactory extends ContextFactory {
     public void setCheckScriptList(List<CheckScript> checkScriptList) {
         Context cx = Context.enter();
         try {
+            ScriptableObject scope = (ScriptableObject) cx.newObject(globalScope);
+            scope.setPrototype(globalScope);
+            scope.setParentScope(null);
             Function clean = (Function) RASP.get("clean", RASP);
-            clean.call(cx, globalScope, clean, null);
+            clean.call(cx, scope, clean, null);
             for (CheckScript checkScript : checkScriptList) {
-                cx.evaluateString(globalScope, "(function(){\n" + checkScript.getContent() + "\n})()", checkScript.getName(), 0, null);
+                cx.evaluateString(scope, "(function(){\n" + checkScript.getContent() + "\n})()", checkScript.getName(), 0, null);
             }
         } catch (Exception e) {
             LOGGER.info(e);
