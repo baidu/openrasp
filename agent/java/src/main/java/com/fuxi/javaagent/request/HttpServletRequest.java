@@ -295,11 +295,12 @@ public final class HttpServletRequest extends AbstractRequest {
             Object servletContext = Reflection.invokeMethod(session, "getServletContext", EMPTY_CLASS);
             Object realPath = Reflection.invokeMethod(servletContext, "getRealPath", new Class[]{String.class}, "/");
             if (realPath instanceof String) {
+                String separator = System.getProperty("file.separator");
                 String rp = (String) realPath;
-                if (rp.endsWith("/")) {
+                if (rp.endsWith(separator)) {
                     rp = rp.substring(0, rp.length() - 1);
                 }
-                int index = rp.lastIndexOf(System.getProperty("file.separator"));
+                int index = rp.lastIndexOf(separator);
                 return rp.substring(0, index);
             } else {
                 return "";

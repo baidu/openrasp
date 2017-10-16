@@ -55,12 +55,15 @@ public class JSContextFactory extends ContextFactory {
 
     public JSContextFactory() throws Exception {
         Context cx = Context.enter();
+        cx.setLanguageVersion(Context.VERSION_ES6);
+        cx.setOptimizationLevel(9);
         try {
             globalScope = cx.initStandardObjects();
 
             globalScope.defineProperty("global", globalScope, ScriptableObject.READONLY);
 
-            Object jsstdout = Context.javaToJS(new JSStdout(), globalScope);
+            ScriptableObject.defineClass(globalScope, JSStdout.class);
+            Object jsstdout = cx.newObject(globalScope, "Stdout");
             globalScope.defineProperty("stdout", jsstdout, ScriptableObject.READONLY);
             globalScope.defineProperty("stderr", jsstdout, ScriptableObject.READONLY);
 
@@ -92,7 +95,6 @@ public class JSContextFactory extends ContextFactory {
             cx.evaluateString(globalScope, script, name, 1, null);
 
             RASP = (ScriptableObject) ScriptableObject.getProperty(globalScope, "RASP");
-
             RASP.defineProperty("sql_tokenize", new JSTokenizeSql(), ScriptableObject.READONLY);
         } finally {
             Context.exit();
@@ -103,10 +105,13 @@ public class JSContextFactory extends ContextFactory {
     public void setCheckScriptList(List<CheckScript> checkScriptList) {
         Context cx = Context.enter();
         try {
+            ScriptableObject scope = (ScriptableObject) cx.newObject(globalScope);
+            scope.setPrototype(globalScope);
+            scope.setParentScope(null);
             Function clean = (Function) RASP.get("clean", RASP);
-            clean.call(cx, globalScope, clean, null);
+            clean.call(cx, scope, clean, null);
             for (CheckScript checkScript : checkScriptList) {
-                cx.evaluateString(globalScope, "(function(){\n" + checkScript.getContent() + "\n})()", checkScript.getName(), 0, null);
+                cx.evaluateString(scope, "(function(){\n" + checkScript.getContent() + "\n})()", checkScript.getName(), 0, null);
             }
         } catch (Exception e) {
             LOGGER.info(e);
@@ -130,6 +135,7 @@ public class JSContextFactory extends ContextFactory {
             cx = (JSContext) enterContext();
         }
         if (cx.pluginTime < pluginTime) {
+            cx.pluginTime = System.currentTimeMillis();
             Scriptable scope = cx.newObject(globalScope);
             scope.setPrototype(globalScope);
             scope.setParentScope(null);
@@ -167,7 +173,7 @@ public class JSContextFactory extends ContextFactory {
         cx.setInstructionObserverThreshold(10 * 1000 * 1000);
         cx.setLanguageVersion(Context.VERSION_ES6);
         // 使用解释执行
-        cx.setOptimizationLevel(-1);
+        cx.setOptimizationLevel(9);
         return cx;
     }
 

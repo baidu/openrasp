@@ -427,6 +427,32 @@ public class HookHandler {
         }
     }
 
+    /**
+     * 检测WebDAV COPY MOVE
+     *
+     * @param webdavServlet
+     * @param source
+     * @param dest
+     */
+    public static void checkWebdavCopyResource(Object webdavServlet, String source, String dest) {
+        if (webdavServlet != null && source != null && dest != null) {
+            String realPath = null;
+            try {
+                Object servletContext = Reflection.invokeMethod(webdavServlet, "getServletContext", new Class[]{});
+                realPath = Reflection.invokeStringMethod(servletContext, "getRealPath", new Class[]{String.class}, "/");
+                realPath = realPath.endsWith(System.getProperty("file.separator")) ? realPath.substring(0, realPath.length() - 1) : realPath;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            if (realPath != null) {
+                HashMap<String, Object> param = new HashMap<String, Object>();
+                param.put("source", realPath + source);
+                param.put("dest", realPath + dest);
+                doCheck(CheckParameter.Type.WEBDAV, param);
+            }
+        }
+    }
+
     public static void onInputStreamRead(int ret, Object inputStream) {
         if (ret != -1 && requestCache.get() != null) {
             AbstractRequest request = requestCache.get();
@@ -464,7 +490,7 @@ public class HookHandler {
     }
 
     private static void handleBlock(CheckParameter parameter) {
-        SecurityException securityException = new SecurityException("Request blocked by OpenRasp");
+        SecurityException securityException = new SecurityException("Request blocked by OpenRASP");
         if (responseCache.get() != null) {
             responseCache.get().sendError();
         }

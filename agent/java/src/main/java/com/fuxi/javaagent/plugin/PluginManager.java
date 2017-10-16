@@ -36,9 +36,6 @@ import com.fuxi.javaagent.tool.filemonitor.FileScanListener;
 import com.fuxi.javaagent.tool.filemonitor.FileScanMonitor;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.log4j.Logger;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.typedarrays.NativeUint8Array;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -74,7 +71,9 @@ public class PluginManager {
     public synchronized static void init() throws Exception {
         jsContextFactory = new JSContextFactory();
         updatePlugin();
-        initFileWatcher();
+        if (!System.getProperty("os.name").toLowerCase().startsWith("mac")) {
+            initFileWatcher();
+        }
     }
 
     /**
@@ -180,36 +179,5 @@ public class PluginManager {
     public static boolean check(CheckParameter parameter) {
         JSContext cx = jsContextFactory.enterAndInitContext();
         return cx.check(parameter);
-    }
-
-    public static void main(String[] a) throws Exception {
-//        InputStream is;
-//        String name;
-//        String script;
-//        name = "plugin.js";
-//        is = Object.class.getResourceAsStream("/" + name);
-//        script = IOUtils.toString(is, "UTF-8");
-//        jsContextFactory = new JSContextFactory();
-//        List<CheckScript> checkScriptList = new LinkedList<CheckScript>();
-//        checkScriptList.add(new CheckScript("adddd", "asdasdasd.asdas"));
-//        jsContextFactory.setCheckScriptList(checkScriptList);
-//
-//        JSContext cx = jsContextFactory.enterAndInitContext();
-//        Map<String, Object> params = new HashMap<String, Object>();
-//        params.put("path0", "../../../../../");
-//        CheckParameter parameter = new CheckParameter(CheckParameter.Type.DIRECTORY, params, null);
-//        System.out.println(cx.check(parameter));
-        Context cx = Context.enter();
-        cx.setLanguageVersion(Context.VERSION_ES6);
-        Scriptable scope = cx.initStandardObjects();
-        NativeUint8Array buffer = new NativeUint8Array(2);
-        buffer.set(0, 10);
-        scope.put("buffer", scope, buffer);
-        Object obj = cx.evaluateString(scope, "buffer[1]=buffer[0];buffer;", "t", 1, null);
-        System.out.println(obj.getClass().getName());
-        NativeUint8Array arr = (NativeUint8Array) obj;
-        System.out.println(arr.get(0));
-        System.out.println(arr.get(1));
-        System.out.println(arr.getByteLength());
     }
 }

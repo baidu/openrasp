@@ -117,6 +117,8 @@ plugin.register('directory', function (params, context) {
 })
 
 plugin.register('readFile', function (params, context) {
+    console.log('basePath', context.appBasePath)
+
     // 检查是否为成功的目录扫描
     var filename_1 = context.url.replace(/.*\//, '')
     var filename_2 = params.realpath.replace(/.*\//, '')
@@ -176,8 +178,21 @@ plugin.register('readFile', function (params, context) {
 
     if (forcefulBrowsing.systemFiles.test(params.realpath)) {
         return {
-            action: 'block',
-            message: '读取系统文件',
+            action:     'block',
+            message:    '读取系统文件',
+            confidence: 100
+        }
+    }
+    return clean
+})
+
+plugin.register('webdav', function (params, context) {
+    
+    // 源文件不是脚本 && 目标文件是脚本，判定为MOVE方式写后门
+    if (! scriptFileRegex.test(params.source) && scriptFileRegex.test(params.dest)) {
+        return {
+            action:    'block',
+            message:   '尝试通过 ' + context.method + ' 方式上传脚本文件: ' + params.dest,
             confidence: 100
         }
     }

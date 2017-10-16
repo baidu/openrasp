@@ -31,14 +31,26 @@
 package com.fuxi.javaagent.plugin;
 
 import org.apache.log4j.Logger;
+import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.annotations.JSFunction;
 
 
 /**
  * JavaScript 环境中的 stdout 对象
+ * 提供输出能力
  */
-public class JSStdout {
+public class JSStdout extends ScriptableObject {
     private static final Logger LOGGER = Logger.getLogger(JSStdout.class.getPackage().getName() + ".log");
 
+    public JSStdout() {
+    }
+
+    @Override
+    public String getClassName() {
+        return "Stdout";
+    }
+
+    @JSFunction
     public void write(Object message) {
         if (message instanceof String) {
             message = ((String) message).replaceAll("\n$", "");

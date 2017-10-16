@@ -33,10 +33,20 @@ package com.fuxi.javaagent.plugin;
 import com.baidu.rasp.TokenGenerator;
 import org.mozilla.javascript.BaseFunction;
 import org.mozilla.javascript.Context;
-import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.Scriptable;
 
+/**
+ * Java 实现的 token 解析功能，将注册到 JS 中 RASP 对象上
+ */
 public class JSTokenizeSql extends BaseFunction {
+    /**
+     * @see BaseFunction#call(Context, Scriptable, Scriptable, Object[])
+     * @param cx
+     * @param scope
+     * @param thisObj
+     * @param args
+     * @return
+     */
     @Override
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args) {
@@ -48,6 +58,23 @@ public class JSTokenizeSql extends BaseFunction {
         }
         String sql = (String) args[0];
         String[] result = TokenGenerator.tokenize(sql);
-        return new NativeArray(result);
+        int length = result.length;
+        Scriptable array = cx.newArray(scope, length);
+        for (int i = 0; i < length; i++) {
+            array.put(i, array, result[i]);
+        }
+        return array;
+    }
+
+    /**
+     * 提供获取该对象默认值的方法
+     * console.log(thisObj) 即会输出此方法返回的值
+     * @see Scriptable#getDefaultValue(Class)
+     * @param hint
+     * @return
+     */
+    @Override
+    public Object getDefaultValue(Class<?> hint) {
+        return "[Function: sql_tokenize]";
     }
 }

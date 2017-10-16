@@ -81,7 +81,7 @@ public class JSContext extends Context {
             try {
                 tmp = function.call(this, scope, function, functionArgs);
             } catch (RhinoException e) {
-                LOGGER.info("\n" + e.details() + "\n" + e.getScriptStackTrace());
+                LOGGER.info(e.details() + "\n" + e.getScriptStackTrace());
                 continue;
             } catch (Exception e) {
                 LOGGER.info(e);
