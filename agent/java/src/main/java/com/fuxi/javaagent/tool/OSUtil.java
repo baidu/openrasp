@@ -30,45 +30,50 @@
 
 package com.fuxi.javaagent.tool;
 
-import org.apache.commons.io.FileUtils;
+import java.net.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
 
-import java.io.File;
-import java.io.IOException;
+public class OSUtil {
 
-/**
- * Created by tyy on 4/7/17.
- * 文件工具类
- */
-public class FileUtil {
-    /**
-     * 读取文件内容
-     *
-     * @param file 文件对象
-     * @return 文件字符串内容
-     * @throws IOException {@link IOException}
-     */
-    public static String readFileByFile(File file) throws IOException {
-        return FileUtils.readFileToString(file);
-    }
+    public static InetAddress inetAddress;
 
-    /**
-     * 还原文件真实路径,避免绕过
-     *
-     * @param file 文件
-     * @return 真实文件路径su
-     */
-    public static String getRealPath(File file) {
-        String absPath = file.getAbsolutePath();
-        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
-            int index = absPath.indexOf("::$");
-            if (index >= 0) {
-                file = new File(absPath.substring(0,index));
-            }
-        }
+    static {
         try {
-            return file.getCanonicalPath();
-        } catch (IOException e) {
-            return absPath;
+            inetAddress = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
         }
     }
+
+    public static String getHostName() {
+        return inetAddress == null ? null : inetAddress.getHostName();
+    }
+
+    public static ArrayList<String> getIpAddress() {
+        ArrayList<String> ipList = new ArrayList<String>();
+        Enumeration allNetInterfaces = null;
+        try {
+            allNetInterfaces = NetworkInterface.getNetworkInterfaces();
+
+            InetAddress ipAddress = null;
+            while (allNetInterfaces.hasMoreElements()) {
+                NetworkInterface netInterface = (NetworkInterface) allNetInterfaces.nextElement();
+                System.out.println(netInterface.getName());
+                Enumeration addresses = netInterface.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    ipAddress = (InetAddress) addresses.nextElement();
+                    if (ipAddress != null && ipAddress instanceof Inet4Address) {
+                        String ip = ipAddress.getHostAddress();
+                        if (!ip.equals("0.0.0.0") && !ip.equals("127.0.0.1"))
+                            ipList.add(netInterface.getName() + ":" + ipAddress.getHostAddress());
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        return ipList;
+    }
+
 }

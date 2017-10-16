@@ -38,7 +38,6 @@ import java.util.Map;
 
 public class JSContext extends Context {
     private static final Logger LOGGER = Logger.getLogger(JSContext.class.getPackage().getName() + ".log");
-    public static final Logger ALARM_LOGGER = Logger.getLogger(PluginManager.class.getPackage().getName() + ".alarm");
 
     public Scriptable scope = null;
     public List<List<CheckProcess>> checkPointList = null;
@@ -51,20 +50,20 @@ public class JSContext extends Context {
             return false;
         }
         Map<String, Object> parameterParams = parameter.getParams();
-        Scriptable parmas = newObject(scope);
+        Scriptable params = newObject(scope);
         for(Map.Entry<String, Object> param : parameterParams.entrySet()) {
             Object value = param.getValue();
             if (value instanceof String) {
-                parmas.put(param.getKey(), parmas, value);
+                params.put(param.getKey(), params, value);
             } else if (value instanceof List) {
                 Scriptable array = newArray(scope, ((List) value).toArray());
-                parmas.put(param.getKey(), parmas, array);
+                params.put(param.getKey(), params, array);
             }
         }
 
         Scriptable requestContext = this.newObject(scope, "Context", new Object[]{parameter.getRequest()});
 
-        Object[] functionArgs = {parmas, requestContext};
+        Object[] functionArgs = {params, requestContext};
         Object tmp;
         CheckProcess checkProcess;
         Function function;
@@ -117,7 +116,7 @@ public class JSContext extends Context {
             confidence = ((Number) tmp).intValue();
             CheckResult checkResult = new CheckResult(action, message, name, confidence);
             AttackInfo attackInfo = new AttackInfo(parameter, checkResult);
-            ALARM_LOGGER.info(attackInfo.toString());
+            PluginManager.ALARM_LOGGER.info(attackInfo.toString());
             block = block || action.equals("block");
         }
         return block;
