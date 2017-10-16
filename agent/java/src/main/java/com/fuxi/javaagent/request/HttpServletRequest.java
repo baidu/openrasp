@@ -216,7 +216,7 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Map<String, String> getServerContext() {
-        Object session = Reflection.invokeMethod(request, "getSession", EMPTY_CLASS);
+        Object session = Reflection.invokeMethod(request, "getSession", new Class[]{boolean.class}, true);
         Object servletContext = Reflection.invokeMethod(session, "getServletContext", EMPTY_CLASS);
         String serverInfo = Reflection.invokeStringMethod(servletContext, "getServerInfo", EMPTY_CLASS);
 
@@ -236,7 +236,7 @@ public final class HttpServletRequest extends AbstractRequest {
      * @param serverInfo 服务器信息
      * @return 服务器类型
      */
-    private String extractType(String serverInfo) {
+    public static String extractType(String serverInfo) {
         if (serverInfo == null) {
             return null;
         }
@@ -253,7 +253,7 @@ public final class HttpServletRequest extends AbstractRequest {
      * @param serverInfo 服务器信息
      * @return 服务器版本号
      */
-    private String extractNumber(String serverInfo) {
+    public static String extractNumber(String serverInfo) {
         if (serverInfo == null) {
             return null;
         }
@@ -264,7 +264,7 @@ public final class HttpServletRequest extends AbstractRequest {
     /**
      * 增加session条目
      *
-     * @param key 键
+     * @param key   键
      * @param value 值
      */
     public void setSessionAttribute(String key, String value) {

@@ -28,47 +28,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.tool;
+package com.fuxi.javaagent.plugin;
 
-import org.apache.commons.io.FileUtils;
+import com.google.gson.Gson;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.Map;
 
 /**
- * Created by tyy on 4/7/17.
- * 文件工具类
+ * 报警事件信息类
  */
-public class FileUtil {
-    /**
-     * 读取文件内容
-     *
-     * @param file 文件对象
-     * @return 文件字符串内容
-     * @throws IOException {@link IOException}
-     */
-    public static String readFileByFile(File file) throws IOException {
-        return FileUtils.readFileToString(file);
+public abstract class EventInfo {
+
+    private String json;
+
+    public abstract String getType();
+
+    public abstract Map<String, Object> getInfo();
+
+    @Override
+    public String toString() {
+        if (json == null) {
+            Map<String, Object> info = getInfo();
+            json = new Gson().toJson(info);
+        }
+        return json;
     }
 
-    /**
-     * 还原文件真实路径,避免绕过
-     *
-     * @param file 文件
-     * @return 真实文件路径su
-     */
-    public static String getRealPath(File file) {
-        String absPath = file.getAbsolutePath();
-        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
-            int index = absPath.indexOf("::$");
-            if (index >= 0) {
-                file = new File(absPath.substring(0,index));
-            }
-        }
-        try {
-            return file.getCanonicalPath();
-        } catch (IOException e) {
-            return absPath;
-        }
-    }
 }

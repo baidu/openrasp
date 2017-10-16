@@ -31,7 +31,8 @@
 package com.fuxi.javaagent.tool.security.tomcat;
 
 import com.fuxi.javaagent.HookHandler;
-import com.fuxi.javaagent.plugin.JSContext;
+import com.fuxi.javaagent.plugin.PluginManager;
+import com.fuxi.javaagent.plugin.SecurityPolicyInfo;
 import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
@@ -44,6 +45,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -88,6 +90,9 @@ public class TomcatSecurityChecker {
         } catch (Exception e) {
             handleException(e);
         }
+        if (!isSafe) {
+            PluginManager.ALARM_LOGGER.info(new SecurityPolicyInfo(getFormattedUnsafeMessage()).toString());
+        }
         return isSafe;
     }
 
@@ -128,7 +133,7 @@ public class TomcatSecurityChecker {
                 if (userGroups != null) {
                     for (String group : userGroups) {
                         if (group.equals(WINDOWS_ADMIN_GROUP_ID)) {
-                            handleSecurityProblem("tomcat以管理员权限启动.");
+                            handleSecurityProblem("服务器以管理员权限启动.");
                         }
                     }
                 }
@@ -207,11 +212,20 @@ public class TomcatSecurityChecker {
      * 检测是否删除了默认安装的app
      */
     private void checkDefaultApp() {
+        LinkedList<String> apps = new LinkedList<String>();
         for (String dir : DEFAULT_APP_DIRS) {
             File file = new File(tomcatBaseDir + File.separator + "webapps" + File.separator + dir);
             if (file.exists() && file.isDirectory()) {
-                handleSecurityProblem("tomcat默认安装程序没有卸载:" + dir + ".");
+                apps.add(dir);
             }
+        }
+
+        if (!apps.isEmpty()) {
+            StringBuilder message = new StringBuilder("tomcat默认安装程序没有卸载: ");
+            for (String app : apps) {
+                message.append(app).append(" ,");
+            }
+            handleSecurityProblem(message.substring(0, message.length() - 1));
         }
     }
 
@@ -224,7 +238,6 @@ public class TomcatSecurityChecker {
     }
 
     private void handleSecurityProblem(String message) {
-        JSContext.ALARM_LOGGER.info(getJsonFormattedMessage("tomcat_security_problem", message));
         isSafe = false;
         unsafeMessage.add(message);
     }

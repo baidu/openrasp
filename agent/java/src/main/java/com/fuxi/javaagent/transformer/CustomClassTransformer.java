@@ -37,6 +37,7 @@ import org.apache.log4j.Logger;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
+import java.util.HashMap;
 import java.util.HashSet;
 
 /**
@@ -44,6 +45,7 @@ import java.util.HashSet;
  */
 public class CustomClassTransformer implements ClassFileTransformer {
     private static final Logger LOGGER = Logger.getLogger(CustomClassTransformer.class.getName());
+    private static HashMap<String, ClassLoader> classLoaderCache = new HashMap<String, ClassLoader>();
     private HashSet<AbstractClassHook> hooks;
 
     public CustomClassTransformer() {
@@ -97,7 +99,17 @@ public class CustomClassTransformer implements ClassFileTransformer {
                 return hook.transformClass(className, classfileBuffer);
             }
         }
-
+        handleClassLoader(loader, className);
         return null;
+    }
+
+    public static ClassLoader getClassLoader(String className) {
+        return classLoaderCache.get(className);
+    }
+
+    private static void handleClassLoader(ClassLoader loader, String className) {
+        if (className.equals("org/apache/catalina/util/ServerInfo")) {
+            classLoaderCache.put(className.replace('/', '.'), loader);
+        }
     }
 }

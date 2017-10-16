@@ -39,6 +39,7 @@ import com.fuxi.javaagent.plugin.PluginManager;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.request.HttpServletRequest;
 import com.fuxi.javaagent.response.HttpServletResponse;
+import com.fuxi.javaagent.tool.FileUtil;
 import com.fuxi.javaagent.tool.Reflection;
 import com.fuxi.javaagent.tool.StackTrace;
 import com.fuxi.javaagent.tool.hook.CustomLockObject;
@@ -265,10 +266,10 @@ public class HookHandler {
             param.put("path", file.getPath());
             try {
                 String path = file.getCanonicalPath();
-                if (path.endsWith(".class")) {
+                if (path.endsWith(".class") || !file.exists()) {
                     return;
                 }
-                param.put("realpath", path);
+                param.put("realpath", FileUtil.getRealPath(file));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -313,11 +314,7 @@ public class HookHandler {
         if (file != null) {
             HashMap<String, Object> param = new HashMap<String, Object>();
             param.put("name", file.getName());
-            try {
-                param.put("realpath", file.getCanonicalPath());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            param.put("realpath", FileUtil.getRealPath(file));
             param.put("content", "");
             doCheck(CheckParameter.Type.WRITEFILE, param);
         }
@@ -519,7 +516,7 @@ public class HookHandler {
         try {
             isBlock = PluginManager.check(parameter);
         } catch (Exception e) {
-            LOGGER.warn("plugin check error: " + parameter);
+            LOGGER.warn("plugin check error: " + e.getMessage());
         } finally {
             enableCurrThreadHook.set(true);
         }

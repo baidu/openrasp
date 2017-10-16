@@ -57,6 +57,7 @@ import java.util.TimerTask;
  */
 public class PluginManager {
     private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
+    public static final Logger ALARM_LOGGER = Logger.getLogger(PluginManager.class.getPackage().getName() + ".alarm");
 
     private static JSContextFactory jsContextFactory = null;
     private static Timer timer = null;

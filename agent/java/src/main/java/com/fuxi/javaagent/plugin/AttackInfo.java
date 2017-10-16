@@ -32,7 +32,7 @@ package com.fuxi.javaagent.plugin;
 
 import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.request.AbstractRequest;
-import com.google.gson.Gson;
+import com.fuxi.javaagent.tool.OSUtil;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -47,28 +47,14 @@ import java.util.Map;
  *
  * @see <a href="https://rasp.baidu.com/doc/setup/log/main.html">document</a>
  */
-public class AttackInfo {
+public class AttackInfo extends EventInfo {
+    public static final String TYPE_ATTACK = "attack";
     private CheckParameter parameter;
     private CheckResult result;
-    private String json;
 
     AttackInfo(CheckParameter parameter, CheckResult result) {
         this.parameter = parameter;
         this.result = result;
-        this.json = null;
-    }
-
-    /**
-     * 转换攻击日志为json格式
-     *
-     * @return json格式日志
-     */
-    String toJson() {
-        if (json == null) {
-            Map<String, Object> info = getInfo();
-            json = new Gson().toJson(info);
-        }
-        return json;
     }
 
     /**
@@ -76,13 +62,17 @@ public class AttackInfo {
      *
      * @return 攻击信息
      */
-    private Map<String, Object> getInfo() {
+    @Override
+    public Map<String, Object> getInfo() {
         Map<String, Object> info = new HashMap<String, Object>();
         AbstractRequest request = parameter.getRequest();
         Timestamp createTime = new Timestamp(parameter.getCreateTime());
 
+        info.put("event_type", getType());
         // 攻击时间
-        info.put("attack_time", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(createTime));
+        info.put("event_time", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(createTime));
+        // 服务器host name
+        info.put("server_hostname", OSUtil.getHostName());
         // 攻击类型
         info.put("attack_type", parameter.getType().toString());
         // 攻击参数
@@ -127,9 +117,7 @@ public class AttackInfo {
             info.put("user_agent", request.getHeader("User-Agent"));
             // 攻击的 Referrer 头
             String referer = request.getHeader("Referer");
-            if (referer != null) {
-                info.put("referer", referer);
-            }
+            info.put("referer", referer == null ? "" : referer);
         }
 
         return info;
@@ -155,11 +143,7 @@ public class AttackInfo {
     }
 
     @Override
-    public String toString() {
-        if (json == null) {
-            Map<String, Object> info = getInfo();
-            json = new Gson().toJson(info);
-        }
-        return json;
+    public String getType() {
+        return TYPE_ATTACK;
     }
 }
