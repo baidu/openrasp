@@ -88,7 +88,7 @@ public class Config {
         reflectionmaxstack,
         reflectionmonitor,
         blockurl,
-        LOGMAXSTACKSIZE,
+        logmaxstack,
         securityenforce_policy,
         readfileextensionregex
     }
@@ -409,7 +409,7 @@ public class Config {
                 case blockurl:
                     setBlockUrl(value);
                     break;
-                case LOGMAXSTACKSIZE:
+                case logmaxstack:
                     setLogMaxStackSize(value);
                     break;
                 case securityenforce_policy:
