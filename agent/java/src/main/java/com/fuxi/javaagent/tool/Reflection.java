@@ -30,7 +30,9 @@
 
 package com.fuxi.javaagent.tool;
 
+import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.transformer.CustomClassTransformer;
+import org.apache.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -42,6 +44,7 @@ import java.lang.reflect.Method;
  * 反射工具类
  */
 public class Reflection {
+    private static final Logger LOGGER = Logger.getLogger(Reflection.class.getName());
 
     /**
      * 根据方法名调用对象的某一个方法
@@ -116,11 +119,11 @@ public class Reflection {
             }
             return method.invoke(object, parameters);
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            LOGGER.warn(e.getMessage());
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            LOGGER.warn(e.getMessage());
         } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+            LOGGER.warn(e.getMessage());
         }
         return null;
     }

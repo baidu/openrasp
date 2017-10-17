@@ -177,7 +177,12 @@ public class HttpServletResponse {
      * 发送自定义错误处理脚本
      */
     private void sendErrorScript(String script) {
-        Object printer = Reflection.invokeMethod(response, "getWriter", new Class[]{});
+        Object printer = null;
+
+        printer = Reflection.invokeMethod(response, "getWriter", new Class[]{});
+        if (printer == null) {
+            printer = Reflection.invokeMethod(response, "getOutputStream", new Class[]{});
+        }
         Reflection.invokeMethod(printer, "print", new Class[]{String.class}, script);
         Reflection.invokeMethod(printer, "flush", new Class[]{});
         Reflection.invokeMethod(printer, "close", new Class[]{});
