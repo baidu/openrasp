@@ -63,6 +63,7 @@ public class Config {
             + "java.lang.Runtime.exec,"
             + "java.lang.ProcessBuilder.start";
     private static final String DEFAULT_LOG_STACK_SIZE = "20";
+    private static final String DEFAULT_READ_FILE_EXTENSION_REGEX = "^(gz|7z|xz|tar|rar|zip|sql|db)$";
 
     private static final Logger LOGGER = Logger.getLogger(Config.class.getName());
     private static String baseDirectory;
@@ -76,6 +77,7 @@ public class Config {
     private boolean enforcePolicy;
     private String[] reflectionMonitorMethod;
     private int logMaxStackSize;
+    private String readFileExtensionRegex;
 
     private String blockUrl;
 
@@ -113,6 +115,7 @@ public class Config {
         this.reflectionMaxStack = Integer.parseInt(DEFAULT_REFLECTION_MAX_STACK);
         this.logMaxStackSize = Integer.parseInt(DEFAULT_LOG_STACK_SIZE);
         this.blockUrl = DEFAULT_BLOCK_URL;
+        this.readFileExtensionRegex = DEFAULT_READ_FILE_EXTENSION_REGEX;
 
         try {
             input = new FileInputStream(new File(baseDirectory, "conf" + File.separator + "rasp.properties"));
@@ -128,6 +131,7 @@ public class Config {
             this.reflectionMaxStack = Integer.parseInt(properties.getProperty("reflection.maxstack", DEFAULT_REFLECTION_MAX_STACK));
             this.logMaxStackSize = Integer.parseInt(properties.getProperty("log.maxstack", DEFAULT_LOG_STACK_SIZE));
             this.blockUrl = properties.getProperty("block.url", DEFAULT_BLOCK_URL);
+            this.readFileExtensionRegex = properties.getProperty("readfile.extension.regex", DEFAULT_READ_FILE_EXTENSION_REGEX);
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find rasp.properties, using default settings: " + e.getMessage());
         } catch (IOException e) {
@@ -154,6 +158,7 @@ public class Config {
         LOGGER.info("reflection.monitor: " + Arrays.toString(this.reflectionMonitorMethod));
         LOGGER.info("reflection.maxstack: " + reflectionMaxStack);
         LOGGER.info("block.url: " + blockUrl);
+        LOGGER.info("readfile.extension.regex: " + readFileExtensionRegex);
     }
 
     private static class ConfigHolder {
@@ -296,4 +301,21 @@ public class Config {
         this.blockUrl = blockUrl;
     }
 
+    /**
+     * 获取读文件需要检测的扩展名正则表达式
+     *
+     * @return
+     */
+    public synchronized String getReadFileExtensionRegex() {
+        return readFileExtensionRegex;
+    }
+
+    /**
+     * 设置读文件需要检测的扩展名正则表达式
+     *
+     * @param readFileExtensionRegex
+     */
+    public synchronized void setReadFileExtensionRegex(String readFileExtensionRegex) {
+        this.readFileExtensionRegex = readFileExtensionRegex;
+    }
 }
