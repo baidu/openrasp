@@ -81,6 +81,18 @@ public class Config {
 
     private String blockUrl;
 
+    private enum KeyName {
+        v8timeoutmillis,
+        bodymaxbytes,
+        hooksignore,
+        reflectionmaxstack,
+        reflectionmonitor,
+        blockurl,
+        LOGMAXSTACKSIZE,
+        securityenforce_policy,
+        readfileextensionregex
+    }
+
     // Config是由bootstrap classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
         Class clazz = Config.class;
@@ -179,15 +191,6 @@ public class Config {
     }
 
     /**
-     * 获取V8执行超时时间
-     *
-     * @return 超时时间
-     */
-    public long getV8Timeout() {
-        return v8Timeout;
-    }
-
-    /**
      * 获取当前jar包所在目录
      *
      * @return 当前jar包目录
@@ -214,13 +217,44 @@ public class Config {
         return v8ThreadPoolSize;
     }
 
+
+
+    //--------------------可以通过插件修改的配置项-----------------------------------
+
+    /**
+     * 获取Js引擎执行超时时间
+     *
+     * @return 超时时间
+     */
+    public synchronized long getV8Timeout() {
+        return v8Timeout;
+    }
+
+    /**
+     * 配置Js引擎执行超时时间
+     *
+     * @param v8Timeout
+     */
+    public synchronized void setV8Timeout(String v8Timeout) {
+        this.v8Timeout = Long.parseLong(v8Timeout);
+    }
+
     /**
      * 保存HTTP请求体时最大保存长度
      *
      * @return 最大长度
      */
-    public long getBodyMaxBytes() {
+    public synchronized long getBodyMaxBytes() {
         return bodyMaxBytes;
+    }
+
+    /**
+     * 配置保存HTTP请求体时最大保存长度
+     *
+     * @param bodyMaxBytes
+     */
+    public synchronized void setBodyMaxBytes(String bodyMaxBytes) {
+        this.bodyMaxBytes = Long.parseLong(bodyMaxBytes);
     }
 
     /**
@@ -228,8 +262,89 @@ public class Config {
      *
      * @return 需要忽略的挂钩点列表
      */
-    public String[] getIgnoreHooks() {
+    public synchronized String[] getIgnoreHooks() {
         return this.ignoreHooks;
+    }
+
+    /**
+     * 配置需要忽略的挂钩点
+     *
+     * @param ignoreHooks
+     */
+    public synchronized void setIgnoreHooks(String ignoreHooks) {
+        this.ignoreHooks = ignoreHooks.replace(" ", "").split(",");
+    }
+
+    /**
+     * 反射hook点传递给插件栈信息的最大深度
+     *
+     * @return 栈信息最大深度
+     */
+    public synchronized int getReflectionMaxStack() {
+        return reflectionMaxStack;
+    }
+
+    /**
+     * 设置反射hook点传递给插件栈信息的最大深度
+     *
+     * @param reflectionMaxStack 栈信息最大深度
+     */
+    public synchronized void setReflectionMaxStack(String reflectionMaxStack) {
+        this.reflectionMaxStack = Integer.parseInt(reflectionMaxStack);
+    }
+
+    /**
+     * 获取反射监控的方法
+     *
+     * @return 需要监控的反射方法
+     */
+    public synchronized String[] getReflectionMonitorMethod() {
+        return reflectionMonitorMethod;
+    }
+
+    /**
+     * 设置反射监控的方法
+     *
+     * @param reflectionMonitorMethod 监控的方法
+     */
+    public synchronized void setReflectionMonitorMethod(String reflectionMonitorMethod) {
+        this.reflectionMonitorMethod = reflectionMonitorMethod.replace(" ", "").split(",");
+    }
+
+    /**
+     * 获取拦截自定义页面的url
+     *
+     * @return 拦截页面url
+     */
+    public synchronized String getBlockUrl() {
+        return blockUrl;
+    }
+
+    /**
+     * 设置拦截页面url
+     *
+     * @param blockUrl 拦截页面url
+     */
+    public synchronized void setBlockUrl(String blockUrl) {
+        this.blockUrl = blockUrl;
+    }
+
+    /**
+     * 获取报警日志最大输出栈深度
+     *
+     * @return
+     */
+    public synchronized int getLogMaxStackSize() {
+        return logMaxStackSize;
+    }
+
+    /**
+     * 配置报警日志最大输出栈深度
+     *
+     * @param logMaxStackSize
+     */
+    public synchronized void setLogMaxStackSize(String logMaxStackSize) {
+        this.logMaxStackSize = Integer.parseInt(logMaxStackSize);
     }
 
     /**
@@ -239,70 +354,17 @@ public class Config {
      *
      * @return true开启，false关闭
      */
-    public boolean getEnforcePolicy() {
+    public synchronized boolean getEnforcePolicy() {
         return enforcePolicy;
     }
 
     /**
-     * 获取反射监控的方法
+     * 配置是否开启强制安全规范
      *
-     * @return 需要监控的反射方法
+     * @return true开启，false关闭
      */
-    public String[] getReflectionMonitorMethod() {
-        return reflectionMonitorMethod;
-    }
-
-    /**
-     * 设置反射监控的方法
-     *
-     * @param reflectionMonitorMethod 监控的方法
-     */
-    public void setReflectionMonitorMethod(String[] reflectionMonitorMethod) {
-        this.reflectionMonitorMethod = reflectionMonitorMethod;
-    }
-
-    /**
-     * 反射hook点传递给插件栈信息的最大深度
-     *
-     * @return 栈信息最大深度
-     */
-    public int getReflectionMaxStack() {
-        return reflectionMaxStack;
-    }
-
-    /**
-     * 设置反射hook点传递给插件栈信息的最大深度
-     *
-     * @param reflectionMaxStack 栈信息最大深度
-     */
-    public void setReflectionMaxStack(int reflectionMaxStack) {
-        this.reflectionMaxStack = reflectionMaxStack;
-    }
-
-    public int getLogMaxStackSize() {
-        return logMaxStackSize;
-    }
-
-    public void setLogMaxStackSize(int logMaxStackSize) {
-        this.logMaxStackSize = logMaxStackSize;
-    }
-
-    /**
-     * 获取拦截自定义页面的url
-     *
-     * @return 拦截页面url
-     */
-    public String getBlockUrl() {
-        return blockUrl;
-    }
-
-    /**
-     * 设置拦截页面url
-     *
-     * @param blockUrl 拦截页面url
-     */
-    public void setBlockUrl(String blockUrl) {
-        this.blockUrl = blockUrl;
+    public synchronized void setEnforcePolicy(String enforcePolicy) {
+        this.enforcePolicy = Boolean.parseBoolean(enforcePolicy);
     }
 
     /**
@@ -321,5 +383,48 @@ public class Config {
      */
     public synchronized void setReadFileExtensionRegex(String readFileExtensionRegex) {
         this.readFileExtensionRegex = readFileExtensionRegex;
+    }
+
+    //--------------------------统一的配置处理------------------------------------
+
+    public boolean setConfig(String name, String value) {
+        try {
+            KeyName keyName = KeyName.valueOf(name.replace(".", ""));
+            switch (keyName) {
+                case v8timeoutmillis:
+                    setV8Timeout(value);
+                    break;
+                case bodymaxbytes:
+                    setBodyMaxBytes(value);
+                    break;
+                case hooksignore:
+                    setIgnoreHooks(value);
+                    break;
+                case reflectionmaxstack:
+                    setReflectionMaxStack(value);
+                    break;
+                case reflectionmonitor:
+                    setReflectionMonitorMethod(value);
+                    break;
+                case blockurl:
+                    setBlockUrl(value);
+                    break;
+                case LOGMAXSTACKSIZE:
+                    setLogMaxStackSize(value);
+                    break;
+                case securityenforce_policy:
+                    setEnforcePolicy(value);
+                    break;
+                case readfileextensionregex:
+                    setReadFileExtensionRegex(value);
+                    break;
+                default:
+                    // do nothing
+            }
+        } catch (Exception e) {
+            LOGGER.info(e.getMessage());
+            return false;
+        }
+        return true;
     }
 }

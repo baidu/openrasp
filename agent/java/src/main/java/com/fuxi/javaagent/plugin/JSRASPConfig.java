@@ -36,9 +36,9 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 
 /**
- * 修改需检测的读文件扩展名正则表达式
+ * 修改rasp相关配置
  */
-public class JSReadFileExtRegex extends BaseFunction {
+public class JSRASPConfig extends BaseFunction {
     /**
      * @see BaseFunction#call(Context, Scriptable, Scriptable, Object[])
      * @param cx
@@ -50,15 +50,15 @@ public class JSReadFileExtRegex extends BaseFunction {
     @Override
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args) {
-        if (args.length < 1) {
+        if (args.length < 2) {
             return Context.getUndefinedValue();
         }
-        if (!(args[0] instanceof String)) {
+        if (!(args[0] instanceof String) || !(args[1] instanceof String)) {
             return Context.getUndefinedValue();
         }
-        String regex = (String) args[0];
-        Config.getConfig().setReadFileExtensionRegex(regex);
-        return JSContext.getUndefinedValue();
+        String configKey = (String) args[0];
+        String configValue = (String) args[1];
+        return Config.getConfig().setConfig(configKey, configValue);
     }
 
     /**
@@ -70,6 +70,6 @@ public class JSReadFileExtRegex extends BaseFunction {
      */
     @Override
     public Object getDefaultValue(Class<?> hint) {
-        return "[Function: set_read_file_ext_regex]";
+        return "[Function: set_rasp_config]";
     }
 }

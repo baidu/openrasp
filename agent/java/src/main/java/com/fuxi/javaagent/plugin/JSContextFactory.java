@@ -96,7 +96,7 @@ public class JSContextFactory extends ContextFactory {
 
             RASP = (ScriptableObject) ScriptableObject.getProperty(globalScope, "RASP");
             RASP.defineProperty("sql_tokenize", new JSTokenizeSql(), ScriptableObject.READONLY);
-            RASP.defineProperty("set_read_file_ext_regex", new JSReadFileExtRegex(), ScriptableObject.READONLY);
+            RASP.defineProperty("set_rasp_config", new JSRASPConfig(), ScriptableObject.READONLY);
         } finally {
             Context.exit();
         }
