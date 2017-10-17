@@ -127,11 +127,15 @@ public class Config {
             this.bodyMaxBytes = Long.parseLong(properties.getProperty("body.maxbytes", DEFAULT_BODYSIZE));
             this.enforcePolicy = Boolean.parseBoolean(properties.getProperty("security.enforce_policy", DEFAULT_ENFORCE_POLICY));
             this.ignoreHooks = properties.getProperty("hooks.ignore", DEFAULT_IGNORE).replace(" ", "").split(",");
-            this.reflectionMonitorMethod = properties.getProperty("reflection.monitor", DEFAULT_REFLECT_MONITOR_METHOD).replace(" ", "").split(",");
+            this.reflectionMonitorMethod = properties.getProperty("reflection.monitor", DEFAULT_REFLECT_MONITOR_METHOD)
+                    .replace(" ", "").split(",");
             this.reflectionMaxStack = Integer.parseInt(properties.getProperty("reflection.maxstack", DEFAULT_REFLECTION_MAX_STACK));
             this.logMaxStackSize = Integer.parseInt(properties.getProperty("log.maxstack", DEFAULT_LOG_STACK_SIZE));
             this.blockUrl = properties.getProperty("block.url", DEFAULT_BLOCK_URL);
             this.readFileExtensionRegex = properties.getProperty("readfile.extension.regex", DEFAULT_READ_FILE_EXTENSION_REGEX);
+            if (this.blockUrl == null || blockUrl.equals("")) {
+                this.blockUrl = DEFAULT_BLOCK_URL;
+            }
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find rasp.properties, using default settings: " + e.getMessage());
         } catch (IOException e) {

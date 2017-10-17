@@ -59,14 +59,14 @@ public class OSUtil {
             InetAddress ipAddress = null;
             while (allNetInterfaces.hasMoreElements()) {
                 NetworkInterface netInterface = (NetworkInterface) allNetInterfaces.nextElement();
-                System.out.println(netInterface.getName());
                 Enumeration addresses = netInterface.getInetAddresses();
                 while (addresses.hasMoreElements()) {
                     ipAddress = (InetAddress) addresses.nextElement();
                     if (ipAddress != null && ipAddress instanceof Inet4Address) {
                         String ip = ipAddress.getHostAddress();
-                        if (!ip.equals("0.0.0.0") && !ip.equals("127.0.0.1"))
+                        if (!ip.equals("0.0.0.0") && !ip.equals("127.0.0.1")) {
                             ipList.add(netInterface.getName() + ":" + ipAddress.getHostAddress());
+                        }
                     }
                 }
             }
