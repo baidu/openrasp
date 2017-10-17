@@ -17,6 +17,8 @@ matrix:
       env: SERVER=jboss4
     - jdk: openjdk7
       env: SERVER=jboss5
+    - jdk: openjdk7
+      env: SERVER=jboss6
     - jdk: openjdk8
       env: SERVER=tomcat8
     - jdk: openjdk8
