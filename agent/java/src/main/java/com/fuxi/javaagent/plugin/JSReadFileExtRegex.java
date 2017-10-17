@@ -58,8 +58,7 @@ public class JSReadFileExtRegex extends BaseFunction {
         }
         String regex = (String) args[0];
         Config.getConfig().setReadFileExtensionRegex(regex);
-        Scriptable result = cx.newObject(scope);
-        return result;
+        return JSContext.getUndefinedValue();
     }
 
     /**

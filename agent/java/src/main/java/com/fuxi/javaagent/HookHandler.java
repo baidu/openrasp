@@ -264,8 +264,7 @@ public class HookHandler {
             param.put("path", file.getPath());
             try {
                 String path = file.getCanonicalPath();
-                if (!FilenameUtils.getExtension(path).matches(Config.getConfig().getReadFileExtensionRegex())
-                        || !file.exists()) {
+                if (path.endsWith(".class") || !file.exists()) {
                     return;
                 }
                 param.put("realpath", FileUtil.getRealPath(file));
@@ -473,7 +472,10 @@ public class HookHandler {
                 e.printStackTrace();
             }
             if (null != file && file instanceof File) {
-                checkReadFile((File)file);
+                String filename  = ((File) file).getName();
+                if (FilenameUtils.getExtension(filename).matches(Config.getConfig().getReadFileExtensionRegex())) {
+                    checkReadFile((File)file);
+                }
             }
         }
     }
