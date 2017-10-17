@@ -73,6 +73,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new JettyHttpInputHook());
         addHook(new JettyServerHook());
         addHook(new CoyoteAdapterHook());
+        addHook(new ProxyDirContextHook());
     }
 
     private void addHook(AbstractClassHook hook) {

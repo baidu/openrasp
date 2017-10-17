@@ -44,12 +44,10 @@ import com.fuxi.javaagent.tool.Reflection;
 import com.fuxi.javaagent.tool.StackTrace;
 import com.fuxi.javaagent.tool.hook.CustomLockObject;
 import com.fuxi.javaagent.tool.security.tomcat.TomcatSecurityChecker;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectStreamClass;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -266,7 +264,8 @@ public class HookHandler {
             param.put("path", file.getPath());
             try {
                 String path = file.getCanonicalPath();
-                if (path.endsWith(".class") || !file.exists()) {
+                if (!FilenameUtils.getExtension(path).matches(Config.getConfig().getReadFileExtensionRegex())
+                        || !file.exists()) {
                     return;
                 }
                 param.put("realpath", FileUtil.getRealPath(file));
@@ -449,6 +448,32 @@ public class HookHandler {
                 param.put("source", realPath + source);
                 param.put("dest", realPath + dest);
                 doCheck(CheckParameter.Type.WEBDAV, param);
+            }
+        }
+    }
+
+    /**
+     * 缓存资源文件读取hook点
+     *
+     * @param cacheEntry
+     */
+    public static void checkResourceCacheEntry(Object cacheEntry) {
+        if (cacheEntry != null) {
+            Object file = null;
+            try {
+                Object resource = Reflection.getField(cacheEntry, "resource");
+                if (null != resource && resource.getClass().getName().startsWith("org.apache.naming.resources."
+                        + "FileDirContext$FileResource")) {
+                    Object binaryContent = Reflection.invokeMethod(resource, "getContent", new Class[]{});
+                    if (null == binaryContent) {
+                        file = Reflection.getField(resource, "file");
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            if (null != file && file instanceof File) {
+                checkReadFile((File)file);
             }
         }
     }
