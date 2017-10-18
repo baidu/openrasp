@@ -104,7 +104,7 @@ public class JSRequestContext extends ScriptableObject {
             return Context.getUndefinedValue();
         }
         JSContext cx = (JSContext) JSContext.getCurrentContext();
-        final Scriptable buffer = cx.newObject(cx.scope, "Uint8Array");
+        final Scriptable buffer = cx.newObject(cx.getScope(), "Uint8Array");
         try {
             body.writeTo(new OutputStream() {
                 int count = 0;
@@ -122,7 +122,7 @@ public class JSRequestContext extends ScriptableObject {
 
     public Object jsGet_header() {
         JSContext cx = (JSContext) JSContext.getCurrentContext();
-        Scriptable header = cx.newObject(cx.scope);
+        Scriptable header = cx.newObject(cx.getScope());
         Enumeration<String> headerNames = javaContext.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String key = headerNames.nextElement();
@@ -134,13 +134,13 @@ public class JSRequestContext extends ScriptableObject {
 
     public Object jsGet_parameter() {
         JSContext cx = (JSContext) JSContext.getCurrentContext();
-        Scriptable parameter = cx.newObject(cx.scope);
+        Scriptable parameter = cx.newObject(cx.getScope());
         Map<String, String[]> parameterMap = javaContext.getParameterMap();
         for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
             String key = entry.getKey();
             String[] value = entry.getValue();
             int length = value.length;
-            Scriptable arr = cx.newArray(cx.scope, length);
+            Scriptable arr = cx.newArray(cx.getScope(), length);
             for (int i = 0; i < length; i++) {
                 arr.put(i, arr, value[i]);
             }
@@ -155,7 +155,7 @@ public class JSRequestContext extends ScriptableObject {
 
     public Object jsGet_server() {
         JSContext cx = (JSContext) JSContext.getCurrentContext();
-        Scriptable server = cx.newObject(cx.scope);
+        Scriptable server = cx.newObject(cx.getScope());
         Map<String, String> serverContext = javaContext.getServerContext();
         for (Map.Entry<String, String> entry : serverContext.entrySet()) {
             String key = entry.getKey();
@@ -170,7 +170,7 @@ public class JSRequestContext extends ScriptableObject {
             return Context.getUndefinedValue();
         }
         JSContext cx = (JSContext) JSContext.getCurrentContext();
-        Scriptable session = cx.newObject(cx.scope);
+        Scriptable session = cx.newObject(cx.getScope());
         Object getter = new BaseFunction() {
             @Override
             public Object call(Context cx, Scriptable scope, Scriptable thisObj,

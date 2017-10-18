@@ -30,7 +30,6 @@
 
 package com.fuxi.javaagent.plugin;
 
-import com.fuxi.javaagent.config.Config;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.*;
@@ -104,7 +103,8 @@ public class JSContextFactory extends ContextFactory {
     }
 
     public void setCheckScriptList(List<CheckScript> checkScriptList) {
-        Context cx = Context.enter();
+        JSContext cx = (JSContext) JSContext.enter();
+        cx.clearTimeout();
         try {
             ScriptableObject scope = (ScriptableObject) cx.newObject(globalScope);
             scope.setPrototype(globalScope);
@@ -135,8 +135,8 @@ public class JSContextFactory extends ContextFactory {
         if (cx == null) {
             cx = (JSContext) enterContext();
         }
-        if (cx.pluginTime < pluginTime) {
-            cx.pluginTime = System.currentTimeMillis();
+        if (cx.getPluginTime() < pluginTime) {
+            cx.setPluginTime(System.currentTimeMillis());
             Scriptable scope = cx.newObject(globalScope);
             scope.setPrototype(globalScope);
             scope.setParentScope(null);
@@ -155,8 +155,8 @@ public class JSContextFactory extends ContextFactory {
                 checkPointList.add(functionList);
             }
 
-            cx.scope = scope;
-            cx.checkPointList = checkPointList;
+            cx.setScope(scope);
+            cx.setCheckPointList(checkPointList);
         }
 
         return cx;
@@ -210,29 +210,8 @@ public class JSContextFactory extends ContextFactory {
     @Override
     protected void observeInstructionCount(Context cx, int instructionCount) {
         JSContext jscx = (JSContext) cx;
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - jscx.startTime > Config.getConfig().getPluginTimeout()) {
-            throw new Error("JavaScript Execution Timeout");
+        if (jscx.isTimeout()) {
+            JSContext.reportError("Error: Plugin Execution Timeout");
         }
-    }
-
-    /**
-     * 设置脚本或函数开始执行时间，用于检测超时
-     *
-     * @param callable
-     * @param cx
-     * @param scope
-     * @param thisObj
-     * @param args
-     * @return
-     */
-    @Override
-    protected Object doTopCall(Callable callable,
-                               Context cx, Scriptable scope,
-                               Scriptable thisObj, Object[] args) {
-        JSContext jscx = (JSContext) cx;
-        jscx.startTime = System.currentTimeMillis();
-
-        return super.doTopCall(callable, cx, scope, thisObj, args);
     }
 }
