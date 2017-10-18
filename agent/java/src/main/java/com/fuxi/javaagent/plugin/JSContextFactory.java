@@ -211,7 +211,7 @@ public class JSContextFactory extends ContextFactory {
     protected void observeInstructionCount(Context cx, int instructionCount) {
         JSContext jscx = (JSContext) cx;
         long currentTime = System.currentTimeMillis();
-        if (currentTime - jscx.startTime > Config.getConfig().getV8Timeout()) {
+        if (currentTime - jscx.startTime > Config.getConfig().getPluginTimeout()) {
             throw new Error("JavaScript Execution Timeout");
         }
     }
