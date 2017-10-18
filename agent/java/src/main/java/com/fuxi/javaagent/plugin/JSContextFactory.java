@@ -48,14 +48,16 @@ import java.util.List;
 public class JSContextFactory extends ContextFactory {
     private static final Logger LOGGER = Logger.getLogger(JSContextFactory.class.getPackage().getName() + ".log");
 
+    private static JSContextFactory jsContextFactory = null;
+
     private ScriptableObject globalScope = null;
     private ScriptableObject RASP = null;
     private long pluginTime = 0;
 
-    public JSContextFactory() throws Exception {
-        Context cx = Context.enter();
-        cx.setLanguageVersion(Context.VERSION_ES6);
-        cx.setOptimizationLevel(9);
+    private JSContextFactory() throws Exception {
+        ContextFactory.initGlobal(this);
+        JSContext cx = (JSContext) JSContext.enter();
+        cx.clearTimeout();
         try {
             globalScope = cx.initStandardObjects();
 
@@ -97,19 +99,22 @@ public class JSContextFactory extends ContextFactory {
             RASP.defineProperty("sql_tokenize", new JSTokenizeSql(), ScriptableObject.READONLY);
             RASP.defineProperty("set_rasp_config", new JSRASPConfig(), ScriptableObject.READONLY);
         } finally {
-            Context.exit();
+            JSContext.exit();
         }
-        ContextFactory.initGlobal(this);
     }
 
-    public void setCheckScriptList(List<CheckScript> checkScriptList) {
+    public static void init() throws Exception {
+        jsContextFactory = new JSContextFactory();
+    }
+
+    public static void setCheckScriptList(List<CheckScript> checkScriptList) {
         JSContext cx = (JSContext) JSContext.enter();
         cx.clearTimeout();
         try {
-            ScriptableObject scope = (ScriptableObject) cx.newObject(globalScope);
-            scope.setPrototype(globalScope);
+            ScriptableObject scope = (ScriptableObject) cx.newObject(jsContextFactory.globalScope);
+            scope.setPrototype(jsContextFactory.globalScope);
             scope.setParentScope(null);
-            Function clean = (Function) RASP.get("clean", RASP);
+            Function clean = (Function) jsContextFactory.RASP.get("clean", jsContextFactory.RASP);
             clean.call(cx, scope, clean, null);
             for (CheckScript checkScript : checkScriptList) {
                 cx.evaluateString(scope, "(function(){\n" + checkScript.getContent() + "\n})()", checkScript.getName(), 0, null);
@@ -117,8 +122,8 @@ public class JSContextFactory extends ContextFactory {
         } catch (Exception e) {
             LOGGER.info(e);
         } finally {
-            pluginTime = System.currentTimeMillis();
-            Context.exit();
+            jsContextFactory.pluginTime = System.currentTimeMillis();
+            JSContext.exit();
         }
     }
 
@@ -130,18 +135,18 @@ public class JSContextFactory extends ContextFactory {
      *
      * @return 与当前线程绑定的 Context
      */
-    public JSContext enterAndInitContext() {
+    public static JSContext enterAndInitContext() {
         JSContext cx = (JSContext) JSContext.getCurrentContext();
         if (cx == null) {
-            cx = (JSContext) enterContext();
+            cx = (JSContext) jsContextFactory.enterContext();
         }
-        if (cx.getPluginTime() < pluginTime) {
+        if (cx.getPluginTime() < jsContextFactory.pluginTime) {
             cx.setPluginTime(System.currentTimeMillis());
-            Scriptable scope = cx.newObject(globalScope);
-            scope.setPrototype(globalScope);
+            Scriptable scope = cx.newObject(jsContextFactory.globalScope);
+            scope.setPrototype(jsContextFactory.globalScope);
             scope.setParentScope(null);
 
-            NativeObject checkPoints = (NativeObject) RASP.get("checkPoints", RASP);
+            NativeObject checkPoints = (NativeObject) jsContextFactory.RASP.get("checkPoints", jsContextFactory.RASP);
             List<List<CheckProcess>> checkPointList = new ArrayList<List<CheckProcess>>(CheckParameter.Type.values().length);
             for (int i = 0; i < CheckParameter.Type.values().length; i++) {
                 NativeArray functions = (NativeArray) checkPoints.get(CheckParameter.Type.values()[i].toString());
