@@ -30,7 +30,6 @@
 
 package com.fuxi.javaagent;
 
-import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.messaging.LogConfig;
 import com.fuxi.javaagent.plugin.PluginManager;
 import com.fuxi.javaagent.tool.JarFileHelper;
@@ -79,6 +78,7 @@ public class Agent {
         } catch (Exception e) {
             System.out.println("Failed to initialize OpenRASP:" + e.getMessage() + "\n"
                     + "Will continue without security protection.");
+            e.printStackTrace();
         }
     }
 
