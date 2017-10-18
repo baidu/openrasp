@@ -52,8 +52,7 @@ public class Config {
 
     public static final int REFLECTION_STACK_START_INDEX = 0;
 
-    private static final String DEFAULT_V8TIMEOUT = "100";
-    private static final String DEFAULT_POOLSIZE = "0";
+    private static final String DEFAULT_PLUGIN_TIMEOUT = "100";
     private static final String DEFAULT_BODYSIZE = "4096";
     private static final String DEFAULT_REFLECTION_MAX_STACK = "100";
     private static final String DEFAULT_IGNORE = "";
@@ -69,9 +68,8 @@ public class Config {
     private static String baseDirectory;
 
 
-    private int v8ThreadPoolSize;
     private int reflectionMaxStack;
-    private long v8Timeout;
+    private long pluginTimeout;
     private long bodyMaxBytes;
     private String[] ignoreHooks;
     private boolean enforcePolicy;
@@ -82,7 +80,7 @@ public class Config {
     private String blockUrl;
 
     private enum KeyName {
-        v8timeoutmillis,
+        plugintimeoutmillis,
         bodymaxbytes,
         hooksignore,
         reflectionmaxstack,
@@ -118,8 +116,7 @@ public class Config {
     private Config() {
         FileInputStream input = null;
 
-        this.v8ThreadPoolSize = Integer.parseInt(DEFAULT_POOLSIZE);
-        this.v8Timeout = Long.parseLong(DEFAULT_V8TIMEOUT);
+        this.pluginTimeout = Long.parseLong(DEFAULT_PLUGIN_TIMEOUT);
         this.bodyMaxBytes = Long.parseLong(DEFAULT_BODYSIZE);
         this.ignoreHooks = new String[]{};
         this.enforcePolicy = Boolean.parseBoolean(DEFAULT_ENFORCE_POLICY);
@@ -134,17 +131,16 @@ public class Config {
             Properties properties = new Properties();
             properties.load(input);
 
-            this.v8ThreadPoolSize = Integer.parseInt(properties.getProperty("v8.threadpool.size", DEFAULT_POOLSIZE));
-            this.v8Timeout = Long.parseLong(properties.getProperty("v8.timeout.millis", DEFAULT_V8TIMEOUT));
-            this.bodyMaxBytes = Long.parseLong(properties.getProperty("body.maxbytes", DEFAULT_BODYSIZE));
             this.enforcePolicy = Boolean.parseBoolean(properties.getProperty("security.enforce_policy", DEFAULT_ENFORCE_POLICY));
             this.ignoreHooks = properties.getProperty("hooks.ignore", DEFAULT_IGNORE).replace(" ", "").split(",");
             this.reflectionMonitorMethod = properties.getProperty("reflection.monitor", DEFAULT_REFLECT_MONITOR_METHOD)
                     .replace(" ", "").split(",");
-            this.reflectionMaxStack = Integer.parseInt(properties.getProperty("reflection.maxstack", DEFAULT_REFLECTION_MAX_STACK));
-            this.logMaxStackSize = Integer.parseInt(properties.getProperty("log.maxstack", DEFAULT_LOG_STACK_SIZE));
             this.blockUrl = properties.getProperty("block.url", DEFAULT_BLOCK_URL);
             this.readFileExtensionRegex = properties.getProperty("readfile.extension.regex", DEFAULT_READ_FILE_EXTENSION_REGEX);
+            setBodyMaxBytes(properties.getProperty("body.maxbytes", DEFAULT_BODYSIZE));
+            setLogMaxStackSize(properties.getProperty("log.maxstack", DEFAULT_LOG_STACK_SIZE));
+            setReflectionMaxStack(properties.getProperty("reflection.maxstack", DEFAULT_REFLECTION_MAX_STACK));
+            setPluginTimeout(properties.getProperty("plugin.timeout.millis", DEFAULT_PLUGIN_TIMEOUT));
             if (this.blockUrl == null || blockUrl.equals("")) {
                 this.blockUrl = DEFAULT_BLOCK_URL;
             }
@@ -160,16 +156,12 @@ public class Config {
             }
         }
 
-        if (this.v8ThreadPoolSize <= 0) {
-            this.v8ThreadPoolSize = Runtime.getRuntime().availableProcessors() + 1;
-        }
         for (int i = 0; i < this.ignoreHooks.length; i++) {
             this.ignoreHooks[i] = this.ignoreHooks[i].trim();
         }
 
         LOGGER.info("baseDirectory: " + baseDirectory);
-        LOGGER.info("v8.threadpool.size: " + v8ThreadPoolSize);
-        LOGGER.info("v8.timeout.millis: " + v8Timeout);
+        LOGGER.info("plugin.timeout.millis: " + pluginTimeout);
         LOGGER.info("hooks.ignore: " + Arrays.toString(this.ignoreHooks));
         LOGGER.info("reflection.monitor: " + Arrays.toString(this.reflectionMonitorMethod));
         LOGGER.info("reflection.maxstack: " + reflectionMaxStack);
@@ -208,16 +200,6 @@ public class Config {
         return baseDirectory + "/plugins";
     }
 
-    /**
-     * 获取V8线程池容量
-     *
-     * @return V8线程池容量
-     */
-    public int getV8ThreadPoolSize() {
-        return v8ThreadPoolSize;
-    }
-
-
 
     //--------------------可以通过插件修改的配置项-----------------------------------
 
@@ -226,17 +208,20 @@ public class Config {
      *
      * @return 超时时间
      */
-    public synchronized long getV8Timeout() {
-        return v8Timeout;
+    public synchronized long getPluginTimeout() {
+        return pluginTimeout;
     }
 
     /**
      * 配置Js引擎执行超时时间
      *
-     * @param v8Timeout
+     * @param pluginTimeout
      */
-    public synchronized void setV8Timeout(String v8Timeout) {
-        this.v8Timeout = Long.parseLong(v8Timeout);
+    public synchronized void setPluginTimeout(String pluginTimeout) {
+        this.pluginTimeout = Long.parseLong(pluginTimeout);
+        if (this.pluginTimeout < 0) {
+            this.pluginTimeout = 0;
+        }
     }
 
     /**
@@ -255,6 +240,9 @@ public class Config {
      */
     public synchronized void setBodyMaxBytes(String bodyMaxBytes) {
         this.bodyMaxBytes = Long.parseLong(bodyMaxBytes);
+        if (this.bodyMaxBytes < 0) {
+            this.bodyMaxBytes = 0;
+        }
     }
 
     /**
@@ -291,6 +279,9 @@ public class Config {
      */
     public synchronized void setReflectionMaxStack(String reflectionMaxStack) {
         this.reflectionMaxStack = Integer.parseInt(reflectionMaxStack);
+        if (this.reflectionMaxStack < 0) {
+            this.reflectionMaxStack = 0;
+        }
     }
 
     /**
@@ -345,6 +336,9 @@ public class Config {
      */
     public synchronized void setLogMaxStackSize(String logMaxStackSize) {
         this.logMaxStackSize = Integer.parseInt(logMaxStackSize);
+        if (this.logMaxStackSize < 0) {
+            this.logMaxStackSize = 0;
+        }
     }
 
     /**
@@ -391,8 +385,8 @@ public class Config {
         try {
             KeyName keyName = KeyName.valueOf(name.replace(".", ""));
             switch (keyName) {
-                case v8timeoutmillis:
-                    setV8Timeout(value);
+                case plugintimeoutmillis:
+                    setPluginTimeout(value);
                     break;
                 case bodymaxbytes:
                     setBodyMaxBytes(value);
