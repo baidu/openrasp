@@ -30,13 +30,16 @@
 
 package com.fuxi.javaagent.tool;
 
+import com.fuxi.javaagent.tool.model.NicModel;
+
 import java.net.*;
-import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 public class OSUtil {
 
-    public static InetAddress inetAddress;
+    private static InetAddress inetAddress;
 
     static {
         try {
@@ -50,22 +53,24 @@ public class OSUtil {
         return inetAddress == null ? null : inetAddress.getHostName();
     }
 
-    public static ArrayList<String> getIpAddress() {
-        ArrayList<String> ipList = new ArrayList<String>();
+    public static LinkedList<NicModel> getIpAddress() {
+        LinkedList<NicModel> ipList = new LinkedList<NicModel>();
         Enumeration allNetInterfaces = null;
         try {
             allNetInterfaces = NetworkInterface.getNetworkInterfaces();
 
-            InetAddress ipAddress = null;
-            while (allNetInterfaces.hasMoreElements()) {
-                NetworkInterface netInterface = (NetworkInterface) allNetInterfaces.nextElement();
-                Enumeration addresses = netInterface.getInetAddresses();
-                while (addresses.hasMoreElements()) {
-                    ipAddress = (InetAddress) addresses.nextElement();
-                    if (ipAddress != null && ipAddress instanceof Inet4Address) {
-                        String ip = ipAddress.getHostAddress();
-                        if (!ip.equals("0.0.0.0") && !ip.equals("127.0.0.1")) {
-                            ipList.add(netInterface.getName() + ":" + ipAddress.getHostAddress());
+            if (allNetInterfaces != null) {
+                InetAddress ipAddress = null;
+                while (allNetInterfaces.hasMoreElements()) {
+                    NetworkInterface netInterface = (NetworkInterface) allNetInterfaces.nextElement();
+                    Enumeration addresses = netInterface.getInetAddresses();
+                    while (addresses.hasMoreElements()) {
+                        ipAddress = (InetAddress) addresses.nextElement();
+                        if (ipAddress != null && ipAddress instanceof Inet4Address) {
+                            String ip = ipAddress.getHostAddress();
+                            if (!ip.equals("0.0.0.0") && !ip.equals("127.0.0.1")) {
+                                ipList.add(new NicModel(netInterface.getName(), ipAddress.getHostAddress()));
+                            }
                         }
                     }
                 }
@@ -74,6 +79,14 @@ public class OSUtil {
             e.printStackTrace();
         }
         return ipList;
+    }
+
+    public static boolean isWindows() {
+        return System.getProperty("os.name") != null && System.getProperty("os.name").toLowerCase().contains("windows");
+    }
+
+    public static boolean isLinux() {
+        return System.getProperty("os.name") != null && System.getProperty("os.name").toLowerCase().contains("linux");
     }
 
 }

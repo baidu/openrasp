@@ -28,11 +28,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.tool.security.tomcat;
+package com.fuxi.javaagent.tool.security;
 
 import com.fuxi.javaagent.HookHandler;
 import com.fuxi.javaagent.plugin.PluginManager;
-import com.fuxi.javaagent.plugin.SecurityPolicyInfo;
+import com.fuxi.javaagent.plugin.event.SecurityPolicyInfo;
 import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;

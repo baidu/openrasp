@@ -39,19 +39,18 @@ import com.fuxi.javaagent.plugin.PluginManager;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.request.HttpServletRequest;
 import com.fuxi.javaagent.response.HttpServletResponse;
-import com.fuxi.javaagent.tool.FileUtil;
-import com.fuxi.javaagent.tool.Reflection;
-import com.fuxi.javaagent.tool.StackTrace;
+import com.fuxi.javaagent.tool.*;
 import com.fuxi.javaagent.tool.hook.CustomLockObject;
-import com.fuxi.javaagent.tool.security.tomcat.TomcatSecurityChecker;
+import com.fuxi.javaagent.tool.security.SqlConnectionChecker;
+import com.fuxi.javaagent.tool.security.TomcatSecurityChecker;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 
-import java.io.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectStreamClass;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -388,7 +387,7 @@ public class HookHandler {
         boolean isSafe = checker.check();
         if (!isSafe) {
             if (Config.getConfig().getEnforcePolicy()) {
-                throw new SecurityException("Can not startup tomcat:\n" + checker.getFormattedUnsafeMessage());
+                throw new SecurityException("Can not startup tomcat cause by:\n" + checker.getFormattedUnsafeMessage());
             }
         }
     }
@@ -472,9 +471,21 @@ public class HookHandler {
                 e.printStackTrace();
             }
             if (null != file && file instanceof File) {
-                String filename  = ((File) file).getName();
+                String filename = ((File) file).getName();
                 if (FilenameUtils.getExtension(filename).matches(Config.getConfig().getReadFileExtensionRegex())) {
-                    checkReadFile((File)file);
+                    checkReadFile((File) file);
+                }
+            }
+        }
+    }
+
+    public static void checkSqlConnection(String url, Properties properties) {
+        if (System.currentTimeMillis() - SqlConnectionChecker.lastCheckTimeStamp > TimeUtils.DAY_MILLISECOND) {
+            SqlConnectionChecker checker = new SqlConnectionChecker(url, properties);
+            boolean isSafe = checker.check();
+            if (!isSafe) {
+                if (Config.getConfig().getEnforcePolicy()) {
+                    handleBlock();
                 }
             }
         }
@@ -516,7 +527,7 @@ public class HookHandler {
         }
     }
 
-    private static void handleBlock(CheckParameter parameter) {
+    private static void handleBlock() {
         SecurityException securityException = new SecurityException("Request blocked by OpenRASP");
         if (responseCache.get() != null) {
             responseCache.get().sendError();
@@ -548,7 +559,7 @@ public class HookHandler {
             enableCurrThreadHook.set(true);
         }
         if (isBlock) {
-            handleBlock(parameter);
+            handleBlock();
         }
     }
 }

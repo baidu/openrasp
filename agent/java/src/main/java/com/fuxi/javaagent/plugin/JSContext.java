@@ -30,6 +30,7 @@
 
 package com.fuxi.javaagent.plugin;
 
+import com.fuxi.javaagent.plugin.event.AttackInfo;
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.*;
 

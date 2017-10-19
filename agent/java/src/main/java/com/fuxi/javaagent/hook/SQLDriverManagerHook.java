@@ -75,6 +75,10 @@ public class SQLDriverManagerHook extends AbstractClassHook {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
                 protected void onMethodEnter() {
+                    loadArg(0);
+                    loadArg(1);
+                    invokeStatic(Type.getType(HookHandler.class),
+                            new Method("checkSqlConnection", "(Ljava/lang/String;Ljava/util/Properties;)V"));
                     invokeStatic(Type.getType(HookHandler.class),
                             new Method("preShieldHook", "()V"));
                 }

@@ -1,4 +1,4 @@
-package com.fuxi.javaagent.plugin;
+package com.fuxi.javaagent.plugin.event;
 
 import com.fuxi.javaagent.request.HttpServletRequest;
 import com.fuxi.javaagent.tool.OSUtil;
@@ -34,7 +34,7 @@ public class SecurityPolicyInfo extends EventInfo {
         // 服务器host name
         info.put("server_hostname", OSUtil.getHostName());
         // 服务器ip
-        info.put("server_ip", OSUtil.getIpAddress());
+        info.put("nic", OSUtil.getIpAddress());
         // 服务器类型
         info.put("server_type", HttpServletRequest.extractType(serverInfo));
         // 服务器版本

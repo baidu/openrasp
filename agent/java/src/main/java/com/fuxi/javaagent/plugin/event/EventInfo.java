@@ -28,7 +28,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.plugin;
+package com.fuxi.javaagent.plugin.event;
 
 import com.google.gson.Gson;
 

@@ -59,7 +59,7 @@ public class FileUtil {
      */
     public static String getRealPath(File file) {
         String absPath = file.getAbsolutePath();
-        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+        if (OSUtil.isWindows()) {
             int index = absPath.indexOf("::$");
             if (index >= 0) {
                 file = new File(absPath.substring(0,index));

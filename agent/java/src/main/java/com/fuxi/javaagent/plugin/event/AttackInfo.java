@@ -28,9 +28,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.plugin;
+package com.fuxi.javaagent.plugin.event;
 
 import com.fuxi.javaagent.config.Config;
+import com.fuxi.javaagent.plugin.CheckParameter;
+import com.fuxi.javaagent.plugin.CheckResult;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.tool.OSUtil;
 
@@ -52,7 +54,7 @@ public class AttackInfo extends EventInfo {
     private CheckParameter parameter;
     private CheckResult result;
 
-    AttackInfo(CheckParameter parameter, CheckResult result) {
+    public AttackInfo(CheckParameter parameter, CheckResult result) {
         this.parameter = parameter;
         this.result = result;
     }
