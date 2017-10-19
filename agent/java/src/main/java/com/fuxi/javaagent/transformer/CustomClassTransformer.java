@@ -74,6 +74,8 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new JettyServerHook());
         addHook(new CoyoteAdapterHook());
         addHook(new ProxyDirContextHook());
+        addHook(new JspIncludeHook());
+        addHook(new JstlImportHook());
     }
 
     private void addHook(AbstractClassHook hook) {
