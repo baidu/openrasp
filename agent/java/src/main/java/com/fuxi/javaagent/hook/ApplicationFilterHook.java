@@ -68,12 +68,6 @@ public class ApplicationFilterHook extends AbstractClassHook {
                                     "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
                 }
 
-                @Override
-                protected void onMethodExit(int opcode) {
-                    invokeStatic(Type.getType(HookHandler.class),
-                            new Method("onApplicationFilterExit", "()V"));
-                    super.onMethodExit(opcode);
-                }
             };
         }
         return mv;
