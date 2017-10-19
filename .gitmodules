@@ -1,4 +1,0 @@
-[submodule "openrasp-plugin-devtool"]
-	path = openrasp-plugin-devtool
-	url = https://github.com/baidu-security/openrasp-plugin-devtool.git
-	branch = master
