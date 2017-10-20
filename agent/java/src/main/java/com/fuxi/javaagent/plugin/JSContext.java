@@ -30,13 +30,12 @@
 
 package com.fuxi.javaagent.plugin;
 
-import com.fuxi.javaagent.plugin.event.AttackInfo;
 import com.fuxi.javaagent.config.Config;
+import com.fuxi.javaagent.plugin.event.AttackInfo;
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.*;
 
 import java.util.List;
-import java.util.Map;
 
 public class JSContext extends Context {
     private static final Logger LOGGER = Logger.getLogger(JSContext.class.getPackage().getName() + ".log");
@@ -94,18 +93,8 @@ public class JSContext extends Context {
         if (processList.size() < 1) {
             return false;
         }
-        Map<String, Object> parameterParams = parameter.getParams();
-        Scriptable params = newObject(scope);
-        for (Map.Entry<String, Object> param : parameterParams.entrySet()) {
-            Object value = param.getValue();
-            if (value instanceof String) {
-                params.put(param.getKey(), params, value);
-            } else if (value instanceof List) {
-                Scriptable array = newArray(scope, ((List) value).toArray());
-                params.put(param.getKey(), params, array);
-            }
-        }
 
+        Scriptable params = (Scriptable) parameter.getParams();
         Scriptable requestContext = this.newObject(scope, "Context", new Object[]{parameter.getRequest()});
 
         Object[] functionArgs = {params, requestContext};
