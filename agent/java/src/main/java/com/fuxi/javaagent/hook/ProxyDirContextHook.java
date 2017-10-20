@@ -30,13 +30,9 @@
 
 package com.fuxi.javaagent.hook;
 
-import com.fuxi.javaagent.HookHandler;
-import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
-import org.objectweb.asm.commons.Method;
 
 /**
  * Created by zhuming01 on 5/31/17.

@@ -30,38 +30,71 @@
 
 package com.fuxi.javaagent.plugin;
 
+import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.plugin.event.AttackInfo;
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.*;
 
 import java.util.List;
-import java.util.Map;
 
 public class JSContext extends Context {
     private static final Logger LOGGER = Logger.getLogger(JSContext.class.getPackage().getName() + ".log");
 
-    public Scriptable scope = null;
-    public List<List<CheckProcess>> checkPointList = null;
-    public long startTime = 0;
-    public long pluginTime = -1;
+    private Scriptable scope = null;
+
+    private List<List<CheckProcess>> checkPointList = null;
+
+    private long pluginTime = Long.MIN_VALUE;
+
+    private long timeout = Long.MAX_VALUE;
+
+    public Scriptable getScope() {
+        return scope;
+    }
+
+    public void setScope(Scriptable scope) {
+        this.scope = scope;
+    }
+
+    public List<List<CheckProcess>> getCheckPointList() {
+        return checkPointList;
+    }
+
+    public void setCheckPointList(List<List<CheckProcess>> checkPointList) {
+        this.checkPointList = checkPointList;
+    }
+
+    public long getPluginTime() {
+        return pluginTime;
+    }
+
+    public void setPluginTime(long pluginTime) {
+        this.pluginTime = pluginTime;
+    }
+
+    public long getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
+    }
+
+    public void clearTimeout() {
+        timeout = Long.MAX_VALUE;
+    }
+
+    public boolean isTimeout() {
+        return System.currentTimeMillis() > timeout;
+    }
 
     public boolean check(CheckParameter parameter) {
         List<CheckProcess> processList = checkPointList.get(parameter.getType().ordinal());
         if (processList.size() < 1) {
             return false;
         }
-        Map<String, Object> parameterParams = parameter.getParams();
-        Scriptable params = newObject(scope);
-        for(Map.Entry<String, Object> param : parameterParams.entrySet()) {
-            Object value = param.getValue();
-            if (value instanceof String) {
-                params.put(param.getKey(), params, value);
-            } else if (value instanceof List) {
-                Scriptable array = newArray(scope, ((List) value).toArray());
-                params.put(param.getKey(), params, array);
-            }
-        }
 
+        Scriptable params = (Scriptable) parameter.getParams();
         Scriptable requestContext = this.newObject(scope, "Context", new Object[]{parameter.getRequest()});
 
         Object[] functionArgs = {params, requestContext};
@@ -75,6 +108,7 @@ public class JSContext extends Context {
         int confidence;
         boolean block = false;
 
+        setTimeout(System.currentTimeMillis() + Config.getConfig().getPluginTimeout());
         int size = processList.size();
         for (int i = 0; i < size; i++) {
             checkProcess = processList.get(i);
@@ -83,12 +117,16 @@ public class JSContext extends Context {
                 tmp = function.call(this, scope, function, functionArgs);
             } catch (RhinoException e) {
                 LOGGER.info(e.details() + "\n" + e.getScriptStackTrace());
-                continue;
+                if (isTimeout()) {
+                    break;
+                } else {
+                    continue;
+                }
             } catch (Exception e) {
                 LOGGER.info(e);
                 continue;
             }
-            if(tmp == Context.getUndefinedValue()) {
+            if (tmp == Context.getUndefinedValue()) {
                 continue;
             }
             result = (ScriptableObject) tmp;

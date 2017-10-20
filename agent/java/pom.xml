@@ -169,7 +169,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${basedir}/target/classes/environment</outputDirectory>
+                            <outputDirectory>${basedir}/src/main/resources/environment</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${basedir}/../../openrasp-plugin-devtool/dist</directory>
