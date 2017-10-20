@@ -255,13 +255,6 @@ public class HookHandler {
     }
 
     /**
-     * ApplicationFilter中doFilter退出hook点
-     */
-    public static void onApplicationFilterExit() {
-        onServiceExit();
-    }
-
-    /**
      * 文件读取hook点
      *
      * @param file 文件对象
