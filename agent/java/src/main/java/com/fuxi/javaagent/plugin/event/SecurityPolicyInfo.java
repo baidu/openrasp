@@ -26,8 +26,6 @@ public class SecurityPolicyInfo extends EventInfo {
     @Override
     public Map<String, Object> getInfo() {
         Map<String, Object> info = new HashMap<String, Object>();
-        String serverInfo = (String) Reflection.invokeStaticMethod("org.apache.catalina.util.ServerInfo",
-                "getServerInfo", new Class[]{});
 
         info.put("event_type", getType());
         info.put("event_time", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(System.currentTimeMillis()));
@@ -36,11 +34,23 @@ public class SecurityPolicyInfo extends EventInfo {
         // 服务器ip
         info.put("nic", OSUtil.getIpAddress());
         // 服务器类型
-        info.put("server_type", HttpServletRequest.extractType(serverInfo));
+        info.put("server_type", getCatalinaServerType());
         // 服务器版本
-        info.put("server_version", HttpServletRequest.extractNumber(serverInfo));
+        info.put("server_version", getCatalinaServerVersion());
         // 安全规范检测信息
         info.put("message", message);
         return info;
+    }
+
+    public static String getCatalinaServerType() {
+        String serverInfo = (String) Reflection.invokeStaticMethod("org.apache.catalina.util.ServerInfo",
+                "getServerInfo", new Class[]{});
+        return HttpServletRequest.extractType(serverInfo);
+    }
+
+    public static String getCatalinaServerVersion() {
+        String serverInfo = (String) Reflection.invokeStaticMethod("org.apache.catalina.util.ServerInfo",
+                "getServerInfo", new Class[]{});
+        return HttpServletRequest.extractNumber(serverInfo);
     }
 }

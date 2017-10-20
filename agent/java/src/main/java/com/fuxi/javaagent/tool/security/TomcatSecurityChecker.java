@@ -34,6 +34,7 @@ import com.fuxi.javaagent.HookHandler;
 import com.fuxi.javaagent.plugin.PluginManager;
 import com.fuxi.javaagent.plugin.event.SecurityPolicyInfo;
 import com.google.gson.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -78,7 +79,8 @@ public class TomcatSecurityChecker {
      */
     public boolean check() {
         try {
-            if (tomcatBaseDir != null) {
+            String serverType = SecurityPolicyInfo.getCatalinaServerType();
+            if (tomcatBaseDir != null && serverType != null && serverType.equalsIgnoreCase("tomcat")) {
                 checkStartUser();
                 checkHttpOnlyIsOpen();
                 checkManagerPassword();
@@ -110,7 +112,16 @@ public class TomcatSecurityChecker {
         Element contextElement = getXmlFileRootElement(contextFile);
         if (contextElement != null) {
             String httpOnly = contextElement.getAttribute(HTTP_ONLY_ATTRIBUTE_NAME);
-            if (httpOnly != null && !httpOnly.equals("true")) {
+
+            boolean isHttpOnly = true;
+            String serverVersion = SecurityPolicyInfo.getCatalinaServerVersion();
+            if (httpOnly != null && httpOnly.equals("false")) {
+                isHttpOnly = false;
+            } else if (!StringUtils.isEmpty(serverVersion) && serverVersion.charAt(0) < '7' && httpOnly == null) {
+                isHttpOnly = false;
+            }
+
+            if (!isHttpOnly) {
                 handleSecurityProblem("tomcat未在conf/context.xml文件中配置全局httpOnly.");
             }
         }
