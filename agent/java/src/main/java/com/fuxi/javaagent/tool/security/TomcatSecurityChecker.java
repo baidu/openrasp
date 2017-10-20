@@ -223,7 +223,7 @@ public class TomcatSecurityChecker {
         if (!apps.isEmpty()) {
             StringBuilder message = new StringBuilder("tomcat默认安装程序没有卸载: ");
             for (String app : apps) {
-                message.append(app).append(" ,");
+                message.append(app).append(", ");
             }
             handleSecurityProblem(message.substring(0, message.length() - 1));
         }
@@ -256,7 +256,7 @@ public class TomcatSecurityChecker {
     public String getFormattedUnsafeMessage() {
         String formatMessage = "";
         if (!unsafeMessage.isEmpty()) {
-            formatMessage += "\tTomcat has unsafe setting：\n";
+            formatMessage += "\tTomcat has unsafe setting:\n";
             for (String message : unsafeMessage) {
                 formatMessage += "\t";
                 formatMessage += message;

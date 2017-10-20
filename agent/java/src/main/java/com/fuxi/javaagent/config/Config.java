@@ -63,6 +63,7 @@ public class Config {
             + "java.lang.ProcessBuilder.start";
     private static final String DEFAULT_LOG_STACK_SIZE = "20";
     private static final String DEFAULT_READ_FILE_EXTENSION_REGEX = "^(gz|7z|xz|tar|rar|zip|sql|db)$";
+    private static final String DEFAULT_INJECTT_URL_PREFIX = "";
 
     private static final Logger LOGGER = Logger.getLogger(Config.class.getName());
     private static String baseDirectory;
@@ -76,8 +77,8 @@ public class Config {
     private String[] reflectionMonitorMethod;
     private int logMaxStackSize;
     private String readFileExtensionRegex;
-
     private String blockUrl;
+    private String injectUrlPrefix;
 
     private enum KeyName {
         plugintimeoutmillis,
@@ -125,6 +126,7 @@ public class Config {
         this.logMaxStackSize = Integer.parseInt(DEFAULT_LOG_STACK_SIZE);
         this.blockUrl = DEFAULT_BLOCK_URL;
         this.readFileExtensionRegex = DEFAULT_READ_FILE_EXTENSION_REGEX;
+        this.injectUrlPrefix = DEFAULT_INJECTT_URL_PREFIX;
 
         try {
             input = new FileInputStream(new File(baseDirectory, "conf" + File.separator + "rasp.properties"));
@@ -137,6 +139,7 @@ public class Config {
                     .replace(" ", "").split(",");
             this.blockUrl = properties.getProperty("block.url", DEFAULT_BLOCK_URL);
             this.readFileExtensionRegex = properties.getProperty("readfile.extension.regex", DEFAULT_READ_FILE_EXTENSION_REGEX);
+            this.injectUrlPrefix = properties.getProperty("inject.urlprefix", DEFAULT_INJECTT_URL_PREFIX);
             setBodyMaxBytes(properties.getProperty("body.maxbytes", DEFAULT_BODYSIZE));
             setLogMaxStackSize(properties.getProperty("log.maxstack", DEFAULT_LOG_STACK_SIZE));
             setReflectionMaxStack(properties.getProperty("reflection.maxstack", DEFAULT_REFLECTION_MAX_STACK));
@@ -167,6 +170,7 @@ public class Config {
         LOGGER.info("reflection.maxstack: " + reflectionMaxStack);
         LOGGER.info("block.url: " + blockUrl);
         LOGGER.info("readfile.extension.regex: " + readFileExtensionRegex);
+        LOGGER.info("inject.urlprefix: " + injectUrlPrefix);
     }
 
     private static class ConfigHolder {
@@ -215,13 +219,31 @@ public class Config {
     /**
      * 配置Js引擎执行超时时间
      *
-     * @param pluginTimeout
+     * @param pluginTimeout 超时时间
      */
     public synchronized void setPluginTimeout(String pluginTimeout) {
         this.pluginTimeout = Long.parseLong(pluginTimeout);
         if (this.pluginTimeout < 0) {
             this.pluginTimeout = 0;
         }
+    }
+
+    /**
+     * 设置需要插入自定义html的页面path前缀
+     *
+     * @return 页面path前缀
+     */
+    public synchronized String getInjectUrlPrefix() {
+        return injectUrlPrefix;
+    }
+
+    /**
+     * 获取需要插入自定义html的页面path前缀
+     *
+     * @param injectUrlPrefix 页面path前缀
+     */
+    public synchronized void setInjectUrlPrefix(String injectUrlPrefix) {
+        this.injectUrlPrefix = injectUrlPrefix;
     }
 
     /**
