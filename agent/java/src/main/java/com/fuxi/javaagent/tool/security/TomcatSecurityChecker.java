@@ -121,7 +121,7 @@ public class TomcatSecurityChecker {
      */
     private void checkStartUser() {
         String osName = System.getProperty("os.name").toLowerCase();
-        if (osName.startsWith("linux")) {
+        if (osName.startsWith("linux") || osName.startsWith("mac")) {
             if ("root".equals(System.getProperty("user.name"))) {
                 handleSecurityProblem("tomcat以root权限启动.");
             }
@@ -221,7 +221,7 @@ public class TomcatSecurityChecker {
         }
 
         if (!apps.isEmpty()) {
-            StringBuilder message = new StringBuilder("tomcat默认安装程序没有卸载: ");
+            StringBuilder message = new StringBuilder("tomcat 默认安装的webapps没有卸载: ");
             for (String app : apps) {
                 message.append(app).append(", ");
             }
@@ -256,9 +256,9 @@ public class TomcatSecurityChecker {
     public String getFormattedUnsafeMessage() {
         String formatMessage = "";
         if (!unsafeMessage.isEmpty()) {
-            formatMessage += "\tTomcat has unsafe setting:\n";
+            formatMessage += "Tomcat 安全规范检查:\n";
             for (String message : unsafeMessage) {
-                formatMessage += "\t";
+                formatMessage += "* ";
                 formatMessage += message;
                 formatMessage += "\n";
             }
