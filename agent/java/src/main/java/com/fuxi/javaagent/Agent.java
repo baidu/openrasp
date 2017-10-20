@@ -67,9 +67,9 @@ public class Agent {
                 return;
             }
             readVersion();
-            initTransformer(inst);
             // 初始化插件系统
             PluginManager.init();
+            initTransformer(inst);
             String message = "OpenRasp Initialized [" + projectVersion + " (build: GitCommit=" + gitCommit + " date="
                     + buildTime + ")]";
             System.out.println(message);
