@@ -94,7 +94,7 @@ public class JSContext extends Context {
             return false;
         }
 
-        Scriptable params = (Scriptable) parameter.getParams();
+        Object params = parameter.getParams();
         Scriptable requestContext = this.newObject(scope, "Context", new Object[]{parameter.getRequest()});
 
         Object[] functionArgs = {params, requestContext};
@@ -126,11 +126,11 @@ public class JSContext extends Context {
                 LOGGER.info(e);
                 continue;
             }
-            if (tmp == Context.getUndefinedValue()) {
+            if (tmp == null || !(tmp instanceof NativeObject)) {
                 continue;
             }
             result = (ScriptableObject) tmp;
-            tmp = result.get("action", result);
+            tmp = result.get("action");
             if (!(tmp instanceof CharSequence)) {
                 continue;
             }
@@ -138,17 +138,17 @@ public class JSContext extends Context {
             if (action.equals("ignore")) {
                 continue;
             }
-            tmp = result.get("message", result);
+            tmp = result.get("message");
             if (!(tmp instanceof CharSequence)) {
                 tmp = "";
             }
             message = tmp.toString();
-            tmp = result.get("name", result);
+            tmp = result.get("name");
             if (!(tmp instanceof CharSequence)) {
                 tmp = checkProcess.getPluginName();
             }
             name = tmp.toString();
-            tmp = result.get("confidence", result);
+            tmp = result.get("confidence");
             if (!(tmp instanceof Number)) {
                 tmp = new Integer(0);
             }
