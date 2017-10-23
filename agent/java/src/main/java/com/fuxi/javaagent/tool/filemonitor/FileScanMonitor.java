@@ -31,8 +31,8 @@
 package com.fuxi.javaagent.tool.filemonitor;
 
 import com.fuxi.javaagent.config.Config;
-import net.contentobjects.jnotify.JNotify;
-import net.contentobjects.jnotify.JNotifyException;
+import com.fuxi.javaagent.contentobjects.jnotify.JNotify;
+import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
 import org.apache.commons.io.monitor.FileAlterationListener;
 import org.apache.commons.io.monitor.FileAlterationObserver;
 
