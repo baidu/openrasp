@@ -69,9 +69,7 @@ public class PluginManager {
     public synchronized static void init() throws Exception {
         JSContextFactory.init();
         updatePlugin();
-        if (!System.getProperty("os.name").toLowerCase().startsWith("mac")) {
-            initFileWatcher();
-        }
+        initFileWatcher();
     }
 
     /**
@@ -92,17 +90,23 @@ public class PluginManager {
                 new FileScanListener() {
                     @Override
                     public void onFileCreate(File file) {
-                        updatePluginAsync();
+                        if (file.getName().endsWith(".js")) {
+                            updatePluginAsync();
+                        }
                     }
 
                     @Override
                     public void onFileChange(File file) {
-                        updatePluginAsync();
+                        if (file.getName().endsWith(".js")) {
+                            updatePluginAsync();
+                        }
                     }
 
                     @Override
                     public void onFileDelete(File file) {
-                        updatePluginAsync();
+                        if (file.getName().endsWith(".js")) {
+                            updatePluginAsync();
+                        }
                     }
                 });
         HookHandler.enableHook.set(oldValue);
