@@ -139,20 +139,23 @@ public class JSContext extends Context {
                 continue;
             }
             tmp = result.get("message");
-            if (!(tmp instanceof CharSequence)) {
-                tmp = "";
+            if (tmp instanceof CharSequence) {
+                message = tmp.toString();
+            } else {
+                message = "";
             }
-            message = tmp.toString();
             tmp = result.get("name");
-            if (!(tmp instanceof CharSequence)) {
-                tmp = checkProcess.getPluginName();
+            if (tmp instanceof CharSequence) {
+                name = tmp.toString();
+            } else {
+                name = checkProcess.getPluginName();
             }
-            name = tmp.toString();
             tmp = result.get("confidence");
-            if (!(tmp instanceof Number)) {
-                tmp = new Integer(0);
+            if (tmp instanceof Number) {
+                confidence = ((Number) tmp).intValue();
+            } else {
+                confidence = new Integer(0);
             }
-            confidence = ((Number) tmp).intValue();
             CheckResult checkResult = new CheckResult(action, message, name, confidence);
             AttackInfo attackInfo = new AttackInfo(parameter, checkResult);
             PluginManager.ALARM_LOGGER.info(attackInfo.toString());
