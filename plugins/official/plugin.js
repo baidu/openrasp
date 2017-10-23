@@ -13,7 +13,7 @@ var clean = {
 }
 
 var forcefulBrowsing = {
-    dotFiles:    /\.(gz|7z|xz|tar|rar|zip|sql|db)$/,
+    dotFiles:    /\.(7z|tar|gz|bz2|xz|rar|zip|sql|db)$/,
     systemFiles: /^\/(proc|sys|var\/log)(\/|$)/,
     unwanted: [
         // user files
@@ -38,51 +38,13 @@ var forcefulBrowsing = {
     ]
 }
 
-var scannerUA = [
-    "attack", "scan", "vulnerability", "injection", "xss", "exploit", "grabber", 
-    "cgichk", "bsqlbf", "sqlmap", "nessus", "arachni", "metis", "sql power injector", 
-    "bilbo", "absinthe", "black widow", "n-stealth", "brutus", "webtrends security analyzer",
-    "netsparker", "jaascois", "pmafind", ".nasl", "nsauditor", "paros", "dirbuster", 
-    "pangolin", "nmap nse", "sqlninja", "nikto", "webinspect", "blackwidow", 
-    "grendel-scan", "havij", "w3af", "hydra"
-]
-
-var xssRegex        = /<script|script>|<iframe|iframe>|javascript:(?!(?:history\.(?:go|back)|void\(0\)))/i
 var scriptFileRegex = /\.(jspx?|php[345]?|phtml)\.?$/i
 var ntfsRegex       = /::\$(DATA|INDEX)$/i // 其他的stream都没啥用
-
-var ognlPayloads = [
-    'ognl.OgnlContext',
-    'ognl.TypeConverter',
-    'ognl.MemberAccess',
-    '_memberAccess',
-    'ognl.ClassResolver',
-    'java.lang.Runtime',
-    'java.lang.Class',
-    'java.lang.ClassLoader',
-    'java.lang.System',
-    'java.lang.ProcessBuilder',
-    'java.lang.Object', 
-    'java.lang.Shutdown',
-    'java.io.File',
-    'javax.script.ScriptEngineManager',
-    'com.opensymphony.xwork2.ActionContext'
-]
-
-var deserializationInvalidClazz = [
-    'org.apache.commons.collections.functors.InvokerTransformer',
-    'org.apache.commons.collections.functors.InstantiateTransformer',
-    'org.apache.commons.collections4.functors.InvokerTransformer',
-    'org.apache.commons.collections4.functors.InstantiateTransformer',
-    'org.codehaus.groovy.runtime.ConvertedClosure',
-    'org.codehaus.groovy.runtime.MethodClosure',
-    'org.springframework.beans.factory.ObjectFactory',
-    'xalan.internal.xsltc.trax.TemplatesImpl'
-]
 
 String.prototype.replaceAll = function(token, tokenValue) {
     var index  = 0;
     var string = this;
+    
     do {
         string = string.replace(token, tokenValue);
     } while((index = string.indexOf(token, index + 1)) > -1);
@@ -291,7 +253,7 @@ plugin.register('sql', function (params, context) {
 })
 
 plugin.register('command', function (params, context) {
-    console.log(params.command)
+    // console.log(params.command)
 
     // 算法1: 简单识别命令执行后门
     function algo1(params, context) {
@@ -351,6 +313,25 @@ plugin.register('xxe', function (params, context) {
 })
 
 plugin.register('ognl', function (params, context) {
+    // 常见 struts payload 语句特征
+    var ognlPayloads = [
+        'ognl.OgnlContext',
+        'ognl.TypeConverter',
+        'ognl.MemberAccess',
+        '_memberAccess',
+        'ognl.ClassResolver',
+        'java.lang.Runtime',
+        'java.lang.Class',
+        'java.lang.ClassLoader',
+        'java.lang.System',
+        'java.lang.ProcessBuilder',
+        'java.lang.Object', 
+        'java.lang.Shutdown',
+        'java.io.File',
+        'javax.script.ScriptEngineManager',
+        'com.opensymphony.xwork2.ActionContext'
+    ]
+
     var ognlExpression = params.expression
     for (var index in ognlPayloads) {
         if (ognlExpression.indexOf(ognlPayloads[index]) > -1) {
@@ -367,6 +348,17 @@ plugin.register('ognl', function (params, context) {
 
 // [[ 近期调整~ ]]
 plugin.register('deserialization', function (params, context) {
+    var deserializationInvalidClazz = [
+        'org.apache.commons.collections.functors.InvokerTransformer',
+        'org.apache.commons.collections.functors.InstantiateTransformer',
+        'org.apache.commons.collections4.functors.InvokerTransformer',
+        'org.apache.commons.collections4.functors.InstantiateTransformer',
+        'org.codehaus.groovy.runtime.ConvertedClosure',
+        'org.codehaus.groovy.runtime.MethodClosure',
+        'org.springframework.beans.factory.ObjectFactory',
+        'xalan.internal.xsltc.trax.TemplatesImpl'
+    ]
+
     var clazz = params.clazz
     for (var index in deserializationInvalidClazz) {
         if (clazz === deserializationInvalidClazz[index]) {
@@ -405,56 +397,76 @@ plugin.register('reflection', function(params, context) {
 // [[ 近期调整~ ]]
 plugin.register('request', function(params, context) {
 
-    // 已知扫描 UA    
-    var foundScanner = false
+    // 已知的扫描器识别
+    function detectScanner(params, context)  {         
+        var foundScanner = false
+        var scannerUA    = [
+            "attack", "scan", "vulnerability", "injection", "xss", "exploit", "grabber", 
+            "cgichk", "bsqlbf", "sqlmap", "nessus", "arachni", "metis", "sql power injector", 
+            "bilbo", "absinthe", "black widow", "n-stealth", "brutus", "webtrends security analyzer",
+            "netsparker", "jaascois", "pmafind", ".nasl", "nsauditor", "paros", "dirbuster", 
+            "pangolin", "nmap nse", "sqlninja", "nikto", "webinspect", "blackwidow", 
+            "grendel-scan", "havij", "w3af", "hydra"
+        ]
 
-    if (context.header['acunetix-product'] || context.header['x-wipp']) {
-        foundScanner = true
-    } else {
-        var ua = context.header['user-agent']
-        if (ua) {
-            for (var i = 0; i < scannerUA.length; i ++) {
-                if (ua.indexOf(scannerUA[i].toLowerCase()) != -1) {
-                    foundScanner = true
-                    break
+        if (context.header['acunetix-product'] || context.header['x-wipp']) {
+            foundScanner = true
+        } else {
+            var ua = context.header['user-agent']
+            if (ua) {
+                for (var i = 0; i < scannerUA.length; i ++) {
+                    if (ua.indexOf(scannerUA[i].toLowerCase()) != -1) {
+                        foundScanner = true
+                        break
+                    }
                 }
             }
         }
+
+        return foundScanner
     }
 
-    if (foundScanner) {
+    // XSS 检测 DEMO，即将移除
+    function detectXSS(params, context) {
+        var xssRegex   = /<script|script>|<iframe|iframe>|javascript:(?!(?:history\.(?:go|back)|void\(0\)))/i
+        var parameters = context.parameter;
+        var message    = '';
+
+        Object.keys(parameters).some(function (name) {
+            parameters[name].some(function (value) {
+                if (xssRegex.test(value)) {
+                    message = 'XSS 攻击: ' + value;
+                    return true;
+                }
+            });
+
+            if (message.length) {
+                return true;
+            }
+        });
+
+        return message
+    }
+
+    if (0 && detectScanner(params, context)) {
         return {
             action:     'block',
-            message:    '已知的扫描器UA: ' + scannerUA[i],
+            message:    '已知的扫描器探测行为: ' + scannerUA[i],
             confidence: 90
         }
     }
 
     // xss 检测 DEMO
-    var parameters = context.parameter;
-    var message    = '';
-
-    Object.keys(parameters).some(function (name) {
-        parameters[name].some(function (value) {
-            if (xssRegex.test(value)) {
-                message = 'XSS 攻击: ' + value;
-                return true;
-            }
-        });
-
-        if (message.length) {
-            return true;
+    var message = detectXSS()
+    if (message.length) {
+        return {
+            action: 'block',
+            message: message,
+            confidence: 90
         }
-    });
-
-    if (! message.length) {
-        return clean;
     }
 
-    return {
-        action: 'block',
-        message: message
-    }
+    return clean    
 })
 
 plugin.log('初始化成功')
