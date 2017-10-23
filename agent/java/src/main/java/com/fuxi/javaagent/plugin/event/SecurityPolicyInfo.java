@@ -10,11 +10,33 @@ import java.util.Map;
 
 public class SecurityPolicyInfo extends EventInfo {
 
+    public enum Type {
+        SQL_CONNECTION(1001),
+        COOKIE_HTTP_ONLY(3001),
+        START_USER(3002),
+        MANAGER_PASSWORD(3003),
+        DEFAULT_APP(3004);
+
+        private int id;
+
+        private Type(int id) {
+            this.id = id;
+        }
+
+        @Override
+        public String toString() {
+            return String.valueOf(this.id);
+        }
+
+    }
+
     public static final String TYPE_SECURITY_POLICY = "security_policy";
 
+    private Type policy;
     private String message;
 
-    public SecurityPolicyInfo(String message) {
+    public SecurityPolicyInfo(Type policy, String message) {
+        this.policy = policy;
         this.message = message;
     }
 
@@ -29,6 +51,8 @@ public class SecurityPolicyInfo extends EventInfo {
 
         info.put("event_type", getType());
         info.put("event_time", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(System.currentTimeMillis()));
+        // policy id
+        info.put("policy_id", this.policy.toString());
         // 服务器host name
         info.put("server_hostname", OSUtil.getHostName());
         // 服务器ip
