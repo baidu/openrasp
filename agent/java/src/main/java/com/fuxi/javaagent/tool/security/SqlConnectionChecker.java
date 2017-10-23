@@ -42,7 +42,7 @@ public class SqlConnectionChecker {
 
         if (!result) {
             unsafeMessage += ("使用管理员账号" + user + "登录" + sqlType + "数据库");
-            PluginManager.ALARM_LOGGER.info(new SecurityPolicyInfo(unsafeMessage));
+            PluginManager.ALARM_LOGGER.info(new SecurityPolicyInfo(SecurityPolicyInfo.Type.SQL_CONNECTION, unsafeMessage));
         }
         return result;
     }
