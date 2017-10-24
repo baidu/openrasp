@@ -63,7 +63,8 @@ public class Config {
             + "java.lang.ProcessBuilder.start";
     private static final String DEFAULT_LOG_STACK_SIZE = "20";
     private static final String DEFAULT_READ_FILE_EXTENSION_REGEX = "^(gz|7z|xz|tar|rar|zip|sql|db)$";
-    private static final String DEFAULT_INJECTT_URL_PREFIX = "";
+    private static final String DEFAULT_INJECT_URL_PREFIX = "";
+    private static final String DEFAULT_OGNL_MIN_LENGTH = "30";
 
     private static final Logger LOGGER = Logger.getLogger(Config.class.getName());
     private static String baseDirectory;
@@ -80,6 +81,8 @@ public class Config {
     private String blockUrl;
     private String injectUrlPrefix;
 
+    private int ognlMinLength;
+
     private enum KeyName {
         plugintimeoutmillis,
         bodymaxbytes,
@@ -89,7 +92,9 @@ public class Config {
         blockurl,
         logmaxstack,
         securityenforce_policy,
-        readfileextensionregex
+        readfileextensionregex,
+        injecturlprefix,
+        ognlminlength
     }
 
     // Config是由bootstrap classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
@@ -126,7 +131,8 @@ public class Config {
         this.logMaxStackSize = Integer.parseInt(DEFAULT_LOG_STACK_SIZE);
         this.blockUrl = DEFAULT_BLOCK_URL;
         this.readFileExtensionRegex = DEFAULT_READ_FILE_EXTENSION_REGEX;
-        this.injectUrlPrefix = DEFAULT_INJECTT_URL_PREFIX;
+        this.injectUrlPrefix = DEFAULT_INJECT_URL_PREFIX;
+        this.ognlMinLength = Integer.parseInt(DEFAULT_OGNL_MIN_LENGTH);
 
         try {
             input = new FileInputStream(new File(baseDirectory, "conf" + File.separator + "rasp.properties"));
@@ -139,11 +145,12 @@ public class Config {
                     .replace(" ", "").split(",");
             this.blockUrl = properties.getProperty("block.url", DEFAULT_BLOCK_URL);
             this.readFileExtensionRegex = properties.getProperty("readfile.extension.regex", DEFAULT_READ_FILE_EXTENSION_REGEX);
-            this.injectUrlPrefix = properties.getProperty("inject.urlprefix", DEFAULT_INJECTT_URL_PREFIX);
+            this.injectUrlPrefix = properties.getProperty("inject.urlprefix", DEFAULT_INJECT_URL_PREFIX);
             setBodyMaxBytes(properties.getProperty("body.maxbytes", DEFAULT_BODYSIZE));
             setLogMaxStackSize(properties.getProperty("log.maxstack", DEFAULT_LOG_STACK_SIZE));
             setReflectionMaxStack(properties.getProperty("reflection.maxstack", DEFAULT_REFLECTION_MAX_STACK));
             setPluginTimeout(properties.getProperty("plugin.timeout.millis", DEFAULT_PLUGIN_TIMEOUT));
+            setOgnlMinLength(properties.getProperty("ognl.expression.minlength", DEFAULT_OGNL_MIN_LENGTH));
             if (this.blockUrl == null || blockUrl.equals("")) {
                 this.blockUrl = DEFAULT_BLOCK_URL;
             }
@@ -171,6 +178,7 @@ public class Config {
         LOGGER.info("block.url: " + blockUrl);
         LOGGER.info("readfile.extension.regex: " + readFileExtensionRegex);
         LOGGER.info("inject.urlprefix: " + injectUrlPrefix);
+        LOGGER.info("ognl.expression.minlength: " + ognlMinLength);
     }
 
     private static class ConfigHolder {
@@ -364,6 +372,27 @@ public class Config {
     }
 
     /**
+     * 获取允许传入插件的ognl表达式的最短长度
+     *
+     * @return ognl表达式最短长度
+     */
+    public int getOgnlMinLength() {
+        return ognlMinLength;
+    }
+
+    /**
+     * 配置允许传入插件的ognl表达式的最短长度
+     *
+     * @param ognlMinLength ognl表达式最短长度
+     */
+    public void setOgnlMinLength(String ognlMinLength) {
+        this.ognlMinLength = Integer.parseInt(ognlMinLength);
+        if (this.ognlMinLength < 0) {
+            this.ognlMinLength = 0;
+        }
+    }
+
+    /**
      * 是否开启强制安全规范
      * 如果开启检测有安全风险的情况下将会禁止服务器启动
      * 如果关闭当有安全风险的情况下通过日志警告
@@ -433,6 +462,12 @@ public class Config {
                     break;
                 case readfileextensionregex:
                     setReadFileExtensionRegex(value);
+                    break;
+                case injecturlprefix:
+                    setInjectUrlPrefix(value);
+                    break;
+                case ognlminlength:
+                    setOgnlMinLength(value);
                     break;
                 default:
                     // do nothing

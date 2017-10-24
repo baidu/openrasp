@@ -364,10 +364,12 @@ public class HookHandler {
      */
     public static void checkOgnlExpression(String expression) {
         if (expression != null) {
-            JSContext cx = JSContextFactory.enterAndInitContext();
-            Scriptable params = cx.newObject(cx.getScope());
-            params.put("expression", params, expression);
-            doCheck(CheckParameter.Type.OGNL, params);
+            if (expression.length() >= Config.getConfig().getOgnlMinLength()) {
+                JSContext cx = JSContextFactory.enterAndInitContext();
+                Scriptable params = cx.newObject(cx.getScope());
+                params.put("expression", params, expression);
+                doCheck(CheckParameter.Type.OGNL, params);
+            }
         }
     }
 
