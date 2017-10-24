@@ -42,20 +42,6 @@ describe(process.env['SERVER'] || 'server', function () {
     afterEach(function () {
         fs.unwatchFile(PLUGIN_LOG);
     });
-    it('should not update plugins after creating or modifing or deleting dir/test.js', function (done) {
-        let error = undefined;
-        setTimeout(() => {
-            done(error);
-        }, 2000);
-        fs.watchFile(PLUGIN_LOG, watchFileOptions, () => {
-            error = new Error('plugins updated');
-        });
-        fs.mkdirSync(SERVER_HOME + '/rasp/plugins/dir');
-        fs.writeFileSync(SERVER_HOME + '/rasp/plugins/dir/test.js', '\nconsole.log()');
-        fs.appendFileSync(SERVER_HOME + '/rasp/plugins/dir/test.js', '\nconsole.log()');
-        fs.unlinkSync(SERVER_HOME + '/rasp/plugins/dir/test.js');
-        fs.rmdirSync(SERVER_HOME + '/rasp/plugins/dir');
-    });
     it('should update plugins after creating test.js', function (done) {
         let timestamp = Date.now();
         fs.watchFile(PLUGIN_LOG, watchFileOptions, () => {
@@ -86,6 +72,20 @@ describe(process.env['SERVER'] || 'server', function () {
             done();
         });
         fs.unlinkSync(SERVER_HOME + '/rasp/plugins/test.js');
+    });
+    it('should not update plugins after creating or modifing or deleting dir/test.js', function (done) {
+        let error = undefined;
+        setTimeout(() => {
+            done(error);
+        }, 2000);
+        fs.watchFile(PLUGIN_LOG, watchFileOptions, () => {
+            error = new Error('plugins updated');
+        });
+        fs.mkdirSync(SERVER_HOME + '/rasp/plugins/dir');
+        fs.writeFileSync(SERVER_HOME + '/rasp/plugins/dir/test.js', '\nconsole.log()');
+        fs.appendFileSync(SERVER_HOME + '/rasp/plugins/dir/test.js', '\nconsole.log()');
+        fs.unlinkSync(SERVER_HOME + '/rasp/plugins/dir/test.js');
+        fs.rmdirSync(SERVER_HOME + '/rasp/plugins/dir');
     });
     it('should not update plugins after creating or modifing or deleting plugin.txt', function (done) {
         let error = undefined;
