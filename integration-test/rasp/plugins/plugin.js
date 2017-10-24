@@ -109,7 +109,7 @@ plugin.register('xxe', function (params, context) {
 plugin.register('ognl', function (params, context) {
     checkContext(context);
     plugin.log('ognl', params);
-    if (params.expression === 'java.lang.Runtime') {
+    if (params.expression === "@org.apache.commons.io.IOUtils@toString(@java.lang.Runtime@getRuntime().exec('whoami').getInputStream())") {
         return {
             action: 'block'
         }
