@@ -6,7 +6,7 @@ wget -N http://iweb.dl.sourceforge.net/project/jboss/JBoss/JBoss-4.2.3.GA/jboss-
 
 unzip jboss-4.2.3.GA.zip
 
-SERVER_HOME=$(pwd)/jboss-4.2.3.GA
+export SERVER_HOME=$(pwd)/jboss-4.2.3.GA
 
 cp app.war ${SERVER_HOME}/server/default/deploy/
 

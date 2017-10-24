@@ -6,7 +6,7 @@ wget -N http://archive.apache.org/dist/tomcat/tomcat-8/v8.5.21/bin/apache-tomcat
 
 tar zxf apache-tomcat-8.5.21.tar.gz
 
-SERVER_HOME=$(pwd)/apache-tomcat-8.5.21
+export SERVER_HOME=$(pwd)/apache-tomcat-8.5.21
 
 cp app.war ${SERVER_HOME}/webapps/
 

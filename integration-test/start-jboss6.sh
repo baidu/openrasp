@@ -6,7 +6,7 @@ wget -N http://download.jboss.org/jbossas/6.1/jboss-as-distribution-6.1.0.Final.
 
 unzip jboss-as-distribution-6.1.0.Final.zip
 
-SERVER_HOME=$(pwd)/jboss-6.1.0.Final
+export SERVER_HOME=$(pwd)/jboss-6.1.0.Final
 
 sed -i -e 's/<parameter><inject bean="BootstrapProfileFactory"/<parameter class="java.io.File"><inject bean="BootstrapProfileFactory"/' ${SERVER_HOME}/server/default/conf/bootstrap/profile.xml
 

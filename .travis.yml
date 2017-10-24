@@ -30,12 +30,12 @@ matrix:
 before_install:
   - pushd integration-test
   - pushd tester && yarn && popd
-  - bash build-war.sh
+  - . build-war.sh
 install:
-  - bash build-rasp.sh
-  - bash start-${SERVER}.sh
+  - . build-rasp.sh
+  - . start-${SERVER}.sh
   - pushd tester
 script:
-  - travis_retry node_modules/.bin/mocha test.js -t 20000
+  - travis_retry node_modules/.bin/mocha *.test.js -t 20000
 before_cache:
   - rm -rf $HOME/.m2/repository/com/fuxi

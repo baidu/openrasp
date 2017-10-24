@@ -6,7 +6,7 @@ wget -N http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.81/bin/apache-tomcat
 
 tar zxf apache-tomcat-7.0.81.tar.gz
 
-SERVER_HOME=$(pwd)/apache-tomcat-7.0.81
+export SERVER_HOME=$(pwd)/apache-tomcat-7.0.81
 
 cp app.war ${SERVER_HOME}/webapps/
 

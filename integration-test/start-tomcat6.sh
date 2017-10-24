@@ -6,7 +6,7 @@ wget -N http://archive.apache.org/dist/tomcat/tomcat-6/v6.0.53/bin/apache-tomcat
 
 tar zxf apache-tomcat-6.0.53.tar.gz
 
-SERVER_HOME=$(pwd)/apache-tomcat-6.0.53
+export SERVER_HOME=$(pwd)/apache-tomcat-6.0.53
 
 cp app.war ${SERVER_HOME}/webapps/
 
