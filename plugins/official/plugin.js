@@ -223,10 +223,89 @@ plugin.register('sql', function (params, context) {
         return match
     }
 
+    // 算法3: SQL语句策略检查（模拟SQL防火墙功能）
+    function algo3(params, context) {
+        function is_compare_op(token) {
+            return token == '>' || token == '<' || token == '>=' || token == '<=' || token == '=' || token == 'xor'
+        }
+
+        function is_logic_op(token) {
+            return token == 'and' || token == 'xor' || token == 'or'
+        }
+
+        function is_sqli(tokens) {
+            // 注意: tokens 必须为小写
+            var reason   = false
+            var features = {
+                'no-version-comments': true,
+                'no-stacked-query':    true,
+                'no-hex':              true,
+                'no-constant-compare': true,
+                'function-blacklist':  {
+                    'load_file': true,
+                    'benchmark': true,
+                    'sleep':     true,
+                    'pg_sleep':  true
+                },
+
+                // 以下尚未实现
+                'unbalanced-comment':  false,
+                'unbalanced-quote':    false,    
+                'trailing-comment':    false  
+            }
+
+            for (var i = 0; i < tokens.length; i ++) {
+                if (tokens[i] == ';' && features['no-stacked-query']) {
+                    reason = '禁止多语句查询'
+                    break
+                } else if (tokens[i].indexOf('0x') == 0 && features['no-hex']) {
+                    reason = '禁止16进制字符串'
+                    break
+                } else if (tokens[i].indexOf('/*!') == 0 && features['no-version-comments']) {
+                    reason = '禁止MySQL版本号注释'
+                    break
+                } else if (is_logic_op(tokens[i]) && features['no-constant-compare'] ) {
+                    // @FIXME: 可绕过，暂时不更新
+                    // 简单识别 (and|xor|or) NUMBER (>|<|>=|<=|xor) NUMBER
+                    var next = []
+                    for (var j = i + 1; j < tokens.length; j ++) {
+                        if (next.length == 3) {
+                            break
+                        }
+
+                        if (tokens[j].indexOf('/*') == -1) {
+                            next.push(tokens[j])
+                        }
+                    }
+
+                    if (next.length != 3) {
+                        continue
+                    }
+
+                    if (! isNaN(next[0]) && ! isNaN(next[2]) && is_compare_op(next[1]) ) {
+                        reason = '禁止常量比较操作'
+                        break
+                    }
+                } else if (tokens[i].indexOf('(') == 0) {
+                    // @FIXME: 可绕过，暂时不更新
+                    if (i > 0 && features['function-blacklist'][tokens[i - 1]]) {
+                        reason = '禁止执行敏感函数: ' + tokens[i-1]
+                        break
+                    }
+                }
+            }
+
+            return reason
+        }
+
+        var tokens = RASP.sql_tokenize(params.query.toLowerCase())
+        return is_sqli(tokens)
+    }
+
     if (algo2(params, context)) {
         return {
             action:     'block',
-            message:    'SQL 管理器（疑似WebShell）',
+            message:    'SQL 管理器 - 疑似WebShell（算法2）',
             confidence: 100
         }
     }
@@ -234,18 +313,27 @@ plugin.register('sql', function (params, context) {
     if (algo1(params, context)) {
         return {
             action:     'block',
-            message:    'SQL 注入攻击',
+            message:    'SQL 注入攻击（算法1）',
             confidence: 100
         }
     }    
+
+    var sqli_reason = algo3(params, context)
+    if (sqli_reason) {
+        return {
+            action:     'block',
+            message:    '数据库语句异常: ' + sqli_reason + '（算法3）',
+            confidence: 100
+        }
+    }
 
     // 算法4: 简单正则匹配（即将移除）
     var sqlRegex = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
 
     if (sqlRegex.test(params.query)) {
         return {
-            action: 'block',
-            message: 'SQL 注入攻击',
+            action: '   block',
+            message:    'SQL 注入攻击（算法4）',
             confidence: 100
         }
     }
@@ -448,23 +536,26 @@ plugin.register('request', function(params, context) {
         return message
     }
 
-    if (0 && detectScanner(params, context)) {
-        return {
-            action:     'block',
-            message:    '已知的扫描器探测行为: ' + scannerUA[i],
-            confidence: 90
-        }
-    }
+    // 扫描器识别 DEMO //
+    // 
+    // if (detectScanner(params, context)) {
+    //     return {
+    //         action:     'block',
+    //         message:    '已知的扫描器探测行为: ' + scannerUA[i],
+    //         confidence: 90
+    //     }
+    // }
 
-    // xss 检测 DEMO
-    var message = detectXSS()
-    if (message.length) {
-        return {
-            action: 'block',
-            message: message,
-            confidence: 90
-        }
-    }
+    // XSS 检测 DEMO //
+    // 
+    // var message = detectXSS(params, context)
+    // if (message.length) {
+    //     return {
+    //         action: 'block',
+    //         message: message,
+    //         confidence: 90
+    //     }
+    // }
 
     return clean    
 })
