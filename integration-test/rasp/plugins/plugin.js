@@ -126,4 +126,14 @@ plugin.register('deserialization', function (params, context) {
     }
 });
 
+plugin.register('include', function (params, context) {
+    checkContext(context);
+    plugin.log('include', params);
+    if (/test/.test(params.url)) {
+        return {
+            action: 'block'
+        }
+    }
+});
+
 plugin.log('初始化成功');

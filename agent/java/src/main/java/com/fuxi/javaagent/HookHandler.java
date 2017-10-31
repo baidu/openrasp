@@ -41,7 +41,10 @@ import com.fuxi.javaagent.plugin.PluginManager;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.request.HttpServletRequest;
 import com.fuxi.javaagent.response.HttpServletResponse;
-import com.fuxi.javaagent.tool.*;
+import com.fuxi.javaagent.tool.FileUtil;
+import com.fuxi.javaagent.tool.Reflection;
+import com.fuxi.javaagent.tool.StackTrace;
+import com.fuxi.javaagent.tool.TimeUtils;
 import com.fuxi.javaagent.tool.hook.CustomLockObject;
 import com.fuxi.javaagent.tool.security.SqlConnectionChecker;
 import com.fuxi.javaagent.tool.security.TomcatSecurityChecker;
@@ -500,6 +503,36 @@ public class HookHandler {
                     handleBlock();
                 }
             }
+        }
+    }
+
+    /**
+     * 检测 jsp:include
+     *
+     * @param url
+     * @see #checkJstlImport(String)
+     */
+    public static void checkJspInclude(String url) {
+        if (url != null) {
+            Map<String, Object> params = new HashMap<String, Object>();
+            params.put("url", url);
+            params.put("function", "jsp_include");
+            doCheck(CheckParameter.Type.INCLUDE, params);
+        }
+    }
+
+    /**
+     * 检测 c:import
+     *
+     * @param url
+     * @see #checkJspInclude(String)
+     */
+    public static void checkJstlImport(String url) {
+        if (url != null) {
+            Map<String, Object> params = new HashMap<String, Object>();
+            params.put("url", url);
+            params.put("function", "jstl_import");
+            doCheck(CheckParameter.Type.INCLUDE, params);
         }
     }
 
