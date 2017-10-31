@@ -32,22 +32,15 @@ package com.fuxi.javaagent.tool;
 
 import com.fuxi.javaagent.tool.model.NicModel;
 
-import java.net.*;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.LinkedList;
 
 public class OSUtil {
 
     private static InetAddress inetAddress;
-
-    static {
-        try {
-            inetAddress = InetAddress.getLocalHost();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-    }
 
     public static String getHostName() {
         return inetAddress == null ? null : inetAddress.getHostName();
@@ -55,8 +48,11 @@ public class OSUtil {
 
     public static LinkedList<NicModel> getIpAddress() {
         LinkedList<NicModel> ipList = new LinkedList<NicModel>();
-        Enumeration allNetInterfaces = null;
         try {
+            if (inetAddress == null) {
+                inetAddress = InetAddress.getLocalHost();
+            }
+            Enumeration allNetInterfaces = null;
             allNetInterfaces = NetworkInterface.getNetworkInterfaces();
 
             if (allNetInterfaces != null) {
@@ -75,7 +71,7 @@ public class OSUtil {
                     }
                 }
             }
-        } catch (SocketException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return ipList;

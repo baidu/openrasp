@@ -56,10 +56,8 @@ import java.util.TimerTask;
  * 必须首先初始化
  */
 public class PluginManager {
-    private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
     public static final Logger ALARM_LOGGER = Logger.getLogger(PluginManager.class.getPackage().getName() + ".alarm");
-
-    private static JSContextFactory jsContextFactory = null;
+    private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
     private static Timer timer = null;
     private static Integer watchId = null;
 
@@ -69,11 +67,9 @@ public class PluginManager {
      * @throws Exception
      */
     public synchronized static void init() throws Exception {
-        jsContextFactory = new JSContextFactory();
+        JSContextFactory.init();
         updatePlugin();
-        if (!System.getProperty("os.name").toLowerCase().startsWith("mac")) {
-            initFileWatcher();
-        }
+        initFileWatcher();
     }
 
     /**
@@ -94,17 +90,23 @@ public class PluginManager {
                 new FileScanListener() {
                     @Override
                     public void onFileCreate(File file) {
-                        updatePluginAsync();
+                        if (file.getName().endsWith(".js")) {
+                            updatePluginAsync();
+                        }
                     }
 
                     @Override
                     public void onFileChange(File file) {
-                        updatePluginAsync();
+                        if (file.getName().endsWith(".js")) {
+                            updatePluginAsync();
+                        }
                     }
 
                     @Override
                     public void onFileDelete(File file) {
-                        updatePluginAsync();
+                        if (file.getName().endsWith(".js")) {
+                            updatePluginAsync();
+                        }
                     }
                 });
         HookHandler.enableHook.set(oldValue);
@@ -136,7 +138,7 @@ public class PluginManager {
             }
         }
 
-        jsContextFactory.setCheckScriptList(scripts);
+        JSContextFactory.setCheckScriptList(scripts);
 
         HookHandler.enableHook.set(oldValue);
     }
@@ -177,7 +179,7 @@ public class PluginManager {
      * @return 如果需要对当前请求进行拦截则返回true, 否则返回false
      */
     public static boolean check(CheckParameter parameter) {
-        JSContext cx = jsContextFactory.enterAndInitContext();
+        JSContext cx = JSContextFactory.enterAndInitContext();
         return cx.check(parameter);
     }
 }

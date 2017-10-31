@@ -216,8 +216,7 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Map<String, String> getServerContext() {
-        Object session = Reflection.invokeMethod(request, "getSession", new Class[]{boolean.class}, true);
-        Object servletContext = Reflection.invokeMethod(session, "getServletContext", EMPTY_CLASS);
+        Object servletContext = getServletContextObject();
         String serverInfo = Reflection.invokeStringMethod(servletContext, "getServerInfo", EMPTY_CLASS);
 
         Map<String, String> ret = new HashMap<String, String>();
@@ -268,7 +267,7 @@ public final class HttpServletRequest extends AbstractRequest {
      * @param value 值
      */
     public void setSessionAttribute(String key, String value) {
-        Object session = Reflection.invokeMethod(request, "getSession", EMPTY_CLASS);
+        Object session = getSessionObject();
         Reflection.invokeMethod(session, "setAttribute", new Class[]{String.class, Object.class}, key, value);
     }
 
@@ -278,7 +277,7 @@ public final class HttpServletRequest extends AbstractRequest {
      * @param key 键
      */
     public Object getSessionAttribute(String key) {
-        Object session = Reflection.invokeMethod(request, "getSession", EMPTY_CLASS);
+        Object session = getSessionObject();
         Object value = Reflection.invokeMethod(session, "getAttribute", new Class[]{String.class}, key);
         return value;
     }
@@ -291,8 +290,7 @@ public final class HttpServletRequest extends AbstractRequest {
     @Override
     public String getAppBasePath() {
         try {
-            Object session = Reflection.invokeMethod(request, "getSession", EMPTY_CLASS);
-            Object servletContext = Reflection.invokeMethod(session, "getServletContext", EMPTY_CLASS);
+            Object servletContext = getServletContextObject();
             Object realPath = Reflection.invokeMethod(servletContext, "getRealPath", new Class[]{String.class}, "/");
             if (realPath instanceof String) {
                 String separator = System.getProperty("file.separator");
@@ -309,5 +307,25 @@ public final class HttpServletRequest extends AbstractRequest {
             e.printStackTrace();
             return "";
         }
+    }
+
+    //--------------------------------私有方法-------------------------------------
+
+    /**
+     * 反射获取session object
+     *
+     * @return
+     */
+    private Object getSessionObject() {
+        return Reflection.invokeMethod(request, "getSession", new Class[]{boolean.class}, true);
+    }
+
+    /**
+     * 反射获取servletContext object
+     *
+     * @return
+     */
+    private Object getServletContextObject() {
+        return Reflection.invokeMethod(getSessionObject(), "getServletContext", EMPTY_CLASS);
     }
 }

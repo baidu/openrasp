@@ -35,6 +35,8 @@ import com.fuxi.javaagent.exception.SecurityException;
 import com.fuxi.javaagent.hook.SQLStatementHook;
 import com.fuxi.javaagent.hook.XXEHook;
 import com.fuxi.javaagent.plugin.CheckParameter;
+import com.fuxi.javaagent.plugin.JSContext;
+import com.fuxi.javaagent.plugin.JSContextFactory;
 import com.fuxi.javaagent.plugin.PluginManager;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.request.HttpServletRequest;
@@ -48,6 +50,7 @@ import com.fuxi.javaagent.tool.security.SqlConnectionChecker;
 import com.fuxi.javaagent.tool.security.TomcatSecurityChecker;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
+import org.mozilla.javascript.Scriptable;
 
 import java.io.File;
 import java.io.IOException;
@@ -133,16 +136,17 @@ public class HookHandler {
      */
     public static void checkFileUpload(String name, byte[] content) {
         if (name != null && content != null) {
-            Map<String, Object> params = new HashMap<String, Object>();
-            params.put("filename", name);
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            params.put("filename", params, name);
             try {
                 if (content.length > 4 * 1024) {
                     content = Arrays.copyOf(content, 4 * 1024);
                 }
-                params.put("content", new String(content, "UTF-8"));
+                params.put("content", params, new String(content, "UTF-8"));
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
-                params.put("content", "[rasp error:" + e.getMessage() + "]");
+                params.put("content", params, "[rasp error:" + e.getMessage() + "]");
             }
 
             doCheck(CheckParameter.Type.FILEUPLOAD, params);
@@ -156,12 +160,13 @@ public class HookHandler {
      */
     public static void checkListFiles(File file) {
         if (file != null) {
-            Map<String, Object> params = new HashMap<String, Object>();
-            params.put("path", file.getPath());
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            params.put("path", params, file.getPath());
             try {
-                params.put("realpath", file.getCanonicalPath());
+                params.put("realpath", params, file.getCanonicalPath());
             } catch (IOException e) {
-                params.put("realpath", file.getAbsolutePath());
+                params.put("realpath", params, file.getAbsolutePath());
             }
 
             doCheck(CheckParameter.Type.DIRECTORY, params);
@@ -192,13 +197,14 @@ public class HookHandler {
      */
     public static void checkSQL(String server, Object statement, String stmt) {
         if (stmt != null && !stmt.isEmpty()) {
-            Map<String, Object> params = new HashMap<String, Object>();
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
             String connectionId = SQLStatementHook.getSqlConnectionId(server, statement);
             if (connectionId != null) {
-                params.put(server + "_connection_id", connectionId);
+                params.put(server + "_connection_id", params, connectionId);
             }
-            params.put("server", server);
-            params.put("query", stmt);
+            params.put("server", params, server);
+            params.put("query", params, stmt);
 
             doCheck(CheckParameter.Type.SQL, params);
         }
@@ -223,7 +229,7 @@ public class HookHandler {
             responseCache.set(responseContainer);
 
             XXEHook.resetLocalExpandedSystemIds();
-            doCheck(CheckParameter.Type.REQUEST, EMPTY_MAP);
+            doCheck(CheckParameter.Type.REQUEST, JSContext.getUndefinedValue());
 
         }
     }
@@ -249,32 +255,26 @@ public class HookHandler {
     }
 
     /**
-     * ApplicationFilter中doFilter退出hook点
-     */
-    public static void onApplicationFilterExit() {
-        onServiceExit();
-    }
-
-    /**
      * 文件读取hook点
      *
      * @param file 文件对象
      */
     public static void checkReadFile(File file) {
         if (file != null) {
-            HashMap<String, Object> param = new HashMap<String, Object>();
-            param.put("path", file.getPath());
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            params.put("path", params, file.getPath());
             try {
                 String path = file.getCanonicalPath();
                 if (path.endsWith(".class") || !file.exists()) {
                     return;
                 }
-                param.put("realpath", FileUtil.getRealPath(file));
+                params.put("realpath", params, FileUtil.getRealPath(file));
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            doCheck(CheckParameter.Type.READFILE, param);
+            doCheck(CheckParameter.Type.READFILE, params);
         }
     }
 
@@ -285,9 +285,11 @@ public class HookHandler {
      */
     public static void checkCommand(List<String> command) {
         if (command != null && !command.isEmpty()) {
-            HashMap<String, Object> param = new HashMap<String, Object>();
-            param.put("command", command);
-            doCheck(CheckParameter.Type.COMMAND, param);
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            Scriptable array = cx.newArray(cx.getScope(), command.toArray());
+            params.put("command", params, array);
+            doCheck(CheckParameter.Type.COMMAND, params);
         }
     }
 
@@ -299,9 +301,10 @@ public class HookHandler {
     public static void checkXXE(String expandedSystemId) {
         if (expandedSystemId != null && !XXEHook.getLocalExpandedSystemIds().contains(expandedSystemId)) {
             XXEHook.getLocalExpandedSystemIds().add(expandedSystemId);
-            HashMap<String, Object> param = new HashMap<String, Object>();
-            param.put("entity", expandedSystemId);
-            doCheck(CheckParameter.Type.XXE, param);
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            params.put("entity", params, expandedSystemId);
+            doCheck(CheckParameter.Type.XXE, params);
         }
     }
 
@@ -312,11 +315,12 @@ public class HookHandler {
      */
     public static void checkWriteFile(File file) {
         if (file != null) {
-            HashMap<String, Object> param = new HashMap<String, Object>();
-            param.put("name", file.getName());
-            param.put("realpath", FileUtil.getRealPath(file));
-            param.put("content", "");
-            doCheck(CheckParameter.Type.WRITEFILE, param);
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            params.put("name", params, file.getName());
+            params.put("realpath", params, FileUtil.getRealPath(file));
+            params.put("content", params, "");
+            doCheck(CheckParameter.Type.WRITEFILE, params);
         }
     }
 
@@ -331,10 +335,11 @@ public class HookHandler {
             String path = ((CustomLockObject) closeLock).getInfo();
             if (path != null && writeBytes != null && writeBytes.length > 0) {
                 File file = new File(path);
-                Map<String, Object> params = new HashMap<String, Object>();
-                params.put("name", file.getName());
-                params.put("realpath", path);
-                params.put("content", new String(writeBytes));
+                JSContext cx = JSContextFactory.enterAndInitContext();
+                Scriptable params = cx.newObject(cx.getScope());
+                params.put("name", params, file.getName());
+                params.put("realpath", params, path);
+                params.put("content", params, new String(writeBytes));
                 doCheck(CheckParameter.Type.WRITEFILE, params);
             }
         }
@@ -359,9 +364,12 @@ public class HookHandler {
      */
     public static void checkOgnlExpression(String expression) {
         if (expression != null) {
-            Map<String, Object> params = new HashMap<String, Object>();
-            params.put("expression", expression);
-            doCheck(CheckParameter.Type.OGNL, params);
+            if (expression.length() >= Config.getConfig().getOgnlMinLength()) {
+                JSContext cx = JSContextFactory.enterAndInitContext();
+                Scriptable params = cx.newObject(cx.getScope());
+                params.put("expression", params, expression);
+                doCheck(CheckParameter.Type.OGNL, params);
+            }
         }
     }
 
@@ -374,8 +382,9 @@ public class HookHandler {
         if (objectStreamClass != null) {
             String clazz = objectStreamClass.getName();
             if (clazz != null) {
-                Map<String, Object> params = new HashMap<String, Object>();
-                params.put("clazz", clazz);
+                JSContext cx = JSContextFactory.enterAndInitContext();
+                Scriptable params = cx.newObject(cx.getScope());
+                params.put("clazz", params, clazz);
                 doCheck(CheckParameter.Type.DESERIALIZATION, params);
             }
         }
@@ -411,12 +420,13 @@ public class HookHandler {
                 String[] reflectMonitorMethod = Config.getConfig().getReflectionMonitorMethod();
                 for (String monitorMethod : reflectMonitorMethod) {
                     if (monitorMethod.equals(absoluteMethodName)) {
-                        Map<String, Object> params = new HashMap<String, Object>();
+                        JSContext cx = JSContextFactory.enterAndInitContext();
+                        Scriptable params = cx.newObject(cx.getScope());
                         List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
                                 Config.getConfig().getReflectionMaxStack());
-                        params.put("clazz", reflectClassName);
-                        params.put("method", reflectMethodName);
-                        params.put("stack", stackInfo);
+                        params.put("clazz", params, reflectClassName);
+                        params.put("method", params, reflectMethodName);
+                        params.put("stack", params, stackInfo);
                         pluginCheck(CheckParameter.Type.REFLECTION, params);
                         break;
                     }
@@ -445,10 +455,11 @@ public class HookHandler {
                 e.printStackTrace();
             }
             if (realPath != null) {
-                HashMap<String, Object> param = new HashMap<String, Object>();
-                param.put("source", realPath + source);
-                param.put("dest", realPath + dest);
-                doCheck(CheckParameter.Type.WEBDAV, param);
+                JSContext cx = JSContextFactory.enterAndInitContext();
+                Scriptable params = cx.newObject(cx.getScope());
+                params.put("source", params, realPath + source);
+                params.put("dest", params, realPath + dest);
+                doCheck(CheckParameter.Type.WEBDAV, params);
             }
         }
     }
@@ -483,7 +494,8 @@ public class HookHandler {
     }
 
     public static void checkSqlConnection(String url, Properties properties) {
-        if (System.currentTimeMillis() - SqlConnectionChecker.lastCheckTimeStamp > TimeUtils.DAY_MILLISECOND) {
+        Long lastAlarmTime = SqlConnectionChecker.alarmTimeCache.get(url);
+        if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
             SqlConnectionChecker checker = new SqlConnectionChecker(url, properties);
             boolean isSafe = checker.check();
             if (!isSafe) {
@@ -574,14 +586,14 @@ public class HookHandler {
      * @param type   检测类型
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
-    private static void doCheck(CheckParameter.Type type, Map<String, Object> params) {
+    private static void doCheck(CheckParameter.Type type, Object params) {
         if (enableHook.get() && enableCurrThreadHook.get()) {
             enableCurrThreadHook.set(false);
             pluginCheck(type, params);
         }
     }
 
-    private static void pluginCheck(CheckParameter.Type type, Map<String, Object> params) {
+    private static void pluginCheck(CheckParameter.Type type, Object params) {
         CheckParameter parameter = new CheckParameter(type, params, requestCache.get());
         boolean isBlock = false;
         try {

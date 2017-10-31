@@ -32,20 +32,16 @@ package com.fuxi.javaagent.plugin;
 
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.request.HttpServletRequest;
-import org.mozilla.javascript.BaseFunction;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.*;
+import org.mozilla.javascript.annotations.JSConstructor;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Enumeration;
-import java.util.Map;
+import java.util.*;
 
 public class JSRequestContext extends ScriptableObject {
-    private AbstractRequest javaContext = null;
-    private static Object[] properties = new Object[]{
+    private static Set<Object> properties = new HashSet<Object>(Arrays.asList(
             "path",
             "method",
             "url",
@@ -58,18 +54,37 @@ public class JSRequestContext extends ScriptableObject {
             "server",
             "appBasePath",
             "session"
-    };
+    ));
+    private JSContext cx = null;
+    private AbstractRequest javaContext = null;
+    private Scriptable scope = null;
 
     public JSRequestContext() {
     }
 
-    public void jsConstructor(Object javaContext) {
-        this.javaContext = (AbstractRequest) javaContext;
+    @JSConstructor
+    public JSRequestContext(Context cx, Object[] args,
+                            Function ctorObj,
+                            boolean inNewExpr) {
+        this.cx = (JSContext) cx;
+        this.scope = this.cx.getScope();
+        this.javaContext = (AbstractRequest) args[0];
     }
 
     @Override
     public String getClassName() {
         return "Context";
+    }
+
+    @Override
+    public Object[] getIds() {
+        properties.addAll(Arrays.asList(super.getIds()));
+        return properties.toArray();
+    }
+
+    @Override
+    public boolean has(String name, Scriptable start) {
+        return (start == this && properties.contains(name)) || super.has(name, start);
     }
 
 
@@ -103,8 +118,7 @@ public class JSRequestContext extends ScriptableObject {
         if (body == null) {
             return Context.getUndefinedValue();
         }
-        JSContext cx = (JSContext) JSContext.getCurrentContext();
-        final Scriptable buffer = cx.newObject(cx.scope, "Uint8Array");
+        final Scriptable buffer = cx.newObject(scope, "Uint8Array");
         try {
             body.writeTo(new OutputStream() {
                 int count = 0;
@@ -121,8 +135,7 @@ public class JSRequestContext extends ScriptableObject {
     }
 
     public Object jsGet_header() {
-        JSContext cx = (JSContext) JSContext.getCurrentContext();
-        Scriptable header = cx.newObject(cx.scope);
+        Scriptable header = cx.newObject(scope);
         Enumeration<String> headerNames = javaContext.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String key = headerNames.nextElement();
@@ -133,14 +146,13 @@ public class JSRequestContext extends ScriptableObject {
     }
 
     public Object jsGet_parameter() {
-        JSContext cx = (JSContext) JSContext.getCurrentContext();
-        Scriptable parameter = cx.newObject(cx.scope);
+        Scriptable parameter = cx.newObject(scope);
         Map<String, String[]> parameterMap = javaContext.getParameterMap();
         for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
             String key = entry.getKey();
             String[] value = entry.getValue();
             int length = value.length;
-            Scriptable arr = cx.newArray(cx.scope, length);
+            Scriptable arr = cx.newArray(scope, length);
             for (int i = 0; i < length; i++) {
                 arr.put(i, arr, value[i]);
             }
@@ -154,8 +166,7 @@ public class JSRequestContext extends ScriptableObject {
     }
 
     public Object jsGet_server() {
-        JSContext cx = (JSContext) JSContext.getCurrentContext();
-        Scriptable server = cx.newObject(cx.scope);
+        Scriptable server = cx.newObject(scope);
         Map<String, String> serverContext = javaContext.getServerContext();
         for (Map.Entry<String, String> entry : serverContext.entrySet()) {
             String key = entry.getKey();
@@ -169,8 +180,7 @@ public class JSRequestContext extends ScriptableObject {
         if (!(javaContext instanceof HttpServletRequest)) {
             return Context.getUndefinedValue();
         }
-        JSContext cx = (JSContext) JSContext.getCurrentContext();
-        Scriptable session = cx.newObject(cx.scope);
+        Scriptable session = cx.newObject(scope);
         Object getter = new BaseFunction() {
             @Override
             public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -205,10 +215,5 @@ public class JSRequestContext extends ScriptableObject {
         ScriptableObject.defineProperty(session, "getSession", getter, ScriptableObject.READONLY);
         ScriptableObject.defineProperty(session, "setSession", setter, ScriptableObject.READONLY);
         return session;
-    }
-
-    @Override
-    public Object[] getIds() {
-        return properties;
     }
 }

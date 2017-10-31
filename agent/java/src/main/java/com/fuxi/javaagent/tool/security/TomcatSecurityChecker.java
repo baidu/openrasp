@@ -33,7 +33,9 @@ package com.fuxi.javaagent.tool.security;
 import com.fuxi.javaagent.HookHandler;
 import com.fuxi.javaagent.plugin.PluginManager;
 import com.fuxi.javaagent.plugin.event.SecurityPolicyInfo;
+import com.fuxi.javaagent.plugin.event.SecurityPolicyInfo.Type;
 import com.google.gson.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -43,10 +45,7 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by tyy on 8/8/17.
@@ -61,14 +60,14 @@ public class TomcatSecurityChecker {
     private static final String[] WEAK_WORDS = new String[]{"both", "tomcat", "admin", "manager", "123456", "root"};
     private static final String[] DEFAULT_APP_DIRS = new String[]{"ROOT", "manager", "host-manager", "docs"};
     private static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
-    private ArrayList<String> unsafeMessage;
+    private HashMap<Type, String> unsafeMessage;
     private boolean isSafe;
     private String tomcatBaseDir;
 
     public TomcatSecurityChecker() {
         isSafe = true;
         tomcatBaseDir = System.getProperty("catalina.base");
-        unsafeMessage = new ArrayList<String>();
+        unsafeMessage = new HashMap<Type, String>();
     }
 
     /**
@@ -78,7 +77,8 @@ public class TomcatSecurityChecker {
      */
     public boolean check() {
         try {
-            if (tomcatBaseDir != null) {
+            String serverType = SecurityPolicyInfo.getCatalinaServerType();
+            if (tomcatBaseDir != null && serverType != null && serverType.equalsIgnoreCase("tomcat")) {
                 checkStartUser();
                 checkHttpOnlyIsOpen();
                 checkManagerPassword();
@@ -91,7 +91,10 @@ public class TomcatSecurityChecker {
             handleException(e);
         }
         if (!isSafe) {
-            PluginManager.ALARM_LOGGER.info(new SecurityPolicyInfo(getFormattedUnsafeMessage()).toString());
+            for (Object o : unsafeMessage.entrySet()) {
+                Map.Entry<Type, String> entry = (Map.Entry) o;
+                PluginManager.ALARM_LOGGER.info(new SecurityPolicyInfo(entry.getKey(), entry.getValue()));
+            }
         }
         return isSafe;
     }
@@ -110,20 +113,29 @@ public class TomcatSecurityChecker {
         Element contextElement = getXmlFileRootElement(contextFile);
         if (contextElement != null) {
             String httpOnly = contextElement.getAttribute(HTTP_ONLY_ATTRIBUTE_NAME);
-            if (httpOnly != null && !httpOnly.equals("true")) {
-                handleSecurityProblem("tomcat未在conf/context.xml文件中配置全局httpOnly.");
+
+            boolean isHttpOnly = true;
+            String serverVersion = SecurityPolicyInfo.getCatalinaServerVersion();
+            if (httpOnly != null && httpOnly.equals("false")) {
+                isHttpOnly = false;
+            } else if (!StringUtils.isEmpty(serverVersion) && serverVersion.charAt(0) < '7' && httpOnly == null) {
+                isHttpOnly = false;
+            }
+
+            if (!isHttpOnly) {
+                handleSecurityProblem(Type.COOKIE_HTTP_ONLY, "tomcat未在conf/context.xml文件中配置全局httpOnly.");
             }
         }
     }
 
     /**
-     * 检测启动用户是否为root
+     * 检测启动用户是否为系统管理员
      */
     private void checkStartUser() {
         String osName = System.getProperty("os.name").toLowerCase();
-        if (osName.startsWith("linux")) {
+        if (osName.startsWith("linux") || osName.startsWith("mac")) {
             if ("root".equals(System.getProperty("user.name"))) {
-                handleSecurityProblem("tomcat以root权限启动.");
+                handleSecurityProblem(Type.START_USER, "tomcat以root权限启动.");
             }
         } else if (osName.startsWith("windows")) {
             try {
@@ -133,17 +145,13 @@ public class TomcatSecurityChecker {
                 if (userGroups != null) {
                     for (String group : userGroups) {
                         if (group.equals(WINDOWS_ADMIN_GROUP_ID)) {
-                            handleSecurityProblem("服务器以管理员权限启动.");
+                            handleSecurityProblem(Type.START_USER, "服务器以管理员权限启动.");
                         }
                     }
                 }
             } catch (Exception e) {
                 handleException(e);
             }
-        } else {
-            LOGGER.error(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "can not support the os:" + osName));
-            return;
         }
 
     }
@@ -177,7 +185,7 @@ public class TomcatSecurityChecker {
                                 String userName = user.getAttribute("username");
                                 String password = user.getAttribute("password");
                                 if (weakWords.contains(userName) && weakWords.contains(password)) {
-                                    handleSecurityProblem("tomcat后台管理角色存在弱用户名和弱密码.");
+                                    handleSecurityProblem(Type.MANAGER_PASSWORD, "tomcat后台管理角色存在弱用户名和弱密码.");
                                     break;
                                 }
                             }
@@ -221,25 +229,21 @@ public class TomcatSecurityChecker {
         }
 
         if (!apps.isEmpty()) {
-            StringBuilder message = new StringBuilder("tomcat默认安装程序没有卸载: ");
+            StringBuilder message = new StringBuilder("tomcat 默认安装的webapps没有卸载: ");
             for (String app : apps) {
-                message.append(app).append(" ,");
+                message.append(app).append(", ");
             }
-            handleSecurityProblem(message.substring(0, message.length() - 1));
+            handleSecurityProblem(Type.DEFAULT_APP, message.substring(0, message.length() - 1));
         }
     }
 
-    public ArrayList<String> getUnsafeMessage() {
+    public HashMap<Type, String> getUnsafeMessage() {
         return unsafeMessage;
     }
 
-    public void addUnsafeMessage(String message) {
-        unsafeMessage.add(message);
-    }
-
-    private void handleSecurityProblem(String message) {
+    private void handleSecurityProblem(Type type, String message) {
         isSafe = false;
-        unsafeMessage.add(message);
+        unsafeMessage.put(type, message);
     }
 
     private void handleException(Exception e) {
@@ -256,10 +260,11 @@ public class TomcatSecurityChecker {
     public String getFormattedUnsafeMessage() {
         String formatMessage = "";
         if (!unsafeMessage.isEmpty()) {
-            formatMessage += "\tTomcat has unsafe setting：\n";
-            for (String message : unsafeMessage) {
-                formatMessage += "\t";
-                formatMessage += message;
+            formatMessage += "Tomcat 安全规范检查:\n";
+            for (Object o : unsafeMessage.entrySet()) {
+                Map.Entry<Type, String> entry = (Map.Entry) o;
+                formatMessage += "* ";
+                formatMessage += entry.getValue();
                 formatMessage += "\n";
             }
             return formatMessage;

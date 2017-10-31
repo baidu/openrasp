@@ -136,11 +136,10 @@ public class AttackInfo extends EventInfo {
 
     private String stringify(StackTraceElement[] trace) {
         StringBuilder ret = new StringBuilder();
-        for (int i = 0; i < trace.length - 1; i++) {
+        for (int i = 0; i < trace.length; i++) {
             ret.append(trace[i].toString());
             ret.append("\n");
         }
-        ret.append(trace[trace.length - 1].toString());
         return ret.toString();
     }
 

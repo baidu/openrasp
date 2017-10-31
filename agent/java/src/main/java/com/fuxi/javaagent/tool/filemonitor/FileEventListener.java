@@ -30,7 +30,8 @@
 
 package com.fuxi.javaagent.tool.filemonitor;
 
-import net.contentobjects.jnotify.JNotifyListener;
+
+import com.fuxi.javaagent.contentobjects.jnotify.JNotifyListener;
 import org.apache.commons.io.monitor.FileAlterationObserver;
 
 /**
