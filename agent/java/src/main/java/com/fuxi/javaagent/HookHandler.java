@@ -514,9 +514,10 @@ public class HookHandler {
      */
     public static void checkJspInclude(String url) {
         if (url != null) {
-            Map<String, Object> params = new HashMap<String, Object>();
-            params.put("url", url);
-            params.put("function", "jsp_include");
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            params.put("url", params, url);
+            params.put("function", params, "jsp_include");
             doCheck(CheckParameter.Type.INCLUDE, params);
         }
     }
@@ -529,9 +530,10 @@ public class HookHandler {
      */
     public static void checkJstlImport(String url) {
         if (url != null) {
-            Map<String, Object> params = new HashMap<String, Object>();
-            params.put("url", url);
-            params.put("function", "jstl_import");
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            params.put("url", params, url);
+            params.put("function", params, "jstl_import");
             doCheck(CheckParameter.Type.INCLUDE, params);
         }
     }
