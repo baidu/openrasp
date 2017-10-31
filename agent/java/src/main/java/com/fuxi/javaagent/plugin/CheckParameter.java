@@ -1,22 +1,5 @@
 /**
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
-<<<<<<< HEAD
- * <p>
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- * <p>
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
- * <p>
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
- * <p>
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software without
- * specific prior written permission.
- * <p>
-=======
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,7 +15,6 @@
  * may be used to endorse or promote products derived from this software without
  * specific prior written permission.
  *
->>>>>>> develop
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -72,17 +54,11 @@ public class CheckParameter {
         OGNL("ognl"),
         DESERIALIZATION("deserialization"),
         REFLECTION("reflection"),
-<<<<<<< HEAD
         WEBDAV("webdav"),
         INCLUDE("include");
 
         String normalName;
 
-=======
-        WEBDAV("webdav");
-
-        String normalName;
->>>>>>> develop
         Type(String name) {
             normalName = name;
         }
@@ -94,20 +70,12 @@ public class CheckParameter {
     }
 
     private final Type type;
-<<<<<<< HEAD
-    private final Map<String, Object> params;
-=======
     private final Object params;
->>>>>>> develop
     private final AbstractRequest request;
     private final long createTime;
 
 
-<<<<<<< HEAD
-    public CheckParameter(Type type, Map<String, Object> params, AbstractRequest request) {
-=======
     public CheckParameter(Type type, Object params, AbstractRequest request) {
->>>>>>> develop
         this.type = type;
         this.params = params;
         this.request = request;
@@ -118,11 +86,7 @@ public class CheckParameter {
         return type;
     }
 
-<<<<<<< HEAD
-    public Map<String, Object> getParams() {
-=======
     public Object getParams() {
->>>>>>> develop
         return params;
     }
 
