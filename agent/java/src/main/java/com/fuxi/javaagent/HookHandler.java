@@ -491,7 +491,8 @@ public class HookHandler {
     }
 
     public static void checkSqlConnection(String url, Properties properties) {
-        if (System.currentTimeMillis() - SqlConnectionChecker.lastCheckTimeStamp > TimeUtils.DAY_MILLISECOND) {
+        Long lastAlarmTime = SqlConnectionChecker.alarmTimeCache.get(url);
+        if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
             SqlConnectionChecker checker = new SqlConnectionChecker(url, properties);
             boolean isSafe = checker.check();
             if (!isSafe) {
