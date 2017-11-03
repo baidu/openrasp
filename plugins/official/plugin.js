@@ -62,8 +62,8 @@ plugin.register('directory', function (params, context) {
     // 简单判断目录遍历，可结合业务定制: e.g 不能超出应用根目录
     if (path.indexOf('/../../../') !== -1 || path.indexOf('\\..\\..\\..\\') !== -1) {
         return {
-            action: 'block',
-            message: '目录遍历攻击',
+            action:     'block',
+            message:    '目录遍历攻击',
             confidence: 90
         }
     }
@@ -79,7 +79,7 @@ plugin.register('directory', function (params, context) {
 })
 
 plugin.register('readFile', function (params, context) {
-    console.log('basePath', context.appBasePath)
+    // console.log('basePath', context.appBasePath)
 
     // 检查是否为成功的目录扫描
     var filename_1 = context.url.replace(/.*\//, '')
@@ -332,7 +332,7 @@ plugin.register('sql', function (params, context) {
 
     if (sqlRegex.test(params.query)) {
         return {
-            action: '   block',
+            action:     'block',
             message:    'SQL 注入攻击（算法4）',
             confidence: 100
         }
@@ -391,7 +391,7 @@ plugin.register('xxe', function (params, context) {
 
         if (protocol === 'file') {
             return {
-                action: '   log',
+                action:     'log',
                 message:    '尝试读取外部实体 (file 协议)',
                 confidence: 90
             }
