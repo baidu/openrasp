@@ -150,6 +150,9 @@ public class JSContextFactory extends ContextFactory {
             List<List<CheckProcess>> checkPointList = new ArrayList<List<CheckProcess>>(CheckParameter.Type.values().length);
             for (int i = 0; i < CheckParameter.Type.values().length; i++) {
                 NativeArray functions = (NativeArray) checkPoints.get(CheckParameter.Type.values()[i].toString());
+                if (functions == null) {
+                    continue;
+                }
                 List<CheckProcess> functionList = new ArrayList<CheckProcess>(functions.size());
                 for (int j = 0; j < functions.size(); j++) {
                     NativeObject functionObj = (NativeObject) functions.get(j);

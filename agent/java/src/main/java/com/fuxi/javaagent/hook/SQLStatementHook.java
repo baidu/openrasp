@@ -14,15 +14,7 @@ import java.util.Arrays;
  * Created by zhuming01 on 7/18/17.
  * All rights reserved
  */
-public class SQLStatementHook extends AbstractClassHook {
-    public static final String SQL_TYPE_MYSQL = "mysql";
-    public static final String SQL_TYPE_SQLITE = "sqlite";
-    public static final String SQL_TYPE_ORACLE = "oracle";
-    public static final String SQL_TYPE_SQLSERVER = "sqlserver";
-    public static final String SQL_TYPE_PGSQL = "pgsql";
-
-    private String type;
-    private String[] exceptions;
+public class SQLStatementHook extends AbstractSqlHook {
 
     /**
      * (none-javadoc)

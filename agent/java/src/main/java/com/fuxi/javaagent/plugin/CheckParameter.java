@@ -55,7 +55,8 @@ public class CheckParameter {
         DESERIALIZATION("deserialization"),
         REFLECTION("reflection"),
         WEBDAV("webdav"),
-        INCLUDE("include");
+        INCLUDE("include"),
+        SQL_SLOW_QUERY("sqlSlowQuery");
 
         String normalName;
 
