@@ -34,10 +34,8 @@ import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.exception.SecurityException;
 import com.fuxi.javaagent.hook.SQLStatementHook;
 import com.fuxi.javaagent.hook.XXEHook;
-import com.fuxi.javaagent.plugin.CheckParameter;
-import com.fuxi.javaagent.plugin.JSContext;
-import com.fuxi.javaagent.plugin.JSContextFactory;
-import com.fuxi.javaagent.plugin.PluginManager;
+import com.fuxi.javaagent.plugin.*;
+import com.fuxi.javaagent.plugin.event.AttackInfo;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.request.HttpServletRequest;
 import com.fuxi.javaagent.response.HttpServletResponse;
@@ -56,6 +54,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectStreamClass;
 import java.io.UnsupportedEncodingException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -207,6 +207,29 @@ public class HookHandler {
             params.put("query", params, stmt);
 
             doCheck(CheckParameter.Type.SQL, params);
+        }
+    }
+
+    /**
+     * 检测数据库查询结果
+     *
+     * @param sqlResultSet 数据库查询结果
+     */
+    public static void checkSqlQueryResult(String server, Object sqlResultSet) {
+        try {
+            ResultSet resultSet = (ResultSet) sqlResultSet;
+            int queryCount = resultSet.getRow();
+            int slowQueryMinCount = Config.getConfig().getSqlSlowQueryMinCount();
+            if (queryCount == slowQueryMinCount + 1) {
+                HashMap<String, Object> params = new HashMap<String, Object>();
+                params.put("slowquery_min_count", slowQueryMinCount);
+                params.put("server", server);
+                CheckParameter parameter = new CheckParameter(CheckParameter.Type.SQL_SLOW_QUERY, params, requestCache.get());
+                CheckResult result = new CheckResult("info", "慢查询: 使用SELECT语句读取了超过" + slowQueryMinCount + "行数据", "local_checker");
+                PluginManager.ALARM_LOGGER.warn(new AttackInfo(parameter, result));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -609,4 +632,5 @@ public class HookHandler {
             handleBlock();
         }
     }
+
 }

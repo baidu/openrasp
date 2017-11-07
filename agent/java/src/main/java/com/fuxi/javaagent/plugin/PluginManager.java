@@ -56,6 +56,8 @@ import java.util.TimerTask;
  * 必须首先初始化
  */
 public class PluginManager {
+
+    public static final String LOCAL_CHECKER_NAME = "local_checker";
     public static final Logger ALARM_LOGGER = Logger.getLogger(PluginManager.class.getPackage().getName() + ".alarm");
     private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
     private static Timer timer = null;
