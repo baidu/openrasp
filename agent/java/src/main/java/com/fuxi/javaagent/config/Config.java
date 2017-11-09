@@ -65,7 +65,7 @@ public class Config {
     private static final String DEFAULT_READ_FILE_EXTENSION_REGEX = "^(gz|7z|xz|tar|rar|zip|sql|db)$";
     private static final String DEFAULT_INJECT_URL_PREFIX = "";
     private static final String DEFAULT_OGNL_MIN_LENGTH = "30";
-    private static final String DEFAULT_SQL_SLOW_QUERY_MIN_ROWS = "100";
+    private static final String DEFAULT_SQL_SLOW_QUERY_MIN_ROWS = "500";
 
     private static final Logger LOGGER = Logger.getLogger(Config.class.getName());
     private static String baseDirectory;
