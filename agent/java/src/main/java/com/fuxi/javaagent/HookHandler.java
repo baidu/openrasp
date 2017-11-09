@@ -55,7 +55,6 @@ import java.io.IOException;
 import java.io.ObjectStreamClass;
 import java.io.UnsupportedEncodingException;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -447,9 +446,10 @@ public class HookHandler {
                         Scriptable params = cx.newObject(cx.getScope());
                         List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
                                 Config.getConfig().getReflectionMaxStack());
+                        Scriptable array = cx.newArray(cx.getScope(), stackInfo.toArray());
                         params.put("clazz", params, reflectClassName);
                         params.put("method", params, reflectMethodName);
-                        params.put("stack", params, stackInfo);
+                        params.put("stack", params, array);
                         pluginCheck(CheckParameter.Type.REFLECTION, params);
                         break;
                     }
