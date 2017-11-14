@@ -51,7 +51,7 @@ import java.util.*;
  * Created by tyy on 8/8/17.
  * 检测tomcat安全规范的工具类
  */
-public class TomcatSecurityChecker {
+public class TomcatSecurityChecker implements PolicyChecker {
 
     public static final String TOMCAT_CHECK_ERROR_LOG_CHANNEL = "tomcat_security_check_error";
     private static final String HTTP_ONLY_ATTRIBUTE_NAME = "useHttpOnly";
@@ -75,6 +75,7 @@ public class TomcatSecurityChecker {
      *
      * @return true代表安全，false代表不安全
      */
+    @Override
     public boolean check() {
         try {
             String serverType = SecurityPolicyInfo.getCatalinaServerType();
@@ -93,7 +94,7 @@ public class TomcatSecurityChecker {
         if (!isSafe) {
             for (Object o : unsafeMessage.entrySet()) {
                 Map.Entry<Type, String> entry = (Map.Entry) o;
-                PluginManager.ALARM_LOGGER.info(new SecurityPolicyInfo(entry.getKey(), entry.getValue()));
+                PolicyChecker.ALARM_LOGGER.info(new SecurityPolicyInfo(entry.getKey(), entry.getValue()));
             }
         }
         return isSafe;

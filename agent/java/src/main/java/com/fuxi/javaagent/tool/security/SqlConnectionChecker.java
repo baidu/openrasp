@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
-public class SqlConnectionChecker {
+public class SqlConnectionChecker implements PolicyChecker{
 
     private static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
     private static final String CONNECTION_USER_KEY = "user";
@@ -28,6 +28,7 @@ public class SqlConnectionChecker {
         parseConnectionParams(url, properties);
     }
 
+    @Override
     public boolean check() {
         boolean result = true;
         if (!StringUtils.isEmpty(user)) {
@@ -45,7 +46,7 @@ public class SqlConnectionChecker {
         if (!result) {
             alarmTimeCache.put(url, System.currentTimeMillis());
             unsafeMessage += ("使用管理员账号" + user + "登录" + sqlType + "数据库:" + url);
-            PluginManager.ALARM_LOGGER.info(new SecurityPolicyInfo(SecurityPolicyInfo.Type.SQL_CONNECTION, unsafeMessage));
+            PolicyChecker.ALARM_LOGGER.info(new SecurityPolicyInfo(SecurityPolicyInfo.Type.SQL_CONNECTION, unsafeMessage));
         }
         return result;
     }
