@@ -62,10 +62,16 @@ public class SqlConnectionChecker {
                         user = properties.getProperty(CONNECTION_USER_KEY);
                     }
                     if (StringUtils.isEmpty(user)) {
-                        int index = url.indexOf("?", indexOfPath);
+                        String paramStartToken = "?";
+                        String paramSplitToken = "&";
+                        if (sqlType.toLowerCase().equals("sqlserver")) {
+                            paramStartToken = ";";
+                            paramSplitToken = ";";
+                        }
+                        int index = url.indexOf(paramStartToken, indexOfPath);
                         if (index != -1) {
                             String paramString = url.substring(index + 1);
-                            StringTokenizer queryParams = new StringTokenizer(paramString, "&");
+                            StringTokenizer queryParams = new StringTokenizer(paramString, paramSplitToken);
                             while (queryParams.hasMoreTokens()) {
                                 String parameterValuePair = queryParams.nextToken();
                                 int indexOfEquals = parameterValuePair.indexOf("=");
