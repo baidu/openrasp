@@ -13,7 +13,7 @@ import java.util.Arrays;
  * Created by tyy on 17-11-6.
  * 为检测慢查询添加便利 sql 查询结果的 hook 点
  */
-public class SqlResultSetHook extends AbstractSqlHook {
+public class SQLResultSetHook extends AbstractSqlHook {
 
     @Override
     public boolean isClassMatched(String className) {
@@ -82,4 +82,5 @@ public class SqlResultSetHook extends AbstractSqlHook {
         }
         return mv;
     }
+
 }
