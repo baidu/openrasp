@@ -11,8 +11,25 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
     public static final String SQL_TYPE_ORACLE = "oracle";
     public static final String SQL_TYPE_SQLSERVER = "sqlserver";
     public static final String SQL_TYPE_PGSQL = "pgsql";
+    public static final String SQL_TYPE_DB2 = "db2";
 
     protected String type;
     protected String[] exceptions;
 
+    @Override
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String[] getExceptions() {
+        return exceptions;
+    }
+
+    public void setExceptions(String[] exceptions) {
+        this.exceptions = exceptions;
+    }
 }

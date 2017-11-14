@@ -45,6 +45,8 @@ import org.apache.log4j.Logger;
 public abstract class AbstractClassHook {
     private static final Logger LOGGER = Logger.getLogger(AbstractClassHook.class.getName());
 
+    private String[] interfaces;
+
     /**
      * 用于判断类名与当前需要hook的类是否相同
      *
@@ -55,11 +57,11 @@ public abstract class AbstractClassHook {
 
     /**
      * hook点所属检测类型．
-     * @see <a href="https://rasp.baidu.com/doc/dev/data.html">https://rasp.baidu.com/doc/dev/data.html</a>
      *
      * @return 检测类型
+     * @see <a href="https://rasp.baidu.com/doc/dev/data.html">https://rasp.baidu.com/doc/dev/data.html</a>
      */
-    public abstract String getType(); 
+    public abstract String getType();
 
     /**
      * 是否计算栈帧
@@ -91,6 +93,14 @@ public abstract class AbstractClassHook {
         return null;
     }
 
+    public String[] getInterfaces() {
+        return interfaces;
+    }
+
+    public void setInterfaces(String[] interfaces) {
+        this.interfaces = interfaces;
+    }
+
     /**
      * 向hook点函数增加的钩子内容
      *
@@ -119,6 +129,12 @@ public abstract class AbstractClassHook {
         RaspHookClassVisitor(AbstractClassHook hook, ClassVisitor cv) {
             super(Opcodes.ASM5, cv);
             this.hook = hook;
+        }
+
+        @Override
+        public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+            hook.setInterfaces(interfaces);
+            super.visit(version, access, name, signature, superName, interfaces);
         }
 
         /**
