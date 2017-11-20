@@ -62,16 +62,16 @@ plugin.register('directory', function (params, context) {
     // 简单判断目录遍历，可结合业务定制: e.g 不能超出应用根目录
     if (path.indexOf('/../../../') !== -1 || path.indexOf('\\..\\..\\..\\') !== -1) {
         return {
-            action: 'block',
-            message: '目录遍历攻击',
+            action:     'block',
+            message:    '目录遍历攻击',
             confidence: 90
         }
     }
 
     if (forcefulBrowsing.systemFiles.test(path)) {
         return {
-            action: 'block',
-            message: '读取系统目录',
+            action:     'block',
+            message:    '读取系统目录',
             confidence: 100
         }
     }
@@ -104,8 +104,8 @@ plugin.register('readFile', function (params, context) {
 
         if (matched) {
             return {
-                action: 'block',
-                message: '尝试下载敏感文件(' + context.method.toUpperCase() + ' 方式): ' + params.realpath,
+                action:     'block',
+                message:    '尝试下载敏感文件(' + context.method.toUpperCase() + ' 方式): ' + params.realpath,
 
                 // 如果是HEAD方式下载敏感文件，100% 扫描器攻击
                 confidence: context.method == 'head' ? 100 : 90
@@ -121,8 +121,9 @@ plugin.register('readFile', function (params, context) {
         for (var j = 0; j < forcefulBrowsing.absolutePaths.length; j ++) {
             if (forcefulBrowsing.absolutePaths[j] == params.realpath) {
                 return {
-                    action:  'block',
-                    message: '疑似webshell - 尝试读取系统文件: ' + params.realpath
+                    action:     'block',
+                    message:    '疑似webshell - 尝试读取系统文件: ' + params.realpath,
+                    confidence: 90
                 }
             }
         }
@@ -132,8 +133,8 @@ plugin.register('readFile', function (params, context) {
     var path = canonicalPath(params.path)
     if (path.indexOf('/../../../') !== -1 || path.indexOf('\\..\\..\\..\\') !== -1) {
         return {
-            action: 'block',
-            message: '目录遍历攻击',
+            action:     'block',
+            message:    '目录遍历攻击',
             confidence: 90
         }
     }
