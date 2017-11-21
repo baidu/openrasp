@@ -458,7 +458,7 @@ plugin.register('request', function(params, context) {
     }
 
     // xss 检测 DEMO
-    var message = detectXSS()
+    var message = detectXSS(params, context)
     if (message.length) {
         return {
             action: 'block',
