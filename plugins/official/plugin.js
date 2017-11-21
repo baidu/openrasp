@@ -304,7 +304,7 @@ plugin.register('xxe', function (params, context) {
 
         if (protocol === 'file') {
             return {
-                action: '   log',
+                action:     'log',
                 message:    '尝试读取外部实体 (file 协议)',
                 confidence: 90
             }
