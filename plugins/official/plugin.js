@@ -70,8 +70,8 @@ plugin.register('directory', function (params, context) {
 
     if (forcefulBrowsing.systemFiles.test(path)) {
         return {
-            action: 'block',
-            message: '读取系统目录',
+            action:     'block',
+            message:    '读取系统目录',
             confidence: 100
         }
     }
@@ -104,8 +104,8 @@ plugin.register('readFile', function (params, context) {
 
         if (matched) {
             return {
-                action: 'block',
-                message: '尝试下载敏感文件(' + context.method.toUpperCase() + ' 方式): ' + params.realpath,
+                action:     'block',
+                message:    '尝试下载敏感文件(' + context.method.toUpperCase() + ' 方式): ' + params.realpath,
 
                 // 如果是HEAD方式下载敏感文件，100% 扫描器攻击
                 confidence: context.method == 'head' ? 100 : 90
@@ -121,8 +121,9 @@ plugin.register('readFile', function (params, context) {
         for (var j = 0; j < forcefulBrowsing.absolutePaths.length; j ++) {
             if (forcefulBrowsing.absolutePaths[j] == params.realpath) {
                 return {
-                    action:  'block',
-                    message: '疑似webshell - 尝试读取系统文件: ' + params.realpath
+                    action:     'block',
+                    message:    '疑似webshell - 尝试读取系统文件: ' + params.realpath,
+                    confidence: 90
                 }
             }
         }
@@ -132,8 +133,8 @@ plugin.register('readFile', function (params, context) {
     var path = canonicalPath(params.path)
     if (path.indexOf('/../../../') !== -1 || path.indexOf('\\..\\..\\..\\') !== -1) {
         return {
-            action: 'block',
-            message: '目录遍历攻击',
+            action:     'block',
+            message:    '目录遍历攻击',
             confidence: 90
         }
     }
@@ -482,4 +483,80 @@ plugin.register('reflection', function(params, context) {
     }
 })
 
-plugin.log('official 初始化成功')
+// [[ 近期调整~ ]]
+plugin.register('request', function(params, context) {
+
+    // 已知的扫描器识别
+    function detectScanner(params, context)  {         
+        var foundScanner = false
+        var scannerUA    = [
+            "attack", "scan", "vulnerability", "injection", "xss", "exploit", "grabber", 
+            "cgichk", "bsqlbf", "sqlmap", "nessus", "arachni", "metis", "sql power injector", 
+            "bilbo", "absinthe", "black widow", "n-stealth", "brutus", "webtrends security analyzer",
+            "netsparker", "jaascois", "pmafind", ".nasl", "nsauditor", "paros", "dirbuster", 
+            "pangolin", "nmap nse", "sqlninja", "nikto", "webinspect", "blackwidow", 
+            "grendel-scan", "havij", "w3af", "hydra"
+        ]
+
+        if (context.header['acunetix-product'] || context.header['x-wipp']) {
+            foundScanner = true
+        } else {
+            var ua = context.header['user-agent']
+            if (ua) {
+                for (var i = 0; i < scannerUA.length; i ++) {
+                    if (ua.indexOf(scannerUA[i].toLowerCase()) != -1) {
+                        foundScanner = true
+                        break
+                    }
+                }
+            }
+        }
+
+        return foundScanner
+    }
+
+    // XSS 检测 DEMO，即将移除
+    function detectXSS(params, context) {
+        var xssRegex   = /<script|script>|<iframe|iframe>|javascript:(?!(?:history\.(?:go|back)|void\(0\)))/i
+        var parameters = context.parameter;
+        var message    = '';
+
+        Object.keys(parameters).some(function (name) {
+            parameters[name].some(function (value) {
+                if (xssRegex.test(value)) {
+                    message = 'XSS 攻击: ' + value;
+                    return true;
+                }
+            });
+
+            if (message.length) {
+                return true;
+            }
+        });
+
+        return message
+    }
+
+    if (0 && detectScanner(params, context)) {
+        return {
+            action:     'block',
+            message:    '已知的扫描器探测行为: ' + scannerUA[i],
+            confidence: 90
+        }
+    }
+
+    // xss 检测 DEMO
+    var message = detectXSS(params, context)
+    if (message.length) {
+        return {
+            action: 'block',
+            message: message,
+            confidence: 90
+        }
+    }
+
+    return clean    
+})
+
+plugin.log('初始化成功')
+>>>>>>> master
