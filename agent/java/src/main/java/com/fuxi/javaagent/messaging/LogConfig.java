@@ -31,6 +31,7 @@
 package com.fuxi.javaagent.messaging;
 
 import com.fuxi.javaagent.Agent;
+import com.fuxi.javaagent.exception.ConfigLoadException;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -65,12 +66,11 @@ public class LogConfig {
      *
      * @param raspRootDirectory rasp根目录
      */
-    public static boolean completeLogConfig(String raspRootDirectory) {
+    public static void completeLogConfig(String raspRootDirectory) {
         String logConfigFile = raspRootDirectory + SEPARATOR + CONFIGFOLDER + SEPARATOR + CONFIGFILE;
-        if (isLogConfigFileExist(logConfigFile)) {
-            return true;
+        if (!isLogConfigFileExist(logConfigFile)) {
+            extractLogConfigFile(raspRootDirectory);
         }
-        return extractLogConfigFile(raspRootDirectory);
     }
 
     /**
@@ -92,7 +92,7 @@ public class LogConfig {
      * @param raspRootDirectory rasp根目录
      * @return 导出文件成功返回true,否则false
      */
-    private static boolean extractLogConfigFile(String raspRootDirectory) {
+    private static void extractLogConfigFile(String raspRootDirectory) {
         InputStream inputStream = null;
         FileWriter fileWriter = null;
         BufferedReader bufferedReader = null;
@@ -150,10 +150,7 @@ public class LogConfig {
             } catch (IOException eis) {
                 eis.printStackTrace();
             }
-            throwable.printStackTrace();
-            System.out.println("Fail to extract " + CONFIGFILE + ", because of: " + throwable.getMessage());
-            return false;
+            throw new ConfigLoadException("Fail to extract " + CONFIGFILE + ", because of: " + throwable.getMessage());
         }
-        return true;
     }
 }

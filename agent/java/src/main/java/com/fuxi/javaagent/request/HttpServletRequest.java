@@ -216,8 +216,7 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Map<String, String> getServerContext() {
-        Object session = Reflection.invokeMethod(request, "getSession", EMPTY_CLASS);
-        Object servletContext = Reflection.invokeMethod(session, "getServletContext", EMPTY_CLASS);
+        Object servletContext = getServletContextObject();
         String serverInfo = Reflection.invokeStringMethod(servletContext, "getServerInfo", EMPTY_CLASS);
 
         Map<String, String> ret = new HashMap<String, String>();
@@ -236,14 +235,14 @@ public final class HttpServletRequest extends AbstractRequest {
      * @param serverInfo 服务器信息
      * @return 服务器类型
      */
-    private String extractType(String serverInfo) {
+    public static String extractType(String serverInfo) {
         if (serverInfo == null) {
             return null;
         }
         serverInfo = serverInfo.toLowerCase();
         if (serverInfo.contains("tomcat")) return "Tomcat";
         if (serverInfo.contains("jboss")) return "JBoss";
-        if (serverInfo.contains("weblogic")) return "WebLogic";
+        if (serverInfo.contains("jetty")) return "Jetty";
         return serverInfo;
     }
 
@@ -253,11 +252,80 @@ public final class HttpServletRequest extends AbstractRequest {
      * @param serverInfo 服务器信息
      * @return 服务器版本号
      */
-    private String extractNumber(String serverInfo) {
+    public static String extractNumber(String serverInfo) {
         if (serverInfo == null) {
             return null;
         }
         Matcher m = PATTERN.matcher(serverInfo);
         return m.find() ? m.group(0) : "";
+    }
+
+    /**
+     * 增加session条目
+     *
+     * @param key   键
+     * @param value 值
+     */
+    public void setSessionAttribute(String key, String value) {
+        Object session = getSessionObject();
+        Reflection.invokeMethod(session, "setAttribute", new Class[]{String.class, Object.class}, key, value);
+    }
+
+    /**
+     * 获取指定键对应session
+     *
+     * @param key 键
+     */
+    public Object getSessionAttribute(String key) {
+        Object session = getSessionObject();
+        Object value = Reflection.invokeMethod(session, "getAttribute", new Class[]{String.class}, key);
+        return value;
+    }
+
+    /**
+     * (none-javadoc)
+     *
+     * @see AbstractRequest#getAppBasePath()
+     */
+    @Override
+    public String getAppBasePath() {
+        try {
+            Object servletContext = getServletContextObject();
+            Object realPath = Reflection.invokeMethod(servletContext, "getRealPath", new Class[]{String.class}, "/");
+            if (realPath instanceof String) {
+                String separator = System.getProperty("file.separator");
+                String rp = (String) realPath;
+                if (rp.endsWith(separator)) {
+                    rp = rp.substring(0, rp.length() - 1);
+                }
+                int index = rp.lastIndexOf(separator);
+                return rp.substring(0, index);
+            } else {
+                return "";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    //--------------------------------私有方法-------------------------------------
+
+    /**
+     * 反射获取session object
+     *
+     * @return
+     */
+    private Object getSessionObject() {
+        return Reflection.invokeMethod(request, "getSession", new Class[]{boolean.class}, true);
+    }
+
+    /**
+     * 反射获取servletContext object
+     *
+     * @return
+     */
+    private Object getServletContextObject() {
+        return Reflection.invokeMethod(getSessionObject(), "getServletContext", EMPTY_CLASS);
     }
 }

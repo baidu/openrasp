@@ -50,4 +50,25 @@ public class FileUtil {
     public static String readFileByFile(File file) throws IOException {
         return FileUtils.readFileToString(file);
     }
+
+    /**
+     * 还原文件真实路径,避免绕过
+     *
+     * @param file 文件
+     * @return 真实文件路径su
+     */
+    public static String getRealPath(File file) {
+        String absPath = file.getAbsolutePath();
+        if (OSUtil.isWindows()) {
+            int index = absPath.indexOf("::$");
+            if (index >= 0) {
+                file = new File(absPath.substring(0,index));
+            }
+        }
+        try {
+            return file.getCanonicalPath();
+        } catch (IOException e) {
+            return absPath;
+        }
+    }
 }

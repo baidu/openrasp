@@ -63,22 +63,34 @@ public class Agent {
     public static void premain(String agentArg, Instrumentation inst) {
         try {
             JarFileHelper.addJarToBootstrap(inst);
-            if (!LogConfig.completeLogConfig(JarFileHelper.getLocalJarParentPath())) {
+            if (!loadConfig(JarFileHelper.getLocalJarParentPath())) {
                 return;
             }
             readVersion();
-            initTransformer(inst);
             // 初始化插件系统
             PluginManager.init();
+            initTransformer(inst);
             String message = "OpenRasp Initialized [" + projectVersion + " (build: GitCommit=" + gitCommit + " date="
                     + buildTime + ")]";
             System.out.println(message);
             Logger.getLogger(Agent.class.getName()).info(message);
             HookHandler.enableHook.set(true);
         } catch (Exception e) {
-            System.out.println("init agent fail:" + e.getMessage() + "\n"
-                    + "The program continues to run.");
+            System.out.println("Failed to initialize OpenRASP:" + e.getMessage() + "\n"
+                    + "Will continue without security protection.");
+            e.printStackTrace();
         }
+    }
+
+    /**
+     * 初始化配置
+     *
+     * @return 配置是否成功
+     */
+    private static boolean loadConfig(String baseDir) throws IOException {
+        LogConfig.completeLogConfig(baseDir);
+
+        return true;
     }
 
     /**

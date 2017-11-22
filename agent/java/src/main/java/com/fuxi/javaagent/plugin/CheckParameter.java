@@ -41,24 +41,50 @@ import java.util.Map;
  * 用于转化hook参数和filter所需要的参数
  */
 public class CheckParameter {
-    private final String type;
-    private final Map<String, Object> params;
+
+    public enum Type {
+        SQL("sql"),
+        COMMAND("command"),
+        DIRECTORY("directory"),
+        REQUEST("request"),
+        READFILE("readFile"),
+        WRITEFILE("writeFile"),
+        FILEUPLOAD("fileUpload"),
+        XXE("xxe"),
+        OGNL("ognl"),
+        DESERIALIZATION("deserialization"),
+        REFLECTION("reflection"),
+        WEBDAV("webdav");
+
+        String normalName;
+        Type(String name) {
+            normalName = name;
+        }
+
+        @Override
+        public String toString() {
+            return normalName;
+        }
+    }
+
+    private final Type type;
+    private final Object params;
     private final AbstractRequest request;
     private final long createTime;
 
 
-    public CheckParameter(String type, Map<String, Object> params, AbstractRequest request) {
+    public CheckParameter(Type type, Object params, AbstractRequest request) {
         this.type = type;
         this.params = params;
         this.request = request;
         this.createTime = System.currentTimeMillis();
     }
 
-    public String getType() {
+    public Type getType() {
         return type;
     }
 
-    public Map<String, Object> getParams() {
+    public Object getParams() {
         return params;
     }
 

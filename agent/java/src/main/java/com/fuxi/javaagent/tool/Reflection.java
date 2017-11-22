@@ -30,6 +30,11 @@
 
 package com.fuxi.javaagent.tool;
 
+import com.fuxi.javaagent.config.Config;
+import com.fuxi.javaagent.transformer.CustomClassTransformer;
+import org.apache.log4j.Logger;
+
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -39,6 +44,7 @@ import java.lang.reflect.Method;
  * 反射工具类
  */
 public class Reflection {
+    private static final Logger LOGGER = Logger.getLogger(Reflection.class.getName());
 
     /**
      * 根据方法名调用对象的某一个方法
@@ -53,21 +59,7 @@ public class Reflection {
         if (object == null) {
             return null;
         }
-
-        try {
-            Method method = object.getClass().getMethod(methodName, paramTypes);
-            if (!method.isAccessible()) {
-                method.setAccessible(true);
-            }
-            return method.invoke(object, parameters);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return invokeMethod(object, object.getClass(), methodName, paramTypes, parameters);
     }
 
     /**
@@ -79,5 +71,60 @@ public class Reflection {
     public static String invokeStringMethod(Object object, String methodName, Class[] paramTypes, Object... parameters) {
         Object ret = invokeMethod(object, methodName, paramTypes, parameters);
         return ret != null ? (String) ret : null;
+    }
+
+    /**
+     * 反射获取对象的字段包括私有的
+     *
+     * @param object    被提取字段的对象
+     * @param fieldName 字段名称
+     * @return 字段的值
+     */
+    public static Object getField(Object object, String fieldName) throws NoSuchFieldException, IllegalAccessException {
+        Field field = object.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        return field.get(object);
+    }
+
+    /**
+     * 调用某一个类的静态方法
+     *
+     * @param className  类名
+     * @param methodName 方法名称
+     * @param paramTypes 参数类型列表
+     * @param parameters 参数列表
+     * @return 方法返回值
+     */
+    public static Object invokeStaticMethod(String className, String methodName, Class[] paramTypes, Object... parameters) {
+        try {
+            Class clazz = null;
+            ClassLoader loader = CustomClassTransformer.getClassLoader(className);
+            if (loader != null) {
+                clazz = loader.loadClass(className);
+            } else {
+                clazz = Class.forName(className);
+            }
+            return invokeMethod(null, clazz, methodName, paramTypes, parameters);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static Object invokeMethod(Object object, Class clazz, String methodName, Class[] paramTypes, Object... parameters) {
+        try {
+            Method method = clazz.getMethod(methodName, paramTypes);
+            if (!method.isAccessible()) {
+                method.setAccessible(true);
+            }
+            return method.invoke(object, parameters);
+        } catch (IllegalAccessException e) {
+            LOGGER.warn(e.getMessage());
+        } catch (InvocationTargetException e) {
+            LOGGER.warn(e.getMessage());
+        } catch (NoSuchMethodException e) {
+            LOGGER.warn(e.getMessage());
+        }
+        return null;
     }
 }

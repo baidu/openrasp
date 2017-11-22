@@ -1,4 +1,7 @@
-# OpenRASP [![Build Status](https://www.travis-ci.org/baidu/openrasp.svg?branch=master)](https://www.travis-ci.org/baidu/openrasp)
+# OpenRASP 
+
+[![Build Status](https://www.travis-ci.org/baidu/openrasp.svg?branch=master)](https://www.travis-ci.org/baidu/openrasp)
+[![Build Status](https://img.shields.io/badge/README-切换语言-yellow.svg)](readme-zh_CN.md)
 
 ### Introduction
 
@@ -26,11 +29,11 @@ We've fully tested OpenRASP on the following application servers for both Linux 
 
 * Tomcat 6-8
 * JBoss 4.X
-* WebLogic 11/12
+* Jetty 7-9
 
 ##### 2. Performance impact on application servers
 
-We ran multiple intense and long-lasting stress tests prior to release. Even in the worst-case scenario (where the hook point got continuously triggered) the server’s performance was only reduced by 10%
+We ran multiple intense and long-lasting stress tests prior to release. Even in the worst-case scenario (where the hook point got continuously triggered) the server’s performance was only reduced by 5%
 
 ##### 3. Integration with existing SIEM or SOC
 
@@ -46,9 +49,8 @@ Detailed plugin development instructions can be found [here](https://rasp.baidu.
 
 Technical support:
 
-* [Baidu Security Forum](http://anquan.baidu.com/bbs)
 * [RASP QQ group #1: 259318664](http://shang.qq.com/wpa/qunwpa?idkey=5016bac5431b23316a79efdcd2c4dadd6ef8b99b231e4ed10f1e265573a66e1c)
-* [openrasp-en-discuss Mailing List](https://sourceforge.net/projects/openrasp-en/lists/openrasp-en-discuss)
+* [OpenRASP Google Group](https://groups.google.com/forum/#!forum/openrasp)
 
 Business inquires, comments, concenrs and opinions:
 

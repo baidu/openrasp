@@ -275,4 +275,14 @@ public class CoyoteRequest extends AbstractRequest {
     public Map<String, String> getServerContext() {
         return null;
     }
+
+    /**
+     * (none-javadoc)
+     *
+     * @see AbstractRequest#getAppBasePath()
+     */
+    @Override
+    public String getAppBasePath() {
+        return null;
+    }
 }

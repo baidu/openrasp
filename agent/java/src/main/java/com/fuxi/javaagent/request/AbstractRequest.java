@@ -33,6 +33,7 @@ package com.fuxi.javaagent.request;
 import java.io.ByteArrayOutputStream;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by zhuming01 on 6/23/17.
@@ -46,6 +47,7 @@ public abstract class AbstractRequest {
     protected Object inputStream = null;
     protected ByteArrayOutputStream bodyOutputStream = null;
     protected static final int maxBodySize = 4096;
+    protected String requestId;
 
     /**
      * constructor
@@ -63,6 +65,7 @@ public abstract class AbstractRequest {
      */
     public AbstractRequest(Object request) {
         this.request = request;
+        this.requestId = UUID.randomUUID().toString().replace("-", "");
     }
 
     /**
@@ -72,6 +75,24 @@ public abstract class AbstractRequest {
      */
     public void setRequest(Object request) {
         this.request = request;
+    }
+
+    /**
+     * 获取请求实体
+     *
+     * @return 请求实体
+     */
+    public Object getRequest() {
+        return this.request;
+    }
+
+    /**
+     * 获取请求Id
+     *
+     * @return 请求Id
+     */
+    public String getRequestId() {
+        return requestId;
     }
 
     /**
@@ -191,6 +212,13 @@ public abstract class AbstractRequest {
     public abstract Map<String, String> getServerContext();
 
     /**
+     * 获取app部署根路径
+     *
+     * @return app部署根路径
+     */
+    public abstract String getAppBasePath();
+
+    /**
      * 返回HTTP request body
      *
      * @return request body, can be null
@@ -200,7 +228,17 @@ public abstract class AbstractRequest {
     }
 
     /**
+     * 返回HTTP request body stream
+     *
+     * @return request body, can be null
+     */
+    public ByteArrayOutputStream getBodyStream() {
+        return bodyOutputStream;
+    }
+
+    /**
      * 返回input stream
+     *
      * @return input stream
      */
     public Object getInputStream() {
@@ -209,6 +247,7 @@ public abstract class AbstractRequest {
 
     /**
      * 设置input stream
+     *
      * @param inputStream input stream
      */
     public void setInputStream(Object inputStream) {

@@ -1,4 +1,0 @@
-FROM postgres:9
-LABEL maintainer="lanyuhang@baidu.com"
-
-ENV POSTGRES_PASSWORD=mysecretpassword

@@ -49,7 +49,7 @@ public class CoyoteInputStreamHook extends AbstractClassHook {
      */
     @Override
     public String getType() {
-        return "readFile";
+        return "body";
     }
 
     /**

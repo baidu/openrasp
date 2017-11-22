@@ -1,4 +1,0 @@
-FROM mysql:5
-LABEL maintainer="lanyuhang@baidu.com"
-
-ENV MYSQL_ROOT_PASSWORD=my-secret-pw

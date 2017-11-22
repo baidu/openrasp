@@ -1,14 +1,6 @@
 <%@ page import="java.io.*" %>
 <%@ page import="ognl.Ognl" %>
 <%
-try {
-    Object value = Ognl.parseExpression("java.lang.Runtime");
+    Object value = Ognl.parseExpression("@org.apache.commons.io.IOUtils@toString(@java.lang.Runtime@getRuntime().exec('whoami').getInputStream())");
     out.println(value);
-} catch (Exception e) {
-    if (e.getClass().getName().equals("com.fuxi.javaagent.exception.SecurityException")) {
-        response.sendError(403, e.getMessage());
-    } else {
-        throw e;
-    }
-}
 %>

@@ -30,33 +30,34 @@
 
 package com.fuxi.javaagent.transformer;
 
-import com.fuxi.javaagent.hook.*;
 import com.fuxi.javaagent.config.Config;
+import com.fuxi.javaagent.hook.*;
+import org.apache.log4j.Logger;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
+import java.util.HashMap;
 import java.util.HashSet;
-import org.apache.log4j.Logger;
 
 /**
  * 自定义类字节码转换器，用于hook类德 方法
  */
 public class CustomClassTransformer implements ClassFileTransformer {
     private static final Logger LOGGER = Logger.getLogger(CustomClassTransformer.class.getName());
+    private static HashMap<String, ClassLoader> classLoaderCache = new HashMap<String, ClassLoader>();
     private HashSet<AbstractClassHook> hooks;
 
     public CustomClassTransformer() {
         hooks = new HashSet<AbstractClassHook>();
 
-        addHook(new CoyoteAdapterHook());
+        addHook(new WebDAVCopyResourceHook());
         addHook(new CoyoteInputStreamHook());
         addHook(new DeserializationHook());
         addHook(new DiskFileItemHook());
         addHook(new FileHook());
         addHook(new FileInputStreamHook());
         addHook(new FileOutputStreamHook());
-        addHook(new HttpServletHook());
         addHook(new OgnlHook());
         addHook(new ProcessBuilderHook());
         addHook(new Struts2DispatcherHook());
@@ -65,8 +66,14 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new WeblogicJspBaseHook());
         addHook(new XXEHook());
         addHook(new JspCompilationContextHook());
+        addHook(new TomcatStartupHook());
         addHook(new ApplicationFilterHook());
         addHook(new ReflectionHook());
+        addHook(new JettyServerHandleHook());
+        addHook(new JettyHttpInputHook());
+        addHook(new JettyServerHook());
+        addHook(new CoyoteAdapterHook());
+        addHook(new ProxyDirContextHook());
     }
 
     private void addHook(AbstractClassHook hook) {
@@ -93,7 +100,17 @@ public class CustomClassTransformer implements ClassFileTransformer {
                 return hook.transformClass(className, classfileBuffer);
             }
         }
-
+        handleClassLoader(loader, className);
         return null;
+    }
+
+    public static ClassLoader getClassLoader(String className) {
+        return classLoaderCache.get(className);
+    }
+
+    private static void handleClassLoader(ClassLoader loader, String className) {
+        if (className.equals("org/apache/catalina/util/ServerInfo")) {
+            classLoaderCache.put(className.replace('/', '.'), loader);
+        }
     }
 }

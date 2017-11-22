@@ -32,10 +32,13 @@ package com.fuxi.javaagent.config;
 
 import org.apache.log4j.Logger;
 
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -49,24 +52,50 @@ public class Config {
 
     public static final int REFLECTION_STACK_START_INDEX = 0;
 
-    private static final String DEFAULT_V8TIMEOUT = "100";
-    private static final String DEFAULT_POOLSIZE = "0";
+    private static final String DEFAULT_PLUGIN_TIMEOUT = "100";
     private static final String DEFAULT_BODYSIZE = "4096";
     private static final String DEFAULT_REFLECTION_MAX_STACK = "100";
     private static final String DEFAULT_IGNORE = "";
+    private static final String DEFAULT_ENFORCE_POLICY = "false";
+    private static final String DEFAULT_BLOCK_URL = "https://rasp.baidu.com/blocked";
     private static final String DEFAULT_REFLECT_MONITOR_METHOD = "java.lang.Runtime.getRuntime,"
             + "java.lang.Runtime.exec,"
             + "java.lang.ProcessBuilder.start";
+    private static final String DEFAULT_LOG_STACK_SIZE = "20";
+    private static final String DEFAULT_READ_FILE_EXTENSION_REGEX = "^(gz|7z|xz|tar|rar|zip|sql|db)$";
+    private static final String DEFAULT_INJECT_URL_PREFIX = "";
+    private static final String DEFAULT_OGNL_MIN_LENGTH = "30";
 
     private static final Logger LOGGER = Logger.getLogger(Config.class.getName());
     private static String baseDirectory;
 
-    private int v8ThreadPoolSize;
+
     private int reflectionMaxStack;
-    private long v8Timeout;
+    private long pluginTimeout;
     private long bodyMaxBytes;
     private String[] ignoreHooks;
+    private boolean enforcePolicy;
     private String[] reflectionMonitorMethod;
+    private int logMaxStackSize;
+    private String readFileExtensionRegex;
+    private String blockUrl;
+    private String injectUrlPrefix;
+
+    private int ognlMinLength;
+
+    private enum KeyName {
+        plugintimeoutmillis,
+        bodymaxbytes,
+        hooksignore,
+        reflectionmaxstack,
+        reflectionmonitor,
+        blockurl,
+        logmaxstack,
+        securityenforce_policy,
+        readfileextensionregex,
+        injecturlprefix,
+        ognlminlength
+    }
 
     // Config是由bootstrap classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
@@ -79,7 +108,12 @@ public class Config {
         if (path.contains("!")) {
             path = path.substring(0, path.indexOf("!"));
         }
-        baseDirectory = new File(path).getParent();
+        try {
+            baseDirectory = URLDecoder.decode(new File(path).getParent(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            LOGGER.warn(e.getMessage());
+            baseDirectory = new File(path).getParent();
+        }
     }
 
     /**
@@ -88,24 +122,38 @@ public class Config {
     private Config() {
         FileInputStream input = null;
 
-        this.v8ThreadPoolSize = Integer.parseInt(DEFAULT_POOLSIZE);
-        this.v8Timeout = Long.parseLong(DEFAULT_V8TIMEOUT);
+        this.pluginTimeout = Long.parseLong(DEFAULT_PLUGIN_TIMEOUT);
         this.bodyMaxBytes = Long.parseLong(DEFAULT_BODYSIZE);
         this.ignoreHooks = new String[]{};
-        this.reflectionMonitorMethod = DEFAULT_REFLECT_MONITOR_METHOD.replace(" ","").split(",");
+        this.enforcePolicy = Boolean.parseBoolean(DEFAULT_ENFORCE_POLICY);
+        this.reflectionMonitorMethod = DEFAULT_REFLECT_MONITOR_METHOD.replace(" ", "").split(",");
         this.reflectionMaxStack = Integer.parseInt(DEFAULT_REFLECTION_MAX_STACK);
+        this.logMaxStackSize = Integer.parseInt(DEFAULT_LOG_STACK_SIZE);
+        this.blockUrl = DEFAULT_BLOCK_URL;
+        this.readFileExtensionRegex = DEFAULT_READ_FILE_EXTENSION_REGEX;
+        this.injectUrlPrefix = DEFAULT_INJECT_URL_PREFIX;
+        this.ognlMinLength = Integer.parseInt(DEFAULT_OGNL_MIN_LENGTH);
 
         try {
             input = new FileInputStream(new File(baseDirectory, "conf" + File.separator + "rasp.properties"));
             Properties properties = new Properties();
             properties.load(input);
 
-            this.v8ThreadPoolSize = Integer.parseInt(properties.getProperty("v8.threadpool.size", DEFAULT_POOLSIZE));
-            this.v8Timeout = Long.parseLong(properties.getProperty("v8.timeout.millis", DEFAULT_V8TIMEOUT));
-            this.bodyMaxBytes = Long.parseLong(properties.getProperty("body.maxbytes", DEFAULT_BODYSIZE));
-            this.ignoreHooks = properties.getProperty("hooks.ignore", DEFAULT_IGNORE).replace(" ","").split(",");
-            this.reflectionMonitorMethod = properties.getProperty("reflection.monitor", DEFAULT_REFLECT_MONITOR_METHOD).replace(" ","").split(",");
-            this.reflectionMaxStack = Integer.parseInt(properties.getProperty("reflection.maxstack", DEFAULT_REFLECTION_MAX_STACK));
+            this.enforcePolicy = Boolean.parseBoolean(properties.getProperty("security.enforce_policy", DEFAULT_ENFORCE_POLICY));
+            this.ignoreHooks = properties.getProperty("hooks.ignore", DEFAULT_IGNORE).replace(" ", "").split(",");
+            this.reflectionMonitorMethod = properties.getProperty("reflection.monitor", DEFAULT_REFLECT_MONITOR_METHOD)
+                    .replace(" ", "").split(",");
+            this.blockUrl = properties.getProperty("block.url", DEFAULT_BLOCK_URL);
+            this.readFileExtensionRegex = properties.getProperty("readfile.extension.regex", DEFAULT_READ_FILE_EXTENSION_REGEX);
+            this.injectUrlPrefix = properties.getProperty("inject.urlprefix", DEFAULT_INJECT_URL_PREFIX);
+            setBodyMaxBytes(properties.getProperty("body.maxbytes", DEFAULT_BODYSIZE));
+            setLogMaxStackSize(properties.getProperty("log.maxstack", DEFAULT_LOG_STACK_SIZE));
+            setReflectionMaxStack(properties.getProperty("reflection.maxstack", DEFAULT_REFLECTION_MAX_STACK));
+            setPluginTimeout(properties.getProperty("plugin.timeout.millis", DEFAULT_PLUGIN_TIMEOUT));
+            setOgnlMinLength(properties.getProperty("ognl.expression.minlength", DEFAULT_OGNL_MIN_LENGTH));
+            if (this.blockUrl == null || blockUrl.equals("")) {
+                this.blockUrl = DEFAULT_BLOCK_URL;
+            }
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find rasp.properties, using default settings: " + e.getMessage());
         } catch (IOException e) {
@@ -118,19 +166,19 @@ public class Config {
             }
         }
 
-        if (this.v8ThreadPoolSize <= 0) {
-            this.v8ThreadPoolSize = Runtime.getRuntime().availableProcessors() + 1;
-        }
         for (int i = 0; i < this.ignoreHooks.length; i++) {
             this.ignoreHooks[i] = this.ignoreHooks[i].trim();
         }
 
         LOGGER.info("baseDirectory: " + baseDirectory);
-        LOGGER.info("v8.threadpool.size: " + v8ThreadPoolSize);
-        LOGGER.info("v8.timeout.millis: " + v8Timeout);
+        LOGGER.info("plugin.timeout.millis: " + pluginTimeout);
         LOGGER.info("hooks.ignore: " + Arrays.toString(this.ignoreHooks));
         LOGGER.info("reflection.monitor: " + Arrays.toString(this.reflectionMonitorMethod));
         LOGGER.info("reflection.maxstack: " + reflectionMaxStack);
+        LOGGER.info("block.url: " + blockUrl);
+        LOGGER.info("readfile.extension.regex: " + readFileExtensionRegex);
+        LOGGER.info("inject.urlprefix: " + injectUrlPrefix);
+        LOGGER.info("ognl.expression.minlength: " + ognlMinLength);
     }
 
     private static class ConfigHolder {
@@ -144,15 +192,6 @@ public class Config {
      */
     public static Config getConfig() {
         return ConfigHolder.instance;
-    }
-
-    /**
-     * 获取V8执行超时时间
-     *
-     * @return 超时时间
-     */
-    public long getV8Timeout() {
-        return v8Timeout;
     }
 
     /**
@@ -173,13 +212,46 @@ public class Config {
         return baseDirectory + "/plugins";
     }
 
+
+    //--------------------可以通过插件修改的配置项-----------------------------------
+
     /**
-     * 获取V8线程池容量
+     * 获取Js引擎执行超时时间
      *
-     * @return V8线程池容量
+     * @return 超时时间
      */
-    public int getV8ThreadPoolSize() {
-        return v8ThreadPoolSize;
+    public synchronized long getPluginTimeout() {
+        return pluginTimeout;
+    }
+
+    /**
+     * 配置Js引擎执行超时时间
+     *
+     * @param pluginTimeout 超时时间
+     */
+    public synchronized void setPluginTimeout(String pluginTimeout) {
+        this.pluginTimeout = Long.parseLong(pluginTimeout);
+        if (this.pluginTimeout < 0) {
+            this.pluginTimeout = 0;
+        }
+    }
+
+    /**
+     * 设置需要插入自定义html的页面path前缀
+     *
+     * @return 页面path前缀
+     */
+    public synchronized String getInjectUrlPrefix() {
+        return injectUrlPrefix;
+    }
+
+    /**
+     * 获取需要插入自定义html的页面path前缀
+     *
+     * @param injectUrlPrefix 页面path前缀
+     */
+    public synchronized void setInjectUrlPrefix(String injectUrlPrefix) {
+        this.injectUrlPrefix = injectUrlPrefix;
     }
 
     /**
@@ -187,8 +259,20 @@ public class Config {
      *
      * @return 最大长度
      */
-    public long getBodyMaxBytes() {
+    public synchronized long getBodyMaxBytes() {
         return bodyMaxBytes;
+    }
+
+    /**
+     * 配置保存HTTP请求体时最大保存长度
+     *
+     * @param bodyMaxBytes
+     */
+    public synchronized void setBodyMaxBytes(String bodyMaxBytes) {
+        this.bodyMaxBytes = Long.parseLong(bodyMaxBytes);
+        if (this.bodyMaxBytes < 0) {
+            this.bodyMaxBytes = 0;
+        }
     }
 
     /**
@@ -196,8 +280,38 @@ public class Config {
      *
      * @return 需要忽略的挂钩点列表
      */
-    public String[] getIgnoreHooks() {
+    public synchronized String[] getIgnoreHooks() {
         return this.ignoreHooks;
+    }
+
+    /**
+     * 配置需要忽略的挂钩点
+     *
+     * @param ignoreHooks
+     */
+    public synchronized void setIgnoreHooks(String ignoreHooks) {
+        this.ignoreHooks = ignoreHooks.replace(" ", "").split(",");
+    }
+
+    /**
+     * 反射hook点传递给插件栈信息的最大深度
+     *
+     * @return 栈信息最大深度
+     */
+    public synchronized int getReflectionMaxStack() {
+        return reflectionMaxStack;
+    }
+
+    /**
+     * 设置反射hook点传递给插件栈信息的最大深度
+     *
+     * @param reflectionMaxStack 栈信息最大深度
+     */
+    public synchronized void setReflectionMaxStack(String reflectionMaxStack) {
+        this.reflectionMaxStack = Integer.parseInt(reflectionMaxStack);
+        if (this.reflectionMaxStack < 0) {
+            this.reflectionMaxStack = 0;
+        }
     }
 
     /**
@@ -205,32 +319,163 @@ public class Config {
      *
      * @return 需要监控的反射方法
      */
-    public String[] getReflectionMonitorMethod() {
+    public synchronized String[] getReflectionMonitorMethod() {
         return reflectionMonitorMethod;
     }
 
     /**
      * 设置反射监控的方法
+     *
      * @param reflectionMonitorMethod 监控的方法
      */
-    public void setReflectionMonitorMethod(String[] reflectionMonitorMethod) {
-        this.reflectionMonitorMethod = reflectionMonitorMethod;
+    public synchronized void setReflectionMonitorMethod(String reflectionMonitorMethod) {
+        this.reflectionMonitorMethod = reflectionMonitorMethod.replace(" ", "").split(",");
     }
 
     /**
-     * 反射hook点传递给插件栈信息的最大深度
-     * @return 栈信息最大深度
+     * 获取拦截自定义页面的url
+     *
+     * @return 拦截页面url
      */
-    public int getReflectionMaxStack() {
-        return reflectionMaxStack;
+    public synchronized String getBlockUrl() {
+        return blockUrl;
     }
 
     /**
-     * 设置反射hook点传递给插件栈信息的最大深度
-     * @param reflectionMaxStack 栈信息最大深度
+     * 设置拦截页面url
+     *
+     * @param blockUrl 拦截页面url
      */
-    public void setReflectionMaxStack(int reflectionMaxStack) {
-        this.reflectionMaxStack = reflectionMaxStack;
+    public synchronized void setBlockUrl(String blockUrl) {
+        this.blockUrl = blockUrl;
     }
 
+    /**
+     * 获取报警日志最大输出栈深度
+     *
+     * @return
+     */
+    public synchronized int getLogMaxStackSize() {
+        return logMaxStackSize;
+    }
+
+    /**
+     * 配置报警日志最大输出栈深度
+     *
+     * @param logMaxStackSize
+     */
+    public synchronized void setLogMaxStackSize(String logMaxStackSize) {
+        this.logMaxStackSize = Integer.parseInt(logMaxStackSize);
+        if (this.logMaxStackSize < 0) {
+            this.logMaxStackSize = 0;
+        }
+    }
+
+    /**
+     * 获取允许传入插件的ognl表达式的最短长度
+     *
+     * @return ognl表达式最短长度
+     */
+    public int getOgnlMinLength() {
+        return ognlMinLength;
+    }
+
+    /**
+     * 配置允许传入插件的ognl表达式的最短长度
+     *
+     * @param ognlMinLength ognl表达式最短长度
+     */
+    public void setOgnlMinLength(String ognlMinLength) {
+        this.ognlMinLength = Integer.parseInt(ognlMinLength);
+        if (this.ognlMinLength < 0) {
+            this.ognlMinLength = 0;
+        }
+    }
+
+    /**
+     * 是否开启强制安全规范
+     * 如果开启检测有安全风险的情况下将会禁止服务器启动
+     * 如果关闭当有安全风险的情况下通过日志警告
+     *
+     * @return true开启，false关闭
+     */
+    public synchronized boolean getEnforcePolicy() {
+        return enforcePolicy;
+    }
+
+    /**
+     * 配置是否开启强制安全规范
+     *
+     * @return true开启，false关闭
+     */
+    public synchronized void setEnforcePolicy(String enforcePolicy) {
+        this.enforcePolicy = Boolean.parseBoolean(enforcePolicy);
+    }
+
+    /**
+     * 获取读文件需要检测的扩展名正则表达式
+     *
+     * @return
+     */
+    public synchronized String getReadFileExtensionRegex() {
+        return readFileExtensionRegex;
+    }
+
+    /**
+     * 设置读文件需要检测的扩展名正则表达式
+     *
+     * @param readFileExtensionRegex
+     */
+    public synchronized void setReadFileExtensionRegex(String readFileExtensionRegex) {
+        this.readFileExtensionRegex = readFileExtensionRegex;
+    }
+
+    //--------------------------统一的配置处理------------------------------------
+
+    public boolean setConfig(String name, String value) {
+        try {
+            KeyName keyName = KeyName.valueOf(name.replace(".", ""));
+            switch (keyName) {
+                case plugintimeoutmillis:
+                    setPluginTimeout(value);
+                    break;
+                case bodymaxbytes:
+                    setBodyMaxBytes(value);
+                    break;
+                case hooksignore:
+                    setIgnoreHooks(value);
+                    break;
+                case reflectionmaxstack:
+                    setReflectionMaxStack(value);
+                    break;
+                case reflectionmonitor:
+                    setReflectionMonitorMethod(value);
+                    break;
+                case blockurl:
+                    setBlockUrl(value);
+                    break;
+                case logmaxstack:
+                    setLogMaxStackSize(value);
+                    break;
+                case securityenforce_policy:
+                    setEnforcePolicy(value);
+                    break;
+                case readfileextensionregex:
+                    setReadFileExtensionRegex(value);
+                    break;
+                case injecturlprefix:
+                    setInjectUrlPrefix(value);
+                    break;
+                case ognlminlength:
+                    setOgnlMinLength(value);
+                    break;
+                default:
+                    // do nothing
+            }
+        } catch (Exception e) {
+            LOGGER.info(e.getMessage());
+            return false;
+        }
+        return true;
+    }
 }

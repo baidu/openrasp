@@ -49,7 +49,7 @@ public class CoyoteAdapterHook extends AbstractClassHook {
      */
     @Override
     public String getType() {
-        return "request";
+        return "pre_request";
     }
 
     /**
@@ -74,19 +74,8 @@ public class CoyoteAdapterHook extends AbstractClassHook {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
                 protected void onMethodEnter() {
-                    loadThis();
-                    loadArg(0);
-                    loadArg(1);
                     invokeStatic(Type.getType(HookHandler.class),
-                            new Method("checkCoyoteAdapterRequest",
-                                    "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
-                }
-
-                @Override
-                protected void onMethodExit(int opcode) {
-                    invokeStatic(Type.getType(HookHandler.class),
-                            new Method("onCoyoteAdapterServiceExit", "()V"));
-                    super.onMethodExit(opcode);
+                            new Method("onServiceExit", "()V"));
                 }
             };
         }

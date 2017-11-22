@@ -37,11 +37,36 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
+import java.util.HashSet;
+
 /**
  * Created by lxk on 6/1/17.
  * XXE漏洞检测hook点
  */
 public class XXEHook extends AbstractClassHook {
+
+    private static ThreadLocal<HashSet<String>> localExpandedSystemIds = new ThreadLocal<HashSet<String>>() {
+        @Override
+        protected HashSet<String> initialValue() {
+            return new HashSet<String>();
+        }
+    };
+
+    /**
+     *
+     * @return 当前线程已触发检测的expandedSystemIds
+     */
+    public static HashSet<String> getLocalExpandedSystemIds() {
+        return localExpandedSystemIds.get();
+    }
+
+    /**
+     *  重置当前线程已触发检测的expandedSystemIds
+     */
+    public static void resetLocalExpandedSystemIds() {
+        localExpandedSystemIds.get().clear();
+    }
+
     /**
      * (none-javadoc)
      *
@@ -70,7 +95,7 @@ public class XXEHook extends AbstractClassHook {
      */
     @Override
     protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
-        if (name.equals("<init>") && desc.startsWith("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;"
+        if (name.equals("setValues") && desc.startsWith("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;"
                 + "Ljava/lang/String;)")) {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
