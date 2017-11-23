@@ -78,7 +78,7 @@ plugin.register('directory', function (params, context) {
             }
         }
     }
-    
+
     return clean
 })
 
@@ -190,11 +190,11 @@ plugin.register('fileUpload', function (params, context) {
 
 plugin.register('sql', function (params, context) {
     var parameters = context.parameter
+    var tokens     = RASP.sql_tokenize(params.query, params.server)
 
     // 算法1: 匹配用户输入
     function algo1(params, context) {
-        var tokens     = RASP.sql_tokenize(params.query, params.server)
-        var match      = false
+        var match = false
 
         Object.keys(parameters).some(function (name) {
             var value = parameters[name][0]
@@ -304,8 +304,7 @@ plugin.register('sql', function (params, context) {
             return reason
         }
 
-        var tokens = RASP.sql_tokenize(params.query.toLowerCase())
-        return is_sqli(tokens)
+        return is_sqli(tokens.map(v => v.toLowerCase()))
     }
 
     if (algo2(params, context)) {
@@ -319,7 +318,7 @@ plugin.register('sql', function (params, context) {
     if (algo1(params, context)) {
         return {
             action:     'block',
-            message:    'SQL 注入攻击（算法1）',
+            message:    'SQL 注入攻击（算法1 - 查询逻辑发生改变）',
             confidence: 100
         }
     }    
