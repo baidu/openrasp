@@ -1,6 +1,5 @@
 //
-// 官方插件仅作为 DEMO
-// 具体检测能力请根据业务来定制~
+// OpenRASP 官方插件只是抛砖引玉，具体检测能力请根据业务来定制
 //
 
 'use strict'
@@ -14,8 +13,8 @@ var clean = {
 
 var forcefulBrowsing = {
     dotFiles:    /\.(7z|tar|gz|bz2|xz|rar|zip|sql|db)$/,
-    systemFiles: /^\/(proc|sys|var\/log)(\/|$)/,
-    unwanted: [
+    systemDir:   /^\/(proc|sys|var\/log)(\/|$)/,
+    unwantedFilenames: [
         // user files
         '.DS_Store',
         'id_rsa', 'id_rsa.pub', 'known_hosts', 'authorized_keys', 
@@ -99,8 +98,8 @@ plugin.register('readFile', function (params, context) {
             matched = true
         } else {
             // 尝试访问敏感文件
-            for (var i = 0; i < forcefulBrowsing.unwanted; i ++) {
-                if (forcefulBrowsing.unwanted[i] == filename_1) {
+            for (var i = 0; i < forcefulBrowsing.unwantedFilenames; i ++) {
+                if (forcefulBrowsing.unwantedFilenames[i] == filename_1) {
                     matched = true
                 }
             }
@@ -133,7 +132,7 @@ plugin.register('readFile', function (params, context) {
         }
     }
 
-    // 检查目录遍历（弱）
+    // 检查文件遍历（弱）
     var path = canonicalPath(params.path)
     if (path.indexOf('/../../../') !== -1 || path.indexOf('\\..\\..\\..\\') !== -1) {
         return {
@@ -143,7 +142,7 @@ plugin.register('readFile', function (params, context) {
         }
     }
 
-    if (forcefulBrowsing.systemFiles.test(params.realpath)) {
+    if (forcefulBrowsing.systemDir.test(params.realpath)) {
         return {
             action:     'block',
             message:    '读取系统文件',
@@ -163,14 +162,58 @@ plugin.register('webdav', function (params, context) {
             confidence: 100
         }
     }
+
+    return clean
+})
+
+plugin.register('include', function (params, context) {
+    var items = params.url.split('://')
+
+    // 必须有协议的情况下才能利用漏洞
+    if (items.length != 2) {
+        return clean
+    }
+
+    // http 方式 SSRF
+    if (items[0].toLowerCase() == 'http') {
+        return {
+            action:     'block',
+            message:    'SSRF漏洞: ' + params.function + ' 方式',
+            confidence: 70
+        }
+    }
+
+    // file 协议
+    if (items[0].toLowerCase() == 'file') {
+        var basename = items[1].split('/').pop()
+
+        if (items[1].endsWith('/')) {
+            return {
+                action:     'block',
+                message:    '敏感目录访问: ' + params.function + ' 方式',
+                confidence: 100
+            }
+        }
+
+        for (var i = 0; i < forcefulBrowsing.unwantedFilenames.length; i ++) {
+            if (basename == forcefulBrowsing.unwantedFilenames[i]) {
+                return {
+                    action:     'block',
+                    message:    '敏感文件下载: ' + params.function + ' 方式',
+                    confidence: 100
+                }
+            }
+        }
+    }
+
     return clean
 })
 
 plugin.register('writeFile', function (params, context) {
     if (scriptFileRegex.test(params.realpath) || ntfsRegex.test(params.realpath)) {
         return {
-            action: 'block',
-            message: '尝试写入脚本文件: ' + params.realpath,
+            action:     'block',
+            message:    '尝试写入脚本文件: ' + params.realpath,
             confidence: 90
         }
     }
@@ -180,8 +223,8 @@ plugin.register('writeFile', function (params, context) {
 plugin.register('fileUpload', function (params, context) {
     if (scriptFileRegex.test(params.filename) || ntfsRegex.test(params.filename)) {
         return {
-            action: 'block',
-            message: '尝试上传脚本文件: ' + params.filename,
+            action:     'block',
+            message:    '尝试上传脚本文件: ' + params.filename,
             confidence: 90
         }
     }
