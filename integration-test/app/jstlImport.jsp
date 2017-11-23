@@ -1,2 +1,2 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<c:import url="test.html" />
+<c:import url="file:///etc/passwd" />

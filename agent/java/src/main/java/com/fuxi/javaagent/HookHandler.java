@@ -530,29 +530,12 @@ public class HookHandler {
     }
 
     /**
-     * 检测 jsp:include
+     * 检测 jstl c:import
      *
      * @param url
-     * @see #checkJstlImport(String)
-     */
-    public static void checkJspInclude(String url) {
-        if (url != null) {
-            JSContext cx = JSContextFactory.enterAndInitContext();
-            Scriptable params = cx.newObject(cx.getScope());
-            params.put("url", params, url);
-            params.put("function", params, "jsp_include");
-            doCheck(CheckParameter.Type.INCLUDE, params);
-        }
-    }
-
-    /**
-     * 检测 c:import
-     *
-     * @param url
-     * @see #checkJspInclude(String)
      */
     public static void checkJstlImport(String url) {
-        if (url != null) {
+        if (url != null && !url.startsWith("/") && url.contains("://")) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             params.put("url", params, url);
