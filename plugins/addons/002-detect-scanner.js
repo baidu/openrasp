@@ -17,11 +17,12 @@ plugin.register('request', function(params, context) {
     ".nasl", "nsauditor", "paros", "dirbuster", "pangolin", "nmap nse", 
     "sqlninja", "nikto", "webinspect", "blackwidow", "grendel-scan", 
     "havij", "w3af", "hydra"]
+  var headers      = context.header
 
-  if (context.header['acunetix-product'] || context.header['x-wipp']) {
+  if (headers['acunetix-product'] || headers['x-wipp']) {
     foundScanner = true
   } else {
-    var ua = context.header['user-agent']
+    var ua = headers['user-agent']
     if (ua) {
       for (var i = 0; i < scannerUA.length; i++) {
         if (ua.indexOf(scannerUA[i].toLowerCase()) != -1) {

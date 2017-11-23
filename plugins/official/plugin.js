@@ -185,14 +185,15 @@ plugin.register('fileUpload', function (params, context) {
 })
 
 plugin.register('sql', function (params, context) {
+    var parameters = context.parameter
 
     // 算法1: 匹配用户输入
     function algo1(params, context) {
-        var tokens = RASP.sql_tokenize(params.query, params.server)
-        var match  = false
+        var tokens     = RASP.sql_tokenize(params.query, params.server)
+        var match      = false
 
-        Object.keys(context.parameter).some(function (name) {
-            var value = context.parameter[name][0]
+        Object.keys(parameters).some(function (name) {
+            var value = parameters[name][0]
 
             if (value.length <= 10 || params.query.indexOf(value) == -1) {
                 return
@@ -213,8 +214,8 @@ plugin.register('sql', function (params, context) {
     function algo2(params, context) {
         var match = false
 
-        Object.keys(context.parameter).some(function (name) {
-            var value = context.parameter[name][0]
+        Object.keys(parameters).some(function (name) {
+            var value = parameters[name][0]
             if (value == params.query) {
                 match = true
                 return true
@@ -342,16 +343,15 @@ plugin.register('sql', function (params, context) {
 })
 
 plugin.register('command', function (params, context) {
-    // console.log(params.command)
-
     // 算法1: 简单识别命令执行后门
     function algo1(params, context) {
-        var match    = false
+        var match      = false
         // 存在绕过 ..
-        var full_cmd = params.command.join(' ')
+        var full_cmd   = params.command.join(' ')
+        var parameters = context.parameter
 
-        Object.keys(context.parameter).some(function (name) {
-            if (context.parameter[name][0] == full_cmd) {
+        Object.keys(parameters).some(function (name) {
+            if (parameters[name][0] == full_cmd) {
                 match = true
                 return true
             }
@@ -360,7 +360,7 @@ plugin.register('command', function (params, context) {
         return match
     }
 
-    if (algo1(params, context)) {
+    if (0 && algo1(params, context)) {
         return {
             action:     'block',
             message:    '发现命令执行后门',
@@ -483,80 +483,4 @@ plugin.register('reflection', function(params, context) {
     }
 })
 
-// [[ 近期调整~ ]]
-plugin.register('request', function(params, context) {
-
-    // 已知的扫描器识别
-    function detectScanner(params, context)  {         
-        var foundScanner = false
-        var scannerUA    = [
-            "attack", "scan", "vulnerability", "injection", "xss", "exploit", "grabber", 
-            "cgichk", "bsqlbf", "sqlmap", "nessus", "arachni", "metis", "sql power injector", 
-            "bilbo", "absinthe", "black widow", "n-stealth", "brutus", "webtrends security analyzer",
-            "netsparker", "jaascois", "pmafind", ".nasl", "nsauditor", "paros", "dirbuster", 
-            "pangolin", "nmap nse", "sqlninja", "nikto", "webinspect", "blackwidow", 
-            "grendel-scan", "havij", "w3af", "hydra"
-        ]
-
-        if (context.header['acunetix-product'] || context.header['x-wipp']) {
-            foundScanner = true
-        } else {
-            var ua = context.header['user-agent']
-            if (ua) {
-                for (var i = 0; i < scannerUA.length; i ++) {
-                    if (ua.indexOf(scannerUA[i].toLowerCase()) != -1) {
-                        foundScanner = true
-                        break
-                    }
-                }
-            }
-        }
-
-        return foundScanner
-    }
-
-    // XSS 检测 DEMO，即将移除
-    function detectXSS(params, context) {
-        var xssRegex   = /<script|script>|<iframe|iframe>|javascript:(?!(?:history\.(?:go|back)|void\(0\)))/i
-        var parameters = context.parameter;
-        var message    = '';
-
-        Object.keys(parameters).some(function (name) {
-            parameters[name].some(function (value) {
-                if (xssRegex.test(value)) {
-                    message = 'XSS 攻击: ' + value;
-                    return true;
-                }
-            });
-
-            if (message.length) {
-                return true;
-            }
-        });
-
-        return message
-    }
-
-    if (0 && detectScanner(params, context)) {
-        return {
-            action:     'block',
-            message:    '已知的扫描器探测行为: ' + scannerUA[i],
-            confidence: 90
-        }
-    }
-
-    // xss 检测 DEMO
-    var message = detectXSS(params, context)
-    if (message.length) {
-        return {
-            action: 'block',
-            message: message,
-            confidence: 90
-        }
-    }
-
-    return clean    
-})
-
 plugin.log('初始化成功')
->>>>>>> master
