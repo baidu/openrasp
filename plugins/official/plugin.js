@@ -29,6 +29,11 @@ var forcefulBrowsing = {
         '.gitignore',
         'error_log', 'error.log', 'nohup.out',
     ],
+    unwantedDirectory: [
+        '/',
+        '/home',
+        '/var/log'
+    ],
     absolutePaths: [
         '/etc/shadow',
         '/etc/hosts',
@@ -56,25 +61,24 @@ function canonicalPath (path) {
     return path.replaceAll('/./', '/').replaceAll('//', '/').replaceAll('//', '/')
 }
 
+// 主要用于识别webshell里的文件管理器
+// 通常程序不会主动列目录或者查看敏感目录，e.g /home /etc /var/log 等等
+// 
+// 若有特例可调整
+// 可结合业务定制: e.g 不能超出应用根目录
 plugin.register('directory', function (params, context) {
-    var path = canonicalPath(params.path)
+    var realpath = params.realpath
 
-    // 简单判断目录遍历，可结合业务定制: e.g 不能超出应用根目录
-    if (path.indexOf('/../../../') !== -1 || path.indexOf('\\..\\..\\..\\') !== -1) {
-        return {
-            action:     'block',
-            message:    '目录遍历攻击',
-            confidence: 90
+    for (var i = 0; i < forcefulBrowsing.unwantedDirectory.length; i ++) {
+        if (realpath == forcefulBrowsing.unwantedDirectory[i]) {
+            return {
+                action:     'block',
+                message:    '疑似WebShell文件管理器 - 读取敏感根目录',
+                confidence: 100
+            }
         }
     }
-
-    if (forcefulBrowsing.systemFiles.test(path)) {
-        return {
-            action:     'block',
-            message:    '读取系统目录',
-            confidence: 100
-        }
-    }
+    
     return clean
 })
 
@@ -85,7 +89,7 @@ plugin.register('readFile', function (params, context) {
     var filename_1 = context.url.replace(/.*\//, '')
     var filename_2 = params.realpath.replace(/.*\//, '')
 
-    plugin.log('readFile:', filename_1, filename_2)
+    // plugin.log('readFile:', filename_1, filename_2)
 
     if (filename_1 == filename_2) {
         var matched = false
