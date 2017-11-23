@@ -66,9 +66,12 @@ changeDirectory $OUTPUT_ROOT/..
 target=rasp-any.tar.gz
 tar -czvf $target $BASENAME || exit
 mv $target $BASE_DIR || exit
+log "Created $target"
+
 target=rasp-any.zip
 zip -r $target $BASENAME || exit
 mv $target $BASE_DIR || exit
+log "Created $target"
 
 log "SUCCESS!"
 
