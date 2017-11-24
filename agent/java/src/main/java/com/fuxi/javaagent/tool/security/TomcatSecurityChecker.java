@@ -79,11 +79,14 @@ public class TomcatSecurityChecker implements PolicyChecker {
     public boolean check() {
         try {
             String serverType = SecurityPolicyInfo.getCatalinaServerType();
-            if (tomcatBaseDir != null && serverType != null && serverType.equalsIgnoreCase("tomcat")) {
+
+            if (tomcatBaseDir != null && serverType != null) {
                 checkStartUser();
-                checkHttpOnlyIsOpen();
-                checkManagerPassword();
-                checkDefaultApp();
+                if (serverType.equalsIgnoreCase("tomcat")) {
+                    checkHttpOnlyIsOpen();
+                    checkManagerPassword();
+                    checkDefaultApp();
+                }
             } else {
                 LOGGER.error(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
                         "can not find tomcat base directory"));
