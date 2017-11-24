@@ -19,7 +19,7 @@
         <dependency>
             <groupId>com.fuxi.javaagent</groupId>
             <artifactId>jnotify</artifactId>
-            <version>1.3</version>
+            <version>1.4.1</version>
         </dependency>
         <dependency>
             <groupId>com.fuxi.javaagent</groupId>
