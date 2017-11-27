@@ -5,6 +5,7 @@ import com.baidu.rasp.RaspError;
 import java.io.File;
 
 import static com.baidu.rasp.RaspError.E10002;
+import static com.baidu.rasp.RaspError.E10004;
 
 /**
  * Created by OpenRASP on 5/19/17.
@@ -23,10 +24,10 @@ public abstract class InstallerFactory {
 
         String serverName = detectServerName(serverRoot.getAbsolutePath());
         if (serverName == null) {
-            System.out.println("Unable to determine app server type, list of currently supported servers are:");
-            System.out.println("\t" + TOMCAT);
-            System.out.println("\t" + JBOSS);
-            return null;
+            System.out.println("List of currently supported servers are:");
+            System.out.println("- " + TOMCAT);
+            System.out.println("- " + JBOSS + "\n");
+            throw new RaspError(E10004 + serverRoot.getPath());
         }
         
         System.out.println("Server type: " + serverName);
