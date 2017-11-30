@@ -13,7 +13,6 @@ var clean = {
 
 var forcefulBrowsing = {
     dotFiles:    /\.(7z|tar|gz|bz2|xz|rar|zip|sql|db)$/,
-    systemDir:   /^\/(proc|sys|var\/log)(\/|$)/,
     unwantedFilenames: [
         // user files
         '.DS_Store',
@@ -31,7 +30,9 @@ var forcefulBrowsing = {
     unwantedDirectory: [
         '/',
         '/home',
-        '/var/log'
+        '/var/log',
+        '/proc',
+        '/sys'
     ],
     absolutePaths: [
         '/etc/shadow',
@@ -60,6 +61,11 @@ function canonicalPath (path) {
     return path.replaceAll('/./', '/').replaceAll('//', '/').replaceAll('//', '/')
 }
 
+function basename (path) {
+    var idx = path.lastIndexOf('/')
+    return path.substr(idx + 1)
+}
+
 // 主要用于识别webshell里的文件管理器
 // 通常程序不会主动列目录或者查看敏感目录，e.g /home /etc /var/log 等等
 // 
@@ -82,13 +88,10 @@ plugin.register('directory', function (params, context) {
 })
 
 plugin.register('readFile', function (params, context) {
-    // console.log('basePath', context.appBasePath)
 
-    // 检查是否为成功的目录扫描
-    var filename_1 = context.url.replace(/.*\//, '')
-    var filename_2 = params.realpath.replace(/.*\//, '')
-
-    // plugin.log('readFile:', filename_1, filename_2)
+    // 算法1: 检查是否为成功的目录扫描
+    var filename_1 = basename(context.url)
+    var filename_2 = basename(params.realpath)
 
     if (filename_1 == filename_2) {
         var matched = false
@@ -116,39 +119,31 @@ plugin.register('readFile', function (params, context) {
         }
     }
 
-    // console.log(params.realpath, params.path)
-
-    // 如果使用绝对路径访问敏感文件
-    // 判定为 webshell
+    // 算法2: 如果使用绝对路径访问敏感文件，判定为 webshell
     if (params.realpath == params.path) {
         for (var j = 0; j < forcefulBrowsing.absolutePaths.length; j ++) {
             if (forcefulBrowsing.absolutePaths[j] == params.realpath) {
                 return {
                     action:     'block',
-                    message:    '疑似webshell - 尝试读取系统文件: ' + params.realpath,
+                    message:    'WebShell/文件管理器 - 尝试读取系统文件: ' + params.realpath,
                     confidence: 90
                 }
             }
         }
     }
 
-    // 检查文件遍历（弱）
-    var path = canonicalPath(params.path)
-    if (path.indexOf('/../../../') !== -1 || path.indexOf('\\..\\..\\..\\') !== -1) {
+    // 算法3: 检查文件遍历，看是否超出web目录范围
+    var path        = canonicalPath(params.path)
+    var appBasePath = context.appBasePath
+
+    if (params.realpath.indexOf(appBasePath) == -1 && (path.indexOf('/../') !== -1 || path.indexOf('\\..\\') !== -1)) {
         return {
             action:     'block',
-            message:    '目录遍历攻击',
+            message:    '目录遍历攻击，跳出web目录范围 (' + appBasePath + ')',
             confidence: 90
         }
     }
 
-    if (forcefulBrowsing.systemDir.test(params.realpath)) {
-        return {
-            action:     'block',
-            message:    '读取系统文件',
-            confidence: 100
-        }
-    }
     return clean
 })
 
