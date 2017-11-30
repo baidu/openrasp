@@ -310,7 +310,7 @@ plugin.register('sql', function (params, context) {
         } else if (i > 0 && tokens_lc[i].indexOf('(') == 0) {
             // @FIXME: 可绕过，暂时不更新
             if (func_list[tokens_lc[i - 1]]) {
-                reason = '禁止执行敏感函数: ' + name
+                reason = '禁止执行敏感函数: ' + reason
                 break
             }
         }
