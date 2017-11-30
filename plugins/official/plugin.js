@@ -210,9 +210,17 @@ plugin.register('include', function (params, context) {
 })
 
 plugin.register('writeFile', function (params, context) {
-    if (scriptFileRegex.test(params.realpath) || ntfsRegex.test(params.realpath)) {
+    if (ntfsRegex.test(params.realpath)) {
         return {
             action:     'block',
+            message:    '尝试利用NTFS流上传后门: ' + params.realpath,
+            confidence: 90
+        }
+    }
+
+    if (scriptFileRegex.test(params.realpath)) {
+        return {
+            action:     'log',
             message:    '尝试写入脚本文件: ' + params.realpath,
             confidence: 90
         }
@@ -232,150 +240,96 @@ plugin.register('fileUpload', function (params, context) {
 })
 
 plugin.register('sql', function (params, context) {
+    var reason     = false
     var parameters = context.parameter
     var tokens     = RASP.sql_tokenize(params.query, params.server)
 
     // 算法1: 匹配用户输入
-    function algo1(params, context) {
-        var match = false
+    // 1. 简单识别逻辑是否发生改变
+    // 2. 识别数据库管理器   
+    Object.keys(parameters).some(function (name) {
+        var value = parameters[name][0]
 
-        Object.keys(parameters).some(function (name) {
-            var value = parameters[name][0]
-
-            if (value.length <= 10 || params.query.indexOf(value) == -1) {
-                return
-            }
-            
-            // 去掉用户输入再次匹配
-            var tokens2 = RASP.sql_tokenize(params.query.replace(value, ''), params.server)
-            if (tokens.length - tokens2.length > 2) {
-                match = true
-                return true
-            }
-        })
-
-        return match
-    }
-
-    // 算法2: 检查是否为 webshell 调用（提交了完整的SQL查询语句）
-    function algo2(params, context) {
-        var match = false
-
-        Object.keys(parameters).some(function (name) {
-            var value = parameters[name][0]
-            if (value == params.query) {
-                match = true
-                return true
-            }
-        })
-
-        return match
-    }
-
-    // 算法3: SQL语句策略检查（模拟SQL防火墙功能）
-    function algo3(params, context) {
-        function is_compare_op(token) {
-            return token == '>' || token == '<' || token == '>=' || token == '<=' || token == '=' || token == 'xor'
+        if (value.length <= 10) {
+            return
         }
 
-        function is_logic_op(token) {
-            return token == 'and' || token == 'xor' || token == 'or'
+        // 判断是否为数据库管理器
+        if (value.length == params.query.length && value == params.query) {
+            reason = '算法2: WebShell - 数据库管理器'
+            return true
         }
 
-        function is_sqli(tokens) {
-            // 注意: tokens 必须为小写
-            var reason   = false
-            var features = {
-                'no-version-comments': true,
-                'no-stacked-query':    true,
-                'no-hex':              true,
-                'no-constant-compare': true,
-                'function-blacklist':  {
-                    'load_file': true,
-                    'benchmark': true,
-                    'sleep':     true,
-                    'pg_sleep':  true
-                },
-
-                // 以下尚未实现
-                'unbalanced-comment':  false,
-                'unbalanced-quote':    false,    
-                'trailing-comment':    false  
-            }
-
-            for (var i = 0; i < tokens.length; i ++) {
-                if (tokens[i] == ';' && features['no-stacked-query']) {
-                    reason = '禁止多语句查询'
-                    break
-                } else if (tokens[i].indexOf('0x') == 0 && features['no-hex']) {
-                    reason = '禁止16进制字符串'
-                    break
-                } else if (tokens[i].indexOf('/*!') == 0 && features['no-version-comments']) {
-                    reason = '禁止MySQL版本号注释'
-                    break
-                } else if (is_logic_op(tokens[i]) && features['no-constant-compare'] ) {
-                    // @FIXME: 可绕过，暂时不更新
-                    // 简单识别 (and|xor|or) NUMBER (>|<|>=|<=|xor) NUMBER
-                    var next = []
-                    for (var j = i + 1; j < tokens.length; j ++) {
-                        if (next.length == 3) {
-                            break
-                        }
-
-                        if (tokens[j].indexOf('/*') == -1) {
-                            next.push(tokens[j])
-                        }
-                    }
-
-                    if (next.length != 3) {
-                        continue
-                    }
-
-                    if (! isNaN(next[0]) && ! isNaN(next[2]) && is_compare_op(next[1]) ) {
-                        reason = '禁止常量比较操作'
-                        break
-                    }
-                } else if (tokens[i].indexOf('(') == 0) {
-                    // @FIXME: 可绕过，暂时不更新
-                    if (i > 0 && features['function-blacklist'][tokens[i - 1]]) {
-                        reason = '禁止执行敏感函数: ' + tokens[i-1]
-                        break
-                    }
-                }
-            }
-
-            return reason
+        // 简单识别用户输入
+        if (params.query.indexOf(value) == -1) {
+            return
         }
 
-        return is_sqli(tokens.map(v => v.toLowerCase()))
+        // 去掉用户输入再次匹配
+        var tokens2 = RASP.sql_tokenize(params.query.replace(value, ''), params.server)
+        if (tokens.length - tokens2.length > 2) {
+            reason = '算法1: 数据库查询逻辑发生改变'
+            return true
+        }
+    })
+    if (reason !== false) {
+        return {
+            'action':     'block',
+            'confidence': 90,
+            'message':    reason
+        }
     }
 
-    if (algo2(params, context)) {
+    // 算法2: SQL语句策略检查（模拟SQL防火墙功能）
+    var func_list = {
+        'load_file': true,
+        'benchmark': true,
+        'sleep':     true,
+        'pg_sleep':  true
+    }
+    var tokens_lc = tokens.map(v => v.toLowerCase())
+
+    for (var i = 0; i < tokens_lc.length; i ++) {
+        if (tokens_lc[i] == ';') {
+            reason = '禁止多语句查询'
+            break
+        } else if (tokens_lc[i].indexOf('0x') == 0) {
+            reason = '禁止16进制字符串'
+            break
+        } else if (tokens_lc[i].indexOf('/*!') == 0) {
+            reason = '禁止MySQL版本号注释'
+            break
+        } else if (i < tokens_lc.length - 3 && (tokens_lc[i] == 'and' || tokens_lc[i] == 'or' || tokens_lc[i] == 'xor')) {
+            // @FIXME: 可绕过，暂时不更新
+            // 简单识别 (and|xor|or) NUMBER (>|<|>=|<=|xor) NUMBER
+            //               i       i+1         i+2        i+3
+                    
+            var op1    = tokens_lc[i + 1]
+            var op2    = tokens_lc[i + 3]
+            var method = tokens_lc[i + 2]
+
+            if (! isNaN(op1) && ! isNaN(op2) && (method[0] == '<' || method[0] == '>' || method[0] == '=')) {
+                reason = '禁止常量比较操作'
+                break
+            }                    
+        } else if (i > 0 && tokens_lc[i].indexOf('(') == 0) {
+            // @FIXME: 可绕过，暂时不更新
+            if (func_list[tokens_lc[i - 1]]) {
+                reason = '禁止执行敏感函数: ' + name
+                break
+            }
+        }
+    }
+
+    if (reason !== false) {
         return {
             action:     'block',
-            message:    'SQL 管理器 - 疑似WebShell（算法2）',
+            message:    '数据库语句异常: ' + reason + '（算法3）',
             confidence: 100
         }
     }
 
-    if (algo1(params, context)) {
-        return {
-            action:     'block',
-            message:    'SQL 注入攻击（算法1 - 查询逻辑发生改变）',
-            confidence: 100
-        }
-    }    
-
-    var sqli_reason = algo3(params, context)
-    if (sqli_reason) {
-        return {
-            action:     'block',
-            message:    '数据库语句异常: ' + sqli_reason + '（算法3）',
-            confidence: 100
-        }
-    }
-
-    // 算法4: 简单正则匹配（即将移除）
+    // 算法3: 简单正则匹配（即将移除）
     var sqlRegex = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
 
     if (sqlRegex.test(params.query)) {
@@ -389,31 +343,6 @@ plugin.register('sql', function (params, context) {
 })
 
 plugin.register('command', function (params, context) {
-    // 算法1: 简单识别命令执行后门
-    function algo1(params, context) {
-        var match      = false
-        // 存在绕过 ..
-        var full_cmd   = params.command.join(' ')
-        var parameters = context.parameter
-
-        Object.keys(parameters).some(function (name) {
-            if (parameters[name][0] == full_cmd) {
-                match = true
-                return true
-            }
-        })
-
-        return match
-    }
-
-    if (0 && algo1(params, context)) {
-        return {
-            action:     'block',
-            message:    '发现命令执行后门',
-            confidence: 100
-        }
-    }
-
     // 默认禁止命令执行
     return {
         action:    'block',
@@ -428,7 +357,7 @@ plugin.register('xxe', function (params, context) {
     if (items.length >= 2) {
         var protocol = items[0]
 
-        if (protocol === 'gopher' || protocol === 'dict') {
+        if (protocol === 'gopher' || protocol === 'dict' || protocol === 'expect') {
             return {
                 action:     'block',
                 message:    'SSRF 攻击 (' + protocol + ' 协议)',
