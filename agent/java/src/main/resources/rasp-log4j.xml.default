@@ -64,6 +64,18 @@
         <!--</filter>-->
     </appender>
 
+    <!-- Configuration templates of syslog(TCP) -->
+    <!-- Add to specific logger as appender-ref like this: <appender-ref ref="SYSLOGTCP" /> -->
+    <!-- Modify localhost to the host of your syslog server -->
+    <!--<appender name="SYSLOGTCP" class="com.fuxi.javaagent.messaging.SyslogTcpAppender">-->
+    <!--<param name="Threshold" value="INFO" />-->
+    <!--<param name="Facility" value="LOCAL0" />-->
+    <!--<param name="FacilityPrinting" value="true" />-->
+    <!--<param name="RemoteHost" value="localhost" />-->
+    <!--<param name="Port" value="8514" />-->
+    <!--<param name="ReconnectionDelay" value="60000" />-->
+    <!--</appender>-->
+
     <!-- Configuration templates of syslog -->
     <!-- Add to specific logger as appender-ref like this: <appender-ref ref="SYSLOG" /> -->
     <!-- Modify 127.0.0.1 to the IP of your syslog server -->
