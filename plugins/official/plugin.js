@@ -293,17 +293,17 @@ plugin.register('sql', function (params, context) {
             if (tokens_lc[i] == ';') {
                 reason = '禁止多语句查询'
                 break
-            } else if (tokens_lc[i][0] == '0' && tokens_lc[i][1] == 'x') {
+            } else if (tokens_lc[i][0] === '0' && tokens_lc[i][1] === 'x') {
                 reason = '禁止16进制字符串'
                 break
-            } else if (tokens_lc[i][0] == '/' && tokens_lc[i][1] == '*' && tokens_lc[i][2] == '!') {
+            } else if (tokens_lc[i][0] === '/' && tokens_lc[i][1] === '*' && tokens_lc[i][2] === '!') {
                 reason = '禁止MySQL版本号注释'
                 break
             } else if (i > 0 && i < tokens_lc.length - 1 && 
-                (tokens_lc[i] == 'xor'
-                    || tokens_lc[i][0] == '<' 
-                    || tokens_lc[i][0] == '>' 
-                    || tokens_lc[i][0] == '=')) {
+                (tokens_lc[i] === 'xor'
+                    || tokens_lc[i][0] === '<'
+                    || tokens_lc[i][0] === '>' 
+                    || tokens_lc[i][0] === '=')) {
                 // @FIXME: 可绕过，暂时不更新
                 // 简单识别 NUMBER (>|<|>=|<=|xor) NUMBER
                 //          i-1         i          i+2    
