@@ -293,13 +293,13 @@ plugin.register('sql', function (params, context) {
             if (tokens_lc[i] == ';') {
                 reason = '禁止多语句查询'
                 break
-            } else if (tokens_lc[i].indexOf('0x') == 0) {
+            } else if (tokens_lc[i][0] == '0' && tokens_lc[i][1] == 'x') {
                 reason = '禁止16进制字符串'
                 break
-            } else if (tokens_lc[i].indexOf('/*!') == 0) {
+            } else if (tokens_lc[i][0] == '/' && tokens_lc[i][1] == '*' && tokens_lc[i][2] == '!') {
                 reason = '禁止MySQL版本号注释'
                 break
-            } else if (i < tokens_lc.length - 3 && 
+            } else if (i > 0 && i < tokens_lc.length - 1 && 
                 (tokens_lc[i] == 'xor'
                     || tokens_lc[i][0] == '<' 
                     || tokens_lc[i][0] == '>' 
@@ -334,7 +334,7 @@ plugin.register('sql', function (params, context) {
     }
 
     // 算法3: 简单正则匹配（即将移除）
-    if (1) {
+    if (0) {
         var sqlRegex = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
 
         if (sqlRegex.test(params.query)) {
