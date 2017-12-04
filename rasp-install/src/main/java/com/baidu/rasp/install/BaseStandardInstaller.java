@@ -1,7 +1,6 @@
 package com.baidu.rasp.install;
 
 import com.baidu.rasp.RaspError;
-import jdk.internal.dynalink.beans.StaticClass;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -17,8 +16,8 @@ public abstract class BaseStandardInstaller implements Installer {
     private String serverName;
     private String serverRoot;
     public static int NOTFOUND = 0;
-    public static int FOUND    = 1;
-    public static int DONE     = 2;
+    public static int FOUND = 1;
+    public static int DONE = 2;
     public static String LINE_SEP = System.getProperty("line.separator");
 
     public BaseStandardInstaller(String serverName, String serverRoot) {
@@ -28,14 +27,18 @@ public abstract class BaseStandardInstaller implements Installer {
 
     @Override
     public void install() throws RaspError, IOException {
-        File srcDir = new File("rasp");
+        String jarPath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+        File srcDir = new File(new File(jarPath).getParent() + "/rasp");
+        if (!(srcDir.exists() && srcDir.isDirectory())) {
+            srcDir = new File("rasp");
+        }
         File installDir = new File(getInstallPath(serverRoot));
 
         if (!srcDir.getCanonicalPath().equals(installDir.getCanonicalPath())) {
             // 拷贝rasp文件夹
-            System.out.println("copy " + srcDir.getAbsolutePath() + " to " + installDir.getAbsolutePath());
-            FileUtils.copyDirectory(new File("rasp"), installDir);
-        } 
+            System.out.println("copy " + srcDir.getCanonicalPath() + " to " + installDir.getCanonicalPath());
+            FileUtils.copyDirectory(srcDir, installDir);
+        }
 
         // 生成配置文件
         if (!generateConfig(installDir.getPath())) {
