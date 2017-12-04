@@ -66,7 +66,7 @@ public abstract class BaseStandardInstaller implements Installer {
             String sep = File.separator;
             File target = new File(dir + sep + "conf" + sep + "rasp.properties");
             if (target.exists()) {
-                System.out.println(target.getAbsolutePath() + "already exists, skipped.");
+                System.out.println(target.getAbsolutePath() + " already exists, skipped.");
                 return true;
             }
             System.out.println("create " + target.getAbsolutePath());
