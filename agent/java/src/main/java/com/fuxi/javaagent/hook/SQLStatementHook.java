@@ -1,7 +1,13 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.checker.policy.SqlConnectionChecker;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
+import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
 import com.fuxi.javaagent.tool.Reflection;
+import com.fuxi.javaagent.tool.TimeUtils;
+import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -9,6 +15,7 @@ import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
 import java.util.Arrays;
+import java.util.Properties;
 
 /**
  * Created by zhuming01 on 7/18/17.
@@ -113,7 +120,7 @@ public class SQLStatementHook extends AbstractSqlHook {
                 push(type);
                 loadThis();
                 loadArg(0);
-                invokeStatic(Type.getType(HookHandler.class),
+                invokeStatic(Type.getType(SQLStatementHook.class),
                         new Method("checkSQL", "(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/String;)V"));
             }
         } : mv;
@@ -166,6 +173,26 @@ public class SQLStatementHook extends AbstractSqlHook {
             return id;
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    /**
+     * SQL语句检测
+     *
+     * @param stmt sql语句
+     */
+    public static void checkSQL(String server, Object statement, String stmt) {
+        if (stmt != null && !stmt.isEmpty()) {
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            String connectionId = getSqlConnectionId(server, statement);
+            if (connectionId != null) {
+                params.put(server + "_connection_id", params, connectionId);
+            }
+            params.put("server", params, server);
+            params.put("query", params, stmt);
+
+            HookHandler.doCheck(CheckParameter.Type.SQL, params);
         }
     }
 

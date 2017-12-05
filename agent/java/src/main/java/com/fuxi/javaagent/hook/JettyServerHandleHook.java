@@ -64,7 +64,7 @@ public class JettyServerHandleHook extends AbstractClassHook {
                     loadThis();
                     loadArg(2);
                     loadArg(3);
-                    invokeStatic(Type.getType(HookHandler.class),
+                    invokeStatic(Type.getType(ApplicationFilterHook.class),
                             new Method("checkRequest", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
                 }
 

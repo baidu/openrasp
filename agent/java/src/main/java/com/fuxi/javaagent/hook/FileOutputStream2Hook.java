@@ -30,9 +30,17 @@
 
 package com.fuxi.javaagent.hook;
 
+import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
+import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
+import com.fuxi.javaagent.tool.hook.CustomLockObject;
+import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.AdviceAdapter;
+
+import java.io.File;
 
 /**
  * Created by lxk on 6/6/17.
@@ -105,11 +113,32 @@ public class FileOutputStream2Hook extends AbstractClassHook {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, "java/io/FileOutputStream", "closeLock", "Ljava/lang/Object;");
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKESTATIC, "com/fuxi/javaagent/HookHandler", "checkFileOutputStreamWrite",
+                    mv.visitMethodInsn(INVOKESTATIC, "com/fuxi/javaagent/hook/FileOutputStream2Hook", "checkFileOutputStreamWrite",
                             "(Ljava/lang/Object;[B)V", false);
                 }
             };
         }
         return mv;
+    }
+
+    /**
+     * 文件写入hook点
+     *
+     * @param closeLock  缓存文件信息
+     * @param writeBytes 写的内容
+     */
+    public static void checkFileOutputStreamWrite(Object closeLock, byte[] writeBytes) {
+        if (closeLock instanceof CustomLockObject && ((CustomLockObject) closeLock).getInfo() != null) {
+            String path = ((CustomLockObject) closeLock).getInfo();
+            if (path != null && writeBytes != null && writeBytes.length > 0) {
+                File file = new File(path);
+                JSContext cx = JSContextFactory.enterAndInitContext();
+                Scriptable params = cx.newObject(cx.getScope());
+                params.put("name", params, file.getName());
+                params.put("realpath", params, path);
+                params.put("content", params, new String(writeBytes));
+                HookHandler.doCheck(CheckParameter.Type.WRITEFILE, params);
+            }
+        }
     }
 }

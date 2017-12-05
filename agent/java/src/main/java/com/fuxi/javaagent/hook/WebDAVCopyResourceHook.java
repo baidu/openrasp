@@ -31,6 +31,11 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
+import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
+import com.fuxi.javaagent.tool.Reflection;
+import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -77,11 +82,38 @@ public class WebDAVCopyResourceHook extends AbstractClassHook {
                     loadThis();
                     loadArg(2);
                     loadArg(3);
-                    invokeStatic(Type.getType(HookHandler.class),
+                    invokeStatic(Type.getType(WebDAVCopyResourceHook.class),
                             new Method("checkWebdavCopyResource", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V"));
                 }
             };
         }
         return mv;
+    }
+
+    /**
+     * 检测WebDAV COPY MOVE
+     *
+     * @param webdavServlet
+     * @param source
+     * @param dest
+     */
+    public static void checkWebdavCopyResource(Object webdavServlet, String source, String dest) {
+        if (webdavServlet != null && source != null && dest != null) {
+            String realPath = null;
+            try {
+                Object servletContext = Reflection.invokeMethod(webdavServlet, "getServletContext", new Class[]{});
+                realPath = Reflection.invokeStringMethod(servletContext, "getRealPath", new Class[]{String.class}, "/");
+                realPath = realPath.endsWith(System.getProperty("file.separator")) ? realPath.substring(0, realPath.length() - 1) : realPath;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            if (realPath != null) {
+                JSContext cx = JSContextFactory.enterAndInitContext();
+                Scriptable params = cx.newObject(cx.getScope());
+                params.put("source", params, realPath + source);
+                params.put("dest", params, realPath + dest);
+                HookHandler.doCheck(CheckParameter.Type.WEBDAV, params);
+            }
+        }
     }
 }

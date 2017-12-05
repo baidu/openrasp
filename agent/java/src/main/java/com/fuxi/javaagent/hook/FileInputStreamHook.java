@@ -31,11 +31,19 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
+import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
+import com.fuxi.javaagent.tool.FileUtil;
+import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by zhuming01 on 5/31/17.
@@ -75,7 +83,7 @@ public class FileInputStreamHook extends AbstractClassHook {
                 public void onMethodExit(int opcode) {
                     if (opcode == Opcodes.RETURN) {
                         loadArg(0);
-                        invokeStatic(Type.getType(HookHandler.class),
+                        invokeStatic(Type.getType(FileInputStreamHook.class),
                                 new Method("checkReadFile", "(Ljava/io/File;)V"));
                     }
                     super.onMethodExit(opcode);
@@ -83,5 +91,29 @@ public class FileInputStreamHook extends AbstractClassHook {
             };
         }
         return mv;
+    }
+
+    /**
+     * 文件读取hook点
+     *
+     * @param file 文件对象
+     */
+    public static void checkReadFile(File file) {
+        if (file != null) {
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            params.put("path", params, file.getPath());
+            try {
+                String path = file.getCanonicalPath();
+                if (path.endsWith(".class") || !file.exists()) {
+                    return;
+                }
+                params.put("realpath", params, FileUtil.getRealPath(file));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            HookHandler.doCheck(CheckParameter.Type.READFILE, params);
+        }
     }
 }

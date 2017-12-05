@@ -31,11 +31,18 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
+import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
+import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 /**
  * Created by zhuming01 on 5/5/17.
@@ -82,7 +89,7 @@ public class DiskFileItemHook extends AbstractClassHook {
                     invokeInterface(Type.getType("org/apache/commons/fileupload/FileItem"),
                             new Method("get", "()[B"));
 
-                    invokeStatic(Type.getType(HookHandler.class),
+                    invokeStatic(Type.getType(DiskFileItemHook.class),
                             new Method("checkFileUpload", "(Ljava/lang/String;[B)V"));
 
                     super.onMethodExit(opcode);
@@ -90,5 +97,30 @@ public class DiskFileItemHook extends AbstractClassHook {
             };
         }
         return mv;
+    }
+
+    /**
+     * 文件上传hook点
+     *
+     * @param name    文件名
+     * @param content 文件数据
+     */
+    public static void checkFileUpload(String name, byte[] content) {
+        if (name != null && content != null) {
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            params.put("filename", params, name);
+            try {
+                if (content.length > 4 * 1024) {
+                    content = Arrays.copyOf(content, 4 * 1024);
+                }
+                params.put("content", params, new String(content, "UTF-8"));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+                params.put("content", params, "[rasp error:" + e.getMessage() + "]");
+            }
+
+            HookHandler.doCheck(CheckParameter.Type.FILEUPLOAD, params);
+        }
     }
 }
