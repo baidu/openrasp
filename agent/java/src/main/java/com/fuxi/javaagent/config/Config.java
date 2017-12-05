@@ -30,16 +30,11 @@
 
 package com.fuxi.javaagent.config;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLDecoder;
-import java.util.Arrays;
 import java.util.Properties;
 
 
@@ -50,26 +45,38 @@ import java.util.Properties;
  */
 public class Config {
 
+    public enum Item {
+        PLUGIN_TIMEOUT_MILLIS("plugin.timeout.millis", "100"),
+        HOOKS_IGNORE("hooks.ignore", ""),
+        BLOCK_URL("block.url", "https://rasp.baidu.com/blocked"),
+        READ_FILE_EXTENSION_REGEX("readfile.extension.regex", "^(gz|7z|xz|tar|rar|zip|sql|db)$"),
+        INJECT_URL_PREFIX("inject.urlprefix", ""),
+        BODY_MAX_BYTES("body.maxbytes", "4096"),
+        LOG_MAX_STACK("log.maxstack", "20"),
+        REFLECTION_MAX_STACK("reflection.maxstack", "100"),
+        SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
+        OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
+        SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
+        REFLECTION_MONITOR("reflection.monitor",
+                "java.lang.Runtime.getRuntime,java.lang.Runtime.exec,java.lang.ProcessBuilder.start");
+
+        Item(String key, String defaultValue) {
+            this.key = key;
+            this.defaultValue = defaultValue;
+        }
+
+        String key;
+        String defaultValue;
+
+        @Override
+        public String toString() {
+            return key;
+        }
+    }
+
     public static final int REFLECTION_STACK_START_INDEX = 0;
-
-    private static final String DEFAULT_PLUGIN_TIMEOUT = "100";
-    private static final String DEFAULT_BODYSIZE = "4096";
-    private static final String DEFAULT_REFLECTION_MAX_STACK = "100";
-    private static final String DEFAULT_IGNORE = "";
-    private static final String DEFAULT_ENFORCE_POLICY = "false";
-    private static final String DEFAULT_BLOCK_URL = "https://rasp.baidu.com/blocked";
-    private static final String DEFAULT_REFLECT_MONITOR_METHOD = "java.lang.Runtime.getRuntime,"
-            + "java.lang.Runtime.exec,"
-            + "java.lang.ProcessBuilder.start";
-    private static final String DEFAULT_LOG_STACK_SIZE = "20";
-    private static final String DEFAULT_READ_FILE_EXTENSION_REGEX = "^(gz|7z|xz|tar|rar|zip|sql|db)$";
-    private static final String DEFAULT_INJECT_URL_PREFIX = "";
-    private static final String DEFAULT_OGNL_MIN_LENGTH = "30";
-    private static final String DEFAULT_SQL_SLOW_QUERY_MIN_ROWS = "500";
-
     private static final Logger LOGGER = Logger.getLogger(Config.class.getName());
     private static String baseDirectory;
-
 
     private int reflectionMaxStack;
     private long pluginTimeout;
@@ -82,23 +89,8 @@ public class Config {
     private String readFileExtensionRegex;
     private String blockUrl;
     private String injectUrlPrefix;
-
     private int ognlMinLength;
 
-    private enum KeyName {
-        plugintimeoutmillis,
-        bodymaxbytes,
-        hooksignore,
-        reflectionmaxstack,
-        reflectionmonitor,
-        blockurl,
-        logmaxstack,
-        securityenforce_policy,
-        readfileextensionregex,
-        injecturlprefix,
-        ognlminlength,
-        sqlslowqueryminrows
-    }
 
     // Config是由bootstrap classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
@@ -117,6 +109,7 @@ public class Config {
             LOGGER.warn(e.getMessage());
             baseDirectory = new File(path).getParent();
         }
+        LOGGER.info("baseDirectory: " + baseDirectory);
     }
 
     /**
@@ -124,66 +117,34 @@ public class Config {
      */
     private Config() {
         FileInputStream input = null;
-
-        this.pluginTimeout = Long.parseLong(DEFAULT_PLUGIN_TIMEOUT);
-        this.bodyMaxBytes = Long.parseLong(DEFAULT_BODYSIZE);
-        this.ignoreHooks = new String[]{};
-        this.enforcePolicy = Boolean.parseBoolean(DEFAULT_ENFORCE_POLICY);
-        this.reflectionMonitorMethod = DEFAULT_REFLECT_MONITOR_METHOD.replace(" ", "").split(",");
-        this.reflectionMaxStack = Integer.parseInt(DEFAULT_REFLECTION_MAX_STACK);
-        this.logMaxStackSize = Integer.parseInt(DEFAULT_LOG_STACK_SIZE);
-        this.blockUrl = DEFAULT_BLOCK_URL;
-        this.readFileExtensionRegex = DEFAULT_READ_FILE_EXTENSION_REGEX;
-        this.injectUrlPrefix = DEFAULT_INJECT_URL_PREFIX;
-        this.ognlMinLength = Integer.parseInt(DEFAULT_OGNL_MIN_LENGTH);
-        this.sqlSlowQueryMinCount = Integer.parseInt(DEFAULT_SQL_SLOW_QUERY_MIN_ROWS);
-
+        Properties properties = new Properties();
         try {
             input = new FileInputStream(new File(baseDirectory, "conf" + File.separator + "rasp.properties"));
-            Properties properties = new Properties();
             properties.load(input);
-
-            this.enforcePolicy = Boolean.parseBoolean(properties.getProperty("security.enforce_policy", DEFAULT_ENFORCE_POLICY));
-            this.ignoreHooks = properties.getProperty("hooks.ignore", DEFAULT_IGNORE).replace(" ", "").split(",");
-            this.reflectionMonitorMethod = properties.getProperty("reflection.monitor", DEFAULT_REFLECT_MONITOR_METHOD)
-                    .replace(" ", "").split(",");
-            this.blockUrl = properties.getProperty("block.url", DEFAULT_BLOCK_URL);
-            this.readFileExtensionRegex = properties.getProperty("readfile.extension.regex", DEFAULT_READ_FILE_EXTENSION_REGEX);
-            this.injectUrlPrefix = properties.getProperty("inject.urlprefix", DEFAULT_INJECT_URL_PREFIX);
-            setBodyMaxBytes(properties.getProperty("body.maxbytes", DEFAULT_BODYSIZE));
-            setLogMaxStackSize(properties.getProperty("log.maxstack", DEFAULT_LOG_STACK_SIZE));
-            setReflectionMaxStack(properties.getProperty("reflection.maxstack", DEFAULT_REFLECTION_MAX_STACK));
-            setPluginTimeout(properties.getProperty("plugin.timeout.millis", DEFAULT_PLUGIN_TIMEOUT));
-            setOgnlMinLength(properties.getProperty("ognl.expression.minlength", DEFAULT_OGNL_MIN_LENGTH));
-            setSqlSlowQueryMinCount(properties.getProperty("sql.slowquery.min_rows", DEFAULT_SQL_SLOW_QUERY_MIN_ROWS));
-            if (this.blockUrl == null || blockUrl.equals("")) {
-                this.blockUrl = DEFAULT_BLOCK_URL;
-            }
+            input.close();
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Could not find rasp.properties, using default settings: " + e.getMessage());
+            handleException("Could not find rasp.properties, using default settings: " + e.getMessage(), e);
         } catch (IOException e) {
-            LOGGER.warn("cannot load properties file: " + e.getMessage());
-        } finally {
-            try {
-                input.close();
-            } catch (Exception ignored) {
-                // ignore
-            }
+            handleException("cannot load properties file: " + e.getMessage(), e);
         }
-
+        for (Item item : Item.values()) {
+            setConfigFromProperties(item, properties);
+        }
         for (int i = 0; i < this.ignoreHooks.length; i++) {
             this.ignoreHooks[i] = this.ignoreHooks[i].trim();
         }
+    }
 
-        LOGGER.info("baseDirectory: " + baseDirectory);
-        LOGGER.info("plugin.timeout.millis: " + pluginTimeout);
-        LOGGER.info("hooks.ignore: " + Arrays.toString(this.ignoreHooks));
-        LOGGER.info("reflection.monitor: " + Arrays.toString(this.reflectionMonitorMethod));
-        LOGGER.info("reflection.maxstack: " + reflectionMaxStack);
-        LOGGER.info("block.url: " + blockUrl);
-        LOGGER.info("readfile.extension.regex: " + readFileExtensionRegex);
-        LOGGER.info("inject.urlprefix: " + injectUrlPrefix);
-        LOGGER.info("ognl.expression.minlength: " + ognlMinLength);
+    private void setConfigFromProperties(Item item, Properties properties) {
+        String key = item.key;
+        String value = properties.getProperty(item.key, item.defaultValue);
+        setConfig(key, value);
+        LOGGER.info(item.key + ": " + value);
+    }
+
+    private void handleException(String message, Exception e) {
+        LOGGER.warn(message);
+        System.out.println(message);
     }
 
     private static class ConfigHolder {
@@ -363,7 +324,7 @@ public class Config {
      * @param blockUrl 拦截页面url
      */
     public synchronized void setBlockUrl(String blockUrl) {
-        this.blockUrl = blockUrl;
+        this.blockUrl = StringUtils.isEmpty(blockUrl) ? Item.BLOCK_URL.defaultValue : blockUrl;
     }
 
     /**
@@ -448,48 +409,32 @@ public class Config {
 
     //--------------------------统一的配置处理------------------------------------
 
-    public boolean setConfig(String name, String value) {
+    public boolean setConfig(String key, String value) {
         try {
-            KeyName keyName = KeyName.valueOf(name.replace(".", ""));
-            switch (keyName) {
-                case plugintimeoutmillis:
-                    setPluginTimeout(value);
-                    break;
-                case bodymaxbytes:
-                    setBodyMaxBytes(value);
-                    break;
-                case hooksignore:
-                    setIgnoreHooks(value);
-                    break;
-                case reflectionmaxstack:
-                    setReflectionMaxStack(value);
-                    break;
-                case reflectionmonitor:
-                    setReflectionMonitorMethod(value);
-                    break;
-                case blockurl:
-                    setBlockUrl(value);
-                    break;
-                case logmaxstack:
-                    setLogMaxStackSize(value);
-                    break;
-                case securityenforce_policy:
-                    setEnforcePolicy(value);
-                    break;
-                case readfileextensionregex:
-                    setReadFileExtensionRegex(value);
-                    break;
-                case injecturlprefix:
-                    setInjectUrlPrefix(value);
-                    break;
-                case ognlminlength:
-                    setOgnlMinLength(value);
-                    break;
-                case sqlslowqueryminrows:
-                    setSqlSlowQueryMinCount(value);
-                    break;
-                default:
-                    // do nothing
+            if (Item.BLOCK_URL.key.equals(key)) {
+                setBlockUrl(value);
+            } else if (Item.BODY_MAX_BYTES.key.equals(key)) {
+                setBodyMaxBytes(value);
+            } else if (Item.HOOKS_IGNORE.key.equals(key)) {
+                setIgnoreHooks(value);
+            } else if (Item.INJECT_URL_PREFIX.key.equals(key)) {
+                setInjectUrlPrefix(value);
+            } else if (Item.LOG_MAX_STACK.key.equals(key)) {
+                setLogMaxStackSize(value);
+            } else if (Item.OGNL_EXPRESSION_MIN_LENGTH.key.equals(key)) {
+                setOgnlMinLength(value);
+            } else if (Item.PLUGIN_TIMEOUT_MILLIS.key.equals(key)) {
+                setPluginTimeout(value);
+            } else if (Item.READ_FILE_EXTENSION_REGEX.key.equals(key)) {
+                setReadFileExtensionRegex(value);
+            } else if (Item.REFLECTION_MAX_STACK.key.equals(key)) {
+                setReflectionMaxStack(value);
+            } else if (Item.SECURITY_ENFORCE_POLICY.key.equals((key))) {
+                setEnforcePolicy(value);
+            } else if (Item.SQL_SLOW_QUERY_MIN_ROWS.key.equals(key)) {
+                setSqlSlowQueryMinCount(value);
+            } else if (Item.REFLECTION_MONITOR.key.equals(key)) {
+                setReflectionMonitorMethod(value);
             }
         } catch (Exception e) {
             LOGGER.info(e.getMessage());

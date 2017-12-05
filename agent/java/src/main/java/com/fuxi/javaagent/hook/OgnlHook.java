@@ -31,6 +31,11 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.config.Config;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
+import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
+import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -74,7 +79,7 @@ public class OgnlHook extends AbstractClassHook {
                 @Override
                 protected void onMethodEnter() {
                     loadArg(0);
-                    invokeStatic(Type.getType(HookHandler.class),
+                    invokeStatic(Type.getType(OgnlHook.class),
                             new Method("checkOgnlExpression", "(Ljava/lang/String;)V"));
                 }
             };
@@ -82,5 +87,20 @@ public class OgnlHook extends AbstractClassHook {
         return mv;
     }
 
+    /**
+     * struct框架ognl语句解析hook点
+     *
+     * @param expression ognl语句
+     */
+    public static void checkOgnlExpression(String expression) {
+        if (expression != null) {
+            if (expression.length() >= Config.getConfig().getOgnlMinLength()) {
+                JSContext cx = JSContextFactory.enterAndInitContext();
+                Scriptable params = cx.newObject(cx.getScope());
+                params.put("expression", params, expression);
+                HookHandler.doCheck(CheckParameter.Type.OGNL, params);
+            }
+        }
+    }
 
 }

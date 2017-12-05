@@ -30,9 +30,14 @@
 
 package com.fuxi.javaagent.hook;
 
+import com.fuxi.javaagent.config.Config;
+import com.fuxi.javaagent.tool.Reflection;
+import org.apache.commons.io.FilenameUtils;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.AdviceAdapter;
+
+import java.io.File;
 
 /**
  * Created by zhuming01 on 5/31/17.
@@ -72,7 +77,7 @@ public class ProxyDirContextHook extends AbstractClassHook {
                 public void onMethodExit(int opcode) {
                     if (opcode == Opcodes.ARETURN) {
                         mv.visitVarInsn(ALOAD, 2);
-                        mv.visitMethodInsn(INVOKESTATIC, "com/fuxi/javaagent/HookHandler", "checkResourceCacheEntry",
+                        mv.visitMethodInsn(INVOKESTATIC, "com/fuxi/javaagent/hook/ProxyDirContextHook", "checkResourceCacheEntry",
                                 "(Ljava/lang/Object;)V", false);
                     }
                     super.onMethodExit(opcode);
@@ -81,5 +86,34 @@ public class ProxyDirContextHook extends AbstractClassHook {
             };
         }
         return mv;
+    }
+
+    /**
+     * 缓存资源文件读取hook点
+     *
+     * @param cacheEntry
+     */
+    public static void checkResourceCacheEntry(Object cacheEntry) {
+        if (cacheEntry != null) {
+            Object file = null;
+            try {
+                Object resource = Reflection.getField(cacheEntry, "resource");
+                if (null != resource && resource.getClass().getName().startsWith("org.apache.naming.resources."
+                        + "FileDirContext$FileResource")) {
+                    Object binaryContent = Reflection.invokeMethod(resource, "getContent", new Class[]{});
+                    if (null == binaryContent) {
+                        file = Reflection.getField(resource, "file");
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            if (null != file && file instanceof File) {
+                String filename = ((File) file).getName();
+                if (FilenameUtils.getExtension(filename).matches(Config.getConfig().getReadFileExtensionRegex())) {
+                    FileInputStreamHook.checkReadFile((File) file);
+                }
+            }
+        }
     }
 }

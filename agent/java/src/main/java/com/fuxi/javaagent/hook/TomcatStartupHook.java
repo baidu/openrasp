@@ -1,6 +1,7 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -29,11 +30,18 @@ public class TomcatStartupHook extends AbstractClassHook {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
                 protected void onMethodEnter() {
-                    invokeStatic(Type.getType(HookHandler.class),
+                    invokeStatic(Type.getType(TomcatStartupHook.class),
                             new Method("checkTomcatStartup", "()V"));
                 }
             };
         }
         return mv;
+    }
+
+    /**
+     * tomcat启动时检测安全规范
+     */
+    public static void checkTomcatStartup() {
+        HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_TOMCAT_START, CheckParameter.EMPTY_MAP);
     }
 }

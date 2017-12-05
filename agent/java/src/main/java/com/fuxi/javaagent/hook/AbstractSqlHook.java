@@ -16,11 +16,6 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
     protected String type;
     protected String[] exceptions;
 
-    @Override
-    public String getType() {
-        return type;
-    }
-
     public void setType(String type) {
         this.type = type;
     }

@@ -32,11 +32,20 @@ package com.fuxi.javaagent.hook;
 
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.config.Config;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
+import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
+import com.fuxi.javaagent.tool.Reflection;
+import com.fuxi.javaagent.tool.StackTrace;
+import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
+
+import java.util.List;
 
 
 /**
@@ -62,12 +71,46 @@ public class ReflectionHook extends AbstractClassHook {
                 @Override
                 protected void onMethodEnter() {
                     loadThis();
-                    invokeStatic(Type.getType(HookHandler.class),
+                    invokeStatic(Type.getType(ReflectionHook.class),
                             new Method("checkReflection",
                                     "(Ljava/lang/Object;)V"));
                 }
             };
         }
         return mv;
+    }
+
+    /**
+     * 反射hook点检测
+     *
+     * @param method 反射调用的方法
+     */
+    public static void checkReflection(Object method) {
+        if (HookHandler.enableHook.get() && HookHandler.isEnableCurrThreadHook()) {
+            HookHandler.disableCurrThreadHook();
+            try {
+                Class reflectClass = (Class) Reflection.invokeMethod(method, "getDeclaringClass", new Class[]{});
+                String reflectClassName = reflectClass.getName();
+                String reflectMethodName = (String) Reflection.invokeMethod(method, "getName", new Class[]{});
+                String absoluteMethodName = reflectClassName + "." + reflectMethodName;
+                String[] reflectMonitorMethod = Config.getConfig().getReflectionMonitorMethod();
+                for (String monitorMethod : reflectMonitorMethod) {
+                    if (monitorMethod.equals(absoluteMethodName)) {
+                        JSContext cx = JSContextFactory.enterAndInitContext();
+                        Scriptable params = cx.newObject(cx.getScope());
+                        List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
+                                Config.getConfig().getReflectionMaxStack());
+                        Scriptable array = cx.newArray(cx.getScope(), stackInfo.toArray());
+                        params.put("clazz", params, reflectClassName);
+                        params.put("method", params, reflectMethodName);
+                        params.put("stack", params, array);
+                        HookHandler.doCheck(CheckParameter.Type.REFLECTION, params);
+                        break;
+                    }
+                }
+            } finally {
+                HookHandler.enableCurrThreadHook();
+            }
+        }
     }
 }
