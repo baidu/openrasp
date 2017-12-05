@@ -70,11 +70,13 @@ public class TomcatSecurityChecker extends PolicyChecker {
         List<EventInfo> infos = new LinkedList<EventInfo>();
         try {
             String serverType = SecurityPolicyInfo.getCatalinaServerType();
-            if (tomcatBaseDir != null && serverType != null && serverType.equalsIgnoreCase("tomcat")) {
+            if (tomcatBaseDir != null && serverType != null) {
                 checkStartUser(infos);
-                checkHttpOnlyIsOpen(tomcatBaseDir, infos);
-                checkManagerPassword(tomcatBaseDir, infos);
-                checkDefaultApp(tomcatBaseDir, infos);
+                if (serverType.equalsIgnoreCase("tomcat")) {
+                    checkHttpOnlyIsOpen(tomcatBaseDir, infos);
+                    checkManagerPassword(tomcatBaseDir, infos);
+                    checkDefaultApp(tomcatBaseDir, infos);
+                }
             } else {
                 LOGGER.error(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
                         "can not find tomcat base directory"));

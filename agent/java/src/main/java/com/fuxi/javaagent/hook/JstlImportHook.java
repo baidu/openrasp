@@ -97,7 +97,7 @@ public class JstlImportHook extends AbstractClassHook {
      * @param url
      */
     public static void checkJstlImport(String url) {
-        if (url != null) {
+        if (url != null && !url.startsWith("/") && url.contains("://")) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             params.put("url", params, url);
