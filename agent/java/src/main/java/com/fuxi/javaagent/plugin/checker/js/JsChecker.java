@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,64 +28,41 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.plugin;
+package com.fuxi.javaagent.plugin.checker.js;
 
-import com.google.gson.Gson;
+import com.fuxi.javaagent.plugin.checker.AttackChecker;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.info.EventInfo;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
+import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 /**
- * Created by tyy on 4/10/17.
- * 插件检测结果
+ * Created by tyy on 17-11-20.
+ *
+ * 使用 js 插件检测
  */
-public class CheckResult {
+public class JsChecker extends AttackChecker {
 
-    public static final int DEFAULT_CONFIDENCE_VALUE = 0;
-
-    private String pluginName;
-    private String message;
-    private String result;
-    private int confidence;
-
-    public String getPluginName() {
-        return pluginName;
+    public JsChecker() {
+        super();
     }
 
-    public String getResult() {
-        return result;
+    public JsChecker(boolean canBlock) {
+        super(canBlock);
     }
 
-    public String getMessage() {
-        return message;
-    }
-
-    public int getConfidence() {
-        return confidence;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public CheckResult(String result, String message, String pluginName) {
-        this(result, message, pluginName, DEFAULT_CONFIDENCE_VALUE);
-    }
-
-    public CheckResult(String result, String message, String pluginName, int confidence) {
-        this.message = message;
-        this.pluginName = pluginName;
-        this.result = result;
-        this.confidence = confidence;
-    }
-
+    /**
+     * 执行js插件进行安全检测
+     *
+     * @param checkParameter 检测参数 {@link CheckParameter}
+     * @return 检测结果
+     */
     @Override
-    public String toString() {
-        Map<String, Object> obj = new HashMap<String, Object>();
-        obj.put("pluginName", pluginName);
-        obj.put("action", result);
-        obj.put("message", message);
-        obj.put("confidence", confidence);
-        return new Gson().toJson(obj);
+    public List<EventInfo> checkParam(CheckParameter checkParameter) {
+        JSContext cx = JSContextFactory.enterAndInitContext();
+        return cx.check(checkParameter);
     }
+
 }

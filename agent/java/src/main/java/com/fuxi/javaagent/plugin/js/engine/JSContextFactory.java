@@ -28,8 +28,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.plugin;
+package com.fuxi.javaagent.plugin.js.engine;
 
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.*;

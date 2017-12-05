@@ -31,11 +31,17 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
+import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
+import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
+
+import java.io.ObjectStreamClass;
 
 /**
  * Created by tyy on 6/21/17.
@@ -75,12 +81,31 @@ public class DeserializationHook extends AbstractClassHook {
                 @Override
                 protected void onMethodEnter() {
                     loadArg(0);
-                    invokeStatic(Type.getType(HookHandler.class),
+                    invokeStatic(Type.getType(DeserializationHook.class),
                             new Method("checkDeserializationClass", "(Ljava/io/ObjectStreamClass;)V"));
                 }
             };
         }
         return mv;
     }
+
+    /**
+     * 反序列化监检测点
+     *
+     * @param objectStreamClass 反序列化的类的流对象
+     */
+    public static void checkDeserializationClass(ObjectStreamClass objectStreamClass) {
+        if (objectStreamClass != null) {
+            String clazz = objectStreamClass.getName();
+            if (clazz != null) {
+                JSContext cx = JSContextFactory.enterAndInitContext();
+                Scriptable params = cx.newObject(cx.getScope());
+                params.put("clazz", params, clazz);
+                HookHandler.doCheck(CheckParameter.Type.DESERIALIZATION, params);
+            }
+        }
+
+    }
+
 
 }

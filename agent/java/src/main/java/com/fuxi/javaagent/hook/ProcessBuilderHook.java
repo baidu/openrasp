@@ -31,11 +31,17 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
+import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
+import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
+
+import java.util.List;
 
 /**
  * Created by zhuming01 on 5/17/17.
@@ -76,11 +82,26 @@ public class ProcessBuilderHook extends AbstractClassHook {
                     loadThis();
                     invokeVirtual(Type.getType("java/lang/ProcessBuilder"),
                             new Method("command", "()Ljava/util/List;"));
-                    invokeStatic(Type.getType(HookHandler.class),
+                    invokeStatic(Type.getType(ProcessBuilderHook.class),
                             new Method("checkCommand", "(Ljava/util/List;)V"));
                 }
             };
         }
         return mv;
+    }
+
+    /**
+     * 命令执行hook点
+     *
+     * @param command 命令列表
+     */
+    public static void checkCommand(List<String> command) {
+        if (command != null && !command.isEmpty()) {
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            Scriptable array = cx.newArray(cx.getScope(), command.toArray());
+            params.put("command", params, array);
+            HookHandler.doCheck(CheckParameter.Type.COMMAND, params);
+        }
     }
 }

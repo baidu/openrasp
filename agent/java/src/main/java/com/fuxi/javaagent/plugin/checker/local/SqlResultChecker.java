@@ -1,20 +1,20 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
- * <p>
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * <p>
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * <p>
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * <p>
+ *
  * 3. Neither the name of the copyright holder nor the names of its contributors
  * may be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * <p>
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -28,33 +28,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.plugin;
+package com.fuxi.javaagent.plugin.checker.local;
 
-import org.apache.log4j.Logger;
-import org.mozilla.javascript.ScriptableObject;
-import org.mozilla.javascript.annotations.JSFunction;
+import com.fuxi.javaagent.config.Config;
+import com.fuxi.javaagent.plugin.checker.AttackChecker;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.info.AttackInfo;
+import com.fuxi.javaagent.plugin.info.EventInfo;
 
+import java.sql.ResultSet;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
- * JavaScript 环境中的 stdout 对象
- * 提供输出能力
+ * Created by tyy on 17-11-20.
+ *
+ * sql检测结果查询
  */
-public class JSStdout extends ScriptableObject {
-    private static final Logger LOGGER = Logger.getLogger(JSStdout.class.getPackage().getName() + ".log");
+public class SqlResultChecker extends AttackChecker {
 
-    public JSStdout() {
+    public SqlResultChecker() {
+        super();
+    }
+
+    public SqlResultChecker(boolean canBlock) {
+        super(canBlock);
     }
 
     @Override
-    public String getClassName() {
-        return "Stdout";
-    }
-
-    @JSFunction
-    public void write(Object message) {
-        if (message instanceof String) {
-            message = ((String) message).replaceAll("\n$", "");
+    public List<EventInfo> checkParam(CheckParameter checkParameter) {
+        LinkedList<EventInfo> result = new LinkedList<EventInfo>();
+        int queryCount = (Integer) checkParameter.getParam("query_count");
+        int slowQueryMinCount = Config.getConfig().getSqlSlowQueryMinCount();
+        if (queryCount == slowQueryMinCount + 1) {
+            result.add(AttackInfo.createLocalAttackInfo(checkParameter, EventInfo.CHECK_ACTION_INFO, "慢查询: 使用SELECT语句读取了超过" + slowQueryMinCount + "行数据"));
         }
-        LOGGER.info(message);
+        return result;
     }
 }

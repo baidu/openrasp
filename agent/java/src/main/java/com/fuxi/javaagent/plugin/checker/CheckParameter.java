@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,8 +28,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.plugin;
+package com.fuxi.javaagent.plugin.checker;
 
+import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.plugin.checker.js.JsChecker;
+import com.fuxi.javaagent.plugin.checker.local.SqlResultChecker;
+import com.fuxi.javaagent.plugin.checker.policy.SqlConnectionChecker;
+import com.fuxi.javaagent.plugin.checker.policy.TomcatSecurityChecker;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.google.gson.Gson;
 
@@ -42,31 +47,43 @@ import java.util.Map;
  */
 public class CheckParameter {
 
+    public static final HashMap<String, Object> EMPTY_MAP = new HashMap<String, Object>();
+
     public enum Type {
-        SQL("sql"),
-        COMMAND("command"),
-        DIRECTORY("directory"),
-        REQUEST("request"),
-        READFILE("readFile"),
-        WRITEFILE("writeFile"),
-        FILEUPLOAD("fileUpload"),
-        XXE("xxe"),
-        OGNL("ognl"),
-        DESERIALIZATION("deserialization"),
-        REFLECTION("reflection"),
-        WEBDAV("webdav"),
-        INCLUDE("include"),
-        SQL_SLOW_QUERY("sqlSlowQuery");
+        // js插件检测
+        SQL("sql", new JsChecker()),
+        COMMAND("command", new JsChecker()),
+        DIRECTORY("directory", new JsChecker()),
+        REQUEST("request", new JsChecker()),
+        READFILE("readFile", new JsChecker()),
+        WRITEFILE("writeFile", new JsChecker()),
+        FILEUPLOAD("fileUpload", new JsChecker()),
+        XXE("xxe", new JsChecker()),
+        OGNL("ognl", new JsChecker()),
+        DESERIALIZATION("deserialization", new JsChecker()),
+        REFLECTION("reflection", new JsChecker()),
+        WEBDAV("webdav", new JsChecker()),
+        INCLUDE("include", new JsChecker()),
+        SSRF("ssrf", new JsChecker()),
 
-        String normalName;
+        // java本地检测
+        SQL_SLOW_QUERY("sqlSlowQuery", new SqlResultChecker(false)),
 
-        Type(String name) {
-            normalName = name;
+        // 安全基线检测
+        POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker()),
+        POLICY_TOMCAT_START("tomcatStart", new TomcatSecurityChecker());
+
+        String name;
+        Checker checker;
+
+        Type(String name, Checker checker) {
+            this.name = name;
+            this.checker = checker;
         }
 
         @Override
         public String toString() {
-            return normalName;
+            return name;
         }
     }
 
@@ -76,11 +93,15 @@ public class CheckParameter {
     private final long createTime;
 
 
-    public CheckParameter(Type type, Object params, AbstractRequest request) {
+    public CheckParameter(Type type, Object params) {
         this.type = type;
         this.params = params;
-        this.request = request;
+        this.request = HookHandler.requestCache.get();
         this.createTime = System.currentTimeMillis();
+    }
+
+    public Object getParam(String key) {
+        return params == null ? null : ((Map) params).get(key);
     }
 
     public Type getType() {

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,11 +28,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.plugin.event;
+package com.fuxi.javaagent.plugin.info;
 
 import com.fuxi.javaagent.config.Config;
-import com.fuxi.javaagent.plugin.CheckParameter;
-import com.fuxi.javaagent.plugin.CheckResult;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.tool.OSUtil;
 
@@ -51,12 +50,31 @@ import java.util.Map;
  */
 public class AttackInfo extends EventInfo {
     public static final String TYPE_ATTACK = "attack";
-    private CheckParameter parameter;
-    private CheckResult result;
+    public static final String DEFAULT_LOCAL_PLUGIN_NAME = "java_local_plugin";
 
-    public AttackInfo(CheckParameter parameter, CheckResult result) {
+    public static final int DEFAULT_CONFIDENCE_VALUE = 0;
+
+    private CheckParameter parameter;
+    private String pluginName;
+    private String message;
+    private String action;
+    private int confidence;
+
+    public static AttackInfo createLocalAttackInfo(CheckParameter parameter, String action, String message) {
+        return new AttackInfo(parameter, action, message, DEFAULT_LOCAL_PLUGIN_NAME);
+    }
+
+    public AttackInfo(CheckParameter parameter, String action, String message, String pluginName) {
+        this(parameter, action, message, pluginName, DEFAULT_CONFIDENCE_VALUE);
+    }
+
+    public AttackInfo(CheckParameter parameter, String action, String message, String pluginName, int confidence) {
+        this.message = message;
+        this.pluginName = pluginName;
+        this.action = action;
+        this.confidence = confidence;
         this.parameter = parameter;
-        this.result = result;
+        setBlock(CHECK_ACTION_BLOCK.equals(action));
     }
 
     /**
@@ -83,13 +101,13 @@ public class AttackInfo extends EventInfo {
         StackTraceElement[] trace = filter(new Throwable().getStackTrace());
         info.put("stack_trace", stringify(trace));
         // 检测插件
-        info.put("plugin_name", result.getPluginName());
+        info.put("plugin_name", this.pluginName);
         // 插件消息
-        info.put("plugin_message", result.getMessage());
+        info.put("plugin_message", this.message);
         // 插件置信度
-        info.put("plugin_confidence", result.getConfidence());
+        info.put("plugin_confidence", this.confidence);
         // 是否拦截
-        info.put("intercept_state", result.getResult());
+        info.put("intercept_state", this.action);
 
         if (request != null) {
             // 请求ID
@@ -146,5 +164,25 @@ public class AttackInfo extends EventInfo {
     @Override
     public String getType() {
         return TYPE_ATTACK;
+    }
+
+    public String getPluginName() {
+        return pluginName;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public int getConfidence() {
+        return confidence;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

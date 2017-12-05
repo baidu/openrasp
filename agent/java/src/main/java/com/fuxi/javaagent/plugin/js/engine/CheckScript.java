@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,54 +28,64 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.hook;
+package com.fuxi.javaagent.plugin.js.engine;
 
-import com.fuxi.javaagent.HookHandler;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.AdviceAdapter;
-import org.objectweb.asm.commons.Method;
+import com.google.gson.Gson;
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Created by tyy on 9/22/17.
- *
- * jetty请求的hook点
+ * Created by tyy on 4/6/17.
+ * All rights reserved
  */
-public class JettyServerHandleHook extends AbstractClassHook {
+public class CheckScript {
 
+    private final String name;
+    private final String content;
 
-    @Override
-    public boolean isClassMatched(String className) {
-        return className.equals("org/eclipse/jetty/server/handler/HandlerWrapper");
+    public CheckScript(File file) throws IOException {
+        this(file.getName(), FileUtils.readFileToString(file, "UTF-8"));
+    }
+
+    public CheckScript(String name, String content) {
+        this.name = name;
+        this.content = content;
     }
 
     @Override
-    public String getType() {
-        return "request";
-    }
-
-    @Override
-    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
-        if (name.equals("handle")) {
-            return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
-                @Override
-                protected void onMethodEnter() {
-                    loadThis();
-                    loadArg(2);
-                    loadArg(3);
-                    invokeStatic(Type.getType(ApplicationFilterHook.class),
-                            new Method("checkRequest", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
-                }
-
-                @Override
-                protected void onMethodExit(int opcode) {
-                    invokeStatic(Type.getType(HookHandler.class),
-                            new Method("onServiceExit", "()V"));
-                    super.onMethodExit(opcode);
-                }
-            };
+    public boolean equals(Object obj) {
+        if (this.getClass().isInstance(obj)) {
+            CheckScript other = (CheckScript) obj;
+            return other.getName().equals(this.getName()) && other.getContent().equals(this.getContent());
         }
-        return mv;
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 17;
+        result = 131 * result + (this.name != null ? this.name.hashCode() : 0);
+        result = 131 * result + (this.content != null ? this.content.hashCode() : 0);
+        return result;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    @Override
+    public String toString() {
+        Map<String, Object> obj = new HashMap<String, Object>();
+        obj.put("name", name);
+        obj.put("content", content);
+        return new Gson().toJson(obj);
     }
 }

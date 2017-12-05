@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  * <p>
  * Redistribution and use in source and binary forms, with or without
@@ -28,17 +28,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.plugin;
+package com.fuxi.javaagent.plugin.js.engine;
 
-import com.baidu.rasp.TokenGenerator;
+import com.fuxi.javaagent.config.Config;
 import org.mozilla.javascript.BaseFunction;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 
 /**
- * Java 实现的 token 解析功能，将注册到 JS 中 RASP 对象上
+ * 修改rasp相关配置
  */
-public class JSTokenizeSql extends BaseFunction {
+public class JSRASPConfig extends BaseFunction {
     /**
      * @see BaseFunction#call(Context, Scriptable, Scriptable, Object[])
      * @param cx
@@ -50,20 +50,15 @@ public class JSTokenizeSql extends BaseFunction {
     @Override
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args) {
-        if (args.length < 1) {
+        if (args.length < 2) {
             return Context.getUndefinedValue();
         }
-        if (!(args[0] instanceof String)) {
+        if (!(args[0] instanceof String) || !(args[1] instanceof String)) {
             return Context.getUndefinedValue();
         }
-        String sql = (String) args[0];
-        String[] result = TokenGenerator.tokenize(sql);
-        int length = result.length;
-        Scriptable array = cx.newArray(scope, length);
-        for (int i = 0; i < length; i++) {
-            array.put(i, array, result[i]);
-        }
-        return array;
+        String configKey = (String) args[0];
+        String configValue = (String) args[1];
+        return Config.getConfig().setConfig(configKey, configValue);
     }
 
     /**
@@ -75,6 +70,6 @@ public class JSTokenizeSql extends BaseFunction {
      */
     @Override
     public Object getDefaultValue(Class<?> hint) {
-        return "[Function: sql_tokenize]";
+        return "[Function: set_rasp_config]";
     }
 }

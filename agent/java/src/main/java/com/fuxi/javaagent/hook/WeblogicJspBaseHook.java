@@ -77,7 +77,7 @@ public class WeblogicJspBaseHook extends AbstractClassHook {
                     loadThis();
                     loadArg(0);
                     loadArg(1);
-                    invokeStatic(Type.getType(HookHandler.class),
+                    invokeStatic(Type.getType(ApplicationFilterHook.class),
                             new Method("checkRequest", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
                 }
 

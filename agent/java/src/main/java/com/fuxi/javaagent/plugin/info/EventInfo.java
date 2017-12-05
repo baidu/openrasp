@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,54 +28,44 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.hook;
+package com.fuxi.javaagent.plugin.info;
 
-import com.fuxi.javaagent.HookHandler;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.AdviceAdapter;
-import org.objectweb.asm.commons.Method;
+import com.google.gson.Gson;
+
+import java.util.Map;
 
 /**
- * Created by tyy on 9/22/17.
- *
- * jetty请求的hook点
+ * 报警事件信息类
  */
-public class JettyServerHandleHook extends AbstractClassHook {
+public abstract class EventInfo {
 
+    public static final String CHECK_ACTION_BLOCK = "block";
+    public static final String CHECK_ACTION_IGNORE = "ignore";
+    public static final String CHECK_ACTION_INFO = "info";
 
-    @Override
-    public boolean isClassMatched(String className) {
-        return className.equals("org/eclipse/jetty/server/handler/HandlerWrapper");
+    private String json;
+
+    private boolean isBlock = false;
+
+    public abstract String getType();
+
+    public abstract Map<String, Object> getInfo();
+
+    public boolean isBlock() {
+        return isBlock;
+    }
+
+    public void setBlock(boolean block) {
+        isBlock = block;
     }
 
     @Override
-    public String getType() {
-        return "request";
-    }
-
-    @Override
-    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
-        if (name.equals("handle")) {
-            return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
-                @Override
-                protected void onMethodEnter() {
-                    loadThis();
-                    loadArg(2);
-                    loadArg(3);
-                    invokeStatic(Type.getType(ApplicationFilterHook.class),
-                            new Method("checkRequest", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
-                }
-
-                @Override
-                protected void onMethodExit(int opcode) {
-                    invokeStatic(Type.getType(HookHandler.class),
-                            new Method("onServiceExit", "()V"));
-                    super.onMethodExit(opcode);
-                }
-            };
+    public String toString() {
+        if (json == null) {
+            Map<String, Object> info = getInfo();
+            json = new Gson().toJson(info);
         }
-        return mv;
+        return json;
     }
+
 }

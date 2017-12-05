@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,30 +28,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.plugin.event;
+package com.fuxi.javaagent.plugin.checker;
 
-import com.google.gson.Gson;
-
-import java.util.Map;
+import org.apache.log4j.Logger;
 
 /**
- * 报警事件信息类
+ * Created by tyy on 17-11-22.
+ *
+ * hook点检测接口
  */
-public abstract class EventInfo {
+public interface Checker {
 
-    private String json;
+    Logger POLICY_ALARM_LOGGER = Logger.getLogger(AbstractChecker.class.getPackage().getName() + ".policy_alarm");
 
-    public abstract String getType();
+    Logger ATTACK_ALARM_LOGGER = Logger.getLogger(AbstractChecker.class.getPackage().getName() + ".alarm");
 
-    public abstract Map<String, Object> getInfo();
-
-    @Override
-    public String toString() {
-        if (json == null) {
-            Map<String, Object> info = getInfo();
-            json = new Gson().toJson(info);
-        }
-        return json;
-    }
+    /**
+     * 检测 hook 点参数
+     *
+     * @param parameter hook点参数
+     * @return 是否阻塞 true代表安全 false代表危险
+     */
+    boolean check(CheckParameter parameter);
 
 }

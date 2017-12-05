@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,54 +28,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.hook;
+package com.fuxi.javaagent.plugin.checker;
 
-import com.fuxi.javaagent.HookHandler;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.AdviceAdapter;
-import org.objectweb.asm.commons.Method;
+import com.fuxi.javaagent.plugin.event.CheckEventListener;
+import com.fuxi.javaagent.plugin.info.AttackInfo;
+import com.fuxi.javaagent.plugin.info.EventInfo;
 
 /**
- * Created by tyy on 9/22/17.
+ * Created by tyy on 17-11-22.
  *
- * jetty请求的hook点
+ * 攻击检测事件监听器
  */
-public class JettyServerHandleHook extends AbstractClassHook {
-
-
+public class AttackCheckListener implements CheckEventListener {
     @Override
-    public boolean isClassMatched(String className) {
-        return className.equals("org/eclipse/jetty/server/handler/HandlerWrapper");
-    }
-
-    @Override
-    public String getType() {
-        return "request";
-    }
-
-    @Override
-    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
-        if (name.equals("handle")) {
-            return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
-                @Override
-                protected void onMethodEnter() {
-                    loadThis();
-                    loadArg(2);
-                    loadArg(3);
-                    invokeStatic(Type.getType(ApplicationFilterHook.class),
-                            new Method("checkRequest", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
-                }
-
-                @Override
-                protected void onMethodExit(int opcode) {
-                    invokeStatic(Type.getType(HookHandler.class),
-                            new Method("onServiceExit", "()V"));
-                    super.onMethodExit(opcode);
-                }
-            };
+    public void onCheckUpdate(EventInfo info) {
+        if (info instanceof AttackInfo) {
+            Checker.ATTACK_ALARM_LOGGER.info(info);
         }
-        return mv;
     }
+
 }

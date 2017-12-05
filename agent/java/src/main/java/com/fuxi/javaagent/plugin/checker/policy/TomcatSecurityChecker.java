@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,12 +28,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.tool.security;
+package com.fuxi.javaagent.plugin.checker.policy;
 
 import com.fuxi.javaagent.HookHandler;
-import com.fuxi.javaagent.plugin.PluginManager;
-import com.fuxi.javaagent.plugin.event.SecurityPolicyInfo;
-import com.fuxi.javaagent.plugin.event.SecurityPolicyInfo.Type;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.info.EventInfo;
+import com.fuxi.javaagent.plugin.info.SecurityPolicyInfo;
+import com.fuxi.javaagent.plugin.info.SecurityPolicyInfo.Type;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -45,45 +46,35 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created by tyy on 8/8/17.
  * 检测tomcat安全规范的工具类
  */
-public class TomcatSecurityChecker implements PolicyChecker {
+public class TomcatSecurityChecker extends PolicyChecker {
 
-    public static final String TOMCAT_CHECK_ERROR_LOG_CHANNEL = "tomcat_security_check_error";
+    private static final String TOMCAT_CHECK_ERROR_LOG_CHANNEL = "tomcat_security_check_error";
     private static final String HTTP_ONLY_ATTRIBUTE_NAME = "useHttpOnly";
     private static final String WINDOWS_ADMIN_GROUP_ID = "S-1-5-32-544";
     private static final String[] TOMCAT_MANAGER_ROLES = new String[]{"admin-gui", "manager-gui", "manager", "admin"};
     private static final String[] WEAK_WORDS = new String[]{"both", "tomcat", "admin", "manager", "123456", "root"};
     private static final String[] DEFAULT_APP_DIRS = new String[]{"ROOT", "manager", "host-manager", "docs"};
     private static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
-    private HashMap<Type, String> unsafeMessage;
-    private boolean isSafe;
-    private String tomcatBaseDir;
 
-    public TomcatSecurityChecker() {
-        isSafe = true;
-        tomcatBaseDir = System.getProperty("catalina.base");
-        unsafeMessage = new HashMap<Type, String>();
-    }
-
-    /**
-     * tomcat安全规范检测
-     *
-     * @return true代表安全，false代表不安全
-     */
     @Override
-    public boolean check() {
+    public List<EventInfo> checkParam(CheckParameter checkParameter) {
+        String tomcatBaseDir = System.getProperty("catalina.base");
+        List<EventInfo> infos = new LinkedList<EventInfo>();
         try {
             String serverType = SecurityPolicyInfo.getCatalinaServerType();
             if (tomcatBaseDir != null && serverType != null && serverType.equalsIgnoreCase("tomcat")) {
-                checkStartUser();
-                checkHttpOnlyIsOpen();
-                checkManagerPassword();
-                checkDefaultApp();
+                checkStartUser(infos);
+                checkHttpOnlyIsOpen(tomcatBaseDir, infos);
+                checkManagerPassword(tomcatBaseDir, infos);
+                checkDefaultApp(tomcatBaseDir, infos);
             } else {
                 LOGGER.error(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
                         "can not find tomcat base directory"));
@@ -91,23 +82,17 @@ public class TomcatSecurityChecker implements PolicyChecker {
         } catch (Exception e) {
             handleException(e);
         }
-        if (!isSafe) {
-            for (Object o : unsafeMessage.entrySet()) {
-                Map.Entry<Type, String> entry = (Map.Entry) o;
-                PolicyChecker.ALARM_LOGGER.info(new SecurityPolicyInfo(entry.getKey(), entry.getValue()));
-            }
-        }
-        return isSafe;
+        return infos;
     }
 
     /**
      * 检测cookie的HttpOnly是否开启
      */
-    private void checkHttpOnlyIsOpen() {
-        File contextFile = new File(tomcatBaseDir + File.separator + "conf/context.xml");
+    private void checkHttpOnlyIsOpen(String tomcatBaseDir, List<EventInfo> infos) {
+        File contextFile = new File(tomcatBaseDir + File.separator + "conf/engine.xml");
         if (!(contextFile.exists() && contextFile.canRead())) {
             LOGGER.error(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "can not load file conf/context.xml"));
+                    "can not load file conf/engine.xml"));
             return;
         }
 
@@ -124,7 +109,7 @@ public class TomcatSecurityChecker implements PolicyChecker {
             }
 
             if (!isHttpOnly) {
-                handleSecurityProblem(Type.COOKIE_HTTP_ONLY, "tomcat未在conf/context.xml文件中配置全局httpOnly.");
+                infos.add(new SecurityPolicyInfo(Type.COOKIE_HTTP_ONLY, "tomcat未在conf/engine.xml文件中配置全局httpOnly.", true));
             }
         }
     }
@@ -132,11 +117,11 @@ public class TomcatSecurityChecker implements PolicyChecker {
     /**
      * 检测启动用户是否为系统管理员
      */
-    private void checkStartUser() {
+    private void checkStartUser(List<EventInfo> infos) {
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.startsWith("linux") || osName.startsWith("mac")) {
             if ("root".equals(System.getProperty("user.name"))) {
-                handleSecurityProblem(Type.START_USER, "tomcat以root权限启动.");
+                infos.add(new SecurityPolicyInfo(Type.START_USER, "tomcat以root权限启动.", true));
             }
         } else if (osName.startsWith("windows")) {
             try {
@@ -146,7 +131,7 @@ public class TomcatSecurityChecker implements PolicyChecker {
                 if (userGroups != null) {
                     for (String group : userGroups) {
                         if (group.equals(WINDOWS_ADMIN_GROUP_ID)) {
-                            handleSecurityProblem(Type.START_USER, "服务器以管理员权限启动.");
+                            infos.add(new SecurityPolicyInfo(Type.START_USER, "服务器以管理员权限启动.", true));
                         }
                     }
                 }
@@ -154,13 +139,12 @@ public class TomcatSecurityChecker implements PolicyChecker {
                 handleException(e);
             }
         }
-
     }
 
     /**
      * 检测tomcat后台管理员角色密码是否安全
      */
-    private void checkManagerPassword() {
+    private void checkManagerPassword(String tomcatBaseDir, List<EventInfo> infos) {
         File userFile = new File(tomcatBaseDir + File.separator + "conf/tomcat-users.xml");
         if (!(userFile.exists() && userFile.canRead())) {
             LOGGER.error(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
@@ -186,8 +170,7 @@ public class TomcatSecurityChecker implements PolicyChecker {
                                 String userName = user.getAttribute("username");
                                 String password = user.getAttribute("password");
                                 if (weakWords.contains(userName) && weakWords.contains(password)) {
-                                    handleSecurityProblem(Type.MANAGER_PASSWORD, "tomcat后台管理角色存在弱用户名和弱密码.");
-                                    break;
+                                    infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD, "tomcat后台管理角色存在弱用户名和弱密码.", true));
                                 }
                             }
                         }
@@ -195,7 +178,6 @@ public class TomcatSecurityChecker implements PolicyChecker {
                 }
             }
         }
-
     }
 
     /**
@@ -220,7 +202,7 @@ public class TomcatSecurityChecker implements PolicyChecker {
     /**
      * 检测是否删除了默认安装的app
      */
-    private void checkDefaultApp() {
+    private void checkDefaultApp(String tomcatBaseDir, List<EventInfo> infos) {
         LinkedList<String> apps = new LinkedList<String>();
         for (String dir : DEFAULT_APP_DIRS) {
             File file = new File(tomcatBaseDir + File.separator + "webapps" + File.separator + dir);
@@ -234,17 +216,8 @@ public class TomcatSecurityChecker implements PolicyChecker {
             for (String app : apps) {
                 message.append(app).append(", ");
             }
-            handleSecurityProblem(Type.DEFAULT_APP, message.substring(0, message.length() - 1));
+            infos.add(new SecurityPolicyInfo(Type.DEFAULT_APP, message.substring(0, message.length() - 1), true));
         }
-    }
-
-    public HashMap<Type, String> getUnsafeMessage() {
-        return unsafeMessage;
-    }
-
-    private void handleSecurityProblem(Type type, String message) {
-        isSafe = false;
-        unsafeMessage.put(type, message);
     }
 
     private void handleException(Exception e) {
@@ -252,24 +225,10 @@ public class TomcatSecurityChecker implements PolicyChecker {
         LOGGER.error(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL, e.getMessage()), e);
     }
 
-    public String getJsonFormattedMessage(String title, String message) {
+    private String getJsonFormattedMessage(String title, String message) {
         JsonObject messageObject = new JsonObject();
         messageObject.addProperty(title, message);
         return messageObject.toString();
     }
 
-    public String getFormattedUnsafeMessage() {
-        String formatMessage = "";
-        if (!unsafeMessage.isEmpty()) {
-            formatMessage += "Tomcat 安全规范检查:\n";
-            for (Object o : unsafeMessage.entrySet()) {
-                Map.Entry<Type, String> entry = (Map.Entry) o;
-                formatMessage += "* ";
-                formatMessage += entry.getValue();
-                formatMessage += "\n";
-            }
-            return formatMessage;
-        }
-        return formatMessage;
-    }
 }

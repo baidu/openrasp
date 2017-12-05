@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,54 +28,70 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.hook;
+package com.fuxi.javaagent.plugin.checker;
 
-import com.fuxi.javaagent.HookHandler;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.AdviceAdapter;
-import org.objectweb.asm.commons.Method;
+import com.fuxi.javaagent.plugin.event.CheckEventDispatcher;
+import com.fuxi.javaagent.plugin.event.CheckEventListener;
+import com.fuxi.javaagent.plugin.info.EventInfo;
+
+import java.util.List;
 
 /**
- * Created by tyy on 9/22/17.
+ * Created by tyy on 17-11-20.
  *
- * jetty请求的hook点
+ * hook点参数检测接口
  */
-public class JettyServerHandleHook extends AbstractClassHook {
+public abstract class AbstractChecker implements Checker {
 
+    private boolean canBlock = true;
+    private CheckEventDispatcher eventDispatcher = new CheckEventDispatcher();
 
-    @Override
-    public boolean isClassMatched(String className) {
-        return className.equals("org/eclipse/jetty/server/handler/HandlerWrapper");
+    public AbstractChecker() {
+        this(true);
+    }
+
+    public AbstractChecker(boolean canBlock) {
+        this.canBlock = canBlock;
     }
 
     @Override
-    public String getType() {
-        return "request";
-    }
-
-    @Override
-    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
-        if (name.equals("handle")) {
-            return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
-                @Override
-                protected void onMethodEnter() {
-                    loadThis();
-                    loadArg(2);
-                    loadArg(3);
-                    invokeStatic(Type.getType(ApplicationFilterHook.class),
-                            new Method("checkRequest", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
+    public boolean check(CheckParameter checkParameter) {
+        List<EventInfo> eventInfos = checkParam(checkParameter);
+        boolean isBlock = false;
+        if (eventInfos != null) {
+            for (EventInfo info : eventInfos) {
+                if (info.isBlock()) {
+                    isBlock = true;
                 }
-
-                @Override
-                protected void onMethodExit(int opcode) {
-                    invokeStatic(Type.getType(HookHandler.class),
-                            new Method("onServiceExit", "()V"));
-                    super.onMethodExit(opcode);
-                }
-            };
+                dispatchCheckEvent(info);
+            }
         }
-        return mv;
+        isBlock = isBlock && canBlock;
+        return isBlock;
     }
+
+    public void addCheckEventListener(CheckEventListener listener) {
+        eventDispatcher.addCheckEventListener(listener);
+    }
+
+    public void dispatchCheckEvent(EventInfo info) {
+        eventDispatcher.onCheckUpdate(info);
+    }
+
+    public boolean isCanBlock() {
+        return canBlock;
+    }
+
+    public void setCanBlock(boolean canBlock) {
+        this.canBlock = canBlock;
+    }
+
+    /**
+     * 实现参数检测逻辑
+     *
+     * @param checkParameter 检测参数
+     * @return 检测结果
+     */
+    public abstract List<EventInfo> checkParam(CheckParameter checkParameter);
+
 }

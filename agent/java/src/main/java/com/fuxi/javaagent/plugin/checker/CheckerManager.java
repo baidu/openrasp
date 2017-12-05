@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,64 +28,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.plugin;
+package com.fuxi.javaagent.plugin.checker;
 
-import com.google.gson.Gson;
-import org.apache.commons.io.FileUtils;
+import java.util.EnumMap;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import com.fuxi.javaagent.plugin.checker.CheckParameter.Type;
 
 /**
- * Created by tyy on 4/6/17.
- * All rights reserved
+ * Created by tyy on 17-11-20.
+ *
+ * 用于管理 hook 点参数的检测
  */
-public class CheckScript {
+public class CheckerManager {
 
-    private final String name;
-    private final String content;
+    private static EnumMap<Type, Checker> checkers = new EnumMap<Type, Checker>(Type.class);
 
-    public CheckScript(File file) throws IOException {
-        this(file.getName(), FileUtils.readFileToString(file, "UTF-8"));
-    }
-
-    public CheckScript(String name, String content) {
-        this.name = name;
-        this.content = content;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this.getClass().isInstance(obj)) {
-            CheckScript other = (CheckScript) obj;
-            return other.getName().equals(this.getName()) && other.getContent().equals(this.getContent());
+    public synchronized static void init() throws Exception {
+        for (Type type : Type.values()) {
+            checkers.put(type, type.checker);
         }
-        return false;
     }
 
-    @Override
-    public int hashCode() {
-        int result = 17;
-        result = 131 * result + (this.name != null ? this.name.hashCode() : 0);
-        result = 131 * result + (this.content != null ? this.content.hashCode() : 0);
-        return result;
+    public static boolean check(Type type, CheckParameter parameter) {
+        return checkers.get(type).check(parameter);
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    @Override
-    public String toString() {
-        Map<String, Object> obj = new HashMap<String, Object>();
-        obj.put("name", name);
-        obj.put("content", content);
-        return new Gson().toJson(obj);
-    }
 }

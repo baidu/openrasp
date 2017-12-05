@@ -1,13 +1,17 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.config.Config;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
+import java.sql.ResultSet;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Created by tyy on 17-11-6.
@@ -75,12 +79,31 @@ public class SQLResultSetHook extends AbstractSqlHook {
                 protected void onMethodEnter() {
                     push(type);
                     loadThis();
-                    invokeStatic(Type.getType(HookHandler.class),
+                    invokeStatic(Type.getType(SQLResultSetHook.class),
                             new Method("checkSqlQueryResult", "(Ljava/lang/String;Ljava/lang/Object;)V"));
                 }
             };
         }
         return mv;
+    }
+
+    /**
+     * 检测数据库查询结果
+     *
+     * @param sqlResultSet 数据库查询结果
+     */
+    public static void checkSqlQueryResult(String server, Object sqlResultSet) {
+        try {
+            ResultSet resultSet = (ResultSet) sqlResultSet;
+            int queryCount = resultSet.getRow();
+            int slowQueryMinCount = Config.getConfig().getSqlSlowQueryMinCount();
+            HashMap<String, Object> params = new HashMap<String, Object>(4);
+            params.put("query_count", slowQueryMinCount);
+            params.put("server", server);
+            HookHandler.doCheck(CheckParameter.Type.SQL_SLOW_QUERY, params);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

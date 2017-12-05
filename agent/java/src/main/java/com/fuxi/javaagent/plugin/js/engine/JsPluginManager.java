@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  * <p>
  * Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.plugin;
+package com.fuxi.javaagent.plugin.js.engine;
 
 import com.fuxi.javaagent.HookHandler;
 import com.fuxi.javaagent.config.Config;
@@ -55,11 +55,9 @@ import java.util.TimerTask;
  * <p>
  * 必须首先初始化
  */
-public class PluginManager {
+public class JsPluginManager {
 
-    public static final String LOCAL_CHECKER_NAME = "local_checker";
-    public static final Logger ALARM_LOGGER = Logger.getLogger(PluginManager.class.getPackage().getName() + ".alarm");
-    private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(JsPluginManager.class.getName());
     private static Timer timer = null;
     private static Integer watchId = null;
 
@@ -126,7 +124,7 @@ public class PluginManager {
     private synchronized static void updatePlugin() throws Exception {
         boolean oldValue = HookHandler.enableHook.getAndSet(false);
         File pluginDir = new File(Config.getConfig().getScriptDirectory());
-        LOGGER.debug("plugin directory: " + pluginDir.getAbsolutePath());
+        LOGGER.debug("checker directory: " + pluginDir.getAbsolutePath());
         if (!pluginDir.isDirectory()) {
             pluginDir.mkdir();
         }
@@ -174,14 +172,5 @@ public class PluginManager {
         }, 500);
     }
 
-    /**
-     * 执行安全检测
-     *
-     * @param parameter 检测参数 {@link CheckParameter}
-     * @return 如果需要对当前请求进行拦截则返回true, 否则返回false
-     */
-    public static boolean check(CheckParameter parameter) {
-        JSContext cx = JSContextFactory.enterAndInitContext();
-        return cx.check(parameter);
-    }
+
 }

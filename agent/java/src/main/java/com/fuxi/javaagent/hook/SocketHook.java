@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,57 +30,40 @@
 
 package com.fuxi.javaagent.hook;
 
-import com.fuxi.javaagent.HookHandler;
-import com.fuxi.javaagent.config.Config;
-import com.fuxi.javaagent.plugin.checker.CheckParameter;
-import com.fuxi.javaagent.plugin.js.engine.JSContext;
-import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
-import org.mozilla.javascript.Scriptable;
+
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
-/**
- * Created by tyy on 6/21/17.
- */
-public class OgnlHook extends AbstractClassHook {
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#getType()
-     */
-    @Override
-    public String getType() {
-        return "ognl";
-    }
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#isClassMatched(String)
-     */
+/**
+ * Created by tyy on 17-11-17.
+ * 检测socket连接的hook点
+ */
+public class SocketHook extends AbstractClassHook {
     @Override
     public boolean isClassMatched(String className) {
-        return "ognl/Ognl".equals(className);
+        return className.equals("java/net/Socket");
     }
 
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#hookMethod(int, String, String, String, String[], MethodVisitor)
-     */
     @Override
-    protected MethodVisitor hookMethod(int access, String name, String desc,
-                                       String signature, String[] exceptions, MethodVisitor mv) {
-        if ("parseExpression".equals(name) && "(Ljava/lang/String;)Ljava/lang/Object;".equals(desc)) {
+    public String getType() {
+        return "socket";
+    }
+
+    @Override
+    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
+        if (("connect").equals(name) && ("(Ljava/net/SocketAddress;I)V").equals(desc)) {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
                 protected void onMethodEnter() {
                     loadArg(0);
-                    invokeStatic(Type.getType(OgnlHook.class),
-                            new Method("checkOgnlExpression", "(Ljava/lang/String;)V"));
+                    invokeStatic(Type.getType(SocketHook.class),
+                            new Method("checkSocketHost", "(Ljava/net/SocketAddress;)V"));
                 }
             };
         }
@@ -88,19 +71,18 @@ public class OgnlHook extends AbstractClassHook {
     }
 
     /**
-     * struct框架ognl语句解析hook点
+     * 检测socket连接的host
      *
-     * @param expression ognl语句
+     * @param address socket连接地址
      */
-    public static void checkOgnlExpression(String expression) {
-        if (expression != null) {
-            if (expression.length() >= Config.getConfig().getOgnlMinLength()) {
-                JSContext cx = JSContextFactory.enterAndInitContext();
-                Scriptable params = cx.newObject(cx.getScope());
-                params.put("expression", params, expression);
-                HookHandler.doCheck(CheckParameter.Type.OGNL, params);
+    public static void checkSocketHost(SocketAddress address) {
+        try {
+            if (address != null && address instanceof InetSocketAddress) {
+                String hostName = ((InetSocketAddress) address).getHostName();
+
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
-
 }

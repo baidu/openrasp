@@ -34,6 +34,10 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
+import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
+import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -78,12 +82,27 @@ public class JstlImportHook extends AbstractClassHook {
                 protected void onMethodExit(int opcode) {
                     if (opcode != Opcodes.ATHROW) {
                         mv.visitInsn(Opcodes.DUP);
-                        invokeStatic(Type.getType(HookHandler.class),
+                        invokeStatic(Type.getType(JstlImportHook.class),
                                 new Method("checkJstlImport", "(Ljava/lang/String;)V"));
                     }
                 }
             };
         }
         return mv;
+    }
+
+    /**
+     * 检测 c:import
+     *
+     * @param url
+     */
+    public static void checkJstlImport(String url) {
+        if (url != null) {
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            params.put("url", params, url);
+            params.put("function", params, "jstl_import");
+            HookHandler.doCheck(CheckParameter.Type.INCLUDE, params);
+        }
     }
 }

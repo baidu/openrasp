@@ -31,11 +31,17 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.checker.policy.SqlConnectionChecker;
+import com.fuxi.javaagent.tool.TimeUtils;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
+
+import java.util.HashMap;
+import java.util.Properties;
 
 /**
  * Created by lxk on 7/6/17.
@@ -77,7 +83,7 @@ public class SQLDriverManagerHook extends AbstractClassHook {
                 protected void onMethodEnter() {
                     loadArg(0);
                     loadArg(1);
-                    invokeStatic(Type.getType(HookHandler.class),
+                    invokeStatic(Type.getType(SQLDriverManagerHook.class),
                             new Method("checkSqlConnection", "(Ljava/lang/String;Ljava/util/Properties;)V"));
                     invokeStatic(Type.getType(HookHandler.class),
                             new Method("preShieldHook", "()V"));
@@ -91,5 +97,21 @@ public class SQLDriverManagerHook extends AbstractClassHook {
             };
         }
         return mv;
+    }
+
+    /**
+     * 检测sql连接规范
+     *
+     * @param url        连接url
+     * @param properties 连接属性
+     */
+    public static void checkSqlConnection(String url, Properties properties) {
+        Long lastAlarmTime = SqlConnectionChecker.alarmTimeCache.get(url);
+        if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
+            HashMap<String, Object> params = new HashMap<String, Object>(4);
+            params.put("url", url);
+            params.put("properties", properties);
+            HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_SQL_CONNECTION, params);
+        }
     }
 }
