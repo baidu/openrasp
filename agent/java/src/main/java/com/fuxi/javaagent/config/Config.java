@@ -65,6 +65,7 @@ public class Config {
     private static final String DEFAULT_READ_FILE_EXTENSION_REGEX = "^(gz|7z|xz|tar|rar|zip|sql|db)$";
     private static final String DEFAULT_INJECT_URL_PREFIX = "";
     private static final String DEFAULT_OGNL_MIN_LENGTH = "30";
+    private static final String DEFAULT_SQL_SLOW_QUERY_MIN_ROWS = "500";
 
     private static final Logger LOGGER = Logger.getLogger(Config.class.getName());
     private static String baseDirectory;
@@ -73,6 +74,7 @@ public class Config {
     private int reflectionMaxStack;
     private long pluginTimeout;
     private long bodyMaxBytes;
+    private int sqlSlowQueryMinCount;
     private String[] ignoreHooks;
     private boolean enforcePolicy;
     private String[] reflectionMonitorMethod;
@@ -94,7 +96,8 @@ public class Config {
         securityenforce_policy,
         readfileextensionregex,
         injecturlprefix,
-        ognlminlength
+        ognlminlength,
+        sqlslowqueryminrows
     }
 
     // Config是由bootstrap classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
@@ -133,6 +136,7 @@ public class Config {
         this.readFileExtensionRegex = DEFAULT_READ_FILE_EXTENSION_REGEX;
         this.injectUrlPrefix = DEFAULT_INJECT_URL_PREFIX;
         this.ognlMinLength = Integer.parseInt(DEFAULT_OGNL_MIN_LENGTH);
+        this.sqlSlowQueryMinCount = Integer.parseInt(DEFAULT_SQL_SLOW_QUERY_MIN_ROWS);
 
         try {
             input = new FileInputStream(new File(baseDirectory, "conf" + File.separator + "rasp.properties"));
@@ -151,6 +155,7 @@ public class Config {
             setReflectionMaxStack(properties.getProperty("reflection.maxstack", DEFAULT_REFLECTION_MAX_STACK));
             setPluginTimeout(properties.getProperty("plugin.timeout.millis", DEFAULT_PLUGIN_TIMEOUT));
             setOgnlMinLength(properties.getProperty("ognl.expression.minlength", DEFAULT_OGNL_MIN_LENGTH));
+            setSqlSlowQueryMinCount(properties.getProperty("sql.slowquery.min_rows", DEFAULT_SQL_SLOW_QUERY_MIN_ROWS));
             if (this.blockUrl == null || blockUrl.equals("")) {
                 this.blockUrl = DEFAULT_BLOCK_URL;
             }
@@ -272,6 +277,17 @@ public class Config {
         this.bodyMaxBytes = Long.parseLong(bodyMaxBytes);
         if (this.bodyMaxBytes < 0) {
             this.bodyMaxBytes = 0;
+        }
+    }
+
+    public synchronized int getSqlSlowQueryMinCount() {
+        return sqlSlowQueryMinCount;
+    }
+
+    public synchronized void setSqlSlowQueryMinCount(String sqlSlowQueryMinCount) {
+        this.sqlSlowQueryMinCount = Integer.parseInt(sqlSlowQueryMinCount);
+        if (this.sqlSlowQueryMinCount < 0) {
+            this.sqlSlowQueryMinCount = 0;
         }
     }
 
@@ -468,6 +484,9 @@ public class Config {
                     break;
                 case ognlminlength:
                     setOgnlMinLength(value);
+                    break;
+                case sqlslowqueryminrows:
+                    setSqlSlowQueryMinCount(value);
                     break;
                 default:
                     // do nothing

@@ -11,11 +11,11 @@ import java.util.Map;
 public class SecurityPolicyInfo extends EventInfo {
 
     public enum Type {
-        SQL_CONNECTION(1001),
         COOKIE_HTTP_ONLY(3001),
         START_USER(3002),
         MANAGER_PASSWORD(3003),
-        DEFAULT_APP(3004);
+        DEFAULT_APP(3004),
+        SQL_CONNECTION(3005);
 
         private int id;
 

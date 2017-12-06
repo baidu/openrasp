@@ -54,9 +54,12 @@ public class CheckParameter {
         OGNL("ognl"),
         DESERIALIZATION("deserialization"),
         REFLECTION("reflection"),
-        WEBDAV("webdav");
+        WEBDAV("webdav"),
+        INCLUDE("include"),
+        SQL_SLOW_QUERY("sqlSlowQuery");
 
         String normalName;
+
         Type(String name) {
             normalName = name;
         }

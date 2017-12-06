@@ -34,14 +34,15 @@ import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.exception.SecurityException;
 import com.fuxi.javaagent.hook.SQLStatementHook;
 import com.fuxi.javaagent.hook.XXEHook;
-import com.fuxi.javaagent.plugin.CheckParameter;
-import com.fuxi.javaagent.plugin.JSContext;
-import com.fuxi.javaagent.plugin.JSContextFactory;
-import com.fuxi.javaagent.plugin.PluginManager;
+import com.fuxi.javaagent.plugin.*;
+import com.fuxi.javaagent.plugin.event.AttackInfo;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.request.HttpServletRequest;
 import com.fuxi.javaagent.response.HttpServletResponse;
-import com.fuxi.javaagent.tool.*;
+import com.fuxi.javaagent.tool.FileUtil;
+import com.fuxi.javaagent.tool.Reflection;
+import com.fuxi.javaagent.tool.StackTrace;
+import com.fuxi.javaagent.tool.TimeUtils;
 import com.fuxi.javaagent.tool.hook.CustomLockObject;
 import com.fuxi.javaagent.tool.security.SqlConnectionChecker;
 import com.fuxi.javaagent.tool.security.TomcatSecurityChecker;
@@ -53,6 +54,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectStreamClass;
 import java.io.UnsupportedEncodingException;
+import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -204,6 +206,29 @@ public class HookHandler {
             params.put("query", params, stmt);
 
             doCheck(CheckParameter.Type.SQL, params);
+        }
+    }
+
+    /**
+     * 检测数据库查询结果
+     *
+     * @param sqlResultSet 数据库查询结果
+     */
+    public static void checkSqlQueryResult(String server, Object sqlResultSet) {
+        try {
+            ResultSet resultSet = (ResultSet) sqlResultSet;
+            int queryCount = resultSet.getRow();
+            int slowQueryMinCount = Config.getConfig().getSqlSlowQueryMinCount();
+            if (queryCount == slowQueryMinCount + 1) {
+                HashMap<String, Object> params = new HashMap<String, Object>();
+                params.put("slowquery_min_count", slowQueryMinCount);
+                params.put("server", server);
+                CheckParameter parameter = new CheckParameter(CheckParameter.Type.SQL_SLOW_QUERY, params, requestCache.get());
+                CheckResult result = new CheckResult("info", "慢查询: 使用SELECT语句读取了超过" + slowQueryMinCount + "行数据", "local_checker");
+                PluginManager.ALARM_LOGGER.warn(new AttackInfo(parameter, result));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -421,9 +446,10 @@ public class HookHandler {
                         Scriptable params = cx.newObject(cx.getScope());
                         List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
                                 Config.getConfig().getReflectionMaxStack());
+                        Scriptable array = cx.newArray(cx.getScope(), stackInfo.toArray());
                         params.put("clazz", params, reflectClassName);
                         params.put("method", params, reflectMethodName);
-                        params.put("stack", params, stackInfo);
+                        params.put("stack", params, array);
                         pluginCheck(CheckParameter.Type.REFLECTION, params);
                         break;
                     }
@@ -491,7 +517,8 @@ public class HookHandler {
     }
 
     public static void checkSqlConnection(String url, Properties properties) {
-        if (System.currentTimeMillis() - SqlConnectionChecker.lastCheckTimeStamp > TimeUtils.DAY_MILLISECOND) {
+        Long lastAlarmTime = SqlConnectionChecker.alarmTimeCache.get(url);
+        if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
             SqlConnectionChecker checker = new SqlConnectionChecker(url, properties);
             boolean isSafe = checker.check();
             if (!isSafe) {
@@ -499,6 +526,21 @@ public class HookHandler {
                     handleBlock();
                 }
             }
+        }
+    }
+
+    /**
+     * 检测 jstl c:import
+     *
+     * @param url
+     */
+    public static void checkJstlImport(String url) {
+        if (url != null && !url.startsWith("/") && url.contains("://")) {
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            params.put("url", params, url);
+            params.put("function", params, "jstl_import");
+            doCheck(CheckParameter.Type.INCLUDE, params);
         }
     }
 
@@ -573,4 +615,5 @@ public class HookHandler {
             handleBlock();
         }
     }
+
 }

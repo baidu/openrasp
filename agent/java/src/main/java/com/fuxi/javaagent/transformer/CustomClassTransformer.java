@@ -63,6 +63,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new Struts2DispatcherHook());
         addHook(new SQLDriverManagerHook());
         addHook(new SQLStatementHook());
+        addHook(new SQLResultSetHook());
         addHook(new WeblogicJspBaseHook());
         addHook(new XXEHook());
         addHook(new JspCompilationContextHook());
@@ -74,6 +75,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new JettyServerHook());
         addHook(new CoyoteAdapterHook());
         addHook(new ProxyDirContextHook());
+        addHook(new JstlImportHook());
     }
 
     private void addHook(AbstractClassHook hook) {

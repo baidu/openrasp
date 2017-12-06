@@ -14,15 +14,7 @@ import java.util.Arrays;
  * Created by zhuming01 on 7/18/17.
  * All rights reserved
  */
-public class SQLStatementHook extends AbstractClassHook {
-    public static final String SQL_TYPE_MYSQL = "mysql";
-    public static final String SQL_TYPE_SQLITE = "sqlite";
-    public static final String SQL_TYPE_ORACLE = "oracle";
-    public static final String SQL_TYPE_SQLSERVER = "sqlserver";
-    public static final String SQL_TYPE_PGSQL = "pgsql";
-
-    private String type;
-    private String[] exceptions;
+public class SQLStatementHook extends AbstractSqlHook {
 
     /**
      * (none-javadoc)
@@ -79,36 +71,42 @@ public class SQLStatementHook extends AbstractClassHook {
             return true;
         }
 
+        /* DB2 */
+        if (className.startsWith("com/ibm/db2/jcc/am")) {
+            this.type = SQL_TYPE_DB2;
+            this.exceptions = new String[]{"java/sql/SQLException"};
+            return true;
+        }
+
         return false;
     }
 
     @Override
     protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
         boolean hook = false;
-        if (name.equals("execute") && Arrays.equals(exceptions, this.exceptions)) {
-            if (desc.equals("(Ljava/lang/String;)Z")
-                    || desc.equals("(Ljava/lang/String;I)Z")
-                    || desc.equals("(Ljava/lang/String;[I)Z")
-                    || desc.equals("(Ljava/lang/String;[Ljava/lang/String;)Z")) {
-                hook = true;
+        // 适配 db2 hook 点
+        if (this.type.equals(SQL_TYPE_DB2) && getInterfaces() != null) {
+            if (isExecutableSqlMethod(name, desc) && getInterfaces().length > 2) {
+                for (String inter : getInterfaces()) {
+                    if (inter != null && inter.equals("com/ibm/db2/jcc/DB2Statement")) {
+                        hook = true;
+                        break;
+                    }
+                }
+            } else if (isQueryResultMethod(name, desc) && getInterfaces().length > 3) {
+                for (String inter : getInterfaces()) {
+                    if (inter != null && inter.equals("com/ibm/db2/jcc/DB2ResultSet")) {
+                        SQLResultSetHook resultSetHook = new SQLResultSetHook();
+                        resultSetHook.setType(this.type);
+                        resultSetHook.setExceptions(this.exceptions);
+                        return resultSetHook.hookMethod(access, name, desc, signature, exceptions, mv);
+                    }
+                }
             }
-        } else if (name.equals("executeUpdate") && Arrays.equals(exceptions, this.exceptions)) {
-            if (desc.equals("(Ljava/lang/String;)I")
-                    || desc.equals("(Ljava/lang/String;I)I")
-                    || desc.equals("(Ljava/lang/String;[I)I")
-                    || desc.equals("(Ljava/lang/String;[Ljava/lang/String;)I")) {
-                hook = true;
-            }
-        } else if (name.equals("executeQuery") && Arrays.equals(exceptions, this.exceptions)) {
-            if (desc.equals("(Ljava/lang/String;)Ljava/sql/ResultSet;")) {
-                hook = true;
-            }
-        } else if (name.equals("addBatch") && Arrays.equals(exceptions, this.exceptions)) {
-            if (desc.equals("(Ljava/lang/String;)V")) {
-                hook = true;
-            }
-        }
 
+        } else {
+            hook = isExecutableSqlMethod(name, desc);
+        }
         return hook ? new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
             @Override
             protected void onMethodEnter() {
@@ -119,6 +117,38 @@ public class SQLStatementHook extends AbstractClassHook {
                         new Method("checkSQL", "(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/String;)V"));
             }
         } : mv;
+    }
+
+    public boolean isExecutableSqlMethod(String name, String desc) {
+        boolean result = false;
+        if (name.equals("execute") && Arrays.equals(exceptions, this.exceptions)) {
+            if (desc.equals("(Ljava/lang/String;)Z")
+                    || desc.equals("(Ljava/lang/String;I)Z")
+                    || desc.equals("(Ljava/lang/String;[I)Z")
+                    || desc.equals("(Ljava/lang/String;[Ljava/lang/String;)Z")) {
+                result = true;
+            }
+        } else if (name.equals("executeUpdate") && Arrays.equals(exceptions, this.exceptions)) {
+            if (desc.equals("(Ljava/lang/String;)I")
+                    || desc.equals("(Ljava/lang/String;I)I")
+                    || desc.equals("(Ljava/lang/String;[I)I")
+                    || desc.equals("(Ljava/lang/String;[Ljava/lang/String;)I")) {
+                result = true;
+            }
+        } else if (name.equals("executeQuery") && Arrays.equals(exceptions, this.exceptions)) {
+            if (desc.equals("(Ljava/lang/String;)Ljava/sql/ResultSet;")) {
+                result = true;
+            }
+        } else if (name.equals("addBatch") && Arrays.equals(exceptions, this.exceptions)) {
+            if (desc.equals("(Ljava/lang/String;)V")) {
+                result = true;
+            }
+        }
+        return result;
+    }
+
+    public boolean isQueryResultMethod(String name, String desc) {
+        return (name.equals("next") && desc.equals("()Z") && Arrays.equals(exceptions, this.exceptions));
     }
 
     public static String getSqlConnectionId(String type, Object statement) {
