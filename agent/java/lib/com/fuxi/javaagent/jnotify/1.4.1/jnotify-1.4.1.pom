@@ -6,7 +6,7 @@
 
     <groupId>com.fuxi.javaagent</groupId>
     <artifactId>jnotify</artifactId>
-    <version>1.4</version>
+    <version>1.4.1</version>
     <packaging>jar</packaging>
 
 </project>
