@@ -265,6 +265,27 @@ Object.defineProperty(global, 'CheckPointWebdav', {
     enumerable: true
 });
 
+var CheckPointSSRF = function () {
+    function CheckPointSSRF(data) {
+        _classCallCheck(this, CheckPointSSRF);
+
+        this.clazz = data.clazz;
+    }
+
+    _createClass(CheckPointSSRF, null, [{
+        key: 'name',
+        get: function get() {
+            return 'ssrf';
+        }
+    }]);
+
+    return CheckPointSSRF;
+}();
+Object.defineProperty(global, 'CheckPointSSRF', {
+    value: CheckPointSSRF,
+    enumerable: true
+});
+
 var CheckPointInclude = function () {
     function CheckPointInclude(data) {
         _classCallCheck(this, CheckPointInclude);

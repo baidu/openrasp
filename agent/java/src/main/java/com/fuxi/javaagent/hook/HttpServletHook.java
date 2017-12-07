@@ -59,9 +59,7 @@ public class HttpServletHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String name) {
-//        return "javax/servlet/http/HttpServlet".equals(name) ||
-//               "org/apache/jasper/servlet/JspServlet".equals(name);
-        return name.endsWith("Servlet");
+        return name.endsWith("http/HttpServlet") || name.endsWith("servlet/JspServlet");
     }
 
     /**

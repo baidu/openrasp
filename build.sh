@@ -63,12 +63,12 @@ log "[4] build OpenRasp"
 buildRasp
 
 changeDirectory $OUTPUT_ROOT/..
-target=rasp-any.tar.gz
+target=rasp-java.tar.gz
 tar -czvf $target $BASENAME || exit
 mv $target $BASE_DIR || exit
 log "Created $target"
 
-target=rasp-any.zip
+target=rasp-java.zip
 zip -r $target $BASENAME || exit
 mv $target $BASE_DIR || exit
 log "Created $target"

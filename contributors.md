@@ -1,13 +1,12 @@
 # Contributors
 
-### Developers (in alphabetical order)
+### Maintainers (in alphabetical order)
 
 * Cao Xinyu
 * Lan Yuhang
 * Li Xinkai
 * Song Yanjun
 * Tang Youyi
-* Zhu Ming
 
 ### Special thanks to the following people
 
@@ -17,4 +16,4 @@
 * Liu ZeWei
 * Ge YanPing
 * Guo YiPing
-
+* Zhu Ming
