@@ -143,6 +143,22 @@
                                     <pattern>log4j.configuration</pattern>
                                     <shadedPattern>log4j.rasp.configuration</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>org.abego</pattern>
+                                    <shadedPattern>com.fuxi.javaagent.abego</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.antlr</pattern>
+                                    <shadedPattern>com.fuxi.javaagent.antlr</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.stringtemplate</pattern>
+                                    <shadedPattern>com.fuxi.javaagent.stringtemplate</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>st4hidden.org.antlr</pattern>
+                                    <shadedPattern>com.fuxi.javaagent.st4hidden.org.antlr</shadedPattern>
+                                </relocation>
                             </relocations>
                         </configuration>
                     </execution>

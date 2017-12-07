@@ -31,6 +31,11 @@
 package com.fuxi.javaagent.hook;
 
 
+import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
+import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
+import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -79,7 +84,10 @@ public class SocketHook extends AbstractClassHook {
         try {
             if (address != null && address instanceof InetSocketAddress) {
                 String hostName = ((InetSocketAddress) address).getHostName();
-
+                JSContext cx = JSContextFactory.enterAndInitContext();
+                Scriptable params = cx.newObject(cx.getScope());
+                params.put("hostname", params, hostName);
+                HookHandler.doCheck(CheckParameter.Type.SSRF, params);
             }
         } catch (Exception e) {
             e.printStackTrace();

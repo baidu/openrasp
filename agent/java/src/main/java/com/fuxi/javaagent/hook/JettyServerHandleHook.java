@@ -44,7 +44,6 @@ import org.objectweb.asm.commons.Method;
  */
 public class JettyServerHandleHook extends AbstractClassHook {
 
-
     @Override
     public boolean isClassMatched(String className) {
         return className.equals("org/eclipse/jetty/server/handler/HandlerWrapper");
