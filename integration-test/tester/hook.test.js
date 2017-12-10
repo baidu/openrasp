@@ -44,7 +44,7 @@ describe(process.env['SERVER'] || 'server', function () {
             .match(/blocked/);
     });
     let checkPoints = ['command', 'deserialization', 'directory',
-        'ognl', 'readFile', 'request', 'writeFile', 'xxe', 'jstlImport', 'sqlite', 'postgresql', 'mysql'];
+        'ognl', 'readFile', 'request', 'writeFile', 'xxe', 'jstlImport', 'sqlite', 'postgresql', 'mysql','http-commonclient','http-httpclient','http-urlconnection'];
     checkPoints.forEach(point => {
         it(point, function () {
             return axios.get(point + '.jsp?test=a&test=b')
