@@ -31,6 +31,7 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.config.Config;
+import com.fuxi.javaagent.hook.file.FileInputStreamHook;
 import com.fuxi.javaagent.tool.Reflection;
 import org.apache.commons.io.FilenameUtils;
 import org.objectweb.asm.MethodVisitor;

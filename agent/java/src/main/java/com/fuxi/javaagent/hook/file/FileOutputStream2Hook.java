@@ -28,9 +28,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.hook;
+package com.fuxi.javaagent.hook.file;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.hook.AbstractClassHook;
 import com.fuxi.javaagent.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.plugin.js.engine.JSContext;
 import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
@@ -99,7 +100,7 @@ public class FileOutputStream2Hook extends AbstractClassHook {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(GETFIELD, "java/io/FileOutputStream", "closeLock", "Ljava/lang/Object;");
                         mv.visitVarInsn(ALOAD, 3);
-                        mv.visitMethodInsn(INVOKESTATIC, "com/fuxi/javaagent/HookHandler", "checkFileOutputStreamInit",
+                        mv.visitMethodInsn(INVOKESTATIC, "com/fuxi/javaagent/hook/file/FileOutputStream2Hook", "checkFileOutputStreamInit",
                                 "(Ljava/lang/Object;Ljava/lang/String;)V", false);
                     }
                     super.onMethodExit(opcode);
@@ -113,12 +114,24 @@ public class FileOutputStream2Hook extends AbstractClassHook {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, "java/io/FileOutputStream", "closeLock", "Ljava/lang/Object;");
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKESTATIC, "com/fuxi/javaagent/hook/FileOutputStream2Hook", "checkFileOutputStreamWrite",
+                    mv.visitMethodInsn(INVOKESTATIC, "com/fuxi/javaagent/hook/file/FileOutputStream2Hook", "checkFileOutputStreamWrite",
                             "(Ljava/lang/Object;[B)V", false);
                 }
             };
         }
         return mv;
+    }
+
+    /**
+     * 文件输出流的构造函数hook点
+     *
+     * @param closeLock 用于记录文件信息的锁对象
+     * @param path      文件路径
+     */
+    public static void checkFileOutputStreamInit(Object closeLock, String path) {
+        if (closeLock instanceof CustomLockObject && HookHandler.enableHook.get() && HookHandler.isEnableCurrThreadHook()) {
+            ((CustomLockObject) closeLock).setInfo(path);
+        }
     }
 
     /**

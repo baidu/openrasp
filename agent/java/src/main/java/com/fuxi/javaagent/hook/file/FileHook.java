@@ -28,13 +28,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.hook;
+package com.fuxi.javaagent.hook.file;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.hook.AbstractClassHook;
 import com.fuxi.javaagent.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.plugin.js.engine.JSContext;
 import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
-import com.fuxi.javaagent.tool.FileUtil;
 import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -46,10 +46,10 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Created by zhuming01 on 5/31/17.
+ * Created by zhuming01 on 5/16/17.
  * All rights reserved
  */
-public class FileInputStreamHook extends AbstractClassHook {
+public class FileHook extends AbstractClassHook {
     /**
      * (none-javadoc)
      *
@@ -57,7 +57,7 @@ public class FileInputStreamHook extends AbstractClassHook {
      */
     @Override
     public String getType() {
-        return "readFile";
+        return "directory";
     }
 
     /**
@@ -67,7 +67,7 @@ public class FileInputStreamHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "java/io/FileInputStream".equals(className);
+        return "java/io/File".equals(className);
     }
 
     /**
@@ -76,17 +76,14 @@ public class FileInputStreamHook extends AbstractClassHook {
      * @see com.fuxi.javaagent.hook.AbstractClassHook#hookMethod(int, String, String, String, String[], MethodVisitor)
      */
     @Override
-    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
-        if ("<init>".equals(name) && "(Ljava/io/File;)V".equals(desc)) {
+    public MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
+        if (name.equals("listFiles")) {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
-                public void onMethodExit(int opcode) {
-                    if (opcode == Opcodes.RETURN) {
-                        loadArg(0);
-                        invokeStatic(Type.getType(FileInputStreamHook.class),
-                                new Method("checkReadFile", "(Ljava/io/File;)V"));
-                    }
-                    super.onMethodExit(opcode);
+                protected void onMethodEnter() {
+                    loadThis();
+                    invokeStatic(Type.getType(FileHook.class),
+                            new Method("checkListFiles", "(Ljava/io/File;)V"));
                 }
             };
         }
@@ -94,26 +91,23 @@ public class FileInputStreamHook extends AbstractClassHook {
     }
 
     /**
-     * 文件读取hook点
+     * 列出文件列表方法hook点
      *
      * @param file 文件对象
      */
-    public static void checkReadFile(File file) {
+    public static void checkListFiles(File file) {
         if (file != null) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             params.put("path", params, file.getPath());
             try {
-                String path = file.getCanonicalPath();
-                if (path.endsWith(".class") || !file.exists()) {
-                    return;
-                }
-                params.put("realpath", params, FileUtil.getRealPath(file));
+                params.put("realpath", params, file.getCanonicalPath());
             } catch (IOException e) {
-                e.printStackTrace();
+                params.put("realpath", params, file.getAbsolutePath());
             }
 
-            HookHandler.doCheck(CheckParameter.Type.READFILE, params);
+            HookHandler.doCheck(CheckParameter.Type.DIRECTORY, params);
         }
     }
+
 }

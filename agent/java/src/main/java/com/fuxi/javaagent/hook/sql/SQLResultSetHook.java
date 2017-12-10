@@ -1,4 +1,4 @@
-package com.fuxi.javaagent.hook;
+package com.fuxi.javaagent.hook.sql;
 
 import com.fuxi.javaagent.HookHandler;
 import com.fuxi.javaagent.config.Config;
