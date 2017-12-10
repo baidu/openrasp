@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,26 +28,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.hook;
+package com.fuxi.javaagent.hook.file;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.hook.AbstractClassHook;
 import com.fuxi.javaagent.plugin.checker.CheckParameter;
-import com.fuxi.javaagent.plugin.checker.policy.SqlConnectionChecker;
-import com.fuxi.javaagent.tool.TimeUtils;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
+import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
+import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
-import java.util.HashMap;
-import java.util.Properties;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 /**
- * Created by lxk on 7/6/17.
+ * Created by zhuming01 on 5/5/17.
  * All rights reserved
  */
-public class SQLDriverManagerHook extends AbstractClassHook {
+public class DiskFileItemHook extends AbstractClassHook {
     /**
      * (none-javadoc)
      *
@@ -55,8 +57,9 @@ public class SQLDriverManagerHook extends AbstractClassHook {
      */
     @Override
     public String getType() {
-        return "sql";
+        return "fileUpload";
     }
+
 
     /**
      * (none-javadoc)
@@ -65,34 +68,32 @@ public class SQLDriverManagerHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "java/sql/DriverManager".equals(className);
+        return "org/apache/commons/fileupload/disk/DiskFileItem".equals(className);
     }
 
     /**
      * (none-javadoc)
      *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#hookMethod(int, String, String, String, String[], MethodVisitor)
+     * @see com.fuxi.javaagent.hook.AbstractClassHook#hookMethod(int, String, String, String, String[], MethodVisitor) (String)
      */
     @Override
-    public MethodVisitor hookMethod(int access, String name, String desc,
-                                    String signature, String[] exceptions, MethodVisitor mv) {
-        if (name.equals("getConnection") && desc.startsWith("(Ljava/lang/String;Ljava/util/Properties;"
-                + "Ljava/lang/Class")) {
+    public MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
+        if (name.equals("setHeaders")) {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
-                protected void onMethodEnter() {
-                    loadArg(0);
-                    loadArg(1);
-                    invokeStatic(Type.getType(SQLDriverManagerHook.class),
-                            new Method("checkSqlConnection", "(Ljava/lang/String;Ljava/util/Properties;)V"));
-                    invokeStatic(Type.getType(HookHandler.class),
-                            new Method("preShieldHook", "()V"));
-                }
+                protected void onMethodExit(int opcode) {
+                    loadThis();
+                    invokeInterface(Type.getType("org/apache/commons/fileupload/FileItem"),
+                            new Method("getName", "()Ljava/lang/String;"));
 
-                @Override
-                protected void onMethodExit(int i) {
-                    invokeStatic(Type.getType(HookHandler.class),
-                            new Method("postShieldHook", "()V"));
+                    loadThis();
+                    invokeInterface(Type.getType("org/apache/commons/fileupload/FileItem"),
+                            new Method("get", "()[B"));
+
+                    invokeStatic(Type.getType(DiskFileItemHook.class),
+                            new Method("checkFileUpload", "(Ljava/lang/String;[B)V"));
+
+                    super.onMethodExit(opcode);
                 }
             };
         }
@@ -100,18 +101,27 @@ public class SQLDriverManagerHook extends AbstractClassHook {
     }
 
     /**
-     * 检测sql连接规范
+     * 文件上传hook点
      *
-     * @param url        连接url
-     * @param properties 连接属性
+     * @param name    文件名
+     * @param content 文件数据
      */
-    public static void checkSqlConnection(String url, Properties properties) {
-        Long lastAlarmTime = SqlConnectionChecker.alarmTimeCache.get(url);
-        if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
-            HashMap<String, Object> params = new HashMap<String, Object>(4);
-            params.put("url", url);
-            params.put("properties", properties);
-            HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_SQL_CONNECTION, params);
+    public static void checkFileUpload(String name, byte[] content) {
+        if (name != null && content != null) {
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            params.put("filename", params, name);
+            try {
+                if (content.length > 4 * 1024) {
+                    content = Arrays.copyOf(content, 4 * 1024);
+                }
+                params.put("content", params, new String(content, "UTF-8"));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+                params.put("content", params, "[rasp error:" + e.getMessage() + "]");
+            }
+
+            HookHandler.doCheck(CheckParameter.Type.FILEUPLOAD, params);
         }
     }
 }

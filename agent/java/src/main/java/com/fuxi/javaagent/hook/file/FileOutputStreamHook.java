@@ -28,12 +28,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.hook;
+package com.fuxi.javaagent.hook.file;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.hook.AbstractClassHook;
 import com.fuxi.javaagent.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.plugin.js.engine.JSContext;
 import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
+import com.fuxi.javaagent.tool.FileUtil;
 import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -41,57 +43,59 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
+import java.io.File;
 
 /**
- * Created by zhuming01 on 5/5/17.
- * All rights reserved
+ * Created by lxk on 6/8/17.
  */
-public class DiskFileItemHook extends AbstractClassHook {
+public class FileOutputStreamHook extends AbstractClassHook {
     /**
      * (none-javadoc)
      *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#getType()
+     * @see AbstractClassHook#getType()
      */
     @Override
     public String getType() {
-        return "fileUpload";
+        return "writeFile";
     }
-
 
     /**
      * (none-javadoc)
      *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#isClassMatched(String)
+     * @see AbstractClassHook#isClassMatched(String)
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "org/apache/commons/fileupload/disk/DiskFileItem".equals(className);
+        return "java/io/FileOutputStream".equals(className);
+    }
+
+
+    /**
+     * (none-javadoc)
+     *
+     * @see AbstractClassHook#computeFrames()
+     */
+    @Override
+    protected boolean computeFrames() {
+        return true;
     }
 
     /**
      * (none-javadoc)
      *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#hookMethod(int, String, String, String, String[], MethodVisitor) (String)
+     * @see AbstractClassHook#hookMethod(int, String, String, String, String[], MethodVisitor)
      */
     @Override
-    public MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
-        if (name.equals("setHeaders")) {
+    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
+        if ("<init>".equals(name) && "(Ljava/io/File;Z)V".equals(desc)) {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
-                protected void onMethodExit(int opcode) {
-                    loadThis();
-                    invokeInterface(Type.getType("org/apache/commons/fileupload/FileItem"),
-                            new Method("getName", "()Ljava/lang/String;"));
-
-                    loadThis();
-                    invokeInterface(Type.getType("org/apache/commons/fileupload/FileItem"),
-                            new Method("get", "()[B"));
-
-                    invokeStatic(Type.getType(DiskFileItemHook.class),
-                            new Method("checkFileUpload", "(Ljava/lang/String;[B)V"));
-
+                public void onMethodExit(int opcode) {
+                    if (opcode == Opcodes.RETURN) {
+                        loadArg(0);
+                        invokeStatic(Type.getType(FileOutputStreamHook.class),
+                                new Method("checkWriteFile", "(Ljava/io/File;)V"));
+                    }
                     super.onMethodExit(opcode);
                 }
             };
@@ -100,27 +104,19 @@ public class DiskFileItemHook extends AbstractClassHook {
     }
 
     /**
-     * 文件上传hook点
+     * 写文件hook点
      *
-     * @param name    文件名
-     * @param content 文件数据
+     * @param file
      */
-    public static void checkFileUpload(String name, byte[] content) {
-        if (name != null && content != null) {
+    public static void checkWriteFile(File file) {
+        if (file != null) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
-            params.put("filename", params, name);
-            try {
-                if (content.length > 4 * 1024) {
-                    content = Arrays.copyOf(content, 4 * 1024);
-                }
-                params.put("content", params, new String(content, "UTF-8"));
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-                params.put("content", params, "[rasp error:" + e.getMessage() + "]");
-            }
-
-            HookHandler.doCheck(CheckParameter.Type.FILEUPLOAD, params);
+            params.put("name", params, file.getName());
+            params.put("realpath", params, FileUtil.getRealPath(file));
+            params.put("content", params, "");
+            HookHandler.doCheck(CheckParameter.Type.WRITEFILE, params);
         }
     }
+
 }
