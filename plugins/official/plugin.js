@@ -12,7 +12,7 @@ const clean = {
 }
 
 var forcefulBrowsing = {
-    dotFiles: /\.(7z|tar|gz|bz2|xz|rar|zip|sql|db)$/,
+    dotFiles: /\.(7z|tar|gz|bz2|xz|rar|zip|sql|db|sqlite)$/,
     nonUserDirectory: /^\/(proc|sys|root)/,
     unwantedFilenames: [
         // user files
@@ -65,6 +65,17 @@ function canonicalPath (path) {
 function basename (path) {
     var idx = path.lastIndexOf('/')
     return path.substr(idx + 1)
+}
+
+function ip2long(ipstr) {
+    var items  = ipstr.split('.')
+    var result = 0
+
+    for (var i = 0; i < items.length; i ++) {
+        result = (result << 8) + parseInt(items[i], 10)
+    }
+    return result >>> 0
+    return ip.split('.').reduce(function(ipInt, octet) { return (ipInt<<8) + parseInt(octet, 10)}, 0) >>> 0;
 }
 
 // 主要用于识别webshell里的文件管理器
@@ -145,6 +156,43 @@ plugin.register('readFile', function (params, context) {
         }
     }
 
+    return clean
+})
+
+plugin.register('ssrf', function (params, context) {
+    var hostname = params.hostname
+    var reason   = false
+
+    // 检查常见探测域名
+    if (hostname.endsWith('.xip.io') || hostname.endsWith('.burpcollaborator.net')) {
+        reason = '访问已知的内网探测域名'    
+    } 
+    // 检测AWS私有地址，如有误报可注释掉
+    else if (1 && hostname == '169.254.169.254') {        
+        reason = '尝试读取 AWS metadata'
+    }
+    // 检查混淆: 
+    // http://2130706433
+    // 
+    // 以下混淆方式没有检测
+    // http://0x7f.0x0.0x0.0x1
+    // http://0x7f.0.0.0
+    // http://0x7f001
+    else if (! isNaN(hostname)) {
+        reason = '尝试使用纯数字IP'
+    }
+    // 如果明确服务器不会访问内网地址，可以打开这个
+    else if (0) {
+        
+    }
+
+    if (reason) {
+        return {
+            action:    'block',
+            message:   'SSRF攻击: ' + reason,
+            confidence: 100
+        }
+    }
     return clean
 })
 
