@@ -221,6 +221,7 @@ plugin.register('include', function (params, context) {
     var items = params.url.split('://')
 
     // 必须有协议的情况下才能利用漏洞
+    // JSTL import 类型的插件回调，已经在Java层面做了过滤
     if (items.length != 2) {
         return clean
     }
