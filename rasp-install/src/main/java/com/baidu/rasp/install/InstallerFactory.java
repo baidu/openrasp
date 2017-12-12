@@ -12,8 +12,8 @@ import static com.baidu.rasp.RaspError.E10004;
  * All rights reserved
  */
 public abstract class InstallerFactory {
-    protected static final String TOMCAT = "tomcat";
-    protected static final String JBOSS = "jboss4-6";
+    protected static final String TOMCAT = "Tomcat";
+    protected static final String JBOSS = "JBoss 4-6";
 
     protected abstract Installer getInstaller(String serverName, String serverRoot);
 
@@ -30,7 +30,7 @@ public abstract class InstallerFactory {
             throw new RaspError(E10004 + serverRoot.getPath());
         }
         
-        System.out.println("Server type: " + serverName);
+        System.out.println("Detected application server type: " + serverName);
         return getInstaller(serverName, serverRoot.getAbsolutePath());
     }
 
