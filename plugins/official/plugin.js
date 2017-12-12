@@ -7,6 +7,7 @@
 //
 // CVE 漏洞覆盖说明
 // https://rasp.baidu.com/doc/usage/cve.html
+// 
 
 'use strict'
 var plugin  = new RASP('offical')
@@ -180,16 +181,16 @@ plugin.register('ssrf', function (params, context) {
     // 检查混淆: 
     // http://2130706433
     // 
-    // 以下混淆方式没有检测
+    // 以下混淆方式没有检测，容易误报
     // http://0x7f.0x0.0x0.0x1
-    // http://0x7f.0.0.0
-    // http://0x7f001
+    // http://0x7f.0.0.0    
     else if (! isNaN(hostname)) {
         reason = '尝试使用纯数字IP'
     }
-    // 如果明确服务器不会访问内网地址，可以打开这个
-    else if (0) {
-        
+    // 检查混淆: 
+    // http://0x7f001
+    else if (hostname.startsWith('0x') && hostname.indexOf('.') === -1) {
+        reason = '尝试使用16进制IP'
     }
 
     if (reason) {
