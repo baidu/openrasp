@@ -12,8 +12,6 @@ plugin.register('request', function(params, context) {
 
   if (! header['accept']) {
     reason = '缺少 Accept 请求头'
-  } else if (! header['content-type']) {
-    reason = '缺少 Content-Type 请求头'
   } else if (method != 'get' && method != 'post' && method != 'head') {
     reason = method.toUpperCase()
   }
