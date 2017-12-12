@@ -104,7 +104,7 @@ public class ReflectionHook extends AbstractClassHook {
                         params.put("clazz", params, reflectClassName);
                         params.put("method", params, reflectMethodName);
                         params.put("stack", params, array);
-                        HookHandler.doCheck(CheckParameter.Type.REFLECTION, params);
+                        HookHandler.doCheckWithoutRequest(CheckParameter.Type.REFLECTION, params);
                         break;
                     }
                 }

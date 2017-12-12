@@ -228,6 +228,7 @@ public class HookHandler {
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
     public static void doCheckWithoutRequest(CheckParameter.Type type, Object params) {
+        boolean enableHookCache = enableCurrThreadHook.get();
         try {
             enableCurrThreadHook.set(false);
             CheckParameter parameter = new CheckParameter(type, params);
@@ -238,7 +239,7 @@ public class HookHandler {
         } catch (Exception e) {
             LOGGER.warn("plugin check error: " + e.getMessage());
         } finally {
-            enableCurrThreadHook.set(true);
+            enableCurrThreadHook.set(enableHookCache);
         }
     }
 
