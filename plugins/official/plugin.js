@@ -176,6 +176,8 @@ plugin.register('ssrf', function (params, context) {
     // 
     // 以下混淆方式没有检测
     // http://0x7f.0x0.0x0.0x1
+    // http://0x7f.0.0.0
+    // http://0x7f001
     else if (! isNaN(hostname)) {
         reason = '尝试使用纯数字IP'
     }
