@@ -66,7 +66,7 @@ public abstract class BaseStandardInstaller implements Installer {
             File target = new File(dir + sep + "conf" + sep + "rasp.properties");
 
 
-            System.out.println("Genearting \"rasp.properties\"\n- " + target.getAbsolutePath());
+            System.out.println("Generating \"rasp.properties\"\n- " + target.getAbsolutePath());
             if (target.exists()) {
                 System.out.println("- Already exists, continuing ..");
                 return true;
