@@ -36,7 +36,7 @@ public abstract class BaseStandardInstaller implements Installer {
 
         if (!srcDir.getCanonicalPath().equals(installDir.getCanonicalPath())) {
             // 拷贝rasp文件夹
-            System.out.println("copy " + srcDir.getCanonicalPath() + " to " + installDir.getCanonicalPath());
+            System.out.println("Duplicating \"rasp\" directory\n- " + installDir.getCanonicalPath());
             FileUtils.copyDirectory(srcDir, installDir);
         }
 
@@ -52,12 +52,11 @@ public abstract class BaseStandardInstaller implements Installer {
         }
 
         // 修改服务器启动脚本
-        System.out.println("modify " + script.getCanonicalPath());
+        System.out.println("Updating startup script\n- " + script.getCanonicalPath());
         String original = read(script);
         String modified = modifyStartScript(original);
         write(script, modified);
-        System.out.println("install done!");
-        System.out.println(">>>please restart server<<<");
+        System.out.println("\nInstallation completed without errors.\nPlease restart application server to take effect.");
     }
 
 
@@ -65,8 +64,11 @@ public abstract class BaseStandardInstaller implements Installer {
         try {
             String sep = File.separator;
             File target = new File(dir + sep + "conf" + sep + "rasp.properties");
+
+
+            System.out.println("Generating \"rasp.properties\"\n- " + target.getAbsolutePath());
             if (target.exists()) {
-                System.out.println(target.getAbsolutePath() + " already exists, skipped.");
+                System.out.println("- Already exists, continuing ..");
                 return true;
             }
             System.out.println("create " + target.getAbsolutePath());
