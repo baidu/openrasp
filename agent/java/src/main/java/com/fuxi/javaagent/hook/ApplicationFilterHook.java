@@ -31,6 +31,8 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -63,8 +65,8 @@ public class ApplicationFilterHook extends AbstractClassHook {
                     loadThis();
                     loadArg(0);
                     loadArg(1);
-                    invokeStatic(Type.getType(HookHandler.class),
-                            new Method("checkFilterRequest",
+                    invokeStatic(Type.getType(ApplicationFilterHook.class),
+                            new Method("checkRequest",
                                     "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
                 }
 
@@ -72,4 +74,10 @@ public class ApplicationFilterHook extends AbstractClassHook {
         }
         return mv;
     }
+
+    public static void checkRequest(Object filter, Object request, Object response) {
+        HookHandler.checkFilterRequest(filter, request, response);
+        HookHandler.doCheck(CheckParameter.Type.REQUEST, JSContext.getUndefinedValue());
+    }
+
 }

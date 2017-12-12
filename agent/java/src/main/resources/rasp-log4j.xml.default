@@ -129,17 +129,17 @@
     <!--</appender>-->
 
 
-    <logger name="com.fuxi.javaagent.plugin.alarm" additivity="false">
+    <logger name="com.fuxi.javaagent.plugin.checker.alarm" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="ALARM"/>
     </logger>
 
-    <logger name="com.fuxi.javaagent.tool.security.policy_alarm" additivity="false">
+    <logger name="com.fuxi.javaagent.plugin.checker.policy_alarm" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="POLICY_ALARM"/>
     </logger>
 
-    <logger name="com.fuxi.javaagent.plugin.log" additivity="false">
+    <logger name="com.fuxi.javaagent.plugin.js.engine.log" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="PLUGIN"/>
     </logger>

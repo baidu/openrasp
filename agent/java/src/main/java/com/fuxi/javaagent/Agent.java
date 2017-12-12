@@ -31,7 +31,8 @@
 package com.fuxi.javaagent;
 
 import com.fuxi.javaagent.messaging.LogConfig;
-import com.fuxi.javaagent.plugin.PluginManager;
+import com.fuxi.javaagent.plugin.checker.CheckerManager;
+import com.fuxi.javaagent.plugin.js.engine.JsPluginManager;
 import com.fuxi.javaagent.tool.JarFileHelper;
 import com.fuxi.javaagent.transformer.CustomClassTransformer;
 import org.apache.log4j.Logger;
@@ -68,7 +69,8 @@ public class Agent {
             }
             readVersion();
             // 初始化插件系统
-            PluginManager.init();
+            JsPluginManager.init();
+            CheckerManager.init();
             initTransformer(inst);
             String message = "OpenRasp Initialized [" + projectVersion + " (build: GitCommit=" + gitCommit + " date="
                     + buildTime + ")]";

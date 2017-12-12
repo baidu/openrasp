@@ -136,4 +136,14 @@ plugin.register('include', function (params, context) {
     }
 });
 
+plugin.register('ssrf', function (params, context) {
+    checkContext(context);
+    plugin.log('ssrf', params);
+    if (params.hostname === '0x7f.0x0.0x0.0x1' && params.url === 'http://0x7f.0x0.0x0.0x1:8080/app') {
+        return {
+            action: 'block'
+        }
+    }
+});
+
 plugin.log('初始化成功');

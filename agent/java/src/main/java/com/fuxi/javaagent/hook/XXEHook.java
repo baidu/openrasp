@@ -31,6 +31,11 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
+import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
+import org.mozilla.javascript.Scriptable;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -53,7 +58,6 @@ public class XXEHook extends AbstractClassHook {
     };
 
     /**
-     *
      * @return 当前线程已触发检测的expandedSystemIds
      */
     public static HashSet<String> getLocalExpandedSystemIds() {
@@ -61,7 +65,7 @@ public class XXEHook extends AbstractClassHook {
     }
 
     /**
-     *  重置当前线程已触发检测的expandedSystemIds
+     * 重置当前线程已触发检测的expandedSystemIds
      */
     public static void resetLocalExpandedSystemIds() {
         localExpandedSystemIds.get().clear();
@@ -101,11 +105,26 @@ public class XXEHook extends AbstractClassHook {
                 @Override
                 protected void onMethodEnter() {
                     loadArg(3);
-                    invokeStatic(Type.getType(HookHandler.class),
+                    invokeStatic(Type.getType(XXEHook.class),
                             new Method("checkXXE", "(Ljava/lang/String;)V"));
                 }
             };
         }
         return mv;
+    }
+
+    /**
+     * xml语句解析hook点
+     *
+     * @param expandedSystemId
+     */
+    public static void checkXXE(String expandedSystemId) {
+        if (expandedSystemId != null && !XXEHook.getLocalExpandedSystemIds().contains(expandedSystemId)) {
+            XXEHook.getLocalExpandedSystemIds().add(expandedSystemId);
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable params = cx.newObject(cx.getScope());
+            params.put("entity", params, expandedSystemId);
+            HookHandler.doCheck(CheckParameter.Type.XXE, params);
+        }
     }
 }

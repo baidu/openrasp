@@ -32,6 +32,16 @@ package com.fuxi.javaagent.transformer;
 
 import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.hook.*;
+import com.fuxi.javaagent.hook.file.DiskFileItemHook;
+import com.fuxi.javaagent.hook.file.FileHook;
+import com.fuxi.javaagent.hook.file.FileInputStreamHook;
+import com.fuxi.javaagent.hook.file.FileOutputStreamHook;
+import com.fuxi.javaagent.hook.sql.SQLDriverManagerHook;
+import com.fuxi.javaagent.hook.sql.SQLResultSetHook;
+import com.fuxi.javaagent.hook.sql.SQLStatementHook;
+import com.fuxi.javaagent.hook.ssrf.CommonHttpClientHook;
+import com.fuxi.javaagent.hook.ssrf.HttpClientHook;
+import com.fuxi.javaagent.hook.ssrf.URLConnectionHook;
 import org.apache.log4j.Logger;
 
 import java.lang.instrument.ClassFileTransformer;
@@ -76,6 +86,9 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new CoyoteAdapterHook());
         addHook(new ProxyDirContextHook());
         addHook(new JstlImportHook());
+        addHook(new URLConnectionHook());
+        addHook(new CommonHttpClientHook());
+        addHook(new HttpClientHook());
     }
 
     private void addHook(AbstractClassHook hook) {
