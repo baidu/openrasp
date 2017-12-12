@@ -1,6 +1,12 @@
 //
-// OpenRASP 官方插件只是抛砖引玉，具体检测能力请根据业务来定制
+// OpenRASP 官方插件已经覆盖了一定的攻击场景，具体检测能力请根据业务来定制
+// 如果想了解具体能检测哪些攻击，覆盖哪些已知漏洞，请参考下面两个链接
 //
+// Web 攻击检测能力说明
+// https://rasp.baidu.com/doc/usage/web.html
+//
+// CVE 漏洞覆盖说明
+// https://rasp.baidu.com/doc/usage/cve.html
 
 'use strict'
 var plugin  = new RASP('offical')
