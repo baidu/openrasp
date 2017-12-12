@@ -70,7 +70,7 @@ public class HttpClientHook extends AbstractSSRFHook {
             if (uri != null) {
                 String url = uri.toString();
                 String hostName = uri.toURL().getHost();
-                checkHttpUrl(url, hostName);
+                checkHttpUrl(url, hostName,"http_client");
             }
         } catch (Throwable t) {
             HookHandler.LOGGER.warn(t.getMessage());

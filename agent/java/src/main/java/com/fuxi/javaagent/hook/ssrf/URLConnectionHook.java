@@ -76,7 +76,7 @@ public class URLConnectionHook extends AbstractSSRFHook {
             if (urlConnection != null) {
                 URL url = urlConnection.getURL();
                 if (url != null) {
-                    checkHttpUrl(url.toString(), urlConnection.getURL().getHost());
+                    checkHttpUrl(url.toString(), urlConnection.getURL().getHost(),"url_open_connection");
                 }
             }
         } catch (Exception e) {

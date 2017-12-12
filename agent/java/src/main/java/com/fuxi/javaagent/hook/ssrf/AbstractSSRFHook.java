@@ -49,11 +49,12 @@ public abstract class AbstractSSRFHook extends AbstractClassHook {
         return "ssrf";
     }
 
-    protected static void checkHttpUrl(String url, String hostName) {
+    protected static void checkHttpUrl(String url, String hostName,String function) {
         JSContext cx = JSContextFactory.enterAndInitContext();
         Scriptable params = cx.newObject(cx.getScope());
         params.put("url", params, url);
         params.put("hostname", params, hostName);
+        params.put("function", params, function);
         HookHandler.doCheck(CheckParameter.Type.SSRF, params);
     }
 

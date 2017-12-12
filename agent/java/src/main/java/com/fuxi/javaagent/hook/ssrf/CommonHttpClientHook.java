@@ -72,7 +72,7 @@ public class CommonHttpClientHook extends AbstractSSRFHook {
                 Object uri = Reflection.invokeMethod(httpMethod, "getURI", new Class[]{});
                 if (uri != null) {
                     String host = Reflection.invokeStringMethod(uri, "getHost", new Class[]{});
-                    checkHttpUrl(uri.toString(), host);
+                    checkHttpUrl(uri.toString(), host,"commons_http_client");
                 }
             }
         } catch (Throwable t) {
