@@ -68,13 +68,15 @@ public class CustomResponseScript extends FileScanListener {
         try {
             if (file.exists()) {
                 instance.setContent(FileUtils.readFileToString(file));
+            } else {
+                instance.setContent("");
+            }
+            if (file.getParentFile().exists()) {
                 if (watchId != null) {
                     FileScanMonitor.removeMonitor(watchId);
                 }
                 watchId = FileScanMonitor.addMonitor(
                         file.getParent(), instance);
-            } else {
-                instance.setContent("");
             }
         } catch (JNotifyException e) {
             throw new ConfigLoadException("add listener on " + file.getAbsolutePath() + " failed because:" + e.getMessage());
@@ -93,6 +95,11 @@ public class CustomResponseScript extends FileScanListener {
      * @param content 自定义页面内容
      */
     private CustomResponseScript(String content) {
+        File assetsDir = new File(Config.getConfig().getBaseDirectory() + File.separator
+                + CustomResponseScript.CUSTOM_RESPONSE_BASE_DIR);
+        if (!assetsDir.exists()) {
+            assetsDir.mkdir();
+        }
         this.content = content;
     }
 
