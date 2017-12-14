@@ -105,7 +105,7 @@ public class Reflection {
                 clazz = Class.forName(className);
             }
             return invokeMethod(null, clazz, methodName, paramTypes, parameters);
-        } catch (ClassNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
@@ -118,11 +118,7 @@ public class Reflection {
                 method.setAccessible(true);
             }
             return method.invoke(object, parameters);
-        } catch (IllegalAccessException e) {
-            LOGGER.warn(e.getMessage());
-        } catch (InvocationTargetException e) {
-            LOGGER.warn(e.getMessage());
-        } catch (NoSuchMethodException e) {
+        } catch (Exception e) {
             LOGGER.warn(e.getMessage());
         }
         return null;

@@ -44,6 +44,10 @@ import java.io.File;
  */
 public class FileScanMonitor {
 
+    static {
+        JNotify.init(Config.getConfig().getBaseDirectory());
+    }
+
     /**
      * 增加监视器
      *
@@ -59,8 +63,6 @@ public class FileScanMonitor {
         observer.addListener(listener);
         int mask = JNotify.FILE_CREATED | JNotify.FILE_DELETED
                 | JNotify.FILE_MODIFIED;
-
-        JNotify.init(Config.getConfig().getBaseDirectory());
         return JNotify.addWatch(path, mask, false, new FileEventListener(observer));
     }
 

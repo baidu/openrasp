@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,10 +28,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.hook;
+package com.fuxi.javaagent.hook.jetty;
 
-import com.fuxi.javaagent.HookHandler;
-import com.fuxi.javaagent.hook.catalina.ApplicationFilterHook;
+import com.fuxi.javaagent.hook.AbstractHttpOutputHook;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -39,56 +38,37 @@ import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
 /**
- * Created by zhuming01 on 5/4/17.
- * All rights reserved
+ * Created by tyy on 17-12-13.
+ *
+ * jetty 输出流关闭 hook 点
  */
-public class HttpServletHook extends AbstractClassHook {
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#getType()
-     */
+public class JettyHttpOutputHook extends AbstractHttpOutputHook {
     @Override
-    public String getType() {
-        return "request";
+    public boolean isClassMatched(String className) {
+        return "org/eclipse/jetty/server/HttpOutput".equals(className);
     }
 
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#isClassMatched(String)
-     */
     @Override
-    public boolean isClassMatched(String name) {
-        return name.endsWith("http/HttpServlet") || name.endsWith("servlet/JspServlet");
-    }
-
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#hookMethod(int, String, String, String, String[], MethodVisitor)
-     */
-    @Override
-    public MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
-        if (name.equals("service") && desc.equals("(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V")) {
+    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
+        if ("close".equals(name) && "()V".equals(desc)) {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
                 protected void onMethodEnter() {
                     loadThis();
-                    loadArg(0);
-                    loadArg(1);
-                    invokeStatic(Type.getType(ApplicationFilterHook.class),
-                            new Method("checkRequest", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
-                }
-
-                @Override
-                protected void onMethodExit(int opcode) {
-                    invokeStatic(Type.getType(HookHandler.class),
-                            new Method("onServiceExit", "()V"));
-                    super.onMethodExit(opcode);
+                    invokeStatic(Type.getType(JettyHttpOutputHook.class),
+                            new Method("appendResponseData", "(Ljava/lang/Object;)V"));
                 }
             };
         }
         return mv;
+    }
+
+    /**
+     * (none-javadoc)
+     *
+     * @see com.fuxi.javaagent.hook.AbstractHttpOutputHook#appendResponseData(Object, int) ()
+     */
+    public static void appendResponseData(Object output) {
+        appendResponseData(output, AbstractHttpOutputHook.JETTY_OUTPUT);
     }
 }
