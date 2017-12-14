@@ -91,10 +91,10 @@ public class TomcatSecurityChecker extends PolicyChecker {
      * 检测cookie的HttpOnly是否开启
      */
     private void checkHttpOnlyIsOpen(String tomcatBaseDir, List<EventInfo> infos) {
-        File contextFile = new File(tomcatBaseDir + File.separator + "conf/engine.xml");
+        File contextFile = new File(tomcatBaseDir + File.separator + "conf/context.xml");
         if (!(contextFile.exists() && contextFile.canRead())) {
             LOGGER.error(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "can not load file conf/engine.xml"));
+                    "can not load file conf/context.xml"));
             return;
         }
 
@@ -111,7 +111,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
             }
 
             if (!isHttpOnly) {
-                infos.add(new SecurityPolicyInfo(Type.COOKIE_HTTP_ONLY, "tomcat未在conf/engine.xml文件中配置全局httpOnly.", true));
+                infos.add(new SecurityPolicyInfo(Type.COOKIE_HTTP_ONLY, "tomcat未在conf/context.xml文件中配置全局httpOnly.", true));
             }
         }
     }

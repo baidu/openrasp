@@ -28,9 +28,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.hook;
+package com.fuxi.javaagent.hook.jetty;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.hook.AbstractClassHook;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -38,39 +39,43 @@ import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
 /**
- * Created by tyy on 9/22/17.
+ * Created by tyy on 9/25/17.
  *
- * jetty请求的hook点
+ * 获取 jetty 请求 body 的 hook 点
  */
-public class JettyServerHandleHook extends AbstractClassHook {
-
+public class JettyHttpInputHook extends AbstractClassHook {
     @Override
     public boolean isClassMatched(String className) {
-        return className.equals("org/eclipse/jetty/server/handler/HandlerWrapper");
+        return className.equals("org/eclipse/jetty/server/HttpInput");
     }
 
     @Override
     public String getType() {
-        return "request";
+        return "body";
     }
 
     @Override
-    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
-        if (name.equals("handle")) {
+    protected MethodVisitor hookMethod(int access, String name, final String desc, String signature, String[] exceptions, MethodVisitor mv) {
+        if (name.equals("read")) {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
-                protected void onMethodEnter() {
-                    loadThis();
-                    loadArg(2);
-                    loadArg(3);
-                    invokeStatic(Type.getType(ApplicationFilterHook.class),
-                            new Method("checkRequest", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
-                }
-
-                @Override
                 protected void onMethodExit(int opcode) {
-                    invokeStatic(Type.getType(HookHandler.class),
-                            new Method("onServiceExit", "()V"));
+                    if (opcode == Opcodes.IRETURN) {
+                        if (desc.equals("()I")) {
+                            dup();
+                            loadThis();
+                            invokeStatic(Type.getType(HookHandler.class),
+                                    new Method("onInputStreamRead", "(ILjava/lang/Object;)V"));
+                        } else if (desc.equals("([BII)I")) {
+                            dup();
+                            loadThis();
+                            loadArg(0);
+                            loadArg(1);
+                            loadArg(2);
+                            invokeStatic(Type.getType(HookHandler.class),
+                                    new Method("onInputStreamRead", "(ILjava/lang/Object;[BII)V"));
+                        }
+                    }
                     super.onMethodExit(opcode);
                 }
             };

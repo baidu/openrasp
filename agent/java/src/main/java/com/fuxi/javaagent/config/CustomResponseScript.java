@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,45 +30,59 @@
 
 package com.fuxi.javaagent.config;
 
-import com.fuxi.javaagent.Agent;
+import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
 import com.fuxi.javaagent.exception.ConfigLoadException;
+import com.fuxi.javaagent.tool.filemonitor.FileScanListener;
+import com.fuxi.javaagent.tool.filemonitor.FileScanMonitor;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
 
 /**
  * Created by tyy on 9/21/17.
+ *
  * 自定义向返回页面中插入的内容
  */
-public class CustomResponseScript {
+public class CustomResponseScript extends FileScanListener {
 
-    private static final String CUSTOM_REPONSE_BASE_DIR = "assets";
+    public static final String CUSTOM_RESPONSE_BASE_DIR = "assets";
 
-    private static final String CUSTOM_REPONSE_DEFAULT_NAME = "inject.html";
+    private static final String CUSTOM_RESPONSE_DEFAULT_NAME = "inject.js";
 
-    private static CustomResponseScript instance;
+    private static CustomResponseScript instance = new CustomResponseScript("");
+
+    private static Integer watchId = null;
 
     private String content;
 
     /**
-     * 加载自定义拦截返回内容
+     * 加载自定义要插入 html 页面的 js 检测脚本脚本
+     * 监控自定义文件的更新
      *
      * @param basePath 安装目录
      */
     public static synchronized void load(String basePath) {
+        File file = new File(basePath + File.separator + CUSTOM_RESPONSE_BASE_DIR +
+                File.separator + CUSTOM_RESPONSE_DEFAULT_NAME);
         try {
-            File file = new File(basePath + File.separator + CUSTOM_REPONSE_BASE_DIR +
-                    File.separator + CUSTOM_REPONSE_DEFAULT_NAME);
-            if (!file.exists()) {
-                return;
+            if (file.exists()) {
+                instance.setContent(FileUtils.readFileToString(file));
+                if (watchId != null) {
+                    FileScanMonitor.removeMonitor(watchId);
+                }
+                watchId = FileScanMonitor.addMonitor(
+                        file.getParent(), instance);
+            } else {
+                instance.setContent("");
             }
-            instance = new CustomResponseScript(FileUtils.readFileToString(file));
+        } catch (JNotifyException e) {
+            throw new ConfigLoadException("add listener on " + file.getAbsolutePath() + " failed because:" + e.getMessage());
         } catch (IOException e) {
-            throw new ConfigLoadException("Fail to extract " + CUSTOM_REPONSE_DEFAULT_NAME
+            throw new ConfigLoadException("Fail to extract " + CUSTOM_RESPONSE_DEFAULT_NAME
+                    + ", because of: " + e.getMessage());
+        } catch (Exception e) {
+            throw new ConfigLoadException("Fail to init custom script " + CUSTOM_RESPONSE_DEFAULT_NAME
                     + ", because of: " + e.getMessage());
         }
     }
@@ -85,18 +99,62 @@ public class CustomResponseScript {
     /**
      * 获取单例
      *
-     * @return
+     * @return 单例
      */
     public static CustomResponseScript getInstance() {
         return instance;
     }
 
-    public String getContent() {
+    /**
+     * 获取自定义脚本内容
+     *
+     * @return 脚本内容
+     */
+    public synchronized String getContent() {
         return content;
     }
 
-    public void setContent(String content) {
+    /**
+     * 设置自定义js脚本
+     *
+     * @param content js脚本内容
+     */
+    public synchronized void setContent(String content) {
         this.content = content;
     }
 
+    /**
+     * 通过文件设置自定义js脚本
+     * 如果文件存在设置为文件内容,如果文件不存在脚本内容设置为空字符串
+     *
+     * @param file
+     */
+    public void updateContentFormFile(File file) {
+        if (file.getName().equals(CUSTOM_RESPONSE_DEFAULT_NAME)) {
+            if (file.exists()) {
+                try {
+                    setContent(FileUtils.readFileToString(file));
+                } catch (IOException e) {
+                    Config.LOGGER.warn(file.getAbsoluteFile() + " update fail because:" + e.getMessage());
+                }
+            } else {
+                setContent("");
+            }
+        }
+    }
+
+    @Override
+    public void onFileCreate(File file) {
+        instance.updateContentFormFile(file);
+    }
+
+    @Override
+    public void onFileChange(File file) {
+        instance.updateContentFormFile(file);
+    }
+
+    @Override
+    public void onFileDelete(File file) {
+        instance.updateContentFormFile(file);
+    }
 }

@@ -41,9 +41,9 @@ import com.fuxi.javaagent.tool.Reflection;
 public class HttpServletResponse {
 
     public static final int BLOCK_STATUS_CODE = 400;
-    private static final String CONTENT_TYPE_HEADER_KEY = "Content-Type";
-    private static final String CONTENT_LENGTH_HEADER_KEY = "Content-Length";
-    private static final String CONTENT_TYPE_HTML_VALUE = "text/html";
+    public static final String CONTENT_TYPE_HEADER_KEY = "Content-Type";
+    public static final String CONTENT_LENGTH_HEADER_KEY = "Content-Length";
+    public static final String CONTENT_TYPE_HTML_VALUE = "text/html";
 
     private Object response;
 
@@ -107,9 +107,22 @@ public class HttpServletResponse {
      * @param key 响应头名称
      * @return 响应头值值
      */
-    public Object getHeader(String key) {
+    public String getHeader(String key) {
         if (response != null) {
-            return Reflection.invokeMethod(response, "getHeader", new Class[]{String.class}, key);
+            Object header = Reflection.invokeMethod(response, "getHeader", new Class[]{String.class}, key);
+            if (header != null) {
+                return header.toString();
+            }
+        }
+        return null;
+    }
+
+    public String getContentType() {
+        if (response != null) {
+            Object contentType = Reflection.invokeMethod(response, "getContentType", new Class[]{});
+            if (contentType != null) {
+                return contentType.toString();
+            }
         }
         return null;
     }

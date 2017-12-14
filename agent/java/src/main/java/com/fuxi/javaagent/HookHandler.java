@@ -78,7 +78,7 @@ public class HookHandler {
             return null;
         }
     };
-    private static ThreadLocal<HttpServletResponse> responseCache = new ThreadLocal<HttpServletResponse>() {
+    public static ThreadLocal<HttpServletResponse> responseCache = new ThreadLocal<HttpServletResponse>() {
         @Override
         protected HttpServletResponse initialValue() {
             return null;

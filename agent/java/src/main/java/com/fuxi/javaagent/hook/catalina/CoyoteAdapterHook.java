@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,10 +28,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.hook;
+package com.fuxi.javaagent.hook.catalina;
 
 import com.fuxi.javaagent.HookHandler;
-import com.fuxi.javaagent.hook.catalina.ApplicationFilterHook;
+import com.fuxi.javaagent.hook.AbstractClassHook;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -39,10 +39,10 @@ import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
 /**
- * Created by zhuming01 on 5/4/17.
+ * Created by zhuming01 on 6/23/17.
  * All rights reserved
  */
-public class HttpServletHook extends AbstractClassHook {
+public class CoyoteAdapterHook extends AbstractClassHook {
     /**
      * (none-javadoc)
      *
@@ -50,7 +50,7 @@ public class HttpServletHook extends AbstractClassHook {
      */
     @Override
     public String getType() {
-        return "request";
+        return "pre_request";
     }
 
     /**
@@ -59,33 +59,24 @@ public class HttpServletHook extends AbstractClassHook {
      * @see com.fuxi.javaagent.hook.AbstractClassHook#isClassMatched(String)
      */
     @Override
-    public boolean isClassMatched(String name) {
-        return name.endsWith("http/HttpServlet") || name.endsWith("servlet/JspServlet");
+    public boolean isClassMatched(String className) {
+        return className.endsWith("apache/catalina/connector/CoyoteAdapter");
     }
 
     /**
      * (none-javadoc)
      *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#hookMethod(int, String, String, String, String[], MethodVisitor)
+     * @see com.fuxi.javaagent.hook.AbstractClassHook#hookMethod(int, String, String, String, String[], MethodVisitor) (String)
      */
     @Override
-    public MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
-        if (name.equals("service") && desc.equals("(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V")) {
+    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions,
+                                       MethodVisitor mv) {
+        if ("service".equals(name)) {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
                 protected void onMethodEnter() {
-                    loadThis();
-                    loadArg(0);
-                    loadArg(1);
-                    invokeStatic(Type.getType(ApplicationFilterHook.class),
-                            new Method("checkRequest", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
-                }
-
-                @Override
-                protected void onMethodExit(int opcode) {
                     invokeStatic(Type.getType(HookHandler.class),
                             new Method("onServiceExit", "()V"));
-                    super.onMethodExit(opcode);
                 }
             };
         }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,9 +28,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.hook;
+package com.fuxi.javaagent.hook.catalina;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.hook.AbstractClassHook;
+import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -38,47 +41,44 @@ import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
 /**
- * Created by tyy on 9/25/17.
- *
- * 获取 jetty 请求 body 的 hook 点
+ * Created by tyy on 9/12/17.
+ * servlet过滤器hook类
  */
-public class JettyHttpInputHook extends AbstractClassHook {
+public class ApplicationFilterHook extends AbstractClassHook {
     @Override
     public boolean isClassMatched(String className) {
-        return className.equals("org/eclipse/jetty/server/HttpInput");
+        return className.endsWith("apache/catalina/core/ApplicationFilterChain");
     }
 
     @Override
     public String getType() {
-        return "body";
+        return "request";
     }
 
     @Override
-    protected MethodVisitor hookMethod(int access, String name, final String desc, String signature, String[] exceptions, MethodVisitor mv) {
-        if (name.equals("read")) {
+    protected MethodVisitor hookMethod(int access, String name, String desc, String signature,
+                                       String[] exceptions, MethodVisitor mv) {
+
+        if ("doFilter".equals(name)) {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
-                protected void onMethodExit(int opcode) {
-                    if (opcode == Opcodes.IRETURN) {
-                        if (desc.equals("()I")) {
-                            dup();
-                            loadThis();
-                            invokeStatic(Type.getType(HookHandler.class),
-                                    new Method("onInputStreamRead", "(ILjava/lang/Object;)V"));
-                        } else if (desc.equals("([BII)I")) {
-                            dup();
-                            loadThis();
-                            loadArg(0);
-                            loadArg(1);
-                            loadArg(2);
-                            invokeStatic(Type.getType(HookHandler.class),
-                                    new Method("onInputStreamRead", "(ILjava/lang/Object;[BII)V"));
-                        }
-                    }
-                    super.onMethodExit(opcode);
+                protected void onMethodEnter() {
+                    loadThis();
+                    loadArg(0);
+                    loadArg(1);
+                    invokeStatic(Type.getType(ApplicationFilterHook.class),
+                            new Method("checkRequest",
+                                    "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
                 }
+
             };
         }
         return mv;
     }
+
+    public static void checkRequest(Object filter, Object request, Object response) {
+        HookHandler.checkFilterRequest(filter, request, response);
+        HookHandler.doCheck(CheckParameter.Type.REQUEST, JSContext.getUndefinedValue());
+    }
+
 }

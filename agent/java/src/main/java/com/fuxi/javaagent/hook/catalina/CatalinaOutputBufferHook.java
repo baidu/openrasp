@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,9 +28,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.fuxi.javaagent.hook;
+package com.fuxi.javaagent.hook.catalina;
 
-import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.hook.AbstractHttpOutputHook;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -38,47 +38,39 @@ import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
 /**
- * Created by zhuming01 on 6/23/17.
- * All rights reserved
+ * Created by tyy on 17-12-11.
+ *
+ * catalina 输出流关闭 hook 点
  */
-public class CoyoteAdapterHook extends AbstractClassHook {
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#getType()
-     */
-    @Override
-    public String getType() {
-        return "pre_request";
-    }
-
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#isClassMatched(String)
-     */
+public class CatalinaOutputBufferHook extends AbstractHttpOutputHook {
     @Override
     public boolean isClassMatched(String className) {
-        return className.endsWith("apache/catalina/connector/CoyoteAdapter");
+        return "org/apache/catalina/connector/OutputBuffer".equals(className);
     }
 
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractClassHook#hookMethod(int, String, String, String, String[], MethodVisitor) (String)
-     */
+
     @Override
-    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions,
-                                       MethodVisitor mv) {
-        if ("service".equals(name)) {
+    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
+        if ("close".equals(name) && "()V".equals(desc)) {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
                 protected void onMethodEnter() {
-                    invokeStatic(Type.getType(HookHandler.class),
-                            new Method("onServiceExit", "()V"));
+                    loadThis();
+                    invokeStatic(Type.getType(CatalinaOutputBufferHook.class),
+                            new Method("appendResponseData", "(Ljava/lang/Object;)V"));
                 }
             };
         }
         return mv;
     }
+
+    /**
+     * (none-javadoc)
+     *
+     * @see com.fuxi.javaagent.hook.AbstractHttpOutputHook#appendResponseData(Object, int) ()
+     */
+    public static void appendResponseData(Object output) {
+        appendResponseData(output,AbstractHttpOutputHook.CATALINA_OUTPUT);
+    }
+
 }
