@@ -30,6 +30,10 @@
 
 package com.fuxi.javaagent.config;
 
+import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
+import com.fuxi.javaagent.exception.ConfigLoadException;
+import com.fuxi.javaagent.tool.filemonitor.FileScanListener;
+import com.fuxi.javaagent.tool.filemonitor.FileScanMonitor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -43,7 +47,7 @@ import java.util.Properties;
  * 项目配置类，通过解析conf/rasp.property文件来加载配置
  * 若没有找到配置文件使用默认值
  */
-public class Config {
+public class Config extends FileScanListener {
 
     public enum Item {
         PLUGIN_TIMEOUT_MILLIS("plugin.timeout.millis", "100"),
@@ -75,7 +79,7 @@ public class Config {
     }
 
     public static final int REFLECTION_STACK_START_INDEX = 0;
-    private static final Logger LOGGER = Logger.getLogger(Config.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(Config.class.getName());
     private static String baseDirectory;
 
     private int reflectionMaxStack;
@@ -108,6 +112,13 @@ public class Config {
         } catch (UnsupportedEncodingException e) {
             LOGGER.warn(e.getMessage());
             baseDirectory = new File(path).getParent();
+        }
+        CustomResponseScript.load(baseDirectory);
+        try {
+            FileScanMonitor.addMonitor(
+                    baseDirectory, ConfigHolder.instance);
+        } catch (JNotifyException e) {
+            throw new ConfigLoadException("add listener on " + baseDirectory + " failed because:" + e.getMessage());
         }
         LOGGER.info("baseDirectory: " + baseDirectory);
     }
@@ -178,6 +189,44 @@ public class Config {
         return baseDirectory + "/plugins";
     }
 
+    /**
+     * 获取自定义插入 html 页面的 js 脚本
+     *
+     * @return js脚本内容
+     */
+    public String getCustomResponseScript() {
+        return CustomResponseScript.getInstance() != null ? CustomResponseScript.getInstance().getContent() : null;
+    }
+
+    @Override
+    public void onDirectoryCreate(File file) {
+        if (file.getName().equals(CustomResponseScript.CUSTOM_RESPONSE_BASE_DIR)
+                && file.isDirectory()) {
+            CustomResponseScript.load(baseDirectory);
+        }
+    }
+
+    @Override
+    public void onDirectoryDelete(File file) {
+        if (file.getName().equals(CustomResponseScript.CUSTOM_RESPONSE_BASE_DIR)) {
+            CustomResponseScript.load(baseDirectory);
+        }
+    }
+
+    @Override
+    public void onFileCreate(File file) {
+        // ignore
+    }
+
+    @Override
+    public void onFileChange(File file) {
+        // ignore
+    }
+
+    @Override
+    public void onFileDelete(File file) {
+        // ignore
+    }
 
     //--------------------可以通过插件修改的配置项-----------------------------------
 
@@ -353,7 +402,7 @@ public class Config {
      *
      * @return ognl表达式最短长度
      */
-    public int getOgnlMinLength() {
+    public synchronized int getOgnlMinLength() {
         return ognlMinLength;
     }
 
@@ -362,7 +411,7 @@ public class Config {
      *
      * @param ognlMinLength ognl表达式最短长度
      */
-    public void setOgnlMinLength(String ognlMinLength) {
+    public synchronized void setOgnlMinLength(String ognlMinLength) {
         this.ognlMinLength = Integer.parseInt(ognlMinLength);
         if (this.ognlMinLength < 0) {
             this.ognlMinLength = 0;
