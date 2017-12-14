@@ -91,15 +91,25 @@ function ip2long(ipstr) {
 // 若有特例可调整
 // 可结合业务定制: e.g 不能超出应用根目录
 plugin.register('directory', function (params, context) {
-    var realpath = params.realpath
+    var path        = params.path
+    var realpath    = params.realpath
+    var appBasePath = context.appBasePath
 
     for (var i = 0; i < forcefulBrowsing.unwantedDirectory.length; i ++) {
         if (realpath == forcefulBrowsing.unwantedDirectory[i]) {
             return {
                 action:     'block',
-                message:    '疑似WebShell文件管理器 - 读取敏感根目录',
+                message:    '疑似WebShell文件管理器 - 读取敏感目录',
                 confidence: 100
             }
+        }
+    }
+
+    if (canonicalPath(path).indexOf('/../../') != -1 && realpath.indexOf(appBasePath) == -1) {
+        return {
+            action:     'log',
+            message:    '尝试列出Web目录以外的目录',
+            confidence: 90
         }
     }
 
