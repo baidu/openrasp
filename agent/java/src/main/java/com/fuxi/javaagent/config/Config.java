@@ -200,17 +200,12 @@ public class Config extends FileScanListener {
 
     @Override
     public void onDirectoryCreate(File file) {
-        if (file.getName().equals(CustomResponseScript.CUSTOM_RESPONSE_BASE_DIR)
-                && file.isDirectory()) {
-            CustomResponseScript.load(baseDirectory);
-        }
+        reloadCustomScript(file);
     }
 
     @Override
     public void onDirectoryDelete(File file) {
-        if (file.getName().equals(CustomResponseScript.CUSTOM_RESPONSE_BASE_DIR)) {
-            CustomResponseScript.load(baseDirectory);
-        }
+        reloadCustomScript(file);
     }
 
     @Override
@@ -226,6 +221,16 @@ public class Config extends FileScanListener {
     @Override
     public void onFileDelete(File file) {
         // ignore
+    }
+
+    private void reloadCustomScript(File assetsDir) {
+        try {
+            if (assetsDir.getName().equals(CustomResponseScript.CUSTOM_RESPONSE_BASE_DIR)) {
+                CustomResponseScript.load(baseDirectory);
+            }
+        } catch (Exception e) {
+            LOGGER.warn(e.getMessage());
+        }
     }
 
     //--------------------可以通过插件修改的配置项-----------------------------------
