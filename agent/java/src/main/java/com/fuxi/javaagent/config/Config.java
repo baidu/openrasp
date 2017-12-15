@@ -113,7 +113,7 @@ public class Config extends FileScanListener {
             LOGGER.warn(e.getMessage());
             baseDirectory = new File(path).getParent();
         }
-        CustomResponseScript.load(baseDirectory);
+        CustomResponseHtml.load(baseDirectory);
         try {
             FileScanMonitor.addMonitor(
                     baseDirectory, ConfigHolder.instance);
@@ -195,7 +195,7 @@ public class Config extends FileScanListener {
      * @return js脚本内容
      */
     public String getCustomResponseScript() {
-        return CustomResponseScript.getInstance() != null ? CustomResponseScript.getInstance().getContent() : null;
+        return CustomResponseHtml.getInstance() != null ? CustomResponseHtml.getInstance().getContent() : null;
     }
 
     @Override
@@ -225,8 +225,8 @@ public class Config extends FileScanListener {
 
     private void reloadCustomScript(File assetsDir) {
         try {
-            if (assetsDir.getName().equals(CustomResponseScript.CUSTOM_RESPONSE_BASE_DIR)) {
-                CustomResponseScript.load(baseDirectory);
+            if (assetsDir.getName().equals(CustomResponseHtml.CUSTOM_RESPONSE_BASE_DIR)) {
+                CustomResponseHtml.load(baseDirectory);
             }
         } catch (Exception e) {
             LOGGER.warn(e.getMessage());
