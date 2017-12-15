@@ -44,13 +44,13 @@ import java.io.IOException;
  *
  * 自定义向返回页面中插入的内容
  */
-public class CustomResponseScript extends FileScanListener {
+public class CustomResponseHtml extends FileScanListener {
 
     public static final String CUSTOM_RESPONSE_BASE_DIR = "assets";
 
-    private static final String CUSTOM_RESPONSE_DEFAULT_NAME = "inject.js";
+    private static final String CUSTOM_RESPONSE_DEFAULT_NAME = "inject.html";
 
-    private static CustomResponseScript instance = new CustomResponseScript("");
+    private static CustomResponseHtml instance = new CustomResponseHtml("");
 
     private static Integer watchId = null;
 
@@ -84,7 +84,7 @@ public class CustomResponseScript extends FileScanListener {
             throw new ConfigLoadException("Fail to extract " + CUSTOM_RESPONSE_DEFAULT_NAME
                     + ", because of: " + e.getMessage());
         } catch (Exception e) {
-            throw new ConfigLoadException("Fail to init custom script " + CUSTOM_RESPONSE_DEFAULT_NAME
+            throw new ConfigLoadException("Fail to init custom html " + CUSTOM_RESPONSE_DEFAULT_NAME
                     + ", because of: " + e.getMessage());
         }
     }
@@ -94,9 +94,9 @@ public class CustomResponseScript extends FileScanListener {
      *
      * @param content 自定义页面内容
      */
-    private CustomResponseScript(String content) {
+    private CustomResponseHtml(String content) {
         File assetsDir = new File(Config.getConfig().getBaseDirectory() + File.separator
-                + CustomResponseScript.CUSTOM_RESPONSE_BASE_DIR);
+                + CustomResponseHtml.CUSTOM_RESPONSE_BASE_DIR);
         if (!assetsDir.exists()) {
             assetsDir.mkdir();
         }
@@ -108,7 +108,7 @@ public class CustomResponseScript extends FileScanListener {
      *
      * @return 单例
      */
-    public static CustomResponseScript getInstance() {
+    public static CustomResponseHtml getInstance() {
         return instance;
     }
 

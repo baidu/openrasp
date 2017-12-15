@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,17 +68,21 @@ public abstract class AbstractHttpOutputHook extends AbstractClassHook {
                     contentType = response.getContentType();
                 }
                 if (contentType != null && contentType.contains(HttpServletResponse.CONTENT_TYPE_HTML_VALUE)) {
-                    String appendScript = Config.getConfig().getCustomResponseScript();
-                    if (!StringUtils.isEmpty(appendScript)) {
-                        String outputMethod = null;
-                        if (outputType == CATALINA_OUTPUT) {
-                            outputMethod = "write";
-                        } else if (outputType == JETTY_OUTPUT) {
-                            outputMethod = "print";
-                        }
-                        if (outputMethod != null) {
-                            Reflection.invokeMethod(output, outputMethod, new Class[]{String.class},
-                                    "</script><script>" + appendScript + "</script>");
+                    String injectPathPrefix = Config.getConfig().getInjectUrlPrefix();
+                    if (!StringUtils.isEmpty(injectPathPrefix)) {
+                        if (HookHandler.requestCache.get().getRequestURL().toString().startsWith(injectPathPrefix)) {
+                            String appendHtml = Config.getConfig().getCustomResponseScript();
+                            if (!StringUtils.isEmpty(appendHtml)) {
+                                String outputMethod = null;
+                                if (outputType == CATALINA_OUTPUT) {
+                                    outputMethod = "write";
+                                } else if (outputType == JETTY_OUTPUT) {
+                                    outputMethod = "print";
+                                }
+                                if (outputMethod != null) {
+                                    Reflection.invokeMethod(output, outputMethod, new Class[]{String.class}, appendHtml);
+                                }
+                            }
                         }
                     }
                 }
