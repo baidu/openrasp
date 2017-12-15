@@ -57,40 +57,39 @@ public abstract class AbstractHttpOutputHook extends AbstractClassHook {
      * @param output 输出流
      */
     public static void appendResponseData(Object output, int outputType) {
-        boolean enableHookCache = HookHandler.isEnableCurrThreadHook();
-        try {
-            HookHandler.disableCurrThreadHook();
-            Boolean isClosed = (Boolean) Reflection.invokeMethod(output, "isClosed", new Class[]{});
-            if (isClosed != null && !isClosed) {
-                HttpServletResponse response = HookHandler.responseCache.get();
-                String contentType = null;
-                if (response != null) {
-                    contentType = response.getContentType();
-                }
-                if (contentType != null && contentType.contains(HttpServletResponse.CONTENT_TYPE_HTML_VALUE)) {
-                    String injectPathPrefix = Config.getConfig().getInjectUrlPrefix();
-                    if (!StringUtils.isEmpty(injectPathPrefix)) {
-                        if (HookHandler.requestCache.get().getRequestURL().toString().startsWith(injectPathPrefix)) {
-                            String appendHtml = Config.getConfig().getCustomResponseScript();
-                            if (!StringUtils.isEmpty(appendHtml)) {
-                                String outputMethod = null;
-                                if (outputType == CATALINA_OUTPUT) {
-                                    outputMethod = "write";
-                                } else if (outputType == JETTY_OUTPUT) {
-                                    outputMethod = "print";
-                                }
-                                if (outputMethod != null) {
-                                    Reflection.invokeMethod(output, outputMethod, new Class[]{String.class}, appendHtml);
+        if (HookHandler.enableHook.get() && HookHandler.isEnableCurrThreadHook()) {
+            try {
+                HookHandler.disableCurrThreadHook();
+                Boolean isClosed = (Boolean) Reflection.invokeMethod(output, "isClosed", new Class[]{});
+                if (isClosed != null && !isClosed) {
+                    HttpServletResponse response = HookHandler.responseCache.get();
+                    String contentType = null;
+                    if (response != null) {
+                        contentType = response.getContentType();
+                    }
+                    if (contentType != null && contentType.contains(HttpServletResponse.CONTENT_TYPE_HTML_VALUE)) {
+                        String injectPathPrefix = Config.getConfig().getInjectUrlPrefix();
+                        if (!StringUtils.isEmpty(injectPathPrefix)) {
+                            if (HookHandler.requestCache.get().getRequestURL().toString().startsWith(injectPathPrefix)) {
+                                String appendHtml = Config.getConfig().getCustomResponseScript();
+                                if (!StringUtils.isEmpty(appendHtml)) {
+                                    String outputMethod = null;
+                                    if (outputType == CATALINA_OUTPUT) {
+                                        outputMethod = "write";
+                                    } else if (outputType == JETTY_OUTPUT) {
+                                        outputMethod = "print";
+                                    }
+                                    if (outputMethod != null) {
+                                        response.sendContent(appendHtml, false);
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (enableHookCache) {
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
                 HookHandler.enableCurrThreadHook();
             }
         }

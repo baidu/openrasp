@@ -68,13 +68,6 @@ public class JettyServerHandleHook extends AbstractClassHook {
                     invokeStatic(Type.getType(ApplicationFilterHook.class),
                             new Method("checkRequest", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
                 }
-
-                @Override
-                protected void onMethodExit(int opcode) {
-                    invokeStatic(Type.getType(HookHandler.class),
-                            new Method("onServiceExit", "()V"));
-                    super.onMethodExit(opcode);
-                }
             };
         }
         return mv;

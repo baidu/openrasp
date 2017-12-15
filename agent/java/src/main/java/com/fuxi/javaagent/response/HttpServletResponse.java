@@ -179,7 +179,7 @@ public class HttpServletResponse {
 
                 resetBuffer();
                 setIntHeader(CONTENT_LENGTH_HEADER_KEY, script.getBytes().length);
-                sendErrorScript(script);
+                sendContent(script, true);
             } catch (Exception e) {
                 //ignore
             }
@@ -189,16 +189,18 @@ public class HttpServletResponse {
     /**
      * 发送自定义错误处理脚本
      */
-    private void sendErrorScript(String script) {
+    public void sendContent(String content, boolean close) {
         Object printer = null;
 
         printer = Reflection.invokeMethod(response, "getWriter", new Class[]{});
         if (printer == null) {
             printer = Reflection.invokeMethod(response, "getOutputStream", new Class[]{});
         }
-        Reflection.invokeMethod(printer, "print", new Class[]{String.class}, script);
+        Reflection.invokeMethod(printer, "print", new Class[]{String.class}, content);
         Reflection.invokeMethod(printer, "flush", new Class[]{});
-        Reflection.invokeMethod(printer, "close", new Class[]{});
+        if (close) {
+            Reflection.invokeMethod(printer, "close", new Class[]{});
+        }
     }
 
 }
