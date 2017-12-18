@@ -451,6 +451,7 @@ public class Config extends FileScanListener {
 
     public boolean setConfig(String key, String value) {
         try {
+            boolean hitted = true;
             if (Item.BLOCK_URL.key.equals(key)) {
                 setBlockUrl(value);
             } else if (Item.BODY_MAX_BYTES.key.equals(key)) {
@@ -475,6 +476,11 @@ public class Config extends FileScanListener {
                 setSqlSlowQueryMinCount(value);
             } else if (Item.REFLECTION_MONITOR.key.equals(key)) {
                 setReflectionMonitorMethod(value);
+            } else {
+                hitted = false;
+            }
+            if (hitted) {
+                LOGGER.info("configuration item \"" + key + "\" changed to \"" + value + "\"");
             }
         } catch (Exception e) {
             LOGGER.info(e.getMessage());
