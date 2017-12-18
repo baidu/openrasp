@@ -96,7 +96,7 @@ var algorithmConfig = {
     },
     'sqli_policy': {
         action:             'block',
-        feature:            ['stacked_query', 'no_hex', 'constant_compare', 'version_comment'],
+        feature:            ['stacked_query', 'no_hex', 'constant_compare', 'version_comment', 'function_blacklist'],
         function_blacklist: ['load_file', 'benchmark', 'pg_sleep', 'sleep']
     },
     'ssrf_aws': {
