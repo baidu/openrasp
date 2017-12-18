@@ -85,6 +85,35 @@ function ip2long(ipstr) {
     return ip.split('.').reduce(function(ipInt, octet) { return (ipInt<<8) + parseInt(octet, 10)}, 0) >>> 0;
 }
 
+// 在这里配置SQLi/SSRF检测逻辑是否开启
+// 为了提高性能，这些检测逻辑均在在 java/php 层面实现
+var algorithmConfig = {
+    'sqli_userinput': {
+        action: 'block'
+    },
+    'sqli_sqlmanager': {
+        action: 'block'
+    },
+    'sqli_policy': {
+        action:             'block',
+        feature:            ['stacked_query', 'no_hex', 'constant_compare', 'version_comment'],
+        function_blacklist: ['load_file', 'benchmark', 'pg_sleep', 'sleep']
+    },
+    'ssrf_aws': {
+        action: 'block'
+    },
+    'ssrf_common': {
+        action: 'block'
+    },
+    'ssrf_obfuscate': {
+        action: 'block'
+    },
+    'ssrf_intranet': {
+        action: 'ignore'
+    }
+}
+
+
 // 主要用于识别webshell里的文件管理器
 // 通常程序不会主动列目录或者查看敏感目录，e.g /home /etc /var/log 等等
 // 
