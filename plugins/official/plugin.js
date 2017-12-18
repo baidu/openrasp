@@ -115,7 +115,7 @@ var algorithmConfig = {
         action: 'ignore'
     }
 }
-plugin.config('algorithmConfig', JSON.stringify(algorithmConfig))
+RASP.config('algorithmConfig', JSON.stringify(algorithmConfig))
 
 // 主要用于识别webshell里的文件管理器
 // 通常程序不会主动列目录或者查看敏感目录，e.g /home /etc /var/log 等等
