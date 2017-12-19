@@ -23,8 +23,10 @@ import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -236,7 +238,7 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
             target.delete();
         }
 
-        File file = new File(fileName);
+        final File file = new File(fileName);
         boolean result = file.renameTo(target);
         if(result) {
             LogLog.debug(fileName +" -> "+ scheduledFilename);
@@ -244,11 +246,35 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
             LogLog.error("Failed to rename ["+fileName+"] to ["+scheduledFilename+"].");
         }
 
-        String removeFilename = fileName+sdf.format(new Date(rc.getRemoveMillis(now, maxBackupIndex)));
-        File removeTarget  = new File(removeFilename);
-        if (removeTarget.exists()) {
-            removeTarget.delete();
-            LogLog.debug("remove " + removeFilename);
+        File parent = file.getParentFile();
+        LogLog.debug("roll over folder -> "+ parent.getAbsolutePath());
+        final Date removeDate = new Date(rc.getRemoveMillis(now, maxBackupIndex));
+        String[] removedFiles = parent.list(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                String logFilename = file.getName();
+                if (name.startsWith(logFilename)) {
+                    String patternSuffix = name.substring(logFilename.length());
+                    try {
+                        Date parsedDate = sdf.parse(patternSuffix);
+                        if (!parsedDate.after(removeDate)
+                                && sdf.format(parsedDate).equals(patternSuffix)) {
+                            return true;
+                        }
+                    } catch (ParseException e) {
+                        //parse pattern suffix error
+                    }
+                }
+                return false;
+            }
+        });
+
+        for(int i = 0; i < removedFiles.length; ++i) {
+            File removeTarget  = new File(parent, removedFiles[i]);
+            if (removeTarget.exists()) {
+                removeTarget.delete();
+                LogLog.debug("remove " + removedFiles[i]);
+            }
         }
 
         try {
