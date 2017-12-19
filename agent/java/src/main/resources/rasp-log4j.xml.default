@@ -11,44 +11,48 @@
         </layout>
     </appender>
 
-    <appender name="ALARM" class="com.fuxi.javaagent.log4j.DailyRollingFileAppender">
+    <appender name="ALARM" class="com.fuxi.javaagent.messaging.OpenraspDailyRollingFileAppender">
         <errorHandler class="com.fuxi.javaagent.log4j.helpers.OnlyOnceErrorHandler"/>
         <param name="File" value="[[TARGET PATH]]/logs/alarm/alarm.log"/>
         <param name="Append" value="true"/>
         <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <!--<param name="MaxBackupIndex" value="30"/>-->
         <param name="encoding" value="UTF-8"/>
         <layout class="com.fuxi.javaagent.log4j.PatternLayout">
             <param name="ConversionPattern" value="%m%n"/>
         </layout>
     </appender>
 
-    <appender name="POLICY_ALARM" class="com.fuxi.javaagent.log4j.DailyRollingFileAppender">
+    <appender name="POLICY_ALARM" class="com.fuxi.javaagent.messaging.OpenraspDailyRollingFileAppender">
         <errorHandler class="com.fuxi.javaagent.log4j.helpers.OnlyOnceErrorHandler"/>
         <param name="File" value="[[TARGET PATH]]/logs/policy_alarm/policy_alarm.log"/>
         <param name="Append" value="true"/>
         <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <!--<param name="MaxBackupIndex" value="30"/>-->
         <param name="encoding" value="UTF-8"/>
         <layout class="com.fuxi.javaagent.log4j.PatternLayout">
             <param name="ConversionPattern" value="%m%n"/>
         </layout>
     </appender>
 
-    <appender name="PLUGIN" class="com.fuxi.javaagent.log4j.DailyRollingFileAppender">
+    <appender name="PLUGIN" class="com.fuxi.javaagent.messaging.OpenraspDailyRollingFileAppender">
         <errorHandler class="com.fuxi.javaagent.log4j.helpers.OnlyOnceErrorHandler"/>
         <param name="File" value="[[TARGET PATH]]/logs/plugin/plugin.log"/>
         <param name="Append" value="true"/>
         <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <!--<param name="MaxBackupIndex" value="30"/>-->
         <param name="encoding" value="UTF-8"/>
         <layout class="com.fuxi.javaagent.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d %-5p [%t][%c] %m%n"/>
         </layout>
     </appender>
 
-    <appender name="RASP" class="com.fuxi.javaagent.log4j.DailyRollingFileAppender">
+    <appender name="RASP" class="com.fuxi.javaagent.messaging.OpenraspDailyRollingFileAppender">
         <errorHandler class="com.fuxi.javaagent.log4j.helpers.OnlyOnceErrorHandler"/>
         <param name="File" value="[[TARGET PATH]]/logs/rasp/rasp.log"/>
         <param name="Append" value="true"/>
         <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <!--<param name="MaxBackupIndex" value="30"/>-->
         <param name="encoding" value="UTF-8"/>
         <layout class="com.fuxi.javaagent.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d %-5p [%t][%c] %m%n"/>
