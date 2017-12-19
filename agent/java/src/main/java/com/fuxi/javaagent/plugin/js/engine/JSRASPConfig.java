@@ -44,7 +44,7 @@ public class JSRASPConfig extends BaseFunction {
         }
         String configKey = (String) args[0];
         String configValue = (String) args[1];
-        return Config.getConfig().setConfig(configKey, configValue);
+        return Config.getConfig().setConfig(configKey, configValue, false);
     }
 
     /**

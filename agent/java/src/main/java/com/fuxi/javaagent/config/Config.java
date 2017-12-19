@@ -135,8 +135,7 @@ public class Config extends FileScanListener {
     private void setConfigFromProperties(Item item, Properties properties) {
         String key = item.key;
         String value = properties.getProperty(item.key, item.defaultValue);
-        setConfig(key, value);
-        LOGGER.info(item.key + ": " + value);
+        setConfig(key, value, true);
     }
 
     private void handleException(String message, Exception e) {
@@ -449,7 +448,7 @@ public class Config extends FileScanListener {
 
     //--------------------------统一的配置处理------------------------------------
 
-    public boolean setConfig(String key, String value) {
+    public boolean setConfig(String key, String value, boolean isInit) {
         try {
             boolean hitted = true;
             if (Item.BLOCK_URL.key.equals(key)) {
@@ -480,7 +479,11 @@ public class Config extends FileScanListener {
                 hitted = false;
             }
             if (hitted) {
-                LOGGER.info("configuration item \"" + key + "\" changed to \"" + value + "\"");
+                if (isInit) {
+                    LOGGER.info(key + ": " + value);
+                } else {
+                    LOGGER.info("configuration item \"" + key + "\" changed to \"" + value + "\"");
+                }
             }
         } catch (Exception e) {
             LOGGER.info(e.getMessage());
