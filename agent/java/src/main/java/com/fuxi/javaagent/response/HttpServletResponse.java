@@ -26,7 +26,7 @@ import com.fuxi.javaagent.tool.Reflection;
  */
 public class HttpServletResponse {
 
-    public static final int BLOCK_STATUS_CODE = 400;
+    private static final int REDIRECT_STATUS_CODE = 302;
     public static final String CONTENT_TYPE_HEADER_KEY = "Content-Type";
     public static final String CONTENT_LENGTH_HEADER_KEY = "Content-Length";
     public static final String CONTENT_TYPE_HTML_VALUE = "text/html";
@@ -153,18 +153,22 @@ public class HttpServletResponse {
     public void sendError() {
         if (response != null) {
             try {
-                setHeader(CONTENT_TYPE_HEADER_KEY, CONTENT_TYPE_HTML_VALUE);
-                Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, BLOCK_STATUS_CODE);
-
+                int statusCode = Config.getConfig().getBlockStatusCode();
                 String blockUrl = Config.getConfig().getBlockUrl();
+                boolean isCommitted = (Boolean) Reflection.invokeMethod(response, "isCommitted", new Class[]{});
                 if (!blockUrl.contains("?")) {
                     String blockParam = "?request_id=" + HookHandler.requestCache.get().getRequestId();
                     blockUrl += blockParam;
                 }
                 String script = "</script><script>location.href=\"" + blockUrl + "\"</script>";
-
+                if (!isCommitted) {
+                    Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, statusCode);
+                    if (statusCode >= 300 && statusCode <= 399) {
+                        setHeader("Location", blockUrl);
+                    }
+                    setIntHeader(CONTENT_LENGTH_HEADER_KEY, script.getBytes().length);
+                }
                 resetBuffer();
-                setIntHeader(CONTENT_LENGTH_HEADER_KEY, script.getBytes().length);
                 sendContent(script, true);
             } catch (Exception e) {
                 //ignore

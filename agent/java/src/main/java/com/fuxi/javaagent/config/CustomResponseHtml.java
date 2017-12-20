@@ -70,6 +70,7 @@ public class CustomResponseHtml extends FileScanListener {
             throw new ConfigLoadException("Fail to extract " + CUSTOM_RESPONSE_DEFAULT_NAME
                     + ", because of: " + e.getMessage());
         } catch (Exception e) {
+            e.printStackTrace();
             throw new ConfigLoadException("Fail to init custom html " + CUSTOM_RESPONSE_DEFAULT_NAME
                     + ", because of: " + e.getMessage());
         }

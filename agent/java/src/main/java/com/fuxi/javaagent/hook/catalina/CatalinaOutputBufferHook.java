@@ -29,11 +29,11 @@ import org.objectweb.asm.commons.Method;
  * catalina 输出流关闭 hook 点
  */
 public class CatalinaOutputBufferHook extends AbstractHttpOutputHook {
+
     @Override
     public boolean isClassMatched(String className) {
         return "org/apache/catalina/connector/OutputBuffer".equals(className);
     }
-
 
     @Override
     protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
@@ -42,21 +42,12 @@ public class CatalinaOutputBufferHook extends AbstractHttpOutputHook {
                 @Override
                 protected void onMethodEnter() {
                     loadThis();
-                    invokeStatic(Type.getType(CatalinaOutputBufferHook.class),
+                    invokeStatic(Type.getType(AbstractHttpOutputHook.class),
                             new Method("appendResponseData", "(Ljava/lang/Object;)V"));
                 }
             };
         }
         return mv;
-    }
-
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractHttpOutputHook#appendResponseData(Object, int) ()
-     */
-    public static void appendResponseData(Object output) {
-        appendResponseData(output,AbstractHttpOutputHook.CATALINA_OUTPUT);
     }
 
 }

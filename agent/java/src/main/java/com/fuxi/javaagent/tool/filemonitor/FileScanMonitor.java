@@ -31,7 +31,7 @@ import java.io.File;
 public class FileScanMonitor {
 
     static {
-        JNotify.init(Config.getConfig().getBaseDirectory());
+        JNotify.init(Config.baseDirectory);
     }
 
     /**

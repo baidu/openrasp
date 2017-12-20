@@ -28,7 +28,7 @@ import org.objectweb.asm.commons.Method;
  * Created by zhuming01 on 7/5/17.
  * All rights reserved
  */
-public class CoyoteInputStreamHook extends AbstractClassHook {
+public class CatalinaInputBufferHook extends AbstractClassHook {
     /**
      * (none-javadoc)
      *
@@ -46,7 +46,7 @@ public class CoyoteInputStreamHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "org/apache/catalina/connector/CoyoteInputStream".equals(className);
+        return "org/apache/catalina/connector/InputBuffer".equals(className);
     }
 
     /**
@@ -57,23 +57,26 @@ public class CoyoteInputStreamHook extends AbstractClassHook {
     @Override
     protected MethodVisitor hookMethod(int access, final String name, final String desc, String signature,
                                        String[] exceptions, MethodVisitor mv) {
-        if (name.equals("read")) {
+        if (name.equals("readBytes") && desc.equals("()I")) {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
                 protected void onMethodExit(int opcode) {
                     if (opcode == Opcodes.IRETURN) {
-                        if (desc.equals("()I")) {
-                            dup();
-                            loadThis();
-                            invokeStatic(Type.getType(HookHandler.class),
-                                    new Method("onInputStreamRead", "(ILjava/lang/Object;)V"));
-                        } else if (desc.equals("([B)I")) {
-                            dup();
-                            loadThis();
-                            loadArg(0);
-                            invokeStatic(Type.getType(HookHandler.class),
-                                    new Method("onInputStreamRead", "(ILjava/lang/Object;[B)V"));
-                        } else if (desc.equals("([BII)I")) {
+                        dup();
+                        loadThis();
+                        invokeStatic(Type.getType(HookHandler.class),
+                                new Method("onInputStreamRead", "(ILjava/lang/Object;)V"));
+                    }
+                    super.onMethodExit(opcode);
+                }
+            };
+        }
+        if (name.equals("read")) {
+            return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
+                @Override
+                protected void onMethodExit(int opcode) {
+                    if (desc.equals("([BII)I")) {
+                        if (opcode == Opcodes.IRETURN) {
                             dup();
                             loadThis();
                             loadArg(0);
@@ -82,6 +85,8 @@ public class CoyoteInputStreamHook extends AbstractClassHook {
                             invokeStatic(Type.getType(HookHandler.class),
                                     new Method("onInputStreamRead", "(ILjava/lang/Object;[BII)V"));
                         }
+                    } else if (desc.equals("()I")) {
+
                     }
                     super.onMethodExit(opcode);
                 }
@@ -89,4 +94,5 @@ public class CoyoteInputStreamHook extends AbstractClassHook {
         }
         return mv;
     }
+
 }

@@ -48,7 +48,8 @@ public class Config extends FileScanListener {
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
         SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
         REFLECTION_MONITOR("reflection.monitor",
-                "java.lang.Runtime.getRuntime,java.lang.Runtime.exec,java.lang.ProcessBuilder.start");
+                "java.lang.Runtime.getRuntime,java.lang.Runtime.exec,java.lang.ProcessBuilder.start"),
+        BLOCK_STATUS_CODE("block.status.code", "302");
 
         Item(String key, String defaultValue) {
             this.key = key;
@@ -64,13 +65,17 @@ public class Config extends FileScanListener {
         }
     }
 
+    private static final String CONFIG_DIR_NAME = "conf";
+    private static final String CONFIG_FILE_NAME = "rasp.properties";
     public static final int REFLECTION_STACK_START_INDEX = 0;
     public static final Logger LOGGER = Logger.getLogger(Config.class.getName());
-    private static String baseDirectory;
+    public static String baseDirectory;
+    private static Integer watchId;
 
+    private String configFileDir;
     private int reflectionMaxStack;
     private long pluginTimeout;
-    private long bodyMaxBytes;
+    private int bodyMaxBytes;
     private int sqlSlowQueryMinCount;
     private String[] ignoreHooks;
     private boolean enforcePolicy;
@@ -80,7 +85,7 @@ public class Config extends FileScanListener {
     private String blockUrl;
     private String injectUrlPrefix;
     private int ognlMinLength;
-
+    private int blockStatusCode;
 
     // Config是由bootstrap classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
@@ -113,29 +118,79 @@ public class Config extends FileScanListener {
      * 构造函数，初始化全局配置
      */
     private Config() {
-        FileInputStream input = null;
-        Properties properties = new Properties();
+        this.configFileDir = baseDirectory + File.separator + CONFIG_DIR_NAME;
+        String configFilePath = this.configFileDir + File.separator + CONFIG_FILE_NAME;
         try {
-            input = new FileInputStream(new File(baseDirectory, "conf" + File.separator + "rasp.properties"));
-            properties.load(input);
-            input.close();
+            loadConfigFromFile(new File(configFilePath));
+            addConfigFileMonitor();
         } catch (FileNotFoundException e) {
             handleException("Could not find rasp.properties, using default settings: " + e.getMessage(), e);
+        } catch (JNotifyException e) {
+            handleException("add listener on " + configFileDir + " failed because:" + e.getMessage(), e);
         } catch (IOException e) {
             handleException("cannot load properties file: " + e.getMessage(), e);
         }
-        for (Item item : Item.values()) {
-            setConfigFromProperties(item, properties);
+    }
+
+    private synchronized void loadConfigFromFile(File file) throws IOException {
+        Properties properties = new Properties();
+        try {
+            if (file.exists()) {
+                FileInputStream input = new FileInputStream(file);
+                properties.load(input);
+                input.close();
+            }
+        } finally {
+            // 出现解析问题使用默认值
+            for (Item item : Item.values()) {
+                setConfigFromProperties(item, properties);
+            }
         }
-        for (int i = 0; i < this.ignoreHooks.length; i++) {
-            this.ignoreHooks[i] = this.ignoreHooks[i].trim();
+    }
+
+    private void reloadConfig(File file) {
+        if (file.getName().equals(CONFIG_FILE_NAME)) {
+            try {
+                loadConfigFromFile(file);
+            } catch (IOException e) {
+                LOGGER.warn("update rasp.properties failed because: " + e.getMessage());
+            }
         }
+    }
+
+    private void addConfigFileMonitor() throws JNotifyException {
+        if (watchId != null) {
+            FileScanMonitor.removeMonitor(watchId);
+        }
+        watchId = FileScanMonitor.addMonitor(configFileDir, new FileScanListener() {
+            @Override
+            public void onFileCreate(File file) {
+                reloadConfig(file);
+            }
+
+            @Override
+            public void onFileChange(File file) {
+                reloadConfig(file);
+            }
+
+            @Override
+            public void onFileDelete(File file) {
+                reloadConfig(file);
+            }
+        });
     }
 
     private void setConfigFromProperties(Item item, Properties properties) {
         String key = item.key;
         String value = properties.getProperty(item.key, item.defaultValue);
-        setConfig(key, value, true);
+        try {
+            setConfig(key, value, true);
+        } catch (Exception e) {
+            // 出现解析问题使用默认值
+            value = item.defaultValue;
+            setConfig(key, item.defaultValue, true);
+            LOGGER.warn("set config " + item.key + " failed , use default value : " + value);
+        }
     }
 
     private void handleException(String message, Exception e) {
@@ -185,12 +240,12 @@ public class Config extends FileScanListener {
 
     @Override
     public void onDirectoryCreate(File file) {
-        reloadCustomScript(file);
+        reloadConfigDir(file);
     }
 
     @Override
     public void onDirectoryDelete(File file) {
-        reloadCustomScript(file);
+        reloadConfigDir(file);
     }
 
     @Override
@@ -208,13 +263,15 @@ public class Config extends FileScanListener {
         // ignore
     }
 
-    private void reloadCustomScript(File assetsDir) {
+    private void reloadConfigDir(File directory) {
         try {
-            if (assetsDir.getName().equals(CustomResponseHtml.CUSTOM_RESPONSE_BASE_DIR)) {
+            if (directory.getName().equals(CustomResponseHtml.CUSTOM_RESPONSE_BASE_DIR)) {
                 CustomResponseHtml.load(baseDirectory);
+            } else if (directory.getName().equals(CONFIG_DIR_NAME)) {
+                reloadConfig(new File(configFileDir + File.separator + CONFIG_FILE_NAME));
             }
         } catch (Exception e) {
-            LOGGER.warn(e.getMessage());
+            LOGGER.warn("update " + directory.getAbsolutePath() + " failed because: " + e.getMessage());
         }
     }
 
@@ -264,7 +321,7 @@ public class Config extends FileScanListener {
      *
      * @return 最大长度
      */
-    public synchronized long getBodyMaxBytes() {
+    public synchronized int getBodyMaxBytes() {
         return bodyMaxBytes;
     }
 
@@ -274,7 +331,7 @@ public class Config extends FileScanListener {
      * @param bodyMaxBytes
      */
     public synchronized void setBodyMaxBytes(String bodyMaxBytes) {
-        this.bodyMaxBytes = Long.parseLong(bodyMaxBytes);
+        this.bodyMaxBytes = Integer.parseInt(bodyMaxBytes);
         if (this.bodyMaxBytes < 0) {
             this.bodyMaxBytes = 0;
         }
@@ -446,11 +503,39 @@ public class Config extends FileScanListener {
         this.readFileExtensionRegex = readFileExtensionRegex;
     }
 
+    /**
+     * 获取拦截状态码
+     *
+     * @return 状态码
+     */
+    public int getBlockStatusCode() {
+        return blockStatusCode;
+    }
+
+    /**
+     * 设置拦截状态码
+     *
+     * @param blockStatusCode 状态码
+     */
+    public void setBlockStatusCode(String blockStatusCode) {
+        this.blockStatusCode = Integer.parseInt(blockStatusCode);
+        if (this.blockStatusCode < 100 || this.blockStatusCode > 999) {
+            this.blockStatusCode = 302;
+        }
+    }
+
     //--------------------------统一的配置处理------------------------------------
 
+    /**
+     * 统一配置接口,通过 js 更改配置的入口
+     *
+     * @param key   配置名
+     * @param value 配置值
+     * @return 是否配置成功
+     */
     public boolean setConfig(String key, String value, boolean isInit) {
         try {
-            boolean hitted = true;
+            boolean isHit = true;
             if (Item.BLOCK_URL.key.equals(key)) {
                 setBlockUrl(value);
             } else if (Item.BODY_MAX_BYTES.key.equals(key)) {
@@ -475,20 +560,26 @@ public class Config extends FileScanListener {
                 setSqlSlowQueryMinCount(value);
             } else if (Item.REFLECTION_MONITOR.key.equals(key)) {
                 setReflectionMonitorMethod(value);
+            } else if (Item.BLOCK_STATUS_CODE.key.equals(key)) {
+                setBlockStatusCode(value);
             } else {
-                hitted = false;
+                isHit = false;
             }
-            if (hitted) {
+            if (isHit) {
                 if (isInit) {
                     LOGGER.info(key + ": " + value);
                 } else {
                     LOGGER.info("configuration item \"" + key + "\" changed to \"" + value + "\"");
                 }
+            } else {
+                LOGGER.info("configuration item \"" + key + "\" doesn't exist");
+                return false;
             }
         } catch (Exception e) {
-            LOGGER.info(e.getMessage());
+            LOGGER.info("configuration item \"" + key + "\" failed to change to \"" + value + "\"" + " because:" + e.getMessage());
             return false;
         }
         return true;
     }
+
 }

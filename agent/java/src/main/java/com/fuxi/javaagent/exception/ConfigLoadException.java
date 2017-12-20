@@ -22,6 +22,10 @@ package com.fuxi.javaagent.exception;
  */
 public class ConfigLoadException extends RuntimeException {
 
+    public ConfigLoadException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     public ConfigLoadException(Throwable cause) {
         super(cause);
     }

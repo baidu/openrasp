@@ -29,9 +29,6 @@ import org.apache.commons.lang3.StringUtils;
  */
 public abstract class AbstractHttpOutputHook extends AbstractClassHook {
 
-    public static final int CATALINA_OUTPUT = 0;
-    public static final int JETTY_OUTPUT = 1;
-
     @Override
     public String getType() {
         return "http_output";
@@ -42,7 +39,7 @@ public abstract class AbstractHttpOutputHook extends AbstractClassHook {
      *
      * @param output 输出流
      */
-    public static void appendResponseData(Object output, int outputType) {
+    public static void appendResponseData(Object output) {
         if (HookHandler.enableHook.get() && HookHandler.isEnableCurrThreadHook()) {
             try {
                 HookHandler.disableCurrThreadHook();
@@ -59,15 +56,7 @@ public abstract class AbstractHttpOutputHook extends AbstractClassHook {
                             if (HookHandler.requestCache.get().getRequestURL().toString().startsWith(injectPathPrefix)) {
                                 String appendHtml = Config.getConfig().getCustomResponseScript();
                                 if (!StringUtils.isEmpty(appendHtml)) {
-                                    String outputMethod = null;
-                                    if (outputType == CATALINA_OUTPUT) {
-                                        outputMethod = "write";
-                                    } else if (outputType == JETTY_OUTPUT) {
-                                        outputMethod = "print";
-                                    }
-                                    if (outputMethod != null) {
-                                        response.sendContent(appendHtml, false);
-                                    }
+                                    response.sendContent(appendHtml, false);
                                 }
                             }
                         }
