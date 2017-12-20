@@ -53,7 +53,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
         hooks = new HashSet<AbstractClassHook>();
 
         addHook(new WebDAVCopyResourceHook());
-        addHook(new CoyoteInputStreamHook());
+        addHook(new CatalinaInputBufferHook());
         addHook(new DeserializationHook());
         addHook(new DiskFileItemHook());
         addHook(new FileHook());

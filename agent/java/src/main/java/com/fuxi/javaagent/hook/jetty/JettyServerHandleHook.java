@@ -16,7 +16,6 @@
 
 package com.fuxi.javaagent.hook.jetty;
 
-import com.fuxi.javaagent.HookHandler;
 import com.fuxi.javaagent.hook.AbstractClassHook;
 import com.fuxi.javaagent.hook.catalina.ApplicationFilterHook;
 import org.objectweb.asm.MethodVisitor;

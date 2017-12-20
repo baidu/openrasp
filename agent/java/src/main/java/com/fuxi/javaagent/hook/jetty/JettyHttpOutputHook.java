@@ -29,6 +29,7 @@ import org.objectweb.asm.commons.Method;
  * jetty 输出流关闭 hook 点
  */
 public class JettyHttpOutputHook extends AbstractHttpOutputHook {
+
     @Override
     public boolean isClassMatched(String className) {
         return "org/eclipse/jetty/server/HttpOutput".equals(className);
@@ -41,7 +42,7 @@ public class JettyHttpOutputHook extends AbstractHttpOutputHook {
                 @Override
                 protected void onMethodEnter() {
                     loadThis();
-                    invokeStatic(Type.getType(JettyHttpOutputHook.class),
+                    invokeStatic(Type.getType(AbstractHttpOutputHook.class),
                             new Method("appendResponseData", "(Ljava/lang/Object;)V"));
                 }
             };
@@ -49,12 +50,4 @@ public class JettyHttpOutputHook extends AbstractHttpOutputHook {
         return mv;
     }
 
-    /**
-     * (none-javadoc)
-     *
-     * @see com.fuxi.javaagent.hook.AbstractHttpOutputHook#appendResponseData(Object, int) ()
-     */
-    public static void appendResponseData(Object output) {
-        appendResponseData(output, AbstractHttpOutputHook.JETTY_OUTPUT);
-    }
 }
