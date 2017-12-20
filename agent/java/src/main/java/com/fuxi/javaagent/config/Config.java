@@ -49,7 +49,7 @@ public class Config extends FileScanListener {
         SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
         REFLECTION_MONITOR("reflection.monitor",
                 "java.lang.Runtime.getRuntime,java.lang.Runtime.exec,java.lang.ProcessBuilder.start"),
-        BLOCK_STATUS_CODE("block.status.code", "302");
+        BLOCK_STATUS_CODE("block.status_code", "302");
 
         Item(String key, String defaultValue) {
             this.key = key;
@@ -189,7 +189,7 @@ public class Config extends FileScanListener {
             // 出现解析问题使用默认值
             value = item.defaultValue;
             setConfig(key, item.defaultValue, true);
-            LOGGER.warn("set config " + item.key + " failed , use default value : " + value);
+            LOGGER.warn("set config " + item.key + " failed, use default value : " + value);
         }
     }
 
@@ -313,7 +313,11 @@ public class Config extends FileScanListener {
      * @param injectUrlPrefix 页面path前缀
      */
     public synchronized void setInjectUrlPrefix(String injectUrlPrefix) {
-        this.injectUrlPrefix = injectUrlPrefix;
+        StringBuilder injectPrefix = new StringBuilder(injectUrlPrefix);
+        while (injectPrefix.length() > 0 && injectPrefix.charAt(injectPrefix.length() - 1) == '/') {
+            injectPrefix.deleteCharAt(injectPrefix.length() - 1);
+        }
+        this.injectUrlPrefix = injectPrefix.toString();
     }
 
     /**
