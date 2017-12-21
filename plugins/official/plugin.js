@@ -226,7 +226,7 @@ plugin.register('ssrf', function (params, context) {
     // 以下混淆方式没有检测，容易误报
     // http://0x7f.0x0.0x0.0x1
     // http://0x7f.0.0.0    
-    else if (! isNaN(hostname)) {
+    else if (Number.isInteger(hostname)) {
         reason = '尝试使用纯数字IP'
     }
     // 检查混淆: 
@@ -411,7 +411,7 @@ plugin.register('sql', function (params, context) {
                 var op1    = tokens_lc[i - 1]
                 var op2    = tokens_lc[i + 1]
 
-                if (! isNaN(op1) && ! isNaN(op2)) {
+                if (Number.isInteger(op1) && Number.isInteger(op2)) {
                     reason = '禁止常量比较操作'
                     break
                 }                    
