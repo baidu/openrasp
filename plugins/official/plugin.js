@@ -89,12 +89,8 @@ function ip2long(ipstr) {
 
 // 在这里配置SQLi/SSRF检测逻辑是否开启
 // 为了提高性能，这些检测逻辑均在在 java/php 层面实现
-
 var algorithmConfig = {
     'sqli_userinput': {
-        action: 'block'
-    },
-    'sqli_sqlmanager': {
         action: 'block'
     },
     'sqli_policy': {
