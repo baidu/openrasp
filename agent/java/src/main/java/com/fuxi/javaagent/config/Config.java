@@ -20,6 +20,8 @@ import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
 import com.fuxi.javaagent.exception.ConfigLoadException;
 import com.fuxi.javaagent.tool.filemonitor.FileScanListener;
 import com.fuxi.javaagent.tool.filemonitor.FileScanMonitor;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -49,15 +51,22 @@ public class Config extends FileScanListener {
         SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
         REFLECTION_MONITOR("reflection.monitor",
                 "java.lang.Runtime.getRuntime,java.lang.Runtime.exec,java.lang.ProcessBuilder.start"),
-        BLOCK_STATUS_CODE("block.status_code", "302");
+        BLOCK_STATUS_CODE("block.status_code", "302"),
+        ALGORITHM_CONFIG("algorithm.config", "{}", false);
 
         Item(String key, String defaultValue) {
+            this(key, defaultValue, true);
+        }
+
+        Item(String key, String defaultValue, boolean isProperties) {
             this.key = key;
             this.defaultValue = defaultValue;
+            this.isProperties = isProperties;
         }
 
         String key;
         String defaultValue;
+        boolean isProperties;
 
         @Override
         public String toString() {
@@ -86,6 +95,7 @@ public class Config extends FileScanListener {
     private String injectUrlPrefix;
     private int ognlMinLength;
     private int blockStatusCode;
+    private JsonObject algorithmConfig;
 
     // Config是由bootstrap classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
@@ -121,7 +131,7 @@ public class Config extends FileScanListener {
         this.configFileDir = baseDirectory + File.separator + CONFIG_DIR_NAME;
         String configFilePath = this.configFileDir + File.separator + CONFIG_FILE_NAME;
         try {
-            loadConfigFromFile(new File(configFilePath));
+            loadConfigFromFile(new File(configFilePath), true);
             addConfigFileMonitor();
         } catch (FileNotFoundException e) {
             handleException("Could not find rasp.properties, using default settings: " + e.getMessage(), e);
@@ -132,7 +142,7 @@ public class Config extends FileScanListener {
         }
     }
 
-    private synchronized void loadConfigFromFile(File file) throws IOException {
+    private synchronized void loadConfigFromFile(File file, boolean isInit) throws IOException {
         Properties properties = new Properties();
         try {
             if (file.exists()) {
@@ -143,7 +153,9 @@ public class Config extends FileScanListener {
         } finally {
             // 出现解析问题使用默认值
             for (Item item : Item.values()) {
-                setConfigFromProperties(item, properties);
+                if (item.isProperties) {
+                    setConfigFromProperties(item, properties, isInit);
+                }
             }
         }
     }
@@ -151,7 +163,7 @@ public class Config extends FileScanListener {
     private void reloadConfig(File file) {
         if (file.getName().equals(CONFIG_FILE_NAME)) {
             try {
-                loadConfigFromFile(file);
+                loadConfigFromFile(file, false);
             } catch (IOException e) {
                 LOGGER.warn("update rasp.properties failed because: " + e.getMessage());
             }
@@ -180,15 +192,15 @@ public class Config extends FileScanListener {
         });
     }
 
-    private void setConfigFromProperties(Item item, Properties properties) {
+    private void setConfigFromProperties(Item item, Properties properties, boolean isInit) {
         String key = item.key;
         String value = properties.getProperty(item.key, item.defaultValue);
         try {
-            setConfig(key, value, true);
+            setConfig(key, value, isInit);
         } catch (Exception e) {
             // 出现解析问题使用默认值
             value = item.defaultValue;
-            setConfig(key, item.defaultValue, true);
+            setConfig(key, item.defaultValue, false);
             LOGGER.warn("set config " + item.key + " failed, use default value : " + value);
         }
     }
@@ -528,6 +540,24 @@ public class Config extends FileScanListener {
         }
     }
 
+    /**
+     * 获取检测算法配置
+     *
+     * @return 配置的 json 对象
+     */
+    public JsonObject getAlgorithmConfig() {
+        return algorithmConfig;
+    }
+
+    /**
+     * 设置检测算法配置
+     *
+     * @param json 配置内容
+     */
+    public void setAlgorithmConfig(String json) {
+        this.algorithmConfig = new JsonParser().parse(json).getAsJsonObject();
+    }
+
     //--------------------------统一的配置处理------------------------------------
 
     /**
@@ -566,6 +596,8 @@ public class Config extends FileScanListener {
                 setReflectionMonitorMethod(value);
             } else if (Item.BLOCK_STATUS_CODE.key.equals(key)) {
                 setBlockStatusCode(value);
+            } else if (Item.ALGORITHM_CONFIG.key.equals(key)) {
+                setAlgorithmConfig(value);
             } else {
                 isHit = false;
             }
@@ -580,6 +612,10 @@ public class Config extends FileScanListener {
                 return false;
             }
         } catch (Exception e) {
+            if (isInit) {
+                // 初始化配置过程中,如果报错需要继续使用默认值执行
+                throw new ConfigLoadException(e);
+            }
             LOGGER.info("configuration item \"" + key + "\" failed to change to \"" + value + "\"" + " because:" + e.getMessage());
             return false;
         }

@@ -27,7 +27,7 @@ public abstract class EventInfo {
 
     public static final String CHECK_ACTION_BLOCK = "block";
     public static final String CHECK_ACTION_IGNORE = "ignore";
-    public static final String CHECK_ACTION_INFO = "info";
+    public static final String CHECK_ACTION_INFO = "log";
 
     private String json;
 

@@ -18,7 +18,9 @@ package com.fuxi.javaagent.plugin.checker;
 
 import com.fuxi.javaagent.HookHandler;
 import com.fuxi.javaagent.plugin.checker.js.JsChecker;
+import com.fuxi.javaagent.plugin.checker.local.SSRFChecker;
 import com.fuxi.javaagent.plugin.checker.local.SqlResultChecker;
+import com.fuxi.javaagent.plugin.checker.local.SqlStatementChecker;
 import com.fuxi.javaagent.plugin.checker.policy.SqlConnectionChecker;
 import com.fuxi.javaagent.plugin.checker.policy.TomcatSecurityChecker;
 import com.fuxi.javaagent.request.AbstractRequest;
@@ -37,7 +39,7 @@ public class CheckParameter {
 
     public enum Type {
         // js插件检测
-        SQL("sql", new JsChecker()),
+        SQL("sql", new SqlStatementChecker()),
         COMMAND("command", new JsChecker()),
         DIRECTORY("directory", new JsChecker()),
         REQUEST("request", new JsChecker()),
@@ -50,7 +52,7 @@ public class CheckParameter {
         REFLECTION("reflection", new JsChecker()),
         WEBDAV("webdav", new JsChecker()),
         INCLUDE("include", new JsChecker()),
-        SSRF("ssrf", new JsChecker()),
+        SSRF("ssrf", new SSRFChecker()),
 
         // java本地检测
         SQL_SLOW_QUERY("sqlSlowQuery", new SqlResultChecker(false)),
