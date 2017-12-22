@@ -22,15 +22,13 @@ import com.fuxi.javaagent.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.plugin.info.AttackInfo;
 import com.fuxi.javaagent.plugin.info.EventInfo;
 
-import java.sql.ResultSet;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Created by tyy on 17-11-20.
  *
- * sql检测结果查询
+ * sql查询结果检测
  */
 public class SqlResultChecker extends AttackChecker {
 

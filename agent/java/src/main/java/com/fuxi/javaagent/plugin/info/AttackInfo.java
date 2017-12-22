@@ -36,9 +36,9 @@ import java.util.Map;
  */
 public class AttackInfo extends EventInfo {
     public static final String TYPE_ATTACK = "attack";
-    public static final String DEFAULT_LOCAL_PLUGIN_NAME = "java_local_plugin";
+    public static final String DEFAULT_LOCAL_PLUGIN_NAME = "java_builtin_plugin";
 
-    public static final int DEFAULT_CONFIDENCE_VALUE = 0;
+    public static final int DEFAULT_CONFIDENCE_VALUE = 100;
 
     private CheckParameter parameter;
     private String pluginName;
@@ -48,6 +48,10 @@ public class AttackInfo extends EventInfo {
 
     public static AttackInfo createLocalAttackInfo(CheckParameter parameter, String action, String message) {
         return new AttackInfo(parameter, action, message, DEFAULT_LOCAL_PLUGIN_NAME);
+    }
+
+    public static AttackInfo createLocalAttackInfo(CheckParameter parameter, String action, String message, int confidence) {
+        return new AttackInfo(parameter, action, message, DEFAULT_LOCAL_PLUGIN_NAME, confidence);
     }
 
     public AttackInfo(CheckParameter parameter, String action, String message, String pluginName) {
