@@ -223,7 +223,8 @@ public class HookHandler {
                 handleBlock();
             }
         } catch (Exception e) {
-            LOGGER.warn("plugin check error: " + e.getMessage());
+            LOGGER.warn("plugin check error: " + e.getClass().getName()
+                    + " because: " + e.getMessage() + " stacktrace: " + e.getStackTrace());
         } finally {
             enableCurrThreadHook.set(enableHookCache);
         }

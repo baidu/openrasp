@@ -135,7 +135,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
     private void checkManagerPassword(String tomcatBaseDir, List<EventInfo> infos) {
         File userFile = new File(tomcatBaseDir + File.separator + "conf/tomcat-users.xml");
         if (!(userFile.exists() && userFile.canRead())) {
-            LOGGER.error(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+            LOGGER.warn(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
                     "can not load file conf/tomcat-users.xml"));
             return;
         }
@@ -143,22 +143,23 @@ public class TomcatSecurityChecker extends PolicyChecker {
         Element userElement = getXmlFileRootElement(userFile);
         if (userElement != null) {
             NodeList userNodeList = userElement.getElementsByTagName("user");
-
-            for (int i = 0; i < userNodeList.getLength(); i++) {
-                Node userNode = userNodeList.item(i);
-                if (userNode.getNodeType() == Node.ELEMENT_NODE) {
-                    Element user = (Element) userNode;
-                    String rolesAttribute = user.getAttribute("roles");
-                    String[] roles = rolesAttribute == null ? null : rolesAttribute.split(",");
-                    if (roles != null && roles.length > 0) {
-                        List<String> managerList = Arrays.asList(TOMCAT_MANAGER_ROLES);
-                        for (int j = 0; j < roles.length; j++) {
-                            if (managerList.contains(roles[j].trim())) {
-                                List<String> weakWords = Arrays.asList(WEAK_WORDS);
-                                String userName = user.getAttribute("username");
-                                String password = user.getAttribute("password");
-                                if (weakWords.contains(userName) && weakWords.contains(password)) {
-                                    infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD, "tomcat后台管理角色存在弱用户名和弱密码.", true));
+            if (userNodeList != null) {
+                for (int i = 0; i < userNodeList.getLength(); i++) {
+                    Node userNode = userNodeList.item(i);
+                    if (userNode.getNodeType() == Node.ELEMENT_NODE) {
+                        Element user = (Element) userNode;
+                        String rolesAttribute = user.getAttribute("roles");
+                        String[] roles = rolesAttribute == null ? null : rolesAttribute.split(",");
+                        if (roles != null && roles.length > 0) {
+                            List<String> managerList = Arrays.asList(TOMCAT_MANAGER_ROLES);
+                            for (int j = 0; j < roles.length; j++) {
+                                if (managerList.contains(roles[j].trim())) {
+                                    List<String> weakWords = Arrays.asList(WEAK_WORDS);
+                                    String userName = user.getAttribute("username");
+                                    String password = user.getAttribute("password");
+                                    if (weakWords.contains(userName) && weakWords.contains(password)) {
+                                        infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD, "tomcat后台管理角色存在弱用户名和弱密码.", true));
+                                    }
                                 }
                             }
                         }

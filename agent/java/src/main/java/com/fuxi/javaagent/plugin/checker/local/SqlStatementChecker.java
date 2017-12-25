@@ -135,7 +135,10 @@ public class SqlStatementChecker extends ConfigurableChecker {
         }
 
         // js 插件检测
-        result.addAll(new JsChecker().checkParam(checkParameter));
+        List<EventInfo> jsResults = new JsChecker().checkParam(checkParameter);
+        if (jsResults != null && jsResults.size() > 0) {
+            result.addAll(jsResults);
+        }
         return result;
     }
 

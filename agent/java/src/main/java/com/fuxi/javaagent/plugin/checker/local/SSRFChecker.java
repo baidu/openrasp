@@ -63,7 +63,10 @@ public class SSRFChecker extends ConfigurableChecker {
                     getActionElement(config, CONFIG_KEY_SSRF_OBFUSCATE), "尝试使用16进制IP"));
         }
 
-        result.addAll(new JsChecker().checkParam(checkParameter));
+        List<EventInfo> jsResults = new JsChecker().checkParam(checkParameter);
+        if (jsResults != null && jsResults.size() > 0) {
+            result.addAll(jsResults);
+        }
         return result;
     }
 
