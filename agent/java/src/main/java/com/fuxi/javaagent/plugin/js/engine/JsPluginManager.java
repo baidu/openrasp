@@ -108,6 +108,8 @@ public class JsPluginManager {
      * @throws Exception
      */
     private synchronized static void updatePlugin() throws Exception {
+        // 清空 algorithm.config 配置
+        Config.getConfig().setAlgorithmConfig("{}");
         boolean oldValue = HookHandler.enableHook.getAndSet(false);
         File pluginDir = new File(Config.getConfig().getScriptDirectory());
         LOGGER.debug("checker directory: " + pluginDir.getAbsolutePath());
