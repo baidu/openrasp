@@ -109,17 +109,17 @@ public class SQLResultSetHook extends AbstractSqlHook {
      * @param sqlResultSet 数据库查询结果
      */
     public static void checkSqlQueryResult(String server, Object sqlResultSet) {
+        HashMap<String, Object> params = null;
         try {
             ResultSet resultSet = (ResultSet) sqlResultSet;
             int queryCount = resultSet.getRow();
-            int slowQueryMinCount = Config.getConfig().getSqlSlowQueryMinCount();
-            HashMap<String, Object> params = new HashMap<String, Object>(4);
-            params.put("query_count", slowQueryMinCount);
+            params = new HashMap<String, Object>(4);
+            params.put("query_count", queryCount);
             params.put("server", server);
-            HookHandler.doCheck(CheckParameter.Type.SQL_SLOW_QUERY, params);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        HookHandler.doCheck(CheckParameter.Type.SQL_SLOW_QUERY, params);
     }
 
 }

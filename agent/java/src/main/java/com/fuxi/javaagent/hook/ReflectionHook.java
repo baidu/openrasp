@@ -74,6 +74,7 @@ public class ReflectionHook extends AbstractClassHook {
     public static void checkReflection(Object method) {
         if (HookHandler.enableHook.get() && HookHandler.isEnableCurrThreadHook()) {
             HookHandler.disableCurrThreadHook();
+            Scriptable params = null;
             try {
                 Class reflectClass = (Class) Reflection.invokeMethod(method, "getDeclaringClass", new Class[]{});
                 String reflectClassName = reflectClass.getName();
@@ -83,18 +84,18 @@ public class ReflectionHook extends AbstractClassHook {
                 for (String monitorMethod : reflectMonitorMethod) {
                     if (monitorMethod.equals(absoluteMethodName)) {
                         JSContext cx = JSContextFactory.enterAndInitContext();
-                        Scriptable params = cx.newObject(cx.getScope());
+                        params = cx.newObject(cx.getScope());
                         List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
                                 Config.getConfig().getReflectionMaxStack());
                         Scriptable array = cx.newArray(cx.getScope(), stackInfo.toArray());
                         params.put("clazz", params, reflectClassName);
                         params.put("method", params, reflectMethodName);
                         params.put("stack", params, array);
-                        HookHandler.doCheckWithoutRequest(CheckParameter.Type.REFLECTION, params);
                         break;
                     }
                 }
             } finally {
+                HookHandler.doCheckWithoutRequest(CheckParameter.Type.REFLECTION, params);
                 HookHandler.enableCurrThreadHook();
             }
         }

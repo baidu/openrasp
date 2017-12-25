@@ -43,10 +43,12 @@ public class SqlResultChecker extends AttackChecker {
     @Override
     public List<EventInfo> checkParam(CheckParameter checkParameter) {
         LinkedList<EventInfo> result = new LinkedList<EventInfo>();
-        int queryCount = (Integer) checkParameter.getParam("query_count");
-        int slowQueryMinCount = Config.getConfig().getSqlSlowQueryMinCount();
-        if (queryCount == slowQueryMinCount + 1) {
-            result.add(AttackInfo.createLocalAttackInfo(checkParameter, EventInfo.CHECK_ACTION_INFO, "慢查询: 使用SELECT语句读取了超过" + slowQueryMinCount + "行数据"));
+        Integer queryCount = (Integer) checkParameter.getParam("query_count");
+        if (queryCount != null) {
+            int slowQueryMinCount = Config.getConfig().getSqlSlowQueryMinCount();
+            if (queryCount == slowQueryMinCount + 1) {
+                result.add(AttackInfo.createLocalAttackInfo(checkParameter, EventInfo.CHECK_ACTION_INFO, "慢查询: 使用SELECT语句读取了超过" + slowQueryMinCount + "行数据"));
+            }
         }
         return result;
     }

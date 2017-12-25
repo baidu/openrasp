@@ -52,14 +52,16 @@ public class HttpClientHook extends AbstractSSRFHook {
     }
 
     public static void checkHttpUri(URI uri) {
+        String url = null;
+        String hostName = null;
         try {
             if (uri != null) {
-                String url = uri.toString();
-                String hostName = uri.toURL().getHost();
-                checkHttpUrl(url, hostName,"httpclient");
+                url = uri.toString();
+                hostName = uri.toURL().getHost();
             }
         } catch (Throwable t) {
             HookHandler.LOGGER.warn(t.getMessage());
         }
+        checkHttpUrl(url, hostName,"httpclient");
     }
 }

@@ -215,18 +215,19 @@ public class HookHandler {
      */
     public static void doCheckWithoutRequest(CheckParameter.Type type, Object params) {
         boolean enableHookCache = enableCurrThreadHook.get();
+        boolean isBlock = false;
         try {
             enableCurrThreadHook.set(false);
             CheckParameter parameter = new CheckParameter(type, params);
-            boolean isBlock = CheckerManager.check(type, parameter);
-            if (isBlock) {
-                handleBlock();
-            }
+            isBlock = CheckerManager.check(type, parameter);
         } catch (Exception e) {
             LOGGER.warn("plugin check error: " + e.getClass().getName()
                     + " because: " + e.getMessage() + " stacktrace: " + e.getStackTrace());
         } finally {
             enableCurrThreadHook.set(enableHookCache);
+        }
+        if (isBlock) {
+            handleBlock();
         }
     }
 
