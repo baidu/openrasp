@@ -31,7 +31,9 @@ public class SecurityPolicyInfo extends EventInfo {
         START_USER(3002),
         MANAGER_PASSWORD(3003),
         DEFAULT_APP(3004),
-        SQL_CONNECTION(3005);
+        DIRECTORY_LISTING(3005),
+        SQL_CONNECTION(3006);
+
 
         private int id;
 

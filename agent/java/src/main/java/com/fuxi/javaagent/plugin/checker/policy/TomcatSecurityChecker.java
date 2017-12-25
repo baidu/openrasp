@@ -61,6 +61,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
                 if (serverType.equalsIgnoreCase("tomcat")) {
                     checkHttpOnlyIsOpen(tomcatBaseDir, infos);
                     checkManagerPassword(tomcatBaseDir, infos);
+                    checkDirectoryListing(tomcatBaseDir, infos);
                     checkDefaultApp(tomcatBaseDir, infos);
                 }
             } else {
@@ -167,6 +168,70 @@ public class TomcatSecurityChecker extends PolicyChecker {
                 }
             }
         }
+    }
+
+    private void checkDirectoryListing(String tomcatBaseDir, List<EventInfo> infos) {
+        File webFile = new File(tomcatBaseDir + File.separator + "conf/web.xml");
+        if (!(webFile.exists() && webFile.canRead())) {
+            LOGGER.warn(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+                    "can not load file conf/web.xml"));
+            return;
+        }
+        Element rootElement = getXmlFileRootElement(webFile);
+        if (rootElement != null) {
+            NodeList servletList = rootElement.getElementsByTagName("servlet");
+            if (servletList != null) {
+                for (int i = 0; i < servletList.getLength(); i++) {
+                    Node node = servletList.item(i);
+                    if (node.getNodeType() == Node.ELEMENT_NODE) {
+                        Element servletElement = (Element) node;
+                        NodeList servletClassList = servletElement.getElementsByTagName("servlet-class");
+                        if (servletClassList != null) {
+                            boolean isFoundDefaultClass = false;
+                            for (int j = 0; j < servletClassList.getLength(); j++) {
+                                String className = servletClassList.item(j).getTextContent();
+                                if ("org.apache.catalina.servlets.DefaultServlet".equals(className)) {
+                                    isFoundDefaultClass = true;
+                                    break;
+                                }
+                            }
+                            if (isFoundDefaultClass) {
+                                if (isOpenListingDirectory(servletElement)) {
+                                    infos.add(new SecurityPolicyInfo(Type.DIRECTORY_LISTING,
+                                            "tomcat 开启了 DefaultServlet 的 Directory Listing 功能", true));
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean isOpenListingDirectory(Element servletElement) {
+        boolean result = false;
+        NodeList initParamList = servletElement.getElementsByTagName("init-param");
+        if (initParamList != null) {
+            for (int z = 0; z < initParamList.getLength(); z++) {
+                Node node = initParamList.item(z);
+                if (node.getNodeType() == Node.ELEMENT_NODE) {
+                    Element initParamElement = (Element) node;
+                    NodeList paramName = initParamElement.getElementsByTagName("param-name");
+                    if (paramName != null && paramName.getLength() > 0) {
+                        if ("listings".equals(paramName.item(0).getTextContent())) {
+                            NodeList paramValue = initParamElement.getElementsByTagName("param-value");
+                            if (paramValue != null && paramValue.getLength() > 0) {
+                                if ("true".equals(paramValue.item(0).getTextContent())) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     /**
