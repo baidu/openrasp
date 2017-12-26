@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.fuxi.javaagent.hook.catalina;
+package com.fuxi.javaagent.hook.jetty;
 
 import com.fuxi.javaagent.HookHandler;
 import com.fuxi.javaagent.hook.AbstractClassHook;
@@ -25,43 +25,33 @@ import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
 /**
- * Created by tyy on 9/12/17.
- * servlet过滤器hook类
+ * Created by tyy on 17-12-25.
+ *
+ * jetty 下的 request hook 点
  */
-public class ApplicationFilterHook extends AbstractClassHook {
+public class JettyRequestHook extends AbstractClassHook {
     @Override
     public boolean isClassMatched(String className) {
-        return className.endsWith("apache/catalina/core/ApplicationFilterChain");
+        return "org/eclipse/jetty/server/Request".equals(className);
     }
 
     @Override
     public String getType() {
-        return "request";
+        return "parameter";
     }
 
     @Override
-    protected MethodVisitor hookMethod(int access, String name, String desc, String signature,
-                                       String[] exceptions, MethodVisitor mv) {
-
-        if ("doFilter".equals(name)) {
+    protected MethodVisitor hookMethod(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor mv) {
+        if ("extractParameters".equals(name) || "extractContentParameters".equals(name)) {
             return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                 @Override
                 protected void onMethodEnter() {
-                    loadThis();
-                    loadArg(0);
-                    loadArg(1);
-                    invokeStatic(Type.getType(ApplicationFilterHook.class),
-                            new Method("checkRequest",
-                                    "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"));
+                    invokeStatic(Type.getType(HookHandler.class),
+                            new Method("onParseParameters", "()V"));
                 }
 
             };
         }
         return mv;
     }
-
-    public static void checkRequest(Object filter, Object request, Object response) {
-        HookHandler.checkFilterRequest(filter, request, response);
-    }
-
 }

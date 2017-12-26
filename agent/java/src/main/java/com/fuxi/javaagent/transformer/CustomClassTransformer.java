@@ -23,10 +23,7 @@ import com.fuxi.javaagent.hook.file.DiskFileItemHook;
 import com.fuxi.javaagent.hook.file.FileHook;
 import com.fuxi.javaagent.hook.file.FileInputStreamHook;
 import com.fuxi.javaagent.hook.file.FileOutputStreamHook;
-import com.fuxi.javaagent.hook.jetty.JettyHttpInputHook;
-import com.fuxi.javaagent.hook.jetty.JettyHttpOutputHook;
-import com.fuxi.javaagent.hook.jetty.JettyServerHandleHook;
-import com.fuxi.javaagent.hook.jetty.JettyServerHook;
+import com.fuxi.javaagent.hook.jetty.*;
 import com.fuxi.javaagent.hook.sql.SQLDriverManagerHook;
 import com.fuxi.javaagent.hook.sql.SQLResultSetHook;
 import com.fuxi.javaagent.hook.sql.SQLStatementHook;
@@ -82,6 +79,8 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new HttpClientHook());
         addHook(new CatalinaOutputBufferHook());
         addHook(new JettyHttpOutputHook());
+        addHook(new CatalinaRequestHook());
+        addHook(new JettyRequestHook());
     }
 
     private void addHook(AbstractClassHook hook) {
