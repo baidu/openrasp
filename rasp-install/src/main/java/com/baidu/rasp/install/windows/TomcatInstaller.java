@@ -35,9 +35,9 @@ import static com.baidu.rasp.RaspError.E10001;
 public class TomcatInstaller extends BaseStandardInstaller {
 
     private static String CATALINASHRASP = "if \"%ACTION%\" == \"start\""
-            + " set JAVA_OPTS=-javaagent:%CATALINA_HOME%\\rasp\\rasp.jar %JAVA_OPTS%";
-    private static String CATALINASHLOG4J = "if \"%ACTION%\" == \"start\" set JAVA_OPTS=-Dlog4j.rasp.configuration="
-            + "file:%CATALINA_HOME%\\rasp\\conf\\rasp-log4j.xml %JAVA_OPTS%";
+            + " set JAVA_OPTS=\"-javaagent:%CATALINA_HOME%\\rasp\\rasp.jar\" %JAVA_OPTS%";
+    private static String CATALINASHLOG4J = "if \"%ACTION%\" == \"start\" set JAVA_OPTS=\"-Dlog4j.rasp.configuration="
+            + "file:%CATALINA_HOME%\\rasp\\conf\\rasp-log4j.xml\" %JAVA_OPTS%";
 
     TomcatInstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
