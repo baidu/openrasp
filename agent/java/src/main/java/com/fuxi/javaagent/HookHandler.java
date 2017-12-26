@@ -20,6 +20,7 @@ import com.fuxi.javaagent.exception.SecurityException;
 import com.fuxi.javaagent.hook.XXEHook;
 import com.fuxi.javaagent.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.plugin.checker.CheckerManager;
+import com.fuxi.javaagent.plugin.js.engine.JSContext;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.request.HttpServletRequest;
 import com.fuxi.javaagent.response.HttpServletResponse;
@@ -137,9 +138,8 @@ public class HookHandler {
             responseContainer.setHeader(REQUEST_ID_HEADER_KEY, requestContainer.getRequestId());
             requestCache.set(requestContainer);
             responseCache.set(responseContainer);
-
             XXEHook.resetLocalExpandedSystemIds();
-
+            doCheck(CheckParameter.Type.REQUEST, JSContext.getUndefinedValue());
         }
     }
 
@@ -196,6 +196,13 @@ public class HookHandler {
             if (request.getInputStream() == inputStream) {
                 request.appendBody(bytes, offset, ret);
             }
+        }
+    }
+
+    public static void onParseParameters() {
+        AbstractRequest request = requestCache.get();
+        if (request != null) {
+            request.setCanGetParameter(true);
         }
     }
 

@@ -34,6 +34,7 @@ public abstract class AbstractRequest {
     protected ByteArrayOutputStream bodyOutputStream = null;
     protected static final int maxBodySize = 4096;
     protected String requestId;
+    protected boolean canGetParameter = false;
 
     /**
      * constructor
@@ -52,6 +53,24 @@ public abstract class AbstractRequest {
     public AbstractRequest(Object request) {
         this.request = request;
         this.requestId = UUID.randomUUID().toString().replace("-", "");
+    }
+
+    /**
+     * 返回是否当前请求能够获取参数内容
+     *
+     * @return 是否能够获取参数内容
+     */
+    public boolean isCanGetParameter() {
+        return canGetParameter;
+    }
+
+    /**
+     * 设置是否能够获取参数
+     *
+     * @param canGetParameter 是否能够获取参数内容
+     */
+    public void setCanGetParameter(boolean canGetParameter) {
+        this.canGetParameter = canGetParameter;
     }
 
     /**

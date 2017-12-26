@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
  * javax.servlet.http.HttpServletRequest类请求的统一格式接口
  */
 public final class HttpServletRequest extends AbstractRequest {
+    private static final Map<String, String[]> EMPTY_PARAM = new HashMap<String, String[]>();
     private static final Pattern PATTERN = Pattern.compile("\\d+(\\.\\d+)*");
 
     /**
@@ -139,7 +140,10 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public String getParameter(String key) {
-        return Reflection.invokeStringMethod(request, "getParameter", STRING_CLASS, key);
+        if (canGetParameter) {
+            return Reflection.invokeStringMethod(request, "getParameter", STRING_CLASS, key);
+        }
+        return null;
     }
 
     /**
@@ -149,8 +153,12 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Enumeration<String> getParameterNames() {
-        Object ret = Reflection.invokeMethod(request, "getParameterNames", EMPTY_CLASS);
-        return ret != null ? (Enumeration) ret : null;
+        if (canGetParameter) {
+            Object ret = Reflection.invokeMethod(request, "getParameterNames", EMPTY_CLASS);
+            return ret != null ? (Enumeration) ret : null;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -160,8 +168,12 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Map<String, String[]> getParameterMap() {
-        Object ret = Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
-        return ret != null ? (Map<String, String[]>) ret : null;
+        if (canGetParameter) {
+            Object ret = Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
+            return ret != null ? (Map<String, String[]>) ret : EMPTY_PARAM;
+        } else {
+            return EMPTY_PARAM;
+        }
     }
 
     /**
