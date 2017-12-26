@@ -289,6 +289,15 @@ plugin.register('fileUpload', function (params, context) {
             confidence: 90
         }
     }
+
+    if (params.filename == ".htaccess" || params.filename == ".user.ini") {
+        return {
+            action:     'block',
+            message:    '尝试上传 Apache/PHP 配置文件: ' + params.filename,
+            confidence: 90
+        } 
+    }
+
     return clean
 })
 
