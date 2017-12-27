@@ -30,7 +30,7 @@ function buildRaspInstall {
 	log "mvn clean package..."
 	mvn clean package || exit 1 
 	cp $BASE_DIR/rasp-install/target/RaspInstall.jar $OUTPUT_ROOT || exit 1
-	rm -rf $BASE_DIR/rasp-install/target || exit 1
+	rm -rf $BASE_DIR/rasp-install/target
 }
 
 # 编译Rasp
