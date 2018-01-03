@@ -46,7 +46,7 @@ public class SSRFChecker extends ConfigurableChecker {
         JsonObject config = Config.getConfig().getAlgorithmConfig();
 
         if (!isModuleIgnore(config, CONFIG_KEY_SSRF_INTRANET)
-                && (hostName.endsWith(".xip.io") || hostName.endsWith(".burpcollaborator.net"))) {
+                && (hostName.endsWith(".xip.io") || hostName.endsWith(".burpcollaborator.net") || hostName.endsWith(".xip.name"))) {
             result.add(AttackInfo.createLocalAttackInfo(checkParameter,
                     getActionElement(config, CONFIG_KEY_SSRF_INTRANET), "访问已知的内网探测域名"));
         } else if (!isModuleIgnore(config, CONFIG_KEY_SSRF_AWS)
