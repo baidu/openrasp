@@ -67,7 +67,7 @@ public class LogConfig {
     private static boolean isLogConfigFileExist(String logConfigFile) {
         File configFile = new File(logConfigFile);
         if (configFile.exists() && configFile.isFile()) {
-            System.out.println("Log config file already exist!");
+            System.out.println("[OpenRASP] Log config file already exists, continuing ...");
             return true;
         }
         return false;
@@ -136,7 +136,7 @@ public class LogConfig {
             } catch (IOException eis) {
                 eis.printStackTrace();
             }
-            throw new ConfigLoadException("Fail to extract " + CONFIGFILE + ", because of: " + throwable.getMessage());
+            throw new ConfigLoadException("[OpenRASP] Unable to extract log4j config file: " + CONFIGFILE + ", error: " + throwable.getMessage());
         }
     }
 }
