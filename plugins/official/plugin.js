@@ -89,7 +89,7 @@ function ip2long(ipstr) {
     // return ip.split('.').reduce(function(ipInt, octet) { return (ipInt<<8) + parseInt(octet, 10)}, 0) >>> 0;
 }
 
-if (plugin.jsEngine !== 'v8') {
+if (RASP.get_jsengine() !== 'v8') {
     // 在java语言下面，为了提高性能，SQLi/SSRF检测逻辑改为原生实现
     // 通过修改这个 algorithmConfig 来控制检测逻辑是否开启
 
