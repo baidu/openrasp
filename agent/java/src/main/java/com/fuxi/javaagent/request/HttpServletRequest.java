@@ -223,7 +223,6 @@ public final class HttpServletRequest extends AbstractRequest {
         ret.put("version", extractNumber(serverInfo));
         ret.put("os", getOs(System.getProperty("os.name")));
         ret.put("language", "java");
-        ret.put("__raw", serverInfo);
         return ret;
     }
 
