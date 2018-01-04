@@ -221,10 +221,23 @@ public final class HttpServletRequest extends AbstractRequest {
         // TODO more reliable
         ret.put("server", extractType(serverInfo));
         ret.put("version", extractNumber(serverInfo));
-        ret.put("os", System.getProperty("os.name"));
+        ret.put("os", getOs(System.getProperty("os.name")));
         ret.put("language", "java");
         ret.put("__raw", serverInfo);
         return ret;
+    }
+
+    public static String getOs(String os) {
+        if (os == null) {
+            return null;
+        }
+        os = os.toLowerCase();
+        if (os.contains("linux")) return "Linux";
+        if (os.contains("windows")) return "Windows";
+        if (os.contains("mac")) return "Mac";
+        if (os.contains("sunos")) return "SunOS";
+        if (os.contains("freebsd")) return "FreeBSD";
+        return os;
     }
 
     /**

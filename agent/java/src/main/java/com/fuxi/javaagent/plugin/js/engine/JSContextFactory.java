@@ -85,6 +85,17 @@ public class JSContextFactory extends ContextFactory {
             RASP = (ScriptableObject) ScriptableObject.getProperty(globalScope, "RASP");
             RASP.defineProperty("sql_tokenize", new JSTokenizeSql(), ScriptableObject.READONLY);
             RASP.defineProperty("config_set", new JSRASPConfig(), ScriptableObject.READONLY);
+            RASP.defineProperty("get_jsengine", new BaseFunction() {
+                @Override
+                public Object call(Context cx, Scriptable scope, Scriptable thisObj, Object[] args) {
+                    return "rhino";
+                }
+
+                @Override
+                public Object getDefaultValue(Class<?> hint) {
+                    return "[Function: get_jsengine]";
+                }
+            }, ScriptableObject.READONLY);
         } finally {
             JSContext.exit();
         }
