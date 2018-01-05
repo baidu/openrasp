@@ -56,6 +56,7 @@ public abstract class BaseStandardInstaller implements Installer {
             FileUtils.copyDirectory(srcDir, installDir);
         }
 
+        System.out.println("Make \"rasp\" directory writable\n");
         modifyFolerPermission(installDir.getCanonicalPath());
 
         // 生成配置文件
@@ -83,13 +84,12 @@ public abstract class BaseStandardInstaller implements Installer {
             String sep = File.separator;
             File target = new File(dir + sep + "conf" + sep + "rasp.properties");
 
-
             System.out.println("Generating \"rasp.properties\"\n- " + target.getAbsolutePath());
             if (target.exists()) {
                 System.out.println("- Already exists, continuing ..");
                 return true;
             }
-            System.out.println("create " + target.getAbsolutePath());
+            System.out.println("- Create " + target.getAbsolutePath());
             target.getParentFile().mkdir();
             target.createNewFile();
             FileWriter writer = new FileWriter(target);
@@ -140,11 +140,11 @@ public abstract class BaseStandardInstaller implements Installer {
 
     public void modifyFolerPermission(String folderPath) {
         if (System.getProperty("os.name").startsWith("Windows")) {
-            String res = runCommand(new String[]{"cmd", "/c", "echo Y| %SYSTEMROOT%\\System32\\cacls \"" + folderPath + "\" /T /G everyone:F"});
+            String res = runCommand(new String[]{"cmd", "/c", "echo Y|%SYSTEMROOT%\\System32\\cacls \"" + folderPath + "\" /G everyone:F"});
+            // System.out.println(res);
         } else {
-            String user = runCommand(new String[]{"bash", "-c", "whoami"});
-            if (user.equals("root")) {
-                runCommand(new String[]{"bash", "-c", "chmod -R 777 " + folderPath});
+            if (System.getProperty("user.name").equals("root")) {
+                runCommand(new String[]{"chmod", "-R", "o+w", folderPath});
             }
         }
     }
