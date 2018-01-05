@@ -56,6 +56,8 @@ public abstract class BaseStandardInstaller implements Installer {
             FileUtils.copyDirectory(srcDir, installDir);
         }
 
+        modifyFolerPermission(installDir.getCanonicalPath());
+
         // 生成配置文件
         if (!generateConfig(installDir.getPath())) {
             System.exit(1);
@@ -127,9 +129,23 @@ public abstract class BaseStandardInstaller implements Installer {
             while ((line = buffer.readLine()) != null) {
                 sb.append(line).append("\n");
             }
+            if (sb.length() > 0) {
+                sb.deleteCharAt(sb.length() - 1);
+            }
             return sb.toString();
         } catch (IOException e) {
             return "";
+        }
+    }
+
+    public void modifyFolerPermission(String folderPath) {
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            String res = runCommand(new String[]{"cmd", "/c", "echo Y| %SYSTEMROOT%\\System32\\cacls \"" + folderPath + "\" /T /G everyone:F"});
+        } else {
+            String user = runCommand(new String[]{"bash", "-c", "whoami"});
+            if (user.equals("root")) {
+                runCommand(new String[]{"bash", "-c", "chmod -R 777 " + folderPath});
+            }
         }
     }
 
