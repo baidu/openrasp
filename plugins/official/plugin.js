@@ -332,8 +332,8 @@ plugin.register('readFile', function (params, context) {
 
         if (matched) {
             return {
-                action:     'block',
-                message:    '尝试下载敏感文件(' + context.method.toUpperCase() + ' 方式): ' + params.realpath,
+                action:     'log',
+                message:    '尝试下载敏感文件 (' + context.method.toUpperCase() + ' 方式): ' + params.realpath,
 
                 // 如果是HEAD方式下载敏感文件，100% 扫描器攻击
                 confidence: context.method == 'head' ? 100 : 90
