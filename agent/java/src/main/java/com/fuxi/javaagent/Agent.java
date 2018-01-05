@@ -64,8 +64,8 @@ public class Agent {
             Logger.getLogger(Agent.class.getName()).info(message);
             HookHandler.enableHook.set(true);
         } catch (Exception e) {
-            System.out.println("Failed to initialize OpenRASP:" + e.getMessage() + "\n"
-                    + "Will continue without security protection.");
+            System.out.println("[OpenRASP] Failed to initialize, will continue without security protection.");
+
             e.printStackTrace();
         }
     }
