@@ -178,7 +178,7 @@ if (RASP.get_jsengine() !== 'v8') {
             var tokens_lc = tokens.map(v => v.toLowerCase())
 
             for (var i = 0; i < tokens_lc.length; i ++) {
-                if (tokens_lc[i] == ';') {
+                if (tokens_lc[i] == ';' && i != tokens_lc.length - 1) {
                     reason = '禁止多语句查询'
                     break
                 } else if (tokens_lc[i][0] === '0' && tokens_lc[i][1] === 'x') {
