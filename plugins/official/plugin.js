@@ -94,23 +94,29 @@ if (RASP.get_jsengine() !== 'v8') {
     // 通过修改这个 algorithmConfig 来控制检测逻辑是否开启
 
     var algorithmConfig = {
+        // SQL注入算法#1 - 匹配用户输入
         'sqli_userinput': {
             action: 'block'
         },
+        // SQL注入算法#2 - 语句规范
         'sqli_policy': {
             action:             'block',
             feature:            ['stacked_query', 'no_hex', 'constant_compare', 'version_comment', 'function_blacklist'],
             function_blacklist: ['load_file', 'benchmark', 'pg_sleep', 'sleep']
         },
+        // SSRF - 是否允许访问 aws metadata
         'ssrf_aws': {
             action: 'block'
         },
+        // SSRF - 是否允许访问 dnslog 地址
         'ssrf_common': {
             action: 'block'
         },
+        // SSRF - 是否允许访问混淆后的IP地址
         'ssrf_obfuscate': {
             action: 'block'
         },
+        // SSRF - 是否直接禁止访问内网
         'ssrf_intranet': {
             action: 'ignore'
         }
