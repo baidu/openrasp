@@ -95,7 +95,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                     for (String token : tokens) {
                         if (!StringUtils.isEmpty(token)) {
                             String lt = token.toLowerCase();
-                            if (lt.equals(";") && modules.contains(CONFIG_KEY_STACKED_QUERY)) {
+                            if (lt.equals(";") && i != tokens.length - 1 && modules.contains(CONFIG_KEY_STACKED_QUERY)) {
                                 message = "禁止多语句查询";
                                 break;
                             } else if (lt.startsWith("0x") && modules.contains(CONFIG_KEY_NO_HEX)) {
