@@ -82,6 +82,9 @@ public class SecurityPolicyInfo extends EventInfo {
         info.put("server_version", getCatalinaServerVersion());
         // 安全规范检测信息
         info.put("message", message);
+        // 攻击调用栈
+        StackTraceElement[] trace = filter(new Throwable().getStackTrace());
+        info.put("stack_trace", stringify(trace));
         return info;
     }
 

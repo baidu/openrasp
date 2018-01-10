@@ -133,24 +133,6 @@ public class AttackInfo extends EventInfo {
         return info;
     }
 
-    private StackTraceElement[] filter(StackTraceElement[] trace) {
-        int i = 0;
-        // 去除插件本身调用栈
-        while (trace[i].getClassName().startsWith("com.fuxi.javaagent") && i < trace.length) {
-            i++;
-        }
-        return Arrays.copyOfRange(trace, i, Math.min(i + Config.getConfig().getLogMaxStackSize(), trace.length));
-    }
-
-    private String stringify(StackTraceElement[] trace) {
-        StringBuilder ret = new StringBuilder();
-        for (int i = 0; i < trace.length; i++) {
-            ret.append(trace[i].toString());
-            ret.append("\n");
-        }
-        return ret.toString();
-    }
-
     @Override
     public String getType() {
         return TYPE_ATTACK;
