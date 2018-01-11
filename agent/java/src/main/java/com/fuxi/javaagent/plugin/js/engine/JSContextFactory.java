@@ -20,6 +20,7 @@ import com.fuxi.javaagent.plugin.checker.CheckParameter;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.*;
+import com.fuxi.javaagent.rhino.shim.*;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -57,18 +58,16 @@ public class JSContextFactory extends ContextFactory {
 
             ScriptableObject.defineClass(globalScope, JSRequestContext.class);
 
+            Script shim;
+            shim = new Shim();
+            shim.exec(cx, globalScope);
+            shim = new Console();
+            shim.exec(cx, globalScope);
+
             InputStream is;
             String name;
             String script;
 
-            name = "shim.js";
-            is = Object.class.getResourceAsStream("/" + name);
-            script = IOUtils.toString(is, "UTF-8");
-            cx.evaluateString(globalScope, script, name, 1, null);
-            name = "console.js";
-            is = Object.class.getResourceAsStream("/" + name);
-            script = IOUtils.toString(is, "UTF-8");
-            cx.evaluateString(globalScope, script, name, 1, null);
             name = "error.js";
             is = Object.class.getResourceAsStream("/environment/" + name);
             script = IOUtils.toString(is, "UTF-8");
