@@ -28,8 +28,12 @@ import static com.baidu.rasp.RaspError.E10001;
  */
 public class Jboss4Installer extends BaseStandardInstaller {
 
-    private static String RUNSHRASP = "JAVA_OPTS=\"-javaagent:${JBOSS_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"";
+    private static String RUNSHRASP = "JAVA_OPTS=\"-javaagent:\\\"${JBOSS_HOME}/rasp/rasp.jar\\\" ${JAVA_OPTS}\"";
     private static String RUNSHLOG4J = "JAVA_OPTS=\"-Dlog4j.rasp.configuration="
+            + "\\\"file://${JBOSS_HOME}/rasp/conf/rasp-log4j.xml\\\" ${JAVA_OPTS}\"";
+
+    private static String RUNSHRASP_OLD = "JAVA_OPTS=\"-javaagent:${JBOSS_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"";
+    private static String RUNSHLOG4J_OLD = "JAVA_OPTS=\"-Dlog4j.rasp.configuration="
             + "file://${JBOSS_HOME}/rasp/conf/rasp-log4j.xml ${JAVA_OPTS}\"";
 
     Jboss4Installer(String serverName, String serverRoot) {
@@ -59,7 +63,7 @@ public class Jboss4Installer extends BaseStandardInstaller {
                 modifyConfigState = DONE;
             }
             if (DONE == modifyConfigState) {
-                if (line.contains(RUNSHRASP) || line.contains(RUNSHLOG4J)) {
+                if (line.contains(RUNSHRASP_OLD) || line.contains(RUNSHLOG4J_OLD)) {
                     continue;
                 }
             }
