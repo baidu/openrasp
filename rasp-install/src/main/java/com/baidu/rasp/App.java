@@ -38,16 +38,22 @@ public class App {
         }
     }
 
+    private static void showBanner() {
+        String banner = "OpenRASP Installer for Java app servers - Copyright ©2017 Baidu Inc.\n" + 
+            "For more details visit: http://rasp.baidu.com/doc/install/software.html\n";
+        System.out.println(banner);
+    }
+
     private static void showHelp() {
         String helpMsg = 
-            "OpenRASP Installer for Java app servers - Copyright ©2017 Baidu Inc.\n" + 
-            "For more details visit: http://rasp.baidu.com/doc/install/software.html\n\n" +
             "Usage:\n" + 
             "java -jar RaspInstall.jar <path/to/server_home>";
         System.out.println(helpMsg);
     }
 
     public static void main(String[] args) throws IOException, URISyntaxException {
+        showBanner();
+
         if (args.length < 1) {
             showHelp();
             return;
@@ -60,7 +66,7 @@ public class App {
             installer.install();
         } catch (Exception e) {
             System.out.println(e.getMessage() + "\n");
-            showHelp();
+            // showHelp();
         }
     }
 }
