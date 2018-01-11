@@ -273,7 +273,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
             for (String app : apps) {
                 message.append(app).append(", ");
             }
-            infos.add(new SecurityPolicyInfo(Type.DEFAULT_APP, message.substring(0, message.length() - 1), true));
+            infos.add(new SecurityPolicyInfo(Type.DEFAULT_APP, message.substring(0, message.length() - 2), true));
         }
     }
 

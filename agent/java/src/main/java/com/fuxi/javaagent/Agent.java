@@ -16,6 +16,7 @@
 
 package com.fuxi.javaagent;
 
+import com.fuxi.javaagent.hook.AbstractClassHook;
 import com.fuxi.javaagent.messaging.LogConfig;
 import com.fuxi.javaagent.plugin.checker.CheckerManager;
 import com.fuxi.javaagent.plugin.js.engine.JsPluginManager;
@@ -88,14 +89,18 @@ public class Agent {
      */
     private static void initTransformer(Instrumentation inst) throws UnmodifiableClassException {
         LinkedList<Class> retransformClasses = new LinkedList<Class>();
-        inst.addTransformer(new CustomClassTransformer(), true);
+        CustomClassTransformer customClassTransformer = new CustomClassTransformer();
+        inst.addTransformer(customClassTransformer, true);
         Class[] loadedClasses = inst.getAllLoadedClasses();
         for (Class clazz : loadedClasses) {
-            if (inst.isModifiableClass(clazz) && !clazz.getName().startsWith("java.lang.invoke.LambdaForm")) {
-                retransformClasses.add(clazz);
+            for (final AbstractClassHook hook : customClassTransformer.getHooks()) {
+                if (hook.isClassMatched(clazz.getName().replace(".", "/"))) {
+                    if (inst.isModifiableClass(clazz) && !clazz.getName().startsWith("java.lang.invoke.LambdaForm")) {
+                        retransformClasses.add(clazz);
+                    }
+                }
             }
         }
-
         // hook已经加载的类
         Class[] classes = new Class[retransformClasses.size()];
         retransformClasses.toArray(classes);

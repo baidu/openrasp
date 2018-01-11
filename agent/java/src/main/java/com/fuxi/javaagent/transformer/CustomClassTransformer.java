@@ -120,4 +120,9 @@ public class CustomClassTransformer implements ClassFileTransformer {
             classLoaderCache.put(className.replace('/', '.'), loader);
         }
     }
+
+    public HashSet<AbstractClassHook> getHooks() {
+        return hooks;
+    }
+
 }
