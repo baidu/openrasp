@@ -36,9 +36,16 @@ import java.net.SocketAddress;
  * 检测socket连接的hook点
  */
 public class SocketHook extends AbstractClassHook {
+
+    private static String CLASS_NAME = "java/net/Socket";
+
+    static {
+        AbstractClassHook.HOOKED_CLASSES.add(CLASS_NAME.replaceAll("/", "."));
+    }
+
     @Override
     public boolean isClassMatched(String className) {
-        return className.equals("java/net/Socket");
+        return className.equals(CLASS_NAME);
     }
 
     @Override

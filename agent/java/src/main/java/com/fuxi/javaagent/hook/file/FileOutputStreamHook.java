@@ -35,6 +35,13 @@ import java.io.File;
  * Created by lxk on 6/8/17.
  */
 public class FileOutputStreamHook extends AbstractClassHook {
+
+    private static String CLASS_NAME = "java/io/FileOutputStream";
+
+    static {
+        AbstractClassHook.HOOKED_CLASSES.add(CLASS_NAME.replaceAll("/", "."));
+    }
+
     /**
      * (none-javadoc)
      *
@@ -52,7 +59,7 @@ public class FileOutputStreamHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "java/io/FileOutputStream".equals(className);
+        return CLASS_NAME.equals(className);
     }
 
 

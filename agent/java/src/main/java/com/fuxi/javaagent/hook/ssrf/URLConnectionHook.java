@@ -17,6 +17,7 @@
 package com.fuxi.javaagent.hook.ssrf;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.hook.AbstractClassHook;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -32,9 +33,16 @@ import java.net.URLConnection;
  * jdk 中进行 http 请求的 hook 点
  */
 public class URLConnectionHook extends AbstractSSRFHook {
+
+    private static String CLASS_NAME = "sun/net/www/protocol/http/HttpURLConnection";
+
+    static {
+        AbstractClassHook.HOOKED_CLASSES.add(CLASS_NAME.replaceAll("/", "."));
+    }
+
     @Override
     public boolean isClassMatched(String className) {
-        return "sun/net/www/protocol/http/HttpURLConnection".equals(className);
+        return CLASS_NAME.equals(className);
     }
 
     @Override

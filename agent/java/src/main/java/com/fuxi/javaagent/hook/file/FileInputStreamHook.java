@@ -37,6 +37,13 @@ import java.io.IOException;
  * All rights reserved
  */
 public class FileInputStreamHook extends AbstractClassHook {
+
+    private static String CLASS_NAME = "java/io/FileInputStream";
+
+    static {
+        AbstractClassHook.HOOKED_CLASSES.add(CLASS_NAME.replaceAll("/", "."));
+    }
+
     /**
      * (none-javadoc)
      *
@@ -54,7 +61,7 @@ public class FileInputStreamHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "java/io/FileInputStream".equals(className);
+        return CLASS_NAME.equals(className);
     }
 
     /**

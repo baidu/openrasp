@@ -36,6 +36,14 @@ import java.util.HashSet;
  */
 public class XXEHook extends AbstractClassHook {
 
+    private static String CLASS_NAME = "com/sun/org/apache/xerces/internal/util/XMLResourceIdentifierImpl";
+    private static String CLASS_NAME_JBOSS = "org/apache/xerces/util/XMLResourceIdentifierImpl";
+
+    static {
+        AbstractClassHook.HOOKED_CLASSES.add(CLASS_NAME.replaceAll("/", "."));
+        AbstractClassHook.HOOKED_CLASSES.add(CLASS_NAME_JBOSS.replaceAll("/", "."));
+    }
+
     private static ThreadLocal<HashSet<String>> localExpandedSystemIds = new ThreadLocal<HashSet<String>>() {
         @Override
         protected HashSet<String> initialValue() {
@@ -74,8 +82,8 @@ public class XXEHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "com/sun/org/apache/xerces/internal/util/XMLResourceIdentifierImpl".equals(className)
-                || "org/apache/xerces/util/XMLResourceIdentifierImpl".equals(className);
+        return CLASS_NAME.equals(className)
+                || CLASS_NAME_JBOSS.equals(className);
     }
 
     /**

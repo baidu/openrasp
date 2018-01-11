@@ -21,6 +21,8 @@ import org.objectweb.asm.*;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.apache.log4j.Logger;
 
+import java.util.HashSet;
+
 /**
  * Created by zhuming01 on 5/19/17.
  * All rights reserved
@@ -30,6 +32,7 @@ import org.apache.log4j.Logger;
  */
 public abstract class AbstractClassHook {
     private static final Logger LOGGER = Logger.getLogger(AbstractClassHook.class.getName());
+    public static HashSet<String> HOOKED_CLASSES = new HashSet<String>();
 
     private String[] interfaces;
 

@@ -34,6 +34,13 @@ import java.util.List;
  * All rights reserved
  */
 public class ProcessBuilderHook extends AbstractClassHook {
+
+    private static String CLASS_NAME = "java/lang/ProcessBuilder";
+
+    static {
+        AbstractClassHook.HOOKED_CLASSES.add(CLASS_NAME.replaceAll("/", "."));
+    }
+
     /**
      * (none-javadoc)
      *
@@ -51,7 +58,7 @@ public class ProcessBuilderHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "java/lang/ProcessBuilder".equals(className);
+        return CLASS_NAME.equals(className);
     }
 
     /**

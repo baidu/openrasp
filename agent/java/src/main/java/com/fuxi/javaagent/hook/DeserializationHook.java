@@ -34,6 +34,13 @@ import java.io.ObjectStreamClass;
  * 反序列化漏洞检测hook
  */
 public class DeserializationHook extends AbstractClassHook {
+
+    private static String CLASS_NAME = "java/io/ObjectInputStream";
+
+    static {
+        AbstractClassHook.HOOKED_CLASSES.add(CLASS_NAME.replaceAll("/", "."));
+    }
+
     /**
      * (none-javadoc)
      *
@@ -51,7 +58,7 @@ public class DeserializationHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "java/io/ObjectInputStream".equals(className);
+        return CLASS_NAME.equals(className);
     }
 
     /**

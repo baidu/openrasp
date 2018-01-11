@@ -36,6 +36,13 @@ import java.util.Arrays;
  * All rights reserved
  */
 public class DiskFileItemHook extends AbstractClassHook {
+
+    private static String CLASS_NAME = "org/apache/commons/fileupload/disk/DiskFileItem";
+
+    static {
+        AbstractClassHook.HOOKED_CLASSES.add(CLASS_NAME.replaceAll("/", "."));
+    }
+
     /**
      * (none-javadoc)
      *
@@ -54,7 +61,7 @@ public class DiskFileItemHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "org/apache/commons/fileupload/disk/DiskFileItem".equals(className);
+        return CLASS_NAME.equals(className);
     }
 
     /**

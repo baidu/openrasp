@@ -40,9 +40,15 @@ import java.util.List;
  */
 public class ReflectionHook extends AbstractClassHook {
 
+    private static String CLASS_NAME = "java/lang/reflect/Method";
+
+    static {
+        AbstractClassHook.HOOKED_CLASSES.add(CLASS_NAME.replaceAll("/", "."));
+    }
+
     @Override
     public boolean isClassMatched(String className) {
-        return className.equals("java/lang/reflect/Method");
+        return className.equals(CLASS_NAME);
     }
 
     @Override

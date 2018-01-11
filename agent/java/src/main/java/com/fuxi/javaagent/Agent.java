@@ -16,6 +16,7 @@
 
 package com.fuxi.javaagent;
 
+import com.fuxi.javaagent.hook.AbstractClassHook;
 import com.fuxi.javaagent.messaging.LogConfig;
 import com.fuxi.javaagent.plugin.checker.CheckerManager;
 import com.fuxi.javaagent.plugin.js.engine.JsPluginManager;
@@ -91,7 +92,9 @@ public class Agent {
         inst.addTransformer(new CustomClassTransformer(), true);
         Class[] loadedClasses = inst.getAllLoadedClasses();
         for (Class clazz : loadedClasses) {
-            if (inst.isModifiableClass(clazz) && !clazz.getName().startsWith("java.lang.invoke.LambdaForm")) {
+            if (inst.isModifiableClass(clazz)
+                && AbstractClassHook.HOOKED_CLASSES.contains(clazz.getName())
+                && !clazz.getName().startsWith("java.lang.invoke.LambdaForm")) {
                 retransformClasses.add(clazz);
             }
         }

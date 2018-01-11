@@ -17,6 +17,7 @@
 package com.fuxi.javaagent.hook.ssrf;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.hook.AbstractClassHook;
 import com.fuxi.javaagent.tool.Reflection;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -30,9 +31,16 @@ import org.objectweb.asm.commons.Method;
  * commons-httpclinet 框架的 http 请求 hook 点
  */
 public class CommonHttpClientHook extends AbstractSSRFHook {
+
+    private static String CLASS_NAME = "org/apache/commons/httpclient/HttpClient";
+
+    static {
+        AbstractClassHook.HOOKED_CLASSES.add(CLASS_NAME.replaceAll("/", "."));
+    }
+
     @Override
     public boolean isClassMatched(String className) {
-        return "org/apache/commons/httpclient/HttpClient".equals(className);
+        return CLASS_NAME.equals(className);
     }
 
     @Override

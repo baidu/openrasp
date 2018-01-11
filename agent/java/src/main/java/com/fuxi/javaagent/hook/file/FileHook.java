@@ -36,6 +36,13 @@ import java.io.IOException;
  * All rights reserved
  */
 public class FileHook extends AbstractClassHook {
+
+    private static String CLASS_NAME = "java/io/File";
+
+    static {
+        AbstractClassHook.HOOKED_CLASSES.add(CLASS_NAME.replaceAll("/", "."));
+    }
+
     /**
      * (none-javadoc)
      *
@@ -53,7 +60,7 @@ public class FileHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "java/io/File".equals(className);
+        return CLASS_NAME.equals(className);
     }
 
     /**
