@@ -34,7 +34,11 @@ import static com.baidu.rasp.RaspError.E10001;
 public class TomcatInstaller extends BaseStandardInstaller {
 
     private static String CATALINASHRASP = "JAVA_OPTS=\"-javaagent:\\\"${CATALINA_HOME}/rasp/rasp.jar\\\" ${JAVA_OPTS}\"";
-    private static String CATALINASHLOG4J = "JAVA_OPTS=\"-Dlog4j.rasp.configuration=\\\"file://${CATALINA_HOME}/rasp/conf\\\""
+    private static String CATALINASHLOG4J = "JAVA_OPTS=\"-Dlog4j.rasp.configuration=\\\"file://${CATALINA_HOME}/rasp/conf"
+            + "/rasp-log4j.xml\\\" ${JAVA_OPTS}\"";
+
+    private static String CATALINASHRASP_OLD = "JAVA_OPTS=\"-javaagent:${CATALINA_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"";
+    private static String CATALINASHLOG4J_OLD = "JAVA_OPTS=\"-Dlog4j.rasp.configuration=file://${CATALINA_HOME}/rasp/conf"
             + "/rasp-log4j.xml ${JAVA_OPTS}\"";
 
     TomcatInstaller(String serverName, String serverRoot) {
@@ -73,7 +77,7 @@ public class TomcatInstaller extends BaseStandardInstaller {
                 modifyConfigState = DONE;
             }
             if (DONE == modifyConfigState) {
-                if (line.contains(CATALINASHRASP) || line.contains(CATALINASHLOG4J)) {
+                if (line.contains(CATALINASHRASP_OLD) || line.contains(CATALINASHLOG4J_OLD)) {
                     continue;
                 }
             }
