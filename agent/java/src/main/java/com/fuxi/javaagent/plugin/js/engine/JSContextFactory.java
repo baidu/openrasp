@@ -98,6 +98,8 @@ public class JSContextFactory extends ContextFactory {
         } finally {
             JSContext.exit();
         }
+
+        System.out.println("[OpenRASP] JSContextFactory Initialized");
     }
 
     public static void init() throws Exception {

@@ -63,6 +63,8 @@ public class TomcatSecurityChecker extends PolicyChecker {
                     checkManagerPassword(tomcatBaseDir, infos);
                     checkDirectoryListing(tomcatBaseDir, infos);
                     checkDefaultApp(tomcatBaseDir, infos);
+
+                    System.out.println("[OpenRASP] Tomcat security baseline - inspection completed");
                 }
             } else {
                 LOGGER.error(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
@@ -71,6 +73,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
         } catch (Exception e) {
             handleException(e);
         }
+
         return infos;
     }
 
