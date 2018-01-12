@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE log4j:configuration PUBLIC "-//APACHE//DTD LOG4J 1.2//EN"
         "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd">
+<!--OPENRASP LOG CONFIG ID:[22], DO NOT REMOVE THIS LINE-->
 <log4j:configuration debug="false">
 
     <appender name="CONSOLE" class="com.fuxi.javaagent.log4j.ConsoleAppender">
