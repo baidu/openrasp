@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE log4j:configuration PUBLIC "-//APACHE//DTD LOG4J 1.2//EN"
         "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd">
+<!--OPENRASP LOG CONFIG ID:[22], DO NOT REMOVE THIS LINE-->
 <log4j:configuration debug="false">
 
     <appender name="CONSOLE" class="com.fuxi.javaagent.log4j.ConsoleAppender">
@@ -11,44 +12,48 @@
         </layout>
     </appender>
 
-    <appender name="ALARM" class="com.fuxi.javaagent.log4j.DailyRollingFileAppender">
+    <appender name="ALARM" class="com.fuxi.javaagent.messaging.OpenraspDailyRollingFileAppender">
         <errorHandler class="com.fuxi.javaagent.log4j.helpers.OnlyOnceErrorHandler"/>
         <param name="File" value="[[TARGET PATH]]/logs/alarm/alarm.log"/>
         <param name="Append" value="true"/>
         <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <!--<param name="MaxBackupIndex" value="30"/>-->
         <param name="encoding" value="UTF-8"/>
         <layout class="com.fuxi.javaagent.log4j.PatternLayout">
             <param name="ConversionPattern" value="%m%n"/>
         </layout>
     </appender>
 
-    <appender name="POLICY_ALARM" class="com.fuxi.javaagent.log4j.DailyRollingFileAppender">
+    <appender name="POLICY_ALARM" class="com.fuxi.javaagent.messaging.OpenraspDailyRollingFileAppender">
         <errorHandler class="com.fuxi.javaagent.log4j.helpers.OnlyOnceErrorHandler"/>
         <param name="File" value="[[TARGET PATH]]/logs/policy_alarm/policy_alarm.log"/>
         <param name="Append" value="true"/>
         <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <!--<param name="MaxBackupIndex" value="30"/>-->
         <param name="encoding" value="UTF-8"/>
         <layout class="com.fuxi.javaagent.log4j.PatternLayout">
             <param name="ConversionPattern" value="%m%n"/>
         </layout>
     </appender>
 
-    <appender name="PLUGIN" class="com.fuxi.javaagent.log4j.DailyRollingFileAppender">
+    <appender name="PLUGIN" class="com.fuxi.javaagent.messaging.OpenraspDailyRollingFileAppender">
         <errorHandler class="com.fuxi.javaagent.log4j.helpers.OnlyOnceErrorHandler"/>
         <param name="File" value="[[TARGET PATH]]/logs/plugin/plugin.log"/>
         <param name="Append" value="true"/>
         <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <!--<param name="MaxBackupIndex" value="30"/>-->
         <param name="encoding" value="UTF-8"/>
         <layout class="com.fuxi.javaagent.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d %-5p [%t][%c] %m%n"/>
         </layout>
     </appender>
 
-    <appender name="RASP" class="com.fuxi.javaagent.log4j.DailyRollingFileAppender">
+    <appender name="RASP" class="com.fuxi.javaagent.messaging.OpenraspDailyRollingFileAppender">
         <errorHandler class="com.fuxi.javaagent.log4j.helpers.OnlyOnceErrorHandler"/>
         <param name="File" value="[[TARGET PATH]]/logs/rasp/rasp.log"/>
         <param name="Append" value="true"/>
         <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <!--<param name="MaxBackupIndex" value="30"/>-->
         <param name="encoding" value="UTF-8"/>
         <layout class="com.fuxi.javaagent.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d %-5p [%t][%c] %m%n"/>
@@ -129,17 +134,17 @@
     <!--</appender>-->
 
 
-    <logger name="com.fuxi.javaagent.plugin.alarm" additivity="false">
+    <logger name="com.fuxi.javaagent.plugin.checker.alarm" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="ALARM"/>
     </logger>
 
-    <logger name="com.fuxi.javaagent.tool.security.policy_alarm" additivity="false">
+    <logger name="com.fuxi.javaagent.plugin.checker.policy_alarm" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="POLICY_ALARM"/>
     </logger>
 
-    <logger name="com.fuxi.javaagent.plugin.log" additivity="false">
+    <logger name="com.fuxi.javaagent.plugin.js.engine.log" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="PLUGIN"/>
     </logger>

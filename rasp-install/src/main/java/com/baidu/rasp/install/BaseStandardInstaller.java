@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.baidu.rasp.install;
 
 import com.baidu.rasp.RaspError;
@@ -36,9 +52,12 @@ public abstract class BaseStandardInstaller implements Installer {
 
         if (!srcDir.getCanonicalPath().equals(installDir.getCanonicalPath())) {
             // 拷贝rasp文件夹
-            System.out.println("copy " + srcDir.getCanonicalPath() + " to " + installDir.getCanonicalPath());
+            System.out.println("Duplicating \"rasp\" directory\n- " + installDir.getCanonicalPath());
             FileUtils.copyDirectory(srcDir, installDir);
         }
+
+        System.out.println("Make \"rasp\" directory writable\n");
+        modifyFolerPermission(installDir.getCanonicalPath());
 
         // 生成配置文件
         if (!generateConfig(installDir.getPath())) {
@@ -52,12 +71,11 @@ public abstract class BaseStandardInstaller implements Installer {
         }
 
         // 修改服务器启动脚本
-        System.out.println("modify " + script.getCanonicalPath());
+        System.out.println("Updating startup script\n- " + script.getCanonicalPath());
         String original = read(script);
         String modified = modifyStartScript(original);
         write(script, modified);
-        System.out.println("install done!");
-        System.out.println(">>>please restart server<<<");
+        System.out.println("\nInstallation completed without errors.\nPlease restart application server to take effect.");
     }
 
 
@@ -65,11 +83,13 @@ public abstract class BaseStandardInstaller implements Installer {
         try {
             String sep = File.separator;
             File target = new File(dir + sep + "conf" + sep + "rasp.properties");
+
+            System.out.println("Generating \"rasp.properties\"\n- " + target.getAbsolutePath());
             if (target.exists()) {
-                System.out.println(target.getAbsolutePath() + " already exists, skipped.");
+                System.out.println("- Already exists, continuing ..");
                 return true;
             }
-            System.out.println("create " + target.getAbsolutePath());
+            System.out.println("- Create " + target.getAbsolutePath());
             target.getParentFile().mkdir();
             target.createNewFile();
             FileWriter writer = new FileWriter(target);
@@ -109,9 +129,23 @@ public abstract class BaseStandardInstaller implements Installer {
             while ((line = buffer.readLine()) != null) {
                 sb.append(line).append("\n");
             }
+            if (sb.length() > 0) {
+                sb.deleteCharAt(sb.length() - 1);
+            }
             return sb.toString();
         } catch (IOException e) {
             return "";
+        }
+    }
+
+    public void modifyFolerPermission(String folderPath) {
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            String res = runCommand(new String[]{"cmd", "/c", "echo Y|%SYSTEMROOT%\\System32\\cacls \"" + folderPath + "\" /G everyone:F"});
+            // System.out.println(res);
+        } else {
+            if (System.getProperty("user.name").equals("root")) {
+                runCommand(new String[]{"chmod", "-R", "o+w", folderPath});
+            }
         }
     }
 

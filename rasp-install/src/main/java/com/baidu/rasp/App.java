@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.baidu.rasp;
 
 import com.baidu.rasp.install.Installer;
@@ -22,16 +38,22 @@ public class App {
         }
     }
 
+    private static void showBanner() {
+        String banner = "OpenRASP Installer for Java app servers - Copyright ©2017 Baidu Inc.\n" + 
+            "For more details visit: http://rasp.baidu.com/doc/install/software.html\n";
+        System.out.println(banner);
+    }
+
     private static void showHelp() {
         String helpMsg = 
-            "OpenRASP Installer for Java app servers - Copyright ©2017 Baidu Inc.\n" + 
-            "For more details visit: http://rasp.baidu.com/doc/install/software.html\n\n" +
             "Usage:\n" + 
             "java -jar RaspInstall.jar <path/to/server_home>";
         System.out.println(helpMsg);
     }
 
     public static void main(String[] args) throws IOException, URISyntaxException {
+        showBanner();
+
         if (args.length < 1) {
             showHelp();
             return;
@@ -44,7 +66,7 @@ public class App {
             installer.install();
         } catch (Exception e) {
             System.out.println(e.getMessage() + "\n");
-            showHelp();
+            // showHelp();
         }
     }
 }

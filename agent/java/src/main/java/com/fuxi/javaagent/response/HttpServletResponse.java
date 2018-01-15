@@ -1,31 +1,17 @@
-/**
- * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
- * <p>
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- * <p>
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
- * <p>
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
- * <p>
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software without
- * specific prior written permission.
- * <p>
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.fuxi.javaagent.response;
@@ -40,10 +26,10 @@ import com.fuxi.javaagent.tool.Reflection;
  */
 public class HttpServletResponse {
 
-    public static final int BLOCK_STATUS_CODE = 400;
-    private static final String CONTENT_TYPE_HEADER_KEY = "Content-Type";
-    private static final String CONTENT_LENGTH_HEADER_KEY = "Content-Length";
-    private static final String CONTENT_TYPE_HTML_VALUE = "text/html";
+    private static final int REDIRECT_STATUS_CODE = 302;
+    public static final String CONTENT_TYPE_HEADER_KEY = "Content-Type";
+    public static final String CONTENT_LENGTH_HEADER_KEY = "Content-Length";
+    public static final String CONTENT_TYPE_HTML_VALUE = "text/html";
 
     private Object response;
 
@@ -107,9 +93,22 @@ public class HttpServletResponse {
      * @param key 响应头名称
      * @return 响应头值值
      */
-    public Object getHeader(String key) {
+    public String getHeader(String key) {
         if (response != null) {
-            return Reflection.invokeMethod(response, "getHeader", new Class[]{String.class}, key);
+            Object header = Reflection.invokeMethod(response, "getHeader", new Class[]{String.class}, key);
+            if (header != null) {
+                return header.toString();
+            }
+        }
+        return null;
+    }
+
+    public String getContentType() {
+        if (response != null) {
+            Object contentType = Reflection.invokeMethod(response, "getContentType", new Class[]{});
+            if (contentType != null) {
+                return contentType.toString();
+            }
         }
         return null;
     }
@@ -154,19 +153,23 @@ public class HttpServletResponse {
     public void sendError() {
         if (response != null) {
             try {
-                setHeader(CONTENT_TYPE_HEADER_KEY, CONTENT_TYPE_HTML_VALUE);
-                Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, BLOCK_STATUS_CODE);
-
+                int statusCode = Config.getConfig().getBlockStatusCode();
                 String blockUrl = Config.getConfig().getBlockUrl();
+                boolean isCommitted = (Boolean) Reflection.invokeMethod(response, "isCommitted", new Class[]{});
                 if (!blockUrl.contains("?")) {
                     String blockParam = "?request_id=" + HookHandler.requestCache.get().getRequestId();
                     blockUrl += blockParam;
                 }
                 String script = "</script><script>location.href=\"" + blockUrl + "\"</script>";
-
+                if (!isCommitted) {
+                    Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, statusCode);
+                    if (statusCode >= 300 && statusCode <= 399) {
+                        setHeader("Location", blockUrl);
+                    }
+                    setIntHeader(CONTENT_LENGTH_HEADER_KEY, script.getBytes().length);
+                }
                 resetBuffer();
-                setIntHeader(CONTENT_LENGTH_HEADER_KEY, script.getBytes().length);
-                sendErrorScript(script);
+                sendContent(script, true);
             } catch (Exception e) {
                 //ignore
             }
@@ -176,16 +179,18 @@ public class HttpServletResponse {
     /**
      * 发送自定义错误处理脚本
      */
-    private void sendErrorScript(String script) {
+    public void sendContent(String content, boolean close) {
         Object printer = null;
 
         printer = Reflection.invokeMethod(response, "getWriter", new Class[]{});
         if (printer == null) {
             printer = Reflection.invokeMethod(response, "getOutputStream", new Class[]{});
         }
-        Reflection.invokeMethod(printer, "print", new Class[]{String.class}, script);
+        Reflection.invokeMethod(printer, "print", new Class[]{String.class}, content);
         Reflection.invokeMethod(printer, "flush", new Class[]{});
-        Reflection.invokeMethod(printer, "close", new Class[]{});
+        if (close) {
+            Reflection.invokeMethod(printer, "close", new Class[]{});
+        }
     }
 
 }

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.baidu.rasp.install.linux;
 
 import com.baidu.rasp.RaspError;
@@ -12,8 +28,12 @@ import static com.baidu.rasp.RaspError.E10001;
  */
 public class Jboss4Installer extends BaseStandardInstaller {
 
-    private static String RUNSHRASP = "JAVA_OPTS=\"-javaagent:${JBOSS_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"";
+    private static String RUNSHRASP = "JAVA_OPTS=\"-javaagent:\\\"${JBOSS_HOME}/rasp/rasp.jar\\\" ${JAVA_OPTS}\"";
     private static String RUNSHLOG4J = "JAVA_OPTS=\"-Dlog4j.rasp.configuration="
+            + "\\\"file://${JBOSS_HOME}/rasp/conf/rasp-log4j.xml\\\" ${JAVA_OPTS}\"";
+
+    private static String RUNSHRASP_OLD = "JAVA_OPTS=\"-javaagent:${JBOSS_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"";
+    private static String RUNSHLOG4J_OLD = "JAVA_OPTS=\"-Dlog4j.rasp.configuration="
             + "file://${JBOSS_HOME}/rasp/conf/rasp-log4j.xml ${JAVA_OPTS}\"";
 
     Jboss4Installer(String serverName, String serverRoot) {
@@ -43,7 +63,7 @@ public class Jboss4Installer extends BaseStandardInstaller {
                 modifyConfigState = DONE;
             }
             if (DONE == modifyConfigState) {
-                if (line.contains(RUNSHRASP) || line.contains(RUNSHLOG4J)) {
+                if (line.contains(RUNSHRASP_OLD) || line.contains(RUNSHLOG4J_OLD)) {
                     continue;
                 }
             }

@@ -1,45 +1,32 @@
-/**
- * Copyright (c) 2017 Baidu, Inc. All Rights Reserved.
+/*
+ * Copyright 2017-2018 Baidu Inc.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software without
- * specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.fuxi.javaagent.config;
 
+import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
+import com.fuxi.javaagent.exception.ConfigLoadException;
+import com.fuxi.javaagent.tool.filemonitor.FileScanListener;
+import com.fuxi.javaagent.tool.filemonitor.FileScanMonitor;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLDecoder;
-import java.util.Arrays;
 import java.util.Properties;
 
 
@@ -48,32 +35,56 @@ import java.util.Properties;
  * 项目配置类，通过解析conf/rasp.property文件来加载配置
  * 若没有找到配置文件使用默认值
  */
-public class Config {
+public class Config extends FileScanListener {
 
+    public enum Item {
+        PLUGIN_TIMEOUT_MILLIS("plugin.timeout.millis", "100"),
+        HOOKS_IGNORE("hooks.ignore", ""),
+        BLOCK_URL("block.url", "https://rasp.baidu.com/blocked"),
+        READ_FILE_EXTENSION_REGEX("readfile.extension.regex", "^(gz|7z|xz|tar|rar|zip|sql|db)$"),
+        INJECT_URL_PREFIX("inject.urlprefix", ""),
+        BODY_MAX_BYTES("body.maxbytes", "4096"),
+        LOG_MAX_STACK("log.maxstack", "20"),
+        REFLECTION_MAX_STACK("reflection.maxstack", "100"),
+        SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
+        OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
+        SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
+        REFLECTION_MONITOR("reflection.monitor",
+                "java.lang.Runtime.getRuntime,java.lang.Runtime.exec,java.lang.ProcessBuilder.start"),
+        BLOCK_STATUS_CODE("block.status_code", "302"),
+        ALGORITHM_CONFIG("algorithm.config", "{}", false);
+
+        Item(String key, String defaultValue) {
+            this(key, defaultValue, true);
+        }
+
+        Item(String key, String defaultValue, boolean isProperties) {
+            this.key = key;
+            this.defaultValue = defaultValue;
+            this.isProperties = isProperties;
+        }
+
+        String key;
+        String defaultValue;
+        boolean isProperties;
+
+        @Override
+        public String toString() {
+            return key;
+        }
+    }
+
+    private static final String CONFIG_DIR_NAME = "conf";
+    private static final String CONFIG_FILE_NAME = "rasp.properties";
     public static final int REFLECTION_STACK_START_INDEX = 0;
+    public static final Logger LOGGER = Logger.getLogger(Config.class.getName());
+    public static String baseDirectory;
+    private static Integer watchId;
 
-    private static final String DEFAULT_PLUGIN_TIMEOUT = "100";
-    private static final String DEFAULT_BODYSIZE = "4096";
-    private static final String DEFAULT_REFLECTION_MAX_STACK = "100";
-    private static final String DEFAULT_IGNORE = "";
-    private static final String DEFAULT_ENFORCE_POLICY = "false";
-    private static final String DEFAULT_BLOCK_URL = "https://rasp.baidu.com/blocked";
-    private static final String DEFAULT_REFLECT_MONITOR_METHOD = "java.lang.Runtime.getRuntime,"
-            + "java.lang.Runtime.exec,"
-            + "java.lang.ProcessBuilder.start";
-    private static final String DEFAULT_LOG_STACK_SIZE = "20";
-    private static final String DEFAULT_READ_FILE_EXTENSION_REGEX = "^(gz|7z|xz|tar|rar|zip|sql|db)$";
-    private static final String DEFAULT_INJECT_URL_PREFIX = "";
-    private static final String DEFAULT_OGNL_MIN_LENGTH = "30";
-    private static final String DEFAULT_SQL_SLOW_QUERY_MIN_ROWS = "500";
-
-    private static final Logger LOGGER = Logger.getLogger(Config.class.getName());
-    private static String baseDirectory;
-
-
+    private String configFileDir;
     private int reflectionMaxStack;
     private long pluginTimeout;
-    private long bodyMaxBytes;
+    private int bodyMaxBytes;
     private int sqlSlowQueryMinCount;
     private String[] ignoreHooks;
     private boolean enforcePolicy;
@@ -82,23 +93,9 @@ public class Config {
     private String readFileExtensionRegex;
     private String blockUrl;
     private String injectUrlPrefix;
-
     private int ognlMinLength;
-
-    private enum KeyName {
-        plugintimeoutmillis,
-        bodymaxbytes,
-        hooksignore,
-        reflectionmaxstack,
-        reflectionmonitor,
-        blockurl,
-        logmaxstack,
-        securityenforce_policy,
-        readfileextensionregex,
-        injecturlprefix,
-        ognlminlength,
-        sqlslowqueryminrows
-    }
+    private int blockStatusCode;
+    private JsonObject algorithmConfig;
 
     // Config是由bootstrap classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
@@ -117,73 +114,100 @@ public class Config {
             LOGGER.warn(e.getMessage());
             baseDirectory = new File(path).getParent();
         }
+        CustomResponseHtml.load(baseDirectory);
+        try {
+            FileScanMonitor.addMonitor(
+                    baseDirectory, ConfigHolder.instance);
+        } catch (JNotifyException e) {
+            throw new ConfigLoadException("add listener on " + baseDirectory + " failed because:" + e.getMessage());
+        }
+        LOGGER.info("baseDirectory: " + baseDirectory);
     }
 
     /**
      * 构造函数，初始化全局配置
      */
     private Config() {
-        FileInputStream input = null;
-
-        this.pluginTimeout = Long.parseLong(DEFAULT_PLUGIN_TIMEOUT);
-        this.bodyMaxBytes = Long.parseLong(DEFAULT_BODYSIZE);
-        this.ignoreHooks = new String[]{};
-        this.enforcePolicy = Boolean.parseBoolean(DEFAULT_ENFORCE_POLICY);
-        this.reflectionMonitorMethod = DEFAULT_REFLECT_MONITOR_METHOD.replace(" ", "").split(",");
-        this.reflectionMaxStack = Integer.parseInt(DEFAULT_REFLECTION_MAX_STACK);
-        this.logMaxStackSize = Integer.parseInt(DEFAULT_LOG_STACK_SIZE);
-        this.blockUrl = DEFAULT_BLOCK_URL;
-        this.readFileExtensionRegex = DEFAULT_READ_FILE_EXTENSION_REGEX;
-        this.injectUrlPrefix = DEFAULT_INJECT_URL_PREFIX;
-        this.ognlMinLength = Integer.parseInt(DEFAULT_OGNL_MIN_LENGTH);
-        this.sqlSlowQueryMinCount = Integer.parseInt(DEFAULT_SQL_SLOW_QUERY_MIN_ROWS);
-
+        this.configFileDir = baseDirectory + File.separator + CONFIG_DIR_NAME;
+        String configFilePath = this.configFileDir + File.separator + CONFIG_FILE_NAME;
         try {
-            input = new FileInputStream(new File(baseDirectory, "conf" + File.separator + "rasp.properties"));
-            Properties properties = new Properties();
-            properties.load(input);
-
-            this.enforcePolicy = Boolean.parseBoolean(properties.getProperty("security.enforce_policy", DEFAULT_ENFORCE_POLICY));
-            this.ignoreHooks = properties.getProperty("hooks.ignore", DEFAULT_IGNORE).replace(" ", "").split(",");
-            this.reflectionMonitorMethod = properties.getProperty("reflection.monitor", DEFAULT_REFLECT_MONITOR_METHOD)
-                    .replace(" ", "").split(",");
-            this.blockUrl = properties.getProperty("block.url", DEFAULT_BLOCK_URL);
-            this.readFileExtensionRegex = properties.getProperty("readfile.extension.regex", DEFAULT_READ_FILE_EXTENSION_REGEX);
-            this.injectUrlPrefix = properties.getProperty("inject.urlprefix", DEFAULT_INJECT_URL_PREFIX);
-            setBodyMaxBytes(properties.getProperty("body.maxbytes", DEFAULT_BODYSIZE));
-            setLogMaxStackSize(properties.getProperty("log.maxstack", DEFAULT_LOG_STACK_SIZE));
-            setReflectionMaxStack(properties.getProperty("reflection.maxstack", DEFAULT_REFLECTION_MAX_STACK));
-            setPluginTimeout(properties.getProperty("plugin.timeout.millis", DEFAULT_PLUGIN_TIMEOUT));
-            setOgnlMinLength(properties.getProperty("ognl.expression.minlength", DEFAULT_OGNL_MIN_LENGTH));
-            setSqlSlowQueryMinCount(properties.getProperty("sql.slowquery.min_rows", DEFAULT_SQL_SLOW_QUERY_MIN_ROWS));
-            if (this.blockUrl == null || blockUrl.equals("")) {
-                this.blockUrl = DEFAULT_BLOCK_URL;
-            }
+            loadConfigFromFile(new File(configFilePath), true);
+            addConfigFileMonitor();
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Could not find rasp.properties, using default settings: " + e.getMessage());
+            handleException("Could not find rasp.properties, using default settings: " + e.getMessage(), e);
+        } catch (JNotifyException e) {
+            handleException("add listener on " + configFileDir + " failed because:" + e.getMessage(), e);
         } catch (IOException e) {
-            LOGGER.warn("cannot load properties file: " + e.getMessage());
-        } finally {
-            try {
+            handleException("cannot load properties file: " + e.getMessage(), e);
+        }
+    }
+
+    private synchronized void loadConfigFromFile(File file, boolean isInit) throws IOException {
+        Properties properties = new Properties();
+        try {
+            if (file.exists()) {
+                FileInputStream input = new FileInputStream(file);
+                properties.load(input);
                 input.close();
-            } catch (Exception ignored) {
-                // ignore
+            }
+        } finally {
+            // 出现解析问题使用默认值
+            for (Item item : Item.values()) {
+                if (item.isProperties) {
+                    setConfigFromProperties(item, properties, isInit);
+                }
             }
         }
+    }
 
-        for (int i = 0; i < this.ignoreHooks.length; i++) {
-            this.ignoreHooks[i] = this.ignoreHooks[i].trim();
+    private void reloadConfig(File file) {
+        if (file.getName().equals(CONFIG_FILE_NAME)) {
+            try {
+                loadConfigFromFile(file, false);
+            } catch (IOException e) {
+                LOGGER.warn("update rasp.properties failed because: " + e.getMessage());
+            }
         }
+    }
 
-        LOGGER.info("baseDirectory: " + baseDirectory);
-        LOGGER.info("plugin.timeout.millis: " + pluginTimeout);
-        LOGGER.info("hooks.ignore: " + Arrays.toString(this.ignoreHooks));
-        LOGGER.info("reflection.monitor: " + Arrays.toString(this.reflectionMonitorMethod));
-        LOGGER.info("reflection.maxstack: " + reflectionMaxStack);
-        LOGGER.info("block.url: " + blockUrl);
-        LOGGER.info("readfile.extension.regex: " + readFileExtensionRegex);
-        LOGGER.info("inject.urlprefix: " + injectUrlPrefix);
-        LOGGER.info("ognl.expression.minlength: " + ognlMinLength);
+    private void addConfigFileMonitor() throws JNotifyException {
+        if (watchId != null) {
+            FileScanMonitor.removeMonitor(watchId);
+        }
+        watchId = FileScanMonitor.addMonitor(configFileDir, new FileScanListener() {
+            @Override
+            public void onFileCreate(File file) {
+                reloadConfig(file);
+            }
+
+            @Override
+            public void onFileChange(File file) {
+                reloadConfig(file);
+            }
+
+            @Override
+            public void onFileDelete(File file) {
+                reloadConfig(file);
+            }
+        });
+    }
+
+    private void setConfigFromProperties(Item item, Properties properties, boolean isInit) {
+        String key = item.key;
+        String value = properties.getProperty(item.key, item.defaultValue);
+        try {
+            setConfig(key, value, isInit);
+        } catch (Exception e) {
+            // 出现解析问题使用默认值
+            value = item.defaultValue;
+            setConfig(key, item.defaultValue, false);
+            LOGGER.warn("set config " + item.key + " failed, use default value : " + value);
+        }
+    }
+
+    private void handleException(String message, Exception e) {
+        LOGGER.warn(message);
+        System.out.println(message);
     }
 
     private static class ConfigHolder {
@@ -217,6 +241,51 @@ public class Config {
         return baseDirectory + "/plugins";
     }
 
+    /**
+     * 获取自定义插入 html 页面的 js 脚本
+     *
+     * @return js脚本内容
+     */
+    public String getCustomResponseScript() {
+        return CustomResponseHtml.getInstance() != null ? CustomResponseHtml.getInstance().getContent() : null;
+    }
+
+    @Override
+    public void onDirectoryCreate(File file) {
+        reloadConfigDir(file);
+    }
+
+    @Override
+    public void onDirectoryDelete(File file) {
+        reloadConfigDir(file);
+    }
+
+    @Override
+    public void onFileCreate(File file) {
+        // ignore
+    }
+
+    @Override
+    public void onFileChange(File file) {
+        // ignore
+    }
+
+    @Override
+    public void onFileDelete(File file) {
+        // ignore
+    }
+
+    private void reloadConfigDir(File directory) {
+        try {
+            if (directory.getName().equals(CustomResponseHtml.CUSTOM_RESPONSE_BASE_DIR)) {
+                CustomResponseHtml.load(baseDirectory);
+            } else if (directory.getName().equals(CONFIG_DIR_NAME)) {
+                reloadConfig(new File(configFileDir + File.separator + CONFIG_FILE_NAME));
+            }
+        } catch (Exception e) {
+            LOGGER.warn("update " + directory.getAbsolutePath() + " failed because: " + e.getMessage());
+        }
+    }
 
     //--------------------可以通过插件修改的配置项-----------------------------------
 
@@ -256,7 +325,11 @@ public class Config {
      * @param injectUrlPrefix 页面path前缀
      */
     public synchronized void setInjectUrlPrefix(String injectUrlPrefix) {
-        this.injectUrlPrefix = injectUrlPrefix;
+        StringBuilder injectPrefix = new StringBuilder(injectUrlPrefix);
+        while (injectPrefix.length() > 0 && injectPrefix.charAt(injectPrefix.length() - 1) == '/') {
+            injectPrefix.deleteCharAt(injectPrefix.length() - 1);
+        }
+        this.injectUrlPrefix = injectPrefix.toString();
     }
 
     /**
@@ -264,7 +337,7 @@ public class Config {
      *
      * @return 最大长度
      */
-    public synchronized long getBodyMaxBytes() {
+    public synchronized int getBodyMaxBytes() {
         return bodyMaxBytes;
     }
 
@@ -274,7 +347,7 @@ public class Config {
      * @param bodyMaxBytes
      */
     public synchronized void setBodyMaxBytes(String bodyMaxBytes) {
-        this.bodyMaxBytes = Long.parseLong(bodyMaxBytes);
+        this.bodyMaxBytes = Integer.parseInt(bodyMaxBytes);
         if (this.bodyMaxBytes < 0) {
             this.bodyMaxBytes = 0;
         }
@@ -363,7 +436,7 @@ public class Config {
      * @param blockUrl 拦截页面url
      */
     public synchronized void setBlockUrl(String blockUrl) {
-        this.blockUrl = blockUrl;
+        this.blockUrl = StringUtils.isEmpty(blockUrl) ? Item.BLOCK_URL.defaultValue : blockUrl;
     }
 
     /**
@@ -392,7 +465,7 @@ public class Config {
      *
      * @return ognl表达式最短长度
      */
-    public int getOgnlMinLength() {
+    public synchronized int getOgnlMinLength() {
         return ognlMinLength;
     }
 
@@ -401,7 +474,7 @@ public class Config {
      *
      * @param ognlMinLength ognl表达式最短长度
      */
-    public void setOgnlMinLength(String ognlMinLength) {
+    public synchronized void setOgnlMinLength(String ognlMinLength) {
         this.ognlMinLength = Integer.parseInt(ognlMinLength);
         if (this.ognlMinLength < 0) {
             this.ognlMinLength = 0;
@@ -446,55 +519,107 @@ public class Config {
         this.readFileExtensionRegex = readFileExtensionRegex;
     }
 
+    /**
+     * 获取拦截状态码
+     *
+     * @return 状态码
+     */
+    public int getBlockStatusCode() {
+        return blockStatusCode;
+    }
+
+    /**
+     * 设置拦截状态码
+     *
+     * @param blockStatusCode 状态码
+     */
+    public void setBlockStatusCode(String blockStatusCode) {
+        this.blockStatusCode = Integer.parseInt(blockStatusCode);
+        if (this.blockStatusCode < 100 || this.blockStatusCode > 999) {
+            this.blockStatusCode = 302;
+        }
+    }
+
+    /**
+     * 获取检测算法配置
+     *
+     * @return 配置的 json 对象
+     */
+    public JsonObject getAlgorithmConfig() {
+        return algorithmConfig;
+    }
+
+    /**
+     * 设置检测算法配置
+     *
+     * @param json 配置内容
+     */
+    public void setAlgorithmConfig(String json) {
+        this.algorithmConfig = new JsonParser().parse(json).getAsJsonObject();
+    }
+
     //--------------------------统一的配置处理------------------------------------
 
-    public boolean setConfig(String name, String value) {
+    /**
+     * 统一配置接口,通过 js 更改配置的入口
+     *
+     * @param key   配置名
+     * @param value 配置值
+     * @return 是否配置成功
+     */
+    public boolean setConfig(String key, String value, boolean isInit) {
         try {
-            KeyName keyName = KeyName.valueOf(name.replace(".", ""));
-            switch (keyName) {
-                case plugintimeoutmillis:
-                    setPluginTimeout(value);
-                    break;
-                case bodymaxbytes:
-                    setBodyMaxBytes(value);
-                    break;
-                case hooksignore:
-                    setIgnoreHooks(value);
-                    break;
-                case reflectionmaxstack:
-                    setReflectionMaxStack(value);
-                    break;
-                case reflectionmonitor:
-                    setReflectionMonitorMethod(value);
-                    break;
-                case blockurl:
-                    setBlockUrl(value);
-                    break;
-                case logmaxstack:
-                    setLogMaxStackSize(value);
-                    break;
-                case securityenforce_policy:
-                    setEnforcePolicy(value);
-                    break;
-                case readfileextensionregex:
-                    setReadFileExtensionRegex(value);
-                    break;
-                case injecturlprefix:
-                    setInjectUrlPrefix(value);
-                    break;
-                case ognlminlength:
-                    setOgnlMinLength(value);
-                    break;
-                case sqlslowqueryminrows:
-                    setSqlSlowQueryMinCount(value);
-                    break;
-                default:
-                    // do nothing
+            boolean isHit = true;
+            if (Item.BLOCK_URL.key.equals(key)) {
+                setBlockUrl(value);
+            } else if (Item.BODY_MAX_BYTES.key.equals(key)) {
+                setBodyMaxBytes(value);
+            } else if (Item.HOOKS_IGNORE.key.equals(key)) {
+                setIgnoreHooks(value);
+            } else if (Item.INJECT_URL_PREFIX.key.equals(key)) {
+                setInjectUrlPrefix(value);
+            } else if (Item.LOG_MAX_STACK.key.equals(key)) {
+                setLogMaxStackSize(value);
+            } else if (Item.OGNL_EXPRESSION_MIN_LENGTH.key.equals(key)) {
+                setOgnlMinLength(value);
+            } else if (Item.PLUGIN_TIMEOUT_MILLIS.key.equals(key)) {
+                setPluginTimeout(value);
+            } else if (Item.READ_FILE_EXTENSION_REGEX.key.equals(key)) {
+                setReadFileExtensionRegex(value);
+            } else if (Item.REFLECTION_MAX_STACK.key.equals(key)) {
+                setReflectionMaxStack(value);
+            } else if (Item.SECURITY_ENFORCE_POLICY.key.equals((key))) {
+                setEnforcePolicy(value);
+            } else if (Item.SQL_SLOW_QUERY_MIN_ROWS.key.equals(key)) {
+                setSqlSlowQueryMinCount(value);
+            } else if (Item.REFLECTION_MONITOR.key.equals(key)) {
+                setReflectionMonitorMethod(value);
+            } else if (Item.BLOCK_STATUS_CODE.key.equals(key)) {
+                setBlockStatusCode(value);
+            } else if (Item.ALGORITHM_CONFIG.key.equals(key)) {
+                setAlgorithmConfig(value);
+            } else {
+                isHit = false;
+            }
+            if (isHit) {
+                if (isInit) {
+                    LOGGER.info(key + ": " + value);
+                } else {
+                    LOGGER.info("configuration item \"" + key + "\" changed to \"" + value + "\"");
+                }
+            } else {
+                LOGGER.info("configuration item \"" + key + "\" doesn't exist");
+                return false;
             }
         } catch (Exception e) {
-            LOGGER.info(e.getMessage());
+            if (isInit) {
+                // 初始化配置过程中,如果报错需要继续使用默认值执行
+                throw new ConfigLoadException(e);
+            }
+            LOGGER.info("configuration item \"" + key + "\" failed to change to \"" + value + "\"" + " because:" + e.getMessage());
             return false;
         }
         return true;
     }
+
 }

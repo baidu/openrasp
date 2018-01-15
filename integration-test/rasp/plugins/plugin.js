@@ -10,18 +10,23 @@ var clean = {
     message: '无风险'
 };
 
-function checkContext(context) {
+function checkContext(context, paramInit) {
     function assert(flag) {
         if (!flag) {
             throw new PluginError(flag);
         }
     }
+
     assert(context.method);
     assert(context.protocol === 'http/1.1');
-    assert(context.parameter.test[0] === 'a' && context.parameter.test[1] === 'b');
     assert(context.server);
     assert(context.url);
     assert(context.path);
+    if (paramInit === true) {
+        assert(context.parameter.test[0] === 'a' && context.parameter.test[1] === 'b');
+    } else {
+        assert(JSON.stringify(context.parameter) === "{}");
+    }
     assert(context.header['test-test'] === 'Test-Test');
     assert(context.querystring);
     assert(context.remoteAddr);
@@ -37,7 +42,7 @@ plugin.register('request', function (params, context) {
 });
 
 plugin.register('directory', function (params, context) {
-    checkContext(context);
+    checkContext(context, true);
     plugin.log('directory', params);
     if (params.path === '/etc') {
         return {
@@ -97,7 +102,7 @@ plugin.register('command', function (params, context) {
 });
 
 plugin.register('xxe', function (params, context) {
-    checkContext(context);
+    checkContext(context, true);
     plugin.log('xxe', params);
     if (params.entity.endsWith('/etc/passwd')) {
         return {
@@ -130,6 +135,16 @@ plugin.register('include', function (params, context) {
     checkContext(context);
     plugin.log('include', params);
     if (/passwd/.test(params.url)) {
+        return {
+            action: 'block'
+        }
+    }
+});
+
+plugin.register('ssrf', function (params, context) {
+    checkContext(context);
+    plugin.log('ssrf', params);
+    if (params.hostname === '0x7f.0x0.0x0.0x1' && params.url === 'http://0x7f.0x0.0x0.0x1:8080/app') {
         return {
             action: 'block'
         }
