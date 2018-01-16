@@ -34,6 +34,7 @@ public class SqlConnectionChecker extends PolicyChecker {
     private static final String SQL_TYPE_MYSQL = "mysql";
     private static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
     private static final String CONNECTION_USER_KEY = "user";
+    private static final int ALARM_TIME_CACHE_MAX_SIZE = 5000;
     public static HashMap<String, Long> alarmTimeCache = new HashMap<String, Long>();
 
     private boolean checkUser(String user, String sqlType) {
@@ -65,51 +66,52 @@ public class SqlConnectionChecker extends PolicyChecker {
 
         String url = (String) checkParameter.getParam("url");
         Properties properties = (Properties) checkParameter.getParam("properties");
-        Long lastAlarmTime = SqlConnectionChecker.alarmTimeCache.get(url);
         LinkedList<EventInfo> infos = null;
-        if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
-            String sqlType = null;
-            String user = null;
-            try {
-                if (!StringUtils.isEmpty(url) && url.startsWith("jdbc:")) {
-                    int indexOfPath = url.indexOf(':', 5);
-                    if (indexOfPath != -1) {
-                        sqlType = url.substring(5, indexOfPath);
+        String sqlType = null;
+        String user = null;
+        try {
+            if (!StringUtils.isEmpty(url) && url.startsWith("jdbc:")) {
+                int indexOfPath = url.indexOf(':', 5);
+                if (indexOfPath != -1) {
+                    sqlType = url.substring(5, indexOfPath);
+                }
+                if (sqlType != null && sqlType.length() > 1) {
+                    if (properties != null) {
+                        user = properties.getProperty(CONNECTION_USER_KEY);
                     }
-                    if (sqlType != null && sqlType.length() > 1) {
-                        if (properties != null) {
-                            user = properties.getProperty(CONNECTION_USER_KEY);
-                        }
-                        if (StringUtils.isEmpty(user)) {
-                            int index = url.indexOf("?", indexOfPath);
-                            if (index != -1) {
-                                String paramString = url.substring(index + 1, url.length());
-                                StringTokenizer queryParams = new StringTokenizer(paramString, "&");
-                                while (queryParams.hasMoreTokens()) {
-                                    String parameterValuePair = queryParams.nextToken();
-                                    int indexOfEquals = parameterValuePair.indexOf("=");
-                                    if (indexOfEquals > 0) {
-                                        if (parameterValuePair.substring(0, indexOfEquals).equals(CONNECTION_USER_KEY)) {
-                                            user = parameterValuePair.substring(indexOfEquals + 1, parameterValuePair.length());
-                                        }
+                    if (StringUtils.isEmpty(user)) {
+                        int index = url.indexOf("?", indexOfPath);
+                        if (index != -1) {
+                            String paramString = url.substring(index + 1, url.length());
+                            StringTokenizer queryParams = new StringTokenizer(paramString, "&");
+                            while (queryParams.hasMoreTokens()) {
+                                String parameterValuePair = queryParams.nextToken();
+                                int indexOfEquals = parameterValuePair.indexOf("=");
+                                if (indexOfEquals > 0) {
+                                    if (parameterValuePair.substring(0, indexOfEquals).equals(CONNECTION_USER_KEY)) {
+                                        user = parameterValuePair.substring(indexOfEquals + 1, parameterValuePair.length());
                                     }
                                 }
                             }
                         }
                     }
                 }
-            } catch (Exception e) {
-                LOGGER.warn("check sql connection fail cause by:" + e.getMessage());
             }
-
-            boolean isSafe = checkUser(user, sqlType);
-            if (!isSafe) {
-                alarmTimeCache.put(url, System.currentTimeMillis());
-                String unsafeMessage = "使用管理员账号" + user + "登录" + sqlType + "数据库:" + url;
-                infos = new LinkedList<EventInfo>();
-                infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.SQL_CONNECTION, unsafeMessage, true));
-            }
+        } catch (Exception e) {
+            LOGGER.warn("check sql connection fail cause by:" + e.getMessage());
         }
+
+        boolean isSafe = checkUser(user, sqlType);
+        if (!isSafe) {
+            if (alarmTimeCache.size() > ALARM_TIME_CACHE_MAX_SIZE) {
+                alarmTimeCache.clear();
+            }
+            alarmTimeCache.put(url, System.currentTimeMillis());
+            String unsafeMessage = "使用管理员账号" + user + "登录" + sqlType + "数据库:" + url;
+            infos = new LinkedList<EventInfo>();
+            infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.SQL_CONNECTION, unsafeMessage, true));
+        }
+
         return infos;
     }
 

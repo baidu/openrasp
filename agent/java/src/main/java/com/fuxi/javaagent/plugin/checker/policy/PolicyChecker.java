@@ -16,7 +16,6 @@
 
 package com.fuxi.javaagent.plugin.checker.policy;
 
-import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.plugin.checker.AbstractChecker;
 
 /**
@@ -27,7 +26,6 @@ import com.fuxi.javaagent.plugin.checker.AbstractChecker;
 public abstract class PolicyChecker extends AbstractChecker {
 
     public PolicyChecker() {
-        super(Config.getConfig().getEnforcePolicy());
         addCheckEventListener(new PolicyCheckListener());
     }
 

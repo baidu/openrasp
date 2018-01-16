@@ -17,6 +17,7 @@
 package com.fuxi.javaagent.hook.sql;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.hook.AbstractClassHook;
 import com.fuxi.javaagent.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.plugin.checker.policy.SqlConnectionChecker;
@@ -71,13 +72,19 @@ public class SQLDriverManagerHook extends AbstractClassHook {
                     loadArg(0);
                     loadArg(1);
                     invokeStatic(Type.getType(SQLDriverManagerHook.class),
-                            new Method("checkSqlConnection", "(Ljava/lang/String;Ljava/util/Properties;)V"));
+                            new Method("checkSqlConnectionOnEnter", "(Ljava/lang/String;Ljava/util/Properties;)V"));
                     invokeStatic(Type.getType(HookHandler.class),
                             new Method("preShieldHook", "()V"));
                 }
 
                 @Override
                 protected void onMethodExit(int i) {
+                    if (Opcodes.ATHROW != i) {
+                        loadArg(0);
+                        loadArg(1);
+                        invokeStatic(Type.getType(SQLDriverManagerHook.class),
+                                new Method("checkSqlConnectionOnExit", "(Ljava/lang/String;Ljava/util/Properties;)V"));
+                    }
                     invokeStatic(Type.getType(HookHandler.class),
                             new Method("postShieldHook", "()V"));
                 }
@@ -87,18 +94,43 @@ public class SQLDriverManagerHook extends AbstractClassHook {
     }
 
     /**
+     * 进入数据库连接函数调用的检测入口
+     *
+     * @param url        连接url
+     * @param properties 连接属性
+     */
+    public static void checkSqlConnectionOnEnter(String url, Properties properties) {
+        if (Config.getConfig().getEnforcePolicy()) {
+            checkSqlConnection(url, properties);
+        }
+    }
+
+    /**
      * 检测sql连接规范
      *
      * @param url        连接url
      * @param properties 连接属性
      */
-    public static void checkSqlConnection(String url, Properties properties) {
-        Long lastAlarmTime = SqlConnectionChecker.alarmTimeCache.get(url);
-        if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
-            HashMap<String, Object> params = new HashMap<String, Object>(4);
-            params.put("url", url);
-            params.put("properties", properties);
-            HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_SQL_CONNECTION, params);
+    public static void checkSqlConnectionOnExit(String url, Properties properties) {
+        if (!Config.getConfig().getEnforcePolicy()) {
+            Long lastAlarmTime = SqlConnectionChecker.alarmTimeCache.get(url);
+            if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
+                checkSqlConnection(url, properties);
+            }
         }
+    }
+
+    /**
+     * 退出数据库连接函数调用的检测入口
+     *
+     * @param url        连接url
+     * @param properties 连接属性
+     */
+    public static void checkSqlConnection(String url, Properties properties) {
+        HashMap<String, Object> params = new HashMap<String, Object>(4);
+        params.put("url", url);
+        params.put("properties", properties);
+        HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_SQL_CONNECTION, params);
+
     }
 }
