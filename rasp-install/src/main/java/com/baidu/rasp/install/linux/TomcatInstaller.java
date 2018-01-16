@@ -46,16 +46,18 @@ public class TomcatInstaller extends BaseStandardInstaller {
 
     @Override
     protected String getInstallPath(String serverRoot) {
-        String catalineBase;
-        if (serverRoot == null) {
-            String output = runCommand(new String[]{"bash", "-c", "ps -elf | grep catalina.base"});
-            Pattern PATTERN = Pattern.compile("-Dcatalina\\.base=(\\S+)");
-            Matcher m = PATTERN.matcher(output);
-            catalineBase = (m.find() ? m.group(1) : null);
-        } else {
-            catalineBase = serverRoot;
-        }
-        return catalineBase + "/rasp";
+        return serverRoot + "/rasp/";
+        
+        // String catalineBase;
+        // if (serverRoot == null) {
+        //     String output = runCommand(new String[]{"bash", "-c", "ps -elf | grep catalina.base"});
+        //     Pattern PATTERN = Pattern.compile("-Dcatalina\\.base=(\\S+)");
+        //     Matcher m = PATTERN.matcher(output);
+        //     catalineBase = (m.find() ? m.group(1) : null);
+        // } else {
+        //     catalineBase = serverRoot;
+        // }
+        // return catalineBase + "/rasp";
     }
 
     @Override

@@ -3,7 +3,7 @@
 // 
 
 'use strict'
-var plugin  = new RASP('offical')
+var plugin  = new RASP('event-logger')
 
 const clean = {
     action:     'ignore',
@@ -12,22 +12,22 @@ const clean = {
 }
 
 plugin.register('directory', function (params, context) {
-    console.log('列出目录: ' + params.realpath)
+    plugin.log('列出目录: ' + params.realpath)
     return clean
 })
 
 plugin.register('webdav', function (params, context) {
-    console.log('使用WEBDAV操作文件: ', context.method, params.source, params.dest)
+    plugin.log('使用WEBDAV操作文件: ', context.method, params.source, params.dest)
     return clean
 })
 
 plugin.register('fileUpload', function (params, context) {
-    console.log('文件上传: ' + params.filename)
+    plugin.log('文件上传: ' + params.filename)
     return clean
 })
 
 plugin.register('command', function (params, context) {
-    console.log('命令执行: ' + params.command)
+    plugin.log('命令执行: ' + params.command)
     return clean
 })
 
@@ -35,33 +35,33 @@ plugin.register('command', function (params, context) {
 // 这个30可以配置，aka "ognl.expression.minlength"
 // https://rasp.baidu.com/doc/setup/others.html
 plugin.register('ognl', function (params, context) {
-    console.log('执行OGNL表达式: ' + params.expression)
+    plugin.log('执行OGNL表达式: ' + params.expression)
     return clean
 })
 
 plugin.register('reflection', function(params, context) {
-    console.log('通过反射调用加载敏感的类: ', params.clazz + '.' + params.method)
+    plugin.log('通过反射调用加载敏感的类: ', params.clazz + '.' + params.method)
     return clean
 })
 
 // 下面的这些方法，可能产生大量日志
 plugin.register('xxe', function (params, context) {
-    console.log('读取XML外部实体: ' + params.entity)
+    plugin.log('读取XML外部实体: ' + params.entity)
     return clean
 })
 
 plugin.register('include', function (params, context) {
-    console.log('文件包含: ' + params.url)
+    plugin.log('文件包含: ' + params.url)
     return clean
 })
 
 plugin.register('readFile', function (params, context) {
-    console.log('读取文件: ' + params.realpath)
+    plugin.log('读取文件: ' + params.realpath)
     return clean
 })
 
 plugin.register('writeFile', function (params, context) {
-    console.log('文件写入: ' + params.realpath)
+    plugin.log('文件写入: ' + params.realpath)
     return clean
 })
 
@@ -69,7 +69,7 @@ plugin.register('writeFile', function (params, context) {
 // 1. 查询语句中，可能包含敏感信息
 // 2. 日志量可能会很大
 plugin.register('sql', function (params, context) {
-    console.log('SQL查询: ' + params.query)
+    plugin.log('SQL查询: ' + params.query)
     return clean
 })
 
