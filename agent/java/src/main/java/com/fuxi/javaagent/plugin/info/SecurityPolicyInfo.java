@@ -16,6 +16,7 @@
 
 package com.fuxi.javaagent.plugin.info;
 
+import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.request.HttpServletRequest;
 import com.fuxi.javaagent.tool.OSUtil;
 import com.fuxi.javaagent.tool.Reflection;
@@ -56,7 +57,7 @@ public class SecurityPolicyInfo extends EventInfo {
     public SecurityPolicyInfo(Type policy, String message, boolean isBlock) {
         this.policy = policy;
         this.message = message;
-        setBlock(isBlock);
+        setBlock(isBlock && Config.getConfig().getEnforcePolicy());
     }
 
     @Override
