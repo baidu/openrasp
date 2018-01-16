@@ -20,6 +20,7 @@ import com.baidu.rasp.RaspError;
 import com.baidu.rasp.install.BaseStandardInstaller;
 
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 import static com.baidu.rasp.RaspError.E10001;
 
@@ -28,13 +29,12 @@ import static com.baidu.rasp.RaspError.E10001;
  */
 public class Jboss4Installer extends BaseStandardInstaller {
 
-    private static String RUNSHRASP = "JAVA_OPTS=\"-javaagent:\\\"${JBOSS_HOME}/rasp/rasp.jar\\\" ${JAVA_OPTS}\"";
-    private static String RUNSHLOG4J = "JAVA_OPTS=\"-Dlog4j.rasp.configuration="
-            + "\\\"file://${JBOSS_HOME}/rasp/conf/rasp-log4j.xml\\\" ${JAVA_OPTS}\"";
-
-    private static String RUNSHRASP_OLD = "JAVA_OPTS=\"-javaagent:${JBOSS_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"";
-    private static String RUNSHLOG4J_OLD = "JAVA_OPTS=\"-Dlog4j.rasp.configuration="
-            + "file://${JBOSS_HOME}/rasp/conf/rasp-log4j.xml ${JAVA_OPTS}\"";
+    private static String OPENRASP_CONFIG =
+            "### BEGIN OPENRASP - DO NOT MODIFY ###\n" +
+            "\tJAVA_OPTS=\"-javaagent:${JBOSS_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"\n" +
+            "\tJAVA_OPTS=\"-Dlog4j.rasp.configuration=file://${JBOSS_HOME}/rasp/conf/rasp-log4j.xml ${JAVA_OPTS}\"\n" +
+            "### END OPENRASP ###\n";
+    private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*/rasp/).*");
 
     Jboss4Installer(String serverName, String serverRoot) {
         super(serverName, serverRoot);
@@ -58,21 +58,20 @@ public class Jboss4Installer extends BaseStandardInstaller {
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             if (FOUND == modifyConfigState) {
-                sb.append("  " + RUNSHRASP + LINE_SEP);
-                sb.append("  " + RUNSHLOG4J + LINE_SEP);
+                sb.append(OPENRASP_CONFIG);
                 modifyConfigState = DONE;
             }
+
             if (DONE == modifyConfigState) {
-                if (line.contains(RUNSHRASP_OLD) || line.contains(RUNSHLOG4J_OLD)) {
+                if (OPENRASP_REGEX.matcher(line).matches()) {
                     continue;
                 }
             }
+
             if (line.startsWith("JAVA_OPTS=") && NOTFOUND == modifyConfigState) {
                 modifyConfigState = FOUND;
             }
-            if (line.contains(RUNSHRASP) || line.contains(RUNSHLOG4J)) {
-                continue;
-            }
+
             sb.append(line).append(LINE_SEP);
         }
         if (NOTFOUND == modifyConfigState) {
