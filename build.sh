@@ -1,11 +1,10 @@
 #!/bin/bash
 
-###############################
-#
-# 自动编译和打包Rasp的安装包
-#
-###############################
-
+##################################
+#                                #
+# 自动编译，并生成OpenRASP安装包 #   
+#                                #
+##################################
 
 BASE_DIR=$(dirname $(readlink -f $0))
 echo "base dir: $BASE_DIR"
@@ -14,7 +13,7 @@ PLUGIN_ROOT=$BASE_DIR/plugins/official
 OUTPUT_ROOT=$BASE_DIR/rasp-$(date +%Y-%m-%d)
 BASENAME="$(basename $OUTPUT_ROOT)"
 
-rm -rf "$OUTPUT_ROOT"
+rm -rf "$OUTPUT_ROOT" rasp-java.{zip,tar.gz}
 mkdir -p "$OUTPUT_ROOT"/rasp/{plugins,conf} || exit 1
 
 function log {
@@ -66,12 +65,12 @@ buildRasp
 changeDirectory $OUTPUT_ROOT/..
 target=rasp-java.tar.gz
 tar -czvf $target $BASENAME || exit
-mv $target $BASE_DIR || exit
+#mv $target $BASE_DIR || exit
 log "Created $target"
 
 target=rasp-java.zip
 zip -r $target $BASENAME || exit
-mv $target $BASE_DIR || exit
+#mv $target $BASE_DIR || exit
 log "Created $target"
 
 log "SUCCESS!"
