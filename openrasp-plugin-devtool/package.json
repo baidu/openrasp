@@ -8,7 +8,7 @@
     "build": "babel -d dist --presets es2015 lib/environment",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "homepage": "http://rasp.baidu.com",
+  "homepage": "https://rasp.baidu.com",
   "bin": {
     "rasp": "bin/rasp",
     "rasp-check": "bin/rasp-check"

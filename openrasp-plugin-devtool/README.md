@@ -1,6 +1,6 @@
 # OpenRASP
 
-A CLI tool for [OpenRASP](http://rasp.baidu.com) JavaScript plugins development.
+A CLI tool for [OpenRASP](https://rasp.baidu.com) JavaScript plugins development.
 
 ### Installation
 

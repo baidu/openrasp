@@ -40,7 +40,7 @@ public class App {
 
     private static void showBanner() {
         String banner = "OpenRASP Installer for Java app servers - Copyright ©2017 Baidu Inc.\n" + 
-            "For more details visit: http://rasp.baidu.com/doc/install/software.html\n";
+            "For more details visit: https://rasp.baidu.com/doc/install/software.html\n";
         System.out.println(banner);
     }
 

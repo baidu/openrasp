@@ -2,7 +2,7 @@
 /* eslint-env node */
 
 console.log();
-console.log('  OpenRASP - http://rasp.baidu.com');
+console.log('  OpenRASP - https://rasp.baidu.com');
 
 require('commander')
     .version(require('../package').version)
