@@ -26,6 +26,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 import static com.baidu.rasp.RaspError.E10001;
 
@@ -34,10 +35,12 @@ import static com.baidu.rasp.RaspError.E10001;
  */
 public class TomcatInstaller extends BaseStandardInstaller {
 
-    private static String CATALINASHRASP = "if \"%ACTION%\" == \"start\""
-            + " set JAVA_OPTS=\"-javaagent:%CATALINA_HOME%\\rasp\\rasp.jar\" %JAVA_OPTS%";
-    private static String CATALINASHLOG4J = "if \"%ACTION%\" == \"start\" set JAVA_OPTS=\"-Dlog4j.rasp.configuration="
-            + "file:%CATALINA_HOME%\\rasp\\conf\\rasp-log4j.xml\" %JAVA_OPTS%";
+    private static String OPENRASP_CONFIG =
+            "rem BEGIN OPENRASP - DO NOT MODIFY" + LINE_SEP +
+            "if \"%ACTION%\" == \"start\" set JAVA_OPTS=\"-javaagent:%CATALINA_HOME%\\rasp\\rasp.jar\" %JAVA_OPTS%" + LINE_SEP +
+            "if \"%ACTION%\" == \"start\" set JAVA_OPTS=\"-Dlog4j.rasp.configuration=file:%CATALINA_HOME%\\rasp\\conf\\rasp-log4j.xml\" %JAVA_OPTS%" + LINE_SEP +
+            "rem END OPENRASP" + LINE_SEP;
+    private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*\\\\rasp\\\\).*");
 
     TomcatInstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
@@ -61,12 +64,11 @@ public class TomcatInstaller extends BaseStandardInstaller {
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             if (FOUND == modifyConfigState) {
-                sb.append(CATALINASHRASP + LINE_SEP);
-                sb.append(CATALINASHLOG4J + LINE_SEP);
+                sb.append(OPENRASP_CONFIG);
                 modifyConfigState = DONE;
             }
             if (DONE == modifyConfigState) {
-                if (line.contains(CATALINASHRASP) || line.contains(CATALINASHLOG4J)) {
+                if (OPENRASP_REGEX.matcher(line).matches()) {
                     continue;
                 }
             }
