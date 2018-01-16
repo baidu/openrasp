@@ -11,10 +11,11 @@ BASE_DIR=$(dirname $(readlink -f $0))
 echo "base dir: $BASE_DIR"
 
 PLUGIN_ROOT=$BASE_DIR/plugins/official
-OUTPUT_ROOT=/tmp/rasp-$(date +%Y-%m-%d)
-BASENAME=$(basename $OUTPUT_ROOT)
+OUTPUT_ROOT=$BASE_DIR/rasp-$(date +%Y-%m-%d)
+BASENAME="$(basename $OUTPUT_ROOT)"
 
-mkdir -p $OUTPUT_ROOT/rasp/plugins $OUTPUT_ROOT/rasp/conf || exit 1
+rm -rf "$OUTPUT_ROOT"
+mkdir -p "$OUTPUT_ROOT"/rasp/{plugins,conf} || exit 1
 
 function log {
 	echo "================= $1 ==================="
