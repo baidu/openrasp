@@ -13,7 +13,7 @@ const POLICY_ALARM_FILE = SERVER_HOME + '/rasp/logs/policy_alarm/policy_alarm.lo
 const RASP_LOG_FILE = SERVER_HOME + '/rasp/logs/rasp/rasp.log';
 const watchFileOptions = {
     persistent: false,
-    interval: 100
+    interval: 25
 };
 chai.expect();
 chai.should();

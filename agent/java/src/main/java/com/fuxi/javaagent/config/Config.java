@@ -52,7 +52,7 @@ public class Config extends FileScanListener {
         REFLECTION_MONITOR("reflection.monitor",
                 "java.lang.Runtime.getRuntime,java.lang.Runtime.exec,java.lang.ProcessBuilder.start"),
         BLOCK_STATUS_CODE("block.status_code", "302"),
-        DEBUG("debug", "0"),
+        DEBUG("debug_level", "0"),
         ALGORITHM_CONFIG("algorithm.config", "{}", false);
 
 
@@ -562,6 +562,10 @@ public class Config extends FileScanListener {
         this.debugLevel = Integer.parseInt(debugLevel);
         if (this.debugLevel < 0) {
             this.debugLevel = 0;
+        } else {
+            String debugEnableMessage = "[OpenRASP] Debug output enabled, debug_level=" + debugLevel;
+            System.out.println(debugEnableMessage);
+            LOGGER.info(debugEnableMessage);
         }
     }
 
