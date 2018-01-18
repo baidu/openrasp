@@ -69,6 +69,14 @@ public class CheckParameter {
             this.checker = checker;
         }
 
+        public String getName() {
+            return name;
+        }
+
+        public Checker getChecker() {
+            return checker;
+        }
+
         @Override
         public String toString() {
             return name;

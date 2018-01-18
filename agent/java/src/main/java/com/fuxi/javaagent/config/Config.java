@@ -52,7 +52,9 @@ public class Config extends FileScanListener {
         REFLECTION_MONITOR("reflection.monitor",
                 "java.lang.Runtime.getRuntime,java.lang.Runtime.exec,java.lang.ProcessBuilder.start"),
         BLOCK_STATUS_CODE("block.status_code", "302"),
+        DEBUG("debug", "0"),
         ALGORITHM_CONFIG("algorithm.config", "{}", false);
+
 
         Item(String key, String defaultValue) {
             this(key, defaultValue, true);
@@ -95,6 +97,7 @@ public class Config extends FileScanListener {
     private String injectUrlPrefix;
     private int ognlMinLength;
     private int blockStatusCode;
+    private int debugLevel;
     private JsonObject algorithmConfig;
 
     // Config是由bootstrap classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
@@ -524,7 +527,7 @@ public class Config extends FileScanListener {
      *
      * @return 状态码
      */
-    public int getBlockStatusCode() {
+    public synchronized int getBlockStatusCode() {
         return blockStatusCode;
     }
 
@@ -533,10 +536,32 @@ public class Config extends FileScanListener {
      *
      * @param blockStatusCode 状态码
      */
-    public void setBlockStatusCode(String blockStatusCode) {
+    public synchronized void setBlockStatusCode(String blockStatusCode) {
         this.blockStatusCode = Integer.parseInt(blockStatusCode);
         if (this.blockStatusCode < 100 || this.blockStatusCode > 999) {
             this.blockStatusCode = 302;
+        }
+    }
+
+    /**
+     * 获取 debugLevel 级别
+     * 0是关闭，非0开启
+     *
+     * @return debugLevel 级别
+     */
+    public synchronized int getDebugLevel() {
+        return debugLevel;
+    }
+
+    /**
+     * 设置 debugLevel 级别
+     *
+     * @param debugLevel debugLevel 级别
+     */
+    public synchronized void setDebugLevel(String debugLevel) {
+        this.debugLevel = Integer.parseInt(debugLevel);
+        if (this.debugLevel < 0) {
+            this.debugLevel = 0;
         }
     }
 
@@ -545,7 +570,7 @@ public class Config extends FileScanListener {
      *
      * @return 配置的 json 对象
      */
-    public JsonObject getAlgorithmConfig() {
+    public synchronized JsonObject getAlgorithmConfig() {
         return algorithmConfig;
     }
 
@@ -554,7 +579,7 @@ public class Config extends FileScanListener {
      *
      * @param json 配置内容
      */
-    public void setAlgorithmConfig(String json) {
+    public synchronized void setAlgorithmConfig(String json) {
         this.algorithmConfig = new JsonParser().parse(json).getAsJsonObject();
     }
 
@@ -596,6 +621,8 @@ public class Config extends FileScanListener {
                 setReflectionMonitorMethod(value);
             } else if (Item.BLOCK_STATUS_CODE.key.equals(key)) {
                 setBlockStatusCode(value);
+            } else if (Item.DEBUG.key.equals(key)) {
+                setDebugLevel(value);
             } else if (Item.ALGORITHM_CONFIG.key.equals(key)) {
                 setAlgorithmConfig(value);
             } else {

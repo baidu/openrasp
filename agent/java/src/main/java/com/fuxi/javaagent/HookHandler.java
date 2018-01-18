@@ -16,6 +16,7 @@
 
 package com.fuxi.javaagent;
 
+import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.exception.SecurityException;
 import com.fuxi.javaagent.hook.XXEHook;
 import com.fuxi.javaagent.plugin.checker.CheckParameter;
@@ -221,6 +222,10 @@ public class HookHandler {
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
     public static void doCheckWithoutRequest(CheckParameter.Type type, Object params) {
+        long a = 0;
+        if (Config.getConfig().getDebugLevel() > 0) {
+            a = System.currentTimeMillis();
+        }
         boolean enableHookCache = enableCurrThreadHook.get();
         boolean isBlock = false;
         try {
@@ -232,6 +237,12 @@ public class HookHandler {
                     + " because: " + e.getMessage() + " stacktrace: " + e.getStackTrace());
         } finally {
             enableCurrThreadHook.set(enableHookCache);
+        }
+        if (a > 0) {
+            long t = System.currentTimeMillis() - a;
+            if (requestCache.get() != null) {
+                LOGGER.info("request_id=" + requestCache.get().getRequestId() + " " + "type=" + type.getName() + " " + "time=" + t);
+            }
         }
         if (isBlock) {
             handleBlock();
