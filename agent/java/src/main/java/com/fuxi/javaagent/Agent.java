@@ -59,7 +59,7 @@ public class Agent {
             JsPluginManager.init();
             CheckerManager.init();
             initTransformer(inst);
-            String message = "OpenRasp Initialized [" + projectVersion + " (build: GitCommit=" + gitCommit + " date="
+            String message = "OpenRASP Initialized [" + projectVersion + " (build: GitCommit=" + gitCommit + " date="
                     + buildTime + ")]";
             System.out.println(message);
             Logger.getLogger(Agent.class.getName()).info(message);
