@@ -13,7 +13,7 @@ const POLICY_ALARM_FILE = SERVER_HOME + '/rasp/logs/policy_alarm/policy_alarm.lo
 const RASP_LOG_FILE = SERVER_HOME + '/rasp/logs/rasp/rasp.log';
 const watchFileOptions = {
     persistent: false,
-    interval: 25
+    interval: 400
 };
 chai.expect();
 chai.should();
@@ -82,29 +82,14 @@ describe(process.env['SERVER'] || 'server', function () {
         });
         fs.writeFileSync(CONF_FILE,'\nsecurity.enforce_policy=true');
     });
-    it('should block when security.enforce_policy=fasle and request_url=http://127.0.0.1:8080/app/sql-not-connectable.jsp', function (done) {
-        let resnData;
+    it('should block when security.enforce_policy=fasle and request_url=http://127.0.0.1:8080/app/sql-not-connectable.jsp and ', function (done) {
         fs.watchFile(RASP_LOG_FILE, watchFileOptions, () => {
             let data = fs.readFileSync(RASP_LOG_FILE, {
                 encoding: 'utf8'
             });
-            if(data.indexOf('configuration')>=0){
+            if(data.indexOf('400')>=0){
                 axios.get('sql-not-connectable.jsp').then(function(response){
-                    resnData = response.data
-                    resnData.should.contains('blocked')
-                    done();
-                })
-            }
-        });
-        fs.writeFileSync(CONF_FILE,'\nsecurity.enforce_policy=true');
-    });
-    it('status code should be 400', function (done) {
-        fs.watchFile(RASP_LOG_FILE, watchFileOptions, () => {
-            let data = fs.readFileSync(RASP_LOG_FILE, {
-                encoding: 'utf8'
-            });
-            if(data.indexOf('configuration')>=0){
-                axios.get('sql-not-connectable.jsp').then(function(response){
+                    response.data.should.contains('blocked')
                     response.status.should.equal(400)
                     done();
                 })

@@ -562,7 +562,7 @@ public class Config extends FileScanListener {
         this.debugLevel = Integer.parseInt(debugLevel);
         if (this.debugLevel < 0) {
             this.debugLevel = 0;
-        } else {
+        } else if (this.debugLevel > 0) {
             String debugEnableMessage = "[OpenRASP] Debug output enabled, debug_level=" + debugLevel;
             System.out.println(debugEnableMessage);
             LOGGER.info(debugEnableMessage);
