@@ -493,10 +493,10 @@ plugin.register('xxe', function (params, context) {
     if (items.length >= 2) {
         var protocol = items[0]
 
-        if (protocol === 'gopher' || protocol === 'dict' || protocol === 'expect') {
+        if (protocol === 'gopher' || protocol === 'ftp' || protocol === 'dict' || protocol === 'expect') {
             return {
                 action:     'block',
-                message:    'SSRF 攻击 (' + protocol + ' 协议)',
+                message:    'SSRF/Blind XXE 攻击 (' + protocol + ' 协议)',
                 confidence: 100
             }
         }
