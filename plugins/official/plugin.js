@@ -486,6 +486,8 @@ plugin.register('command', function (params, context) {
     // 如果你在服务器有执行命令的需求，我们建议你修改 算法2
     var message = undefined
     var known   = {
+        'java.lang.reflect.Method.invoke': '尝试通过反射执行命令',
+        'ognl.OgnlRuntime.invokeMethod': '尝试通过 OGNL 代码执行命令',
         'com.thoughtworks.xstream.XStream.unmarshal': '尝试通过 xstream 反序列化执行命令',
         'org.apache.commons.collections4.functors.InvokerTransformer.transform': '尝试通过 transformer 反序列化执行命令'
     }
@@ -494,14 +496,14 @@ plugin.register('command', function (params, context) {
         var method = params.stack[i]
         if (known[method]) {
             message = known[method]
-            break
+            // break
         }
     }
 
     if (message) {
         return {
             action:     'block',
-            message:    message
+            message:    message,
             confidence: 100
         }
     }
