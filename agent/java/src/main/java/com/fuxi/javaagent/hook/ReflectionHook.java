@@ -86,7 +86,7 @@ public class ReflectionHook extends AbstractClassHook {
                         JSContext cx = JSContextFactory.enterAndInitContext();
                         params = cx.newObject(cx.getScope());
                         List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
-                                Config.getConfig().getReflectionMaxStack());
+                                Config.getConfig().getPluginMaxStack());
                         Scriptable array = cx.newArray(cx.getScope(), stackInfo.toArray());
                         params.put("clazz", params, reflectClassName);
                         params.put("method", params, reflectMethodName);

@@ -17,9 +17,11 @@
 package com.fuxi.javaagent.hook;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.plugin.js.engine.JSContext;
 import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
+import com.fuxi.javaagent.tool.StackTrace;
 import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -83,11 +85,19 @@ public class ProcessBuilderHook extends AbstractClassHook {
      */
     public static void checkCommand(List<String> command) {
         if (command != null && !command.isEmpty()) {
-            JSContext cx = JSContextFactory.enterAndInitContext();
-            Scriptable params = cx.newObject(cx.getScope());
-            Scriptable array = cx.newArray(cx.getScope(), command.toArray());
-            params.put("command", params, array);
-            HookHandler.doCheck(CheckParameter.Type.COMMAND, params);
+            try {
+                JSContext cx = JSContextFactory.enterAndInitContext();
+                Scriptable params = cx.newObject(cx.getScope());
+                Scriptable commandArray = cx.newArray(cx.getScope(), command.toArray());
+                params.put("command", params, commandArray);
+                List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
+                        Config.getConfig().getPluginMaxStack());
+                Scriptable stackArray = cx.newArray(cx.getScope(), stackInfo.toArray());
+                params.put("stack", params, stackArray);
+                HookHandler.doCheck(CheckParameter.Type.COMMAND, params);
+            } catch (Throwable t) {
+                HookHandler.LOGGER.warn(t.getMessage());
+            }
         }
     }
 }

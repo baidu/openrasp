@@ -45,12 +45,10 @@ public class Config extends FileScanListener {
         INJECT_URL_PREFIX("inject.urlprefix", ""),
         BODY_MAX_BYTES("body.maxbytes", "4096"),
         LOG_MAX_STACK("log.maxstack", "20"),
-        REFLECTION_MAX_STACK("reflection.maxstack", "100"),
+        REFLECTION_MAX_STACK("plugin.maxstack", "100"),
         SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
         SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
-        REFLECTION_MONITOR("reflection.monitor",
-                "java.lang.Runtime.getRuntime,java.lang.Runtime.exec,java.lang.ProcessBuilder.start"),
         BLOCK_STATUS_CODE("block.status_code", "302"),
         DEBUG("debug_level", "0"),
         ALGORITHM_CONFIG("algorithm.config", "{}", false);
@@ -84,7 +82,7 @@ public class Config extends FileScanListener {
     private static Integer watchId;
 
     private String configFileDir;
-    private int reflectionMaxStack;
+    private int pluginMaxStack;
     private long pluginTimeout;
     private int bodyMaxBytes;
     private int sqlSlowQueryMinCount;
@@ -390,19 +388,19 @@ public class Config extends FileScanListener {
      *
      * @return 栈信息最大深度
      */
-    public synchronized int getReflectionMaxStack() {
-        return reflectionMaxStack;
+    public synchronized int getPluginMaxStack() {
+        return pluginMaxStack;
     }
 
     /**
      * 设置反射hook点传递给插件栈信息的最大深度
      *
-     * @param reflectionMaxStack 栈信息最大深度
+     * @param pluginMaxStack 栈信息最大深度
      */
-    public synchronized void setReflectionMaxStack(String reflectionMaxStack) {
-        this.reflectionMaxStack = Integer.parseInt(reflectionMaxStack);
-        if (this.reflectionMaxStack < 0) {
-            this.reflectionMaxStack = 0;
+    public synchronized void setPluginMaxStack(String pluginMaxStack) {
+        this.pluginMaxStack = Integer.parseInt(pluginMaxStack);
+        if (this.pluginMaxStack < 0) {
+            this.pluginMaxStack = 0;
         }
     }
 
@@ -616,13 +614,11 @@ public class Config extends FileScanListener {
             } else if (Item.READ_FILE_EXTENSION_REGEX.key.equals(key)) {
                 setReadFileExtensionRegex(value);
             } else if (Item.REFLECTION_MAX_STACK.key.equals(key)) {
-                setReflectionMaxStack(value);
+                setPluginMaxStack(value);
             } else if (Item.SECURITY_ENFORCE_POLICY.key.equals((key))) {
                 setEnforcePolicy(value);
             } else if (Item.SQL_SLOW_QUERY_MIN_ROWS.key.equals(key)) {
                 setSqlSlowQueryMinCount(value);
-            } else if (Item.REFLECTION_MONITOR.key.equals(key)) {
-                setReflectionMonitorMethod(value);
             } else if (Item.BLOCK_STATUS_CODE.key.equals(key)) {
                 setBlockStatusCode(value);
             } else if (Item.DEBUG.key.equals(key)) {
