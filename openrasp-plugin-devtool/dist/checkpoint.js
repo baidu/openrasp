@@ -223,27 +223,6 @@ Object.defineProperty(global, 'CheckPointDeserialization', {
     enumerable: true
 });
 
-var CheckPointReflection = function () {
-    function CheckPointReflection(data) {
-        _classCallCheck(this, CheckPointReflection);
-
-        this.clazz = data.clazz;
-    }
-
-    _createClass(CheckPointReflection, null, [{
-        key: 'name',
-        get: function get() {
-            return 'reflection';
-        }
-    }]);
-
-    return CheckPointReflection;
-}();
-Object.defineProperty(global, 'CheckPointReflection', {
-    value: CheckPointReflection,
-    enumerable: true
-});
-
 var CheckPointWebdav = function () {
     function CheckPointWebdav(data) {
         _classCallCheck(this, CheckPointWebdav);

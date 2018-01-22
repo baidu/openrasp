@@ -149,20 +149,6 @@ Object.defineProperty(global, 'CheckPointDeserialization', {
     enumerable: true
 });
 
-const CheckPointReflection = class {
-    constructor(data) {
-        this.clazz = data.clazz;
-    }
-
-    static get name() {
-        return 'reflection';
-    }
-};
-Object.defineProperty(global, 'CheckPointReflection', {
-    value: CheckPointReflection,
-    enumerable: true
-});
-
 const CheckPointWebdav = class {
     constructor(data) {
         this.clazz = data.clazz;
