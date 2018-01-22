@@ -8,6 +8,8 @@
 // CVE 漏洞覆盖说明
 // https://rasp.baidu.com/doc/usage/cve.html
 // 
+// OpenRASP 最佳实践
+// https://rasp.baidu.com/#section-books
 
 'use strict'
 var plugin  = new RASP('offical')
@@ -55,7 +57,6 @@ var scriptFileRegex = /\.(jspx?|php[345]?|phtml)\.?$/i
 var ntfsRegex       = /::\$(DATA|INDEX)$/i // 其他的stream都没啥用
 
 // 常用函数
-
 String.prototype.replaceAll = function(token, tokenValue) {
     var index  = 0;
     var string = this;
@@ -249,10 +250,14 @@ if (RASP.get_jsengine() !== 'v8') {
         var reason   = false
 
         // 检查常见探测域名
-        if (hostname == 'requestb.in' || hostname.endsWith('.xip.name') || hostname.endsWith('.xip.io') || hostname.endsWith('.nip.io') || hostname.endsWith('.burpcollaborator.net')) {
+        if (hostname == 'requestb.in' 
+            || hostname.endsWith('.vcap.me') 
+            || hostname.endsWith('.xip.name') || hostname.endsWith('.xip.io') || hostname.endsWith('.nip.io') 
+            || hostname.endsWith('.burpcollaborator.net')) 
+        {
             reason = '访问已知的内网探测域名'    
         } 
-        // 检测AWS私有地址，如有误报可注释掉
+        // 检测AWS私有地址，如有需求可注释掉
         else if (1 && hostname == '169.254.169.254') {        
             reason = '尝试读取 AWS metadata'
         }
@@ -280,7 +285,6 @@ if (RASP.get_jsengine() !== 'v8') {
         }
         return clean
     })
-
 
 }
 
@@ -375,7 +379,6 @@ plugin.register('readFile', function (params, context) {
     return clean
 })
 
-
 plugin.register('webdav', function (params, context) {
     
     // 源文件不是脚本 && 目标文件是脚本，判定为MOVE方式写后门
@@ -389,7 +392,6 @@ plugin.register('webdav', function (params, context) {
 
     return clean
 })
-
 
 plugin.register('include', function (params, context) {
     var items = params.url.split('://')
@@ -478,15 +480,41 @@ plugin.register('fileUpload', function (params, context) {
 
 
 plugin.register('command', function (params, context) {
-    // 默认禁止命令执行
+
+    // 算法1: 根据堆栈，检查是否为反序列化攻击
+    // 
+    // 如果你在服务器有执行命令的需求，我们建议你修改 算法2
+    var message = undefined
+    var known   = {
+        'com.thoughtworks.xstream.XStream.unmarshal': '尝试通过 xstream 反序列化执行命令',
+        'org.apache.commons.collections4.functors.InvokerTransformer.transform': '尝试通过 transformer 反序列化执行命令'
+    }
+    
+    for (var i = 0; i < params.stack.length; i ++) {
+        var method = params.stack[i]
+        if (known[method]) {
+            message = known[method]
+            break
+        }
+    }
+
+    if (message) {
+        return {
+            action:     'block',
+            message:    message
+            confidence: 100
+        }
+    }
+
+    // 算法2: 默认禁止命令执行，如有需要可改成 log 或者 ignore
     return {
-        action:    'block',
-        message:   '尝试执行命令',
+        action:     'block',
+        message:    '尝试执行命令',
         confidence: 90
     }
 })
 
-
+// 注意: PHP 不支持XXE检测
 plugin.register('xxe', function (params, context) {
     var items = params.entity.split('://')
 
@@ -512,7 +540,7 @@ plugin.register('xxe', function (params, context) {
     return clean
 })
 
-
+// 默认情况下，当OGNL表达式长度超过30才会进入检测点，此长度可配置
 plugin.register('ognl', function (params, context) {
     // 常见 struts payload 语句特征
     var ognlPayloads = [
@@ -574,30 +602,4 @@ plugin.register('deserialization', function (params, context) {
     return clean
 })
 
-
-plugin.register('reflection', function(params, context) {
-    var title = '异常的执行流'
-    var known = {
-        'com.thoughtworks.xstream.XStream.unmarshal': 'xstream 反序列化攻击',
-        'org.apache.commons.collections4.functors.InvokerTransformer.transform': 'transformer 反序列化攻击'
-    }
-
-    // 是否为已知类型的反序列化攻击？
-    params.stack.some(function (method) {
-        if (known[method]) {
-            title = known[method]
-            return true;
-        }
-    });
-
-    return {
-        action:     'block',
-        message:    title + ': ' + params.clazz + '.' + params.method,
-        confidence: 100
-    }
-})
-
-
 plugin.log('官方插件: 初始化成功')
-
-
