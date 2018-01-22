@@ -249,7 +249,7 @@ if (RASP.get_jsengine() !== 'v8') {
         var reason   = false
 
         // 检查常见探测域名
-        if (hostname.endsWith('.xip.name') || hostname.endsWith('.xip.io') || hostname.endsWith('.burpcollaborator.net')) {
+        if (hostname == 'requestb.in' || hostname.endsWith('.xip.name') || hostname.endsWith('.xip.io') || hostname.endsWith('.nip.io') || hostname.endsWith('.burpcollaborator.net')) {
             reason = '访问已知的内网探测域名'    
         } 
         // 检测AWS私有地址，如有误报可注释掉
