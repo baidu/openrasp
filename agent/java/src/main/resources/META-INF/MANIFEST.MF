@@ -1,6 +1,5 @@
 Implementation-Version: 1.0-SNAPSHOT
 Can-Redefine-Classes: TRUE
-Main-Class: com.fuxi.javaagent.Agent
-Premain-Class: com.fuxi.javaagent.Agent
+Premain-Class: com.baidu.openrasp.Agent
 Can-Retransform-Classes: TRUE
 

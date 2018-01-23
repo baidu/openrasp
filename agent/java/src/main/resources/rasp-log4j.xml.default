@@ -4,65 +4,65 @@
 <!--OPENRASP LOG CONFIG ID:[22], DO NOT REMOVE THIS LINE-->
 <log4j:configuration debug="false">
 
-    <appender name="CONSOLE" class="com.fuxi.javaagent.log4j.ConsoleAppender">
-        <layout class="com.fuxi.javaagent.log4j.PatternLayout">
+    <appender name="CONSOLE" class="com.baidu.openrasp.log4j.ConsoleAppender">
+        <layout class="com.baidu.openrasp.log4j.PatternLayout">
             <param name="encoding" value="UTF-8"/>
             <param name="ConversionPattern"
                    value="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
         </layout>
     </appender>
 
-    <appender name="ALARM" class="com.fuxi.javaagent.messaging.OpenraspDailyRollingFileAppender">
-        <errorHandler class="com.fuxi.javaagent.log4j.helpers.OnlyOnceErrorHandler"/>
+    <appender name="ALARM" class="com.baidu.openrasp.messaging.OpenraspDailyRollingFileAppender">
+        <errorHandler class="com.baidu.openrasp.log4j.helpers.OnlyOnceErrorHandler"/>
         <param name="File" value="[[TARGET PATH]]/logs/alarm/alarm.log"/>
         <param name="Append" value="true"/>
         <param name="DatePattern" value="'.'yyyy-MM-dd"/>
         <!--<param name="MaxBackupIndex" value="30"/>-->
         <param name="encoding" value="UTF-8"/>
-        <layout class="com.fuxi.javaagent.log4j.PatternLayout">
+        <layout class="com.baidu.openrasp.log4j.PatternLayout">
             <param name="ConversionPattern" value="%m%n"/>
         </layout>
     </appender>
 
-    <appender name="POLICY_ALARM" class="com.fuxi.javaagent.messaging.OpenraspDailyRollingFileAppender">
-        <errorHandler class="com.fuxi.javaagent.log4j.helpers.OnlyOnceErrorHandler"/>
+    <appender name="POLICY_ALARM" class="com.baidu.openrasp.messaging.OpenraspDailyRollingFileAppender">
+        <errorHandler class="com.baidu.openrasp.log4j.helpers.OnlyOnceErrorHandler"/>
         <param name="File" value="[[TARGET PATH]]/logs/policy_alarm/policy_alarm.log"/>
         <param name="Append" value="true"/>
         <param name="DatePattern" value="'.'yyyy-MM-dd"/>
         <!--<param name="MaxBackupIndex" value="30"/>-->
         <param name="encoding" value="UTF-8"/>
-        <layout class="com.fuxi.javaagent.log4j.PatternLayout">
+        <layout class="com.baidu.openrasp.log4j.PatternLayout">
             <param name="ConversionPattern" value="%m%n"/>
         </layout>
     </appender>
 
-    <appender name="PLUGIN" class="com.fuxi.javaagent.messaging.OpenraspDailyRollingFileAppender">
-        <errorHandler class="com.fuxi.javaagent.log4j.helpers.OnlyOnceErrorHandler"/>
+    <appender name="PLUGIN" class="com.baidu.openrasp.messaging.OpenraspDailyRollingFileAppender">
+        <errorHandler class="com.baidu.openrasp.log4j.helpers.OnlyOnceErrorHandler"/>
         <param name="File" value="[[TARGET PATH]]/logs/plugin/plugin.log"/>
         <param name="Append" value="true"/>
         <param name="DatePattern" value="'.'yyyy-MM-dd"/>
         <!--<param name="MaxBackupIndex" value="30"/>-->
         <param name="encoding" value="UTF-8"/>
-        <layout class="com.fuxi.javaagent.log4j.PatternLayout">
+        <layout class="com.baidu.openrasp.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d %-5p [%t][%c] %m%n"/>
         </layout>
     </appender>
 
-    <appender name="RASP" class="com.fuxi.javaagent.messaging.OpenraspDailyRollingFileAppender">
-        <errorHandler class="com.fuxi.javaagent.log4j.helpers.OnlyOnceErrorHandler"/>
+    <appender name="RASP" class="com.baidu.openrasp.messaging.OpenraspDailyRollingFileAppender">
+        <errorHandler class="com.baidu.openrasp.log4j.helpers.OnlyOnceErrorHandler"/>
         <param name="File" value="[[TARGET PATH]]/logs/rasp/rasp.log"/>
         <param name="Append" value="true"/>
         <param name="DatePattern" value="'.'yyyy-MM-dd"/>
         <!--<param name="MaxBackupIndex" value="30"/>-->
         <param name="encoding" value="UTF-8"/>
-        <layout class="com.fuxi.javaagent.log4j.PatternLayout">
+        <layout class="com.baidu.openrasp.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d %-5p [%t][%c] %m%n"/>
         </layout>
 
         <!-- BurstFilter: log rate limit filter used for appender -->
         <!-- maxBurst: max log burst -->
         <!-- refill %refillAmount% available log token amount per %refillInterval% seconds -->
-        <!--<filter class="com.fuxi.javaagent.messaging.BurstFilter">-->
+        <!--<filter class="com.baidu.openrasp.messaging.BurstFilter">-->
         <!--<param name="maxBurst" value="10000" />-->
         <!--<param name="refillAmount" value="10000" />-->
         <!--<param name="refillInterval" value="10" />-->
@@ -72,7 +72,7 @@
     <!-- Configuration templates of syslog(TCP) -->
     <!-- Add to specific logger as appender-ref like this: <appender-ref ref="SYSLOGTCP" /> -->
     <!-- Modify localhost to the host of your syslog server -->
-    <!--<appender name="SYSLOGTCP" class="com.fuxi.javaagent.messaging.SyslogTcpAppender">-->
+    <!--<appender name="SYSLOGTCP" class="com.baidu.openrasp.messaging.SyslogTcpAppender">-->
     <!--<param name="Threshold" value="INFO" />-->
     <!--<param name="Facility" value="LOCAL0" />-->
     <!--<param name="FacilityPrinting" value="true" />-->
@@ -84,11 +84,11 @@
     <!-- Configuration templates of syslog -->
     <!-- Add to specific logger as appender-ref like this: <appender-ref ref="SYSLOG" /> -->
     <!-- Modify 127.0.0.1 to the IP of your syslog server -->
-    <!--<appender name="SYSLOG" class="com.fuxi.javaagent.log4j.net.SyslogAppender">-->
+    <!--<appender name="SYSLOG" class="com.baidu.openrasp.log4j.net.SyslogAppender">-->
     <!--<param name="Threshold" value="ERROR" />-->
     <!--<param name="Facility" value="LOCAL0" />-->
     <!--<param name="SyslogHost" value="127.0.0.1" />-->
-    <!--<layout class="com.fuxi.javaagent.log4j.PatternLayout">-->
+    <!--<layout class="com.baidu.openrasp.log4j.PatternLayout">-->
     <!--<param name="ConversionPattern" value="%d %-5p [%t][%c] %m%n" />-->
     <!--</layout>-->
     <!--</appender>-->
@@ -125,7 +125,7 @@
     <!--maxCacheSize : max size of cached alarm logging item-->
     <!--cacheFlushTime : the time interval for post all the cached logging items-->
     <!--Recommended to use with the BurstFilter-->
-    <!--<appender name="ALARMHTTPAPPENDER" class="com.fuxi.javaagent.messaging.AlarmHttpAppender">-->
+    <!--<appender name="ALARMHTTPAPPENDER" class="com.baidu.openrasp.messaging.AlarmHttpAppender">-->
     <!--<param name="url" value="http://host:port/alarm"/>-->
     <!--<param name="connectionTimeout" value="10000"/>-->
     <!--<param name="readTimeout" value="10000"/>-->
@@ -134,17 +134,17 @@
     <!--</appender>-->
 
 
-    <logger name="com.fuxi.javaagent.plugin.checker.alarm" additivity="false">
+    <logger name="com.baidu.openrasp.plugin.checker.alarm" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="ALARM"/>
     </logger>
 
-    <logger name="com.fuxi.javaagent.plugin.checker.policy_alarm" additivity="false">
+    <logger name="com.baidu.openrasp.plugin.checker.policy_alarm" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="POLICY_ALARM"/>
     </logger>
 
-    <logger name="com.fuxi.javaagent.plugin.js.engine.log" additivity="false">
+    <logger name="com.baidu.openrasp.plugin.js.engine.log" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="PLUGIN"/>
     </logger>
