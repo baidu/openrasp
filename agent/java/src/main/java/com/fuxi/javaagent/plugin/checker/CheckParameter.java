@@ -49,7 +49,7 @@ public class CheckParameter {
         XXE("xxe", new JsChecker()),
         OGNL("ognl", new JsChecker()),
         DESERIALIZATION("deserialization", new JsChecker()),
-        REFLECTION("reflection", new JsChecker()),
+//        REFLECTION("reflection", new JsChecker()),
         WEBDAV("webdav", new JsChecker()),
         INCLUDE("include", new JsChecker()),
         SSRF("ssrf", new SSRFChecker()),
