@@ -39,7 +39,7 @@ public class SSRFChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_SSRF_OBFUSCATE = "ssrf_obfuscate";
     private static final String CONFIG_KEY_SSRF_INTRANET = "ssrf_intranet";
     private static final String[] INTRANET_DETECTION_SUFFIX = new String[]{".xip.io", ".burpcollaborator.net",
-            ".xip.name", ".requestb.in", ".nip.io", ".vcap.me"};
+            ".xip.name", ".nip.io", ".vcap.me"};
 
     @Override
     public List<EventInfo> checkParam(CheckParameter checkParameter) {
@@ -48,12 +48,16 @@ public class SSRFChecker extends ConfigurableChecker {
         JsonObject config = Config.getConfig().getAlgorithmConfig();
 
         if (!isModuleIgnore(config, CONFIG_KEY_SSRF_INTRANET)) {
+            boolean isFound = false;
             for (String suffix : INTRANET_DETECTION_SUFFIX) {
                 if (hostName.endsWith(suffix)) {
-                    result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                            getActionElement(config, CONFIG_KEY_SSRF_INTRANET), "访问已知的内网探测域名"));
+                    isFound = true;
                     break;
                 }
+            }
+            if (isFound || hostName.equals("requestb.in")) {
+                result.add(AttackInfo.createLocalAttackInfo(checkParameter,
+                        getActionElement(config, CONFIG_KEY_SSRF_INTRANET), "访问已知的内网探测域名"));
             }
         } else if (!isModuleIgnore(config, CONFIG_KEY_SSRF_AWS)
                 && hostName.equals("169.254.169.254")) {

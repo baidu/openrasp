@@ -53,16 +53,20 @@ public class CommonHttpClientHook extends AbstractSSRFHook {
     }
 
     public static void checkHttpConnection(Object httpMethod) {
+        String host = null;
+        Object uri = null;
         try {
             if (httpMethod != null) {
-                Object uri = Reflection.invokeMethod(httpMethod, "getURI", new Class[]{});
+                uri = Reflection.invokeMethod(httpMethod, "getURI", new Class[]{});
                 if (uri != null) {
-                    String host = Reflection.invokeStringMethod(uri, "getHost", new Class[]{});
-                    checkHttpUrl(uri.toString(), host,"commons_httpclient");
+                    host = Reflection.invokeStringMethod(uri, "getHost", new Class[]{});
                 }
             }
         } catch (Throwable t) {
             HookHandler.LOGGER.warn(t.getMessage());
+        }
+        if (host != null) {
+            checkHttpUrl(uri.toString(), host, "commons_httpclient");
         }
     }
 }

@@ -62,6 +62,8 @@ public class HttpClientHook extends AbstractSSRFHook {
         } catch (Throwable t) {
             HookHandler.LOGGER.warn(t.getMessage());
         }
-        checkHttpUrl(url, hostName,"httpclient");
+        if (hostName != null) {
+            checkHttpUrl(url, hostName, "httpclient");
+        }
     }
 }

@@ -80,7 +80,7 @@ public class JSContext extends Context {
     public List<EventInfo> check(CheckParameter parameter) {
         LinkedList<EventInfo> checkResults = new LinkedList<EventInfo>();
         List<CheckProcess> processList = checkPointList.get(parameter.getType().ordinal());
-        if (processList.size() < 1) {
+        if (processList == null || processList.size() < 1) {
             return null;
         }
 
@@ -145,7 +145,7 @@ public class JSContext extends Context {
             } else {
                 confidence = new Integer(0);
             }
-            checkResults.add(new AttackInfo(parameter,action, message, name, confidence));
+            checkResults.add(new AttackInfo(parameter, action, message, name, confidence));
         }
         return checkResults;
     }
