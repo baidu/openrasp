@@ -19,6 +19,7 @@ package com.fuxi.javaagent.plugin.checker.local;
 import com.baidu.rasp.TokenGenerator;
 import com.fuxi.javaagent.HookHandler;
 import com.fuxi.javaagent.config.Config;
+import com.fuxi.javaagent.plugin.antlrlistener.TokenizeErrorListener;
 import com.fuxi.javaagent.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.plugin.checker.js.JsChecker;
 import com.fuxi.javaagent.plugin.info.AttackInfo;
@@ -46,13 +47,15 @@ public class SqlStatementChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_VERSION_COMMENT = "version_comment";
     private static final String CONFIG_KEY_FUNCTION_BLACKLIST = "function_blacklist";
 
+    private static TokenizeErrorListener tokenizeErrorListener = new TokenizeErrorListener();
+
     @Override
     public List<EventInfo> checkParam(CheckParameter checkParameter) {
         List<EventInfo> result = new LinkedList<EventInfo>();
         String query = (String) checkParameter.getParam("query");
 
         String message = null;
-        String[] tokens = TokenGenerator.tokenize(query);
+        String[] tokens = TokenGenerator.tokenize(query, tokenizeErrorListener);
         Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
         JsonObject config = Config.getConfig().getAlgorithmConfig();
         // 算法1: 匹配用户输入
@@ -73,7 +76,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                 if (!query.contains(value)) {
                     continue;
                 }
-                String[] tokens2 = TokenGenerator.tokenize(query.replace(value, ""));
+                String[] tokens2 = TokenGenerator.tokenize(query.replace(value, ""), tokenizeErrorListener);
                 if (tokens != null) {
                     if (tokens.length - tokens2.length > 2) {
                         message = "算法1: 数据库查询逻辑发生改变";

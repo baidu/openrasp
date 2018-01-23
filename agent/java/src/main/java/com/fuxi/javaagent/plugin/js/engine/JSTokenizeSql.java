@@ -17,6 +17,7 @@
 package com.fuxi.javaagent.plugin.js.engine;
 
 import com.baidu.rasp.TokenGenerator;
+import com.fuxi.javaagent.plugin.antlrlistener.TokenizeErrorListener;
 import org.mozilla.javascript.BaseFunction;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
@@ -25,6 +26,7 @@ import org.mozilla.javascript.Scriptable;
  * Java 实现的 token 解析功能，将注册到 JS 中 RASP 对象上
  */
 public class JSTokenizeSql extends BaseFunction {
+    private static TokenizeErrorListener tokenizeErrorListener = new TokenizeErrorListener();
     /**
      * @see BaseFunction#call(Context, Scriptable, Scriptable, Object[])
      * @param cx
@@ -43,7 +45,7 @@ public class JSTokenizeSql extends BaseFunction {
             return Context.getUndefinedValue();
         }
         String sql = (String) args[0];
-        String[] result = TokenGenerator.tokenize(sql);
+        String[] result = TokenGenerator.tokenize(sql, tokenizeErrorListener);
         int length = result.length;
         Scriptable array = cx.newArray(scope, length);
         for (int i = 0; i < length; i++) {
