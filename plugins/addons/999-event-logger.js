@@ -39,11 +39,6 @@ plugin.register('ognl', function (params, context) {
     return clean
 })
 
-plugin.register('reflection', function(params, context) {
-    plugin.log('通过反射调用加载敏感的类: ', params.clazz + '.' + params.method)
-    return clean
-})
-
 // 下面的这些方法，可能产生大量日志
 plugin.register('xxe', function (params, context) {
     plugin.log('读取XML外部实体: ' + params.entity)
