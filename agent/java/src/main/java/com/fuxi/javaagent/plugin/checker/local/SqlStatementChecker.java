@@ -114,6 +114,9 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                 String op1 = tokens[i - 1];
                                 String op2 = tokens[i + 1];
                                 if (StringUtils.isNumeric(op1) && StringUtils.isNumeric(op2)) {
+                                    if ("1".equals(op1) && "1".equals(op2) && "=".equals(lt)) {
+                                        continue;
+                                    }
                                     message = "禁止常量比较操作";
                                     break;
                                 }
