@@ -202,11 +202,24 @@ if (RASP.get_jsengine() !== 'v8') {
                     // @FIXME: 可绕过，暂时不更新
                     // 简单识别 NUMBER (>|<|>=|<=|xor) NUMBER
                     //          i-1         i          i+2    
-                            
+                        
                     var op1    = tokens_lc[i - 1]
                     var op2    = tokens_lc[i + 1]
 
-                    if (Number.isInteger(op1) && Number.isInteger(op2)) {
+                    // @TODO: strip quotes
+                    var num1   = parseInt(op1)
+                    var num2   = parseInt(op2)
+
+                    if (! isNaN(num1) && ! isNaN(num2)) {
+                        // 允许 1=1 这样的常量对比以避免误报
+                        // 来自 wooyun-2015-0131345 的截图
+                        // 
+                        // SQLmap 是随机4位数字，不受影响
+                        if (num1 == 1 && num2 == 1 && tokens_lc[i][0] === '=')
+                        {
+                            continue;
+                        }
+
                         reason = '禁止常量比较操作'
                         break
                     }                    
