@@ -13,6 +13,6 @@ public class TokenizeErrorListener extends BaseErrorListener {
 
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-        LOGGER.info("SQL TOKENIZE ERROR: line " + line + ":" + charPositionInLine + " at " + offendingSymbol + ": " + msg);
+        LOGGER.info("RASP.sql_tokenize error: line " + line + ":" + charPositionInLine + " at " + offendingSymbol + ": " + msg);
     }
 }
