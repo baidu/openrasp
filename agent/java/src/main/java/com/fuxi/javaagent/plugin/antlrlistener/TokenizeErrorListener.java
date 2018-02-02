@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
  * Created by lxk on 1/22/18.
  */
 public class TokenizeErrorListener extends BaseErrorListener {
-    public static final Logger LOGGER = Logger.getLogger(TokenizeErrorListener.class.getName());
+    public static final Logger LOGGER = Logger.getLogger("com.fuxi.javaagent.plugin.js.engine.log");
 
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
