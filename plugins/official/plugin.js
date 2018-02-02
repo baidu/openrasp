@@ -112,7 +112,9 @@ if (RASP.get_jsengine() !== 'v8') {
                 // 探测阶段
                 'is_srvrolemember',
                 // 报错注入
-                'updatexml', 'extractvalue'
+                'updatexml', 'extractvalue',
+                // 盲注
+                'hex'
             ]
         },
         // SSRF - 是否允许访问 aws metadata
@@ -193,7 +195,8 @@ if (RASP.get_jsengine() !== 'v8') {
                 'pg_sleep':         true,
                 'is_srvrolemember': true,
                 'updatexml':        true,
-                'extractvalue':     true
+                'extractvalue':     true,
+                'hex':              true
             }
             var tokens_lc = tokens.map(v => v.toLowerCase())
 
@@ -202,9 +205,9 @@ if (RASP.get_jsengine() !== 'v8') {
                 if (1 && tokens_lc[i] === 'select') {
                     var null_count = 0
 
-                    // 寻找逗号或者NULL
+                    // 寻找连续的逗号、NULL或者数字
                     for (var j = i + 1; j < tokens_lc.length && j < i + 6; j ++) {
-                        if (tokens_lc[j] === ',' || tokens_lc[j] == 'null') {
+                        if (tokens_lc[j] === ',' || tokens_lc[j] == 'null' || ! isNaN(parseInt(tokens_lc[j]))) {
                             null_count ++
                         } else {
                             break
@@ -212,8 +215,9 @@ if (RASP.get_jsengine() !== 'v8') {
                     }
 
                     // NULL,NULL,NULL == 5个token
+                    // 1,2,3          == 5个token
                     if (null_count >= 5) {
-                        reason = 'UNION-NULL 方式注入 - 字段类型探测: ' + null_count
+                        reason = 'UNION-NULL 方式注入 - 字段类型探测'
                         break
                     }
                     continue
