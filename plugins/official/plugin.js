@@ -104,7 +104,16 @@ if (RASP.get_jsengine() !== 'v8') {
         'sqli_policy': {
             action:             'block',
             feature:            ['stacked_query', 'no_hex', 'constant_compare', 'version_comment', 'function_blacklist', 'union_null'],
-            function_blacklist: ['load_file', 'benchmark', 'pg_sleep', 'sleep', 'is_srvrolemember']
+            function_blacklist: [
+                // 文件操作
+                'load_file', 
+                // 时间差注入
+                'benchmark', 'pg_sleep', 'sleep',
+                // 探测阶段
+                'is_srvrolemember',
+                // 报错注入
+                'updatexml', 'extractvalue'
+            ]
         },
         // SSRF - 是否允许访问 aws metadata
         'ssrf_aws': {
@@ -183,6 +192,8 @@ if (RASP.get_jsengine() !== 'v8') {
                 'sleep':            true,
                 'pg_sleep':         true,
                 'is_srvrolemember': true,
+                'updatexml':        true,
+                'extractvalue':     true
             }
             var tokens_lc = tokens.map(v => v.toLowerCase())
 
@@ -258,7 +269,7 @@ if (RASP.get_jsengine() !== 'v8') {
             if (reason !== false) {
                 return {
                     action:     'block',
-                    message:    '数据库语句异常: ' + reason + '（算法3）',
+                    message:    '算法3: 数据库语句异常: ' + reason,
                     confidence: 100
                 }
             }
