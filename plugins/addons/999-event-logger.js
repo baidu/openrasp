@@ -60,11 +60,27 @@ plugin.register('writeFile', function (params, context) {
     return clean
 })
 
+function normalize_query(query) {
+    var tokens = RASP.sql_tokenize(query)
+    for (var i = 0; i < tokens.length; i ++) {
+        var token = tokens[i]
+
+        // 检查是否为字符串
+        if ( (token[0] == "'" || token[0] == '"') &&
+            (token[token.length - 1] == "'" || token[token.length - 1] == '"'))
+        {
+            tokens[i] = '"S"'
+        }
+    }
+
+    return tokens.join(' ')
+}
+
 // 记录SQL日志，可能带来如下两种问题
 // 1. 查询语句中，可能包含敏感信息
 // 2. 日志量可能会很大
 plugin.register('sql', function (params, context) {
-    plugin.log('SQL查询: ' + params.query)
+    plugin.log('SQL查询: ' + normalize_query(params.query))
     return clean
 })
 
