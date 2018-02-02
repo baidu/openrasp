@@ -50,6 +50,7 @@ var forcefulBrowsing = {
         '/etc/apache2/apache2.conf',
         '/root/.bash_history',
         '/root/.bash_profile',
+        'C:\\Windows\\system32\\inetsrv\\MetaBase.xml'
     ]
 }
 
@@ -103,7 +104,7 @@ if (RASP.get_jsengine() !== 'v8') {
         'sqli_policy': {
             action:             'block',
             feature:            ['stacked_query', 'no_hex', 'constant_compare', 'version_comment', 'function_blacklist'],
-            function_blacklist: ['load_file', 'benchmark', 'pg_sleep', 'sleep']
+            function_blacklist: ['load_file', 'benchmark', 'pg_sleep', 'sleep', 'is_srvrolemember']
         },
         // SSRF - 是否允许访问 aws metadata
         'ssrf_aws': {
@@ -177,14 +178,36 @@ if (RASP.get_jsengine() !== 'v8') {
         // 算法2: SQL语句策略检查（模拟SQL防火墙功能）
         if (1) {
             var func_list = {
-                'load_file': true,
-                'benchmark': true,
-                'sleep':     true,
-                'pg_sleep':  true
+                'load_file':        true,
+                'benchmark':        true,
+                'sleep':            true,
+                'pg_sleep':         true,
+                'is_srvrolemember': true,
             }
             var tokens_lc = tokens.map(v => v.toLowerCase())
 
-            for (var i = 0; i < tokens_lc.length; i ++) {
+            for (var i = 1; i < tokens_lc.length; i ++) {
+
+                if (1 && tokens_lc[i] === 'select') {
+                    var null_count = 0
+
+                    // 寻找逗号或者NULL
+                    for (var j = i + 1; j < tokens_lc.length && j < i + 6; j ++) {
+                        if (tokens_lc[j] === ',' || tokens_lc[j] == 'null') {
+                            null_count ++
+                        } else {
+                            break
+                        }
+                    }
+
+                    // NULL,NULL,NULL == 5个token
+                    if (null_count >= 5) {
+                        reason = 'UNION-NULL 方式注入 - 字段类型探测: ' + null_count
+                        break
+                    }
+                    continue
+                }
+
                 if (tokens_lc[i] == ';' && i != tokens_lc.length - 1) {
                     reason = '禁止多语句查询'
                     break
