@@ -237,12 +237,12 @@ if (RASP.get_jsengine() !== 'v8') {
                     // 简单识别 NUMBER (>|<|>=|<=|xor) NUMBER
                     //          i-1         i          i+2    
                         
-                    var op1    = tokens_lc[i - 1]
-                    var op2    = tokens_lc[i + 1]
+                    var op1  = tokens_lc[i - 1]
+                    var op2  = tokens_lc[i + 1]
 
                     // @TODO: strip quotes
-                    var num1   = parseInt(op1)
-                    var num2   = parseInt(op2)
+                    var num1 = parseInt(op1)
+                    var num2 = parseInt(op2)
 
                     if (! isNaN(num1) && ! isNaN(num2)) {
                         // 允许 1=1 这样的常量对比以避免误报
