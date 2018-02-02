@@ -114,7 +114,9 @@ if (RASP.get_jsengine() !== 'v8') {
                 // 报错注入
                 'updatexml', 'extractvalue',
                 // 盲注
-                'hex'
+                'hex',
+                // 可能误报，暂不开启
+                // 'char', 'chr', 'mid', 'ord', 'ascii'
             ]
         },
         // SSRF - 是否允许访问 aws metadata
@@ -196,7 +198,7 @@ if (RASP.get_jsengine() !== 'v8') {
                 'is_srvrolemember': true,
                 'updatexml':        true,
                 'extractvalue':     true,
-                'hex':              true
+                'hex':              true,
             }
             var tokens_lc = tokens.map(v => v.toLowerCase())
 
@@ -261,7 +263,7 @@ if (RASP.get_jsengine() !== 'v8') {
                         reason = '禁止常量比较操作'
                         break
                     }                    
-                } else if (i > 0 && tokens_lc[i].indexOf('(') == 0) {
+                } else if (i > 0 && tokens_lc[i][0] === '(') {
                     // @FIXME: 可绕过，暂时不更新
                     if (func_list[tokens_lc[i - 1]]) {
                         reason = '禁止执行敏感函数: ' + tokens_lc[i - 1]
