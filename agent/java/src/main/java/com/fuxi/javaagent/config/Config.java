@@ -51,7 +51,8 @@ public class Config extends FileScanListener {
         SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
         BLOCK_STATUS_CODE("block.status_code", "302"),
         DEBUG("debug_level", "0"),
-        ALGORITHM_CONFIG("algorithm.config", "{}", false);
+        ALGORITHM_CONFIG("algorithm.config", "{}", false),
+        SQLINJECTSCANCLASSPREFIX("sqlInjectScanClassPrefix", "");
 
 
         Item(String key, String defaultValue) {
@@ -97,6 +98,7 @@ public class Config extends FileScanListener {
     private int blockStatusCode;
     private int debugLevel;
     private JsonObject algorithmConfig;
+    private String sqlInjectScanClassPrefix;
 
     // Config是由bootstrap classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
@@ -585,6 +587,13 @@ public class Config extends FileScanListener {
         this.algorithmConfig = new JsonParser().parse(json).getAsJsonObject();
     }
 
+    public synchronized void setSqlInjectScanClassPrefix(String sqlInjectScanClassPrefix) {
+        this.sqlInjectScanClassPrefix = sqlInjectScanClassPrefix;
+    }
+
+    public String getSqlInjectScanClassPrefix() {
+        return this.sqlInjectScanClassPrefix;
+    }
     //--------------------------统一的配置处理------------------------------------
 
     /**
@@ -625,7 +634,10 @@ public class Config extends FileScanListener {
                 setDebugLevel(value);
             } else if (Item.ALGORITHM_CONFIG.key.equals(key)) {
                 setAlgorithmConfig(value);
-            } else {
+            } else if(Item.SQLINJECTSCANCLASSPREFIX.key.equals(key)) {
+                setSqlInjectScanClassPrefix(value);
+            }
+            else {
                 isHit = false;
             }
             if (isHit) {

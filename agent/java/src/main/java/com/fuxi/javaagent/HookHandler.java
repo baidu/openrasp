@@ -21,6 +21,7 @@ import com.fuxi.javaagent.exception.SecurityException;
 import com.fuxi.javaagent.hook.XXEHook;
 import com.fuxi.javaagent.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.plugin.checker.CheckerManager;
+import com.fuxi.javaagent.plugin.checker.local.TrustStringManager;
 import com.fuxi.javaagent.plugin.js.engine.JSContext;
 import com.fuxi.javaagent.request.AbstractRequest;
 import com.fuxi.javaagent.request.HttpServletRequest;
@@ -133,6 +134,8 @@ public class HookHandler {
         if (servlet != null && request != null && !enableCurrThreadHook.get()) {
             // 默认是关闭hook的，只有处理过HTTP request的线程才打开
             enableCurrThreadHook.set(true);
+            TrustStringManager.initRequest();
+
             HttpServletRequest requestContainer = new HttpServletRequest(request);
             HttpServletResponse responseContainer = new HttpServletResponse(response);
             responseContainer.setHeader(OPEN_RASP_HEADER_KEY, OPEN_RASP_HEADER_VALUE);
@@ -149,6 +152,7 @@ public class HookHandler {
      * 请求结束后不可以在进入任何hook点
      */
     public static void onServiceExit() {
+        TrustStringManager.endRequest();
         enableCurrThreadHook.set(false);
         requestCache.set(null);
     }

@@ -21,13 +21,10 @@ import com.fuxi.javaagent.HookHandler;
 import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.plugin.antlrlistener.TokenizeErrorListener;
 import com.fuxi.javaagent.plugin.checker.CheckParameter;
-import com.fuxi.javaagent.plugin.checker.js.JsChecker;
 import com.fuxi.javaagent.plugin.info.AttackInfo;
 import com.fuxi.javaagent.plugin.info.EventInfo;
 import com.google.gson.JsonObject;
-import org.apache.commons.lang3.StringUtils;
 
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +50,6 @@ public class SqlStatementChecker extends ConfigurableChecker {
     public List<EventInfo> checkParam(CheckParameter checkParameter) {
         List<EventInfo> result = new LinkedList<EventInfo>();
         String query = (String) checkParameter.getParam("query");
-
         String message = null;
         String[] tokens = TokenGenerator.tokenize(query, tokenizeErrorListener);
         Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
@@ -61,8 +57,13 @@ public class SqlStatementChecker extends ConfigurableChecker {
         // 算法1: 匹配用户输入
         // 1. 简单识别逻辑是否发生改变
         // 2. 识别数据库管理器
-        String action = getActionElement(config, CONFIG_KEY_SQLI_USER_INPUT);
+        //String action = getActionElement(config, CONFIG_KEY_SQLI_USER_INPUT);
+        String action = EventInfo.CHECK_ACTION_BLOCK;
         if (!EventInfo.CHECK_ACTION_IGNORE.equals(action) && action != null) {
+            if(!TrustStringManager.isSqlValidate(query)) {
+                result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
+                        "算法0:查询语句中包含不可信的部分，应该放在参数部分", 90));
+            }
             for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
                 String[] v = entry.getValue();
                 String value = v[0];
@@ -73,9 +74,11 @@ public class SqlStatementChecker extends ConfigurableChecker {
                     message = "算法2: WebShell - 数据库管理器";
                     break;
                 }
+                /*
                 if (!query.contains(value)) {
                     continue;
                 }
+
                 String[] tokens2 = TokenGenerator.tokenize(query.replace(value, ""), tokenizeErrorListener);
                 if (tokens != null) {
                     if (tokens.length - tokens2.length > 2) {
@@ -83,12 +86,14 @@ public class SqlStatementChecker extends ConfigurableChecker {
                         break;
                     }
                 }
+                */
             }
         }
         if (message != null) {
             result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
                     message, 90));
         } else {
+            /*
             // 算法2: SQL语句策略检查（模拟SQL防火墙功能）
             action = getActionElement(config, CONFIG_KEY_SQLI_POLICY);
             if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
@@ -138,14 +143,16 @@ public class SqlStatementChecker extends ConfigurableChecker {
                             message, 100));
                 }
             }
+            */
         }
 
+        /*
         // js 插件检测
         List<EventInfo> jsResults = new JsChecker().checkParam(checkParameter);
         if (jsResults != null && jsResults.size() > 0) {
             result.addAll(jsResults);
         }
+        */
         return result;
     }
-
 }

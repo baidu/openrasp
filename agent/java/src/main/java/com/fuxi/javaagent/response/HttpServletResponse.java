@@ -170,6 +170,7 @@ public class HttpServletResponse {
                 }
                 resetBuffer();
                 sendContent(script, true);
+                throw new IllegalAccessError();//一旦进行拦截，抛错误防止后续逻辑的继续处理
             } catch (Exception e) {
                 //ignore
             }
