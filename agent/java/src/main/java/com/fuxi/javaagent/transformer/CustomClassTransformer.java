@@ -82,7 +82,6 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new CatalinaRequestHook());
         addHook(new JettyRequestHook());
         addHook(new ConstStringHook());
-        addHook(new StringBuilderHook());
         addHook(new SQLPrepareStatementHook());
     }
 
