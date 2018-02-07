@@ -1,5 +1,0 @@
-Implementation-Version: 1.0-SNAPSHOT
-Can-Redefine-Classes: TRUE
-Premain-Class: com.baidu.openrasp.Agent
-Can-Retransform-Classes: TRUE
-
