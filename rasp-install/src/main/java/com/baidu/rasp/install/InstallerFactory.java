@@ -45,7 +45,7 @@ public abstract class InstallerFactory {
             System.out.println("- " + JBOSS + "\n");
             throw new RaspError(E10004 + serverRoot.getPath());
         }
-        
+
         System.out.println("Detected application server type: " + serverName);
         return getInstaller(serverName, serverRoot.getAbsolutePath());
     }
@@ -56,7 +56,9 @@ public abstract class InstallerFactory {
             return TOMCAT;
         }
         if (new File(serverRoot, "bin/probe.sh").exists()
-                || new File(serverRoot, "bin/probe.bat").exists()) {
+                || new File(serverRoot, "bin/probe.bat").exists()
+                || new File(serverRoot, "bin/twiddle.sh").exists()
+                || new File(serverRoot, "bin/twiddle.bat").exists()) {
             return JBOSS;
         }
         return null;

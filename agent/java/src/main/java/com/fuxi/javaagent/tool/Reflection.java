@@ -92,7 +92,6 @@ public class Reflection {
             }
             return invokeMethod(null, clazz, methodName, paramTypes, parameters);
         } catch (Exception e) {
-            e.printStackTrace();
             return null;
         }
     }
