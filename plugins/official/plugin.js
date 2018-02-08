@@ -130,7 +130,7 @@ if (RASP.get_jsengine() !== 'v8') {
 
     plugin.register('sql', function (params, context) {
         var reason     = false
-        var parameters = context.parameter
+        var parameters = context.parameter || {}
         var tokens     = RASP.sql_tokenize(params.query, params.server)
 
         // console.log(tokens)
