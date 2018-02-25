@@ -19,6 +19,7 @@ import com.baidu.rasp.SQLLexer;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.Token;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -29,18 +30,17 @@ import java.util.regex.Pattern;
  * All rights reserved
  */
 public class TrustStringManager {
+
+
     private static ThreadLocal<HashSet<CharSequence>> badStringParts = new ThreadLocal<HashSet<CharSequence>>();
-
     private static ThreadLocal<HashSet<CharSequence>> goodStrings = new ThreadLocal<HashSet<CharSequence>>();
-
-    private static ThreadLocal<HashSet<CharSequence>> uncertainParts = new ThreadLocal<HashSet<CharSequence>>();
-
-    private static ConcurrentHashMap<CharSequence, Object> constMap = new ConcurrentHashMap<CharSequence, Object>();
+    private static ThreadLocal<HashMap<CharSequence, UncertInputState>> uncertainParts = new ThreadLocal<HashMap<CharSequence, UncertInputState>>();
+    private static ConcurrentHashMap<CharSequence, CharSequence> constMap = new ConcurrentHashMap<CharSequence, CharSequence>();
 
     public static void initRequest() {
         badStringParts.set(new HashSet<CharSequence>());
         goodStrings.set(new HashSet<CharSequence>());
-        uncertainParts.set(new HashSet<CharSequence>());
+        uncertainParts.set(new HashMap<CharSequence, UncertInputState>());
     }
 
     public static void endRequest() {
@@ -51,28 +51,149 @@ public class TrustStringManager {
 
     public static String getConstString(String str) {
         if(str != null) {
-            constMap.put(str, "");
+            constMap.put(str, str);
         }
         return str;
     }
 
-    public static StringBuilder handleBuilderAdd(StringBuilder sb, CharSequence str) {
-        if(!isValidatePart(str)) {
-            addBadString(sb);
+    private static boolean isCharAt(CharSequence sb, int index, char value) {
+        int len = sb.length();
+        if(index >= 0 && index < len) {
+            return sb.charAt(index) == value;
         }
+        return false;
+    }
+
+    private static void checkUncertainAdd(StringBuilder sb, InputValidateResultEnum validateResult, CharSequence str) {
+        HashMap<CharSequence, UncertInputState> uncertainPart = uncertainParts.get();
+        UncertInputState state = uncertainPart.get(sb);
+        switch (state) {
+            case NoQuote:
+                if(validateResult.equals(InputValidateResultEnum.SafeString)) {
+                    return;
+                }
+
+                if(validateResult.equals(InputValidateResultEnum.Ok)) {
+                    if(isCharAt(str, 0, '\'')
+                            || (isCharAt(str, 0, '%') && isCharAt(str, 1, '\''))) {
+                        uncertainPart.put(sb, UncertInputState.RightQuote);
+                        return;
+                    }
+                }
+                addBadString(sb);
+                break;
+            case LeftQuote:
+                if(validateResult.equals(InputValidateResultEnum.SafeString)) {
+                    return;
+                }
+
+                if(validateResult.equals(InputValidateResultEnum.Ok)) {
+                    if(isCharAt(str, 0, '\'')
+                            || (isCharAt(str, 0, '%') && isCharAt(str, 1, '\''))) {
+                        uncertainPart.remove(sb);
+                        return;
+                    }
+                }
+                addBadString(sb);
+                break;
+            case RightQuote:
+                if(validateResult.equals(InputValidateResultEnum.Ok)) {
+                    return;
+                }
+                addBadString(sb);
+                break;
+            default:
+                break;
+
+        }
+    }
+
+    private static void checkNormalAdd(StringBuilder sb, InputValidateResultEnum validateResult, CharSequence str) {
+        if(validateResult.equals(InputValidateResultEnum.Ok)) {
+            return;
+        }
+
+        int len = sb.length();
+        if(validateResult.equals(InputValidateResultEnum.SafeString)) {
+            HashMap<CharSequence, UncertInputState> uncertainPart = uncertainParts.get();
+            UncertInputState state = uncertainPart.get(str);
+            if(len == 0) {
+                uncertainPart.put(sb, state);
+                return;
+            }
+            switch(state)
+            {
+                case NoQuote:
+                    if(isCharAt(sb, len - 1, '\'')
+                            || (isCharAt(sb, len - 1, '%') && isCharAt(sb, len - 2, '\''))){
+                        uncertainPart.put(sb, UncertInputState.LeftQuote);
+                        return;
+                    }
+                    addBadString(sb);
+                    break;
+                case LeftQuote:
+                    uncertainPart.put(sb, UncertInputState.LeftQuote);
+                    break;
+                case RightQuote:
+                    if(isCharAt(sb, len - 1, '\'')
+                            || (isCharAt(sb, len - 1, '%') && isCharAt(sb, len - 2, '\''))){
+                        uncertainPart.remove(sb);
+                        return;
+                    }
+                    addBadString(sb);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+
+    private static void checkIsAddValidate(StringBuilder sb, CharSequence str) {
+        HashSet<CharSequence> set = badStringParts.get();
+        if(set != null && set.contains(sb)) {
+            return;
+        }
+
+        InputValidateResultEnum validateResult = isValidatePart(str);
+        if(validateResult.equals(InputValidateResultEnum.Fail)) {
+            addBadString(sb);
+            return;
+        }
+
+        HashMap<CharSequence, UncertInputState> uncertainPart = uncertainParts.get();
+        if(uncertainPart != null && uncertainPart.containsKey(sb)) {
+            checkUncertainAdd(sb, validateResult, str);
+            return;
+        }
+        checkNormalAdd(sb, validateResult, str);
+    }
+
+    public static StringBuilder handleBuilderAdd(StringBuilder sb, CharSequence str) {
+        checkIsAddValidate(sb, str);
         sb.append(str);
         return sb;
     }
 
-    public static String handleBuilderToString(StringBuilder sb) {
-        String strResult = sb.toString();
+    private static void checkBuilder(StringBuilder sb, String strResult) {
         HashSet<CharSequence> set = badStringParts.get();
         if(set != null && set.contains(sb)) {
             addBadString(strResult);
+            return;
         }
-        else {
-            addGoodString(strResult);
+
+        HashMap<CharSequence, UncertInputState> uncertMap = uncertainParts.get();
+        if(uncertMap != null && uncertMap.containsKey(sb)) {
+            uncertMap.put(strResult, uncertMap.get(sb));
+            return;
         }
+
+        addGoodString(strResult);
+    }
+
+    public static String handleBuilderToString(StringBuilder sb) {
+        String strResult = sb.toString();
+        checkBuilder(sb, strResult);
         return strResult;
     }
 
@@ -91,69 +212,36 @@ public class TrustStringManager {
     }
 
     public static boolean isSqlValidate(String sql) {
-        if(!isValidatePart(sql)) {
-            return false;
-        }
-        HashSet<CharSequence> uncertainSet = uncertainParts.get();
-        if(uncertainSet.isEmpty()) {
-            return true;
-        }
-        for(CharSequence word : uncertainSet) {
-            if(!isParamValueValidate(sql, word.toString())) {
-                return false;
-            }
-        }
-        return true;
+        return isValidatePart(sql).equals(InputValidateResultEnum.Ok);
     }
-
-    private static boolean isParamValueValidate(String query, String paramValue) {
-        if(query.indexOf(paramValue) < 0) {
-            return true;
-        }
-        ANTLRInputStream input = new ANTLRInputStream(query);
-        SQLLexer lexer = new SQLLexer(input);
-        for(Token token = lexer.nextToken(); token.getType() != -1; token = lexer.nextToken()) {
-            if(isStringType(token)) {
-                String v = token.getText();
-                if(v.length() <= 2) {
-                    continue;
-                }
-                v = v.substring(1, v.length() - 1);
-                if (v.indexOf(paramValue) >= 0) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private static boolean isStringType(Token token) {
-        return token.getType() == 5;
-    }
-
-    private static boolean isValidatePart(CharSequence str) {
+    
+    private static InputValidateResultEnum isValidatePart(CharSequence str) {
         if(str == null || str == "") {
-            return true;
+            return InputValidateResultEnum.Ok;
         }
 
         if(isNumberic(str)) {
-            return true;
+            return InputValidateResultEnum.Ok;
         }
 
         if(constMap.containsKey(str)) {
-            return true;
+            return InputValidateResultEnum.Ok;
         }
 
         HashSet<CharSequence> set = goodStrings.get();
         if(set != null && set.contains(str)) {
-            return true;
+            return InputValidateResultEnum.Ok;
+        }
+
+        HashMap<CharSequence, UncertInputState> uncertMap = uncertainParts.get();
+        if(uncertMap != null && uncertMap.containsKey(str)) {
+            return InputValidateResultEnum.SafeString;
         }
         if(isSafeValue(str)) {
-            HashSet<CharSequence> uncertainSet = uncertainParts.get();
-            uncertainSet.add(str);
-            return true;
+            uncertMap.put(str, UncertInputState.NoQuote);
+            return InputValidateResultEnum.SafeString;
         }
-        return false;
+        return InputValidateResultEnum.Fail;
     }
 
 
@@ -171,8 +259,23 @@ public class TrustStringManager {
         if(v == null) {
             return false;
         }
-        Pattern pattern = Pattern.compile("^(-|[.]|@|[?]|[\\u4e00-\\u9fa5a-zA-Z0-9])*$");
+        Pattern pattern = Pattern.compile("^(-|[.]|@|[\\u4e00-\\u9fa5a-zA-Z0-9])*$");
         Matcher matcher = pattern.matcher(v);
         return matcher != null && matcher.find();
+    }
+
+
+    private static enum InputValidateResultEnum
+    {
+        Ok,
+        Fail,
+        SafeString
+    }
+
+    private static enum UncertInputState
+    {
+        NoQuote,
+        LeftQuote,
+        RightQuote
     }
 }
