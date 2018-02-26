@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook.jetty;
+package com.baidu.openrasp.hook.server.catalina;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.hook.server.ServerInputHook;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -25,30 +26,19 @@ import javassist.NotFoundException;
 import java.io.IOException;
 
 /**
- * Created by tyy on 9/25/17.
- *
- * 获取 jetty 请求 body 的 hook 点
+ * Created by zhuming01 on 7/5/17.
+ * All rights reserved
  */
-public class JettyHttpInputHook extends AbstractClassHook {
+public class CatalinaInputBufferHook extends ServerInputHook {
 
     /**
      * (none-javadoc)
      *
-     * @see AbstractClassHook#isClassMatched(String)
+     * @see com.baidu.openrasp.hook.AbstractClassHook#isClassMatched(String)
      */
     @Override
     public boolean isClassMatched(String className) {
-        return className.equals("org/eclipse/jetty/server/HttpInput");
-    }
-
-    /**
-     * (none-javadoc)
-     *
-     * @see AbstractClassHook#getType()
-     */
-    @Override
-    public String getType() {
-        return "body";
+        return "org/apache/catalina/connector/InputBuffer".equals(className);
     }
 
     /**
@@ -58,12 +48,12 @@ public class JettyHttpInputHook extends AbstractClassHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String srcRead1 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
+        String readByteSrc = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
                 "($w)$_,$0", int.class, Object.class);
-        insertAfter(ctClass, "read", "()I", srcRead1);
-        String src2Read2 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
+        insertAfter(ctClass, "readByte", "()I", readByteSrc);
+        String readSrc = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
                 "($w)$_,$0,$1,($w)$2,($w)$3", int.class, Object.class, byte[].class, int.class, int.class);
-        insertAfter(ctClass, "read", "([BII)I", src2Read2);
+        insertAfter(ctClass, "read", "([BII)I", readSrc);
     }
 
 }

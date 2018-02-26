@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook;
+package com.baidu.openrasp.hook.server;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.hook.server.ServerRequestHook;
-import com.baidu.openrasp.hook.server.catalina.ApplicationFilterHook;
+import com.baidu.openrasp.hook.AbstractClassHook;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -26,19 +25,20 @@ import javassist.NotFoundException;
 import java.io.IOException;
 
 /**
- * Created by zhuming01 on 5/4/17.
- * All rights reserved
+ * Created by tyy on 18-2-11.
+ *
+ * 用于记录用户获取参数的 hook 点
  */
-public class HttpServletHook extends ServerRequestHook {
+public abstract class ServerParamHook extends AbstractClassHook{
 
     /**
      * (none-javadoc)
      *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#isClassMatched(String)
+     * @see com.baidu.openrasp.hook.AbstractClassHook#getType()
      */
     @Override
-    public boolean isClassMatched(String name) {
-        return name.endsWith("http/HttpServlet") || name.endsWith("servlet/JspServlet");
+    public String getType() {
+        return "parameter";
     }
 
     /**
@@ -48,13 +48,15 @@ public class HttpServletHook extends ServerRequestHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String srcBefore = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
-                "$0,$1,$2", Object.class, Object.class, Object.class);
-        insertBefore(ctClass, "resolveClass",
-                "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V", srcBefore);
-        String srcAfter = getInvokeStaticSrc(HookHandler.class, "onServiceExit", "");
-        insertAfter(ctClass, "service",
-                "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V", srcAfter, true);
+        String src = getInvokeStaticSrc(HookHandler.class, "onParseParameters", "");
+        hookMethod(ctClass, src);
     }
 
+    /**
+     * hook 方法
+     *
+     * @param ctClass hook 点所在的类
+     * @param src     加入 hook点的代码
+     */
+    protected abstract void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException;
 }

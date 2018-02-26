@@ -16,8 +16,6 @@
 
 package com.baidu.openrasp;
 
-import com.baidu.openrasp.Agent;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.instrument.Instrumentation;

@@ -16,7 +16,6 @@
 
 package com.baidu.openrasp;
 
-import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
@@ -29,7 +28,6 @@ import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.util.LinkedList;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;

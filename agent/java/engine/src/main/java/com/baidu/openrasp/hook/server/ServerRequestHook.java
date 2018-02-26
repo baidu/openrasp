@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook.catalina;
+package com.baidu.openrasp.hook.server;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
@@ -25,45 +25,21 @@ import javassist.NotFoundException;
 import java.io.IOException;
 
 /**
- * Created by tyy on 9/12/17.
- * servlet过滤器hook类
+ * Created by tyy on 18-2-8.
+ *
+ * 服务器请求 hook 点基类
  */
-public class ApplicationFilterHook extends AbstractClassHook {
-
-    public ApplicationFilterHook() {
-        couldIgnore = false;
-    }
+public abstract class ServerRequestHook extends AbstractClassHook {
 
     /**
      * (none-javadoc)
+     * tyy
      *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#isClassMatched(String)
-     */
-    @Override
-    public boolean isClassMatched(String className) {
-        return className.endsWith("apache/catalina/core/ApplicationFilterChain");
-    }
-
-    /**
-     * (none-javadoc)
-     *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#isClassMatched(String)
+     * @see com.baidu.openrasp.hook.AbstractClassHook#getType()
      */
     @Override
     public String getType() {
         return "request";
-    }
-
-    /**
-     * (none-javadoc)
-     *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#hookMethod(CtClass)
-     */
-    @Override
-    protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(this.getClass(), "checkRequest", "$0,$1,$2"
-                , Object.class, Object.class, Object.class);
-        insertBefore(ctClass, "doFilter", null, src);
     }
 
     /**

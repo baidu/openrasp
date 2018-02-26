@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook.jetty;
+package com.baidu.openrasp.hook.server.resin;
 
 import com.baidu.openrasp.hook.AbstractClassHook;
-import com.baidu.openrasp.hook.AbstractHttpOutputHook;
+import com.baidu.openrasp.hook.server.ServerRequestHook;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -25,11 +25,11 @@ import javassist.NotFoundException;
 import java.io.IOException;
 
 /**
- * Created by tyy on 17-12-13.
+ * Created by tyy on 18-2-11.
  *
- * jetty 输出流关闭 hook 点
+ * resin 请求处理 hook 点
  */
-public class JettyHttpOutputHook extends AbstractHttpOutputHook {
+public class ResinRequestHook extends ServerRequestHook {
 
     /**
      * (none-javadoc)
@@ -38,7 +38,7 @@ public class JettyHttpOutputHook extends AbstractHttpOutputHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "org/eclipse/jetty/server/HttpOutput".equals(className);
+        return "com/caucho/server/dispatch/ServletInvocation".equals(className);
     }
 
     /**
@@ -48,9 +48,14 @@ public class JettyHttpOutputHook extends AbstractHttpOutputHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(AbstractHttpOutputHook.class, "appendResponseData",
-                "$0", Object.class);
-        insertBefore(ctClass, "close", "()V", src);
+        String src = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
+                "$0,$1,$2", Object.class, Object.class, Object.class);
+        // resin3.x
+        insertBefore(ctClass, "service",
+                "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)V", src);
+        // resin4.x
+        insertBefore(ctClass, "doResume",
+                "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)Z", src);
     }
 
 }

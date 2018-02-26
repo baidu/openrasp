@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook.jetty;
+package com.baidu.openrasp.hook.server;
 
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
-import com.baidu.openrasp.hook.catalina.ApplicationFilterHook;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -25,34 +25,20 @@ import javassist.NotFoundException;
 import java.io.IOException;
 
 /**
- * Created by tyy on 9/22/17.
+ * Created by tyy on 18-2-8.
  *
- * jetty请求的hook点
+ * 服务器请求预处理 hook 点基类
  */
-public class JettyServerHandleHook extends AbstractClassHook {
-
-    public JettyServerHandleHook() {
-        couldIgnore = false;
-    }
+public abstract class ServerPreRequestHook extends AbstractClassHook {
 
     /**
      * (none-javadoc)
      *
-     * @see AbstractClassHook#isClassMatched(String)
-     */
-    @Override
-    public boolean isClassMatched(String className) {
-        return className.equals("org/eclipse/jetty/server/handler/HandlerWrapper");
-    }
-
-    /**
-     * (none-javadoc)
-     *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#hookMethod(CtClass)
+     * @see com.baidu.openrasp.hook.AbstractClassHook#getType()
      */
     @Override
     public String getType() {
-        return "request";
+        return "pre_request";
     }
 
     /**
@@ -62,9 +48,16 @@ public class JettyServerHandleHook extends AbstractClassHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(ApplicationFilterHook.class, "checkRequest",
-                "$0,$3,$4", Object.class, Object.class, Object.class);
-        insertBefore(ctClass, "handle", null, src);
+        String src = getInvokeStaticSrc(HookHandler.class, "onServiceExit", "");
+        hookMethod(ctClass, src);
     }
+
+    /**
+     * hook 方法
+     *
+     * @param ctClass hook 点所在的类
+     * @param src     加入 hook点的代码
+     */
+    protected abstract void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException;
 
 }

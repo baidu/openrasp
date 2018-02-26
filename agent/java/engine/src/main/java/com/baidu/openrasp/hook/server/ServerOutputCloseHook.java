@@ -14,25 +14,57 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook;
+package com.baidu.openrasp.hook.server;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.response.HttpServletResponse;
 import com.baidu.openrasp.tool.Reflection;
+import javassist.CannotCompileException;
+import javassist.CtClass;
+import javassist.NotFoundException;
 import org.apache.commons.lang3.StringUtils;
+
+import java.io.IOException;
 
 /**
  * Created by tyy on 17-12-13.
  *
- * http 输出 hook 点
+ * 服务器 http 输出关闭 hook 点基类
+ * 用于向输出流中插入自定义内容
  */
-public abstract class AbstractHttpOutputHook extends AbstractClassHook {
+public abstract class ServerOutputCloseHook extends AbstractClassHook {
 
+    /**
+     * (none-javadoc)
+     *
+     * @see com.baidu.openrasp.hook.AbstractClassHook#hookMethod(CtClass)
+     */
     @Override
     public String getType() {
         return "http_output";
     }
+
+    /**
+     * (none-javadoc)
+     *
+     * @see com.baidu.openrasp.hook.AbstractClassHook#hookMethod(CtClass)
+     */
+    @Override
+    protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
+        String src = getInvokeStaticSrc(ServerOutputCloseHook.class, "appendResponseData",
+                "$0", Object.class);
+        hookMethod(ctClass, src);
+    }
+
+    /**
+     * hook 方法
+     *
+     * @param ctClass hook 点所在的类
+     * @param src     加入 hook点的代码
+     */
+    protected abstract void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException;
 
     /**
      * 向响应的 html 页面插入自定义 js 脚本

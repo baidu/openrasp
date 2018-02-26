@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook.catalina;
+package com.baidu.openrasp.hook.server.jetty;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.hook.server.ServerInputHook;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -25,28 +26,20 @@ import javassist.NotFoundException;
 import java.io.IOException;
 
 /**
- * Created by zhuming01 on 7/5/17.
- * All rights reserved
+ * Created by tyy on 9/25/17.
+ *
+ * 获取 jetty 请求 body 的 hook 点
  */
-public class CatalinaInputBufferHook extends AbstractClassHook {
-    /**
-     * (none-javadoc)
-     *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#getType()
-     */
-    @Override
-    public String getType() {
-        return "body";
-    }
+public class JettyHttpInputHook extends ServerInputHook {
 
     /**
      * (none-javadoc)
      *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#isClassMatched(String)
+     * @see AbstractClassHook#isClassMatched(String)
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "org/apache/catalina/connector/InputBuffer".equals(className);
+        return className.equals("org/eclipse/jetty/server/HttpInput");
     }
 
     /**
@@ -56,12 +49,12 @@ public class CatalinaInputBufferHook extends AbstractClassHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String readByteSrc = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
+        String srcRead1 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
                 "($w)$_,$0", int.class, Object.class);
-        insertAfter(ctClass, "readByte", "()I", readByteSrc);
-        String readSrc = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
+        insertAfter(ctClass, "read", "()I", srcRead1);
+        String src2Read2 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
                 "($w)$_,$0,$1,($w)$2,($w)$3", int.class, Object.class, byte[].class, int.class, int.class);
-        insertAfter(ctClass, "read", "([BII)I", readSrc);
+        insertAfter(ctClass, "read", "([BII)I", src2Read2);
     }
 
 }

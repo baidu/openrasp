@@ -43,7 +43,7 @@ public class ModuleLoader {
 
     private ClassLoader engineClassLoader;
 
-    // ModuleLoader classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
+    // ModuleLoader 为 classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
         Class clazz = ModuleLoader.class;
         // path值示例：　file:/opt/apache-tomcat-xxx/rasp/rasp.jar!/com/fuxi/javaagent/Agent.class
@@ -61,6 +61,13 @@ public class ModuleLoader {
         }
     }
 
+    /**
+     * 单例构造方法
+     * 构造同时完成加载
+     *
+     * @param agentArg premain 传入的命令行参数
+     * @param inst     {@link java.lang.instrument.Instrumentation}
+     */
     private ModuleLoader(String agentArg, Instrumentation inst) {
         for (int i = 0; i < jars.length; i++) {
             Object module = null;
@@ -97,7 +104,13 @@ public class ModuleLoader {
         }
     }
 
-    public static void load(String agentArg, Instrumentation inst) throws Exception {
+    /**
+     * 加载所有 RASP 模块
+     *
+     * @param agentArg premain 传入的命令行参数
+     * @param inst     {@link java.lang.instrument.Instrumentation}
+     */
+    public static synchronized void load(String agentArg, Instrumentation inst) throws Exception {
         if (instance == null) {
             synchronized (ModuleLoader.class) {
                 if (instance == null) {
@@ -107,10 +120,19 @@ public class ModuleLoader {
         }
     }
 
+    /**
+     * 用于 OpenRasp 引擎模块加载自己类的入口
+     *
+     * @param className 类名
+     * @return 类实体
+     */
     public static Class loadClass(String className) throws ClassNotFoundException {
         return instance.engineClassLoader.loadClass(className);
     }
 
+    /**
+     * 模块类加载器
+     */
     public static class ModuleClassLoader extends URLClassLoader {
 
         private Module module;

@@ -538,6 +538,15 @@ public class Config extends FileScanListener {
     }
 
     /**
+     * 是否开启调试
+     *
+     * @return true 代表开启
+     */
+    public synchronized boolean isDebugEnabled() {
+        return debugLevel > 0;
+    }
+
+    /**
      * 设置 debugLevel 级别
      *
      * @param debugLevel debugLevel 级别

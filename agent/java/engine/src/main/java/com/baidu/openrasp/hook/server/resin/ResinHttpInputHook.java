@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook;
+package com.baidu.openrasp.hook.server.resin;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.hook.server.ServerRequestHook;
+import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.hook.server.ServerInputHook;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -25,34 +26,31 @@ import javassist.NotFoundException;
 import java.io.IOException;
 
 /**
- * Created by zhuming01 on 6/28/17.
- * All rights reserved
+ * Created by tyy on 18-2-11.
+ *
+ * 获取 resin 请求 body 的 hook 点
  */
-public class WeblogicJspBaseHook extends ServerRequestHook {
+public class ResinHttpInputHook extends ServerInputHook {
 
     /**
      * (none-javadoc)
      *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#isClassMatched(String)
+     * @see AbstractClassHook#isClassMatched(String)
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "weblogic/servlet/jsp/JspBase".equals(className);
+        return className.equals("com/caucho/server/connection/ServletInputStreamImpl")
+                || className.equals("com/caucho/server/http/ServletInputStreamImpl");
     }
 
-    /**
-     * (none-javadoc)
-     *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#hookMethod(CtClass)
-     */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String hookDesc = "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)V";
-        String srcBefore = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
-                "$0,$1,$2", Object.class, Object.class, Object.class);
-        insertBefore(ctClass, "service", hookDesc, srcBefore);
-        String srcAfter = getInvokeStaticSrc(HookHandler.class, "onServiceExit", "");
-        insertAfter(ctClass, "service", hookDesc, srcAfter, true);
+        String srcRead1 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
+                "($w)$_,$0", int.class, Object.class);
+        insertAfter(ctClass, "read", "()I", srcRead1);
+        String src2Read2 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
+                "($w)$_,$0,$1,($w)$2,($w)$3", int.class, Object.class, byte[].class, int.class, int.class);
+        insertAfter(ctClass, "read", "([BII)I", src2Read2);
     }
 
 }

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook;
+package com.baidu.openrasp.hook.server.jetty;
 
-import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.hook.server.ServerRequestHook;
 import com.baidu.openrasp.hook.server.catalina.ApplicationFilterHook;
 import javassist.CannotCompileException;
@@ -26,19 +26,24 @@ import javassist.NotFoundException;
 import java.io.IOException;
 
 /**
- * Created by zhuming01 on 6/28/17.
- * All rights reserved
+ * Created by tyy on 9/22/17.
+ *
+ * jetty请求的hook点
  */
-public class Struts2DispatcherHook extends ServerRequestHook {
+public class JettyServerHandleHook extends ServerRequestHook {
+
+    public JettyServerHandleHook() {
+        couldIgnore = false;
+    }
 
     /**
      * (none-javadoc)
      *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#isClassMatched(String)
+     * @see AbstractClassHook#isClassMatched(String)
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "org/apache/struts2/dispatcher/Dispatcher".equals(className);
+        return className.equals("org/eclipse/jetty/server/handler/HandlerWrapper");
     }
 
     /**
@@ -48,14 +53,9 @@ public class Struts2DispatcherHook extends ServerRequestHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String hookDesc = "(Ljavax/servlet/http/HttpServletRequest;"
-                + "Ljavax/servlet/http/HttpServletResponse;"
-                + "Lorg/apache/struts2/dispatcher/mapper/ActionMapping;)V";
-        String srcBefore = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
-                "$0,$1,$2", Object.class, Object.class, Object.class);
-        insertBefore(ctClass, "serviceAction", hookDesc, "new Exception().printStackTrace();"+srcBefore);
-        String srcAfter = getInvokeStaticSrc(HookHandler.class, "onServiceExit", "");
-        insertAfter(ctClass, "serviceAction", hookDesc, srcAfter, true);
+        String src = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
+                "$0,$3,$4", Object.class, Object.class, Object.class);
+        insertBefore(ctClass, "handle", null, src);
     }
 
 }

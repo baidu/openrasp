@@ -14,20 +14,25 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp;
+package com.baidu.openrasp.hook.server;
 
-import java.lang.instrument.Instrumentation;
+import com.baidu.openrasp.hook.AbstractClassHook;
 
 /**
- * Created by tyy on 18-2-1.
+ * Created by tyy on 18-2-11.
  *
- * 每个子模块入口都需要继承的模块
- * 模块入口类 配置在子模块 jar 包的 MANIFEST 配置中
+ * 用于从服务器请求中获取 body 的 hook 点基类
  */
-public interface Module {
+public abstract class ServerInputHook extends AbstractClassHook{
 
-    void start(String agentArg, Instrumentation inst) throws Exception;
-
-    void release();
+    /**
+     * (none-javadoc)
+     *
+     * @see com.baidu.openrasp.hook.AbstractClassHook#getType()
+     */
+    @Override
+    public String getType() {
+        return "body";
+    }
 
 }

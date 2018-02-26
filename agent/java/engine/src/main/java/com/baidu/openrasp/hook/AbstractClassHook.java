@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook;
 
 
+import com.baidu.openrasp.config.Config;
 import javassist.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -73,7 +74,9 @@ public abstract class AbstractClassHook {
             hookMethod(ctClass);
             return ctClass.toBytecode();
         } catch (Exception e) {
-            LOGGER.error("transform class " + ctClass.getName() + " failed", e);
+            if (Config.getConfig().isDebugEnabled()) {
+                LOGGER.error("transform class " + ctClass.getName() + " failed", e);
+            }
         }
         return null;
     }
@@ -115,19 +118,20 @@ public abstract class AbstractClassHook {
      */
     public void insertBefore(CtClass ctClass, String methodName, String desc, String src)
             throws NotFoundException, CannotCompileException {
-        try {
-            LinkedList<CtMethod> methods = getMethod(ctClass, methodName, desc);
-            if (methods != null) {
-                for (CtMethod method : methods) {
-                    if (method != null) {
-                        insertBefore(method, src);
-                    }
+
+        LinkedList<CtMethod> methods = getMethod(ctClass, methodName, desc);
+        if (methods != null && methods.size() > 0) {
+            for (CtMethod method : methods) {
+                if (method != null) {
+                    insertBefore(method, src);
                 }
             }
-        } catch (NotFoundException e) {
-            LOGGER.warn("can not find method " + methodName + " " + desc + " in class " + ctClass.getName(), e);
-            throw e;
+        } else {
+            if (Config.getConfig().isDebugEnabled()) {
+                LOGGER.warn("can not find method " + methodName + " " + desc + " in class " + ctClass.getName());
+            }
         }
+
     }
 
     /**
@@ -156,19 +160,20 @@ public abstract class AbstractClassHook {
      */
     public void insertAfter(CtClass ctClass, String methodName, String desc, String src, boolean asFinally)
             throws NotFoundException, CannotCompileException {
-        try {
-            LinkedList<CtMethod> methods = getMethod(ctClass, methodName, desc);
-            if (methods != null) {
-                for (CtMethod method : methods) {
-                    if (method != null) {
-                        insertAfter(method, src, asFinally);
-                    }
+
+        LinkedList<CtMethod> methods = getMethod(ctClass, methodName, desc);
+        if (methods != null && methods.size() > 0) {
+            for (CtMethod method : methods) {
+                if (method != null) {
+                    insertAfter(method, src, asFinally);
                 }
             }
-        } catch (NotFoundException e) {
-            LOGGER.warn("can not find method " + methodName + " " + desc + " in class " + ctClass.getName(), e);
-            throw e;
+        } else {
+            if (Config.getConfig().isDebugEnabled()) {
+                LOGGER.warn("can not find method " + methodName + " " + desc + " in class " + ctClass.getName());
+            }
         }
+
     }
 
     /**
@@ -181,7 +186,7 @@ public abstract class AbstractClassHook {
      * @return 所有符合要求的方法实例
      * @see javassist.bytecode.Descriptor
      */
-    private LinkedList<CtMethod> getMethod(CtClass ctClass, String methodName, String desc) throws NotFoundException {
+    private LinkedList<CtMethod> getMethod(CtClass ctClass, String methodName, String desc) {
         LinkedList<CtMethod> methods = new LinkedList<CtMethod>();
         if (StringUtils.isEmpty(desc)) {
             CtMethod[] allMethods = ctClass.getDeclaredMethods();
@@ -193,7 +198,11 @@ public abstract class AbstractClassHook {
                 }
             }
         } else {
-            methods.add(ctClass.getMethod(methodName, desc));
+            try {
+                methods.add(ctClass.getMethod(methodName, desc));
+            } catch (NotFoundException e) {
+                // ignore
+            }
         }
         return methods;
     }
@@ -209,7 +218,9 @@ public abstract class AbstractClassHook {
             method.insertBefore(src);
             LOGGER.info("insert before method " + method.getLongName());
         } catch (CannotCompileException e) {
-            LOGGER.error("insert before method " + method.getLongName() + " failed", e);
+            if (Config.getConfig().isDebugEnabled()) {
+                LOGGER.error("insert before method " + method.getLongName() + " failed", e);
+            }
             throw e;
         }
     }

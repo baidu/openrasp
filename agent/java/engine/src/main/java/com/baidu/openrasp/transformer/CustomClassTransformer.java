@@ -18,12 +18,13 @@ package com.baidu.openrasp.transformer;
 
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.*;
-import com.baidu.openrasp.hook.catalina.*;
 import com.baidu.openrasp.hook.file.DiskFileItemHook;
 import com.baidu.openrasp.hook.file.FileHook;
 import com.baidu.openrasp.hook.file.FileInputStreamHook;
 import com.baidu.openrasp.hook.file.FileOutputStreamHook;
-import com.baidu.openrasp.hook.jetty.*;
+import com.baidu.openrasp.hook.server.catalina.*;
+import com.baidu.openrasp.hook.server.jetty.*;
+import com.baidu.openrasp.hook.server.resin.*;
 import com.baidu.openrasp.hook.sql.SQLDriverManagerHook;
 import com.baidu.openrasp.hook.sql.SQLResultSetHook;
 import com.baidu.openrasp.hook.sql.SQLStatementHook;
@@ -50,8 +51,6 @@ public class CustomClassTransformer implements ClassFileTransformer {
     private static final Logger LOGGER = Logger.getLogger(CustomClassTransformer.class.getName());
     private static HashMap<String, ClassLoader> classLoaderCache = new HashMap<String, ClassLoader>();
 
-    private ClassPool classPool = new ClassPool(true);
-    private HashSet<ClassLoader> allClassLoaders = new HashSet<ClassLoader>();
     private HashSet<AbstractClassHook> hooks;
 
     public CustomClassTransformer() {
@@ -88,6 +87,11 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new JettyHttpOutputHook());
         addHook(new CatalinaRequestHook());
         addHook(new JettyRequestHook());
+        addHook(new ResinPreRequestHook());
+        addHook(new ResinRequestHook());
+        addHook(new ResinOutputCloseHook());
+        addHook(new ResinParseParamHook());
+        addHook(new ResinHttpInputHook());
     }
 
     private void addHook(AbstractClassHook hook) {
@@ -109,11 +113,12 @@ public class CustomClassTransformer implements ClassFileTransformer {
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
                             ProtectionDomain domain, byte[] classfileBuffer) throws IllegalClassFormatException {
-        addLoader(loader);
         for (final AbstractClassHook hook : hooks) {
             if (hook.isClassMatched(className)) {
                 CtClass ctClass = null;
                 try {
+                    ClassPool classPool = new ClassPool();
+                    addLoader(classPool, loader);
                     ctClass = classPool.makeClass(new ByteArrayInputStream(classfileBuffer));
                     if (loader == null) {
                         hook.setLoadedByBootstrapLoader(true);
@@ -132,12 +137,10 @@ public class CustomClassTransformer implements ClassFileTransformer {
         return null;
     }
 
-    private void addLoader(ClassLoader loader) {
+    private void addLoader(ClassPool classPool, ClassLoader loader) {
+        classPool.appendSystemPath();
         if (loader != null) {
-            if (!allClassLoaders.contains(loader)) {
-                classPool.appendClassPath(new LoaderClassPath(loader));
-                allClassLoaders.add(loader);
-            }
+            classPool.appendClassPath(new LoaderClassPath(loader));
         }
     }
 

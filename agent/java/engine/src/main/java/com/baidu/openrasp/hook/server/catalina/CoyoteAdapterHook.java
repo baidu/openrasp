@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook;
+package com.baidu.openrasp.hook.server.catalina;
 
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.hook.server.ServerRequestHook;
+import com.baidu.openrasp.hook.server.ServerPreRequestHook;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
 
-import java.io.IOException;
-
 /**
- * Created by zhuming01 on 6/28/17.
+ * Created by zhuming01 on 6/23/17.
  * All rights reserved
  */
-public class WeblogicJspBaseHook extends ServerRequestHook {
+public class CoyoteAdapterHook extends ServerPreRequestHook {
+
+    public CoyoteAdapterHook() {
+        couldIgnore = false;
+    }
 
     /**
      * (none-javadoc)
@@ -37,22 +38,17 @@ public class WeblogicJspBaseHook extends ServerRequestHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "weblogic/servlet/jsp/JspBase".equals(className);
+        return className.endsWith("apache/catalina/connector/CoyoteAdapter");
     }
 
     /**
      * (none-javadoc)
      *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#hookMethod(CtClass)
+     * @see com.baidu.openrasp.hook.server.ServerPreRequestHook#hookMethod(CtClass, String)
      */
     @Override
-    protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String hookDesc = "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)V";
-        String srcBefore = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
-                "$0,$1,$2", Object.class, Object.class, Object.class);
-        insertBefore(ctClass, "service", hookDesc, srcBefore);
-        String srcAfter = getInvokeStaticSrc(HookHandler.class, "onServiceExit", "");
-        insertAfter(ctClass, "service", hookDesc, srcAfter, true);
+    protected void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException {
+        insertBefore(ctClass, "service", null, src);
     }
 
 }

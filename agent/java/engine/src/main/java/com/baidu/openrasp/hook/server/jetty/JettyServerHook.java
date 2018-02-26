@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook.jetty;
+package com.baidu.openrasp.hook.server.jetty;
 
-import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
-import com.baidu.openrasp.hook.catalina.ApplicationFilterHook;
+import com.baidu.openrasp.hook.server.ServerPreRequestHook;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
 
-import java.io.IOException;
+public class JettyServerHook extends ServerPreRequestHook {
 
-public class JettyServerHook extends AbstractClassHook {
-
-    public JettyServerHook(){
+    public JettyServerHook() {
         couldIgnore = false;
     }
 
@@ -44,21 +41,10 @@ public class JettyServerHook extends AbstractClassHook {
     /**
      * (none-javadoc)
      *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#hookMethod(CtClass)
+     * @see com.baidu.openrasp.hook.server.ServerPreRequestHook#hookMethod(CtClass, String)
      */
     @Override
-    public String getType() {
-        return "pre_request";
-    }
-
-    /**
-     * (none-javadoc)
-     *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#hookMethod(CtClass)
-     */
-    @Override
-    protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(HookHandler.class, "onServiceExit", "");
+    protected void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException {
         insertBefore(ctClass, "handle", null, src);
     }
 

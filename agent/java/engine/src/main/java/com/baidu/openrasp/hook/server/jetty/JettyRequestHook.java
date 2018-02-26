@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook.catalina;
+package com.baidu.openrasp.hook.server.jetty;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.hook.server.ServerParamHook;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -27,43 +28,24 @@ import java.io.IOException;
 /**
  * Created by tyy on 17-12-25.
  *
- * catalina 框架下的 request hook 点
+ * jetty 下的 request hook 点
  */
-public class CatalinaRequestHook extends AbstractClassHook {
-
-    public CatalinaRequestHook(){
-        couldIgnore = false;
-    }
+public class JettyRequestHook extends ServerParamHook {
 
     /**
      * (none-javadoc)
      *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#isClassMatched(String)
+     * @see AbstractClassHook#isClassMatched(String)
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "org/apache/catalina/connector/Request".equals(className);
+        return "org/eclipse/jetty/server/Request".equals(className);
     }
 
-    /**
-     * (none-javadoc)
-     *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#getType()
-     */
     @Override
-    public String getType() {
-        return "parameter";
-    }
-
-    /**
-     * (none-javadoc)
-     *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#hookMethod(CtClass)
-     */
-    @Override
-    protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(HookHandler.class, "onParseParameters", "");
-        insertBefore(ctClass, "parseParameters", "()V", src);
+    protected void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException {
+        insertBefore(ctClass, "extractParameters", null, src);
+        insertBefore(ctClass, "extractContentParameters", null, src);
     }
 
 }

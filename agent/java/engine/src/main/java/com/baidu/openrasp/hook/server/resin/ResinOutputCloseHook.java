@@ -14,42 +14,38 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook.catalina;
+package com.baidu.openrasp.hook.server.resin;
 
-import com.baidu.openrasp.hook.AbstractHttpOutputHook;
+import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.hook.server.ServerOutputCloseHook;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
 
-import java.io.IOException;
-
 /**
- * Created by tyy on 17-12-11.
+ * Created by tyy on 18-2-11.
  *
- * catalina 输出流关闭 hook 点
+ * resin 响应关闭 hook 点
  */
-public class CatalinaOutputBufferHook extends AbstractHttpOutputHook {
+public class ResinOutputCloseHook extends ServerOutputCloseHook {
 
     /**
      * (none-javadoc)
      *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#isClassMatched(String)
+     * @see AbstractClassHook#isClassMatched(String)
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "org/apache/catalina/connector/OutputBuffer".equals(className);
+        return "com/caucho/server/connection/AbstractHttpResponse".equals(className)
+                || "com/caucho/server/http/AbstractHttpResponse".equals(className);
     }
 
-    /**
-     * (none-javadoc)
-     *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#hookMethod(CtClass)
-     */
     @Override
-    protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(AbstractHttpOutputHook.class, "appendResponseData",
-                "$0", Object.class);
-        insertBefore(ctClass, "close", "()V", src);
+    protected void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException {
+        // resin3.x
+        insertBefore(ctClass, "finish", "(Z)V", src);
+        // resin4.x
+        insertBefore(ctClass, "finishInvocation", "(Z)V", src);
     }
 
 }

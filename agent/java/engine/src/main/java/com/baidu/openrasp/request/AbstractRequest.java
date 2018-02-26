@@ -17,6 +17,8 @@
 package com.baidu.openrasp.request;
 
 import java.io.ByteArrayOutputStream;
+import java.io.CharArrayReader;
+import java.io.CharArrayWriter;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.UUID;
@@ -32,6 +34,7 @@ public abstract class AbstractRequest {
     protected Object request;
     protected Object inputStream = null;
     protected ByteArrayOutputStream bodyOutputStream = null;
+    protected CharArrayWriter bodyCharWriter = null;
     protected static final int maxBodySize = 4096;
     protected String requestId;
     protected boolean canGetParameter = false;

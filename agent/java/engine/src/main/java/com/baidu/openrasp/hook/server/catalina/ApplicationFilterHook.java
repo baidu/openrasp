@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook.jetty;
+package com.baidu.openrasp.hook.server.catalina;
 
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.hook.server.ServerRequestHook;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -25,34 +24,19 @@ import javassist.NotFoundException;
 import java.io.IOException;
 
 /**
- * Created by tyy on 17-12-25.
- *
- * jetty 下的 request hook 点
+ * Created by tyy on 9/12/17.
+ * servlet过滤器hook类
  */
-public class JettyRequestHook extends AbstractClassHook {
-
-    public JettyRequestHook() {
-        couldIgnore = false;
-    }
+public class ApplicationFilterHook extends ServerRequestHook {
 
     /**
      * (none-javadoc)
      *
-     * @see AbstractClassHook#isClassMatched(String)
+     * @see com.baidu.openrasp.hook.AbstractClassHook#isClassMatched(String)
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "org/eclipse/jetty/server/Request".equals(className);
-    }
-
-    /**
-     * (none-javadoc)
-     *
-     * @see AbstractClassHook#getType()
-     */
-    @Override
-    public String getType() {
-        return "parameter";
+        return className.endsWith("apache/catalina/core/ApplicationFilterChain");
     }
 
     /**
@@ -62,9 +46,9 @@ public class JettyRequestHook extends AbstractClassHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(HookHandler.class, "onParseParameters", "");
-        insertBefore(ctClass, "extractParameters", null, src);
-        insertBefore(ctClass, "extractContentParameters", null, src);
+        String src = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
+                "$0,$1,$2", Object.class, Object.class, Object.class);
+        insertBefore(ctClass, "doFilter", null, src);
     }
 
 }
