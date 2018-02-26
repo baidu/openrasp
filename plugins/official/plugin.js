@@ -108,7 +108,7 @@ if (RASP.get_jsengine() !== 'v8') {
                 'no_hex', 
                 'constant_compare', 
                 'version_comment', 
-                'function_blacklist', 
+                'function_blacklist',
                 'union_null'
             ],
             function_blacklist: [
