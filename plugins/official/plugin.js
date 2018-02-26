@@ -123,7 +123,7 @@ if (RASP.get_jsengine() !== 'v8') {
                 // 盲注
                 'hex',
                 // 可能误报，暂不开启 - 批量验证中
-                // 'char', 'chr', 'mid', 'ord', 'ascii'
+                // 'char', 'chr', 'mid', 'ord', 'ascii', 'bin'
             ]
         },
         // SSRF - 是否允许访问 aws metadata
