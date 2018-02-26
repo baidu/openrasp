@@ -102,11 +102,18 @@ if (RASP.get_jsengine() !== 'v8') {
         },
         // SQL注入算法#2 - 语句规范
         'sqli_policy': {
-            action:             'block',
-            feature:            ['stacked_query', 'no_hex', 'constant_compare', 'version_comment', 'function_blacklist', 'union_null'],
+            action:  'block',
+            feature: [
+                'stacked_query', 
+                'no_hex', 
+                'constant_compare', 
+                'version_comment', 
+                'function_blacklist', 
+                'union_null'
+            ],
             function_blacklist: [
                 // 文件操作
-                'load_file', 
+                'load_file',
                 // 时间差注入
                 'benchmark', 'pg_sleep', 'sleep',
                 // 探测阶段
@@ -115,7 +122,7 @@ if (RASP.get_jsengine() !== 'v8') {
                 'updatexml', 'extractvalue',
                 // 盲注
                 'hex',
-                // 可能误报，暂不开启
+                // 可能误报，暂不开启 - 批量验证中
                 // 'char', 'chr', 'mid', 'ord', 'ascii'
             ]
         },
