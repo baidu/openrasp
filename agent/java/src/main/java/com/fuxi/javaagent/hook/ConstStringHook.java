@@ -66,6 +66,10 @@ public class ConstStringHook extends AbstractClassHook {
                             invokeStatic(ReplaceBuilderType, new Method("handleBuilderAdd", "(Ljava/lang/StringBuilder;Ljava/lang/CharSequence;)Ljava/lang/StringBuilder;"));
                             return;
                         }
+                        else if(("append").equals(name) && ("(C)Ljava/lang/StringBuilder;").equals(desc)) {
+                            invokeStatic(ReplaceBuilderType, new Method("handleBuilderAdd", "(Ljava/lang/StringBuilder;C)Ljava/lang/StringBuilder;"));
+                            return;
+                        }
                         else if (("toString").equals(name) && ("()Ljava/lang/String;").equals(desc)) {
                             invokeStatic(ReplaceBuilderType, new Method("handleBuilderToString", "(Ljava/lang/StringBuilder;)Ljava/lang/String;"));
                             return;

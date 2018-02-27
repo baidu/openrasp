@@ -63,10 +63,13 @@ public class TrustStringManager {
         return str;
     }
 
-    private static boolean isCharAt(CharSequence sb, int index, char value) {
-        int len = sb.length();
+    private static boolean isCharAt(CharSequence str, int index, char value) {
+        if(str == null) {
+            return false;
+        }
+        int len = str.length();
         if(index >= 0 && index < len) {
-            return sb.charAt(index) == value;
+            return str.charAt(index) == value;
         }
         return false;
     }
@@ -179,6 +182,14 @@ public class TrustStringManager {
     public static StringBuilder handleBuilderAdd(StringBuilder sb, CharSequence str) {
         checkIsAddValidate(sb, str);
         sb.append(str);
+        return sb;
+    }
+
+    public static StringBuilder handleBuilderAdd(StringBuilder sb, char v) {
+        String str = String.valueOf(v);
+        getConstString(str);
+        checkIsAddValidate(sb, str);
+        sb.append(v);
         return sb;
     }
 
