@@ -46,6 +46,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_CONSTANT_COMPARE = "constant_compare";
     private static final String CONFIG_KEY_VERSION_COMMENT = "version_comment";
     private static final String CONFIG_KEY_FUNCTION_BLACKLIST = "function_blacklist";
+    private static final String CONFIG_KEY_UNION_NULL = "union_null";
 
     private static TokenizeErrorListener tokenizeErrorListener = new TokenizeErrorListener();
 
@@ -92,12 +93,32 @@ public class SqlStatementChecker extends ConfigurableChecker {
             // 算法2: SQL语句策略检查（模拟SQL防火墙功能）
             action = getActionElement(config, CONFIG_KEY_SQLI_POLICY);
             if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
-                int i = 0;
+                int i = -1;
                 if (tokens != null) {
                     HashSet<String> modules = getJsonArrayAsSet(config, CONFIG_KEY_SQLI_POLICY, "feature");
                     for (String token : tokens) {
+                        i++;
                         if (!StringUtils.isEmpty(token)) {
                             String lt = token.toLowerCase();
+                            if (lt.equals("select") && modules.contains(CONFIG_KEY_UNION_NULL)) {
+                                int nullCount = 0;
+                                // 寻找连续的逗号、NULL或者数字
+                                for (int j = i + 1; j < tokens.length && j < i + 6; j++) {
+                                    if (tokens[j].equals(",") || tokens[j].equals("null") || StringUtils.isNumeric(tokens[j])) {
+                                        nullCount++;
+                                    } else {
+                                        break;
+                                    }
+                                }
+
+                                // NULL,NULL,NULL == 5个token
+                                // 1,2,3          == 5个token
+                                if (nullCount >= 5) {
+                                    message = "UNION-NULL 方式注入 - 字段类型探测";
+                                    break;
+                                }
+                                continue;
+                            }
                             if (lt.equals(";") && i != tokens.length - 1 && modules.contains(CONFIG_KEY_STACKED_QUERY)) {
                                 message = "禁止多语句查询";
                                 break;
@@ -130,7 +151,6 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                 }
                             }
                         }
-                        i++;
                     }
                 }
                 if (message != null) {
