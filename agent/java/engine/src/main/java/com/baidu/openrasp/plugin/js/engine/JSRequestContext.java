@@ -134,15 +134,17 @@ public class JSRequestContext extends ScriptableObject {
     public Object jsGet_parameter() {
         Scriptable parameter = cx.newObject(scope);
         Map<String, String[]> parameterMap = javaContext.getParameterMap();
-        for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
-            String key = entry.getKey();
-            String[] value = entry.getValue();
-            int length = value.length;
-            Scriptable arr = cx.newArray(scope, length);
-            for (int i = 0; i < length; i++) {
-                arr.put(i, arr, value[i]);
+        if (parameterMap != null) {
+            for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+                String key = entry.getKey();
+                String[] value = entry.getValue();
+                int length = value.length;
+                Scriptable arr = cx.newArray(scope, length);
+                for (int i = 0; i < length; i++) {
+                    arr.put(i, arr, value[i]);
+                }
+                parameter.put(key, parameter, arr);
             }
-            parameter.put(key, parameter, arr);
         }
         return parameter;
     }

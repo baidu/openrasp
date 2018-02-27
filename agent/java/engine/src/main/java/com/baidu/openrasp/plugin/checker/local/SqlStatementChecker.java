@@ -63,7 +63,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
         // 1. 简单识别逻辑是否发生改变
         // 2. 识别数据库管理器
         String action = getActionElement(config, CONFIG_KEY_SQLI_USER_INPUT);
-        if (!EventInfo.CHECK_ACTION_IGNORE.equals(action) && action != null) {
+        if (!EventInfo.CHECK_ACTION_IGNORE.equals(action) && action != null && parameterMap != null) {
             for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
                 String[] v = entry.getValue();
                 String value = v[0];

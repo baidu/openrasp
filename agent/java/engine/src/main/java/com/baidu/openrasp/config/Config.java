@@ -44,6 +44,7 @@ public class Config extends FileScanListener {
         BLOCK_URL("block.url", "https://rasp.baidu.com/blocked"),
         READ_FILE_EXTENSION_REGEX("readfile.extension.regex", "^(gz|7z|xz|tar|rar|zip|sql|db)$"),
         INJECT_URL_PREFIX("inject.urlprefix", ""),
+        REQUEST_PARAM_ENCODING("request.param_encoding", ""),
         BODY_MAX_BYTES("body.maxbytes", "4096"),
         LOG_MAX_STACK("log.maxstack", "20"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
@@ -94,6 +95,7 @@ public class Config extends FileScanListener {
     private String readFileExtensionRegex;
     private String blockUrl;
     private String injectUrlPrefix;
+    private String requestParamEncoding;
     private int ognlMinLength;
     private int blockStatusCode;
     private int debugLevel;
@@ -580,6 +582,27 @@ public class Config extends FileScanListener {
         this.algorithmConfig = new JsonParser().parse(json).getAsJsonObject();
     }
 
+    /**
+     * 获取请求参数编码
+     *
+     * @return 请求参数编码
+     */
+    public synchronized String getRequestParamEncoding() {
+        return requestParamEncoding;
+    }
+
+    /**
+     * 设置请求参数编码
+     * 当该配置不为空的情况下，将会允许 hook 点（如 request hook 点）能够根据设置的编码先于用户获取参数
+     * （注意：如果设置了该编码，那么所有的请求参数都将按照这个编码解码，如果用户对参数有多种编码，建议不要添加此配置）
+     * 当该配置为空的情况下，只有用户获取了参数之后，才会允许 hook 点获取参数，从而防止乱码问题
+     *
+     * @param requestParamEncoding 请求参数编码
+     */
+    public synchronized void setRequestParamEncoding(String requestParamEncoding) {
+        this.requestParamEncoding = requestParamEncoding;
+    }
+
     //--------------------------统一的配置处理------------------------------------
 
     /**
@@ -620,6 +643,8 @@ public class Config extends FileScanListener {
                 setDebugLevel(value);
             } else if (Item.ALGORITHM_CONFIG.key.equals(key)) {
                 setAlgorithmConfig(value);
+            } else if (Item.REQUEST_PARAM_ENCODING.key.equals(key)) {
+                setRequestParamEncoding(value);
             } else {
                 isHit = false;
             }

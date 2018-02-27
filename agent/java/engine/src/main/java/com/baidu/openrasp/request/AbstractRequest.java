@@ -16,6 +16,11 @@
 
 package com.baidu.openrasp.request;
 
+import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.tool.Reflection;
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.ByteArrayOutputStream;
 import java.io.CharArrayReader;
 import java.io.CharArrayWriter;
@@ -303,4 +308,18 @@ public abstract class AbstractRequest {
             bodyOutputStream.write(bytes, offset, len);
         }
     }
+
+    protected boolean setCharacterEncodingFromConfig() {
+        try {
+            String paramEncoding = Config.getConfig().getRequestParamEncoding();
+            if (!StringUtils.isEmpty(paramEncoding)) {
+                Reflection.invokeMethod(request, "setCharacterEncoding", STRING_CLASS, paramEncoding);
+                return true;
+            }
+        } catch (Exception e) {
+            HookHandler.LOGGER.warn("set character encoding failed", e);
+        }
+        return false;
+    }
+
 }

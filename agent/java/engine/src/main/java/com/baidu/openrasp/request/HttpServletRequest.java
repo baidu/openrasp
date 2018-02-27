@@ -140,10 +140,12 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public String getParameter(String key) {
-        if (canGetParameter) {
-            return Reflection.invokeStringMethod(request, "getParameter", STRING_CLASS, key);
+        if (!canGetParameter) {
+            if (!setCharacterEncodingFromConfig()) {
+                return null;
+            }
         }
-        return null;
+        return Reflection.invokeStringMethod(request, "getParameter", STRING_CLASS, key);
     }
 
     /**
@@ -153,12 +155,13 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Enumeration<String> getParameterNames() {
-        if (canGetParameter) {
-            Object ret = Reflection.invokeMethod(request, "getParameterNames", EMPTY_CLASS);
-            return ret != null ? (Enumeration) ret : null;
-        } else {
-            return null;
+        if (!canGetParameter) {
+            if (!setCharacterEncodingFromConfig()) {
+                return null;
+            }
         }
+        Object ret = Reflection.invokeMethod(request, "getParameterNames", EMPTY_CLASS);
+        return ret != null ? (Enumeration) ret : null;
     }
 
     /**
@@ -168,12 +171,13 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Map<String, String[]> getParameterMap() {
-        if (canGetParameter) {
-            Object ret = Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
-            return ret != null ? (Map<String, String[]>) ret : EMPTY_PARAM;
-        } else {
-            return EMPTY_PARAM;
+        if (!canGetParameter) {
+            if (!setCharacterEncodingFromConfig()) {
+                return EMPTY_PARAM;
+            }
         }
+        Object ret = Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
+        return ret != null ? (Map<String, String[]>) ret : EMPTY_PARAM;
     }
 
     /**
