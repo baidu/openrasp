@@ -31,35 +31,18 @@ import java.util.regex.Pattern;
  * All rights reserved
  */
 public class TrustStringManager {
-
-
-    private static ThreadLocal<IdentityHashMap<CharSequence, CharSequence>> badStringParts = new ThreadLocal<IdentityHashMap<CharSequence, CharSequence>>();
-    private static ThreadLocal<IdentityHashMap<CharSequence, CharSequence>> goodStrings = new ThreadLocal<IdentityHashMap<CharSequence, CharSequence>>();
-
-    private static ThreadLocal<IdentityHashMap<CharSequence, UncertInputState>> uncertainParts = new ThreadLocal<IdentityHashMap<CharSequence, UncertInputState>>();
-    private static ThreadLocal<IdentityHashMap<CharSequence, CharSequence>> constMap = new ThreadLocal<IdentityHashMap<CharSequence, CharSequence>>();
+    private static ThreadLocal<IdentityHashMap<CharSequence, StringCheckStateEnum>> inputValidateMap = new ThreadLocal<IdentityHashMap<CharSequence, StringCheckStateEnum>>();
 
     public static void initRequest() {
-        badStringParts.set(new IdentityHashMap<CharSequence, CharSequence>());
-        goodStrings.set(new IdentityHashMap<CharSequence, CharSequence>());
-        uncertainParts.set(new IdentityHashMap<CharSequence, UncertInputState>());
-        constMap.set(new IdentityHashMap<CharSequence, CharSequence>());
+        inputValidateMap.set(new IdentityHashMap<CharSequence, StringCheckStateEnum>());
     }
 
     public static void endRequest() {
-        badStringParts.set(null);
-        goodStrings.set(null);
-        uncertainParts.set(null);
-        constMap.set(null);
+        inputValidateMap.set(null);
     }
 
     public static String getConstString(String str) {
-        if(str != null) {
-            IdentityHashMap<CharSequence, CharSequence> map = constMap.get();
-            if(map != null) {
-                map.put(str, str);
-            }
-        }
+        addValidateString(str);
         return str;
     }
 
@@ -74,40 +57,40 @@ public class TrustStringManager {
         return false;
     }
 
-    private static void checkUncertainAdd(StringBuilder sb, InputValidateResultEnum validateResult, CharSequence str) {
-        IdentityHashMap<CharSequence, UncertInputState> uncertainPart = uncertainParts.get();
-        UncertInputState state = uncertainPart.get(sb);
+    private static void checkUncertainAdd(StringBuilder sb, StringCheckStateEnum validateResult, CharSequence str) {
+        IdentityHashMap<CharSequence, StringCheckStateEnum> uncertainPart = inputValidateMap.get();
+        StringCheckStateEnum state = uncertainPart.get(sb);
         switch (state) {
-            case NoQuote:
-                if(validateResult.equals(InputValidateResultEnum.SafeString)) {
+            case UncertainNoQuote:
+                if(validateResult.equals(StringCheckStateEnum.Uncertain)) {
                     return;
                 }
 
-                if(validateResult.equals(InputValidateResultEnum.Ok)) {
+                if(validateResult.equals(StringCheckStateEnum.Validate)) {
                     if(isCharAt(str, 0, '\'')
                             || (isCharAt(str, 0, '%') && isCharAt(str, 1, '\''))) {
-                        uncertainPart.put(sb, UncertInputState.RightQuote);
+                        uncertainPart.put(sb, StringCheckStateEnum.UncertainRightQuote);
                         return;
                     }
                 }
                 addBadString(sb);
                 break;
-            case LeftQuote:
-                if(validateResult.equals(InputValidateResultEnum.SafeString)) {
+            case UncertainLeftQuote:
+                if(validateResult.equals(StringCheckStateEnum.Uncertain)) {
                     return;
                 }
 
-                if(validateResult.equals(InputValidateResultEnum.Ok)) {
+                if(validateResult.equals(StringCheckStateEnum.Validate)) {
                     if(isCharAt(str, 0, '\'')
                             || (isCharAt(str, 0, '%') && isCharAt(str, 1, '\''))) {
-                        uncertainPart.remove(sb);
+                        addValidateString(sb);
                         return;
                     }
                 }
                 addBadString(sb);
                 break;
-            case RightQuote:
-                if(validateResult.equals(InputValidateResultEnum.Ok)) {
+            case UncertainRightQuote:
+                if(validateResult.equals(StringCheckStateEnum.Validate)) {
                     return;
                 }
                 addBadString(sb);
@@ -118,36 +101,37 @@ public class TrustStringManager {
         }
     }
 
-    private static void checkNormalAdd(StringBuilder sb, InputValidateResultEnum validateResult, CharSequence str) {
-        if(validateResult.equals(InputValidateResultEnum.Ok)) {
+    private static void checkNormalAdd(StringBuilder sb, StringCheckStateEnum validateResult, CharSequence str) {
+        if(validateResult.equals(StringCheckStateEnum.Validate)) {
+            addValidateString(sb);
             return;
         }
 
         int len = sb.length();
-        if(validateResult.equals(InputValidateResultEnum.SafeString)) {
-            IdentityHashMap<CharSequence, UncertInputState> uncertainPart = uncertainParts.get();
-            UncertInputState state = uncertainPart.get(str);
+        if(validateResult.equals(StringCheckStateEnum.Uncertain)) {
+            IdentityHashMap<CharSequence, StringCheckStateEnum> uncertainPart = inputValidateMap.get();
+            StringCheckStateEnum state = uncertainPart.get(str);
             if(len == 0) {
                 uncertainPart.put(sb, state);
                 return;
             }
             switch(state)
             {
-                case NoQuote:
+                case UncertainNoQuote:
                     if(isCharAt(sb, len - 1, '\'')
                             || (isCharAt(sb, len - 1, '%') && isCharAt(sb, len - 2, '\''))){
-                        uncertainPart.put(sb, UncertInputState.LeftQuote);
+                        uncertainPart.put(sb, StringCheckStateEnum.UncertainLeftQuote);
                         return;
                     }
                     addBadString(sb);
                     break;
-                case LeftQuote:
-                    uncertainPart.put(sb, UncertInputState.LeftQuote);
+                case UncertainLeftQuote:
+                    uncertainPart.put(sb, StringCheckStateEnum.UncertainLeftQuote);
                     break;
-                case RightQuote:
+                case UncertainRightQuote:
                     if(isCharAt(sb, len - 1, '\'')
                             || (isCharAt(sb, len - 1, '%') && isCharAt(sb, len - 2, '\''))){
-                        uncertainPart.remove(sb);
+                        addValidateString(sb);
                         return;
                     }
                     addBadString(sb);
@@ -158,21 +142,39 @@ public class TrustStringManager {
         }
     }
 
+    private static boolean isUncertain(StringCheckStateEnum state) {
+        if(state != null) {
+            switch(state) {
+                case UncertainNoQuote:
+                case UncertainLeftQuote:
+                case UncertainRightQuote:
+                case Uncertain:
+                    return true;
+                default:
+                    break;
+            }
+        }
+        return false;
+    }
 
     private static void checkIsAddValidate(StringBuilder sb, CharSequence str) {
-        IdentityHashMap<CharSequence, CharSequence> set = badStringParts.get();
-        if(set != null && set.containsKey(sb)) {
+        IdentityHashMap<CharSequence, StringCheckStateEnum> map = inputValidateMap.get();
+        StringCheckStateEnum state = null;
+        if(map != null) {
+            state = map.get(sb);
+        }
+
+        if(StringCheckStateEnum.Invalidate.equals(state)) {
             return;
         }
 
-        InputValidateResultEnum validateResult = isValidatePart(str);
-        if(validateResult.equals(InputValidateResultEnum.Fail)) {
+        StringCheckStateEnum validateResult = isValidatePart(str);
+        if(StringCheckStateEnum.Invalidate.equals(validateResult)) {
             addBadString(sb);
             return;
         }
 
-        IdentityHashMap<CharSequence, UncertInputState> uncertainPart = uncertainParts.get();
-        if(uncertainPart != null && uncertainPart.containsKey(sb)) {
+        if(isUncertain(state)){
             checkUncertainAdd(sb, validateResult, str);
             return;
         }
@@ -187,26 +189,30 @@ public class TrustStringManager {
 
     public static StringBuilder handleBuilderAdd(StringBuilder sb, char v) {
         String str = String.valueOf(v);
-        getConstString(str);
+        addValidateString(str);
         checkIsAddValidate(sb, str);
         sb.append(v);
         return sb;
     }
 
     private static void checkBuilder(StringBuilder sb, String strResult) {
-        IdentityHashMap<CharSequence, CharSequence> set = badStringParts.get();
-        if(set != null && set.containsKey(sb)) {
+        IdentityHashMap<CharSequence, StringCheckStateEnum> map = inputValidateMap.get();
+        StringCheckStateEnum state = null;
+        if(map != null) {
+            state = map.get(sb);
+        }
+
+        if(StringCheckStateEnum.Invalidate.equals(state)) {
             addBadString(strResult);
             return;
         }
 
-        IdentityHashMap<CharSequence, UncertInputState> uncertMap = uncertainParts.get();
-        if(uncertMap != null && uncertMap.containsKey(sb)) {
-            uncertMap.put(strResult, uncertMap.get(sb));
+        if(isUncertain(state)) {
+            map.put(strResult, state);
             return;
         }
 
-        addGoodString(strResult);
+        addValidateString(strResult);
     }
 
     public static String handleBuilderToString(StringBuilder sb) {
@@ -216,52 +222,58 @@ public class TrustStringManager {
     }
 
     public static void addBadString(CharSequence str) {
-        IdentityHashMap<CharSequence, CharSequence> set = badStringParts.get();
-        if(set != null && str != null) {
-            set.put(str, str);
+        IdentityHashMap<CharSequence, StringCheckStateEnum> map = inputValidateMap.get();
+        if(map != null && str != null) {
+            map.put(str, StringCheckStateEnum.Invalidate);
         }
     }
 
-    private static void addGoodString(CharSequence str) {
-        IdentityHashMap<CharSequence, CharSequence> set = goodStrings.get();
-        if(set != null && str != null) {
-            set.put(str, str);
+    private static void addValidateString(CharSequence str) {
+        IdentityHashMap<CharSequence, StringCheckStateEnum> map = inputValidateMap.get();
+        if(map != null && str != null) {
+            map.put(str, StringCheckStateEnum.Validate);
         }
     }
 
     public static boolean isSqlValidate(String sql) {
-        return isValidatePart(sql).equals(InputValidateResultEnum.Ok);
+        return isValidatePart(sql).equals(StringCheckStateEnum.Validate);
     }
 
 
-    private static InputValidateResultEnum isValidatePart(CharSequence str) {
+    private static StringCheckStateEnum isValidatePart(CharSequence str) {
         if(str == null || str == "") {
-            return InputValidateResultEnum.Ok;
+            return StringCheckStateEnum.Validate;
+        }
+
+        IdentityHashMap<CharSequence, StringCheckStateEnum> map = inputValidateMap.get();
+        if(map != null) {
+            StringCheckStateEnum oldV = map.get(str);
+            if(oldV != null) {
+                switch(oldV) {
+                    case Invalidate:
+                        return StringCheckStateEnum.Invalidate;
+                    case UncertainNoQuote:
+                    case UncertainLeftQuote:
+                    case UncertainRightQuote:
+                    case Uncertain:
+                        return StringCheckStateEnum.Uncertain;
+                    case Validate:
+                        return StringCheckStateEnum.Validate;
+                    default:
+                        break;
+                }
+            }
         }
 
         if(isNumberic(str)) {
-            return InputValidateResultEnum.Ok;
+            return StringCheckStateEnum.Validate;
         }
 
-        IdentityHashMap<CharSequence, CharSequence> constmap = constMap.get();
-        if(constmap.containsKey(str)) {
-            return InputValidateResultEnum.Ok;
-        }
-
-        IdentityHashMap<CharSequence, CharSequence> set = goodStrings.get();
-        if(set != null && set.containsKey(str)) {
-            return InputValidateResultEnum.Ok;
-        }
-
-        IdentityHashMap<CharSequence, UncertInputState> uncertMap = uncertainParts.get();
-        if(uncertMap != null && uncertMap.containsKey(str)) {
-            return InputValidateResultEnum.SafeString;
-        }
         if(isSafeValue(str)) {
-            uncertMap.put(str, UncertInputState.NoQuote);
-            return InputValidateResultEnum.SafeString;
+            map.put(str, StringCheckStateEnum.UncertainNoQuote);
+            return StringCheckStateEnum.Uncertain;
         }
-        return InputValidateResultEnum.Fail;
+        return StringCheckStateEnum.Invalidate;
     }
 
 
@@ -285,17 +297,13 @@ public class TrustStringManager {
     }
 
 
-    private static enum InputValidateResultEnum
+    private static enum StringCheckStateEnum
     {
-        Ok,
-        Fail,
-        SafeString
-    }
-
-    private static enum UncertInputState
-    {
-        NoQuote,
-        LeftQuote,
-        RightQuote
+        Validate,
+        Invalidate,
+        Uncertain,
+        UncertainNoQuote,
+        UncertainLeftQuote,
+        UncertainRightQuote
     }
 }
