@@ -58,8 +58,11 @@ public class TrustStringManager {
     }
 
     private static void checkUncertainAdd(StringBuilder sb, StringCheckStateEnum validateResult, CharSequence str) {
-        IdentityHashMap<CharSequence, StringCheckStateEnum> uncertainPart = inputValidateMap.get();
-        StringCheckStateEnum state = uncertainPart.get(sb);
+        IdentityHashMap<CharSequence, StringCheckStateEnum> checkMap = inputValidateMap.get();
+        StringCheckStateEnum state = checkMap.get(sb);
+        if(state == null) {
+            return;
+        }
         switch (state) {
             case UncertainNoQuote:
                 if(validateResult.equals(StringCheckStateEnum.Uncertain)) {
@@ -69,7 +72,7 @@ public class TrustStringManager {
                 if(validateResult.equals(StringCheckStateEnum.Validate)) {
                     if(isCharAt(str, 0, '\'')
                             || (isCharAt(str, 0, '%') && isCharAt(str, 1, '\''))) {
-                        uncertainPart.put(sb, StringCheckStateEnum.UncertainRightQuote);
+                        checkMap.put(sb, StringCheckStateEnum.UncertainRightQuote);
                         return;
                     }
                 }
@@ -109,10 +112,13 @@ public class TrustStringManager {
 
         int len = sb.length();
         if(validateResult.equals(StringCheckStateEnum.Uncertain)) {
-            IdentityHashMap<CharSequence, StringCheckStateEnum> uncertainPart = inputValidateMap.get();
-            StringCheckStateEnum state = uncertainPart.get(str);
+            IdentityHashMap<CharSequence, StringCheckStateEnum> checkMap = inputValidateMap.get();
+            StringCheckStateEnum state = checkMap.get(str);
             if(len == 0) {
-                uncertainPart.put(sb, state);
+                checkMap.put(sb, state);
+                return;
+            }
+            if(state == null) {
                 return;
             }
             switch(state)
@@ -120,13 +126,13 @@ public class TrustStringManager {
                 case UncertainNoQuote:
                     if(isCharAt(sb, len - 1, '\'')
                             || (isCharAt(sb, len - 1, '%') && isCharAt(sb, len - 2, '\''))){
-                        uncertainPart.put(sb, StringCheckStateEnum.UncertainLeftQuote);
+                        checkMap.put(sb, StringCheckStateEnum.UncertainLeftQuote);
                         return;
                     }
                     addBadString(sb);
                     break;
                 case UncertainLeftQuote:
-                    uncertainPart.put(sb, StringCheckStateEnum.UncertainLeftQuote);
+                    checkMap.put(sb, StringCheckStateEnum.UncertainLeftQuote);
                     break;
                 case UncertainRightQuote:
                     if(isCharAt(sb, len - 1, '\'')
@@ -241,7 +247,7 @@ public class TrustStringManager {
 
 
     private static StringCheckStateEnum isValidatePart(CharSequence str) {
-        if(str == null || str == "") {
+        if(str == null || str.equals("")) {
             return StringCheckStateEnum.Validate;
         }
 
