@@ -18,6 +18,7 @@ package com.fuxi.javaagent.response;
 
 import com.fuxi.javaagent.HookHandler;
 import com.fuxi.javaagent.config.Config;
+import com.fuxi.javaagent.error.BlockedError;
 import com.fuxi.javaagent.tool.Reflection;
 
 /**
@@ -170,7 +171,7 @@ public class HttpServletResponse {
                 }
                 resetBuffer();
                 sendContent(script, true);
-                throw new IllegalAccessError();//一旦进行拦截，抛错误防止后续逻辑的继续处理
+                throw new BlockedError();//一旦进行拦截，抛错误防止后续逻辑的继续处理
             } catch (Exception e) {
                 //ignore
             }

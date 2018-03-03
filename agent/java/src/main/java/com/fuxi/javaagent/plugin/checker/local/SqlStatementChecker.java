@@ -21,10 +21,13 @@ import com.fuxi.javaagent.HookHandler;
 import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.plugin.antlrlistener.TokenizeErrorListener;
 import com.fuxi.javaagent.plugin.checker.CheckParameter;
+import com.fuxi.javaagent.plugin.checker.js.JsChecker;
 import com.fuxi.javaagent.plugin.info.AttackInfo;
 import com.fuxi.javaagent.plugin.info.EventInfo;
 import com.google.gson.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -59,100 +62,100 @@ public class SqlStatementChecker extends ConfigurableChecker {
         // 2. 识别数据库管理器
         //String action = getActionElement(config, CONFIG_KEY_SQLI_USER_INPUT);
         String action = EventInfo.CHECK_ACTION_BLOCK;
-        if (!EventInfo.CHECK_ACTION_IGNORE.equals(action) && action != null) {
+        if(TrustStringManager.isTrustStringConfiged()) {
             if(!TrustStringManager.isSqlValidate(query)) {
                 result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
                         "算法0:查询语句中包含不可信的部分，应该放在参数部分", 90));
             }
-            for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
-                String[] v = entry.getValue();
-                String value = v[0];
-                if (value.length() <= 10) {
-                    continue;
-                }
-                if (value.length() == query.length() && value.equals(query)) {
-                    message = "算法2: WebShell - 数据库管理器";
-                    break;
-                }
-                /*
-                if (!query.contains(value)) {
-                    continue;
-                }
-
-                String[] tokens2 = TokenGenerator.tokenize(query.replace(value, ""), tokenizeErrorListener);
-                if (tokens != null) {
-                    if (tokens.length - tokens2.length > 2) {
-                        message = "算法1: 数据库查询逻辑发生改变";
+        }
+        else
+        {
+            if (!EventInfo.CHECK_ACTION_IGNORE.equals(action) && action != null) {
+                for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+                    String[] v = entry.getValue();
+                    String value = v[0];
+                    if (value.length() <= 10) {
+                        continue;
+                    }
+                    if (value.length() == query.length() && value.equals(query)) {
+                        message = "算法2: WebShell - 数据库管理器";
                         break;
                     }
-                }
-                */
-            }
-        }
-        if (message != null) {
-            result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
-                    message, 90));
-        } else {
-            /*
-            // 算法2: SQL语句策略检查（模拟SQL防火墙功能）
-            action = getActionElement(config, CONFIG_KEY_SQLI_POLICY);
-            if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
-                int i = 0;
-                if (tokens != null) {
-                    HashSet<String> modules = getJsonArrayAsSet(config, CONFIG_KEY_SQLI_POLICY, "feature");
-                    for (String token : tokens) {
-                        if (!StringUtils.isEmpty(token)) {
-                            String lt = token.toLowerCase();
-                            if (lt.equals(";") && i != tokens.length - 1 && modules.contains(CONFIG_KEY_STACKED_QUERY)) {
-                                message = "禁止多语句查询";
-                                break;
-                            } else if (lt.startsWith("0x") && modules.contains(CONFIG_KEY_NO_HEX)) {
-                                message = "禁止16进制字符串";
-                                break;
-                            } else if (lt.startsWith("/*!") && modules.contains(CONFIG_KEY_VERSION_COMMENT)) {
-                                message = "禁止MySQL版本号注释";
-                                break;
-                            } else if (i > 0 && i < tokens.length - 1 && (lt.equals("xor")
-                                    || lt.charAt(0) == '<'
-                                    || lt.charAt(0) == '>'
-                                    || lt.charAt(0) == '=') && modules.contains(CONFIG_KEY_CONSTANT_COMPARE)) {
-                                String op1 = tokens[i - 1];
-                                String op2 = tokens[i + 1];
-                                if (StringUtils.isNumeric(op1) && StringUtils.isNumeric(op2)) {
-                                    if ("1".equals(op1) && "1".equals(op2) && "=".equals(lt)) {
-                                        continue;
-                                    }
-                                    message = "禁止常量比较操作";
-                                    break;
-                                }
-                            } else if (i > 0 && tokens[i].indexOf('(') == 0
-                                    && modules.contains(CONFIG_KEY_FUNCTION_BLACKLIST)) {
-                                // FIXME: 可绕过，暂时不更新
-                                HashSet<String> funBlackList = getJsonArrayAsSet(config, CONFIG_KEY_SQLI_POLICY, "function_blacklist");
-                                if (funBlackList.contains(tokens[i - 1])) {
-                                    message = "禁止执行敏感函数: " + tokens[i - 1];
-                                    break;
-                                }
-                            }
+
+                    if (!query.contains(value)) {
+                        continue;
+                    }
+
+                    String[] tokens2 = TokenGenerator.tokenize(query.replace(value, ""), tokenizeErrorListener);
+                    if (tokens != null) {
+                        if (tokens.length - tokens2.length > 2) {
+                            message = "算法1: 数据库查询逻辑发生改变";
+                            break;
                         }
-                        i++;
                     }
                 }
-                if (message != null) {
-                    result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
-                            message, 100));
+            }
+            if (message != null) {
+                result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
+                        message, 90));
+            } else {
+                // 算法2: SQL语句策略检查（模拟SQL防火墙功能）
+                action = getActionElement(config, CONFIG_KEY_SQLI_POLICY);
+                if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
+                    int i = 0;
+                    if (tokens != null) {
+                        HashSet<String> modules = getJsonArrayAsSet(config, CONFIG_KEY_SQLI_POLICY, "feature");
+                        for (String token : tokens) {
+                            if (!StringUtils.isEmpty(token)) {
+                                String lt = token.toLowerCase();
+                                if (lt.equals(";") && i != tokens.length - 1 && modules.contains(CONFIG_KEY_STACKED_QUERY)) {
+                                    message = "禁止多语句查询";
+                                    break;
+                                } else if (lt.startsWith("0x") && modules.contains(CONFIG_KEY_NO_HEX)) {
+                                    message = "禁止16进制字符串";
+                                    break;
+                                } else if (lt.startsWith("/*!") && modules.contains(CONFIG_KEY_VERSION_COMMENT)) {
+                                    message = "禁止MySQL版本号注释";
+                                    break;
+                                } else if (i > 0 && i < tokens.length - 1 && (lt.equals("xor")
+                                        || lt.charAt(0) == '<'
+                                        || lt.charAt(0) == '>'
+                                        || lt.charAt(0) == '=') && modules.contains(CONFIG_KEY_CONSTANT_COMPARE)) {
+                                    String op1 = tokens[i - 1];
+                                    String op2 = tokens[i + 1];
+                                    if (StringUtils.isNumeric(op1) && StringUtils.isNumeric(op2)) {
+                                        if ("1".equals(op1) && "1".equals(op2) && "=".equals(lt)) {
+                                            continue;
+                                        }
+                                        message = "禁止常量比较操作";
+                                        break;
+                                    }
+                                } else if (i > 0 && tokens[i].indexOf('(') == 0
+                                        && modules.contains(CONFIG_KEY_FUNCTION_BLACKLIST)) {
+                                    // FIXME: 可绕过，暂时不更新
+                                    HashSet<String> funBlackList = getJsonArrayAsSet(config, CONFIG_KEY_SQLI_POLICY, "function_blacklist");
+                                    if (funBlackList.contains(tokens[i - 1])) {
+                                        message = "禁止执行敏感函数: " + tokens[i - 1];
+                                        break;
+                                    }
+                                }
+                            }
+                            i++;
+                        }
+                    }
+                    if (message != null) {
+                        result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
+                                message, 100));
+                    }
                 }
             }
-            */
         }
 
-        /*
         // js 插件检测
         List<EventInfo> jsResults = new JsChecker().checkParam(checkParameter);
         if (jsResults != null && jsResults.size() > 0) {
             result.addAll(jsResults);
         }
-        */
         return result;
     }
 }

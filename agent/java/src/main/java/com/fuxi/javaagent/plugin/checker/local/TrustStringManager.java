@@ -16,6 +16,7 @@
 package com.fuxi.javaagent.plugin.checker.local;
 
 import com.baidu.rasp.SQLLexer;
+import com.fuxi.javaagent.config.Config;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.Token;
 
@@ -245,6 +246,17 @@ public class TrustStringManager {
         return isValidatePart(sql).equals(StringCheckStateEnum.Validate);
     }
 
+    public static boolean isTrustStringConfiged() {
+        String scanPackage = Config.getConfig().getSqlInjectScanClassPrefix();
+        if(scanPackage == null || "".equals(scanPackage)) {
+            return false;
+        }
+        return true;
+    }
+
+    /*
+
+    * */
 
     private static StringCheckStateEnum isValidatePart(CharSequence str) {
         if(str == null || str.equals("")) {

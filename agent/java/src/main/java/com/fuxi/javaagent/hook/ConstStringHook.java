@@ -33,7 +33,7 @@ public class ConstStringHook extends AbstractClassHook {
     @Override
     public boolean isClassMatched(String className) {
         String scanPackage = Config.getConfig().getSqlInjectScanClassPrefix();
-        if(scanPackage == null || scanPackage == "") {
+        if(scanPackage == null || "".equals(scanPackage)) {
             return false;
         }
         return className.startsWith(scanPackage);
