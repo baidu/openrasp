@@ -7,8 +7,15 @@
 const chai = require('chai').use(require('chai-as-promised'));
 const axios = require('axios');
 const FormData = require('form-data');
+const fs = require('fs');
 const timeout = ms => new Promise(resolve => setTimeout(resolve, ms));
-
+const watchFileOptions = {
+    persistent: false,
+    interval: 400
+};
+const SERVER_HOME = process.env['SERVER_HOME'];
+const CONF_FILE = SERVER_HOME + '/rasp/conf/rasp.properties';
+const RASP_LOG_FILE = SERVER_HOME + '/rasp/logs/rasp/rasp.log';
 chai.should();
 axios.defaults.headers.common['Test-Test'] = 'Test-Test';
 axios.defaults.validateStatus = status => status !== undefined;
@@ -31,6 +38,9 @@ describe(process.env['SERVER'] || 'server', function () {
         process.stdout.write('\tconnecting to server');
         return chain;
     });
+    after(function () {
+        fs.writeFileSync(CONF_FILE, '');
+    });
     it('fileUpload', function () {
         let form = new FormData();
         form.append('test', new Buffer(10), {
@@ -51,5 +61,13 @@ describe(process.env['SERVER'] || 'server', function () {
                 .should.eventually.have.property('data')
                 .match(/blocked/);
         });
+    });
+    it('paramEncodingConfig', function () {
+        fs.watchFile(RASP_LOG_FILE, watchFileOptions, () => {
+            return axios.get("param-encoding" + '.jsp?test=a&test=b')
+            .should.eventually.have.property('data')
+            .match(/blocked/);
+        });
+        fs.writeFileSync(CONF_FILE, '\nrequest.param_encoding=utf-8');
     });
 });
