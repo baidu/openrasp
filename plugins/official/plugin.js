@@ -46,6 +46,7 @@ var forcefulBrowsing = {
     ],
     absolutePaths: [
         '/etc/shadow',
+        '/etc/passwd',
         '/etc/hosts',
         '/etc/apache2/apache2.conf',
         '/root/.bash_history',
