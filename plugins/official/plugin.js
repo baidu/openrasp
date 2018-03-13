@@ -152,7 +152,7 @@ if (RASP.get_jsengine() !== 'v8') {
 
     plugin.register('sql', function (params, context) {
         var reason     = false
-        var parameters = context.parameter
+        var parameters = context.parameter || {}
         var tokens     = RASP.sql_tokenize(params.query, params.server)
 
         // console.log(tokens)
@@ -551,10 +551,18 @@ plugin.register('command', function (params, context) {
         'ognl.OgnlRuntime.invokeMethod': '尝试通过 OGNL 代码执行命令',
         'com.thoughtworks.xstream.XStream.unmarshal': '尝试通过 xstream 反序列化执行命令',
         'org.apache.commons.collections4.functors.InvokerTransformer.transform': '尝试通过 transformer 反序列化执行命令'
-    }
+    }    
     
-    for (var i = 0; i < params.stack.length; i ++) {
+    for (var i = 2; i < params.stack.length; i ++) {
         var method = params.stack[i]
+
+        // 仅当命令本身来自反射调用才拦截
+        // 如果某个类是反射调用，这个类再主动执行命令，则忽略
+        if (! method.startsWith('java.') && ! method.startsWith('sun.') && ! message) {
+            message = undefined
+            break
+        }
+
         if (known[method]) {
             message = known[method]
             // break
@@ -569,7 +577,9 @@ plugin.register('command', function (params, context) {
         }
     }
 
-    // 算法2: 默认禁止命令执行，如有需要可改成 log 或者 ignore
+    // 算法2: 默认禁止命令执行
+    // 如有需要可改成 log 或者 ignore
+    // 或者根据URL来决定是否允许执行命令
     return {
         action:     'block',
         message:    '尝试执行命令',
@@ -583,6 +593,7 @@ plugin.register('xxe', function (params, context) {
 
     if (items.length >= 2) {
         var protocol = items[0]
+        var address  = items[1]
 
         if (protocol === 'gopher' || protocol === 'ftp' || protocol === 'dict' || protocol === 'expect') {
             return {
@@ -592,7 +603,12 @@ plugin.register('xxe', function (params, context) {
             }
         }
 
-        if (protocol === 'file') {
+        // file 协议 + 绝对路径, e.g
+        // file:///etc/passwd
+        //
+        // 相对路径容易误报, e.g
+        // file://xwork.dtd
+        if (address.length > 0 && protocol === 'file' && address[0] == '/') {
             return {
                 action:     'log',
                 message:    '尝试读取外部实体 (file 协议)',
