@@ -50,7 +50,7 @@ describe(process.env['SERVER'] || 'server', function () {
         fs.unwatchFile(POLICY_ALARM_FILE);
         fs.unwatchFile(RASP_LOG_FILE);
     });
-    it('should not log and not block when security.enforce_policy=fasle and request_url=http://127.0.0.1:8080/app/sql-not-connectable.jsp', function (done) {
+    it('should not log and not block when security.enforce_policy=false and request_url=http://127.0.0.1:8080/app/sql-not-connectable.jsp', function (done) {
         let timestamp = Date.now();
         let resData;
         fs.watchFile(POLICY_ALARM_FILE, watchFileOptions, () => {
@@ -82,7 +82,7 @@ describe(process.env['SERVER'] || 'server', function () {
         });
         fs.writeFileSync(CONF_FILE,'\nsecurity.enforce_policy=true');
     });
-    it('should block when security.enforce_policy=fasle and request_url=http://127.0.0.1:8080/app/sql-not-connectable.jsp and ', function (done) {
+    it('should block when security.enforce_policy=false and request_url=http://127.0.0.1:8080/app/sql-not-connectable.jsp and ', function (done) {
         fs.watchFile(RASP_LOG_FILE, watchFileOptions, () => {
             let data = fs.readFileSync(RASP_LOG_FILE, {
                 encoding: 'utf8'
