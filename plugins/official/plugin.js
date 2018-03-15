@@ -183,7 +183,7 @@ if (RASP.get_jsengine() !== 'v8') {
                 }
 
                 // 去掉用户输入再次匹配
-                var tokens2 = RASP.sql_tokenize(params.query.replace(value, ''), params.server)
+                var tokens2 = RASP.sql_tokenize(params.query.replaceAll(value, ''), params.server)
                 if (tokens.length - tokens2.length > 2) {
                     reason = '算法1: 数据库查询逻辑发生改变'
                     return true
