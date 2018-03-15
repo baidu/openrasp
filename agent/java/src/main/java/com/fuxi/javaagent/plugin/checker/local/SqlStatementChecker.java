@@ -67,7 +67,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
             for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
                 String[] v = entry.getValue();
                 String value = v[0];
-                if (value.length() <= 10) {
+                if (value.length() <= 15) {
                     continue;
                 }
                 if (value.length() == query.length() && value.equals(query)) {

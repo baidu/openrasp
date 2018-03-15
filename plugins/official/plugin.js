@@ -165,7 +165,7 @@ if (RASP.get_jsengine() !== 'v8') {
                 var value = parameters[name][0]
 
                 // 请求参数长度超过10才考虑
-                if (value.length <= 10) {
+                if (value.length <= 15) {
                     return
                 }
 
