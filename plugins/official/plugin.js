@@ -164,7 +164,9 @@ if (RASP.get_jsengine() !== 'v8') {
             Object.keys(parameters).some(function (name) {
                 var value = parameters[name][0]
 
-                // 请求参数长度超过10才考虑
+                // 请求参数长度超过15才考虑，任何跨表查询都至少需要20个字符，所以可以写的更大点
+                // SELECT * FROM admin
+                // and updatexml(....)
                 if (value.length <= 15) {
                     return
                 }
