@@ -30,6 +30,7 @@
         <dependency>
             <groupId>com.baidu.openrasp</groupId>
             <artifactId>rasp-boot</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.baidu.openrasp</groupId>
