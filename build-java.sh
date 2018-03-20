@@ -26,11 +26,11 @@ function changeDirectory {
 }
 
 function buildRaspInstall {
-	changeDirectory $BASE_DIR/rasp-install
+	changeDirectory $BASE_DIR/rasp-install/java
 	log "mvn clean package..."
 	mvn clean package || exit 1 
-	cp $BASE_DIR/rasp-install/target/RaspInstall.jar $OUTPUT_ROOT || exit 1
-	rm -rf $BASE_DIR/rasp-install/target
+	cp $BASE_DIR/rasp-install/java/target/RaspInstall.jar $OUTPUT_ROOT || exit 1
+	rm -rf $BASE_DIR/rasp-install/java/target
 }
 
 # 编译Rasp
@@ -47,7 +47,7 @@ function buildPlugin {
 }
 
 function copyConf {
-	cp $BASE_DIR/rasp-install/src/main/resources/rasp.properties $OUTPUT_ROOT/rasp/conf/rasp.properties || exit 1
+	cp $BASE_DIR/rasp-install/java/src/main/resources/rasp.properties $OUTPUT_ROOT/rasp/conf/rasp.properties || exit 1
 }
 
 log "[1] build RaspInstall.jar" 
