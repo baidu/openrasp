@@ -38,7 +38,8 @@ function buildRasp {
 	changeDirectory $BASE_DIR/agent/java || exit 1
 	log "mvn clean package"
 	mvn clean package  || exit 1
-	cp $BASE_DIR/agent/java/target/rasp.jar $OUTPUT_ROOT/rasp || exit 1
+	cp $BASE_DIR/agent/java/boot/target/rasp.jar $OUTPUT_ROOT/rasp || exit 1
+	cp $BASE_DIR/agent/java/engine/target/rasp-engine.jar $OUTPUT_ROOT/rasp || exit 1
 }
 
 function buildPlugin {
