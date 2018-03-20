@@ -30,6 +30,7 @@ public abstract class AttackChecker extends AbstractChecker{
 
     public AttackChecker(boolean canBlock) {
         super(canBlock);
+        addCheckEventListener(new AttackCheckListener());
     }
 
 }
