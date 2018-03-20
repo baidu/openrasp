@@ -11,7 +11,7 @@ PHP_ARG_WITH(antlr4, for native antlr4 support,
 [  --with-antlr4=DIR       Set the path to antlr4], no, no)
 
 if test "$PHP_OPENRASP" != "no"; then
-
+  PHP_REQUIRE_CXX()
   if test "$PHP_JSON" = "no" && test "$ext_shared" = "no"; then
     AC_MSG_ERROR([JSON is not enabled! Add --enable-json to your configure line.])
   fi
@@ -45,15 +45,21 @@ if test "$PHP_OPENRASP" != "no"; then
     * )
       PHP_ADD_LIBRARY(rt, , OPENRASP_SHARED_LIBADD)
       PHP_ADD_LIBRARY(dl, , OPENRASP_SHARED_LIBADD)
-
-      STATIC_LIBCXX=`g++ -print-file-name=libstdc++.a`
-      if test $STATIC_LIBCXX == "libstdc++.a"; then
-        echo 'Warning: static libc++ library "libstdc++.a" unavailable, porting to other system may fail!'
-        STATIC_LIBCXX=""
-      fi
-      OPENRASP_LIBS="-Wl,--whole-archive $V8_LIBS -Wl,--no-whole-archive -pthread $OPENRASP_LIBS $STATIC_LIBCXX"
+      OPENRASP_LIBS="-Wl,--whole-archive $V8_LIBS -Wl,--no-whole-archive -pthread $OPENRASP_LIBS"
       ;;
   esac
+
+  AC_CONFIG_COMMANDS([convert-*.js-to-openrasp_v8_js.h], [
+    command -v xxd >/dev/null 2>&1 || { echo "xxd it's not installed." >&2; exit 1; }
+    pushd $builddir >/dev/null 2>&1
+    xxd -i console.js > openrasp_v8_js.h
+    xxd -i checkpoint.js >> openrasp_v8_js.h
+    xxd -i context.js >> openrasp_v8_js.h
+    xxd -i error.js >> openrasp_v8_js.h
+    xxd -i rasp.js >> openrasp_v8_js.h
+    xxd -i sql_tokenize.js >> openrasp_v8_js.h
+    popd >/dev/null 2>&1
+  ], [builddir=PHP_EXT_BUILDDIR([openrasp])/js])
 
   if test "$PHP_GETTEXT" != "no"; then
     SEARCH_FOR="/include/libintl.h"
@@ -150,43 +156,56 @@ if test "$PHP_OPENRASP" != "no"; then
       ;;
   esac
 
+  AC_MSG_CHECKING([for static libstdc++ library])
+  AC_LANG_PUSH([C++])
+  old_LDFLAGS=$LDFLAGS
+  LDFLAGS="-static-libstdc++"
+  AC_TRY_LINK([],[],[
+    OPENRASP_LIBS="-static-libstdc++ $OPENRASP_LIBS"
+    AC_MSG_RESULT([yes])
+  ], [
+    AC_MSG_RESULT([no])
+    AC_MSG_NOTICE([porting to other system may fail])
+  ])
+  LDFLAGS=$old_LDFLAGS
+  AC_LANG_POP([C++])
+
   EXTRA_LIBS="$OPENRASP_LIBS $EXTRA_LIBS"
   OPENRASP_SHARED_LIBADD="$OPENRASP_LIBS $OPENRASP_SHARED_LIBADD"
   PHP_SUBST(OPENRASP_SHARED_LIBADD)
-  PHP_REQUIRE_CXX()
 
-  AC_CACHE_CHECK(for C standard version, ac_cv_v8_cstd, [
-    ac_cv_v8_cstd="c++11"
-    old_CPPFLAGS=$CPPFLAGS
-    AC_LANG_PUSH([C++])
-    CPPFLAGS="-std="$ac_cv_v8_cstd
-    AC_TRY_RUN([int main() { return 0; }],[],[ac_cv_v8_cstd="c++0x"],[])
-    AC_LANG_POP([C++])
-    CPPFLAGS=$old_CPPFLAGS
-  ]);
-
-  AC_CACHE_CHECK(how to allow c++11 narrowing, ac_cv_v8_narrowing, [
-    ac_cv_v8_narrowing=""
+  AC_CACHE_CHECK(for C standard version, ac_cv_cstd, [
+    ac_cv_cstd="c++11"
     old_CXXFLAGS=$CXXFLAGS
     AC_LANG_PUSH([C++])
-    CXXFLAGS="-std="$ac_cv_v8_cstd
+    CXXFLAGS="-std="$ac_cv_cstd
+    AC_TRY_RUN([int main() { return 0; }],[],[ac_cv_cstd="c++0x"],[])
+    AC_LANG_POP([C++])
+    CXXFLAGS=$old_CXXFLAGS
+  ]);
+
+  AC_CACHE_CHECK(how to allow c++11 narrowing, ac_cv_narrowing, [
+    ac_cv_narrowing=""
+    old_CXXFLAGS=$CXXFLAGS
+    AC_LANG_PUSH([C++])
+    CXXFLAGS="-std="$ac_cv_cstd
     AC_TRY_RUN([int main() {
         struct { unsigned int x; } foo = {-1};
         (void) foo;
         return 0;
-    }], [ ac_cv_v8_narrowing="" ], [
-        CXXFLAGS="-Wno-c++11-narrowing -std="$ac_cv_v8_cstd
+    }], [ ac_cv_narrowing="" ], [
+        CXXFLAGS="-Wno-c++11-narrowing -std="$ac_cv_cstd
         AC_TRY_RUN([int main() {
             struct { unsigned int x; } foo = {-1};
             (void) foo;
             return 0;
-        }], [ ac_cv_v8_narrowing="-Wno-c++11-narrowing" ], [
-            CXXFLAGS="-Wno-narrowing -std="$ac_cv_v8_cstd
+        }], [ ac_cv_narrowing="-Wno-c++11-narrowing" ], [
+            CXXFLAGS="-Wno-narrowing -std="$ac_cv_cstd
             AC_TRY_RUN([int main() {
                 struct { unsigned int x; } foo = {-1};
                 (void) foo;
                 return 0;
-            }], [ ac_cv_v8_narrowing="-Wno-narrowing" ], [
+            }], [ ac_cv_narrowing="-Wno-narrowing" ], [
                 AC_MSG_RESULT([cannot compile with narrowing])
             ], [])
         ], [])
@@ -195,31 +214,22 @@ if test "$PHP_OPENRASP" != "no"; then
     CXXFLAGS=$old_CXXFLAGS
   ]);
 
-  EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS $ac_cv_v8_narrowing -std=$ac_cv_v8_cstd -Wno-deprecated-declarations -Wno-write-strings -Wno-deprecated-register"
+  EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS $ac_cv_narrowing -std=$ac_cv_cstd -Wno-deprecated-declarations -Wno-write-strings -Wno-deprecated-register"
   PHP_SUBST(EXTRA_CXXFLAGS)
 
   AC_MSG_CHECKING([whether fully support regex])
   AC_LANG_PUSH([C++])
+  old_CXXFLAGS=$CXXFLAGS
+  CXXFLAGS="-std=$ac_cv_cstd"
   AC_TRY_LINK([#include <regex>], [std::cregex_token_iterator it;],
   [
     AC_MSG_RESULT(yes)
+    CXXFLAGS=$old_CXXFLAGS
     AC_LANG_POP([C++])
   ],[
     AC_MSG_RESULT(no)
     AC_MSG_ERROR([Please install a newer c++ compiler])
   ])
-
-  AC_CONFIG_COMMANDS([convert-*.js-to-openrasp_v8_js.h], [
-    command -v xxd >/dev/null 2>&1 || { echo "xxd it's not installed." >&2; exit 1; }
-    pushd $builddir >/dev/null 2>&1
-    xxd -i console.js > openrasp_v8_js.h
-    xxd -i checkpoint.js >> openrasp_v8_js.h
-    xxd -i context.js >> openrasp_v8_js.h
-    xxd -i error.js >> openrasp_v8_js.h
-    xxd -i rasp.js >> openrasp_v8_js.h
-    xxd -i sql_tokenize.js >> openrasp_v8_js.h
-    popd >/dev/null 2>&1
-  ], [builddir=PHP_EXT_BUILDDIR([openrasp])/js])
 
   AC_MSG_CHECKING(for mmap() using MAP_ANON shared memory support)
   AC_TRY_RUN([
@@ -397,38 +407,38 @@ int main() {
     msg=yes,msg=no,msg=no)
   AC_MSG_RESULT([$msg])
 
-flock_type=unknown
-AC_MSG_CHECKING("whether flock struct is linux ordered")
-AC_TRY_RUN([
-  #include <fcntl.h>
-  struct flock lock = { 1, 2, 3, 4, 5 };
-  int main() { 
-    if(lock.l_type == 1 && lock.l_whence == 2 && lock.l_start == 3 && lock.l_len == 4) {
-		return 0;
-    }
-    return 1;
-  } 
-], [
-	flock_type=linux
-    AC_DEFINE([HAVE_FLOCK_LINUX], [], [Struct flock is Linux-type])
-    AC_MSG_RESULT("yes")
-], AC_MSG_RESULT("no") )
+  flock_type=unknown
+  AC_MSG_CHECKING("whether flock struct is linux ordered")
+  AC_TRY_RUN([
+    #include <fcntl.h>
+    struct flock lock = { 1, 2, 3, 4, 5 };
+    int main() { 
+      if(lock.l_type == 1 && lock.l_whence == 2 && lock.l_start == 3 && lock.l_len == 4) {
+      return 0;
+      }
+      return 1;
+    } 
+  ], [
+    flock_type=linux
+      AC_DEFINE([HAVE_FLOCK_LINUX], [], [Struct flock is Linux-type])
+      AC_MSG_RESULT("yes")
+  ], AC_MSG_RESULT("no"))
 
-AC_MSG_CHECKING("whether flock struct is BSD ordered")
-AC_TRY_RUN([
-  #include <fcntl.h>
-  struct flock lock = { 1, 2, 3, 4, 5 };
-  int main() { 
-    if(lock.l_start == 1 && lock.l_len == 2 && lock.l_type == 4 && lock.l_whence == 5) {
-		return 0;
-    }
-    return 1;
-  } 
-], [
-	flock_type=bsd
-    AC_DEFINE([HAVE_FLOCK_BSD], [], [Struct flock is BSD-type]) 
-    AC_MSG_RESULT("yes")
-], AC_MSG_RESULT("no") )
+  AC_MSG_CHECKING("whether flock struct is BSD ordered")
+  AC_TRY_RUN([
+    #include <fcntl.h>
+    struct flock lock = { 1, 2, 3, 4, 5 };
+    int main() { 
+      if(lock.l_start == 1 && lock.l_len == 2 && lock.l_type == 4 && lock.l_whence == 5) {
+      return 0;
+      }
+      return 1;
+    } 
+  ], [
+    flock_type=bsd
+      AC_DEFINE([HAVE_FLOCK_BSD], [], [Struct flock is BSD-type]) 
+      AC_MSG_RESULT("yes")
+  ], AC_MSG_RESULT("no") )
 
   if test "$flock_type" = "unknown"; then
     AC_MSG_ERROR([Don't know how to define struct flock on this system[,] set --enable-openrasp=no])
