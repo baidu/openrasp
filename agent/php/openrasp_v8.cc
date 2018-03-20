@@ -1,0 +1,418 @@
+/*
+  +----------------------------------------------------------------------+
+  | PHP Version 5                                                        |
+  +----------------------------------------------------------------------+
+  | Copyright (c) 1997-2016 The PHP Group                                |
+  +----------------------------------------------------------------------+
+  | This source file is subject to version 3.01 of the PHP license,      |
+  | that is bundled with this package in the file LICENSE, and is        |
+  | available through the world-wide-web at the following url:           |
+  | http://www.php.net/license/3_01.txt                                  |
+  | If you did not receive a copy of the PHP license and are unable to   |
+  | obtain it through the world-wide-web, please send a note to          |
+  | license@php.net so we can mail you a copy immediately.               |
+  +----------------------------------------------------------------------+
+  | Author:                                                              |
+  +----------------------------------------------------------------------+
+*/
+
+/* $Id$ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+extern "C" {
+#include "php.h"
+#include "php_ini.h"
+#include "ext/standard/info.h"
+#include "php_openrasp.h"
+#include "php_scandir.h"
+}
+#include <sstream>
+#include <fstream>
+#include "openrasp_v8.h"
+#include "js/openrasp_v8_js.h"
+#include "openrasp_ini.h"
+
+using namespace openrasp;
+
+ZEND_DECLARE_MODULE_GLOBALS(openrasp_v8)
+
+openrasp_v8_process_globals openrasp::process_globals;
+
+unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC);
+void openrasp_load_plugins(TSRMLS_D);
+static bool init_isolate(TSRMLS_D);
+static bool shutdown_isolate(TSRMLS_D);
+static v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset = 0);
+
+unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
+{
+    if (!OPENRASP_V8_G(is_env_initialized))
+    {
+        return 0;
+    }
+    v8::Isolate *isolate = OPENRASP_V8_G(isolate);
+    v8::Isolate::Scope isolate_scope(isolate);
+    v8::HandleScope handlescope(isolate);
+    v8::Local<v8::Context> context = OPENRASP_V8_G(context).Get(isolate);
+    v8::Context::Scope context_scope(context);
+    v8::Local<v8::Function> check = OPENRASP_V8_G(check).Get(isolate);
+    v8::Local<v8::Value> type = V8STRING_N(c_type).ToLocalChecked();
+    v8::Local<v8::Value> params = zval_to_v8val(z_params, isolate TSRMLS_CC);
+    v8::Local<v8::Object> request_context = OPENRASP_V8_G(request_context).Get(isolate);
+    v8::Local<v8::Value> argv[]{type, params, request_context};
+
+    TRYCATCH();
+    v8::Local<v8::Value> rst;
+    {
+        TimeoutTask *task = new TimeoutTask(isolate, openrasp_ini.timeout_ms);
+        std::lock_guard<std::timed_mutex> lock(task->GetMtx());
+        process_globals.v8_platform->CallOnBackgroundThread(task);
+        bool avoidwarning = check->Call(context, check, 3, argv).ToLocal(&rst);
+    }
+    if (rst.IsEmpty())
+    {
+        if (try_catch.Message().IsEmpty())
+        {
+#ifdef OPENRASP_DEBUG
+            LOG("Check Timeout");
+#endif
+            plugin_info(ZEND_STRL("Check Timeout") TSRMLS_CC);
+        }
+        else
+        {
+            std::stringstream stream;
+            v8error_to_stream(isolate, try_catch, stream);
+            std::string error = stream.str();
+#ifdef OPENRASP_DEBUG
+            LOG(error);
+#endif
+            plugin_info(error.c_str(), error.length() TSRMLS_CC);
+        }
+        return 0;
+    }
+    if (!rst->IsArray())
+    {
+        return 0;
+    }
+    v8::Local<v8::String> key_action = OPENRASP_V8_G(key_action).Get(isolate);
+    v8::Local<v8::String> key_message = OPENRASP_V8_G(key_message).Get(isolate);
+    v8::Local<v8::String> key_name = OPENRASP_V8_G(key_name).Get(isolate);
+    v8::Local<v8::String> key_confidence = OPENRASP_V8_G(key_confidence).Get(isolate);
+
+    v8::Local<v8::Array> arr = rst.As<v8::Array>();
+    int len = arr->Length();
+    bool is_block = false;
+    for (int i = 0; i < len; i++)
+    {
+        v8::Local<v8::Object> item = arr->Get(i).As<v8::Object>();
+        v8::Local<v8::Value> v8_action = item->Get(key_action);
+        if (!v8_action->IsString())
+        {
+            continue;
+        }
+        int action_hash = v8_action->ToString()->GetIdentityHash();
+        if (OPENRASP_V8_G(action_hash_ignore) == action_hash)
+        {
+            continue;
+        }
+        is_block = is_block || OPENRASP_V8_G(action_hash_block) == action_hash;
+
+        v8::Local<v8::Value> v8_message = item->Get(key_message);
+        v8::Local<v8::Value> v8_name = item->Get(key_name);
+        v8::Local<v8::Value> v8_confidence = item->Get(key_confidence);
+        v8::String::Utf8Value utf_action(v8_action);
+        v8::String::Utf8Value utf_message(v8_message);
+        v8::String::Utf8Value utf_name(v8_name);
+
+        zval z_type, z_action, z_message, z_name, z_confidence;
+        INIT_ZVAL(z_type);
+        INIT_ZVAL(z_action);
+        INIT_ZVAL(z_message);
+        INIT_ZVAL(z_name);
+        INIT_ZVAL(z_confidence);
+        ZVAL_STRING(&z_type, c_type, 0);
+        ZVAL_STRINGL(&z_action, *utf_action, utf_action.length(), 0);
+        ZVAL_STRINGL(&z_message, *utf_message, utf_message.length(), 0);
+        ZVAL_STRINGL(&z_name, *utf_name, utf_name.length(), 0);
+        ZVAL_LONG(&z_confidence, v8_confidence->Int32Value());
+
+        zval result;
+        INIT_ZVAL(result);
+        ALLOC_HASHTABLE(Z_ARRVAL(result));
+        // 设置 zend hash 的析构函数为空
+        // 便于用共享 v8 产生的字符串，减少内存分配
+        zend_hash_init(Z_ARRVAL(result), 0, 0, 0, 0);
+        Z_TYPE(result) = IS_ARRAY;
+        add_assoc_zval(&result, "attack_type", &z_type);
+        add_assoc_zval(&result, "attack_params", z_params);
+        add_assoc_zval(&result, "intercept_state", &z_action);
+        add_assoc_zval(&result, "plugin_message", &z_message);
+        add_assoc_zval(&result, "plugin_name", &z_name);
+        add_assoc_zval(&result, "plugin_confidence", &z_confidence);
+        alarm_info(&result TSRMLS_CC);
+        zval_dtor(&result);
+    }
+    return is_block ? 1 : 0;
+}
+
+static v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset)
+{
+    v8::Isolate *isolate = v8::Isolate::GetCurrent();
+    v8::Isolate::Scope isolate_scope(isolate);
+    v8::EscapableHandleScope handle_scope(isolate);
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    v8::Context::Scope context_scope(context);
+    v8::Local<v8::String> filename;
+    if (!V8STRING_EX(_filename.c_str(), v8::NewStringType::kNormal, _filename.length()).ToLocal(&filename))
+    {
+        return v8::MaybeLocal<v8::Script>();
+    }
+    v8::Local<v8::String> source;
+    if (!V8STRING_EX(_source.c_str(), v8::NewStringType::kNormal, _source.length()).ToLocal(&source))
+    {
+        return v8::MaybeLocal<v8::Script>();
+    }
+    v8::Local<v8::Integer> line_offset = v8::Integer::New(isolate, _line_offset);
+    v8::ScriptOrigin origin(filename, line_offset);
+    v8::MaybeLocal<v8::Script> script = v8::Script::Compile(context, source, &origin);
+    return script;
+}
+
+static bool init_isolate(TSRMLS_D)
+{
+    if (process_globals.is_initialized && !OPENRASP_V8_G(is_isolate_initialized))
+    {
+        OPENRASP_V8_G(create_params).array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
+        OPENRASP_V8_G(isolate) = v8::Isolate::New(OPENRASP_V8_G(create_params));
+    }
+    return OPENRASP_V8_G(is_isolate_initialized) = OPENRASP_V8_G(isolate) != nullptr;
+}
+
+static bool shutdown_isolate(TSRMLS_D)
+{
+    if (OPENRASP_V8_G(is_isolate_initialized))
+    {
+        OPENRASP_V8_G(isolate)->Dispose();
+        delete OPENRASP_V8_G(create_params).array_buffer_allocator;
+        OPENRASP_V8_G(is_isolate_initialized) = false;
+    }
+    return true;
+}
+
+static bool init_js_env(TSRMLS_D)
+{
+    if (OPENRASP_V8_G(is_env_initialized))
+    {
+        return true;
+    }
+    if (!OPENRASP_V8_G(is_isolate_initialized))
+    {
+        return false;
+    }
+    v8::Isolate *isolate = OPENRASP_V8_G(isolate);
+    v8::Isolate::Scope isolate_scope(isolate);
+    v8::HandleScope handle_scope(isolate);
+    v8::Local<v8::Context> context = v8::Context::New(isolate);
+    OPENRASP_V8_G(context).Reset(isolate, context);
+    v8::Context::Scope context_scope(context);
+    v8::Local<v8::Object> global = context->Global();
+    global->Set(V8STRING_I("global").ToLocalChecked(), global);
+
+    TRYCATCH();
+    v8::Local<v8::Function> log =
+        v8::Function::New(isolate, [](const v8::FunctionCallbackInfo<v8::Value> &info) {
+            TSRMLS_FETCH();
+            for (int i = 0; i < info.Length(); i++)
+            {
+                v8::String::Utf8Value message(info[i]);
+                plugin_info(*message, message.length() TSRMLS_CC);
+            }
+        });
+    v8::Local<v8::Object> stdout = v8::Object::New(isolate);
+    stdout->Set(V8STRING_I("write").ToLocalChecked(), log);
+    global->Set(V8STRING_I("stdout").ToLocalChecked(), stdout);
+    global->Set(V8STRING_I("stderr").ToLocalChecked(), stdout);
+
+#define MAKE_JS_SRC_PAIR(name) \
+    std::make_pair<const char *, const char *>((const char *)name##_js, ZEND_TOSTR(name) ".js")
+    std::vector<std::pair<const char *, const char *>> js_src_list = {
+        MAKE_JS_SRC_PAIR(console),
+        MAKE_JS_SRC_PAIR(checkpoint),
+        MAKE_JS_SRC_PAIR(error),
+        MAKE_JS_SRC_PAIR(context),
+        MAKE_JS_SRC_PAIR(sql_tokenize),
+        MAKE_JS_SRC_PAIR(rasp),
+    };
+    for (auto js_src : js_src_list)
+    {
+        v8::Local<v8::Script> script;
+        if (!compile_script(js_src.first, js_src.second).ToLocal(&script) ||
+            script->Run(context).IsEmpty())
+        {
+            std::stringstream stream;
+            v8error_to_stream(isolate, try_catch, stream);
+            std::string error = stream.str();
+            plugin_info(error.c_str(), error.length() TSRMLS_CC);
+            openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize js plugin - %s"), error.c_str());
+            return false;
+        }
+    }
+
+    v8::Local<v8::String> key_action = V8STRING_I("action").ToLocalChecked();
+    v8::Local<v8::String> key_message = V8STRING_I("message").ToLocalChecked();
+    v8::Local<v8::String> key_name = V8STRING_I("name").ToLocalChecked();
+    v8::Local<v8::String> key_confidence = V8STRING_I("confidence").ToLocalChecked();
+    v8::Local<v8::Object> RASP = global->Get(context, V8STRING_I("RASP").ToLocalChecked())
+                                     .ToLocalChecked()
+                                     .As<v8::Object>();
+    v8::Local<v8::Function> check = RASP->Get(context, V8STRING_I("check").ToLocalChecked())
+                                        .ToLocalChecked()
+                                        .As<v8::Function>();
+
+    OPENRASP_V8_G(key_action).Reset(isolate, key_action);
+    OPENRASP_V8_G(key_message).Reset(isolate, key_message);
+    OPENRASP_V8_G(key_name).Reset(isolate, key_name);
+    OPENRASP_V8_G(key_confidence).Reset(isolate, key_confidence);
+    OPENRASP_V8_G(RASP).Reset(isolate, RASP);
+    OPENRASP_V8_G(check).Reset(isolate, check);
+    OPENRASP_V8_G(request_context).Reset(isolate, RequestContext::New(isolate));
+
+    OPENRASP_V8_G(action_hash_ignore) = V8STRING_N("ignore").ToLocalChecked()->GetIdentityHash();
+    OPENRASP_V8_G(action_hash_log) = V8STRING_N("log").ToLocalChecked()->GetIdentityHash();
+    OPENRASP_V8_G(action_hash_block) = V8STRING_N("block").ToLocalChecked()->GetIdentityHash();
+
+#ifdef HAVE_NATIVE_ANTLR4
+    v8::Local<v8::Function> sql_tokenize =
+        v8::Function::New(isolate, [](const v8::FunctionCallbackInfo<v8::Value> &info) {
+            static TokenizeErrorListener tokenizeErrorListener;
+            if (info.Length() >= 1 && info[0]->IsString())
+            {
+                antlr4::ANTLRInputStream input(*v8::String::Utf8Value(info[0]));
+                SQLLexer lexer(&input);
+                lexer.removeErrorListeners();
+                lexer.addErrorListener(&tokenizeErrorListener);
+                antlr4::CommonTokenStream output(&lexer);
+                output.fill();
+                auto tokens = output.getTokens();
+                int length = tokens.size();
+                v8::Isolate *isolate = info.GetIsolate();
+                v8::Local<v8::Array> arr = v8::Array::New(isolate, length);
+                for (int i = 0; i < length - 1; i++)
+                {
+                    v8::Local<v8::String> token;
+                    if (V8STRING_N(tokens[i]->getText().c_str()).ToLocal(&token))
+                    {
+                        arr->Set(i, token);
+                    }
+                }
+                info.GetReturnValue().Set(arr);
+            }
+        });
+    RASP->Set(V8STRING_I("sql_tokenize").ToLocalChecked(), sql_tokenize);
+#endif
+
+    for (auto plugin_src : process_globals.plugin_src_list)
+    {
+        v8::Local<v8::Script> script;
+        if (!compile_script("(function(){\n" + plugin_src.source + "\n})()", plugin_src.filename, -1).ToLocal(&script) ||
+            script->Run(context).IsEmpty())
+        {
+            std::stringstream stream;
+            v8error_to_stream(isolate, try_catch, stream);
+            std::string error = stream.str();
+            plugin_info(error.c_str(), error.length() TSRMLS_CC);
+        }
+    }
+    return OPENRASP_V8_G(is_env_initialized) = true;
+}
+
+void openrasp_load_plugins(TSRMLS_D)
+{
+    std::vector<openrasp_v8_plugin_src> plugin_src_list;
+    std::string plugin_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("plugins"));
+    dirent **ent = nullptr;
+    int n_plugin = php_scandir(plugin_path.c_str(),
+                               &ent,
+#ifdef HAVE_DIRENT_H
+                               [](const dirent *entry) -> int { return entry->d_type == DT_REG; },
+#else
+                               nullptr,
+#endif
+                               nullptr);
+    for (int i = 0; i < n_plugin; i++)
+    {
+        const char *p = strrchr(ent[i]->d_name, '.');
+        if (p != nullptr && strcasecmp(p, ".js") == 0)
+        {
+            std::string filename(ent[i]->d_name);
+            std::ifstream file(plugin_path + DEFAULT_SLASH + filename);
+            std::streampos beg = file.tellg();
+            file.seekg(0, std::ios::end);
+            std::streampos end = file.tellg();
+            file.seekg(0, std::ios::beg);
+            // plugin file size limitation: 10 MB
+            if (10 * 1024 * 1024 >= end - beg)
+            {
+                std::string source((std::istreambuf_iterator<char>(file)),
+                                   std::istreambuf_iterator<char>());
+                plugin_src_list.push_back(openrasp_v8_plugin_src{filename, source});
+            }
+            else
+            {
+                openrasp_error(E_WARNING, CONFIG_ERROR, _("The size of plugin file '%s' should be less than 10 MB, skiped"), filename.c_str());
+            }
+        }
+        free(ent[i]);
+    }
+    free(ent);
+    process_globals.plugin_src_list = std::move(plugin_src_list);
+}
+
+PHP_GINIT_FUNCTION(openrasp_v8)
+{
+#ifdef ZTS
+    new (openrasp_v8_globals) _zend_openrasp_v8_globals;
+#endif
+    init_isolate(TSRMLS_C);
+    init_js_env(TSRMLS_C);
+}
+
+PHP_GSHUTDOWN_FUNCTION(openrasp_v8)
+{
+    shutdown_isolate(TSRMLS_C);
+#ifdef ZTS
+    openrasp_v8_globals->~_zend_openrasp_v8_globals();
+#endif
+}
+
+PHP_MINIT_FUNCTION(openrasp_v8)
+{
+    openrasp_load_plugins(TSRMLS_C);
+    process_globals.v8_platform = new V8Platform();
+    v8::V8::InitializePlatform(process_globals.v8_platform);
+    // It can be called multiple times,
+    // but intern code initializes v8 only once
+    v8::V8::Initialize();
+    process_globals.is_initialized = true;
+    ZEND_INIT_MODULE_GLOBALS(openrasp_v8, PHP_GINIT(openrasp_v8), PHP_GSHUTDOWN(openrasp_v8));
+    return OPENRASP_V8_G(is_env_initialized) ? SUCCESS : FAILURE;
+}
+
+PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
+{
+    ZEND_SHUTDOWN_MODULE_GLOBALS(openrasp_v8, PHP_GSHUTDOWN(openrasp_v8));
+    if (process_globals.is_initialized)
+    {
+        // Disposing v8 is permanent, it cannot be reinitialized,
+        // it should generally not be necessary to dispose v8 before exiting a process,
+        // so skip this step for module graceful reload
+        // v8::V8::Dispose();
+        v8::V8::ShutdownPlatform();
+        delete process_globals.v8_platform;
+        process_globals.is_initialized = false;
+    }
+    return SUCCESS;
+}
