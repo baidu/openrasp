@@ -53,7 +53,7 @@ if test "$PHP_OPENRASP" != "no"; then
         AC_MSG_RESULT([no])
         AC_MSG_NOTICE([porting to other system may fail])
       else
-        OPENRASP_LIBS="$STATIC_LIBCXX $OPENRASP_LIBS"
+        OPENRASP_LIBS="$OPENRASP_LIBS $STATIC_LIBCXX"
         AC_MSG_RESULT([yes])
       fi
       ;;
