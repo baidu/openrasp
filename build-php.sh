@@ -53,7 +53,7 @@ cp ../../plugins/official/plugin.js "$output_base"/plugins
 
 # 打包
 cd "$script_base"
-tar --numeric-owner --group=0 --owner=0 -cjvf "$script_base/rasp-php.tar.bz2" "$output_base"
+tar --numeric-owner --group=0 --owner=0 -cjvf "$script_base/rasp-php.tar.bz2" "$(basename "$output_base")"
 
 
 
