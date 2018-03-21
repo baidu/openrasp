@@ -40,27 +40,24 @@ if test "$PHP_OPENRASP" != "no"; then
   V8_LIBS="$V8_PATH/lib/libv8_{base,libsampler,libbase,snapshot}.a"
   case $host_os in
     darwin* )
-      OPENRASP_LIBS="$V8_LIBS $OPENRASP_LIBS"
+      OPENRASP_LIBS="-Wl,$V8_LIBS $OPENRASP_LIBS"
       ;;
     * )
       PHP_ADD_LIBRARY(rt, , OPENRASP_SHARED_LIBADD)
       PHP_ADD_LIBRARY(dl, , OPENRASP_SHARED_LIBADD)
-      OPENRASP_LIBS="-Wl,--whole-archive $V8_LIBS -Wl,--no-whole-archive -pthread $OPENRASP_LIBS"
-
-      AC_MSG_CHECKING([for static libstdc++ library])
-      STATIC_LIBCXX=`$CC -print-file-name=libstdc++.a`
-      if test $STATIC_LIBCXX == "libstdc++.a"; then
-        AC_MSG_RESULT([no])
-        AC_MSG_NOTICE([porting to other system may fail])
-      else
-        OPENRASP_LIBS="$OPENRASP_LIBS $STATIC_LIBCXX"
-        AC_MSG_RESULT([yes])
-      fi
+      OPENRASP_LIBS="-Wl,--whole-archive -Wl,$V8_LIBS -Wl,--no-whole-archive -pthread $OPENRASP_LIBS"
       ;;
   esac
 
+  AC_MSG_CHECKING([for xxd])
+  if command -v xxd >/dev/null 2>&1; then
+    AC_MSG_RESULT([found])
+  else
+    AC_MSG_RESULT([not found])
+    AC_MSG_ERROR([Please install xxd])
+  fi
+
   AC_CONFIG_COMMANDS([convert-*.js-to-openrasp_v8_js.h], [
-    command -v xxd >/dev/null 2>&1 || { echo "xxd it's not installed." >&2; exit 1; }
     pushd $builddir >/dev/null 2>&1
     xxd -i console.js > openrasp_v8_js.h
     xxd -i checkpoint.js >> openrasp_v8_js.h
@@ -165,6 +162,17 @@ if test "$PHP_OPENRASP" != "no"; then
     * )
       ;;
   esac
+
+  AC_MSG_CHECKING([for static libstdc++ library])
+  STATIC_LIBSTDCXX=`$CXX -print-file-name=libstdc++.a`
+  if test $STATIC_LIBSTDCXX == "libstdc++.a"; then
+    OPENRASP_LIBS="$OPENRASP_LIBS -lstdc++"
+    AC_MSG_RESULT([no])
+    AC_MSG_NOTICE([porting to other system may fail])
+  else
+    OPENRASP_LIBS="$OPENRASP_LIBS -Wl,$STATIC_LIBSTDCXX"
+    AC_MSG_RESULT([yes])
+  fi
 
   EXTRA_LIBS="$OPENRASP_LIBS $EXTRA_LIBS"
   OPENRASP_SHARED_LIBADD="$OPENRASP_LIBS $OPENRASP_SHARED_LIBADD"
