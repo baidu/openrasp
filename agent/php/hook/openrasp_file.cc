@@ -47,7 +47,7 @@ void hook_file(INTERNAL_FUNCTION_PARAMETERS)
 	zval *zcontext = NULL;
 
 	if (openrasp_check_type_ignored(ZEND_STRL("readFile") TSRMLS_CC)
-    || zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p|lr!", &filename, &filename_len, &flags, &zcontext) == FAILURE) {
+    || zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|lr!", &filename, &filename_len, &flags, &zcontext) == FAILURE) {
 		return;
 	}
     use_include_path = flags & PHP_FILE_USE_INCLUDE_PATH;
@@ -62,7 +62,7 @@ void hook_readfile(INTERNAL_FUNCTION_PARAMETERS)
 	zval *zcontext = NULL;
 
 	if (openrasp_check_type_ignored(ZEND_STRL("readFile") TSRMLS_CC)
-    || zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p|br!", &filename, &filename_len, &use_include_path, &zcontext) == FAILURE) {
+    || zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|br!", &filename, &filename_len, &use_include_path, &zcontext) == FAILURE) {
 		return;
 	}
     check_file_operation("readFile", filename, filename_len, use_include_path TSRMLS_CC);
@@ -78,7 +78,7 @@ void hook_file_get_contents(INTERNAL_FUNCTION_PARAMETERS)
 	zval *zcontext = NULL;
 
 	if (openrasp_check_type_ignored(ZEND_STRL("readFile") TSRMLS_CC)
-    || zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p|br!ll", &filename, &filename_len, &use_include_path, &zcontext, &offset, &maxlen) == FAILURE) {
+    || zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|br!ll", &filename, &filename_len, &use_include_path, &zcontext, &offset, &maxlen) == FAILURE) {
 		return;
 	}
     check_file_operation("readFile", filename, filename_len, use_include_path TSRMLS_CC);
@@ -143,7 +143,7 @@ void hook_fopen(INTERNAL_FUNCTION_PARAMETERS)
 	zend_bool use_include_path = 0;
 	zval *zcontext = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ps|br", &filename, &filename_len, &mode, &mode_len, &use_include_path, &zcontext) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|br", &filename, &filename_len, &mode, &mode_len, &use_include_path, &zcontext) == FAILURE) {
 		return;
 	}
     const char *type = mode_to_type(mode);
@@ -160,7 +160,7 @@ void hook_splfileobject___construct_ex(INTERNAL_FUNCTION_PARAMETERS)
 	zend_bool use_include_path = 0;
 	zval *zcontext = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p|sbr", &filename, &filename_len, &mode, &mode_len, &use_include_path, &zcontext) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|sbr", &filename, &filename_len, &mode, &mode_len, &use_include_path, &zcontext) == FAILURE) {
 		return;
 	}
     const char *type = mode_to_type(mode);
