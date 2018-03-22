@@ -16,7 +16,8 @@
 
 package com.fuxi.javaagent.plugin.checker.local;
 
-import com.baidu.rasp.TokenGenerator;
+
+import com.baidu.openrasp.TokenGenerator;
 import com.fuxi.javaagent.HookHandler;
 import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.plugin.antlrlistener.TokenizeErrorListener;

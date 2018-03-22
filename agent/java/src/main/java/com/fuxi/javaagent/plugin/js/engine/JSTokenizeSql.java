@@ -16,7 +16,8 @@
 
 package com.fuxi.javaagent.plugin.js.engine;
 
-import com.baidu.rasp.TokenGenerator;
+
+import com.baidu.openrasp.TokenGenerator;
 import com.fuxi.javaagent.plugin.antlrlistener.TokenizeErrorListener;
 import org.mozilla.javascript.BaseFunction;
 import org.mozilla.javascript.Context;
