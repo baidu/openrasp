@@ -261,11 +261,11 @@ if (RASP.get_jsengine() !== 'v8') {
                     var num2 = parseInt(op2)
 
                     if (! isNaN(num1) && ! isNaN(num2)) {
-                        // 允许 1=1, 2=0 这样的常量对比以避免误报
+                        // 允许 1=1, 2=0 这样的常量对比以避免误报，只要有一个小于10就先忽略掉
                         // 来自 wooyun-2015-0131345 的截图
                         // 
                         // SQLmap 是随机4位数字，不受影响
-                        if (num1 < 10 && num2 < 10 && tokens_lc[i][0] === '=')
+                        if (tokens_lc[i][0] === '=' && (num1 < 10 || num2 < 10))
                         {
                             continue;
                         }
