@@ -172,21 +172,21 @@ void hook_splfileobject___construct_ex(INTERNAL_FUNCTION_PARAMETERS)
 
 void hook_copy(INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval **source, **dest;
-    int argc = MIN(2, ZEND_NUM_ARGS());
-    if (!openrasp_check_type_ignored(ZEND_STRL("writeFile") TSRMLS_CC) &&
-        argc > 1 &&
-        zend_get_parameters_ex(argc, &source, &dest) == SUCCESS &&
-        Z_TYPE_PP(source) == IS_STRING &&
-        Z_TYPE_PP(dest) == IS_STRING)
-    {
+    char *source, *target;
+	int source_len, target_len;
+	zval *zcontext = NULL;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|r", &source, &source_len, &target, &target_len, &zcontext) == FAILURE) {
+		return;
+	}
+
+    if (source && target && strlen(source) == source_len && strlen(target) == target_len) {
+        char *real_path = php_resolve_path(target, target_len, NULL TSRMLS_CC);
         zval *params;
         MAKE_STD_ZVAL(params);
         array_init(params);
-        add_assoc_zval(params, "path", *dest);
-        Z_ADDREF_P(*dest);
-        add_assoc_zval(params, "realpath", *dest);
-        Z_ADDREF_P(*dest);
+        add_assoc_string(params, "path", target, 1);
+        add_assoc_string(params, "realpath", real_path ? real_path : target, 1);
         check("writeFile", params TSRMLS_CC);
-    }
+	}
 }
