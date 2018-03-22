@@ -137,13 +137,13 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                 String op2 = tokens[i + 1];
                                 if (StringUtils.isNumeric(op1) && StringUtils.isNumeric(op2)) {
                                     try {
-                                        if (Double.parseDouble(op1) < 10 && Double.parseDouble(op2) < 10) {
+                                        if (Double.parseDouble(op1) < 10 || Double.parseDouble(op2) < 10) {
                                             continue;
                                         }
                                     } catch (Exception e) {
                                         // ignore
                                     }
-                                    message = "禁止常量比较操作";
+                                    message = "禁止常量比较操作: " + op1 + " vs " + op2;
                                     break;
                                 }
                             } else if (i > 0 && tokens[i].indexOf('(') == 0
