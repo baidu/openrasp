@@ -570,8 +570,8 @@ int plugin_info(const char *message, int message_len TSRMLS_DC) {
 /* 用于报警的info
 */
 int alarm_info(zval *params_result TSRMLS_DC) {
-    assert(Z_TYPE_P(params_result) != IS_ARRAY);
-    assert(!OPENRASP_LOG_G(in_request_process));
+    assert(Z_TYPE_P(params_result) == IS_ARRAY);
+    assert(OPENRASP_LOG_G(in_request_process));
     int alarm_result = FAILURE;
     char *event_time = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 0 TSRMLS_CC);
     add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "event_time", event_time, 1);
@@ -608,7 +608,7 @@ int alarm_info(zval *params_result TSRMLS_DC) {
 /* 用于基线的info
 */
 int policy_info(zval *params_result TSRMLS_DC) {
-    assert(Z_TYPE_P(params_result) != IS_ARRAY);
+    assert(Z_TYPE_P(params_result) == IS_ARRAY);
     if (!OPENRASP_LOG_G(in_request_process))
     {        
         INIT_LOGGER_IF_NEED(policy);
