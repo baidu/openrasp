@@ -270,7 +270,7 @@ if (RASP.get_jsengine() !== 'v8') {
                             continue;
                         }
 
-                        reason = '禁止常量比较操作'
+                        reason = '禁止常量比较操作: ' + num1 + ' vs ' + num2
                         break
                     }                    
                 } else if (i > 0 && tokens_lc[i][0] === '(') {
