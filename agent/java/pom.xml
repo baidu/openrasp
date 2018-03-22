@@ -27,12 +27,13 @@
         </dependency>
         <dependency>
             <groupId>com.fuxi.javaagent</groupId>
-            <artifactId>sqlparser</artifactId>
-            <version>1.4</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fuxi.javaagent</groupId>
             <artifactId>rhino-shim</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.baidu.openrasp/sqlparser -->
+        <dependency>
+            <groupId>com.baidu.openrasp</groupId>
+            <artifactId>sqlparser</artifactId>
             <version>1.0</version>
         </dependency>
         <dependency>
