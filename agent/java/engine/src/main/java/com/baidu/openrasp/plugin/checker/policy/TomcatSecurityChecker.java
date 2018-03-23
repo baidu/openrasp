@@ -67,7 +67,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
                     System.out.println("[OpenRASP] Tomcat security baseline - inspection completed");
                 }
             } else {
-                LOGGER.error(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+                LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
                         "can not find tomcat base directory"));
             }
         } catch (Exception e) {
@@ -83,7 +83,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
     private void checkHttpOnlyIsOpen(String tomcatBaseDir, List<EventInfo> infos) {
         File contextFile = new File(tomcatBaseDir + File.separator + "conf/context.xml");
         if (!(contextFile.exists() && contextFile.canRead())) {
-            LOGGER.error(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+            LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
                     "can not load file conf/context.xml"));
             return;
         }
@@ -139,7 +139,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
     private void checkManagerPassword(String tomcatBaseDir, List<EventInfo> infos) {
         File userFile = new File(tomcatBaseDir + File.separator + "conf/tomcat-users.xml");
         if (!(userFile.exists() && userFile.canRead())) {
-            LOGGER.warn(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+            LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
                     "can not load file conf/tomcat-users.xml"));
             return;
         }
@@ -176,7 +176,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
     private void checkDirectoryListing(String tomcatBaseDir, List<EventInfo> infos) {
         File webFile = new File(tomcatBaseDir + File.separator + "conf/web.xml");
         if (!(webFile.exists() && webFile.canRead())) {
-            LOGGER.warn(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+            LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
                     "can not load file conf/web.xml"));
             return;
         }
@@ -279,13 +279,11 @@ public class TomcatSecurityChecker extends PolicyChecker {
 
     private void handleException(Exception e) {
         e.printStackTrace();
-        LOGGER.error(getJsonFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL, e.getMessage()), e);
+        LOGGER.error(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL, e.getMessage()), e);
     }
 
-    private String getJsonFormattedMessage(String title, String message) {
-        JsonObject messageObject = new JsonObject();
-        messageObject.addProperty(title, message);
-        return messageObject.toString();
+    private String getFormattedMessage(String title, String message) {
+        return title + ": " + message;
     }
 
 }

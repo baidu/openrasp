@@ -17,13 +17,13 @@
 package com.baidu.openrasp.plugin.checker.local;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.TokenGenerator;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.antlrlistener.TokenizeErrorListener;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.js.JsChecker;
 import com.baidu.openrasp.plugin.info.AttackInfo;
 import com.baidu.openrasp.plugin.info.EventInfo;
-import com.baidu.rasp.TokenGenerator;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 
@@ -136,13 +136,13 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                 String op2 = tokens[i + 1];
                                 if (StringUtils.isNumeric(op1) && StringUtils.isNumeric(op2)) {
                                     try {
-                                        if (Double.parseDouble(op1) < 10 && Double.parseDouble(op2) < 10) {
+                                        if (Double.parseDouble(op1) < 10 || Double.parseDouble(op2) < 10) {
                                             continue;
                                         }
                                     } catch (Exception e) {
                                         // ignore
                                     }
-                                    message = "禁止常量比较操作";
+                                    message = "禁止常量比较操作: " + op1 + " vs " + op2;
                                     break;
                                 }
                             } else if (i > 0 && tokens[i].indexOf('(') == 0
