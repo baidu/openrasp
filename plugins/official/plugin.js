@@ -41,6 +41,7 @@ var forcefulBrowsing = {
         '/',
         '/home',
         '/var/log',
+        '/private/var/log',
         '/proc',
         '/sys'
     ],
@@ -121,10 +122,8 @@ if (RASP.get_jsengine() !== 'v8') {
                 'is_srvrolemember',
                 // 报错注入
                 'updatexml', 'extractvalue',
-                // 盲注
-                'hex',
-                // 可能误报，暂不开启 - 批量验证中
-                // 'char', 'chr', 'mid', 'ord', 'ascii', 'bin'
+                // 盲注函数，如有误报可删掉一些函数
+                'hex', 'char', 'chr', 'mid', 'ord', 'ascii', 'bin'                
             ]
         },
         // SSRF - 是否允许访问 aws metadata
@@ -209,6 +208,12 @@ if (RASP.get_jsengine() !== 'v8') {
                 'updatexml':        true,
                 'extractvalue':     true,
                 'hex':              true,
+                'char':             true,
+                'chr':              true, 
+                'mid':              true,
+                'ord':              true,
+                'ascii':            true,                
+                'bin':              true
             }
             var tokens_lc = tokens.map(v => v.toLowerCase())
 
@@ -261,8 +266,7 @@ if (RASP.get_jsengine() !== 'v8') {
                     var num2 = parseInt(op2)
 
                     if (! isNaN(num1) && ! isNaN(num2)) {
-                        // 允许 1=1, 2=0 这样的常量对比以避免误报，只要有一个小于10就先忽略掉
-                        // 来自 wooyun-2015-0131345 的截图
+                        // 允许 1=1, 2=0, 201801010=0 这样的常量对比以避免误报，只要有一个小于10就先忽略掉
                         // 
                         // SQLmap 是随机4位数字，不受影响
                         if (tokens_lc[i][0] === '=' && (num1 < 10 || num2 < 10))
@@ -291,7 +295,7 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
-        // 算法3: 简单正则匹配（即将移除）
+        // 算法3: 简单正则匹配 DEMO
         if (0) {
             var sqlRegex = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
 
