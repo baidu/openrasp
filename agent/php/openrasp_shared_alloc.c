@@ -270,11 +270,6 @@ int openrasp_shared_hash_exist(ulong hash, char *date_tag)
 			shared_segment_globals->sql_connection_hash[shared_segment_globals->size] = hash;
 			shared_segment_globals->size += 1;
 		}
-		else
-		{
-			openrasp_error(E_WARNING, SHM_ERROR, _("%d sql-connection items have been stored in shared memory, the excess will be ignored."),
-			SQL_CONNECTION_ARRAY_SIZE);
-		}
 		return 0;
 	}
 }
