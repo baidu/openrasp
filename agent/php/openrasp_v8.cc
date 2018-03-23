@@ -334,35 +334,33 @@ void openrasp_load_plugins(TSRMLS_D)
     std::vector<openrasp_v8_plugin_src> plugin_src_list;
     std::string plugin_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("plugins"));
     dirent **ent = nullptr;
-    int n_plugin = php_scandir(plugin_path.c_str(),
-                               &ent,
-#ifdef HAVE_DIRENT_H
-                               [](const dirent *entry) -> int { return entry->d_type == DT_REG; },
-#else
-                               nullptr,
-#endif
-                               nullptr);
+    int n_plugin = php_scandir(plugin_path.c_str(), &ent, nullptr, nullptr);
     for (int i = 0; i < n_plugin; i++)
     {
         const char *p = strrchr(ent[i]->d_name, '.');
         if (p != nullptr && strcasecmp(p, ".js") == 0)
         {
             std::string filename(ent[i]->d_name);
-            std::ifstream file(plugin_path + DEFAULT_SLASH + filename);
-            std::streampos beg = file.tellg();
-            file.seekg(0, std::ios::end);
-            std::streampos end = file.tellg();
-            file.seekg(0, std::ios::beg);
-            // plugin file size limitation: 10 MB
-            if (10 * 1024 * 1024 >= end - beg)
+            std::string filepath(plugin_path + DEFAULT_SLASH + filename);
+            struct stat sb;
+            if (VCWD_STAT(filepath.c_str(), &sb) == 0 && (sb.st_mode & S_IFREG) != 0)
             {
-                std::string source((std::istreambuf_iterator<char>(file)),
-                                   std::istreambuf_iterator<char>());
-                plugin_src_list.push_back(openrasp_v8_plugin_src{filename, source});
-            }
-            else
-            {
-                openrasp_error(E_WARNING, CONFIG_ERROR, _("The size of plugin file '%s' should be less than 10 MB, skiped"), filename.c_str());
+                std::ifstream file(filepath);
+                std::streampos beg = file.tellg();
+                file.seekg(0, std::ios::end);
+                std::streampos end = file.tellg();
+                file.seekg(0, std::ios::beg);
+                // plugin file size limitation: 10 MB
+                if (10 * 1024 * 1024 >= end - beg)
+                {
+                    std::string source((std::istreambuf_iterator<char>(file)),
+                                       std::istreambuf_iterator<char>());
+                    plugin_src_list.push_back(openrasp_v8_plugin_src{filename, source});
+                }
+                else
+                {
+                    openrasp_error(E_WARNING, CONFIG_ERROR, _("The size of plugin file '%s' should be less than 10 MB, skiped"), filename.c_str());
+                }
             }
         }
         free(ent[i]);

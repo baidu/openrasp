@@ -31,20 +31,21 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
             monitor = fsw::monitor_factory::create_monitor(
                 fsw_monitor_type::system_default_monitor_type, paths,
                 [](const std::vector<fsw::event> &events, void *ctx) {
-                    if (raise(supported_sapi->second))
+                    auto evt = std::find_if(events.begin(), events.end(), [](fsw::event evt) {
+                        auto flags = evt.get_flags();
+                        auto flag = std::find_if(flags.begin(), flags.end(), [](fsw_event_flag flag) {
+                            return flag == fsw_event_flag::IsDir || flag == fsw_event_flag::IsSymLink;
+                        });
+                        return flag == flags.end();
+                    });
+                    if (evt != events.end())
                     {
-                        openrasp_error(E_WARNING, CONFIG_ERROR, _("Failed to reload %s"), sapi_module.name);
+                        if (raise(supported_sapi->second))
+                        {
+                            openrasp_error(E_WARNING, CONFIG_ERROR, _("Failed to reload %s"), sapi_module.name);
+                        }
                     }
                 } TSRMLS_CC);
-            std::vector<fsw_event_type_filter> event_filters;
-            event_filters.push_back(fsw_event_type_filter{fsw_event_flag::IsFile});
-            event_filters.push_back(fsw_event_type_filter{fsw_event_flag::Created});
-            event_filters.push_back(fsw_event_type_filter{fsw_event_flag::MovedFrom});
-            event_filters.push_back(fsw_event_type_filter{fsw_event_flag::MovedTo});
-            event_filters.push_back(fsw_event_type_filter{fsw_event_flag::Removed});
-            event_filters.push_back(fsw_event_type_filter{fsw_event_flag::Renamed});
-            event_filters.push_back(fsw_event_type_filter{fsw_event_flag::Updated});
-            monitor->set_event_type_filters(event_filters);
 
             std::vector<fsw::monitor_filter> path_filters;
             path_filters.push_back(fsw::monitor_filter{".*", fsw_filter_type::filter_exclude, false, false});
