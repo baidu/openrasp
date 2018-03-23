@@ -117,7 +117,7 @@ if (array_key_exists("d", $options) && !empty($options["d"])) {
 } else if (array_key_exists("h", $options)) {
 	show_help();
 } else {
-	log_tips(ERROR, "Fail to parse arguments, please use \"-h\" to check help information.");
+	log_tips(ERROR, "Please use \"-h\" to check help information.");
 }
 
 major_tips('copy openrasp lib to extension_dir');
