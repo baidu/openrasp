@@ -52,6 +52,9 @@ mkdir -p "$output_base"/{conf,assets,logs,locale,plugins}
 cp ../../plugins/official/plugin.js "$output_base"/plugins
 cp ../../rasp-install/php/install.php "$output_base"
 
+cd po
+tar cvf - `find . -name  \*.mo` | (cd "$output_base"/locale; tar xvf -)
+
 # 打包
 cd "$script_base"
 tar --numeric-owner --group=0 --owner=0 -cjvf "$script_base/rasp-php.tar.bz2" "$(basename "$output_base")"

@@ -183,7 +183,7 @@ static bool make_openrasp_root_dir(TSRMLS_D)
 #ifdef HAVE_GETTEXT
     if (nullptr != setlocale(LC_ALL, openrasp_ini.locale ? openrasp_ini.locale : ""))
     {
-        std::string locale_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + "locale");
+        std::string locale_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + "locale" + DEFAULT_SLASH);
         if (!bindtextdomain(GETTEXT_PACKAGE, locale_path.c_str())) {
             openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to bindtextdomain - %s"), strerror(errno));
         }
