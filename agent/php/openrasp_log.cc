@@ -362,7 +362,7 @@ static int openrasp_log_by_file(rasp_logger_entry *logger, char *message, int me
     if (if_need_update_formatted_file_suffix(logger, now, message_len TSRMLS_CC))
     {
         efree(OPENRASP_LOG_G(formatted_date_suffix));
-        OPENRASP_LOG_G(formatted_date_suffix) = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now, 0 TSRMLS_CC);
+        OPENRASP_LOG_G(formatted_date_suffix) = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now, 1 TSRMLS_CC);
         if (logger->stream_log)
         {
             php_stream_close(logger->stream_log);
@@ -387,7 +387,7 @@ static int openrasp_log_by_syslog(rasp_logger_entry *logger, severity_level leve
     int   priority        = 0;
 
     long  now             = (long)time(NULL);
-    time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), now, 0 TSRMLS_CC);
+    time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), now, 1 TSRMLS_CC);
     priority = openrasp_ini.syslog_facility * 8 + level_int;
     syslog_info_len = spprintf(&syslog_info, 0, "<%d>%s %s: %s", priority, time_RFC3339, host_name, message);
     efree(time_RFC3339);
@@ -498,7 +498,7 @@ static int base_log(rasp_logger_entry *logger, severity_level level_int, char *m
         if (logger->appender & FILE_APPENDER)
         {
             char *file_path = NULL;
-            char *tmp_formatted_date_suffix = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), (long)time(NULL), 0 TSRMLS_CC);
+            char *tmp_formatted_date_suffix = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), (long)time(NULL), 1 TSRMLS_CC);
             spprintf(&file_path, 0, "%s%clogs%c%s%c%s.log.%s", openrasp_ini.root_dir, DEFAULT_SLASH, DEFAULT_SLASH, 
                 logger->name, DEFAULT_SLASH, logger->name, tmp_formatted_date_suffix);
 #ifndef _WIN32
@@ -543,7 +543,7 @@ int rasp_info(const char *message, int message_len TSRMLS_DC) {
         INIT_LOGGER_IF_NEED(rasp);
     }
     char *rasp_info                 = NULL;    
-    char *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 0 TSRMLS_CC);
+    char *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
     int   rasp_info_len = spprintf(&rasp_info, 0, "%s   %s\n", time_RFC3339, message);
     int  rasp_result = base_info(&OPENRASP_LOG_G(rasp_logger), rasp_info, rasp_info_len TSRMLS_CC);
     efree(time_RFC3339);
@@ -559,7 +559,7 @@ int plugin_info(const char *message, int message_len TSRMLS_DC) {
         INIT_LOGGER_IF_NEED(plugin);
     }
     char *plugin_info                 = NULL;    
-    char *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 0 TSRMLS_CC);
+    char *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
     int  plugin_info_len = spprintf(&plugin_info, 0, "%s   %s\n", time_RFC3339, message);
     int  plugin_result = base_info(&OPENRASP_LOG_G(plugin_logger), plugin_info, plugin_info_len TSRMLS_CC);
     efree(time_RFC3339);
@@ -573,7 +573,7 @@ int alarm_info(zval *params_result TSRMLS_DC) {
     assert(Z_TYPE_P(params_result) == IS_ARRAY);
     assert(OPENRASP_LOG_G(in_request_process));
     int alarm_result = FAILURE;
-    char *event_time = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 0 TSRMLS_CC);
+    char *event_time = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
     add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "event_time", event_time, 1);
 
     zval *trace = NULL;
@@ -616,7 +616,7 @@ int policy_info(zval *params_result TSRMLS_DC) {
     }
     
     int policy_result = FAILURE;
-    char *event_time = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 0 TSRMLS_CC);
+    char *event_time = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
     add_assoc_string(OPENRASP_LOG_G(policy_request_info), "event_time", event_time, 1);
     zval *trace = NULL;
     MAKE_STD_ZVAL(trace);
@@ -774,7 +774,7 @@ PHP_RINIT_FUNCTION(openrasp_log)
 {
     OPENRASP_LOG_G(in_request_process) = 1;
 	long now = (long)time(NULL);
-    OPENRASP_LOG_G(formatted_date_suffix) = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now, 0 TSRMLS_CC);
+    OPENRASP_LOG_G(formatted_date_suffix) = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now, 1 TSRMLS_CC);
     init_openrasp_loggers(TSRMLS_C);
     init_alarm_request_info(TSRMLS_C);
     init_policy_request_info(TSRMLS_C);
