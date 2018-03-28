@@ -55,6 +55,20 @@ function get_ini_scanned_path() {
 	}
 }
 
+function startsWith($haystack, $needle)
+{
+     $length = strlen($needle);
+     return (substr($haystack, 0, $length) === $needle);
+}
+
+function endsWith($haystack, $needle)
+{
+    $length = strlen($needle);
+
+    return $length === 0 || 
+    (substr($haystack, -$length) === $needle);
+}
+
 function zip_data($source, $destination) {
     if (extension_loaded('zip') === true) {
         if (file_exists($source) === true) {
@@ -149,7 +163,7 @@ Options:
 	
 	--ignore-ini   		skip update openrasp.ini or php.ini.
 
-	--ignore-plugin   	skip update JavaScript plugins.
+	--ignore-plugin   	skip update official JavaScript plugins.
 
     -h          		This Help.
 
@@ -377,16 +391,35 @@ foreach($sub_folders as $key => $value) {
 		}
 		if ($key === "plugins") {
 			if (array_key_exists("ignore-plugin", $options)) {
-				major_tips('with \"--ignore-plugin\", skip javascript plugin modification.');
+				major_tips('with \"--ignore-plugin\", skip official javascript plugin modification.');
 			} else {
-				major_tips('modify javascript plugin');
-				$zip_path = dirname($sub_item).DIRECTORY_SEPARATOR.'plugins_backup.zip';
-				if (zip_data($sub_item, $zip_path)) {
-					log_tips(INFO, $sub_item.' backup to '.$zip_path);
-				}
-				if (file_exists(__DIR__.DIRECTORY_SEPARATOR.$key)) {
-					clear_dir($sub_item);
-					recurse_copy(__DIR__.DIRECTORY_SEPARATOR.$key, $sub_item);
+				major_tips('modify official javascript plugin');
+				$plugin_source_dir = __DIR__.DIRECTORY_SEPARATOR.$key;
+				if (file_exists($plugin_source_dir)) {
+					$official_plugins = scandir($plugin_source_dir);
+					foreach($official_plugins as $key=>$plugin) {
+						if ($plugin === '.'
+						|| $plugin === '..'
+						|| !is_file($plugin_source_dir.DIRECTORY_SEPARATOR.$plugin)
+						|| !endsWith($plugin, '.js')) {
+							continue;
+						}
+						if (file_exists($sub_item.DIRECTORY_SEPARATOR.$plugin)) {
+							if (md5_file($plugin_source_dir.DIRECTORY_SEPARATOR.$plugin) === md5_file($sub_item.DIRECTORY_SEPARATOR.$plugin)) {
+								log_tips(INFO, 'official plugin: '.$plugin.' has not changed, skip.');
+								continue;
+							}
+							if (!rename($sub_item.DIRECTORY_SEPARATOR.$plugin, $sub_item.DIRECTORY_SEPARATOR.$plugin.'.bak')) {
+								log_tips(ERROR, $sub_item.DIRECTORY_SEPARATOR.$plugin.' backup failure!');
+							}
+						}
+						if (!copy($plugin_source_dir.DIRECTORY_SEPARATOR.$plugin, $sub_item.DIRECTORY_SEPARATOR.$plugin)) {
+							log_tips(ERROR, 'fail to modify official javascript plugin!');
+						} else {
+							log_tips(INFO, 'Successfully update official plugin: '.$plugin);
+						}
+					}
+
 				}
 			}
 		} else if ($key === "locale") {
