@@ -78,7 +78,16 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     case IS_VAR:
     {
         // whether the parameter is the user input data
-        eval_handler(ZEND_OPCODE_HANDLER_ARGS_PASSTHRU);
+        if (openrasp_zval_in_request(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC))
+        {
+            zval *attack_params;
+            MAKE_STD_ZVAL(attack_params);
+            ZVAL_STRING(attack_params, "", 1);
+            zval *plugin_message = NULL;
+            MAKE_STD_ZVAL(plugin_message);
+            ZVAL_STRING(plugin_message, _("File inclusion"), 1);
+            openrasp_buildin_php_risk_handle(1, "include", 100, attack_params, plugin_message TSRMLS_CC);
+        }
         op1 = OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr;
         break;
     }
