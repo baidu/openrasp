@@ -52,6 +52,61 @@ function get_ini_scanned_path() {
 	}
 }
 
+function zip_data($source, $destination) {
+    if (extension_loaded('zip') === true) {
+        if (file_exists($source) === true) {
+            $zip = new ZipArchive();
+            if ($zip->open($destination, ZIPARCHIVE::CREATE) === true) {
+                $source = realpath($source);
+                if (is_dir($source) === true) {
+                    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source), RecursiveIteratorIterator::SELF_FIRST);
+                    foreach ($files as $file) {
+                        $file = realpath($file);
+                        if (is_dir($file) === true) {
+                            $zip->addEmptyDir(str_replace($source . '/', '', $file . '/'));
+                        } else if (is_file($file) === true) {
+                            $zip->addFromString(str_replace($source . '/', '', $file), file_get_contents($file));
+                        }
+                    }
+                } else if (is_file($source) === true) {
+                    $zip->addFromString(basename($source), file_get_contents($source));
+                }
+            }
+            return $zip->close();
+        }
+    }
+    return false;
+}
+
+function clear_dir($dir) {
+	$it = new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS);
+	$files = new RecursiveIteratorIterator($it,
+				 RecursiveIteratorIterator::CHILD_FIRST);
+	foreach($files as $file) {
+		if ($file->isDir()){
+			rmdir($file->getRealPath());
+		} else {
+			unlink($file->getRealPath());
+		}
+	}
+}
+
+function recurse_copy($src,$dst) { 
+	$dir = opendir($src); 
+	@mkdir($dst); 
+    while(false !== ( $file = readdir($dir)) ) { 
+        if (( $file != '.' ) && ( $file != '..' )) { 
+            if ( is_dir($src . '/' . $file) ) { 
+                recurse_copy($src . '/' . $file,$dst . '/' . $file); 
+            } 
+            else { 
+                copy($src . '/' . $file,$dst . '/' . $file); 
+            } 
+        } 
+    } 
+    closedir($dir); 
+} 
+
 //安装流程展示
 function major_tips($message, $done = FALSE) {
 	global $index;
@@ -296,6 +351,33 @@ if ($ini_scanned_path) {
 	log_tips(ERROR, 'Cannot find appropriate php.ini file.');
 }
 
+
+major_tips('initialize openrasp work folder (openrasp.root_dir)');
+if (file_exists($root_dir)) {
+	$root_path = realpath($root_dir);
+	$zip_path = dirname(realpath($root_dir)).DIRECTORY_SEPARATOR.'openrasp_backup.zip';
+	if (zip_data($root_path, $zip_path)) {
+		log_tips(INFO, $root_path.' backup to '.$zip_path);
+	}
+	clear_dir($root_path);
+} else {
+	if (!mkdir($root_dir, 0777, TRUE)) {
+		log_tips(ERROR, 'Fail to mkdir '.$root_dir);
+	}
+}
+$sub_folders = array('conf'=>0755, 'assets'=>0755, 'logs'=>0777, 'locale'=>0755, 'plugins'=>0755);
+foreach($sub_folders as $key => $value) {
+	$sub_item = realpath($root_dir).DIRECTORY_SEPARATOR.$key;
+	$old_mask = umask(0);
+	$mkdir_res = mkdir($sub_item, $value);
+	$old_mask = umask(0);
+	if (!$mkdir_res) {
+		log_tips(ERROR, 'Fail to mkdir '.$sub_item);
+	}
+	if (file_exists(__DIR__.DIRECTORY_SEPARATOR.$key)) {
+		recurse_copy(__DIR__.DIRECTORY_SEPARATOR.$key, $sub_item);
+	}
+}
 
 major_tips('Finish the installation.', TRUE); 
 ?>
