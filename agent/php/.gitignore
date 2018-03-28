@@ -4,6 +4,7 @@
 *.o
 *.loT
 .libs
+.mo
 acinclude.m4
 aclocal.m4
 autom4te.cache

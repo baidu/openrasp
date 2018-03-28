@@ -52,8 +52,11 @@ mkdir -p "$output_base"/{conf,assets,logs,locale,plugins}
 cp ../../plugins/official/plugin.js "$output_base"/plugins
 cp ../../rasp-install/php/install.php "$output_base"
 
-cd po
-tar cvf - `find . -name  \*.mo` | (cd "$output_base"/locale; tar xvf -)
+# 生成并拷贝mo文件
+./scripts/locale.sh
+mv ./po/locale.tar "$output_base"/locale
+cd "$output_base"/locale
+tar xvf locale.tar && rm -f locale.tar
 
 # 打包
 cd "$script_base"
