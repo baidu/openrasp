@@ -151,10 +151,7 @@ static void clear_openrasp_syslog_streams(TSRMLS_D)
 
 static void init_alarm_request_info(TSRMLS_D)
 {
-    if (OPENRASP_LOG_G(alarm_request_info))
-    {        
-        //should never happen
-    }
+    assert(OPENRASP_LOG_G(alarm_request_info) == nullptr);
     MAKE_STD_ZVAL(OPENRASP_LOG_G(alarm_request_info));
     array_init(OPENRASP_LOG_G(alarm_request_info));
 
