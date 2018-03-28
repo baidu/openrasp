@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: openrasp@baidu.com\n"
-"POT-Creation-Date: 2018-03-26 05:30-0700\n"
-"PO-Revision-Date: 2018-03-26 05:30-0700\n"
+"POT-Creation-Date: 2018-03-27 21:18-0700\n"
+"PO-Revision-Date: 2018-03-27 21:18-0700\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: zh_TW\n"
@@ -97,22 +97,31 @@ msgstr ""
 msgid "Fail to textdomain - %s"
 msgstr ""
 
-#: openrasp_fswatch.cc:63
+#: openrasp_fswatch.cc:59
 #, c-format
 msgid "Failed to initialize fswatch: %s"
 msgstr ""
 
-#: openrasp_fswatch.cc:67
+#: openrasp_fswatch.cc:63
 msgid "Failed to initialize fswatch: unknown error."
 msgstr ""
 
-#: openrasp_fswatch.cc:45
+#: openrasp_fswatch.cc:34
 #, c-format
 msgid "Failed to reload %s"
 msgstr ""
 
 #: hook/openrasp_file.cc:105
 msgid "File dropper backdoor"
+msgstr ""
+
+#: openrasp_fswatch.cc:72
+#, c-format
+msgid "Fswatch error: %s"
+msgstr ""
+
+#: openrasp_fswatch.cc:76
+msgid "Fswatch error: unknown error"
 msgstr ""
 
 #: openrasp_log.cc:680

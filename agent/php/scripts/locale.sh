@@ -3,6 +3,8 @@
 set -ex
 cd "$(dirname "$0")"/../
 
+locale_list="zh_CN.utf8 zh_TW fr_FR es_ES"
+
 if test -f po/openrasp.pot 
 then
 jeoption=" -j "
@@ -14,9 +16,9 @@ xgettext --keyword=_ --language=C --add-comments --sort-output \
 	--msgid-bugs-address openrasp@baidu.com \
 	$jeoption -o po/openrasp.pot $(find . -name '*.cc' -o -name '*.c')
 
-for lang in zh_CN.utf8 zh_TW fr_FR es_ES
+for lang in $locale_list
 do
-	if !(test -d po/"$lang")
+	if !(test -d po/"$lang"/LC_MESSAGES)
 	then
 		mkdir -p po/"$lang"/LC_MESSAGES
 	fi
@@ -29,5 +31,14 @@ do
 	fi
 
 	msgfmt --output-file=po/"$lang"/LC_MESSAGES/openrasp.mo po/"$lang"/openrasp.po
+done
+
+cd po
+tar cvf locale.tar `find . -name  \*.mo`
+cd ..
+
+for lang in $locale_list
+do
+	rm -rf po/"$lang"/LC_MESSAGES
 done
 
