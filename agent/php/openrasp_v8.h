@@ -70,9 +70,9 @@ public:
 private:
   std::mutex lock_;
   bool initialized_ = false;
-  int thread_pool_size_;
+  int thread_pool_size_ = 0;
   std::vector<WorkerThread *> thread_pool_;
-  TaskQueue *queue_;
+  TaskQueue *queue_ = nullptr;
 };
 
 class TimeoutTask : public v8::Task
@@ -96,11 +96,11 @@ public:
 class openrasp_v8_process_globals
 {
 public:
+  v8::StartupData snapshot_blob{nullptr, 0};
   std::mutex lock;
   bool is_initialized = false;
   V8Platform *v8_platform = nullptr;
   std::vector<openrasp_v8_plugin_src> plugin_src_list;
-  long timeout_ms = 100;
 };
 
 extern openrasp_v8_process_globals process_globals;
@@ -112,6 +112,7 @@ v8::Local<v8::Object> New(v8::Isolate *isolate);
 
 void v8error_to_stream(v8::Isolate *isolate, v8::TryCatch &try_catch, std::ostream &buf);
 v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC);
+v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset = 0);
 } // namespace openrasp
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_v8)
