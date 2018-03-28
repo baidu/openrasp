@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd "$(dirname "$0")"
+
 set -ex
 script_base="$(readlink -f $(dirname "$0"))"
 
