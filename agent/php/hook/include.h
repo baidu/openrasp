@@ -46,7 +46,7 @@ int include_or_eval_handler(ZEND_OPCODE_HANDLER_ARGS)
 int eval_handler(ZEND_OPCODE_HANDLER_ARGS)
 {
     zend_op *opline = execute_data->opline;
-    if (!openrasp_check_type_ignored(ZEND_STRL("webshell") TSRMLS_CC) &&
+    if (!openrasp_check_type_ignored(ZEND_STRL("webshell_eval") TSRMLS_CC) &&
         OPENRASP_OP1_TYPE(opline) == IS_VAR &&
         openrasp_zval_in_request(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC))
     {
@@ -56,16 +56,12 @@ int eval_handler(ZEND_OPCODE_HANDLER_ARGS)
         zval *plugin_message = NULL;
         MAKE_STD_ZVAL(plugin_message);
         ZVAL_STRING(plugin_message, _("China Chopper WebShell"), 1);
-        openrasp_buildin_php_risk_handle(1, "webshell", 100, attack_params, plugin_message TSRMLS_CC);
+        openrasp_buildin_php_risk_handle(1, "webshell_eval", 100, attack_params, plugin_message TSRMLS_CC);
     }
     return ZEND_USER_OPCODE_DISPATCH;
 }
 int include_handler(ZEND_OPCODE_HANDLER_ARGS)
 {
-    if (openrasp_check_type_ignored(ZEND_STRL("include") TSRMLS_CC))
-    {
-        return ZEND_USER_OPCODE_DISPATCH;
-    }
     zend_op *opline = execute_data->opline;
     zval *op1 = nullptr;
     switch (OPENRASP_OP1_TYPE(opline))
@@ -78,7 +74,8 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     case IS_VAR:
     {
         // whether the parameter is the user input data
-        if (openrasp_zval_in_request(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC))
+        if (!openrasp_check_type_ignored(ZEND_STRL("webshell_include") TSRMLS_CC)
+        && openrasp_zval_in_request(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC))
         {
             zval *attack_params;
             MAKE_STD_ZVAL(attack_params);
@@ -86,7 +83,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
             zval *plugin_message = NULL;
             MAKE_STD_ZVAL(plugin_message);
             ZVAL_STRING(plugin_message, _("File inclusion"), 1);
-            openrasp_buildin_php_risk_handle(1, "include", 100, attack_params, plugin_message TSRMLS_CC);
+            openrasp_buildin_php_risk_handle(1, "webshell_include", 100, attack_params, plugin_message TSRMLS_CC);
         }
         op1 = OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr;
         break;
@@ -117,6 +114,10 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     {
         return ZEND_USER_OPCODE_DISPATCH;
     }
+    }
+    if (openrasp_check_type_ignored(ZEND_STRL("include") TSRMLS_CC))
+    {
+        return ZEND_USER_OPCODE_DISPATCH;
     }
     zval *path;
     MAKE_STD_ZVAL(path);

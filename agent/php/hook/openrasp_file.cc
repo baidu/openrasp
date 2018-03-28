@@ -88,51 +88,52 @@ void hook_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
     zval **path, **data, **flags;
     char resolved_path_buff[MAXPATHLEN];
     int argc = MIN(3, ZEND_NUM_ARGS());
-    if (!openrasp_check_type_ignored(ZEND_STRL("writeFile") TSRMLS_CC) &&
-        argc > 1 &&
-        zend_get_parameters_ex(argc, &path, &data, &flags) == SUCCESS &&
+    if (argc > 1 && zend_get_parameters_ex(argc, &path, &data, &flags) == SUCCESS &&
         Z_TYPE_PP(path) == IS_STRING)
     {
-        if (!openrasp_check_type_ignored(ZEND_STRL("webshell") TSRMLS_CC)
+        if (!openrasp_check_type_ignored(ZEND_STRL("webshell_file_put_contents") TSRMLS_CC)
             && openrasp_zval_in_request(*path TSRMLS_CC)
             && openrasp_zval_in_request(*data TSRMLS_CC))
+        {
+            zval *attack_params = NULL;
+            MAKE_STD_ZVAL(attack_params);
+            ZVAL_STRING(attack_params, "", 1);
+            zval *plugin_message = NULL;
+            MAKE_STD_ZVAL(plugin_message);
+            ZVAL_STRING(plugin_message, _("File dropper backdoor"), 1);
+            openrasp_buildin_php_risk_handle(1, "webshell_file_put_contents", 100, attack_params, plugin_message TSRMLS_CC);
+        }
+        if (!openrasp_check_type_ignored(ZEND_STRL("writeFile") TSRMLS_CC))
+        {
+            char *real_path = nullptr;
+            char *include_path = nullptr;
+            if (argc == 3 && Z_TYPE_PP(flags) == IS_LONG && (Z_LVAL_PP(flags) & PHP_FILE_USE_INCLUDE_PATH))
             {
-                zval *attack_params = NULL;
-                MAKE_STD_ZVAL(attack_params);
-                ZVAL_STRING(attack_params, "", 1);
-                zval *plugin_message = NULL;
-                MAKE_STD_ZVAL(plugin_message);
-                ZVAL_STRING(plugin_message, _("File dropper backdoor"), 1);
-                openrasp_buildin_php_risk_handle(1, "webshell", 100, attack_params, plugin_message TSRMLS_CC);
+                include_path = PG(include_path);
             }
-        char *real_path = nullptr;
-        char *include_path = nullptr;
-        if (argc == 3 && Z_TYPE_PP(flags) == IS_LONG && (Z_LVAL_PP(flags) & PHP_FILE_USE_INCLUDE_PATH))
-        {
-            include_path = PG(include_path);
+            else
+            {
+                include_path = NULL;
+            }
+            real_path = php_resolve_path(Z_STRVAL_PP(path), Z_STRLEN_PP(path), include_path TSRMLS_CC);
+            zval *params;
+            MAKE_STD_ZVAL(params);
+            array_init(params);
+            add_assoc_zval(params, "path", *path);
+            Z_ADDREF_P(*path);
+            if (real_path)
+            {
+                add_assoc_string(params, "realpath", real_path, 1);
+            }
+            else
+            {
+                zval *realpath;
+                MAKE_STD_ZVAL(realpath);
+                ZVAL_STRING(realpath, Z_STRVAL_PP(path), 1);
+                add_assoc_zval(params, "realpath", realpath);
+            }
+            check("writeFile", params TSRMLS_CC);
         }
-        else
-        {
-            include_path = NULL;
-        }
-        real_path = php_resolve_path(Z_STRVAL_PP(path), Z_STRLEN_PP(path), include_path TSRMLS_CC);
-        zval *params;
-        MAKE_STD_ZVAL(params);
-        array_init(params);
-        add_assoc_zval(params, "path", *path);
-        Z_ADDREF_P(*path);
-        if (real_path)
-        {
-            add_assoc_string(params, "realpath", real_path, 1);
-        }
-        else
-        {
-            zval *realpath;
-            MAKE_STD_ZVAL(realpath);
-            ZVAL_STRING(realpath, Z_STRVAL_PP(path), 1);
-            add_assoc_zval(params, "realpath", realpath);
-        }
-        check("writeFile", params TSRMLS_CC);
     }
 
 }
