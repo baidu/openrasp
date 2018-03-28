@@ -62,7 +62,7 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
     {
         openrasp_error(E_WARNING, FSWATCH_ERROR, _("Failed to initialize fswatch: unknown error."));
     }
-    fswatch_thread = new std::thread([&monitor]() {
+    fswatch_thread = new std::thread([monitor]() {
         try
         {
             monitor->start();
@@ -77,7 +77,6 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
         }
         monitor->stop();
         delete monitor;
-        monitor = nullptr;
     });
     fswatch_thread->detach();
     return SUCCESS;
