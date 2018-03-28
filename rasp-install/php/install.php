@@ -1,4 +1,7 @@
 <?php
+# whatever to make PHP happy
+date_default_timezone_set('Asia/Shanghai');
+
 const UNKNOWN 		= "unknown";
 
 const OS_WIN 		= "windows";
