@@ -154,3 +154,26 @@ v8::Local<v8::Value> openrasp::zval_to_v8val(zval *val, v8::Isolate *isolate TSR
     }
     return rst;
 }
+
+v8::MaybeLocal<v8::Script> openrasp::compile_script(std::string _source, std::string _filename, int _line_offset)
+{
+    v8::Isolate *isolate = v8::Isolate::GetCurrent();
+    v8::Isolate::Scope isolate_scope(isolate);
+    v8::EscapableHandleScope handle_scope(isolate);
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    v8::Context::Scope context_scope(context);
+    v8::Local<v8::String> filename;
+    if (!V8STRING_EX(_filename.c_str(), v8::NewStringType::kNormal, _filename.length()).ToLocal(&filename))
+    {
+        return v8::MaybeLocal<v8::Script>();
+    }
+    v8::Local<v8::String> source;
+    if (!V8STRING_EX(_source.c_str(), v8::NewStringType::kNormal, _source.length()).ToLocal(&source))
+    {
+        return v8::MaybeLocal<v8::Script>();
+    }
+    v8::Local<v8::Integer> line_offset = v8::Integer::New(isolate, _line_offset);
+    v8::ScriptOrigin origin(filename, line_offset);
+    v8::MaybeLocal<v8::Script> script = v8::Script::Compile(context, source, &origin);
+    return script;
+}
