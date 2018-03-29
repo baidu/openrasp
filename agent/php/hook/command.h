@@ -25,7 +25,7 @@ inline void hook_command(INTERNAL_FUNCTION_PARAMETERS)
         {
             webshell_alarm("webshell_command" TSRMLS_CC);
         }
-        if (!openrasp_check_type_ignored(ZEND_STRL("command") TSRMLS_CC))
+        if (!openrasp_check_type_ignored(ZEND_STRL("command") TSRMLS_CC) && Z_STRLEN_PP(command) > 0)
         {
             zval *params;
             MAKE_STD_ZVAL(params);
