@@ -188,7 +188,7 @@ void pre_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
 }
 void post_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
 {
-    if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_OBJECT)
+    if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value))
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_connection, 0);
     }
