@@ -161,31 +161,44 @@ if (RASP.get_jsengine() !== 'v8') {
         // 2. 识别数据库管理器   
         if (1) {
             Object.keys(parameters).some(function (name) {
-                var value = parameters[name][0]
+                // 两种情况
+                // ?id=XXXX
+                // ?filter[category_id]=XXXX
 
-                // 请求参数长度超过15才考虑，任何跨表查询都至少需要20个字符，所以可以写的更大点
-                // SELECT * FROM admin
-                // and updatexml(....)
-                if (value.length <= 15) {
-                    return
+                var value_list
+
+                if (typeof parameters[name][0] == 'string') {
+                    value_list = parameters[name]
+                } else {
+                    value_list = Object.values(parameters[name][0])
                 }
 
-                // 判断是否为数据库管理器
-                if (value.length == params.query.length && value == params.query) {
-                    reason = '算法2: WebShell - 数据库管理器'
-                    return true
-                }
+                for (var i = 0; i < value_list.length; i ++) {
+                    var value = value_list[i]
+                    // 请求参数长度超过15才考虑，任何跨表查询都至少需要20个字符，所以可以写的更大点
+                    // SELECT * FROM admin
+                    // and updatexml(....)
+                    if (value.length <= 15) {
+                        return
+                    }
 
-                // 简单识别用户输入
-                if (params.query.indexOf(value) == -1) {
-                    return
-                }
+                    // 判断是否为数据库管理器
+                    if (value.length == params.query.length && value == params.query) {
+                        reason = '算法2: WebShell - 数据库管理器 - 攻击参数: ' + name
+                        return true
+                    }
 
-                // 去掉用户输入再次匹配
-                var tokens2 = RASP.sql_tokenize(params.query.replaceAll(value, ''), params.server)
-                if (tokens.length - tokens2.length > 2) {
-                    reason = '算法1: 数据库查询逻辑发生改变'
-                    return true
+                    // 简单识别用户输入
+                    if (params.query.indexOf(value) == -1) {
+                        return
+                    }
+
+                    // 去掉用户输入再次匹配
+                    var tokens2 = RASP.sql_tokenize(params.query.replaceAll(value, ''), params.server)
+                    if (tokens.length - tokens2.length > 2) {
+                        reason = '算法1: 数据库查询逻辑发生改变 - 攻击参数: ' + name
+                        return true
+                    }
                 }
             })
             if (reason !== false) {
