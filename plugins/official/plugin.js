@@ -189,7 +189,7 @@ if (RASP.get_jsengine() !== 'v8') {
                    
                     if (value.length == params.query.length && value == params.query) {
                         // 判断是否为数据库管理器，如果有需要请改为 0
-                        if (0) {
+                        if (1) {
                             reason = '算法2: WebShell - 数据库管理器 - 攻击参数: ' + name
                             return true
                         } else {
