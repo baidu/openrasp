@@ -365,6 +365,7 @@ PHP_GINIT_FUNCTION(openrasp_v8)
 
 PHP_GSHUTDOWN_FUNCTION(openrasp_v8)
 {
+    shutdown_isolate(TSRMLS_C);
 #ifdef ZTS
     openrasp_v8_globals->~_zend_openrasp_v8_globals();
 #endif
@@ -399,7 +400,6 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
     ZEND_SHUTDOWN_MODULE_GLOBALS(openrasp_v8, PHP_GSHUTDOWN(openrasp_v8));
     if (process_globals.is_initialized)
     {
-        shutdown_isolate(TSRMLS_C);
         // Disposing v8 is permanent, it cannot be reinitialized,
         // it should generally not be necessary to dispose v8 before exiting a process,
         // so skip this step for module graceful reload
