@@ -102,6 +102,10 @@ if (RASP.get_jsengine() !== 'v8') {
         'sqli_userinput': {
             action: 'block'
         },
+        // SQL注入算法#1 - 数据库管理器
+        'sqli_dbmanager': {
+            action: 'block'
+        },
         // SQL注入算法#2 - 语句规范
         'sqli_policy': {
             action:  'block',
@@ -182,11 +186,15 @@ if (RASP.get_jsengine() !== 'v8') {
                     if (value.length <= 15) {
                         continue
                     }
-
-                    // 判断是否为数据库管理器
+                   
                     if (value.length == params.query.length && value == params.query) {
-                        reason = '算法2: WebShell - 数据库管理器 - 攻击参数: ' + name
-                        return true
+                        // 判断是否为数据库管理器，如果有需要请改为 0
+                        if (0) {
+                            reason = '算法2: WebShell - 数据库管理器 - 攻击参数: ' + name
+                            return true
+                        } else {
+                            continue
+                        }                        
                     }
 
                     // 简单识别用户输入
