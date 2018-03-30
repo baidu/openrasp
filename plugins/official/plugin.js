@@ -161,10 +161,10 @@ if (RASP.get_jsengine() !== 'v8') {
         // 2. 识别数据库管理器   
         if (1) {
             Object.keys(parameters).some(function (name) {
-                // 两种情况
+                // 覆盖两种情况，后者仅PHP支持
+                // 
                 // ?id=XXXX
                 // ?filter[category_id]=XXXX
-
                 var value_list
 
                 if (typeof parameters[name][0] == 'string') {
@@ -175,11 +175,12 @@ if (RASP.get_jsengine() !== 'v8') {
 
                 for (var i = 0; i < value_list.length; i ++) {
                     var value = value_list[i]
-                    // 请求参数长度超过15才考虑，任何跨表查询都至少需要20个字符，所以可以写的更大点
+
+                    // 请求参数长度超过15才考虑，任何跨表查询都至少需要20个字符，其实可以写的更大点
                     // SELECT * FROM admin
                     // and updatexml(....)
                     if (value.length <= 15) {
-                        return
+                        continue
                     }
 
                     // 判断是否为数据库管理器
@@ -190,7 +191,7 @@ if (RASP.get_jsengine() !== 'v8') {
 
                     // 简单识别用户输入
                     if (params.query.indexOf(value) == -1) {
-                        return
+                        continue
                     }
 
                     // 去掉用户输入再次匹配
