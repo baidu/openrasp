@@ -30,6 +30,13 @@ import java.util.regex.Pattern;
  */
 //undo:only judge in webapp work thread not back thread.unless will cause outofmemory...ss
 //undo:call druid sqlparser(some problem with mysql). or sqlparser( antlr) donot distinct big/little string...(or by config)
+/*
+/com/alibaba/druid/sql/parser/Lexer.java的
+1、scanString2_d()方法 1251行判断字符串结束好像有问题，感觉应该用双引号才对？
+2、scanString 方法对 mysql的支持不全，mysql里面 \ 也是可以转义的。
+antlr 区分大小写的？
+* */
+
 public class TrustStringManager {
     private static ThreadLocal<IdentityHashMap<CharSequence, CharSequence>> certainMap = new ThreadLocal<IdentityHashMap<CharSequence, CharSequence>>();
     private static ThreadLocal<IdentityHashMap<CharSequence, CharSequence>> uncertainMap = new ThreadLocal<IdentityHashMap<CharSequence, CharSequence>>();
