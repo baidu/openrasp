@@ -576,11 +576,12 @@ plugin.register('command', function (params, context) {
     var message  = undefined
     var userCode = false
     var known    = {
-        'java.lang.reflect.Method.invoke': '尝试通过反射执行命令',
-        'ognl.OgnlRuntime.invokeMethod': '尝试通过 OGNL 代码执行命令',
-        'com.thoughtworks.xstream.XStream.unmarshal': '尝试通过 xstream 反序列化执行命令',
-        'org.apache.commons.collections4.functors.InvokerTransformer.transform': '尝试通过 transformer 反序列化执行命令',
-        'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest': '尝试通过 JNDI 注入方式执行命令'
+        'java.lang.reflect.Method.invoke':                                          '尝试通过反射执行命令',
+        'ognl.OgnlRuntime.invokeMethod':                                            '尝试通过 OGNL 代码执行命令',
+        'com.thoughtworks.xstream.XStream.unmarshal':                               '尝试通过 xstream 反序列化执行命令',
+        'org.apache.commons.collections4.functors.InvokerTransformer.transform':    '尝试通过 transformer 反序列化执行命令',
+        'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':               '尝试通过 JNDI 注入方式执行命令',
+        'com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze': '尝试通过 fastjson 反序列化方式执行命令'
     }    
     
     for (var i = 2; i < params.stack.length; i ++) {
