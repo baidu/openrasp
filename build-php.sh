@@ -36,9 +36,9 @@ cd agent/php
 phpize --clean
 phpize
 if [[ $php_os == "macos" ]]; then
-	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext=/usr/local/homebrew/opt/gettext -q
+	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext=/usr/local/homebrew/opt/gettext -q ${extra_config_opt}
 else
-	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext -q
+	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext -q ${extra_config_opt}
 fi
 
 make
