@@ -38,7 +38,7 @@ static void check_file_operation(const char* type, char *filename, int filename_
     }
 }
 
-void hook_file(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_file(INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename;
 	int filename_len;
@@ -54,7 +54,7 @@ void hook_file(INTERNAL_FUNCTION_PARAMETERS)
     check_file_operation("readFile", filename, filename_len, use_include_path TSRMLS_CC);
 }
 
-void hook_readfile(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_readfile(INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename;
 	int filename_len;
@@ -68,7 +68,7 @@ void hook_readfile(INTERNAL_FUNCTION_PARAMETERS)
     check_file_operation("readFile", filename, filename_len, use_include_path TSRMLS_CC);
 }
 
-void hook_file_get_contents(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_file_get_contents(INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename;
 	int filename_len;
@@ -83,7 +83,7 @@ void hook_file_get_contents(INTERNAL_FUNCTION_PARAMETERS)
 	}
     check_file_operation("readFile", filename, filename_len, use_include_path TSRMLS_CC);
 }
-void hook_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **path, **data, **flags;
     char resolved_path_buff[MAXPATHLEN];
@@ -137,7 +137,7 @@ void hook_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
     }
 
 }
-void hook_fopen(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_fopen(INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename, *mode;
 	int filename_len, mode_len;
@@ -154,7 +154,7 @@ void hook_fopen(INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void hook_splfileobject___construct_ex(INTERNAL_FUNCTION_PARAMETERS)
+void pre_splfileobject___construct(INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename, *mode;
 	int filename_len, mode_len;
@@ -171,7 +171,7 @@ void hook_splfileobject___construct_ex(INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void hook_copy(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_copy(INTERNAL_FUNCTION_PARAMETERS)
 {
     char *source, *target;
 	int source_len, target_len;

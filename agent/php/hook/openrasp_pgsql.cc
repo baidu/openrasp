@@ -162,7 +162,7 @@ static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connectio
 /**
  * pg_connect
  */
-void pre_pg_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void pre_global_pg_connect(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {
@@ -172,7 +172,7 @@ void pre_pg_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
         }
     }
 }
-void post_pg_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void post_global_pg_connect(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_RESOURCE)
     {
@@ -183,28 +183,28 @@ void post_pg_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
 /**
  * pg_pconnect 
  */
-void pre_pg_pconnect(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void pre_global_pg_pconnect(INTERNAL_FUNCTION_PARAMETERS)
 {
-    pre_pg_connect(INTERNAL_FUNCTION_PARAM_PASSTHRU, server);
+    pre_global_pg_connect(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
-void post_pg_pconnect(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void post_global_pg_pconnect(INTERNAL_FUNCTION_PARAMETERS)
 {
-    post_pg_connect(INTERNAL_FUNCTION_PARAM_PASSTHRU, server);
+    post_global_pg_connect(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 /**
  * pg_query
  */
-void pre_pg_query(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void pre_global_pg_query(INTERNAL_FUNCTION_PARAMETERS)
 {
 	int  argc = ZEND_NUM_ARGS();
 	if (argc == 1) {
-        check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, server, 1);
+        check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "pgsql", 1);
 	} else {
-		check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, server, 2);
+		check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "pgsql", 2);
 	}
 }
-void post_pg_query(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void post_global_pg_query(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_check_type_ignored(ZEND_STRL("sqlSlowQuery") TSRMLS_CC)) 
     {
@@ -226,22 +226,22 @@ void post_pg_query(INTERNAL_FUNCTION_PARAMETERS, char *server)
 /**
  * pg_send_query
  */
-void pre_pg_send_query(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void pre_global_pg_send_query(INTERNAL_FUNCTION_PARAMETERS)
 {
     int  argc = ZEND_NUM_ARGS();
 	if (argc == 1) {
-        check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, server, 1);
+        check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "pgsql", 1);
 	} else {
-		check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, server, 2);
+		check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "pgsql", 2);
 	}
 }
-void post_pg_send_query(INTERNAL_FUNCTION_PARAMETERS, char *server){}
+void post_global_pg_send_query(INTERNAL_FUNCTION_PARAMETERS){}
 
 /**
  * pg_get_result
  */ 
-void pre_pg_get_result(INTERNAL_FUNCTION_PARAMETERS, char *server){}
-void post_pg_get_result(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void pre_global_pg_get_result(INTERNAL_FUNCTION_PARAMETERS){}
+void post_global_pg_get_result(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_check_type_ignored(ZEND_STRL("sqlSlowQuery") TSRMLS_CC)) 
     {

@@ -132,146 +132,58 @@ void check(const char *type, zval *params TSRMLS_DC)
     }
 }
 
-#define HOOK_CALLABLE(name)                                \
-    OPENRASP_HOOK_FUNCTION(name)                           \
-    {                                                      \
-        pre_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU);      \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU); \
-    }
+/**
+ * callable相关hook点
+ */
+PRE_HOOK_FUNCTION(usort);
+PRE_HOOK_FUNCTION(uksort);
+PRE_HOOK_FUNCTION(uasort);
+PRE_HOOK_FUNCTION(array_walk);
+PRE_HOOK_FUNCTION(array_map);
+PRE_HOOK_FUNCTION(array_filter);
+PRE_HOOK_FUNCTION(array_diff_ukey);
 
-HOOK_CALLABLE(array_diff_ukey);
-HOOK_CALLABLE(array_filter);
-HOOK_CALLABLE(array_map);
-HOOK_CALLABLE(array_walk);
-HOOK_CALLABLE(uasort);
-HOOK_CALLABLE(uksort);
-HOOK_CALLABLE(usort);
+PRE_HOOK_FUNCTION_EX(__construct, reflectionfunction);
 
-inline void hook_reflectionfunction(INTERNAL_FUNCTION_PARAMETERS)
-{
-    zval *name;
-    zval *closure = NULL;
-    char *lcname;
-    zend_function *fptr;
-    char *name_str;
-    int name_len;
+/**
+ * sql相关hook点
+ */
+HOOK_FUNCTION_EX(mysqli, mysqli);
+HOOK_FUNCTION_EX(real_connect, mysqli);
+HOOK_FUNCTION_EX(query, mysqli);
+HOOK_FUNCTION_EX(exec, sqlite3);
+HOOK_FUNCTION_EX(query, sqlite3);
+HOOK_FUNCTION_EX(querySingle, sqlite3);
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &name_str, &name_len) == SUCCESS)
-    {
-        char *nsname;
+HOOK_FUNCTION(mysql_connect);
+HOOK_FUNCTION(mysql_pconnect);
+HOOK_FUNCTION(mysql_query);
 
-        lcname = zend_str_tolower_dup(name_str, name_len);
+HOOK_FUNCTION(mysqli_connect);
+HOOK_FUNCTION(mysqli_real_connect);
+HOOK_FUNCTION(mysqli_query);
+HOOK_FUNCTION(mysqli_real_query);
+HOOK_FUNCTION(pg_connect);
+HOOK_FUNCTION(pg_pconnect);
+HOOK_FUNCTION(pg_query);
+HOOK_FUNCTION(pg_send_query);
+HOOK_FUNCTION(pg_get_result);
 
-        /* Ignore leading "\" */
-        nsname = lcname;
-        if (lcname[0] == '\\')
-        {
-            nsname = &lcname[1];
-            name_len--;
-        }
-
-        if (zend_hash_find(EG(function_table), nsname, name_len + 1, (void **)&fptr) == FAILURE)
-        {
-            efree(lcname);
-            return;
-        }
-        if (openrasp_check_callable_black(nsname, name_len TSRMLS_CC))
-        {
-            zval *attack_params = NULL;
-            MAKE_STD_ZVAL(attack_params);
-            ZVAL_STRING(attack_params, nsname, 1);
-            zval *plugin_message = NULL;
-            MAKE_STD_ZVAL(plugin_message);
-            char *message_str = NULL;
-            spprintf(&message_str, 0, _("Webshell detected: using %s"), nsname);
-            ZVAL_STRING(plugin_message, message_str, 1);
-            efree(message_str);
-            openrasp_buildin_php_risk_handle(1, "callable", 90, attack_params, plugin_message TSRMLS_CC);
-        }
-        efree(lcname);
-    }
-    else
-    {
-        return;
-    }
-}
-
-#define HOOK_REFLECTION(name, scope)                               \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope)                         \
-    {                                                              \
-        hook_reflectionfunction(INTERNAL_FUNCTION_PARAM_PASSTHRU); \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);         \
-    }
-HOOK_REFLECTION(__construct, reflectionfunction);
-
-#define HOOK_SQL_EX(name, scope, server)                                                           \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope)                                                         \
-    {                                                                                              \
-        pre_##scope##_##name##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, const_cast<char *>(#server));  \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                         \
-        post_##scope##_##name##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, const_cast<char *>(#server)); \
-    }
-HOOK_SQL_EX(exec, sqlite3, sqlite);
-HOOK_SQL_EX(query, sqlite3, sqlite);
-HOOK_SQL_EX(querySingle, sqlite3, sqlite);
-HOOK_SQL_EX(mysqli, mysqli, mysql);
-HOOK_SQL_EX(real_connect, mysqli, mysql);
-HOOK_SQL_EX(query, mysqli, mysql);
-
-#define HOOK_SQL(name, server)                                                      \
-    OPENRASP_HOOK_FUNCTION(name)                                                    \
-    {                                                                               \
-        pre_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU, const_cast<char *>(#server));  \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                          \
-        post_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU, const_cast<char *>(#server)); \
-    }
-HOOK_SQL(mysql_connect, mysql);
-HOOK_SQL(mysql_pconnect, mysql);
-HOOK_SQL(mysql_query, mysql);
-HOOK_SQL(mysqli_connect, mysql);
-HOOK_SQL(mysqli_real_connect, mysql);
-HOOK_SQL(mysqli_query, mysql);
-HOOK_SQL(mysqli_real_query, mysql);
-HOOK_SQL(pg_connect, pgsql);
-HOOK_SQL(pg_pconnect, pgsql);
-HOOK_SQL(pg_query, pgsql);
-HOOK_SQL(pg_send_query, pgsql);
-HOOK_SQL(pg_get_result, pgsql);
-
-#define HOOK_PDO_EX(name, scope)                                      \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope)                            \
-    {                                                                 \
-        pre_##scope##_##name##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU);  \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);            \
-        post_##scope##_##name##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU); \
-    }
-HOOK_PDO_EX(query, pdo);
-HOOK_PDO_EX(exec, pdo);
-HOOK_PDO_EX(__construct, pdo);
+HOOK_FUNCTION_EX(__construct, pdo);
+HOOK_FUNCTION_EX(query, pdo);
+HOOK_FUNCTION_EX(exec, pdo);
 
 /**
  * 文件相关hook点
  */
-#define HOOK_FILE(name)                                    \
-    OPENRASP_HOOK_FUNCTION(name)                           \
-    {                                                      \
-        hook_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU);     \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU); \
-    }
-HOOK_FILE(file);
-HOOK_FILE(readfile);
-HOOK_FILE(file_get_contents);
-HOOK_FILE(file_put_contents);
-HOOK_FILE(fopen);
-HOOK_FILE(copy);
+PRE_HOOK_FUNCTION(file);
+PRE_HOOK_FUNCTION(readfile);
+PRE_HOOK_FUNCTION(file_get_contents);
+PRE_HOOK_FUNCTION(file_put_contents);
+PRE_HOOK_FUNCTION(fopen);
+PRE_HOOK_FUNCTION(copy);
 
-#define HOOK_FILE_EX(name, scope)                                     \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope)                            \
-    {                                                                 \
-        hook_##scope##_##name##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU); \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);            \
-    }
-HOOK_FILE_EX(__construct, splfileobject);
+PRE_HOOK_FUNCTION_EX(__construct, splfileobject);
 
 PHP_GINIT_FUNCTION(openrasp_hook)
 {
