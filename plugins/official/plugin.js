@@ -102,9 +102,9 @@ if (RASP.get_jsengine() !== 'v8') {
         'sqli_userinput': {
             action: 'block'
         },
-        // SQL注入算法#1 - 数据库管理器
+        // SQL注入算法#1 - 是否拦截数据库管理器，默认关闭，有需要可改为 block
         'sqli_dbmanager': {
-            action: 'block'
+            action: 'ignore'
         },
         // SQL注入算法#2 - 语句规范
         'sqli_policy': {
@@ -188,9 +188,9 @@ if (RASP.get_jsengine() !== 'v8') {
                     }
                    
                     if (value.length == params.query.length && value == params.query) {
-                        // 判断是否为数据库管理器，如果有需要请改为 0
-                        if (1) {
-                            reason = '算法2: WebShell - 数据库管理器 - 攻击参数: ' + name
+                        // 是否拦截数据库管理器，有需要请改为 1
+                        if (0) {
+                            reason = '算法2: WebShell - 拦截数据库管理器 - 攻击参数: ' + name
                             return true
                         } else {
                             continue
