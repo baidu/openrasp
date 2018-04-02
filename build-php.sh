@@ -1,4 +1,10 @@
 #!/bin/bash
+#
+# To enable native antlr support, do
+# 
+# wget https://packages.baidu.com/app/openrasp/libantlr4-linux.tar.gz -O /tmp/libantlr4.tar.gz
+# tar -xf /tmp/libantlr4.tar.gz -C /tmp
+# extra_config_opt="--with-antlr4=/tmp/libantlr4" bash build-php.sh
 
 cd "$(dirname "$0")"
 
