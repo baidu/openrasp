@@ -41,6 +41,7 @@ import java.util.Map;
 public class SqlStatementChecker extends ConfigurableChecker {
 
     private static final String CONFIG_KEY_SQLI_USER_INPUT = "sqli_userinput";
+    private static final String CONFIG_KEY_DB_MANAGER = "sqli_dbmanager";
     private static final String CONFIG_KEY_SQLI_POLICY = "sqli_policy";
     private static final String CONFIG_KEY_STACKED_QUERY = "stacked_query";
     private static final String CONFIG_KEY_NO_HEX = "no_hex";
@@ -72,8 +73,14 @@ public class SqlStatementChecker extends ConfigurableChecker {
                     continue;
                 }
                 if (value.length() == query.length() && value.equals(query)) {
-                    message = "算法2: WebShell - 数据库管理器";
-                    break;
+                    String managerAction = getActionElement(config, CONFIG_KEY_DB_MANAGER);
+                    if (!EventInfo.CHECK_ACTION_IGNORE.equals(managerAction) && managerAction != null) {
+                        message = "算法2: WebShell - 数据库管理器 - 攻击参数: " + entry.getKey();
+                        action = managerAction;
+                        break;
+                    } else {
+                        continue;
+                    }
                 }
                 if (!query.contains(value)) {
                     continue;
@@ -81,7 +88,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                 String[] tokens2 = TokenGenerator.tokenize(query.replace(value, ""), tokenizeErrorListener);
                 if (tokens != null) {
                     if (tokens.length - tokens2.length > 2) {
-                        message = "算法1: 数据库查询逻辑发生改变";
+                        message = "算法1: 数据库查询逻辑发生改变 - 攻击参数: " + entry.getKey();
                         break;
                     }
                 }
