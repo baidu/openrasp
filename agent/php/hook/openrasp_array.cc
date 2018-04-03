@@ -21,7 +21,7 @@ static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
             spprintf(&message_str, 0, _("Webshell detected: using %s"), Z_STRVAL_P(function_name));
             ZVAL_STRING(plugin_message, message_str, 1);
             efree(message_str);
-            openrasp_buildin_php_risk_handle(1, "callable", 90, attack_params, plugin_message TSRMLS_CC);
+            openrasp_buildin_php_risk_handle(1, "callable", 100, attack_params, plugin_message TSRMLS_CC);
 		}
 	}
 }
@@ -221,7 +221,7 @@ void pre_reflectionfunction___construct(INTERNAL_FUNCTION_PARAMETERS)
             spprintf(&message_str, 0, _("Webshell detected: using %s"), nsname);
             ZVAL_STRING(plugin_message, message_str, 1);
             efree(message_str);
-            openrasp_buildin_php_risk_handle(1, "callable", 90, attack_params, plugin_message TSRMLS_CC);
+            openrasp_buildin_php_risk_handle(1, "callable", 100, attack_params, plugin_message TSRMLS_CC);
         }
         efree(lcname);
     }

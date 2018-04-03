@@ -68,7 +68,7 @@ OPENRASP_HOOK_FUNCTION(curl_exec)
         spprintf(&message_str, 0, _("ssrf found : %s"), Z_STRVAL(effective_url));
         ZVAL_STRING(plugin_message, message_str, 1);
         efree(message_str);
-        openrasp_buildin_php_risk_handle(1, "ssrf", 90, attack_params, plugin_message TSRMLS_CC);       
+        openrasp_buildin_php_risk_handle(1, "ssrf", 100, attack_params, plugin_message TSRMLS_CC);       
     }
     zval_dtor(&opt);
     zval_dtor(&origin_url);

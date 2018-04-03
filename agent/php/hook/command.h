@@ -2,17 +2,6 @@
 
 #include "openrasp_hook.h"
 
-inline static void webshell_alarm(const char *type TSRMLS_DC)
-{
-    zval *attack_params = NULL;
-    MAKE_STD_ZVAL(attack_params);
-    ZVAL_STRING(attack_params, "", 1);
-    zval *plugin_message = NULL;
-    MAKE_STD_ZVAL(plugin_message);
-    ZVAL_STRING(plugin_message, _("Command execution backdoor"), 1);
-    openrasp_buildin_php_risk_handle(1, type, 100, attack_params, plugin_message TSRMLS_CC);
-}
-
 inline void hook_command(INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **command;
@@ -23,7 +12,15 @@ inline void hook_command(INTERNAL_FUNCTION_PARAMETERS)
         if (!openrasp_check_type_ignored(ZEND_STRL("webshell_command") TSRMLS_CC)
             && openrasp_zval_in_request(*command TSRMLS_CC))
         {
-            webshell_alarm("webshell_command" TSRMLS_CC);
+            zval *attack_params = NULL;
+            MAKE_STD_ZVAL(attack_params);
+            array_init(attack_params);
+            add_assoc_zval(attack_params, "command", *command);
+            Z_ADDREF_PP(command);
+            zval *plugin_message = NULL;
+            MAKE_STD_ZVAL(plugin_message);
+            ZVAL_STRING(plugin_message, _("Command execution backdoor"), 1);
+            openrasp_buildin_php_risk_handle(1, "webshell_command", 100, attack_params, plugin_message TSRMLS_CC);
         }
         if (!openrasp_check_type_ignored(ZEND_STRL("command") TSRMLS_CC) && Z_STRLEN_PP(command) > 0)
         {
@@ -64,7 +61,15 @@ OPENRASP_HOOK_FUNCTION(pcntl_exec)
         if (!openrasp_check_type_ignored(ZEND_STRL("webshell_command") TSRMLS_CC)
         && openrasp_zval_in_request(*path TSRMLS_CC))
         {
-            webshell_alarm("webshell_command" TSRMLS_CC);
+            zval *attack_params = NULL;
+            MAKE_STD_ZVAL(attack_params);
+            array_init(attack_params);
+            add_assoc_zval(attack_params, "command", *path);
+            Z_ADDREF_PP(path);
+            zval *plugin_message = NULL;
+            MAKE_STD_ZVAL(plugin_message);
+            ZVAL_STRING(plugin_message, _("Command execution backdoor"), 1);
+            openrasp_buildin_php_risk_handle(1, "webshell_command", 100, attack_params, plugin_message TSRMLS_CC);
         }
         if (!openrasp_check_type_ignored(ZEND_STRL("command") TSRMLS_CC))
         {
@@ -123,7 +128,15 @@ OPENRASP_HOOK_FUNCTION(assert)
         if (!openrasp_check_type_ignored(ZEND_STRL("webshell_eval") TSRMLS_CC)
         && openrasp_zval_in_request(*assertion TSRMLS_CC))
         {
-            webshell_alarm("webshell_eval" TSRMLS_CC);
+            zval *attack_params;
+            MAKE_STD_ZVAL(attack_params);
+            array_init(attack_params);
+            add_assoc_zval(attack_params, "eval", *assertion);
+            Z_ADDREF_PP(assertion);
+            zval *plugin_message = NULL;
+            MAKE_STD_ZVAL(plugin_message);
+            ZVAL_STRING(plugin_message, _("China Chopper WebShell"), 1);
+            openrasp_buildin_php_risk_handle(1, "webshell_eval", 100, attack_params, plugin_message TSRMLS_CC);
         }
     }
     origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);
