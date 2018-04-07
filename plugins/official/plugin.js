@@ -586,6 +586,11 @@ plugin.register('command', function (params, context) {
     for (var i = 2; i < params.stack.length; i ++) {
         var method = params.stack[i]
 
+        if (method.startsWith('ysoserial.Pwner')) {
+            message = 'YsoSerial 漏洞利用工具 - 反序列化攻击'
+            break
+        }
+
         // 仅当命令本身来自反射调用才拦截
         // 如果某个类是反射调用，这个类再主动执行命令，则忽略
         if (! method.startsWith('java.') && ! method.startsWith('sun.') && ! message) {
