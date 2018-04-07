@@ -22,6 +22,11 @@ extern "C" {
 #include <string>
 #include <set>
 
+typedef enum hook_position_t {
+	PRE_HOOK = 1 << 0, 
+    POST_HOOK  = 1 << 1
+} hook_position;
+
 typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
 /**
  * 使用这个宏定义被 hook 函数的替换函数的函数头部
@@ -42,6 +47,27 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
     inline void hook_##scope##_##name##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function)
 #define OPENRASP_HOOK_FUNCTION(name) \
     OPENRASP_HOOK_FUNCTION_EX(name, global)
+
+#define HOOK_FUNCTION_EX(name, scope)                                                                   \
+    OPENRASP_HOOK_FUNCTION_EX(name, scope)                                                              \
+    {                                                                                                   \
+        pre_##scope##_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                         \
+        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                              \
+        post_##scope##_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                        \
+    }
+
+#define HOOK_FUNCTION(name) \
+    HOOK_FUNCTION_EX(name, global)
+
+#define PRE_HOOK_FUNCTION_EX(name, scope)                                                               \
+    OPENRASP_HOOK_FUNCTION_EX(name, scope)                                                              \
+    {                                                                                                   \
+        pre_##scope##_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                         \
+        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                              \
+    }
+
+#define PRE_HOOK_FUNCTION(name) \
+    PRE_HOOK_FUNCTION_EX(name, global)
 /**
  * 使用这个宏 hook 指定函数
  * 需要在 hook 前先定义相应的替换函数

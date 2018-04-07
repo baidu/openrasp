@@ -175,7 +175,7 @@ static void v8native_antlr4(const v8::FunctionCallbackInfo<v8::Value> &info)
         auto tokens = output.getTokens();
         int length = tokens.size();
         v8::Isolate *isolate = info.GetIsolate();
-        v8::Local<v8::Array> arr = v8::Array::New(isolate, length);
+        v8::Local<v8::Array> arr = v8::Array::New(isolate, length - 1);
         for (int i = 0; i < length - 1; i++)
         {
             v8::Local<v8::String> token;

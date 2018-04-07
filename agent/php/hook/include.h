@@ -52,7 +52,9 @@ int eval_handler(ZEND_OPCODE_HANDLER_ARGS)
     {
         zval *attack_params;
         MAKE_STD_ZVAL(attack_params);
-        ZVAL_STRING(attack_params, "", 1);
+        array_init(attack_params);
+        add_assoc_zval(attack_params, "eval", OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr);
+        Z_ADDREF_P(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr);
         zval *plugin_message = NULL;
         MAKE_STD_ZVAL(plugin_message);
         ZVAL_STRING(plugin_message, _("China Chopper WebShell"), 1);
@@ -79,7 +81,9 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
         {
             zval *attack_params;
             MAKE_STD_ZVAL(attack_params);
-            ZVAL_STRING(attack_params, "", 1);
+            array_init(attack_params);
+            add_assoc_zval(attack_params, "url", OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr);
+            Z_ADDREF_P(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr);
             zval *plugin_message = NULL;
             MAKE_STD_ZVAL(plugin_message);
             ZVAL_STRING(plugin_message, _("File inclusion"), 1);

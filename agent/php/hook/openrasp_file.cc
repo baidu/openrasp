@@ -38,7 +38,7 @@ static void check_file_operation(const char* type, char *filename, int filename_
     }
 }
 
-void hook_file(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_file(INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename;
 	int filename_len;
@@ -54,7 +54,7 @@ void hook_file(INTERNAL_FUNCTION_PARAMETERS)
     check_file_operation("readFile", filename, filename_len, use_include_path TSRMLS_CC);
 }
 
-void hook_readfile(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_readfile(INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename;
 	int filename_len;
@@ -68,7 +68,7 @@ void hook_readfile(INTERNAL_FUNCTION_PARAMETERS)
     check_file_operation("readFile", filename, filename_len, use_include_path TSRMLS_CC);
 }
 
-void hook_file_get_contents(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_file_get_contents(INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename;
 	int filename_len;
@@ -83,7 +83,7 @@ void hook_file_get_contents(INTERNAL_FUNCTION_PARAMETERS)
 	}
     check_file_operation("readFile", filename, filename_len, use_include_path TSRMLS_CC);
 }
-void hook_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **path, **data, **flags;
     char resolved_path_buff[MAXPATHLEN];
@@ -91,13 +91,28 @@ void hook_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
     if (argc > 1 && zend_get_parameters_ex(argc, &path, &data, &flags) == SUCCESS &&
         Z_TYPE_PP(path) == IS_STRING)
     {
+        char *real_path = nullptr;
+        char *include_path = nullptr;
+        if (argc == 3 && Z_TYPE_PP(flags) == IS_LONG && (Z_LVAL_PP(flags) & PHP_FILE_USE_INCLUDE_PATH))
+        {
+            include_path = PG(include_path);
+        }
+        else
+        {
+            include_path = NULL;
+        }
+        real_path = php_resolve_path(Z_STRVAL_PP(path), Z_STRLEN_PP(path), include_path TSRMLS_CC);
+        
         if (!openrasp_check_type_ignored(ZEND_STRL("webshell_file_put_contents") TSRMLS_CC)
             && openrasp_zval_in_request(*path TSRMLS_CC)
             && openrasp_zval_in_request(*data TSRMLS_CC))
         {
             zval *attack_params = NULL;
             MAKE_STD_ZVAL(attack_params);
-            ZVAL_STRING(attack_params, "", 1);
+            array_init(attack_params);
+            add_assoc_zval(attack_params, "name", *path);
+            Z_ADDREF_P(*path);
+            add_assoc_string(attack_params, "realpath", real_path ? real_path : Z_STRVAL_PP(path), 1);
             zval *plugin_message = NULL;
             MAKE_STD_ZVAL(plugin_message);
             ZVAL_STRING(plugin_message, _("File dropper backdoor"), 1);
@@ -105,39 +120,18 @@ void hook_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
         }
         if (!openrasp_check_type_ignored(ZEND_STRL("writeFile") TSRMLS_CC))
         {
-            char *real_path = nullptr;
-            char *include_path = nullptr;
-            if (argc == 3 && Z_TYPE_PP(flags) == IS_LONG && (Z_LVAL_PP(flags) & PHP_FILE_USE_INCLUDE_PATH))
-            {
-                include_path = PG(include_path);
-            }
-            else
-            {
-                include_path = NULL;
-            }
-            real_path = php_resolve_path(Z_STRVAL_PP(path), Z_STRLEN_PP(path), include_path TSRMLS_CC);
             zval *params;
             MAKE_STD_ZVAL(params);
             array_init(params);
             add_assoc_zval(params, "path", *path);
             Z_ADDREF_P(*path);
-            if (real_path)
-            {
-                add_assoc_string(params, "realpath", real_path, 1);
-            }
-            else
-            {
-                zval *realpath;
-                MAKE_STD_ZVAL(realpath);
-                ZVAL_STRING(realpath, Z_STRVAL_PP(path), 1);
-                add_assoc_zval(params, "realpath", realpath);
-            }
+            add_assoc_string(params, "realpath", real_path ? real_path : Z_STRVAL_PP(path), 1);
             check("writeFile", params TSRMLS_CC);
         }
     }
 
 }
-void hook_fopen(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_fopen(INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename, *mode;
 	int filename_len, mode_len;
@@ -154,7 +148,7 @@ void hook_fopen(INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void hook_splfileobject___construct_ex(INTERNAL_FUNCTION_PARAMETERS)
+void pre_splfileobject___construct(INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename, *mode;
 	int filename_len, mode_len;
@@ -171,7 +165,7 @@ void hook_splfileobject___construct_ex(INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void hook_copy(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_copy(INTERNAL_FUNCTION_PARAMETERS)
 {
     char *source, *target;
 	int source_len, target_len;

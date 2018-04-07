@@ -13,13 +13,13 @@
 # endif
 #endif
 
-void hook_file(INTERNAL_FUNCTION_PARAMETERS);
-void hook_readfile(INTERNAL_FUNCTION_PARAMETERS);
-void hook_file_get_contents(INTERNAL_FUNCTION_PARAMETERS);
-void hook_file_put_contents(INTERNAL_FUNCTION_PARAMETERS);
-void hook_fopen(INTERNAL_FUNCTION_PARAMETERS);
-void hook_copy(INTERNAL_FUNCTION_PARAMETERS);
+void pre_global_file(INTERNAL_FUNCTION_PARAMETERS);
+void pre_global_readfile(INTERNAL_FUNCTION_PARAMETERS);
+void pre_global_file_get_contents(INTERNAL_FUNCTION_PARAMETERS);
+void pre_global_file_put_contents(INTERNAL_FUNCTION_PARAMETERS);
+void pre_global_fopen(INTERNAL_FUNCTION_PARAMETERS);
+void pre_global_copy(INTERNAL_FUNCTION_PARAMETERS);
 
-void hook_splfileobject___construct_ex(INTERNAL_FUNCTION_PARAMETERS);
+void pre_splfileobject___construct(INTERNAL_FUNCTION_PARAMETERS);
 
 #endif //OPENRASP_FILE_H

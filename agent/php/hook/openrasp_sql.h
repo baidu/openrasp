@@ -21,83 +21,88 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
 void check_query_clause(INTERNAL_FUNCTION_PARAMETERS, char *server, int num);
 long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count, zval *params[] TSRMLS_DC);
 
-//SQLite3::exec
-void pre_sqlite3_exec_ex(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_sqlite3_exec_ex(INTERNAL_FUNCTION_PARAMETERS, char *server);
-
-//SQLite3::query
-void pre_sqlite3_query_ex(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_sqlite3_query_ex(INTERNAL_FUNCTION_PARAMETERS, char *server);
-
-//SQLite3::querySingle
-void pre_sqlite3_querySingle_ex(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_sqlite3_querySingle_ex(INTERNAL_FUNCTION_PARAMETERS, char *server);
-
-//mysqli::mysqli 
-void pre_mysqli_mysqli_ex(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_mysqli_mysqli_ex(INTERNAL_FUNCTION_PARAMETERS, char *server);
-
-//mysqli::real_connect 
-void pre_mysqli_real_connect_ex(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_mysqli_real_connect_ex(INTERNAL_FUNCTION_PARAMETERS, char *server);
-
-//mysqli::query 
-void pre_mysqli_query_ex(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_mysqli_query_ex(INTERNAL_FUNCTION_PARAMETERS, char *server);
-
+//************************ mysql ************************
 //mysql_connect
-void pre_mysql_connect(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_mysql_connect(INTERNAL_FUNCTION_PARAMETERS, char *server);
+void pre_global_mysql_connect(INTERNAL_FUNCTION_PARAMETERS);
+void post_global_mysql_connect(INTERNAL_FUNCTION_PARAMETERS);
 
 //mysql_pconnect
-void pre_mysql_pconnect(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_mysql_pconnect(INTERNAL_FUNCTION_PARAMETERS, char *server);
+void pre_global_mysql_pconnect(INTERNAL_FUNCTION_PARAMETERS);
+void post_global_mysql_pconnect(INTERNAL_FUNCTION_PARAMETERS);
 
 //mysql_query
-void pre_mysql_query(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_mysql_query(INTERNAL_FUNCTION_PARAMETERS, char *server);
+void pre_global_mysql_query(INTERNAL_FUNCTION_PARAMETERS);
+void post_global_mysql_query(INTERNAL_FUNCTION_PARAMETERS);
+
+//************************ mysqli ************************
+//mysqli::mysqli 
+void pre_mysqli_mysqli(INTERNAL_FUNCTION_PARAMETERS);
+void post_mysqli_mysqli(INTERNAL_FUNCTION_PARAMETERS);
+
+//mysqli::real_connect 
+void pre_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS);
+void post_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS);
+
+//mysqli::query 
+void pre_mysqli_query(INTERNAL_FUNCTION_PARAMETERS);
+void post_mysqli_query(INTERNAL_FUNCTION_PARAMETERS);
 
 //mysqli_connect
-void pre_mysqli_connect(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_mysqli_connect(INTERNAL_FUNCTION_PARAMETERS, char *server);
+void pre_global_mysqli_connect(INTERNAL_FUNCTION_PARAMETERS);
+void post_global_mysqli_connect(INTERNAL_FUNCTION_PARAMETERS);
 
 //mysqli_real_connect
-void pre_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS, char *server);
+void pre_global_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS);
+void post_global_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS);
 
 //mysqli_query
-void pre_mysqli_query(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_mysqli_query(INTERNAL_FUNCTION_PARAMETERS, char *server);
+void pre_global_mysqli_query(INTERNAL_FUNCTION_PARAMETERS);
+void post_global_mysqli_query(INTERNAL_FUNCTION_PARAMETERS);
 
 //mysqli_real_query
-void pre_mysqli_real_query(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_mysqli_real_query(INTERNAL_FUNCTION_PARAMETERS, char *server);
+void pre_global_mysqli_real_query(INTERNAL_FUNCTION_PARAMETERS);
+void post_global_mysqli_real_query(INTERNAL_FUNCTION_PARAMETERS);
 
+//************************ pgsql ************************
 //pg_connect
-void pre_pg_connect(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_pg_connect(INTERNAL_FUNCTION_PARAMETERS, char *server);
+void pre_global_pg_connect(INTERNAL_FUNCTION_PARAMETERS);
+void post_global_pg_connect(INTERNAL_FUNCTION_PARAMETERS);
 
 //pg_pconnect
-void pre_pg_pconnect(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_pg_pconnect(INTERNAL_FUNCTION_PARAMETERS, char *server);
+void pre_global_pg_pconnect(INTERNAL_FUNCTION_PARAMETERS);
+void post_global_pg_pconnect(INTERNAL_FUNCTION_PARAMETERS);
 
 //pg_query
-void pre_pg_query(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_pg_query(INTERNAL_FUNCTION_PARAMETERS, char *server);
+void pre_global_pg_query(INTERNAL_FUNCTION_PARAMETERS);
+void post_global_pg_query(INTERNAL_FUNCTION_PARAMETERS);
 
 //pg_send_query
-void pre_pg_send_query(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_pg_send_query(INTERNAL_FUNCTION_PARAMETERS, char *server);
+void pre_global_pg_send_query(INTERNAL_FUNCTION_PARAMETERS);
+void post_global_pg_send_query(INTERNAL_FUNCTION_PARAMETERS);
 
 //pg_get_result
-void pre_pg_get_result(INTERNAL_FUNCTION_PARAMETERS, char *server);
-void post_pg_get_result(INTERNAL_FUNCTION_PARAMETERS, char *server);
+void pre_global_pg_get_result(INTERNAL_FUNCTION_PARAMETERS);
+void post_global_pg_get_result(INTERNAL_FUNCTION_PARAMETERS);
 
-void pre_pdo_query_ex(INTERNAL_FUNCTION_PARAMETERS);
-void post_pdo_query_ex(INTERNAL_FUNCTION_PARAMETERS);
-void pre_pdo_exec_ex(INTERNAL_FUNCTION_PARAMETERS);
-void post_pdo_exec_ex(INTERNAL_FUNCTION_PARAMETERS);
-void pre_pdo___construct_ex(INTERNAL_FUNCTION_PARAMETERS);
-void post_pdo___construct_ex(INTERNAL_FUNCTION_PARAMETERS);
+//************************ pdo ************************
+void pre_pdo_query(INTERNAL_FUNCTION_PARAMETERS);
+void post_pdo_query(INTERNAL_FUNCTION_PARAMETERS);
+void pre_pdo_exec(INTERNAL_FUNCTION_PARAMETERS);
+void post_pdo_exec(INTERNAL_FUNCTION_PARAMETERS);
+void pre_pdo___construct(INTERNAL_FUNCTION_PARAMETERS);
+void post_pdo___construct(INTERNAL_FUNCTION_PARAMETERS);
+
+//************************ sqlite3 ************************
+//SQLite3::exec
+void pre_sqlite3_exec(INTERNAL_FUNCTION_PARAMETERS);
+void post_sqlite3_exec(INTERNAL_FUNCTION_PARAMETERS);
+
+//SQLite3::query
+void pre_sqlite3_query(INTERNAL_FUNCTION_PARAMETERS);
+void post_sqlite3_query(INTERNAL_FUNCTION_PARAMETERS);
+
+//SQLite3::querySingle
+void pre_sqlite3_querySingle(INTERNAL_FUNCTION_PARAMETERS);
+void post_sqlite3_querySingle(INTERNAL_FUNCTION_PARAMETERS);
 
 #endif //OPENRASP_SQL_H

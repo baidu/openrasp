@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: openrasp@baidu.com\n"
-"POT-Creation-Date: 2018-03-27 23:13-0700\n"
+"POT-Creation-Date: 2018-04-01 23:52-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,7 +23,8 @@ msgid ""
 "security protection"
 msgstr ""
 
-#: openrasp_shared_alloc.c:216 openrasp_shared_alloc.c:216
+#: openrasp_shared_alloc.c:216 openrasp_shared_alloc.c:217
+#: openrasp_shared_alloc.c:217
 #, c-format
 msgid "Cannot create lock - %s (%d)"
 msgstr ""
@@ -36,7 +37,8 @@ msgstr ""
 msgid "Cannot lock mutex"
 msgstr ""
 
-#: openrasp_shared_alloc.c:237 openrasp_shared_alloc.c:237
+#: openrasp_shared_alloc.c:237 openrasp_shared_alloc.c:238
+#: openrasp_shared_alloc.c:238
 #, c-format
 msgid "Cannot remove lock - %s (%d)"
 msgstr ""
@@ -46,8 +48,8 @@ msgstr ""
 msgid "Could not create directory %s - %s"
 msgstr ""
 
-#: openrasp_log.cc:708 openrasp_log.cc:715 openrasp_log.cc:708
-#: openrasp_log.cc:715
+#: openrasp_log.cc:708 openrasp_log.cc:715 openrasp_log.cc:705
+#: openrasp_log.cc:712 openrasp_log.cc:705 openrasp_log.cc:712
 msgid "Error allocating memory needed to call GetAdaptersinfo."
 msgstr ""
 
@@ -56,35 +58,35 @@ msgstr ""
 msgid "Fail to bindtextdomain - %s"
 msgstr ""
 
-#: openrasp_log.cc:286 openrasp_log.cc:286
+#: openrasp_log.cc:286 openrasp_log.cc:283 openrasp_log.cc:283
 #, c-format
 msgid "Fail to connect syslog server %s."
 msgstr ""
 
-#: openrasp_log.cc:762 openrasp_log.cc:762
+#: openrasp_log.cc:762 openrasp_log.cc:759 openrasp_log.cc:759
 #, c-format
 msgid "Fail to gethostname - %s."
 msgstr ""
 
-#: openrasp_log.cc:730 openrasp_log.cc:730
+#: openrasp_log.cc:730 openrasp_log.cc:727 openrasp_log.cc:727
 #, c-format
 msgid "Fail to getifaddrs - %s."
 msgstr ""
 
-#: openrasp_v8.cc:259 openrasp_v8.cc:259
+#: openrasp_v8.cc:259 openrasp_v8.cc:234 openrasp_v8.cc:234
 #, c-format
 msgid "Fail to initialize js plugin - %s"
 msgstr ""
 
-#: openrasp_log.cc:600 openrasp_log.cc:600
+#: openrasp_log.cc:600 openrasp_log.cc:597 openrasp_log.cc:597
 msgid "Fail to merge request parameters during alarm logging."
 msgstr ""
 
-#: openrasp_log.cc:647 openrasp_log.cc:647
+#: openrasp_log.cc:647 openrasp_log.cc:644 openrasp_log.cc:644
 msgid "Fail to merge request parameters during policy logging."
 msgstr ""
 
-#: openrasp_log.cc:322 openrasp_log.cc:322
+#: openrasp_log.cc:322 openrasp_log.cc:319 openrasp_log.cc:319
 #, c-format
 msgid "Fail to open php_stream of %s!"
 msgstr ""
@@ -113,7 +115,8 @@ msgstr ""
 msgid "Failed to reload %s"
 msgstr ""
 
-#: hook/openrasp_file.cc:105 hook/openrasp_file.cc:105
+#: hook/openrasp_file.cc:105 hook/openrasp_file.cc:103
+#: hook/openrasp_file.cc:103
 msgid "File dropper backdoor"
 msgstr ""
 
@@ -126,22 +129,23 @@ msgstr ""
 msgid "Fswatch error: unknown error"
 msgstr ""
 
-#: openrasp_log.cc:680 openrasp_log.cc:680
+#: openrasp_log.cc:680 openrasp_log.cc:677 openrasp_log.cc:677
 #, c-format
 msgid "Invalid \"openrasp.syslog_server_address\" (%s) and it'll be ignored."
 msgstr ""
 
-#: openrasp_log.cc:307 openrasp_log.cc:307
+#: openrasp_log.cc:307 openrasp_log.cc:304 openrasp_log.cc:304
 #, c-format
 msgid "No write permission of file %s."
 msgstr ""
 
-#: openrasp_v8.cc:362 openrasp_v8.cc:362
+#: openrasp_v8.cc:362 openrasp_v8.cc:349 openrasp_v8.cc:349
 #, c-format
 msgid "The size of plugin file '%s' should be less than 10 MB, skiped"
 msgstr ""
 
-#: openrasp_shared_alloc.c:150 openrasp_shared_alloc.c:150
+#: openrasp_shared_alloc.c:150 openrasp_shared_alloc.c:151
+#: openrasp_shared_alloc.c:151
 #, c-format
 msgid "Unable to allocate shared memory segment of %ld bytes: %s: %s (%d)"
 msgstr ""
@@ -150,7 +154,8 @@ msgstr ""
 msgid "Unable to create file mapping"
 msgstr ""
 
-#: openrasp_shared_alloc.c:89 openrasp_shared_alloc.c:89
+#: openrasp_shared_alloc.c:89 openrasp_shared_alloc.c:90
+#: openrasp_shared_alloc.c:90
 #, c-format
 msgid "Unable to create lock file: %s (%d)"
 msgstr ""
@@ -185,7 +190,7 @@ msgid "Unable to write base address"
 msgstr ""
 
 #: hook/openrasp_array.cc:21 openrasp_hook.cc:186 hook/openrasp_array.cc:21
-#: openrasp_hook.cc:186
+#: hook/openrasp_array.cc:221
 #, c-format
 msgid "Webshell detected: using %s"
 msgstr ""
@@ -215,7 +220,7 @@ msgid ""
 "expose_php should be turned off to prevent PHP Version information disclosure"
 msgstr ""
 
-#: openrasp_log.cc:752 openrasp_log.cc:752
+#: openrasp_log.cc:752 openrasp_log.cc:749 openrasp_log.cc:749
 #, c-format
 msgid "getifaddrs: getnameinfo failed - %s."
 msgstr ""

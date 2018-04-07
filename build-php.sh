@@ -1,4 +1,10 @@
 #!/bin/bash
+#
+# To enable native antlr support, do
+# 
+# wget https://packages.baidu.com/app/openrasp/libantlr4-linux.tar.gz -O /tmp/libantlr4.tar.gz
+# tar -xf /tmp/libantlr4.tar.gz -C /tmp
+# extra_config_opt="--with-antlr4=/tmp/libantlr4" bash build-php.sh
 
 cd "$(dirname "$0")"
 
@@ -36,9 +42,9 @@ cd agent/php
 phpize --clean
 phpize
 if [[ $php_os == "macos" ]]; then
-	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext=/usr/local/homebrew/opt/gettext -q
+	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext=/usr/local/homebrew/opt/gettext -q ${extra_config_opt}
 else
-	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext -q
+	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext -q ${extra_config_opt}
 fi
 
 make

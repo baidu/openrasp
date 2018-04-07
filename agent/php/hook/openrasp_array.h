@@ -54,12 +54,14 @@
 #define DOUBLE_DRIFT_FIX	0.000000000000001
 /* }}} */
 
-void pre_array_diff_ukey(INTERNAL_FUNCTION_PARAMETERS);
-void pre_array_filter(INTERNAL_FUNCTION_PARAMETERS);
-void pre_array_map(INTERNAL_FUNCTION_PARAMETERS);
-void pre_array_walk(INTERNAL_FUNCTION_PARAMETERS);
-void pre_uasort(INTERNAL_FUNCTION_PARAMETERS);
-void pre_uksort(INTERNAL_FUNCTION_PARAMETERS);
-void pre_usort(INTERNAL_FUNCTION_PARAMETERS);
+void pre_global_array_diff_ukey(INTERNAL_FUNCTION_PARAMETERS);
+void pre_global_array_filter(INTERNAL_FUNCTION_PARAMETERS);
+void pre_global_array_map(INTERNAL_FUNCTION_PARAMETERS);
+void pre_global_array_walk(INTERNAL_FUNCTION_PARAMETERS);
+void pre_global_uasort(INTERNAL_FUNCTION_PARAMETERS);
+void pre_global_uksort(INTERNAL_FUNCTION_PARAMETERS);
+void pre_global_usort(INTERNAL_FUNCTION_PARAMETERS);
+
+void pre_reflectionfunction___construct(INTERNAL_FUNCTION_PARAMETERS);
 
 #endif //OPENRASP_ARRAY_H
