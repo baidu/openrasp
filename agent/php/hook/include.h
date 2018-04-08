@@ -127,6 +127,11 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     MAKE_STD_ZVAL(path);
     MAKE_COPY_ZVAL(&op1, path);
     convert_to_string(path);
+    if (strstr(Z_STRVAL_P(path), "/../") == nullptr && strstr(Z_STRVAL_P(path), "://") == nullptr)
+    {
+        zval_ptr_dtor(&path);
+        return ZEND_USER_OPCODE_DISPATCH;
+    }
     char *real_path = php_resolve_path(Z_STRVAL_P(path),
                                        Z_STRLEN_P(path),
                                        PG(include_path) TSRMLS_CC);
