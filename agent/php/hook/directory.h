@@ -6,7 +6,7 @@ inline void hook_directory(INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **path;
     int argc = MIN(1, ZEND_NUM_ARGS());
-    if (!openrasp_check_type_ignored(ZEND_STRL("command") TSRMLS_CC) &&
+    if (!openrasp_check_type_ignored(ZEND_STRL("directory") TSRMLS_CC) &&
         argc > 0 &&
         zend_get_parameters_ex(argc, &path) == SUCCESS &&
         Z_TYPE_PP(path) == IS_STRING)
