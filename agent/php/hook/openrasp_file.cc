@@ -115,7 +115,7 @@ void pre_global_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
             add_assoc_string(attack_params, "realpath", real_path ? real_path : Z_STRVAL_PP(path), 1);
             zval *plugin_message = NULL;
             MAKE_STD_ZVAL(plugin_message);
-            ZVAL_STRING(plugin_message, _("File dropper backdoor"), 1);
+            ZVAL_STRING(plugin_message, _("Webshell detected - File dropper backdoor"), 1);
             openrasp_buildin_php_risk_handle(1, "webshell_file_put_contents", 100, attack_params, plugin_message TSRMLS_CC);
         }
         if (!openrasp_check_type_ignored(ZEND_STRL("writeFile") TSRMLS_CC))
