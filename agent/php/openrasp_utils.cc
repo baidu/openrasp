@@ -116,7 +116,7 @@ int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC)
     }
     char *dirname = estrndup(path, len);
     int dirlen = php_dirname(dirname, len);
-    int rst = recursive_mkdir(dirname, dirlen, mode);
+    int rst = recursive_mkdir(dirname, dirlen, mode TSRMLS_CC);
     efree(dirname);
     if (rst)
     {

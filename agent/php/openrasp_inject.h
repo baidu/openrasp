@@ -14,7 +14,7 @@ extern "C" {
 #include "php_ini.h"
 #include "php_main.h"
 #include "Zend/zend_API.h"
-
+#include "ext/standard/php_string.h"
 #ifdef __cplusplus
 }
 #endif

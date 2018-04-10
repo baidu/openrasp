@@ -79,7 +79,7 @@ class TimeoutTask : public v8::Task
 {
 public:
   v8::Isolate *isolate;
-  std::chrono::time_point<std::chrono::steady_clock> time_point;
+  std::chrono::time_point<std::chrono::high_resolution_clock> time_point;
   std::timed_mutex mtx;
   TimeoutTask(v8::Isolate *_isolate, int _milliseconds = 100);
   void Run() override;
@@ -96,7 +96,7 @@ public:
 class openrasp_v8_process_globals
 {
 public:
-  v8::StartupData snapshot_blob{nullptr, 0};
+  v8::StartupData snapshot_blob;
   std::mutex lock;
   bool is_initialized = false;
   V8Platform *v8_platform = nullptr;

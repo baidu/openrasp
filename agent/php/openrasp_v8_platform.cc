@@ -148,7 +148,7 @@ void V8Platform::CallDelayedOnForegroundThread(v8::Isolate *isolate, v8::Task *t
 
 double V8Platform::MonotonicallyIncreasingTime()
 {
-    auto now = std::chrono::steady_clock::now().time_since_epoch();
+    auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
     return std::chrono::duration_cast<std::chrono::milliseconds>(now).count() / 1000;
 }
 
@@ -170,7 +170,7 @@ void V8Platform::EnsureBackgroundThreadInitialized()
 openrasp::TimeoutTask::TimeoutTask(v8::Isolate *_isolate, int _milliseconds)
     : isolate(_isolate)
 {
-    time_point = std::chrono::steady_clock::now() + std::chrono::milliseconds(_milliseconds);
+    time_point = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(_milliseconds);
 }
 
 void openrasp::TimeoutTask::Run()
@@ -186,7 +186,7 @@ void openrasp::TimeoutTask::Run()
             return;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } while (std::chrono::steady_clock::now() < time_point);
+    } while (std::chrono::high_resolution_clock::now() < time_point);
 
     // TerminateExecution can be used by any thread
     // even if that thread has not acquired the V8 lock with a Locker object

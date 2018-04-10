@@ -207,10 +207,10 @@ static v8::StartupData init_js_snapshot(TSRMLS_D)
         v8::Local<v8::Object> global = context->Global();
         global->Set(V8STRING_I("global").ToLocalChecked(), global);
         v8::Local<v8::Function> log = v8::Function::New(isolate, v8native_log);
-        v8::Local<v8::Object> stdout = v8::Object::New(isolate);
-        stdout->Set(V8STRING_I("write").ToLocalChecked(), log);
-        global->Set(V8STRING_I("stdout").ToLocalChecked(), stdout);
-        global->Set(V8STRING_I("stderr").ToLocalChecked(), stdout);
+        v8::Local<v8::Object> v8_stdout = v8::Object::New(isolate);
+        v8_stdout->Set(V8STRING_I("write").ToLocalChecked(), log);
+        global->Set(V8STRING_I("stdout").ToLocalChecked(), v8_stdout);
+        global->Set(V8STRING_I("stderr").ToLocalChecked(), v8_stdout);
 
 #define MAKE_JS_SRC_PAIR(name) {(const char *)name##_js, ZEND_TOSTR(name) ".js"}
         std::vector<std::pair<const char *, const char *>> js_src_list = {
@@ -365,6 +365,7 @@ PHP_GINIT_FUNCTION(openrasp_v8)
 
 PHP_GSHUTDOWN_FUNCTION(openrasp_v8)
 {
+    shutdown_isolate(TSRMLS_C);
 #ifdef ZTS
     openrasp_v8_globals->~_zend_openrasp_v8_globals();
 #endif
@@ -399,7 +400,6 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
     ZEND_SHUTDOWN_MODULE_GLOBALS(openrasp_v8, PHP_GSHUTDOWN(openrasp_v8));
     if (process_globals.is_initialized)
     {
-        shutdown_isolate(TSRMLS_C);
         // Disposing v8 is permanent, it cannot be reinitialized,
         // it should generally not be necessary to dispose v8 before exiting a process,
         // so skip this step for module graceful reload
