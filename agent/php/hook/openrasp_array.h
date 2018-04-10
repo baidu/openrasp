@@ -1,6 +1,9 @@
 #ifndef OPENRASP_ARRAY_H
 #define OPENRASP_ARRAY_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "php.h"
 #include "php_ini.h"
 #include <stdarg.h>
@@ -18,6 +21,9 @@
 #include "ext/standard/php_string.h"
 #include "ext/standard/php_rand.h"
 #include "ext/standard/php_smart_str.h"
+#ifdef __cplusplus
+}
+#endif
 
 /* {{{ defines */
 #define EXTR_OVERWRITE			0

@@ -109,7 +109,7 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_inject)
                 sapi_header_struct *sapi_header = (sapi_header_struct *)element->data;
                 if (sapi_header->header_len > 0 &&
                     strncasecmp(sapi_header->header, "content-type", sizeof("content-type") - 1) == 0 &&
-                    strcasestr(sapi_header->header, "text/html") != nullptr)
+                    php_stristr(sapi_header->header, "text/html", sapi_header->header_len, sizeof("text/html") - 1) != nullptr)
                 {
 #if PHP_MINOR_VERSION > 3
                     php_output_write(inject_html.data(), inject_html.size() TSRMLS_CC);

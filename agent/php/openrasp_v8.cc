@@ -207,10 +207,10 @@ static v8::StartupData init_js_snapshot(TSRMLS_D)
         v8::Local<v8::Object> global = context->Global();
         global->Set(V8STRING_I("global").ToLocalChecked(), global);
         v8::Local<v8::Function> log = v8::Function::New(isolate, v8native_log);
-        v8::Local<v8::Object> stdout = v8::Object::New(isolate);
-        stdout->Set(V8STRING_I("write").ToLocalChecked(), log);
-        global->Set(V8STRING_I("stdout").ToLocalChecked(), stdout);
-        global->Set(V8STRING_I("stderr").ToLocalChecked(), stdout);
+        v8::Local<v8::Object> v8_stdout = v8::Object::New(isolate);
+        v8_stdout->Set(V8STRING_I("write").ToLocalChecked(), log);
+        global->Set(V8STRING_I("stdout").ToLocalChecked(), v8_stdout);
+        global->Set(V8STRING_I("stderr").ToLocalChecked(), v8_stdout);
 
 #define MAKE_JS_SRC_PAIR(name) {(const char *)name##_js, ZEND_TOSTR(name) ".js"}
         std::vector<std::pair<const char *, const char *>> js_src_list = {
