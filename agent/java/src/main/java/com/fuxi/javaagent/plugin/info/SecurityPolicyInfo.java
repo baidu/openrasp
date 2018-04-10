@@ -76,7 +76,7 @@ public class SecurityPolicyInfo extends EventInfo {
         // 服务器host name
         info.put("server_hostname", OSUtil.getHostName());
         // 服务器ip
-        info.put("nic", OSUtil.getIpAddress());
+        info.put("server_nic", OSUtil.getIpAddress());
         // 服务器类型
         info.put("server_type", getCatalinaServerType());
         // 服务器版本

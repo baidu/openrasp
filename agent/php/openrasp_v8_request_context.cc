@@ -348,6 +348,9 @@ static void server_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
     server->Set(V8STRING_I("language").ToLocalChecked(), V8STRING_N("php").ToLocalChecked());
     server->Set(V8STRING_I("name").ToLocalChecked(), V8STRING_N("PHP").ToLocalChecked());
     server->Set(V8STRING_I("version").ToLocalChecked(), V8STRING_N(OPENRASP_PHP_VERSION).ToLocalChecked());
+#ifdef PHP_WIN32
+    server->Set(V8STRING_I("os").ToLocalChecked(), V8STRING_N("Windows").ToLocalChecked());
+#else
     if (strstr(PHP_OS, "Darwin"))
     {
         server->Set(V8STRING_I("os").ToLocalChecked(), V8STRING_N("Mac").ToLocalChecked());
@@ -356,14 +359,11 @@ static void server_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
     {
         server->Set(V8STRING_I("os").ToLocalChecked(), V8STRING_N("Linux").ToLocalChecked());
     }
-    else if (strstr(PHP_OS, "Windows"))
-    {
-        server->Set(V8STRING_I("os").ToLocalChecked(), V8STRING_N("Windows").ToLocalChecked());
-    }
     else
     {
         server->Set(V8STRING_I("os").ToLocalChecked(), V8STRING_N(PHP_OS).ToLocalChecked());
     }
+#endif
     info.GetReturnValue().Set(server);
 }
 v8::Local<v8::Object> openrasp::RequestContext::New(v8::Isolate *isolate)

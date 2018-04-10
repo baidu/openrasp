@@ -17,23 +17,19 @@ static const char* mode_to_type(char *mode)
 }
 
 static void check_file_operation(const char* type, char *filename, int filename_len, zend_bool use_include_path TSRMLS_DC)
-{
-    char resolved_path_buff[MAXPATHLEN];
-    char *real_path = nullptr;
-    real_path = php_resolve_path(filename, filename_len, use_include_path ? PG(include_path) : NULL TSRMLS_CC);
+{	
+    char expand_path[MAXPATHLEN];
+	if (!expand_filepath(filename, expand_path TSRMLS_CC)) {
+		return;
+	}
+    char *real_path = php_resolve_path(expand_path, strlen(expand_path), use_include_path ? PG(include_path) : NULL TSRMLS_CC);
     if (real_path)
     {
         zval *params;
         MAKE_STD_ZVAL(params);
         array_init(params);
-        zval *path = NULL;
-        MAKE_STD_ZVAL(path);
-        ZVAL_STRING(path, filename, 1);
-        zval *realpath = NULL;
-        MAKE_STD_ZVAL(realpath);
-        ZVAL_STRING(realpath, real_path, 1);
-        add_assoc_zval(params, "path", path);
-        add_assoc_zval(params, "realpath", realpath);
+        add_assoc_string(params, "path", expand_path, 1);
+        add_assoc_string(params, "realpath", real_path, 1);
         check(type, params TSRMLS_CC);
     }
 }
@@ -101,7 +97,11 @@ void pre_global_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
         {
             include_path = NULL;
         }
-        real_path = php_resolve_path(Z_STRVAL_PP(path), Z_STRLEN_PP(path), include_path TSRMLS_CC);
+        char expand_path[MAXPATHLEN];
+        if (!expand_filepath(Z_STRVAL_PP(path), expand_path TSRMLS_CC)) {
+            return;
+        }
+        real_path = php_resolve_path(expand_path, strlen(expand_path), include_path TSRMLS_CC);
         
         if (!openrasp_check_type_ignored(ZEND_STRL("webshell_file_put_contents") TSRMLS_CC)
             && openrasp_zval_in_request(*path TSRMLS_CC)
@@ -123,8 +123,7 @@ void pre_global_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
             zval *params;
             MAKE_STD_ZVAL(params);
             array_init(params);
-            add_assoc_zval(params, "path", *path);
-            Z_ADDREF_P(*path);
+            add_assoc_string(params, "path", expand_path, 1);
             add_assoc_string(params, "realpath", real_path ? real_path : Z_STRVAL_PP(path), 1);
             check("writeFile", params TSRMLS_CC);
         }
