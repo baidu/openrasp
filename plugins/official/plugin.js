@@ -113,6 +113,20 @@ function validate_stack_php(stack) {
     return verdict
 }
 
+function is_outside_webroot(appBasePath, realpath, path) {
+    var verdict = false
+
+    if (realpath.indexOf(appBasePath) == -1 && (path.indexOf('/../') !== -1 || path.indexOf('\\..\\') !== -1)) {
+        return {
+            action:     'block',
+            message:    '目录遍历攻击，跳出web目录范围 (' + appBasePath + ')',
+            confidence: 90
+        }
+    }
+
+    return verdict
+}
+
 if (RASP.get_jsengine() !== 'v8') {
     // 在java语言下面，为了提高性能，SQLi/SSRF检测逻辑改为原生实现
     // 通过修改这个 algorithmConfig 来控制检测逻辑是否开启
@@ -478,10 +492,10 @@ plugin.register('readFile', function (params, context) {
     }
 
     // 算法3: 检查文件遍历，看是否超出web目录范围
-    var path        = canonicalPath(params.path)
+    var path        = params.path
     var appBasePath = context.appBasePath
 
-    if (params.realpath.indexOf(appBasePath) == -1 && (path.indexOf('/../') !== -1 || path.indexOf('\\..\\') !== -1)) {
+    if (is_outside_webroot(appBasePath, params.realpath, path)) {
         return {
             action:     'block',
             message:    '目录遍历攻击，跳出web目录范围 (' + appBasePath + ')',
@@ -507,15 +521,31 @@ plugin.register('webdav', function (params, context) {
 })
 
 plugin.register('include', function (params, context) {
-    var items = params.url.split('://')
+    var url = params.url    
 
-    // 必须有协议的情况下才能利用漏洞
-    // JSTL import 类型的插件回调，已经在Java层面做了过滤
-    if (items.length != 2) {
+    // 如果没有协议
+    // ?file=../../../../../var/log/httpd/error.log
+    if (url.indexOf('://') == -1) {
+        var path        = canonicalPath(url)
+        var realpath    = params.realpath
+        var appBasePath = context.appBasePath
+
+        if (is_outside_webroot(appBasePath, realpath, path)) {
+            return {
+                action:     'block',
+                message:    '任意文件包含攻击，包含web目录范围之外的文件 (' + appBasePath + ')',
+                confidence: 100
+            }
+        }
+
         return clean
     }
 
-    // http 方式 SSRF
+    // 如果有协议
+    // include ('http://xxxxx')
+    var items = url.split('://')
+
+    // http 方式 SSRF/RFI
     if (items[0].toLowerCase() == 'http') {
         return {
             action:     'block',
