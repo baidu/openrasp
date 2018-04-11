@@ -5,6 +5,9 @@
 # wget https://packages.baidu.com/app/openrasp/libantlr4-linux.tar.gz -O /tmp/libantlr4.tar.gz
 # tar -xf /tmp/libantlr4.tar.gz -C /tmp
 # extra_config_opt="--with-antlr4=/tmp/libantlr4" bash build-php.sh
+# 
+# 中文 PHP 扩展编译说明
+# https://rasp.baidu.com/doc/hacking/compile/php.html
 
 cd "$(dirname "$0")"
 
