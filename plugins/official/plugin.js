@@ -97,6 +97,22 @@ function ip2long(ipstr) {
     // return ip.split('.').reduce(function(ipInt, octet) { return (ipInt<<8) + parseInt(octet, 10)}, 0) >>> 0;
 }
 
+function validate_stack_php(stack) {
+    var verdict = false
+
+    for (var i = 0; i < stack.length; i ++) {
+        var stack = stack[i]
+
+        // 来自 eval/assert/create_function/...
+        if (stack.indexOf('eval()\'d code') != -1 || stack.indexOf('runtime-created function') != -1) {
+            verdict = true
+            break
+        }
+    }
+
+    return verdict
+}
+
 if (RASP.get_jsengine() !== 'v8') {
     // 在java语言下面，为了提高性能，SQLi/SSRF检测逻辑改为原生实现
     // 通过修改这个 algorithmConfig 来控制检测逻辑是否开启
@@ -391,6 +407,7 @@ plugin.register('directory', function (params, context) {
     var realpath    = params.realpath
     var appBasePath = context.appBasePath
 
+    // 算法1 - 读取敏感目录
     for (var i = 0; i < forcefulBrowsing.unwantedDirectory.length; i ++) {
         if (realpath == forcefulBrowsing.unwantedDirectory[i]) {
             return {
@@ -401,6 +418,7 @@ plugin.register('directory', function (params, context) {
         }
     }
 
+    // 算法2 - 使用至少2个/../，且跳出web目录
     if (canonicalPath(path).indexOf('/../../') != -1 && realpath.indexOf(appBasePath) == -1) {
         return {
             action:     'log',
@@ -573,7 +591,6 @@ plugin.register('fileUpload', function (params, context) {
     return clean
 })
 
-
 plugin.register('command', function (params, context) {
     var server  = context.server
     var message = undefined
@@ -622,17 +639,10 @@ plugin.register('command', function (params, context) {
 
     // PHP 检测逻辑
     else if (server.language == 'php') {
-        for (var i = 0; i < params.stack.length; i ++) {
-            var stack = params.stack[i]
-
-            // 来自 eval/assert/create_function/...
-            if (stack.indexOf('eval()\'d code') != -1 || stack.indexOf('runtime-created function') != -1) {
-                message = '发现 Webshell 或者其他eval类型的后门'
-                break
-            }
+        if (validate_stack_php(params.stack)) {
+            message = '发现 Webshell 或者其他eval类型的后门'
         }
     }
-
 
     if (message) {
         return {
