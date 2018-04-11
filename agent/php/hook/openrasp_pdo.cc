@@ -100,7 +100,7 @@ void post_pdo_query(INTERNAL_FUNCTION_PARAMETERS)
         if (!stmt->dbh) {	
             return;	
         }	
-        if (stmt->row_count > openrasp_ini.slowquery_min_rows)
+        if (stmt->row_count >= openrasp_ini.slowquery_min_rows)
         {
             slow_query_alarm(stmt->row_count TSRMLS_CC);      
         }
@@ -120,7 +120,7 @@ void post_pdo_exec(INTERNAL_FUNCTION_PARAMETERS)
     }    
     if (Z_TYPE_P(return_value) == IS_LONG)
     {	
-        if (Z_LVAL_P(return_value) > openrasp_ini.slowquery_min_rows)
+        if (Z_LVAL_P(return_value) >= openrasp_ini.slowquery_min_rows)
         {
             slow_query_alarm(Z_LVAL_P(return_value) TSRMLS_CC);
         }
