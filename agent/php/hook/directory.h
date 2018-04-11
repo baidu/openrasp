@@ -21,13 +21,17 @@ inline void hook_directory(INTERNAL_FUNCTION_PARAMETERS)
         if (real_path)
         {
             add_assoc_string(params, "realpath", real_path, 1);
+            zval *stack = NULL;
+            MAKE_STD_ZVAL(stack);
+            array_init(stack);
+            format_debug_backtrace_arr(stack TSRMLS_CC);
+            add_assoc_zval(params, "stack", stack);
+            check("directory", params TSRMLS_CC);
         }
         else
         {
-            add_assoc_zval(params, "realpath", *path);
             Z_ADDREF_PP(path);
         }
-        check("directory", params TSRMLS_CC);
     }
 }
 #define HOOK_DIRECTORY(name)                               \
