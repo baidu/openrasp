@@ -43,7 +43,10 @@ var forcefulBrowsing = {
         '/var/log',
         '/private/var/log',
         '/proc',
-        '/sys'
+        '/sys',
+        'C:\\',
+        'D:\\',
+        'E:\\'
     ],
     absolutePaths: [
         '/etc/shadow',
@@ -52,7 +55,8 @@ var forcefulBrowsing = {
         '/etc/apache2/apache2.conf',
         '/root/.bash_history',
         '/root/.bash_profile',
-        'C:\\Windows\\system32\\inetsrv\\MetaBase.xml'
+        'c:\\windows\\system32\\inetsrv\\metabase.xml',
+        'c:\\windows\\system32\\drivers\\etc\\hosts'
     ]
 }
 
@@ -442,8 +446,10 @@ plugin.register('readFile', function (params, context) {
 
     // 算法2: 如果使用绝对路径访问敏感文件，判定为 webshell
     if (params.realpath == params.path) {
+        var realpath_lc = params.realpath.toLowerCase()
+
         for (var j = 0; j < forcefulBrowsing.absolutePaths.length; j ++) {
-            if (forcefulBrowsing.absolutePaths[j] == params.realpath) {
+            if (forcefulBrowsing.absolutePaths[j] == realpath_lc) {
                 return {
                     action:     'block',
                     message:    'WebShell/文件管理器 - 尝试读取系统文件: ' + params.realpath,
@@ -569,45 +575,64 @@ plugin.register('fileUpload', function (params, context) {
 
 
 plugin.register('command', function (params, context) {
+    var server  = context.server
+    var message = undefined
 
     // 算法1: 根据堆栈，检查是否为反序列化攻击
     // 
     // 如果你在服务器有执行命令的需求，我们建议你修改 算法2
-    var message  = undefined
-    var userCode = false
-    var known    = {
-        'java.lang.reflect.Method.invoke':                                          '尝试通过反射执行命令',
-        'ognl.OgnlRuntime.invokeMethod':                                            '尝试通过 OGNL 代码执行命令',
-        'com.thoughtworks.xstream.XStream.unmarshal':                               '尝试通过 xstream 反序列化执行命令',
-        'org.apache.commons.collections4.functors.InvokerTransformer.transform':    '尝试通过 transformer 反序列化执行命令',
-        'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':               '尝试通过 JNDI 注入方式执行命令',
-        'com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze': '尝试通过 fastjson 反序列化方式执行命令'
-    }    
-    
-    for (var i = 2; i < params.stack.length; i ++) {
-        var method = params.stack[i]
-
-        if (method.startsWith('ysoserial.Pwner')) {
-            message = 'YsoSerial 漏洞利用工具 - 反序列化攻击'
-            break
+   
+    // Java 检测逻辑
+    if (server.language == 'java') {
+        var userCode = false
+        var known    = {
+            'java.lang.reflect.Method.invoke':                                          '尝试通过反射执行命令',
+            'ognl.OgnlRuntime.invokeMethod':                                            '尝试通过 OGNL 代码执行命令',
+            'com.thoughtworks.xstream.XStream.unmarshal':                               '尝试通过 xstream 反序列化执行命令',
+            'org.apache.commons.collections4.functors.InvokerTransformer.transform':    '尝试通过 transformer 反序列化执行命令',
+            'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':               '尝试通过 JNDI 注入方式执行命令',
+            'com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze': '尝试通过 fastjson 反序列化方式执行命令'
         }
+        
+        for (var i = 2; i < params.stack.length; i ++) {
+            var method = params.stack[i]
 
-        // 仅当命令本身来自反射调用才拦截
-        // 如果某个类是反射调用，这个类再主动执行命令，则忽略
-        if (! method.startsWith('java.') && ! method.startsWith('sun.') && ! message) {
-            userCode = true
-        }
-
-        if (known[method]) {
-            // 同上，如果反射调用和命令执行之间，包含用户代码，则不认为是反射调用
-            if (userCode && method == 'java.lang.reflect.Method.invoke') {
-                continue
+            if (method.startsWith('ysoserial.Pwner')) {
+                message = 'YsoSerial 漏洞利用工具 - 反序列化攻击'
+                break
             }
 
-            message = known[method]
-            // break
+            // 仅当命令本身来自反射调用才拦截
+            // 如果某个类是反射调用，这个类再主动执行命令，则忽略
+            if (! method.startsWith('java.') && ! method.startsWith('sun.') && ! message) {
+                userCode = true
+            }
+
+            if (known[method]) {
+                // 同上，如果反射调用和命令执行之间，包含用户代码，则不认为是反射调用
+                if (userCode && method == 'java.lang.reflect.Method.invoke') {
+                    continue
+                }
+
+                message = known[method]
+                // break
+            }
         }
     }
+
+    // PHP 检测逻辑
+    else if (server.language == 'php') {
+        for (var i = 0; i < params.stack.length; i ++) {
+            var stack = params.stack[i]
+
+            // 来自 eval/assert/create_function/...
+            if (stack.indexOf('eval()\'d code') != -1 || stack.indexOf('runtime-created function') != -1) {
+                message = '发现 Webshell 或者其他eval类型的后门'
+                break
+            }
+        }
+    }
+
 
     if (message) {
         return {
