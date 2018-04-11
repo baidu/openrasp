@@ -463,7 +463,7 @@ plugin.register('readFile', function (params, context) {
     }
 
     // 算法2: 如果使用绝对路径访问敏感文件，判定为 webshell
-    if (params.realpath == params.path) {
+    if (params.realpath == canonicalPath(params.path)) {
         var realpath_lc = params.realpath.toLowerCase()
 
         for (var j = 0; j < forcefulBrowsing.absolutePaths.length; j ++) {
