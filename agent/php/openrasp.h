@@ -16,10 +16,6 @@ extern "C" {
 #define _(STRING) (STRING)
 #endif
 
-#ifdef __cplusplus
-}
-#endif
-
 #define FSWATCH_ERROR (20001)
 #define LOG_ERROR (20002)
 #define SHM_ERROR (20003)
@@ -48,10 +44,6 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp)
 #else
 #define OPENRASP_G(v) (openrasp_globals.v)
 #define OPENRASP_GP() (&openrasp_globals)
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC);

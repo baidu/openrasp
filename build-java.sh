@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# 手动编译说明
+# https://rasp.baidu.com/doc/hacking/compile/java.html
 
 ##################################
 #                                #

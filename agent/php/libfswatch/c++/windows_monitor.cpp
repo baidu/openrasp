@@ -101,7 +101,7 @@ namespace fsw
   {
     FSW_ELOGF(_("Initializing search structures for %s.\n"), win_strings::wstring_to_string(path).c_str());
 
-    HANDLE h = CreateFile(path.c_str(),
+    HANDLE h = CreateFileW(path.c_str(),
                            GENERIC_READ,
                            FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
                            nullptr, OPEN_EXISTING,
