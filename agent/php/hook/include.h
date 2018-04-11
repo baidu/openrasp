@@ -127,28 +127,34 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     MAKE_STD_ZVAL(path);
     MAKE_COPY_ZVAL(&op1, path);
     convert_to_string(path);
-    if (strstr(Z_STRVAL_P(path), "/../") == nullptr && strstr(Z_STRVAL_P(path), "://") == nullptr)
+    php_url *resource = php_url_parse_ex(Z_STRVAL_P(path), Z_STRLEN_P(path));
+    char *real_path = nullptr;
+    if (resource && resource->scheme) 
+    {
+        real_path = Z_STRVAL_P(path);
+    }
+    else
+    {
+        if (strstr(Z_STRVAL_P(path), "/../") != nullptr)
+        {
+            char expand_path[MAXPATHLEN];
+            if (expand_filepath(Z_STRVAL_P(path), expand_path TSRMLS_CC)) {
+                real_path = php_resolve_path(expand_path, strlen(expand_path), PG(include_path) TSRMLS_CC);
+            }
+        }
+    }
+    if (!real_path)
     {
         zval_ptr_dtor(&path);
         return ZEND_USER_OPCODE_DISPATCH;
     }
-    char *real_path = php_resolve_path(Z_STRVAL_P(path),
-                                       Z_STRLEN_P(path),
-                                       PG(include_path) TSRMLS_CC);
     zval *params;
     MAKE_STD_ZVAL(params);
     array_init(params);
     add_assoc_zval(params, "path", path);
     add_assoc_zval(params, "url", path);
     Z_ADDREF_P(path);
-    if (real_path)
-    {
-        add_assoc_string(params, "realpath", real_path, 0);
-    }
-    else
-    {
-        add_assoc_string(params, "realpath", "", 1);
-    }
+    add_assoc_string(params, "realpath", real_path, 1);
     char *function = nullptr;
     switch (OPENRASP_INCLUDE_OR_EVAL_TYPE(execute_data->opline))
     {

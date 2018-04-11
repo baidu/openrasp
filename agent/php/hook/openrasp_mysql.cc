@@ -142,7 +142,7 @@ void post_global_mysql_query(INTERNAL_FUNCTION_PARAMETERS)
     {
         num_rows = fetch_rows_via_user_function("mysql_affected_rows", 0, NULL TSRMLS_CC);
     }
-    if (num_rows > openrasp_ini.slowquery_min_rows)
+    if (num_rows >= openrasp_ini.slowquery_min_rows)
     {
         slow_query_alarm(num_rows TSRMLS_CC);
     }

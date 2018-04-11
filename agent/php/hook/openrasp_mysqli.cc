@@ -152,7 +152,7 @@ void post_mysqli_query(INTERNAL_FUNCTION_PARAMETERS)
         args[0] = this_ptr;
         num_rows = fetch_rows_via_user_function("mysqli_affected_rows", 1, args TSRMLS_CC);
     }
-    if (num_rows > openrasp_ini.slowquery_min_rows)
+    if (num_rows >= openrasp_ini.slowquery_min_rows)
     {
         slow_query_alarm(num_rows TSRMLS_CC);
     }
@@ -234,7 +234,7 @@ void post_global_mysqli_query(INTERNAL_FUNCTION_PARAMETERS)
         num_rows = fetch_rows_via_user_function("mysqli_affected_rows", 1, args TSRMLS_CC);
     }
     efree(ppp_args);
-    if (num_rows > openrasp_ini.slowquery_min_rows)
+    if (num_rows >= openrasp_ini.slowquery_min_rows)
     {
         slow_query_alarm(num_rows TSRMLS_CC);
     }
