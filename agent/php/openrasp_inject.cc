@@ -104,7 +104,7 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_inject)
         }
         if (is_match_inject_prefix)
         {
-            char * target_header = estrdup("text/html");
+            char target_header[] = "text/html";
             for (zend_llist_element *element = SG(sapi_headers).headers.head; element; element = element->next)
             {
                 sapi_header_struct *sapi_header = (sapi_header_struct *)element->data;
@@ -120,7 +120,6 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_inject)
                     break;
                 }
             }
-            efree(target_header);
         }
     }
     efree(OPENRASP_INJECT_G(request_id));
