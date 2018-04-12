@@ -420,13 +420,14 @@ plugin.register('directory', function (params, context) {
     var path        = params.path
     var realpath    = params.realpath
     var appBasePath = context.appBasePath
+    var server      = context.server
 
     // 算法1 - 读取敏感目录
     for (var i = 0; i < forcefulBrowsing.unwantedDirectory.length; i ++) {
         if (realpath == forcefulBrowsing.unwantedDirectory[i]) {
             return {
                 action:     'block',
-                message:    '疑似WebShell文件管理器 - 读取敏感目录',
+                message:    'WebShell文件管理器 - 读取敏感目录',
                 confidence: 100
             }
         }
@@ -435,9 +436,20 @@ plugin.register('directory', function (params, context) {
     // 算法2 - 使用至少2个/../，且跳出web目录
     if (canonicalPath(path).indexOf('/../../') != -1 && realpath.indexOf(appBasePath) == -1) {
         return {
-            action:     'log',
+            action:     'block',
             message:    '尝试列出Web目录以外的目录',
             confidence: 90
+        }
+    }
+
+    // java 暂时没有增加堆栈这个参数，v0.31 之后会移除这个 IF 判断
+    if (server.language == 'php') {
+        if (validate_stack_php(params.stack)) {
+            return {
+                action:     'block',
+                message:    '发现 Webshell 或者其他eval类型的后门',
+                confidence: 90
+            }
         }
     }
 
