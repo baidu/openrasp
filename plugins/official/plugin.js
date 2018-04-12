@@ -10,6 +10,7 @@
 // 
 // OpenRASP 最佳实践
 // https://rasp.baidu.com/#section-books
+// 
 
 'use strict'
 var plugin  = new RASP('offical')
@@ -23,6 +24,8 @@ const clean = {
 var forcefulBrowsing = {
     dotFiles: /\.(7z|tar|gz|bz2|xz|rar|zip|sql|db|sqlite)$/,
     nonUserDirectory: /^\/(proc|sys|root)/,
+
+    // webdav 文件探针 - 最常被下载的文件
     unwantedFilenames: [
         // user files
         '.DS_Store',
