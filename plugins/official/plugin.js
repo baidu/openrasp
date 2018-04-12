@@ -127,6 +127,10 @@ function is_outside_webroot(appBasePath, realpath, path) {
     return verdict
 }
 
+function is_from_userinput(params, value) {
+
+}
+
 if (RASP.get_jsengine() !== 'v8') {
     // 在java语言下面，为了提高性能，SQLi/SSRF检测逻辑改为原生实现
     // 通过修改这个 algorithmConfig 来控制检测逻辑是否开启
@@ -457,33 +461,39 @@ plugin.register('directory', function (params, context) {
 })
 
 plugin.register('readFile', function (params, context) {
+    var server = context.server
 
-    // 算法1: 检查是否为成功的目录扫描
-    var filename_1 = basename(context.url)
-    var filename_2 = basename(params.realpath)
+    // 算法1: 和URL比较，检查是否为成功的目录扫描。仅适用于 java webdav 方式
+    // 
+    // 注意: 此方法受到 readfile.extension.regex 和资源文件大小的限制
+    // https://rasp.baidu.com/doc/setup/others.html#java-common
+    if (server.language == 'java') {
+        var filename_1 = basename(context.url)
+        var filename_2 = basename(params.realpath)
 
-    if (filename_1 == filename_2) {
-        var matched = false
+        if (filename_1 == filename_2) {
+            var matched = false
 
-        // 尝试下载压缩包、SQL文件等等
-        if (forcefulBrowsing.dotFiles.test(filename_1)) {
-            matched = true
-        } else {
-            // 尝试访问敏感文件
-            for (var i = 0; i < forcefulBrowsing.unwantedFilenames; i ++) {
-                if (forcefulBrowsing.unwantedFilenames[i] == filename_1) {
-                    matched = true
+            // 尝试下载压缩包、SQL文件等等
+            if (forcefulBrowsing.dotFiles.test(filename_1)) {
+                matched = true
+            } else {
+                // 尝试访问敏感文件
+                for (var i = 0; i < forcefulBrowsing.unwantedFilenames; i ++) {
+                    if (forcefulBrowsing.unwantedFilenames[i] == filename_1) {
+                        matched = true
+                    }
                 }
             }
-        }
 
-        if (matched) {
-            return {
-                action:     'log',
-                message:    '尝试下载敏感文件 (' + context.method.toUpperCase() + ' 方式): ' + params.realpath,
+            if (matched) {
+                return {
+                    action:     'log',
+                    message:    '尝试下载敏感文件 (' + context.method.toUpperCase() + ' 方式): ' + params.realpath,
 
-                // 如果是HEAD方式下载敏感文件，100% 扫描器攻击
-                confidence: context.method == 'head' ? 100 : 90
+                    // 如果是HEAD方式下载敏感文件，100% 扫描器攻击
+                    confidence: context.method == 'head' ? 100 : 90
+                }
             }
         }
     }
