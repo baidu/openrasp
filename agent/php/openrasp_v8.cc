@@ -223,9 +223,7 @@ static v8::StartupData init_js_snapshot(TSRMLS_D)
         };
         for (auto js_src : js_src_list)
         {
-            v8::Local<v8::Script> script;
-            if (!compile_script(js_src.first, js_src.second).ToLocal(&script) ||
-                script->Run(context).IsEmpty())
+            if (exec_script(isolate, context, js_src.first, js_src.second).IsEmpty())
             {
                 std::stringstream stream;
                 v8error_to_stream(isolate, try_catch, stream);
@@ -246,9 +244,7 @@ static v8::StartupData init_js_snapshot(TSRMLS_D)
         openrasp_load_plugins(TSRMLS_C);
         for (auto plugin_src : process_globals.plugin_src_list)
         {
-            v8::Local<v8::Script> script;
-            if (!compile_script("(function(){\n" + plugin_src.source + "\n})()", plugin_src.filename, -1).ToLocal(&script) ||
-                script->Run(context).IsEmpty())
+            if (exec_script(isolate, context, "(function(){\n" + plugin_src.source + "\n})()", plugin_src.filename, -1).IsEmpty())
             {
                 std::stringstream stream;
                 v8error_to_stream(isolate, try_catch, stream);

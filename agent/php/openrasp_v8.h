@@ -113,6 +113,8 @@ v8::Local<v8::Object> New(v8::Isolate *isolate);
 void v8error_to_stream(v8::Isolate *isolate, v8::TryCatch &try_catch, std::ostream &buf);
 v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC);
 v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset = 0);
+v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
+                                      std::string _source, std::string _filename, int _line_offset = 0);
 } // namespace openrasp
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_v8)
