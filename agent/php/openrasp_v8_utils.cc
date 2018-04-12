@@ -177,3 +177,27 @@ v8::MaybeLocal<v8::Script> openrasp::compile_script(std::string _source, std::st
     v8::MaybeLocal<v8::Script> script = v8::Script::Compile(context, source, &origin);
     return script;
 }
+
+v8::MaybeLocal<v8::Value> openrasp::exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
+                                                 std::string _source, std::string _filename, int _line_offset)
+{
+    v8::MaybeLocal<v8::Value> result;
+    v8::Local<v8::String> filename;
+    if (!V8STRING_EX(_filename.c_str(), v8::NewStringType::kNormal, _filename.length()).ToLocal(&filename))
+    {
+        return result;
+    }
+    v8::Local<v8::String> source;
+    if (!V8STRING_EX(_source.c_str(), v8::NewStringType::kNormal, _source.length()).ToLocal(&source))
+    {
+        return result;
+    }
+    v8::Local<v8::Integer> line_offset = v8::Integer::New(isolate, _line_offset);
+    v8::ScriptOrigin origin(filename, line_offset);
+    v8::Local<v8::Script> script;
+    if (!v8::Script::Compile(context, source, &origin).ToLocal(&script))
+    {
+        return result;
+    }
+    return script->Run(context);
+}
