@@ -11,6 +11,9 @@
 // OpenRASP 最佳实践
 // https://rasp.baidu.com/#section-books
 // 
+// 如果你发现这个插件可以绕过，请联系我们，或者在 github 提交 ISSUE
+// https://rasp.baidu.com/doc/aboutus/support.html
+// 
 
 'use strict'
 var plugin  = new RASP('offical')
@@ -21,6 +24,9 @@ const clean = {
     confidence: 0
 }
 
+// OpenRASP 大部分算法都依赖规则
+// 只有文件访问 - 算法#4 加了一个探针，作为最后一道防线
+// 具体算法请查看后面 plugin.register 的内容
 var forcefulBrowsing = {
     dotFiles: /\.(7z|tar|gz|bz2|xz|rar|zip|sql|db|sqlite)$/,
     nonUserDirectory: /^\/(proc|sys|root)/,
