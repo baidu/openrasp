@@ -612,11 +612,8 @@ plugin.register('writeFile', function (params, context) {
         }
     }
 
-    // 可能产生误报的场景 ..
-    // discuz    会写 PHP 日志文件
-    // wordpress 安装时写 wp_config.php
-    // 
-    // 如果你没有这种场景，请修改 action 为 block，以实现更好的防护效果
+    // 关于这个算法，请参考这个插件定制文档
+    // https://rasp.baidu.com/doc/dev/official.html#case-3
     if (scriptFileRegex.test(params.realpath)) {
         return {
             action:     'log',
