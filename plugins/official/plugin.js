@@ -37,6 +37,8 @@ var forcefulBrowsing = {
         '.gitignore',
         'error_log', 'error.log', 'nohup.out',
     ],
+
+    // 目录探针 - webshell 查看频次最高的目录
     unwantedDirectory: [
         '/',
         '/home',
@@ -48,6 +50,8 @@ var forcefulBrowsing = {
         'D:\\',
         'E:\\'
     ],
+
+    // 文件探针 - webshell 查看频次最高的文件
     absolutePaths: [
         '/etc/shadow',
         '/etc/passwd',
@@ -127,8 +131,20 @@ function is_outside_webroot(appBasePath, realpath, path) {
     return verdict
 }
 
-function is_from_userinput(params, value) {
+function is_from_userinput(parameter, target) {
+    var verdict = false
 
+    Object.keys(parameter).some(function (key) {
+        var value = parameter[key]
+
+        // 只处理非数组、hash情况
+        if (value[0] == target) {
+            verdict = true
+            return true
+        }
+    })
+
+    return verdict
 }
 
 if (RASP.get_jsengine() !== 'v8') {
@@ -467,7 +483,7 @@ plugin.register('readFile', function (params, context) {
     // 
     // 注意: 此方法受到 readfile.extension.regex 和资源文件大小的限制
     // https://rasp.baidu.com/doc/setup/others.html#java-common
-    if (server.language == 'java') {
+    if (1 && server.language == 'java') {
         var filename_1 = basename(context.url)
         var filename_2 = basename(params.realpath)
 
@@ -498,8 +514,9 @@ plugin.register('readFile', function (params, context) {
         }
     }
 
-    // 算法2: 如果使用绝对路径访问敏感文件，判定为 webshell
-    if (params.realpath == canonicalPath(params.path)) {
+    // 算法2: 文件、目录探针
+    // 如果应用读取了列表里的文件，比如 /root/.bash_history，这通常意味着后门操作
+    if (1) {
         var realpath_lc = params.realpath.toLowerCase()
 
         for (var j = 0; j < forcefulBrowsing.absolutePaths.length; j ++) {
@@ -514,14 +531,29 @@ plugin.register('readFile', function (params, context) {
     }
 
     // 算法3: 检查文件遍历，看是否超出web目录范围
-    var path        = params.path
-    var appBasePath = context.appBasePath
+    // e.g 使用 ../../../etc/passwd 跨目录读取文件
+    if (1) {
+        var path        = params.path
+        var appBasePath = context.appBasePath
 
-    if (is_outside_webroot(appBasePath, params.realpath, path)) {
-        return {
-            action:     'block',
-            message:    '目录遍历攻击，跳出web目录范围 (' + appBasePath + ')',
-            confidence: 90
+        if (is_outside_webroot(appBasePath, params.realpath, path)) {
+            return {
+                action:     'block',
+                message:    '目录遍历攻击，跳出web目录范围 (' + appBasePath + ')',
+                confidence: 90
+            }
+        }
+    }
+
+    // 算法4: 文件管理器，要读取的文件来自用户输入
+    // ?file=/etc/./hosts
+    if (1) {
+        if (is_from_userinput(context.parameter, params.path)) {
+            return {
+                action:     'block',
+                message:    'WebShell/文件管理器 - 读取文件: ' + params.realpath,
+                confidence: 90
+            }        
         }
     }
 
