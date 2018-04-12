@@ -17,10 +17,12 @@
 package com.fuxi.javaagent.hook.file;
 
 import com.fuxi.javaagent.HookHandler;
+import com.fuxi.javaagent.config.Config;
 import com.fuxi.javaagent.hook.AbstractClassHook;
 import com.fuxi.javaagent.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.plugin.js.engine.JSContext;
 import com.fuxi.javaagent.plugin.js.engine.JSContextFactory;
+import com.fuxi.javaagent.tool.StackTrace;
 import org.mozilla.javascript.Scriptable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -30,6 +32,7 @@ import org.objectweb.asm.commons.Method;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by zhuming01 on 5/16/17.
@@ -83,16 +86,26 @@ public class FileHook extends AbstractClassHook {
      */
     public static void checkListFiles(File file) {
         if (file != null) {
-            JSContext cx = JSContextFactory.enterAndInitContext();
-            Scriptable params = cx.newObject(cx.getScope());
-            params.put("path", params, file.getPath());
+            Scriptable params = null;
             try {
-                params.put("realpath", params, file.getCanonicalPath());
-            } catch (IOException e) {
-                params.put("realpath", params, file.getAbsolutePath());
+                JSContext cx = JSContextFactory.enterAndInitContext();
+                params = cx.newObject(cx.getScope());
+                params.put("path", params, file.getPath());
+                List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
+                        Config.getConfig().getPluginMaxStack());
+                Scriptable stackArray = cx.newArray(cx.getScope(), stackInfo.toArray());
+                params.put("stack", params, stackArray);
+                try {
+                    params.put("realpath", params, file.getCanonicalPath());
+                } catch (IOException e) {
+                    params.put("realpath", params, file.getAbsolutePath());
+                }
+            } catch (Throwable t) {
+                HookHandler.LOGGER.warn(t.getMessage());
             }
-
-            HookHandler.doCheck(CheckParameter.Type.DIRECTORY, params);
+            if (params != null) {
+                HookHandler.doCheck(CheckParameter.Type.DIRECTORY, params);
+            }
         }
     }
 
