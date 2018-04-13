@@ -1,8 +1,6 @@
-#pragma once
-
 #include "openrasp_hook.h"
 
-inline void hook_directory(INTERNAL_FUNCTION_PARAMETERS)
+static inline void hook_directory(INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **path;
     int argc = MIN(1, ZEND_NUM_ARGS());
@@ -34,12 +32,16 @@ inline void hook_directory(INTERNAL_FUNCTION_PARAMETERS)
         }
     }
 }
-#define HOOK_DIRECTORY(name)                               \
-    OPENRASP_HOOK_FUNCTION(name)                           \
-    {                                                      \
-        hook_directory(INTERNAL_FUNCTION_PARAM_PASSTHRU);  \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU); \
-    }
-HOOK_DIRECTORY(dir);
-HOOK_DIRECTORY(opendir);
-HOOK_DIRECTORY(scandir);
+
+void pre_global_dir(INTERNAL_FUNCTION_PARAMETERS)
+{
+    hook_directory(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+void pre_global_opendir(INTERNAL_FUNCTION_PARAMETERS)
+{
+    hook_directory(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+void pre_global_scandir(INTERNAL_FUNCTION_PARAMETERS)
+{
+    hook_directory(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}

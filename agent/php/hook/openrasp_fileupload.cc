@@ -1,8 +1,6 @@
-#pragma once
-
 #include "openrasp_hook.h"
 
-OPENRASP_HOOK_FUNCTION(move_uploaded_file)
+void pre_global_move_uploaded_file(INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **name, **dest;
     int argc = MIN(2, ZEND_NUM_ARGS());
@@ -56,5 +54,4 @@ OPENRASP_HOOK_FUNCTION(move_uploaded_file)
             }
         }
     }
-    origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }

@@ -86,6 +86,34 @@ extern "C" {
 #define DOUBLE_DRIFT_FIX	0.000000000000001
 /* }}} */
 
+#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4)
+#define OPENRASP_OP1_TYPE(n) ((n)->op1.op_type)
+#define OPENRASP_OP2_TYPE(n) ((n)->op2.op_type)
+#define OPENRASP_OP1_VAR(n) ((n)->op1.u.var)
+#define OPENRASP_OP2_VAR(n) ((n)->op2.u.var)
+#define OPENRASP_OP1_CONSTANT_PTR(n) (&(n)->op1.u.constant)
+#define OPENRASP_OP2_CONSTANT_PTR(n) (&(n)->op2.u.constant)
+#define OPENRASP_INCLUDE_OR_EVAL_TYPE(n) (Z_LVAL(n->op2.u.constant))
+#else
+#define OPENRASP_OP1_TYPE(n) ((n)->op1_type)
+#define OPENRASP_OP2_TYPE(n) ((n)->op2_type)
+#define OPENRASP_OP1_VAR(n) ((n)->op1.var)
+#define OPENRASP_OP2_VAR(n) ((n)->op2.var)
+#define OPENRASP_OP1_CONSTANT_PTR(n) ((n)->op1.zv)
+#define OPENRASP_OP2_CONSTANT_PTR(n) ((n)->op2.zv)
+#define OPENRASP_INCLUDE_OR_EVAL_TYPE(n) (n->extended_value)
+#endif
+
+#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 5)
+#define OPENRASP_T(offset) (*(temp_variable *)((char *)execute_data->Ts + offset))
+#define OPENRASP_CV(i) (execute_data->CVs[i])
+#define OPENRASP_CV_OF(i) (EG(current_execute_data)->CVs[i])
+#else
+#define OPENRASP_T(offset) (*EX_TMP_VAR(execute_data, offset))
+#define OPENRASP_CV(i) (*EX_CV_NUM(execute_data, i))
+#define OPENRASP_CV_OF(i) (*EX_CV_NUM(EG(current_execute_data), i))
+#endif
+
 #define MYSQLI_STORE_RESULT 0
 #define MYSQLI_USE_RESULT 	1
 #define MYSQL_PORT          3306

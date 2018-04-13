@@ -35,7 +35,7 @@ if (PHP_OPENRASP != "no") {
 	ADD_FLAG("CFLAGS_OPENRASP", "/D __STDC_LIMIT_MACROS");
 
 
-	ADD_SOURCES(configure_module_dirname + "/hook", "openrasp_command.cc openrasp_array.cc openrasp_sql.cc openrasp_file.cc openrasp_mysql.cc openrasp_mysqli.cc openrasp_pdo.cc openrasp_pgsql.cc openrasp_sqlite3.cc", "openrasp");
+	ADD_SOURCES(configure_module_dirname + "/hook", "openrasp_command.cc openrasp_directory.cc openrasp_fileupload.cc openrasp_include.cc openrasp_array.cc openrasp_sql.cc openrasp_file.cc openrasp_mysql.cc openrasp_mysqli.cc openrasp_pdo.cc openrasp_pgsql.cc openrasp_sqlite3.cc", "openrasp");
 
 	// ADD_FLAG("CFLAGS_OPENRASP", "/I " + configure_module_dirname + "/libfswatch");
 	// ADD_SOURCES(configure_module_dirname + "/libfswatch/c", "libfswatch_log.cpp libfswatch.cpp cevent.cpp", "openrasp");
