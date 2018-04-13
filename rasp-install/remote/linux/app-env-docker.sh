@@ -11,7 +11,7 @@ function InstallJava()
 	path=$1
 
 	wget https://packages.baidu.com/app/openrasp/rasp-java.tar.gz
-	tar -xzvf rasp-java.tar.gz
+	tar -xvf rasp-java.tar.gz
 	
 	cd rasp-*
 	java -jar RaspInstall.jar "$path"
@@ -21,7 +21,7 @@ function InstallJava()
 function InstallPHP()
 {
 	wget https://packages.baidu.com/app/openrasp/rasp-php.tar.bz2
-	tar -xzvf rasp-php.tar.bz2
+	tar -xvf rasp-php.tar.bz2
 	
 	ph rasp-*/install.php -d /opt/rasp/
 	rm -rf rasp*
