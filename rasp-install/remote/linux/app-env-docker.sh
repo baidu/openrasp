@@ -23,19 +23,22 @@ function InstallPHP()
 	wget https://packages.baidu.com/app/openrasp/rasp-php.tar.bz2
 	tar -xvf rasp-php.tar.bz2
 	
-	ph rasp-*/install.php -d /opt/rasp/
+	php rasp-*/install.php -d /opt/rasp/
 	rm -rf rasp*
 }
 
 if [[ -d /tomcat/ ]]; then
 	InstallJava /tomcat/
+	bash /tomcat/bin/shutdown.sh
+	bash /tomcat/bin/startup.sh
 fi
 
 if [[ -d /jboss/ ]]; then
-	InstallJava /tomcat/
+	InstallJava /jboss/
 fi
 
 if [[ -x /usr/bin/php ]]; then
 	InstallPHP
+	apachectl -k restart
 fi
 
