@@ -1,4 +1,3 @@
-#include "openrasp_array.h"
 #include "openrasp_hook.h"
 
 static void check_callable_function(zend_fcall_info fci TSRMLS_DC)

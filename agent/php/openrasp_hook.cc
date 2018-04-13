@@ -1,10 +1,6 @@
 #include "openrasp_hook.h"
 #include "openrasp_ini.h"
 #include "openrasp_inject.h"
-#include "hook/openrasp_array.h"
-#include "hook/openrasp_sql.h"
-#include "hook/openrasp_file.h"
-#include "hook/command.h"
 #include "hook/include.h"
 #include "hook/fileUpload.h"
 #include "hook/ssrf.h"
@@ -131,6 +127,18 @@ void check(const char *type, zval *params TSRMLS_DC)
         handle_block(TSRMLS_C);
     }
 }
+
+/**
+ * command相关hook点
+ */
+PRE_HOOK_FUNCTION(passthru);
+PRE_HOOK_FUNCTION(system);
+PRE_HOOK_FUNCTION(exec);
+PRE_HOOK_FUNCTION(shell_exec);
+PRE_HOOK_FUNCTION(proc_open);
+PRE_HOOK_FUNCTION(popen);
+PRE_HOOK_FUNCTION(pcntl_exec);
+PRE_HOOK_FUNCTION(assert);
 
 /**
  * callable相关hook点

@@ -6,7 +6,7 @@ if (!extension_loaded("openrasp")) print "skip";
 ?>
 --FILE--
 <?php
-include('/../header.rasp');
+include('/../../../../../../../../../../etc/hosts');
 echo 'include OK';
 ?>
 --EXPECT--

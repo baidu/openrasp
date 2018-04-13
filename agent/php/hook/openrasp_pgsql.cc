@@ -1,4 +1,4 @@
-#include "openrasp_sql.h"
+#include "openrasp_hook.h"
 #include <string>
 
 static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)

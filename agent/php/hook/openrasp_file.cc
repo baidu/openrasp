@@ -1,4 +1,4 @@
-#include "openrasp_file.h"
+#include "openrasp_hook.h"
 
 static const char* mode_to_type(char *mode)
 {

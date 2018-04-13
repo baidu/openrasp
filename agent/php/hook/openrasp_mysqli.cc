@@ -1,4 +1,4 @@
-#include "openrasp_sql.h"
+#include "openrasp_hook.h"
 
 extern "C" {
 #include "zend_ini.h"

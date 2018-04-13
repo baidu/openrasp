@@ -3,14 +3,25 @@
 
 #include "openrasp.h"
 #include "openrasp_log.h"
+#include "openrasp_ini.h"
 
+#ifdef __cplusplus
 extern "C" {
+#endif
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include <stdarg.h>
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+#include <stdio.h>
 #include "php.h"
 #include "php_ini.h"
 #include "php_main.h"
+#include "zend_globals.h"
+#include "zend_interfaces.h"
+#include "php_globals.h"
 #include "ext/standard/file.h"
 #include "ext/standard/url.h"
 #include "ext/standard/php_string.h"
@@ -18,9 +29,79 @@ extern "C" {
 #include "ext/standard/php_var.h"
 #include "Zend/zend_API.h"
 #include "Zend/zend_compile.h"
+#include "ext/standard/basic_functions.h"
+#include "ext/standard/php_rand.h"
+#include "ext/standard/php_smart_str.h"
+#ifdef PHP_WIN32
+#include "win32/unistd.h"
+#endif
+#ifdef __cplusplus
 }
+#endif
 #include <string>
 #include <set>
+
+#ifdef ZEND_WIN32
+# ifndef MAXPATHLEN
+#  define MAXPATHLEN     _MAX_PATH
+# endif
+#else
+# ifndef MAXPATHLEN
+#  define MAXPATHLEN     4096
+# endif
+#endif
+
+/* {{{ defines */
+#define EXTR_OVERWRITE			0
+#define EXTR_SKIP				1
+#define EXTR_PREFIX_SAME		2
+#define	EXTR_PREFIX_ALL			3
+#define	EXTR_PREFIX_INVALID		4
+#define	EXTR_PREFIX_IF_EXISTS	5
+#define	EXTR_IF_EXISTS			6
+
+#define EXTR_REFS				0x100
+
+#define CASE_LOWER				0
+#define CASE_UPPER				1
+
+#define DIFF_NORMAL			1
+#define DIFF_KEY			2
+#define DIFF_ASSOC			6
+#define DIFF_COMP_DATA_NONE    -1
+#define DIFF_COMP_DATA_INTERNAL 0
+#define DIFF_COMP_DATA_USER     1
+#define DIFF_COMP_KEY_INTERNAL  0
+#define DIFF_COMP_KEY_USER      1
+
+#define INTERSECT_NORMAL		1
+#define INTERSECT_KEY			2
+#define INTERSECT_ASSOC			6
+#define INTERSECT_COMP_DATA_NONE    -1
+#define INTERSECT_COMP_DATA_INTERNAL 0
+#define INTERSECT_COMP_DATA_USER     1
+#define INTERSECT_COMP_KEY_INTERNAL  0
+#define INTERSECT_COMP_KEY_USER      1
+
+#define DOUBLE_DRIFT_FIX	0.000000000000001
+/* }}} */
+
+#define MYSQLI_STORE_RESULT 0
+#define MYSQLI_USE_RESULT 	1
+#define MYSQL_PORT          3306
+
+typedef struct sql_connection_entry_t {
+	char *server = nullptr;
+    char *host = nullptr;
+    char *username = nullptr;
+} sql_connection_entry;
+
+typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
+
+void slow_query_alarm(int rows TSRMLS_DC);
+zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
+void check_query_clause(INTERNAL_FUNCTION_PARAMETERS, char *server, int num);
+long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count, zval *params[] TSRMLS_DC);
 
 typedef enum hook_position_t {
 	PRE_HOOK = 1 << 0, 
@@ -49,6 +130,8 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
     OPENRASP_HOOK_FUNCTION_EX(name, global)
 
 #define HOOK_FUNCTION_EX(name, scope)                                                                   \
+    extern void pre_##scope##_##name(INTERNAL_FUNCTION_PARAMETERS);                                     \
+    extern void post_##scope##_##name(INTERNAL_FUNCTION_PARAMETERS);                                    \
     OPENRASP_HOOK_FUNCTION_EX(name, scope)                                                              \
     {                                                                                                   \
         pre_##scope##_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                         \
@@ -60,6 +143,7 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
     HOOK_FUNCTION_EX(name, global)
 
 #define PRE_HOOK_FUNCTION_EX(name, scope)                                                               \
+    extern void pre_##scope##_##name(INTERNAL_FUNCTION_PARAMETERS);                                     \
     OPENRASP_HOOK_FUNCTION_EX(name, scope)                                                              \
     {                                                                                                   \
         pre_##scope##_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                         \

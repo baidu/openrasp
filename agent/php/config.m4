@@ -451,6 +451,7 @@ int main() {
   PHP_NEW_EXTENSION(openrasp,
     openrasp.cc \
     openrasp_utils.cc \
+    hook/openrasp_command.cc \
     hook/openrasp_array.cc \
     hook/openrasp_sql.cc \
     hook/openrasp_mysql.cc \

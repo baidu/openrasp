@@ -1,4 +1,4 @@
-#include "openrasp_sql.h"
+#include "openrasp_hook.h"
 
 //sqlite3::exec
 void pre_sqlite3_exec(INTERNAL_FUNCTION_PARAMETERS)
