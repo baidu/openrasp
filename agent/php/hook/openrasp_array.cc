@@ -2,6 +2,10 @@
 
 static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
 {
+    if (openrasp_check_type_ignored(ZEND_STRL("callable") TSRMLS_CC))
+    {
+        return;
+    }
 	if (!ZEND_FCI_INITIALIZED(fci))
 	{
 		return;
@@ -183,6 +187,10 @@ void pre_global_usort(INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_reflectionfunction___construct(INTERNAL_FUNCTION_PARAMETERS)
 {
+	if (openrasp_check_type_ignored(ZEND_STRL("callable") TSRMLS_CC))
+    {
+        return;
+    }
     zval *name;
     zval *closure = NULL;
     char *lcname;
@@ -223,9 +231,5 @@ void pre_reflectionfunction___construct(INTERNAL_FUNCTION_PARAMETERS)
             openrasp_buildin_php_risk_handle(1, "callable", 100, attack_params, plugin_message TSRMLS_CC);
         }
         efree(lcname);
-    }
-    else
-    {
-        return;
     }
 }
