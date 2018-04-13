@@ -10,7 +10,7 @@ function InstallJava()
 {
 	path=$1
 
-	wget https://packages.baidu.com/app/openrasp/rasp-java.tar.gz
+	curl https://packages.baidu.com/app/openrasp/rasp-java.tar.gz -O rasp-java.tar.gz
 	tar -xvf rasp-java.tar.gz
 	
 	cd rasp-*
@@ -20,7 +20,7 @@ function InstallJava()
 
 function InstallPHP()
 {
-	wget https://packages.baidu.com/app/openrasp/rasp-php.tar.bz2
+	curl https://packages.baidu.com/app/openrasp/rasp-php.tar.bz2 -O rasp-php.tar.bz2
 	tar -xvf rasp-php.tar.bz2
 	
 	php rasp-*/install.php -d /opt/rasp/
@@ -29,16 +29,16 @@ function InstallPHP()
 
 if [[ -d /tomcat/ ]]; then
 	InstallJava /tomcat/
-	bash /tomcat/bin/shutdown.sh
-	bash /tomcat/bin/startup.sh
+	/etc/init.d/tomcat.sh restart
 fi
 
 if [[ -d /jboss/ ]]; then
 	InstallJava /jboss/
+	/etc/init.d/jboss.sh restart
 fi
 
 if [[ -x /usr/bin/php ]]; then
 	InstallPHP
-	apachectl -k restart
+	/etc/init.d/httpd.sh restart
 fi
 
