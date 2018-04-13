@@ -206,7 +206,7 @@ if (!is_writable($extension_dir)) {
 	log_tips(ERROR, $extension_dir.' is not writable, please make sure you have write permissions!');
 }
 if (!file_exists($lib_source_path)) {
-	log_tips(ERROR, 'unsupported system or php version.');
+	log_tips(ERROR, 'unsupported system or php version: expecting ' . $lib_source_path . ' to be present.');
 }
 $lib_dest_path = $extension_dir.DIRECTORY_SEPARATOR.$lib_filename;
 if (file_exists($lib_dest_path)
