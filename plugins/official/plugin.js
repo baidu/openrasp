@@ -118,7 +118,9 @@ function validate_stack_php(stack) {
         var stack = stack[i]
 
         // 来自 eval/assert/create_function/...
-        if (stack.indexOf('eval()\'d code') != -1 || stack.indexOf('runtime-created function') != -1) {
+        if (stack.indexOf('eval()\'d code') != -1 
+            || stack.indexOf('runtime-created function') != -1
+            || stack.indexOf('assert code@') != -1) {
             verdict = true
             break
         }
@@ -477,7 +479,7 @@ plugin.register('directory', function (params, context) {
         if (validate_stack_php(params.stack)) {
             return {
                 action:     'block',
-                message:    '发现 Webshell 或者其他eval类型的后门',
+                message:    '发现 Webshell，或者eval/assert/create_function等类型的代码执行漏洞',
                 confidence: 90
             }
         }
