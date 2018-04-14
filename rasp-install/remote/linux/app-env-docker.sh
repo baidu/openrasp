@@ -46,7 +46,7 @@ if [[ -d /jboss/ ]]; then
 	/etc/init.d/jboss.sh restart
 fi
 
-if [[ -d /root/springboot.jar ]]; then
+if [[ -f /root/springboot.jar ]]; then
 	InstallSpringBoot
 fi
 
