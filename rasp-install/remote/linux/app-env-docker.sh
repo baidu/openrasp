@@ -10,7 +10,7 @@ function InstallJava()
 {
 	path=$1
 
-	curl https://packages.baidu.com/app/openrasp/rasp-java.tar.gz -O rasp-java.tar.gz
+	curl https://packages.baidu.com/app/openrasp/rasp-java.tar.gz -o rasp-java.tar.gz
 	tar -xvf rasp-java.tar.gz
 	
 	cd rasp-*
@@ -20,7 +20,7 @@ function InstallJava()
 
 function InstallSpringBoot()
 {
-	curl https://packages.baidu.com/app/openrasp/rasp-java.tar.gz -O rasp-java.tar.gz
+	curl https://packages.baidu.com/app/openrasp/rasp-java.tar.gz -o rasp-java.tar.gz
 	tar -xvf rasp-java.tar.gz
 
 	rm -rf /rasp
@@ -29,7 +29,7 @@ function InstallSpringBoot()
 
 function InstallPHP()
 {
-	curl https://packages.baidu.com/app/openrasp/rasp-php.tar.bz2 -O rasp-php.tar.bz2
+	curl https://packages.baidu.com/app/openrasp/rasp-php.tar.bz2 -o rasp-php.tar.bz2
 	tar -xvf rasp-php.tar.bz2
 	
 	php rasp-*/install.php -d /opt/rasp/
