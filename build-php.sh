@@ -61,7 +61,7 @@ phpize --clean
 # 复制其他文件
 mkdir -p "$output_base"/{conf,assets,logs,locale,plugins}
 cp ../../plugins/official/plugin.js "$output_base"/plugins/official.js
-cp ../../rasp-install/php/install.php "$output_base"
+cp ../../rasp-install/php/*.php "$output_base"
 
 # 生成并拷贝mo文件
 ./scripts/locale.sh
