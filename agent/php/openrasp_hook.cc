@@ -73,17 +73,36 @@ bool openrasp_check_callable_black(const char *item_name, uint item_name_length 
 
 void handle_block(TSRMLS_D)
 {
-    zval function_name, retval;
-    INIT_ZVAL(function_name);
-    ZVAL_STRING(&function_name, "ob_end_clean", 1);
-    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, 0, nullptr TSRMLS_CC) == FAILURE)
-    {
-        openrasp_error(E_WARNING, RUNTIME_ERROR, _("Error occurs while cleaning output buffer and turnning off output buffering"));
+#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION == 3)
+    if (OG(ob_nesting_level) && (OG(active_ob_buffer).status || OG(active_ob_buffer).erase)) {
+        php_end_ob_buffer(0, 0 TSRMLS_CC);
     }
+#elif (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION >= 4)
+    int status = php_output_get_status(TSRMLS_C);
+    if (status & PHP_OUTPUT_WRITTEN) {
+        php_output_discard(TSRMLS_C);
+    }
+#else
+#  error "Not support"
+#endif
     char *block_url = openrasp_ini.block_url;
     char *request_id = OPENRASP_INJECT_G(request_id);
-    /* 当 headers 已经输出时，只能在 body 中插入 script 进行重定向 */
-    if (SG(headers_sent))
+    if (!SG(headers_sent))
+    {
+        char *redirect_header = nullptr;
+        int redirect_header_len = 0;
+        redirect_header_len = spprintf(&redirect_header, 0, "Location: %s?request_id=%s", block_url, request_id);
+        if (redirect_header)
+        {
+            sapi_header_line header;
+            header.line = redirect_header;
+            header.line_len = redirect_header_len;
+            header.response_code = openrasp_ini.block_status_code;
+            sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
+        }
+        efree(redirect_header);
+    }
+    /* body 中插入 script 进行重定向 */
     {
         char *redirect_script = nullptr;
         int redirect_script_len = 0;
@@ -98,21 +117,6 @@ void handle_block(TSRMLS_D)
 #endif
         }
         efree(redirect_script);
-    }
-    else
-    {
-        char *redirect_header = nullptr;
-        int redirect_header_len = 0;
-        redirect_header_len = spprintf(&redirect_header, 0, "Location: %s?request_id=%s", block_url, request_id);
-        if (redirect_header)
-        {
-            sapi_header_line header;
-            header.line = redirect_header;
-            header.line_len = redirect_header_len;
-            header.response_code = openrasp_ini.block_status_code;
-            sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
-        }
-        efree(redirect_header);
     }
     zend_bailout();
 }
