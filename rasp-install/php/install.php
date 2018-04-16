@@ -1,5 +1,5 @@
 <?php
-include_once('./util.php');
+include_once(__DIR__.'/util.php');
 
 //全局变量
 $index 				= 1;
