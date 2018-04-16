@@ -73,6 +73,13 @@ bool openrasp_check_callable_black(const char *item_name, uint item_name_length 
 
 void handle_block(TSRMLS_D)
 {
+    zval function_name, retval;
+    INIT_ZVAL(function_name);
+    ZVAL_STRING(&function_name, "ob_end_clean", 1);
+    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, 0, nullptr TSRMLS_CC) == FAILURE)
+    {
+        openrasp_error(E_WARNING, RUNTIME_ERROR, _("Error occurs while cleaning output buffer and turnning off output buffering"));
+    }
     char *block_url = openrasp_ini.block_url;
     char *request_id = OPENRASP_INJECT_G(request_id);
     /* 当 headers 已经输出时，只能在 body 中插入 script 进行重定向 */
