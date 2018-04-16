@@ -27,7 +27,9 @@ const clean = {
 // OpenRASP 大部分算法都不依赖规则，我们主要使用调用堆栈、编码规范、用户输入匹配的思路来检测漏洞。
 // 
 // 目前，只有文件访问 - 算法#4 加了一个探针，作为最后一道防线
-// 具体算法请查看后面 plugin.register 的内容
+// 当应用读取了这些文件，通常意味着服务器已经被入侵
+// 这些配置是通用的，一般不需要定制
+ 
 var forcefulBrowsing = {
     dotFiles: /\.(7z|tar|gz|bz2|xz|rar|zip|sql|db|sqlite)$/,
     nonUserDirectory: /^\/(proc|sys|root)/,
