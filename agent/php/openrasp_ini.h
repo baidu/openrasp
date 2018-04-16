@@ -19,6 +19,7 @@ class Openrasp_ini
     int log_maxburst = 1000;
     int syslog_facility;
     bool syslog_alarm_enable = 0;
+    int block_status_code = 302;
     char *inject_html_urlprefix;
     unsigned int slowquery_min_rows = 500;
     bool enforce_policy = false;

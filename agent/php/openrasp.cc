@@ -38,6 +38,7 @@ PHP_INI_ENTRY1("openrasp.syslog_server_address", nullptr, PHP_INI_SYSTEM, OnUpda
 PHP_INI_ENTRY1("openrasp.syslog_facility", "1", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_facility)
 PHP_INI_ENTRY1("openrasp.syslog_alarm_enable", "0", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.syslog_alarm_enable)
 PHP_INI_ENTRY1("openrasp.timeout_ms", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.timeout_ms)
+PHP_INI_ENTRY1("openrasp.block_status_code", "302", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.block_status_code)
 PHP_INI_END()
 
 PHP_GINIT_FUNCTION(openrasp)

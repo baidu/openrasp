@@ -109,7 +109,7 @@ void handle_block(TSRMLS_D)
             sapi_header_line header;
             header.line = redirect_header;
             header.line_len = redirect_header_len;
-            header.response_code = 302;
+            header.response_code = openrasp_ini.block_status_code;
             sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
         }
         efree(redirect_header);

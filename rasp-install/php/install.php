@@ -76,6 +76,9 @@ openrasp.root_dir="$root_dir"
 	
 ;拦截攻击后，跳转到这个URL，并增加 request_id 参数
 ;openrasp.block_url=https://rasp.baidu.com/blocked/
+
+;拦截攻击后，将状态码设置为这个值
+;openrasp.block_status_code=302
 	
 ;数组回调函数黑名单，命中即拦截
 ;openrasp.callable_blacklists=system,exec,passthru,proc_open,shell_exec,popen,pcntl_exec,assert
