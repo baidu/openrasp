@@ -199,6 +199,12 @@ static v8::StartupData init_js_snapshot(TSRMLS_D)
 {
     v8::SnapshotCreator creator(external_references);
     v8::Isolate *isolate = creator.GetIsolate();
+#ifdef PHP_WIN32
+    uintptr_t current_stack = reinterpret_cast<uintptr_t>(&current_stack);
+    uintptr_t stack_limit = current_stack - 512 * 1024;
+    stack_limit = stack_limit >= 0 ? stack_limit : 0;
+    isolate->SetStackLimit(stack_limit);
+#endif
     {
         v8::HandleScope handle_scope(isolate);
         v8::Local<v8::Context> context = v8::Context::New(isolate);

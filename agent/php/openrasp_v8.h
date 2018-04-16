@@ -22,6 +22,7 @@
 #define OPENRASP_V8_H
 
 #include "openrasp.h"
+#undef COMPILER // conflict with v8 defination
 #include <v8.h>
 #include <v8-platform.h>
 #include <mutex>
