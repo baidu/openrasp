@@ -19,6 +19,7 @@ extern "C" {
 #include "php.h"
 #include "php_ini.h"
 #include "php_main.h"
+#include "php_output.h"
 #include "zend_globals.h"
 #include "zend_interfaces.h"
 #include "php_globals.h"

@@ -27,7 +27,9 @@ const clean = {
 // OpenRASP 大部分算法都不依赖规则，我们主要使用调用堆栈、编码规范、用户输入匹配的思路来检测漏洞。
 // 
 // 目前，只有文件访问 - 算法#4 加了一个探针，作为最后一道防线
-// 具体算法请查看后面 plugin.register 的内容
+// 当应用读取了这些文件，通常意味着服务器已经被入侵
+// 这些配置是通用的，一般不需要定制
+ 
 var forcefulBrowsing = {
     dotFiles: /\.(7z|tar|gz|bz2|xz|rar|zip|sql|db|sqlite)$/,
     nonUserDirectory: /^\/(proc|sys|root)/,
@@ -120,7 +122,8 @@ function validate_stack_php(stack) {
         // 来自 eval/assert/create_function/...
         if (stack.indexOf('eval()\'d code') != -1 
             || stack.indexOf('runtime-created function') != -1
-            || stack.indexOf('assert code@') != -1) {
+            || stack.indexOf('assert code@') != -1
+            || stack.indexOf('regexp code@') != -1) {
             verdict = true
             break
         }
@@ -739,7 +742,7 @@ plugin.register('command', function (params, context) {
     // PHP 检测逻辑
     else if (server.language == 'php') {
         if (validate_stack_php(params.stack)) {
-            message = '发现 Webshell，或者eval/assert/create_function等类型的代码执行漏洞'
+            message = '发现 Webshell，或者基于 eval/assert/create_function/preg_replace/.. 等类型的代码执行漏洞'
         }
     }
 

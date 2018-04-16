@@ -5,14 +5,21 @@
 #include <signal.h>
 #include <algorithm>
 #include <exception>
+#ifndef PHP_WIN32
 static std::vector<std::pair<std::string, int>> supported_sapis{
     {"apache2handler", SIGUSR1},
     {"fpm-fcgi", SIGUSR2},
 };
 static std::vector<std::pair<std::string, int>>::iterator supported_sapi;
+#else
+#include <windows.h>
+void (*ap_signal_parent)(int) = nullptr;
+#endif
+static fsw::monitor *monitor = nullptr;
 static std::thread *fswatch_thread = nullptr;
 PHP_MINIT_FUNCTION(openrasp_fswatch)
 {
+#ifndef PHP_WIN32
     supported_sapi = std::find_if(supported_sapis.begin(), supported_sapis.end(),
                                   [](std::pair<std::string, int> i) { return i.first.compare(sapi_module.name) == 0; });
     if (supported_sapi == supported_sapis.end())
@@ -20,19 +27,31 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
         //openrasp_error(E_WARNING, CONFIG_ERROR, _("SAPI %s does not support automatic reloading, file monitor is deactivated"), sapi_module.name);
         return SUCCESS;
     }
-    std::vector<std::string> paths;
-    paths.push_back(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("plugins"));
-    paths.push_back(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("assets"));
-    fsw::monitor *monitor = nullptr;
+#else
+    if (getenv("AP_PARENT_PID") != nullptr ||
+        (*(void **)(&ap_signal_parent) = GetProcAddress(GetModuleHandle("libhttpd.dll"), "ap_signal_parent")) == nullptr)
+    {
+        return SUCCESS;
+    }
+#endif
     try
     {
+        std::vector<std::string> paths;
+        paths.push_back(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("plugins"));
+        paths.push_back(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("assets"));
+
         monitor = fsw::monitor_factory::create_monitor(
             fsw_monitor_type::system_default_monitor_type, paths,
             [](const std::vector<fsw::event> &events, void *ctx) {
+#ifndef PHP_WIN32
                 if (raise(supported_sapi->second))
                 {
                     openrasp_error(E_WARNING, CONFIG_ERROR, _("Failed to reload %s"), sapi_module.name);
                 }
+#else
+                ap_signal_parent(2);
+#endif
+                monitor->stop();
             } TSRMLS_CC);
 
         std::vector<fsw_event_type_filter> event_filters;
@@ -53,6 +72,22 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
 
         monitor->set_recursive(false);
         monitor->set_latency(1);
+
+        fswatch_thread = new std::thread([]() {
+            try
+            {
+                monitor->start();
+            }
+            catch (std::exception &conf)
+            {
+                openrasp_error(E_WARNING, FSWATCH_ERROR, _("Fswatch error: %s"), conf.what());
+            }
+            catch (...)
+            {
+                openrasp_error(E_WARNING, FSWATCH_ERROR, _("Fswatch error: unknown error"));
+            }
+        });
+        fswatch_thread->detach();
     }
     catch (std::exception &conf)
     {
@@ -62,27 +97,13 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
     {
         openrasp_error(E_WARNING, FSWATCH_ERROR, _("Failed to initialize fswatch: unknown error."));
     }
-    fswatch_thread = new std::thread([monitor]() {
-        try
-        {
-            monitor->start();
-        }
-        catch (std::exception &conf)
-        {
-            openrasp_error(E_WARNING, FSWATCH_ERROR, _("Fswatch error: %s"), conf.what());
-        }
-        catch (...)
-        {
-            openrasp_error(E_WARNING, FSWATCH_ERROR, _("Fswatch error: unknown error"));
-        }
-        monitor->stop();
-        delete monitor;
-    });
-    fswatch_thread->detach();
+
     return SUCCESS;
 }
 PHP_MSHUTDOWN_FUNCTION(openrasp_fswatch)
 {
+    delete monitor;
+    monitor = nullptr;
     delete fswatch_thread;
     fswatch_thread = nullptr;
     return SUCCESS;

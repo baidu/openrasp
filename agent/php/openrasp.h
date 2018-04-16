@@ -21,6 +21,7 @@ extern "C" {
 #define SHM_ERROR (20003)
 #define CONFIG_ERROR (20004)
 #define PLUGIN_ERROR (20005)
+#define RUNTIME_ERROR (20006)
 
 #ifndef ZEND_SHUTDOWN_MODULE_GLOBALS
 #ifdef ZTS
