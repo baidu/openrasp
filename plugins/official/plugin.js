@@ -122,7 +122,8 @@ function validate_stack_php(stack) {
         // 来自 eval/assert/create_function/...
         if (stack.indexOf('eval()\'d code') != -1 
             || stack.indexOf('runtime-created function') != -1
-            || stack.indexOf('assert code@') != -1) {
+            || stack.indexOf('assert code@') != -1
+            || stack.indexOf('regexp code@') != -1) {
             verdict = true
             break
         }
