@@ -741,7 +741,7 @@ plugin.register('command', function (params, context) {
     // PHP 检测逻辑
     else if (server.language == 'php') {
         if (validate_stack_php(params.stack)) {
-            message = '发现 Webshell，或者eval/assert/create_function等类型的代码执行漏洞'
+            message = '发现 Webshell，或者基于 eval/assert/create_function/preg_replace/.. 等类型的代码执行漏洞'
         }
     }
 
