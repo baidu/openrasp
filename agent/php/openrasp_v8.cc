@@ -202,7 +202,7 @@ static v8::StartupData init_js_snapshot(TSRMLS_D)
 #ifdef PHP_WIN32
     uintptr_t current_stack = reinterpret_cast<uintptr_t>(&current_stack);
     uintptr_t stack_limit = current_stack - 512 * 1024;
-    stack_limit = stack_limit >= 0 ? stack_limit : 0;
+    stack_limit = stack_limit < current_stack ? stack_limit : sizeof(stack_limit);
     isolate->SetStackLimit(stack_limit);
 #endif
     {
