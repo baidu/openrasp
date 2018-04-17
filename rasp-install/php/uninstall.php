@@ -81,7 +81,7 @@ if ($ini_scanned_path) {
     if (!empty($ini_system_links) && is_array($ini_system_links)) {
         foreach ($ini_system_links as $key => $value) {
             if (file_exists($value) && is_link($value) && readlink($value) === $ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file) {
-                log_tips(INFO, 'Remove found system links of openrasp.ini: '.$value);
+                log_tips(INFO, 'Deleted symbol link of openrasp.ini: '.$value);
                 unlink($value);
             }
         }
@@ -145,7 +145,7 @@ if ($ini_scanned_path) {
 
 major_tips('Removing OpenRASP PHP extensions');
 if (!file_exists($extension_dir)) {
-	log_tips(ERROR, $extension_dir.' not exist!');
+	log_tips(ERROR, "PHP extension folder '$extension_dir' does not exist");
 }
 if (!is_writable($extension_dir)) {
 	log_tips(ERROR, $extension_dir.' is not writable, please make sure you have write permissions!');
@@ -155,7 +155,7 @@ if (file_exists($lib_dest_path)) {
     if (unlink($lib_dest_path)) {
         log_tips(INFO, "'$lib_dest_path' removed");
     } else {
-        log_tips(ERROR, 'Fail to delete '.$lib_dest_path);
+        log_tips(ERROR, "Unable to remove '$lib_dest_path'");
     }
 }
 $lib_backup_path = $lib_dest_path.'.bak';
@@ -167,7 +167,7 @@ if (file_exists($lib_backup_path)) {
     }
 }
 
-major_tips('Removing OpenRASP work folder');
+major_tips('Removing OpenRASP root folder');
 if (!file_exists($root_dir) && !is_writable($root_dir)) {
 	log_tips(ERROR, $root_dir.' is not writable, please make sure you have write permissions!');
 }
@@ -183,5 +183,5 @@ if (rmdir($root_dir)) {
 }
 
 
-major_tips('Uninstallation completed without errors, please restart or reload PHP server to take effect.', TRUE); 
+major_tips('Uninstallation completed without errors, please restart PHP server to take effect.', TRUE); 
 ?>

@@ -71,15 +71,15 @@ if (!is_writable($extension_dir)) {
 	log_tips(ERROR, "Extension directory '$extension_dir' is not writable, make sure you have write permissions");
 }
 if (!file_exists($lib_source_path)) {
-	log_tips(ERROR, 'Unsupported system or php version: expecting ' . $lib_source_path . ' to be present.');
+	log_tips(ERROR, "Unsupported system or php version: expecting '$lib_source_path' to be present.");
 }
 $lib_dest_path = $extension_dir.DIRECTORY_SEPARATOR.$lib_filename;
 if (file_exists($lib_dest_path)
 	&& !rename($lib_dest_path, $lib_dest_path.'.bak')) {
 	log_tips(ERROR, "Unable to backup old openrasp extension: $lib_dest_path");
 }
-if (!copy($lib_source_path, $extension_dir.DIRECTORY_SEPARATOR.$lib_filename)) {
-	log_tips(ERROR, 'Failed to copy openrasp.so to ' . $extension_dir.DIRECTORY_SEPARATOR.$lib_filename);
+if (!copy($lib_source_path, $lib_dest_path)) {
+	log_tips(ERROR, "Failed to copy openrasp.so to '$lib_dest_path'");
 } else {
 	log_tips(INFO, "Successfully copied '$lib_filename' to '$extension_dir'");
 }
@@ -87,7 +87,7 @@ if (!copy($lib_source_path, $extension_dir.DIRECTORY_SEPARATOR.$lib_filename)) {
 if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
 	major_tips("Skipped update of php.ini since '--ignore-ini' is set");
 } else {
-	major_tips('modify php.ini');
+	major_tips('Updating php.ini');
 	$ini_content = <<<OPENRASP
 ;OPENRASP BEGIN
 	
@@ -157,30 +157,31 @@ OPENRASP;
 		if (!is_writable($ini_scanned_path)) {
 			log_tips(ERROR, $ini_scanned_path . ' is not writable, please make sure you have write permissions!');
 		}
-	
-	
-		$handle = fopen($ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file, "w+");
+		
+		
+		$ini_src = $ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file;
+		$handle  = fopen($ini_src, "w+");
 		if ($handle) {
 			if (fwrite($handle, $ini_content) === FALSE) {
 				fclose($handle);
 				log_tips(ERROR, 'Cannot write to '. $ini_scanned_path . DIRECTORY_SEPARATOR . $ini_scanned_file);
 			} else {
-				log_tips(INFO, 'Successfully write openrasp config to '.$ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file);
+				log_tips(INFO, "Successfully write openrasp config to '$ini_src'");
 			}
 			fclose($handle);
 			if (!empty($ini_system_links) && is_array($ini_system_links)) {
-				log_tips(INFO, 'Found system links of openrasp.ini are:', $ini_system_links);
+				log_tips(INFO, "Detected symbol links of openrasp.ini at '$ini_system_links'");
 				foreach ($ini_system_links as $key => $value) {
-					if (file_exists($value) && readlink($value) === $ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file) {
+					if (file_exists($value) && readlink($value) === $ini_src) {
 						continue;
 					}
-					if (!symlink($ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file, $value)) {
-						log_tips(ERROR, 'Fail to create link '.$value);
+					if (!symlink($ini_src, $value)) {
+						log_tips(ERROR, "Unable to create symbol link '$ini_src' to '$value'");
 					}
 				}
 			}
 		} else {
-			log_tips(ERROR, 'Unable to open ini file for writing: ' . $ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file);
+			log_tips(ERROR, 'Unable to open ini file for writing: ' . $ini_src);
 		} 
 	} else if ($ini_loaded_file) {
 		if (!is_writable($ini_loaded_file)) {
@@ -305,5 +306,5 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 	}
 }
 
-major_tips("Installation completed without errors\nPlease restart or gracefully reload PHP server to take effect.", TRUE); 
+major_tips("Installation completed without errors, please restart PHP server to take effect.", TRUE); 
 ?>
