@@ -27,6 +27,14 @@ if (PHP_OPENRASP != "no") {
 	CHECK_LIB("v8_libsampler.lib", "openrasp");
 	CHECK_LIB("v8_snapshot.lib", "openrasp");
 
+	if (CHECK_LIB("ws2_32.lib", "openrasp", PHP_OPENRASP)
+	&& CHECK_LIB("Iphlpapi.lib", "openrasp", PHP_OPENRASP)
+	&& CHECK_HEADER_ADD_INCLUDE("winsock2.h", "CFLAGS_OPENRASP")) {
+		AC_DEFINE('HAVE_IPHLPAPI_WS2', 1);
+	} else {
+		WARNING("GetAdaptersInfo not supported; libraries and headers not found");
+	}
+
 	CHECK_HEADER_ADD_INCLUDE("v8.h", "CFLAGS_OPENRASP");
 	ADD_FLAG("CFLAGS_OPENRASP", "/I " + configure_module_dirname);
 	ADD_FLAG("CFLAGS_OPENRASP", "/EHcs");
