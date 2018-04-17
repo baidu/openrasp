@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 ?>
-OpenRASP Installer for PHP servers - Copyright ©2017-2018 Baidu Inc.
+OpenRASP Uninstaller for PHP servers - Copyright ©2017-2018 Baidu Inc.
 For more details visit: https://rasp.baidu.com/doc/install/software.html
 
 <?php
@@ -132,7 +132,7 @@ if ($ini_scanned_path) {
                 log_tips(ERROR, 'Fail to restore the original php.ini file.');
             }
          } else {
-             log_tips(INFO, 'Successfully remove openrasp config from '.$ini_loaded_file);
+             log_tips(INFO, 'Successfully removed openrasp config from '.$ini_loaded_file);
          }
         fclose($handle);
     } else {
