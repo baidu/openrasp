@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "openrasp_log.h"
 #include "openrasp_ini.h"
 #include "openrasp_inject.h"
@@ -48,7 +64,7 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 #define RASP_STREAM_WRITE_RETRY_NUMBER      1
 
 #define INIT_REQUEST_INFO_FROM_TRACK_VARS_SERVER(original_name, new_name, p_zval) do {              \
-    zval **new_name##_item, *new_name##_default;                                                    \
+    zval **new_name##_item;                                                                         \
     if (zend_hash_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]),                             \
         ZEND_STRS(ZEND_TOSTR(original_name)),                                                       \
         (void **)&new_name##_item) == FAILURE || Z_TYPE_PP(new_name##_item) != IS_STRING)           \

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: openrasp@baidu.com\n"
-"POT-Creation-Date: 2018-04-01 23:52-0700\n"
+"POT-Creation-Date: 2018-04-16 07:03-0700\n"
 "PO-Revision-Date: 2018-03-27 21:18-0700\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: openrasp.cc:63
+#: openrasp.cc:63 openrasp.cc:64
 msgid ""
 "\"openrasp.root_dir\" should be configured in php.ini, continuing without "
 "security protection"
@@ -41,7 +41,11 @@ msgstr ""
 msgid "Cannot remove lock - %s (%d)"
 msgstr ""
 
-#: openrasp_utils.cc:134
+#: hook/openrasp_include.cc:30
+msgid "China Chopper WebShell"
+msgstr ""
+
+#: openrasp_utils.cc:134 openrasp_utils.cc:137
 #, c-format
 msgid "Could not create directory %s - %s"
 msgstr ""
@@ -51,7 +55,12 @@ msgstr ""
 msgid "Error allocating memory needed to call GetAdaptersinfo."
 msgstr ""
 
-#: openrasp.cc:188
+#: openrasp_hook.cc:86 openrasp_hook.cc:81
+msgid ""
+"Error occurs while cleaning output buffer and turnning off output buffering"
+msgstr ""
+
+#: openrasp.cc:188 openrasp.cc:193 openrasp.cc:194 openrasp.cc:190
 #, c-format
 msgid "Fail to bindtextdomain - %s"
 msgstr ""
@@ -71,7 +80,7 @@ msgstr ""
 msgid "Fail to getifaddrs - %s."
 msgstr ""
 
-#: openrasp_v8.cc:259 openrasp_v8.cc:234
+#: openrasp_v8.cc:259 openrasp_v8.cc:234 openrasp_v8.cc:232 openrasp_v8.cc:238
 #, c-format
 msgid "Fail to initialize js plugin - %s"
 msgstr ""
@@ -89,26 +98,26 @@ msgstr ""
 msgid "Fail to open php_stream of %s!"
 msgstr ""
 
-#: openrasp.cc:196
+#: openrasp.cc:196 openrasp.cc:201 openrasp.cc:202 openrasp.cc:198
 #, c-format
 msgid "Fail to setlocale to \"openrasp.locale\" - %s"
 msgstr ""
 
-#: openrasp.cc:191
+#: openrasp.cc:191 openrasp.cc:196 openrasp.cc:197 openrasp.cc:193
 #, c-format
 msgid "Fail to textdomain - %s"
 msgstr ""
 
-#: openrasp_fswatch.cc:59
+#: openrasp_fswatch.cc:59 openrasp_fswatch.cc:94
 #, c-format
 msgid "Failed to initialize fswatch: %s"
 msgstr ""
 
-#: openrasp_fswatch.cc:63
+#: openrasp_fswatch.cc:63 openrasp_fswatch.cc:98
 msgid "Failed to initialize fswatch: unknown error."
 msgstr ""
 
-#: openrasp_fswatch.cc:34
+#: openrasp_fswatch.cc:34 openrasp_fswatch.cc:49
 #, c-format
 msgid "Failed to reload %s"
 msgstr ""
@@ -117,12 +126,16 @@ msgstr ""
 msgid "File dropper backdoor"
 msgstr ""
 
-#: openrasp_fswatch.cc:72
+#: hook/openrasp_include.cc:59
+msgid "File inclusion"
+msgstr ""
+
+#: openrasp_fswatch.cc:72 openrasp_fswatch.cc:83
 #, c-format
 msgid "Fswatch error: %s"
 msgstr ""
 
-#: openrasp_fswatch.cc:76
+#: openrasp_fswatch.cc:76 openrasp_fswatch.cc:87
 msgid "Fswatch error: unknown error"
 msgstr ""
 
@@ -136,7 +149,7 @@ msgstr ""
 msgid "No write permission of file %s."
 msgstr ""
 
-#: openrasp_v8.cc:362 openrasp_v8.cc:349
+#: openrasp_v8.cc:362 openrasp_v8.cc:349 openrasp_v8.cc:345 openrasp_v8.cc:351
 #, c-format
 msgid "The size of plugin file '%s' should be less than 10 MB, skiped"
 msgstr ""
@@ -184,9 +197,28 @@ msgstr ""
 msgid "Unable to write base address"
 msgstr ""
 
+#: hook/openrasp_command.cc:195 hook/openrasp_command.cc:216
+msgid "Webshell detected - China Chopper"
+msgstr ""
+
+#: hook/openrasp_command.cc:19
+msgid "Webshell detected - Command execution backdoor"
+msgstr ""
+
+#: hook/openrasp_file.cc:134
+msgid "Webshell detected - File dropper backdoor"
+msgstr ""
+
 #: hook/openrasp_array.cc:21 openrasp_hook.cc:186 hook/openrasp_array.cc:221
+#: hook/openrasp_array.cc:220 hook/openrasp_array.cc:228
 #, c-format
 msgid "Webshell detected: using %s"
+msgstr ""
+
+#: hook/openrasp_array.cc:21 hook/openrasp_array.cc:20
+#: hook/openrasp_array.cc:24
+#, c-format
+msgid "Webshell detected: using '%s' function"
 msgstr ""
 
 #: openrasp_security_policy.cc:9
@@ -197,6 +229,10 @@ msgstr ""
 
 #: openrasp_shared_alloc_win32.c:207
 msgid "calloc() failed"
+msgstr ""
+
+#: openrasp_hook.cc:83
+msgid "ccc"
 msgstr ""
 
 #: hook/openrasp_sql.cc:62
@@ -222,6 +258,12 @@ msgstr ""
 #: hook/openrasp_sql.cc:34
 #, c-format
 msgid "slow query: read %d rows via sql statement - exceed %d"
+msgstr ""
+
+#: openrasp_hook.cc:272 openrasp_hook.cc:279 openrasp_hook.cc:281
+#: openrasp_hook.cc:283 openrasp_hook.cc:284
+#, c-format
+msgid "ssrf found : %s"
 msgstr ""
 
 #: openrasp_security_policy.cc:14
