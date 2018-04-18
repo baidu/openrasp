@@ -1,6 +1,36 @@
 ARG_ENABLE("openrasp", "enable openrasp support", "no");
 
 if (PHP_OPENRASP != "no") {
+
+	ADD_FLAG("CFLAGS_OPENRASP", "/I " + configure_module_dirname);
+	ADD_FLAG("CFLAGS_OPENRASP", "/EHcs");
+	ADD_FLAG("CFLAGS_OPENRASP", "/MD");
+	ADD_FLAG("CFLAGS_OPENRASP", "/D NOMINMAX");
+	ADD_FLAG("CFLAGS_OPENRASP", "/D ZEND_WIN32_KEEP_INLINE");
+	ADD_FLAG("CFLAGS_OPENRASP", "/D __STDC_LIMIT_MACROS");
+	ADD_FLAG("CFLAGS", "/U ZEND_WIN32_FORCE_INLINE");
+
+	ADD_SOURCES(configure_module_dirname + "/hook", "openrasp_command.cc openrasp_directory.cc openrasp_fileupload.cc openrasp_include.cc openrasp_array.cc openrasp_sql.cc openrasp_file.cc openrasp_mysql.cc openrasp_mysqli.cc openrasp_pdo.cc openrasp_pgsql.cc openrasp_sqlite3.cc", "openrasp");
+
+	var libfswatch_path = configure_module_dirname + "/libfswatch";
+	ADD_FLAG("CFLAGS_OPENRASP", "/I " + libfswatch_path);
+	ADD_SOURCES(libfswatch_path + "/c", "libfswatch_log.cpp libfswatch.cpp cevent.cpp", "openrasp", libfswatch_path);
+	ADD_SOURCES(libfswatch_path + "/c++", "monitor.cpp filter.cpp windows_monitor.cpp event.cpp libfswatch_exception.cpp", "openrasp", libfswatch_path);
+	ADD_SOURCES(libfswatch_path + "/c++/windows", "win_handle.cpp win_error_message.cpp win_strings.cpp win_paths.cpp win_directory_change_event.cpp", "openrasp", libfswatch_path);
+	ADD_SOURCES(libfswatch_path + "/c++/string", "string_utils.cpp", "openrasp", libfswatch_path);
+
+	CHECK_LIB("winmm.lib", "openrasp");
+	CHECK_LIB("dbghelp.lib", "openrasp");
+	CHECK_LIB("shlwapi.lib", "openrasp");
+
+	CHECK_HEADER_ADD_INCLUDE("v8.h", "CFLAGS_OPENRASP");
+	var libv8_path = PHP_PHP_BUILD + "\\" + (X64 ? "lib64" : "lib");
+	CHECK_LIB("v8_base.lib", "openrasp", libv8_path);
+	CHECK_LIB("v8_libbase.lib", "openrasp", libv8_path);
+	CHECK_LIB("v8_libsampler.lib", "openrasp", libv8_path);
+	CHECK_LIB("v8_snapshot.lib", "openrasp", libv8_path);
+	DEFINE("LDFLAGS", get_define("LDFLAGS_OPENRASP") + " " + get_define("LDFLAGS"));
+
 	EXTENSION("openrasp",
 	"openrasp.cc \
 	openrasp_ini.cc \
@@ -18,30 +48,5 @@ if (PHP_OPENRASP != "no") {
 	openrasp_v8_utils.cc \
 	openrasp_security_policy.cc"
 	, true);
-
-	CHECK_LIB("winmm.lib", "openrasp");
-	CHECK_LIB("dbghelp.lib", "openrasp");
-	CHECK_LIB("shlwapi.lib", "openrasp");
-	CHECK_LIB("v8_base.lib", "openrasp");
-	CHECK_LIB("v8_libbase.lib", "openrasp");
-	CHECK_LIB("v8_libsampler.lib", "openrasp");
-	CHECK_LIB("v8_snapshot.lib", "openrasp");
-
-	CHECK_HEADER_ADD_INCLUDE("v8.h", "CFLAGS_OPENRASP");
-	ADD_FLAG("CFLAGS_OPENRASP", "/I " + configure_module_dirname);
-	ADD_FLAG("CFLAGS_OPENRASP", "/EHcs");
-	ADD_FLAG("CFLAGS_OPENRASP", "/MD");
-	ADD_FLAG("CFLAGS_OPENRASP", "/D NOMINMAX");
-	ADD_FLAG("CFLAGS_OPENRASP", "/D ZEND_WIN32_KEEP_INLINE");
-	ADD_FLAG("CFLAGS_OPENRASP", "/D __STDC_LIMIT_MACROS");
-
-
-	ADD_SOURCES(configure_module_dirname + "/hook", "openrasp_command.cc openrasp_directory.cc openrasp_fileupload.cc openrasp_include.cc openrasp_array.cc openrasp_sql.cc openrasp_file.cc openrasp_mysql.cc openrasp_mysqli.cc openrasp_pdo.cc openrasp_pgsql.cc openrasp_sqlite3.cc", "openrasp");
-
-	ADD_FLAG("CFLAGS_OPENRASP", "/I " + configure_module_dirname + "/libfswatch");
-	ADD_SOURCES(configure_module_dirname + "/libfswatch/c", "libfswatch_log.cpp libfswatch.cpp cevent.cpp", "openrasp");
-	ADD_SOURCES(configure_module_dirname + "/libfswatch/c++", "monitor.cpp filter.cpp windows_monitor.cpp event.cpp libfswatch_exception.cpp", "openrasp");
-	ADD_SOURCES(configure_module_dirname + "/libfswatch/c++/windows", "win_handle.cpp win_error_message.cpp win_strings.cpp win_paths.cpp win_directory_change_event.cpp", "openrasp");
-	ADD_SOURCES(configure_module_dirname + "/libfswatch/c++/string", "string_utils.cpp", "openrasp");
 }
 
