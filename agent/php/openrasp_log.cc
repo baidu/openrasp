@@ -65,7 +65,8 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 
 #define INIT_REQUEST_INFO_FROM_TRACK_VARS_SERVER(original_name, new_name, p_zval) do {              \
     zval **new_name##_item;                                                                         \
-    if (zend_hash_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]),                             \
+    if (Z_TYPE_P(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY ||                                \
+        zend_hash_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]),                             \
         ZEND_STRS(ZEND_TOSTR(original_name)),                                                       \
         (void **)&new_name##_item) == FAILURE || Z_TYPE_PP(new_name##_item) != IS_STRING)           \
         {                                                                                           \
@@ -192,7 +193,8 @@ static void init_alarm_request_info(TSRMLS_D)
     zval **info_item;
     zval *path = NULL;        
     static const char REQUEST_URI[] = "REQUEST_URI";                                                                                                                                                                       
-    if (zend_hash_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_URI),     
+    if (Z_TYPE_P(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY 
+        && zend_hash_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_URI),     
         (void **)&info_item) == SUCCESS && Z_TYPE_PP(info_item) == IS_STRING) 
         {
             char *haystack = Z_STRVAL_PP(info_item);                                            
