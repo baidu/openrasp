@@ -64,7 +64,7 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 #define RASP_STREAM_WRITE_RETRY_NUMBER      1
 
 #define INIT_REQUEST_INFO_FROM_TRACK_VARS_SERVER(original_name, new_name, p_zval) do {              \
-    zval **new_name##_item, *new_name##_default;                                                    \
+    zval **new_name##_item;                                                                         \
     if (zend_hash_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]),                             \
         ZEND_STRS(ZEND_TOSTR(original_name)),                                                       \
         (void **)&new_name##_item) == FAILURE || Z_TYPE_PP(new_name##_item) != IS_STRING)           \
