@@ -23,6 +23,14 @@ if (PHP_OPENRASP != "no") {
 	CHECK_LIB("dbghelp.lib", "openrasp");
 	CHECK_LIB("shlwapi.lib", "openrasp");
 
+	if (CHECK_LIB("ws2_32.lib", "openrasp", PHP_OPENRASP)
+	&& CHECK_LIB("Iphlpapi.lib", "openrasp", PHP_OPENRASP)
+	&& CHECK_HEADER_ADD_INCLUDE("winsock2.h", "CFLAGS_OPENRASP")) {
+		AC_DEFINE('HAVE_IPHLPAPI_WS2', 1);
+	} else {
+		WARNING("GetAdaptersInfo not supported; libraries and headers not found");
+	}
+
 	CHECK_HEADER_ADD_INCLUDE("v8.h", "CFLAGS_OPENRASP");
 	var libv8_path = PHP_PHP_BUILD + "\\" + (X64 ? "lib64" : "lib");
 	CHECK_LIB("v8_base.lib", "openrasp", libv8_path);
