@@ -99,8 +99,9 @@ void handle_block(TSRMLS_D)
         php_output_discard(TSRMLS_C);
     }
 #else
-#  error "Not support"
+#  error "Unsupported PHP version, please contact OpenRASP team for more information"
 #endif
+
     char *block_url = openrasp_ini.block_url;
     char *request_id = OPENRASP_INJECT_G(request_id);
     if (!SG(headers_sent))
