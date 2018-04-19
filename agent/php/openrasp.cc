@@ -211,7 +211,7 @@ static bool make_openrasp_root_dir(TSRMLS_D)
     }
     else
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to setlocale to \"openrasp.locale\" - %s"), openrasp_ini.locale);
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("Unable to set OpenRASP locale to '%s'"), openrasp_ini.locale);
     }
 #endif
     return true;

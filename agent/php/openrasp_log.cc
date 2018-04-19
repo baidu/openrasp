@@ -319,7 +319,7 @@ static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log
             }
             else if (VCWD_ACCESS(file_path, W_OK) != 0)
             {
-                openrasp_error(E_WARNING, LOG_ERROR, _("No write permission of file %s."), file_path);
+                openrasp_error(E_WARNING, LOG_ERROR, _("Unable to open '%s' for writing"), file_path);
                 break;
             }        
             stream = php_stream_open_wrapper(file_path, "a+", REPORT_ERRORS | IGNORE_URL_WIN, NULL);            
@@ -692,7 +692,8 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
         if (resource && resource->scheme && (!strcmp(resource->scheme, "tcp") || !strcmp(resource->scheme, "udp"))) {
             alarm_appender = static_cast<log_appender>(alarm_appender | SYSLOG_APPENDER);
         } else {
-            openrasp_error(E_WARNING, LOG_ERROR, _("Invalid \"openrasp.syslog_server_address\" (%s) and it'll be ignored."), openrasp_ini.syslog_server_address);
+            openrasp_error(E_WARNING, LOG_ERROR, 
+                _("Invalid syslog server address: '%s', expecting 'tcp://' or 'udp://' to be present."), openrasp_ini.syslog_server_address);
         }
     }
     openrasp_log_globals->alarm_logger.appender     		= alarm_appender;
@@ -742,7 +743,7 @@ PHP_MINIT_FUNCTION(openrasp_log)
     struct ifaddrs *ifaddr, *ifa;
     if (getifaddrs(&ifaddr) == -1) 
     {
-        openrasp_error(E_WARNING, LOG_ERROR, _("Fail to getifaddrs - %s."), strerror(errno));
+        openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs error: %s"), strerror(errno));
     }
     else
     {
@@ -764,7 +765,7 @@ PHP_MINIT_FUNCTION(openrasp_log)
                 s = getnameinfo(ifa->ifa_addr,sizeof(struct sockaddr_in),
                             host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
                 if (s != 0) {
-                    openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs: getnameinfo failed - %s."), gai_strerror(s));
+                    openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs error: getnameinfo failed - %s."), gai_strerror(s));
                 }
                 _if_addr_map.insert(std::pair<std::string, std::string>(ifa->ifa_name, host));
             }
@@ -774,7 +775,7 @@ PHP_MINIT_FUNCTION(openrasp_log)
 #endif
     if (gethostname(host_name, sizeof(host_name) - 1)) { 
         sprintf( host_name, "UNKNOWN_HOST" );
-        openrasp_error(E_WARNING, LOG_ERROR, _("Fail to gethostname - %s."), strerror(errno));
+        openrasp_error(E_WARNING, LOG_ERROR, _("gethostname error: %s"), strerror(errno));
     }
     return SUCCESS;
 }

@@ -296,7 +296,7 @@ OPENRASP_HOOK_FUNCTION(curl_exec)
         zval *plugin_message = NULL;
         MAKE_STD_ZVAL(plugin_message);
         char *message_str = NULL;
-        spprintf(&message_str, 0, _("ssrf found : %s"), Z_STRVAL(effective_url));
+        spprintf(&message_str, 0, _("Detected SSRF via 302 redirect, effective url is %s"), Z_STRVAL(effective_url));
         ZVAL_STRING(plugin_message, message_str, 1);
         efree(message_str);
         openrasp_buildin_php_risk_handle(1, "ssrf", 100, attack_params, plugin_message TSRMLS_CC);       

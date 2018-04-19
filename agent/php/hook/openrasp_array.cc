@@ -241,7 +241,7 @@ void pre_reflectionfunction___construct(INTERNAL_FUNCTION_PARAMETERS)
             zval *plugin_message = NULL;
             MAKE_STD_ZVAL(plugin_message);
             char *message_str = NULL;
-            spprintf(&message_str, 0, _("Webshell detected: using %s"), nsname);
+            spprintf(&message_str, 0, _("Webshell detected: using '%s' function"), nsname);
             ZVAL_STRING(plugin_message, message_str, 1);
             efree(message_str);
             openrasp_buildin_php_risk_handle(1, "callable", 100, attack_params, plugin_message TSRMLS_CC);

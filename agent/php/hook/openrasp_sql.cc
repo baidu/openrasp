@@ -47,7 +47,7 @@ void slow_query_alarm(int rows TSRMLS_DC)
     zval *plugin_message = nullptr;
     MAKE_STD_ZVAL(plugin_message);
     char *message_str = nullptr;
-    spprintf(&message_str, 0, _("slow query: read %d rows via sql statement - exceed %d"), rows, openrasp_ini.slowquery_min_rows);
+    spprintf(&message_str, 0, _("SQL slow query detected: selected %d rows, exceeding %d"), rows, openrasp_ini.slowquery_min_rows);
     ZVAL_STRING(plugin_message, message_str, 1);
     efree(message_str);
     openrasp_buildin_php_risk_handle(0, "sqlSlowQuery", 100, attack_params, plugin_message TSRMLS_CC);
@@ -59,10 +59,10 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
         {"mysql", "root"},
         {"mssql", "sa"},
         {"pgsql", "postgres"},
-        {"oci", "dbsnmp"},
-        {"oci", "sysman"},
-        {"oci", "system"},
-        {"oci", "sys"}
+        {"oci",   "dbsnmp"},
+        {"oci",   "sysman"},
+        {"oci",   "system"},
+        {"oci",   "sys"}
     };
     sql_connection_entry conn_entry;
     char *check_message = nullptr;
@@ -75,7 +75,10 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
         {
             if (std::string(conn_entry.username) == pos.first->second) 
             {
-                spprintf(&check_message, 0, _("connect %s server via the default username:%s"), conn_entry.server, conn_entry.username);
+                spprintf(&check_message, 0, 
+                    _("Connecting to a %s instance using the high privileged account: %s"), 
+                    conn_entry.server,
+                    conn_entry.username);
                 break;
             }
             pos.first++;
