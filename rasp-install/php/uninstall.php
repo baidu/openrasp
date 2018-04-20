@@ -33,7 +33,7 @@ $lib_source_path 	= sprintf("%s%sphp%s%s-php%s.%s-%s%s%s", __DIR__,
 $extension_dir 		= ini_get('extension_dir');
 $ini_loaded_file 	= php_ini_loaded_file();
 $ini_scanned_path 	= get_ini_scanned_path();
-$ini_scanned_file 	= 'openrasp.ini';
+$ini_scanned_file 	= 'z_openrasp.ini';
 $openrasp_work_sub_folders = array('conf'=>0755, 'assets'=>0755, 'logs'=>0777, 'locale'=>0755, 'plugins'=>0755);
 $help_msg = <<<HELP
 Synopsis:
