@@ -116,7 +116,8 @@ public class JsPluginManager {
         if (!pluginDir.isDirectory()) {
             pluginDir.mkdir();
         }
-        File[] pluginFiles = pluginDir.listFiles((FileFilter) FileFilterUtils.suffixFileFilter(".js"));
+        FileFilter filter = FileFilterUtils.and(FileFilterUtils.sizeFileFilter(10 * 1024 * 1024, false), FileFilterUtils.suffixFileFilter(".js"));
+        File[] pluginFiles = pluginDir.listFiles(filter);
         List<CheckScript> scripts = new LinkedList<CheckScript>();
         for (File file : pluginFiles) {
             try {
