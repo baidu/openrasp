@@ -45,3 +45,5 @@ class Openrasp_ini
 };
 
 extern Openrasp_ini openrasp_ini;
+
+bool strtobool(const char *str, int len);

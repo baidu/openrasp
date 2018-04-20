@@ -15,8 +15,8 @@
  */
 
 #include "openrasp_security_policy.h"
+#include "openrasp_ini.h"
 static void security_check(bool flag, int id, const char *msg TSRMLS_DC);
-static bool strtobool(const char *str, int len);
 #define SECURITY_CHECK(flag, id, msg) security_check(flag, id, msg TSRMLS_CC)
 #define STRTOBOOL strtobool
 
@@ -51,25 +51,5 @@ static void security_check(bool flag, int id, const char *msg TSRMLS_DC)
         add_assoc_zval(&result, "message", &message);
         policy_info(&result TSRMLS_CC);
         zval_dtor(&result);
-    }
-}
-
-static bool strtobool(const char *str, int len)
-{
-    if (len == 2 && strcasecmp("on", str) == 0)
-    {
-        return true;
-    }
-    else if (len == 3 && strcasecmp("yes", str) == 0)
-    {
-        return true;
-    }
-    else if (len == 4 && strcasecmp("true", str) == 0)
-    {
-        return true;
-    }
-    else
-    {
-        return atoi(str);
     }
 }

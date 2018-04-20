@@ -40,22 +40,7 @@ ZEND_INI_MH(OnUpdateOpenraspCString)
 ZEND_INI_MH(OnUpdateOpenraspBool)
 {
     bool *tmp = reinterpret_cast<bool *>(mh_arg1);
-    if (new_value_length == 2 && strcasecmp("on", new_value) == 0)
-    {
-        *tmp = true;
-    }
-    else if (new_value_length == 3 && strcasecmp("yes", new_value) == 0)
-    {
-        *tmp = true;
-    }
-    else if (new_value_length == 4 && strcasecmp("true", new_value) == 0)
-    {
-        *tmp = true;
-    }
-    else
-    {
-        *tmp = atoi(new_value);
-    }
+    *tmp = strtobool(new_value, new_value_length);
     return SUCCESS;
 }
 
@@ -73,4 +58,24 @@ ZEND_INI_MH(OnUpdateOpenraspSet)
         }
     }
     return SUCCESS;
+}
+
+bool strtobool(const char *str, int len)
+{
+    if (len == 2 && strcasecmp("on", str) == 0)
+    {
+        return true;
+    }
+    else if (len == 3 && strcasecmp("yes", str) == 0)
+    {
+        return true;
+    }
+    else if (len == 4 && strcasecmp("true", str) == 0)
+    {
+        return true;
+    }
+    else
+    {
+        return atoi(str);
+    }
 }
