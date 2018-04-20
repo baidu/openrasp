@@ -68,7 +68,6 @@ static inline int check_sapi_need_alloc_shm()
 {
 	static const char *supported_sapis[] = {
 		"fpm-fcgi",
-		"apache2filter",
 		"apache2handler",
 		NULL};
 	const char **sapi_name;

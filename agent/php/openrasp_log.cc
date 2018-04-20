@@ -559,7 +559,7 @@ int rasp_info(const char *message, int message_len TSRMLS_DC) {
     }
     char *rasp_info                 = NULL;    
     char *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
-    int   rasp_info_len = spprintf(&rasp_info, 0, "%s   %s\n", time_RFC3339, message);
+    int   rasp_info_len = spprintf(&rasp_info, 0, "%s %s\n", time_RFC3339, message);
     int  rasp_result = base_info(&OPENRASP_LOG_G(rasp_logger), rasp_info, rasp_info_len TSRMLS_CC);
     efree(time_RFC3339);
     efree(rasp_info);
@@ -575,7 +575,7 @@ int plugin_info(const char *message, int message_len TSRMLS_DC) {
     }
     char *plugin_info                 = NULL;    
     char *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
-    int  plugin_info_len = spprintf(&plugin_info, 0, "%s   %s\n", time_RFC3339, message);
+    int  plugin_info_len = spprintf(&plugin_info, 0, "%s %s\n", time_RFC3339, message);
     int  plugin_result = base_info(&OPENRASP_LOG_G(plugin_logger), plugin_info, plugin_info_len TSRMLS_CC);
     efree(time_RFC3339);
     efree(plugin_info);
