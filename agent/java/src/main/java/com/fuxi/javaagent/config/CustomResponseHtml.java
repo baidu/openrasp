@@ -109,13 +109,13 @@ public class CustomResponseHtml extends FileScanListener {
     }
 
     /**
-     * 设置自定义js脚本
+     * 设置自定义HTML注入
      *
-     * @param content js脚本内容
+     * @param content html注入内容
      */
     public synchronized void setContent(String content) {
         this.content = content;
-        Config.LOGGER.info("custom response html changed to \"" + content + "\"");
+        Config.LOGGER.info("custom html injection content changed to \"" + content + "\"");
     }
 
     /**
