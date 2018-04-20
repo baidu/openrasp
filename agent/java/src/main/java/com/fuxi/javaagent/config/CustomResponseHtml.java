@@ -115,6 +115,7 @@ public class CustomResponseHtml extends FileScanListener {
      */
     public synchronized void setContent(String content) {
         this.content = content;
+        Config.LOGGER.info("custom response html changed to \"" + content + "\"");
     }
 
     /**
