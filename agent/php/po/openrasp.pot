@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: openrasp@baidu.com\n"
-"POT-Creation-Date: 2018-04-19 05:30-0700\n"
+"POT-Creation-Date: 2018-04-20 01:03-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -58,6 +58,12 @@ msgstr ""
 #: hook/openrasp_sql.cc:87
 #, c-format
 msgid ""
+"Connecting to a %s instance using the high privileged account: %s - (%s:%d)"
+msgstr ""
+
+#: hook/openrasp_sql.cc:87
+#, c-format
+msgid ""
 "Connecting to a %s://%s:%d instance using the high privileged account: %s"
 msgstr ""
 
@@ -71,7 +77,7 @@ msgstr ""
 msgid "Could not create directory '%s': %s"
 msgstr ""
 
-#: openrasp_hook.cc:300 openrasp_hook.cc:300
+#: openrasp_hook.cc:300 hook/openrasp_ssrf.cc:79
 #, c-format
 msgid "Detected SSRF via 302 redirect, effective url is %s"
 msgstr ""
@@ -207,7 +213,7 @@ msgstr ""
 msgid "No write permission of file %s."
 msgstr ""
 
-#: hook/openrasp_sql.cc:50 hook/openrasp_sql.cc:58
+#: hook/openrasp_sql.cc:50 hook/openrasp_sql.cc:58 hook/openrasp_sql.cc:58
 #, c-format
 msgid "SQL slow query detected: selected %d rows, exceeding %d"
 msgstr ""

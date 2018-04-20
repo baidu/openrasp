@@ -463,6 +463,7 @@ int main() {
     hook/openrasp_sqlite3.cc \
     hook/openrasp_pdo.cc \
     hook/openrasp_file.cc \
+    hook/openrasp_ssrf.cc \
     openrasp_hook.cc \
     openrasp_inject.cc \
     openrasp_log.cc \
