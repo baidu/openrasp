@@ -63,12 +63,9 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
     sql_connection_p->server = "mysql";
     sql_connection_p->username = estrdup(username);
 
-    if (hostname) {
-        if (socket && strcmp(hostname, "localhost") == 0) {
-            spprintf(&(sql_connection_p->host), 0, "%s", socket);
-        } else {
-            spprintf(&(sql_connection_p->host), 0, "%s:%ld", hostname, port);
-        }
+    if (hostname && strcmp(hostname, "localhost") != 0) {
+        sql_connection_p->host = estrdup(hostname);
+        sql_connection_p->port = port;
     }
 }
 

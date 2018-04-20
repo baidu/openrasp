@@ -20,4 +20,5 @@ if (file_exists($file)) {
     echo "readfile OK";
 }
 ?>
---EXPECT--
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

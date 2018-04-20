@@ -16,4 +16,5 @@ if (is_dir($dir)) {
     }
 }
 ?>
---EXPECT--
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

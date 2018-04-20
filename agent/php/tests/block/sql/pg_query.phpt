@@ -21,4 +21,5 @@ if($dbconn) {
   echo "pg_connect error, please make sure the pg server is connectable.";
 }
 ?>
---EXPECT--
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

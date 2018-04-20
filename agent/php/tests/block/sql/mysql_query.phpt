@@ -23,4 +23,5 @@ printf ("ROWS: %d",$num_rows);
 mysql_free_result($result);
 mysql_close($con);
 ?>
---EXPECT--
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

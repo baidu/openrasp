@@ -27,4 +27,5 @@ if ($result = $mysqli->query("SELECT id, name FROM " . $mysql_table . " WHERE id
 
 $mysqli->close();
 ?>
---EXPECT--
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

@@ -138,6 +138,7 @@ extern "C" {
 typedef struct sql_connection_entry_t {
 	char *server = nullptr;
     char *host = nullptr;
+    int   port = 0;
     char *username = nullptr;
 } sql_connection_entry;
 

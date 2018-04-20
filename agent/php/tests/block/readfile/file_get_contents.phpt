@@ -10,4 +10,5 @@ if (!stristr(PHP_OS, "Linux")) die("skip this test is Linux platforms only");
 $file = file_get_contents('/etc/hosts');
 echo "file_get_contents OK";
 ?>
---EXPECT--
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

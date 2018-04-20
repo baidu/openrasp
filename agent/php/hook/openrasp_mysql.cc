@@ -70,6 +70,7 @@ static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
 		tmp++;
 		if (tmp[0] != '/') {
 			port = atoi(tmp);
+            sql_connection_p->port = port;
 			if ((tmp=strchr(tmp, ':'))) {
 				tmp++;
 				socket=tmp;
@@ -77,11 +78,10 @@ static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
 		} else {
 			socket = tmp;
 		}
-        sql_connection_p->host = estrdup(host_and_port);
+        sql_connection_p->host = host;
 	} else {
-		host = host_and_port;
-		port = default_port;
-        spprintf(&(sql_connection_p->host), 0, "%s:%d", host, port);
+        sql_connection_p->host = estrdup(host_and_port);
+        sql_connection_p->port = default_port;
 	}
     sql_connection_p->server = "mysql";
     sql_connection_p->username = user ? estrdup(user) : nullptr;

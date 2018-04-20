@@ -21,6 +21,8 @@ extern "C" {
 #include "zend_ini.h"
 }
 
+extern void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p);
+
 static char *dsn_from_uri(char *uri, char *buf, size_t buflen TSRMLS_DC)
 {
 	php_stream *stream;
@@ -89,8 +91,43 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
             sql_connection_p->server = (char*)server_names[index];
         }
     }
-    sql_connection_p->username = estrdup(username);
-    sql_connection_p->host = estrdup(data_source);
+    if (strcmp(sql_connection_p->server, "mysql") == 0)
+    {
+        struct pdo_data_src_parser mysql_vars[] = {
+            { "charset",  NULL,	0 },
+            { "dbname",   "",	0 },
+            { "host",   "localhost",	0 },
+            { "port",   "3306",	0 },
+            { "unix_socket",  NULL,	0 },
+	    };
+        php_pdo_parse_data_source(data_source, data_source_len, mysql_vars, 5);
+        sql_connection_p->host = estrdup(mysql_vars[2].optval);
+        sql_connection_p->port = atoi(mysql_vars[3].optval);
+        sql_connection_p->username = estrdup(username);
+    }
+    else if (strcmp(sql_connection_p->server, "pgsql") == 0)
+    {
+        char *e, *p, *conn_str = nullptr;
+        e = (char *) data_source + strlen(data_source);
+        p = (char *) data_source;
+        while ((p = (char *)memchr(p, ';', (e - p)))) {
+            *p = ' ';
+        }
+        if (username && password) {
+            spprintf(&conn_str, 0, "%s user=%s password=%s", data_source, username, password);
+        } else if (username) {
+            spprintf(&conn_str, 0, "%s user=%s", data_source, username);
+        } else if (password) {
+            spprintf(&conn_str, 0, "%s password=%s", data_source, password);
+        } else {
+            spprintf(&conn_str, 0, "%s", (char *) data_source);
+        }
+        parse_connection_string(conn_str, sql_connection_p);
+    }
+    else
+    {
+        //It is not supported at present
+    }
 }
 
 static void pdo_pre_process(INTERNAL_FUNCTION_PARAMETERS)

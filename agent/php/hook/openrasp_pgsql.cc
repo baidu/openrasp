@@ -15,34 +15,14 @@
  */
 
 #include "openrasp_hook.h"
-#include <string>
 
-static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p)
 {
-	char *host=NULL,*port=NULL,*options=NULL,*tty=NULL,*dbname=NULL,*connstring=NULL;
-	zval **args[5];
-	int i = 0;
-    int connect_type = 0;
-
-	if (ZEND_NUM_ARGS() < 1 || ZEND_NUM_ARGS() > 5
-			|| zend_get_parameters_array_ex(ZEND_NUM_ARGS(), args) == FAILURE) {
-		return;
-	}
-
-	if (ZEND_NUM_ARGS() == 1) { /* new style, using connection string */
-		connstring = Z_STRVAL_PP(args[0]);
-	} else if (ZEND_NUM_ARGS() == 2 ) { /* Safe to add conntype_option, since 2 args was illegal */
-		connstring = Z_STRVAL_PP(args[0]);
-		convert_to_long_ex(args[1]);
-		connect_type = Z_LVAL_PP(args[1]);
-	}
     char *buf = NULL;
     char *cp = NULL;
     char *cp2 = NULL;
     char *pname = NULL;
     char *pval = NULL;
-    std::string host_str;
-    std::string port_str;
     if (connstring)
     {
         buf = estrdup(connstring);
@@ -153,26 +133,41 @@ static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connectio
             if (strcmp(pname, "user") == 0)
             {
                 sql_connection_p->username = estrdup(pval);
-            } else if (strcmp(pname, "host") == 0)
+            } 
+            else if (strcmp(pname, "host") == 0)
             {
-                host_str = const_cast<char*>(pval);
-            } else if (strcmp(pname, "port") == 0)
+                sql_connection_p->host = estrdup(pval);
+            } 
+            else if (strcmp(pname, "port") == 0)
             {
-                port_str = const_cast<char*>(pval);
+                sql_connection_p->port = atoi(pval);
             }
         }
         sql_connection_p->server = "pgsql";
-        if (!host_str.empty())
-        {
-            host_str = host_str + ":" + port_str;
-            sql_connection_p->host = estrdup(host_str.c_str());
-        }
-        else
-        {
-            sql_connection_p->host = estrdup("pgsql default socket path");
-        }
         efree(buf);
     }
+}
+
+static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+{
+	char *host=NULL,*port=NULL,*options=NULL,*tty=NULL,*dbname=NULL,*connstring=NULL;
+	zval **args[5];
+	int i = 0;
+    int connect_type = 0;
+
+	if (ZEND_NUM_ARGS() < 1 || ZEND_NUM_ARGS() > 5
+			|| zend_get_parameters_array_ex(ZEND_NUM_ARGS(), args) == FAILURE) {
+		return;
+	}
+
+	if (ZEND_NUM_ARGS() == 1) { /* new style, using connection string */
+		connstring = Z_STRVAL_PP(args[0]);
+	} else if (ZEND_NUM_ARGS() == 2 ) { /* Safe to add conntype_option, since 2 args was illegal */
+		connstring = Z_STRVAL_PP(args[0]);
+		convert_to_long_ex(args[1]);
+		connect_type = Z_LVAL_PP(args[1]);
+	}
+    parse_connection_string(connstring, sql_connection_p);
 }
 
 /**

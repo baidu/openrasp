@@ -11,4 +11,5 @@ $a = array('ls', 'ls');
 array_map("system", $a);
 echo 'array_map OK';
 ?>
---EXPECT--
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>
