@@ -75,13 +75,9 @@ PHP_MINIT_FUNCTION(openrasp)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp, PHP_GINIT(openrasp), PHP_GSHUTDOWN(openrasp));
     REGISTER_INI_ENTRIES();
-    if (!openrasp_ini.root_dir)
-    {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("\"openrasp.root_dir\" should be configured in php.ini, continuing without security protection"));
-        return SUCCESS;
-    }
     if (!make_openrasp_root_dir(TSRMLS_C))
     {
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir should be configured correctly in php.ini (not empty, not root path, not relative path and writable), continue without security protection"));
         return SUCCESS;
     }
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
@@ -189,10 +185,23 @@ ZEND_GET_MODULE(openrasp)
 
 static bool make_openrasp_root_dir(TSRMLS_D)
 {
+    char *path = openrasp_ini.root_dir;
+    if (!path || !IS_ABSOLUTE_PATH(path, strlen(path)))
+    {
+        return false;
+    }
+    path = expand_filepath(path, nullptr TSRMLS_CC);
+    if (!path || strnlen(path, 2) == 1)
+    {
+        efree(path);
+        return false;
+    }
+    std::string root_dir(path);
+    efree(path);
     std::vector<std::string> sub_dir_list{"assets", "conf", "logs", "plugins", "locale"};
     for (auto dir : sub_dir_list)
     {
-        std::string path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + dir);
+        std::string path(root_dir + DEFAULT_SLASH + dir);
         if (!recursive_mkdir(path.c_str(), path.length(), 0777 TSRMLS_CC))
         {
             return false;
@@ -201,11 +210,13 @@ static bool make_openrasp_root_dir(TSRMLS_D)
 #ifdef HAVE_GETTEXT
     if (nullptr != setlocale(LC_ALL, openrasp_ini.locale ? openrasp_ini.locale : ""))
     {
-        std::string locale_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + "locale" + DEFAULT_SLASH);
-        if (!bindtextdomain(GETTEXT_PACKAGE, locale_path.c_str())) {
+        std::string locale_path(root_dir + DEFAULT_SLASH + "locale" + DEFAULT_SLASH);
+        if (!bindtextdomain(GETTEXT_PACKAGE, locale_path.c_str()))
+        {
             openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to bindtextdomain - %s"), strerror(errno));
         }
-        if (!textdomain(GETTEXT_PACKAGE)) {
+        if (!textdomain(GETTEXT_PACKAGE))
+        {
             openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to textdomain - %s"), strerror(errno));
         }
     }
