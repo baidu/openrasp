@@ -35,7 +35,9 @@ bool openrasp_zval_in_request(zval *item TSRMLS_DC)
     int size = sizeof(pairs) / sizeof(pairs[0]);
     for (int index = 0; index < size; ++index)
     {
-        if (!PG(http_globals)[pairs[index].id] && !zend_is_auto_global(pairs[index].name, strlen(pairs[index].name) TSRMLS_CC))
+        if (!PG(http_globals)[pairs[index].id] 
+        && !zend_is_auto_global(pairs[index].name, strlen(pairs[index].name) TSRMLS_CC)
+        && Z_TYPE_P(PG(http_globals)[pairs[index].id]) != IS_ARRAY)
         {
             return 0;
         }
