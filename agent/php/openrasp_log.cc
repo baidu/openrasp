@@ -289,18 +289,35 @@ static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log
     case SYSLOG_APPENDER:
         if (!OPENRASP_LOG_G(syslog_stream))
         {
-            res_len = spprintf(&res, 0, "%s", openrasp_ini.syslog_server_address);
-            stream = php_stream_xport_create(res, res_len, REPORT_ERRORS, STREAM_XPORT_CLIENT | STREAM_XPORT_CONNECT, 0, 0, NULL, NULL, NULL);        
-            if (stream)
-            {                       
-                OPENRASP_LOG_G(syslog_stream) = stream;
-                return &OPENRASP_LOG_G(syslog_stream);
-            }
-            else
+            long now = (long)time(NULL);
+            if ((now - OPENRASP_LOG_G(last_retry_time)) > OPENRASP_LOG_G(retry_interval))
             {
-                openrasp_error(E_WARNING, LOG_ERROR, _("Fail to connect syslog server %s."), openrasp_ini.syslog_server_address);                
+                struct timeval tv;
+                tv.tv_sec = 0;
+                tv.tv_usec = openrasp_ini.syslog_connection_timeout * 1000;
+                res_len = spprintf(&res, 0, "%s", openrasp_ini.syslog_server_address);
+                stream = php_stream_xport_create(res, res_len, REPORT_ERRORS, STREAM_XPORT_CLIENT | STREAM_XPORT_CONNECT, 0, &tv, NULL, NULL, NULL);        
+                if (stream)
+                {
+                    tv.tv_sec = 0;
+                    tv.tv_usec = openrasp_ini.syslog_read_timeout * 1000;
+                    php_stream_set_option(stream, PHP_STREAM_OPTION_READ_TIMEOUT, 0, &tv);
+                    OPENRASP_LOG_G(syslog_stream) = stream;
+                    OPENRASP_LOG_G(retry_interval) = openrasp_ini.initial_retry_interval;
+                    return &OPENRASP_LOG_G(syslog_stream);
+                }
+                else
+                {
+                    int tmp_retry_interval = OPENRASP_LOG_G(retry_interval) * openrasp_ini.retry_interval_factor;
+                    OPENRASP_LOG_G(retry_interval) = 
+                    tmp_retry_interval > openrasp_ini.max_retry_interval ?
+                    tmp_retry_interval : 
+                    openrasp_ini.max_retry_interval;
+                    openrasp_error(E_WARNING, LOG_ERROR, _("Fail to connect syslog server %s."), openrasp_ini.syslog_server_address);                
+                }
+                efree(res);
+                OPENRASP_LOG_G(last_retry_time) = now;
             }
-            efree(res);
         }
         else
         {
@@ -349,23 +366,14 @@ static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log
 static int openrasp_log_stream_write(rasp_logger_entry *logger, log_appender appender_int, char *message, int message_len TSRMLS_DC)
 {
     php_stream **pp_stream;  
-    int remaining_retry_num = RASP_STREAM_WRITE_RETRY_NUMBER;
-    do {
+    {
         pp_stream = openrasp_log_stream_zval_find(logger, appender_int TSRMLS_CC);
         if (!pp_stream)
         {
             return FAILURE;
         }
-        if (php_stream_write(*pp_stream, message, message_len) != message_len)
-        {
-            php_stream_close(*pp_stream);
-            *pp_stream = NULL;
-        }
-        else
-        {
-        --remaining_retry_num;
-        }
-    } while (remaining_retry_num > 0);
+        php_stream_write(*pp_stream, message, message_len);
+    }
     return SUCCESS;
 }
 
@@ -677,11 +685,13 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
 	openrasp_log_globals->formatted_date_suffix 			= NULL;	
 	openrasp_log_globals->syslog_stream       				= NULL;
     openrasp_log_globals->in_request_process                = 0;
+    openrasp_log_globals->retry_interval                    = openrasp_ini.initial_retry_interval;
+    openrasp_log_globals->last_retry_time                   = 0;
 
 	memset(&openrasp_log_globals->rasp_logger, 0, sizeof(rasp_logger_entry));
-	openrasp_log_globals->rasp_logger.name     			= const_cast<char *>(RASP_LOGGER);
+	openrasp_log_globals->rasp_logger.name     			    = const_cast<char *>(RASP_LOGGER);
 	openrasp_log_globals->rasp_logger.level  	   			= LEVEL_INFO;
-	openrasp_log_globals->rasp_logger.appender     		= FILE_APPENDER;
+	openrasp_log_globals->rasp_logger.appender     		    = FILE_APPENDER;
 
 	memset(&openrasp_log_globals->alarm_logger, 0, sizeof(rasp_logger_entry));
 	openrasp_log_globals->alarm_logger.name     			= ALARM_LOGGER;
@@ -700,12 +710,12 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
 
 	memset(&openrasp_log_globals->plugin_logger, 0, sizeof(rasp_logger_entry));
 	openrasp_log_globals->plugin_logger.name     			= PLUGIN_LOGGER;
-	openrasp_log_globals->plugin_logger.level  	   		= LEVEL_INFO;
+	openrasp_log_globals->plugin_logger.level  	   		    = LEVEL_INFO;
 	openrasp_log_globals->plugin_logger.appender     		= FILE_APPENDER;
 	
 	memset(&openrasp_log_globals->policy_logger, 0, sizeof(rasp_logger_entry));
 	openrasp_log_globals->policy_logger.name     			= POLICY_LOGGER;
-	openrasp_log_globals->policy_logger.level  	   		= LEVEL_INFO;
+	openrasp_log_globals->policy_logger.level  	   		    = LEVEL_INFO;
 	openrasp_log_globals->policy_logger.appender     		= FILE_APPENDER;
 }
 

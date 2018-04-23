@@ -78,6 +78,8 @@ zval                  *alarm_request_info;
 zval                  *policy_request_info;
 zend_bool              enable_alarm_syslog;
 zend_bool              in_request_process;
+int                    retry_interval;
+long                   last_retry_time;
 rasp_logger_entry      alarm_logger;
 rasp_logger_entry      rasp_logger;
 rasp_logger_entry      plugin_logger;

@@ -20,6 +20,17 @@
 
 Openrasp_ini openrasp_ini;
 
+ZEND_INI_MH(OnUpdateOpenraspDoubleGEZero)
+{
+    double tmp = zend_string_to_double(new_value, new_value_length);
+    if (tmp < 0 || tmp > std::numeric_limits<double>::max())
+    {
+        return FAILURE;
+    }
+    *reinterpret_cast<double *>(mh_arg1) = tmp;
+    return SUCCESS;
+}
+
 ZEND_INI_MH(OnUpdateOpenraspIntGEZero)
 {
     long tmp = zend_atol(new_value, new_value_length);
