@@ -15,6 +15,7 @@
  */
 
 #include "openrasp.h"
+#include "openrasp_ini.h"
 extern "C" {
 #include "php_ini.h"
 #include "ext/standard/file.h"
@@ -33,12 +34,17 @@ void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
 #endif
     if (Z_TYPE(trace_arr) == IS_ARRAY)
     {
+        int i = 0;
         std::string buffer;
         HashTable *hash_arr = Z_ARRVAL(trace_arr);
         for (zend_hash_internal_pointer_reset(hash_arr);
              zend_hash_has_more_elements(hash_arr) == SUCCESS;
              zend_hash_move_forward(hash_arr))
         {
+            if (++i > openrasp_ini.log_maxstack)
+            {
+                break;
+            }
             zval **ele_value;
             if (zend_hash_get_current_data(hash_arr, (void **)&ele_value) != SUCCESS ||
                 Z_TYPE_PP(ele_value) != IS_ARRAY)
@@ -85,11 +91,16 @@ void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
 #endif
     if (Z_TYPE(trace_arr) == IS_ARRAY)
     {
+        int i = 0;
         HashTable *hash_arr = Z_ARRVAL(trace_arr);
         for (zend_hash_internal_pointer_reset(hash_arr);
              zend_hash_has_more_elements(hash_arr) == SUCCESS;
              zend_hash_move_forward(hash_arr))
         {
+            if (++i > openrasp_ini.plugin_maxstack)
+            {
+                break;
+            }
             zval **ele_value;
             if (zend_hash_get_current_data(hash_arr, (void **)&ele_value) != SUCCESS ||
                 Z_TYPE_PP(ele_value) != IS_ARRAY)

@@ -42,6 +42,8 @@ class Openrasp_ini
     int block_status_code = 302;
     char *inject_html_urlprefix;
     unsigned int slowquery_min_rows = 500;
+    unsigned int plugin_maxstack = 100;
+    unsigned int log_maxstack = 10;
     bool enforce_policy = false;
     char *block_url;
     std::unordered_set<std::string> hooks_ignore;

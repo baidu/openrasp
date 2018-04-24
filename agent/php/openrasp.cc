@@ -58,6 +58,8 @@ PHP_INI_ENTRY1("openrasp.syslog_read_timeout", "10", PHP_INI_SYSTEM, OnUpdateOpe
 PHP_INI_ENTRY1("openrasp.syslog_connection_retry_interval", "300", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_connection_retry_interval)
 PHP_INI_ENTRY1("openrasp.timeout_ms", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.timeout_ms)
 PHP_INI_ENTRY1("openrasp.block_status_code", "302", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.block_status_code)
+PHP_INI_ENTRY1("openrasp.plugin_maxstack", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.plugin_maxstack)
+PHP_INI_ENTRY1("openrasp.log_maxstack", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_maxstack)
 PHP_INI_END()
 
 PHP_GINIT_FUNCTION(openrasp)

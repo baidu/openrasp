@@ -26,7 +26,7 @@ $index 				= 1;
 $root_dir 			= null;
 $current_os 		= get_OS();
 $supported_sapi 	= array('apache2', 'cli', 'fpm');
-$lib_filename 		= $current_os == OS_WIN ? 'openrasp.dll' : 'openrasp.so';
+$lib_filename 		= $current_os == OS_WIN ? 'php_openrasp.dll' : 'openrasp.so';
 $lib_source_path 	= sprintf("%s%sphp%s%s-php%s.%s-%s%s%s", __DIR__, 
 	DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, 	$current_os, PHP_MAJOR_VERSION, 
 	PHP_MINOR_VERSION, php_uname("m"), DIRECTORY_SEPARATOR, $lib_filename);
@@ -141,6 +141,12 @@ openrasp.root_dir="$root_dir"
 
 ;对于单个请求，JS插件整体超时时间（毫秒）
 ;openrasp.timeout_ms=100
+
+;插件获取堆栈的最大深度
+openrasp.plugin_maxstack=100
+
+;报警日志记录的最大堆栈深度
+openrasp.log_maxstack=10
 	
 ;OPENRASP END
 	
