@@ -113,16 +113,17 @@ function ip2long(ipstr) {
     // return ip.split('.').reduce(function(ipInt, octet) { return (ipInt<<8) + parseInt(octet, 10)}, 0) >>> 0;
 }
 
-function validate_stack_php(stack) {
+function validate_stack_php(stacks) {
     var verdict = false
 
-    for (var i = 0; i < stack.length; i ++) {
-        var stack = stack[i]
+    for (var i = 0; i < stacks.length; i ++) {
+        var stack = stacks[i]
 
         // 来自 eval/assert/create_function/...
         if (stack.indexOf('eval()\'d code') != -1 
             || stack.indexOf('runtime-created function') != -1
             || stack.indexOf('assert code@') != -1
+            || stack.indexOf('@call_user_func') != -1
             || stack.indexOf('regexp code@') != -1) {
             verdict = true
             break
