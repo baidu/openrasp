@@ -16,6 +16,25 @@
 
 #include "openrasp_hook.h"
 
+extern "C"
+{
+#ifdef PHP_WIN32
+# include "win32/inet.h"
+# include <winsock2.h>
+# include <windows.h>
+# include <Ws2tcpip.h>
+#else
+#include <netinet/in.h>
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+#include <netdb.h>
+#ifdef HAVE_DNS_H
+#include <dns.h>
+#endif
+#endif
+}
+
 int pre_global_curl_exec(INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args)
 {
     zval **zid;
@@ -42,23 +61,32 @@ int pre_global_curl_exec(INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval
     {
         zval *params;
         MAKE_STD_ZVAL(params);
-        zval *host = NULL;
-        MAKE_STD_ZVAL(host);
         array_init(params);
         add_assoc_zval(params, "url", origin_url);
         Z_ADDREF_P(origin_url);
+        add_assoc_string(params, "function", estrdup("curl_exec"), 0);
         php_url *url = php_url_parse_ex(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url));
-        if (url != NULL && url->host != NULL)
+        add_assoc_string(params, "hostname", (url && url->host) ? estrdup(url->host) : estrdup(""), 0);
+        zval *ip_arr = NULL;
+        MAKE_STD_ZVAL(ip_arr);
+        array_init(ip_arr);
+        if (url && url->host) 
         {
-            ZVAL_STRING(host, url->host, 1);
+            struct hostent *hp;
+            struct in_addr in;
+            int i;
+            hp = gethostbyname(url->host);
+            if (hp != NULL && hp->h_addr_list != NULL) {
+                for (i = 0 ; hp->h_addr_list[i] != 0 ; i++) {
+                    in = *(struct in_addr *) hp->h_addr_list[i];
+                    add_next_index_string(ip_arr, inet_ntoa(in), 1);
+                }
+            }
         }
-        else
-        {
-            ZVAL_STRING(host, "", 1);
-        }
-        add_assoc_zval(params, "hostname", host);
+        add_assoc_zval(params, "ip", ip_arr);
         check("ssrf", params TSRMLS_CC);
     }
+    return 0;
 }
 
 void post_global_curl_exec(INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args)
