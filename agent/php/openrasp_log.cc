@@ -290,7 +290,7 @@ static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log
         if (!OPENRASP_LOG_G(syslog_stream))
         {
             long now = (long)time(NULL);
-            if ((now - OPENRASP_LOG_G(last_retry_time)) > OPENRASP_LOG_G(retry_interval))
+            if ((now - OPENRASP_LOG_G(last_retry_time)) > openrasp_ini.syslog_connection_retry_interval)
             {
                 struct timeval tv;
                 tv.tv_sec = 0;
@@ -303,16 +303,10 @@ static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log
                     tv.tv_usec = openrasp_ini.syslog_read_timeout * 1000;
                     php_stream_set_option(stream, PHP_STREAM_OPTION_READ_TIMEOUT, 0, &tv);
                     OPENRASP_LOG_G(syslog_stream) = stream;
-                    OPENRASP_LOG_G(retry_interval) = openrasp_ini.initial_retry_interval;
                     return &OPENRASP_LOG_G(syslog_stream);
                 }
                 else
                 {
-                    int tmp_retry_interval = OPENRASP_LOG_G(retry_interval) * openrasp_ini.retry_interval_factor;
-                    OPENRASP_LOG_G(retry_interval) = 
-                    tmp_retry_interval > openrasp_ini.max_retry_interval ?
-                    tmp_retry_interval : 
-                    openrasp_ini.max_retry_interval;
                     openrasp_error(E_WARNING, LOG_ERROR, _("Fail to connect syslog server %s."), openrasp_ini.syslog_server_address);                
                 }
                 efree(res);
@@ -685,7 +679,6 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
 	openrasp_log_globals->formatted_date_suffix 			= NULL;	
 	openrasp_log_globals->syslog_stream       				= NULL;
     openrasp_log_globals->in_request_process                = 0;
-    openrasp_log_globals->retry_interval                    = openrasp_ini.initial_retry_interval;
     openrasp_log_globals->last_retry_time                   = 0;
 
 	memset(&openrasp_log_globals->rasp_logger, 0, sizeof(rasp_logger_entry));

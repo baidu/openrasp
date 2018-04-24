@@ -38,9 +38,7 @@ class Openrasp_ini
     bool syslog_alarm_enable = 0;
     long syslog_connection_timeout = 50;
     long syslog_read_timeout = 10;
-    int initial_retry_interval = 200;
-    int max_retry_interval = 7200;
-    double retry_interval_factor = 1.5;
+    int syslog_connection_retry_interval = 200;
     int block_status_code = 302;
     char *inject_html_urlprefix;
     unsigned int slowquery_min_rows = 500;

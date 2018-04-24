@@ -136,14 +136,8 @@ openrasp.root_dir="$root_dir"
 ;syslog read timeout(毫秒)
 ;openrasp.syslog_read_timeout=10
 
-;syslog初始重试间隔(秒)
-;openrasp.initial_retry_interval=200
-
-;syslog最大重试间隔(秒)
-;openrasp.max_retry_interval=7200
-
-；syslog重试间隔倍增因子
-;openrasp.retry_interval_factor=1.5
+;syslog重连时间间隔(秒)
+;openrasp.syslog_connection_retry_interval=300
 
 ;对于单个请求，JS插件整体超时时间（毫秒）
 ;openrasp.timeout_ms=100
