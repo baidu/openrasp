@@ -200,6 +200,10 @@ if (RASP.get_jsengine() !== 'v8') {
                 'hex', 'char', 'chr', 'mid', 'ord', 'ascii', 'bin'                
             ]
         },
+        // SSRF - 来自用户输入，且为内网地址就拦截
+        'ssrf_userinput': {
+            action: 'block'
+        },
         // SSRF - 是否允许访问 aws metadata
         'ssrf_aws': {
             action: 'block'
