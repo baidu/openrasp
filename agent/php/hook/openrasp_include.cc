@@ -117,7 +117,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     char *real_path = nullptr;
     if (resource && resource->scheme) 
     {
-        real_path = Z_STRVAL_P(path);
+        real_path = estrdup(Z_STRVAL_P(path));
     }
     else
     {
@@ -140,7 +140,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     add_assoc_zval(params, "path", path);
     add_assoc_zval(params, "url", path);
     Z_ADDREF_P(path);
-    add_assoc_string(params, "realpath", real_path, 1);
+    add_assoc_string(params, "realpath", real_path, 0);
     char *function = nullptr;
     switch (OPENRASP_INCLUDE_OR_EVAL_TYPE(execute_data->opline))
     {

@@ -38,7 +38,7 @@ static void check_file_operation(const char* type, char *filename, int filename_
     char *real_path = nullptr;
     if (resource && resource->scheme) 
     {
-        real_path = filename;
+        real_path = estrdup(filename);
     }
     else
     {
@@ -54,7 +54,7 @@ static void check_file_operation(const char* type, char *filename, int filename_
         MAKE_STD_ZVAL(params);
         array_init(params);
         add_assoc_string(params, "path", filename, 1);
-        add_assoc_string(params, "realpath", real_path, 1);
+        add_assoc_string(params, "realpath", real_path, 0);
         check(type, params TSRMLS_CC);
     }
 }
@@ -112,7 +112,7 @@ void pre_global_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
     if (argc > 1 && zend_get_parameters_ex(argc, &path, &data, &flags) == SUCCESS &&
         Z_TYPE_PP(path) == IS_STRING)
     {
-        char *real_path = nullptr;
+        char real_path[MAXPATHLEN] = {0};
         char *include_path = nullptr;
         if (argc == 3 && Z_TYPE_PP(flags) == IS_LONG && (Z_LVAL_PP(flags) & PHP_FILE_USE_INCLUDE_PATH))
         {
@@ -125,7 +125,7 @@ void pre_global_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
         php_url *resource = php_url_parse_ex(Z_STRVAL_PP(path), Z_STRLEN_PP(path));
         if (resource && resource->scheme) 
         {
-            real_path = Z_STRVAL_PP(path);
+            strncpy(real_path, Z_STRVAL_PP(path), Z_STRLEN_PP(path));
         }
         else
         {
@@ -133,7 +133,12 @@ void pre_global_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
             if (!expand_filepath(Z_STRVAL_PP(path), expand_path TSRMLS_CC)) {
                 return;
             }
-            real_path = php_resolve_path(expand_path, strlen(expand_path), include_path TSRMLS_CC);
+            char *resolved_path = php_resolve_path(expand_path, strlen(expand_path), include_path TSRMLS_CC);
+            if (resolved_path)
+            {
+                strcpy(real_path, resolved_path);
+                efree(resolved_path);
+            }
         }
         if (!openrasp_check_type_ignored(ZEND_STRL("webshell_file_put_contents") TSRMLS_CC)
             && openrasp_zval_in_request(*path TSRMLS_CC)
@@ -144,13 +149,13 @@ void pre_global_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
             array_init(attack_params);
             add_assoc_zval(attack_params, "name", *path);
             Z_ADDREF_P(*path);
-            add_assoc_string(attack_params, "realpath", real_path ? real_path : Z_STRVAL_PP(path), 1);
+            add_assoc_string(attack_params, "realpath", real_path, 1);
             zval *plugin_message = NULL;
             MAKE_STD_ZVAL(plugin_message);
             ZVAL_STRING(plugin_message, _("Webshell detected - File dropper backdoor"), 1);
             openrasp_buildin_php_risk_handle(1, "webshell_file_put_contents", 100, attack_params, plugin_message TSRMLS_CC);
         }
-        if (!openrasp_check_type_ignored(ZEND_STRL("writeFile") TSRMLS_CC) && real_path)
+        if (!openrasp_check_type_ignored(ZEND_STRL("writeFile") TSRMLS_CC) && strlen(real_path))
         {
             zval *params;
             MAKE_STD_ZVAL(params);
@@ -207,12 +212,6 @@ void pre_global_copy(INTERNAL_FUNCTION_PARAMETERS)
 	}
 
     if (source && target && strlen(source) == source_len && strlen(target) == target_len) {
-        char *real_path = php_resolve_path(target, target_len, NULL TSRMLS_CC);
-        zval *params;
-        MAKE_STD_ZVAL(params);
-        array_init(params);
-        add_assoc_string(params, "path", target, 1);
-        add_assoc_string(params, "realpath", real_path ? real_path : target, 1);
-        check("writeFile", params TSRMLS_CC);
+        check_file_operation("writeFile", target, target_len, 0 TSRMLS_CC);
 	}
 }
