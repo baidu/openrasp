@@ -406,10 +406,20 @@ if (RASP.get_jsengine() !== 'v8') {
 
     plugin.register('ssrf', function (params, context) {
         var hostname = params.hostname
+        var url      = params.url
+        var ip       = params.ip
         var reason   = false
 
+        // 算法1 - 用户输入识别
+        // 当参数来自用户输入，且为内网IP，判定为SSRF攻击
+        if (ip.length && is_from_userinput(context.parameter, url)) {
+            if (/^(192|172|10)\./.test(ip[0])) {
+                reason = '访问内网地址: ' + ip[0]
+            }
+        }
+
         // 检查常见探测域名
-        if (hostname == 'requestb.in' 
+        else if (hostname == 'requestb.in' 
             || hostname.endsWith('.vcap.me') 
             || hostname.endsWith('.xip.name') || hostname.endsWith('.xip.io') || hostname.endsWith('.nip.io') 
             || hostname.endsWith('.burpcollaborator.net')) 
