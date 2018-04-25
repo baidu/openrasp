@@ -214,8 +214,8 @@ static v8::StartupData init_js_snapshot(TSRMLS_D)
         global->Set(V8STRING_I("stdout").ToLocalChecked(), v8_stdout);
         global->Set(V8STRING_I("stderr").ToLocalChecked(), v8_stdout);
 
-#define MAKE_JS_SRC_PAIR(name) {(const char *)name##_js, ZEND_TOSTR(name) ".js"}
-        std::vector<std::pair<const char *, const char *>> js_src_list = {
+#define MAKE_JS_SRC_PAIR(name) {{(const char *)name##_js, name##_js_len}, ZEND_TOSTR(name) ".js"}
+        std::vector<std::pair<std::string, std::string>> js_src_list = {
             MAKE_JS_SRC_PAIR(console),
             MAKE_JS_SRC_PAIR(checkpoint),
             MAKE_JS_SRC_PAIR(error),
@@ -225,7 +225,7 @@ static v8::StartupData init_js_snapshot(TSRMLS_D)
         };
         for (auto js_src : js_src_list)
         {
-            if (exec_script(isolate, context, js_src.first, js_src.second).IsEmpty())
+            if (exec_script(isolate, context, std::move(js_src.first), std::move(js_src.second)).IsEmpty())
             {
                 std::stringstream stream;
                 v8error_to_stream(isolate, try_catch, stream);
