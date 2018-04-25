@@ -4,11 +4,11 @@
     String filename = "/etc/passwd";
 
     FileInputStream fileIn = new FileInputStream(filename);
-    OutputStream outStream = response.getOutputStream();
-
-    byte[] outputByte = new byte[4096];
-    while(fileIn.read(outputByte, 0, 4096) != -1) {
-    	outStream.write(outputByte, 0, 4096);
+    BufferedReader reader = new BufferedReader(new FileReader(filename));
+    String line = reader.readLine();
+    while (line != null) {
+        out.println(line);
+        line = reader.readLine();
     }
     fileIn.close();
 %>
