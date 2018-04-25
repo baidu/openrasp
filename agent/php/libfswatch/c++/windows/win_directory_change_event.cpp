@@ -70,11 +70,21 @@ namespace fsw
     : handle{INVALID_HANDLE_VALUE},
       buffer_size{sizeof (FILE_NOTIFY_INFORMATION) * buffer_length},
       bytes_returned{}
+  {
+    buffer.reset(malloc(buffer_size));
+    if (buffer.get() == nullptr) throw libfsw_exception(_("malloc failed."));
+    if (overlapped.get() == nullptr) throw libfsw_exception(_("malloc failed."));
+    memset(buffer.get(), 0, buffer_size);
+    memset(overlapped.get(), 0, sizeof(OVERLAPPED));
+  }
+
+  directory_change_event::~directory_change_event()
+  {
+    if (handle.is_valid())
     {
-      buffer.reset(malloc(buffer_size));
-      if (buffer.get() == nullptr) throw libfsw_exception(_("malloc failed."));
-      if (overlapped.get() == nullptr) throw libfsw_exception(_("malloc failed."));
+      CancelIoEx((HANDLE) handle, overlapped.get());
     }
+  }
 
   bool directory_change_event::is_io_incomplete()
   {

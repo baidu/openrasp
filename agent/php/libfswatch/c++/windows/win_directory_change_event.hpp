@@ -53,6 +53,10 @@ namespace fsw
     win_error_message read_error;
 
     directory_change_event(size_t buffer_length = 16);
+    directory_change_event(directory_change_event &&) = default;
+    directory_change_event& operator=(directory_change_event &&) = default;
+    ~directory_change_event();
+
     bool is_io_incomplete();
     bool is_buffer_overflowed();
     bool read_changes_async();
