@@ -6,6 +6,12 @@
 set -x
 cd /tmp
 
+norestart=0
+
+if [[ ! -z "$1" ]]; then
+    norestart=1
+fi
+
 function InstallJava()
 {
 	path=$1
@@ -38,12 +44,18 @@ function InstallPHP()
 
 if [[ -d /tomcat/ ]]; then
 	InstallJava /tomcat/
-	/etc/init.d/tomcat.sh restart
+
+    if [[ "$norestart" != 1 ]]; then
+	    /etc/init.d/tomcat.sh restart
+    fi
 fi
 
 if [[ -d /jboss/ ]]; then
 	InstallJava /jboss/
-	/etc/init.d/jboss.sh restart
+    
+    if [[ "$norestart" != 1 ]]; then
+	    /etc/init.d/jboss.sh restart
+    fi
 fi
 
 if [[ -f /root/springboot.jar ]]; then
