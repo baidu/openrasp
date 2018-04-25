@@ -414,7 +414,7 @@ if (RASP.get_jsengine() !== 'v8') {
         var ip       = params.ip
         var reason   = false
 
-        // 算法1 - 用户输入识别
+        // 算法1 - ssrf_userinput
         // 当参数来自用户输入，且为内网IP，判定为SSRF攻击
         if (ip.length && is_from_userinput(context.parameter, url)) {
             if (/^(192|172|10)\./.test(ip[0])) {
@@ -422,6 +422,7 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
+        // 算法2 - ssrf_common
         // 检查常见探测域名
         else if (hostname == 'requestb.in' 
             || hostname.endsWith('.vcap.me') 
@@ -430,10 +431,13 @@ if (RASP.get_jsengine() !== 'v8') {
         {
             reason = '访问已知的内网探测域名'    
         } 
+        // 算法3 - ssrf_aws
         // 检测AWS私有地址，如有需求可注释掉
         else if (1 && hostname == '169.254.169.254') {        
             reason = '尝试读取 AWS metadata'
         }
+        // 算法4 - ssrf_obfuscate
+        // 
         // 检查混淆: 
         // http://2130706433
         // 
