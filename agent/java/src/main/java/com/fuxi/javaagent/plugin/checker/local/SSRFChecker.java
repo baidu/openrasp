@@ -68,7 +68,7 @@ public class SSRFChecker extends ConfigurableChecker {
             }
         }
 
-        if (result.isEmpty() && !isModuleIgnore(config, CONFIG_KEY_SSRF_INTRANET)) {
+        if (result.isEmpty() && !isModuleIgnore(config, CONFIG_KEY_SSRF_COMMON)) {
             boolean isFound = false;
             for (String suffix : INTRANET_DETECTION_SUFFIX) {
                 if (hostName.endsWith(suffix)) {
@@ -78,7 +78,7 @@ public class SSRFChecker extends ConfigurableChecker {
             }
             if (isFound || hostName.equals("requestb.in")) {
                 result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                        getActionElement(config, CONFIG_KEY_SSRF_INTRANET), "访问已知的内网探测域名"));
+                        getActionElement(config, CONFIG_KEY_SSRF_COMMON), "访问已知的内网探测域名"));
             }
         }
 
@@ -87,10 +87,10 @@ public class SSRFChecker extends ConfigurableChecker {
                     && hostName.equals("169.254.169.254")) {
                 result.add(AttackInfo.createLocalAttackInfo(checkParameter,
                         getActionElement(config, CONFIG_KEY_SSRF_AWS), "尝试读取 AWS metadata"));
-            } else if (!isModuleIgnore(config, CONFIG_KEY_SSRF_COMMON)
+            } else if (!isModuleIgnore(config, CONFIG_KEY_SSRF_OBFUSCATE)
                     && StringUtils.isNumeric(hostName)) {
                 result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                        getActionElement(config, CONFIG_KEY_SSRF_COMMON), "尝试使用纯数字IP"));
+                        getActionElement(config, CONFIG_KEY_SSRF_OBFUSCATE), "尝试使用纯数字IP"));
             } else if (!isModuleIgnore(config, CONFIG_KEY_SSRF_OBFUSCATE)
                     && hostName.startsWith("0x") && !hostName.contains(".")) {
                 result.add(AttackInfo.createLocalAttackInfo(checkParameter,
