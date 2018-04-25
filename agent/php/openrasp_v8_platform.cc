@@ -189,6 +189,11 @@ openrasp::TimeoutTask::TimeoutTask(v8::Isolate *_isolate, int _milliseconds)
     time_point = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(_milliseconds);
 }
 
+openrasp::TimeoutTask::~TimeoutTask()
+{
+    std::lock_guard<std::timed_mutex> lock(mtx);
+}
+
 void openrasp::TimeoutTask::Run()
 {
     do
