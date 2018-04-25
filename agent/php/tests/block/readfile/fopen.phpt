@@ -10,4 +10,5 @@ if (!stristr(PHP_OS, "Linux")) die("skip this test is Linux platforms only");
 $handle = fopen("/etc/hosts", "r");
 echo "fopen OK";
 ?>
---EXPECT--
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

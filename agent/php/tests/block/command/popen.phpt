@@ -10,4 +10,5 @@ $handle = popen('/tmp/dummy/cmd', 'r');
 pclose($handle);
 echo 'popen OK';
 ?>
---EXPECT--
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

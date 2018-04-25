@@ -20,4 +20,5 @@ try {
     echo 'Query failed: ' . $e->getMessage();
 }
 ?>
---EXPECT--
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

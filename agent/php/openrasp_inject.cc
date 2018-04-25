@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "openrasp_inject.h"
 #include "openrasp_ini.h"
 #include <string>
@@ -59,7 +75,7 @@ PHP_RINIT_FUNCTION(openrasp_inject)
         auto time_point = std::chrono::steady_clock::now();
         long long unsigned int nano = time_point.time_since_epoch().count();
         auto hash = zend_inline_hash_func(reinterpret_cast<const char *>(&nano), sizeof(nano));
-        spprintf(&OPENRASP_INJECT_G(request_id), 32, "%016llx%016lx", nano, hash);
+        spprintf(&OPENRASP_INJECT_G(request_id), 32, "%016llx%016lx", hash, nano);
         char *uuid_header = nullptr;
         int uuid_header_len = spprintf(&uuid_header, 0, "Request-ID: %s", OPENRASP_INJECT_G(request_id));
         if (uuid_header)
@@ -104,12 +120,13 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_inject)
         }
         if (is_match_inject_prefix)
         {
+            char target_header[] = "text/html";
             for (zend_llist_element *element = SG(sapi_headers).headers.head; element; element = element->next)
             {
                 sapi_header_struct *sapi_header = (sapi_header_struct *)element->data;
                 if (sapi_header->header_len > 0 &&
                     strncasecmp(sapi_header->header, "content-type", sizeof("content-type") - 1) == 0 &&
-                    strcasestr(sapi_header->header, "text/html") != nullptr)
+                    php_stristr(sapi_header->header, target_header, sapi_header->header_len, strlen(target_header)) != nullptr)
                 {
 #if PHP_MINOR_VERSION > 3
                     php_output_write(inject_html.data(), inject_html.size() TSRMLS_CC);

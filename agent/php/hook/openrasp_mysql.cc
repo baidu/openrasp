@@ -1,4 +1,20 @@
-#include "openrasp_sql.h"
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "openrasp_hook.h"
 
 extern "C" {
 #include "zend_ini.h"
@@ -54,6 +70,7 @@ static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
 		tmp++;
 		if (tmp[0] != '/') {
 			port = atoi(tmp);
+            sql_connection_p->port = port;
 			if ((tmp=strchr(tmp, ':'))) {
 				tmp++;
 				socket=tmp;
@@ -61,11 +78,10 @@ static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
 		} else {
 			socket = tmp;
 		}
-        sql_connection_p->host = estrdup(host_and_port);
+        sql_connection_p->host = host;
 	} else {
-		host = host_and_port;
-		port = default_port;
-        spprintf(&(sql_connection_p->host), 0, "%s:%d", host, port);
+        sql_connection_p->host = estrdup(host_and_port);
+        sql_connection_p->port = default_port;
 	}
     sql_connection_p->server = "mysql";
     sql_connection_p->username = user ? estrdup(user) : nullptr;
@@ -82,7 +98,7 @@ static inline void init_mysql_pconnect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, 
 }
 
 //mysql_connect
-void pre_mysql_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void pre_global_mysql_connect(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {        
@@ -92,7 +108,7 @@ void pre_mysql_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
         }
     }
 }
-void post_mysql_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void post_global_mysql_connect(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_RESOURCE)
     {
@@ -101,7 +117,7 @@ void post_mysql_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
 }
 
 //mysql_pconnect
-void pre_mysql_pconnect(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void pre_global_mysql_pconnect(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {        
@@ -111,7 +127,7 @@ void pre_mysql_pconnect(INTERNAL_FUNCTION_PARAMETERS, char *server)
         }
     }
 }
-void post_mysql_pconnect(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void post_global_mysql_pconnect(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_RESOURCE)
     {
@@ -119,12 +135,13 @@ void post_mysql_pconnect(INTERNAL_FUNCTION_PARAMETERS, char *server)
     }
 }
 
+
 //mysql_query
-void pre_mysql_query(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void pre_global_mysql_query(INTERNAL_FUNCTION_PARAMETERS)
 {    
-    check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, server, 1);
+    check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "mysql", 1);
 }
-void post_mysql_query(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void post_global_mysql_query(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_check_type_ignored(ZEND_STRL("sqlSlowQuery") TSRMLS_CC)) 
     {
@@ -141,7 +158,7 @@ void post_mysql_query(INTERNAL_FUNCTION_PARAMETERS, char *server)
     {
         num_rows = fetch_rows_via_user_function("mysql_affected_rows", 0, NULL TSRMLS_CC);
     }
-    if (num_rows > openrasp_ini.slowquery_min_rows)
+    if (num_rows >= openrasp_ini.slowquery_min_rows)
     {
         slow_query_alarm(num_rows TSRMLS_CC);
     }

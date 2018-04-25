@@ -1,4 +1,20 @@
-#include "openrasp_sql.h"
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "openrasp_hook.h"
 #include "openrasp_ini.h"
 #include <string>
 #include <map>
@@ -12,15 +28,23 @@ extern "C" {
 /**
  * sql connection alarm
  */
-static void connection_via_default_username_policy(char *check_message TSRMLS_DC)
+static void connection_via_default_username_policy(char *check_message, sql_connection_entry *sql_connection_p TSRMLS_DC)
 {           
-    zval *params_result = nullptr;
-    MAKE_STD_ZVAL(params_result);
-    array_init(params_result);
-    add_assoc_string(params_result, "message", check_message, 1);
-    add_assoc_long(params_result, "policy_id", 3006);
-    policy_info(params_result TSRMLS_CC);
-    zval_ptr_dtor(&params_result);
+    zval *policy_array = nullptr;
+    MAKE_STD_ZVAL(policy_array);
+    array_init(policy_array);
+    add_assoc_string(policy_array, "message", check_message, 1);
+    add_assoc_long(policy_array, "policy_id", 3006);
+    zval *connection_params = nullptr;
+    MAKE_STD_ZVAL(connection_params);
+    array_init(connection_params);
+    add_assoc_string(connection_params, "server", sql_connection_p->server, 1);
+    add_assoc_string(connection_params, "host", sql_connection_p->host, 1);
+    add_assoc_long(connection_params, "port", sql_connection_p->port);
+    add_assoc_string(connection_params, "user", sql_connection_p->username, 1);
+    add_assoc_zval(policy_array, "params", connection_params);
+    policy_info(policy_array TSRMLS_CC);
+    zval_ptr_dtor(&policy_array);
 }
 
 void slow_query_alarm(int rows TSRMLS_DC)
@@ -31,10 +55,10 @@ void slow_query_alarm(int rows TSRMLS_DC)
     zval *plugin_message = nullptr;
     MAKE_STD_ZVAL(plugin_message);
     char *message_str = nullptr;
-    spprintf(&message_str, 0, _("slow query: read %d rows via sql statement - exceed %d"), rows, openrasp_ini.slowquery_min_rows);
+    spprintf(&message_str, 0, _("SQL slow query detected: selected %d rows, exceeding %d"), rows, openrasp_ini.slowquery_min_rows);
     ZVAL_STRING(plugin_message, message_str, 1);
     efree(message_str);
-    openrasp_buildin_php_risk_handle(0, "sqlSlowQuery", 90, attack_params, plugin_message TSRMLS_CC);
+    openrasp_buildin_php_risk_handle(0, "sqlSlowQuery", 100, attack_params, plugin_message TSRMLS_CC);
 }
 
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy)
@@ -43,10 +67,10 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
         {"mysql", "root"},
         {"mssql", "sa"},
         {"pgsql", "postgres"},
-        {"oci", "dbsnmp"},
-        {"oci", "sysman"},
-        {"oci", "system"},
-        {"oci", "sys"}
+        {"oci",   "dbsnmp"},
+        {"oci",   "sysman"},
+        {"oci",   "system"},
+        {"oci",   "sys"}
     };
     sql_connection_entry conn_entry;
     char *check_message = nullptr;
@@ -59,7 +83,12 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
         {
             if (std::string(conn_entry.username) == pos.first->second) 
             {
-                spprintf(&check_message, 0, _("connect %s server via the default username:%s"), conn_entry.server, conn_entry.username);
+                spprintf(&check_message, 0, 
+                    _("Connecting to a %s instance using the high privileged account: %s - (%s:%d)"), 
+                    conn_entry.server,
+                    conn_entry.username,
+                    conn_entry.host,
+                    conn_entry.port);
                 break;
             }
             pos.first++;
@@ -68,7 +97,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
         {
             if (enforce_policy)
             {
-                connection_via_default_username_policy(check_message TSRMLS_CC);
+                connection_via_default_username_policy(check_message, &conn_entry TSRMLS_CC);
                 need_block = 1;
             }
             else
@@ -77,7 +106,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
                 openrasp_shared_alloc_lock(TSRMLS_C);
                 if (!openrasp_shared_hash_exist(connection_hash, OPENRASP_LOG_G(formatted_date_suffix)))
                 {
-                    connection_via_default_username_policy(check_message TSRMLS_CC);
+                    connection_via_default_username_policy(check_message, &conn_entry TSRMLS_CC);
                 }
                 openrasp_shared_alloc_unlock(TSRMLS_C);
             }

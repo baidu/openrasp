@@ -1,301 +1,325 @@
 <?php
-const UNKNOWN 		= "unknown";
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+?>
+OpenRASP Installer for PHP servers - Copyright ©2017-2018 Baidu Inc.
+For more details visit: https://rasp.baidu.com/doc/install/software.html
 
-const OS_WIN 		= "windows";
-const OS_LINUX 		= "linux";
-const OS_OSX 		= "mac";
-
-const LINUX_UBUNTU 	= "ubuntu";
-const LINUX_CENTOS 	= "centos";
-
-const INFO 			= "INFO";
-const DEBUG 		= "DEBUG";
-const ERROR 		= "ERROR";
-
-const UNFOUND 		= 0;
-const FOUND 		= 1;
-const FINSH 		= 2;
-
-
-//获取linux发行版本
-function get_linux_release_name() {
-	if (file_exists("/etc/debian_version")) {
-		return LINUX_UBUNTU;
-	} else if(file_exists("/etc/redhat-release")) {
-		return LINUX_CENTOS;
-	} else {
-		return UNKNOWN;
-	}
-}
-
-//获取操作系统
-function get_OS() {
-	if (stristr(PHP_OS, 'DAR')) {
-		return OS_OSX;
-	} else if (stristr(PHP_OS, 'WIN')) {
-		return OS_WIN;
-	} else if (stristr(PHP_OS, 'LINUX')) {
-		return OS_LINUX;
-	} else {
-		return UNKNOWN;
-	}
-}
-
-//获取 ini_scanned_path
-function get_ini_scanned_path() {
-	$ini_scanned_files = php_ini_scanned_files();
-	if ($ini_scanned_files) {
-		$ini_scanned_arr = explode(",\n", trim(php_ini_scanned_files()));
-		return dirname($ini_scanned_arr[0]);
-	} else {
-		return false;
-	}
-}
-
-//安装流程展示
-function major_tips($message, $done = FALSE) {
-	global $index;
-	echo <<<MSG
-***********************************************************
- $index. $message
-***********************************************************
-
-MSG;
-	$index++;
-	if ($done) {
-		exit(0);
-	}
-}
-
-//日志
-function log_tips($level, $msg, $arr = null) {
-	echo '['.$level."]: ".$msg.PHP_EOL;
-	if (!empty($arr) && is_array($arr)) {
-		foreach ($arr as $key => $value) {
-			echo $key." =>".$value.PHP_EOL;
-		}
-	}
-	if ($level === ERROR) {
-		exit(0); 	
-	}
-}
-
-//帮助
-function show_help() {
-	echo <<<HELP
-Synopsis:
-    php install.php [options]
-
-Options:
-    -d <file>   <file> will act as OpenRASP work folder.
-
-    -h          This Help.
-
-HELP;
-	exit(0); 
-}
+<?php
+include_once(__DIR__ . '/util.php');
 
 //全局变量
 $index 				= 1;
 $root_dir 			= null;
 $current_os 		= get_OS();
 $supported_sapi 	= array('apache2', 'cli', 'fpm');
-$lib_filename 		= $current_os == OS_WIN ? 'openrasp.dll' : 'openrasp.so';
+$lib_filename 		= $current_os == OS_WIN ? 'php_openrasp.dll' : 'openrasp.so';
 $lib_source_path 	= sprintf("%s%sphp%s%s-php%s.%s-%s%s%s", __DIR__, 
 	DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, 	$current_os, PHP_MAJOR_VERSION, 
 	PHP_MINOR_VERSION, php_uname("m"), DIRECTORY_SEPARATOR, $lib_filename);
 $extension_dir 		= ini_get('extension_dir');
 $ini_loaded_file 	= php_ini_loaded_file();
 $ini_scanned_path 	= get_ini_scanned_path();
-$ini_scanned_file 	= 'openrasp.ini';
+$ini_scanned_file 	= 'z_openrasp.ini';
+$openrasp_work_sub_folders = array('conf'=>0755, 'assets'=>0755, 'logs'=>0777, 'locale'=>0755, 'plugins'=>0755);
+$help_msg = <<<HELP
+Synopsis:
+    php install.php [options]
+
+Options:
+    -d <openrasp_root>  Specify OpenRASP installation folder
+	
+    --ignore-ini        Do not update PHP ini entries
+
+    --ignore-plugin     Do not update the official javascript plugin
+
+    -h                  Show help messages
+
+HELP;
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 过程化安装 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-$options = getopt("d:h");
+$shortopts = "d:h";
+$longopts = array("ignore-ini", "ignore-plugin");
+$options = getopt($shortopts, $longopts);
 if (array_key_exists("d", $options) && !empty($options["d"])) {
 	$root_dir = $options["d"];
 	log_tips(INFO, "openrasp.root_dir => ".$root_dir);
 } else if (array_key_exists("h", $options)) {
 	show_help();
 } else {
-	log_tips(ERROR, "Please use \"-h\" to check help information.");
+	log_tips(ERROR, "Bad command line arguments. Please use \"-h\" to check help messages.");
 }
 
-major_tips('copy openrasp lib to extension_dir');
+major_tips('Installing OpenRASP PHP Extension');
 if (!file_exists($extension_dir)) {
-	log_tips(ERROR, $extension_dir.' not exist!');
+	log_tips(ERROR, "Extension directory '$extension_dir' does not exist");
 }
 if (!is_writable($extension_dir)) {
-	log_tips(ERROR, $extension_dir.' is not writable, please make sure you have write permissions!');
+	log_tips(ERROR, "Extension directory '$extension_dir' is not writable, make sure you have write permissions");
 }
 if (!file_exists($lib_source_path)) {
-	log_tips(ERROR, 'unsupported system or php version.');
+	log_tips(ERROR, "Unsupported system or php version: expecting '$lib_source_path' to be present.");
 }
 $lib_dest_path = $extension_dir.DIRECTORY_SEPARATOR.$lib_filename;
 if (file_exists($lib_dest_path)
 	&& !rename($lib_dest_path, $lib_dest_path.'.bak')) {
-	log_tips(ERROR, $lib_dest_path.' backup failure!');
+	log_tips(ERROR, "Unable to backup old openrasp extension: $lib_dest_path");
 }
-if (!copy($lib_source_path, $extension_dir.DIRECTORY_SEPARATOR.$lib_filename)) {
-	log_tips(ERROR, 'fail to copy openrasp lib into extension_dir!');
+if (!copy($lib_source_path, $lib_dest_path)) {
+	log_tips(ERROR, "Failed to copy openrasp.so to '$lib_dest_path'");
 } else {
-	log_tips(INFO, 'Successfully copy '.$lib_filename.' to '.$extension_dir);
+	log_tips(INFO, "Successfully copied '$lib_filename' to '$extension_dir'");
 }
 
-major_tips('modify php.ini');
-$ini_content = <<<OPENRASP
+if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
+	major_tips("Skipped update of php.ini since '--ignore-ini' is set");
+} else {
+	major_tips('Updating php.ini');
+	$ini_content = <<<OPENRASP
 ;OPENRASP BEGIN
-
+	
 extension=openrasp.so
 openrasp.root_dir="$root_dir"
-
+	
 ;拦截攻击后，跳转到这个URL，并增加 request_id 参数
 ;openrasp.block_url=https://rasp.baidu.com/blocked/
 
+;拦截攻击后，将状态码设置为这个值
+;openrasp.block_status_code=302
+	
 ;数组回调函数黑名单，命中即拦截
 ;openrasp.callable_blacklists=system,exec,passthru,proc_open,shell_exec,popen,pcntl_exec,assert
-
+	
 ;当服务器不满足安全配置规范，是否禁止服务器启动
 ;openrasp.enforce_policy=Off
-
+	
 ;hook 点黑名单，逗号分隔
 ;openrasp.hooks_ignore=
-
+	
 ;对于以下URL，修改响应并注入HTML
 ;openrasp.inject_urlprefix=
-
+	
 ;国际化配置
 ;openrasp.locale=
-
+	
 ;每个进程/线程每秒钟最大日志条数
 ;openrasp.log_maxburst=1000
-
+	
 ;当SQL查询结果行数大于或等于该值，则认为是慢查询
 ;openrasp.slowquery_min_rows=500
-
+	
 ;报警是否开启 syslog
 ;openrasp.syslog_alarm_enable=Off
-
+	
 ;用于 syslog 的 facility
 ;openrasp.syslog_facility=
-
+	
 ;syslog 服务器地址
 ;openrasp.syslog_server_address=
+
+;syslog connection timeout(毫秒)
+;openrasp.syslog_connection_timeout=50
+	
+;syslog read timeout(毫秒)
+;openrasp.syslog_read_timeout=10
+
+;syslog重连时间间隔(秒)
+;openrasp.syslog_connection_retry_interval=300
 
 ;对于单个请求，JS插件整体超时时间（毫秒）
 ;openrasp.timeout_ms=100
 
+;插件获取堆栈的最大深度
+openrasp.plugin_maxstack=100
+
+;报警日志记录的最大堆栈深度
+openrasp.log_maxstack=10
+	
 ;OPENRASP END
-
-
+	
 OPENRASP;
-
-if ($ini_scanned_path) {
-	$linux_release_name = UNKNOWN;
-	$ini_system_links = null;
-	if ($current_os == OS_LINUX) {
-		$linux_release_name = get_linux_release_name();
-	}
-	if ($linux_release_name == LINUX_UBUNTU) {
-		$ini_scanned_root = stristr($ini_scanned_path, 'cli', true);
-		if ($ini_scanned_root) {
-			$ini_scanned_path = $ini_scanned_root."mods-available";
-			foreach ($supported_sapi as $key => $value) {
-				if (file_exists($ini_scanned_root.$value) && is_dir($ini_scanned_root.$value)) {
-					$ini_system_links[$value] = $ini_scanned_root.$value.DIRECTORY_SEPARATOR.'conf.d/99-openrasp.ini';	
+	
+	if ($ini_scanned_path) {
+		$linux_release_name = UNKNOWN;
+		$ini_system_links = null;
+		if ($current_os == OS_LINUX) {
+			$linux_release_name = get_linux_release_name();
+		}
+		if ($linux_release_name == LINUX_UBUNTU) {
+			$ini_scanned_root = stristr($ini_scanned_path, 'cli', true);
+			if ($ini_scanned_root) {
+				$ini_scanned_path = $ini_scanned_root . "mods-available";
+				foreach ($supported_sapi as $key => $value) {
+					if (file_exists($ini_scanned_root.$value) && is_dir($ini_scanned_root.$value)) {
+						$ini_system_links[$value] = $ini_scanned_root.$value.DIRECTORY_SEPARATOR . 'conf.d/99-openrasp.ini';	
+					}
 				}
 			}
 		}
-	}
-	if (!is_writable($ini_scanned_path)) {
-		log_tips(ERROR, $ini_scanned_path.' is not writable, please make sure you have write permissions!');
-	}
-
-
-	$handle = fopen($ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file, "w+");
-	if ($handle) {
-		if (fwrite($handle, $ini_content) === FALSE) {
+		if (!is_writable($ini_scanned_path)) {
+			log_tips(ERROR, $ini_scanned_path . ' is not writable, please make sure you have write permissions!');
+		}
+		
+		
+		$ini_src = $ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file;
+		$handle  = fopen($ini_src, "w+");
+		if ($handle) {
+			if (fwrite($handle, $ini_content) === FALSE) {
+				fclose($handle);
+				log_tips(ERROR, 'Cannot write to '. $ini_src);
+			} else {
+				log_tips(INFO, "Successfully write openrasp config to '$ini_src'");
+			}
 			fclose($handle);
-			log_tips(ERROR, 'Cannot write to '.$ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file);
+			if (!empty($ini_system_links) && is_array($ini_system_links)) {
+				log_tips(INFO, "Detected symbol links of openrasp.ini at '$ini_system_links'");
+				foreach ($ini_system_links as $key => $value) {
+					if (file_exists($value) && readlink($value) === $ini_src) {
+						continue;
+					}
+					if (!symlink($ini_src, $value)) {
+						log_tips(ERROR, "Unable to create symbol link '$ini_src' to '$value'");
+					}
+				}
+			}
 		} else {
-			log_tips(INFO, 'Successfully write openrasp config to '.$ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file);
-		}
-		fclose($handle);
-		if (!empty($ini_system_links) && is_array($ini_system_links)) {
-			log_tips(INFO, 'Found system links of openrasp.ini are:', $ini_system_links);
-			foreach ($ini_system_links as $key => $value) {
-				if (file_exists($value) && readlink($value) === $ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file) {
-					continue;
-				}
-				if (!symlink($ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file, $value)) {
-					log_tips(ERROR, 'Fail to create link '.$value);
-				}
-			}
-		}
-	} else {
-		log_tips(ERROR, 'Cannot open '.$ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file);
-	} 
-} else if ($ini_loaded_file) {
-	if (!is_writable($ini_loaded_file)) {
-		log_tips(ERROR, $ini_loaded_file.' is not writable, please make sure you have write permissions!');
-	}
-	if (!copy($ini_loaded_file, $ini_loaded_file.'.bak')) {
-		log_tips(ERROR, $ini_loaded_file.' backup failure!');
-	}
-
-	$old_ini_data = file($ini_loaded_file.'.bak');
-	$tmp_ini_data = array();
-	$found_openrasp = UNFOUND;
-	foreach ($old_ini_data as $key => $line) {
-		if (trim($line) == ";OPENRASP BEGIN") {
-			$found_openrasp = FOUND;
+			log_tips(ERROR, 'Unable to open ini file for writing: ' . $ini_src);
 		} 
-		if (trim($line) == ";OPENRASP END") {
-			$found_openrasp = FINSH;
+	} else if ($ini_loaded_file) {
+		if (!is_writable($ini_loaded_file)) {
+			log_tips(ERROR, $ini_loaded_file . ' is not writable, please make sure you have write permissions!');
 		}
-		if (FOUND !== $found_openrasp && trim($line) != ";OPENRASP END") {
-			$tmp_ini_data[] = $line;
+		if (!copy($ini_loaded_file, $ini_loaded_file.'.bak')) {
+			log_tips(ERROR, "Unable to backup old ini file: '$ini_loaded_file'");
 		}
-	}
-	if (FOUND === $found_openrasp) {
-		log_tips(ERROR, 'Error occurs during positioning openrasp config tag in'.$ini_loaded_file);
-	} else if (FINSH === $found_openrasp) {
-		log_tips(INFO, 'Openrasp config tags found, they will be removed.');
-	}
-	$tmp_ini_data[] = $ini_content;
-			$fp = fopen($ini_loaded_file, "a+");
-		flock($fp, LOCK_EX);
-		foreach($tmp_ini_data as $key => $line) {
-     		fwrite($fp, $line);
- 		}
-		flock($fp, LOCK_UN);
-		fclose($fp);
-
-	$handle = fopen($ini_loaded_file, "w+");
-	if ($handle) {
-		$write_state = TRUE;
-		foreach($tmp_ini_data as $key => $line) {
-			if (fwrite($handle, $line) === FALSE) {
-				$write_state = FALSE;
-				break;
+	
+		$old_ini_data = file($ini_loaded_file.'.bak');
+		$tmp_ini_data = array();
+		$found_openrasp = UNFOUND;
+		foreach ($old_ini_data as $key => $line) {
+			if (trim($line) == ";OPENRASP BEGIN") {
+				$found_openrasp = FOUND;
+			} 
+			if (trim($line) == ";OPENRASP END") {
+				$found_openrasp = FINSH;
 			}
- 		}
- 		if ($write_state === FALSE) {
- 			fclose($handle);
- 			log_tips(INFO, 'Fail write ini content to '.$ini_loaded_file.', we will restore the php.ini file.');
- 			if (!copy($ini_loaded_file.'.bak', $ini_loaded_file)) {
-				log_tips(ERROR, 'Fail to restore the php.ini file, you must manually restore php.ini.');
+			if (FOUND !== $found_openrasp && trim($line) != ";OPENRASP END") {
+				$tmp_ini_data[] = $line;
 			}
- 		} else {
- 			log_tips(INFO, 'Successfully append openrasp config to '.$ini_loaded_file);
- 		}
-		fclose($handle);
+		}
+		if (FOUND === $found_openrasp) {
+			log_tips(ERROR, "Unable to locate OPENRASP closing tags in '$ini_loaded_file', possibly corrupted ini file");
+		} else if (FINSH === $found_openrasp) {
+			log_tips(INFO, 'Found old configuration in INI files, doing upgrades');
+		}
+		$tmp_ini_data[] = $ini_content;
+		$handle = fopen($ini_loaded_file, "w+");
+		if ($handle) {
+			$write_state = TRUE;
+			foreach($tmp_ini_data as $key => $line) {
+				if (fwrite($handle, $line) === FALSE) {
+					$write_state = FALSE;
+					break;
+				}
+			 }
+			 if ($write_state === FALSE) {
+				 fclose($handle);
+				 log_tips(INFO, 'Fail write ini content to '.$ini_loaded_file.', we will restore the php.ini file.');
+				 if (!copy($ini_loaded_file.'.bak', $ini_loaded_file)) {
+					log_tips(ERROR, 'Fail to restore the php.ini file, you must manually restore php.ini.');
+				}
+			 } else {
+				 log_tips(INFO, 'Successfully append openrasp config to '.$ini_loaded_file);
+			 }
+			fclose($handle);
+		} else {
+			log_tips(ERROR, "Unable to open '$ini_loaded_file' for writing");
+		} 
 	} else {
-		log_tips(ERROR, 'Cannot open '.$ini_loaded_file);
-	} 
-} else {
-	log_tips(ERROR, 'Cannot find appropriate php.ini file.');
+		log_tips(ERROR, 'Cannot find appropriate php.ini file.');
+	}
 }
 
+major_tips('Initializing OpenRASP root folder (openrasp.root_dir)');
+if (file_exists($root_dir)) {
+	if (!chmod($root_dir, 0777)) {
+		log_tips(ERROR, 'Fail to chmod '.$root_dir);
+	}
+} else {
+	if (!mkdir($root_dir, 0777, TRUE)) {
+		log_tips(ERROR, 'Unable to create directory: ' . $root_dir);
+	}
+}
+foreach($openrasp_work_sub_folders as $key => $value) {
+	$sub_item = realpath($root_dir).DIRECTORY_SEPARATOR.$key;
+	if (file_exists($sub_item)) {
+		if (substr(sprintf('%o', fileperms($sub_item)), -4) != strval($value)) {
+			chmod($sub_item, $value);
+		}
+		if ($key === "plugins") {
+			if (array_key_exists("ignore-plugin", $options)) {
+				major_tips("Skipped update of the official javascript plugin since '--ignore-plugin' is set");
+			} else {
+				major_tips('Updating the official javascript plugin');
+				$plugin_source_dir = __DIR__.DIRECTORY_SEPARATOR.$key;
+				if (file_exists($plugin_source_dir)) {
+					$official_plugins = scandir($plugin_source_dir);
+					foreach($official_plugins as $key=>$plugin) {
+						if ($plugin === '.'
+						|| $plugin === '..'
+						|| !is_file($plugin_source_dir.DIRECTORY_SEPARATOR.$plugin)
+						|| !endsWith($plugin, '.js')) {
+							continue;
+						}
+						if (file_exists($sub_item.DIRECTORY_SEPARATOR.$plugin)) {
+							if (md5_file($plugin_source_dir.DIRECTORY_SEPARATOR.$plugin) === md5_file($sub_item.DIRECTORY_SEPARATOR.$plugin)) {
+								log_tips(INFO, 'Skipping update of ' . $plugin . ' since no changes is detected');
+								continue;
+							}
+							if (!rename($sub_item.DIRECTORY_SEPARATOR.$plugin, $sub_item.DIRECTORY_SEPARATOR.$plugin.'.bak')) {
+								log_tips(ERROR, $sub_item.DIRECTORY_SEPARATOR.$plugin.' backup failure!');
+							}
+						}
+						if (!copy($plugin_source_dir.DIRECTORY_SEPARATOR.$plugin, $sub_item.DIRECTORY_SEPARATOR.$plugin)) {
+							log_tips(ERROR, 'Unable to update the official javascript plugin');
+						} else {
+							log_tips(INFO, 'Successfully update official plugin: '.$plugin);
+						}
+					}
 
-major_tips('Finish the installation.', TRUE); 
+				}
+			}
+		} else if ($key === "locale") {
+			if (file_exists(__DIR__.DIRECTORY_SEPARATOR.$key)) {
+				clear_dir($sub_item);
+				recurse_copy(__DIR__.DIRECTORY_SEPARATOR.$key, $sub_item);
+			}
+		}
+	} else {
+		$old_mask = umask(0);
+		$mkdir_res = mkdir($sub_item, $value);
+		$old_mask = umask(0);
+		if (!$mkdir_res) {
+			log_tips(ERROR, "Unable to create directory: $sub_item");
+		}
+		if (file_exists(__DIR__.DIRECTORY_SEPARATOR.$key)) {
+			recurse_copy(__DIR__.DIRECTORY_SEPARATOR.$key, $sub_item);
+		}
+	}
+}
+
+major_tips("Installation completed without errors, please restart PHP server to take effect.", TRUE); 
 ?>

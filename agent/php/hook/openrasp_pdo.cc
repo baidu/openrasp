@@ -1,9 +1,27 @@
-#include "openrasp_sql.h"
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "openrasp_hook.h"
 
 extern "C" {
 #include "ext/pdo/php_pdo_driver.h"
 #include "zend_ini.h"
 }
+
+extern void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p);
 
 static char *dsn_from_uri(char *uri, char *buf, size_t buflen TSRMLS_DC)
 {
@@ -73,22 +91,57 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
             sql_connection_p->server = (char*)server_names[index];
         }
     }
-    sql_connection_p->username = estrdup(username);
-    sql_connection_p->host = estrdup(data_source);
+    if (strcmp(sql_connection_p->server, "mysql") == 0)
+    {
+        struct pdo_data_src_parser mysql_vars[] = {
+            { "charset",  NULL,	0 },
+            { "dbname",   "",	0 },
+            { "host",   "localhost",	0 },
+            { "port",   "3306",	0 },
+            { "unix_socket",  NULL,	0 },
+	    };
+        php_pdo_parse_data_source(data_source, data_source_len, mysql_vars, 5);
+        sql_connection_p->host = estrdup(mysql_vars[2].optval);
+        sql_connection_p->port = atoi(mysql_vars[3].optval);
+        sql_connection_p->username = estrdup(username);
+    }
+    else if (strcmp(sql_connection_p->server, "pgsql") == 0)
+    {
+        char *e, *p, *conn_str = nullptr;
+        e = (char *) data_source + strlen(data_source);
+        p = (char *) data_source;
+        while ((p = (char *)memchr(p, ';', (e - p)))) {
+            *p = ' ';
+        }
+        if (username && password) {
+            spprintf(&conn_str, 0, "%s user=%s password=%s", data_source, username, password);
+        } else if (username) {
+            spprintf(&conn_str, 0, "%s user=%s", data_source, username);
+        } else if (password) {
+            spprintf(&conn_str, 0, "%s password=%s", data_source, password);
+        } else {
+            spprintf(&conn_str, 0, "%s", (char *) data_source);
+        }
+        parse_connection_string(conn_str, sql_connection_p);
+    }
+    else
+    {
+        //It is not supported at present
+    }
 }
 
-static void pdo_pre_process_ex(INTERNAL_FUNCTION_PARAMETERS)
+static void pdo_pre_process(INTERNAL_FUNCTION_PARAMETERS)
 {
     pdo_dbh_t *dbh = reinterpret_cast<pdo_dbh_t*>(zend_object_store_get_object(getThis() TSRMLS_CC));
     check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, const_cast<char*>(dbh->driver->driver_name), 1);
 }
 
-void pre_pdo_query_ex(INTERNAL_FUNCTION_PARAMETERS)
+void pre_pdo_query(INTERNAL_FUNCTION_PARAMETERS)
 {
-    pdo_pre_process_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    pdo_pre_process(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void post_pdo_query_ex(INTERNAL_FUNCTION_PARAMETERS)
+void post_pdo_query(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_check_type_ignored(ZEND_STRL("sqlSlowQuery") TSRMLS_CC)) 
     {
@@ -100,19 +153,19 @@ void post_pdo_query_ex(INTERNAL_FUNCTION_PARAMETERS)
         if (!stmt->dbh) {	
             return;	
         }	
-        if (stmt->row_count > openrasp_ini.slowquery_min_rows)
+        if (stmt->row_count >= openrasp_ini.slowquery_min_rows)
         {
             slow_query_alarm(stmt->row_count TSRMLS_CC);      
         }
     }    
 }
 
-void pre_pdo_exec_ex(INTERNAL_FUNCTION_PARAMETERS)
+void pre_pdo_exec(INTERNAL_FUNCTION_PARAMETERS)
 {
-    pdo_pre_process_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    pdo_pre_process(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void post_pdo_exec_ex(INTERNAL_FUNCTION_PARAMETERS)
+void post_pdo_exec(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_check_type_ignored(ZEND_STRL("sqlSlowQuery") TSRMLS_CC)) 
     {
@@ -120,14 +173,14 @@ void post_pdo_exec_ex(INTERNAL_FUNCTION_PARAMETERS)
     }    
     if (Z_TYPE_P(return_value) == IS_LONG)
     {	
-        if (Z_LVAL_P(return_value) > openrasp_ini.slowquery_min_rows)
+        if (Z_LVAL_P(return_value) >= openrasp_ini.slowquery_min_rows)
         {
             slow_query_alarm(Z_LVAL_P(return_value) TSRMLS_CC);
         }
     } 
 }
 
-void pre_pdo___construct_ex(INTERNAL_FUNCTION_PARAMETERS)
+void pre_pdo___construct(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {        
@@ -138,7 +191,7 @@ void pre_pdo___construct_ex(INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void post_pdo___construct_ex(INTERNAL_FUNCTION_PARAMETERS)
+void post_pdo___construct(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(this_ptr) == IS_OBJECT)
     {

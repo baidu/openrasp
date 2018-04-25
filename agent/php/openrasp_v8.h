@@ -1,27 +1,24 @@
 /*
-  +----------------------------------------------------------------------+
-  | PHP Version 5                                                        |
-  +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2016 The PHP Group                                |
-  +----------------------------------------------------------------------+
-  | This source file is subject to version 3.01 of the PHP license,      |
-  | that is bundled with this package in the file LICENSE, and is        |
-  | available through the world-wide-web at the following url:           |
-  | http://www.php.net/license/3_01.txt                                  |
-  | If you did not receive a copy of the PHP license and are unable to   |
-  | obtain it through the world-wide-web, please send a note to          |
-  | license@php.net so we can mail you a copy immediately.               |
-  +----------------------------------------------------------------------+
-  | Author:                                                              |
-  +----------------------------------------------------------------------+
-*/
-
-/* $Id$ */
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #ifndef OPENRASP_V8_H
 #define OPENRASP_V8_H
 
 #include "openrasp.h"
+#undef COMPILER // conflict with v8 defination
 #include <v8.h>
 #include <v8-platform.h>
 #include <mutex>
@@ -70,16 +67,16 @@ public:
 private:
   std::mutex lock_;
   bool initialized_ = false;
-  int thread_pool_size_;
+  int thread_pool_size_ = 0;
   std::vector<WorkerThread *> thread_pool_;
-  TaskQueue *queue_;
+  TaskQueue *queue_ = nullptr;
 };
 
 class TimeoutTask : public v8::Task
 {
 public:
   v8::Isolate *isolate;
-  std::chrono::time_point<std::chrono::steady_clock> time_point;
+  std::chrono::time_point<std::chrono::high_resolution_clock> time_point;
   std::timed_mutex mtx;
   TimeoutTask(v8::Isolate *_isolate, int _milliseconds = 100);
   void Run() override;
@@ -96,11 +93,11 @@ public:
 class openrasp_v8_process_globals
 {
 public:
+  v8::StartupData snapshot_blob;
   std::mutex lock;
   bool is_initialized = false;
   V8Platform *v8_platform = nullptr;
   std::vector<openrasp_v8_plugin_src> plugin_src_list;
-  long timeout_ms = 100;
 };
 
 extern openrasp_v8_process_globals process_globals;
@@ -112,6 +109,9 @@ v8::Local<v8::Object> New(v8::Isolate *isolate);
 
 void v8error_to_stream(v8::Isolate *isolate, v8::TryCatch &try_catch, std::ostream &buf);
 v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC);
+v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset = 0);
+v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
+                                      std::string _source, std::string _filename, int _line_offset = 0);
 } // namespace openrasp
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_v8)

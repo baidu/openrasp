@@ -53,11 +53,17 @@ public class SecurityPolicyInfo extends EventInfo {
 
     private Type policy;
     private String message;
+    private Map<String,String> params;
 
-    public SecurityPolicyInfo(Type policy, String message, boolean isBlock) {
+    public SecurityPolicyInfo(Type policy, String message, boolean isBlock, Map<String, String> params) {
         this.policy = policy;
         this.message = message;
+        this.params = params;
         setBlock(isBlock && Config.getConfig().getEnforcePolicy());
+    }
+
+    public SecurityPolicyInfo(Type policy, String message, boolean isBlock) {
+        this(policy,message,isBlock,null);
     }
 
     @Override
@@ -76,13 +82,17 @@ public class SecurityPolicyInfo extends EventInfo {
         // 服务器host name
         info.put("server_hostname", OSUtil.getHostName());
         // 服务器ip
-        info.put("nic", OSUtil.getIpAddress());
+        info.put("server_nic", OSUtil.getIpAddress());
         // 服务器类型
         info.put("server_type", getCatalinaServerType());
         // 服务器版本
         info.put("server_version", getCatalinaServerVersion());
         // 安全规范检测信息
         info.put("message", message);
+        // 检测参数信息
+        if(params !=null){
+            info.put("params",params);
+        }
         // 攻击调用栈
         StackTraceElement[] trace = filter(new Throwable().getStackTrace());
         info.put("stack_trace", stringify(trace));

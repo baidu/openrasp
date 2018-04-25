@@ -49,7 +49,7 @@ if ((substr($excludedir, 0, strlen($needle)) === $needle))
   $register_str = '';
   array_walk($hook_types, function ($item, $key, $excludedir) use (&$register_str)
   {
-    if ($item=='writeFile') {
+    if ($item=='writeFile' || $item=='readFile') {
       $register_str .= "plugin.register('" . $item . "', function (params, context) {if(params.realpath.lastIndexOf('$excludedir', 0) === 0){return clean}return block})\n";
     } else if ($item=='include'){
       $register_str .= "plugin.register('" . $item . "', function (params, context) {if(params.url.indexOf('.inc', params.url.length - '.inc'.length) !== -1){return clean}return block})\n";
@@ -59,7 +59,7 @@ if ((substr($excludedir, 0, strlen($needle)) === $needle))
   }, $excludedir);
   file_put_contents($rootdir, $register_str, FILE_APPEND | LOCK_EX);
 } else {
-  echo "please create \".work\" folder and set its ansolute path as openrasp.root_dir\n";
+  echo "please set openrasp.root_dir=".__DIR__."/.work, and retry\n";
 }
 ?>
 --EXPECT--

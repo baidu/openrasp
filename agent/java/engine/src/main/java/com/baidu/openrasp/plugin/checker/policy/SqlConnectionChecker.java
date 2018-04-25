@@ -68,6 +68,7 @@ public class SqlConnectionChecker extends PolicyChecker {
         LinkedList<EventInfo> infos = null;
         String sqlType = null;
         String user = null;
+        String urlWithoutParams = null;
         try {
             if (!StringUtils.isEmpty(url) && url.startsWith("jdbc:")) {
                 int indexOfPath = url.indexOf(':', 5);
@@ -78,10 +79,11 @@ public class SqlConnectionChecker extends PolicyChecker {
                     if (properties != null) {
                         user = properties.getProperty(CONNECTION_USER_KEY);
                     }
-                    if (StringUtils.isEmpty(user)) {
-                        int index = url.indexOf("?", indexOfPath);
-                        if (index != -1) {
-                            String paramString = url.substring(index + 1, url.length());
+
+                    int indexOfParams = url.indexOf("?", indexOfPath);
+                    if (indexOfParams != -1) {
+                        if (StringUtils.isEmpty(user)) {
+                            String paramString = url.substring(indexOfParams + 1, url.length());
                             StringTokenizer queryParams = new StringTokenizer(paramString, "&");
                             while (queryParams.hasMoreTokens()) {
                                 String parameterValuePair = queryParams.nextToken();
@@ -93,6 +95,11 @@ public class SqlConnectionChecker extends PolicyChecker {
                                 }
                             }
                         }
+                    } else {
+                        indexOfParams = url.length();
+                    }
+                    if (!StringUtils.isEmpty(user)) {
+                        urlWithoutParams = url.substring(0, indexOfParams);
                     }
                 }
             }
@@ -106,9 +113,13 @@ public class SqlConnectionChecker extends PolicyChecker {
                 alarmTimeCache.clear();
             }
             alarmTimeCache.put(url, System.currentTimeMillis());
-            String unsafeMessage = "使用管理员账号" + user + "登录" + sqlType + "数据库:" + url;
+            String unsafeMessage = "使用管理员账号" + user + "登录" + sqlType + "数据库:" + urlWithoutParams;
             infos = new LinkedList<EventInfo>();
-            infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.SQL_CONNECTION, unsafeMessage, true));
+            HashMap<String, String> params = new HashMap<String, String>(4);
+            params.put("server", sqlType);
+            params.put("url", urlWithoutParams);
+            params.put("user", user);
+            infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.SQL_CONNECTION, unsafeMessage, true, params));
         }
 
         return infos;

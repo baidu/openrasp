@@ -9,4 +9,5 @@ if (!extension_loaded("openrasp")) print "skip";
 passthru('cd',$return_val);
 echo 'passthru OK';
 ?>
---EXPECT--
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

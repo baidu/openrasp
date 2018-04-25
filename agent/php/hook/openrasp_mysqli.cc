@@ -1,4 +1,20 @@
-#include "openrasp_sql.h"
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "openrasp_hook.h"
 
 extern "C" {
 #include "zend_ini.h"
@@ -47,12 +63,9 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
     sql_connection_p->server = "mysql";
     sql_connection_p->username = estrdup(username);
 
-    if (hostname) {
-        if (socket && strcmp(hostname, "localhost") == 0) {
-            spprintf(&(sql_connection_p->host), 0, "%s", socket);
-        } else {
-            spprintf(&(sql_connection_p->host), 0, "%s:%ld", hostname, port);
-        }
+    if (hostname && strcmp(hostname, "localhost") != 0) {
+        sql_connection_p->host = estrdup(hostname);
+        sql_connection_p->port = port;
     }
 }
 
@@ -76,8 +89,8 @@ static void init_mysqli_real_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sq
     init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 1, 1);
 }
 
-//mysqli::__construct
-void pre_mysqli_mysqli_ex(INTERNAL_FUNCTION_PARAMETERS, char *server)
+//mysqli::mysqli
+void pre_mysqli_mysqli(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {
@@ -87,7 +100,7 @@ void pre_mysqli_mysqli_ex(INTERNAL_FUNCTION_PARAMETERS, char *server)
         }
     }
 }
-void post_mysqli_mysqli_ex(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void post_mysqli_mysqli(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(this_ptr) == IS_OBJECT)
     {
@@ -95,8 +108,9 @@ void post_mysqli_mysqli_ex(INTERNAL_FUNCTION_PARAMETERS, char *server)
     }
 }
 
+
 //mysqli::real_connect 
-void pre_mysqli_real_connect_ex(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void pre_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {
@@ -106,7 +120,7 @@ void pre_mysqli_real_connect_ex(INTERNAL_FUNCTION_PARAMETERS, char *server)
         }
     }
 }
-void post_mysqli_real_connect_ex(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void post_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(this_ptr) == IS_OBJECT)
     {
@@ -114,12 +128,13 @@ void post_mysqli_real_connect_ex(INTERNAL_FUNCTION_PARAMETERS, char *server)
     }
 }
 
+
 //mysqli::query
-void pre_mysqli_query_ex(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void pre_mysqli_query(INTERNAL_FUNCTION_PARAMETERS)
 {
-    check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, server, 1);
+    check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "mysql", 1);
 }
-void post_mysqli_query_ex(INTERNAL_FUNCTION_PARAMETERS, char *server) 
+void post_mysqli_query(INTERNAL_FUNCTION_PARAMETERS) 
 {
     if (openrasp_check_type_ignored(ZEND_STRL("sqlSlowQuery") TSRMLS_CC)) 
     {
@@ -150,14 +165,15 @@ void post_mysqli_query_ex(INTERNAL_FUNCTION_PARAMETERS, char *server)
         args[0] = this_ptr;
         num_rows = fetch_rows_via_user_function("mysqli_affected_rows", 1, args TSRMLS_CC);
     }
-    if (num_rows > openrasp_ini.slowquery_min_rows)
+    if (num_rows >= openrasp_ini.slowquery_min_rows)
     {
         slow_query_alarm(num_rows TSRMLS_CC);
     }
 }
 
+
 //mysqli_connect
-void pre_mysqli_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void pre_global_mysqli_connect(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {        
@@ -167,7 +183,7 @@ void pre_mysqli_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
         }
     }
 }
-void post_mysqli_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void post_global_mysqli_connect(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_OBJECT)
     {
@@ -175,8 +191,9 @@ void post_mysqli_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
     }
 }
 
+
 //mysqli_real_connect
-void pre_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void pre_global_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {        
@@ -186,20 +203,21 @@ void pre_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
         }
     }
 }
-void post_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void post_global_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_OBJECT)
+    if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value))
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_connection, 0);
     }
 }
 
+
 //mysqli_query
-void pre_mysqli_query(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void pre_global_mysqli_query(INTERNAL_FUNCTION_PARAMETERS)
 {    
-    check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, server, 2);
+    check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "mysql", 2);
 }
-void post_mysqli_query(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void post_global_mysqli_query(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_check_type_ignored(ZEND_STRL("sqlSlowQuery") TSRMLS_CC)) 
     {
@@ -229,17 +247,19 @@ void post_mysqli_query(INTERNAL_FUNCTION_PARAMETERS, char *server)
         num_rows = fetch_rows_via_user_function("mysqli_affected_rows", 1, args TSRMLS_CC);
     }
     efree(ppp_args);
-    if (num_rows > openrasp_ini.slowquery_min_rows)
+    if (num_rows >= openrasp_ini.slowquery_min_rows)
     {
         slow_query_alarm(num_rows TSRMLS_CC);
     }
 }
 
+
 //mysqli_real_query
-void pre_mysqli_real_query(INTERNAL_FUNCTION_PARAMETERS, char *server)
+void pre_global_mysqli_real_query(INTERNAL_FUNCTION_PARAMETERS)
 {    
-    check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, server, 2);
+    check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "mysql", 2);
 }
-void post_mysqli_real_query(INTERNAL_FUNCTION_PARAMETERS, char *server)
-{
-}
+void post_global_mysqli_real_query(INTERNAL_FUNCTION_PARAMETERS){}
+
+
+

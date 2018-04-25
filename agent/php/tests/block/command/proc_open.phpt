@@ -20,4 +20,5 @@ if (is_resource($process)) {
 }
 echo 'proc_open OK';
 ?>
---EXPECT--
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

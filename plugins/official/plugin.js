@@ -10,6 +10,10 @@
 // 
 // OpenRASP 最佳实践
 // https://rasp.baidu.com/#section-books
+// 
+// 如果你发现这个插件可以绕过，请联系我们，或者在 github 提交 ISSUE
+// https://rasp.baidu.com/doc/aboutus/support.html
+// 
 
 'use strict'
 var plugin  = new RASP('offical')
@@ -20,9 +24,17 @@ const clean = {
     confidence: 0
 }
 
+// OpenRASP 大部分算法都不依赖规则，我们主要使用调用堆栈、编码规范、用户输入匹配的思路来检测漏洞。
+// 
+// 目前，只有文件访问 - 算法#4 加了一个探针，作为最后一道防线
+// 当应用读取了这些文件，通常意味着服务器已经被入侵
+// 这些配置是通用的，一般不需要定制
+ 
 var forcefulBrowsing = {
     dotFiles: /\.(7z|tar|gz|bz2|xz|rar|zip|sql|db|sqlite)$/,
     nonUserDirectory: /^\/(proc|sys|root)/,
+
+    // webdav 文件探针 - 最常被下载的文件
     unwantedFilenames: [
         // user files
         '.DS_Store',
@@ -37,13 +49,21 @@ var forcefulBrowsing = {
         '.gitignore',
         'error_log', 'error.log', 'nohup.out',
     ],
+
+    // 目录探针 - webshell 查看频次最高的目录
     unwantedDirectory: [
         '/',
         '/home',
         '/var/log',
+        '/private/var/log',
         '/proc',
-        '/sys'
+        '/sys',
+        'C:\\',
+        'D:\\',
+        'E:\\'
     ],
+
+    // 文件探针 - webshell 查看频次最高的文件
     absolutePaths: [
         '/etc/shadow',
         '/etc/passwd',
@@ -51,7 +71,8 @@ var forcefulBrowsing = {
         '/etc/apache2/apache2.conf',
         '/root/.bash_history',
         '/root/.bash_profile',
-        'C:\\Windows\\system32\\inetsrv\\MetaBase.xml'
+        'c:\\windows\\system32\\inetsrv\\metabase.xml',
+        'c:\\windows\\system32\\drivers\\etc\\hosts'
     ]
 }
 
@@ -92,6 +113,56 @@ function ip2long(ipstr) {
     // return ip.split('.').reduce(function(ipInt, octet) { return (ipInt<<8) + parseInt(octet, 10)}, 0) >>> 0;
 }
 
+function validate_stack_php(stacks) {
+    var verdict = false
+
+    for (var i = 0; i < stacks.length; i ++) {
+        var stack = stacks[i]
+
+        // 来自 eval/assert/create_function/...
+        if (stack.indexOf('eval()\'d code') != -1 
+            || stack.indexOf('runtime-created function') != -1
+            || stack.indexOf('assert code@') != -1
+            || stack.indexOf('@call_user_func') != -1
+            || stack.indexOf('regexp code@') != -1) {
+            verdict = true
+            break
+        }
+    }
+
+    return verdict
+}
+
+function is_outside_webroot(appBasePath, realpath, path) {
+    var verdict = false
+
+    if (realpath.indexOf(appBasePath) == -1 && (path.indexOf('/../') !== -1 || path.indexOf('\\..\\') !== -1)) {
+        return {
+            action:     'block',
+            message:    '目录遍历攻击，跳出web目录范围 (' + appBasePath + ')',
+            confidence: 90
+        }
+    }
+
+    return verdict
+}
+
+function is_from_userinput(parameter, target) {
+    var verdict = false
+
+    Object.keys(parameter).some(function (key) {
+        var value = parameter[key]
+
+        // 只处理非数组、hash情况
+        if (value[0] == target) {
+            verdict = true
+            return true
+        }
+    })
+
+    return verdict
+}
+
 if (RASP.get_jsengine() !== 'v8') {
     // 在java语言下面，为了提高性能，SQLi/SSRF检测逻辑改为原生实现
     // 通过修改这个 algorithmConfig 来控制检测逻辑是否开启
@@ -100,6 +171,10 @@ if (RASP.get_jsengine() !== 'v8') {
         // SQL注入算法#1 - 匹配用户输入
         'sqli_userinput': {
             action: 'block'
+        },
+        // SQL注入算法#1 - 是否拦截数据库管理器，默认关闭，有需要可改为 block
+        'sqli_dbmanager': {
+            action: 'ignore'
         },
         // SQL注入算法#2 - 语句规范
         'sqli_policy': {
@@ -121,11 +196,13 @@ if (RASP.get_jsengine() !== 'v8') {
                 'is_srvrolemember',
                 // 报错注入
                 'updatexml', 'extractvalue',
-                // 盲注
-                'hex',
-                // 可能误报，暂不开启 - 批量验证中
-                // 'char', 'chr', 'mid', 'ord', 'ascii', 'bin'
+                // 盲注函数，如有误报可删掉一些函数
+                'hex', 'char', 'chr', 'mid', 'ord', 'ascii', 'bin'                
             ]
+        },
+        // SSRF - 来自用户输入，且为内网地址就拦截
+        'ssrf_userinput': {
+            action: 'block'
         },
         // SSRF - 是否允许访问 aws metadata
         'ssrf_aws': {
@@ -162,31 +239,49 @@ if (RASP.get_jsengine() !== 'v8') {
         // 2. 识别数据库管理器   
         if (1) {
             Object.keys(parameters).some(function (name) {
-                var value = parameters[name][0]
+                // 覆盖两种情况，后者仅PHP支持
+                // 
+                // ?id=XXXX
+                // ?filter[category_id]=XXXX
+                var value_list
 
-                // 请求参数长度超过15才考虑，任何跨表查询都至少需要20个字符，所以可以写的更大点
-                // SELECT * FROM admin
-                // and updatexml(....)
-                if (value.length <= 15) {
-                    return
+                if (typeof parameters[name][0] == 'string') {
+                    value_list = parameters[name]
+                } else {
+                    value_list = Object.values(parameters[name][0])
                 }
 
-                // 判断是否为数据库管理器
-                if (value.length == params.query.length && value == params.query) {
-                    reason = '算法2: WebShell - 数据库管理器'
-                    return true
-                }
+                for (var i = 0; i < value_list.length; i ++) {
+                    var value = value_list[i]
 
-                // 简单识别用户输入
-                if (params.query.indexOf(value) == -1) {
-                    return
-                }
+                    // 请求参数长度超过15才考虑，任何跨表查询都至少需要20个字符，其实可以写的更大点
+                    // SELECT * FROM admin
+                    // and updatexml(....)
+                    if (value.length <= 15) {
+                        continue
+                    }
+                   
+                    if (value.length == params.query.length && value == params.query) {
+                        // 是否拦截数据库管理器，有需要请改为 1
+                        if (0) {
+                            reason = '算法2: WebShell - 拦截数据库管理器 - 攻击参数: ' + name
+                            return true
+                        } else {
+                            continue
+                        }                        
+                    }
 
-                // 去掉用户输入再次匹配
-                var tokens2 = RASP.sql_tokenize(params.query.replaceAll(value, ''), params.server)
-                if (tokens.length - tokens2.length > 2) {
-                    reason = '算法1: 数据库查询逻辑发生改变'
-                    return true
+                    // 简单识别用户输入
+                    if (params.query.indexOf(value) == -1) {
+                        continue
+                    }
+
+                    // 去掉用户输入再次匹配
+                    var tokens2 = RASP.sql_tokenize(params.query.replaceAll(value, ''), params.server)
+                    if (tokens.length - tokens2.length > 2) {
+                        reason = '算法1: 数据库查询逻辑发生改变 - 攻击参数: ' + name
+                        return true
+                    }
                 }
             })
             if (reason !== false) {
@@ -209,6 +304,12 @@ if (RASP.get_jsengine() !== 'v8') {
                 'updatexml':        true,
                 'extractvalue':     true,
                 'hex':              true,
+                'char':             true,
+                'chr':              true, 
+                'mid':              true,
+                'ord':              true,
+                'ascii':            true,                
+                'bin':              true
             }
             var tokens_lc = tokens.map(v => v.toLowerCase())
 
@@ -261,8 +362,7 @@ if (RASP.get_jsengine() !== 'v8') {
                     var num2 = parseInt(op2)
 
                     if (! isNaN(num1) && ! isNaN(num2)) {
-                        // 允许 1=1, 2=0 这样的常量对比以避免误报，只要有一个小于10就先忽略掉
-                        // 来自 wooyun-2015-0131345 的截图
+                        // 允许 1=1, 2=0, 201801010=0 这样的常量对比以避免误报，只要有一个小于10就先忽略掉
                         // 
                         // SQLmap 是随机4位数字，不受影响
                         if (tokens_lc[i][0] === '=' && (num1 < 10 || num2 < 10))
@@ -291,7 +391,7 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
-        // 算法3: 简单正则匹配（即将移除）
+        // 算法3: 简单正则匹配 DEMO
         if (0) {
             var sqlRegex = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
 
@@ -310,20 +410,34 @@ if (RASP.get_jsengine() !== 'v8') {
 
     plugin.register('ssrf', function (params, context) {
         var hostname = params.hostname
+        var url      = params.url
+        var ip       = params.ip
         var reason   = false
 
+        // 算法1 - ssrf_userinput
+        // 当参数来自用户输入，且为内网IP，判定为SSRF攻击
+        if (ip.length && is_from_userinput(context.parameter, url)) {
+            if (/^(192|172|10)\./.test(ip[0])) {
+                reason = '访问内网地址: ' + ip[0]
+            }
+        }
+
+        // 算法2 - ssrf_common
         // 检查常见探测域名
-        if (hostname == 'requestb.in' 
+        else if (hostname == 'requestb.in' 
             || hostname.endsWith('.vcap.me') 
             || hostname.endsWith('.xip.name') || hostname.endsWith('.xip.io') || hostname.endsWith('.nip.io') 
             || hostname.endsWith('.burpcollaborator.net')) 
         {
             reason = '访问已知的内网探测域名'    
         } 
+        // 算法3 - ssrf_aws
         // 检测AWS私有地址，如有需求可注释掉
         else if (1 && hostname == '169.254.169.254') {        
             reason = '尝试读取 AWS metadata'
         }
+        // 算法4 - ssrf_obfuscate
+        // 
         // 检查混淆: 
         // http://2130706433
         // 
@@ -360,22 +474,36 @@ plugin.register('directory', function (params, context) {
     var path        = params.path
     var realpath    = params.realpath
     var appBasePath = context.appBasePath
+    var server      = context.server
 
+    // 算法1 - 读取敏感目录
     for (var i = 0; i < forcefulBrowsing.unwantedDirectory.length; i ++) {
         if (realpath == forcefulBrowsing.unwantedDirectory[i]) {
             return {
                 action:     'block',
-                message:    '疑似WebShell文件管理器 - 读取敏感目录',
+                message:    'WebShell文件管理器 - 读取敏感目录',
                 confidence: 100
             }
         }
     }
 
+    // 算法2 - 使用至少2个/../，且跳出web目录
     if (canonicalPath(path).indexOf('/../../') != -1 && realpath.indexOf(appBasePath) == -1) {
         return {
-            action:     'log',
+            action:     'block',
             message:    '尝试列出Web目录以外的目录',
             confidence: 90
+        }
+    }
+
+    // java 暂时没有增加堆栈这个参数，v0.31 之后会移除这个 IF 判断
+    if (server.language == 'php') {
+        if (validate_stack_php(params.stack)) {
+            return {
+                action:     'block',
+                message:    '发现 Webshell，或者其他eval类型的后门',
+                confidence: 90
+            }
         }
     }
 
@@ -383,41 +511,50 @@ plugin.register('directory', function (params, context) {
 })
 
 plugin.register('readFile', function (params, context) {
+    var server = context.server
 
-    // 算法1: 检查是否为成功的目录扫描
-    var filename_1 = basename(context.url)
-    var filename_2 = basename(params.realpath)
+    // 算法1: 和URL比较，检查是否为成功的目录扫描。仅适用于 java webdav 方式
+    // 
+    // 注意: 此方法受到 readfile.extension.regex 和资源文件大小的限制
+    // https://rasp.baidu.com/doc/setup/others.html#java-common
+    if (1 && server.language == 'java') {
+        var filename_1 = basename(context.url)
+        var filename_2 = basename(params.realpath)
 
-    if (filename_1 == filename_2) {
-        var matched = false
+        if (filename_1 == filename_2) {
+            var matched = false
 
-        // 尝试下载压缩包、SQL文件等等
-        if (forcefulBrowsing.dotFiles.test(filename_1)) {
-            matched = true
-        } else {
-            // 尝试访问敏感文件
-            for (var i = 0; i < forcefulBrowsing.unwantedFilenames; i ++) {
-                if (forcefulBrowsing.unwantedFilenames[i] == filename_1) {
-                    matched = true
+            // 尝试下载压缩包、SQL文件等等
+            if (forcefulBrowsing.dotFiles.test(filename_1)) {
+                matched = true
+            } else {
+                // 尝试访问敏感文件
+                for (var i = 0; i < forcefulBrowsing.unwantedFilenames; i ++) {
+                    if (forcefulBrowsing.unwantedFilenames[i] == filename_1) {
+                        matched = true
+                    }
                 }
             }
-        }
 
-        if (matched) {
-            return {
-                action:     'log',
-                message:    '尝试下载敏感文件 (' + context.method.toUpperCase() + ' 方式): ' + params.realpath,
+            if (matched) {
+                return {
+                    action:     'log',
+                    message:    '尝试下载敏感文件 (' + context.method.toUpperCase() + ' 方式): ' + params.realpath,
 
-                // 如果是HEAD方式下载敏感文件，100% 扫描器攻击
-                confidence: context.method == 'head' ? 100 : 90
+                    // 如果是HEAD方式下载敏感文件，100% 扫描器攻击
+                    confidence: context.method == 'head' ? 100 : 90
+                }
             }
         }
     }
 
-    // 算法2: 如果使用绝对路径访问敏感文件，判定为 webshell
-    if (params.realpath == params.path) {
+    // 算法2: 文件、目录探针
+    // 如果应用读取了列表里的文件，比如 /root/.bash_history，这通常意味着后门操作
+    if (1) {
+        var realpath_lc = params.realpath.toLowerCase()
+
         for (var j = 0; j < forcefulBrowsing.absolutePaths.length; j ++) {
-            if (forcefulBrowsing.absolutePaths[j] == params.realpath) {
+            if (forcefulBrowsing.absolutePaths[j] == realpath_lc) {
                 return {
                     action:     'block',
                     message:    'WebShell/文件管理器 - 尝试读取系统文件: ' + params.realpath,
@@ -428,14 +565,29 @@ plugin.register('readFile', function (params, context) {
     }
 
     // 算法3: 检查文件遍历，看是否超出web目录范围
-    var path        = canonicalPath(params.path)
-    var appBasePath = context.appBasePath
+    // e.g 使用 ../../../etc/passwd 跨目录读取文件
+    if (1) {
+        var path        = params.path
+        var appBasePath = context.appBasePath
 
-    if (params.realpath.indexOf(appBasePath) == -1 && (path.indexOf('/../') !== -1 || path.indexOf('\\..\\') !== -1)) {
-        return {
-            action:     'block',
-            message:    '目录遍历攻击，跳出web目录范围 (' + appBasePath + ')',
-            confidence: 90
+        if (is_outside_webroot(appBasePath, params.realpath, path)) {
+            return {
+                action:     'block',
+                message:    '目录遍历攻击，跳出web目录范围 (' + appBasePath + ')',
+                confidence: 90
+            }
+        }
+    }
+
+    // 算法4: 文件管理器，要读取的文件来自用户输入
+    // ?file=/etc/./hosts
+    if (1) {
+        if (is_from_userinput(context.parameter, params.path)) {
+            return {
+                action:     'block',
+                message:    'WebShell/文件管理器 - 读取文件: ' + params.realpath,
+                confidence: 90
+            }        
         }
     }
 
@@ -457,15 +609,31 @@ plugin.register('webdav', function (params, context) {
 })
 
 plugin.register('include', function (params, context) {
-    var items = params.url.split('://')
+    var url = params.url    
 
-    // 必须有协议的情况下才能利用漏洞
-    // JSTL import 类型的插件回调，已经在Java层面做了过滤
-    if (items.length != 2) {
+    // 如果没有协议
+    // ?file=../../../../../var/log/httpd/error.log
+    if (url.indexOf('://') == -1) {
+        var path        = canonicalPath(url)
+        var realpath    = params.realpath
+        var appBasePath = context.appBasePath
+
+        if (is_outside_webroot(appBasePath, realpath, path)) {
+            return {
+                action:     'block',
+                message:    '任意文件包含攻击，包含web目录范围之外的文件 (' + appBasePath + ')',
+                confidence: 100
+            }
+        }
+
         return clean
     }
 
-    // http 方式 SSRF
+    // 如果有协议
+    // include ('http://xxxxx')
+    var items = url.split('://')
+
+    // http 方式 SSRF/RFI
     if (items[0].toLowerCase() == 'http') {
         return {
             action:     'block',
@@ -510,6 +678,8 @@ plugin.register('writeFile', function (params, context) {
         }
     }
 
+    // 关于这个算法，请参考这个插件定制文档
+    // https://rasp.baidu.com/doc/dev/official.html#case-3
     if (scriptFileRegex.test(params.realpath)) {
         return {
             action:     'log',
@@ -541,33 +711,57 @@ plugin.register('fileUpload', function (params, context) {
     return clean
 })
 
-
 plugin.register('command', function (params, context) {
+    var server  = context.server
+    var message = undefined
 
     // 算法1: 根据堆栈，检查是否为反序列化攻击
     // 
     // 如果你在服务器有执行命令的需求，我们建议你修改 算法2
-    var message = undefined
-    var known   = {
-        'java.lang.reflect.Method.invoke': '尝试通过反射执行命令',
-        'ognl.OgnlRuntime.invokeMethod': '尝试通过 OGNL 代码执行命令',
-        'com.thoughtworks.xstream.XStream.unmarshal': '尝试通过 xstream 反序列化执行命令',
-        'org.apache.commons.collections4.functors.InvokerTransformer.transform': '尝试通过 transformer 反序列化执行命令'
-    }    
-    
-    for (var i = 2; i < params.stack.length; i ++) {
-        var method = params.stack[i]
-
-        // 仅当命令本身来自反射调用才拦截
-        // 如果某个类是反射调用，这个类再主动执行命令，则忽略
-        if (! method.startsWith('java.') && ! method.startsWith('sun.') && ! message) {
-            message = undefined
-            break
+   
+    // Java 检测逻辑
+    if (server.language == 'java') {
+        var userCode = false
+        var known    = {
+            'java.lang.reflect.Method.invoke':                                              '尝试通过反射执行命令',
+            'ognl.OgnlRuntime.invokeMethod':                                                '尝试通过 OGNL 代码执行命令',
+            'com.thoughtworks.xstream.XStream.unmarshal':                                   '尝试通过 xstream 反序列化执行命令',
+            'org.apache.commons.collections4.functors.InvokerTransformer.transform':        '尝试通过 transformer 反序列化执行命令',
+            'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':                   '尝试通过 JNDI 注入方式执行命令',
+            'com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze':     '尝试通过 fastjson 反序列化方式执行命令',
+            'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': '尝试通过 Spring SpEL 表达式执行命令'
         }
+        
+        for (var i = 2; i < params.stack.length; i ++) {
+            var method = params.stack[i]
 
-        if (known[method]) {
-            message = known[method]
-            // break
+            if (method.startsWith('ysoserial.Pwner')) {
+                message = 'YsoSerial 漏洞利用工具 - 反序列化攻击'
+                break
+            }
+
+            // 仅当命令本身来自反射调用才拦截
+            // 如果某个类是反射调用，这个类再主动执行命令，则忽略
+            if (! method.startsWith('java.') && ! method.startsWith('sun.') && ! message) {
+                userCode = true
+            }
+
+            if (known[method]) {
+                // 同上，如果反射调用和命令执行之间，包含用户代码，则不认为是反射调用
+                if (userCode && method == 'java.lang.reflect.Method.invoke') {
+                    continue
+                }
+
+                message = known[method]
+                // break
+            }
+        }
+    }
+
+    // PHP 检测逻辑
+    else if (server.language == 'php') {
+        if (validate_stack_php(params.stack)) {
+            message = '发现 Webshell，或者基于 eval/assert/create_function/preg_replace/.. 等类型的代码执行漏洞'
         }
     }
 

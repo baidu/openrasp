@@ -52,7 +52,7 @@ public class Config extends FileScanListener {
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
         SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
         BLOCK_STATUS_CODE("block.status_code", "302"),
-        DEBUG("debug_level", "0"),
+        DEBUG("debug.level", "0"),
         ALGORITHM_CONFIG("algorithm.config", "{}", false);
 
 

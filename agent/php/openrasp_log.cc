@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "openrasp_log.h"
 #include "openrasp_ini.h"
 #include "openrasp_inject.h"
@@ -48,8 +64,9 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 #define RASP_STREAM_WRITE_RETRY_NUMBER      1
 
 #define INIT_REQUEST_INFO_FROM_TRACK_VARS_SERVER(original_name, new_name, p_zval) do {              \
-    zval **new_name##_item, *new_name##_default;                                                    \
-    if (zend_hash_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]),                             \
+    zval **new_name##_item;                                                                         \
+    if (Z_TYPE_P(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY ||                                \
+        zend_hash_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]),                             \
         ZEND_STRS(ZEND_TOSTR(original_name)),                                                       \
         (void **)&new_name##_item) == FAILURE || Z_TYPE_PP(new_name##_item) != IS_STRING)           \
         {                                                                                           \
@@ -151,10 +168,7 @@ static void clear_openrasp_syslog_streams(TSRMLS_D)
 
 static void init_alarm_request_info(TSRMLS_D)
 {
-    if (OPENRASP_LOG_G(alarm_request_info))
-    {        
-        //should never happen
-    }
+    assert(OPENRASP_LOG_G(alarm_request_info) == nullptr);
     MAKE_STD_ZVAL(OPENRASP_LOG_G(alarm_request_info));
     array_init(OPENRASP_LOG_G(alarm_request_info));
 
@@ -179,7 +193,8 @@ static void init_alarm_request_info(TSRMLS_D)
     zval **info_item;
     zval *path = NULL;        
     static const char REQUEST_URI[] = "REQUEST_URI";                                                                                                                                                                       
-    if (zend_hash_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_URI),     
+    if (Z_TYPE_P(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY 
+        && zend_hash_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_URI),     
         (void **)&info_item) == SUCCESS && Z_TYPE_PP(info_item) == IS_STRING) 
         {
             char *haystack = Z_STRVAL_PP(info_item);                                            
@@ -204,7 +219,7 @@ static void init_policy_request_info(TSRMLS_D)
     add_assoc_string(OPENRASP_LOG_G(policy_request_info), "server_hostname", host_name, 1);
     add_assoc_string(OPENRASP_LOG_G(policy_request_info), "server_type", "PHP", 1);
     add_assoc_string(OPENRASP_LOG_G(policy_request_info), "server_version", OPENRASP_PHP_VERSION, 1);
-    add_assoc_zval(OPENRASP_LOG_G(policy_request_info), "nic", _get_ifaddr_zval());
+    add_assoc_zval(OPENRASP_LOG_G(policy_request_info), "server_nic", _get_ifaddr_zval());
 }
 
 static void clear_alarm_request_info(TSRMLS_D)
@@ -274,18 +289,29 @@ static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log
     case SYSLOG_APPENDER:
         if (!OPENRASP_LOG_G(syslog_stream))
         {
-            res_len = spprintf(&res, 0, "%s", openrasp_ini.syslog_server_address);
-            stream = php_stream_xport_create(res, res_len, REPORT_ERRORS, STREAM_XPORT_CLIENT | STREAM_XPORT_CONNECT, 0, 0, NULL, NULL, NULL);        
-            if (stream)
-            {                       
-                OPENRASP_LOG_G(syslog_stream) = stream;
-                return &OPENRASP_LOG_G(syslog_stream);
-            }
-            else
+            long now = (long)time(NULL);
+            if ((now - OPENRASP_LOG_G(last_retry_time)) > openrasp_ini.syslog_connection_retry_interval)
             {
-                openrasp_error(E_WARNING, LOG_ERROR, _("Fail to connect syslog server %s."), openrasp_ini.syslog_server_address);                
+                struct timeval tv;
+                tv.tv_sec = 0;
+                tv.tv_usec = openrasp_ini.syslog_connection_timeout * 1000;
+                res_len = spprintf(&res, 0, "%s", openrasp_ini.syslog_server_address);
+                stream = php_stream_xport_create(res, res_len, REPORT_ERRORS, STREAM_XPORT_CLIENT | STREAM_XPORT_CONNECT, 0, &tv, NULL, NULL, NULL);        
+                if (stream)
+                {
+                    tv.tv_sec = 0;
+                    tv.tv_usec = openrasp_ini.syslog_read_timeout * 1000;
+                    php_stream_set_option(stream, PHP_STREAM_OPTION_READ_TIMEOUT, 0, &tv);
+                    OPENRASP_LOG_G(syslog_stream) = stream;
+                    return &OPENRASP_LOG_G(syslog_stream);
+                }
+                else
+                {
+                    openrasp_error(E_WARNING, LOG_ERROR, _("Fail to connect syslog server %s."), openrasp_ini.syslog_server_address);                
+                }
+                efree(res);
+                OPENRASP_LOG_G(last_retry_time) = now;
             }
-            efree(res);
         }
         else
         {
@@ -304,7 +330,7 @@ static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log
             }
             else if (VCWD_ACCESS(file_path, W_OK) != 0)
             {
-                openrasp_error(E_WARNING, LOG_ERROR, _("No write permission of file %s."), file_path);
+                openrasp_error(E_WARNING, LOG_ERROR, _("Unable to open '%s' for writing"), file_path);
                 break;
             }        
             stream = php_stream_open_wrapper(file_path, "a+", REPORT_ERRORS | IGNORE_URL_WIN, NULL);            
@@ -334,23 +360,14 @@ static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log
 static int openrasp_log_stream_write(rasp_logger_entry *logger, log_appender appender_int, char *message, int message_len TSRMLS_DC)
 {
     php_stream **pp_stream;  
-    int remaining_retry_num = RASP_STREAM_WRITE_RETRY_NUMBER;
-    do {
+    {
         pp_stream = openrasp_log_stream_zval_find(logger, appender_int TSRMLS_CC);
         if (!pp_stream)
         {
             return FAILURE;
         }
-        if (php_stream_write(*pp_stream, message, message_len) != message_len)
-        {
-            php_stream_close(*pp_stream);
-            *pp_stream = NULL;
-        }
-        else
-        {
-        --remaining_retry_num;
-        }
-    } while (remaining_retry_num > 0);
+        php_stream_write(*pp_stream, message, message_len);
+    }
     return SUCCESS;
 }
 
@@ -362,7 +379,7 @@ static int openrasp_log_by_file(rasp_logger_entry *logger, char *message, int me
     if (if_need_update_formatted_file_suffix(logger, now, message_len TSRMLS_CC))
     {
         efree(OPENRASP_LOG_G(formatted_date_suffix));
-        OPENRASP_LOG_G(formatted_date_suffix) = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now, 0 TSRMLS_CC);
+        OPENRASP_LOG_G(formatted_date_suffix) = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now, 1 TSRMLS_CC);
         if (logger->stream_log)
         {
             php_stream_close(logger->stream_log);
@@ -387,7 +404,7 @@ static int openrasp_log_by_syslog(rasp_logger_entry *logger, severity_level leve
     int   priority        = 0;
 
     long  now             = (long)time(NULL);
-    time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), now, 0 TSRMLS_CC);
+    time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), now, 1 TSRMLS_CC);
     priority = openrasp_ini.syslog_facility * 8 + level_int;
     syslog_info_len = spprintf(&syslog_info, 0, "<%d>%s %s: %s", priority, time_RFC3339, host_name, message);
     efree(time_RFC3339);
@@ -498,7 +515,7 @@ static int base_log(rasp_logger_entry *logger, severity_level level_int, char *m
         if (logger->appender & FILE_APPENDER)
         {
             char *file_path = NULL;
-            char *tmp_formatted_date_suffix = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), (long)time(NULL), 0 TSRMLS_CC);
+            char *tmp_formatted_date_suffix = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), (long)time(NULL), 1 TSRMLS_CC);
             spprintf(&file_path, 0, "%s%clogs%c%s%c%s.log.%s", openrasp_ini.root_dir, DEFAULT_SLASH, DEFAULT_SLASH, 
                 logger->name, DEFAULT_SLASH, logger->name, tmp_formatted_date_suffix);
 #ifndef _WIN32
@@ -543,8 +560,8 @@ int rasp_info(const char *message, int message_len TSRMLS_DC) {
         INIT_LOGGER_IF_NEED(rasp);
     }
     char *rasp_info                 = NULL;    
-    char *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 0 TSRMLS_CC);
-    int   rasp_info_len = spprintf(&rasp_info, 0, "%s   %s\n", time_RFC3339, message);
+    char *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
+    int   rasp_info_len = spprintf(&rasp_info, 0, "%s %s\n", time_RFC3339, message);
     int  rasp_result = base_info(&OPENRASP_LOG_G(rasp_logger), rasp_info, rasp_info_len TSRMLS_CC);
     efree(time_RFC3339);
     efree(rasp_info);
@@ -559,8 +576,8 @@ int plugin_info(const char *message, int message_len TSRMLS_DC) {
         INIT_LOGGER_IF_NEED(plugin);
     }
     char *plugin_info                 = NULL;    
-    char *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 0 TSRMLS_CC);
-    int  plugin_info_len = spprintf(&plugin_info, 0, "%s   %s\n", time_RFC3339, message);
+    char *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
+    int  plugin_info_len = spprintf(&plugin_info, 0, "%s %s\n", time_RFC3339, message);
     int  plugin_result = base_info(&OPENRASP_LOG_G(plugin_logger), plugin_info, plugin_info_len TSRMLS_CC);
     efree(time_RFC3339);
     efree(plugin_info);
@@ -573,7 +590,7 @@ int alarm_info(zval *params_result TSRMLS_DC) {
     assert(Z_TYPE_P(params_result) == IS_ARRAY);
     assert(OPENRASP_LOG_G(in_request_process));
     int alarm_result = FAILURE;
-    char *event_time = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 0 TSRMLS_CC);
+    char *event_time = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
     add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "event_time", event_time, 1);
 
     zval *trace = NULL;
@@ -616,7 +633,7 @@ int policy_info(zval *params_result TSRMLS_DC) {
     }
     
     int policy_result = FAILURE;
-    char *event_time = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 0 TSRMLS_CC);
+    char *event_time = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
     add_assoc_string(OPENRASP_LOG_G(policy_request_info), "event_time", event_time, 1);
     zval *trace = NULL;
     MAKE_STD_ZVAL(trace);
@@ -662,11 +679,12 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
 	openrasp_log_globals->formatted_date_suffix 			= NULL;	
 	openrasp_log_globals->syslog_stream       				= NULL;
     openrasp_log_globals->in_request_process                = 0;
+    openrasp_log_globals->last_retry_time                   = 0;
 
 	memset(&openrasp_log_globals->rasp_logger, 0, sizeof(rasp_logger_entry));
-	openrasp_log_globals->rasp_logger.name     			= const_cast<char *>(RASP_LOGGER);
+	openrasp_log_globals->rasp_logger.name     			    = const_cast<char *>(RASP_LOGGER);
 	openrasp_log_globals->rasp_logger.level  	   			= LEVEL_INFO;
-	openrasp_log_globals->rasp_logger.appender     		= FILE_APPENDER;
+	openrasp_log_globals->rasp_logger.appender     		    = FILE_APPENDER;
 
 	memset(&openrasp_log_globals->alarm_logger, 0, sizeof(rasp_logger_entry));
 	openrasp_log_globals->alarm_logger.name     			= ALARM_LOGGER;
@@ -677,19 +695,20 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
         if (resource && resource->scheme && (!strcmp(resource->scheme, "tcp") || !strcmp(resource->scheme, "udp"))) {
             alarm_appender = static_cast<log_appender>(alarm_appender | SYSLOG_APPENDER);
         } else {
-            openrasp_error(E_WARNING, LOG_ERROR, _("Invalid \"openrasp.syslog_server_address\" (%s) and it'll be ignored."), openrasp_ini.syslog_server_address);
+            openrasp_error(E_WARNING, LOG_ERROR, 
+                _("Invalid syslog server address: '%s', expecting 'tcp://' or 'udp://' to be present."), openrasp_ini.syslog_server_address);
         }
     }
     openrasp_log_globals->alarm_logger.appender     		= alarm_appender;
 
 	memset(&openrasp_log_globals->plugin_logger, 0, sizeof(rasp_logger_entry));
 	openrasp_log_globals->plugin_logger.name     			= PLUGIN_LOGGER;
-	openrasp_log_globals->plugin_logger.level  	   		= LEVEL_INFO;
+	openrasp_log_globals->plugin_logger.level  	   		    = LEVEL_INFO;
 	openrasp_log_globals->plugin_logger.appender     		= FILE_APPENDER;
 	
 	memset(&openrasp_log_globals->policy_logger, 0, sizeof(rasp_logger_entry));
 	openrasp_log_globals->policy_logger.name     			= POLICY_LOGGER;
-	openrasp_log_globals->policy_logger.level  	   		= LEVEL_INFO;
+	openrasp_log_globals->policy_logger.level  	   		    = LEVEL_INFO;
 	openrasp_log_globals->policy_logger.appender     		= FILE_APPENDER;
 }
 
@@ -727,7 +746,7 @@ PHP_MINIT_FUNCTION(openrasp_log)
     struct ifaddrs *ifaddr, *ifa;
     if (getifaddrs(&ifaddr) == -1) 
     {
-        openrasp_error(E_WARNING, LOG_ERROR, _("Fail to getifaddrs - %s."), strerror(errno));
+        openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs error: %s"), strerror(errno));
     }
     else
     {
@@ -749,7 +768,7 @@ PHP_MINIT_FUNCTION(openrasp_log)
                 s = getnameinfo(ifa->ifa_addr,sizeof(struct sockaddr_in),
                             host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
                 if (s != 0) {
-                    openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs: getnameinfo failed - %s."), gai_strerror(s));
+                    openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs error: getnameinfo failed - %s."), gai_strerror(s));
                 }
                 _if_addr_map.insert(std::pair<std::string, std::string>(ifa->ifa_name, host));
             }
@@ -759,7 +778,7 @@ PHP_MINIT_FUNCTION(openrasp_log)
 #endif
     if (gethostname(host_name, sizeof(host_name) - 1)) { 
         sprintf( host_name, "UNKNOWN_HOST" );
-        openrasp_error(E_WARNING, LOG_ERROR, _("Fail to gethostname - %s."), strerror(errno));
+        openrasp_error(E_WARNING, LOG_ERROR, _("gethostname error: %s"), strerror(errno));
     }
     return SUCCESS;
 }
@@ -774,7 +793,7 @@ PHP_RINIT_FUNCTION(openrasp_log)
 {
     OPENRASP_LOG_G(in_request_process) = 1;
 	long now = (long)time(NULL);
-    OPENRASP_LOG_G(formatted_date_suffix) = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now, 0 TSRMLS_CC);
+    OPENRASP_LOG_G(formatted_date_suffix) = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now, 1 TSRMLS_CC);
     init_openrasp_loggers(TSRMLS_C);
     init_alarm_request_info(TSRMLS_C);
     init_policy_request_info(TSRMLS_C);

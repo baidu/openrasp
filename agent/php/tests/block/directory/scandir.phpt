@@ -11,4 +11,5 @@ $dir = "/home";
 $files1 = scandir($dir);
 echo "scandir OK" . "\n";
 ?>
---EXPECT--
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "openrasp_v8.h"
 #include <iostream>
 using namespace openrasp;
@@ -153,4 +169,51 @@ v8::Local<v8::Value> openrasp::zval_to_v8val(zval *val, v8::Isolate *isolate TSR
         break;
     }
     return rst;
+}
+
+v8::MaybeLocal<v8::Script> openrasp::compile_script(std::string _source, std::string _filename, int _line_offset)
+{
+    v8::Isolate *isolate = v8::Isolate::GetCurrent();
+    v8::Isolate::Scope isolate_scope(isolate);
+    v8::EscapableHandleScope handle_scope(isolate);
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    v8::Context::Scope context_scope(context);
+    v8::Local<v8::String> filename;
+    if (!V8STRING_EX(_filename.c_str(), v8::NewStringType::kNormal, _filename.length()).ToLocal(&filename))
+    {
+        return v8::MaybeLocal<v8::Script>();
+    }
+    v8::Local<v8::String> source;
+    if (!V8STRING_EX(_source.c_str(), v8::NewStringType::kNormal, _source.length()).ToLocal(&source))
+    {
+        return v8::MaybeLocal<v8::Script>();
+    }
+    v8::Local<v8::Integer> line_offset = v8::Integer::New(isolate, _line_offset);
+    v8::ScriptOrigin origin(filename, line_offset);
+    v8::MaybeLocal<v8::Script> script = v8::Script::Compile(context, source, &origin);
+    return script;
+}
+
+v8::MaybeLocal<v8::Value> openrasp::exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
+                                                 std::string _source, std::string _filename, int _line_offset)
+{
+    v8::MaybeLocal<v8::Value> result;
+    v8::Local<v8::String> filename;
+    if (!V8STRING_EX(_filename.c_str(), v8::NewStringType::kNormal, _filename.length()).ToLocal(&filename))
+    {
+        return result;
+    }
+    v8::Local<v8::String> source;
+    if (!V8STRING_EX(_source.c_str(), v8::NewStringType::kNormal, _source.length()).ToLocal(&source))
+    {
+        return result;
+    }
+    v8::Local<v8::Integer> line_offset = v8::Integer::New(isolate, _line_offset);
+    v8::ScriptOrigin origin(filename, line_offset);
+    v8::Local<v8::Script> script;
+    if (!v8::Script::Compile(context, source, &origin).ToLocal(&script))
+    {
+        return result;
+    }
+    return script->Run(context);
 }

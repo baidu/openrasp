@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "openrasp.h"
 #include "openrasp_ini.h"
 
@@ -37,7 +53,13 @@ PHP_INI_ENTRY1("openrasp.log_maxburst", "1000", PHP_INI_SYSTEM, OnUpdateOpenrasp
 PHP_INI_ENTRY1("openrasp.syslog_server_address", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.syslog_server_address)
 PHP_INI_ENTRY1("openrasp.syslog_facility", "1", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_facility)
 PHP_INI_ENTRY1("openrasp.syslog_alarm_enable", "0", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.syslog_alarm_enable)
+PHP_INI_ENTRY1("openrasp.syslog_connection_timeout", "50", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_connection_timeout)
+PHP_INI_ENTRY1("openrasp.syslog_read_timeout", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_read_timeout)
+PHP_INI_ENTRY1("openrasp.syslog_connection_retry_interval", "300", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_connection_retry_interval)
 PHP_INI_ENTRY1("openrasp.timeout_ms", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.timeout_ms)
+PHP_INI_ENTRY1("openrasp.block_status_code", "302", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.block_status_code)
+PHP_INI_ENTRY1("openrasp.plugin_maxstack", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.plugin_maxstack)
+PHP_INI_ENTRY1("openrasp.log_maxstack", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_maxstack)
 PHP_INI_END()
 
 PHP_GINIT_FUNCTION(openrasp)
@@ -58,13 +80,9 @@ PHP_MINIT_FUNCTION(openrasp)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp, PHP_GINIT(openrasp), PHP_GSHUTDOWN(openrasp));
     REGISTER_INI_ENTRIES();
-    if (!openrasp_ini.root_dir)
-    {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("\"openrasp.root_dir\" should be configured in php.ini, continuing without security protection"));
-        return SUCCESS;
-    }
     if (!make_openrasp_root_dir(TSRMLS_C))
     {
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir should be configured correctly in php.ini (not empty, not root path, not relative path and writable), continue without security protection"));
         return SUCCESS;
     }
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
@@ -89,10 +107,11 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
     if (is_initialized)
     {
         int result;
+        result = PHP_MSHUTDOWN(openrasp_fswatch)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
+        result = PHP_MSHUTDOWN(openrasp_inject)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_hook)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_v8)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_log)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
-        result = PHP_MSHUTDOWN(openrasp_fswatch)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
     }
     UNREGISTER_INI_ENTRIES();
     ZEND_SHUTDOWN_MODULE_GLOBALS(openrasp, PHP_GSHUTDOWN(openrasp));
@@ -171,10 +190,23 @@ ZEND_GET_MODULE(openrasp)
 
 static bool make_openrasp_root_dir(TSRMLS_D)
 {
+    char *path = openrasp_ini.root_dir;
+    if (!path || !IS_ABSOLUTE_PATH(path, strlen(path)))
+    {
+        return false;
+    }
+    path = expand_filepath(path, nullptr TSRMLS_CC);
+    if (!path || strnlen(path, 2) == 1)
+    {
+        efree(path);
+        return false;
+    }
+    std::string root_dir(path);
+    efree(path);
     std::vector<std::string> sub_dir_list{"assets", "conf", "logs", "plugins", "locale"};
     for (auto dir : sub_dir_list)
     {
-        std::string path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + dir);
+        std::string path(root_dir + DEFAULT_SLASH + dir);
         if (!recursive_mkdir(path.c_str(), path.length(), 0777 TSRMLS_CC))
         {
             return false;
@@ -183,17 +215,19 @@ static bool make_openrasp_root_dir(TSRMLS_D)
 #ifdef HAVE_GETTEXT
     if (nullptr != setlocale(LC_ALL, openrasp_ini.locale ? openrasp_ini.locale : ""))
     {
-        std::string locale_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + "locale");
-        if (!bindtextdomain(GETTEXT_PACKAGE, locale_path.c_str())) {
+        std::string locale_path(root_dir + DEFAULT_SLASH + "locale" + DEFAULT_SLASH);
+        if (!bindtextdomain(GETTEXT_PACKAGE, locale_path.c_str()))
+        {
             openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to bindtextdomain - %s"), strerror(errno));
         }
-        if (!textdomain(GETTEXT_PACKAGE)) {
+        if (!textdomain(GETTEXT_PACKAGE))
+        {
             openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to textdomain - %s"), strerror(errno));
         }
     }
     else
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to setlocale to \"openrasp.locale\" - %s"), openrasp_ini.locale);
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("Unable to set OpenRASP locale to '%s'"), openrasp_ini.locale);
     }
 #endif
     return true;

@@ -23,6 +23,10 @@ import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import org.mozilla.javascript.Scriptable;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.util.LinkedList;
+
 /**
  * Created by tyy on 17-12-9.
  *
@@ -42,16 +46,30 @@ public abstract class AbstractSSRFHook extends AbstractClassHook {
 
     /**
      * ssrf 检测的入口
-     * @param url http 请求的 url
+     *
+     * @param url      http 请求的 url
      * @param hostName http 请求的 host
      * @param function http 请求的方式
      */
-    protected static void checkHttpUrl(String url, String hostName,String function) {
+    protected static void checkHttpUrl(String url, String hostName, String function) {
         JSContext cx = JSContextFactory.enterAndInitContext();
         Scriptable params = cx.newObject(cx.getScope());
         params.put("url", params, url);
         params.put("hostname", params, hostName);
         params.put("function", params, function);
+        LinkedList<String> ip = new LinkedList<String>();
+        try {
+            InetAddress[] addresses = InetAddress.getAllByName(hostName);
+            for (InetAddress address : addresses) {
+                if (address != null && address instanceof Inet4Address) {
+                    ip.add(address.getHostAddress());
+                }
+            }
+        } catch (Throwable t) {
+            // ignore
+        }
+        Scriptable array = cx.newArray(cx.getScope(), ip.toArray());
+        params.put("ip", params, array);
         HookHandler.doCheck(CheckParameter.Type.SSRF, params);
     }
 

@@ -1,6 +1,22 @@
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "openrasp_security_policy.h"
+#include "openrasp_ini.h"
 static void security_check(bool flag, int id, const char *msg TSRMLS_DC);
-static bool strtobool(const char *str, int len);
 #define SECURITY_CHECK(flag, id, msg) security_check(flag, id, msg TSRMLS_CC)
 #define STRTOBOOL strtobool
 
@@ -35,25 +51,5 @@ static void security_check(bool flag, int id, const char *msg TSRMLS_DC)
         add_assoc_zval(&result, "message", &message);
         policy_info(&result TSRMLS_CC);
         zval_dtor(&result);
-    }
-}
-
-static bool strtobool(const char *str, int len)
-{
-    if (len == 2 && strcasecmp("on", str) == 0)
-    {
-        return true;
-    }
-    else if (len == 3 && strcasecmp("yes", str) == 0)
-    {
-        return true;
-    }
-    else if (len == 4 && strcasecmp("true", str) == 0)
-    {
-        return true;
-    }
-    else
-    {
-        return atoi(str);
     }
 }

@@ -1,14 +1,22 @@
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "openrasp_hook.h"
 #include "openrasp_ini.h"
 #include "openrasp_inject.h"
-#include "hook/openrasp_array.h"
-#include "hook/openrasp_sql.h"
-#include "hook/openrasp_file.h"
-#include "hook/command.h"
-#include "hook/include.h"
-#include "hook/fileUpload.h"
-#include "hook/ssrf.h"
-#include "hook/directory.h"
 #include <new>
 
 typedef struct _track_vars_pair_t
@@ -27,7 +35,9 @@ bool openrasp_zval_in_request(zval *item TSRMLS_DC)
     int size = sizeof(pairs) / sizeof(pairs[0]);
     for (int index = 0; index < size; ++index)
     {
-        if (!PG(http_globals)[pairs[index].id] && !zend_is_auto_global(pairs[index].name, strlen(pairs[index].name) TSRMLS_CC))
+        if (!PG(http_globals)[pairs[index].id] 
+        && !zend_is_auto_global(pairs[index].name, strlen(pairs[index].name) TSRMLS_CC)
+        && Z_TYPE_P(PG(http_globals)[pairs[index].id]) != IS_ARRAY)
         {
             return 0;
         }
@@ -81,10 +91,37 @@ bool openrasp_check_callable_black(const char *item_name, uint item_name_length 
 
 void handle_block(TSRMLS_D)
 {
+#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION == 3)
+    if (OG(ob_nesting_level) && (OG(active_ob_buffer).status || OG(active_ob_buffer).erase)) {
+        php_end_ob_buffer(0, 0 TSRMLS_CC);
+    }
+#elif (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION >= 4)
+    int status = php_output_get_status(TSRMLS_C);
+    if (status & PHP_OUTPUT_WRITTEN) {
+        php_output_discard(TSRMLS_C);
+    }
+#else
+#  error "Unsupported PHP version, please contact OpenRASP team for more information"
+#endif
+
     char *block_url = openrasp_ini.block_url;
     char *request_id = OPENRASP_INJECT_G(request_id);
-    /* 当 headers 已经输出时，只能在 body 中插入 script 进行重定向 */
-    if (SG(headers_sent))
+    if (!SG(headers_sent))
+    {
+        char *redirect_header = nullptr;
+        int redirect_header_len = 0;
+        redirect_header_len = spprintf(&redirect_header, 0, "Location: %s?request_id=%s", block_url, request_id);
+        if (redirect_header)
+        {
+            sapi_header_line header;
+            header.line = redirect_header;
+            header.line_len = redirect_header_len;
+            header.response_code = openrasp_ini.block_status_code;
+            sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
+        }
+        efree(redirect_header);
+    }
+    /* body 中插入 script 进行重定向 */
     {
         char *redirect_script = nullptr;
         int redirect_script_len = 0;
@@ -99,21 +136,6 @@ void handle_block(TSRMLS_D)
 #endif
         }
         efree(redirect_script);
-    }
-    else
-    {
-        char *redirect_header = nullptr;
-        int redirect_header_len = 0;
-        redirect_header_len = spprintf(&redirect_header, 0, "Location: %s?request_id=%s", block_url, request_id);
-        if (redirect_header)
-        {
-            sapi_header_line header;
-            header.line = redirect_header;
-            header.line_len = redirect_header_len;
-            header.response_code = 302;
-            sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
-        }
-        efree(redirect_header);
     }
     zend_bailout();
 }
@@ -132,146 +154,108 @@ void check(const char *type, zval *params TSRMLS_DC)
     }
 }
 
-#define HOOK_CALLABLE(name)                                \
-    OPENRASP_HOOK_FUNCTION(name)                           \
-    {                                                      \
-        pre_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU);      \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU); \
-    }
+extern int include_or_eval_handler(ZEND_OPCODE_HANDLER_ARGS);
 
-HOOK_CALLABLE(array_diff_ukey);
-HOOK_CALLABLE(array_filter);
-HOOK_CALLABLE(array_map);
-HOOK_CALLABLE(array_walk);
-HOOK_CALLABLE(uasort);
-HOOK_CALLABLE(uksort);
-HOOK_CALLABLE(usort);
+/**
+ * fileupload相关hook点
+ */
+PRE_HOOK_FUNCTION(move_uploaded_file);
 
-inline void hook_reflectionfunction(INTERNAL_FUNCTION_PARAMETERS)
-{
-    zval *name;
-    zval *closure = NULL;
-    char *lcname;
-    zend_function *fptr;
-    char *name_str;
-    int name_len;
+/**
+ * directory相关hook点
+ */
+PRE_HOOK_FUNCTION(dir);
+PRE_HOOK_FUNCTION(opendir);
+PRE_HOOK_FUNCTION(scandir);
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &name_str, &name_len) == SUCCESS)
-    {
-        char *nsname;
+/**
+ * command相关hook点
+ */
+PRE_HOOK_FUNCTION(passthru);
+PRE_HOOK_FUNCTION(system);
+PRE_HOOK_FUNCTION(exec);
+PRE_HOOK_FUNCTION(shell_exec);
+PRE_HOOK_FUNCTION(proc_open);
+PRE_HOOK_FUNCTION(popen);
+PRE_HOOK_FUNCTION(pcntl_exec);
+PRE_HOOK_FUNCTION(assert);
 
-        lcname = zend_str_tolower_dup(name_str, name_len);
+/**
+ * callable相关hook点
+ */
+PRE_HOOK_FUNCTION(usort);
+PRE_HOOK_FUNCTION(uksort);
+PRE_HOOK_FUNCTION(uasort);
+PRE_HOOK_FUNCTION(array_walk);
+PRE_HOOK_FUNCTION(array_map);
+PRE_HOOK_FUNCTION(array_filter);
+PRE_HOOK_FUNCTION(array_diff_ukey);
 
-        /* Ignore leading "\" */
-        nsname = lcname;
-        if (lcname[0] == '\\')
-        {
-            nsname = &lcname[1];
-            name_len--;
-        }
+PRE_HOOK_FUNCTION_EX(__construct, reflectionfunction);
 
-        if (zend_hash_find(EG(function_table), nsname, name_len + 1, (void **)&fptr) == FAILURE)
-        {
-            efree(lcname);
-            return;
-        }
-        if (openrasp_check_callable_black(nsname, name_len TSRMLS_CC))
-        {
-            zval *attack_params = NULL;
-            MAKE_STD_ZVAL(attack_params);
-            ZVAL_STRING(attack_params, nsname, 1);
-            zval *plugin_message = NULL;
-            MAKE_STD_ZVAL(plugin_message);
-            char *message_str = NULL;
-            spprintf(&message_str, 0, _("Webshell detected: using %s"), nsname);
-            ZVAL_STRING(plugin_message, message_str, 1);
-            efree(message_str);
-            openrasp_buildin_php_risk_handle(1, "callable", 90, attack_params, plugin_message TSRMLS_CC);
-        }
-        efree(lcname);
-    }
-    else
-    {
-        return;
-    }
-}
+/**
+ * sql相关hook点
+ */
+HOOK_FUNCTION_EX(mysqli, mysqli);
+HOOK_FUNCTION_EX(real_connect, mysqli);
+HOOK_FUNCTION_EX(query, mysqli);
+HOOK_FUNCTION_EX(exec, sqlite3);
+HOOK_FUNCTION_EX(query, sqlite3);
+HOOK_FUNCTION_EX(querySingle, sqlite3);
 
-#define HOOK_REFLECTION(name, scope)                               \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope)                         \
-    {                                                              \
-        hook_reflectionfunction(INTERNAL_FUNCTION_PARAM_PASSTHRU); \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);         \
-    }
-HOOK_REFLECTION(__construct, reflectionfunction);
+HOOK_FUNCTION(mysql_connect);
+HOOK_FUNCTION(mysql_pconnect);
+HOOK_FUNCTION(mysql_query);
 
-#define HOOK_SQL_EX(name, scope, server)                                                           \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope)                                                         \
-    {                                                                                              \
-        pre_##scope##_##name##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, const_cast<char *>(#server));  \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                         \
-        post_##scope##_##name##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, const_cast<char *>(#server)); \
-    }
-HOOK_SQL_EX(exec, sqlite3, sqlite);
-HOOK_SQL_EX(query, sqlite3, sqlite);
-HOOK_SQL_EX(querySingle, sqlite3, sqlite);
-HOOK_SQL_EX(mysqli, mysqli, mysql);
-HOOK_SQL_EX(real_connect, mysqli, mysql);
-HOOK_SQL_EX(query, mysqli, mysql);
+HOOK_FUNCTION(mysqli_connect);
+HOOK_FUNCTION(mysqli_real_connect);
+HOOK_FUNCTION(mysqli_query);
+HOOK_FUNCTION(mysqli_real_query);
+HOOK_FUNCTION(pg_connect);
+HOOK_FUNCTION(pg_pconnect);
+HOOK_FUNCTION(pg_query);
+HOOK_FUNCTION(pg_send_query);
+HOOK_FUNCTION(pg_get_result);
 
-#define HOOK_SQL(name, server)                                                      \
-    OPENRASP_HOOK_FUNCTION(name)                                                    \
-    {                                                                               \
-        pre_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU, const_cast<char *>(#server));  \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                          \
-        post_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU, const_cast<char *>(#server)); \
-    }
-HOOK_SQL(mysql_connect, mysql);
-HOOK_SQL(mysql_pconnect, mysql);
-HOOK_SQL(mysql_query, mysql);
-HOOK_SQL(mysqli_connect, mysql);
-HOOK_SQL(mysqli_real_connect, mysql);
-HOOK_SQL(mysqli_query, mysql);
-HOOK_SQL(mysqli_real_query, mysql);
-HOOK_SQL(pg_connect, pgsql);
-HOOK_SQL(pg_pconnect, pgsql);
-HOOK_SQL(pg_query, pgsql);
-HOOK_SQL(pg_send_query, pgsql);
-HOOK_SQL(pg_get_result, pgsql);
-
-#define HOOK_PDO_EX(name, scope)                                      \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope)                            \
-    {                                                                 \
-        pre_##scope##_##name##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU);  \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);            \
-        post_##scope##_##name##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU); \
-    }
-HOOK_PDO_EX(query, pdo);
-HOOK_PDO_EX(exec, pdo);
-HOOK_PDO_EX(__construct, pdo);
+HOOK_FUNCTION_EX(__construct, pdo);
+HOOK_FUNCTION_EX(query, pdo);
+HOOK_FUNCTION_EX(exec, pdo);
 
 /**
  * 文件相关hook点
  */
-#define HOOK_FILE(name)                                    \
-    OPENRASP_HOOK_FUNCTION(name)                           \
-    {                                                      \
-        hook_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU);     \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU); \
-    }
-HOOK_FILE(file);
-HOOK_FILE(readfile);
-HOOK_FILE(file_get_contents);
-HOOK_FILE(file_put_contents);
-HOOK_FILE(fopen);
-HOOK_FILE(copy);
+PRE_HOOK_FUNCTION(file);
+PRE_HOOK_FUNCTION(readfile);
+PRE_HOOK_FUNCTION(file_get_contents);
+PRE_HOOK_FUNCTION(file_put_contents);
+PRE_HOOK_FUNCTION(fopen);
+PRE_HOOK_FUNCTION(copy);
 
-#define HOOK_FILE_EX(name, scope)                                     \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope)                            \
-    {                                                                 \
-        hook_##scope##_##name##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU); \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);            \
+PRE_HOOK_FUNCTION_EX(__construct, splfileobject);
+
+/**
+ * ssrf相关hook点
+ */
+extern int pre_global_curl_exec(INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args);
+extern void post_global_curl_exec(INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args);
+OPENRASP_HOOK_FUNCTION(curl_exec)
+{
+    zval function_name, opt, origin_url, *args[2];
+    INIT_ZVAL(function_name);
+    INIT_ZVAL(opt);
+    INIT_ZVAL(origin_url);
+    ZVAL_STRING(&function_name, "curl_getinfo", 0); // 不需要 zval_dtor
+
+    int skip_post = pre_global_curl_exec(INTERNAL_FUNCTION_PARAM_PASSTHRU, &function_name, &opt, &origin_url, args);
+    origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (!skip_post)
+    {
+        post_global_curl_exec(INTERNAL_FUNCTION_PARAM_PASSTHRU, &function_name, &opt, &origin_url, args);
     }
-HOOK_FILE_EX(__construct, splfileobject);
+
+    zval_dtor(&opt);
+    zval_dtor(&origin_url);
+}
 
 PHP_GINIT_FUNCTION(openrasp_hook)
 {

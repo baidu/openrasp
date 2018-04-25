@@ -12,10 +12,10 @@ include('openrasp_test_sql_config.inc');
 $dsn = 'mysql:dbname='.$mysql_db.';host='.$mysql_host.';port='.$mysql_port;
 try {
     $dbh = new PDO($dsn, 'root', $mysql_passwd);
-    $dbh = null;
 } catch (PDOException $e) {
     echo 'Connection failed: ' . $e->getMessage();
 }
 echo "pdo mysql connection OK"
 ?>
---EXPECT--
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

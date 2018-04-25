@@ -6,7 +6,8 @@ if (!extension_loaded("openrasp")) print "skip";
 ?>
 --FILE--
 <?php
-include('header.rasp');
+include('/../../../../../../../../../../etc/hosts');
 echo 'include OK';
 ?>
---EXPECT--
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>
