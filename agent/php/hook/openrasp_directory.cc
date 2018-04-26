@@ -26,25 +26,35 @@ static inline void hook_directory(INTERNAL_FUNCTION_PARAMETERS)
         Z_TYPE_PP(path) == IS_STRING)
     {
         char resolved_path_buff[MAXPATHLEN];
-        zval *params;
-        MAKE_STD_ZVAL(params);
-        array_init(params);
-        add_assoc_zval(params, "path", *path);
-        Z_ADDREF_PP(path);
-        char *real_path = VCWD_REALPATH(Z_STRVAL_PP(path), resolved_path_buff);
-        if (real_path)
+        if (VCWD_REALPATH(Z_STRVAL_PP(path), resolved_path_buff))
         {
-            add_assoc_string(params, "realpath", real_path, 1);
+#if PHP_API_VERSION < 20100412
+            if (PG(safe_mode) && (!php_checkuid(resolved_path_buff, NULL, CHECKUID_CHECK_FILE_AND_DIR))) {
+                return;
+            }
+#endif
+
+            if (php_check_open_basedir(resolved_path_buff TSRMLS_CC)) {
+                return;
+            }
+
+#ifdef ZTS
+            if (VCWD_ACCESS(resolved_path_buff, F_OK)) {
+                return;
+            }
+#endif
+            zval *params;
+            MAKE_STD_ZVAL(params);
+            array_init(params);
+            add_assoc_zval(params, "path", *path);
+            Z_ADDREF_PP(path);
+            add_assoc_string(params, "realpath", resolved_path_buff, 1);
             zval *stack = NULL;
             MAKE_STD_ZVAL(stack);
             array_init(stack);
             format_debug_backtrace_arr(stack TSRMLS_CC);
             add_assoc_zval(params, "stack", stack);
             check("directory", params TSRMLS_CC);
-        }
-        else
-        {
-            Z_ADDREF_PP(path);
         }
     }
 }
