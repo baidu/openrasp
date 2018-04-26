@@ -76,16 +76,16 @@ public class App {
             return;
         }
         //参数0：rasp安装根目录
-        //参数1：install 安装，uninstall 卸载
+        //参数1：-install 安装，-uninstall 卸载
         try {
-            if ("install".equals(args[1])){
-                File serverRoot = new File(args[0]);
+            if ("-install".equals(args[0])){
+                File serverRoot = new File(args[1]);
                 InstallerFactory factory = newInstallerFactory();
                 Installer installer = factory.getInstaller(serverRoot);
                 installer.install();
-            }else if ("uninstall".equals(args[1])){
+            }else if ("-uninstall".equals(args[0])){
 
-                File serverRoot = new File(args[0]);
+                File serverRoot = new File(args[1]);
                 UninstallerFactory factory=newUninstallerFactory();
                 Uninstaller uninstaller=factory.getUninstaller(serverRoot);
                 uninstaller.uninstall();

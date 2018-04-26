@@ -37,17 +37,12 @@ public class ResinInstaller extends BaseStandardInstaller {
 
     public static int getVersion(String installPath) {
 
-        String CMD_WINDOWS = "java -classpath ./resin.jar com.caucho.Version";
-        String CMD_LINUX = "java -classpath ./resin.jar com.caucho.Version";
+        String command = "java -classpath ./resin.jar com.caucho.Version";
         int version = -1;
         try {
             File resinFile = new File(new File(installPath).getParent() + File.separator + "lib");
             Process p = null;
-            if (System.getProperty("os.name").startsWith("Windows")) {
-                p = Runtime.getRuntime().exec(CMD_WINDOWS, null, resinFile);
-            } else {
-                p = Runtime.getRuntime().exec(CMD_LINUX, null, resinFile);
-            }
+            p = Runtime.getRuntime().exec(command, null, resinFile);
             InputStreamReader reader = new InputStreamReader(p.getInputStream(), "GBK");
             BufferedReader bufferedReader = new BufferedReader(reader);
             StringBuilder sb = new StringBuilder();
@@ -58,9 +53,17 @@ public class ResinInstaller extends BaseStandardInstaller {
             p.destroy();
             bufferedReader.close();
             reader.close();
-            String res = new String(sb);
-            res = res.substring(res.indexOf("-") + 1, res.indexOf("."));
-            version = Integer.valueOf(res);
+            String res = new String(sb).split("\\.")[0];
+            sb.delete(0, sb.length());
+            for (int i = res.length() - 1; i >= 0; i--) {
+                if (res.charAt(i) >= '0' && res.charAt(i) <= '9') {
+                    sb.append(res.charAt(i));
+                } else {
+
+                    break;
+                }
+            }
+            version = Integer.valueOf(sb.reverse().toString());
 
         } catch (Exception e) {
 
