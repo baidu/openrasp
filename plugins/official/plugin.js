@@ -76,8 +76,11 @@ var forcefulBrowsing = {
     ]
 }
 
-var scriptFileRegex = /\.(jspx?|php[345]?|phtml)\.?$/i
-var ntfsRegex       = /::\$(DATA|INDEX)$/i // 其他的stream都没啥用
+// 如果你配置了非常规的扩展名映射，比如让 .abc 当做PHP脚本执行，那你可能需要增加更多扩展名
+var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml)\.?$/i
+
+// 其他的stream都没啥用
+var ntfsRegex       = /::\$(DATA|INDEX)$/i
 
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue) {
