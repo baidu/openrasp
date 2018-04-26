@@ -59,7 +59,6 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 #define RASP_LOG_FILE_MODE                  (mode_t)0666
 #define DEFAULT_LOG_FILE_SUFFIX             "Y-m-d"
 #define RASP_RFC3339_FORMAT                 "Y-m-d\\TH:i:sP"
-#define DEFAULT_LOG_ROTATE_SECOND           (24*60*60)
 #define RASP_LOG_TOKEN_REFILL_INTERVAL      1000
 #define RASP_STREAM_WRITE_RETRY_NUMBER      1
 
@@ -153,17 +152,6 @@ static int openrasp_log_files_mkdir(char *path TSRMLS_DC) {
     }
     zend_bool mkdir_result = recursive_mkdir(path, strlen(path), 0777 TSRMLS_CC);   
 	return mkdir_result ? SUCCESS : FAILURE;
-}
-
-/* 销毁流列表
-*/
-static void clear_openrasp_syslog_streams(TSRMLS_D)
-{
-    if (OPENRASP_LOG_G(syslog_stream))
-    {
-        php_stream_close(OPENRASP_LOG_G(syslog_stream));        
-        OPENRASP_LOG_G(syslog_stream) = NULL;
-    }
 }
 
 static void init_alarm_request_info(TSRMLS_D)
@@ -265,11 +253,7 @@ static void clear_openrasp_loggers(TSRMLS_D)
 static zend_bool if_need_update_formatted_file_suffix(rasp_logger_entry *logger, long now, int log_info_len TSRMLS_DC)
 {
     int  last_logged_second       = logger->last_logged_time / 1000;
-    long log_rotate_second        = DEFAULT_LOG_ROTATE_SECOND;
-    if (log_rotate_second <= 0 || log_rotate_second > INT_MAX)
-    {
-        return 0;
-    }
+    long log_rotate_second        = 24*60*60;
     if (now/log_rotate_second != last_logged_second/log_rotate_second)
     {
         return 1;
@@ -336,9 +320,9 @@ static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log
             stream = php_stream_open_wrapper(file_path, "a+", REPORT_ERRORS | IGNORE_URL_WIN, NULL);            
             if (stream)
             {
-                if (need_create_file)
+                if (need_create_file && FAILURE == VCWD_CHMOD(file_path, RASP_LOG_FILE_MODE))
                 {
-                    VCWD_CHMOD(file_path, RASP_LOG_FILE_MODE);
+                    openrasp_error(E_WARNING, LOG_ERROR, _("Unable to chmod file: %s."), file_path);
                 }                
                 logger->stream_log = stream;
                 return &logger->stream_log;

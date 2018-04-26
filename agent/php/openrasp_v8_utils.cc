@@ -148,7 +148,7 @@ v8::Local<v8::Value> openrasp::zval_to_v8val(zval *val, v8::Isolate *isolate TSR
     case IS_LONG:
     {
         int64_t v = Z_LVAL_P(val);
-        if (v < -std::numeric_limits<int32_t>::min() || v > std::numeric_limits<int32_t>::max())
+        if (v < std::numeric_limits<int32_t>::min() || v > std::numeric_limits<int32_t>::max())
         {
             rst = v8::Number::New(isolate, v);
         }
