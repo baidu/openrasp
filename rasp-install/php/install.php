@@ -204,54 +204,63 @@ if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
 			log_tips(ERROR, 'Unable to open ini file for writing: ' . $ini_src);
 		} 
 	} else if ($ini_loaded_file) {
-		if (!is_writable($ini_loaded_file)) {
-			log_tips(ERROR, $ini_loaded_file . ' is not writable, please make sure you have write permissions!');
-		}
-		if (!copy($ini_loaded_file, $ini_loaded_file.'.bak')) {
-			log_tips(ERROR, "Unable to backup old ini file: '$ini_loaded_file'");
-		}
-	
-		$old_ini_data = file($ini_loaded_file.'.bak');
-		$tmp_ini_data = array();
-		$found_openrasp = UNFOUND;
-		foreach ($old_ini_data as $key => $line) {
-			if (trim($line) == ";OPENRASP BEGIN") {
-				$found_openrasp = FOUND;
-			} 
-			if (trim($line) == ";OPENRASP END") {
-				$found_openrasp = FINSH;
-			}
-			if (FOUND !== $found_openrasp && trim($line) != ";OPENRASP END") {
-				$tmp_ini_data[] = $line;
+		$ini_files_2b_updated = array($ini_loaded_file);
+		if (OS_WIN == $current_os) {
+			$wamp_apache_ini = dirname($ini_loaded_file).DIRECTORY_SEPARATOR.'phpForApache.ini';
+			if (file_exists($wamp_apache_ini)) {
+				array_push($ini_files_2b_updated, $wamp_apache_ini);
 			}
 		}
-		if (FOUND === $found_openrasp) {
-			log_tips(ERROR, "Unable to locate OPENRASP closing tags in '$ini_loaded_file', possibly corrupted ini file");
-		} else if (FINSH === $found_openrasp) {
-			log_tips(INFO, 'Found old configuration in INI files, doing upgrades');
-		}
-		$tmp_ini_data[] = get_ini_content($lib_filename, $root_dir);
-		$handle = fopen($ini_loaded_file, "w+");
-		if ($handle) {
-			$write_state = TRUE;
-			foreach($tmp_ini_data as $key => $line) {
-				if (fwrite($handle, $line) === FALSE) {
-					$write_state = FALSE;
-					break;
+		foreach($ini_files_2b_updated as $key=>$ini_file) {
+			if (!is_writable($ini_file)) {
+				log_tips(ERROR, $ini_file . ' is not writable, please make sure you have write permissions!');
+			}
+			if (!copy($ini_file, $ini_file.'.bak')) {
+				log_tips(ERROR, "Unable to backup old ini file: '$ini_file'");
+			}
+		
+			$old_ini_data = file($ini_file.'.bak');
+			$tmp_ini_data = array();
+			$found_openrasp = UNFOUND;
+			foreach ($old_ini_data as $key => $line) {
+				if (trim($line) == ";OPENRASP BEGIN") {
+					$found_openrasp = FOUND;
+				} 
+				if (trim($line) == ";OPENRASP END") {
+					$found_openrasp = FINSH;
 				}
-			 }
-			 if ($write_state === FALSE) {
-				 fclose($handle);
-				 log_tips(INFO, 'Fail write ini content to '.$ini_loaded_file.', we will restore the php.ini file.');
-				 if (!copy($ini_loaded_file.'.bak', $ini_loaded_file)) {
-					log_tips(ERROR, 'Fail to restore the php.ini file, you must manually restore php.ini.');
+				if (FOUND !== $found_openrasp && trim($line) != ";OPENRASP END") {
+					$tmp_ini_data[] = $line;
 				}
-			 } else {
-				 log_tips(INFO, 'Successfully append openrasp config to '.$ini_loaded_file);
-			 }
-			fclose($handle);
-		} else {
-			log_tips(ERROR, "Unable to open '$ini_loaded_file' for writing");
+			}
+			if (FOUND === $found_openrasp) {
+				log_tips(ERROR, "Unable to locate OPENRASP closing tags in '$ini_file', possibly corrupted ini file");
+			} else if (FINSH === $found_openrasp) {
+				log_tips(INFO, 'Found old configuration in INI files, doing upgrades');
+			}
+			$tmp_ini_data[] = get_ini_content($lib_filename, $root_dir);
+			$handle = fopen($ini_file, "w+");
+			if ($handle) {
+				$write_state = TRUE;
+				foreach($tmp_ini_data as $key => $line) {
+					if (fwrite($handle, $line) === FALSE) {
+						$write_state = FALSE;
+						break;
+					}
+				 }
+				 if ($write_state === FALSE) {
+					 fclose($handle);
+					 log_tips(INFO, 'Fail write ini content to '.$ini_file.', we will restore the php.ini file.');
+					 if (!copy($ini_file.'.bak', $ini_file)) {
+						log_tips(ERROR, 'Fail to restore the php.ini file, you must manually restore php.ini.');
+					}
+				 } else {
+					 log_tips(INFO, 'Successfully append openrasp config to '.$ini_file);
+				 }
+				fclose($handle);
+			} else {
+				log_tips(ERROR, "Unable to open '$ini_file' for writing");
+			}
 		} 
 	} else {
 		log_tips(ERROR, 'Cannot find appropriate php.ini file.');
