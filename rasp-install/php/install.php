@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 ?>
-OpenRASP Installer for PHP servers - Copyright ©2017-2018 Baidu Inc.
+OpenRASP Installer for PHP servers - Copyright 2017-2018 Baidu Inc.
 For more details visit: https://rasp.baidu.com/doc/install/software.html
 
 <?php
@@ -112,7 +112,7 @@ Synopsis:
     php install.php [options]
 
 Options:
-    -d <openrasp_root>  Specify OpenRASP installation folder
+    -d <openrasp_root>  Specify OpenRASP installation folder, which is essential
 	
     --ignore-ini        Do not update PHP ini entries
 
