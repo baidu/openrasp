@@ -77,7 +77,7 @@ PHP_RINIT_FUNCTION(openrasp_inject)
         auto hash = zend_inline_hash_func(reinterpret_cast<const char *>(&nano), sizeof(nano));
         spprintf(&OPENRASP_INJECT_G(request_id), 32, "%016llx%016lx", hash, nano);
         char *uuid_header = nullptr;
-        int uuid_header_len = spprintf(&uuid_header, 0, "Request-ID: %s", OPENRASP_INJECT_G(request_id));
+        int uuid_header_len = spprintf(&uuid_header, 0, "X-Request-ID: %s", OPENRASP_INJECT_G(request_id));
         if (uuid_header)
         {
             sapi_header_line header;
