@@ -20,6 +20,10 @@ import com.baidu.rasp.install.Installer;
 import com.baidu.rasp.install.InstallerFactory;
 import com.baidu.rasp.install.linux.LinuxInstallerFactory;
 import com.baidu.rasp.install.windows.WindowsInstallerFactory;
+import com.baidu.rasp.uninstall.Uninstaller;
+import com.baidu.rasp.uninstall.UninstallerFactory;
+import com.baidu.rasp.uninstall.linux.LinuxUninstallerFactory;
+import com.baidu.rasp.uninstall.windows.WindowsUninstallerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,6 +42,13 @@ public class App {
         }
     }
 
+    private static UninstallerFactory newUninstallerFactory() {
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            return new WindowsUninstallerFactory();
+        }else {
+            return new LinuxUninstallerFactory();
+        }
+    }
     private static void showBanner() {
         String banner = "OpenRASP Installer for Java app servers - Copyright ©2017 Baidu Inc.\n" + 
             "For more details visit: https://rasp.baidu.com/doc/install/software.html\n";
@@ -51,19 +62,38 @@ public class App {
         System.out.println(helpMsg);
     }
 
+    private static void showArgs() {
+        String helpMsg =
+                "Usage:\n" +
+                        "args error<install or uninstall> ";
+        System.out.println(helpMsg);
+    }
     public static void main(String[] args) throws IOException, URISyntaxException {
         showBanner();
 
-        if (args.length < 1) {
+        if (args.length < 2) {
             showHelp();
             return;
         }
-
+        //参数0：rasp安装根目录
+        //参数1：install 安装，uninstall 卸载
         try {
-            File serverRoot = new File(args[0]);
-            InstallerFactory factory = newInstallerFactory();
-            Installer installer = factory.getInstaller(serverRoot);
-            installer.install();
+            if ("install".equals(args[1])){
+                File serverRoot = new File(args[0]);
+                InstallerFactory factory = newInstallerFactory();
+                Installer installer = factory.getInstaller(serverRoot);
+                installer.install();
+            }else if ("uninstall".equals(args[1])){
+
+                File serverRoot = new File(args[0]);
+                UninstallerFactory factory=newUninstallerFactory();
+                Uninstaller uninstaller=factory.getUninstaller(serverRoot);
+                uninstaller.uninstall();
+
+            }else {
+
+                showArgs();
+            }
         } catch (Exception e) {
             System.out.println(e.getMessage() + "\n");
             // showHelp();

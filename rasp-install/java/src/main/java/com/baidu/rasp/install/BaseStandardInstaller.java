@@ -44,7 +44,7 @@ public abstract class BaseStandardInstaller implements Installer {
     @Override
     public void install() throws RaspError, IOException {
         String jarPath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
-        File srcDir = new File(new File(jarPath).getParent() + "/rasp");
+        File srcDir = new File(new File(jarPath).getParent() + File.separator+"rasp");
         if (!(srcDir.exists() && srcDir.isDirectory())) {
             srcDir = new File("rasp");
         }
@@ -105,7 +105,7 @@ public abstract class BaseStandardInstaller implements Installer {
 
     }
 
-    protected String read(File file) throws IOException {
+    public static String read(File file) throws IOException {
         FileInputStream fis = new FileInputStream(file);
         byte[] data = new byte[(int) file.length()];
         fis.read(data);
@@ -113,14 +113,14 @@ public abstract class BaseStandardInstaller implements Installer {
         return new String(data);
     }
 
-    protected void write(File file, String content) throws IOException {
+    public static void write(File file, String content) throws IOException {
         FileOutputStream outputStream = new FileOutputStream(file);
         OutputStreamWriter writer = new OutputStreamWriter(outputStream);
         writer.write(content);
         writer.close();
     }
 
-    public String runCommand(String[] args) {
+    public static String runCommand(String[] args) {
         try {
             Process p = Runtime.getRuntime().exec(args);
             BufferedReader buffer = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -138,7 +138,7 @@ public abstract class BaseStandardInstaller implements Installer {
         }
     }
 
-    public void modifyFolerPermission(String folderPath) {
+    public static void modifyFolerPermission(String folderPath) {
         if (System.getProperty("os.name").startsWith("Windows")) {
             String res = runCommand(new String[]{"cmd", "/c", "echo Y|%SYSTEMROOT%\\System32\\cacls \"" + folderPath + "\" /G everyone:F"});
             // System.out.println(res);

@@ -32,6 +32,9 @@ public class WindowsInstallerFactory extends InstallerFactory {
         if (serverName.equals(JBOSS)) {
             return new Jboss4Installer(serverName, serverRoot);
         }
+        if (serverName.equals(RESIN)) {
+            return new ResinInstaller(serverName, serverRoot);
+        }
         System.out.println("Invalid server name: " + serverName);
         return null;
     }
