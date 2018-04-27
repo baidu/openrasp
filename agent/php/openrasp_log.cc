@@ -676,8 +676,11 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
     log_appender alarm_appender = FILE_APPENDER;
     if (openrasp_ini.syslog_alarm_enable && openrasp_ini.syslog_server_address) {
         php_url *resource = php_url_parse_ex(openrasp_ini.syslog_server_address, strlen(openrasp_ini.syslog_server_address));
-        if (resource && resource->scheme && (!strcmp(resource->scheme, "tcp") || !strcmp(resource->scheme, "udp"))) {
-            alarm_appender = static_cast<log_appender>(alarm_appender | SYSLOG_APPENDER);
+        if (resource) {
+            if (resource->scheme && (!strcmp(resource->scheme, "tcp") || !strcmp(resource->scheme, "udp"))) {
+                alarm_appender = static_cast<log_appender>(alarm_appender | SYSLOG_APPENDER);
+            }
+            php_url_free(resource);
         } else {
             openrasp_error(E_WARNING, LOG_ERROR, 
                 _("Invalid syslog server address: '%s', expecting 'tcp://' or 'udp://' to be present."), openrasp_ini.syslog_server_address);

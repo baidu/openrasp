@@ -70,18 +70,22 @@ int pre_global_curl_exec(INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval
         zval *ip_arr = NULL;
         MAKE_STD_ZVAL(ip_arr);
         array_init(ip_arr);
-        if (url && url->host) 
+        if (url) 
         {
-            struct hostent *hp;
-            struct in_addr in;
-            int i;
-            hp = gethostbyname(url->host);
-            if (hp != NULL && hp->h_addr_list != NULL) {
-                for (i = 0 ; hp->h_addr_list[i] != 0 ; i++) {
-                    in = *(struct in_addr *) hp->h_addr_list[i];
-                    add_next_index_string(ip_arr, inet_ntoa(in), 1);
+            if (url->host)
+            {
+                struct hostent *hp;
+                struct in_addr in;
+                int i;
+                hp = gethostbyname(url->host);
+                if (hp != NULL && hp->h_addr_list != NULL) {
+                    for (i = 0 ; hp->h_addr_list[i] != 0 ; i++) {
+                        in = *(struct in_addr *) hp->h_addr_list[i];
+                        add_next_index_string(ip_arr, inet_ntoa(in), 1);
+                    }
                 }
             }
+            php_url_free(url);
         }
         add_assoc_zval(params, "ip", ip_arr);
         check("ssrf", params TSRMLS_CC);

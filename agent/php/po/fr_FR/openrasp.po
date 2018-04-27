@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: openrasp@baidu.com\n"
-"POT-Creation-Date: 2018-04-20 01:03-0700\n"
+"POT-Creation-Date: 2018-04-27 02:46-0700\n"
 "PO-Revision-Date: 2018-03-27 21:18-0700\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -17,14 +17,20 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: openrasp.cc:63 openrasp.cc:64 openrasp.cc:80
+#: openrasp.cc:63 openrasp.cc:64 openrasp.cc:80 openrasp.cc:82 openrasp.cc:85
 msgid ""
 "\"openrasp.root_dir\" should be configured in php.ini, continuing without "
 "security protection"
 msgstr ""
 
+#: openrasp_fswatch.cc:90
+msgid ""
+"An exception occurred while reloading master process, but this message may "
+"not be outputed"
+msgstr ""
+
 #: openrasp_shared_alloc.c:216 openrasp_shared_alloc.c:217
-#: openrasp_shared_alloc.c:233
+#: openrasp_shared_alloc.c:233 openrasp_shared_alloc.c:232
 #, c-format
 msgid "Cannot create lock - %s (%d)"
 msgstr ""
@@ -38,7 +44,7 @@ msgid "Cannot lock mutex"
 msgstr ""
 
 #: openrasp_shared_alloc.c:237 openrasp_shared_alloc.c:238
-#: openrasp_shared_alloc.c:254
+#: openrasp_shared_alloc.c:254 openrasp_shared_alloc.c:253
 #, c-format
 msgid "Cannot remove lock - %s (%d)"
 msgstr ""
@@ -69,12 +75,13 @@ msgstr ""
 msgid "Could not create directory %s - %s"
 msgstr ""
 
-#: openrasp_utils.cc:153
+#: openrasp_utils.cc:153 openrasp_utils.cc:164
 #, c-format
 msgid "Could not create directory '%s': %s"
 msgstr ""
 
-#: openrasp_hook.cc:300 hook/openrasp_ssrf.cc:79
+#: openrasp_hook.cc:300 hook/openrasp_ssrf.cc:79 hook/openrasp_ssrf.cc:107
+#: hook/openrasp_ssrf.cc:111
 #, c-format
 msgid "Detected SSRF via 302 redirect, effective url is %s"
 msgstr ""
@@ -82,7 +89,9 @@ msgstr ""
 #: openrasp_log.cc:708 openrasp_log.cc:715 openrasp_log.cc:705
 #: openrasp_log.cc:712 openrasp_log.cc:721 openrasp_log.cc:728
 #: openrasp_log.cc:723 openrasp_log.cc:730 openrasp_log.cc:724
-#: openrasp_log.cc:731
+#: openrasp_log.cc:731 openrasp_log.cc:726 openrasp_log.cc:733
+#: openrasp_log.cc:740 openrasp_log.cc:727 openrasp_log.cc:734
+#: openrasp_log.cc:711 openrasp_log.cc:718 openrasp_log.cc:714
 msgid "Error allocating memory needed to call GetAdaptersinfo."
 msgstr ""
 
@@ -92,13 +101,14 @@ msgid ""
 msgstr ""
 
 #: openrasp.cc:188 openrasp.cc:193 openrasp.cc:194 openrasp.cc:190
-#: openrasp.cc:206
+#: openrasp.cc:206 openrasp.cc:208 openrasp.cc:211 openrasp.cc:221
 #, c-format
 msgid "Fail to bindtextdomain - %s"
 msgstr ""
 
 #: openrasp_log.cc:286 openrasp_log.cc:283 openrasp_log.cc:299
-#: openrasp_log.cc:301
+#: openrasp_log.cc:301 openrasp_log.cc:307 openrasp_log.cc:316
+#: openrasp_log.cc:310 openrasp_log.cc:294
 #, c-format
 msgid "Fail to connect syslog server %s."
 msgstr ""
@@ -121,17 +131,20 @@ msgid "Fail to initialize js plugin - %s"
 msgstr ""
 
 #: openrasp_log.cc:600 openrasp_log.cc:597 openrasp_log.cc:613
-#: openrasp_log.cc:615
+#: openrasp_log.cc:615 openrasp_log.cc:617 openrasp_log.cc:622
+#: openrasp_log.cc:601
 msgid "Fail to merge request parameters during alarm logging."
 msgstr ""
 
 #: openrasp_log.cc:647 openrasp_log.cc:644 openrasp_log.cc:660
-#: openrasp_log.cc:662
+#: openrasp_log.cc:662 openrasp_log.cc:664 openrasp_log.cc:669
+#: openrasp_log.cc:648
 msgid "Fail to merge request parameters during policy logging."
 msgstr ""
 
 #: openrasp_log.cc:322 openrasp_log.cc:319 openrasp_log.cc:335
-#: openrasp_log.cc:337
+#: openrasp_log.cc:337 openrasp_log.cc:343 openrasp_log.cc:353
+#: openrasp_log.cc:348 openrasp_log.cc:332
 #, c-format
 msgid "Fail to open php_stream of %s!"
 msgstr ""
@@ -143,21 +156,24 @@ msgid "Fail to setlocale to \"openrasp.locale\" - %s"
 msgstr ""
 
 #: openrasp.cc:191 openrasp.cc:196 openrasp.cc:197 openrasp.cc:193
-#: openrasp.cc:209
+#: openrasp.cc:209 openrasp.cc:211 openrasp.cc:214 openrasp.cc:225
 #, c-format
 msgid "Fail to textdomain - %s"
 msgstr ""
 
 #: openrasp_fswatch.cc:59 openrasp_fswatch.cc:94 openrasp_fswatch.cc:110
+#: openrasp_fswatch.cc:132
 #, c-format
 msgid "Failed to initialize fswatch: %s"
 msgstr ""
 
 #: openrasp_fswatch.cc:63 openrasp_fswatch.cc:98 openrasp_fswatch.cc:114
+#: openrasp_fswatch.cc:136
 msgid "Failed to initialize fswatch: unknown error."
 msgstr ""
 
 #: openrasp_fswatch.cc:34 openrasp_fswatch.cc:49 openrasp_fswatch.cc:65
+#: openrasp_fswatch.cc:82
 #, c-format
 msgid "Failed to reload %s"
 msgstr ""
@@ -171,11 +187,13 @@ msgid "File inclusion"
 msgstr ""
 
 #: openrasp_fswatch.cc:72 openrasp_fswatch.cc:83 openrasp_fswatch.cc:99
+#: openrasp_fswatch.cc:120
 #, c-format
 msgid "Fswatch error: %s"
 msgstr ""
 
 #: openrasp_fswatch.cc:76 openrasp_fswatch.cc:87 openrasp_fswatch.cc:103
+#: openrasp_fswatch.cc:124
 msgid "Fswatch error: unknown error"
 msgstr ""
 
@@ -190,7 +208,8 @@ msgstr ""
 msgid "Invalid \"openrasp.syslog_server_address\" (%s) and it'll be ignored."
 msgstr ""
 
-#: openrasp_log.cc:696
+#: openrasp_log.cc:696 openrasp_log.cc:698 openrasp_log.cc:705
+#: openrasp_log.cc:699 openrasp_log.cc:683 openrasp_log.cc:686
 #, c-format
 msgid ""
 "Invalid syslog server address: '%s', expecting 'tcp://' or 'udp://' to be "
@@ -215,9 +234,14 @@ msgid "The size of plugin file '%s' should be less than 10 MB, skiped"
 msgstr ""
 
 #: openrasp_shared_alloc.c:150 openrasp_shared_alloc.c:151
-#: openrasp_shared_alloc.c:167
+#: openrasp_shared_alloc.c:167 openrasp_shared_alloc.c:166
 #, c-format
 msgid "Unable to allocate shared memory segment of %ld bytes: %s: %s (%d)"
+msgstr ""
+
+#: openrasp_log.cc:325
+#, c-format
+msgid "Unable to chmod file: %s."
 msgstr ""
 
 #: openrasp_shared_alloc_win32.c:217 openrasp_shared_alloc_win32.c:233
@@ -225,7 +249,7 @@ msgid "Unable to create file mapping"
 msgstr ""
 
 #: openrasp_shared_alloc.c:89 openrasp_shared_alloc.c:90
-#: openrasp_shared_alloc.c:106
+#: openrasp_shared_alloc.c:106 openrasp_shared_alloc.c:105
 #, c-format
 msgid "Unable to create lock file: %s (%d)"
 msgstr ""
@@ -234,7 +258,8 @@ msgstr ""
 msgid "Unable to create view for file mapping"
 msgstr ""
 
-#: openrasp_log.cc:322
+#: openrasp_log.cc:322 openrasp_log.cc:328 openrasp_log.cc:338
+#: openrasp_log.cc:333 openrasp_log.cc:317
 #, c-format
 msgid "Unable to open '%s' for writing"
 msgstr ""
@@ -260,7 +285,7 @@ msgstr ""
 msgid "Unable to reattach to base address: %d"
 msgstr ""
 
-#: openrasp.cc:214
+#: openrasp.cc:214 openrasp.cc:216 openrasp.cc:219 openrasp.cc:230
 #, c-format
 msgid "Unable to set OpenRASP locale to '%s'"
 msgstr ""
@@ -279,6 +304,7 @@ msgid "Webshell detected - Command execution backdoor"
 msgstr ""
 
 #: hook/openrasp_file.cc:134 hook/openrasp_file.cc:150
+#: hook/openrasp_file.cc:155 hook/openrasp_file.cc:161
 msgid "Webshell detected - File dropper backdoor"
 msgstr ""
 
@@ -325,17 +351,20 @@ msgid ""
 "expose_php should be turned off to prevent PHP Version information disclosure"
 msgstr ""
 
-#: openrasp_log.cc:778
+#: openrasp_log.cc:778 openrasp_log.cc:780 openrasp_log.cc:787
+#: openrasp_log.cc:781 openrasp_log.cc:765 openrasp_log.cc:768
 #, c-format
 msgid "gethostname error: %s"
 msgstr ""
 
-#: openrasp_log.cc:746
+#: openrasp_log.cc:746 openrasp_log.cc:748 openrasp_log.cc:755
+#: openrasp_log.cc:749 openrasp_log.cc:733 openrasp_log.cc:736
 #, c-format
 msgid "getifaddrs error: %s"
 msgstr ""
 
-#: openrasp_log.cc:768
+#: openrasp_log.cc:768 openrasp_log.cc:770 openrasp_log.cc:777
+#: openrasp_log.cc:771 openrasp_log.cc:755 openrasp_log.cc:758
 #, c-format
 msgid "getifaddrs error: getnameinfo failed - %s."
 msgstr ""
@@ -344,6 +373,13 @@ msgstr ""
 #: openrasp_log.cc:767
 #, c-format
 msgid "getifaddrs: getnameinfo failed - %s."
+msgstr ""
+
+#: openrasp.cc:85
+msgid ""
+"openrasp.root_dir should be configured correctly in php.ini (not empty, not "
+"root path, not relative path and writable), continue without security "
+"protection"
 msgstr ""
 
 #: hook/openrasp_sql.cc:34 hook/openrasp_sql.cc:50
