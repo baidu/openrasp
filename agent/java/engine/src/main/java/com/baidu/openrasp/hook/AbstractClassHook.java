@@ -287,8 +287,8 @@ public abstract class AbstractClassHook {
         } else {
             src += ",null);";
         }
-        src = "try {" + src + "} catch (Throwable t) {if(t.getClass().getName().equals" +
-                "(\"com.baidu.openrasp.exception.SecurityException\")){throw t;}}";
+        src = "try {" + src + "} catch (Throwable t) {if(t.getCause() != null && t.getCause().getClass()" +
+                ".getName().equals(\"com.baidu.openrasp.exception.SecurityException\")){throw t;}}";
         return src;
     }
 
