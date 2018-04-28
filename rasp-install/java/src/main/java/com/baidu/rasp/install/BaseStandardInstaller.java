@@ -31,6 +31,7 @@ import static com.baidu.rasp.RaspError.E10003;
 public abstract class BaseStandardInstaller implements Installer {
     private String serverName;
     private String serverRoot;
+    public static String resinPath;
     public static int NOTFOUND = 0;
     public static int FOUND = 1;
     public static int DONE = 2;
@@ -39,8 +40,8 @@ public abstract class BaseStandardInstaller implements Installer {
     public BaseStandardInstaller(String serverName, String serverRoot) {
         this.serverName = serverName;
         this.serverRoot = serverRoot;
+        resinPath=serverRoot;
     }
-
     @Override
     public void install() throws RaspError, IOException {
         String jarPath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
