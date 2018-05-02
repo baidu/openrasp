@@ -8,6 +8,7 @@ services:
   - mysql
   - postgresql
 matrix:
+  fast_finish: true
   include:
     - jdk: openjdk7
       env: SERVER=tomcat6
@@ -36,6 +37,6 @@ install:
   - . start-${SERVER}.sh
   - pushd tester
 script:
-  - travis_retry node_modules/.bin/mocha *.test.js -t 20000
+  - travis_retry node_modules/.bin/mocha *.test.js -t 30000 --retries 3
 before_cache:
   - rm -rf $HOME/.m2/repository/com/fuxi
