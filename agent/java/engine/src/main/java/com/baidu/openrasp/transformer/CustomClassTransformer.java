@@ -26,6 +26,7 @@ import com.baidu.openrasp.hook.server.catalina.*;
 import com.baidu.openrasp.hook.server.jetty.*;
 import com.baidu.openrasp.hook.server.resin.*;
 import com.baidu.openrasp.hook.sql.SQLDriverManagerHook;
+import com.baidu.openrasp.hook.sql.SQLPreparedStatementHook;
 import com.baidu.openrasp.hook.sql.SQLResultSetHook;
 import com.baidu.openrasp.hook.sql.SQLStatementHook;
 import com.baidu.openrasp.hook.ssrf.CommonHttpClientHook;
@@ -92,6 +93,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new ResinOutputCloseHook());
         addHook(new ResinParseParamHook());
         addHook(new ResinHttpInputHook());
+        addHook(new SQLPreparedStatementHook());
     }
 
     private void addHook(AbstractClassHook hook) {
@@ -123,7 +125,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
                     if (loader == null) {
                         hook.setLoadedByBootstrapLoader(true);
                     }
-                    return hook.transformClass(ctClass);
+                    classfileBuffer = hook.transformClass(ctClass);
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
@@ -134,7 +136,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
             }
         }
         handleClassLoader(loader, className);
-        return null;
+        return classfileBuffer;
     }
 
     private void addLoader(ClassPool classPool, ClassLoader loader) {

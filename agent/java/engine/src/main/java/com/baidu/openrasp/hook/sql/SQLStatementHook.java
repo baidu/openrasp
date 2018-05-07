@@ -27,7 +27,6 @@ import javassist.NotFoundException;
 import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * Created by zhuming01 on 7/18/17.
@@ -82,7 +81,6 @@ public class SQLStatementHook extends AbstractSqlHook {
                 || "org/postgresql/jdbc1/AbstractJdbc1Statement".equals(className)
                 || "org/postgresql/jdbc2/AbstractJdbc2Statement".equals(className)
                 || "org/postgresql/jdbc3/AbstractJdbc3Statement".equals(className)
-                || "org/postgresql/jdbc3/AbstractJdbc3Statement".equals(className)
                 || "org/postgresql/jdbc3g/AbstractJdbc3gStatement".equals(className)
                 || "org/postgresql/jdbc4/AbstractJdbc4Statement".equals(className)) {
             this.type = SQL_TYPE_PGSQL;
@@ -91,7 +89,7 @@ public class SQLStatementHook extends AbstractSqlHook {
         }
 
         /* DB2 */
-        if (className.startsWith("com/ibm/db2/jcc/am")) {
+        if (className != null && className.startsWith("com/ibm/db2/jcc/am")) {
             this.type = SQL_TYPE_DB2;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
@@ -108,9 +106,9 @@ public class SQLStatementHook extends AbstractSqlHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         CtClass[] interfaces = ctClass.getInterfaces();
-        if (this.type.equals(SQL_TYPE_DB2) && interfaces != null) {
+        if (SQL_TYPE_DB2.equals(this.type) && interfaces != null) {
             for (CtClass inter : interfaces) {
-                if (inter.getName().equals("com.ibm.db2.jcc.DB2Statement")) {
+                if ("com.ibm.db2.jcc.DB2Statement".equals(inter.getName())) {
                     if (interfaces.length > 2) {
                         hookSqlStatementMethod(ctClass);
                     }
