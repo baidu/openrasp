@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: openrasp@baidu.com\n"
-"POT-Creation-Date: 2018-04-27 02:46-0700\n"
+"POT-Creation-Date: 2018-05-06 20:46-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -86,7 +86,7 @@ msgid "Could not create directory '%s': %s"
 msgstr ""
 
 #: openrasp_hook.cc:300 hook/openrasp_ssrf.cc:79 hook/openrasp_ssrf.cc:107
-#: hook/openrasp_ssrf.cc:111
+#: hook/openrasp_ssrf.cc:111 hook/openrasp_ssrf.cc:111
 #, c-format
 msgid "Detected SSRF via 302 redirect, effective url is %s"
 msgstr ""
@@ -97,7 +97,7 @@ msgstr ""
 #: openrasp_log.cc:731 openrasp_log.cc:726 openrasp_log.cc:733
 #: openrasp_log.cc:740 openrasp_log.cc:727 openrasp_log.cc:734
 #: openrasp_log.cc:711 openrasp_log.cc:718 openrasp_log.cc:714
-#: openrasp_log.cc:721
+#: openrasp_log.cc:714 openrasp_log.cc:721
 msgid "Error allocating memory needed to call GetAdaptersinfo."
 msgstr ""
 
@@ -220,6 +220,7 @@ msgstr ""
 
 #: openrasp_log.cc:696 openrasp_log.cc:698 openrasp_log.cc:705
 #: openrasp_log.cc:699 openrasp_log.cc:683 openrasp_log.cc:686
+#: openrasp_log.cc:686
 #, c-format
 msgid ""
 "Invalid syslog server address: '%s', expecting 'tcp://' or 'udp://' to be "
@@ -327,6 +328,7 @@ msgstr ""
 
 #: hook/openrasp_file.cc:134 hook/openrasp_file.cc:150
 #: hook/openrasp_file.cc:155 hook/openrasp_file.cc:161
+#: hook/openrasp_file.cc:165
 msgid "Webshell detected - File dropper backdoor"
 msgstr ""
 
@@ -380,18 +382,21 @@ msgstr ""
 
 #: openrasp_log.cc:778 openrasp_log.cc:780 openrasp_log.cc:787
 #: openrasp_log.cc:781 openrasp_log.cc:765 openrasp_log.cc:768
+#: openrasp_log.cc:768
 #, c-format
 msgid "gethostname error: %s"
 msgstr ""
 
 #: openrasp_log.cc:746 openrasp_log.cc:748 openrasp_log.cc:755
 #: openrasp_log.cc:749 openrasp_log.cc:733 openrasp_log.cc:736
+#: openrasp_log.cc:736
 #, c-format
 msgid "getifaddrs error: %s"
 msgstr ""
 
 #: openrasp_log.cc:768 openrasp_log.cc:770 openrasp_log.cc:777
 #: openrasp_log.cc:771 openrasp_log.cc:755 openrasp_log.cc:758
+#: openrasp_log.cc:758
 #, c-format
 msgid "getifaddrs error: getnameinfo failed - %s."
 msgstr ""

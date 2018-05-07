@@ -142,6 +142,10 @@ void pre_global_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
                 strcpy(real_path, resolved_path);
                 efree(resolved_path);
             }
+            else
+            {
+                strcpy(real_path, expand_path);
+            }
         }
         if (resource) {
             php_url_free(resource);
