@@ -21,6 +21,7 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.tool.StackTrace;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -28,6 +29,8 @@ import javassist.NotFoundException;
 import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -35,6 +38,7 @@ import java.util.List;
  * All rights reserved
  */
 public class ProcessBuilderHook extends AbstractClassHook {
+
     /**
      * (none-javadoc)
      *
@@ -52,7 +56,12 @@ public class ProcessBuilderHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "java/lang/ProcessBuilder".equals(className);
+        if (OSUtil.isLinux() || OSUtil.isMacOS()) {
+            return "java/lang/UNIXProcess".equals(className);
+        } else if (OSUtil.isWindows()) {
+            return "java/lang/ProcessImpl".equals(className);
+        }
+        return false;
     }
 
     /**
@@ -62,9 +71,32 @@ public class ProcessBuilderHook extends AbstractClassHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
-                "command()", List.class);
-        insertBefore(ctClass, "start", "()Ljava/lang/Process;", src);
+        if (ctClass.getName().contains("ProcessImpl")) {
+            String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
+                    "$1", List.class);
+            insertBefore(ctClass, "<init>", null, src);
+        } else if (ctClass.getName().contains("UNIXProcess")) {
+            String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
+                    "$1,$2", byte[].class, byte[].class);
+            insertBefore(ctClass, "<init>", null, src);
+        }
+    }
+
+    public static void checkCommand(byte[] command, byte[] args) {
+        LinkedList<String> commands = new LinkedList<String>();
+        if (command != null && command.length > 0) {
+            commands.add(new String(command, 0, command.length - 1));
+        }
+        if (args != null && args.length > 0) {
+            int position = 0;
+            for (int i = 0; i < args.length; i++) {
+                if (args[i] == 0) {
+                    commands.add(new String(Arrays.copyOfRange(args, position, i)));
+                    position = i + 1;
+                }
+            }
+        }
+        checkCommand(commands);
     }
 
     /**

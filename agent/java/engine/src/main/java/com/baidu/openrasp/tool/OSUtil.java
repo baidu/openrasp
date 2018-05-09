@@ -71,4 +71,8 @@ public class OSUtil {
         return System.getProperty("os.name") != null && System.getProperty("os.name").toLowerCase().contains("linux");
     }
 
+    public static boolean isMacOS(){
+        return System.getProperty("os.name") != null && System.getProperty("os.name").toLowerCase().contains("mac os x");
+    }
+
 }

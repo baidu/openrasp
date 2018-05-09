@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedList;
 
 /**
@@ -119,9 +120,9 @@ public abstract class AbstractClassHook {
     public void insertBefore(CtClass ctClass, String methodName, String desc, String src)
             throws NotFoundException, CannotCompileException {
 
-        LinkedList<CtMethod> methods = getMethod(ctClass, methodName, desc);
+        LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc);
         if (methods != null && methods.size() > 0) {
-            for (CtMethod method : methods) {
+            for (CtBehavior method : methods) {
                 if (method != null) {
                     insertBefore(method, src);
                 }
@@ -161,9 +162,9 @@ public abstract class AbstractClassHook {
     public void insertAfter(CtClass ctClass, String methodName, String desc, String src, boolean asFinally)
             throws NotFoundException, CannotCompileException {
 
-        LinkedList<CtMethod> methods = getMethod(ctClass, methodName, desc);
+        LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc);
         if (methods != null && methods.size() > 0) {
-            for (CtMethod method : methods) {
+            for (CtBehavior method : methods) {
                 if (method != null) {
                     insertAfter(method, src, asFinally);
                 }
@@ -176,6 +177,20 @@ public abstract class AbstractClassHook {
 
     }
 
+    private LinkedList<CtBehavior> getConstructor(CtClass ctClass, String desc) {
+        LinkedList<CtBehavior> methods = new LinkedList<CtBehavior>();
+        if (StringUtils.isEmpty(desc)) {
+            Collections.addAll(methods, ctClass.getDeclaredConstructors());
+        } else {
+            try {
+                methods.add(ctClass.getConstructor(desc));
+            } catch (NotFoundException e) {
+                // ignore
+            }
+        }
+        return methods;
+    }
+
     /**
      * 获取特定类的方法实例
      * 如果描述符为空，那么返回所有同名的方法
@@ -186,8 +201,11 @@ public abstract class AbstractClassHook {
      * @return 所有符合要求的方法实例
      * @see javassist.bytecode.Descriptor
      */
-    private LinkedList<CtMethod> getMethod(CtClass ctClass, String methodName, String desc) {
-        LinkedList<CtMethod> methods = new LinkedList<CtMethod>();
+    private LinkedList<CtBehavior> getMethod(CtClass ctClass, String methodName, String desc) {
+        if ("<init>".equals(methodName)) {
+            return getConstructor(ctClass, desc);
+        }
+        LinkedList<CtBehavior> methods = new LinkedList<CtBehavior>();
         if (StringUtils.isEmpty(desc)) {
             CtMethod[] allMethods = ctClass.getDeclaredMethods();
             if (allMethods != null) {
