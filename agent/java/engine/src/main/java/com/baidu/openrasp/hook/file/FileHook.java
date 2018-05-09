@@ -65,7 +65,7 @@ public class FileHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(FileHook.class, "checkListFiles", "$0", File.class);
-        insertBefore(ctClass, "listFiles", null, src);
+        insertBefore(ctClass, "list", "()[Ljava/lang/String;", src);
     }
 
     /**
