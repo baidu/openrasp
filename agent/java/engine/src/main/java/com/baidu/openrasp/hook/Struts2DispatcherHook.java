@@ -48,14 +48,11 @@ public class Struts2DispatcherHook extends ServerRequestHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String hookDesc = "(Ljavax/servlet/http/HttpServletRequest;"
-                + "Ljavax/servlet/http/HttpServletResponse;"
-                + "Lorg/apache/struts2/dispatcher/mapper/ActionMapping;)V";
         String srcBefore = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
                 "$0,$1,$2", Object.class, Object.class, Object.class);
-        insertBefore(ctClass, "serviceAction", hookDesc, "new Exception().printStackTrace();"+srcBefore);
+        insertBefore(ctClass, "serviceAction", null, srcBefore);
         String srcAfter = getInvokeStaticSrc(HookHandler.class, "onServiceExit", "");
-        insertAfter(ctClass, "serviceAction", hookDesc, srcAfter, true);
+        insertAfter(ctClass, "serviceAction", null, srcAfter, true);
     }
 
 }

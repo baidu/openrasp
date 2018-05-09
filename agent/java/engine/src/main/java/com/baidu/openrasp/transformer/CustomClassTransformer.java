@@ -66,7 +66,6 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new FileOutputStreamHook());
         addHook(new OgnlHook());
         addHook(new ProcessBuilderHook());
-        addHook(new Struts2DispatcherHook());
         addHook(new SQLDriverManagerHook());
         addHook(new SQLStatementHook());
         addHook(new SQLResultSetHook());
