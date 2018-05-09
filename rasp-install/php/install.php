@@ -38,6 +38,20 @@ function get_lib_2b_installed($current_os, $lib_filename)
 	return $lib_abspath;
 }
 
+function check_dep_exts_installed($dep_exts)
+{
+	if (is_array($dep_exts)) {
+		foreach($dep_exts as $key=>$value) {
+			if (!extension_loaded($value)) {
+				return false;
+			}
+		}
+		return true;
+	} else {
+		return false;
+	}
+}
+
 function get_ini_content($lib_filename, $root_dir)
 {
 $ini_content = <<<OPENRASP
@@ -133,6 +147,13 @@ if (array_key_exists("d", $options) && !empty($options["d"])) {
 	show_help($install_help_msg);
 } else {
 	log_tips(ERROR, "Bad command line arguments. Please use \"-h\" to check help messages.");
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 检察依赖扩展 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+major_tips('Check whether dependent PHP extensions are installed');
+$dep_exts = array('json', 'PDO');
+if (!check_dep_exts_installed($dep_exts)) {
+	log_tips(ERROR, implode(" ",$dep_exts) . " must be installed correctly.");
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 拷贝动态库 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
