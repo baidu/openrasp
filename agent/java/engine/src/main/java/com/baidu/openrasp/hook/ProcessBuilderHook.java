@@ -30,6 +30,7 @@ import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -73,7 +74,7 @@ public class ProcessBuilderHook extends AbstractClassHook {
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         if (ctClass.getName().contains("ProcessImpl")) {
             String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
-                    "$1", List.class);
+                    "$1", String[].class);
             insertBefore(ctClass, "<init>", null, src);
         } else if (ctClass.getName().contains("UNIXProcess")) {
             String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
@@ -96,6 +97,12 @@ public class ProcessBuilderHook extends AbstractClassHook {
                 }
             }
         }
+        checkCommand(commands);
+    }
+
+    public static void checkCommand(String[] commnad) {
+        LinkedList<String> commands = new LinkedList<String>();
+        Collections.addAll(commands, commnad);
         checkCommand(commands);
     }
 

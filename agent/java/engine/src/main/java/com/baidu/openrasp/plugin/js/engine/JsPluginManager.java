@@ -43,7 +43,7 @@ import java.util.TimerTask;
  */
 public class JsPluginManager {
 
-    private static final Logger LOGGER = Logger.getLogger(JsPluginManager.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(JsPluginManager.class.getPackage().getName() + ".log");
     private static Timer timer = null;
     private static Integer watchId = null;
 
