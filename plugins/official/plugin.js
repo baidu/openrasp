@@ -717,17 +717,26 @@ plugin.register('command', function (params, context) {
             'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': '尝试通过 Spring SpEL 表达式执行命令'
         }
         
-        for (var i = 2; i < params.stack.length; i ++) {
+        for (var i = 2; i < params.stack.length; i ++) 
+        {
             var method = params.stack[i]
 
-            if (method.startsWith('ysoserial.Pwner')) {
+            if (method.startsWith('ysoserial.Pwner')) 
+            {
                 message = 'YsoSerial 漏洞利用工具 - 反序列化攻击'
+                break
+            }
+
+            if (method == 'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute')
+            {
+                message = '尝试通过 Groovy 脚本执行命令'
                 break
             }
 
             // 仅当命令本身来自反射调用才拦截
             // 如果某个类是反射调用，这个类再主动执行命令，则忽略
-            if (! method.startsWith('java.') && ! method.startsWith('sun.') && ! message) {
+            if (! method.startsWith('java.') && ! method.startsWith('sun.') && !method.startsWith('com.sun.')) 
+            {
                 userCode = true
             }
 
@@ -744,8 +753,10 @@ plugin.register('command', function (params, context) {
     }
 
     // PHP 检测逻辑
-    else if (server.language == 'php') {
-        if (validate_stack_php(params.stack)) {
+    else if (server.language == 'php')
+    {
+        if (validate_stack_php(params.stack)) 
+        {
             message = '发现 Webshell，或者基于 eval/assert/create_function/preg_replace/.. 等类型的代码执行漏洞'
         }
     }
