@@ -218,10 +218,6 @@ if (RASP.get_jsengine() !== 'v8') {
         // SSRF - 是否允许访问混淆后的IP地址
         'ssrf_obfuscate': {
             action: 'block'
-        },
-        // SSRF - 是否直接禁止访问内网
-        'ssrf_intranet': {
-            action: 'ignore'
         }
     }
 
