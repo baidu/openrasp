@@ -390,22 +390,8 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
-        // 算法3: 简单正则匹配 DEMO
-        if (0) {
-            var sqlRegex = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
-
-            if (sqlRegex.test(params.query)) {
-                return {
-                    action:     'block',
-                    message:    'SQL 注入攻击（算法4）',
-                    confidence: 100
-                }
-            }
-        }
-
         return clean
     })
-
 
     plugin.register('ssrf', function (params, context) {
         var hostname = params.hostname
