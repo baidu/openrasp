@@ -99,7 +99,7 @@ public class ProcessBuilderHook extends AbstractClassHook {
                 HookHandler.LOGGER.warn(t.getMessage());
             }
             if(params != null) {
-                HookHandler.doCheck(CheckParameter.Type.COMMAND, params);
+                HookHandler.doCheckWithoutRequest(CheckParameter.Type.COMMAND, params);
             }
         }
     }
