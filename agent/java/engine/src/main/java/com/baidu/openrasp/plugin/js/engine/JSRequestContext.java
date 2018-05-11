@@ -17,6 +17,7 @@
 package com.baidu.openrasp.plugin.js.engine;
 
 import com.baidu.openrasp.request.AbstractRequest;
+import com.baidu.openrasp.request.EmptyRequest;
 import com.baidu.openrasp.request.HttpServletRequest;
 import org.mozilla.javascript.*;
 import org.mozilla.javascript.annotations.JSConstructor;
@@ -54,7 +55,7 @@ public class JSRequestContext extends ScriptableObject {
                             boolean inNewExpr) {
         this.cx = (JSContext) cx;
         this.scope = this.cx.getScope();
-        this.javaContext = (AbstractRequest) args[0];
+        this.javaContext = args[0] == null ? new EmptyRequest() : (AbstractRequest) args[0];
     }
 
     @Override

@@ -29,6 +29,8 @@ import java.io.IOException;
  */
 public class SQLPreparedStatementHook extends AbstractSqlHook {
 
+    private String className;
+
     @Override
     public boolean isClassMatched(String className) {
 
@@ -63,12 +65,13 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
         }
 
         /* PostgreSQL */
-        if ("org/postgresql/jdbc/PgStatement".equals(className)
+        if ("org/postgresql/jdbc/PgPreparedStatement".equals(className)
                 || "org/postgresql/jdbc1/AbstractJdbc1Statement".equals(className)
                 || "org/postgresql/jdbc2/AbstractJdbc2Statement".equals(className)
                 || "org/postgresql/jdbc3/AbstractJdbc3Statement".equals(className)
                 || "org/postgresql/jdbc3g/AbstractJdbc3gStatement".equals(className)
                 || "org/postgresql/jdbc4/AbstractJdbc4Statement".equals(className)) {
+            this.className = className;
             this.type = SQL_TYPE_PGSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
@@ -114,7 +117,11 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
         } else if (SQL_TYPE_SQLSERVER.equals(this.type)) {
             originalSqlCode = "preparedSQL";
         } else if (SQL_TYPE_PGSQL.equals(this.type)) {
-            originalSqlCode = "preparedQuery.toString(preparedQuery.createParameterList())";
+            if ("org/postgresql/jdbc/PgPreparedStatement".equals(className)) {
+                originalSqlCode = "preparedQuery.query.toString(preparedQuery.query.createParameterList())";
+            } else {
+                originalSqlCode = "preparedQuery.toString(preparedQuery.createParameterList())";
+            }
         } else if (SQL_TYPE_ORACLE.equals(this.type)) {
             originalSqlCode = "this.sqlObject.getOriginalSql()";
         }
