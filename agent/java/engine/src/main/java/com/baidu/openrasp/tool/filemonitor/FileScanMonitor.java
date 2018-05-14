@@ -31,7 +31,8 @@ import java.io.File;
 public class FileScanMonitor {
 
     static {
-        JNotify.init(Config.baseDirectory);
+        JnotifyWatcher watcher=new JnotifyWatcher();
+        JNotify.init(Config.baseDirectory,watcher);
     }
 
     /**
