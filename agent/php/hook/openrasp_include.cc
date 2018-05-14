@@ -113,58 +113,65 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     MAKE_STD_ZVAL(path);
     MAKE_COPY_ZVAL(&op1, path);
     convert_to_string(path);
-    php_url *resource = php_url_parse_ex(Z_STRVAL_P(path), Z_STRLEN_P(path));
     char *real_path = nullptr;
-    if (resource && resource->scheme) 
+    fprintf(stdout, "%s\n", Z_STRVAL_P(path));
+    if ((strlen(Z_STRVAL_P(path)) < 4 
+    || (strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".php") && strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".inc")))
+    && (strstr(Z_STRVAL_P(path), "://") != nullptr || strstr(Z_STRVAL_P(path), "../") != nullptr))
     {
-        real_path = estrdup(Z_STRVAL_P(path));
+        real_path = openrasp_real_path(Z_STRVAL_P(path), Z_STRLEN_P(path), 1, false TSRMLS_CC);
     }
-    else
-    {
-        if (strstr(Z_STRVAL_P(path), "/../") != nullptr)
-        {
-            char expand_path[MAXPATHLEN];
-            if (expand_filepath(Z_STRVAL_P(path), expand_path TSRMLS_CC)) {
-                real_path = php_resolve_path(expand_path, strlen(expand_path), PG(include_path) TSRMLS_CC);
-            }
-        }
-    }
-    if (resource) {
-        php_url_free(resource);
-    }
+    
     if (!real_path)
     {
         zval_ptr_dtor(&path);
-        return ZEND_USER_OPCODE_DISPATCH;
     }
-    zval *params;
-    MAKE_STD_ZVAL(params);
-    array_init(params);
-    add_assoc_zval(params, "path", path);
-    add_assoc_zval(params, "url", path);
-    Z_ADDREF_P(path);
-    add_assoc_string(params, "realpath", real_path, 0);
-    char *function = nullptr;
-    switch (OPENRASP_INCLUDE_OR_EVAL_TYPE(execute_data->opline))
+    else
     {
-    case ZEND_INCLUDE:
-        function = "include";
-        break;
-    case ZEND_INCLUDE_ONCE:
-        function = "include_once";
-        break;
-    case ZEND_REQUIRE:
-        function = "require";
-        break;
-    case ZEND_REQUIRE_ONCE:
-        function = "require_once";
-        break;
-    default:
-        function = "";
-        break;
+        zval **doc_root;
+        if ((!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
+        || (Z_TYPE_P(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY &&
+        zend_hash_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS("DOCUMENT_ROOT"), (void **)&doc_root) == SUCCESS && 
+        Z_TYPE_PP(doc_root) == IS_STRING &&
+        strlen(real_path) >= Z_STRLEN_PP(doc_root) &&
+        0 == strncmp(real_path, Z_STRVAL_PP(doc_root), Z_STRLEN_PP(doc_root))))
+        {
+            fprintf(stdout, "real path is : %s, webroot is %s\n", real_path, Z_STRVAL_PP(doc_root));
+            //skip
+            efree(real_path);
+            zval_ptr_dtor(&path);
+        }
+        else
+        {
+            zval *params;
+            MAKE_STD_ZVAL(params);
+            array_init(params);
+            add_assoc_zval(params, "path", path);
+            add_assoc_zval(params, "url", path);
+            Z_ADDREF_P(path);
+            add_assoc_string(params, "realpath", real_path, 0);
+            char *function = nullptr;
+            switch (OPENRASP_INCLUDE_OR_EVAL_TYPE(execute_data->opline))
+            {
+            case ZEND_INCLUDE:
+                function = "include";
+                break;
+            case ZEND_INCLUDE_ONCE:
+                function = "include_once";
+                break;
+            case ZEND_REQUIRE:
+                function = "require";
+                break;
+            case ZEND_REQUIRE_ONCE:
+                function = "require_once";
+                break;
+            default:
+                function = "";
+                break;
+            }
+            add_assoc_string(params, "function", function, 1);
+            check("include", params TSRMLS_CC);
+        }
     }
-    add_assoc_string(params, "function", function, 1);
-    check("include", params TSRMLS_CC);
-
     return ZEND_USER_OPCODE_DISPATCH;
 }
