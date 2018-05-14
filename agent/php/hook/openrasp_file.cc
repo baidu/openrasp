@@ -18,17 +18,13 @@
 
 static const char* mode_to_type(char *mode)
 {
-    if (strchr(mode, '+') > mode)
+    if (strchr(mode, '+') > mode || strchr(mode, 'w') > mode || strchr(mode, 'a') > mode)
     {
         return "writeFile";
     }
-    else if (strchr(mode, 'r') != nullptr)
+    else //r,rb,rt
     {
         return "readFile";
-    }
-    else
-    {
-        return "writeFile";
     }
 }
 
