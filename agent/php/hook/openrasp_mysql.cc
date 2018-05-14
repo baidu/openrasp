@@ -98,7 +98,7 @@ static inline void init_mysql_pconnect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, 
 }
 
 //mysql_connect
-void pre_global_mysql_connect(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_mysql_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {        
@@ -108,7 +108,7 @@ void pre_global_mysql_connect(INTERNAL_FUNCTION_PARAMETERS)
         }
     }
 }
-void post_global_mysql_connect(INTERNAL_FUNCTION_PARAMETERS)
+void post_global_mysql_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_RESOURCE)
     {
@@ -117,7 +117,7 @@ void post_global_mysql_connect(INTERNAL_FUNCTION_PARAMETERS)
 }
 
 //mysql_pconnect
-void pre_global_mysql_pconnect(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_mysql_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {        
@@ -127,7 +127,7 @@ void pre_global_mysql_pconnect(INTERNAL_FUNCTION_PARAMETERS)
         }
     }
 }
-void post_global_mysql_pconnect(INTERNAL_FUNCTION_PARAMETERS)
+void post_global_mysql_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_RESOURCE)
     {
@@ -137,16 +137,12 @@ void post_global_mysql_pconnect(INTERNAL_FUNCTION_PARAMETERS)
 
 
 //mysql_query
-void pre_global_mysql_query(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_mysql_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {    
     check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "mysql", 1);
 }
-void post_global_mysql_query(INTERNAL_FUNCTION_PARAMETERS)
+void post_global_mysql_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (openrasp_check_type_ignored(ZEND_STRL("sqlSlowQuery") TSRMLS_CC)) 
-    {
-        return;
-    } 
     long num_rows = 0;
     if (Z_TYPE_P(return_value) == IS_RESOURCE)
     {

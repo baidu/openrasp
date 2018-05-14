@@ -136,17 +136,13 @@ static void pdo_pre_process(INTERNAL_FUNCTION_PARAMETERS)
     check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, const_cast<char*>(dbh->driver->driver_name), 1);
 }
 
-void pre_pdo_query(INTERNAL_FUNCTION_PARAMETERS)
+void pre_pdo_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pdo_pre_process(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void post_pdo_query(INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (openrasp_check_type_ignored(ZEND_STRL("sqlSlowQuery") TSRMLS_CC)) 
-    {
-        return;
-    }    
+void post_pdo_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{   
     if (Z_TYPE_P(return_value) == IS_OBJECT)
     {
         pdo_stmt_t *stmt = (pdo_stmt_t*)zend_object_store_get_object(return_value TSRMLS_CC);
@@ -160,17 +156,13 @@ void post_pdo_query(INTERNAL_FUNCTION_PARAMETERS)
     }    
 }
 
-void pre_pdo_exec(INTERNAL_FUNCTION_PARAMETERS)
+void pre_pdo_exec_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pdo_pre_process(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void post_pdo_exec(INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (openrasp_check_type_ignored(ZEND_STRL("sqlSlowQuery") TSRMLS_CC)) 
-    {
-        return;
-    }    
+void post_pdo_exec_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{    
     if (Z_TYPE_P(return_value) == IS_LONG)
     {	
         if (Z_LVAL_P(return_value) >= openrasp_ini.slowquery_min_rows)
@@ -180,7 +172,7 @@ void post_pdo_exec(INTERNAL_FUNCTION_PARAMETERS)
     } 
 }
 
-void pre_pdo___construct(INTERNAL_FUNCTION_PARAMETERS)
+void pre_pdo___construct_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {        
@@ -191,7 +183,7 @@ void pre_pdo___construct(INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void post_pdo___construct(INTERNAL_FUNCTION_PARAMETERS)
+void post_pdo___construct_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(this_ptr) == IS_OBJECT)
     {

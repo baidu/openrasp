@@ -131,10 +131,6 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
 */
 void check_query_clause(INTERNAL_FUNCTION_PARAMETERS, char *server, int num)
 {    
-    if (openrasp_check_type_ignored(ZEND_STRL("sql") TSRMLS_CC)) 
-    {
-        return;
-    }
     int argc = MIN(num, ZEND_NUM_ARGS());
     zval ***args = (zval ***)safe_emalloc(argc, sizeof(zval **), 0);
     if (argc == num &&

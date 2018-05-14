@@ -35,13 +35,12 @@ extern "C"
 #endif
 }
 
-int pre_global_curl_exec(INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args)
+int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args)
 {
     zval **zid;
 
     int argc = MIN(1, ZEND_NUM_ARGS());
-    if (openrasp_check_type_ignored(ZEND_STRL("ssrf") TSRMLS_CC) ||
-        argc <= 0 ||
+    if (argc <= 0 ||
         zend_get_parameters_ex(argc, &zid) != SUCCESS ||
         Z_TYPE_PP(zid) != IS_RESOURCE)
     {
@@ -88,12 +87,12 @@ int pre_global_curl_exec(INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval
             php_url_free(url);
         }
         add_assoc_zval(params, "ip", ip_arr);
-        check("ssrf", params TSRMLS_CC);
+        check(check_type, params TSRMLS_CC);
     }
     return 0;
 }
 
-void post_global_curl_exec(INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args)
+void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args)
 {    
     zval effective_url;
     INIT_ZVAL(effective_url);
@@ -111,7 +110,7 @@ void post_global_curl_exec(INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zv
         spprintf(&message_str, 0, _("Detected SSRF via 302 redirect, effective url is %s"), Z_STRVAL(effective_url));
         ZVAL_STRING(plugin_message, message_str, 1);
         efree(message_str);
-        openrasp_buildin_php_risk_handle(1, "ssrf", 100, attack_params, plugin_message TSRMLS_CC);       
+        openrasp_buildin_php_risk_handle(1, check_type, 100, attack_params, plugin_message TSRMLS_CC);       
     }
     zval_dtor(&effective_url);
     return;

@@ -68,6 +68,9 @@ extern "C" {
 # endif
 #endif
 
+#define OPENRASP_INTERNAL_FUNCTION_PARAMETERS INTERNAL_FUNCTION_PARAMETERS, const char * check_type
+#define OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU INTERNAL_FUNCTION_PARAM_PASSTHRU, check_type
+
 /* {{{ defines */
 #define EXTR_OVERWRITE			0
 #define EXTR_SKIP				1
@@ -164,40 +167,62 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
  * @param name 函数完整名称
  * @param scope 函数所属 class，全局函数的 scope 为 global
  */
-#define OPENRASP_HOOK_FUNCTION_EX(name, scope)                                                          \
-    php_function origin_##scope##_##name = nullptr;                                                     \
-    inline void hook_##scope##_##name##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function); \
-    void hook_##scope##_##name(INTERNAL_FUNCTION_PARAMETERS)                                            \
-    {                                                                                                   \
-        hook_##scope##_##name##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, origin_##scope##_##name);          \
-    }                                                                                                   \
-    inline void hook_##scope##_##name##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function)
-#define OPENRASP_HOOK_FUNCTION(name) \
-    OPENRASP_HOOK_FUNCTION_EX(name, global)
+#define OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                                \
+    php_function origin_##scope##_##name##_##type = nullptr;                                                        \
+    inline void hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function);    \
+    void hook_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAMETERS)                                               \
+    {                                                                                                               \
+        hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, origin_##scope##_##name##_##type);    \
+    }                                                                                                               \
+    inline void hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function)
+#define OPENRASP_HOOK_FUNCTION(name, type) \
+    OPENRASP_HOOK_FUNCTION_EX(name, global, type)
 
-#define HOOK_FUNCTION_EX(name, scope)                                                                   \
-    extern void pre_##scope##_##name(INTERNAL_FUNCTION_PARAMETERS);                                     \
-    extern void post_##scope##_##name(INTERNAL_FUNCTION_PARAMETERS);                                    \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope)                                                              \
+#define HOOK_FUNCTION_EX(name, scope, type)                                                             \
+    extern void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                   \
+    extern void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                  \
+    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                        \
     {                                                                                                   \
-        pre_##scope##_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                         \
+        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)) TSRMLS_CC);         \
+        if (!type_ignored) {                                                                            \
+            pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));        \
+        }                                                                                               \
         origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                              \
-        post_##scope##_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                        \
+        if (!type_ignored) {                                                                            \
+            post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));       \
+        }                                                                                               \
     }
 
-#define HOOK_FUNCTION(name) \
-    HOOK_FUNCTION_EX(name, global)
+#define HOOK_FUNCTION(name, type) \
+    HOOK_FUNCTION_EX(name, global, type)
 
-#define PRE_HOOK_FUNCTION_EX(name, scope)                                                               \
-    extern void pre_##scope##_##name(INTERNAL_FUNCTION_PARAMETERS);                                     \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope)                                                              \
+#define PRE_HOOK_FUNCTION_EX(name, scope, type)                                                         \
+    extern void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                   \
+    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                        \
     {                                                                                                   \
-        pre_##scope##_##name(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                         \
+        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)) TSRMLS_CC);         \
+        if (!type_ignored) {                                                                            \
+            pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));        \
+        }                                                                                               \
         origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                              \
     }
 
-#define PRE_HOOK_FUNCTION(name) \
-    PRE_HOOK_FUNCTION_EX(name, global)
+#define PRE_HOOK_FUNCTION(name, type) \
+    PRE_HOOK_FUNCTION_EX(name, global, type)
+
+#define POST_HOOK_FUNCTION_EX(name, scope, type)                                                        \
+    extern void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                  \
+    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                        \
+    {                                                                                                   \
+        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                              \
+        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)) TSRMLS_CC);         \
+        if (!type_ignored) {                                                                            \
+            post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));       \
+        }                                                                                               \
+    }
+
+#define POST_HOOK_FUNCTION(name, type) \
+    POST_HOOK_FUNCTION_EX(name, global, type)
 /**
  * 使用这个宏 hook 指定函数
  * 需要在 hook 前先定义相应的替换函数
@@ -206,7 +231,7 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
  * @param name 函数完整名称
  * @param scope 函数所属 class，全局函数的 scope 为 global
  */
-#define OPENRASP_HOOK_EX(name, scope)                                                                      \
+#define OPENRASP_HOOK_EX(name, scope, type)                                                                \
     {                                                                                                      \
         HashTable *ht = nullptr;                                                                           \
         zend_function *function;                                                                           \
@@ -226,12 +251,12 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
             zend_hash_find(ht, ZEND_STRS(ZEND_TOSTR(name)), (void **)&function) == SUCCESS &&              \
             function->internal_function.handler != zif_display_disabled_function)                          \
         {                                                                                                  \
-            origin_##scope##_##name = function->internal_function.handler;                                 \
-            function->internal_function.handler = hook_##scope##_##name;                                   \
+            origin_##scope##_##name##_##type = function->internal_function.handler;                        \
+            function->internal_function.handler = hook_##scope##_##name##_##type;                          \
         }                                                                                                  \
     }
-#define OPENRASP_HOOK(name) \
-    OPENRASP_HOOK_EX(name, global)
+#define OPENRASP_HOOK(name, type) \
+    OPENRASP_HOOK_EX(name, global, type)
 
 struct openrasp_hook_ini_t
 {

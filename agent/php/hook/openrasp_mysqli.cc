@@ -90,7 +90,7 @@ static void init_mysqli_real_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sq
 }
 
 //mysqli::mysqli
-void pre_mysqli_mysqli(INTERNAL_FUNCTION_PARAMETERS)
+void pre_mysqli_mysqli_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {
@@ -100,7 +100,7 @@ void pre_mysqli_mysqli(INTERNAL_FUNCTION_PARAMETERS)
         }
     }
 }
-void post_mysqli_mysqli(INTERNAL_FUNCTION_PARAMETERS)
+void post_mysqli_mysqli_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(this_ptr) == IS_OBJECT)
     {
@@ -110,7 +110,7 @@ void post_mysqli_mysqli(INTERNAL_FUNCTION_PARAMETERS)
 
 
 //mysqli::real_connect 
-void pre_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS)
+void pre_mysqli_real_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {
@@ -120,7 +120,7 @@ void pre_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS)
         }
     }
 }
-void post_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS)
+void post_mysqli_real_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(this_ptr) == IS_OBJECT)
     {
@@ -130,16 +130,12 @@ void post_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS)
 
 
 //mysqli::query
-void pre_mysqli_query(INTERNAL_FUNCTION_PARAMETERS)
+void pre_mysqli_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "mysql", 1);
 }
-void post_mysqli_query(INTERNAL_FUNCTION_PARAMETERS) 
-{
-    if (openrasp_check_type_ignored(ZEND_STRL("sqlSlowQuery") TSRMLS_CC)) 
-    {
-        return;
-    }        
+void post_mysqli_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS) 
+{       
     long resultmode = MYSQLI_STORE_RESULT;
     int argc = ZEND_NUM_ARGS();
     if (2 == argc)
@@ -173,7 +169,7 @@ void post_mysqli_query(INTERNAL_FUNCTION_PARAMETERS)
 
 
 //mysqli_connect
-void pre_global_mysqli_connect(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_mysqli_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {        
@@ -183,7 +179,7 @@ void pre_global_mysqli_connect(INTERNAL_FUNCTION_PARAMETERS)
         }
     }
 }
-void post_global_mysqli_connect(INTERNAL_FUNCTION_PARAMETERS)
+void post_global_mysqli_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_OBJECT)
     {
@@ -193,7 +189,7 @@ void post_global_mysqli_connect(INTERNAL_FUNCTION_PARAMETERS)
 
 
 //mysqli_real_connect
-void pre_global_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_mysqli_real_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {        
@@ -203,7 +199,7 @@ void pre_global_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS)
         }
     }
 }
-void post_global_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS)
+void post_global_mysqli_real_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value))
     {
@@ -213,16 +209,12 @@ void post_global_mysqli_real_connect(INTERNAL_FUNCTION_PARAMETERS)
 
 
 //mysqli_query
-void pre_global_mysqli_query(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_mysqli_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {    
     check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "mysql", 2);
 }
-void post_global_mysqli_query(INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (openrasp_check_type_ignored(ZEND_STRL("sqlSlowQuery") TSRMLS_CC)) 
-    {
-        return;
-    }        
+void post_global_mysqli_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{      
     long resultmode = MYSQLI_STORE_RESULT;
     int argc = ZEND_NUM_ARGS();    
     zval ***ppp_args = (zval ***)safe_emalloc(argc, sizeof(zval **), 0);
@@ -255,11 +247,10 @@ void post_global_mysqli_query(INTERNAL_FUNCTION_PARAMETERS)
 
 
 //mysqli_real_query
-void pre_global_mysqli_real_query(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_mysqli_real_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {    
     check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "mysql", 2);
 }
-void post_global_mysqli_real_query(INTERNAL_FUNCTION_PARAMETERS){}
 
 
 

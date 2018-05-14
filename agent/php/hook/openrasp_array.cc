@@ -18,10 +18,6 @@
 
 static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
 {
-    if (openrasp_check_type_ignored(ZEND_STRL("callable") TSRMLS_CC))
-    {
-        return;
-    }
 	if (!ZEND_FCI_INITIALIZED(fci))
 	{
 		return;
@@ -43,6 +39,18 @@ static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
             openrasp_buildin_php_risk_handle(1, "callable", 100, attack_params, plugin_message TSRMLS_CC);
 		}
 	}
+}
+
+static void pre_base_sort(INTERNAL_FUNCTION_PARAMETERS)
+{
+    zval *array;
+	zend_fcall_info fci;
+	zend_fcall_info_cache fci_cache;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "af", &array, &fci, &fci_cache) == FAILURE) {
+		return;
+	}
+	check_callable_function(fci TSRMLS_CC);
 }
 
 static void pre_php_array_diff(INTERNAL_FUNCTION_PARAMETERS, int behavior, int data_compare_type, int key_compare_type)
@@ -127,12 +135,12 @@ static void pre_php_array_diff(INTERNAL_FUNCTION_PARAMETERS, int behavior, int d
     efree(args);
 }
 
-void pre_global_array_diff_ukey(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_array_diff_ukey_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pre_php_array_diff(INTERNAL_FUNCTION_PARAM_PASSTHRU, DIFF_KEY, DIFF_COMP_DATA_INTERNAL, DIFF_COMP_KEY_USER);
 }
 
-void pre_global_array_filter(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_array_filter_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *array;
 	long use_type = 0;
@@ -147,7 +155,7 @@ void pre_global_array_filter(INTERNAL_FUNCTION_PARAMETERS)
 	}
 }
 
-void pre_global_array_map(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_array_map_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval ***arrays = NULL;
 	int n_arrays = 0;
@@ -161,7 +169,7 @@ void pre_global_array_map(INTERNAL_FUNCTION_PARAMETERS)
     efree(arrays);
 }
 
-void pre_global_array_walk(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_array_walk_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     HashTable *array;
 	zval *userdata = NULL;
@@ -174,39 +182,23 @@ void pre_global_array_walk(INTERNAL_FUNCTION_PARAMETERS)
 	check_callable_function(fci TSRMLS_CC);
 }
 
-static void pre_base_sort(INTERNAL_FUNCTION_PARAMETERS)
-{
-    zval *array;
-	zend_fcall_info fci;
-	zend_fcall_info_cache fci_cache;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "af", &array, &fci, &fci_cache) == FAILURE) {
-		return;
-	}
-	check_callable_function(fci TSRMLS_CC);
-}
-
-void pre_global_uasort(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_uasort_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pre_base_sort(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_uksort(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_uksort_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pre_base_sort(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_usort(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_usort_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pre_base_sort(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_reflectionfunction___construct(INTERNAL_FUNCTION_PARAMETERS)
+void pre_reflectionfunction___construct_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-	if (openrasp_check_type_ignored(ZEND_STRL("callable") TSRMLS_CC))
-    {
-        return;
-    }
     zval *name;
     zval *closure = NULL;
     char *lcname;
@@ -244,7 +236,7 @@ void pre_reflectionfunction___construct(INTERNAL_FUNCTION_PARAMETERS)
             spprintf(&message_str, 0, _("Webshell detected: using '%s' function"), nsname);
             ZVAL_STRING(plugin_message, message_str, 1);
             efree(message_str);
-            openrasp_buildin_php_risk_handle(1, "callable", 100, attack_params, plugin_message TSRMLS_CC);
+            openrasp_buildin_php_risk_handle(1, check_type, 100, attack_params, plugin_message TSRMLS_CC);
         }
         efree(lcname);
     }

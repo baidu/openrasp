@@ -173,7 +173,7 @@ static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connectio
 /**
  * pg_connect
  */
-void pre_global_pg_connect(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {
@@ -183,7 +183,7 @@ void pre_global_pg_connect(INTERNAL_FUNCTION_PARAMETERS)
         }
     }
 }
-void post_global_pg_connect(INTERNAL_FUNCTION_PARAMETERS)
+void post_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_RESOURCE)
     {
@@ -194,19 +194,19 @@ void post_global_pg_connect(INTERNAL_FUNCTION_PARAMETERS)
 /**
  * pg_pconnect 
  */
-void pre_global_pg_pconnect(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pg_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    pre_global_pg_connect(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    pre_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
-void post_global_pg_pconnect(INTERNAL_FUNCTION_PARAMETERS)
+void post_global_pg_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    post_global_pg_connect(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    post_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 /**
  * pg_query
  */
-void pre_global_pg_query(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pg_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	int  argc = ZEND_NUM_ARGS();
 	if (argc == 1) {
@@ -215,12 +215,8 @@ void pre_global_pg_query(INTERNAL_FUNCTION_PARAMETERS)
 		check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "pgsql", 2);
 	}
 }
-void post_global_pg_query(INTERNAL_FUNCTION_PARAMETERS)
+void post_global_pg_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (openrasp_check_type_ignored(ZEND_STRL("sqlSlowQuery") TSRMLS_CC)) 
-    {
-        return;
-    } 
     long num_rows = 0;
     if (Z_TYPE_P(return_value) == IS_RESOURCE)
     {
@@ -237,7 +233,7 @@ void post_global_pg_query(INTERNAL_FUNCTION_PARAMETERS)
 /**
  * pg_send_query
  */
-void pre_global_pg_send_query(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pg_send_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     int  argc = ZEND_NUM_ARGS();
 	if (argc == 1) {
@@ -246,18 +242,12 @@ void pre_global_pg_send_query(INTERNAL_FUNCTION_PARAMETERS)
 		check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "pgsql", 2);
 	}
 }
-void post_global_pg_send_query(INTERNAL_FUNCTION_PARAMETERS){}
 
 /**
  * pg_get_result
  */ 
-void pre_global_pg_get_result(INTERNAL_FUNCTION_PARAMETERS){}
-void post_global_pg_get_result(INTERNAL_FUNCTION_PARAMETERS)
+void post_global_pg_get_result_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (openrasp_check_type_ignored(ZEND_STRL("sqlSlowQuery") TSRMLS_CC)) 
-    {
-        return;
-    } 
     long num_rows = 0;
     if (Z_TYPE_P(return_value) == IS_RESOURCE)
     {

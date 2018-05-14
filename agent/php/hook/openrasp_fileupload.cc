@@ -16,12 +16,11 @@
 
 #include "openrasp_hook.h"
 
-void pre_global_move_uploaded_file(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_move_uploaded_file_fileUpload(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **name, **dest;
     int argc = MIN(2, ZEND_NUM_ARGS());
-    if (!openrasp_check_type_ignored(ZEND_STRL("fileUpload") TSRMLS_CC) &&
-        argc == 2 &&
+    if (argc == 2 &&
         SG(rfc1867_uploaded_files) != NULL &&
         zend_get_parameters_ex(argc, &name, &dest) == SUCCESS &&
         Z_TYPE_PP(name) == IS_STRING &&
@@ -66,7 +65,7 @@ void pre_global_move_uploaded_file(INTERNAL_FUNCTION_PARAMETERS)
                 add_assoc_zval(params, "filename", *realname);
                 Z_ADDREF_PP(realname);
                 add_assoc_stringl(params, "content", contents, MIN(len, 4 * 1024), 0);
-                check("fileUpload", params TSRMLS_CC);
+                check(check_type, params TSRMLS_CC);
             }
         }
     }

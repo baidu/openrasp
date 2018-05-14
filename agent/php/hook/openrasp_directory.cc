@@ -16,12 +16,11 @@
 
 #include "openrasp_hook.h"
 
-static inline void hook_directory(INTERNAL_FUNCTION_PARAMETERS)
+static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **path;
     int argc = MIN(1, ZEND_NUM_ARGS());
-    if (!openrasp_check_type_ignored(ZEND_STRL("directory") TSRMLS_CC) &&
-        argc > 0 &&
+    if (argc > 0 &&
         zend_get_parameters_ex(argc, &path) == SUCCESS &&
         Z_TYPE_PP(path) == IS_STRING)
     {
@@ -54,20 +53,20 @@ static inline void hook_directory(INTERNAL_FUNCTION_PARAMETERS)
             array_init(stack);
             format_debug_backtrace_arr(stack TSRMLS_CC);
             add_assoc_zval(params, "stack", stack);
-            check("directory", params TSRMLS_CC);
+            check(check_type, params TSRMLS_CC);
         }
     }
 }
 
-void pre_global_dir(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_dir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    hook_directory(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
-void pre_global_opendir(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_opendir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    hook_directory(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
-void pre_global_scandir(INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_scandir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    hook_directory(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }

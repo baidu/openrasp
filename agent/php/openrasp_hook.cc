@@ -159,102 +159,127 @@ extern int include_or_eval_handler(ZEND_OPCODE_HANDLER_ARGS);
 /**
  * fileupload相关hook点
  */
-PRE_HOOK_FUNCTION(move_uploaded_file);
+PRE_HOOK_FUNCTION(move_uploaded_file, fileUpload);
 
 /**
  * directory相关hook点
  */
-PRE_HOOK_FUNCTION(dir);
-PRE_HOOK_FUNCTION(opendir);
-PRE_HOOK_FUNCTION(scandir);
+PRE_HOOK_FUNCTION(dir, directory);
+PRE_HOOK_FUNCTION(opendir, directory);
+PRE_HOOK_FUNCTION(scandir, directory);
 
 /**
  * command相关hook点
  */
-PRE_HOOK_FUNCTION(passthru);
-PRE_HOOK_FUNCTION(system);
-PRE_HOOK_FUNCTION(exec);
-PRE_HOOK_FUNCTION(shell_exec);
-PRE_HOOK_FUNCTION(proc_open);
-PRE_HOOK_FUNCTION(popen);
-PRE_HOOK_FUNCTION(pcntl_exec);
-PRE_HOOK_FUNCTION(assert);
+PRE_HOOK_FUNCTION(passthru, command);
+PRE_HOOK_FUNCTION(system, command);
+PRE_HOOK_FUNCTION(exec, command);
+PRE_HOOK_FUNCTION(shell_exec, command);
+PRE_HOOK_FUNCTION(proc_open, command);
+PRE_HOOK_FUNCTION(popen, command);
+PRE_HOOK_FUNCTION(pcntl_exec, command);
+
+PRE_HOOK_FUNCTION(passthru, webshell_command);
+PRE_HOOK_FUNCTION(system, webshell_command);
+PRE_HOOK_FUNCTION(exec, webshell_command);
+PRE_HOOK_FUNCTION(shell_exec, webshell_command);
+PRE_HOOK_FUNCTION(proc_open, webshell_command);
+PRE_HOOK_FUNCTION(popen, webshell_command);
+PRE_HOOK_FUNCTION(pcntl_exec, webshell_command);
+PRE_HOOK_FUNCTION(assert, webshell_eval);
 
 /**
  * callable相关hook点
  */
-PRE_HOOK_FUNCTION(usort);
-PRE_HOOK_FUNCTION(uksort);
-PRE_HOOK_FUNCTION(uasort);
-PRE_HOOK_FUNCTION(array_walk);
-PRE_HOOK_FUNCTION(array_map);
-PRE_HOOK_FUNCTION(array_filter);
-PRE_HOOK_FUNCTION(array_diff_ukey);
+PRE_HOOK_FUNCTION(usort, callable);
+PRE_HOOK_FUNCTION(uksort, callable);
+PRE_HOOK_FUNCTION(uasort, callable);
+PRE_HOOK_FUNCTION(array_walk, callable);
+PRE_HOOK_FUNCTION(array_map, callable);
+PRE_HOOK_FUNCTION(array_filter, callable);
+PRE_HOOK_FUNCTION(array_diff_ukey, callable);
 
-PRE_HOOK_FUNCTION_EX(__construct, reflectionfunction);
+PRE_HOOK_FUNCTION_EX(__construct, reflectionfunction, callable);
 
 /**
  * sql相关hook点
  */
-HOOK_FUNCTION_EX(mysqli, mysqli);
-HOOK_FUNCTION_EX(real_connect, mysqli);
-HOOK_FUNCTION_EX(query, mysqli);
-HOOK_FUNCTION_EX(exec, sqlite3);
-HOOK_FUNCTION_EX(query, sqlite3);
-HOOK_FUNCTION_EX(querySingle, sqlite3);
+HOOK_FUNCTION_EX(mysqli, mysqli, dbConnection);
+HOOK_FUNCTION_EX(real_connect, mysqli, dbConnection);
+PRE_HOOK_FUNCTION_EX(query, mysqli, sql);
+POST_HOOK_FUNCTION_EX(query, mysqli, sqlSlowQuery);
+PRE_HOOK_FUNCTION_EX(exec, sqlite3, sql);
+PRE_HOOK_FUNCTION_EX(query, sqlite3, sql);
+PRE_HOOK_FUNCTION_EX(querySingle, sqlite3, sql);
 
-HOOK_FUNCTION(mysql_connect);
-HOOK_FUNCTION(mysql_pconnect);
-HOOK_FUNCTION(mysql_query);
+HOOK_FUNCTION(mysql_connect, dbConnection);
+HOOK_FUNCTION(mysql_pconnect, dbConnection);
+PRE_HOOK_FUNCTION(mysql_query, sql);
+POST_HOOK_FUNCTION(mysql_query, sqlSlowQuery);
 
-HOOK_FUNCTION(mysqli_connect);
-HOOK_FUNCTION(mysqli_real_connect);
-HOOK_FUNCTION(mysqli_query);
-HOOK_FUNCTION(mysqli_real_query);
-HOOK_FUNCTION(pg_connect);
-HOOK_FUNCTION(pg_pconnect);
-HOOK_FUNCTION(pg_query);
-HOOK_FUNCTION(pg_send_query);
-HOOK_FUNCTION(pg_get_result);
+HOOK_FUNCTION(mysqli_connect, dbConnection);
+HOOK_FUNCTION(mysqli_real_connect, dbConnection);
+PRE_HOOK_FUNCTION(mysqli_query, sql);
+POST_HOOK_FUNCTION(mysqli_query, sqlSlowQuery);
+PRE_HOOK_FUNCTION(mysqli_real_query, sql);
+HOOK_FUNCTION(pg_connect, dbConnection);
+HOOK_FUNCTION(pg_pconnect, dbConnection);
+PRE_HOOK_FUNCTION(pg_query, sql);
+POST_HOOK_FUNCTION(pg_query, sqlSlowQuery);
+PRE_HOOK_FUNCTION(pg_send_query, sql);
+POST_HOOK_FUNCTION(pg_get_result, sqlSlowQuery);
 
-HOOK_FUNCTION_EX(__construct, pdo);
-HOOK_FUNCTION_EX(query, pdo);
-HOOK_FUNCTION_EX(exec, pdo);
+HOOK_FUNCTION_EX(__construct, pdo, dbConnection);
+PRE_HOOK_FUNCTION_EX(query, pdo, sql);
+POST_HOOK_FUNCTION_EX(query, pdo, sqlSlowQuery);
+PRE_HOOK_FUNCTION_EX(exec, pdo, sql);
+POST_HOOK_FUNCTION_EX(exec, pdo, sqlSlowQuery);
 
 /**
  * 文件相关hook点
  */
-PRE_HOOK_FUNCTION(file);
-PRE_HOOK_FUNCTION(readfile);
-PRE_HOOK_FUNCTION(file_get_contents);
-PRE_HOOK_FUNCTION(file_put_contents);
-PRE_HOOK_FUNCTION(fopen);
-PRE_HOOK_FUNCTION(copy);
+PRE_HOOK_FUNCTION(file, readFile);
+PRE_HOOK_FUNCTION(readfile, readFile);
+PRE_HOOK_FUNCTION(file_get_contents, readFile);
+PRE_HOOK_FUNCTION(file_put_contents, webshell_file_put_contents);
+PRE_HOOK_FUNCTION(file_put_contents, writeFile);
+PRE_HOOK_FUNCTION(fopen, readFile);
+PRE_HOOK_FUNCTION(fopen, writeFile);
+PRE_HOOK_FUNCTION(copy, writeFile);
 
-PRE_HOOK_FUNCTION_EX(__construct, splfileobject);
+PRE_HOOK_FUNCTION_EX(__construct, splfileobject, readFile);
+PRE_HOOK_FUNCTION_EX(__construct, splfileobject, writeFile);
 
 /**
  * ssrf相关hook点
  */
-extern int pre_global_curl_exec(INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args);
-extern void post_global_curl_exec(INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args);
-OPENRASP_HOOK_FUNCTION(curl_exec)
+extern int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args);
+extern void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args);
+OPENRASP_HOOK_FUNCTION(curl_exec, ssrf)
 {
+    bool type_ignored = openrasp_check_type_ignored(ZEND_STRL("ssrf") TSRMLS_CC);
     zval function_name, opt, origin_url, *args[2];
-    INIT_ZVAL(function_name);
-    INIT_ZVAL(opt);
-    INIT_ZVAL(origin_url);
-    ZVAL_STRING(&function_name, "curl_getinfo", 0); // 不需要 zval_dtor
-
-    int skip_post = pre_global_curl_exec(INTERNAL_FUNCTION_PARAM_PASSTHRU, &function_name, &opt, &origin_url, args);
-    origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);
-    if (!skip_post)
+    int skip_post = 1;
+    if (!type_ignored)
     {
-        post_global_curl_exec(INTERNAL_FUNCTION_PARAM_PASSTHRU, &function_name, &opt, &origin_url, args);
-    }
+        INIT_ZVAL(function_name);
+        INIT_ZVAL(opt);
+        INIT_ZVAL(origin_url);
+        ZVAL_STRING(&function_name, "curl_getinfo", 0); // 不需要 zval_dtor
 
-    zval_dtor(&opt);
-    zval_dtor(&origin_url);
+        skip_post = pre_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, "ssrf", &function_name, &opt, &origin_url, args);
+    }
+    origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (!type_ignored)
+    {
+        if (!skip_post)
+        {
+            post_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, "ssrf", &function_name, &opt, &origin_url, args);
+        }
+
+        zval_dtor(&opt);
+        zval_dtor(&origin_url);
+    }
 }
 
 PHP_GINIT_FUNCTION(openrasp_hook)
@@ -274,55 +299,71 @@ PHP_GSHUTDOWN_FUNCTION(openrasp_hook)
 PHP_MINIT_FUNCTION(openrasp_hook)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp_hook, PHP_GINIT(openrasp_hook), PHP_GSHUTDOWN(openrasp_hook));
-    OPENRASP_HOOK(array_diff_ukey);
-    OPENRASP_HOOK(array_filter);
-    OPENRASP_HOOK(array_map);
-    OPENRASP_HOOK(array_walk);
-    OPENRASP_HOOK(uasort);
-    OPENRASP_HOOK(uksort);
-    OPENRASP_HOOK(usort);
-    OPENRASP_HOOK(passthru);
-    OPENRASP_HOOK(system);
-    OPENRASP_HOOK(exec);
-    OPENRASP_HOOK(shell_exec);
-    OPENRASP_HOOK(proc_open);
-    OPENRASP_HOOK(popen);
-    OPENRASP_HOOK(pcntl_exec);
-    OPENRASP_HOOK(assert);
-    OPENRASP_HOOK(file);
-    OPENRASP_HOOK(readfile);
-    OPENRASP_HOOK(file_get_contents);
-    OPENRASP_HOOK(file_put_contents);
-    OPENRASP_HOOK(fopen);
-    OPENRASP_HOOK(copy);
-    OPENRASP_HOOK(mysql_connect);
-    OPENRASP_HOOK(mysql_pconnect);
-    OPENRASP_HOOK(mysql_query);
-    OPENRASP_HOOK(mysqli_connect);
-    OPENRASP_HOOK(mysqli_real_connect);
-    OPENRASP_HOOK(mysqli_query);
-    OPENRASP_HOOK(mysqli_real_query);
-    OPENRASP_HOOK(pg_connect);
-    OPENRASP_HOOK(pg_pconnect);
-    OPENRASP_HOOK(pg_query);
-    OPENRASP_HOOK(pg_send_query);
-    OPENRASP_HOOK(pg_get_result);
-    OPENRASP_HOOK(move_uploaded_file);
-    OPENRASP_HOOK(curl_exec);
-    OPENRASP_HOOK(dir);
-    OPENRASP_HOOK(opendir);
-    OPENRASP_HOOK(scandir);
-    OPENRASP_HOOK_EX(__construct, splfileobject);
-    OPENRASP_HOOK_EX(exec, sqlite3);
-    OPENRASP_HOOK_EX(query, sqlite3);
-    OPENRASP_HOOK_EX(querySingle, sqlite3);
-    OPENRASP_HOOK_EX(mysqli, mysqli);
-    OPENRASP_HOOK_EX(real_connect, mysqli);
-    OPENRASP_HOOK_EX(query, mysqli);
-    OPENRASP_HOOK_EX(query, pdo);
-    OPENRASP_HOOK_EX(exec, pdo);
-    OPENRASP_HOOK_EX(__construct, pdo);
-    OPENRASP_HOOK_EX(__construct, reflectionfunction);
+    OPENRASP_HOOK(array_diff_ukey, callable);
+    OPENRASP_HOOK(array_filter, callable);
+    OPENRASP_HOOK(array_map, callable);
+    OPENRASP_HOOK(array_walk, callable);
+    OPENRASP_HOOK(uasort, callable);
+    OPENRASP_HOOK(uksort, callable);
+    OPENRASP_HOOK(usort, callable);
+    OPENRASP_HOOK(passthru, command);
+    OPENRASP_HOOK(system, command);
+    OPENRASP_HOOK(exec, command);
+    OPENRASP_HOOK(shell_exec, command);
+    OPENRASP_HOOK(proc_open, command);
+    OPENRASP_HOOK(popen, command);
+    OPENRASP_HOOK(pcntl_exec, command);
+    OPENRASP_HOOK(passthru, webshell_command);
+    OPENRASP_HOOK(system, webshell_command);
+    OPENRASP_HOOK(exec, webshell_command);
+    OPENRASP_HOOK(shell_exec, webshell_command);
+    OPENRASP_HOOK(proc_open, webshell_command);
+    OPENRASP_HOOK(popen, webshell_command);
+    OPENRASP_HOOK(pcntl_exec, webshell_command);
+    OPENRASP_HOOK(assert, webshell_eval);
+    OPENRASP_HOOK(file, readFile);
+    OPENRASP_HOOK(readfile, readFile);
+    OPENRASP_HOOK(file_get_contents, readFile);
+    OPENRASP_HOOK(file_put_contents, writeFile);
+    OPENRASP_HOOK(file_put_contents, webshell_file_put_contents);
+    OPENRASP_HOOK(fopen, readFile);
+    OPENRASP_HOOK(fopen, writeFile);
+    OPENRASP_HOOK(copy, writeFile);
+    OPENRASP_HOOK(mysql_connect, dbConnection);
+    OPENRASP_HOOK(mysql_pconnect, dbConnection);
+    OPENRASP_HOOK(mysql_query, sqlSlowQuery);
+    OPENRASP_HOOK(mysql_query, sql);
+    OPENRASP_HOOK(mysqli_connect, dbConnection);
+    OPENRASP_HOOK(mysqli_real_connect, dbConnection);
+    OPENRASP_HOOK(mysqli_query, sqlSlowQuery);
+    OPENRASP_HOOK(mysqli_query, sql);
+    OPENRASP_HOOK(mysqli_real_query, sql);
+    OPENRASP_HOOK(pg_connect, dbConnection);
+    OPENRASP_HOOK(pg_pconnect, dbConnection);
+    OPENRASP_HOOK(pg_query, sqlSlowQuery);
+    OPENRASP_HOOK(pg_query, sql);
+    OPENRASP_HOOK(pg_send_query, sql);
+    OPENRASP_HOOK(pg_get_result, sqlSlowQuery);
+    OPENRASP_HOOK(move_uploaded_file, fileUpload);
+    OPENRASP_HOOK(curl_exec, ssrf);
+    OPENRASP_HOOK(dir, directory);
+    OPENRASP_HOOK(opendir, directory);
+    OPENRASP_HOOK(scandir, directory);
+    OPENRASP_HOOK_EX(__construct, splfileobject, readFile);
+    OPENRASP_HOOK_EX(__construct, splfileobject, writeFile);
+    OPENRASP_HOOK_EX(exec, sqlite3, sql);
+    OPENRASP_HOOK_EX(query, sqlite3, sql);
+    OPENRASP_HOOK_EX(querySingle, sqlite3, sql);
+    OPENRASP_HOOK_EX(mysqli, mysqli, dbConnection);
+    OPENRASP_HOOK_EX(real_connect, mysqli, dbConnection);
+    OPENRASP_HOOK_EX(query, mysqli, sqlSlowQuery);
+    OPENRASP_HOOK_EX(query, mysqli, sql);
+    OPENRASP_HOOK_EX(query, pdo, sqlSlowQuery);
+    OPENRASP_HOOK_EX(query, pdo, sql);
+    OPENRASP_HOOK_EX(exec, pdo, sqlSlowQuery);
+    OPENRASP_HOOK_EX(exec, pdo, sql);
+    OPENRASP_HOOK_EX(__construct, pdo, dbConnection);
+    OPENRASP_HOOK_EX(__construct, reflectionfunction, callable);
     zend_set_user_opcode_handler(ZEND_INCLUDE_OR_EVAL, include_or_eval_handler);
     return SUCCESS;
 }
