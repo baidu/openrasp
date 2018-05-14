@@ -1,42 +1,32 @@
 sudo: required
-language: java
 cache:
-  yarn: true
   directories:
-    - $HOME/.m2
-services:
-  - mysql
-  - postgresql
+    - $HOME/cache
 matrix:
-  fast_finish: true
   include:
-    - jdk: openjdk7
-      env: SERVER=tomcat6
-    - jdk: openjdk7
-      env: SERVER=tomcat7
-    - jdk: openjdk7
-      env: SERVER=jboss4
-    - jdk: openjdk7
-      env: SERVER=jboss5
-    - jdk: openjdk7
-      env: SERVER=jboss6
-    - jdk: openjdk8
-      env: SERVER=tomcat8
-    - jdk: openjdk8
-      env: SERVER=jetty9
-    - jdk: oraclejdk8
-      env: SERVER=tomcat8
-    - jdk: oraclejdk8
-      env: SERVER=jetty9
+    - env: MSG=world CC=gcc-4.9 CXX=g++-4.9
+      language: php
+      php: 5.6
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
+    - env: MSG=world CC=gcc-4.9 CXX=g++-4.9
+      language: php
+      php: 5.5
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
 before_install:
-  - pushd integration-test
-  - pushd tester && yarn && popd
-  - . build-war.sh
+  - echo 'date.timezone = "UTC"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
 install:
-  - . build-rasp.sh
-  - . start-${SERVER}.sh
-  - pushd tester
+  - pushd agent/php
+  - wget -N https://packages.baidu.com/app/openrasp/libv8-5.9-linux.tar.gz -P $HOME/cache
+  - tar -zxf $HOME/cache/libv8-5.9-linux.tar.gz
 script:
-  - travis_retry node_modules/.bin/mocha *.test.js -t 30000 --retries 3
-before_cache:
-  - rm -rf $HOME/.m2/repository/com/fuxi
+  - NO_INTERACTION=1 REPORT_EXIT_STATUS=1 phpize && ./configure --with-v8=./libv8-5.9-linux --with-gettext && make && make test
