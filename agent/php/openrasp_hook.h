@@ -32,6 +32,7 @@ extern "C" {
 #include <math.h>
 #include <time.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include "php.h"
 #include "php_ini.h"
 #include "php_main.h"

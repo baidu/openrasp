@@ -246,6 +246,7 @@ PRE_HOOK_FUNCTION(file_put_contents, writeFile);
 PRE_HOOK_FUNCTION(fopen, readFile);
 PRE_HOOK_FUNCTION(fopen, writeFile);
 PRE_HOOK_FUNCTION(copy, writeFile);
+PRE_HOOK_FUNCTION(copy, readFile);
 
 PRE_HOOK_FUNCTION_EX(__construct, splfileobject, readFile);
 PRE_HOOK_FUNCTION_EX(__construct, splfileobject, writeFile);
@@ -329,6 +330,7 @@ PHP_MINIT_FUNCTION(openrasp_hook)
     OPENRASP_HOOK(fopen, readFile);
     OPENRASP_HOOK(fopen, writeFile);
     OPENRASP_HOOK(copy, writeFile);
+    OPENRASP_HOOK(copy, readFile);
     OPENRASP_HOOK(mysql_connect, dbConnection);
     OPENRASP_HOOK(mysql_pconnect, dbConnection);
     OPENRASP_HOOK(mysql_query, sqlSlowQuery);
