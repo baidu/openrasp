@@ -16,6 +16,13 @@
 
 #include "openrasp_hook.h"
 
+/**
+ * directory相关hook点
+ */
+PRE_HOOK_FUNCTION(dir, directory);
+PRE_HOOK_FUNCTION(opendir, directory);
+PRE_HOOK_FUNCTION(scandir, directory);
+
 static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **path;

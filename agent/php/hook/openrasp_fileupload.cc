@@ -16,6 +16,11 @@
 
 #include "openrasp_hook.h"
 
+/**
+ * fileupload相关hook点
+ */
+PRE_HOOK_FUNCTION(move_uploaded_file, fileUpload);
+
 void pre_global_move_uploaded_file_fileUpload(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **name, **dest;

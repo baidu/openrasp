@@ -16,6 +16,19 @@
 
 #include "openrasp_hook.h"
 
+/**
+ * callable相关hook点
+ */
+PRE_HOOK_FUNCTION(usort, callable);
+PRE_HOOK_FUNCTION(uksort, callable);
+PRE_HOOK_FUNCTION(uasort, callable);
+PRE_HOOK_FUNCTION(array_walk, callable);
+PRE_HOOK_FUNCTION(array_map, callable);
+PRE_HOOK_FUNCTION(array_filter, callable);
+PRE_HOOK_FUNCTION(array_diff_ukey, callable);
+
+PRE_HOOK_FUNCTION_EX(__construct, reflectionfunction, callable);
+
 static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
 {
 	if (!ZEND_FCI_INITIALIZED(fci))

@@ -35,6 +35,38 @@ extern "C"
 #endif
 }
 
+/**
+ * ssrf相关hook点
+ */
+int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args);
+void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args);
+OPENRASP_HOOK_FUNCTION(curl_exec, ssrf)
+{
+    bool type_ignored = openrasp_check_type_ignored(ZEND_STRL("ssrf") TSRMLS_CC);
+    zval function_name, opt, origin_url, *args[2];
+    int skip_post = 1;
+    if (!type_ignored)
+    {
+        INIT_ZVAL(function_name);
+        INIT_ZVAL(opt);
+        INIT_ZVAL(origin_url);
+        ZVAL_STRING(&function_name, "curl_getinfo", 0); // 不需要 zval_dtor
+
+        skip_post = pre_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, "ssrf", &function_name, &opt, &origin_url, args);
+    }
+    origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (!type_ignored)
+    {
+        if (!skip_post)
+        {
+            post_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, "ssrf", &function_name, &opt, &origin_url, args);
+        }
+
+        zval_dtor(&opt);
+        zval_dtor(&origin_url);
+    }
+}
+
 int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args)
 {
     zval **zid;

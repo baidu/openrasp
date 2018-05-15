@@ -20,6 +20,19 @@ extern "C" {
 #include "zend_ini.h"
 }
 
+/**
+ * mysqli相关hook点
+ */
+HOOK_FUNCTION_EX(mysqli, mysqli, dbConnection);
+HOOK_FUNCTION_EX(real_connect, mysqli, dbConnection);
+PRE_HOOK_FUNCTION_EX(query, mysqli, sql);
+POST_HOOK_FUNCTION_EX(query, mysqli, sqlSlowQuery);
+HOOK_FUNCTION(mysqli_connect, dbConnection);
+HOOK_FUNCTION(mysqli_real_connect, dbConnection);
+PRE_HOOK_FUNCTION(mysqli_query, sql);
+POST_HOOK_FUNCTION(mysqli_query, sqlSlowQuery);
+PRE_HOOK_FUNCTION(mysqli_real_query, sql);
+
 static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, zend_bool is_real_connect, zend_bool in_ctor)
 {
     char *hostname = NULL, *username=NULL, *passwd=NULL, *dbname=NULL, *socket=NULL;

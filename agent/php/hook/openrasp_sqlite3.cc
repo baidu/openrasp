@@ -16,6 +16,10 @@
 
 #include "openrasp_hook.h"
 
+PRE_HOOK_FUNCTION_EX(exec, sqlite3, sql);
+PRE_HOOK_FUNCTION_EX(query, sqlite3, sql);
+PRE_HOOK_FUNCTION_EX(querySingle, sqlite3, sql);
+
 //sqlite3::exec
 void pre_sqlite3_exec_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {

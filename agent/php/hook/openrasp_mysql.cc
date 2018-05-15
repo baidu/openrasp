@@ -20,6 +20,11 @@ extern "C" {
 #include "zend_ini.h"
 }
 
+HOOK_FUNCTION(mysql_connect, dbConnection);
+HOOK_FUNCTION(mysql_pconnect, dbConnection);
+PRE_HOOK_FUNCTION(mysql_query, sql);
+POST_HOOK_FUNCTION(mysql_query, sqlSlowQuery);
+
 static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, int persistent)
 {
     char *user=NULL, *passwd=NULL, *host_and_port=NULL, *socket=NULL, *host=NULL, *tmp=NULL;

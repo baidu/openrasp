@@ -21,6 +21,12 @@ extern "C" {
 #include "zend_ini.h"
 }
 
+HOOK_FUNCTION_EX(__construct, pdo, dbConnection);
+PRE_HOOK_FUNCTION_EX(query, pdo, sql);
+POST_HOOK_FUNCTION_EX(query, pdo, sqlSlowQuery);
+PRE_HOOK_FUNCTION_EX(exec, pdo, sql);
+POST_HOOK_FUNCTION_EX(exec, pdo, sqlSlowQuery);
+
 extern void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p);
 
 static char *dsn_from_uri(char *uri, char *buf, size_t buflen TSRMLS_DC)

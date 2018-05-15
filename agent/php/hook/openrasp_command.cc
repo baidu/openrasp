@@ -16,6 +16,26 @@
 
 #include "openrasp_hook.h"
 
+/**
+ * command相关hook点
+ */
+PRE_HOOK_FUNCTION(passthru, command);
+PRE_HOOK_FUNCTION(system, command);
+PRE_HOOK_FUNCTION(exec, command);
+PRE_HOOK_FUNCTION(shell_exec, command);
+PRE_HOOK_FUNCTION(proc_open, command);
+PRE_HOOK_FUNCTION(popen, command);
+PRE_HOOK_FUNCTION(pcntl_exec, command);
+
+PRE_HOOK_FUNCTION(passthru, webshell_command);
+PRE_HOOK_FUNCTION(system, webshell_command);
+PRE_HOOK_FUNCTION(exec, webshell_command);
+PRE_HOOK_FUNCTION(shell_exec, webshell_command);
+PRE_HOOK_FUNCTION(proc_open, webshell_command);
+PRE_HOOK_FUNCTION(popen, webshell_command);
+PRE_HOOK_FUNCTION(pcntl_exec, webshell_command);
+PRE_HOOK_FUNCTION(assert, webshell_eval);
+
 static void check_command_args_in_gpc(INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_check_type_ignored(ZEND_STRL("webshell_command") TSRMLS_CC))

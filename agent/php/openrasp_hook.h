@@ -168,71 +168,7 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
  * @param name 函数完整名称
  * @param scope 函数所属 class，全局函数的 scope 为 global
  */
-#define OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                                \
-    php_function origin_##scope##_##name##_##type = nullptr;                                                        \
-    inline void hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function);    \
-    void hook_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAMETERS)                                               \
-    {                                                                                                               \
-        hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, origin_##scope##_##name##_##type);    \
-    }                                                                                                               \
-    inline void hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function)
-#define OPENRASP_HOOK_FUNCTION(name, type) \
-    OPENRASP_HOOK_FUNCTION_EX(name, global, type)
-
-#define HOOK_FUNCTION_EX(name, scope, type)                                                             \
-    extern void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                   \
-    extern void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                  \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                        \
-    {                                                                                                   \
-        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)) TSRMLS_CC);         \
-        if (!type_ignored) {                                                                            \
-            pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));        \
-        }                                                                                               \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                              \
-        if (!type_ignored) {                                                                            \
-            post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));       \
-        }                                                                                               \
-    }
-
-#define HOOK_FUNCTION(name, type) \
-    HOOK_FUNCTION_EX(name, global, type)
-
-#define PRE_HOOK_FUNCTION_EX(name, scope, type)                                                         \
-    extern void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                   \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                        \
-    {                                                                                                   \
-        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)) TSRMLS_CC);         \
-        if (!type_ignored) {                                                                            \
-            pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));        \
-        }                                                                                               \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                              \
-    }
-
-#define PRE_HOOK_FUNCTION(name, type) \
-    PRE_HOOK_FUNCTION_EX(name, global, type)
-
-#define POST_HOOK_FUNCTION_EX(name, scope, type)                                                        \
-    extern void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                  \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                        \
-    {                                                                                                   \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                              \
-        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)) TSRMLS_CC);         \
-        if (!type_ignored) {                                                                            \
-            post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));       \
-        }                                                                                               \
-    }
-
-#define POST_HOOK_FUNCTION(name, type) \
-    POST_HOOK_FUNCTION_EX(name, global, type)
-/**
- * 使用这个宏 hook 指定函数
- * 需要在 hook 前先定义相应的替换函数
- * 这个宏只在 compiler_global 中查找对应的函数或类，所以可以在 MINIT 中使用
- * 
- * @param name 函数完整名称
- * @param scope 函数所属 class，全局函数的 scope 为 global
- */
-#define OPENRASP_HOOK_EX(name, scope, type)                                                                \
+#define DEFINE_HOOK_HANDLER_EX(name, scope, type)                                                          \
     {                                                                                                      \
         HashTable *ht = nullptr;                                                                           \
         zend_function *function;                                                                           \
@@ -256,8 +192,66 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
             function->internal_function.handler = hook_##scope##_##name##_##type;                          \
         }                                                                                                  \
     }
-#define OPENRASP_HOOK(name, type) \
-    OPENRASP_HOOK_EX(name, global, type)
+    
+#define OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                                \
+    php_function origin_##scope##_##name##_##type = nullptr;                                                        \
+    inline void hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function);    \
+    void hook_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAMETERS)                                               \
+    {                                                                                                               \
+        hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, origin_##scope##_##name##_##type);    \
+    }                                                                                                               \
+    void scope##_##name##_##type##_handler()                                                                        \
+    DEFINE_HOOK_HANDLER_EX(name, scope, type)                                                                       \
+    inline void hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function)
+
+#define OPENRASP_HOOK_FUNCTION(name, type) \
+    OPENRASP_HOOK_FUNCTION_EX(name, global, type)
+
+#define HOOK_FUNCTION_EX(name, scope, type)                                                             \
+    void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                          \
+    void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                         \
+    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                        \
+    {                                                                                                   \
+        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)) TSRMLS_CC);         \
+        if (!type_ignored) {                                                                            \
+            pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));        \
+        }                                                                                               \
+        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                              \
+        if (!type_ignored) {                                                                            \
+            post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));       \
+        }                                                                                               \
+    }
+
+#define HOOK_FUNCTION(name, type) \
+    HOOK_FUNCTION_EX(name, global, type)
+
+#define PRE_HOOK_FUNCTION_EX(name, scope, type)                                                         \
+    void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                          \
+    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                        \
+    {                                                                                                   \
+        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)) TSRMLS_CC);         \
+        if (!type_ignored) {                                                                            \
+            pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));        \
+        }                                                                                               \
+        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                              \
+    }
+
+#define PRE_HOOK_FUNCTION(name, type) \
+    PRE_HOOK_FUNCTION_EX(name, global, type)
+
+#define POST_HOOK_FUNCTION_EX(name, scope, type)                                                        \
+    void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                         \
+    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                        \
+    {                                                                                                   \
+        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                              \
+        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)) TSRMLS_CC);         \
+        if (!type_ignored) {                                                                            \
+            post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));       \
+        }                                                                                               \
+    }
+
+#define POST_HOOK_FUNCTION(name, type) \
+    POST_HOOK_FUNCTION_EX(name, global, type)
 
 struct openrasp_hook_ini_t
 {

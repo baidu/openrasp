@@ -16,6 +16,22 @@
 
 #include "openrasp_hook.h"
 
+/**
+ * 文件相关hook点
+ */
+PRE_HOOK_FUNCTION(file, readFile);
+PRE_HOOK_FUNCTION(readfile, readFile);
+PRE_HOOK_FUNCTION(file_get_contents, readFile);
+PRE_HOOK_FUNCTION(file_put_contents, webshell_file_put_contents);
+PRE_HOOK_FUNCTION(file_put_contents, writeFile);
+PRE_HOOK_FUNCTION(fopen, readFile);
+PRE_HOOK_FUNCTION(fopen, writeFile);
+PRE_HOOK_FUNCTION(copy, writeFile);
+PRE_HOOK_FUNCTION(copy, readFile);
+
+PRE_HOOK_FUNCTION_EX(__construct, splfileobject, readFile);
+PRE_HOOK_FUNCTION_EX(__construct, splfileobject, writeFile);
+
 extern "C" int php_stream_parse_fopen_modes(const char *mode, int *open_flags);
 
 //ref: http://pubs.opengroup.org/onlinepubs/7908799/xsh/open.html
