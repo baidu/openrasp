@@ -27,7 +27,7 @@ typedef struct _track_vars_pair_t
 
 #define REGISTER_HOOK_HANDLER_EX(name, scope, type)                     \
     {                                                                   \
-        extern void scope##_##name##_##type##_handler();                \
+        extern void scope##_##name##_##type##_handler(TSRMLS_D);        \
         global_hook_handlers.insert(scope##_##name##_##type##_handler); \
     }
 
@@ -181,7 +181,7 @@ PHP_GSHUTDOWN_FUNCTION(openrasp_hook)
 
 PHP_MINIT_FUNCTION(openrasp_hook)
 {
-    static std::unordered_set<void (*)()> global_hook_handlers;
+    static std::unordered_set<void (*)(TSRMLS_D)> global_hook_handlers;
     ZEND_INIT_MODULE_GLOBALS(openrasp_hook, PHP_GINIT(openrasp_hook), PHP_GSHUTDOWN(openrasp_hook));
 
     REGISTER_HOOK_HANDLER(array_diff_ukey, callable);
@@ -264,7 +264,7 @@ PHP_MINIT_FUNCTION(openrasp_hook)
 
     for (auto& single_handler : global_hook_handlers)
     {
-        single_handler();
+        single_handler(TSRMLS_C);
     }
 
     zend_set_user_opcode_handler(ZEND_INCLUDE_OR_EVAL, include_or_eval_handler);

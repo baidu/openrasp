@@ -200,7 +200,7 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
     {                                                                                                               \
         hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, origin_##scope##_##name##_##type);    \
     }                                                                                                               \
-    void scope##_##name##_##type##_handler()                                                                        \
+    void scope##_##name##_##type##_handler(TSRMLS_D)                                                                \
     DEFINE_HOOK_HANDLER_EX(name, scope, type)                                                                       \
     inline void hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function)
 
