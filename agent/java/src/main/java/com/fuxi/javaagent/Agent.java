@@ -50,6 +50,13 @@ public class Agent {
      */
     public static void premain(String agentArg, Instrumentation inst) {
         try {
+            System.out.println("\n\n" +
+                    " ██████╗ ██████╗ ███████╗███╗   ██╗██████╗  █████╗ ███████╗██████╗ \n" +
+                    "██╔═══██╗██╔══██╗██╔════╝████╗  ██║██╔══██╗██╔══██╗██╔════╝██╔══██╗\n" +
+                    "██║   ██║██████╔╝█████╗  ██╔██╗ ██║██████╔╝███████║███████╗██████╔╝\n" +
+                    "██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║██╔══██╗██╔══██║╚════██║██╔═══╝ \n" +
+                    "╚██████╔╝██║     ███████╗██║ ╚████║██║  ██║██║  ██║███████║██║     \n" +
+                    " ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝ " + "\n\n");
             JarFileHelper.addJarToBootstrap(inst);
             if (!loadConfig(JarFileHelper.getLocalJarParentPath())) {
                 return;
