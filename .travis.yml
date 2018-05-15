@@ -1,10 +1,13 @@
-sudo: required
 cache:
+  apt: true
   directories:
     - $HOME/cache
+services:
+  - mysql
+  - postgresql
 matrix:
   include:
-    - env: MSG=world CC=gcc-4.9 CXX=g++-4.9
+    - env: CC=gcc-4.9 CXX=g++-4.9 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
       language: php
       php: 5.6
       addons:
@@ -13,20 +16,21 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
-    - env: MSG=world CC=gcc-4.9 CXX=g++-4.9
+    - env: CC=gcc-4.9 CXX=g++-4.9 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
       language: php
-      php: 5.5
+      php: 5.4
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
-before_install:
-  - echo 'date.timezone = "UTC"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
-install:
+before_script:
   - pushd agent/php
+  - phpenv config-rm xdebug.ini || true
+  - phpenv config-rm ext-opcache.ini || true
   - wget -N https://packages.baidu.com/app/openrasp/libv8-5.9-linux.tar.gz -P $HOME/cache
   - tar -zxf $HOME/cache/libv8-5.9-linux.tar.gz
+  - phpize && ./configure --with-v8=./libv8-5.9-linux --with-gettext && make -j2 --quiet
 script:
-  - NO_INTERACTION=1 REPORT_EXIT_STATUS=1 phpize && ./configure --with-v8=./libv8-5.9-linux --with-gettext && make && make test
+  - php run-tests.php -p `which php` -d extension=`pwd`/modules/openrasp.so --offline --show-diff --set-timeout 120

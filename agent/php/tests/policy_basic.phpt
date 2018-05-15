@@ -2,7 +2,7 @@
 policy check (basic)
 --SKIPIF--
 <?php
-include('skipif.inc');
+include(__DIR__.'/skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp

@@ -19,7 +19,5 @@ openrasp.root_dir=/tmp/openrasp
 <?php
 copy('/tmp/openrasp/tmpfile', '/tmp/openrasp/tmpfile');
 ?>
---XFAIL--
-this bug should be fixed
 --EXPECTREGEX--
 <\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>
