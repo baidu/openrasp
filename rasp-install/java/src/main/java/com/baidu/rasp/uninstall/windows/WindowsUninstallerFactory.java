@@ -20,11 +20,12 @@ import com.baidu.rasp.uninstall.Uninstaller;
 import com.baidu.rasp.uninstall.UninstallerFactory;
 
 /**
-　　* @Description:
-　　* @author anyang
-　　* @date 2018/4/25 19:36
-　　*/
-public class WindowsUninstallerFactory extends UninstallerFactory{
+ * @author anyang
+ * @Description:
+ * @date 2018/4/25 19:36
+ *
+ */
+public class WindowsUninstallerFactory extends UninstallerFactory {
 
     @Override
     protected Uninstaller getUninstaller(String serverName, String serverRoot) {

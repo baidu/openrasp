@@ -23,10 +23,10 @@ import java.util.Scanner;
 import java.util.regex.Pattern;
 
 /**
-　　* @Description: tomcat自动卸载
-　　* @author anyang
-　　* @date 2018/4/25 19:34
-　　*/
+ * @author anyang
+ * @Description: tomcat自动卸载
+ * @date 2018/4/25 19:34
+ */
 public class TomcatUninstaller extends BaseStandardUninstaller {
 
     private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*/rasp/).*");
@@ -34,6 +34,7 @@ public class TomcatUninstaller extends BaseStandardUninstaller {
     public TomcatUninstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
     }
+
     @Override
     protected String getInstallPath(String serverRoot) {
         return serverRoot + "/rasp/";
@@ -42,7 +43,7 @@ public class TomcatUninstaller extends BaseStandardUninstaller {
     @Override
     protected String getScript(String installPath) {
 
-        return new File(installPath).getParent() + File.separator + "bin"+File.separator+"catalina.sh";
+        return new File(installPath).getParent() + File.separator + "bin" + File.separator + "catalina.sh";
     }
 
     @Override

@@ -18,6 +18,7 @@ package com.baidu.rasp.uninstall;
 
 import com.baidu.rasp.RaspError;
 import com.baidu.rasp.install.BaseStandardInstaller;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -25,16 +26,16 @@ import static com.baidu.rasp.RaspError.E10003;
 import static com.baidu.rasp.RaspError.E10002;
 
 /**
-　　* @Description: 自动卸载基础类
-　　* @author anyang
-　　* @date 2018/4/25 19:37
-　　*/
+ * @Description: 自动卸载基础类
+ * @author anyang
+ * @date 2018/4/25 19:37
+ */
 public abstract class BaseStandardUninstaller implements Uninstaller {
     private String serverRoot;
     private String serverName;
     public static String LINE_SEP = System.getProperty("line.separator");
 
-    public BaseStandardUninstaller(String serverName,String serverRoot) {
+    public BaseStandardUninstaller(String serverName, String serverRoot) {
         this.serverRoot = serverRoot;
         this.serverName = serverName;
     }
@@ -64,7 +65,7 @@ public abstract class BaseStandardUninstaller implements Uninstaller {
         File file = new File(path);
         String[] tempList = file.list();
         File temp = null;
-        for (String s:tempList) {
+        for (String s : tempList) {
             if (path.endsWith(File.separator)) {
                 temp = new File(path + s);
             } else {
@@ -81,11 +82,12 @@ public abstract class BaseStandardUninstaller implements Uninstaller {
             }
         }
     }
+
     public void delRaspFolder(String folderPath) throws RaspError {
 
         File folder = new File(folderPath);
         if (!folder.exists()) {
-            throw new RaspError(E10002+folderPath);
+            throw new RaspError(E10002 + folderPath);
         }
         // 删除完rasp文件夹里面所有文件和子文件夹
         delAllFile(folderPath);

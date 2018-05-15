@@ -23,10 +23,10 @@ import java.util.Scanner;
 import java.util.regex.Pattern;
 
 /**
-　　* @Description:jboss自动卸载
-　　* @author anyang
-　　* @date 2018/4/25 19:33
-　　*/
+ * @Description:jboss自动卸载
+ * @author anyang
+ * @date 2018/4/25 19:33
+ */
 public class Jboss4Uninstaller extends BaseStandardUninstaller {
 
     private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*/rasp/).*");
@@ -37,13 +37,13 @@ public class Jboss4Uninstaller extends BaseStandardUninstaller {
 
     @Override
     protected String getInstallPath(String serverRoot) {
-        return serverRoot + File.separator+"rasp";
+        return serverRoot + File.separator + "rasp";
     }
 
     @Override
     protected String getScript(String installPath) {
 
-        return new File(installPath).getParent() + File.separator+"bin"+File.separator+"run.sh";
+        return new File(installPath).getParent() + File.separator + "bin" + File.separator + "run.sh";
     }
 
     @Override

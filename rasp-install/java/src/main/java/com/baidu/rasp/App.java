@@ -45,29 +45,31 @@ public class App {
     private static UninstallerFactory newUninstallerFactory() {
         if (System.getProperty("os.name").startsWith("Windows")) {
             return new WindowsUninstallerFactory();
-        }else {
+        } else {
             return new LinuxUninstallerFactory();
         }
     }
+
     private static void showBanner() {
-        String banner = "OpenRASP Installer for Java app servers - Copyright ©2017 Baidu Inc.\n" + 
-            "For more details visit: https://rasp.baidu.com/doc/install/software.html\n";
+        String banner = "OpenRASP Installer for Java app servers - Copyright ©2017 Baidu Inc.\n" +
+                "For more details visit: https://rasp.baidu.com/doc/install/software.html\n";
         System.out.println(banner);
     }
 
     private static void showHelp() {
-        String helpMsg = 
-            "Usage:\n" + 
-            "java -jar RaspInstall.jar <path/to/server_home>";
+        String helpMsg = "Install:\n" +
+                "java -jar RaspInstall.jar -install <path/to/server_home>\n" +
+                "\n" +
+                "Uninstall:\n" +
+                "java -jar RaspInstall.jar -uninstall <path/to/server_home>\n";
         System.out.println(helpMsg);
     }
 
     private static void showArgs() {
-        String helpMsg =
-                "Usage:\n" +
-                        "args error<install or uninstall> ";
+        String helpMsg = "Bad argument '%s', try again with -install or -uninstall";
         System.out.println(helpMsg);
     }
+
     public static void main(String[] args) throws IOException, URISyntaxException {
         showBanner();
 
@@ -78,19 +80,19 @@ public class App {
         //参数0：rasp安装根目录
         //参数1：-install 安装，-uninstall 卸载
         try {
-            if ("-install".equals(args[0])){
+            if ("-install".equals(args[0])) {
                 File serverRoot = new File(args[1]);
                 InstallerFactory factory = newInstallerFactory();
                 Installer installer = factory.getInstaller(serverRoot);
                 installer.install();
-            }else if ("-uninstall".equals(args[0])){
+            } else if ("-uninstall".equals(args[0])) {
 
                 File serverRoot = new File(args[1]);
-                UninstallerFactory factory=newUninstallerFactory();
-                Uninstaller uninstaller=factory.getUninstaller(serverRoot);
+                UninstallerFactory factory = newUninstallerFactory();
+                Uninstaller uninstaller = factory.getUninstaller(serverRoot);
                 uninstaller.uninstall();
 
-            }else {
+            } else {
 
                 showArgs();
             }
