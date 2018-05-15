@@ -249,5 +249,15 @@ void pre_global_copy_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_copy_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    pre_global_copy_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    char *source, *target;
+	int source_len, target_len;
+	zval *zcontext = NULL;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|r", &source, &source_len, &target, &target_len, &zcontext) == FAILURE) {
+		return;
+	}
+
+    if (source && target && strlen(source) == source_len && strlen(target) == target_len) {
+        check_file_operation(check_type, source, source_len, 0 TSRMLS_CC);
+	}
 }
