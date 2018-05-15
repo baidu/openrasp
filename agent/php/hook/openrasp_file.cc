@@ -16,15 +16,16 @@
 
 #include "openrasp_hook.h"
 
+//ref: http://php.net/manual/zh/function.fopen.php
 static const char* mode_to_type(char *mode)
 {
-    if (strchr(mode, '+') > mode || strchr(mode, 'w') > mode || strchr(mode, 'a') > mode)
-    {
-        return "writeFile";
-    }
-    else //r,rb,rt
+    if (1 == strlen(mode) && mode == strchr(mode, 'r'))
     {
         return "readFile";
+    }
+    else
+    {
+        return "writeFile";
     }
 }
 
@@ -166,7 +167,19 @@ void pre_global_fopen_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|br", &filename, &filename_len, &mode, &mode_len, &use_include_path, &zcontext) == FAILURE) {
 		return;
-	}
+    }
+    if (mode == strchr(mode, 'x') || mode == strchr(mode, 'c'))
+    {
+        char *real_path = openrasp_real_path(filename, filename_len, use_include_path, false TSRMLS_CC);
+        if (real_path)
+        {
+            efree(real_path);
+        }
+        else
+        {
+            return;
+        }
+    }
     const char *type = mode_to_type(mode);
     if (0 == strcmp(type, check_type))
     {
@@ -188,7 +201,19 @@ void pre_splfileobject___construct_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETE
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|sbr", &filename, &filename_len, &mode, &mode_len, &use_include_path, &zcontext) == FAILURE) {
 		return;
-	}
+    }
+    if (mode == strchr(mode, 'x') || mode == strchr(mode, 'c'))
+    {
+        char *real_path = openrasp_real_path(filename, filename_len, use_include_path, false TSRMLS_CC);
+        if (real_path)
+        {
+            efree(real_path);
+        }
+        else
+        {
+            return;
+        }
+    }
     const char *type = mode_to_type(mode);
     if (0 == strcmp(type, check_type))
     {
