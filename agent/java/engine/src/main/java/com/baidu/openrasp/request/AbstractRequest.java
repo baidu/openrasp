@@ -40,7 +40,7 @@ public abstract class AbstractRequest {
     protected Object inputStream = null;
     protected ByteArrayOutputStream bodyOutputStream = null;
     protected CharArrayWriter bodyCharWriter = null;
-    protected static final int maxBodySize = 4096;
+    protected int maxBodySize = 4096;
     protected String requestId;
     protected boolean canGetParameter = false;
 
@@ -61,6 +61,7 @@ public abstract class AbstractRequest {
     public AbstractRequest(Object request) {
         this.request = request;
         this.requestId = UUID.randomUUID().toString().replace("-", "");
+        this.maxBodySize = Config.getConfig().getBodyMaxBytes();
     }
 
     /**
