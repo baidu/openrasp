@@ -1,13 +1,15 @@
 cache:
   apt: true
+  yarn: true
   directories:
     - $HOME/cache
+    - $HOME/.m2
 services:
   - mysql
   - postgresql
 matrix:
   include:
-    - env: CC=gcc-4.9 CXX=g++-4.9 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
+    - env: OPENRASP_LANG=php CC=gcc-4.9 CXX=g++-4.9 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
       language: php
       php: 5.6
       addons:
@@ -16,7 +18,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
-    - env: CC=gcc-4.9 CXX=g++-4.9 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
+    - env: OPENRASP_LANG=php CC=gcc-4.9 CXX=g++-4.9 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
       language: php
       php: 5.4
       addons:
@@ -25,12 +27,28 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
+    - env: OPENRASP_LANG=java SERVER=tomcat8
+      language: java
+      jdk: openjdk8
+    - env: OPENRASP_LANG=java SERVER=jetty9
+      language: java
+      jdk: oraclejdk8
+    - env: OPENRASP_LANG=java SERVER=tomcat6
+      language: java
+      jdk: openjdk7
+    - env: OPENRASP_LANG=java SERVER=tomcat7
+      language: java
+      jdk: openjdk7
+    - env: OPENRASP_LANG=java SERVER=jboss4
+      language: java
+      jdk: openjdk7
+    - env: OPENRASP_LANG=java SERVER=jboss5
+      language: java
+      jdk: openjdk7
+    - env: OPENRASP_LANG=java SERVER=jboss6
+      language: java
+      jdk: openjdk7
 before_script:
-  - pushd agent/php
-  - phpenv config-rm xdebug.ini || true
-  - phpenv config-rm ext-opcache.ini || true
-  - wget -N https://packages.baidu.com/app/openrasp/libv8-5.9-linux.tar.gz -P $HOME/cache
-  - tar -zxf $HOME/cache/libv8-5.9-linux.tar.gz
-  - phpize && ./configure --with-v8=./libv8-5.9-linux --with-gettext && make -j2 --quiet
+  - bash ./travis/$OPENRASP_LANG/before_script.sh
 script:
-  - php run-tests.php -p `which php` -d extension=`pwd`/modules/openrasp.so --offline --show-diff --set-timeout 120
+  - travis_retry bash ./travis/$OPENRASP_LANG/script.sh

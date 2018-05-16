@@ -2,13 +2,15 @@
 
 set +e
 
-wget -N http://iweb.dl.sourceforge.net/project/jboss/JBoss/JBoss-4.2.3.GA/jboss-4.2.3.GA.zip
+wget -N http://archive.apache.org/dist/tomcat/tomcat-6/v6.0.53/bin/apache-tomcat-6.0.53.tar.gz
 
-unzip jboss-4.2.3.GA.zip
+tar zxf apache-tomcat-6.0.53.tar.gz
 
-export SERVER_HOME=$(pwd)/jboss-4.2.3.GA
+export SERVER_HOME=$(pwd)/apache-tomcat-6.0.53
 
-cp app.war ${SERVER_HOME}/server/default/deploy/
+echo "export SERVER_HOME=$SERVER_HOME" > /tmp/openrasp_java_server_home.sh
+
+cp app.war ${SERVER_HOME}/webapps/
 
 # cp -R rasp ${SERVER_HOME}/
 
@@ -22,4 +24,4 @@ cp app.war ${SERVER_HOME}/server/default/deploy/
 
 java -jar RaspInstall.jar ${SERVER_HOME}
 
-nohup sh ${SERVER_HOME}/bin/run.sh &
+sh ${SERVER_HOME}/bin/startup.sh

@@ -2,15 +2,15 @@
 
 set +e
 
-wget -N http://iweb.dl.sourceforge.net/project/jboss/JBoss/JBoss-5.1.0.GA/jboss-5.1.0.GA.zip
+wget -N http://archive.apache.org/dist/tomcat/tomcat-8/v8.5.21/bin/apache-tomcat-8.5.21.tar.gz
 
-unzip jboss-5.1.0.GA.zip
+tar zxf apache-tomcat-8.5.21.tar.gz
 
-export SERVER_HOME=$(pwd)/jboss-5.1.0.GA
+export SERVER_HOME=$(pwd)/apache-tomcat-8.5.21
 
-sed -i -e 's/<parameter><inject bean="BootstrapProfileFactory"/<parameter class="java.io.File"><inject bean="BootstrapProfileFactory"/' ${SERVER_HOME}/server/default/conf/bootstrap/profile.xml
+echo "export SERVER_HOME=$SERVER_HOME" > /tmp/openrasp_java_server_home.sh
 
-cp app.war ${SERVER_HOME}/server/default/deploy/
+cp app.war ${SERVER_HOME}/webapps/
 
 # cp -R rasp ${SERVER_HOME}/
 
@@ -24,4 +24,4 @@ cp app.war ${SERVER_HOME}/server/default/deploy/
 
 java -jar RaspInstall.jar ${SERVER_HOME}
 
-nohup sh ${SERVER_HOME}/bin/run.sh &
+sh ${SERVER_HOME}/bin/startup.sh

@@ -2,13 +2,17 @@
 
 set +e
 
-wget -N http://archive.apache.org/dist/tomcat/tomcat-6/v6.0.53/bin/apache-tomcat-6.0.53.tar.gz
+wget -N http://download.jboss.org/jbossas/6.1/jboss-as-distribution-6.1.0.Final.zip
 
-tar zxf apache-tomcat-6.0.53.tar.gz
+unzip jboss-as-distribution-6.1.0.Final.zip
 
-export SERVER_HOME=$(pwd)/apache-tomcat-6.0.53
+export SERVER_HOME=$(pwd)/jboss-6.1.0.Final
 
-cp app.war ${SERVER_HOME}/webapps/
+echo "export SERVER_HOME=$SERVER_HOME" > /tmp/openrasp_java_server_home.sh
+
+sed -i -e 's/<parameter><inject bean="BootstrapProfileFactory"/<parameter class="java.io.File"><inject bean="BootstrapProfileFactory"/' ${SERVER_HOME}/server/default/conf/bootstrap/profile.xml
+
+cp app.war ${SERVER_HOME}/server/default/deploy/
 
 # cp -R rasp ${SERVER_HOME}/
 
@@ -22,4 +26,4 @@ cp app.war ${SERVER_HOME}/webapps/
 
 java -jar RaspInstall.jar ${SERVER_HOME}
 
-sh ${SERVER_HOME}/bin/startup.sh
+nohup sh ${SERVER_HOME}/bin/run.sh &

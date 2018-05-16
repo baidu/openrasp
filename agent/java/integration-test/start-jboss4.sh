@@ -2,13 +2,15 @@
 
 set +e
 
-wget -N http://archive.apache.org/dist/tomcat/tomcat-8/v8.5.21/bin/apache-tomcat-8.5.21.tar.gz
+wget -N http://iweb.dl.sourceforge.net/project/jboss/JBoss/JBoss-4.2.3.GA/jboss-4.2.3.GA.zip
 
-tar zxf apache-tomcat-8.5.21.tar.gz
+unzip jboss-4.2.3.GA.zip
 
-export SERVER_HOME=$(pwd)/apache-tomcat-8.5.21
+export SERVER_HOME=$(pwd)/jboss-4.2.3.GA
 
-cp app.war ${SERVER_HOME}/webapps/
+echo "export SERVER_HOME=$SERVER_HOME" > /tmp/openrasp_java_server_home.sh
+
+cp app.war ${SERVER_HOME}/server/default/deploy/
 
 # cp -R rasp ${SERVER_HOME}/
 
@@ -22,4 +24,4 @@ cp app.war ${SERVER_HOME}/webapps/
 
 java -jar RaspInstall.jar ${SERVER_HOME}
 
-sh ${SERVER_HOME}/bin/startup.sh
+nohup sh ${SERVER_HOME}/bin/run.sh &

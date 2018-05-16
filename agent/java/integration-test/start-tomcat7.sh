@@ -8,6 +8,8 @@ tar zxf apache-tomcat-7.0.81.tar.gz
 
 export SERVER_HOME=$(pwd)/apache-tomcat-7.0.81
 
+echo "export SERVER_HOME=$SERVER_HOME" > /tmp/openrasp_java_server_home.sh
+
 cp app.war ${SERVER_HOME}/webapps/
 
 # cp -R rasp ${SERVER_HOME}/

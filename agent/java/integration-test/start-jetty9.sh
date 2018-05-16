@@ -8,6 +8,8 @@ tar zxf jetty-distribution-9.4.7.v20170914.tar.gz
 
 export SERVER_HOME=$(pwd)/jetty-distribution-9.4.7.v20170914
 
+echo "export SERVER_HOME=$SERVER_HOME" > /tmp/openrasp_java_server_home.sh
+
 cp app.war ${SERVER_HOME}/webapps/
 
 cp -R rasp ${SERVER_HOME}/

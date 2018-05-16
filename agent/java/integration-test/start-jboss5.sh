@@ -2,11 +2,13 @@
 
 set +e
 
-wget -N http://download.jboss.org/jbossas/6.1/jboss-as-distribution-6.1.0.Final.zip
+wget -N http://iweb.dl.sourceforge.net/project/jboss/JBoss/JBoss-5.1.0.GA/jboss-5.1.0.GA.zip
 
-unzip jboss-as-distribution-6.1.0.Final.zip
+unzip jboss-5.1.0.GA.zip
 
-export SERVER_HOME=$(pwd)/jboss-6.1.0.Final
+export SERVER_HOME=$(pwd)/jboss-5.1.0.GA
+
+echo "export SERVER_HOME=$SERVER_HOME" > /tmp/openrasp_java_server_home.sh
 
 sed -i -e 's/<parameter><inject bean="BootstrapProfileFactory"/<parameter class="java.io.File"><inject bean="BootstrapProfileFactory"/' ${SERVER_HOME}/server/default/conf/bootstrap/profile.xml
 
