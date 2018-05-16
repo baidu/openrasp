@@ -6,7 +6,7 @@ include(__DIR__.'/../skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.callable_blacklists=system
+openrasp.callable_blacklists=system,exec
 --FILE--
 <?php
 array_map("system", array('ls', 'ls'));

@@ -17,7 +17,7 @@ openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
 fopen('/tmp/openrasp/tmpfile', 'r');
-echo 'ok';
 ?>
+ok
 --EXPECT--
 ok
