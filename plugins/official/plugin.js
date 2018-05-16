@@ -185,7 +185,8 @@ if (RASP.get_jsengine() !== 'v8') {
             feature: [
                 'stacked_query', 
                 'no_hex', 
-                'constant_compare', 
+                // 当代码编写不规范，常量比较算法会造成大量误报，所以默认不再开启此功能
+                // 'constant_compare', 
                 'version_comment', 
                 'function_blacklist',
                 'union_null'
