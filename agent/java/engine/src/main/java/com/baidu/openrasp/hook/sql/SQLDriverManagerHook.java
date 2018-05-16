@@ -28,7 +28,6 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 
 import java.io.IOException;
-import java.sql.DriverManager;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -68,11 +67,13 @@ public class SQLDriverManagerHook extends AbstractClassHook {
                 "$1,$2", String.class, Properties.class);
         String srcAfter = getInvokeStaticSrc(SQLDriverManagerHook.class, "checkSqlConnectionOnExit",
                 "$1,$2", String.class, Properties.class);
+        String srcOnExit = getInvokeStaticSrc(SQLDriverManagerHook.class, "onConnectionExit", "");
         CtBehavior[] behaviors = ctClass.getDeclaredMethods("getConnection");
         for (CtBehavior behavior : behaviors) {
             if (behavior.getMethodInfo().getDescriptor().startsWith("(Ljava/lang/String;Ljava/util/Properties;Ljava/lang/Class")) {
                 insertBefore(behavior, srcBefore);
                 insertAfter(behavior, srcAfter, false);
+                insertAfter(behavior, srcOnExit, true);
             }
         }
     }
@@ -87,6 +88,7 @@ public class SQLDriverManagerHook extends AbstractClassHook {
         if (Config.getConfig().getEnforcePolicy()) {
             checkSqlConnection(url, properties);
         }
+        HookHandler.preShieldHook();
     }
 
     /**
@@ -102,6 +104,13 @@ public class SQLDriverManagerHook extends AbstractClassHook {
                 checkSqlConnection(url, properties);
             }
         }
+    }
+
+    /**
+     * 关闭对 hook 点检测的屏蔽
+     */
+    public static void onConnectionExit() {
+        HookHandler.postShieldHook();
     }
 
     /**
