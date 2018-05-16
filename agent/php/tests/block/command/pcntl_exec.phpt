@@ -3,6 +3,7 @@ Check for command hook
 --SKIPIF--
 <?php 
 if (!extension_loaded("openrasp")) print "skip";
+if (!extension_loaded("pcntl")) print "skip";
 ?>
 --FILE--
 <?php

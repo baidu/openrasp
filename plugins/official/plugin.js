@@ -76,8 +76,11 @@ var forcefulBrowsing = {
     ]
 }
 
-var scriptFileRegex = /\.(jspx?|php[345]?|phtml)\.?$/i
-var ntfsRegex       = /::\$(DATA|INDEX)$/i // 其他的stream都没啥用
+// 如果你配置了非常规的扩展名映射，比如让 .abc 当做PHP脚本执行，那你可能需要增加更多扩展名
+var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml)\.?$/i
+
+// 其他的stream都没啥用
+var ntfsRegex       = /::\$(DATA|INDEX)$/i
 
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue) {
@@ -182,7 +185,8 @@ if (RASP.get_jsengine() !== 'v8') {
             feature: [
                 'stacked_query', 
                 'no_hex', 
-                'constant_compare', 
+                // 当代码编写不规范，常量比较算法会造成大量误报，所以默认不再开启此功能
+                // 'constant_compare', 
                 'version_comment', 
                 'function_blacklist',
                 'union_null'
@@ -215,10 +219,6 @@ if (RASP.get_jsengine() !== 'v8') {
         // SSRF - 是否允许访问混淆后的IP地址
         'ssrf_obfuscate': {
             action: 'block'
-        },
-        // SSRF - 是否直接禁止访问内网
-        'ssrf_intranet': {
-            action: 'ignore'
         }
     }
 
@@ -391,22 +391,8 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
-        // 算法3: 简单正则匹配 DEMO
-        if (0) {
-            var sqlRegex = /\bupdatexml\s*\(|\bextractvalue\s*\(|\bunion.*select.*(from|into|benchmark).*\b/i
-
-            if (sqlRegex.test(params.query)) {
-                return {
-                    action:     'block',
-                    message:    'SQL 注入攻击（算法4）',
-                    confidence: 100
-                }
-            }
-        }
-
         return clean
     })
-
 
     plugin.register('ssrf', function (params, context) {
         var hostname = params.hostname
@@ -740,9 +726,14 @@ plugin.register('command', function (params, context) {
                 break
             }
 
+            if (method == 'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute') {
+                message = '尝试通过 Groovy 脚本执行命令'
+                break
+            }
+
             // 仅当命令本身来自反射调用才拦截
             // 如果某个类是反射调用，这个类再主动执行命令，则忽略
-            if (! method.startsWith('java.') && ! method.startsWith('sun.') && ! message) {
+            if (! method.startsWith('java.') && ! method.startsWith('sun.') && !method.startsWith('com.sun.')) {
                 userCode = true
             }
 
@@ -760,7 +751,8 @@ plugin.register('command', function (params, context) {
 
     // PHP 检测逻辑
     else if (server.language == 'php') {
-        if (validate_stack_php(params.stack)) {
+        if (validate_stack_php(params.stack)) 
+        {
             message = '发现 Webshell，或者基于 eval/assert/create_function/preg_replace/.. 等类型的代码执行漏洞'
         }
     }

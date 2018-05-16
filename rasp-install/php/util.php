@@ -4,7 +4,7 @@ date_default_timezone_set('Asia/Shanghai');
 
 const UNKNOWN 		= "unknown";
 
-const OS_WIN 		= "windows";
+const OS_WIN 		= "win32";
 const OS_LINUX 		= "linux";
 const OS_OSX 		= "mac";
 
@@ -153,10 +153,22 @@ function log_tips($level, $msg, $arr = null) {
 }
 
 //帮助
-function show_help() {
-	global $help_msg;
+function show_help($help_msg) {
 	echo $help_msg;
 	exit(0); 
 }
+
+//通用全局变量
+$index 				= 1;
+$root_dir 			= null;
+$current_os 		= get_OS();
+$supported_sapi 	= array('apache2', 'cli', 'fpm');
+$lib_filename 		= $current_os == OS_WIN ? 'php_openrasp.dll' : 'openrasp.so';
+$extension_dir 		= ini_get('extension_dir');
+$ini_loaded_file 	= php_ini_loaded_file();
+$ini_scanned_path 	= get_ini_scanned_path();
+//make sure loaded after json and pdo
+$ini_scanned_file 	= 'z_openrasp.ini';
+$openrasp_work_sub_folders = array('conf'=>0755, 'assets'=>0755, 'logs'=>0777, 'locale'=>0755, 'plugins'=>0755);
 
 ?>

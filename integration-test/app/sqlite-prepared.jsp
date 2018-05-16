@@ -4,9 +4,12 @@
 <%
     Class.forName("org.sqlite.JDBC");
     Connection conn = DriverManager.getConnection("jdbc:sqlite::memory");
-    String createSql = "CREATE TABLE user(NAME TEXT NOT NULL)";
-    Statement statement = conn.createStatement();
-    statement.execute(createSql);
+    try {
+        String createSql = "CREATE TABLE user(NAME TEXT NOT NULL)";
+        Statement statement = conn.createStatement();
+        statement.execute(createSql);
+    } catch (Exception e) {
+    }
     String sql = "SELECT * FROM user";
     PreparedStatement stmt = conn.prepareStatement(sql);
     ResultSet rs = stmt.executeQuery();

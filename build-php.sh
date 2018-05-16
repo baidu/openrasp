@@ -33,7 +33,7 @@ case "$(uname -s)" in
 esac
 
 # 下载 libv8
-curl https://rasp.baidu.com/download/libv8-5.9-"$php_os".tar.gz -o /tmp/libv8-5.9.tar.gz
+curl https://packages.baidu.com/app/openrasp/libv8-5.9-"$php_os".tar.gz -o /tmp/libv8-5.9.tar.gz
 tar -xf /tmp/libv8-5.9.tar.gz -C /tmp/
 
 # 确定编译目录

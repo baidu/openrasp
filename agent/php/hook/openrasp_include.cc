@@ -129,6 +129,9 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
             }
         }
     }
+    if (resource) {
+        php_url_free(resource);
+    }
     if (!real_path)
     {
         zval_ptr_dtor(&path);

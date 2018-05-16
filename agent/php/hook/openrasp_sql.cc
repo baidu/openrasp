@@ -102,13 +102,16 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
             }
             else
             { 
-                ulong connection_hash = zend_inline_hash_func(conn_entry.host, strlen(conn_entry.host));
+                char *server_host_port = nullptr;
+                int server_host_port_len = spprintf(&server_host_port, 0, "%s-%s:%d", conn_entry.server, conn_entry.host, conn_entry.port);
+                ulong connection_hash = zend_inline_hash_func(server_host_port, server_host_port_len);
                 openrasp_shared_alloc_lock(TSRMLS_C);
                 if (!openrasp_shared_hash_exist(connection_hash, OPENRASP_LOG_G(formatted_date_suffix)))
                 {
                     connection_via_default_username_policy(check_message, &conn_entry TSRMLS_CC);
                 }
                 openrasp_shared_alloc_unlock(TSRMLS_C);
+                efree(server_host_port);
             }
             efree(check_message);
         }

@@ -150,7 +150,7 @@ void post_pdo_query(INTERNAL_FUNCTION_PARAMETERS)
     if (Z_TYPE_P(return_value) == IS_OBJECT)
     {
         pdo_stmt_t *stmt = (pdo_stmt_t*)zend_object_store_get_object(return_value TSRMLS_CC);
-        if (!stmt->dbh) {	
+        if (!stmt || !stmt->dbh) {	
             return;	
         }	
         if (stmt->row_count >= openrasp_ini.slowquery_min_rows)

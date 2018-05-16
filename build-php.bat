@@ -28,7 +28,7 @@ call buildconf.bat
 
 echo Build x86
 call vcvarsall.bat x86
-call configure.bat --disable-all --enable-json --enable-cli --enable-openrasp
+call configure.bat --disable-all --enable-json --enable-pdo --enable-cli --enable-openrasp
 nmake php_openrasp.dll
 set output_ext=%output_base%\php\win32-php5.6-x86
 md %output_ext%
@@ -37,7 +37,7 @@ copy Release_TS\php_openrasp.dll %output_ext%\
 if not "%PROCESSOR_ARCHITECTURE%" == "AMD64" goto build_mo
 echo Build x64
 call vcvarsall.bat x64
-call configure.bat --disable-all --enable-json --enable-cli --enable-openrasp
+call configure.bat --disable-all --enable-json --enable-pdo --enable-cli --enable-openrasp
 nmake php_openrasp.dll
 set output_ext=%output_base%\php\win32-php5.6-x64
 md %output_ext%
@@ -55,6 +55,7 @@ for /d %%i in ("*") do (
 popd
 
 copy %root%\plugins\official\plugin.js %output_base%\plugins\official.js
+copy %root%\rasp-install\php\*.php %output_base%\
 
 echo Zip
 del rasp-php.zip

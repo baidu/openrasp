@@ -229,19 +229,20 @@ namespace fsw
 
     for (;;)
     {
-#ifdef HAVE_CXX_MUTEX
-      unique_lock<mutex> run_guard(run_mutex);
-      if (should_stop) break;
-      run_guard.unlock();
-#endif
-
-      //sleep(latency);
-	  this_thread::sleep_for(chrono::seconds(static_cast<long long>(latency)));
-
-      for (const auto & path : load->win_paths)
       {
-        process_path(path);
+#ifdef HAVE_CXX_MUTEX
+        lock_guard<mutex> run_guard(run_mutex);
+#endif
+        if (should_stop)
+        {
+          break;
+        }
+        for (const auto & path : load->win_paths)
+        {
+          process_path(path);
+        }
       }
+      this_thread::sleep_for(chrono::seconds(static_cast<long long>(latency)));
     }
   }
 }

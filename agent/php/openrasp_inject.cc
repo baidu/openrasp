@@ -73,11 +73,11 @@ PHP_RINIT_FUNCTION(openrasp_inject)
 {
     {
         auto time_point = std::chrono::steady_clock::now();
-        long long unsigned int nano = time_point.time_since_epoch().count();
-        auto hash = zend_inline_hash_func(reinterpret_cast<const char *>(&nano), sizeof(nano));
-        spprintf(&OPENRASP_INJECT_G(request_id), 32, "%016llx%016lx", hash, nano);
+        long long nano = time_point.time_since_epoch().count();
+        unsigned long hash = zend_inline_hash_func(reinterpret_cast<const char *>(&nano), sizeof(nano));
+        spprintf(&OPENRASP_INJECT_G(request_id), 32, "%016lx%016llx", hash, nano);
         char *uuid_header = nullptr;
-        int uuid_header_len = spprintf(&uuid_header, 0, "Request-ID: %s", OPENRASP_INJECT_G(request_id));
+        int uuid_header_len = spprintf(&uuid_header, 0, "X-Request-ID: %s", OPENRASP_INJECT_G(request_id));
         if (uuid_header)
         {
             sapi_header_line header;

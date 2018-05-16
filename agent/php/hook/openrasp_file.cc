@@ -48,6 +48,9 @@ static void check_file_operation(const char* type, char *filename, int filename_
         }
         real_path = php_resolve_path(expand_path, strlen(expand_path), use_include_path ? PG(include_path) : NULL TSRMLS_CC);
     }
+    if (resource) {
+        php_url_free(resource);
+    }
     if (real_path)
     {
         zval *params;
@@ -139,6 +142,13 @@ void pre_global_file_put_contents(INTERNAL_FUNCTION_PARAMETERS)
                 strcpy(real_path, resolved_path);
                 efree(resolved_path);
             }
+            else
+            {
+                strcpy(real_path, expand_path);
+            }
+        }
+        if (resource) {
+            php_url_free(resource);
         }
         if (!openrasp_check_type_ignored(ZEND_STRL("webshell_file_put_contents") TSRMLS_CC)
             && openrasp_zval_in_request(*path TSRMLS_CC)

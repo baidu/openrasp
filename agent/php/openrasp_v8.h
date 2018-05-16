@@ -79,6 +79,7 @@ public:
   std::chrono::time_point<std::chrono::high_resolution_clock> time_point;
   std::timed_mutex mtx;
   TimeoutTask(v8::Isolate *_isolate, int _milliseconds = 100);
+  ~TimeoutTask();
   void Run() override;
   std::timed_mutex &GetMtx();
 };
