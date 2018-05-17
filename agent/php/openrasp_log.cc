@@ -315,6 +315,7 @@ static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log
             else if (VCWD_ACCESS(file_path, W_OK) != 0)
             {
                 openrasp_error(E_WARNING, LOG_ERROR, _("Unable to open '%s' for writing"), file_path);
+                efree(file_path);
                 break;
             }        
             stream = php_stream_open_wrapper(file_path, "a+", REPORT_ERRORS | IGNORE_URL_WIN, NULL);            
@@ -325,6 +326,7 @@ static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log
                     openrasp_error(E_WARNING, LOG_ERROR, _("Unable to chmod file: %s."), file_path);
                 }                
                 logger->stream_log = stream;
+                efree(file_path);
                 return &logger->stream_log;
             }
             else
