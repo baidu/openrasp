@@ -18,6 +18,7 @@
 using namespace openrasp;
 static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
     static const char REQUEST_SCHEME[] = "REQUEST_SCHEME";
     static const ulong REQUEST_SCHEME_HASH = zend_get_hash_value(ZEND_STRS(REQUEST_SCHEME));
@@ -90,6 +91,7 @@ static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<
 }
 static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
     static const char REQUEST_METHOD[] = "REQUEST_METHOD";
     static const ulong REQUEST_METHOD_HASH = zend_get_hash_value(ZEND_STRS(REQUEST_METHOD));
@@ -120,6 +122,7 @@ static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
 }
 static void querystring_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
     static const char QUERY_STRING[] = "QUERY_STRING";
     static const ulong QUERY_STRING_HASH = zend_get_hash_value(ZEND_STRS(QUERY_STRING));
@@ -137,6 +140,7 @@ static void querystring_getter(v8::Local<v8::Name> name, const v8::PropertyCallb
 }
 static void appBasePath_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
     static const char DOCUMENT_ROOT[] = "DOCUMENT_ROOT";
     static const ulong DOCUMENT_ROOT_HASH = zend_get_hash_value(ZEND_STRS(DOCUMENT_ROOT));
@@ -154,6 +158,7 @@ static void appBasePath_getter(v8::Local<v8::Name> name, const v8::PropertyCallb
 }
 static void protocol_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
     static const char REQUEST_SCHEME[] = "REQUEST_SCHEME";
     static const ulong REQUEST_SCHEME_HASH = zend_get_hash_value(ZEND_STRS(REQUEST_SCHEME));
@@ -162,17 +167,16 @@ static void protocol_getter(v8::Local<v8::Name> name, const v8::PropertyCallback
         return;
     }
     zval **value;
-    char *protocol = "http";
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_SCHEME), REQUEST_SCHEME_HASH, (void **)&value) == SUCCESS &&
-        Z_TYPE_PP(value) == IS_STRING)
+    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_SCHEME), REQUEST_SCHEME_HASH, (void **)&value) != SUCCESS ||
+        Z_TYPE_PP(value) != IS_STRING)
     {
-        protocol = Z_STRVAL_PP(value);
+        return;
     }
-    v8::Isolate *isolate = info.GetIsolate();
-    info.GetReturnValue().Set(V8STRING_N(protocol).ToLocalChecked());
+    info.GetReturnValue().Set(zval_to_v8val(*value, info.GetIsolate() TSRMLS_CC));
 }
 static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
     static const char REMOTE_ADDR[] = "REMOTE_ADDR";
     static const ulong REMOTE_ADDR_HASH = zend_get_hash_value(ZEND_STRS(REMOTE_ADDR));
@@ -190,6 +194,7 @@ static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallba
 }
 static void path_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
     static const char REQUEST_URI[] = "REQUEST_URI";
     static const ulong REQUEST_URI_HASH = zend_get_hash_value(ZEND_STRS(REQUEST_URI));
@@ -339,6 +344,7 @@ static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
 }
 static void body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    info.GetReturnValue().Set(v8::ArrayBuffer::New(info.GetIsolate(), nullptr, 0, v8::ArrayBufferCreationMode::kInternalized));
     TSRMLS_FETCH();
     php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, NULL);
     if (!stream)
