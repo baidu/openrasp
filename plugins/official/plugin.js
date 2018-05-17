@@ -311,11 +311,21 @@ if (RASP.get_jsengine() !== 'v8') {
                 'ascii':            true,                
                 'bin':              true
             }
+            var features  = {
+                'stacked_query':      true,
+                'no_hex':             true,
+                'constant_compare':   false,
+                'version_comment':    true, 
+                'function_blacklist': true,
+                'union_null':         true,
+            }
+
             var tokens_lc = tokens.map(v => v.toLowerCase())
 
-            for (var i = 1; i < tokens_lc.length; i ++) {
-
-                if (1 && tokens_lc[i] === 'select') {
+            for (var i = 1; i < tokens_lc.length; i ++) 
+            {
+                if (features['union_null'] && tokens_lc[i] === 'select') 
+                {
                     var null_count = 0
 
                     // 寻找连续的逗号、NULL或者数字
@@ -336,20 +346,28 @@ if (RASP.get_jsengine() !== 'v8') {
                     continue
                 }
 
-                if (tokens_lc[i] == ';' && i != tokens_lc.length - 1) {
+                if (features['stacked_query'] && tokens_lc[i] == ';' && i != tokens_lc.length - 1) 
+                {
                     reason = '禁止多语句查询'
                     break
-                } else if (tokens_lc[i][0] === '0' && tokens_lc[i][1] === 'x') {
+                } 
+                else if (features['no_hex'] && tokens_lc[i][0] === '0' && tokens_lc[i][1] === 'x') 
+                {
                     reason = '禁止16进制字符串'
                     break
-                } else if (tokens_lc[i][0] === '/' && tokens_lc[i][1] === '*' && tokens_lc[i][2] === '!') {
+                } 
+                else if (features['version_comment'] && tokens_lc[i][0] === '/' && tokens_lc[i][1] === '*' && tokens_lc[i][2] === '!') 
+                {
                     reason = '禁止MySQL版本号注释'
                     break
-                } else if (i > 0 && i < tokens_lc.length - 1 && 
+                } 
+                else if (features['constant_compare'] &&
+                    i > 0 && i < tokens_lc.length - 1 && 
                     (tokens_lc[i] === 'xor'
                         || tokens_lc[i][0] === '<'
                         || tokens_lc[i][0] === '>' 
-                        || tokens_lc[i][0] === '=')) {
+                        || tokens_lc[i][0] === '=')) 
+                {
                     // @FIXME: 可绕过，暂时不更新
                     // 简单识别 NUMBER (>|<|>=|<=|xor) NUMBER
                     //          i-1         i          i+2    
@@ -373,7 +391,9 @@ if (RASP.get_jsengine() !== 'v8') {
                         reason = '禁止常量比较操作: ' + num1 + ' vs ' + num2
                         break
                     }                    
-                } else if (i > 0 && tokens_lc[i][0] === '(') {
+                } 
+                else if (features['function_blacklist'] && i > 0 && tokens_lc[i][0] === '(') 
+                {
                     // @FIXME: 可绕过，暂时不更新
                     if (func_list[tokens_lc[i - 1]]) {
                         reason = '禁止执行敏感函数: ' + tokens_lc[i - 1]
@@ -768,6 +788,13 @@ plugin.register('command', function (params, context) {
     // 算法2: 默认禁止命令执行
     // 如有需要可改成 log 或者 ignore
     // 或者根据URL来决定是否允许执行命令
+
+    // 从 v0.31 开始，当命令执行来自非HTTP请求的，我们也会检测反序列化攻击
+    // 但是不应该拦截正常的命令执行，所以这里加一个 context.url 检查
+    if (! context.url) {
+        return clean
+    }
+
     return {
         action:     'block',
         message:    '尝试执行命令',
