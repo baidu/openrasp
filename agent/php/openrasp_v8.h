@@ -20,6 +20,7 @@
 #include "openrasp.h"
 #undef COMPILER // conflict with v8 defination
 #include <v8.h>
+#include <libplatform/libplatform.h>
 #include <v8-platform.h>
 #include <mutex>
 #include <queue>
@@ -48,40 +49,16 @@ namespace openrasp
 #define V8STRING_I(string) \
   V8STRING_EX(string, v8::NewStringType::kInternalized, -1)
 
-class TaskQueue;
-class WorkerThread;
-class V8Platform : public v8::Platform
-{
-public:
-  V8Platform();
-  V8Platform(int thread_pool_size);
-  ~V8Platform();
-  virtual size_t NumberOfAvailableBackgroundThreads();
-  virtual void CallOnBackgroundThread(v8::Task *task, ExpectedRuntime expected_runtime);
-  virtual void CallOnBackgroundThread(v8::Task *task);
-  virtual void CallOnForegroundThread(v8::Isolate *isolate, v8::Task *task);
-  virtual void CallDelayedOnForegroundThread(v8::Isolate *isolate, v8::Task *task, double delay_in_seconds);
-  virtual double MonotonicallyIncreasingTime();
-  void EnsureBackgroundThreadInitialized();
-
-private:
-  std::mutex lock_;
-  bool initialized_ = false;
-  int thread_pool_size_ = 0;
-  std::vector<WorkerThread *> thread_pool_;
-  TaskQueue *queue_ = nullptr;
-};
-
 class TimeoutTask : public v8::Task
 {
 public:
+  TimeoutTask(v8::Isolate *_isolate, int _milliseconds = 100);
+  void Run() override;
+  std::timed_mutex &GetMtx();
+private:
   v8::Isolate *isolate;
   std::chrono::time_point<std::chrono::high_resolution_clock> time_point;
   std::timed_mutex mtx;
-  TimeoutTask(v8::Isolate *_isolate, int _milliseconds = 100);
-  ~TimeoutTask();
-  void Run() override;
-  std::timed_mutex &GetMtx();
 };
 
 class openrasp_v8_plugin_src
@@ -97,7 +74,7 @@ public:
   v8::StartupData snapshot_blob;
   std::mutex lock;
   bool is_initialized = false;
-  V8Platform *v8_platform = nullptr;
+  v8::Platform *v8_platform = nullptr;
   std::vector<openrasp_v8_plugin_src> plugin_src_list;
 };
 

@@ -36,6 +36,7 @@ if (PHP_OPENRASP != "no") {
 	CHECK_LIB("v8_base.lib", "openrasp", libv8_path);
 	CHECK_LIB("v8_libbase.lib", "openrasp", libv8_path);
 	CHECK_LIB("v8_libsampler.lib", "openrasp", libv8_path);
+	CHECK_LIB("v8_libplatform.lib", "openrasp", libv8_path);
 	CHECK_LIB("v8_snapshot.lib", "openrasp", libv8_path);
 	DEFINE("LDFLAGS", get_define("LDFLAGS_OPENRASP") + " " + get_define("LDFLAGS"));
 
@@ -51,7 +52,7 @@ if (PHP_OPENRASP != "no") {
 	openrasp_shared_alloc_mmap.c  \
 	openrasp_shared_alloc_win32.c  \
 	openrasp_v8.cc \
-	openrasp_v8_platform.cc \
+	openrasp_v8_timeout_task.cc \
 	openrasp_v8_request_context.cc \
 	openrasp_v8_utils.cc \
 	openrasp_security_policy.cc"

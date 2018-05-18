@@ -37,7 +37,7 @@ if test "$PHP_OPENRASP" != "no"; then
   fi
 
   PHP_ADD_INCLUDE($V8_PATH/include)
-  V8_LIBS="$V8_PATH/lib/libv8_{base,libsampler,libbase,snapshot}.a"
+  V8_LIBS="$V8_PATH/lib/libv8_{base,libsampler,libbase,libplatform,snapshot}.a"
   case $host_os in
     darwin* )
       OPENRASP_LIBS="-Wl,$V8_LIBS $OPENRASP_LIBS"
@@ -470,7 +470,7 @@ int main() {
     openrasp_shared_alloc.c  \
     openrasp_shared_alloc_mmap.c  \
     openrasp_v8.cc \
-    openrasp_v8_platform.cc \
+    openrasp_v8_timeout_task.cc \
     openrasp_v8_request_context.cc \
     openrasp_v8_utils.cc \
     openrasp_security_policy.cc \

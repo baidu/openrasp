@@ -63,7 +63,7 @@ unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
     {
         TimeoutTask *task = new TimeoutTask(isolate, openrasp_ini.timeout_ms);
         std::lock_guard<std::timed_mutex> lock(task->GetMtx());
-        process_globals.v8_platform->CallOnBackgroundThread(task);
+        process_globals.v8_platform->CallOnBackgroundThread(task, v8::Platform::kShortRunningTask);
         bool avoidwarning = check->Call(context, check, 3, argv).ToLocal(&rst);
     }
     if (rst.IsEmpty())
@@ -263,6 +263,15 @@ static bool init_isolate(TSRMLS_D)
 {
     if (process_globals.is_initialized && !OPENRASP_V8_G(is_isolate_initialized))
     {
+        if (!process_globals.v8_platform)
+        {
+#ifdef ZTS
+            process_globals.v8_platform = v8::platform::CreateDefaultPlatform();
+#else
+            process_globals.v8_platform = v8::platform::CreateDefaultPlatform(1);
+#endif
+            v8::V8::InitializePlatform(process_globals.v8_platform);
+        }
         OPENRASP_V8_G(create_params).array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
         OPENRASP_V8_G(create_params).snapshot_blob = &process_globals.snapshot_blob;
         OPENRASP_V8_G(create_params).external_references = external_references;
@@ -375,20 +384,19 @@ PHP_MINIT_FUNCTION(openrasp_v8)
     // but intern code initializes v8 only once
     v8::V8::Initialize();
 
-    V8Platform platform;
-    v8::V8::InitializePlatform(&platform);
+    v8::Platform *platform = v8::platform::CreateDefaultPlatform();
+    v8::V8::InitializePlatform(platform);
     process_globals.snapshot_blob = init_js_snapshot(TSRMLS_C);
     v8::V8::ShutdownPlatform();
+    delete platform;
+
     if (process_globals.snapshot_blob.data == nullptr ||
         process_globals.snapshot_blob.raw_size <= 0)
     {
         return FAILURE;
     }
 
-    process_globals.v8_platform = new V8Platform();
-    v8::V8::InitializePlatform(process_globals.v8_platform);
     process_globals.is_initialized = true;
-
     ZEND_INIT_MODULE_GLOBALS(openrasp_v8, PHP_GINIT(openrasp_v8), PHP_GSHUTDOWN(openrasp_v8));
     return SUCCESS;
 }
@@ -402,11 +410,14 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
         // it should generally not be necessary to dispose v8 before exiting a process,
         // so skip this step for module graceful reload
         // v8::V8::Dispose();
-        v8::V8::ShutdownPlatform();
+        if (process_globals.v8_platform)
+        {
+            v8::V8::ShutdownPlatform();
+            delete process_globals.v8_platform;
+            process_globals.v8_platform = nullptr;
+        }
         delete[] process_globals.snapshot_blob.data;
         process_globals.snapshot_blob.data = nullptr;
-        delete process_globals.v8_platform;
-        process_globals.v8_platform = nullptr;
         process_globals.is_initialized = false;
     }
     return SUCCESS;
