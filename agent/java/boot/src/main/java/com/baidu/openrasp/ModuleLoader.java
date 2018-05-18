@@ -19,10 +19,9 @@ package com.baidu.openrasp;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Method;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.net.URLDecoder;
-import java.util.HashMap;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 
@@ -39,9 +38,6 @@ public class ModuleLoader {
 
     private static ModuleLoader instance;
 
-    private HashMap<String, ClassLoader> classLoaderMap = new HashMap<String, ClassLoader>();
-
-    private ClassLoader engineClassLoader;
 
     // ModuleLoader 为 classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
@@ -62,13 +58,12 @@ public class ModuleLoader {
     }
 
     /**
-     * 单例构造方法
-     * 构造同时完成加载
+     * 构造所有模块
      *
      * @param agentArg premain 传入的命令行参数
      * @param inst     {@link java.lang.instrument.Instrumentation}
      */
-    private ModuleLoader(String agentArg, Instrumentation inst) {
+    private ModuleLoader(String agentArg, Instrumentation inst) throws Exception {
         for (int i = 0; i < jars.length; i++) {
             Object module = null;
             try {
@@ -80,8 +75,15 @@ public class ModuleLoader {
                 String moduleEnterClassName = attributes.getValue("Rasp-Module-Class");
                 if (moduleName != null && moduleEnterClassName != null
                         && !moduleName.equals("") && !moduleEnterClassName.equals("")) {
-                    ModuleClassLoader moduleClassLoader = new ModuleClassLoader(originFile.toURI().toURL());
-                    Class moduleClass = moduleClassLoader.loadClass(moduleEnterClassName);
+                    Method method = Class.forName("java.net.URLClassLoader").getDeclaredMethod("addURL", URL.class);
+                    method.setAccessible(true);
+                    ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+                    while (systemClassLoader.getParent() != null
+                            && !systemClassLoader.getClass().getName().startsWith("sun.misc.Launcher")) {
+                        systemClassLoader = systemClassLoader.getParent();
+                    }
+                    method.invoke(systemClassLoader, originFile.toURI().toURL());
+                    Class moduleClass = ClassLoader.getSystemClassLoader().loadClass(moduleEnterClassName);
                     module = moduleClass.newInstance();
                     if (module instanceof Module) {
                         try {
@@ -90,16 +92,12 @@ public class ModuleLoader {
                             moduleClass.getMethod("release").invoke(module);
                             throw e;
                         }
-                        moduleClassLoader.setModule((Module) module);
-                        classLoaderMap.put(moduleName, moduleClassLoader);
-                        if (moduleName.equals("rasp-engine")) {
-                            engineClassLoader = moduleClassLoader;
-                        }
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println("[OpenRASP] Failed to initialize module jar: " + jars[i]);
+                throw e;
             }
         }
     }
@@ -118,37 +116,6 @@ public class ModuleLoader {
                 }
             }
         }
-    }
-
-    /**
-     * 用于 OpenRasp 引擎模块加载自己类的入口
-     *
-     * @param className 类名
-     * @return 类实体
-     */
-    public static Class loadClass(String className) throws ClassNotFoundException {
-        return instance.engineClassLoader.loadClass(className);
-    }
-
-    /**
-     * 模块类加载器
-     */
-    public static class ModuleClassLoader extends URLClassLoader {
-
-        private Module module;
-
-        ModuleClassLoader(URL url) {
-            super(new URL[]{url});
-        }
-
-        public Module getModule() {
-            return module;
-        }
-
-        public void setModule(Module module) {
-            this.module = module;
-        }
-
     }
 
 }

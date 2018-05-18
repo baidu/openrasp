@@ -50,10 +50,10 @@ public class JettyHttpInputHook extends ServerInputHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String srcRead1 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
-                "($w)$_,$0", int.class, Object.class);
+                "$_,$0", int.class, Object.class);
         insertAfter(ctClass, "read", "()I", srcRead1);
         String src2Read2 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
-                "($w)$_,$0,$1,($w)$2,($w)$3", int.class, Object.class, byte[].class, int.class, int.class);
+                "$_,$0,$1,$2,$3", int.class, Object.class, byte[].class, int.class, int.class);
         insertAfter(ctClass, "read", "([BII)I", src2Read2);
     }
 

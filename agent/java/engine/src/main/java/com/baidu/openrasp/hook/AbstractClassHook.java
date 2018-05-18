@@ -300,12 +300,16 @@ public abstract class AbstractClassHook {
         } else {
             parameterTypesString = "new Class[]{" + parameterTypesString + "}";
         }
-        src = "com.baidu.openrasp.ModuleLoader.loadClass(\"" + invokeClassName + "\").getMethod(\"" + methodName +
-                "\"," + parameterTypesString + ").invoke(null";
-        if (!StringUtils.isEmpty(paramString)) {
-            src += (",new Object[]{" + paramString + "});");
+        if (isLoadedByBootstrapLoader) {
+            src = "ClassLoader.getSystemClassLoader().loadClass(\"" + invokeClassName + "\").getMethod(\"" + methodName +
+                    "\"," + parameterTypesString + ").invoke(null";
+            if (!StringUtils.isEmpty(paramString)) {
+                src += (",new Object[]{" + paramString + "});");
+            } else {
+                src += ",null);";
+            }
         } else {
-            src += ",null);";
+            src = invokeClassName + '.' + methodName + "(" + paramString + ");";
         }
         src = "try {" + src + "} catch (Throwable t) {if(t.getCause() != null && t.getCause().getClass()" +
                 ".getName().equals(\"com.baidu.openrasp.exception.SecurityException\")){throw t;}}";
