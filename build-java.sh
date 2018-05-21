@@ -43,7 +43,8 @@ function buildRasp {
 	mvn versions:use-latest-releases -Dincludes=com.baidu.openrasp:sqlparser
 	log "mvn clean package"
 	mvn clean package  || exit 1
-	cp $BASE_DIR/agent/java/target/rasp.jar $OUTPUT_ROOT/rasp || exit 1
+	cp $BASE_DIR/agent/java/boot/target/rasp.jar $OUTPUT_ROOT/rasp || exit 1
+	cp $BASE_DIR/agent/java/engine/target/rasp-engine.jar $OUTPUT_ROOT/rasp || exit 1
 }
 
 function buildPlugin {

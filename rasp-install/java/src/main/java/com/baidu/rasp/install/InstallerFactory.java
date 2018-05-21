@@ -30,6 +30,7 @@ import static com.baidu.rasp.RaspError.E10004;
 public abstract class InstallerFactory {
     protected static final String TOMCAT = "Tomcat";
     protected static final String JBOSS = "JBoss 4-6";
+    protected static final String RESIN = "Resin";
 
     protected abstract Installer getInstaller(String serverName, String serverRoot);
 
@@ -42,6 +43,7 @@ public abstract class InstallerFactory {
         if (serverName == null) {
             System.out.println("List of currently supported servers are:");
             System.out.println("- " + TOMCAT);
+            System.out.println("- " + RESIN);
             System.out.println("- " + JBOSS + "\n");
             throw new RaspError(E10004 + serverRoot.getPath());
         }
@@ -50,7 +52,7 @@ public abstract class InstallerFactory {
         return getInstaller(serverName, serverRoot.getAbsolutePath());
     }
 
-    private static String detectServerName(String serverRoot) {
+    public static String detectServerName(String serverRoot) {
         if (new File(serverRoot, "bin/catalina.sh").exists()
                 || new File(serverRoot, "bin/catalina.bat").exists()) {
             return TOMCAT;
@@ -60,6 +62,10 @@ public abstract class InstallerFactory {
                 || new File(serverRoot, "bin/twiddle.sh").exists()
                 || new File(serverRoot, "bin/twiddle.bat").exists()) {
             return JBOSS;
+        }
+        if (new File(serverRoot, "bin/httpd.sh").exists()
+                || new File(serverRoot, "bin/resin.sh").exists()) {
+            return RESIN;
         }
         return null;
     }
