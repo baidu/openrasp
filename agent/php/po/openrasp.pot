@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: openrasp@baidu.com\n"
-"POT-Creation-Date: 2018-05-06 20:46-0700\n"
+"POT-Creation-Date: 2018-05-16 23:34-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -328,7 +328,7 @@ msgstr ""
 
 #: hook/openrasp_file.cc:134 hook/openrasp_file.cc:150
 #: hook/openrasp_file.cc:155 hook/openrasp_file.cc:161
-#: hook/openrasp_file.cc:165
+#: hook/openrasp_file.cc:165 hook/openrasp_file.cc:165
 msgid "Webshell detected - File dropper backdoor"
 msgstr ""
 
