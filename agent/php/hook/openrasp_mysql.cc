@@ -144,8 +144,17 @@ void post_global_mysql_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETE
 //mysql_query
 void pre_global_mysql_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {    
-    check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "mysql", 1);
+	char *query;
+	int query_len;
+	zval *mysql_link = NULL;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|r", &query, &query_len, &mysql_link) == FAILURE) {
+		return;
+	}
+
+    sql_type_handler(query, query_len, "mysql" TSRMLS_CC);
 }
+
 void post_global_mysql_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     long num_rows = 0;

@@ -26,6 +26,7 @@ PRE_HOOK_FUNCTION_EX(query, pdo, sql);
 POST_HOOK_FUNCTION_EX(query, pdo, sqlSlowQuery);
 PRE_HOOK_FUNCTION_EX(exec, pdo, sql);
 POST_HOOK_FUNCTION_EX(exec, pdo, sqlSlowQuery);
+PRE_HOOK_FUNCTION_EX(prepare, pdo, sqlPrepare);
 
 extern void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p);
 
@@ -136,15 +137,19 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
     }
 }
 
-static void pdo_pre_process(INTERNAL_FUNCTION_PARAMETERS)
-{
-    pdo_dbh_t *dbh = reinterpret_cast<pdo_dbh_t*>(zend_object_store_get_object(getThis() TSRMLS_CC));
-    check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, const_cast<char*>(dbh->driver->driver_name), 1);
-}
-
 void pre_pdo_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    pdo_pre_process(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    pdo_dbh_t *dbh = reinterpret_cast<pdo_dbh_t*>(zend_object_store_get_object(getThis() TSRMLS_CC));
+	char *statement;
+	int statement_len;
+	
+	if (!ZEND_NUM_ARGS() || 
+    FAILURE == zend_parse_parameters(1 TSRMLS_CC, "s", &statement, &statement_len)) 
+    {
+		return;;
+	}
+
+    sql_type_handler(statement, statement_len, const_cast<char*>(dbh->driver->driver_name) TSRMLS_CC);
 }
 
 void post_pdo_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -164,7 +169,15 @@ void post_pdo_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_pdo_exec_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    pdo_pre_process(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    pdo_dbh_t *dbh = reinterpret_cast<pdo_dbh_t*>(zend_object_store_get_object(getThis() TSRMLS_CC));
+	char *statement;
+	int statement_len;
+
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &statement, &statement_len)) {
+		return;
+    }
+    
+    sql_type_handler(statement, statement_len, const_cast<char*>(dbh->driver->driver_name) TSRMLS_CC);
 }
 
 void post_pdo_exec_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -195,4 +208,18 @@ void post_pdo___construct_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pdo_connection_entry, 0);
     }
+}
+
+void pre_pdo_prepare_sqlPrepare(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+	pdo_dbh_t *dbh = reinterpret_cast<pdo_dbh_t*>(zend_object_store_get_object(getThis() TSRMLS_CC));
+	char *statement;
+	int statement_len;
+	zval *options = NULL;
+
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|a", &statement,
+			&statement_len, &options)) {
+		return;
+	}
+    sql_type_handler(statement, statement_len, const_cast<char*>(dbh->driver->driver_name) TSRMLS_CC);
 }

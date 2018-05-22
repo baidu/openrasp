@@ -150,7 +150,7 @@ typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_e
 
 void slow_query_alarm(int rows TSRMLS_DC);
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
-void check_query_clause(INTERNAL_FUNCTION_PARAMETERS, char *server, int num);
+void sql_type_handler(char* query, int query_len, char *server TSRMLS_DC);
 long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count, zval *params[] TSRMLS_DC);
 
 typedef enum hook_position_t {

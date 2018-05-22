@@ -127,25 +127,17 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
     return need_block;
 }
 
-/*  check sql query clause
-*/
-void check_query_clause(INTERNAL_FUNCTION_PARAMETERS, char *server, int num)
-{    
-    int argc = MIN(num, ZEND_NUM_ARGS());
-    zval ***args = (zval ***)safe_emalloc(argc, sizeof(zval **), 0);
-    if (argc == num &&
-        zend_get_parameters_array_ex(argc, args) == SUCCESS &&
-        Z_TYPE_PP(args[num - 1]) == IS_STRING)
-    {        
+void sql_type_handler(char* query, int query_len, char *server TSRMLS_DC)
+{
+    if (query && strlen(query) == query_len)
+    {
         zval *params;
         MAKE_STD_ZVAL(params);
         array_init(params);
-        add_assoc_zval(params, "query", *args[num - 1]);        
-        Z_ADDREF_P(*args[num - 1]);
+        add_assoc_string(params, "query", query, 1);
         add_assoc_string(params, "server", server, 1);
         check("sql", params TSRMLS_CC);
     }
-    efree(args);
 }
 
 long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count, zval *params[] TSRMLS_DC)

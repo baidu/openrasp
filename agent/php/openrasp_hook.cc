@@ -231,11 +231,13 @@ PHP_MINIT_FUNCTION(openrasp_hook)
     REGISTER_HOOK_HANDLER(mysqli_real_connect, dbConnection);
     REGISTER_HOOK_HANDLER(mysqli_query, sqlSlowQuery);
     REGISTER_HOOK_HANDLER(mysqli_query, sql);
+    REGISTER_HOOK_HANDLER(mysqli_prepare, sqlPrepare);
     REGISTER_HOOK_HANDLER(mysqli_real_query, sql);
     REGISTER_HOOK_HANDLER_EX(mysqli, mysqli, dbConnection);
     REGISTER_HOOK_HANDLER_EX(real_connect, mysqli, dbConnection);
     REGISTER_HOOK_HANDLER_EX(query, mysqli, sqlSlowQuery);
     REGISTER_HOOK_HANDLER_EX(query, mysqli, sql);
+    REGISTER_HOOK_HANDLER_EX(prepare, mysqli, sqlPrepare);
 
     REGISTER_HOOK_HANDLER(pg_connect, dbConnection);
     REGISTER_HOOK_HANDLER(pg_pconnect, dbConnection);
@@ -243,6 +245,7 @@ PHP_MINIT_FUNCTION(openrasp_hook)
     REGISTER_HOOK_HANDLER(pg_query, sql);
     REGISTER_HOOK_HANDLER(pg_send_query, sql);
     REGISTER_HOOK_HANDLER(pg_get_result, sqlSlowQuery);
+    REGISTER_HOOK_HANDLER(pg_prepare, sqlPrepare);
 
     REGISTER_HOOK_HANDLER_EX(exec, sqlite3, sql);
     REGISTER_HOOK_HANDLER_EX(query, sqlite3, sql);
@@ -253,6 +256,7 @@ PHP_MINIT_FUNCTION(openrasp_hook)
     REGISTER_HOOK_HANDLER_EX(exec, pdo, sqlSlowQuery);
     REGISTER_HOOK_HANDLER_EX(exec, pdo, sql);
     REGISTER_HOOK_HANDLER_EX(__construct, pdo, dbConnection);
+    REGISTER_HOOK_HANDLER_EX(prepare, pdo, sqlPrepare);
 
     REGISTER_HOOK_HANDLER(move_uploaded_file, fileUpload);
 

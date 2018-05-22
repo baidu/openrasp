@@ -22,6 +22,7 @@ PRE_HOOK_FUNCTION(pg_query, sql);
 POST_HOOK_FUNCTION(pg_query, sqlSlowQuery);
 PRE_HOOK_FUNCTION(pg_send_query, sql);
 POST_HOOK_FUNCTION(pg_get_result, sqlSlowQuery);
+PRE_HOOK_FUNCTION(pg_prepare, sqlPrepare);
 
 void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p)
 {
@@ -215,12 +216,21 @@ void post_global_pg_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
  */
 void pre_global_pg_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-	int  argc = ZEND_NUM_ARGS();
+    zval *pgsql_link = NULL;
+	char *query;
+	int query_len, argc = ZEND_NUM_ARGS();
+
 	if (argc == 1) {
-        check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "pgsql", 1);
+		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &query, &query_len) == FAILURE) {
+			return;
+		}
 	} else {
-		check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "pgsql", 2);
+		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &pgsql_link, &query, &query_len) == FAILURE) {
+			return;
+		}
 	}
+
+    sql_type_handler(query, query_len, "pgsql" TSRMLS_CC);
 }
 void post_global_pg_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
@@ -242,12 +252,7 @@ void post_global_pg_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
  */
 void pre_global_pg_send_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    int  argc = ZEND_NUM_ARGS();
-	if (argc == 1) {
-        check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "pgsql", 1);
-	} else {
-		check_query_clause(INTERNAL_FUNCTION_PARAM_PASSTHRU, "pgsql", 2);
-	}
+    pre_global_pg_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 /**
@@ -266,4 +271,23 @@ void post_global_pg_get_result_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETER
     {
         slow_query_alarm(num_rows TSRMLS_CC);       
     }
+}
+
+void pre_global_pg_prepare_sqlPrepare(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    zval *pgsql_link = NULL;
+	char *query, *stmtname;
+	int query_len, stmtname_len, argc = ZEND_NUM_ARGS();
+
+	if (argc == 2) {
+		if (zend_parse_parameters(argc TSRMLS_CC, "ss", &stmtname, &stmtname_len, &query, &query_len) == FAILURE) {
+			return;
+		}
+	} else {
+		if (zend_parse_parameters(argc TSRMLS_CC, "rss", &pgsql_link, &stmtname, &stmtname_len, &query, &query_len) == FAILURE) {
+			return;
+		}
+	}
+
+    sql_type_handler(query, query_len, "pgsql" TSRMLS_CC);
 }
