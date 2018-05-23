@@ -37,7 +37,7 @@ public abstract class ConfigurableChecker extends AttackChecker {
         return getStringElement(config, key, "action");
     }
 
-    protected HashMap<String, Boolean> getJsonArrayAsSet(JsonObject config, String key, String subKey) {
+    protected HashMap<String, Boolean> getJsonObjectAsMap(JsonObject config, String key, String subKey) {
         HashMap<String, Boolean> result = null;
         try {
             JsonElement value = getElement(config, key, subKey);
