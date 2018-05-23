@@ -239,7 +239,7 @@ var algorithmConfig = {
     command_reflect: {
         action: 'block'
     },
-    // 命令执行 - 禁止服务器执行命令
+    // 命令执行 - 常规方式，如有需求请改为 'ignore'
     command_other: {
         action: 'block'
     },
