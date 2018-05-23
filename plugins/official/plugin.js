@@ -18,71 +18,11 @@
 'use strict'
 var plugin  = new RASP('offical')
 
-const clean = {
-    action:     'ignore',
-    message:    '无风险',
-    confidence: 0
-}
-
-// OpenRASP 大部分算法都不依赖规则，我们主要使用调用堆栈、编码规范、用户输入匹配的思路来检测漏洞。
-// 
-// 目前，只有文件访问 - 算法#4 加了一个探针，作为最后一道防线
-// 当应用读取了这些文件，通常意味着服务器已经被入侵
-// 这些配置是通用的，一般不需要定制
- 
-var forcefulBrowsing = {
-    dotFiles: /\.(7z|tar|gz|bz2|xz|rar|zip|sql|db|sqlite)$/,
-    nonUserDirectory: /^\/(proc|sys|root)/,
-
-    // webdav 文件探针 - 最常被下载的文件
-    unwantedFilenames: [
-        // user files
-        '.DS_Store',
-        'id_rsa', 'id_rsa.pub', 'known_hosts', 'authorized_keys', 
-        '.bash_history', '.csh_history', '.zsh_history', '.mysql_history',
-
-        // project files
-        '.htaccess', '.user.ini',
-
-        'web.config', 'web.xml', 'build.property.xml', 'bower.json',
-        'Gemfile', 'Gemfile.lock',
-        '.gitignore',
-        'error_log', 'error.log', 'nohup.out',
-    ],
-
-    // 目录探针 - webshell 查看频次最高的目录
-    unwantedDirectory: [
-        '/',
-        '/home',
-        '/var/log',
-        '/private/var/log',
-        '/proc',
-        '/sys',
-        'C:\\',
-        'D:\\',
-        'E:\\'
-    ],
-
-    // 文件探针 - webshell 查看频次最高的文件
-    absolutePaths: [
-        '/etc/shadow',
-        '/etc/passwd',
-        '/etc/hosts',
-        '/etc/apache2/apache2.conf',
-        '/root/.bash_history',
-        '/root/.bash_profile',
-        'c:\\windows\\system32\\inetsrv\\metabase.xml',
-        'c:\\windows\\system32\\drivers\\etc\\hosts'
-    ]
-}
-
-// 如果你配置了非常规的扩展名映射，比如让 .abc 当做PHP脚本执行，那你可能需要增加更多扩展名
-var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml)\.?$/i
-
-// 其他的 stream 都没啥用
-var ntfsRegex       = /::\$(DATA|INDEX)$/i
-
 // 检测逻辑总开关
+// 
+// block  -> 拦截
+// log    -> 打印日志，不拦截
+// ignore -> 关闭这个算法
 
 var algorithmConfig = {
     // SQL注入算法#1 - 匹配用户输入
@@ -249,6 +189,70 @@ var algorithmConfig = {
         action: 'block'
     }
 }
+
+// OpenRASP 大部分算法都不依赖规则，我们主要使用调用堆栈、编码规范、用户输入匹配的思路来检测漏洞。
+// 
+// 目前，只有文件访问 - 算法#4 加了一个探针，作为最后一道防线
+// 当应用读取了这些文件，通常意味着服务器已经被入侵
+// 这些配置是通用的，一般不需要定制
+
+const clean = {
+    action:     'ignore',
+    message:    '无风险',
+    confidence: 0
+}
+
+var forcefulBrowsing = {
+    dotFiles: /\.(7z|tar|gz|bz2|xz|rar|zip|sql|db|sqlite)$/,
+    nonUserDirectory: /^\/(proc|sys|root)/,
+
+    // webdav 文件探针 - 最常被下载的文件
+    unwantedFilenames: [
+        // user files
+        '.DS_Store',
+        'id_rsa', 'id_rsa.pub', 'known_hosts', 'authorized_keys', 
+        '.bash_history', '.csh_history', '.zsh_history', '.mysql_history',
+
+        // project files
+        '.htaccess', '.user.ini',
+
+        'web.config', 'web.xml', 'build.property.xml', 'bower.json',
+        'Gemfile', 'Gemfile.lock',
+        '.gitignore',
+        'error_log', 'error.log', 'nohup.out',
+    ],
+
+    // 目录探针 - webshell 查看频次最高的目录
+    unwantedDirectory: [
+        '/',
+        '/home',
+        '/var/log',
+        '/private/var/log',
+        '/proc',
+        '/sys',
+        'C:\\',
+        'D:\\',
+        'E:\\'
+    ],
+
+    // 文件探针 - webshell 查看频次最高的文件
+    absolutePaths: [
+        '/etc/shadow',
+        '/etc/passwd',
+        '/etc/hosts',
+        '/etc/apache2/apache2.conf',
+        '/root/.bash_history',
+        '/root/.bash_profile',
+        'c:\\windows\\system32\\inetsrv\\metabase.xml',
+        'c:\\windows\\system32\\drivers\\etc\\hosts'
+    ]
+}
+
+// 如果你配置了非常规的扩展名映射，比如让 .abc 当做PHP脚本执行，那你可能需要增加更多扩展名
+var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml)\.?$/i
+
+// 其他的 stream 都没啥用
+var ntfsRegex       = /::\$(DATA|INDEX)$/i
 
 // 常用函数
 
