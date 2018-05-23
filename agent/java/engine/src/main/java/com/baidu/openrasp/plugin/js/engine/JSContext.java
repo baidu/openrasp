@@ -124,7 +124,7 @@ public class JSContext extends Context {
                 continue;
             }
             action = tmp.toString();
-            if (action.equals("ignore")) {
+            if (action == null || "ignore".equals(action)) {
                 continue;
             }
             tmp = result.get("message");

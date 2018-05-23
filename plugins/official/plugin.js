@@ -599,7 +599,7 @@ plugin.register('directory', function (params, context) {
         for (var i = 0; i < forcefulBrowsing.unwantedDirectory.length; i ++) {
             if (realpath == forcefulBrowsing.unwantedDirectory[i]) {
                 return {
-                    action:     algorithmConfig.readdir_unwanted,
+                    action:     algorithmConfig.directory_unwanted.action,
                     message:    'WebShell文件管理器 - 读取敏感目录',
                     confidence: 100
                 }
@@ -775,7 +775,7 @@ plugin.register('include', function (params, context) {
             // 部分应用，如果直接包含目录，会把这个目录内容列出来
             if (algorithmConfig.include_dir.action != 'ignore') {
                 return {
-                    action:     'block',
+                    action:     algorithmConfig.include_dir.action,
                     message:    '敏感目录访问: ' + params.function + ' 方式',
                     confidence: 100
                 }
@@ -876,7 +876,7 @@ if (algorithmConfig.fileUpload_webdav.action != 'ignore')
         if (! scriptFileRegex.test(params.source) && scriptFileRegex.test(params.dest)) 
         {
             return {
-                action:    'block',
+                action:    algorithmConfig.fileUpload_webdav.action,
                 message:   '尝试通过 ' + context.method + ' 方式上传脚本文件: ' + params.dest,
                 confidence: 100
             }
