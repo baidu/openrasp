@@ -147,6 +147,7 @@ typedef struct sql_connection_entry_t {
 } sql_connection_entry;
 
 typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
+typedef void (*hook_handler_t)(TSRMLS_D);
 
 void slow_query_alarm(int rows TSRMLS_DC);
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
@@ -202,6 +203,7 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
     }                                                                                                               \
     void scope##_##name##_##type##_handler(TSRMLS_D)                                                                \
     DEFINE_HOOK_HANDLER_EX(name, scope, type)                                                                       \
+    int scope##_##name##_##type = [](){register_hook_handler(scope##_##name##_##type##_handler);return 0;}();       \
     inline void hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function)
 
 #define OPENRASP_HOOK_FUNCTION(name, type) \
@@ -291,5 +293,6 @@ bool openrasp_check_callable_black(const char *item_name, uint item_name_length 
 bool openrasp_zval_in_request(zval *item TSRMLS_DC);
 void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zval *message TSRMLS_DC);
 char * openrasp_real_path(char *filename, int filename_len, zend_bool use_include_path, bool handle_unresolved TSRMLS_DC);
+void register_hook_handler(hook_handler_t hook_handler);
 
 #endif

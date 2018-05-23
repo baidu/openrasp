@@ -18,6 +18,14 @@
 #include "openrasp_ini.h"
 #include "openrasp_inject.h"
 #include <new>
+#include <vector>
+
+static std::vector<hook_handler_t> global_hook_handlers;
+
+void register_hook_handler(hook_handler_t hook_handler)
+{
+    global_hook_handlers.push_back(hook_handler);
+}
 
 typedef struct _track_vars_pair_t
 {
@@ -181,91 +189,8 @@ PHP_GSHUTDOWN_FUNCTION(openrasp_hook)
 
 PHP_MINIT_FUNCTION(openrasp_hook)
 {
-    static std::unordered_set<void (*)(TSRMLS_D)> global_hook_handlers;
     ZEND_INIT_MODULE_GLOBALS(openrasp_hook, PHP_GINIT(openrasp_hook), PHP_GSHUTDOWN(openrasp_hook));
-
-    REGISTER_HOOK_HANDLER(array_diff_ukey, callable);
-    REGISTER_HOOK_HANDLER(array_filter, callable);
-    REGISTER_HOOK_HANDLER(array_map, callable);
-    REGISTER_HOOK_HANDLER(array_walk, callable);
-    REGISTER_HOOK_HANDLER(uasort, callable);
-    REGISTER_HOOK_HANDLER(uksort, callable);
-    REGISTER_HOOK_HANDLER(usort, callable);
-    REGISTER_HOOK_HANDLER_EX(__construct, reflectionfunction, callable);
-
-    REGISTER_HOOK_HANDLER(passthru, command);
-    REGISTER_HOOK_HANDLER(system, command);
-    REGISTER_HOOK_HANDLER(exec, command);
-    REGISTER_HOOK_HANDLER(shell_exec, command);
-    REGISTER_HOOK_HANDLER(proc_open, command);
-    REGISTER_HOOK_HANDLER(popen, command);
-    REGISTER_HOOK_HANDLER(pcntl_exec, command);
-
-    REGISTER_HOOK_HANDLER(passthru, webshell_command);
-    REGISTER_HOOK_HANDLER(system, webshell_command);
-    REGISTER_HOOK_HANDLER(exec, webshell_command);
-    REGISTER_HOOK_HANDLER(shell_exec, webshell_command);
-    REGISTER_HOOK_HANDLER(proc_open, webshell_command);
-    REGISTER_HOOK_HANDLER(popen, webshell_command);
-    REGISTER_HOOK_HANDLER(pcntl_exec, webshell_command);
-    REGISTER_HOOK_HANDLER(assert, webshell_eval);
-
-    REGISTER_HOOK_HANDLER(file, readFile);
-    REGISTER_HOOK_HANDLER(readfile, readFile);
-    REGISTER_HOOK_HANDLER(file_get_contents, readFile);
-    REGISTER_HOOK_HANDLER(file_put_contents, writeFile);
-    REGISTER_HOOK_HANDLER(file_put_contents, webshell_file_put_contents);
-    REGISTER_HOOK_HANDLER(fopen, readFile);
-    REGISTER_HOOK_HANDLER(fopen, writeFile);
-    REGISTER_HOOK_HANDLER(copy, writeFile);
-    REGISTER_HOOK_HANDLER(copy, readFile);
-    REGISTER_HOOK_HANDLER_EX(__construct, splfileobject, readFile);
-    REGISTER_HOOK_HANDLER_EX(__construct, splfileobject, writeFile);
-
-    REGISTER_HOOK_HANDLER(mysql_connect, dbConnection);
-    REGISTER_HOOK_HANDLER(mysql_pconnect, dbConnection);
-    REGISTER_HOOK_HANDLER(mysql_query, sqlSlowQuery);
-    REGISTER_HOOK_HANDLER(mysql_query, sql);
-
-    REGISTER_HOOK_HANDLER(mysqli_connect, dbConnection);
-    REGISTER_HOOK_HANDLER(mysqli_real_connect, dbConnection);
-    REGISTER_HOOK_HANDLER(mysqli_query, sqlSlowQuery);
-    REGISTER_HOOK_HANDLER(mysqli_query, sql);
-    REGISTER_HOOK_HANDLER(mysqli_prepare, sqlPrepare);
-    REGISTER_HOOK_HANDLER(mysqli_real_query, sql);
-    REGISTER_HOOK_HANDLER_EX(mysqli, mysqli, dbConnection);
-    REGISTER_HOOK_HANDLER_EX(real_connect, mysqli, dbConnection);
-    REGISTER_HOOK_HANDLER_EX(query, mysqli, sqlSlowQuery);
-    REGISTER_HOOK_HANDLER_EX(query, mysqli, sql);
-    REGISTER_HOOK_HANDLER_EX(prepare, mysqli, sqlPrepare);
-
-    REGISTER_HOOK_HANDLER(pg_connect, dbConnection);
-    REGISTER_HOOK_HANDLER(pg_pconnect, dbConnection);
-    REGISTER_HOOK_HANDLER(pg_query, sqlSlowQuery);
-    REGISTER_HOOK_HANDLER(pg_query, sql);
-    REGISTER_HOOK_HANDLER(pg_send_query, sql);
-    REGISTER_HOOK_HANDLER(pg_get_result, sqlSlowQuery);
-    REGISTER_HOOK_HANDLER(pg_prepare, sqlPrepare);
-
-    REGISTER_HOOK_HANDLER_EX(exec, sqlite3, sql);
-    REGISTER_HOOK_HANDLER_EX(query, sqlite3, sql);
-    REGISTER_HOOK_HANDLER_EX(querySingle, sqlite3, sql);
-
-    REGISTER_HOOK_HANDLER_EX(query, pdo, sqlSlowQuery);
-    REGISTER_HOOK_HANDLER_EX(query, pdo, sql);
-    REGISTER_HOOK_HANDLER_EX(exec, pdo, sqlSlowQuery);
-    REGISTER_HOOK_HANDLER_EX(exec, pdo, sql);
-    REGISTER_HOOK_HANDLER_EX(__construct, pdo, dbConnection);
-    REGISTER_HOOK_HANDLER_EX(prepare, pdo, sqlPrepare);
-
-    REGISTER_HOOK_HANDLER(move_uploaded_file, fileUpload);
-
-    REGISTER_HOOK_HANDLER(curl_exec, ssrf);
-
-    REGISTER_HOOK_HANDLER(dir, directory);
-    REGISTER_HOOK_HANDLER(opendir, directory);
-    REGISTER_HOOK_HANDLER(scandir, directory);
-
+    
     for (auto& single_handler : global_hook_handlers)
     {
         single_handler(TSRMLS_C);

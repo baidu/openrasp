@@ -451,6 +451,7 @@ int main() {
   PHP_NEW_EXTENSION(openrasp,
     openrasp.cc \
     openrasp_utils.cc \
+    openrasp_hook.cc \
     hook/openrasp_directory.cc \
     hook/openrasp_fileupload.cc \
     hook/openrasp_include.cc \ 
@@ -464,7 +465,6 @@ int main() {
     hook/openrasp_pdo.cc \
     hook/openrasp_file.cc \
     hook/openrasp_ssrf.cc \
-    openrasp_hook.cc \
     openrasp_inject.cc \
     openrasp_log.cc \
     openrasp_shared_alloc.c  \
