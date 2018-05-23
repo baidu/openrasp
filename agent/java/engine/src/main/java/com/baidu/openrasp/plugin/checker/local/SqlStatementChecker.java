@@ -27,10 +27,7 @@ import com.baidu.openrasp.plugin.info.EventInfo;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by tyy on 17-12-20.
@@ -102,12 +99,12 @@ public class SqlStatementChecker extends ConfigurableChecker {
             if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
                 int i = -1;
                 if (tokens != null) {
-                    HashSet<String> modules = getJsonArrayAsSet(config, CONFIG_KEY_SQLI_POLICY, "feature");
+                    HashMap<String, Boolean> modules = getJsonArrayAsSet(config, CONFIG_KEY_SQLI_POLICY, "feature");
                     for (String token : tokens) {
                         i++;
                         if (!StringUtils.isEmpty(token)) {
                             String lt = token.toLowerCase();
-                            if (lt.equals("select") && modules.contains(CONFIG_KEY_UNION_NULL)) {
+                            if (lt.equals("select") && modules.get(CONFIG_KEY_UNION_NULL)) {
                                 int nullCount = 0;
                                 // 寻找连续的逗号、NULL或者数字
                                 for (int j = i + 1; j < tokens.length && j < i + 6; j++) {
@@ -126,19 +123,19 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                 }
                                 continue;
                             }
-                            if (lt.equals(";") && i != tokens.length - 1 && modules.contains(CONFIG_KEY_STACKED_QUERY)) {
+                            if (lt.equals(";") && i != tokens.length - 1 && modules.get(CONFIG_KEY_STACKED_QUERY)) {
                                 message = "禁止多语句查询";
                                 break;
-                            } else if (lt.startsWith("0x") && modules.contains(CONFIG_KEY_NO_HEX)) {
+                            } else if (lt.startsWith("0x") && modules.get(CONFIG_KEY_NO_HEX)) {
                                 message = "禁止16进制字符串";
                                 break;
-                            } else if (lt.startsWith("/*!") && modules.contains(CONFIG_KEY_VERSION_COMMENT)) {
+                            } else if (lt.startsWith("/*!") && modules.get(CONFIG_KEY_VERSION_COMMENT)) {
                                 message = "禁止MySQL版本号注释";
                                 break;
                             } else if (i > 0 && i < tokens.length - 1 && (lt.equals("xor")
                                     || lt.charAt(0) == '<'
                                     || lt.charAt(0) == '>'
-                                    || lt.charAt(0) == '=') && modules.contains(CONFIG_KEY_CONSTANT_COMPARE)) {
+                                    || lt.charAt(0) == '=') && modules.get(CONFIG_KEY_CONSTANT_COMPARE)) {
                                 String op1 = tokens[i - 1];
                                 String op2 = tokens[i + 1];
                                 if (StringUtils.isNumeric(op1) && StringUtils.isNumeric(op2)) {
@@ -153,10 +150,10 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                     break;
                                 }
                             } else if (i > 0 && tokens[i].indexOf('(') == 0
-                                    && modules.contains(CONFIG_KEY_FUNCTION_BLACKLIST)) {
+                                    && modules.get(CONFIG_KEY_FUNCTION_BLACKLIST)) {
                                 // FIXME: 可绕过，暂时不更新
-                                HashSet<String> funBlackList = getJsonArrayAsSet(config, CONFIG_KEY_SQLI_POLICY, "function_blacklist");
-                                if (funBlackList.contains(tokens[i - 1])) {
+                                HashMap<String, Boolean> funBlackList = getJsonArrayAsSet(config, CONFIG_KEY_SQLI_POLICY, "function_blacklist");
+                                if (funBlackList.get(tokens[i - 1])) {
                                     message = "禁止执行敏感函数: " + tokens[i - 1];
                                     break;
                                 }

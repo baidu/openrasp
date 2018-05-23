@@ -81,12 +81,13 @@ public class JSRequestContext extends ScriptableObject {
     }
 
     public String jsGet_method() {
-        return javaContext.getMethod().toLowerCase();
+        String method = javaContext.getMethod();
+        return method == null ? null : method.toLowerCase();
     }
 
     public String jsGet_url() {
         StringBuffer requestURL = javaContext.getRequestURL();
-        return requestURL.toString();
+        return requestURL == null ? null : requestURL.toString();
     }
 
     public String jsGet_querystring() {
@@ -98,7 +99,8 @@ public class JSRequestContext extends ScriptableObject {
     }
 
     public String jsGet_protocol() {
-        return javaContext.getProtocol().toLowerCase();
+        String proto = javaContext.getProtocol();
+        return proto == null ? null : proto.toLowerCase();
     }
 
     public Object jsGet_body() {
@@ -125,10 +127,12 @@ public class JSRequestContext extends ScriptableObject {
     public Object jsGet_header() {
         Scriptable header = cx.newObject(scope);
         Enumeration<String> headerNames = javaContext.getHeaderNames();
-        while (headerNames.hasMoreElements()) {
-            String key = headerNames.nextElement();
-            String value = javaContext.getHeader(key);
-            header.put(key.toLowerCase(), header, value);
+        if (headerNames != null) {
+            while (headerNames.hasMoreElements()) {
+                String key = headerNames.nextElement();
+                String value = javaContext.getHeader(key);
+                header.put(key.toLowerCase(), header, value);
+            }
         }
         return header;
     }
@@ -158,10 +162,12 @@ public class JSRequestContext extends ScriptableObject {
     public Object jsGet_server() {
         Scriptable server = cx.newObject(scope);
         Map<String, String> serverContext = javaContext.getServerContext();
-        for (Map.Entry<String, String> entry : serverContext.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            server.put(key, server, value);
+        if (serverContext != null) {
+            for (Map.Entry<String, String> entry : serverContext.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                server.put(key, server, value);
+            }
         }
         return server;
     }

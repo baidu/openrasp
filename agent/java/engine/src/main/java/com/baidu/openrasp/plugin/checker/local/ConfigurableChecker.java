@@ -18,11 +18,13 @@ package com.baidu.openrasp.plugin.checker.local;
 
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.AttackChecker;
-import com.google.gson.JsonArray;
+import com.baidu.openrasp.plugin.js.engine.JSContext;
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 
-import java.util.HashSet;
+import java.util.HashMap;
 
 /**
  * Created by tyy on 17-12-21.
@@ -35,27 +37,22 @@ public abstract class ConfigurableChecker extends AttackChecker {
         return getStringElement(config, key, "action");
     }
 
-    protected HashSet<String> getJsonArrayAsSet(JsonObject config, String key, String subKey) {
-        HashSet<String> set = new HashSet<String>(8);
+    protected HashMap<String, Boolean> getJsonArrayAsSet(JsonObject config, String key, String subKey) {
+        HashMap<String, Boolean> result = null;
         try {
             JsonElement value = getElement(config, key, subKey);
             if (value != null) {
-                JsonArray jsonArray = value.getAsJsonArray();
-                if (jsonArray != null) {
-                    for (JsonElement element : jsonArray) {
-                        if (element != null) {
-                            String module = element.getAsString();
-                            if (module != null) {
-                                set.add(module);
-                            }
-                        }
-                    }
-                }
+                Gson gson = new Gson();
+                result = gson.fromJson(value, new TypeToken<HashMap<String, Boolean>>() {
+                }.getType());
             }
         } catch (Exception e) {
-            Config.LOGGER.warn("parse jason failed because: " + e.getMessage());
+            logJsonError(e);
         }
-        return set;
+        if (result == null) {
+            result = new HashMap<String, Boolean>();
+        }
+        return result;
     }
 
     protected String getStringElement(JsonObject config, String key, String subKey) {
@@ -65,7 +62,7 @@ public abstract class ConfigurableChecker extends AttackChecker {
                 return value.getAsString();
             }
         } catch (Exception e) {
-            Config.LOGGER.warn("parse jason failed because: " + e.getMessage());
+            logJsonError(e);
         }
         return null;
     }
@@ -81,6 +78,12 @@ public abstract class ConfigurableChecker extends AttackChecker {
             }
         }
         return null;
+    }
+
+    private void logJsonError(Exception e) {
+        JSContext.LOGGER.warn("Parse jason failed because: " + e.getMessage() +
+                System.getProperty("line.separator") +
+                "        Please check algorithmConfig in js");
     }
 
 }

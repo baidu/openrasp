@@ -27,7 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class JSContext extends Context {
-    private static final Logger LOGGER = Logger.getLogger(JSContext.class.getPackage().getName() + ".log");
+    public static final Logger LOGGER = Logger.getLogger(JSContext.class.getPackage().getName() + ".log");
 
     private Scriptable scope = null;
 

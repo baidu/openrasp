@@ -308,11 +308,13 @@ public abstract class AbstractClassHook {
             } else {
                 src += ",null);";
             }
+            src = "try {" + src + "} catch (Throwable t) {if(t.getCause() != null && t.getCause().getClass()" +
+                    ".getName().equals(\"com.baidu.openrasp.exception.SecurityException\")){throw t;}}";
         } else {
             src = invokeClassName + '.' + methodName + "(" + paramString + ");";
+            src = "try {" + src + "} catch (Throwable t) {System.out.println(t.getClass().getName());if(t.getClass()" +
+                    ".getName().equals(\"com.baidu.openrasp.exception.SecurityException\")){throw t;}}";
         }
-        src = "try {" + src + "} catch (Throwable t) {if(t.getCause() != null && t.getCause().getClass()" +
-                ".getName().equals(\"com.baidu.openrasp.exception.SecurityException\")){throw t;}}";
         return src;
     }
 
