@@ -65,9 +65,8 @@ public class App {
         System.out.println(helpMsg);
     }
 
-    private static void showArgs() {
-        String helpMsg = "Bad argument '%s', try again with -install or -uninstall";
-        System.out.println(helpMsg);
+    private static void showArgs(String arg) {
+        System.out.println("Bad argument " + arg + ", try again with -install or -uninstall");
     }
 
     public static void main(String[] args) throws IOException, URISyntaxException {
@@ -94,7 +93,7 @@ public class App {
 
             } else {
 
-                showArgs();
+                showArgs(args[0]);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage() + "\n");
