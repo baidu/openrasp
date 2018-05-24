@@ -38,6 +38,8 @@ public class ModuleLoader {
 
     private static ModuleLoader instance;
 
+    public static ClassLoader moduleClassLoader;
+
 
     // ModuleLoader 为 classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
@@ -55,6 +57,12 @@ public class ModuleLoader {
         } catch (UnsupportedEncodingException e) {
             baseDirectory = new File(path).getParent();
         }
+        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+        while (systemClassLoader.getParent() != null
+                && !systemClassLoader.getClass().getName().startsWith("sun.misc.Launcher")) {
+            systemClassLoader = systemClassLoader.getParent();
+        }
+        moduleClassLoader = systemClassLoader;
     }
 
     /**
@@ -77,13 +85,9 @@ public class ModuleLoader {
                         && !moduleName.equals("") && !moduleEnterClassName.equals("")) {
                     Method method = Class.forName("java.net.URLClassLoader").getDeclaredMethod("addURL", URL.class);
                     method.setAccessible(true);
-                    ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-                    while (systemClassLoader.getParent() != null
-                            && !systemClassLoader.getClass().getName().startsWith("sun.misc.Launcher")) {
-                        systemClassLoader = systemClassLoader.getParent();
-                    }
-                    method.invoke(systemClassLoader, originFile.toURI().toURL());
-                    Class moduleClass = ClassLoader.getSystemClassLoader().loadClass(moduleEnterClassName);
+                    method.invoke(moduleClassLoader, originFile.toURI().toURL());
+                    method.invoke(ClassLoader.getSystemClassLoader(), originFile.toURI().toURL());
+                    Class moduleClass = moduleClassLoader.loadClass(moduleEnterClassName);
                     module = moduleClass.newInstance();
                     if (module instanceof Module) {
                         try {

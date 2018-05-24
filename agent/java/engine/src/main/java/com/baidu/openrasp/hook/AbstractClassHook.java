@@ -301,7 +301,7 @@ public abstract class AbstractClassHook {
             parameterTypesString = "new Class[]{" + parameterTypesString + "}";
         }
         if (isLoadedByBootstrapLoader) {
-            src = "ClassLoader.getSystemClassLoader().loadClass(\"" + invokeClassName + "\").getMethod(\"" + methodName +
+            src = "com.baidu.openrasp.ModuleLoader.moduleClassLoader.loadClass(\"" + invokeClassName + "\").getMethod(\"" + methodName +
                     "\"," + parameterTypesString + ").invoke(null";
             if (!StringUtils.isEmpty(paramString)) {
                 src += (",new Object[]{" + paramString + "});");
