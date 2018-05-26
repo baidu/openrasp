@@ -525,7 +525,8 @@ if (RASP.get_jsengine() !== 'v8') {
         // 检查常见探测域名
         else if (algorithmConfig.ssrf_common.action != 'ignore')
         {
-            if (hostname == 'requestb.in' 
+            if (hostname == 'requestb.in'
+            || hostname == 'transfer.sh'
             || hostname.endsWith('.vcap.me') 
             || hostname.endsWith('.xip.name') || hostname.endsWith('.xip.io') || hostname.endsWith('.nip.io') 
             || hostname.endsWith('.burpcollaborator.net'))
