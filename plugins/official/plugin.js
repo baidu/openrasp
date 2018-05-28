@@ -300,11 +300,7 @@ function is_outside_webroot(appBasePath, realpath, path) {
     var verdict = false
 
     if (realpath.indexOf(appBasePath) == -1 && (path.indexOf('/../') !== -1 || path.indexOf('\\..\\') !== -1)) {
-        return {
-            action:     'block',
-            message:    '目录遍历攻击，跳出web目录范围 (' + appBasePath + ')',
-            confidence: 90
-        }
+        verdict = true
     }
 
     return verdict
