@@ -296,6 +296,25 @@ function validate_stack_php(stacks) {
     return verdict
 }
 
+function is_absolute_path(path, os) {
+
+    // Windows - C:\\windows
+    if (os == 'Windows') {
+            
+        if (path[1] == ':')
+        {
+            var drive = path[0].toLowerCase()
+            if (drive >= 'a' && drive <= 'z')
+            {
+                return true
+            }
+        }        
+    }
+    
+    // Unices - /root/
+    return path[0] === '/'
+}
+
 function is_outside_webroot(appBasePath, realpath, path) {
     var verdict = false
 
@@ -638,10 +657,13 @@ plugin.register('directory', function (params, context) {
 plugin.register('readFile', function (params, context) {
     var server = context.server
 
-    // 算法1: 和URL比较，检查是否为成功的目录扫描。仅适用于 java webdav 方式
+    //
+    //【近期调整】
+    // 算法1: 和URL比较，检查是否为成功的目录扫描。仅适用于 java webdav 方式 
     // 
     // 注意: 此方法受到 readfile.extension.regex 和资源文件大小的限制
     // https://rasp.baidu.com/doc/setup/others.html#java-common
+    // 
     if (1 && server.language == 'java') {
         var filename_1 = basename(context.url)
         var filename_2 = basename(params.realpath)
@@ -673,8 +695,10 @@ plugin.register('readFile', function (params, context) {
         }
     }
 
+    //
     // 算法2: 文件、目录探针
     // 如果应用读取了列表里的文件，比如 /root/.bash_history，这通常意味着后门操作
+    // 
     if (algorithmConfig.readFile_unwanted.action != 'ignore')
     {
         var realpath_lc = params.realpath.toLowerCase()
@@ -690,8 +714,10 @@ plugin.register('readFile', function (params, context) {
         }
     }
 
+    //
     // 算法3: 检查文件遍历，看是否超出web目录范围
     // e.g 使用 ../../../etc/passwd 跨目录读取文件
+    // 
     if (algorithmConfig.readFile_traversal.action != 'ignore') 
     {
         var path        = params.path
@@ -706,16 +732,37 @@ plugin.register('readFile', function (params, context) {
         }
     }
 
-    // 算法4: 拦截任意文件下载漏洞，要读取的文件来自用户输入
-    // ?file=/etc/./hosts
-    if (algorithmConfig.readFile_userinput.action != 'ignore') 
+    //
+    // 算法4: 拦截任意文件下载漏洞，要读取的文件来自用户输入，且没有路径拼接
+    //
+    // 不影响正常操作，e.g
+    // ?path=download/1.jpg
+    // 
+    if (algorithmConfig.readFile_userinput.action != 'ignore')
     {
-        if (is_from_userinput(context.parameter, params.path)) {
-            return {
-                action:     algorithmConfig.readFile_userinput.action,
-                message:    '任意文件下载攻击，目标文件: ' + params.realpath,
-                confidence: 90
-            }        
+        if (is_from_userinput(context.parameter, params.path))
+        {
+            // 1. 使用绝对路径
+            // ?file=/etc/./hosts
+            if (is_absolute_path(params.path, context.server.os))
+            {
+                return {
+                    action:     algorithmConfig.readFile_userinput.action,
+                    message:    '任意文件下载攻击（绝对路径），目标文件: ' + params.realpath,
+                    confidence: 90
+                }   
+            }
+
+            // 2. 相对路径且包含 /../ 
+            // ?file=download/../../etc/passwd
+            if (params.path.indexOf('/../') !== -1 || params.path.indexOf('\\..\\') !== -1)
+            {
+                return {
+                    action:     algorithmConfig.readFile_userinput.action,
+                    message:    '任意文件下载攻击（相对路径），目标文件: ' + params.realpath,
+                    confidence: 90
+                }                   
+            }
         }
     }
 
