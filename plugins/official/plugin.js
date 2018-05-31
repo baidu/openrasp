@@ -527,7 +527,7 @@ if (RASP.get_jsengine() !== 'v8') {
         // 当参数来自用户输入，且为内网IP，判定为SSRF攻击
         if (algorithmConfig.ssrf_userinput.action != 'ignore') 
         {
-            if (ip.length && 
+            if (ip.length &&
                 is_from_userinput(context.parameter, url) &&
                 /^(192|172|10)\./.test(ip[0]))
             {
@@ -538,7 +538,7 @@ if (RASP.get_jsengine() !== 'v8') {
 
         // 算法2 - ssrf_common
         // 检查常见探测域名
-        else if (algorithmConfig.ssrf_common.action != 'ignore')
+        if (algorithmConfig.ssrf_common.action != 'ignore')
         {
             if (hostname == 'requestb.in'
             || hostname == 'transfer.sh'
@@ -553,7 +553,7 @@ if (RASP.get_jsengine() !== 'v8') {
 
         // 算法3 - ssrf_aws
         // 检测AWS私有地址，如有需求可注释掉
-        else if (algorithmConfig.ssrf_aws.action != 'ignore') 
+        if (algorithmConfig.ssrf_aws.action != 'ignore') 
         {
             if (hostname == '169.254.169.254') 
             {
@@ -571,7 +571,7 @@ if (RASP.get_jsengine() !== 'v8') {
         // 以下混淆方式没有检测，容易误报
         // http://0x7f.0x0.0x0.0x1
         // http://0x7f.0.0.0    
-        else if (algorithmConfig.ssrf_obfuscate.action != 'ignore') 
+        if (algorithmConfig.ssrf_obfuscate.action != 'ignore') 
         {
             if (Number.isInteger(hostname))
             {
