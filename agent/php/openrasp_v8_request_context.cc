@@ -20,256 +20,240 @@ static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    static const char REQUEST_SCHEME[] = "REQUEST_SCHEME";
-    static const ulong REQUEST_SCHEME_HASH = zend_get_hash_value(ZEND_STRS(REQUEST_SCHEME));
-    static const char SERVER_NAME[] = "SERVER_NAME";
-    static const ulong SERVER_NAME_HASH = zend_get_hash_value(ZEND_STRS(SERVER_NAME));
-    static const char HTTP_HOST[] = "HTTP_HOST";
-    static const ulong HTTP_HOST_HASH = zend_get_hash_value(ZEND_STRS(HTTP_HOST));
-    static const char SERVER_ADDR[] = "SERVER_ADDR";
-    static const ulong SERVER_ADDR_HASH = zend_get_hash_value(ZEND_STRS(SERVER_ADDR));
-    static const char SERVER_PORT[] = "SERVER_PORT";
-    static const ulong SERVER_PORT_HASH = zend_get_hash_value(ZEND_STRS(SERVER_PORT));
-    static const char REQUEST_URI[] = "REQUEST_URI";
-    static const ulong REQUEST_URI_HASH = zend_get_hash_value(ZEND_STRS(REQUEST_URI));
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
+
+    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
         return;
     }
-    zval **host, **server_port, **server_addr, **request_uri, **request_scheme;
-    char *c_host = nullptr;
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(HTTP_HOST), HTTP_HOST_HASH, (void **)&host) == SUCCESS &&
-        Z_TYPE_PP(host) == IS_STRING)
+    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+
+    zval *REQUEST_SCHEME = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_SCHEME"));
+    zval *SERVER_NAME = zend_hash_str_find(_SERVER, ZEND_STRL("SERVER_NAME"));
+    zval *HTTP_HOST = zend_hash_str_find(_SERVER, ZEND_STRL("HTTP_HOST"));
+    zval *SERVER_ADDR = zend_hash_str_find(_SERVER, ZEND_STRL("SERVER_ADDR"));
+    zval *SERVER_PORT = zend_hash_str_find(_SERVER, ZEND_STRL("SERVER_PORT"));
+    zval *REQUEST_URI = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_URI"));
+
+    std::string url;
+    if (REQUEST_SCHEME)
     {
-        c_host = estrndup(Z_STRVAL_PP(host), Z_STRLEN_PP(host));
+        url.append(Z_STRVAL_P(REQUEST_SCHEME), Z_STRLEN_P(REQUEST_SCHEME));
     }
-    if (!c_host)
+    url.append("://");
+    if (HTTP_HOST)
     {
-        if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(SERVER_PORT), SERVER_PORT_HASH, (void **)&server_port) != SUCCESS ||
-            Z_TYPE_PP(server_port) != IS_STRING)
+        url.append(Z_STRVAL_P(HTTP_HOST), Z_STRLEN_P(HTTP_HOST));
+    }
+    else
+    {
+        if (SERVER_NAME)
         {
-            return;
+            url.append(Z_STRVAL_P(SERVER_NAME), Z_STRLEN_P(SERVER_NAME));
         }
-        if ((zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(SERVER_NAME), SERVER_NAME_HASH, (void **)&server_addr) != SUCCESS ||
-             Z_TYPE_PP(server_addr) != IS_STRING) &&
-            (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(SERVER_ADDR), SERVER_ADDR_HASH, (void **)&server_addr) != SUCCESS ||
-             Z_TYPE_PP(server_addr) != IS_STRING))
+        else if (SERVER_ADDR)
         {
-            return;
+            url.append(Z_STRVAL_P(SERVER_ADDR), Z_STRLEN_P(SERVER_ADDR));
         }
-        spprintf(&c_host, 0, "%s:%s", Z_STRVAL_PP(server_addr), Z_STRVAL_PP(server_port));
+        url.append(":");
+        if (SERVER_PORT)
+        {
+            url.append(Z_STRVAL_P(SERVER_PORT), Z_STRLEN_P(SERVER_PORT));
+        }
     }
-    if (!c_host)
+    if (REQUEST_URI)
     {
-        return;
+        url.append(Z_STRVAL_P(REQUEST_URI), Z_STRLEN_P(REQUEST_URI));
     }
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_URI), REQUEST_URI_HASH, (void **)&request_uri) != SUCCESS ||
-        Z_TYPE_PP(request_uri) != IS_STRING)
-    {
-        return;
-    }
-    char *c_request_scheme = "http";
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_SCHEME), REQUEST_SCHEME_HASH, (void **)&request_scheme) == SUCCESS &&
-        Z_TYPE_PP(request_scheme) == IS_STRING)
-    {
-        c_request_scheme = Z_STRVAL_PP(request_scheme);
-    }
-    char *url;
-    int len = spprintf(&url, 0, "%s://%s%s", c_request_scheme, c_host, Z_STRVAL_PP(request_uri));
-    if (!url)
-    {
-        return;
-    }
+
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::String> v8_url;
-    if (V8STRING_EX(url, v8::NewStringType::kNormal, len).ToLocal(&v8_url))
+    if (V8STRING_EX(url.c_str(), v8::NewStringType::kNormal, url.length()).ToLocal(&v8_url))
     {
         info.GetReturnValue().Set(v8_url);
     }
-    efree(url);
-    efree(c_host);
 }
 static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    static const char REQUEST_METHOD[] = "REQUEST_METHOD";
-    static const ulong REQUEST_METHOD_HASH = zend_get_hash_value(ZEND_STRS(REQUEST_METHOD));
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
+
+    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
         return;
     }
-    zval **value;
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_METHOD), REQUEST_METHOD_HASH, (void **)&value) != SUCCESS ||
-        Z_TYPE_PP(value) != IS_STRING)
+    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+
+    zval *REQUEST_METHOD = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_METHOD"));
+
+    if (!REQUEST_METHOD)
     {
         return;
     }
+
+    std::string method(Z_STRVAL_P(REQUEST_METHOD), Z_STRLEN_P(REQUEST_METHOD));
+    for (auto &ch : method)
+    {
+        ch = std::tolower(ch);
+    }
+
     v8::Isolate *isolate = info.GetIsolate();
-    char *str = estrndup(Z_STRVAL_PP(value), Z_STRLEN_PP(value));
-    if (!str)
+    v8::Local<v8::String> v8_method;
+    if (V8STRING_EX(method.c_str(), v8::NewStringType::kNormal, method.length()).ToLocal(&v8_method))
     {
-        return;
+        info.GetReturnValue().Set(v8_method);
     }
-    char *p = str;
-    while (*p)
-    {
-        *p = tolower(*p);
-        p++;
-    }
-    info.GetReturnValue().Set(V8STRING_EX(str, v8::NewStringType::kNormal, Z_STRLEN_PP(value)).ToLocalChecked());
-    efree(str);
 }
 static void querystring_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    static const char QUERY_STRING[] = "QUERY_STRING";
-    static const ulong QUERY_STRING_HASH = zend_get_hash_value(ZEND_STRS(QUERY_STRING));
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
+
+    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
         return;
     }
-    zval **value;
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(QUERY_STRING), QUERY_STRING_HASH, (void **)&value) != SUCCESS ||
-        Z_TYPE_PP(value) != IS_STRING)
-    {
-        return;
-    }
-    info.GetReturnValue().Set(zval_to_v8val(*value, info.GetIsolate() TSRMLS_CC));
+    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+
+    zval *QUERY_STRING = zend_hash_str_find(_SERVER, ZEND_STRL("QUERY_STRING"));
+
+    info.GetReturnValue().Set(zval_to_v8val(QUERY_STRING, info.GetIsolate() TSRMLS_CC));
 }
 static void appBasePath_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    static const char DOCUMENT_ROOT[] = "DOCUMENT_ROOT";
-    static const ulong DOCUMENT_ROOT_HASH = zend_get_hash_value(ZEND_STRS(DOCUMENT_ROOT));
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
+
+    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
         return;
     }
-    zval **value;
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(DOCUMENT_ROOT), DOCUMENT_ROOT_HASH, (void **)&value) != SUCCESS ||
-        Z_TYPE_PP(value) != IS_STRING)
-    {
-        return;
-    }
-    info.GetReturnValue().Set(zval_to_v8val(*value, info.GetIsolate() TSRMLS_CC));
+    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+
+    zval *DOCUMENT_ROOT = zend_hash_str_find(_SERVER, ZEND_STRL("DOCUMENT_ROOT"));
+
+    info.GetReturnValue().Set(zval_to_v8val(DOCUMENT_ROOT, info.GetIsolate() TSRMLS_CC));
 }
 static void protocol_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    static const char REQUEST_SCHEME[] = "REQUEST_SCHEME";
-    static const ulong REQUEST_SCHEME_HASH = zend_get_hash_value(ZEND_STRS(REQUEST_SCHEME));
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
+
+    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
         return;
     }
-    zval **value;
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_SCHEME), REQUEST_SCHEME_HASH, (void **)&value) != SUCCESS ||
-        Z_TYPE_PP(value) != IS_STRING)
-    {
-        return;
-    }
-    info.GetReturnValue().Set(zval_to_v8val(*value, info.GetIsolate() TSRMLS_CC));
+    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+
+    zval *REQUEST_SCHEME = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_SCHEME"));
+
+    info.GetReturnValue().Set(zval_to_v8val(REQUEST_SCHEME, info.GetIsolate() TSRMLS_CC));
 }
 static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    static const char REMOTE_ADDR[] = "REMOTE_ADDR";
-    static const ulong REMOTE_ADDR_HASH = zend_get_hash_value(ZEND_STRS(REMOTE_ADDR));
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
+
+    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
         return;
     }
-    zval **value;
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REMOTE_ADDR), REMOTE_ADDR_HASH, (void **)&value) != SUCCESS ||
-        Z_TYPE_PP(value) != IS_STRING)
-    {
-        return;
-    }
-    info.GetReturnValue().Set(zval_to_v8val(*value, info.GetIsolate() TSRMLS_CC));
+    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+
+    zval *REMOTE_ADDR = zend_hash_str_find(_SERVER, ZEND_STRL("REMOTE_ADDR"));
+
+    info.GetReturnValue().Set(zval_to_v8val(REMOTE_ADDR, info.GetIsolate() TSRMLS_CC));
 }
 static void path_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    static const char REQUEST_URI[] = "REQUEST_URI";
-    static const ulong REQUEST_URI_HASH = zend_get_hash_value(ZEND_STRS(REQUEST_URI));
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
+
+    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
         return;
     }
-    zval **value;
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_URI), REQUEST_URI_HASH, (void **)&value) != SUCCESS ||
-        Z_TYPE_PP(value) != IS_STRING)
+    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+
+    zval *REQUEST_URI = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_URI"));
+
+    if (!REQUEST_URI)
     {
         return;
     }
+
+    std::string path(Z_STRVAL_P(REQUEST_URI), Z_STRLEN_P(REQUEST_URI));
+    size_t len = path.find_first_of('?');
+
     v8::Isolate *isolate = info.GetIsolate();
-    char *str = Z_STRVAL_PP(value);
-    char *p = strchr(str, '?');
-    int len = p == nullptr ? Z_STRLEN_PP(value) : p - str;
-    info.GetReturnValue().Set(V8STRING_EX(str, v8::NewStringType::kNormal, len).ToLocalChecked());
+    v8::Local<v8::String> v8_path;
+    if (V8STRING_EX(path.c_str(), v8::NewStringType::kNormal, len != std::string::npos ? len : path.length()).ToLocal(&v8_path))
+    {
+        info.GetReturnValue().Set(v8_path);
+    }
 }
 static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     TSRMLS_FETCH();
-    if ((!PG(http_globals)[TRACK_VARS_GET] && !zend_is_auto_global(ZEND_STRL("_GET") TSRMLS_CC)) ||
-        (!PG(http_globals)[TRACK_VARS_POST] && !zend_is_auto_global(ZEND_STRL("_POST") TSRMLS_CC)))
+    if ((Z_TYPE(PG(http_globals)[TRACK_VARS_GET]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_GET"))) ||
+        (Z_TYPE(PG(http_globals)[TRACK_VARS_POST]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_POST"))))
     {
         return;
     }
+    const HashTable *_GET = Z_ARRVAL(PG(http_globals)[TRACK_VARS_GET]);
+    const HashTable *_POST = Z_ARRVAL(PG(http_globals)[TRACK_VARS_POST]);
+
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::Object> obj = v8::Object::New(isolate);
-    HashTable *GET = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_GET]);
-    for (zend_hash_internal_pointer_reset(GET); zend_hash_has_more_elements(GET) == SUCCESS; zend_hash_move_forward(GET))
+
+    zval *value;
+    zend_string *key;
+    zend_ulong idx;
+    ZEND_HASH_FOREACH_KEY_VAL(_GET, idx, key, value)
     {
-        char *key;
-        ulong idx;
-        int type;
-        zval **value;
-        type = zend_hash_get_current_key(GET, &key, &idx, 0);
-        if (type == HASH_KEY_NON_EXISTENT ||
-            zend_hash_get_current_data(GET, (void **)&value) != SUCCESS)
+        v8::Local<v8::Value> v8_value = zval_to_v8val(value, isolate TSRMLS_CC);
+        if (v8_value->IsNullOrUndefined())
         {
             continue;
         }
-        v8::Local<v8::Value> v8_value = zval_to_v8val(*value, isolate TSRMLS_CC);
         if (!v8_value->IsArray())
         {
             v8::Local<v8::Array> v8_arr = v8::Array::New(isolate);
             v8_arr->Set(0, v8_value);
             v8_value = v8_arr;
         }
-        v8::Local<v8::Value> v8_key =
-            type == HASH_KEY_IS_STRING ? V8STRING_I(key).ToLocalChecked().As<v8::Value>() : v8::Uint32::New(isolate, idx).As<v8::Value>();
-        obj->Set(v8_key, v8_value);
+        if (key)
+        {
+            obj->Set(V8STRING_I(key->val).ToLocalChecked(), v8_value);
+        }
+        else
+        {
+            obj->Set(idx, v8_value);
+        }
     }
-    HashTable *POST = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_POST]);
-    for (zend_hash_internal_pointer_reset(POST); zend_hash_has_more_elements(POST) == SUCCESS; zend_hash_move_forward(POST))
+    ZEND_HASH_FOREACH_END();
+
+    ZEND_HASH_FOREACH_KEY_VAL(_POST, idx, key, value)
     {
-        char *key;
-        ulong idx;
-        int type;
-        zval **value;
-        type = zend_hash_get_current_key(POST, &key, &idx, 0);
-        if (type == HASH_KEY_NON_EXISTENT ||
-            zend_hash_get_current_data(POST, (void **)&value) != SUCCESS)
+        v8::Local<v8::Value> v8_value = zval_to_v8val(value, isolate TSRMLS_CC);
+        if (v8_value->IsNullOrUndefined())
         {
             continue;
         }
-        v8::Local<v8::Value> v8_value = zval_to_v8val(*value, isolate TSRMLS_CC);
         if (!v8_value->IsArray())
         {
             v8::Local<v8::Array> v8_arr = v8::Array::New(isolate);
             v8_arr->Set(0, v8_value);
             v8_value = v8_arr;
         }
-        v8::Local<v8::Value> v8_key =
-            type == HASH_KEY_IS_STRING ? V8STRING_I(key).ToLocalChecked().As<v8::Value>() : v8::Uint32::New(isolate, idx).As<v8::Value>();
+        v8::Local<v8::Value> v8_key;
+        if (key)
+        {
+            v8_key = V8STRING_I(key->val).ToLocalChecked();
+        }
+        else
+        {
+            v8_key = v8::Integer::New(isolate, idx);
+        }
         v8::Local<v8::Value> v8_existed_value = obj->Get(v8_key);
         if (!v8_existed_value.IsEmpty() &&
             v8_existed_value->IsArray())
@@ -291,55 +275,51 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
         }
         obj->Set(v8_key, v8_value);
     }
+    ZEND_HASH_FOREACH_END();
+
     info.GetReturnValue().Set(obj);
 }
 static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     TSRMLS_FETCH();
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
+    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
         return;
     }
+    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::Object> obj = v8::Object::New(isolate);
-    HashTable *SERVER = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]);
-    for (zend_hash_internal_pointer_reset(SERVER); zend_hash_has_more_elements(SERVER) == SUCCESS; zend_hash_move_forward(SERVER))
+
+    zval *value;
+    zend_string *key;
+    ZEND_HASH_FOREACH_STR_KEY_VAL(_SERVER, key, value)
     {
-        char *key;
-        ulong idx;
-        int type;
-        zval **value;
-        type = zend_hash_get_current_key(SERVER, &key, &idx, 0);
-        if (type != HASH_KEY_IS_STRING ||
-            strncmp(key, "HTTP_", 5) != 0 ||
-            zend_hash_get_current_data(SERVER, (void **)&value) != SUCCESS ||
-            Z_TYPE_PP(value) != IS_STRING)
+        if (key == NULL ||
+            strncmp(key->val, "HTTP_", 5) != 0)
         {
             continue;
         }
-        key += 5;
-        char *dup_key = nullptr;
-        dup_key = estrndup(key, strlen(key));
-        if (!dup_key)
+        std::string tmp(key->val + 5, key->len - 5);
+        for (auto &ch : tmp)
         {
-            continue;
-        }
-        char *p = dup_key;
-        while (*p)
-        {
-            if ('_' == *p)
+            if (ch == '_')
             {
-                *p = '-';
+                ch = '-';
             }
             else
             {
-                *p = tolower(*p);
+                ch = std::tolower(ch);
             }
-            p++;
         }
-        obj->Set(V8STRING_I(dup_key).ToLocalChecked(), zval_to_v8val(*value, isolate TSRMLS_CC));
-        efree(dup_key);
+        v8::Local<v8::String> v8_key;
+        if (V8STRING_EX(tmp.c_str(), v8::NewStringType::kInternalized, tmp.length()).ToLocal(&v8_key))
+        {
+            obj->Set(v8_key, zval_to_v8val(value, isolate TSRMLS_CC));
+        }
     }
+    ZEND_HASH_FOREACH_END();
+
     info.GetReturnValue().Set(obj);
 }
 static void body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
@@ -351,15 +331,14 @@ static void body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo
     {
         return;
     }
-    char *contents = nullptr;
-    int len = php_stream_copy_to_mem(stream, &contents, 4 * 1024, 1);
+    zend_string *buffer = php_stream_copy_to_mem(stream, 4 * 1024, 0);
     stream->is_persistent ? php_stream_pclose(stream) : php_stream_close(stream);
-    if (len <= 0 || !contents)
+    if (!buffer)
     {
         return;
     }
     v8::Isolate *isolate = info.GetIsolate();
-    v8::Local<v8::ArrayBuffer> arraybuffer = v8::ArrayBuffer::New(isolate, contents, MIN(len, 4 * 1024), v8::ArrayBufferCreationMode::kInternalized);
+    v8::Local<v8::ArrayBuffer> arraybuffer = v8::ArrayBuffer::New(isolate, buffer->val, MIN(buffer->len, 4 * 1024), v8::ArrayBufferCreationMode::kInternalized);
     info.GetReturnValue().Set(arraybuffer);
 }
 static void server_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)

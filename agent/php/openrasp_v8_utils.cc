@@ -69,53 +69,34 @@ v8::Local<v8::Value> openrasp::zval_to_v8val(zval *val, v8::Isolate *isolate TSR
     case IS_ARRAY:
     {
         HashTable *ht = Z_ARRVAL_P(val);
-        if (!ht || ht->nApplyCount > 1)
+        if (!ht || ZEND_HASH_GET_APPLY_COUNT(ht) > 1)
         {
-            rst = v8::Undefined(isolate);
             break;
         }
-        int num = zend_hash_num_elements(ht);
+        ZEND_HASH_INC_APPLY_COUNT(ht);
+
+        v8::Local<v8::Array> arr;
         v8::Local<v8::Object> obj;
-        v8::Local<v8::Array> arr = v8::Array::New(isolate, num);
-        rst = arr;
-        if (num == 0)
-        {
-            break;
-        }
+        rst = arr = v8::Array::New(isolate);
         bool is_assoc = false;
-        int index = 0;
-        for (zend_hash_internal_pointer_reset(Z_ARRVAL_P(val)); zend_hash_has_more_elements(Z_ARRVAL_P(val)) == SUCCESS; zend_hash_move_forward(Z_ARRVAL_P(val)))
+        size_t index = 0;
+
+        zval *value;
+        zend_string *key;
+        zend_ulong idx;
+        ZEND_HASH_FOREACH_KEY_VAL(ht, idx, key, value)
         {
-            char *key;
-            ulong idx;
-            int type;
-            zval **value;
-            if (zend_hash_get_current_data(Z_ARRVAL_P(val), (void **)&value) != SUCCESS)
-            {
-                continue;
-            }
-            HashTable *ht = HASH_OF(*value);
-            if (ht)
-            {
-                ht->nApplyCount++;
-            }
-            v8::Local<v8::Value> v8_value = zval_to_v8val(*value, isolate TSRMLS_CC);
-            if (ht)
-            {
-                ht->nApplyCount--;
-            }
-            type = zend_hash_get_current_key(Z_ARRVAL_P(val), &key, &idx, 0);
+            v8::Local<v8::Value> v8_value = zval_to_v8val(value, isolate TSRMLS_CC);
             if (!is_assoc)
             {
-                if (type == HASH_KEY_IS_LONG && index == idx)
+                if (index == idx)
                 {
                     arr->Set(index++, v8_value);
                 }
                 else
                 {
                     is_assoc = true;
-                    obj = v8::Object::New(isolate);
-                    rst = obj;
+                    rst = obj = v8::Object::New(isolate);
                     for (int i = 0; i < index; i++)
                     {
                         obj->Set(i, arr->Get(i));
@@ -124,20 +105,22 @@ v8::Local<v8::Value> openrasp::zval_to_v8val(zval *val, v8::Isolate *isolate TSR
             }
             if (is_assoc)
             {
-                if (type == HASH_KEY_IS_LONG)
+                if (!key)
                 {
                     obj->Set(idx, v8_value);
                 }
                 else
                 {
                     v8::Local<v8::String> v8_key;
-                    if (V8STRING_I(key).ToLocal(&v8_key))
+                    if (V8STRING_EX(key->val, v8::NewStringType::kInternalized, key->len).ToLocal(&v8_key))
                     {
                         obj->Set(v8_key, v8_value);
                     }
                 }
             }
         }
+        ZEND_HASH_FOREACH_END();
+        ZEND_HASH_INC_APPLY_COUNT(ht);
         break;
     }
     case IS_STRING:
@@ -161,8 +144,11 @@ v8::Local<v8::Value> openrasp::zval_to_v8val(zval *val, v8::Isolate *isolate TSR
     case IS_DOUBLE:
         rst = v8::Number::New(isolate, Z_DVAL_P(val));
         break;
-    case IS_BOOL:
-        rst = v8::Boolean::New(isolate, Z_BVAL_P(val));
+    case IS_TRUE:
+        rst = v8::Boolean::New(isolate, true);
+        break;
+    case IS_FALSE:
+        rst = v8::Boolean::New(isolate, false);
         break;
     default:
         rst = v8::Undefined(isolate);
@@ -195,7 +181,7 @@ v8::MaybeLocal<v8::Script> openrasp::compile_script(std::string _source, std::st
 }
 
 v8::MaybeLocal<v8::Value> openrasp::exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
-                                                 std::string _source, std::string _filename, int _line_offset)
+                                                std::string _source, std::string _filename, int _line_offset)
 {
     v8::MaybeLocal<v8::Value> result;
     v8::Local<v8::String> filename;

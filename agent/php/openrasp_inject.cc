@@ -99,20 +99,18 @@ PHP_RINIT_FUNCTION(openrasp_inject)
 }
 PHP_RSHUTDOWN_FUNCTION(openrasp_inject)
 {
-    static const char REQUEST_URI[] = "REQUEST_URI";
-    static const ulong REQUEST_URI_HASH = zend_get_hash_value(ZEND_STRS(REQUEST_URI));
     if (inject_html.size())
     {
         bool is_match_inject_prefix = true;
         if (openrasp_ini.inject_html_urlprefix && strlen(openrasp_ini.inject_html_urlprefix) > 0)
         {
             is_match_inject_prefix = false;
-            if (PG(http_globals)[TRACK_VARS_SERVER] || zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
+            if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY || zend_is_auto_global_str(ZEND_STRL("_SERVER")))
             {
-                zval **value;
-                if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_URI), REQUEST_URI_HASH, (void **)&value) == SUCCESS &&
-                    Z_TYPE_PP(value) == IS_STRING &&
-                    strncasecmp(Z_STRVAL_PP(value), openrasp_ini.inject_html_urlprefix, strlen(openrasp_ini.inject_html_urlprefix)) == 0)
+                zval *value;
+                if ((value = zend_hash_str_find(Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS("REQUEST_URI"))) != NULL &&
+                    Z_TYPE_P(value) == IS_STRING &&
+                    strncasecmp(Z_STRVAL_P(value), openrasp_ini.inject_html_urlprefix, strlen(openrasp_ini.inject_html_urlprefix)) == 0)
                 {
                     is_match_inject_prefix = true;
                 }
@@ -128,11 +126,7 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_inject)
                     strncasecmp(sapi_header->header, "content-type", sizeof("content-type") - 1) == 0 &&
                     php_stristr(sapi_header->header, target_header, sapi_header->header_len, strlen(target_header)) != nullptr)
                 {
-#if PHP_MINOR_VERSION > 3
                     php_output_write(inject_html.data(), inject_html.size() TSRMLS_CC);
-#else
-                    php_body_write(inject_html.data(), inject_html.size() TSRMLS_CC);
-#endif
                     break;
                 }
             }

@@ -16,7 +16,8 @@
 
 #include "openrasp.h"
 #include "openrasp_ini.h"
-extern "C" {
+extern "C"
+{
 #include "php_ini.h"
 #include "ext/standard/file.h"
 #include "ext/standard/php_string.h"
@@ -37,38 +38,35 @@ void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
         int i = 0;
         std::string buffer;
         HashTable *hash_arr = Z_ARRVAL(trace_arr);
-        for (zend_hash_internal_pointer_reset(hash_arr);
-             zend_hash_has_more_elements(hash_arr) == SUCCESS;
-             zend_hash_move_forward(hash_arr))
+        zval *ele_value = NULL;
+        ZEND_HASH_FOREACH_VAL(hash_arr, ele_value)
         {
             if (++i > openrasp_ini.log_maxstack)
             {
                 break;
             }
-            zval **ele_value;
-            if (zend_hash_get_current_data(hash_arr, (void **)&ele_value) != SUCCESS ||
-                Z_TYPE_PP(ele_value) != IS_ARRAY)
+            if (Z_TYPE_P(ele_value) != IS_ARRAY)
             {
                 continue;
             }
-            zval **trace_ele;
-            if (zend_hash_find(Z_ARRVAL_PP(ele_value), ZEND_STRS("file"), (void **)&trace_ele) == SUCCESS &&
-                Z_TYPE_PP(trace_ele) == IS_STRING)
+            zval *trace_ele;
+            if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("file"))) != NULL &&
+                Z_TYPE_P(trace_ele) == IS_STRING)
             {
-                buffer.append(Z_STRVAL_PP(trace_ele), Z_STRLEN_PP(trace_ele));
+                buffer.append(Z_STRVAL_P(trace_ele), Z_STRLEN_P(trace_ele));
             }
             buffer.push_back('(');
-            if (zend_hash_find(Z_ARRVAL_PP(ele_value), ZEND_STRS("function"), (void **)&trace_ele) == SUCCESS &&
-                Z_TYPE_PP(trace_ele) == IS_STRING)
+            if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("function"))) != NULL &&
+                Z_TYPE_P(trace_ele) == IS_STRING)
             {
-                buffer.append(Z_STRVAL_PP(trace_ele), Z_STRLEN_PP(trace_ele));
+                buffer.append(Z_STRVAL_P(trace_ele), Z_STRLEN_P(trace_ele));
             }
             buffer.push_back(':');
             //line number
-            if (zend_hash_find(Z_ARRVAL_PP(ele_value), ZEND_STRS("line"), (void **)&trace_ele) == SUCCESS &&
-                Z_TYPE_PP(trace_ele) == IS_LONG)
+            if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("line"))) != NULL &&
+                Z_TYPE_P(trace_ele) == IS_LONG)
             {
-                buffer.append(std::to_string(Z_LVAL_PP(trace_ele)));
+                buffer.append(std::to_string(Z_LVAL_P(trace_ele)));
             }
             else
             {
@@ -76,7 +74,8 @@ void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
             }
             buffer.append(")\n");
         }
-        ZVAL_STRINGL(backtrace_str, buffer.c_str(), buffer.length(), 1);
+        ZEND_HASH_FOREACH_END();
+        ZVAL_STRINGL(backtrace_str, buffer.c_str(), buffer.length());
     }
     zval_dtor(&trace_arr);
 }
@@ -93,35 +92,33 @@ void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
     {
         int i = 0;
         HashTable *hash_arr = Z_ARRVAL(trace_arr);
-        for (zend_hash_internal_pointer_reset(hash_arr);
-             zend_hash_has_more_elements(hash_arr) == SUCCESS;
-             zend_hash_move_forward(hash_arr))
+        zval *ele_value = NULL;
+        ZEND_HASH_FOREACH_VAL(hash_arr, ele_value)
         {
-            if (++i > openrasp_ini.plugin_maxstack)
+            if (++i > openrasp_ini.log_maxstack)
             {
                 break;
             }
-            zval **ele_value;
-            if (zend_hash_get_current_data(hash_arr, (void **)&ele_value) != SUCCESS ||
-                Z_TYPE_PP(ele_value) != IS_ARRAY)
+            if (Z_TYPE_P(ele_value) != IS_ARRAY)
             {
                 continue;
             }
             std::string buffer;
-            zval **trace_ele;
-            if (zend_hash_find(Z_ARRVAL_PP(ele_value), ZEND_STRS("file"), (void **)&trace_ele) == SUCCESS &&
-                Z_TYPE_PP(trace_ele) == IS_STRING)
+            zval *trace_ele;
+            if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("file"))) != NULL &&
+                Z_TYPE_P(trace_ele) == IS_STRING)
             {
-                buffer.append(Z_STRVAL_PP(trace_ele), Z_STRLEN_PP(trace_ele));
+                buffer.append(Z_STRVAL_P(trace_ele), Z_STRLEN_P(trace_ele));
             }
-            if (zend_hash_find(Z_ARRVAL_PP(ele_value), ZEND_STRS("function"), (void **)&trace_ele) == SUCCESS &&
-                Z_TYPE_PP(trace_ele) == IS_STRING)
+            if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("function"))) != NULL &&
+                Z_TYPE_P(trace_ele) == IS_STRING)
             {
                 buffer.push_back('@');
-                buffer.append(Z_STRVAL_PP(trace_ele), Z_STRLEN_PP(trace_ele));
+                buffer.append(Z_STRVAL_P(trace_ele), Z_STRLEN_P(trace_ele));
             }
-            add_next_index_stringl(backtrace_arr, buffer.c_str(), buffer.length(), 1);
+            add_next_index_stringl(backtrace_arr, buffer.c_str(), buffer.length());
         }
+        ZEND_HASH_FOREACH_END();
     }
     zval_dtor(&trace_arr);
 }

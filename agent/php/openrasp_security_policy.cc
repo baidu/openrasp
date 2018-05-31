@@ -36,19 +36,10 @@ static void security_check(bool flag, int id, const char *msg TSRMLS_DC)
 {
     if (!flag)
     {
-        zval policy_id, message;
-        INIT_ZVAL(policy_id);
-        INIT_ZVAL(message);
-        ZVAL_LONG(&policy_id, id);
-        ZVAL_STRING(&message, msg, 0);
-
         zval result;
-        INIT_ZVAL(result);
-        ALLOC_HASHTABLE(Z_ARRVAL(result));
-        zend_hash_init(Z_ARRVAL(result), 0, 0, 0, 0);
-        Z_TYPE(result) = IS_ARRAY;
-        add_assoc_zval(&result, "policy_id", &policy_id);
-        add_assoc_zval(&result, "message", &message);
+        array_init(&result);
+        add_assoc_long(&result, "policy_id", id);
+        add_assoc_string(&result, "message", const_cast<char *>(msg));
         policy_info(&result TSRMLS_CC);
         zval_dtor(&result);
     }

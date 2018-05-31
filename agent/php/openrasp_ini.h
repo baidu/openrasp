@@ -20,7 +20,6 @@
 #include <string>
 #include <unordered_set>
 
-ZEND_INI_MH(OnUpdateOpenraspDoubleGEZero);
 ZEND_INI_MH(OnUpdateOpenraspIntGEZero);
 ZEND_INI_MH(OnUpdateOpenraspCString);
 ZEND_INI_MH(OnUpdateOpenraspBool);

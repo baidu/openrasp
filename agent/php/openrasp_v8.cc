@@ -18,7 +18,8 @@
 #include "config.h"
 #endif
 
-extern "C" {
+extern "C"
+{
 #include "php.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
@@ -115,31 +116,14 @@ unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
         v8::String::Utf8Value utf_message(v8_message);
         v8::String::Utf8Value utf_name(v8_name);
 
-        zval z_type, z_action, z_message, z_name, z_confidence;
-        INIT_ZVAL(z_type);
-        INIT_ZVAL(z_action);
-        INIT_ZVAL(z_message);
-        INIT_ZVAL(z_name);
-        INIT_ZVAL(z_confidence);
-        ZVAL_STRING(&z_type, c_type, 0);
-        ZVAL_STRINGL(&z_action, *utf_action, utf_action.length(), 0);
-        ZVAL_STRINGL(&z_message, *utf_message, utf_message.length(), 0);
-        ZVAL_STRINGL(&z_name, *utf_name, utf_name.length(), 0);
-        ZVAL_LONG(&z_confidence, v8_confidence->Int32Value());
-
         zval result;
-        INIT_ZVAL(result);
-        ALLOC_HASHTABLE(Z_ARRVAL(result));
-        // 设置 zend hash 的析构函数为空
-        // 便于用共享 v8 产生的字符串，减少内存分配
-        zend_hash_init(Z_ARRVAL(result), 0, 0, 0, 0);
-        Z_TYPE(result) = IS_ARRAY;
-        add_assoc_zval(&result, "attack_type", &z_type);
+        array_init(&result);
+        add_assoc_stringl(&result, "attack_type", const_cast<char *>(c_type), strlen(c_type));
+        add_assoc_stringl(&result, "intercept_state", *utf_action, utf_action.length());
+        add_assoc_stringl(&result, "plugin_message", *utf_message, utf_message.length());
+        add_assoc_stringl(&result, "plugin_name", *utf_name, utf_name.length());
+        add_assoc_long(&result, "plugin_confidence", v8_confidence->Int32Value());
         add_assoc_zval(&result, "attack_params", z_params);
-        add_assoc_zval(&result, "intercept_state", &z_action);
-        add_assoc_zval(&result, "plugin_message", &z_message);
-        add_assoc_zval(&result, "plugin_name", &z_name);
-        add_assoc_zval(&result, "plugin_confidence", &z_confidence);
         alarm_info(&result TSRMLS_CC);
         zval_dtor(&result);
     }
