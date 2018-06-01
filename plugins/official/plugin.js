@@ -542,8 +542,11 @@ if (RASP.get_jsengine() !== 'v8') {
         {
             if (hostname == 'requestb.in'
             || hostname == 'transfer.sh'
+            || hostname.endsWith('.ceye.io')
             || hostname.endsWith('.vcap.me') 
-            || hostname.endsWith('.xip.name') || hostname.endsWith('.xip.io') || hostname.endsWith('.nip.io') 
+            || hostname.endsWith('.xip.name') 
+            || hostname.endsWith('.xip.io') 
+            || hostname.endsWith('.nip.io') 
             || hostname.endsWith('.burpcollaborator.net'))
             {
                 reason = '访问已知的内网探测域名'

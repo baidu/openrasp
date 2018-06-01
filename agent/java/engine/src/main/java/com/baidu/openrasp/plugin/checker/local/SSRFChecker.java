@@ -44,7 +44,7 @@ public class SSRFChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_SSRF_COMMON = "ssrf_common";
     private static final String CONFIG_KEY_SSRF_OBFUSCATE = "ssrf_obfuscate";
     private static final String CONFIG_KEY_SSRF_USER_INPUT = "ssrf_userinput";
-    private static final String[] INTRANET_DETECTION_SUFFIX = new String[]{".xip.io", ".burpcollaborator.net",
+    private static final String[] INTRANET_DETECTION_SUFFIX = new String[]{".ceye.io", ".xip.io", ".burpcollaborator.net",
             ".xip.name", ".nip.io", ".vcap.me"};
 
     @Override
