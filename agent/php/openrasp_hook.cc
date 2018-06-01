@@ -33,15 +33,6 @@ typedef struct _track_vars_pair_t
     const char *name;
 } track_vars_pair;
 
-#define REGISTER_HOOK_HANDLER_EX(name, scope, type)                     \
-    {                                                                   \
-        extern void scope##_##name##_##type##_handler(TSRMLS_D);        \
-        global_hook_handlers.insert(scope##_##name##_##type##_handler); \
-    }
-
-#define REGISTER_HOOK_HANDLER(name, type)   \
-    REGISTER_HOOK_HANDLER_EX(name, global, type)
-
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_hook)
 
 bool openrasp_zval_in_request(zval *item TSRMLS_DC)
@@ -50,45 +41,38 @@ bool openrasp_zval_in_request(zval *item TSRMLS_DC)
                                             {TRACK_VARS_GET, "_GET"},
                                             {TRACK_VARS_COOKIE, "_COOKIE"}};
     int size = sizeof(pairs) / sizeof(pairs[0]);
+    zend_string *skey;
+    zval *val;
     for (int index = 0; index < size; ++index)
     {
         if (!PG(http_globals)[pairs[index].id] 
-        && !zend_is_auto_global(pairs[index].name, strlen(pairs[index].name) TSRMLS_CC)
-        && Z_TYPE_P(PG(http_globals)[pairs[index].id]) != IS_ARRAY)
+        && !zend_is_auto_global_str(pairs[index].name, strlen(pairs[index].name) TSRMLS_CC)
+        && Z_TYPE(PG(http_globals)[pairs[index].id]) != IS_ARRAY)
         {
-            return 0;
+            return false;
         }
-        HashTable *ht = Z_ARRVAL_P(PG(http_globals)[pairs[index].id]);
-        for (zend_hash_internal_pointer_reset(ht);
-             zend_hash_has_more_elements(ht) == SUCCESS;
-             zend_hash_move_forward(ht))
-        {
-            zval **ele_value;
-            if (zend_hash_get_current_data(ht, (void **)&ele_value) != SUCCESS)
+        HashTable *ht = Z_ARRVAL(PG(http_globals)[pairs[index].id]);
+        ZEND_HASH_FOREACH_STR_KEY_VAL(ht, skey, val) {
+            if (item == val)
             {
-                continue;
+                return true;
             }
-            if (item == *ele_value)
-            {
-                return 1;
-            }
-        }
+        } ZEND_HASH_FOREACH_END();
     }
-    return 0;
+    return false;
 }
 
-void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zval *message TSRMLS_DC)
+void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, const char *message TSRMLS_DC)
 {
-    zval *params_result = nullptr;
-    MAKE_STD_ZVAL(params_result);
-    array_init(params_result);
-    add_assoc_string(params_result, "intercept_state", const_cast<char *>(is_block ? "block" : "log"), 1);
-    add_assoc_string(params_result, "attack_type", (char *)type, 1);
-    add_assoc_string(params_result, "plugin_name", const_cast<char *>("php_builtin_plugin"), 1);
-    add_assoc_long(params_result, "plugin_confidence", confidence);
-    add_assoc_zval(params_result, "attack_params", params);
-    add_assoc_zval(params_result, "plugin_message", message);
-    alarm_info(params_result TSRMLS_CC);
+    zval params_result;
+    array_init(&params_result);
+    add_assoc_string(&params_result, "intercept_state",   is_block ? "block" : "log");
+    add_assoc_string(&params_result, "attack_type",       type);
+    add_assoc_string(&params_result, "plugin_name",       "php_builtin_plugin");
+    add_assoc_string(&params_result, "plugin_message",    message);
+    add_assoc_long(&params_result,   "plugin_confidence", confidence);
+    add_assoc_zval(&params_result,   "attack_params",     params);
+    alarm_info(&params_result TSRMLS_CC);
     zval_ptr_dtor(&params_result);
     if (is_block)
     {
@@ -108,19 +92,10 @@ bool openrasp_check_callable_black(const char *item_name, uint item_name_length 
 
 void handle_block(TSRMLS_D)
 {
-#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION == 3)
-    if (OG(ob_nesting_level) && (OG(active_ob_buffer).status || OG(active_ob_buffer).erase)) {
-        php_end_ob_buffer(0, 0 TSRMLS_CC);
-    }
-#elif (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION >= 4)
     int status = php_output_get_status(TSRMLS_C);
     if (status & PHP_OUTPUT_WRITTEN) {
-        php_output_discard(TSRMLS_C);
+        php_output_discard_all(TSRMLS_C);
     }
-#else
-#  error "Unsupported PHP version, please contact OpenRASP team for more information"
-#endif
-
     char *block_url = openrasp_ini.block_url;
     char *request_id = OPENRASP_INJECT_G(request_id);
     if (!SG(headers_sent))
@@ -145,12 +120,8 @@ void handle_block(TSRMLS_D)
         redirect_script_len = spprintf(&redirect_script, 0, "</script><script>location.href=\"%s?request_id=%s\"</script>", block_url, request_id);
         if (redirect_script)
         {
-#if PHP_MINOR_VERSION > 3
             php_output_write(redirect_script, redirect_script_len TSRMLS_CC);
             php_output_flush(TSRMLS_C);
-#else
-            php_body_write(redirect_script, redirect_script_len TSRMLS_CC);
-#endif
         }
         efree(redirect_script);
     }
@@ -164,7 +135,6 @@ void handle_block(TSRMLS_D)
 void check(const char *type, zval *params TSRMLS_DC)
 {
     char result = openrasp_check(type, params TSRMLS_CC);
-    zval_ptr_dtor(&params);
     if (result)
     {
         handle_block(TSRMLS_C);

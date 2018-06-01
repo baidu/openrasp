@@ -38,6 +38,7 @@ extern "C" {
 #include "php_main.h"
 #include "php_output.h"
 #include "zend_globals.h"
+#include "zend_types.h"
 #include "zend_interfaces.h"
 #include "php_globals.h"
 #include "ext/standard/file.h"
@@ -149,11 +150,6 @@ typedef struct sql_connection_entry_t {
 typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
 typedef void (*hook_handler_t)(TSRMLS_D);
 
-void slow_query_alarm(int rows TSRMLS_DC);
-zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
-void sql_type_handler(char* query, int query_len, char *server TSRMLS_DC);
-long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count, zval *params[] TSRMLS_DC);
-
 typedef enum hook_position_t {
 	PRE_HOOK = 1 << 0, 
     POST_HOOK  = 1 << 1
@@ -179,14 +175,14 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
         }                                                                                                  \
         else                                                                                               \
         {                                                                                                  \
-            zend_class_entry **clazz;                                                                      \
-            if (zend_hash_find(CG(class_table), ZEND_STRS(ZEND_TOSTR(scope)), (void **)&clazz) == SUCCESS) \
+            zend_class_entry *clazz;                                                                       \
+            if ((clazz = zend_hash_str_find_ptr(CG(class_table), ZEND_STRL(ZEND_TOSTR(scope)))) == NULL)   \
             {                                                                                              \
-                ht = &(*clazz)->function_table;                                                            \
+                ht = &(clazz->function_table);                                                             \
             }                                                                                              \
         }                                                                                                  \
         if (ht &&                                                                                          \
-            zend_hash_find(ht, ZEND_STRS(ZEND_TOSTR(name)), (void **)&function) == SUCCESS &&              \
+            (function = zend_hash_str_find_ptr(ht, ZEND_STRL(ZEND_TOSTR(name)))) != NULL                   \
             function->internal_function.handler != zif_display_disabled_function)                          \
         {                                                                                                  \
             origin_##scope##_##name##_##type = function->internal_function.handler;                        \
@@ -287,12 +283,16 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_hook);
 typedef void (*fill_param_t)(HashTable *ht);
 
 void handle_block(TSRMLS_D);
+bool openrasp_zval_in_request(zval *item TSRMLS_DC);
 void check(const char *type, zval *params TSRMLS_DC);
+void register_hook_handler(hook_handler_t hook_handler);
 bool openrasp_check_type_ignored(const char *item_name, uint item_name_length TSRMLS_DC);
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC);
-bool openrasp_zval_in_request(zval *item TSRMLS_DC);
-void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zval *message TSRMLS_DC);
+void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, const char *message TSRMLS_DC);
 char * openrasp_real_path(char *filename, int filename_len, zend_bool use_include_path, bool handle_unresolved TSRMLS_DC);
-void register_hook_handler(hook_handler_t hook_handler);
+void slow_query_alarm(int rows TSRMLS_DC);
+zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
+void sql_type_handler(char* query, int query_len, char *server TSRMLS_DC);
+long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count, zval *params[] TSRMLS_DC);
 
 #endif
