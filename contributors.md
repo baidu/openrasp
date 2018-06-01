@@ -5,7 +5,6 @@
 * Cao Xinyu
 * Lan Yuhang
 * Li Xinkai
-* Song Yanjun
 * Tang Youyi
 
 ### Special thanks to the following people
