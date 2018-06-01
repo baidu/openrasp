@@ -92,7 +92,15 @@ var algorithmConfig = {
     },
     // SSRF - 是否允许访问 dnslog 地址
     ssrf_common: {
-        action: 'block'
+        action:  'block',
+        domains: [
+            '.ceye.io',
+            '.vcap.me',
+            '.xip.name',
+            '.xip.io',
+            '.nip.io',
+            '.burpcollaborator.net'
+        ]
     },
     // SSRF - 是否允许访问混淆后的IP地址
     ssrf_obfuscate: {
@@ -531,8 +539,11 @@ if (RASP.get_jsengine() !== 'v8') {
                 is_from_userinput(context.parameter, url) &&
                 /^(192|172|10)\./.test(ip[0]))
             {
-                reason = '访问内网地址: ' + ip[0]
-                action = algorithmConfig.ssrf_userinput.action
+                return {
+                    action:    algorithmConfig.ssrf_userinput.action,
+                    message:   'SSRF攻击 - 访问内网地址: ' + ip[0],
+                    confidence: 100
+                }
             }
         }
 
@@ -540,28 +551,48 @@ if (RASP.get_jsengine() !== 'v8') {
         // 检查常见探测域名
         if (algorithmConfig.ssrf_common.action != 'ignore')
         {
-            if (hostname == 'requestb.in'
-            || hostname == 'transfer.sh'
-            || hostname.endsWith('.ceye.io')
-            || hostname.endsWith('.vcap.me') 
-            || hostname.endsWith('.xip.name') 
-            || hostname.endsWith('.xip.io') 
-            || hostname.endsWith('.nip.io') 
-            || hostname.endsWith('.burpcollaborator.net'))
+            var blocked = false
+            var domains = algorithmConfig.ssrf_common.domains
+
+            if (hostname == 'requestb.in' || hostname == 'transfer.sh')
             {
-                reason = '访问已知的内网探测域名'
-                action = algorithmConfig.ssrf_common.action
+                blocked = true
+            }
+            else
+            {
+                for (var i = 0; i < domains.length; i ++)
+                {
+                    if (hostname.endsWith(domains[i]))
+                    {
+                        blocked = true
+                        break
+                    }
+                }
+            }
+
+            if (blocked)
+            {
+                return {
+                    action:    algorithmConfig.ssrf_common.action,
+                    message:   'SSRF攻击 - 访问已知的内网探测域名',
+                    confidence: 100
+                }                
             }
         } 
 
         // 算法3 - ssrf_aws
         // 检测AWS私有地址，如有需求可注释掉
+        // 
+        // TODO: 增加 Google Cloud 对应的私有地址
         if (algorithmConfig.ssrf_aws.action != 'ignore') 
         {
             if (hostname == '169.254.169.254') 
             {
-                reason = '尝试读取 AWS metadata'
-                action = algorithmConfig.ssrf_aws.action
+                return {
+                    action:    algorithmConfig.ssrf_aws.action,
+                    message:   'SSRF攻击 - 读取 AWS metadata',
+                    confidence: 100
+                }                
             }
         }
 
@@ -576,26 +607,27 @@ if (RASP.get_jsengine() !== 'v8') {
         // http://0x7f.0.0.0    
         if (algorithmConfig.ssrf_obfuscate.action != 'ignore') 
         {
+            var reason = false
+
             if (Number.isInteger(hostname))
             {
                 reason = '尝试使用纯数字IP'
-                action = algorithmConfig.ssrf_obfuscate.action
             }
             else if (hostname.startsWith('0x') && hostname.indexOf('.') === -1) 
             {
                 reason = '尝试使用16进制IP'
-                action = algorithmConfig.ssrf_obfuscate.action
+            }
+
+            if (reason)
+            {
+                return {
+                    action:    algorithmConfig.ssrf_obfuscate.action,
+                    message:   'SSRF攻击: ' + reason,
+                    confidence: 100
+                }                
             }
         }
 
-        if (reason) 
-        {
-            return {
-                action:    'block',
-                message:   'SSRF攻击: ' + reason,
-                confidence: 100
-            }
-        }
         return clean
     })
 
