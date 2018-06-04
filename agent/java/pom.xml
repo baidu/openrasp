@@ -135,6 +135,10 @@
                                     <pattern>javassist</pattern>
                                     <shadedPattern>com.baidu.openrasp.javassist</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>org.mozilla</pattern>
+                                    <shadedPattern>com.baidu.openrasp.org.mozilla</shadedPattern>
+                                </relocation>
                             </relocations>
                         </configuration>
                     </execution>
