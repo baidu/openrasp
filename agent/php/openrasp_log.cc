@@ -97,8 +97,8 @@ static int openrasp_log_files_mkdir(char *path TSRMLS_DC) {
 
 static void init_logger_instance(int logger_id TSRMLS_DC)
 {
-    assert(logger_id > 0 && logger_id < TOTAL);
-    rasp_logger_entry logger_entry = OPENRASP_LOG_G(loggers)[logger_id];
+    assert(logger_id >= 0 && logger_id < TOTAL);
+    rasp_logger_entry& logger_entry = OPENRASP_LOG_G(loggers)[logger_id];
     if (!logger_entry.initialized)
     {
         logger_entry.available_token = openrasp_ini.log_maxburst;
@@ -113,7 +113,7 @@ static void init_logger_instance(int logger_id TSRMLS_DC)
 
 static void close_logger_stream(int logger_id TSRMLS_DC)
 {
-    assert(logger_id > 0 && logger_id < TOTAL);
+    assert(logger_id >= 0 && logger_id < TOTAL);
     rasp_logger_entry logger_entry = OPENRASP_LOG_G(loggers)[logger_id];
     if (logger_entry.stream_log)
     {
@@ -553,7 +553,7 @@ int rasp_info(const char *message, int message_len TSRMLS_DC) {
     }
     char *rasp_info = NULL;    
     zend_string *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
-    int   rasp_info_len = spprintf(&rasp_info, 0, "%s %s\n", time_RFC3339, message);
+    int   rasp_info_len = spprintf(&rasp_info, 0, "%s %s\n", ZSTR_VAL(time_RFC3339), message);
     int  rasp_result = base_info(&OPENRASP_LOG_G(loggers)[RASP_LOGGER], rasp_info, rasp_info_len TSRMLS_CC);
     zend_string_release(time_RFC3339);
     efree(rasp_info);
@@ -569,7 +569,7 @@ int plugin_info(const char *message, int message_len TSRMLS_DC) {
     }
     char *plugin_info = NULL;    
     zend_string *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
-    int  plugin_info_len = spprintf(&plugin_info, 0, "%s %s\n", time_RFC3339, message);
+    int  plugin_info_len = spprintf(&plugin_info, 0, "%s %s\n", ZSTR_VAL(time_RFC3339), message);
     int  plugin_result = base_info(&OPENRASP_LOG_G(loggers)[PLUGIN_LOGGER], plugin_info, plugin_info_len TSRMLS_CC);
     zend_string_release(time_RFC3339);
     efree(plugin_info);

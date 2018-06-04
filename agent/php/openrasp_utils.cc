@@ -28,11 +28,7 @@ extern "C"
 void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
 {
     zval trace_arr;
-#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION <= 3)
-    zend_fetch_debug_backtrace(&trace_arr, 0, 0 TSRMLS_CC);
-#else
     zend_fetch_debug_backtrace(&trace_arr, 0, 0, 0 TSRMLS_CC);
-#endif
     if (Z_TYPE(trace_arr) == IS_ARRAY)
     {
         int i = 0;
@@ -83,11 +79,7 @@ void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
 void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
 {
     zval trace_arr;
-#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION <= 3)
-    zend_fetch_debug_backtrace(&trace_arr, 0, 0 TSRMLS_CC);
-#else
     zend_fetch_debug_backtrace(&trace_arr, 0, 0, 0 TSRMLS_CC);
-#endif
     if (Z_TYPE(trace_arr) == IS_ARRAY)
     {
         int i = 0;

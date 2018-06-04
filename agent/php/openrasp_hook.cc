@@ -50,12 +50,14 @@ bool openrasp_zval_in_request(zval *item TSRMLS_DC)
         && !zend_is_auto_global(name TSRMLS_CC)
         && Z_TYPE(PG(http_globals)[pairs[index].id]) != IS_ARRAY)
         {
+            zend_string_release(name);
             return false;
         }
         HashTable *ht = Z_ARRVAL(PG(http_globals)[pairs[index].id]);
         ZEND_HASH_FOREACH_STR_KEY_VAL(ht, skey, val) {
-            if (item == val)
+            if (Z_STR_P(item) == Z_STR_P(val))
             {
+                zend_string_release(name);
                 return true;
             }
         } ZEND_HASH_FOREACH_END();
@@ -138,6 +140,7 @@ void handle_block(TSRMLS_D)
 void check(const char *type, zval *params TSRMLS_DC)
 {
     char result = openrasp_check(type, params TSRMLS_CC);
+    zval_ptr_dtor(params);
     if (result)
     {
         handle_block(TSRMLS_C);

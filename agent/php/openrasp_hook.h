@@ -176,13 +176,13 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
         else                                                                                               \
         {                                                                                                  \
             zend_class_entry *clazz;                                                                       \
-            if ((clazz = zend_hash_str_find_ptr(CG(class_table), ZEND_STRL(ZEND_TOSTR(scope)))) == NULL)   \
+            if ((clazz = static_cast<zend_class_entry *>(zend_hash_str_find_ptr(CG(class_table), ZEND_STRL(ZEND_TOSTR(scope))))) == NULL)   \
             {                                                                                              \
                 ht = &(clazz->function_table);                                                             \
             }                                                                                              \
         }                                                                                                  \
         if (ht &&                                                                                          \
-            (function = zend_hash_str_find_ptr(ht, ZEND_STRL(ZEND_TOSTR(name)))) != NULL                   \
+            (function = static_cast<zend_function *>(zend_hash_str_find_ptr(ht, ZEND_STRL(ZEND_TOSTR(name))))) != NULL &&                  \
             function->internal_function.handler != zif_display_disabled_function)                          \
         {                                                                                                  \
             origin_##scope##_##name##_##type = function->internal_function.handler;                        \

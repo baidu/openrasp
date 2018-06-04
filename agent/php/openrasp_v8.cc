@@ -124,6 +124,7 @@ unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
         add_assoc_stringl(&result, "plugin_name", *utf_name, utf_name.length());
         add_assoc_long(&result, "plugin_confidence", v8_confidence->Int32Value());
         add_assoc_zval(&result, "attack_params", z_params);
+        Z_TRY_ADDREF_P(z_params);
         alarm_info(&result TSRMLS_CC);
         zval_dtor(&result);
     }
