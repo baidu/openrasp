@@ -40,6 +40,7 @@ extern "C" {
 #include "zend_globals.h"
 #include "zend_types.h"
 #include "zend_interfaces.h"
+#include "zend_smart_str.h"
 #include "php_globals.h"
 #include "ext/standard/file.h"
 #include "ext/standard/url.h"
@@ -50,7 +51,6 @@ extern "C" {
 #include "Zend/zend_compile.h"
 #include "ext/standard/basic_functions.h"
 #include "ext/standard/php_rand.h"
-#include "ext/standard/php_smart_str.h"
 #ifdef PHP_WIN32
 #include "win32/unistd.h"
 #endif
@@ -293,6 +293,6 @@ char * openrasp_real_path(char *filename, int filename_len, zend_bool use_includ
 void slow_query_alarm(int rows TSRMLS_DC);
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
 void sql_type_handler(char* query, int query_len, char *server TSRMLS_DC);
-long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count, zval *params[] TSRMLS_DC);
+long fetch_rows_via_user_function(const char *f_name_str, uint32_t param_count, zval *params[] TSRMLS_DC);
 
 #endif

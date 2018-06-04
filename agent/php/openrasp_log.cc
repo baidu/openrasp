@@ -18,6 +18,7 @@
 #include "openrasp_ini.h"
 #include "openrasp_inject.h"
 #include <map>
+#include <vector>
 
 extern "C" {
 #include "openrasp_shared_alloc.h"
@@ -26,7 +27,7 @@ extern "C" {
 #include "ext/standard/php_array.h"
 #include "ext/standard/microtime.h"
 #include "ext/date/php_date.h"
-#include "ext/standard/php_smart_str.h"
+#include "zend_smart_str.h"
 #include "ext/json/php_json.h"
 
 #ifdef PHP_WIN32
@@ -66,13 +67,33 @@ typedef void (*value_filter_t)(zval *origin_zv, zval *new_zv);
 
 typedef struct keys_filter_t
 {
-    const char *origin_key_str,
-    const char *new_key_str,
-    value_filter_t value_filter
+    const char *origin_key_str;
+    const char *new_key_str;
+    value_filter_t value_filter;
 } keys_filter;
 
 static std::map<std::string, std::string> _if_addr_map;
 static char host_name[255];
+
+/* 获取当前毫秒时间
+*/
+static long get_millisecond(TSRMLS_D)
+{
+    struct timeval tp = {0};
+    gettimeofday(&tp, NULL);
+    return (long)(tp.tv_sec * 1000 + tp.tv_usec / 1000);
+}
+
+/* 创建日志文件夹
+*/
+static int openrasp_log_files_mkdir(char *path TSRMLS_DC) { 
+    if (VCWD_ACCESS(path, F_OK) == 0)
+    {
+        return SUCCESS;
+    }
+    zend_bool mkdir_result = recursive_mkdir(path, strlen(path), 0777 TSRMLS_CC);   
+	return mkdir_result ? SUCCESS : FAILURE;
+}
 
 static void init_logger_instance(int logger_id TSRMLS_DC)
 {
@@ -119,30 +140,10 @@ static void _get_ifaddr_zval(zval *z_ifaddr)
     for (auto iter = _if_addr_map.cbegin(); iter != _if_addr_map.cend(); ++iter) {
         zval ifa_addr_item;
         array_init(&ifa_addr_item);
-        add_assoc_string(ifa_addr_item, "name", iter->first.c_str());
-        add_assoc_string(ifa_addr_item, "ip", iter->second.c_str());
+        add_assoc_str(&ifa_addr_item, "name", zend_string_init(iter->first.c_str(), iter->first.length(), 0));
+        add_assoc_str(&ifa_addr_item, "ip", zend_string_init(iter->second.c_str(), iter->second.length(), 0));
         zend_hash_next_index_insert(Z_ARRVAL_P(z_ifaddr), &ifa_addr_item);
     }
-}
-
-/* 获取当前毫秒时间
-*/
-static long get_millisecond(TSRMLS_D)
-{
-    struct timeval tp = {0};
-    gettimeofday(&tp, NULL);
-    return (long)(tp.tv_sec * 1000 + tp.tv_usec / 1000);
-}
-
-/* 创建日志文件夹
-*/
-static int openrasp_log_files_mkdir(char *path TSRMLS_DC) { 
-    if (VCWD_ACCESS(path, F_OK) == 0)
-    {
-        return SUCCESS;
-    }
-    zend_bool mkdir_result = recursive_mkdir(path, strlen(path), 0777 TSRMLS_CC);   
-	return mkdir_result ? SUCCESS : FAILURE;
 }
 
 static void request_uri_path_filter(zval *origin_zv, zval *new_zv)
@@ -156,10 +157,10 @@ static void request_uri_path_filter(zval *origin_zv, zval *new_zv)
     }
 }
 
-static void migrate_hash_values(zval *dest, const zval *src, keys_filter *filters)
+static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_filter> &filters)
 {
     zval *origin_zv;
-    for (keys_filter filter : filters)
+    for (keys_filter filter:filters)
     {
         if (Z_TYPE_P(src) == IS_ARRAY &&
         (origin_zv = zend_hash_str_find(Z_ARRVAL_P(src), ZEND_STRL(filter.origin_key_str))) != nullptr &&
@@ -168,8 +169,8 @@ static void migrate_hash_values(zval *dest, const zval *src, keys_filter *filter
             if (filter.value_filter)
             {
                 zval new_zv;
-                value_filter(origin_zv, &new_zv);
-                add_assoc_zval(dest, filter.new_key_str, new_zv);
+                filter.value_filter(origin_zv, &new_zv);
+                add_assoc_zval(dest, filter.new_key_str, &new_zv);
             }
             else
             {
@@ -182,7 +183,7 @@ static void migrate_hash_values(zval *dest, const zval *src, keys_filter *filter
 
 static void init_alarm_request_info(TSRMLS_D)
 {
-    static keys_filter alarm_filters[] = 
+    static std::vector<keys_filter> alarm_filters = 
     {
         {"REMOTE_ADDR",     "attack_source",    nullptr},
         {"SERVER_NAME",     "target",           nullptr},
@@ -390,15 +391,15 @@ static int openrasp_log_by_file(rasp_logger_entry *logger, char *message, int me
 static int openrasp_log_by_syslog(rasp_logger_entry *logger, severity_level level_int, char *message, int message_len TSRMLS_DC)
 {
     char *syslog_info     = NULL;
-    char *time_RFC3339    = NULL;
+    zend_string *time_RFC3339    = NULL;
     int   syslog_info_len = 0;
     int   priority        = 0;
 
     long  now             = (long)time(NULL);
     time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), now, 1 TSRMLS_CC);
     priority = openrasp_ini.syslog_facility * 8 + level_int;
-    syslog_info_len = spprintf(&syslog_info, 0, "<%d>%s %s: %s", priority, time_RFC3339, host_name, message);
-    efree(time_RFC3339);
+    syslog_info_len = spprintf(&syslog_info, 0, "<%d>%s %s: %s", priority, ZSTR_VAL(time_RFC3339), host_name, message);
+    zend_string_release(time_RFC3339);
 
     if (openrasp_log_stream_write(logger, SYSLOG_APPENDER, syslog_info, syslog_info_len TSRMLS_CC))
     {
@@ -592,12 +593,9 @@ int alarm_info(zval *params_result TSRMLS_DC) {
     {
         smart_str buf_json = {0};
         php_json_encode(&buf_json, &OPENRASP_LOG_G(alarm_request_info), 0 TSRMLS_CC);
-        if (buf_json.a > buf_json.len)
-        {
-            buf_json.c[buf_json.len] = '\n';
-            buf_json.len++;
-        }
-        alarm_result = base_info(&OPENRASP_LOG_G(loggers)[ALARM_LOGGER], buf_json.c, buf_json.len TSRMLS_CC);
+        smart_str_appendc(&buf_json, '\n');
+        smart_str_0(&buf_json);
+        alarm_result = base_info(&OPENRASP_LOG_G(loggers)[ALARM_LOGGER], ZSTR_VAL(buf_json.s), ZSTR_LEN(buf_json.s) TSRMLS_CC);
         smart_str_free(&buf_json);
         delete_merged_array_keys(Z_ARRVAL(OPENRASP_LOG_G(alarm_request_info)), Z_ARRVAL_P(params_result));
     }
@@ -625,7 +623,7 @@ int policy_info(zval *params_result TSRMLS_DC) {
     
     int policy_result = FAILURE;
 
-    add_assoc_str(OPENRASP_LOG_G(policy_request_info), "event_time", php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC));
+    add_assoc_str(&OPENRASP_LOG_G(policy_request_info), "event_time", php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC));
     zval trace;
     if (OPENRASP_LOG_G(in_request_process))
     {
@@ -641,12 +639,9 @@ int policy_info(zval *params_result TSRMLS_DC) {
     {
         smart_str buf_json = {0};      
         php_json_encode(&buf_json, &OPENRASP_LOG_G(policy_request_info), 0 TSRMLS_CC);
-        if (buf_json.a > buf_json.len)
-        {
-            buf_json.c[buf_json.len] = '\n';
-            buf_json.len++;
-        }
-        policy_result = base_info(&OPENRASP_LOG_G(loggers)[POLICY_LOGGER], buf_json.c, buf_json.len TSRMLS_CC);
+        smart_str_appendc(&buf_json, '\n');
+        smart_str_0(&buf_json);
+        policy_result = base_info(&OPENRASP_LOG_G(loggers)[POLICY_LOGGER], ZSTR_VAL(buf_json.s), ZSTR_LEN(buf_json.s) TSRMLS_CC);
         smart_str_free(&buf_json);
         delete_merged_array_keys(Z_ARRVAL(OPENRASP_LOG_G(policy_request_info)), Z_ARRVAL_P(params_result));
     }
@@ -676,13 +671,10 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
     openrasp_log_globals->in_request_process = 0;
     openrasp_log_globals->last_retry_time = 0;
 
-    openrasp_log_globals->loggers = 
-    {
-        {"alarm",  0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr},
-        {"policy", 0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr},
-        {"plugin", 0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr},
-        {"rasp",   0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr}
-    };
+    openrasp_log_globals->loggers[ALARM_LOGGER] = {"alarm",  0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
+    openrasp_log_globals->loggers[POLICY_LOGGER] = {"policy", 0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
+    openrasp_log_globals->loggers[PLUGIN_LOGGER] = {"plugin", 0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
+    openrasp_log_globals->loggers[RASP_LOGGER] = {"rasp",   0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
 
     log_appender alarm_appender = FILE_APPENDER;
     if (openrasp_ini.syslog_alarm_enable && openrasp_ini.syslog_server_address) {
@@ -790,7 +782,7 @@ PHP_RINIT_FUNCTION(openrasp_log)
 
 PHP_RSHUTDOWN_FUNCTION(openrasp_log)
 {
-    assert(OPENRASP_LOG_G(formatted_date_suffix) != nullptr)
+    assert(OPENRASP_LOG_G(formatted_date_suffix) != nullptr);
     zend_string_release(OPENRASP_LOG_G(formatted_date_suffix));
     OPENRASP_LOG_G(formatted_date_suffix) = nullptr;
     

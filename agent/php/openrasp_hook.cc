@@ -45,8 +45,9 @@ bool openrasp_zval_in_request(zval *item TSRMLS_DC)
     zval *val;
     for (int index = 0; index < size; ++index)
     {
-        if (!PG(http_globals)[pairs[index].id] 
-        && !zend_is_auto_global_str(pairs[index].name, strlen(pairs[index].name) TSRMLS_CC)
+        zend_string *name = zend_string_init(pairs[index].name, strlen(pairs[index].name), 0);
+        if (Z_TYPE(PG(http_globals)[pairs[index].id]) != IS_ARRAY 
+        && !zend_is_auto_global(name TSRMLS_CC)
         && Z_TYPE(PG(http_globals)[pairs[index].id]) != IS_ARRAY)
         {
             return false;
@@ -58,6 +59,7 @@ bool openrasp_zval_in_request(zval *item TSRMLS_DC)
                 return true;
             }
         } ZEND_HASH_FOREACH_END();
+        zend_string_release(name);
     }
     return false;
 }
@@ -66,12 +68,13 @@ void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int 
 {
     zval params_result;
     array_init(&params_result);
-    add_assoc_string(&params_result, "intercept_state",   is_block ? "block" : "log");
-    add_assoc_string(&params_result, "attack_type",       type);
-    add_assoc_string(&params_result, "plugin_name",       "php_builtin_plugin");
-    add_assoc_string(&params_result, "plugin_message",    message);
     add_assoc_long(&params_result,   "plugin_confidence", confidence);
     add_assoc_zval(&params_result,   "attack_params",     params);
+    add_assoc_str(&params_result, "attack_type",       zend_string_init(type, strlen(type), 0));
+    add_assoc_str(&params_result, "plugin_message",    zend_string_init(message, strlen(message), 0));
+    const char *intercept_state = is_block ? "block" : "log";
+    add_assoc_str(&params_result, "intercept_state",   zend_string_init(intercept_state, strlen(intercept_state), 0));
+    add_assoc_str(&params_result, "plugin_name",       zend_string_init("php_builtin_plugin", strlen("php_builtin_plugin"), 0));
     alarm_info(&params_result TSRMLS_CC);
     zval_ptr_dtor(&params_result);
     if (is_block)
@@ -141,8 +144,6 @@ void check(const char *type, zval *params TSRMLS_DC)
     }
 }
 
-extern int include_or_eval_handler(ZEND_OPCODE_HANDLER_ARGS);
-
 PHP_GINIT_FUNCTION(openrasp_hook)
 {
 #ifdef ZTS
@@ -165,8 +166,6 @@ PHP_MINIT_FUNCTION(openrasp_hook)
     {
         single_handler(TSRMLS_C);
     }
-
-    zend_set_user_opcode_handler(ZEND_INCLUDE_OR_EVAL, include_or_eval_handler);
     return SUCCESS;
 }
 

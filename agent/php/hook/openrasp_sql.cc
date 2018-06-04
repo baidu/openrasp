@@ -140,7 +140,7 @@ void sql_type_handler(char* query, int query_len, char *server TSRMLS_DC)
     }
 }
 
-long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count, zval *params[] TSRMLS_DC)
+long fetch_rows_via_user_function(const char *f_name_str, uint32_t param_count, zval *params[] TSRMLS_DC)
 {
     zval function_name, retval;
     INIT_ZVAL(function_name);
