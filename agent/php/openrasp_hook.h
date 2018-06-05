@@ -288,7 +288,7 @@ void check(const char *type, zval *params TSRMLS_DC);
 void register_hook_handler(hook_handler_t hook_handler);
 bool openrasp_check_type_ignored(const char *item_name, uint item_name_length TSRMLS_DC);
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC);
-void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, const char *message TSRMLS_DC);
+void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zend_string *message TSRMLS_DC);
 char * openrasp_real_path(char *filename, int filename_len, zend_bool use_include_path, bool handle_unresolved TSRMLS_DC);
 void slow_query_alarm(int rows TSRMLS_DC);
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);

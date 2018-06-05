@@ -47,7 +47,8 @@ static void check_command_args_in_gpc(INTERNAL_FUNCTION_PARAMETERS)
         add_assoc_zval(&attack_params, "command", command);
         Z_ADDREF_P(command);
         const char *plugin_message = _("Webshell detected - Command execution backdoor");
-        openrasp_buildin_php_risk_handle(1, "webshell_command", 100, &attack_params, plugin_message TSRMLS_CC);
+        openrasp_buildin_php_risk_handle(1, "webshell_command", 100, &attack_params, 
+        zend_string_init(plugin_message, strlen(plugin_message), 0) TSRMLS_CC);
     }
 }
 

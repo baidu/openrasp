@@ -66,14 +66,14 @@ bool openrasp_zval_in_request(zval *item TSRMLS_DC)
     return false;
 }
 
-void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, const char *message TSRMLS_DC)
+void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zend_string *message TSRMLS_DC)
 {
     zval params_result;
     array_init(&params_result);
     add_assoc_long(&params_result,   "plugin_confidence", confidence);
     add_assoc_zval(&params_result,   "attack_params",     params);
     add_assoc_str(&params_result, "attack_type",       zend_string_init(type, strlen(type), 0));
-    add_assoc_str(&params_result, "plugin_message",    zend_string_init(message, strlen(message), 0));
+    add_assoc_str(&params_result, "plugin_message",    message);
     const char *intercept_state = is_block ? "block" : "log";
     add_assoc_str(&params_result, "intercept_state",   zend_string_init(intercept_state, strlen(intercept_state), 0));
     add_assoc_str(&params_result, "plugin_name",       zend_string_init("php_builtin_plugin", strlen("php_builtin_plugin"), 0));
