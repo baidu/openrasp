@@ -71,14 +71,15 @@ static void openrasp_exec_ex(INTERNAL_FUNCTION_PARAMETERS, int mode)
     zval *ret_code=NULL, *ret_array=NULL;
     int ret;
 
-	ZEND_PARSE_PARAMETERS_START(1, (mode ? 2 : 3))
-		Z_PARAM_STRING(cmd, cmd_len)
-		Z_PARAM_OPTIONAL
-		if (!mode) {
-			Z_PARAM_ZVAL_DEREF(ret_array)
+	if (mode) {
+		if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|z/", &cmd, &cmd_len, &ret_code) == FAILURE) {
+			return;
 		}
-		Z_PARAM_ZVAL_DEREF(ret_code)
-	ZEND_PARSE_PARAMETERS_END_EX(return);
+	} else {
+		if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|z/z/", &cmd, &cmd_len, &ret_array, &ret_code) == FAILURE) {
+			return;
+		}
+	}
 
     if (!cmd_len) {
         return;
