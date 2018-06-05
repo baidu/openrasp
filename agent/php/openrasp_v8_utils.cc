@@ -120,7 +120,7 @@ v8::Local<v8::Value> openrasp::zval_to_v8val(zval *val, v8::Isolate *isolate TSR
             }
         }
         ZEND_HASH_FOREACH_END();
-        ZEND_HASH_INC_APPLY_COUNT(ht);
+        ZEND_HASH_DEC_APPLY_COUNT(ht);
         break;
     }
     case IS_STRING:

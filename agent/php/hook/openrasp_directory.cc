@@ -23,57 +23,70 @@ PRE_HOOK_FUNCTION(dir, directory);
 PRE_HOOK_FUNCTION(opendir, directory);
 PRE_HOOK_FUNCTION(scandir, directory);
 
-static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+static void _check_dirname(char *dirname, size_t dir_len, const char *check_type)
 {
-    zval **path;
-    int argc = MIN(1, ZEND_NUM_ARGS());
-    if (argc > 0 &&
-        zend_get_parameters_ex(argc, &path) == SUCCESS &&
-        Z_TYPE_PP(path) == IS_STRING)
-    {
-        char resolved_path_buff[MAXPATHLEN];
-        if (VCWD_REALPATH(Z_STRVAL_PP(path), resolved_path_buff))
-        {
-#if PHP_API_VERSION < 20100412
-            if (PG(safe_mode) && (!php_checkuid(resolved_path_buff, NULL, CHECKUID_CHECK_FILE_AND_DIR))) {
-                return;
-            }
-#endif
+	if (dir_len < 1)
+	{
+		return;
+	}
+	php_stream *dirp;
+	dirp = php_stream_opendir(dirname, IGNORE_PATH, NULL);
+	if (!dirp)
+	{
+		return;
+	}
+	php_stream_close(dirp);
+	char resolved_path_buff[MAXPATHLEN];
+	if (VCWD_REALPATH(dirname, resolved_path_buff))
+	{
+		zval params;
+		array_init(&params);
+		add_assoc_string(&params, "path", dirname);
+		add_assoc_string(&params, "realpath", resolved_path_buff);
+		zval stack;
+		array_init(&stack);
+		format_debug_backtrace_arr(&stack TSRMLS_CC);
+		add_assoc_zval(&params, "stack", &stack);
+		check(check_type, &params TSRMLS_CC);
+	}
+}
 
-            if (php_check_open_basedir(resolved_path_buff TSRMLS_CC)) {
-                return;
-            }
+static void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    char *dirname;
+	size_t dir_len;
+	zval *zcontext = NULL;
 
-#ifdef ZTS
-            if (VCWD_ACCESS(resolved_path_buff, F_OK)) {
-                return;
-            }
-#endif
-            zval *params;
-            MAKE_STD_ZVAL(params);
-            array_init(params);
-            add_assoc_zval(params, "path", *path);
-            Z_ADDREF_PP(path);
-            add_assoc_string(params, "realpath", resolved_path_buff, 1);
-            zval *stack = NULL;
-            MAKE_STD_ZVAL(stack);
-            array_init(stack);
-            format_debug_backtrace_arr(stack TSRMLS_CC);
-            add_assoc_zval(params, "stack", stack);
-            check(check_type, params TSRMLS_CC);
-        }
-    }
+	ZEND_PARSE_PARAMETERS_START(1, 2)
+		Z_PARAM_PATH(dirname, dir_len)
+		Z_PARAM_OPTIONAL
+		Z_PARAM_RESOURCE(zcontext)
+	ZEND_PARSE_PARAMETERS_END();
+
+	_check_dirname(dirname, dir_len, check_type);
 }
 
 void pre_global_dir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 void pre_global_opendir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 void pre_global_scandir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	char *dirn;
+	size_t dirn_len;
+	zend_long flags = 0;
+	zval *zcontext = NULL;
+
+	ZEND_PARSE_PARAMETERS_START(1, 3)
+		Z_PARAM_PATH(dirn, dirn_len)
+		Z_PARAM_OPTIONAL
+		Z_PARAM_LONG(flags)
+		Z_PARAM_RESOURCE(zcontext)
+	ZEND_PARSE_PARAMETERS_END();
+
+	_check_dirname(dirn, dirn_len, check_type);
 }

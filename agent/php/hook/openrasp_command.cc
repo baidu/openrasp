@@ -51,7 +51,7 @@ static void check_command_args_in_gpc(INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-static void send_command_to_plugin(char * cmd TSRMLS_DC)
+static void send_command_to_plugin(char *cmd TSRMLS_DC)
 {
     zval params;
     array_init(&params);
