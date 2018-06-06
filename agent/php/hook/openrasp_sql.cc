@@ -122,14 +122,14 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
     return need_block;
 }
 
-void sql_type_handler(char *query, int query_len, char *server TSRMLS_DC)
+void sql_type_handler(char *query, int query_len, const char *server TSRMLS_DC)
 {
     if (query && strlen(query) == query_len)
     {
         zval params;
         array_init(&params);
         add_assoc_string(&params, "query", query);
-        add_assoc_string(&params, "server", server);
+        add_assoc_str(&params, "server", zend_string_init(server, strlen(server), 0));
         check("sql", &params TSRMLS_CC);
     }
 }
