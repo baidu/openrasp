@@ -176,7 +176,7 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
         else                                                                                               \
         {                                                                                                  \
             zend_class_entry *clazz;                                                                       \
-            if ((clazz = static_cast<zend_class_entry *>(zend_hash_str_find_ptr(CG(class_table), ZEND_STRL(ZEND_TOSTR(scope))))) == NULL)   \
+            if ((clazz = static_cast<zend_class_entry *>(zend_hash_str_find_ptr(CG(class_table), ZEND_STRL(ZEND_TOSTR(scope))))) != NULL)   \
             {                                                                                              \
                 ht = &(clazz->function_table);                                                             \
             }                                                                                              \

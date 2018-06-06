@@ -46,21 +46,21 @@ bool openrasp_zval_in_request(zval *item TSRMLS_DC)
     for (int index = 0; index < size; ++index)
     {
         zend_string *name = zend_string_init(pairs[index].name, strlen(pairs[index].name), 0);
-        if (Z_TYPE(PG(http_globals)[pairs[index].id]) != IS_ARRAY 
-        && !zend_is_auto_global(name TSRMLS_CC)
-        && Z_TYPE(PG(http_globals)[pairs[index].id]) != IS_ARRAY)
+        if (Z_TYPE(PG(http_globals)[pairs[index].id]) != IS_ARRAY && !zend_is_auto_global(name TSRMLS_CC) && Z_TYPE(PG(http_globals)[pairs[index].id]) != IS_ARRAY)
         {
             zend_string_release(name);
             return false;
         }
         HashTable *ht = Z_ARRVAL(PG(http_globals)[pairs[index].id]);
-        ZEND_HASH_FOREACH_STR_KEY_VAL(ht, skey, val) {
+        ZEND_HASH_FOREACH_STR_KEY_VAL(ht, skey, val)
+        {
             if (Z_STR_P(item) == Z_STR_P(val))
             {
                 zend_string_release(name);
                 return true;
             }
-        } ZEND_HASH_FOREACH_END();
+        }
+        ZEND_HASH_FOREACH_END();
         zend_string_release(name);
     }
     return false;
@@ -70,13 +70,13 @@ void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int 
 {
     zval params_result;
     array_init(&params_result);
-    add_assoc_long(&params_result,   "plugin_confidence", confidence);
-    add_assoc_zval(&params_result,   "attack_params",     params);
-    add_assoc_str(&params_result, "attack_type",       zend_string_init(type, strlen(type), 0));
-    add_assoc_str(&params_result, "plugin_message",    message);
+    add_assoc_long(&params_result, "plugin_confidence", confidence);
+    add_assoc_zval(&params_result, "attack_params", params);
+    add_assoc_str(&params_result, "attack_type", zend_string_init(type, strlen(type), 0));
+    add_assoc_str(&params_result, "plugin_message", message);
     const char *intercept_state = is_block ? "block" : "log";
-    add_assoc_str(&params_result, "intercept_state",   zend_string_init(intercept_state, strlen(intercept_state), 0));
-    add_assoc_str(&params_result, "plugin_name",       zend_string_init("php_builtin_plugin", strlen("php_builtin_plugin"), 0));
+    add_assoc_str(&params_result, "intercept_state", zend_string_init(intercept_state, strlen(intercept_state), 0));
+    add_assoc_str(&params_result, "plugin_name", zend_string_init("php_builtin_plugin", strlen("php_builtin_plugin"), 0));
     alarm_info(&params_result TSRMLS_CC);
     zval_ptr_dtor(&params_result);
     if (is_block)
@@ -98,7 +98,8 @@ bool openrasp_check_callable_black(const char *item_name, uint item_name_length 
 void handle_block(TSRMLS_D)
 {
     int status = php_output_get_status(TSRMLS_C);
-    if (status & PHP_OUTPUT_WRITTEN) {
+    if (status & PHP_OUTPUT_WRITTEN)
+    {
         php_output_discard_all(TSRMLS_C);
     }
     char *block_url = openrasp_ini.block_url;
@@ -164,8 +165,8 @@ PHP_GSHUTDOWN_FUNCTION(openrasp_hook)
 PHP_MINIT_FUNCTION(openrasp_hook)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp_hook, PHP_GINIT(openrasp_hook), PHP_GSHUTDOWN(openrasp_hook));
-    
-    for (auto& single_handler : global_hook_handlers)
+
+    for (auto &single_handler : global_hook_handlers)
     {
         single_handler(TSRMLS_C);
     }

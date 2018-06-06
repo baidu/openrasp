@@ -10,6 +10,7 @@ plugin.register('sql', params => {
 })
 EOF;
 include(__DIR__.'/../skipif.inc');
+if (PHP_MAJOR_VERSION == 7) die("Skipped: no mysql extension in PHP7.X .");
 if (!extension_loaded("mysql")) die("Skipped: mysql extension required.");
 @$con = mysql_connect('127.0.0.1', 'root');
 if (!$con) die("Skipped: can not connect to MySQL " . mysql_error());

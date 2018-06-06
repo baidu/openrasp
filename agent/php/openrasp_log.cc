@@ -114,7 +114,7 @@ static void init_logger_instance(int logger_id TSRMLS_DC)
 static void close_logger_stream(int logger_id TSRMLS_DC)
 {
     assert(logger_id >= 0 && logger_id < TOTAL);
-    rasp_logger_entry logger_entry = OPENRASP_LOG_G(loggers)[logger_id];
+    rasp_logger_entry& logger_entry = OPENRASP_LOG_G(loggers)[logger_id];
     if (logger_entry.stream_log)
     {
         php_stream_close(logger_entry.stream_log);

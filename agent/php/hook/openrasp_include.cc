@@ -114,7 +114,6 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     MAKE_COPY_ZVAL(&op1, path);
     convert_to_string(path);
     char *real_path = nullptr;
-    fprintf(stdout, "%s\n", Z_STRVAL_P(path));
     if ((strlen(Z_STRVAL_P(path)) < 4 
     || (strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".php") && strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".inc")))
     && (strstr(Z_STRVAL_P(path), "://") != nullptr || strstr(Z_STRVAL_P(path), "../") != nullptr))
@@ -136,7 +135,6 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
         strlen(real_path) >= Z_STRLEN_PP(doc_root) &&
         0 == strncmp(real_path, Z_STRVAL_PP(doc_root), Z_STRLEN_PP(doc_root))))
         {
-            fprintf(stdout, "real path is : %s, webroot is %s\n", real_path, Z_STRVAL_PP(doc_root));
             //skip
             efree(real_path);
             zval_ptr_dtor(&path);
