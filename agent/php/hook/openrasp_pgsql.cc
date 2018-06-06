@@ -19,10 +19,10 @@
 HOOK_FUNCTION(pg_connect, dbConnection);
 HOOK_FUNCTION(pg_pconnect, dbConnection);
 PRE_HOOK_FUNCTION(pg_query, sql);
-POST_HOOK_FUNCTION(pg_query, sqlSlowQuery);
 PRE_HOOK_FUNCTION(pg_send_query, sql);
-POST_HOOK_FUNCTION(pg_get_result, sqlSlowQuery);
 PRE_HOOK_FUNCTION(pg_prepare, sqlPrepare);
+POST_HOOK_FUNCTION(pg_query, sqlSlowQuery);
+POST_HOOK_FUNCTION(pg_get_result, sqlSlowQuery);
 
 void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p)
 {
@@ -159,23 +159,25 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
 static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
 	char *host=NULL,*port=NULL,*options=NULL,*tty=NULL,*dbname=NULL,*connstring=NULL;
-	zval **args[5];
-	int i = 0;
+	zval *args;
     int connect_type = 0;
-
-	if (ZEND_NUM_ARGS() < 1 || ZEND_NUM_ARGS() > 5
-			|| zend_get_parameters_array_ex(ZEND_NUM_ARGS(), args) == FAILURE) {
+    args = (zval *)safe_emalloc(ZEND_NUM_ARGS(), sizeof(zval), 0);
+	if (ZEND_NUM_ARGS() < 1 || ZEND_NUM_ARGS() > 5 || 
+    zend_get_parameters_array_ex(ZEND_NUM_ARGS(), args) == FAILURE) 
+    {
+        efree(args);
 		return;
 	}
 
-	if (ZEND_NUM_ARGS() == 1) { /* new style, using connection string */
-		connstring = Z_STRVAL_PP(args[0]);
+    if (ZEND_NUM_ARGS() == 1) { /* new style, using connection string */
+		connstring = Z_STRVAL(args[0]);
 	} else if (ZEND_NUM_ARGS() == 2 ) { /* Safe to add conntype_option, since 2 args was illegal */
-		connstring = Z_STRVAL_PP(args[0]);
-		convert_to_long_ex(args[1]);
-		connect_type = Z_LVAL_PP(args[1]);
+		connstring = Z_STRVAL(args[0]);
+		convert_to_long_ex(&args[1]);
+		connect_type = (int)Z_LVAL(args[1]);
 	}
     parse_connection_string(connstring, sql_connection_p);
+    efree(args);
 }
 
 /**
@@ -183,12 +185,10 @@ static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connectio
  */
 void pre_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (openrasp_ini.enforce_policy)
+    if (openrasp_ini.enforce_policy &&
+    check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pg_connection_entry, 1))
     {
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pg_connection_entry, 1))
-        {
-            handle_block(TSRMLS_C);
-        }
+        handle_block(TSRMLS_C);
     }
 }
 void post_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -218,7 +218,7 @@ void pre_global_pg_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *pgsql_link = NULL;
 	char *query;
-	int query_len, argc = ZEND_NUM_ARGS();
+	size_t query_len, argc = ZEND_NUM_ARGS();
 
 	if (argc == 1) {
 		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &query, &query_len) == FAILURE) {
@@ -237,9 +237,7 @@ void post_global_pg_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     long num_rows = 0;
     if (Z_TYPE_P(return_value) == IS_RESOURCE)
     {
-        zval *args[1];
-        args[0] = return_value;
-        num_rows = fetch_rows_via_user_function("pg_num_rows", 1, args TSRMLS_CC);
+        num_rows = fetch_rows_via_user_function("pg_num_rows", 1, return_value TSRMLS_CC);
     }
     if (num_rows >= openrasp_ini.slowquery_min_rows)
     {
@@ -263,9 +261,7 @@ void post_global_pg_get_result_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETER
     long num_rows = 0;
     if (Z_TYPE_P(return_value) == IS_RESOURCE)
     {
-        zval *args[1];
-        args[0] = return_value;
-        num_rows = fetch_rows_via_user_function("pg_num_rows", 1, args TSRMLS_CC);
+        num_rows = fetch_rows_via_user_function("pg_num_rows", 1, return_value TSRMLS_CC);
     }
     if (num_rows >= openrasp_ini.slowquery_min_rows)
     {
@@ -277,7 +273,7 @@ void pre_global_pg_prepare_sqlPrepare(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *pgsql_link = NULL;
 	char *query, *stmtname;
-	int query_len, stmtname_len, argc = ZEND_NUM_ARGS();
+	size_t query_len, stmtname_len, argc = ZEND_NUM_ARGS();
 
 	if (argc == 2) {
 		if (zend_parse_parameters(argc TSRMLS_CC, "ss", &stmtname, &stmtname_len, &query, &query_len) == FAILURE) {
