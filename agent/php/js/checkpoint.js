@@ -204,3 +204,31 @@ Object.defineProperty(global, 'CheckPointInclude', {
     value: CheckPointInclude,
     enumerable: true
 });
+
+const CheckPointCopy = class {
+    constructor(data) {
+        this.clazz = data.clazz;
+    }
+
+    static get name() {
+        return 'copy';
+    }
+};
+Object.defineProperty(global, 'CheckPointCopy', {
+    value: CheckPointCopy,
+    enumerable: true
+});
+
+const CheckPointRename = class {
+    constructor(data) {
+        this.clazz = data.clazz;
+    }
+
+    static get name() {
+        return 'rename';
+    }
+};
+Object.defineProperty(global, 'CheckPointRename', {
+    value: CheckPointRename,
+    enumerable: true
+});
