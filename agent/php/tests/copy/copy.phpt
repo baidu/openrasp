@@ -4,9 +4,9 @@ hook copy
 <?php
 $dir = __DIR__;
 $plugin = <<<EOF
-plugin.register('writeFile', params => {
-    assert(params.path == '/tmp/openrasp/tmpfile')
-    assert(params.realpath.endsWith('tmpfile'))
+plugin.register('copy', params => {
+    assert(params.source.endsWith('tmpfile'))
+    assert(params.dest.endsWith('tmpfile'))
     return block
 })
 EOF;
