@@ -30,35 +30,31 @@ extern "C" {
  */
 static void connection_via_default_username_policy(char *check_message, sql_connection_entry *sql_connection_p TSRMLS_DC)
 {           
-    zval *policy_array = nullptr;
-    MAKE_STD_ZVAL(policy_array);
-    array_init(policy_array);
-    add_assoc_string(policy_array, "message", check_message, 1);
-    add_assoc_long(policy_array, "policy_id", 3006);
-    zval *connection_params = nullptr;
-    MAKE_STD_ZVAL(connection_params);
-    array_init(connection_params);
-    add_assoc_string(connection_params, "server", sql_connection_p->server, 1);
-    add_assoc_string(connection_params, "host", sql_connection_p->host, 1);
-    add_assoc_long(connection_params, "port", sql_connection_p->port);
-    add_assoc_string(connection_params, "user", sql_connection_p->username, 1);
-    add_assoc_zval(policy_array, "params", connection_params);
-    policy_info(policy_array TSRMLS_CC);
+    zval policy_array;
+    array_init(&policy_array);
+    add_assoc_string(&policy_array, "message", check_message);
+    add_assoc_long(&policy_array, "policy_id", 3006);
+    zval connection_params;
+    array_init(&connection_params);
+    add_assoc_string(&connection_params, "server", sql_connection_p->server);
+    add_assoc_string(&connection_params, "host", sql_connection_p->host);
+    add_assoc_long(&connection_params, "port", sql_connection_p->port);
+    add_assoc_string(&connection_params, "user", sql_connection_p->username);
+    add_assoc_zval(&policy_array, "params", &connection_params);
+    policy_info(&policy_array TSRMLS_CC);
     zval_ptr_dtor(&policy_array);
 }
 
 void slow_query_alarm(int rows TSRMLS_DC)
 {
-    zval *attack_params = nullptr;
-    MAKE_STD_ZVAL(attack_params);
-    ZVAL_LONG(attack_params, rows);
-    zval *plugin_message = nullptr;
-    MAKE_STD_ZVAL(plugin_message);
+    zval attack_params;
+    ZVAL_LONG(&attack_params, rows);
+    zval plugin_message;
     char *message_str = nullptr;
     spprintf(&message_str, 0, _("SQL slow query detected: selected %d rows, exceeding %d"), rows, openrasp_ini.slowquery_min_rows);
-    ZVAL_STRING(plugin_message, message_str, 1);
+    zend_string *message = zend_string_init(message_str, strlen(message_str), 0);
     efree(message_str);
-    openrasp_buildin_php_risk_handle(0, "sqlSlowQuery", 100, attack_params, plugin_message TSRMLS_CC);
+    openrasp_buildin_php_risk_handle(0, "sqlSlowQuery", 100, &attack_params, message TSRMLS_CC);
 }
 
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy)
@@ -106,7 +102,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
                 int server_host_port_len = spprintf(&server_host_port, 0, "%s-%s:%d", conn_entry.server, conn_entry.host, conn_entry.port);
                 ulong connection_hash = zend_inline_hash_func(server_host_port, server_host_port_len);
                 openrasp_shared_alloc_lock(TSRMLS_C);
-                if (!openrasp_shared_hash_exist(connection_hash, OPENRASP_LOG_G(formatted_date_suffix)))
+                if (!openrasp_shared_hash_exist(connection_hash, ZSTR_VAL(OPENRASP_LOG_G(formatted_date_suffix))))
                 {
                     connection_via_default_username_policy(check_message, &conn_entry TSRMLS_CC);
                 }
@@ -131,20 +127,18 @@ void sql_type_handler(char* query, int query_len, char *server TSRMLS_DC)
 {
     if (query && strlen(query) == query_len)
     {
-        zval *params;
-        MAKE_STD_ZVAL(params);
-        array_init(params);
-        add_assoc_string(params, "query", query, 1);
-        add_assoc_string(params, "server", server, 1);
-        check("sql", params TSRMLS_CC);
+        zval params;
+        array_init(&params);
+        add_assoc_string(&params, "query", query);
+        add_assoc_string(&params, "server", server);
+        check("sql", &params TSRMLS_CC);
     }
 }
 
-long fetch_rows_via_user_function(const char *f_name_str, uint32_t param_count, zval *params[] TSRMLS_DC)
+long fetch_rows_via_user_function(const char *f_name_str, uint32_t param_count, zval params[] TSRMLS_DC)
 {
     zval function_name, retval;
-    INIT_ZVAL(function_name);
-    ZVAL_STRING(&function_name, f_name_str, 0);
+    ZVAL_STRING(&function_name, f_name_str);
     if (call_user_function(EG(function_table), nullptr, &function_name, &retval, param_count, params TSRMLS_CC) == SUCCESS
     && Z_TYPE(retval) == IS_LONG)
     {

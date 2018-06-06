@@ -453,18 +453,9 @@ int main() {
     openrasp_utils.cc \
     openrasp_hook.cc \
     hook/openrasp_directory.cc \
-    hook/openrasp_fileupload.cc \
-    hook/openrasp_include.cc \ 
     hook/openrasp_command.cc \
-    hook/openrasp_array.cc \
     hook/openrasp_sql.cc \
-    hook/openrasp_mysql.cc \
     hook/openrasp_mysqli.cc \
-    hook/openrasp_pgsql.cc \
-    hook/openrasp_sqlite3.cc \
-    hook/openrasp_pdo.cc \
-    hook/openrasp_file.cc \
-    hook/openrasp_ssrf.cc \
     openrasp_inject.cc \
     openrasp_log.cc \
     openrasp_shared_alloc.c  \
