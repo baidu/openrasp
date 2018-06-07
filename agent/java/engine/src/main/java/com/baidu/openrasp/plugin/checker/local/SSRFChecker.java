@@ -24,6 +24,8 @@ import com.baidu.openrasp.plugin.checker.js.JsChecker;
 import com.baidu.openrasp.plugin.info.AttackInfo;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.mozilla.javascript.NativeArray;
@@ -44,8 +46,6 @@ public class SSRFChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_SSRF_COMMON = "ssrf_common";
     private static final String CONFIG_KEY_SSRF_OBFUSCATE = "ssrf_obfuscate";
     private static final String CONFIG_KEY_SSRF_USER_INPUT = "ssrf_userinput";
-    private static final String[] INTRANET_DETECTION_SUFFIX = new String[]{".ceye.io", ".xip.io", ".burpcollaborator.net",
-            ".xip.name", ".nip.io", ".vcap.me"};
 
     @Override
     public List<EventInfo> checkParam(CheckParameter checkParameter) {
@@ -72,10 +72,13 @@ public class SSRFChecker extends ConfigurableChecker {
 
             if (result.isEmpty() && !isModuleIgnore(config, CONFIG_KEY_SSRF_COMMON)) {
                 boolean isFound = false;
-                for (String suffix : INTRANET_DETECTION_SUFFIX) {
-                    if (hostName.endsWith(suffix)) {
-                        isFound = true;
-                        break;
+                JsonArray domains = getJsonObjectAsArray(config, CONFIG_KEY_SSRF_COMMON, "domains");
+                if (domains != null) {
+                    for (JsonElement suffix : domains) {
+                        if (hostName.endsWith(suffix.getAsString())) {
+                            isFound = true;
+                            break;
+                        }
                     }
                 }
                 if (isFound || hostName.equals("requestb.in")) {

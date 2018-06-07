@@ -20,6 +20,7 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.AttackChecker;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -35,6 +36,19 @@ public abstract class ConfigurableChecker extends AttackChecker {
 
     protected String getActionElement(JsonObject config, String key) {
         return getStringElement(config, key, "action");
+    }
+
+    protected JsonArray getJsonObjectAsArray(JsonObject config, String key, String subKey){
+        JsonArray result = null;
+        try {
+            JsonElement value = getElement(config, key, subKey);
+            if (value != null) {
+               result = value.getAsJsonArray();
+            }
+        } catch (Exception e) {
+            logJsonError(e);
+        }
+        return result;
     }
 
     protected HashMap<String, Boolean> getJsonObjectAsMap(JsonObject config, String key, String subKey) {
