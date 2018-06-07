@@ -111,6 +111,11 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
         sql_connection_p->host = estrdup(mysql_vars[2].optval);
         sql_connection_p->port = atoi(mysql_vars[3].optval);
         sql_connection_p->username = estrdup(username);
+        for (int i = 0; i < 5; i++) {
+            if (mysql_vars[i].freeme) {
+                efree(mysql_vars[i].optval);
+		}
+	}
     }
     else if (strcmp(sql_connection_p->server, "pgsql") == 0)
     {
