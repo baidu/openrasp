@@ -39,16 +39,17 @@ static void check_command_args_in_gpc(INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *command;
     int argc = MIN(1, ZEND_NUM_ARGS());
-    if (argc == 1 && zend_get_parameters_ex(argc, &command) == SUCCESS
-    && openrasp_zval_in_request(command TSRMLS_CC))
+    if (argc == 1 &&
+        zend_get_parameters_ex(argc, &command) == SUCCESS &&
+        openrasp_zval_in_request(command TSRMLS_CC))
     {
         zval attack_params;
         array_init(&attack_params);
         add_assoc_zval(&attack_params, "command", command);
         Z_ADDREF_P(command);
-        const char *plugin_message = _("Webshell detected - Command execution backdoor");
-        openrasp_buildin_php_risk_handle(1, "webshell_command", 100, &attack_params, 
-        zend_string_init(plugin_message, strlen(plugin_message), 0) TSRMLS_CC);
+        zval plugin_message;
+        ZVAL_STRING(&plugin_message, _("Webshell detected - Command execution backdoor"));
+        openrasp_buildin_php_risk_handle(1, "webshell_command", 100, &attack_params, &plugin_message TSRMLS_CC);
     }
 }
 
@@ -68,20 +69,26 @@ static void openrasp_exec_ex(INTERNAL_FUNCTION_PARAMETERS, int mode)
 {
     char *cmd;
     size_t cmd_len;
-    zval *ret_code=NULL, *ret_array=NULL;
+    zval *ret_code = NULL, *ret_array = NULL;
     int ret;
 
-	if (mode) {
-		if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|z/", &cmd, &cmd_len, &ret_code) == FAILURE) {
-			return;
-		}
-	} else {
-		if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|z/z/", &cmd, &cmd_len, &ret_array, &ret_code) == FAILURE) {
-			return;
-		}
-	}
+    if (mode)
+    {
+        if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|z/", &cmd, &cmd_len, &ret_code) == FAILURE)
+        {
+            return;
+        }
+    }
+    else
+    {
+        if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|z/z/", &cmd, &cmd_len, &ret_array, &ret_code) == FAILURE)
+        {
+            return;
+        }
+    }
 
-    if (!cmd_len) {
+    if (!cmd_len)
+    {
         return;
     }
 
@@ -125,14 +132,15 @@ void pre_global_shell_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETER
 
 void pre_global_shell_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-	char *command;
-	size_t command_len;
+    char *command;
+    size_t command_len;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_STRING(command, command_len)
-	ZEND_PARSE_PARAMETERS_END();
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_STRING(command, command_len)
+    ZEND_PARSE_PARAMETERS_END();
 
-    if (!command_len) {
+    if (!command_len)
+    {
         return;
     }
     send_command_to_plugin(command TSRMLS_CC);
@@ -145,24 +153,25 @@ void pre_global_proc_open_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS
 
 void pre_global_proc_open_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-	char *command, *cwd = NULL;
-	size_t command_len, cwd_len = 0;
-	zval *descriptorspec;
-	zval *pipes;
-	zval *environment = NULL;
-	zval *other_options = NULL;
+    char *command, *cwd = NULL;
+    size_t command_len, cwd_len = 0;
+    zval *descriptorspec;
+    zval *pipes;
+    zval *environment = NULL;
+    zval *other_options = NULL;
 
-	ZEND_PARSE_PARAMETERS_START(3, 6)
-		Z_PARAM_STRING(command, command_len)
-		Z_PARAM_ARRAY(descriptorspec)
-		Z_PARAM_ZVAL_DEREF(pipes)
-		Z_PARAM_OPTIONAL
-		Z_PARAM_STRING_EX(cwd, cwd_len, 1, 0)
-		Z_PARAM_ARRAY_EX(environment, 1, 0)
-		Z_PARAM_ARRAY_EX(other_options, 1, 0)
-	ZEND_PARSE_PARAMETERS_END_EX(return);
+    ZEND_PARSE_PARAMETERS_START(3, 6)
+    Z_PARAM_STRING(command, command_len)
+    Z_PARAM_ARRAY(descriptorspec)
+    Z_PARAM_ZVAL_DEREF(pipes)
+    Z_PARAM_OPTIONAL
+    Z_PARAM_STRING_EX(cwd, cwd_len, 1, 0)
+    Z_PARAM_ARRAY_EX(environment, 1, 0)
+    Z_PARAM_ARRAY_EX(other_options, 1, 0)
+    ZEND_PARSE_PARAMETERS_END_EX(return );
 
-    if (!command_len) {
+    if (!command_len)
+    {
         return;
     }
     send_command_to_plugin(command TSRMLS_CC);
@@ -175,15 +184,16 @@ void pre_global_popen_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_popen_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-	char *command, *mode;
-	size_t command_len, mode_len;
+    char *command, *mode;
+    size_t command_len, mode_len;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-		Z_PARAM_PATH(command, command_len)
-		Z_PARAM_STRING(mode, mode_len)
-	ZEND_PARSE_PARAMETERS_END();
+    Z_PARAM_PATH(command, command_len)
+    Z_PARAM_STRING(mode, mode_len)
+    ZEND_PARSE_PARAMETERS_END();
 
-    if (!command_len) {
+    if (!command_len)
+    {
         return;
     }
     send_command_to_plugin(command TSRMLS_CC);
@@ -201,12 +211,14 @@ void pre_global_pcntl_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     int argc = 0, argi = 0;
     char *path;
     size_t path_len;
-        
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|aa", &path, &path_len, &args, &envs) == FAILURE) {
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|aa", &path, &path_len, &args, &envs) == FAILURE)
+    {
         return;
     }
     zval command;
-    if (ZEND_NUM_ARGS() > 1) {
+    if (ZEND_NUM_ARGS() > 1)
+    {
         zval args_str;
         zend_string *delim = zend_string_init(ZEND_STRL(" "), 0);
         php_implode(delim, args, &args_str TSRMLS_CC);
@@ -216,7 +228,9 @@ void pre_global_pcntl_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         ZVAL_STRING(&command, cmd);
         efree(cmd);
         zval_ptr_dtor(&args_str);
-    } else {
+    }
+    else
+    {
         ZVAL_STRINGL(&command, path, path_len);
     }
     zval params;

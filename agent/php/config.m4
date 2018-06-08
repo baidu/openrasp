@@ -57,6 +57,7 @@ if test "$PHP_OPENRASP" != "no"; then
     AC_MSG_ERROR([Please install xxd])
   fi
 
+  OPENRASP_SRCDIR=[]PHP_EXT_SRCDIR([openrasp])
   AC_CONFIG_COMMANDS([convert-*.js-to-openrasp_v8_js.h], [
     pushd $builddir >/dev/null 2>&1
     xxd -i console.js > openrasp_v8_js.h
@@ -66,7 +67,7 @@ if test "$PHP_OPENRASP" != "no"; then
     xxd -i rasp.js >> openrasp_v8_js.h
     xxd -i sql_tokenize.js >> openrasp_v8_js.h
     popd >/dev/null 2>&1
-  ], [builddir=PHP_EXT_BUILDDIR([openrasp])/js])
+  ], [builddir="$OPENRASP_SRCDIR/js"])
 
   if test "$PHP_GETTEXT" != "no"; then
     SEARCH_FOR="/include/libintl.h"
@@ -154,7 +155,7 @@ if test "$PHP_OPENRASP" != "no"; then
     libfswatch/c/libfswatch_log.cpp \
     libfswatch/c/libfswatch.cpp \
     libfswatch/c/cevent.cpp"
-  PHP_ADD_INCLUDE(PHP_EXT_BUILDDIR([openrasp])/libfswatch)
+  PHP_ADD_INCLUDE("$OPENRASP_SRCDIR/libfswatch")
   case $host_os in
     darwin* )
       OPENRASP_LIBS="-framework CoreServices $OPENRASP_LIBS"
@@ -452,6 +453,9 @@ int main() {
     openrasp.cc \
     openrasp_utils.cc \
     openrasp_hook.cc \
+    hook/openrasp_include.cc \
+    hook/openrasp_fileupload.cc \
+    hook/openrasp_file.cc \
     hook/openrasp_directory.cc \
     hook/openrasp_command.cc \
     hook/openrasp_sql.cc \

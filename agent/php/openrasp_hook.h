@@ -22,7 +22,8 @@
 #include "openrasp_ini.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -61,51 +62,51 @@ extern "C" {
 #include <set>
 
 #ifdef ZEND_WIN32
-# ifndef MAXPATHLEN
-#  define MAXPATHLEN     _MAX_PATH
-# endif
+#ifndef MAXPATHLEN
+#define MAXPATHLEN _MAX_PATH
+#endif
 #else
-# ifndef MAXPATHLEN
-#  define MAXPATHLEN     4096
-# endif
+#ifndef MAXPATHLEN
+#define MAXPATHLEN 4096
+#endif
 #endif
 
-#define OPENRASP_INTERNAL_FUNCTION_PARAMETERS INTERNAL_FUNCTION_PARAMETERS, const char * check_type
+#define OPENRASP_INTERNAL_FUNCTION_PARAMETERS INTERNAL_FUNCTION_PARAMETERS, const char *check_type
 #define OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU INTERNAL_FUNCTION_PARAM_PASSTHRU, check_type
 
 /* {{{ defines */
-#define EXTR_OVERWRITE			0
-#define EXTR_SKIP				1
-#define EXTR_PREFIX_SAME		2
-#define	EXTR_PREFIX_ALL			3
-#define	EXTR_PREFIX_INVALID		4
-#define	EXTR_PREFIX_IF_EXISTS	5
-#define	EXTR_IF_EXISTS			6
+#define EXTR_OVERWRITE 0
+#define EXTR_SKIP 1
+#define EXTR_PREFIX_SAME 2
+#define EXTR_PREFIX_ALL 3
+#define EXTR_PREFIX_INVALID 4
+#define EXTR_PREFIX_IF_EXISTS 5
+#define EXTR_IF_EXISTS 6
 
-#define EXTR_REFS				0x100
+#define EXTR_REFS 0x100
 
-#define CASE_LOWER				0
-#define CASE_UPPER				1
+#define CASE_LOWER 0
+#define CASE_UPPER 1
 
-#define DIFF_NORMAL			1
-#define DIFF_KEY			2
-#define DIFF_ASSOC			6
-#define DIFF_COMP_DATA_NONE    -1
+#define DIFF_NORMAL 1
+#define DIFF_KEY 2
+#define DIFF_ASSOC 6
+#define DIFF_COMP_DATA_NONE -1
 #define DIFF_COMP_DATA_INTERNAL 0
-#define DIFF_COMP_DATA_USER     1
-#define DIFF_COMP_KEY_INTERNAL  0
-#define DIFF_COMP_KEY_USER      1
+#define DIFF_COMP_DATA_USER 1
+#define DIFF_COMP_KEY_INTERNAL 0
+#define DIFF_COMP_KEY_USER 1
 
-#define INTERSECT_NORMAL		1
-#define INTERSECT_KEY			2
-#define INTERSECT_ASSOC			6
-#define INTERSECT_COMP_DATA_NONE    -1
+#define INTERSECT_NORMAL 1
+#define INTERSECT_KEY 2
+#define INTERSECT_ASSOC 6
+#define INTERSECT_COMP_DATA_NONE -1
 #define INTERSECT_COMP_DATA_INTERNAL 0
-#define INTERSECT_COMP_DATA_USER     1
-#define INTERSECT_COMP_KEY_INTERNAL  0
-#define INTERSECT_COMP_KEY_USER      1
+#define INTERSECT_COMP_DATA_USER 1
+#define INTERSECT_COMP_KEY_INTERNAL 0
+#define INTERSECT_COMP_KEY_USER 1
 
-#define DOUBLE_DRIFT_FIX	0.000000000000001
+#define DOUBLE_DRIFT_FIX 0.000000000000001
 /* }}} */
 
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4)
@@ -137,22 +138,24 @@ extern "C" {
 #endif
 
 #define MYSQLI_STORE_RESULT 0
-#define MYSQLI_USE_RESULT 	1
-#define MYSQL_PORT          3306
+#define MYSQLI_USE_RESULT 1
+#define MYSQL_PORT 3306
 
-typedef struct sql_connection_entry_t {
-	char *server = nullptr;
+typedef struct sql_connection_entry_t
+{
+    char *server = nullptr;
     char *host = nullptr;
-    int   port = 0;
+    int port = 0;
     char *username = nullptr;
 } sql_connection_entry;
 
 typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
 typedef void (*hook_handler_t)(TSRMLS_D);
 
-typedef enum hook_position_t {
-	PRE_HOOK = 1 << 0, 
-    POST_HOOK  = 1 << 1
+typedef enum hook_position_t
+{
+    PRE_HOOK = 1 << 0,
+    POST_HOOK = 1 << 1
 } hook_position;
 
 typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
@@ -165,87 +168,90 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
  * @param name 函数完整名称
  * @param scope 函数所属 class，全局函数的 scope 为 global
  */
-#define DEFINE_HOOK_HANDLER_EX(name, scope, type)                                                          \
-    {                                                                                                      \
-        HashTable *ht = nullptr;                                                                           \
-        zend_function *function;                                                                           \
-        if (strcmp("global", ZEND_TOSTR(scope)) == 0)                                                      \
-        {                                                                                                  \
-            ht = CG(function_table);                                                                       \
-        }                                                                                                  \
-        else                                                                                               \
-        {                                                                                                  \
-            zend_class_entry *clazz;                                                                       \
-            if ((clazz = static_cast<zend_class_entry *>(zend_hash_str_find_ptr(CG(class_table), ZEND_STRL(ZEND_TOSTR(scope))))) != NULL)   \
-            {                                                                                              \
-                ht = &(clazz->function_table);                                                             \
-            }                                                                                              \
-        }                                                                                                  \
-        if (ht &&                                                                                          \
-            (function = static_cast<zend_function *>(zend_hash_str_find_ptr(ht, ZEND_STRL(ZEND_TOSTR(name))))) != NULL &&                  \
-            function->internal_function.handler != zif_display_disabled_function)                          \
-        {                                                                                                  \
-            origin_##scope##_##name##_##type = function->internal_function.handler;                        \
-            function->internal_function.handler = hook_##scope##_##name##_##type;                          \
-        }                                                                                                  \
+#define DEFINE_HOOK_HANDLER_EX(name, scope, type)                                                                                         \
+    {                                                                                                                                     \
+        HashTable *ht = nullptr;                                                                                                          \
+        zend_function *function;                                                                                                          \
+        if (strcmp("global", ZEND_TOSTR(scope)) == 0)                                                                                     \
+        {                                                                                                                                 \
+            ht = CG(function_table);                                                                                                      \
+        }                                                                                                                                 \
+        else                                                                                                                              \
+        {                                                                                                                                 \
+            zend_class_entry *clazz;                                                                                                      \
+            if ((clazz = static_cast<zend_class_entry *>(zend_hash_str_find_ptr(CG(class_table), ZEND_STRL(ZEND_TOSTR(scope))))) == NULL) \
+            {                                                                                                                             \
+                ht = &(clazz->function_table);                                                                                            \
+            }                                                                                                                             \
+        }                                                                                                                                 \
+        if (ht &&                                                                                                                         \
+            (function = static_cast<zend_function *>(zend_hash_str_find_ptr(ht, ZEND_STRL(ZEND_TOSTR(name))))) != NULL &&                 \
+            function->internal_function.handler != zif_display_disabled_function)                                                         \
+        {                                                                                                                                 \
+            origin_##scope##_##name##_##type = function->internal_function.handler;                                                       \
+            function->internal_function.handler = hook_##scope##_##name##_##type;                                                         \
+        }                                                                                                                                 \
     }
-    
-#define OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                                \
-    php_function origin_##scope##_##name##_##type = nullptr;                                                        \
-    inline void hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function);    \
-    void hook_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAMETERS)                                               \
-    {                                                                                                               \
-        hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, origin_##scope##_##name##_##type);    \
-    }                                                                                                               \
-    void scope##_##name##_##type##_handler(TSRMLS_D)                                                                \
-    DEFINE_HOOK_HANDLER_EX(name, scope, type)                                                                       \
-    int scope##_##name##_##type = [](){register_hook_handler(scope##_##name##_##type##_handler);return 0;}();       \
+
+#define OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                             \
+    php_function origin_##scope##_##name##_##type = nullptr;                                                     \
+    inline void hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function); \
+    void hook_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAMETERS)                                            \
+    {                                                                                                            \
+        hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, origin_##scope##_##name##_##type); \
+    }                                                                                                            \
+    void scope##_##name##_##type##_handler(TSRMLS_D)                                                             \
+        DEFINE_HOOK_HANDLER_EX(name, scope, type) int scope##_##name##_##type = []() {register_hook_handler(scope##_##name##_##type##_handler);return 0; }();                      \
     inline void hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function)
 
 #define OPENRASP_HOOK_FUNCTION(name, type) \
     OPENRASP_HOOK_FUNCTION_EX(name, global, type)
 
-#define HOOK_FUNCTION_EX(name, scope, type)                                                             \
-    void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                          \
-    void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                         \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                        \
-    {                                                                                                   \
-        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)) TSRMLS_CC);         \
-        if (!type_ignored) {                                                                            \
-            pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));        \
-        }                                                                                               \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                              \
-        if (!type_ignored) {                                                                            \
-            post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));       \
-        }                                                                                               \
+#define HOOK_FUNCTION_EX(name, scope, type)                                                       \
+    void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                    \
+    void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                   \
+    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                  \
+    {                                                                                             \
+        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)) TSRMLS_CC);   \
+        if (!type_ignored)                                                                        \
+        {                                                                                         \
+            pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));  \
+        }                                                                                         \
+        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                        \
+        if (!type_ignored)                                                                        \
+        {                                                                                         \
+            post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type))); \
+        }                                                                                         \
     }
 
 #define HOOK_FUNCTION(name, type) \
     HOOK_FUNCTION_EX(name, global, type)
 
-#define PRE_HOOK_FUNCTION_EX(name, scope, type)                                                         \
-    void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                          \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                        \
-    {                                                                                                   \
-        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)) TSRMLS_CC);         \
-        if (!type_ignored) {                                                                            \
-            pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));        \
-        }                                                                                               \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                              \
+#define PRE_HOOK_FUNCTION_EX(name, scope, type)                                                  \
+    void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                   \
+    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                 \
+    {                                                                                            \
+        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)) TSRMLS_CC);  \
+        if (!type_ignored)                                                                       \
+        {                                                                                        \
+            pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type))); \
+        }                                                                                        \
+        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                       \
     }
 
 #define PRE_HOOK_FUNCTION(name, type) \
     PRE_HOOK_FUNCTION_EX(name, global, type)
 
-#define POST_HOOK_FUNCTION_EX(name, scope, type)                                                        \
-    void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                         \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                        \
-    {                                                                                                   \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                              \
-        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)) TSRMLS_CC);         \
-        if (!type_ignored) {                                                                            \
-            post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));       \
-        }                                                                                               \
+#define POST_HOOK_FUNCTION_EX(name, scope, type)                                                  \
+    void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                   \
+    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                  \
+    {                                                                                             \
+        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                        \
+        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)) TSRMLS_CC);   \
+        if (!type_ignored)                                                                        \
+        {                                                                                         \
+            post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type))); \
+        }                                                                                         \
     }
 
 #define POST_HOOK_FUNCTION(name, type) \
@@ -257,7 +263,7 @@ struct openrasp_hook_ini_t
     bool enforce_policy = false;
     char *block_url = nullptr;
     std::set<std::string> hooks_ignore;
-    std::set<std::string> callable_blacklists;//haha
+    std::set<std::string> callable_blacklists; //haha
 };
 extern struct openrasp_hook_ini_t openrasp_hook_ini;
 
@@ -288,11 +294,11 @@ void check(const char *type, zval *params TSRMLS_DC);
 void register_hook_handler(hook_handler_t hook_handler);
 bool openrasp_check_type_ignored(const char *item_name, uint item_name_length TSRMLS_DC);
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC);
-void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zend_string *message TSRMLS_DC);
-char * openrasp_real_path(char *filename, int filename_len, zend_bool use_include_path, bool handle_unresolved TSRMLS_DC);
+void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zval *message TSRMLS_DC);
+zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, bool handle_unresolved TSRMLS_DC);
 void slow_query_alarm(int rows TSRMLS_DC);
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
-void sql_type_handler(char* query, int query_len, const char *server TSRMLS_DC);
+void sql_type_handler(char *query, int query_len, const char *server TSRMLS_DC);
 long fetch_rows_via_user_function(const char *f_name_str, uint32_t param_count, zval params[] TSRMLS_DC);
 
 #endif

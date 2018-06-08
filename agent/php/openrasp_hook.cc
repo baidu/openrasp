@@ -41,42 +41,37 @@ bool openrasp_zval_in_request(zval *item TSRMLS_DC)
                                             {TRACK_VARS_GET, "_GET"},
                                             {TRACK_VARS_COOKIE, "_COOKIE"}};
     int size = sizeof(pairs) / sizeof(pairs[0]);
-    zend_string *skey;
-    zval *val;
     for (int index = 0; index < size; ++index)
     {
-        zend_string *name = zend_string_init(pairs[index].name, strlen(pairs[index].name), 0);
-        if (Z_TYPE(PG(http_globals)[pairs[index].id]) != IS_ARRAY && !zend_is_auto_global(name TSRMLS_CC) && Z_TYPE(PG(http_globals)[pairs[index].id]) != IS_ARRAY)
+        zval *global = &PG(http_globals)[pairs[index].id];
+        if (Z_TYPE_P(global) != IS_ARRAY &&
+            !zend_is_auto_global_str(const_cast<char *>(pairs[index].name), strlen(pairs[index].name)))
         {
-            zend_string_release(name);
             return false;
         }
-        HashTable *ht = Z_ARRVAL(PG(http_globals)[pairs[index].id]);
-        ZEND_HASH_FOREACH_STR_KEY_VAL(ht, skey, val)
+        zval *val;
+        ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(global), val)
         {
-            if (Z_STR_P(item) == Z_STR_P(val))
+            if (Z_COUNTED_P(item) == Z_COUNTED_P(val))
             {
-                zend_string_release(name);
                 return true;
             }
         }
         ZEND_HASH_FOREACH_END();
-        zend_string_release(name);
     }
     return false;
 }
 
-void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zend_string *message TSRMLS_DC)
+void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zval *message TSRMLS_DC)
 {
     zval params_result;
     array_init(&params_result);
     add_assoc_long(&params_result, "plugin_confidence", confidence);
     add_assoc_zval(&params_result, "attack_params", params);
-    add_assoc_str(&params_result, "attack_type", zend_string_init(type, strlen(type), 0));
-    add_assoc_str(&params_result, "plugin_message", message);
-    const char *intercept_state = is_block ? "block" : "log";
-    add_assoc_str(&params_result, "intercept_state", zend_string_init(intercept_state, strlen(intercept_state), 0));
-    add_assoc_str(&params_result, "plugin_name", zend_string_init("php_builtin_plugin", strlen("php_builtin_plugin"), 0));
+    add_assoc_string(&params_result, "attack_type", const_cast<char *>(type));
+    add_assoc_zval(&params_result, "plugin_message", message);
+    add_assoc_string(&params_result, "intercept_state", const_cast<char *>(is_block ? "block" : "log"));
+    add_assoc_string(&params_result, "plugin_name", const_cast<char *>("php_builtin_plugin"));
     alarm_info(&params_result TSRMLS_CC);
     zval_ptr_dtor(&params_result);
     if (is_block)
@@ -93,6 +88,25 @@ bool openrasp_check_type_ignored(const char *item_name, uint item_name_length TS
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC)
 {
     return openrasp_ini.callable_blacklists.find(item_name) != openrasp_ini.callable_blacklists.end();
+}
+
+zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, bool handle_unresolved TSRMLS_DC)
+{
+    char *expand_path = expand_filepath(filename, nullptr);
+    zend_string *resolved_path;
+    if (expand_path)
+    {
+        resolved_path = php_resolve_path(expand_path, strlen(expand_path), use_include_path ? PG(include_path) : nullptr);
+    }
+    else
+    {
+        resolved_path = php_resolve_path(filename, length, use_include_path ? PG(include_path) : nullptr);
+    }
+    if (!resolved_path && handle_unresolved)
+    {
+        resolved_path = zend_string_init(filename, length, 0);
+    }
+    return resolved_path;
 }
 
 void handle_block(TSRMLS_D)

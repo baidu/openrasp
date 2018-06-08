@@ -23,55 +23,56 @@ PRE_HOOK_FUNCTION(move_uploaded_file, fileUpload);
 
 void pre_global_move_uploaded_file_fileUpload(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval **name, **dest;
+    zval *name, *dest;
     int argc = MIN(2, ZEND_NUM_ARGS());
-    if (argc == 2 &&
-        SG(rfc1867_uploaded_files) != NULL &&
-        zend_get_parameters_ex(argc, &name, &dest) == SUCCESS &&
-        Z_TYPE_PP(name) == IS_STRING &&
-        Z_TYPE_PP(dest) == IS_STRING &&
-        zend_hash_exists(SG(rfc1867_uploaded_files), Z_STRVAL_PP(name), Z_STRLEN_PP(name) + 1) &&
-        (PG(http_globals)[TRACK_VARS_FILES] || zend_is_auto_global(ZEND_STRL("_FILES") TSRMLS_CC)))
+
+    if (argc < 2 ||
+        zend_get_parameters_ex(argc, &name, &dest) != SUCCESS ||
+        Z_TYPE_P(name) != IS_STRING ||
+        Z_TYPE_P(dest) != IS_STRING ||
+        !zend_hash_exists(SG(rfc1867_uploaded_files), Z_STR_P(name)) ||
+        php_check_open_basedir_ex(Z_STRVAL_P(dest), 0) ||
+        (Z_TYPE(PG(http_globals)[TRACK_VARS_FILES]) != IS_STRING && !zend_is_auto_global_str(ZEND_STRL("_FILES") TSRMLS_CC)))
     {
-        zval **realname = nullptr;
-        HashTable *ht = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_FILES]);
-        for (zend_hash_internal_pointer_reset(ht);
-             zend_hash_has_more_elements(ht) == SUCCESS;
-             zend_hash_move_forward(ht))
+        return;
+    }
+
+    zval *realname = nullptr, *file;
+    ZEND_HASH_FOREACH_VAL(Z_ARRVAL(PG(http_globals)[TRACK_VARS_FILES]), file)
+    {
+        zval *tmp_name = NULL;
+        if (Z_TYPE_P(file) != IS_ARRAY ||
+            (tmp_name = zend_hash_str_find(Z_ARRVAL_P(file), ZEND_STRS("tmp_name"))) == NULL ||
+            Z_TYPE_P(tmp_name) != IS_STRING ||
+            zend_binary_strcmp(Z_STRVAL_P(tmp_name), Z_STRLEN_P(tmp_name), Z_STRVAL_P(name), Z_STRLEN_P(name)) != 0)
         {
-            zval **file, **tmp_name;
-            if (zend_hash_get_current_data(ht, (void **)&file) != SUCCESS ||
-                Z_TYPE_PP(file) != IS_ARRAY ||
-                zend_hash_find(Z_ARRVAL_PP(file), ZEND_STRS("tmp_name"), (void **)&tmp_name) != SUCCESS ||
-                Z_TYPE_PP(tmp_name) != IS_STRING ||
-                zend_binary_strcmp(Z_STRVAL_PP(tmp_name), Z_STRLEN_PP(tmp_name), Z_STRVAL_PP(name), Z_STRLEN_PP(name)) != 0)
-            {
-                continue;
-            }
-            if (zend_hash_find(Z_ARRVAL_PP(file), ZEND_STRS("name"), (void **)&realname) == SUCCESS)
-            {
-                break;
-            }
+            continue;
         }
-        if (!realname)
+        if ((realname = zend_hash_str_find(Z_ARRVAL_P(file), ZEND_STRS("name"))) != NULL)
         {
-            realname = dest;
-        }
-        php_stream *stream = php_stream_open_wrapper(Z_STRVAL_PP(name), "rb", 0, NULL);
-        if (stream)
-        {
-            char *contents;
-            int len = php_stream_copy_to_mem(stream, &contents, 4 * 1024, 0);
-            if (len > 0)
-            {
-                zval *params;
-                MAKE_STD_ZVAL(params);
-                array_init(params);
-                add_assoc_zval(params, "filename", *realname);
-                Z_ADDREF_PP(realname);
-                add_assoc_stringl(params, "content", contents, MIN(len, 4 * 1024), 0);
-                check(check_type, params TSRMLS_CC);
-            }
+            break;
         }
     }
+    ZEND_HASH_FOREACH_END();
+    if (!realname)
+    {
+        realname = dest;
+    }
+    php_stream *stream = php_stream_open_wrapper(Z_STRVAL_P(name), "rb", 0, NULL);
+    if (!stream)
+    {
+        return;
+    }
+    zend_string *buffer = php_stream_copy_to_mem(stream, 4 * 1024, 0);
+    stream->is_persistent ? php_stream_pclose(stream) : php_stream_close(stream);
+    if (!buffer)
+    {
+        return;
+    }
+    zval params;
+    array_init(&params);
+    add_assoc_zval(&params, "filename", realname);
+    Z_ADDREF_P(realname);
+    add_assoc_str(&params, "content", buffer);
+    check(check_type, &params TSRMLS_CC);
 }
