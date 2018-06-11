@@ -331,14 +331,37 @@ static void body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo
     {
         return;
     }
-    zend_string *buffer = php_stream_copy_to_mem(stream, 4 * 1024, 0);
+
+    size_t len = 0, maxlen = 4 * 1024;
+    char *buffer = (char *)malloc(maxlen);
+    char *ptr = buffer;
+    while ((len < maxlen) && !php_stream_eof(stream))
+    {
+        size_t ret = php_stream_read(stream, ptr, maxlen - len);
+        if (!ret)
+        {
+            break;
+        }
+        len += ret;
+        ptr += ret;
+    }
+    if (len)
+    {
+        *ptr = '\0';
+    }
+    else
+    {
+        free(buffer);
+        buffer = nullptr;
+    }
+
     stream->is_persistent ? php_stream_pclose(stream) : php_stream_close(stream);
     if (!buffer)
     {
         return;
     }
     v8::Isolate *isolate = info.GetIsolate();
-    v8::Local<v8::ArrayBuffer> arraybuffer = v8::ArrayBuffer::New(isolate, buffer->val, MIN(buffer->len, 4 * 1024), v8::ArrayBufferCreationMode::kInternalized);
+    v8::Local<v8::ArrayBuffer> arraybuffer = v8::ArrayBuffer::New(isolate, buffer, MIN(len, maxlen), v8::ArrayBufferCreationMode::kInternalized);
     info.GetReturnValue().Set(arraybuffer);
 }
 static void server_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
