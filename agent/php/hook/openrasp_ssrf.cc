@@ -16,13 +16,12 @@
 
 #include "openrasp_hook.h"
 
-extern "C"
-{
+extern "C" {
 #ifdef PHP_WIN32
-# include "win32/inet.h"
-# include <winsock2.h>
-# include <windows.h>
-# include <Ws2tcpip.h>
+#include "win32/inet.h"
+#include <winsock2.h>
+#include <windows.h>
+#include <Ws2tcpip.h>
 #else
 #include <netinet/in.h>
 #if HAVE_ARPA_INET_H
@@ -38,70 +37,68 @@ extern "C"
 /**
  * ssrf相关hook点
  */
-int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args);
-void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args);
+bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval args[]);
+void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval args[]);
 OPENRASP_HOOK_FUNCTION(curl_exec, ssrf)
 {
     bool type_ignored = openrasp_check_type_ignored(ZEND_STRL("ssrf") TSRMLS_CC);
-    zval function_name, opt, origin_url, *args[2];
-    int skip_post = 1;
+    zval origin_url, function_name;
+    zval *zid = nullptr, *opt = nullptr;
+    bool skip_hook = false;
+    zval args[2];
+    ZVAL_STRING(&function_name, "curl_getinfo");
+    ZVAL_NULL(&origin_url);
     if (!type_ignored)
     {
-        INIT_ZVAL(function_name);
-        INIT_ZVAL(opt);
-        INIT_ZVAL(origin_url);
-        ZVAL_STRING(&function_name, "curl_getinfo", 0); // 不需要 zval_dtor
-
-        skip_post = pre_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, "ssrf", &function_name, &opt, &origin_url, args);
+        if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zid) == FAILURE)
+        {
+            skip_hook = true;
+        }
+        if ((opt = zend_get_constant_str(ZEND_STRL("CURLINFO_EFFECTIVE_URL"))) == nullptr)
+        {
+            skip_hook = true;
+        }
+        args[0] = *zid;
+        args[1] = *opt;
+        if (!skip_hook)
+        {
+            skip_hook = pre_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, "ssrf", &function_name, opt, &origin_url, args);
+        }
     }
     origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);
-    if (!type_ignored)
+    if (!type_ignored && !skip_hook)
     {
-        if (!skip_post)
-        {
-            post_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, "ssrf", &function_name, &opt, &origin_url, args);
-        }
-
-        zval_dtor(&opt);
-        zval_dtor(&origin_url);
+        post_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, "ssrf", &function_name, opt, &origin_url, args);
     }
+    zval_ptr_dtor(&origin_url);
+    zval_ptr_dtor(&function_name);
 }
 
-int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args)
+bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval args[])
 {
-    zval **zid;
-
-    int argc = MIN(1, ZEND_NUM_ARGS());
-    if (argc <= 0 ||
-        zend_get_parameters_ex(argc, &zid) != SUCCESS ||
-        Z_TYPE_PP(zid) != IS_RESOURCE)
-    {
-        return 1;
-    }
-    if (!zend_get_constant(ZEND_STRL("CURLINFO_EFFECTIVE_URL"), opt TSRMLS_CC))
-    {
-        return 1;
-    }
-    args[0] = *zid;
-    args[1] = opt;
     if (call_user_function(EG(function_table), NULL, function_name, origin_url, 2, args TSRMLS_CC) != SUCCESS ||
         Z_TYPE_P(origin_url) != IS_STRING)
     {
-        return 1;
+        return true;
     }
     {
-        zval *params;
-        MAKE_STD_ZVAL(params);
-        array_init(params);
-        add_assoc_zval(params, "url", origin_url);
-        Z_ADDREF_P(origin_url);
-        add_assoc_string(params, "function", estrdup("curl_exec"), 0);
+        zval params;
+        array_init(&params);
+        add_assoc_zval(&params, "url", origin_url);
+        Z_TRY_ADDREF_P(origin_url);
+        add_assoc_string(&params, "function", const_cast<char *>("curl_exec"));
         php_url *url = php_url_parse_ex(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url));
-        add_assoc_string(params, "hostname", (url && url->host) ? estrdup(url->host) : estrdup(""), 0);
-        zval *ip_arr = NULL;
-        MAKE_STD_ZVAL(ip_arr);
-        array_init(ip_arr);
-        if (url) 
+        if (url && url->host)
+        {
+            add_assoc_str(&params, "hostname", (zend_string_init(url->host, strlen(url->host), 0)));
+        }
+        else
+        {
+            add_assoc_string(&params, "hostname", "");
+        }
+        zval ip_arr;
+        array_init(&ip_arr);
+        if (url)
         {
             if (url->host)
             {
@@ -109,41 +106,38 @@ int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *funct
                 struct in_addr in;
                 int i;
                 hp = gethostbyname(url->host);
-                if (hp != NULL && hp->h_addr_list != NULL) {
-                    for (i = 0 ; hp->h_addr_list[i] != 0 ; i++) {
-                        in = *(struct in_addr *) hp->h_addr_list[i];
-                        add_next_index_string(ip_arr, inet_ntoa(in), 1);
+                if (hp != NULL && hp->h_addr_list != NULL)
+                {
+                    for (i = 0; hp->h_addr_list[i] != 0; i++)
+                    {
+                        in = *(struct in_addr *)hp->h_addr_list[i];
+                        add_next_index_string(&ip_arr, inet_ntoa(in));
                     }
                 }
             }
             php_url_free(url);
         }
-        add_assoc_zval(params, "ip", ip_arr);
-        check(check_type, params TSRMLS_CC);
+        add_assoc_zval(&params, "ip", &ip_arr);
+        check(check_type, &params TSRMLS_CC);
     }
-    return 0;
+    return false;
 }
 
-void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args)
-{    
+void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval args[])
+{
     zval effective_url;
-    INIT_ZVAL(effective_url);
+    ZVAL_NULL(&effective_url);
     if (call_user_function(EG(function_table), NULL, function_name, &effective_url, 2, args TSRMLS_CC) != SUCCESS &&
         Z_TYPE(effective_url) != IS_STRING &&
         (strncasecmp(Z_STRVAL(effective_url), "file", 4) == 0 || strncasecmp(Z_STRVAL(effective_url), "scp", 3) == 0) &&
         strcmp(Z_STRVAL(effective_url), Z_STRVAL_P(origin_url)) != 0)
     {
-        zval *attack_params = NULL;
-        MAKE_STD_ZVAL(attack_params);
-        ZVAL_STRING(attack_params, Z_STRVAL(effective_url), 1);
-        zval *plugin_message = NULL;
-        MAKE_STD_ZVAL(plugin_message);
-        char *message_str = NULL;
-        spprintf(&message_str, 0, _("Detected SSRF via 302 redirect, effective url is %s"), Z_STRVAL(effective_url));
-        ZVAL_STRING(plugin_message, message_str, 1);
-        efree(message_str);
-        openrasp_buildin_php_risk_handle(1, check_type, 100, attack_params, plugin_message TSRMLS_CC);       
+        zval attack_params;
+        ZVAL_STRING(&attack_params, Z_STRVAL(effective_url));
+        zval plugin_message;
+        ZVAL_STR(&plugin_message, strpprintf(0, _("Detected SSRF via 302 redirect, effective url is %s"), Z_STRVAL(effective_url)));
+        openrasp_buildin_php_risk_handle(1, check_type, 100, &attack_params, &plugin_message TSRMLS_CC);
     }
-    zval_dtor(&effective_url);
+    zval_ptr_dtor(&effective_url);
     return;
 }

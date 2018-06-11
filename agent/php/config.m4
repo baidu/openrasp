@@ -464,6 +464,7 @@ int main() {
     hook/openrasp_pgsql.cc \
     hook/openrasp_sqlite3.cc \
     hook/openrasp_pdo.cc \
+    hook/openrasp_ssrf.cc \
     openrasp_inject.cc \
     openrasp_log.cc \
     openrasp_shared_alloc.c  \
