@@ -42,13 +42,13 @@ void pre_global_move_uploaded_file_fileUpload(OPENRASP_INTERNAL_FUNCTION_PARAMET
     {
         zval *tmp_name = NULL;
         if (Z_TYPE_P(file) != IS_ARRAY ||
-            (tmp_name = zend_hash_str_find(Z_ARRVAL_P(file), ZEND_STRS("tmp_name"))) == NULL ||
+            (tmp_name = zend_hash_str_find(Z_ARRVAL_P(file), ZEND_STRL("tmp_name"))) == NULL ||
             Z_TYPE_P(tmp_name) != IS_STRING ||
             zend_binary_strcmp(Z_STRVAL_P(tmp_name), Z_STRLEN_P(tmp_name), Z_STRVAL_P(name), Z_STRLEN_P(name)) != 0)
         {
             continue;
         }
-        if ((realname = zend_hash_str_find(Z_ARRVAL_P(file), ZEND_STRS("name"))) != NULL)
+        if ((realname = zend_hash_str_find(Z_ARRVAL_P(file), ZEND_STRL("name"))) != NULL)
         {
             break;
         }

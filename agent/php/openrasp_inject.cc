@@ -108,7 +108,7 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_inject)
             if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY || zend_is_auto_global_str(ZEND_STRL("_SERVER")))
             {
                 zval *value;
-                if ((value = zend_hash_str_find(Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS("REQUEST_URI"))) != NULL &&
+                if ((value = zend_hash_str_find(Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRL("REQUEST_URI"))) != NULL &&
                     Z_TYPE_P(value) == IS_STRING &&
                     strncasecmp(Z_STRVAL_P(value), openrasp_ini.inject_html_urlprefix, strlen(openrasp_ini.inject_html_urlprefix)) == 0)
                 {
