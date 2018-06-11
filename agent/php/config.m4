@@ -453,6 +453,7 @@ int main() {
     openrasp.cc \
     openrasp_utils.cc \
     openrasp_hook.cc \
+    hook/openrasp_array.cc \
     hook/openrasp_include.cc \
     hook/openrasp_fileupload.cc \
     hook/openrasp_file.cc \
