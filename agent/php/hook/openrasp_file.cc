@@ -35,15 +35,20 @@ PRE_HOOK_FUNCTION_EX(__construct, splfileobject, writeFile);
 extern "C" int php_stream_parse_fopen_modes(const char *mode, int *open_flags);
 
 //ref: http://pubs.opengroup.org/onlinepubs/7908799/xsh/open.html
-static const char *flag_to_type(int open_flags, bool file_exist)
+static const char *flag_to_type(const char *mode, bool is_file_exist)
 {
+    int open_flags = 0;
+    if (FAILURE == php_stream_parse_fopen_modes(mode, &open_flags))
+    {
+        return "";
+    }
     if (open_flags == O_RDONLY)
     {
         return "readFile";
     }
-    else if ((open_flags | O_CREAT) && (open_flags | O_EXCL) && !file_exist)
+    else if ((open_flags | O_CREAT) && (open_flags | O_EXCL) && !is_file_exist)
     {
-        return "skip";
+        return "";
     }
     else
     {
@@ -66,64 +71,56 @@ static void check_file_operation(const char *check_type, char *filename, int fil
 
 void pre_global_file_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *filename;
-    int filename_len;
-    long flags = 0;
-    zval *zcontext = NULL;
+    zend_string *filename;
+    zend_long flags;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|lr!", &filename, &filename_len, &flags, &zcontext) == FAILURE)
-    {
-        return;
-    }
-    check_file_operation(check_type, filename, filename_len, flags & PHP_FILE_USE_INCLUDE_PATH TSRMLS_CC);
+    ZEND_PARSE_PARAMETERS_START(1, 2)
+    Z_PARAM_STR(filename)
+    Z_PARAM_OPTIONAL
+    Z_PARAM_LONG(flags)
+    ZEND_PARSE_PARAMETERS_END();
+
+    check_file_operation(check_type, ZSTR_VAL(filename), ZSTR_LEN(filename), flags & PHP_FILE_USE_INCLUDE_PATH TSRMLS_CC);
 }
 
 void pre_global_readfile_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *filename;
-    int filename_len;
-    zend_bool use_include_path = 0;
-    zval *zcontext = NULL;
+    zend_string *filename;
+    zend_bool use_include_path;
+    ZEND_PARSE_PARAMETERS_START(1, 2)
+    Z_PARAM_STR(filename)
+    Z_PARAM_OPTIONAL
+    Z_PARAM_BOOL(use_include_path)
+    ZEND_PARSE_PARAMETERS_END();
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|br!", &filename, &filename_len, &use_include_path, &zcontext) == FAILURE)
-    {
-        return;
-    }
-    check_file_operation(check_type, filename, filename_len, use_include_path TSRMLS_CC);
+    check_file_operation(check_type, ZSTR_VAL(filename), ZSTR_LEN(filename), use_include_path TSRMLS_CC);
 }
 
 void pre_global_file_get_contents_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *filename;
-    int filename_len;
-    zend_bool use_include_path = 0;
-    long offset = -1;
-    long maxlen = PHP_STREAM_COPY_ALL;
-    zval *zcontext = NULL;
-
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|br!ll", &filename, &filename_len, &use_include_path, &zcontext, &offset, &maxlen) == FAILURE)
-    {
-        return;
-    }
-    check_file_operation(check_type, filename, filename_len, use_include_path TSRMLS_CC);
+    pre_global_readfile_readFile(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_file_put_contents_webshell_file_put_contents(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *path, *data, *flags;
-    int argc = MIN(3, ZEND_NUM_ARGS());
-    if (argc > 1 &&
-        zend_get_parameters_ex(argc, &path, &data, &flags) == SUCCESS &&
-        Z_TYPE_P(path) == IS_STRING &&
-        openrasp_zval_in_request(path TSRMLS_CC) &&
+    zval *filename, *data;
+    zend_long flags;
+
+    ZEND_PARSE_PARAMETERS_START(2, 3)
+    Z_PARAM_ZVAL(filename)
+    Z_PARAM_ZVAL(data)
+    Z_PARAM_OPTIONAL
+    Z_PARAM_LONG(flags)
+    ZEND_PARSE_PARAMETERS_END();
+
+    if (openrasp_zval_in_request(filename TSRMLS_CC) &&
         openrasp_zval_in_request(data TSRMLS_CC))
     {
-        zend_string *real_path = openrasp_real_path(Z_STRVAL_P(path), Z_STRLEN_P(path),
-                                                    (argc == 3 && Z_TYPE_P(flags) == IS_LONG && (Z_LVAL_P(flags) & PHP_FILE_USE_INCLUDE_PATH)), true TSRMLS_CC);
+        zend_string *real_path = openrasp_real_path(Z_STRVAL_P(filename), Z_STRLEN_P(filename), flags & PHP_FILE_USE_INCLUDE_PATH, true TSRMLS_CC);
         zval attack_params;
         array_init(&attack_params);
-        add_assoc_zval(&attack_params, "name", path);
-        Z_ADDREF_P(path);
+        add_assoc_zval(&attack_params, "name", filename);
+        Z_ADDREF_P(filename);
         add_assoc_str(&attack_params, "realpath", real_path);
         zval plugin_message;
         ZVAL_STRING(&plugin_message, _("Webshell detected - File dropper backdoor"));
@@ -133,53 +130,41 @@ void pre_global_file_put_contents_webshell_file_put_contents(OPENRASP_INTERNAL_F
 
 void pre_global_file_put_contents_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *filename;
-    int filename_len;
+    zend_string *filename;
     zval *data;
-    int numbytes = 0;
-    long flags = 0;
-    zval *zcontext = NULL;
+    zend_long flags;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz/|lr!", &filename, &filename_len, &data, &flags, &zcontext) == FAILURE)
-    {
-        return;
-    }
+    ZEND_PARSE_PARAMETERS_START(2, 3)
+    Z_PARAM_STR(filename)
+    Z_PARAM_ZVAL(data)
+    Z_PARAM_OPTIONAL
+    Z_PARAM_LONG(flags)
+    ZEND_PARSE_PARAMETERS_END();
 
-    if (strlen(filename) != filename_len)
-    {
-        return;
-    }
-
-    check_file_operation(check_type, filename, filename_len, (flags & PHP_FILE_USE_INCLUDE_PATH) TSRMLS_CC);
+    check_file_operation(check_type, ZSTR_VAL(filename), ZSTR_LEN(filename), (flags & PHP_FILE_USE_INCLUDE_PATH) TSRMLS_CC);
 }
 
 void pre_global_fopen_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *filename, *mode;
-    int filename_len, mode_len;
-    zend_bool use_include_path = 0;
-    zval *zcontext = NULL;
-    bool file_exist = false;
-    int open_flags;
+    zend_string *filename, *mode;
+    zend_bool use_include_path;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|br", &filename, &filename_len, &mode, &mode_len, &use_include_path, &zcontext) == FAILURE)
-    {
-        return;
-    }
-    if (FAILURE == php_stream_parse_fopen_modes(mode, &open_flags))
-    {
-        return;
-    }
-    zend_string *real_path = openrasp_real_path(filename, filename_len, use_include_path, false TSRMLS_CC);
+    ZEND_PARSE_PARAMETERS_START(2, 3)
+    Z_PARAM_STR(filename)
+    Z_PARAM_STR(mode)
+    Z_PARAM_OPTIONAL
+    Z_PARAM_BOOL(use_include_path)
+    ZEND_PARSE_PARAMETERS_END();
+
+    zend_string *real_path = openrasp_real_path(ZSTR_VAL(filename), ZSTR_LEN(filename), use_include_path, false TSRMLS_CC);
+    const char *type = flag_to_type(ZSTR_VAL(mode), real_path);
     if (real_path)
     {
-        file_exist = true;
-        efree(real_path);
+        zend_string_release(real_path);
     }
-    const char *type = flag_to_type(open_flags, file_exist);
     if (0 == strcmp(type, check_type))
     {
-        check_file_operation(check_type, filename, filename_len, use_include_path TSRMLS_CC);
+        check_file_operation(check_type, ZSTR_VAL(filename), ZSTR_LEN(filename), use_include_path TSRMLS_CC);
     }
 }
 
@@ -190,31 +175,25 @@ void pre_global_fopen_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_splfileobject___construct_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *filename, *mode;
-    int filename_len, mode_len;
-    zend_bool use_include_path = 0;
-    zval *zcontext = NULL;
-    bool file_exist = false;
-    int open_flags;
+    zend_string *filename, *mode;
+    zend_bool use_include_path;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|sbr", &filename, &filename_len, &mode, &mode_len, &use_include_path, &zcontext) == FAILURE)
-    {
-        return;
-    }
-    if (FAILURE == php_stream_parse_fopen_modes(mode, &open_flags))
-    {
-        return;
-    }
-    zend_string *real_path = openrasp_real_path(filename, filename_len, use_include_path, false TSRMLS_CC);
+    ZEND_PARSE_PARAMETERS_START(1, 3)
+    Z_PARAM_STR(filename)
+    Z_PARAM_OPTIONAL
+    Z_PARAM_STR(mode)
+    Z_PARAM_BOOL(use_include_path)
+    ZEND_PARSE_PARAMETERS_END();
+
+    zend_string *real_path = openrasp_real_path(ZSTR_VAL(filename), ZSTR_LEN(filename), use_include_path, false TSRMLS_CC);
+    const char *type = flag_to_type(ZSTR_VAL(mode), real_path);
     if (real_path)
     {
-        file_exist = true;
         zend_string_release(real_path);
     }
-    const char *type = flag_to_type(open_flags, file_exist);
     if (0 == strcmp(type, check_type))
     {
-        check_file_operation(type, filename, filename_len, use_include_path TSRMLS_CC);
+        check_file_operation(check_type, ZSTR_VAL(filename), ZSTR_LEN(filename), use_include_path TSRMLS_CC);
     }
 }
 
@@ -225,25 +204,20 @@ void pre_splfileobject___construct_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETER
 
 void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *source, *target;
-    int argc = MIN(2, ZEND_NUM_ARGS());
+    zend_string *source, *dest;
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+    Z_PARAM_STR(source)
+    Z_PARAM_STR(dest)
+    ZEND_PARSE_PARAMETERS_END();
 
-    if (argc < 2 ||
-        zend_get_parameters_ex(argc, &source, &target) != SUCCESS ||
-        Z_TYPE_P(source) != IS_STRING ||
-        Z_TYPE_P(target) != IS_STRING)
-    {
-        return;
-    }
-
-    zend_string *source_real_path = openrasp_real_path(Z_STRVAL_P(source), Z_STRLEN_P(source), false, false TSRMLS_CC);
+    zend_string *source_real_path = openrasp_real_path(ZSTR_VAL(source), ZSTR_LEN(source), false, false TSRMLS_CC);
     if (source_real_path)
     {
-        zend_string *target_real_path = openrasp_real_path(Z_STRVAL_P(target), Z_STRLEN_P(target), false, true TSRMLS_CC);
+        zend_string *dest_real_path = openrasp_real_path(ZSTR_VAL(dest), ZSTR_LEN(dest), false, true TSRMLS_CC);
         zval params;
         array_init(&params);
         add_assoc_str(&params, "source", source_real_path);
-        add_assoc_str(&params, "dest", target_real_path);
+        add_assoc_str(&params, "dest", dest_real_path);
         check(check_type, &params TSRMLS_CC);
     }
 }
