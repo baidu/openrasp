@@ -74,11 +74,16 @@ void pre_global_file_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     zend_string *filename;
     zend_long flags;
 
-    ZEND_PARSE_PARAMETERS_START(1, 2)
-    Z_PARAM_STR(filename)
-    Z_PARAM_OPTIONAL
-    Z_PARAM_LONG(flags)
-    ZEND_PARSE_PARAMETERS_END();
+    // ZEND_PARSE_PARAMETERS_START(1, 2)
+    // Z_PARAM_STR(filename)
+    // Z_PARAM_OPTIONAL
+    // Z_PARAM_LONG(flags)
+    // ZEND_PARSE_PARAMETERS_END();
+
+    if (zend_parse_parameters(MIN(2, ZEND_NUM_ARGS()), "P|l", &filename, &flags) != SUCCESS)
+    {
+        return;
+    }
 
     check_file_operation(check_type, ZSTR_VAL(filename), ZSTR_LEN(filename), flags & PHP_FILE_USE_INCLUDE_PATH TSRMLS_CC);
 }
@@ -87,11 +92,17 @@ void pre_global_readfile_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zend_string *filename;
     zend_bool use_include_path;
-    ZEND_PARSE_PARAMETERS_START(1, 2)
-    Z_PARAM_STR(filename)
-    Z_PARAM_OPTIONAL
-    Z_PARAM_BOOL(use_include_path)
-    ZEND_PARSE_PARAMETERS_END();
+
+    // ZEND_PARSE_PARAMETERS_START(1, 2)
+    // Z_PARAM_STR(filename)
+    // Z_PARAM_OPTIONAL
+    // Z_PARAM_BOOL(use_include_path)
+    // ZEND_PARSE_PARAMETERS_END();
+
+    if (zend_parse_parameters(MIN(2, ZEND_NUM_ARGS()), "P|b", &filename, &use_include_path) != SUCCESS)
+    {
+        return;
+    }
 
     check_file_operation(check_type, ZSTR_VAL(filename), ZSTR_LEN(filename), use_include_path TSRMLS_CC);
 }
@@ -106,12 +117,17 @@ void pre_global_file_put_contents_webshell_file_put_contents(OPENRASP_INTERNAL_F
     zval *filename, *data;
     zend_long flags;
 
-    ZEND_PARSE_PARAMETERS_START(2, 3)
-    Z_PARAM_ZVAL(filename)
-    Z_PARAM_ZVAL(data)
-    Z_PARAM_OPTIONAL
-    Z_PARAM_LONG(flags)
-    ZEND_PARSE_PARAMETERS_END();
+    // ZEND_PARSE_PARAMETERS_START(2, 3)
+    // Z_PARAM_ZVAL(filename)
+    // Z_PARAM_ZVAL(data)
+    // Z_PARAM_OPTIONAL
+    // Z_PARAM_LONG(flags)
+    // ZEND_PARSE_PARAMETERS_END();
+
+    if (zend_parse_parameters(MIN(3, ZEND_NUM_ARGS()), "zz|l", &filename, &data, &flags) != SUCCESS)
+    {
+        return;
+    }
 
     if (openrasp_zval_in_request(filename TSRMLS_CC) &&
         openrasp_zval_in_request(data TSRMLS_CC))
@@ -134,30 +150,39 @@ void pre_global_file_put_contents_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETER
     zval *data;
     zend_long flags;
 
-    ZEND_PARSE_PARAMETERS_START(2, 3)
-    Z_PARAM_STR(filename)
-    Z_PARAM_ZVAL(data)
-    Z_PARAM_OPTIONAL
-    Z_PARAM_LONG(flags)
-    ZEND_PARSE_PARAMETERS_END();
+    // ZEND_PARSE_PARAMETERS_START(2, 3)
+    // Z_PARAM_STR(filename)
+    // Z_PARAM_ZVAL(data)
+    // Z_PARAM_OPTIONAL
+    // Z_PARAM_LONG(flags)
+    // ZEND_PARSE_PARAMETERS_END();
+
+    if (zend_parse_parameters(MIN(3, ZEND_NUM_ARGS()), "Pz|l", &filename, &data, &flags) != SUCCESS)
+    {
+        return;
+    }
 
     check_file_operation(check_type, ZSTR_VAL(filename), ZSTR_LEN(filename), (flags & PHP_FILE_USE_INCLUDE_PATH) TSRMLS_CC);
 }
-
-void pre_global_fopen_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+static inline void fopen_common_handler(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zend_string *filename, *mode;
     zend_bool use_include_path;
 
-    ZEND_PARSE_PARAMETERS_START(2, 3)
-    Z_PARAM_STR(filename)
-    Z_PARAM_STR(mode)
-    Z_PARAM_OPTIONAL
-    Z_PARAM_BOOL(use_include_path)
-    ZEND_PARSE_PARAMETERS_END();
+    // ZEND_PARSE_PARAMETERS_START(2, 3)
+    // Z_PARAM_STR(filename)
+    // Z_PARAM_STR(mode)
+    // Z_PARAM_OPTIONAL
+    // Z_PARAM_BOOL(use_include_path)
+    // ZEND_PARSE_PARAMETERS_END();
+
+    if (zend_parse_parameters(MIN(3, ZEND_NUM_ARGS()), "P|Sb", &filename, &mode, &use_include_path) != SUCCESS)
+    {
+        return;
+    }
 
     zend_string *real_path = openrasp_real_path(ZSTR_VAL(filename), ZSTR_LEN(filename), use_include_path, false TSRMLS_CC);
-    const char *type = flag_to_type(ZSTR_VAL(mode), real_path);
+    const char *type = flag_to_type(mode ? ZSTR_VAL(mode) : "r", real_path);
     if (real_path)
     {
         zend_string_release(real_path);
@@ -165,41 +190,32 @@ void pre_global_fopen_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     if (0 == strcmp(type, check_type))
     {
         check_file_operation(check_type, ZSTR_VAL(filename), ZSTR_LEN(filename), use_include_path TSRMLS_CC);
+    }
+}
+void pre_global_fopen_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    if (ZEND_NUM_ARGS() >= 2)
+    {
+        fopen_common_handler(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
     }
 }
 
 void pre_global_fopen_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    pre_global_fopen_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (ZEND_NUM_ARGS() >= 2)
+    {
+        fopen_common_handler(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    }
 }
 
 void pre_splfileobject___construct_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zend_string *filename, *mode;
-    zend_bool use_include_path;
-
-    ZEND_PARSE_PARAMETERS_START(1, 3)
-    Z_PARAM_STR(filename)
-    Z_PARAM_OPTIONAL
-    Z_PARAM_STR(mode)
-    Z_PARAM_BOOL(use_include_path)
-    ZEND_PARSE_PARAMETERS_END();
-
-    zend_string *real_path = openrasp_real_path(ZSTR_VAL(filename), ZSTR_LEN(filename), use_include_path, false TSRMLS_CC);
-    const char *type = flag_to_type(ZSTR_VAL(mode), real_path);
-    if (real_path)
-    {
-        zend_string_release(real_path);
-    }
-    if (0 == strcmp(type, check_type))
-    {
-        check_file_operation(check_type, ZSTR_VAL(filename), ZSTR_LEN(filename), use_include_path TSRMLS_CC);
-    }
+    fopen_common_handler(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_splfileobject___construct_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    pre_splfileobject___construct_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    fopen_common_handler(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -224,5 +240,5 @@ void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_rename_rename(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    return pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
