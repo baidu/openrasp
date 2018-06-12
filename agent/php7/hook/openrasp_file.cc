@@ -168,7 +168,8 @@ static inline void fopen_common_handler(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zend_string *filename, *mode;
     zend_bool use_include_path;
-
+    mode = nullptr;
+    
     // ZEND_PARSE_PARAMETERS_START(2, 3)
     // Z_PARAM_STR(filename)
     // Z_PARAM_STR(mode)

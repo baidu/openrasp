@@ -25,7 +25,7 @@ static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<
     {
         return;
     }
-    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
 
     zval *REQUEST_SCHEME = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_SCHEME"));
     zval *SERVER_NAME = zend_hash_str_find(_SERVER, ZEND_STRL("SERVER_NAME"));
@@ -81,7 +81,7 @@ static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
     {
         return;
     }
-    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
 
     zval *REQUEST_METHOD = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_METHOD"));
 
@@ -112,11 +112,13 @@ static void querystring_getter(v8::Local<v8::Name> name, const v8::PropertyCallb
     {
         return;
     }
-    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
 
     zval *QUERY_STRING = zend_hash_str_find(_SERVER, ZEND_STRL("QUERY_STRING"));
-
-    info.GetReturnValue().Set(zval_to_v8val(QUERY_STRING, info.GetIsolate() TSRMLS_CC));
+    if (QUERY_STRING)
+    {
+        info.GetReturnValue().Set(zval_to_v8val(QUERY_STRING, info.GetIsolate() TSRMLS_CC));
+    }
 }
 static void appBasePath_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
@@ -127,11 +129,13 @@ static void appBasePath_getter(v8::Local<v8::Name> name, const v8::PropertyCallb
     {
         return;
     }
-    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
 
     zval *DOCUMENT_ROOT = zend_hash_str_find(_SERVER, ZEND_STRL("DOCUMENT_ROOT"));
-
-    info.GetReturnValue().Set(zval_to_v8val(DOCUMENT_ROOT, info.GetIsolate() TSRMLS_CC));
+    if (DOCUMENT_ROOT)
+    {
+        info.GetReturnValue().Set(zval_to_v8val(DOCUMENT_ROOT, info.GetIsolate() TSRMLS_CC));
+    }
 }
 static void protocol_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
@@ -142,11 +146,13 @@ static void protocol_getter(v8::Local<v8::Name> name, const v8::PropertyCallback
     {
         return;
     }
-    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
 
     zval *REQUEST_SCHEME = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_SCHEME"));
-
-    info.GetReturnValue().Set(zval_to_v8val(REQUEST_SCHEME, info.GetIsolate() TSRMLS_CC));
+    if (REQUEST_SCHEME)
+    {
+        info.GetReturnValue().Set(zval_to_v8val(REQUEST_SCHEME, info.GetIsolate() TSRMLS_CC));
+    }
 }
 static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
@@ -157,11 +163,13 @@ static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallba
     {
         return;
     }
-    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
 
     zval *REMOTE_ADDR = zend_hash_str_find(_SERVER, ZEND_STRL("REMOTE_ADDR"));
-
-    info.GetReturnValue().Set(zval_to_v8val(REMOTE_ADDR, info.GetIsolate() TSRMLS_CC));
+    if (REMOTE_ADDR)
+    {
+        info.GetReturnValue().Set(zval_to_v8val(REMOTE_ADDR, info.GetIsolate() TSRMLS_CC));
+    }
 }
 static void path_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
@@ -172,7 +180,7 @@ static void path_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo
     {
         return;
     }
-    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
 
     zval *REQUEST_URI = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_URI"));
 
@@ -199,8 +207,8 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     {
         return;
     }
-    const HashTable *_GET = Z_ARRVAL(PG(http_globals)[TRACK_VARS_GET]);
-    const HashTable *_POST = Z_ARRVAL(PG(http_globals)[TRACK_VARS_POST]);
+    HashTable *_GET = Z_ARRVAL(PG(http_globals)[TRACK_VARS_GET]);
+    HashTable *_POST = Z_ARRVAL(PG(http_globals)[TRACK_VARS_POST]);
 
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::Object> obj = v8::Object::New(isolate);
@@ -286,7 +294,7 @@ static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
     {
         return;
     }
-    const HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
 
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::Object> obj = v8::Object::New(isolate);
