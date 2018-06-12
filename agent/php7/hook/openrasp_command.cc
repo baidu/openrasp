@@ -135,9 +135,13 @@ void pre_global_shell_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     char *command;
     size_t command_len;
 
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-    Z_PARAM_STRING(command, command_len)
-    ZEND_PARSE_PARAMETERS_END();
+    // ZEND_PARSE_PARAMETERS_START(1, 1)
+    // Z_PARAM_STRING(command, command_len)
+    // ZEND_PARSE_PARAMETERS_END();
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &command, &command_len) == FAILURE) {
+		return;
+	}
 
     if (!command_len)
     {
@@ -160,15 +164,21 @@ void pre_global_proc_open_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     zval *environment = NULL;
     zval *other_options = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(3, 6)
-    Z_PARAM_STRING(command, command_len)
-    Z_PARAM_ARRAY(descriptorspec)
-    Z_PARAM_ZVAL_DEREF(pipes)
-    Z_PARAM_OPTIONAL
-    Z_PARAM_STRING_EX(cwd, cwd_len, 1, 0)
-    Z_PARAM_ARRAY_EX(environment, 1, 0)
-    Z_PARAM_ARRAY_EX(other_options, 1, 0)
-    ZEND_PARSE_PARAMETERS_END_EX(return );
+    // ZEND_PARSE_PARAMETERS_START(3, 6)
+    // Z_PARAM_STRING(command, command_len)
+    // Z_PARAM_ARRAY(descriptorspec)
+    // Z_PARAM_ZVAL_DEREF(pipes)
+    // Z_PARAM_OPTIONAL
+    // Z_PARAM_STRING_EX(cwd, cwd_len, 1, 0)
+    // Z_PARAM_ARRAY_EX(environment, 1, 0)
+    // Z_PARAM_ARRAY_EX(other_options, 1, 0)
+    // ZEND_PARSE_PARAMETERS_END_EX(return);
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "saz|s!a!a!", &command,
+				&command_len, &descriptorspec, &pipes, &cwd, &cwd_len, &environment,
+				&other_options) == FAILURE) {
+		return;
+	}
 
     if (!command_len)
     {
@@ -187,10 +197,14 @@ void pre_global_popen_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     char *command, *mode;
     size_t command_len, mode_len;
 
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-    Z_PARAM_PATH(command, command_len)
-    Z_PARAM_STRING(mode, mode_len)
-    ZEND_PARSE_PARAMETERS_END();
+    // ZEND_PARSE_PARAMETERS_START(2, 2)
+    // Z_PARAM_PATH(command, command_len)
+    // Z_PARAM_STRING(mode, mode_len)
+    // ZEND_PARSE_PARAMETERS_END();
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &command, &command_len, &mode, &mode_len) == FAILURE) {
+		return;
+	}
 
     if (!command_len)
     {

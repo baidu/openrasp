@@ -72,10 +72,14 @@ void pre_global_array_map_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	zend_fcall_info fci = empty_fcall_info;
 	zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
 
-	ZEND_PARSE_PARAMETERS_START(2, -1)
-		Z_PARAM_FUNC_EX(fci, fci_cache, 1, 0)
-		Z_PARAM_VARIADIC('+', arrays, n_arrays)
-	ZEND_PARSE_PARAMETERS_END();
+	// ZEND_PARSE_PARAMETERS_START(2, -1)
+	// 	Z_PARAM_FUNC_EX(fci, fci_cache, 1, 0)
+	// 	Z_PARAM_VARIADIC('+', arrays, n_arrays)
+	// ZEND_PARSE_PARAMETERS_END();
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "f!+", &fci, &fci_cache, &arrays, &n_arrays) == FAILURE) {
+		return;
+	}
 
 	check_callable_function(fci, check_type TSRMLS_CC);
 }
@@ -84,23 +88,30 @@ void pre_global_array_walk_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	HashTable *array;
 	zval *userdata = NULL;
-	zend_fcall_info orig_array_walk_fci;
-	zend_fcall_info_cache orig_array_walk_fci_cache;
+	zend_fcall_info fci = empty_fcall_info;
+	zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
+	// zend_fcall_info orig_array_walk_fci;
+	// zend_fcall_info_cache orig_array_walk_fci_cache;
 
-	orig_array_walk_fci = BG(array_walk_fci);
-	orig_array_walk_fci_cache = BG(array_walk_fci_cache);
+	// orig_array_walk_fci = BG(array_walk_fci);
+	// orig_array_walk_fci_cache = BG(array_walk_fci_cache);
 
-	ZEND_PARSE_PARAMETERS_START(2, 3)
-		Z_PARAM_ARRAY_OR_OBJECT_HT_EX(array, 0, 1)
-		Z_PARAM_FUNC(BG(array_walk_fci), BG(array_walk_fci_cache))
-		Z_PARAM_OPTIONAL
-		Z_PARAM_ZVAL_EX(userdata, 0, 1)
-	ZEND_PARSE_PARAMETERS_END_EX(
-		BG(array_walk_fci) = orig_array_walk_fci;
-		BG(array_walk_fci_cache) = orig_array_walk_fci_cache;
-		return
-	);
-	check_callable_function(BG(array_walk_fci), check_type TSRMLS_CC);
+	// ZEND_PARSE_PARAMETERS_START(2, 3)
+	// 	Z_PARAM_ARRAY_OR_OBJECT_HT_EX(array, 0, 1)
+	// 	Z_PARAM_FUNC(BG(array_walk_fci), BG(array_walk_fci_cache))
+	// 	Z_PARAM_OPTIONAL
+	// 	Z_PARAM_ZVAL_EX(userdata, 0, 1)
+	// ZEND_PARSE_PARAMETERS_END_EX(
+	// 	BG(array_walk_fci) = orig_array_walk_fci;
+	// 	BG(array_walk_fci_cache) = orig_array_walk_fci_cache;
+	// 	return
+	// );
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Hf|z/", &array, &fci, &fci_cache, &userdata) == FAILURE) {
+		return;
+	}
+
+	check_callable_function(fci, check_type TSRMLS_CC);
 }
 
 void pre_reflectionfunction___construct_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
