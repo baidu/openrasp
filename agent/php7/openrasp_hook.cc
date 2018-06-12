@@ -92,9 +92,9 @@ bool openrasp_check_callable_black(const char *item_name, uint item_name_length 
 
 zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, bool handle_unresolved TSRMLS_DC)
 {
-    char *expand_path = expand_filepath(filename, nullptr);
     zend_string *resolved_path;
-    if (expand_path)
+    char expand_path[MAXPATHLEN];
+    if (expand_filepath(filename, expand_path))
     {
         resolved_path = php_resolve_path(expand_path, strlen(expand_path), use_include_path ? PG(include_path) : nullptr);
     }

@@ -221,10 +221,16 @@ void pre_splfileobject___construct_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETER
 void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zend_string *source, *dest;
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-    Z_PARAM_STR(source)
-    Z_PARAM_STR(dest)
-    ZEND_PARSE_PARAMETERS_END();
+
+    // ZEND_PARSE_PARAMETERS_START(2, 2)
+    // Z_PARAM_STR(source)
+    // Z_PARAM_STR(dest)
+    // ZEND_PARSE_PARAMETERS_END();
+
+    if (zend_parse_parameters(MIN(2, ZEND_NUM_ARGS()), "PP", &source, &dest) != SUCCESS)
+    {
+        return;
+    }
 
     zend_string *source_real_path = openrasp_real_path(ZSTR_VAL(source), ZSTR_LEN(source), false, false TSRMLS_CC);
     if (source_real_path)

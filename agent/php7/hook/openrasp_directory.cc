@@ -23,26 +23,35 @@ PRE_HOOK_FUNCTION(dir, directory);
 PRE_HOOK_FUNCTION(opendir, directory);
 PRE_HOOK_FUNCTION(scandir, directory);
 
-static void _check_dirname(char *dirname, size_t dir_len, const char *check_type)
+static inline void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-	if (dir_len < 1)
+	zend_string *dirname;
+
+	if (zend_parse_parameters(MIN(1, ZEND_NUM_ARGS()), "P", &dirname) != SUCCESS)
 	{
 		return;
 	}
+
+	if (ZSTR_LEN(dirname) < 1)
+	{
+		return;
+	}
+
 	php_stream *dirp;
-	dirp = php_stream_opendir(dirname, IGNORE_PATH, NULL);
+	dirp = php_stream_opendir(ZSTR_VAL(dirname), IGNORE_PATH, NULL);
 	if (!dirp)
 	{
 		return;
 	}
 	php_stream_close(dirp);
-	char resolved_path_buff[MAXPATHLEN];
-	if (VCWD_REALPATH(dirname, resolved_path_buff))
+	zend_string *real_path = openrasp_real_path(ZSTR_VAL(dirname), ZSTR_LEN(dirname), false, false);
+	if (real_path)
 	{
 		zval params;
 		array_init(&params);
-		add_assoc_string(&params, "path", dirname);
-		add_assoc_string(&params, "realpath", resolved_path_buff);
+		add_assoc_str(&params, "path", dirname);
+		zend_string_addref(dirname);
+		add_assoc_str(&params, "realpath", real_path);
 		zval stack;
 		array_init(&stack);
 		format_debug_backtrace_arr(&stack TSRMLS_CC);
@@ -51,42 +60,15 @@ static void _check_dirname(char *dirname, size_t dir_len, const char *check_type
 	}
 }
 
-static void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    char *dirname;
-	size_t dir_len;
-	zval *zcontext = NULL;
-
-	ZEND_PARSE_PARAMETERS_START(1, 2)
-		Z_PARAM_PATH(dirname, dir_len)
-		Z_PARAM_OPTIONAL
-		Z_PARAM_RESOURCE(zcontext)
-	ZEND_PARSE_PARAMETERS_END();
-
-	_check_dirname(dirname, dir_len, check_type);
-}
-
 void pre_global_dir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	_hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 void pre_global_opendir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	_hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 void pre_global_scandir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-	char *dirn;
-	size_t dirn_len;
-	zend_long flags = 0;
-	zval *zcontext = NULL;
-
-	ZEND_PARSE_PARAMETERS_START(1, 3)
-		Z_PARAM_PATH(dirn, dirn_len)
-		Z_PARAM_OPTIONAL
-		Z_PARAM_LONG(flags)
-		Z_PARAM_RESOURCE(zcontext)
-	ZEND_PARSE_PARAMETERS_END();
-
-	_check_dirname(dirn, dirn_len, check_type);
+	_hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
