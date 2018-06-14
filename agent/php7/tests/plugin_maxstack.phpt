@@ -1,0 +1,34 @@
+--TEST--
+plugin maxstack
+--SKIPIF--
+<?php
+$plugin = <<<EOF
+plugin.register('command', params => {
+    assert(params.command == 'echo test')
+    assert(params.stack[0].endsWith('exec'))
+    assert(params.stack.length <= 10)
+    return block
+})
+EOF;
+include(__DIR__.'/skipif.inc');
+?>
+--INI--
+openrasp.root_dir=/tmp/openrasp
+openrasp.plugin_maxstack=10
+--FILE--
+<?php
+function test($deep)
+{
+    if ($deep < 20)
+    {
+        test($deep + 1);
+    }
+    else
+    {
+        exec('echo test');
+    }
+}
+test(0);
+?>
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

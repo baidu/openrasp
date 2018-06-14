@@ -1,0 +1,61 @@
+ARG_ENABLE("openrasp", "enable openrasp support", "no");
+
+if (PHP_OPENRASP != "no") {
+
+	ADD_FLAG("CFLAGS_OPENRASP", "/I " + configure_module_dirname);
+	ADD_FLAG("CFLAGS_OPENRASP", "/EHcs");
+	ADD_FLAG("CFLAGS_OPENRASP", "/MD");
+	ADD_FLAG("CFLAGS_OPENRASP", "/D NOMINMAX");
+	ADD_FLAG("CFLAGS_OPENRASP", "/D ZEND_WIN32_KEEP_INLINE");
+	ADD_FLAG("CFLAGS_OPENRASP", "/D __STDC_LIMIT_MACROS");
+	ADD_FLAG("CFLAGS", "/U ZEND_WIN32_FORCE_INLINE");
+
+	ADD_SOURCES(configure_module_dirname + "/hook", "openrasp_command.cc openrasp_directory.cc openrasp_fileupload.cc openrasp_include.cc openrasp_array.cc openrasp_sql.cc openrasp_file.cc openrasp_mysql.cc openrasp_mysqli.cc openrasp_pdo.cc openrasp_pgsql.cc openrasp_sqlite3.cc openrasp_ssrf.cc", "openrasp");
+
+	var libfswatch_path = configure_module_dirname + "/libfswatch";
+	ADD_FLAG("CFLAGS_OPENRASP", "/I " + libfswatch_path);
+	ADD_SOURCES(libfswatch_path + "/c", "libfswatch_log.cpp libfswatch.cpp cevent.cpp", "openrasp", libfswatch_path);
+	ADD_SOURCES(libfswatch_path + "/c++", "monitor.cpp filter.cpp windows_monitor.cpp event.cpp libfswatch_exception.cpp", "openrasp", libfswatch_path);
+	ADD_SOURCES(libfswatch_path + "/c++/windows", "win_handle.cpp win_error_message.cpp win_strings.cpp win_paths.cpp win_directory_change_event.cpp", "openrasp", libfswatch_path);
+	ADD_SOURCES(libfswatch_path + "/c++/string", "string_utils.cpp", "openrasp", libfswatch_path);
+
+	CHECK_LIB("winmm.lib", "openrasp");
+	CHECK_LIB("dbghelp.lib", "openrasp");
+	CHECK_LIB("shlwapi.lib", "openrasp");
+
+	if (CHECK_LIB("ws2_32.lib", "openrasp", PHP_OPENRASP)
+	&& CHECK_LIB("Iphlpapi.lib", "openrasp", PHP_OPENRASP)
+	&& CHECK_HEADER_ADD_INCLUDE("winsock2.h", "CFLAGS_OPENRASP")) {
+		AC_DEFINE('HAVE_IPHLPAPI_WS2', 1);
+	} else {
+		WARNING("GetAdaptersInfo not supported; libraries and headers not found");
+	}
+
+	CHECK_HEADER_ADD_INCLUDE("v8.h", "CFLAGS_OPENRASP");
+	var libv8_path = PHP_PHP_BUILD + "\\" + (X64 ? "lib64" : "lib");
+	CHECK_LIB("v8_base.lib", "openrasp", libv8_path);
+	CHECK_LIB("v8_libbase.lib", "openrasp", libv8_path);
+	CHECK_LIB("v8_libsampler.lib", "openrasp", libv8_path);
+	CHECK_LIB("v8_libplatform.lib", "openrasp", libv8_path);
+	CHECK_LIB("v8_snapshot.lib", "openrasp", libv8_path);
+	DEFINE("LDFLAGS", get_define("LDFLAGS_OPENRASP") + " " + get_define("LDFLAGS"));
+
+	EXTENSION("openrasp",
+	"openrasp.cc \
+	openrasp_ini.cc \
+	openrasp_utils.cc \
+	openrasp_hook.cc \
+	openrasp_inject.cc \
+	openrasp_log.cc \
+	openrasp_fswatch.cc \
+	openrasp_shared_alloc.c  \
+	openrasp_shared_alloc_mmap.c  \
+	openrasp_shared_alloc_win32.c  \
+	openrasp_v8.cc \
+	openrasp_v8_timeout_task.cc \
+	openrasp_v8_request_context.cc \
+	openrasp_v8_utils.cc \
+	openrasp_security_policy.cc"
+	, true);
+}
+
