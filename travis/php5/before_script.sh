@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ev
 
-pushd agent/php
+pushd agent/$OPENRASP_LANG
 phpenv config-rm xdebug.ini || true
 phpenv config-rm ext-opcache.ini || true
 wget -N https://packages.baidu.com/app/openrasp/libv8-5.9-linux.tar.gz -P ~/cache

@@ -8,7 +8,7 @@ services:
   - postgresql
 matrix:
   include:
-    - env: OPENRASP_LANG=php CC=gcc-5 CXX=g++-5 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
+    - env: OPENRASP_LANG=php5 CC=gcc-5 CXX=g++-5 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
       language: php
       php: 5.6
       addons:
@@ -17,7 +17,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
-    - env: OPENRASP_LANG=php CC=gcc-4.9 CXX=g++-4.9 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
+    - env: OPENRASP_LANG=php5 CC=gcc-4.9 CXX=g++-4.9 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
       language: php
       php: 5.4
       addons:
