@@ -45,7 +45,7 @@ static inline void openrasp_webshell_command_common(INTERNAL_FUNCTION_PARAMETERS
         return;
     }
 
-    if (openrasp_zval_in_request(command TSRMLS_CC))
+    if (openrasp_zval_in_request(command))
     {
         zval attack_params;
         array_init(&attack_params);
@@ -53,7 +53,7 @@ static inline void openrasp_webshell_command_common(INTERNAL_FUNCTION_PARAMETERS
         Z_ADDREF_P(command);
         zval plugin_message;
         ZVAL_STRING(&plugin_message, _("Webshell detected - Command execution backdoor"));
-        openrasp_buildin_php_risk_handle(1, "webshell_command", 100, &attack_params, &plugin_message TSRMLS_CC);
+        openrasp_buildin_php_risk_handle(1, "webshell_command", 100, &attack_params, &plugin_message);
     }
 }
 
@@ -72,9 +72,9 @@ static inline void openrasp_command_common(INTERNAL_FUNCTION_PARAMETERS)
     zend_string_addref(command);
     zval stack;
     array_init(&stack);
-    format_debug_backtrace_arr(&stack TSRMLS_CC);
+    format_debug_backtrace_arr(&stack);
     add_assoc_zval(&params, "stack", &stack);
-    check("command", &params TSRMLS_CC);
+    check("command", &params);
 }
 
 void pre_global_passthru_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -175,7 +175,7 @@ void pre_global_pcntl_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     zend_string_addref(command);
     zval stack;
     array_init(&stack);
-    format_debug_backtrace_arr(&stack TSRMLS_CC);
+    format_debug_backtrace_arr(&stack);
     add_assoc_zval(&params, "stack", &stack);
-    check("command", &params TSRMLS_CC);
+    check("command", &params);
 }

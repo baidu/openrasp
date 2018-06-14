@@ -144,7 +144,7 @@ int openrasp_shared_alloc_startup()
 	const openrasp_shared_memory_handler_entry *he;
 	int res = ALLOC_FAILURE;
 
-	TSRMLS_FETCH();
+	
 
 	openrasp_shared_alloc_create_lock();
 
@@ -192,10 +192,10 @@ void openrasp_shared_alloc_shutdown()
 #endif
 }
 
-void openrasp_shared_alloc_safe_unlock(TSRMLS_D)
+void openrasp_shared_alloc_safe_unlock()
 {
 	if (OPENRASP_G(locked)) {
-		openrasp_shared_alloc_unlock(TSRMLS_C);
+		openrasp_shared_alloc_unlock();
 	}
 }
 
@@ -205,7 +205,7 @@ static FLOCK_STRUCTURE(mem_write_lock, F_WRLCK, SEEK_SET, 0, 1);
 static FLOCK_STRUCTURE(mem_write_unlock, F_UNLCK, SEEK_SET, 0, 1);
 #endif
 
-void openrasp_shared_alloc_lock(TSRMLS_D)
+void openrasp_shared_alloc_lock()
 {
 	if(!need_alloc_shm)
 	{
@@ -240,7 +240,7 @@ void openrasp_shared_alloc_lock(TSRMLS_D)
 	OPENRASP_G(locked) = 1;
 }
 
-void openrasp_shared_alloc_unlock(TSRMLS_D)
+void openrasp_shared_alloc_unlock()
 {
 	if(!need_alloc_shm)
 	{

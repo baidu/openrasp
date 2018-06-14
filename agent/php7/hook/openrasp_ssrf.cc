@@ -41,7 +41,7 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
 void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval args[]);
 OPENRASP_HOOK_FUNCTION(curl_exec, ssrf)
 {
-    bool type_ignored = openrasp_check_type_ignored(ZEND_STRL("ssrf") TSRMLS_CC);
+    bool type_ignored = openrasp_check_type_ignored(ZEND_STRL("ssrf"));
     zval origin_url, function_name;
     zval *zid = nullptr, *opt = nullptr;
     bool skip_hook = false;
@@ -76,7 +76,7 @@ OPENRASP_HOOK_FUNCTION(curl_exec, ssrf)
 
 bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval args[])
 {
-    if (call_user_function(EG(function_table), NULL, function_name, origin_url, 2, args TSRMLS_CC) != SUCCESS ||
+    if (call_user_function(EG(function_table), NULL, function_name, origin_url, 2, args) != SUCCESS ||
         Z_TYPE_P(origin_url) != IS_STRING)
     {
         return true;
@@ -118,7 +118,7 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
             php_url_free(url);
         }
         add_assoc_zval(&params, "ip", &ip_arr);
-        check(check_type, &params TSRMLS_CC);
+        check(check_type, &params);
     }
     return false;
 }
@@ -127,7 +127,7 @@ void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *fun
 {
     zval effective_url;
     ZVAL_NULL(&effective_url);
-    if (call_user_function(EG(function_table), NULL, function_name, &effective_url, 2, args TSRMLS_CC) != SUCCESS &&
+    if (call_user_function(EG(function_table), NULL, function_name, &effective_url, 2, args) != SUCCESS &&
         Z_TYPE(effective_url) != IS_STRING &&
         (strncasecmp(Z_STRVAL(effective_url), "file", 4) == 0 || strncasecmp(Z_STRVAL(effective_url), "scp", 3) == 0) &&
         strcmp(Z_STRVAL(effective_url), Z_STRVAL_P(origin_url)) != 0)
@@ -136,7 +136,7 @@ void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *fun
         ZVAL_STRING(&attack_params, Z_STRVAL(effective_url));
         zval plugin_message;
         ZVAL_STR(&plugin_message, strpprintf(0, _("Detected SSRF via 302 redirect, effective url is %s"), Z_STRVAL(effective_url)));
-        openrasp_buildin_php_risk_handle(1, check_type, 100, &attack_params, &plugin_message TSRMLS_CC);
+        openrasp_buildin_php_risk_handle(1, check_type, 100, &attack_params, &plugin_message);
     }
     zval_ptr_dtor(&effective_url);
     return;

@@ -25,19 +25,19 @@ PRE_HOOK_FUNCTION(array_filter, callable);
 
 PRE_HOOK_FUNCTION_EX(__construct, reflectionfunction, callable);
 
-static void _callable_handler(const char *functionname, uint functionname_len, const char *check_type TSRMLS_DC)
+static void _callable_handler(const char *functionname, uint functionname_len, const char *check_type)
 {
-	if (openrasp_check_callable_black(functionname, functionname_len TSRMLS_CC))
+	if (openrasp_check_callable_black(functionname, functionname_len))
 	{
 		zval attack_params;
 		ZVAL_STRING(&attack_params, functionname);
 		zval plugin_message;
 		ZVAL_STR(&plugin_message, strpprintf(0, _("Webshell detected: using '%s' function"), functionname));
-		openrasp_buildin_php_risk_handle(1, check_type, 100, &attack_params, &plugin_message TSRMLS_CC);
+		openrasp_buildin_php_risk_handle(1, check_type, 100, &attack_params, &plugin_message);
 	}
 }
 
-static void check_callable_function(zend_fcall_info fci, const char *check_type TSRMLS_DC)
+static void check_callable_function(zend_fcall_info fci, const char *check_type)
 {
 	if (!ZEND_FCI_INITIALIZED(fci))
 	{
@@ -46,7 +46,7 @@ static void check_callable_function(zend_fcall_info fci, const char *check_type 
 	zval function_name = fci.function_name;
 	if (Z_TYPE(function_name) == IS_STRING && Z_STRLEN(function_name) > 0)
 	{
-		_callable_handler(Z_STRVAL(function_name), Z_STRLEN(function_name), check_type TSRMLS_CC);
+		_callable_handler(Z_STRVAL(function_name), Z_STRLEN(function_name), check_type);
 	}
 }
 
@@ -60,7 +60,7 @@ void pre_global_array_filter_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	{
 		return;
 	}
-	check_callable_function(fci, check_type TSRMLS_CC);
+	check_callable_function(fci, check_type);
 }
 
 void pre_global_array_walk_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -83,7 +83,7 @@ void pre_global_array_map_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 		return;
 	}
 
-	check_callable_function(fci, check_type TSRMLS_CC);
+	check_callable_function(fci, check_type);
 }
 
 void pre_reflectionfunction___construct_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -120,7 +120,7 @@ void pre_reflectionfunction___construct_callable(OPENRASP_INTERNAL_FUNCTION_PARA
 			efree(lcname);
 			return;
 		}
-		_callable_handler(nsname, name_len, check_type TSRMLS_CC);
+		_callable_handler(nsname, name_len, check_type);
 		efree(lcname);
 	}
 }

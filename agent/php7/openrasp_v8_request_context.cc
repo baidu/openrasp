@@ -19,7 +19,7 @@ using namespace openrasp;
 static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    TSRMLS_FETCH();
+    
 
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
@@ -75,7 +75,7 @@ static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<
 static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    TSRMLS_FETCH();
+    
 
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
@@ -106,7 +106,7 @@ static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
 static void querystring_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    TSRMLS_FETCH();
+    
 
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
@@ -117,13 +117,13 @@ static void querystring_getter(v8::Local<v8::Name> name, const v8::PropertyCallb
     zval *QUERY_STRING = zend_hash_str_find(_SERVER, ZEND_STRL("QUERY_STRING"));
     if (QUERY_STRING)
     {
-        info.GetReturnValue().Set(zval_to_v8val(QUERY_STRING, info.GetIsolate() TSRMLS_CC));
+        info.GetReturnValue().Set(zval_to_v8val(QUERY_STRING, info.GetIsolate()));
     }
 }
 static void appBasePath_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    TSRMLS_FETCH();
+    
 
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
@@ -134,13 +134,13 @@ static void appBasePath_getter(v8::Local<v8::Name> name, const v8::PropertyCallb
     zval *DOCUMENT_ROOT = zend_hash_str_find(_SERVER, ZEND_STRL("DOCUMENT_ROOT"));
     if (DOCUMENT_ROOT)
     {
-        info.GetReturnValue().Set(zval_to_v8val(DOCUMENT_ROOT, info.GetIsolate() TSRMLS_CC));
+        info.GetReturnValue().Set(zval_to_v8val(DOCUMENT_ROOT, info.GetIsolate()));
     }
 }
 static void protocol_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    TSRMLS_FETCH();
+    
 
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
@@ -151,13 +151,13 @@ static void protocol_getter(v8::Local<v8::Name> name, const v8::PropertyCallback
     zval *REQUEST_SCHEME = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_SCHEME"));
     if (REQUEST_SCHEME)
     {
-        info.GetReturnValue().Set(zval_to_v8val(REQUEST_SCHEME, info.GetIsolate() TSRMLS_CC));
+        info.GetReturnValue().Set(zval_to_v8val(REQUEST_SCHEME, info.GetIsolate()));
     }
 }
 static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    TSRMLS_FETCH();
+    
 
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
@@ -168,13 +168,13 @@ static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallba
     zval *REMOTE_ADDR = zend_hash_str_find(_SERVER, ZEND_STRL("REMOTE_ADDR"));
     if (REMOTE_ADDR)
     {
-        info.GetReturnValue().Set(zval_to_v8val(REMOTE_ADDR, info.GetIsolate() TSRMLS_CC));
+        info.GetReturnValue().Set(zval_to_v8val(REMOTE_ADDR, info.GetIsolate()));
     }
 }
 static void path_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    TSRMLS_FETCH();
+    
 
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
@@ -201,7 +201,7 @@ static void path_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo
 }
 static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
-    TSRMLS_FETCH();
+    
     if ((Z_TYPE(PG(http_globals)[TRACK_VARS_GET]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_GET"))) ||
         (Z_TYPE(PG(http_globals)[TRACK_VARS_POST]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_POST"))))
     {
@@ -218,7 +218,7 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     zend_ulong idx;
     ZEND_HASH_FOREACH_KEY_VAL(_GET, idx, key, value)
     {
-        v8::Local<v8::Value> v8_value = zval_to_v8val(value, isolate TSRMLS_CC);
+        v8::Local<v8::Value> v8_value = zval_to_v8val(value, isolate);
         if (v8_value->IsNullOrUndefined())
         {
             continue;
@@ -242,7 +242,7 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
 
     ZEND_HASH_FOREACH_KEY_VAL(_POST, idx, key, value)
     {
-        v8::Local<v8::Value> v8_value = zval_to_v8val(value, isolate TSRMLS_CC);
+        v8::Local<v8::Value> v8_value = zval_to_v8val(value, isolate);
         if (v8_value->IsNullOrUndefined())
         {
             continue;
@@ -289,7 +289,7 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
 }
 static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
-    TSRMLS_FETCH();
+    
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
         return;
@@ -323,7 +323,7 @@ static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
         v8::Local<v8::String> v8_key;
         if (V8STRING_EX(tmp.c_str(), v8::NewStringType::kInternalized, tmp.length()).ToLocal(&v8_key))
         {
-            obj->Set(v8_key, zval_to_v8val(value, isolate TSRMLS_CC));
+            obj->Set(v8_key, zval_to_v8val(value, isolate));
         }
     }
     ZEND_HASH_FOREACH_END();
@@ -333,7 +333,7 @@ static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
 static void body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().Set(v8::ArrayBuffer::New(info.GetIsolate(), nullptr, 0, v8::ArrayBufferCreationMode::kInternalized));
-    TSRMLS_FETCH();
+    
     php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, NULL);
     if (!stream)
     {
@@ -374,7 +374,7 @@ static void body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo
 }
 static void server_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
-    TSRMLS_FETCH();
+    
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::Object> server = v8::Object::New(isolate);
     server->Set(V8STRING_I("language").ToLocalChecked(), V8STRING_N("php").ToLocalChecked());

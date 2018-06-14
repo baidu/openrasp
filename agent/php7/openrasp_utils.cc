@@ -25,10 +25,10 @@ extern "C"
 }
 #include <string>
 
-void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
+void format_debug_backtrace_str(zval *backtrace_str)
 {
     zval trace_arr;
-    zend_fetch_debug_backtrace(&trace_arr, 0, 0, 0 TSRMLS_CC);
+    zend_fetch_debug_backtrace(&trace_arr, 0, 0, 0);
     if (Z_TYPE(trace_arr) == IS_ARRAY)
     {
         int i = 0;
@@ -76,10 +76,10 @@ void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
     zval_dtor(&trace_arr);
 }
 
-void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
+void format_debug_backtrace_arr(zval *backtrace_arr)
 {
     zval trace_arr;
-    zend_fetch_debug_backtrace(&trace_arr, 0, 0, 0 TSRMLS_CC);
+    zend_fetch_debug_backtrace(&trace_arr, 0, 0, 0);
     if (Z_TYPE(trace_arr) == IS_ARRAY)
     {
         int i = 0;
@@ -126,7 +126,7 @@ void openrasp_error(int type, int error_code, const char *format, ...)
     efree(message);
 }
 
-int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC)
+int recursive_mkdir(const char *path, int len, int mode)
 {
     struct stat sb;
     if (VCWD_STAT(path, &sb) == 0 && (sb.st_mode & S_IFDIR) != 0)
@@ -135,7 +135,7 @@ int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC)
     }
     char *dirname = estrndup(path, len);
     int dirlen = php_dirname(dirname, len);
-    int rst = recursive_mkdir(dirname, dirlen, mode TSRMLS_CC);
+    int rst = recursive_mkdir(dirname, dirlen, mode);
     efree(dirname);
     if (rst)
     {

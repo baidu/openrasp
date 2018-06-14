@@ -77,7 +77,7 @@ static char host_name[255];
 
 /* 获取当前毫秒时间
 */
-static long get_millisecond(TSRMLS_D)
+static long get_millisecond()
 {
     struct timeval tp = {0};
     gettimeofday(&tp, NULL);
@@ -86,32 +86,32 @@ static long get_millisecond(TSRMLS_D)
 
 /* 创建日志文件夹
 */
-static int openrasp_log_files_mkdir(char *path TSRMLS_DC) { 
+static int openrasp_log_files_mkdir(char *path) { 
     if (VCWD_ACCESS(path, F_OK) == 0)
     {
         return SUCCESS;
     }
-    zend_bool mkdir_result = recursive_mkdir(path, strlen(path), 0777 TSRMLS_CC);   
+    zend_bool mkdir_result = recursive_mkdir(path, strlen(path), 0777);   
 	return mkdir_result ? SUCCESS : FAILURE;
 }
 
-static void init_logger_instance(int logger_id TSRMLS_DC)
+static void init_logger_instance(int logger_id)
 {
     assert(logger_id >= 0 && logger_id < TOTAL);
     rasp_logger_entry& logger_entry = OPENRASP_LOG_G(loggers)[logger_id];
     if (!logger_entry.initialized)
     {
         logger_entry.available_token = openrasp_ini.log_maxburst;
-        logger_entry.last_logged_time = get_millisecond(TSRMLS_C);
+        logger_entry.last_logged_time = get_millisecond();
         char *logger_folder = NULL;
         spprintf(&logger_folder, 0, "%s%clogs%c%s", openrasp_ini.root_dir, DEFAULT_SLASH, DEFAULT_SLASH, logger_entry.name);
-        logger_entry.accessable = (openrasp_log_files_mkdir(logger_folder TSRMLS_CC) == SUCCESS) ? 1 : 0;
+        logger_entry.accessable = (openrasp_log_files_mkdir(logger_folder) == SUCCESS) ? 1 : 0;
         efree(logger_folder);
         logger_entry.initialized = 1;
     }
 }
 
-static void close_logger_stream(int logger_id TSRMLS_DC)
+static void close_logger_stream(int logger_id)
 {
     assert(logger_id >= 0 && logger_id < TOTAL);
     rasp_logger_entry& logger_entry = OPENRASP_LOG_G(loggers)[logger_id];
@@ -181,7 +181,7 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
     }
 }
 
-static void init_alarm_request_info(TSRMLS_D)
+static void init_alarm_request_info()
 {
     static std::vector<keys_filter> alarm_filters = 
     {
@@ -196,7 +196,7 @@ static void init_alarm_request_info(TSRMLS_D)
 
     assert(Z_TYPE(OPENRASP_LOG_G(alarm_request_info)) == IS_NULL);
     array_init(&OPENRASP_LOG_G(alarm_request_info));
-    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY || zend_is_auto_global_str(ZEND_STRL("_SERVER") TSRMLS_CC))
+    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY || zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
         migrate_hash_values(&OPENRASP_LOG_G(alarm_request_info), &PG(http_globals)[TRACK_VARS_SERVER], alarm_filters);
     }
@@ -207,7 +207,7 @@ static void init_alarm_request_info(TSRMLS_D)
     add_assoc_string(&OPENRASP_LOG_G(alarm_request_info), "request_id", OPENRASP_INJECT_G(request_id));
 }
 
-static void init_policy_request_info(TSRMLS_D)
+static void init_policy_request_info()
 {
     assert(Z_TYPE(OPENRASP_LOG_G(policy_request_info)) == IS_NULL);
     array_init(&OPENRASP_LOG_G(policy_request_info));
@@ -220,14 +220,14 @@ static void init_policy_request_info(TSRMLS_D)
     add_assoc_zval(&OPENRASP_LOG_G(policy_request_info), "server_nic", &ifaddr);
 }
 
-static void clear_alarm_request_info(TSRMLS_D)
+static void clear_alarm_request_info()
 {
     assert(Z_TYPE(OPENRASP_LOG_G(alarm_request_info)) == IS_ARRAY);
     zval_ptr_dtor(&OPENRASP_LOG_G(alarm_request_info));
     ZVAL_NULL(&OPENRASP_LOG_G(alarm_request_info));
 }
 
-static void clear_policy_request_info(TSRMLS_D)
+static void clear_policy_request_info()
 {
     assert(Z_TYPE(OPENRASP_LOG_G(policy_request_info)) == IS_ARRAY);
     zval_ptr_dtor(&OPENRASP_LOG_G(policy_request_info));
@@ -236,27 +236,27 @@ static void clear_policy_request_info(TSRMLS_D)
 
 /* 初始化logger
 */
-static void init_openrasp_loggers(TSRMLS_D)
+static void init_openrasp_loggers()
 {
     for (int logger_id = 0; logger_id < TOTAL; logger_id++)
     {
-        init_logger_instance(logger_id TSRMLS_CC);
+        init_logger_instance(logger_id);
     }
 }
 
 /* 释放全局logger
 */
-static void clear_openrasp_loggers(TSRMLS_D)
+static void clear_openrasp_loggers()
 {
     for (int logger_id = 0; logger_id < TOTAL; logger_id++)
     {
-        close_logger_stream(logger_id TSRMLS_CC);
+        close_logger_stream(logger_id);
     }
 }
 
 /* 判断是否需要更新文件时间后缀
 */
-static zend_bool if_need_update_formatted_file_suffix(rasp_logger_entry *logger, long now, int log_info_len TSRMLS_DC)
+static zend_bool if_need_update_formatted_file_suffix(rasp_logger_entry *logger, long now, int log_info_len)
 {
     int  last_logged_second       = logger->last_logged_time / 1000;
     long log_rotate_second        = 24*60*60;
@@ -267,7 +267,7 @@ static zend_bool if_need_update_formatted_file_suffix(rasp_logger_entry *logger,
     return 0;
 }
 
-static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log_appender appender_int TSRMLS_DC)
+static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log_appender appender_int)
 {
     php_stream *stream              = NULL;
     char       *res                 = NULL;
@@ -349,11 +349,11 @@ static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log
     return NULL;
 }
 
-static int openrasp_log_stream_write(rasp_logger_entry *logger, log_appender appender_int, char *message, int message_len TSRMLS_DC)
+static int openrasp_log_stream_write(rasp_logger_entry *logger, log_appender appender_int, char *message, int message_len)
 {
     php_stream **pp_stream;  
     {
-        pp_stream = openrasp_log_stream_zval_find(logger, appender_int TSRMLS_CC);
+        pp_stream = openrasp_log_stream_zval_find(logger, appender_int);
         if (!pp_stream)
         {
             return FAILURE;
@@ -365,13 +365,13 @@ static int openrasp_log_stream_write(rasp_logger_entry *logger, log_appender app
 
 /* 文件记录日志
 */
-static int openrasp_log_by_file(rasp_logger_entry *logger, char *message, int message_len TSRMLS_DC)
+static int openrasp_log_by_file(rasp_logger_entry *logger, char *message, int message_len)
 {
     long now = (long)time(NULL);    
-    if (if_need_update_formatted_file_suffix(logger, now, message_len TSRMLS_CC))
+    if (if_need_update_formatted_file_suffix(logger, now, message_len))
     {
         zend_string_release(OPENRASP_LOG_G(formatted_date_suffix));
-        OPENRASP_LOG_G(formatted_date_suffix) = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now, 1 TSRMLS_CC);
+        OPENRASP_LOG_G(formatted_date_suffix) = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now, 1);
         if (logger->stream_log)
         {
             php_stream_close(logger->stream_log);
@@ -379,7 +379,7 @@ static int openrasp_log_by_file(rasp_logger_entry *logger, char *message, int me
         }
     }
 
-    if (openrasp_log_stream_write(logger, FILE_APPENDER, message, message_len TSRMLS_CC) == FAILURE)
+    if (openrasp_log_stream_write(logger, FILE_APPENDER, message, message_len) == FAILURE)
     {
         return FAILURE;
     }
@@ -388,7 +388,7 @@ static int openrasp_log_by_file(rasp_logger_entry *logger, char *message, int me
 
 /* TCP UDP记录日志
 */
-static int openrasp_log_by_syslog(rasp_logger_entry *logger, severity_level level_int, char *message, int message_len TSRMLS_DC)
+static int openrasp_log_by_syslog(rasp_logger_entry *logger, severity_level level_int, char *message, int message_len)
 {
     char *syslog_info     = NULL;
     zend_string *time_RFC3339    = NULL;
@@ -396,12 +396,12 @@ static int openrasp_log_by_syslog(rasp_logger_entry *logger, severity_level leve
     int   priority        = 0;
 
     long  now             = (long)time(NULL);
-    time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), now, 1 TSRMLS_CC);
+    time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), now, 1);
     priority = openrasp_ini.syslog_facility * 8 + level_int;
     syslog_info_len = spprintf(&syslog_info, 0, "<%d>%s %s: %s", priority, ZSTR_VAL(time_RFC3339), host_name, message);
     zend_string_release(time_RFC3339);
 
-    if (openrasp_log_stream_write(logger, SYSLOG_APPENDER, syslog_info, syslog_info_len TSRMLS_CC))
+    if (openrasp_log_stream_write(logger, SYSLOG_APPENDER, syslog_info, syslog_info_len))
     {
         efree(syslog_info);
         return FAILURE;
@@ -413,7 +413,7 @@ static int openrasp_log_by_syslog(rasp_logger_entry *logger, severity_level leve
 
 /*  校验日志level与对应logger的level
  */
-static int check_log_level(rasp_logger_entry *logger, severity_level level_int TSRMLS_DC)
+static int check_log_level(rasp_logger_entry *logger, severity_level level_int)
 {
     if (logger->level >= LEVEL_DEBUG)
     {
@@ -445,9 +445,9 @@ static int check_log_level(rasp_logger_entry *logger, severity_level level_int T
 
 /* 限速实现(bucket token)
 */
-static int comsume_token_if_available(rasp_logger_entry *logger TSRMLS_DC)
+static int comsume_token_if_available(rasp_logger_entry *logger)
 {
-    long now_millisecond = get_millisecond(TSRMLS_C);
+    long now_millisecond = get_millisecond();
 
     //refill
     if (now_millisecond - logger->last_logged_time > RASP_LOG_TOKEN_REFILL_INTERVAL)
@@ -467,26 +467,26 @@ static int comsume_token_if_available(rasp_logger_entry *logger TSRMLS_DC)
     else
     {
         (logger->available_token)--;
-        logger->last_logged_time = get_millisecond(TSRMLS_C);
+        logger->last_logged_time = get_millisecond();
     }
     return SUCCESS;
 }
 
 /* 基础日志方法
 */
-static int base_log(rasp_logger_entry *logger, severity_level level_int, char *message, int message_len TSRMLS_DC)
+static int base_log(rasp_logger_entry *logger, severity_level level_int, char *message, int message_len)
 {
     if (!logger->accessable)
     {
         return FAILURE;
     }
 
-    if (check_log_level(logger, level_int TSRMLS_CC) == FAILURE)
+    if (check_log_level(logger, level_int) == FAILURE)
     {
         return FAILURE;
     }
     
-    if (comsume_token_if_available(logger TSRMLS_CC) == FAILURE)
+    if (comsume_token_if_available(logger) == FAILURE)
     {
         return FAILURE;
     }
@@ -495,11 +495,11 @@ static int base_log(rasp_logger_entry *logger, severity_level level_int, char *m
     {
         if (logger->appender & FILE_APPENDER)
         {
-            openrasp_log_by_file(logger, message, message_len TSRMLS_CC);
+            openrasp_log_by_file(logger, message, message_len);
         }
         if (logger->appender & SYSLOG_APPENDER)
         {
-            openrasp_log_by_syslog(logger, level_int, message, message_len TSRMLS_CC);
+            openrasp_log_by_syslog(logger, level_int, message, message_len);
         }
     }
     else
@@ -507,7 +507,7 @@ static int base_log(rasp_logger_entry *logger, severity_level level_int, char *m
         if (logger->appender & FILE_APPENDER)
         {
             char *file_path = NULL;
-            zend_string *tmp_formatted_date_suffix = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), (long)time(NULL), 1 TSRMLS_CC);
+            zend_string *tmp_formatted_date_suffix = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), (long)time(NULL), 1);
             spprintf(&file_path, 0, "%s%clogs%c%s%c%s.log.%s", openrasp_ini.root_dir, DEFAULT_SLASH, DEFAULT_SLASH, 
                 logger->name, DEFAULT_SLASH, logger->name, ZSTR_VAL(tmp_formatted_date_suffix));
 #ifndef _WIN32
@@ -532,29 +532,29 @@ static int base_log(rasp_logger_entry *logger, severity_level level_int, char *m
 
 /* 基础info
 */
-static inline int base_info(rasp_logger_entry *logger, const char *message, int message_len TSRMLS_DC) {
-    return base_log(logger, LEVEL_INFO, (char*)message, message_len TSRMLS_CC);
+static inline int base_info(rasp_logger_entry *logger, const char *message, int message_len) {
+    return base_log(logger, LEVEL_INFO, (char*)message, message_len);
 }
 
 /* 基础debug
 */
-static inline int base_debug(rasp_logger_entry *logger, const char *message, int message_len TSRMLS_DC) {
-    return base_log(logger, LEVEL_DEBUG, (char*)message, message_len TSRMLS_CC);
+static inline int base_debug(rasp_logger_entry *logger, const char *message, int message_len) {
+    return base_log(logger, LEVEL_DEBUG, (char*)message, message_len);
 }
 
 /*************************************************************************************************/
 
 /* 用于openrasp的info
 */
-int rasp_info(const char *message, int message_len TSRMLS_DC) {
+int rasp_info(const char *message, int message_len) {
     if (!OPENRASP_LOG_G(in_request_process))
     {
-        init_logger_instance(RASP_LOGGER TSRMLS_CC);
+        init_logger_instance(RASP_LOGGER);
     }
     char *rasp_info = NULL;    
-    zend_string *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
+    zend_string *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1);
     int   rasp_info_len = spprintf(&rasp_info, 0, "%s %s\n", ZSTR_VAL(time_RFC3339), message);
-    int  rasp_result = base_info(&OPENRASP_LOG_G(loggers)[RASP_LOGGER], rasp_info, rasp_info_len TSRMLS_CC);
+    int  rasp_result = base_info(&OPENRASP_LOG_G(loggers)[RASP_LOGGER], rasp_info, rasp_info_len);
     zend_string_release(time_RFC3339);
     efree(rasp_info);
     return rasp_result;
@@ -562,15 +562,15 @@ int rasp_info(const char *message, int message_len TSRMLS_DC) {
 
 /* 用于插件的info
 */
-int plugin_info(const char *message, int message_len TSRMLS_DC) {
+int plugin_info(const char *message, int message_len) {
     if (!OPENRASP_LOG_G(in_request_process))
     {
-        init_logger_instance(PLUGIN_LOGGER TSRMLS_CC);
+        init_logger_instance(PLUGIN_LOGGER);
     }
     char *plugin_info = NULL;    
-    zend_string *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
+    zend_string *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1);
     int  plugin_info_len = spprintf(&plugin_info, 0, "%s %s\n", ZSTR_VAL(time_RFC3339), message);
-    int  plugin_result = base_info(&OPENRASP_LOG_G(loggers)[PLUGIN_LOGGER], plugin_info, plugin_info_len TSRMLS_CC);
+    int  plugin_result = base_info(&OPENRASP_LOG_G(loggers)[PLUGIN_LOGGER], plugin_info, plugin_info_len);
     zend_string_release(time_RFC3339);
     efree(plugin_info);
     return plugin_result;
@@ -578,24 +578,24 @@ int plugin_info(const char *message, int message_len TSRMLS_DC) {
 
 /* 用于报警的info
 */
-int alarm_info(zval *params_result TSRMLS_DC) {
+int alarm_info(zval *params_result) {
     assert(Z_TYPE_P(params_result) == IS_ARRAY);
     assert(OPENRASP_LOG_G(in_request_process));
 
     int alarm_result = FAILURE;
 
-    add_assoc_str(&OPENRASP_LOG_G(alarm_request_info), "event_time", php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC));
+    add_assoc_str(&OPENRASP_LOG_G(alarm_request_info), "event_time", php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1));
     zval trace;
-    format_debug_backtrace_str(&trace TSRMLS_CC);
+    format_debug_backtrace_str(&trace);
     add_assoc_zval(&OPENRASP_LOG_G(alarm_request_info), "stack_trace", &trace);
 
     if (php_array_merge(Z_ARRVAL(OPENRASP_LOG_G(alarm_request_info)), Z_ARRVAL_P(params_result)))
     {
         smart_str buf_json = {0};
-        php_json_encode(&buf_json, &OPENRASP_LOG_G(alarm_request_info), 0 TSRMLS_CC);
+        php_json_encode(&buf_json, &OPENRASP_LOG_G(alarm_request_info), 0);
         smart_str_appendc(&buf_json, '\n');
         smart_str_0(&buf_json);
-        alarm_result = base_info(&OPENRASP_LOG_G(loggers)[ALARM_LOGGER], ZSTR_VAL(buf_json.s), ZSTR_LEN(buf_json.s) TSRMLS_CC);
+        alarm_result = base_info(&OPENRASP_LOG_G(loggers)[ALARM_LOGGER], ZSTR_VAL(buf_json.s), ZSTR_LEN(buf_json.s));
         smart_str_free(&buf_json);
         delete_merged_array_keys(Z_ARRVAL(OPENRASP_LOG_G(alarm_request_info)), Z_ARRVAL_P(params_result));
     }
@@ -612,22 +612,22 @@ int alarm_info(zval *params_result TSRMLS_DC) {
 
 /* 用于基线的info
 */
-int policy_info(zval *params_result TSRMLS_DC) {
+int policy_info(zval *params_result) {
     assert(Z_TYPE_P(params_result) == IS_ARRAY);
 
     if (!OPENRASP_LOG_G(in_request_process))
     {
-        init_logger_instance(POLICY_LOGGER TSRMLS_CC);
-        init_policy_request_info(TSRMLS_C);
+        init_logger_instance(POLICY_LOGGER);
+        init_policy_request_info();
     }
     
     int policy_result = FAILURE;
 
-    add_assoc_str(&OPENRASP_LOG_G(policy_request_info), "event_time", php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC));
+    add_assoc_str(&OPENRASP_LOG_G(policy_request_info), "event_time", php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1));
     zval trace;
     if (OPENRASP_LOG_G(in_request_process))
     {
-        format_debug_backtrace_str(&trace TSRMLS_CC);
+        format_debug_backtrace_str(&trace);
     }
     else
     {
@@ -638,10 +638,10 @@ int policy_info(zval *params_result TSRMLS_DC) {
     if (php_array_merge(Z_ARRVAL(OPENRASP_LOG_G(policy_request_info)), Z_ARRVAL_P(params_result)))
     {
         smart_str buf_json = {0};      
-        php_json_encode(&buf_json, &OPENRASP_LOG_G(policy_request_info), 0 TSRMLS_CC);
+        php_json_encode(&buf_json, &OPENRASP_LOG_G(policy_request_info), 0);
         smart_str_appendc(&buf_json, '\n');
         smart_str_0(&buf_json);
-        policy_result = base_info(&OPENRASP_LOG_G(loggers)[POLICY_LOGGER], ZSTR_VAL(buf_json.s), ZSTR_LEN(buf_json.s) TSRMLS_CC);
+        policy_result = base_info(&OPENRASP_LOG_G(loggers)[POLICY_LOGGER], ZSTR_VAL(buf_json.s), ZSTR_LEN(buf_json.s));
         smart_str_free(&buf_json);
         delete_merged_array_keys(Z_ARRVAL(OPENRASP_LOG_G(policy_request_info)), Z_ARRVAL_P(params_result));
     }
@@ -655,13 +655,13 @@ int policy_info(zval *params_result TSRMLS_DC) {
 
     if (!OPENRASP_LOG_G(in_request_process))
     {                
-        clear_policy_request_info(TSRMLS_C);
+        clear_policy_request_info();
     }
 
     return policy_result;
 }
 
-static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_globals TSRMLS_DC)
+static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_globals)
 {
     ZVAL_NULL(&openrasp_log_globals->alarm_request_info);
     ZVAL_NULL(&openrasp_log_globals->policy_request_info);
@@ -773,10 +773,10 @@ PHP_RINIT_FUNCTION(openrasp_log)
 {
     OPENRASP_LOG_G(in_request_process) = 1;
 	long now = (long)time(NULL);
-    OPENRASP_LOG_G(formatted_date_suffix) = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now, 1 TSRMLS_CC);
-    init_openrasp_loggers(TSRMLS_C);
-    init_alarm_request_info(TSRMLS_C);
-    init_policy_request_info(TSRMLS_C);
+    OPENRASP_LOG_G(formatted_date_suffix) = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now, 1);
+    init_openrasp_loggers();
+    init_alarm_request_info();
+    init_policy_request_info();
     return SUCCESS;
 }
 
@@ -791,9 +791,9 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_log)
         php_stream_close(OPENRASP_LOG_G(syslog_stream));        
         OPENRASP_LOG_G(syslog_stream) = nullptr;
     }
-    clear_openrasp_loggers(TSRMLS_C);
-    clear_alarm_request_info(TSRMLS_C);
-    clear_policy_request_info(TSRMLS_C);
+    clear_openrasp_loggers();
+    clear_alarm_request_info();
+    clear_policy_request_info();
     OPENRASP_LOG_G(in_request_process) = 0;
     return SUCCESS;
 }

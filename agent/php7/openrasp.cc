@@ -36,7 +36,7 @@ extern "C" {
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
 bool is_initialized = false;
-static bool make_openrasp_root_dir(TSRMLS_D);
+static bool make_openrasp_root_dir();
 
 PHP_INI_BEGIN()
 PHP_INI_ENTRY1("openrasp.root_dir", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.root_dir)
@@ -80,7 +80,7 @@ PHP_MINIT_FUNCTION(openrasp)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp, PHP_GINIT(openrasp), PHP_GSHUTDOWN(openrasp));
     REGISTER_INI_ENTRIES();
-    if (!make_openrasp_root_dir(TSRMLS_C))
+    if (!make_openrasp_root_dir())
     {
         openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir should be configured correctly in php.ini (not empty, not root path, not relative path and writable), continue without security protection"));
         return SUCCESS;
@@ -188,14 +188,14 @@ zend_module_entry openrasp_module_entry = {
 ZEND_GET_MODULE(openrasp)
 #endif
 
-static bool make_openrasp_root_dir(TSRMLS_D)
+static bool make_openrasp_root_dir()
 {
     char *path = openrasp_ini.root_dir;
     if (!path || !IS_ABSOLUTE_PATH(path, strlen(path)))
     {
         return false;
     }
-    path = expand_filepath(path, nullptr TSRMLS_CC);
+    path = expand_filepath(path, nullptr);
     if (!path || strnlen(path, 2) == 1)
     {
         efree(path);
@@ -207,7 +207,7 @@ static bool make_openrasp_root_dir(TSRMLS_D)
     for (auto dir : sub_dir_list)
     {
         std::string path(root_dir + DEFAULT_SLASH + dir);
-        if (!recursive_mkdir(path.c_str(), path.length(), 0777 TSRMLS_CC))
+        if (!recursive_mkdir(path.c_str(), path.length(), 0777))
         {
             return false;
         }

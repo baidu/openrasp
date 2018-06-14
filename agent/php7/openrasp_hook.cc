@@ -35,7 +35,7 @@ typedef struct _track_vars_pair_t
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_hook)
 
-bool openrasp_zval_in_request(zval *item TSRMLS_DC)
+bool openrasp_zval_in_request(zval *item)
 {
     static const track_vars_pair pairs[] = {{TRACK_VARS_POST, "_POST"},
                                             {TRACK_VARS_GET, "_GET"},
@@ -62,7 +62,7 @@ bool openrasp_zval_in_request(zval *item TSRMLS_DC)
     return false;
 }
 
-void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zval *message TSRMLS_DC)
+void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zval *message)
 {
     zval params_result;
     array_init(&params_result);
@@ -72,25 +72,25 @@ void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int 
     add_assoc_zval(&params_result, "plugin_message", message);
     add_assoc_string(&params_result, "intercept_state", const_cast<char *>(is_block ? "block" : "log"));
     add_assoc_string(&params_result, "plugin_name", const_cast<char *>("php_builtin_plugin"));
-    alarm_info(&params_result TSRMLS_CC);
+    alarm_info(&params_result);
     zval_ptr_dtor(&params_result);
     if (is_block)
     {
-        handle_block(TSRMLS_C);
+        handle_block();
     }
 }
 
-bool openrasp_check_type_ignored(const char *item_name, uint item_name_length TSRMLS_DC)
+bool openrasp_check_type_ignored(const char *item_name, uint item_name_length)
 {
     return openrasp_ini.hooks_ignore.find(item_name) != openrasp_ini.hooks_ignore.end();
 }
 
-bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC)
+bool openrasp_check_callable_black(const char *item_name, uint item_name_length)
 {
     return openrasp_ini.callable_blacklists.find(item_name) != openrasp_ini.callable_blacklists.end();
 }
 
-zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, bool handle_unresolved TSRMLS_DC)
+zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, bool handle_unresolved)
 {
     zend_string *resolved_path;
     char expand_path[MAXPATHLEN];
@@ -109,12 +109,12 @@ zend_string *openrasp_real_path(char *filename, int length, bool use_include_pat
     return resolved_path;
 }
 
-void handle_block(TSRMLS_D)
+void handle_block()
 {
-    int status = php_output_get_status(TSRMLS_C);
+    int status = php_output_get_status();
     if (status & PHP_OUTPUT_WRITTEN)
     {
-        php_output_discard_all(TSRMLS_C);
+        php_output_discard_all();
     }
     char *block_url = openrasp_ini.block_url;
     char *request_id = OPENRASP_INJECT_G(request_id);
@@ -129,7 +129,7 @@ void handle_block(TSRMLS_D)
             header.line = redirect_header;
             header.line_len = redirect_header_len;
             header.response_code = openrasp_ini.block_status_code;
-            sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
+            sapi_header_op(SAPI_HEADER_REPLACE, &header);
         }
         efree(redirect_header);
     }
@@ -140,8 +140,8 @@ void handle_block(TSRMLS_D)
         redirect_script_len = spprintf(&redirect_script, 0, "</script><script>location.href=\"%s?request_id=%s\"</script>", block_url, request_id);
         if (redirect_script)
         {
-            php_output_write(redirect_script, redirect_script_len TSRMLS_CC);
-            php_output_flush(TSRMLS_C);
+            php_output_write(redirect_script, redirect_script_len);
+            php_output_flush();
         }
         efree(redirect_script);
     }
@@ -152,13 +152,13 @@ void handle_block(TSRMLS_D)
  * 调用 openrasp_check 提供的方法进行检测
  * 若需要拦截，直接返回重定向信息，并终止请求
  */
-void check(const char *type, zval *params TSRMLS_DC)
+void check(const char *type, zval *params)
 {
-    char result = openrasp_check(type, params TSRMLS_CC);
+    char result = openrasp_check(type, params);
     zval_ptr_dtor(params);
     if (result)
     {
-        handle_block(TSRMLS_C);
+        handle_block();
     }
 }
 
@@ -182,7 +182,7 @@ PHP_MINIT_FUNCTION(openrasp_hook)
 
     for (auto &single_handler : global_hook_handlers)
     {
-        single_handler(TSRMLS_C);
+        single_handler();
     }
     return SUCCESS;
 }

@@ -50,8 +50,8 @@ int eval_handler(zend_execute_data *execute_data)
     zval *inc_filename = zend_get_zval_ptr(opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
     if (inc_filename != nullptr &&
         opline->op1_type == IS_CV &&
-        !openrasp_check_type_ignored(ZEND_STRL("webshell_eval") TSRMLS_CC) &&
-        openrasp_zval_in_request(inc_filename TSRMLS_CC))
+        !openrasp_check_type_ignored(ZEND_STRL("webshell_eval")) &&
+        openrasp_zval_in_request(inc_filename))
     {
         zval attack_params;
         array_init(&attack_params);
@@ -59,7 +59,7 @@ int eval_handler(zend_execute_data *execute_data)
         Z_ADDREF_P(inc_filename);
         zval plugin_message;
         ZVAL_STRING(&plugin_message, _("China Chopper WebShell"));
-        openrasp_buildin_php_risk_handle(1, "webshell_eval", 100, &attack_params, &plugin_message TSRMLS_CC);
+        openrasp_buildin_php_risk_handle(1, "webshell_eval", 100, &attack_params, &plugin_message);
     }
     return ZEND_USER_OPCODE_DISPATCH;
 }
@@ -75,8 +75,8 @@ int include_handler(zend_execute_data *execute_data)
     }
     if (opline->op1_type == IS_CV)
     {
-        if (!openrasp_check_type_ignored(ZEND_STRL("webshell_include") TSRMLS_CC) &&
-            openrasp_zval_in_request(inc_filename TSRMLS_CC))
+        if (!openrasp_check_type_ignored(ZEND_STRL("webshell_include")) &&
+            openrasp_zval_in_request(inc_filename))
         {
             zval attack_params;
             array_init(&attack_params);
@@ -84,10 +84,10 @@ int include_handler(zend_execute_data *execute_data)
             Z_ADDREF_P(inc_filename);
             zval plugin_message;
             ZVAL_STRING(&plugin_message, _("File inclusion"));
-            openrasp_buildin_php_risk_handle(1, "webshell_include", 100, &attack_params, &plugin_message TSRMLS_CC);
+            openrasp_buildin_php_risk_handle(1, "webshell_include", 100, &attack_params, &plugin_message);
         }
     }
-    if (openrasp_check_type_ignored(ZEND_STRL("include") TSRMLS_CC))
+    if (openrasp_check_type_ignored(ZEND_STRL("include")))
     {
         goto DISPATCH;
     }
@@ -101,14 +101,14 @@ int include_handler(zend_execute_data *execute_data)
     if ((strlen(Z_STRVAL_P(inc_filename)) < 4 || (strcmp(Z_STRVAL_P(inc_filename) + Z_STRLEN_P(inc_filename) - 4, ".php") && strcmp(Z_STRVAL_P(inc_filename) + Z_STRLEN_P(inc_filename) - 4, ".inc"))) &&
         (strstr(Z_STRVAL_P(inc_filename), "://") != nullptr || strstr(Z_STRVAL_P(inc_filename), "../") != nullptr))
     {
-        real_path = openrasp_real_path(Z_STRVAL_P(inc_filename), Z_STRLEN_P(inc_filename), true, false TSRMLS_CC);
+        real_path = openrasp_real_path(Z_STRVAL_P(inc_filename), Z_STRLEN_P(inc_filename), true, false);
     }
     if (!real_path)
     {
         goto DISPATCH;
     }
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY &&
-        !zend_is_auto_global_str(ZEND_STRL("_SERVER") TSRMLS_CC))
+        !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
         goto DISPATCH;
     }
@@ -144,7 +144,7 @@ int include_handler(zend_execute_data *execute_data)
         add_assoc_string(&params, "function", "");
         break;
     }
-    check("include", &params TSRMLS_CC);
+    check("include", &params);
 
 DISPATCH:
     if (real_path)

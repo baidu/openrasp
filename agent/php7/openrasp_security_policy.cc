@@ -16,8 +16,8 @@
 
 #include "openrasp_security_policy.h"
 #include "openrasp_ini.h"
-static void security_check(bool flag, int id, const char *msg TSRMLS_DC);
-#define SECURITY_CHECK(flag, id, msg) security_check(flag, id, msg TSRMLS_CC)
+static void security_check(bool flag, int id, const char *msg);
+#define SECURITY_CHECK(flag, id, msg) security_check(flag, id, msg)
 #define STRTOBOOL strtobool
 
 PHP_MINIT_FUNCTION(openrasp_security_policy)
@@ -32,7 +32,7 @@ PHP_MINIT_FUNCTION(openrasp_security_policy)
     return SUCCESS;
 }
 
-static void security_check(bool flag, int id, const char *msg TSRMLS_DC)
+static void security_check(bool flag, int id, const char *msg)
 {
     if (!flag)
     {
@@ -40,7 +40,7 @@ static void security_check(bool flag, int id, const char *msg TSRMLS_DC)
         array_init(&result);
         add_assoc_long(&result, "policy_id", id);
         add_assoc_string(&result, "message", const_cast<char *>(msg));
-        policy_info(&result TSRMLS_CC);
+        policy_info(&result);
         zval_dtor(&result);
     }
 }

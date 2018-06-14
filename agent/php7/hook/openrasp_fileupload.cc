@@ -32,7 +32,7 @@ void pre_global_move_uploaded_file_fileUpload(OPENRASP_INTERNAL_FUNCTION_PARAMET
         Z_TYPE_P(dest) != IS_STRING ||
         !zend_hash_exists(SG(rfc1867_uploaded_files), Z_STR_P(name)) ||
         php_check_open_basedir_ex(Z_STRVAL_P(dest), 0) ||
-        (Z_TYPE(PG(http_globals)[TRACK_VARS_FILES]) != IS_STRING && !zend_is_auto_global_str(ZEND_STRL("_FILES") TSRMLS_CC)))
+        (Z_TYPE(PG(http_globals)[TRACK_VARS_FILES]) != IS_STRING && !zend_is_auto_global_str(ZEND_STRL("_FILES"))))
     {
         return;
     }
@@ -74,5 +74,5 @@ void pre_global_move_uploaded_file_fileUpload(OPENRASP_INTERNAL_FUNCTION_PARAMET
     add_assoc_zval(&params, "filename", realname);
     Z_ADDREF_P(realname);
     add_assoc_str(&params, "content", buffer);
-    check(check_type, &params TSRMLS_CC);
+    check(check_type, &params);
 }

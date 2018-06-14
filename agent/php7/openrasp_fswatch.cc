@@ -89,7 +89,7 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
                 {
                     openrasp_error(E_WARNING, CONFIG_ERROR, _("An exception occurred while reloading master process, but this message may not be outputed"));
                 }
-            } TSRMLS_CC);
+            });
 
         std::vector<fsw_event_type_filter> event_filters;
         event_filters.push_back(fsw_event_type_filter{fsw_event_flag::IsFile});

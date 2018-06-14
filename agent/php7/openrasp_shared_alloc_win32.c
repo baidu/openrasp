@@ -178,7 +178,7 @@ static int create_segments(openrasp_shared_segment_globals **shared_segments_p, 
 	void *vista_mapping_base_set[] = { (void *) 0x25000000, (void *) 0x26000000, (void *) 0x35000000, (void *) 0x36000000, (void *) 0x55000000, 0 };
 #endif
 	void **wanted_mapping_base = default_mapping_base_set;
-	TSRMLS_FETCH();
+	
 
 	openrasp_shared_alloc_lock_win32();
 	/* Mapping retries: When Apache2 restarts, the parent process startup routine

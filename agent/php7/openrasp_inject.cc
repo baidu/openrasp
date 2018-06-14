@@ -25,7 +25,7 @@
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_inject)
 std::vector<char> inject_html;
 
-void openrasp_load_inject_html(TSRMLS_D)
+void openrasp_load_inject_html()
 {
     std::vector<char> inject;
     char *path;
@@ -59,7 +59,7 @@ PHP_GSHUTDOWN_FUNCTION(openrasp_inject)
 PHP_MINIT_FUNCTION(openrasp_inject)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp_inject, PHP_GINIT(openrasp_inject), PHP_GSHUTDOWN(openrasp_inject));
-    openrasp_load_inject_html(TSRMLS_C);
+    openrasp_load_inject_html();
     return SUCCESS;
 }
 
@@ -84,7 +84,7 @@ PHP_RINIT_FUNCTION(openrasp_inject)
             header.line = uuid_header;
             header.line_len = uuid_header_len;
             header.response_code = 0;
-            sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
+            sapi_header_op(SAPI_HEADER_REPLACE, &header);
         }
         efree(uuid_header);
     }
@@ -93,7 +93,7 @@ PHP_RINIT_FUNCTION(openrasp_inject)
         header.line = "X-Protected-By: OpenRASP";
         header.line_len = sizeof("X-Protected-By: OpenRASP") - 1;
         header.response_code = 0;
-        sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
+        sapi_header_op(SAPI_HEADER_REPLACE, &header);
     }
     return SUCCESS;
 }
@@ -126,7 +126,7 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_inject)
                     strncasecmp(sapi_header->header, "content-type", sizeof("content-type") - 1) == 0 &&
                     php_stristr(sapi_header->header, target_header, sapi_header->header_len, strlen(target_header)) != nullptr)
                 {
-                    php_output_write(inject_html.data(), inject_html.size() TSRMLS_CC);
+                    php_output_write(inject_html.data(), inject_html.size());
                     break;
                 }
             }

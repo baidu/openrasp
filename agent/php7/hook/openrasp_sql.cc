@@ -29,7 +29,7 @@ extern "C"
 /**
  * sql connection alarm
  */
-static void connection_via_default_username_policy(char *check_message, sql_connection_entry *sql_connection_p TSRMLS_DC)
+static void connection_via_default_username_policy(char *check_message, sql_connection_entry *sql_connection_p)
 {
     zval policy_array;
     array_init(&policy_array);
@@ -42,17 +42,17 @@ static void connection_via_default_username_policy(char *check_message, sql_conn
     add_assoc_long(&connection_params, "port", sql_connection_p->port);
     add_assoc_string(&connection_params, "user", sql_connection_p->username);
     add_assoc_zval(&policy_array, "params", &connection_params);
-    policy_info(&policy_array TSRMLS_CC);
+    policy_info(&policy_array);
     zval_ptr_dtor(&policy_array);
 }
 
-void slow_query_alarm(int rows TSRMLS_DC)
+void slow_query_alarm(int rows)
 {
     zval attack_params;
     ZVAL_LONG(&attack_params, rows);
     zval plugin_message;
     ZVAL_STR(&plugin_message, strpprintf(0, _("SQL slow query detected: selected %d rows, exceeding %d"), rows, openrasp_ini.slowquery_min_rows));
-    openrasp_buildin_php_risk_handle(0, "sqlSlowQuery", 100, &attack_params, &plugin_message TSRMLS_CC);
+    openrasp_buildin_php_risk_handle(0, "sqlSlowQuery", 100, &attack_params, &plugin_message);
 }
 
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy)
@@ -90,7 +90,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
         {
             if (enforce_policy)
             {
-                connection_via_default_username_policy(check_message, &conn_entry TSRMLS_CC);
+                connection_via_default_username_policy(check_message, &conn_entry);
                 need_block = 1;
             }
             else
@@ -98,12 +98,12 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
                 char *server_host_port = nullptr;
                 int server_host_port_len = spprintf(&server_host_port, 0, "%s-%s:%d", conn_entry.server, conn_entry.host, conn_entry.port);
                 ulong connection_hash = zend_inline_hash_func(server_host_port, server_host_port_len);
-                openrasp_shared_alloc_lock(TSRMLS_C);
+                openrasp_shared_alloc_lock();
                 if (!openrasp_shared_hash_exist(connection_hash, ZSTR_VAL(OPENRASP_LOG_G(formatted_date_suffix))))
                 {
-                    connection_via_default_username_policy(check_message, &conn_entry TSRMLS_CC);
+                    connection_via_default_username_policy(check_message, &conn_entry);
                 }
-                openrasp_shared_alloc_unlock(TSRMLS_C);
+                openrasp_shared_alloc_unlock();
                 efree(server_host_port);
             }
             efree(check_message);
@@ -120,7 +120,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
     return need_block;
 }
 
-void sql_type_handler(char *query, int query_len, const char *server TSRMLS_DC)
+void sql_type_handler(char *query, int query_len, const char *server)
 {
     if (query && strlen(query) == query_len)
     {
@@ -128,16 +128,16 @@ void sql_type_handler(char *query, int query_len, const char *server TSRMLS_DC)
         array_init(&params);
         add_assoc_string(&params, "query", query);
         add_assoc_str(&params, "server", zend_string_init(server, strlen(server), 0));
-        check("sql", &params TSRMLS_CC);
+        check("sql", &params);
     }
 }
 
-long fetch_rows_via_user_function(const char *f_name_str, uint32_t param_count, zval params[] TSRMLS_DC)
+long fetch_rows_via_user_function(const char *f_name_str, uint32_t param_count, zval params[])
 {
     zval function_name, retval;
     long result = 0;
     ZVAL_STRING(&function_name, f_name_str);
-    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, param_count, params TSRMLS_CC) == SUCCESS && Z_TYPE(retval) == IS_LONG)
+    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, param_count, params) == SUCCESS && Z_TYPE(retval) == IS_LONG)
     {
         result = Z_LVAL(retval);
     }

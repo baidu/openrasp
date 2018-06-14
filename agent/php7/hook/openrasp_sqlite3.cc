@@ -26,10 +26,10 @@ void pre_sqlite3_exec_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	char *sql;
 	size_t sql_len;
 
-	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &sql, &sql_len)) {
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "s", &sql, &sql_len)) {
 		return;
 	}
-    sql_type_handler(sql, sql_len, "sqlite" TSRMLS_CC);
+    sql_type_handler(sql, sql_len, "sqlite");
 }
 
 //sqlite3::query
@@ -45,8 +45,8 @@ void pre_sqlite3_querySingle_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	size_t sql_len;
 	zend_bool entire_row = 0;
 
-	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|b", &sql, &sql_len, &entire_row)) {
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "s|b", &sql, &sql_len, &entire_row)) {
 		return;
 	}
-    sql_type_handler(sql, sql_len, "sqlite" TSRMLS_CC);
+    sql_type_handler(sql, sql_len, "sqlite");
 }

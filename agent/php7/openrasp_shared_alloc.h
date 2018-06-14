@@ -90,9 +90,9 @@ void openrasp_shared_alloc_shutdown();
 void set_sapi_shared_alloc_available(zend_bool available);
 
 /* exclusive locking */
-void openrasp_shared_alloc_lock(TSRMLS_D);
-void openrasp_shared_alloc_unlock(TSRMLS_D); /* returns the allocated size during lock..unlock */
-void openrasp_shared_alloc_safe_unlock(TSRMLS_D);
+void openrasp_shared_alloc_lock();
+void openrasp_shared_alloc_unlock(); /* returns the allocated size during lock..unlock */
+void openrasp_shared_alloc_safe_unlock();
 
 int openrasp_shared_hash_exist(ulong hash, char *date_tag);
 

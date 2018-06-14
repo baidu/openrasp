@@ -61,7 +61,7 @@ void openrasp::v8error_to_stream(v8::Isolate *isolate, v8::TryCatch &try_catch, 
     }
 }
 
-v8::Local<v8::Value> openrasp::zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC)
+v8::Local<v8::Value> openrasp::zval_to_v8val(zval *val, v8::Isolate *isolate)
 {
     v8::Local<v8::Value> rst = v8::Undefined(isolate);
     switch (Z_TYPE_P(val))
@@ -86,7 +86,7 @@ v8::Local<v8::Value> openrasp::zval_to_v8val(zval *val, v8::Isolate *isolate TSR
         zend_ulong idx;
         ZEND_HASH_FOREACH_KEY_VAL(ht, idx, key, value)
         {
-            v8::Local<v8::Value> v8_value = zval_to_v8val(value, isolate TSRMLS_CC);
+            v8::Local<v8::Value> v8_value = zval_to_v8val(value, isolate);
             if (!is_assoc)
             {
                 if (index == idx)

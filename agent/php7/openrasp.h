@@ -63,15 +63,15 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp)
 #define OPENRASP_GP() (&openrasp_globals)
 #endif
 
-unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC);
-int rasp_info(const char *message, int message_len TSRMLS_DC);
-int plugin_info(const char *message, int message_len TSRMLS_DC);
-int alarm_info(zval *params_result TSRMLS_DC);
-int policy_info(zval *params_result TSRMLS_DC);
-void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC);
-void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC);
+unsigned char openrasp_check(const char *c_type, zval *z_params);
+int rasp_info(const char *message, int message_len);
+int plugin_info(const char *message, int message_len);
+int alarm_info(zval *params_result);
+int policy_info(zval *params_result);
+void format_debug_backtrace_str(zval *backtrace_str);
+void format_debug_backtrace_arr(zval *backtrace_arr);
 void openrasp_error(int type, int error_code, const char *format, ...);
-int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC);
+int recursive_mkdir(const char *path, int len, int mode);
 
 #ifdef __cplusplus
 }

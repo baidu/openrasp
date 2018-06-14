@@ -90,7 +90,7 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp_log);
 
 /* In every utility function you add that needs to use variables
    in php_rasp_globals, call TSRMLS_FETCH(); after declaring other
-   variables used by that function, or better yet, pass in TSRMLS_CC
+   variables used by that function, or better yet, pass in C
    after the last function argument and declare your utility function
    with TSRMLS_DC after the last declared argument.  Always refer to
    the globals in your function as RASP_G(variable).  You are

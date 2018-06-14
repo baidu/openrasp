@@ -31,7 +31,7 @@ POST_HOOK_FUNCTION_EX(exec, pdo, sqlSlowQuery);
 
 extern void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p);
 
-static char *dsn_from_uri(char *uri, char *buf, size_t buflen TSRMLS_DC)
+static char *dsn_from_uri(char *uri, char *buf, size_t buflen)
 {
 	php_stream *stream;
 	char *dsn = NULL;
@@ -54,7 +54,7 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
     zval *options = NULL;
     char alt_dsn[512];
 
-    if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|s!s!a!", &data_source, &data_source_len,
+    if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "s|s!s!a!", &data_source, &data_source_len,
                 &username, &usernamelen, &password, &passwordlen, &options)) {
         return;
     }
@@ -81,7 +81,7 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
 
     if (!strncmp(data_source, "uri:", sizeof("uri:")-1)) {
         /* the specified URI holds connection details */
-        data_source = dsn_from_uri(data_source + sizeof("uri:")-1, alt_dsn, sizeof(alt_dsn) TSRMLS_CC);
+        data_source = dsn_from_uri(data_source + sizeof("uri:")-1, alt_dsn, sizeof(alt_dsn));
         if (!data_source) {
             return;
         }
@@ -150,12 +150,12 @@ void pre_pdo_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	size_t statement_len;
 	
 	if (!ZEND_NUM_ARGS() || 
-    FAILURE == zend_parse_parameters(1 TSRMLS_CC, "s", &statement, &statement_len)) 
+    FAILURE == zend_parse_parameters(1, "s", &statement, &statement_len)) 
     {
 		return;;
 	}
 
-    sql_type_handler(statement, statement_len, dbh->driver->driver_name TSRMLS_CC);
+    sql_type_handler(statement, statement_len, dbh->driver->driver_name);
 }
 
 void post_pdo_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -168,7 +168,7 @@ void post_pdo_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         }
         if (stmt->row_count >= openrasp_ini.slowquery_min_rows)
         {
-            slow_query_alarm(stmt->row_count TSRMLS_CC);      
+            slow_query_alarm(stmt->row_count);      
         }
     }    
 }
@@ -179,11 +179,11 @@ void pre_pdo_exec_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	char *statement;
 	size_t statement_len;
 
-	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &statement, &statement_len)) {
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "s", &statement, &statement_len)) {
 		return;
     }
     
-    sql_type_handler(statement, statement_len, dbh->driver->driver_name TSRMLS_CC);
+    sql_type_handler(statement, statement_len, dbh->driver->driver_name);
 }
 
 void post_pdo_exec_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -192,7 +192,7 @@ void post_pdo_exec_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {	
         if (Z_LVAL_P(return_value) >= openrasp_ini.slowquery_min_rows)
         {
-            slow_query_alarm(Z_LVAL_P(return_value) TSRMLS_CC);
+            slow_query_alarm(Z_LVAL_P(return_value));
         }
     } 
 }
@@ -202,7 +202,7 @@ void pre_pdo___construct_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     if (openrasp_ini.enforce_policy &&
     check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pdo_connection_entry, 1))
     {        
-        handle_block(TSRMLS_C);
+        handle_block();
     }
 }
 
@@ -221,9 +221,9 @@ void pre_pdo_prepare_sqlPrepare(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	size_t statement_len;
 	zval *options = NULL;
 
-	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|a", &statement,
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "s|a", &statement,
 			&statement_len, &options)) {
 		return;
 	}
-    sql_type_handler(statement, statement_len, dbh->driver->driver_name TSRMLS_CC);
+    sql_type_handler(statement, statement_len, dbh->driver->driver_name);
 }

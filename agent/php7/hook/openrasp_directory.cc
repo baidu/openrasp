@@ -54,9 +54,9 @@ static inline void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 		add_assoc_str(&params, "realpath", real_path);
 		zval stack;
 		array_init(&stack);
-		format_debug_backtrace_arr(&stack TSRMLS_CC);
+		format_debug_backtrace_arr(&stack);
 		add_assoc_zval(&params, "stack", &stack);
-		check(check_type, &params TSRMLS_CC);
+		check(check_type, &params);
 	}
 }
 
