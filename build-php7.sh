@@ -41,7 +41,7 @@ output_base="$script_base/rasp-php-$(date +%Y-%m-%d)"
 output_ext="$output_base/php/${php_os}-php${php_version}-${php_arch}"
 
 # 编译
-cd agent/php
+cd agent/php7
 phpize --clean
 phpize
 if [[ $php_os == "macos" ]]; then
