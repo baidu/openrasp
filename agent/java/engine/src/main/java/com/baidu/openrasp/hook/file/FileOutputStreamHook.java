@@ -65,7 +65,7 @@ public class FileOutputStreamHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(FileOutputStreamHook.class, "checkWriteFile", "$1", File.class);
-        insertAfter(ctClass.getConstructor("(Ljava/io/File;Z)V"), src, false);
+        insertBefore(ctClass.getConstructor("(Ljava/io/File;Z)V"), src);
     }
 
     /**
