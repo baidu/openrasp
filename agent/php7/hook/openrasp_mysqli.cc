@@ -16,7 +16,8 @@
 
 #include "openrasp_hook.h"
 
-extern "C" {
+extern "C"
+{
 #include "zend_ini.h"
 }
 /**
@@ -39,7 +40,7 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
 {
     char *hostname = NULL, *username = NULL, *passwd = NULL, *dbname = NULL, *socket = NULL;
     size_t hostname_len = 0, username_len = 0, passwd_len = 0, dbname_len = 0, socket_len = 0;
-    long port = 0, flags = 0;
+    zend_long port = 0, flags = 0;
     zval *object = getThis();
     static char *default_host = INI_STR("mysqli.default_host");
     static char *default_user = INI_STR("mysqli.default_user");
@@ -62,11 +63,23 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
     }
     else
     {
-        if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "o|sssslsl", &object, &hostname,
-                                         &hostname_len, &username, &username_len, &passwd, &passwd_len, &dbname, &dbname_len, &port, &socket,
-                                         &socket_len, &flags) == FAILURE)
+        if (in_ctor)
         {
-            return;
+            if (zend_parse_parameters(ZEND_NUM_ARGS(), "|sssslsl", &hostname,
+                                             &hostname_len, &username, &username_len, &passwd, &passwd_len, &dbname, &dbname_len, &port, &socket,
+                                             &socket_len, &flags) == FAILURE)
+            {
+                return;
+            }
+        }
+        else
+        {
+            if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "o|sssslsl", &object, &hostname,
+                                             &hostname_len, &username, &username_len, &passwd, &passwd_len, &dbname, &dbname_len, &port, &socket,
+                                             &socket_len, &flags) == FAILURE)
+            {
+                return;
+            }
         }
     }
     if (!username)
@@ -95,12 +108,12 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
     }
 }
 
-static void init_mysqli_connect_connection(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static void init_global_mysqli_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
     init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 0, 0);
 }
 
-static void init_mysqli_real_connect_connection(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static void init_global_mysqli_real_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
     init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 1, 0);
 }
@@ -191,7 +204,7 @@ void post_mysqli_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 void pre_global_mysqli_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_connect_connection, 1))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry, 1))
     {
         handle_block();
     }
@@ -201,7 +214,7 @@ void post_global_mysqli_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETE
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_OBJECT)
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_connect_connection, 0);
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry, 0);
     }
 }
 
@@ -209,7 +222,7 @@ void post_global_mysqli_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETE
 void pre_global_mysqli_real_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_connection, 1))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_real_connect_conn_entry, 1))
     {
         handle_block();
     }
@@ -219,7 +232,7 @@ void post_global_mysqli_real_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PAR
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_TRUE)
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_connection, 0);
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_real_connect_conn_entry, 0);
     }
 }
 

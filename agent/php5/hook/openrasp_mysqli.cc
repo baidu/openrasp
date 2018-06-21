@@ -56,11 +56,24 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
 			return;
 		}
 	} else {
-		if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "o|sssslsl", &object,
-										&hostname, &hostname_len, &username, &username_len, &passwd, &passwd_len, &dbname, &dbname_len, &port, &socket, &socket_len,
-										&flags) == FAILURE) {
-			return;
-		}
+        if (in_ctor)
+        {
+            if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sssslsl",
+                                            &hostname, &hostname_len, &username, &username_len, &passwd, &passwd_len, &dbname, &dbname_len, &port, &socket, &socket_len,
+                                            &flags) == FAILURE) {
+                return;
+            }
+        }
+        else
+        {
+            if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "o|sssslsl", &object,
+                                            &hostname, &hostname_len, &username, &username_len, &passwd, &passwd_len, &dbname, &dbname_len, &port, &socket, &socket_len,
+                                            &flags) == FAILURE) {
+                return;
+            }
+        }
+
+
 	}
     if (!username){
 		username = default_user;
@@ -83,12 +96,12 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
     }
 }
 
-static void init_mysqli_connect_connection(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static void init_global_mysqli_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
     init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 0, 0);
 }
 
-static void init_mysqli_real_connect_connection(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static void init_global_mysqli_real_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
     init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 1, 0);
 }
@@ -194,7 +207,7 @@ void pre_global_mysqli_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETER
 {
     if (openrasp_ini.enforce_policy)
     {        
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_connect_connection, 1))
+        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry, 1))
         {
             handle_block(TSRMLS_C);
         }
@@ -204,7 +217,7 @@ void post_global_mysqli_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETE
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_OBJECT)
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_connect_connection, 0);
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry, 0);
     }
 }
 
@@ -214,7 +227,7 @@ void pre_global_mysqli_real_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARA
 {
     if (openrasp_ini.enforce_policy)
     {        
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_connection, 1))
+        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_real_connect_conn_entry, 1))
         {
             handle_block(TSRMLS_C);
         }
@@ -224,7 +237,7 @@ void post_global_mysqli_real_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PAR
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value))
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_connection, 0);
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_real_connect_conn_entry, 0);
     }
 }
 
