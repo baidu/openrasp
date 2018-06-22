@@ -272,7 +272,6 @@ var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml)\.?$/i
 var ntfsRegex       = /::\$(DATA|INDEX)$/i
 
 // 常用函数
-
 String.prototype.replaceAll = function(token, tokenValue) {
     var index  = 0;
     var string = this;
@@ -284,8 +283,30 @@ String.prototype.replaceAll = function(token, tokenValue) {
     return string
 }
 
-function canonicalPath (path) {
-    return path.replaceAll('/./', '/').replaceAll('//', '/').replaceAll('//', '/')
+// function canonicalPath (path) {
+//     return path.replaceAll('/./', '/').replaceAll('//', '/').replaceAll('//', '/')
+// }
+
+// 我们不再需要简化路径，当出现两个 /../ 或者两个 \..\ 就可以判定为路径遍历攻击了
+// e.g /./././././home/../../../../etc/passwd
+function hasTraversal (path) {
+    var left  = path.indexOf('/../')
+    var right = path.lastIndexOf('/../')
+
+    if (left != -1 && right != -1 && left != right)
+    {
+        return true
+    }
+
+    var left  = path.indexOf('\\..\\')
+    var right = path.lastIndexOf('\\..\\')    
+
+    if (left != -1 && right != -1 && left != right)
+    {
+        return true
+    }
+
+    return false
 }
 
 function basename (path) {
@@ -335,7 +356,7 @@ function is_absolute_path(path, os) {
 function is_outside_webroot(appBasePath, realpath, path) {
     var verdict = false
 
-    if (realpath.indexOf(appBasePath) == -1 && (path.indexOf('/../') !== -1 || path.indexOf('\\..\\') !== -1)) {
+    if (realpath.indexOf(appBasePath) == -1 && hasTraversal(path)) {
         verdict = true
     }
 
@@ -668,9 +689,9 @@ plugin.register('directory', function (params, context) {
     }
 
     // 算法2 - 使用至少2个/../，且跳出web目录
-    if (algorithmConfig.directory_outsideWebroot.action != 'ignore') 
+    if (algorithmConfig.directory_outsideWebroot.action != 'ignore')
     {
-        if (canonicalPath(path).indexOf('/../../') != -1 && realpath.indexOf(appBasePath) == -1) 
+        if (hasTraversal(path) && realpath.indexOf(appBasePath) == -1)
         {
             return {
                 action:     algorithmConfig.directory_outsideWebroot.action,
@@ -799,7 +820,7 @@ plugin.register('readFile', function (params, context) {
 
             // 2. 相对路径且包含 /../ 
             // ?file=download/../../etc/passwd
-            if (params.path.indexOf('/../') !== -1 || params.path.indexOf('\\..\\') !== -1)
+            if (hasTraversal(params.path))
             {
                 return {
                     action:     algorithmConfig.readFile_userinput.action,
@@ -814,18 +835,17 @@ plugin.register('readFile', function (params, context) {
 })
 
 plugin.register('include', function (params, context) {
-    var url = params.url    
+    var url = params.url
 
     // 如果没有协议
     // ?file=../../../../../var/log/httpd/error.log
     if (url.indexOf('://') == -1) {
-        var path        = canonicalPath(url)
         var realpath    = params.realpath
         var appBasePath = context.appBasePath
 
         // 是否跳出 web 目录？
         if (algorithmConfig.include_outsideWebroot.action != 'ignore' &&
-            is_outside_webroot(appBasePath, realpath, path)) 
+            is_outside_webroot(appBasePath, realpath, url)) 
         {
             return {
                 action:     algorithmConfig.include_outsideWebroot.action,
