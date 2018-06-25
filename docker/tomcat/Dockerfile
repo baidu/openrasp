@@ -15,7 +15,7 @@ ADD "https://github.com/baidu/openrasp/releases/download/${version_rasp}/rasp-ja
 
 RUN cd /tmp \
 	&& tar -zxvf rasp-java.tar.gz \
-	&& java -jar rasp-*/RaspInstall.jar "$TOMCAT_HOME"
+	&& java -jar rasp-*/RaspInstall.jar -install "$TOMCAT_HOME"
 
 EXPOSE 8080
 CMD ["catalina.sh", "run"]
