@@ -2,10 +2,10 @@ FROM tomcat:8.0
 MAINTAINER OpenRASP Developers
 
 ARG version_testcase
-ENV version_testcase=${version_testcase:-v1.0.1}
+ENV version_testcase=${version_testcase:-v1.0.6}
 
 ARG version_rasp
-ENV version_rasp=${version_rasp:-v0.24}
+ENV version_rasp=${version_rasp:-v0.32}
 
 ENV TOMCAT_HOME /usr/local/tomcat
 ENV PATH $TOMCAT_HOME/bin:$PATH
