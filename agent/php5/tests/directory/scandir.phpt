@@ -4,6 +4,9 @@ hook scandir (relative path)
 <?php
 $plugin = <<<EOF
 plugin.register('directory', params => {
+    assert(params.path == '/bin/../bin')
+    assert(params.realpath == '/bin')
+    assert(params.stack[0].endsWith('scandir'))
     return block
 })
 EOF;

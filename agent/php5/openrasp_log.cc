@@ -563,7 +563,7 @@ static inline int base_debug(rasp_logger_entry *logger, const char *message, int
 int rasp_info(const char *message, int message_len TSRMLS_DC) {
     if (!OPENRASP_LOG_G(in_request_process))
     {        
-        init_logger_instance(RASP_LOGGER);
+        init_logger_instance(RASP_LOGGER TSRMLS_CC);
     }
     char *rasp_info                 = NULL;    
     char *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
@@ -579,7 +579,7 @@ int rasp_info(const char *message, int message_len TSRMLS_DC) {
 int plugin_info(const char *message, int message_len TSRMLS_DC) {
     if (!OPENRASP_LOG_G(in_request_process))
     {        
-        init_logger_instance(PLUGIN_LOGGER);
+        init_logger_instance(PLUGIN_LOGGER TSRMLS_CC);
     }
     char *plugin_info                 = NULL;    
     char *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1 TSRMLS_CC);
@@ -634,7 +634,7 @@ int policy_info(zval *params_result TSRMLS_DC) {
     assert(Z_TYPE_P(params_result) == IS_ARRAY);
     if (!OPENRASP_LOG_G(in_request_process))
     {        
-        init_logger_instance(POLICY_LOGGER);
+        init_logger_instance(POLICY_LOGGER TSRMLS_CC);
         init_policy_request_info(TSRMLS_C);
     }
     
