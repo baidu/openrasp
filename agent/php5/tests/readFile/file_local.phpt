@@ -1,5 +1,8 @@
 --TEST--
-hook fopen (r)
+hook file
+--DESCRIPTION--
+http://php.net/manual/en/function.file.php
+local file
 --SKIPIF--
 <?php
 $plugin = <<<EOF
@@ -16,7 +19,7 @@ file_put_contents('/tmp/openrasp/tmpfile', 'temp');
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-var_dump(fopen('/tmp/openrasp/tmpfile', 'r'));
+var_dump(file('/tmp/openrasp/tmpfile'));
 ?>
 --EXPECTREGEX--
 <\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

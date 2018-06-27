@@ -5,7 +5,7 @@ hook fopen (a)
 $plugin = <<<EOF
 plugin.register('writeFile', params => {
     assert(params.path == '/tmp/openrasp/tmpfile')
-    assert(params.realpath.endsWith('openrasp/tmpfile'))
+    assert(params.realpath == '/tmp/openrasp/tmpfile')
     return block
 })
 EOF;

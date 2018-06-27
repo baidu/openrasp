@@ -37,15 +37,18 @@ extern "C" {
 }
 #endif
 
-#define RASP_LOGGER                                 "rasp"
-#define ALARM_LOGGER                                "alarm"
-#define PLUGIN_LOGGER                               "plugin"
-#define POLICY_LOGGER                               "policy"                                        
-
 typedef enum log_appender_t {
 	  FILE_APPENDER = 1 << 0, 
     SYSLOG_APPENDER  = 1 << 1
 } log_appender;
+
+typedef enum logger_instance_t {
+    ALARM_LOGGER,
+    POLICY_LOGGER,
+    PLUGIN_LOGGER,
+    RASP_LOGGER,
+    TOTAL
+} logger_instance;
 
 //reference https://en.wikipedia.org/wiki/Syslog
 typedef enum severity_level_t {
@@ -79,10 +82,7 @@ zval                  *policy_request_info;
 zend_bool              enable_alarm_syslog;
 zend_bool              in_request_process;
 long                   last_retry_time;
-rasp_logger_entry      alarm_logger;
-rasp_logger_entry      rasp_logger;
-rasp_logger_entry      plugin_logger;
-rasp_logger_entry      policy_logger;
+rasp_logger_entry      loggers[TOTAL];
 
 ZEND_END_MODULE_GLOBALS(openrasp_log)
 

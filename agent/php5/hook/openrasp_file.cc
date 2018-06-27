@@ -16,6 +16,10 @@
 
 #include "openrasp_hook.h"
 
+extern "C" {
+#include "ext/standard/php_fopen_wrappers.h"    
+}
+
 /**
  * 文件相关hook点
  */
@@ -54,30 +58,34 @@ static const char *flag_to_type(int open_flags, bool file_exist)
 //return value estrdup
 char *openrasp_real_path(char *filename, int filename_len, zend_bool use_include_path, bool handle_unresolved TSRMLS_DC)
 {
-    php_url *resource = php_url_parse_ex(filename, filename_len);
-    char *real_path = nullptr;
-    if (resource && resource->scheme)
+    char *resolved_path = nullptr;
+    resolved_path = php_resolve_path(filename, filename_len, use_include_path ? PG(include_path) : NULL TSRMLS_CC);
+    if (nullptr == resolved_path)
     {
-        real_path = estrdup(filename);
-    }
-    else
-    {
-        char expand_path[MAXPATHLEN];
-        if (!expand_filepath(filename, expand_path TSRMLS_CC))
+        const char *p;
+        for (p = filename; isalnum((int)*p) || *p == '+' || *p == '-' || *p == '.'; p++)
+            ;
+        if ((*p == ':') && (p - filename > 1) && (p[1] == '/') && (p[2] == '/'))
         {
-            return real_path;
+            php_stream_wrapper *wrapper;
+            wrapper = php_stream_locate_url_wrapper(filename, nullptr, STREAM_LOCATE_WRAPPERS_ONLY TSRMLS_CC);
+            if (wrapper && (wrapper != &php_stream_http_wrapper || !handle_unresolved))
+            {
+                resolved_path = estrdup(filename);
+            }
         }
-        real_path = php_resolve_path(expand_path, strlen(expand_path), use_include_path ? PG(include_path) : NULL TSRMLS_CC);
-        if (!real_path && handle_unresolved)
+        else
         {
-            real_path = estrdup(expand_path);
+            char expand_path[MAXPATHLEN];
+            char real_path[MAXPATHLEN];
+            expand_filepath(filename, expand_path TSRMLS_CC);
+            if (VCWD_REALPATH(expand_path, real_path) || handle_unresolved)
+            {
+                resolved_path = estrdup(expand_path);
+            }
         }
     }
-    if (resource)
-    {
-        php_url_free(resource);
-    }
-    return real_path;
+    return resolved_path;
 }
 
 static void check_file_operation(const char *type, char *filename, int filename_len, zend_bool use_include_path TSRMLS_DC)

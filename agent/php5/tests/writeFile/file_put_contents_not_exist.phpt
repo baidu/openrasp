@@ -6,7 +6,7 @@ $dir = __DIR__;
 $plugin = <<<EOF
 plugin.register('writeFile', params => {
     assert(params.path == '/tmp/openrasp/not_exist')
-    assert(params.realpath.endsWith('not_exist'))
+    assert(params.realpath == '/tmp/openrasp/not_exist')
     return block
 })
 EOF;

@@ -38,8 +38,6 @@ PRE_HOOK_FUNCTION(assert, webshell_eval);
 
 static void check_command_args_in_gpc(INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!openrasp_check_type_ignored(ZEND_STRL("webshell_command") TSRMLS_CC))
-    {
         zval **command;
         int argc = MIN(1, ZEND_NUM_ARGS());
         if (argc == 1 && zend_get_parameters_ex(argc, &command) == SUCCESS
@@ -55,7 +53,6 @@ static void check_command_args_in_gpc(INTERNAL_FUNCTION_PARAMETERS)
             ZVAL_STRING(plugin_message, _("Webshell detected - Command execution backdoor"), 1);
             openrasp_buildin_php_risk_handle(1, "webshell_command", 100, attack_params, plugin_message TSRMLS_CC);
         }
-    }
 }
 
 static void send_command_to_plugin(char * cmd TSRMLS_DC)
@@ -74,8 +71,6 @@ static void send_command_to_plugin(char * cmd TSRMLS_DC)
 
 static void openrasp_exec_ex(INTERNAL_FUNCTION_PARAMETERS, int mode)
 {
-    if (!openrasp_check_type_ignored(ZEND_STRL("command") TSRMLS_CC))
-    {
         char *cmd;
         int cmd_len;
         zval *ret_code=NULL, *ret_array=NULL;
@@ -93,7 +88,6 @@ static void openrasp_exec_ex(INTERNAL_FUNCTION_PARAMETERS, int mode)
             return;
         }
         send_command_to_plugin(cmd TSRMLS_CC);
-    }
 }
 
 void pre_global_passthru_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -133,10 +127,6 @@ void pre_global_shell_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETER
 
 void pre_global_shell_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (openrasp_check_type_ignored(ZEND_STRL("command") TSRMLS_CC))
-    {
-        return;
-    }
 	char *command;
 	int command_len;
 

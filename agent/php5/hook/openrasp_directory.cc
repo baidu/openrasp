@@ -39,7 +39,6 @@ static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
                 return;
             }
 #endif
-
             if (php_check_open_basedir(resolved_path_buff TSRMLS_CC)) {
                 return;
             }
