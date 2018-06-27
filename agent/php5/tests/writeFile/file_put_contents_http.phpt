@@ -1,7 +1,7 @@
 --TEST--
 hook file_put_contents (url http)
 --DESCRIPTION--
-url ftp
+NO CHECK, cuz of HTTP wrapper does not support writeable connections
 --SKIPIF--
 <?php
 $dir = __DIR__;
