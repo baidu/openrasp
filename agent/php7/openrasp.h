@@ -55,13 +55,15 @@ ZEND_END_MODULE_GLOBALS(openrasp)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp)
 
-#ifdef ZTS
-#define OPENRASP_G(v) TSRMG(openrasp_globals_id, zend_openrasp_globals *, v)
-#define OPENRASP_GP() ((zend_openrasp_globals *)(*((void ***)tsrm_ls))[TSRM_UNSHUFFLE_RSRC_ID(openrasp_globals_id)])
-#else
-#define OPENRASP_G(v) (openrasp_globals.v)
-#define OPENRASP_GP() (&openrasp_globals)
-#endif
+#define OPENRASP_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(openrasp, v)
+
+// #ifdef ZTS
+// #define OPENRASP_G(v) TSRMG(openrasp_globals_id, zend_openrasp_globals *, v)
+// #define OPENRASP_GP() ((zend_openrasp_globals *)(*((void ***)tsrm_ls))[TSRM_UNSHUFFLE_RSRC_ID(openrasp_globals_id)])
+// #else
+// #define OPENRASP_G(v) (openrasp_globals.v)
+// #define OPENRASP_GP() (&openrasp_globals)
+// #endif
 
 unsigned char openrasp_check(const char *c_type, zval *z_params);
 int rasp_info(const char *message, int message_len);

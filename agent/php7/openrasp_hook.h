@@ -273,13 +273,15 @@ ZEND_END_MODULE_GLOBALS(openrasp_hook)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp_hook);
 
-#ifdef ZTS
-#define OPENRASP_HOOK_G(v) TSRMG(openrasp_hook_globals_id, zend_openrasp_hook_globals *, v)
-#define OPENRASP_HOOK_GP() ((zend_openrasp_hook_globals *)(*((void ***)tsrm_ls))[TSRM_UNSHUFFLE_RSRC_ID(openrasp_hook_globals_id)])
-#else
-#define OPENRASP_HOOK_G(v) (openrasp_hook_globals.v)
-#define OPENRASP_HOOK_GP() (&openrasp_hook_globals)
-#endif
+#define OPENRASP_HOOK_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(openrasp_hook, v)
+
+// #ifdef ZTS
+// #define OPENRASP_HOOK_G(v) TSRMG(openrasp_hook_globals_id, zend_openrasp_hook_globals *, v)
+// #define OPENRASP_HOOK_GP() ((zend_openrasp_hook_globals *)(*((void ***)tsrm_ls))[TSRM_UNSHUFFLE_RSRC_ID(openrasp_hook_globals_id)])
+// #else
+// #define OPENRASP_HOOK_G(v) (openrasp_hook_globals.v)
+// #define OPENRASP_HOOK_GP() (&openrasp_hook_globals)
+// #endif
 
 PHP_MINIT_FUNCTION(openrasp_hook);
 PHP_MSHUTDOWN_FUNCTION(openrasp_hook);

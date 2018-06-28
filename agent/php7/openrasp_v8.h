@@ -128,13 +128,15 @@ PHP_GSHUTDOWN_FUNCTION(openrasp_v8);
 PHP_MINIT_FUNCTION(openrasp_v8);
 PHP_MSHUTDOWN_FUNCTION(openrasp_v8);
 
-#ifdef ZTS
-#define OPENRASP_V8_G(v) TSRMG(openrasp_v8_globals_id, zend_openrasp_v8_globals *, v)
-#define OPENRASP_V8_GP() ((zend_openrasp_v8_globals *)(*((void ***)tsrm_ls))[TSRM_UNSHUFFLE_RSRC_ID(openrasp_v8_globals_id)])
-#else
-#define OPENRASP_V8_G(v) (openrasp_v8_globals.v)
-#define OPENRASP_V8_GP() (&openrasp_v8_globals)
-#endif
+#define OPENRASP_V8_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(openrasp_v8, v)
+
+// #ifdef ZTS
+// #define OPENRASP_V8_G(v) TSRMG(openrasp_v8_globals_id, zend_openrasp_v8_globals *, v)
+// #define OPENRASP_V8_GP() ((zend_openrasp_v8_globals *)(*((void ***)tsrm_ls))[TSRM_UNSHUFFLE_RSRC_ID(openrasp_v8_globals_id)])
+// #else
+// #define OPENRASP_V8_G(v) (openrasp_v8_globals.v)
+// #define OPENRASP_V8_GP() (&openrasp_v8_globals)
+// #endif
 
 #ifdef HAVE_NATIVE_ANTLR4
 #include <antlr4-runtime/antlr4-runtime.h>
