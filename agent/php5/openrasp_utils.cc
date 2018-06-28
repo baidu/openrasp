@@ -76,7 +76,7 @@ void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
             }
             buffer.append(")\n");
         }
-        ZVAL_STRINGL(backtrace_str, buffer.c_str(), buffer.length(), 1);
+        ZVAL_STRINGL(backtrace_str, buffer.c_str(), buffer.length() - 1, 1);
     }
     zval_dtor(&trace_arr);
 }
