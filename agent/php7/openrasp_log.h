@@ -88,23 +88,15 @@ ZEND_END_MODULE_GLOBALS(openrasp_log)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp_log);
 
-/* In every utility function you add that needs to use variables
-   in php_rasp_globals, call TSRMLS_FETCH(); after declaring other
-   variables used by that function, or better yet, pass in C
-   after the last function argument and declare your utility function
-   with TSRMLS_DC after the last declared argument.  Always refer to
-   the globals in your function as RASP_G(variable).  You are
-   encouraged to rename these macros something shorter, see
-   examples in any other php module directory.
-*/
+#define OPENRASP_LOG_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(openrasp_log, v)
 
-#ifdef ZTS
-#define OPENRASP_LOG_G(v) TSRMG(openrasp_log_globals_id, zend_openrasp_log_globals *, v)
-#define OPENRASP_LOG_GP() ((zend_openrasp_log_globals *)(*((void ***)tsrm_ls))[TSRM_UNSHUFFLE_RSRC_ID(openrasp_log_globals_id)])
-#else
-#define OPENRASP_LOG_G(v) (openrasp_log_globals.v)
-#define OPENRASP_LOG_GP() (&openrasp_log_globals)
-#endif
+// #ifdef ZTS
+// #define OPENRASP_LOG_G(v) TSRMG(openrasp_log_globals_id, zend_openrasp_log_globals *, v)
+// #define OPENRASP_LOG_GP() ((zend_openrasp_log_globals *)(*((void ***)tsrm_ls))[TSRM_UNSHUFFLE_RSRC_ID(openrasp_log_globals_id)])
+// #else
+// #define OPENRASP_LOG_G(v) (openrasp_log_globals.v)
+// #define OPENRASP_LOG_GP() (&openrasp_log_globals)
+// #endif
 
 PHP_MINIT_FUNCTION(openrasp_log);
 PHP_MSHUTDOWN_FUNCTION(openrasp_log);
