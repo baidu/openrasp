@@ -111,10 +111,14 @@ var algorithmConfig = {
     readFile_userinput: {
         action: 'block'
     },
+    // 任意文件下载防护 - 使用 file_get_contents 等函数读取 http(s):// 内容（注意，这里不区分是否为内网地址）
+    readFile_userinput_ssrf: {
+        action: 'block'
+    },
     // 任意文件下载防护 - 使用 ../../ 跳出 web 目录读取敏感文件
     readFile_traversal: {
         action: 'block'
-    }, 
+    },   
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
     readFile_unwanted: {
         action: 'block'
@@ -807,6 +811,8 @@ plugin.register('readFile', function (params, context) {
     {
         if (is_from_userinput(context.parameter, params.path))
         {
+            var path_lc = params.path.toLowerCase()
+            
             // 1. 使用绝对路径
             // ?file=/etc/./hosts
             if (is_absolute_path(params.path, context.server.os))
@@ -828,6 +834,21 @@ plugin.register('readFile', function (params, context) {
                     confidence: 90
                 }                   
             }
+
+            // 3. 直接读取 http(s):// 内容
+            // ?file=http://www.baidu.com
+            if (path_lc.startsWith('http://') || path_lc.startsWith('https://'))
+            {
+                if (algorithmConfig.readFile_userinput_ssrf.action != 'ignore')
+                {
+                    return {
+                        action:     algorithmConfig.readFile_userinput_ssrf.action,
+                        message:    '任意文件读取/SSRF攻击，目标URL: ' + params.path,
+                        confidence: 90
+                    } 
+                }
+            }
+            
         }
     }
 
