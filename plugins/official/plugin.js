@@ -332,10 +332,17 @@ function validate_stack_php(stacks) {
         if (stack.indexOf('eval()\'d code') != -1 
             || stack.indexOf('runtime-created function') != -1
             || stack.indexOf('assert code@') != -1
-            || stack.indexOf('@call_user_func') != -1
             || stack.indexOf('regexp code@') != -1) {
             verdict = true
             break
+        }
+
+        // 存在一些误报，调整下距离
+        if (stack.indexOf('@call_user_func') != -1) {
+            if (i <= 3) {
+                verdict = true
+                break
+            }
         }
     }
 
