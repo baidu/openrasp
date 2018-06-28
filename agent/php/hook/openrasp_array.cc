@@ -214,7 +214,11 @@ void pre_reflectionfunction___construct(INTERNAL_FUNCTION_PARAMETERS)
     char *name_str;
     int name_len;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &name_str, &name_len) == SUCCESS)
+	if (zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, ZEND_NUM_ARGS() TSRMLS_CC, "o", &closure) == SUCCESS) 
+	{
+        return;
+	} 
+	else if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &name_str, &name_len) == SUCCESS)
     {
         char *nsname;
 
