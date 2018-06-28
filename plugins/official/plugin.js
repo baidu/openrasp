@@ -106,6 +106,10 @@ var algorithmConfig = {
     ssrf_obfuscate: {
         action: 'block'
     },
+    // SSRF - 禁止使用 curl 读取 file:///etc/passwd 这样的内容
+    ssrf_file: {
+        action: 'block',
+    },
 
     // 任意文件下载防护 - 来自用户输入
     readFile_userinput: {
@@ -662,6 +666,23 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
+        // 算法5 - ssrf_file
+        // 
+        // 特殊协议检查，比如
+        // 使用 curl 读取 file:///etc/passwd
+        if (algorithmConfig.ssrf_file.action != 'ignore')
+        {
+            var url_lc = url.toLowerCase()
+            if (url_lc.startsWith('file://'))
+            {
+                return {
+                    action:    algorithmConfig.ssrf_file.action,
+                    message:   '任意文件下载攻击，尝试使用 file:// 读取文件',
+                    confidence: 100
+                }                  
+            }
+        }
+
         return clean
     })
 
@@ -812,7 +833,7 @@ plugin.register('readFile', function (params, context) {
         if (is_from_userinput(context.parameter, params.path))
         {
             var path_lc = params.path.toLowerCase()
-            
+
             // 1. 使用绝对路径
             // ?file=/etc/./hosts
             if (is_absolute_path(params.path, context.server.os))
