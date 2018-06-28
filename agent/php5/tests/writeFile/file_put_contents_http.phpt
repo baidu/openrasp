@@ -6,7 +6,11 @@ NO CHECK, cuz of HTTP wrapper does not support writeable connections
 <?php
 $dir = __DIR__;
 $plugin = <<<EOF
-//nothing
+plugin.register('writeFile', params => {
+    assert(params.path == 'http://www.example.com/')
+    assert(params.realpath == 'http://www.example.com/')
+    return block
+})
 EOF;
 include(__DIR__.'/../skipif.inc');
 ?>
