@@ -20,11 +20,12 @@
 #include <new>
 #include <vector>
 
-static std::vector<hook_handler_t> global_hook_handlers;
+static hook_handler_t global_hook_handlers[512];
+static size_t global_hook_handlers_len = 0;
 
 void register_hook_handler(hook_handler_t hook_handler)
 {
-    global_hook_handlers.push_back(hook_handler);
+    global_hook_handlers[global_hook_handlers_len++] = hook_handler;
 }
 
 typedef struct _track_vars_pair_t
@@ -32,15 +33,6 @@ typedef struct _track_vars_pair_t
     int id;
     const char *name;
 } track_vars_pair;
-
-#define REGISTER_HOOK_HANDLER_EX(name, scope, type)                     \
-    {                                                                   \
-        extern void scope##_##name##_##type##_handler(TSRMLS_D);        \
-        global_hook_handlers.insert(scope##_##name##_##type##_handler); \
-    }
-
-#define REGISTER_HOOK_HANDLER(name, type)   \
-    REGISTER_HOOK_HANDLER_EX(name, global, type)
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_hook)
 
@@ -52,9 +44,7 @@ bool openrasp_zval_in_request(zval *item TSRMLS_DC)
     int size = sizeof(pairs) / sizeof(pairs[0]);
     for (int index = 0; index < size; ++index)
     {
-        if (!PG(http_globals)[pairs[index].id] 
-        && !zend_is_auto_global(pairs[index].name, strlen(pairs[index].name) TSRMLS_CC)
-        && Z_TYPE_P(PG(http_globals)[pairs[index].id]) != IS_ARRAY)
+        if (!PG(http_globals)[pairs[index].id] && !zend_is_auto_global(pairs[index].name, strlen(pairs[index].name) TSRMLS_CC) && Z_TYPE_P(PG(http_globals)[pairs[index].id]) != IS_ARRAY)
         {
             return 0;
         }
@@ -109,16 +99,18 @@ bool openrasp_check_callable_black(const char *item_name, uint item_name_length 
 void handle_block(TSRMLS_D)
 {
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION == 3)
-    if (OG(ob_nesting_level) && (OG(active_ob_buffer).status || OG(active_ob_buffer).erase)) {
+    if (OG(ob_nesting_level) && (OG(active_ob_buffer).status || OG(active_ob_buffer).erase))
+    {
         php_end_ob_buffer(0, 0 TSRMLS_CC);
     }
 #elif (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION >= 4)
     int status = php_output_get_status(TSRMLS_C);
-    if (status & PHP_OUTPUT_WRITTEN) {
+    if (status & PHP_OUTPUT_WRITTEN)
+    {
         php_output_discard(TSRMLS_C);
     }
 #else
-#  error "Unsupported PHP version, please contact OpenRASP team for more information"
+#error "Unsupported PHP version, please contact OpenRASP team for more information"
 #endif
 
     char *block_url = openrasp_ini.block_url;
@@ -190,10 +182,10 @@ PHP_GSHUTDOWN_FUNCTION(openrasp_hook)
 PHP_MINIT_FUNCTION(openrasp_hook)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp_hook, PHP_GINIT(openrasp_hook), PHP_GSHUTDOWN(openrasp_hook));
-    
-    for (auto& single_handler : global_hook_handlers)
+
+    for (size_t i = 0; i < global_hook_handlers_len; i++)
     {
-        single_handler(TSRMLS_C);
+        global_hook_handlers[i](TSRMLS_C);
     }
 
     zend_set_user_opcode_handler(ZEND_INCLUDE_OR_EVAL, include_or_eval_handler);
