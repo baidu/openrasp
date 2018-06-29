@@ -169,7 +169,7 @@ static inline void fopen_common_handler(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     zend_string *filename, *mode;
     zend_bool use_include_path;
     mode = nullptr;
-    
+
     // ZEND_PARSE_PARAMETERS_START(2, 3)
     // Z_PARAM_STR(filename)
     // Z_PARAM_STR(mode)
@@ -237,11 +237,18 @@ void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     if (source_real_path)
     {
         zend_string *dest_real_path = openrasp_real_path(ZSTR_VAL(dest), ZSTR_LEN(dest), false, true);
-        zval params;
-        array_init(&params);
-        add_assoc_str(&params, "source", source_real_path);
-        add_assoc_str(&params, "dest", dest_real_path);
-        check(check_type, &params);
+        if (dest_real_path)
+        {
+            zval params;
+            array_init(&params);
+            add_assoc_str(&params, "source", source_real_path);
+            add_assoc_str(&params, "dest", dest_real_path);
+            check(check_type, &params);
+        }
+        else
+        {
+            zend_string_release(source_real_path);
+        }
     }
 }
 

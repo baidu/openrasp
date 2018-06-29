@@ -16,8 +16,9 @@
 
 #include "openrasp_hook.h"
 
-extern "C" {
-#include "ext/standard/php_fopen_wrappers.h"    
+extern "C"
+{
+#include "ext/standard/php_fopen_wrappers.h"
 }
 
 /**
@@ -27,7 +28,7 @@ PRE_HOOK_FUNCTION(file, readFile);
 PRE_HOOK_FUNCTION(readfile, readFile);
 PRE_HOOK_FUNCTION(file_get_contents, readFile);
 PRE_HOOK_FUNCTION(file_put_contents, writeFile);
-PRE_HOOK_FUNCTION(file_put_contents, webshell_file_put_contents);//must after PRE_HOOK_FUNCTION(file_put_contents, writeFile);
+PRE_HOOK_FUNCTION(file_put_contents, webshell_file_put_contents); //must after PRE_HOOK_FUNCTION(file_put_contents, writeFile);
 PRE_HOOK_FUNCTION(fopen, readFile);
 PRE_HOOK_FUNCTION(fopen, writeFile);
 PRE_HOOK_FUNCTION(copy, copy);
@@ -278,12 +279,19 @@ void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         if (source_real_path)
         {
             char *target_real_path = openrasp_real_path(target, target_len, false, true TSRMLS_CC);
-            zval *params;
-            MAKE_STD_ZVAL(params);
-            array_init(params);
-            add_assoc_string(params, "source", source_real_path, 0);
-            add_assoc_string(params, "dest", target_real_path, 0);
-            check("copy", params TSRMLS_CC);
+            if (target_real_path)
+            {
+                zval *params;
+                MAKE_STD_ZVAL(params);
+                array_init(params);
+                add_assoc_string(params, "source", source_real_path, 0);
+                add_assoc_string(params, "dest", target_real_path, 0);
+                check("copy", params TSRMLS_CC);
+            }
+            else
+            {
+                efree(source_real_path);
+            }
         }
     }
 }
@@ -305,12 +313,19 @@ void pre_global_rename_rename(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         if (source_real_path)
         {
             char *target_real_path = openrasp_real_path(target, target_len, false, true TSRMLS_CC);
-            zval *params;
-            MAKE_STD_ZVAL(params);
-            array_init(params);
-            add_assoc_string(params, "source", source_real_path, 0);
-            add_assoc_string(params, "dest", target_real_path, 0);
-            check("rename", params TSRMLS_CC);
+            if (target_real_path)
+            {
+                zval *params;
+                MAKE_STD_ZVAL(params);
+                array_init(params);
+                add_assoc_string(params, "source", source_real_path, 0);
+                add_assoc_string(params, "dest", target_real_path, 0);
+                check("rename", params TSRMLS_CC);
+            }
+            else
+            {
+                efree(source_real_path);
+            }
         }
     }
 }
