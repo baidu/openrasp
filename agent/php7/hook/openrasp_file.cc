@@ -133,14 +133,17 @@ void pre_global_file_put_contents_webshell_file_put_contents(OPENRASP_INTERNAL_F
         openrasp_zval_in_request(data))
     {
         zend_string *real_path = openrasp_real_path(Z_STRVAL_P(filename), Z_STRLEN_P(filename), flags & PHP_FILE_USE_INCLUDE_PATH, true);
-        zval attack_params;
-        array_init(&attack_params);
-        add_assoc_zval(&attack_params, "name", filename);
-        Z_ADDREF_P(filename);
-        add_assoc_str(&attack_params, "realpath", real_path);
-        zval plugin_message;
-        ZVAL_STRING(&plugin_message, _("Webshell detected - File dropper backdoor"));
-        openrasp_buildin_php_risk_handle(1, "webshell_file_put_contents", 100, &attack_params, &plugin_message);
+        if (real_path)
+        {
+            zval attack_params;
+            array_init(&attack_params);
+            add_assoc_zval(&attack_params, "name", filename);
+            Z_ADDREF_P(filename);
+            add_assoc_str(&attack_params, "realpath", real_path);
+            zval plugin_message;
+            ZVAL_STRING(&plugin_message, _("Webshell detected - File dropper backdoor"));
+            openrasp_buildin_php_risk_handle(1, "webshell_file_put_contents", 100, &attack_params, &plugin_message);
+        }
     }
 }
 

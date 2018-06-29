@@ -157,16 +157,19 @@ void pre_global_file_put_contents_webshell_file_put_contents(OPENRASP_INTERNAL_F
     {
         char *real_path = openrasp_real_path(Z_STRVAL_PP(path), Z_STRLEN_PP(path),
                                              (argc == 3 && Z_TYPE_PP(flags) == IS_LONG && (Z_LVAL_PP(flags) & PHP_FILE_USE_INCLUDE_PATH)), true TSRMLS_CC);
-        zval *attack_params = NULL;
-        MAKE_STD_ZVAL(attack_params);
-        array_init(attack_params);
-        add_assoc_zval(attack_params, "name", *path);
-        Z_ADDREF_P(*path);
-        add_assoc_string(attack_params, "realpath", real_path, 0);
-        zval *plugin_message = NULL;
-        MAKE_STD_ZVAL(plugin_message);
-        ZVAL_STRING(plugin_message, _("Webshell detected - File dropper backdoor"), 1);
-        openrasp_buildin_php_risk_handle(1, "webshell_file_put_contents", 100, attack_params, plugin_message TSRMLS_CC);
+        if (real_path)
+        {
+            zval *attack_params = NULL;
+            MAKE_STD_ZVAL(attack_params);
+            array_init(attack_params);
+            add_assoc_zval(attack_params, "name", *path);
+            Z_ADDREF_P(*path);
+            add_assoc_string(attack_params, "realpath", real_path, 0);
+            zval *plugin_message = NULL;
+            MAKE_STD_ZVAL(plugin_message);
+            ZVAL_STRING(plugin_message, _("Webshell detected - File dropper backdoor"), 1);
+            openrasp_buildin_php_risk_handle(1, "webshell_file_put_contents", 100, attack_params, plugin_message TSRMLS_CC);
+        }
     }
 }
 
