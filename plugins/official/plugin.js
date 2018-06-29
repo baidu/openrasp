@@ -875,9 +875,9 @@ plugin.register('readFile', function (params, context) {
                 {
                     return {
                         action:     algorithmConfig.readFile_userinput_http.action,
-                        message:    '任意文件读取/SSRF攻击，目标URL: ' + params.path,
+                        message:    '任意文件读取，目标URL: ' + params.path,
                         confidence: 90
-                    } 
+                    }
                 }
             }
 
@@ -889,7 +889,7 @@ plugin.register('readFile', function (params, context) {
                 {
                     return {
                         action:     algorithmConfig.readFile_userinput_file.action,
-                        message:    '任意文件读取/SSRF攻击，目标URL: ' + params.path,
+                        message:    '任意文件读取，目标文件: ' + params.path,
                         confidence: 90
                     } 
                 }
