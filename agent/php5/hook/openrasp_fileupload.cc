@@ -62,6 +62,7 @@ void pre_global_move_uploaded_file_fileUpload(OPENRASP_INTERNAL_FUNCTION_PARAMET
         {
             char *contents;
             int len = php_stream_copy_to_mem(stream, &contents, 4 * 1024, 0);
+            php_stream_close(stream);
             if (len > 0)
             {
                 zval *params;
