@@ -20,6 +20,10 @@
 #include <new>
 #include <vector>
 
+extern "C" {
+#include "ext/standard/php_fopen_wrappers.h"    
+}
+
 static std::vector<hook_handler_t> global_hook_handlers;
 
 void register_hook_handler(hook_handler_t hook_handler)
@@ -92,19 +96,32 @@ bool openrasp_check_callable_black(const char *item_name, uint item_name_length)
 
 zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, bool handle_unresolved)
 {
-    zend_string *resolved_path;
-    char expand_path[MAXPATHLEN];
-    if (expand_filepath(filename, expand_path))
+    zend_string *resolved_path = nullptr;
+    resolved_path = php_resolve_path(filename, length, use_include_path ? PG(include_path) : nullptr);
+    if (nullptr == resolved_path)
     {
-        resolved_path = php_resolve_path(expand_path, strlen(expand_path), use_include_path ? PG(include_path) : nullptr);
-    }
-    else
-    {
-        resolved_path = php_resolve_path(filename, length, use_include_path ? PG(include_path) : nullptr);
-    }
-    if (!resolved_path && handle_unresolved)
-    {
-        resolved_path = zend_string_init(filename, length, 0);
+        const char *p;
+        for (p = filename; isalnum((int)*p) || *p == '+' || *p == '-' || *p == '.'; p++)
+            ;
+        if ((*p == ':') && (p - filename > 1) && (p[1] == '/') && (p[2] == '/'))
+        {
+            php_stream_wrapper *wrapper;
+            wrapper = php_stream_locate_url_wrapper(filename, nullptr, STREAM_LOCATE_WRAPPERS_ONLY TSRMLS_CC);
+            if (wrapper && (wrapper != &php_stream_http_wrapper || !handle_unresolved))
+            {
+                resolved_path = zend_string_init(filename, length, 0);
+            }
+        }
+        else
+        {
+            char expand_path[MAXPATHLEN];
+            char real_path[MAXPATHLEN];
+            expand_filepath(filename, expand_path);
+            if (VCWD_REALPATH(expand_path, real_path) || handle_unresolved)
+            {
+                resolved_path = zend_string_init(expand_path, strlen(expand_path), 0);
+            }
+        }
     }
     return resolved_path;
 }

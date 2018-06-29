@@ -22,8 +22,8 @@
 PRE_HOOK_FUNCTION(file, readFile);
 PRE_HOOK_FUNCTION(readfile, readFile);
 PRE_HOOK_FUNCTION(file_get_contents, readFile);
-PRE_HOOK_FUNCTION(file_put_contents, webshell_file_put_contents);
 PRE_HOOK_FUNCTION(file_put_contents, writeFile);
+PRE_HOOK_FUNCTION(file_put_contents, webshell_file_put_contents);
 PRE_HOOK_FUNCTION(fopen, readFile);
 PRE_HOOK_FUNCTION(fopen, writeFile);
 PRE_HOOK_FUNCTION(copy, copy);
