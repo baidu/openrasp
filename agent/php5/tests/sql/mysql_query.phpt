@@ -2,6 +2,7 @@
 hook mysql_query
 --SKIPIF--
 <?php
+if (PHP_MAJOR_VERSION >= 7) die('Skipped: no mysql extension in PHP7.');
 $plugin = <<<EOF
 plugin.register('sql', params => {
     assert(params.query == 'SELECT a FROM b')
