@@ -18,7 +18,7 @@
 
 PRE_HOOK_FUNCTION_EX(exec, sqlite3, sql);
 PRE_HOOK_FUNCTION_EX(query, sqlite3, sql);
-PRE_HOOK_FUNCTION_EX(querySingle, sqlite3, sql);
+PRE_HOOK_FUNCTION_EX(querysingle, sqlite3, sql);
 
 //sqlite3::exec
 void pre_sqlite3_exec_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -39,7 +39,7 @@ void pre_sqlite3_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 }
 
 //sqlite3::querySingle
-void pre_sqlite3_querySingle_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_sqlite3_querysingle_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	char *sql;
 	size_t sql_len;

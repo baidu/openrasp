@@ -121,21 +121,24 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
     else if (strcmp(sql_connection_p->server, "pgsql") == 0)
     {
         char *e, *p, *conn_str = nullptr;
-        e = (char *) data_source + strlen(data_source);
-        p = (char *) data_source;
+        char *dhn_data_source = estrdup(colon + 1);
+        e = (char *) dhn_data_source + strlen(dhn_data_source);
+        p = (char *) dhn_data_source;
         while ((p = (char *)memchr(p, ';', (e - p)))) {
             *p = ' ';
         }
         if (username && password) {
-            spprintf(&conn_str, 0, "%s user=%s password=%s", data_source, username, password);
+            spprintf(&conn_str, 0, "%s user=%s password=%s", dhn_data_source, username, password);
         } else if (username) {
-            spprintf(&conn_str, 0, "%s user=%s", data_source, username);
+            spprintf(&conn_str, 0, "%s user=%s", dhn_data_source, username);
         } else if (password) {
-            spprintf(&conn_str, 0, "%s password=%s", data_source, password);
+            spprintf(&conn_str, 0, "%s password=%s", dhn_data_source, password);
         } else {
-            spprintf(&conn_str, 0, "%s", (char *) data_source);
+            spprintf(&conn_str, 0, "%s", (char *) dhn_data_source);
         }
         parse_connection_string(conn_str, sql_connection_p);
+        efree(conn_str);
+        efree(dhn_data_source);
     }
     else
     {

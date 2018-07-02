@@ -1,17 +1,16 @@
 --TEST--
-hook PDO::__construct
+hook pg_pconnect
 --SKIPIF--
-<?php 
+<?php
 include(__DIR__.'/../skipif.inc');
-if (!extension_loaded("mysqli")) die("Skipped: mysqli extension required.");
-if (!extension_loaded("pdo")) die("Skipped: mysqli extension required.");
+if (!extension_loaded("pgsql")) die("Skipped: pgsql extension required.");
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
 openrasp.enforce_policy=On
 --FILE--
 <?php
-new PDO('mysql:host=127.0.0.1;port=3306', 'root');
+pg_pconnect('host=127.0.0.1 port=5432 dbname=test user=postgres');
 ?>
 --EXPECTREGEX--
 <\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>
