@@ -17,7 +17,8 @@
 #include "openrasp.h"
 #include "openrasp_ini.h"
 
-extern "C" {
+extern "C"
+{
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -64,6 +65,9 @@ PHP_INI_END()
 
 PHP_GINIT_FUNCTION(openrasp)
 {
+#if defined(COMPILE_DL_JSON) && defined(ZTS)
+    ZEND_TSRMLS_CACHE_UPDATE();
+#endif
 #ifdef ZTS
     new (openrasp_globals) _zend_openrasp_globals;
 #endif
