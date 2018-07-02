@@ -40,3 +40,4 @@ tests/**/.work
 js/*.h
 error-output.txt
 .DS_Store
+!tests/include/
