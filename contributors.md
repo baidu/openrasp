@@ -2,10 +2,10 @@
 
 ### Maintainers (in alphabetical order)
 
+* An Yang
 * Cao Xinyu
 * Lan Yuhang
 * Li Xinkai
-* Song Yanjun
 * Tang Youyi
 
 ### Special thanks to the following people
@@ -18,4 +18,9 @@
 * Guo YiPing
 * Zhu Ming
 * @fszz
+* @计算姬
+* @暮云春树
+* @园长
+* [@Leesec](http://www.leesec.com/)
+* @Ezreal
 

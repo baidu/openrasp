@@ -20,7 +20,7 @@ function InstallJava()
 	tar -xvf rasp-java.tar.gz
 	
 	cd rasp-*
-	java -jar RaspInstall.jar "$path"
+	java -jar RaspInstall.jar -install "$path"
 	rm -rf rasp*
 }
 

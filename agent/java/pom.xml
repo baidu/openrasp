@@ -8,71 +8,31 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <groupId>com.fuxi.javaagent</groupId>
-    <artifactId>rasp</artifactId>
+    <groupId>com.baidu.openrasp</groupId>
+    <artifactId>openrasp</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
-    <repositories>
-        <repository>
-            <id>in-project</id>
-            <name>In Project Repo</name>
-            <url>file://${project.basedir}/lib</url>
-        </repository>
-    </repositories>
-    <dependencies>
-        <dependency>
-            <groupId>com.fuxi.javaagent</groupId>
-            <artifactId>jnotify</artifactId>
-            <version>1.4.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fuxi.javaagent</groupId>
-            <artifactId>rhino-shim</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.baidu.openrasp/sqlparser -->
-        <dependency>
-            <groupId>com.baidu.openrasp</groupId>
-            <artifactId>sqlparser</artifactId>
-            <version>1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm-all</artifactId>
-            <version>5.2</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.5</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.2</version>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.17</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mozilla</groupId>
-            <artifactId>rhino</artifactId>
-            <version>1.7.7.2</version>
-        </dependency>
-    </dependencies>
+    <packaging>pom</packaging>
 
     <scm>
         <connection>scm:git:https://github.com/baidu/openrasp</connection>
         <developerConnection>scm:git:https://github.com/baidu/openrasp</developerConnection>
         <url>https://github.com/baidu/openrasp</url>
     </scm>
+
+    <modules>
+        <module>boot</module>
+        <module>engine</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.baidu.openrasp</groupId>
+                <artifactId>rasp-boot</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <finalName>rasp</finalName>
@@ -127,32 +87,29 @@
                                         <Project-Version>${project.version}</Project-Version>
                                         <Build-Time>${maven.build.timestamp}</Build-Time>
                                         <Git-Commit>${buildNumber}</Git-Commit>
-                                        <Can-Redefine-Classes>TRUE</Can-Redefine-Classes>
-                                        <Premain-Class>com.fuxi.javaagent.Agent</Premain-Class>
-                                        <Can-Retransform-Classes>TRUE</Can-Retransform-Classes>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
                             <relocations>
                                 <relocation>
                                     <pattern>org.apache.commons.lang3</pattern>
-                                    <shadedPattern>com.fuxi.javaagent</shadedPattern>
+                                    <shadedPattern>com.baidu.openrasp</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.apache.commons.io</pattern>
-                                    <shadedPattern>com.fuxi.javaagent</shadedPattern>
+                                    <shadedPattern>com.baidu.openrasp</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.objectweb</pattern>
-                                    <shadedPattern>com.fuxi.javaagent</shadedPattern>
+                                    <shadedPattern>com.baidu.openrasp</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>com.google</pattern>
-                                    <shadedPattern>com.fuxi.javaagent</shadedPattern>
+                                    <shadedPattern>com.baidu.openrasp</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.apache.log4j</pattern>
-                                    <shadedPattern>com.fuxi.javaagent.log4j</shadedPattern>
+                                    <shadedPattern>com.baidu.openrasp.log4j</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>log4j.configuration</pattern>
@@ -160,19 +117,27 @@
                                 </relocation>
                                 <relocation>
                                     <pattern>org.abego</pattern>
-                                    <shadedPattern>com.fuxi.javaagent.abego</shadedPattern>
+                                    <shadedPattern>com.baidu.openrasp.abego</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.antlr</pattern>
-                                    <shadedPattern>com.fuxi.javaagent.antlr</shadedPattern>
+                                    <shadedPattern>com.baidu.openrasp.antlr</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.stringtemplate</pattern>
-                                    <shadedPattern>com.fuxi.javaagent.stringtemplate</shadedPattern>
+                                    <shadedPattern>com.baidu.openrasp.stringtemplate</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>st4hidden.org.antlr</pattern>
-                                    <shadedPattern>com.fuxi.javaagent.st4hidden.org.antlr</shadedPattern>
+                                    <shadedPattern>com.baidu.openrasp.st4hidden.org.antlr</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>javassist</pattern>
+                                    <shadedPattern>com.baidu.openrasp.javassist</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.mozilla</pattern>
+                                    <shadedPattern>com.baidu.openrasp.org.mozilla</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
@@ -187,29 +152,6 @@
                     <reportOutputDirectory>../javadocs</reportOutputDirectory>
                     <destDir>rasp-doc</destDir>
                 </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.0.2</version>
-                <executions>
-                    <execution>
-                        <id>copy-resources</id>
-                        <!-- here the phase you need -->
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${basedir}/src/main/resources/environment</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${basedir}/../../openrasp-plugin-devtool/dist</directory>
-                                    <filtering>true</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

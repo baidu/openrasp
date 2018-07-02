@@ -24,6 +24,6 @@ cp app.war ${SERVER_HOME}/server/default/deploy/
 
 # tar zxf rasp-java.tar.gz --strip-components=1  $(tar ztf rasp-java.tar.gz --wildcards "*RaspInstall.jar")
 
-java -jar RaspInstall.jar ${SERVER_HOME}
+java -jar RaspInstall.jar -install ${SERVER_HOME}
 
 nohup sh ${SERVER_HOME}/bin/run.sh &
