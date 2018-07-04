@@ -1,7 +1,15 @@
 ARG_ENABLE("openrasp", "enable openrasp support", "no");
 
 if (PHP_OPENRASP != "no") {
-
+	WScript.CreateObject('WScript.Shell').Run(
+		"cmd /c cd " + configure_module_dirname + "/js &&" +
+		"xxd -i console.js > openrasp_v8_js.h &&" +
+		"xxd -i checkpoint.js >> openrasp_v8_js.h &&" +
+		"xxd -i context.js >> openrasp_v8_js.h &&" +
+		"xxd -i error.js >> openrasp_v8_js.h &&" +
+		"xxd -i rasp.js >> openrasp_v8_js.h &&" +
+		"xxd -i sql_tokenize.js >> openrasp_v8_js.h"
+	)
 	ADD_FLAG("CFLAGS_OPENRASP", "/I " + configure_module_dirname);
 	ADD_FLAG("CFLAGS_OPENRASP", "/EHcs");
 	ADD_FLAG("CFLAGS_OPENRASP", "/MD");
