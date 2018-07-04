@@ -149,6 +149,14 @@ typedef struct sql_connection_entry_t
     char *username = nullptr;
 } sql_connection_entry;
 
+typedef enum wrapper_operation_t {
+    RENAME          = 1 << 0,
+	READING         = 1 << 1,
+    WRITING         = 1 << 2,
+    APPENDING       = 1 << 3,
+    SIMULTANEOUSRW  = 1 << 4
+} wrapper_operation;
+
 typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
 typedef void (*hook_handler_t)();
 
@@ -297,7 +305,7 @@ void register_hook_handler(hook_handler_t hook_handler);
 bool openrasp_check_type_ignored(const char *item_name, uint item_name_length);
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length);
 void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zval *message);
-zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, bool handle_unresolved);
+zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, wrapper_operation w_op);
 void slow_query_alarm(int rows);
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
 void sql_type_handler(char *query, int query_len, const char *server);

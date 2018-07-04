@@ -44,7 +44,7 @@ static inline void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 		return;
 	}
 	php_stream_close(dirp);
-	zend_string *real_path = openrasp_real_path(ZSTR_VAL(dirname), ZSTR_LEN(dirname), false, false);
+	zend_string *real_path = openrasp_real_path(ZSTR_VAL(dirname), ZSTR_LEN(dirname), false, READING);
 	if (real_path)
 	{
 		zval params;

@@ -19,6 +19,7 @@
 #include "openrasp_inject.h"
 #include <new>
 #include <vector>
+#include <map>
 
 extern "C" {
 #include "ext/standard/php_fopen_wrappers.h"    
@@ -94,8 +95,25 @@ bool openrasp_check_callable_black(const char *item_name, uint item_name_length)
     return openrasp_ini.callable_blacklists.find(item_name) != openrasp_ini.callable_blacklists.end();
 }
 
-zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, bool handle_unresolved)
+zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, wrapper_operation w_op)
 {
+    static const std::map<std::string, int> opMap = 
+    {
+        {"http", READING},
+        {"https", READING},
+        {"ftp", READING | WRITING | APPENDING},
+        {"ftps", READING | WRITING | APPENDING},
+        {"php", READING | WRITING | APPENDING | SIMULTANEOUSRW},
+        {"zlib", READING | WRITING | APPENDING},
+        {"bzip2", READING | WRITING | APPENDING},
+        {"zlib", READING},
+        {"data", READING},
+        {"phar", READING | WRITING | SIMULTANEOUSRW},
+        {"ssh2", READING | WRITING | SIMULTANEOUSRW},
+        {"rar", READING},
+        {"ogg", READING | WRITING | APPENDING},
+        {"expect", READING | WRITING | APPENDING}
+    };
     zend_string *resolved_path = nullptr;
     resolved_path = php_resolve_path(filename, length, use_include_path ? PG(include_path) : nullptr);
     if (nullptr == resolved_path)
@@ -105,11 +123,26 @@ zend_string *openrasp_real_path(char *filename, int length, bool use_include_pat
             ;
         if ((*p == ':') && (p - filename > 1) && (p[1] == '/') && (p[2] == '/'))
         {
+            std::string scheme(filename, p - filename);
             php_stream_wrapper *wrapper;
             wrapper = php_stream_locate_url_wrapper(filename, nullptr, STREAM_LOCATE_WRAPPERS_ONLY TSRMLS_CC);
-            if (wrapper && (wrapper != &php_stream_http_wrapper || !handle_unresolved))
+            if (wrapper && wrapper->wops)
             {
-                resolved_path = zend_string_init(filename, length, 0);
+                if (w_op & RENAME)
+                {
+                    if (wrapper->wops->rename)
+                    {
+                        resolved_path = zend_string_init(filename, length, 0);
+                    }
+                }
+                else
+                {
+                    auto it = opMap.find(scheme);
+                    if (it != opMap.end() && w_op & it->second)
+                    {
+                        resolved_path = zend_string_init(filename, length, 0);
+                    }
+                }
             }
         }
         else
@@ -117,7 +150,7 @@ zend_string *openrasp_real_path(char *filename, int length, bool use_include_pat
             char expand_path[MAXPATHLEN];
             char real_path[MAXPATHLEN];
             expand_filepath(filename, expand_path);
-            if (VCWD_REALPATH(expand_path, real_path) || handle_unresolved)
+            if (VCWD_REALPATH(expand_path, real_path) || w_op & WRITING)
             {
                 resolved_path = zend_string_init(expand_path, strlen(expand_path), 0);
             }

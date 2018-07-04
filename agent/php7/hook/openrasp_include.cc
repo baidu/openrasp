@@ -26,12 +26,6 @@ int eval_handler(zend_execute_data *execute_data);
 int include_or_eval_handler(zend_execute_data *execute_data);
 static zend_free_op should_free;
 
-
-
-
-
-
-
 int include_or_eval_handler(zend_execute_data *execute_data)
 {
     const zend_op *opline = EX(opline);
@@ -49,14 +43,14 @@ int eval_handler(zend_execute_data *execute_data)
     const zend_op *opline = EX(opline);
     zval *inc_filename = zend_get_zval_ptr(opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
     if (inc_filename != nullptr &&
-        opline->op1_type == IS_CV &&
+        opline->op1_type == IS_VAR &&
         !openrasp_check_type_ignored(ZEND_STRL("webshell_eval")) &&
         openrasp_zval_in_request(inc_filename))
     {
         zval attack_params;
         array_init(&attack_params);
         add_assoc_zval(&attack_params, "eval", inc_filename);
-        Z_ADDREF_P(inc_filename);
+        Z_TRY_ADDREF_P(inc_filename);
         zval plugin_message;
         ZVAL_STRING(&plugin_message, _("China Chopper WebShell"));
         openrasp_buildin_php_risk_handle(1, "webshell_eval", 100, &attack_params, &plugin_message);
@@ -67,13 +61,14 @@ int include_handler(zend_execute_data *execute_data)
 {
     const zend_op *opline = EX(opline);
     zval params, tmp_inc_filename, *inc_filename, *document_root;
+    ZVAL_NULL(&tmp_inc_filename);
     zend_string *real_path = nullptr;
     inc_filename = zend_get_zval_ptr(opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
     if (inc_filename == nullptr)
     {
         goto DISPATCH;
     }
-    if (opline->op1_type == IS_CV)
+    if (opline->op1_type == IS_VAR)
     {
         if (!openrasp_check_type_ignored(ZEND_STRL("webshell_include")) &&
             openrasp_zval_in_request(inc_filename))
@@ -81,7 +76,7 @@ int include_handler(zend_execute_data *execute_data)
             zval attack_params;
             array_init(&attack_params);
             add_assoc_zval(&attack_params, "url", inc_filename);
-            Z_ADDREF_P(inc_filename);
+            Z_TRY_ADDREF_P(inc_filename);
             zval plugin_message;
             ZVAL_STRING(&plugin_message, _("File inclusion"));
             openrasp_buildin_php_risk_handle(1, "webshell_include", 100, &attack_params, &plugin_message);
@@ -101,7 +96,7 @@ int include_handler(zend_execute_data *execute_data)
     if ((strlen(Z_STRVAL_P(inc_filename)) < 4 || (strcmp(Z_STRVAL_P(inc_filename) + Z_STRLEN_P(inc_filename) - 4, ".php") && strcmp(Z_STRVAL_P(inc_filename) + Z_STRLEN_P(inc_filename) - 4, ".inc"))) &&
         (strstr(Z_STRVAL_P(inc_filename), "://") != nullptr || strstr(Z_STRVAL_P(inc_filename), "../") != nullptr))
     {
-        real_path = openrasp_real_path(Z_STRVAL_P(inc_filename), Z_STRLEN_P(inc_filename), true, false);
+        real_path = openrasp_real_path(Z_STRVAL_P(inc_filename), Z_STRLEN_P(inc_filename), true, READING);
     }
     if (!real_path)
     {
@@ -115,16 +110,16 @@ int include_handler(zend_execute_data *execute_data)
     document_root = zend_hash_str_find(Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRL("DOCUMENT_ROOT"));
     if (document_root == nullptr ||
         Z_TYPE_P(document_root) != IS_STRING ||
-        strncmp(ZSTR_VAL(real_path), Z_STRVAL_P(document_root), ZSTR_LEN(real_path)) != 0)
+        strncmp(ZSTR_VAL(real_path), Z_STRVAL_P(document_root), Z_STRLEN_P(document_root)) == 0)
     {
         goto DISPATCH;
     }
 
     array_init(&params);
     add_assoc_zval(&params, "path", inc_filename);
-    Z_ADDREF_P(inc_filename);
+    Z_TRY_ADDREF_P(inc_filename);
     add_assoc_zval(&params, "url", inc_filename);
-    Z_ADDREF_P(inc_filename);
+    Z_TRY_ADDREF_P(inc_filename);
     add_assoc_str(&params, "realpath", real_path);
     switch (opline->extended_value)
     {
@@ -151,6 +146,9 @@ DISPATCH:
     {
         zend_string_release(real_path);
     }
-    zval_dtor(&tmp_inc_filename);
+    if (Z_TYPE(tmp_inc_filename) != IS_NULL)
+    {
+        zval_ptr_dtor(&tmp_inc_filename);
+    }
     return ZEND_USER_OPCODE_DISPATCH;
 }

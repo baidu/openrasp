@@ -34,7 +34,7 @@ void format_debug_backtrace_str(zval *backtrace_str)
         int i = 0;
         std::string buffer;
         HashTable *hash_arr = Z_ARRVAL(trace_arr);
-        zval *ele_value = NULL;
+        zval *ele_value = NULL;        
         ZEND_HASH_FOREACH_VAL(hash_arr, ele_value)
         {
             if (++i > openrasp_ini.log_maxstack)
@@ -71,7 +71,14 @@ void format_debug_backtrace_str(zval *backtrace_str)
             buffer.append(")\n");
         }
         ZEND_HASH_FOREACH_END();
-        ZVAL_STRINGL(backtrace_str, buffer.c_str(), buffer.length() - 1);
+        if (buffer.length() > 0)
+        {
+            ZVAL_STRINGL(backtrace_str, buffer.c_str(), buffer.length() - 1);
+        }
+        else
+        {
+            ZVAL_STRING(backtrace_str, "");
+        }
     }
     zval_dtor(&trace_arr);
 }

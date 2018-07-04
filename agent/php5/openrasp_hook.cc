@@ -19,6 +19,12 @@
 #include "openrasp_inject.h"
 #include <new>
 #include <vector>
+#include <map>
+
+extern "C"
+{
+#include "ext/standard/php_fopen_wrappers.h"
+}
 
 static hook_handler_t global_hook_handlers[512];
 static size_t global_hook_handlers_len = 0;
@@ -35,6 +41,71 @@ typedef struct _track_vars_pair_t
 } track_vars_pair;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_hook)
+
+//return value estrdup
+char *openrasp_real_path(char *filename, int filename_len, zend_bool use_include_path, wrapper_operation w_op TSRMLS_DC)
+{
+    static const std::map<std::string, int> opMap = 
+    {
+        {"http", READING},
+        {"https", READING},
+        {"ftp", READING | WRITING | APPENDING},
+        {"ftps", READING | WRITING | APPENDING},
+        {"php", READING | WRITING | APPENDING | SIMULTANEOUSRW},
+        {"zlib", READING | WRITING | APPENDING},
+        {"bzip2", READING | WRITING | APPENDING},
+        {"zlib", READING},
+        {"data", READING},
+        {"phar", READING | WRITING | SIMULTANEOUSRW},
+        {"ssh2", READING | WRITING | SIMULTANEOUSRW},
+        {"rar", READING},
+        {"ogg", READING | WRITING | APPENDING},
+        {"expect", READING | WRITING | APPENDING}
+    };
+    char *resolved_path = nullptr;
+    resolved_path = php_resolve_path(filename, filename_len, use_include_path ? PG(include_path) : NULL TSRMLS_CC);
+    if (nullptr == resolved_path)
+    {
+        const char *p;
+        for (p = filename; isalnum((int)*p) || *p == '+' || *p == '-' || *p == '.'; p++)
+            ;
+        if ((*p == ':') && (p - filename > 1) && (p[1] == '/') && (p[2] == '/'))
+        {
+            std::string scheme(filename, p - filename);
+            php_stream_wrapper *wrapper;
+            wrapper = php_stream_locate_url_wrapper(filename, nullptr, STREAM_LOCATE_WRAPPERS_ONLY TSRMLS_CC);
+            if (wrapper && wrapper->wops)
+            {
+                if (w_op & RENAME)
+                {
+                    if (wrapper->wops->rename)
+                    {
+                        resolved_path = estrdup(filename);    
+                    }
+                }
+                else
+                {
+                    auto it = opMap.find(scheme);
+                    if (it != opMap.end() && w_op & it->second)
+                    {
+                        resolved_path = estrdup(filename);
+                    }
+                }
+            }
+        }
+        else
+        {
+            char expand_path[MAXPATHLEN];
+            char real_path[MAXPATHLEN];
+            expand_filepath(filename, expand_path TSRMLS_CC);
+            if (VCWD_REALPATH(expand_path, real_path) || w_op & WRITING)
+            {
+                resolved_path = estrdup(expand_path);
+            }
+        }
+    }
+    return resolved_path;
+}
 
 bool openrasp_zval_in_request(zval *item TSRMLS_DC)
 {

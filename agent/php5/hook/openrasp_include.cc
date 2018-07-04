@@ -118,7 +118,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     || (strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".php") && strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".inc")))
     && (strstr(Z_STRVAL_P(path), "://") != nullptr || strstr(Z_STRVAL_P(path), "../") != nullptr))
     {
-        real_path = openrasp_real_path(Z_STRVAL_P(path), Z_STRLEN_P(path), 1, false TSRMLS_CC);
+        real_path = openrasp_real_path(Z_STRVAL_P(path), Z_STRLEN_P(path), 1, READING TSRMLS_CC);
     }
     
     if (!real_path)
