@@ -99,7 +99,8 @@ var algorithmConfig = {
             '.xip.name',
             '.xip.io',
             '.nip.io',
-            '.burpcollaborator.net'
+            '.burpcollaborator.net',
+            '.tu4.org'
         ]
     },
     // SSRF - 是否允许访问混淆后的IP地址
