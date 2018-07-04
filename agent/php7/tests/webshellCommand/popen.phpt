@@ -1,15 +1,16 @@
 --TEST--
-hook array_filter
+hook popen (webshell)
 --SKIPIF--
 <?php
 include(__DIR__.'/../skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.callable_blacklists=system,exec
+--GET--
+a=cd
 --FILE--
 <?php
-array_filter(array('ls', 'whoami'), "system");
+popen($_GET['a'], 'r');
 ?>
 --EXPECTREGEX--
 <\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

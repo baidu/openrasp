@@ -1,11 +1,14 @@
 --TEST--
-SplFileObject::__construct
+hook file
+--DESCRIPTION--
+http://php.net/manual/en/function.file.php
+local file
 --SKIPIF--
 <?php
 $plugin = <<<EOF
 plugin.register('readFile', params => {
     assert(params.path == '/tmp/openrasp/tmpfile')
-    assert(params.realpath.endsWith('openrasp/tmpfile'))
+    assert(params.realpath == '/tmp/openrasp/tmpfile')
     return block
 })
 EOF;
@@ -16,7 +19,7 @@ file_put_contents('/tmp/openrasp/tmpfile', 'temp');
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-var_dump(new SplFileObject('/tmp/openrasp/tmpfile'));
+var_dump(file('/tmp/openrasp/tmpfile'));
 ?>
 --EXPECTREGEX--
 <\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

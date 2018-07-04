@@ -179,6 +179,8 @@ void check(const char *type, zval *params)
     }
 }
 
+extern int include_or_eval_handler(zend_execute_data *execute_data);
+
 PHP_GINIT_FUNCTION(openrasp_hook)
 {
 #ifdef ZTS
@@ -201,6 +203,7 @@ PHP_MINIT_FUNCTION(openrasp_hook)
     {
         single_handler();
     }
+    zend_set_user_opcode_handler(ZEND_INCLUDE_OR_EVAL, include_or_eval_handler);
     return SUCCESS;
 }
 

@@ -1,5 +1,5 @@
 --TEST--
-hook array_filter
+hook reflectionfunction
 --SKIPIF--
 <?php
 include(__DIR__.'/../skipif.inc');
@@ -9,7 +9,7 @@ openrasp.root_dir=/tmp/openrasp
 openrasp.callable_blacklists=system,exec
 --FILE--
 <?php
-array_filter(array('ls', 'whoami'), "system");
+$func = new ReflectionFunction('system'); 
 ?>
 --EXPECTREGEX--
 <\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

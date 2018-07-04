@@ -6,7 +6,7 @@ $dir = __DIR__;
 $plugin = <<<EOF
 plugin.register('writeFile', params => {
     assert(params.path == '/tmp/openrasp/tmpfile')
-    assert(params.realpath.endsWith('tmpfile'))
+    assert(params.realpath == '/tmp/openrasp/tmpfile')
     return block
 })
 EOF;
