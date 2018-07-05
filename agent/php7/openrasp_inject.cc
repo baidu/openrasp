@@ -101,7 +101,7 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_inject)
 {
     if (inject_html.size())
     {
-        bool is_match_inject_prefix = true;
+        bool is_match_inject_prefix = false;
         if (openrasp_ini.inject_html_urlprefix && strlen(openrasp_ini.inject_html_urlprefix) > 0)
         {
             is_match_inject_prefix = false;
