@@ -274,10 +274,10 @@ void pre_global_rename_rename(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
     if (source && target && strlen(source) == source_len && strlen(target) == target_len)
     {
-        char *source_real_path = openrasp_real_path(source, source_len, false, RENAME TSRMLS_CC);
+        char *source_real_path = openrasp_real_path(source, source_len, false, RENAMESRC TSRMLS_CC);
         if (source_real_path)
         {
-            char *target_real_path = openrasp_real_path(target, target_len, false, RENAME TSRMLS_CC);
+            char *target_real_path = openrasp_real_path(target, target_len, false, RENAMEDEST TSRMLS_CC);
             if (target_real_path)
             {
                 zval *params;

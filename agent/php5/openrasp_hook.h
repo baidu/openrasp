@@ -147,11 +147,13 @@ typedef struct sql_connection_entry_t {
 } sql_connection_entry;
 
 typedef enum wrapper_operation_t {
-    RENAME          = 1 << 0,
-	READING         = 1 << 1,
-    WRITING         = 1 << 2,
-    APPENDING       = 1 << 3,
-    SIMULTANEOUSRW  = 1 << 4
+    OPENDIR         = 1 << 0,
+    RENAMESRC       = 1 << 1,
+    RENAMEDEST      = 1 << 2,
+	READING         = 1 << 3,
+    WRITING         = 1 << 4,
+    APPENDING       = 1 << 5,
+    SIMULTANEOUSRW  = 1 << 6
 } wrapper_operation;
 
 typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);

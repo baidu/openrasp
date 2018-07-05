@@ -3,7 +3,12 @@ hook dir not exist
 --SKIPIF--
 <?php
 $plugin = <<<EOF
-plugin.register('directory', params => block)
+plugin.register('directory', params => {
+    assert(params.path == '/aaa/bbb/../../../bin')
+    assert(params.realpath == '/bin')
+    assert(params.stack[0].endsWith('dir'))
+    return block
+})
 EOF;
 include(__DIR__.'/../skipif.inc');
 ?>

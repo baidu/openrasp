@@ -134,11 +134,18 @@ zend_string *openrasp_real_path(char *filename, int length, bool use_include_pat
             wrapper = php_stream_locate_url_wrapper(filename, nullptr, STREAM_LOCATE_WRAPPERS_ONLY TSRMLS_CC);
             if (wrapper && wrapper->wops)
             {
-                if (w_op & RENAME)
+                if (w_op & RENAMESRC || w_op & RENAMEDEST)
                 {
                     if (wrapper->wops->rename)
                     {
                         resolved_path = zend_string_init(filename, length, 0);
+                    }
+                }
+                else if ((w_op & OPENDIR))
+                {
+                    if (wrapper->wops->dir_opener)
+                    {
+                        resolved_path = zend_string_init(filename, length, 0);  
                     }
                 }
                 else
@@ -156,9 +163,23 @@ zend_string *openrasp_real_path(char *filename, int length, bool use_include_pat
             char expand_path[MAXPATHLEN];
             char real_path[MAXPATHLEN];
             expand_filepath(filename, expand_path);
-            if (VCWD_REALPATH(expand_path, real_path) || w_op & WRITING)
+            if (VCWD_REALPATH(expand_path, real_path))
             {
-                resolved_path = zend_string_init(expand_path, strlen(expand_path), 0);
+                if (w_op & OPENDIR)
+                {
+                    //skip
+                }
+                else
+                {
+                    resolved_path = zend_string_init(expand_path, strlen(expand_path), 0);
+                }
+            }
+            else
+            {
+                if (w_op & WRITING || w_op & RENAMEDEST)
+                {
+                    resolved_path = zend_string_init(expand_path, strlen(expand_path), 0);
+                }
             }
         }
     }

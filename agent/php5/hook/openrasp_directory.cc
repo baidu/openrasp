@@ -31,8 +31,8 @@ static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         zend_get_parameters_ex(argc, &path) == SUCCESS &&
         Z_TYPE_PP(path) == IS_STRING)
     {
-        char resolved_path_buff[MAXPATHLEN];
-        if (VCWD_REALPATH(Z_STRVAL_PP(path), resolved_path_buff))
+        char* resolved_path_buff = openrasp_real_path(Z_STRVAL_PP(path), Z_STRLEN_PP(path), false, OPENDIR TSRMLS_CC);
+        if (resolved_path_buff)
         {
 #if PHP_API_VERSION < 20100412
             if (PG(safe_mode) && (!php_checkuid(resolved_path_buff, NULL, CHECKUID_CHECK_FILE_AND_DIR))) {
@@ -53,7 +53,7 @@ static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             array_init(params);
             add_assoc_zval(params, "path", *path);
             Z_ADDREF_PP(path);
-            add_assoc_string(params, "realpath", resolved_path_buff, 1);
+            add_assoc_string(params, "realpath", resolved_path_buff, 0);
             zval *stack = NULL;
             MAKE_STD_ZVAL(stack);
             array_init(stack);

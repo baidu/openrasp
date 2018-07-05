@@ -82,9 +82,16 @@ char *openrasp_real_path(char *filename, int filename_len, zend_bool use_include
             wrapper = php_stream_locate_url_wrapper(filename, nullptr, STREAM_LOCATE_WRAPPERS_ONLY TSRMLS_CC);
             if (wrapper && wrapper->wops)
             {
-                if (w_op & RENAME)
+                if (w_op & RENAMESRC || w_op & RENAMEDEST)
                 {
                     if (wrapper->wops->rename)
+                    {
+                        resolved_path = estrdup(filename);    
+                    }
+                }
+                else if ((w_op & OPENDIR))
+                {
+                    if (wrapper->wops->dir_opener)
                     {
                         resolved_path = estrdup(filename);    
                     }
@@ -104,9 +111,23 @@ char *openrasp_real_path(char *filename, int filename_len, zend_bool use_include
             char expand_path[MAXPATHLEN];
             char real_path[MAXPATHLEN];
             expand_filepath(filename, expand_path TSRMLS_CC);
-            if (VCWD_REALPATH(expand_path, real_path) || w_op & WRITING)
+            if (VCWD_REALPATH(expand_path, real_path))
             {
-                resolved_path = estrdup(expand_path);
+                if (w_op & OPENDIR)
+                {
+                    //skip
+                }
+                else
+                {
+                    resolved_path = estrdup(expand_path);
+                }
+            }
+            else
+            {
+                if (w_op & WRITING || w_op & RENAMEDEST)
+                {
+                    resolved_path = estrdup(expand_path);
+                }
             }
         }
     }
