@@ -42,10 +42,16 @@ typedef struct _track_vars_pair_t
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_hook)
 
+struct scheme_cmp { 
+    bool operator() (const std::string& lhs, const std::string& rhs) const {
+        return strcasecmp(lhs.c_str(), rhs.c_str()) < 0;
+    }
+};
+
 //return value estrdup
 char *openrasp_real_path(char *filename, int filename_len, zend_bool use_include_path, wrapper_operation w_op TSRMLS_DC)
 {
-    static const std::map<std::string, int> opMap = 
+    static const std::map<std::string, int, scheme_cmp> opMap = 
     {
         {"http", READING},
         {"https", READING},

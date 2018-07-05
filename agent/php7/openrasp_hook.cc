@@ -95,9 +95,15 @@ bool openrasp_check_callable_black(const char *item_name, uint item_name_length)
     return openrasp_ini.callable_blacklists.find(item_name) != openrasp_ini.callable_blacklists.end();
 }
 
+struct scheme_cmp { 
+    bool operator() (const std::string& lhs, const std::string& rhs) const {
+        return strcasecmp(lhs.c_str(), rhs.c_str()) < 0;
+    }
+};
+
 zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, wrapper_operation w_op)
 {
-    static const std::map<std::string, int> opMap = 
+    static const std::map<std::string, int, scheme_cmp> opMap = 
     {
         {"http", READING},
         {"https", READING},
