@@ -15,7 +15,7 @@ include(__DIR__.'/../skipif.inc');
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-@file('hdummyttp://www.example.com/');
+@file('dummy://www.example.com/');
 echo 'no check';
 ?>
 --EXPECT--
