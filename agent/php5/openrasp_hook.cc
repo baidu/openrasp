@@ -113,7 +113,7 @@ char *openrasp_real_path(char *filename, int filename_len, zend_bool use_include
             expand_filepath(filename, expand_path TSRMLS_CC);
             if (VCWD_REALPATH(expand_path, real_path))
             {
-                if (w_op & OPENDIR)
+                if (w_op & OPENDIR || w_op & RENAMESRC)
                 {
                     //skip
                 }

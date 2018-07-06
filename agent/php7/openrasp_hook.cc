@@ -165,7 +165,7 @@ zend_string *openrasp_real_path(char *filename, int length, bool use_include_pat
             expand_filepath(filename, expand_path);
             if (VCWD_REALPATH(expand_path, real_path))
             {
-                if (w_op & OPENDIR)
+                if (w_op & OPENDIR || w_op & RENAMESRC)
                 {
                     //skip
                 }

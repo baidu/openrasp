@@ -3,7 +3,10 @@ hook dir not exist
 --SKIPIF--
 <?php
 $plugin = <<<EOF
-plugin.register('directory', params => block)
+plugin.register('directory', params => {
+    assert(params.path == 'openrasp_test_not_exist')
+    return block
+})
 EOF;
 include(__DIR__.'/../skipif.inc');
 ?>

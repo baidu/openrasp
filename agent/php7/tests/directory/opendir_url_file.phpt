@@ -1,5 +1,5 @@
 --TEST--
-hook opendir (relative path)
+hook opendir
 --SKIPIF--
 <?php
 $plugin = <<<EOF
