@@ -162,7 +162,7 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
     zval *origin_zv;
     for (keys_filter filter:filters)
     {
-        if (Z_TYPE_P(src) == IS_ARRAY &&
+        if (src && Z_TYPE_P(src) == IS_ARRAY &&
         (origin_zv = zend_hash_str_find(Z_ARRVAL_P(src), ZEND_STRL(filter.origin_key_str))) != nullptr &&
         Z_TYPE_P(origin_zv) == IS_STRING)
         {
@@ -177,6 +177,10 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
                 add_assoc_zval(dest, filter.new_key_str, origin_zv);
                 Z_TRY_ADDREF_P(origin_zv);
             }
+        }
+        else
+        {
+            add_assoc_string(dest, filter.new_key_str, "");
         }
     }
 }
@@ -196,10 +200,12 @@ static void init_alarm_request_info()
 
     assert(Z_TYPE(OPENRASP_LOG_G(alarm_request_info)) == IS_NULL);
     array_init(&OPENRASP_LOG_G(alarm_request_info));
+    zval *migrate_src = nullptr;
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY || zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
-        migrate_hash_values(&OPENRASP_LOG_G(alarm_request_info), &PG(http_globals)[TRACK_VARS_SERVER], alarm_filters);
+        migrate_src = &PG(http_globals)[TRACK_VARS_SERVER];
     }
+    migrate_hash_values(&OPENRASP_LOG_G(alarm_request_info), migrate_src, alarm_filters);
     add_assoc_string(&OPENRASP_LOG_G(alarm_request_info), "event_type", "attack");
     add_assoc_string(&OPENRASP_LOG_G(alarm_request_info), "server_hostname", host_name);
     add_assoc_string(&OPENRASP_LOG_G(alarm_request_info), "server_type", "PHP");
