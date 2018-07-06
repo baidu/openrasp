@@ -699,6 +699,11 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
             if (resource->scheme && (!strcmp(resource->scheme, "tcp") || !strcmp(resource->scheme, "udp"))) {
                 alarm_appender = static_cast<log_appender>(alarm_appender | SYSLOG_APPENDER);
             }
+            else
+            {
+                openrasp_error(E_WARNING, LOG_ERROR, 
+                _("Invalid url scheme in syslog server address: '%s', expecting 'tcp:' or 'udp:'."), openrasp_ini.syslog_server_address);
+            }
             php_url_free(resource);
         } else {
             openrasp_error(E_WARNING, LOG_ERROR, 
