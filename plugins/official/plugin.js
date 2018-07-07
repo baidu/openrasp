@@ -1100,7 +1100,8 @@ plugin.register('command', function (params, context) {
                 'org.apache.commons.collections4.functors.InvokerTransformer.transform':        '尝试通过 transformer 反序列化执行命令',
                 'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':                   '尝试通过 JNDI 注入方式执行命令',
                 'com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze':     '尝试通过 fastjson 反序列化方式执行命令',
-                'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': '尝试通过 Spring SpEL 表达式执行命令'
+                'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': '尝试通过 Spring SpEL 表达式执行命令',
+                'freemarker.template.utility.Execute.exec':                                     '尝试通过 FreeMarker 模板执行命令'
             }
             
             for (var i = 2; i < params.stack.length; i ++) {
