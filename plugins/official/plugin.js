@@ -322,6 +322,25 @@ function hasTraversal (path) {
     return false
 }
 
+function isHostnameDNSLOG(hostname) {
+    var domains = algorithmConfig.ssrf_common.domains
+
+    if (hostname == 'requestb.in' || hostname == 'transfer.sh')
+    {
+        return true
+    }
+   
+    for (var i = 0; i < domains.length; i ++)
+    {
+        if (hostname.endsWith(domains[i]))
+        {
+            return true
+        }
+    }
+
+    return false
+}
+
 function basename (path) {
     var idx = path.lastIndexOf('/')
     return path.substr(idx + 1)
@@ -601,26 +620,7 @@ if (RASP.get_jsengine() !== 'v8') {
         // 检查常见探测域名
         if (algorithmConfig.ssrf_common.action != 'ignore')
         {
-            var blocked = false
-            var domains = algorithmConfig.ssrf_common.domains
-
-            if (hostname == 'requestb.in' || hostname == 'transfer.sh')
-            {
-                blocked = true
-            }
-            else
-            {
-                for (var i = 0; i < domains.length; i ++)
-                {
-                    if (hostname.endsWith(domains[i]))
-                    {
-                        blocked = true
-                        break
-                    }
-                }
-            }
-
-            if (blocked)
+            if (isHostnameDNSLOG(hostname))
             {
                 return {
                     action:    algorithmConfig.ssrf_common.action,
@@ -672,7 +672,7 @@ if (RASP.get_jsengine() !== 'v8') {
             {
                 return {
                     action:    algorithmConfig.ssrf_obfuscate.action,
-                    message:   'SSRF攻击: ' + reason,
+                    message:   'SSRF攻击 - IP地址混淆 - ' + reason,
                     confidence: 100
                 }                
             }
@@ -1174,7 +1174,7 @@ plugin.register('command', function (params, context) {
 })
 
 
-// 注意: PHP 不支持XXE检测
+// 注意: 由于libxml2无法挂钩，所以PHP暂时不支持XXE检测
 plugin.register('xxe', function (params, context) {
     var items = params.entity.split('://')
 
@@ -1182,6 +1182,7 @@ plugin.register('xxe', function (params, context) {
         var protocol = items[0]
         var address  = items[1]
 
+        // 拒绝特殊协议
         if (algorithmConfig.xxe_protocol.action != 'ignore') {
             if (protocol === 'gopher' || protocol === 'ftp' || protocol === 'dict' || protocol === 'expect') {
                 return {
