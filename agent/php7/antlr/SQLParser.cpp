@@ -89,13 +89,15 @@ std::vector<std::string> SQLParser::_ruleNames = {
 };
 
 std::vector<std::string> SQLParser::_literalNames = {
-  "", "", "", "'\"'", "'''", "", "", "", "'*/'", "", "", "','", "'.'", "'||'"
+  "", "", "", "'\"'", "'''", "'{'", "'}'", "", "", "", "'*/'", "", "", "','", 
+  "'.'", "'||'"
 };
 
 std::vector<std::string> SQLParser::_symbolicNames = {
-  "", "Identifier", "Number", "DOUBLE_QUOTE", "SINGLE_QUOTE", "StringLiteral", 
-  "EscapeSequence", "BLOCK_COMMENT_START", "BLOCK_COMMENT_END", "BLOCK_COMMENT", 
-  "POUND_COMMENT", "COMMA", "DOT", "OR", "SYMBOL", "WS"
+  "", "Identifier", "Number", "DOUBLE_QUOTE", "SINGLE_QUOTE", "L_BRACKET", 
+  "R_BRACKET", "StringLiteral", "EscapeSequence", "BLOCK_COMMENT_START", 
+  "BLOCK_COMMENT_END", "BLOCK_COMMENT", "POUND_COMMENT", "COMMA", "DOT", 
+  "OR", "SYMBOL", "WS"
 };
 
 dfa::Vocabulary SQLParser::_vocabulary(_literalNames, _symbolicNames);
@@ -118,7 +120,7 @@ SQLParser::Initializer::Initializer() {
 
   _serializedATN = {
     0x3, 0x608b, 0xa72a, 0x8133, 0xb9ed, 0x417c, 0x3be7, 0x7786, 0x5964, 
-    0x3, 0x11, 0x7, 0x4, 0x2, 0x9, 0x2, 0x3, 0x2, 0x3, 0x2, 0x3, 0x2, 0x2, 
+    0x3, 0x13, 0x7, 0x4, 0x2, 0x9, 0x2, 0x3, 0x2, 0x3, 0x2, 0x3, 0x2, 0x2, 
     0x2, 0x3, 0x2, 0x2, 0x2, 0x2, 0x5, 0x2, 0x4, 0x3, 0x2, 0x2, 0x2, 0x4, 
     0x5, 0x3, 0x2, 0x2, 0x2, 0x5, 0x3, 0x3, 0x2, 0x2, 0x2, 0x2, 
   };

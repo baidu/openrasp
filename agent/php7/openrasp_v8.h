@@ -147,7 +147,8 @@ public:
   virtual void syntaxError(antlr4::Recognizer *recognizer, antlr4::Token *offendingSymbol, size_t line, size_t charPositionInLine,
                            const std::string &msg, std::exception_ptr e)
   {
-    std::string err_msg = "RASP.sql_tokenize error: line " + std::to_string(line) + ":" + std::to_string(charPositionInLine) + " " + msg;
+    std::string _sql_statement = ((openrasp::SQLLexer *)recognizer)->getInputStream()->toString();
+    std::string err_msg = "RASP.sql_tokenize error: line " + std::to_string(line) + ":" + std::to_string(charPositionInLine) + " " + msg + " in SQL statement (" + _sql_statement + ")";
     plugin_info(err_msg.c_str(), err_msg.length());
   }
 };

@@ -13,10 +13,10 @@ namespace openrasp {
 class  SQLLexer : public antlr4::Lexer {
 public:
   enum {
-    Identifier = 1, Number = 2, DOUBLE_QUOTE = 3, SINGLE_QUOTE = 4, StringLiteral = 5, 
-    EscapeSequence = 6, BLOCK_COMMENT_START = 7, BLOCK_COMMENT_END = 8, 
-    BLOCK_COMMENT = 9, POUND_COMMENT = 10, COMMA = 11, DOT = 12, OR = 13, 
-    SYMBOL = 14, WS = 15
+    Identifier = 1, Number = 2, DOUBLE_QUOTE = 3, SINGLE_QUOTE = 4, L_BRACKET = 5, 
+    R_BRACKET = 6, StringLiteral = 7, EscapeSequence = 8, BLOCK_COMMENT_START = 9, 
+    BLOCK_COMMENT_END = 10, BLOCK_COMMENT = 11, POUND_COMMENT = 12, COMMA = 13, 
+    DOT = 14, OR = 15, SYMBOL = 16, WS = 17
   };
 
   SQLLexer(antlr4::CharStream *input);
