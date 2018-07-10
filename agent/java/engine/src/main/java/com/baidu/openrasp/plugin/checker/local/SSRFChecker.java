@@ -64,7 +64,7 @@ public class SSRFChecker extends ConfigurableChecker {
                         String ip = (String) ips.get(0);
                         if (url.equals(value) && Pattern.matches("^(192|172|10)\\..*", ip)) {
                             result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                                    getActionElement(config, CONFIG_KEY_SSRF_USER_INPUT), "访问内网地址: " + ip));
+                                    getActionElement(config, CONFIG_KEY_SSRF_USER_INPUT), "SSRF攻击 - 访问内网地址: " + ip));
                         }
                     }
                 }
@@ -83,7 +83,7 @@ public class SSRFChecker extends ConfigurableChecker {
                 }
                 if (isFound || hostName.equals("requestb.in")) {
                     result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                            getActionElement(config, CONFIG_KEY_SSRF_COMMON), "访问已知的内网探测域名"));
+                            getActionElement(config, CONFIG_KEY_SSRF_COMMON), "SSRF攻击 - 访问已知的内网探测域名"));
                 }
             }
 
@@ -91,19 +91,19 @@ public class SSRFChecker extends ConfigurableChecker {
                 if (!isModuleIgnore(config, CONFIG_KEY_SSRF_AWS)
                         && hostName.equals("169.254.169.254")) {
                     result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                            getActionElement(config, CONFIG_KEY_SSRF_AWS), "尝试读取 AWS metadata"));
+                            getActionElement(config, CONFIG_KEY_SSRF_AWS), "SSRF攻击 - 尝试读取 AWS metadata"));
                 } else if (!isModuleIgnore(config, CONFIG_KEY_SSRF_OBFUSCATE)
                         && StringUtils.isNumeric(hostName)) {
                     result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                            getActionElement(config, CONFIG_KEY_SSRF_OBFUSCATE), "尝试使用纯数字IP"));
+                            getActionElement(config, CONFIG_KEY_SSRF_OBFUSCATE), "SSRF攻击 - IP地址混淆 - 尝试使用纯数字IP"));
                 } else if (!isModuleIgnore(config, CONFIG_KEY_SSRF_OBFUSCATE)
                         && hostName.startsWith("0x") && !hostName.contains(".")) {
                     result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                            getActionElement(config, CONFIG_KEY_SSRF_OBFUSCATE), "尝试使用16进制IP"));
+                            getActionElement(config, CONFIG_KEY_SSRF_OBFUSCATE), "SSRF攻击 - IP地址混淆 - 尝试使用16进制IP"));
                 }
             }
         } catch (Exception e) {
-            JSContext.LOGGER.warn("An error occurred while the local ssrf plugin was detecting, because:" + e.getMessage());
+            JSContext.LOGGER.warn("An exception occurred while executing SSRF plugin, was:" + e.getMessage());
         }
 
         List<EventInfo> jsResults = new JsChecker().checkParam(checkParameter);
