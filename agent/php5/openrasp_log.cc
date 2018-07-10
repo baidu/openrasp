@@ -172,7 +172,7 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
     for (keys_filter filter:filters)
     {
         if (src && Z_TYPE_P(src) == IS_ARRAY &&
-        zend_hash_find(Z_ARRVAL_P(src), ZEND_STRS(filter.origin_key_str), (void **)&origin_zv) == SUCCESS &&
+        zend_hash_find(Z_ARRVAL_P(src), filter.origin_key_str, strlen(filter.origin_key_str) + 1, (void **)&origin_zv) == SUCCESS &&
         Z_TYPE_PP(origin_zv) == IS_STRING)
         {
             if (filter.value_filter)
@@ -213,8 +213,7 @@ static void init_alarm_request_info(TSRMLS_D)
     array_init(OPENRASP_LOG_G(alarm_request_info));
 
     zval *migrate_src = nullptr;
-    if (PG(http_globals)[TRACK_VARS_SERVER] &&
-    (Z_TYPE_P(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY || zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC)))
+    if (PG(http_globals)[TRACK_VARS_SERVER] || zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
     {
         migrate_src = PG(http_globals)[TRACK_VARS_SERVER];
     }
@@ -801,7 +800,7 @@ PHP_RINIT_FUNCTION(openrasp_log)
 	long now = (long)time(NULL);
     OPENRASP_LOG_G(formatted_date_suffix) = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now, 1 TSRMLS_CC);
     init_openrasp_loggers(TSRMLS_C);
-    init_alarm_request_info(TSRMLS_C);
+    init_alarm_request_info(TSRMLS_C);               
     init_policy_request_info(TSRMLS_C);
     return SUCCESS;
 }

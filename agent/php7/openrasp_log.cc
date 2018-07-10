@@ -163,7 +163,7 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
     for (keys_filter filter:filters)
     {
         if (src && Z_TYPE_P(src) == IS_ARRAY &&
-        (origin_zv = zend_hash_str_find(Z_ARRVAL_P(src), ZEND_STRL(filter.origin_key_str))) != nullptr &&
+        (origin_zv = zend_hash_str_find(Z_ARRVAL_P(src), filter.origin_key_str, strlen(filter.origin_key_str))) != nullptr &&
         Z_TYPE_P(origin_zv) == IS_STRING)
         {
             if (filter.value_filter)
