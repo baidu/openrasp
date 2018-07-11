@@ -155,6 +155,10 @@ static void request_uri_path_filter(zval *origin_zv, zval *new_zv)
     {
         ZVAL_STRINGL(new_zv, haystack, found - haystack);
     }
+    else
+    {
+        ZVAL_STRING(new_zv, haystack);
+    }
 }
 
 static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_filter> &filters)
