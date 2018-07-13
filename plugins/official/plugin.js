@@ -427,7 +427,49 @@ if (RASP.get_jsengine() !== 'v8') {
 } else {
     // 对于PHP + V8，性能还不错，我们保留JS检测逻辑
 
+    // v8 全局SQL结果缓存
+    var LRU = {
+        cache: {},
+        stack: [],
+        max:   100,
+
+        lookup: function(key) {
+            var found = this.cache.hasOwnProperty(key)
+            if (found) {
+                var idx = this.stack.indexOf(key)
+
+                this.cache[key] ++
+                this.stack.splice(idx, 1)
+                this.stack.unshift(key)
+            }
+
+            return found
+        }，
+
+        put: function(key) {
+            this.stack.push(key)
+            this.cache[key] = 1
+
+            if (this.stack.length > this.max) {
+                var tail = this.stack.pop()
+                this.cache.delete(tail)
+            }
+        },
+
+        dump: function() {
+            console.log (this.cache)
+            console.log (this.stack)
+            console.log ('')
+        }
+    }
+
     plugin.register('sql', function (params, context) {
+
+        // 缓存检查
+        if (LRU.lookup(params.query)) {
+            return clean
+        }
+
         var reason     = false
         var parameters = context.parameter || {}
         var tokens     = RASP.sql_tokenize(params.query, params.server)
@@ -589,6 +631,7 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
+        LRU.put(params.query)
         return clean
     })
 
