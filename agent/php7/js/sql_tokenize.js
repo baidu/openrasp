@@ -7964,7 +7964,7 @@ TokenizeErrorListener.prototype.constructor = TokenizeErrorListener;
 TokenizeErrorListener.prototype.syntaxError = function(recognizer, offendingSymbol, line, column, msg, e) {
     if (recognizer instanceof SQLLexer)
     {
-        console.error("line " + line + ":" + column + " " + msg + " in SQL statement (" + (recognizer).inputStream.toString() + ")");
+        console.error("RASP.sql_tokenize() error: line " + line + ":" + column + " " + msg + " in SQL statement:\n" + (recognizer).inputStream.toString());
 	}
 };
 var listener = new TokenizeErrorListener();

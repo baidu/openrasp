@@ -55,6 +55,7 @@ public:
   TimeoutTask(v8::Isolate *_isolate, int _milliseconds = 100);
   void Run() override;
   std::timed_mutex &GetMtx();
+
 private:
   v8::Isolate *isolate;
   std::chrono::time_point<std::chrono::high_resolution_clock> time_point;
@@ -146,7 +147,7 @@ public:
                            const std::string &msg, std::exception_ptr e)
   {
     std::string _sql_statement = ((openrasp::SQLLexer *)recognizer)->getInputStream()->toString();
-    std::string err_msg = "RASP.sql_tokenize error: line " + std::to_string(line) + ":" + std::to_string(charPositionInLine) + " " + msg + " in SQL statement (" + _sql_statement + ")";
+    std::string err_msg = "RASP.sql_tokenize() error: line " + std::to_string(line) + ":" + std::to_string(charPositionInLine) + " " + msg + " in SQL statement:" + PHP_EOL + _sql_statement;
     plugin_info(err_msg.c_str(), err_msg.length() TSRMLS_CC);
   }
 };

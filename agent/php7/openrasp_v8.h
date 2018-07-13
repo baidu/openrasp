@@ -148,7 +148,7 @@ public:
                            const std::string &msg, std::exception_ptr e)
   {
     std::string _sql_statement = ((openrasp::SQLLexer *)recognizer)->getInputStream()->toString();
-    std::string err_msg = "RASP.sql_tokenize error: line " + std::to_string(line) + ":" + std::to_string(charPositionInLine) + " " + msg + " in SQL statement (" + _sql_statement + ")";
+    std::string err_msg = "RASP.sql_tokenize() error: line " + std::to_string(line) + ":" + std::to_string(charPositionInLine) + " " + msg + " in SQL statement:" + PHP_EOL + _sql_statement;
     plugin_info(err_msg.c_str(), err_msg.length());
   }
 };
