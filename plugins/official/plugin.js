@@ -147,14 +147,13 @@ var algorithmConfig = {
         action: 'log'
     },
 
-    // 重命名和复制操作监控
-    // v0.40 之后支持，暂时不开启
-    // rename_webshell: {
-    //     action: 'block'
-    // },    
+    // 重命名监控 - 将普通文件重命名为webshell
+    rename_webshell: {
+        action: 'block'
+    },
     // copy_webshell: {
     //     action: 'block'
-    // },    
+    // },
 
     // 文件管理器 - 反射方式列目录
     directory_reflect: {
@@ -1104,25 +1103,24 @@ if (algorithmConfig.fileUpload_webdav.action != 'ignore')
     })
 }
 
-
-// if (0 && algorithmConfig.rename_webshell.action != 'ignore')
-// {
-//     plugin.register('rename', function (params, context) {
+if (algorithmConfig.rename_webshell.action != 'ignore')
+{
+    plugin.register('rename', function (params, context) {
         
-//         // 源文件不是脚本，且目标文件是脚本，判定为重命名方式写后门
-//         // 案例有 ueditor getshell
-//         if (! scriptFileRegex.test(params.source) && scriptFileRegex.test(params.dest)) 
-//         {
-//             return {
-//                 action:    algorithmConfig.rename_webshell.action,
-//                 message:   '重命名方式获取 webshell，源文件: ' + params.source,
-//                 confidence: 100
-//             }
-//         }
+        // 源文件不是脚本，且目标文件是脚本，判定为重命名方式写后门
+        // 案例有 ueditor getshell
+        if (! scriptFileRegex.test(params.source) && scriptFileRegex.test(params.dest)) 
+        {
+            return {
+                action:    algorithmConfig.rename_webshell.action,
+                message:   '重命名方式获取 webshell，源文件: ' + params.source,
+                confidence: 100
+            }
+        }
 
-//         return clean
-//     })
-// }
+        return clean
+    })
+}
 
 
 plugin.register('command', function (params, context) {
