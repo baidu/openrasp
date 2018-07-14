@@ -147,7 +147,8 @@ var algorithmConfig = {
         action: 'log'
     },
 
-    // 重命名监控 - 将普通文件重命名为webshell
+    // 重命名监控 - 将普通文件重命名为webshell，
+    // 案例有 ueditor getshell、MOVE 方式上传后门等等
     rename_webshell: {
         action: 'block'
     },
@@ -1108,7 +1109,6 @@ if (algorithmConfig.rename_webshell.action != 'ignore')
     plugin.register('rename', function (params, context) {
         
         // 源文件不是脚本，且目标文件是脚本，判定为重命名方式写后门
-        // 案例有 ueditor getshell
         if (! scriptFileRegex.test(params.source) && scriptFileRegex.test(params.dest)) 
         {
             return {
