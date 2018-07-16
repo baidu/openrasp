@@ -444,7 +444,7 @@ if (RASP.get_jsengine() !== 'v8') {
             }
 
             return found
-        }，
+        },
 
         put: function(key) {
             this.stack.push(key)
