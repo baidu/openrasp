@@ -452,7 +452,7 @@ if (RASP.get_jsengine() !== 'v8') {
 
             if (this.stack.length > this.max) {
                 var tail = this.stack.pop()
-                this.cache.delete(tail)
+                delete this.cache[tail]
             }
         },
 
