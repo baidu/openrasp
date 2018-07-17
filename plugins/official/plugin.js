@@ -41,7 +41,7 @@ var algorithmConfig = {
         action:     'block',
         min_length: 15
     },
-    // SQL注入算法#1 - 是否拦截数据库管理器，默认关闭，有需要可改为 block
+    // SQL注入算法#1 - 是否拦截数据库管理器，默认关闭，有需要可改为 block（此算法依赖于 sqli_userinput）
     sqli_dbmanager: {
         action: 'ignore'
     },
