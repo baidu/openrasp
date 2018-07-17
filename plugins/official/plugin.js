@@ -25,11 +25,23 @@ var plugin  = new RASP('offical')
 // ignore -> 关闭这个算法
 
 var algorithmConfig = {
+	// 全局检测结果缓存配置 - LRU 大小
+	// 当检测结果为 ignore 时，我们会缓存处理结果以提高性能
+	cache: {
+		sqli: {
+			capacity: 100
+		}
+	},
+
     // SQL注入算法#1 - 匹配用户输入
+    // 1. 用户输入长度至少 15
+    // 2. 用户输入至少包含一个SQL关键词（待定）
+    // 3. 用户输入完整的出现在SQL语句，且SQL语句逻辑发生变更
     sqli_userinput: {
-        action: 'block'
+        action:     'block',
+        min_length: 15
     },
-    // SQL注入算法#1 - 是否拦截数据库管理器，默认关闭，有需要可改为 block
+    // SQL注入算法#1 - 是否拦截数据库管理器，默认关闭，有需要可改为 block（此算法依赖于 sqli_userinput）
     sqli_dbmanager: {
         action: 'ignore'
     },
@@ -38,48 +50,48 @@ var algorithmConfig = {
         action:  'block',
         feature: {
             // 是否禁止多语句执行，select ...; update ...;
-            'stacked_query':      true,
+            stacked_query:      true,
 
             // 是否禁止16进制字符串，select 0x41424344
-            'no_hex':             true,
+            no_hex:             true,
 
             // 禁止版本号注释，select/*!500001,2,*/3
-            'version_comment':    true,
+            version_comment:    true,
 
             // 函数黑名单，具体列表见下方，select load_file(...)
-            'function_blacklist': true,
+            function_blacklist: true,
 
             // 拦截 union select NULL,NULL 或者 union select 1,2,3,4
-            'union_null':         true,
+            union_null:         true,
 
             // 是否禁止常量比较，AND 8333=8555
             // 当代码编写不规范，常量比较算法会造成大量误报，所以默认不再开启此功能
-            'constant_compare':   false,
+            constant_compare:   false,
         },
         function_blacklist: {
             // 文件操作
-            'load_file':        true,
+            load_file:        true,
 
             // 时间差注入
-            'benchmark':        true,
-            'sleep':            true,
-            'pg_sleep':         true,
+            benchmark:        true,
+            sleep:            true,
+            pg_sleep:         true,
 
             // 探测阶段
-            'is_srvrolemember': true,
+            is_srvrolemember: true,
 
             // 报错注入
-            'updatexml':        true,
-            'extractvalue':     true,
+            updatexml:        true,
+            extractvalue:     true,
 
             // 盲注函数，如有误报可删掉一些函数
-            'hex':              true,
-            'char':             true,
-            'chr':              true, 
-            'mid':              true,
-            'ord':              true,
-            'ascii':            true,                
-            'bin':              true
+            hex:              true,
+            char:             true,
+            chr:              true, 
+            mid:              true,
+            ord:              true,
+            ascii:            true,                
+            bin:              true
         }
     },
     // SSRF - 来自用户输入，且为内网地址就拦截
@@ -147,14 +159,14 @@ var algorithmConfig = {
         action: 'log'
     },
 
-    // 重命名和复制操作监控
-    // v0.40 之后支持，暂时不开启
-    // rename_webshell: {
-    //     action: 'block'
-    // },    
+    // 重命名监控 - 将普通文件重命名为webshell，
+    // 案例有 ueditor getshell、MOVE 方式上传后门等等
+    rename_webshell: {
+        action: 'block'
+    },
     // copy_webshell: {
     //     action: 'block'
-    // },    
+    // },
 
     // 文件管理器 - 反射方式列目录
     directory_reflect: {
@@ -427,8 +439,51 @@ if (RASP.get_jsengine() !== 'v8') {
 } else {
     // 对于PHP + V8，性能还不错，我们保留JS检测逻辑
 
+    // v8 全局SQL结果缓存
+    var LRU = {
+        cache: {},
+        stack: [],
+        max:   algorithmConfig.cache.sqli.capacity,
+
+        lookup: function(key) {
+            var found = this.cache.hasOwnProperty(key)
+            if (found) {
+                var idx = this.stack.indexOf(key)
+
+                this.cache[key] ++
+                this.stack.splice(idx, 1)
+                this.stack.unshift(key)
+            }
+
+            return found
+        },
+
+        put: function(key) {
+            this.stack.push(key)
+            this.cache[key] = 1
+
+            if (this.stack.length > this.max) {
+                var tail = this.stack.pop()
+                delete this.cache[tail]
+            }
+        },
+
+        dump: function() {
+            console.log (this.cache)
+            console.log (this.stack)
+            console.log ('')
+        }
+    }
+
     plugin.register('sql', function (params, context) {
+
+        // 缓存检查
+        if (LRU.lookup(params.query)) {
+            return clean
+        }
+
         var reason     = false
+        var min_length = algorithmConfig.sqli_userinput.minlength
         var parameters = context.parameter || {}
         var tokens     = RASP.sql_tokenize(params.query, params.server)
 
@@ -457,7 +512,9 @@ if (RASP.get_jsengine() !== 'v8') {
                     // 请求参数长度超过15才考虑，任何跨表查询都至少需要20个字符，其实可以写的更大点
                     // SELECT * FROM admin
                     // and updatexml(....)
-                    if (value.length <= 15) {
+                    // 
+                    // @TODO: 支持万能密码检测
+                    if (value.length <= min_length) {
                         continue
                     }
                    
@@ -589,6 +646,7 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
+        LRU.put(params.query)
         return clean
     })
 
@@ -1061,25 +1119,23 @@ if (algorithmConfig.fileUpload_webdav.action != 'ignore')
     })
 }
 
-
-// if (0 && algorithmConfig.rename_webshell.action != 'ignore')
-// {
-//     plugin.register('rename', function (params, context) {
+if (algorithmConfig.rename_webshell.action != 'ignore')
+{
+    plugin.register('rename', function (params, context) {
         
-//         // 源文件不是脚本，且目标文件是脚本，判定为重命名方式写后门
-//         // 案例有 ueditor getshell
-//         if (! scriptFileRegex.test(params.source) && scriptFileRegex.test(params.dest)) 
-//         {
-//             return {
-//                 action:    algorithmConfig.rename_webshell.action,
-//                 message:   '重命名方式获取 webshell，源文件: ' + params.source,
-//                 confidence: 100
-//             }
-//         }
+        // 源文件不是脚本，且目标文件是脚本，判定为重命名方式写后门
+        if (! scriptFileRegex.test(params.source) && scriptFileRegex.test(params.dest)) 
+        {
+            return {
+                action:    algorithmConfig.rename_webshell.action,
+                message:   '重命名方式获取 webshell，源文件: ' + params.source,
+                confidence: 100
+            }
+        }
 
-//         return clean
-//     })
-// }
+        return clean
+    })
+}
 
 
 plugin.register('command', function (params, context) {
