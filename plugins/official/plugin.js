@@ -25,9 +25,21 @@ var plugin  = new RASP('offical')
 // ignore -> 关闭这个算法
 
 var algorithmConfig = {
+	// 全局检测结果缓存配置 - LRU 大小
+	// 当检测结果为 ignore 时，我们会缓存处理结果以提高性能
+	cache: {
+		sqli: {
+			capacity: 100
+		}
+	},
+
     // SQL注入算法#1 - 匹配用户输入
+    // 1. 用户输入长度至少 15
+    // 2. 用户输入至少包含一个SQL关键词（待定）
+    // 3. 用户输入完整的出现在SQL语句，且SQL语句逻辑发生变更
     sqli_userinput: {
-        action: 'block'
+        action:     'block',
+        min_length: 15
     },
     // SQL注入算法#1 - 是否拦截数据库管理器，默认关闭，有需要可改为 block
     sqli_dbmanager: {
@@ -431,7 +443,7 @@ if (RASP.get_jsengine() !== 'v8') {
     var LRU = {
         cache: {},
         stack: [],
-        max:   100,
+        max:   algorithmConfig.cache.sqli.capacity,
 
         lookup: function(key) {
             var found = this.cache.hasOwnProperty(key)
@@ -471,6 +483,7 @@ if (RASP.get_jsengine() !== 'v8') {
         }
 
         var reason     = false
+        var min_length = algorithmConfig.sqli_userinput.minlength
         var parameters = context.parameter || {}
         var tokens     = RASP.sql_tokenize(params.query, params.server)
 
@@ -499,7 +512,9 @@ if (RASP.get_jsengine() !== 'v8') {
                     // 请求参数长度超过15才考虑，任何跨表查询都至少需要20个字符，其实可以写的更大点
                     // SELECT * FROM admin
                     // and updatexml(....)
-                    if (value.length <= 15) {
+                    // 
+                    // @TODO: 支持万能密码检测
+                    if (value.length <= min_length) {
                         continue
                     }
                    
