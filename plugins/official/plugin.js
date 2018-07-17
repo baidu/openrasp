@@ -50,48 +50,48 @@ var algorithmConfig = {
         action:  'block',
         feature: {
             // 是否禁止多语句执行，select ...; update ...;
-            'stacked_query':      true,
+            stacked_query:      true,
 
             // 是否禁止16进制字符串，select 0x41424344
-            'no_hex':             true,
+            no_hex:             true,
 
             // 禁止版本号注释，select/*!500001,2,*/3
-            'version_comment':    true,
+            version_comment:    true,
 
             // 函数黑名单，具体列表见下方，select load_file(...)
-            'function_blacklist': true,
+            function_blacklist: true,
 
             // 拦截 union select NULL,NULL 或者 union select 1,2,3,4
-            'union_null':         true,
+            union_null:         true,
 
             // 是否禁止常量比较，AND 8333=8555
             // 当代码编写不规范，常量比较算法会造成大量误报，所以默认不再开启此功能
-            'constant_compare':   false,
+            constant_compare:   false,
         },
         function_blacklist: {
             // 文件操作
-            'load_file':        true,
+            load_file:        true,
 
             // 时间差注入
-            'benchmark':        true,
-            'sleep':            true,
-            'pg_sleep':         true,
+            benchmark:        true,
+            sleep:            true,
+            pg_sleep:         true,
 
             // 探测阶段
-            'is_srvrolemember': true,
+            is_srvrolemember: true,
 
             // 报错注入
-            'updatexml':        true,
-            'extractvalue':     true,
+            updatexml:        true,
+            extractvalue:     true,
 
             // 盲注函数，如有误报可删掉一些函数
-            'hex':              true,
-            'char':             true,
-            'chr':              true, 
-            'mid':              true,
-            'ord':              true,
-            'ascii':            true,                
-            'bin':              true
+            hex:              true,
+            char:             true,
+            chr:              true, 
+            mid:              true,
+            ord:              true,
+            ascii:            true,                
+            bin:              true
         }
     },
     // SSRF - 来自用户输入，且为内网地址就拦截
