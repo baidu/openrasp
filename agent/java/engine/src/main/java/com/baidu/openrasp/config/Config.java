@@ -55,7 +55,10 @@ public class Config extends FileScanListener {
         SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
         BLOCK_STATUS_CODE("block.status_code", "302"),
         DEBUG("debug.level", "0"),
-        ALGORITHM_CONFIG("algorithm.config", "{}", false);
+        ALGORITHM_CONFIG("algorithm.config", "{}", false),
+        XSS_REGEX("xss.regex","<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"),
+        XSS_EXCEED_LENGTH_COUNT("xss.exceed.length.count","20"),
+        XSS__PARAMETER_LENGTH("xss.parameter.length","15");
 
 
         Item(String key, String defaultValue) {
@@ -102,6 +105,10 @@ public class Config extends FileScanListener {
     private int blockStatusCode;
     private int debugLevel;
     private JsonObject algorithmConfig;
+    private String xssRegex;
+    private String xssExceedLengthCount;
+    private String xssParameterLength;
+
 
     static {
         baseDirectory = FileUtil.getBaseDir();
@@ -605,6 +612,30 @@ public class Config extends FileScanListener {
         this.requestParamEncoding = requestParamEncoding;
     }
 
+    public String getXssRegex() {
+        return xssRegex;
+    }
+
+    public void setXssRegex(String xssRegex) {
+        this.xssRegex = xssRegex;
+    }
+
+    public String getXssExceedLengthCount() {
+        return xssExceedLengthCount;
+    }
+
+    public void setXssExceedLengthCount(String xssExceedLengthCount) {
+        this.xssExceedLengthCount = xssExceedLengthCount;
+    }
+
+    public String getXssParameterLength() {
+        return xssParameterLength;
+    }
+
+    public void setXssParameterLength(String xssParameterLength) {
+        this.xssParameterLength = xssParameterLength;
+    }
+
     //--------------------------统一的配置处理------------------------------------
 
     /**
@@ -647,7 +678,16 @@ public class Config extends FileScanListener {
                 setAlgorithmConfig(value);
             } else if (Item.REQUEST_PARAM_ENCODING.key.equals(key)) {
                 setRequestParamEncoding(value);
-            } else {
+            }else if (Item.XSS_REGEX.key.equals(key)){
+                setXssRegex(value);
+            }else if (Item.XSS_EXCEED_LENGTH_COUNT.key.equals(key)){
+
+                setXssExceedLengthCount(value);
+            }else if (Item.XSS__PARAMETER_LENGTH.key.equals(key)){
+
+                setXssParameterLength(value);
+            }
+            else {
                 isHit = false;
             }
             if (isHit) {

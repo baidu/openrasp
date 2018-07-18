@@ -17,10 +17,14 @@
 package com.baidu.openrasp.hook.sql;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.JsonStringify;
+import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.Reflection;
+import com.google.gson.JsonObject;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -33,6 +37,11 @@ import java.io.IOException;
  * All rights reserved
  */
 public class SQLStatementHook extends AbstractSqlHook {
+
+    /**
+     *sql缓存，保存最近检测无威胁的sql语句，缓存大小可配置
+     */
+    public static LRUCache<String, String> sqlCache = new LRUCache<String, String>(Config.getConfig().getAlgorithmConfig().get("sqli_userinput").getAsJsonObject().get("min_length").getAsInt());
 
     /**
      * (none-javadoc)
@@ -158,7 +167,7 @@ public class SQLStatementHook extends AbstractSqlHook {
      * @param stmt sql语句
      */
     public static void checkSQL(String server, Object statement, String stmt) {
-        if (stmt != null && !stmt.isEmpty()) {
+        if (stmt != null && !stmt.isEmpty() && !sqlCache.isContainsKey(stmt)) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             String connectionId = getSqlConnectionId(server, statement);

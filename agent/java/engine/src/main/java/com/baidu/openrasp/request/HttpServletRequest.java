@@ -16,11 +16,12 @@
 
 package com.baidu.openrasp.request;
 
+import com.baidu.openrasp.hook.FileUploadHook;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.transformer.CustomClassTransformer;
 
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -171,13 +172,28 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Map<String, String[]> getParameterMap() {
-        if (!canGetParameter) {
-            if (!setCharacterEncodingFromConfig()) {
-                return EMPTY_PARAM;
+        ClassLoader loader = CustomClassTransformer.getClassLoader("org.apache.commons.fileupload.servlet.ServletFileUpload");
+        boolean isMultipartContent=false;
+        if (loader!=null){
+            try {
+                isMultipartContent = (Boolean) Reflection.invokeStaticMethod("org.apache.commons.fileupload.servlet.ServletFileUpload", "isMultipartContent", new Class[]{loader.loadClass("javax.servlet.http.HttpServletRequest")}, request);
+
+            } catch (Throwable e) {
+                e.printStackTrace();
             }
         }
-        Object ret = Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
-        return ret != null ? (Map<String, String[]>) ret : EMPTY_PARAM;
+        if (isMultipartContent){
+            return FileUploadHook.fileUploadCache;
+        }
+        else {
+            if (!canGetParameter) {
+                if (!setCharacterEncodingFromConfig()) {
+                    return EMPTY_PARAM;
+                }
+            }
+            Object ret = Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
+            return ret != null ? (Map<String, String[]>) ret : EMPTY_PARAM;
+        }
     }
 
     /**

@@ -18,11 +18,14 @@ package com.baidu.openrasp.transformer;
 
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.*;
+import com.baidu.openrasp.hook.dubbo.DubboPreRequestHook;
+import com.baidu.openrasp.hook.dubbo.DubboRequestHook;
 import com.baidu.openrasp.hook.file.DiskFileItemHook;
 import com.baidu.openrasp.hook.file.FileHook;
 import com.baidu.openrasp.hook.file.FileInputStreamHook;
 import com.baidu.openrasp.hook.file.FileOutputStreamHook;
 import com.baidu.openrasp.hook.server.catalina.*;
+import com.baidu.openrasp.hook.server.jboss.JbossOutputBufferFlushHook;
 import com.baidu.openrasp.hook.server.jetty.*;
 import com.baidu.openrasp.hook.server.resin.*;
 import com.baidu.openrasp.hook.sql.SQLDriverManagerHook;
@@ -42,6 +45,8 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -50,9 +55,15 @@ import java.util.HashSet;
  */
 public class CustomClassTransformer implements ClassFileTransformer {
     private static final Logger LOGGER = Logger.getLogger(CustomClassTransformer.class.getName());
+    private static ArrayList<String> list=new ArrayList<String>();
     private static HashMap<String, ClassLoader> classLoaderCache = new HashMap<String, ClassLoader>();
 
     private HashSet<AbstractClassHook> hooks;
+
+    static{
+        list.add("org/apache/catalina/util/ServerInfo");
+        list.add("org/apache/commons/fileupload/servlet/ServletFileUpload");
+    }
 
     public CustomClassTransformer() {
         hooks = new HashSet<AbstractClassHook>();
@@ -93,6 +104,14 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new ResinParseParamHook());
         addHook(new ResinHttpInputHook());
         addHook(new SQLPreparedStatementHook());
+        addHook(new CatalinaOutputBufferFlushHook());
+        addHook(new ResinOutputBufferFlushHook());
+        addHook(new JettyOutputBufferFlushHook());
+        addHook(new DubboRequestHook());
+        addHook(new DubboPreRequestHook());
+        addHook(new JbossOutputBufferFlushHook());
+        addHook(new FileUploadHook());
+        addHook(new GetFileUploadCharsetHook());
     }
 
     private void addHook(AbstractClassHook hook) {
@@ -116,6 +135,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
                             ProtectionDomain domain, byte[] classfileBuffer) throws IllegalClassFormatException {
         for (final AbstractClassHook hook : hooks) {
             if (hook.isClassMatched(className)) {
+                System.out.println(className+"-----------");
                 CtClass ctClass = null;
                 try {
                     ClassPool classPool = new ClassPool();
@@ -150,7 +170,8 @@ public class CustomClassTransformer implements ClassFileTransformer {
     }
 
     private static void handleClassLoader(ClassLoader loader, String className) {
-        if (className.equals("org/apache/catalina/util/ServerInfo")) {
+
+        if (list.contains(className)) {
             classLoaderCache.put(className.replace('/', '.'), loader);
         }
     }

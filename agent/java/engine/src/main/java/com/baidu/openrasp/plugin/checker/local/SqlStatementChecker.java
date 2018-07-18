@@ -19,12 +19,14 @@ package com.baidu.openrasp.plugin.checker.local;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.TokenGenerator;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.hook.sql.SQLStatementHook;
 import com.baidu.openrasp.plugin.antlrlistener.TokenizeErrorListener;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.js.JsChecker;
 import com.baidu.openrasp.plugin.info.AttackInfo;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
+import com.baidu.openrasp.tool.JsonStringify;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 
@@ -35,7 +37,7 @@ import java.util.Map;
 
 /**
  * Created by tyy on 17-12-20.
- *
+ * <p>
  * 检测 sql 语句的 java 版本
  */
 public class SqlStatementChecker extends ConfigurableChecker {
@@ -49,6 +51,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_VERSION_COMMENT = "version_comment";
     private static final String CONFIG_KEY_FUNCTION_BLACKLIST = "function_blacklist";
     private static final String CONFIG_KEY_UNION_NULL = "union_null";
+    private static int paramLength = Config.getConfig().getAlgorithmConfig().get("cache").getAsJsonObject().get("sqli").getAsJsonObject().get("capacity").getAsInt();
 
     private static TokenizeErrorListener tokenizeErrorListener = new TokenizeErrorListener();
 
@@ -70,7 +73,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                 for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
                     String[] v = entry.getValue();
                     String value = v[0];
-                    if (value.length() <= 15) {
+                    if (value.length() <= paramLength) {
                         continue;
                     }
                     if (value.length() == query.length() && value.equals(query)) {
@@ -191,6 +194,10 @@ public class SqlStatementChecker extends ConfigurableChecker {
         List<EventInfo> jsResults = new JsChecker().checkParam(checkParameter);
         if (jsResults != null && jsResults.size() > 0) {
             result.addAll(jsResults);
+        }
+        //检测无威胁的sql加入sql缓存
+        if (result.isEmpty()){
+            SQLStatementHook.sqlCache.put(query,null);
         }
         return result;
     }
