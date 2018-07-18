@@ -55,6 +55,30 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <!-- support for JDK 6 -->
+                <version>2.1.5</version>
+                <executions>
+                    <execution>
+                        <id>git-commit-id</id>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                            <prefix>git-commit-id</prefix>
+                            <skipPoms>false</skipPoms>
+                            <dotGitDirectory>${session.executionRootDirectory}/../../.git/</dotGitDirectory>
+                            <gitDescribe>
+                                <skip>true</skip>
+                            </gitDescribe>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
@@ -86,7 +110,10 @@
                                     <manifestEntries>
                                         <Project-Version>${project.version}</Project-Version>
                                         <Build-Time>${maven.build.timestamp}</Build-Time>
-                                        <Git-Commit>${buildNumber}</Git-Commit>
+                                        <Git-Commit>${git-commit-id.commit.id.abbrev}</Git-Commit>
+                                        <Git-Branch>${git-commit-id.branch}</Git-Branch>
+                                        <Last-Commit-User-Name>${git-commit-id.commit.user.name}</Last-Commit-User-Name>
+                                        <Last-Commit-User-Email>${git-commit-id.commit.user.email}</Last-Commit-User-Email>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
