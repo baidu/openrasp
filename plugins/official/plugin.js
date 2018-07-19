@@ -149,6 +149,10 @@ var algorithmConfig = {
     readFile_traversal: {
         action: 'block'
     },   
+    // 任意文件下载防护 - 防止读取当前文件，aka 源代码泄露
+    readFile_disclosure: {
+        action: 'block'
+    },
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
     readFile_unwanted: {
         action: 'block'
@@ -983,9 +987,27 @@ plugin.register('readFile', function (params, context) {
                         confidence: 90
                     } 
                 }
-            }            
+            }
         }
     }
+
+    //
+    // 算法5: 防止源代码泄露，有误报请关闭
+    // /download.php?file=download.php
+    // 
+    if (algorithmConfig.readFile_disclosure.action != 'ignore') 
+    {
+        var filename_1 = basename(context.url)
+        var filename_2 = basename(params.realpath)
+
+        if (filename_1 == filename_2) {
+            return {
+                action:     algorithmConfig.readFile_disclosure.action,
+                message:    '任意文件下载攻击 - 源代码泄露攻击',
+                confidence: 90
+            }
+        }
+    }    
 
     return clean
 })
