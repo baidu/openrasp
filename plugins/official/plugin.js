@@ -25,20 +25,20 @@ var plugin  = new RASP('offical')
 // ignore -> 关闭这个算法
 
 var algorithmConfig = {
-	// 全局检测结果缓存配置 - LRU 大小
-	// 当检测结果为 ignore 时，我们会缓存处理结果以提高性能
-	cache: {
-		sqli: {
-			capacity: 100
-		}
-	},
+    // 全局检测结果缓存配置 - LRU 大小
+    // 当检测结果为 ignore 时，我们会缓存处理结果以提高性能
+    cache: {
+        sqli: {
+            capacity: 100
+        }
+    },
 
     // SQL注入算法#1 - 匹配用户输入
     // 1. 用户输入长度至少 15
     // 2. 用户输入至少包含一个SQL关键词（待定）
     // 3. 用户输入完整的出现在SQL语句，且SQL语句逻辑发生变更
     sqli_userinput: {
-        action:     'block',
+        action:     'ignore',
         min_length: 15
     },
     // SQL注入算法#1 - 是否拦截数据库管理器，默认关闭，有需要可改为 block（此算法依赖于 sqli_userinput）
@@ -150,9 +150,9 @@ var algorithmConfig = {
         action: 'block'
     },   
     // 任意文件下载防护 - 防止读取当前文件，aka 源代码泄露
-    readFile_disclosure: {
-        action: 'block'
-    },
+    // readFile_disclosure: {
+    //     action: 'ignore'
+    // },
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
     readFile_unwanted: {
         action: 'block'
@@ -995,19 +995,19 @@ plugin.register('readFile', function (params, context) {
     // 算法5: 防止源代码泄露，有误报请关闭
     // /download.php?file=download.php
     // 
-    if (algorithmConfig.readFile_disclosure.action != 'ignore') 
-    {
-        var filename_1 = basename(context.url)
-        var filename_2 = basename(params.realpath)
+    // if (algorithmConfig.readFile_disclosure.action != 'ignore') 
+    // {
+    //     var filename_1 = basename(context.url)
+    //     var filename_2 = basename(params.realpath)
 
-        if (filename_1 == filename_2) {
-            return {
-                action:     algorithmConfig.readFile_disclosure.action,
-                message:    '任意文件下载攻击 - 源代码泄露攻击',
-                confidence: 90
-            }
-        }
-    }    
+    //     if (filename_1 == filename_2) {
+    //         return {
+    //             action:     algorithmConfig.readFile_disclosure.action,
+    //             message:    '任意文件下载攻击 - 源代码泄露攻击',
+    //             confidence: 90
+    //         }
+    //     }
+    // }    
 
     return clean
 })
