@@ -120,19 +120,25 @@ var algorithmConfig = {
         action: 'block'
     },
     // SSRF - 禁止使用 curl 读取 file:///etc/passwd 这样的内容
-    ssrf_file: {
+    ssrf_protocol: {
         action: 'block',
+        protocols: [
+            'file',
+            'dict',
+            'gopher',
+            'php'
+        ]
     },
 
     // 任意文件下载防护 - 来自用户输入
     readFile_userinput: {
-        action: 'block'
+        action: 'block',
     },
     // 任意文件下载防护 - 使用 file_get_contents 等函数读取 http(s):// 内容（注意，这里不区分是否为内网地址）
     readFile_userinput_http: {
         action: 'block'
     },
-    // 任意文件下载防护 - 使用 file:// 协议
+    // 任意文件下载防护 - 使用 file://、php:// 协议
     readFile_userinput_file: {
         action: 'block'
     },
@@ -667,7 +673,7 @@ if (RASP.get_jsengine() !== 'v8') {
         {
             if (ip.length &&
                 is_from_userinput(context.parameter, url) &&
-                /^(192|172|10)\./.test(ip[0]))
+                /^(127|192|172|10)\./.test(ip[0]))
             {
                 return {
                     action:    algorithmConfig.ssrf_userinput.action,
@@ -739,18 +745,19 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
-        // 算法5 - ssrf_file
+        // 算法5 - ssrf_protocol
         // 
         // 特殊协议检查，比如
         // 使用 curl 读取 file:///etc/passwd
-        if (algorithmConfig.ssrf_file.action != 'ignore')
-        {
-            var url_lc = url.toLowerCase()
-            if (url_lc.startsWith('file://'))
+        if (algorithmConfig.ssrf_protocol.action != 'ignore')
+        {            
+            var proto = url.split(':')[0].toLowerCase()
+
+            if (algorithmConfig.ssrf_protocol.protocols.hasOwnProperty(proto))
             {
                 return {
                     action:    algorithmConfig.ssrf_file.action,
-                    message:   '任意文件下载攻击，尝试使用 file:// 读取文件',
+                    message:   'SSRF攻击 - 尝试使用 ' + proto + '协议',
                     confidence: 100
                 }                  
             }
@@ -945,7 +952,8 @@ plugin.register('readFile', function (params, context) {
 
             // 4. 读取 file:// 内容
             // ?file=file:///etc/passwd
-            if (path_lc.startsWith('file://'))
+            // ?file=php://filter/read=convert.base64-encode/resource=XXX
+            if (path_lc.startsWith('file://') || path_lc.startsWith('php://'))
             {
                 if (algorithmConfig.readFile_userinput_file.action != 'ignore')
                 {
