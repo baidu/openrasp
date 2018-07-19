@@ -720,7 +720,7 @@ if (RASP.get_jsengine() !== 'v8') {
                     action:    algorithmConfig.ssrf_aws.action,
                     message:   'SSRF攻击 - 读取 AWS metadata',
                     confidence: 100
-                }                
+                }
             }
         }
 
@@ -764,7 +764,7 @@ if (RASP.get_jsengine() !== 'v8') {
         {            
             var proto = url.split(':')[0].toLowerCase()
 
-            if (algorithmConfig.ssrf_protocol.protocols.indexOf(proto))
+            if (algorithmConfig.ssrf_protocol.protocols.indexOf(proto) != -1)
             {
                 return {
                     action:    algorithmConfig.ssrf_protocol.action,
@@ -1014,7 +1014,7 @@ plugin.register('include', function (params, context) {
     // include('php://XXX')
     if (algorithmConfig.include_protocol.action != 'ignore')
     {
-        if (algorithmConfig.include_protocol.protocols.indexOf(proto))
+        if (algorithmConfig.include_protocol.protocols.indexOf(proto) != -1)
         {
             return {
                 action:     algorithmConfig.include_protocol.action,
@@ -1265,7 +1265,7 @@ plugin.register('xxe', function (params, context) {
 
         // 拒绝特殊协议
         if (algorithmConfig.xxe_protocol.action != 'ignore') {
-            if (algorithmConfig.xxe_protocol.protocols.indexOf(protocol)) {
+            if (algorithmConfig.xxe_protocol.protocols.indexOf(protocol) != -1) {
                 return {
                     action:     algorithmConfig.xxe_protocol.action,
                     message:    'SSRF/Blind XXE 攻击 (' + protocol + ' 协议)',
