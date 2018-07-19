@@ -187,18 +187,24 @@ var algorithmConfig = {
         action: 'block'
     },
 
-    // 文件包含 - 包含 http:// 内容
-    include_http: {
-        action: 'block'
+    // 文件包含 - 特殊协议
+    include_protocol: {
+        action: 'block',
+        protocols: [
+            'http',
+            'https',
+            'php',
+            'file'
+        ]
     },
-    // 文件包含 - 包含目录
-    include_dir: {
-        action: 'block'
-    },
-    // 文件包含 - 包含敏感文件
-    include_unwanted: {
-        action: 'block'
-    },  
+    // // 文件包含 - 包含目录
+    // include_dir: {
+    //     action: 'block'
+    // },
+    // // 文件包含 - 包含敏感文件
+    // include_unwanted: {
+    //     action: 'block'
+    // },  
     // 文件包含 - 包含web目录之外的文件
     include_outsideWebroot: {
         action: 'block'
@@ -206,7 +212,12 @@ var algorithmConfig = {
 
     // XXE - 使用 gopher/ftp/dict/.. 等不常见协议访问外部实体
     xxe_protocol: {
-        action: 'block'
+        action: 'block',
+        protocols: [
+            'ftp',
+            'dict',
+            'gopher'
+        ]
     },
 
     // 文件上传 - COPY/MOVE 方式，仅适合 tomcat
@@ -753,10 +764,10 @@ if (RASP.get_jsengine() !== 'v8') {
         {            
             var proto = url.split(':')[0].toLowerCase()
 
-            if (algorithmConfig.ssrf_protocol.protocols.hasOwnProperty(proto))
+            if (algorithmConfig.ssrf_protocol.protocols.indexOf(proto))
             {
                 return {
-                    action:    algorithmConfig.ssrf_file.action,
+                    action:    algorithmConfig.ssrf_protocol.action,
                     message:   'SSRF攻击 - 尝试使用 ' + proto + '协议',
                     confidence: 100
                 }                  
@@ -996,49 +1007,52 @@ plugin.register('include', function (params, context) {
     // 如果有协议
     // include ('http://xxxxx')
     var items = url.split('://')
+    var proto = items[0].toLowerCase()
 
-    // http 方式 SSRF/RFI
-    if (items[0].toLowerCase() == 'http') 
+    // 特殊协议，
+    // include('file://XXX')
+    // include('php://XXX')
+    if (algorithmConfig.include_protocol.action != 'ignore')
     {
-        if (algorithmConfig.include_http.action != 'ignore')
+        if (algorithmConfig.include_protocol.protocols.indexOf(proto))
         {
             return {
-                action:     algorithmConfig.include_http.action,
-                message:    'SSRF漏洞: ' + params.function + ' 方式',
-                confidence: 70
-            }  
-        }        
+                action:     algorithmConfig.include_protocol.action,
+                message:    '文件包含攻击: ' + proto + '协议 + ' + params.function + '() 函数',
+                confidence: 90
+            }
+        }
     }
 
     // file 协议
-    if (items[0].toLowerCase() == 'file') {
-        var basename = items[1].split('/').pop()
+    // if (items[0].toLowerCase() == 'file') {
+    //     var basename = items[1].split('/').pop()
 
-        // 是否为目录？
-        if (items[1].endsWith('/')) {
-            // 部分应用，如果直接包含目录，会把这个目录内容列出来
-            if (algorithmConfig.include_dir.action != 'ignore') {
-                return {
-                    action:     algorithmConfig.include_dir.action,
-                    message:    '敏感目录访问: ' + params.function + ' 方式',
-                    confidence: 100
-                }
-            }
-        }
+    //     // 是否为目录？
+    //     if (items[1].endsWith('/')) {
+    //         // 部分应用，如果直接包含目录，会把这个目录内容列出来
+    //         if (algorithmConfig.include_dir.action != 'ignore') {
+    //             return {
+    //                 action:     algorithmConfig.include_dir.action,
+    //                 message:    '敏感目录访问: ' + params.function + ' 方式',
+    //                 confidence: 100
+    //             }
+    //         }
+    //     }
 
-        // 是否为敏感文件？
-        if (algorithmConfig.include_unwanted.action != 'ignore') {
-            for (var i = 0; i < forcefulBrowsing.unwantedFilenames.length; i ++) {
-                if (basename == forcefulBrowsing.unwantedFilenames[i]) {
-                    return {
-                        action:     algorithmConfig.include_unwanted.action,
-                        message:    '敏感文件下载: ' + params.function + ' 方式',
-                        confidence: 100
-                    }
-                }
-            }
-        }
-    }
+    //     // 是否为敏感文件？
+    //     if (algorithmConfig.include_unwanted.action != 'ignore') {
+    //         for (var i = 0; i < forcefulBrowsing.unwantedFilenames.length; i ++) {
+    //             if (basename == forcefulBrowsing.unwantedFilenames[i]) {
+    //                 return {
+    //                     action:     algorithmConfig.include_unwanted.action,
+    //                     message:    '敏感文件下载: ' + params.function + ' 方式',
+    //                     confidence: 100
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     return clean
 })
@@ -1251,7 +1265,7 @@ plugin.register('xxe', function (params, context) {
 
         // 拒绝特殊协议
         if (algorithmConfig.xxe_protocol.action != 'ignore') {
-            if (protocol === 'gopher' || protocol === 'ftp' || protocol === 'dict' || protocol === 'expect') {
+            if (algorithmConfig.xxe_protocol.protocols.indexOf(protocol)) {
                 return {
                     action:     algorithmConfig.xxe_protocol.action,
                     message:    'SSRF/Blind XXE 攻击 (' + protocol + ' 协议)',
