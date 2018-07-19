@@ -67,6 +67,9 @@ var algorithmConfig = {
             // 是否禁止常量比较，AND 8333=8555
             // 当代码编写不规范，常量比较算法会造成大量误报，所以默认不再开启此功能
             constant_compare:   false,
+
+            // 是否拦截 into outfile 写文件操作
+            into_outfile:       true
         },
         function_blacklist: {
             // 文件操作
@@ -655,6 +658,14 @@ if (RASP.get_jsengine() !== 'v8') {
                         break
                     }
                 }
+                else if (features['into_outfile'] && i < tokens_lc.length - 1 && tokens_lc[i] == 'into')
+                {
+                    if (tokens_lc[i + 1] == 'outfile')
+                    {
+                        reason = '禁止使用 INTO OUTFILE 语句'
+                        break
+                    }
+                }
             }
 
             if (reason !== false) {
@@ -768,7 +779,7 @@ if (RASP.get_jsengine() !== 'v8') {
             {
                 return {
                     action:    algorithmConfig.ssrf_protocol.action,
-                    message:   'SSRF攻击 - 尝试使用 ' + proto + '协议',
+                    message:   'SSRF攻击 - 尝试使用 ' + proto + ' 协议',
                     confidence: 100
                 }                  
             }
