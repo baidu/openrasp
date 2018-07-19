@@ -341,8 +341,8 @@ function hasTraversal (path) {
     // 左右斜杠，一视同仁
     var path2 = path.replaceAll('\\', '/')
 
-    var left  = path.indexOf('/../')
-    var right = path.lastIndexOf('/../')
+    var left  = path2.indexOf('/../')
+    var right = path2.lastIndexOf('/../')
 
     if (left != -1 && right != -1 && left != right)
     {
