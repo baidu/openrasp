@@ -124,10 +124,8 @@ zend_string *openrasp_real_path(char *filename, int length, bool use_include_pat
     resolved_path = php_resolve_path(filename, length, use_include_path ? PG(include_path) : nullptr);
     if (nullptr == resolved_path)
     {
-        const char *p;
-        for (p = filename; isalnum((int)*p) || *p == '+' || *p == '-' || *p == '.'; p++)
-            ;
-        if ((*p == ':') && (p - filename > 1) && (p[1] == '/') && (p[2] == '/'))
+        const char *p = fetch_url_scheme(filename);
+        if (nullptr !=p)
         {
             std::string scheme(filename, p - filename);
             php_stream_wrapper *wrapper;
