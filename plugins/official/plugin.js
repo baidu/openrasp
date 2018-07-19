@@ -445,6 +445,7 @@ if (RASP.get_jsengine() !== 'v8') {
         stack: [],
         max:   algorithmConfig.cache.sqli.capacity,
 
+        // 查询缓存，如果在则移动到队首
         lookup: function(key) {
             var found = this.cache.hasOwnProperty(key)
             if (found) {
@@ -458,6 +459,7 @@ if (RASP.get_jsengine() !== 'v8') {
             return found
         },
 
+        // 增加缓存，如果超过大小则删除末尾元素
         put: function(key) {
             this.stack.push(key)
             this.cache[key] = 1
@@ -468,6 +470,7 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         },
 
+        // 调试函数，用于打印内部信息
         dump: function() {
             console.log (this.cache)
             console.log (this.stack)
