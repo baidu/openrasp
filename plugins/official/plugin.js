@@ -25,20 +25,20 @@ var plugin  = new RASP('offical')
 // ignore -> 关闭这个算法
 
 var algorithmConfig = {
-	// 全局检测结果缓存配置 - LRU 大小
-	// 当检测结果为 ignore 时，我们会缓存处理结果以提高性能
-	cache: {
-		sqli: {
-			capacity: 100
-		}
-	},
+    // 全局检测结果缓存配置 - LRU 大小
+    // 当检测结果为 ignore 时，我们会缓存处理结果以提高性能
+    cache: {
+        sqli: {
+            capacity: 100
+        }
+    },
 
     // SQL注入算法#1 - 匹配用户输入
     // 1. 用户输入长度至少 15
     // 2. 用户输入至少包含一个SQL关键词（待定）
     // 3. 用户输入完整的出现在SQL语句，且SQL语句逻辑发生变更
     sqli_userinput: {
-        action:     'block',
+        action:     'ignore',
         min_length: 15
     },
     // SQL注入算法#1 - 是否拦截数据库管理器，默认关闭，有需要可改为 block（此算法依赖于 sqli_userinput）
@@ -67,6 +67,9 @@ var algorithmConfig = {
             // 是否禁止常量比较，AND 8333=8555
             // 当代码编写不规范，常量比较算法会造成大量误报，所以默认不再开启此功能
             constant_compare:   false,
+
+            // 是否拦截 into outfile 写文件操作
+            into_outfile:       true
         },
         function_blacklist: {
             // 文件操作
@@ -120,19 +123,25 @@ var algorithmConfig = {
         action: 'block'
     },
     // SSRF - 禁止使用 curl 读取 file:///etc/passwd 这样的内容
-    ssrf_file: {
+    ssrf_protocol: {
         action: 'block',
+        protocols: [
+            'file',
+            'dict',
+            'gopher',
+            'php'
+        ]
     },
 
     // 任意文件下载防护 - 来自用户输入
     readFile_userinput: {
-        action: 'block'
+        action: 'block',
     },
     // 任意文件下载防护 - 使用 file_get_contents 等函数读取 http(s):// 内容（注意，这里不区分是否为内网地址）
     readFile_userinput_http: {
         action: 'block'
     },
-    // 任意文件下载防护 - 使用 file:// 协议
+    // 任意文件下载防护 - 使用 file://、php:// 协议
     readFile_userinput_file: {
         action: 'block'
     },
@@ -140,6 +149,10 @@ var algorithmConfig = {
     readFile_traversal: {
         action: 'block'
     },   
+    // 任意文件下载防护 - 防止读取当前文件，aka 源代码泄露
+    // readFile_disclosure: {
+    //     action: 'ignore'
+    // },
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
     readFile_unwanted: {
         action: 'block'
@@ -181,18 +194,24 @@ var algorithmConfig = {
         action: 'block'
     },
 
-    // 文件包含 - 包含 http:// 内容
-    include_http: {
-        action: 'block'
+    // 文件包含 - 特殊协议
+    include_protocol: {
+        action: 'block',
+        protocols: [
+            'http',
+            'https',
+            'php',
+            'file'
+        ]
     },
-    // 文件包含 - 包含目录
-    include_dir: {
-        action: 'block'
-    },
-    // 文件包含 - 包含敏感文件
-    include_unwanted: {
-        action: 'block'
-    },  
+    // // 文件包含 - 包含目录
+    // include_dir: {
+    //     action: 'block'
+    // },
+    // // 文件包含 - 包含敏感文件
+    // include_unwanted: {
+    //     action: 'block'
+    // },  
     // 文件包含 - 包含web目录之外的文件
     include_outsideWebroot: {
         action: 'block'
@@ -200,7 +219,12 @@ var algorithmConfig = {
 
     // XXE - 使用 gopher/ftp/dict/.. 等不常见协议访问外部实体
     xxe_protocol: {
-        action: 'block'
+        action: 'block',
+        protocols: [
+            'ftp',
+            'dict',
+            'gopher'
+        ]
     },
 
     // 文件上传 - COPY/MOVE 方式，仅适合 tomcat
@@ -312,19 +336,17 @@ String.prototype.replaceAll = function(token, tokenValue) {
 //     return path.replaceAll('/./', '/').replaceAll('//', '/').replaceAll('//', '/')
 // }
 
-// 我们不再需要简化路径，当出现两个 /../ 或者两个 \..\ 就可以判定为路径遍历攻击了
-// e.g /./././././home/../../../../etc/passwd
+// 我们不再需要简化路径，当出现两个 /../ 或者两个 \..\ 就可以判定为路径遍历攻击了，e.g
+// /./././././home/../../../../etc/passwd
+// \\..\\..\\..
+// \/..\/..\/..
 function hasTraversal (path) {
-    var left  = path.indexOf('/../')
-    var right = path.lastIndexOf('/../')
 
-    if (left != -1 && right != -1 && left != right)
-    {
-        return true
-    }
+    // 左右斜杠，一视同仁
+    var path2 = path.replaceAll('\\', '/')
 
-    var left  = path.indexOf('\\..\\')
-    var right = path.lastIndexOf('\\..\\')    
+    var left  = path2.indexOf('/../')
+    var right = path2.lastIndexOf('/../')
 
     if (left != -1 && right != -1 && left != right)
     {
@@ -445,6 +467,7 @@ if (RASP.get_jsengine() !== 'v8') {
         stack: [],
         max:   algorithmConfig.cache.sqli.capacity,
 
+        // 查询缓存，如果在则移动到队首
         lookup: function(key) {
             var found = this.cache.hasOwnProperty(key)
             if (found) {
@@ -458,6 +481,7 @@ if (RASP.get_jsengine() !== 'v8') {
             return found
         },
 
+        // 增加缓存，如果超过大小则删除末尾元素
         put: function(key) {
             this.stack.push(key)
             this.cache[key] = 1
@@ -468,6 +492,7 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         },
 
+        // 调试函数，用于打印内部信息
         dump: function() {
             console.log (this.cache)
             console.log (this.stack)
@@ -635,6 +660,14 @@ if (RASP.get_jsengine() !== 'v8') {
                         break
                     }
                 }
+                else if (features['into_outfile'] && i < tokens_lc.length - 1 && tokens_lc[i] == 'into')
+                {
+                    if (tokens_lc[i + 1] == 'outfile')
+                    {
+                        reason = '禁止使用 INTO OUTFILE 语句'
+                        break
+                    }
+                }
             }
 
             if (reason !== false) {
@@ -664,7 +697,7 @@ if (RASP.get_jsengine() !== 'v8') {
         {
             if (ip.length &&
                 is_from_userinput(context.parameter, url) &&
-                /^(192|172|10)\./.test(ip[0]))
+                /^(127|192|172|10)\./.test(ip[0]))
             {
                 return {
                     action:    algorithmConfig.ssrf_userinput.action,
@@ -700,7 +733,7 @@ if (RASP.get_jsengine() !== 'v8') {
                     action:    algorithmConfig.ssrf_aws.action,
                     message:   'SSRF攻击 - 读取 AWS metadata',
                     confidence: 100
-                }                
+                }
             }
         }
 
@@ -736,18 +769,19 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
-        // 算法5 - ssrf_file
+        // 算法5 - ssrf_protocol
         // 
         // 特殊协议检查，比如
         // 使用 curl 读取 file:///etc/passwd
-        if (algorithmConfig.ssrf_file.action != 'ignore')
-        {
-            var url_lc = url.toLowerCase()
-            if (url_lc.startsWith('file://'))
+        if (algorithmConfig.ssrf_protocol.action != 'ignore')
+        {            
+            var proto = url.split(':')[0].toLowerCase()
+
+            if (algorithmConfig.ssrf_protocol.protocols.indexOf(proto) != -1)
             {
                 return {
-                    action:    algorithmConfig.ssrf_file.action,
-                    message:   '任意文件下载攻击，尝试使用 file:// 读取文件',
+                    action:    algorithmConfig.ssrf_protocol.action,
+                    message:   'SSRF攻击 - 尝试使用 ' + proto + ' 协议',
                     confidence: 100
                 }                  
             }
@@ -942,7 +976,8 @@ plugin.register('readFile', function (params, context) {
 
             // 4. 读取 file:// 内容
             // ?file=file:///etc/passwd
-            if (path_lc.startsWith('file://'))
+            // ?file=php://filter/read=convert.base64-encode/resource=XXX
+            if (path_lc.startsWith('file://') || path_lc.startsWith('php://'))
             {
                 if (algorithmConfig.readFile_userinput_file.action != 'ignore')
                 {
@@ -952,9 +987,27 @@ plugin.register('readFile', function (params, context) {
                         confidence: 90
                     } 
                 }
-            }            
+            }
         }
     }
+
+    //
+    // 算法5: 防止源代码泄露，有误报请关闭
+    // /download.php?file=download.php
+    // 
+    // if (algorithmConfig.readFile_disclosure.action != 'ignore') 
+    // {
+    //     var filename_1 = basename(context.url)
+    //     var filename_2 = basename(params.realpath)
+
+    //     if (filename_1 == filename_2) {
+    //         return {
+    //             action:     algorithmConfig.readFile_disclosure.action,
+    //             message:    '任意文件下载攻击 - 源代码泄露攻击',
+    //             confidence: 90
+    //         }
+    //     }
+    // }    
 
     return clean
 })
@@ -985,49 +1038,52 @@ plugin.register('include', function (params, context) {
     // 如果有协议
     // include ('http://xxxxx')
     var items = url.split('://')
+    var proto = items[0].toLowerCase()
 
-    // http 方式 SSRF/RFI
-    if (items[0].toLowerCase() == 'http') 
+    // 特殊协议，
+    // include('file://XXX')
+    // include('php://XXX')
+    if (algorithmConfig.include_protocol.action != 'ignore')
     {
-        if (algorithmConfig.include_http.action != 'ignore')
+        if (algorithmConfig.include_protocol.protocols.indexOf(proto) != -1)
         {
             return {
-                action:     algorithmConfig.include_http.action,
-                message:    'SSRF漏洞: ' + params.function + ' 方式',
-                confidence: 70
-            }  
-        }        
+                action:     algorithmConfig.include_protocol.action,
+                message:    '文件包含攻击: ' + proto + '协议 + ' + params.function + '() 函数',
+                confidence: 90
+            }
+        }
     }
 
     // file 协议
-    if (items[0].toLowerCase() == 'file') {
-        var basename = items[1].split('/').pop()
+    // if (items[0].toLowerCase() == 'file') {
+    //     var basename = items[1].split('/').pop()
 
-        // 是否为目录？
-        if (items[1].endsWith('/')) {
-            // 部分应用，如果直接包含目录，会把这个目录内容列出来
-            if (algorithmConfig.include_dir.action != 'ignore') {
-                return {
-                    action:     algorithmConfig.include_dir.action,
-                    message:    '敏感目录访问: ' + params.function + ' 方式',
-                    confidence: 100
-                }
-            }
-        }
+    //     // 是否为目录？
+    //     if (items[1].endsWith('/')) {
+    //         // 部分应用，如果直接包含目录，会把这个目录内容列出来
+    //         if (algorithmConfig.include_dir.action != 'ignore') {
+    //             return {
+    //                 action:     algorithmConfig.include_dir.action,
+    //                 message:    '敏感目录访问: ' + params.function + ' 方式',
+    //                 confidence: 100
+    //             }
+    //         }
+    //     }
 
-        // 是否为敏感文件？
-        if (algorithmConfig.include_unwanted.action != 'ignore') {
-            for (var i = 0; i < forcefulBrowsing.unwantedFilenames.length; i ++) {
-                if (basename == forcefulBrowsing.unwantedFilenames[i]) {
-                    return {
-                        action:     algorithmConfig.include_unwanted.action,
-                        message:    '敏感文件下载: ' + params.function + ' 方式',
-                        confidence: 100
-                    }
-                }
-            }
-        }
-    }
+    //     // 是否为敏感文件？
+    //     if (algorithmConfig.include_unwanted.action != 'ignore') {
+    //         for (var i = 0; i < forcefulBrowsing.unwantedFilenames.length; i ++) {
+    //             if (basename == forcefulBrowsing.unwantedFilenames[i]) {
+    //                 return {
+    //                     action:     algorithmConfig.include_unwanted.action,
+    //                     message:    '敏感文件下载: ' + params.function + ' 方式',
+    //                     confidence: 100
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     return clean
 })
@@ -1240,7 +1296,7 @@ plugin.register('xxe', function (params, context) {
 
         // 拒绝特殊协议
         if (algorithmConfig.xxe_protocol.action != 'ignore') {
-            if (protocol === 'gopher' || protocol === 'ftp' || protocol === 'dict' || protocol === 'expect') {
+            if (algorithmConfig.xxe_protocol.protocols.indexOf(protocol) != -1) {
                 return {
                     action:     algorithmConfig.xxe_protocol.action,
                     message:    'SSRF/Blind XXE 攻击 (' + protocol + ' 协议)',

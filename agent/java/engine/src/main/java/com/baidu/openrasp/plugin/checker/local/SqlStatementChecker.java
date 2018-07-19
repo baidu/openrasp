@@ -49,6 +49,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_VERSION_COMMENT = "version_comment";
     private static final String CONFIG_KEY_FUNCTION_BLACKLIST = "function_blacklist";
     private static final String CONFIG_KEY_UNION_NULL = "union_null";
+    private static final String CONFIG_KEY_INTO_OUTFILE = "into_outfile";
 
     private static TokenizeErrorListener tokenizeErrorListener = new TokenizeErrorListener();
 
@@ -145,7 +146,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                         && modules.get(CONFIG_KEY_VERSION_COMMENT)) {
                                     message = "禁止MySQL版本号注释";
                                     break;
-                                } else if (i > 0 && i < tokens.length - 1 && (lt.equals("xor")
+                                } else if (i > 0 && i < tokens.length - 2 && (lt.equals("xor")
                                         || lt.charAt(0) == '<'
                                         || lt.charAt(0) == '>'
                                         || lt.charAt(0) == '=')
@@ -173,6 +174,11 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                         message = "禁止执行敏感函数: " + tokens[i - 1];
                                         break;
                                     }
+                                } else if (i < tokens.length - 2 && tokens[i].equals("into") && tokens[i + 1].equals("outfile")
+                                        && modules.containsKey(CONFIG_KEY_INTO_OUTFILE)
+                                        && modules.get(CONFIG_KEY_INTO_OUTFILE)) {
+                                    message = "禁止使用 INTO OUTFILE 语句";
+                                    break;
                                 }
                             }
                         }
