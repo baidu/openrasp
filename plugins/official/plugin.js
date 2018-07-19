@@ -332,19 +332,17 @@ String.prototype.replaceAll = function(token, tokenValue) {
 //     return path.replaceAll('/./', '/').replaceAll('//', '/').replaceAll('//', '/')
 // }
 
-// 我们不再需要简化路径，当出现两个 /../ 或者两个 \..\ 就可以判定为路径遍历攻击了
-// e.g /./././././home/../../../../etc/passwd
+// 我们不再需要简化路径，当出现两个 /../ 或者两个 \..\ 就可以判定为路径遍历攻击了，e.g
+// /./././././home/../../../../etc/passwd
+// \\..\\..\\..
+// \/..\/..\/..
 function hasTraversal (path) {
+
+    // 左右斜杠，一视同仁
+    var path2 = path.replaceAll('\\', '/')
+
     var left  = path.indexOf('/../')
     var right = path.lastIndexOf('/../')
-
-    if (left != -1 && right != -1 && left != right)
-    {
-        return true
-    }
-
-    var left  = path.indexOf('\\..\\')
-    var right = path.lastIndexOf('\\..\\')    
 
     if (left != -1 && right != -1 && left != right)
     {
