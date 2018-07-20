@@ -245,9 +245,13 @@ var algorithmConfig = {
     command_reflect: {
         action: 'block'
     },
+    // 命令后门 - 匹配用户输入
+    command_userinput: {
+        action: 'block'
+    },
     // 命令执行 - 常规方式，如有需求请改为 'ignore'
     command_other: {
-        action: 'block'
+        action: 'log'
     },
 
     // transformer 反序列化攻击
@@ -1263,7 +1267,23 @@ plugin.register('command', function (params, context) {
         }
     }
 
-    // 算法2: 默认禁止命令执行
+    // 算法2: 匹配用户输入
+    if (algorithmConfig.command_userinput.action == 'ignore') {
+
+        // 全文匹配
+        var cmd = params.command.join(' ')
+        if (is_from_userinput(context.parameter, cmd)) {
+            return {
+                action:     algorithmConfig.command_userinput.action,
+                message:    '发现命令执行后门',
+                confidence: 100
+            }            
+        }
+
+        // 1.0 之前会增加命令注入检测，以及一个bash/cmd解释器，请耐心等待~        
+    }
+
+    // 算法3: 默认禁止命令执行
     // 如有需要可改成 log 或者 ignore
     // 或者根据URL来决定是否允许执行命令
 
