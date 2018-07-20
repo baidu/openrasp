@@ -62,7 +62,7 @@ public class SSRFChecker extends ConfigurableChecker {
                         String[] v = entry.getValue();
                         String value = v[0];
                         String ip = (String) ips.get(0);
-                        if (url.equals(value) && Pattern.matches("^(192|172|10)\\..*", ip)) {
+                        if (url.equals(value) && Pattern.matches("^(127|192|172|10)\\..*", ip)) {
                             result.add(AttackInfo.createLocalAttackInfo(checkParameter,
                                     getActionElement(config, CONFIG_KEY_SSRF_USER_INPUT), "SSRF攻击 - 访问内网地址: " + ip));
                         }
