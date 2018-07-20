@@ -249,9 +249,9 @@ var algorithmConfig = {
     command_userinput: {
         action: 'block'
     },
-    // 命令执行 - 常规方式，如有需求请改为 'ignore'
+    // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
     command_other: {
-        action: 'log'
+        action: 'block'
     },
 
     // transformer 反序列化攻击
@@ -1267,8 +1267,14 @@ plugin.register('command', function (params, context) {
         }
     }
 
+    // 从 v0.31 开始，当命令执行来自非HTTP请求的，我们也会检测反序列化攻击
+    // 但是不应该拦截正常的命令执行，所以这里加一个 context.url 检查
+    if (! context.url) {
+        return clean
+    }
+
     // 算法2: 匹配用户输入
-    if (algorithmConfig.command_userinput.action == 'ignore') {
+    if (algorithmConfig.command_userinput.action != 'ignore') {
 
         // 全文匹配
         var cmd = params.command.join(' ')
@@ -1283,16 +1289,7 @@ plugin.register('command', function (params, context) {
         // 1.0 之前会增加命令注入检测，以及一个bash/cmd解释器，请耐心等待~        
     }
 
-    // 算法3: 默认禁止命令执行
-    // 如有需要可改成 log 或者 ignore
-    // 或者根据URL来决定是否允许执行命令
-
-    // 从 v0.31 开始，当命令执行来自非HTTP请求的，我们也会检测反序列化攻击
-    // 但是不应该拦截正常的命令执行，所以这里加一个 context.url 检查
-    if (! context.url) {
-        return clean
-    }
-
+    // 算法3: 拦截所有的命令执行
     if (algorithmConfig.command_other.action == 'ignore') {
         return clean
     } else {
