@@ -25,11 +25,12 @@ extern "C" {
 #include "ext/standard/php_fopen_wrappers.h"    
 }
 
-static std::vector<hook_handler_t> global_hook_handlers;
+static hook_handler_t global_hook_handlers[512];
+static size_t global_hook_handlers_len = 0;
 
 void register_hook_handler(hook_handler_t hook_handler)
 {
-    global_hook_handlers.push_back(hook_handler);
+    global_hook_handlers[global_hook_handlers_len++] = hook_handler;
 }
 
 typedef struct _track_vars_pair_t
@@ -257,10 +258,11 @@ PHP_MINIT_FUNCTION(openrasp_hook)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp_hook, PHP_GINIT(openrasp_hook), PHP_GSHUTDOWN(openrasp_hook));
 
-    for (auto &single_handler : global_hook_handlers)
+    for (size_t i = 0; i < global_hook_handlers_len; i++)
     {
-        single_handler();
+        global_hook_handlers[i](TSRMLS_C);
     }
+
     zend_set_user_opcode_handler(ZEND_INCLUDE_OR_EVAL, include_or_eval_handler);
     return SUCCESS;
 }
