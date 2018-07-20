@@ -20,7 +20,7 @@ var plugin  = new RASP('offical')
 
 // 检测逻辑总开关
 // 
-// block  -> 拦截
+// block  -> 拦截，并打印报警日志
 // log    -> 打印日志，不拦截
 // ignore -> 关闭这个算法
 
@@ -122,7 +122,7 @@ var algorithmConfig = {
     ssrf_obfuscate: {
         action: 'block'
     },
-    // SSRF - 禁止使用 curl 读取 file:///etc/passwd 这样的内容
+    // SSRF - 禁止使用 curl 读取 file:///etc/passwd、php://filter/XXXX 这样的内容
     ssrf_protocol: {
         action: 'block',
         protocols: [
@@ -695,8 +695,7 @@ if (RASP.get_jsengine() !== 'v8') {
         var reason   = false
         var action   = 'ignore'
 
-        // 算法1 - ssrf_userinput
-        // 当参数来自用户输入，且为内网IP，判定为SSRF攻击
+        // 算法1 - 当参数来自用户输入，且为内网IP，判定为SSRF攻击
         if (algorithmConfig.ssrf_userinput.action != 'ignore') 
         {
             if (ip.length &&
@@ -711,8 +710,7 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
-        // 算法2 - ssrf_common
-        // 检查常见探测域名
+        // 算法2 - 检查常见探测域名
         if (algorithmConfig.ssrf_common.action != 'ignore')
         {
             if (isHostnameDNSLOG(hostname))
@@ -725,10 +723,7 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         } 
 
-        // 算法3 - ssrf_aws
-        // 检测AWS私有地址，如有需求可注释掉
-        // 
-        // TODO: 增加 Google Cloud 对应的私有地址
+        // 算法3 - 检测AWS私有地址
         if (algorithmConfig.ssrf_aws.action != 'ignore') 
         {
             if (hostname == '169.254.169.254') 
@@ -773,12 +768,10 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
-        // 算法5 - ssrf_protocol
-        // 
-        // 特殊协议检查，比如
-        // 使用 curl 读取 file:///etc/passwd
+        // 算法5 - 特殊协议检查
         if (algorithmConfig.ssrf_protocol.action != 'ignore')
         {            
+            // 获取协议
             var proto = url.split(':')[0].toLowerCase()
 
             if (algorithmConfig.ssrf_protocol.protocols.indexOf(proto) != -1)
@@ -834,6 +827,7 @@ plugin.register('directory', function (params, context) {
         }
     }
 
+    // 算法3 - 检查PHP菜刀等后门
     if (algorithmConfig.directory_reflect.action != 'ignore') 
     {
 
@@ -856,7 +850,7 @@ plugin.register('readFile', function (params, context) {
     var server = context.server
 
     //
-    //【近期调整】
+    //【即将删除】
     // 算法1: 和URL比较，检查是否为成功的目录扫描。仅适用于 java webdav 方式 
     // 
     // 注意: 此方法受到 readfile.extension.regex 和资源文件大小的限制
@@ -1276,8 +1270,13 @@ plugin.register('command', function (params, context) {
     // 算法2: 匹配用户输入
     if (algorithmConfig.command_userinput.action != 'ignore') {
 
+        // TODO: java/php 统一改为字符串
+        var cmd = params.command
+        if (params.command instanceof Array) {
+            cmd = params.command.join(' ')
+        }
+
         // 全文匹配
-        var cmd = params.command.join(' ')
         if (is_from_userinput(context.parameter, cmd)) {
             return {
                 action:     algorithmConfig.command_userinput.action,
