@@ -38,7 +38,7 @@ var algorithmConfig = {
     // 2. 用户输入至少包含一个SQL关键词（待定）
     // 3. 用户输入完整的出现在SQL语句，且SQL语句逻辑发生变更
     sqli_userinput: {
-        action:     'ignore',
+        action:     'block',
         min_length: 15
     },
     // SQL注入算法#1 - 是否拦截数据库管理器，默认关闭，有需要可改为 block（此算法依赖于 sqli_userinput）
