@@ -251,7 +251,7 @@ var algorithmConfig = {
     },
     // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
     command_other: {
-        action: 'block'
+        action: 'log'
     },
 
     // transformer 反序列化攻击
