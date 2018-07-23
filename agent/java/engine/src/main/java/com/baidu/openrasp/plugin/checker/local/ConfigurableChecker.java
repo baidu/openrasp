@@ -34,16 +34,18 @@ import java.util.HashMap;
  */
 public abstract class ConfigurableChecker extends AttackChecker {
 
+    private static final int DEFAULT_MIN_LENGTH = 15;
+
     protected String getActionElement(JsonObject config, String key) {
         return getStringElement(config, key, "action");
     }
 
-    protected JsonArray getJsonObjectAsArray(JsonObject config, String key, String subKey){
+    protected JsonArray getJsonObjectAsArray(JsonObject config, String key, String subKey) {
         JsonArray result = null;
         try {
             JsonElement value = getElement(config, key, subKey);
             if (value != null) {
-               result = value.getAsJsonArray();
+                result = value.getAsJsonArray();
             }
         } catch (Exception e) {
             logJsonError(e);
@@ -93,6 +95,18 @@ public abstract class ConfigurableChecker extends AttackChecker {
         }
         return null;
     }
+
+    protected int getIntElement(JsonObject config, String key, String subKey) {
+
+        try {
+            JsonElement element = getElement(config, key, subKey);
+            return element != null ? element.getAsInt() : DEFAULT_MIN_LENGTH;
+        } catch (Exception e) {
+            logJsonError(e);
+        }
+        return DEFAULT_MIN_LENGTH;
+    }
+
 
     private void logJsonError(Exception e) {
         JSContext.LOGGER.warn("Parse jason failed because: " + e.getMessage() +

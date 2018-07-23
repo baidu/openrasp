@@ -18,10 +18,7 @@ package com.baidu.openrasp.transformer;
 
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.*;
-import com.baidu.openrasp.hook.file.DiskFileItemHook;
-import com.baidu.openrasp.hook.file.FileHook;
-import com.baidu.openrasp.hook.file.FileInputStreamHook;
-import com.baidu.openrasp.hook.file.FileOutputStreamHook;
+import com.baidu.openrasp.hook.file.*;
 import com.baidu.openrasp.hook.server.catalina.*;
 import com.baidu.openrasp.hook.server.jetty.*;
 import com.baidu.openrasp.hook.server.resin.*;
@@ -93,6 +90,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new ResinParseParamHook());
         addHook(new ResinHttpInputHook());
         addHook(new SQLPreparedStatementHook());
+        addHook(new FileRenameHook());
     }
 
     private void addHook(AbstractClassHook hook) {
