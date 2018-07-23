@@ -206,7 +206,7 @@ public class SQLStatementHook extends AbstractSqlHook {
                 }
             }
         } catch (Exception e) {
-            JSContext.LOGGER.warn("Parse jason failed because: " + e.getMessage());
+            JSContext.LOGGER.warn("Parse json failed because: " + e.getMessage());
         }
         return DEFAULT_LRU_CACHE_CAPACITY;
     }
