@@ -148,11 +148,7 @@ var algorithmConfig = {
     // 任意文件下载防护 - 使用 ../../ 跳出 web 目录读取敏感文件
     readFile_traversal: {
         action: 'block'
-    },   
-    // 任意文件下载防护 - 防止读取当前文件，aka 源代码泄露
-    // readFile_disclosure: {
-    //     action: 'ignore'
-    // },
+    },
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
     readFile_unwanted: {
         action: 'block'
@@ -987,25 +983,7 @@ plugin.register('readFile', function (params, context) {
                 }
             }
         }
-    }
-
-    //
-    // 算法5: 防止源代码泄露，有误报请关闭
-    // /download.php?file=download.php
-    // 
-    // if (algorithmConfig.readFile_disclosure.action != 'ignore') 
-    // {
-    //     var filename_1 = basename(context.url)
-    //     var filename_2 = basename(params.realpath)
-
-    //     if (filename_1 == filename_2) {
-    //         return {
-    //             action:     algorithmConfig.readFile_disclosure.action,
-    //             message:    '任意文件下载攻击 - 源代码泄露攻击',
-    //             confidence: 90
-    //         }
-    //     }
-    // }    
+    }  
 
     return clean
 })
@@ -1090,7 +1068,7 @@ plugin.register('include', function (params, context) {
 plugin.register('writeFile', function (params, context) {
 
     // 写 NTFS 流文件，肯定不正常
-    if (algorithmConfig.writeFile_NTFS.action != 'ignore') 
+    if (algorithmConfig.writeFile_NTFS.action != 'ignore')
     {
         if (ntfsRegex.test(params.realpath)) {
             return {
@@ -1132,6 +1110,7 @@ plugin.register('writeFile', function (params, context) {
 
 if (algorithmConfig.fileUpload_multipart.action != 'ignore') 
 {
+    // 禁止使用 multipart 上传脚本文件，或者 apache/php 服务器配置文件
     plugin.register('fileUpload', function (params, context) {
 
         if (scriptFileRegex.test(params.filename) || ntfsRegex.test(params.filename)) {
