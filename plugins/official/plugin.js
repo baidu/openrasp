@@ -137,11 +137,11 @@ var algorithmConfig = {
     readFile_userinput: {
         action: 'block'
     },
-    // 任意文件下载防护 - 使用 file_get_contents 等函数读取 file://、php:// 协议
+    // 任意文件下载防护 - 使用 file_get_contents 等函数读取 http(s):// 内容（注意，这里不区分是否为内网地址）
     readFile_userinput_http: {
         action: 'block'
     },
-    // 任意文件下载防护 - 使用 file_get_contents 等函数读取 http(s):// 内容（注意，这里不区分是否为内网地址）
+    // 任意文件下载防护 - 使用 file_get_contents 等函数读取 file://、php:// 协议
     readFile_userinput_unwanted: {
         action: 'block'
     },
