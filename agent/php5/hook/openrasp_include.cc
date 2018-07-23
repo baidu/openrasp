@@ -62,7 +62,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     case IS_VAR:
     {
         // whether the parameter is the user input data
-        if (!openrasp_check_type_ignored(ZEND_STRL("webshell_include") TSRMLS_CC)
+        if (!openrasp_check_type_ignored(ZEND_STRL("webshell_include") TSRMLS_CC) 
         && openrasp_zval_in_request(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC))
         {
             zval *attack_params;
@@ -114,13 +114,13 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     MAKE_COPY_ZVAL(&op1, path);
     convert_to_string(path);
     char *real_path = nullptr;
-    if ((strlen(Z_STRVAL_P(path)) < 4 
-    || (strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".php") && strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".inc")))
-    && (strstr(Z_STRVAL_P(path), "://") != nullptr || strstr(Z_STRVAL_P(path), "../") != nullptr))
+    const char *scheme_end = nullptr;
+    if (Z_STRVAL_P(path) && (scheme_end = fetch_url_scheme(Z_STRVAL_P(path))) != nullptr || (strlen(Z_STRVAL_P(path)) < 4 || 
+    (strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".php") && strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".inc"))))
     {
         real_path = openrasp_real_path(Z_STRVAL_P(path), Z_STRLEN_P(path), 1, READING TSRMLS_CC);
     }
-    
+
     if (!real_path)
     {
         zval_ptr_dtor(&path);
@@ -128,18 +128,35 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     else
     {
         zval **doc_root;
-        if ((!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
-        || (Z_TYPE_P(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY &&
-        zend_hash_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS("DOCUMENT_ROOT"), (void **)&doc_root) == SUCCESS && 
-        Z_TYPE_PP(doc_root) == IS_STRING &&
-        strlen(real_path) >= Z_STRLEN_PP(doc_root) &&
-        0 == strncmp(real_path, Z_STRVAL_PP(doc_root), Z_STRLEN_PP(doc_root))))
+        bool send_to_plugin = false;
+        if (scheme_end || strstr(Z_STRVAL_P(path), "../") != nullptr)
         {
-            //skip
-            efree(real_path);
-            zval_ptr_dtor(&path);
+            send_to_plugin = true;
         }
-        else
+        if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
+        {
+            send_to_plugin = true;
+        }
+        if (Z_TYPE_P(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY)
+        {
+            if (zend_hash_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS("DOCUMENT_ROOT"), (void **)&doc_root) == FAILURE)
+            {
+                send_to_plugin = true;
+            }
+            else
+            {   
+                assert(Z_TYPE_PP(doc_root) == IS_STRING);
+                if (0 == strncmp(real_path, Z_STRVAL_PP(doc_root), Z_STRLEN_PP(doc_root)))
+                {
+                    send_to_plugin = false;
+                }
+                else
+                {
+                    send_to_plugin = true;
+                }  
+            }            
+        }
+        if (send_to_plugin)
         {
             zval *params;
             MAKE_STD_ZVAL(params);
@@ -169,6 +186,12 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
             }
             add_assoc_string(params, "function", function, 1);
             check("include", params TSRMLS_CC);
+        }
+        else
+        {
+            //skip
+            efree(real_path);
+            zval_ptr_dtor(&path);
         }
     }
     return ZEND_USER_OPCODE_DISPATCH;

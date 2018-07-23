@@ -74,6 +74,7 @@ void format_debug_backtrace_str(zval *backtrace_str);
 void format_debug_backtrace_arr(zval *backtrace_arr);
 void openrasp_error(int type, int error_code, const char *format, ...);
 int recursive_mkdir(const char *path, int len, int mode);
+const char * fetch_url_scheme(const char *filename);
 
 #ifdef __cplusplus
 }

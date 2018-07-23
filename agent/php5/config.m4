@@ -448,6 +448,17 @@ int main() {
     AC_MSG_ERROR([Don't know how to define struct flock on this system[,] set --enable-openrasp=no])
   fi
   
+  AC_MSG_CHECKING([for git commit id])
+  if command -v git >/dev/null 2>&1; then
+    commit_id="$(git describe --always)"
+    if test -n $commit_id; then
+      AC_DEFINE_UNQUOTED([OPENRASP_COMMIT_ID], ["${commit_id}"], [Using git commit id as version])
+      AC_MSG_RESULT([found])
+    fi
+  else
+    AC_MSG_RESULT([not found])
+  fi
+
   PHP_NEW_EXTENSION(openrasp,
     openrasp.cc \
     openrasp_utils.cc \

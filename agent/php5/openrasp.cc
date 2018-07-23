@@ -145,7 +145,11 @@ PHP_MINFO_FUNCTION(openrasp)
 {
     php_info_print_table_start();
     php_info_print_table_row(2, "Status", is_initialized ? "Protected" : "Unprotected, Initialization Failed");
-    php_info_print_table_row(2, "Version", "1.0");
+#ifdef OPENRASP_COMMIT_ID
+    php_info_print_table_row(2, "Version", OPENRASP_COMMIT_ID);
+#else
+    php_info_print_table_row(2, "Version", "");
+#endif
     php_info_print_table_row(2, "V8 Version", ZEND_TOSTR(V8_MAJOR_VERSION) "." ZEND_TOSTR(V8_MINOR_VERSION));
 #ifdef HAVE_NATIVE_ANTLR4
     php_info_print_table_row(2, "Antlr Version", antlr4::RuntimeMetaData::VERSION.c_str());
