@@ -1051,7 +1051,7 @@ plugin.register('include', function (params, context) {
         {
             return {
                 action:     algorithmConfig.include_protocol.action,
-                message:    _("File inclusion - using unwanted protocol %1% with funtion %2%()", [proto, params.function]),
+                message:    _("File inclusion - using unwanted protocol '%1%://' with funtion %2%()", [proto, params.function]),
                 confidence: 90
             }
         }
@@ -1411,6 +1411,5 @@ if (algorithmConfig.transformer_deser.action != 'ignore') {
     })
 }
 
-plugin.log('OpenRASP default plugin: Initialized')
-
+plugin.log('OpenRASP official plugin: Initialized')
 
