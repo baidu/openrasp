@@ -222,6 +222,10 @@ var algorithmConfig = {
             'gopher'
         ]
     },
+    // XXE - 使用 file 协议读取内容，可能误报，默认 log
+    xxe_file: {
+        action: 'log',
+    },
 
     // 文件上传 - COPY/MOVE 方式，仅适合 tomcat
     fileUpload_webdav: {
@@ -256,15 +260,9 @@ var algorithmConfig = {
     }
 }
 
-// OpenRASP 大部分算法都不依赖规则，我们主要使用调用堆栈、编码规范、用户输入匹配的思路来检测漏洞。
-//
-// 目前，只有文件访问 - 算法#4 加了一个探针，作为最后一道防线
-// 当应用读取了这些文件，通常意味着服务器已经被入侵
-// 这些配置是通用的，一般不需要定制
-
 const clean = {
     action:     'ignore',
-    message:    '无风险',
+    message:    'Looks fine to me',
     confidence: 0
 }
 
@@ -452,6 +450,20 @@ function is_from_userinput(parameter, target) {
     return verdict
 }
 
+// 下个版本将会支持翻译，目前还需要暴露一个 getText 接口给插件
+function _(message, args)
+{
+    args = args || []
+
+    for (var i = 0; i < args.length; i ++)
+    {
+        var symbol = '%' + (i + 1) + '%'
+        message = message.replace(symbol, args[i])      
+    }
+
+    return message
+}
+
 // 开始
 
 if (RASP.get_jsengine() !== 'v8') {
@@ -543,10 +555,10 @@ if (RASP.get_jsengine() !== 'v8') {
                         continue
                     }
 
+                    // 检测数据库管理器
                     if (value.length == params.query.length && value == params.query) {
-                        // 是否拦截数据库管理器，有需要请改为 block
                         if (algorithmConfig.sqli_dbmanager.action != 'ignore') {
-                            reason = '算法2: WebShell - 拦截数据库管理器 - 攻击参数: ' + name
+                            reason = _("SQLi - Database manager detected, request parameter name: %1%", [name])
                             return true
                         } else {
                             continue
@@ -561,7 +573,7 @@ if (RASP.get_jsengine() !== 'v8') {
                     // 去掉用户输入再次匹配
                     var tokens2 = RASP.sql_tokenize(params.query.replaceAll(value, ''), params.server)
                     if (tokens.length - tokens2.length > 2) {
-                        reason = '算法1: 数据库查询逻辑发生改变 - 攻击参数: ' + name
+                        reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
                         return true
                     }
                 }
@@ -600,7 +612,7 @@ if (RASP.get_jsengine() !== 'v8') {
                     // NULL,NULL,NULL == 5个token
                     // 1,2,3          == 5个token
                     if (null_count >= 5) {
-                        reason = 'UNION-NULL 方式注入 - 字段类型探测'
+                        reason = _("SQLi - Detected UNION-NULL phrase in sql query")
                         break
                     }
                     continue
@@ -608,17 +620,17 @@ if (RASP.get_jsengine() !== 'v8') {
 
                 if (features['stacked_query'] && tokens_lc[i] == ';' && i != tokens_lc.length - 1)
                 {
-                    reason = '禁止多语句查询'
+                    reason = _("SQLi - Detected stacked queries")
                     break
                 }
                 else if (features['no_hex'] && tokens_lc[i][0] === '0' && tokens_lc[i][1] === 'x')
                 {
-                    reason = '禁止16进制字符串'
+                    reason = _("SQLi - Detected hexadecimal values in sql query")
                     break
                 }
                 else if (features['version_comment'] && tokens_lc[i][0] === '/' && tokens_lc[i][1] === '*' && tokens_lc[i][2] === '!')
                 {
-                    reason = '禁止MySQL版本号注释'
+                    reason = _("SQLi - Detected MySQL version comment in sql query")
                     break
                 }
                 else if (features['constant_compare'] &&
@@ -648,15 +660,16 @@ if (RASP.get_jsengine() !== 'v8') {
                             continue;
                         }
 
-                        reason = '禁止常量比较操作: ' + num1 + ' vs ' + num2
+                        reason = _("SQLi - Detected blind sql injection attack: comparing %1% against %2%", [num1, num2])
                         break
                     }
                 }
                 else if (features['function_blacklist'] && i > 0 && tokens_lc[i][0] === '(')
                 {
-                    // @FIXME: 可绕过，暂时不更新
-                    if (func_list[tokens_lc[i - 1]]) {
-                        reason = '禁止执行敏感函数: ' + tokens_lc[i - 1]
+                    var func_name = tokens_lc[i - 1]
+
+                    if (func_list[func_name]) {
+                        reason = _("SQLi - Detected dangerous method call %1%() in sql query", [func_name])
                         break
                     }
                 }
@@ -664,7 +677,7 @@ if (RASP.get_jsengine() !== 'v8') {
                 {
                     if (tokens_lc[i + 1] == 'outfile')
                     {
-                        reason = '禁止使用 INTO OUTFILE 语句'
+                        reason = _("SQLi - Detected INTO OUTFILE phrase in sql query")
                         break
                     }
                 }
@@ -673,7 +686,7 @@ if (RASP.get_jsengine() !== 'v8') {
             if (reason !== false) {
                 return {
                     action:     algorithmConfig.sqli_policy.action,
-                    message:    '算法3: 数据库语句异常: ' + reason,
+                    message:    reason,
                     confidence: 100
                 }
             }
@@ -700,7 +713,7 @@ if (RASP.get_jsengine() !== 'v8') {
             {
                 return {
                     action:    algorithmConfig.ssrf_userinput.action,
-                    message:   'SSRF攻击 - 访问内网地址: ' + ip[0],
+                    message:   _("SSRF - Requesting intranet address: %1%", [ ip[0] ]),
                     confidence: 100
                 }
             }
@@ -712,8 +725,8 @@ if (RASP.get_jsengine() !== 'v8') {
             if (isHostnameDNSLOG(hostname))
             {
                 return {
-                    action:    algorithmConfig.ssrf_common.action,
-                    message:   'SSRF攻击 - 访问已知的内网探测域名',
+                    action:     algorithmConfig.ssrf_common.action,
+                    message:    _("SSRF - Requesting known DNSLOG address: %1%", [hostname]),
                     confidence: 100
                 }
             }
@@ -726,7 +739,7 @@ if (RASP.get_jsengine() !== 'v8') {
             {
                 return {
                     action:    algorithmConfig.ssrf_aws.action,
-                    message:   'SSRF攻击 - 读取 AWS metadata',
+                    message:   _("SSRF - Requesting AWS metadata address"),
                     confidence: 100
                 }
             }
@@ -747,18 +760,18 @@ if (RASP.get_jsengine() !== 'v8') {
 
             if (Number.isInteger(hostname))
             {
-                reason = '尝试使用纯数字IP'
+                reason = _("SSRF - Requesting numeric IP address: %1%", [hostname])
             }
             else if (hostname.startsWith('0x') && hostname.indexOf('.') === -1)
             {
-                reason = '尝试使用16进制IP'
+                reason = _("SSRF - Requesting hexadecimal IP address: %1%", [hostname])
             }
 
             if (reason)
             {
                 return {
-                    action:    algorithmConfig.ssrf_obfuscate.action,
-                    message:   'SSRF攻击 - IP地址混淆 - ' + reason,
+                    action:     algorithmConfig.ssrf_obfuscate.action,
+                    message:    reason,
                     confidence: 100
                 }
             }
@@ -774,7 +787,7 @@ if (RASP.get_jsengine() !== 'v8') {
             {
                 return {
                     action:    algorithmConfig.ssrf_protocol.action,
-                    message:   'SSRF攻击 - 尝试使用 ' + proto + ' 协议',
+                    message:   _("SSRF - Using dangerous protocol: %1%://", [proto]),
                     confidence: 100
                 }
             }
@@ -803,7 +816,7 @@ plugin.register('directory', function (params, context) {
             if (realpath == forcefulBrowsing.unwantedDirectory[i]) {
                 return {
                     action:     algorithmConfig.directory_unwanted.action,
-                    message:    'WebShell文件管理器 - 读取敏感目录',
+                    message:    _("WebShell activity - Accessing sensitive folder: %1%", [realpath]),
                     confidence: 100
                 }
             }
@@ -817,7 +830,7 @@ plugin.register('directory', function (params, context) {
         {
             return {
                 action:     algorithmConfig.directory_outsideWebroot.action,
-                message:    '尝试列出Web目录以外的目录',
+                message:    _("Directory traversal - Accessing directory outside webroot (%1%), directory is %2%", [appBasePath, realpath]),
                 confidence: 90
             }
         }
@@ -832,7 +845,7 @@ plugin.register('directory', function (params, context) {
         {
             return {
                 action:     algorithmConfig.directory_reflect.action,
-                message:    '发现 Webshell，或者其他eval类型的后门',
+                message:    _("WebShell activity - Using file manager function with China Chopper WebShell"),
                 confidence: 90
             }
         }
@@ -874,7 +887,10 @@ plugin.register('readFile', function (params, context) {
             if (matched) {
                 return {
                     action:     'log',
-                    message:    '尝试下载敏感文件 (' + context.method.toUpperCase() + ' 方式): ' + params.realpath,
+                    message:    _("Forceful browsing - Downloading sensitive file %1% (HTTP method %2%)", [
+                        params.realpath, 
+                        context.method.toUpperCase()
+                    ]),
 
                     // 如果是HEAD方式下载敏感文件，100% 扫描器攻击
                     confidence: context.method == 'head' ? 100 : 90
@@ -895,7 +911,7 @@ plugin.register('readFile', function (params, context) {
             if (forcefulBrowsing.absolutePaths[j] == realpath_lc) {
                 return {
                     action:     algorithmConfig.readFile_unwanted.action,
-                    message:    'WebShell/文件管理器 - 尝试读取系统文件: ' + params.realpath,
+                    message:    _("WebShell activity - accessing sensitive file %1%", [params.realpath]),
                     confidence: 90
                 }
             }
@@ -914,7 +930,7 @@ plugin.register('readFile', function (params, context) {
         if (is_outside_webroot(appBasePath, params.realpath, path)) {
             return {
                 action:     algorithmConfig.readFile_traversal.action,
-                message:    '目录遍历攻击，跳出web目录范围 (' + appBasePath + ')',
+                message:    _("Path traversal - accessing files outside webroot (%1%), file is %2%", [appBasePath, params.realpath]),
                 confidence: 90
             }
         }
@@ -938,7 +954,7 @@ plugin.register('readFile', function (params, context) {
             {
                 return {
                     action:     algorithmConfig.readFile_userinput.action,
-                    message:    '任意文件下载攻击（绝对路径），目标文件: ' + params.realpath,
+                    message:    _("Path traversal - Downloading files with absolute path, file is %1%", [params.realpath]),
                     confidence: 90
                 }
             }
@@ -949,7 +965,7 @@ plugin.register('readFile', function (params, context) {
             {
                 return {
                     action:     algorithmConfig.readFile_userinput.action,
-                    message:    '任意文件下载攻击（相对路径），目标文件: ' + params.realpath,
+                    message:    _("Path traversal - Downloading files with relative path, file is %1%", [params.realpath]),
                     confidence: 90
                 }
             }
@@ -965,7 +981,7 @@ plugin.register('readFile', function (params, context) {
                 {
                     return {
                         action:     algorithmConfig.readFile_userinput_http.action,
-                        message:    '任意文件读取，目标URL: ' + params.path,
+                        message:    _("SSRF - Requesting http/https resource with file streaming functions, URL is %1%", [params.path]),
                         confidence: 90
                     }
                 }
@@ -980,7 +996,7 @@ plugin.register('readFile', function (params, context) {
                 {
                     return {
                         action:     algorithmConfig.readFile_userinput_unwanted.action,
-                        message:    '任意文件读取，目标文件: ' + params.path,
+                        message:    _("Path traversal - Requesting unwanted protocol %1%", [proto]),
                         confidence: 90
                     }
                 }
@@ -1006,7 +1022,7 @@ plugin.register('include', function (params, context) {
         {
             return {
                 action:     algorithmConfig.include_outsideWebroot.action,
-                message:    '任意文件包含攻击，包含web目录范围之外的文件 (' + appBasePath + ')',
+                message:    _("File inclusion - including files outside webroot", [appBasePath]),
                 confidence: 100
             }
         }
@@ -1028,7 +1044,7 @@ plugin.register('include', function (params, context) {
         {
             return {
                 action:     algorithmConfig.include_protocol.action,
-                message:    '文件包含攻击: ' + proto + '协议 + ' + params.function + '() 函数',
+                message:    _("File inclusion - using unwanted protocol %1% with funtion %2%()", [proto, params.function]),
                 confidence: 90
             }
         }
@@ -1076,7 +1092,7 @@ plugin.register('writeFile', function (params, context) {
         if (ntfsRegex.test(params.realpath)) {
             return {
                 action:     algorithmConfig.writeFile_NTFS.action,
-                message:    '尝试利用NTFS流上传后门: ' + params.realpath,
+                message:    _("File write - Writing NTFS alternative data streams", [params.realpath]),
                 confidence: 90
             }
         }
@@ -1089,7 +1105,7 @@ plugin.register('writeFile', function (params, context) {
         if (scriptFileRegex.test(params.realpath)) {
             return {
                 action:     algorithmConfig.writeFile_PUT_script.action,
-                message:    '使用 PUT 方式上传脚本文件，路径: ' + params.realpath,
+                message:    _("File upload - Using HTTP PUT method to upload a webshell", [params.realpath]),
                 confidence: 90
             }
         }
@@ -1102,7 +1118,7 @@ plugin.register('writeFile', function (params, context) {
         if (scriptFileRegex.test(params.realpath)) {
             return {
                 action:     algorithmConfig.writeFile_script.action,
-                message:    '尝试写入脚本文件，路径: ' + params.realpath,
+                message:    _("File write - Creating or appending to a server-side script file, file is %1%", [params.realpath]),
                 confidence: 90
             }
         }
@@ -1119,7 +1135,7 @@ if (algorithmConfig.fileUpload_multipart.action != 'ignore')
         if (scriptFileRegex.test(params.filename) || ntfsRegex.test(params.filename)) {
             return {
                 action:     algorithmConfig.fileUpload_multipart.action,
-                message:    '尝试上传脚本文件: ' + params.filename,
+                message:    _("File upload - Uploading a server-side script file with multipart/form-data protocol", [params.filename]),
                 confidence: 90
             }
         }
@@ -1127,7 +1143,7 @@ if (algorithmConfig.fileUpload_multipart.action != 'ignore')
         if (params.filename == ".htaccess" || params.filename == ".user.ini") {
             return {
                 action:     algorithmConfig.fileUpload_multipart.action,
-                message:    '尝试上传 Apache/PHP 配置文件: ' + params.filename,
+                message:    _("File upload - Uploading a server-side config file with multipart/form-data protocol", [params.filename]),
                 confidence: 90
             }
         }
@@ -1146,7 +1162,9 @@ if (algorithmConfig.fileUpload_webdav.action != 'ignore')
         {
             return {
                 action:    algorithmConfig.fileUpload_webdav.action,
-                message:   '尝试通过 ' + context.method + ' 方式上传脚本文件: ' + params.dest,
+                message:   _("File upload - Uploading a server-side script file with HTTP method %1%, file is %2%", [
+                    context.method, params.dest
+                ]),
                 confidence: 100
             }
         }
@@ -1164,7 +1182,9 @@ if (algorithmConfig.rename_webshell.action != 'ignore')
         {
             return {
                 action:    algorithmConfig.rename_webshell.action,
-                message:   '重命名方式获取 webshell，源文件: ' + params.source,
+                message:   _("File upload - Renaming a non-script file to server-side script file, source file is %1%", [
+                    params.source
+                ]),
                 confidence: 100
             }
         }
@@ -1186,26 +1206,26 @@ plugin.register('command', function (params, context) {
         if (server.language == 'java') {
             var userCode = false
             var known    = {
-                'java.lang.reflect.Method.invoke':                                              '尝试通过反射执行命令',
-                'ognl.OgnlRuntime.invokeMethod':                                                '尝试通过 OGNL 代码执行命令',
-                'com.thoughtworks.xstream.XStream.unmarshal':                                   '尝试通过 xstream 反序列化执行命令',
-                'org.apache.commons.collections4.functors.InvokerTransformer.transform':        '尝试通过 transformer 反序列化执行命令',
-                'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':                   '尝试通过 JNDI 注入方式执行命令',
-                'com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze':     '尝试通过 fastjson 反序列化方式执行命令',
-                'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': '尝试通过 Spring SpEL 表达式执行命令',
-                'freemarker.template.utility.Execute.exec':                                     '尝试通过 FreeMarker 模板执行命令'
+                'java.lang.reflect.Method.invoke':                                              _("Reflected command execution - Unknown vulnerability detected"),
+                'ognl.OgnlRuntime.invokeMethod':                                                _("Reflected command execution - Using OGNL library"),
+                'com.thoughtworks.xstream.XStream.unmarshal':                                   _("Reflected command execution - Using xstream library"),
+                'org.apache.commons.collections4.functors.InvokerTransformer.transform':        _("Reflected command execution - Using Transformer library"),
+                'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':                   _("Reflected command execution - Using JNDI library"),
+                'com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze':     _("Reflected command execution - Using fastjson library"),
+                'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': _("Reflected command execution - Using SpEL expressions"),
+                'freemarker.template.utility.Execute.exec':                                     _("Reflected command execution - Using FreeMarker template"),
             }
 
             for (var i = 2; i < params.stack.length; i ++) {
                 var method = params.stack[i]
 
                 if (method.startsWith('ysoserial.Pwner')) {
-                    message = 'YsoSerial 漏洞利用工具 - 反序列化攻击'
+                    message = _("Reflected command execution - Using YsoSerial tool")
                     break
                 }
 
                 if (method == 'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute') {
-                    message = '尝试通过 Groovy 脚本执行命令'
+                    message = _("Reflected command execution - Using Groovy library")
                     break
                 }
 
@@ -1230,7 +1250,7 @@ plugin.register('command', function (params, context) {
         // PHP 检测逻辑
         else if (server.language == 'php' && validate_stack_php(params.stack))
         {
-            message = '发现 Webshell，或者基于 eval/assert/create_function/preg_replace/.. 等类型的代码执行漏洞'
+            message = _("WebShell activity - Detected reflected command execution")
         }
 
         if (message)
@@ -1251,18 +1271,13 @@ plugin.register('command', function (params, context) {
 
     // 算法2: 匹配用户输入
     if (algorithmConfig.command_userinput.action != 'ignore') {
-
-        // TODO: java/php 统一改为字符串
         var cmd = params.command
-        if (params.command instanceof Array) {
-            cmd = params.command.join(' ')
-        }
 
         // 全文匹配
         if (is_from_userinput(context.parameter, cmd)) {
             return {
                 action:     algorithmConfig.command_userinput.action,
-                message:    '发现命令执行后门',
+                message:    _("WebShell detected - Executing command %1%", [cmd]),
                 confidence: 100
             }
         }
@@ -1270,13 +1285,13 @@ plugin.register('command', function (params, context) {
         // 1.0 之前会增加命令注入检测，以及一个bash/cmd解释器，请耐心等待~
     }
 
-    // 算法3: 拦截所有的命令执行
+    // 算法3: 记录所有的命令执行
     if (algorithmConfig.command_other.action == 'ignore') {
         return clean
     } else {
         return {
             action:     algorithmConfig.command_other.action,
-            message:    '尝试执行命令',
+            message:    _("Command execution - Logging all command execution by default, command is %1%", [cmd]),
             confidence: 90
         }
     }
@@ -1297,7 +1312,7 @@ plugin.register('xxe', function (params, context) {
             if (algorithmConfig.xxe_protocol.protocols.indexOf(protocol) != -1) {
                 return {
                     action:     algorithmConfig.xxe_protocol.action,
-                    message:    'SSRF/Blind XXE 攻击 (' + protocol + ' 协议)',
+                    message:    _("XXE - Using dangerous protocol %1%", [protocol]),
                     confidence: 100
                 }
             }
@@ -1308,13 +1323,16 @@ plugin.register('xxe', function (params, context) {
         //
         // 相对路径容易误报, e.g
         // file://xwork.dtd
-        if (address.length > 0 && protocol === 'file' && address[0] == '/') {
-            return {
-                action:     'log',
-                message:    '尝试读取外部实体 (file 协议)',
-                confidence: 90
-            }
+        if (algorithmConfig.xxe_file.action != 'ignore') {
+            if (address.length > 0 && protocol === 'file' && address[0] == '/') {
+                return {
+                    action:     algorithmConfig.xxe_file.action,
+                    message:    _("XXE - Accessing file %1%", [address]),
+                    confidence: 90
+                }
+            } 
         }
+
     }
     return clean
 })
@@ -1349,7 +1367,7 @@ if (algorithmConfig.ognl_exec.action != 'ignore')
             {
                 return {
                     action:     algorithmConfig.ognl_exec.action,
-                    message:    '尝试ognl远程命令执行',
+                    message:    _("OGNL exec - Trying to exploit a OGNL expression vulnerability"),
                     confidence: 100
                 }
             }
@@ -1359,8 +1377,6 @@ if (algorithmConfig.ognl_exec.action != 'ignore')
     })
 }
 
-
-// [[ 近期调整~ ]]
 if (algorithmConfig.transformer_deser.action != 'ignore') {
     plugin.register('deserialization', function (params, context) {
         var deserializationInvalidClazz = [
@@ -1379,7 +1395,7 @@ if (algorithmConfig.transformer_deser.action != 'ignore') {
             if (clazz === deserializationInvalidClazz[index]) {
                 return {
                     action:     algorithmConfig.transformer_deser.action,
-                    message:    '尝试反序列化攻击',
+                    message:    _("Transformer deserialization - unknown deserialize vulnerability detected"),
                     confidence: 100
                 }
             }
@@ -1388,4 +1404,6 @@ if (algorithmConfig.transformer_deser.action != 'ignore') {
     })
 }
 
-plugin.log('官方插件: 初始化成功')
+plugin.log('OpenRASP official plugin: Plugin initialized')
+
+
