@@ -918,7 +918,7 @@ plugin.register('readFile', function (params, context) {
             if (forcefulBrowsing.absolutePaths[j] == realpath_lc) {
                 return {
                     action:     algorithmConfig.readFile_unwanted.action,
-                    message:    _("WebShell activity - accessing sensitive file %1%", [params.realpath]),
+                    message:    _("WebShell activity - Accessing sensitive file %1%", [params.realpath]),
                     confidence: 90
                 }
             }
