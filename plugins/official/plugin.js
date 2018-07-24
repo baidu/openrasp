@@ -1,19 +1,26 @@
-//
-// OpenRASP 官方插件已经覆盖了一定的攻击场景，具体检测能力请根据业务来定制
-// 如果想了解具体能检测哪些攻击，覆盖哪些已知漏洞，请参考下面两个链接
-//
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// 常用链接
+// 
 // Web 攻击检测能力说明、零规则检测算法介绍
 // https://rasp.baidu.com/doc/usage/web.html
 //
 // CVE 漏洞覆盖说明
 // https://rasp.baidu.com/doc/usage/cve.html
-//
-// OpenRASP 最佳实践
-// https://rasp.baidu.com/#section-books
-//
-// 如果你发现这个插件可以绕过，请联系我们，或者在 github 提交 ISSUE
-// https://rasp.baidu.com/doc/aboutus/support.html
-//
 
 'use strict'
 var plugin  = new RASP('offical')
@@ -1277,7 +1284,7 @@ plugin.register('command', function (params, context) {
         if (is_from_userinput(context.parameter, cmd)) {
             return {
                 action:     algorithmConfig.command_userinput.action,
-                message:    _("WebShell detected - Executing command %1%", [cmd]),
+                message:    _("WebShell detected - Executing command: %1%", [cmd]),
                 confidence: 100
             }
         }
@@ -1404,6 +1411,6 @@ if (algorithmConfig.transformer_deser.action != 'ignore') {
     })
 }
 
-plugin.log('OpenRASP official plugin: Plugin initialized')
+plugin.log('OpenRASP default plugin: Initialized')
 
 
