@@ -52,7 +52,7 @@ static inline void openrasp_webshell_command_common(INTERNAL_FUNCTION_PARAMETERS
         add_assoc_zval(&attack_params, "command", command);
         Z_ADDREF_P(command);
         zval plugin_message;
-        ZVAL_STRING(&plugin_message, _("Webshell detected - Command execution backdoor"));
+        ZVAL_STRING(&plugin_message, _("WebShell activity - Detected command execution backdoor"));
         openrasp_buildin_php_risk_handle(1, "webshell_command", 100, &attack_params, &plugin_message);
     }
 }

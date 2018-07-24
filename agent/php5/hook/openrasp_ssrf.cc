@@ -139,7 +139,7 @@ void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *fun
         zval *plugin_message = NULL;
         MAKE_STD_ZVAL(plugin_message);
         char *message_str = NULL;
-        spprintf(&message_str, 0, _("Detected SSRF via 302 redirect, effective url is %s"), Z_STRVAL(effective_url));
+        spprintf(&message_str, 0, _("SSRF - Detected SSRF via 302 redirect, current effective url is %s"), Z_STRVAL(effective_url));
         ZVAL_STRING(plugin_message, message_str, 1);
         efree(message_str);
         openrasp_buildin_php_risk_handle(1, check_type, 100, attack_params, plugin_message TSRMLS_CC);       

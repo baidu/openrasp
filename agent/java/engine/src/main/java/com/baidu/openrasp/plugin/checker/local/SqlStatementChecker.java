@@ -79,7 +79,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                     if (value.length() == query.length() && value.equals(query)) {
                         String managerAction = getActionElement(config, CONFIG_KEY_DB_MANAGER);
                         if (!EventInfo.CHECK_ACTION_IGNORE.equals(managerAction) && managerAction != null) {
-                            message = "算法2: WebShell - 数据库管理器 - 攻击参数: " + entry.getKey();
+                            message = "SQLi - Database manager detected, request parameter name: " + entry.getKey();
                             action = managerAction;
                             break;
                         } else {
@@ -92,7 +92,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                     String[] tokens2 = TokenGenerator.tokenize(query.replace(value, ""), tokenizeErrorListener);
                     if (tokens != null) {
                         if (tokens.length - tokens2.length > 2) {
-                            message = "算法1: 数据库查询逻辑发生改变 - 攻击参数: " + entry.getKey();
+                            message = "SQLi - SQL query structure altered by user input, request parameter name: " + entry.getKey();
                             break;
                         }
                     }
@@ -128,7 +128,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                     // NULL,NULL,NULL == 5个token
                                     // 1,2,3          == 5个token
                                     if (nullCount >= 5) {
-                                        message = "UNION-NULL 方式注入 - 字段类型探测";
+                                        message = "SQLi - Detected UNION-NULL phrase in sql query";
                                         break;
                                     }
                                     continue;
@@ -136,17 +136,17 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                 if (lt.equals(";") && i != tokens.length - 1
                                         && modules.containsKey(CONFIG_KEY_STACKED_QUERY)
                                         && modules.get(CONFIG_KEY_STACKED_QUERY)) {
-                                    message = "禁止多语句查询";
+                                    message = "SQLi - Detected stacked queries";
                                     break;
                                 } else if (lt.startsWith("0x")
                                         && modules.containsKey(CONFIG_KEY_NO_HEX)
                                         && modules.get(CONFIG_KEY_NO_HEX)) {
-                                    message = "禁止16进制字符串";
+                                    message = "SQLi - Detected hexadecimal values in sql query";
                                     break;
                                 } else if (lt.startsWith("/*!")
                                         && modules.containsKey(CONFIG_KEY_VERSION_COMMENT)
                                         && modules.get(CONFIG_KEY_VERSION_COMMENT)) {
-                                    message = "禁止MySQL版本号注释";
+                                    message = "SQLi - Detected MySQL version comment in sql query";
                                     break;
                                 } else if (i > 0 && i < tokens.length - 2 && (lt.equals("xor")
                                         || lt.charAt(0) == '<'
@@ -164,7 +164,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                         } catch (Exception e) {
                                             // ignore
                                         }
-                                        message = "禁止常量比较操作: " + op1 + " vs " + op2;
+                                        message = "SQLi - Detected blind sql injection attack: comparing " + op1 + " against " + op2;
                                         break;
                                     }
                                 } else if (i > 0 && tokens[i].indexOf('(') == 0
@@ -173,13 +173,13 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                     // FIXME: 可绕过，暂时不更新
                                     HashMap<String, Boolean> funBlackList = getJsonObjectAsMap(config, CONFIG_KEY_SQLI_POLICY, "function_blacklist");
                                     if (funBlackList.containsKey(tokens[i - 1]) && funBlackList.get(tokens[i - 1])) {
-                                        message = "禁止执行敏感函数: " + tokens[i - 1];
+                                        message = "SQLi - Detected dangerous method call " + tokens[i - 1] + "() in sql query";
                                         break;
                                     }
                                 } else if (i < tokens.length - 2 && tokens[i].equals("into") && tokens[i + 1].equals("outfile")
                                         && modules.containsKey(CONFIG_KEY_INTO_OUTFILE)
                                         && modules.get(CONFIG_KEY_INTO_OUTFILE)) {
-                                    message = "禁止使用 INTO OUTFILE 语句";
+                                    message = "SQLi - Detected INTO OUTFILE phrase in sql query";
                                     break;
                                 }
                             }
@@ -192,7 +192,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                 }
             }
         } catch (Exception e) {
-            JSContext.LOGGER.warn("An error occurred while the local sql plugin was detecting, because:" + e.getMessage());
+            JSContext.LOGGER.warn("Exception while running builtin sqli plugin: " + e.getMessage());
         }
 
         // js 插件检测

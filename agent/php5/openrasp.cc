@@ -82,7 +82,7 @@ PHP_MINIT_FUNCTION(openrasp)
     REGISTER_INI_ENTRIES();
     if (!make_openrasp_root_dir(TSRMLS_C))
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir should be configured correctly in php.ini (not empty, not root path, not relative path and writable), continue without security protection"));
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir is not configured correctly in php.ini (not empty, not root path, not relative path and must be writable), continuing without security protection"));
         return SUCCESS;
     }
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
@@ -222,16 +222,16 @@ static bool make_openrasp_root_dir(TSRMLS_D)
         std::string locale_path(root_dir + DEFAULT_SLASH + "locale" + DEFAULT_SLASH);
         if (!bindtextdomain(GETTEXT_PACKAGE, locale_path.c_str()))
         {
-            openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to bindtextdomain - %s"), strerror(errno));
+            openrasp_error(E_WARNING, CONFIG_ERROR, _("bindtextdomain() failed: %s"), strerror(errno));
         }
         if (!textdomain(GETTEXT_PACKAGE))
         {
-            openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to textdomain - %s"), strerror(errno));
+            openrasp_error(E_WARNING, CONFIG_ERROR, _("textdomain() failed: %s"), strerror(errno));
         }
     }
     else
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("Unable to set OpenRASP locale to '%s'"), openrasp_ini.locale);
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("Unable to set OpenRASP locale to %s"), openrasp_ini.locale);
     }
 #endif
     return true;
