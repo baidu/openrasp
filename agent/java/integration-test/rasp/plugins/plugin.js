@@ -102,7 +102,7 @@ plugin.register('sql', function (params, context) {
 plugin.register('command', function (params, context) {
     checkContext(context);
     plugin.log('command', params);
-    if (params.command[0] === 'pwd') {
+    if (params.command === 'pwd') {
         return {
             action: 'block'
         }
