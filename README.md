@@ -15,7 +15,7 @@ When an attack happens, WAF matches the malicious request with its signatures an
 
 ### Quick Start
 
-See detailed installation instructions [here](https://rasp.baidu.com/doc/install/main.html)
+See detailed installation instructions [here](https://github.com/baidu/openrasp/wiki/Installation)
 
 We also provide a few test cases that are corresponding to OWASP TOP 10 attacks, [download here](https://rasp.baidu.com/doc/install/testcase.html)
 
