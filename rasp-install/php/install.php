@@ -141,7 +141,10 @@ $shortopts = "d:h";
 $longopts = array("ignore-ini", "ignore-plugin");
 $options = getopt($shortopts, $longopts);
 if (array_key_exists("d", $options) && !empty($options["d"])) {
-	$root_dir = $options["d"];
+	$root_dir = realpath($options["d"]);
+	if (empty ($root_dir)) {
+		log_tips(ERROR, "Can't resolve realpath of " . $options["d"], ": no such directory.");
+	}
 	log_tips(INFO, "openrasp.root_dir => ".$root_dir);
 } else if (array_key_exists("h", $options)) {
 	show_help($install_help_msg);
