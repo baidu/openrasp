@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+extern "C"
+{
+    #include <stdio.h>
+}
+#include <string.h>
 #include <unistd.h>
 #include "openrasp_ctrl_block.h"
 
@@ -48,6 +53,16 @@ void OpenraspCtrlBlock::set_log_agent_id(unsigned long log_agent_id)
 unsigned long OpenraspCtrlBlock::get_log_agent_id()
 {
     return _log_agent_id;
+}
+
+void OpenraspCtrlBlock::set_plugin_md5(std::string plugin_md5)
+{
+    strncpy(_plugin_md5, plugin_md5.c_str(), 32);
+}
+
+const char *OpenraspCtrlBlock::get_plugin_md5()
+{
+    return _plugin_md5;
 }
 
 } // namespace openrasp

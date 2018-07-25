@@ -32,7 +32,7 @@ extern "C"
 #include "ext/json/php_json.h"
 }
 
-#define DEFAULT_PLUGIN_AUTORELOAD_INTERVAL 10
+#define DEFAULT_PLUGIN_AUTORELOAD_INTERVAL 120
 #define DEFAULT_LOG_AUTORELOAD_INTERVAL 10
 
 namespace openrasp
@@ -75,6 +75,7 @@ void PluginAgentRunner::run()
   OPENRASP_SET_PROC_NAME("plugin-agent");
   install_signal_handler();
   std::string _root_dir(openrasp_ini.root_dir);
+  TSRMLS_FETCH();
   while (true)
   {
     for (int i = 0; i < _autoreload_interval; ++i)
@@ -92,6 +93,7 @@ void PluginAgentRunner::run()
       curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
       curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 50L);
       curl_easy_setopt(curl, CURLOPT_TCP_KEEPALIVE, 1L);
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 
       std::string response_string;
       std::string header_string;

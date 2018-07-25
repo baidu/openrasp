@@ -143,7 +143,6 @@ static void supervisor_sigchld_handler(int signal_no)
 	int status;
 	while ((p = waitpid(-1, &status, WNOHANG)) > 0)
 	{
-		rasp_info("pid die", strlen("pid die") TSRMLS_CC);
 		/* Handle the death of pid p */
 		// TODO update agent_list
 	}
@@ -151,7 +150,7 @@ static void supervisor_sigchld_handler(int signal_no)
 
 int OpenraspAgentManager::_write_local_plugin_md5_to_shm()
 {
-	std::ifstream ifs(_root_dir + "plugins/offical.js");
+	std::ifstream ifs(_root_dir + "/plugins/offical.js");
 	if (ifs.good())
 	{
 		std::stringstream buffer;

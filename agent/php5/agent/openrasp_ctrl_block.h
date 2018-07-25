@@ -31,13 +31,13 @@ class OpenraspCtrlBlock
     void set_log_agent_id(unsigned long log_agent_id);
     unsigned long get_log_agent_id();
     void set_plugin_md5(std::string plugin_md5);
-    std::string get_plugin_md5();
+    const char *get_plugin_md5();
 
   private:
     unsigned long _plugin_agent_id = 0;
     unsigned long _log_agent_id = 0;
     pid_t _supervisor_id;
-    std::string _plugin_md5;
+    char _plugin_md5[33];
 };
 
 } // namespace openrasp
