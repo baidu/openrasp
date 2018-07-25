@@ -97,7 +97,7 @@ PHP_MINIT_FUNCTION(openrasp)
     result = PHP_MINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
-    result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
+    // result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
     is_initialized = true;
     return SUCCESS;
 }
@@ -107,7 +107,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
     if (is_initialized)
     {
         int result;
-        result = PHP_MSHUTDOWN(openrasp_fswatch)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
+        // result = PHP_MSHUTDOWN(openrasp_fswatch)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_inject)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_hook)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_v8)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
