@@ -487,6 +487,11 @@ int main() {
     openrasp_security_policy.cc \
     openrasp_ini.cc \
     openrasp_fswatch.cc \
+    agent/openrasp_ctrl_block.cc \
+    agent/openrasp_agent_manager.cc \
+    agent/openrasp_agent_runner.cc \
+    agent/utils/digest.cc \
+    agent/mm/shm_manager.cc \
     $LIBFSWATCH_SOURCE \
     $ANTLR4_SOURCES \
     , $ext_shared)
