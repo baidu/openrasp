@@ -1310,6 +1310,17 @@ plugin.register('command', function (params, context) {
 plugin.register('xxe', function (params, context) {
     var items = params.entity.split('://')
 
+    if (algorithmConfig.xxe_protocol.action != 'ignore') {
+        // 检查 windows + SMB 协议，防止泄露 NTLM 信息
+        if (params.entity.startsWith('\\\\')) {
+            return {
+                action:     algorithmConfig.xxe_protocol.action,
+                message:    _("XXE - Using dangerous protocol SMB"),
+                confidence: 100
+            }                
+        }        
+    }
+
     if (items.length >= 2) {
         var protocol = items[0]
         var address  = items[1]
@@ -1324,14 +1335,6 @@ plugin.register('xxe', function (params, context) {
                 }
             }
 
-            // 检查 windows + SMB 协议，防止泄露 NTLM 信息
-            if (params.entity.startsWith('\\\\')) {
-                return {
-                    action:     algorithmConfig.xxe_protocol.action,
-                    message:    _("XXE - Using dangerous protocol SMB"),
-                    confidence: 100
-                }                
-            }
         }
 
         // file 协议 + 绝对路径, e.g
