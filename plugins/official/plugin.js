@@ -1323,6 +1323,15 @@ plugin.register('xxe', function (params, context) {
                     confidence: 100
                 }
             }
+
+            // 检查 windows + SMB 协议，防止泄露 NTLM 信息
+            if (params.entity.startsWith('\\\\')) {
+                return {
+                    action:     algorithmConfig.xxe_protocol.action,
+                    message:    _("XXE - Using dangerous protocol SMB"),
+                    confidence: 100
+                }                
+            }
         }
 
         // file 协议 + 绝对路径, e.g
