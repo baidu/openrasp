@@ -176,7 +176,8 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                         message = "SQLi - Detected dangerous method call " + tokens[i - 1] + "() in sql query";
                                         break;
                                     }
-                                } else if (i < tokens.length - 2 && tokens[i].equals("into") && tokens[i + 1].equals("outfile")
+                                } else if (i < tokens.length - 2 && tokens[i].equals("into") 
+                                        && (tokens[i + 1].equals("outfile") || tokens[i + 1].equals("dupfile"))
                                         && modules.containsKey(CONFIG_KEY_INTO_OUTFILE)
                                         && modules.get(CONFIG_KEY_INTO_OUTFILE)) {
                                     message = "SQLi - Detected INTO OUTFILE phrase in sql query";

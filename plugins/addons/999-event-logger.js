@@ -1,5 +1,5 @@
 //
-// OpenRASP 事件记录插件 - DEMO
+// OpenRASP plugin: event logger demo
 // 
 
 'use strict'
@@ -7,32 +7,32 @@ var plugin  = new RASP('event-logger')
 
 const clean = {
     action:     'ignore',
-    message:    '无风险',
+    message:    'Looks fine to me',
     confidence: 0
 }
 
 plugin.register('directory', function (params, context) {
-    plugin.log('列出目录: ' + params.realpath)
+    plugin.log('Listing directory content: ' + params.realpath)
     return clean
 })
 
 plugin.register('webdav', function (params, context) {
-    plugin.log('使用WEBDAV操作文件: ', context.method, params.source, params.dest)
+    plugin.log('Webdav operation: ', context.method, params.source, params.dest)
     return clean
 })
 
 plugin.register('fileUpload', function (params, context) {
-    plugin.log('文件上传: ' + params.filename)
+    plugin.log('File upload: ' + params.filename)
     return clean
 })
 
  plugin.register('rename', function (params, context) {
-    plugin.log('文件重命名: ' + params.source + ' -> ' + params.dest)  
+    plugin.log('Rename file - From ' + params.source + ' to ' + params.dest)  
     return clean
 })
 
 plugin.register('command', function (params, context) {
-    plugin.log('命令执行: ' + params.command)
+    plugin.log('Execute command: ' + params.command)
     return clean
 })
 
@@ -40,28 +40,28 @@ plugin.register('command', function (params, context) {
 // 这个30可以配置，aka "ognl.expression.minlength"
 // https://rasp.baidu.com/doc/setup/others.html
 plugin.register('ognl', function (params, context) {
-    plugin.log('执行OGNL表达式: ' + params.expression)
+    plugin.log('Evaluating OGNL expression: ' + params.expression)
     return clean
 })
 
 // 下面的这些方法，可能产生大量日志
 plugin.register('xxe', function (params, context) {
-    plugin.log('读取XML外部实体: ' + params.entity)
+    plugin.log('Loading XML entity: ' + params.entity)
     return clean
 })
 
 plugin.register('include', function (params, context) {
-    plugin.log('文件包含: ' + params.url)
+    plugin.log('Include file: ' + params.url)
     return clean
 })
 
 plugin.register('readFile', function (params, context) {
-    plugin.log('读取文件: ' + params.realpath)
+    plugin.log('Read file: ' + params.realpath)
     return clean
 })
 
 plugin.register('writeFile', function (params, context) {
-    plugin.log('文件写入: ' + params.realpath)
+    plugin.log('Write file: ' + params.realpath)
     return clean
 })
 
@@ -85,10 +85,10 @@ function normalize_query(query) {
 // 1. 查询语句中，可能包含敏感信息
 // 2. 日志量可能会很大
 plugin.register('sql', function (params, context) {
-    plugin.log('SQL查询: ' + normalize_query(params.query))
+    plugin.log('SQL query: ' + normalize_query(params.query))
     return clean
 })
 
-plugin.log('999-event-logger: 初始化成功')
+plugin.log('999-event-logger: plugin loaded')
 
 

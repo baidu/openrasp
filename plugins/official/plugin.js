@@ -682,7 +682,7 @@ if (RASP.get_jsengine() !== 'v8') {
                 }
                 else if (features['into_outfile'] && i < tokens_lc.length - 1 && tokens_lc[i] == 'into')
                 {
-                    if (tokens_lc[i + 1] == 'outfile')
+                    if (tokens_lc[i + 1] == 'outfile' || tokens_lc[i + 1] == 'dumpfile' )
                     {
                         reason = _("SQLi - Detected INTO OUTFILE phrase in sql query")
                         break
