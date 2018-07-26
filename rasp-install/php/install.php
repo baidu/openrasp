@@ -19,6 +19,9 @@ OpenRASP Installer for PHP servers - Copyright 2017-2018 Baidu Inc.
 For more details visit: https://rasp.baidu.com/doc/install/software.html
 
 <?php
+if (! defined ('__DIR__')) {
+	define('__DIR__', dirname (__FILE__));
+}
 include_once(__DIR__ . DIRECTORY_SEPARATOR .'util.php');
 
 //获取将要安装动态库绝对路径(get absolute path of lib to be installed)
@@ -143,7 +146,7 @@ $options = getopt($shortopts, $longopts);
 if (array_key_exists("d", $options) && !empty($options["d"])) {
 	$root_dir = realpath($options["d"]);
 	if (empty ($root_dir)) {
-		log_tips(ERROR, "Can't resolve realpath of " . $options["d"], ": no such directory.");
+		log_tips(ERROR, "Can't resolve realpath of " . $options["d"] . ": No such directory.");
 	}
 	log_tips(INFO, "openrasp.root_dir => ".$root_dir);
 } else if (array_key_exists("h", $options)) {
@@ -168,7 +171,7 @@ if (!is_writable($extension_dir)) {
 	log_tips(ERROR, "Extension directory '$extension_dir' is not writable, make sure you have write permissions");
 }
 if (!file_exists($lib_source_path)) {
-	log_tips(ERROR, "Unsupported system or php version: expecting '$lib_source_path' to be present.");
+	log_tips(ERROR, "Unsupported system or php version: " . phpversion() . "\nUname: " . php_uname() . "\nExpecting '$lib_source_path' to be present.");
 }
 $lib_dest_path = $extension_dir.DIRECTORY_SEPARATOR.$lib_filename;
 if (file_exists($lib_dest_path)
