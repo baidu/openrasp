@@ -215,7 +215,7 @@ void OpenraspAgentManager::supervisor_run()
 				}
 				else if (pid == 0)
 				{
-					OPENRASP_SET_PROC_NAME(ai.name);
+					OPENRASP_SET_PROC_NAME(ai.name.c_str());
 					if (ai.name == PLUGIN_AGENT_PR_NAME)
 					{
 						plugin_agent_run();
