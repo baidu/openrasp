@@ -22,6 +22,8 @@
 #include <sys/prctl.h>
 
 #define OPENRASP_SET_PROC_NAME(name) prctl(PR_SET_NAME, (name), 0, 0, 0)
+#define PLUGIN_AGENT_PR_NAME "plugin-agent"
+#define LOG_AGENT_PR_NAME "log-agent"
 
 namespace openrasp
 {
@@ -31,27 +33,29 @@ class OpenraspCtrlBlock;
 
 class OpenraspAgentManager
 {
-  public:
-    OpenraspAgentManager(ShmManager *mm);
+public:
+  OpenraspAgentManager(ShmManager *mm);
 
-    void supervisor_run();
+  void supervisor_run();
+  void plugin_agent_run();
+  void log_agent_run();
+  int startup();
+  int shutdown();
 
-    int startup();
-    int shutdown();
+private:
+  int _create_share_memory();
+  int _destroy_share_memory();
 
-  private:
-    int _create_share_memory();
-    int _destroy_share_memory();
+  int _agent_startup();
+  int _process_agent_startup();
 
-    int _agent_startup();
-    int _process_agent_startup();
+  int _write_local_plugin_md5_to_shm();
 
-    int _write_local_plugin_md5_to_shm();
-
-  private:
-    ShmManager *_mm;
-    OpenraspCtrlBlock *_agent_ctrl_block;
-    std::string _root_dir;
+private:
+  ShmManager *_mm;
+  OpenraspCtrlBlock *_agent_ctrl_block;
+  std::string _root_dir;
+  std::string _backend;
 };
 
 } // namespace openrasp

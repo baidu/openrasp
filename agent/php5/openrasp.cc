@@ -62,6 +62,9 @@ PHP_INI_ENTRY1("openrasp.timeout_ms", "100", PHP_INI_SYSTEM, OnUpdateOpenraspInt
 PHP_INI_ENTRY1("openrasp.block_status_code", "302", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.block_status_code)
 PHP_INI_ENTRY1("openrasp.plugin_maxstack", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.plugin_maxstack)
 PHP_INI_ENTRY1("openrasp.log_maxstack", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_maxstack)
+PHP_INI_ENTRY1("openrasp.backend", "http://cq02-scloud-csiemtest.cq02.baidu.com:8888", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.backend)
+PHP_INI_ENTRY1("openrasp.plugin_update_interval", "60", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.plugin_update_interval)
+PHP_INI_ENTRY1("openrasp.log_push_interval", "15", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_push_interval)
 PHP_INI_END()
 
 PHP_GINIT_FUNCTION(openrasp)
@@ -235,8 +238,17 @@ static bool make_openrasp_root_dir(TSRMLS_D)
         return false;
     }
     std::string root_dir(path);
+    std::string default_slash(1, DEFAULT_SLASH);
     efree(path);
-    std::vector<std::string> sub_dir_list{"assets", "conf", "logs", "plugins", "locale"};
+    std::vector<std::string> sub_dir_list{
+        "assets",
+        "conf",
+        "plugins",
+        "locale",
+        "logs" + default_slash + ALARM_LOG_DIR_NAME,
+        "logs" + default_slash + POLICY_LOG_DIR_NAME,
+        "logs" + default_slash + PLUGIN_LOG_DIR_NAME,
+        "logs" + default_slash + RASP_LOG_DIR_NAME};
     for (auto dir : sub_dir_list)
     {
         std::string path(root_dir + DEFAULT_SLASH + dir);

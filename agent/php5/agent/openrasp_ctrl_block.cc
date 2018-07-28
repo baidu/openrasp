@@ -55,14 +55,20 @@ unsigned long OpenraspCtrlBlock::get_log_agent_id()
     return _log_agent_id;
 }
 
-void OpenraspCtrlBlock::set_plugin_md5(std::string plugin_md5)
+void OpenraspCtrlBlock::set_plugin_md5(const char* plugin_md5)
 {
-    strncpy(_plugin_md5, plugin_md5.c_str(), 32);
+    strncpy(_plugin_md5, plugin_md5, 32);
+    _last_update_time = (long)time(nullptr);
 }
 
 const char *OpenraspCtrlBlock::get_plugin_md5()
 {
     return _plugin_md5;
+}
+
+long OpenraspCtrlBlock::get_last_update_time()
+{
+    return _last_update_time;
 }
 
 } // namespace openrasp

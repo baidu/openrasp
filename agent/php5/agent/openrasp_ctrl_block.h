@@ -23,21 +23,26 @@ namespace openrasp
 
 class OpenraspCtrlBlock
 {
-  public:
-    void set_supervisor_id(pid_t supervisor_id);
-    pid_t get_supervisor_id();
-    void set_plugin_agent_id(unsigned long plugin_agent_id);
-    unsigned long get_plugin_agent_id();
-    void set_log_agent_id(unsigned long log_agent_id);
-    unsigned long get_log_agent_id();
-    void set_plugin_md5(std::string plugin_md5);
-    const char *get_plugin_md5();
+public:
+  void set_supervisor_id(pid_t supervisor_id);
+  pid_t get_supervisor_id();
 
-  private:
-    unsigned long _plugin_agent_id = 0;
-    unsigned long _log_agent_id = 0;
-    pid_t _supervisor_id;
-    char _plugin_md5[33];
+  void set_plugin_agent_id(unsigned long plugin_agent_id);
+  unsigned long get_plugin_agent_id();
+
+  void set_log_agent_id(unsigned long log_agent_id);
+  unsigned long get_log_agent_id();
+
+  void set_plugin_md5(const char *plugin_md5);
+  const char *get_plugin_md5();
+  long get_last_update_time();
+
+private:
+  pid_t _supervisor_id;
+  unsigned long _plugin_agent_id = 0;
+  unsigned long _log_agent_id = 0;
+  char _plugin_md5[33];
+  long _last_update_time = 0;
 };
 
 } // namespace openrasp

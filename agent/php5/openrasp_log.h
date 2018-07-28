@@ -37,6 +37,11 @@ extern "C" {
 }
 #endif
 
+#define ALARM_LOG_DIR_NAME "alarm"
+#define POLICY_LOG_DIR_NAME "policy"
+#define PLUGIN_LOG_DIR_NAME "plugin"
+#define RASP_LOG_DIR_NAME "rasp"
+
 typedef enum log_appender_t {
 	  FILE_APPENDER = 1 << 0, 
     SYSLOG_APPENDER  = 1 << 1

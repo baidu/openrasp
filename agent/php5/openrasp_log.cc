@@ -695,10 +695,10 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
     openrasp_log_globals->in_request_process                = 0;
     openrasp_log_globals->last_retry_time                   = 0;
 
-    openrasp_log_globals->loggers[ALARM_LOGGER] = {"alarm",  0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
-    openrasp_log_globals->loggers[POLICY_LOGGER] = {"policy", 0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
-    openrasp_log_globals->loggers[PLUGIN_LOGGER] = {"plugin", 0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
-    openrasp_log_globals->loggers[RASP_LOGGER] = {"rasp",   0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
+    openrasp_log_globals->loggers[ALARM_LOGGER] = {ALARM_LOG_DIR_NAME,  0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
+    openrasp_log_globals->loggers[POLICY_LOGGER] = {POLICY_LOG_DIR_NAME, 0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
+    openrasp_log_globals->loggers[PLUGIN_LOGGER] = {PLUGIN_LOG_DIR_NAME, 0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
+    openrasp_log_globals->loggers[RASP_LOGGER] = {RASP_LOG_DIR_NAME,   0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
 
     log_appender alarm_appender = FILE_APPENDER;
     if (openrasp_ini.syslog_alarm_enable && openrasp_ini.syslog_server_address) {
