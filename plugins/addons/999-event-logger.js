@@ -26,8 +26,13 @@ plugin.register('fileUpload', function (params, context) {
     return clean
 })
 
- plugin.register('rename', function (params, context) {
+plugin.register('rename', function (params, context) {
     plugin.log('Rename file - From ' + params.source + ' to ' + params.dest)  
+    return clean
+})
+
+plugin.register('ssrf', function (params, context) {
+    plugin.log('SSRF requesting ' + params.url + ' (IP: ' + params.ip + ')')
     return clean
 })
 
