@@ -134,9 +134,18 @@ var algorithmConfig = {
         action: 'block',
         protocols: [
             'file',
-            'dict',
             'gopher',
-            'php'
+
+            // java specific
+            'jar',
+            'netloc',
+
+            // php specific
+            'dict',
+            'php',
+            'phar',
+            'compress.zlib',
+            'compress.bzip2'
         ]
     },
 
@@ -201,12 +210,23 @@ var algorithmConfig = {
     include_protocol: {
         action: 'block',
         protocols: [
+            'file',
+            'gopher',
+
+            // java specific
+            'jar',
+            'netloc',
+
+            // php stream
             'http',
             'https',
+
+            // php specific
+            'dict',
             'php',
-            'file',
-            'jar',
-            'netloc'
+            'phar',
+            'compress.zlib',
+            'compress.bzip2'
         ]
     },
     // // 文件包含 - 包含目录
