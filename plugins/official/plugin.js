@@ -226,7 +226,9 @@ var algorithmConfig = {
         protocols: [
             'ftp',
             'dict',
-            'gopher'
+            'gopher',
+            'jar',
+            'netloc'
         ]
     },
     // XXE - 使用 file 协议读取内容，可能误报，默认 log
