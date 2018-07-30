@@ -204,7 +204,9 @@ var algorithmConfig = {
             'http',
             'https',
             'php',
-            'file'
+            'file',
+            'jar',
+            'netloc'
         ]
     },
     // // 文件包含 - 包含目录
