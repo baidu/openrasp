@@ -145,6 +145,11 @@ $shortopts = "d:h";
 $longopts = array("ignore-ini", "ignore-plugin");
 $options = getopt($shortopts, $longopts);
 if (array_key_exists("d", $options) && !empty($options["d"])) {
+	// 创建目录
+	if (! file_exists($options["d"])) {
+    	mkdir($options["d"], 0777, true);
+	}
+
 	$root_dir = realpath($options["d"]);
 	if (empty ($root_dir)) {
 		log_tips(ERROR, "Can't resolve realpath of " . $options["d"] . ": No such directory.");
