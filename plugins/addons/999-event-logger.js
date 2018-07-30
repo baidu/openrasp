@@ -26,6 +26,11 @@ plugin.register('fileUpload', function (params, context) {
     return clean
 })
 
+ plugin.register('rename', function (params, context) {
+    plugin.log('文件重命名: ' + params.source + ' -> ' + params.dest)  
+    return clean
+})
+
 plugin.register('command', function (params, context) {
     plugin.log('命令执行: ' + params.command)
     return clean

@@ -741,7 +741,7 @@ PHP_MINIT_FUNCTION(openrasp_log)
     struct ifaddrs *ifaddr, *ifa;
     if (getifaddrs(&ifaddr) == -1) 
     {
-        openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs error: %s"), strerror(errno));
+        openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs() error: %s"), strerror(errno));
     }
     else
     {
@@ -773,7 +773,7 @@ PHP_MINIT_FUNCTION(openrasp_log)
 #endif
     if (gethostname(host_name, sizeof(host_name) - 1)) { 
         sprintf( host_name, "UNKNOWN_HOST" );
-        openrasp_error(E_WARNING, LOG_ERROR, _("gethostname error: %s"), strerror(errno));
+        openrasp_error(E_WARNING, LOG_ERROR, _("gethostname() error: %s"), strerror(errno));
     }
     return SUCCESS;
 }

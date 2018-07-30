@@ -26,6 +26,7 @@ import com.baidu.openrasp.tool.StackTrace;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
+import org.apache.commons.lang3.StringUtils;
 import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
@@ -117,8 +118,7 @@ public class ProcessBuilderHook extends AbstractClassHook {
             try {
                 JSContext cx = JSContextFactory.enterAndInitContext();
                 params = cx.newObject(cx.getScope());
-                Scriptable commandArray = cx.newArray(cx.getScope(), command.toArray());
-                params.put("command", params, commandArray);
+                params.put("command", params, StringUtils.join(command," "));
                 List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
                         Config.getConfig().getPluginMaxStack());
                 Scriptable stackArray = cx.newArray(cx.getScope(), stackInfo.toArray());

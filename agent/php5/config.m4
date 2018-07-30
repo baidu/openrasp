@@ -134,27 +134,27 @@ if test "$PHP_OPENRASP" != "no"; then
     OPENRASP_LIBS="$ANTLR4_LIBS $OPENRASP_LIBS"
   fi
 
-  LIBFSWATCH_SOURCE="libfswatch/c++/path_utils.cpp \
-    libfswatch/c++/fen_monitor.cpp \
-    libfswatch/c++/fsevents_monitor.cpp \
-    libfswatch/c++/monitor.cpp \
-    libfswatch/c++/filter.cpp \
-    libfswatch/c++/inotify_monitor.cpp \
-    libfswatch/c++/windows_monitor.cpp \
-    libfswatch/c++/string/string_utils.cpp \
-    libfswatch/c++/event.cpp \
-    libfswatch/c++/poll_monitor.cpp \
-    libfswatch/c++/windows/win_handle.cpp \
-    libfswatch/c++/windows/win_error_message.cpp \
-    libfswatch/c++/windows/win_strings.cpp \
-    libfswatch/c++/windows/win_paths.cpp \
-    libfswatch/c++/windows/win_directory_change_event.cpp \
-    libfswatch/c++/kqueue_monitor.cpp \
-    libfswatch/c++/libfswatch_exception.cpp \
-    libfswatch/c/libfswatch_log.cpp \
-    libfswatch/c/libfswatch.cpp \
-    libfswatch/c/cevent.cpp"
-  PHP_ADD_INCLUDE(PHP_EXT_BUILDDIR([openrasp])/libfswatch)
+  # LIBFSWATCH_SOURCE="libfswatch/c++/path_utils.cpp \
+  #   libfswatch/c++/fen_monitor.cpp \
+  #   libfswatch/c++/fsevents_monitor.cpp \
+  #   libfswatch/c++/monitor.cpp \
+  #   libfswatch/c++/filter.cpp \
+  #   libfswatch/c++/inotify_monitor.cpp \
+  #   libfswatch/c++/windows_monitor.cpp \
+  #   libfswatch/c++/string/string_utils.cpp \
+  #   libfswatch/c++/event.cpp \
+  #   libfswatch/c++/poll_monitor.cpp \
+  #   libfswatch/c++/windows/win_handle.cpp \
+  #   libfswatch/c++/windows/win_error_message.cpp \
+  #   libfswatch/c++/windows/win_strings.cpp \
+  #   libfswatch/c++/windows/win_paths.cpp \
+  #   libfswatch/c++/windows/win_directory_change_event.cpp \
+  #   libfswatch/c++/kqueue_monitor.cpp \
+  #   libfswatch/c++/libfswatch_exception.cpp \
+  #   libfswatch/c/libfswatch_log.cpp \
+  #   libfswatch/c/libfswatch.cpp \
+  #   libfswatch/c/cevent.cpp"
+  # PHP_ADD_INCLUDE(PHP_EXT_BUILDDIR([openrasp])/libfswatch)
   case $host_os in
     darwin* )
       OPENRASP_LIBS="-framework CoreServices $OPENRASP_LIBS"
@@ -221,19 +221,19 @@ if test "$PHP_OPENRASP" != "no"; then
   EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS $ac_cv_narrowing -std=$ac_cv_cstd -Wno-deprecated-declarations -Wno-write-strings -Wno-deprecated-register"
   PHP_SUBST(EXTRA_CXXFLAGS)
 
-  AC_MSG_CHECKING([whether fully support regex])
-  AC_LANG_PUSH([C++])
-  old_CXXFLAGS=$CXXFLAGS
-  CXXFLAGS="-std=$ac_cv_cstd"
-  AC_TRY_LINK([#include <regex>], [std::cregex_token_iterator it;],
-  [
-    AC_MSG_RESULT(yes)
-    CXXFLAGS=$old_CXXFLAGS
-    AC_LANG_POP([C++])
-  ],[
-    AC_MSG_RESULT(no)
-    AC_MSG_ERROR([Please install a newer c++ compiler])
-  ])
+  # AC_MSG_CHECKING([whether fully support regex])
+  # AC_LANG_PUSH([C++])
+  # old_CXXFLAGS=$CXXFLAGS
+  # CXXFLAGS="-std=$ac_cv_cstd"
+  # AC_TRY_LINK([#include <regex>], [std::cregex_token_iterator it;],
+  # [
+  #   AC_MSG_RESULT(yes)
+  #   CXXFLAGS=$old_CXXFLAGS
+  #   AC_LANG_POP([C++])
+  # ],[
+  #   AC_MSG_RESULT(no)
+  #   AC_MSG_ERROR([Please install a newer c++ compiler])
+  # ])
 
   AC_MSG_CHECKING(for mmap() using MAP_ANON shared memory support)
   AC_TRY_RUN([
@@ -486,12 +486,10 @@ int main() {
     openrasp_v8_utils.cc \
     openrasp_security_policy.cc \
     openrasp_ini.cc \
-    openrasp_fswatch.cc \
     agent/openrasp_ctrl_block.cc \
     agent/openrasp_agent_manager.cc \
     agent/utils/digest.cc \
     agent/mm/shm_manager.cc \
-    $LIBFSWATCH_SOURCE \
     $ANTLR4_SOURCES \
     , $ext_shared)
   ifdef([PHP_ADD_EXTENSION_DEP],

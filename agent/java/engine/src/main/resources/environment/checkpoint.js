@@ -285,3 +285,25 @@ Object.defineProperty(global, 'CheckPointInclude', {
     value: CheckPointInclude,
     enumerable: true
 });
+
+var CheckPointRename = function () {
+    function CheckPointRename(data) {
+        _classCallCheck(this, CheckPointRename);
+
+        this.source = data.source;
+        this.dest = data.dest;
+    }
+
+    _createClass(CheckPointRename, null, [{
+        key: 'name',
+        get: function get() {
+            return 'rename';
+        }
+    }]);
+
+    return CheckPointRename;
+}();
+Object.defineProperty(global, 'CheckPointRename', {
+    value: CheckPointRename,
+    enumerable: true
+});

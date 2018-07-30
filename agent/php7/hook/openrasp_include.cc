@@ -52,7 +52,7 @@ int eval_handler(zend_execute_data *execute_data)
         add_assoc_zval(&attack_params, "eval", inc_filename);
         Z_TRY_ADDREF_P(inc_filename);
         zval plugin_message;
-        ZVAL_STRING(&plugin_message, _("China Chopper WebShell"));
+        ZVAL_STRING(&plugin_message, _("WebShell activity - Detected China Chopper webshell (eval method)"));
         openrasp_buildin_php_risk_handle(1, "webshell_eval", 100, &attack_params, &plugin_message);
     }
     return ZEND_USER_OPCODE_DISPATCH;
