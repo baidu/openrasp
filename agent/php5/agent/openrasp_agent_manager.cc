@@ -37,6 +37,7 @@ extern "C"
 {
 #include "ext/standard/php_smart_str.h"
 #include "ext/json/php_json.h"
+#include "php_main.h"
 }
 
 namespace openrasp
@@ -55,6 +56,15 @@ typedef struct agent_info_t
 	unsigned long agent_pid;
 } agent_info;
 
+inline static bool need_daemon_agent()
+{
+	if (sapi_module.name && strcmp(sapi_module.name, "fpm-fcgi") == 0)
+	{
+		return true;
+	}
+	return false;
+}
+
 OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
 	: _mm(mm),
 	  _agent_ctrl_block(NULL)
@@ -63,11 +73,15 @@ OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
 
 int OpenraspAgentManager::startup()
 {
-	_root_dir = std::string(openrasp_ini.root_dir);
-	_backend = std::string(openrasp_ini.backend);
-	_create_share_memory();
-	_write_local_plugin_md5_to_shm();
-	_agent_startup();
+	if (need_daemon_agent())
+	{
+		_root_dir = std::string(openrasp_ini.root_dir);
+		_backend = std::string(openrasp_ini.backend);
+		_create_share_memory();
+		_write_local_plugin_md5_to_shm();
+		_agent_startup();
+		initialized = true;
+	}
 	return SUCCESS;
 }
 
@@ -80,13 +94,16 @@ int OpenraspAgentManager::_create_share_memory()
 
 int OpenraspAgentManager::shutdown()
 {
-	pid_t supervisor_id = static_cast<pid_t>(_agent_ctrl_block->get_supervisor_id());
-	pid_t plugin_agent_id = _agent_ctrl_block->get_plugin_agent_id();
-	pid_t log_agent_id = _agent_ctrl_block->get_log_agent_id();
-	kill(supervisor_id, SIGTERM);
-	kill(plugin_agent_id, SIGTERM);
-	kill(log_agent_id, SIGTERM);
-	_destroy_share_memory();
+	if (initialized)
+	{
+		pid_t supervisor_id = static_cast<pid_t>(_agent_ctrl_block->get_supervisor_id());
+		pid_t plugin_agent_id = _agent_ctrl_block->get_plugin_agent_id();
+		pid_t log_agent_id = _agent_ctrl_block->get_log_agent_id();
+		kill(supervisor_id, SIGTERM);
+		kill(plugin_agent_id, SIGTERM);
+		kill(log_agent_id, SIGTERM);
+		_destroy_share_memory();
+	}
 	return SUCCESS;
 }
 

@@ -54,6 +54,7 @@ private:
   OpenraspCtrlBlock *_agent_ctrl_block;
   std::string _root_dir;
   std::string _backend;
+  bool initialized = false;
 };
 
 extern ShmManager sm;
