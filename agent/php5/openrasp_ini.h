@@ -50,7 +50,8 @@ class Openrasp_ini
     std::unordered_set<std::string> callable_blacklists;
     char* backend;
     unsigned int plugin_update_interval = 60;
-    unsigned int log_push_interval = 15;
+    unsigned int log_push_interval = 10;
+    char *clientip_header;
 };
 
 extern Openrasp_ini openrasp_ini;

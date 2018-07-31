@@ -64,7 +64,8 @@ PHP_INI_ENTRY1("openrasp.plugin_maxstack", "100", PHP_INI_SYSTEM, OnUpdateOpenra
 PHP_INI_ENTRY1("openrasp.log_maxstack", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_maxstack)
 PHP_INI_ENTRY1("openrasp.backend", "http://cq02-scloud-csiemtest.cq02.baidu.com:8888", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.backend)
 PHP_INI_ENTRY1("openrasp.plugin_update_interval", "60", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.plugin_update_interval)
-PHP_INI_ENTRY1("openrasp.log_push_interval", "15", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_push_interval)
+PHP_INI_ENTRY1("openrasp.log_push_interval", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_push_interval)
+PHP_INI_ENTRY1("openrasp.clientip_header", "http_clientip", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.clientip_header)
 PHP_INI_END()
 
 PHP_GINIT_FUNCTION(openrasp)

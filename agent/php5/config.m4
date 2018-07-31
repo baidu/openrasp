@@ -489,6 +489,7 @@ int main() {
     openrasp_fswatch.cc \
     agent/openrasp_ctrl_block.cc \
     agent/openrasp_agent_manager.cc \
+    agent/openrasp_log_collector.cc \
     agent/utils/digest.cc \
     agent/mm/shm_manager.cc \
     $LIBFSWATCH_SOURCE \

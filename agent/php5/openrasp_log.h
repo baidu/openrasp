@@ -42,6 +42,9 @@ extern "C" {
 #define PLUGIN_LOG_DIR_NAME "plugin"
 #define RASP_LOG_DIR_NAME "rasp"
 
+#define DEFAULT_LOG_FILE_SUFFIX             "Y-m-d"
+#define RASP_RFC3339_FORMAT                 "Y-m-d\\TH:i:sP"
+
 typedef enum log_appender_t {
 	  FILE_APPENDER = 1 << 0, 
     SYSLOG_APPENDER  = 1 << 1

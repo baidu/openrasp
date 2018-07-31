@@ -23,6 +23,7 @@
 
 #include "openrasp.h"
 #include "openrasp_agent_manager.h"
+#include "openrasp_log_collector.h"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -321,18 +322,8 @@ void OpenraspAgentManager::plugin_agent_run()
 
 void OpenraspAgentManager::log_agent_run()
 {
-	install_signal_handler();
-	while (true)
-	{
-		for (int i = 0; i < openrasp_ini.log_push_interval; ++i)
-		{
-			sleep(1);
-			if (signal_received == SIGTERM)
-			{
-				agent_exit();
-			}
-		}
-	}
+	LogCollector logCollector;
+	logCollector.run();
 }
 
 } // namespace openrasp
