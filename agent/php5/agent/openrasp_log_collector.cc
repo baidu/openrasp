@@ -230,8 +230,9 @@ void LogCollector::process_log_push(int dir_watch_fd)
                 if (ifs.is_open())
                 {
                     ifs.close();
+                    ifs.clear();
                 }
-                ifs = std::ifstream(dir_abs_path + _default_slash + log_dir_umap[dir_watch_fd]->active_file_name);
+                ifs.open(dir_abs_path + _default_slash + log_dir_umap[dir_watch_fd]->active_file_name);
                 ifs.seekg(task_tag == REREAD_TAG ? ifs.end : ifs.beg);
             }
             else if (task_tag == MODIFY_TAG)
@@ -254,6 +255,7 @@ void LogCollector::process_log_push(int dir_watch_fd)
                 if (ifs.is_open())
                 {
                     ifs.close();
+                    ifs.clear();
                 }
             }
             else

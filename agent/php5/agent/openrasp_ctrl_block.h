@@ -41,7 +41,7 @@ private:
   pid_t _supervisor_id;
   unsigned long _plugin_agent_id = 0;
   unsigned long _log_agent_id = 0;
-  char _plugin_md5[33];
+  char _plugin_md5[33] = {0};
   long _last_update_time = 0;
 };
 

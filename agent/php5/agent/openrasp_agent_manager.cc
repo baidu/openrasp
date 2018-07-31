@@ -57,14 +57,14 @@ typedef struct agent_info_t
 
 OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
 	: _mm(mm),
-	  _agent_ctrl_block(NULL),
-	  _root_dir(openrasp_ini.root_dir),
-	  _backend(openrasp_ini.backend)
+	  _agent_ctrl_block(NULL)
 {
 }
 
 int OpenraspAgentManager::startup()
 {
+	_root_dir = std::string(openrasp_ini.root_dir);
+	_backend = std::string(openrasp_ini.backend);
 	_create_share_memory();
 	_write_local_plugin_md5_to_shm();
 	_agent_startup();
