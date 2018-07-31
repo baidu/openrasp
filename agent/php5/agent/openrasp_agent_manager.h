@@ -19,9 +19,7 @@
 
 #include "mm/shm_manager.h"
 #include "openrasp_ctrl_block.h"
-#include <sys/prctl.h>
 
-#define OPENRASP_SET_PROC_NAME(name) prctl(PR_SET_NAME, (name), 0, 0, 0)
 #define PLUGIN_AGENT_PR_NAME "plugin-agent"
 #define LOG_AGENT_PR_NAME "log-agent"
 
@@ -57,6 +55,9 @@ private:
   std::string _root_dir;
   std::string _backend;
 };
+
+extern ShmManager sm;
+extern OpenraspAgentManager oam;
 
 } // namespace openrasp
 

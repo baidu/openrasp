@@ -81,19 +81,6 @@ PHP_GSHUTDOWN_FUNCTION(openrasp)
 #endif
 }
 
-#ifndef PHP_WIN32
-openrasp::ShmManager sm;
-openrasp::OpenraspAgentManager *oam = nullptr;
-inline static bool _need_daemon_agent()
-{
-    if (sapi_module.name && strcmp(sapi_module.name, "fpm-fcgi") == 0)
-    {
-        return true;
-    }
-    return false;
-}
-#endif
-
 PHP_MINIT_FUNCTION(openrasp)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp, PHP_GINIT(openrasp), PHP_GSHUTDOWN(openrasp));
@@ -115,13 +102,7 @@ PHP_MINIT_FUNCTION(openrasp)
     result = PHP_MINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
-#ifndef PHP_WIN32
-    if (_need_daemon_agent())
-    {
-        oam = new openrasp::OpenraspAgentManager(&sm);
-        oam->startup();
-    }
-#endif
+    openrasp::oam.startup();
     // result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
     is_initialized = true;
     return SUCCESS;
@@ -138,13 +119,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
         result = PHP_MSHUTDOWN(openrasp_v8)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_log)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
     }
-#ifndef PHP_WIN32
-    if (_need_daemon_agent())
-    {
-        oam->shutdown();
-        delete oam;
-    }
-#endif
+    openrasp::oam.shutdown();
     UNREGISTER_INI_ENTRIES();
     ZEND_SHUTDOWN_MODULE_GLOBALS(openrasp, PHP_GSHUTDOWN(openrasp));
     return SUCCESS;
