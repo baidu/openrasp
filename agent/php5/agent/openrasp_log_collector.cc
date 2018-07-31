@@ -39,6 +39,7 @@ LogCollector::LogCollector()
     : _root_dir(openrasp_ini.root_dir),
       _default_slash(1, DEFAULT_SLASH)
 {
+    TSRMLS_FETCH();
     char *tmp_formatted_date_suffix = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), (long)time(NULL), 1 TSRMLS_CC);
     _formatted_date_suffix = std::string(tmp_formatted_date_suffix);
     efree(tmp_formatted_date_suffix);
@@ -50,6 +51,7 @@ LogCollector::LogCollector()
 
 void LogCollector::run()
 {
+    TSRMLS_FETCH();
     sigset_t mask;
     int sfd;
     struct signalfd_siginfo fdsi;
@@ -195,6 +197,7 @@ void LogCollector::run()
 
 void LogCollector::add_watch_file(std::string filename, bool newly_created, int dir_watch_fd)
 {
+    TSRMLS_FETCH();
     const char *file_abs_name = (log_dir_umap[dir_watch_fd]->dir_abs_path + _default_slash + filename).c_str();
     if (VCWD_STAT(file_abs_name, &sb) == 0)
     {
@@ -211,6 +214,7 @@ void LogCollector::add_watch_file(std::string filename, bool newly_created, int 
 
 void LogCollector::process_log_push(int dir_watch_fd)
 {
+    TSRMLS_FETCH();
     zval *z_logs = nullptr;
     MAKE_STD_ZVAL(z_logs);
     const std::string dir_abs_path = log_dir_umap.at(dir_watch_fd)->dir_abs_path;

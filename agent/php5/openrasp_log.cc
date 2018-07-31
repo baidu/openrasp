@@ -66,7 +66,7 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 #define RASP_STREAM_WRITE_RETRY_NUMBER      1
 
 
-typedef void (*value_filter_t)(zval *origin_zv, zval *new_zv);
+typedef void (*value_filter_t)(zval *origin_zv, zval *new_zv TSRMLS_DC);
 
 typedef struct keys_filter_t
 {
@@ -169,7 +169,7 @@ static std::string fetch_last_clientip(const std::string &s)
     return item;
 }
 
-static void replace_clientip_by_header(zval *origin_zv, zval *new_zv)
+static void replace_clientip_by_header(zval *origin_zv, zval *new_zv TSRMLS_DC)
 {
     zval *server_globals = PG(http_globals)[TRACK_VARS_SERVER];
     char* tmp_clientip_header = estrdup(openrasp_ini.clientip_header);
@@ -190,7 +190,7 @@ static void replace_clientip_by_header(zval *origin_zv, zval *new_zv)
     efree(tmp_clientip_header);
 }
 
-static void request_uri_path_filter(zval *origin_zv, zval *new_zv)
+static void request_uri_path_filter(zval *origin_zv, zval *new_zv TSRMLS_DC)
 {
     char *haystack = Z_STRVAL_P(origin_zv);                                            
     int   haystack_len = Z_STRLEN_P(origin_zv);                
@@ -205,7 +205,7 @@ static void request_uri_path_filter(zval *origin_zv, zval *new_zv)
     }
 }
 
-static void build_complete_url(zval *items, zval *new_zv)
+static void build_complete_url(zval *items, zval *new_zv TSRMLS_DC)
 {
     assert(Z_TYPE_P(items) == IS_ARRAY);
     zval **origin_zv;
@@ -239,7 +239,7 @@ static void build_complete_url(zval *items, zval *new_zv)
     ZVAL_STRINGL(new_zv, buffer.c_str(), buffer.length(), 1);
 }
 
-static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_filter> &filters)
+static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_filter> &filters TSRMLS_DC)
 {
     zval **origin_zv;
     for (keys_filter filter:filters)
@@ -267,7 +267,7 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
                 {
                     zval *new_zv = nullptr;
                     MAKE_STD_ZVAL(new_zv);
-                    filter.value_filter(items, new_zv);
+                    filter.value_filter(items, new_zv TSRMLS_CC);
                     add_assoc_zval(dest, filter.new_key_str, new_zv);
                     zval_ptr_dtor(&items);
                 }
@@ -281,7 +281,7 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
                     {
                         zval *new_zv = nullptr;
                         MAKE_STD_ZVAL(new_zv);
-                        filter.value_filter(*origin_zv, new_zv);
+                        filter.value_filter(*origin_zv, new_zv TSRMLS_CC);
                         add_assoc_zval(dest, filter.new_key_str, new_zv);
                     }
                     else
@@ -321,7 +321,7 @@ static void init_alarm_request_info(TSRMLS_D)
     {
         migrate_src = PG(http_globals)[TRACK_VARS_SERVER];
     }
-    migrate_hash_values(OPENRASP_LOG_G(alarm_request_info), migrate_src, alarm_filters);
+    migrate_hash_values(OPENRASP_LOG_G(alarm_request_info), migrate_src, alarm_filters TSRMLS_CC);
     add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "event_type", "attack", 1);
     add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "server_hostname", host_name, 1);
     add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "server_type", "PHP", 1);
