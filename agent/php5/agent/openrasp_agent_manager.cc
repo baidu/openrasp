@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <signal.h>
 #include <fcntl.h>
 #include <fstream>
 #include <sstream>
@@ -30,6 +31,7 @@
 #include "openrasp_ini.h"
 #include "utils/digest.h"
 #include <curl/curl.h>
+#include <thread>
 
 extern "C"
 {
@@ -39,6 +41,9 @@ extern "C"
 
 namespace openrasp
 {
+
+ShmManager sm;
+OpenraspAgentManager oam(&sm);
 
 typedef void (OpenraspCtrlBlock::*agent_id_setter_t)(unsigned long plugin_agent_id);
 
@@ -195,8 +200,6 @@ int OpenraspAgentManager::_write_local_plugin_md5_to_shm()
 
 void OpenraspAgentManager::supervisor_run()
 {
-	OPENRASP_SET_PROC_NAME("openrasp-agent.supervisor");
-
 	struct sigaction sa_usr = {0};
 	sa_usr.sa_flags = 0;
 	sa_usr.sa_handler = supervisor_sigchld_handler;
@@ -216,7 +219,6 @@ void OpenraspAgentManager::supervisor_run()
 				}
 				else if (pid == 0)
 				{
-					OPENRASP_SET_PROC_NAME(ai.name.c_str());
 					if (ai.name == PLUGIN_AGENT_PR_NAME)
 					{
 						plugin_agent_run();

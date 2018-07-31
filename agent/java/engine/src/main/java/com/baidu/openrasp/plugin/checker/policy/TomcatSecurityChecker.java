@@ -101,7 +101,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
             }
 
             if (!isHttpOnly) {
-                infos.add(new SecurityPolicyInfo(Type.COOKIE_HTTP_ONLY, "tomcat未在conf/context.xml文件中配置全局httpOnly.", true));
+                infos.add(new SecurityPolicyInfo(Type.COOKIE_HTTP_ONLY, "Tomcat security baseline - httpOnly should be enabled in conf/context.xml", true));
             }
         }
     }
@@ -113,7 +113,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.startsWith("linux") || osName.startsWith("mac")) {
             if ("root".equals(System.getProperty("user.name"))) {
-                infos.add(new SecurityPolicyInfo(Type.START_USER, "tomcat以root权限启动.", true));
+                infos.add(new SecurityPolicyInfo(Type.START_USER, "Java security baseline - should not start application server with root account", true));
             }
         } else if (osName.startsWith("windows")) {
             try {
@@ -123,7 +123,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
                 if (userGroups != null) {
                     for (String group : userGroups) {
                         if (group.equals(WINDOWS_ADMIN_GROUP_ID)) {
-                            infos.add(new SecurityPolicyInfo(Type.START_USER, "服务器以管理员权限启动.", true));
+                            infos.add(new SecurityPolicyInfo(Type.START_USER, "Java security baseline - should not start application server with Administrator/system account", true));
                         }
                     }
                 }
@@ -162,7 +162,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
                                     String userName = user.getAttribute("username");
                                     String password = user.getAttribute("password");
                                     if (weakWords.contains(userName) && weakWords.contains(password)) {
-                                        infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD, "tomcat后台管理角色存在弱用户名和弱密码.", true));
+                                        infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD, "Tomcat security baseline - detected weak username/password combination in tomcat-users.xml", true));
                                     }
                                 }
                             }
@@ -201,7 +201,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
                             if (isFoundDefaultClass) {
                                 if (isOpenListingDirectory(servletElement)) {
                                     infos.add(new SecurityPolicyInfo(Type.DIRECTORY_LISTING,
-                                            "tomcat 开启了 DefaultServlet 的 Directory Listing 功能", true));
+                                            "Tomcat security baseline - detected open Directory Listing in conf/web.xml", true));
                                     return;
                                 }
                             }
@@ -269,7 +269,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
         }
 
         if (!apps.isEmpty()) {
-            StringBuilder message = new StringBuilder("tomcat 默认安装的webapps没有卸载: ");
+            StringBuilder message = new StringBuilder("Tomcat security baseline - did not remove the following default webapps: ");
             for (String app : apps) {
                 message.append(app).append(", ");
             }

@@ -86,7 +86,7 @@ openrasp.root_dir=$root_dir
 	
 ;当SQL查询结果行数大于或等于该值，则认为是慢查询
 ;openrasp.slowquery_min_rows=500
-	
+
 ;报警是否开启 syslog
 ;openrasp.syslog_alarm_enable=Off
 	
@@ -126,7 +126,7 @@ Synopsis:
     php install.php [options]
 
 Options:
-    -d <openrasp_root>  Specify OpenRASP installation folder, which is essential
+    -d <openrasp_root>  Specify OpenRASP installation folder (required)
 	
     --ignore-ini        Do not update PHP ini entries
 
@@ -150,14 +150,14 @@ if (array_key_exists("d", $options) && !empty($options["d"])) {
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 检察依赖扩展 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-major_tips('Check whether dependent PHP extensions are installed');
+major_tips('Check whether required PHP extensions are installed');
 $dep_exts = array('json', 'PDO');
 if (!check_dep_exts_installed($dep_exts)) {
-	log_tips(ERROR, implode(" ",$dep_exts) . " must be installed correctly.");
+	log_tips(ERROR, "OpenRASP depends on the following PHP extension: " . implode(" ", $dep_exts) . " . Make sure they are installed on your system.");
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 拷贝动态库 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-major_tips('Installing OpenRASP PHP Extension');
+major_tips('Installing OpenRASP PHP extension');
 if (!file_exists($extension_dir)) {
 	log_tips(ERROR, "Extension directory '$extension_dir' does not exist");
 }
@@ -191,13 +191,13 @@ if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
 				$ini_scanned_path = $ini_scanned_root . "mods-available";
 				foreach ($supported_sapi as $key => $value) {
 					if (file_exists($ini_scanned_root.$value) && is_dir($ini_scanned_root.$value)) {
-						$ini_symbol_links[$value] = $ini_scanned_root.$value.DIRECTORY_SEPARATOR . 'conf.d/99-openrasp.ini';	
+						$ini_symbol_links[$value] = $ini_scanned_root . $value . DIRECTORY_SEPARATOR . 'conf.d/99-openrasp.ini';	
 					}
 				}
 			}
 		}
 		if (!is_writable($ini_scanned_path)) {
-			log_tips(ERROR, $ini_scanned_path . ' is not writable, please make sure you have write permissions!');
+			log_tips(ERROR, $ini_scanned_path . ' is not writable, make sure you have write permissions.');
 		}
 		
 		$ini_src = $ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file;
@@ -234,7 +234,7 @@ if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
 		}
 		foreach($ini_files_2b_updated as $key=>$ini_file) {
 			if (!is_writable($ini_file)) {
-				log_tips(ERROR, $ini_file . ' is not writable, please make sure you have write permissions!');
+				log_tips(ERROR, $ini_file . ' is not writable, make sure you have write permissions');
 			}
 			if (!copy($ini_file, $ini_file.'.bak')) {
 				log_tips(ERROR, "Unable to backup old ini file: '$ini_file'");

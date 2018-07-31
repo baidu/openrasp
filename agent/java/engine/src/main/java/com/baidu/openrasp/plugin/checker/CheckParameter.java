@@ -46,6 +46,7 @@ public class CheckParameter {
         READFILE("readFile", new JsChecker()),
         WRITEFILE("writeFile", new JsChecker()),
         FILEUPLOAD("fileUpload", new JsChecker()),
+        FILERENAME("rename",new JsChecker()),
         XXE("xxe", new JsChecker()),
         OGNL("ognl", new JsChecker()),
         DESERIALIZATION("deserialization", new JsChecker()),

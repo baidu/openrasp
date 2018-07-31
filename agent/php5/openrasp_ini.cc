@@ -15,7 +15,7 @@
  */
 
 #include "openrasp_ini.h"
-#include <regex>
+// #include <regex>
 #include <limits>
 
 Openrasp_ini openrasp_ini;
@@ -59,15 +59,47 @@ ZEND_INI_MH(OnUpdateOpenraspSet)
 {
     std::unordered_set<std::string> *p = reinterpret_cast<std::unordered_set<std::string> *>(mh_arg1);
     p->clear();
-    if (new_value)
+    char *tmp;
+    if (new_value && (tmp = strdup(new_value)))
     {
-        std::regex re(R"([\s,]+)");
-        const std::cregex_token_iterator end;
-        for (std::cregex_token_iterator it(new_value, new_value + new_value_length, re, -1); it != end; it++)
+        char *s = nullptr, *e = tmp;
+        while (*e)
         {
-            p->insert(it->str());
+            switch (*e)
+            {
+            case ' ':
+            case ',':
+                if (s)
+                {
+                    *e = '\0';
+                    p->insert(std::string(s, e - s));
+                    s = nullptr;
+                }
+                break;
+            default:
+                if (!s)
+                {
+                    s = e;
+                }
+                break;
+            }
+            e++;
         }
+        if (s)
+        {
+            p->insert(std::string(s, e - s));
+        }
+        free(tmp);
     }
+    // if (new_value)
+    // {
+    //     std::regex re(R"([\s,]+)");
+    //     const std::cregex_token_iterator end;
+    //     for (std::cregex_token_iterator it(new_value, new_value + new_value_length, re, -1); it != end; it++)
+    //     {
+    //         p->insert(it->str());
+    //     }
+    // }
     return SUCCESS;
 }
 

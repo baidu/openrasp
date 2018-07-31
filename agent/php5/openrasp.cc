@@ -82,26 +82,13 @@ PHP_GSHUTDOWN_FUNCTION(openrasp)
 #endif
 }
 
-#ifndef PHP_WIN32
-openrasp::ShmManager sm;
-openrasp::OpenraspAgentManager *oam = nullptr;
-inline static bool _need_daemon_agent()
-{
-    if (sapi_module.name && strcmp(sapi_module.name, "fpm-fcgi") == 0)
-    {
-        return true;
-    }
-    return false;
-}
-#endif
-
 PHP_MINIT_FUNCTION(openrasp)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp, PHP_GINIT(openrasp), PHP_GSHUTDOWN(openrasp));
     REGISTER_INI_ENTRIES();
     if (!make_openrasp_root_dir(TSRMLS_C))
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir should be configured correctly in php.ini (not empty, not root path, not relative path and writable), continue without security protection"));
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir is not configured correctly in php.ini (not empty, not root path, not relative path and must be writable), continuing without security protection"));
         return SUCCESS;
     }
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
@@ -116,14 +103,8 @@ PHP_MINIT_FUNCTION(openrasp)
     result = PHP_MINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
-    result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
-#ifndef PHP_WIN32
-    if (_need_daemon_agent())
-    {
-        oam = new openrasp::OpenraspAgentManager(&sm);
-        oam->startup();
-    }
-#endif
+    openrasp::oam.startup();
+    // result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
     is_initialized = true;
     return SUCCESS;
 }
@@ -133,19 +114,13 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
     if (is_initialized)
     {
         int result;
-        result = PHP_MSHUTDOWN(openrasp_fswatch)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
+        // result = PHP_MSHUTDOWN(openrasp_fswatch)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_inject)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_hook)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_v8)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_log)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
     }
-#ifndef PHP_WIN32
-    if (_need_daemon_agent())
-    {
-        oam->shutdown();
-        delete oam;
-    }
-#endif
+    openrasp::oam.shutdown();
     UNREGISTER_INI_ENTRIES();
     ZEND_SHUTDOWN_MODULE_GLOBALS(openrasp, PHP_GSHUTDOWN(openrasp));
     return SUCCESS;
@@ -264,16 +239,16 @@ static bool make_openrasp_root_dir(TSRMLS_D)
         std::string locale_path(root_dir + DEFAULT_SLASH + "locale" + DEFAULT_SLASH);
         if (!bindtextdomain(GETTEXT_PACKAGE, locale_path.c_str()))
         {
-            openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to bindtextdomain - %s"), strerror(errno));
+            openrasp_error(E_WARNING, CONFIG_ERROR, _("bindtextdomain() failed: %s"), strerror(errno));
         }
         if (!textdomain(GETTEXT_PACKAGE))
         {
-            openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to textdomain - %s"), strerror(errno));
+            openrasp_error(E_WARNING, CONFIG_ERROR, _("textdomain() failed: %s"), strerror(errno));
         }
     }
     else
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("Unable to set OpenRASP locale to '%s'"), openrasp_ini.locale);
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("Unable to set OpenRASP locale to %s"), openrasp_ini.locale);
     }
 #endif
     return true;

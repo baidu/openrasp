@@ -42,7 +42,7 @@ static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
             zval *plugin_message = NULL;
             MAKE_STD_ZVAL(plugin_message);
             char *message_str = NULL;
-            spprintf(&message_str, 0, _("Webshell detected: using '%s' function"), Z_STRVAL_P(function_name));
+            spprintf(&message_str, 0, _("WebShell activity - Using dangerous callback method %s()"), Z_STRVAL_P(function_name));
             ZVAL_STRING(plugin_message, message_str, 1);
             efree(message_str);
             openrasp_buildin_php_risk_handle(1, "callable", 100, attack_params, plugin_message TSRMLS_CC);

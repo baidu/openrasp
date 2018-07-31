@@ -419,7 +419,7 @@ static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log
                 }
                 else
                 {
-                    openrasp_error(E_WARNING, LOG_ERROR, _("Fail to connect syslog server %s."), openrasp_ini.syslog_server_address);                
+                    openrasp_error(E_WARNING, LOG_ERROR, _("Unable to contact syslog server %s"), openrasp_ini.syslog_server_address);                
                 }
                 efree(res);
                 OPENRASP_LOG_G(last_retry_time) = now;

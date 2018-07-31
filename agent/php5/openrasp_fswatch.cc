@@ -87,7 +87,7 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
                 }
                 catch (...)
                 {
-                    openrasp_error(E_WARNING, CONFIG_ERROR, _("An exception occurred while reloading master process, but this message may not be outputed"));
+                    openrasp_error(E_WARNING, CONFIG_ERROR, _("An exception occurred while reloading master process, but this message may not be visible"));
                 }
             } TSRMLS_CC);
 
