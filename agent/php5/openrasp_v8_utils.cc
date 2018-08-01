@@ -15,9 +15,13 @@
  */
 
 #include "openrasp_v8.h"
+#include "js/openrasp_v8_js.h"
 #include <iostream>
-using namespace openrasp;
-void openrasp::v8error_to_stream(v8::Isolate *isolate, v8::TryCatch &try_catch, std::ostream &buf)
+#include <sstream>
+
+namespace openrasp
+{
+void v8error_to_stream(v8::Isolate *isolate, v8::TryCatch &try_catch, std::ostream &buf)
 {
     v8::HandleScope handle_scope(isolate);
     v8::String::Utf8Value exception(try_catch.Exception());
@@ -61,7 +65,7 @@ void openrasp::v8error_to_stream(v8::Isolate *isolate, v8::TryCatch &try_catch, 
     }
 }
 
-v8::Local<v8::Value> openrasp::zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC)
+v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC)
 {
     v8::Local<v8::Value> rst = v8::Undefined(isolate);
     switch (Z_TYPE_P(val))
@@ -171,7 +175,7 @@ v8::Local<v8::Value> openrasp::zval_to_v8val(zval *val, v8::Isolate *isolate TSR
     return rst;
 }
 
-v8::MaybeLocal<v8::Script> openrasp::compile_script(std::string _source, std::string _filename, int _line_offset)
+v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset)
 {
     v8::Isolate *isolate = v8::Isolate::GetCurrent();
     v8::Isolate::Scope isolate_scope(isolate);
@@ -194,8 +198,8 @@ v8::MaybeLocal<v8::Script> openrasp::compile_script(std::string _source, std::st
     return script;
 }
 
-v8::MaybeLocal<v8::Value> openrasp::exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
-                                                 std::string _source, std::string _filename, int _line_offset)
+v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
+                                      std::string _source, std::string _filename, int _line_offset)
 {
     v8::MaybeLocal<v8::Value> result;
     v8::Local<v8::String> filename;
@@ -217,3 +221,116 @@ v8::MaybeLocal<v8::Value> openrasp::exec_script(v8::Isolate *isolate, v8::Local<
     }
     return script->Run(context);
 }
+
+static void v8native_log(const v8::FunctionCallbackInfo<v8::Value> &info)
+{
+    TSRMLS_FETCH();
+    for (int i = 0; i < info.Length(); i++)
+    {
+        v8::String::Utf8Value message(info[i]);
+        plugin_info(*message, message.length() TSRMLS_CC);
+    }
+}
+
+static void v8native_antlr4(const v8::FunctionCallbackInfo<v8::Value> &info)
+{
+#ifdef HAVE_NATIVE_ANTLR4
+    static TokenizeErrorListener tokenizeErrorListener;
+    if (info.Length() >= 1 && info[0]->IsString())
+    {
+        antlr4::ANTLRInputStream input(*v8::String::Utf8Value(info[0]));
+        SQLLexer lexer(&input);
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(&tokenizeErrorListener);
+        antlr4::CommonTokenStream output(&lexer);
+        output.fill();
+        auto tokens = output.getTokens();
+        int length = tokens.size();
+        v8::Isolate *isolate = info.GetIsolate();
+        v8::Local<v8::Array> arr = v8::Array::New(isolate, length - 1);
+        for (int i = 0; i < length - 1; i++)
+        {
+            v8::Local<v8::String> token;
+            if (V8STRING_N(tokens[i]->getText().c_str()).ToLocal(&token))
+            {
+                arr->Set(i, token);
+            }
+        }
+        info.GetReturnValue().Set(arr);
+    }
+#endif
+}
+
+intptr_t external_references[] = {
+    reinterpret_cast<intptr_t>(v8native_log),
+    reinterpret_cast<intptr_t>(v8native_antlr4),
+    0,
+};
+
+v8::StartupData init_js_snapshot(TSRMLS_D)
+{
+    v8::SnapshotCreator creator(external_references);
+    v8::Isolate *isolate = creator.GetIsolate();
+#ifdef PHP_WIN32
+    uintptr_t current_stack = reinterpret_cast<uintptr_t>(&current_stack);
+    uintptr_t stack_limit = current_stack - 512 * 1024;
+    stack_limit = stack_limit < current_stack ? stack_limit : sizeof(stack_limit);
+    isolate->SetStackLimit(stack_limit);
+#endif
+    {
+        v8::HandleScope handle_scope(isolate);
+        v8::Local<v8::Context> context = v8::Context::New(isolate);
+        v8::Context::Scope context_scope(context);
+        v8::TryCatch try_catch;
+        v8::Local<v8::Object> global = context->Global();
+        global->Set(V8STRING_I("global").ToLocalChecked(), global);
+        v8::Local<v8::Function> log = v8::Function::New(isolate, v8native_log);
+        v8::Local<v8::Object> v8_stdout = v8::Object::New(isolate);
+        v8_stdout->Set(V8STRING_I("write").ToLocalChecked(), log);
+        global->Set(V8STRING_I("stdout").ToLocalChecked(), v8_stdout);
+        global->Set(V8STRING_I("stderr").ToLocalChecked(), v8_stdout);
+
+#define MAKE_JS_SRC_PAIR(name) {{(const char *)name##_js, name##_js_len}, ZEND_TOSTR(name) ".js"}
+        std::vector<std::pair<std::string, std::string>> js_src_list = {
+            MAKE_JS_SRC_PAIR(console),
+            MAKE_JS_SRC_PAIR(checkpoint),
+            MAKE_JS_SRC_PAIR(error),
+            MAKE_JS_SRC_PAIR(context),
+            MAKE_JS_SRC_PAIR(sql_tokenize),
+            MAKE_JS_SRC_PAIR(rasp),
+        };
+        for (auto js_src : js_src_list)
+        {
+            if (exec_script(isolate, context, std::move(js_src.first), std::move(js_src.second)).IsEmpty())
+            {
+                std::stringstream stream;
+                v8error_to_stream(isolate, try_catch, stream);
+                std::string error = stream.str();
+                plugin_info(error.c_str(), error.length() TSRMLS_CC);
+                openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize js plugin - %s"), error.c_str());
+                return v8::StartupData{nullptr, 0};
+            }
+        }
+#ifdef HAVE_NATIVE_ANTLR4
+        v8::Local<v8::Function> sql_tokenize = v8::Function::New(isolate, v8native_antlr4);
+        context->Global()
+            ->Get(context, V8STRING_I("RASP").ToLocalChecked())
+            .ToLocalChecked()
+            .As<v8::Object>()
+            ->Set(V8STRING_I("sql_tokenize").ToLocalChecked(), sql_tokenize);
+#endif
+        for (auto plugin_src : process_globals.plugin_src_list)
+        {
+            if (exec_script(isolate, context, "(function(){\n" + plugin_src.source + "\n})()", plugin_src.filename, -1).IsEmpty())
+            {
+                std::stringstream stream;
+                v8error_to_stream(isolate, try_catch, stream);
+                std::string error = stream.str();
+                plugin_info(error.c_str(), error.length() TSRMLS_CC);
+            }
+        }
+        creator.SetDefaultContext(context);
+    }
+    return creator.CreateBlob(v8::SnapshotCreator::FunctionCodeHandling::kClear);
+}
+} // namespace openrasp

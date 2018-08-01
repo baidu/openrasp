@@ -39,6 +39,10 @@ public:
   void log_agent_run();
   int startup();
   int shutdown();
+  long get_plugin_update_timestamp()
+  {
+    return _agent_ctrl_block ? _agent_ctrl_block->get_last_update_time() : 0;
+  }
 
 private:
   int _create_share_memory();

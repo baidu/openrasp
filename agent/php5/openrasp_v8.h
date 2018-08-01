@@ -73,10 +73,11 @@ class openrasp_v8_process_globals
 {
 public:
   v8::StartupData snapshot_blob;
-  std::mutex lock;
+  std::mutex mtx;
   bool is_initialized = false;
   v8::Platform *v8_platform = nullptr;
   std::vector<openrasp_v8_plugin_src> plugin_src_list;
+  long plugin_update_timestamp = 0;
 };
 
 extern openrasp_v8_process_globals process_globals;
@@ -91,6 +92,9 @@ v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC);
 v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset = 0);
 v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
                                       std::string _source, std::string _filename, int _line_offset = 0);
+v8::StartupData init_js_snapshot(TSRMLS_D);
+extern intptr_t external_references[];
+
 } // namespace openrasp
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_v8)
@@ -103,6 +107,7 @@ _zend_openrasp_v8_globals()
   is_isolate_initialized = false;
   is_env_initialized = false;
   is_running = false;
+  plugin_update_timestamp = 0;
 }
 v8::Isolate *isolate;
 v8::Isolate::CreateParams create_params;
@@ -120,6 +125,7 @@ int action_hash_block;
 bool is_isolate_initialized;
 bool is_env_initialized;
 bool is_running;
+long plugin_update_timestamp;
 ZEND_END_MODULE_GLOBALS(openrasp_v8)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp_v8)
