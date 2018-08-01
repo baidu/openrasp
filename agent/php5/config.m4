@@ -490,6 +490,7 @@ int main() {
     agent/openrasp_agent_manager.cc \
     agent/openrasp_log_collector.cc \
     agent/utils/digest.cc \
+    agent/utils/curl_helper.cc \
     agent/mm/shm_manager.cc \
     $ANTLR4_SOURCES \
     , $ext_shared)

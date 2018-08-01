@@ -30,7 +30,7 @@
 #include <iostream>
 #include "openrasp_ini.h"
 #include "utils/digest.h"
-#include <curl/curl.h>
+#include "utils/curl_helper.h"
 #include <thread>
 
 extern "C"
@@ -197,16 +197,10 @@ static void agent_exit()
 	exit(0);
 }
 
-static size_t writeFunction(void *ptr, size_t size, size_t nmemb, std::string *data)
-{
-	data->append((char *)ptr, size * nmemb);
-	return size * nmemb;
-}
-
 int OpenraspAgentManager::_write_local_plugin_md5_to_shm()
 {
 	std::ifstream ifs(_root_dir + "/plugins/offical.js");
-	if (ifs.good())
+	if (ifs.is_open() && ifs.good())
 	{
 		std::stringstream buffer;
 		buffer << ifs.rdbuf();
@@ -261,78 +255,58 @@ void OpenraspAgentManager::plugin_agent_run()
 {
 	install_signal_handler();
 	TSRMLS_FETCH();
+	CURL *curl = curl_easy_init();
+	ResponseInfo res_info;
 	while (true)
 	{
-		auto curl = curl_easy_init();
-		CURLcode res;
-		if (curl)
+		std::string url_string = _backend + "/v1/plugin?md5=" + std::string(_agent_ctrl_block->get_plugin_md5());
+		perform_curl(curl, url_string, nullptr, res_info);
+		if (CURLE_OK == res_info.res)
 		{
-			curl_easy_setopt(curl, CURLOPT_URL, (_backend + "/test.php").c_str());
-			curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
-			curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 50L);
-			curl_easy_setopt(curl, CURLOPT_TCP_KEEPALIVE, 1L);
-			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-
-			std::string response_string;
-			std::string header_string;
-			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunction);
-			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_string);
-			curl_easy_setopt(curl, CURLOPT_HEADERDATA, &header_string);
-
-			char *url;
-			long response_code;
-			double elapsed;
-
-			res = curl_easy_perform(curl);
-			if (CURLE_OK == res)
+			zval *return_value = nullptr;
+			MAKE_STD_ZVAL(return_value);
+			php_json_decode(return_value, (char *)res_info.response_string.c_str(), res_info.response_string.size(), 1, 512 TSRMLS_CC);
+			zval **origin_zv;
+			if (res_info.response_code >= 200 && res_info.response_code < 300)
 			{
-				curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-				curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &elapsed);
-				curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &url);
-				zval *return_value = nullptr;
-				MAKE_STD_ZVAL(return_value);
-				php_json_decode(return_value, (char *)response_string.c_str(), response_string.size(), 1, 512 TSRMLS_CC);
-				zval **origin_zv;
-				if (response_code >= 200 && response_code < 300)
+				if (Z_TYPE_P(return_value) == IS_ARRAY)
 				{
-					if (Z_TYPE_P(return_value) == IS_ARRAY)
-					{
-						if (zend_hash_find(Z_ARRVAL_P(return_value), "content", strlen("content") + 1, (void **)&origin_zv) == SUCCESS &&
-							Z_TYPE_PP(origin_zv) == IS_STRING)
-						{
-							std::ofstream out_file(_root_dir + "/plugins/offical.js", std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
-							if (out_file.good())
-							{
-								out_file << Z_STRVAL_PP(origin_zv);
-								out_file.close();
-							}
-						}
-						if (zend_hash_find(Z_ARRVAL_P(return_value), "md5", strlen("md5") + 1, (void **)&origin_zv) == SUCCESS &&
-							Z_TYPE_PP(origin_zv) == IS_STRING)
-						{
-							_agent_ctrl_block->set_plugin_md5(Z_STRVAL_PP(origin_zv));
-						}
-					}
-				}
-				else
-				{
-					if (Z_TYPE_P(return_value) == IS_ARRAY &&
-						zend_hash_find(Z_ARRVAL_P(return_value), "error", strlen("error") + 1, (void **)&origin_zv) == SUCCESS &&
+					if (zend_hash_find(Z_ARRVAL_P(return_value), "content", strlen("content") + 1, (void **)&origin_zv) == SUCCESS &&
 						Z_TYPE_PP(origin_zv) == IS_STRING)
 					{
-						openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to update offcial plugin, error: %s."), Z_STRVAL_PP(origin_zv));
+						std::ofstream out_file(_root_dir + "/plugins/offical.js", std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
+						if (out_file.is_open() && out_file.good())
+						{
+							out_file << Z_STRVAL_PP(origin_zv);
+							out_file.close();
+						}
+					}
+					if (zend_hash_find(Z_ARRVAL_P(return_value), "md5", strlen("md5") + 1, (void **)&origin_zv) == SUCCESS &&
+						Z_TYPE_PP(origin_zv) == IS_STRING)
+					{
+						_agent_ctrl_block->set_plugin_md5(Z_STRVAL_PP(origin_zv));
 					}
 				}
-				zval_ptr_dtor(&return_value);
 			}
-			curl_easy_cleanup(curl);
-			curl = nullptr;
+			else
+			{
+				if (Z_TYPE_P(return_value) == IS_ARRAY &&
+					zend_hash_find(Z_ARRVAL_P(return_value), "error", strlen("error") + 1, (void **)&origin_zv) == SUCCESS &&
+					Z_TYPE_PP(origin_zv) == IS_STRING)
+				{
+					openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to update offcial plugin, error: %s."), Z_STRVAL_PP(origin_zv));
+				}
+			}
+			zval_ptr_dtor(&return_value);
 		}
+
 		for (int i = 0; i < openrasp_ini.plugin_update_interval; ++i)
 		{
 			sleep(1);
 			if (signal_received == SIGTERM)
 			{
+				curl_easy_cleanup(curl);
+				curl = nullptr;
 				agent_exit();
 			}
 		}

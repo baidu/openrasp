@@ -24,6 +24,7 @@
 #include <sstream>
 #include <vector>
 #include <unordered_map>
+#include "utils/curl_helper.h"
 
 #include <sys/inotify.h>
 #include <sys/epoll.h>
@@ -35,6 +36,7 @@ namespace openrasp
 class LogDirEntry
 {
 public:
+  const std::string backend_url;
   const std::string dir_abs_path;
   const std::string prefix;
   std::string active_file_name;
@@ -42,8 +44,8 @@ public:
   std::thread active_thread;
   moodycamel::ReaderWriterQueue<char> log_queue{1024};
 
-  LogDirEntry(const std::string dir_abs_path, const std::string prefix)
-      : dir_abs_path(dir_abs_path), prefix(prefix)
+  LogDirEntry(const std::string dir_abs_path, const std::string prefix, const std::string backend_url)
+      : dir_abs_path(dir_abs_path), prefix(prefix), backend_url(backend_url)
   {
   }
 };
@@ -57,6 +59,8 @@ public:
 protected:
   void process_log_push(int dir_watch_fd);
   void add_watch_file(std::string filename, bool newly_created, int dir_watch_fd);
+  void update_formatted_date_suffix();
+  void post_logs_via_curl(zval *log_arr, CURL *curl, std::string url_string);
 
 private:
   bool _exit = false;
@@ -65,6 +69,7 @@ private:
   struct stat sb;
   std::string _formatted_date_suffix;
   std::string _root_dir;
+  std::string _backend;
   std::string _default_slash;
   std::unordered_map<int, LogDirEntry *> log_dir_umap;
   std::unordered_map<int, int> log_file_umap;

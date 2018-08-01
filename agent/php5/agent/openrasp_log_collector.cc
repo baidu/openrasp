@@ -22,6 +22,8 @@ extern "C"
 {
 #include "ext/standard/file.h"
 #include "ext/date/php_date.h"
+#include "ext/standard/php_smart_str.h"
+#include "ext/json/php_json.h"
 }
 
 namespace openrasp
@@ -37,26 +39,31 @@ namespace openrasp
 
 LogCollector::LogCollector()
     : _root_dir(openrasp_ini.root_dir),
-      _default_slash(1, DEFAULT_SLASH)
+      _default_slash(1, DEFAULT_SLASH),
+      _backend(openrasp_ini.backend)
+{
+    TSRMLS_FETCH();
+    update_formatted_date_suffix();
+    log_dirs.push_back(std::move(LogDirEntry(_root_dir + _default_slash + "logs" + _default_slash + ALARM_LOG_DIR_NAME, "alarm.log.", "/v1/log/attack")));
+    log_dirs.push_back(std::move(LogDirEntry(_root_dir + _default_slash + "logs" + _default_slash + POLICY_LOG_DIR_NAME, "policy.log.", "/v1/log/policy")));
+}
+
+void LogCollector::update_formatted_date_suffix()
 {
     TSRMLS_FETCH();
     char *tmp_formatted_date_suffix = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), (long)time(NULL), 1 TSRMLS_CC);
     _formatted_date_suffix = std::string(tmp_formatted_date_suffix);
     efree(tmp_formatted_date_suffix);
-    log_dirs.push_back(std::move(LogDirEntry(_root_dir + _default_slash + "logs" + _default_slash + ALARM_LOG_DIR_NAME, "alarm.log.")));
-    log_dirs.push_back(std::move(LogDirEntry(_root_dir + _default_slash + "logs" + _default_slash + POLICY_LOG_DIR_NAME, "policy.log.")));
-    log_dirs.push_back(std::move(LogDirEntry(_root_dir + _default_slash + "logs" + _default_slash + PLUGIN_LOG_DIR_NAME, "plugin.log.")));
-    log_dirs.push_back(std::move(LogDirEntry(_root_dir + _default_slash + "logs" + _default_slash + RASP_LOG_DIR_NAME, "rasp.log.")));
 }
 
 void LogCollector::run()
 {
     TSRMLS_FETCH();
-    sigset_t mask;
     int sfd;
-    struct signalfd_siginfo fdsi;
     ssize_t s;
+    sigset_t mask;
     char buffer[BUF_LEN];
+    struct signalfd_siginfo fdsi;
     std::vector<std::pair<int, std::string>> created_files;
 
     sigemptyset(&mask);
@@ -110,8 +117,8 @@ void LogCollector::run()
     }
     while (running)
     {
-        int num_events;
         int i;
+        int num_events;
         if ((num_events = epoll_wait(epoll_instance, events, MAX_EVENTS, 1000)) < 0)
         {
             openrasp_error(E_ERROR, AGENT_ERROR, _("Fail to epoll_wait %d."), errno);
@@ -121,8 +128,8 @@ void LogCollector::run()
             if (events[i].data.fd == inotify_instance)
             {
                 int len;
-                const struct inotify_event *event;
                 char *ptr;
+                const struct inotify_event *event;
                 while (1)
                 {
                     len = read(inotify_instance, buffer, BUF_LEN);
@@ -143,7 +150,12 @@ void LogCollector::run()
                         {
                             if (event->mask & IN_CREATE && !(event->mask & IN_ISDIR))
                             {
-                                created_files.push_back(std::make_pair(dir_got->first, std::string(event->name, event->len)));
+                                update_formatted_date_suffix();
+                                std::string added_filename = std::string(event->name, event->len);
+                                if (dir_got->second->prefix + _formatted_date_suffix == added_filename)
+                                {
+                                    created_files.push_back(std::make_pair(dir_got->first, added_filename));
+                                }
                             }
                         }
                         auto file_got = log_file_umap.find(event->wd);
@@ -163,7 +175,6 @@ void LogCollector::run()
                         inotify_rm_watch(inotify_instance, created_file_pair.first);
                     }
                     add_watch_file(created_file_pair.second, true, created_file_pair.first);
-                    
                 }
                 created_files.clear();
             }
@@ -176,7 +187,7 @@ void LogCollector::run()
                 {
                     _exit = true;
                     running = false;
-                    for( auto iter=log_dir_umap.begin();iter!=log_dir_umap.end();iter++ )
+                    for (auto iter = log_dir_umap.begin(); iter != log_dir_umap.end(); iter++)
                     {
                         inotify_rm_watch(inotify_instance, iter->first);
                     }
@@ -195,6 +206,25 @@ void LogCollector::run()
     }
 }
 
+void LogCollector::post_logs_via_curl(zval *log_arr, CURL *curl, std::string url_string)
+{
+    TSRMLS_FETCH();
+    smart_str buf_json = {0};
+    php_json_encode(&buf_json, log_arr, 0 TSRMLS_CC);
+    ResponseInfo res_info;
+    if (buf_json.a > buf_json.len)
+    {
+        buf_json.c[buf_json.len] = '\0';
+        buf_json.len++;
+    }
+    perform_curl(curl, url_string, buf_json.c, res_info);
+    if (CURLE_OK != res_info.res)
+    {
+        openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to post logs to %s."), url_string.c_str());
+    }
+    smart_str_free(&buf_json);
+}
+
 void LogCollector::add_watch_file(std::string filename, bool newly_created, int dir_watch_fd)
 {
     TSRMLS_FETCH();
@@ -203,7 +233,7 @@ void LogCollector::add_watch_file(std::string filename, bool newly_created, int 
     {
         if (S_ISREG(sb.st_mode) && VCWD_ACCESS(file_abs_name, R_OK | F_OK) == 0)
         {
-            int inotify_file_watch = inotify_add_watch(inotify_instance, file_abs_name, IN_MODIFY | IN_DELETE);
+            int inotify_file_watch = inotify_add_watch(inotify_instance, file_abs_name, IN_MODIFY);
             log_file_umap[inotify_file_watch] = dir_watch_fd;
             log_dir_umap[dir_watch_fd]->active_file_fd = inotify_file_watch;
             log_dir_umap[dir_watch_fd]->active_file_name = filename;
@@ -215,15 +245,18 @@ void LogCollector::add_watch_file(std::string filename, bool newly_created, int 
 void LogCollector::process_log_push(int dir_watch_fd)
 {
     TSRMLS_FETCH();
-    zval *z_logs = nullptr;
-    MAKE_STD_ZVAL(z_logs);
-    const std::string dir_abs_path = log_dir_umap.at(dir_watch_fd)->dir_abs_path;
+    zval *log_arr = nullptr;
+    MAKE_STD_ZVAL(log_arr);
+    array_init(log_arr);
     std::ifstream ifs;
     char task_tag;
     std::string line;
+    CURL *curl = curl_easy_init();
+    const std::string dir_abs_path = log_dir_umap.at(dir_watch_fd)->dir_abs_path;
+    std::string url_string = _backend + log_dir_umap[dir_watch_fd]->backend_url;
     while (true)
     {
-        while (log_dir_umap.at(dir_watch_fd)->log_queue.try_dequeue(task_tag))
+        while (log_dir_umap[dir_watch_fd]->log_queue.try_dequeue(task_tag))
         {
             if (task_tag == CREATE_TAG || task_tag == REREAD_TAG)
             {
@@ -233,7 +266,7 @@ void LogCollector::process_log_push(int dir_watch_fd)
                     ifs.clear();
                 }
                 ifs.open(dir_abs_path + _default_slash + log_dir_umap[dir_watch_fd]->active_file_name);
-                ifs.seekg(task_tag == REREAD_TAG ? ifs.end : ifs.beg);
+                ifs.seekg(0, task_tag == REREAD_TAG ? std::ios_base::end : std::ios_base::beg);
             }
             else if (task_tag == MODIFY_TAG)
             {
@@ -241,11 +274,7 @@ void LogCollector::process_log_push(int dir_watch_fd)
                 {
                     while (std::getline(ifs, line))
                     {
-                        //TODO
-                    }
-                    if (!ifs.eof())
-                    {
-                        break;
+                        add_next_index_stringl(log_arr, line.c_str(), line.size(), 1);
                     }
                     ifs.clear();
                 }
@@ -263,9 +292,21 @@ void LogCollector::process_log_push(int dir_watch_fd)
                 //skip
             }
         }
-        if (_exit)
+        if (zend_hash_num_elements(Z_ARRVAL_P(log_arr)) > 0)
         {
-            break;
+            post_logs_via_curl(log_arr, curl, url_string);
+            zend_hash_clean(Z_ARRVAL_P(log_arr));
+        }
+        for (int i = 0; i < openrasp_ini.log_push_interval; ++i)
+        {
+            sleep(1);
+            if (_exit)
+            {
+                zval_ptr_dtor(&log_arr);
+                curl_easy_cleanup(curl);
+                curl = nullptr;
+                break;
+            }
         }
     }
 }
