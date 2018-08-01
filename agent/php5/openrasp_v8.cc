@@ -71,7 +71,19 @@ unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
     {
         if (try_catch.Message().IsEmpty())
         {
-            plugin_info(ZEND_STRL("Check Timeout") TSRMLS_CC);
+            v8::Local<v8::Function> console_log = context->Global()
+                                                      ->Get(context, V8STRING_I("console").ToLocalChecked())
+                                                      .ToLocalChecked()
+                                                      .As<v8::Object>()
+                                                      ->Get(context, V8STRING_I("log").ToLocalChecked())
+                                                      .ToLocalChecked()
+                                                      .As<v8::Function>();
+            v8::Local<v8::Object> message = v8::Object::New(isolate);
+            message->Set(V8STRING_N("message").ToLocalChecked(), V8STRING_N("timeout").ToLocalChecked());
+            message->Set(V8STRING_N("type").ToLocalChecked(), type);
+            message->Set(V8STRING_N("params").ToLocalChecked(), params);
+            message->Set(V8STRING_N("context").ToLocalChecked(), request_context);
+            bool avoidwarning = console_log->Call(context, console_log, 1, reinterpret_cast<v8::Local<v8::Value> *>(&message)).IsEmpty();
         }
         else
         {
