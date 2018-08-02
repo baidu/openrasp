@@ -820,7 +820,7 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
         }
     }
     openrasp_log_globals->loggers[ALARM_LOGGER].appender     		= alarm_appender;
-    openrasp_log_globals->time_offset = fetch_time_offset();
+    openrasp_log_globals->time_offset = fetch_time_offset(TSRMLS_C);
 }
 
 PHP_MINIT_FUNCTION(openrasp_log)

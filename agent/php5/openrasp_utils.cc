@@ -192,9 +192,9 @@ const char * fetch_url_scheme(const char *filename)
     return nullptr;
 }
 
-long fetch_time_offset()
+long fetch_time_offset(TSRMLS_D)
 {
-    timelib_tzinfo *default_tz = get_timezone_info();
+    timelib_tzinfo *default_tz = get_timezone_info(TSRMLS_C);
     int32_t exact_offset = default_tz->type->offset;
     return std::round((double)exact_offset / 3600) * 3600;
 }

@@ -416,7 +416,7 @@ void OpenraspAgentManager::log_agent_run()
 	install_signal_handler();
 
 	long last_post_time = 0;
-	long time_offset = fetch_time_offset();
+	long time_offset = fetch_time_offset(TSRMLS_C);
 	std::string formatted_date_suffix =	update_formatted_date_suffix();
 
 	zval *log_arr = nullptr;
