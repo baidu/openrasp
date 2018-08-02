@@ -15,7 +15,7 @@ When an attack happens, WAF matches the malicious request with its signatures an
 
 ### Quick Start
 
-See detailed installation instructions [here](https://rasp.baidu.com/doc/install/main.html)
+See detailed installation instructions [here](https://github.com/baidu/openrasp/wiki/Installation)
 
 We also provide a few test cases that are corresponding to OWASP TOP 10 attacks, [download here](https://rasp.baidu.com/doc/install/testcase.html)
 
@@ -25,11 +25,12 @@ We also provide a few test cases that are corresponding to OWASP TOP 10 attacks,
 
 Only Java based web application servers are supported for now. The support of other web application servers will also be soon included in the coming releases.
 
-We've fully tested OpenRASP on the following application servers for both Linux and Windows platforms.
+We've fully tested OpenRASP on the following application servers for Linux platforms.
 
 * Tomcat 6-8
 * JBoss 4.X
 * Jetty 7-9
+* PHP 5.3-5.6, 7.0-7.2
 
 ##### 2. Performance impact on application servers
 

@@ -134,9 +134,18 @@ var algorithmConfig = {
         action: 'block',
         protocols: [
             'file',
-            'dict',
             'gopher',
-            'php'
+
+            // java specific
+            'jar',
+            'netloc',
+
+            // php specific
+            'dict',
+            'php',
+            'phar',
+            'compress.zlib',
+            'compress.bzip2'
         ]
     },
 
@@ -201,10 +210,23 @@ var algorithmConfig = {
     include_protocol: {
         action: 'block',
         protocols: [
+            'file',
+            'gopher',
+
+            // java specific
+            'jar',
+            'netloc',
+
+            // php stream
             'http',
             'https',
+
+            // php specific
+            'dict',
             'php',
-            'file'
+            'phar',
+            'compress.zlib',
+            'compress.bzip2'
         ]
     },
     // // 文件包含 - 包含目录
@@ -226,7 +248,9 @@ var algorithmConfig = {
         protocols: [
             'ftp',
             'dict',
-            'gopher'
+            'gopher',
+            'jar',
+            'netloc'
         ]
     },
     // XXE - 使用 file 协议读取内容，可能误报，默认 log
@@ -266,6 +290,11 @@ var algorithmConfig = {
         action: 'block'
     }
 }
+
+// 将所有拦截开关设置为 log
+// Object.keys(algorithmConfig).forEach(function (name) {
+//     algorithmConfig[name].action = 'log'
+// })
 
 const clean = {
     action:     'ignore',
@@ -682,7 +711,7 @@ if (RASP.get_jsengine() !== 'v8') {
                 }
                 else if (features['into_outfile'] && i < tokens_lc.length - 1 && tokens_lc[i] == 'into')
                 {
-                    if (tokens_lc[i + 1] == 'outfile')
+                    if (tokens_lc[i + 1] == 'outfile' || tokens_lc[i + 1] == 'dumpfile' )
                     {
                         reason = _("SQLi - Detected INTO OUTFILE phrase in sql query")
                         break
@@ -1310,6 +1339,17 @@ plugin.register('command', function (params, context) {
 plugin.register('xxe', function (params, context) {
     var items = params.entity.split('://')
 
+    if (algorithmConfig.xxe_protocol.action != 'ignore') {
+        // 检查 windows + SMB 协议，防止泄露 NTLM 信息
+        if (params.entity.startsWith('\\\\')) {
+            return {
+                action:     algorithmConfig.xxe_protocol.action,
+                message:    _("XXE - Using dangerous protocol SMB"),
+                confidence: 100
+            }                
+        }        
+    }
+
     if (items.length >= 2) {
         var protocol = items[0]
         var address  = items[1]
@@ -1324,14 +1364,6 @@ plugin.register('xxe', function (params, context) {
                 }
             }
 
-            // 检查 windows + SMB 协议，防止泄露 NTLM 信息
-            if (params.entity.startsWith('\\\\')) {
-                return {
-                    action:     algorithmConfig.xxe_protocol.action,
-                    message:    _("XXE - Using dangerous protocol SMB"),
-                    confidence: 100
-                }                
-            }
         }
 
         // file 协议 + 绝对路径, e.g
