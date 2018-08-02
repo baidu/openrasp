@@ -182,7 +182,7 @@ static bool init_snapshot(TSRMLS_D)
     if (process_globals.snapshot_blob.data == nullptr &&
         process_globals.snapshot_blob.raw_size == 0)
     {
-        process_globals.snapshot_blob = init_js_snapshot(TSRMLS_C);
+        process_globals.snapshot_blob = get_snapshot(TSRMLS_C);
     }
     return true;
 }
@@ -367,7 +367,7 @@ PHP_MINIT_FUNCTION(openrasp_v8)
 
     v8::Platform *platform = v8::platform::CreateDefaultPlatform();
     v8::V8::InitializePlatform(platform);
-    process_globals.snapshot_blob = init_js_snapshot(TSRMLS_C);
+    process_globals.snapshot_blob = get_snapshot(TSRMLS_C);
     v8::V8::ShutdownPlatform();
     delete platform;
 

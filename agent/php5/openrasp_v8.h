@@ -92,7 +92,7 @@ v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC);
 v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset = 0);
 v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
                                       std::string _source, std::string _filename, int _line_offset = 0);
-v8::StartupData init_js_snapshot(TSRMLS_D);
+v8::StartupData get_snapshot(TSRMLS_D);
 extern intptr_t external_references[];
 
 } // namespace openrasp
