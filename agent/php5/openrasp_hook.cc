@@ -230,7 +230,7 @@ void handle_block(TSRMLS_D)
     {
         char *redirect_script = nullptr;
         int redirect_script_len = 0;
-        redirect_script_len = spprintf(&redirect_script, 0, "</script><script>location.href=\"%s?request_id=%s\"</script>", block_url, request_id);
+        redirect_script_len = spprintf(&redirect_script, 0, "</script><script>location.href=\"%s?request_id=%s\"</script>\n", block_url, request_id);
         if (redirect_script)
         {
 #if PHP_MINOR_VERSION > 3
