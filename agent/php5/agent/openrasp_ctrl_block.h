@@ -28,11 +28,11 @@ public:
   void set_supervisor_id(pid_t supervisor_id);
   pid_t get_supervisor_id();
 
-  void set_plugin_agent_id(unsigned long plugin_agent_id);
-  unsigned long get_plugin_agent_id();
+  void set_plugin_agent_id(pid_t plugin_agent_id);
+  pid_t get_plugin_agent_id();
 
-  void set_log_agent_id(unsigned long log_agent_id);
-  unsigned long get_log_agent_id();
+  void set_log_agent_id(pid_t log_agent_id);
+  pid_t get_log_agent_id();
 
   void set_plugin_version(const char *plugin_version);
   const char *get_plugin_version();
@@ -40,10 +40,10 @@ public:
 
 private:
   pid_t _supervisor_id;
-  unsigned long _plugin_agent_id = 0;
-  unsigned long _log_agent_id = 0;
-  char _plugin_version[PLIGIN_VERSION_MAX_SIZE + 1] = {0};
+  pid_t _log_agent_id = 0;
+  pid_t _plugin_agent_id = 0;
   long _last_update_time = 0;
+  char _plugin_version[PLIGIN_VERSION_MAX_SIZE + 1] = {0};
 };
 
 } // namespace openrasp

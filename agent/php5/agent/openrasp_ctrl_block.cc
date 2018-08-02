@@ -35,22 +35,22 @@ pid_t OpenraspCtrlBlock::get_supervisor_id()
     return _supervisor_id;
 }
 
-void OpenraspCtrlBlock::set_plugin_agent_id(unsigned long plugin_agent_id)
+void OpenraspCtrlBlock::set_plugin_agent_id(pid_t plugin_agent_id)
 {
     _plugin_agent_id = plugin_agent_id;
 }
 
-unsigned long OpenraspCtrlBlock::get_plugin_agent_id()
+pid_t OpenraspCtrlBlock::get_plugin_agent_id()
 {
     return _plugin_agent_id;
 }
 
-void OpenraspCtrlBlock::set_log_agent_id(unsigned long log_agent_id)
+void OpenraspCtrlBlock::set_log_agent_id(pid_t log_agent_id)
 {
     _log_agent_id = log_agent_id;
 }
 
-unsigned long OpenraspCtrlBlock::get_log_agent_id()
+pid_t OpenraspCtrlBlock::get_log_agent_id()
 {
     return _log_agent_id;
 }

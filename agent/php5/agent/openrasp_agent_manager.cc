@@ -187,9 +187,9 @@ int OpenraspAgentManager::shutdown()
 		pid_t supervisor_id = static_cast<pid_t>(_agent_ctrl_block->get_supervisor_id());
 		pid_t plugin_agent_id = _agent_ctrl_block->get_plugin_agent_id();
 		pid_t log_agent_id = _agent_ctrl_block->get_log_agent_id();
-		kill(supervisor_id, SIGTERM);
-		kill(plugin_agent_id, SIGTERM);
-		kill(log_agent_id, SIGTERM);
+		kill(supervisor_id, SIGKILL);
+		kill(plugin_agent_id, SIGKILL);
+		kill(log_agent_id, SIGKILL);
 		destroy_share_memory();
 	}
 	return SUCCESS;
