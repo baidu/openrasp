@@ -19,6 +19,7 @@
 
 #include "mm/shm_manager.h"
 #include "openrasp_ctrl_block.h"
+#include "utils/curl_helper.h"
 
 #define PLUGIN_AGENT_PR_NAME "plugin-agent"
 #define LOG_AGENT_PR_NAME "log-agent"
@@ -29,35 +30,58 @@ namespace openrasp
 class ShmManager;
 class OpenraspCtrlBlock;
 
+class LogDirInfo
+{
+public:
+  const std::string dir_abs_path;
+  const std::string backend_url;
+  const std::string prefix;
+  std::ifstream ifs;
+
+  LogDirInfo(const std::string dir_abs_path, const std::string prefix, const std::string backend_url)
+      : dir_abs_path(dir_abs_path), prefix(prefix), backend_url(backend_url)
+  {
+  }
+};
+
 class OpenraspAgentManager
 {
+
 public:
   OpenraspAgentManager(ShmManager *mm);
 
-  void supervisor_run();
-  void plugin_agent_run();
-  void log_agent_run();
   int startup();
   int shutdown();
+  void log_agent_run();
+  void plugin_agent_run();
   long get_plugin_update_timestamp()
   {
     return _agent_ctrl_block ? _agent_ctrl_block->get_last_update_time() : 0;
   }
 
 private:
-  int _create_share_memory();
-  int _destroy_share_memory();
+  int create_share_memory();
+  int destroy_share_memory();
 
-  int _agent_startup();
-  int _process_agent_startup();
+  void supervisor_run();
+  int agent_startup();
 
-  int _write_local_plugin_md5_to_shm();
+  //for plugin update
+  int process_agent_startup();
+  int offcial_plugin_version_shm();
+  std::string clear_offcial_plugins();
+  void update_local_offcial_plugin(std::string plugin_abs_path, const char *plugin, const char *version);
+
+  //for log collect
+  std::string update_formatted_date_suffix();
+  void post_logs_via_curl(zval *log_arr, CURL *curl, std::string url_string);
 
 private:
   ShmManager *_mm;
   OpenraspCtrlBlock *_agent_ctrl_block;
   std::string _root_dir;
   std::string _backend;
+  std::string _default_slash;
   bool initialized = false;
 };
 

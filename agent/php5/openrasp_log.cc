@@ -382,7 +382,8 @@ static zend_bool if_need_update_formatted_file_suffix(rasp_logger_entry *logger,
 {
     int  last_logged_second       = logger->last_logged_time / 1000;
     long log_rotate_second        = 24*60*60;
-    if (now/log_rotate_second != last_logged_second/log_rotate_second)
+    long offset = OPENRASP_LOG_G(time_offset);
+    if ((now + offset) / log_rotate_second != (last_logged_second + offset) / log_rotate_second)
     {
         return 1;
     }    
@@ -819,6 +820,7 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
         }
     }
     openrasp_log_globals->loggers[ALARM_LOGGER].appender     		= alarm_appender;
+    openrasp_log_globals->time_offset = fetch_time_offset();
 }
 
 PHP_MINIT_FUNCTION(openrasp_log)

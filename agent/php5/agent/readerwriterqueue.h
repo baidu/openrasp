@@ -12,10 +12,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ * 
+ * https://github.com/cameron314/readerwriterqueue.git
  */
-// ©2013-2016 Cameron Desrochers.
-// Distributed under the simplified BSD license (see the license file that
-// should have come with this header).
 
 #pragma once
 

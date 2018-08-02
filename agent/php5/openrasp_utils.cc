@@ -16,10 +16,12 @@
 
 #include "openrasp.h"
 #include "openrasp_ini.h"
+#include<cmath>
 extern "C"
 {
 #include "php_ini.h"
 #include "ext/standard/file.h"
+#include "ext/date/php_date.h"
 #include "ext/standard/php_string.h"
 #include "Zend/zend_builtin_functions.h"
 }
@@ -188,4 +190,11 @@ const char * fetch_url_scheme(const char *filename)
         return p;
     }
     return nullptr;
+}
+
+long fetch_time_offset()
+{
+    timelib_tzinfo *default_tz = get_timezone_info();
+    int32_t exact_offset = default_tz->type->offset;
+    return std::round((double)exact_offset / 3600) * 3600;
 }

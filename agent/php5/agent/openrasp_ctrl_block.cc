@@ -55,15 +55,15 @@ unsigned long OpenraspCtrlBlock::get_log_agent_id()
     return _log_agent_id;
 }
 
-void OpenraspCtrlBlock::set_plugin_md5(const char* plugin_md5)
+void OpenraspCtrlBlock::set_plugin_version(const char* plugin_version)
 {
-    strncpy(_plugin_md5, plugin_md5, 32);
+    strncpy(_plugin_version, plugin_version, OpenraspCtrlBlock::PLIGIN_VERSION_MAX_SIZE);
     _last_update_time = (long)time(nullptr);
 }
 
-const char *OpenraspCtrlBlock::get_plugin_md5()
+const char *OpenraspCtrlBlock::get_plugin_version()
 {
-    return _plugin_md5;
+    return _plugin_version;
 }
 
 long OpenraspCtrlBlock::get_last_update_time()

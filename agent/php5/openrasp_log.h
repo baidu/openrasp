@@ -90,6 +90,7 @@ zval                  *policy_request_info;
 zend_bool              enable_alarm_syslog;
 zend_bool              in_request_process;
 long                   last_retry_time;
+long                   time_offset;
 rasp_logger_entry      loggers[TOTAL];
 
 ZEND_END_MODULE_GLOBALS(openrasp_log)
