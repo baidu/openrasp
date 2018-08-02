@@ -23,8 +23,8 @@
 #include <sstream>
 
 #include "openrasp.h"
+#include "openrasp_log.h"
 #include "openrasp_agent_manager.h"
-#include "openrasp_log_collector.h"
 #include <string>
 #include <vector>
 #include <iostream>
