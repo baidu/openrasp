@@ -474,6 +474,7 @@ void OpenraspAgentManager::log_agent_run()
 			sleep(1);
 			if (signal_received == SIGTERM)
 			{
+				zval_ptr_dtor(&log_arr);
 				curl_easy_cleanup(curl);
 				curl = nullptr;
 				agent_exit();
