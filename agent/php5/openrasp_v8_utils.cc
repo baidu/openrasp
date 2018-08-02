@@ -267,7 +267,7 @@ intptr_t external_references[] = {
     0,
 };
 
-v8::StartupData init_js_snapshot(TSRMLS_D)
+v8::StartupData get_snapshot(TSRMLS_D)
 {
     v8::SnapshotCreator creator(external_references);
     v8::Isolate *isolate = creator.GetIsolate();
