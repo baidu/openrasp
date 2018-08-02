@@ -167,7 +167,7 @@ int OpenraspAgentManager::startup()
 		_backend = std::string(openrasp_ini.backend);
 		create_share_memory();
 		offcial_plugin_version_shm();
-		agent_startup();
+		process_agent_startup();
 		initialized = true;
 	}
 	return SUCCESS;
@@ -198,12 +198,6 @@ int OpenraspAgentManager::shutdown()
 int OpenraspAgentManager::destroy_share_memory()
 {
 	this->_mm->destroy(SHMEM_SEC_CTRL_BLOCK);
-	return SUCCESS;
-}
-
-int OpenraspAgentManager::agent_startup()
-{
-	process_agent_startup();
 	return SUCCESS;
 }
 
