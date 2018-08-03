@@ -52,6 +52,7 @@ class Openrasp_ini
     unsigned int plugin_update_interval = 60;
     unsigned int log_push_interval = 10;
     char *clientip_header;
+    char *authentication_id;
 };
 
 extern Openrasp_ini openrasp_ini;

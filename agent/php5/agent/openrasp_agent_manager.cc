@@ -30,10 +30,11 @@
 #include <iostream>
 #include "openrasp_ini.h"
 #include "utils/digest.h"
-#include <thread>
 #include <dirent.h>
 #include <algorithm>
 #include <functional>
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/string.hpp>
 
 extern "C"
 {
@@ -141,17 +142,6 @@ static void openrasp_scandir(const std::string dir_abs, std::vector<std::string>
 	}
 }
 
-static inline char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
-{
-	zval **origin_zv;
-	if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
-		Z_TYPE_PP(origin_zv) == IS_STRING)
-	{
-		return Z_STRVAL_PP(origin_zv);
-	}
-	return nullptr;
-}
-
 OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
 	: _mm(mm),
 	  _default_slash(1, DEFAULT_SLASH),
@@ -186,10 +176,10 @@ bool OpenraspAgentManager::create_share_memory()
 }
 
 bool OpenraspAgentManager::shutdown()
-{	
+{
 	char buffer[MAXPATHLEN];
 	pid_t ppid = getppid();
-	size_t len = ::readlink(("/proc/" + std::to_string(ppid) + "/exe").c_str(), buffer, sizeof(buffer) -1);
+	size_t len = ::readlink(("/proc/" + std::to_string(ppid) + "/exe").c_str(), buffer, sizeof(buffer) - 1);
 	if (ppid != 1 || (len != -1 && strncmp(buffer, "/sbin/init", 10)))
 	{
 		//fpm will shutdown twice in daemon, check symnol link for ubuntu GNOME
@@ -366,27 +356,39 @@ void OpenraspAgentManager::plugin_agent_run()
 		}
 		if (res_info.response_code >= 200 && res_info.response_code < 300)
 		{
-			char *version = nullptr;
-			char *plugin = nullptr;
-			char *md5 = nullptr;
-			if ((version = fetch_outmost_string_from_ht(Z_ARRVAL_P(return_value), "version")) &&
-				(plugin = fetch_outmost_string_from_ht(Z_ARRVAL_P(return_value), "plugin")) &&
-				(md5 = fetch_outmost_string_from_ht(Z_ARRVAL_P(return_value), "md5")))
+			long status;
+			char *description = nullptr;
+			if ((status = fetch_outmost_long_from_ht(Z_ARRVAL_P(return_value), "status")) &&
+				(description = fetch_outmost_string_from_ht(Z_ARRVAL_P(return_value), "description")))
 			{
-				std::string cal_md5 = md5sum(static_cast<const void *>(plugin), strlen(plugin));
-				if (!strcmp(cal_md5.c_str(), md5))
+				if (0 < status)
 				{
-					update_local_offcial_plugin(_root_dir + "/plugins/" + std::string(version) + ".js", plugin, version);
+					openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to update offcial plugin, status: %ld."), status);
+				}
+				else if (0 == status)
+				{
+					if (HashTable *data = fetch_outmost_hashtable_from_ht(Z_ARRVAL_P(return_value), "data"))
+					{
+						char *version = nullptr;
+						char *plugin = nullptr;
+						char *md5 = nullptr;
+						if ((version = fetch_outmost_string_from_ht(data, "version")) &&
+							(plugin = fetch_outmost_string_from_ht(data, "plugin")) &&
+							(md5 = fetch_outmost_string_from_ht(data, "md5")))
+						{
+							std::string cal_md5 = md5sum(static_cast<const void *>(plugin), strlen(plugin));
+							if (!strcmp(cal_md5.c_str(), md5))
+							{
+								update_local_offcial_plugin(_root_dir + "/plugins/" + std::string(version) + ".js", plugin, version);
+							}
+						}
+					}
 				}
 			}
 		}
 		else
 		{
-			char *error = nullptr;
-			if ((error = fetch_outmost_string_from_ht(Z_ARRVAL_P(return_value), "error")))
-			{
-				openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to update offcial plugin, error: %s."), error);
-			}
+			openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to update offcial plugin, response code: %ld."), res_info.response_code);
 		}
 		zval_ptr_dtor(&return_value);
 	}
@@ -413,66 +415,87 @@ void OpenraspAgentManager::log_agent_run()
 	TSRMLS_FETCH();
 	install_signal_handler();
 
+	static const std::string position_backup_file = ".LogCollectingPos";
 	long last_post_time = 0;
 	long time_offset = fetch_time_offset(TSRMLS_C);
 	std::string formatted_date_suffix = update_formatted_date_suffix();
 
-	zval *log_arr = nullptr;
-	MAKE_STD_ZVAL(log_arr);
-	array_init(log_arr);
-
+	std::string buffer;
 	std::string line;
 	ResponseInfo res_info;
 	CURL *curl = curl_easy_init();
 
-	std::vector<LogDirInfo> log_dirs;
-	log_dirs.push_back(std::move(LogDirInfo(_root_dir + _default_slash + "logs" + _default_slash + ALARM_LOG_DIR_NAME, "alarm.log.", "/v1/log/attack")));
-	log_dirs.push_back(std::move(LogDirInfo(_root_dir + _default_slash + "logs" + _default_slash + POLICY_LOG_DIR_NAME, "policy.log.", "/v1/log/policy")));
+	LogDirInfo alarm_dir_info(_root_dir + _default_slash + "logs" + _default_slash + ALARM_LOG_DIR_NAME, "alarm.log.", "/v1/log/attack");
+	LogDirInfo policy_dir_info(_root_dir + _default_slash + "logs" + _default_slash + POLICY_LOG_DIR_NAME, "policy.log.", "/v1/log/policy");
+	std::vector<LogDirInfo *> log_dirs{&alarm_dir_info, &policy_dir_info};
+	try
+	{
+		std::ifstream is(_root_dir + _default_slash + "conf" + _default_slash + position_backup_file);
+		cereal::BinaryInputArchive archive(is);
+		archive(formatted_date_suffix, alarm_dir_info.fpos, policy_dir_info.fpos);
+	}
+	catch (std::exception& e)
+	{
+		//first startup throw excetion
+	}
 	while (true)
 	{
 		long now = (long)time(NULL);
 		bool file_rotate = !is_same_day(now, last_post_time, time_offset);
+		for (LogDirInfo *ldi : log_dirs)
+		{
+			if (!ldi->ifs.is_open())
+			{
+				ldi->ifs.open(ldi->dir_abs_path + _default_slash + ldi->prefix + formatted_date_suffix);
+				ldi->ifs.seekg(ldi->fpos);
+			}
+			if (ldi->ifs.is_open() && ldi->ifs.good())
+			{
+				std::string url_string = _backend + ldi->backend_url;
+				buffer.push_back('[');
+				while (std::getline(ldi->ifs, line))
+				{
+					buffer.append(line);
+					buffer.push_back(',');
+				}
+				buffer.pop_back();
+				buffer.push_back(']');
+				ldi->ifs.clear();
+				if (buffer.size() > 1)
+				{
+					post_logs_via_curl(buffer, curl, url_string);
+				}
+				buffer.clear();
+				ldi->fpos = ldi->ifs.tellg();
+			}
+			if (file_rotate)
+			{
+				if (ldi->ifs.is_open())
+				{
+					ldi->ifs.close();
+					ldi->ifs.clear();
+				}
+			}
+		}
 		if (file_rotate)
 		{
 			formatted_date_suffix = update_formatted_date_suffix();
 		}
-		for (int i = 0; i < log_dirs.size(); ++i)
-		{
-			if (log_dirs[i].ifs.is_open() && log_dirs[i].ifs.good())
-			{
-				std::string url_string = _backend + log_dirs[i].backend_url;
-				while (std::getline(log_dirs[i].ifs, line))
-				{
-					add_next_index_stringl(log_arr, line.c_str(), line.size(), 1);
-				}
-				log_dirs[i].ifs.clear();
-				if (zend_hash_num_elements(Z_ARRVAL_P(log_arr)) > 0)
-				{
-					post_logs_via_curl(log_arr, curl, url_string);
-					zend_hash_clean(Z_ARRVAL_P(log_arr));
-				}
-			}
-			if (file_rotate)
-			{
-				if (log_dirs[i].ifs.is_open())
-				{
-					log_dirs[i].ifs.close();
-					log_dirs[i].ifs.clear();
-				}
-			}
-			if (!log_dirs[i].ifs.is_open())
-			{
-				log_dirs[i].ifs.open(log_dirs[i].dir_abs_path + _default_slash + log_dirs[i].prefix + formatted_date_suffix);
-				log_dirs[i].ifs.seekg(0, 0 == last_post_time ? std::ios_base::end : std::ios_base::beg);
-			}
-		}
 		last_post_time = now;
+		try
+		{
+			std::ofstream os(_root_dir + _default_slash + "conf" + _default_slash + position_backup_file);
+			cereal::BinaryOutputArchive archive(os);
+			archive(formatted_date_suffix, alarm_dir_info.fpos, policy_dir_info.fpos);
+		}
+		catch (std::exception& e)
+		{
+		}
 		for (int i = 0; i < openrasp_ini.log_push_interval; ++i)
 		{
 			sleep(1);
 			if (signal_received == SIGTERM)
 			{
-				zval_ptr_dtor(&log_arr);
 				curl_easy_cleanup(curl);
 				curl = nullptr;
 				agent_exit();
@@ -481,23 +504,14 @@ void OpenraspAgentManager::log_agent_run()
 	}
 }
 
-void OpenraspAgentManager::post_logs_via_curl(zval *log_arr, CURL *curl, std::string url_string)
+void OpenraspAgentManager::post_logs_via_curl(std::string log_arr, CURL *curl, std::string url_string)
 {
-	TSRMLS_FETCH();
-	smart_str buf_json = {0};
-	php_json_encode(&buf_json, log_arr, 0 TSRMLS_CC);
 	ResponseInfo res_info;
-	if (buf_json.a > buf_json.len)
-	{
-		buf_json.c[buf_json.len] = '\0';
-		buf_json.len++;
-	}
-	perform_curl(curl, url_string, buf_json.c, res_info);
+	perform_curl(curl, url_string, log_arr.c_str(), res_info);
 	if (CURLE_OK != res_info.res)
 	{
 		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to post logs to %s."), url_string.c_str());
 	}
-	smart_str_free(&buf_json);
 }
 
 } // namespace openrasp

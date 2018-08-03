@@ -37,6 +37,7 @@ public:
   const std::string backend_url;
   const std::string prefix;
   std::ifstream ifs;
+  int fpos = 0;
 
   LogDirInfo(const std::string dir_abs_path, const std::string prefix, const std::string backend_url)
       : dir_abs_path(dir_abs_path), prefix(prefix), backend_url(backend_url)
@@ -72,16 +73,16 @@ private:
 
   //for log collect
   std::string update_formatted_date_suffix();
-  void post_logs_via_curl(zval *log_arr, CURL *curl, std::string url_string);
+  void post_logs_via_curl(std::string log_arr, CURL *curl, std::string url_string);
 
 private:
   ShmManager *_mm;
-  OpenraspCtrlBlock *_agent_ctrl_block;
   std::string _root_dir;
   std::string _backend;
-  std::string _default_slash;
-  static const int supervisor_interval = 10;
   bool initialized = false;
+  std::string _default_slash;
+  OpenraspCtrlBlock *_agent_ctrl_block;
+  static const int supervisor_interval = 10;
 };
 
 extern ShmManager sm;

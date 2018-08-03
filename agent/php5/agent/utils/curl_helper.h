@@ -18,6 +18,8 @@
 #define _OPENRASP_CURL_HELPER_H_
 #include <string>
 #include <curl/curl.h>
+#include "openrasp_hook.h"
+
 namespace openrasp
 {
 
@@ -30,6 +32,9 @@ struct ResponseInfo
     double elapsed;
 };
 
-void perform_curl(CURL *curl, const std::string url_string, const char* postdata, ResponseInfo& res_info);
+void perform_curl(CURL *curl, const std::string url_string, const char *postdata, ResponseInfo &res_info);
+char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
+long fetch_outmost_long_from_ht(HashTable *ht, const char *arKey);
+HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey);
 } // namespace openrasp
 #endif

@@ -15,6 +15,7 @@
  */
 
 #include "curl_helper.h"
+#include "openrasp_ini.h"
 
 namespace openrasp
 {
@@ -30,7 +31,8 @@ void perform_curl(CURL *curl, const std::string url_string, const char *postdata
     if (curl)
     {
         struct curl_slist *chunk = nullptr;
-        chunk = curl_slist_append(chunk, "X-OpenRASP-Authentication-ID: 4e56cd55aa559823e5dc256e486b2b50");
+        std::string auth_header = "X-OpenRASP-Authentication-ID: " + std::string(openrasp_ini.authentication_id);
+        chunk = curl_slist_append(chunk, auth_header.c_str());
         res_info.res = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
         curl_easy_setopt(curl, CURLOPT_URL, url_string.c_str());
         curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
@@ -52,5 +54,38 @@ void perform_curl(CURL *curl, const std::string url_string, const char *postdata
             curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &(res_info.elapsed));
         }
     }
+}
+
+char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
+{
+	zval **origin_zv;
+	if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
+		Z_TYPE_PP(origin_zv) == IS_STRING)
+	{
+		return Z_STRVAL_PP(origin_zv);
+	}
+	return nullptr;
+}
+
+HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey)
+{
+	zval **origin_zv;
+	if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
+		Z_TYPE_PP(origin_zv) == IS_ARRAY)
+	{
+		return Z_ARRVAL_PP(origin_zv);
+	}
+	return nullptr;
+}
+
+long fetch_outmost_long_from_ht(HashTable *ht, const char *arKey)
+{
+    zval **origin_zv;
+	if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
+		Z_TYPE_PP(origin_zv) == IS_LONG)
+	{
+		return Z_LVAL_PP(origin_zv);
+	}
+	return 1;
 }
 } // namespace openrasp
