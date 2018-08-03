@@ -281,7 +281,7 @@ static inline v8::Isolate *get_isolate(TSRMLS_D)
             load_plugins(TSRMLS_C);
             shutdown_snapshot(TSRMLS_C);
             init_snapshot(TSRMLS_C);
-            if (process_globals.snapshot_blob.data != nullptr ||
+            if (process_globals.snapshot_blob.data != nullptr &&
                 process_globals.snapshot_blob.raw_size > 0)
             {
                 process_globals.plugin_update_timestamp = timestamp;
@@ -377,11 +377,9 @@ PHP_MINIT_FUNCTION(openrasp_v8)
     // but intern code initializes v8 only once
     v8::V8::Initialize();
 
-    v8::Platform *platform = v8::platform::CreateDefaultPlatform();
-    v8::V8::InitializePlatform(platform);
-    process_globals.snapshot_blob = get_snapshot(TSRMLS_C);
-    v8::V8::ShutdownPlatform();
-    delete platform;
+    init_platform(TSRMLS_C);
+    init_snapshot(TSRMLS_C);
+    shutdown_platform(TSRMLS_C);
 
     if (process_globals.snapshot_blob.data == nullptr ||
         process_globals.snapshot_blob.raw_size <= 0)
@@ -397,14 +395,12 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
 {
     ZEND_SHUTDOWN_MODULE_GLOBALS(openrasp_v8, PHP_GSHUTDOWN(openrasp_v8));
 
-    if (process_globals.is_initialized)
-    {
-        // Disposing v8 is permanent, it cannot be reinitialized,
-        // it should generally not be necessary to dispose v8 before exiting a process,
-        // so skip this step for module graceful reload
-        // v8::V8::Dispose();
-        shutdown_platform();
-        shutdown_snapshot();
-    }
+    // Disposing v8 is permanent, it cannot be reinitialized,
+    // it should generally not be necessary to dispose v8 before exiting a process,
+    // so skip this step for module graceful reload
+    // v8::V8::Dispose();
+    shutdown_platform();
+    shutdown_snapshot();
+
     return SUCCESS;
 }
