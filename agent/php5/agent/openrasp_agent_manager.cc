@@ -159,30 +159,44 @@ OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
 {
 }
 
-int OpenraspAgentManager::startup()
+bool OpenraspAgentManager::startup()
 {
 	if (need_daemon_agent())
 	{
 		_root_dir = std::string(openrasp_ini.root_dir);
 		_backend = std::string(openrasp_ini.backend);
-		create_share_memory();
-		offcial_plugin_version_shm();
+		if (!create_share_memory())
+		{
+			return false;
+		}
 		process_agent_startup();
 		initialized = true;
 	}
-	return SUCCESS;
+	return true;
 }
 
-int OpenraspAgentManager::create_share_memory()
+bool OpenraspAgentManager::create_share_memory()
 {
-	_agent_ctrl_block = reinterpret_cast<OpenraspCtrlBlock *>(
-		_mm->create(SHMEM_SEC_CTRL_BLOCK, sizeof(OpenraspCtrlBlock)));
-	return SUCCESS;
+	char *shm_block = _mm->create(SHMEM_SEC_CTRL_BLOCK, sizeof(OpenraspCtrlBlock));
+	if (shm_block && (_agent_ctrl_block = reinterpret_cast<OpenraspCtrlBlock *>(shm_block)))
+	{
+		return true;
+	}
+	return false;
 }
 
-int OpenraspAgentManager::shutdown()
-{
-	if (initialized && getppid() != 1)
+bool OpenraspAgentManager::shutdown()
+{	
+	char buffer[MAXPATHLEN];
+	pid_t ppid = getppid();
+	size_t len = ::readlink(("/proc/" + std::to_string(ppid) + "/exe").c_str(), buffer, sizeof(buffer) -1);
+	if (ppid != 1 || (len != -1 && strncmp(buffer, "/sbin/init", 10)))
+	{
+		//fpm will shutdown twice in daemon, check symnol link for ubuntu GNOME
+		//http://upstart.ubuntu.com/cookbook/#session-init
+		return true;
+	}
+	if (initialized)
 	{
 		pid_t supervisor_id = static_cast<pid_t>(_agent_ctrl_block->get_supervisor_id());
 		pid_t plugin_agent_id = _agent_ctrl_block->get_plugin_agent_id();
@@ -192,21 +206,21 @@ int OpenraspAgentManager::shutdown()
 		kill(log_agent_id, SIGKILL);
 		destroy_share_memory();
 	}
-	return SUCCESS;
+	return true;
 }
 
-int OpenraspAgentManager::destroy_share_memory()
+bool OpenraspAgentManager::destroy_share_memory()
 {
 	this->_mm->destroy(SHMEM_SEC_CTRL_BLOCK);
-	return SUCCESS;
+	return true;
 }
 
-int OpenraspAgentManager::process_agent_startup()
+bool OpenraspAgentManager::process_agent_startup()
 {
 	pid_t pid = fork();
 	if (pid < 0)
 	{
-		return FAILURE;
+		return false;
 	}
 	else if (pid == 0)
 	{
@@ -228,10 +242,10 @@ int OpenraspAgentManager::process_agent_startup()
 	{
 		_agent_ctrl_block->set_supervisor_id(pid);
 	}
-	return SUCCESS;
+	return true;
 }
 
-std::string OpenraspAgentManager::clear_offcial_plugins()
+std::string OpenraspAgentManager::clear_old_offcial_plugins()
 {
 	TSRMLS_FETCH();
 	std::string plugin_dir = _root_dir + "/plugins";
@@ -256,20 +270,6 @@ std::string OpenraspAgentManager::clear_offcial_plugins()
 	return newest_plugin;
 }
 
-int OpenraspAgentManager::offcial_plugin_version_shm()
-{
-	TSRMLS_FETCH();
-	std::string newest_plugin = clear_offcial_plugins();
-	if (!newest_plugin.empty())
-	{
-		size_t pos = newest_plugin.find(".js");
-		if (pos != std::string::npos)
-		{
-			_agent_ctrl_block->set_plugin_version(std::string(newest_plugin, 0, pos).c_str());
-		}
-	}
-}
-
 void OpenraspAgentManager::supervisor_run()
 {
 	struct sigaction sa_usr = {0};
@@ -280,37 +280,41 @@ void OpenraspAgentManager::supervisor_run()
 	super_install_signal_handler();
 	while (true)
 	{
-		if (!plugin_agent_info.is_alive)
+		for (int i = 0; i < supervisor_interval; ++i)
 		{
-			pid_t pid = fork();
-
-			if (pid == 0)
+			if (0 == i)
 			{
-				plugin_agent_run();
+				if (!plugin_agent_info.is_alive)
+				{
+					pid_t pid = fork();
+					if (pid == 0)
+					{
+						plugin_agent_run();
+					}
+					else if (pid > 0)
+					{
+						plugin_agent_info.is_alive = true;
+						plugin_agent_info.agent_pid = pid;
+						_agent_ctrl_block->set_plugin_agent_id(pid);
+					}
+				}
+				if (!log_agent_info.is_alive)
+				{
+					pid_t pid = fork();
+					if (pid == 0)
+					{
+						log_agent_run();
+					}
+					else if (pid > 0)
+					{
+						log_agent_info.is_alive = true;
+						log_agent_info.agent_pid = pid;
+						_agent_ctrl_block->set_log_agent_id(pid);
+					}
+				}
 			}
-			else if (pid > 0)
-			{
-				plugin_agent_info.is_alive = true;
-				plugin_agent_info.agent_pid = pid;
-				_agent_ctrl_block->set_plugin_agent_id(pid);
-			}
+			sleep(1);
 		}
-		if (!log_agent_info.is_alive)
-		{
-			pid_t pid = fork();
-
-			if (pid == 0)
-			{
-				log_agent_run();
-			}
-			else if (pid > 0)
-			{
-				log_agent_info.is_alive = true;
-				log_agent_info.agent_pid = pid;
-				_agent_ctrl_block->set_log_agent_id(pid);
-			}
-		}
-		sleep(1);
 	}
 }
 
@@ -324,7 +328,7 @@ void OpenraspAgentManager::update_local_offcial_plugin(std::string plugin_abs_pa
 		out_file.close();
 		_agent_ctrl_block->set_plugin_version(version);
 	}
-	clear_offcial_plugins();
+	clear_old_offcial_plugins();
 }
 
 void OpenraspAgentManager::plugin_agent_run()
@@ -411,7 +415,7 @@ void OpenraspAgentManager::log_agent_run()
 
 	long last_post_time = 0;
 	long time_offset = fetch_time_offset(TSRMLS_C);
-	std::string formatted_date_suffix =	update_formatted_date_suffix();
+	std::string formatted_date_suffix = update_formatted_date_suffix();
 
 	zval *log_arr = nullptr;
 	MAKE_STD_ZVAL(log_arr);
@@ -430,7 +434,7 @@ void OpenraspAgentManager::log_agent_run()
 		bool file_rotate = !is_same_day(now, last_post_time, time_offset);
 		if (file_rotate)
 		{
-			formatted_date_suffix =	update_formatted_date_suffix();
+			formatted_date_suffix = update_formatted_date_suffix();
 		}
 		for (int i = 0; i < log_dirs.size(); ++i)
 		{

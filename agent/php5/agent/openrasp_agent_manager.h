@@ -50,26 +50,24 @@ class OpenraspAgentManager
 public:
   OpenraspAgentManager(ShmManager *mm);
 
-  int startup();
-  int shutdown();
+  bool startup();
+  bool shutdown();
   void log_agent_run();
   void plugin_agent_run();
   long get_plugin_update_timestamp()
   {
-    return _agent_ctrl_block ? _agent_ctrl_block->get_last_update_time() : 0;
+    return (!initialized || _agent_ctrl_block) ? 0 : _agent_ctrl_block->get_last_update_time();
   }
 
 private:
-  int create_share_memory();
-  int destroy_share_memory();
+  bool create_share_memory();
+  bool destroy_share_memory();
 
   void supervisor_run();
-  int agent_startup();
 
   //for plugin update
-  int process_agent_startup();
-  int offcial_plugin_version_shm();
-  std::string clear_offcial_plugins();
+  bool process_agent_startup();
+  std::string clear_old_offcial_plugins();
   void update_local_offcial_plugin(std::string plugin_abs_path, const char *plugin, const char *version);
 
   //for log collect
@@ -82,6 +80,7 @@ private:
   std::string _root_dir;
   std::string _backend;
   std::string _default_slash;
+  static const int supervisor_interval = 10;
   bool initialized = false;
 };
 
