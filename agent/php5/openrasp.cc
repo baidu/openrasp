@@ -128,8 +128,6 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
 
 PHP_RINIT_FUNCTION(openrasp)
 {
-    		std::string a = std::to_string(getppid());
-		rasp_info(a.c_str(), a.size() TSRMLS_CC);
     if (is_initialized)
     {
         int result;
