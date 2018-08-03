@@ -182,7 +182,7 @@ int OpenraspAgentManager::create_share_memory()
 
 int OpenraspAgentManager::shutdown()
 {
-	if (initialized)
+	if (initialized && getppid() != 1)
 	{
 		pid_t supervisor_id = static_cast<pid_t>(_agent_ctrl_block->get_supervisor_id());
 		pid_t plugin_agent_id = _agent_ctrl_block->get_plugin_agent_id();

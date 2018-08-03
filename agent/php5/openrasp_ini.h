@@ -33,7 +33,7 @@ class Openrasp_ini
     char *locale;
     unsigned int timeout_ms = 100;
     char *syslog_server_address;
-    int log_maxburst = 1000;
+    int log_maxburst = 100;
     int syslog_facility;
     bool syslog_alarm_enable = 0;
     long syslog_connection_timeout = 50;

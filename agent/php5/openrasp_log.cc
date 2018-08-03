@@ -62,7 +62,7 @@ extern "C" {
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 
 #define RASP_LOG_FILE_MODE                  (mode_t)0666
-#define RASP_LOG_TOKEN_REFILL_INTERVAL      1000
+#define RASP_LOG_TOKEN_REFILL_INTERVAL      60000
 #define RASP_STREAM_WRITE_RETRY_NUMBER      1
 
 
