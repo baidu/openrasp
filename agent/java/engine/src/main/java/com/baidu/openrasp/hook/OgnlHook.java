@@ -49,7 +49,7 @@ public class OgnlHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "ognl/Ognl".equals(className);
+        return "ognl/OgnlParser".equals(className);
     }
 
     /**
@@ -60,17 +60,18 @@ public class OgnlHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(OgnlHook.class, "checkOgnlExpression",
-                "$1", String.class);
-        insertBefore(ctClass, "parseExpression", "(Ljava/lang/String;)Ljava/lang/Object;", src);
+                "$_", Object.class);
+        insertAfter(ctClass, "topLevelExpression", null, src);
     }
 
     /**
      * struct框架ognl语句解析hook点
      *
-     * @param expression ognl语句
+     * @param object ognl语句
      */
-    public static void checkOgnlExpression(String expression) {
-        if (expression != null) {
+    public static void checkOgnlExpression(Object object) {
+        if (object != null) {
+            String expression = String.valueOf(object);
             if (expression.length() >= Config.getConfig().getOgnlMinLength()) {
                 JSContext cx = JSContextFactory.enterAndInitContext();
                 Scriptable params = cx.newObject(cx.getScope());
