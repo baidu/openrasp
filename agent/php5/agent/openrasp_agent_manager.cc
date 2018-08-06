@@ -442,9 +442,10 @@ void OpenraspAgentManager::log_agent_run()
 		bool file_rotate = !is_same_day(now, last_post_time, time_offset);
 		for (LogDirInfo *ldi : log_dirs)
 		{
-			if (!ldi->ifs.is_open())
+			std::string active_log_file = ldi->dir_abs_path + _default_slash + ldi->prefix + formatted_date_suffix;
+			if (!ldi->ifs.is_open() && VCWD_ACCESS(active_log_file.c_str(), F_OK) == 0)
 			{
-				ldi->ifs.open(ldi->dir_abs_path + _default_slash + ldi->prefix + formatted_date_suffix);
+				ldi->ifs.open(active_log_file);
 				ldi->ifs.seekg(ldi->fpos);
 			}
 			if (ldi->ifs.is_open() && ldi->ifs.good())
@@ -474,7 +475,7 @@ void OpenraspAgentManager::log_agent_run()
 					ldi->ifs.clear();
 				}
 				std::vector<std::string> files_tobe_deleted;
-				std::string tobe_deleted_date_suffix = get_formatted_date_suffix(now - 90 * 24 * 60 * 60);
+				std::string tobe_deleted_date_suffix = get_formatted_date_suffix(now - openrasp_ini.log_max_backup * 24 * 60 * 60);
 				openrasp_scandir(ldi->dir_abs_path, files_tobe_deleted,
 								 [&ldi, &tobe_deleted_date_suffix](const char *filename) {
 									 return !strncmp(filename, ldi->prefix.c_str(), ldi->prefix.size()) &&
