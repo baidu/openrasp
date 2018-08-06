@@ -826,7 +826,10 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
 PHP_MINIT_FUNCTION(openrasp_log)
 {
 	ZEND_INIT_MODULE_GLOBALS(openrasp_log, openrasp_log_init_globals, NULL);
-    openrasp_shared_alloc_startup();
+    if (check_sapi_need_alloc_shm())
+    {
+        openrasp_shared_alloc_startup();
+    }
 #if defined(PHP_WIN32) && defined(HAVE_IPHLPAPI_WS2)
     PIP_ADAPTER_INFO pAdapterInfo;
     PIP_ADAPTER_INFO pAdapter = NULL;
@@ -896,7 +899,10 @@ PHP_MINIT_FUNCTION(openrasp_log)
 
 PHP_MSHUTDOWN_FUNCTION(openrasp_log)
 {
-    openrasp_shared_alloc_shutdown();
+    if (check_sapi_need_alloc_shm())
+    {
+        openrasp_shared_alloc_shutdown();
+    }
     return SUCCESS;
 }
 

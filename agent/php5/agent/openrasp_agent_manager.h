@@ -72,7 +72,7 @@ private:
   void update_local_offcial_plugin(std::string plugin_abs_path, const char *plugin, const char *version);
 
   //for log collect
-  std::string update_formatted_date_suffix();
+  std::string get_formatted_date_suffix(long timestamp);
   void post_logs_via_curl(std::string log_arr, CURL *curl, std::string url_string);
 
 private:

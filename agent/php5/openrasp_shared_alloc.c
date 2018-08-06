@@ -44,7 +44,6 @@
 static const openrasp_shared_memory_handlers *g_shared_alloc_handler = NULL;
 static const char *g_shared_model;
 openrasp_shared_segment_globals *shared_segment_globals;
-static zend_bool need_alloc_shm = 0;
 
 #ifndef PHP_WIN32
 #ifdef ZTS
@@ -64,7 +63,7 @@ static const openrasp_shared_memory_handler_entry handler_table[] = {
 	{ NULL, NULL}
 };
 
-static inline int check_sapi_need_alloc_shm()
+int check_sapi_need_alloc_shm()
 {
 	static const char *supported_sapis[] = {
 		"fpm-fcgi",
@@ -87,10 +86,6 @@ static inline int check_sapi_need_alloc_shm()
 #ifndef ZEND_WIN32
 void openrasp_shared_alloc_create_lock(void)
 {
-	if(!need_alloc_shm)
-	{
-		return;
-	}
 	int val;
 
 #ifdef ZTS
@@ -136,10 +131,6 @@ static int openrasp_shared_alloc_try(const openrasp_shared_memory_handler_entry 
 
 int openrasp_shared_alloc_startup()
 {
-	if(!(need_alloc_shm = check_sapi_need_alloc_shm()))
-	{
-		return ALLOC_FAILURE;
-	}
 	char *error_in = NULL;
 	const openrasp_shared_memory_handler_entry *he;
 	int res = ALLOC_FAILURE;
@@ -177,10 +168,6 @@ int openrasp_shared_alloc_startup()
 
 void openrasp_shared_alloc_shutdown()
 {
-	if(!need_alloc_shm)
-	{
-		return;
-	}
 	if (shared_segment_globals != NULL)
 	{
 		S_H(detach_segment)(shared_segment_globals);
@@ -207,10 +194,6 @@ static FLOCK_STRUCTURE(mem_write_unlock, F_UNLCK, SEEK_SET, 0, 1);
 
 void openrasp_shared_alloc_lock(TSRMLS_D)
 {
-	if(!need_alloc_shm)
-	{
-		return;
-	}
 #ifndef ZEND_WIN32
 
 #ifdef ZTS
@@ -242,10 +225,6 @@ void openrasp_shared_alloc_lock(TSRMLS_D)
 
 void openrasp_shared_alloc_unlock(TSRMLS_D)
 {
-	if(!need_alloc_shm)
-	{
-		return;
-	}
 	OPENRASP_G(locked) = 0;
 
 #ifndef ZEND_WIN32

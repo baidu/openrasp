@@ -51,8 +51,6 @@ namespace openrasp
 ShmManager sm;
 OpenraspAgentManager oam(&sm);
 
-typedef bool (*file_filter_t)(const char *filename);
-
 typedef struct agent_info_t
 {
 	const std::string name;
@@ -121,7 +119,7 @@ static void agent_exit()
 	exit(0);
 }
 
-static void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, file_filter_t file_filter)
+static void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter)
 {
 	DIR *dir;
 	std::string result;
@@ -394,11 +392,11 @@ void OpenraspAgentManager::plugin_agent_run()
 	}
 }
 
-std::string OpenraspAgentManager::update_formatted_date_suffix()
+std::string OpenraspAgentManager::get_formatted_date_suffix(long timestamp)
 {
 	TSRMLS_FETCH();
 	std::string result;
-	char *tmp_formatted_date_suffix = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), (long)time(NULL), 1 TSRMLS_CC);
+	char *tmp_formatted_date_suffix = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), timestamp, 1 TSRMLS_CC);
 	result = std::string(tmp_formatted_date_suffix);
 	efree(tmp_formatted_date_suffix);
 	return result;
@@ -418,7 +416,7 @@ void OpenraspAgentManager::log_agent_run()
 	static const std::string position_backup_file = ".LogCollectingPos";
 	long last_post_time = 0;
 	long time_offset = fetch_time_offset(TSRMLS_C);
-	std::string formatted_date_suffix = update_formatted_date_suffix();
+	std::string formatted_date_suffix = get_formatted_date_suffix((long)time(NULL));
 
 	std::string buffer;
 	std::string line;
@@ -434,7 +432,7 @@ void OpenraspAgentManager::log_agent_run()
 		cereal::BinaryInputArchive archive(is);
 		archive(formatted_date_suffix, alarm_dir_info.fpos, policy_dir_info.fpos);
 	}
-	catch (std::exception& e)
+	catch (std::exception &e)
 	{
 		//first startup throw excetion
 	}
@@ -475,11 +473,22 @@ void OpenraspAgentManager::log_agent_run()
 					ldi->ifs.close();
 					ldi->ifs.clear();
 				}
+				std::vector<std::string> files_tobe_deleted;
+				std::string tobe_deleted_date_suffix = get_formatted_date_suffix(now - 90 * 24 * 60 * 60);
+				openrasp_scandir(ldi->dir_abs_path, files_tobe_deleted,
+								 [&ldi, &tobe_deleted_date_suffix](const char *filename) {
+									 return !strncmp(filename, ldi->prefix.c_str(), ldi->prefix.size()) &&
+											std::string(filename) < (ldi->prefix + tobe_deleted_date_suffix);
+								 });
+				for (std::string delete_file : files_tobe_deleted)
+				{
+					VCWD_UNLINK(delete_file.c_str());
+				}
 			}
 		}
 		if (file_rotate)
 		{
-			formatted_date_suffix = update_formatted_date_suffix();
+			formatted_date_suffix = get_formatted_date_suffix((long)time(NULL));
 		}
 		last_post_time = now;
 		try
@@ -488,7 +497,7 @@ void OpenraspAgentManager::log_agent_run()
 			cereal::BinaryOutputArchive archive(os);
 			archive(formatted_date_suffix, alarm_dir_info.fpos, policy_dir_info.fpos);
 		}
-		catch (std::exception& e)
+		catch (std::exception &e)
 		{
 		}
 		for (int i = 0; i < openrasp_ini.log_push_interval; ++i)
