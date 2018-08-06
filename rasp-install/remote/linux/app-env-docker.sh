@@ -35,7 +35,7 @@ function InstallSpringBoot()
 
 function InstallPHP()
 {
-	curl https://packages.baidu.com/app/openrasp/rasp-php.tar.bz2 -o rasp-php.tar.bz2
+	curl https://packages.baidu.com/app/openrasp/rasp-php-linux.tar.bz2 -o rasp-php.tar.bz2
 	tar -xvf rasp-php.tar.bz2
 	
 	php rasp-*/install.php -d /opt/rasp/

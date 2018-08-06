@@ -38,14 +38,14 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp_v8)
 
 openrasp_v8_process_globals openrasp::process_globals;
 
-void load_plugins(TSRMLS_D);
-static bool init_platform(TSRMLS_D);
-static bool shutdown_platform(TSRMLS_D);
-static bool init_snapshot(TSRMLS_D);
-static bool shutdown_snapshot(TSRMLS_D);
-static bool init_isolate(TSRMLS_D);
-static bool shutdown_isolate(TSRMLS_D);
-static v8::Isolate *get_isolate(TSRMLS_D);
+static inline void load_plugins(TSRMLS_D);
+static inline bool init_platform(TSRMLS_D);
+static inline bool shutdown_platform(TSRMLS_D);
+static inline bool init_snapshot(TSRMLS_D);
+static inline bool shutdown_snapshot(TSRMLS_D);
+static inline bool init_isolate(TSRMLS_D);
+static inline bool shutdown_isolate(TSRMLS_D);
+static inline v8::Isolate *get_isolate(TSRMLS_D);
 
 unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
 {
@@ -164,7 +164,7 @@ unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
     return is_block ? 1 : 0;
 }
 
-static bool init_platform(TSRMLS_D)
+static inline bool init_platform(TSRMLS_D)
 {
     if (!process_globals.v8_platform)
     {
@@ -178,7 +178,7 @@ static bool init_platform(TSRMLS_D)
     return true;
 }
 
-static bool shutdown_platform(TSRMLS_D)
+static inline bool shutdown_platform(TSRMLS_D)
 {
     if (process_globals.v8_platform)
     {
@@ -189,7 +189,7 @@ static bool shutdown_platform(TSRMLS_D)
     return true;
 }
 
-static bool init_snapshot(TSRMLS_D)
+static inline bool init_snapshot(TSRMLS_D)
 {
     if (process_globals.snapshot_blob.data == nullptr &&
         process_globals.snapshot_blob.raw_size == 0)
@@ -199,7 +199,7 @@ static bool init_snapshot(TSRMLS_D)
     return true;
 }
 
-static bool shutdown_snapshot(TSRMLS_D)
+static inline bool shutdown_snapshot(TSRMLS_D)
 {
     if (process_globals.snapshot_blob.data != nullptr &&
         process_globals.snapshot_blob.raw_size > 0)
@@ -211,7 +211,7 @@ static bool shutdown_snapshot(TSRMLS_D)
     return true;
 }
 
-static bool init_isolate(TSRMLS_D)
+static inline bool init_isolate(TSRMLS_D)
 {
     if (!OPENRASP_V8_G(is_isolate_initialized))
     {
@@ -255,7 +255,7 @@ static bool init_isolate(TSRMLS_D)
     return true;
 }
 
-static bool shutdown_isolate(TSRMLS_D)
+static inline bool shutdown_isolate(TSRMLS_D)
 {
     if (OPENRASP_V8_G(is_isolate_initialized))
     {
@@ -267,7 +267,7 @@ static bool shutdown_isolate(TSRMLS_D)
     return true;
 }
 
-static v8::Isolate *get_isolate(TSRMLS_D)
+static inline v8::Isolate *get_isolate(TSRMLS_D)
 {
     init_platform(TSRMLS_C);
 
@@ -281,7 +281,7 @@ static v8::Isolate *get_isolate(TSRMLS_D)
             load_plugins(TSRMLS_C);
             shutdown_snapshot(TSRMLS_C);
             init_snapshot(TSRMLS_C);
-            if (process_globals.snapshot_blob.data != nullptr ||
+            if (process_globals.snapshot_blob.data != nullptr &&
                 process_globals.snapshot_blob.raw_size > 0)
             {
                 process_globals.plugin_update_timestamp = timestamp;
@@ -308,7 +308,7 @@ static v8::Isolate *get_isolate(TSRMLS_D)
     return OPENRASP_V8_G(isolate);
 }
 
-void load_plugins(TSRMLS_D)
+static inline void load_plugins(TSRMLS_D)
 {
     std::vector<openrasp_v8_plugin_src> plugin_src_list;
     std::string plugin_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("plugins"));
@@ -377,11 +377,9 @@ PHP_MINIT_FUNCTION(openrasp_v8)
     // but intern code initializes v8 only once
     v8::V8::Initialize();
 
-    v8::Platform *platform = v8::platform::CreateDefaultPlatform();
-    v8::V8::InitializePlatform(platform);
-    process_globals.snapshot_blob = get_snapshot(TSRMLS_C);
-    v8::V8::ShutdownPlatform();
-    delete platform;
+    init_platform(TSRMLS_C);
+    init_snapshot(TSRMLS_C);
+    shutdown_platform(TSRMLS_C);
 
     if (process_globals.snapshot_blob.data == nullptr ||
         process_globals.snapshot_blob.raw_size <= 0)
@@ -397,14 +395,12 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
 {
     ZEND_SHUTDOWN_MODULE_GLOBALS(openrasp_v8, PHP_GSHUTDOWN(openrasp_v8));
 
-    if (process_globals.is_initialized)
-    {
-        // Disposing v8 is permanent, it cannot be reinitialized,
-        // it should generally not be necessary to dispose v8 before exiting a process,
-        // so skip this step for module graceful reload
-        // v8::V8::Dispose();
-        shutdown_platform();
-        shutdown_snapshot();
-    }
+    // Disposing v8 is permanent, it cannot be reinitialized,
+    // it should generally not be necessary to dispose v8 before exiting a process,
+    // so skip this step for module graceful reload
+    // v8::V8::Dispose();
+    shutdown_platform();
+    shutdown_snapshot();
+
     return SUCCESS;
 }
