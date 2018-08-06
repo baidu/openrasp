@@ -172,7 +172,7 @@ static std::string fetch_last_clientip(const std::string &s)
 static void replace_clientip_by_header(zval *origin_zv, zval *new_zv TSRMLS_DC)
 {
     zval *server_globals = PG(http_globals)[TRACK_VARS_SERVER];
-    char* tmp_clientip_header = estrdup(openrasp_ini.clientip_header);
+    char* tmp_clientip_header = estrdup(("HTTP_" + std::string(openrasp_ini.clientip_header)).c_str());
     char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
     zval **z_clientip_pp;
     if (server_globals && 
