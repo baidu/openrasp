@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-#include "openrasp.h"
+#include "openrasp_utils.h"
 #include "openrasp_ini.h"
-#include<cmath>
+#include <cmath>
+
 extern "C"
 {
 #include "php_ini.h"
@@ -25,7 +26,6 @@ extern "C"
 #include "ext/standard/php_string.h"
 #include "Zend/zend_builtin_functions.h"
 }
-#include <string>
 
 void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
 {
@@ -176,7 +176,7 @@ int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC)
     return 0;
 }
 
-const char * fetch_url_scheme(const char *filename)
+const char *fetch_url_scheme(const char *filename)
 {
     if (nullptr == filename)
     {
@@ -197,4 +197,31 @@ long fetch_time_offset(TSRMLS_D)
     timelib_tzinfo *default_tz = get_timezone_info(TSRMLS_C);
     int32_t exact_offset = default_tz->type->offset;
     return std::round((double)exact_offset / 3600) * 3600;
+}
+
+void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter)
+{
+	DIR *dir;
+	std::string result;
+	struct dirent *ent;
+	if ((dir = opendir(dir_abs.c_str())) != NULL)
+	{
+		while ((ent = readdir(dir)) != NULL)
+		{
+			if (file_filter)
+			{
+				if (file_filter(ent->d_name))
+				{
+					plugins.push_back(std::string(ent->d_name));
+				}
+			}
+		}
+		closedir(dir);
+	}
+}
+
+bool same_day_in_current_timezone(long src, long target, long offset)
+{
+	long day = 24 * 60 * 60;
+	return ((src + offset) / day == (target + offset) / day);
 }

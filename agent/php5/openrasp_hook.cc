@@ -16,6 +16,7 @@
 
 #include "openrasp_hook.h"
 #include "openrasp_ini.h"
+#include "openrasp_utils.h"
 #include "openrasp_inject.h"
 #include <new>
 #include <vector>

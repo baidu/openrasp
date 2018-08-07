@@ -16,6 +16,7 @@
 
 #include "openrasp.h"
 #include "openrasp_ini.h"
+#include "openrasp_utils.h"
 
 extern "C"
 {

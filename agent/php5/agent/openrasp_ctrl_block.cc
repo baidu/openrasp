@@ -27,48 +27,58 @@ namespace openrasp
 
 void OpenraspCtrlBlock::set_supervisor_id(pid_t supervisor_id)
 {
-    _supervisor_id = supervisor_id;
+    this->supervisor_id = supervisor_id;
 }
 
 pid_t OpenraspCtrlBlock::get_supervisor_id()
 {
-    return _supervisor_id;
+    return supervisor_id;
 }
 
 void OpenraspCtrlBlock::set_plugin_agent_id(pid_t plugin_agent_id)
 {
-    _plugin_agent_id = plugin_agent_id;
+    this->plugin_agent_id = plugin_agent_id;
 }
 
 pid_t OpenraspCtrlBlock::get_plugin_agent_id()
 {
-    return _plugin_agent_id;
+    return plugin_agent_id;
 }
 
 void OpenraspCtrlBlock::set_log_agent_id(pid_t log_agent_id)
 {
-    _log_agent_id = log_agent_id;
+    this->log_agent_id = log_agent_id;
 }
 
 pid_t OpenraspCtrlBlock::get_log_agent_id()
 {
-    return _log_agent_id;
+    return log_agent_id;
+}
+
+void OpenraspCtrlBlock::set_fpm_master_pid(pid_t fpm_master_pid)
+{
+    this->fpm_master_pid = fpm_master_pid;
+}
+  
+pid_t OpenraspCtrlBlock::get_fpm_master_pid()
+{
+    return fpm_master_pid;
 }
 
 void OpenraspCtrlBlock::set_plugin_version(const char* plugin_version)
 {
-    strncpy(_plugin_version, plugin_version, OpenraspCtrlBlock::PLIGIN_VERSION_MAX_SIZE);
-    _last_update_time = (long)time(nullptr);
+    strncpy(this->plugin_version, plugin_version, OpenraspCtrlBlock::PLIGIN_VERSION_MAX_SIZE);
+    last_update_time = (long)time(nullptr);
 }
 
 const char *OpenraspCtrlBlock::get_plugin_version()
 {
-    return _plugin_version;
+    return plugin_version;
 }
 
 long OpenraspCtrlBlock::get_last_update_time()
 {
-    return _last_update_time;
+    return last_update_time;
 }
 
 } // namespace openrasp

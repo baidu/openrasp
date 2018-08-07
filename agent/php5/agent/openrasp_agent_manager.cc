@@ -32,7 +32,6 @@
 #include "utils/digest.h"
 #include <dirent.h>
 #include <algorithm>
-#include <functional>
 #include <cereal/archives/binary.hpp>
 #include <cereal/types/string.hpp>
 
@@ -117,27 +116,6 @@ static void install_signal_handler()
 static void agent_exit()
 {
 	exit(0);
-}
-
-static void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter)
-{
-	DIR *dir;
-	std::string result;
-	struct dirent *ent;
-	if ((dir = opendir(dir_abs.c_str())) != NULL)
-	{
-		while ((ent = readdir(dir)) != NULL)
-		{
-			if (file_filter)
-			{
-				if (file_filter(ent->d_name))
-				{
-					plugins.push_back(std::string(ent->d_name));
-				}
-			}
-		}
-		closedir(dir);
-	}
 }
 
 OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
@@ -402,12 +380,6 @@ std::string OpenraspAgentManager::get_formatted_date_suffix(long timestamp)
 	return result;
 }
 
-static inline bool is_same_day(long src, long target, long offset)
-{
-	long day = 24 * 60 * 60;
-	return ((src + offset) / day == (target + offset) / day);
-}
-
 void OpenraspAgentManager::log_agent_run()
 {
 	TSRMLS_FETCH();
@@ -439,7 +411,7 @@ void OpenraspAgentManager::log_agent_run()
 	while (true)
 	{
 		long now = (long)time(NULL);
-		bool file_rotate = !is_same_day(now, last_post_time, time_offset);
+		bool file_rotate = !same_day_in_current_timezone(now, last_post_time, time_offset);
 		for (LogDirInfo *ldi : log_dirs)
 		{
 			std::string active_log_file = ldi->dir_abs_path + _default_slash + ldi->prefix + formatted_date_suffix;

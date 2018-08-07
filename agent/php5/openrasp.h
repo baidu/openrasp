@@ -69,12 +69,6 @@ int rasp_info(const char *message, int message_len TSRMLS_DC);
 int plugin_info(const char *message, int message_len TSRMLS_DC);
 int alarm_info(zval *params_result TSRMLS_DC);
 int policy_info(zval *params_result TSRMLS_DC);
-void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC);
-void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC);
-void openrasp_error(int type, int error_code, const char *format, ...);
-int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC);
-const char * fetch_url_scheme(const char *filename);
-long fetch_time_offset(TSRMLS_D);
 
 #ifdef __cplusplus
 }
