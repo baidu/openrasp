@@ -68,7 +68,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
             // 1. 简单识别逻辑是否发生改变
             // 2. 识别数据库管理器
             String action = getActionElement(config, CONFIG_KEY_SQLI_USER_INPUT);
-            int paramterLength = getIntElement(config,CONFIG_KEY_SQLI_USER_INPUT,CONFIG_KEY_MIN_LENGTH);
+            int paramterLength = getIntElement(config, CONFIG_KEY_SQLI_USER_INPUT, CONFIG_KEY_MIN_LENGTH);
             if (!EventInfo.CHECK_ACTION_IGNORE.equals(action) && action != null && parameterMap != null) {
                 for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
                     String[] v = entry.getValue();
@@ -108,11 +108,13 @@ public class SqlStatementChecker extends ConfigurableChecker {
                     int i = -1;
                     if (tokens != null) {
                         HashMap<String, Boolean> modules = getJsonObjectAsMap(config, CONFIG_KEY_SQLI_POLICY, "feature");
+                        for (int z = 0; z < tokens.length; z++) {
+                            tokens[z] = tokens[z].toLowerCase();
+                        }
                         for (String token : tokens) {
                             i++;
                             if (!StringUtils.isEmpty(token)) {
-                                String lt = token.toLowerCase();
-                                if (lt.equals("select")
+                                if (token.equals("select")
                                         && modules.containsKey(CONFIG_KEY_UNION_NULL)
                                         && modules.get(CONFIG_KEY_UNION_NULL)) {
                                     int nullCount = 0;
@@ -133,25 +135,25 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                     }
                                     continue;
                                 }
-                                if (lt.equals(";") && i != tokens.length - 1
+                                if (token.equals(";") && i != tokens.length - 1
                                         && modules.containsKey(CONFIG_KEY_STACKED_QUERY)
                                         && modules.get(CONFIG_KEY_STACKED_QUERY)) {
                                     message = "SQLi - Detected stacked queries";
                                     break;
-                                } else if (lt.startsWith("0x")
+                                } else if (token.startsWith("0x")
                                         && modules.containsKey(CONFIG_KEY_NO_HEX)
                                         && modules.get(CONFIG_KEY_NO_HEX)) {
                                     message = "SQLi - Detected hexadecimal values in sql query";
                                     break;
-                                } else if (lt.startsWith("/*!")
+                                } else if (token.startsWith("/*!")
                                         && modules.containsKey(CONFIG_KEY_VERSION_COMMENT)
                                         && modules.get(CONFIG_KEY_VERSION_COMMENT)) {
                                     message = "SQLi - Detected MySQL version comment in sql query";
                                     break;
-                                } else if (i > 0 && i < tokens.length - 2 && (lt.equals("xor")
-                                        || lt.charAt(0) == '<'
-                                        || lt.charAt(0) == '>'
-                                        || lt.charAt(0) == '=')
+                                } else if (i > 0 && i < tokens.length - 2 && (token.equals("xor")
+                                        || token.charAt(0) == '<'
+                                        || token.charAt(0) == '>'
+                                        || token.charAt(0) == '=')
                                         && modules.containsKey(CONFIG_KEY_CONSTANT_COMPARE)
                                         && modules.get(CONFIG_KEY_CONSTANT_COMPARE)) {
                                     String op1 = tokens[i - 1];
@@ -176,7 +178,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                         message = "SQLi - Detected dangerous method call " + tokens[i - 1] + "() in sql query";
                                         break;
                                     }
-                                } else if (i < tokens.length - 2 && tokens[i].equals("into") 
+                                } else if (i < tokens.length - 2 && tokens[i].equals("into")
                                         && (tokens[i + 1].equals("outfile") || tokens[i + 1].equals("dupfile"))
                                         && modules.containsKey(CONFIG_KEY_INTO_OUTFILE)
                                         && modules.get(CONFIG_KEY_INTO_OUTFILE)) {
@@ -202,8 +204,8 @@ public class SqlStatementChecker extends ConfigurableChecker {
             result.addAll(jsResults);
         }
         // 检测无威胁的sql加入sql缓存
-        if (result.isEmpty()){
-            SQLStatementHook.sqlCache.put(query,null);
+        if (result.isEmpty()) {
+            SQLStatementHook.sqlCache.put(query, null);
         }
         return result;
     }
