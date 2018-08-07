@@ -65,6 +65,8 @@ private:
   bool destroy_share_memory();
 
   void supervisor_run();
+  pid_t search_master_pid();
+
 
   //for plugin update
   bool process_agent_startup();
@@ -77,6 +79,7 @@ private:
 
 private:
   ShmManager *_mm;
+  pid_t first_process_pid;
   std::string _root_dir;
   std::string _backend;
   bool initialized = false;

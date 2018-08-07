@@ -138,6 +138,7 @@ bool OpenraspAgentManager::startup()
 		process_agent_startup();
 		initialized = true;
 	}
+	first_process_pid = getpid();
 	return true;
 }
 
@@ -151,18 +152,59 @@ bool OpenraspAgentManager::create_share_memory()
 	return false;
 }
 
+pid_t OpenraspAgentManager::search_master_pid()
+{
+	std::vector<std::string> processes;
+	openrasp_scandir("/proc", processes,
+					 [](const char *filename) {
+						 TSRMLS_FETCH();
+						 struct stat sb;
+						 if (VCWD_STAT(("/proc/" + std::string(filename)).c_str(), &sb) == 0 && (sb.st_mode & S_IFDIR) != 0)
+						 {
+							 return true;
+						 }
+						 return false;
+					 });
+	for (std::string pid : processes)
+	{
+		std::string stat_file_path = "/proc/" + pid + "/stat";
+		if (VCWD_ACCESS(stat_file_path.c_str(), F_OK) == 0)
+		{
+			std::ifstream ifs_stat(stat_file_path);
+			std::string stat_line;
+			std::getline(ifs_stat, stat_line);
+			if (stat_line.empty())
+			{
+				continue;
+			}
+			std::stringstream stat_items(stat_line);
+			std::string item;
+			for (int i = 0; i < 4; ++i)
+			{
+				std::getline(stat_items, item, ' ');
+			}
+			int ppid = std::atoi(item.c_str());
+			if (ppid == first_process_pid)
+			{
+				std::string cmdline_file_path = "/proc/" + pid + "/cmdline";
+				std::ifstream ifs_cmdline(cmdline_file_path);
+				std::string cmdline;
+				std::getline(ifs_cmdline, cmdline);
+				if (cmdline.find("php-fpm: master process") == 0)
+				{
+					return std::atoi(pid.c_str());
+				}
+			}
+		}
+	}
+	return 0;
+}
+
 bool OpenraspAgentManager::shutdown()
 {
-	char buffer[MAXPATHLEN];
-	pid_t ppid = getppid();
-	size_t len = ::readlink(("/proc/" + std::to_string(ppid) + "/exe").c_str(), buffer, sizeof(buffer) - 1);
-	if (ppid != 1 || (len != -1 && strncmp(buffer, "/sbin/init", 10)))
-	{
-		//fpm will shutdown twice in daemon, check symnol link for ubuntu GNOME
-		//http://upstart.ubuntu.com/cookbook/#session-init
-		return true;
-	}
-	if (initialized)
+	pid_t master_pid = search_master_pid();
+	_agent_ctrl_block->set_master_pid(master_pid);
+	if (initialized && (!master_pid || getpid() == master_pid))
 	{
 		pid_t supervisor_id = static_cast<pid_t>(_agent_ctrl_block->get_supervisor_id());
 		pid_t plugin_agent_id = _agent_ctrl_block->get_plugin_agent_id();
