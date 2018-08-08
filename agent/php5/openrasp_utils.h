@@ -28,7 +28,6 @@ void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC);
 void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC);
 int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC);
 bool same_day_in_current_timezone(long src, long target, long offset);
-void openrasp_error(int type, int error_code, const char *format, ...);
 void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter);
 
 #endif
