@@ -37,6 +37,7 @@
 
 extern "C"
 {
+#include "openrasp_shared_alloc.h"
 #include "ext/standard/php_smart_str.h"
 #include "ext/json/php_json.h"
 #include "ext/date/php_date.h"
@@ -55,20 +56,11 @@ typedef struct agent_info_t
 	const std::string name;
 	bool is_alive;
 	unsigned long agent_pid;
+	volatile int signal_received;
 } agent_info;
 
-static agent_info plugin_agent_info{PLUGIN_AGENT_PR_NAME, false, 0};
-static agent_info log_agent_info{LOG_AGENT_PR_NAME, false, 0};
-volatile static int signal_received = 0;
-
-inline static bool need_daemon_agent()
-{
-	if (sapi_module.name && strcmp(sapi_module.name, "fpm-fcgi") == 0)
-	{
-		return true;
-	}
-	return false;
-}
+static agent_info plugin_agent_info{PLUGIN_AGENT_PR_NAME, false, 0, 0};
+static agent_info log_agent_info{LOG_AGENT_PR_NAME, false, 0, 0};
 
 static void super_signal_handler(int signal_no)
 {
@@ -100,24 +92,6 @@ static void supervisor_sigchld_handler(int signal_no)
 	}
 }
 
-static void signal_handler(int signal_no)
-{
-	signal_received = signal_no;
-}
-
-static void install_signal_handler()
-{
-	struct sigaction sa_usr = {0};
-	sa_usr.sa_flags = 0;
-	sa_usr.sa_handler = signal_handler;
-	sigaction(SIGTERM, &sa_usr, NULL);
-}
-
-static void agent_exit()
-{
-	exit(0);
-}
-
 OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
 	: _mm(mm),
 	  _default_slash(1, DEFAULT_SLASH),
@@ -127,7 +101,7 @@ OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
 
 bool OpenraspAgentManager::startup()
 {
-	if (need_daemon_agent())
+	if (check_sapi_need_alloc_shm())
 	{
 		_root_dir = std::string(openrasp_ini.root_dir);
 		_backend = std::string(openrasp_ini.backend);
@@ -142,6 +116,31 @@ bool OpenraspAgentManager::startup()
 	return true;
 }
 
+bool OpenraspAgentManager::shutdown()
+{
+	if (initialized)
+	{
+		if (strcmp(sapi_module.name, "fpm-fcgi") == 0)
+		{
+			pid_t master_pid = search_master_pid();
+			_agent_ctrl_block->set_master_pid(master_pid);
+			if (master_pid && getpid() != master_pid)
+			{
+				return true;
+			}
+		}
+		pid_t supervisor_id = static_cast<pid_t>(_agent_ctrl_block->get_supervisor_id());
+		pid_t plugin_agent_id = _agent_ctrl_block->get_plugin_agent_id();
+		pid_t log_agent_id = _agent_ctrl_block->get_log_agent_id();
+		kill(supervisor_id, SIGKILL);
+		kill(plugin_agent_id, SIGKILL);
+		kill(log_agent_id, SIGKILL);
+		destroy_share_memory();
+		initialized = false;
+	}
+	return true;
+}
+
 bool OpenraspAgentManager::create_share_memory()
 {
 	char *shm_block = _mm->create(SHMEM_SEC_CTRL_BLOCK, sizeof(OpenraspCtrlBlock));
@@ -150,6 +149,13 @@ bool OpenraspAgentManager::create_share_memory()
 		return true;
 	}
 	return false;
+}
+
+bool OpenraspAgentManager::destroy_share_memory()
+{
+	_agent_ctrl_block = nullptr;
+	this->_mm->destroy(SHMEM_SEC_CTRL_BLOCK);
+	return true;
 }
 
 pid_t OpenraspAgentManager::search_master_pid()
@@ -200,30 +206,12 @@ pid_t OpenraspAgentManager::search_master_pid()
 	return 0;
 }
 
-bool OpenraspAgentManager::shutdown()
+void OpenraspAgentManager::install_signal_handler(__sighandler_t signal_handler)
 {
-	if (initialized)
-	{
-		pid_t master_pid = search_master_pid();
-		_agent_ctrl_block->set_master_pid(master_pid);
-		if (!master_pid || getpid() == master_pid)
-		{
-			pid_t supervisor_id = static_cast<pid_t>(_agent_ctrl_block->get_supervisor_id());
-			pid_t plugin_agent_id = _agent_ctrl_block->get_plugin_agent_id();
-			pid_t log_agent_id = _agent_ctrl_block->get_log_agent_id();
-			kill(supervisor_id, SIGKILL);
-			kill(plugin_agent_id, SIGKILL);
-			kill(log_agent_id, SIGKILL);
-			destroy_share_memory();
-		}
-	}
-	return true;
-}
-
-bool OpenraspAgentManager::destroy_share_memory()
-{
-	this->_mm->destroy(SHMEM_SEC_CTRL_BLOCK);
-	return true;
+	struct sigaction sa_usr = {0};
+	sa_usr.sa_flags = 0;
+	sa_usr.sa_handler = signal_handler;
+	sigaction(SIGTERM, &sa_usr, NULL);
 }
 
 bool OpenraspAgentManager::process_agent_startup()
@@ -344,7 +332,10 @@ void OpenraspAgentManager::update_local_offcial_plugin(std::string plugin_abs_pa
 
 void OpenraspAgentManager::plugin_agent_run()
 {
-	install_signal_handler();
+	install_signal_handler(
+		[](int signal_no) {
+			plugin_agent_info.signal_received = signal_no;
+		});
 	TSRMLS_FETCH();
 	CURL *curl = curl_easy_init();
 	ResponseInfo res_info;
@@ -353,11 +344,11 @@ void OpenraspAgentManager::plugin_agent_run()
 		for (int i = 0; i < openrasp_ini.plugin_update_interval; ++i)
 		{
 			sleep(1);
-			if (signal_received == SIGTERM)
+			if (plugin_agent_info.signal_received == SIGTERM)
 			{
 				curl_easy_cleanup(curl);
 				curl = nullptr;
-				agent_exit();
+				exit(0);
 			}
 		}
 		std::string url_string = _backend + "/v1/plugin?version=" + std::string(_agent_ctrl_block->get_plugin_version());
@@ -428,7 +419,10 @@ std::string OpenraspAgentManager::get_formatted_date_suffix(long timestamp)
 void OpenraspAgentManager::log_agent_run()
 {
 	TSRMLS_FETCH();
-	install_signal_handler();
+	install_signal_handler(
+		[](int signal_no) {
+			log_agent_info.signal_received = signal_no;
+		});
 
 	static const std::string position_backup_file = ".LogCollectingPos";
 	long last_post_time = 0;
@@ -521,11 +515,11 @@ void OpenraspAgentManager::log_agent_run()
 		for (int i = 0; i < openrasp_ini.log_push_interval; ++i)
 		{
 			sleep(1);
-			if (signal_received == SIGTERM)
+			if (log_agent_info.signal_received == SIGTERM)
 			{
 				curl_easy_cleanup(curl);
 				curl = nullptr;
-				agent_exit();
+				exit(0);
 			}
 		}
 	}

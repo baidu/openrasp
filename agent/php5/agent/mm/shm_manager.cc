@@ -60,6 +60,8 @@ int ShmManager::destroy(enum ShmemSecKey mem_key)
 
     munmap(shmem_meta.mem_addr, shmem_meta.mem_size);
 
+    _shmem_key_map.erase(mem_key);
+
     return SUCCESS;
 }
 

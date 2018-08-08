@@ -66,6 +66,7 @@ private:
   void supervisor_run();
   pid_t search_master_pid();
   bool process_agent_startup();
+  void install_signal_handler(__sighandler_t signal_handler);
 
   //for plugin update
   void plugin_agent_run();
