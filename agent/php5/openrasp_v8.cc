@@ -79,7 +79,7 @@ unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
                                                       .ToLocalChecked()
                                                       .As<v8::Function>();
             v8::Local<v8::Object> message = v8::Object::New(isolate);
-            message->Set(V8STRING_N("message").ToLocalChecked(), V8STRING_N("timeout").ToLocalChecked());
+            message->Set(V8STRING_N("message").ToLocalChecked(), V8STRING_N("Javascript plugin execution timeout.").ToLocalChecked());
             message->Set(V8STRING_N("type").ToLocalChecked(), type);
             message->Set(V8STRING_N("params").ToLocalChecked(), params);
             message->Set(V8STRING_N("context").ToLocalChecked(), request_context);
