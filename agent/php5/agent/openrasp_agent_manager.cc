@@ -202,17 +202,20 @@ pid_t OpenraspAgentManager::search_master_pid()
 
 bool OpenraspAgentManager::shutdown()
 {
-	pid_t master_pid = search_master_pid();
-	_agent_ctrl_block->set_master_pid(master_pid);
-	if (initialized && (!master_pid || getpid() == master_pid))
+	if (initialized)
 	{
-		pid_t supervisor_id = static_cast<pid_t>(_agent_ctrl_block->get_supervisor_id());
-		pid_t plugin_agent_id = _agent_ctrl_block->get_plugin_agent_id();
-		pid_t log_agent_id = _agent_ctrl_block->get_log_agent_id();
-		kill(supervisor_id, SIGKILL);
-		kill(plugin_agent_id, SIGKILL);
-		kill(log_agent_id, SIGKILL);
-		destroy_share_memory();
+		pid_t master_pid = search_master_pid();
+		_agent_ctrl_block->set_master_pid(master_pid);
+		if (!master_pid || getpid() == master_pid)
+		{
+			pid_t supervisor_id = static_cast<pid_t>(_agent_ctrl_block->get_supervisor_id());
+			pid_t plugin_agent_id = _agent_ctrl_block->get_plugin_agent_id();
+			pid_t log_agent_id = _agent_ctrl_block->get_log_agent_id();
+			kill(supervisor_id, SIGKILL);
+			kill(plugin_agent_id, SIGKILL);
+			kill(log_agent_id, SIGKILL);
+			destroy_share_memory();
+		}
 	}
 	return true;
 }
