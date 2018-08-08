@@ -53,11 +53,10 @@ public:
 
   bool startup();
   bool shutdown();
-  void log_agent_run();
-  void plugin_agent_run();
+
   long get_plugin_update_timestamp()
   {
-    return (!initialized || _agent_ctrl_block) ? 0 : _agent_ctrl_block->get_last_update_time();
+    return (!initialized || nullptr == _agent_ctrl_block) ? 0 : _agent_ctrl_block->get_last_update_time();
   }
 
 private:
@@ -66,14 +65,15 @@ private:
 
   void supervisor_run();
   pid_t search_master_pid();
-
+  bool process_agent_startup();
 
   //for plugin update
-  bool process_agent_startup();
+  void plugin_agent_run();
   std::string clear_old_offcial_plugins();
   void update_local_offcial_plugin(std::string plugin_abs_path, const char *plugin, const char *version);
 
   //for log collect
+  void log_agent_run();
   std::string get_formatted_date_suffix(long timestamp);
   void post_logs_via_curl(std::string log_arr, CURL *curl, std::string url_string);
 

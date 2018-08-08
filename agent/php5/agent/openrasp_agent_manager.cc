@@ -121,7 +121,7 @@ static void agent_exit()
 OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
 	: _mm(mm),
 	  _default_slash(1, DEFAULT_SLASH),
-	  _agent_ctrl_block(NULL)
+	  _agent_ctrl_block(nullptr)
 {
 }
 
