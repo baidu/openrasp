@@ -16,7 +16,8 @@
 
 #include "openrasp.h"
 #include "openrasp_ini.h"
-extern "C" {
+extern "C"
+{
 #include "php_ini.h"
 #include "ext/standard/file.h"
 #include "ext/standard/php_string.h"
@@ -76,7 +77,7 @@ void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
             }
             buffer.append(")\n");
         }
-        if (buffer.length() > 0) 
+        if (buffer.length() > 0)
         {
             ZVAL_STRINGL(backtrace_str, buffer.c_str(), buffer.length() - 1, 1);
         }
@@ -171,4 +172,20 @@ int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC)
         openrasp_error(E_WARNING, CONFIG_ERROR, _("Could not create directory '%s': %s"), path, strerror(errno));
     }
     return 0;
+}
+
+const char * fetch_url_scheme(const char *filename)
+{
+    if (nullptr == filename)
+    {
+        return nullptr;
+    }
+    const char *p;
+    for (p = filename; isalnum((int)*p) || *p == '+' || *p == '-' || *p == '.'; p++)
+        ;
+    if ((*p == ':') && (p - filename > 1) && (p[1] == '/') && (p[2] == '/'))
+    {
+        return p;
+    }
+    return nullptr;
 }

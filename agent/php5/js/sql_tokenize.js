@@ -34,9 +34,6 @@ global["sql_tokenize"] =
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
 /******/
-/******/ 	// identity function for calling harmony imports with the correct context
-/******/ 	__webpack_require__.i = function(value) { return value; };
-/******/
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
@@ -64,7 +61,7 @@ global["sql_tokenize"] =
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 32);
+/******/ 	return __webpack_require__(__webpack_require__.s = 31);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -474,11 +471,11 @@ DoubleDict.prototype.set = function (a, b, o) {
 
 
 function escapeWhitespace(s, escapeSpaces) {
-    s = s.replace(/\t/g, "\\t")
-         .replace(/\n/g, "\\n")
-         .replace(/\r/g, "\\r");
+    s = s.replace("\t", "\\t");
+    s = s.replace("\n", "\\n");
+    s = s.replace("\r", "\\r");
     if (escapeSpaces) {
-        s = s.replace(/ /g, "\u00B7");
+        s = s.replace(" ", "\u00B7");
     }
     return s;
 }
@@ -517,7 +514,6 @@ exports.escapeWhitespace = escapeWhitespace;
 exports.arrayToString = arrayToString;
 exports.titleCase = titleCase;
 exports.equalArrays = equalArrays;
-
 
 /***/ }),
 /* 1 */
@@ -1320,181 +1316,6 @@ exports.BasicBlockStartState = BasicBlockStartState;
  * Use of this file is governed by the BSD 3-clause license that
  * can be found in the LICENSE.txt file in the project root.
  */
-
-// The root of the ANTLR exception hierarchy. In general, ANTLR tracks just
-//  3 kinds of errors: prediction errors, failed predicate errors, and
-//  mismatched input errors. In each case, the parser knows where it is
-//  in the input, where it is in the ATN, the rule invocation stack,
-//  and what kind of problem occurred.
-
-var PredicateTransition = __webpack_require__(8).PredicateTransition;
-
-function RecognitionException(params) {
-	Error.call(this);
-	if (!!Error.captureStackTrace) {
-        Error.captureStackTrace(this, RecognitionException);
-	} else {
-		var stack = new Error().stack;
-	}
-	this.message = params.message;
-    this.recognizer = params.recognizer;
-    this.input = params.input;
-    this.ctx = params.ctx;
-    // The current {@link Token} when an error occurred. Since not all streams
-    // support accessing symbols by index, we have to track the {@link Token}
-    // instance itself.
-    this.offendingToken = null;
-    // Get the ATN state number the parser was in at the time the error
-    // occurred. For {@link NoViableAltException} and
-    // {@link LexerNoViableAltException} exceptions, this is the
-    // {@link DecisionState} number. For others, it is the state whose outgoing
-    // edge we couldn't match.
-    this.offendingState = -1;
-    if (this.recognizer!==null) {
-        this.offendingState = this.recognizer.state;
-    }
-    return this;
-}
-
-RecognitionException.prototype = Object.create(Error.prototype);
-RecognitionException.prototype.constructor = RecognitionException;
-
-// <p>If the state number is not known, this method returns -1.</p>
-
-//
-// Gets the set of input symbols which could potentially follow the
-// previously matched symbol at the time this exception was thrown.
-//
-// <p>If the set of expected tokens is not known and could not be computed,
-// this method returns {@code null}.</p>
-//
-// @return The set of token types that could potentially follow the current
-// state in the ATN, or {@code null} if the information is not available.
-// /
-RecognitionException.prototype.getExpectedTokens = function() {
-    if (this.recognizer!==null) {
-        return this.recognizer.atn.getExpectedTokens(this.offendingState, this.ctx);
-    } else {
-        return null;
-    }
-};
-
-RecognitionException.prototype.toString = function() {
-    return this.message;
-};
-
-function LexerNoViableAltException(lexer, input, startIndex, deadEndConfigs) {
-	RecognitionException.call(this, {message:"", recognizer:lexer, input:input, ctx:null});
-    this.startIndex = startIndex;
-    this.deadEndConfigs = deadEndConfigs;
-    return this;
-}
-
-LexerNoViableAltException.prototype = Object.create(RecognitionException.prototype);
-LexerNoViableAltException.prototype.constructor = LexerNoViableAltException;
-
-LexerNoViableAltException.prototype.toString = function() {
-    var symbol = "";
-    if (this.startIndex >= 0 && this.startIndex < this.input.size) {
-        symbol = this.input.getText((this.startIndex,this.startIndex));
-    }
-    return "LexerNoViableAltException" + symbol;
-};
-
-// Indicates that the parser could not decide which of two or more paths
-// to take based upon the remaining input. It tracks the starting token
-// of the offending input and also knows where the parser was
-// in the various paths when the error. Reported by reportNoViableAlternative()
-//
-function NoViableAltException(recognizer, input, startToken, offendingToken, deadEndConfigs, ctx) {
-	ctx = ctx || recognizer._ctx;
-	offendingToken = offendingToken || recognizer.getCurrentToken();
-	startToken = startToken || recognizer.getCurrentToken();
-	input = input || recognizer.getInputStream();
-	RecognitionException.call(this, {message:"", recognizer:recognizer, input:input, ctx:ctx});
-    // Which configurations did we try at input.index() that couldn't match
-	// input.LT(1)?//
-    this.deadEndConfigs = deadEndConfigs;
-    // The token object at the start index; the input stream might
-    // not be buffering tokens so get a reference to it. (At the
-    // time the error occurred, of course the stream needs to keep a
-    // buffer all of the tokens but later we might not have access to those.)
-    this.startToken = startToken;
-    this.offendingToken = offendingToken;
-}
-
-NoViableAltException.prototype = Object.create(RecognitionException.prototype);
-NoViableAltException.prototype.constructor = NoViableAltException;
-
-// This signifies any kind of mismatched input exceptions such as
-// when the current input does not match the expected token.
-//
-function InputMismatchException(recognizer) {
-	RecognitionException.call(this, {message:"", recognizer:recognizer, input:recognizer.getInputStream(), ctx:recognizer._ctx});
-    this.offendingToken = recognizer.getCurrentToken();
-}
-
-InputMismatchException.prototype = Object.create(RecognitionException.prototype);
-InputMismatchException.prototype.constructor = InputMismatchException;
-
-// A semantic predicate failed during validation. Validation of predicates
-// occurs when normally parsing the alternative just like matching a token.
-// Disambiguating predicate evaluation occurs when we test a predicate during
-// prediction.
-
-function FailedPredicateException(recognizer, predicate, message) {
-	RecognitionException.call(this, {message:this.formatMessage(predicate,message || null), recognizer:recognizer,
-                         input:recognizer.getInputStream(), ctx:recognizer._ctx});
-    var s = recognizer._interp.atn.states[recognizer.state];
-    var trans = s.transitions[0];
-    if (trans instanceof PredicateTransition) {
-        this.ruleIndex = trans.ruleIndex;
-        this.predicateIndex = trans.predIndex;
-    } else {
-        this.ruleIndex = 0;
-        this.predicateIndex = 0;
-    }
-    this.predicate = predicate;
-    this.offendingToken = recognizer.getCurrentToken();
-    return this;
-}
-
-FailedPredicateException.prototype = Object.create(RecognitionException.prototype);
-FailedPredicateException.prototype.constructor = FailedPredicateException;
-
-FailedPredicateException.prototype.formatMessage = function(predicate, message) {
-    if (message !==null) {
-        return message;
-    } else {
-        return "failed predicate: {" + predicate + "}?";
-    }
-};
-
-function ParseCancellationException() {
-	Error.call(this);
-	Error.captureStackTrace(this, ParseCancellationException);
-	return this;
-}
-
-ParseCancellationException.prototype = Object.create(Error.prototype);
-ParseCancellationException.prototype.constructor = ParseCancellationException;
-
-exports.RecognitionException = RecognitionException;
-exports.NoViableAltException = NoViableAltException;
-exports.LexerNoViableAltException = LexerNoViableAltException;
-exports.InputMismatchException = InputMismatchException;
-exports.FailedPredicateException = FailedPredicateException;
-exports.ParseCancellationException = ParseCancellationException;
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
- * Use of this file is governed by the BSD 3-clause license that
- * can be found in the LICENSE.txt file in the project root.
- */
 ///
 
 // The basic notion of a tree has a parent, a payload, and a list of children.
@@ -1717,6 +1538,181 @@ exports.ParseTreeListener = ParseTreeListener;
 exports.ParseTreeVisitor = ParseTreeVisitor;
 exports.ParseTreeWalker = ParseTreeWalker;
 exports.INVALID_INTERVAL = INVALID_INTERVAL;
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
+ * Use of this file is governed by the BSD 3-clause license that
+ * can be found in the LICENSE.txt file in the project root.
+ */
+
+// The root of the ANTLR exception hierarchy. In general, ANTLR tracks just
+//  3 kinds of errors: prediction errors, failed predicate errors, and
+//  mismatched input errors. In each case, the parser knows where it is
+//  in the input, where it is in the ATN, the rule invocation stack,
+//  and what kind of problem occurred.
+
+var PredicateTransition = __webpack_require__(8).PredicateTransition;
+
+function RecognitionException(params) {
+	Error.call(this);
+	if (!!Error.captureStackTrace) {
+        Error.captureStackTrace(this, RecognitionException);
+	} else {
+		var stack = new Error().stack;
+	}
+	this.message = params.message;
+    this.recognizer = params.recognizer;
+    this.input = params.input;
+    this.ctx = params.ctx;
+    // The current {@link Token} when an error occurred. Since not all streams
+    // support accessing symbols by index, we have to track the {@link Token}
+    // instance itself.
+    this.offendingToken = null;
+    // Get the ATN state number the parser was in at the time the error
+    // occurred. For {@link NoViableAltException} and
+    // {@link LexerNoViableAltException} exceptions, this is the
+    // {@link DecisionState} number. For others, it is the state whose outgoing
+    // edge we couldn't match.
+    this.offendingState = -1;
+    if (this.recognizer!==null) {
+        this.offendingState = this.recognizer.state;
+    }
+    return this;
+}
+
+RecognitionException.prototype = Object.create(Error.prototype);
+RecognitionException.prototype.constructor = RecognitionException;
+
+// <p>If the state number is not known, this method returns -1.</p>
+
+//
+// Gets the set of input symbols which could potentially follow the
+// previously matched symbol at the time this exception was thrown.
+//
+// <p>If the set of expected tokens is not known and could not be computed,
+// this method returns {@code null}.</p>
+//
+// @return The set of token types that could potentially follow the current
+// state in the ATN, or {@code null} if the information is not available.
+// /
+RecognitionException.prototype.getExpectedTokens = function() {
+    if (this.recognizer!==null) {
+        return this.recognizer.atn.getExpectedTokens(this.offendingState, this.ctx);
+    } else {
+        return null;
+    }
+};
+
+RecognitionException.prototype.toString = function() {
+    return this.message;
+};
+
+function LexerNoViableAltException(lexer, input, startIndex, deadEndConfigs) {
+	RecognitionException.call(this, {message:"", recognizer:lexer, input:input, ctx:null});
+    this.startIndex = startIndex;
+    this.deadEndConfigs = deadEndConfigs;
+    return this;
+}
+
+LexerNoViableAltException.prototype = Object.create(RecognitionException.prototype);
+LexerNoViableAltException.prototype.constructor = LexerNoViableAltException;
+
+LexerNoViableAltException.prototype.toString = function() {
+    var symbol = "";
+    if (this.startIndex >= 0 && this.startIndex < this.input.size) {
+        symbol = this.input.getText((this.startIndex,this.startIndex));
+    }
+    return "LexerNoViableAltException" + symbol;
+};
+
+// Indicates that the parser could not decide which of two or more paths
+// to take based upon the remaining input. It tracks the starting token
+// of the offending input and also knows where the parser was
+// in the various paths when the error. Reported by reportNoViableAlternative()
+//
+function NoViableAltException(recognizer, input, startToken, offendingToken, deadEndConfigs, ctx) {
+	ctx = ctx || recognizer._ctx;
+	offendingToken = offendingToken || recognizer.getCurrentToken();
+	startToken = startToken || recognizer.getCurrentToken();
+	input = input || recognizer.getInputStream();
+	RecognitionException.call(this, {message:"", recognizer:recognizer, input:input, ctx:ctx});
+    // Which configurations did we try at input.index() that couldn't match
+	// input.LT(1)?//
+    this.deadEndConfigs = deadEndConfigs;
+    // The token object at the start index; the input stream might
+    // not be buffering tokens so get a reference to it. (At the
+    // time the error occurred, of course the stream needs to keep a
+    // buffer all of the tokens but later we might not have access to those.)
+    this.startToken = startToken;
+    this.offendingToken = offendingToken;
+}
+
+NoViableAltException.prototype = Object.create(RecognitionException.prototype);
+NoViableAltException.prototype.constructor = NoViableAltException;
+
+// This signifies any kind of mismatched input exceptions such as
+// when the current input does not match the expected token.
+//
+function InputMismatchException(recognizer) {
+	RecognitionException.call(this, {message:"", recognizer:recognizer, input:recognizer.getInputStream(), ctx:recognizer._ctx});
+    this.offendingToken = recognizer.getCurrentToken();
+}
+
+InputMismatchException.prototype = Object.create(RecognitionException.prototype);
+InputMismatchException.prototype.constructor = InputMismatchException;
+
+// A semantic predicate failed during validation. Validation of predicates
+// occurs when normally parsing the alternative just like matching a token.
+// Disambiguating predicate evaluation occurs when we test a predicate during
+// prediction.
+
+function FailedPredicateException(recognizer, predicate, message) {
+	RecognitionException.call(this, {message:this.formatMessage(predicate,message || null), recognizer:recognizer,
+                         input:recognizer.getInputStream(), ctx:recognizer._ctx});
+    var s = recognizer._interp.atn.states[recognizer.state];
+    var trans = s.transitions[0];
+    if (trans instanceof PredicateTransition) {
+        this.ruleIndex = trans.ruleIndex;
+        this.predicateIndex = trans.predIndex;
+    } else {
+        this.ruleIndex = 0;
+        this.predicateIndex = 0;
+    }
+    this.predicate = predicate;
+    this.offendingToken = recognizer.getCurrentToken();
+    return this;
+}
+
+FailedPredicateException.prototype = Object.create(RecognitionException.prototype);
+FailedPredicateException.prototype.constructor = FailedPredicateException;
+
+FailedPredicateException.prototype.formatMessage = function(predicate, message) {
+    if (message !==null) {
+        return message;
+    } else {
+        return "failed predicate: {" + predicate + "}?";
+    }
+};
+
+function ParseCancellationException() {
+	Error.call(this);
+	Error.captureStackTrace(this, ParseCancellationException);
+	return this;
+}
+
+ParseCancellationException.prototype = Object.create(Error.prototype);
+ParseCancellationException.prototype.constructor = ParseCancellationException;
+
+exports.RecognitionException = RecognitionException;
+exports.NoViableAltException = NoViableAltException;
+exports.LexerNoViableAltException = LexerNoViableAltException;
+exports.InputMismatchException = InputMismatchException;
+exports.FailedPredicateException = FailedPredicateException;
+exports.ParseCancellationException = ParseCancellationException;
 
 
 /***/ }),
@@ -2465,7 +2461,7 @@ exports.getCachedPredictionContext = getCachedPredictionContext;
  * can be found in the LICENSE.txt file in the project root.
  */
 
-var LL1Analyzer = __webpack_require__(38).LL1Analyzer;
+var LL1Analyzer = __webpack_require__(33).LL1Analyzer;
 var IntervalSet = __webpack_require__(2).IntervalSet;
 
 function ATN(grammarType , maxTokenType) {
@@ -3757,6 +3753,350 @@ exports.PredPrediction = PredPrediction;
 /* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
+//
+/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
+ * Use of this file is governed by the BSD 3-clause license that
+ * can be found in the LICENSE.txt file in the project root.
+ */
+///
+
+// A tuple: (ATN state, predicted alt, syntactic, semantic context).
+//  The syntactic context is a graph-structured stack node whose
+//  path(s) to the root is the rule invocation(s)
+//  chain used to arrive at the state.  The semantic context is
+//  the tree of semantic predicates encountered before reaching
+//  an ATN state.
+///
+
+var DecisionState = __webpack_require__(3).DecisionState;
+var SemanticContext = __webpack_require__(10).SemanticContext;
+var Hash = __webpack_require__(0).Hash;
+
+
+function checkParams(params, isCfg) {
+	if(params===null) {
+		var result = { state:null, alt:null, context:null, semanticContext:null };
+		if(isCfg) {
+			result.reachesIntoOuterContext = 0;
+		}
+		return result;
+	} else {
+		var props = {};
+		props.state = params.state || null;
+		props.alt = (params.alt === undefined) ? null : params.alt;
+		props.context = params.context || null;
+		props.semanticContext = params.semanticContext || null;
+		if(isCfg) {
+			props.reachesIntoOuterContext = params.reachesIntoOuterContext || 0;
+			props.precedenceFilterSuppressed = params.precedenceFilterSuppressed || false;
+		}
+		return props;
+	}
+}
+
+function ATNConfig(params, config) {
+	this.checkContext(params, config);
+	params = checkParams(params);
+	config = checkParams(config, true);
+    // The ATN state associated with this configuration///
+    this.state = params.state!==null ? params.state : config.state;
+    // What alt (or lexer rule) is predicted by this configuration///
+    this.alt = params.alt!==null ? params.alt : config.alt;
+    // The stack of invoking states leading to the rule/states associated
+    //  with this config.  We track only those contexts pushed during
+    //  execution of the ATN simulator.
+    this.context = params.context!==null ? params.context : config.context;
+    this.semanticContext = params.semanticContext!==null ? params.semanticContext :
+        (config.semanticContext!==null ? config.semanticContext : SemanticContext.NONE);
+    // We cannot execute predicates dependent upon local context unless
+    // we know for sure we are in the correct context. Because there is
+    // no way to do this efficiently, we simply cannot evaluate
+    // dependent predicates unless we are in the rule that initially
+    // invokes the ATN simulator.
+    //
+    // closure() tracks the depth of how far we dip into the
+    // outer context: depth &gt; 0.  Note that it may not be totally
+    // accurate depth since I don't ever decrement. TODO: make it a boolean then
+    this.reachesIntoOuterContext = config.reachesIntoOuterContext;
+    this.precedenceFilterSuppressed = config.precedenceFilterSuppressed;
+    return this;
+}
+
+ATNConfig.prototype.checkContext = function(params, config) {
+	if((params.context===null || params.context===undefined) &&
+			(config===null || config.context===null || config.context===undefined)) {
+		this.context = null;
+	}
+};
+
+
+ATNConfig.prototype.hashCode = function() {
+    var hash = new Hash();
+    this.updateHashCode(hash);
+    return hash.finish();
+};
+
+
+ATNConfig.prototype.updateHashCode = function(hash) {
+    hash.update(this.state.stateNumber, this.alt, this.context, this.semanticContext);
+};
+
+// An ATN configuration is equal to another if both have
+//  the same state, they predict the same alternative, and
+//  syntactic/semantic contexts are the same.
+
+ATNConfig.prototype.equals = function(other) {
+    if (this === other) {
+        return true;
+    } else if (! (other instanceof ATNConfig)) {
+        return false;
+    } else {
+        return this.state.stateNumber===other.state.stateNumber &&
+            this.alt===other.alt &&
+            (this.context===null ? other.context===null : this.context.equals(other.context)) &&
+            this.semanticContext.equals(other.semanticContext) &&
+            this.precedenceFilterSuppressed===other.precedenceFilterSuppressed;
+    }
+};
+
+
+ATNConfig.prototype.hashCodeForConfigSet = function() {
+    var hash = new Hash();
+    hash.update(this.state.stateNumber, this.alt, this.semanticContext);
+    return hash.finish();
+};
+
+
+ATNConfig.prototype.equalsForConfigSet = function(other) {
+    if (this === other) {
+        return true;
+    } else if (! (other instanceof ATNConfig)) {
+        return false;
+    } else {
+        return this.state.stateNumber===other.state.stateNumber &&
+            this.alt===other.alt &&
+            this.semanticContext.equals(other.semanticContext);
+    }
+};
+
+
+ATNConfig.prototype.toString = function() {
+    return "(" + this.state + "," + this.alt +
+        (this.context!==null ? ",[" + this.context.toString() + "]" : "") +
+        (this.semanticContext !== SemanticContext.NONE ?
+                ("," + this.semanticContext.toString())
+                : "") +
+        (this.reachesIntoOuterContext>0 ?
+                (",up=" + this.reachesIntoOuterContext)
+                : "") + ")";
+};
+
+
+function LexerATNConfig(params, config) {
+	ATNConfig.call(this, params, config);
+
+    // This is the backing field for {@link //getLexerActionExecutor}.
+	var lexerActionExecutor = params.lexerActionExecutor || null;
+    this.lexerActionExecutor = lexerActionExecutor || (config!==null ? config.lexerActionExecutor : null);
+    this.passedThroughNonGreedyDecision = config!==null ? this.checkNonGreedyDecision(config, this.state) : false;
+    return this;
+}
+
+LexerATNConfig.prototype = Object.create(ATNConfig.prototype);
+LexerATNConfig.prototype.constructor = LexerATNConfig;
+
+LexerATNConfig.prototype.updateHashCode = function(hash) {
+    hash.update(this.state.stateNumber, this.alt, this.context, this.semanticContext, this.passedThroughNonGreedyDecision, this.lexerActionExecutor);
+};
+
+LexerATNConfig.prototype.equals = function(other) {
+    return this === other ||
+            (other instanceof LexerATNConfig &&
+            this.passedThroughNonGreedyDecision == other.passedThroughNonGreedyDecision &&
+            (this.lexerActionExecutor ? this.lexerActionExecutor.equals(other.lexerActionExecutor) : !other.lexerActionExecutor) &&
+            ATNConfig.prototype.equals.call(this, other));
+};
+
+LexerATNConfig.prototype.hashCodeForConfigSet = LexerATNConfig.prototype.hashCode;
+
+LexerATNConfig.prototype.equalsForConfigSet = LexerATNConfig.prototype.equals;
+
+
+LexerATNConfig.prototype.checkNonGreedyDecision = function(source, target) {
+    return source.passedThroughNonGreedyDecision ||
+        (target instanceof DecisionState) && target.nonGreedy;
+};
+
+exports.ATNConfig = ATNConfig;
+exports.LexerATNConfig = LexerATNConfig;
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
+ * Use of this file is governed by the BSD 3-clause license that
+ * can be found in the LICENSE.txt file in the project root.
+ */
+///
+
+//  A rule context is a record of a single rule invocation. It knows
+//  which context invoked it, if any. If there is no parent context, then
+//  naturally the invoking state is not valid.  The parent link
+//  provides a chain upwards from the current rule invocation to the root
+//  of the invocation tree, forming a stack. We actually carry no
+//  information about the rule associated with this context (except
+//  when parsing). We keep only the state number of the invoking state from
+//  the ATN submachine that invoked this. Contrast this with the s
+//  pointer inside ParserRuleContext that tracks the current state
+//  being "executed" for the current rule.
+//
+//  The parent contexts are useful for computing lookahead sets and
+//  getting error information.
+//
+//  These objects are used during parsing and prediction.
+//  For the special case of parsers, we use the subclass
+//  ParserRuleContext.
+//
+//  @see ParserRuleContext
+///
+
+var RuleNode = __webpack_require__(4).RuleNode;
+var INVALID_INTERVAL = __webpack_require__(4).INVALID_INTERVAL;
+var INVALID_ALT_NUMBER = __webpack_require__(7).INVALID_ALT_NUMBER;
+
+function RuleContext(parent, invokingState) {
+	RuleNode.call(this);
+	// What context invoked this rule?
+	this.parentCtx = parent || null;
+	// What state invoked the rule associated with this context?
+	// The "return address" is the followState of invokingState
+	// If parent is null, this should be -1.
+	this.invokingState = invokingState || -1;
+	return this;
+}
+
+RuleContext.prototype = Object.create(RuleNode.prototype);
+RuleContext.prototype.constructor = RuleContext;
+
+RuleContext.prototype.depth = function() {
+	var n = 0;
+	var p = this;
+	while (p !== null) {
+		p = p.parentCtx;
+		n += 1;
+	}
+	return n;
+};
+
+// A context is empty if there is no invoking state; meaning nobody call
+// current context.
+RuleContext.prototype.isEmpty = function() {
+	return this.invokingState === -1;
+};
+
+// satisfy the ParseTree / SyntaxTree interface
+
+RuleContext.prototype.getSourceInterval = function() {
+	return INVALID_INTERVAL;
+};
+
+RuleContext.prototype.getRuleContext = function() {
+	return this;
+};
+
+RuleContext.prototype.getPayload = function() {
+	return this;
+};
+
+// Return the combined text of all child nodes. This method only considers
+// tokens which have been added to the parse tree.
+// <p>
+// Since tokens on hidden channels (e.g. whitespace or comments) are not
+// added to the parse trees, they will not appear in the output of this
+// method.
+// /
+RuleContext.prototype.getText = function() {
+	if (this.getChildCount() === 0) {
+		return "";
+	} else {
+		return this.children.map(function(child) {
+			return child.getText();
+		}).join("");
+	}
+};
+
+// For rule associated with this parse tree internal node, return
+// the outer alternative number used to match the input. Default
+// implementation does not compute nor store this alt num. Create
+// a subclass of ParserRuleContext with backing field and set
+// option contextSuperClass.
+// to set it.
+RuleContext.prototype.getAltNumber = function() { return INVALID_ALT_NUMBER; }
+
+// Set the outer alternative number for this context node. Default
+// implementation does nothing to avoid backing field overhead for
+// trees that don't need it.  Create
+// a subclass of ParserRuleContext with backing field and set
+// option contextSuperClass.
+RuleContext.prototype.setAltNumber = function(altNumber) { }
+
+RuleContext.prototype.getChild = function(i) {
+	return null;
+};
+
+RuleContext.prototype.getChildCount = function() {
+	return 0;
+};
+
+RuleContext.prototype.accept = function(visitor) {
+	return visitor.visitChildren(this);
+};
+
+//need to manage circular dependencies, so export now
+exports.RuleContext = RuleContext;
+var Trees = __webpack_require__(20).Trees;
+
+
+// Print out a whole tree, not just a node, in LISP format
+// (root child1 .. childN). Print just a node if this is a leaf.
+//
+
+RuleContext.prototype.toStringTree = function(ruleNames, recog) {
+	return Trees.toStringTree(this, ruleNames, recog);
+};
+
+RuleContext.prototype.toString = function(ruleNames, stop) {
+	ruleNames = ruleNames || null;
+	stop = stop || null;
+	var p = this;
+	var s = "[";
+	while (p !== null && p !== stop) {
+		if (ruleNames === null) {
+			if (!p.isEmpty()) {
+				s += p.invokingState;
+			}
+		} else {
+			var ri = p.ruleIndex;
+			var ruleName = (ri >= 0 && ri < ruleNames.length) ? ruleNames[ri]
+					: "" + ri;
+			s += ruleName;
+		}
+		if (p.parentCtx !== null && (ruleNames !== null || !p.parentCtx.isEmpty())) {
+			s += " ";
+		}
+		p = p.parentCtx;
+	}
+	s += "]";
+	return s;
+};
+
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
 /* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
  * Use of this file is governed by the BSD 3-clause license that
  * can be found in the LICENSE.txt file in the project root.
@@ -3768,10 +4108,10 @@ exports.PredPrediction = PredPrediction;
 //  uses simplified match() and error recovery mechanisms in the interest of speed.
 
 var Token = __webpack_require__(1).Token;
-var Recognizer = __webpack_require__(20).Recognizer;
-var CommonTokenFactory = __webpack_require__(35).CommonTokenFactory;
-var RecognitionException  = __webpack_require__(4).RecognitionException;
-var LexerNoViableAltException = __webpack_require__(4).LexerNoViableAltException;
+var Recognizer = __webpack_require__(24).Recognizer;
+var CommonTokenFactory = __webpack_require__(36).CommonTokenFactory;
+var RecognitionException  = __webpack_require__(5).RecognitionException;
+var LexerNoViableAltException = __webpack_require__(5).LexerNoViableAltException;
 
 function TokenSource() {
 	return this;
@@ -4131,436 +4471,7 @@ exports.Lexer = Lexer;
 
 
 /***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
- * Use of this file is governed by the BSD 3-clause license that
- * can be found in the LICENSE.txt file in the project root.
- */
-///
-
-//  A rule context is a record of a single rule invocation. It knows
-//  which context invoked it, if any. If there is no parent context, then
-//  naturally the invoking state is not valid.  The parent link
-//  provides a chain upwards from the current rule invocation to the root
-//  of the invocation tree, forming a stack. We actually carry no
-//  information about the rule associated with this context (except
-//  when parsing). We keep only the state number of the invoking state from
-//  the ATN submachine that invoked this. Contrast this with the s
-//  pointer inside ParserRuleContext that tracks the current state
-//  being "executed" for the current rule.
-//
-//  The parent contexts are useful for computing lookahead sets and
-//  getting error information.
-//
-//  These objects are used during parsing and prediction.
-//  For the special case of parsers, we use the subclass
-//  ParserRuleContext.
-//
-//  @see ParserRuleContext
-///
-
-var RuleNode = __webpack_require__(5).RuleNode;
-var INVALID_INTERVAL = __webpack_require__(5).INVALID_INTERVAL;
-var INVALID_ALT_NUMBER = __webpack_require__(7).INVALID_ALT_NUMBER;
-
-function RuleContext(parent, invokingState) {
-	RuleNode.call(this);
-	// What context invoked this rule?
-	this.parentCtx = parent || null;
-	// What state invoked the rule associated with this context?
-	// The "return address" is the followState of invokingState
-	// If parent is null, this should be -1.
-	this.invokingState = invokingState || -1;
-	return this;
-}
-
-RuleContext.prototype = Object.create(RuleNode.prototype);
-RuleContext.prototype.constructor = RuleContext;
-
-RuleContext.prototype.depth = function() {
-	var n = 0;
-	var p = this;
-	while (p !== null) {
-		p = p.parentCtx;
-		n += 1;
-	}
-	return n;
-};
-
-// A context is empty if there is no invoking state; meaning nobody call
-// current context.
-RuleContext.prototype.isEmpty = function() {
-	return this.invokingState === -1;
-};
-
-// satisfy the ParseTree / SyntaxTree interface
-
-RuleContext.prototype.getSourceInterval = function() {
-	return INVALID_INTERVAL;
-};
-
-RuleContext.prototype.getRuleContext = function() {
-	return this;
-};
-
-RuleContext.prototype.getPayload = function() {
-	return this;
-};
-
-// Return the combined text of all child nodes. This method only considers
-// tokens which have been added to the parse tree.
-// <p>
-// Since tokens on hidden channels (e.g. whitespace or comments) are not
-// added to the parse trees, they will not appear in the output of this
-// method.
-// /
-RuleContext.prototype.getText = function() {
-	if (this.getChildCount() === 0) {
-		return "";
-	} else {
-		return this.children.map(function(child) {
-			return child.getText();
-		}).join("");
-	}
-};
-
-// For rule associated with this parse tree internal node, return
-// the outer alternative number used to match the input. Default
-// implementation does not compute nor store this alt num. Create
-// a subclass of ParserRuleContext with backing field and set
-// option contextSuperClass.
-// to set it.
-RuleContext.prototype.getAltNumber = function() { return INVALID_ALT_NUMBER; }
-
-// Set the outer alternative number for this context node. Default
-// implementation does nothing to avoid backing field overhead for
-// trees that don't need it.  Create
-// a subclass of ParserRuleContext with backing field and set
-// option contextSuperClass.
-RuleContext.prototype.setAltNumber = function(altNumber) { }
-
-RuleContext.prototype.getChild = function(i) {
-	return null;
-};
-
-RuleContext.prototype.getChildCount = function() {
-	return 0;
-};
-
-RuleContext.prototype.accept = function(visitor) {
-	return visitor.visitChildren(this);
-};
-
-//need to manage circular dependencies, so export now
-exports.RuleContext = RuleContext;
-var Trees = __webpack_require__(29).Trees;
-
-
-// Print out a whole tree, not just a node, in LISP format
-// (root child1 .. childN). Print just a node if this is a leaf.
-//
-
-RuleContext.prototype.toStringTree = function(ruleNames, recog) {
-	return Trees.toStringTree(this, ruleNames, recog);
-};
-
-RuleContext.prototype.toString = function(ruleNames, stop) {
-	ruleNames = ruleNames || null;
-	stop = stop || null;
-	var p = this;
-	var s = "[";
-	while (p !== null && p !== stop) {
-		if (ruleNames === null) {
-			if (!p.isEmpty()) {
-				s += p.invokingState;
-			}
-		} else {
-			var ri = p.ruleIndex;
-			var ruleName = (ri >= 0 && ri < ruleNames.length) ? ruleNames[ri]
-					: "" + ri;
-			s += ruleName;
-		}
-		if (p.parentCtx !== null && (ruleNames !== null || !p.parentCtx.isEmpty())) {
-			s += " ";
-		}
-		p = p.parentCtx;
-	}
-	s += "]";
-	return s;
-};
-
-
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-//
-/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
- * Use of this file is governed by the BSD 3-clause license that
- * can be found in the LICENSE.txt file in the project root.
- */
-///
-
-// A tuple: (ATN state, predicted alt, syntactic, semantic context).
-//  The syntactic context is a graph-structured stack node whose
-//  path(s) to the root is the rule invocation(s)
-//  chain used to arrive at the state.  The semantic context is
-//  the tree of semantic predicates encountered before reaching
-//  an ATN state.
-///
-
-var DecisionState = __webpack_require__(3).DecisionState;
-var SemanticContext = __webpack_require__(10).SemanticContext;
-var Hash = __webpack_require__(0).Hash;
-
-
-function checkParams(params, isCfg) {
-	if(params===null) {
-		var result = { state:null, alt:null, context:null, semanticContext:null };
-		if(isCfg) {
-			result.reachesIntoOuterContext = 0;
-		}
-		return result;
-	} else {
-		var props = {};
-		props.state = params.state || null;
-		props.alt = (params.alt === undefined) ? null : params.alt;
-		props.context = params.context || null;
-		props.semanticContext = params.semanticContext || null;
-		if(isCfg) {
-			props.reachesIntoOuterContext = params.reachesIntoOuterContext || 0;
-			props.precedenceFilterSuppressed = params.precedenceFilterSuppressed || false;
-		}
-		return props;
-	}
-}
-
-function ATNConfig(params, config) {
-	this.checkContext(params, config);
-	params = checkParams(params);
-	config = checkParams(config, true);
-    // The ATN state associated with this configuration///
-    this.state = params.state!==null ? params.state : config.state;
-    // What alt (or lexer rule) is predicted by this configuration///
-    this.alt = params.alt!==null ? params.alt : config.alt;
-    // The stack of invoking states leading to the rule/states associated
-    //  with this config.  We track only those contexts pushed during
-    //  execution of the ATN simulator.
-    this.context = params.context!==null ? params.context : config.context;
-    this.semanticContext = params.semanticContext!==null ? params.semanticContext :
-        (config.semanticContext!==null ? config.semanticContext : SemanticContext.NONE);
-    // We cannot execute predicates dependent upon local context unless
-    // we know for sure we are in the correct context. Because there is
-    // no way to do this efficiently, we simply cannot evaluate
-    // dependent predicates unless we are in the rule that initially
-    // invokes the ATN simulator.
-    //
-    // closure() tracks the depth of how far we dip into the
-    // outer context: depth &gt; 0.  Note that it may not be totally
-    // accurate depth since I don't ever decrement. TODO: make it a boolean then
-    this.reachesIntoOuterContext = config.reachesIntoOuterContext;
-    this.precedenceFilterSuppressed = config.precedenceFilterSuppressed;
-    return this;
-}
-
-ATNConfig.prototype.checkContext = function(params, config) {
-	if((params.context===null || params.context===undefined) &&
-			(config===null || config.context===null || config.context===undefined)) {
-		this.context = null;
-	}
-};
-
-
-ATNConfig.prototype.hashCode = function() {
-    var hash = new Hash();
-    this.updateHashCode(hash);
-    return hash.finish();
-};
-
-
-ATNConfig.prototype.updateHashCode = function(hash) {
-    hash.update(this.state.stateNumber, this.alt, this.context, this.semanticContext);
-};
-
-// An ATN configuration is equal to another if both have
-//  the same state, they predict the same alternative, and
-//  syntactic/semantic contexts are the same.
-
-ATNConfig.prototype.equals = function(other) {
-    if (this === other) {
-        return true;
-    } else if (! (other instanceof ATNConfig)) {
-        return false;
-    } else {
-        return this.state.stateNumber===other.state.stateNumber &&
-            this.alt===other.alt &&
-            (this.context===null ? other.context===null : this.context.equals(other.context)) &&
-            this.semanticContext.equals(other.semanticContext) &&
-            this.precedenceFilterSuppressed===other.precedenceFilterSuppressed;
-    }
-};
-
-
-ATNConfig.prototype.hashCodeForConfigSet = function() {
-    var hash = new Hash();
-    hash.update(this.state.stateNumber, this.alt, this.semanticContext);
-    return hash.finish();
-};
-
-
-ATNConfig.prototype.equalsForConfigSet = function(other) {
-    if (this === other) {
-        return true;
-    } else if (! (other instanceof ATNConfig)) {
-        return false;
-    } else {
-        return this.state.stateNumber===other.state.stateNumber &&
-            this.alt===other.alt &&
-            this.semanticContext.equals(other.semanticContext);
-    }
-};
-
-
-ATNConfig.prototype.toString = function() {
-    return "(" + this.state + "," + this.alt +
-        (this.context!==null ? ",[" + this.context.toString() + "]" : "") +
-        (this.semanticContext !== SemanticContext.NONE ?
-                ("," + this.semanticContext.toString())
-                : "") +
-        (this.reachesIntoOuterContext>0 ?
-                (",up=" + this.reachesIntoOuterContext)
-                : "") + ")";
-};
-
-
-function LexerATNConfig(params, config) {
-	ATNConfig.call(this, params, config);
-
-    // This is the backing field for {@link //getLexerActionExecutor}.
-	var lexerActionExecutor = params.lexerActionExecutor || null;
-    this.lexerActionExecutor = lexerActionExecutor || (config!==null ? config.lexerActionExecutor : null);
-    this.passedThroughNonGreedyDecision = config!==null ? this.checkNonGreedyDecision(config, this.state) : false;
-    return this;
-}
-
-LexerATNConfig.prototype = Object.create(ATNConfig.prototype);
-LexerATNConfig.prototype.constructor = LexerATNConfig;
-
-LexerATNConfig.prototype.updateHashCode = function(hash) {
-    hash.update(this.state.stateNumber, this.alt, this.context, this.semanticContext, this.passedThroughNonGreedyDecision, this.lexerActionExecutor);
-};
-
-LexerATNConfig.prototype.equals = function(other) {
-    return this === other ||
-            (other instanceof LexerATNConfig &&
-            this.passedThroughNonGreedyDecision == other.passedThroughNonGreedyDecision &&
-            (this.lexerActionExecutor ? this.lexerActionExecutor.equals(other.lexerActionExecutor) : !other.lexerActionExecutor) &&
-            ATNConfig.prototype.equals.call(this, other));
-};
-
-LexerATNConfig.prototype.hashCodeForConfigSet = LexerATNConfig.prototype.hashCode;
-
-LexerATNConfig.prototype.equalsForConfigSet = LexerATNConfig.prototype.equals;
-
-
-LexerATNConfig.prototype.checkNonGreedyDecision = function(source, target) {
-    return source.passedThroughNonGreedyDecision ||
-        (target instanceof DecisionState) && target.nonGreedy;
-};
-
-exports.ATNConfig = ATNConfig;
-exports.LexerATNConfig = LexerATNConfig;
-
-/***/ }),
 /* 15 */
-/***/ (function(module, exports) {
-
-/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
- * Use of this file is governed by the BSD 3-clause license that
- * can be found in the LICENSE.txt file in the project root.
- */
-
-// A DFA walker that knows how to dump them to serialized strings.#/
-
-
-function DFASerializer(dfa, literalNames, symbolicNames) {
-	this.dfa = dfa;
-	this.literalNames = literalNames || [];
-	this.symbolicNames = symbolicNames || [];
-	return this;
-}
-
-DFASerializer.prototype.toString = function() {
-   if(this.dfa.s0 === null) {
-       return null;
-   }
-   var buf = "";
-   var states = this.dfa.sortedStates();
-   for(var i=0;i<states.length;i++) {
-       var s = states[i];
-       if(s.edges!==null) {
-            var n = s.edges.length;
-            for(var j=0;j<n;j++) {
-                var t = s.edges[j] || null;
-                if(t!==null && t.stateNumber !== 0x7FFFFFFF) {
-                    buf = buf.concat(this.getStateString(s));
-                    buf = buf.concat("-");
-                    buf = buf.concat(this.getEdgeLabel(j));
-                    buf = buf.concat("->");
-                    buf = buf.concat(this.getStateString(t));
-                    buf = buf.concat('\n');
-                }
-            }
-       }
-   }
-   return buf.length===0 ? null : buf;
-};
-
-DFASerializer.prototype.getEdgeLabel = function(i) {
-    if (i===0) {
-        return "EOF";
-    } else if(this.literalNames !==null || this.symbolicNames!==null) {
-        return this.literalNames[i-1] || this.symbolicNames[i-1];
-    } else {
-        return String.fromCharCode(i-1);
-    }
-};
-
-DFASerializer.prototype.getStateString = function(s) {
-    var baseStateStr = ( s.isAcceptState ? ":" : "") + "s" + s.stateNumber + ( s.requiresFullContext ? "^" : "");
-    if(s.isAcceptState) {
-        if (s.predicates !== null) {
-            return baseStateStr + "=>" + s.predicates.toString();
-        } else {
-            return baseStateStr + "=>" + s.prediction.toString();
-        }
-    } else {
-        return baseStateStr;
-    }
-};
-
-function LexerDFASerializer(dfa) {
-	DFASerializer.call(this, dfa, null);
-	return this;
-}
-
-LexerDFASerializer.prototype = Object.create(DFASerializer.prototype);
-LexerDFASerializer.prototype.constructor = LexerDFASerializer;
-
-LexerDFASerializer.prototype.getEdgeLabel = function(i) {
-	return "'" + String.fromCharCode(i) + "'";
-};
-
-exports.DFASerializer = DFASerializer;
-exports.LexerDFASerializer = LexerDFASerializer;
-
-
-
-/***/ }),
-/* 16 */
 /***/ (function(module, exports) {
 
 //
@@ -4653,148 +4564,92 @@ exports.ProxyErrorListener = ProxyErrorListener;
 
 
 /***/ }),
-/* 17 */
-/***/ (function(module, exports, __webpack_require__) {
+/* 16 */
+/***/ (function(module, exports) {
 
-//
 /* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
  * Use of this file is governed by the BSD 3-clause license that
  * can be found in the LICENSE.txt file in the project root.
  */
-//
 
-var Token = __webpack_require__(1).Token;
-__webpack_require__(27);
-__webpack_require__(28);
+// A DFA walker that knows how to dump them to serialized strings.#/
 
-// Vacuum all input from a string and then treat it like a buffer.
 
-function _loadString(stream, decodeToUnicodeCodePoints) {
-	stream._index = 0;
-	stream.data = [];
-	if (stream.decodeToUnicodeCodePoints) {
-		for (var i = 0; i < stream.strdata.length; ) {
-			var codePoint = stream.strdata.codePointAt(i);
-			stream.data.push(codePoint);
-			i += codePoint <= 0xFFFF ? 1 : 2;
-		}
-	} else {
-		for (var i = 0; i < stream.strdata.length; i++) {
-			var codeUnit = stream.strdata.charCodeAt(i);
-			stream.data.push(codeUnit);
-		}
-	}
-	stream._size = stream.data.length;
-}
-
-// If decodeToUnicodeCodePoints is true, the input is treated
-// as a series of Unicode code points.
-//
-// Otherwise, the input is treated as a series of 16-bit UTF-16 code
-// units.
-function InputStream(data, decodeToUnicodeCodePoints) {
-	this.name = "<empty>";
-	this.strdata = data;
-	this.decodeToUnicodeCodePoints = decodeToUnicodeCodePoints || false;
-	_loadString(this);
+function DFASerializer(dfa, literalNames, symbolicNames) {
+	this.dfa = dfa;
+	this.literalNames = literalNames || [];
+	this.symbolicNames = symbolicNames || [];
 	return this;
 }
 
-Object.defineProperty(InputStream.prototype, "index", {
-	get : function() {
-		return this._index;
-	}
-});
-
-Object.defineProperty(InputStream.prototype, "size", {
-	get : function() {
-		return this._size;
-	}
-});
-
-// Reset the stream so that it's in the same state it was
-// when the object was created *except* the data array is not
-// touched.
-//
-InputStream.prototype.reset = function() {
-	this._index = 0;
+DFASerializer.prototype.toString = function() {
+   if(this.dfa.s0 === null) {
+       return null;
+   }
+   var buf = "";
+   var states = this.dfa.sortedStates();
+   for(var i=0;i<states.length;i++) {
+       var s = states[i];
+       if(s.edges!==null) {
+            var n = s.edges.length;
+            for(var j=0;j<n;j++) {
+                var t = s.edges[j] || null;
+                if(t!==null && t.stateNumber !== 0x7FFFFFFF) {
+                    buf = buf.concat(this.getStateString(s));
+                    buf = buf.concat("-");
+                    buf = buf.concat(this.getEdgeLabel(j));
+                    buf = buf.concat("->");
+                    buf = buf.concat(this.getStateString(t));
+                    buf = buf.concat('\n');
+                }
+            }
+       }
+   }
+   return buf.length===0 ? null : buf;
 };
 
-InputStream.prototype.consume = function() {
-	if (this._index >= this._size) {
-		// assert this.LA(1) == Token.EOF
-		throw ("cannot consume EOF");
-	}
-	this._index += 1;
+DFASerializer.prototype.getEdgeLabel = function(i) {
+    if (i===0) {
+        return "EOF";
+    } else if(this.literalNames !==null || this.symbolicNames!==null) {
+        return this.literalNames[i-1] || this.symbolicNames[i-1];
+    } else {
+        return String.fromCharCode(i-1);
+    }
 };
 
-InputStream.prototype.LA = function(offset) {
-	if (offset === 0) {
-		return 0; // undefined
-	}
-	if (offset < 0) {
-		offset += 1; // e.g., translate LA(-1) to use offset=0
-	}
-	var pos = this._index + offset - 1;
-	if (pos < 0 || pos >= this._size) { // invalid
-		return Token.EOF;
-	}
-	return this.data[pos];
+DFASerializer.prototype.getStateString = function(s) {
+    var baseStateStr = ( s.isAcceptState ? ":" : "") + "s" + s.stateNumber + ( s.requiresFullContext ? "^" : "");
+    if(s.isAcceptState) {
+        if (s.predicates !== null) {
+            return baseStateStr + "=>" + s.predicates.toString();
+        } else {
+            return baseStateStr + "=>" + s.prediction.toString();
+        }
+    } else {
+        return baseStateStr;
+    }
 };
 
-InputStream.prototype.LT = function(offset) {
-	return this.LA(offset);
+function LexerDFASerializer(dfa) {
+	DFASerializer.call(this, dfa, null);
+	return this;
+}
+
+LexerDFASerializer.prototype = Object.create(DFASerializer.prototype);
+LexerDFASerializer.prototype.constructor = LexerDFASerializer;
+
+LexerDFASerializer.prototype.getEdgeLabel = function(i) {
+	return "'" + String.fromCharCode(i) + "'";
 };
 
-// mark/release do nothing; we have entire buffer
-InputStream.prototype.mark = function() {
-	return -1;
-};
+exports.DFASerializer = DFASerializer;
+exports.LexerDFASerializer = LexerDFASerializer;
 
-InputStream.prototype.release = function(marker) {
-};
-
-// consume() ahead until p==_index; can't just set p=_index as we must
-// update line and column. If we seek backwards, just set p
-//
-InputStream.prototype.seek = function(_index) {
-	if (_index <= this._index) {
-		this._index = _index; // just jump; don't update stream state (line,
-								// ...)
-		return;
-	}
-	// seek forward
-	this._index = Math.min(_index, this._size);
-};
-
-InputStream.prototype.getText = function(start, stop) {
-	if (stop >= this._size) {
-		stop = this._size - 1;
-	}
-	if (start >= this._size) {
-		return "";
-	} else {
-		if (this.decodeToUnicodeCodePoints) {
-			var result = "";
-			for (var i = start; i <= stop; i++) {
-				result += String.fromCodePoint(this.data[i]);
-			}
-			return result;
-		} else {
-			return this.strdata.slice(start, stop + 1);
-		}
-	}
-};
-
-InputStream.prototype.toString = function() {
-	return this.strdata;
-};
-
-exports.InputStream = InputStream;
 
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
@@ -4826,7 +4681,7 @@ exports.InputStream = InputStream;
 //  satisfy the superclass interface.
 
 var RuleContext = __webpack_require__(13).RuleContext;
-var Tree = __webpack_require__(5);
+var Tree = __webpack_require__(4);
 var INVALID_INTERVAL = Tree.INVALID_INTERVAL;
 var TerminalNode = Tree.TerminalNode;
 var TerminalNodeImpl = Tree.TerminalNodeImpl;
@@ -5024,36 +4879,7 @@ InterpreterRuleContext.prototype.constructor = InterpreterRuleContext;
 exports.ParserRuleContext = ParserRuleContext;
 
 /***/ }),
-/* 19 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
- * Use of this file is governed by the BSD 3-clause license that
- * can be found in the LICENSE.txt file in the project root.
- */
-exports.atn = __webpack_require__(44);
-exports.codepointat = __webpack_require__(27);
-exports.dfa = __webpack_require__(46);
-exports.fromcodepoint = __webpack_require__(28);
-exports.tree = __webpack_require__(49);
-exports.error = __webpack_require__(48);
-exports.Token = __webpack_require__(1).Token;
-exports.CharStreams = __webpack_require__(34).CharStreams;
-exports.CommonToken = __webpack_require__(1).CommonToken;
-exports.InputStream = __webpack_require__(17).InputStream;
-exports.FileStream = __webpack_require__(37).FileStream;
-exports.CommonTokenStream = __webpack_require__(36).CommonTokenStream;
-exports.Lexer = __webpack_require__(12).Lexer;
-exports.Parser = __webpack_require__(39).Parser;
-var pc = __webpack_require__(6);
-exports.PredictionContextCache = pc.PredictionContextCache;
-exports.ParserRuleContext = __webpack_require__(18).ParserRuleContext;
-exports.Interval = __webpack_require__(2).Interval;
-exports.Utils = __webpack_require__(0);
-
-
-/***/ }),
-/* 20 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 //
@@ -5064,180 +4890,311 @@ exports.Utils = __webpack_require__(0);
 //
 
 var Token = __webpack_require__(1).Token;
-var ConsoleErrorListener = __webpack_require__(16).ConsoleErrorListener;
-var ProxyErrorListener = __webpack_require__(16).ProxyErrorListener;
+__webpack_require__(27);
+__webpack_require__(28);
 
-function Recognizer() {
-    this._listeners = [ ConsoleErrorListener.INSTANCE ];
-    this._interp = null;
-    this._stateNumber = -1;
-    return this;
+// Vacuum all input from a string and then treat it like a buffer.
+
+function _loadString(stream, decodeToUnicodeCodePoints) {
+	stream._index = 0;
+	stream.data = [];
+	if (stream.decodeToUnicodeCodePoints) {
+		for (var i = 0; i < stream.strdata.length; ) {
+			var codePoint = stream.strdata.codePointAt(i);
+			stream.data.push(codePoint);
+			i += codePoint <= 0xFFFF ? 1 : 2;
+		}
+	} else {
+		for (var i = 0; i < stream.strdata.length; i++) {
+			var codeUnit = stream.strdata.charCodeAt(i);
+			stream.data.push(codeUnit);
+		}
+	}
+	stream._size = stream.data.length;
 }
 
-Recognizer.tokenTypeMapCache = {};
-Recognizer.ruleIndexMapCache = {};
-
-
-Recognizer.prototype.checkVersion = function(toolVersion) {
-    var runtimeVersion = "4.7.1";
-    if (runtimeVersion!==toolVersion) {
-        console.log("ANTLR runtime and generated code versions disagree: "+runtimeVersion+"!="+toolVersion);
-    }
-};
-
-Recognizer.prototype.addErrorListener = function(listener) {
-    this._listeners.push(listener);
-};
-
-Recognizer.prototype.removeErrorListeners = function() {
-    this._listeners = [];
-};
-
-Recognizer.prototype.getTokenTypeMap = function() {
-    var tokenNames = this.getTokenNames();
-    if (tokenNames===null) {
-        throw("The current recognizer does not provide a list of token names.");
-    }
-    var result = this.tokenTypeMapCache[tokenNames];
-    if(result===undefined) {
-        result = tokenNames.reduce(function(o, k, i) { o[k] = i; });
-        result.EOF = Token.EOF;
-        this.tokenTypeMapCache[tokenNames] = result;
-    }
-    return result;
-};
-
-// Get a map from rule names to rule indexes.
+// If decodeToUnicodeCodePoints is true, the input is treated
+// as a series of Unicode code points.
 //
-// <p>Used for XPath and tree pattern compilation.</p>
-//
-Recognizer.prototype.getRuleIndexMap = function() {
-    var ruleNames = this.ruleNames;
-    if (ruleNames===null) {
-        throw("The current recognizer does not provide a list of rule names.");
-    }
-    var result = this.ruleIndexMapCache[ruleNames];
-    if(result===undefined) {
-        result = ruleNames.reduce(function(o, k, i) { o[k] = i; });
-        this.ruleIndexMapCache[ruleNames] = result;
-    }
-    return result;
-};
+// Otherwise, the input is treated as a series of 16-bit UTF-16 code
+// units.
+function InputStream(data, decodeToUnicodeCodePoints) {
+	this.name = "<empty>";
+	this.strdata = data;
+	this.decodeToUnicodeCodePoints = decodeToUnicodeCodePoints || false;
+	_loadString(this);
+	return this;
+}
 
-Recognizer.prototype.getTokenType = function(tokenName) {
-    var ttype = this.getTokenTypeMap()[tokenName];
-    if (ttype !==undefined) {
-        return ttype;
-    } else {
-        return Token.INVALID_TYPE;
-    }
-};
-
-
-// What is the error header, normally line/character position information?//
-Recognizer.prototype.getErrorHeader = function(e) {
-    var line = e.getOffendingToken().line;
-    var column = e.getOffendingToken().column;
-    return "line " + line + ":" + column;
-};
-
-
-// How should a token be displayed in an error message? The default
-//  is to display just the text, but during development you might
-//  want to have a lot of information spit out.  Override in that case
-//  to use t.toString() (which, for CommonToken, dumps everything about
-//  the token). This is better than forcing you to override a method in
-//  your token objects because you don't have to go modify your lexer
-//  so that it creates a new Java type.
-//
-// @deprecated This method is not called by the ANTLR 4 Runtime. Specific
-// implementations of {@link ANTLRErrorStrategy} may provide a similar
-// feature when necessary. For example, see
-// {@link DefaultErrorStrategy//getTokenErrorDisplay}.
-//
-Recognizer.prototype.getTokenErrorDisplay = function(t) {
-    if (t===null) {
-        return "<no token>";
-    }
-    var s = t.text;
-    if (s===null) {
-        if (t.type===Token.EOF) {
-            s = "<EOF>";
-        } else {
-            s = "<" + t.type + ">";
-        }
-    }
-    s = s.replace("\n","\\n").replace("\r","\\r").replace("\t","\\t");
-    return "'" + s + "'";
-};
-
-Recognizer.prototype.getErrorListenerDispatch = function() {
-    return new ProxyErrorListener(this._listeners);
-};
-
-// subclass needs to override these if there are sempreds or actions
-// that the ATN interp needs to execute
-Recognizer.prototype.sempred = function(localctx, ruleIndex, actionIndex) {
-    return true;
-};
-
-Recognizer.prototype.precpred = function(localctx , precedence) {
-    return true;
-};
-
-//Indicate that the recognizer has changed internal state that is
-//consistent with the ATN state passed in.  This way we always know
-//where we are in the ATN as the parser goes along. The rule
-//context objects form a stack that lets us see the stack of
-//invoking rules. Combine this and we have complete ATN
-//configuration information.
-
-Object.defineProperty(Recognizer.prototype, "state", {
+Object.defineProperty(InputStream.prototype, "index", {
 	get : function() {
-		return this._stateNumber;
-	},
-	set : function(state) {
-		this._stateNumber = state;
+		return this._index;
 	}
 });
 
+Object.defineProperty(InputStream.prototype, "size", {
+	get : function() {
+		return this._size;
+	}
+});
 
-exports.Recognizer = Recognizer;
+// Reset the stream so that it's in the same state it was
+// when the object was created *except* the data array is not
+// touched.
+//
+InputStream.prototype.reset = function() {
+	this._index = 0;
+};
+
+InputStream.prototype.consume = function() {
+	if (this._index >= this._size) {
+		// assert this.LA(1) == Token.EOF
+		throw ("cannot consume EOF");
+	}
+	this._index += 1;
+};
+
+InputStream.prototype.LA = function(offset) {
+	if (offset === 0) {
+		return 0; // undefined
+	}
+	if (offset < 0) {
+		offset += 1; // e.g., translate LA(-1) to use offset=0
+	}
+	var pos = this._index + offset - 1;
+	if (pos < 0 || pos >= this._size) { // invalid
+		return Token.EOF;
+	}
+	return this.data[pos];
+};
+
+InputStream.prototype.LT = function(offset) {
+	return this.LA(offset);
+};
+
+// mark/release do nothing; we have entire buffer
+InputStream.prototype.mark = function() {
+	return -1;
+};
+
+InputStream.prototype.release = function(marker) {
+};
+
+// consume() ahead until p==_index; can't just set p=_index as we must
+// update line and column. If we seek backwards, just set p
+//
+InputStream.prototype.seek = function(_index) {
+	if (_index <= this._index) {
+		this._index = _index; // just jump; don't update stream state (line,
+								// ...)
+		return;
+	}
+	// seek forward
+	this._index = Math.min(_index, this._size);
+};
+
+InputStream.prototype.getText = function(start, stop) {
+	if (stop >= this._size) {
+		stop = this._size - 1;
+	}
+	if (start >= this._size) {
+		return "";
+	} else {
+		if (this.decodeToUnicodeCodePoints) {
+			var result = "";
+			for (var i = start; i <= stop; i++) {
+				result += String.fromCodePoint(this.data[i]);
+			}
+			return result;
+		} else {
+			return this.strdata.slice(start, stop + 1);
+		}
+	}
+};
+
+InputStream.prototype.toString = function() {
+	return this.strdata;
+};
+
+exports.InputStream = InputStream;
 
 
 /***/ }),
-/* 21 */
-/***/ (function(module, exports) {
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
+ * Use of this file is governed by the BSD 3-clause license that
+ * can be found in the LICENSE.txt file in the project root.
+ */
+exports.atn = __webpack_require__(32);
+exports.codepointat = __webpack_require__(27);
+exports.dfa = __webpack_require__(39);
+exports.fromcodepoint = __webpack_require__(28);
+exports.tree = __webpack_require__(41);
+exports.error = __webpack_require__(42);
+exports.Token = __webpack_require__(1).Token;
+exports.CharStreams = __webpack_require__(44).CharStreams;
+exports.CommonToken = __webpack_require__(1).CommonToken;
+exports.InputStream = __webpack_require__(18).InputStream;
+exports.FileStream = __webpack_require__(45).FileStream;
+exports.CommonTokenStream = __webpack_require__(46).CommonTokenStream;
+exports.Lexer = __webpack_require__(14).Lexer;
+exports.Parser = __webpack_require__(48).Parser;
+var pc = __webpack_require__(6);
+exports.PredictionContextCache = pc.PredictionContextCache;
+exports.ParserRuleContext = __webpack_require__(17).ParserRuleContext;
+exports.Interval = __webpack_require__(2).Interval;
+exports.Utils = __webpack_require__(0);
+
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports, __webpack_require__) {
 
 /* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
  * Use of this file is governed by the BSD 3-clause license that
  * can be found in the LICENSE.txt file in the project root.
  */
 
-function ATNDeserializationOptions(copyFrom) {
-	if(copyFrom===undefined) {
-		copyFrom = null;
-	}
-	this.readOnly = false;
-    this.verifyATN = copyFrom===null ? true : copyFrom.verifyATN;
-    this.generateRuleBypassTransitions = copyFrom===null ? false : copyFrom.generateRuleBypassTransitions;
+var Utils = __webpack_require__(0);
+var Token = __webpack_require__(1).Token;
+var RuleNode = __webpack_require__(4).RuleNode;
+var ErrorNode = __webpack_require__(4).ErrorNode;
+var TerminalNode = __webpack_require__(4).TerminalNode;
+var ParserRuleContext = __webpack_require__(17).ParserRuleContext;
+var RuleContext = __webpack_require__(13).RuleContext;
+var INVALID_ALT_NUMBER = __webpack_require__(7).INVALID_ALT_NUMBER;
 
-    return this;
+
+/** A set of utility routines useful for all kinds of ANTLR trees. */
+function Trees() {
 }
 
-ATNDeserializationOptions.defaultOptions = new ATNDeserializationOptions();
-ATNDeserializationOptions.defaultOptions.readOnly = true;
+// Print out a whole tree in LISP form. {@link //getNodeText} is used on the
+//  node payloads to get the text for the nodes.  Detect
+//  parse trees and extract data appropriately.
+Trees.toStringTree = function(tree, ruleNames, recog) {
+	ruleNames = ruleNames || null;
+	recog = recog || null;
+    if(recog!==null) {
+       ruleNames = recog.ruleNames;
+    }
+    var s = Trees.getNodeText(tree, ruleNames);
+    s = Utils.escapeWhitespace(s, false);
+    var c = tree.getChildCount();
+    if(c===0) {
+        return s;
+    }
+    var res = "(" + s + ' ';
+    if(c>0) {
+        s = Trees.toStringTree(tree.getChild(0), ruleNames);
+        res = res.concat(s);
+    }
+    for(var i=1;i<c;i++) {
+        s = Trees.toStringTree(tree.getChild(i), ruleNames);
+        res = res.concat(' ' + s);
+    }
+    res = res.concat(")");
+    return res;
+};
 
-//    def __setattr__(self, key, value):
-//        if key!="readOnly" and self.readOnly:
-//            raise Exception("The object is read only.")
-//        super(type(self), self).__setattr__(key,value)
+Trees.getNodeText = function(t, ruleNames, recog) {
+	ruleNames = ruleNames || null;
+	recog = recog || null;
+    if(recog!==null) {
+        ruleNames = recog.ruleNames;
+    }
+    if(ruleNames!==null) {
+       if (t instanceof RuleContext) {
+           var altNumber = t.getAltNumber();
+           if ( altNumber!=INVALID_ALT_NUMBER ) {
+               return ruleNames[t.ruleIndex]+":"+altNumber;
+           }
+           return ruleNames[t.ruleIndex];
+       } else if ( t instanceof ErrorNode) {
+           return t.toString();
+       } else if(t instanceof TerminalNode) {
+           if(t.symbol!==null) {
+               return t.symbol.text;
+           }
+       }
+    }
+    // no recog for rule names
+    var payload = t.getPayload();
+    if (payload instanceof Token ) {
+       return payload.text;
+    }
+    return t.getPayload().toString();
+};
 
-exports.ATNDeserializationOptions = ATNDeserializationOptions;
 
+// Return ordered list of all children of this node
+Trees.getChildren = function(t) {
+	var list = [];
+	for(var i=0;i<t.getChildCount();i++) {
+		list.push(t.getChild(i));
+	}
+	return list;
+};
+
+// Return a list of all ancestors of this node.  The first node of
+//  list is the root and the last is the parent of this node.
+//
+Trees.getAncestors = function(t) {
+    var ancestors = [];
+    t = t.getParent();
+    while(t!==null) {
+        ancestors = [t].concat(ancestors);
+        t = t.getParent();
+    }
+    return ancestors;
+};
+
+Trees.findAllTokenNodes = function(t, ttype) {
+    return Trees.findAllNodes(t, ttype, true);
+};
+
+Trees.findAllRuleNodes = function(t, ruleIndex) {
+	return Trees.findAllNodes(t, ruleIndex, false);
+};
+
+Trees.findAllNodes = function(t, index, findTokens) {
+	var nodes = [];
+	Trees._findAllNodes(t, index, findTokens, nodes);
+	return nodes;
+};
+
+Trees._findAllNodes = function(t, index, findTokens, nodes) {
+	// check this node (the root) first
+	if(findTokens && (t instanceof TerminalNode)) {
+		if(t.symbol.type===index) {
+			nodes.push(t);
+		}
+	} else if(!findTokens && (t instanceof ParserRuleContext)) {
+		if(t.ruleIndex===index) {
+			nodes.push(t);
+		}
+	}
+	// check children
+	for(var i=0;i<t.getChildCount();i++) {
+		Trees._findAllNodes(t.getChild(i), index, findTokens, nodes);
+	}
+};
+
+Trees.descendants = function(t) {
+	var nodes = [t];
+    for(var i=0;i<t.getChildCount();i++) {
+        nodes = nodes.concat(Trees.descendants(t.getChild(i)));
+    }
+    return nodes;
+};
+
+
+exports.Trees = Trees;
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
@@ -5247,7 +5204,7 @@ exports.ATNDeserializationOptions = ATNDeserializationOptions;
 
 var Token = __webpack_require__(1).Token;
 var ATN = __webpack_require__(7).ATN;
-var ATNType = __webpack_require__(40).ATNType;
+var ATNType = __webpack_require__(34).ATNType;
 var ATNStates = __webpack_require__(3);
 var ATNState = ATNStates.ATNState;
 var BasicState = ATNStates.BasicState;
@@ -5278,8 +5235,8 @@ var PredicateTransition = Transitions.PredicateTransition;
 var PrecedencePredicateTransition = Transitions.PrecedencePredicateTransition;
 var IntervalSet = __webpack_require__(2).IntervalSet;
 var Interval = __webpack_require__(2).Interval;
-var ATNDeserializationOptions = __webpack_require__(21).ATNDeserializationOptions;
-var LexerActions = __webpack_require__(24);
+var ATNDeserializationOptions = __webpack_require__(22).ATNDeserializationOptions;
+var LexerActions = __webpack_require__(23);
 var LexerActionType = LexerActions.LexerActionType;
 var LexerSkipAction = LexerActions.LexerSkipAction;
 var LexerChannelAction = LexerActions.LexerChannelAction;
@@ -5380,7 +5337,7 @@ ATNDeserializer.prototype.deserialize = function(data) {
 ATNDeserializer.prototype.reset = function(data) {
 	var adjust = function(c) {
         var v = c.charCodeAt(0);
-        return v>1  ? v-2 : v + 65533;
+        return v>1  ? v-2 : -1;
 	};
     var temp = data.split("").map(adjust);
     // don't adjust the first value since that's the version number
@@ -5920,64 +5877,38 @@ ATNDeserializer.prototype.lexerActionFactory = function(type, data1, data2) {
 exports.ATNDeserializer = ATNDeserializer;
 
 /***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
+/* 22 */
+/***/ (function(module, exports) {
 
-//
 /* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
  * Use of this file is governed by the BSD 3-clause license that
  * can be found in the LICENSE.txt file in the project root.
  */
-///
 
-var DFAState = __webpack_require__(11).DFAState;
-var ATNConfigSet = __webpack_require__(9).ATNConfigSet;
-var getCachedPredictionContext = __webpack_require__(6).getCachedPredictionContext;
+function ATNDeserializationOptions(copyFrom) {
+	if(copyFrom===undefined) {
+		copyFrom = null;
+	}
+	this.readOnly = false;
+    this.verifyATN = copyFrom===null ? true : copyFrom.verifyATN;
+    this.generateRuleBypassTransitions = copyFrom===null ? false : copyFrom.generateRuleBypassTransitions;
 
-function ATNSimulator(atn, sharedContextCache) {
-
-    // The context cache maps all PredictionContext objects that are ==
-    //  to a single cached copy. This cache is shared across all contexts
-    //  in all ATNConfigs in all DFA states.  We rebuild each ATNConfigSet
-    //  to use only cached nodes/graphs in addDFAState(). We don't want to
-    //  fill this during closure() since there are lots of contexts that
-    //  pop up but are not used ever again. It also greatly slows down closure().
-    //
-    //  <p>This cache makes a huge difference in memory and a little bit in speed.
-    //  For the Java grammar on java.*, it dropped the memory requirements
-    //  at the end from 25M to 16M. We don't store any of the full context
-    //  graphs in the DFA because they are limited to local context only,
-    //  but apparently there's a lot of repetition there as well. We optimize
-    //  the config contexts before storing the config set in the DFA states
-    //  by literally rebuilding them with cached subgraphs only.</p>
-    //
-    //  <p>I tried a cache for use during closure operations, that was
-    //  whacked after each adaptivePredict(). It cost a little bit
-    //  more time I think and doesn't save on the overall footprint
-    //  so it's not worth the complexity.</p>
-    ///
-    this.atn = atn;
-    this.sharedContextCache = sharedContextCache;
     return this;
 }
 
-// Must distinguish between missing edge and edge we know leads nowhere///
-ATNSimulator.ERROR = new DFAState(0x7FFFFFFF, new ATNConfigSet());
+ATNDeserializationOptions.defaultOptions = new ATNDeserializationOptions();
+ATNDeserializationOptions.defaultOptions.readOnly = true;
 
+//    def __setattr__(self, key, value):
+//        if key!="readOnly" and self.readOnly:
+//            raise Exception("The object is read only.")
+//        super(type(self), self).__setattr__(key,value)
 
-ATNSimulator.prototype.getCachedContext = function(context) {
-    if (this.sharedContextCache ===null) {
-        return context;
-    }
-    var visited = {};
-    return getCachedPredictionContext(context, this.sharedContextCache, visited);
-};
-
-exports.ATNSimulator = ATNSimulator;
+exports.ATNDeserializationOptions = ATNDeserializationOptions;
 
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ (function(module, exports) {
 
 //
@@ -6348,7 +6279,217 @@ exports.LexerPopModeAction = LexerPopModeAction;
 exports.LexerModeAction = LexerModeAction;
 
 /***/ }),
+/* 24 */
+/***/ (function(module, exports, __webpack_require__) {
+
+//
+/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
+ * Use of this file is governed by the BSD 3-clause license that
+ * can be found in the LICENSE.txt file in the project root.
+ */
+//
+
+var Token = __webpack_require__(1).Token;
+var ConsoleErrorListener = __webpack_require__(15).ConsoleErrorListener;
+var ProxyErrorListener = __webpack_require__(15).ProxyErrorListener;
+
+function Recognizer() {
+    this._listeners = [ ConsoleErrorListener.INSTANCE ];
+    this._interp = null;
+    this._stateNumber = -1;
+    return this;
+}
+
+Recognizer.tokenTypeMapCache = {};
+Recognizer.ruleIndexMapCache = {};
+
+
+Recognizer.prototype.checkVersion = function(toolVersion) {
+    var runtimeVersion = "4.7";
+    if (runtimeVersion!==toolVersion) {
+        console.log("ANTLR runtime and generated code versions disagree: "+runtimeVersion+"!="+toolVersion);
+    }
+};
+
+Recognizer.prototype.addErrorListener = function(listener) {
+    this._listeners.push(listener);
+};
+
+Recognizer.prototype.removeErrorListeners = function() {
+    this._listeners = [];
+};
+
+Recognizer.prototype.getTokenTypeMap = function() {
+    var tokenNames = this.getTokenNames();
+    if (tokenNames===null) {
+        throw("The current recognizer does not provide a list of token names.");
+    }
+    var result = this.tokenTypeMapCache[tokenNames];
+    if(result===undefined) {
+        result = tokenNames.reduce(function(o, k, i) { o[k] = i; });
+        result.EOF = Token.EOF;
+        this.tokenTypeMapCache[tokenNames] = result;
+    }
+    return result;
+};
+
+// Get a map from rule names to rule indexes.
+//
+// <p>Used for XPath and tree pattern compilation.</p>
+//
+Recognizer.prototype.getRuleIndexMap = function() {
+    var ruleNames = this.ruleNames;
+    if (ruleNames===null) {
+        throw("The current recognizer does not provide a list of rule names.");
+    }
+    var result = this.ruleIndexMapCache[ruleNames];
+    if(result===undefined) {
+        result = ruleNames.reduce(function(o, k, i) { o[k] = i; });
+        this.ruleIndexMapCache[ruleNames] = result;
+    }
+    return result;
+};
+
+Recognizer.prototype.getTokenType = function(tokenName) {
+    var ttype = this.getTokenTypeMap()[tokenName];
+    if (ttype !==undefined) {
+        return ttype;
+    } else {
+        return Token.INVALID_TYPE;
+    }
+};
+
+
+// What is the error header, normally line/character position information?//
+Recognizer.prototype.getErrorHeader = function(e) {
+    var line = e.getOffendingToken().line;
+    var column = e.getOffendingToken().column;
+    return "line " + line + ":" + column;
+};
+
+
+// How should a token be displayed in an error message? The default
+//  is to display just the text, but during development you might
+//  want to have a lot of information spit out.  Override in that case
+//  to use t.toString() (which, for CommonToken, dumps everything about
+//  the token). This is better than forcing you to override a method in
+//  your token objects because you don't have to go modify your lexer
+//  so that it creates a new Java type.
+//
+// @deprecated This method is not called by the ANTLR 4 Runtime. Specific
+// implementations of {@link ANTLRErrorStrategy} may provide a similar
+// feature when necessary. For example, see
+// {@link DefaultErrorStrategy//getTokenErrorDisplay}.
+//
+Recognizer.prototype.getTokenErrorDisplay = function(t) {
+    if (t===null) {
+        return "<no token>";
+    }
+    var s = t.text;
+    if (s===null) {
+        if (t.type===Token.EOF) {
+            s = "<EOF>";
+        } else {
+            s = "<" + t.type + ">";
+        }
+    }
+    s = s.replace("\n","\\n").replace("\r","\\r").replace("\t","\\t");
+    return "'" + s + "'";
+};
+
+Recognizer.prototype.getErrorListenerDispatch = function() {
+    return new ProxyErrorListener(this._listeners);
+};
+
+// subclass needs to override these if there are sempreds or actions
+// that the ATN interp needs to execute
+Recognizer.prototype.sempred = function(localctx, ruleIndex, actionIndex) {
+    return true;
+};
+
+Recognizer.prototype.precpred = function(localctx , precedence) {
+    return true;
+};
+
+//Indicate that the recognizer has changed internal state that is
+//consistent with the ATN state passed in.  This way we always know
+//where we are in the ATN as the parser goes along. The rule
+//context objects form a stack that lets us see the stack of
+//invoking rules. Combine this and we have complete ATN
+//configuration information.
+
+Object.defineProperty(Recognizer.prototype, "state", {
+	get : function() {
+		return this._stateNumber;
+	},
+	set : function(state) {
+		this._stateNumber = state;
+	}
+});
+
+
+exports.Recognizer = Recognizer;
+
+
+/***/ }),
 /* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+//
+/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
+ * Use of this file is governed by the BSD 3-clause license that
+ * can be found in the LICENSE.txt file in the project root.
+ */
+///
+
+var DFAState = __webpack_require__(11).DFAState;
+var ATNConfigSet = __webpack_require__(9).ATNConfigSet;
+var getCachedPredictionContext = __webpack_require__(6).getCachedPredictionContext;
+
+function ATNSimulator(atn, sharedContextCache) {
+
+    // The context cache maps all PredictionContext objects that are ==
+    //  to a single cached copy. This cache is shared across all contexts
+    //  in all ATNConfigs in all DFA states.  We rebuild each ATNConfigSet
+    //  to use only cached nodes/graphs in addDFAState(). We don't want to
+    //  fill this during closure() since there are lots of contexts that
+    //  pop up but are not used ever again. It also greatly slows down closure().
+    //
+    //  <p>This cache makes a huge difference in memory and a little bit in speed.
+    //  For the Java grammar on java.*, it dropped the memory requirements
+    //  at the end from 25M to 16M. We don't store any of the full context
+    //  graphs in the DFA because they are limited to local context only,
+    //  but apparently there's a lot of repetition there as well. We optimize
+    //  the config contexts before storing the config set in the DFA states
+    //  by literally rebuilding them with cached subgraphs only.</p>
+    //
+    //  <p>I tried a cache for use during closure operations, that was
+    //  whacked after each adaptivePredict(). It cost a little bit
+    //  more time I think and doesn't save on the overall footprint
+    //  so it's not worth the complexity.</p>
+    ///
+    this.atn = atn;
+    this.sharedContextCache = sharedContextCache;
+    return this;
+}
+
+// Must distinguish between missing edge and edge we know leads nowhere///
+ATNSimulator.ERROR = new DFAState(0x7FFFFFFF, new ATNConfigSet());
+
+
+ATNSimulator.prototype.getCachedContext = function(context) {
+    if (this.sharedContextCache ===null) {
+        return context;
+    }
+    var visited = {};
+    return getCachedPredictionContext(context, this.sharedContextCache, visited);
+};
+
+exports.ATNSimulator = ATNSimulator;
+
+
+/***/ }),
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 //
@@ -6369,7 +6510,7 @@ var AltDict = __webpack_require__(0).AltDict;
 var ATN = __webpack_require__(7).ATN;
 var RuleStopState = __webpack_require__(3).RuleStopState;
 var ATNConfigSet = __webpack_require__(9).ATNConfigSet;
-var ATNConfig = __webpack_require__(14).ATNConfig;
+var ATNConfig = __webpack_require__(12).ATNConfig;
 var SemanticContext = __webpack_require__(10).SemanticContext;
 var Hash = __webpack_require__(0).Hash;
 var hashStuff = __webpack_require__(0).hashStuff;
@@ -6913,7 +7054,135 @@ exports.PredictionMode = PredictionMode;
 
 
 /***/ }),
-/* 26 */
+/* 27 */
+/***/ (function(module, exports) {
+
+/*! https://mths.be/codepointat v0.2.0 by @mathias */
+if (!String.prototype.codePointAt) {
+	(function() {
+		'use strict'; // needed to support `apply`/`call` with `undefined`/`null`
+		var defineProperty = (function() {
+			// IE 8 only supports `Object.defineProperty` on DOM elements
+			try {
+				var object = {};
+				var $defineProperty = Object.defineProperty;
+				var result = $defineProperty(object, object, object) && $defineProperty;
+			} catch(error) {}
+			return result;
+		}());
+		var codePointAt = function(position) {
+			if (this == null) {
+				throw TypeError();
+			}
+			var string = String(this);
+			var size = string.length;
+			// `ToInteger`
+			var index = position ? Number(position) : 0;
+			if (index != index) { // better `isNaN`
+				index = 0;
+			}
+			// Account for out-of-bounds indices:
+			if (index < 0 || index >= size) {
+				return undefined;
+			}
+			// Get the first code unit
+			var first = string.charCodeAt(index);
+			var second;
+			if ( // check if it’s the start of a surrogate pair
+				first >= 0xD800 && first <= 0xDBFF && // high surrogate
+				size > index + 1 // there is a next code unit
+			) {
+				second = string.charCodeAt(index + 1);
+				if (second >= 0xDC00 && second <= 0xDFFF) { // low surrogate
+					// https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+					return (first - 0xD800) * 0x400 + second - 0xDC00 + 0x10000;
+				}
+			}
+			return first;
+		};
+		if (defineProperty) {
+			defineProperty(String.prototype, 'codePointAt', {
+				'value': codePointAt,
+				'configurable': true,
+				'writable': true
+			});
+		} else {
+			String.prototype.codePointAt = codePointAt;
+		}
+	}());
+}
+
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports) {
+
+/*! https://mths.be/fromcodepoint v0.2.1 by @mathias */
+if (!String.fromCodePoint) {
+	(function() {
+		var defineProperty = (function() {
+			// IE 8 only supports `Object.defineProperty` on DOM elements
+			try {
+				var object = {};
+				var $defineProperty = Object.defineProperty;
+				var result = $defineProperty(object, object, object) && $defineProperty;
+			} catch(error) {}
+			return result;
+		}());
+		var stringFromCharCode = String.fromCharCode;
+		var floor = Math.floor;
+		var fromCodePoint = function(_) {
+			var MAX_SIZE = 0x4000;
+			var codeUnits = [];
+			var highSurrogate;
+			var lowSurrogate;
+			var index = -1;
+			var length = arguments.length;
+			if (!length) {
+				return '';
+			}
+			var result = '';
+			while (++index < length) {
+				var codePoint = Number(arguments[index]);
+				if (
+					!isFinite(codePoint) || // `NaN`, `+Infinity`, or `-Infinity`
+					codePoint < 0 || // not a valid Unicode code point
+					codePoint > 0x10FFFF || // not a valid Unicode code point
+					floor(codePoint) != codePoint // not an integer
+				) {
+					throw RangeError('Invalid code point: ' + codePoint);
+				}
+				if (codePoint <= 0xFFFF) { // BMP code point
+					codeUnits.push(codePoint);
+				} else { // Astral code point; split in surrogate halves
+					// https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+					codePoint -= 0x10000;
+					highSurrogate = (codePoint >> 10) + 0xD800;
+					lowSurrogate = (codePoint % 0x400) + 0xDC00;
+					codeUnits.push(highSurrogate, lowSurrogate);
+				}
+				if (index + 1 == length || codeUnits.length > MAX_SIZE) {
+					result += stringFromCharCode.apply(null, codeUnits);
+					codeUnits.length = 0;
+				}
+			}
+			return result;
+		};
+		if (defineProperty) {
+			defineProperty(String, 'fromCodePoint', {
+				'value': fromCodePoint,
+				'configurable': true,
+				'writable': true
+			});
+		} else {
+			String.fromCodePoint = fromCodePoint;
+		}
+	}());
+}
+
+
+/***/ }),
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 //
@@ -6924,7 +7193,7 @@ exports.PredictionMode = PredictionMode;
 //
 
 var Token = __webpack_require__(1).Token;
-var Errors = __webpack_require__(4);
+var Errors = __webpack_require__(5);
 var NoViableAltException = Errors.NoViableAltException;
 var InputMismatchException = Errors.InputMismatchException;
 var FailedPredicateException = Errors.FailedPredicateException;
@@ -7185,7 +7454,7 @@ DefaultErrorStrategy.prototype.reportNoViableAlternative = function(recognizer, 
         if (e.startToken.type===Token.EOF) {
             input = "<EOF>";
         } else {
-            input = tokens.getText(new Interval(e.startToken.tokenIndex, e.offendingToken.tokenIndex));
+            input = tokens.getText(new Interval(e.startToken, e.offendingToken));
         }
     } else {
         input = "<unknown input>";
@@ -7673,280 +7942,6 @@ BailErrorStrategy.prototype.sync = function(recognizer) {
 exports.BailErrorStrategy = BailErrorStrategy;
 exports.DefaultErrorStrategy = DefaultErrorStrategy;
 
-
-/***/ }),
-/* 27 */
-/***/ (function(module, exports) {
-
-/*! https://mths.be/codepointat v0.2.0 by @mathias */
-if (!String.prototype.codePointAt) {
-	(function() {
-		'use strict'; // needed to support `apply`/`call` with `undefined`/`null`
-		var defineProperty = (function() {
-			// IE 8 only supports `Object.defineProperty` on DOM elements
-			try {
-				var object = {};
-				var $defineProperty = Object.defineProperty;
-				var result = $defineProperty(object, object, object) && $defineProperty;
-			} catch(error) {}
-			return result;
-		}());
-		var codePointAt = function(position) {
-			if (this == null) {
-				throw TypeError();
-			}
-			var string = String(this);
-			var size = string.length;
-			// `ToInteger`
-			var index = position ? Number(position) : 0;
-			if (index != index) { // better `isNaN`
-				index = 0;
-			}
-			// Account for out-of-bounds indices:
-			if (index < 0 || index >= size) {
-				return undefined;
-			}
-			// Get the first code unit
-			var first = string.charCodeAt(index);
-			var second;
-			if ( // check if it’s the start of a surrogate pair
-				first >= 0xD800 && first <= 0xDBFF && // high surrogate
-				size > index + 1 // there is a next code unit
-			) {
-				second = string.charCodeAt(index + 1);
-				if (second >= 0xDC00 && second <= 0xDFFF) { // low surrogate
-					// https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
-					return (first - 0xD800) * 0x400 + second - 0xDC00 + 0x10000;
-				}
-			}
-			return first;
-		};
-		if (defineProperty) {
-			defineProperty(String.prototype, 'codePointAt', {
-				'value': codePointAt,
-				'configurable': true,
-				'writable': true
-			});
-		} else {
-			String.prototype.codePointAt = codePointAt;
-		}
-	}());
-}
-
-
-/***/ }),
-/* 28 */
-/***/ (function(module, exports) {
-
-/*! https://mths.be/fromcodepoint v0.2.1 by @mathias */
-if (!String.fromCodePoint) {
-	(function() {
-		var defineProperty = (function() {
-			// IE 8 only supports `Object.defineProperty` on DOM elements
-			try {
-				var object = {};
-				var $defineProperty = Object.defineProperty;
-				var result = $defineProperty(object, object, object) && $defineProperty;
-			} catch(error) {}
-			return result;
-		}());
-		var stringFromCharCode = String.fromCharCode;
-		var floor = Math.floor;
-		var fromCodePoint = function(_) {
-			var MAX_SIZE = 0x4000;
-			var codeUnits = [];
-			var highSurrogate;
-			var lowSurrogate;
-			var index = -1;
-			var length = arguments.length;
-			if (!length) {
-				return '';
-			}
-			var result = '';
-			while (++index < length) {
-				var codePoint = Number(arguments[index]);
-				if (
-					!isFinite(codePoint) || // `NaN`, `+Infinity`, or `-Infinity`
-					codePoint < 0 || // not a valid Unicode code point
-					codePoint > 0x10FFFF || // not a valid Unicode code point
-					floor(codePoint) != codePoint // not an integer
-				) {
-					throw RangeError('Invalid code point: ' + codePoint);
-				}
-				if (codePoint <= 0xFFFF) { // BMP code point
-					codeUnits.push(codePoint);
-				} else { // Astral code point; split in surrogate halves
-					// https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
-					codePoint -= 0x10000;
-					highSurrogate = (codePoint >> 10) + 0xD800;
-					lowSurrogate = (codePoint % 0x400) + 0xDC00;
-					codeUnits.push(highSurrogate, lowSurrogate);
-				}
-				if (index + 1 == length || codeUnits.length > MAX_SIZE) {
-					result += stringFromCharCode.apply(null, codeUnits);
-					codeUnits.length = 0;
-				}
-			}
-			return result;
-		};
-		if (defineProperty) {
-			defineProperty(String, 'fromCodePoint', {
-				'value': fromCodePoint,
-				'configurable': true,
-				'writable': true
-			});
-		} else {
-			String.fromCodePoint = fromCodePoint;
-		}
-	}());
-}
-
-
-/***/ }),
-/* 29 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
- * Use of this file is governed by the BSD 3-clause license that
- * can be found in the LICENSE.txt file in the project root.
- */
-
-var Utils = __webpack_require__(0);
-var Token = __webpack_require__(1).Token;
-var RuleNode = __webpack_require__(5).RuleNode;
-var ErrorNode = __webpack_require__(5).ErrorNode;
-var TerminalNode = __webpack_require__(5).TerminalNode;
-var ParserRuleContext = __webpack_require__(18).ParserRuleContext;
-var RuleContext = __webpack_require__(13).RuleContext;
-var INVALID_ALT_NUMBER = __webpack_require__(7).INVALID_ALT_NUMBER;
-
-
-/** A set of utility routines useful for all kinds of ANTLR trees. */
-function Trees() {
-}
-
-// Print out a whole tree in LISP form. {@link //getNodeText} is used on the
-//  node payloads to get the text for the nodes.  Detect
-//  parse trees and extract data appropriately.
-Trees.toStringTree = function(tree, ruleNames, recog) {
-	ruleNames = ruleNames || null;
-	recog = recog || null;
-    if(recog!==null) {
-       ruleNames = recog.ruleNames;
-    }
-    var s = Trees.getNodeText(tree, ruleNames);
-    s = Utils.escapeWhitespace(s, false);
-    var c = tree.getChildCount();
-    if(c===0) {
-        return s;
-    }
-    var res = "(" + s + ' ';
-    if(c>0) {
-        s = Trees.toStringTree(tree.getChild(0), ruleNames);
-        res = res.concat(s);
-    }
-    for(var i=1;i<c;i++) {
-        s = Trees.toStringTree(tree.getChild(i), ruleNames);
-        res = res.concat(' ' + s);
-    }
-    res = res.concat(")");
-    return res;
-};
-
-Trees.getNodeText = function(t, ruleNames, recog) {
-	ruleNames = ruleNames || null;
-	recog = recog || null;
-    if(recog!==null) {
-        ruleNames = recog.ruleNames;
-    }
-    if(ruleNames!==null) {
-       if (t instanceof RuleContext) {
-           var altNumber = t.getAltNumber();
-           if ( altNumber!=INVALID_ALT_NUMBER ) {
-               return ruleNames[t.ruleIndex]+":"+altNumber;
-           }
-           return ruleNames[t.ruleIndex];
-       } else if ( t instanceof ErrorNode) {
-           return t.toString();
-       } else if(t instanceof TerminalNode) {
-           if(t.symbol!==null) {
-               return t.symbol.text;
-           }
-       }
-    }
-    // no recog for rule names
-    var payload = t.getPayload();
-    if (payload instanceof Token ) {
-       return payload.text;
-    }
-    return t.getPayload().toString();
-};
-
-
-// Return ordered list of all children of this node
-Trees.getChildren = function(t) {
-	var list = [];
-	for(var i=0;i<t.getChildCount();i++) {
-		list.push(t.getChild(i));
-	}
-	return list;
-};
-
-// Return a list of all ancestors of this node.  The first node of
-//  list is the root and the last is the parent of this node.
-//
-Trees.getAncestors = function(t) {
-    var ancestors = [];
-    t = t.getParent();
-    while(t!==null) {
-        ancestors = [t].concat(ancestors);
-        t = t.getParent();
-    }
-    return ancestors;
-};
-
-Trees.findAllTokenNodes = function(t, ttype) {
-    return Trees.findAllNodes(t, ttype, true);
-};
-
-Trees.findAllRuleNodes = function(t, ruleIndex) {
-	return Trees.findAllNodes(t, ruleIndex, false);
-};
-
-Trees.findAllNodes = function(t, index, findTokens) {
-	var nodes = [];
-	Trees._findAllNodes(t, index, findTokens, nodes);
-	return nodes;
-};
-
-Trees._findAllNodes = function(t, index, findTokens, nodes) {
-	// check this node (the root) first
-	if(findTokens && (t instanceof TerminalNode)) {
-		if(t.symbol.type===index) {
-			nodes.push(t);
-		}
-	} else if(!findTokens && (t instanceof ParserRuleContext)) {
-		if(t.ruleIndex===index) {
-			nodes.push(t);
-		}
-	}
-	// check children
-	for(var i=0;i<t.getChildCount();i++) {
-		Trees._findAllNodes(t.getChild(i), index, findTokens, nodes);
-	}
-};
-
-Trees.descendants = function(t) {
-	var nodes = [t];
-    for(var i=0;i<t.getChildCount();i++) {
-        nodes = nodes.concat(Trees.descendants(t.getChild(i)));
-    }
-    return nodes;
-};
-
-
-exports.Trees = Trees;
-
 /***/ }),
 /* 30 */
 /***/ (function(module, exports) {
@@ -7957,129 +7952,28 @@ exports.Trees = Trees;
 /* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
-// Generated from SQL.g4 by ANTLR 4.5
-// jshint ignore: start
-var antlr4 = __webpack_require__(19);
-
-
-var serializedATN = ["\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd",
-    "\2\21\u00a0\b\1\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b",
-    "\t\b\4\t\t\t\4\n\t\n\4\13\t\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4",
-    "\20\t\20\3\2\6\2#\n\2\r\2\16\2$\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2",
-    "\3\2\5\2\61\n\2\3\3\6\3\64\n\3\r\3\16\3\65\3\3\6\39\n\3\r\3\16\3:\3",
-    "\3\3\3\6\3?\n\3\r\3\16\3@\3\3\3\3\5\3E\n\3\3\4\3\4\3\5\3\5\3\6\3\6\3",
-    "\6\7\6N\n\6\f\6\16\6Q\13\6\3\6\3\6\3\6\3\6\3\6\7\6X\n\6\f\6\16\6[\13",
-    "\6\3\6\3\6\5\6_\n\6\3\7\3\7\5\7c\n\7\3\b\3\b\3\b\3\b\3\b\6\bj\n\b\r",
-    "\b\16\bk\3\t\3\t\3\t\3\n\3\n\3\n\3\n\3\n\3\n\3\n\3\n\3\n\7\nz\n\n\f",
-    "\n\16\n}\13\n\3\n\3\n\5\n\u0081\n\n\3\n\3\n\3\13\3\13\7\13\u0087\n\13",
-    "\f\13\16\13\u008a\13\13\3\13\3\13\3\f\3\f\3\r\3\r\3\16\3\16\3\16\3\17",
-    "\6\17\u0096\n\17\r\17\16\17\u0097\3\20\6\20\u009b\n\20\r\20\16\20\u009c",
-    "\3\20\3\20\3{\2\21\3\3\5\4\7\5\t\6\13\7\r\b\17\t\21\n\23\13\25\f\27",
-    "\r\31\16\33\17\35\20\37\21\3\2\13\7\2\60\60\62;C\\aac|\3\2\62;\4\2$",
-    "$^^\4\2))^^\n\2$$))^^ddhhppttvv\3\2##\4\2\f\f\17\17\t\2##&(*-//\61\61",
-    "<B``\5\2\13\f\16\17\"\"\u00b3\2\3\3\2\2\2\2\5\3\2\2\2\2\7\3\2\2\2\2",
-    "\t\3\2\2\2\2\13\3\2\2\2\2\r\3\2\2\2\2\17\3\2\2\2\2\21\3\2\2\2\2\23\3",
-    "\2\2\2\2\25\3\2\2\2\2\27\3\2\2\2\2\31\3\2\2\2\2\33\3\2\2\2\2\35\3\2",
-    "\2\2\2\37\3\2\2\2\3\60\3\2\2\2\5D\3\2\2\2\7F\3\2\2\2\tH\3\2\2\2\13^",
-    "\3\2\2\2\r`\3\2\2\2\17d\3\2\2\2\21m\3\2\2\2\23\u0080\3\2\2\2\25\u0084",
-    "\3\2\2\2\27\u008d\3\2\2\2\31\u008f\3\2\2\2\33\u0091\3\2\2\2\35\u0095",
-    "\3\2\2\2\37\u009a\3\2\2\2!#\t\2\2\2\"!\3\2\2\2#$\3\2\2\2$\"\3\2\2\2",
-    "$%\3\2\2\2%\61\3\2\2\2&\'\7b\2\2\'(\5\3\2\2()\7b\2\2)\61\3\2\2\2*+\7",
-    "b\2\2+,\5\3\2\2,-\7b\2\2-.\7\60\2\2./\5\3\2\2/\61\3\2\2\2\60\"\3\2\2",
-    "\2\60&\3\2\2\2\60*\3\2\2\2\61\4\3\2\2\2\62\64\t\3\2\2\63\62\3\2\2\2",
-    "\64\65\3\2\2\2\65\63\3\2\2\2\65\66\3\2\2\2\66E\3\2\2\2\679\t\3\2\28",
-    "\67\3\2\2\29:\3\2\2\2:8\3\2\2\2:;\3\2\2\2;<\3\2\2\2<>\7\60\2\2=?\t\3",
-    "\2\2>=\3\2\2\2?@\3\2\2\2@>\3\2\2\2@A\3\2\2\2AE\3\2\2\2BC\7/\2\2CE\5",
-    "\5\3\2D\63\3\2\2\2D8\3\2\2\2DB\3\2\2\2E\6\3\2\2\2FG\7$\2\2G\b\3\2\2",
-    "\2HI\7)\2\2I\n\3\2\2\2JO\5\7\4\2KN\n\4\2\2LN\5\r\7\2MK\3\2\2\2ML\3\2",
-    "\2\2NQ\3\2\2\2OM\3\2\2\2OP\3\2\2\2PR\3\2\2\2QO\3\2\2\2RS\5\7\4\2S_\3",
-    "\2\2\2TY\5\t\5\2UX\n\5\2\2VX\5\r\7\2WU\3\2\2\2WV\3\2\2\2X[\3\2\2\2Y",
-    "W\3\2\2\2YZ\3\2\2\2Z\\\3\2\2\2[Y\3\2\2\2\\]\5\t\5\2]_\3\2\2\2^J\3\2",
-    "\2\2^T\3\2\2\2_\f\3\2\2\2`b\7^\2\2ac\t\6\2\2ba\3\2\2\2bc\3\2\2\2c\16",
-    "\3\2\2\2de\7\61\2\2ef\7,\2\2fg\7#\2\2gi\3\2\2\2hj\t\3\2\2ih\3\2\2\2",
-    "jk\3\2\2\2ki\3\2\2\2kl\3\2\2\2l\20\3\2\2\2mn\7,\2\2no\7\61\2\2o\22\3",
-    "\2\2\2pq\7\61\2\2qr\7,\2\2rs\7,\2\2s\u0081\7\61\2\2tu\7\61\2\2uv\7,",
-    "\2\2vw\3\2\2\2w{\n\7\2\2xz\13\2\2\2yx\3\2\2\2z}\3\2\2\2{|\3\2\2\2{y",
-    "\3\2\2\2|~\3\2\2\2}{\3\2\2\2~\177\7,\2\2\177\u0081\7\61\2\2\u0080p\3",
-    "\2\2\2\u0080t\3\2\2\2\u0081\u0082\3\2\2\2\u0082\u0083\b\n\2\2\u0083",
-    "\24\3\2\2\2\u0084\u0088\7%\2\2\u0085\u0087\n\b\2\2\u0086\u0085\3\2\2",
-    "\2\u0087\u008a\3\2\2\2\u0088\u0086\3\2\2\2\u0088\u0089\3\2\2\2\u0089",
-    "\u008b\3\2\2\2\u008a\u0088\3\2\2\2\u008b\u008c\b\13\2\2\u008c\26\3\2",
-    "\2\2\u008d\u008e\7.\2\2\u008e\30\3\2\2\2\u008f\u0090\7\60\2\2\u0090",
-    "\32\3\2\2\2\u0091\u0092\7~\2\2\u0092\u0093\7~\2\2\u0093\34\3\2\2\2\u0094",
-    "\u0096\t\t\2\2\u0095\u0094\3\2\2\2\u0096\u0097\3\2\2\2\u0097\u0095\3",
-    "\2\2\2\u0097\u0098\3\2\2\2\u0098\36\3\2\2\2\u0099\u009b\t\n\2\2\u009a",
-    "\u0099\3\2\2\2\u009b\u009c\3\2\2\2\u009c\u009a\3\2\2\2\u009c\u009d\3",
-    "\2\2\2\u009d\u009e\3\2\2\2\u009e\u009f\b\20\2\2\u009f \3\2\2\2\25\2",
-    "$\60\65:@DMOWY^bk{\u0080\u0088\u0097\u009c\3\b\2\2"].join("");
-
-
-var atn = new antlr4.atn.ATNDeserializer().deserialize(serializedATN);
-
-var decisionsToDFA = atn.decisionToState.map( function(ds, index) { return new antlr4.dfa.DFA(ds, index); });
-
-function SQLLexer(input) {
-	antlr4.Lexer.call(this, input);
-    this._interp = new antlr4.atn.LexerATNSimulator(this, atn, decisionsToDFA, new antlr4.PredictionContextCache());
-    return this;
-}
-
-SQLLexer.prototype = Object.create(antlr4.Lexer.prototype);
-SQLLexer.prototype.constructor = SQLLexer;
-
-SQLLexer.EOF = antlr4.Token.EOF;
-SQLLexer.Identifier = 1;
-SQLLexer.Number = 2;
-SQLLexer.DOUBLE_QUOTE = 3;
-SQLLexer.SINGLE_QUOTE = 4;
-SQLLexer.StringLiteral = 5;
-SQLLexer.EscapeSequence = 6;
-SQLLexer.BLOCK_COMMENT_START = 7;
-SQLLexer.BLOCK_COMMENT_END = 8;
-SQLLexer.BLOCK_COMMENT = 9;
-SQLLexer.POUND_COMMENT = 10;
-SQLLexer.COMMA = 11;
-SQLLexer.DOT = 12;
-SQLLexer.OR = 13;
-SQLLexer.SYMBOL = 14;
-SQLLexer.WS = 15;
-
-
-SQLLexer.modeNames = [ "DEFAULT_MODE" ];
-
-SQLLexer.literalNames = [ 'null', 'null', 'null', "'\"'", "'''", 'null', 
-                          'null', 'null', "'*/'", 'null', 'null', "','", 
-                          "'.'", "'||'" ];
-
-SQLLexer.symbolicNames = [ 'null', "Identifier", "Number", "DOUBLE_QUOTE", 
-                           "SINGLE_QUOTE", "StringLiteral", "EscapeSequence", 
-                           "BLOCK_COMMENT_START", "BLOCK_COMMENT_END", "BLOCK_COMMENT", 
-                           "POUND_COMMENT", "COMMA", "DOT", "OR", "SYMBOL", 
-                           "WS" ];
-
-SQLLexer.ruleNames = [ "Identifier", "Number", "DOUBLE_QUOTE", "SINGLE_QUOTE", 
-                       "StringLiteral", "EscapeSequence", "BLOCK_COMMENT_START", 
-                       "BLOCK_COMMENT_END", "BLOCK_COMMENT", "POUND_COMMENT", 
-                       "COMMA", "DOT", "OR", "SYMBOL", "WS" ];
-
-SQLLexer.grammarFileName = "SQL.g4";
-
-
-
-exports.SQLLexer = SQLLexer;
-
-
-
-/***/ }),
-/* 32 */
-/***/ (function(module, exports, __webpack_require__) {
-
 var antlr4 = __webpack_require__(19)
-var SQLLexer = __webpack_require__(31).SQLLexer
+var SQLLexer = __webpack_require__(49).SQLLexer
+
+TokenizeErrorListener = function () {
+    antlr4.error.ErrorListener.call(this);
+    return this
+}
+TokenizeErrorListener.prototype = Object.create(antlr4.error.ErrorListener.prototype);
+TokenizeErrorListener.prototype.constructor = TokenizeErrorListener;
+TokenizeErrorListener.prototype.syntaxError = function(recognizer, offendingSymbol, line, column, msg, e) {
+    if (recognizer instanceof SQLLexer)
+    {
+        console.error("RASP.sql_tokenize() error: line " + line + ":" + column + " " + msg + " in SQL statement:\n" + (recognizer).inputStream.toString());
+	}
+};
+var listener = new TokenizeErrorListener();
 
 function sql_tokenize(query) {
     var input = new antlr4.InputStream(query)
     var lexer = new SQLLexer(input)
+    lexer.removeErrorListeners();
+    lexer.addErrorListener(listener);
     var output = new antlr4.CommonTokenStream(lexer)
     output.fill()
     var tokens = []
@@ -8091,681 +7985,23 @@ function sql_tokenize(query) {
 module.exports = sql_tokenize
 
 /***/ }),
+/* 32 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
+ * Use of this file is governed by the BSD 3-clause license that
+ * can be found in the LICENSE.txt file in the project root.
+ */
+
+exports.ATN = __webpack_require__(7).ATN;
+exports.ATNDeserializer = __webpack_require__(21).ATNDeserializer;
+exports.LexerATNSimulator = __webpack_require__(35).LexerATNSimulator;
+exports.ParserATNSimulator = __webpack_require__(38).ParserATNSimulator;
+exports.PredictionMode = __webpack_require__(26).PredictionMode;
+
+
+/***/ }),
 /* 33 */
-/***/ (function(module, exports, __webpack_require__) {
-
-//
-/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
- * Use of this file is governed by the BSD 3-clause license that
- * can be found in the LICENSE.txt file in the project root.
- */
-
-// This implementation of {@link TokenStream} loads tokens from a
-// {@link TokenSource} on-demand, and places the tokens in a buffer to provide
-// access to any previous token by index.
-//
-// <p>
-// This token stream ignores the value of {@link Token//getChannel}. If your
-// parser requires the token stream filter tokens to only those on a particular
-// channel, such as {@link Token//DEFAULT_CHANNEL} or
-// {@link Token//HIDDEN_CHANNEL}, use a filtering token stream such a
-// {@link CommonTokenStream}.</p>
-
-var Token = __webpack_require__(1).Token;
-var Lexer = __webpack_require__(12).Lexer;
-var Interval = __webpack_require__(2).Interval;
-
-// this is just to keep meaningful parameter types to Parser
-function TokenStream() {
-	return this;
-}
-
-function BufferedTokenStream(tokenSource) {
-
-	TokenStream.call(this);
-	// The {@link TokenSource} from which tokens for this stream are fetched.
-	this.tokenSource = tokenSource;
-
-	// A collection of all tokens fetched from the token source. The list is
-	// considered a complete view of the input once {@link //fetchedEOF} is set
-	// to {@code true}.
-	this.tokens = [];
-
-	// The index into {@link //tokens} of the current token (next token to
-	// {@link //consume}). {@link //tokens}{@code [}{@link //p}{@code ]} should
-	// be
-	// {@link //LT LT(1)}.
-	//
-	// <p>This field is set to -1 when the stream is first constructed or when
-	// {@link //setTokenSource} is called, indicating that the first token has
-	// not yet been fetched from the token source. For additional information,
-	// see the documentation of {@link IntStream} for a description of
-	// Initializing Methods.</p>
-	this.index = -1;
-
-	// Indicates whether the {@link Token//EOF} token has been fetched from
-	// {@link //tokenSource} and added to {@link //tokens}. This field improves
-	// performance for the following cases:
-	//
-	// <ul>
-	// <li>{@link //consume}: The lookahead check in {@link //consume} to
-	// prevent
-	// consuming the EOF symbol is optimized by checking the values of
-	// {@link //fetchedEOF} and {@link //p} instead of calling {@link
-	// //LA}.</li>
-	// <li>{@link //fetch}: The check to prevent adding multiple EOF symbols
-	// into
-	// {@link //tokens} is trivial with this field.</li>
-	// <ul>
-	this.fetchedEOF = false;
-	return this;
-}
-
-BufferedTokenStream.prototype = Object.create(TokenStream.prototype);
-BufferedTokenStream.prototype.constructor = BufferedTokenStream;
-
-BufferedTokenStream.prototype.mark = function() {
-	return 0;
-};
-
-BufferedTokenStream.prototype.release = function(marker) {
-	// no resources to release
-};
-
-BufferedTokenStream.prototype.reset = function() {
-	this.seek(0);
-};
-
-BufferedTokenStream.prototype.seek = function(index) {
-	this.lazyInit();
-	this.index = this.adjustSeekIndex(index);
-};
-
-BufferedTokenStream.prototype.get = function(index) {
-	this.lazyInit();
-	return this.tokens[index];
-};
-
-BufferedTokenStream.prototype.consume = function() {
-	var skipEofCheck = false;
-	if (this.index >= 0) {
-		if (this.fetchedEOF) {
-			// the last token in tokens is EOF. skip check if p indexes any
-			// fetched token except the last.
-			skipEofCheck = this.index < this.tokens.length - 1;
-		} else {
-			// no EOF token in tokens. skip check if p indexes a fetched token.
-			skipEofCheck = this.index < this.tokens.length;
-		}
-	} else {
-		// not yet initialized
-		skipEofCheck = false;
-	}
-	if (!skipEofCheck && this.LA(1) === Token.EOF) {
-		throw "cannot consume EOF";
-	}
-	if (this.sync(this.index + 1)) {
-		this.index = this.adjustSeekIndex(this.index + 1);
-	}
-};
-
-// Make sure index {@code i} in tokens has a token.
-//
-// @return {@code true} if a token is located at index {@code i}, otherwise
-// {@code false}.
-// @see //get(int i)
-// /
-BufferedTokenStream.prototype.sync = function(i) {
-	var n = i - this.tokens.length + 1; // how many more elements we need?
-	if (n > 0) {
-		var fetched = this.fetch(n);
-		return fetched >= n;
-	}
-	return true;
-};
-
-// Add {@code n} elements to buffer.
-//
-// @return The actual number of elements added to the buffer.
-// /
-BufferedTokenStream.prototype.fetch = function(n) {
-	if (this.fetchedEOF) {
-		return 0;
-	}
-	for (var i = 0; i < n; i++) {
-		var t = this.tokenSource.nextToken();
-		t.tokenIndex = this.tokens.length;
-		this.tokens.push(t);
-		if (t.type === Token.EOF) {
-			this.fetchedEOF = true;
-			return i + 1;
-		}
-	}
-	return n;
-};
-
-// Get all tokens from start..stop inclusively///
-BufferedTokenStream.prototype.getTokens = function(start, stop, types) {
-	if (types === undefined) {
-		types = null;
-	}
-	if (start < 0 || stop < 0) {
-		return null;
-	}
-	this.lazyInit();
-	var subset = [];
-	if (stop >= this.tokens.length) {
-		stop = this.tokens.length - 1;
-	}
-	for (var i = start; i < stop; i++) {
-		var t = this.tokens[i];
-		if (t.type === Token.EOF) {
-			break;
-		}
-		if (types === null || types.contains(t.type)) {
-			subset.push(t);
-		}
-	}
-	return subset;
-};
-
-BufferedTokenStream.prototype.LA = function(i) {
-	return this.LT(i).type;
-};
-
-BufferedTokenStream.prototype.LB = function(k) {
-	if (this.index - k < 0) {
-		return null;
-	}
-	return this.tokens[this.index - k];
-};
-
-BufferedTokenStream.prototype.LT = function(k) {
-	this.lazyInit();
-	if (k === 0) {
-		return null;
-	}
-	if (k < 0) {
-		return this.LB(-k);
-	}
-	var i = this.index + k - 1;
-	this.sync(i);
-	if (i >= this.tokens.length) { // return EOF token
-		// EOF must be last token
-		return this.tokens[this.tokens.length - 1];
-	}
-	return this.tokens[i];
-};
-
-// Allowed derived classes to modify the behavior of operations which change
-// the current stream position by adjusting the target token index of a seek
-// operation. The default implementation simply returns {@code i}. If an
-// exception is thrown in this method, the current stream index should not be
-// changed.
-//
-// <p>For example, {@link CommonTokenStream} overrides this method to ensure
-// that
-// the seek target is always an on-channel token.</p>
-//
-// @param i The target token index.
-// @return The adjusted target token index.
-
-BufferedTokenStream.prototype.adjustSeekIndex = function(i) {
-	return i;
-};
-
-BufferedTokenStream.prototype.lazyInit = function() {
-	if (this.index === -1) {
-		this.setup();
-	}
-};
-
-BufferedTokenStream.prototype.setup = function() {
-	this.sync(0);
-	this.index = this.adjustSeekIndex(0);
-};
-
-// Reset this token stream by setting its token source.///
-BufferedTokenStream.prototype.setTokenSource = function(tokenSource) {
-	this.tokenSource = tokenSource;
-	this.tokens = [];
-	this.index = -1;
-	this.fetchedEOF = false;
-};
-
-
-// Given a starting index, return the index of the next token on channel.
-// Return i if tokens[i] is on channel. Return -1 if there are no tokens
-// on channel between i and EOF.
-// /
-BufferedTokenStream.prototype.nextTokenOnChannel = function(i, channel) {
-	this.sync(i);
-	if (i >= this.tokens.length) {
-		return -1;
-	}
-	var token = this.tokens[i];
-	while (token.channel !== this.channel) {
-		if (token.type === Token.EOF) {
-			return -1;
-		}
-		i += 1;
-		this.sync(i);
-		token = this.tokens[i];
-	}
-	return i;
-};
-
-// Given a starting index, return the index of the previous token on channel.
-// Return i if tokens[i] is on channel. Return -1 if there are no tokens
-// on channel between i and 0.
-BufferedTokenStream.prototype.previousTokenOnChannel = function(i, channel) {
-	while (i >= 0 && this.tokens[i].channel !== channel) {
-		i -= 1;
-	}
-	return i;
-};
-
-// Collect all tokens on specified channel to the right of
-// the current token up until we see a token on DEFAULT_TOKEN_CHANNEL or
-// EOF. If channel is -1, find any non default channel token.
-BufferedTokenStream.prototype.getHiddenTokensToRight = function(tokenIndex,
-		channel) {
-	if (channel === undefined) {
-		channel = -1;
-	}
-	this.lazyInit();
-	if (tokenIndex < 0 || tokenIndex >= this.tokens.length) {
-		throw "" + tokenIndex + " not in 0.." + this.tokens.length - 1;
-	}
-	var nextOnChannel = this.nextTokenOnChannel(tokenIndex + 1, Lexer.DEFAULT_TOKEN_CHANNEL);
-	var from_ = tokenIndex + 1;
-	// if none onchannel to right, nextOnChannel=-1 so set to = last token
-	var to = nextOnChannel === -1 ? this.tokens.length - 1 : nextOnChannel;
-	return this.filterForChannel(from_, to, channel);
-};
-
-// Collect all tokens on specified channel to the left of
-// the current token up until we see a token on DEFAULT_TOKEN_CHANNEL.
-// If channel is -1, find any non default channel token.
-BufferedTokenStream.prototype.getHiddenTokensToLeft = function(tokenIndex,
-		channel) {
-	if (channel === undefined) {
-		channel = -1;
-	}
-	this.lazyInit();
-	if (tokenIndex < 0 || tokenIndex >= this.tokens.length) {
-		throw "" + tokenIndex + " not in 0.." + this.tokens.length - 1;
-	}
-	var prevOnChannel = this.previousTokenOnChannel(tokenIndex - 1, Lexer.DEFAULT_TOKEN_CHANNEL);
-	if (prevOnChannel === tokenIndex - 1) {
-		return null;
-	}
-	// if none on channel to left, prevOnChannel=-1 then from=0
-	var from_ = prevOnChannel + 1;
-	var to = tokenIndex - 1;
-	return this.filterForChannel(from_, to, channel);
-};
-
-BufferedTokenStream.prototype.filterForChannel = function(left, right, channel) {
-	var hidden = [];
-	for (var i = left; i < right + 1; i++) {
-		var t = this.tokens[i];
-		if (channel === -1) {
-			if (t.channel !== Lexer.DEFAULT_TOKEN_CHANNEL) {
-				hidden.push(t);
-			}
-		} else if (t.channel === channel) {
-			hidden.push(t);
-		}
-	}
-	if (hidden.length === 0) {
-		return null;
-	}
-	return hidden;
-};
-
-BufferedTokenStream.prototype.getSourceName = function() {
-	return this.tokenSource.getSourceName();
-};
-
-// Get the text of all tokens in this buffer.///
-BufferedTokenStream.prototype.getText = function(interval) {
-	this.lazyInit();
-	this.fill();
-	if (interval === undefined || interval === null) {
-		interval = new Interval(0, this.tokens.length - 1);
-	}
-	var start = interval.start;
-	if (start instanceof Token) {
-		start = start.tokenIndex;
-	}
-	var stop = interval.stop;
-	if (stop instanceof Token) {
-		stop = stop.tokenIndex;
-	}
-	if (start === null || stop === null || start < 0 || stop < 0) {
-		return "";
-	}
-	if (stop >= this.tokens.length) {
-		stop = this.tokens.length - 1;
-	}
-	var s = "";
-	for (var i = start; i < stop + 1; i++) {
-		var t = this.tokens[i];
-		if (t.type === Token.EOF) {
-			break;
-		}
-		s = s + t.text;
-	}
-	return s;
-};
-
-// Get all tokens from lexer until EOF///
-BufferedTokenStream.prototype.fill = function() {
-	this.lazyInit();
-	while (this.fetch(1000) === 1000) {
-		continue;
-	}
-};
-
-exports.BufferedTokenStream = BufferedTokenStream;
-
-
-/***/ }),
-/* 34 */
-/***/ (function(module, exports, __webpack_require__) {
-
-//
-/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
- * Use of this file is governed by the BSD 3-clause license that
- * can be found in the LICENSE.txt file in the project root.
- */
-//
-
-var InputStream = __webpack_require__(17).InputStream;
-
-var isNodeJs = typeof window === 'undefined' && typeof importScripts === 'undefined';
-var fs = isNodeJs ? __webpack_require__(30) : null;
-
-// Utility functions to create InputStreams from various sources.
-//
-// All returned InputStreams support the full range of Unicode
-// up to U+10FFFF (the default behavior of InputStream only supports
-// code points up to U+FFFF).
-var CharStreams = {
-  // Creates an InputStream from a string.
-  fromString: function(str) {
-    return new InputStream(str, true);
-  },
-
-  // Asynchronously creates an InputStream from a blob given the
-  // encoding of the bytes in that blob (defaults to 'utf8' if
-  // encoding is null).
-  //
-  // Invokes onLoad(result) on success, onError(error) on
-  // failure.
-  fromBlob: function(blob, encoding, onLoad, onError) {
-    var reader = FileReader();
-    reader.onload = function(e) {
-      var is = new InputStream(e.target.result, true);
-      onLoad(is);
-    };
-    reader.onerror = onError;
-    reader.readAsText(blob, encoding);
-  },
-
-  // Creates an InputStream from a Buffer given the
-  // encoding of the bytes in that buffer (defaults to 'utf8' if
-  // encoding is null).
-  fromBuffer: function(buffer, encoding) {
-    return new InputStream(buffer.toString(encoding), true);
-  },
-
-  // Asynchronously creates an InputStream from a file on disk given
-  // the encoding of the bytes in that file (defaults to 'utf8' if
-  // encoding is null).
-  //
-  // Invokes callback(error, result) on completion.
-  fromPath: function(path, encoding, callback) {
-    fs.readFile(path, encoding, function(err, data) {
-      var is = null;
-      if (data !== null) {
-        is = new InputStream(data, true);
-      }
-      callback(err, is);
-    });
-  },
-
-  // Synchronously creates an InputStream given a path to a file
-  // on disk and the encoding of the bytes in that file (defaults to
-  // 'utf8' if encoding is null).
-  fromPathSync: function(path, encoding) {
-    var data = fs.readFileSync(path, encoding);
-    return new InputStream(data, true);
-  }
-};
-
-exports.CharStreams = CharStreams;
-
-
-/***/ }),
-/* 35 */
-/***/ (function(module, exports, __webpack_require__) {
-
-//
-/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
- * Use of this file is governed by the BSD 3-clause license that
- * can be found in the LICENSE.txt file in the project root.
- */
-//
-
-//
-// This default implementation of {@link TokenFactory} creates
-// {@link CommonToken} objects.
-//
-
-var CommonToken = __webpack_require__(1).CommonToken;
-
-function TokenFactory() {
-	return this;
-}
-
-function CommonTokenFactory(copyText) {
-	TokenFactory.call(this);
-    // Indicates whether {@link CommonToken//setText} should be called after
-    // constructing tokens to explicitly set the text. This is useful for cases
-    // where the input stream might not be able to provide arbitrary substrings
-    // of text from the input after the lexer creates a token (e.g. the
-    // implementation of {@link CharStream//getText} in
-    // {@link UnbufferedCharStream} throws an
-    // {@link UnsupportedOperationException}). Explicitly setting the token text
-    // allows {@link Token//getText} to be called at any time regardless of the
-    // input stream implementation.
-    //
-    // <p>
-    // The default value is {@code false} to avoid the performance and memory
-    // overhead of copying text for every token unless explicitly requested.</p>
-    //
-    this.copyText = copyText===undefined ? false : copyText;
-	return this;
-}
-
-CommonTokenFactory.prototype = Object.create(TokenFactory.prototype);
-CommonTokenFactory.prototype.constructor = CommonTokenFactory;
-
-//
-// The default {@link CommonTokenFactory} instance.
-//
-// <p>
-// This token factory does not explicitly copy token text when constructing
-// tokens.</p>
-//
-CommonTokenFactory.DEFAULT = new CommonTokenFactory();
-
-CommonTokenFactory.prototype.create = function(source, type, text, channel, start, stop, line, column) {
-    var t = new CommonToken(source, type, channel, start, stop);
-    t.line = line;
-    t.column = column;
-    if (text !==null) {
-        t.text = text;
-    } else if (this.copyText && source[1] !==null) {
-        t.text = source[1].getText(start,stop);
-    }
-    return t;
-};
-
-CommonTokenFactory.prototype.createThin = function(type, text) {
-    var t = new CommonToken(null, type);
-    t.text = text;
-    return t;
-};
-
-exports.CommonTokenFactory = CommonTokenFactory;
-
-
-/***/ }),
-/* 36 */
-/***/ (function(module, exports, __webpack_require__) {
-
-//
-/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
- * Use of this file is governed by the BSD 3-clause license that
- * can be found in the LICENSE.txt file in the project root.
- */
-///
-
-//
-// This class extends {@link BufferedTokenStream} with functionality to filter
-// token streams to tokens on a particular channel (tokens where
-// {@link Token//getChannel} returns a particular value).
-//
-// <p>
-// This token stream provides access to all tokens by index or when calling
-// methods like {@link //getText}. The channel filtering is only used for code
-// accessing tokens via the lookahead methods {@link //LA}, {@link //LT}, and
-// {@link //LB}.</p>
-//
-// <p>
-// By default, tokens are placed on the default channel
-// ({@link Token//DEFAULT_CHANNEL}), but may be reassigned by using the
-// {@code ->channel(HIDDEN)} lexer command, or by using an embedded action to
-// call {@link Lexer//setChannel}.
-// </p>
-//
-// <p>
-// Note: lexer rules which use the {@code ->skip} lexer command or call
-// {@link Lexer//skip} do not produce tokens at all, so input text matched by
-// such a rule will not be available as part of the token stream, regardless of
-// channel.</p>
-///
-
-var Token = __webpack_require__(1).Token;
-var BufferedTokenStream = __webpack_require__(33).BufferedTokenStream;
-
-function CommonTokenStream(lexer, channel) {
-	BufferedTokenStream.call(this, lexer);
-    this.channel = channel===undefined ? Token.DEFAULT_CHANNEL : channel;
-    return this;
-}
-
-CommonTokenStream.prototype = Object.create(BufferedTokenStream.prototype);
-CommonTokenStream.prototype.constructor = CommonTokenStream;
-
-CommonTokenStream.prototype.adjustSeekIndex = function(i) {
-    return this.nextTokenOnChannel(i, this.channel);
-};
-
-CommonTokenStream.prototype.LB = function(k) {
-    if (k===0 || this.index-k<0) {
-        return null;
-    }
-    var i = this.index;
-    var n = 1;
-    // find k good tokens looking backwards
-    while (n <= k) {
-        // skip off-channel tokens
-        i = this.previousTokenOnChannel(i - 1, this.channel);
-        n += 1;
-    }
-    if (i < 0) {
-        return null;
-    }
-    return this.tokens[i];
-};
-
-CommonTokenStream.prototype.LT = function(k) {
-    this.lazyInit();
-    if (k === 0) {
-        return null;
-    }
-    if (k < 0) {
-        return this.LB(-k);
-    }
-    var i = this.index;
-    var n = 1; // we know tokens[pos] is a good one
-    // find k good tokens
-    while (n < k) {
-        // skip off-channel tokens, but make sure to not look past EOF
-        if (this.sync(i + 1)) {
-            i = this.nextTokenOnChannel(i + 1, this.channel);
-        }
-        n += 1;
-    }
-    return this.tokens[i];
-};
-
-// Count EOF just once.///
-CommonTokenStream.prototype.getNumberOfOnChannelTokens = function() {
-    var n = 0;
-    this.fill();
-    for (var i =0; i< this.tokens.length;i++) {
-        var t = this.tokens[i];
-        if( t.channel===this.channel) {
-            n += 1;
-        }
-        if( t.type===Token.EOF) {
-            break;
-        }
-    }
-    return n;
-};
-
-exports.CommonTokenStream = CommonTokenStream;
-
-/***/ }),
-/* 37 */
-/***/ (function(module, exports, __webpack_require__) {
-
-//
-/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
- * Use of this file is governed by the BSD 3-clause license that
- * can be found in the LICENSE.txt file in the project root.
- */
-//
-
-//
-//  This is an InputStream that is loaded from a file all at once
-//  when you construct the object.
-//
-var InputStream = __webpack_require__(17).InputStream;
-var isNodeJs = typeof window === 'undefined' && typeof importScripts === 'undefined';
-var fs = isNodeJs ? __webpack_require__(30) : null;
-
-function FileStream(fileName, decodeToUnicodeCodePoints) {
-	var data = fs.readFileSync(fileName, "utf8");
-	InputStream.call(this, data, decodeToUnicodeCodePoints);
-	this.fileName = fileName;
-	return this;
-}
-
-FileStream.prototype = Object.create(InputStream.prototype);
-FileStream.prototype.constructor = FileStream;
-
-exports.FileStream = FileStream;
-
-
-/***/ }),
-/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 //
@@ -8778,7 +8014,7 @@ exports.FileStream = FileStream;
 var Set = __webpack_require__(0).Set;
 var BitSet = __webpack_require__(0).BitSet;
 var Token = __webpack_require__(1).Token;
-var ATNConfig = __webpack_require__(14).ATNConfig;
+var ATNConfig = __webpack_require__(12).ATNConfig;
 var Interval = __webpack_require__(2).Interval;
 var IntervalSet = __webpack_require__(2).IntervalSet;
 var RuleStopState = __webpack_require__(3).RuleStopState;
@@ -8970,686 +8206,7 @@ exports.LL1Analyzer = LL1Analyzer;
 
 
 /***/ }),
-/* 39 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
- * Use of this file is governed by the BSD 3-clause license that
- * can be found in the LICENSE.txt file in the project root.
- */
-
-var Token = __webpack_require__(1).Token;
-var ParseTreeListener = __webpack_require__(5).ParseTreeListener;
-var Recognizer = __webpack_require__(20).Recognizer;
-var DefaultErrorStrategy = __webpack_require__(26).DefaultErrorStrategy;
-var ATNDeserializer = __webpack_require__(22).ATNDeserializer;
-var ATNDeserializationOptions = __webpack_require__(21).ATNDeserializationOptions;
-var TerminalNode = __webpack_require__(5).TerminalNode;
-var ErrorNode = __webpack_require__(5).ErrorNode;
-
-function TraceListener(parser) {
-	ParseTreeListener.call(this);
-    this.parser = parser;
-	return this;
-}
-
-TraceListener.prototype = Object.create(ParseTreeListener.prototype);
-TraceListener.prototype.constructor = TraceListener;
-
-TraceListener.prototype.enterEveryRule = function(ctx) {
-	console.log("enter   " + this.parser.ruleNames[ctx.ruleIndex] + ", LT(1)=" + this.parser._input.LT(1).text);
-};
-
-TraceListener.prototype.visitTerminal = function( node) {
-	console.log("consume " + node.symbol + " rule " + this.parser.ruleNames[this.parser._ctx.ruleIndex]);
-};
-
-TraceListener.prototype.exitEveryRule = function(ctx) {
-	console.log("exit    " + this.parser.ruleNames[ctx.ruleIndex] + ", LT(1)=" + this.parser._input.LT(1).text);
-};
-
-// this is all the parsing support code essentially; most of it is error
-// recovery stuff.//
-function Parser(input) {
-	Recognizer.call(this);
-	// The input stream.
-	this._input = null;
-	// The error handling strategy for the parser. The default value is a new
-	// instance of {@link DefaultErrorStrategy}.
-	this._errHandler = new DefaultErrorStrategy();
-	this._precedenceStack = [];
-	this._precedenceStack.push(0);
-	// The {@link ParserRuleContext} object for the currently executing rule.
-	// this is always non-null during the parsing process.
-	this._ctx = null;
-	// Specifies whether or not the parser should construct a parse tree during
-	// the parsing process. The default value is {@code true}.
-	this.buildParseTrees = true;
-	// When {@link //setTrace}{@code (true)} is called, a reference to the
-	// {@link TraceListener} is stored here so it can be easily removed in a
-	// later call to {@link //setTrace}{@code (false)}. The listener itself is
-	// implemented as a parser listener so this field is not directly used by
-	// other parser methods.
-	this._tracer = null;
-	// The list of {@link ParseTreeListener} listeners registered to receive
-	// events during the parse.
-	this._parseListeners = null;
-	// The number of syntax errors reported during parsing. this value is
-	// incremented each time {@link //notifyErrorListeners} is called.
-	this._syntaxErrors = 0;
-	this.setInputStream(input);
-	return this;
-}
-
-Parser.prototype = Object.create(Recognizer.prototype);
-Parser.prototype.contructor = Parser;
-
-// this field maps from the serialized ATN string to the deserialized {@link
-// ATN} with
-// bypass alternatives.
-//
-// @see ATNDeserializationOptions//isGenerateRuleBypassTransitions()
-//
-Parser.bypassAltsAtnCache = {};
-
-// reset the parser's state//
-Parser.prototype.reset = function() {
-	if (this._input !== null) {
-		this._input.seek(0);
-	}
-	this._errHandler.reset(this);
-	this._ctx = null;
-	this._syntaxErrors = 0;
-	this.setTrace(false);
-	this._precedenceStack = [];
-	this._precedenceStack.push(0);
-	if (this._interp !== null) {
-		this._interp.reset();
-	}
-};
-
-// Match current input symbol against {@code ttype}. If the symbol type
-// matches, {@link ANTLRErrorStrategy//reportMatch} and {@link //consume} are
-// called to complete the match process.
-//
-// <p>If the symbol type does not match,
-// {@link ANTLRErrorStrategy//recoverInline} is called on the current error
-// strategy to attempt recovery. If {@link //getBuildParseTree} is
-// {@code true} and the token index of the symbol returned by
-// {@link ANTLRErrorStrategy//recoverInline} is -1, the symbol is added to
-// the parse tree by calling {@link ParserRuleContext//addErrorNode}.</p>
-//
-// @param ttype the token type to match
-// @return the matched symbol
-// @throws RecognitionException if the current input symbol did not match
-// {@code ttype} and the error strategy could not recover from the
-// mismatched symbol
-
-Parser.prototype.match = function(ttype) {
-	var t = this.getCurrentToken();
-	if (t.type === ttype) {
-		this._errHandler.reportMatch(this);
-		this.consume();
-	} else {
-		t = this._errHandler.recoverInline(this);
-		if (this.buildParseTrees && t.tokenIndex === -1) {
-			// we must have conjured up a new token during single token
-			// insertion
-			// if it's not the current symbol
-			this._ctx.addErrorNode(t);
-		}
-	}
-	return t;
-};
-// Match current input symbol as a wildcard. If the symbol type matches
-// (i.e. has a value greater than 0), {@link ANTLRErrorStrategy//reportMatch}
-// and {@link //consume} are called to complete the match process.
-//
-// <p>If the symbol type does not match,
-// {@link ANTLRErrorStrategy//recoverInline} is called on the current error
-// strategy to attempt recovery. If {@link //getBuildParseTree} is
-// {@code true} and the token index of the symbol returned by
-// {@link ANTLRErrorStrategy//recoverInline} is -1, the symbol is added to
-// the parse tree by calling {@link ParserRuleContext//addErrorNode}.</p>
-//
-// @return the matched symbol
-// @throws RecognitionException if the current input symbol did not match
-// a wildcard and the error strategy could not recover from the mismatched
-// symbol
-
-Parser.prototype.matchWildcard = function() {
-	var t = this.getCurrentToken();
-	if (t.type > 0) {
-		this._errHandler.reportMatch(this);
-		this.consume();
-	} else {
-		t = this._errHandler.recoverInline(this);
-		if (this._buildParseTrees && t.tokenIndex === -1) {
-			// we must have conjured up a new token during single token
-			// insertion
-			// if it's not the current symbol
-			this._ctx.addErrorNode(t);
-		}
-	}
-	return t;
-};
-
-Parser.prototype.getParseListeners = function() {
-	return this._parseListeners || [];
-};
-
-// Registers {@code listener} to receive events during the parsing process.
-//
-// <p>To support output-preserving grammar transformations (including but not
-// limited to left-recursion removal, automated left-factoring, and
-// optimized code generation), calls to listener methods during the parse
-// may differ substantially from calls made by
-// {@link ParseTreeWalker//DEFAULT} used after the parse is complete. In
-// particular, rule entry and exit events may occur in a different order
-// during the parse than after the parser. In addition, calls to certain
-// rule entry methods may be omitted.</p>
-//
-// <p>With the following specific exceptions, calls to listener events are
-// <em>deterministic</em>, i.e. for identical input the calls to listener
-// methods will be the same.</p>
-//
-// <ul>
-// <li>Alterations to the grammar used to generate code may change the
-// behavior of the listener calls.</li>
-// <li>Alterations to the command line options passed to ANTLR 4 when
-// generating the parser may change the behavior of the listener calls.</li>
-// <li>Changing the version of the ANTLR Tool used to generate the parser
-// may change the behavior of the listener calls.</li>
-// </ul>
-//
-// @param listener the listener to add
-//
-// @throws NullPointerException if {@code} listener is {@code null}
-//
-Parser.prototype.addParseListener = function(listener) {
-	if (listener === null) {
-		throw "listener";
-	}
-	if (this._parseListeners === null) {
-		this._parseListeners = [];
-	}
-	this._parseListeners.push(listener);
-};
-
-//
-// Remove {@code listener} from the list of parse listeners.
-//
-// <p>If {@code listener} is {@code null} or has not been added as a parse
-// listener, this method does nothing.</p>
-// @param listener the listener to remove
-//
-Parser.prototype.removeParseListener = function(listener) {
-	if (this._parseListeners !== null) {
-		var idx = this._parseListeners.indexOf(listener);
-		if (idx >= 0) {
-			this._parseListeners.splice(idx, 1);
-		}
-		if (this._parseListeners.length === 0) {
-			this._parseListeners = null;
-		}
-	}
-};
-
-// Remove all parse listeners.
-Parser.prototype.removeParseListeners = function() {
-	this._parseListeners = null;
-};
-
-// Notify any parse listeners of an enter rule event.
-Parser.prototype.triggerEnterRuleEvent = function() {
-	if (this._parseListeners !== null) {
-        var ctx = this._ctx;
-		this._parseListeners.map(function(listener) {
-			listener.enterEveryRule(ctx);
-			ctx.enterRule(listener);
-		});
-	}
-};
-
-//
-// Notify any parse listeners of an exit rule event.
-//
-// @see //addParseListener
-//
-Parser.prototype.triggerExitRuleEvent = function() {
-	if (this._parseListeners !== null) {
-		// reverse order walk of listeners
-        var ctx = this._ctx;
-		this._parseListeners.slice(0).reverse().map(function(listener) {
-			ctx.exitRule(listener);
-			listener.exitEveryRule(ctx);
-		});
-	}
-};
-
-Parser.prototype.getTokenFactory = function() {
-	return this._input.tokenSource._factory;
-};
-
-// Tell our token source and error strategy about a new way to create tokens.//
-Parser.prototype.setTokenFactory = function(factory) {
-	this._input.tokenSource._factory = factory;
-};
-
-// The ATN with bypass alternatives is expensive to create so we create it
-// lazily.
-//
-// @throws UnsupportedOperationException if the current parser does not
-// implement the {@link //getSerializedATN()} method.
-//
-Parser.prototype.getATNWithBypassAlts = function() {
-	var serializedAtn = this.getSerializedATN();
-	if (serializedAtn === null) {
-		throw "The current parser does not support an ATN with bypass alternatives.";
-	}
-	var result = this.bypassAltsAtnCache[serializedAtn];
-	if (result === null) {
-		var deserializationOptions = new ATNDeserializationOptions();
-		deserializationOptions.generateRuleBypassTransitions = true;
-		result = new ATNDeserializer(deserializationOptions)
-				.deserialize(serializedAtn);
-		this.bypassAltsAtnCache[serializedAtn] = result;
-	}
-	return result;
-};
-
-// The preferred method of getting a tree pattern. For example, here's a
-// sample use:
-//
-// <pre>
-// ParseTree t = parser.expr();
-// ParseTreePattern p = parser.compileParseTreePattern("&lt;ID&gt;+0",
-// MyParser.RULE_expr);
-// ParseTreeMatch m = p.match(t);
-// String id = m.get("ID");
-// </pre>
-
-var Lexer = __webpack_require__(12).Lexer;
-
-Parser.prototype.compileParseTreePattern = function(pattern, patternRuleIndex, lexer) {
-	lexer = lexer || null;
-	if (lexer === null) {
-		if (this.getTokenStream() !== null) {
-			var tokenSource = this.getTokenStream().tokenSource;
-			if (tokenSource instanceof Lexer) {
-				lexer = tokenSource;
-			}
-		}
-	}
-	if (lexer === null) {
-		throw "Parser can't discover a lexer to use";
-	}
-	var m = new ParseTreePatternMatcher(lexer, this);
-	return m.compile(pattern, patternRuleIndex);
-};
-
-Parser.prototype.getInputStream = function() {
-	return this.getTokenStream();
-};
-
-Parser.prototype.setInputStream = function(input) {
-	this.setTokenStream(input);
-};
-
-Parser.prototype.getTokenStream = function() {
-	return this._input;
-};
-
-// Set the token stream and reset the parser.//
-Parser.prototype.setTokenStream = function(input) {
-	this._input = null;
-	this.reset();
-	this._input = input;
-};
-
-// Match needs to return the current input symbol, which gets put
-// into the label for the associated token ref; e.g., x=ID.
-//
-Parser.prototype.getCurrentToken = function() {
-	return this._input.LT(1);
-};
-
-Parser.prototype.notifyErrorListeners = function(msg, offendingToken, err) {
-	offendingToken = offendingToken || null;
-	err = err || null;
-	if (offendingToken === null) {
-		offendingToken = this.getCurrentToken();
-	}
-	this._syntaxErrors += 1;
-	var line = offendingToken.line;
-	var column = offendingToken.column;
-	var listener = this.getErrorListenerDispatch();
-	listener.syntaxError(this, offendingToken, line, column, msg, err);
-};
-
-//
-// Consume and return the {@linkplain //getCurrentToken current symbol}.
-//
-// <p>E.g., given the following input with {@code A} being the current
-// lookahead symbol, this function moves the cursor to {@code B} and returns
-// {@code A}.</p>
-//
-// <pre>
-// A B
-// ^
-// </pre>
-//
-// If the parser is not in error recovery mode, the consumed symbol is added
-// to the parse tree using {@link ParserRuleContext//addChild(Token)}, and
-// {@link ParseTreeListener//visitTerminal} is called on any parse listeners.
-// If the parser <em>is</em> in error recovery mode, the consumed symbol is
-// added to the parse tree using
-// {@link ParserRuleContext//addErrorNode(Token)}, and
-// {@link ParseTreeListener//visitErrorNode} is called on any parse
-// listeners.
-//
-Parser.prototype.consume = function() {
-	var o = this.getCurrentToken();
-	if (o.type !== Token.EOF) {
-		this.getInputStream().consume();
-	}
-	var hasListener = this._parseListeners !== null && this._parseListeners.length > 0;
-	if (this.buildParseTrees || hasListener) {
-		var node;
-		if (this._errHandler.inErrorRecoveryMode(this)) {
-			node = this._ctx.addErrorNode(o);
-		} else {
-			node = this._ctx.addTokenNode(o);
-		}
-        node.invokingState = this.state;
-		if (hasListener) {
-			this._parseListeners.map(function(listener) {
-				if (node instanceof ErrorNode || (node.isErrorNode !== undefined && node.isErrorNode())) {
-					listener.visitErrorNode(node);
-				} else if (node instanceof TerminalNode) {
-					listener.visitTerminal(node);
-				}
-			});
-		}
-	}
-	return o;
-};
-
-Parser.prototype.addContextToParseTree = function() {
-	// add current context to parent if we have a parent
-	if (this._ctx.parentCtx !== null) {
-		this._ctx.parentCtx.addChild(this._ctx);
-	}
-};
-
-// Always called by generated parsers upon entry to a rule. Access field
-// {@link //_ctx} get the current context.
-
-Parser.prototype.enterRule = function(localctx, state, ruleIndex) {
-	this.state = state;
-	this._ctx = localctx;
-	this._ctx.start = this._input.LT(1);
-	if (this.buildParseTrees) {
-		this.addContextToParseTree();
-	}
-	if (this._parseListeners !== null) {
-		this.triggerEnterRuleEvent();
-	}
-};
-
-Parser.prototype.exitRule = function() {
-	this._ctx.stop = this._input.LT(-1);
-	// trigger event on _ctx, before it reverts to parent
-	if (this._parseListeners !== null) {
-		this.triggerExitRuleEvent();
-	}
-	this.state = this._ctx.invokingState;
-	this._ctx = this._ctx.parentCtx;
-};
-
-Parser.prototype.enterOuterAlt = function(localctx, altNum) {
-   	localctx.setAltNumber(altNum);
-	// if we have new localctx, make sure we replace existing ctx
-	// that is previous child of parse tree
-	if (this.buildParseTrees && this._ctx !== localctx) {
-		if (this._ctx.parentCtx !== null) {
-			this._ctx.parentCtx.removeLastChild();
-			this._ctx.parentCtx.addChild(localctx);
-		}
-	}
-	this._ctx = localctx;
-};
-
-// Get the precedence level for the top-most precedence rule.
-//
-// @return The precedence level for the top-most precedence rule, or -1 if
-// the parser context is not nested within a precedence rule.
-
-Parser.prototype.getPrecedence = function() {
-	if (this._precedenceStack.length === 0) {
-		return -1;
-	} else {
-		return this._precedenceStack[this._precedenceStack.length-1];
-	}
-};
-
-Parser.prototype.enterRecursionRule = function(localctx, state, ruleIndex,
-		precedence) {
-	this.state = state;
-	this._precedenceStack.push(precedence);
-	this._ctx = localctx;
-	this._ctx.start = this._input.LT(1);
-	if (this._parseListeners !== null) {
-		this.triggerEnterRuleEvent(); // simulates rule entry for
-										// left-recursive rules
-	}
-};
-
-//
-// Like {@link //enterRule} but for recursive rules.
-
-Parser.prototype.pushNewRecursionContext = function(localctx, state, ruleIndex) {
-	var previous = this._ctx;
-	previous.parentCtx = localctx;
-	previous.invokingState = state;
-	previous.stop = this._input.LT(-1);
-
-	this._ctx = localctx;
-	this._ctx.start = previous.start;
-	if (this.buildParseTrees) {
-		this._ctx.addChild(previous);
-	}
-	if (this._parseListeners !== null) {
-		this.triggerEnterRuleEvent(); // simulates rule entry for
-										// left-recursive rules
-	}
-};
-
-Parser.prototype.unrollRecursionContexts = function(parentCtx) {
-	this._precedenceStack.pop();
-	this._ctx.stop = this._input.LT(-1);
-	var retCtx = this._ctx; // save current ctx (return value)
-	// unroll so _ctx is as it was before call to recursive method
-	if (this._parseListeners !== null) {
-		while (this._ctx !== parentCtx) {
-			this.triggerExitRuleEvent();
-			this._ctx = this._ctx.parentCtx;
-		}
-	} else {
-		this._ctx = parentCtx;
-	}
-	// hook into tree
-	retCtx.parentCtx = parentCtx;
-	if (this.buildParseTrees && parentCtx !== null) {
-		// add return ctx into invoking rule's tree
-		parentCtx.addChild(retCtx);
-	}
-};
-
-Parser.prototype.getInvokingContext = function(ruleIndex) {
-	var ctx = this._ctx;
-	while (ctx !== null) {
-		if (ctx.ruleIndex === ruleIndex) {
-			return ctx;
-		}
-		ctx = ctx.parentCtx;
-	}
-	return null;
-};
-
-Parser.prototype.precpred = function(localctx, precedence) {
-	return precedence >= this._precedenceStack[this._precedenceStack.length-1];
-};
-
-Parser.prototype.inContext = function(context) {
-	// TODO: useful in parser?
-	return false;
-};
-
-//
-// Checks whether or not {@code symbol} can follow the current state in the
-// ATN. The behavior of this method is equivalent to the following, but is
-// implemented such that the complete context-sensitive follow set does not
-// need to be explicitly constructed.
-//
-// <pre>
-// return getExpectedTokens().contains(symbol);
-// </pre>
-//
-// @param symbol the symbol type to check
-// @return {@code true} if {@code symbol} can follow the current state in
-// the ATN, otherwise {@code false}.
-
-Parser.prototype.isExpectedToken = function(symbol) {
-	var atn = this._interp.atn;
-	var ctx = this._ctx;
-	var s = atn.states[this.state];
-	var following = atn.nextTokens(s);
-	if (following.contains(symbol)) {
-		return true;
-	}
-	if (!following.contains(Token.EPSILON)) {
-		return false;
-	}
-	while (ctx !== null && ctx.invokingState >= 0 && following.contains(Token.EPSILON)) {
-		var invokingState = atn.states[ctx.invokingState];
-		var rt = invokingState.transitions[0];
-		following = atn.nextTokens(rt.followState);
-		if (following.contains(symbol)) {
-			return true;
-		}
-		ctx = ctx.parentCtx;
-	}
-	if (following.contains(Token.EPSILON) && symbol === Token.EOF) {
-		return true;
-	} else {
-		return false;
-	}
-};
-
-// Computes the set of input symbols which could follow the current parser
-// state and context, as given by {@link //getState} and {@link //getContext},
-// respectively.
-//
-// @see ATN//getExpectedTokens(int, RuleContext)
-//
-Parser.prototype.getExpectedTokens = function() {
-	return this._interp.atn.getExpectedTokens(this.state, this._ctx);
-};
-
-Parser.prototype.getExpectedTokensWithinCurrentRule = function() {
-	var atn = this._interp.atn;
-	var s = atn.states[this.state];
-	return atn.nextTokens(s);
-};
-
-// Get a rule's index (i.e., {@code RULE_ruleName} field) or -1 if not found.//
-Parser.prototype.getRuleIndex = function(ruleName) {
-	var ruleIndex = this.getRuleIndexMap()[ruleName];
-	if (ruleIndex !== null) {
-		return ruleIndex;
-	} else {
-		return -1;
-	}
-};
-
-// Return List&lt;String&gt; of the rule names in your parser instance
-// leading up to a call to the current rule. You could override if
-// you want more details such as the file/line info of where
-// in the ATN a rule is invoked.
-//
-// this is very useful for error messages.
-//
-Parser.prototype.getRuleInvocationStack = function(p) {
-	p = p || null;
-	if (p === null) {
-		p = this._ctx;
-	}
-	var stack = [];
-	while (p !== null) {
-		// compute what follows who invoked us
-		var ruleIndex = p.ruleIndex;
-		if (ruleIndex < 0) {
-			stack.push("n/a");
-		} else {
-			stack.push(this.ruleNames[ruleIndex]);
-		}
-		p = p.parentCtx;
-	}
-	return stack;
-};
-
-// For debugging and other purposes.//
-Parser.prototype.getDFAStrings = function() {
-	return this._interp.decisionToDFA.toString();
-};
-// For debugging and other purposes.//
-Parser.prototype.dumpDFA = function() {
-	var seenOne = false;
-	for (var i = 0; i < this._interp.decisionToDFA.length; i++) {
-		var dfa = this._interp.decisionToDFA[i];
-		if (dfa.states.length > 0) {
-			if (seenOne) {
-				console.log();
-			}
-			this.printer.println("Decision " + dfa.decision + ":");
-			this.printer.print(dfa.toString(this.literalNames, this.symbolicNames));
-			seenOne = true;
-		}
-	}
-};
-
-/*
-"			printer = function() {\r\n" +
-"				this.println = function(s) { document.getElementById('output') += s + '\\n'; }\r\n" +
-"				this.print = function(s) { document.getElementById('output') += s; }\r\n" +
-"			};\r\n" +
-*/
-
-Parser.prototype.getSourceName = function() {
-	return this._input.sourceName;
-};
-
-// During a parse is sometimes useful to listen in on the rule entry and exit
-// events as well as token matches. this is for quick and dirty debugging.
-//
-Parser.prototype.setTrace = function(trace) {
-	if (!trace) {
-		this.removeParseListener(this._tracer);
-		this._tracer = null;
-	} else {
-		if (this._tracer !== null) {
-			this.removeParseListener(this._tracer);
-		}
-		this._tracer = new TraceListener(this);
-		this.addParseListener(this._tracer);
-	}
-};
-
-exports.Parser = Parser;
-
-/***/ }),
-/* 40 */
+/* 34 */
 /***/ (function(module, exports) {
 
 /* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
@@ -9672,7 +8229,7 @@ exports.ATNType = ATNType;
 
 
 /***/ }),
-/* 41 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 //
@@ -9699,19 +8256,19 @@ exports.ATNType = ATNType;
 ///
 
 var Token = __webpack_require__(1).Token;
-var Lexer = __webpack_require__(12).Lexer;
+var Lexer = __webpack_require__(14).Lexer;
 var ATN = __webpack_require__(7).ATN;
-var ATNSimulator = __webpack_require__(23).ATNSimulator;
+var ATNSimulator = __webpack_require__(25).ATNSimulator;
 var DFAState = __webpack_require__(11).DFAState;
 var ATNConfigSet = __webpack_require__(9).ATNConfigSet;
 var OrderedATNConfigSet = __webpack_require__(9).OrderedATNConfigSet;
 var PredictionContext = __webpack_require__(6).PredictionContext;
 var SingletonPredictionContext = __webpack_require__(6).SingletonPredictionContext;
 var RuleStopState = __webpack_require__(3).RuleStopState;
-var LexerATNConfig = __webpack_require__(14).LexerATNConfig;
+var LexerATNConfig = __webpack_require__(12).LexerATNConfig;
 var Transition = __webpack_require__(8).Transition;
-var LexerActionExecutor = __webpack_require__(42).LexerActionExecutor;
-var LexerNoViableAltException = __webpack_require__(4).LexerNoViableAltException;
+var LexerActionExecutor = __webpack_require__(37).LexerActionExecutor;
+var LexerNoViableAltException = __webpack_require__(5).LexerNoViableAltException;
 
 function resetSimState(sim) {
 	sim.index = -1;
@@ -10314,7 +8871,82 @@ exports.LexerATNSimulator = LexerATNSimulator;
 
 
 /***/ }),
-/* 42 */
+/* 36 */
+/***/ (function(module, exports, __webpack_require__) {
+
+//
+/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
+ * Use of this file is governed by the BSD 3-clause license that
+ * can be found in the LICENSE.txt file in the project root.
+ */
+//
+
+//
+// This default implementation of {@link TokenFactory} creates
+// {@link CommonToken} objects.
+//
+
+var CommonToken = __webpack_require__(1).CommonToken;
+
+function TokenFactory() {
+	return this;
+}
+
+function CommonTokenFactory(copyText) {
+	TokenFactory.call(this);
+    // Indicates whether {@link CommonToken//setText} should be called after
+    // constructing tokens to explicitly set the text. This is useful for cases
+    // where the input stream might not be able to provide arbitrary substrings
+    // of text from the input after the lexer creates a token (e.g. the
+    // implementation of {@link CharStream//getText} in
+    // {@link UnbufferedCharStream} throws an
+    // {@link UnsupportedOperationException}). Explicitly setting the token text
+    // allows {@link Token//getText} to be called at any time regardless of the
+    // input stream implementation.
+    //
+    // <p>
+    // The default value is {@code false} to avoid the performance and memory
+    // overhead of copying text for every token unless explicitly requested.</p>
+    //
+    this.copyText = copyText===undefined ? false : copyText;
+	return this;
+}
+
+CommonTokenFactory.prototype = Object.create(TokenFactory.prototype);
+CommonTokenFactory.prototype.constructor = CommonTokenFactory;
+
+//
+// The default {@link CommonTokenFactory} instance.
+//
+// <p>
+// This token factory does not explicitly copy token text when constructing
+// tokens.</p>
+//
+CommonTokenFactory.DEFAULT = new CommonTokenFactory();
+
+CommonTokenFactory.prototype.create = function(source, type, text, channel, start, stop, line, column) {
+    var t = new CommonToken(source, type, channel, start, stop);
+    t.line = line;
+    t.column = column;
+    if (text !==null) {
+        t.text = text;
+    } else if (this.copyText && source[1] !==null) {
+        t.text = source[1].getText(start,stop);
+    }
+    return t;
+};
+
+CommonTokenFactory.prototype.createThin = function(type, text) {
+    var t = new CommonToken(null, type);
+    t.text = text;
+    return t;
+};
+
+exports.CommonTokenFactory = CommonTokenFactory;
+
+
+/***/ }),
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 //
@@ -10332,7 +8964,7 @@ exports.LexerATNSimulator = LexerATNSimulator;
 // not cause bloating of the {@link DFA} created for the lexer.</p>
 
 var hashStuff = __webpack_require__(0).hashStuff;
-var LexerIndexedCustomAction = __webpack_require__(24).LexerIndexedCustomAction;
+var LexerIndexedCustomAction = __webpack_require__(23).LexerIndexedCustomAction;
 
 function LexerActionExecutor(lexerActions) {
 	this.lexerActions = lexerActions === null ? [] : lexerActions;
@@ -10486,7 +9118,7 @@ exports.LexerActionExecutor = LexerActionExecutor;
 
 
 /***/ }),
-/* 43 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 //
@@ -10730,15 +9362,15 @@ var BitSet = Utils.BitSet;
 var DoubleDict = Utils.DoubleDict;
 var ATN = __webpack_require__(7).ATN;
 var ATNState = __webpack_require__(3).ATNState;
-var ATNConfig = __webpack_require__(14).ATNConfig;
+var ATNConfig = __webpack_require__(12).ATNConfig;
 var ATNConfigSet = __webpack_require__(9).ATNConfigSet;
 var Token = __webpack_require__(1).Token;
 var DFAState = __webpack_require__(11).DFAState;
 var PredPrediction = __webpack_require__(11).PredPrediction;
-var ATNSimulator = __webpack_require__(23).ATNSimulator;
-var PredictionMode = __webpack_require__(25).PredictionMode;
+var ATNSimulator = __webpack_require__(25).ATNSimulator;
+var PredictionMode = __webpack_require__(26).PredictionMode;
 var RuleContext = __webpack_require__(13).RuleContext;
-var ParserRuleContext = __webpack_require__(18).ParserRuleContext;
+var ParserRuleContext = __webpack_require__(17).ParserRuleContext;
 var SemanticContext = __webpack_require__(10).SemanticContext;
 var StarLoopEntryState = __webpack_require__(3).StarLoopEntryState;
 var RuleStopState = __webpack_require__(3).RuleStopState;
@@ -10750,7 +9382,7 @@ var SetTransition = Transitions.SetTransition;
 var NotSetTransition = Transitions.NotSetTransition;
 var RuleTransition = Transitions.RuleTransition;
 var ActionTransition = Transitions.ActionTransition;
-var NoViableAltException = __webpack_require__(4).NoViableAltException;
+var NoViableAltException = __webpack_require__(5).NoViableAltException;
 
 var SingletonPredictionContext = __webpack_require__(6).SingletonPredictionContext;
 var predictionContextFromRuleContext = __webpack_require__(6).predictionContextFromRuleContext;
@@ -12219,7 +10851,7 @@ ParserATNSimulator.prototype.reportAmbiguity = function(dfa, D, startIndex, stop
 exports.ParserATNSimulator = ParserATNSimulator;
 
 /***/ }),
-/* 44 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
@@ -12227,15 +10859,14 @@ exports.ParserATNSimulator = ParserATNSimulator;
  * can be found in the LICENSE.txt file in the project root.
  */
 
-exports.ATN = __webpack_require__(7).ATN;
-exports.ATNDeserializer = __webpack_require__(22).ATNDeserializer;
-exports.LexerATNSimulator = __webpack_require__(41).LexerATNSimulator;
-exports.ParserATNSimulator = __webpack_require__(43).ParserATNSimulator;
-exports.PredictionMode = __webpack_require__(25).PredictionMode;
+exports.DFA = __webpack_require__(40).DFA;
+exports.DFASerializer = __webpack_require__(16).DFASerializer;
+exports.LexerDFASerializer = __webpack_require__(16).LexerDFASerializer;
+exports.PredPrediction = __webpack_require__(11).PredPrediction;
 
 
 /***/ }),
-/* 45 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 //
@@ -12248,8 +10879,8 @@ var Set = __webpack_require__(0).Set;
 var DFAState = __webpack_require__(11).DFAState;
 var StarLoopEntryState = __webpack_require__(3).StarLoopEntryState;
 var ATNConfigSet = __webpack_require__(9).ATNConfigSet;
-var DFASerializer = __webpack_require__(15).DFASerializer;
-var LexerDFASerializer = __webpack_require__(15).LexerDFASerializer;
+var DFASerializer = __webpack_require__(16).DFASerializer;
+var LexerDFASerializer = __webpack_require__(16).LexerDFASerializer;
 
 
 
@@ -12394,7 +11025,7 @@ exports.DFA = DFA;
 
 
 /***/ }),
-/* 46 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
@@ -12402,14 +11033,35 @@ exports.DFA = DFA;
  * can be found in the LICENSE.txt file in the project root.
  */
 
-exports.DFA = __webpack_require__(45).DFA;
-exports.DFASerializer = __webpack_require__(15).DFASerializer;
-exports.LexerDFASerializer = __webpack_require__(15).LexerDFASerializer;
-exports.PredPrediction = __webpack_require__(11).PredPrediction;
+var Tree = __webpack_require__(4);
+exports.Trees = __webpack_require__(20).Trees;
+exports.RuleNode = Tree.RuleNode;
+exports.ParseTreeListener = Tree.ParseTreeListener;
+exports.ParseTreeVisitor = Tree.ParseTreeVisitor;
+exports.ParseTreeWalker = Tree.ParseTreeWalker;
 
 
 /***/ }),
-/* 47 */
+/* 42 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
+ * Use of this file is governed by the BSD 3-clause license that
+ * can be found in the LICENSE.txt file in the project root.
+ */
+
+exports.RecognitionException = __webpack_require__(5).RecognitionException;
+exports.NoViableAltException = __webpack_require__(5).NoViableAltException;
+exports.LexerNoViableAltException = __webpack_require__(5).LexerNoViableAltException;
+exports.InputMismatchException = __webpack_require__(5).InputMismatchException;
+exports.FailedPredicateException = __webpack_require__(5).FailedPredicateException;
+exports.DiagnosticErrorListener = __webpack_require__(43).DiagnosticErrorListener;
+exports.BailErrorStrategy = __webpack_require__(29).BailErrorStrategy;
+exports.ErrorListener = __webpack_require__(15).ErrorListener;
+
+
+/***/ }),
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 //
@@ -12439,7 +11091,7 @@ exports.PredPrediction = __webpack_require__(11).PredPrediction;
 // </ul>
 
 var BitSet = __webpack_require__(0).BitSet;
-var ErrorListener = __webpack_require__(16).ErrorListener;
+var ErrorListener = __webpack_require__(15).ErrorListener;
 var Interval = __webpack_require__(2).Interval;
 
 function DiagnosticErrorListener(exactOnly) {
@@ -12525,6 +11177,605 @@ DiagnosticErrorListener.prototype.getConflictingAlts = function(reportedAlts, co
 exports.DiagnosticErrorListener = DiagnosticErrorListener;
 
 /***/ }),
+/* 44 */
+/***/ (function(module, exports, __webpack_require__) {
+
+//
+/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
+ * Use of this file is governed by the BSD 3-clause license that
+ * can be found in the LICENSE.txt file in the project root.
+ */
+//
+
+var InputStream = __webpack_require__(18).InputStream;
+
+var isNodeJs = typeof window === 'undefined' && typeof importScripts === 'undefined';
+var fs = isNodeJs ? __webpack_require__(30) : null;
+
+// Utility functions to create InputStreams from various sources.
+//
+// All returned InputStreams support the full range of Unicode
+// up to U+10FFFF (the default behavior of InputStream only supports
+// code points up to U+FFFF).
+var CharStreams = {
+  // Creates an InputStream from a string.
+  fromString: function(str) {
+    return InputStream(str, true);
+  },
+
+  // Asynchronously creates an InputStream from a blob given the
+  // encoding of the bytes in that blob (defaults to 'utf8' if
+  // encoding is null).
+  //
+  // Invokes onLoad(result) on success, onError(error) on
+  // failure.
+  fromBlob: function(blob, encoding, onLoad, onError) {
+    var reader = FileReader();
+    reader.onload = function(e) {
+      var is = InputStream(e.target.result, true);
+      onLoad(is);
+    };
+    reader.onerror = onError;
+    reader.readAsText(blob, encoding);
+  },
+
+  // Creates an InputStream from a Buffer given the
+  // encoding of the bytes in that buffer (defaults to 'utf8' if
+  // encoding is null).
+  fromBuffer: function(buffer, encoding) {
+    return InputStream(buffer.toString(encoding), true);
+  },
+
+  // Asynchronously creates an InputStream from a file on disk given
+  // the encoding of the bytes in that file (defaults to 'utf8' if
+  // encoding is null).
+  //
+  // Invokes callback(error, result) on completion.
+  fromPath: function(path, encoding, callback) {
+    fs.readFile(path, encoding, function(err, data) {
+      var is = null;
+      if (data !== null) {
+        is = InputStream(data, true);
+      }
+      callback(err, is);
+    });
+  },
+
+  // Synchronously creates an InputStream given a path to a file
+  // on disk and the encoding of the bytes in that file (defaults to
+  // 'utf8' if encoding is null).
+  fromPathSync: function(path, encoding) {
+    var data = fs.readFileSync(path, encoding);
+    return InputStream(data, true);
+  }
+};
+
+exports.CharStreams = CharStreams;
+
+
+/***/ }),
+/* 45 */
+/***/ (function(module, exports, __webpack_require__) {
+
+//
+/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
+ * Use of this file is governed by the BSD 3-clause license that
+ * can be found in the LICENSE.txt file in the project root.
+ */
+//
+
+//
+//  This is an InputStream that is loaded from a file all at once
+//  when you construct the object.
+//
+var InputStream = __webpack_require__(18).InputStream;
+var isNodeJs = typeof window === 'undefined' && typeof importScripts === 'undefined';
+var fs = isNodeJs ? __webpack_require__(30) : null;
+
+function FileStream(fileName, decodeToUnicodeCodePoints) {
+	var data = fs.readFileSync(fileName, "utf8");
+	InputStream.call(this, data, decodeToUnicodeCodePoints);
+	this.fileName = fileName;
+	return this;
+}
+
+FileStream.prototype = Object.create(InputStream.prototype);
+FileStream.prototype.constructor = FileStream;
+
+exports.FileStream = FileStream;
+
+
+/***/ }),
+/* 46 */
+/***/ (function(module, exports, __webpack_require__) {
+
+//
+/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
+ * Use of this file is governed by the BSD 3-clause license that
+ * can be found in the LICENSE.txt file in the project root.
+ */
+///
+
+//
+// This class extends {@link BufferedTokenStream} with functionality to filter
+// token streams to tokens on a particular channel (tokens where
+// {@link Token//getChannel} returns a particular value).
+//
+// <p>
+// This token stream provides access to all tokens by index or when calling
+// methods like {@link //getText}. The channel filtering is only used for code
+// accessing tokens via the lookahead methods {@link //LA}, {@link //LT}, and
+// {@link //LB}.</p>
+//
+// <p>
+// By default, tokens are placed on the default channel
+// ({@link Token//DEFAULT_CHANNEL}), but may be reassigned by using the
+// {@code ->channel(HIDDEN)} lexer command, or by using an embedded action to
+// call {@link Lexer//setChannel}.
+// </p>
+//
+// <p>
+// Note: lexer rules which use the {@code ->skip} lexer command or call
+// {@link Lexer//skip} do not produce tokens at all, so input text matched by
+// such a rule will not be available as part of the token stream, regardless of
+// channel.</p>
+///
+
+var Token = __webpack_require__(1).Token;
+var BufferedTokenStream = __webpack_require__(47).BufferedTokenStream;
+
+function CommonTokenStream(lexer, channel) {
+	BufferedTokenStream.call(this, lexer);
+    this.channel = channel===undefined ? Token.DEFAULT_CHANNEL : channel;
+    return this;
+}
+
+CommonTokenStream.prototype = Object.create(BufferedTokenStream.prototype);
+CommonTokenStream.prototype.constructor = CommonTokenStream;
+
+CommonTokenStream.prototype.adjustSeekIndex = function(i) {
+    return this.nextTokenOnChannel(i, this.channel);
+};
+
+CommonTokenStream.prototype.LB = function(k) {
+    if (k===0 || this.index-k<0) {
+        return null;
+    }
+    var i = this.index;
+    var n = 1;
+    // find k good tokens looking backwards
+    while (n <= k) {
+        // skip off-channel tokens
+        i = this.previousTokenOnChannel(i - 1, this.channel);
+        n += 1;
+    }
+    if (i < 0) {
+        return null;
+    }
+    return this.tokens[i];
+};
+
+CommonTokenStream.prototype.LT = function(k) {
+    this.lazyInit();
+    if (k === 0) {
+        return null;
+    }
+    if (k < 0) {
+        return this.LB(-k);
+    }
+    var i = this.index;
+    var n = 1; // we know tokens[pos] is a good one
+    // find k good tokens
+    while (n < k) {
+        // skip off-channel tokens, but make sure to not look past EOF
+        if (this.sync(i + 1)) {
+            i = this.nextTokenOnChannel(i + 1, this.channel);
+        }
+        n += 1;
+    }
+    return this.tokens[i];
+};
+
+// Count EOF just once.///
+CommonTokenStream.prototype.getNumberOfOnChannelTokens = function() {
+    var n = 0;
+    this.fill();
+    for (var i =0; i< this.tokens.length;i++) {
+        var t = this.tokens[i];
+        if( t.channel===this.channel) {
+            n += 1;
+        }
+        if( t.type===Token.EOF) {
+            break;
+        }
+    }
+    return n;
+};
+
+exports.CommonTokenStream = CommonTokenStream;
+
+/***/ }),
+/* 47 */
+/***/ (function(module, exports, __webpack_require__) {
+
+//
+/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
+ * Use of this file is governed by the BSD 3-clause license that
+ * can be found in the LICENSE.txt file in the project root.
+ */
+
+// This implementation of {@link TokenStream} loads tokens from a
+// {@link TokenSource} on-demand, and places the tokens in a buffer to provide
+// access to any previous token by index.
+//
+// <p>
+// This token stream ignores the value of {@link Token//getChannel}. If your
+// parser requires the token stream filter tokens to only those on a particular
+// channel, such as {@link Token//DEFAULT_CHANNEL} or
+// {@link Token//HIDDEN_CHANNEL}, use a filtering token stream such a
+// {@link CommonTokenStream}.</p>
+
+var Token = __webpack_require__(1).Token;
+var Lexer = __webpack_require__(14).Lexer;
+var Interval = __webpack_require__(2).Interval;
+
+// this is just to keep meaningful parameter types to Parser
+function TokenStream() {
+	return this;
+}
+
+function BufferedTokenStream(tokenSource) {
+
+	TokenStream.call(this);
+	// The {@link TokenSource} from which tokens for this stream are fetched.
+	this.tokenSource = tokenSource;
+
+	// A collection of all tokens fetched from the token source. The list is
+	// considered a complete view of the input once {@link //fetchedEOF} is set
+	// to {@code true}.
+	this.tokens = [];
+
+	// The index into {@link //tokens} of the current token (next token to
+	// {@link //consume}). {@link //tokens}{@code [}{@link //p}{@code ]} should
+	// be
+	// {@link //LT LT(1)}.
+	//
+	// <p>This field is set to -1 when the stream is first constructed or when
+	// {@link //setTokenSource} is called, indicating that the first token has
+	// not yet been fetched from the token source. For additional information,
+	// see the documentation of {@link IntStream} for a description of
+	// Initializing Methods.</p>
+	this.index = -1;
+
+	// Indicates whether the {@link Token//EOF} token has been fetched from
+	// {@link //tokenSource} and added to {@link //tokens}. This field improves
+	// performance for the following cases:
+	//
+	// <ul>
+	// <li>{@link //consume}: The lookahead check in {@link //consume} to
+	// prevent
+	// consuming the EOF symbol is optimized by checking the values of
+	// {@link //fetchedEOF} and {@link //p} instead of calling {@link
+	// //LA}.</li>
+	// <li>{@link //fetch}: The check to prevent adding multiple EOF symbols
+	// into
+	// {@link //tokens} is trivial with this field.</li>
+	// <ul>
+	this.fetchedEOF = false;
+	return this;
+}
+
+BufferedTokenStream.prototype = Object.create(TokenStream.prototype);
+BufferedTokenStream.prototype.constructor = BufferedTokenStream;
+
+BufferedTokenStream.prototype.mark = function() {
+	return 0;
+};
+
+BufferedTokenStream.prototype.release = function(marker) {
+	// no resources to release
+};
+
+BufferedTokenStream.prototype.reset = function() {
+	this.seek(0);
+};
+
+BufferedTokenStream.prototype.seek = function(index) {
+	this.lazyInit();
+	this.index = this.adjustSeekIndex(index);
+};
+
+BufferedTokenStream.prototype.get = function(index) {
+	this.lazyInit();
+	return this.tokens[index];
+};
+
+BufferedTokenStream.prototype.consume = function() {
+	var skipEofCheck = false;
+	if (this.index >= 0) {
+		if (this.fetchedEOF) {
+			// the last token in tokens is EOF. skip check if p indexes any
+			// fetched token except the last.
+			skipEofCheck = this.index < this.tokens.length - 1;
+		} else {
+			// no EOF token in tokens. skip check if p indexes a fetched token.
+			skipEofCheck = this.index < this.tokens.length;
+		}
+	} else {
+		// not yet initialized
+		skipEofCheck = false;
+	}
+	if (!skipEofCheck && this.LA(1) === Token.EOF) {
+		throw "cannot consume EOF";
+	}
+	if (this.sync(this.index + 1)) {
+		this.index = this.adjustSeekIndex(this.index + 1);
+	}
+};
+
+// Make sure index {@code i} in tokens has a token.
+//
+// @return {@code true} if a token is located at index {@code i}, otherwise
+// {@code false}.
+// @see //get(int i)
+// /
+BufferedTokenStream.prototype.sync = function(i) {
+	var n = i - this.tokens.length + 1; // how many more elements we need?
+	if (n > 0) {
+		var fetched = this.fetch(n);
+		return fetched >= n;
+	}
+	return true;
+};
+
+// Add {@code n} elements to buffer.
+//
+// @return The actual number of elements added to the buffer.
+// /
+BufferedTokenStream.prototype.fetch = function(n) {
+	if (this.fetchedEOF) {
+		return 0;
+	}
+	for (var i = 0; i < n; i++) {
+		var t = this.tokenSource.nextToken();
+		t.tokenIndex = this.tokens.length;
+		this.tokens.push(t);
+		if (t.type === Token.EOF) {
+			this.fetchedEOF = true;
+			return i + 1;
+		}
+	}
+	return n;
+};
+
+// Get all tokens from start..stop inclusively///
+BufferedTokenStream.prototype.getTokens = function(start, stop, types) {
+	if (types === undefined) {
+		types = null;
+	}
+	if (start < 0 || stop < 0) {
+		return null;
+	}
+	this.lazyInit();
+	var subset = [];
+	if (stop >= this.tokens.length) {
+		stop = this.tokens.length - 1;
+	}
+	for (var i = start; i < stop; i++) {
+		var t = this.tokens[i];
+		if (t.type === Token.EOF) {
+			break;
+		}
+		if (types === null || types.contains(t.type)) {
+			subset.push(t);
+		}
+	}
+	return subset;
+};
+
+BufferedTokenStream.prototype.LA = function(i) {
+	return this.LT(i).type;
+};
+
+BufferedTokenStream.prototype.LB = function(k) {
+	if (this.index - k < 0) {
+		return null;
+	}
+	return this.tokens[this.index - k];
+};
+
+BufferedTokenStream.prototype.LT = function(k) {
+	this.lazyInit();
+	if (k === 0) {
+		return null;
+	}
+	if (k < 0) {
+		return this.LB(-k);
+	}
+	var i = this.index + k - 1;
+	this.sync(i);
+	if (i >= this.tokens.length) { // return EOF token
+		// EOF must be last token
+		return this.tokens[this.tokens.length - 1];
+	}
+	return this.tokens[i];
+};
+
+// Allowed derived classes to modify the behavior of operations which change
+// the current stream position by adjusting the target token index of a seek
+// operation. The default implementation simply returns {@code i}. If an
+// exception is thrown in this method, the current stream index should not be
+// changed.
+//
+// <p>For example, {@link CommonTokenStream} overrides this method to ensure
+// that
+// the seek target is always an on-channel token.</p>
+//
+// @param i The target token index.
+// @return The adjusted target token index.
+
+BufferedTokenStream.prototype.adjustSeekIndex = function(i) {
+	return i;
+};
+
+BufferedTokenStream.prototype.lazyInit = function() {
+	if (this.index === -1) {
+		this.setup();
+	}
+};
+
+BufferedTokenStream.prototype.setup = function() {
+	this.sync(0);
+	this.index = this.adjustSeekIndex(0);
+};
+
+// Reset this token stream by setting its token source.///
+BufferedTokenStream.prototype.setTokenSource = function(tokenSource) {
+	this.tokenSource = tokenSource;
+	this.tokens = [];
+	this.index = -1;
+	this.fetchedEOF = false;
+};
+
+
+// Given a starting index, return the index of the next token on channel.
+// Return i if tokens[i] is on channel. Return -1 if there are no tokens
+// on channel between i and EOF.
+// /
+BufferedTokenStream.prototype.nextTokenOnChannel = function(i, channel) {
+	this.sync(i);
+	if (i >= this.tokens.length) {
+		return -1;
+	}
+	var token = this.tokens[i];
+	while (token.channel !== this.channel) {
+		if (token.type === Token.EOF) {
+			return -1;
+		}
+		i += 1;
+		this.sync(i);
+		token = this.tokens[i];
+	}
+	return i;
+};
+
+// Given a starting index, return the index of the previous token on channel.
+// Return i if tokens[i] is on channel. Return -1 if there are no tokens
+// on channel between i and 0.
+BufferedTokenStream.prototype.previousTokenOnChannel = function(i, channel) {
+	while (i >= 0 && this.tokens[i].channel !== channel) {
+		i -= 1;
+	}
+	return i;
+};
+
+// Collect all tokens on specified channel to the right of
+// the current token up until we see a token on DEFAULT_TOKEN_CHANNEL or
+// EOF. If channel is -1, find any non default channel token.
+BufferedTokenStream.prototype.getHiddenTokensToRight = function(tokenIndex,
+		channel) {
+	if (channel === undefined) {
+		channel = -1;
+	}
+	this.lazyInit();
+	if (tokenIndex < 0 || tokenIndex >= this.tokens.length) {
+		throw "" + tokenIndex + " not in 0.." + this.tokens.length - 1;
+	}
+	var nextOnChannel = this.nextTokenOnChannel(tokenIndex + 1, Lexer.DEFAULT_TOKEN_CHANNEL);
+	var from_ = tokenIndex + 1;
+	// if none onchannel to right, nextOnChannel=-1 so set to = last token
+	var to = nextOnChannel === -1 ? this.tokens.length - 1 : nextOnChannel;
+	return this.filterForChannel(from_, to, channel);
+};
+
+// Collect all tokens on specified channel to the left of
+// the current token up until we see a token on DEFAULT_TOKEN_CHANNEL.
+// If channel is -1, find any non default channel token.
+BufferedTokenStream.prototype.getHiddenTokensToLeft = function(tokenIndex,
+		channel) {
+	if (channel === undefined) {
+		channel = -1;
+	}
+	this.lazyInit();
+	if (tokenIndex < 0 || tokenIndex >= this.tokens.length) {
+		throw "" + tokenIndex + " not in 0.." + this.tokens.length - 1;
+	}
+	var prevOnChannel = this.previousTokenOnChannel(tokenIndex - 1, Lexer.DEFAULT_TOKEN_CHANNEL);
+	if (prevOnChannel === tokenIndex - 1) {
+		return null;
+	}
+	// if none on channel to left, prevOnChannel=-1 then from=0
+	var from_ = prevOnChannel + 1;
+	var to = tokenIndex - 1;
+	return this.filterForChannel(from_, to, channel);
+};
+
+BufferedTokenStream.prototype.filterForChannel = function(left, right, channel) {
+	var hidden = [];
+	for (var i = left; i < right + 1; i++) {
+		var t = this.tokens[i];
+		if (channel === -1) {
+			if (t.channel !== Lexer.DEFAULT_TOKEN_CHANNEL) {
+				hidden.push(t);
+			}
+		} else if (t.channel === channel) {
+			hidden.push(t);
+		}
+	}
+	if (hidden.length === 0) {
+		return null;
+	}
+	return hidden;
+};
+
+BufferedTokenStream.prototype.getSourceName = function() {
+	return this.tokenSource.getSourceName();
+};
+
+// Get the text of all tokens in this buffer.///
+BufferedTokenStream.prototype.getText = function(interval) {
+	this.lazyInit();
+	this.fill();
+	if (interval === undefined || interval === null) {
+		interval = new Interval(0, this.tokens.length - 1);
+	}
+	var start = interval.start;
+	if (start instanceof Token) {
+		start = start.tokenIndex;
+	}
+	var stop = interval.stop;
+	if (stop instanceof Token) {
+		stop = stop.tokenIndex;
+	}
+	if (start === null || stop === null || start < 0 || stop < 0) {
+		return "";
+	}
+	if (stop >= this.tokens.length) {
+		stop = this.tokens.length - 1;
+	}
+	var s = "";
+	for (var i = start; i < stop + 1; i++) {
+		var t = this.tokens[i];
+		if (t.type === Token.EOF) {
+			break;
+		}
+		s = s + t.text;
+	}
+	return s;
+};
+
+// Get all tokens from lexer until EOF///
+BufferedTokenStream.prototype.fill = function() {
+	this.lazyInit();
+	while (this.fetch(1000) === 1000) {
+		continue;
+	}
+};
+
+exports.BufferedTokenStream = BufferedTokenStream;
+
+
+/***/ }),
 /* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -12533,31 +11784,799 @@ exports.DiagnosticErrorListener = DiagnosticErrorListener;
  * can be found in the LICENSE.txt file in the project root.
  */
 
-exports.RecognitionException = __webpack_require__(4).RecognitionException;
-exports.NoViableAltException = __webpack_require__(4).NoViableAltException;
-exports.LexerNoViableAltException = __webpack_require__(4).LexerNoViableAltException;
-exports.InputMismatchException = __webpack_require__(4).InputMismatchException;
-exports.FailedPredicateException = __webpack_require__(4).FailedPredicateException;
-exports.DiagnosticErrorListener = __webpack_require__(47).DiagnosticErrorListener;
-exports.BailErrorStrategy = __webpack_require__(26).BailErrorStrategy;
-exports.ErrorListener = __webpack_require__(16).ErrorListener;
+var Token = __webpack_require__(1).Token;
+var ParseTreeListener = __webpack_require__(4).ParseTreeListener;
+var Recognizer = __webpack_require__(24).Recognizer;
+var DefaultErrorStrategy = __webpack_require__(29).DefaultErrorStrategy;
+var ATNDeserializer = __webpack_require__(21).ATNDeserializer;
+var ATNDeserializationOptions = __webpack_require__(22).ATNDeserializationOptions;
+var TerminalNode = __webpack_require__(4).TerminalNode;
+var ErrorNode = __webpack_require__(4).ErrorNode;
 
+function TraceListener(parser) {
+	ParseTreeListener.call(this);
+    this.parser = parser;
+	return this;
+}
+
+TraceListener.prototype = Object.create(ParseTreeListener.prototype);
+TraceListener.prototype.constructor = TraceListener;
+
+TraceListener.prototype.enterEveryRule = function(ctx) {
+	console.log("enter   " + this.parser.ruleNames[ctx.ruleIndex] + ", LT(1)=" + this.parser._input.LT(1).text);
+};
+
+TraceListener.prototype.visitTerminal = function( node) {
+	console.log("consume " + node.symbol + " rule " + this.parser.ruleNames[this.parser._ctx.ruleIndex]);
+};
+
+TraceListener.prototype.exitEveryRule = function(ctx) {
+	console.log("exit    " + this.parser.ruleNames[ctx.ruleIndex] + ", LT(1)=" + this.parser._input.LT(1).text);
+};
+
+// this is all the parsing support code essentially; most of it is error
+// recovery stuff.//
+function Parser(input) {
+	Recognizer.call(this);
+	// The input stream.
+	this._input = null;
+	// The error handling strategy for the parser. The default value is a new
+	// instance of {@link DefaultErrorStrategy}.
+	this._errHandler = new DefaultErrorStrategy();
+	this._precedenceStack = [];
+	this._precedenceStack.push(0);
+	// The {@link ParserRuleContext} object for the currently executing rule.
+	// this is always non-null during the parsing process.
+	this._ctx = null;
+	// Specifies whether or not the parser should construct a parse tree during
+	// the parsing process. The default value is {@code true}.
+	this.buildParseTrees = true;
+	// When {@link //setTrace}{@code (true)} is called, a reference to the
+	// {@link TraceListener} is stored here so it can be easily removed in a
+	// later call to {@link //setTrace}{@code (false)}. The listener itself is
+	// implemented as a parser listener so this field is not directly used by
+	// other parser methods.
+	this._tracer = null;
+	// The list of {@link ParseTreeListener} listeners registered to receive
+	// events during the parse.
+	this._parseListeners = null;
+	// The number of syntax errors reported during parsing. this value is
+	// incremented each time {@link //notifyErrorListeners} is called.
+	this._syntaxErrors = 0;
+	this.setInputStream(input);
+	return this;
+}
+
+Parser.prototype = Object.create(Recognizer.prototype);
+Parser.prototype.contructor = Parser;
+
+// this field maps from the serialized ATN string to the deserialized {@link
+// ATN} with
+// bypass alternatives.
+//
+// @see ATNDeserializationOptions//isGenerateRuleBypassTransitions()
+//
+Parser.bypassAltsAtnCache = {};
+
+// reset the parser's state//
+Parser.prototype.reset = function() {
+	if (this._input !== null) {
+		this._input.seek(0);
+	}
+	this._errHandler.reset(this);
+	this._ctx = null;
+	this._syntaxErrors = 0;
+	this.setTrace(false);
+	this._precedenceStack = [];
+	this._precedenceStack.push(0);
+	if (this._interp !== null) {
+		this._interp.reset();
+	}
+};
+
+// Match current input symbol against {@code ttype}. If the symbol type
+// matches, {@link ANTLRErrorStrategy//reportMatch} and {@link //consume} are
+// called to complete the match process.
+//
+// <p>If the symbol type does not match,
+// {@link ANTLRErrorStrategy//recoverInline} is called on the current error
+// strategy to attempt recovery. If {@link //getBuildParseTree} is
+// {@code true} and the token index of the symbol returned by
+// {@link ANTLRErrorStrategy//recoverInline} is -1, the symbol is added to
+// the parse tree by calling {@link ParserRuleContext//addErrorNode}.</p>
+//
+// @param ttype the token type to match
+// @return the matched symbol
+// @throws RecognitionException if the current input symbol did not match
+// {@code ttype} and the error strategy could not recover from the
+// mismatched symbol
+
+Parser.prototype.match = function(ttype) {
+	var t = this.getCurrentToken();
+	if (t.type === ttype) {
+		this._errHandler.reportMatch(this);
+		this.consume();
+	} else {
+		t = this._errHandler.recoverInline(this);
+		if (this.buildParseTrees && t.tokenIndex === -1) {
+			// we must have conjured up a new token during single token
+			// insertion
+			// if it's not the current symbol
+			this._ctx.addErrorNode(t);
+		}
+	}
+	return t;
+};
+// Match current input symbol as a wildcard. If the symbol type matches
+// (i.e. has a value greater than 0), {@link ANTLRErrorStrategy//reportMatch}
+// and {@link //consume} are called to complete the match process.
+//
+// <p>If the symbol type does not match,
+// {@link ANTLRErrorStrategy//recoverInline} is called on the current error
+// strategy to attempt recovery. If {@link //getBuildParseTree} is
+// {@code true} and the token index of the symbol returned by
+// {@link ANTLRErrorStrategy//recoverInline} is -1, the symbol is added to
+// the parse tree by calling {@link ParserRuleContext//addErrorNode}.</p>
+//
+// @return the matched symbol
+// @throws RecognitionException if the current input symbol did not match
+// a wildcard and the error strategy could not recover from the mismatched
+// symbol
+
+Parser.prototype.matchWildcard = function() {
+	var t = this.getCurrentToken();
+	if (t.type > 0) {
+		this._errHandler.reportMatch(this);
+		this.consume();
+	} else {
+		t = this._errHandler.recoverInline(this);
+		if (this._buildParseTrees && t.tokenIndex === -1) {
+			// we must have conjured up a new token during single token
+			// insertion
+			// if it's not the current symbol
+			this._ctx.addErrorNode(t);
+		}
+	}
+	return t;
+};
+
+Parser.prototype.getParseListeners = function() {
+	return this._parseListeners || [];
+};
+
+// Registers {@code listener} to receive events during the parsing process.
+//
+// <p>To support output-preserving grammar transformations (including but not
+// limited to left-recursion removal, automated left-factoring, and
+// optimized code generation), calls to listener methods during the parse
+// may differ substantially from calls made by
+// {@link ParseTreeWalker//DEFAULT} used after the parse is complete. In
+// particular, rule entry and exit events may occur in a different order
+// during the parse than after the parser. In addition, calls to certain
+// rule entry methods may be omitted.</p>
+//
+// <p>With the following specific exceptions, calls to listener events are
+// <em>deterministic</em>, i.e. for identical input the calls to listener
+// methods will be the same.</p>
+//
+// <ul>
+// <li>Alterations to the grammar used to generate code may change the
+// behavior of the listener calls.</li>
+// <li>Alterations to the command line options passed to ANTLR 4 when
+// generating the parser may change the behavior of the listener calls.</li>
+// <li>Changing the version of the ANTLR Tool used to generate the parser
+// may change the behavior of the listener calls.</li>
+// </ul>
+//
+// @param listener the listener to add
+//
+// @throws NullPointerException if {@code} listener is {@code null}
+//
+Parser.prototype.addParseListener = function(listener) {
+	if (listener === null) {
+		throw "listener";
+	}
+	if (this._parseListeners === null) {
+		this._parseListeners = [];
+	}
+	this._parseListeners.push(listener);
+};
+
+//
+// Remove {@code listener} from the list of parse listeners.
+//
+// <p>If {@code listener} is {@code null} or has not been added as a parse
+// listener, this method does nothing.</p>
+// @param listener the listener to remove
+//
+Parser.prototype.removeParseListener = function(listener) {
+	if (this._parseListeners !== null) {
+		var idx = this._parseListeners.indexOf(listener);
+		if (idx >= 0) {
+			this._parseListeners.splice(idx, 1);
+		}
+		if (this._parseListeners.length === 0) {
+			this._parseListeners = null;
+		}
+	}
+};
+
+// Remove all parse listeners.
+Parser.prototype.removeParseListeners = function() {
+	this._parseListeners = null;
+};
+
+// Notify any parse listeners of an enter rule event.
+Parser.prototype.triggerEnterRuleEvent = function() {
+	if (this._parseListeners !== null) {
+        var ctx = this._ctx;
+		this._parseListeners.map(function(listener) {
+			listener.enterEveryRule(ctx);
+			ctx.enterRule(listener);
+		});
+	}
+};
+
+//
+// Notify any parse listeners of an exit rule event.
+//
+// @see //addParseListener
+//
+Parser.prototype.triggerExitRuleEvent = function() {
+	if (this._parseListeners !== null) {
+		// reverse order walk of listeners
+        var ctx = this._ctx;
+		this._parseListeners.slice(0).reverse().map(function(listener) {
+			ctx.exitRule(listener);
+			listener.exitEveryRule(ctx);
+		});
+	}
+};
+
+Parser.prototype.getTokenFactory = function() {
+	return this._input.tokenSource._factory;
+};
+
+// Tell our token source and error strategy about a new way to create tokens.//
+Parser.prototype.setTokenFactory = function(factory) {
+	this._input.tokenSource._factory = factory;
+};
+
+// The ATN with bypass alternatives is expensive to create so we create it
+// lazily.
+//
+// @throws UnsupportedOperationException if the current parser does not
+// implement the {@link //getSerializedATN()} method.
+//
+Parser.prototype.getATNWithBypassAlts = function() {
+	var serializedAtn = this.getSerializedATN();
+	if (serializedAtn === null) {
+		throw "The current parser does not support an ATN with bypass alternatives.";
+	}
+	var result = this.bypassAltsAtnCache[serializedAtn];
+	if (result === null) {
+		var deserializationOptions = new ATNDeserializationOptions();
+		deserializationOptions.generateRuleBypassTransitions = true;
+		result = new ATNDeserializer(deserializationOptions)
+				.deserialize(serializedAtn);
+		this.bypassAltsAtnCache[serializedAtn] = result;
+	}
+	return result;
+};
+
+// The preferred method of getting a tree pattern. For example, here's a
+// sample use:
+//
+// <pre>
+// ParseTree t = parser.expr();
+// ParseTreePattern p = parser.compileParseTreePattern("&lt;ID&gt;+0",
+// MyParser.RULE_expr);
+// ParseTreeMatch m = p.match(t);
+// String id = m.get("ID");
+// </pre>
+
+var Lexer = __webpack_require__(14).Lexer;
+
+Parser.prototype.compileParseTreePattern = function(pattern, patternRuleIndex, lexer) {
+	lexer = lexer || null;
+	if (lexer === null) {
+		if (this.getTokenStream() !== null) {
+			var tokenSource = this.getTokenStream().tokenSource;
+			if (tokenSource instanceof Lexer) {
+				lexer = tokenSource;
+			}
+		}
+	}
+	if (lexer === null) {
+		throw "Parser can't discover a lexer to use";
+	}
+	var m = new ParseTreePatternMatcher(lexer, this);
+	return m.compile(pattern, patternRuleIndex);
+};
+
+Parser.prototype.getInputStream = function() {
+	return this.getTokenStream();
+};
+
+Parser.prototype.setInputStream = function(input) {
+	this.setTokenStream(input);
+};
+
+Parser.prototype.getTokenStream = function() {
+	return this._input;
+};
+
+// Set the token stream and reset the parser.//
+Parser.prototype.setTokenStream = function(input) {
+	this._input = null;
+	this.reset();
+	this._input = input;
+};
+
+// Match needs to return the current input symbol, which gets put
+// into the label for the associated token ref; e.g., x=ID.
+//
+Parser.prototype.getCurrentToken = function() {
+	return this._input.LT(1);
+};
+
+Parser.prototype.notifyErrorListeners = function(msg, offendingToken, err) {
+	offendingToken = offendingToken || null;
+	err = err || null;
+	if (offendingToken === null) {
+		offendingToken = this.getCurrentToken();
+	}
+	this._syntaxErrors += 1;
+	var line = offendingToken.line;
+	var column = offendingToken.column;
+	var listener = this.getErrorListenerDispatch();
+	listener.syntaxError(this, offendingToken, line, column, msg, err);
+};
+
+//
+// Consume and return the {@linkplain //getCurrentToken current symbol}.
+//
+// <p>E.g., given the following input with {@code A} being the current
+// lookahead symbol, this function moves the cursor to {@code B} and returns
+// {@code A}.</p>
+//
+// <pre>
+// A B
+// ^
+// </pre>
+//
+// If the parser is not in error recovery mode, the consumed symbol is added
+// to the parse tree using {@link ParserRuleContext//addChild(Token)}, and
+// {@link ParseTreeListener//visitTerminal} is called on any parse listeners.
+// If the parser <em>is</em> in error recovery mode, the consumed symbol is
+// added to the parse tree using
+// {@link ParserRuleContext//addErrorNode(Token)}, and
+// {@link ParseTreeListener//visitErrorNode} is called on any parse
+// listeners.
+//
+Parser.prototype.consume = function() {
+	var o = this.getCurrentToken();
+	if (o.type !== Token.EOF) {
+		this.getInputStream().consume();
+	}
+	var hasListener = this._parseListeners !== null && this._parseListeners.length > 0;
+	if (this.buildParseTrees || hasListener) {
+		var node;
+		if (this._errHandler.inErrorRecoveryMode(this)) {
+			node = this._ctx.addErrorNode(o);
+		} else {
+			node = this._ctx.addTokenNode(o);
+		}
+        node.invokingState = this.state;
+		if (hasListener) {
+			this._parseListeners.map(function(listener) {
+				if (node instanceof ErrorNode || (node.isErrorNode !== undefined && node.isErrorNode())) {
+					listener.visitErrorNode(node);
+				} else if (node instanceof TerminalNode) {
+					listener.visitTerminal(node);
+				}
+			});
+		}
+	}
+	return o;
+};
+
+Parser.prototype.addContextToParseTree = function() {
+	// add current context to parent if we have a parent
+	if (this._ctx.parentCtx !== null) {
+		this._ctx.parentCtx.addChild(this._ctx);
+	}
+};
+
+// Always called by generated parsers upon entry to a rule. Access field
+// {@link //_ctx} get the current context.
+
+Parser.prototype.enterRule = function(localctx, state, ruleIndex) {
+	this.state = state;
+	this._ctx = localctx;
+	this._ctx.start = this._input.LT(1);
+	if (this.buildParseTrees) {
+		this.addContextToParseTree();
+	}
+	if (this._parseListeners !== null) {
+		this.triggerEnterRuleEvent();
+	}
+};
+
+Parser.prototype.exitRule = function() {
+	this._ctx.stop = this._input.LT(-1);
+	// trigger event on _ctx, before it reverts to parent
+	if (this._parseListeners !== null) {
+		this.triggerExitRuleEvent();
+	}
+	this.state = this._ctx.invokingState;
+	this._ctx = this._ctx.parentCtx;
+};
+
+Parser.prototype.enterOuterAlt = function(localctx, altNum) {
+   	localctx.setAltNumber(altNum);
+	// if we have new localctx, make sure we replace existing ctx
+	// that is previous child of parse tree
+	if (this.buildParseTrees && this._ctx !== localctx) {
+		if (this._ctx.parentCtx !== null) {
+			this._ctx.parentCtx.removeLastChild();
+			this._ctx.parentCtx.addChild(localctx);
+		}
+	}
+	this._ctx = localctx;
+};
+
+// Get the precedence level for the top-most precedence rule.
+//
+// @return The precedence level for the top-most precedence rule, or -1 if
+// the parser context is not nested within a precedence rule.
+
+Parser.prototype.getPrecedence = function() {
+	if (this._precedenceStack.length === 0) {
+		return -1;
+	} else {
+		return this._precedenceStack[this._precedenceStack.length-1];
+	}
+};
+
+Parser.prototype.enterRecursionRule = function(localctx, state, ruleIndex,
+		precedence) {
+	this.state = state;
+	this._precedenceStack.push(precedence);
+	this._ctx = localctx;
+	this._ctx.start = this._input.LT(1);
+	if (this._parseListeners !== null) {
+		this.triggerEnterRuleEvent(); // simulates rule entry for
+										// left-recursive rules
+	}
+};
+
+//
+// Like {@link //enterRule} but for recursive rules.
+
+Parser.prototype.pushNewRecursionContext = function(localctx, state, ruleIndex) {
+	var previous = this._ctx;
+	previous.parentCtx = localctx;
+	previous.invokingState = state;
+	previous.stop = this._input.LT(-1);
+
+	this._ctx = localctx;
+	this._ctx.start = previous.start;
+	if (this.buildParseTrees) {
+		this._ctx.addChild(previous);
+	}
+	if (this._parseListeners !== null) {
+		this.triggerEnterRuleEvent(); // simulates rule entry for
+										// left-recursive rules
+	}
+};
+
+Parser.prototype.unrollRecursionContexts = function(parentCtx) {
+	this._precedenceStack.pop();
+	this._ctx.stop = this._input.LT(-1);
+	var retCtx = this._ctx; // save current ctx (return value)
+	// unroll so _ctx is as it was before call to recursive method
+	if (this._parseListeners !== null) {
+		while (this._ctx !== parentCtx) {
+			this.triggerExitRuleEvent();
+			this._ctx = this._ctx.parentCtx;
+		}
+	} else {
+		this._ctx = parentCtx;
+	}
+	// hook into tree
+	retCtx.parentCtx = parentCtx;
+	if (this.buildParseTrees && parentCtx !== null) {
+		// add return ctx into invoking rule's tree
+		parentCtx.addChild(retCtx);
+	}
+};
+
+Parser.prototype.getInvokingContext = function(ruleIndex) {
+	var ctx = this._ctx;
+	while (ctx !== null) {
+		if (ctx.ruleIndex === ruleIndex) {
+			return ctx;
+		}
+		ctx = ctx.parentCtx;
+	}
+	return null;
+};
+
+Parser.prototype.precpred = function(localctx, precedence) {
+	return precedence >= this._precedenceStack[this._precedenceStack.length-1];
+};
+
+Parser.prototype.inContext = function(context) {
+	// TODO: useful in parser?
+	return false;
+};
+
+//
+// Checks whether or not {@code symbol} can follow the current state in the
+// ATN. The behavior of this method is equivalent to the following, but is
+// implemented such that the complete context-sensitive follow set does not
+// need to be explicitly constructed.
+//
+// <pre>
+// return getExpectedTokens().contains(symbol);
+// </pre>
+//
+// @param symbol the symbol type to check
+// @return {@code true} if {@code symbol} can follow the current state in
+// the ATN, otherwise {@code false}.
+
+Parser.prototype.isExpectedToken = function(symbol) {
+	var atn = this._interp.atn;
+	var ctx = this._ctx;
+	var s = atn.states[this.state];
+	var following = atn.nextTokens(s);
+	if (following.contains(symbol)) {
+		return true;
+	}
+	if (!following.contains(Token.EPSILON)) {
+		return false;
+	}
+	while (ctx !== null && ctx.invokingState >= 0 && following.contains(Token.EPSILON)) {
+		var invokingState = atn.states[ctx.invokingState];
+		var rt = invokingState.transitions[0];
+		following = atn.nextTokens(rt.followState);
+		if (following.contains(symbol)) {
+			return true;
+		}
+		ctx = ctx.parentCtx;
+	}
+	if (following.contains(Token.EPSILON) && symbol === Token.EOF) {
+		return true;
+	} else {
+		return false;
+	}
+};
+
+// Computes the set of input symbols which could follow the current parser
+// state and context, as given by {@link //getState} and {@link //getContext},
+// respectively.
+//
+// @see ATN//getExpectedTokens(int, RuleContext)
+//
+Parser.prototype.getExpectedTokens = function() {
+	return this._interp.atn.getExpectedTokens(this.state, this._ctx);
+};
+
+Parser.prototype.getExpectedTokensWithinCurrentRule = function() {
+	var atn = this._interp.atn;
+	var s = atn.states[this.state];
+	return atn.nextTokens(s);
+};
+
+// Get a rule's index (i.e., {@code RULE_ruleName} field) or -1 if not found.//
+Parser.prototype.getRuleIndex = function(ruleName) {
+	var ruleIndex = this.getRuleIndexMap()[ruleName];
+	if (ruleIndex !== null) {
+		return ruleIndex;
+	} else {
+		return -1;
+	}
+};
+
+// Return List&lt;String&gt; of the rule names in your parser instance
+// leading up to a call to the current rule. You could override if
+// you want more details such as the file/line info of where
+// in the ATN a rule is invoked.
+//
+// this is very useful for error messages.
+//
+Parser.prototype.getRuleInvocationStack = function(p) {
+	p = p || null;
+	if (p === null) {
+		p = this._ctx;
+	}
+	var stack = [];
+	while (p !== null) {
+		// compute what follows who invoked us
+		var ruleIndex = p.ruleIndex;
+		if (ruleIndex < 0) {
+			stack.push("n/a");
+		} else {
+			stack.push(this.ruleNames[ruleIndex]);
+		}
+		p = p.parentCtx;
+	}
+	return stack;
+};
+
+// For debugging and other purposes.//
+Parser.prototype.getDFAStrings = function() {
+	return this._interp.decisionToDFA.toString();
+};
+// For debugging and other purposes.//
+Parser.prototype.dumpDFA = function() {
+	var seenOne = false;
+	for (var i = 0; i < this._interp.decisionToDFA.length; i++) {
+		var dfa = this._interp.decisionToDFA[i];
+		if (dfa.states.length > 0) {
+			if (seenOne) {
+				console.log();
+			}
+			this.printer.println("Decision " + dfa.decision + ":");
+			this.printer.print(dfa.toString(this.literalNames, this.symbolicNames));
+			seenOne = true;
+		}
+	}
+};
+
+/*
+"			printer = function() {\r\n" +
+"				this.println = function(s) { document.getElementById('output') += s + '\\n'; }\r\n" +
+"				this.print = function(s) { document.getElementById('output') += s; }\r\n" +
+"			};\r\n" +
+*/
+
+Parser.prototype.getSourceName = function() {
+	return this._input.sourceName;
+};
+
+// During a parse is sometimes useful to listen in on the rule entry and exit
+// events as well as token matches. this is for quick and dirty debugging.
+//
+Parser.prototype.setTrace = function(trace) {
+	if (!trace) {
+		this.removeParseListener(this._tracer);
+		this._tracer = null;
+	} else {
+		if (this._tracer !== null) {
+			this.removeParseListener(this._tracer);
+		}
+		this._tracer = new TraceListener(this);
+		this.addParseListener(this._tracer);
+	}
+};
+
+exports.Parser = Parser;
 
 /***/ }),
 /* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
- * Use of this file is governed by the BSD 3-clause license that
- * can be found in the LICENSE.txt file in the project root.
- */
+// Generated from SQL.g4 by ANTLR 4.5
+// jshint ignore: start
+var antlr4 = __webpack_require__(19);
 
-var Tree = __webpack_require__(5);
-exports.Trees = __webpack_require__(29).Trees;
-exports.RuleNode = Tree.RuleNode;
-exports.ParseTreeListener = Tree.ParseTreeListener;
-exports.ParseTreeVisitor = Tree.ParseTreeVisitor;
-exports.ParseTreeWalker = Tree.ParseTreeWalker;
+
+var serializedATN = ["\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd",
+    "\2\23\u00ac\b\1\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b",
+    "\t\b\4\t\t\t\4\n\t\n\4\13\t\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4",
+    "\20\t\20\4\21\t\21\4\22\t\22\3\2\6\2\'\n\2\r\2\16\2(\3\2\3\2\3\2\3\2",
+    "\3\2\3\2\3\2\3\2\3\2\3\2\5\2\65\n\2\3\3\6\38\n\3\r\3\16\39\3\3\6\3=",
+    "\n\3\r\3\16\3>\3\3\3\3\6\3C\n\3\r\3\16\3D\3\3\3\3\5\3I\n\3\3\4\3\4\3",
+    "\5\3\5\3\6\3\6\3\7\3\7\3\b\3\b\3\b\7\bV\n\b\f\b\16\bY\13\b\3\b\3\b\3",
+    "\b\3\b\3\b\7\b`\n\b\f\b\16\bc\13\b\3\b\3\b\5\bg\n\b\3\t\3\t\5\tk\n\t",
+    "\3\n\3\n\3\n\3\n\3\n\6\nr\n\n\r\n\16\ns\3\13\3\13\3\13\3\f\3\f\3\f\3",
+    "\f\3\f\3\f\3\f\3\f\3\f\7\f\u0082\n\f\f\f\16\f\u0085\13\f\3\f\3\f\5\f",
+    "\u0089\n\f\3\f\3\f\3\r\3\r\3\r\5\r\u0090\n\r\3\r\7\r\u0093\n\r\f\r\16",
+    "\r\u0096\13\r\3\r\3\r\3\16\3\16\3\17\3\17\3\20\3\20\3\20\3\21\6\21\u00a2",
+    "\n\21\r\21\16\21\u00a3\3\22\6\22\u00a7\n\22\r\22\16\22\u00a8\3\22\3",
+    "\22\3\u0083\2\23\3\3\5\4\7\5\t\6\13\7\r\b\17\t\21\n\23\13\25\f\27\r",
+    "\31\16\33\17\35\20\37\21!\22#\23\3\2\13\7\2\60\60\62;C\\aac|\3\2\62",
+    ";\4\2$$^^\4\2))^^\n\2$$))^^ddhhppttvv\3\2##\4\2\f\f\17\17\t\2##&(*-",
+    "//\61\61<B``\5\2\13\f\16\17\"\"\u00c0\2\3\3\2\2\2\2\5\3\2\2\2\2\7\3",
+    "\2\2\2\2\t\3\2\2\2\2\13\3\2\2\2\2\r\3\2\2\2\2\17\3\2\2\2\2\21\3\2\2",
+    "\2\2\23\3\2\2\2\2\25\3\2\2\2\2\27\3\2\2\2\2\31\3\2\2\2\2\33\3\2\2\2",
+    "\2\35\3\2\2\2\2\37\3\2\2\2\2!\3\2\2\2\2#\3\2\2\2\3\64\3\2\2\2\5H\3\2",
+    "\2\2\7J\3\2\2\2\tL\3\2\2\2\13N\3\2\2\2\rP\3\2\2\2\17f\3\2\2\2\21h\3",
+    "\2\2\2\23l\3\2\2\2\25u\3\2\2\2\27\u0088\3\2\2\2\31\u008f\3\2\2\2\33",
+    "\u0099\3\2\2\2\35\u009b\3\2\2\2\37\u009d\3\2\2\2!\u00a1\3\2\2\2#\u00a6",
+    "\3\2\2\2%\'\t\2\2\2&%\3\2\2\2\'(\3\2\2\2(&\3\2\2\2()\3\2\2\2)\65\3\2",
+    "\2\2*+\7b\2\2+,\5\3\2\2,-\7b\2\2-\65\3\2\2\2./\7b\2\2/\60\5\3\2\2\60",
+    "\61\7b\2\2\61\62\7\60\2\2\62\63\5\3\2\2\63\65\3\2\2\2\64&\3\2\2\2\64",
+    "*\3\2\2\2\64.\3\2\2\2\65\4\3\2\2\2\668\t\3\2\2\67\66\3\2\2\289\3\2\2",
+    "\29\67\3\2\2\29:\3\2\2\2:I\3\2\2\2;=\t\3\2\2<;\3\2\2\2=>\3\2\2\2><\3",
+    "\2\2\2>?\3\2\2\2?@\3\2\2\2@B\7\60\2\2AC\t\3\2\2BA\3\2\2\2CD\3\2\2\2",
+    "DB\3\2\2\2DE\3\2\2\2EI\3\2\2\2FG\7/\2\2GI\5\5\3\2H\67\3\2\2\2H<\3\2",
+    "\2\2HF\3\2\2\2I\6\3\2\2\2JK\7$\2\2K\b\3\2\2\2LM\7)\2\2M\n\3\2\2\2NO",
+    "\7}\2\2O\f\3\2\2\2PQ\7\177\2\2Q\16\3\2\2\2RW\5\7\4\2SV\n\4\2\2TV\5\21",
+    "\t\2US\3\2\2\2UT\3\2\2\2VY\3\2\2\2WU\3\2\2\2WX\3\2\2\2XZ\3\2\2\2YW\3",
+    "\2\2\2Z[\5\7\4\2[g\3\2\2\2\\a\5\t\5\2]`\n\5\2\2^`\5\21\t\2_]\3\2\2\2",
+    "_^\3\2\2\2`c\3\2\2\2a_\3\2\2\2ab\3\2\2\2bd\3\2\2\2ca\3\2\2\2de\5\t\5",
+    "\2eg\3\2\2\2fR\3\2\2\2f\\\3\2\2\2g\20\3\2\2\2hj\7^\2\2ik\t\6\2\2ji\3",
+    "\2\2\2jk\3\2\2\2k\22\3\2\2\2lm\7\61\2\2mn\7,\2\2no\7#\2\2oq\3\2\2\2",
+    "pr\t\3\2\2qp\3\2\2\2rs\3\2\2\2sq\3\2\2\2st\3\2\2\2t\24\3\2\2\2uv\7,",
+    "\2\2vw\7\61\2\2w\26\3\2\2\2xy\7\61\2\2yz\7,\2\2z{\7,\2\2{\u0089\7\61",
+    "\2\2|}\7\61\2\2}~\7,\2\2~\177\3\2\2\2\177\u0083\n\7\2\2\u0080\u0082",
+    "\13\2\2\2\u0081\u0080\3\2\2\2\u0082\u0085\3\2\2\2\u0083\u0084\3\2\2",
+    "\2\u0083\u0081\3\2\2\2\u0084\u0086\3\2\2\2\u0085\u0083\3\2\2\2\u0086",
+    "\u0087\7,\2\2\u0087\u0089\7\61\2\2\u0088x\3\2\2\2\u0088|\3\2\2\2\u0089",
+    "\u008a\3\2\2\2\u008a\u008b\b\f\2\2\u008b\30\3\2\2\2\u008c\u0090\7%\2",
+    "\2\u008d\u008e\7/\2\2\u008e\u0090\7/\2\2\u008f\u008c\3\2\2\2\u008f\u008d",
+    "\3\2\2\2\u0090\u0094\3\2\2\2\u0091\u0093\n\b\2\2\u0092\u0091\3\2\2\2",
+    "\u0093\u0096\3\2\2\2\u0094\u0092\3\2\2\2\u0094\u0095\3\2\2\2\u0095\u0097",
+    "\3\2\2\2\u0096\u0094\3\2\2\2\u0097\u0098\b\r\2\2\u0098\32\3\2\2\2\u0099",
+    "\u009a\7.\2\2\u009a\34\3\2\2\2\u009b\u009c\7\60\2\2\u009c\36\3\2\2\2",
+    "\u009d\u009e\7~\2\2\u009e\u009f\7~\2\2\u009f \3\2\2\2\u00a0\u00a2\t",
+    "\t\2\2\u00a1\u00a0\3\2\2\2\u00a2\u00a3\3\2\2\2\u00a3\u00a1\3\2\2\2\u00a3",
+    "\u00a4\3\2\2\2\u00a4\"\3\2\2\2\u00a5\u00a7\t\n\2\2\u00a6\u00a5\3\2\2",
+    "\2\u00a7\u00a8\3\2\2\2\u00a8\u00a6\3\2\2\2\u00a8\u00a9\3\2\2\2\u00a9",
+    "\u00aa\3\2\2\2\u00aa\u00ab\b\22\2\2\u00ab$\3\2\2\2\26\2(\649>DHUW_a",
+    "fjs\u0083\u0088\u008f\u0094\u00a3\u00a8\3\b\2\2"].join("");
+
+
+var atn = new antlr4.atn.ATNDeserializer().deserialize(serializedATN);
+
+var decisionsToDFA = atn.decisionToState.map( function(ds, index) { return new antlr4.dfa.DFA(ds, index); });
+
+function SQLLexer(input) {
+	antlr4.Lexer.call(this, input);
+    this._interp = new antlr4.atn.LexerATNSimulator(this, atn, decisionsToDFA, new antlr4.PredictionContextCache());
+    return this;
+}
+
+SQLLexer.prototype = Object.create(antlr4.Lexer.prototype);
+SQLLexer.prototype.constructor = SQLLexer;
+
+SQLLexer.EOF = antlr4.Token.EOF;
+SQLLexer.Identifier = 1;
+SQLLexer.Number = 2;
+SQLLexer.DOUBLE_QUOTE = 3;
+SQLLexer.SINGLE_QUOTE = 4;
+SQLLexer.L_BRACKET = 5;
+SQLLexer.R_BRACKET = 6;
+SQLLexer.StringLiteral = 7;
+SQLLexer.EscapeSequence = 8;
+SQLLexer.BLOCK_COMMENT_START = 9;
+SQLLexer.BLOCK_COMMENT_END = 10;
+SQLLexer.BLOCK_COMMENT = 11;
+SQLLexer.POUND_COMMENT = 12;
+SQLLexer.COMMA = 13;
+SQLLexer.DOT = 14;
+SQLLexer.OR = 15;
+SQLLexer.SYMBOL = 16;
+SQLLexer.WS = 17;
+
+
+SQLLexer.modeNames = [ "DEFAULT_MODE" ];
+
+SQLLexer.literalNames = [ 'null', 'null', 'null', "'\"'", "'''", "'{'", 
+                          "'}'", 'null', 'null', 'null', "'*/'", 'null', 
+                          'null', "','", "'.'", "'||'" ];
+
+SQLLexer.symbolicNames = [ 'null', "Identifier", "Number", "DOUBLE_QUOTE", 
+                           "SINGLE_QUOTE", "L_BRACKET", "R_BRACKET", "StringLiteral", 
+                           "EscapeSequence", "BLOCK_COMMENT_START", "BLOCK_COMMENT_END", 
+                           "BLOCK_COMMENT", "POUND_COMMENT", "COMMA", "DOT", 
+                           "OR", "SYMBOL", "WS" ];
+
+SQLLexer.ruleNames = [ "Identifier", "Number", "DOUBLE_QUOTE", "SINGLE_QUOTE", 
+                       "L_BRACKET", "R_BRACKET", "StringLiteral", "EscapeSequence", 
+                       "BLOCK_COMMENT_START", "BLOCK_COMMENT_END", "BLOCK_COMMENT", 
+                       "POUND_COMMENT", "COMMA", "DOT", "OR", "SYMBOL", 
+                       "WS" ];
+
+SQLLexer.grammarFileName = "SQL.g4";
+
+
+
+exports.SQLLexer = SQLLexer;
+
 
 
 /***/ })

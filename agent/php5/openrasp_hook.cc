@@ -72,10 +72,8 @@ char *openrasp_real_path(char *filename, int filename_len, zend_bool use_include
     resolved_path = php_resolve_path(filename, filename_len, use_include_path ? PG(include_path) : NULL TSRMLS_CC);
     if (nullptr == resolved_path)
     {
-        const char *p;
-        for (p = filename; isalnum((int)*p) || *p == '+' || *p == '-' || *p == '.'; p++)
-            ;
-        if ((*p == ':') && (p - filename > 1) && (p[1] == '/') && (p[2] == '/'))
+        const char *p = fetch_url_scheme(filename);
+        if (nullptr !=p)
         {
             std::string scheme(filename, p - filename);
             php_stream_wrapper *wrapper;
@@ -232,7 +230,7 @@ void handle_block(TSRMLS_D)
     {
         char *redirect_script = nullptr;
         int redirect_script_len = 0;
-        redirect_script_len = spprintf(&redirect_script, 0, "</script><script>location.href=\"%s?request_id=%s\"</script>", block_url, request_id);
+        redirect_script_len = spprintf(&redirect_script, 0, "</script><script>location.href=\"%s?request_id=%s\"</script>\n", block_url, request_id);
         if (redirect_script)
         {
 #if PHP_MINOR_VERSION > 3

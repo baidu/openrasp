@@ -22,12 +22,13 @@ static void security_check(bool flag, int id, const char *msg TSRMLS_DC);
 
 PHP_MINIT_FUNCTION(openrasp_security_policy)
 {
-    SECURITY_CHECK(PG(allow_url_include) == 0, 4001, _("allow_url_include should be turned off to prevent File Inclusion vulnerability"));
-    SECURITY_CHECK(PG(expose_php) == 0, 4002, _("expose_php should be turned off to prevent PHP Version information disclosure"));
-    SECURITY_CHECK(PG(display_errors) == 0, 4003, _("display_errors should be turned off to prevent printing errors to the screen"));
+    SECURITY_CHECK(PG(allow_url_include) == 0, 4001, _("allow_url_include should be turned off to prevent remote file inclusion vulnerability"));
+    SECURITY_CHECK(PG(expose_php) == 0, 4002, _("expose_php should be turned off to prevent PHP version information disclosure"));
+    SECURITY_CHECK(PG(display_errors) == 0, 4003, _("display_errors should be turned off to insulate your code from probing"));
     if (INI_STR("yaml.decode_php"))
     {
-        SECURITY_CHECK(STRTOBOOL(INI_STR("yaml.decode_php"), strlen(INI_STR("yaml.decode_php"))) == false, 4004, _("yaml.decode_php should be turned off to prevent serializing php objects"));
+        SECURITY_CHECK(STRTOBOOL(INI_STR("yaml.decode_php"), strlen(INI_STR("yaml.decode_php"))) == false, 4004, 
+            _("yaml.decode_php should be turned off to prevent serialized php objects which have the explicit tag \"!php/object\" from being unserialized"));
     }
     return SUCCESS;
 }

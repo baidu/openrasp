@@ -18,7 +18,8 @@
 #include "config.h"
 #endif
 
-extern "C" {
+extern "C"
+{
 #include "php.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
@@ -70,7 +71,19 @@ unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
     {
         if (try_catch.Message().IsEmpty())
         {
-            plugin_info(ZEND_STRL("Check Timeout") TSRMLS_CC);
+            v8::Local<v8::Function> console_log = context->Global()
+                                                      ->Get(context, V8STRING_I("console").ToLocalChecked())
+                                                      .ToLocalChecked()
+                                                      .As<v8::Object>()
+                                                      ->Get(context, V8STRING_I("log").ToLocalChecked())
+                                                      .ToLocalChecked()
+                                                      .As<v8::Function>();
+            v8::Local<v8::Object> message = v8::Object::New(isolate);
+            message->Set(V8STRING_N("message").ToLocalChecked(), V8STRING_N("Javascript plugin execution timeout.").ToLocalChecked());
+            message->Set(V8STRING_N("type").ToLocalChecked(), type);
+            message->Set(V8STRING_N("params").ToLocalChecked(), params);
+            message->Set(V8STRING_N("context").ToLocalChecked(), request_context);
+            bool avoidwarning = console_log->Call(context, console_log, 1, reinterpret_cast<v8::Local<v8::Value> *>(&message)).IsEmpty();
         }
         else
         {
@@ -243,7 +256,6 @@ static v8::StartupData init_js_snapshot(TSRMLS_D)
             .As<v8::Object>()
             ->Set(V8STRING_I("sql_tokenize").ToLocalChecked(), sql_tokenize);
 #endif
-        openrasp_load_plugins(TSRMLS_C);
         for (auto plugin_src : process_globals.plugin_src_list)
         {
             if (exec_script(isolate, context, "(function(){\n" + plugin_src.source + "\n})()", plugin_src.filename, -1).IsEmpty())
@@ -380,6 +392,14 @@ PHP_GSHUTDOWN_FUNCTION(openrasp_v8)
 
 PHP_MINIT_FUNCTION(openrasp_v8)
 {
+    ZEND_INIT_MODULE_GLOBALS(openrasp_v8, PHP_GINIT(openrasp_v8), PHP_GSHUTDOWN(openrasp_v8));
+
+    openrasp_load_plugins(TSRMLS_C);
+    if (process_globals.plugin_src_list.size() <= 0)
+    {
+        return SUCCESS;
+    }
+
     // It can be called multiple times,
     // but intern code initializes v8 only once
     v8::V8::Initialize();
@@ -397,13 +417,13 @@ PHP_MINIT_FUNCTION(openrasp_v8)
     }
 
     process_globals.is_initialized = true;
-    ZEND_INIT_MODULE_GLOBALS(openrasp_v8, PHP_GINIT(openrasp_v8), PHP_GSHUTDOWN(openrasp_v8));
     return SUCCESS;
 }
 
 PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
 {
     ZEND_SHUTDOWN_MODULE_GLOBALS(openrasp_v8, PHP_GSHUTDOWN(openrasp_v8));
+
     if (process_globals.is_initialized)
     {
         // Disposing v8 is permanent, it cannot be reinitialized,

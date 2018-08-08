@@ -290,7 +290,8 @@ var CheckPointRename = function () {
     function CheckPointRename(data) {
         _classCallCheck(this, CheckPointRename);
 
-        this.name = data.name;
+        this.source = data.source;
+        this.dest = data.dest;
     }
 
     _createClass(CheckPointRename, null, [{

@@ -102,7 +102,7 @@ plugin.register('sql', function (params, context) {
 plugin.register('command', function (params, context) {
     checkContext(context);
     plugin.log('command', params);
-    if (params.command[0] === 'pwd') {
+    if (params.command === 'pwd') {
         return {
             action: 'block'
         }
@@ -122,7 +122,7 @@ plugin.register('xxe', function (params, context) {
 plugin.register('ognl', function (params, context) {
     checkContext(context);
     plugin.log('ognl', params);
-    if (params.expression === "@org.apache.commons.io.IOUtils@toString(@java.lang.Runtime@getRuntime().exec('whoami').getInputStream())") {
+    if (params.expression === "@org.apache.commons.io.IOUtils@toString(@java.lang.Runtime@getRuntime().exec(\"whoami\").getInputStream())") {
         return {
             action: 'block'
         }

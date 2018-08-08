@@ -71,6 +71,7 @@ public class OgnlHook extends AbstractClassHook {
      */
     public static void checkOgnlExpression(Object object) {
 
+
         if (object != null) {
             String expression = String.valueOf(object);
             if (expression.length() >= Config.getConfig().getOgnlMinLength()) {

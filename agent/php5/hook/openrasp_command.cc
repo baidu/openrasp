@@ -50,7 +50,7 @@ static void check_command_args_in_gpc(INTERNAL_FUNCTION_PARAMETERS)
             Z_ADDREF_PP(command);
             zval *plugin_message = NULL;
             MAKE_STD_ZVAL(plugin_message);
-            ZVAL_STRING(plugin_message, _("Webshell detected - Command execution backdoor"), 1);
+            ZVAL_STRING(plugin_message, _("WebShell activity - Detected command execution backdoor"), 1);
             openrasp_buildin_php_risk_handle(1, "webshell_command", 100, attack_params, plugin_message TSRMLS_CC);
         }
 }
@@ -253,7 +253,7 @@ void pre_global_assert_webshell_eval(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             Z_ADDREF_PP(assertion);
             zval *plugin_message = NULL;
             MAKE_STD_ZVAL(plugin_message);
-            ZVAL_STRING(plugin_message, _("Webshell detected - China Chopper"), 1);
+            ZVAL_STRING(plugin_message, _("WebShell activity - Detected China Chopper (assert method)"), 1);
             openrasp_buildin_php_risk_handle(1, check_type, 100, attack_params, plugin_message TSRMLS_CC);
         }
     }

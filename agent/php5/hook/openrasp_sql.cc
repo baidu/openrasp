@@ -84,7 +84,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
             if (std::string(conn_entry.username) == pos.first->second) 
             {
                 spprintf(&check_message, 0, 
-                    _("Connecting to a %s instance using the high privileged account: %s - (%s:%d)"), 
+                    _("Database security - Connecting to a %s instance using the high privileged account: %s - (%s:%d)"), 
                     conn_entry.server,
                     conn_entry.username,
                     conn_entry.host,

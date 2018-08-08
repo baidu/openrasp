@@ -40,12 +40,12 @@ public abstract class ConfigurableChecker extends AttackChecker {
         return getStringElement(config, key, "action");
     }
 
-    protected JsonArray getJsonObjectAsArray(JsonObject config, String key, String subKey){
+    protected JsonArray getJsonObjectAsArray(JsonObject config, String key, String subKey) {
         JsonArray result = null;
         try {
             JsonElement value = getElement(config, key, subKey);
             if (value != null) {
-               result = value.getAsJsonArray();
+                result = value.getAsJsonArray();
             }
         } catch (Exception e) {
             logJsonError(e);
@@ -107,8 +107,10 @@ public abstract class ConfigurableChecker extends AttackChecker {
         return DEFAULT_MIN_LENGTH;
     }
 
+
+
     private void logJsonError(Exception e) {
-        JSContext.LOGGER.warn("Parse jason failed because: " + e.getMessage() +
+        JSContext.LOGGER.warn("Parse json failed because: " + e.getMessage() +
                 System.getProperty("line.separator") +
                 "        Please check algorithmConfig in js");
     }

@@ -10,6 +10,19 @@ if (PHP_OPENRASP != "no") {
 		"xxd -i rasp.js >> openrasp_v8_js.h &&" +
 		"xxd -i sql_tokenize.js >> openrasp_v8_js.h"
 	)
+	var oShell = WScript.CreateObject('WScript.Shell');
+	var ret = oShell.Run('cmd /c WHERE git', 0, true);
+	if (ret == 0) {
+		var oExec = oShell.Exec('cmd /c git describe --always');
+		var oStream = oExec.StdOut;
+		var commitId = ""
+		while (!oStream.atEndOfStream)
+		{
+			commitId = commitId + oStream.readAll();
+		}
+		commitId = commitId.replace(/(\r\n|\n|\r)/gm, "");
+		AC_DEFINE('OPENRASP_COMMIT_ID', commitId);
+	}
 	ADD_FLAG("CFLAGS_OPENRASP", "/I " + configure_module_dirname);
 	ADD_FLAG("CFLAGS_OPENRASP", "/EHcs");
 	ADD_FLAG("CFLAGS_OPENRASP", "/MD");

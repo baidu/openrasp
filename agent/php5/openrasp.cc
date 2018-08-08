@@ -82,7 +82,7 @@ PHP_MINIT_FUNCTION(openrasp)
     REGISTER_INI_ENTRIES();
     if (!make_openrasp_root_dir(TSRMLS_C))
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir should be configured correctly in php.ini (not empty, not root path, not relative path and writable), continue without security protection"));
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir is not configured correctly in php.ini (not empty, not root path, not relative path and must be writable), continuing without security protection"));
         return SUCCESS;
     }
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
@@ -145,7 +145,11 @@ PHP_MINFO_FUNCTION(openrasp)
 {
     php_info_print_table_start();
     php_info_print_table_row(2, "Status", is_initialized ? "Protected" : "Unprotected, Initialization Failed");
-    php_info_print_table_row(2, "Version", "1.0");
+#ifdef OPENRASP_COMMIT_ID
+    php_info_print_table_row(2, "Version", OPENRASP_COMMIT_ID);
+#else
+    php_info_print_table_row(2, "Version", "");
+#endif
     php_info_print_table_row(2, "V8 Version", ZEND_TOSTR(V8_MAJOR_VERSION) "." ZEND_TOSTR(V8_MINOR_VERSION));
 #ifdef HAVE_NATIVE_ANTLR4
     php_info_print_table_row(2, "Antlr Version", antlr4::RuntimeMetaData::VERSION.c_str());
@@ -218,16 +222,16 @@ static bool make_openrasp_root_dir(TSRMLS_D)
         std::string locale_path(root_dir + DEFAULT_SLASH + "locale" + DEFAULT_SLASH);
         if (!bindtextdomain(GETTEXT_PACKAGE, locale_path.c_str()))
         {
-            openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to bindtextdomain - %s"), strerror(errno));
+            openrasp_error(E_WARNING, CONFIG_ERROR, _("bindtextdomain() failed: %s"), strerror(errno));
         }
         if (!textdomain(GETTEXT_PACKAGE))
         {
-            openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to textdomain - %s"), strerror(errno));
+            openrasp_error(E_WARNING, CONFIG_ERROR, _("textdomain() failed: %s"), strerror(errno));
         }
     }
     else
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("Unable to set OpenRASP locale to '%s'"), openrasp_ini.locale);
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("Unable to set OpenRASP locale to %s"), openrasp_ini.locale);
     }
 #endif
     return true;

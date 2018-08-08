@@ -52,7 +52,7 @@ int eval_handler(zend_execute_data *execute_data)
         add_assoc_zval(&attack_params, "eval", inc_filename);
         Z_TRY_ADDREF_P(inc_filename);
         zval plugin_message;
-        ZVAL_STRING(&plugin_message, _("China Chopper WebShell"));
+        ZVAL_STRING(&plugin_message, _("WebShell activity - Detected China Chopper webshell (eval method)"));
         openrasp_buildin_php_risk_handle(1, "webshell_eval", 100, &attack_params, &plugin_message);
     }
     return ZEND_USER_OPCODE_DISPATCH;
@@ -64,6 +64,8 @@ int include_handler(zend_execute_data *execute_data)
     ZVAL_NULL(&tmp_inc_filename);
     zend_string *real_path = nullptr;
     inc_filename = zend_get_zval_ptr(opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
+    const char *scheme_end = nullptr;
+    bool send_to_plugin = false;
     if (inc_filename == nullptr)
     {
         goto DISPATCH;
@@ -93,8 +95,9 @@ int include_handler(zend_execute_data *execute_data)
         convert_to_string(&tmp_inc_filename);
         inc_filename = &tmp_inc_filename;
     }
-    if ((strlen(Z_STRVAL_P(inc_filename)) < 4 || (strcmp(Z_STRVAL_P(inc_filename) + Z_STRLEN_P(inc_filename) - 4, ".php") && strcmp(Z_STRVAL_P(inc_filename) + Z_STRLEN_P(inc_filename) - 4, ".inc"))) &&
-        (strstr(Z_STRVAL_P(inc_filename), "://") != nullptr || strstr(Z_STRVAL_P(inc_filename), "../") != nullptr))
+    if (Z_STRVAL_P(inc_filename) && (scheme_end = fetch_url_scheme(Z_STRVAL_P(inc_filename))) != nullptr || 
+    (strlen(Z_STRVAL_P(inc_filename)) < 4 || (strcmp(Z_STRVAL_P(inc_filename) + Z_STRLEN_P(inc_filename) - 4, ".php") && 
+    strcmp(Z_STRVAL_P(inc_filename) + Z_STRLEN_P(inc_filename) - 4, ".inc"))))
     {
         real_path = openrasp_real_path(Z_STRVAL_P(inc_filename), Z_STRLEN_P(inc_filename), true, READING);
     }
@@ -102,15 +105,33 @@ int include_handler(zend_execute_data *execute_data)
     {
         goto DISPATCH;
     }
+    if (scheme_end || strstr(Z_STRVAL_P(inc_filename), "../") != nullptr)
+    {
+        send_to_plugin = true;
+    }
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY &&
         !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
-        goto DISPATCH;
+        send_to_plugin = true;
     }
     document_root = zend_hash_str_find(Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRL("DOCUMENT_ROOT"));
-    if (document_root == nullptr ||
-        Z_TYPE_P(document_root) != IS_STRING ||
-        strncmp(ZSTR_VAL(real_path), Z_STRVAL_P(document_root), Z_STRLEN_P(document_root)) == 0)
+    if (nullptr == document_root)
+    {
+        send_to_plugin = true;
+    }
+    else
+    {
+        assert(Z_TYPE_P(document_root) == IS_STRING);
+        if (strncmp(ZSTR_VAL(real_path), Z_STRVAL_P(document_root), Z_STRLEN_P(document_root)) == 0)
+        {
+            send_to_plugin = false;
+        }
+        else
+        {
+            send_to_plugin = true;
+        }
+    }
+    if (!send_to_plugin)
     {
         goto DISPATCH;
     }

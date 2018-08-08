@@ -25,11 +25,12 @@ extern "C" {
 #include "ext/standard/php_fopen_wrappers.h"    
 }
 
-static std::vector<hook_handler_t> global_hook_handlers;
+static hook_handler_t global_hook_handlers[512];
+static size_t global_hook_handlers_len = 0;
 
 void register_hook_handler(hook_handler_t hook_handler)
 {
-    global_hook_handlers.push_back(hook_handler);
+    global_hook_handlers[global_hook_handlers_len++] = hook_handler;
 }
 
 typedef struct _track_vars_pair_t
@@ -124,10 +125,8 @@ zend_string *openrasp_real_path(char *filename, int length, bool use_include_pat
     resolved_path = php_resolve_path(filename, length, use_include_path ? PG(include_path) : nullptr);
     if (nullptr == resolved_path)
     {
-        const char *p;
-        for (p = filename; isalnum((int)*p) || *p == '+' || *p == '-' || *p == '.'; p++)
-            ;
-        if ((*p == ':') && (p - filename > 1) && (p[1] == '/') && (p[2] == '/'))
+        const char *p = fetch_url_scheme(filename);
+        if (nullptr !=p)
         {
             std::string scheme(filename, p - filename);
             php_stream_wrapper *wrapper;
@@ -214,7 +213,7 @@ void handle_block()
     {
         char *redirect_script = nullptr;
         int redirect_script_len = 0;
-        redirect_script_len = spprintf(&redirect_script, 0, "</script><script>location.href=\"%s?request_id=%s\"</script>", block_url, request_id);
+        redirect_script_len = spprintf(&redirect_script, 0, "</script><script>location.href=\"%s?request_id=%s\"</script>\n", block_url, request_id);
         if (redirect_script)
         {
             php_output_write(redirect_script, redirect_script_len);
@@ -259,10 +258,11 @@ PHP_MINIT_FUNCTION(openrasp_hook)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp_hook, PHP_GINIT(openrasp_hook), PHP_GSHUTDOWN(openrasp_hook));
 
-    for (auto &single_handler : global_hook_handlers)
+    for (size_t i = 0; i < global_hook_handlers_len; i++)
     {
-        single_handler();
+        global_hook_handlers[i](TSRMLS_C);
     }
+
     zend_set_user_opcode_handler(ZEND_INCLUDE_OR_EVAL, include_or_eval_handler);
     return SUCCESS;
 }
