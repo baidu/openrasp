@@ -32,8 +32,8 @@
 #include "utils/digest.h"
 #include <dirent.h>
 #include <algorithm>
-#include <cereal/archives/binary.hpp>
-#include <cereal/types/string.hpp>
+#include "cereal/archives/binary.hpp"
+#include "cereal/types/string.hpp"
 
 extern "C"
 {
