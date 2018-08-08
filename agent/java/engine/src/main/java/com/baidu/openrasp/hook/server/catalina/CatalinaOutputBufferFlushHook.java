@@ -3,11 +3,14 @@ package com.baidu.openrasp.hook.server.catalina;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
+import com.baidu.openrasp.request.HttpServletRequest;
+import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.hook.ServerXss;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -18,51 +21,71 @@ import java.util.*;
 public class CatalinaOutputBufferFlushHook extends AbstractClassHook {
 
     @Override
+    public boolean isClassMatched(String className) {
+        return "org/apache/catalina/connector/OutputBuffer".equals(className);
+    }
+
+    @Override
     public String getType() {
         return "xss";
     }
 
-    /**
-     * (none-javadoc)
-     *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#isClassMatched(String)
-     */
     @Override
-    public boolean isClassMatched(String className) {
-        return "org/apache/tomcat/util/buf/CharChunk".equals(className);
+    protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
+
+        String src = getInvokeStaticSrc(CatalinaOutputBufferFlushHook.class, "getJbossOutputBuffer", "$0", Object.class);
+        insertBefore(ctClass, "close", "()V", src);
+
     }
 
-    @Override
-    protected void hookMethod(CtClass ctClass) throws NotFoundException, CannotCompileException {
-        String src = getInvokeStaticSrc(CatalinaOutputBufferFlushHook.class, "getOutputBuffer", "buff,start,end", char[].class, int.class, int.class);
-        insertBefore(ctClass, "flushBuffer", "()V", src);
-    }
+    public static void getJbossOutputBuffer(Object object) {
+        try {
+            String serverType = getServerType();
+            String content = null;
+            if ("tomcat".equalsIgnoreCase(serverType)) {
 
-
-    public static void getOutputBuffer(char[] buffer, int start, int end) {
-
-        boolean isEnableXssHook = HookHandler.isEnableXssHook();
-        if (isEnableXssHook) {
-            HookHandler.disableXssHook();
-            try {
+                Object charChunk = Reflection.getField(object, "cb");
+                char[] buffer = (char[]) Reflection.getField(charChunk, "buff");
+                int start = (Integer) Reflection.getSuperField(charChunk, "start");
+                int end = (Integer) Reflection.getSuperField(charChunk, "end");
                 if (end > start) {
                     char[] temp = new char[end - start + 1];
                     System.arraycopy(buffer, start, temp, 0, end - start);
-                    byte[] bytes = new String(temp).getBytes();
-                    String content = new String(bytes);
-                    if (!content.contains("X-Protected-By")) {
-                        HashMap<String, Object> params = ServerXss.generateXssParameters(content);
-                        HookHandler.doCheck(CheckParameter.Type.XSS, params);
-
-                    }
+                    content = new String(temp);
                 }
 
-            } catch (Exception e) {
 
-                e.printStackTrace();
+            } else if ("jboss".equalsIgnoreCase(serverType)) {
+                Object byteChunk = Reflection.getField(object, "bb");
+                byte[] buffer = (byte[]) Reflection.getField(byteChunk, "buff");
+                int start = (Integer) Reflection.getField(byteChunk, "start");
+                int end = (Integer) Reflection.getField(byteChunk, "end");
+                if (end > start) {
+                    byte[] temp = new byte[end - start + 1];
+                    System.arraycopy(buffer, start, temp, 0, end - start);
+                    content = new String(temp, "utf-8");
+                }
+
             }
 
+            if (content != null) {
+
+                HashMap<String, Object> params = ServerXss.generateXssParameters(content);
+                HookHandler.doCheck(CheckParameter.Type.XSS, params);
+
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
         }
 
+
+    }
+
+    public static String getServerType() {
+        String serverInfo = (String) Reflection.invokeStaticMethod("org.apache.catalina.util.ServerInfo",
+                "getServerInfo", new Class[]{});
+        return HttpServletRequest.extractType(serverInfo);
     }
 }

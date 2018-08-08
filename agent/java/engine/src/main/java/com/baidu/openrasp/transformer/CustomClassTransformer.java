@@ -22,7 +22,6 @@ import com.baidu.openrasp.hook.dubbo.DubboPreRequestHook;
 import com.baidu.openrasp.hook.dubbo.DubboRequestHook;
 import com.baidu.openrasp.hook.file.*;
 import com.baidu.openrasp.hook.server.catalina.*;
-import com.baidu.openrasp.hook.server.jboss.JbossOutputBufferFlushHook;
 import com.baidu.openrasp.hook.server.jetty.*;
 import com.baidu.openrasp.hook.server.resin.*;
 import com.baidu.openrasp.hook.sql.SQLDriverManagerHook;
@@ -105,7 +104,6 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new JettyOutputBufferFlushHook());
         addHook(new DubboRequestHook());
         addHook(new DubboPreRequestHook());
-        addHook(new JbossOutputBufferFlushHook());
         addHook(new FileUploadHook());
         addHook(new GetFileUploadCharsetHook());
         addHook(new FileRenameHook());

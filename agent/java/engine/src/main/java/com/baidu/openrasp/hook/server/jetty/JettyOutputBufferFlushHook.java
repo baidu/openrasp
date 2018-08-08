@@ -13,10 +13,11 @@ import java.io.IOException;
 import java.util.HashMap;
 
 /**
-　　* @Description: jetty 获取输出buffer的hook点
-　　* @author anyang
-　　* @date 2018/8/7 19:25
-　　*/
+ * 　　* @Description: jetty 获取输出buffer的hook点
+ * 　　* @author anyang
+ * 　　* @date 2018/8/7 19:25
+ *
+ */
 public class JettyOutputBufferFlushHook extends AbstractClassHook {
 
     @Override
@@ -40,21 +41,15 @@ public class JettyOutputBufferFlushHook extends AbstractClassHook {
 
     public static void getJettyOutputBuffer(Object object) {
 
-        boolean isEnableXssHook = HookHandler.isEnableXssHook();
-        if (isEnableXssHook) {
-            HookHandler.disableXssHook();
+        try {
+            Object buffer = Reflection.getSuperField(object, "_buffer");
+            String content = new String(buffer.toString().getBytes(), "utf-8");
+            HashMap<String, Object> params = ServerXss.generateXssParameters(content);
+            HookHandler.doCheck(CheckParameter.Type.XSS, params);
 
-            try {
-                Object buffer = Reflection.getSuperField(object, "_buffer");
-                String content = new String(buffer.toString().getBytes(), "utf-8");
-                HashMap<String, Object> params = ServerXss.generateXssParameters(content);
-                HookHandler.doCheck(CheckParameter.Type.XSS, params);
+        } catch (Exception e) {
 
-            } catch (Exception e) {
-
-                e.printStackTrace();
-            }
-
+            e.printStackTrace();
         }
 
     }
