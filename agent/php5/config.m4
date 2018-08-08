@@ -107,6 +107,22 @@ if test "$PHP_OPENRASP" != "no"; then
     OPENRASP_LIBS="$GETTEXT_LIBS $OPENRASP_LIBS"
   fi
 
+  SEARCH_FOR="/include/curl/easy.h"
+  AC_MSG_CHECKING([for cURL in default path])
+  for i in $SEARCH_PATH ; do
+    if test -r $i/$SEARCH_FOR; then
+      CURL_PATH=$i
+      AC_MSG_RESULT(found in $i)
+    fi
+  done
+  if test -z "$CURL_PATH"; then
+    AC_MSG_RESULT([not found])
+    AC_MSG_ERROR([Please reinstall the cURL distribution])
+  fi
+
+  O_LDFLAGS=$LDFLAGS
+  LDFLAGS="$LDFLAGS -L$CURL_PATH/$PHP_LIBDIR"
+
   if test "$PHP_ANTLR4" != "no"; then
     SEARCH_FOR="include/antlr4-runtime/antlr4-runtime.h"
     if test -r $PHP_ANTLR4/$SEARCH_FOR; then
