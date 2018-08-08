@@ -98,7 +98,7 @@ public class SQLResultSetHook extends AbstractSqlHook {
      */
     @Override
     public String getType() {
-        return "sql_result_set";
+        return "sqlSlowQuery";
     }
 
     /**
