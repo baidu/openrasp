@@ -34,6 +34,8 @@ import java.util.HashMap;
  */
 public abstract class ConfigurableChecker extends AttackChecker {
 
+    private static final int DEFAULT_MIN_LENGTH = 15;
+
     protected String getActionElement(JsonObject config, String key) {
         return getStringElement(config, key, "action");
     }
@@ -92,6 +94,17 @@ public abstract class ConfigurableChecker extends AttackChecker {
             }
         }
         return null;
+    }
+
+    protected int getIntElement(JsonObject config, String key, String subKey) {
+
+        try {
+            JsonElement element = getElement(config, key, subKey);
+            return element != null ? element.getAsInt() : DEFAULT_MIN_LENGTH;
+        } catch (Exception e) {
+            logJsonError(e);
+        }
+        return DEFAULT_MIN_LENGTH;
     }
 
     private void logJsonError(Exception e) {

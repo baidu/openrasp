@@ -21,9 +21,10 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
-import com.baidu.openrasp.tool.JsonStringify;
 import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.StackTrace;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -38,10 +39,15 @@ import java.io.IOException;
  */
 public class SQLStatementHook extends AbstractSqlHook {
 
+    private static final String CONFIG_KEY_CACHE = "cache";
+    private static final String CONFIG_KEY_SQLI = "sqli";
+    private static final String CONFIG_KEY_CAPACITY = "capacity";
+    private static final int DEFAULT_LRU_CACHE_CAPACITY = 100;
+
     /**
-     *sql缓存，保存最近检测无威胁的sql语句，缓存大小可配置
+     * sql缓存，保存最近检测无威胁的sql语句，缓存大小可配置
      */
-    public static LRUCache<String, String> sqlCache = new LRUCache<String, String>(Config.getConfig().getAlgorithmConfig().get("sqli_userinput").getAsJsonObject().get("min_length").getAsInt());
+    public static LRUCache<String, String> sqlCache = new LRUCache<String, String>(getLRUCacheSize());
 
     /**
      * (none-javadoc)
@@ -179,6 +185,31 @@ public class SQLStatementHook extends AbstractSqlHook {
 
             HookHandler.doCheck(CheckParameter.Type.SQL, params);
         }
+    }
+
+    /**
+     * 从js配置获取lru的缓存大小，如果返回为空，那么使用默认值。
+     */
+    public static int getLRUCacheSize() {
+        try {
+            JsonObject config = Config.getConfig().getAlgorithmConfig();
+            if (config != null) {
+                JsonElement jsonElement = config.get(CONFIG_KEY_CACHE);
+                if (jsonElement != null) {
+                    JsonElement jsonSubElement = jsonElement.getAsJsonObject().get(CONFIG_KEY_SQLI);
+                    if (jsonSubElement != null) {
+                        JsonElement value = jsonSubElement.getAsJsonObject().get(CONFIG_KEY_CAPACITY);
+                        if (value != null) {
+                            return value.getAsInt();
+                        }
+
+                    }
+                }
+            }
+        } catch (Exception e) {
+            JSContext.LOGGER.warn("Parse jason failed because: " + e.getMessage());
+        }
+        return DEFAULT_LRU_CACHE_CAPACITY;
     }
 
 }

@@ -1,5 +1,6 @@
-package com.baidu.openrasp.hook;
+package com.baidu.openrasp.hook.file;
 
+import com.baidu.openrasp.hook.AbstractClassHook;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -9,7 +10,7 @@ import java.io.IOException;
 /**
  * Created by anyang on 2018/7/5.
  */
-public class GetFileUploadCharsetHook extends AbstractClassHook{
+public class GetFileUploadCharsetHook extends AbstractClassHook {
 
     public static String charset;
     @Override

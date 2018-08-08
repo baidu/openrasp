@@ -1,6 +1,5 @@
 package com.baidu.openrasp.hook.dubbo;
 
-import com.baidu.openrasp.tool.Reflection;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,8 +19,6 @@ public class DubboRequest extends AbstractDubboRequest {
     @Override
     public Map<String, String[]> getParameterMap() {
 
-        Object ret = Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
-
-        return ret != null ? (Map<String, String[]>) ret : EMPTY_PARAM;
+        return request != null ? (Map<String, String[]>) request : EMPTY_PARAM;
     }
 }

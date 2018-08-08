@@ -51,7 +51,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_VERSION_COMMENT = "version_comment";
     private static final String CONFIG_KEY_FUNCTION_BLACKLIST = "function_blacklist";
     private static final String CONFIG_KEY_UNION_NULL = "union_null";
-    private static int paramLength = Config.getConfig().getAlgorithmConfig().get("cache").getAsJsonObject().get("sqli").getAsJsonObject().get("capacity").getAsInt();
+    private static final String CONFIG_KEY__MIN_LENGTH = "min_length";
 
     private static TokenizeErrorListener tokenizeErrorListener = new TokenizeErrorListener();
 
@@ -69,11 +69,12 @@ public class SqlStatementChecker extends ConfigurableChecker {
             // 1. 简单识别逻辑是否发生改变
             // 2. 识别数据库管理器
             String action = getActionElement(config, CONFIG_KEY_SQLI_USER_INPUT);
+            int paramterLength = getIntElement(config,CONFIG_KEY_SQLI_USER_INPUT,CONFIG_KEY__MIN_LENGTH);
             if (!EventInfo.CHECK_ACTION_IGNORE.equals(action) && action != null && parameterMap != null) {
                 for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
                     String[] v = entry.getValue();
                     String value = v[0];
-                    if (value.length() <= paramLength) {
+                    if (value.length() <= paramterLength) {
                         continue;
                     }
                     if (value.length() == query.length() && value.equals(query)) {

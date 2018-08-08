@@ -187,8 +187,6 @@ public class HookHandler {
 
 
         if (request != null && !enableCurrThreadHook.get()) {
-            System.out.println("222222222222222222");
-            System.out.println(Thread.currentThread().getId());
             enableCurrThreadHook.set(true);
             DubboRequest requestContainer = new DubboRequest(request);
             dubboRequestCache.set(requestContainer);
@@ -211,7 +209,6 @@ public class HookHandler {
      * 请求结束后不可以在进入任何hook点
      */
     public static void onDubboExit() {
-        System.out.println("prerequest+++++++++++++++++++++++");
         enableCurrThreadHook.set(false);
         dubboRequestCache.set(null);
     }

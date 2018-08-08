@@ -22,7 +22,7 @@ public class DubboPreRequestHook extends AbstractClassHook {
 
     @Override
     public boolean isClassMatched(String className) {
-        return "com/alibaba/dubbo/rpc/protocol/ProtocolFilterWrapper".equals(className);
+        return "com/alibaba/dubbo/rpc/filter/GenericFilter".equals(className);
     }
 
     @Override
@@ -34,7 +34,7 @@ public class DubboPreRequestHook extends AbstractClassHook {
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
 
         String src = getInvokeStaticSrc(HookHandler.class, "onDubboExit", "");
-        insertBefore(ctClass, "export", null, src);
+        insertBefore(ctClass, "invoke", null, src);
 
     }
 }

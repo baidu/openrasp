@@ -16,22 +16,20 @@
 
 package com.baidu.openrasp.tool;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * 　　* @Description: prepareStatement hook缓存
+ * 　　* @Description: 实现对sql的LRU缓存
  * 　　* @author anyang
  * 　　* @date 2018/6/20 11:05
  *
  */
 public class LRUCache<K, V> {
 
-    private static final float hashTableLoadFactor = 0.75f;
+    private static final float HASH_TABLE_LOAD_FACTOR = 0.75f;
 
     private LinkedHashMap<K, V> map;
     private int cacheSize;
@@ -44,9 +42,8 @@ public class LRUCache<K, V> {
      */
     public LRUCache(int cacheSize) {
         this.cacheSize = cacheSize;
-        int hashTableCapacity = (int) Math.ceil(cacheSize / hashTableLoadFactor) + 1;
-        map = new LinkedHashMap<K, V>(hashTableCapacity, hashTableLoadFactor, true) {
-            private static final long serialVersionUID = 1;
+        int hashTableCapacity = (int) Math.ceil(cacheSize / HASH_TABLE_LOAD_FACTOR) + 1;
+        map = new LinkedHashMap<K, V>(hashTableCapacity, HASH_TABLE_LOAD_FACTOR, true) {
 
             @Override
             protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
@@ -56,8 +53,7 @@ public class LRUCache<K, V> {
     }
 
     /**
-     * Retrieves an entry from the cache.<br>
-     * The retrieved entry becomes the MRU (most recently used) entry.
+     * get an entry from the cache.
      *
      * @param key the key whose associated value is to be returned.
      * @return the value associated to this key, or null if no value with this key exists in the cache.
@@ -74,12 +70,9 @@ public class LRUCache<K, V> {
     }
 
     /**
-     * Adds an entry to this cache.
-     * The new entry becomes the MRU (most recently used) entry.
-     * If an entry with the specified key already exists in the cache, it is replaced by the new entry.
-     * If the cache is full, the LRU (least recently used) entry is removed from the cache.
+     * Add an entry to this cache.
      *
-     * @param key   the key with which the specified value is to be associated.
+     * @param key the key with which the specified value is to be associated.
      * @param value a value to be associated with the specified key.
      */
     public void put(K key, V value) {
@@ -92,9 +85,9 @@ public class LRUCache<K, V> {
     }
 
     /**
-     * Clears the cache.
+     * Clear the cache.
      */
-    public synchronized void clear() {
+    public void clear() {
 
         try {
             lock.lock();
@@ -105,7 +98,9 @@ public class LRUCache<K, V> {
     }
 
     /**
-     * Returns the existion of  in the cache.
+     * Return the existence of  in the cache.
+     *
+     * @param key the key with which the specified value is to be associated.
      */
     public boolean isContainsKey(K key) {
 
@@ -117,18 +112,4 @@ public class LRUCache<K, V> {
         }
     }
 
-    /**
-     * Returns a <code>Collection</code> that contains a copy of all cache entries.
-     *
-     * @return a <code>Collection</code> with a copy of the cache content.
-     */
-    public Collection<Map.Entry<K, V>> getAll() {
-
-        try {
-            lock.lock();
-            return new ArrayList<Map.Entry<K, V>>(map.entrySet());
-        } finally {
-            lock.unlock();
-        }
-    }
 }

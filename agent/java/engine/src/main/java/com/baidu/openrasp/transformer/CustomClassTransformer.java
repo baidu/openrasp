@@ -20,10 +20,7 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.*;
 import com.baidu.openrasp.hook.dubbo.DubboPreRequestHook;
 import com.baidu.openrasp.hook.dubbo.DubboRequestHook;
-import com.baidu.openrasp.hook.file.DiskFileItemHook;
-import com.baidu.openrasp.hook.file.FileHook;
-import com.baidu.openrasp.hook.file.FileInputStreamHook;
-import com.baidu.openrasp.hook.file.FileOutputStreamHook;
+import com.baidu.openrasp.hook.file.*;
 import com.baidu.openrasp.hook.server.catalina.*;
 import com.baidu.openrasp.hook.server.jboss.JbossOutputBufferFlushHook;
 import com.baidu.openrasp.hook.server.jetty.*;
@@ -46,7 +43,6 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -112,6 +108,8 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new JbossOutputBufferFlushHook());
         addHook(new FileUploadHook());
         addHook(new GetFileUploadCharsetHook());
+        addHook(new FileRenameHook());
+        addHook(new JBossJMXConsoleHook());
     }
 
     private void addHook(AbstractClassHook hook) {

@@ -18,7 +18,7 @@ import java.util.Map;
 public class DubboRequestHook extends AbstractClassHook {
 
     public DubboRequestHook() {
-        couldIgnore=false;
+        couldIgnore = false;
     }
 
     @Override
@@ -39,26 +39,38 @@ public class DubboRequestHook extends AbstractClassHook {
         insertBefore(ctClass, "invoke", null, src);
     }
 
-    public static void getDubboRpcRequestParameters(Object object){
+    public static void getDubboRpcRequestParameters(Object object) {
 
-        System.out.println("request++++++++++++++++");
         try {
 
-            Object[] args=(Object[]) Reflection.invokeMethod(object,"getArguments",new Class[]{});
-            Class<?>[] parameterTypes=(Class<?>[]) Reflection.invokeMethod(object,"getParameterTypes",new Class[]{});
-            Map<String,String[]> map=new HashMap<String, String[]>();
-            if (args.length!=0){
-                for (int i=0;i<args.length;i++){
-                    String[]strings=new String[1];
-                    strings[0]=args[i].toString();
-                    map.put(String.valueOf(i),strings);
+            Object[] args = (Object[]) Reflection.invokeMethod(object, "getArguments", new Class[]{});
+            Class<?>[] parameterTypes = (Class<?>[]) Reflection.invokeMethod(object, "getParameterTypes", new Class[]{});
+            Map<String, String[]> map = new HashMap<String, String[]>(args.length);
+            if (args.length != 0) {
+                for (int i = 0; i < args.length; i++) {
+                    if (parameterTypes[i].isPrimitive() || isWrapClass(parameterTypes[i]) || args[i] instanceof String) {
+                        String[] strings = new String[1];
+                        strings[0] = String.valueOf(args[i]);
+                        map.put(String.valueOf(i), strings);
+                    }
+
                 }
             }
             HookHandler.checkDubboFilterRequest(map);
 
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
+    }
+
+    public static boolean isWrapClass(Class clazz) {
+        try {
+            return ((Class) clazz.getField("TYPE").get(null)).isPrimitive();
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+        return false;
     }
 }

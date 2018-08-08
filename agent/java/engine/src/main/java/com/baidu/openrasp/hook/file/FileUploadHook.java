@@ -1,5 +1,6 @@
-package com.baidu.openrasp.hook;
+package com.baidu.openrasp.hook.file;
 
+import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.tool.Reflection;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -45,7 +46,6 @@ public class FileUploadHook extends AbstractClassHook {
                     String fieldName = Reflection.invokeStringMethod(o, "getFieldName", new Class[]{}, null);
                     String fieldValue = Reflection.invokeStringMethod(o, "getString", new Class[]{}, null);
                     fileUploadCache.put(fieldName, new String[]{fieldValue});
-                    System.out.println(fieldName + "====" + fieldValue);
                 } else {
                     String fileName = Reflection.invokeStringMethod(o, "getName", new Class[]{}, null);
                     String fileContent = Reflection.invokeStringMethod(o, "getString", new Class[]{}, null);
@@ -55,7 +55,6 @@ public class FileUploadHook extends AbstractClassHook {
                         e.printStackTrace();
                     }
                     fileUploadCache.put(fileName, new String[]{fileContent});
-                    System.out.println(fileName + "===" + fileContent);
                 }
             }
         }
