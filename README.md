@@ -34,7 +34,7 @@ We've fully tested OpenRASP on the following application servers for Linux platf
 
 ##### 2. Performance impact on application servers
 
-We ran multiple intense and long-lasting stress tests prior to release. Even in the worst-case scenario (where the hook point got continuously triggered) the server’s performance was only reduced by 5%
+We ran multiple intense and long-lasting stress tests prior to release. Even in the worst-case scenario (where the hook point got continuously triggered) the server’s performance was only reduced by 1~4%
 
 ##### 3. Integration with existing SIEM or SOC
 

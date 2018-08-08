@@ -38,7 +38,8 @@ static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
 		{
 			zval *attack_params = NULL;
             MAKE_STD_ZVAL(attack_params);
-            ZVAL_STRING(attack_params, Z_STRVAL_P(function_name), 1);
+            array_init(attack_params);
+            add_assoc_string(attack_params, "function", Z_STRVAL_P(function_name), 1);
             zval *plugin_message = NULL;
             MAKE_STD_ZVAL(plugin_message);
             char *message_str = NULL;
@@ -128,7 +129,8 @@ void pre_reflectionfunction___construct_callable(OPENRASP_INTERNAL_FUNCTION_PARA
         {
             zval *attack_params = NULL;
             MAKE_STD_ZVAL(attack_params);
-            ZVAL_STRING(attack_params, nsname, 1);
+            array_init(attack_params);
+            add_assoc_string(attack_params, "function", nsname, 1);
             zval *plugin_message = NULL;
             MAKE_STD_ZVAL(plugin_message);
             char *message_str = NULL;

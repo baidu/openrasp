@@ -30,7 +30,8 @@ static void _callable_handler(const char *functionname, uint functionname_len, c
 	if (openrasp_check_callable_black(functionname, functionname_len))
 	{
 		zval attack_params;
-		ZVAL_STRING(&attack_params, functionname);
+		array_init(&attack_params);
+		add_assoc_string(&attack_params, "function", const_cast<char *>(functionname));
 		zval plugin_message;
 		ZVAL_STR(&plugin_message, strpprintf(0, _("Webshell detected: using '%s' function"), functionname));
 		openrasp_buildin_php_risk_handle(1, check_type, 100, &attack_params, &plugin_message);
