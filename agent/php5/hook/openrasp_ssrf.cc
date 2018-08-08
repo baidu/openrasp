@@ -135,7 +135,8 @@ void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *fun
     {
         zval *attack_params = NULL;
         MAKE_STD_ZVAL(attack_params);
-        ZVAL_STRING(attack_params, Z_STRVAL(effective_url), 1);
+        array_init(attack_params);
+        add_assoc_string(attack_params, "url", Z_STRVAL(effective_url), 1);
         zval *plugin_message = NULL;
         MAKE_STD_ZVAL(plugin_message);
         char *message_str = NULL;
