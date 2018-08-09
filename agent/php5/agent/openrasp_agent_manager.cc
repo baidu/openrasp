@@ -101,6 +101,7 @@ OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
 
 bool OpenraspAgentManager::startup()
 {
+	first_process_pid = getpid();
 	if (check_sapi_need_alloc_shm())
 	{
 		_root_dir = std::string(openrasp_ini.root_dir);
@@ -112,7 +113,6 @@ bool OpenraspAgentManager::startup()
 		process_agent_startup();
 		initialized = true;
 	}
-	first_process_pid = getpid();
 	return true;
 }
 
@@ -129,12 +129,7 @@ bool OpenraspAgentManager::shutdown()
 				return true;
 			}
 		}
-		pid_t supervisor_id = static_cast<pid_t>(_agent_ctrl_block->get_supervisor_id());
-		pid_t plugin_agent_id = _agent_ctrl_block->get_plugin_agent_id();
-		pid_t log_agent_id = _agent_ctrl_block->get_log_agent_id();
-		kill(supervisor_id, SIGKILL);
-		kill(plugin_agent_id, SIGKILL);
-		kill(log_agent_id, SIGKILL);
+		process_agent_shutdown();
 		destroy_share_memory();
 		initialized = false;
 	}
@@ -216,6 +211,7 @@ void OpenraspAgentManager::install_signal_handler(__sighandler_t signal_handler)
 
 bool OpenraspAgentManager::process_agent_startup()
 {
+	_agent_ctrl_block->set_master_pid(first_process_pid);
 	pid_t pid = fork();
 	if (pid < 0)
 	{
@@ -242,6 +238,16 @@ bool OpenraspAgentManager::process_agent_startup()
 		_agent_ctrl_block->set_supervisor_id(pid);
 	}
 	return true;
+}
+
+void OpenraspAgentManager::process_agent_shutdown()
+{
+	pid_t supervisor_id = _agent_ctrl_block->get_supervisor_id();
+	pid_t plugin_agent_id = _agent_ctrl_block->get_plugin_agent_id();
+	pid_t log_agent_id = _agent_ctrl_block->get_log_agent_id();
+	kill(plugin_agent_id, SIGKILL);
+	kill(log_agent_id, SIGKILL);
+	kill(supervisor_id, SIGKILL);
 }
 
 std::string OpenraspAgentManager::clear_old_offcial_plugins()
@@ -277,6 +283,7 @@ void OpenraspAgentManager::supervisor_run()
 	sigaction(SIGCHLD, &sa_usr, NULL);
 
 	super_install_signal_handler();
+	TSRMLS_FETCH();
 	while (true)
 	{
 		for (int i = 0; i < supervisor_interval; ++i)
@@ -313,6 +320,12 @@ void OpenraspAgentManager::supervisor_run()
 				}
 			}
 			sleep(1);
+			struct stat sb;
+			if (VCWD_STAT(("/proc/" + std::to_string(_agent_ctrl_block->get_master_pid())).c_str(), &sb) == -1 &&
+				errno == ENOENT)
+			{
+				process_agent_shutdown();
+			}
 		}
 	}
 }
