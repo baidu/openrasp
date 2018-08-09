@@ -138,7 +138,7 @@ var algorithmConfig = {
 
             // java specific
             'jar',
-            'netloc',
+            'netdoc',
 
             // php specific
             'dict',
@@ -215,7 +215,7 @@ var algorithmConfig = {
 
             // java specific
             'jar',
-            'netloc',
+            'netdoc',
 
             // php stream
             'http',
@@ -250,7 +250,7 @@ var algorithmConfig = {
             'dict',
             'gopher',
             'jar',
-            'netloc'
+            'netdoc'
         ]
     },
     // XXE - 使用 file 协议读取内容，可能误报，默认 log
