@@ -356,6 +356,11 @@ var ntfsRegex       = /::\$(DATA|INDEX)$/i
 
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue) {
+    // 空值判断，防止死循环
+    if (! token || token.length == 0) {
+        return this
+    }
+
     var index  = 0;
     var string = this;
 
