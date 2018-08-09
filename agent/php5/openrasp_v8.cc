@@ -399,8 +399,8 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
     // it should generally not be necessary to dispose v8 before exiting a process,
     // so skip this step for module graceful reload
     // v8::V8::Dispose();
-    shutdown_platform();
-    shutdown_snapshot();
+    shutdown_platform(TSRMLS_C);
+    shutdown_snapshot(TSRMLS_C);
 
     return SUCCESS;
 }

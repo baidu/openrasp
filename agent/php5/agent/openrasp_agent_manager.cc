@@ -155,6 +155,7 @@ bool OpenraspAgentManager::destroy_share_memory()
 
 pid_t OpenraspAgentManager::search_master_pid()
 {
+	TSRMLS_FETCH();
 	std::vector<std::string> processes;
 	openrasp_scandir("/proc", processes,
 					 [](const char *filename) {
