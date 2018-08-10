@@ -120,8 +120,8 @@ if test "$PHP_OPENRASP" != "no"; then
     AC_MSG_ERROR([Please reinstall the cURL distribution])
   fi
 
-  O_LDFLAGS=$LDFLAGS
-  LDFLAGS="$LDFLAGS -L$CURL_PATH/$PHP_LIBDIR"
+  PHP_ADD_INCLUDE($CURL_PATH/include)
+  PHP_ADD_LIBRARY_WITH_PATH(curl, $CURL_PATH/$PHP_LIBDIR, OPENRASP_SHARED_LIBADD)
 
   if test "$PHP_ANTLR4" != "no"; then
     SEARCH_FOR="include/antlr4-runtime/antlr4-runtime.h"
