@@ -95,7 +95,7 @@ static void supervisor_sigchld_handler(int signal_no)
 OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
 	: _mm(mm),
 	  _default_slash(1, DEFAULT_SLASH),
-	  _agent_ctrl_block(nullptr)
+	  agent_ctrl_block(nullptr)
 {
 }
 
@@ -123,7 +123,7 @@ bool OpenraspAgentManager::shutdown()
 		if (strcmp(sapi_module.name, "fpm-fcgi") == 0)
 		{
 			pid_t master_pid = search_master_pid();
-			_agent_ctrl_block->set_master_pid(master_pid);
+			agent_ctrl_block->set_master_pid(master_pid);
 			if (master_pid && getpid() != master_pid)
 			{
 				return true;
@@ -139,7 +139,7 @@ bool OpenraspAgentManager::shutdown()
 bool OpenraspAgentManager::create_share_memory()
 {
 	char *shm_block = _mm->create(SHMEM_SEC_CTRL_BLOCK, sizeof(OpenraspCtrlBlock));
-	if (shm_block && (_agent_ctrl_block = reinterpret_cast<OpenraspCtrlBlock *>(shm_block)))
+	if (shm_block && (agent_ctrl_block = reinterpret_cast<OpenraspCtrlBlock *>(shm_block)))
 	{
 		return true;
 	}
@@ -148,7 +148,7 @@ bool OpenraspAgentManager::create_share_memory()
 
 bool OpenraspAgentManager::destroy_share_memory()
 {
-	_agent_ctrl_block = nullptr;
+	agent_ctrl_block = nullptr;
 	this->_mm->destroy(SHMEM_SEC_CTRL_BLOCK);
 	return true;
 }
@@ -212,7 +212,7 @@ void OpenraspAgentManager::install_signal_handler(__sighandler_t signal_handler)
 
 bool OpenraspAgentManager::process_agent_startup()
 {
-	_agent_ctrl_block->set_master_pid(first_process_pid);
+	agent_ctrl_block->set_master_pid(first_process_pid);
 	pid_t pid = fork();
 	if (pid < 0)
 	{
@@ -220,32 +220,21 @@ bool OpenraspAgentManager::process_agent_startup()
 	}
 	else if (pid == 0)
 	{
-		int fd;
-		if (-1 != (fd = open("/dev/null", O_RDONLY)))
-		{
-			close(STDIN_FILENO);
-			close(STDERR_FILENO);
-			close(STDOUT_FILENO);
-			dup2(fd, STDIN_FILENO);
-			dup2(fd, STDERR_FILENO);
-			dup2(fd, STDOUT_FILENO);
-			close(fd);
-		}
 		setsid();
 		supervisor_run();
 	}
 	else
 	{
-		_agent_ctrl_block->set_supervisor_id(pid);
+		agent_ctrl_block->set_supervisor_id(pid);
 	}
 	return true;
 }
 
 void OpenraspAgentManager::process_agent_shutdown()
 {
-	pid_t supervisor_id = _agent_ctrl_block->get_supervisor_id();
-	pid_t plugin_agent_id = _agent_ctrl_block->get_plugin_agent_id();
-	pid_t log_agent_id = _agent_ctrl_block->get_log_agent_id();
+	pid_t supervisor_id = agent_ctrl_block->get_supervisor_id();
+	pid_t plugin_agent_id = agent_ctrl_block->get_plugin_agent_id();
+	pid_t log_agent_id = agent_ctrl_block->get_log_agent_id();
 	kill(plugin_agent_id, SIGKILL);
 	kill(log_agent_id, SIGKILL);
 	kill(supervisor_id, SIGKILL);
@@ -302,7 +291,7 @@ void OpenraspAgentManager::supervisor_run()
 					{
 						plugin_agent_info.is_alive = true;
 						plugin_agent_info.agent_pid = pid;
-						_agent_ctrl_block->set_plugin_agent_id(pid);
+						agent_ctrl_block->set_plugin_agent_id(pid);
 					}
 				}
 				if (!log_agent_info.is_alive)
@@ -316,13 +305,13 @@ void OpenraspAgentManager::supervisor_run()
 					{
 						log_agent_info.is_alive = true;
 						log_agent_info.agent_pid = pid;
-						_agent_ctrl_block->set_log_agent_id(pid);
+						agent_ctrl_block->set_log_agent_id(pid);
 					}
 				}
 			}
 			sleep(1);
 			struct stat sb;
-			if (VCWD_STAT(("/proc/" + std::to_string(_agent_ctrl_block->get_master_pid())).c_str(), &sb) == -1 &&
+			if (VCWD_STAT(("/proc/" + std::to_string(agent_ctrl_block->get_master_pid())).c_str(), &sb) == -1 &&
 				errno == ENOENT)
 			{
 				process_agent_shutdown();
@@ -339,7 +328,7 @@ void OpenraspAgentManager::update_local_offcial_plugin(std::string plugin_abs_pa
 	{
 		out_file << plugin;
 		out_file.close();
-		_agent_ctrl_block->set_plugin_version(version);
+		agent_ctrl_block->set_plugin_version(version);
 	}
 	clear_old_offcial_plugins();
 }
@@ -351,10 +340,14 @@ void OpenraspAgentManager::plugin_agent_run()
 			plugin_agent_info.signal_received = signal_no;
 		});
 	TSRMLS_FETCH();
-	CURL *curl = curl_easy_init();
+	CURL *curl = nullptr;
 	ResponseInfo res_info;
 	while (true)
 	{
+		if (nullptr == curl)
+		{
+			curl = curl_easy_init();
+		}
 		for (int i = 0; i < openrasp_ini.plugin_update_interval; ++i)
 		{
 			sleep(1);
@@ -365,7 +358,7 @@ void OpenraspAgentManager::plugin_agent_run()
 				exit(0);
 			}
 		}
-		std::string url_string = _backend + "/v1/plugin?version=" + std::string(_agent_ctrl_block->get_plugin_version());
+		std::string url_string = _backend + "/v1/plugin?version=" + std::string(agent_ctrl_block->get_plugin_version());
 		perform_curl(curl, url_string, nullptr, res_info);
 		if (CURLE_OK != res_info.res)
 		{
@@ -446,7 +439,7 @@ void OpenraspAgentManager::log_agent_run()
 	std::string buffer;
 	std::string line;
 	ResponseInfo res_info;
-	CURL *curl = curl_easy_init();
+	CURL *curl = nullptr;
 
 	LogDirInfo alarm_dir_info(_root_dir + _default_slash + "logs" + _default_slash + ALARM_LOG_DIR_NAME, "alarm.log.", "/v1/log/attack");
 	LogDirInfo policy_dir_info(_root_dir + _default_slash + "logs" + _default_slash + POLICY_LOG_DIR_NAME, "policy.log.", "/v1/log/policy");
@@ -463,34 +456,50 @@ void OpenraspAgentManager::log_agent_run()
 	}
 	while (true)
 	{
+		if (nullptr == curl)
+		{
+			curl = curl_easy_init();
+		}
 		long now = (long)time(NULL);
 		bool file_rotate = !same_day_in_current_timezone(now, last_post_time, time_offset);
 		for (LogDirInfo *ldi : log_dirs)
 		{
 			std::string active_log_file = ldi->dir_abs_path + _default_slash + ldi->prefix + formatted_date_suffix;
-			if (!ldi->ifs.is_open() && VCWD_ACCESS(active_log_file.c_str(), F_OK) == 0)
+			if (VCWD_ACCESS(active_log_file.c_str(), F_OK) == 0)
 			{
-				ldi->ifs.open(active_log_file);
+				if (!ldi->ifs.is_open())
+				{
+					ldi->ifs.open(active_log_file);
+				}
 				ldi->ifs.seekg(ldi->fpos);
-			}
-			if (ldi->ifs.is_open() && ldi->ifs.good())
-			{
-				std::string url_string = _backend + ldi->backend_url;
-				buffer.push_back('[');
-				while (std::getline(ldi->ifs, line))
+				if (ldi->ifs.good())
 				{
-					buffer.append(line);
-					buffer.push_back(',');
+					std::string url_string = _backend + ldi->backend_url;
+					buffer.push_back('[');
+					int count = 0;
+					while (std::getline(ldi->ifs, line) && count < max_post_logs_account)
+					{
+						buffer.append(line);
+						buffer.push_back(',');
+						++count;
+					}
+					buffer.pop_back();
+					buffer.push_back(']');
+					if (buffer.size() > 1)
+					{
+						if (post_logs_via_curl(buffer, curl, url_string))
+						{
+							ldi->fpos = ldi->ifs.tellg();
+						}
+					}
+					buffer.clear();
 				}
-				buffer.pop_back();
-				buffer.push_back(']');
+				else
+				{
+					ldi->ifs.seekg(0, std::ios_base::end);
+					ldi->fpos = ldi->ifs.tellg();
+				}
 				ldi->ifs.clear();
-				if (buffer.size() > 1)
-				{
-					post_logs_via_curl(buffer, curl, url_string);
-				}
-				buffer.clear();
-				ldi->fpos = ldi->ifs.tellg();
 			}
 			if (file_rotate)
 			{
@@ -539,14 +548,17 @@ void OpenraspAgentManager::log_agent_run()
 	}
 }
 
-void OpenraspAgentManager::post_logs_via_curl(std::string log_arr, CURL *curl, std::string url_string)
+bool OpenraspAgentManager::post_logs_via_curl(std::string log_arr, CURL *curl, std::string url_string)
 {
 	ResponseInfo res_info;
 	perform_curl(curl, url_string, log_arr.c_str(), res_info);
-	if (CURLE_OK != res_info.res)
+	if (CURLE_OK != res_info.res ||
+		res_info.response_code < 200 && res_info.response_code >= 300)
 	{
 		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to post logs to %s."), url_string.c_str());
+		return false;
 	}
+	return true;
 }
 
 } // namespace openrasp

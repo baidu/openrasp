@@ -50,13 +50,13 @@ class OpenraspAgentManager
 
 public:
   OpenraspAgentManager(ShmManager *mm);
-
+  OpenraspCtrlBlock *agent_ctrl_block;
   bool startup();
   bool shutdown();
 
   long get_plugin_update_timestamp()
   {
-    return (!initialized || nullptr == _agent_ctrl_block) ? 0 : _agent_ctrl_block->get_last_update_time();
+    return (!initialized || nullptr == agent_ctrl_block) ? 0 : agent_ctrl_block->get_last_update_time();
   }
 
 private:
@@ -77,7 +77,7 @@ private:
   //for log collect
   void log_agent_run();
   std::string get_formatted_date_suffix(long timestamp);
-  void post_logs_via_curl(std::string log_arr, CURL *curl, std::string url_string);
+  bool post_logs_via_curl(std::string log_arr, CURL *curl, std::string url_string);
 
 private:
   ShmManager *_mm;
@@ -86,8 +86,8 @@ private:
   std::string _backend;
   bool initialized = false;
   std::string _default_slash;
-  OpenraspCtrlBlock *_agent_ctrl_block;
   static const int supervisor_interval = 10;
+  static const int max_post_logs_account = 12;
 };
 
 extern ShmManager sm;
