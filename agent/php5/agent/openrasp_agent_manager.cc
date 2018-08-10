@@ -220,6 +220,17 @@ bool OpenraspAgentManager::process_agent_startup()
 	}
 	else if (pid == 0)
 	{
+		int fd;
+		if (-1 != (fd = open("/dev/null", O_RDONLY)))
+		{
+			close(STDIN_FILENO);
+			close(STDERR_FILENO);
+			close(STDOUT_FILENO);
+			dup2(fd, STDIN_FILENO);
+			dup2(fd, STDERR_FILENO);
+			dup2(fd, STDOUT_FILENO);
+			close(fd);
+		}
 		setsid();
 		supervisor_run();
 	}
