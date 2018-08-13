@@ -1,4 +1,4 @@
-package com.baidu.openrasp.plugin.antlrlistener;
+package com.baidu.openrasp.plugin.antlr;
 
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.Lexer;
