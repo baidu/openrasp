@@ -69,6 +69,7 @@ PHP_INI_ENTRY1("openrasp.log_push_interval", "10", PHP_INI_SYSTEM, OnUpdateOpenr
 PHP_INI_ENTRY1("openrasp.clientip_header", "clientip", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.clientip_header)
 PHP_INI_ENTRY1("openrasp.authentication_id", "4e56cd55aa559823e5dc256e486b2b50", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.authentication_id)
 PHP_INI_ENTRY1("openrasp.log_max_backup", "30", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_max_backup)
+PHP_INI_ENTRY1("openrasp.plugin_update_enable", "1", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.plugin_update_enable)
 PHP_INI_END()
 
 PHP_GINIT_FUNCTION(openrasp)

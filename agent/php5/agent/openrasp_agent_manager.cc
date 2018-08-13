@@ -185,9 +185,11 @@ pid_t OpenraspAgentManager::search_master_pid()
 
 bool OpenraspAgentManager::process_agent_startup()
 {
-	agents.push_back(std::move((std::unique_ptr<BaseAgent>)new PluginAgent()));
-	std::unique_ptr<BaseAgent> log_agent_ptr(new LogAgent());
-	agents.push_back(std::move(log_agent_ptr));
+	if (openrasp_ini.plugin_update_enable)
+	{
+		agents.push_back(std::move((std::unique_ptr<BaseAgent>)new PluginAgent()));
+	}
+	agents.push_back(std::move((std::unique_ptr<BaseAgent>)new LogAgent()));
 	agent_ctrl_block->set_master_pid(first_process_pid);
 	pid_t pid = fork();
 	if (pid < 0)

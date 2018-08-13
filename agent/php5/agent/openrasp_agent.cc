@@ -22,6 +22,7 @@
 #include <algorithm>
 #include "cereal/archives/binary.hpp"
 #include "cereal/types/string.hpp"
+#include <sys/prctl.h>
 extern "C"
 {
 #include "ext/standard/php_smart_str.h"
@@ -33,12 +34,14 @@ extern "C"
 
 namespace openrasp
 {
-	
+
+#define AGENT_SET_PROC_NAME(name) prctl(PR_SET_NAME, (name), 0, 0, 0)
+
 volatile int PluginAgent::signal_received = 0;
 volatile int LogAgent::signal_received = 0;
 
 BaseAgent::BaseAgent(std::string name)
-		: default_slash(1, DEFAULT_SLASH)
+	: default_slash(1, DEFAULT_SLASH)
 {
 	this->name = name;
 	this->is_alive = false;
@@ -53,16 +56,17 @@ void BaseAgent::install_signal_handler(__sighandler_t signal_handler)
 }
 
 PluginAgent::PluginAgent()
-		: BaseAgent(PLUGIN_AGENT_PR_NAME)
+	: BaseAgent(PLUGIN_AGENT_PR_NAME)
 {
 }
 
 void PluginAgent::run()
 {
+	AGENT_SET_PROC_NAME(this->name.c_str());
 	install_signal_handler(
-			[](int signal_no) {
-				PluginAgent::signal_received = signal_no;
-			});
+		[](int signal_no) {
+			PluginAgent::signal_received = signal_no;
+		});
 	TSRMLS_FETCH();
 	CURL *curl = nullptr;
 	ResponseInfo res_info;
@@ -103,7 +107,7 @@ void PluginAgent::run()
 			long status;
 			char *description = nullptr;
 			if ((status = fetch_outmost_long_from_ht(Z_ARRVAL_P(return_value), "status")) &&
-					(description = fetch_outmost_string_from_ht(Z_ARRVAL_P(return_value), "description")))
+				(description = fetch_outmost_string_from_ht(Z_ARRVAL_P(return_value), "description")))
 			{
 				if (0 < status)
 				{
@@ -117,8 +121,8 @@ void PluginAgent::run()
 						char *plugin = nullptr;
 						char *md5 = nullptr;
 						if ((version = fetch_outmost_string_from_ht(data, "version")) &&
-								(plugin = fetch_outmost_string_from_ht(data, "plugin")) &&
-								(md5 = fetch_outmost_string_from_ht(data, "md5")))
+							(plugin = fetch_outmost_string_from_ht(data, "plugin")) &&
+							(md5 = fetch_outmost_string_from_ht(data, "md5")))
 						{
 							std::string cal_md5 = md5sum(static_cast<const void *>(plugin), strlen(plugin));
 							if (!strcmp(cal_md5.c_str(), md5))
@@ -150,8 +154,8 @@ std::string PluginAgent::clear_old_offcial_plugins()
 	std::string plugin_dir = root_dir + "/plugins";
 	std::vector<std::string> offcial_plugins;
 	openrasp_scandir(plugin_dir, offcial_plugins,
-									 [](const char *filename) { return !strncmp(filename, "official-", strlen("official-")) &&
-																										 !strcmp(filename + strlen(filename) - 3, ".js"); });
+					 [](const char *filename) { return !strncmp(filename, "official-", strlen("official-")) &&
+													   !strcmp(filename + strlen(filename) - 3, ".js"); });
 	std::sort(offcial_plugins.rbegin(), offcial_plugins.rend());
 	std::string newest_plugin;
 	for (int i = 0; i < offcial_plugins.size(); ++i)
@@ -183,7 +187,7 @@ void PluginAgent::update_local_offcial_plugin(std::string plugin_abs_path, const
 }
 
 LogAgent::LogAgent()
-		: BaseAgent(LOG_AGENT_PR_NAME)
+	: BaseAgent(LOG_AGENT_PR_NAME)
 {
 }
 
@@ -204,11 +208,12 @@ std::string LogAgent::get_formatted_date_suffix(long timestamp)
 
 void LogAgent::run()
 {
+	AGENT_SET_PROC_NAME(this->name.c_str());
 	TSRMLS_FETCH();
 	install_signal_handler(
-			[](int signal_no) {
-				LogAgent::signal_received = signal_no;
-			});
+		[](int signal_no) {
+			LogAgent::signal_received = signal_no;
+		});
 	std::string root_dir = std::string(openrasp_ini.root_dir);
 	static const std::string position_backup_file = ".LogCollectingPos";
 	long last_post_time = 0;
@@ -290,10 +295,10 @@ void LogAgent::run()
 				std::vector<std::string> files_tobe_deleted;
 				std::string tobe_deleted_date_suffix = get_formatted_date_suffix(now - openrasp_ini.log_max_backup * 24 * 60 * 60);
 				openrasp_scandir(ldi->dir_abs_path, files_tobe_deleted,
-												 [&ldi, &tobe_deleted_date_suffix](const char *filename) {
-													 return !strncmp(filename, ldi->prefix.c_str(), ldi->prefix.size()) &&
-																	std::string(filename) < (ldi->prefix + tobe_deleted_date_suffix);
-												 });
+								 [&ldi, &tobe_deleted_date_suffix](const char *filename) {
+									 return !strncmp(filename, ldi->prefix.c_str(), ldi->prefix.size()) &&
+											std::string(filename) < (ldi->prefix + tobe_deleted_date_suffix);
+								 });
 				for (std::string delete_file : files_tobe_deleted)
 				{
 					VCWD_UNLINK(delete_file.c_str());
@@ -332,7 +337,7 @@ bool LogAgent::post_logs_via_curl(std::string log_arr, CURL *curl, std::string u
 	ResponseInfo res_info;
 	perform_curl(curl, url_string, log_arr.c_str(), res_info);
 	if (CURLE_OK != res_info.res ||
-			res_info.response_code < 200 && res_info.response_code >= 300)
+		res_info.response_code < 200 && res_info.response_code >= 300)
 	{
 		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to post logs to %s."), url_string.c_str());
 		return false;

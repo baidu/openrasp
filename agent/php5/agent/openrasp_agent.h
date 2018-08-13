@@ -20,9 +20,6 @@
 #include "openrasp_agent_manager.h"
 #include "utils/curl_helper.h"
 
-#define PLUGIN_AGENT_PR_NAME "plugin-agent"
-#define LOG_AGENT_PR_NAME "log-agent"
-
 namespace openrasp
 {
 
