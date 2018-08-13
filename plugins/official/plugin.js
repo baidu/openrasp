@@ -628,16 +628,32 @@ if (RASP.get_jsengine() !== 'v8') {
                     }
 
                     // 简单识别用户输入
-                    if (params.query.indexOf(value) == -1) {
+                    var para_index = params.query.indexOf(value);
+                    if (para_index == -1) {
                         continue
                     }
 
-                    // 去掉用户输入再次匹配
-                    var tokens2 = RASP.sql_tokenize(params.query.replaceAll(value, ''), params.server)
-                    if (tokens.length - tokens2.length > 2) {
+                    //检测用户输入产生的token数量
+                    var start = -1 , end = -11;
+                    for(var i=0;i<tokens.length;i++){
+                        if(tokens[i][3] > para_index){
+                            start = i;
+                            break;
+                        }
+                    }
+
+                    for(var i=start;i<tokens.length;i++){
+                        if(tokens[i][3] > para_index + value.length - 1){
+                            end = i;
+                            break;
+                        }
+                    }
+
+                    if(end - start > 2 || end - start < 0){
                         reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
                         return true
                     }
+
                 }
             })
             if (reason !== false) {
@@ -654,7 +670,7 @@ if (RASP.get_jsengine() !== 'v8') {
             var features  = algorithmConfig.sqli_policy.feature
             var func_list = algorithmConfig.sqli_policy.function_blacklist
 
-            var tokens_lc = tokens.map(v => v.toLowerCase())
+            var tokens_lc = tokens.map(function(v){return v[0].toLowerCase()})
 
             for (var i = 1; i < tokens_lc.length; i ++)
             {
