@@ -872,7 +872,7 @@ plugin.register('directory', function (params, context) {
     // 算法2 - 使用至少2个/../，且跳出web目录
     if (algorithmConfig.directory_outsideWebroot.action != 'ignore')
     {
-        if (hasTraversal(path) && realpath.indexOf(appBasePath) == -1)
+        if (is_outside_webroot(appBasePath, realpath, path))
         {
             return {
                 action:     algorithmConfig.directory_outsideWebroot.action,
