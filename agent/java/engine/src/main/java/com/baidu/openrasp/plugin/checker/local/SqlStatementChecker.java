@@ -28,11 +28,13 @@ import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
+import org.antlr.v4.runtime.Token;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 /**
  * Created by tyy on 17-12-20.
@@ -60,7 +62,11 @@ public class SqlStatementChecker extends ConfigurableChecker {
         String query = (String) checkParameter.getParam("query");
 
         String message = null;
-        String[] tokens = TokenGenerator.tokenize(query, tokenizeErrorListener);
+        ArrayList<Token> rawTokens = TokenGenerator.rawTokenize(query, tokenizeErrorListener);
+        String[] tokens = new String[rawTokens.size()];
+        for (int j = 0; j < rawTokens.size(); j++) {
+            tokens[j] = rawTokens.get(j).getText();
+        }
         Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
         try {
             JsonObject config = Config.getConfig().getAlgorithmConfig();
@@ -86,15 +92,29 @@ public class SqlStatementChecker extends ConfigurableChecker {
                             continue;
                         }
                     }
-                    if (!query.contains(value)) {
+
+                    int para_index = query.indexOf(value);
+                    if (para_index < 0) {
                         continue;
                     }
-                    String[] tokens2 = TokenGenerator.tokenize(query.replace(value, ""), tokenizeErrorListener);
-                    if (tokens != null) {
-                        if (tokens.length - tokens2.length > 2) {
-                            message = "SQLi - SQL query structure altered by user input, request parameter name: " + entry.getKey();
+
+                    int start = tokens.length, end = tokens.length;
+                    for(int i=0;i<tokens.length;i++){
+                        if(rawTokens.get(i).getStartIndex() >= para_index){
+                            start = i;
                             break;
                         }
+                    }
+
+                    for(int i=0;i<tokens.length;i++){
+                        if(rawTokens.get(i).getStartIndex() >= para_index + value.length() - 1){
+                            end = i;
+                            break;
+                        }
+                    }
+
+                    if(end - start > 2 || end == start){
+                        message = "SQLi - SQL query structure altered by user input, request parameter name: " + entry.getKey();
                     }
                 }
             }
