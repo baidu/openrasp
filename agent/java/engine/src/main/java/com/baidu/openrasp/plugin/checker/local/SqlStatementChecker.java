@@ -17,10 +17,10 @@
 package com.baidu.openrasp.plugin.checker.local;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.TokenGenerator;
+import com.baidu.openrasp.plugin.antlr.TokenGenerator;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.sql.SQLStatementHook;
-import com.baidu.openrasp.plugin.antlrlistener.TokenizeErrorListener;
+import com.baidu.openrasp.plugin.antlr.TokenizeErrorListener;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.js.JsChecker;
 import com.baidu.openrasp.plugin.info.AttackInfo;
