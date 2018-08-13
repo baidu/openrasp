@@ -21,6 +21,7 @@
 #include <fcntl.h>
 #include <fstream>
 #include <sstream>
+#include <memory>
 
 #include "openrasp.h"
 #include "openrasp_log.h"
@@ -29,18 +30,10 @@
 #include <vector>
 #include <iostream>
 #include "openrasp_ini.h"
-#include "utils/digest.h"
-#include <dirent.h>
-#include <algorithm>
-#include "cereal/archives/binary.hpp"
-#include "cereal/types/string.hpp"
 
 extern "C"
 {
 #include "openrasp_shared_alloc.h"
-#include "ext/standard/php_smart_str.h"
-#include "ext/json/php_json.h"
-#include "ext/date/php_date.h"
 #include "php_streams.h"
 #include "php_main.h"
 }
@@ -51,16 +44,7 @@ namespace openrasp
 ShmManager sm;
 OpenraspAgentManager oam(&sm);
 
-typedef struct agent_info_t
-{
-	const std::string name;
-	bool is_alive;
-	unsigned long agent_pid;
-	volatile int signal_received;
-} agent_info;
-
-static agent_info plugin_agent_info{PLUGIN_AGENT_PR_NAME, false, 0, 0};
-static agent_info log_agent_info{LOG_AGENT_PR_NAME, false, 0, 0};
+std::vector<std::unique_ptr<BaseAgent>> agents;
 
 static void super_signal_handler(int signal_no)
 {
@@ -81,20 +65,19 @@ static void supervisor_sigchld_handler(int signal_no)
 	int status;
 	while ((p = waitpid(-1, &status, WNOHANG)) > 0)
 	{
-		if (p == plugin_agent_info.agent_pid)
+		for (int i = 0; i < agents.size(); ++i)
 		{
-			plugin_agent_info.is_alive = false;
-		}
-		else if (p == log_agent_info.agent_pid)
-		{
-			log_agent_info.is_alive = false;
+			std::unique_ptr<BaseAgent> &agent_ptr = agents[i];
+			if (p == agent_ptr->agent_pid)
+			{
+				agent_ptr->is_alive = false;
+			}
 		}
 	}
 }
 
 OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
 	: _mm(mm),
-	  _default_slash(1, DEFAULT_SLASH),
 	  agent_ctrl_block(nullptr)
 {
 }
@@ -104,8 +87,6 @@ bool OpenraspAgentManager::startup()
 	first_process_pid = getpid();
 	if (check_sapi_need_alloc_shm())
 	{
-		_root_dir = std::string(openrasp_ini.root_dir);
-		_backend = std::string(openrasp_ini.backend);
 		if (!create_share_memory())
 		{
 			return false;
@@ -202,16 +183,11 @@ pid_t OpenraspAgentManager::search_master_pid()
 	return 0;
 }
 
-void OpenraspAgentManager::install_signal_handler(__sighandler_t signal_handler)
-{
-	struct sigaction sa_usr = {0};
-	sa_usr.sa_flags = 0;
-	sa_usr.sa_handler = signal_handler;
-	sigaction(SIGTERM, &sa_usr, NULL);
-}
-
 bool OpenraspAgentManager::process_agent_startup()
 {
+	agents.push_back(std::move((std::unique_ptr<BaseAgent>)new PluginAgent()));
+	std::unique_ptr<BaseAgent> log_agent_ptr(new LogAgent());
+	agents.push_back(std::move(log_agent_ptr));
 	agent_ctrl_block->set_master_pid(first_process_pid);
 	pid_t pid = fork();
 	if (pid < 0)
@@ -251,31 +227,6 @@ void OpenraspAgentManager::process_agent_shutdown()
 	kill(supervisor_id, SIGKILL);
 }
 
-std::string OpenraspAgentManager::clear_old_offcial_plugins()
-{
-	TSRMLS_FETCH();
-	std::string plugin_dir = _root_dir + "/plugins";
-	std::vector<std::string> offcial_plugins;
-	openrasp_scandir(plugin_dir, offcial_plugins,
-					 [](const char *filename) { return !strncmp(filename, "official-", strlen("official-")) &&
-													   !strcmp(filename + strlen(filename) - 3, ".js"); });
-	std::sort(offcial_plugins.rbegin(), offcial_plugins.rend());
-	std::string newest_plugin;
-	for (int i = 0; i < offcial_plugins.size(); ++i)
-	{
-		std::string plugin_abs_path = plugin_dir + _default_slash + offcial_plugins[i];
-		if (0 == i)
-		{
-			newest_plugin = offcial_plugins[i];
-		}
-		else
-		{
-			VCWD_UNLINK(plugin_abs_path.c_str());
-		}
-	}
-	return newest_plugin;
-}
-
 void OpenraspAgentManager::supervisor_run()
 {
 	struct sigaction sa_usr = {0};
@@ -291,32 +242,22 @@ void OpenraspAgentManager::supervisor_run()
 		{
 			if (0 == i)
 			{
-				if (!plugin_agent_info.is_alive)
+				for (int i = 0; i < agents.size(); ++i)
 				{
-					pid_t pid = fork();
-					if (pid == 0)
+					std::unique_ptr<BaseAgent> &agent_ptr = agents[i];
+					if (!agent_ptr->is_alive)
 					{
-						plugin_agent_run();
-					}
-					else if (pid > 0)
-					{
-						plugin_agent_info.is_alive = true;
-						plugin_agent_info.agent_pid = pid;
-						agent_ctrl_block->set_plugin_agent_id(pid);
-					}
-				}
-				if (!log_agent_info.is_alive)
-				{
-					pid_t pid = fork();
-					if (pid == 0)
-					{
-						log_agent_run();
-					}
-					else if (pid > 0)
-					{
-						log_agent_info.is_alive = true;
-						log_agent_info.agent_pid = pid;
-						agent_ctrl_block->set_log_agent_id(pid);
+						pid_t pid = fork();
+						if (pid == 0)
+						{
+							agent_ptr->run();
+						}
+						else if (pid > 0)
+						{
+							agent_ptr->is_alive = true;
+							agent_ptr->agent_pid = pid;
+							agent_ptr->write_pid_to_shm(pid);
+						}
 					}
 				}
 			}
@@ -329,247 +270,6 @@ void OpenraspAgentManager::supervisor_run()
 			}
 		}
 	}
-}
-
-void OpenraspAgentManager::update_local_offcial_plugin(std::string plugin_abs_path, const char *plugin, const char *version)
-{
-	TSRMLS_FETCH();
-	std::ofstream out_file(plugin_abs_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
-	if (out_file.is_open() && out_file.good())
-	{
-		out_file << plugin;
-		out_file.close();
-		agent_ctrl_block->set_plugin_version(version);
-	}
-	clear_old_offcial_plugins();
-}
-
-void OpenraspAgentManager::plugin_agent_run()
-{
-	install_signal_handler(
-		[](int signal_no) {
-			plugin_agent_info.signal_received = signal_no;
-		});
-	TSRMLS_FETCH();
-	CURL *curl = nullptr;
-	ResponseInfo res_info;
-	while (true)
-	{
-		if (nullptr == curl)
-		{
-			curl = curl_easy_init();
-		}
-		for (int i = 0; i < openrasp_ini.plugin_update_interval; ++i)
-		{
-			sleep(1);
-			if (plugin_agent_info.signal_received == SIGTERM)
-			{
-				curl_easy_cleanup(curl);
-				curl = nullptr;
-				exit(0);
-			}
-		}
-		std::string url_string = _backend + "/v1/plugin?version=" + std::string(agent_ctrl_block->get_plugin_version());
-		perform_curl(curl, url_string, nullptr, res_info);
-		if (CURLE_OK != res_info.res)
-		{
-			continue;
-		}
-		zval *return_value = nullptr;
-		MAKE_STD_ZVAL(return_value);
-		php_json_decode(return_value, (char *)res_info.response_string.c_str(), res_info.response_string.size(), 1, 512 TSRMLS_CC);
-		zval **origin_zv;
-		if (Z_TYPE_P(return_value) != IS_ARRAY)
-		{
-			zval_ptr_dtor(&return_value);
-			continue;
-		}
-		if (res_info.response_code >= 200 && res_info.response_code < 300)
-		{
-			long status;
-			char *description = nullptr;
-			if ((status = fetch_outmost_long_from_ht(Z_ARRVAL_P(return_value), "status")) &&
-				(description = fetch_outmost_string_from_ht(Z_ARRVAL_P(return_value), "description")))
-			{
-				if (0 < status)
-				{
-					openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to update offcial plugin, status: %ld."), status);
-				}
-				else if (0 == status)
-				{
-					if (HashTable *data = fetch_outmost_hashtable_from_ht(Z_ARRVAL_P(return_value), "data"))
-					{
-						char *version = nullptr;
-						char *plugin = nullptr;
-						char *md5 = nullptr;
-						if ((version = fetch_outmost_string_from_ht(data, "version")) &&
-							(plugin = fetch_outmost_string_from_ht(data, "plugin")) &&
-							(md5 = fetch_outmost_string_from_ht(data, "md5")))
-						{
-							std::string cal_md5 = md5sum(static_cast<const void *>(plugin), strlen(plugin));
-							if (!strcmp(cal_md5.c_str(), md5))
-							{
-								update_local_offcial_plugin(_root_dir + "/plugins/" + std::string(version) + ".js", plugin, version);
-							}
-						}
-					}
-				}
-			}
-		}
-		else
-		{
-			openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to update offcial plugin, response code: %ld."), res_info.response_code);
-		}
-		zval_ptr_dtor(&return_value);
-	}
-}
-
-std::string OpenraspAgentManager::get_formatted_date_suffix(long timestamp)
-{
-	TSRMLS_FETCH();
-	std::string result;
-	char *tmp_formatted_date_suffix = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), timestamp, 1 TSRMLS_CC);
-	result = std::string(tmp_formatted_date_suffix);
-	efree(tmp_formatted_date_suffix);
-	return result;
-}
-
-void OpenraspAgentManager::log_agent_run()
-{
-	TSRMLS_FETCH();
-	install_signal_handler(
-		[](int signal_no) {
-			log_agent_info.signal_received = signal_no;
-		});
-
-	static const std::string position_backup_file = ".LogCollectingPos";
-	long last_post_time = 0;
-	long time_offset = fetch_time_offset(TSRMLS_C);
-	std::string formatted_date_suffix = get_formatted_date_suffix((long)time(NULL));
-
-	std::string buffer;
-	std::string line;
-	ResponseInfo res_info;
-	CURL *curl = nullptr;
-
-	LogDirInfo alarm_dir_info(_root_dir + _default_slash + "logs" + _default_slash + ALARM_LOG_DIR_NAME, "alarm.log.", "/v1/log/attack");
-	LogDirInfo policy_dir_info(_root_dir + _default_slash + "logs" + _default_slash + POLICY_LOG_DIR_NAME, "policy.log.", "/v1/log/policy");
-	std::vector<LogDirInfo *> log_dirs{&alarm_dir_info, &policy_dir_info};
-	try
-	{
-		std::ifstream is(_root_dir + _default_slash + "conf" + _default_slash + position_backup_file);
-		cereal::BinaryInputArchive archive(is);
-		archive(formatted_date_suffix, alarm_dir_info.fpos, policy_dir_info.fpos);
-	}
-	catch (std::exception &e)
-	{
-		//first startup throw excetion
-	}
-	while (true)
-	{
-		if (nullptr == curl)
-		{
-			curl = curl_easy_init();
-		}
-		long now = (long)time(NULL);
-		bool file_rotate = !same_day_in_current_timezone(now, last_post_time, time_offset);
-		for (LogDirInfo *ldi : log_dirs)
-		{
-			std::string active_log_file = ldi->dir_abs_path + _default_slash + ldi->prefix + formatted_date_suffix;
-			if (VCWD_ACCESS(active_log_file.c_str(), F_OK) == 0)
-			{
-				if (!ldi->ifs.is_open())
-				{
-					ldi->ifs.open(active_log_file);
-				}
-				ldi->ifs.seekg(ldi->fpos);
-				if (ldi->ifs.good())
-				{
-					std::string url_string = _backend + ldi->backend_url;
-					buffer.push_back('[');
-					int count = 0;
-					while (std::getline(ldi->ifs, line) && count < max_post_logs_account)
-					{
-						buffer.append(line);
-						buffer.push_back(',');
-						++count;
-					}
-					buffer.pop_back();
-					buffer.push_back(']');
-					if (buffer.size() > 1)
-					{
-						if (post_logs_via_curl(buffer, curl, url_string))
-						{
-							ldi->fpos = ldi->ifs.tellg();
-						}
-					}
-					buffer.clear();
-				}
-				else
-				{
-					ldi->ifs.seekg(0, std::ios_base::end);
-					ldi->fpos = ldi->ifs.tellg();
-				}
-				ldi->ifs.clear();
-			}
-			if (file_rotate)
-			{
-				if (ldi->ifs.is_open())
-				{
-					ldi->ifs.close();
-					ldi->ifs.clear();
-				}
-				std::vector<std::string> files_tobe_deleted;
-				std::string tobe_deleted_date_suffix = get_formatted_date_suffix(now - openrasp_ini.log_max_backup * 24 * 60 * 60);
-				openrasp_scandir(ldi->dir_abs_path, files_tobe_deleted,
-								 [&ldi, &tobe_deleted_date_suffix](const char *filename) {
-									 return !strncmp(filename, ldi->prefix.c_str(), ldi->prefix.size()) &&
-											std::string(filename) < (ldi->prefix + tobe_deleted_date_suffix);
-								 });
-				for (std::string delete_file : files_tobe_deleted)
-				{
-					VCWD_UNLINK(delete_file.c_str());
-				}
-			}
-		}
-		if (file_rotate)
-		{
-			formatted_date_suffix = get_formatted_date_suffix((long)time(NULL));
-		}
-		last_post_time = now;
-		try
-		{
-			std::ofstream os(_root_dir + _default_slash + "conf" + _default_slash + position_backup_file);
-			cereal::BinaryOutputArchive archive(os);
-			archive(formatted_date_suffix, alarm_dir_info.fpos, policy_dir_info.fpos);
-		}
-		catch (std::exception &e)
-		{
-		}
-		for (int i = 0; i < openrasp_ini.log_push_interval; ++i)
-		{
-			sleep(1);
-			if (log_agent_info.signal_received == SIGTERM)
-			{
-				curl_easy_cleanup(curl);
-				curl = nullptr;
-				exit(0);
-			}
-		}
-	}
-}
-
-bool OpenraspAgentManager::post_logs_via_curl(std::string log_arr, CURL *curl, std::string url_string)
-{
-	ResponseInfo res_info;
-	perform_curl(curl, url_string, log_arr.c_str(), res_info);
-	if (CURLE_OK != res_info.res ||
-		res_info.response_code < 200 && res_info.response_code >= 300)
-	{
-		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to post logs to %s."), url_string.c_str());
-		return false;
-	}
-	return true;
 }
 
 } // namespace openrasp

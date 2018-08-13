@@ -19,7 +19,8 @@
 
 #include "mm/shm_manager.h"
 #include "openrasp_ctrl_block.h"
-#include "utils/curl_helper.h"
+#include "openrasp_agent.h"
+#include <fstream>
 
 #define PLUGIN_AGENT_PR_NAME "plugin-agent"
 #define LOG_AGENT_PR_NAME "log-agent"
@@ -28,6 +29,9 @@ namespace openrasp
 {
 
 class ShmManager;
+class BaseAgent;
+class PluginAgent;
+class LogAgent;
 class OpenraspCtrlBlock;
 
 class LogDirInfo
@@ -62,30 +66,15 @@ public:
 private:
   bool create_share_memory();
   bool destroy_share_memory();
-
   void supervisor_run();
   pid_t search_master_pid();
   bool process_agent_startup();
   void process_agent_shutdown();
-  void install_signal_handler(__sighandler_t signal_handler);
-
-  //for plugin update
-  void plugin_agent_run();
-  std::string clear_old_offcial_plugins();
-  void update_local_offcial_plugin(std::string plugin_abs_path, const char *plugin, const char *version);
-
-  //for log collect
-  void log_agent_run();
-  std::string get_formatted_date_suffix(long timestamp);
-  bool post_logs_via_curl(std::string log_arr, CURL *curl, std::string url_string);
 
 private:
   ShmManager *_mm;
   pid_t first_process_pid;
-  std::string _root_dir;
-  std::string _backend;
   bool initialized = false;
-  std::string _default_slash;
   static const int supervisor_interval = 10;
   static const int max_post_logs_account = 12;
 };

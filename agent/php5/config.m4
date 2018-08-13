@@ -503,6 +503,7 @@ int main() {
     openrasp_security_policy.cc \
     openrasp_ini.cc \
     agent/openrasp_ctrl_block.cc \
+    agent/openrasp_agent.cc \
     agent/openrasp_agent_manager.cc \
     agent/utils/digest.cc \
     agent/utils/curl_helper.cc \
