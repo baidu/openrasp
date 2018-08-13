@@ -566,7 +566,7 @@ if (RASP.get_jsengine() !== 'v8') {
         }
 
         var reason     = false
-        var min_length = algorithmConfig.sqli_userinput.minlength
+        var min_length = algorithmConfig.sqli_userinput.min_length
         var parameters = context.parameter || {}
         var tokens     = RASP.sql_tokenize(params.query, params.server)
 
