@@ -618,22 +618,24 @@ if (RASP.get_jsengine() !== 'v8') {
                     }
 
                     //检测用户输入产生的token数量
-                    var start = -1 , end = -11;
+                    var start = tokens.length , end = tokens.length;
                     for(var i=0;i<tokens.length;i++){
-                        if(tokens[i][3] > para_index){
+                        if(tokens[i][3] >= para_index){
                             start = i;
                             break;
                         }
                     }
 
                     for(var i=start;i<tokens.length;i++){
-                        if(tokens[i][3] > para_index + value.length - 1){
+                        if(tokens[i][3] >= para_index + value.length - 1){
                             end = i;
                             break;
                         }
                     }
 
-                    if(end - start > 2 || end - start < 0){
+                    
+
+                    if(end - start > 2 || end == start){
                         reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
                         return true
                     }
