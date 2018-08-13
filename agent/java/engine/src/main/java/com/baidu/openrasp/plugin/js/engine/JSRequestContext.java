@@ -172,44 +172,4 @@ public class JSRequestContext extends ScriptableObject {
         return server;
     }
 
-    public Object jsGet_session() {
-        if (!(javaContext instanceof HttpServletRequest)) {
-            return Context.getUndefinedValue();
-        }
-        Scriptable session = cx.newObject(scope);
-        Object getter = new BaseFunction() {
-            @Override
-            public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-                               Object[] args) {
-                if (args.length < 1 || !(args[0] instanceof String)) {
-                    throw Context.reportRuntimeError("Error: Invalid Arguments");
-                }
-                return ((HttpServletRequest) javaContext).getSessionAttribute((String) args[0]).toString();
-            }
-
-            @Override
-            public Object getDefaultValue(Class<?> hint) {
-                return "[Function: getSession]";
-            }
-        };
-        Object setter = new BaseFunction() {
-            @Override
-            public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-                               Object[] args) {
-                if (args.length < 2 || !(args[0] instanceof String) || !(args[1] instanceof String)) {
-                    throw Context.reportRuntimeError("Error: Invalid Arguments");
-                }
-                ((HttpServletRequest) javaContext).setSessionAttribute((String) args[0], (String) args[1]);
-                return null;
-            }
-
-            @Override
-            public Object getDefaultValue(Class<?> hint) {
-                return "[Function: setSession]";
-            }
-        };
-        ScriptableObject.defineProperty(session, "getSession", getter, ScriptableObject.READONLY);
-        ScriptableObject.defineProperty(session, "setSession", setter, ScriptableObject.READONLY);
-        return session;
-    }
 }

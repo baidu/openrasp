@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook;
+package com.baidu.openrasp.hook.server.jetty;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.plugin.checker.CheckParameter;
+import com.baidu.openrasp.hook.server.ServerStartupHook;
+import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -25,36 +27,28 @@ import javassist.NotFoundException;
 import java.io.IOException;
 
 /**
- * Created by tyy on 8/9/17.
- * 用于hook tomcat启动函数
+ * Created by tyy on 18-8-10.
+ *
+ * jetty 启动 hook 点
  */
-public class TomcatStartupHook extends AbstractClassHook {
-
+public class JettyStartupHook extends ServerStartupHook {
     @Override
     public boolean isClassMatched(String className) {
-        return "org/apache/catalina/startup/Catalina".equals(className);
+        return "org/eclipse/jetty/server/Server".equals(className);
     }
 
-    @Override
-    public String getType() {
-        return "startup";
-    }
-
-    /**
-     * (none-javadoc)
-     *
-     * @see com.baidu.openrasp.hook.AbstractClassHook#hookMethod(CtClass)
-     */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(TomcatStartupHook.class, "checkTomcatStartup", "");
-        insertBefore(ctClass, "start", null, src);
+        String src = getInvokeStaticSrc(JettyStartupHook.class, "handleJettyStartup", "$0");
+        insertAfter(ctClass, "doStart", null, src, true);
     }
 
-    /**
-     * tomcat启动时检测安全规范
-     */
-    public static void checkTomcatStartup() {
-        HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_TOMCAT_START, CheckParameter.EMPTY_MAP);
+    public static void handleJettyStartup(Object server) {
+        try {
+            ApplicationModel.init("jetty",
+                    Reflection.invokeStringMethod(server, "getVersion", new Class[]{}));
+        } catch (Exception e) {
+            HookHandler.LOGGER.warn("handle resin startup failed", e);
+        }
     }
 }

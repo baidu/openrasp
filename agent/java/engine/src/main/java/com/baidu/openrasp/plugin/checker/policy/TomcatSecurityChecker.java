@@ -21,6 +21,7 @@ import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo.Type;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -55,17 +56,13 @@ public class TomcatSecurityChecker extends PolicyChecker {
         String tomcatBaseDir = System.getProperty("catalina.base");
         List<EventInfo> infos = new LinkedList<EventInfo>();
         try {
-            String serverType = SecurityPolicyInfo.getCatalinaServerType();
-            if (tomcatBaseDir != null && serverType != null) {
+            if (tomcatBaseDir != null) {
                 checkStartUser(infos);
-                if (serverType.equalsIgnoreCase("tomcat")) {
-                    checkHttpOnlyIsOpen(tomcatBaseDir, infos);
-                    checkManagerPassword(tomcatBaseDir, infos);
-                    checkDirectoryListing(tomcatBaseDir, infos);
-                    checkDefaultApp(tomcatBaseDir, infos);
-
-                    System.out.println("[OpenRASP] Tomcat security baseline - inspection completed");
-                }
+                checkHttpOnlyIsOpen(tomcatBaseDir, infos);
+                checkManagerPassword(tomcatBaseDir, infos);
+                checkDirectoryListing(tomcatBaseDir, infos);
+                checkDefaultApp(tomcatBaseDir, infos);
+                System.out.println("[OpenRASP] Tomcat security baseline - inspection completed");
             } else {
                 LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
                         "can not find tomcat base directory"));
@@ -93,7 +90,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
             String httpOnly = contextElement.getAttribute(HTTP_ONLY_ATTRIBUTE_NAME);
 
             boolean isHttpOnly = true;
-            String serverVersion = SecurityPolicyInfo.getCatalinaServerVersion();
+            String serverVersion = ApplicationModel.getVersion();
             if (httpOnly != null && httpOnly.equals("false")) {
                 isHttpOnly = false;
             } else if (!StringUtils.isEmpty(serverVersion) && serverVersion.charAt(0) < '7' && httpOnly == null) {

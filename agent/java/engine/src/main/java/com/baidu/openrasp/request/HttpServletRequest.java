@@ -16,7 +16,9 @@
 
 package com.baidu.openrasp.request;
 
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -218,29 +220,7 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Map<String, String> getServerContext() {
-        Object servletContext = getServletContextObject();
-        String serverInfo = Reflection.invokeStringMethod(servletContext, "getServerInfo", EMPTY_CLASS);
-
-        Map<String, String> ret = new HashMap<String, String>();
-        // TODO more reliable
-        ret.put("server", extractType(serverInfo));
-        ret.put("version", extractNumber(serverInfo));
-        ret.put("os", getOs(System.getProperty("os.name")));
-        ret.put("language", "java");
-        return ret;
-    }
-
-    public static String getOs(String os) {
-        if (os == null) {
-            return null;
-        }
-        os = os.toLowerCase();
-        if (os.contains("linux")) return "Linux";
-        if (os.contains("windows")) return "Windows";
-        if (os.contains("mac")) return "Mac";
-        if (os.contains("sunos")) return "SunOS";
-        if (os.contains("freebsd")) return "FreeBSD";
-        return os;
+        return ApplicationModel.getApplicationInfo();
     }
 
     /**
@@ -261,42 +241,6 @@ public final class HttpServletRequest extends AbstractRequest {
     }
 
     /**
-     * 获取服务器版本号
-     *
-     * @param serverInfo 服务器信息
-     * @return 服务器版本号
-     */
-    public static String extractNumber(String serverInfo) {
-        if (serverInfo == null) {
-            return null;
-        }
-        Matcher m = PATTERN.matcher(serverInfo);
-        return m.find() ? m.group(0) : "";
-    }
-
-    /**
-     * 增加session条目
-     *
-     * @param key   键
-     * @param value 值
-     */
-    public void setSessionAttribute(String key, String value) {
-        Object session = getSessionObject();
-        Reflection.invokeMethod(session, "setAttribute", new Class[]{String.class, Object.class}, key, value);
-    }
-
-    /**
-     * 获取指定键对应session
-     *
-     * @param key 键
-     */
-    public Object getSessionAttribute(String key) {
-        Object session = getSessionObject();
-        Object value = Reflection.invokeMethod(session, "getAttribute", new Class[]{String.class}, key);
-        return value;
-    }
-
-    /**
      * (none-javadoc)
      *
      * @see AbstractRequest#getAppBasePath()
@@ -304,8 +248,7 @@ public final class HttpServletRequest extends AbstractRequest {
     @Override
     public String getAppBasePath() {
         try {
-            Object servletContext = getServletContextObject();
-            Object realPath = Reflection.invokeMethod(servletContext, "getRealPath", new Class[]{String.class}, "/");
+            Object realPath = Reflection.invokeMethod(request, "getRealPath", new Class[]{String.class}, "/");
             if (realPath instanceof String) {
                 String separator = System.getProperty("file.separator");
                 String rp = (String) realPath;
@@ -323,23 +266,4 @@ public final class HttpServletRequest extends AbstractRequest {
         }
     }
 
-    //--------------------------------私有方法-------------------------------------
-
-    /**
-     * 反射获取session object
-     *
-     * @return
-     */
-    private Object getSessionObject() {
-        return Reflection.invokeMethod(request, "getSession", new Class[]{boolean.class}, true);
-    }
-
-    /**
-     * 反射获取servletContext object
-     *
-     * @return
-     */
-    private Object getServletContextObject() {
-        return Reflection.invokeMethod(getSessionObject(), "getServletContext", EMPTY_CLASS);
-    }
 }

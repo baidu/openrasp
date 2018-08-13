@@ -91,6 +91,8 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new ResinHttpInputHook());
         addHook(new SQLPreparedStatementHook());
         addHook(new FileRenameHook());
+        addHook(new ResinStartupHook());
+        addHook(new JettyStartupHook());
     }
 
     private void addHook(AbstractClassHook hook) {

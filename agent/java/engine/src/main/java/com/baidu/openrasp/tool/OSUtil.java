@@ -63,6 +63,20 @@ public class OSUtil {
         return ipList;
     }
 
+    public static String getOs() {
+        String os = System.getProperty("os.name");
+        if (os == null) {
+            return null;
+        }
+        os = os.toLowerCase();
+        if (os.contains("linux")) return "Linux";
+        if (os.contains("windows")) return "Windows";
+        if (os.contains("mac")) return "Mac";
+        if (os.contains("sunos")) return "SunOS";
+        if (os.contains("freebsd")) return "FreeBSD";
+        return os;
+    }
+
     public static boolean isWindows() {
         return System.getProperty("os.name") != null && System.getProperty("os.name").toLowerCase().contains("windows");
     }
@@ -71,7 +85,7 @@ public class OSUtil {
         return System.getProperty("os.name") != null && System.getProperty("os.name").toLowerCase().contains("linux");
     }
 
-    public static boolean isMacOS(){
+    public static boolean isMacOS() {
         return System.getProperty("os.name") != null && System.getProperty("os.name").toLowerCase().contains("mac os x");
     }
 
