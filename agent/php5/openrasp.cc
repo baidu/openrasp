@@ -32,7 +32,6 @@ extern "C"
 #include "openrasp_hook.h"
 #include "openrasp_inject.h"
 #include "openrasp_security_policy.h"
-#include "openrasp_fswatch.h"
 #include <new>
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"
