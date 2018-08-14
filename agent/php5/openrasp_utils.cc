@@ -196,7 +196,7 @@ long fetch_time_offset(TSRMLS_D)
 {
     struct timeval tp = {0};
     timelib_time_offset *offset;
-    offset = timelib_get_time_zone_info(tp.tv_sec, get_timezone_info());
+    offset = timelib_get_time_zone_info(tp.tv_sec, get_timezone_info(TSRMLS_C));
     long tz_offset = offset->offset;
     timelib_time_offset_dtor(offset);
     return tz_offset;
