@@ -569,9 +569,8 @@ if (RASP.get_jsengine() !== 'v8') {
         var min_length = algorithmConfig.sqli_userinput.min_length
         var parameters = context.parameter || {}
         var raw_tokens     = RASP.sql_tokenize(params.query, params.server)
-        var tokens = raw_tokens.map(function(x) { return x.text; });
 
-        // console.log(tokens)
+        //console.log(raw_tokens)
 
         // 算法1: 匹配用户输入
         // 1. 简单识别逻辑是否发生改变
@@ -620,7 +619,7 @@ if (RASP.get_jsengine() !== 'v8') {
 
                     //检测用户输入产生的token数量
                     var start = raw_tokens.length , end = raw_tokens.length;
-                    for(var i=0;i<tokraw_tokensens.length;i++){
+                    for(var i=0;i<raw_tokens.length;i++){
                         if(raw_tokens[i].stop >= para_index){
                             start = i;
                             break;
@@ -654,7 +653,7 @@ if (RASP.get_jsengine() !== 'v8') {
             var features  = algorithmConfig.sqli_policy.feature
             var func_list = algorithmConfig.sqli_policy.function_blacklist
 
-            var tokens_lc = tokens.map(function(v){return v[0].toLowerCase()})
+            var tokens_lc = raw_tokens.map(function(v){return v.text.toLowerCase()})
 
             for (var i = 1; i < tokens_lc.length; i ++)
             {
