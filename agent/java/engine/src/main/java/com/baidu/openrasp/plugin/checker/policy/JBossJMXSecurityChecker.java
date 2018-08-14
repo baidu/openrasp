@@ -1,7 +1,7 @@
 package com.baidu.openrasp.plugin.checker.policy;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.hook.JBossJMXConsoleHook;
+import com.baidu.openrasp.hook.server.jboss.JBossStartupHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
@@ -51,7 +51,7 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
 
         String jbossBaseDir = System.getProperty("jboss.home.dir");
         List<EventInfo> infos = new LinkedList<EventInfo>();
-        String serverVersion = JBossJMXConsoleHook.serverVersion;
+        String serverVersion = JBossStartupHook.serverVersion;
         if (serverVersion != null) {
             String jbossWebXmlPath = "deploy" + File.separator + "jmx-console.war" + File.separator + "WEB-INF" + File.separator + "jboss-web.xml";
             String webXmlPath = "deploy" + File.separator + "jmx-console.war" + File.separator + "WEB-INF" + File.separator + "web.xml";
