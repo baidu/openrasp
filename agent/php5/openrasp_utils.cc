@@ -192,14 +192,12 @@ const char *fetch_url_scheme(const char *filename)
     return nullptr;
 }
 
-long fetch_time_offset(TSRMLS_D)
+long fetch_time_offset()
 {
-    struct timeval tp = {0};
-    timelib_time_offset *offset;
-    offset = timelib_get_time_zone_info(tp.tv_sec, get_timezone_info(TSRMLS_C));
-    long tz_offset = offset->offset;
-    timelib_time_offset_dtor(offset);
-    return tz_offset;
+    time_t t = time(NULL);
+    struct tm lt = {0};
+    localtime_r(&t, &lt);
+    return lt.tm_gmtoff;
 }
 
 void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter)
@@ -227,4 +225,16 @@ bool same_day_in_current_timezone(long src, long target, long offset)
 {
     long day = 24 * 60 * 60;
     return ((src + offset) / day == (target + offset) / day);
+}
+
+char *openrasp_format_date(char *format, int format_len, time_t ts)
+{
+    char buffer[128];
+    struct tm *tm_info;
+
+    time(&ts);
+    tm_info = localtime(&ts);
+
+    strftime(buffer, 64, format, tm_info);
+    return estrdup(buffer);
 }

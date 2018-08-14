@@ -197,7 +197,7 @@ std::string LogAgent::get_formatted_date_suffix(long timestamp)
 {
 	TSRMLS_FETCH();
 	std::string result;
-	char *tmp_formatted_date_suffix = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), timestamp, 1 TSRMLS_CC);
+	char *tmp_formatted_date_suffix = openrasp_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), timestamp);
 	result = std::string(tmp_formatted_date_suffix);
 	efree(tmp_formatted_date_suffix);
 	return result;
@@ -214,7 +214,7 @@ void LogAgent::run()
 	std::string root_dir = std::string(openrasp_ini.root_dir);
 	static const std::string position_backup_file = ".LogCollectingPos";
 	long last_post_time = 0;
-	long time_offset = fetch_time_offset(TSRMLS_C);
+	long time_offset = fetch_time_offset();
 	std::string formatted_date_suffix = get_formatted_date_suffix((long)time(NULL));
 
 	std::string buffer;
