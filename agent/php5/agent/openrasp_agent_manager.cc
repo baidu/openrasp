@@ -229,6 +229,7 @@ void OpenraspAgentManager::process_agent_shutdown()
 
 void OpenraspAgentManager::supervisor_run()
 {
+	AGENT_SET_PROC_NAME("supervisor-agent");
 	struct sigaction sa_usr = {0};
 	sa_usr.sa_flags = 0;
 	sa_usr.sa_handler = supervisor_sigchld_handler;

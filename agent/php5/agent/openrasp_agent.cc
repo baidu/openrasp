@@ -22,7 +22,6 @@
 #include <algorithm>
 #include "cereal/archives/binary.hpp"
 #include "cereal/types/string.hpp"
-#include <sys/prctl.h>
 extern "C"
 {
 #include "ext/standard/php_smart_str.h"
@@ -34,8 +33,6 @@ extern "C"
 
 namespace openrasp
 {
-
-#define AGENT_SET_PROC_NAME(name) prctl(PR_SET_NAME, (name), 0, 0, 0)
 
 volatile int PluginAgent::signal_received = 0;
 volatile int LogAgent::signal_received = 0;

@@ -22,7 +22,9 @@
 #include "openrasp_ctrl_block.h"
 #include "openrasp_agent.h"
 #include <fstream>
+#include <sys/prctl.h>
 
+#define AGENT_SET_PROC_NAME(name) prctl(PR_SET_NAME, (name), 0, 0, 0)
 #define PLUGIN_AGENT_PR_NAME "plugin-agent"
 #define LOG_AGENT_PR_NAME "log-agent"
 
