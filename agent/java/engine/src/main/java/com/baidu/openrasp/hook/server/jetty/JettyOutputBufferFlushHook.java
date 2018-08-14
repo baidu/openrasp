@@ -13,10 +13,9 @@ import java.io.IOException;
 import java.util.HashMap;
 
 /**
- * 　　* @Description: jetty 获取输出buffer的hook点
- * 　　* @author anyang
- * 　　* @date 2018/8/7 19:25
- *
+ * @author anyang
+ * @Description: jetty 获取输出buffer的hook点
+ * @date 2018/8/1315:13
  */
 public class JettyOutputBufferFlushHook extends AbstractClassHook {
 

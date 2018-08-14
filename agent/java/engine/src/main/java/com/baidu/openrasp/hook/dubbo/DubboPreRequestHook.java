@@ -9,10 +9,10 @@ import javassist.NotFoundException;
 import java.io.IOException;
 
 /**
-　　* @Description: 在进入dubbo的hook之前，关掉当前的hook点
-　　* @author anyang
-　　* @date 2018/6/22 17:30
-　　*/
+ * @author anyang
+ * @Description: dubbo请求预处理hook点
+ * @date 2018/8/1315:13
+ */
 public class DubboPreRequestHook extends AbstractClassHook {
 
     public DubboPreRequestHook() {

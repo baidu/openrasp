@@ -3,7 +3,9 @@ package com.baidu.openrasp.hook.dubbo;
 import java.util.Map;
 
 /**
- * Created by anyang on 2018/6/22.
+ * @author anyang
+ * @Description: dubbo的request请求抽象类
+ * @date 2018/8/1315:13
  */
 public abstract class AbstractDubboRequest {
 
