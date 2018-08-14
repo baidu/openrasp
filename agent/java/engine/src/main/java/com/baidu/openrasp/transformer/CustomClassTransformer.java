@@ -131,7 +131,6 @@ public class CustomClassTransformer implements ClassFileTransformer {
                             ProtectionDomain domain, byte[] classfileBuffer) throws IllegalClassFormatException {
         for (final AbstractClassHook hook : hooks) {
             if (hook.isClassMatched(className)) {
-                System.out.println(className+"-----------");
                 CtClass ctClass = null;
                 try {
                     ClassPool classPool = new ClassPool();
