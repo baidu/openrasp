@@ -28,6 +28,7 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -36,6 +37,18 @@ import java.util.Properties;
  * All rights reserved
  */
 public class SQLDriverManagerHook extends AbstractClassHook {
+    private static ArrayList<String> classList = new ArrayList<String>();
+
+    static {
+        classList.add("com/mysql/jdbc/NonRegisteringDriver");
+        classList.add("com/mysql/cj/jdbc/NonRegisteringDriver");
+        classList.add("org/sqlite/JDBC");
+        classList.add("com/microsoft/sqlserver/jdbc/SQLServerDriver");
+        classList.add("org/postgresql/Driver");
+        classList.add("oracle/jdbc/driver/OracleDriver");
+        classList.add("com/ibm/db2/jcc/DB2Driver");
+    }
+
     /**
      * (none-javadoc)
      *
@@ -53,7 +66,7 @@ public class SQLDriverManagerHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "java/sql/DriverManager".equals(className);
+        return classList.contains(className);
     }
 
     /**
@@ -68,14 +81,9 @@ public class SQLDriverManagerHook extends AbstractClassHook {
         String srcAfter = getInvokeStaticSrc(SQLDriverManagerHook.class, "checkSqlConnectionOnExit",
                 "$1,$2", String.class, Properties.class);
         String srcOnExit = getInvokeStaticSrc(SQLDriverManagerHook.class, "onConnectionExit", "");
-        CtBehavior[] behaviors = ctClass.getDeclaredMethods("getConnection");
-        for (CtBehavior behavior : behaviors) {
-            if (behavior.getMethodInfo().getDescriptor().startsWith("(Ljava/lang/String;Ljava/util/Properties;Ljava/lang/Class")) {
-                insertBefore(behavior, srcBefore);
-                insertAfter(behavior, srcAfter, false);
-                insertAfter(behavior, srcOnExit, true);
-            }
-        }
+        insertBefore(ctClass, "connect", null, srcBefore);
+        insertAfter(ctClass, "connect", null, srcAfter, false);
+        insertAfter(ctClass, "connect", null, srcOnExit, true);
     }
 
     /**

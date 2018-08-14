@@ -23,6 +23,7 @@ import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.Reflection;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import javassist.CannotCompileException;
@@ -206,6 +207,7 @@ public class SQLStatementHook extends AbstractSqlHook {
                 }
             }
         } catch (Exception e) {
+
             JSContext.LOGGER.warn("Parse json failed because: " + e.getMessage());
         }
         return DEFAULT_LRU_CACHE_CAPACITY;

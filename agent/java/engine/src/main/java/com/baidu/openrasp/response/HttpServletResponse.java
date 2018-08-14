@@ -29,8 +29,11 @@ public class HttpServletResponse {
     private static final int REDIRECT_STATUS_CODE = 302;
     public static final String CONTENT_TYPE_HEADER_KEY = "Content-Type";
     public static final String CONTENT_LENGTH_HEADER_KEY = "Content-Length";
+    public static final String CONTENT_TYPE_REPLACE = "$REQUEST_ID$";
     public static final String CONTENT_TYPE_HTML_VALUE = "text/html";
-
+    public static final String CONTENT_TYPE_JSON_VALUE = "application/json";
+    public static final String CONTENT_TYPE_XML_VALUE = "application/xml";
+    public static final String CONTENT_TYPE_TEXT_XML = "text/xml";
     private Object response;
 
     /**
@@ -156,11 +159,16 @@ public class HttpServletResponse {
                 int statusCode = Config.getConfig().getBlockStatusCode();
                 String blockUrl = Config.getConfig().getBlockUrl();
                 boolean isCommitted = (Boolean) Reflection.invokeMethod(response, "isCommitted", new Class[]{});
-                if (!blockUrl.contains("?")) {
-                    String blockParam = "?request_id=" + HookHandler.requestCache.get().getRequestId();
-                    blockUrl += blockParam;
+                String requestId = HookHandler.requestCache.get().getRequestId();
+                String contentType = getResponseContentType();
+                String script;
+                if (contentType.startsWith(CONTENT_TYPE_JSON_VALUE)) {
+                    script = Config.getConfig().getBlockJson().replace(CONTENT_TYPE_REPLACE, requestId);
+                } else if (contentType.startsWith(CONTENT_TYPE_XML_VALUE) || contentType.startsWith(CONTENT_TYPE_TEXT_XML)) {
+                    script = Config.getConfig().getBlockXml().replace(CONTENT_TYPE_REPLACE, requestId);
+                } else {
+                    script = Config.getConfig().getBlockHtml().replace(CONTENT_TYPE_REPLACE, requestId);
                 }
-                String script = "</script><script>location.href=\"" + blockUrl + "\"</script>";
                 if (!isCommitted) {
                     Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, statusCode);
                     if (statusCode >= 300 && statusCode <= 399) {
@@ -191,6 +199,20 @@ public class HttpServletResponse {
         if (close) {
             Reflection.invokeMethod(printer, "close", new Class[]{});
         }
+    }
+
+    /**
+     * 获取响应发送脚本的ContentType类型
+     */
+    public String getResponseContentType() {
+        String contentType = getContentType();
+        if (contentType == null) {
+            contentType = HookHandler.requestCache.get().getHeader("Accept");
+            if (!contentType.startsWith(CONTENT_TYPE_JSON_VALUE) && !contentType.startsWith(CONTENT_TYPE_XML_VALUE) && !contentType.startsWith(CONTENT_TYPE_TEXT_XML)) {
+                contentType = CONTENT_TYPE_HTML_VALUE;
+            }
+        }
+        return contentType;
     }
 
 }

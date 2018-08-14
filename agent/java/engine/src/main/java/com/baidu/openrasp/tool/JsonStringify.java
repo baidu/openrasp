@@ -16,6 +16,9 @@
 
 package com.baidu.openrasp.tool;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 /**
  * Created by tyy on 7/6/17.
  * json字符串格式化的工具类
@@ -61,6 +64,18 @@ public class JsonStringify {
             }
         }
         return tmpString.toString();
+    }
+
+    public static String getJsonStringElement(JsonObject jsonObject, String key) {
+        JsonElement element = jsonObject.get(key);
+        if (element != null) {
+            if (element.isJsonPrimitive()) {
+                return element.getAsString();
+            } else {
+                return element.toString();
+            }
+        }
+        return "";
     }
 
 }
