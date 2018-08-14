@@ -108,6 +108,8 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new GetFileUploadCharsetHook());
         addHook(new FileRenameHook());
         addHook(new JBossJMXConsoleHook());
+        addHook(new ResinStartupHook());
+        addHook(new JettyStartupHook());
     }
 
     private void addHook(AbstractClassHook hook) {

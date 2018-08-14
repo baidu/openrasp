@@ -20,6 +20,7 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.request.HttpServletRequest;
 import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -60,7 +61,7 @@ public class SecurityPolicyInfo extends EventInfo {
 
     private Type policy;
     private String message;
-    private Map<String,String> params;
+    private Map<String, String> params;
 
     public SecurityPolicyInfo(Type policy, String message, boolean isBlock, Map<String, String> params) {
         this.policy = policy;
@@ -70,7 +71,7 @@ public class SecurityPolicyInfo extends EventInfo {
     }
 
     public SecurityPolicyInfo(Type policy, String message, boolean isBlock) {
-        this(policy,message,isBlock,null);
+        this(policy, message, isBlock, null);
     }
 
     @Override
@@ -91,14 +92,14 @@ public class SecurityPolicyInfo extends EventInfo {
         // 服务器ip
         info.put("server_nic", OSUtil.getIpAddress());
         // 服务器类型
-        info.put("server_type", getCatalinaServerType());
+        info.put("server_type", ApplicationModel.getServerName());
         // 服务器版本
-        info.put("server_version", getCatalinaServerVersion());
+        info.put("server_version", ApplicationModel.getVersion());
         // 安全规范检测信息
         info.put("message", message);
         // 检测参数信息
-        if(params !=null){
-            info.put("params",params);
+        if (params != null) {
+            info.put("params", params);
         }
         // 攻击调用栈
         StackTraceElement[] trace = filter(new Throwable().getStackTrace());
@@ -106,15 +107,4 @@ public class SecurityPolicyInfo extends EventInfo {
         return info;
     }
 
-    public static String getCatalinaServerType() {
-        String serverInfo = (String) Reflection.invokeStaticMethod("org.apache.catalina.util.ServerInfo",
-                "getServerInfo", new Class[]{});
-        return HttpServletRequest.extractType(serverInfo);
-    }
-
-    public static String getCatalinaServerVersion() {
-        String serverInfo = (String) Reflection.invokeStaticMethod("org.apache.catalina.util.ServerInfo",
-                "getServerInfo", new Class[]{});
-        return HttpServletRequest.extractNumber(serverInfo);
-    }
 }

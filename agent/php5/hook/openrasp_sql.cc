@@ -51,7 +51,8 @@ void slow_query_alarm(int rows TSRMLS_DC)
 {
     zval *attack_params = nullptr;
     MAKE_STD_ZVAL(attack_params);
-    ZVAL_LONG(attack_params, rows);
+    array_init(attack_params);
+    add_assoc_long(attack_params, "query_count",rows);
     zval *plugin_message = nullptr;
     MAKE_STD_ZVAL(plugin_message);
     char *message_str = nullptr;

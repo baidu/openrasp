@@ -138,7 +138,7 @@ var algorithmConfig = {
 
             // java specific
             'jar',
-            'netloc',
+            'netdoc',
 
             // php specific
             'dict',
@@ -215,7 +215,7 @@ var algorithmConfig = {
 
             // java specific
             'jar',
-            'netloc',
+            'netdoc',
 
             // php stream
             'http',
@@ -250,7 +250,7 @@ var algorithmConfig = {
             'dict',
             'gopher',
             'jar',
-            'netloc'
+            'netdoc'
         ]
     },
     // XXE - 使用 file 协议读取内容，可能误报，默认 log
@@ -356,6 +356,11 @@ var ntfsRegex       = /::\$(DATA|INDEX)$/i
 
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue) {
+    // 空值判断，防止死循环
+    if (! token || token.length == 0) {
+        return this
+    }
+
     var index  = 0;
     var string = this;
 
@@ -463,7 +468,12 @@ function is_absolute_path(path, os) {
 function is_outside_webroot(appBasePath, realpath, path) {
     var verdict = false
 
-    if (realpath.indexOf(appBasePath) == -1 && hasTraversal(path)) {
+    // servlet 3.X 之后可能会获取不到 appBasePath，或者为空
+    // 提前加个判断，防止因为bug导致误报
+    if (! appBasePath || appBasePath.length == 0) {
+        verdict = false
+    }
+    else if (realpath.indexOf(appBasePath) == -1 && hasTraversal(path)) {
         verdict = true
     }
 
