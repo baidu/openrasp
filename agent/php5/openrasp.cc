@@ -168,11 +168,7 @@ PHP_MINFO_FUNCTION(openrasp)
     php_info_print_table_row(2, "Version", "");
 #endif
     php_info_print_table_row(2, "V8 Version", ZEND_TOSTR(V8_MAJOR_VERSION) "." ZEND_TOSTR(V8_MINOR_VERSION));
-#ifdef HAVE_NATIVE_ANTLR4
-    php_info_print_table_row(2, "Antlr Version", antlr4::RuntimeMetaData::VERSION.c_str());
-#else
     php_info_print_table_row(2, "Antlr Version", "4.7.1 (JavaScript Runtime)");
-#endif
     php_info_print_table_end();
     DISPLAY_INI_ENTRIES();
 }
