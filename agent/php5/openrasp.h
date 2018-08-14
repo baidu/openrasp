@@ -32,7 +32,6 @@ extern "C" {
 #define _(STRING) (STRING)
 #endif
 
-#define FSWATCH_ERROR (20001)
 #define LOG_ERROR (20002)
 #define SHM_ERROR (20003)
 #define CONFIG_ERROR (20004)

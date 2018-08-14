@@ -144,22 +144,6 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8);
 #define OPENRASP_V8_GP() (&openrasp_v8_globals)
 #endif
 
-#ifdef HAVE_NATIVE_ANTLR4
-#include <antlr4-runtime/antlr4-runtime.h>
-#include "antlr/SQLLexer.h"
-class TokenizeErrorListener : public antlr4::BaseErrorListener
-{
-public:
-  virtual void syntaxError(antlr4::Recognizer *recognizer, antlr4::Token *offendingSymbol, size_t line, size_t charPositionInLine,
-                           const std::string &msg, std::exception_ptr e)
-  {
-    std::string _sql_statement = ((openrasp::SQLLexer *)recognizer)->getInputStream()->toString();
-    std::string err_msg = "RASP.sql_tokenize() error: line " + std::to_string(line) + ":" + std::to_string(charPositionInLine) + " " + msg + " in SQL statement:" + PHP_EOL + _sql_statement;
-    plugin_info(err_msg.c_str(), err_msg.length() TSRMLS_CC);
-  }
-};
-#endif
-
 #endif /* OPENRASP_v8_H */
 
 /*
