@@ -30,7 +30,9 @@ extern "C"
 #include <fstream>
 #include "openrasp_v8.h"
 #include "openrasp_ini.h"
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"
+#endif
 
 using namespace openrasp;
 
@@ -271,6 +273,7 @@ static inline v8::Isolate *get_isolate(TSRMLS_D)
 {
     init_platform(TSRMLS_C);
 
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (oam.get_plugin_update_timestamp() > process_globals.plugin_update_timestamp)
     {
         long timestamp = oam.get_plugin_update_timestamp();
@@ -279,24 +282,27 @@ static inline v8::Isolate *get_isolate(TSRMLS_D)
         {
             process_globals.is_initialized = false;
             load_plugins(TSRMLS_C);
-            shutdown_snapshot(TSRMLS_C);
-            init_snapshot(TSRMLS_C);
-            if (process_globals.snapshot_blob.data != nullptr &&
-                process_globals.snapshot_blob.raw_size > 0)
+            auto snapshot_blob = get_snapshot(TSRMLS_C);
+            if (snapshot_blob.data != nullptr &&
+                snapshot_blob.raw_size > 0)
             {
+                delete[] process_globals.snapshot_blob.data;
+                process_globals.snapshot_blob = {nullptr, 0};
+                process_globals.snapshot_blob = snapshot_blob;
                 process_globals.plugin_update_timestamp = timestamp;
                 process_globals.is_initialized = true;
             }
             process_globals.mtx.unlock();
         }
     }
+#endif
 
     if (process_globals.is_initialized &&
-        (!OPENRASP_V8_G(is_isolate_initialized) ||
-         process_globals.plugin_update_timestamp > OPENRASP_V8_G(plugin_update_timestamp)))
+        (!OPENRASP_V8_G(is_isolate_initialized) || process_globals.plugin_update_timestamp > OPENRASP_V8_G(plugin_update_timestamp)))
     {
         if (process_globals.mtx.try_lock() &&
-            process_globals.is_initialized)
+            process_globals.is_initialized &&
+            (!OPENRASP_V8_G(is_isolate_initialized) || process_globals.plugin_update_timestamp > OPENRASP_V8_G(plugin_update_timestamp)))
         {
             shutdown_isolate(TSRMLS_C);
             init_isolate(TSRMLS_C);

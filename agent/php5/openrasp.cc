@@ -34,7 +34,9 @@ extern "C"
 #include "openrasp_security_policy.h"
 #include "openrasp_fswatch.h"
 #include <new>
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"
+#endif
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
@@ -107,8 +109,9 @@ PHP_MINIT_FUNCTION(openrasp)
     result = PHP_MINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
     openrasp::oam.startup();
-    // result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
+#endif
     is_initialized = true;
     return SUCCESS;
 }
@@ -118,13 +121,15 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
     if (is_initialized)
     {
         int result;
-        // result = PHP_MSHUTDOWN(openrasp_fswatch)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_inject)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_hook)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_v8)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_log)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+        openrasp::oam.shutdown();
+#endif
+        is_initialized = false;
     }
-    openrasp::oam.shutdown();
     UNREGISTER_INI_ENTRIES();
     ZEND_SHUTDOWN_MODULE_GLOBALS(openrasp, PHP_GSHUTDOWN(openrasp));
     return SUCCESS;
