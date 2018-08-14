@@ -7970,17 +7970,14 @@ TokenizeErrorListener.prototype.syntaxError = function(recognizer, offendingSymb
 var listener = new TokenizeErrorListener();
 
 function sql_tokenize(query) {
-    var input = new antlr4.InputStream(query)
-    var lexer = new SQLLexer(input)
+    var input = new antlr4.InputStream(query);
+    var lexer = new SQLLexer(input);
     lexer.removeErrorListeners();
     lexer.addErrorListener(listener);
-    var output = new antlr4.CommonTokenStream(lexer)
-    output.fill()
-    var tokens = []
-    for (i = 0; i < output.tokens.length - 1; i++) {
-        tokens.push(output.tokens[i].text)
-    }
-    return tokens
+    var output = new antlr4.CommonTokenStream(lexer);
+    output.fill();
+    output.tokens.pop();
+    return output.tokens;
 }
 module.exports = sql_tokenize
 

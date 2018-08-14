@@ -99,21 +99,21 @@ public class SqlStatementChecker extends ConfigurableChecker {
                     }
 
                     int start = tokens.length, end = tokens.length;
-                    for(int i=0;i<tokens.length;i++){
-                        if(rawTokens.get(i).getStartIndex() >= para_index){
+                    for (int i = 0; i < tokens.length; i ++){
+                        if ( rawTokens.get(i).getStopIndex() >= para_index){
                             start = i;
                             break;
                         }
                     }
 
-                    for(int i=0;i<tokens.length;i++){
-                        if(rawTokens.get(i).getStartIndex() >= para_index + value.length() - 1){
+                    for (int i = start; i < tokens.length; i ++){
+                        if( rawTokens.get(i).getStopIndex() >= para_index + value.length() - 1){
                             end = i;
                             break;
                         }
                     }
 
-                    if(end - start > 2 || end == start){
+                    if (end - start > 2){
                         message = "SQLi - SQL query structure altered by user input, request parameter name: " + entry.getKey();
                     }
                 }
