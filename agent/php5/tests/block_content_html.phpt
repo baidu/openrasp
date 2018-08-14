@@ -1,5 +1,5 @@
 --TEST--
-block url
+block content html
 --SKIPIF--
 <?php
 $plugin = <<<EOF
@@ -13,10 +13,14 @@ include(__DIR__.'/skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.block_url=http://block_url.com
+openrasp.block_content_html="<p>OpenRASP Request ID: OPENRASP_REQUEST_ID</p>"
+--ENV--
+return <<<END
+HTTP_ACCEPT=text/html;
+END;
 --FILE--
 <?php
 exec('echo test');
 ?>
 --EXPECTREGEX--
-.*block_url.*
+<p>OpenRASP Request ID: .*<\/p>

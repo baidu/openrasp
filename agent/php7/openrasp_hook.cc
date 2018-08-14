@@ -21,8 +21,9 @@
 #include <vector>
 #include <map>
 
-extern "C" {
-#include "ext/standard/php_fopen_wrappers.h"    
+extern "C"
+{
+#include "ext/standard/php_fopen_wrappers.h"
 }
 
 static hook_handler_t global_hook_handlers[512];
@@ -96,16 +97,17 @@ bool openrasp_check_callable_black(const char *item_name, uint item_name_length)
     return openrasp_ini.callable_blacklists.find(item_name) != openrasp_ini.callable_blacklists.end();
 }
 
-struct scheme_cmp { 
-    bool operator() (const std::string& lhs, const std::string& rhs) const {
+struct scheme_cmp
+{
+    bool operator()(const std::string &lhs, const std::string &rhs) const
+    {
         return strcasecmp(lhs.c_str(), rhs.c_str()) < 0;
     }
 };
 
 zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, wrapper_operation w_op)
 {
-    static const std::map<std::string, int, scheme_cmp> opMap = 
-    {
+    static const std::map<std::string, int, scheme_cmp> opMap = {
         {"http", READING},
         {"https", READING},
         {"ftp", READING | WRITING | APPENDING},
@@ -119,14 +121,13 @@ zend_string *openrasp_real_path(char *filename, int length, bool use_include_pat
         {"ssh2", READING | WRITING | SIMULTANEOUSRW},
         {"rar", READING},
         {"ogg", READING | WRITING | APPENDING},
-        {"expect", READING | WRITING | APPENDING}
-    };
+        {"expect", READING | WRITING | APPENDING}};
     zend_string *resolved_path = nullptr;
     resolved_path = php_resolve_path(filename, length, use_include_path ? PG(include_path) : nullptr);
     if (nullptr == resolved_path)
     {
         const char *p = fetch_url_scheme(filename);
-        if (nullptr !=p)
+        if (nullptr != p)
         {
             std::string scheme(filename, p - filename);
             php_stream_wrapper *wrapper;
@@ -144,7 +145,7 @@ zend_string *openrasp_real_path(char *filename, int length, bool use_include_pat
                 {
                     if (wrapper->wops->dir_opener)
                     {
-                        resolved_path = zend_string_init(filename, length, 0);  
+                        resolved_path = zend_string_init(filename, length, 0);
                     }
                 }
                 else
@@ -185,6 +186,19 @@ zend_string *openrasp_real_path(char *filename, int length, bool use_include_pat
     return resolved_path;
 }
 
+static std::string resolve_request_id(std::string str)
+{
+    static std::string placeholder = "OPENRASP_REQUEST_ID";
+    std::string request_id = OPENRASP_INJECT_G(request_id);
+    size_t start_pos = 0;
+    while ((start_pos = str.find(placeholder, start_pos)) != std::string::npos)
+    {
+        str.replace(start_pos, placeholder.length(), request_id);
+        start_pos += request_id.length();
+    }
+    return std::move(str);
+}
+
 void handle_block()
 {
     int status = php_output_get_status();
@@ -192,34 +206,48 @@ void handle_block()
     {
         php_output_discard_all();
     }
-    char *block_url = openrasp_ini.block_url;
-    char *request_id = OPENRASP_INJECT_G(request_id);
+
     if (!SG(headers_sent))
     {
-        char *redirect_header = nullptr;
-        int redirect_header_len = 0;
-        redirect_header_len = spprintf(&redirect_header, 0, "Location: %s?request_id=%s", block_url, request_id);
-        if (redirect_header)
-        {
-            sapi_header_line header;
-            header.line = redirect_header;
-            header.line_len = redirect_header_len;
-            header.response_code = openrasp_ini.block_status_code;
-            sapi_header_op(SAPI_HEADER_REPLACE, &header);
-        }
-        efree(redirect_header);
+        std::string location = resolve_request_id("Location: " + std::string(openrasp_ini.block_redirect_url) TSRMLS_CC);
+        sapi_header_line header;
+        header.line = const_cast<char *>(location.c_str());
+        header.line_len = location.length();
+        header.response_code = openrasp_ini.block_status_code;
+        sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
     }
-    /* body 中插入 script 进行重定向 */
+
     {
-        char *redirect_script = nullptr;
-        int redirect_script_len = 0;
-        redirect_script_len = spprintf(&redirect_script, 0, "</script><script>location.href=\"%s?request_id=%s\"</script>\n", block_url, request_id);
-        if (redirect_script)
+        std::string body;
+        if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY ||
+            zend_is_auto_global_str(ZEND_STRL("_SERVER")))
         {
-            php_output_write(redirect_script, redirect_script_len);
+            zval *z_accept = zend_hash_str_find(Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRL("HTTP_ACCEPT"));
+            if (z_accept)
+            {
+                std::string accept(Z_STRVAL_P(z_accept));
+                if (openrasp_ini.block_content_json &&
+                    accept.find("application/json") != std::string::npos)
+                {
+                    body = resolve_request_id(openrasp_ini.block_content_json TSRMLS_CC);
+                }
+                else if (openrasp_ini.block_content_xml &&
+                         accept.find("text/xml") != std::string::npos)
+                {
+                    body = resolve_request_id(openrasp_ini.block_content_xml TSRMLS_CC);
+                }
+            }
+        }
+        if (body.length() == 0 &&
+            openrasp_ini.block_content_html)
+        {
+            body = resolve_request_id(openrasp_ini.block_content_html TSRMLS_CC);
+        }
+        if (body.length() > 0)
+        {
+            php_output_write(body.c_str(), body.length());
             php_output_flush();
         }
-        efree(redirect_script);
     }
     zend_bailout();
 }

@@ -267,16 +267,6 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
 #define POST_HOOK_FUNCTION(name, type) \
     POST_HOOK_FUNCTION_EX(name, global, type)
 
-struct openrasp_hook_ini_t
-{
-    unsigned int slowquery_min_rows = 500;
-    bool enforce_policy = false;
-    char *block_url = nullptr;
-    std::set<std::string> hooks_ignore;
-    std::set<std::string> callable_blacklists; //haha
-};
-extern struct openrasp_hook_ini_t openrasp_hook_ini;
-
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_hook)
 
 ZEND_END_MODULE_GLOBALS(openrasp_hook)
