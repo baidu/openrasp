@@ -22,6 +22,7 @@ import com.baidu.openrasp.hook.file.*;
 import com.baidu.openrasp.hook.server.catalina.*;
 import com.baidu.openrasp.hook.server.jetty.*;
 import com.baidu.openrasp.hook.server.resin.*;
+import com.baidu.openrasp.hook.server.websphere.*;
 import com.baidu.openrasp.hook.sql.SQLDriverManagerHook;
 import com.baidu.openrasp.hook.sql.SQLPreparedStatementHook;
 import com.baidu.openrasp.hook.sql.SQLResultSetHook;
@@ -91,6 +92,11 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new ResinHttpInputHook());
         addHook(new SQLPreparedStatementHook());
         addHook(new FileRenameHook());
+        addHook(new WebsphereRequestHook());
+        addHook(new WebspherePreRequestHook());
+        addHook(new WebsphereParseParamHook());
+        addHook(new WebsphereHttpInputHook());
+        addHook(new WebphereHttpOutputHook());
     }
 
     private void addHook(AbstractClassHook hook) {
