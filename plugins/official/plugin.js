@@ -568,7 +568,8 @@ if (RASP.get_jsengine() !== 'v8') {
         var reason     = false
         var min_length = algorithmConfig.sqli_userinput.min_length
         var parameters = context.parameter || {}
-        var tokens     = RASP.sql_tokenize(params.query, params.server)
+        var raw_tokens     = RASP.sql_tokenize(params.query, params.server)
+        var tokens = raw_tokens.map(function(x) { return x.text; });
 
         // console.log(tokens)
 
@@ -618,28 +619,25 @@ if (RASP.get_jsengine() !== 'v8') {
                     }
 
                     //检测用户输入产生的token数量
-                    var start = tokens.length , end = tokens.length;
-                    for(var i=0;i<tokens.length;i++){
-                        if(tokens[i][3] >= para_index){
+                    var start = raw_tokens.length , end = raw_tokens.length;
+                    for(var i=0;i<tokraw_tokensens.length;i++){
+                        if(raw_tokens[i].stop >= para_index){
                             start = i;
                             break;
                         }
                     }
 
-                    for(var i=start;i<tokens.length;i++){
-                        if(tokens[i][3] >= para_index + value.length - 1){
+                    for(var i=start;i<raw_tokens.length;i++){
+                        if(raw_tokens[i].stop >= para_index + value.length - 1){
                             end = i;
                             break;
                         }
                     }
 
-                    
-
-                    if(end - start > 2 || end == start){
+                    if(end - start > 2){
                         reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
                         return true
                     }
-
                 }
             })
             if (reason !== false) {
