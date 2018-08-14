@@ -19,6 +19,7 @@
 
 #include "openrasp_agent_manager.h"
 #include "utils/curl_helper.h"
+#include <signal.h>
 
 namespace openrasp
 {

@@ -17,6 +17,7 @@
 #ifndef _OPENRASP_AGENT_MANAGER_H_
 #define _OPENRASP_AGENT_MANAGER_H_
 
+#include "openrasp.h"
 #include "mm/shm_manager.h"
 #include "openrasp_ctrl_block.h"
 #include "openrasp_agent.h"

@@ -47,7 +47,7 @@ BaseAgent::BaseAgent(std::string name)
 	this->is_alive = false;
 }
 
-void BaseAgent::install_signal_handler(__sighandler_t signal_handler)
+void BaseAgent::install_signal_handler(sighandler_t signal_handler)
 {
 	struct sigaction sa_usr = {0};
 	sa_usr.sa_flags = 0;

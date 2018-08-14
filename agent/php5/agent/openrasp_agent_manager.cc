@@ -17,13 +17,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <signal.h>
 #include <fcntl.h>
 #include <fstream>
 #include <sstream>
 #include <memory>
 
-#include "openrasp.h"
 #include "openrasp_log.h"
 #include "openrasp_agent_manager.h"
 #include <string>

@@ -194,34 +194,37 @@ const char *fetch_url_scheme(const char *filename)
 
 long fetch_time_offset(TSRMLS_D)
 {
-    timelib_tzinfo *default_tz = get_timezone_info(TSRMLS_C);
-    int32_t exact_offset = default_tz->type->offset;
-    return std::round((double)exact_offset / 3600) * 3600;
+    struct timeval tp = {0};
+    timelib_time_offset *offset;
+    offset = timelib_get_time_zone_info(tp.tv_sec, get_timezone_info());
+    long tz_offset = offset->offset;
+    timelib_time_offset_dtor(offset);
+    return tz_offset;
 }
 
 void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter)
 {
-	DIR *dir;
-	std::string result;
-	struct dirent *ent;
-	if ((dir = opendir(dir_abs.c_str())) != NULL)
-	{
-		while ((ent = readdir(dir)) != NULL)
-		{
-			if (file_filter)
-			{
-				if (file_filter(ent->d_name))
-				{
-					plugins.push_back(std::string(ent->d_name));
-				}
-			}
-		}
-		closedir(dir);
-	}
+    DIR *dir;
+    std::string result;
+    struct dirent *ent;
+    if ((dir = opendir(dir_abs.c_str())) != NULL)
+    {
+        while ((ent = readdir(dir)) != NULL)
+        {
+            if (file_filter)
+            {
+                if (file_filter(ent->d_name))
+                {
+                    plugins.push_back(std::string(ent->d_name));
+                }
+            }
+        }
+        closedir(dir);
+    }
 }
 
 bool same_day_in_current_timezone(long src, long target, long offset)
 {
-	long day = 24 * 60 * 60;
-	return ((src + offset) / day == (target + offset) / day);
+    long day = 24 * 60 * 60;
+    return ((src + offset) / day == (target + offset) / day);
 }
