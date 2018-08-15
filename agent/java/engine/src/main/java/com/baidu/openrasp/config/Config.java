@@ -61,7 +61,7 @@ public class Config extends FileScanListener {
         XSS__PARAMETER_LENGTH("xss.parameter.length", "15"),
         BLOCK_JSON("block.json", "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"$REQUEST_ID$\"}"),
         BLOCK_XML("block.xml", "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>$REQUEST_ID$</request_id></doc>"),
-        BLOCK_HTML("block.html", "</script><script>location.href=\"https://rasp.baidu.com/blocked/?request_id=$REQUEST_ID$\"</script>");
+        BLOCK_HTML("block.html", "</script><script>location.href=\"$REDIRECT_URL$?request_id=$REQUEST_ID$\"</script>");
 
 
         Item(String key, String defaultValue) {

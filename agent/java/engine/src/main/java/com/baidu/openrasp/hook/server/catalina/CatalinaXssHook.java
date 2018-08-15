@@ -2,6 +2,7 @@ package com.baidu.openrasp.hook.server.catalina;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.hook.server.ServerXssHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.request.HttpServletRequest;
 import com.baidu.openrasp.tool.Reflection;
@@ -18,7 +19,7 @@ import java.util.*;
  * 　　* @author anyang
  * 　　* @date 2018/6/11 14:53
  */
-public class CatalinaOutputBufferFlushHook extends AbstractClassHook {
+public class CatalinaXssHook extends ServerXssHook {
 
     @Override
     public boolean isClassMatched(String className) {
@@ -26,14 +27,9 @@ public class CatalinaOutputBufferFlushHook extends AbstractClassHook {
     }
 
     @Override
-    public String getType() {
-        return "xss";
-    }
-
-    @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
 
-        String src = getInvokeStaticSrc(CatalinaOutputBufferFlushHook.class, "getJbossOutputBuffer", "$0", Object.class);
+        String src = getInvokeStaticSrc(CatalinaXssHook.class, "getJbossOutputBuffer", "$0", Object.class);
         insertBefore(ctClass, "close", "()V", src);
 
     }

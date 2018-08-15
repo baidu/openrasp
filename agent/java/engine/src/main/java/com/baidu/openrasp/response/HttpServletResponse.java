@@ -29,7 +29,8 @@ public class HttpServletResponse {
     private static final int REDIRECT_STATUS_CODE = 302;
     public static final String CONTENT_TYPE_HEADER_KEY = "Content-Type";
     public static final String CONTENT_LENGTH_HEADER_KEY = "Content-Length";
-    public static final String CONTENT_TYPE_REPLACE = "$REQUEST_ID$";
+    public static final String CONTENT_TYPE_REPLACE_REQUEST_ID = "$REQUEST_ID$";
+    public static final String CONTENT_TYPE_REPLACE_REDIRECT_URL = "$REDIRECT_URL$";
     public static final String CONTENT_TYPE_HTML_VALUE = "text/html";
     public static final String CONTENT_TYPE_JSON_VALUE = "application/json";
     public static final String CONTENT_TYPE_XML_VALUE = "application/xml";
@@ -163,11 +164,12 @@ public class HttpServletResponse {
                 String contentType = getResponseContentType();
                 String script;
                 if (contentType.startsWith(CONTENT_TYPE_JSON_VALUE)) {
-                    script = Config.getConfig().getBlockJson().replace(CONTENT_TYPE_REPLACE, requestId);
+                    script = Config.getConfig().getBlockJson().replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId);
                 } else if (contentType.startsWith(CONTENT_TYPE_XML_VALUE) || contentType.startsWith(CONTENT_TYPE_TEXT_XML)) {
-                    script = Config.getConfig().getBlockXml().replace(CONTENT_TYPE_REPLACE, requestId);
+                    script = Config.getConfig().getBlockXml().replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId);
                 } else {
-                    script = Config.getConfig().getBlockHtml().replace(CONTENT_TYPE_REPLACE, requestId);
+                    script = Config.getConfig().getBlockHtml().replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId).
+                            replace(CONTENT_TYPE_REPLACE_REDIRECT_URL,blockUrl);
                 }
                 if (!isCommitted) {
                     Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, statusCode);

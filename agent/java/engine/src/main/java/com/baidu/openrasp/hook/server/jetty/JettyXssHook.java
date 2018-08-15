@@ -2,6 +2,7 @@ package com.baidu.openrasp.hook.server.jetty;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.hook.server.ServerXssHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.hook.ServerXss;
@@ -17,7 +18,7 @@ import java.util.HashMap;
  * @Description: jetty 获取输出buffer的hook点
  * @date 2018/8/1315:13
  */
-public class JettyOutputBufferFlushHook extends AbstractClassHook {
+public class JettyXssHook extends ServerXssHook {
 
     @Override
     public boolean isClassMatched(String className) {
@@ -25,14 +26,9 @@ public class JettyOutputBufferFlushHook extends AbstractClassHook {
     }
 
     @Override
-    public String getType() {
-        return "xss";
-    }
-
-    @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
 
-        String src = getInvokeStaticSrc(JettyOutputBufferFlushHook.class, "getJettyOutputBuffer", "_generator", Object.class);
+        String src = getInvokeStaticSrc(JettyXssHook.class, "getJettyOutputBuffer", "_generator", Object.class);
         insertBefore(ctClass, "completeResponse", "()V", src);
 
     }

@@ -2,6 +2,7 @@ package com.baidu.openrasp.hook.server.resin;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.hook.server.ServerXssHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.hook.ServerXss;
 import javassist.CannotCompileException;
@@ -13,11 +14,11 @@ import java.util.HashMap;
 
 
 /**
-　　* @Description: resin 获取输出buffer的hook点
+　　* @Description: resin xss检测的hook点
 　　* @author anyang
 　　* @date 2018/8/7 19:27
 　　*/
-public class ResinOutputBufferFlushHook extends AbstractClassHook {
+public class ResinXssHook extends ServerXssHook {
 
     @Override
     public boolean isClassMatched(String className) {
@@ -26,14 +27,9 @@ public class ResinOutputBufferFlushHook extends AbstractClassHook {
     }
 
     @Override
-    public String getType() {
-        return "xss";
-    }
-
-    @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
 
-        String src = getInvokeStaticSrc(ResinOutputBufferFlushHook.class, "getResinOutputBuffer", "_charBuffer,_charLength,_isOutputStreamOnly", char[].class, int.class, boolean.class);
+        String src = getInvokeStaticSrc(ResinXssHook.class, "getResinOutputBuffer", "_charBuffer,_charLength,_isOutputStreamOnly", char[].class, int.class, boolean.class);
         insertBefore(ctClass, "flushCharBuffer", "()V", src);
 
     }

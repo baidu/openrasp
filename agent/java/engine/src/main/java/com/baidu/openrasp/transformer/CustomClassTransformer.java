@@ -100,9 +100,9 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new ResinParseParamHook());
         addHook(new ResinHttpInputHook());
         addHook(new SQLPreparedStatementHook());
-        addHook(new CatalinaOutputBufferFlushHook());
-        addHook(new ResinOutputBufferFlushHook());
-        addHook(new JettyOutputBufferFlushHook());
+        addHook(new CatalinaXssHook());
+        addHook(new ResinXssHook());
+        addHook(new JettyXssHook());
         addHook(new DubboRequestHook());
         addHook(new DubboPreRequestHook());
         addHook(new FileUploadHook());
