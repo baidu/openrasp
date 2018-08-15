@@ -188,7 +188,7 @@ zend_string *openrasp_real_path(char *filename, int length, bool use_include_pat
 
 static std::string resolve_request_id(std::string str)
 {
-    static std::string placeholder = "OPENRASP_REQUEST_ID";
+    static std::string placeholder = "%request_id%";
     std::string request_id = OPENRASP_INJECT_G(request_id);
     size_t start_pos = 0;
     while ((start_pos = str.find(placeholder, start_pos)) != std::string::npos)
@@ -218,6 +218,7 @@ void handle_block()
     }
 
     {
+        std::string content_type;
         std::string body;
         if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY ||
             zend_is_auto_global_str(ZEND_STRL("_SERVER")))
@@ -229,11 +230,19 @@ void handle_block()
                 if (openrasp_ini.block_content_json &&
                     accept.find("application/json") != std::string::npos)
                 {
+                    content_type = "Content-type: application/json";
                     body = resolve_request_id(openrasp_ini.block_content_json TSRMLS_CC);
                 }
                 else if (openrasp_ini.block_content_xml &&
                          accept.find("text/xml") != std::string::npos)
                 {
+                    content_type = "Content-type: text/xml";
+                    body = resolve_request_id(openrasp_ini.block_content_xml TSRMLS_CC);
+                }
+                else if (openrasp_ini.block_content_xml &&
+                         accept.find("application/xml") != std::string::npos)
+                {
+                    content_type = "Content-type: application/xml";
                     body = resolve_request_id(openrasp_ini.block_content_xml TSRMLS_CC);
                 }
             }
@@ -241,10 +250,12 @@ void handle_block()
         if (body.length() == 0 &&
             openrasp_ini.block_content_html)
         {
+            content_type = "Content-type: text/html";
             body = resolve_request_id(openrasp_ini.block_content_html TSRMLS_CC);
         }
         if (body.length() > 0)
         {
+            sapi_add_header(const_cast<char *>(content_type.c_str()), content_type.length(), 1);
             php_output_write(body.c_str(), body.length());
             php_output_flush();
         }

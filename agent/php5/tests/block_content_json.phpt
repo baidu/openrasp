@@ -12,8 +12,9 @@ EOF;
 include(__DIR__.'/skipif.inc');
 ?>
 --INI--
+default_charset="UTF-8"
 openrasp.root_dir=/tmp/openrasp
-openrasp.block_content_json="{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"OPENRASP_REQUEST_ID\"}"
+openrasp.block_content_json="{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"
 --ENV--
 return <<<END
 HTTP_ACCEPT=application/json;
@@ -22,5 +23,7 @@ END;
 <?php
 exec('echo test');
 ?>
+--EXPECTHEADERS--
+Content-type: application/json
 --EXPECTREGEX--
 {"error":true, "reason": "Request blocked by OpenRASP", "request_id": ".*"}

@@ -12,8 +12,9 @@ EOF;
 include(__DIR__.'/skipif.inc');
 ?>
 --INI--
+default_charset="UTF-8"
 openrasp.root_dir=/tmp/openrasp
-openrasp.block_content_html="<p>OpenRASP Request ID: OPENRASP_REQUEST_ID</p>"
+openrasp.block_content_html="<p>OpenRASP Request ID: %request_id%</p>"
 --ENV--
 return <<<END
 HTTP_ACCEPT=text/html;
@@ -22,5 +23,7 @@ END;
 <?php
 exec('echo test');
 ?>
+--EXPECTHEADERS--
+Content-type: text/html;charset=UTF-8
 --EXPECTREGEX--
 <p>OpenRASP Request ID: .*<\/p>
