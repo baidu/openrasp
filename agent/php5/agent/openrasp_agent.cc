@@ -66,7 +66,6 @@ void PluginAgent::run()
 		});
 	TSRMLS_FETCH();
 	CURL *curl = nullptr;
-	ResponseInfo res_info;
 	std::string root_dir = std::string(openrasp_ini.root_dir);
 	while (true)
 	{
@@ -85,6 +84,7 @@ void PluginAgent::run()
 			}
 		}
 		std::string url_string = std::string(openrasp_ini.backend) + "/v1/plugin?version=" + std::string(oam.agent_ctrl_block->get_plugin_version());
+		ResponseInfo res_info;
 		perform_curl(curl, url_string, nullptr, res_info);
 		if (CURLE_OK != res_info.res)
 		{
@@ -124,7 +124,7 @@ void PluginAgent::run()
 							std::string cal_md5 = md5sum(static_cast<const void *>(plugin), strlen(plugin));
 							if (!strcmp(cal_md5.c_str(), md5))
 							{
-								update_local_offcial_plugin(root_dir + "/plugins/" + std::string(version) + ".js", plugin, version);
+								update_local_offcial_plugin(root_dir + "/plugins/offcial.js", plugin, version);
 							}
 						}
 					}
@@ -180,7 +180,10 @@ void PluginAgent::update_local_offcial_plugin(std::string plugin_abs_path, const
 		out_file.close();
 		oam.agent_ctrl_block->set_plugin_version(version);
 	}
-	clear_old_offcial_plugins();
+	else
+	{
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write offcial plugin to %s."), plugin_abs_path.c_str());
+	}
 }
 
 LogAgent::LogAgent()
@@ -219,7 +222,6 @@ void LogAgent::run()
 
 	std::string buffer;
 	std::string line;
-	ResponseInfo res_info;
 	CURL *curl = nullptr;
 
 	LogDirInfo alarm_dir_info(root_dir + default_slash + "logs" + default_slash + ALARM_LOG_DIR_NAME, "alarm.log.", "/v1/log/attack");
