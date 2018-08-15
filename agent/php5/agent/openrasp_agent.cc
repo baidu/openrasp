@@ -20,7 +20,7 @@
 #include <sstream>
 #include <dirent.h>
 #include <algorithm>
-#include "cereal/archives/binary.hpp"
+#include "cereal/archives/xml.hpp"
 #include "cereal/types/string.hpp"
 extern "C"
 {
@@ -215,7 +215,7 @@ void LogAgent::run()
 			LogAgent::signal_received = signal_no;
 		});
 	std::string root_dir = std::string(openrasp_ini.root_dir);
-	static const std::string position_backup_file = ".LogCollectingPos";
+	static const std::string position_backup_file = ".LogCollectingPos.xml";
 	long last_post_time = 0;
 	long time_offset = fetch_time_offset();
 	std::string formatted_date_suffix = get_formatted_date_suffix((long)time(NULL));
@@ -230,7 +230,7 @@ void LogAgent::run()
 	try
 	{
 		std::ifstream is(root_dir + default_slash + "logs" + default_slash + position_backup_file);
-		cereal::BinaryInputArchive archive(is);
+		cereal::XMLInputArchive archive(is);
 		archive(formatted_date_suffix, alarm_dir_info.fpos, policy_dir_info.fpos);
 	}
 	catch (std::exception &e)
@@ -255,6 +255,7 @@ void LogAgent::run()
 					ldi->ifs.open(active_log_file);
 				}
 				ldi->ifs.seekg(ldi->fpos);
+				ldi->ifs.clear();
 				if (ldi->ifs.good())
 				{
 					std::string url_string = std::string(openrasp_ini.backend) + ldi->backend_url;
@@ -312,7 +313,7 @@ void LogAgent::run()
 		try
 		{
 			std::ofstream os(root_dir + default_slash + "logs" + default_slash + position_backup_file);
-			cereal::BinaryOutputArchive archive(os);
+			cereal::XMLOutputArchive archive(os);
 			archive(formatted_date_suffix, alarm_dir_info.fpos, policy_dir_info.fpos);
 		}
 		catch (std::exception &e)
