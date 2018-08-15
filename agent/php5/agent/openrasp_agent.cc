@@ -245,45 +245,41 @@ void LogAgent::run()
 		}
 		long now = (long)time(NULL);
 		bool file_rotate = !same_day_in_current_timezone(now, last_post_time, time_offset);
-		for (LogDirInfo *ldi : log_dirs)
+		for (int i = 0; i < log_dirs.size(); ++i)
 		{
+			LogDirInfo *ldi = log_dirs[i];
 			std::string active_log_file = ldi->dir_abs_path + default_slash + ldi->prefix + formatted_date_suffix;
 			if (VCWD_ACCESS(active_log_file.c_str(), F_OK) == 0)
 			{
 				if (!ldi->ifs.is_open())
 				{
-					ldi->ifs.open(active_log_file);
+					ldi->ifs.open(active_log_file, std::ifstream::binary);
 				}
 				ldi->ifs.seekg(ldi->fpos);
-				ldi->ifs.clear();
-				if (ldi->ifs.good())
+				if (!ldi->ifs.good())
 				{
-					std::string url_string = std::string(openrasp_ini.backend) + ldi->backend_url;
-					buffer.push_back('[');
-					int count = 0;
-					while (std::getline(ldi->ifs, line) && count < max_post_logs_account)
-					{
-						buffer.append(line);
-						buffer.push_back(',');
-						++count;
-					}
-					buffer.pop_back();
-					buffer.push_back(']');
-					if (buffer.size() > 1)
-					{
-						if (post_logs_via_curl(buffer, curl, url_string))
-						{
-							ldi->fpos = ldi->ifs.tellg();
-						}
-					}
-					buffer.clear();
+					ldi->ifs.clear();
 				}
-				else
+				std::string url_string = std::string(openrasp_ini.backend) + ldi->backend_url;
+				buffer.push_back('[');
+				int count = 0;
+				while (std::getline(ldi->ifs, line) && count < max_post_logs_account)
 				{
-					ldi->ifs.seekg(0, std::ios_base::end);
-					ldi->fpos = ldi->ifs.tellg();
+					buffer.append(line);
+					buffer.push_back(',');
+					++count;
 				}
-				ldi->ifs.clear();
+				buffer.pop_back();
+				buffer.push_back(']');
+				if (buffer.size() > 1)
+				{
+					if (post_logs_via_curl(buffer, curl, url_string))
+					{
+						ldi->ifs.clear();
+						ldi->fpos = ldi->ifs.tellg();
+					}
+				}
+				buffer.clear();
 			}
 			if (file_rotate)
 			{
