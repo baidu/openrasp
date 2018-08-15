@@ -288,6 +288,7 @@ void LogAgent::run()
 					ldi->ifs.close();
 					ldi->ifs.clear();
 				}
+				ldi->fpos = 0;
 				std::vector<std::string> files_tobe_deleted;
 				std::string tobe_deleted_date_suffix = get_formatted_date_suffix(now - openrasp_ini.log_max_backup * 24 * 60 * 60);
 				openrasp_scandir(ldi->dir_abs_path, files_tobe_deleted,
