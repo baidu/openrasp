@@ -58,7 +58,6 @@ class LogAgent : public BaseAgent
 public:
   static volatile int signal_received;
   static const int max_post_logs_account = 512;
-  
   LogAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);

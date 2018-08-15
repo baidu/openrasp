@@ -103,11 +103,11 @@ bool OpenraspAgentManager::shutdown()
 		{
 			pid_t master_pid = search_master_pid();
 			agent_ctrl_block->set_master_pid(master_pid);
-			if (master_pid && getpid() != master_pid)
+		}
+		if (agent_ctrl_block->get_master_pid() && getpid() != agent_ctrl_block->get_master_pid())
 			{
 				return true;
 			}
-		}
 		process_agent_shutdown();
 		destroy_share_memory();
 		initialized = false;
@@ -196,17 +196,6 @@ bool OpenraspAgentManager::process_agent_startup()
 	}
 	else if (pid == 0)
 	{
-		int fd;
-		if (-1 != (fd = open("/dev/null", O_RDONLY)))
-		{
-			close(STDIN_FILENO);
-			close(STDERR_FILENO);
-			close(STDOUT_FILENO);
-			dup2(fd, STDIN_FILENO);
-			dup2(fd, STDERR_FILENO);
-			dup2(fd, STDOUT_FILENO);
-			close(fd);
-		}
 		setsid();
 		supervisor_run();
 	}
@@ -219,6 +208,7 @@ bool OpenraspAgentManager::process_agent_startup()
 
 void OpenraspAgentManager::process_agent_shutdown()
 {
+	agents.clear();
 	pid_t supervisor_id = agent_ctrl_block->get_supervisor_id();
 	pid_t plugin_agent_id = agent_ctrl_block->get_plugin_agent_id();
 	pid_t log_agent_id = agent_ctrl_block->get_log_agent_id();
