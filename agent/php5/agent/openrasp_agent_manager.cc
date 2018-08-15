@@ -102,12 +102,15 @@ bool OpenraspAgentManager::shutdown()
 		if (strcmp(sapi_module.name, "fpm-fcgi") == 0)
 		{
 			pid_t master_pid = search_master_pid();
-			agent_ctrl_block->set_master_pid(master_pid);
+			if (master_pid)
+			{
+				agent_ctrl_block->set_master_pid(master_pid);
+			}
 		}
 		if (agent_ctrl_block->get_master_pid() && getpid() != agent_ctrl_block->get_master_pid())
-			{
-				return true;
-			}
+		{
+			return true;
+		}
 		process_agent_shutdown();
 		destroy_share_memory();
 		initialized = false;
