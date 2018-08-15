@@ -97,6 +97,8 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addHook(new WebsphereParseParamHook());
         addHook(new WebsphereHttpInputHook());
         addHook(new WebphereHttpOutputHook());
+        addHook(new WebsphereStartupHook());
+        addHook(new WebsphereXssHook());
     }
 
     private void addHook(AbstractClassHook hook) {
