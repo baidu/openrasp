@@ -269,18 +269,8 @@ public final class HttpServletRequest extends AbstractRequest {
     @Override
     public String getAppBasePath() {
         try {
-            Object realPath = Reflection.invokeMethod(request, "getRealPath", new Class[]{String.class}, "/");
-            if (realPath instanceof String) {
-                String separator = System.getProperty("file.separator");
-                String rp = (String) realPath;
-                if (rp.endsWith(separator)) {
-                    rp = rp.substring(0, rp.length() - 1);
-                }
-                int index = rp.lastIndexOf(separator);
-                return rp.substring(0, index);
-            } else {
-                return "";
-            }
+            String realPath = Reflection.invokeStringMethod(request, "getRealPath", new Class[]{String.class}, "/");
+            return realPath == null ? "" : realPath;
         } catch (Exception e) {
             e.printStackTrace();
             return "";
