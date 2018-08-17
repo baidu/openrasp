@@ -77,14 +77,15 @@ HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey)
 	return nullptr;
 }
 
-long fetch_outmost_long_from_ht(HashTable *ht, const char *arKey)
+bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result)
 {
     zval **origin_zv;
 	if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
 		Z_TYPE_PP(origin_zv) == IS_LONG)
 	{
-		return Z_LVAL_PP(origin_zv);
+		*result = Z_LVAL_PP(origin_zv);
+        return true;
 	}
-	return 1;
+	return false;
 }
 } // namespace openrasp

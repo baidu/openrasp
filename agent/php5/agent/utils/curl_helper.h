@@ -34,7 +34,7 @@ struct ResponseInfo
 
 void perform_curl(CURL *curl, const std::string url_string, const char *postdata, ResponseInfo &res_info);
 char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
-long fetch_outmost_long_from_ht(HashTable *ht, const char *arKey);
+bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result);
 HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey);
 } // namespace openrasp
 #endif

@@ -102,9 +102,9 @@ void PluginAgent::run()
 		if (res_info.response_code >= 200 && res_info.response_code < 300)
 		{
 			long status;
-			char *description = nullptr;
-			if ((status = fetch_outmost_long_from_ht(Z_ARRVAL_P(return_value), "status")) &&
-				(description = fetch_outmost_string_from_ht(Z_ARRVAL_P(return_value), "description")))
+			bool has_status = fetch_outmost_long_from_ht(Z_ARRVAL_P(return_value), "status", &status);
+			char *description = fetch_outmost_string_from_ht(Z_ARRVAL_P(return_value), "description");
+			if (has_status && description)
 			{
 				if (0 < status)
 				{
