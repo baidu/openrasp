@@ -254,6 +254,7 @@ void LogAgent::run()
 				if (!ldi->ifs.is_open())
 				{
 					ldi->ifs.open(active_log_file, std::ifstream::binary);
+					ldi->st_ino = get_file_st_ino(active_log_file TSRMLS_CC);
 				}
 				ldi->ifs.seekg(ldi->fpos);
 				if (!ldi->ifs.good())
@@ -280,6 +281,13 @@ void LogAgent::run()
 					}
 				}
 				buffer.clear();
+				long st_ino = get_file_st_ino(active_log_file TSRMLS_CC);
+				if (0 != st_ino && st_ino != ldi->st_ino)
+				{
+					ldi->ifs.close();
+					ldi->ifs.clear();
+					ldi->fpos = 0;
+				}
 			}
 			if (file_rotate)
 			{

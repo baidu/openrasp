@@ -25,11 +25,13 @@
 
 long fetch_time_offset();
 const char *fetch_url_scheme(const char *filename);
+long get_file_st_ino(std::string filename TSRMLS_DC);
 void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC);
 void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC);
 int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC);
 bool same_day_in_current_timezone(long src, long target, long offset);
 char *openrasp_format_date(char *format, int format_len, time_t ts);
+void openrasp_pcre_match(char *regex, int regex_len, char *subject, int subject_len, zval *return_value TSRMLS_DC);
 void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter);
 
 #endif

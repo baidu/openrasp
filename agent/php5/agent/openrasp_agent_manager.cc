@@ -118,6 +118,40 @@ bool OpenraspAgentManager::shutdown()
 	return true;
 }
 
+bool OpenraspAgentManager::verify_ini_correct()
+{
+	TSRMLS_FETCH();
+	if (check_sapi_need_alloc_shm())
+	{
+		if (nullptr == openrasp_ini.backend)
+		{
+			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.backend is essential when remote management is enabled."));
+			return false;
+		}
+		if (nullptr == openrasp_ini.authentication_id)
+		{
+			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.authentication_id is essential when remote management is enabled."));
+			return false;
+		}
+		else
+		{
+			zval *match_res = nullptr;
+			MAKE_STD_ZVAL(match_res);
+			char *regex = "/^[0-9a-fA-F]{32}$/";
+			const int regex_len = strlen(regex);
+			openrasp_pcre_match(regex, regex_len, openrasp_ini.authentication_id, strlen(openrasp_ini.authentication_id), match_res TSRMLS_CC);
+			if (Z_TYPE_P(match_res) != IS_LONG || Z_LVAL_P(match_res) != 1)
+			{
+				openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.authentication_id format is incorrect."));
+				zval_ptr_dtor(&match_res);
+				return false;
+			}
+			zval_ptr_dtor(&match_res);
+		}
+	}
+	return true;
+}
+
 bool OpenraspAgentManager::create_share_memory()
 {
 	char *shm_block = _mm->create(SHMEM_SEC_CTRL_BLOCK, sizeof(OpenraspCtrlBlock));

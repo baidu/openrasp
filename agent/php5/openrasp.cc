@@ -64,11 +64,11 @@ PHP_INI_ENTRY1("openrasp.timeout_ms", "100", PHP_INI_SYSTEM, OnUpdateOpenraspInt
 PHP_INI_ENTRY1("openrasp.block_status_code", "302", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.block_status_code)
 PHP_INI_ENTRY1("openrasp.plugin_maxstack", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.plugin_maxstack)
 PHP_INI_ENTRY1("openrasp.log_maxstack", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_maxstack)
-PHP_INI_ENTRY1("openrasp.backend", "http://scloud.baidu.com:8080", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.backend)
+PHP_INI_ENTRY1("openrasp.backend", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.backend)
 PHP_INI_ENTRY1("openrasp.plugin_update_interval", "60", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.plugin_update_interval)
 PHP_INI_ENTRY1("openrasp.log_push_interval", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_push_interval)
 PHP_INI_ENTRY1("openrasp.clientip_header", "clientip", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.clientip_header)
-PHP_INI_ENTRY1("openrasp.authentication_id", "4e56cd55aa559823e5dc256e486b2b50", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.authentication_id)
+PHP_INI_ENTRY1("openrasp.authentication_id", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.authentication_id)
 PHP_INI_ENTRY1("openrasp.log_max_backup", "30", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_max_backup)
 PHP_INI_ENTRY1("openrasp.plugin_update_enable", "1", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.plugin_update_enable)
 PHP_INI_END()
@@ -91,6 +91,12 @@ PHP_MINIT_FUNCTION(openrasp)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp, PHP_GINIT(openrasp), PHP_GSHUTDOWN(openrasp));
     REGISTER_INI_ENTRIES();
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+    if (!openrasp::oam.verify_ini_correct())
+    {
+        return SUCCESS;
+    }
+#endif
     if (!make_openrasp_root_dir(TSRMLS_C))
     {
         openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir is not configured correctly in php.ini (not empty, not root path, not relative path and must be writable), continuing without security protection"));
@@ -181,8 +187,9 @@ PHP_MINFO_FUNCTION(openrasp)
 zend_module_dep openrasp_deps[] = {
     ZEND_MOD_REQUIRED("standard")
         ZEND_MOD_REQUIRED("json")
-            ZEND_MOD_CONFLICTS("xdebug")
-                ZEND_MOD_END};
+            ZEND_MOD_REQUIRED("pcre")
+                ZEND_MOD_CONFLICTS("xdebug")
+                    ZEND_MOD_END};
 #endif
 
 zend_module_entry openrasp_module_entry = {

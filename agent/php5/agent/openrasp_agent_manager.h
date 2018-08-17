@@ -45,6 +45,7 @@ public:
   const std::string prefix;
   std::ifstream ifs;
   int fpos = 0;
+  long st_ino = 0;
 
   LogDirInfo(const std::string dir_abs_path, const std::string prefix, const std::string backend_url)
       : dir_abs_path(dir_abs_path), prefix(prefix), backend_url(backend_url)
@@ -60,6 +61,7 @@ public:
   OpenraspCtrlBlock *agent_ctrl_block;
   bool startup();
   bool shutdown();
+  bool verify_ini_correct();
 
   long get_plugin_update_timestamp()
   {
