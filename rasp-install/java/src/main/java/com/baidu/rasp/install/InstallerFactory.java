@@ -60,7 +60,9 @@ public abstract class InstallerFactory {
         if (new File(serverRoot, "bin/probe.sh").exists()
                 || new File(serverRoot, "bin/probe.bat").exists()
                 || new File(serverRoot, "bin/twiddle.sh").exists()
-                || new File(serverRoot, "bin/twiddle.bat").exists()) {
+                || new File(serverRoot, "bin/twiddle.bat").exists())
+                || new File(serverRoot, "bin/jdr.bat").exists()
+                || new File(serverRoot, "bin/jdr.sh").exists(){
             return JBOSS;
         }
         if (new File(serverRoot, "bin/httpd.sh").exists()
