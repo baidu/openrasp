@@ -216,7 +216,7 @@ void LogAgent::run()
 		});
 	std::string root_dir = std::string(openrasp_ini.root_dir);
 	static const std::string position_backup_file = ".LogCollectingPos.xml";
-	long last_post_time = 0;
+	long last_post_time = (long)time(NULL);
 	long time_offset = fetch_time_offset();
 	std::string formatted_date_suffix = get_formatted_date_suffix((long)time(NULL));
 
