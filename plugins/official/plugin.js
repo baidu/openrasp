@@ -185,7 +185,7 @@ var algorithmConfig = {
     },
 
     // 重命名监控 - 将普通文件重命名为webshell，
-    // 案例有 ueditor getshell、MOVE 方式上传后门等等
+    // 案例有 MOVE 方式上传后门、CVE-2018-9134 dedecms v5.7 后台重命名 getshell
     rename_webshell: {
         action: 'block'
     },
@@ -444,6 +444,17 @@ function validate_stack_php(stacks) {
     }
 
     return verdict
+}
+
+function has_file_extension(path) {
+    var filename = basename(path)
+    var index    = filename.indexOf('.')
+
+    if (index > 0 && index != filename.length - 1) {
+        return true
+    }
+
+    return false
 }
 
 function is_absolute_path(path, os) {
@@ -1222,6 +1233,12 @@ if (algorithmConfig.fileUpload_webdav.action != 'ignore')
 if (algorithmConfig.rename_webshell.action != 'ignore')
 {
     plugin.register('rename', function (params, context) {
+
+        // 源文件必须有扩展名，避免误报，e.g hello.txt
+        if (! has_file_extension(params.source))
+        {
+            return clean
+        }
 
         // 源文件不是脚本，且目标文件是脚本，判定为重命名方式写后门
         if (! scriptFileRegex.test(params.source) && scriptFileRegex.test(params.dest))
