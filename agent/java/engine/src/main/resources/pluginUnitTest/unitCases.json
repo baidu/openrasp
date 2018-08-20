@@ -1,0 +1,1045 @@
+[
+  {
+    "id": "sqli_userinput",
+    "name": "sql",
+    "action": "block",
+    "params": {
+      "server": "mysql",
+      "query": "SELECT * FROM users WHERE id = 1 and 1=2 union select user(),2,3#"
+    },
+    "context": {
+      "parameter": {
+        "id": [
+          "1 and 1=2 union select user(),2,3#"
+        ]
+      }
+    }
+  },
+  {
+    "id": "sqli_userinput_bypass",
+    "name": "sql",
+    "action": "block",
+    "params": {
+      "server": "mysql",
+      "query": "SELECT id, name FROM test.vuln WHERE id = 1 union select id,name from test.vuln #union select id,name from test.vuln where id = 1"
+    },
+    "context": {
+      "parameter": {
+        "id": [
+          "1 union select id,name from test.vuln #"
+        ]
+      }
+    }
+  },
+  {
+    "id": "sqli_policy_hex",
+    "name": "sql",
+    "action": "block",
+    "params": {
+      "server": "mysql",
+      "query": "SELECT * FROM users WHERE id = 1 and 1=2 union select 0x41424344#"
+    },
+    "context": {
+      "parameter": {}
+    }
+  },
+  {
+    "id": "sqli_policy_func",
+    "name": "sql",
+    "action": "block",
+    "params": {
+      "server": "mysql",
+      "query": "SELECT * FROM users WHERE id = sleep(3)"
+    },
+    "context": {
+      "parameter": {}
+    }
+  },
+  {
+    "id": "sqli_policy_into_outfile",
+    "name": "sql",
+    "action": "block",
+    "params": {
+      "server": "mysql",
+      "query": "SELECT * FROM users WHERE id = 123 or 1=1 union select username,password/**/into/**/outfile/**/\"/tmp/123.txt\""
+    },
+    "context": {
+      "parameter": {}
+    }
+  },
+  {
+    "id": "sqli_constant_white",
+    "name": "sql",
+    "action": "ignore",
+    "params": {
+      "server": "mysql",
+      "query": "select * from users where uid = ? AND (0=0 OR a.MEMBER_ID=0)"
+    },
+    "context": {
+      "parameter": {}
+    }
+  },
+  {
+    "id": "sqli_white",
+    "name": "sql",
+    "action": "ignore",
+    "params": {
+      "server": "mysql",
+      "query": "select @@version, concat(user(), database())"
+    },
+    "context": {
+      "parameter": {}
+    }
+  },
+  {
+    "id": "sqli_bypass_currentuser",
+    "name": "sql",
+    "action": "block",
+    "params": {
+      "server": "mysql",
+      "query": "SELECT * FROM users WHERE id = 1 and current_user == \"root\""
+    },
+    "context": {
+      "parameter": {}
+    }
+  },
+  {
+    "id": "sqli_short_payload",
+    "name": "sql",
+    "action": "ignore",
+    "params": {
+      "server": "mysql",
+      "query": "SELECT * FROM users WHERE id = 1 and 1=1"
+    },
+    "context": {
+      "parameter": {
+        "id": [
+          "1 and 1=1"
+        ]
+      }
+    }
+  },
+  {
+    "id": "sqli_with_comment",
+    "name": "sql",
+    "action": "block",
+    "params": {
+      "server": "mysql",
+      "query": "SELECT * FROM users WHERE id = 1/*123*/and/**/1=2/*qwe*/union/*qwe*/select/*qwe*/user()/*qwe*/,/*qwe*/2/*qwe*/,/*qwe*/3#abdc"
+    },
+    "context": {
+      "parameter": {
+        "id": [
+          "1/*123*/and/**/1=2/*qwe*/union/*qwe*/select/*qwe*/user()/*qwe*/,/*qwe*/2/*qwe*/,/*qwe*/3#abdc"
+        ]
+      }
+    }
+  },
+  {
+    "id": "directory_reflect_white",
+    "name": "directory",
+    "action": "ignore",
+    "params": {
+      "path": "/var/www/html/blog/storage/framework/sessions",
+      "realpath": "/var/www/html/blog/storage/framework/sessions",
+      "stack": [
+        "/var/www/html/blog/vendor/symfony/finder/Iterator/RecursiveDirectoryIterator.php@opendir",
+        "/var/www/html/blog/vendor/symfony/finder/Iterator/RecursiveDirectoryIterator.php@isRewindable",
+        "@rewind",
+        "/var/www/html/blog/vendor/symfony/finder/Iterator/FilterIterator.php@rewind",
+        "@rewind",
+        "/var/www/html/blog/vendor/symfony/finder/Iterator/FilterIterator.php@rewind",
+        "@rewind",
+        "/var/www/html/blog/vendor/symfony/finder/Iterator/FilterIterator.php@rewind",
+        "@rewind",
+        "/var/www/html/blog/vendor/symfony/finder/Iterator/FilterIterator.php@rewind",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Session/FileSessionHandler.php@rewind",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php@gc",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php@collectGarbage",
+        "@handle",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php@call_user_func_array",
+        "@Illuminate\\Pipeline\\{closure}",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Routing/Pipeline.php@call_user_func",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php@Illuminate\\Routing\\{closure}",
+        "@handle",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php@call_user_func_array",
+        "@Illuminate\\Pipeline\\{closure}",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Routing/Pipeline.php@call_user_func",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php@Illuminate\\Routing\\{closure}",
+        "@handle",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php@call_user_func_array",
+        "@Illuminate\\Pipeline\\{closure}",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Routing/Pipeline.php@call_user_func",
+        "@Illuminate\\Routing\\{closure}",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php@call_user_func",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Routing/Router.php@then",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Routing/Router.php@runRouteWithinStack",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Routing/Router.php@dispatchToRoute",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php@dispatch",
+        "@Illuminate\\Foundation\\Http\\{closure}",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Routing/Pipeline.php@call_user_func",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/CheckForMaintenanceMode.php@Illuminate\\Routing\\{closure}",
+        "@handle",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php@call_user_func_array",
+        "@Illuminate\\Pipeline\\{closure}",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Routing/Pipeline.php@call_user_func",
+        "@Illuminate\\Routing\\{closure}",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php@call_user_func",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php@then",
+        "/var/www/html/blog/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php@sendRequestThroughRouter",
+        "/var/www/html/blog/public/index.php@handle"
+      ]
+    },
+    "context": {
+      "appBasePath": "/var/www/html/",
+      "server": {
+        "language": "php"
+      }
+    }
+  },
+  {
+    "id": "ssrf_userinput_intranet",
+    "name": "ssrf",
+    "action": "block",
+    "params": {
+      "hostname": "172.16.177.120",
+      "ip": [
+        "172.16.177.120"
+      ],
+      "url": "http://172.16.177.120/hello.action?redirect=123"
+    },
+    "context": {
+      "parameter": {
+        "url": [
+          "http://172.16.177.120/hello.action?redirect=123"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ssrf_userinput_localhost",
+    "name": "ssrf",
+    "action": "block",
+    "params": {
+      "hostname": "127.0.0.1",
+      "ip": [
+        "127.0.0.1"
+      ],
+      "url": "http://127.0.0.1/hello.action?redirect=123"
+    },
+    "context": {
+      "parameter": {
+        "url": [
+          "http://127.0.0.1/hello.action?redirect=123"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ssrf_common",
+    "name": "ssrf",
+    "action": "block",
+    "params": {
+      "hostname": "172.16.177.120.xip.io",
+      "ip": [
+        "172.16.177.120"
+      ],
+      "url": "http://172.16.177.120/hello.action?redirect=123"
+    },
+    "context": {
+      "parameter": {}
+    }
+  },
+  {
+    "id": "ssrf_curl_file",
+    "name": "ssrf",
+    "action": "block",
+    "params": {
+      "hostname": "",
+      "ip": [
+        ""
+      ],
+      "url": "file:///etc/passwd"
+    },
+    "context": {
+      "parameter": {}
+    }
+  },
+  {
+    "id": "ssrf_curl_gopher",
+    "name": "ssrf",
+    "action": "block",
+    "params": {
+      "hostname": "172.16.177.120.xip.io",
+      "ip": [
+        "172.16.177.120"
+      ],
+      "url": "gopher:///172.16.177.120"
+    },
+    "context": {
+      "parameter": {}
+    }
+  },
+  {
+    "id": "ssrf_obfuscate",
+    "name": "ssrf",
+    "action": "block",
+    "params": {
+      "hostname": "0x7f1111",
+      "ip": [
+        "127.0.0.1"
+      ],
+      "url": "http://0x7f1111/hello"
+    },
+    "context": {
+      "parameter": {}
+    }
+  },
+  {
+    "id": "ssrf_white",
+    "name": "ssrf",
+    "action": "ignore",
+    "params": {
+      "hostname": "www.baidu.com",
+      "ip": [
+        "220.130.222.33",
+        "220.111.222.33"
+      ],
+      "url": "https://www.baidu.com"
+    },
+    "context": {
+      "parameter": {
+        "url": [
+          "https://www.baidu.com/?wd=123"
+        ]
+      }
+    }
+  },
+  {
+    "id": "script_fileUpload",
+    "name": "fileUpload",
+    "action": "block",
+    "params": {
+      "filename": "abc.php"
+    },
+    "context": {
+      "parameter": {}
+    }
+  },
+  {
+    "id": "script_fileUpload_white",
+    "name": "fileUpload",
+    "action": "ignore",
+    "params": {
+      "filename": "abc.jpg"
+    },
+    "context": {
+      "parameter": {}
+    }
+  },
+  {
+    "id": "include_outsideWebroot",
+    "name": "include",
+    "action": "block",
+    "params": {
+      "url": "../../../../../var/log/httpd/error.log",
+      "realpath": "/var/log/httpd/error.log"
+    },
+    "context": {
+      "appBasePath": "/home/webroot",
+      "parameter": {}
+    }
+  },
+  {
+    "id": "include_outsideWebroot_windows_bypass",
+    "name": "include",
+    "action": "block",
+    "params": {
+      "url": "..\\/..\\/..\\/..\\/..\\/error.log",
+      "realpath": "/var/log/httpd/error.log"
+    },
+    "context": {
+      "appBasePath": "/home/webroot",
+      "parameter": {}
+    }
+  },
+  {
+    "id": "include_protocol_php",
+    "name": "include",
+    "action": "block",
+    "params": {
+      "url": "php://whatever",
+      "realpath": "php://whateve",
+      "function": "include_once"
+    },
+    "context": {
+      "appBasePath": "/home/webroot",
+      "parameter": {}
+    }
+  },
+  {
+    "id": "include_white",
+    "name": "include",
+    "action": "ignore",
+    "params": {
+      "url": "/home/webroot//include.php",
+      "realpath": "/home/webroot/include.php"
+    },
+    "context": {
+      "appBasePath": "/home/webroot",
+      "parameter": {}
+    }
+  },
+  {
+    "id": "writeFile_PUT_script",
+    "name": "writeFile",
+    "action": "block",
+    "params": {
+      "realpath": "/home/webroot/test.jsp"
+    },
+    "context": {
+      "parameter": {},
+      "method": "put"
+    }
+  },
+  {
+    "id": "writeFile_white",
+    "name": "writeFile",
+    "action": "ignore",
+    "params": {
+      "realpath": "/home/webroot/test.jpg"
+    },
+    "context": {
+      "parameter": {},
+      "method": "post"
+    }
+  },
+  {
+    "id": "readFile_userinput",
+    "name": "readFile",
+    "action": "block",
+    "params": {
+      "path": "../../../../../../etc/passwd",
+      "realpath": "/etc/passwd"
+    },
+    "context": {
+      "url": "/hello",
+      "appBasePath": "/home/webroot",
+      "parameter": {
+        "path": [
+          "../../../../../../etc/passwd"
+        ]
+      },
+      "server": {
+        "language": "java"
+      }
+    }
+  },
+  {
+    "id": "readFile_userinput",
+    "name": "readFile",
+    "action": "ignore",
+    "params": {
+      "path": "download/1.jpg",
+      "realpath": "/home/webroot/download/1.jpg"
+    },
+    "context": {
+      "url": "/hello",
+      "appBasePath": "/home/webroot",
+      "parameter": {
+        "path": [
+          "download/1.jpg"
+        ]
+      },
+      "server": {
+        "language": "java"
+      }
+    }
+  },
+  {
+    "id": "readFile_unwanted",
+    "name": "readFile",
+    "action": "block",
+    "params": {
+      "path": "/etc/shadow",
+      "realpath": "/etc/shadow"
+    },
+    "context": {
+      "url": "/shell.jsp",
+      "appBasePath": "/home/webroot",
+      "parameter": {
+        "path": [
+          "/etc/shadow"
+        ]
+      },
+      "server": {
+        "language": "java"
+      }
+    }
+  },
+  {
+    "id": "xxe_relative",
+    "name": "xxe",
+    "action": "ignore",
+    "params": {
+      "entity": "file://xwork.dtd"
+    },
+    "context": {}
+  },
+  {
+    "id": "xxe_linux_file",
+    "name": "xxe",
+    "action": "ignore",
+    "params": {
+      "entity": "file:///etc/passwd"
+    },
+    "context": {}
+  },
+  {
+    "id": "xxe_windows_smb",
+    "name": "xxe",
+    "action": "block",
+    "params": {
+      "entity": "\\\\1.1.1.1\\helloworld"
+    },
+    "context": {}
+  },
+  {
+    "id": "xxe_windows_file",
+    "name": "xxe",
+    "action": "block",
+    "params": {
+      "entity": "file://c:\\windows\\system32\\calc.exe"
+    },
+    "context": {}
+  },
+  {
+    "id": "struts-s2-045-bypass",
+    "name": "ognl",
+    "action": "block",
+    "params": {
+      "expression": "(#_='multipart/form-data').(#dm=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS).(#_memberAccess?(#_memberAccess=#dm):((#container=#context['com.opensymphony.xwork2.ActionContext.container']).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.getExcludedPackageNames().clear()).(#ognlUtil.getExcludedClasses().clear()).(#context.setMemberAccess(#dm)))).(#cmd=(@org.apache.struts2.ServletActionContext@getRequest().getHeader('Data'))).(#iswin=(@java.lang.System@getProperty('os.name').toLowerCase().contains('win'))).(#cmds=(#iswin?{'cmd.exe','/c',#cmd}:{'/bin/bash','-c',#cmd})).(#p=new java.lang.ProcessBuilder(#cmds)).(#p.redirectErrorStream(true)).(#process=#p.start()).(#ros=(@org.apache.struts2.ServletActionContext@getResponse().getOutputStream())).(@org.apache.commons.io.IOUtils@copy(#process.getInputStream(),#ros)).(#ros.flush())"
+    },
+    "context": {}
+  },
+  {
+    "id": "command_reflect_java1",
+    "name": "command",
+    "action": "block",
+    "params": {
+      "command": "cat /etc/passwd",
+      "stack": [
+        "java.lang.reflect.Method.invoke",
+        "org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute"
+      ]
+    },
+    "context": {
+      "url": "/shell.jsp",
+      "appBasePath": "/home/webroot",
+      "parameter": {
+        "cmd": [
+          "cat /etc/passwd"
+        ]
+      },
+      "server": {
+        "language": "java"
+      }
+    }
+  },
+  {
+    "id": "command_reflect_yeepay_false",
+    "name": "command",
+    "action": "log",
+    "params": {
+      "command": "nbtstat -A 172.16.177.20",
+      "stack": [
+        "com.fuxi.javaagent.tool.StackTrace.getStackTraceArray",
+        "com.fuxi.javaagent.hook.ProcessBuilderHook.checkCommand",
+        "java.lang.ProcessBuilder.start",
+        "java.lang.Runtime.exec",
+        "java.lang.Runtime.exec",
+        "java.lang.Runtime.exec",
+        "com.yeepay.app.selfservice.util.MACAddressUtil.getLocalMac",
+        "com.yeepay.app.selfservice.security.DoCorpLoginConfirmActionNew.execute",
+        "sun.reflect.NativeMethodAccessorImpl.invoke0",
+        "sun.reflect.NativeMethodAccessorImpl.invoke",
+        "sun.reflect.DelegatingMethodAccessorImpl.invoke",
+        "java.lang.reflect.Method.invoke"
+      ]
+    },
+    "context": {
+      "url": "/whatever/hello.action",
+      "appBasePath": "/home/webroot",
+      "parameter": {},
+      "server": {
+        "language": "java"
+      }
+    }
+  },
+  {
+    "id": "command_freemarker",
+    "name": "command",
+    "action": "block",
+    "params": {
+      "command": "cat /etc/passwd",
+      "stack": [
+        "com.fuxi.javaagent.tool.StackTrace.getStackTraceArray",
+        "com.fuxi.javaagent.hook.ProcessBuilderHook.checkCommand",
+        "java.lang.ProcessBuilder.start",
+        "java.lang.Runtime.exec",
+        "java.lang.Runtime.exec",
+        "java.lang.Runtime.exec",
+        "freemarker.template.utility.Execute.exec",
+        "freemarker.core.MethodCall._eval",
+        "freemarker.core.Expression.eval",
+        "freemarker.core.Expression.evalAndCoerceToString",
+        "freemarker.core.DollarVariable.accept",
+        "freemarker.core.Environment.visit",
+        "freemarker.core.MixedContent.accept",
+        "freemarker.core.Environment.visit",
+        "freemarker.core.Environment.process",
+        "freemarker.template.Template.process",
+        "org.springframework.web.servlet.view.freemarker.FreeMarkerView.processTemplate",
+        "org.springframework.web.servlet.view.freemarker.FreeMarkerView.doRender",
+        "org.springframework.web.servlet.view.freemarker.FreeMarkerView.renderMergedTemplateModel",
+        "org.springframework.web.servlet.view.AbstractTemplateView.renderMergedOutputModel",
+        "org.springframework.web.servlet.view.AbstractView.render",
+        "org.springframework.web.servlet.DispatcherServlet.render",
+        "org.springframework.web.servlet.DispatcherServlet.processDispatchResult",
+        "org.springframework.web.servlet.DispatcherServlet.doDispatch",
+        "org.springframework.web.servlet.DispatcherServlet.doService",
+        "org.springframework.web.servlet.FrameworkServlet.processRequest",
+        "org.springframework.web.servlet.FrameworkServlet.doGet",
+        "javax.servlet.http.HttpServlet.service",
+        "org.springframework.web.servlet.FrameworkServlet.service",
+        "javax.servlet.http.HttpServlet.service",
+        "org.apache.catalina.core.ApplicationFilterChain.internalDoFilter",
+        "org.apache.catalina.core.ApplicationFilterChain.doFilter",
+        "org.apache.tomcat.websocket.server.WsFilter.doFilter",
+        "org.apache.catalina.core.ApplicationFilterChain.internalDoFilter",
+        "org.apache.catalina.core.ApplicationFilterChain.doFilter",
+        "org.apache.catalina.core.StandardWrapperValve.invoke",
+        "org.apache.catalina.core.StandardContextValve.invoke",
+        "org.apache.catalina.core.StandardHostValve.invoke",
+        "org.apache.catalina.valves.ErrorReportValve.invoke",
+        "org.apache.catalina.valves.AbstractAccessLogValve.invoke",
+        "org.apache.catalina.core.StandardEngineValve.invoke",
+        "org.apache.catalina.connector.CoyoteAdapter.service",
+        "org.apache.coyote.http11.AbstractHttp11Processor.process",
+        "org.apache.coyote.AbstractProtocol$AbstractConnectionHandler.process",
+        "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun",
+        "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.run",
+        "java.util.concurrent.ThreadPoolExecutor.runWorker",
+        "java.util.concurrent.ThreadPoolExecutor$Worker.run",
+        "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run",
+        "java.lang.Thread.run"
+      ]
+    },
+    "context": {
+      "url": "/shell.jsp",
+      "appBasePath": "/home/webroot",
+      "parameter": {
+        "cmd": [
+          "cat /etc/passwd"
+        ]
+      },
+      "server": {
+        "language": "java"
+      }
+    }
+  },
+  {
+    "id": "command_fastjson",
+    "name": "command",
+    "action": "block",
+    "params": {
+      "command": "cat /etc/passwd",
+      "stack": [
+        "com.baidu.openrasp.tool.StackTrace.getStackTraceArray",
+        "com.baidu.openrasp.hook.ProcessBuilderHook.checkCommand",
+        "com.baidu.openrasp.hook.ProcessBuilderHook.checkCommand",
+        "sun.reflect.NativeMethodAccessorImpl.invoke0",
+        "sun.reflect.NativeMethodAccessorImpl.invoke",
+        "sun.reflect.DelegatingMethodAccessorImpl.invoke",
+        "java.lang.reflect.Method.invoke",
+        "java.lang.UNIXProcess.<init>",
+        "java.lang.ProcessImpl.start",
+        "java.lang.ProcessBuilder.start",
+        "java.lang.Runtime.exec",
+        "java.lang.Runtime.exec",
+        "java.lang.Runtime.exec",
+        "person.Test.<init>",
+        "sun.reflect.NativeConstructorAccessorImpl.newInstance0",
+        "sun.reflect.NativeConstructorAccessorImpl.newInstance",
+        "sun.reflect.DelegatingConstructorAccessorImpl.newInstance",
+        "java.lang.reflect.Constructor.newInstance",
+        "java.lang.Class.newInstance0",
+        "java.lang.Class.newInstance",
+        "com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl.getTransletInstance",
+        "com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl.newTransformer",
+        "com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl.getOutputProperties",
+        "sun.reflect.NativeMethodAccessorImpl.invoke0",
+        "sun.reflect.NativeMethodAccessorImpl.invoke",
+        "sun.reflect.DelegatingMethodAccessorImpl.invoke",
+        "java.lang.reflect.Method.invoke",
+        "com.alibaba.fastjson.parser.deserializer.FieldDeserializer.setValue",
+        "com.alibaba.fastjson.parser.deserializer.DefaultFieldDeserializer.parseField",
+        "com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.parseField",
+        "com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze",
+        "com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze",
+        "com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze",
+        "com.alibaba.fastjson.parser.DefaultJSONParser.parseObject",
+        "com.alibaba.fastjson.parser.DefaultJSONParser.parse",
+        "com.alibaba.fastjson.parser.deserializer.JavaObjectDeserializer.deserialze",
+        "com.alibaba.fastjson.parser.DefaultJSONParser.parseObject",
+        "com.alibaba.fastjson.JSON.parseObject",
+        "com.alibaba.fastjson.JSON.parseObject",
+        "person.Poc.testAutoTypeDeny",
+        "person.Poc.run",
+        "person.FastJsonServlet.doGet",
+        "javax.servlet.http.HttpServlet.service",
+        "javax.servlet.http.HttpServlet.service",
+        "org.apache.catalina.core.ApplicationFilterChain.internalDoFilter",
+        "org.apache.catalina.core.ApplicationFilterChain.doFilter",
+        "org.apache.tomcat.websocket.server.WsFilter.doFilter",
+        "org.apache.catalina.core.ApplicationFilterChain.internalDoFilter",
+        "org.apache.catalina.core.ApplicationFilterChain.doFilter",
+        "org.apache.catalina.core.StandardWrapperValve.invoke",
+        "org.apache.catalina.core.StandardContextValve.invoke",
+        "org.apache.catalina.authenticator.AuthenticatorBase.invoke",
+        "org.apache.catalina.core.StandardHostValve.invoke",
+        "org.apache.catalina.valves.ErrorReportValve.invoke",
+        "org.apache.catalina.valves.AccessLogValve.invoke",
+        "org.apache.catalina.core.StandardEngineValve.invoke",
+        "org.apache.catalina.connector.CoyoteAdapter.service",
+        "org.apache.coyote.http11.AbstractHttp11Processor.process",
+        "org.apache.coyote.AbstractProtocol$AbstractConnectionHandler.process",
+        "org.apache.tomcat.util.net.JIoEndpoint$SocketProcessor.run",
+        "java.util.concurrent.ThreadPoolExecutor.runWorker",
+        "java.util.concurrent.ThreadPoolExecutor$Worker.run",
+        "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run",
+        "java.lang.Thread.run"
+      ]
+    },
+    "context": {
+      "url": "/shell.jsp",
+      "appBasePath": "/home/webroot",
+      "parameter": {
+        "cmd": [
+          "cat /etc/passwd"
+        ]
+      },
+      "server": {
+        "language": "java"
+      }
+    }
+  },
+  {
+    "id": "command_jenkins_xstream",
+    "name": "command",
+    "action": "block",
+    "params": {
+      "command": "cat /etc/passwd",
+      "stack": [
+        "java.lang.ProcessBuilder.start",
+        "sun.reflect.NativeMethodAccessorImpl.invoke0",
+        "sun.reflect.NativeMethodAccessorImpl.invoke",
+        "sun.reflect.DelegatingMethodAccessorImpl.invoke",
+        "java.lang.reflect.Method.invoke",
+        "javax.imageio.ImageIO$ContainsFilter.filter",
+        "javax.imageio.spi.FilterIterator.advance",
+        "javax.imageio.spi.FilterIterator.next",
+        "javax.crypto.Cipher.chooseFirstProvider",
+        "javax.crypto.Cipher.update",
+        "javax.crypto.CipherInputStream.getMoreData",
+        "javax.crypto.CipherInputStream.read",
+        "com.sun.xml.internal.bind.v2.util.ByteArrayOutputStreamEx.readFrom",
+        "com.sun.xml.internal.bind.v2.runtime.unmarshaller.Base64Data.get",
+        "com.sun.xml.internal.bind.v2.runtime.unmarshaller.Base64Data.toString",
+        "jdk.nashorn.internal.objects.NativeString.getStringValue",
+        "jdk.nashorn.internal.objects.NativeString.hashCode",
+        "java.util.HashMap.hash",
+        "java.util.HashMap.put",
+        "com.thoughtworks.xstream.converters.collections.MapConverter.putCurrentEntryIntoMap",
+        "com.thoughtworks.xstream.converters.collections.MapConverter.populateMap",
+        "com.thoughtworks.xstream.converters.collections.MapConverter.populateMap",
+        "com.thoughtworks.xstream.converters.collections.MapConverter.unmarshal",
+        "com.thoughtworks.xstream.core.TreeUnmarshaller.convert",
+        "com.thoughtworks.xstream.core.AbstractReferenceUnmarshaller.convert",
+        "com.thoughtworks.xstream.core.TreeUnmarshaller.convertAnother",
+        "com.thoughtworks.xstream.core.TreeUnmarshaller.convertAnother",
+        "com.thoughtworks.xstream.core.TreeUnmarshaller.start",
+        "com.thoughtworks.xstream.core.AbstractTreeMarshallingStrategy.unmarshal",
+        "com.thoughtworks.xstream.XStream.unmarshal",
+        "com.thoughtworks.xstream.XStream.unmarshal",
+        "com.thoughtworks.xstream.XStream.fromXML",
+        "org.apache.struts2.rest.handler.XStreamHandler.toObject",
+        "org.apache.struts2.rest.ContentTypeInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.ParametersInterceptor.doIntercept",
+        "com.opensymphony.xwork2.interceptor.MethodFilterInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.StaticParametersInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "org.apache.struts2.interceptor.CheckboxInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "org.apache.struts2.interceptor.FileUploadInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.ModelDrivenInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.ScopedModelDrivenInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.ParametersInterceptor.doIntercept",
+        "com.opensymphony.xwork2.interceptor.MethodFilterInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "org.apache.struts2.interceptor.ProfilingActivationInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "org.apache.struts2.interceptor.debugging.DebuggingInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.ChainingInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "org.apache.struts2.interceptor.I18nInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.PrepareInterceptor.doIntercept",
+        "com.opensymphony.xwork2.interceptor.MethodFilterInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "org.apache.struts2.interceptor.MessageStoreInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "org.apache.struts2.interceptor.ServletConfigInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.AliasInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.ExceptionMappingInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.DefaultActionProxy.execute",
+        "org.apache.struts2.dispatcher.Dispatcher.serviceAction",
+        "org.apache.struts2.dispatcher.ExecuteOperations.executeAction",
+        "org.apache.struts2.dispatcher.filter.StrutsPrepareAndExecuteFilter.doFilter",
+        "org.apache.catalina.core.ApplicationFilterChain.internalDoFilter",
+        "org.apache.catalina.core.ApplicationFilterChain.doFilter",
+        "org.jboss.web.tomcat.filters.ReplyHeaderFilter.doFilter",
+        "org.apache.catalina.core.ApplicationFilterChain.internalDoFilter",
+        "org.apache.catalina.core.ApplicationFilterChain.doFilter",
+        "org.apache.catalina.core.StandardWrapperValve.invoke",
+        "org.apache.catalina.core.StandardContextValve.invoke",
+        "org.jboss.web.tomcat.security.SecurityAssociationValve.invoke",
+        "org.apache.catalina.authenticator.AuthenticatorBase.invoke",
+        "org.jboss.web.tomcat.security.JaccContextValve.invoke",
+        "org.apache.catalina.core.StandardHostValve.invoke",
+        "org.apache.catalina.valves.ErrorReportValve.invoke",
+        "org.jboss.web.tomcat.service.jca.CachedConnectionValve.invoke",
+        "org.apache.catalina.core.StandardEngineValve.invoke",
+        "org.apache.catalina.connector.CoyoteAdapter.service",
+        "org.apache.coyote.http11.Http11Processor.process",
+        "org.apache.coyote.http11.Http11Protocol$Http11ConnectionHandler.process",
+        "org.apache.tomcat.util.net.JIoEndpoint$Worker.run",
+        "java.lang.Thread.run"
+      ]
+    },
+    "context": {
+      "url": "/shell.jsp",
+      "appBasePath": "/home/webroot",
+      "parameter": {
+        "cmd": [
+          "cat /etc/passwd"
+        ]
+      },
+      "server": {
+        "language": "java"
+      }
+    }
+  },
+  {
+    "id": "command_struts_xstream",
+    "name": "command",
+    "action": "block",
+    "params": {
+      "command": "cat /etc/passwd",
+      "stack": [
+        "java.lang.ProcessBuilder.start",
+        "sun.reflect.NativeMethodAccessorImpl.invoke0",
+        "sun.reflect.NativeMethodAccessorImpl.invoke",
+        "sun.reflect.DelegatingMethodAccessorImpl.invoke",
+        "java.lang.reflect.Method.invoke",
+        "javax.imageio.ImageIO$ContainsFilter.filter",
+        "javax.imageio.spi.FilterIterator.advance",
+        "javax.imageio.spi.FilterIterator.next",
+        "javax.crypto.Cipher.chooseFirstProvider",
+        "javax.crypto.Cipher.update",
+        "javax.crypto.CipherInputStream.getMoreData",
+        "javax.crypto.CipherInputStream.read",
+        "com.sun.xml.internal.bind.v2.util.ByteArrayOutputStreamEx.readFrom",
+        "com.sun.xml.internal.bind.v2.runtime.unmarshaller.Base64Data.get",
+        "com.sun.xml.internal.bind.v2.runtime.unmarshaller.Base64Data.toString",
+        "jdk.nashorn.internal.objects.NativeString.getStringValue",
+        "jdk.nashorn.internal.objects.NativeString.hashCode",
+        "java.util.HashMap.hash",
+        "java.util.HashMap.put",
+        "com.thoughtworks.xstream.converters.collections.MapConverter.putCurrentEntryIntoMap",
+        "com.thoughtworks.xstream.converters.collections.MapConverter.populateMap",
+        "com.thoughtworks.xstream.converters.collections.MapConverter.populateMap",
+        "com.thoughtworks.xstream.converters.collections.MapConverter.unmarshal",
+        "com.thoughtworks.xstream.core.TreeUnmarshaller.convert",
+        "com.thoughtworks.xstream.core.AbstractReferenceUnmarshaller.convert",
+        "com.thoughtworks.xstream.core.TreeUnmarshaller.convertAnother",
+        "com.thoughtworks.xstream.core.TreeUnmarshaller.convertAnother",
+        "com.thoughtworks.xstream.core.TreeUnmarshaller.start",
+        "com.thoughtworks.xstream.core.AbstractTreeMarshallingStrategy.unmarshal",
+        "com.thoughtworks.xstream.XStream.unmarshal",
+        "com.thoughtworks.xstream.XStream.unmarshal",
+        "com.thoughtworks.xstream.XStream.fromXML",
+        "org.apache.struts2.rest.handler.XStreamHandler.toObject",
+        "org.apache.struts2.rest.ContentTypeInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.ParametersInterceptor.doIntercept",
+        "com.opensymphony.xwork2.interceptor.MethodFilterInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.StaticParametersInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "org.apache.struts2.interceptor.CheckboxInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "org.apache.struts2.interceptor.FileUploadInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.ModelDrivenInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.ScopedModelDrivenInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.ParametersInterceptor.doIntercept",
+        "com.opensymphony.xwork2.interceptor.MethodFilterInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "org.apache.struts2.interceptor.ProfilingActivationInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "org.apache.struts2.interceptor.debugging.DebuggingInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.ChainingInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "org.apache.struts2.interceptor.I18nInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.PrepareInterceptor.doIntercept",
+        "com.opensymphony.xwork2.interceptor.MethodFilterInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "org.apache.struts2.interceptor.MessageStoreInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "org.apache.struts2.interceptor.ServletConfigInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.AliasInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.interceptor.ExceptionMappingInterceptor.intercept",
+        "com.opensymphony.xwork2.DefaultActionInvocation.invoke",
+        "org.apache.struts2.rest.RestActionInvocation.invoke",
+        "com.opensymphony.xwork2.DefaultActionProxy.execute",
+        "org.apache.struts2.dispatcher.Dispatcher.serviceAction",
+        "org.apache.struts2.dispatcher.ExecuteOperations.executeAction",
+        "org.apache.struts2.dispatcher.filter.StrutsPrepareAndExecuteFilter.doFilter",
+        "org.apache.catalina.core.ApplicationFilterChain.internalDoFilter",
+        "org.apache.catalina.core.ApplicationFilterChain.doFilter",
+        "org.jboss.web.tomcat.filters.ReplyHeaderFilter.doFilter",
+        "org.apache.catalina.core.ApplicationFilterChain.internalDoFilter",
+        "org.apache.catalina.core.ApplicationFilterChain.doFilter",
+        "org.apache.catalina.core.StandardWrapperValve.invoke",
+        "org.apache.catalina.core.StandardContextValve.invoke",
+        "org.jboss.web.tomcat.security.SecurityAssociationValve.invoke",
+        "org.apache.catalina.authenticator.AuthenticatorBase.invoke",
+        "org.jboss.web.tomcat.security.JaccContextValve.invoke",
+        "org.apache.catalina.core.StandardHostValve.invoke",
+        "org.apache.catalina.valves.ErrorReportValve.invoke",
+        "org.jboss.web.tomcat.service.jca.CachedConnectionValve.invoke",
+        "org.apache.catalina.core.StandardEngineValve.invoke",
+        "org.apache.catalina.connector.CoyoteAdapter.service",
+        "org.apache.coyote.http11.Http11Processor.process",
+        "org.apache.coyote.http11.Http11Protocol$Http11ConnectionHandler.process",
+        "org.apache.tomcat.util.net.JIoEndpoint$Worker.run",
+        "java.lang.Thread.run"
+      ]
+    },
+    "context": {
+      "url": "/shell.jsp",
+      "appBasePath": "/home/webroot",
+      "parameter": {
+        "cmd": [
+          "cat /etc/passwd"
+        ]
+      },
+      "server": {
+        "language": "java"
+      }
+    }
+  },
+  {
+    "id": "command_reflect_php_drupal",
+    "name": "command",
+    "action": "block",
+    "params": {
+      "command": "cat /etc/passwd",
+      "stack": [
+        "@system",
+        "/var/www/html/core/lib/Drupal/Core/Render/Renderer.php@call_user_func",
+        "/var/www/html/core/lib/Drupal/Core/Render/Renderer.php@doRender",
+        "/var/www/html/core/lib/Drupal/Core/Render/Renderer.php@render",
+        "/var/www/html/core/lib/Drupal/Core/Render/Renderer.php@Drupal\\Core\\Render\\{closure}",
+        "/var/www/html/core/lib/Drupal/Core/Render/Renderer.php@executeInRenderContext",
+        "/var/www/html/core/modules/file/src/Element/ManagedFile.php@renderRoot",
+        "@uploadAjaxCallback",
+        "/var/www/html/core/lib/Drupal/Core/Form/FormAjaxResponseBuilder.php@call_user_func_array",
+        "/var/www/html/core/lib/Drupal/Core/Form/EventSubscriber/FormAjaxSubscriber.php@buildResponse",
+        "/var/www/html/core/lib/Drupal/Component/EventDispatcher/ContainerAwareEventDispatcher.php@onException",
+        "/var/www/html/vendor/symfony/http-kernel/HttpKernel.php@dispatch",
+        "/var/www/html/vendor/symfony/http-kernel/HttpKernel.php@handleException",
+        "/var/www/html/core/lib/Drupal/Core/StackMiddleware/Session.php@handle",
+        "/var/www/html/core/lib/Drupal/Core/StackMiddleware/KernelPreHandle.php@handle",
+        "/var/www/html/core/modules/page_cache/src/StackMiddleware/PageCache.php@handle",
+        "/var/www/html/core/modules/page_cache/src/StackMiddleware/PageCache.php@pass",
+        "/var/www/html/core/lib/Drupal/Core/StackMiddleware/ReverseProxyMiddleware.php@handle",
+        "/var/www/html/core/lib/Drupal/Core/StackMiddleware/NegotiationMiddleware.php@handle",
+        "/var/www/html/vendor/stack/builder/src/Stack/StackedHttpKernel.php@handle",
+        "/var/www/html/core/lib/Drupal/Core/DrupalKernel.php@handle",
+        "/var/www/html/index.php@handle"
+      ]
+    },
+    "context": {
+      "url": "/shell.jsp",
+      "appBasePath": "/home/webroot",
+      "parameter": {
+        "cmd": [
+          "cat /etc/passwd"
+        ]
+      },
+      "server": {
+        "language": "php"
+      }
+    }
+  }
+]

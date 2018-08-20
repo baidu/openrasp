@@ -25,15 +25,7 @@ public class UnitTest {
         JsonObject config = getConfig();
         JsonObject requestInfo;
         JsonObject params;
-        String input = "";
-
-
-        try {
-            input = readJsonFile(UnitTest.class.getResource("/unit.json").getPath());
-        }
-        catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
+        String input = readJsonFile(UnitTest.class.getResource("/pluginUnitTest/unitCases.json").getPath());
         Gson gson = new Gson();
         Iterator testCases = gson.fromJson(input, JsonElement.class).getAsJsonArray().iterator();
         while(testCases.hasNext()) {
@@ -67,18 +59,17 @@ public class UnitTest {
                 result = ssrfChecker.testCheckSSRF(checkParameter, testRequest.getParameterMap(), config);
             }
             else{
-                result = new ArrayList<EventInfo>();
+                System.out.println("[IGNORED] Test id:" + requestInfo.get("id").getAsString());
+                continue;
             }
             String action = requestInfo.get("action").getAsString();
             if(((action.equals("block") || action.equals("log")) && result.size() != 0)
                     || (action.equals("ignore")) && result.size() == 0){
-                System.out.println("Test id:" + requestInfo.get("id").getAsString() + " passed!");
+                System.out.println("[PASS] Test id:" + requestInfo.get("id").getAsString() );
             }
             else {
-                System.out.println("Test id:" + requestInfo.get("id").getAsString() + " failed!");
+                System.out.println("[FAILED] Test id:" + requestInfo.get("id").getAsString());
             }
-
-            System.out.println(0);
         }
     }
 
@@ -91,8 +82,8 @@ public class UnitTest {
         return String.valueOf(chars);
     }
 
-    public static JsonObject getConfig() {
-        String configJson = "{\"cache\":{\"sqli\":{\"capacity\":100}},\"sqli_userinput\":{\"action\":\"block\",\"min_length\":15},\"sqli_dbmanager\":{\"action\":\"ignore\"},\"sqli_policy\":{\"action\":\"block\",\"feature\":{\"stacked_query\":true,\"no_hex\":true,\"version_comment\":true,\"function_blacklist\":true,\"union_null\":true,\"constant_compare\":false,\"into_outfile\":true},\"function_blacklist\":{\"load_file\":true,\"benchmark\":true,\"sleep\":true,\"pg_sleep\":true,\"is_srvrolemember\":true,\"updatexml\":true,\"extractvalue\":true,\"hex\":true,\"char\":true,\"chr\":true,\"mid\":true,\"ord\":true,\"ascii\":true,\"bin\":true}},\"ssrf_userinput\":{\"action\":\"block\"},\"ssrf_aws\":{\"action\":\"block\"},\"ssrf_common\":{\"action\":\"block\",\"domains\":[\".ceye.io\",\".vcap.me\",\".xip.name\",\".xip.io\",\".nip.io\",\".burpcollaborator.net\",\".tu4.org\"]},\"ssrf_obfuscate\":{\"action\":\"block\"},\"ssrf_protocol\":{\"action\":\"block\",\"protocols\":[\"file\",\"gopher\",\"jar\",\"netdoc\",\"dict\",\"php\",\"phar\",\"compress.zlib\",\"compress.bzip2\"]},\"readFile_userinput\":{\"action\":\"block\"},\"readFile_userinput_http\":{\"action\":\"block\"},\"readFile_userinput_unwanted\":{\"action\":\"block\"},\"readFile_traversal\":{\"action\":\"block\"},\"readFile_unwanted\":{\"action\":\"block\"},\"writeFile_NTFS\":{\"action\":\"block\"},\"writeFile_PUT_script\":{\"action\":\"block\"},\"writeFile_script\":{\"action\":\"log\"},\"rename_webshell\":{\"action\":\"block\"},\"copy_webshell\":{\"action\":\"block\"},\"directory_reflect\":{\"action\":\"block\"},\"directory_unwanted\":{\"action\":\"block\"},\"directory_outsideWebroot\":{\"action\":\"block\"},\"include_protocol\":{\"action\":\"block\",\"protocols\":[\"file\",\"gopher\",\"jar\",\"netdoc\",\"http\",\"https\",\"dict\",\"php\",\"phar\",\"compress.zlib\",\"compress.bzip2\"]},\"include_dir\":{\"action\":\"block\"},\"include_unwanted\":{\"action\":\"block\"},\"include_outsideWebroot\":{\"action\":\"block\"},\"xxe_protocol\":{\"action\":\"block\",\"protocols\":[\"ftp\",\"dict\",\"gopher\",\"jar\",\"netdoc\"]},\"xxe_file\":{\"action\":\"log\"},\"fileUpload_webdav\":{\"action\":\"block\"},\"fileUpload_multipart\":{\"action\":\"block\"},\"ognl_exec\":{\"action\":\"block\"},\"command_reflect\":{\"action\":\"block\"},\"command_userinput\":{\"action\":\"block\"},\"command_other\":{\"action\":\"log\"},\"transformer_deser\":{\"action\":\"block\"}}";
+    public static JsonObject getConfig() throws Exception{
+        String configJson = readJsonFile(UnitTest.class.getResource("/pluginUnitTest/unitConfig.json").getPath());
         Gson gson = new Gson();
         return gson.fromJson(configJson, JsonElement.class).getAsJsonObject();
     }
