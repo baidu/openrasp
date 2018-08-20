@@ -261,6 +261,14 @@ static inline bool shutdown_isolate(TSRMLS_D)
 {
     if (OPENRASP_V8_G(is_isolate_initialized))
     {
+        OPENRASP_V8_G(context).Reset();
+        OPENRASP_V8_G(key_action).Reset();
+        OPENRASP_V8_G(key_message).Reset();
+        OPENRASP_V8_G(key_name).Reset();
+        OPENRASP_V8_G(key_confidence).Reset();
+        OPENRASP_V8_G(RASP).Reset();
+        OPENRASP_V8_G(check).Reset();
+        OPENRASP_V8_G(request_context).Reset();
         OPENRASP_V8_G(isolate)->Dispose();
         OPENRASP_V8_G(isolate) = nullptr;
         delete OPENRASP_V8_G(create_params).array_buffer_allocator;
