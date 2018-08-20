@@ -47,61 +47,67 @@ public class SSRFChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_SSRF_OBFUSCATE = "ssrf_obfuscate";
     private static final String CONFIG_KEY_SSRF_USER_INPUT = "ssrf_userinput";
 
-    @Override
-    public List<EventInfo> checkParam(CheckParameter checkParameter) {
-        List<EventInfo> result = new LinkedList<EventInfo>();
+    private List<EventInfo> result = new LinkedList<EventInfo>();
+
+    private void checkSSRF(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config){
         String hostName = (String) checkParameter.getParam("hostname");
         String url = (String) checkParameter.getParam("url");
-        NativeArray ips = (NativeArray) checkParameter.getParam("ip");
+        List ips = (List) checkParameter.getParam("ip");
+
+        if (!isModuleIgnore(config, CONFIG_KEY_SSRF_USER_INPUT)) {
+            if (ips.size() > 0) {
+                for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+                    String[] v = entry.getValue();
+                    String value = v[0];
+                    String ip = (String) ips.get(0);
+                    if (url.equals(value) && Pattern.matches("^(127|192|172|10)\\..*", ip)) {
+                        result.add(AttackInfo.createLocalAttackInfo(checkParameter,
+                                getActionElement(config, CONFIG_KEY_SSRF_USER_INPUT), "SSRF - Requesting intranet address: " + ip));
+                    }
+                }
+            }
+        }
+
+        if (result.isEmpty() && !isModuleIgnore(config, CONFIG_KEY_SSRF_COMMON)) {
+            boolean isFound = false;
+            JsonArray domains = getJsonObjectAsArray(config, CONFIG_KEY_SSRF_COMMON, "domains");
+            if (domains != null) {
+                for (JsonElement suffix : domains) {
+                    if (hostName.endsWith(suffix.getAsString())) {
+                        isFound = true;
+                        break;
+                    }
+                }
+            }
+            if (isFound || hostName.equals("requestb.in")) {
+                result.add(AttackInfo.createLocalAttackInfo(checkParameter,
+                        getActionElement(config, CONFIG_KEY_SSRF_COMMON), "SSRF - Requesting known DNSLOG address"));
+            }
+        }
+
+        if (result.isEmpty()) {
+            if (!isModuleIgnore(config, CONFIG_KEY_SSRF_AWS)
+                    && hostName.equals("169.254.169.254")) {
+                result.add(AttackInfo.createLocalAttackInfo(checkParameter,
+                        getActionElement(config, CONFIG_KEY_SSRF_AWS), "SSRF - Requesting AWS metadata address"));
+            } else if (!isModuleIgnore(config, CONFIG_KEY_SSRF_OBFUSCATE)
+                    && StringUtils.isNumeric(hostName)) {
+                result.add(AttackInfo.createLocalAttackInfo(checkParameter,
+                        getActionElement(config, CONFIG_KEY_SSRF_OBFUSCATE), "SSRF - Requesting numeric IP address"));
+            } else if (!isModuleIgnore(config, CONFIG_KEY_SSRF_OBFUSCATE)
+                    && hostName.startsWith("0x") && !hostName.contains(".")) {
+                result.add(AttackInfo.createLocalAttackInfo(checkParameter,
+                        getActionElement(config, CONFIG_KEY_SSRF_OBFUSCATE), "SSRF - Requesting hexadecimal IP address"));
+            }
+        }
+    }
+
+    @Override
+    public List<EventInfo> checkParam(CheckParameter checkParameter) {
+        JsonObject config = Config.getConfig().getAlgorithmConfig();
+        Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
         try {
-            JsonObject config = Config.getConfig().getAlgorithmConfig();
-            Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
-            if (!isModuleIgnore(config, CONFIG_KEY_SSRF_USER_INPUT)) {
-                if (ips.size() > 0) {
-                    for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
-                        String[] v = entry.getValue();
-                        String value = v[0];
-                        String ip = (String) ips.get(0);
-                        if (url.equals(value) && Pattern.matches("^(127|192|172|10)\\..*", ip)) {
-                            result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                                    getActionElement(config, CONFIG_KEY_SSRF_USER_INPUT), "SSRF - Requesting intranet address: " + ip));
-                        }
-                    }
-                }
-            }
-
-            if (result.isEmpty() && !isModuleIgnore(config, CONFIG_KEY_SSRF_COMMON)) {
-                boolean isFound = false;
-                JsonArray domains = getJsonObjectAsArray(config, CONFIG_KEY_SSRF_COMMON, "domains");
-                if (domains != null) {
-                    for (JsonElement suffix : domains) {
-                        if (hostName.endsWith(suffix.getAsString())) {
-                            isFound = true;
-                            break;
-                        }
-                    }
-                }
-                if (isFound || hostName.equals("requestb.in")) {
-                    result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                            getActionElement(config, CONFIG_KEY_SSRF_COMMON), "SSRF - Requesting known DNSLOG address"));
-                }
-            }
-
-            if (result.isEmpty()) {
-                if (!isModuleIgnore(config, CONFIG_KEY_SSRF_AWS)
-                        && hostName.equals("169.254.169.254")) {
-                    result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                            getActionElement(config, CONFIG_KEY_SSRF_AWS), "SSRF - Requesting AWS metadata address"));
-                } else if (!isModuleIgnore(config, CONFIG_KEY_SSRF_OBFUSCATE)
-                        && StringUtils.isNumeric(hostName)) {
-                    result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                            getActionElement(config, CONFIG_KEY_SSRF_OBFUSCATE), "SSRF - Requesting numeric IP address"));
-                } else if (!isModuleIgnore(config, CONFIG_KEY_SSRF_OBFUSCATE)
-                        && hostName.startsWith("0x") && !hostName.contains(".")) {
-                    result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                            getActionElement(config, CONFIG_KEY_SSRF_OBFUSCATE), "SSRF - Requesting hexadecimal IP address"));
-                }
-            }
+            checkSSRF(checkParameter, parameterMap, config);
         } catch (Exception e) {
             JSContext.LOGGER.warn("Exception while executing builtin SSRF plugin, was:" + e.getMessage());
         }
@@ -116,6 +122,11 @@ public class SSRFChecker extends ConfigurableChecker {
     private boolean isModuleIgnore(JsonObject config, String configKey) {
         String action = getActionElement(config, configKey);
         return EventInfo.CHECK_ACTION_IGNORE.equals(action) || action == null;
+    }
+
+    public List<EventInfo> testCheckSSRF(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
+        checkSSRF(checkParameter, parameterMap, config);
+        return result;
     }
 
 }

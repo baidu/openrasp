@@ -56,164 +56,169 @@ public class SqlStatementChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_MIN_LENGTH = "min_length";
     private static TokenizeErrorListener tokenizeErrorListener = new TokenizeErrorListener();
 
-    @Override
-    public List<EventInfo> checkParam(CheckParameter checkParameter) {
-        List<EventInfo> result = new LinkedList<EventInfo>();
-        String query = (String) checkParameter.getParam("query");
+    private List<EventInfo> result = new LinkedList<EventInfo>();
 
+    private void checkSql(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
+        String query = (String) checkParameter.getParam("query");
         String message = null;
         ArrayList<Token> rawTokens = TokenGenerator.rawTokenize(query, tokenizeErrorListener);
         String[] tokens = new String[rawTokens.size()];
         for (int j = 0; j < rawTokens.size(); j++) {
             tokens[j] = rawTokens.get(j).getText();
         }
-        Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
-        try {
-            JsonObject config = Config.getConfig().getAlgorithmConfig();
-            // 算法1: 匹配用户输入
-            // 1. 简单识别逻辑是否发生改变
-            // 2. 识别数据库管理器
-            String action = getActionElement(config, CONFIG_KEY_SQLI_USER_INPUT);
-            int paramterLength = getIntElement(config, CONFIG_KEY_SQLI_USER_INPUT, CONFIG_KEY_MIN_LENGTH);
-            if (!EventInfo.CHECK_ACTION_IGNORE.equals(action) && action != null && parameterMap != null) {
-                for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
-                    String[] v = entry.getValue();
-                    String value = v[0];
-                    if (value.length() <= paramterLength) {
+        // 算法1: 匹配用户输入
+        // 1. 简单识别逻辑是否发生改变
+        // 2. 识别数据库管理器
+        String action = getActionElement(config, CONFIG_KEY_SQLI_USER_INPUT);
+        int paramterLength = getIntElement(config, CONFIG_KEY_SQLI_USER_INPUT, CONFIG_KEY_MIN_LENGTH);
+        if (!EventInfo.CHECK_ACTION_IGNORE.equals(action) && action != null && parameterMap != null) {
+            for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+                String[] v = entry.getValue();
+                String value = v[0];
+                if (value.length() <= paramterLength) {
+                    continue;
+                }
+                if (value.length() == query.length() && value.equals(query)) {
+                    String managerAction = getActionElement(config, CONFIG_KEY_DB_MANAGER);
+                    if (!EventInfo.CHECK_ACTION_IGNORE.equals(managerAction) && managerAction != null) {
+                        message = "SQLi - Database manager detected, request parameter name: " + entry.getKey();
+                        action = managerAction;
+                        break;
+                    } else {
                         continue;
-                    }
-                    if (value.length() == query.length() && value.equals(query)) {
-                        String managerAction = getActionElement(config, CONFIG_KEY_DB_MANAGER);
-                        if (!EventInfo.CHECK_ACTION_IGNORE.equals(managerAction) && managerAction != null) {
-                            message = "SQLi - Database manager detected, request parameter name: " + entry.getKey();
-                            action = managerAction;
-                            break;
-                        } else {
-                            continue;
-                        }
-                    }
-
-                    int para_index = query.indexOf(value);
-                    if (para_index < 0) {
-                        continue;
-                    }
-
-                    int start = tokens.length, end = tokens.length;
-                    for (int i = 0; i < tokens.length; i ++){
-                        if ( rawTokens.get(i).getStopIndex() >= para_index){
-                            start = i;
-                            break;
-                        }
-                    }
-
-                    for (int i = start; i < tokens.length; i ++){
-                        if( rawTokens.get(i).getStopIndex() >= para_index + value.length() - 1){
-                            end = i;
-                            break;
-                        }
-                    }
-
-                    if (end - start > 2){
-                        message = "SQLi - SQL query structure altered by user input, request parameter name: " + entry.getKey();
                     }
                 }
-            }
-            if (message != null) {
-                result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
-                        message, 90));
-            } else {
-                // 算法2: SQL语句策略检查（模拟SQL防火墙功能）
-                action = getActionElement(config, CONFIG_KEY_SQLI_POLICY);
-                if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
-                    int i = -1;
-                    if (tokens != null) {
-                        HashMap<String, Boolean> modules = getJsonObjectAsMap(config, CONFIG_KEY_SQLI_POLICY, "feature");
-                        for (int z = 0; z < tokens.length; z++) {
-                            tokens[z] = tokens[z].toLowerCase();
-                        }
-                        for (String token : tokens) {
-                            i++;
-                            if (!StringUtils.isEmpty(token)) {
-                                if (token.equals("select")
-                                        && modules.containsKey(CONFIG_KEY_UNION_NULL)
-                                        && modules.get(CONFIG_KEY_UNION_NULL)) {
-                                    int nullCount = 0;
-                                    // 寻找连续的逗号、NULL或者数字
-                                    for (int j = i + 1; j < tokens.length && j < i + 6; j++) {
-                                        if (tokens[j].equals(",") || tokens[j].equals("null") || StringUtils.isNumeric(tokens[j])) {
-                                            nullCount++;
-                                        } else {
-                                            break;
-                                        }
-                                    }
 
-                                    // NULL,NULL,NULL == 5个token
-                                    // 1,2,3          == 5个token
-                                    if (nullCount >= 5) {
-                                        message = "SQLi - Detected UNION-NULL phrase in sql query";
+                int para_index = query.indexOf(value);
+                if (para_index < 0) {
+                    continue;
+                }
+
+                int start = tokens.length, end = tokens.length;
+                for (int i = 0; i < tokens.length; i ++){
+                    if ( rawTokens.get(i).getStopIndex() >= para_index){
+                        start = i;
+                        break;
+                    }
+                }
+
+                for (int i = start; i < tokens.length; i ++){
+                    if( rawTokens.get(i).getStopIndex() >= para_index + value.length() - 1){
+                        end = i;
+                        break;
+                    }
+                }
+
+                if (end - start > 2){
+                    message = "SQLi - SQL query structure altered by user input, request parameter name: " + entry.getKey();
+                }
+            }
+        }
+        if (message != null) {
+            result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
+                    message, 90));
+        } else {
+            // 算法2: SQL语句策略检查（模拟SQL防火墙功能）
+            action = getActionElement(config, CONFIG_KEY_SQLI_POLICY);
+            if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
+                int i = -1;
+                if (tokens != null) {
+                    HashMap<String, Boolean> modules = getJsonObjectAsMap(config, CONFIG_KEY_SQLI_POLICY, "feature");
+                    for (int z = 0; z < tokens.length; z++) {
+                        tokens[z] = tokens[z].toLowerCase();
+                    }
+                    for (String token : tokens) {
+                        i++;
+                        if (!StringUtils.isEmpty(token)) {
+                            if (token.equals("select")
+                                    && modules.containsKey(CONFIG_KEY_UNION_NULL)
+                                    && modules.get(CONFIG_KEY_UNION_NULL)) {
+                                int nullCount = 0;
+                                // 寻找连续的逗号、NULL或者数字
+                                for (int j = i + 1; j < tokens.length && j < i + 6; j++) {
+                                    if (tokens[j].equals(",") || tokens[j].equals("null") || StringUtils.isNumeric(tokens[j])) {
+                                        nullCount++;
+                                    } else {
                                         break;
                                     }
-                                    continue;
                                 }
-                                if (token.equals(";") && i != tokens.length - 1
-                                        && modules.containsKey(CONFIG_KEY_STACKED_QUERY)
-                                        && modules.get(CONFIG_KEY_STACKED_QUERY)) {
-                                    message = "SQLi - Detected stacked queries";
+
+                                // NULL,NULL,NULL == 5个token
+                                // 1,2,3          == 5个token
+                                if (nullCount >= 5) {
+                                    message = "SQLi - Detected UNION-NULL phrase in sql query";
                                     break;
-                                } else if (token.startsWith("0x")
-                                        && modules.containsKey(CONFIG_KEY_NO_HEX)
-                                        && modules.get(CONFIG_KEY_NO_HEX)) {
-                                    message = "SQLi - Detected hexadecimal values in sql query";
-                                    break;
-                                } else if (token.startsWith("/*!")
-                                        && modules.containsKey(CONFIG_KEY_VERSION_COMMENT)
-                                        && modules.get(CONFIG_KEY_VERSION_COMMENT)) {
-                                    message = "SQLi - Detected MySQL version comment in sql query";
-                                    break;
-                                } else if (i > 0 && i < tokens.length - 2 && (token.equals("xor")
-                                        || token.charAt(0) == '<'
-                                        || token.charAt(0) == '>'
-                                        || token.charAt(0) == '=')
-                                        && modules.containsKey(CONFIG_KEY_CONSTANT_COMPARE)
-                                        && modules.get(CONFIG_KEY_CONSTANT_COMPARE)) {
-                                    String op1 = tokens[i - 1];
-                                    String op2 = tokens[i + 1];
-                                    if (StringUtils.isNumeric(op1) && StringUtils.isNumeric(op2)) {
-                                        try {
-                                            if (Double.parseDouble(op1) < 10 || Double.parseDouble(op2) < 10) {
-                                                continue;
-                                            }
-                                        } catch (Exception e) {
-                                            // ignore
+                                }
+                                continue;
+                            }
+                            if (token.equals(";") && i != tokens.length - 1
+                                    && modules.containsKey(CONFIG_KEY_STACKED_QUERY)
+                                    && modules.get(CONFIG_KEY_STACKED_QUERY)) {
+                                message = "SQLi - Detected stacked queries";
+                                break;
+                            } else if (token.startsWith("0x")
+                                    && modules.containsKey(CONFIG_KEY_NO_HEX)
+                                    && modules.get(CONFIG_KEY_NO_HEX)) {
+                                message = "SQLi - Detected hexadecimal values in sql query";
+                                break;
+                            } else if (token.startsWith("/*!")
+                                    && modules.containsKey(CONFIG_KEY_VERSION_COMMENT)
+                                    && modules.get(CONFIG_KEY_VERSION_COMMENT)) {
+                                message = "SQLi - Detected MySQL version comment in sql query";
+                                break;
+                            } else if (i > 0 && i < tokens.length - 2 && (token.equals("xor")
+                                    || token.charAt(0) == '<'
+                                    || token.charAt(0) == '>'
+                                    || token.charAt(0) == '=')
+                                    && modules.containsKey(CONFIG_KEY_CONSTANT_COMPARE)
+                                    && modules.get(CONFIG_KEY_CONSTANT_COMPARE)) {
+                                String op1 = tokens[i - 1];
+                                String op2 = tokens[i + 1];
+                                if (StringUtils.isNumeric(op1) && StringUtils.isNumeric(op2)) {
+                                    try {
+                                        if (Double.parseDouble(op1) < 10 || Double.parseDouble(op2) < 10) {
+                                            continue;
                                         }
-                                        message = "SQLi - Detected blind sql injection attack: comparing " + op1 + " against " + op2;
-                                        break;
+                                    } catch (Exception e) {
+                                        // ignore
                                     }
-                                } else if (i > 0 && tokens[i].indexOf('(') == 0
-                                        && modules.containsKey(CONFIG_KEY_FUNCTION_BLACKLIST)
-                                        && modules.get(CONFIG_KEY_FUNCTION_BLACKLIST)) {
-                                    // FIXME: 可绕过，暂时不更新
-                                    HashMap<String, Boolean> funBlackList = getJsonObjectAsMap(config, CONFIG_KEY_SQLI_POLICY, "function_blacklist");
-                                    if (funBlackList.containsKey(tokens[i - 1]) && funBlackList.get(tokens[i - 1])) {
-                                        message = "SQLi - Detected dangerous method call " + tokens[i - 1] + "() in sql query";
-                                        break;
-                                    }
-                                } else if (i < tokens.length - 2 && tokens[i].equals("into")
-                                        && (tokens[i + 1].equals("outfile") || tokens[i + 1].equals("dupfile"))
-                                        && modules.containsKey(CONFIG_KEY_INTO_OUTFILE)
-                                        && modules.get(CONFIG_KEY_INTO_OUTFILE)) {
-                                    message = "SQLi - Detected INTO OUTFILE phrase in sql query";
+                                    message = "SQLi - Detected blind sql injection attack: comparing " + op1 + " against " + op2;
                                     break;
                                 }
+                            } else if (i > 0 && tokens[i].indexOf('(') == 0
+                                    && modules.containsKey(CONFIG_KEY_FUNCTION_BLACKLIST)
+                                    && modules.get(CONFIG_KEY_FUNCTION_BLACKLIST)) {
+                                // FIXME: 可绕过，暂时不更新
+                                HashMap<String, Boolean> funBlackList = getJsonObjectAsMap(config, CONFIG_KEY_SQLI_POLICY, "function_blacklist");
+                                if (funBlackList.containsKey(tokens[i - 1]) && funBlackList.get(tokens[i - 1])) {
+                                    message = "SQLi - Detected dangerous method call " + tokens[i - 1] + "() in sql query";
+                                    break;
+                                }
+                            } else if (i < tokens.length - 2 && tokens[i].equals("into")
+                                    && (tokens[i + 1].equals("outfile") || tokens[i + 1].equals("dupfile"))
+                                    && modules.containsKey(CONFIG_KEY_INTO_OUTFILE)
+                                    && modules.get(CONFIG_KEY_INTO_OUTFILE)) {
+                                message = "SQLi - Detected INTO OUTFILE phrase in sql query";
+                                break;
                             }
                         }
                     }
-                    if (message != null) {
-                        result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
-                                message, 100));
-                    }
+                }
+                if (message != null) {
+                    result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
+                            message, 100));
                 }
             }
+        }
+    }
+
+    @Override
+    public List<EventInfo> checkParam(CheckParameter checkParameter) {
+
+        JsonObject config = Config.getConfig().getAlgorithmConfig();
+        Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
+        try {
+            checkSql(checkParameter, parameterMap, config);
         } catch (Exception e) {
             JSContext.LOGGER.warn("Exception while running builtin sqli plugin: " + e.getMessage());
         }
@@ -225,8 +230,14 @@ public class SqlStatementChecker extends ConfigurableChecker {
         }
         // 检测无威胁的sql加入sql缓存
         if (result.isEmpty()) {
+            String query = (String) checkParameter.getParam("query");
             SQLStatementHook.sqlCache.put(query, null);
         }
+        return result;
+    }
+
+    public List<EventInfo> testCheckSql(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
+        checkSql(checkParameter, parameterMap, config);
         return result;
     }
 
