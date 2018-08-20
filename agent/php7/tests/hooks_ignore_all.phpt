@@ -1,5 +1,5 @@
 --TEST--
-hooks ignore
+hooks ignore all
 --SKIPIF--
 <?php
 $plugin = <<<EOF
@@ -18,7 +18,7 @@ include(__DIR__.'/skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.hooks_ignore=readFile,writeFile
+openrasp.hooks_ignore=all
 --FILE--
 <?php
 file_put_contents('/tmp/openrasp/tmpfile', 'test');
