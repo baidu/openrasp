@@ -120,7 +120,7 @@
     }
   },
   {
-    "id": "sqli_with_comment",
+    "id": "sqli_annotation",
     "name": "sql",
     "action": "block",
     "params": {
@@ -131,6 +131,22 @@
       "parameter": {
         "id": [
           "1/*123*/and/**/1=2/*qwe*/union/*qwe*/select/*qwe*/user()/*qwe*/,/*qwe*/2/*qwe*/,/*qwe*/3#abdc"
+        ]
+      }
+    }
+  },
+  {
+    "id": "sqli_inline_annotation",
+    "name": "sql",
+    "action": "block",
+    "params": {
+      "server": "mysql",
+      "query": "select * from user where 1=/*!59999 '*/1 union select 1,2,3 from test.user#'"
+    },
+    "context": {
+      "parameter": {
+        "id": [
+          "/*!59999 '*/1 union select 1,2,3 from test.user#'"
         ]
       }
     }
