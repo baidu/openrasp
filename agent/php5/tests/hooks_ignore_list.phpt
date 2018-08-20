@@ -4,12 +4,12 @@ hooks ignore list
 <?php
 $plugin = <<<EOF
 plugin.register('readFile', params => {
-    assert(params.path == '/tmp/openrasp/tmpfile')
+    assert(params.path.endsWith('/tmp/openrasp/tmpfile'))
     assert(params.realpath.endsWith('openrasp/tmpfile'))
     return block
 })
 plugin.register('writeFile', params => {
-    assert(params.path == '/tmp/openrasp/tmpfile')
+    assert(params.path.endsWith('/tmp/openrasp/tmpfile'))
     assert(params.realpath.endsWith('openrasp/tmpfile'))
     return block
 })
