@@ -151,7 +151,7 @@ std::string PluginAgent::clear_old_offcial_plugins()
 	std::string plugin_dir = root_dir + "/plugins";
 	std::vector<std::string> offcial_plugins;
 	openrasp_scandir(plugin_dir, offcial_plugins,
-					 [](const char *filename) { return !strncmp(filename, "official-", strlen("official-")) &&
+					 [](const char *filename) { return !strncmp(filename, "offcial-", strlen("offcial-")) &&
 													   !strcmp(filename + strlen(filename) - 3, ".js"); });
 	std::sort(offcial_plugins.rbegin(), offcial_plugins.rend());
 	std::string newest_plugin;
