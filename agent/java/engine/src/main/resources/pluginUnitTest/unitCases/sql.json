@@ -1,0 +1,153 @@
+[{
+    "id": "sqli_userinput",
+    "name": "sql",
+    "action": "block",
+    "params": {
+        "server": "mysql",
+        "query": "SELECT * FROM users WHERE id = 1 and 1=2 union select user(),2,3#"
+    },
+    "context": {
+        "parameter": {
+            "id": ["1 and 1=2 union select user(),2,3#"]
+        }
+    },
+    "description": "normal sqli test"
+},
+{
+    "id": "sqli_userinput_bypass",
+    "name": "sql",
+    "action": "block",
+    "params": {
+        "server": "mysql",
+        "query": "SELECT id, name FROM test.vuln WHERE id = 1 union select id,name from test.vuln #union select id,name from test.vuln where id = 1"
+    },
+    "context": {
+        "parameter": {
+            "id": ["1 union select id,name from test.vuln #"]
+        }
+    },
+    "description": "sqli with # annotation"
+},
+{
+    "id": "sqli_policy_hex",
+    "name": "sql",
+    "action": "block",
+    "params": {
+        "server": "mysql",
+        "query": "SELECT * FROM users WHERE id = 1 and 1=2 union select 0x41424344#"
+    },
+    "context": {
+        "parameter": {}
+    },
+    "description": "sqli with hex number"
+},
+{
+    "id": "sqli_policy_func",
+    "name": "sql",
+    "action": "block",
+    "params": {
+        "server": "mysql",
+        "query": "SELECT * FROM users WHERE id = sleep(3)"
+    },
+    "context": {
+        "parameter": {}
+    },
+    "description": "sqli with delay function"
+},
+{
+    "id": "sqli_policy_into_outfile",
+    "name": "sql",
+    "action": "block",
+    "params": {
+        "server": "mysql",
+        "query": "SELECT * FROM users WHERE id = 123 or 1=1 union select username,password/**/into/**/outfile/**/\"/tmp/123.txt\""
+    },
+    "context": {
+        "parameter": {}
+    },
+    "description": "sqli write files"
+},
+{
+    "id": "sqli_constant_white",
+    "name": "sql",
+    "action": "ignore",
+    "params": {
+        "server": "mysql",
+        "query": "select * from users where uid = ? AND (0=0 OR a.MEMBER_ID=0)"
+    },
+    "context": {
+        "parameter": {}
+    },
+    "description": "sqli false positive with constant number compare"
+},
+{
+    "id": "sqli_white",
+    "name": "sql",
+    "action": "ignore",
+    "params": {
+        "server": "mysql",
+        "query": "select @@version, concat(user(), database())"
+    },
+    "context": {
+        "parameter": {}
+    },
+    "description": "sqli test payload"
+},
+{
+    "id": "sqli_bypass_currentuser",
+    "name": "sql",
+    "action": "block",
+    "params": {
+        "server": "mysql",
+        "query": "SELECT * FROM users WHERE id = 1 and current_user == \"root\""
+    },
+    "context": {
+        "parameter": {}
+    },
+    "description": "sqli get current user"
+},
+{
+    "id": "sqli_short_payload",
+    "name": "sql",
+    "action": "ignore",
+    "params": {
+        "server": "mysql",
+        "query": "SELECT * FROM users WHERE id = 1 and 1=1"
+    },
+    "context": {
+        "parameter": {
+            "id": ["1 and 1=1"]
+        }
+    },
+    "description": "short payload in user input should be ignore"
+},
+{
+    "id": "sqli_annotation",
+    "name": "sql",
+    "action": "block",
+    "params": {
+        "server": "mysql",
+        "query": "SELECT * FROM users WHERE id = 1/*123*/and/**/1=2/*qwe*/union/*qwe*/select/*qwe*/user()/*qwe*/,/*qwe*/2/*qwe*/,/*qwe*/3#abdc"
+    },
+    "context": {
+        "parameter": {
+            "id": ["1/*123*/and/**/1=2/*qwe*/union/*qwe*/select/*qwe*/user()/*qwe*/,/*qwe*/2/*qwe*/,/*qwe*/3#abdc"]
+        }
+    },
+    "description": "sqli bypass with annotation"
+},
+{
+    "id": "sqli_inline_annotation",
+    "name": "sql",
+    "action": "block",
+    "params": {
+        "server": "mysql",
+        "query": "select * from user where 1=/*!59999 '*/1 union select 1,2,3 from test.user#'"
+    },
+    "context": {
+        "parameter": {
+            "id": ["/*!59999 '*/1 union select 1,2,3 from test.user#'"]
+        }
+    },
+    "description": "sqli bypass with annotation"
+}]
