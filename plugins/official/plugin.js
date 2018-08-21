@@ -1,3 +1,5 @@
+const version = '2018-0821-2100'
+
 /*
  * Copyright 2017-2018 Baidu Inc.
  *
