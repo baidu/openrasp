@@ -83,19 +83,22 @@ void PluginAgent::run()
 				exit(0);
 			}
 		}
-		std::string url_string = std::string(openrasp_ini.backend) + "/v1/plugin?version=";
-		if (curl)
-		{
-			const char *plugin_version = oam.agent_ctrl_block->get_plugin_version();
-			char *url_encode_output = curl_easy_escape(curl, plugin_version, strlen(plugin_version));
-			if (url_encode_output)
-			{
-				url_string += std::string(url_encode_output);
-				curl_free(url_encode_output);
-			}
-		}
 		ResponseInfo res_info;
-		perform_curl(curl, url_string, nullptr, res_info);
+		std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/plugin";
+		zval *body = nullptr;
+		MAKE_STD_ZVAL(body);
+		array_init(body);
+		add_assoc_string(body, "version", (char *)oam.agent_ctrl_block->get_plugin_version(), 1);
+		smart_str buf_json = {0};
+		php_json_encode(&buf_json, body, 0 TSRMLS_CC);
+		if (buf_json.a > buf_json.len)
+		{
+			buf_json.c[buf_json.len] = '\0';
+			buf_json.len++;
+		}
+		perform_curl(curl, url_string, buf_json.c, res_info);
+		smart_str_free(&buf_json);
+		zval_ptr_dtor(&body);
 		if (CURLE_OK != res_info.res)
 		{
 			continue;
@@ -271,7 +274,7 @@ void LogAgent::run()
 				{
 					ldi->ifs.clear();
 				}
-				std::string url_string = std::string(openrasp_ini.backend) + ldi->backend_url;
+				std::string url_string = std::string(openrasp_ini.backend_url) + ldi->backend_url;
 				buffer.push_back('[');
 				int count = 0;
 				while (std::getline(ldi->ifs, line) && count < max_post_logs_account)

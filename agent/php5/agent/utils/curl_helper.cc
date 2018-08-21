@@ -31,7 +31,7 @@ void perform_curl(CURL *curl, const std::string url_string, const char *postdata
     if (curl)
     {
         struct curl_slist *chunk = nullptr;
-        std::string auth_header = "X-OpenRASP-Authentication-ID: " + std::string(openrasp_ini.authentication_id);
+        std::string auth_header = "X-OpenRASP-AppID: " + std::string(openrasp_ini.app_id);
         chunk = curl_slist_append(chunk, auth_header.c_str());
         res_info.res = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
         curl_easy_setopt(curl, CURLOPT_URL, url_string.c_str());

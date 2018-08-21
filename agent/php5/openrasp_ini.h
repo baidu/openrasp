@@ -49,11 +49,11 @@ class Openrasp_ini
     char *block_url;
     std::unordered_set<std::string> hooks_ignore;
     std::unordered_set<std::string> callable_blacklists;
-    char* backend;
+    char* backend_url;
     unsigned int plugin_update_interval = 60;
     unsigned int log_push_interval = 10;
     char *clientip_header;
-    char *authentication_id;
+    char *app_id;
     bool plugin_update_enable = 1;
 };
 
