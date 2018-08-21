@@ -125,12 +125,12 @@ bool OpenraspAgentManager::verify_ini_correct()
 	{
 		if (nullptr == openrasp_ini.backend)
 		{
-			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.backend is essential when remote management is enabled."));
+			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.backend is required when remote management is enabled."));
 			return false;
 		}
 		if (nullptr == openrasp_ini.authentication_id)
 		{
-			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.authentication_id is essential when remote management is enabled."));
+			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.authentication_id is required when remote management is enabled."));
 			return false;
 		}
 		else
@@ -142,7 +142,7 @@ bool OpenraspAgentManager::verify_ini_correct()
 			openrasp_pcre_match(regex, regex_len, openrasp_ini.authentication_id, strlen(openrasp_ini.authentication_id), match_res TSRMLS_CC);
 			if (Z_TYPE_P(match_res) != IS_LONG || Z_LVAL_P(match_res) != 1)
 			{
-				openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.authentication_id format is incorrect."));
+				openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.authentication_id must have 32 characters"));
 				zval_ptr_dtor(&match_res);
 				return false;
 			}
