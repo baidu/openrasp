@@ -83,7 +83,17 @@ void PluginAgent::run()
 				exit(0);
 			}
 		}
-		std::string url_string = std::string(openrasp_ini.backend) + "/v1/plugin?version=" + std::string(oam.agent_ctrl_block->get_plugin_version());
+		std::string url_string = std::string(openrasp_ini.backend) + "/v1/plugin?version=";
+		if (curl)
+		{
+			const char *plugin_version = oam.agent_ctrl_block->get_plugin_version();
+			char *url_encode_output = curl_easy_escape(curl, plugin_version, strlen(plugin_version));
+			if (url_encode_output)
+			{
+				url_string += std::string(url_encode_output);
+				curl_free(url_encode_output);
+			}
+		}
 		ResponseInfo res_info;
 		perform_curl(curl, url_string, nullptr, res_info);
 		if (CURLE_OK != res_info.res)
