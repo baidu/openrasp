@@ -49,8 +49,8 @@ public:
   PluginAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);
-  virtual std::string clear_old_offcial_plugins();
-  virtual void update_local_offcial_plugin(std::string plugin_abs_path, const char *plugin, const char *version);
+  virtual std::string clear_old_official_plugins();
+  virtual void update_local_official_plugin(std::string plugin_abs_path, const char *plugin, const char *version);
 };
 
 class LogAgent : public BaseAgent

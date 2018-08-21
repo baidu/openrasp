@@ -108,7 +108,7 @@ void PluginAgent::run()
 			{
 				if (0 < status)
 				{
-					openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to update offcial plugin, status: %ld."), status);
+					openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to update official plugin, status: %ld."), status);
 				}
 				else if (0 == status)
 				{
@@ -124,7 +124,7 @@ void PluginAgent::run()
 							std::string cal_md5 = md5sum(static_cast<const void *>(plugin), strlen(plugin));
 							if (!strcmp(cal_md5.c_str(), md5))
 							{
-								update_local_offcial_plugin(root_dir + "/plugins/offcial.js", plugin, version);
+								update_local_official_plugin(root_dir + "/plugins/official.js", plugin, version);
 							}
 						}
 					}
@@ -133,7 +133,7 @@ void PluginAgent::run()
 		}
 		else
 		{
-			openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to update offcial plugin, response code: %ld."), res_info.response_code);
+			openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to update official plugin, response code: %ld."), res_info.response_code);
 		}
 		zval_ptr_dtor(&return_value);
 	}
@@ -144,23 +144,23 @@ void PluginAgent::write_pid_to_shm(pid_t agent_pid)
 	oam.agent_ctrl_block->set_plugin_agent_id(agent_pid);
 }
 
-std::string PluginAgent::clear_old_offcial_plugins()
+std::string PluginAgent::clear_old_official_plugins()
 {
 	TSRMLS_FETCH();
 	std::string root_dir = std::string(openrasp_ini.root_dir);
 	std::string plugin_dir = root_dir + "/plugins";
-	std::vector<std::string> offcial_plugins;
-	openrasp_scandir(plugin_dir, offcial_plugins,
-					 [](const char *filename) { return !strncmp(filename, "offcial-", strlen("offcial-")) &&
+	std::vector<std::string> official_plugins;
+	openrasp_scandir(plugin_dir, official_plugins,
+					 [](const char *filename) { return !strncmp(filename, "official-", strlen("official-")) &&
 													   !strcmp(filename + strlen(filename) - 3, ".js"); });
-	std::sort(offcial_plugins.rbegin(), offcial_plugins.rend());
+	std::sort(official_plugins.rbegin(), official_plugins.rend());
 	std::string newest_plugin;
-	for (int i = 0; i < offcial_plugins.size(); ++i)
+	for (int i = 0; i < official_plugins.size(); ++i)
 	{
-		std::string plugin_abs_path = plugin_dir + default_slash + offcial_plugins[i];
+		std::string plugin_abs_path = plugin_dir + default_slash + official_plugins[i];
 		if (0 == i)
 		{
-			newest_plugin = offcial_plugins[i];
+			newest_plugin = official_plugins[i];
 		}
 		else
 		{
@@ -170,7 +170,7 @@ std::string PluginAgent::clear_old_offcial_plugins()
 	return newest_plugin;
 }
 
-void PluginAgent::update_local_offcial_plugin(std::string plugin_abs_path, const char *plugin, const char *version)
+void PluginAgent::update_local_official_plugin(std::string plugin_abs_path, const char *plugin, const char *version)
 {
 	TSRMLS_FETCH();
 	std::ofstream out_file(plugin_abs_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
@@ -182,7 +182,7 @@ void PluginAgent::update_local_offcial_plugin(std::string plugin_abs_path, const
 	}
 	else
 	{
-		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write offcial plugin to %s."), plugin_abs_path.c_str());
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write official plugin to %s."), plugin_abs_path.c_str());
 	}
 }
 
