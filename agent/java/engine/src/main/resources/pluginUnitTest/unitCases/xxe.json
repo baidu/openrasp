@@ -1,0 +1,40 @@
+[{
+    "id": "xxe_relative",
+    "name": "xxe",
+    "action": "ignore",
+    "params": {
+        "entity": "file://xwork.dtd"
+    },
+    "context": {},
+    "description": "xxe with entity include"
+},
+{
+    "id": "xxe_linux_file",
+    "name": "xxe",
+    "action": "ignore",
+    "params": {
+        "entity": "file:///etc/passwd"
+    },
+    "context": {},
+    "description": "normal xxe"
+},
+{
+    "id": "xxe_windows_smb",
+    "name": "xxe",
+    "action": "block",
+    "params": {
+        "entity": "\\\\1.1.1.1\\helloworld"
+    },
+    "context": {},
+    "description": "xxe use smb"
+},
+{
+    "id": "xxe_windows_file",
+    "name": "xxe",
+    "action": "block",
+    "params": {
+        "entity": "file://c:\\windows\\system32\\calc.exe"
+    },
+    "context": {},
+    "description": "xxe with windows file format"
+}]

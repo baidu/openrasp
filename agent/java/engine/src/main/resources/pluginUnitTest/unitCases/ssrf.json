@@ -1,0 +1,104 @@
+[{
+    "id": "ssrf_userinput_intranet",
+    "name": "ssrf",
+    "action": "block",
+    "params": {
+        "hostname": "172.16.177.120",
+        "ip": ["172.16.177.120"],
+        "url": "http://172.16.177.120/hello.action?redirect=123"
+    },
+    "context": {
+        "parameter": {
+            "url": ["http://172.16.177.120/hello.action?redirect=123"]
+        }
+    },
+    "description": "normal ssrf"
+},
+{
+    "id": "ssrf_userinput_localhost",
+    "name": "ssrf",
+    "action": "block",
+    "params": {
+        "hostname": "127.0.0.1",
+        "ip": ["127.0.0.1"],
+        "url": "http://127.0.0.1/hello.action?redirect=123"
+    },
+    "context": {
+        "parameter": {
+            "url": ["http://127.0.0.1/hello.action?redirect=123"]
+        }
+    },
+    "description": "ssrf use redirect"
+},
+{
+    "id": "ssrf_common",
+    "name": "ssrf",
+    "action": "block",
+    "params": {
+        "hostname": "172.16.177.120.xip.io",
+        "ip": ["172.16.177.120"],
+        "url": "http://172.16.177.120/hello.action?redirect=123"
+    },
+    "context": {
+        "parameter": {}
+    },
+    "description": "ssrf use xip.io"
+},
+{
+    "id": "ssrf_curl_file",
+    "name": "ssrf",
+    "action": "block",
+    "params": {
+        "hostname": "",
+        "ip": [""],
+        "url": "file:///etc/passwd"
+    },
+    "context": {
+        "parameter": {}
+    },
+    "description": "ssrf use file protocol"
+},
+{
+    "id": "ssrf_curl_gopher",
+    "name": "ssrf",
+    "action": "block",
+    "params": {
+        "hostname": "172.16.177.120.xip.io",
+        "ip": ["172.16.177.120"],
+        "url": "gopher:///172.16.177.120"
+    },
+    "context": {
+        "parameter": {}
+    },
+    "description": "ssrf use gopher protocol"
+},
+{
+    "id": "ssrf_obfuscate",
+    "name": "ssrf",
+    "action": "block",
+    "params": {
+        "hostname": "0x7f1111",
+        "ip": ["127.0.0.1"],
+        "url": "http://0x7f1111/hello"
+    },
+    "context": {
+        "parameter": {}
+    },
+    "description": "ssrf use hex format ip"
+},
+{
+    "id": "ssrf_white",
+    "name": "ssrf",
+    "action": "ignore",
+    "params": {
+        "hostname": "www.baidu.com",
+        "ip": ["220.130.222.33", "220.111.222.33"],
+        "url": "https://www.baidu.com"
+    },
+    "context": {
+        "parameter": {
+            "url": ["https://www.baidu.com/?wd=123"]
+        }
+    },
+    "description": "ssrf false positive test"
+}]
