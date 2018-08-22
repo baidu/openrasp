@@ -417,7 +417,10 @@ function isHostnameDNSLOG(hostname) {
 }
 
 function basename (path) {
-    var idx = path.lastIndexOf('/')
+    // 简单处理，同时支持 windows/linux
+    var path2 = path.replaceAll('\\', '/')
+    var idx   = path2.lastIndexOf('/')
+
     return path.substr(idx + 1)
 }
 
