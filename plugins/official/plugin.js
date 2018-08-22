@@ -208,6 +208,11 @@ var algorithmConfig = {
         action: 'block'
     },
 
+    // 文件包含 - 用户输入
+    include_userinput: {
+        action: 'block'
+    },
+
     // 文件包含 - 特殊协议
     include_protocol: {
         action: 'block',
@@ -381,12 +386,14 @@ String.prototype.replaceAll = function(token, tokenValue) {
 // /./././././home/../../../../etc/passwd
 // \\..\\..\\..
 // \/..\/..\/..
-function hasTraversal (path) {
+function has_traversal (path) {
 
     // 左右斜杠，一视同仁
     var path2 = path.replaceAll('\\', '/')
 
-    var left  = path2.indexOf('/../')
+    // 覆盖 ../../
+    // 以及 /../../
+    var left  = path2.indexOf('../')
     var right = path2.lastIndexOf('/../')
 
     if (left != -1 && right != -1 && left != right)
@@ -489,14 +496,43 @@ function is_outside_webroot(appBasePath, realpath, path) {
     if (! appBasePath || appBasePath.length == 0) {
         verdict = false
     }
-    else if (realpath.indexOf(appBasePath) == -1 && hasTraversal(path)) {
+    else if (realpath.indexOf(appBasePath) == -1 && has_traversal(path)) {
         verdict = true
     }
 
     return verdict
 }
 
-function is_from_userinput(parameter, target) {
+// 路径是否来自用户输入
+// file_get_contents("/etc/passwd");
+// file_get_contents("../../../../../../../etc/passwd");
+// 
+// 或者以用户输入结尾
+// file_get_contents("/data/uploads/" . "../../../../../../../etc/passwd");
+function is_path_endswith_userinput(parameter, target)
+{
+    var verdict = false
+
+    Object.keys(parameter).some(function (key) {
+        // 只处理非数组、hash情况
+        var value = parameter[key]
+            value = value[0]
+
+        // 参数必须有跳出目录，或者是绝对路径
+        if ((has_traversal(value) || is_absolute_path(value))
+            && (value == target || target.endsWith(value)))
+        {
+            verdict = true
+            return true
+        }
+    })
+
+    return verdict
+}
+
+// 是否来自用户输入 - 适合任意类型参数
+function is_from_userinput(parameter, target) 
+{
     var verdict = false
 
     Object.keys(parameter).some(function (key) {
@@ -937,14 +973,17 @@ plugin.register('directory', function (params, context) {
 
 
 plugin.register('readFile', function (params, context) {
-    var server = context.server
+    var server    = context.server
+    var parameter = context.parameter
 
     //
     //【即将删除】
     // 算法1: 和URL比较，检查是否为成功的目录扫描。仅适用于 java webdav 方式
-    //
     // 注意: 此方法受到 readfile.extension.regex 和资源文件大小的限制
+    // 
+    // 相关ISSUE
     // https://rasp.baidu.com/doc/setup/others.html#java-common
+    // https://github.com/baidu/openrasp/issues/39
     //
     if (1 && server.language == 'java') {
         var filename_1 = basename(context.url)
@@ -1025,31 +1064,21 @@ plugin.register('readFile', function (params, context) {
     //
     if (algorithmConfig.readFile_userinput.action != 'ignore')
     {
-        if (is_from_userinput(context.parameter, params.path))
+        // ?path=/etc/./hosts
+        // ?path=../../../etc/passwd
+        if (is_path_endswith_userinput(parameter, params.path))
+        {
+            return {
+                action:     algorithmConfig.readFile_userinput.action,
+                message:    _("Path traversal - Downloading files specified by userinput, file is %1%", [params.realpath]),
+                confidence: 90
+            }
+        }
+
+        // @FIXME: 用户输入匹配了两次，需要提高效率
+        if (is_from_userinput(parameter, params.path))
         {
             var path_lc = params.path.toLowerCase()
-
-            // 1. 使用绝对路径
-            // ?file=/etc/./hosts
-            if (is_absolute_path(params.path, context.server.os))
-            {
-                return {
-                    action:     algorithmConfig.readFile_userinput.action,
-                    message:    _("Path traversal - Downloading files with absolute path, file is %1%", [params.realpath]),
-                    confidence: 90
-                }
-            }
-
-            // 2. 相对路径且包含 /../
-            // ?file=download/../../etc/passwd
-            if (hasTraversal(params.path))
-            {
-                return {
-                    action:     algorithmConfig.readFile_userinput.action,
-                    message:    _("Path traversal - Downloading files with relative path, file is %1%", [params.realpath]),
-                    confidence: 90
-                }
-            }
 
             // 获取协议，如果有
             var proto = path_lc.split('://')[0]
@@ -1089,7 +1118,21 @@ plugin.register('readFile', function (params, context) {
 })
 
 plugin.register('include', function (params, context) {
-    var url = params.url
+    var url       = params.url
+    var parameter = context.parameter
+
+    // 用户输入检查
+    if (algorithmConfig.include_userinput.action != 'ignore')
+    {
+        if (is_path_endswith_userinput(parameter, url)) 
+        {
+            return {
+                action:     algorithmConfig.include_userinput.action,
+                message:    _("File inclusion - including files provided by userinput", [appBasePath]),
+                confidence: 100                
+            }
+        }
+    }
 
     // 如果没有协议
     // ?file=../../../../../var/log/httpd/error.log
