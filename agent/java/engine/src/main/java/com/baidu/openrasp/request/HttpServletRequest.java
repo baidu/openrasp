@@ -175,17 +175,18 @@ public final class HttpServletRequest extends AbstractRequest {
             if (!setCharacterEncodingFromConfig()) {
                 res = EMPTY_PARAM;
             }
+        } else {
+            res = (Map<String, String[]>) Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
         }
-        Object ret = Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
-        if (ret != null) {
-            res.putAll((Map<String, String[]>) ret);
-        }
+
         ClassLoader loader = CustomClassTransformer.getClassLoader("org.apache.commons.fileupload.servlet.ServletFileUpload");
         boolean isMultipartContent = false;
         if (loader != null) {
             try {
-                isMultipartContent = (Boolean) Reflection.invokeStaticMethod("org.apache.commons.fileupload.servlet.ServletFileUpload", "isMultipartContent", new Class[]{loader.loadClass("javax.servlet.http.HttpServletRequest")}, request);
-
+                isMultipartContent = (Boolean) Reflection.invokeStaticMethod(
+                        "org.apache.commons.fileupload.servlet.ServletFileUpload",
+                        "isMultipartContent",
+                        new Class[]{loader.loadClass("javax.servlet.http.HttpServletRequest")}, request);
             } catch (Throwable e) {
                 e.printStackTrace();
             }
