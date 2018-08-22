@@ -1078,10 +1078,8 @@ plugin.register('readFile', function (params, context) {
         // @FIXME: 用户输入匹配了两次，需要提高效率
         if (is_from_userinput(parameter, params.path))
         {
-            var path_lc = params.path.toLowerCase()
-
             // 获取协议，如果有
-            var proto = path_lc.split('://')[0]
+            var proto = params.path.split('://')[0].toLowerCase()
 
             // 3. 读取 http(s):// 内容
             // ?file=http://www.baidu.com
@@ -1106,7 +1104,7 @@ plugin.register('readFile', function (params, context) {
                 {
                     return {
                         action:     algorithmConfig.readFile_userinput_unwanted.action,
-                        message:    _("Path traversal - Requesting unwanted protocol %1%", [proto]),
+                        message:    _("Path traversal - Requesting unwanted protocol %1%://", [proto]),
                         confidence: 90
                     }
                 }
