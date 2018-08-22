@@ -159,6 +159,10 @@
                                     <shadedPattern>com.baidu.openrasp.st4hidden.org.antlr</shadedPattern>
                                 </relocation>
                                 <relocation>
+                                    <pattern>org.reflections</pattern>
+                                    <shadedPattern>com.baidu.openrasp.reflections</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>javassist</pattern>
                                     <shadedPattern>com.baidu.openrasp.javassist</shadedPattern>
                                 </relocation>

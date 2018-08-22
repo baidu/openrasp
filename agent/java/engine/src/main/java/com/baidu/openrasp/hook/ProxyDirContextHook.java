@@ -18,6 +18,7 @@ package com.baidu.openrasp.hook;
 
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.file.FileInputStreamHook;
+import com.baidu.openrasp.tool.Annotation.HookAnnotation;
 import com.baidu.openrasp.tool.Reflection;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -31,6 +32,7 @@ import java.io.IOException;
  * Created by zhuming01 on 5/31/17.
  * All rights reserved
  */
+@HookAnnotation
 public class ProxyDirContextHook extends AbstractClassHook {
     /**
      * (none-javadoc)

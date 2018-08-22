@@ -16,15 +16,11 @@
 
 package com.baidu.openrasp.request;
 
-import com.baidu.openrasp.hook.file.FileUploadHook;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.transformer.CustomClassTransformer;
-import com.baidu.openrasp.config.Config;
-import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -174,6 +170,16 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Map<String, String[]> getParameterMap() {
+        Map<String, String[]> res = new HashMap<String, String[]>();
+        if (!canGetParameter) {
+            if (!setCharacterEncodingFromConfig()) {
+                res = EMPTY_PARAM;
+            }
+        }
+        Object ret = Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
+        if (ret != null) {
+            res.putAll((Map<String, String[]>) ret);
+        }
         ClassLoader loader = CustomClassTransformer.getClassLoader("org.apache.commons.fileupload.servlet.ServletFileUpload");
         boolean isMultipartContent = false;
         if (loader != null) {
@@ -185,22 +191,10 @@ public final class HttpServletRequest extends AbstractRequest {
             }
         }
         if (isMultipartContent) {
-            Map<String, String[]> res = new HashMap<String, String[]>();
-            Object ret = Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
-            if (ret != null) {
-                res.putAll((Map<String, String[]>) ret);
-            }
-            res.putAll(FileUploadHook.fileUploadCache);
-            return res;
-        } else {
-            if (!canGetParameter) {
-                if (!setCharacterEncodingFromConfig()) {
-                    return EMPTY_PARAM;
-                }
-            }
-            Object ret = Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
-            return ret != null ? (Map<String, String[]>) ret : EMPTY_PARAM;
+            mergeMap(fileUploadCache, res);
         }
+
+        return res;
     }
 
     /**
@@ -277,4 +271,21 @@ public final class HttpServletRequest extends AbstractRequest {
         }
     }
 
+    public void mergeMap(Map<String, String[]> src, Map<String, String[]> dst) {
+        for (Map.Entry<String, String[]> entry : src.entrySet()) {
+            if (dst.containsKey(entry.getKey())) {
+                dst.put(entry.getKey(), mergeArray(dst.get(entry.getKey()), entry.getValue()));
+            } else {
+                dst.put(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+    public String[] mergeArray(String[] s1, String[] s2) {
+        int str1Length = s1.length;
+        int str2length = s2.length;
+        s1 = Arrays.copyOf(s1, str1Length + str2length);
+        System.arraycopy(s2, 0, s1, str1Length, str2length);
+        return s1;
+    }
 }

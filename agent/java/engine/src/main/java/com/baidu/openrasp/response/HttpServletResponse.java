@@ -169,7 +169,7 @@ public class HttpServletResponse {
                     script = Config.getConfig().getBlockXml().replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId);
                 } else {
                     script = Config.getConfig().getBlockHtml().replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId).
-                            replace(CONTENT_TYPE_REPLACE_REDIRECT_URL,blockUrl);
+                            replace(CONTENT_TYPE_REPLACE_REDIRECT_URL, blockUrl);
                 }
                 if (!isCommitted) {
                     Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, statusCode);

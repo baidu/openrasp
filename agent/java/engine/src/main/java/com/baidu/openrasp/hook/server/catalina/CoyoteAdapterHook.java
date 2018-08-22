@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook.server.catalina;
 
 import com.baidu.openrasp.hook.server.ServerPreRequestHook;
+import com.baidu.openrasp.tool.Annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -25,6 +26,7 @@ import javassist.NotFoundException;
  * Created by zhuming01 on 6/23/17.
  * All rights reserved
  */
+@HookAnnotation
 public class CoyoteAdapterHook extends ServerPreRequestHook {
 
     public CoyoteAdapterHook() {

@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook.server.catalina;
 
 import com.baidu.openrasp.hook.server.ServerRequestHook;
+import com.baidu.openrasp.tool.Annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -27,6 +28,7 @@ import java.io.IOException;
  * Created by tyy on 9/12/17.
  * servlet过滤器hook类
  */
+@HookAnnotation
 public class ApplicationFilterHook extends ServerRequestHook {
 
     /**

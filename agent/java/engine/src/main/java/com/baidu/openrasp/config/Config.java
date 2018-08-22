@@ -51,6 +51,7 @@ public class Config extends FileScanListener {
         LOG_MAX_STACK("log.maxstack", "20"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
         SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
+        OPENRASP_PLUGIN_FILTER("openrasp.plugin_filter", "on"),
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
         SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
         BLOCK_STATUS_CODE("block.status_code", "302"),
@@ -114,6 +115,7 @@ public class Config extends FileScanListener {
     private String blockJson;
     private String blockXml;
     private String blockHtml;
+    private String pluginFilter;
 
 
     static {
@@ -728,6 +730,26 @@ public class Config extends FileScanListener {
         this.blockHtml = blockHtml;
     }
 
+    /**
+     * 获取对于文件的include/reaFile等hook点，当文件不存在时，
+     * 是否调用插件的开关状态
+     *
+     * @return 返回是否进入插件
+     */
+    public String getPluginFilter() {
+        return pluginFilter;
+    }
+
+    /**
+     * 设置对于文件的include/reaFile等hook点，当文件不存在时，
+     * 是否调用插件的开关状态
+     *
+     * @param pluginFilter 开关状态:on/off
+     */
+    public void setPluginFilter(String pluginFilter) {
+        this.pluginFilter = pluginFilter;
+    }
+
     //--------------------------统一的配置处理------------------------------------
 
     /**
@@ -784,7 +806,9 @@ public class Config extends FileScanListener {
                 setBlockXml(value);
             } else if (Item.BLOCK_HTML.key.equals(key)) {
                 setBlockHtml(value);
-            } else {
+            } else if (Item.OPENRASP_PLUGIN_FILTER.key.equals(key)){
+                setPluginFilter(value);
+            }else {
                 isHit = false;
             }
             if (isHit) {

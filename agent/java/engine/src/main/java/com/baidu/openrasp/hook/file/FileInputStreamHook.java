@@ -17,10 +17,12 @@
 package com.baidu.openrasp.hook.file;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.Annotation.HookAnnotation;
 import com.baidu.openrasp.tool.FileUtil;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -34,6 +36,7 @@ import java.io.IOException;
  * Created by zhuming01 on 5/31/17.
  * All rights reserved
  */
+@HookAnnotation
 public class FileInputStreamHook extends AbstractClassHook {
     /**
      * (none-javadoc)
@@ -72,13 +75,14 @@ public class FileInputStreamHook extends AbstractClassHook {
      * @param file 文件对象
      */
     public static void checkReadFile(File file) {
+        String checkSwitch = Config.getConfig().getPluginFilter();
         if (file != null) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             params.put("path", params, file.getPath());
             try {
                 String path = file.getCanonicalPath();
-                if (path.endsWith(".class") || !file.exists()) {
+                if (path.endsWith(".class") || !file.exists() && "on".equals(checkSwitch)) {
                     return;
                 }
                 params.put("realpath", params, FileUtil.getRealPath(file));

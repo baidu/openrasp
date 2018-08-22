@@ -16,6 +16,7 @@
 
 package com.baidu.openrasp.hook.sql;
 
+import com.baidu.openrasp.tool.Annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -27,6 +28,7 @@ import java.io.IOException;
  *
  * sql Prepare 查询 hook 点
  */
+@HookAnnotation
 public class SQLPreparedStatementHook extends AbstractSqlHook {
 
     private String className;

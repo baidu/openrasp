@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.tool.Annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -27,6 +28,7 @@ import java.io.IOException;
  * Created by lxk on 7/8/17.
  * All rights reserved
  */
+@HookAnnotation
 public class JspCompilationContextHook extends AbstractClassHook {
     /**
      * (none-javadoc)

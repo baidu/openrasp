@@ -21,6 +21,7 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.Annotation.HookAnnotation;
 import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.Reflection;
 
@@ -37,6 +38,7 @@ import java.io.IOException;
  * Created by zhuming01 on 7/18/17.
  * All rights reserved
  */
+@HookAnnotation
 public class SQLStatementHook extends AbstractSqlHook {
 
     private static final String CONFIG_KEY_CACHE = "cache";

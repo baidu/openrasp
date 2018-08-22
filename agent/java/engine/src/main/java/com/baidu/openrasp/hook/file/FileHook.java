@@ -22,6 +22,7 @@ import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.Annotation.HookAnnotation;
 import com.baidu.openrasp.tool.StackTrace;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -36,6 +37,7 @@ import java.util.List;
  * Created by zhuming01 on 5/16/17.
  * All rights reserved
  */
+@HookAnnotation
 public class FileHook extends AbstractClassHook {
     /**
      * (none-javadoc)

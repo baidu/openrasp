@@ -21,6 +21,7 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
+import com.baidu.openrasp.tool.Annotation.HookAnnotation;
 import com.baidu.openrasp.tool.TimeUtils;
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
@@ -36,6 +37,7 @@ import java.util.Properties;
  * Created by lxk on 7/6/17.
  * All rights reserved
  */
+@HookAnnotation
 public class SQLDriverManagerHook extends AbstractClassHook {
     private static ArrayList<String> classList = new ArrayList<String>();
 

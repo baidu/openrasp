@@ -23,6 +23,7 @@ import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.Annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -36,6 +37,7 @@ import java.io.IOException;
  * 　　* @author anyang
  * 　　* @date 2018/7/23 10:54
  */
+@HookAnnotation
 public class FileRenameHook extends AbstractClassHook {
     @Override
     public boolean isClassMatched(String className) {
@@ -55,7 +57,7 @@ public class FileRenameHook extends AbstractClassHook {
     }
 
     public static void checkFileRename(File source, File dest) {
-        if (source != null && dest != null) {
+        if (source != null && !source.isDirectory() && dest != null && !dest.isDirectory()) {
 
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
