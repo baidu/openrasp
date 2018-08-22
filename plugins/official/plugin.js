@@ -568,7 +568,7 @@ if (RASP.get_jsengine() !== 'v8') {
         var reason     = false
         var min_length = algorithmConfig.sqli_userinput.min_length
         var parameters = context.parameter || {}
-        var raw_tokens     = RASP.sql_tokenize(params.query, params.server)
+        var raw_tokens = RASP.sql_tokenize(params.query, params.server)
 
         //console.log(raw_tokens)
 
@@ -612,28 +612,32 @@ if (RASP.get_jsengine() !== 'v8') {
                     }
 
                     // 简单识别用户输入
-                    var para_index = params.query.indexOf(value);
-                    if (para_index == -1) {
+                    var userinput_idx = params.query.indexOf(value);
+                    if (userinput_idx == -1) {
                         continue
                     }
 
-                    //检测用户输入产生的token数量
-                    var start = raw_tokens.length , end = raw_tokens.length;
-                    for(var i=0;i<raw_tokens.length;i++){
-                        if(raw_tokens[i].stop >= para_index){
-                            start = i;
-                            break;
+                    // 当用户输入穿越了2个token，就可以判定为SQL注入
+                    var start = -1, end = raw_tokens.length, distance = 2
+
+                    // 寻找 token 起始点
+                    for (var i = 0; i < raw_tokens.length; i++) {
+                        if (raw_tokens[i].stop >= userinput_idx) {
+                            start = i
+                            break
                         }
                     }
 
-                    for(var i=start;i<raw_tokens.length;i++){
-                        if(raw_tokens[i].stop >= para_index + value.length - 1){
+                    // 寻找 token 结束点
+                    // 另外，最多需要遍历 distance 个 token
+                    for (var i = start; i < start + distance && i < raw_tokens.length; i++) {
+                        if (raw_tokens[i].stop >= userinput_idx + value.length - 1) {
                             end = i;
                             break;
                         }
                     }
 
-                    if(end - start > 2){
+                    if (end - start > distance) {
                         reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
                         return true
                     }
