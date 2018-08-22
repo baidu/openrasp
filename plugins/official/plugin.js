@@ -936,7 +936,7 @@ plugin.register('readFile', function (params, context) {
                 matched = true
             } else {
                 // 尝试访问敏感文件
-                for (var i = 0; i < forcefulBrowsing.unwantedFilenames; i ++) {
+                for (var i = 0; i < forcefulBrowsing.unwantedFilenames.length; i ++) {
                     if (forcefulBrowsing.unwantedFilenames[i] == filename_1) {
                         matched = true
                     }
