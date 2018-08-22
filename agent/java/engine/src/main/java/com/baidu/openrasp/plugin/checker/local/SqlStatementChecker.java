@@ -20,6 +20,7 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.plugin.antlr.TokenGenerator;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.sql.SQLStatementHook;
+import com.baidu.openrasp.plugin.antlr.TokenResult;
 import com.baidu.openrasp.plugin.antlr.TokenizeErrorListener;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.js.JsChecker;
@@ -38,7 +39,7 @@ import java.util.ArrayList;
 
 /**
  * Created by tyy on 17-12-20.
- *
+ * <p>
  * 检测 sql 语句的 java 版本
  */
 public class SqlStatementChecker extends ConfigurableChecker {
@@ -61,7 +62,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
     private void checkSql(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
         String query = (String) checkParameter.getParam("query");
         String message = null;
-        ArrayList<Token> rawTokens = TokenGenerator.rawTokenize(query, tokenizeErrorListener);
+        ArrayList<TokenResult> rawTokens = TokenGenerator.detailTokenize(query, tokenizeErrorListener);
         String[] tokens = new String[rawTokens.size()];
         for (int j = 0; j < rawTokens.size(); j++) {
             tokens[j] = rawTokens.get(j).getText();
@@ -89,27 +90,33 @@ public class SqlStatementChecker extends ConfigurableChecker {
                     }
                 }
 
+                // 简单识别用户输入
                 int para_index = query.indexOf(value);
                 if (para_index < 0) {
                     continue;
                 }
 
-                int start = tokens.length, end = tokens.length;
-                for (int i = 0; i < tokens.length; i ++){
-                    if ( rawTokens.get(i).getStopIndex() >= para_index){
+                // 当用户输入穿越了2个token，就可以判定为SQL注入
+                int start = tokens.length, end = tokens.length, distance = 2;
+
+                // 寻找 token 起始点
+                for (int i = 0; i < tokens.length; i++) {
+                    if (rawTokens.get(i).getStop() >= para_index) {
                         start = i;
                         break;
                     }
                 }
 
-                for (int i = start; i < tokens.length; i ++){
-                    if( rawTokens.get(i).getStopIndex() >= para_index + value.length() - 1){
+                // 寻找 token 结束点
+                // 另外，最多需要遍历 distance 个 token
+                for (int i = start; i < start + distance && i < tokens.length; i++) {
+                    if (rawTokens.get(i).getStop() >= para_index + value.length() - 1) {
                         end = i;
                         break;
                     }
                 }
 
-                if (end - start > 2){
+                if (end - start > distance) {
                     message = "SQLi - SQL query structure altered by user input, request parameter name: " + entry.getKey();
                 }
             }

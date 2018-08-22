@@ -67,7 +67,7 @@ public class TokenGenerator {
              token.getType() != Token.EOF;
              token = lexer.nextToken())
         {
-            result.add(new TokenResult(token.getType(), token.getText(), token.getStartIndex()));
+            result.add(new TokenResult(token.getText(), token.getStartIndex(), token.getStopIndex()));
         }
         return result;
     }

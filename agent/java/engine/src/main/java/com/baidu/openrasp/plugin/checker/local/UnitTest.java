@@ -1,7 +1,6 @@
 package com.baidu.openrasp.plugin.checker.local;
 
 import com.baidu.openrasp.plugin.info.EventInfo;
-import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.request.UnitTestRequest;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.google.gson.Gson;
@@ -16,25 +15,23 @@ public class UnitTest {
     public static void main(String[] args) {
         try {
             test();
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static void test() throws Exception{
+    private static void test() throws Exception {
         JsonObject config = getConfig();
         JsonObject requestInfo;
         JsonObject params;
         int success = 0, fail = 0, ignore = 0;
         LinkedList<String> testCaseFiles = getJsonFiles(UnitTest.class.getResource("/pluginUnitTest/unitCases").getPath());
-        for(String fileName : testCaseFiles){
+        for (String fileName : testCaseFiles) {
 
             String input = readJsonFile(fileName);
             Gson gson = new Gson();
-            Iterator testCases = gson.fromJson(input, JsonElement.class).getAsJsonArray().iterator();
-            while(testCases.hasNext()) {
-                requestInfo = (JsonObject) testCases.next();
+            for (Object o : gson.fromJson(input, JsonElement.class).getAsJsonArray()) {
+                requestInfo = (JsonObject) o;
                 params = (JsonObject) requestInfo.get("params");
                 //获取case中的param
                 Map<String, Object> paramMap = new HashMap<String, Object>();
@@ -67,17 +64,17 @@ public class UnitTest {
                 } else {
                     //忽略没有对应方法的用例
                     //System.out.println("[IGNORED] Test id:" + requestInfo.get("id").getAsString());
-                    ignore ++;
+                    ignore++;
                     continue;
                 }
                 String action = requestInfo.get("action").getAsString();
 
                 if (((action.equals("block") || action.equals("log")) && result.size() != 0)
                         || (action.equals("ignore")) && result.size() == 0) {
-                    success ++;
+                    success++;
                     //System.out.println("[PASS] Test id:" + requestInfo.get("id").getAsString());
                 } else {
-                    fail ++;
+                    fail++;
                     System.out.println("[FAILED] Test id:" + requestInfo.get("id").getAsString());
                     System.out.println("Case description:" + requestInfo.get("description").getAsString());
                 }
@@ -87,24 +84,23 @@ public class UnitTest {
         System.out.println(output);
     }
 
-    private static String readJsonFile(String path) throws IOException{
+    private static String readJsonFile(String path) throws IOException {
         File file = new File(path);
         FileReader reader = new FileReader(file);
-        int fileLen = (int)file.length();
+        int fileLen = (int) file.length();
         char[] chars = new char[fileLen];
         reader.read(chars);
         return String.valueOf(chars);
     }
 
-    public static LinkedList<String> getJsonFiles(String pathName) throws IOException{
+    public static LinkedList<String> getJsonFiles(String pathName) throws IOException {
         File dirFile = new File(pathName);
-        if (! dirFile.exists() || ! dirFile.isDirectory()) {
+        if (!dirFile.exists() || !dirFile.isDirectory()) {
             throw new IOException();
         }
         String[] fileList = dirFile.list();
         LinkedList<String> result = new LinkedList<String>();
-        for (int i = 0; i < fileList.length; i++) {
-            String string = fileList[i];
+        for (String string : fileList) {
             File file = new File(dirFile.getPath(), string);
             if (!file.isDirectory()) {
                 result.push(dirFile.getPath() + File.separator + string);
@@ -114,7 +110,7 @@ public class UnitTest {
     }
 
 
-    public static JsonObject getConfig() throws Exception{
+    public static JsonObject getConfig() throws Exception {
         String configJson = readJsonFile(UnitTest.class.getResource("/pluginUnitTest/unitConfig.json").getPath());
         Gson gson = new Gson();
         return gson.fromJson(configJson, JsonElement.class).getAsJsonObject();

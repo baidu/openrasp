@@ -5,29 +5,25 @@ package com.baidu.openrasp.plugin.antlr;
  */
 public class TokenResult {
 
-    private int type;
     private String text;
-    private int startIndex;
+    private int start, stop;
 
-    public TokenResult(int type, String text, int startIndex)
+    public TokenResult(String tokenText, int startIndex, int stopIndex)
     {
-        this.type = type;
-        this.text = text;
-        this.startIndex = startIndex;
+        this.text = tokenText;
+        this.start = startIndex;
+        this.stop = stopIndex;
     }
 
-    public int getType()
+    public String getText() { return this.text; }
+
+    public int getStart()
     {
-        return this.type;
+        return this.start;
     }
 
-    public String getText()
+    public int getStop()
     {
-        return this.text;
-    }
-
-    public int getStartIndex()
-    {
-        return this.startIndex;
+        return this.stop;
     }
 }

@@ -9,16 +9,4 @@
         "parameter": {}
     },
     "description": "script file upload"
-},
-{
-    "id": "script_fileUpload_white",
-    "name": "fileUpload",
-    "action": "ignore",
-    "params": {
-        "filename": "abc.jpg"
-    },
-    "context": {
-        "parameter": {}
-    },
-    "description": "file upload false positive"
 }]
