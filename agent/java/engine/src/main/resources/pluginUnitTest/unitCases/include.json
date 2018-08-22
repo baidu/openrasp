@@ -1,32 +1,4 @@
 [{
-    "id": "include_outsideWebroot",
-    "name": "include",
-    "action": "block",
-    "params": {
-        "url": "../../../../../var/log/httpd/error.log",
-        "realpath": "/var/log/httpd/error.log"
-    },
-    "context": {
-        "appBasePath": "/home/webroot",
-        "parameter": {}
-    },
-    "description": "include file outside webroot path"
-},
-{
-    "id": "include_outsideWebroot_windows_bypass",
-    "name": "include",
-    "action": "block",
-    "params": {
-        "url": "..\\/..\\/..\\/..\\/..\\/error.log",
-        "realpath": "/var/log/httpd/error.log"
-    },
-    "context": {
-        "appBasePath": "/home/webroot",
-        "parameter": {}
-    },
-    "description": "include file outside webroot path use windows path format"
-},
-{
     "id": "include_protocol_php",
     "name": "include",
     "action": "block",
@@ -40,33 +12,4 @@
         "parameter": {}
     },
     "description": "include file with php protocol"
-},
-{
-    "id": "include_white",
-    "name": "include",
-    "action": "ignore",
-    "params": {
-        "url": "/home/webroot//include.php",
-        "realpath": "/home/webroot/include.php"
-    },
-    "context": {
-        "appBasePath": "/home/webroot",
-        "parameter": {}
-    },
-    "description": "include file false positive test"
-},
-{
-    "id": "include_protocol_phar",
-    "name": "include",
-    "action": "block",
-    "params": {
-        "url": "phar://test.phar",
-        "realpath": "phar://test.phar",
-        "function": "include_once"
-    },
-    "context": {
-        "appBasePath": "/home/webroot",
-        "parameter": {}
-    },
-    "description": "include file with phar protocol"
 }]
