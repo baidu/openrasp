@@ -47,9 +47,8 @@ public class SSRFChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_SSRF_OBFUSCATE = "ssrf_obfuscate";
     private static final String CONFIG_KEY_SSRF_USER_INPUT = "ssrf_userinput";
 
-    private List<EventInfo> result = new LinkedList<EventInfo>();
-
-    private void checkSSRF(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config){
+    List<EventInfo> checkSSRF(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
+        List<EventInfo> result = new LinkedList<EventInfo>();
         String hostName = (String) checkParameter.getParam("hostname");
         String url = (String) checkParameter.getParam("url");
         List ips = (List) checkParameter.getParam("ip");
@@ -100,14 +99,16 @@ public class SSRFChecker extends ConfigurableChecker {
                         getActionElement(config, CONFIG_KEY_SSRF_OBFUSCATE), "SSRF - Requesting hexadecimal IP address"));
             }
         }
+        return result;
     }
 
     @Override
     public List<EventInfo> checkParam(CheckParameter checkParameter) {
+        List<EventInfo> result = new LinkedList<EventInfo>();
         JsonObject config = Config.getConfig().getAlgorithmConfig();
         Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
         try {
-            checkSSRF(checkParameter, parameterMap, config);
+            result = checkSSRF(checkParameter, parameterMap, config);
         } catch (Exception e) {
             JSContext.LOGGER.warn("Exception while executing builtin SSRF plugin, was:" + e.getMessage());
         }
@@ -122,11 +123,6 @@ public class SSRFChecker extends ConfigurableChecker {
     private boolean isModuleIgnore(JsonObject config, String configKey) {
         String action = getActionElement(config, configKey);
         return EventInfo.CHECK_ACTION_IGNORE.equals(action) || action == null;
-    }
-
-    public List<EventInfo> testCheckSSRF(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
-        checkSSRF(checkParameter, parameterMap, config);
-        return result;
     }
 
 }
