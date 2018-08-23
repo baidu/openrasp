@@ -246,12 +246,24 @@ bool OpenraspAgentManager::process_agent_startup()
 void OpenraspAgentManager::process_agent_shutdown()
 {
 	agents.clear();
-	pid_t supervisor_id = agent_ctrl_block->get_supervisor_id();
-	pid_t plugin_agent_id = agent_ctrl_block->get_plugin_agent_id();
 	pid_t log_agent_id = agent_ctrl_block->get_log_agent_id();
-	kill(plugin_agent_id, SIGKILL);
-	kill(log_agent_id, SIGKILL);
-	kill(supervisor_id, SIGKILL);
+	if (log_agent_id > 0)
+	{
+		kill(log_agent_id, SIGKILL);
+	}
+	if (openrasp_ini.plugin_update_enable)
+	{
+		pid_t plugin_agent_id = agent_ctrl_block->get_plugin_agent_id();
+		if (plugin_agent_id > 0)
+		{
+			kill(plugin_agent_id, SIGKILL);
+		}
+	}
+	pid_t supervisor_id = agent_ctrl_block->get_supervisor_id();
+	if (supervisor_id > 0)
+	{
+		kill(supervisor_id, SIGKILL);
+	}
 }
 
 void OpenraspAgentManager::supervisor_run()
