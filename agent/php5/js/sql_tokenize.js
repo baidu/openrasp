@@ -471,11 +471,11 @@ DoubleDict.prototype.set = function (a, b, o) {
 
 
 function escapeWhitespace(s, escapeSpaces) {
-    s = s.replace("\t", "\\t");
-    s = s.replace("\n", "\\n");
-    s = s.replace("\r", "\\r");
+    s = s.replace(/\t/g, "\\t")
+         .replace(/\n/g, "\\n")
+         .replace(/\r/g, "\\r");
     if (escapeSpaces) {
-        s = s.replace(" ", "\u00B7");
+        s = s.replace(/ /g, "\u00B7");
     }
     return s;
 }
@@ -514,6 +514,7 @@ exports.escapeWhitespace = escapeWhitespace;
 exports.arrayToString = arrayToString;
 exports.titleCase = titleCase;
 exports.equalArrays = equalArrays;
+
 
 /***/ }),
 /* 1 */
@@ -5337,7 +5338,7 @@ ATNDeserializer.prototype.deserialize = function(data) {
 ATNDeserializer.prototype.reset = function(data) {
 	var adjust = function(c) {
         var v = c.charCodeAt(0);
-        return v>1  ? v-2 : -1;
+        return v>1  ? v-2 : v + 65533;
 	};
     var temp = data.split("").map(adjust);
     // don't adjust the first value since that's the version number
@@ -6305,7 +6306,7 @@ Recognizer.ruleIndexMapCache = {};
 
 
 Recognizer.prototype.checkVersion = function(toolVersion) {
-    var runtimeVersion = "4.7";
+    var runtimeVersion = "4.7.1";
     if (runtimeVersion!==toolVersion) {
         console.log("ANTLR runtime and generated code versions disagree: "+runtimeVersion+"!="+toolVersion);
     }
@@ -7454,7 +7455,7 @@ DefaultErrorStrategy.prototype.reportNoViableAlternative = function(recognizer, 
         if (e.startToken.type===Token.EOF) {
             input = "<EOF>";
         } else {
-            input = tokens.getText(new Interval(e.startToken, e.offendingToken));
+            input = tokens.getText(new Interval(e.startToken.tokenIndex, e.offendingToken.tokenIndex));
         }
     } else {
         input = "<unknown input>";
@@ -7942,6 +7943,7 @@ BailErrorStrategy.prototype.sync = function(recognizer) {
 exports.BailErrorStrategy = BailErrorStrategy;
 exports.DefaultErrorStrategy = DefaultErrorStrategy;
 
+
 /***/ }),
 /* 30 */
 /***/ (function(module, exports) {
@@ -7954,20 +7956,6 @@ exports.DefaultErrorStrategy = DefaultErrorStrategy;
 
 var antlr4 = __webpack_require__(19)
 var SQLLexer = __webpack_require__(49).SQLLexer
-
-TokenizeErrorListener = function () {
-    antlr4.error.ErrorListener.call(this);
-    return this
-}
-TokenizeErrorListener.prototype = Object.create(antlr4.error.ErrorListener.prototype);
-TokenizeErrorListener.prototype.constructor = TokenizeErrorListener;
-TokenizeErrorListener.prototype.syntaxError = function(recognizer, offendingSymbol, line, column, msg, e) {
-    if (recognizer instanceof SQLLexer)
-    {
-        console.error("RASP.sql_tokenize() error: line " + line + ":" + column + " " + msg + " in SQL statement:\n" + (recognizer).inputStream.toString());
-	}
-};
-var listener = new TokenizeErrorListener();
 
 function sql_tokenize(query) {
     var input = new antlr4.InputStream(query);
@@ -11197,7 +11185,7 @@ var fs = isNodeJs ? __webpack_require__(30) : null;
 var CharStreams = {
   // Creates an InputStream from a string.
   fromString: function(str) {
-    return InputStream(str, true);
+    return new InputStream(str, true);
   },
 
   // Asynchronously creates an InputStream from a blob given the
@@ -11209,7 +11197,7 @@ var CharStreams = {
   fromBlob: function(blob, encoding, onLoad, onError) {
     var reader = FileReader();
     reader.onload = function(e) {
-      var is = InputStream(e.target.result, true);
+      var is = new InputStream(e.target.result, true);
       onLoad(is);
     };
     reader.onerror = onError;
@@ -11220,7 +11208,7 @@ var CharStreams = {
   // encoding of the bytes in that buffer (defaults to 'utf8' if
   // encoding is null).
   fromBuffer: function(buffer, encoding) {
-    return InputStream(buffer.toString(encoding), true);
+    return new InputStream(buffer.toString(encoding), true);
   },
 
   // Asynchronously creates an InputStream from a file on disk given
@@ -11232,7 +11220,7 @@ var CharStreams = {
     fs.readFile(path, encoding, function(err, data) {
       var is = null;
       if (data !== null) {
-        is = InputStream(data, true);
+        is = new InputStream(data, true);
       }
       callback(err, is);
     });
@@ -11243,7 +11231,7 @@ var CharStreams = {
   // 'utf8' if encoding is null).
   fromPathSync: function(path, encoding) {
     var data = fs.readFileSync(path, encoding);
-    return InputStream(data, true);
+    return new InputStream(data, true);
   }
 };
 
@@ -12461,60 +12449,62 @@ var antlr4 = __webpack_require__(19);
 
 
 var serializedATN = ["\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd",
-    "\2\23\u00ac\b\1\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b",
+    "\2\24\u00b0\b\1\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b",
     "\t\b\4\t\t\t\4\n\t\n\4\13\t\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4",
-    "\20\t\20\4\21\t\21\4\22\t\22\3\2\6\2\'\n\2\r\2\16\2(\3\2\3\2\3\2\3\2",
-    "\3\2\3\2\3\2\3\2\3\2\3\2\5\2\65\n\2\3\3\6\38\n\3\r\3\16\39\3\3\6\3=",
-    "\n\3\r\3\16\3>\3\3\3\3\6\3C\n\3\r\3\16\3D\3\3\3\3\5\3I\n\3\3\4\3\4\3",
-    "\5\3\5\3\6\3\6\3\7\3\7\3\b\3\b\3\b\7\bV\n\b\f\b\16\bY\13\b\3\b\3\b\3",
-    "\b\3\b\3\b\7\b`\n\b\f\b\16\bc\13\b\3\b\3\b\5\bg\n\b\3\t\3\t\5\tk\n\t",
-    "\3\n\3\n\3\n\3\n\3\n\6\nr\n\n\r\n\16\ns\3\13\3\13\3\13\3\f\3\f\3\f\3",
-    "\f\3\f\3\f\3\f\3\f\3\f\7\f\u0082\n\f\f\f\16\f\u0085\13\f\3\f\3\f\5\f",
-    "\u0089\n\f\3\f\3\f\3\r\3\r\3\r\5\r\u0090\n\r\3\r\7\r\u0093\n\r\f\r\16",
-    "\r\u0096\13\r\3\r\3\r\3\16\3\16\3\17\3\17\3\20\3\20\3\20\3\21\6\21\u00a2",
-    "\n\21\r\21\16\21\u00a3\3\22\6\22\u00a7\n\22\r\22\16\22\u00a8\3\22\3",
-    "\22\3\u0083\2\23\3\3\5\4\7\5\t\6\13\7\r\b\17\t\21\n\23\13\25\f\27\r",
-    "\31\16\33\17\35\20\37\21!\22#\23\3\2\13\7\2\60\60\62;C\\aac|\3\2\62",
-    ";\4\2$$^^\4\2))^^\n\2$$))^^ddhhppttvv\3\2##\4\2\f\f\17\17\t\2##&(*-",
-    "//\61\61<B``\5\2\13\f\16\17\"\"\u00c0\2\3\3\2\2\2\2\5\3\2\2\2\2\7\3",
-    "\2\2\2\2\t\3\2\2\2\2\13\3\2\2\2\2\r\3\2\2\2\2\17\3\2\2\2\2\21\3\2\2",
-    "\2\2\23\3\2\2\2\2\25\3\2\2\2\2\27\3\2\2\2\2\31\3\2\2\2\2\33\3\2\2\2",
-    "\2\35\3\2\2\2\2\37\3\2\2\2\2!\3\2\2\2\2#\3\2\2\2\3\64\3\2\2\2\5H\3\2",
-    "\2\2\7J\3\2\2\2\tL\3\2\2\2\13N\3\2\2\2\rP\3\2\2\2\17f\3\2\2\2\21h\3",
-    "\2\2\2\23l\3\2\2\2\25u\3\2\2\2\27\u0088\3\2\2\2\31\u008f\3\2\2\2\33",
-    "\u0099\3\2\2\2\35\u009b\3\2\2\2\37\u009d\3\2\2\2!\u00a1\3\2\2\2#\u00a6",
-    "\3\2\2\2%\'\t\2\2\2&%\3\2\2\2\'(\3\2\2\2(&\3\2\2\2()\3\2\2\2)\65\3\2",
-    "\2\2*+\7b\2\2+,\5\3\2\2,-\7b\2\2-\65\3\2\2\2./\7b\2\2/\60\5\3\2\2\60",
-    "\61\7b\2\2\61\62\7\60\2\2\62\63\5\3\2\2\63\65\3\2\2\2\64&\3\2\2\2\64",
-    "*\3\2\2\2\64.\3\2\2\2\65\4\3\2\2\2\668\t\3\2\2\67\66\3\2\2\289\3\2\2",
-    "\29\67\3\2\2\29:\3\2\2\2:I\3\2\2\2;=\t\3\2\2<;\3\2\2\2=>\3\2\2\2><\3",
-    "\2\2\2>?\3\2\2\2?@\3\2\2\2@B\7\60\2\2AC\t\3\2\2BA\3\2\2\2CD\3\2\2\2",
-    "DB\3\2\2\2DE\3\2\2\2EI\3\2\2\2FG\7/\2\2GI\5\5\3\2H\67\3\2\2\2H<\3\2",
-    "\2\2HF\3\2\2\2I\6\3\2\2\2JK\7$\2\2K\b\3\2\2\2LM\7)\2\2M\n\3\2\2\2NO",
-    "\7}\2\2O\f\3\2\2\2PQ\7\177\2\2Q\16\3\2\2\2RW\5\7\4\2SV\n\4\2\2TV\5\21",
-    "\t\2US\3\2\2\2UT\3\2\2\2VY\3\2\2\2WU\3\2\2\2WX\3\2\2\2XZ\3\2\2\2YW\3",
-    "\2\2\2Z[\5\7\4\2[g\3\2\2\2\\a\5\t\5\2]`\n\5\2\2^`\5\21\t\2_]\3\2\2\2",
-    "_^\3\2\2\2`c\3\2\2\2a_\3\2\2\2ab\3\2\2\2bd\3\2\2\2ca\3\2\2\2de\5\t\5",
-    "\2eg\3\2\2\2fR\3\2\2\2f\\\3\2\2\2g\20\3\2\2\2hj\7^\2\2ik\t\6\2\2ji\3",
-    "\2\2\2jk\3\2\2\2k\22\3\2\2\2lm\7\61\2\2mn\7,\2\2no\7#\2\2oq\3\2\2\2",
-    "pr\t\3\2\2qp\3\2\2\2rs\3\2\2\2sq\3\2\2\2st\3\2\2\2t\24\3\2\2\2uv\7,",
-    "\2\2vw\7\61\2\2w\26\3\2\2\2xy\7\61\2\2yz\7,\2\2z{\7,\2\2{\u0089\7\61",
-    "\2\2|}\7\61\2\2}~\7,\2\2~\177\3\2\2\2\177\u0083\n\7\2\2\u0080\u0082",
-    "\13\2\2\2\u0081\u0080\3\2\2\2\u0082\u0085\3\2\2\2\u0083\u0084\3\2\2",
-    "\2\u0083\u0081\3\2\2\2\u0084\u0086\3\2\2\2\u0085\u0083\3\2\2\2\u0086",
-    "\u0087\7,\2\2\u0087\u0089\7\61\2\2\u0088x\3\2\2\2\u0088|\3\2\2\2\u0089",
-    "\u008a\3\2\2\2\u008a\u008b\b\f\2\2\u008b\30\3\2\2\2\u008c\u0090\7%\2",
-    "\2\u008d\u008e\7/\2\2\u008e\u0090\7/\2\2\u008f\u008c\3\2\2\2\u008f\u008d",
-    "\3\2\2\2\u0090\u0094\3\2\2\2\u0091\u0093\n\b\2\2\u0092\u0091\3\2\2\2",
-    "\u0093\u0096\3\2\2\2\u0094\u0092\3\2\2\2\u0094\u0095\3\2\2\2\u0095\u0097",
-    "\3\2\2\2\u0096\u0094\3\2\2\2\u0097\u0098\b\r\2\2\u0098\32\3\2\2\2\u0099",
-    "\u009a\7.\2\2\u009a\34\3\2\2\2\u009b\u009c\7\60\2\2\u009c\36\3\2\2\2",
-    "\u009d\u009e\7~\2\2\u009e\u009f\7~\2\2\u009f \3\2\2\2\u00a0\u00a2\t",
-    "\t\2\2\u00a1\u00a0\3\2\2\2\u00a2\u00a3\3\2\2\2\u00a3\u00a1\3\2\2\2\u00a3",
-    "\u00a4\3\2\2\2\u00a4\"\3\2\2\2\u00a5\u00a7\t\n\2\2\u00a6\u00a5\3\2\2",
-    "\2\u00a7\u00a8\3\2\2\2\u00a8\u00a6\3\2\2\2\u00a8\u00a9\3\2\2\2\u00a9",
-    "\u00aa\3\2\2\2\u00aa\u00ab\b\22\2\2\u00ab$\3\2\2\2\26\2(\649>DHUW_a",
-    "fjs\u0083\u0088\u008f\u0094\u00a3\u00a8\3\b\2\2"].join("");
+    "\20\t\20\4\21\t\21\4\22\t\22\4\23\t\23\3\2\6\2)\n\2\r\2\16\2*\3\2\3",
+    "\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\5\2\67\n\2\3\3\6\3:\n\3\r\3\16\3",
+    ";\3\3\6\3?\n\3\r\3\16\3@\3\3\3\3\6\3E\n\3\r\3\16\3F\3\3\3\3\5\3K\n\3",
+    "\3\4\3\4\3\5\3\5\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\7\6Z\n\6\f\6\16",
+    "\6]\13\6\3\6\3\6\5\6a\n\6\3\6\3\6\3\7\3\7\3\7\5\7h\n\7\3\7\7\7k\n\7",
+    "\f\7\16\7n\13\7\3\7\3\7\3\b\3\b\3\t\3\t\3\n\3\n\3\n\7\ny\n\n\f\n\16",
+    "\n|\13\n\3\n\3\n\3\n\3\n\3\n\7\n\u0083\n\n\f\n\16\n\u0086\13\n\3\n\3",
+    "\n\5\n\u008a\n\n\3\13\3\13\5\13\u008e\n\13\3\f\3\f\3\f\3\f\3\f\6\f\u0095",
+    "\n\f\r\f\16\f\u0096\3\r\3\r\3\r\3\16\3\16\3\17\3\17\3\20\3\20\3\20\3",
+    "\21\3\21\3\22\6\22\u00a6\n\22\r\22\16\22\u00a7\3\23\6\23\u00ab\n\23",
+    "\r\23\16\23\u00ac\3\23\3\23\3[\2\24\3\3\5\4\7\5\t\6\13\7\r\b\17\t\21",
+    "\n\23\13\25\f\27\r\31\16\33\17\35\20\37\21!\22#\23%\24\3\2\13\7\2\60",
+    "\60\62;C\\aac|\3\2\62;\3\2##\4\2\f\f\17\17\4\2$$^^\4\2))^^\n\2$$))^",
+    "^ddhhppttvv\n\2##&(*-//\61\61<>@B``\5\2\13\f\16\17\"\"\u00c4\2\3\3\2",
+    "\2\2\2\5\3\2\2\2\2\7\3\2\2\2\2\t\3\2\2\2\2\13\3\2\2\2\2\r\3\2\2\2\2",
+    "\17\3\2\2\2\2\21\3\2\2\2\2\23\3\2\2\2\2\25\3\2\2\2\2\27\3\2\2\2\2\31",
+    "\3\2\2\2\2\33\3\2\2\2\2\35\3\2\2\2\2\37\3\2\2\2\2!\3\2\2\2\2#\3\2\2",
+    "\2\2%\3\2\2\2\3\66\3\2\2\2\5J\3\2\2\2\7L\3\2\2\2\tN\3\2\2\2\13`\3\2",
+    "\2\2\rg\3\2\2\2\17q\3\2\2\2\21s\3\2\2\2\23\u0089\3\2\2\2\25\u008b\3",
+    "\2\2\2\27\u008f\3\2\2\2\31\u0098\3\2\2\2\33\u009b\3\2\2\2\35\u009d\3",
+    "\2\2\2\37\u009f\3\2\2\2!\u00a2\3\2\2\2#\u00a5\3\2\2\2%\u00aa\3\2\2\2",
+    "\')\t\2\2\2(\'\3\2\2\2)*\3\2\2\2*(\3\2\2\2*+\3\2\2\2+\67\3\2\2\2,-\7",
+    "b\2\2-.\5\3\2\2./\7b\2\2/\67\3\2\2\2\60\61\7b\2\2\61\62\5\3\2\2\62\63",
+    "\7b\2\2\63\64\7\60\2\2\64\65\5\3\2\2\65\67\3\2\2\2\66(\3\2\2\2\66,\3",
+    "\2\2\2\66\60\3\2\2\2\67\4\3\2\2\28:\t\3\2\298\3\2\2\2:;\3\2\2\2;9\3",
+    "\2\2\2;<\3\2\2\2<K\3\2\2\2=?\t\3\2\2>=\3\2\2\2?@\3\2\2\2@>\3\2\2\2@",
+    "A\3\2\2\2AB\3\2\2\2BD\7\60\2\2CE\t\3\2\2DC\3\2\2\2EF\3\2\2\2FD\3\2\2",
+    "\2FG\3\2\2\2GK\3\2\2\2HI\7/\2\2IK\5\5\3\2J9\3\2\2\2J>\3\2\2\2JH\3\2",
+    "\2\2K\6\3\2\2\2LM\7$\2\2M\b\3\2\2\2NO\7)\2\2O\n\3\2\2\2PQ\7\61\2\2Q",
+    "R\7,\2\2RS\7,\2\2Sa\7\61\2\2TU\7\61\2\2UV\7,\2\2VW\3\2\2\2W[\n\4\2\2",
+    "XZ\13\2\2\2YX\3\2\2\2Z]\3\2\2\2[\\\3\2\2\2[Y\3\2\2\2\\^\3\2\2\2][\3",
+    "\2\2\2^_\7,\2\2_a\7\61\2\2`P\3\2\2\2`T\3\2\2\2ab\3\2\2\2bc\b\6\2\2c",
+    "\f\3\2\2\2dh\7%\2\2ef\7/\2\2fh\7/\2\2gd\3\2\2\2ge\3\2\2\2hl\3\2\2\2",
+    "ik\n\5\2\2ji\3\2\2\2kn\3\2\2\2lj\3\2\2\2lm\3\2\2\2mo\3\2\2\2nl\3\2\2",
+    "\2op\b\7\2\2p\16\3\2\2\2qr\7}\2\2r\20\3\2\2\2st\7\177\2\2t\22\3\2\2",
+    "\2uz\5\7\4\2vy\n\6\2\2wy\5\25\13\2xv\3\2\2\2xw\3\2\2\2y|\3\2\2\2zx\3",
+    "\2\2\2z{\3\2\2\2{}\3\2\2\2|z\3\2\2\2}~\5\7\4\2~\u008a\3\2\2\2\177\u0084",
+    "\5\t\5\2\u0080\u0083\n\7\2\2\u0081\u0083\5\25\13\2\u0082\u0080\3\2\2",
+    "\2\u0082\u0081\3\2\2\2\u0083\u0086\3\2\2\2\u0084\u0082\3\2\2\2\u0084",
+    "\u0085\3\2\2\2\u0085\u0087\3\2\2\2\u0086\u0084\3\2\2\2\u0087\u0088\5",
+    "\t\5\2\u0088\u008a\3\2\2\2\u0089u\3\2\2\2\u0089\177\3\2\2\2\u008a\24",
+    "\3\2\2\2\u008b\u008d\7^\2\2\u008c\u008e\t\b\2\2\u008d\u008c\3\2\2\2",
+    "\u008d\u008e\3\2\2\2\u008e\26\3\2\2\2\u008f\u0090\7\61\2\2\u0090\u0091",
+    "\7,\2\2\u0091\u0092\7#\2\2\u0092\u0094\3\2\2\2\u0093\u0095\t\3\2\2\u0094",
+    "\u0093\3\2\2\2\u0095\u0096\3\2\2\2\u0096\u0094\3\2\2\2\u0096\u0097\3",
+    "\2\2\2\u0097\30\3\2\2\2\u0098\u0099\7,\2\2\u0099\u009a\7\61\2\2\u009a",
+    "\32\3\2\2\2\u009b\u009c\7.\2\2\u009c\34\3\2\2\2\u009d\u009e\7\60\2\2",
+    "\u009e\36\3\2\2\2\u009f\u00a0\7~\2\2\u00a0\u00a1\7~\2\2\u00a1 \3\2\2",
+    "\2\u00a2\u00a3\7?\2\2\u00a3\"\3\2\2\2\u00a4\u00a6\t\t\2\2\u00a5\u00a4",
+    "\3\2\2\2\u00a6\u00a7\3\2\2\2\u00a7\u00a5\3\2\2\2\u00a7\u00a8\3\2\2\2",
+    "\u00a8$\3\2\2\2\u00a9\u00ab\t\n\2\2\u00aa\u00a9\3\2\2\2\u00ab\u00ac",
+    "\3\2\2\2\u00ac\u00aa\3\2\2\2\u00ac\u00ad\3\2\2\2\u00ad\u00ae\3\2\2\2",
+    "\u00ae\u00af\b\23\2\2\u00af&\3\2\2\2\26\2*\66;@FJ[`glxz\u0082\u0084",
+    "\u0089\u008d\u0096\u00a7\u00ac\3\b\2\2"].join("");
 
 
 var atn = new antlr4.atn.ATNDeserializer().deserialize(serializedATN);
@@ -12535,38 +12525,39 @@ SQLLexer.Identifier = 1;
 SQLLexer.Number = 2;
 SQLLexer.DOUBLE_QUOTE = 3;
 SQLLexer.SINGLE_QUOTE = 4;
-SQLLexer.L_BRACKET = 5;
-SQLLexer.R_BRACKET = 6;
-SQLLexer.StringLiteral = 7;
-SQLLexer.EscapeSequence = 8;
-SQLLexer.BLOCK_COMMENT_START = 9;
-SQLLexer.BLOCK_COMMENT_END = 10;
-SQLLexer.BLOCK_COMMENT = 11;
-SQLLexer.POUND_COMMENT = 12;
+SQLLexer.BLOCK_COMMENT = 5;
+SQLLexer.POUND_COMMENT = 6;
+SQLLexer.L_BRACKET = 7;
+SQLLexer.R_BRACKET = 8;
+SQLLexer.StringLiteral = 9;
+SQLLexer.EscapeSequence = 10;
+SQLLexer.BLOCK_COMMENT_START = 11;
+SQLLexer.BLOCK_COMMENT_END = 12;
 SQLLexer.COMMA = 13;
 SQLLexer.DOT = 14;
 SQLLexer.OR = 15;
-SQLLexer.SYMBOL = 16;
-SQLLexer.WS = 17;
+SQLLexer.EQUAL = 16;
+SQLLexer.SYMBOL = 17;
+SQLLexer.WS = 18;
 
 
 SQLLexer.modeNames = [ "DEFAULT_MODE" ];
 
-SQLLexer.literalNames = [ 'null', 'null', 'null', "'\"'", "'''", "'{'", 
-                          "'}'", 'null', 'null', 'null', "'*/'", 'null', 
-                          'null', "','", "'.'", "'||'" ];
+SQLLexer.literalNames = [ 'null', 'null', 'null', "'\"'", "'''", 'null', 
+                          'null', "'{'", "'}'", 'null', 'null', 'null', 
+                          "'*/'", "','", "'.'", "'||'", "'='" ];
 
 SQLLexer.symbolicNames = [ 'null', "Identifier", "Number", "DOUBLE_QUOTE", 
-                           "SINGLE_QUOTE", "L_BRACKET", "R_BRACKET", "StringLiteral", 
-                           "EscapeSequence", "BLOCK_COMMENT_START", "BLOCK_COMMENT_END", 
-                           "BLOCK_COMMENT", "POUND_COMMENT", "COMMA", "DOT", 
-                           "OR", "SYMBOL", "WS" ];
+                           "SINGLE_QUOTE", "BLOCK_COMMENT", "POUND_COMMENT", 
+                           "L_BRACKET", "R_BRACKET", "StringLiteral", "EscapeSequence", 
+                           "BLOCK_COMMENT_START", "BLOCK_COMMENT_END", "COMMA", 
+                           "DOT", "OR", "EQUAL", "SYMBOL", "WS" ];
 
 SQLLexer.ruleNames = [ "Identifier", "Number", "DOUBLE_QUOTE", "SINGLE_QUOTE", 
-                       "L_BRACKET", "R_BRACKET", "StringLiteral", "EscapeSequence", 
-                       "BLOCK_COMMENT_START", "BLOCK_COMMENT_END", "BLOCK_COMMENT", 
-                       "POUND_COMMENT", "COMMA", "DOT", "OR", "SYMBOL", 
-                       "WS" ];
+                       "BLOCK_COMMENT", "POUND_COMMENT", "L_BRACKET", "R_BRACKET", 
+                       "StringLiteral", "EscapeSequence", "BLOCK_COMMENT_START", 
+                       "BLOCK_COMMENT_END", "COMMA", "DOT", "OR", "EQUAL", 
+                       "SYMBOL", "WS" ];
 
 SQLLexer.grammarFileName = "SQL.g4";
 
