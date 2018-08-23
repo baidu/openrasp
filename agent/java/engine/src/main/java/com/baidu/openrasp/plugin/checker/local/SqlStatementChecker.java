@@ -180,7 +180,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                     && modules.containsKey(CONFIG_KEY_FUNCTION_BLACKLIST)
                                     && modules.get(CONFIG_KEY_FUNCTION_BLACKLIST)) {
                                 // FIXME: 可绕过，暂时不更新                                
-                                if (funcBlackList.containsKey(tokens[i - 1]) && funBlackList.get(tokens[i - 1])) {
+                                if (funcBlackList.containsKey(tokens[i - 1]) && funcBlackList.get(tokens[i - 1])) {
                                     message = "SQLi - Detected dangerous method call " + tokens[i - 1] + "() in sql query";
                                     break;
                                 }
