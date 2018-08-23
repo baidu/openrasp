@@ -7957,17 +7957,46 @@ exports.DefaultErrorStrategy = DefaultErrorStrategy;
 var antlr4 = __webpack_require__(19)
 var SQLLexer = __webpack_require__(49).SQLLexer
 
-function sql_tokenize(query) {
-    var input = new antlr4.InputStream(query);
-    var lexer = new SQLLexer(input);
-    lexer.removeErrorListeners();
-    lexer.addErrorListener(listener);
-    var output = new antlr4.CommonTokenStream(lexer);
-    output.fill();
-    output.tokens.pop();
-    return output.tokens;
+TokenizeErrorListener = function () {
+    antlr4.error.ErrorListener.call(this);
+    return this
 }
+TokenizeErrorListener.prototype = Object.create(antlr4.error.ErrorListener.prototype)
+TokenizeErrorListener.prototype.constructor = TokenizeErrorListener
+TokenizeErrorListener.prototype.syntaxError = function(recognizer, offendingSymbol, line, column, msg, e) 
+{
+    if (recognizer instanceof SQLLexer)
+    {
+        console.error("RASP.sql_tokenize() error: line " + line + ":" + column + " " + msg + " in SQL statement:\n" + (recognizer).inputStream.toString());
+	}
+};
+
+var listener = new TokenizeErrorListener();
+
+function sql_tokenize(query) {
+    var chars  = new antlr4.InputStream(query)
+    var lexer  = new SQLLexer(chars)
+    lexer.removeErrorListeners()
+    lexer.addErrorListener(listener)
+
+    var tokens = new antlr4.CommonTokenStream(lexer)
+    // var parser = new SQLParser(tokens)
+	// parser.buildParseTrees = true;
+
+    tokens.fill(tokens);
+    var result = tokens.tokens.map(function(x) {
+        return {
+            text:  x.text,
+            stop:  x.stop,
+            start: x.start
+        }
+    })
+    result.pop()
+    return result
+}
+
 module.exports = sql_tokenize
+
 
 /***/ }),
 /* 32 */
