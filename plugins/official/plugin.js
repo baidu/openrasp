@@ -78,7 +78,10 @@ var algorithmConfig = {
             constant_compare:   false,
 
             // 是否拦截 into outfile 写文件操作
-            into_outfile:       true
+            into_outfile:       true,
+
+            // 是否拦截 information_schema 相关读取操作
+            information_schema: true
         },
         function_blacklist: {
             // 文件操作
@@ -784,11 +787,20 @@ if (RASP.get_jsengine() !== 'v8') {
                 }
                 else if (features['into_outfile'] && i < tokens_lc.length - 1 && tokens_lc[i] == 'into')
                 {
-                    if (tokens_lc[i + 1] == 'outfile' || tokens_lc[i + 1] == 'dumpfile' )
+                    if (tokens_lc[i + 1] == 'outfile' || tokens_lc[i + 1] == 'dumpfile')
                     {
                         reason = _("SQLi - Detected INTO OUTFILE phrase in sql query")
                         break
                     }
+                }
+                else if (features['information_schema'] && i < tokens_lc.length - 1 && tokens_lc[i] == 'from')
+                {
+                	var table = tokens_lc[i + 1].replaceAll('`', '')
+                	if (table == 'information_schema.tables')
+                	{
+                        reason = _("SQLi - Detected access to MySQL information_schema.tables table")
+                        break                		
+                	}
                 }
             }
 
