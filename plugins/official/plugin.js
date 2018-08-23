@@ -948,7 +948,6 @@ plugin.register('directory', function (params, context) {
     // 算法3 - 检查PHP菜刀等后门
     if (algorithmConfig.directory_reflect.action != 'ignore')
     {
-
         // 目前，只有 PHP 支持通过堆栈方式，拦截列目录功能
         if (server.language == 'php' && validate_stack_php(params.stack))
         {
@@ -969,43 +968,56 @@ plugin.register('readFile', function (params, context) {
     var parameter = context.parameter
 
     //
-    //【即将删除】
-    // 算法1: 和URL比较，检查是否为成功的目录扫描。仅适用于 java webdav 方式
-    // 注意: 此方法受到 readfile.extension.regex 和资源文件大小的限制
-    // 
-    // 相关ISSUE
-    // https://rasp.baidu.com/doc/setup/others.html#java-common
-    // https://github.com/baidu/openrasp/issues/39
+    // 算法1: 简单用户输入识别，拦截任意文件下载漏洞
     //
-    if (1 && server.language == 'java') {
-        var filename_1 = basename(context.url)
-        var filename_2 = basename(params.realpath)
+    // 不影响正常操作，e.g
+    // ?path=download/1.jpg
+    //
+    if (algorithmConfig.readFile_userinput.action != 'ignore')
+    {
+        // ?path=/etc/./hosts
+        // ?path=../../../etc/passwd
+        if (is_path_endswith_userinput(parameter, params.path))
+        {
+            return {
+                action:     algorithmConfig.readFile_userinput.action,
+                message:    _("Path traversal - Downloading files specified by userinput, file is %1%", [params.realpath]),
+                confidence: 90
+            }
+        }
 
-        if (filename_1 == filename_2) {
-            var matched = false
+        // @FIXME: 用户输入匹配了两次，需要提高效率
+        if (is_from_userinput(parameter, params.path))
+        {
+            // 获取协议，如果有
+            var proto = params.path.split('://')[0].toLowerCase()
 
-            // 尝试下载压缩包、SQL文件等等
-            if (forcefulBrowsing.dotFiles.test(filename_1)) {
-                matched = true
-            } else {
-                // 尝试访问敏感文件
-                for (var i = 0; i < forcefulBrowsing.unwantedFilenames.length; i ++) {
-                    if (forcefulBrowsing.unwantedFilenames[i] == filename_1) {
-                        matched = true
+            // 1. 读取 http(s):// 内容
+            // ?file=http://www.baidu.com
+            if (proto === 'http' || proto === 'https')
+            {
+                if (algorithmConfig.readFile_userinput_http.action != 'ignore')
+                {
+                    return {
+                        action:     algorithmConfig.readFile_userinput_http.action,
+                        message:    _("SSRF - Requesting http/https resource with file streaming functions, URL is %1%", [params.path]),
+                        confidence: 90
                     }
                 }
             }
 
-            if (matched) {
-                return {
-                    action:     'log',
-                    message:    _("Forceful browsing - Downloading sensitive file %1% (HTTP method %2%)", [
-                        params.realpath, 
-                        context.method.toUpperCase()
-                    ]),
-
-                    // 如果是HEAD方式下载敏感文件，100% 扫描器攻击
-                    confidence: context.method == 'head' ? 100 : 90
+            // 2. 读取特殊协议内容
+            // ?file=file:///etc/passwd
+            // ?file=php://filter/read=convert.base64-encode/resource=XXX
+            if (proto === 'file' || proto === 'php')
+            {
+                if (algorithmConfig.readFile_userinput_unwanted.action != 'ignore')
+                {
+                    return {
+                        action:     algorithmConfig.readFile_userinput_unwanted.action,
+                        message:    _("Path traversal - Requesting unwanted protocol %1%://", [proto]),
+                        confidence: 90
+                    }
                 }
             }
         }
@@ -1048,61 +1060,6 @@ plugin.register('readFile', function (params, context) {
         }
     }
 
-    //
-    // 算法4: 拦截任意文件下载漏洞，要读取的文件来自用户输入，且没有路径拼接
-    //
-    // 不影响正常操作，e.g
-    // ?path=download/1.jpg
-    //
-    if (algorithmConfig.readFile_userinput.action != 'ignore')
-    {
-        // ?path=/etc/./hosts
-        // ?path=../../../etc/passwd
-        if (is_path_endswith_userinput(parameter, params.path))
-        {
-            return {
-                action:     algorithmConfig.readFile_userinput.action,
-                message:    _("Path traversal - Downloading files specified by userinput, file is %1%", [params.realpath]),
-                confidence: 90
-            }
-        }
-
-        // @FIXME: 用户输入匹配了两次，需要提高效率
-        if (is_from_userinput(parameter, params.path))
-        {
-            // 获取协议，如果有
-            var proto = params.path.split('://')[0].toLowerCase()
-
-            // 3. 读取 http(s):// 内容
-            // ?file=http://www.baidu.com
-            if (proto === 'http' || proto === 'https')
-            {
-                if (algorithmConfig.readFile_userinput_http.action != 'ignore')
-                {
-                    return {
-                        action:     algorithmConfig.readFile_userinput_http.action,
-                        message:    _("SSRF - Requesting http/https resource with file streaming functions, URL is %1%", [params.path]),
-                        confidence: 90
-                    }
-                }
-            }
-
-            // 4. 读取特殊协议内容
-            // ?file=file:///etc/passwd
-            // ?file=php://filter/read=convert.base64-encode/resource=XXX
-            if (proto === 'file' || proto === 'php')
-            {
-                if (algorithmConfig.readFile_userinput_unwanted.action != 'ignore')
-                {
-                    return {
-                        action:     algorithmConfig.readFile_userinput_unwanted.action,
-                        message:    _("Path traversal - Requesting unwanted protocol %1%://", [proto]),
-                        confidence: 90
-                    }
-                }
-            }
-        }
-    }
 
     return clean
 })
