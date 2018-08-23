@@ -212,7 +212,6 @@ var algorithmConfig = {
     include_userinput: {
         action: 'block'
     },
-
     // 文件包含 - 特殊协议
     include_protocol: {
         action: 'block',
@@ -236,17 +235,9 @@ var algorithmConfig = {
             'compress.bzip2'
         ]
     },
-    // // 文件包含 - 包含目录
-    // include_dir: {
-    //     action: 'block'
-    // },
-    // // 文件包含 - 包含敏感文件
-    // include_unwanted: {
-    //     action: 'block'
-    // },
-    // 文件包含 - 包含web目录之外的文件
+    // 文件包含 - 包含web目录之外的文件，默认关闭
     include_outsideWebroot: {
-        action: 'block'
+        action: 'ignore'
     },
 
     // XXE - 使用 gopher/ftp/dict/.. 等不常见协议访问外部实体
@@ -673,6 +664,7 @@ if (RASP.get_jsengine() !== 'v8') {
                     var start = -1, end = raw_tokens.length, distance = 2
 
                     // 寻找 token 起始点
+                    // @TODO: 改为二分查找
                     for (var i = 0; i < raw_tokens.length; i++) {
                         if (raw_tokens[i].stop >= userinput_idx) {
                             start = i
@@ -1122,11 +1114,11 @@ plugin.register('include', function (params, context) {
     // 用户输入检查
     if (algorithmConfig.include_userinput.action != 'ignore')
     {
-        if (is_path_endswith_userinput(parameter, url)) 
+        if (is_path_endswith_userinput(parameter, url))
         {
             return {
                 action:     algorithmConfig.include_userinput.action,
-                message:    _("File inclusion - including files provided by userinput", [appBasePath]),
+                message:    _("File inclusion - including files specified by user input", [appBasePath]),
                 confidence: 100                
             }
         }
@@ -1172,36 +1164,6 @@ plugin.register('include', function (params, context) {
         }
     }
 
-    // file 协议
-    // if (items[0].toLowerCase() == 'file') {
-    //     var basename = items[1].split('/').pop()
-
-    //     // 是否为目录？
-    //     if (items[1].endsWith('/')) {
-    //         // 部分应用，如果直接包含目录，会把这个目录内容列出来
-    //         if (algorithmConfig.include_dir.action != 'ignore') {
-    //             return {
-    //                 action:     algorithmConfig.include_dir.action,
-    //                 message:    '敏感目录访问: ' + params.function + ' 方式',
-    //                 confidence: 100
-    //             }
-    //         }
-    //     }
-
-    //     // 是否为敏感文件？
-    //     if (algorithmConfig.include_unwanted.action != 'ignore') {
-    //         for (var i = 0; i < forcefulBrowsing.unwantedFilenames.length; i ++) {
-    //             if (basename == forcefulBrowsing.unwantedFilenames[i]) {
-    //                 return {
-    //                     action:     algorithmConfig.include_unwanted.action,
-    //                     message:    '敏感文件下载: ' + params.function + ' 方式',
-    //                     confidence: 100
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
     return clean
 })
 
@@ -1234,7 +1196,7 @@ plugin.register('writeFile', function (params, context) {
     }
 
     // 关于这个算法，请参考这个插件定制文档
-    // https://rasp.baidu.com/doc/dev/official.html#case-3
+    // https://rasp.baidu.com/doc/dev/official.html#case-2
     if (algorithmConfig.writeFile_script.action != 'ignore')
     {
         if (scriptFileRegex.test(params.realpath)) {
