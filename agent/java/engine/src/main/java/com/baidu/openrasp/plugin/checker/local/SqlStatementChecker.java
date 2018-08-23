@@ -49,6 +49,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_SQLI_POLICY = "sqli_policy";
     private static final String CONFIG_KEY_STACKED_QUERY = "stacked_query";
     private static final String CONFIG_KEY_NO_HEX = "no_hex";
+    private static final String CONFIG_KEY_INFORMATION_SCHEMA = "information_schema";
     private static final String CONFIG_KEY_VERSION_COMMENT = "version_comment";
     private static final String CONFIG_KEY_FUNCTION_BLACKLIST = "function_blacklist";
     private static final String CONFIG_KEY_UNION_NULL = "union_null";
@@ -123,14 +124,19 @@ public class SqlStatementChecker extends ConfigurableChecker {
                     message, 90));
         } else {
             // 算法2: SQL语句策略检查（模拟SQL防火墙功能）
+            HashMap<String, Boolean> funcBlackList = getJsonObjectAsMap(config, CONFIG_KEY_SQLI_POLICY, "function_blacklist");
+
             action = getActionElement(config, CONFIG_KEY_SQLI_POLICY);
             if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
                 int i = -1;
                 if (tokens != null) {
                     HashMap<String, Boolean> modules = getJsonObjectAsMap(config, CONFIG_KEY_SQLI_POLICY, "feature");
+
+                    // token 转换小写
                     for (int z = 0; z < tokens.length; z++) {
                         tokens[z] = tokens[z].toLowerCase();
                     }
+
                     for (String token : tokens) {
                         i++;
                         if (!StringUtils.isEmpty(token)) {
@@ -173,9 +179,8 @@ public class SqlStatementChecker extends ConfigurableChecker {
                             } else if (i > 0 && tokens[i].indexOf('(') == 0
                                     && modules.containsKey(CONFIG_KEY_FUNCTION_BLACKLIST)
                                     && modules.get(CONFIG_KEY_FUNCTION_BLACKLIST)) {
-                                // FIXME: 可绕过，暂时不更新
-                                HashMap<String, Boolean> funBlackList = getJsonObjectAsMap(config, CONFIG_KEY_SQLI_POLICY, "function_blacklist");
-                                if (funBlackList.containsKey(tokens[i - 1]) && funBlackList.get(tokens[i - 1])) {
+                                // FIXME: 可绕过，暂时不更新                                
+                                if (funcBlackList.containsKey(tokens[i - 1]) && funBlackList.get(tokens[i - 1])) {
                                     message = "SQLi - Detected dangerous method call " + tokens[i - 1] + "() in sql query";
                                     break;
                                 }
@@ -185,6 +190,21 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                     && modules.get(CONFIG_KEY_INTO_OUTFILE)) {
                                 message = "SQLi - Detected INTO OUTFILE phrase in sql query";
                                 break;
+                            } else if (i < tokens.length - 1 && tokens[i].equals("from")
+                                    && modules.containsKey(CONFIG_KEY_INFORMATION_SCHEMA)
+                                    && modules.get(CONFIG_KEY_INFORMATION_SCHEMA)) {
+
+                                // 处理反引号和空格
+                                String[] parts = tokens[i + 1].replace("`", "").Split(".");
+                                if (parts.length == 2) {
+                                    String db    = parts[0].trim();
+                                    String table = parts[1].trim();
+
+                                    if (db.equals("information_schema") && table.equals("table")) {
+                                        message = "SQLi - Detected access to MySQL information_schema.tables table";
+                                        break;
+                                    }
+                                }                                
                             }
                         }
                     }

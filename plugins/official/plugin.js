@@ -791,7 +791,7 @@ if (RASP.get_jsengine() !== 'v8') {
                 	var parts = tokens_lc[i + 1].replaceAll('`', '').split('.')
                     if (parts.length == 2)
                     {
-                        if (parts[0] == 'information_schema' && parts[1] == 'tables')
+                        if (parts[0].trim() == 'information_schema' && parts[1].trim() == 'tables')
                         {
                             reason = _("SQLi - Detected access to MySQL information_schema.tables table")
                             break  
