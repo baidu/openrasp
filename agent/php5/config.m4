@@ -112,6 +112,22 @@ if test "$PHP_OPENRASP" != "no"; then
       darwin* )
         ;;
       * )
+        SEARCH_FOR="/include/curl/easy.h"
+        AC_MSG_CHECKING([for cURL in default path])
+        for i in $SEARCH_PATH ; do
+          if test -r $i/$SEARCH_FOR; then
+            CURL_PATH=$i
+            AC_MSG_RESULT(found in $i)
+          fi
+        done
+        if test -z "$CURL_PATH"; then
+          AC_MSG_RESULT([not found])
+          AC_MSG_ERROR([Please reinstall the cURL distribution])
+        fi
+
+        PHP_ADD_INCLUDE($CURL_PATH/include)
+        PHP_ADD_LIBRARY_WITH_PATH(curl, $CURL_PATH/$PHP_LIBDIR, OPENRASP_SHARED_LIBADD)
+
         OPENRASP_REMOTE_MANAGER_SOURCE="agent/openrasp_ctrl_block.cc \
         agent/openrasp_agent.cc \
         agent/openrasp_agent_manager.cc \
@@ -123,22 +139,6 @@ if test "$PHP_OPENRASP" != "no"; then
     esac
   fi
 
-  SEARCH_FOR="/include/curl/easy.h"
-  AC_MSG_CHECKING([for cURL in default path])
-  for i in $SEARCH_PATH ; do
-    if test -r $i/$SEARCH_FOR; then
-      CURL_PATH=$i
-      AC_MSG_RESULT(found in $i)
-    fi
-  done
-  if test -z "$CURL_PATH"; then
-    AC_MSG_RESULT([not found])
-    AC_MSG_ERROR([Please reinstall the cURL distribution])
-  fi
-
-  PHP_ADD_INCLUDE($CURL_PATH/include)
-  PHP_ADD_LIBRARY_WITH_PATH(curl, $CURL_PATH/$PHP_LIBDIR, OPENRASP_SHARED_LIBADD)
-  
   case $host_os in
     darwin* )
       OPENRASP_LIBS="-framework CoreServices $OPENRASP_LIBS"
