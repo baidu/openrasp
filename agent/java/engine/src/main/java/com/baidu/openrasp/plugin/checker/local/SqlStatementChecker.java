@@ -180,7 +180,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                     break;
                                 }
                             } else if (i < tokens.length - 2 && tokens[i].equals("into")
-                                    && (tokens[i + 1].equals("outfile") || tokens[i + 1].equals("dupfile"))
+                                    && (tokens[i + 1].equals("outfile") || tokens[i + 1].equals("dumpfile"))
                                     && modules.containsKey(CONFIG_KEY_INTO_OUTFILE)
                                     && modules.get(CONFIG_KEY_INTO_OUTFILE)) {
                                 message = "SQLi - Detected INTO OUTFILE phrase in sql query";
