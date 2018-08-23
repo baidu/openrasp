@@ -579,7 +579,7 @@ int plugin_info(const char *message, int message_len) {
     }
     char *plugin_info = NULL;    
     zend_string *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1);
-    int  plugin_info_len = spprintf(&plugin_info, 0, "%s %s\n", ZSTR_VAL(time_RFC3339), message);
+    int  plugin_info_len = spprintf(&plugin_info, 0, "%s %s", ZSTR_VAL(time_RFC3339), message);
     int  plugin_result = base_info(&OPENRASP_LOG_G(loggers)[PLUGIN_LOGGER], plugin_info, plugin_info_len);
     zend_string_release(time_RFC3339);
     efree(plugin_info);
