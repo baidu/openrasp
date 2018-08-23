@@ -49,7 +49,6 @@ public class SqlStatementChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_SQLI_POLICY = "sqli_policy";
     private static final String CONFIG_KEY_STACKED_QUERY = "stacked_query";
     private static final String CONFIG_KEY_NO_HEX = "no_hex";
-    private static final String CONFIG_KEY_CONSTANT_COMPARE = "constant_compare";
     private static final String CONFIG_KEY_VERSION_COMMENT = "version_comment";
     private static final String CONFIG_KEY_FUNCTION_BLACKLIST = "function_blacklist";
     private static final String CONFIG_KEY_UNION_NULL = "union_null";
@@ -171,25 +170,6 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                     && modules.get(CONFIG_KEY_VERSION_COMMENT)) {
                                 message = "SQLi - Detected MySQL version comment in sql query";
                                 break;
-                            } else if (i > 0 && i < tokens.length - 2 && (token.equals("xor")
-                                    || token.charAt(0) == '<'
-                                    || token.charAt(0) == '>'
-                                    || token.charAt(0) == '=')
-                                    && modules.containsKey(CONFIG_KEY_CONSTANT_COMPARE)
-                                    && modules.get(CONFIG_KEY_CONSTANT_COMPARE)) {
-                                String op1 = tokens[i - 1];
-                                String op2 = tokens[i + 1];
-                                if (StringUtils.isNumeric(op1) && StringUtils.isNumeric(op2)) {
-                                    try {
-                                        if (Double.parseDouble(op1) < 10 || Double.parseDouble(op2) < 10) {
-                                            continue;
-                                        }
-                                    } catch (Exception e) {
-                                        // ignore
-                                    }
-                                    message = "SQLi - Detected blind sql injection attack: comparing " + op1 + " against " + op2;
-                                    break;
-                                }
                             } else if (i > 0 && tokens[i].indexOf('(') == 0
                                     && modules.containsKey(CONFIG_KEY_FUNCTION_BLACKLIST)
                                     && modules.get(CONFIG_KEY_FUNCTION_BLACKLIST)) {
