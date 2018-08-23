@@ -57,6 +57,10 @@ var algorithmConfig = {
     // SQL注入算法#2 - 语句规范
     sqli_policy: {
         action:  'block',
+
+        // 为了减少 tokenize 次数，当SQL语句包含支持的特征时才进入
+        filter:  ';|\/\*|(?:\d{1,2},){4}|(?:null,){4}|0x[\da-f]{8}|\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin)\b',
+
         feature: {
             // 是否禁止多语句执行，select ...; update ...;
             stacked_query:      true,
@@ -355,6 +359,9 @@ var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml)\.?$/i
 // 其他的 stream 都没啥用
 var ntfsRegex       = /::\$(DATA|INDEX)$/i
 
+// SQL注入算法2 - 预过滤正则
+var sqli_prefilter  = new RegExp(algorithmConfig.sqli_policy.filter)
+
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue) {
     // 空值判断，防止死循环
@@ -614,9 +621,9 @@ if (RASP.get_jsengine() !== 'v8') {
         var reason     = false
         var min_length = algorithmConfig.sqli_userinput.min_length
         var parameters = context.parameter || {}
-        var raw_tokens = RASP.sql_tokenize(params.query, params.server)
 
-        //console.log(raw_tokens)
+        // 懒加载，需要的时候再初始化 token 数组
+        var raw_tokens = []
 
         // 算法1: 匹配用户输入
         // 1. 简单识别逻辑是否发生改变
@@ -663,6 +670,11 @@ if (RASP.get_jsengine() !== 'v8') {
                         continue
                     }
 
+                    if (raw_tokens.length == 0) {
+                        raw_tokens = RASP.sql_tokenize(params.query, params.server)
+                        // console.log(raw_tokens)
+                    }
+
                     // 当用户输入穿越了2个token，就可以判定为SQL注入
                     var start = -1, end = raw_tokens.length, distance = 2
 
@@ -701,9 +713,20 @@ if (RASP.get_jsengine() !== 'v8') {
 
         // 算法2: SQL语句策略检查（模拟SQL防火墙功能）
         if (algorithmConfig.sqli_policy.action != 'ignore') {
+
+            // 懒加载，需要时才处理
+            if (raw_tokens.length == 0) {
+                var query_lc = params.query.toLowerCase()
+
+                if (sqli_prefilter.test(query_lc)) {
+                    raw_tokens = RASP.sql_tokenize(params.query, params.server)
+                }
+            }
+
             var features  = algorithmConfig.sqli_policy.feature
             var func_list = algorithmConfig.sqli_policy.function_blacklist
 
+            // 转换小写，避免大小写绕过
             var tokens_lc = raw_tokens.map(function(v){return v.text.toLowerCase()})
 
             for (var i = 1; i < tokens_lc.length; i ++)
@@ -924,11 +947,7 @@ if (RASP.get_jsengine() !== 'v8') {
 
 }
 
-// 主要用于识别webshell里的文件管理器
-// 通常程序不会主动列目录或者查看敏感目录，e.g /home /etc /var/log 等等
-//
-// 若有特例可调整
-// 可结合业务定制: e.g 不能超出应用根目录
+
 plugin.register('directory', function (params, context) {
     var path        = params.path
     var realpath    = params.realpath
