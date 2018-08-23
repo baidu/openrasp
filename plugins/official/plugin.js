@@ -1,4 +1,4 @@
-const version = '2018-0823-2000'
+const version = '2018-0823-2100'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -58,7 +58,7 @@ var algorithmConfig = {
     sqli_policy: {
         action:  'block',
 
-        // 为了减少 tokenize 次数，当SQL语句包含支持的特征时才进入
+        // 粗规则: 为了减少 tokenize 次数，当SQL语句包含一定特征时才进入
         filter:  ';|\/\*|(?:\d{1,2},){4}|(?:null,){4}|0x[\da-f]{8}|\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin)\b',
 
         feature: {
@@ -76,10 +76,6 @@ var algorithmConfig = {
 
             // 拦截 union select NULL,NULL 或者 union select 1,2,3,4
             union_null:         true,
-
-            // 是否禁止常量比较，AND 8333=8555
-            // 当代码编写不规范，常量比较算法会造成大量误报，所以默认不再开启此功能
-            constant_compare:   false,
 
             // 是否拦截 into outfile 写文件操作
             into_outfile:       true,
@@ -770,37 +766,6 @@ if (RASP.get_jsengine() !== 'v8') {
                 {
                     reason = _("SQLi - Detected MySQL version comment in sql query")
                     break
-                }
-                else if (features['constant_compare'] &&
-                    i > 0 && i < tokens_lc.length - 1 &&
-                    (tokens_lc[i] === 'xor'
-                        || tokens_lc[i][0] === '<'
-                        || tokens_lc[i][0] === '>'
-                        || tokens_lc[i][0] === '='))
-                {
-                    // @FIXME: 可绕过，暂时不更新
-                    // 简单识别 NUMBER (>|<|>=|<=|xor) NUMBER
-                    //          i-1         i          i+2
-
-                    var op1  = tokens_lc[i - 1]
-                    var op2  = tokens_lc[i + 1]
-
-                    // @TODO: strip quotes
-                    var num1 = parseInt(op1)
-                    var num2 = parseInt(op2)
-
-                    if (! isNaN(num1) && ! isNaN(num2)) {
-                        // 允许 1=1, 2=0, 201801010=0 这样的常量对比以避免误报，只要有一个小于10就先忽略掉
-                        //
-                        // SQLmap 是随机4位数字，不受影响
-                        if (tokens_lc[i][0] === '=' && (num1 < 10 || num2 < 10))
-                        {
-                            continue;
-                        }
-
-                        reason = _("SQLi - Detected blind sql injection attack: comparing %1% against %2%", [num1, num2])
-                        break
-                    }
                 }
                 else if (features['function_blacklist'] && i > 0 && tokens_lc[i][0] === '(')
                 {
