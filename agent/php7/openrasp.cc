@@ -91,7 +91,7 @@ PHP_MINIT_FUNCTION(openrasp)
     REGISTER_INI_ENTRIES();
     if (!make_openrasp_root_dir())
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir should be configured correctly in php.ini (not empty, not root path, not relative path and writable), continue without security protection"));
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir is not configured correctly in php.ini, continuing without security protection"));
         return SUCCESS;
     }
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
@@ -204,13 +204,20 @@ ZEND_GET_MODULE(openrasp)
 static bool make_openrasp_root_dir()
 {
     char *path = openrasp_ini.root_dir;
-    if (!path || !IS_ABSOLUTE_PATH(path, strlen(path)))
+    if (!path)
     {
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be an empty path"));
+        return false;
+    }
+    if (!IS_ABSOLUTE_PATH(path, strlen(path)))
+    {
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be a relative path"));
         return false;
     }
     path = expand_filepath(path, nullptr);
     if (!path || strnlen(path, 2) == 1)
     {
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be a root path"));
         efree(path);
         return false;
     }
@@ -222,6 +229,7 @@ static bool make_openrasp_root_dir()
         std::string path(root_dir + DEFAULT_SLASH + dir);
         if (!recursive_mkdir(path.c_str(), path.length(), 0777))
         {
+            openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir must be a writable path"));
             return false;
         }
     }
