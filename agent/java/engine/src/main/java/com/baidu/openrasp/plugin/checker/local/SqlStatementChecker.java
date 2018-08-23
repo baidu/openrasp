@@ -55,14 +55,12 @@ public class SqlStatementChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_UNION_NULL = "union_null";
     private static final String CONFIG_KEY_INTO_OUTFILE = "into_outfile";
     private static final String CONFIG_KEY_MIN_LENGTH = "min_length";
-    private static TokenizeErrorListener tokenizeErrorListener = new TokenizeErrorListener();
 
-    private List<EventInfo> result = new LinkedList<EventInfo>();
-
-    private void checkSql(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
+    List<EventInfo> checkSql(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
+        List<EventInfo> result = new LinkedList<EventInfo>();
         String query = (String) checkParameter.getParam("query");
         String message = null;
-        ArrayList<TokenResult> rawTokens = TokenGenerator.detailTokenize(query, tokenizeErrorListener);
+        ArrayList<TokenResult> rawTokens = TokenGenerator.detailTokenize(query, new TokenizeErrorListener());
         String[] tokens = new String[rawTokens.size()];
         for (int j = 0; j < rawTokens.size(); j++) {
             tokens[j] = rawTokens.get(j).getText();
@@ -217,15 +215,16 @@ public class SqlStatementChecker extends ConfigurableChecker {
                 }
             }
         }
+        return result;
     }
 
     @Override
     public List<EventInfo> checkParam(CheckParameter checkParameter) {
-
+        List<EventInfo> result = new LinkedList<EventInfo>();
         JsonObject config = Config.getConfig().getAlgorithmConfig();
         Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
         try {
-            checkSql(checkParameter, parameterMap, config);
+            result = checkSql(checkParameter, parameterMap, config);
         } catch (Exception e) {
             JSContext.LOGGER.warn("Exception while running builtin sqli plugin: " + e.getMessage());
         }
@@ -240,11 +239,6 @@ public class SqlStatementChecker extends ConfigurableChecker {
             String query = (String) checkParameter.getParam("query");
             SQLStatementHook.sqlCache.put(query, null);
         }
-        return result;
-    }
-
-    public List<EventInfo> testCheckSql(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
-        checkSql(checkParameter, parameterMap, config);
         return result;
     }
 

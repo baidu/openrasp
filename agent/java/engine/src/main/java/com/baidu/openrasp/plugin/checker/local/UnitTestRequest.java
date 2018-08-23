@@ -1,7 +1,24 @@
-package com.baidu.openrasp.request;
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.baidu.openrasp.plugin.checker.local;
 
 import java.util.*;
 
+import com.baidu.openrasp.request.AbstractRequest;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -10,10 +27,10 @@ public class UnitTestRequest extends AbstractRequest {
     private JsonObject context;
     private JsonObject parameter;
 
-    public UnitTestRequest(JsonObject requestInfoJson){
+    public UnitTestRequest(JsonObject requestInfoJson) {
         super(0);
-        context = (JsonObject)requestInfoJson.get("context");
-        parameter = (JsonObject)context.get("parameter");
+        context = (JsonObject) requestInfoJson.get("context");
+        parameter = (JsonObject) context.get("parameter");
     }
 
     /**
@@ -23,7 +40,7 @@ public class UnitTestRequest extends AbstractRequest {
      */
     @Override
     public String getLocalAddr() {
-        if(context.has("localAddr")) {
+        if (context.has("localAddr")) {
             return context.get("localAddr").getAsString();
         }
         return null;
@@ -36,7 +53,7 @@ public class UnitTestRequest extends AbstractRequest {
      */
     @Override
     public String getMethod() {
-        if(context.has("method")) {
+        if (context.has("method")) {
             return context.get("method").getAsString();
         }
         return null;
@@ -49,7 +66,7 @@ public class UnitTestRequest extends AbstractRequest {
      */
     @Override
     public String getProtocol() {
-        if(context.has("protocol")) {
+        if (context.has("protocol")) {
             return context.get("protocol").getAsString();
         }
         return null;
@@ -62,7 +79,7 @@ public class UnitTestRequest extends AbstractRequest {
      */
     @Override
     public String getAuthType() {
-        if(context.has("authType")) {
+        if (context.has("authType")) {
             return context.get("authType").getAsString();
         }
         return null;
@@ -75,7 +92,7 @@ public class UnitTestRequest extends AbstractRequest {
      */
     @Override
     public String getContextPath() {
-        if(context.has("contextPath")) {
+        if (context.has("contextPath")) {
             return context.get("contextPath").getAsString();
         }
         return null;
@@ -88,7 +105,7 @@ public class UnitTestRequest extends AbstractRequest {
      */
     @Override
     public String getRemoteAddr() {
-        if(context.has("remoteAddr")) {
+        if (context.has("remoteAddr")) {
             return context.get("remoteAddr").getAsString();
         }
         return null;
@@ -101,7 +118,7 @@ public class UnitTestRequest extends AbstractRequest {
      */
     @Override
     public String getRequestURI() {
-        if(context.has("requestUri")) {
+        if (context.has("requestUri")) {
             return context.get("requestUri").getAsString();
         }
         return null;
@@ -114,7 +131,7 @@ public class UnitTestRequest extends AbstractRequest {
      */
     @Override
     public StringBuffer getRequestURL() {
-        if(context.has("requestUrl")) {
+        if (context.has("requestUrl")) {
             return new StringBuffer(context.get("requestUrl").getAsString());
         }
         return null;
@@ -127,7 +144,7 @@ public class UnitTestRequest extends AbstractRequest {
      */
     @Override
     public String getServerName() {
-        if(context.has("serverName")) {
+        if (context.has("serverName")) {
             return context.get("serverName").getAsString();
         }
         return null;
@@ -141,7 +158,7 @@ public class UnitTestRequest extends AbstractRequest {
      */
     @Override
     public String getParameter(String key) {
-        if(parameter.has(key)) {
+        if (parameter.has(key)) {
             return parameter.get(key).getAsJsonArray().get(0).getAsString();
         }
         return null;
@@ -172,13 +189,13 @@ public class UnitTestRequest extends AbstractRequest {
         Iterator<Map.Entry<String, JsonElement>> entrySetIterator = parameter.entrySet().iterator();
         Map<String, String[]> result = new HashMap<String, String[]>();
         Map.Entry<String, JsonElement> paraEntry;
-        while(entrySetIterator.hasNext()) {
+        while (entrySetIterator.hasNext()) {
             paraEntry = entrySetIterator.next();
             List<String> value = new ArrayList<String>();
             for (JsonElement jsonElement : paraEntry.getValue().getAsJsonArray()) {
                 value.add(jsonElement.getAsString());
             }
-            final int size =  value.size();
+            final int size = value.size();
             String[] valueArray = value.toArray(new String[size]);
             result.put(paraEntry.getKey(), valueArray);
         }
@@ -193,9 +210,9 @@ public class UnitTestRequest extends AbstractRequest {
      */
     @Override
     public String getHeader(String key) {
-        if(context.has("header")) {
+        if (context.has("header")) {
             JsonObject headers = context.get("header").getAsJsonObject();
-            if(headers.has(key)){
+            if (headers.has(key)) {
                 return headers.get(key).getAsString();
             }
         }
@@ -209,7 +226,7 @@ public class UnitTestRequest extends AbstractRequest {
      */
     @Override
     public Enumeration<String> getHeaderNames() {
-        if(context.has("header")) {
+        if (context.has("header")) {
             Vector<String> headerNames = new Vector<String>();
             for (Map.Entry<String, JsonElement> stringJsonElementEntry : context.get("header").getAsJsonObject().entrySet()) {
                 headerNames.add(stringJsonElementEntry.getKey());
@@ -226,7 +243,7 @@ public class UnitTestRequest extends AbstractRequest {
      */
     @Override
     public String getQueryString() {
-        if(context.has("querystring")) {
+        if (context.has("querystring")) {
             return context.get("querystring").getAsString();
         }
         return null;
@@ -250,7 +267,7 @@ public class UnitTestRequest extends AbstractRequest {
      */
     @Override
     public String getAppBasePath() {
-        if(context.has("appbasepath")) {
+        if (context.has("appbasepath")) {
             return context.get("appbasepath").getAsString();
         }
         return null;

@@ -1,13 +1,30 @@
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.baidu.openrasp.plugin.checker.local;
 
-import com.baidu.openrasp.plugin.info.EventInfo;
-import com.baidu.openrasp.request.UnitTestRequest;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
+import com.baidu.openrasp.plugin.info.EventInfo;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.apache.commons.io.FileUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 public class UnitTest {
@@ -57,10 +74,9 @@ public class UnitTest {
                 List<EventInfo> result;
                 if (testUnitName.equals("sql")) {
                     SqlStatementChecker sqlStatementChecker = new SqlStatementChecker();
-                    result = sqlStatementChecker.testCheckSql(checkParameter, testRequest.getParameterMap(), config);
+                    result = new SqlStatementChecker().checkSql(checkParameter, testRequest.getParameterMap(), config);
                 } else if (testUnitName.equals("ssrf")) {
-                    SSRFChecker ssrfChecker = new SSRFChecker();
-                    result = ssrfChecker.testCheckSSRF(checkParameter, testRequest.getParameterMap(), config);
+                    result = new SSRFChecker().checkSSRF(checkParameter, testRequest.getParameterMap(), config);
                 } else {
                     //忽略没有对应方法的用例
                     //System.out.println("[IGNORED] Test id:" + requestInfo.get("id").getAsString());
@@ -86,35 +102,31 @@ public class UnitTest {
 
     private static String readJsonFile(String path) throws IOException {
         File file = new File(path);
-        FileReader reader = new FileReader(file);
-        int fileLen = (int) file.length();
-        char[] chars = new char[fileLen];
-        reader.read(chars);
-        return String.valueOf(chars);
+        return FileUtils.readFileToString(file);
     }
 
-    public static LinkedList<String> getJsonFiles(String pathName) throws IOException {
+    private static LinkedList<String> getJsonFiles(String pathName) throws IOException {
         File dirFile = new File(pathName);
         if (!dirFile.exists() || !dirFile.isDirectory()) {
             throw new IOException();
         }
         String[] fileList = dirFile.list();
         LinkedList<String> result = new LinkedList<String>();
-        for (String string : fileList) {
-            File file = new File(dirFile.getPath(), string);
-            if (!file.isDirectory()) {
-                result.push(dirFile.getPath() + File.separator + string);
+        if (fileList != null) {
+            for (String string : fileList) {
+                File file = new File(dirFile.getPath(), string);
+                if (!file.isDirectory()) {
+                    result.push(dirFile.getPath() + File.separator + string);
+                }
             }
         }
         return result;
     }
-
 
     public static JsonObject getConfig() throws Exception {
         String configJson = readJsonFile(UnitTest.class.getResource("/pluginUnitTest/unitConfig.json").getPath());
         Gson gson = new Gson();
         return gson.fromJson(configJson, JsonElement.class).getAsJsonObject();
     }
-
 
 }
