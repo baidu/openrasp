@@ -1,4 +1,4 @@
-const version = '2018-0821-2100'
+const version = '2018-0823-2000'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -795,12 +795,17 @@ if (RASP.get_jsengine() !== 'v8') {
                 }
                 else if (features['information_schema'] && i < tokens_lc.length - 1 && tokens_lc[i] == 'from')
                 {
-                	var table = tokens_lc[i + 1].replaceAll('`', '')
-                	if (table == 'information_schema.tables')
-                	{
-                        reason = _("SQLi - Detected access to MySQL information_schema.tables table")
-                        break                		
-                	}
+                    // `information_schema`.tables
+                    // information_schema  .tables
+                	var parts = tokens_lc[i + 1].replaceAll('`', '').split('.')
+                    if (parts.length == 2)
+                    {
+                        if (parts[0] == 'information_schema' && parts[1] == 'tables')
+                        {
+                            reason = _("SQLi - Detected access to MySQL information_schema.tables table")
+                            break  
+                        }
+                    }
                 }
             }
 
