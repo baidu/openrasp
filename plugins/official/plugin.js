@@ -405,7 +405,7 @@ function has_traversal (path) {
     return false
 }
 
-function isHostnameDNSLOG(hostname) {
+function is_hostname_dnslog(hostname) {
     var domains = algorithmConfig.ssrf_common.domains
 
     if (hostname == 'requestb.in' || hostname == 'transfer.sh')
@@ -670,6 +670,7 @@ if (RASP.get_jsengine() !== 'v8') {
                         continue
                     }
 
+                    // 懒加载，需要的时候初始化 token
                     if (raw_tokens.length == 0) {
                         raw_tokens = RASP.sql_tokenize(params.query, params.server)
                         // console.log(raw_tokens)
@@ -678,8 +679,7 @@ if (RASP.get_jsengine() !== 'v8') {
                     // 当用户输入穿越了2个token，就可以判定为SQL注入
                     var start = -1, end = raw_tokens.length, distance = 2
 
-                    // 寻找 token 起始点
-                    // @TODO: 改为二分查找
+                    // 寻找 token 起始点，可以改为二分查找
                     for (var i = 0; i < raw_tokens.length; i++) {
                         if (raw_tokens[i].stop >= userinput_idx) {
                             start = i
@@ -871,7 +871,7 @@ if (RASP.get_jsengine() !== 'v8') {
         // 算法2 - 检查常见探测域名
         if (algorithmConfig.ssrf_common.action != 'ignore')
         {
-            if (isHostnameDNSLOG(hostname))
+            if (is_hostname_dnslog(hostname))
             {
                 return {
                     action:     algorithmConfig.ssrf_common.action,
