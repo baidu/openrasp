@@ -195,7 +195,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                     && modules.get(CONFIG_KEY_INFORMATION_SCHEMA)) {
 
                                 // 处理反引号和空格
-                                String[] parts = tokens[i + 1].replace("`", "").Split(".");
+                                String[] parts = tokens[i + 1].replace("`", "").split(".");
                                 if (parts.length == 2) {
                                     String db    = parts[0].trim();
                                     String table = parts[1].trim();
