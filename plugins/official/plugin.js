@@ -702,6 +702,7 @@ if (RASP.get_jsengine() !== 'v8') {
                     }
                 }
             })
+
             if (reason !== false) {
                 return {
                     'action':     algorithmConfig.sqli_userinput.action,
@@ -727,7 +728,9 @@ if (RASP.get_jsengine() !== 'v8') {
             var func_list = algorithmConfig.sqli_policy.function_blacklist
 
             // 转换小写，避免大小写绕过
-            var tokens_lc = raw_tokens.map(function(v){return v.text.toLowerCase()})
+            var tokens_lc = raw_tokens.map(function(v) {
+                return v.text.toLowerCase()
+            })
 
             for (var i = 1; i < tokens_lc.length; i ++)
             {
@@ -841,6 +844,7 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
+        // 加入缓存，对 prepared sql 特别有效
         LRU.put(params.query)
         return clean
     })
