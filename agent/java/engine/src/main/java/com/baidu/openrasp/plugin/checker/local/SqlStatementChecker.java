@@ -190,7 +190,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                     && modules.get(CONFIG_KEY_INTO_OUTFILE)) {
                                 message = "SQLi - Detected INTO OUTFILE phrase in sql query";
                                 break;
-                            } else if (i < tokens.length - 1 && tokens[i].equals("from")
+                            } else if (i < tokens.length - 2 && tokens[i].equals("from")
                                     && modules.containsKey(CONFIG_KEY_INFORMATION_SCHEMA)
                                     && modules.get(CONFIG_KEY_INFORMATION_SCHEMA)) {
 
@@ -200,7 +200,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                     String db    = parts[0].trim();
                                     String table = parts[1].trim();
 
-                                    if (db.equals("information_schema") && table.equals("table")) {
+                                    if (db.equals("information_schema") && table.equals("tables")) {
                                         message = "SQLi - Detected access to MySQL information_schema.tables table";
                                         break;
                                     }

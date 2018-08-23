@@ -776,7 +776,7 @@ if (RASP.get_jsengine() !== 'v8') {
                         break
                     }
                 }
-                else if (features['into_outfile'] && i < tokens_lc.length - 1 && tokens_lc[i] == 'into')
+                else if (features['into_outfile'] && i < tokens_lc.length - 2 && tokens_lc[i] == 'into')
                 {
                     if (tokens_lc[i + 1] == 'outfile' || tokens_lc[i + 1] == 'dumpfile')
                     {
@@ -784,7 +784,7 @@ if (RASP.get_jsengine() !== 'v8') {
                         break
                     }
                 }
-                else if (features['information_schema'] && i < tokens_lc.length - 1 && tokens_lc[i] == 'from')
+                else if (features['information_schema'] && i < tokens_lc.length - 2 && tokens_lc[i] == 'from')
                 {
                     // `information_schema`.tables
                     // information_schema  .tables
