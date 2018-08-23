@@ -101,7 +101,6 @@ public class Config extends FileScanListener {
     private boolean enforcePolicy;
     private String[] reflectionMonitorMethod;
     private int logMaxStackSize;
-    private String readFileExtensionRegex;
     private String blockUrl;
     private String injectUrlPrefix;
     private String requestParamEncoding;
@@ -508,24 +507,6 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取读文件需要检测的扩展名正则表达式
-     *
-     * @return
-     */
-    public synchronized String getReadFileExtensionRegex() {
-        return readFileExtensionRegex;
-    }
-
-    /**
-     * 设置读文件需要检测的扩展名正则表达式
-     *
-     * @param readFileExtensionRegex
-     */
-    public synchronized void setReadFileExtensionRegex(String readFileExtensionRegex) {
-        this.readFileExtensionRegex = readFileExtensionRegex;
-    }
-
-    /**
      * 获取拦截状态码
      *
      * @return 状态码
@@ -776,8 +757,6 @@ public class Config extends FileScanListener {
                 setOgnlMinLength(value);
             } else if (Item.PLUGIN_TIMEOUT_MILLIS.key.equals(key)) {
                 setPluginTimeout(value);
-            } else if (Item.READ_FILE_EXTENSION_REGEX.key.equals(key)) {
-                setReadFileExtensionRegex(value);
             } else if (Item.REFLECTION_MAX_STACK.key.equals(key)) {
                 setPluginMaxStack(value);
             } else if (Item.SECURITY_ENFORCE_POLICY.key.equals((key))) {
