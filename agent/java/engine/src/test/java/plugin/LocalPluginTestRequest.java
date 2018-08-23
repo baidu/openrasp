@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.plugin.checker.local;
+package plugin;
 
 import java.util.*;
 
@@ -22,12 +22,12 @@ import com.baidu.openrasp.request.AbstractRequest;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-public class UnitTestRequest extends AbstractRequest {
+public class LocalPluginTestRequest extends AbstractRequest {
 
     private JsonObject context;
     private JsonObject parameter;
 
-    public UnitTestRequest(JsonObject requestInfoJson) {
+    public LocalPluginTestRequest(JsonObject requestInfoJson) {
         super(0);
         context = (JsonObject) requestInfoJson.get("context");
         parameter = (JsonObject) context.get("parameter");

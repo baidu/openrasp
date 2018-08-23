@@ -47,7 +47,7 @@ public class SSRFChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_SSRF_OBFUSCATE = "ssrf_obfuscate";
     private static final String CONFIG_KEY_SSRF_USER_INPUT = "ssrf_userinput";
 
-    List<EventInfo> checkSSRF(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
+    public List<EventInfo> checkSSRF(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
         List<EventInfo> result = new LinkedList<EventInfo>();
         String hostName = (String) checkParameter.getParam("hostname");
         String url = (String) checkParameter.getParam("url");
