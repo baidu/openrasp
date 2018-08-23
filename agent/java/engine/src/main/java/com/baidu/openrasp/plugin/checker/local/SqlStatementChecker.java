@@ -56,7 +56,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_INTO_OUTFILE = "into_outfile";
     private static final String CONFIG_KEY_MIN_LENGTH = "min_length";
 
-    List<EventInfo> checkSql(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
+    public List<EventInfo> checkSql(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
         List<EventInfo> result = new LinkedList<EventInfo>();
         String query = (String) checkParameter.getParam("query");
         String message = null;
