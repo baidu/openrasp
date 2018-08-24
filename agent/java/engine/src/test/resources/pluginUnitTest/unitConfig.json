@@ -20,7 +20,8 @@
       "function_blacklist": true,
       "union_null": true,
       "constant_compare": false,
-      "into_outfile": true
+      "into_outfile": true,
+      "information_schema":true
     },
     "function_blacklist": {
       "load_file": true,

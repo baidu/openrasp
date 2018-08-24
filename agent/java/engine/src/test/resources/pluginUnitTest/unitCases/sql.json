@@ -38,4 +38,17 @@
         "parameter": {}
     },
     "description": "sqli with delay function"
+},
+{
+    "id": "sqli_policy_information_schema",
+    "name": "sql",
+    "action": "block",
+    "params": {
+        "server": "mysql",
+        "query": "select * from information_schema.tables"
+    },
+    "context": {
+        "parameter": {}
+    },
+    "description": "sqli with schema detective"
 }]
