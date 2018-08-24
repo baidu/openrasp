@@ -65,6 +65,13 @@ public abstract class AbstractRequest {
     }
 
     /**
+     * constructor 测试时使用的构造函数
+     *
+     */
+    public AbstractRequest(int request) {
+    }
+
+    /**
      * 返回是否当前请求能够获取参数内容
      *
      * @return 是否能够获取参数内容

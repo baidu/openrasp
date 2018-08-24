@@ -17,6 +17,7 @@
 package com.baidu.openrasp.plugin.js.engine;
 
 
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.request.EmptyRequest;
 import com.baidu.openrasp.request.HttpServletRequest;
@@ -77,36 +78,39 @@ public class JSRequestContext extends ScriptableObject {
 
 
     public String jsGet_path() {
-        return javaContext.getRequestURI();
+        String path = javaContext.getRequestURI();
+        return path == null ? "" : path;
     }
 
     public String jsGet_method() {
         String method = javaContext.getMethod();
-        return method == null ? null : method.toLowerCase();
+        return method == null ? "" : method.toLowerCase();
     }
 
     public String jsGet_url() {
         StringBuffer requestURL = javaContext.getRequestURL();
-        return requestURL == null ? null : requestURL.toString();
+        return requestURL == null ? "" : requestURL.toString();
     }
 
     public String jsGet_querystring() {
-        return javaContext.getQueryString();
+        String query = javaContext.getQueryString();
+        return query == null ? "" : query;
     }
 
     public String jsGet_appBasePath() {
-        return javaContext.getAppBasePath();
+        String appBasePath = javaContext.getAppBasePath();
+        return appBasePath == null ? "" : appBasePath;
     }
 
     public String jsGet_protocol() {
         String proto = javaContext.getProtocol();
-        return proto == null ? null : proto.toLowerCase();
+        return proto == null ? "" : proto.toLowerCase();
     }
 
     public Object jsGet_body() {
         ByteArrayOutputStream body = javaContext.getBodyStream();
         if (body == null) {
-            return Context.getUndefinedValue();
+            return cx.newObject(scope);
         }
         final Scriptable buffer = cx.newObject(scope, "Uint8Array");
         try {
@@ -119,7 +123,8 @@ public class JSRequestContext extends ScriptableObject {
                 }
             });
         } catch (Exception e) {
-            return e;
+            HookHandler.LOGGER.warn("js failed to get body", e);
+            return cx.newObject(scope);
         }
         return buffer;
     }
@@ -156,7 +161,8 @@ public class JSRequestContext extends ScriptableObject {
     }
 
     public String jsGet_remoteAddr() {
-        return javaContext.getRemoteAddr();
+        String remoteAddr = javaContext.getRemoteAddr();
+        return remoteAddr == null ? "" : remoteAddr;
     }
 
     public Object jsGet_server() {

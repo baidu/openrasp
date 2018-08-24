@@ -693,7 +693,7 @@ int plugin_info(const char *message, int message_len TSRMLS_DC) {
     }
     char *plugin_info                 = NULL;    
     char *time_RFC3339 = openrasp_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL));
-    int  plugin_info_len = spprintf(&plugin_info, 0, "%s %s\n", time_RFC3339, message);
+    int  plugin_info_len = spprintf(&plugin_info, 0, "%s %s", time_RFC3339, message);
     int  plugin_result = base_info(&OPENRASP_LOG_G(loggers)[PLUGIN_LOGGER], plugin_info, plugin_info_len TSRMLS_CC);
     efree(time_RFC3339);
     efree(plugin_info);

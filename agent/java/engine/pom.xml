@@ -77,6 +77,12 @@
             <artifactId>javassist</artifactId>
             <version>3.21.0-GA</version>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -104,11 +110,12 @@
                         </configuration>
                     </execution>
                 </executions>
+
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
+                <version>3.0.2</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -121,6 +128,9 @@
                             <Rasp-Module-Class>com.baidu.openrasp.EngineBoot</Rasp-Module-Class>
                         </manifestEntries>
                     </archive>
+                    <excludes>
+                        <exclude>**/pluginUnitTest/</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>
