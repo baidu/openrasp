@@ -184,9 +184,9 @@ var algorithmConfig = {
         action: 'block'
     },
     // 写文件操作 - 脚本文件
-    // https://rasp.baidu.com/doc/dev/official.html#case-3
+    // https://rasp.baidu.com/doc/dev/official.html#case-file-write
     writeFile_script: {
-        action: 'log'
+        action: 'ignore'
     },
 
     // 重命名监控 - 将普通文件重命名为webshell，
@@ -1158,7 +1158,7 @@ plugin.register('writeFile', function (params, context) {
     }
 
     // 关于这个算法，请参考这个插件定制文档
-    // https://rasp.baidu.com/doc/dev/official.html#case-2
+    // https://rasp.baidu.com/doc/dev/official.html#case-file-write
     if (algorithmConfig.writeFile_script.action != 'ignore')
     {
         if (scriptFileRegex.test(params.realpath)) {
