@@ -59,7 +59,7 @@ var algorithmConfig = {
         action:  'block',
 
         // 粗规则: 为了减少 tokenize 次数，当SQL语句包含一定特征时才进入
-        filter:  ';|\/\*|(?:\d{1,2},){4}|(?:null,){4}|0x[\da-f]{8}|\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin)\b',
+        filter:  ';|\\/\\*|(?:\\d{1,2},){4}|(?:null,){4}|0x[\\da-f]{8}|\\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin)\\b',
 
         feature: {
             // 是否禁止多语句执行，select ...; update ...;
