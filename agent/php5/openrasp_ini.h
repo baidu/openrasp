@@ -35,7 +35,7 @@ class Openrasp_ini
     char *syslog_server_address;
     int log_maxburst = 1000;
     int syslog_facility;
-    bool syslog_alarm_enable = 0;
+    bool syslog_alarm_enable = false;
     long syslog_connection_timeout = 50;
     long syslog_read_timeout = 10;
     int syslog_connection_retry_interval = 200;
@@ -51,6 +51,7 @@ class Openrasp_ini
     char *block_content_json;
     char *block_content_xml;
     char *block_content_html;
+    bool plugin_filter = true;
 };
 
 extern Openrasp_ini openrasp_ini;

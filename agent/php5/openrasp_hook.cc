@@ -19,7 +19,8 @@
 #include "openrasp_inject.h"
 #include <new>
 #include <vector>
-#include <map>
+#include <unordered_map>
+#include <algorithm>
 
 extern "C"
 {
@@ -42,18 +43,10 @@ typedef struct _track_vars_pair_t
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_hook)
 
-struct scheme_cmp
-{
-    bool operator()(const std::string &lhs, const std::string &rhs) const
-    {
-        return strcasecmp(lhs.c_str(), rhs.c_str()) < 0;
-    }
-};
-
 //return value estrdup
-char *openrasp_real_path(char *filename, int filename_len, zend_bool use_include_path, wrapper_operation w_op TSRMLS_DC)
+char *openrasp_real_path(char *filename, int filename_len, bool use_include_path, uint32_t w_op TSRMLS_DC)
 {
-    static const std::map<std::string, int, scheme_cmp> opMap = {
+    static const std::unordered_map<std::string, uint32_t> opMap = {
         {"http", READING},
         {"https", READING},
         {"ftp", READING | WRITING | APPENDING},
@@ -68,26 +61,29 @@ char *openrasp_real_path(char *filename, int filename_len, zend_bool use_include
         {"rar", READING},
         {"ogg", READING | WRITING | APPENDING},
         {"expect", READING | WRITING | APPENDING}};
+    if (!openrasp_ini.plugin_filter)
+    {
+        w_op |= WRITING;
+    }
     char *resolved_path = nullptr;
-    resolved_path = php_resolve_path(filename, filename_len, use_include_path ? PG(include_path) : NULL TSRMLS_CC);
+    resolved_path = php_resolve_path(filename, filename_len, use_include_path ? PG(include_path) : nullptr TSRMLS_CC);
     if (nullptr == resolved_path)
     {
         const char *p = fetch_url_scheme(filename);
         if (nullptr != p)
         {
-            std::string scheme(filename, p - filename);
             php_stream_wrapper *wrapper;
             wrapper = php_stream_locate_url_wrapper(filename, nullptr, STREAM_LOCATE_WRAPPERS_ONLY TSRMLS_CC);
             if (wrapper && wrapper->wops)
             {
-                if (w_op & RENAMESRC || w_op & RENAMEDEST)
+                if (w_op & (RENAMESRC | RENAMEDEST))
                 {
                     if (wrapper->wops->rename)
                     {
                         resolved_path = estrdup(filename);
                     }
                 }
-                else if ((w_op & OPENDIR))
+                else if (w_op & OPENDIR)
                 {
                     if (wrapper->wops->dir_opener)
                     {
@@ -96,8 +92,10 @@ char *openrasp_real_path(char *filename, int filename_len, zend_bool use_include
                 }
                 else
                 {
+                    std::string scheme(filename, p - filename);
+                    std::transform(scheme.begin(), scheme.end(), scheme.begin(), std::tolower);
                     auto it = opMap.find(scheme);
-                    if (it != opMap.end() && w_op & it->second)
+                    if (it != opMap.end() && (w_op & it->second))
                     {
                         resolved_path = estrdup(filename);
                     }
@@ -111,7 +109,7 @@ char *openrasp_real_path(char *filename, int filename_len, zend_bool use_include
             expand_filepath(filename, expand_path TSRMLS_CC);
             if (VCWD_REALPATH(expand_path, real_path))
             {
-                if (w_op & OPENDIR || w_op & RENAMESRC)
+                if (w_op & (OPENDIR | RENAMESRC))
                 {
                     //skip
                 }
@@ -122,7 +120,7 @@ char *openrasp_real_path(char *filename, int filename_len, zend_bool use_include
             }
             else
             {
-                if (w_op & WRITING || w_op & RENAMEDEST)
+                if (w_op & (WRITING | RENAMEDEST))
                 {
                     resolved_path = estrdup(expand_path);
                 }

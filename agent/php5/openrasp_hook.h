@@ -146,7 +146,7 @@ typedef struct sql_connection_entry_t {
     char *username = nullptr;
 } sql_connection_entry;
 
-typedef enum wrapper_operation_t {
+enum PATH_OPERATION {
     OPENDIR         = 1 << 0,
     RENAMESRC       = 1 << 1,
     RENAMEDEST      = 1 << 2,
@@ -154,7 +154,7 @@ typedef enum wrapper_operation_t {
     WRITING         = 1 << 4,
     APPENDING       = 1 << 5,
     SIMULTANEOUSRW  = 1 << 6
-} wrapper_operation;
+};
 
 typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
 typedef void (*hook_handler_t)(TSRMLS_D);
@@ -292,7 +292,7 @@ bool openrasp_check_type_ignored(const char *item_name, uint item_name_length TS
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC);
 bool openrasp_zval_in_request(zval *item TSRMLS_DC);
 void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zval *message TSRMLS_DC);
-char * openrasp_real_path(char *filename, int filename_len, zend_bool use_include_path, wrapper_operation w_op TSRMLS_DC);
+char *openrasp_real_path(char *filename, int filename_len, bool use_include_path, uint32_t w_op TSRMLS_DC);
 void register_hook_handler(hook_handler_t hook_handler);
 
 #endif
