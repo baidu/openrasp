@@ -60,14 +60,11 @@ public class FileUploadHook extends AbstractClassHook {
             HashMap<String, String[]> fileUploadCache = HookHandler.requestCache.get().getFileUploadCache();
             for (Object o : list) {
                 boolean isFormField = (Boolean) Reflection.invokeMethod(o, "isFormField", new Class[]{});
+                //只获取multipart中的非文件字段值
                 if (isFormField) {
                     String fieldName = Reflection.invokeStringMethod(o, "getFieldName", new Class[]{});
                     String fieldValue = Reflection.invokeStringMethod(o, "getString", new Class[]{});
                     fileUploadCache.put(fieldName, new String[]{fieldValue});
-                } else {
-                    String fileName = Reflection.invokeStringMethod(o, "getName", new Class[]{});
-                    String fileContent = Reflection.invokeStringMethod(o, "getString", new Class[]{});
-                    fileUploadCache.put(fileName, new String[]{fileContent});
                 }
             }
         }

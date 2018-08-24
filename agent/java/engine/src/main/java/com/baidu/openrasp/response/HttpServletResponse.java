@@ -29,8 +29,7 @@ public class HttpServletResponse {
     private static final int REDIRECT_STATUS_CODE = 302;
     public static final String CONTENT_TYPE_HEADER_KEY = "Content-Type";
     public static final String CONTENT_LENGTH_HEADER_KEY = "Content-Length";
-    public static final String CONTENT_TYPE_REPLACE_REQUEST_ID = "$REQUEST_ID$";
-    public static final String CONTENT_TYPE_REPLACE_REDIRECT_URL = "$REDIRECT_URL$";
+    public static final String CONTENT_TYPE_REPLACE_REQUEST_ID = "%request_id%";
     public static final String CONTENT_TYPE_HTML_VALUE = "text/html";
     public static final String CONTENT_TYPE_JSON_VALUE = "application/json";
     public static final String CONTENT_TYPE_XML_VALUE = "application/xml";
@@ -168,13 +167,12 @@ public class HttpServletResponse {
                 } else if (contentType.startsWith(CONTENT_TYPE_XML_VALUE) || contentType.startsWith(CONTENT_TYPE_TEXT_XML)) {
                     script = Config.getConfig().getBlockXml().replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId);
                 } else {
-                    script = Config.getConfig().getBlockHtml().replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId).
-                            replace(CONTENT_TYPE_REPLACE_REDIRECT_URL, blockUrl);
+                    script = Config.getConfig().getBlockHtml().replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId);
                 }
                 if (!isCommitted) {
                     Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, statusCode);
                     if (statusCode >= 300 && statusCode <= 399) {
-                        setHeader("Location", blockUrl);
+                        setHeader("Location", blockUrl.replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId));
                     }
                     setIntHeader(CONTENT_LENGTH_HEADER_KEY, script.getBytes().length);
                 }
