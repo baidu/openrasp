@@ -101,6 +101,17 @@ public class CheckParameter {
         this.createTime = System.currentTimeMillis();
     }
 
+    /**
+     * 用于单元测试的构造函数
+     *
+     */
+    public CheckParameter(Type type, Object params,AbstractRequest request) {
+        this.type = type;
+        this.params = params;
+        this.request = request;
+        this.createTime = System.currentTimeMillis();
+    }
+
     public Object getParam(String key) {
         return params == null ? null : ((Map) params).get(key);
     }
