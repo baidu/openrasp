@@ -16,11 +16,12 @@
 
 #include "openrasp.h"
 #include "openrasp_ini.h"
+#include "openrasp_utils.h"
 extern "C"
 {
 #include "php_ini.h"
+#include "ext/pcre/php_pcre.h"
 #include "ext/standard/file.h"
-#include "ext/standard/php_string.h"
 #include "Zend/zend_builtin_functions.h"
 }
 #include <string>
@@ -34,7 +35,7 @@ void format_debug_backtrace_str(zval *backtrace_str)
         int i = 0;
         std::string buffer;
         HashTable *hash_arr = Z_ARRVAL(trace_arr);
-        zval *ele_value = NULL;        
+        zval *ele_value = NULL;
         ZEND_HASH_FOREACH_VAL(hash_arr, ele_value)
         {
             if (++i > openrasp_ini.log_maxstack)
@@ -162,7 +163,7 @@ int recursive_mkdir(const char *path, int len, int mode)
     return 0;
 }
 
-const char * fetch_url_scheme(const char *filename)
+const char *fetch_url_scheme(const char *filename)
 {
     if (nullptr == filename)
     {
@@ -176,4 +177,85 @@ const char * fetch_url_scheme(const char *filename)
         return p;
     }
     return nullptr;
+}
+
+long fetch_time_offset()
+{
+    time_t t = time(NULL);
+    struct tm lt = {0};
+    localtime_r(&t, &lt);
+    return lt.tm_gmtoff;
+}
+
+void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter)
+{
+    DIR *dir;
+    std::string result;
+    struct dirent *ent;
+    if ((dir = opendir(dir_abs.c_str())) != NULL)
+    {
+        while ((ent = readdir(dir)) != NULL)
+        {
+            if (file_filter)
+            {
+                if (file_filter(ent->d_name))
+                {
+                    plugins.push_back(std::string(ent->d_name));
+                }
+            }
+        }
+        closedir(dir);
+    }
+}
+
+bool same_day_in_current_timezone(long src, long target, long offset)
+{
+    long day = 24 * 60 * 60;
+    return ((src + offset) / day == (target + offset) / day);
+}
+
+zend_string *openrasp_format_date(char *format, int format_len, time_t ts)
+{
+    char buffer[128];
+    struct tm *tm_info;
+
+    time(&ts);
+    tm_info = localtime(&ts);
+
+    strftime(buffer, 64, format, tm_info);
+    return zend_string_init(buffer, strlen(buffer), 0);
+}
+
+void openrasp_pcre_match(zend_string *regex, zend_string *subject, zval *return_value)
+{
+    pcre_cache_entry *pce;
+    zval *subpats = NULL;
+    zend_long flags = 0;
+    zend_long start_offset = 0;
+    int global = 0;
+
+    if (ZEND_SIZE_T_INT_OVFL(ZSTR_LEN(subject)))
+    {
+        RETURN_FALSE;
+    }
+
+    if ((pce = pcre_get_compiled_regex_cache(regex)) == NULL)
+    {
+        RETURN_FALSE;
+    }
+
+    pce->refcount++;
+    php_pcre_match_impl(pce, ZSTR_VAL(subject), (int)ZSTR_LEN(subject), return_value, subpats,
+		global, 0, flags, start_offset);
+    pce->refcount--;
+}
+
+long get_file_st_ino(std::string filename)
+{
+    struct stat sb;
+    if (VCWD_STAT(filename.c_str(), &sb) == 0 && (sb.st_mode & S_IFREG) != 0)
+    {
+        return (long)sb.st_ino;
+    }
+    return 0;
 }
