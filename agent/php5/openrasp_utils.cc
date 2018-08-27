@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-#include "openrasp.h"
+#include "openrasp_utils.h"
 #include "openrasp_ini.h"
+#include <cmath>
+
 extern "C"
 {
 #include "php_ini.h"
 #include "ext/standard/file.h"
+#include "ext/date/php_date.h"
+#include "ext/pcre/php_pcre.h"
 #include "ext/standard/php_string.h"
 #include "Zend/zend_builtin_functions.h"
 }
-#include <string>
 
 void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
 {
@@ -174,7 +177,7 @@ int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC)
     return 0;
 }
 
-const char * fetch_url_scheme(const char *filename)
+const char *fetch_url_scheme(const char *filename)
 {
     if (nullptr == filename)
     {
@@ -188,4 +191,78 @@ const char * fetch_url_scheme(const char *filename)
         return p;
     }
     return nullptr;
+}
+
+long fetch_time_offset()
+{
+    time_t t = time(NULL);
+    struct tm lt = {0};
+    localtime_r(&t, &lt);
+    return lt.tm_gmtoff;
+}
+
+void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter)
+{
+    DIR *dir;
+    std::string result;
+    struct dirent *ent;
+    if ((dir = opendir(dir_abs.c_str())) != NULL)
+    {
+        while ((ent = readdir(dir)) != NULL)
+        {
+            if (file_filter)
+            {
+                if (file_filter(ent->d_name))
+                {
+                    plugins.push_back(std::string(ent->d_name));
+                }
+            }
+        }
+        closedir(dir);
+    }
+}
+
+bool same_day_in_current_timezone(long src, long target, long offset)
+{
+    long day = 24 * 60 * 60;
+    return ((src + offset) / day == (target + offset) / day);
+}
+
+char *openrasp_format_date(char *format, int format_len, time_t ts)
+{
+    char buffer[128];
+    struct tm *tm_info;
+
+    time(&ts);
+    tm_info = localtime(&ts);
+
+    strftime(buffer, 64, format, tm_info);
+    return estrdup(buffer);
+}
+
+void openrasp_pcre_match(char *regex, int regex_len, char *subject, int subject_len, zval *return_value TSRMLS_DC)
+{
+    pcre_cache_entry *pce;
+    zval *subpats = NULL;
+    long flags = 0;
+    long start_offset = 0;
+    int global = 0;
+
+    if ((pce = pcre_get_compiled_regex_cache(regex, regex_len TSRMLS_CC)) == NULL)
+    {
+        RETURN_FALSE;
+    }
+
+    php_pcre_match_impl(pce, subject, subject_len, return_value, subpats,
+                        global, 0, flags, start_offset TSRMLS_CC);
+}
+
+long get_file_st_ino(std::string filename TSRMLS_DC)
+{
+    struct stat sb;
+    if (VCWD_STAT(filename.c_str(), &sb) == 0 && (sb.st_mode & S_IFREG) != 0)
+    {
+        return (long)sb.st_ino;
+    }
+    return 0;
 }

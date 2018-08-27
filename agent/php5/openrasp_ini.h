@@ -48,6 +48,7 @@ class Openrasp_ini
     char *block_url;
     std::unordered_set<std::string> hooks_ignore;
     std::unordered_set<std::string> callable_blacklists;
+    char *clientip_header;
 };
 
 extern Openrasp_ini openrasp_ini;

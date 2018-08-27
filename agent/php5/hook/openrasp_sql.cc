@@ -19,7 +19,8 @@
 #include <string>
 #include <map>
 
-extern "C" {
+extern "C"
+{
 #include "ext/pdo/php_pdo_driver.h"
 #include "zend_ini.h"
 #include "openrasp_shared_alloc.h"
@@ -29,7 +30,7 @@ extern "C" {
  * sql connection alarm
  */
 static void connection_via_default_username_policy(char *check_message, sql_connection_entry *sql_connection_p TSRMLS_DC)
-{           
+{
     zval *policy_array = nullptr;
     MAKE_STD_ZVAL(policy_array);
     array_init(policy_array);
@@ -68,28 +69,27 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
         {"mysql", "root"},
         {"mssql", "sa"},
         {"pgsql", "postgres"},
-        {"oci",   "dbsnmp"},
-        {"oci",   "sysman"},
-        {"oci",   "system"},
-        {"oci",   "sys"}
-    };
+        {"oci", "dbsnmp"},
+        {"oci", "sysman"},
+        {"oci", "system"},
+        {"oci", "sys"}};
     sql_connection_entry conn_entry;
     char *check_message = nullptr;
-    zend_bool need_block= 0;
+    zend_bool need_block = 0;
     connection_init_func(INTERNAL_FUNCTION_PARAM_PASSTHRU, &conn_entry);
     if (conn_entry.server && conn_entry.username && conn_entry.host)
     {
         auto pos = database_username_blacklists.equal_range(std::string(conn_entry.server));
         while (pos.first != pos.second)
         {
-            if (std::string(conn_entry.username) == pos.first->second) 
+            if (std::string(conn_entry.username) == pos.first->second)
             {
-                spprintf(&check_message, 0, 
-                    _("Database security - Connecting to a %s instance using the high privileged account: %s - (%s:%d)"), 
-                    conn_entry.server,
-                    conn_entry.username,
-                    conn_entry.host,
-                    conn_entry.port);
+                spprintf(&check_message, 0,
+                         _("Database security - Connecting to a %s instance using the high privileged account: %s - (%s:%d)"),
+                         conn_entry.server,
+                         conn_entry.username,
+                         conn_entry.host,
+                         conn_entry.port);
                 break;
             }
             pos.first++;
@@ -102,19 +102,23 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
                 need_block = 1;
             }
             else
-            { 
-                char *server_host_port = nullptr;
-                int server_host_port_len = spprintf(&server_host_port, 0, "%s-%s:%d", conn_entry.server, conn_entry.host, conn_entry.port);
-                ulong connection_hash = zend_inline_hash_func(server_host_port, server_host_port_len);
-                openrasp_shared_alloc_lock(TSRMLS_C);
-                if (!openrasp_shared_hash_exist(connection_hash, OPENRASP_LOG_G(formatted_date_suffix)))
+            {
+                if (check_sapi_need_alloc_shm())
                 {
-                    connection_via_default_username_policy(check_message, &conn_entry TSRMLS_CC);
+                    char *server_host_port = nullptr;
+                    int server_host_port_len = spprintf(&server_host_port, 0, "%s-%s:%d", conn_entry.server, conn_entry.host, conn_entry.port);
+                    ulong connection_hash = zend_inline_hash_func(server_host_port, server_host_port_len);
+                    openrasp_shared_alloc_lock(TSRMLS_C);
+                    if (!openrasp_shared_hash_exist(connection_hash, OPENRASP_LOG_G(formatted_date_suffix)))
+                    {
+                        connection_via_default_username_policy(check_message, &conn_entry TSRMLS_CC);
+                    }
+                    openrasp_shared_alloc_unlock(TSRMLS_C);
+                    efree(server_host_port);
                 }
-                openrasp_shared_alloc_unlock(TSRMLS_C);
-                efree(server_host_port);
             }
             efree(check_message);
+            check_message = nullptr;
         }
     }
     if (conn_entry.host)
@@ -128,7 +132,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
     return need_block;
 }
 
-void sql_type_handler(char* query, int query_len, char *server TSRMLS_DC)
+void sql_type_handler(char *query, int query_len, char *server TSRMLS_DC)
 {
     if (query && strlen(query) == query_len)
     {
@@ -146,12 +150,9 @@ long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count,
     zval function_name, retval;
     INIT_ZVAL(function_name);
     ZVAL_STRING(&function_name, f_name_str, 0);
-    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, param_count, params TSRMLS_CC) == SUCCESS
-    && Z_TYPE(retval) == IS_LONG)
+    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, param_count, params TSRMLS_CC) == SUCCESS && Z_TYPE(retval) == IS_LONG)
     {
         return Z_LVAL(retval);
     }
     return 0;
 }
-
-
