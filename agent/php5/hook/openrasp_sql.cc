@@ -134,7 +134,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
 
 void sql_type_handler(char *query, int query_len, char *server TSRMLS_DC)
 {
-    if (query && strlen(query) == query_len)
+    if (LIKELY(query && strlen(query) == query_len))
     {
         zval *params;
         MAKE_STD_ZVAL(params);

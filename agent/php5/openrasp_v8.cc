@@ -52,7 +52,7 @@ static inline v8::Isolate *get_isolate(TSRMLS_D);
 unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
 {
     v8::Isolate *isolate = get_isolate(TSRMLS_C);
-    if (!isolate)
+    if (UNLIKELY(!isolate))
     {
         return 0;
     }
@@ -74,7 +74,7 @@ unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
         process_globals.v8_platform->CallOnBackgroundThread(task, v8::Platform::kShortRunningTask);
         bool avoidwarning = check->Call(context, check, 3, argv).ToLocal(&rst);
     }
-    if (rst.IsEmpty())
+    if (UNLIKELY(rst.IsEmpty()))
     {
         if (try_catch.Message().IsEmpty())
         {
@@ -101,7 +101,7 @@ unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
         }
         return 0;
     }
-    if (!rst->IsArray())
+    if (UNLIKELY(!rst->IsArray()))
     {
         return 0;
     }
@@ -117,12 +117,12 @@ unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
     {
         v8::Local<v8::Object> item = arr->Get(i).As<v8::Object>();
         v8::Local<v8::Value> v8_action = item->Get(key_action);
-        if (!v8_action->IsString())
+        if (UNLIKELY(!v8_action->IsString()))
         {
             continue;
         }
         int action_hash = v8_action->ToString()->GetIdentityHash();
-        if (OPENRASP_V8_G(action_hash_ignore) == action_hash)
+        if (LIKELY(OPENRASP_V8_G(action_hash_ignore) == action_hash))
         {
             continue;
         }
@@ -279,7 +279,10 @@ static inline bool shutdown_isolate(TSRMLS_D)
 
 static inline v8::Isolate *get_isolate(TSRMLS_D)
 {
-    init_platform(TSRMLS_C);
+    if (UNLIKELY(!process_globals.v8_platform))
+    {
+        init_platform(TSRMLS_C);
+    }
 
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (oam.get_plugin_update_timestamp() > process_globals.plugin_update_timestamp)
@@ -305,8 +308,8 @@ static inline v8::Isolate *get_isolate(TSRMLS_D)
     }
 #endif
 
-    if (process_globals.is_initialized &&
-        (!OPENRASP_V8_G(is_isolate_initialized) || process_globals.plugin_update_timestamp > OPENRASP_V8_G(plugin_update_timestamp)))
+    if (UNLIKELY(process_globals.is_initialized &&
+                 (!OPENRASP_V8_G(is_isolate_initialized) || process_globals.plugin_update_timestamp > OPENRASP_V8_G(plugin_update_timestamp))))
     {
         if (process_globals.mtx.try_lock() &&
             process_globals.is_initialized &&
