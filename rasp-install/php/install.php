@@ -20,7 +20,7 @@ For more details visit: https://rasp.baidu.com/doc/install/software.html
 
 <?php
 if (PHP_VERSION_ID < 50300) {
-	echo sprintf("OpenRASP works on PHP 5.3 and onwards, version %s.%s is not supported\n", PHP_MAJOR_VERSION, PHP_MINOR_VERSION);
+	echo sprintf("Error: OpenRASP works on PHP 5.3 and onwards, version %s.%s is not supported\n", PHP_MAJOR_VERSION, PHP_MINOR_VERSION);
 	exit;
 }
 include_once(__DIR__ . DIRECTORY_SEPARATOR .'util.php');
