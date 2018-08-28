@@ -570,39 +570,61 @@ if (RASP.get_jsengine() !== 'v8') {
 
     // v8 全局SQL结果缓存
     var LRU = {
+        head: undefined,
+        tail: undefined,
         cache: {},
-        stack: [],
-        max:   algorithmConfig.cache.sqli.capacity,
+        maxLength:   algorithmConfig.cache.sqli.capacity,
 
         // 查询缓存，如果在则移动到队首
-        lookup: function(key) {
-            var found = this.cache.hasOwnProperty(key)
-            if (found) {
-                var idx = this.stack.indexOf(key)
-
-                this.cache[key] ++
-                this.stack.splice(idx, 1)
-                this.stack.unshift(key)
+        get: function(key) {
+            var node = this.cache[key]
+            if (node) {
+                this.update(node)
+                return true
+            } else {
+                return false
             }
-
-            return found
         },
 
         // 增加缓存，如果超过大小则删除末尾元素
         put: function(key) {
-            this.stack.push(key)
-            this.cache[key] = 1
-
-            if (this.stack.length > this.max) {
-                var tail = this.stack.pop()
-                delete this.cache[tail]
+            var node = this.cache[key]
+            if (node) {
+                node = {
+                    key: key
+                }
             }
+            this.update(node)
+        },
+
+        update: function (node) {
+            if (node == this.head) {
+                return
+            } else if (node == this.tail) {
+                this.tail = node.prev
+                this.tail.next = undefined
+            } else if (node.prev && node.next) {
+                node.prev.next = node.next
+                node.next.prev = node.prev
+            } else if (!this.cache.hasOwnProperty(node.key)) {
+                this.cache[node.key] = node
+                if (++this.length > this.maxLength) {
+                    this.cache[this.tail.key] = undefined
+                    this.tail.prev.next = undefined
+                    this.tail = this.tail.prev
+                }
+            } else {
+                return
+            }
+            node.prev = undefined
+            node.next = this.head
+            this.head.prev = node
+            this.head = node
         },
 
         // 调试函数，用于打印内部信息
         dump: function() {
             console.log (this.cache)
-            console.log (this.stack)
             console.log ('')
         }
     }
@@ -610,7 +632,7 @@ if (RASP.get_jsengine() !== 'v8') {
     plugin.register('sql', function (params, context) {
 
         // 缓存检查
-        if (LRU.lookup(params.query)) {
+        if (LRU.get(params.query)) {
             return clean
         }
 
