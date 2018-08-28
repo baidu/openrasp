@@ -211,7 +211,15 @@ static void build_complete_url(zval *items, zval *new_zv TSRMLS_DC)
     assert(Z_TYPE_P(items) == IS_ARRAY);
     zval **origin_zv;
     std::string buffer;
-    buffer.append(ZEND_STRL("http://"));
+    if (zend_hash_find(Z_ARRVAL_P(items), ZEND_STRS("REQUEST_SCHEME"), (void **)&origin_zv) == SUCCESS)
+    {
+        buffer.append(Z_STRVAL_PP(origin_zv), Z_STRLEN_PP(origin_zv));
+    }
+    else
+    {
+        buffer.append(ZEND_STRL("http"));
+    }
+    buffer.append(ZEND_STRL("://"));
     if (zend_hash_find(Z_ARRVAL_P(items), ZEND_STRS("HTTP_HOST"), (void **)&origin_zv) == SUCCESS)
     {
         buffer.append(Z_STRVAL_PP(origin_zv), Z_STRLEN_PP(origin_zv));
@@ -310,7 +318,7 @@ static void init_alarm_request_info(TSRMLS_D)
         {"HTTP_USER_AGENT", "user_agent",       nullptr},
         {"REMOTE_ADDR",     "attack_source",    replace_clientip_by_header},
         {"REQUEST_URI",     "path",             request_uri_path_filter},
-        {"HTTP_HOST SERVER_NAME SERVER_ADDR SERVER_PORT REQUEST_URI",     "url",              build_complete_url}
+        {"REQUEST_SCHEME HTTP_HOST SERVER_NAME SERVER_ADDR SERVER_PORT REQUEST_URI",     "url",              build_complete_url}
     };
 
     assert(OPENRASP_LOG_G(alarm_request_info) == nullptr);
@@ -382,12 +390,10 @@ static void clear_openrasp_loggers(TSRMLS_D)
 static zend_bool if_need_update_formatted_file_suffix(rasp_logger_entry *logger, long now, int log_info_len TSRMLS_DC)
 {
     int  last_logged_second       = logger->last_logged_time / 1000;
-    long log_rotate_second        = 24*60*60;
-    long offset = OPENRASP_LOG_G(time_offset);
-    if ((now + offset) / log_rotate_second != (last_logged_second + offset) / log_rotate_second)
+    if (!same_day_in_current_timezone(now, last_logged_second, OPENRASP_LOG_G(time_offset)))
     {
         return 1;
-    }    
+    }
     return 0;
 }
 
