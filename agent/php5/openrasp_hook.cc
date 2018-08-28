@@ -185,12 +185,12 @@ void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int 
 
 bool openrasp_check_type_ignored(const char *item_name, uint item_name_length TSRMLS_DC)
 {
-    return openrasp_ini.hooks_ignore.find(item_name) != openrasp_ini.hooks_ignore.end();
+    return openrasp_ini.hooks_ignore.find({item_name, item_name_length}) != openrasp_ini.hooks_ignore.end();
 }
 
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC)
 {
-    return openrasp_ini.callable_blacklists.find(item_name) != openrasp_ini.callable_blacklists.end();
+    return openrasp_ini.callable_blacklists.find({item_name, item_name_length}) != openrasp_ini.callable_blacklists.end();
 }
 
 void handle_block(TSRMLS_D)
