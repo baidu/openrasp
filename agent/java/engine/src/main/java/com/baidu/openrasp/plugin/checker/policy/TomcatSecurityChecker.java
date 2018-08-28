@@ -159,7 +159,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
                                     String userName = user.getAttribute("username");
                                     String password = user.getAttribute("password");
                                     if (weakWords.contains(userName) && weakWords.contains(password)) {
-                                        infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD, "Tomcat security baseline - detected weak username/password combination in tomcat-users.xml", true));
+                                        infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD, "Tomcat security baseline - detected weak username/password combination in tomcat-users.xml (username: " + userName + ")", true));
                                     }
                                 }
                             }
