@@ -20,6 +20,10 @@
 #include "openrasp_inject.h"
 #include <map>
 #include <vector>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
 
 extern "C" {
 #include "openrasp_shared_alloc.h"
@@ -66,7 +70,7 @@ typedef void (*value_filter_t)(zval *origin_zv, zval *new_zv);
 
 typedef struct keys_filter_t
 {
-    const char *origin_key_str;
+    const std::string origin_key_str;
     const char *new_key_str;
     value_filter_t value_filter;
 } keys_filter;
@@ -145,6 +149,39 @@ static void _get_ifaddr_zval(zval *z_ifaddr)
     }
 }
 
+static std::string fetch_last_clientip(const std::string &s) 
+{
+    std::stringstream ip_list_ss(s);
+    std::string item;
+    while (std::getline(ip_list_ss, item, ','))
+    ;
+    std::stringstream ip_ss(item);
+    while (std::getline(ip_ss, item, ' '))
+    ;
+    return item;
+}
+
+static void replace_clientip_by_header(zval *origin_zv, zval *new_zv)
+{
+    zval *server_globals = &PG(http_globals)[TRACK_VARS_SERVER];
+    char* tmp_clientip_header = estrdup(("HTTP_" + std::string(openrasp_ini.clientip_header)).c_str());
+    char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
+    zval *z_clientip_pp;
+    if (server_globals && 
+    ((z_clientip_pp = zend_hash_str_find(Z_ARRVAL_P(server_globals), uch, strlen(uch))) != nullptr) &&
+    Z_TYPE_P(z_clientip_pp) == IS_STRING)
+    {
+        std::string clientip_list = std::string(Z_STRVAL_P(z_clientip_pp));
+        std::string clientip = fetch_last_clientip(clientip_list);
+        ZVAL_STRINGL(new_zv, clientip.c_str(), clientip.size());
+    }
+    else
+    {
+        ZVAL_STRINGL(new_zv, Z_STRVAL_P(origin_zv), Z_STRLEN_P(origin_zv));
+    }
+    efree(tmp_clientip_header);
+}
+
 static void request_uri_path_filter(zval *origin_zv, zval *new_zv)
 {
     char *haystack = Z_STRVAL_P(origin_zv);                                            
@@ -160,28 +197,103 @@ static void request_uri_path_filter(zval *origin_zv, zval *new_zv)
     }
 }
 
+static void build_complete_url(zval *items, zval *new_zv)
+{
+    assert(Z_TYPE_P(items) == IS_ARRAY);
+    zval *origin_zv;
+    std::string buffer;
+    if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(items), ZEND_STRL("REQUEST_SCHEME"))) != nullptr)
+    {
+        buffer.append(Z_STRVAL_P(origin_zv), Z_STRLEN_P(origin_zv));
+    }
+    else
+    {
+        buffer.append(ZEND_STRL("http"));    
+    }
+    buffer.append(ZEND_STRL("://"));
+    if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(items), ZEND_STRL("HTTP_HOST"))) != nullptr)
+    {
+        buffer.append(Z_STRVAL_P(origin_zv), Z_STRLEN_P(origin_zv));
+    }
+    else
+    {
+        if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(items), ZEND_STRL("SERVER_NAME"))) != nullptr)
+        {
+            buffer.append(Z_STRVAL_P(origin_zv), Z_STRLEN_P(origin_zv));
+        }
+        else if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(items), ZEND_STRL("SERVER_ADDR"))) != nullptr)
+        {
+            buffer.append(Z_STRVAL_P(origin_zv), Z_STRLEN_P(origin_zv));
+        }
+        if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(items), ZEND_STRL("SERVER_PORT"))) != nullptr
+        && Z_TYPE_P(origin_zv) == IS_STRING && strncmp(Z_STRVAL_P(origin_zv), "80", 2) != 0)
+        {
+            buffer.push_back(':');
+            buffer.append(Z_STRVAL_P(origin_zv), Z_STRLEN_P(origin_zv));
+        }
+    }
+    if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(items), ZEND_STRL("REQUEST_URI"))) != nullptr)
+    {
+        buffer.append(Z_STRVAL_P(origin_zv), Z_STRLEN_P(origin_zv));
+    }
+    ZVAL_STRINGL(new_zv, buffer.c_str(), buffer.length());
+}
+
 static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_filter> &filters)
 {
     zval *origin_zv;
     for (keys_filter filter:filters)
     {
-        if (src && Z_TYPE_P(src) == IS_ARRAY &&
-        (origin_zv = zend_hash_str_find(Z_ARRVAL_P(src), filter.origin_key_str, strlen(filter.origin_key_str))) != nullptr &&
-        Z_TYPE_P(origin_zv) == IS_STRING)
+        if (src && Z_TYPE_P(src) == IS_ARRAY)
         {
-            if (filter.value_filter)
+            if (filter.origin_key_str.find(" ") != std::string::npos)
             {
-                zval new_zv;
-                filter.value_filter(origin_zv, &new_zv);
-                add_assoc_zval(dest, filter.new_key_str, &new_zv);
+                zval items;
+                array_init(&items);
+                std::istringstream iss(filter.origin_key_str);
+                std::vector<std::string> tokens{std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{}};
+                for(std::string item : tokens)
+                {
+                    if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(src), item.c_str(), item.length())) != nullptr &&
+                    Z_TYPE_P(origin_zv) == IS_STRING)
+                    {
+                        add_assoc_zval(&items, item.c_str(), origin_zv);
+                        Z_ADDREF_P(origin_zv);
+                    }
+                }
+                assert(filter.value_filter != nullptr);
+                if (filter.value_filter)
+                {
+                    zval new_zv;
+                    filter.value_filter(&items, &new_zv);
+                    add_assoc_zval(dest, filter.new_key_str, &new_zv);
+                    zval_ptr_dtor(&items);
+                }
             }
             else
             {
-                add_assoc_zval(dest, filter.new_key_str, origin_zv);
-                Z_TRY_ADDREF_P(origin_zv);
+                if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(src), filter.origin_key_str.c_str(), filter.origin_key_str.length())) != nullptr &&
+                Z_TYPE_P(origin_zv) == IS_STRING)
+                {
+                    if (filter.value_filter)
+                    {
+                        zval new_zv;
+                        filter.value_filter(origin_zv, &new_zv);
+                        add_assoc_zval(dest, filter.new_key_str, &new_zv);
+                    }
+                    else
+                    {
+                        add_assoc_zval(dest, filter.new_key_str, origin_zv);
+                        Z_TRY_ADDREF_P(origin_zv);
+                    }
+                }
+                else
+                {
+                    add_assoc_string(dest, filter.new_key_str, "");
+                }
             }
         }
-        else
+        if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(dest), filter.new_key_str, strlen(filter.new_key_str))) == nullptr)
         {
             add_assoc_string(dest, filter.new_key_str, "");
         }
@@ -192,13 +304,13 @@ static void init_alarm_request_info()
 {
     static std::vector<keys_filter> alarm_filters = 
     {
-        {"REMOTE_ADDR",     "attack_source",    nullptr},
         {"SERVER_NAME",     "target",           nullptr},
         {"SERVER_ADDR",     "server_ip",        nullptr},
-        {"REQUEST_URI",     "url",              nullptr},
         {"HTTP_REFERER",    "referer",          nullptr},
         {"HTTP_USER_AGENT", "user_agent",       nullptr},
-        {"REQUEST_URI",     "path",             request_uri_path_filter}
+        {"REMOTE_ADDR",     "attack_source",    replace_clientip_by_header},
+        {"REQUEST_URI",     "path",             request_uri_path_filter},
+        {"REQUEST_SCHEME HTTP_HOST SERVER_NAME SERVER_ADDR SERVER_PORT REQUEST_URI",     "url",              build_complete_url}
     };
 
     assert(Z_TYPE(OPENRASP_LOG_G(alarm_request_info)) == IS_NULL);
