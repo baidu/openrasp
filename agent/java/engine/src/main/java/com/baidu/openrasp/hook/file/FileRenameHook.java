@@ -19,6 +19,7 @@
 package com.baidu.openrasp.hook.file;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
@@ -57,7 +58,8 @@ public class FileRenameHook extends AbstractClassHook {
     }
 
     public static void checkFileRename(File source, File dest) {
-        if (source != null && !source.isDirectory() && dest != null && !dest.isDirectory()) {
+        String checkSwitch = Config.getConfig().getPluginFilter();
+        if ("off".equals(checkSwitch)||source != null && !source.isDirectory() && dest != null && !dest.isDirectory()) {
 
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());

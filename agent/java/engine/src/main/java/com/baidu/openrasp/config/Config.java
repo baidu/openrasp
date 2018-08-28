@@ -43,14 +43,14 @@ public class Config extends FileScanListener {
     public enum Item {
         PLUGIN_TIMEOUT_MILLIS("plugin.timeout.millis", "100"),
         HOOKS_IGNORE("hooks.ignore", ""),
-        BLOCK_URL("block.redirect.url", "https://rasp.baidu.com/blocked/?request_id=%request_id%"),
+        BLOCK_REDIRECT_URL("block.redirect.url", "https://rasp.baidu.com/blocked/?request_id=%request_id%"),
         INJECT_URL_PREFIX("inject.urlprefix", ""),
         REQUEST_PARAM_ENCODING("request.param_encoding", ""),
         BODY_MAX_BYTES("body.maxbytes", "4096"),
         LOG_MAX_STACK("log.maxstack", "20"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
         SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
-        OPENRASP_PLUGIN_FILTER("openrasp.plugin_filter", "on"),
+        PLUGIN_FILTER("plugin.filter", "on"),
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
         SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
         BLOCK_STATUS_CODE("block.status_code", "302"),
@@ -440,7 +440,7 @@ public class Config extends FileScanListener {
      * @param blockUrl 拦截页面url
      */
     public synchronized void setBlockUrl(String blockUrl) {
-        this.blockUrl = StringUtils.isEmpty(blockUrl) ? Item.BLOCK_URL.defaultValue : blockUrl;
+        this.blockUrl = StringUtils.isEmpty(blockUrl) ? Item.BLOCK_REDIRECT_URL.defaultValue : blockUrl;
     }
 
     /**
@@ -742,7 +742,7 @@ public class Config extends FileScanListener {
     public boolean setConfig(String key, String value, boolean isInit) {
         try {
             boolean isHit = true;
-            if (Item.BLOCK_URL.key.equals(key)) {
+            if (Item.BLOCK_REDIRECT_URL.key.equals(key)) {
                 setBlockUrl(value);
             } else if (Item.BODY_MAX_BYTES.key.equals(key)) {
                 setBodyMaxBytes(value);
@@ -784,7 +784,7 @@ public class Config extends FileScanListener {
                 setBlockXml(value);
             } else if (Item.BLOCK_HTML.key.equals(key)) {
                 setBlockHtml(value);
-            } else if (Item.OPENRASP_PLUGIN_FILTER.key.equals(key)){
+            } else if (Item.PLUGIN_FILTER.key.equals(key)){
                 setPluginFilter(value);
             }else {
                 isHit = false;
