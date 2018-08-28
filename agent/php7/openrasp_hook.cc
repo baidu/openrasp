@@ -18,9 +18,7 @@
 #include "openrasp_ini.h"
 #include "openrasp_inject.h"
 #include <new>
-#include <vector>
 #include <unordered_map>
-#include <algorithm>
 
 extern "C"
 {
@@ -148,7 +146,10 @@ zend_string *openrasp_real_path(char *filename, int length, bool use_include_pat
                 else
                 {
                     std::string scheme(filename, p - filename);
-                    std::transform(scheme.begin(), scheme.end(), scheme.begin(), std::tolower);
+                    for (auto &ch : scheme)
+                    {
+                        ch = std::tolower(ch);
+                    }
                     auto it = opMap.find(scheme);
                     if (it != opMap.end() && (w_op & it->second))
                     {

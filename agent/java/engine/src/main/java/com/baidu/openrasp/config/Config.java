@@ -44,7 +44,6 @@ public class Config extends FileScanListener {
         PLUGIN_TIMEOUT_MILLIS("plugin.timeout.millis", "100"),
         HOOKS_IGNORE("hooks.ignore", ""),
         BLOCK_URL("block.redirect.url", "https://rasp.baidu.com/blocked/?request_id=%request_id%"),
-        READ_FILE_EXTENSION_REGEX("readfile.extension.regex", "^(gz|7z|xz|tar|rar|zip|sql|db)$"),
         INJECT_URL_PREFIX("inject.urlprefix", ""),
         REQUEST_PARAM_ENCODING("request.param_encoding", ""),
         BODY_MAX_BYTES("body.maxbytes", "4096"),
