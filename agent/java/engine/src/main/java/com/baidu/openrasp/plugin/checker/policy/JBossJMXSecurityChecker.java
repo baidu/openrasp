@@ -5,6 +5,7 @@ import com.baidu.openrasp.hook.server.jboss.JBossStartupHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -51,7 +52,7 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
 
         String jbossBaseDir = System.getProperty("jboss.home.dir");
         List<EventInfo> infos = new LinkedList<EventInfo>();
-        String serverVersion = JBossStartupHook.serverVersion;
+        String serverVersion = ApplicationModel.getVersion();
         if (serverVersion != null) {
             String jbossWebXmlPath = "deploy" + File.separator + "jmx-console.war" + File.separator + "WEB-INF" + File.separator + "jboss-web.xml";
             String webXmlPath = "deploy" + File.separator + "jmx-console.war" + File.separator + "WEB-INF" + File.separator + "web.xml";
@@ -65,12 +66,10 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
                 webXmlPath = jbossBaseDir + File.separator + "common" + File.separator + webXmlPath;
             } else {
 
-                LOGGER.error(JBOSS_SECURITY_CHECK_ERROR + " :" + "JBoss 支持版本4.x-7.x");
+                LOGGER.error(JBOSS_SECURITY_CHECK_ERROR + " :" + "JBoss supported 4.x-7.x");
             }
             checkJBossWebXml(jbossWebXmlPath, infos);
             checkWebXml(webXmlPath, infos);
-        } else {
-            LOGGER.error(JBOSS_SECURITY_CHECK_ERROR + " :" + "JBoss 支持版本4.x-7.x");
         }
 
         return infos;
@@ -157,6 +156,6 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
 
     public void handleError(String tagName, List<EventInfo> infos) {
 
-        infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.valueOf(map.get(tagName)), "jboss未配置" + tagName + "或者配置错误", true));
+        infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.valueOf(map.get(tagName)), "JBoss security baseline - " + tagName + "should be enabled", true));
     }
 }

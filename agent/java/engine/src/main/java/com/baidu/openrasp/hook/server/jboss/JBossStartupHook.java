@@ -37,7 +37,6 @@ import java.io.IOException;
 @HookAnnotation
 public class JBossStartupHook extends AbstractClassHook {
 
-    public static String serverVersion = null;
 
     @Override
     public boolean isClassMatched(String className) {
@@ -64,7 +63,7 @@ public class JBossStartupHook extends AbstractClassHook {
     public static void checkJBossJMXConsole(Object object) {
 
         try {
-            serverVersion = Reflection.invokeStringMethod(object, "getVersionNumber", new Class[]{});
+            String serverVersion = Reflection.invokeStringMethod(object, "getVersionNumber", new Class[]{});
             ApplicationModel.init("jboss", serverVersion);
             HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_JBOSS_JMX_CONSOLE, CheckParameter.EMPTY_MAP);
         } catch (Exception e) {
