@@ -96,7 +96,7 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
      */
     @Override
     public String getType() {
-        return "sql_prepared";
+        return "sqlPrepared";
     }
 
     /**
