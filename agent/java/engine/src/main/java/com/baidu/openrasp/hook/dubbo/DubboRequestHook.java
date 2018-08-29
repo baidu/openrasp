@@ -47,7 +47,7 @@ public class DubboRequestHook extends AbstractClassHook {
 
     @Override
     public String getType() {
-        return "request";
+        return "dubboRequest";
     }
 
     @Override
