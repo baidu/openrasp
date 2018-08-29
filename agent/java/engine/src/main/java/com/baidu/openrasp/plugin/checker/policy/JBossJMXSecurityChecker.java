@@ -46,11 +46,9 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
             String jbossWebXmlPath = "deploy" + File.separator + "jmx-console.war" + File.separator + "WEB-INF" + File.separator + "jboss-web.xml";
             String webXmlPath = "deploy" + File.separator + "jmx-console.war" + File.separator + "WEB-INF" + File.separator + "web.xml";
             if (serverVersion.startsWith("4") || serverVersion.startsWith("5")) {
-
                 jbossWebXmlPath = jbossBaseDir + File.separator + "server" + File.separator + "default" + File.separator + jbossWebXmlPath;
                 webXmlPath = jbossBaseDir + File.separator + "server" + File.separator + "default" + File.separator + webXmlPath;
             } else if (serverVersion.startsWith("6")) {
-
                 jbossWebXmlPath = jbossBaseDir + File.separator + "common" + File.separator + jbossWebXmlPath;
                 webXmlPath = jbossBaseDir + File.separator + "common" + File.separator + webXmlPath;
             } else {
@@ -144,7 +142,6 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
 
 
     public void handleError(String tagName, List<EventInfo> infos) {
-
         infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.JBOSS_JMX_CONSOLE, "JBoss security baseline - Auth constraint for /jmx-console/HTMLAdaptor is not enabled in jboss-web.xml and web.xml", true));
     }
 }
