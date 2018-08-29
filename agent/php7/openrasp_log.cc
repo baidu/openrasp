@@ -161,27 +161,6 @@ static std::string fetch_last_clientip(const std::string &s)
     return item;
 }
 
-static void replace_clientip_by_header(zval *origin_zv, zval *new_zv)
-{
-    zval *server_globals = &PG(http_globals)[TRACK_VARS_SERVER];
-    char* tmp_clientip_header = estrdup(("HTTP_" + std::string(openrasp_ini.clientip_header)).c_str());
-    char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
-    zval *z_clientip_pp;
-    if (server_globals && 
-    ((z_clientip_pp = zend_hash_str_find(Z_ARRVAL_P(server_globals), uch, strlen(uch))) != nullptr) &&
-    Z_TYPE_P(z_clientip_pp) == IS_STRING)
-    {
-        std::string clientip_list = std::string(Z_STRVAL_P(z_clientip_pp));
-        std::string clientip = fetch_last_clientip(clientip_list);
-        ZVAL_STRINGL(new_zv, clientip.c_str(), clientip.size());
-    }
-    else
-    {
-        ZVAL_STRINGL(new_zv, Z_STRVAL_P(origin_zv), Z_STRLEN_P(origin_zv));
-    }
-    efree(tmp_clientip_header);
-}
-
 static void request_uri_path_filter(zval *origin_zv, zval *new_zv)
 {
     char *haystack = Z_STRVAL_P(origin_zv);                                            
@@ -300,19 +279,19 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
     }
 }
 
+static std::vector<keys_filter> alarm_filters = 
+{
+    {"SERVER_NAME",     "target",           nullptr},
+    {"SERVER_ADDR",     "server_ip",        nullptr},
+    {"HTTP_REFERER",    "referer",          nullptr},
+    {"HTTP_USER_AGENT", "user_agent",       nullptr},
+    {"REMOTE_ADDR",     "attack_source",    nullptr},
+    {"REQUEST_URI",     "path",             request_uri_path_filter},
+    {"REQUEST_SCHEME HTTP_HOST SERVER_NAME SERVER_ADDR SERVER_PORT REQUEST_URI",     "url",              build_complete_url}
+};
+
 static void init_alarm_request_info()
 {
-    static std::vector<keys_filter> alarm_filters = 
-    {
-        {"SERVER_NAME",     "target",           nullptr},
-        {"SERVER_ADDR",     "server_ip",        nullptr},
-        {"HTTP_REFERER",    "referer",          nullptr},
-        {"HTTP_USER_AGENT", "user_agent",       nullptr},
-        {"REMOTE_ADDR",     "attack_source",    replace_clientip_by_header},
-        {"REQUEST_URI",     "path",             request_uri_path_filter},
-        {"REQUEST_SCHEME HTTP_HOST SERVER_NAME SERVER_ADDR SERVER_PORT REQUEST_URI",     "url",              build_complete_url}
-    };
-
     assert(Z_TYPE(OPENRASP_LOG_G(alarm_request_info)) == IS_NULL);
     array_init(&OPENRASP_LOG_G(alarm_request_info));
     zval *migrate_src = nullptr;
@@ -824,6 +803,14 @@ PHP_MINIT_FUNCTION(openrasp_log)
     if (check_sapi_need_alloc_shm())
     {
         openrasp_shared_alloc_startup();
+    }
+    if (openrasp_ini.clientip_header && strcmp(openrasp_ini.clientip_header, ""))
+    {
+        char* tmp_clientip_header = estrdup(openrasp_ini.clientip_header);
+        char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
+        const char* server_global_hey = ("HTTP_" + std::string(uch)).c_str();
+        alarm_filters.push_back({server_global_hey, "client_ip", nullptr});
+        efree(tmp_clientip_header);
     }
 #if defined(PHP_WIN32) && defined(HAVE_IPHLPAPI_WS2)
     PIP_ADAPTER_INFO pAdapterInfo;

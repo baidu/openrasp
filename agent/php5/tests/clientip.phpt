@@ -30,4 +30,4 @@ exec('echo test');
 passthru('tail -n 1 /tmp/openrasp/logs/alarm/alarm.log.'.date("Y-m-d"));
 ?>
 --EXPECTREGEX--
-.*"attack_source":"3.3.3.3".*
+.*"client_ip":"1.1.1.1, 2.2.2.2, 3.3.3.3".*
