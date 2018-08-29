@@ -27,6 +27,7 @@ long fetch_time_offset();
 const char *fetch_url_scheme(const char *filename);
 long get_file_st_ino(std::string filename TSRMLS_DC);
 void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC);
+std::string format_debug_backtrace_str(TSRMLS_D);
 void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC);
 int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC);
 bool same_day_in_current_timezone(long src, long target, long offset);
