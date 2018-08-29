@@ -43,7 +43,6 @@ public class Config extends FileScanListener {
     public enum Item {
         PLUGIN_TIMEOUT_MILLIS("plugin.timeout.millis", "100"),
         HOOKS_IGNORE("hooks.ignore", ""),
-        BLOCK_REDIRECT_URL("block.redirect.url", "https://rasp.baidu.com/blocked/?request_id=%request_id%"),
         INJECT_URL_PREFIX("inject.urlprefix", ""),
         REQUEST_PARAM_ENCODING("request.param_encoding", ""),
         BODY_MAX_BYTES("body.maxbytes", "4096"),
@@ -59,9 +58,10 @@ public class Config extends FileScanListener {
         XSS_REGEX("xss.regex", "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"),
         XSS_EXCEED_LENGTH_COUNT("xss.exceed.length.count", "20"),
         XSS__PARAMETER_LENGTH("xss.parameter.length", "15"),
-        BLOCK_JSON("block.content.json", "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"),
-        BLOCK_XML("block.content.xml", "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"),
-        BLOCK_HTML("block.content.html", "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>");
+        BLOCK_REDIRECT_URL("block.redirect_url", "https://rasp.baidu.com/blocked/?request_id=%request_id%"),
+        BLOCK_JSON("block.content_json", "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"),
+        BLOCK_XML("block.content_xml", "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"),
+        BLOCK_HTML("block.content_html", "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>");
 
 
         Item(String key, String defaultValue) {
