@@ -26,6 +26,7 @@
 long fetch_time_offset();
 const char *fetch_url_scheme(const char *filename);
 long get_file_st_ino(std::string filename TSRMLS_DC);
+std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D);
 void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC);
 std::string format_debug_backtrace_str(TSRMLS_D);
 void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC);
