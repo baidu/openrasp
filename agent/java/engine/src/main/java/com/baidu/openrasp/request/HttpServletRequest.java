@@ -16,6 +16,7 @@
 
 package com.baidu.openrasp.request;
 
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.transformer.CustomClassTransformer;
 import com.baidu.openrasp.tool.model.ApplicationModel;
@@ -270,6 +271,14 @@ public final class HttpServletRequest extends AbstractRequest {
             e.printStackTrace();
             return "";
         }
+    }
+
+    @Override
+    public String getClinetIp() {
+        String clientIp = Config.getConfig().getClientIp();
+        System.out.println(getHeader(clientIp) + "11111111111111");
+        String realIp = getHeader(clientIp);
+        return realIp != null ? realIp : "";
     }
 
     public void mergeMap(Map<String, String[]> src, Map<String, String[]> dst) {

@@ -35,17 +35,6 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
     private static final String[] URL_PATTERN_VALUES = new String[]{"/*"};
     private static final String[] HTTP_METHOD_VALUES = new String[]{"get", "post"};
     public static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
-    public static HashMap<String, String> map = new HashMap<String, String>();
-
-    static {
-        map.put(SECURITY_DOMAIN, "SECURITY_DOMAIN");
-        map.put(SECURITY_CONSTRAINT, "SECURITY_CONSTRAINT");
-        map.put(WEB_RESOURCE_COLLECTION, "WEB_RESOURCE_COLLECTION");
-        map.put(WEB_RESOURCE_NAME, "WEB_RESOURCE_NAME");
-        map.put(URL_PATTERN, "URL_PATTERN");
-        map.put(HTTP_METHOD, "HTTP_METHOD");
-        map.put(AUTH_CONSTRAINT, "AUTH_CONSTRAINT");
-    }
 
     @Override
     public List<EventInfo> checkParam(CheckParameter checkParameter) {
@@ -156,6 +145,6 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
 
     public void handleError(String tagName, List<EventInfo> infos) {
 
-        infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.valueOf(map.get(tagName)), "JBoss security baseline - " + tagName + "should be enabled", true));
+        infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.JBOSS_JMX_CONSOLE, "JBoss security baseline - " + tagName + " should be enabled in JBoss-web.xml or web-xml", true));
     }
 }

@@ -35,13 +35,7 @@ public class SecurityPolicyInfo extends EventInfo {
         DEFAULT_APP(3004),
         DIRECTORY_LISTING(3005),
         SQL_CONNECTION(3006),
-        SECURITY_DOMAIN(3007),
-        SECURITY_CONSTRAINT(3008),
-        WEB_RESOURCE_COLLECTION(3009),
-        WEB_RESOURCE_NAME(3010),
-        URL_PATTERN(3011),
-        HTTP_METHOD(3012),
-        AUTH_CONSTRAINT(3013);
+        JBOSS_JMX_CONSOLE(3007);
 
 
         private int id;

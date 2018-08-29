@@ -55,6 +55,7 @@ public class Config extends FileScanListener {
         BLOCK_STATUS_CODE("block.status_code", "302"),
         DEBUG("debug.level", "0"),
         ALGORITHM_CONFIG("algorithm.config", "{}", false),
+        CLIENT_IP_HEADER("clientIp.header","clientip"),
         BLOCK_REDIRECT_URL("block.redirect_url", "https://rasp.baidu.com/blocked/?request_id=%request_id%"),
         BLOCK_JSON("block.content_json", "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"),
         BLOCK_XML("block.content_xml", "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"),
@@ -108,6 +109,7 @@ public class Config extends FileScanListener {
     private String blockXml;
     private String blockHtml;
     private String pluginFilter;
+    private String clientIp;
 
 
     static {
@@ -671,7 +673,24 @@ public class Config extends FileScanListener {
         this.pluginFilter = pluginFilter;
     }
 
-    //--------------------------统一的配置处理------------------------------------
+    /**
+     * 获取自定义的请求头，
+     *
+     * @return 返回请求头
+     */
+    public String getClientIp() {
+        return clientIp;
+    }
+
+    /**
+     * 设置自定义的请求头，
+     *
+     * @param clientIp 待设置的请求头信息
+     */
+    public void setClientIp(String clientIp) {
+        this.clientIp = clientIp;
+    }
+//--------------------------统一的配置处理------------------------------------
 
     /**
      * 统一配置接口,通过 js 更改配置的入口
@@ -719,6 +738,8 @@ public class Config extends FileScanListener {
                 setBlockHtml(value);
             } else if (Item.PLUGIN_FILTER.key.equals(key)){
                 setPluginFilter(value);
+            }else if (Item.CLIENT_IP_HEADER.key.equals(key)){
+                setClientIp(value);
             }else {
                 isHit = false;
             }
