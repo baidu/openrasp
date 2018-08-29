@@ -145,6 +145,6 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
 
     public void handleError(String tagName, List<EventInfo> infos) {
 
-        infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.JBOSS_JMX_CONSOLE, "JBoss security baseline - " + tagName + " should be enabled in JBoss-web.xml or web-xml", true));
+        infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.JBOSS_JMX_CONSOLE, "JBoss security baseline - Auth constraint for /jmx-console/HTMLAdaptor is not enabled in jboss-web.xml and web.xml", true));
     }
 }
