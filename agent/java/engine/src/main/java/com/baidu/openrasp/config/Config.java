@@ -55,9 +55,6 @@ public class Config extends FileScanListener {
         BLOCK_STATUS_CODE("block.status_code", "302"),
         DEBUG("debug.level", "0"),
         ALGORITHM_CONFIG("algorithm.config", "{}", false),
-        XSS_REGEX("xss.regex", "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"),
-        XSS_EXCEED_LENGTH_COUNT("xss.exceed.length.count", "20"),
-        XSS__PARAMETER_LENGTH("xss.parameter.length", "15"),
         BLOCK_REDIRECT_URL("block.redirect_url", "https://rasp.baidu.com/blocked/?request_id=%request_id%"),
         BLOCK_JSON("block.content_json", "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"),
         BLOCK_XML("block.content_xml", "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"),
@@ -107,9 +104,6 @@ public class Config extends FileScanListener {
     private int blockStatusCode;
     private int debugLevel;
     private JsonObject algorithmConfig;
-    private String xssRegex;
-    private String xssExceedLengthCount;
-    private String xssParameterLength;
     private String blockJson;
     private String blockXml;
     private String blockHtml;
@@ -600,59 +594,6 @@ public class Config extends FileScanListener {
         this.requestParamEncoding = requestParamEncoding;
     }
 
-    /**
-     * 获取XSS攻击检测的正则表达式
-     *
-     * @return XSS检测正则
-     */
-    public String getXssRegex() {
-        return xssRegex;
-    }
-
-    /**
-     * 设置XSS检测的正则表达式
-     *
-     * @param xssRegex XSS检测正则
-     */
-    public void setXssRegex(String xssRegex) {
-        this.xssRegex = xssRegex;
-    }
-
-    /**
-     * 获取XSS检测目标超过XSS长度限制的参数的个数
-     *
-     * @return 返回允许超过XSS长度限制的参数个数
-     */
-    public String getXssExceedLengthCount() {
-        return xssExceedLengthCount;
-    }
-
-    /**
-     * 设置用户输入超过XSS检测最小长度的参数个数
-     *
-     * @param xssExceedLengthCount 超过XSS检测最小长度的参数个数
-     */
-    public void setXssExceedLengthCount(String xssExceedLengthCount) {
-        this.xssExceedLengthCount = xssExceedLengthCount;
-    }
-
-    /**
-     * 获取需要XSS攻击检测的参数的最小长度，超过长度限制必须检测
-     *
-     * @return 返回参数最小长度
-     */
-    public String getXssParameterLength() {
-        return xssParameterLength;
-    }
-
-    /**
-     * 设置参数的最小长度
-     *
-     * @param xssParameterLength XSS检测参数最小长度
-     */
-    public void setXssParameterLength(String xssParameterLength) {
-        this.xssParameterLength = xssParameterLength;
-    }
 
     /**
      * 获取响应的contentType类型
@@ -770,14 +711,6 @@ public class Config extends FileScanListener {
                 setAlgorithmConfig(value);
             } else if (Item.REQUEST_PARAM_ENCODING.key.equals(key)) {
                 setRequestParamEncoding(value);
-            } else if (Item.XSS_REGEX.key.equals(key)) {
-                setXssRegex(value);
-            } else if (Item.XSS_EXCEED_LENGTH_COUNT.key.equals(key)) {
-
-                setXssExceedLengthCount(value);
-            } else if (Item.XSS__PARAMETER_LENGTH.key.equals(key)) {
-
-                setXssParameterLength(value);
             } else if (Item.BLOCK_JSON.key.equals(key)) {
                 setBlockJson(value);
             } else if (Item.BLOCK_XML.key.equals(key)) {

@@ -21,7 +21,6 @@ import com.baidu.openrasp.plugin.checker.js.JsChecker;
 import com.baidu.openrasp.plugin.checker.local.SSRFChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlStatementChecker;
-import com.baidu.openrasp.plugin.checker.local.XssChecker;
 import com.baidu.openrasp.plugin.checker.policy.JBossJMXSecurityChecker;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
 import com.baidu.openrasp.plugin.checker.policy.TomcatSecurityChecker;
@@ -59,7 +58,6 @@ public class CheckParameter {
 
         // java本地检测
         SQL_SLOW_QUERY("sqlSlowQuery", new SqlResultChecker(false)),
-        XSS("xss", new XssChecker()),
 
         // 安全基线检测
         POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker()),
