@@ -18,7 +18,6 @@
 #define OPENRASP_V8_H
 
 #include "openrasp.h"
-#include "openrasp_utils.h"
 #undef COMPILER // conflict with v8 defination
 #include <v8.h>
 #include <libplatform/libplatform.h>
@@ -40,6 +39,16 @@ namespace openrasp
 
 #define TRYCATCH() \
   v8::TryCatch try_catch
+
+static inline v8::Local<v8::String> NewV8String(v8::Isolate *isolate, const char *str, size_t len = -1)
+{
+  return v8::String::NewFromUtf8(isolate, str, v8::NewStringType::kNormal, len).ToLocalChecked();
+}
+
+static inline v8::Local<v8::String> NewV8String(v8::Isolate *isolate, std::string &&str)
+{
+  return NewV8String(isolate, str.c_str(), str.length());
+}
 
 #define V8STRING_EX(string, type, length) \
   (v8::String::NewFromUtf8(isolate, string, type, length))
@@ -95,6 +104,7 @@ v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Contex
                                       std::string _source, std::string _filename, int _line_offset = 0);
 v8::StartupData get_snapshot(TSRMLS_D);
 extern intptr_t external_references[];
+void alarm_info(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result TSRMLS_DC);
 
 } // namespace openrasp
 
@@ -120,6 +130,8 @@ v8::Persistent<v8::String> key_action;
 v8::Persistent<v8::String> key_message;
 v8::Persistent<v8::String> key_name;
 v8::Persistent<v8::String> key_confidence;
+v8::Persistent<v8::Function> console_log;
+v8::Persistent<v8::Function> JSON_stringify;
 int action_hash_ignore;
 int action_hash_log;
 int action_hash_block;

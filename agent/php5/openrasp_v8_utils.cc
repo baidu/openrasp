@@ -15,6 +15,8 @@
  */
 
 #include "openrasp_v8.h"
+#include "openrasp_utils.h"
+#include "openrasp_log.h"
 #include "js/openrasp_v8_js.h"
 #include <iostream>
 #include <sstream>
@@ -295,4 +297,56 @@ v8::StartupData get_snapshot(TSRMLS_D)
     }
     return creator.CreateBlob(v8::SnapshotCreator::FunctionCodeHandling::kClear);
 }
+
+void alarm_info(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result TSRMLS_DC)
+{
+    auto JSON_stringify = OPENRASP_V8_G(JSON_stringify).Get(isolate);
+    auto key_action = OPENRASP_V8_G(key_action).Get(isolate);
+    auto key_message = OPENRASP_V8_G(key_message).Get(isolate);
+    auto key_confidence = OPENRASP_V8_G(key_confidence).Get(isolate);
+    auto key_name = OPENRASP_V8_G(key_name).Get(isolate);
+
+    auto stack_trace = NewV8String(isolate, format_debug_backtrace_str(TSRMLS_C));
+
+    std::time_t t = std::time(nullptr);
+    char buffer[100] = {0};
+    size_t size = std::strftime(buffer, sizeof(buffer), "%Y-%m-%d%t%H:%M:%S%z", std::localtime(&t));
+    auto event_time = NewV8String(isolate, buffer, size);
+
+    auto obj = v8::Object::New(isolate);
+    obj->Set(NewV8String(isolate, "attack_type"), type);
+    obj->Set(NewV8String(isolate, "attack_params"), params);
+    obj->Set(NewV8String(isolate, "intercept_state"), result->Get(key_action));
+    obj->Set(NewV8String(isolate, "plugin_message"), result->Get(key_message));
+    obj->Set(NewV8String(isolate, "plugin_confidence"), result->Get(key_confidence));
+    obj->Set(NewV8String(isolate, "plugin_name"), result->Get(key_name));
+    obj->Set(NewV8String(isolate, "stack_trace"), stack_trace);
+    obj->Set(NewV8String(isolate, "event_time"), event_time);
+
+    HashTable *ht = Z_ARRVAL_P(OPENRASP_LOG_G(alarm_request_info));
+    for (zend_hash_internal_pointer_reset(ht);
+         zend_hash_has_more_elements(ht) == SUCCESS;
+         zend_hash_move_forward(ht))
+    {
+        char *key;
+        ulong idx;
+        int type;
+        zval **value;
+        type = zend_hash_get_current_key(ht, &key, &idx, 0);
+        if (type != HASH_KEY_IS_STRING ||
+            zend_hash_get_current_data(ht, (void **)&value) != SUCCESS ||
+            Z_TYPE_PP(value) != IS_STRING)
+        {
+            continue;
+        }
+        obj->Set(NewV8String(isolate, key), NewV8String(isolate, Z_STRVAL_PP(value), Z_STRLEN_PP(value)));
+    }
+    v8::Local<v8::Value> val;
+    if (JSON_stringify->Call(isolate->GetCurrentContext(), JSON_stringify, 1, reinterpret_cast<v8::Local<v8::Value> *>(&obj)).ToLocal(&val))
+    {
+        v8::String::Utf8Value msg(val);
+        base_info(&OPENRASP_LOG_G(loggers)[ALARM_LOGGER], *msg, msg.length() TSRMLS_CC);
+    }
+}
+
 } // namespace openrasp
