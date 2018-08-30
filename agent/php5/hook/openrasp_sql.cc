@@ -135,23 +135,22 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
 
 void sql_type_handler(char *query, int query_len, char *server TSRMLS_DC)
 {
+    auto isolate = openrasp::get_isolate(TSRMLS_C);
+    if (isolate)
     {
-        auto isolate = openrasp::get_isolate(TSRMLS_C);
-        v8::Isolate::Scope isolate_scope(isolate);
-        v8::HandleScope handle_scope(isolate);
-        auto context = OPENRASP_V8_G(context).Get(isolate);
-        v8::Context::Scope context_scope(context);
-
-        auto params = v8::Object::New(isolate);
-        params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len));
-        params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server));
-        bool is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, "sql", 3), params TSRMLS_CC);
-        if (!is_block)
+        bool is_block = false;
         {
-            return;
+            v8::HandleScope handle_scope(isolate);
+            auto params = v8::Object::New(isolate);
+            params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len));
+            params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server));
+            is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, "sql", 3), params TSRMLS_CC);
+        }
+        if (is_block)
+        {
+            handle_block(TSRMLS_C);
         }
     }
-    handle_block(TSRMLS_C);
 }
 
 long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count, zval *params[] TSRMLS_DC)

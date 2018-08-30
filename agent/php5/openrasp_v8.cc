@@ -48,10 +48,6 @@ static inline bool shutdown_isolate(TSRMLS_D);
 
 bool openrasp_check(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params TSRMLS_DC)
 {
-    // v8::Isolate::Scope isolate_scope(isolate);
-    // v8::HandleScope handlescope(isolate);
-    // auto context = OPENRASP_V8_G(context).Get(isolate);
-    // v8::Context::Scope context_scope(context);
     auto context = isolate->GetCurrentContext();
     v8::TryCatch try_catch;
     auto check = OPENRASP_V8_G(check).Get(isolate);
@@ -126,114 +122,12 @@ unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
     {
         return 0;
     }
-    v8::Isolate::Scope isolate_scope(isolate);
     v8::HandleScope handlescope(isolate);
-    v8::Local<v8::Context> context = OPENRASP_V8_G(context).Get(isolate);
-    v8::Context::Scope context_scope(context);
-    v8::TryCatch try_catch;
-    v8::Local<v8::Function> check = OPENRASP_V8_G(check).Get(isolate);
-    v8::Local<v8::Value> type = V8STRING_N(c_type).ToLocalChecked();
-    v8::Local<v8::Value> params = zval_to_v8val(z_params, isolate TSRMLS_CC);
-    v8::Local<v8::Object> request_context = OPENRASP_V8_G(request_context).Get(isolate);
-    v8::Local<v8::Value> argv[]{type, params, request_context};
 
-    v8::Local<v8::Value> rst;
-    {
-        TimeoutTask *task = new TimeoutTask(isolate, openrasp_ini.timeout_ms);
-        std::lock_guard<std::timed_mutex> lock(task->GetMtx());
-        process_globals.v8_platform->CallOnBackgroundThread(task, v8::Platform::kShortRunningTask);
-        bool avoidwarning = check->Call(context, check, 3, argv).ToLocal(&rst);
-    }
-    if (UNLIKELY(rst.IsEmpty()))
-    {
-        if (try_catch.Message().IsEmpty())
-        {
-            v8::Local<v8::Function> console_log = context->Global()
-                                                      ->Get(context, V8STRING_I("console").ToLocalChecked())
-                                                      .ToLocalChecked()
-                                                      .As<v8::Object>()
-                                                      ->Get(context, V8STRING_I("log").ToLocalChecked())
-                                                      .ToLocalChecked()
-                                                      .As<v8::Function>();
-            v8::Local<v8::Object> message = v8::Object::New(isolate);
-            message->Set(V8STRING_N("message").ToLocalChecked(), V8STRING_N("Javascript plugin execution timeout.").ToLocalChecked());
-            message->Set(V8STRING_N("type").ToLocalChecked(), type);
-            message->Set(V8STRING_N("params").ToLocalChecked(), params);
-            message->Set(V8STRING_N("context").ToLocalChecked(), request_context);
-            bool avoidwarning = console_log->Call(context, console_log, 1, reinterpret_cast<v8::Local<v8::Value> *>(&message)).IsEmpty();
-        }
-        else
-        {
-            std::stringstream stream;
-            v8error_to_stream(isolate, try_catch, stream);
-            std::string error = stream.str();
-            plugin_info(error.c_str(), error.length() TSRMLS_CC);
-        }
-        return 0;
-    }
-    if (UNLIKELY(!rst->IsArray()))
-    {
-        return 0;
-    }
-    v8::Local<v8::String> key_action = OPENRASP_V8_G(key_action).Get(isolate);
-    v8::Local<v8::String> key_message = OPENRASP_V8_G(key_message).Get(isolate);
-    v8::Local<v8::String> key_name = OPENRASP_V8_G(key_name).Get(isolate);
-    v8::Local<v8::String> key_confidence = OPENRASP_V8_G(key_confidence).Get(isolate);
+    auto type = V8STRING_N(c_type).ToLocalChecked();
+    auto params = v8::Local<v8::Object>::Cast(zval_to_v8val(z_params, isolate TSRMLS_CC));
 
-    v8::Local<v8::Array> arr = rst.As<v8::Array>();
-    int len = arr->Length();
-    bool is_block = false;
-    for (int i = 0; i < len; i++)
-    {
-        v8::Local<v8::Object> item = arr->Get(i).As<v8::Object>();
-        v8::Local<v8::Value> v8_action = item->Get(key_action);
-        if (UNLIKELY(!v8_action->IsString()))
-        {
-            continue;
-        }
-        int action_hash = v8_action->ToString()->GetIdentityHash();
-        if (LIKELY(OPENRASP_V8_G(action_hash_ignore) == action_hash))
-        {
-            continue;
-        }
-        is_block = is_block || OPENRASP_V8_G(action_hash_block) == action_hash;
-
-        v8::Local<v8::Value> v8_message = item->Get(key_message);
-        v8::Local<v8::Value> v8_name = item->Get(key_name);
-        v8::Local<v8::Value> v8_confidence = item->Get(key_confidence);
-        v8::String::Utf8Value utf_action(v8_action);
-        v8::String::Utf8Value utf_message(v8_message);
-        v8::String::Utf8Value utf_name(v8_name);
-
-        zval z_type, z_action, z_message, z_name, z_confidence;
-        INIT_ZVAL(z_type);
-        INIT_ZVAL(z_action);
-        INIT_ZVAL(z_message);
-        INIT_ZVAL(z_name);
-        INIT_ZVAL(z_confidence);
-        ZVAL_STRING(&z_type, c_type, 0);
-        ZVAL_STRINGL(&z_action, *utf_action, utf_action.length(), 0);
-        ZVAL_STRINGL(&z_message, *utf_message, utf_message.length(), 0);
-        ZVAL_STRINGL(&z_name, *utf_name, utf_name.length(), 0);
-        ZVAL_LONG(&z_confidence, v8_confidence->Int32Value());
-
-        zval result;
-        INIT_ZVAL(result);
-        ALLOC_HASHTABLE(Z_ARRVAL(result));
-        // 设置 zend hash 的析构函数为空
-        // 便于用共享 v8 产生的字符串，减少内存分配
-        zend_hash_init(Z_ARRVAL(result), 0, 0, 0, 0);
-        Z_TYPE(result) = IS_ARRAY;
-        add_assoc_zval(&result, "attack_type", &z_type);
-        add_assoc_zval(&result, "attack_params", z_params);
-        add_assoc_zval(&result, "intercept_state", &z_action);
-        add_assoc_zval(&result, "plugin_message", &z_message);
-        add_assoc_zval(&result, "plugin_name", &z_name);
-        add_assoc_zval(&result, "plugin_confidence", &z_confidence);
-        alarm_info(&result TSRMLS_CC);
-        zval_dtor(&result);
-    }
-    return is_block ? 1 : 0;
+    return openrasp_check(isolate, type, params TSRMLS_CC);
 }
 
 static inline bool init_platform(TSRMLS_D)
@@ -292,10 +186,10 @@ static inline bool init_isolate(TSRMLS_D)
         OPENRASP_V8_G(create_params).external_references = external_references;
 
         v8::Isolate *isolate = v8::Isolate::New(OPENRASP_V8_G(create_params));
-        v8::Isolate::Scope isolate_scope(isolate);
+        isolate->Enter();
         v8::HandleScope handle_scope(isolate);
         v8::Local<v8::Context> context = v8::Context::New(isolate);
-        v8::Context::Scope context_scope(context);
+        context->Enter();
         v8::Local<v8::String> key_action = V8STRING_I("action").ToLocalChecked();
         v8::Local<v8::String> key_message = V8STRING_I("message").ToLocalChecked();
         v8::Local<v8::String> key_name = V8STRING_I("name").ToLocalChecked();
@@ -343,6 +237,14 @@ static inline bool shutdown_isolate(TSRMLS_D)
 {
     if (OPENRASP_V8_G(is_isolate_initialized))
     {
+        auto isolate = OPENRASP_V8_G(isolate);
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto context = OPENRASP_V8_G(context).Get(isolate);
+            context->Exit();
+        }
+        isolate->Exit();
+
         OPENRASP_V8_G(context).Reset();
         OPENRASP_V8_G(key_action).Reset();
         OPENRASP_V8_G(key_message).Reset();
@@ -353,6 +255,7 @@ static inline bool shutdown_isolate(TSRMLS_D)
         OPENRASP_V8_G(request_context).Reset();
         OPENRASP_V8_G(console_log).Reset();
         OPENRASP_V8_G(JSON_stringify).Reset();
+
         OPENRASP_V8_G(isolate)->Dispose();
         OPENRASP_V8_G(isolate) = nullptr;
         delete OPENRASP_V8_G(create_params).array_buffer_allocator;
