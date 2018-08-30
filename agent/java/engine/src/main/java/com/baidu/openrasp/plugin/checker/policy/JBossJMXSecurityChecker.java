@@ -71,7 +71,7 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
         if (root != null) {
             NodeList list = root.getElementsByTagName(SECURITY_DOMAIN);
             if (list.getLength() == 0) {
-                handleError(SECURITY_DOMAIN, infos);
+                handleError(SECURITY_DOMAIN, path, infos);
             }
         }
     }
@@ -90,21 +90,21 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
                     NodeList webResource = element.getElementsByTagName(WEB_RESOURCE_COLLECTION);
                     if (webResource.getLength() > 0) {
                         Element subElement = (Element) list.item(i);
-                        checkXmlElement(subElement, WEB_RESOURCE_NAME, Arrays.asList(WEB_RESOURCE_NAME_VALUES), infos);
-                        checkXmlElement(subElement, URL_PATTERN, Arrays.asList(URL_PATTERN_VALUES), infos);
-                        checkXmlElement(subElement, HTTP_METHOD, Arrays.asList(HTTP_METHOD_VALUES), infos);
+                        checkXmlElement(subElement, WEB_RESOURCE_NAME, Arrays.asList(WEB_RESOURCE_NAME_VALUES), infos, path);
+                        checkXmlElement(subElement, URL_PATTERN, Arrays.asList(URL_PATTERN_VALUES), infos, path);
+                        checkXmlElement(subElement, HTTP_METHOD, Arrays.asList(HTTP_METHOD_VALUES), infos, path);
                     } else {
-                        handleError(WEB_RESOURCE_COLLECTION, infos);
+                        handleError(WEB_RESOURCE_COLLECTION, path, infos);
                     }
 
                     NodeList authConstraint = element.getElementsByTagName("auth-constraint");
                     if (authConstraint.getLength() == 0) {
-                        handleError(AUTH_CONSTRAINT, infos);
+                        handleError(AUTH_CONSTRAINT, path, infos);
                     }
                 }
 
             } else {
-                handleError(SECURITY_CONSTRAINT, infos);
+                handleError(SECURITY_CONSTRAINT, path, infos);
             }
         }
     }
@@ -126,22 +126,22 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
         return null;
     }
 
-    public void checkXmlElement(Element element, String key, List<String> reference, List<EventInfo> infos) {
+    public void checkXmlElement(Element element, String key, List<String> reference, List<EventInfo> infos, String path) {
         NodeList list = element.getElementsByTagName(key);
         if (list.getLength() > 0) {
             for (int i = 0; i < list.getLength(); i++) {
                 if (!reference.contains(list.item(i).getTextContent().toLowerCase())) {
-                    handleError(key, infos);
+                    handleError(key, path, infos);
                 }
             }
 
         } else {
-            handleError(key, infos);
+            handleError(key, path, infos);
         }
     }
 
 
-    public void handleError(String tagName, List<EventInfo> infos) {
-        infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.JBOSS_JMX_CONSOLE, "JBoss security baseline - Auth constraint for /jmx-console/HTMLAdaptor is not enabled in jboss-web.xml and web.xml", true));
+    public void handleError(String tagName, String path, List<EventInfo> infos) {
+        infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.JBOSS_JMX_CONSOLE, "JBoss security baseline - Auth constraint for /jmx-console/HTMLAdaptor is not enabled in " + path + "(" + tagName + "is missing or wrong)", true));
     }
 }

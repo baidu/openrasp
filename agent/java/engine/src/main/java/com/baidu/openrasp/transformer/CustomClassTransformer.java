@@ -18,12 +18,11 @@ package com.baidu.openrasp.transformer;
 
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.*;
-import com.baidu.openrasp.tool.Annotation.HookAnnotation;
+import com.baidu.openrasp.tool.Annotation.AnnotationScanner;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
 import org.apache.log4j.Logger;
-import org.reflections.Reflections;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -68,8 +67,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
     }
 
     private void addAnnotationHook() {
-        Reflections reflections = new Reflections(SCAN_ANNOTATION_PACKAGE);
-        Set<Class<?>> classesSet = reflections.getTypesAnnotatedWith(HookAnnotation.class);
+        Set<Class> classesSet = AnnotationScanner.getClassWithAnnotation(SCAN_ANNOTATION_PACKAGE);
         for (Class clazz : classesSet) {
             try {
                 Object object = clazz.newInstance();
