@@ -20,7 +20,7 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.policy.JBossJMXSecurityChecker;
-import com.baidu.openrasp.tool.Annotation.HookAnnotation;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.CannotCompileException;

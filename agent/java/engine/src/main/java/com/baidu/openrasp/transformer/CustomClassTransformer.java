@@ -18,7 +18,7 @@ package com.baidu.openrasp.transformer;
 
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.*;
-import com.baidu.openrasp.tool.Annotation.AnnotationScanner;
+import com.baidu.openrasp.tool.annotation.AnnotationScanner;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
@@ -38,7 +38,7 @@ import java.util.Set;
  * 自定义类字节码转换器，用于hook类德 方法
  */
 public class CustomClassTransformer implements ClassFileTransformer {
-    private static final Logger LOGGER = Logger.getLogger(CustomClassTransformer.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(CustomClassTransformer.class.getName());
     private static final String SCAN_ANNOTATION_PACKAGE = "com.baidu.openrasp.hook";
     private static ArrayList<String> list = new ArrayList<String>();
     private static HashMap<String, ClassLoader> classLoaderCache = new HashMap<String, ClassLoader>();
@@ -55,11 +55,11 @@ public class CustomClassTransformer implements ClassFileTransformer {
         addAnnotationHook();
     }
 
-    private void addHook(AbstractClassHook hook) {
+    private void addHook(AbstractClassHook hook, String className) {
         String[] ignore = Config.getConfig().getIgnoreHooks();
         for (String s : ignore) {
             if (hook.couldIgnore() && (s.equals("all") || s.equals(hook.getType()))) {
-                LOGGER.info("ignore hook type " + hook.getType());
+                LOGGER.info("ignore hook type " + hook.getType() + ", class " + className);
                 return;
             }
         }
@@ -72,7 +72,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
             try {
                 Object object = clazz.newInstance();
                 if (object instanceof AbstractClassHook) {
-                    addHook((AbstractClassHook) object);
+                    addHook((AbstractClassHook) object, clazz.getName());
                 }
             } catch (Exception e) {
                 LOGGER.error("add hook failed", e);

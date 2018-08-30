@@ -18,7 +18,7 @@ package com.baidu.openrasp.hook.server.resin;
 
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.hook.server.ServerParamHook;
-import com.baidu.openrasp.tool.Annotation.HookAnnotation;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;

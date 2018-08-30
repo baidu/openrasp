@@ -18,7 +18,7 @@ package com.baidu.openrasp.hook.dubbo;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
-import com.baidu.openrasp.tool.Annotation.HookAnnotation;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.Reflection;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -59,7 +59,6 @@ public class DubboRequestHook extends AbstractClassHook {
     }
 
     public static void getDubboRpcRequestParameters(Object object) {
-
         Object[] args = (Object[]) Reflection.invokeMethod(object, "getArguments", new Class[]{});
         Class<?>[] parameterTypes = (Class<?>[]) Reflection.invokeMethod(object, "getParameterTypes", new Class[]{});
         Map<String, String[]> map = new HashMap<String, String[]>(args.length);

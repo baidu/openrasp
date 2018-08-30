@@ -29,11 +29,9 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
     private static final String WEB_RESOURCE_COLLECTION = "web-resource-collection";
     private static final String WEB_RESOURCE_NAME = "web-resource-name";
     private static final String URL_PATTERN = "url-pattern";
-    private static final String HTTP_METHOD = "http-method";
     private static final String AUTH_CONSTRAINT = "auth-constraint";
     private static final String[] WEB_RESOURCE_NAME_VALUES = new String[]{"htmladaptor"};
     private static final String[] URL_PATTERN_VALUES = new String[]{"/*"};
-    private static final String[] HTTP_METHOD_VALUES = new String[]{"get", "post"};
     public static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
 
     @Override
@@ -92,7 +90,6 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
                         Element subElement = (Element) list.item(i);
                         checkXmlElement(subElement, WEB_RESOURCE_NAME, Arrays.asList(WEB_RESOURCE_NAME_VALUES), infos, path);
                         checkXmlElement(subElement, URL_PATTERN, Arrays.asList(URL_PATTERN_VALUES), infos, path);
-                        checkXmlElement(subElement, HTTP_METHOD, Arrays.asList(HTTP_METHOD_VALUES), infos, path);
                     } else {
                         handleError(WEB_RESOURCE_COLLECTION, path, infos);
                     }
@@ -142,6 +139,6 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
 
 
     public void handleError(String tagName, String path, List<EventInfo> infos) {
-        infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.JBOSS_JMX_CONSOLE, "JBoss security baseline - Auth constraint for /jmx-console/HTMLAdaptor is not enabled in " + path + "(" + tagName + "is missing or wrong)", true));
+        infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.JBOSS_JMX_CONSOLE, "JBoss security baseline - Auth constraint for /jmx-console/HTMLAdaptor is not enabled in " + path + "(" + tagName + " is missing or wrong)", true));
     }
 }

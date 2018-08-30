@@ -21,10 +21,9 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
-import com.baidu.openrasp.tool.Annotation.HookAnnotation;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.TimeUtils;
 import javassist.CannotCompileException;
-import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.NotFoundException;
 

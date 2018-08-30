@@ -18,8 +18,7 @@ package com.baidu.openrasp.hook.server.jetty;
 
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.hook.server.ServerRequestHook;
-import com.baidu.openrasp.hook.server.catalina.ApplicationFilterHook;
-import com.baidu.openrasp.tool.Annotation.HookAnnotation;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
