@@ -31,14 +31,13 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 /**
- * @program openrasp
  * @description: 扫描特定包名下的含有特定的注解的类
  * @author: anyang
  * @create: 2018/08/29 21:04
  */
 public class AnnotationScanner {
 
-    public static Set<Class> getClassWithAnnotation(String packageName) {
+    public static Set<Class> getClassWithAnnotation(String packageName, Class annotationClass) {
         Set<Class> classes = new LinkedHashSet<Class>();
         Set<Class> res = new LinkedHashSet<Class>();
         String newPackageName = packageName.replace('.', '/');
@@ -82,7 +81,7 @@ public class AnnotationScanner {
             throw new AnnotationScannerException(e);
         }
         for (Class clazz : classes) {
-            if (clazz.getAnnotation(HookAnnotation.class) != null) {
+            if (clazz.getAnnotation(annotationClass) != null) {
                 res.add(clazz);
             }
         }
