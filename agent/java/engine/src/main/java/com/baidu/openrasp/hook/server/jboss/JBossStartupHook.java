@@ -65,9 +65,9 @@ public class JBossStartupHook extends AbstractClassHook {
         try {
             String serverVersion = Reflection.invokeStringMethod(object, "getVersionNumber", new Class[]{});
             ApplicationModel.init("jboss", serverVersion);
-            HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_JBOSS_JMX_CONSOLE, CheckParameter.EMPTY_MAP);
         } catch (Exception e) {
             JBossJMXSecurityChecker.LOGGER.error("handle jboss startup failed", e);
         }
+        HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_JBOSS_JMX_CONSOLE, CheckParameter.EMPTY_MAP);
     }
 }

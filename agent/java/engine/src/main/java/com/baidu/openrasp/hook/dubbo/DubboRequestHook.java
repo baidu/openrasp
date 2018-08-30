@@ -60,26 +60,21 @@ public class DubboRequestHook extends AbstractClassHook {
 
     public static void getDubboRpcRequestParameters(Object object) {
 
-        try {
-
-            Object[] args = (Object[]) Reflection.invokeMethod(object, "getArguments", new Class[]{});
-            Class<?>[] parameterTypes = (Class<?>[]) Reflection.invokeMethod(object, "getParameterTypes", new Class[]{});
-            Map<String, String[]> map = new HashMap<String, String[]>(args.length);
-            if (args.length != 0) {
-                for (int i = 0; i < args.length; i++) {
-                    if (parameterTypes[i].isPrimitive() || isWrapClass(parameterTypes[i]) || args[i] instanceof String) {
-                        String[] strings = new String[1];
-                        strings[0] = String.valueOf(args[i]);
-                        map.put(String.valueOf(i), strings);
-                    }
-
+        Object[] args = (Object[]) Reflection.invokeMethod(object, "getArguments", new Class[]{});
+        Class<?>[] parameterTypes = (Class<?>[]) Reflection.invokeMethod(object, "getParameterTypes", new Class[]{});
+        Map<String, String[]> map = new HashMap<String, String[]>(args.length);
+        if (args.length != 0) {
+            for (int i = 0; i < args.length; i++) {
+                if (parameterTypes[i].isPrimitive() || isWrapClass(parameterTypes[i]) || args[i] instanceof String) {
+                    String[] strings = new String[1];
+                    strings[0] = String.valueOf(args[i]);
+                    map.put(String.valueOf(i), strings);
                 }
-            }
-            HookHandler.checkDubboFilterRequest(map);
 
-        } catch (Exception e) {
-            e.printStackTrace();
+            }
         }
+
+        HookHandler.checkDubboFilterRequest(map);
 
     }
 
