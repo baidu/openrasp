@@ -34,11 +34,9 @@ extern "C"
 #include "agent/openrasp_agent_manager.h"
 #endif
 
-using namespace openrasp;
-
-ZEND_DECLARE_MODULE_GLOBALS(openrasp_v8)
-
-openrasp_v8_process_globals openrasp::process_globals;
+namespace openrasp
+{
+openrasp_v8_process_globals process_globals;
 
 static inline void load_plugins(TSRMLS_D);
 static inline bool init_platform(TSRMLS_D);
@@ -47,7 +45,79 @@ static inline bool init_snapshot(TSRMLS_D);
 static inline bool shutdown_snapshot(TSRMLS_D);
 static inline bool init_isolate(TSRMLS_D);
 static inline bool shutdown_isolate(TSRMLS_D);
-static inline v8::Isolate *get_isolate(TSRMLS_D);
+
+bool openrasp_check(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params TSRMLS_DC)
+{
+    // v8::Isolate::Scope isolate_scope(isolate);
+    // v8::HandleScope handlescope(isolate);
+    // auto context = OPENRASP_V8_G(context).Get(isolate);
+    // v8::Context::Scope context_scope(context);
+    auto context = isolate->GetCurrentContext();
+    v8::TryCatch try_catch;
+    auto check = OPENRASP_V8_G(check).Get(isolate);
+    auto request_context = OPENRASP_V8_G(request_context).Get(isolate);
+    v8::Local<v8::Value> argv[]{type, params, request_context};
+
+    v8::Local<v8::Value> rst;
+    {
+        auto task = new TimeoutTask(isolate, openrasp_ini.timeout_ms);
+        std::lock_guard<std::timed_mutex> lock(task->GetMtx());
+        process_globals.v8_platform->CallOnBackgroundThread(task, v8::Platform::kShortRunningTask);
+        (void)check->Call(context, check, 3, argv).ToLocal(&rst);
+    }
+    if (UNLIKELY(rst.IsEmpty()))
+    {
+        if (try_catch.Message().IsEmpty())
+        {
+            auto console_log = OPENRASP_V8_G(console_log).Get(isolate);
+            auto message = v8::Object::New(isolate);
+            message->Set(V8STRING_N("message").ToLocalChecked(), V8STRING_N("Javascript plugin execution timeout.").ToLocalChecked());
+            message->Set(V8STRING_N("type").ToLocalChecked(), type);
+            message->Set(V8STRING_N("params").ToLocalChecked(), params);
+            message->Set(V8STRING_N("context").ToLocalChecked(), request_context);
+            (void)console_log->Call(context, console_log, 1, reinterpret_cast<v8::Local<v8::Value> *>(&message)).IsEmpty();
+        }
+        else
+        {
+            std::stringstream stream;
+            v8error_to_stream(isolate, try_catch, stream);
+            auto error = stream.str();
+            plugin_info(error.c_str(), error.length() TSRMLS_CC);
+        }
+        return 0;
+    }
+    if (UNLIKELY(!rst->IsArray()))
+    {
+        return 0;
+    }
+    auto key_action = OPENRASP_V8_G(key_action).Get(isolate);
+    auto key_message = OPENRASP_V8_G(key_message).Get(isolate);
+    auto key_name = OPENRASP_V8_G(key_name).Get(isolate);
+    auto key_confidence = OPENRASP_V8_G(key_confidence).Get(isolate);
+    auto JSON_stringify = OPENRASP_V8_G(JSON_stringify).Get(isolate);
+
+    auto arr = v8::Local<v8::Array>::Cast(rst);
+    int len = arr->Length();
+    bool is_block = false;
+    for (int i = 0; i < len; i++)
+    {
+        auto item = v8::Local<v8::Object>::Cast(arr->Get(i));
+        v8::Local<v8::Value> v8_action = item->Get(key_action);
+        if (UNLIKELY(!v8_action->IsString()))
+        {
+            continue;
+        }
+        int action_hash = v8_action->ToString()->GetIdentityHash();
+        if (LIKELY(OPENRASP_V8_G(action_hash_ignore) == action_hash))
+        {
+            continue;
+        }
+        is_block = is_block || OPENRASP_V8_G(action_hash_block) == action_hash;
+
+        alarm_info(isolate, type, params, item TSRMLS_CC);
+    }
+    return is_block;
+}
 
 unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
 {
@@ -237,6 +307,16 @@ static inline bool init_isolate(TSRMLS_D)
         v8::Local<v8::Function> check = RASP->Get(context, V8STRING_I("check").ToLocalChecked())
                                             .ToLocalChecked()
                                             .As<v8::Function>();
+        auto console_log = context->Global()
+                               ->Get(v8::String::NewFromUtf8(isolate, "console"))
+                               .As<v8::Object>()
+                               ->Get(v8::String::NewFromUtf8(isolate, "log"))
+                               .As<v8::Function>();
+        auto JSON_stringify = context->Global()
+                                  ->Get(v8::String::NewFromUtf8(isolate, "JSON"))
+                                  .As<v8::Object>()
+                                  ->Get(v8::String::NewFromUtf8(isolate, "stringify"))
+                                  .As<v8::Function>();
 
         OPENRASP_V8_G(isolate) = isolate;
         OPENRASP_V8_G(context).Reset(isolate, context);
@@ -247,6 +327,8 @@ static inline bool init_isolate(TSRMLS_D)
         OPENRASP_V8_G(RASP).Reset(isolate, RASP);
         OPENRASP_V8_G(check).Reset(isolate, check);
         OPENRASP_V8_G(request_context).Reset(isolate, RequestContext::New(isolate));
+        OPENRASP_V8_G(console_log).Reset(isolate, console_log);
+        OPENRASP_V8_G(JSON_stringify).Reset(isolate, JSON_stringify);
 
         OPENRASP_V8_G(action_hash_ignore) = V8STRING_N("ignore").ToLocalChecked()->GetIdentityHash();
         OPENRASP_V8_G(action_hash_log) = V8STRING_N("log").ToLocalChecked()->GetIdentityHash();
@@ -269,6 +351,8 @@ static inline bool shutdown_isolate(TSRMLS_D)
         OPENRASP_V8_G(RASP).Reset();
         OPENRASP_V8_G(check).Reset();
         OPENRASP_V8_G(request_context).Reset();
+        OPENRASP_V8_G(console_log).Reset();
+        OPENRASP_V8_G(JSON_stringify).Reset();
         OPENRASP_V8_G(isolate)->Dispose();
         OPENRASP_V8_G(isolate) = nullptr;
         delete OPENRASP_V8_G(create_params).array_buffer_allocator;
@@ -277,7 +361,7 @@ static inline bool shutdown_isolate(TSRMLS_D)
     return true;
 }
 
-static inline v8::Isolate *get_isolate(TSRMLS_D)
+v8::Isolate *get_isolate(TSRMLS_D)
 {
     if (UNLIKELY(!process_globals.v8_platform))
     {
@@ -364,6 +448,12 @@ static inline void load_plugins(TSRMLS_D)
     free(ent);
     process_globals.plugin_src_list = std::move(plugin_src_list);
 }
+
+} // namespace openrasp
+
+using namespace openrasp;
+
+ZEND_DECLARE_MODULE_GLOBALS(openrasp_v8)
 
 PHP_GINIT_FUNCTION(openrasp_v8)
 {

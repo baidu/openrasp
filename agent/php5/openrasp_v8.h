@@ -40,14 +40,19 @@ namespace openrasp
 #define TRYCATCH() \
   v8::TryCatch try_catch
 
-static inline v8::Local<v8::String> NewV8String(v8::Isolate *isolate, const char *str, size_t len = -1)
+inline v8::Local<v8::String> NewV8String(v8::Isolate *isolate, const char *str, size_t len = -1)
 {
   return v8::String::NewFromUtf8(isolate, str, v8::NewStringType::kNormal, len).ToLocalChecked();
 }
 
-static inline v8::Local<v8::String> NewV8String(v8::Isolate *isolate, std::string &&str)
+inline v8::Local<v8::String> NewV8String(v8::Isolate *isolate, std::string &&str)
 {
   return NewV8String(isolate, str.c_str(), str.length());
+}
+
+inline v8::Local<v8::String> NewV8String(v8::Isolate *isolate, std::string &str)
+{
+  return NewV8String(isolate, std::move(str));
 }
 
 #define V8STRING_EX(string, type, length) \
@@ -105,7 +110,9 @@ v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Contex
 v8::StartupData get_snapshot(TSRMLS_D);
 extern intptr_t external_references[];
 void alarm_info(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result TSRMLS_DC);
-
+bool openrasp_check(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params TSRMLS_DC);
+unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC);
+v8::Isolate *get_isolate(TSRMLS_D);
 } // namespace openrasp
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_v8)

@@ -63,7 +63,6 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp)
 #define OPENRASP_GP() (&openrasp_globals)
 #endif
 
-unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC);
 void openrasp_error(int type, int error_code, const char *format, ...);
 int rasp_info(const char *message, int message_len TSRMLS_DC);
 int plugin_info(const char *message, int message_len TSRMLS_DC);

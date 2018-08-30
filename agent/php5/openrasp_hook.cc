@@ -18,6 +18,7 @@
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
 #include "openrasp_inject.h"
+#include "openrasp_v8.h"
 #include <new>
 #include <vector>
 #include <map>
@@ -252,7 +253,7 @@ void handle_block(TSRMLS_D)
  */
 void check(const char *type, zval *params TSRMLS_DC)
 {
-    char result = openrasp_check(type, params TSRMLS_CC);
+    char result = openrasp::openrasp_check(type, params TSRMLS_CC);
     zval_ptr_dtor(&params);
     if (result)
     {
