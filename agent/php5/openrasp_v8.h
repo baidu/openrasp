@@ -31,6 +31,7 @@
 #include <iostream>
 #include <condition_variable>
 #include <thread>
+#include <map>
 
 namespace openrasp
 {
@@ -75,6 +76,23 @@ private:
   v8::Isolate *isolate;
   std::chrono::time_point<std::chrono::high_resolution_clock> time_point;
   std::timed_mutex mtx;
+};
+
+class TimeoutTaskNG : public v8::Task
+{
+public:
+  TimeoutTaskNG();
+  void Run() override;
+  
+  static void Start();
+  static void AddIsolate(v8::Isolate *isolate);
+  static void DelIsolate(v8::Isolate *isolate);
+  static void SetTimeout(v8::Isolate *isolate, size_t timeout = 0);
+  static void Terminate();
+private:
+  static std::mutex mtx;
+  static bool terminated;
+  static std::map<v8::Isolate *, std::chrono::time_point<std::chrono::high_resolution_clock>> time_points;
 };
 
 class openrasp_v8_plugin_src

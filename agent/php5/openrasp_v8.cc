@@ -55,12 +55,15 @@ bool openrasp_check(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<
     v8::Local<v8::Value> argv[]{type, params, request_context};
 
     v8::Local<v8::Value> rst;
-    {
-        auto task = new TimeoutTask(isolate, openrasp_ini.timeout_ms);
-        std::lock_guard<std::timed_mutex> lock(task->GetMtx());
-        process_globals.v8_platform->CallOnBackgroundThread(task, v8::Platform::kShortRunningTask);
-        (void)check->Call(context, check, 3, argv).ToLocal(&rst);
-    }
+    TimeoutTaskNG::SetTimeout(isolate, openrasp_ini.timeout_ms);
+    (void)check->Call(context, check, 3, argv).ToLocal(&rst);
+    TimeoutTaskNG::SetTimeout(isolate);
+    // {
+    //     auto task = new TimeoutTask(isolate, openrasp_ini.timeout_ms);
+    //     std::lock_guard<std::timed_mutex> lock(task->GetMtx());
+    //     process_globals.v8_platform->CallOnBackgroundThread(task, v8::Platform::kShortRunningTask);
+    //     (void)check->Call(context, check, 3, argv).ToLocal(&rst);
+    // }
     if (UNLIKELY(rst.IsEmpty()))
     {
         if (try_catch.Message().IsEmpty())
@@ -87,11 +90,8 @@ bool openrasp_check(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<
         return 0;
     }
     auto key_action = OPENRASP_V8_G(key_action).Get(isolate);
-    auto key_message = OPENRASP_V8_G(key_message).Get(isolate);
-    auto key_name = OPENRASP_V8_G(key_name).Get(isolate);
-    auto key_confidence = OPENRASP_V8_G(key_confidence).Get(isolate);
-    auto JSON_stringify = OPENRASP_V8_G(JSON_stringify).Get(isolate);
-
+    auto hash_action_ignore = OPENRASP_V8_G(action_hash_ignore);
+    auto hash_action_block = OPENRASP_V8_G(action_hash_block);
     auto arr = v8::Local<v8::Array>::Cast(rst);
     int len = arr->Length();
     bool is_block = false;
@@ -103,12 +103,12 @@ bool openrasp_check(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<
         {
             continue;
         }
-        int action_hash = v8_action->ToString()->GetIdentityHash();
-        if (LIKELY(OPENRASP_V8_G(action_hash_ignore) == action_hash))
+        int hash_action = v8_action->ToString()->GetIdentityHash();
+        if (LIKELY(hash_action_ignore == hash_action))
         {
             continue;
         }
-        is_block = is_block || OPENRASP_V8_G(action_hash_block) == action_hash;
+        is_block = is_block || hash_action_block == hash_action;
 
         alarm_info(isolate, type, params, item TSRMLS_CC);
     }
@@ -224,6 +224,7 @@ static inline bool init_isolate(TSRMLS_D)
         OPENRASP_V8_G(action_hash_log) = V8STRING_N("log").ToLocalChecked()->GetIdentityHash();
         OPENRASP_V8_G(action_hash_block) = V8STRING_N("block").ToLocalChecked()->GetIdentityHash();
 
+        TimeoutTaskNG::AddIsolate(isolate);
         OPENRASP_V8_G(is_isolate_initialized) = true;
     }
     return true;
@@ -239,6 +240,7 @@ static inline bool shutdown_isolate(TSRMLS_D)
             auto context = OPENRASP_V8_G(context).Get(isolate);
             context->Exit();
         }
+        TimeoutTaskNG::DelIsolate(isolate);
         isolate->Exit();
 
         OPENRASP_V8_G(context).Reset();
@@ -265,6 +267,7 @@ v8::Isolate *get_isolate(TSRMLS_D)
     if (UNLIKELY(!process_globals.v8_platform))
     {
         init_platform(TSRMLS_C);
+        TimeoutTaskNG::Start();
     }
 
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
@@ -405,6 +408,8 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
     // it should generally not be necessary to dispose v8 before exiting a process,
     // so skip this step for module graceful reload
     // v8::V8::Dispose();
+    TimeoutTaskNG::Terminate();
+    process_globals.is_initialized = false;
     shutdown_platform(TSRMLS_C);
     shutdown_snapshot(TSRMLS_C);
 
