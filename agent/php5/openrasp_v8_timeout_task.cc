@@ -63,19 +63,25 @@ openrasp::TimeoutTaskNG::TimeoutTaskNG() {}
 
 void openrasp::TimeoutTaskNG::Run()
 {
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    auto now = std::chrono::high_resolution_clock::now();
+    while (true)
     {
-        std::lock_guard<std::mutex> lock(mtx);
-        for (auto &it : time_points)
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        auto now = std::chrono::high_resolution_clock::now();
         {
-            if (it.second < now &&
-                it.second != std::chrono::high_resolution_clock::time_point())
+            std::lock_guard<std::mutex> lock(mtx);
+            if (terminated || !process_globals.v8_platform)
             {
-                it.first->TerminateExecution();
+                return;
+            }
+            for (auto &it : time_points)
+            {
+                if (it.second < now &&
+                    it.second != std::chrono::high_resolution_clock::time_point())
+                {
+                    it.first->TerminateExecution();
+                }
             }
         }
-        Start();
     }
 }
 

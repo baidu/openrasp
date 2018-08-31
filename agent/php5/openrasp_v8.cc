@@ -134,7 +134,7 @@ static inline bool init_platform(TSRMLS_D)
 {
     if (!process_globals.v8_platform)
     {
-        process_globals.v8_platform = v8::platform::CreateDefaultPlatform(1);
+        process_globals.v8_platform = v8::platform::CreateDefaultPlatform(2);
         v8::V8::InitializePlatform(process_globals.v8_platform);
     }
     return true;
