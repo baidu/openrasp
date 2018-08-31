@@ -515,6 +515,11 @@ function is_path_endswith_userinput(parameter, target)
         var value = parameter[key]
             value = value[0]
 
+        // 只处理字符串类型的
+        if (typeof value != 'string') {
+            return
+        }
+
         // 参数必须有跳出目录，或者是绝对路径
         if ((has_traversal(value) || is_absolute_path(value))
             && (value == target || target.endsWith(value)))
