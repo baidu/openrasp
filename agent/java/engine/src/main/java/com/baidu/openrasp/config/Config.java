@@ -55,7 +55,7 @@ public class Config extends FileScanListener {
         BLOCK_STATUS_CODE("block.status_code", "302"),
         DEBUG("debug.level", "0"),
         ALGORITHM_CONFIG("algorithm.config", "{}", false),
-        CLIENT_IP_HEADER("clientip.header","clientip"),
+        CLIENT_IP_HEADER("clientip.header","ClientIP"),
         BLOCK_REDIRECT_URL("block.redirect_url", "https://rasp.baidu.com/blocked/?request_id=%request_id%"),
         BLOCK_JSON("block.content_json", "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"),
         BLOCK_XML("block.content_xml", "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"),
@@ -688,7 +688,7 @@ public class Config extends FileScanListener {
      * @param clientIp 待设置的请求头信息
      */
     public synchronized void setClientIp(String clientIp) {
-        this.clientIp = clientIp.toLowerCase();
+        this.clientIp = clientIp;
     }
 //--------------------------统一的配置处理------------------------------------
 
