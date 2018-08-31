@@ -49,7 +49,7 @@ public class Config extends FileScanListener {
         LOG_MAX_STACK("log.maxstack", "20"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
         SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
-        PLUGIN_FILTER("plugin.filter", "on"),
+        PLUGIN_FILTER("plugin.filter", "false"),
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
         SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
         BLOCK_STATUS_CODE("block.status_code", "302"),
@@ -108,7 +108,7 @@ public class Config extends FileScanListener {
     private String blockJson;
     private String blockXml;
     private String blockHtml;
-    private String pluginFilter;
+    private boolean pluginFilter;
     private String clientIp;
 
 
@@ -602,7 +602,7 @@ public class Config extends FileScanListener {
      *
      * @return 返回contentType类型
      */
-    public String getBlockJson() {
+    public synchronized String getBlockJson() {
         return blockJson;
     }
 
@@ -611,7 +611,7 @@ public class Config extends FileScanListener {
      *
      * @param blockJson ContentType
      */
-    public void setBlockJson(String blockJson) {
+    public synchronized void setBlockJson(String blockJson) {
         this.blockJson = blockJson;
     }
 
@@ -621,7 +621,7 @@ public class Config extends FileScanListener {
      *
      * @return 返回contentType类型
      */
-    public String getBlockXml() {
+    public synchronized String getBlockXml() {
         return blockXml;
     }
 
@@ -630,7 +630,7 @@ public class Config extends FileScanListener {
      *
      * @param blockXml ContentType类型
      */
-    public void setBlockXml(String blockXml) {
+    public synchronized void setBlockXml(String blockXml) {
         this.blockXml = blockXml;
     }
 
@@ -640,7 +640,7 @@ public class Config extends FileScanListener {
      *
      * @return 返回contentType类型
      */
-    public String getBlockHtml() {
+    public synchronized String getBlockHtml() {
         return blockHtml;
     }
 
@@ -649,7 +649,7 @@ public class Config extends FileScanListener {
      *
      * @param blockHtml ContentType
      */
-    public void setBlockHtml(String blockHtml) {
+    public synchronized void setBlockHtml(String blockHtml) {
         this.blockHtml = blockHtml;
     }
 
@@ -659,7 +659,7 @@ public class Config extends FileScanListener {
      *
      * @return 返回是否进入插件
      */
-    public String getPluginFilter() {
+    public synchronized boolean getPluginFilter() {
         return pluginFilter;
     }
 
@@ -669,8 +669,8 @@ public class Config extends FileScanListener {
      *
      * @param pluginFilter 开关状态:on/off
      */
-    public void setPluginFilter(String pluginFilter) {
-        this.pluginFilter = pluginFilter;
+    public synchronized void setPluginFilter(String pluginFilter) {
+        this.pluginFilter = Boolean.parseBoolean(pluginFilter);
     }
 
     /**
@@ -678,7 +678,7 @@ public class Config extends FileScanListener {
      *
      * @return 返回请求头
      */
-    public String getClientIp() {
+    public synchronized String getClientIp() {
         return clientIp;
     }
 
@@ -687,7 +687,7 @@ public class Config extends FileScanListener {
      *
      * @param clientIp 待设置的请求头信息
      */
-    public void setClientIp(String clientIp) {
+    public synchronized void setClientIp(String clientIp) {
         this.clientIp = clientIp;
     }
 //--------------------------统一的配置处理------------------------------------

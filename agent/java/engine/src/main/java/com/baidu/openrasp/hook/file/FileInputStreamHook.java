@@ -30,6 +30,7 @@ import javassist.NotFoundException;
 import org.mozilla.javascript.Scriptable;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 /**
@@ -66,7 +67,7 @@ public class FileInputStreamHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(FileInputStreamHook.class, "checkReadFile", "$1", File.class);
-        insertAfter(ctClass.getConstructor("(Ljava/io/File;)V"), src, false);
+        insertBefore(ctClass.getConstructor("(Ljava/io/File;)V"), src);
     }
 
     /**
@@ -75,14 +76,14 @@ public class FileInputStreamHook extends AbstractClassHook {
      * @param file 文件对象
      */
     public static void checkReadFile(File file) {
-        String checkSwitch = Config.getConfig().getPluginFilter();
+        boolean checkSwitch = Config.getConfig().getPluginFilter();
         if (file != null) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             params.put("path", params, file.getPath());
             try {
                 String path = file.getCanonicalPath();
-                if (path.endsWith(".class") || !file.exists() && "on".equals(checkSwitch)) {
+                if (path.endsWith(".class") || !file.exists() && checkSwitch) {
                     return;
                 }
                 params.put("realpath", params, FileUtil.getRealPath(file));
