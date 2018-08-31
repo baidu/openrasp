@@ -49,13 +49,13 @@ public class Config extends FileScanListener {
         LOG_MAX_STACK("log.maxstack", "20"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
         SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
-        PLUGIN_FILTER("plugin.filter", "false"),
+        PLUGIN_FILTER("plugin.filter", "true"),
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
         SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
         BLOCK_STATUS_CODE("block.status_code", "302"),
         DEBUG("debug.level", "0"),
         ALGORITHM_CONFIG("algorithm.config", "{}", false),
-        CLIENT_IP_HEADER("clientIp.header","clientip"),
+        CLIENT_IP_HEADER("clientip.header","clientip"),
         BLOCK_REDIRECT_URL("block.redirect_url", "https://rasp.baidu.com/blocked/?request_id=%request_id%"),
         BLOCK_JSON("block.content_json", "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"),
         BLOCK_XML("block.content_xml", "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"),
@@ -688,7 +688,7 @@ public class Config extends FileScanListener {
      * @param clientIp 待设置的请求头信息
      */
     public synchronized void setClientIp(String clientIp) {
-        this.clientIp = clientIp;
+        this.clientIp = clientIp.toLowerCase();
     }
 //--------------------------统一的配置处理------------------------------------
 
