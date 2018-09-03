@@ -19,9 +19,9 @@
 /**
  * fileupload相关hook点
  */
-PRE_HOOK_FUNCTION(move_uploaded_file, fileUpload);
+PRE_HOOK_FUNCTION(move_uploaded_file, FILE_UPLOAD);
 
-void pre_global_move_uploaded_file_fileUpload(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **name, **dest;
     int argc = MIN(2, ZEND_NUM_ARGS());

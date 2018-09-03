@@ -16,12 +16,12 @@
 
 #include "openrasp_hook.h"
 
-PRE_HOOK_FUNCTION_EX(exec, sqlite3, sql);
-PRE_HOOK_FUNCTION_EX(query, sqlite3, sql);
-PRE_HOOK_FUNCTION_EX(querysingle, sqlite3, sql);
+PRE_HOOK_FUNCTION_EX(exec, sqlite3, SQL);
+PRE_HOOK_FUNCTION_EX(query, sqlite3, SQL);
+PRE_HOOK_FUNCTION_EX(querysingle, sqlite3, SQL);
 
 //sqlite3::exec
-void pre_sqlite3_exec_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_sqlite3_exec_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	char *sql;
 	int sql_len;
@@ -33,13 +33,13 @@ void pre_sqlite3_exec_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 }
 
 //sqlite3::query
-void pre_sqlite3_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_sqlite3_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    pre_sqlite3_exec_sql(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    pre_sqlite3_exec_SQL(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 //sqlite3::querySingle
-void pre_sqlite3_querysingle_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_sqlite3_querysingle_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	char *sql;
 	int sql_len;

@@ -21,12 +21,12 @@ extern "C" {
 #include "zend_ini.h"
 }
 
-HOOK_FUNCTION_EX(__construct, pdo, dbConnection);
-PRE_HOOK_FUNCTION_EX(query, pdo, sql);
-POST_HOOK_FUNCTION_EX(query, pdo, sqlSlowQuery);
-PRE_HOOK_FUNCTION_EX(exec, pdo, sql);
-POST_HOOK_FUNCTION_EX(exec, pdo, sqlSlowQuery);
-PRE_HOOK_FUNCTION_EX(prepare, pdo, sqlPrepared);
+HOOK_FUNCTION_EX(__construct, pdo, DB_CONNECTION);
+PRE_HOOK_FUNCTION_EX(query, pdo, SQL);
+POST_HOOK_FUNCTION_EX(query, pdo, SQL_SLOW_QUERY);
+PRE_HOOK_FUNCTION_EX(exec, pdo, SQL);
+POST_HOOK_FUNCTION_EX(exec, pdo, SQL_SLOW_QUERY);
+PRE_HOOK_FUNCTION_EX(prepare, pdo, SQL_PREPARED);
 
 extern void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p);
 
@@ -145,7 +145,7 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
     }
 }
 
-void pre_pdo_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_pdo_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pdo_dbh_t *dbh = reinterpret_cast<pdo_dbh_t*>(zend_object_store_get_object(getThis() TSRMLS_CC));
 	char *statement;
@@ -160,7 +160,7 @@ void pre_pdo_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     sql_type_handler(statement, statement_len, const_cast<char*>(dbh->driver->driver_name) TSRMLS_CC);
 }
 
-void post_pdo_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_pdo_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {   
     if (Z_TYPE_P(return_value) == IS_OBJECT)
     {
@@ -175,7 +175,7 @@ void post_pdo_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }    
 }
 
-void pre_pdo_exec_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_pdo_exec_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pdo_dbh_t *dbh = reinterpret_cast<pdo_dbh_t*>(zend_object_store_get_object(getThis() TSRMLS_CC));
 	char *statement;
@@ -188,7 +188,7 @@ void pre_pdo_exec_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     sql_type_handler(statement, statement_len, const_cast<char*>(dbh->driver->driver_name) TSRMLS_CC);
 }
 
-void post_pdo_exec_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_pdo_exec_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {    
     if (Z_TYPE_P(return_value) == IS_LONG)
     {	
@@ -199,7 +199,7 @@ void post_pdo_exec_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     } 
 }
 
-void pre_pdo___construct_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_pdo___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {        
@@ -218,7 +218,7 @@ void post_pdo___construct_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void pre_pdo_prepare_sqlPrepared(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_pdo_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	pdo_dbh_t *dbh = reinterpret_cast<pdo_dbh_t*>(zend_object_store_get_object(getThis() TSRMLS_CC));
 	char *statement;

@@ -16,13 +16,13 @@
 
 #include "openrasp_hook.h"
 
-HOOK_FUNCTION(pg_connect, dbConnection);
-HOOK_FUNCTION(pg_pconnect, dbConnection);
-PRE_HOOK_FUNCTION(pg_query, sql);
-POST_HOOK_FUNCTION(pg_query, sqlSlowQuery);
-PRE_HOOK_FUNCTION(pg_send_query, sql);
-POST_HOOK_FUNCTION(pg_get_result, sqlSlowQuery);
-PRE_HOOK_FUNCTION(pg_prepare, sqlPrepared);
+HOOK_FUNCTION(pg_connect, DB_CONNECTION);
+HOOK_FUNCTION(pg_pconnect, DB_CONNECTION);
+PRE_HOOK_FUNCTION(pg_query, SQL);
+POST_HOOK_FUNCTION(pg_query, SQL_SLOW_QUERY);
+PRE_HOOK_FUNCTION(pg_send_query, SQL);
+POST_HOOK_FUNCTION(pg_get_result, SQL_SLOW_QUERY);
+PRE_HOOK_FUNCTION(pg_prepare, SQL_PREPARED);
 
 void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p)
 {
@@ -181,7 +181,7 @@ static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connectio
 /**
  * pg_connect
  */
-void pre_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {
@@ -191,7 +191,7 @@ void pre_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         }
     }
 }
-void post_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_RESOURCE)
     {
@@ -202,19 +202,19 @@ void post_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 /**
  * pg_pconnect 
  */
-void pre_global_pg_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pg_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    pre_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    pre_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
-void post_global_pg_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_global_pg_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    post_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    post_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 /**
  * pg_query
  */
-void pre_global_pg_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pg_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *pgsql_link = NULL;
 	char *query;
@@ -232,7 +232,7 @@ void pre_global_pg_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
     sql_type_handler(query, query_len, "pgsql" TSRMLS_CC);
 }
-void post_global_pg_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_global_pg_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     long num_rows = 0;
     if (Z_TYPE_P(return_value) == IS_RESOURCE)
@@ -250,15 +250,15 @@ void post_global_pg_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 /**
  * pg_send_query
  */
-void pre_global_pg_send_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pg_send_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    pre_global_pg_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    pre_global_pg_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 /**
  * pg_get_result
  */ 
-void post_global_pg_get_result_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_global_pg_get_result_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     long num_rows = 0;
     if (Z_TYPE_P(return_value) == IS_RESOURCE)
@@ -273,7 +273,7 @@ void post_global_pg_get_result_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETER
     }
 }
 
-void pre_global_pg_prepare_sqlPrepared(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pg_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *pgsql_link = NULL;
 	char *query, *stmtname;

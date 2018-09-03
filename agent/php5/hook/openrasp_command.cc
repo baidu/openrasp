@@ -19,22 +19,22 @@
 /**
  * command相关hook点
  */
-PRE_HOOK_FUNCTION(passthru, command);
-PRE_HOOK_FUNCTION(system, command);
-PRE_HOOK_FUNCTION(exec, command);
-PRE_HOOK_FUNCTION(shell_exec, command);
-PRE_HOOK_FUNCTION(proc_open, command);
-PRE_HOOK_FUNCTION(popen, command);
-PRE_HOOK_FUNCTION(pcntl_exec, command);
+PRE_HOOK_FUNCTION(passthru, COMMAND);
+PRE_HOOK_FUNCTION(system, COMMAND);
+PRE_HOOK_FUNCTION(exec, COMMAND);
+PRE_HOOK_FUNCTION(shell_exec, COMMAND);
+PRE_HOOK_FUNCTION(proc_open, COMMAND);
+PRE_HOOK_FUNCTION(popen, COMMAND);
+PRE_HOOK_FUNCTION(pcntl_exec, COMMAND);
 
-PRE_HOOK_FUNCTION(passthru, webshell_command);
-PRE_HOOK_FUNCTION(system, webshell_command);
-PRE_HOOK_FUNCTION(exec, webshell_command);
-PRE_HOOK_FUNCTION(shell_exec, webshell_command);
-PRE_HOOK_FUNCTION(proc_open, webshell_command);
-PRE_HOOK_FUNCTION(popen, webshell_command);
-PRE_HOOK_FUNCTION(pcntl_exec, webshell_command);
-PRE_HOOK_FUNCTION(assert, webshell_eval);
+PRE_HOOK_FUNCTION(passthru, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(system, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(exec, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(shell_exec, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(proc_open, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(popen, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(pcntl_exec, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(assert, WEBSHELL_EVAL);
 
 static void check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
@@ -66,7 +66,7 @@ static void send_command_to_plugin(char * cmd TSRMLS_DC)
     array_init(stack);
     format_debug_backtrace_arr(stack TSRMLS_CC);
     add_assoc_zval(params, "stack", stack);
-    check("command", params TSRMLS_CC);
+    check(COMMAND, params TSRMLS_CC);
 }
 
 static void openrasp_exec_ex(INTERNAL_FUNCTION_PARAMETERS, int mode)
@@ -90,42 +90,42 @@ static void openrasp_exec_ex(INTERNAL_FUNCTION_PARAMETERS, int mode)
         send_command_to_plugin(cmd TSRMLS_CC);
 }
 
-void pre_global_passthru_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_passthru_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_passthru_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_passthru_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     openrasp_exec_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, 3);
 }
 
-void pre_global_system_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_system_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_system_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_system_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     openrasp_exec_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, 1);
 }
 
-void pre_global_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_exec_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     openrasp_exec_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0);
 }
 
-void pre_global_shell_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_shell_exec_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_shell_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_shell_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	char *command;
 	int command_len;
@@ -139,12 +139,12 @@ void pre_global_shell_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     send_command_to_plugin(command TSRMLS_CC);
 }
 
-void pre_global_proc_open_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_proc_open_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_proc_open_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_proc_open_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	char *command;
 	int command_len = 0;
@@ -165,12 +165,12 @@ void pre_global_proc_open_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     send_command_to_plugin(command TSRMLS_CC);
 }
 
-void pre_global_popen_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_popen_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_popen_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_popen_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	char *command, *mode;
 	int command_len, mode_len;
@@ -184,12 +184,12 @@ void pre_global_popen_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     send_command_to_plugin(command TSRMLS_CC);
 }
 
-void pre_global_pcntl_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pcntl_exec_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_pcntl_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pcntl_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *args = NULL, *envs = NULL;
     zval **element;
@@ -229,10 +229,10 @@ void pre_global_pcntl_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     array_init(stack);
     format_debug_backtrace_arr(stack TSRMLS_CC);
     add_assoc_zval(params, "stack", stack);
-    check("command", params TSRMLS_CC);
+    check(COMMAND, params TSRMLS_CC);
 }
 
-void pre_global_assert_webshell_eval(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_assert_WEBSHELL_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **assertion;
 	int description_len = 0;

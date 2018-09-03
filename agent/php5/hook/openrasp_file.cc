@@ -19,41 +19,41 @@
 /**
  * 文件相关hook点
  */
-PRE_HOOK_FUNCTION(file, readFile);
-PRE_HOOK_FUNCTION(readfile, readFile);
-PRE_HOOK_FUNCTION(file_get_contents, readFile);
-PRE_HOOK_FUNCTION(file_put_contents, writeFile);
-PRE_HOOK_FUNCTION(file_put_contents, webshell_file_put_contents); //must after PRE_HOOK_FUNCTION(file_put_contents, writeFile);
-PRE_HOOK_FUNCTION(fopen, readFile);
-PRE_HOOK_FUNCTION(fopen, writeFile);
-PRE_HOOK_FUNCTION(copy, copy);
-PRE_HOOK_FUNCTION(rename, rename);
+PRE_HOOK_FUNCTION(file, READ_FILE);
+PRE_HOOK_FUNCTION(readfile, READ_FILE);
+PRE_HOOK_FUNCTION(file_get_contents, READ_FILE);
+PRE_HOOK_FUNCTION(file_put_contents, WRITE_FILE);
+PRE_HOOK_FUNCTION(file_put_contents, WEBSHELL_FILE_PUT_CONTENTS); //must after PRE_HOOK_FUNCTION(file_put_contents, writeFile);
+PRE_HOOK_FUNCTION(fopen, READ_FILE);
+PRE_HOOK_FUNCTION(fopen, WRITE_FILE);
+PRE_HOOK_FUNCTION(copy, COPY);
+PRE_HOOK_FUNCTION(rename, RENAME);
 
-PRE_HOOK_FUNCTION_EX(__construct, splfileobject, readFile);
-PRE_HOOK_FUNCTION_EX(__construct, splfileobject, writeFile);
+PRE_HOOK_FUNCTION_EX(__construct, splfileobject, READ_FILE);
+PRE_HOOK_FUNCTION_EX(__construct, splfileobject, WRITE_FILE);
 
 extern "C" int php_stream_parse_fopen_modes(const char *mode, int *open_flags);
 
 //ref: http://pubs.opengroup.org/onlinepubs/7908799/xsh/open.html
-static const char *flag_to_type(int open_flags, bool file_exist)
+static OpenRASPCheckType flag_to_type(int open_flags, bool file_exist)
 {
     if (open_flags == O_RDONLY)
     {
-        return "readFile";
+        return READ_FILE;
     }
     else if ((open_flags | O_CREAT) && (open_flags | O_EXCL) && !file_exist)
     {
-        return "skip";
+        return NO_TYPE;
     }
     else
     {
-        return "writeFile";
+        return WRITE_FILE;
     }
 }
 
-static void check_file_operation(const char *type, char *filename, int filename_len, zend_bool use_include_path TSRMLS_DC)
+static void check_file_operation(OpenRASPCheckType type, char *filename, int filename_len, zend_bool use_include_path TSRMLS_DC)
 {
-    char *real_path = openrasp_real_path(filename, filename_len, use_include_path, (0 == strcmp(type, "writeFile") ? WRITING : READING) TSRMLS_CC);
+    char *real_path = openrasp_real_path(filename, filename_len, use_include_path, (type == WRITE_FILE ? WRITING : READING) TSRMLS_CC);
     if (real_path)
     {
         zval *params;
@@ -65,7 +65,7 @@ static void check_file_operation(const char *type, char *filename, int filename_
     }
 }
 
-void pre_global_file_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_file_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename;
     int filename_len;
@@ -81,7 +81,7 @@ void pre_global_file_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     check_file_operation(check_type, filename, filename_len, use_include_path TSRMLS_CC);
 }
 
-void pre_global_readfile_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_readfile_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename;
     int filename_len;
@@ -95,7 +95,7 @@ void pre_global_readfile_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     check_file_operation(check_type, filename, filename_len, use_include_path TSRMLS_CC);
 }
 
-void pre_global_file_get_contents_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_file_get_contents_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename;
     int filename_len;
@@ -111,7 +111,7 @@ void pre_global_file_get_contents_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS
     check_file_operation(check_type, filename, filename_len, use_include_path TSRMLS_CC);
 }
 
-void pre_global_file_put_contents_webshell_file_put_contents(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_file_put_contents_WEBSHELL_FILE_PUT_CONTENTS(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **path, **data, **flags;
     int argc = MIN(3, ZEND_NUM_ARGS());
@@ -135,7 +135,7 @@ void pre_global_file_put_contents_webshell_file_put_contents(OPENRASP_INTERNAL_F
     }
 }
 
-void pre_global_file_put_contents_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_file_put_contents_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename;
     int filename_len;
@@ -157,7 +157,7 @@ void pre_global_file_put_contents_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETER
     check_file_operation(check_type, filename, filename_len, (flags & PHP_FILE_USE_INCLUDE_PATH) TSRMLS_CC);
 }
 
-void pre_global_fopen_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_fopen_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename, *mode;
     int filename_len, mode_len;
@@ -180,19 +180,19 @@ void pre_global_fopen_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         file_exist = true;
         efree(real_path);
     }
-    const char *type = flag_to_type(open_flags, file_exist);
-    if (0 == strcmp(type, check_type))
+    OpenRASPCheckType type = flag_to_type(open_flags, file_exist);
+    if (type == check_type)
     {
         check_file_operation(check_type, filename, filename_len, use_include_path TSRMLS_CC);
     }
 }
 
-void pre_global_fopen_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_fopen_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    pre_global_fopen_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    pre_global_fopen_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_splfileobject___construct_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_splfileobject___construct_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     char *filename, *mode;
     int filename_len, mode_len;
@@ -215,19 +215,19 @@ void pre_splfileobject___construct_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETE
         file_exist = true;
         efree(real_path);
     }
-    const char *type = flag_to_type(open_flags, file_exist);
-    if (0 == strcmp(type, check_type))
+    OpenRASPCheckType type = flag_to_type(open_flags, file_exist);
+    if (type == check_type)
     {
         check_file_operation(type, filename, filename_len, use_include_path TSRMLS_CC);
     }
 }
 
-void pre_splfileobject___construct_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_splfileobject___construct_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    pre_splfileobject___construct_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    pre_splfileobject___construct_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     char *source, *target;
     int source_len, target_len;
@@ -251,7 +251,7 @@ void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
                 array_init(params);
                 add_assoc_string(params, "source", source_real_path, 0);
                 add_assoc_string(params, "dest", target_real_path, 0);
-                check("copy", params TSRMLS_CC);
+                check(check_type, params TSRMLS_CC);
             }
             else
             {
@@ -261,7 +261,7 @@ void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void pre_global_rename_rename(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     char *source, *target;
     int source_len, target_len;
@@ -335,7 +335,7 @@ void pre_global_rename_rename(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             array_init(params);
             add_assoc_string(params, "source", source_real_path, 0);
             add_assoc_string(params, "dest", target_real_path, 0);
-            check("rename", params TSRMLS_CC);
+            check(check_type, params TSRMLS_CC);
         }
         return;
     }

@@ -20,10 +20,10 @@ extern "C" {
 #include "zend_ini.h"
 }
 
-HOOK_FUNCTION(mysql_connect, dbConnection);
-HOOK_FUNCTION(mysql_pconnect, dbConnection);
-PRE_HOOK_FUNCTION(mysql_query, sql);
-POST_HOOK_FUNCTION(mysql_query, sqlSlowQuery);
+HOOK_FUNCTION(mysql_connect, DB_CONNECTION);
+HOOK_FUNCTION(mysql_pconnect, DB_CONNECTION);
+PRE_HOOK_FUNCTION(mysql_query, SQL);
+POST_HOOK_FUNCTION(mysql_query, SQL_SLOW_QUERY);
 
 static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, int persistent)
 {
@@ -103,7 +103,7 @@ static inline void init_mysql_pconnect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, 
 }
 
 //mysql_connect
-void pre_global_mysql_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {        
@@ -113,7 +113,7 @@ void pre_global_mysql_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS
         }
     }
 }
-void post_global_mysql_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_RESOURCE)
     {
@@ -122,7 +122,7 @@ void post_global_mysql_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETER
 }
 
 //mysql_pconnect
-void pre_global_mysql_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (openrasp_ini.enforce_policy)
     {        
@@ -132,7 +132,7 @@ void pre_global_mysql_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETER
         }
     }
 }
-void post_global_mysql_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_RESOURCE)
     {
@@ -142,7 +142,7 @@ void post_global_mysql_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETE
 
 
 //mysql_query
-void pre_global_mysql_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_mysql_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {    
 	char *query;
 	int query_len;
@@ -155,7 +155,7 @@ void pre_global_mysql_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     sql_type_handler(query, query_len, "mysql" TSRMLS_CC);
 }
 
-void post_global_mysql_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_global_mysql_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     long num_rows = 0;
     if (Z_TYPE_P(return_value) == IS_RESOURCE)

@@ -30,6 +30,26 @@ extern "C"
 static hook_handler_t global_hook_handlers[512];
 static size_t global_hook_handlers_len = 0;
 
+std::map<OpenRASPCheckType, const char *> CheckTypeNameMap =
+    {
+        {CALLABLE, "callable"},
+        {COMMAND, "command"},
+        {DIRECTORY, "directory"},
+        {READ_FILE, "readFile"},
+        {WRITE_FILE, "writeFile"},
+        {COPY, "copy"},
+        {RENAME, "rename"},
+        {FILE_UPLOAD, "fileUpload"},
+        {INCLUDE, "include"},
+        {DB_CONNECTION, "dbConnection"},
+        {SQL, "sql"},
+        {SQL_SLOW_QUERY, "sqlSlowQuert"},
+        {SQL_PREPARED, "sqlPrepared"},
+        {SSRF, "ssrf"},
+        {WEBSHELL_EVAL, "wenshell_eval"},
+        {WEBSHELL_COMMAND, "wenshell_command"},
+        {WEBSHELL_FILE_PUT_CONTENTS, "webshell_file_put_contents"}};
+
 void register_hook_handler(hook_handler_t hook_handler)
 {
     global_hook_handlers[global_hook_handlers_len++] = hook_handler;
@@ -164,13 +184,13 @@ bool openrasp_zval_in_request(zval *item TSRMLS_DC)
     return 0;
 }
 
-void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zval *message TSRMLS_DC)
+void openrasp_buildin_php_risk_handle(zend_bool is_block, OpenRASPCheckType type, int confidence, zval *params, zval *message TSRMLS_DC)
 {
     zval *params_result = nullptr;
     MAKE_STD_ZVAL(params_result);
     array_init(params_result);
     add_assoc_string(params_result, "intercept_state", const_cast<char *>(is_block ? "block" : "log"), 1);
-    add_assoc_string(params_result, "attack_type", (char *)type, 1);
+    add_assoc_string(params_result, "attack_type", (char *)CheckTypeNameMap.at(type), 1);
     add_assoc_string(params_result, "plugin_name", const_cast<char *>("php_builtin_plugin"), 1);
     add_assoc_long(params_result, "plugin_confidence", confidence);
     add_assoc_zval(params_result, "attack_params", params);
@@ -183,9 +203,10 @@ void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int 
     }
 }
 
-bool openrasp_check_type_ignored(const char *item_name, uint item_name_length TSRMLS_DC)
+bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC)
 {
-    return openrasp_ini.hooks_ignore.find(item_name) != openrasp_ini.hooks_ignore.end();
+    //TODO 白名单
+    return false;
 }
 
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC)
@@ -250,8 +271,9 @@ void handle_block(TSRMLS_D)
  * 调用 openrasp_check 提供的方法进行检测
  * 若需要拦截，直接返回重定向信息，并终止请求
  */
-void check(const char *type, zval *params TSRMLS_DC)
+void check(OpenRASPCheckType check_type, zval *params TSRMLS_DC)
 {
+    const char * type = CheckTypeNameMap.at(check_type);
     char result = openrasp_check(type, params TSRMLS_CC);
     zval_ptr_dtor(&params);
     if (result)

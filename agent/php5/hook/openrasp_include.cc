@@ -32,7 +32,7 @@ int include_or_eval_handler(ZEND_OPCODE_HANDLER_ARGS)
 int eval_handler(ZEND_OPCODE_HANDLER_ARGS)
 {
     zend_op *opline = execute_data->opline;
-    if (!openrasp_check_type_ignored(ZEND_STRL("webshell_eval") TSRMLS_CC) &&
+    if (!openrasp_check_type_ignored(WEBSHELL_EVAL TSRMLS_CC) &&
         OPENRASP_OP1_TYPE(opline) == IS_VAR &&
         openrasp_zval_in_request(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC))
     {
@@ -44,7 +44,7 @@ int eval_handler(ZEND_OPCODE_HANDLER_ARGS)
         zval *plugin_message = NULL;
         MAKE_STD_ZVAL(plugin_message);
         ZVAL_STRING(plugin_message, _("WebShell activity - Detected China Chopper webshell (eval method)"), 1);
-        openrasp_buildin_php_risk_handle(1, "webshell_eval", 100, attack_params, plugin_message TSRMLS_CC);
+        openrasp_buildin_php_risk_handle(1, WEBSHELL_EVAL, 100, attack_params, plugin_message TSRMLS_CC);
     }
     return ZEND_USER_OPCODE_DISPATCH;
 }
@@ -91,7 +91,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
         return ZEND_USER_OPCODE_DISPATCH;
     }
     }
-    if (openrasp_check_type_ignored(ZEND_STRL("include") TSRMLS_CC))
+    if (openrasp_check_type_ignored(INCLUDE TSRMLS_CC))
     {
         return ZEND_USER_OPCODE_DISPATCH;
     }
@@ -171,7 +171,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
                 break;
             }
             add_assoc_string(params, "function", function, 1);
-            check("include", params TSRMLS_CC);
+            check(INCLUDE , params TSRMLS_CC);
         }
         else
         {

@@ -19,11 +19,11 @@
 /**
  * callable相关hook点
  */
-PRE_HOOK_FUNCTION(array_walk, callable);
-PRE_HOOK_FUNCTION(array_map, callable);
-PRE_HOOK_FUNCTION(array_filter, callable);
+PRE_HOOK_FUNCTION(array_walk, CALLABLE);
+PRE_HOOK_FUNCTION(array_map, CALLABLE);
+PRE_HOOK_FUNCTION(array_filter, CALLABLE);
 
-PRE_HOOK_FUNCTION_EX(__construct, reflectionfunction, callable);
+PRE_HOOK_FUNCTION_EX(__construct, reflectionfunction, CALLABLE);
 
 static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
 {
@@ -46,12 +46,12 @@ static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
             spprintf(&message_str, 0, _("WebShell activity - Using dangerous callback method %s()"), Z_STRVAL_P(function_name));
             ZVAL_STRING(plugin_message, message_str, 1);
             efree(message_str);
-            openrasp_buildin_php_risk_handle(1, "callable", 100, attack_params, plugin_message TSRMLS_CC);
+            openrasp_buildin_php_risk_handle(1, CALLABLE, 100, attack_params, plugin_message TSRMLS_CC);
 		}
 	}
 }
 
-void pre_global_array_filter_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_array_filter_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *array;
 	long use_type = 0;
@@ -66,7 +66,7 @@ void pre_global_array_filter_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	}
 }
 
-void pre_global_array_map_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_array_map_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval ***arrays = NULL;
 	int n_arrays = 0;
@@ -80,7 +80,7 @@ void pre_global_array_map_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     efree(arrays);
 }
 
-void pre_global_array_walk_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_array_walk_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     HashTable *array;
 	zval *userdata = NULL;
@@ -93,7 +93,7 @@ void pre_global_array_walk_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	check_callable_function(fci TSRMLS_CC);
 }
 
-void pre_reflectionfunction___construct_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_reflectionfunction___construct_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *name;
     zval *closure = NULL;

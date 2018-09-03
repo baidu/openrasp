@@ -60,7 +60,7 @@ void slow_query_alarm(int rows TSRMLS_DC)
     spprintf(&message_str, 0, _("SQL slow query detected: selected %d rows, exceeding %d"), rows, openrasp_ini.slowquery_min_rows);
     ZVAL_STRING(plugin_message, message_str, 1);
     efree(message_str);
-    openrasp_buildin_php_risk_handle(0, "sqlSlowQuery", 100, attack_params, plugin_message TSRMLS_CC);
+    openrasp_buildin_php_risk_handle(0, SQL_SLOW_QUERY, 100, attack_params, plugin_message TSRMLS_CC);
 }
 
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy)
@@ -141,7 +141,7 @@ void sql_type_handler(char *query, int query_len, char *server TSRMLS_DC)
         array_init(params);
         add_assoc_string(params, "query", query, 1);
         add_assoc_string(params, "server", server, 1);
-        check("sql", params TSRMLS_CC);
+        check(SQL, params TSRMLS_CC);
     }
 }
 

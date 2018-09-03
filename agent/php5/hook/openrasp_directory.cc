@@ -19,9 +19,9 @@
 /**
  * directory相关hook点
  */
-PRE_HOOK_FUNCTION(dir, directory);
-PRE_HOOK_FUNCTION(opendir, directory);
-PRE_HOOK_FUNCTION(scandir, directory);
+PRE_HOOK_FUNCTION(dir, DIRECTORY);
+PRE_HOOK_FUNCTION(opendir, DIRECTORY);
+PRE_HOOK_FUNCTION(scandir, DIRECTORY);
 
 static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
@@ -64,15 +64,15 @@ static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void pre_global_dir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_dir_DIRECTORY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
-void pre_global_opendir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_opendir_DIRECTORY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
-void pre_global_scandir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_scandir_DIRECTORY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
