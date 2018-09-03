@@ -26,7 +26,7 @@ PRE_HOOK_FUNCTION_EX(query, pdo, sql);
 POST_HOOK_FUNCTION_EX(query, pdo, sqlSlowQuery);
 PRE_HOOK_FUNCTION_EX(exec, pdo, sql);
 POST_HOOK_FUNCTION_EX(exec, pdo, sqlSlowQuery);
-PRE_HOOK_FUNCTION_EX(prepare, pdo, sqlPrepare);
+PRE_HOOK_FUNCTION_EX(prepare, pdo, sqlPrepared);
 
 extern void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p);
 
@@ -218,7 +218,7 @@ void post_pdo___construct_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void pre_pdo_prepare_sqlPrepare(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_pdo_prepare_sqlPrepared(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	pdo_dbh_t *dbh = reinterpret_cast<pdo_dbh_t*>(zend_object_store_get_object(getThis() TSRMLS_CC));
 	char *statement;

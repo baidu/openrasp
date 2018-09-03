@@ -16,9 +16,14 @@
 
 #include "openrasp_log.h"
 #include "openrasp_ini.h"
+#include "openrasp_utils.h"
 #include "openrasp_inject.h"
 #include <map>
 #include <vector>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
 
 extern "C" {
 #include "openrasp_shared_alloc.h"
@@ -58,16 +63,14 @@ extern "C" {
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 
 #define RASP_LOG_FILE_MODE                  (mode_t)0666
-#define DEFAULT_LOG_FILE_SUFFIX             "Y-m-d"
-#define RASP_RFC3339_FORMAT                 "Y-m-d\\TH:i:sP"
-#define RASP_LOG_TOKEN_REFILL_INTERVAL      1000
+#define RASP_LOG_TOKEN_REFILL_INTERVAL      60000
 #define RASP_STREAM_WRITE_RETRY_NUMBER      1
 
 typedef void (*value_filter_t)(zval *origin_zv, zval *new_zv);
 
 typedef struct keys_filter_t
 {
-    const char *origin_key_str;
+    const std::string origin_key_str;
     const char *new_key_str;
     value_filter_t value_filter;
 } keys_filter;
@@ -146,6 +149,18 @@ static void _get_ifaddr_zval(zval *z_ifaddr)
     }
 }
 
+static std::string fetch_last_clientip(const std::string &s) 
+{
+    std::stringstream ip_list_ss(s);
+    std::string item;
+    while (std::getline(ip_list_ss, item, ','))
+    ;
+    std::stringstream ip_ss(item);
+    while (std::getline(ip_ss, item, ' '))
+    ;
+    return item;
+}
+
 static void request_uri_path_filter(zval *origin_zv, zval *new_zv)
 {
     char *haystack = Z_STRVAL_P(origin_zv);                                            
@@ -161,47 +176,122 @@ static void request_uri_path_filter(zval *origin_zv, zval *new_zv)
     }
 }
 
+static void build_complete_url(zval *items, zval *new_zv)
+{
+    assert(Z_TYPE_P(items) == IS_ARRAY);
+    zval *origin_zv;
+    std::string buffer;
+    if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(items), ZEND_STRL("REQUEST_SCHEME"))) != nullptr)
+    {
+        buffer.append(Z_STRVAL_P(origin_zv), Z_STRLEN_P(origin_zv));
+    }
+    else
+    {
+        buffer.append(ZEND_STRL("http"));    
+    }
+    buffer.append(ZEND_STRL("://"));
+    if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(items), ZEND_STRL("HTTP_HOST"))) != nullptr)
+    {
+        buffer.append(Z_STRVAL_P(origin_zv), Z_STRLEN_P(origin_zv));
+    }
+    else
+    {
+        if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(items), ZEND_STRL("SERVER_NAME"))) != nullptr)
+        {
+            buffer.append(Z_STRVAL_P(origin_zv), Z_STRLEN_P(origin_zv));
+        }
+        else if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(items), ZEND_STRL("SERVER_ADDR"))) != nullptr)
+        {
+            buffer.append(Z_STRVAL_P(origin_zv), Z_STRLEN_P(origin_zv));
+        }
+        if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(items), ZEND_STRL("SERVER_PORT"))) != nullptr
+        && Z_TYPE_P(origin_zv) == IS_STRING && strncmp(Z_STRVAL_P(origin_zv), "80", 2) != 0)
+        {
+            buffer.push_back(':');
+            buffer.append(Z_STRVAL_P(origin_zv), Z_STRLEN_P(origin_zv));
+        }
+    }
+    if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(items), ZEND_STRL("REQUEST_URI"))) != nullptr)
+    {
+        buffer.append(Z_STRVAL_P(origin_zv), Z_STRLEN_P(origin_zv));
+    }
+    ZVAL_STRINGL(new_zv, buffer.c_str(), buffer.length());
+}
+
 static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_filter> &filters)
 {
     zval *origin_zv;
     for (keys_filter filter:filters)
     {
-        if (src && Z_TYPE_P(src) == IS_ARRAY &&
-        (origin_zv = zend_hash_str_find(Z_ARRVAL_P(src), filter.origin_key_str, strlen(filter.origin_key_str))) != nullptr &&
-        Z_TYPE_P(origin_zv) == IS_STRING)
+        if (src && Z_TYPE_P(src) == IS_ARRAY)
         {
-            if (filter.value_filter)
+            if (filter.origin_key_str.find(" ") != std::string::npos)
             {
-                zval new_zv;
-                filter.value_filter(origin_zv, &new_zv);
-                add_assoc_zval(dest, filter.new_key_str, &new_zv);
+                zval items;
+                array_init(&items);
+                std::istringstream iss(filter.origin_key_str);
+                std::vector<std::string> tokens{std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{}};
+                for(std::string item : tokens)
+                {
+                    if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(src), item.c_str(), item.length())) != nullptr &&
+                    Z_TYPE_P(origin_zv) == IS_STRING)
+                    {
+                        add_assoc_zval(&items, item.c_str(), origin_zv);
+                        Z_ADDREF_P(origin_zv);
+                    }
+                }
+                assert(filter.value_filter != nullptr);
+                if (filter.value_filter)
+                {
+                    zval new_zv;
+                    filter.value_filter(&items, &new_zv);
+                    add_assoc_zval(dest, filter.new_key_str, &new_zv);
+                    zval_ptr_dtor(&items);
+                }
             }
             else
             {
-                add_assoc_zval(dest, filter.new_key_str, origin_zv);
-                Z_TRY_ADDREF_P(origin_zv);
+                if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(src), filter.origin_key_str.c_str(), filter.origin_key_str.length())) != nullptr &&
+                Z_TYPE_P(origin_zv) == IS_STRING)
+                {
+                    if (filter.value_filter)
+                    {
+                        zval new_zv;
+                        filter.value_filter(origin_zv, &new_zv);
+                        add_assoc_zval(dest, filter.new_key_str, &new_zv);
+                    }
+                    else
+                    {
+                        add_assoc_zval(dest, filter.new_key_str, origin_zv);
+                        Z_TRY_ADDREF_P(origin_zv);
+                    }
+                }
+                else
+                {
+                    add_assoc_string(dest, filter.new_key_str, "");
+                }
             }
         }
-        else
+        if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(dest), filter.new_key_str, strlen(filter.new_key_str))) == nullptr)
         {
             add_assoc_string(dest, filter.new_key_str, "");
         }
     }
 }
 
+static std::vector<keys_filter> alarm_filters = 
+{
+    {"SERVER_NAME",     "target",           nullptr},
+    {"SERVER_ADDR",     "server_ip",        nullptr},
+    {"HTTP_REFERER",    "referer",          nullptr},
+    {"HTTP_USER_AGENT", "user_agent",       nullptr},
+    {"REMOTE_ADDR",     "attack_source",    nullptr},
+    {"REQUEST_URI",     "path",             request_uri_path_filter},
+    {"REQUEST_SCHEME HTTP_HOST SERVER_NAME SERVER_ADDR SERVER_PORT REQUEST_URI",     "url",              build_complete_url}
+};
+
 static void init_alarm_request_info()
 {
-    static std::vector<keys_filter> alarm_filters = 
-    {
-        {"REMOTE_ADDR",     "attack_source",    nullptr},
-        {"SERVER_NAME",     "target",           nullptr},
-        {"SERVER_ADDR",     "server_ip",        nullptr},
-        {"REQUEST_URI",     "url",              nullptr},
-        {"HTTP_REFERER",    "referer",          nullptr},
-        {"HTTP_USER_AGENT", "user_agent",       nullptr},
-        {"REQUEST_URI",     "path",             request_uri_path_filter}
-    };
-
     assert(Z_TYPE(OPENRASP_LOG_G(alarm_request_info)) == IS_NULL);
     array_init(&OPENRASP_LOG_G(alarm_request_info));
     zval *migrate_src = nullptr;
@@ -269,11 +359,10 @@ static void clear_openrasp_loggers()
 static zend_bool if_need_update_formatted_file_suffix(rasp_logger_entry *logger, long now, int log_info_len)
 {
     int  last_logged_second       = logger->last_logged_time / 1000;
-    long log_rotate_second        = 24*60*60;
-    if (now/log_rotate_second != last_logged_second/log_rotate_second)
+    if (same_day_in_current_timezone(now, last_logged_second, OPENRASP_LOG_G(time_offset)))
     {
         return 1;
-    }    
+    }
     return 0;
 }
 
@@ -381,7 +470,7 @@ static int openrasp_log_by_file(rasp_logger_entry *logger, char *message, int me
     if (if_need_update_formatted_file_suffix(logger, now, message_len))
     {
         zend_string_release(OPENRASP_LOG_G(formatted_date_suffix));
-        OPENRASP_LOG_G(formatted_date_suffix) = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now, 1);
+        OPENRASP_LOG_G(formatted_date_suffix) = openrasp_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now);
         if (logger->stream_log)
         {
             php_stream_close(logger->stream_log);
@@ -406,7 +495,7 @@ static int openrasp_log_by_syslog(rasp_logger_entry *logger, severity_level leve
     int   priority        = 0;
 
     long  now             = (long)time(NULL);
-    time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), now, 1);
+    time_RFC3339 = openrasp_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), now);
     priority = openrasp_ini.syslog_facility * 8 + level_int;
     syslog_info_len = spprintf(&syslog_info, 0, "<%d>%s %s: %s", priority, ZSTR_VAL(time_RFC3339), host_name, message);
     zend_string_release(time_RFC3339);
@@ -517,7 +606,7 @@ static int base_log(rasp_logger_entry *logger, severity_level level_int, char *m
         if (logger->appender & FILE_APPENDER)
         {
             char *file_path = NULL;
-            zend_string *tmp_formatted_date_suffix = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), (long)time(NULL), 1);
+            zend_string *tmp_formatted_date_suffix = openrasp_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), (long)time(NULL));
             spprintf(&file_path, 0, "%s%clogs%c%s%c%s.log.%s", openrasp_ini.root_dir, DEFAULT_SLASH, DEFAULT_SLASH, 
                 logger->name, DEFAULT_SLASH, logger->name, ZSTR_VAL(tmp_formatted_date_suffix));
 #ifndef _WIN32
@@ -562,7 +651,7 @@ int rasp_info(const char *message, int message_len) {
         init_logger_instance(RASP_LOGGER);
     }
     char *rasp_info = NULL;    
-    zend_string *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1);
+    zend_string *time_RFC3339 = openrasp_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL));
     int   rasp_info_len = spprintf(&rasp_info, 0, "%s %s\n", ZSTR_VAL(time_RFC3339), message);
     int  rasp_result = base_info(&OPENRASP_LOG_G(loggers)[RASP_LOGGER], rasp_info, rasp_info_len);
     zend_string_release(time_RFC3339);
@@ -578,7 +667,7 @@ int plugin_info(const char *message, int message_len) {
         init_logger_instance(PLUGIN_LOGGER);
     }
     char *plugin_info = NULL;    
-    zend_string *time_RFC3339 = php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1);
+    zend_string *time_RFC3339 = openrasp_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL));
     int  plugin_info_len = spprintf(&plugin_info, 0, "%s %s", ZSTR_VAL(time_RFC3339), message);
     int  plugin_result = base_info(&OPENRASP_LOG_G(loggers)[PLUGIN_LOGGER], plugin_info, plugin_info_len);
     zend_string_release(time_RFC3339);
@@ -594,7 +683,7 @@ int alarm_info(zval *params_result) {
 
     int alarm_result = FAILURE;
 
-    add_assoc_str(&OPENRASP_LOG_G(alarm_request_info), "event_time", php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1));
+    add_assoc_str(&OPENRASP_LOG_G(alarm_request_info), "event_time", openrasp_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL)));
     zval trace;
     format_debug_backtrace_str(&trace);
     add_assoc_zval(&OPENRASP_LOG_G(alarm_request_info), "stack_trace", &trace);
@@ -633,7 +722,7 @@ int policy_info(zval *params_result) {
     
     int policy_result = FAILURE;
 
-    add_assoc_str(&OPENRASP_LOG_G(policy_request_info), "event_time", php_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL), 1));
+    add_assoc_str(&OPENRASP_LOG_G(policy_request_info), "event_time", openrasp_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), (long)time(NULL)));
     zval trace;
     if (OPENRASP_LOG_G(in_request_process))
     {
@@ -681,10 +770,10 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
     openrasp_log_globals->in_request_process = 0;
     openrasp_log_globals->last_retry_time = 0;
 
-    openrasp_log_globals->loggers[ALARM_LOGGER] = {"alarm",  0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
-    openrasp_log_globals->loggers[POLICY_LOGGER] = {"policy", 0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
-    openrasp_log_globals->loggers[PLUGIN_LOGGER] = {"plugin", 0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
-    openrasp_log_globals->loggers[RASP_LOGGER] = {"rasp",   0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
+    openrasp_log_globals->loggers[ALARM_LOGGER] = {ALARM_LOG_DIR_NAME,  0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
+    openrasp_log_globals->loggers[POLICY_LOGGER] = {POLICY_LOG_DIR_NAME, 0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
+    openrasp_log_globals->loggers[PLUGIN_LOGGER] = {PLUGIN_LOG_DIR_NAME, 0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
+    openrasp_log_globals->loggers[RASP_LOGGER] = {RASP_LOG_DIR_NAME,   0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
 
     log_appender alarm_appender = FILE_APPENDER;
     if (openrasp_ini.syslog_alarm_enable && openrasp_ini.syslog_server_address) {
@@ -705,12 +794,24 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
         }
     }
     openrasp_log_globals->loggers[ALARM_LOGGER].appender = alarm_appender;
+    openrasp_log_globals->time_offset = fetch_time_offset();
 }
 
 PHP_MINIT_FUNCTION(openrasp_log)
 {
 	ZEND_INIT_MODULE_GLOBALS(openrasp_log, openrasp_log_init_globals, NULL);
-    openrasp_shared_alloc_startup();
+    if (check_sapi_need_alloc_shm())
+    {
+        openrasp_shared_alloc_startup();
+    }
+    if (openrasp_ini.clientip_header && strcmp(openrasp_ini.clientip_header, ""))
+    {
+        char* tmp_clientip_header = estrdup(openrasp_ini.clientip_header);
+        char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
+        const char* server_global_hey = ("HTTP_" + std::string(uch)).c_str();
+        alarm_filters.push_back({server_global_hey, "client_ip", nullptr});
+        efree(tmp_clientip_header);
+    }
 #if defined(PHP_WIN32) && defined(HAVE_IPHLPAPI_WS2)
     PIP_ADAPTER_INFO pAdapterInfo;
     PIP_ADAPTER_INFO pAdapter = NULL;
@@ -780,7 +881,10 @@ PHP_MINIT_FUNCTION(openrasp_log)
 
 PHP_MSHUTDOWN_FUNCTION(openrasp_log)
 {
-    openrasp_shared_alloc_shutdown();
+    if (check_sapi_need_alloc_shm())
+    {
+        openrasp_shared_alloc_shutdown();
+    }
     return SUCCESS;
 }
 
@@ -788,7 +892,7 @@ PHP_RINIT_FUNCTION(openrasp_log)
 {
     OPENRASP_LOG_G(in_request_process) = 1;
 	long now = (long)time(NULL);
-    OPENRASP_LOG_G(formatted_date_suffix) = php_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now, 1);
+    OPENRASP_LOG_G(formatted_date_suffix) = openrasp_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), now);
     init_openrasp_loggers();
     init_alarm_request_info();
     init_policy_request_info();
