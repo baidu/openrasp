@@ -55,12 +55,11 @@ bool openrasp_check(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<
     v8::Local<v8::Value> argv[]{type, params, request_context};
 
     v8::Local<v8::Value> rst;
-    {
-        auto task = new TimeoutTask(isolate, openrasp_ini.timeout_ms);
-        std::lock_guard<std::timed_mutex> lock(task->GetMtx());
-        process_globals.v8_platform->CallOnBackgroundThread(task, v8::Platform::kShortRunningTask);
-        (void)check->Call(context, check, 3, argv).ToLocal(&rst);
-    }
+    auto task = new TimeoutTask(isolate, openrasp_ini.timeout_ms);
+    task->GetMtx().lock();
+    process_globals.v8_platform->CallOnBackgroundThread(task, v8::Platform::kShortRunningTask);
+    (void)check->Call(context, check, 3, argv).ToLocal(&rst);
+    task->GetMtx().unlock();
     if (UNLIKELY(rst.IsEmpty()))
     {
         if (try_catch.Message().IsEmpty())

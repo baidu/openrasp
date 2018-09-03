@@ -17,15 +17,17 @@ openrasp.root_dir=/tmp/openrasp
 openrasp.timeout_ms=2000
 --FILE--
 <?php
-$start = time();
+$start = round(microtime(true) * 1000);
 exec('echo test');
-$end = time();
-if ($end - $start > 1)
+$end = round(microtime(true) * 1000);
+$interval = $end - $start;
+if ($interval > 2000 && $interval < 2000 * 1.2)
 {
     echo 'ok';
 } 
 else
 {
+    var_dump($interval);
     var_dump($start);
     var_dump($end);
 }

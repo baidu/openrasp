@@ -39,7 +39,6 @@ void openrasp::TimeoutTask::Run()
             mtx.unlock();
             return;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     } while (std::chrono::high_resolution_clock::now() < time_point);
 
     // TerminateExecution can be used by any thread
