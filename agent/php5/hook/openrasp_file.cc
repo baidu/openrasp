@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_hook.h"
+#include "openrasp_v8.h"
 
 /**
  * 文件相关hook点
@@ -53,15 +54,27 @@ static const char *flag_to_type(int open_flags, bool file_exist)
 
 static void check_file_operation(const char *type, char *filename, int filename_len, zend_bool use_include_path TSRMLS_DC)
 {
+    v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
+    if (!isolate)
+    {
+        return;
+    }
     char *real_path = openrasp_real_path(filename, filename_len, use_include_path, (0 == strcmp(type, "writeFile") ? WRITING : READING) TSRMLS_CC);
     if (real_path)
     {
-        zval *params;
-        MAKE_STD_ZVAL(params);
-        array_init(params);
-        add_assoc_string(params, "path", filename, 1);
-        add_assoc_string(params, "realpath", real_path, 0);
-        check(type, params TSRMLS_CC);
+        bool is_block = false;
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto params = v8::Object::New(isolate);
+            params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, filename, filename_len));
+            params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
+            efree(real_path);
+            is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, type), params TSRMLS_CC);
+        }
+        if (is_block)
+        {
+            handle_block(TSRMLS_C);
+        }
     }
 }
 
@@ -229,6 +242,11 @@ void pre_splfileobject___construct_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETER
 
 void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
+    v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
+    if (!isolate)
+    {
+        return;
+    }
     char *source, *target;
     int source_len, target_len;
     zval *zcontext = NULL;
@@ -246,12 +264,20 @@ void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             char *target_real_path = openrasp_real_path(target, target_len, false, WRITING TSRMLS_CC);
             if (target_real_path)
             {
-                zval *params;
-                MAKE_STD_ZVAL(params);
-                array_init(params);
-                add_assoc_string(params, "source", source_real_path, 0);
-                add_assoc_string(params, "dest", target_real_path, 0);
-                check("copy", params TSRMLS_CC);
+                bool is_block = false;
+                {
+                    v8::HandleScope handle_scope(isolate);
+                    auto params = v8::Object::New(isolate);
+                    params->Set(openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_real_path));
+                    efree(source_real_path);
+                    params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, target_real_path));
+                    efree(target_real_path);
+                    is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params TSRMLS_CC);
+                }
+                if (is_block)
+                {
+                    handle_block(TSRMLS_C);
+                }
             }
             else
             {
@@ -263,6 +289,11 @@ void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_rename_rename(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
+    v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
+    if (!isolate)
+    {
+        return;
+    }
     char *source, *target;
     int source_len, target_len;
     zval *zcontext = NULL;
@@ -330,12 +361,20 @@ void pre_global_rename_rename(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         }
         else
         {
-            zval *params;
-            MAKE_STD_ZVAL(params);
-            array_init(params);
-            add_assoc_string(params, "source", source_real_path, 0);
-            add_assoc_string(params, "dest", target_real_path, 0);
-            check("rename", params TSRMLS_CC);
+            bool is_block = false;
+            {
+                v8::HandleScope handle_scope(isolate);
+                auto params = v8::Object::New(isolate);
+                params->Set(openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_real_path));
+                efree(source_real_path);
+                params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, target_real_path));
+                efree(target_real_path);
+                is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params TSRMLS_CC);
+            }
+            if (is_block)
+            {
+                handle_block(TSRMLS_C);
+            }
         }
         return;
     }

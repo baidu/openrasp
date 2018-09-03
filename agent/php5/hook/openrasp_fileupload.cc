@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_hook.h"
+#include "openrasp_v8.h"
 
 /**
  * fileupload相关hook点
@@ -65,13 +66,24 @@ void pre_global_move_uploaded_file_fileUpload(OPENRASP_INTERNAL_FUNCTION_PARAMET
             php_stream_close(stream);
             if (len > 0)
             {
-                zval *params;
-                MAKE_STD_ZVAL(params);
-                array_init(params);
-                add_assoc_zval(params, "filename", *realname);
-                Z_ADDREF_PP(realname);
-                add_assoc_stringl(params, "content", contents, MIN(len, 4 * 1024), 0);
-                check(check_type, params TSRMLS_CC);
+                v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
+                if (!isolate)
+                {
+                    return;
+                }
+                bool is_block = false;
+                {
+                    v8::HandleScope handle_scope(isolate);
+                    auto params = v8::Object::New(isolate);
+                    params->Set(openrasp::NewV8String(isolate, "filename"), openrasp::NewV8String(isolate, Z_STRVAL_PP(realname), Z_STRLEN_PP(realname)));
+                    params->Set(openrasp::NewV8String(isolate, "content"), openrasp::NewV8String(isolate, contents, MIN(len, 4 * 1024)));
+                    efree(contents);
+                    is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params TSRMLS_CC);
+                }
+                if (is_block)
+                {
+                    handle_block(TSRMLS_C);
+                }
             }
         }
     }
