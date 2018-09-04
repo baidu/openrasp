@@ -44,7 +44,7 @@ std::map<OpenRASPCheckType, const char *> CheckTypeNameMap =
         {INCLUDE, "include"},
         {DB_CONNECTION, "dbConnection"},
         {SQL, "sql"},
-        {SQL_SLOW_QUERY, "sqlSlowQuert"},
+        {SQL_SLOW_QUERY, "sqlSlowQuery"},
         {SQL_PREPARED, "sqlPrepared"},
         {SSRF, "ssrf"},
         {WEBSHELL_EVAL, "wenshell_eval"},
