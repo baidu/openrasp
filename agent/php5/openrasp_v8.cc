@@ -333,7 +333,7 @@ static inline void load_plugins(TSRMLS_D)
                 {
                     std::string source((std::istreambuf_iterator<char>(file)),
                                        std::istreambuf_iterator<char>());
-                    plugin_src_list.push_back(openrasp_v8_plugin_src{filename, source});
+                    plugin_src_list.emplace_back(openrasp_v8_plugin_src{filename, source});
                 }
                 else
                 {
@@ -344,7 +344,7 @@ static inline void load_plugins(TSRMLS_D)
         free(ent[i]);
     }
     free(ent);
-    process_globals.plugin_src_list = std::move(plugin_src_list);
+    process_globals.plugin_src_list = plugin_src_list;
 }
 
 } // namespace openrasp

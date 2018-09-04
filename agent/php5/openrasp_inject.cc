@@ -39,7 +39,7 @@ void openrasp_load_inject_html(TSRMLS_D)
         inject.resize(size);
         file.read(inject.data(), size);
     }
-    inject_html = std::move(inject);
+    inject_html = inject;
 }
 
 PHP_GINIT_FUNCTION(openrasp_inject)

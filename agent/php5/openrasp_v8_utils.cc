@@ -271,9 +271,9 @@ v8::StartupData get_snapshot(TSRMLS_D)
             MAKE_JS_SRC_PAIR(sql_tokenize),
             MAKE_JS_SRC_PAIR(rasp),
         };
-        for (auto js_src : js_src_list)
+        for (auto &js_src : js_src_list)
         {
-            if (exec_script(isolate, context, std::move(js_src.first), std::move(js_src.second)).IsEmpty())
+            if (exec_script(isolate, context, js_src.first, js_src.second).IsEmpty())
             {
                 std::stringstream stream;
                 v8error_to_stream(isolate, try_catch, stream);
