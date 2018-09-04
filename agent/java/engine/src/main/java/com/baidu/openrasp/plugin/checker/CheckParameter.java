@@ -44,6 +44,7 @@ public class CheckParameter {
         COMMAND("command", new JsChecker()),
         DIRECTORY("directory", new JsChecker()),
         REQUEST("request", new JsChecker()),
+        DUBBOREQUEST("dubboRequest",new JsChecker()),
         READFILE("readFile", new JsChecker()),
         WRITEFILE("writeFile", new JsChecker()),
         FILEUPLOAD("fileUpload", new JsChecker()),
