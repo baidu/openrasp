@@ -189,6 +189,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
                 auto params = v8::Object::New(isolate);
                 params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, Z_STRVAL_P(path), Z_STRLEN_P(path)));
                 params->Set(openrasp::NewV8String(isolate, "url"), openrasp::NewV8String(isolate, Z_STRVAL_P(path), Z_STRLEN_P(path)));
+                zval_ptr_dtor(&path);
                 params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
                 efree(real_path);
                 params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, function));
