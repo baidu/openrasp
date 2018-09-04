@@ -641,7 +641,7 @@ static int base_log(rasp_logger_entry *logger, severity_level level_int, char *m
 
 /* 基础info
 */
-static inline int base_info(rasp_logger_entry *logger, const char *message, int message_len TSRMLS_DC) {
+int base_info(rasp_logger_entry *logger, const char *message, int message_len TSRMLS_DC) {
     return base_log(logger, LEVEL_INFO, (char*)message, message_len TSRMLS_CC);
 }
 

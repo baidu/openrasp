@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_hook.h"
+#include "openrasp_v8.h"
 
 int include_handler(ZEND_OPCODE_HANDLER_ARGS);
 int eval_handler(ZEND_OPCODE_HANDLER_ARGS);
@@ -101,7 +102,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     convert_to_string(path);
     char *real_path = nullptr;
     const char *scheme_end = nullptr;
-    if (Z_STRVAL_P(path) && (scheme_end = fetch_url_scheme(Z_STRVAL_P(path))) != nullptr || (strlen(Z_STRVAL_P(path)) < 4 || 
+    if ((Z_STRVAL_P(path) && (scheme_end = fetch_url_scheme(Z_STRVAL_P(path))) != nullptr) || (strlen(Z_STRVAL_P(path)) < 4 || 
     (strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".php") && strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".inc"))))
     {
         real_path = openrasp_real_path(Z_STRVAL_P(path), Z_STRLEN_P(path), 1, READING TSRMLS_CC);
@@ -144,14 +145,12 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
         }
         if (send_to_plugin)
         {
-            zval *params;
-            MAKE_STD_ZVAL(params);
-            array_init(params);
-            add_assoc_zval(params, "path", path);
-            add_assoc_zval(params, "url", path);
-            Z_ADDREF_P(path);
-            add_assoc_string(params, "realpath", real_path, 0);
-            char *function = nullptr;
+            v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
+            if (!isolate)
+            {
+                return ZEND_USER_OPCODE_DISPATCH;
+            }
+            const char *function = nullptr;
             switch (OPENRASP_INCLUDE_OR_EVAL_TYPE(execute_data->opline))
             {
             case ZEND_INCLUDE:
@@ -170,8 +169,22 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
                 function = "";
                 break;
             }
-            add_assoc_string(params, "function", function, 1);
-            check(INCLUDE , params TSRMLS_CC);
+            bool is_block = false;
+            {
+                v8::HandleScope handle_scope(isolate);
+                auto params = v8::Object::New(isolate);
+                params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, Z_STRVAL_P(path), Z_STRLEN_P(path)));
+                params->Set(openrasp::NewV8String(isolate, "url"), openrasp::NewV8String(isolate, Z_STRVAL_P(path), Z_STRLEN_P(path)));
+                zval_ptr_dtor(&path);
+                params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
+                efree(real_path);
+                params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, function));
+                is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, CheckTypeNameMap.at(INCLUDE)), params TSRMLS_CC);
+            }
+            if (is_block)
+            {
+                handle_block(TSRMLS_C);
+            }
         }
         else
         {

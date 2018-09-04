@@ -18,6 +18,7 @@
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
 #include "openrasp_inject.h"
+#include "openrasp_v8.h"
 #include <new>
 #include <vector>
 #include <map>
@@ -211,7 +212,7 @@ bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC)
 
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC)
 {
-    return openrasp_ini.callable_blacklists.find(item_name) != openrasp_ini.callable_blacklists.end();
+    return openrasp_ini.callable_blacklists.find({item_name, item_name_length}) != openrasp_ini.callable_blacklists.end();
 }
 
 void handle_block(TSRMLS_D)
@@ -274,7 +275,7 @@ void handle_block(TSRMLS_D)
 void check(OpenRASPCheckType check_type, zval *params TSRMLS_DC)
 {
     const char * type = CheckTypeNameMap.at(check_type);
-    char result = openrasp_check(type, params TSRMLS_CC);
+    char result = openrasp::openrasp_check(type, params TSRMLS_CC);
     zval_ptr_dtor(&params);
     if (result)
     {

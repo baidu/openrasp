@@ -248,21 +248,19 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
 #define OPENRASP_HOOK_FUNCTION(name, type) \
     OPENRASP_HOOK_FUNCTION_EX(name, global, type)
 
-#define HOOK_FUNCTION_EX(name, scope, type)                                         \
-    void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);      \
-    void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);     \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                    \
-    {                                                                               \
-        bool type_ignored = openrasp_check_type_ignored(type TSRMLS_CC);            \
-        if (!type_ignored)                                                          \
-        {                                                                           \
-            pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, type);  \
-        }                                                                           \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                          \
-        if (!type_ignored)                                                          \
-        {                                                                           \
-            post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, type); \
-        }                                                                           \
+#define HOOK_FUNCTION_EX(name, scope, type)                                     \
+    void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);  \
+    void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS); \
+    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                \
+    {                                                                           \
+        static bool type_ignored = openrasp_check_type_ignored(type TSRMLS_CC); \
+        if (UNLIKELY(type_ignored))                                             \
+        {                                                                       \
+            return origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);           \
+        }                                                                       \
+        pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, type);  \
+        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                      \
+        post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, type); \
     }
 
 #define HOOK_FUNCTION(name, type) \
@@ -272,8 +270,8 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
     void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);     \
     OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                   \
     {                                                                              \
-        bool type_ignored = openrasp_check_type_ignored(type TSRMLS_CC);           \
-        if (!type_ignored)                                                         \
+        static bool type_ignored = openrasp_check_type_ignored(type TSRMLS_CC);    \
+        if (LIKELY(!type_ignored))                                                 \
         {                                                                          \
             pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, type); \
         }                                                                          \
@@ -288,8 +286,8 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
     OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                    \
     {                                                                               \
         origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                          \
-        bool type_ignored = openrasp_check_type_ignored(type TSRMLS_CC);            \
-        if (!type_ignored)                                                          \
+        static bool type_ignored = openrasp_check_type_ignored(type TSRMLS_CC);     \
+        if (LIKELY(!type_ignored))                                                  \
         {                                                                           \
             post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, type); \
         }                                                                           \

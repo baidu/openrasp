@@ -28,7 +28,7 @@ extern "C"
 #include "Zend/zend_builtin_functions.h"
 }
 
-void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
+std::string format_debug_backtrace_str(TSRMLS_D)
 {
     zval trace_arr;
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION <= 3)
@@ -36,10 +36,10 @@ void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
 #else
     zend_fetch_debug_backtrace(&trace_arr, 0, 0, 0 TSRMLS_CC);
 #endif
+    std::string buffer;
     if (Z_TYPE(trace_arr) == IS_ARRAY)
     {
         int i = 0;
-        std::string buffer;
         HashTable *hash_arr = Z_ARRVAL(trace_arr);
         for (zend_hash_internal_pointer_reset(hash_arr);
              zend_hash_has_more_elements(hash_arr) == SUCCESS;
@@ -80,19 +80,22 @@ void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
             }
             buffer.append(")\n");
         }
-        if (buffer.length() > 0)
-        {
-            ZVAL_STRINGL(backtrace_str, buffer.c_str(), buffer.length() - 1, 1);
-        }
-        else
-        {
-            ZVAL_STRING(backtrace_str, "", 1);
-        }
     }
     zval_dtor(&trace_arr);
+    if (buffer.length() > 0)
+    {
+        buffer.pop_back();
+    }
+    return buffer;
 }
 
-void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
+void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
+{
+    auto trace = format_debug_backtrace_str(TSRMLS_C);
+    ZVAL_STRINGL(backtrace_str, trace.c_str(), trace.length(), 1);
+}
+
+std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D)
 {
     zval trace_arr;
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION <= 3)
@@ -100,6 +103,7 @@ void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
 #else
     zend_fetch_debug_backtrace(&trace_arr, 0, 0, 0 TSRMLS_CC);
 #endif
+    std::vector<std::string> array;
     if (Z_TYPE(trace_arr) == IS_ARRAY)
     {
         int i = 0;
@@ -131,10 +135,20 @@ void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
                 buffer.push_back('@');
                 buffer.append(Z_STRVAL_PP(trace_ele), Z_STRLEN_PP(trace_ele));
             }
-            add_next_index_stringl(backtrace_arr, buffer.c_str(), buffer.length(), 1);
+            array.push_back(buffer);
         }
     }
     zval_dtor(&trace_arr);
+    return array;
+}
+
+void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
+{
+    auto array = format_debug_backtrace_arr(TSRMLS_C);
+    for (auto &str : array)
+    {
+        add_next_index_stringl(backtrace_arr, str.c_str(), str.length(), 1);
+    }
 }
 
 void openrasp_error(int type, int error_code, const char *format, ...)

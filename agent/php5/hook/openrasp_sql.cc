@@ -16,6 +16,7 @@
 
 #include "openrasp_hook.h"
 #include "openrasp_ini.h"
+#include "openrasp_v8.h"
 #include <string>
 #include <map>
 
@@ -134,14 +135,21 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
 
 void sql_type_handler(char *query, int query_len, char *server TSRMLS_DC)
 {
-    if (query && strlen(query) == query_len)
+    auto isolate = openrasp::get_isolate(TSRMLS_C);
+    if (isolate)
     {
-        zval *params;
-        MAKE_STD_ZVAL(params);
-        array_init(params);
-        add_assoc_string(params, "query", query, 1);
-        add_assoc_string(params, "server", server, 1);
-        check(SQL, params TSRMLS_CC);
+        bool is_block = false;
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto params = v8::Object::New(isolate);
+            params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len));
+            params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server));
+            is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, CheckTypeNameMap.at(SQL), 3), params TSRMLS_CC);
+        }
+        if (is_block)
+        {
+            handle_block(TSRMLS_C);
+        }
     }
 }
 

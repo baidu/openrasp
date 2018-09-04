@@ -105,17 +105,16 @@ static inline void init_mysql_pconnect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, 
 //mysql_connect
 void pre_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (openrasp_ini.enforce_policy)
-    {        
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry, 1))
-        {
-            handle_block(TSRMLS_C);
-        }
+    if (UNLIKELY(openrasp_ini.enforce_policy &&
+               check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry, 1)))
+    {
+        handle_block(TSRMLS_C);
     }
 }
 void post_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_RESOURCE)
+    if (LIKELY(!openrasp_ini.enforce_policy &&
+               Z_TYPE_P(return_value) == IS_RESOURCE))
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry, 0);
     }
@@ -124,17 +123,16 @@ void post_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETE
 //mysql_pconnect
 void pre_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (openrasp_ini.enforce_policy)
-    {        
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry, 1))
-        {
-            handle_block(TSRMLS_C);
-        }
+    if (UNLIKELY(openrasp_ini.enforce_policy &&
+               check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry, 1)))
+    {
+        handle_block(TSRMLS_C);
     }
 }
 void post_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_RESOURCE)
+    if (LIKELY(!openrasp_ini.enforce_policy &&
+               Z_TYPE_P(return_value) == IS_RESOURCE))
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry, 0);
     }
@@ -148,8 +146,9 @@ void pre_global_mysql_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	int query_len;
 	zval *mysql_link = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|r", &query, &query_len, &mysql_link) == FAILURE) {
-		return;
+    if (UNLIKELY(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|r", &query, &query_len, &mysql_link) == FAILURE))
+    {
+        return;
 	}
 
     sql_type_handler(query, query_len, "mysql" TSRMLS_CC);

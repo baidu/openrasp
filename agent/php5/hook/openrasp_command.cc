@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_hook.h"
+#include "openrasp_v8.h"
 
 /**
  * command相关hook点
@@ -55,18 +56,31 @@ static void check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         }
 }
 
-static void send_command_to_plugin(char * cmd TSRMLS_DC)
+static void send_command_to_plugin(const char *command TSRMLS_DC)
 {
-    zval *params;
-    MAKE_STD_ZVAL(params);
-    array_init(params);
-    add_assoc_string(params, "command", cmd, 1);
-    zval *stack = NULL;
-    MAKE_STD_ZVAL(stack);
-    array_init(stack);
-    format_debug_backtrace_arr(stack TSRMLS_CC);
-    add_assoc_zval(params, "stack", stack);
-    check(COMMAND, params TSRMLS_CC);
+    v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
+    if (isolate)
+    {
+        bool is_block = false;
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto arr = format_debug_backtrace_arr(TSRMLS_C);
+            size_t len = arr.size();
+            auto stack = v8::Array::New(isolate, len);
+            for (size_t i = 0; i < len; i++)
+            {
+                stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
+            }
+            auto params = v8::Object::New(isolate);
+            params->Set(openrasp::NewV8String(isolate, "command"), openrasp::NewV8String(isolate, command));
+            params->Set(openrasp::NewV8String(isolate, "stack"), stack);
+            is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, CheckTypeNameMap.at(COMMAND)), params TSRMLS_CC);
+        }
+        if (is_block)
+        {
+            handle_block(TSRMLS_C);
+        }
+    }
 }
 
 static void openrasp_exec_ex(INTERNAL_FUNCTION_PARAMETERS, int mode)
@@ -199,37 +213,36 @@ void pre_global_pcntl_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     char **current_arg;
     char *path;
     int path_len;
-        
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|aa", &path, &path_len, &args, &envs) == FAILURE) {
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|aa", &path, &path_len, &args, &envs) == FAILURE)
+    {
         return;
     }
-    zval *command;
-    MAKE_STD_ZVAL(command);
-    if (ZEND_NUM_ARGS() > 1) {
-        zval *args_str;
-        MAKE_STD_ZVAL(args_str);
-        zval *delim;
-        MAKE_STD_ZVAL(delim);
-        ZVAL_STRINGL(delim, " ", 1, 1);
-        php_implode(delim, args, args_str TSRMLS_CC);
-        char *cmd = nullptr;
-        spprintf(&cmd, 0, "%s %s", path, Z_STRVAL_P(args_str));
-        ZVAL_STRING(command, cmd, 1);
-        efree(cmd);
-        zval_ptr_dtor(&args_str);
-    } else {
-        ZVAL_STRINGL(command, path, path_len, 1);
+
+    std::string command(path, path_len);
+    if (ZEND_NUM_ARGS() > 1)
+    {
+        HashTable *ht = Z_ARRVAL_P(args);
+        for (zend_hash_internal_pointer_reset(ht);
+             zend_hash_has_more_elements(ht) == SUCCESS;
+             zend_hash_move_forward(ht))
+        {
+            char *key;
+            ulong idx;
+            int type;
+            zval **value;
+            type = zend_hash_get_current_key(ht, &key, &idx, 0);
+            if (type == HASH_KEY_IS_STRING ||
+                zend_hash_get_current_data(ht, (void **)&value) != SUCCESS ||
+                Z_TYPE_PP(value) != IS_STRING)
+            {
+                continue;
+            }
+            command.append(" ").append(Z_STRVAL_PP(value), Z_STRLEN_PP(value));
+        }
     }
-    zval *params;
-    MAKE_STD_ZVAL(params);
-    array_init(params);
-    add_assoc_zval(params, "command", command);
-    zval *stack = NULL;
-    MAKE_STD_ZVAL(stack);
-    array_init(stack);
-    format_debug_backtrace_arr(stack TSRMLS_CC);
-    add_assoc_zval(params, "stack", stack);
-    check(COMMAND, params TSRMLS_CC);
+
+    send_command_to_plugin(command.c_str() TSRMLS_CC);
 }
 
 void pre_global_assert_WEBSHELL_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)

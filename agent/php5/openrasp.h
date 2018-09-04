@@ -63,12 +63,25 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp)
 #define OPENRASP_GP() (&openrasp_globals)
 #endif
 
-unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC);
 void openrasp_error(int type, int error_code, const char *format, ...);
 int rasp_info(const char *message, int message_len TSRMLS_DC);
 int plugin_info(const char *message, int message_len TSRMLS_DC);
 int alarm_info(zval *params_result TSRMLS_DC);
 int policy_info(zval *params_result TSRMLS_DC);
+
+#ifdef UNLIKELY
+#undef UNLIKELY
+#endif
+#ifdef LIKELY
+#undef LIKELY
+#endif
+#if defined(__GNUC__) || defined(__clang__)
+#define UNLIKELY(condition) (__builtin_expect(!!(condition), 0))
+#define LIKELY(condition) (__builtin_expect(!!(condition), 1))
+#else
+#define UNLIKELY(condition) (condition)
+#define LIKELY(condition) (condition)
+#endif
 
 #ifdef __cplusplus
 }
