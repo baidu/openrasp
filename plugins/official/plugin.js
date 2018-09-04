@@ -594,7 +594,7 @@ if (RASP.get_jsengine() !== 'v8') {
         // 增加缓存，如果超过大小则删除末尾元素
         put: function(key) {
             var node = this.cache[key]
-            if (node) {
+            if (!node) {
                 node = {
                     key: key
                 }
