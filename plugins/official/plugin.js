@@ -166,9 +166,9 @@ var algorithmConfig = {
     readFile_userinput_unwanted: {
         action: 'block'
     },
-    // 任意文件下载防护 - 使用 ../../ 跳出 web 目录读取敏感文件
-    readFile_traversal: {
-        action: 'block'
+    // 任意文件下载防护 - 读取 web 目录以外的文件，默认关闭
+    readFile_outsideWebroot: {
+        action: 'ignore'
     },
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
     readFile_unwanted: {
@@ -206,9 +206,9 @@ var algorithmConfig = {
     directory_unwanted: {
         action: 'block'
     },
-    // 文件管理器 - 列出webroot之外的目录
+    // 文件管理器 - 列出webroot之外的目录，默认关闭
     directory_outsideWebroot: {
-        action: 'block'
+        action: 'ignore'
     },
 
     // 文件包含 - 用户输入
@@ -445,7 +445,7 @@ function validate_stack_php(stacks) {
 
         // 存在一些误报，调整下距离
         if (stack.indexOf('@call_user_func') != -1) {
-            if (i <= 3) {
+            if (i <= 2) {
                 verdict = true
                 break
             }
@@ -1076,16 +1076,15 @@ plugin.register('readFile', function (params, context) {
 
     //
     // 算法3: 检查文件遍历，看是否超出web目录范围
-    // e.g 使用 ../../../etc/passwd 跨目录读取文件
     //
-    if (algorithmConfig.readFile_traversal.action != 'ignore')
+    if (algorithmConfig.readFile_outsideWebroot.action != 'ignore')
     {
         var path        = params.path
         var appBasePath = context.appBasePath
 
         if (is_outside_webroot(appBasePath, params.realpath, path)) {
             return {
-                action:     algorithmConfig.readFile_traversal.action,
+                action:     algorithmConfig.readFile_outsideWebroot.action,
                 message:    _("Path traversal - accessing files outside webroot (%1%), file is %2%", [appBasePath, params.realpath]),
                 confidence: 90
             }
