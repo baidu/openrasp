@@ -575,13 +575,17 @@ if (RASP.get_jsengine() !== 'v8') {
 
     // v8 全局SQL结果缓存
     var LRU = {
-        head: undefined,
-        tail: undefined,
+        head: {
+            next: this.tail
+        },
+        tail: {
+            prev: this.head
+        },
         cache: {},
-        maxLength:   algorithmConfig.cache.sqli.capacity,
+        maxLength: algorithmConfig.cache.sqli.capacity,
 
         // 查询缓存，如果在则移动到队首
-        get: function(key) {
+        get: function (key) {
             var node = this.cache[key]
             if (node) {
                 this.update(node)
@@ -592,7 +596,7 @@ if (RASP.get_jsengine() !== 'v8') {
         },
 
         // 增加缓存，如果超过大小则删除末尾元素
-        put: function(key) {
+        put: function (key) {
             var node = this.cache[key]
             if (!node) {
                 node = {
@@ -628,9 +632,9 @@ if (RASP.get_jsengine() !== 'v8') {
         },
 
         // 调试函数，用于打印内部信息
-        dump: function() {
-            console.log (this.cache)
-            console.log ('')
+        dump: function () {
+            console.log(this.cache)
+            console.log('')
         }
     }
 
