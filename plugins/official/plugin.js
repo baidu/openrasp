@@ -81,7 +81,7 @@ var algorithmConfig = {
             into_outfile:       true,
 
             // 是否拦截 information_schema 相关读取操作
-            information_schema: true
+            information_schema: false
         },
         function_blacklist: {
             // 文件操作
