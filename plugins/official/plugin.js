@@ -168,7 +168,7 @@ var algorithmConfig = {
     },
     // 任意文件下载防护 - 使用 ../../ 跳出 web 目录读取敏感文件
     readFile_traversal: {
-        action: 'block'
+        action: 'ignore'
     },
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
     readFile_unwanted: {
@@ -208,7 +208,7 @@ var algorithmConfig = {
     },
     // 文件管理器 - 列出webroot之外的目录
     directory_outsideWebroot: {
-        action: 'block'
+        action: 'ignore'
     },
 
     // 文件包含 - 用户输入
