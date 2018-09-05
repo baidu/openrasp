@@ -80,8 +80,8 @@ var algorithmConfig = {
             // 是否拦截 into outfile 写文件操作
             into_outfile:       true,
 
-            // 是否拦截 information_schema 相关读取操作
-            information_schema: true
+            // 是否拦截 information_schema 相关读取操作，默认关闭
+            information_schema: false
         },
         function_blacklist: {
             // 文件操作
