@@ -575,13 +575,10 @@ if (RASP.get_jsengine() !== 'v8') {
 
     // v8 全局SQL结果缓存
     var LRU = {
-        head: {
-            next: this.tail
-        },
-        tail: {
-            prev: this.head
-        },
+        head: undefined,
+        tail: undefined,
         cache: {},
+        length: 0,
         maxLength: algorithmConfig.cache.sqli.capacity,
 
         // 查询缓存，如果在则移动到队首
@@ -617,8 +614,18 @@ if (RASP.get_jsengine() !== 'v8') {
                 node.next.prev = node.prev
             } else if (!this.cache.hasOwnProperty(node.key)) {
                 this.cache[node.key] = node
-                if (++this.length > this.maxLength) {
-                    this.cache[this.tail.key] = undefined
+                if (this.length == 0) {
+                    this.head = this.tail = node
+                    this.length = 1
+                    return
+                } else if (this.length == 1) {
+                    this.head = node
+                    this.head.next = this.tail
+                    this.tail.prev = this.head
+                    this.length = 2
+                    return
+                } else if (++this.length > this.maxLength) {
+                    delete this.cache[this.tail.key]
                     this.tail.prev.next = undefined
                     this.tail = this.tail.prev
                 }
