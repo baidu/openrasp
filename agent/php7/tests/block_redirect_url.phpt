@@ -1,5 +1,5 @@
 --TEST--
-block url
+block redirect url
 --SKIPIF--
 <?php
 $plugin = <<<EOF
@@ -13,10 +13,12 @@ include(__DIR__.'/skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.block_url=http://block_url.com
+openrasp.block_redirect_url="/block?request_id="
 --FILE--
 <?php
 exec('echo test');
 ?>
+--EXPECTHEADERS--
+Location: /block?request_id=
 --EXPECTREGEX--
-.*block_url.*
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

@@ -18,17 +18,17 @@ package com.baidu.openrasp.hook.server.jetty;
 
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.hook.server.ServerOutputCloseHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-
-import java.io.IOException;
 
 /**
  * Created by tyy on 17-12-13.
  *
  * jetty 输出流关闭 hook 点
  */
+@HookAnnotation
 public class JettyHttpOutputHook extends ServerOutputCloseHook {
 
     /**

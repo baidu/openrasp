@@ -71,6 +71,26 @@ public class Reflection {
     }
 
     /**
+     * 反射获取父类对象的字段包括私有的
+     *
+     * @param paramClass    被提取字段的对象
+     * @param fieldName 字段名称
+     * @return 字段的值
+     */
+    public static Object getSuperField(Object paramClass, String fieldName) {
+        Object object = null;
+        try {
+            Field field = paramClass.getClass().getSuperclass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            object = field.get(paramClass);
+        } catch (Exception e) {
+
+            LOGGER.error(e.getMessage());
+        }
+        return object;
+    }
+
+    /**
      * 调用某一个类的静态方法
      *
      * @param className  类名

@@ -21,6 +21,7 @@ import com.baidu.openrasp.plugin.checker.js.JsChecker;
 import com.baidu.openrasp.plugin.checker.local.SSRFChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlStatementChecker;
+import com.baidu.openrasp.plugin.checker.policy.JBossJMXSecurityChecker;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
 import com.baidu.openrasp.plugin.checker.policy.TomcatSecurityChecker;
 import com.baidu.openrasp.request.AbstractRequest;
@@ -43,6 +44,7 @@ public class CheckParameter {
         COMMAND("command", new JsChecker()),
         DIRECTORY("directory", new JsChecker()),
         REQUEST("request", new JsChecker()),
+        DUBBOREQUEST("dubboRequest",new JsChecker()),
         READFILE("readFile", new JsChecker()),
         WRITEFILE("writeFile", new JsChecker()),
         FILEUPLOAD("fileUpload", new JsChecker()),
@@ -60,7 +62,8 @@ public class CheckParameter {
 
         // 安全基线检测
         POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker()),
-        POLICY_TOMCAT_START("tomcatStart", new TomcatSecurityChecker());
+        POLICY_TOMCAT_START("tomcatStart", new TomcatSecurityChecker()),
+        POLICY_JBOSS_JMX_CONSOLE("jbossJMXConsole", new JBossJMXSecurityChecker());
 
         String name;
         Checker checker;

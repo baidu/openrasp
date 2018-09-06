@@ -113,4 +113,9 @@ public class EmptyRequest extends AbstractRequest {
     public String getAppBasePath() {
         return null;
     }
+
+    @Override
+    public String getClinetIp() {
+        return null;
+    }
 }

@@ -20,6 +20,7 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.Reflection;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -32,6 +33,7 @@ import java.io.IOException;
  * Created by lxk on 10/12/17.
  * All rights reserved
  */
+@HookAnnotation
 public class WebDAVCopyResourceHook extends AbstractClassHook {
     /**
      * (none-javadoc)

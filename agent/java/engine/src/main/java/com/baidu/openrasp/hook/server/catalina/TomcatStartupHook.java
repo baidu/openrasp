@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook;
+package com.baidu.openrasp.hook.server.catalina;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.hook.server.ServerStartupHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
+import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -28,16 +32,12 @@ import java.io.IOException;
  * Created by tyy on 8/9/17.
  * 用于hook tomcat启动函数
  */
-public class TomcatStartupHook extends AbstractClassHook {
+@HookAnnotation
+public class TomcatStartupHook extends ServerStartupHook {
 
     @Override
     public boolean isClassMatched(String className) {
         return "org/apache/catalina/startup/Catalina".equals(className);
-    }
-
-    @Override
-    public String getType() {
-        return "startup";
     }
 
     /**
@@ -55,6 +55,18 @@ public class TomcatStartupHook extends AbstractClassHook {
      * tomcat启动时检测安全规范
      */
     public static void checkTomcatStartup() {
+        try {
+            String serverInfo = (String) Reflection.invokeStaticMethod("org.apache.catalina.util.ServerInfo",
+                    "getServerInfo", new Class[]{});
+            if (serverInfo != null && serverInfo.toLowerCase().contains("tomcat")) {
+                String version = (String) Reflection.invokeStaticMethod(
+                        "org.apache.catalina.util.ServerInfo", "getServerNumber", new Class[]{});
+                ApplicationModel.init("tomcat", version);
+            }
+        } catch (Exception e) {
+            HookHandler.LOGGER.warn("handle resin startup failed", e);
+        }
         HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_TOMCAT_START, CheckParameter.EMPTY_MAP);
     }
+
 }

@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.CharArrayReader;
 import java.io.CharArrayWriter;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -43,6 +44,7 @@ public abstract class AbstractRequest {
     protected int maxBodySize = 4096;
     protected String requestId;
     protected boolean canGetParameter = false;
+    protected HashMap<String, String[]> fileUploadCache = new HashMap<String, String[]>();
 
     /**
      * constructor
@@ -240,6 +242,13 @@ public abstract class AbstractRequest {
     public abstract String getAppBasePath();
 
     /**
+     * 获取自定义的clientip
+     *
+     * @return 自定义的clientip
+     */
+    public abstract String getClinetIp();
+
+    /**
      * 返回HTTP request body
      *
      * @return request body, can be null
@@ -330,4 +339,7 @@ public abstract class AbstractRequest {
         return false;
     }
 
+    public HashMap<String, String[]> getFileUploadCache() {
+        return fileUploadCache;
+    }
 }

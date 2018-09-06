@@ -21,6 +21,7 @@ import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.FileUtil;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -35,6 +36,7 @@ import java.io.IOException;
  *
  * 文件输出流 hook 点
  */
+@HookAnnotation
 public class FileOutputStreamHook extends AbstractClassHook {
     /**
      * (none-javadoc)

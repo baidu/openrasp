@@ -6,8 +6,8 @@ $plugin = <<<EOF
 plugin.register('include', params => {
     assert(params.function = 'include')
     assert(params.path == '/etc/passwd')
-    assert(params.url == '/etc/passwd')
-    assert(params.realpath == '/etc/passwd')
+    assert(params.url.endsWith('/etc/passwd'))
+    assert(params.realpath.endsWith('/etc/passwd'))
     return block
 })
 EOF;
