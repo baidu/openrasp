@@ -15,62 +15,23 @@
  */
 
 #include "openrasp_v8.h"
+#include "openrasp_log.h"
 using namespace openrasp;
 static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    
-
-    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
-    {
-        return;
-    }
-    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
-
-    zval *REQUEST_SCHEME = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_SCHEME"));
-    zval *SERVER_NAME = zend_hash_str_find(_SERVER, ZEND_STRL("SERVER_NAME"));
-    zval *HTTP_HOST = zend_hash_str_find(_SERVER, ZEND_STRL("HTTP_HOST"));
-    zval *SERVER_ADDR = zend_hash_str_find(_SERVER, ZEND_STRL("SERVER_ADDR"));
-    zval *SERVER_PORT = zend_hash_str_find(_SERVER, ZEND_STRL("SERVER_PORT"));
-    zval *REQUEST_URI = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_URI"));
-
-    std::string url;
-    if (REQUEST_SCHEME)
-    {
-        url.append(Z_STRVAL_P(REQUEST_SCHEME), Z_STRLEN_P(REQUEST_SCHEME));
-    }
-    url.append("://");
-    if (HTTP_HOST)
-    {
-        url.append(Z_STRVAL_P(HTTP_HOST), Z_STRLEN_P(HTTP_HOST));
-    }
-    else
-    {
-        if (SERVER_NAME)
+    zval *origin_zv;
+    if (Z_TYPE(OPENRASP_LOG_G(alarm_request_info)) == IS_ARRAY &&
+        (origin_zv = zend_hash_str_find(Z_ARRVAL(OPENRASP_LOG_G(alarm_request_info)), ZEND_STRL("url"))) != nullptr)
         {
-            url.append(Z_STRVAL_P(SERVER_NAME), Z_STRLEN_P(SERVER_NAME));
+            char *url = Z_STRVAL_P(origin_zv);
+            v8::Isolate *isolate = info.GetIsolate();
+            v8::Local<v8::String> v8_url;
+            if (V8STRING_EX(url, v8::NewStringType::kNormal, Z_STRLEN_P(origin_zv)).ToLocal(&v8_url))
+            {
+                info.GetReturnValue().Set(v8_url);
+            }
         }
-        else if (SERVER_ADDR)
-        {
-            url.append(Z_STRVAL_P(SERVER_ADDR), Z_STRLEN_P(SERVER_ADDR));
-        }
-        url.append(":");
-        if (SERVER_PORT)
-        {
-            url.append(Z_STRVAL_P(SERVER_PORT), Z_STRLEN_P(SERVER_PORT));
-        }
-    }
-    if (REQUEST_URI)
-    {
-        url.append(Z_STRVAL_P(REQUEST_URI), Z_STRLEN_P(REQUEST_URI));
-    }
-
-    v8::Isolate *isolate = info.GetIsolate();
-    v8::Local<v8::String> v8_url;
-    if (V8STRING_EX(url.c_str(), v8::NewStringType::kNormal, url.length()).ToLocal(&v8_url))
-    {
-        info.GetReturnValue().Set(v8_url);
-    }
 }
 static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {

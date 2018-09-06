@@ -45,6 +45,7 @@ class Openrasp_ini
     bool enforce_policy = false;
     std::unordered_set<std::string> hooks_ignore;
     std::unordered_set<std::string> callable_blacklists;
+    char *clientip_header;
     int block_status_code = 302;
     char *block_redirect_url;
     char *block_content_json;

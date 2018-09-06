@@ -12,6 +12,7 @@ display_errors=true
 yaml.decode_php=no
 --FILE--
 <?php
+include(__DIR__.'/timezone.inc');
 passthru('tail -n 3 /tmp/openrasp/logs/policy/policy.log.'.date("Y-m-d"));
 ?>
 --EXPECTREGEX--

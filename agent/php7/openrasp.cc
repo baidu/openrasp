@@ -67,6 +67,7 @@ PHP_INI_ENTRY1("openrasp.block_redirect_url", R"(https://rasp.baidu.com/blocked/
 PHP_INI_ENTRY1("openrasp.block_content_json", R"({"error":true, "reason": "Request blocked by OpenRASP", "request_id": "%request_id%"})", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_content_json)
 PHP_INI_ENTRY1("openrasp.block_content_xml", R"(<?xml version="1.0"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>)", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_content_xml)
 PHP_INI_ENTRY1("openrasp.block_content_html", R"(</script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>)", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_content_html)
+PHP_INI_ENTRY1("openrasp.clientip_header", "clientip", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.clientip_header)
 PHP_INI_END()
 
 PHP_GINIT_FUNCTION(openrasp)

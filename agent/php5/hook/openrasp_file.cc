@@ -143,7 +143,7 @@ void pre_global_file_put_contents_webshell_file_put_contents(OPENRASP_INTERNAL_F
             zval *plugin_message = NULL;
             MAKE_STD_ZVAL(plugin_message);
             ZVAL_STRING(plugin_message, _("WebShell activity - Detected file dropper backdoor"), 1);
-            openrasp_buildin_php_risk_handle(1, "webshell_file_put_contents", 100, attack_params, plugin_message TSRMLS_CC);
+            openrasp_buildin_php_risk_handle(1, check_type, 100, attack_params, plugin_message TSRMLS_CC);
         }
     }
 }

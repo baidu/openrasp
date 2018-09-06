@@ -166,8 +166,8 @@ var algorithmConfig = {
     readFile_userinput_unwanted: {
         action: 'block'
     },
-    // 任意文件下载防护 - 读取 web 目录以外的文件，默认关闭
-    readFile_outsideWebroot: {
+    // 任意文件下载防护 - 使用 ../../ 跳出 web 目录读取敏感文件
+    readFile_traversal: {
         action: 'ignore'
     },
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
@@ -1424,12 +1424,21 @@ plugin.register('xxe', function (params, context) {
         //
         // 相对路径容易误报, e.g
         // file://xwork.dtd
-        if (algorithmConfig.xxe_file.action != 'ignore') {
-            if (address.length > 0 && protocol === 'file' && address[0] == '/') {
-                return {
-                    action:     algorithmConfig.xxe_file.action,
-                    message:    _("XXE - Accessing file %1%", [address]),
-                    confidence: 90
+        if (algorithmConfig.xxe_file.action != 'ignore') 
+        {
+            if (address.length > 0 && protocol === 'file' && address[0] == '/') 
+            {
+                var address_lc = address.toLowerCase()
+
+                // 过滤掉 xml、dtd
+                if (! address_lc.endsWith('.xml') && 
+                    ! address_lc.endsWith('.dtd')) 
+                {
+                    return {
+                        action:     algorithmConfig.xxe_file.action,
+                        message:    _("XXE - Accessing file %1%", [address]),
+                        confidence: 90
+                    }
                 }
             } 
         }

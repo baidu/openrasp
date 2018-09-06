@@ -15,6 +15,7 @@ include(__DIR__.'/skipif.inc');
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
+include(__DIR__.'/timezone.inc');
 header('Content-type: text/plain');
 exec('echo test');
 passthru('tail -n 1 /tmp/openrasp/logs/alarm/alarm.log.'.date("Y-m-d"));
