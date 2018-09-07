@@ -88,8 +88,9 @@ void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int 
 
 bool openrasp_check_type_ignored(const char *item_name, uint item_name_length)
 {
-    return openrasp_ini.hooks_ignore.find("all") != openrasp_ini.hooks_ignore.end() ||
-           openrasp_ini.hooks_ignore.find(item_name) != openrasp_ini.hooks_ignore.end();
+    static const std::string all("all");
+    return openrasp_ini.hooks_ignore.find(all) != openrasp_ini.hooks_ignore.end() ||
+           openrasp_ini.hooks_ignore.find({item_name, item_name_length}) != openrasp_ini.hooks_ignore.end();
 }
 
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length)
@@ -196,7 +197,7 @@ static std::string resolve_request_id(std::string str)
         str.replace(start_pos, placeholder.length(), request_id);
         start_pos += request_id.length();
     }
-    return std::move(str);
+    return str;
 }
 
 void handle_block()
