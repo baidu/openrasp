@@ -269,7 +269,7 @@ var algorithmConfig = {
     },
     // 文件上传 - Multipart 方式上传 HTML/JS 等文件
     fileUpload_multipart_html: {
-        action: 'block'
+        action: 'ignore'
     },
 
     // OGNL 代码执行漏洞
