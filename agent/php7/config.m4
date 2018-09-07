@@ -135,27 +135,6 @@ if test "$PHP_OPENRASP" != "no"; then
     OPENRASP_LIBS="$ANTLR4_LIBS $OPENRASP_LIBS"
   fi
 
-  LIBFSWATCH_SOURCE="libfswatch/c++/path_utils.cpp \
-    libfswatch/c++/fen_monitor.cpp \
-    libfswatch/c++/fsevents_monitor.cpp \
-    libfswatch/c++/monitor.cpp \
-    libfswatch/c++/filter.cpp \
-    libfswatch/c++/inotify_monitor.cpp \
-    libfswatch/c++/windows_monitor.cpp \
-    libfswatch/c++/string/string_utils.cpp \
-    libfswatch/c++/event.cpp \
-    libfswatch/c++/poll_monitor.cpp \
-    libfswatch/c++/windows/win_handle.cpp \
-    libfswatch/c++/windows/win_error_message.cpp \
-    libfswatch/c++/windows/win_strings.cpp \
-    libfswatch/c++/windows/win_paths.cpp \
-    libfswatch/c++/windows/win_directory_change_event.cpp \
-    libfswatch/c++/kqueue_monitor.cpp \
-    libfswatch/c++/libfswatch_exception.cpp \
-    libfswatch/c/libfswatch_log.cpp \
-    libfswatch/c/libfswatch.cpp \
-    libfswatch/c/cevent.cpp"
-  PHP_ADD_INCLUDE("$OPENRASP_SRCDIR/libfswatch")
   case $host_os in
     darwin* )
       OPENRASP_LIBS="-framework CoreServices $OPENRASP_LIBS"
@@ -486,8 +465,6 @@ int main() {
     openrasp_v8_utils.cc \
     openrasp_security_policy.cc \
     openrasp_ini.cc \
-    openrasp_fswatch.cc \
-    $LIBFSWATCH_SOURCE \
     $ANTLR4_SOURCES \
     , $ext_shared)
   ifdef([PHP_ADD_EXTENSION_DEP],
