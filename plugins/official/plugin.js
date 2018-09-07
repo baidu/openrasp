@@ -263,8 +263,12 @@ var algorithmConfig = {
     fileUpload_webdav: {
         action: 'block'
     },
-    // 文件上传 - Multipart 表单方式
-    fileUpload_multipart: {
+    // 文件上传 - Multipart 方式上传脚本文件
+    fileUpload_multipart_script: {
+        action: 'block'
+    },
+    // 文件上传 - Multipart 方式上传 HTML/JS 等文件
+    fileUpload_multipart_html: {
         action: 'block'
     },
 
@@ -351,6 +355,9 @@ var forcefulBrowsing = {
 
 // 如果你配置了非常规的扩展名映射，比如让 .abc 当做PHP脚本执行，那你可能需要增加更多扩展名
 var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml)\.?$/i
+
+// 匹配 HTML/JS 等可以用于钓鱼、domain-fronting 的文件
+var htmlFileRegex   = /\.(htm|html|js)$/i
 
 // 其他的 stream 都没啥用
 var ntfsRegex       = /::\$(DATA|INDEX)$/i
@@ -1174,30 +1181,47 @@ plugin.register('writeFile', function (params, context) {
 })
 
 
-if (algorithmConfig.fileUpload_multipart.action != 'ignore')
-{
-    // 禁止使用 multipart 上传脚本文件，或者 apache/php 服务器配置文件
-    plugin.register('fileUpload', function (params, context) {
 
-        if (scriptFileRegex.test(params.filename) || ntfsRegex.test(params.filename)) {
+plugin.register('fileUpload', function (params, context) {
+
+    // 是否禁止使用 multipart 上传脚本文件，或者 apache/php 服务器配置文件
+    if (algorithmConfig.fileUpload_multipart_script.action != 'ignore') 
+    {
+        if (scriptFileRegex.test(params.filename) || ntfsRegex.test(params.filename)) 
+        {
             return {
-                action:     algorithmConfig.fileUpload_multipart.action,
-                message:    _("File upload - Uploading a server-side script file with multipart/form-data protocol", [params.filename]),
+                action:     algorithmConfig.fileUpload_multipart_script.action,
+                message:    _("File upload - Uploading a server-side script file with multipart/form-data protocol, filename: %1%", [params.filename]),
                 confidence: 90
             }
         }
 
-        if (params.filename == ".htaccess" || params.filename == ".user.ini") {
+        if (params.filename == ".htaccess" || params.filename == ".user.ini") 
+        {
             return {
-                action:     algorithmConfig.fileUpload_multipart.action,
-                message:    _("File upload - Uploading a server-side config file with multipart/form-data protocol", [params.filename]),
+                action:     algorithmConfig.fileUpload_multipart_script.action,
+                message:    _("File upload - Uploading a server-side config file with multipart/form-data protocol, filename: %1%", [params.filename]),
                 confidence: 90
             }
         }
+    }
 
-        return clean
-    })
-}
+    // 是否禁止 HTML/JS 文件
+    if (algorithmConfig.fileUpload_multipart_html.action != 'ignore') 
+    {
+        if (htmlFileRegex.test(params.filename)) 
+        {
+            return {
+                action:     algorithmConfig.fileUpload_multipart_html.action,
+                message:    _("File upload - Uploading a HTML/JS file with multipart/form-data protocol", [params.filename]),
+                confidence: 90
+            }
+        }
+    }    
+
+    return clean
+})
+
 
 
 if (algorithmConfig.fileUpload_webdav.action != 'ignore')
