@@ -7,9 +7,6 @@ PHP_ARG_WITH(v8, for v8 support,
 PHP_ARG_WITH(gettext, for gettext support,
 [  --with-gettext=DIR   Set the path to gettext], no, no)
 
-PHP_ARG_WITH(antlr4, for native antlr4 support,
-[  --with-antlr4=DIR       Set the path to antlr4], no, no)
-
 if test "$PHP_OPENRASP" != "no"; then
   PHP_REQUIRE_CXX()
   if test "$PHP_JSON" = "no" && test "$ext_shared" = "no"; then
@@ -106,33 +103,6 @@ if test "$PHP_OPENRASP" != "no"; then
     AC_DEFINE([HAVE_GETTEXT], [1], [Have gettext support])
     PHP_ADD_INCLUDE($GETTEXT_PATH/include)
     OPENRASP_LIBS="$GETTEXT_LIBS $OPENRASP_LIBS"
-  fi
-
-  if test "$PHP_ANTLR4" != "no"; then
-    SEARCH_FOR="include/antlr4-runtime/antlr4-runtime.h"
-    if test -r $PHP_ANTLR4/$SEARCH_FOR; then
-      ANTLR4_PATH=$PHP_ANTLR4
-    else
-      AC_MSG_CHECKING([for antlr4 files in default path])
-      for i in $SEARCH_PATH ; do
-        if test -r $i/$SEARCH_FOR; then
-          ANTLR4_PATH=$i
-          AC_MSG_RESULT(found in $i)
-        fi
-      done
-    fi
-
-    if test -z "$ANTLR4_PATH"; then
-      AC_MSG_RESULT([not found])
-      AC_MSG_ERROR([Please reinstall the antlr4 distribution])
-    fi
-    
-    AC_DEFINE([HAVE_NATIVE_ANTLR4], [1], [Have native antlr4 support])
-    PHP_ADD_INCLUDE($ANTLR4_PATH/include)
-    PHP_ADD_INCLUDE($ANTLR4_PATH/include/antlr4-runtime)
-    ANTLR4_SOURCES="antlr/SQLParser.cpp antlr/SQLLexer.cpp"
-    ANTLR4_LIBS="$ANTLR4_PATH/lib/libantlr4-runtime.a"
-    OPENRASP_LIBS="$ANTLR4_LIBS $OPENRASP_LIBS"
   fi
 
   case $host_os in
@@ -465,7 +435,6 @@ int main() {
     openrasp_v8_utils.cc \
     openrasp_security_policy.cc \
     openrasp_ini.cc \
-    $ANTLR4_SOURCES \
     , $ext_shared)
   ifdef([PHP_ADD_EXTENSION_DEP],
   [
