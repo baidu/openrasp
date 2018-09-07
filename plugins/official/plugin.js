@@ -443,9 +443,10 @@ function validate_stack_php(stacks) {
             break
         }
 
-        // 存在一些误报，调整下距离
+        // call_user_func/call_user_func_array 两个函数调用很频繁
+        // 必须是 call_user_func 直接调用 system/exec 等函数才拦截，否则会有很多误报
         if (stack.indexOf('@call_user_func') != -1) {
-            if (i <= 3) {
+            if (i <= 1) {
                 verdict = true
                 break
             }
