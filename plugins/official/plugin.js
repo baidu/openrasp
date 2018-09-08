@@ -722,7 +722,7 @@ if (RASP.get_jsengine() !== 'v8') {
 
             // 懒加载，需要时才处理
             if (raw_tokens.length == 0) {
-                var query_lc = params.query.toLowerCase()
+                var query_lc = params.query.toLowerCase().trim()
 
                 if (sqli_prefilter.test(query_lc)) {
                     raw_tokens = RASP.sql_tokenize(params.query, params.server)
