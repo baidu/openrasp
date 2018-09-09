@@ -8,7 +8,7 @@
 * Li Xinkai
 * Tang Youyi
 
-### Special thanks to the following people
+### Special thanks to the following people (sorted by contribution date)
 
 * Lenx Wei
 * Sun MingShen
