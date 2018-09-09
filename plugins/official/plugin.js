@@ -524,9 +524,18 @@ function is_path_endswith_userinput(parameter, target)
         var value = parameter[key]
             value = value[0]
 
+        console.log (target, value, target.endsWith(value))
+
         // 参数必须有跳出目录，或者是绝对路径
         if ((has_traversal(value) || is_absolute_path(value))
             && (value == target || target.endsWith(value)))
+        {
+            verdict = true
+            return true
+        }
+
+        // 如果应用做了特殊处理，比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
+        if (value.startsWith('file://') && value.endsWith(target))
         {
             verdict = true
             return true
