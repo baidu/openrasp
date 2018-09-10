@@ -1,12 +1,12 @@
 --TEST--
-request url
+alarm json
 --SKIPIF--
 <?php
 $plugin = <<<EOF
-plugin.register('command', (params, context) => {
+plugin.register('command', params => {
     assert(params.command == 'echo test')
-    assert(context.url == 'https://rasp.baidu.com/index.php')
-    return block
+    assert(params.stack[0].endsWith('exec'))
+    return {action: 'log'}
 })
 EOF;
 include(__DIR__.'/skipif.inc');
@@ -14,6 +14,8 @@ include(__DIR__.'/skipif.inc');
 --INI--
 openrasp.root_dir=/tmp/openrasp
 --CGI--
+--GET--
+a[]=1&b=2
 --ENV--
 return <<<END
 REQUEST_SCHEME=https
@@ -23,7 +25,10 @@ REQUEST_URI=/index.php
 END;
 --FILE--
 <?php
+include(__DIR__.'/timezone.inc');
+header('Content-type: text/plain');
 exec('echo test');
+passthru('tail -n 1 /tmp/openrasp/logs/alarm/alarm.log.'.date("Y-m-d"));
 ?>
 --EXPECTREGEX--
-<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>
+.*"body":"".*
