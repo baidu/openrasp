@@ -7,6 +7,9 @@ PHP_ARG_WITH(v8, for v8 support,
 PHP_ARG_WITH(gettext, for gettext support,
 [  --with-gettext=DIR   Set the path to gettext], no, no)
 
+PHP_ARG_ENABLE(openrasp-remote-manager, whether to enable openrasp remote manager support,
+[  --enable-openrasp-remote-manager       Enable openrasp remote manager support (Linux Only)], no, no)
+
 if test "$PHP_OPENRASP" != "no"; then
   PHP_REQUIRE_CXX()
   if test "$PHP_JSON" = "no" && test "$ext_shared" = "no"; then
@@ -103,6 +106,38 @@ if test "$PHP_OPENRASP" != "no"; then
     AC_DEFINE([HAVE_GETTEXT], [1], [Have gettext support])
     PHP_ADD_INCLUDE($GETTEXT_PATH/include)
     OPENRASP_LIBS="$GETTEXT_LIBS $OPENRASP_LIBS"
+  fi
+  
+  if test "$PHP_OPENRASP_REMOTE_MANAGER" != "no"; then
+    case $host_os in
+      darwin* )
+        ;;
+      * )
+        SEARCH_FOR="/include/curl/easy.h"
+        AC_MSG_CHECKING([for cURL in default path])
+        for i in $SEARCH_PATH ; do
+          if test -r $i/$SEARCH_FOR; then
+            CURL_PATH=$i
+            AC_MSG_RESULT(found in $i)
+          fi
+        done
+        if test -z "$CURL_PATH"; then
+          AC_MSG_RESULT([not found])
+          AC_MSG_ERROR([Please reinstall the cURL distribution])
+        fi
+
+        PHP_ADD_INCLUDE($CURL_PATH/include)
+        PHP_ADD_LIBRARY_WITH_PATH(curl, $CURL_PATH/$PHP_LIBDIR, OPENRASP_SHARED_LIBADD)
+
+        OPENRASP_REMOTE_MANAGER_SOURCE="agent/openrasp_ctrl_block.cc \
+        agent/openrasp_agent.cc \
+        agent/openrasp_agent_manager.cc \
+        agent/utils/digest.cc \
+        agent/utils/curl_helper.cc \
+        agent/mm/shm_manager.cc"
+        AC_DEFINE([HAVE_OPENRASP_REMOTE_MANAGER], [1], [Have openrasp remote manager support])
+        ;;
+    esac
   fi
 
   case $host_os in
@@ -435,6 +470,7 @@ int main() {
     openrasp_v8_utils.cc \
     openrasp_security_policy.cc \
     openrasp_ini.cc \
+    $OPENRASP_REMOTE_MANAGER_SOURCE \
     , $ext_shared)
   ifdef([PHP_ADD_EXTENSION_DEP],
   [

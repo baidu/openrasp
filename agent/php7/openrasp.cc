@@ -32,6 +32,9 @@ extern "C"
 #include "openrasp_inject.h"
 #include "openrasp_security_policy.h"
 #include <new>
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+#include "agent/openrasp_agent_manager.h"
+#endif
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
@@ -59,6 +62,13 @@ PHP_INI_ENTRY1("openrasp.timeout_ms", "100", PHP_INI_SYSTEM, OnUpdateOpenraspInt
 PHP_INI_ENTRY1("openrasp.plugin_maxstack", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.plugin_maxstack)
 PHP_INI_ENTRY1("openrasp.log_maxstack", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_maxstack)
 PHP_INI_ENTRY1("openrasp.plugin_filter", "on", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.plugin_filter)
+
+PHP_INI_ENTRY1("openrasp.backend_url", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.backend_url)
+PHP_INI_ENTRY1("openrasp.plugin_update_interval", "60", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.plugin_update_interval)
+PHP_INI_ENTRY1("openrasp.log_push_interval", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_push_interval)
+PHP_INI_ENTRY1("openrasp.app_id", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.app_id)
+PHP_INI_ENTRY1("openrasp.log_max_backup", "30", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_max_backup)
+PHP_INI_ENTRY1("openrasp.plugin_update_enable", "1", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.plugin_update_enable)
 
 PHP_INI_ENTRY1("openrasp.block_status_code", "302", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.block_status_code)
 PHP_INI_ENTRY1("openrasp.block_url", R"(https://rasp.baidu.com/blocked/?request_id=%request_id%)", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_redirect_url) // deprecated, just for compatibility
@@ -90,6 +100,12 @@ PHP_MINIT_FUNCTION(openrasp)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp, PHP_GINIT(openrasp), PHP_GSHUTDOWN(openrasp));
     REGISTER_INI_ENTRIES();
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+    if (!openrasp::oam.verify_ini_correct())
+    {
+        return SUCCESS;
+    }
+#endif
     if (!make_openrasp_root_dir())
     {
         openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir is not configured correctly in php.ini, continuing without security protection"));
@@ -107,6 +123,9 @@ PHP_MINIT_FUNCTION(openrasp)
     result = PHP_MINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+    openrasp::oam.startup();
+#endif
     is_initialized = true;
     return SUCCESS;
 }
@@ -120,6 +139,9 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
         result = PHP_MSHUTDOWN(openrasp_hook)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_v8)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_log)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+        openrasp::oam.shutdown();
+#endif
     }
     UNREGISTER_INI_ENTRIES();
     ZEND_SHUTDOWN_MODULE_GLOBALS(openrasp, PHP_GSHUTDOWN(openrasp));
@@ -160,6 +182,12 @@ PHP_MINFO_FUNCTION(openrasp)
 #endif
     php_info_print_table_row(2, "V8 Version", ZEND_TOSTR(V8_MAJOR_VERSION) "." ZEND_TOSTR(V8_MINOR_VERSION));
     php_info_print_table_row(2, "Antlr Version", "4.7.1 (JavaScript Runtime)");
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+    if (openrasp_ini.plugin_update_enable)
+    {
+        php_info_print_table_row(2, "Plugin Version", openrasp::oam.agent_ctrl_block ? openrasp::oam.agent_ctrl_block->get_plugin_version() : "");
+    }
+#endif
     php_info_print_table_end();
     DISPLAY_INI_ENTRIES();
 }

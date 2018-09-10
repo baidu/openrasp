@@ -52,6 +52,13 @@ class Openrasp_ini
     char *block_content_xml;
     char *block_content_html;
     bool plugin_filter = true;
+
+    unsigned int log_max_backup = 90;
+    char* backend_url;
+    unsigned int plugin_update_interval = 60;
+    unsigned int log_push_interval = 10;
+    char *app_id;
+    bool plugin_update_enable = 1;
 };
 
 extern Openrasp_ini openrasp_ini;

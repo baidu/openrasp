@@ -38,6 +38,7 @@ extern "C" {
 #define CONFIG_ERROR (20004)
 #define PLUGIN_ERROR (20005)
 #define RUNTIME_ERROR (20006)
+#define AGENT_ERROR (20007)
 
 #ifndef ZEND_SHUTDOWN_MODULE_GLOBALS
 #ifdef ZTS

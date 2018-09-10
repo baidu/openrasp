@@ -24,7 +24,7 @@
 #include "cereal/types/string.hpp"
 extern "C"
 {
-#include "ext/standard/php_smart_str.h"
+#include "zend_smart_str.h"
 #include "ext/json/php_json.h"
 #include "ext/date/php_date.h"
 #include "php_streams.h"
@@ -85,28 +85,23 @@ void PluginAgent::run()
 		}
 		ResponseInfo res_info;
 		std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/plugin";
-		zval *body = nullptr;
-		MAKE_STD_ZVAL(body);
-		array_init(body);
-		add_assoc_string(body, "version", (char *)oam.agent_ctrl_block->get_plugin_version(), 1);
+		zval body;
+		array_init(&body);
+		add_assoc_string(&body, "version", (char *)oam.agent_ctrl_block->get_plugin_version());
 		smart_str buf_json = {0};
-		php_json_encode(&buf_json, body, 0 TSRMLS_CC);
-		if (buf_json.a > buf_json.len)
-		{
-			buf_json.c[buf_json.len] = '\0';
-			buf_json.len++;
-		}
-		perform_curl(curl, url_string, buf_json.c, res_info);
+		php_json_encode(&buf_json, &body, 0);
+		smart_str_0(&buf_json);
+		perform_curl(curl, url_string, ZSTR_VAL(buf_json.s), res_info);
 		smart_str_free(&buf_json);
 		zval_ptr_dtor(&body);
 		if (CURLE_OK != res_info.res)
 		{
 			continue;
 		}
-		zval *return_value = nullptr;
-		MAKE_STD_ZVAL(return_value);
-		php_json_decode(return_value, (char *)res_info.response_string.c_str(), res_info.response_string.size(), 1, 512 TSRMLS_CC);
-		if (Z_TYPE_P(return_value) != IS_ARRAY)
+		zval return_value;
+		ZVAL_NULL(&return_value);
+		php_json_decode(&return_value, (char *)res_info.response_string.c_str(), res_info.response_string.size(), 1, 512);
+		if (Z_TYPE(return_value) != IS_ARRAY)
 		{
 			zval_ptr_dtor(&return_value);
 			continue;
@@ -114,8 +109,8 @@ void PluginAgent::run()
 		if (res_info.response_code >= 200 && res_info.response_code < 300)
 		{
 			long status;
-			bool has_status = fetch_outmost_long_from_ht(Z_ARRVAL_P(return_value), "status", &status);
-			char *description = fetch_outmost_string_from_ht(Z_ARRVAL_P(return_value), "description");
+			bool has_status = fetch_outmost_long_from_ht(Z_ARRVAL(return_value), "status", &status);
+			char *description = fetch_outmost_string_from_ht(Z_ARRVAL(return_value), "description");
 			if (has_status && description)
 			{
 				if (0 < status)
@@ -124,7 +119,7 @@ void PluginAgent::run()
 				}
 				else if (0 == status)
 				{
-					if (HashTable *data = fetch_outmost_hashtable_from_ht(Z_ARRVAL_P(return_value), "data"))
+					if (HashTable *data = fetch_outmost_hashtable_from_ht(Z_ARRVAL(return_value), "data"))
 					{
 						char *version = nullptr;
 						char *plugin = nullptr;
@@ -186,9 +181,9 @@ std::string LogAgent::get_formatted_date_suffix(long timestamp)
 {
 	TSRMLS_FETCH();
 	std::string result;
-	char *tmp_formatted_date_suffix = openrasp_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), timestamp);
-	result = std::string(tmp_formatted_date_suffix);
-	efree(tmp_formatted_date_suffix);
+	zend_string *tmp_formatted_date_suffix = openrasp_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), timestamp);
+	result = std::string(ZSTR_VAL(tmp_formatted_date_suffix));
+	zend_string_release(tmp_formatted_date_suffix);
 	return result;
 }
 
@@ -240,7 +235,7 @@ void LogAgent::run()
 				if (!ldi->ifs.is_open())
 				{
 					ldi->ifs.open(active_log_file, std::ifstream::binary);
-					ldi->st_ino = get_file_st_ino(active_log_file TSRMLS_CC);
+					ldi->st_ino = get_file_st_ino(active_log_file);
 				}
 				ldi->ifs.seekg(ldi->fpos);
 				if (!ldi->ifs.good())
@@ -267,7 +262,7 @@ void LogAgent::run()
 					}
 				}
 				buffer.clear();
-				long st_ino = get_file_st_ino(active_log_file TSRMLS_CC);
+				long st_ino = get_file_st_ino(active_log_file);
 				if (0 != st_ino && st_ino != ldi->st_ino)
 				{
 					ldi->ifs.close();
