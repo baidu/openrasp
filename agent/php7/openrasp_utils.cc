@@ -26,14 +26,14 @@ extern "C"
 }
 #include <string>
 
-void format_debug_backtrace_str(zval *backtrace_str)
+std::string format_debug_backtrace_str()
 {
     zval trace_arr;
+    std::string buffer;
     zend_fetch_debug_backtrace(&trace_arr, 0, 0, 0);
     if (Z_TYPE(trace_arr) == IS_ARRAY)
     {
         int i = 0;
-        std::string buffer;
         HashTable *hash_arr = Z_ARRVAL(trace_arr);
         zval *ele_value = NULL;
         ZEND_HASH_FOREACH_VAL(hash_arr, ele_value)
@@ -72,21 +72,25 @@ void format_debug_backtrace_str(zval *backtrace_str)
             buffer.append(")\n");
         }
         ZEND_HASH_FOREACH_END();
-        if (buffer.length() > 0)
-        {
-            ZVAL_STRINGL(backtrace_str, buffer.c_str(), buffer.length() - 1);
-        }
-        else
-        {
-            ZVAL_STRING(backtrace_str, "");
-        }
     }
     zval_dtor(&trace_arr);
+    if (buffer.length() > 0)
+    {
+        buffer.pop_back();
+    }
+    return buffer;
 }
 
-void format_debug_backtrace_arr(zval *backtrace_arr)
+void format_debug_backtrace_str(zval *backtrace_str)
+{
+    auto trace = format_debug_backtrace_str(TSRMLS_C);
+    ZVAL_STRINGL(backtrace_str, trace.c_str(), trace.length());
+}
+
+std::vector<std::string> format_debug_backtrace_arr()
 {
     zval trace_arr;
+    std::vector<std::string> array;
     zend_fetch_debug_backtrace(&trace_arr, 0, 0, 0);
     if (Z_TYPE(trace_arr) == IS_ARRAY)
     {
@@ -116,11 +120,21 @@ void format_debug_backtrace_arr(zval *backtrace_arr)
                 buffer.push_back('@');
                 buffer.append(Z_STRVAL_P(trace_ele), Z_STRLEN_P(trace_ele));
             }
-            add_next_index_stringl(backtrace_arr, buffer.c_str(), buffer.length());
+            array.push_back(buffer);
         }
         ZEND_HASH_FOREACH_END();
     }
     zval_dtor(&trace_arr);
+    return array;
+}
+
+void format_debug_backtrace_arr(zval *backtrace_arr)
+{
+    auto array = format_debug_backtrace_arr();
+    for (auto &str : array)
+    {
+        add_next_index_stringl(backtrace_arr, str.c_str(), str.length());
+    }
 }
 
 void openrasp_error(int type, int error_code, const char *format, ...)
@@ -246,7 +260,7 @@ void openrasp_pcre_match(zend_string *regex, zend_string *subject, zval *return_
 
     pce->refcount++;
     php_pcre_match_impl(pce, ZSTR_VAL(subject), (int)ZSTR_LEN(subject), return_value, subpats,
-		global, 0, flags, start_offset);
+                        global, 0, flags, start_offset);
     pce->refcount--;
 }
 

@@ -66,7 +66,6 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp)
 // #define OPENRASP_GP() (&openrasp_globals)
 // #endif
 
-unsigned char openrasp_check(const char *c_type, zval *z_params);
 int rasp_info(const char *message, int message_len);
 int plugin_info(const char *message, int message_len);
 int alarm_info(zval *params_result);
@@ -76,6 +75,20 @@ void format_debug_backtrace_arr(zval *backtrace_arr);
 void openrasp_error(int type, int error_code, const char *format, ...);
 int recursive_mkdir(const char *path, int len, int mode);
 const char * fetch_url_scheme(const char *filename);
+
+#ifdef UNLIKELY
+#undef UNLIKELY
+#endif
+#ifdef LIKELY
+#undef LIKELY
+#endif
+#if defined(__GNUC__) || defined(__clang__)
+#define UNLIKELY(condition) (__builtin_expect(!!(condition), 0))
+#define LIKELY(condition) (__builtin_expect(!!(condition), 1))
+#else
+#define UNLIKELY(condition) (condition)
+#define LIKELY(condition) (condition)
+#endif
 
 #ifdef __cplusplus
 }

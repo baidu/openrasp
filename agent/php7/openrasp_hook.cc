@@ -17,6 +17,7 @@
 #include "openrasp_hook.h"
 #include "openrasp_ini.h"
 #include "openrasp_inject.h"
+#include "openrasp_v8.h"
 #include <new>
 #include <unordered_map>
 
@@ -270,7 +271,7 @@ void handle_block()
  */
 void check(const char *type, zval *params)
 {
-    char result = openrasp_check(type, params);
+    char result = openrasp::openrasp_check(type, params);
     zval_ptr_dtor(params);
     if (result)
     {
