@@ -168,7 +168,7 @@ var algorithmConfig = {
         action: 'block'
     },
     // 任意文件下载防护 - 使用 ../../ 跳出 web 目录读取敏感文件
-    readFile_traversal: {
+    readFile_outsideWebroot: {
         action: 'ignore'
     },
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
