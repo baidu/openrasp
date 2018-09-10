@@ -1,4 +1,4 @@
-const version = '2018-0823-2100'
+const version = '2018-0910-1900'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
