@@ -19,7 +19,6 @@ package com.baidu.openrasp.hook.server.jboss;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.checker.policy.serverPolicy.JBossSecurityChecker;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.model.ApplicationModel;
@@ -66,7 +65,7 @@ public class JBossStartupHook extends AbstractClassHook {
             String serverVersion = Reflection.invokeStringMethod(object, "getVersionNumber", new Class[]{});
             ApplicationModel.init("jboss", serverVersion);
         } catch (Exception e) {
-            JBossSecurityChecker.LOGGER.error("handle jboss startup failed", e);
+            HookHandler.LOGGER.error("handle jboss startup failed", e);
         }
         HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_JBOSS_START, CheckParameter.EMPTY_MAP);
     }

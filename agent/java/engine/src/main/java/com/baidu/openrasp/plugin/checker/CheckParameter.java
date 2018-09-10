@@ -21,11 +21,11 @@ import com.baidu.openrasp.plugin.checker.js.JsChecker;
 import com.baidu.openrasp.plugin.checker.local.SSRFChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlStatementChecker;
-import com.baidu.openrasp.plugin.checker.policy.serverPolicy.JBossSecurityChecker;
+import com.baidu.openrasp.plugin.checker.policy.serverpolicy.JBossSecurityChecker;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
-import com.baidu.openrasp.plugin.checker.policy.serverPolicy.JettySecurityChecker;
-import com.baidu.openrasp.plugin.checker.policy.serverPolicy.ResinSecurityChecker;
-import com.baidu.openrasp.plugin.checker.policy.serverPolicy.TomcatSecurityChecker;
+import com.baidu.openrasp.plugin.checker.policy.serverpolicy.JettySecurityChecker;
+import com.baidu.openrasp.plugin.checker.policy.serverpolicy.ResinSecurityChecker;
+import com.baidu.openrasp.plugin.checker.policy.serverpolicy.TomcatSecurityChecker;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.google.gson.Gson;
 

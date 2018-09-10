@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.plugin.checker.policy.serverPolicy;
+package com.baidu.openrasp.plugin.checker.policy.serverpolicy;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
