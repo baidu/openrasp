@@ -58,8 +58,9 @@ var algorithmConfig = {
     sqli_policy: {
         action:  'block',
 
-        // 粗规则: 为了减少 tokenize 次数，当SQL语句包含一定特征时才进入
-        filter:  ';|\\/\\*|(?:\\d{1,2},){4}|(?:null,){4}|0x[\\da-f]{8}|\\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin)\\b',
+        // 粗规则 - 为了减少 tokenize 次数，当SQL语句包含一定特征时才进入
+        // 另外，我们只需要处理增删改查的语句，虽然 show 语句也可以报错注入，但是算法2没必要处理
+        filter:  '^(select|insert|update|delete).*(;|\\/\\*|(?:\\d{1,2},){4}|(?:null,){4}|0x[\\da-f]{8}|\\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin))\\b',
 
         feature: {
             // 是否禁止多语句执行，select ...; update ...;
@@ -166,8 +167,8 @@ var algorithmConfig = {
     readFile_userinput_unwanted: {
         action: 'block'
     },
-    // 任意文件下载防护 - 读取 web 目录以外的文件，默认关闭
-    readFile_outsideWebroot: {
+    // 任意文件下载防护 - 使用 ../../ 跳出 web 目录读取敏感文件
+    readFile_traversal: {
         action: 'ignore'
     },
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
@@ -263,9 +264,13 @@ var algorithmConfig = {
     fileUpload_webdav: {
         action: 'block'
     },
-    // 文件上传 - Multipart 表单方式
-    fileUpload_multipart: {
+    // 文件上传 - Multipart 方式上传脚本文件
+    fileUpload_multipart_script: {
         action: 'block'
+    },
+    // 文件上传 - Multipart 方式上传 HTML/JS 等文件
+    fileUpload_multipart_html: {
+        action: 'ignore'
     },
 
     // OGNL 代码执行漏洞
@@ -351,6 +356,9 @@ var forcefulBrowsing = {
 
 // 如果你配置了非常规的扩展名映射，比如让 .abc 当做PHP脚本执行，那你可能需要增加更多扩展名
 var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml)\.?$/i
+
+// 匹配 HTML/JS 等可以用于钓鱼、domain-fronting 的文件
+var htmlFileRegex   = /\.(htm|html|js)$/i
 
 // 其他的 stream 都没啥用
 var ntfsRegex       = /::\$(DATA|INDEX)$/i
@@ -443,9 +451,10 @@ function validate_stack_php(stacks) {
             break
         }
 
-        // 存在一些误报，调整下距离
+        // call_user_func/call_user_func_array 两个函数调用很频繁
+        // 必须是 call_user_func 直接调用 system/exec 等函数才拦截，否则会有很多误报
         if (stack.indexOf('@call_user_func') != -1) {
-            if (i <= 2) {
+            if (i <= 1) {
                 verdict = true
                 break
             }
@@ -523,6 +532,15 @@ function is_path_endswith_userinput(parameter, target)
         // 参数必须有跳出目录，或者是绝对路径
         if ((has_traversal(value) || is_absolute_path(value))
             && (value == target || target.endsWith(value)))
+        {
+            verdict = true
+            return true
+        }
+
+        // 如果应用做了特殊处理， 比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
+        if (value.startsWith('file://') && 
+            is_absolute_path(target) && 
+            value.endsWith(target))
         {
             verdict = true
             return true
@@ -751,7 +769,7 @@ if (RASP.get_jsengine() !== 'v8') {
 
             // 懒加载，需要时才处理
             if (raw_tokens.length == 0) {
-                var query_lc = params.query.toLowerCase()
+                var query_lc = params.query.toLowerCase().trim()
 
                 if (sqli_prefilter.test(query_lc)) {
                     raw_tokens = RASP.sql_tokenize(params.query, params.server)
@@ -1210,30 +1228,47 @@ plugin.register('writeFile', function (params, context) {
 })
 
 
-if (algorithmConfig.fileUpload_multipart.action != 'ignore')
-{
-    // 禁止使用 multipart 上传脚本文件，或者 apache/php 服务器配置文件
-    plugin.register('fileUpload', function (params, context) {
 
-        if (scriptFileRegex.test(params.filename) || ntfsRegex.test(params.filename)) {
+plugin.register('fileUpload', function (params, context) {
+
+    // 是否禁止使用 multipart 上传脚本文件，或者 apache/php 服务器配置文件
+    if (algorithmConfig.fileUpload_multipart_script.action != 'ignore') 
+    {
+        if (scriptFileRegex.test(params.filename) || ntfsRegex.test(params.filename)) 
+        {
             return {
-                action:     algorithmConfig.fileUpload_multipart.action,
-                message:    _("File upload - Uploading a server-side script file with multipart/form-data protocol", [params.filename]),
+                action:     algorithmConfig.fileUpload_multipart_script.action,
+                message:    _("File upload - Uploading a server-side script file with multipart/form-data protocol, filename: %1%", [params.filename]),
                 confidence: 90
             }
         }
 
-        if (params.filename == ".htaccess" || params.filename == ".user.ini") {
+        if (params.filename == ".htaccess" || params.filename == ".user.ini") 
+        {
             return {
-                action:     algorithmConfig.fileUpload_multipart.action,
-                message:    _("File upload - Uploading a server-side config file with multipart/form-data protocol", [params.filename]),
+                action:     algorithmConfig.fileUpload_multipart_script.action,
+                message:    _("File upload - Uploading a server-side config file with multipart/form-data protocol, filename: %1%", [params.filename]),
                 confidence: 90
             }
         }
+    }
 
-        return clean
-    })
-}
+    // 是否禁止 HTML/JS 文件
+    if (algorithmConfig.fileUpload_multipart_html.action != 'ignore') 
+    {
+        if (htmlFileRegex.test(params.filename)) 
+        {
+            return {
+                action:     algorithmConfig.fileUpload_multipart_html.action,
+                message:    _("File upload - Uploading a HTML/JS file with multipart/form-data protocol", [params.filename]),
+                confidence: 90
+            }
+        }
+    }    
+
+    return clean
+})
+
 
 
 if (algorithmConfig.fileUpload_webdav.action != 'ignore')
@@ -1424,12 +1459,21 @@ plugin.register('xxe', function (params, context) {
         //
         // 相对路径容易误报, e.g
         // file://xwork.dtd
-        if (algorithmConfig.xxe_file.action != 'ignore') {
-            if (address.length > 0 && protocol === 'file' && address[0] == '/') {
-                return {
-                    action:     algorithmConfig.xxe_file.action,
-                    message:    _("XXE - Accessing file %1%", [address]),
-                    confidence: 90
+        if (algorithmConfig.xxe_file.action != 'ignore') 
+        {
+            if (address.length > 0 && protocol === 'file' && address[0] == '/') 
+            {
+                var address_lc = address.toLowerCase()
+
+                // 过滤掉 xml、dtd
+                if (! address_lc.endsWith('.xml') && 
+                    ! address_lc.endsWith('.dtd')) 
+                {
+                    return {
+                        action:     algorithmConfig.xxe_file.action,
+                        message:    _("XXE - Accessing file %1%", [address]),
+                        confidence: 90
+                    }
                 }
             } 
         }

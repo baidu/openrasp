@@ -15,79 +15,25 @@
  */
 
 #include "openrasp_v8.h"
+#include "openrasp_log.h"
+
 using namespace openrasp;
 static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    static const char REQUEST_SCHEME[] = "REQUEST_SCHEME";
-    static const ulong REQUEST_SCHEME_HASH = zend_get_hash_value(ZEND_STRS(REQUEST_SCHEME));
-    static const char SERVER_NAME[] = "SERVER_NAME";
-    static const ulong SERVER_NAME_HASH = zend_get_hash_value(ZEND_STRS(SERVER_NAME));
-    static const char HTTP_HOST[] = "HTTP_HOST";
-    static const ulong HTTP_HOST_HASH = zend_get_hash_value(ZEND_STRS(HTTP_HOST));
-    static const char SERVER_ADDR[] = "SERVER_ADDR";
-    static const ulong SERVER_ADDR_HASH = zend_get_hash_value(ZEND_STRS(SERVER_ADDR));
-    static const char SERVER_PORT[] = "SERVER_PORT";
-    static const ulong SERVER_PORT_HASH = zend_get_hash_value(ZEND_STRS(SERVER_PORT));
-    static const char REQUEST_URI[] = "REQUEST_URI";
-    static const ulong REQUEST_URI_HASH = zend_get_hash_value(ZEND_STRS(REQUEST_URI));
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
+    zval **origin_zv;
+    if (Z_TYPE_P(OPENRASP_LOG_G(alarm_request_info)) == IS_ARRAY &&
+        zend_hash_find(Z_ARRVAL_P(OPENRASP_LOG_G(alarm_request_info)), ZEND_STRS("url"), (void **)&origin_zv) == SUCCESS)
     {
-        return;
-    }
-    zval **host, **server_port, **server_addr, **request_uri, **request_scheme;
-    char *c_host = nullptr;
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(HTTP_HOST), HTTP_HOST_HASH, (void **)&host) == SUCCESS &&
-        Z_TYPE_PP(host) == IS_STRING)
-    {
-        c_host = estrndup(Z_STRVAL_PP(host), Z_STRLEN_PP(host));
-    }
-    if (!c_host)
-    {
-        if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(SERVER_PORT), SERVER_PORT_HASH, (void **)&server_port) != SUCCESS ||
-            Z_TYPE_PP(server_port) != IS_STRING)
+        char *url = Z_STRVAL_PP(origin_zv);
+        v8::Isolate *isolate = info.GetIsolate();
+        v8::Local<v8::String> v8_url;
+        if (V8STRING_EX(url, v8::NewStringType::kNormal, Z_STRLEN_PP(origin_zv)).ToLocal(&v8_url))
         {
-            return;
+            info.GetReturnValue().Set(v8_url);
         }
-        if ((zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(SERVER_NAME), SERVER_NAME_HASH, (void **)&server_addr) != SUCCESS ||
-             Z_TYPE_PP(server_addr) != IS_STRING) &&
-            (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(SERVER_ADDR), SERVER_ADDR_HASH, (void **)&server_addr) != SUCCESS ||
-             Z_TYPE_PP(server_addr) != IS_STRING))
-        {
-            return;
-        }
-        spprintf(&c_host, 0, "%s:%s", Z_STRVAL_PP(server_addr), Z_STRVAL_PP(server_port));
     }
-    if (!c_host)
-    {
-        return;
-    }
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_URI), REQUEST_URI_HASH, (void **)&request_uri) != SUCCESS ||
-        Z_TYPE_PP(request_uri) != IS_STRING)
-    {
-        return;
-    }
-    char *c_request_scheme = "http";
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_SCHEME), REQUEST_SCHEME_HASH, (void **)&request_scheme) == SUCCESS &&
-        Z_TYPE_PP(request_scheme) == IS_STRING)
-    {
-        c_request_scheme = Z_STRVAL_PP(request_scheme);
-    }
-    char *url;
-    int len = spprintf(&url, 0, "%s://%s%s", c_request_scheme, c_host, Z_STRVAL_PP(request_uri));
-    if (!url)
-    {
-        return;
-    }
-    v8::Isolate *isolate = info.GetIsolate();
-    v8::Local<v8::String> v8_url;
-    if (V8STRING_EX(url, v8::NewStringType::kNormal, len).ToLocal(&v8_url))
-    {
-        info.GetReturnValue().Set(v8_url);
-    }
-    efree(url);
-    efree(c_host);
 }
 static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {

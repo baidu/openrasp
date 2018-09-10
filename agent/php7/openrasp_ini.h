@@ -51,6 +51,7 @@ class Openrasp_ini
     char *block_content_xml;
     char *block_content_html;
     bool plugin_filter = true;
+    char *clientip_header;
 };
 
 extern Openrasp_ini openrasp_ini;

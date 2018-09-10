@@ -70,20 +70,6 @@ int include_handler(zend_execute_data *execute_data)
     {
         goto DISPATCH;
     }
-    if (opline->op1_type == IS_VAR)
-    {
-        if (!openrasp_check_type_ignored(ZEND_STRL("webshell_include")) &&
-            openrasp_zval_in_request(inc_filename))
-        {
-            zval attack_params;
-            array_init(&attack_params);
-            add_assoc_zval(&attack_params, "url", inc_filename);
-            Z_TRY_ADDREF_P(inc_filename);
-            zval plugin_message;
-            ZVAL_STRING(&plugin_message, _("File inclusion"));
-            openrasp_buildin_php_risk_handle(1, "webshell_include", 100, &attack_params, &plugin_message);
-        }
-    }
     if (openrasp_check_type_ignored(ZEND_STRL("include")))
     {
         goto DISPATCH;

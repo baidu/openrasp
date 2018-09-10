@@ -96,16 +96,19 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
             }
             else
             {
-                char *server_host_port = nullptr;
-                int server_host_port_len = spprintf(&server_host_port, 0, "%s-%s:%d", conn_entry.server, conn_entry.host, conn_entry.port);
-                ulong connection_hash = zend_inline_hash_func(server_host_port, server_host_port_len);
-                openrasp_shared_alloc_lock();
-                if (!openrasp_shared_hash_exist(connection_hash, ZSTR_VAL(OPENRASP_LOG_G(formatted_date_suffix))))
+                if (check_sapi_need_alloc_shm())
                 {
-                    connection_via_default_username_policy(check_message, &conn_entry);
+                    char *server_host_port = nullptr;
+                    int server_host_port_len = spprintf(&server_host_port, 0, "%s-%s:%d", conn_entry.server, conn_entry.host, conn_entry.port);
+                    ulong connection_hash = zend_inline_hash_func(server_host_port, server_host_port_len);
+                    openrasp_shared_alloc_lock();
+                    if (!openrasp_shared_hash_exist(connection_hash, ZSTR_VAL(OPENRASP_LOG_G(formatted_date_suffix))))
+                    {
+                        connection_via_default_username_policy(check_message, &conn_entry);
+                    }
+                    openrasp_shared_alloc_unlock();
+                    efree(server_host_port);
                 }
-                openrasp_shared_alloc_unlock();
-                efree(server_host_port);
             }
             efree(check_message);
         }

@@ -16,6 +16,7 @@
 
 #include "openrasp.h"
 #include "openrasp_ini.h"
+#include "openrasp_utils.h"
 
 extern "C" {
 #ifdef HAVE_CONFIG_H
@@ -44,11 +45,11 @@ PHP_INI_ENTRY1("openrasp.root_dir", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCSt
 PHP_INI_ENTRY1("openrasp.locale", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.locale)
 #endif
 PHP_INI_ENTRY1("openrasp.slowquery_min_rows", "500", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.slowquery_min_rows)
-PHP_INI_ENTRY1("openrasp.enforce_policy", "off", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.enforce_policy)
-PHP_INI_ENTRY1("openrasp.hooks_ignore", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspSet, &openrasp_ini.hooks_ignore)
+PHP_INI_ENTRY1("openrasp.enforce_policy", "0", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.enforce_policy)
+PHP_INI_ENTRY1("openrasp.hooks_ignore", "sqlSlowQuery", PHP_INI_SYSTEM, OnUpdateOpenraspSet, &openrasp_ini.hooks_ignore)
 PHP_INI_ENTRY1("openrasp.callable_blacklists", "system,exec,passthru,proc_open,shell_exec,popen,pcntl_exec,assert", PHP_INI_SYSTEM, OnUpdateOpenraspSet, &openrasp_ini.callable_blacklists)
 PHP_INI_ENTRY1("openrasp.inject_urlprefix", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.inject_html_urlprefix)
-PHP_INI_ENTRY1("openrasp.log_maxburst", "1000", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_maxburst)
+PHP_INI_ENTRY1("openrasp.log_maxburst", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_maxburst)
 PHP_INI_ENTRY1("openrasp.syslog_server_address", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.syslog_server_address)
 PHP_INI_ENTRY1("openrasp.syslog_facility", "1", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_facility)
 PHP_INI_ENTRY1("openrasp.syslog_alarm_enable", "off", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.syslog_alarm_enable)
@@ -67,6 +68,7 @@ PHP_INI_ENTRY1("openrasp.block_content_json", R"({"error":true, "reason": "Reque
 PHP_INI_ENTRY1("openrasp.block_content_xml", R"(<?xml version="1.0"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>)", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_content_xml)
 PHP_INI_ENTRY1("openrasp.block_content_html", R"(</script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>)", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_content_html)
 
+PHP_INI_ENTRY1("openrasp.clientip_header", "clientip", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.clientip_header)
 PHP_INI_END()
 
 PHP_GINIT_FUNCTION(openrasp)
@@ -119,6 +121,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
         result = PHP_MSHUTDOWN(openrasp_hook)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_v8)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_log)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
+        is_initialized = false;
     }
     UNREGISTER_INI_ENTRIES();
     ZEND_SHUTDOWN_MODULE_GLOBALS(openrasp, PHP_GSHUTDOWN(openrasp));
@@ -173,8 +176,9 @@ PHP_MINFO_FUNCTION(openrasp)
 zend_module_dep openrasp_deps[] = {
     ZEND_MOD_REQUIRED("standard")
         ZEND_MOD_REQUIRED("json")
-            ZEND_MOD_CONFLICTS("xdebug")
-                ZEND_MOD_END};
+            ZEND_MOD_REQUIRED("pcre")
+                ZEND_MOD_CONFLICTS("xdebug")
+                    ZEND_MOD_END};
 #endif
 
 zend_module_entry openrasp_module_entry = {
@@ -220,8 +224,17 @@ static bool make_openrasp_root_dir(TSRMLS_D)
         return false;
     }
     std::string root_dir(path);
+    std::string default_slash(1, DEFAULT_SLASH);
     efree(path);
-    std::vector<std::string> sub_dir_list{"assets", "conf", "logs", "plugins", "locale"};
+    std::vector<std::string> sub_dir_list{
+        "assets",
+        "conf",
+        "plugins",
+        "locale",
+        "logs" + default_slash + ALARM_LOG_DIR_NAME,
+        "logs" + default_slash + POLICY_LOG_DIR_NAME,
+        "logs" + default_slash + PLUGIN_LOG_DIR_NAME,
+        "logs" + default_slash + RASP_LOG_DIR_NAME};
     for (auto dir : sub_dir_list)
     {
         std::string path(root_dir + DEFAULT_SLASH + dir);

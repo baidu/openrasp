@@ -61,20 +61,6 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     }
     case IS_VAR:
     {
-        // whether the parameter is the user input data
-        if (!openrasp_check_type_ignored(ZEND_STRL("webshell_include") TSRMLS_CC) 
-        && openrasp_zval_in_request(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC))
-        {
-            zval *attack_params;
-            MAKE_STD_ZVAL(attack_params);
-            array_init(attack_params);
-            add_assoc_zval(attack_params, "url", OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr);
-            Z_ADDREF_P(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr);
-            zval *plugin_message = NULL;
-            MAKE_STD_ZVAL(plugin_message);
-            ZVAL_STRING(plugin_message, _("File inclusion - Detected include/require vulnerability or webshell based on the same mechanism"), 1);
-            openrasp_buildin_php_risk_handle(1, "webshell_include", 100, attack_params, plugin_message TSRMLS_CC);
-        }
         op1 = OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr;
         break;
     }
