@@ -332,7 +332,7 @@ static void init_alarm_request_info(TSRMLS_D)
     add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "server_type", "PHP", 1);
     add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "server_version", OPENRASP_PHP_VERSION, 1);
     add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "request_id", OPENRASP_INJECT_G(request_id), 1);
-    add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "body", fetch_request_body(4*1024 TSRMLS_CC), 0);
+    add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "body", fetch_request_body(openrasp_ini.body_maxbytes TSRMLS_CC), 0);
 }
 
 static void init_policy_request_info(TSRMLS_D)

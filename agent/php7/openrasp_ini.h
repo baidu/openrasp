@@ -48,6 +48,7 @@ class Openrasp_ini
     std::unordered_set<std::string> hooks_ignore;
     std::unordered_set<std::string> callable_blacklists;
     char *clientip_header;
+    int body_maxbytes = 4 * 1024;
 };
 
 extern Openrasp_ini openrasp_ini;

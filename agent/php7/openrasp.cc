@@ -62,6 +62,7 @@ PHP_INI_ENTRY1("openrasp.block_status_code", "302", PHP_INI_SYSTEM, OnUpdateOpen
 PHP_INI_ENTRY1("openrasp.plugin_maxstack", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.plugin_maxstack)
 PHP_INI_ENTRY1("openrasp.log_maxstack", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_maxstack)
 PHP_INI_ENTRY1("openrasp.clientip_header", "clientip", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.clientip_header)
+PHP_INI_ENTRY1("openrasp.body_maxbytes", "4096", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.body_maxbytes)
 PHP_INI_END()
 
 PHP_GINIT_FUNCTION(openrasp)
