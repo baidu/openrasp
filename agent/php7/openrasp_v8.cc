@@ -30,6 +30,9 @@ extern "C"
 #include <fstream>
 #include "openrasp_v8.h"
 #include "openrasp_ini.h"
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+#include "agent/openrasp_agent_manager.h"
+#endif
 
 namespace openrasp
 {
