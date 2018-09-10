@@ -124,12 +124,12 @@ bool OpenraspAgentManager::verify_ini_correct()
 	bool result = true;
 	if (check_sapi_need_alloc_shm())
 	{
-		if (nullptr == openrasp_ini.backend_url)
+		if (nullptr == openrasp_ini.backend_url || strcmp(openrasp_ini.backend_url, "") == 0)
 		{
 			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.backend_url is required when remote management is enabled."));
 			result = false;
 		}
-		if (nullptr == openrasp_ini.app_id)
+		if (nullptr == openrasp_ini.app_id || strcmp(openrasp_ini.app_id, "") == 0)
 		{
 			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_id is required when remote management is enabled."));
 			result = false;
