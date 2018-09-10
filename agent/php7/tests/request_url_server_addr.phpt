@@ -4,7 +4,6 @@ request url
 <?php
 $plugin = <<<EOF
 plugin.register('command', (params, context) => {
-    plugin.log(context)
     assert(params.command == 'echo test')
     assert(context.url == 'http://127.0.0.1/index.php')
     return block
