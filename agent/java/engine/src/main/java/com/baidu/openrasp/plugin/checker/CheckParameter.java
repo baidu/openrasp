@@ -21,9 +21,11 @@ import com.baidu.openrasp.plugin.checker.js.JsChecker;
 import com.baidu.openrasp.plugin.checker.local.SSRFChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlStatementChecker;
-import com.baidu.openrasp.plugin.checker.policy.JBossJMXSecurityChecker;
+import com.baidu.openrasp.plugin.checker.policy.serverPolicy.JBossSecurityChecker;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
-import com.baidu.openrasp.plugin.checker.policy.TomcatSecurityChecker;
+import com.baidu.openrasp.plugin.checker.policy.serverPolicy.JettySecurityChecker;
+import com.baidu.openrasp.plugin.checker.policy.serverPolicy.ResinSecurityChecker;
+import com.baidu.openrasp.plugin.checker.policy.serverPolicy.TomcatSecurityChecker;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.google.gson.Gson;
 
@@ -63,7 +65,9 @@ public class CheckParameter {
         // 安全基线检测
         POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker()),
         POLICY_TOMCAT_START("tomcatStart", new TomcatSecurityChecker()),
-        POLICY_JBOSS_JMX_CONSOLE("jbossJMXConsole", new JBossJMXSecurityChecker());
+        POLICY_JBOSS_START("jbossStart", new JBossSecurityChecker()),
+        POLICY_JETTY_START("jettyStart", new JettySecurityChecker()),
+        POLICY_RESIN_START("resinStart", new ResinSecurityChecker());
 
         String name;
         Checker checker;
