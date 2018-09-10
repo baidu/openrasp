@@ -357,6 +357,9 @@ var forcefulBrowsing = {
 // 如果你配置了非常规的扩展名映射，比如让 .abc 当做PHP脚本执行，那你可能需要增加更多扩展名
 var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml)\.?$/i
 
+// 正常文件
+var cleanFileRegex = /\.(jpg|jpeg|png|gif|bmp|txt)\.?$/i
+
 // 匹配 HTML/JS 等可以用于钓鱼、domain-fronting 的文件
 var htmlFileRegex   = /\.(htm|html|js)$/i
 
@@ -1258,14 +1261,8 @@ if (algorithmConfig.rename_webshell.action != 'ignore')
 {
     plugin.register('rename', function (params, context) {
 
-        // 源文件必须有扩展名，避免误报，e.g hello.txt
-        if (! has_file_extension(params.source))
-        {
-            return clean
-        }
-
-        // 源文件不是脚本，且目标文件是脚本，判定为重命名方式写后门
-        if (! scriptFileRegex.test(params.source) && scriptFileRegex.test(params.dest))
+        // 源文件是干净的文件，目标文件是脚本文件，判定为重命名方式写后门
+        if (cleanFileRegex.test(params.source) && scriptFileRegex.test(params.dest))
         {
             return {
                 action:    algorithmConfig.rename_webshell.action,
