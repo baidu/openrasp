@@ -69,6 +69,7 @@ PHP_INI_ENTRY1("openrasp.block_content_xml", R"(<?xml version="1.0"?><doc><error
 PHP_INI_ENTRY1("openrasp.block_content_html", R"(</script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>)", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_content_html)
 
 PHP_INI_ENTRY1("openrasp.clientip_header", "clientip", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.clientip_header)
+PHP_INI_ENTRY1("openrasp.body_maxbytes", "4096", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.body_maxbytes)
 PHP_INI_END()
 
 PHP_GINIT_FUNCTION(openrasp)
