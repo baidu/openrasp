@@ -69,6 +69,7 @@ void pre_global_move_uploaded_file_fileUpload(OPENRASP_INTERNAL_FUNCTION_PARAMET
                 v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
                 if (!isolate)
                 {
+                    efree(contents);
                     return;
                 }
                 bool is_block = false;

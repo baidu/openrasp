@@ -141,15 +141,11 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
                 {
                     send_to_plugin = true;
                 }  
-            }            
-        }
-        if (send_to_plugin)
-        {
-            v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
-            if (!isolate)
-            {
-                return ZEND_USER_OPCODE_DISPATCH;
             }
+        }
+        v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
+        if (send_to_plugin && isolate)
+        {
             const char *function = nullptr;
             switch (OPENRASP_INCLUDE_OR_EVAL_TYPE(execute_data->opline))
             {

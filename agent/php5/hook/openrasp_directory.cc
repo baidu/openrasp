@@ -55,6 +55,7 @@ static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
             if (!isolate)
             {
+                efree(resolved_path_buff);
                 return;
             }
             bool is_block = false;
