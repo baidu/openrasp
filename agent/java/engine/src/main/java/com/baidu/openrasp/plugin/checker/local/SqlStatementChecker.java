@@ -27,6 +27,7 @@ import com.baidu.openrasp.plugin.checker.js.JsChecker;
 import com.baidu.openrasp.plugin.info.AttackInfo;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
+import com.baidu.openrasp.tool.JsonStringify;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.antlr.v4.runtime.Token;

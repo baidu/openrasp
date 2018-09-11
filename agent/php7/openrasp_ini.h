@@ -34,19 +34,23 @@ class Openrasp_ini
     char *syslog_server_address;
     int log_maxburst = 1000;
     int syslog_facility;
-    bool syslog_alarm_enable = 0;
+    bool syslog_alarm_enable = false;
     long syslog_connection_timeout = 50;
     long syslog_read_timeout = 10;
     int syslog_connection_retry_interval = 200;
-    int block_status_code = 302;
     char *inject_html_urlprefix;
     unsigned int slowquery_min_rows = 500;
     unsigned int plugin_maxstack = 100;
     unsigned int log_maxstack = 10;
     bool enforce_policy = false;
-    char *block_url;
     std::unordered_set<std::string> hooks_ignore;
     std::unordered_set<std::string> callable_blacklists;
+    int block_status_code = 302;
+    char *block_redirect_url;
+    char *block_content_json;
+    char *block_content_xml;
+    char *block_content_html;
+    bool plugin_filter = true;
     char *clientip_header;
 };
 

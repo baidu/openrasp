@@ -16,20 +16,19 @@
 
 package com.baidu.openrasp.hook.server.jetty;
 
-import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.hook.server.ServerParamHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-
-import java.io.IOException;
 
 /**
  * Created by tyy on 17-12-25.
  *
  * jetty 下的 request hook 点
  */
+@HookAnnotation
 public class JettyRequestHook extends ServerParamHook {
 
     /**

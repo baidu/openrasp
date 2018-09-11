@@ -19,6 +19,7 @@ package com.baidu.openrasp.hook.server.jetty;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.hook.server.ServerInputHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -30,6 +31,7 @@ import java.io.IOException;
  *
  * 获取 jetty 请求 body 的 hook 点
  */
+@HookAnnotation
 public class JettyHttpInputHook extends ServerInputHook {
 
     /**

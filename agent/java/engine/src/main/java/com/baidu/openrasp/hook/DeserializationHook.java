@@ -20,6 +20,7 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -32,6 +33,7 @@ import java.io.ObjectStreamClass;
  * Created by tyy on 6/21/17.
  * 反序列化漏洞检测hook
  */
+@HookAnnotation
 public class DeserializationHook extends AbstractClassHook {
     /**
      * (none-javadoc)

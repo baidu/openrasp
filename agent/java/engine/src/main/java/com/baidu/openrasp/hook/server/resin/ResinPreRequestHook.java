@@ -18,6 +18,7 @@ package com.baidu.openrasp.hook.server.resin;
 
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.hook.server.ServerPreRequestHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -27,6 +28,7 @@ import javassist.NotFoundException;
  *
  * resin 服务器请求预处理 hook 点
  */
+@HookAnnotation
 public class ResinPreRequestHook extends ServerPreRequestHook {
 
     /**

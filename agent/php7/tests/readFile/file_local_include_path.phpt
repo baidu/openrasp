@@ -8,7 +8,7 @@ local file with include path
 $plugin = <<<EOF
 plugin.register('readFile', params => {
     assert(params.path == 'tmpfile')
-    assert(params.realpath == '/tmp/openrasp/tmpfile')
+    assert(params.realpath.endsWith('/tmp/openrasp/tmpfile'))
     return block
 })
 EOF;

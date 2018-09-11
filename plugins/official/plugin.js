@@ -81,7 +81,7 @@ var algorithmConfig = {
             // 是否拦截 into outfile 写文件操作
             into_outfile:       true,
 
-            // 是否拦截 information_schema 相关读取操作
+            // 是否拦截 information_schema 相关读取操作，默认关闭
             information_schema: false
         },
         function_blacklist: {
@@ -168,7 +168,7 @@ var algorithmConfig = {
         action: 'block'
     },
     // 任意文件下载防护 - 使用 ../../ 跳出 web 目录读取敏感文件
-    readFile_traversal: {
+    readFile_outsideWebroot: {
         action: 'ignore'
     },
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
@@ -207,7 +207,7 @@ var algorithmConfig = {
     directory_unwanted: {
         action: 'block'
     },
-    // 文件管理器 - 列出webroot之外的目录
+    // 文件管理器 - 列出webroot之外的目录，默认关闭
     directory_outsideWebroot: {
         action: 'ignore'
     },
@@ -527,6 +527,11 @@ function is_path_endswith_userinput(parameter, target)
         var value = parameter[key]
             value = value[0]
 
+        // 只处理字符串类型的
+        if (typeof value != 'string') {
+            return
+        }
+
         // 参数必须有跳出目录，或者是绝对路径
         if ((has_traversal(value) || is_absolute_path(value))
             && (value == target || target.endsWith(value)))
@@ -591,47 +596,80 @@ if (RASP.get_jsengine() !== 'v8') {
 
     // v8 全局SQL结果缓存
     var LRU = {
+        head: undefined,
+        tail: undefined,
         cache: {},
-        stack: [],
-        max:   algorithmConfig.cache.sqli.capacity,
+        length: 0,
+        maxLength: algorithmConfig.cache.sqli.capacity,
 
         // 查询缓存，如果在则移动到队首
-        lookup: function(key) {
-            var found = this.cache.hasOwnProperty(key)
-            if (found) {
-                var idx = this.stack.indexOf(key)
-
-                this.cache[key] ++
-                this.stack.splice(idx, 1)
-                this.stack.unshift(key)
+        get: function (key) {
+            var node = this.cache[key]
+            if (node) {
+                this.update(node)
+                return true
+            } else {
+                return false
             }
-
-            return found
         },
 
         // 增加缓存，如果超过大小则删除末尾元素
-        put: function(key) {
-            this.stack.push(key)
-            this.cache[key] = 1
-
-            if (this.stack.length > this.max) {
-                var tail = this.stack.pop()
-                delete this.cache[tail]
+        put: function (key) {
+            var node = this.cache[key]
+            if (!node) {
+                node = {
+                    key: key
+                }
             }
+            this.update(node)
+        },
+
+        update: function (node) {
+            if (node == this.head) {
+                return
+            } else if (node == this.tail) {
+                this.tail = node.prev
+                this.tail.next = undefined
+            } else if (node.prev && node.next) {
+                node.prev.next = node.next
+                node.next.prev = node.prev
+            } else if (!this.cache.hasOwnProperty(node.key)) {
+                this.cache[node.key] = node
+                if (this.length == 0) {
+                    this.head = this.tail = node
+                    this.length = 1
+                    return
+                } else if (this.length == 1) {
+                    this.head = node
+                    this.head.next = this.tail
+                    this.tail.prev = this.head
+                    this.length = 2
+                    return
+                } else if (++this.length > this.maxLength) {
+                    delete this.cache[this.tail.key]
+                    this.tail.prev.next = undefined
+                    this.tail = this.tail.prev
+                }
+            } else {
+                return
+            }
+            node.prev = undefined
+            node.next = this.head
+            this.head.prev = node
+            this.head = node
         },
 
         // 调试函数，用于打印内部信息
-        dump: function() {
-            console.log (this.cache)
-            console.log (this.stack)
-            console.log ('')
+        dump: function () {
+            console.log(this.cache)
+            console.log('')
         }
     }
 
     plugin.register('sql', function (params, context) {
 
         // 缓存检查
-        if (LRU.lookup(params.query)) {
+        if (LRU.get(params.query)) {
             return clean
         }
 
@@ -1070,16 +1108,15 @@ plugin.register('readFile', function (params, context) {
 
     //
     // 算法3: 检查文件遍历，看是否超出web目录范围
-    // e.g 使用 ../../../etc/passwd 跨目录读取文件
     //
-    if (algorithmConfig.readFile_traversal.action != 'ignore')
+    if (algorithmConfig.readFile_outsideWebroot.action != 'ignore')
     {
         var path        = params.path
         var appBasePath = context.appBasePath
 
         if (is_outside_webroot(appBasePath, params.realpath, path)) {
             return {
-                action:     algorithmConfig.readFile_traversal.action,
+                action:     algorithmConfig.readFile_outsideWebroot.action,
                 message:    _("Path traversal - accessing files outside webroot (%1%), file is %2%", [appBasePath, params.realpath]),
                 confidence: 90
             }

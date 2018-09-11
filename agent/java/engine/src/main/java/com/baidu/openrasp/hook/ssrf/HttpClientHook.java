@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook.ssrf;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -29,6 +30,7 @@ import java.net.URI;
  *
  * httpclient 框架的请求 http 的 hook 点
  */
+@HookAnnotation
 public class HttpClientHook extends AbstractSSRFHook {
 
     /**

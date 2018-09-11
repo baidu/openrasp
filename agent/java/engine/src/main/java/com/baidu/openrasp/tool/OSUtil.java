@@ -21,6 +21,7 @@ import com.baidu.openrasp.tool.model.NicModel;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.LinkedList;
 
@@ -29,7 +30,14 @@ public class OSUtil {
     private static InetAddress inetAddress;
 
     public static String getHostName() {
-        return inetAddress == null ? null : inetAddress.getHostName();
+        try {
+            if (inetAddress == null) {
+                inetAddress = InetAddress.getLocalHost();
+            }
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        return inetAddress.getHostName();
     }
 
     public static LinkedList<NicModel> getIpAddress() {
@@ -63,6 +71,20 @@ public class OSUtil {
         return ipList;
     }
 
+    public static String getOs() {
+        String os = System.getProperty("os.name");
+        if (os == null) {
+            return "";
+        }
+        os = os.toLowerCase();
+        if (os.contains("linux")) return "Linux";
+        if (os.contains("windows")) return "Windows";
+        if (os.contains("mac")) return "Mac";
+        if (os.contains("sunos")) return "SunOS";
+        if (os.contains("freebsd")) return "FreeBSD";
+        return os;
+    }
+
     public static boolean isWindows() {
         return System.getProperty("os.name") != null && System.getProperty("os.name").toLowerCase().contains("windows");
     }
@@ -71,7 +93,7 @@ public class OSUtil {
         return System.getProperty("os.name") != null && System.getProperty("os.name").toLowerCase().contains("linux");
     }
 
-    public static boolean isMacOS(){
+    public static boolean isMacOS() {
         return System.getProperty("os.name") != null && System.getProperty("os.name").toLowerCase().contains("mac os x");
     }
 

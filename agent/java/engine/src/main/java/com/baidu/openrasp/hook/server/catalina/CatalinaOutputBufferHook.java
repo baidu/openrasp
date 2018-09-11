@@ -17,17 +17,17 @@
 package com.baidu.openrasp.hook.server.catalina;
 
 import com.baidu.openrasp.hook.server.ServerOutputCloseHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-
-import java.io.IOException;
 
 /**
  * Created by tyy on 17-12-11.
  *
  * catalina 输出流关闭 hook 点
  */
+@HookAnnotation
 public class CatalinaOutputBufferHook extends ServerOutputCloseHook {
 
     /**

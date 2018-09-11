@@ -17,10 +17,12 @@
 package com.baidu.openrasp.hook.file;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.FileUtil;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -28,12 +30,14 @@ import javassist.NotFoundException;
 import org.mozilla.javascript.Scriptable;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 /**
  * Created by zhuming01 on 5/31/17.
  * All rights reserved
  */
+@HookAnnotation
 public class FileInputStreamHook extends AbstractClassHook {
     /**
      * (none-javadoc)
@@ -63,7 +67,7 @@ public class FileInputStreamHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(FileInputStreamHook.class, "checkReadFile", "$1", File.class);
-        insertAfter(ctClass.getConstructor("(Ljava/io/File;)V"), src, false);
+        insertBefore(ctClass.getConstructor("(Ljava/io/File;)V"), src);
     }
 
     /**
@@ -72,13 +76,14 @@ public class FileInputStreamHook extends AbstractClassHook {
      * @param file 文件对象
      */
     public static void checkReadFile(File file) {
+        boolean checkSwitch = Config.getConfig().getPluginFilter();
         if (file != null) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             params.put("path", params, file.getPath());
             try {
                 String path = file.getCanonicalPath();
-                if (path.endsWith(".class") || !file.exists()) {
+                if (path.endsWith(".class") || !file.exists() && checkSwitch) {
                     return;
                 }
                 params.put("realpath", params, FileUtil.getRealPath(file));

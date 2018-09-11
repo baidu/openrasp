@@ -7,8 +7,8 @@ local file with "://"
 <?php
 $plugin = <<<EOF
 plugin.register('readFile', params => {
-    assert(params.path == '/tmp/openrasp/http://tmpfile')
-    assert(params.realpath == '/tmp/openrasp/http:/tmpfile')
+    assert(params.path.endsWith('/tmp/openrasp/http://tmpfile'))
+    assert(params.realpath.endsWith('/tmp/openrasp/http:/tmpfile'))
     return block
 })
 EOF;
