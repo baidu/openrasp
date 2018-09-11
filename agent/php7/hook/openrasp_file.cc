@@ -59,13 +59,35 @@ static const char *flag_to_type(const char *mode, bool is_file_exist)
 static void check_file_operation(const char *check_type, char *filename, int filename_len, bool use_include_path)
 {
     zend_string *real_path = openrasp_real_path(filename, filename_len, use_include_path, (0 == strcmp(check_type, "writeFile") ? WRITING : READING));
-    if (real_path)
+    if (!real_path)
     {
-        zval params;
-        array_init(&params);
-        add_assoc_stringl(&params, "path", filename, filename_len);
-        add_assoc_str(&params, "realpath", real_path);
-        check(check_type, &params);
+        return;
+    }
+    v8::Isolate *isolate = openrasp::get_isolate();
+    if (!isolate)
+    {
+        zend_string_release(real_path);
+        return;
+    }
+    bool is_block = false;
+    {
+        v8::HandleScope handle_scope(isolate);
+        auto arr = format_debug_backtrace_arr();
+        size_t len = arr.size();
+        auto stack = v8::Array::New(isolate, len);
+        for (size_t i = 0; i < len; i++)
+        {
+            stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
+        }
+        auto params = v8::Object::New(isolate);
+        params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, filename, filename_len));
+        params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path->val, real_path->len));
+        zend_string_release(real_path);
+        is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params);
+    }
+    if (is_block)
+    {
+        handle_block();
     }
 }
 
@@ -237,21 +259,43 @@ void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
 
     zend_string *source_real_path = openrasp_real_path(ZSTR_VAL(source), ZSTR_LEN(source), false, READING);
-    if (source_real_path)
+    if (!source_real_path)
     {
-        zend_string *dest_real_path = openrasp_real_path(ZSTR_VAL(dest), ZSTR_LEN(dest), false, WRITING);
-        if (dest_real_path)
+        return;
+    }
+    zend_string *dest_real_path = openrasp_real_path(ZSTR_VAL(dest), ZSTR_LEN(dest), false, WRITING);
+    if (!dest_real_path)
+    {
+        zend_string_release(source_real_path);
+        return;
+    }
+    v8::Isolate *isolate = openrasp::get_isolate();
+    if (!isolate)
+    {
+        zend_string_release(source_real_path);
+        zend_string_release(dest_real_path);
+        return;
+    }
+    bool is_block = false;
+    {
+        v8::HandleScope handle_scope(isolate);
+        auto arr = format_debug_backtrace_arr();
+        size_t len = arr.size();
+        auto stack = v8::Array::New(isolate, len);
+        for (size_t i = 0; i < len; i++)
         {
-            zval params;
-            array_init(&params);
-            add_assoc_str(&params, "source", source_real_path);
-            add_assoc_str(&params, "dest", dest_real_path);
-            check(check_type, &params);
+            stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
         }
-        else
-        {
-            zend_string_release(source_real_path);
-        }
+        auto params = v8::Object::New(isolate);
+        params->Set(openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_real_path->val, source_real_path->len));
+        zend_string_release(source_real_path);
+        params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, dest_real_path->val, dest_real_path->len));
+        zend_string_release(dest_real_path);
+        is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params);
+    }
+    if (is_block)
+    {
+        handle_block();
     }
 }
 
@@ -322,11 +366,34 @@ void pre_global_rename_rename(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         }
         else
         {
-            zval params;
-            array_init(&params);
-            add_assoc_str(&params, "source", source_real_path);
-            add_assoc_str(&params, "dest", dest_real_path);
-            check(check_type, &params);
+            v8::Isolate *isolate = openrasp::get_isolate();
+            if (!isolate)
+            {
+                zend_string_release(source_real_path);
+                zend_string_release(dest_real_path);
+                return;
+            }
+            bool is_block = false;
+            {
+                v8::HandleScope handle_scope(isolate);
+                auto arr = format_debug_backtrace_arr();
+                size_t len = arr.size();
+                auto stack = v8::Array::New(isolate, len);
+                for (size_t i = 0; i < len; i++)
+                {
+                    stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
+                }
+                auto params = v8::Object::New(isolate);
+                params->Set(openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_real_path->val, source_real_path->len));
+                zend_string_release(source_real_path);
+                params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, dest_real_path->val, dest_real_path->len));
+                zend_string_release(dest_real_path);
+                is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params);
+            }
+            if (is_block)
+            {
+                handle_block();
+            }
         }
         return;
     }

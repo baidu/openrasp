@@ -69,10 +69,24 @@ void pre_global_move_uploaded_file_fileUpload(OPENRASP_INTERNAL_FUNCTION_PARAMET
     {
         return;
     }
-    zval params;
-    array_init(&params);
-    add_assoc_zval(&params, "filename", realname);
-    Z_ADDREF_P(realname);
-    add_assoc_str(&params, "content", buffer);
-    check(check_type, &params);
+
+    v8::Isolate *isolate = openrasp::get_isolate();
+    if (!isolate)
+    {
+        zend_string_release(buffer);
+        return;
+    }
+    bool is_block = false;
+    {
+        v8::HandleScope handle_scope(isolate);
+        auto params = v8::Object::New(isolate);
+        params->Set(openrasp::NewV8String(isolate, "filename"), openrasp::NewV8String(isolate, Z_STRVAL_P(realname), Z_STRLEN_P(realname)));
+        params->Set(openrasp::NewV8String(isolate, "content"), openrasp::NewV8String(isolate, buffer->val, MIN(buffer->len, 4 * 1024)));
+        zend_string_release(buffer);
+        is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params);
+    }
+    if (is_block)
+    {
+        handle_block();
+    }
 }

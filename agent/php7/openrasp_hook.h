@@ -20,6 +20,8 @@
 #include "openrasp.h"
 #include "openrasp_log.h"
 #include "openrasp_ini.h"
+#include "openrasp_v8.h"
+#include "openrasp_utils.h"
 
 #ifdef __cplusplus
 extern "C"

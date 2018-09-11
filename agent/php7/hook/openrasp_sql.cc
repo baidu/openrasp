@@ -126,13 +126,21 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
 
 void sql_type_handler(char *query, int query_len, const char *server)
 {
-    if (query && strlen(query) == query_len)
+    v8::Isolate *isolate = openrasp::get_isolate();
+    if (query && strlen(query) == query_len && isolate)
     {
-        zval params;
-        array_init(&params);
-        add_assoc_string(&params, "query", query);
-        add_assoc_str(&params, "server", zend_string_init(server, strlen(server), 0));
-        check("sql", &params);
+        bool is_block = false;
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto params = v8::Object::New(isolate);
+            params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len));
+            params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server));
+            is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, "sql"), params);
+        }
+        if (is_block)
+        {
+            handle_block();
+        }
     }
 }
 
