@@ -309,7 +309,7 @@ v8::Isolate *get_isolate(TSRMLS_D)
 
 static inline void load_plugins(TSRMLS_D)
 {
-    std::vector<openrasp_v8_plugin_src> plugin_src_list;
+    std::vector<openrasp_v8_js_src> plugin_src_list;
     std::string plugin_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("plugins"));
     dirent **ent = nullptr;
     int n_plugin = php_scandir(plugin_path.c_str(), &ent, nullptr, nullptr);
@@ -333,7 +333,7 @@ static inline void load_plugins(TSRMLS_D)
                 {
                     std::string source((std::istreambuf_iterator<char>(file)),
                                        std::istreambuf_iterator<char>());
-                    plugin_src_list.emplace_back(openrasp_v8_plugin_src{filename, source});
+                    plugin_src_list.emplace_back(openrasp_v8_js_src{filename, source});
                 }
                 else
                 {

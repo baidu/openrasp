@@ -224,7 +224,7 @@ intptr_t external_references[] = {
     0,
 };
 
-v8::StartupData get_snapshot()
+v8::StartupData get_snapshot(std::vector<openrasp_v8_js_src> &plugin_list)
 {
     v8::SnapshotCreator creator(external_references);
     v8::Isolate *isolate = creator.GetIsolate();
@@ -241,46 +241,51 @@ v8::StartupData get_snapshot()
         v8::TryCatch try_catch;
         v8::Local<v8::Object> global = context->Global();
         global->Set(V8STRING_I("global").ToLocalChecked(), global);
+        global->Set(V8STRING_I("window").ToLocalChecked(), global);
         v8::Local<v8::Function> log = v8::Function::New(isolate, v8native_log);
         v8::Local<v8::Object> v8_stdout = v8::Object::New(isolate);
         v8_stdout->Set(V8STRING_I("write").ToLocalChecked(), log);
         global->Set(V8STRING_I("stdout").ToLocalChecked(), v8_stdout);
         global->Set(V8STRING_I("stderr").ToLocalChecked(), v8_stdout);
 
-#define MAKE_JS_SRC_PAIR(name) {{(const char *)name##_js, name##_js_len}, ZEND_TOSTR(name) ".js"}
-        std::vector<std::pair<std::string, std::string>> js_src_list = {
-            MAKE_JS_SRC_PAIR(console),
-            MAKE_JS_SRC_PAIR(checkpoint),
-            MAKE_JS_SRC_PAIR(error),
-            MAKE_JS_SRC_PAIR(context),
-            MAKE_JS_SRC_PAIR(sql_tokenize),
-            MAKE_JS_SRC_PAIR(rasp),
+        std::vector<openrasp_v8_js_src> internal_js_list = {
+            openrasp_v8_js_src{"console.js", {reinterpret_cast<const char *>(console_js), console_js_len}},
+            openrasp_v8_js_src{"checkpoint.js", {reinterpret_cast<const char *>(checkpoint_js), checkpoint_js_len}},
+            openrasp_v8_js_src{"error.js", {reinterpret_cast<const char *>(error_js), error_js_len}},
+            openrasp_v8_js_src{"context.js", {reinterpret_cast<const char *>(context_js), context_js_len}},
+            openrasp_v8_js_src{"sql_tokenize.js", {reinterpret_cast<const char *>(sql_tokenize_js), sql_tokenize_js_len}},
+            openrasp_v8_js_src{"rasp.js", {reinterpret_cast<const char *>(rasp_js), rasp_js_len}},
         };
-        for (auto &js_src : js_src_list)
+        for (auto &js_src : internal_js_list)
         {
-            if (exec_script(isolate, context, js_src.first, js_src.second).IsEmpty())
+            if (exec_script(isolate, context, js_src.source, js_src.filename).IsEmpty())
             {
                 std::stringstream stream;
                 v8error_to_stream(isolate, try_catch, stream);
                 std::string error = stream.str();
-                plugin_info(error.c_str(), error.length());
+                plugin_info(error.c_str(), error.length() TSRMLS_CC);
                 openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize js plugin - %s"), error.c_str());
                 return v8::StartupData{nullptr, 0};
             }
         }
-        for (auto plugin_src : process_globals.plugin_src_list)
+        for (auto &plugin_src : plugin_list)
         {
             if (exec_script(isolate, context, "(function(){\n" + plugin_src.source + "\n})()", plugin_src.filename, -1).IsEmpty())
             {
                 std::stringstream stream;
                 v8error_to_stream(isolate, try_catch, stream);
                 std::string error = stream.str();
-                plugin_info(error.c_str(), error.length());
+                plugin_info(error.c_str(), error.length() TSRMLS_CC);
             }
         }
         creator.SetDefaultContext(context);
     }
     return creator.CreateBlob(v8::SnapshotCreator::FunctionCodeHandling::kClear);
+}
+
+v8::StartupData get_snapshot()
+{
+    return get_snapshot(process_globals.plugin_src_list TSRMLS_CC);
 }
 
 void alarm_info(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)
