@@ -17,6 +17,7 @@
 package com.baidu.openrasp.request;
 
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,7 +26,7 @@ import java.util.Map;
  * @Description: dubbo的request请求类
  * @date 2018/8/1315:13
  */
-public class DubboRequest extends AbstractDubboRequest {
+public class DubboRequest extends AbstractRequest {
 
     private static final Map<String, String[]> EMPTY_PARAM = new HashMap<String, String[]>();
 
@@ -38,5 +39,92 @@ public class DubboRequest extends AbstractDubboRequest {
     public Map<String, String[]> getParameterMap() {
 
         return request != null ? (Map<String, String[]>) request : EMPTY_PARAM;
+    }
+
+    @Override
+    public String getLocalAddr() {
+        return null;
+    }
+
+    @Override
+    public String getMethod() {
+        return null;
+    }
+
+    @Override
+    public String getProtocol() {
+        return null;
+    }
+
+    @Override
+    public String getAuthType() {
+        return null;
+    }
+
+    @Override
+    public String getContextPath() {
+        return null;
+    }
+
+    @Override
+    public String getRemoteAddr() {
+        return null;
+    }
+
+    @Override
+    public String getRequestURI() {
+        return null;
+    }
+
+    @Override
+    public StringBuffer getRequestURL() {
+        return null;
+    }
+
+    @Override
+    public String getServerName() {
+        return null;
+    }
+
+    @Override
+    public String getParameter(String key) {
+        return null;
+    }
+
+    @Override
+    public Enumeration<String> getParameterNames() {
+        return null;
+    }
+
+    @Override
+    public String getHeader(String key) {
+        return null;
+    }
+
+    @Override
+    public Enumeration<String> getHeaderNames() {
+        return null;
+    }
+
+    @Override
+    public String getQueryString() {
+        return null;
+    }
+
+    @Override
+    public Map<String, String> getServerContext() {
+        HashMap<String, String> serverContext = new HashMap<String, String>(4);
+        serverContext.put("language", "java");
+        return serverContext;
+    }
+
+    @Override
+    public String getAppBasePath() {
+        return null;
+    }
+
+    @Override
+    public String getClinetIp() {
+        return null;
     }
 }

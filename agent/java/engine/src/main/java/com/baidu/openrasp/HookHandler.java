@@ -19,7 +19,6 @@ package com.baidu.openrasp;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.exception.SecurityException;
 import com.baidu.openrasp.hook.XXEHook;
-import com.baidu.openrasp.request.AbstractDubboRequest;
 import com.baidu.openrasp.request.DubboRequest;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
@@ -67,9 +66,9 @@ public class HookHandler {
         }
     };
 
-    public static ThreadLocal<AbstractDubboRequest> dubboRequestCache = new ThreadLocal<AbstractDubboRequest>() {
+    public static ThreadLocal<AbstractRequest> dubboRequestCache = new ThreadLocal<AbstractRequest>() {
         @Override
-        protected AbstractDubboRequest initialValue() {
+        protected AbstractRequest initialValue() {
             return null;
         }
     };
