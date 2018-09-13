@@ -161,10 +161,11 @@ typedef enum check_type_t
     SSRF = 1 << 13,
     WEBSHELL_EVAL = 1 << 14,
     WEBSHELL_COMMAND = 1 << 15,
-    WEBSHELL_FILE_PUT_CONTENTS = 1 << 16
+    WEBSHELL_FILE_PUT_CONTENTS = 1 << 16 //plus 2 (CHECK_TYPE_NR_ITEMS)
 } OpenRASPCheckType;
+const int CHECK_TYPE_NR_ITEMS = 18;
 
-extern std::map<OpenRASPCheckType, const char *> CheckTypeNameMap;
+extern const std::map<OpenRASPCheckType, const char *> CheckTypeNameMap;
 
 typedef struct sql_connection_entry_t
 {

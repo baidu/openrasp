@@ -31,7 +31,7 @@ extern "C"
 static hook_handler_t global_hook_handlers[512];
 static size_t global_hook_handlers_len = 0;
 
-std::map<OpenRASPCheckType, const char *> CheckTypeNameMap =
+const std::map<OpenRASPCheckType, const char *> CheckTypeNameMap =
     {
         {CALLABLE, "callable"},
         {COMMAND, "command"},
