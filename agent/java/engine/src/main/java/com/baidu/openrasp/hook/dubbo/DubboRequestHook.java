@@ -81,9 +81,7 @@ public class DubboRequestHook extends AbstractClassHook {
         try {
             return ((Class) clazz.getField("TYPE").get(null)).isPrimitive();
         } catch (Exception e) {
-
-            e.printStackTrace();
+            return false;
         }
-        return false;
     }
 }
