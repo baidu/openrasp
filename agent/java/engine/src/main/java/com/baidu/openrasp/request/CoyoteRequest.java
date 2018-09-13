@@ -271,4 +271,14 @@ public class CoyoteRequest extends AbstractRequest {
     public String getAppBasePath() {
         return null;
     }
+
+    /**
+     * (none-javadoc)
+     *
+     * @see AbstractRequest#getClinetIp()
+     */
+    @Override
+    public String getClinetIp() {
+        return null;
+    }
 }

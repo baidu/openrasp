@@ -17,8 +17,8 @@
 package com.baidu.openrasp.hook.server.catalina;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.hook.server.ServerInputHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -29,6 +29,7 @@ import java.io.IOException;
  * Created by zhuming01 on 7/5/17.
  * All rights reserved
  */
+@HookAnnotation
 public class CatalinaInputBufferHook extends ServerInputHook {
 
     /**

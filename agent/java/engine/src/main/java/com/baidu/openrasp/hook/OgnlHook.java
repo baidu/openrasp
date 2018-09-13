@@ -21,6 +21,7 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -31,6 +32,7 @@ import java.io.IOException;
 /**
  * Created by tyy on 6/21/17.
  */
+@HookAnnotation
 public class OgnlHook extends AbstractClassHook {
     /**
      * (none-javadoc)
@@ -70,6 +72,8 @@ public class OgnlHook extends AbstractClassHook {
      * @param object ognl语句
      */
     public static void checkOgnlExpression(Object object) {
+
+
         if (object != null) {
             String expression = String.valueOf(object);
             if (expression.length() >= Config.getConfig().getOgnlMinLength()) {

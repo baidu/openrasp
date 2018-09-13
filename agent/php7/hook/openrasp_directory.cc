@@ -45,18 +45,37 @@ static inline void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	}
 	php_stream_close(dirp);
 	zend_string *real_path = openrasp_real_path(ZSTR_VAL(dirname), ZSTR_LEN(dirname), false, OPENDIR);
-	if (real_path)
+	if (!real_path)
 	{
-		zval params;
-		array_init(&params);
-		add_assoc_str(&params, "path", dirname);
-		zend_string_addref(dirname);
-		add_assoc_str(&params, "realpath", real_path);
-		zval stack;
-		array_init(&stack);
-		format_debug_backtrace_arr(&stack);
-		add_assoc_zval(&params, "stack", &stack);
-		check(check_type, &params);
+		return;
+	}
+
+	v8::Isolate *isolate = openrasp::get_isolate();
+	if (!isolate)
+	{
+		zend_string_release(real_path);
+		return;
+	}
+	bool is_block = false;
+	{
+		v8::HandleScope handle_scope(isolate);
+		auto arr = format_debug_backtrace_arr();
+		size_t len = arr.size();
+		auto stack = v8::Array::New(isolate, len);
+		for (size_t i = 0; i < len; i++)
+		{
+			stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
+		}
+		auto params = v8::Object::New(isolate);
+		params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, dirname->val, dirname->len));
+		params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path->val, real_path->len));
+		zend_string_release(real_path);
+		params->Set(openrasp::NewV8String(isolate, "stack"), stack);
+		is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params);
+	}
+	if (is_block)
+	{
+		handle_block();
 	}
 }
 

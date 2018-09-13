@@ -8,7 +8,7 @@ url file://
 $plugin = <<<EOF
 plugin.register('readFile', params => {
     assert(params.path == 'file:///tmp/openrasp/tmpfile')
-    assert(params.realpath == '/tmp/openrasp/tmpfile')
+    assert(params.realpath.endsWith('/tmp/openrasp/tmpfile'))
     return block
 })
 EOF;

@@ -21,6 +21,7 @@ import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -34,6 +35,7 @@ import java.util.Arrays;
  * Created by zhuming01 on 5/5/17.
  * All rights reserved
  */
+@HookAnnotation
 public class DiskFileItemHook extends AbstractClassHook {
     /**
      * (none-javadoc)

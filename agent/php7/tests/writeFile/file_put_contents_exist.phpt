@@ -5,8 +5,8 @@ hook file_put_contents (exist)
 $dir = __DIR__;
 $plugin = <<<EOF
 plugin.register('writeFile', params => {
-    assert(params.path == '/tmp/openrasp/tmpfile')
-    assert(params.realpath == '/tmp/openrasp/tmpfile')
+    assert(params.path.endsWith('/tmp/openrasp/tmpfile'))
+    assert(params.realpath.endsWith('/tmp/openrasp/tmpfile'))
     return block
 })
 EOF;

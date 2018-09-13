@@ -21,8 +21,10 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.Reflection;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import javassist.CannotCompileException;
@@ -36,6 +38,7 @@ import java.io.IOException;
  * Created by zhuming01 on 7/18/17.
  * All rights reserved
  */
+@HookAnnotation
 public class SQLStatementHook extends AbstractSqlHook {
 
     private static final String CONFIG_KEY_CACHE = "cache";
@@ -206,6 +209,7 @@ public class SQLStatementHook extends AbstractSqlHook {
                 }
             }
         } catch (Exception e) {
+
             JSContext.LOGGER.warn("Parse json failed because: " + e.getMessage());
         }
         return DEFAULT_LRU_CACHE_CAPACITY;

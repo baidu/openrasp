@@ -4,8 +4,9 @@ hook opendir
 <?php
 $plugin = <<<EOF
 plugin.register('directory', params => {
+    console.log(params)
     assert(params.path == 'file:///tmp/openrasp')
-    assert(params.realpath == '/tmp/openrasp')
+    assert(params.realpath.endsWith('/tmp/openrasp'))
     assert(params.stack[0].endsWith('opendir'))
     return block
 })

@@ -20,6 +20,8 @@
 #include "openrasp.h"
 #include "openrasp_log.h"
 #include "openrasp_ini.h"
+#include "openrasp_v8.h"
+#include "openrasp_utils.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -149,15 +151,16 @@ typedef struct sql_connection_entry_t
     char *username = nullptr;
 } sql_connection_entry;
 
-typedef enum wrapper_operation_t {
-    OPENDIR         = 1 << 0,
-    RENAMESRC       = 1 << 1,
-    RENAMEDEST      = 1 << 2,
-	READING         = 1 << 3,
-    WRITING         = 1 << 4,
-    APPENDING       = 1 << 5,
-    SIMULTANEOUSRW  = 1 << 6
-} wrapper_operation;
+enum PATH_OPERATION
+{
+    OPENDIR = 1 << 0,
+    RENAMESRC = 1 << 1,
+    RENAMEDEST = 1 << 2,
+    READING = 1 << 3,
+    WRITING = 1 << 4,
+    APPENDING = 1 << 5,
+    SIMULTANEOUSRW = 1 << 6
+};
 
 typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
 typedef void (*hook_handler_t)();
@@ -267,16 +270,6 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
 #define POST_HOOK_FUNCTION(name, type) \
     POST_HOOK_FUNCTION_EX(name, global, type)
 
-struct openrasp_hook_ini_t
-{
-    unsigned int slowquery_min_rows = 500;
-    bool enforce_policy = false;
-    char *block_url = nullptr;
-    std::set<std::string> hooks_ignore;
-    std::set<std::string> callable_blacklists; //haha
-};
-extern struct openrasp_hook_ini_t openrasp_hook_ini;
-
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_hook)
 
 ZEND_END_MODULE_GLOBALS(openrasp_hook)
@@ -307,7 +300,7 @@ void register_hook_handler(hook_handler_t hook_handler);
 bool openrasp_check_type_ignored(const char *item_name, uint item_name_length);
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length);
 void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zval *message);
-zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, wrapper_operation w_op);
+zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, uint32_t w_op);
 void slow_query_alarm(int rows);
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
 void sql_type_handler(char *query, int query_len, const char *server);

@@ -106,7 +106,6 @@ void PluginAgent::run()
 		zval *return_value = nullptr;
 		MAKE_STD_ZVAL(return_value);
 		php_json_decode(return_value, (char *)res_info.response_string.c_str(), res_info.response_string.size(), 1, 512 TSRMLS_CC);
-		zval **origin_zv;
 		if (Z_TYPE_P(return_value) != IS_ARRAY)
 		{
 			zval_ptr_dtor(&return_value);
@@ -155,32 +154,6 @@ void PluginAgent::run()
 void PluginAgent::write_pid_to_shm(pid_t agent_pid)
 {
 	oam.agent_ctrl_block->set_plugin_agent_id(agent_pid);
-}
-
-std::string PluginAgent::clear_old_official_plugins()
-{
-	TSRMLS_FETCH();
-	std::string root_dir = std::string(openrasp_ini.root_dir);
-	std::string plugin_dir = root_dir + "/plugins";
-	std::vector<std::string> official_plugins;
-	openrasp_scandir(plugin_dir, official_plugins,
-					 [](const char *filename) { return !strncmp(filename, "official-", strlen("official-")) &&
-													   !strcmp(filename + strlen(filename) - 3, ".js"); });
-	std::sort(official_plugins.rbegin(), official_plugins.rend());
-	std::string newest_plugin;
-	for (int i = 0; i < official_plugins.size(); ++i)
-	{
-		std::string plugin_abs_path = plugin_dir + default_slash + official_plugins[i];
-		if (0 == i)
-		{
-			newest_plugin = official_plugins[i];
-		}
-		else
-		{
-			VCWD_UNLINK(plugin_abs_path.c_str());
-		}
-	}
-	return newest_plugin;
 }
 
 void PluginAgent::update_local_official_plugin(std::string plugin_abs_path, const char *plugin, const char *version)

@@ -31,8 +31,10 @@ extern "C"
 #include "openrasp_hook.h"
 #include "openrasp_inject.h"
 #include "openrasp_security_policy.h"
-#include "openrasp_fswatch.h"
 #include <new>
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+#include "agent/openrasp_agent_manager.h"
+#endif
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
@@ -44,23 +46,36 @@ PHP_INI_ENTRY1("openrasp.root_dir", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString,
 #ifdef HAVE_GETTEXT
 PHP_INI_ENTRY1("openrasp.locale", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.locale)
 #endif
-PHP_INI_ENTRY1("openrasp.block_url", "https://rasp.baidu.com/blocked/", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_url)
 PHP_INI_ENTRY1("openrasp.slowquery_min_rows", "500", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.slowquery_min_rows)
-PHP_INI_ENTRY1("openrasp.enforce_policy", "0", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.enforce_policy)
-PHP_INI_ENTRY1("openrasp.hooks_ignore", "sqlSlowQuery", PHP_INI_SYSTEM, OnUpdateOpenraspSet, &openrasp_ini.hooks_ignore)
+PHP_INI_ENTRY1("openrasp.enforce_policy", "off", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.enforce_policy)
+PHP_INI_ENTRY1("openrasp.hooks_ignore", "", PHP_INI_SYSTEM, OnUpdateOpenraspSet, &openrasp_ini.hooks_ignore)
 PHP_INI_ENTRY1("openrasp.callable_blacklists", "system,exec,passthru,proc_open,shell_exec,popen,pcntl_exec,assert", PHP_INI_SYSTEM, OnUpdateOpenraspSet, &openrasp_ini.callable_blacklists)
 PHP_INI_ENTRY1("openrasp.inject_urlprefix", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.inject_html_urlprefix)
-PHP_INI_ENTRY1("openrasp.log_maxburst", "1000", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_maxburst)
+PHP_INI_ENTRY1("openrasp.log_maxburst", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_maxburst)
 PHP_INI_ENTRY1("openrasp.syslog_server_address", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.syslog_server_address)
 PHP_INI_ENTRY1("openrasp.syslog_facility", "1", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_facility)
-PHP_INI_ENTRY1("openrasp.syslog_alarm_enable", "0", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.syslog_alarm_enable)
+PHP_INI_ENTRY1("openrasp.syslog_alarm_enable", "off", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.syslog_alarm_enable)
 PHP_INI_ENTRY1("openrasp.syslog_connection_timeout", "50", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_connection_timeout)
 PHP_INI_ENTRY1("openrasp.syslog_read_timeout", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_read_timeout)
 PHP_INI_ENTRY1("openrasp.syslog_connection_retry_interval", "300", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_connection_retry_interval)
 PHP_INI_ENTRY1("openrasp.timeout_ms", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.timeout_ms)
-PHP_INI_ENTRY1("openrasp.block_status_code", "302", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.block_status_code)
 PHP_INI_ENTRY1("openrasp.plugin_maxstack", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.plugin_maxstack)
 PHP_INI_ENTRY1("openrasp.log_maxstack", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_maxstack)
+PHP_INI_ENTRY1("openrasp.plugin_filter", "on", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.plugin_filter)
+
+PHP_INI_ENTRY1("openrasp.backend_url", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.backend_url)
+PHP_INI_ENTRY1("openrasp.plugin_update_interval", "60", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.plugin_update_interval)
+PHP_INI_ENTRY1("openrasp.log_push_interval", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_push_interval)
+PHP_INI_ENTRY1("openrasp.app_id", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.app_id)
+PHP_INI_ENTRY1("openrasp.log_max_backup", "30", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_max_backup)
+PHP_INI_ENTRY1("openrasp.plugin_update_enable", "1", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.plugin_update_enable)
+
+PHP_INI_ENTRY1("openrasp.block_status_code", "302", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.block_status_code)
+PHP_INI_ENTRY1("openrasp.block_url", R"(https://rasp.baidu.com/blocked/?request_id=%request_id%)", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_redirect_url) // deprecated, just for compatibility
+PHP_INI_ENTRY1("openrasp.block_redirect_url", R"(https://rasp.baidu.com/blocked/?request_id=%request_id%)", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_redirect_url)
+PHP_INI_ENTRY1("openrasp.block_content_json", R"({"error":true, "reason": "Request blocked by OpenRASP", "request_id": "%request_id%"})", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_content_json)
+PHP_INI_ENTRY1("openrasp.block_content_xml", R"(<?xml version="1.0"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>)", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_content_xml)
+PHP_INI_ENTRY1("openrasp.block_content_html", R"(</script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>)", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_content_html)
 PHP_INI_ENTRY1("openrasp.clientip_header", "clientip", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.clientip_header)
 PHP_INI_END()
 
@@ -85,9 +100,15 @@ PHP_MINIT_FUNCTION(openrasp)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp, PHP_GINIT(openrasp), PHP_GSHUTDOWN(openrasp));
     REGISTER_INI_ENTRIES();
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+    if (!openrasp::oam.verify_ini_correct())
+    {
+        return SUCCESS;
+    }
+#endif
     if (!make_openrasp_root_dir())
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir should be configured correctly in php.ini (not empty, not root path, not relative path and writable), continue without security protection"));
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir is not configured correctly in php.ini, continuing without security protection"));
         return SUCCESS;
     }
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
@@ -102,7 +123,9 @@ PHP_MINIT_FUNCTION(openrasp)
     result = PHP_MINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
-    result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+    openrasp::oam.startup();
+#endif
     is_initialized = true;
     return SUCCESS;
 }
@@ -112,11 +135,13 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
     if (is_initialized)
     {
         int result;
-        result = PHP_MSHUTDOWN(openrasp_fswatch)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_inject)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_hook)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_v8)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_log)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+        openrasp::oam.shutdown();
+#endif
     }
     UNREGISTER_INI_ENTRIES();
     ZEND_SHUTDOWN_MODULE_GLOBALS(openrasp, PHP_GSHUTDOWN(openrasp));
@@ -156,10 +181,12 @@ PHP_MINFO_FUNCTION(openrasp)
     php_info_print_table_row(2, "Version", "");
 #endif
     php_info_print_table_row(2, "V8 Version", ZEND_TOSTR(V8_MAJOR_VERSION) "." ZEND_TOSTR(V8_MINOR_VERSION));
-#ifdef HAVE_NATIVE_ANTLR4
-    php_info_print_table_row(2, "Antlr Version", antlr4::RuntimeMetaData::VERSION.c_str());
-#else
     php_info_print_table_row(2, "Antlr Version", "4.7.1 (JavaScript Runtime)");
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+    if (openrasp_ini.plugin_update_enable)
+    {
+        php_info_print_table_row(2, "Plugin Version", openrasp::oam.agent_ctrl_block ? openrasp::oam.agent_ctrl_block->get_plugin_version() : "");
+    }
 #endif
     php_info_print_table_end();
     DISPLAY_INI_ENTRIES();
@@ -200,13 +227,20 @@ ZEND_GET_MODULE(openrasp)
 static bool make_openrasp_root_dir()
 {
     char *path = openrasp_ini.root_dir;
-    if (!path || !IS_ABSOLUTE_PATH(path, strlen(path)))
+    if (!path)
     {
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be an empty path"));
+        return false;
+    }
+    if (!IS_ABSOLUTE_PATH(path, strlen(path)))
+    {
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be a relative path"));
         return false;
     }
     path = expand_filepath(path, nullptr);
     if (!path || strnlen(path, 2) == 1)
     {
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be a root path"));
         efree(path);
         return false;
     }
@@ -218,6 +252,7 @@ static bool make_openrasp_root_dir()
         std::string path(root_dir + DEFAULT_SLASH + dir);
         if (!recursive_mkdir(path.c_str(), path.length(), 0777))
         {
+            openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir must be a writable path"));
             return false;
         }
     }

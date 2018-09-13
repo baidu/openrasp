@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook.server.catalina;
 
 import com.baidu.openrasp.hook.server.ServerParamHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -26,6 +27,7 @@ import javassist.NotFoundException;
  *
  * catalina 框架下的 request hook 点
  */
+@HookAnnotation
 public class CatalinaRequestHook extends ServerParamHook {
 
     /**

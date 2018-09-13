@@ -19,6 +19,7 @@ package com.baidu.openrasp.hook.server.resin;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.hook.server.ServerInputHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -30,6 +31,7 @@ import java.io.IOException;
  *
  * 获取 resin 请求 body 的 hook 点
  */
+@HookAnnotation
 public class ResinHttpInputHook extends ServerInputHook {
 
     /**

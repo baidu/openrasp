@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2017-2018 Baidu Inc.
  *
@@ -14,13 +15,16 @@
  * limitations under the License.
  */
 
+
 package com.baidu.openrasp.hook.file;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -34,6 +38,7 @@ import java.io.IOException;
  * 　　* @author anyang
  * 　　* @date 2018/7/23 10:54
  */
+@HookAnnotation
 public class FileRenameHook extends AbstractClassHook {
     @Override
     public boolean isClassMatched(String className) {
@@ -53,7 +58,8 @@ public class FileRenameHook extends AbstractClassHook {
     }
 
     public static void checkFileRename(File source, File dest) {
-        if (source != null && dest != null) {
+        boolean checkSwitch = Config.getConfig().getPluginFilter();
+        if (!checkSwitch||source != null && !source.isDirectory() && dest != null && !dest.isDirectory()) {
 
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
@@ -68,6 +74,8 @@ public class FileRenameHook extends AbstractClassHook {
             } catch (IOException e) {
                 params.put("dest", params, dest.getAbsolutePath());
             }
+
+
             HookHandler.doCheck(CheckParameter.Type.FILERENAME, params);
 
         }

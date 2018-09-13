@@ -1,3 +1,8 @@
+// Java 版本需要设置 request.param_encoding 之后才能使用
+// PHP  版本不支持 request hook 点，所以没有这个检测
+//  
+//  https://rasp.baidu.com/doc/setup/others.html
+
 var plugin = new RASP('offical')
 var clean  = {
     action: 'ignore',
@@ -5,10 +10,11 @@ var clean  = {
     confidence: 0
 }
 
-// [[ 近期调整~ ]]
 plugin.register('request', function(params, context) {
 
     // XSS 检测 DEMO
+    // 在 request hook 点简单匹配用户输入参数
+
     function detectXSS(params, context) {
         var xssRegex   = /<script|script>|<iframe|iframe>|javascript:(?!(?:history\.(?:go|back)|void\(0\)))/i
         var parameters = context.parameter;
@@ -34,8 +40,8 @@ plugin.register('request', function(params, context) {
     var message = detectXSS(params, context)
     if (message.length) {
         return {
-            action: 'block',
-            message: message,
+            action:     'block',
+            message:    message,
             confidence: 90
         }
     }

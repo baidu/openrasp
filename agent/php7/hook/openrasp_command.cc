@@ -57,7 +57,7 @@ static inline void openrasp_webshell_command_common(OPENRASP_INTERNAL_FUNCTION_P
     }
 }
 
-static inline void openrasp_command_common(INTERNAL_FUNCTION_PARAMETERS)
+static inline void openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zend_string *command;
 
@@ -66,15 +66,30 @@ static inline void openrasp_command_common(INTERNAL_FUNCTION_PARAMETERS)
         return;
     }
 
-    zval params;
-    array_init(&params);
-    add_assoc_str(&params, "command", command);
-    zend_string_addref(command);
-    zval stack;
-    array_init(&stack);
-    format_debug_backtrace_arr(&stack);
-    add_assoc_zval(&params, "stack", &stack);
-    check("command", &params);
+    v8::Isolate *isolate = openrasp::get_isolate();
+    if (!isolate)
+    {
+        return;
+    }
+    bool is_block = false;
+    {
+        v8::HandleScope handle_scope(isolate);
+        auto arr = format_debug_backtrace_arr();
+        size_t len = arr.size();
+        auto stack = v8::Array::New(isolate, len);
+        for (size_t i = 0; i < len; i++)
+        {
+            stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
+        }
+        auto params = v8::Object::New(isolate);
+        params->Set(openrasp::NewV8String(isolate, "command"), openrasp::NewV8String(isolate, command->val, command->len));
+        params->Set(openrasp::NewV8String(isolate, "stack"), stack);
+        is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params);
+    }
+    if (is_block)
+    {
+        handle_block();
+    }
 }
 
 void pre_global_passthru_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -84,7 +99,7 @@ void pre_global_passthru_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_passthru_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    openrasp_command_common(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_system_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -94,7 +109,7 @@ void pre_global_system_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_system_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    openrasp_command_common(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -104,7 +119,7 @@ void pre_global_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    openrasp_command_common(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_shell_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -114,7 +129,7 @@ void pre_global_shell_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETER
 
 void pre_global_shell_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    openrasp_command_common(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_proc_open_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -124,7 +139,7 @@ void pre_global_proc_open_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS
 
 void pre_global_proc_open_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    openrasp_command_common(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_popen_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -134,7 +149,7 @@ void pre_global_popen_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_popen_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    openrasp_command_common(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_pcntl_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -169,13 +184,28 @@ void pre_global_pcntl_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         }
     }
 
-    zval params;
-    array_init(&params);
-    add_assoc_str(&params, "command", command);
-    zend_string_addref(command);
-    zval stack;
-    array_init(&stack);
-    format_debug_backtrace_arr(&stack);
-    add_assoc_zval(&params, "stack", &stack);
-    check("command", &params);
+    v8::Isolate *isolate = openrasp::get_isolate();
+    if (!isolate)
+    {
+        return;
+    }
+    bool is_block = false;
+    {
+        v8::HandleScope handle_scope(isolate);
+        auto arr = format_debug_backtrace_arr();
+        size_t len = arr.size();
+        auto stack = v8::Array::New(isolate, len);
+        for (size_t i = 0; i < len; i++)
+        {
+            stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
+        }
+        auto params = v8::Object::New(isolate);
+        params->Set(openrasp::NewV8String(isolate, "command"), openrasp::NewV8String(isolate, command->val, command->len));
+        params->Set(openrasp::NewV8String(isolate, "stack"), stack);
+        is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params);
+    }
+    if (is_block)
+    {
+        handle_block();
+    }
 }
