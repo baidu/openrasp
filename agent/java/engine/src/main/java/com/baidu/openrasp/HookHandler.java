@@ -19,8 +19,8 @@ package com.baidu.openrasp;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.exception.SecurityException;
 import com.baidu.openrasp.hook.XXEHook;
-import com.baidu.openrasp.hook.dubbo.AbstractDubboRequest;
-import com.baidu.openrasp.hook.dubbo.DubboRequest;
+import com.baidu.openrasp.request.AbstractDubboRequest;
+import com.baidu.openrasp.request.DubboRequest;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
@@ -184,8 +184,6 @@ public class HookHandler {
      * @param request 请求实体
      */
     public static void checkDubboRequest(Object request) {
-
-
         if (request != null && !enableCurrThreadHook.get()) {
             enableCurrThreadHook.set(true);
             DubboRequest requestContainer = new DubboRequest(request);

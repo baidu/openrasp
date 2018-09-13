@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook.dubbo;
+package com.baidu.openrasp.request;
 
 import java.util.Map;
 
