@@ -46,15 +46,15 @@ public class CheckParameter {
         COMMAND("command", new JsChecker()),
         DIRECTORY("directory", new JsChecker()),
         REQUEST("request", new JsChecker()),
-        DUBBOREQUEST("dubboRequest",new JsChecker()),
+        DUBBOREQUEST("dubboRequest", new JsChecker()),
         READFILE("readFile", new JsChecker()),
         WRITEFILE("writeFile", new JsChecker()),
         FILEUPLOAD("fileUpload", new JsChecker()),
-        FILERENAME("rename",new JsChecker()),
+        FILERENAME("rename", new JsChecker()),
         XXE("xxe", new JsChecker()),
         OGNL("ognl", new JsChecker()),
         DESERIALIZATION("deserialization", new JsChecker()),
-//        REFLECTION("reflection", new JsChecker()),
+        //        REFLECTION("reflection", new JsChecker()),
         WEBDAV("webdav", new JsChecker()),
         INCLUDE("include", new JsChecker()),
         SSRF("ssrf", new SSRFChecker()),
@@ -100,7 +100,11 @@ public class CheckParameter {
     public CheckParameter(Type type, Object params) {
         this.type = type;
         this.params = params;
-        this.request = HookHandler.requestCache.get();
+        if (HookHandler.requestCache.get() != null) {
+            this.request = HookHandler.requestCache.get();
+        } else {
+            this.request = HookHandler.dubboRequestCache.get();
+        }
         this.createTime = System.currentTimeMillis();
     }
 
