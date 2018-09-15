@@ -32,6 +32,10 @@ extern "C" {
 #define _(STRING) (STRING)
 #endif
 
+#ifdef __cplusplus
+}
+#endif
+
 #define LOG_ERROR (20002)
 #define SHM_ERROR (20003)
 #define CONFIG_ERROR (20004)
@@ -81,10 +85,6 @@ int policy_info(zval *params_result TSRMLS_DC);
 #else
 #define UNLIKELY(condition) (condition)
 #define LIKELY(condition) (condition)
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif

@@ -18,6 +18,7 @@
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
 #include "openrasp_inject.h"
+#include "openrasp_shared_alloc.h"
 #include <map>
 #include <vector>
 #include <string>
@@ -26,7 +27,6 @@
 #include <iterator>
 
 extern "C" {
-#include "openrasp_shared_alloc.h"
 #include "ext/standard/url.h"
 #include "ext/standard/php_string.h"
 #include "ext/standard/php_array.h"
