@@ -100,11 +100,7 @@ public class CheckParameter {
     public CheckParameter(Type type, Object params) {
         this.type = type;
         this.params = params;
-        if (HookHandler.requestCache.get() != null) {
-            this.request = HookHandler.requestCache.get();
-        } else {
-            this.request = HookHandler.dubboRequestCache.get();
-        }
+        this.request = HookHandler.requestCache.get();
         this.createTime = System.currentTimeMillis();
     }
 

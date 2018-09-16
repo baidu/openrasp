@@ -66,12 +66,6 @@ public class HookHandler {
         }
     };
 
-    public static ThreadLocal<AbstractRequest> dubboRequestCache = new ThreadLocal<AbstractRequest>() {
-        @Override
-        protected AbstractRequest initialValue() {
-            return null;
-        }
-    };
     public static ThreadLocal<HttpServletResponse> responseCache = new ThreadLocal<HttpServletResponse>() {
         @Override
         protected HttpServletResponse initialValue() {
@@ -186,7 +180,7 @@ public class HookHandler {
         if (request != null && !enableCurrThreadHook.get()) {
             enableCurrThreadHook.set(true);
             DubboRequest requestContainer = new DubboRequest(request);
-            dubboRequestCache.set(requestContainer);
+            requestCache.set(requestContainer);
             XXEHook.resetLocalExpandedSystemIds();
             doCheck(CheckParameter.Type.DUBBOREQUEST, JSContext.getUndefinedValue());
         }
@@ -207,7 +201,7 @@ public class HookHandler {
      */
     public static void onDubboExit() {
         enableCurrThreadHook.set(false);
-        dubboRequestCache.set(null);
+        requestCache.set(null);
     }
 
     /**
