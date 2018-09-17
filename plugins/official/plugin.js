@@ -1186,9 +1186,11 @@ plugin.register('include', function (params, context) {
     return clean
 })
 
-
+var writeFileLru = new LRU(algorithmConfig.cache.sqli.capacity)
 plugin.register('writeFile', function (params, context) {
-
+    if (writeFileLru.get(params.realpath)) {
+        return clean
+    }
     // 写 NTFS 流文件，肯定不正常
     if (algorithmConfig.writeFile_NTFS.action != 'ignore')
     {
@@ -1226,6 +1228,7 @@ plugin.register('writeFile', function (params, context) {
             }
         }
     }
+    writeFileLru.put(params.realpath)
     return clean
 })
 
