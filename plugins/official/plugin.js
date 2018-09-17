@@ -370,6 +370,74 @@ var ntfsRegex       = /::\$(DATA|INDEX)$/i
 var sqli_prefilter  = new RegExp(algorithmConfig.sqli_policy.filter)
 
 // 常用函数
+
+function LRU(maxLength) {
+    this.maxLength = maxLength
+    this.length = 0
+    this.head = undefined
+    this.tail = undefined
+    this.cache = {}
+}
+
+LRU.prototype.get = function (key) {
+    var node = this.cache[key]
+    if (node) {
+        this.update(node)
+        return true
+    } else {
+        return false
+    }
+}
+
+LRU.prototype.put = function (key) {
+    var node = this.cache[key]
+    if (!node) {
+        node = {
+            key: key
+        }
+    }
+    this.update(node)
+}
+
+LRU.prototype.update = function (node) {
+    if (node == this.head) {
+        return
+    } else if (node == this.tail) {
+        this.tail = node.prev
+        this.tail.next = undefined
+    } else if (node.prev && node.next) {
+        node.prev.next = node.next
+        node.next.prev = node.prev
+    } else if (!this.cache.hasOwnProperty(node.key)) {
+        this.cache[node.key] = node
+        if (this.length == 0) {
+            this.head = this.tail = node
+            this.length = 1
+            return
+        } else if (this.length == 1) {
+            this.head = node
+            this.head.next = this.tail
+            this.tail.prev = this.head
+            this.length = 2
+            return
+        } else if (++this.length > this.maxLength) {
+            delete this.cache[this.tail.key]
+            this.tail.prev.next = undefined
+            this.tail = this.tail.prev
+        }
+    } else {
+        return
+    }
+    node.prev = undefined
+    node.next = this.head
+    this.head.prev = node
+    this.head = node
+}
+
+LRU.prototype.dump = function () {
+    console.log(this.cache)
+}
+
 String.prototype.replaceAll = function(token, tokenValue) {
     // 空值判断，防止死循环
     if (! token || token.length == 0) {
@@ -595,81 +663,12 @@ if (RASP.get_jsengine() !== 'v8') {
     // 对于PHP + V8，性能还不错，我们保留JS检测逻辑
 
     // v8 全局SQL结果缓存
-    var LRU = {
-        head: undefined,
-        tail: undefined,
-        cache: {},
-        length: 0,
-        maxLength: algorithmConfig.cache.sqli.capacity,
-
-        // 查询缓存，如果在则移动到队首
-        get: function (key) {
-            var node = this.cache[key]
-            if (node) {
-                this.update(node)
-                return true
-            } else {
-                return false
-            }
-        },
-
-        // 增加缓存，如果超过大小则删除末尾元素
-        put: function (key) {
-            var node = this.cache[key]
-            if (!node) {
-                node = {
-                    key: key
-                }
-            }
-            this.update(node)
-        },
-
-        update: function (node) {
-            if (node == this.head) {
-                return
-            } else if (node == this.tail) {
-                this.tail = node.prev
-                this.tail.next = undefined
-            } else if (node.prev && node.next) {
-                node.prev.next = node.next
-                node.next.prev = node.prev
-            } else if (!this.cache.hasOwnProperty(node.key)) {
-                this.cache[node.key] = node
-                if (this.length == 0) {
-                    this.head = this.tail = node
-                    this.length = 1
-                    return
-                } else if (this.length == 1) {
-                    this.head = node
-                    this.head.next = this.tail
-                    this.tail.prev = this.head
-                    this.length = 2
-                    return
-                } else if (++this.length > this.maxLength) {
-                    delete this.cache[this.tail.key]
-                    this.tail.prev.next = undefined
-                    this.tail = this.tail.prev
-                }
-            } else {
-                return
-            }
-            node.prev = undefined
-            node.next = this.head
-            this.head.prev = node
-            this.head = node
-        },
-
-        // 调试函数，用于打印内部信息
-        dump: function () {
-            console.log(this.cache)
-            console.log('')
-        }
-    }
+    var lru = new LRU(algorithmConfig.cache.sqli.capacity)
 
     plugin.register('sql', function (params, context) {
 
         // 缓存检查
-        if (LRU.get(params.query)) {
+        if (lru.get(params.query)) {
             return clean
         }
 
@@ -869,7 +868,7 @@ if (RASP.get_jsengine() !== 'v8') {
         }
 
         // 加入缓存，对 prepared sql 特别有效
-        LRU.put(params.query)
+        lru.put(params.query)
         return clean
     })
 
