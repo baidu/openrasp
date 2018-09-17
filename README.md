@@ -30,6 +30,8 @@ We've fully tested OpenRASP on the following application servers for Linux platf
 * Tomcat 6-8
 * JBoss 4.X
 * Jetty 7-9
+* Resin 3-4
+* SpringBoot 1-2
 * PHP 5.3-5.6, 7.0-7.2
 
 ##### 2. Performance impact on application servers
