@@ -18,6 +18,7 @@ package com.baidu.openrasp.hook.server.jboss;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.hook.server.ServerStartupHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.Reflection;
@@ -29,12 +30,12 @@ import javassist.NotFoundException;
 import java.io.IOException;
 
 /**
- * 　　* @Description: JBoss的JMX Console 安全检查
+ * 　　* @Description: JBoss的基线检查
  * 　　* @author anyang
  * 　　* @date 2018/7/30 15:46
  */
 @HookAnnotation
-public class JBossStartupHook extends AbstractClassHook {
+public class JBossStartupHook extends ServerStartupHook {
 
 
     @Override
@@ -42,11 +43,6 @@ public class JBossStartupHook extends AbstractClassHook {
         return "org/jboss/system/server/ServerImpl".equals(className) ||
                 "org/jboss/bootstrap/AbstractServerImpl".equals(className) ||
                 "org/jboss/bootstrap/impl/base/server/AbstractServer".equals(className);
-    }
-
-    @Override
-    public String getType() {
-        return "JBossJMXConsole";
     }
 
     @Override
