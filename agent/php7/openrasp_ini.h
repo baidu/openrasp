@@ -32,7 +32,7 @@ class Openrasp_ini
     char *locale;
     unsigned int timeout_ms = 100;
     char *syslog_server_address;
-    int log_maxburst = 1000;
+    int log_maxburst = 100;
     int syslog_facility;
     bool syslog_alarm_enable = false;
     long syslog_connection_timeout = 50;
@@ -42,23 +42,23 @@ class Openrasp_ini
     unsigned int slowquery_min_rows = 500;
     unsigned int plugin_maxstack = 100;
     unsigned int log_maxstack = 10;
+    unsigned int log_max_backup = 90;
     bool enforce_policy = false;
     std::unordered_set<std::string> hooks_ignore;
     std::unordered_set<std::string> callable_blacklists;
-    char *clientip_header;
+    char *backend_url;
+    unsigned int plugin_update_interval = 60;
+    unsigned int log_push_interval = 10;
+    char *app_id;
+    bool plugin_update_enable = 1;
     int block_status_code = 302;
     char *block_redirect_url;
     char *block_content_json;
     char *block_content_xml;
     char *block_content_html;
     bool plugin_filter = true;
-
-    unsigned int log_max_backup = 90;
-    char* backend_url;
-    unsigned int plugin_update_interval = 60;
-    unsigned int log_push_interval = 10;
-    char *app_id;
-    bool plugin_update_enable = 1;
+    char *clientip_header;
+    int body_maxbytes = 4 * 1024;
 };
 
 extern Openrasp_ini openrasp_ini;

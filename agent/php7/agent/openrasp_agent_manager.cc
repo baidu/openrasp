@@ -24,6 +24,7 @@
 
 #include "openrasp_log.h"
 #include "openrasp_agent_manager.h"
+#include "openrasp_shared_alloc.h"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -31,7 +32,6 @@
 
 extern "C"
 {
-#include "openrasp_shared_alloc.h"
 #include "php_streams.h"
 #include "php_main.h"
 }

@@ -460,10 +460,11 @@ int main() {
     hook/openrasp_pdo.cc \
     hook/openrasp_file.cc \
     hook/openrasp_ssrf.cc \
+    openrasp_config.cc \
     openrasp_inject.cc \
     openrasp_log.cc \
-    openrasp_shared_alloc.c  \
-    openrasp_shared_alloc_mmap.c  \
+    openrasp_shared_alloc.cc  \
+    openrasp_shared_alloc_mmap.cc  \
     openrasp_v8.cc \
     openrasp_v8_timeout_task.cc \
     openrasp_v8_request_context.cc \

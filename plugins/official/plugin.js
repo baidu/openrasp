@@ -1,4 +1,4 @@
-const version = '2018-0823-2100'
+const version = '2018-0910-1900'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -58,8 +58,9 @@ var algorithmConfig = {
     sqli_policy: {
         action:  'block',
 
-        // 粗规则: 为了减少 tokenize 次数，当SQL语句包含一定特征时才进入
-        filter:  ';|\\/\\*|(?:\\d{1,2},){4}|(?:null,){4}|0x[\\da-f]{8}|\\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin)\\b',
+        // 粗规则 - 为了减少 tokenize 次数，当SQL语句包含一定特征时才进入
+        // 另外，我们只需要处理增删改查的语句，虽然 show 语句也可以报错注入，但是算法2没必要处理
+        filter:  '^(select|insert|update|delete).*(;|\\/\\*|(?:\\d{1,2},){4}|(?:null,){4}|0x[\\da-f]{8}|\\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin))\\b',
 
         feature: {
             // 是否禁止多语句执行，select ...; update ...;
@@ -167,7 +168,7 @@ var algorithmConfig = {
         action: 'block'
     },
     // 任意文件下载防护 - 使用 ../../ 跳出 web 目录读取敏感文件
-    readFile_traversal: {
+    readFile_outsideWebroot: {
         action: 'ignore'
     },
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
@@ -263,9 +264,13 @@ var algorithmConfig = {
     fileUpload_webdav: {
         action: 'block'
     },
-    // 文件上传 - Multipart 表单方式
-    fileUpload_multipart: {
+    // 文件上传 - Multipart 方式上传脚本文件
+    fileUpload_multipart_script: {
         action: 'block'
+    },
+    // 文件上传 - Multipart 方式上传 HTML/JS 等文件
+    fileUpload_multipart_html: {
+        action: 'ignore'
     },
 
     // OGNL 代码执行漏洞
@@ -351,6 +356,12 @@ var forcefulBrowsing = {
 
 // 如果你配置了非常规的扩展名映射，比如让 .abc 当做PHP脚本执行，那你可能需要增加更多扩展名
 var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml)\.?$/i
+
+// 正常文件
+var cleanFileRegex = /\.(jpg|jpeg|png|gif|bmp|txt)\.?$/i
+
+// 匹配 HTML/JS 等可以用于钓鱼、domain-fronting 的文件
+var htmlFileRegex   = /\.(htm|html|js)$/i
 
 // 其他的 stream 都没啥用
 var ntfsRegex       = /::\$(DATA|INDEX)$/i
@@ -524,6 +535,15 @@ function is_path_endswith_userinput(parameter, target)
         // 参数必须有跳出目录，或者是绝对路径
         if ((has_traversal(value) || is_absolute_path(value))
             && (value == target || target.endsWith(value)))
+        {
+            verdict = true
+            return true
+        }
+
+        // 如果应用做了特殊处理， 比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
+        if (value.startsWith('file://') && 
+            is_absolute_path(target) && 
+            value.endsWith(target))
         {
             verdict = true
             return true
@@ -752,7 +772,7 @@ if (RASP.get_jsengine() !== 'v8') {
 
             // 懒加载，需要时才处理
             if (raw_tokens.length == 0) {
-                var query_lc = params.query.toLowerCase()
+                var query_lc = params.query.toLowerCase().trim()
 
                 if (sqli_prefilter.test(query_lc)) {
                     raw_tokens = RASP.sql_tokenize(params.query, params.server)
@@ -1211,30 +1231,47 @@ plugin.register('writeFile', function (params, context) {
 })
 
 
-if (algorithmConfig.fileUpload_multipart.action != 'ignore')
-{
-    // 禁止使用 multipart 上传脚本文件，或者 apache/php 服务器配置文件
-    plugin.register('fileUpload', function (params, context) {
 
-        if (scriptFileRegex.test(params.filename) || ntfsRegex.test(params.filename)) {
+plugin.register('fileUpload', function (params, context) {
+
+    // 是否禁止使用 multipart 上传脚本文件，或者 apache/php 服务器配置文件
+    if (algorithmConfig.fileUpload_multipart_script.action != 'ignore') 
+    {
+        if (scriptFileRegex.test(params.filename) || ntfsRegex.test(params.filename)) 
+        {
             return {
-                action:     algorithmConfig.fileUpload_multipart.action,
-                message:    _("File upload - Uploading a server-side script file with multipart/form-data protocol", [params.filename]),
+                action:     algorithmConfig.fileUpload_multipart_script.action,
+                message:    _("File upload - Uploading a server-side script file with multipart/form-data protocol, filename: %1%", [params.filename]),
                 confidence: 90
             }
         }
 
-        if (params.filename == ".htaccess" || params.filename == ".user.ini") {
+        if (params.filename == ".htaccess" || params.filename == ".user.ini") 
+        {
             return {
-                action:     algorithmConfig.fileUpload_multipart.action,
-                message:    _("File upload - Uploading a server-side config file with multipart/form-data protocol", [params.filename]),
+                action:     algorithmConfig.fileUpload_multipart_script.action,
+                message:    _("File upload - Uploading a server-side config file with multipart/form-data protocol, filename: %1%", [params.filename]),
                 confidence: 90
             }
         }
+    }
 
-        return clean
-    })
-}
+    // 是否禁止 HTML/JS 文件
+    if (algorithmConfig.fileUpload_multipart_html.action != 'ignore') 
+    {
+        if (htmlFileRegex.test(params.filename)) 
+        {
+            return {
+                action:     algorithmConfig.fileUpload_multipart_html.action,
+                message:    _("File upload - Uploading a HTML/JS file with multipart/form-data protocol", [params.filename]),
+                confidence: 90
+            }
+        }
+    }    
+
+    return clean
+})
+
 
 
 if (algorithmConfig.fileUpload_webdav.action != 'ignore')
@@ -1261,14 +1298,8 @@ if (algorithmConfig.rename_webshell.action != 'ignore')
 {
     plugin.register('rename', function (params, context) {
 
-        // 源文件必须有扩展名，避免误报，e.g hello.txt
-        if (! has_file_extension(params.source))
-        {
-            return clean
-        }
-
-        // 源文件不是脚本，且目标文件是脚本，判定为重命名方式写后门
-        if (! scriptFileRegex.test(params.source) && scriptFileRegex.test(params.dest))
+        // 源文件是干净的文件，目标文件是脚本文件，判定为重命名方式写后门
+        if (cleanFileRegex.test(params.source) && scriptFileRegex.test(params.dest))
         {
             return {
                 action:    algorithmConfig.rename_webshell.action,

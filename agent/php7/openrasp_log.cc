@@ -18,6 +18,7 @@
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
 #include "openrasp_inject.h"
+#include "openrasp_shared_alloc.h"
 #include <map>
 #include <vector>
 #include <string>
@@ -26,7 +27,6 @@
 #include <iterator>
 
 extern "C" {
-#include "openrasp_shared_alloc.h"
 #include "ext/standard/url.h"
 #include "ext/standard/php_string.h"
 #include "ext/standard/php_array.h"
@@ -290,6 +290,22 @@ static std::vector<keys_filter> alarm_filters =
     {"REQUEST_SCHEME HTTP_HOST SERVER_NAME SERVER_ADDR SERVER_PORT REQUEST_URI",     "url",              build_complete_url}
 };
 
+static zend_string* fetch_request_body(size_t max_len)
+{
+    php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, NULL);
+    if (!stream)
+    {
+        return zend_string_init("", strlen(""), 0);
+    }
+    zend_string *buf = php_stream_copy_to_mem(stream, max_len, 0);
+    php_stream_close(stream);
+    if (!buf)
+    {
+        return zend_string_init("", strlen(""), 0);
+    }
+    return buf;
+}
+
 static void init_alarm_request_info()
 {
     assert(Z_TYPE(OPENRASP_LOG_G(alarm_request_info)) == IS_NULL);
@@ -305,6 +321,7 @@ static void init_alarm_request_info()
     add_assoc_string(&OPENRASP_LOG_G(alarm_request_info), "server_type", "PHP");
     add_assoc_string(&OPENRASP_LOG_G(alarm_request_info), "server_version", OPENRASP_PHP_VERSION);
     add_assoc_string(&OPENRASP_LOG_G(alarm_request_info), "request_id", OPENRASP_INJECT_G(request_id));
+    add_assoc_str(&OPENRASP_LOG_G(alarm_request_info), "body", fetch_request_body(openrasp_ini.body_maxbytes));
 }
 
 static void init_policy_request_info()

@@ -32,6 +32,10 @@ extern "C" {
 #define _(STRING) (STRING)
 #endif
 
+#ifdef __cplusplus
+}
+#endif
+
 #define FSWATCH_ERROR (20001)
 #define LOG_ERROR (20002)
 #define SHM_ERROR (20003)
@@ -86,10 +90,6 @@ const char * fetch_url_scheme(const char *filename);
 #else
 #define UNLIKELY(condition) (condition)
 #define LIKELY(condition) (condition)
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif

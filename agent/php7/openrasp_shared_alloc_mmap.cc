@@ -30,8 +30,8 @@
 
 static int create_segments(openrasp_shared_segment_globals **shared_segments_p, char **error_in)
 {
-	size_t requested_size = sizeof(openrasp_shared_segment_globals);	
-	*shared_segments_p = mmap(0, requested_size, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+	size_t requested_size = sizeof(openrasp_shared_segment_globals);
+	*shared_segments_p = (openrasp_shared_segment_globals *)mmap(0, requested_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 	if (*shared_segments_p == MAP_FAILED) {
 		*error_in = "mmap";
 		return ALLOC_FAILURE;

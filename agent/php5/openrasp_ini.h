@@ -50,7 +50,6 @@ class Openrasp_ini
     char* backend_url;
     unsigned int plugin_update_interval = 60;
     unsigned int log_push_interval = 10;
-    char *clientip_header;
     char *app_id;
     bool plugin_update_enable = 1;
     int block_status_code = 302;
@@ -59,6 +58,8 @@ class Openrasp_ini
     char *block_content_xml;
     char *block_content_html;
     bool plugin_filter = true;
+    char *clientip_header;
+    int body_maxbytes = 4 * 1024;
 };
 
 extern Openrasp_ini openrasp_ini;

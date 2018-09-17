@@ -17,6 +17,7 @@
 #include "openrasp_hook.h"
 #include "openrasp_ini.h"
 #include "openrasp_v8.h"
+#include "openrasp_shared_alloc.h"
 #include <string>
 #include <map>
 
@@ -24,7 +25,6 @@ extern "C"
 {
 #include "ext/pdo/php_pdo_driver.h"
 #include "zend_ini.h"
-#include "openrasp_shared_alloc.h"
 }
 
 /**
