@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.plugin.checker.policy;
+package com.baidu.openrasp.plugin.checker.policy.serverpolicy;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -22,7 +22,6 @@ import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo.Type;
 import com.baidu.openrasp.tool.model.ApplicationModel;
-import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
@@ -41,23 +40,20 @@ import java.util.List;
  * Created by tyy on 8/8/17.
  * 检测tomcat安全规范的工具类
  */
-public class TomcatSecurityChecker extends PolicyChecker {
+public class TomcatSecurityChecker extends ServerPolicyChecker {
 
     private static final String TOMCAT_CHECK_ERROR_LOG_CHANNEL = "tomcat_security_check_error";
     private static final String HTTP_ONLY_ATTRIBUTE_NAME = "useHttpOnly";
-    private static final String WINDOWS_ADMIN_GROUP_ID = "S-1-5-32-544";
     private static final String[] TOMCAT_MANAGER_ROLES = new String[]{"admin-gui", "manager-gui", "manager", "admin"};
     private static final String[] WEAK_WORDS = new String[]{"both", "tomcat", "admin", "manager", "123456", "root"};
     private static final String[] DEFAULT_APP_DIRS = new String[]{"ROOT", "manager", "host-manager", "docs"};
     private static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
 
     @Override
-    public List<EventInfo> checkParam(CheckParameter checkParameter) {
+    public void checkServer(CheckParameter checkParameter, List<EventInfo> infos) {
         String tomcatBaseDir = System.getProperty("catalina.base");
-        List<EventInfo> infos = new LinkedList<EventInfo>();
         try {
             if (tomcatBaseDir != null) {
-                checkStartUser(infos);
                 checkHttpOnlyIsOpen(tomcatBaseDir, infos);
                 checkManagerPassword(tomcatBaseDir, infos);
                 checkDirectoryListing(tomcatBaseDir, infos);
@@ -70,10 +66,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
         } catch (Exception e) {
             handleException(e);
         }
-
-        return infos;
     }
-
     /**
      * 检测cookie的HttpOnly是否开启
      */
@@ -99,33 +92,6 @@ public class TomcatSecurityChecker extends PolicyChecker {
 
             if (!isHttpOnly) {
                 infos.add(new SecurityPolicyInfo(Type.COOKIE_HTTP_ONLY, "Tomcat security baseline - httpOnly should be enabled in conf/context.xml", true));
-            }
-        }
-    }
-
-    /**
-     * 检测启动用户是否为系统管理员
-     */
-    private void checkStartUser(List<EventInfo> infos) {
-        String osName = System.getProperty("os.name").toLowerCase();
-        if (osName.startsWith("linux") || osName.startsWith("mac")) {
-            if ("root".equals(System.getProperty("user.name"))) {
-                infos.add(new SecurityPolicyInfo(Type.START_USER, "Java security baseline - should not start application server with root account", true));
-            }
-        } else if (osName.startsWith("windows")) {
-            try {
-                Class<?> ntSystemClass = Class.forName("com.sun.security.auth.module.NTSystem");
-                Object ntSystemObject = ntSystemClass.newInstance();
-                String[] userGroups = (String[]) ntSystemClass.getMethod("getGroupIDs").invoke(ntSystemObject);
-                if (userGroups != null) {
-                    for (String group : userGroups) {
-                        if (group.equals(WINDOWS_ADMIN_GROUP_ID)) {
-                            infos.add(new SecurityPolicyInfo(Type.START_USER, "Java security baseline - should not start application server with Administrator/system account", true));
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                handleException(e);
             }
         }
     }

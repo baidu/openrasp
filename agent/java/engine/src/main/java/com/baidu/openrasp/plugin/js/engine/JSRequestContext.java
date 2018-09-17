@@ -41,8 +41,7 @@ public class JSRequestContext extends ScriptableObject {
             "parameter",
             "remoteAddr",
             "server",
-            "appBasePath",
-            "session"
+            "appBasePath"
     ));
     private JSContext cx = null;
     private AbstractRequest javaContext = null;
