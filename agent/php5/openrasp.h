@@ -36,6 +36,8 @@ extern "C" {
 }
 #endif
 
+#include "openrasp_config.h"
+
 #define LOG_ERROR (20002)
 #define SHM_ERROR (20003)
 #define CONFIG_ERROR (20004)
@@ -55,6 +57,7 @@ extern "C" {
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp)
 zend_bool locked;
+openrasp::OpenraspConfig config;
 ZEND_END_MODULE_GLOBALS(openrasp)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp)

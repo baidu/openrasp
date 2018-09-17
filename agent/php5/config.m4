@@ -460,6 +460,7 @@ int main() {
     hook/openrasp_pdo.cc \
     hook/openrasp_file.cc \
     hook/openrasp_ssrf.cc \
+    openrasp_config.cc \
     openrasp_inject.cc \
     openrasp_log.cc \
     openrasp_shared_alloc.cc  \
