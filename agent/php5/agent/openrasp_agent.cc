@@ -34,7 +34,7 @@ extern "C"
 namespace openrasp
 {
 
-volatile int PluginAgent::signal_received = 0;
+volatile int HeartBeatAgent::signal_received = 0;
 volatile int LogAgent::signal_received = 0;
 
 BaseAgent::BaseAgent(std::string name)
@@ -52,124 +52,149 @@ void BaseAgent::install_signal_handler(sighandler_t signal_handler)
 	sigaction(SIGTERM, &sa_usr, NULL);
 }
 
-PluginAgent::PluginAgent()
-	: BaseAgent(PLUGIN_AGENT_PR_NAME)
+HeartBeatAgent::HeartBeatAgent()
+	: BaseAgent(HEARTBEAT_AGENT_PR_NAME)
 {
 }
 
-void PluginAgent::run()
+void HeartBeatAgent::run()
 {
 	AGENT_SET_PROC_NAME(this->name.c_str());
 	install_signal_handler(
 		[](int signal_no) {
-			PluginAgent::signal_received = signal_no;
+			HeartBeatAgent::signal_received = signal_no;
 		});
 	TSRMLS_FETCH();
-	CURL *curl = nullptr;
-	std::string root_dir = std::string(openrasp_ini.root_dir);
+	CURL *curl = curl_easy_init();
 	while (true)
 	{
-		if (nullptr == curl)
-		{
-			curl = curl_easy_init();
-		}
+		do_heartbeat(curl TSRMLS_CC);
 		for (int i = 0; i < openrasp_ini.plugin_update_interval; ++i)
 		{
 			sleep(1);
-			if (PluginAgent::signal_received == SIGTERM)
+			if (HeartBeatAgent::signal_received == SIGTERM)
 			{
 				curl_easy_cleanup(curl);
 				curl = nullptr;
 				exit(0);
 			}
 		}
-		ResponseInfo res_info;
-		std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/plugin";
-		zval *body = nullptr;
-		MAKE_STD_ZVAL(body);
-		array_init(body);
-		add_assoc_string(body, "version", (char *)oam->agent_ctrl_block->get_plugin_version(), 1);
-		smart_str buf_json = {0};
-		php_json_encode(&buf_json, body, 0 TSRMLS_CC);
-		if (buf_json.a > buf_json.len)
+	}
+}
+
+void HeartBeatAgent::do_heartbeat(CURL *curl TSRMLS_DC)
+{
+	if (nullptr == curl)
+	{
+		curl = curl_easy_init();
+		if (nullptr == curl)
 		{
-			buf_json.c[buf_json.len] = '\0';
-			buf_json.len++;
+			return;
 		}
-		perform_curl(curl, url_string, buf_json.c, res_info);
-		smart_str_free(&buf_json);
-		zval_ptr_dtor(&body);
-		if (CURLE_OK != res_info.res)
+	} //make sure curl is not nullptr
+	ResponseInfo res_info;
+	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/heartbeat";
+	zval *body = nullptr;
+	MAKE_STD_ZVAL(body);
+	array_init(body);
+	add_assoc_string(body, "version", (char *)oam->agent_ctrl_block->get_plugin_version(), 1);
+	smart_str buf_json = {0};
+	php_json_encode(&buf_json, body, 0 TSRMLS_CC);
+	if (buf_json.a > buf_json.len)
+	{
+		buf_json.c[buf_json.len] = '\0';
+		buf_json.len++;
+	}
+	perform_curl(curl, url_string, buf_json.c, res_info);
+	smart_str_free(&buf_json);
+	zval_ptr_dtor(&body);
+	if (CURLE_OK != res_info.res)
+	{
+		return;
+	}
+	zval *return_value = nullptr;
+	MAKE_STD_ZVAL(return_value);
+	php_json_decode(return_value, (char *)res_info.response_string.c_str(), res_info.response_string.size(), 1, 512 TSRMLS_CC);
+	if (Z_TYPE_P(return_value) != IS_ARRAY)
+	{
+		zval_ptr_dtor(&return_value);
+		return;
+	}
+	if (res_info.response_code >= 200 && res_info.response_code < 300)
+	{
+		long status;
+		bool has_status = fetch_outmost_long_from_ht(Z_ARRVAL_P(return_value), "status", &status);
+		char *description = fetch_outmost_string_from_ht(Z_ARRVAL_P(return_value), "description");
+		if (has_status && description)
 		{
-			continue;
-		}
-		zval *return_value = nullptr;
-		MAKE_STD_ZVAL(return_value);
-		php_json_decode(return_value, (char *)res_info.response_string.c_str(), res_info.response_string.size(), 1, 512 TSRMLS_CC);
-		if (Z_TYPE_P(return_value) != IS_ARRAY)
-		{
-			zval_ptr_dtor(&return_value);
-			continue;
-		}
-		if (res_info.response_code >= 200 && res_info.response_code < 300)
-		{
-			long status;
-			bool has_status = fetch_outmost_long_from_ht(Z_ARRVAL_P(return_value), "status", &status);
-			char *description = fetch_outmost_string_from_ht(Z_ARRVAL_P(return_value), "description");
-			if (has_status && description)
+			if (0 < status)
 			{
-				if (0 < status)
+				openrasp_error(E_WARNING, AGENT_ERROR, _("Heartbeat error, http status: %ld."), status);
+			}
+			else if (0 == status)
+			{
+				if (HashTable *data = fetch_outmost_hashtable_from_ht(Z_ARRVAL_P(return_value), "data"))
 				{
-					openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to update official plugin, status: %ld."), status);
-				}
-				else if (0 == status)
-				{
-					if (HashTable *data = fetch_outmost_hashtable_from_ht(Z_ARRVAL_P(return_value), "data"))
+					HashTable *plugin_ht = nullptr;
+					if (plugin_ht = fetch_outmost_hashtable_from_ht(data, "plugin"))
 					{
-						char *version = nullptr;
-						char *plugin = nullptr;
-						char *md5 = nullptr;
-						if ((version = fetch_outmost_string_from_ht(data, "version")) &&
-							(plugin = fetch_outmost_string_from_ht(data, "plugin")) &&
-							(md5 = fetch_outmost_string_from_ht(data, "md5")))
-						{
-							std::string cal_md5 = md5sum(static_cast<const void *>(plugin), strlen(plugin));
-							if (!strcmp(cal_md5.c_str(), md5))
-							{
-								update_local_official_plugin(root_dir + "/plugins/official.js", plugin, version);
-							}
-						}
+						update_official_plugin(plugin_ht);
+					}
+					long config_time;
+					bool has_config_time = fetch_outmost_long_from_ht(data, "config_time", &config_time);
+					HashTable *config_ht = fetch_outmost_hashtable_from_ht(data, "config");
+					if (has_config_time && config_ht)
+					{
+						update_config(config_ht);
 					}
 				}
 			}
 		}
-		else
-		{
-			openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to update official plugin, response code: %ld."), res_info.response_code);
-		}
-		zval_ptr_dtor(&return_value);
-	}
-}
-
-void PluginAgent::write_pid_to_shm(pid_t agent_pid)
-{
-	oam->agent_ctrl_block->set_plugin_agent_id(agent_pid);
-}
-
-void PluginAgent::update_local_official_plugin(std::string plugin_abs_path, const char *plugin, const char *version)
-{
-	TSRMLS_FETCH();
-	std::ofstream out_file(plugin_abs_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
-	if (out_file.is_open() && out_file.good())
-	{
-		out_file << plugin;
-		out_file.close();
-		oam->agent_ctrl_block->set_plugin_version(version);
 	}
 	else
 	{
-		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write official plugin to %s."), plugin_abs_path.c_str());
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Heartbeat error, response code: %ld."), res_info.response_code);
 	}
+	zval_ptr_dtor(&return_value);
+}
+
+void HeartBeatAgent::update_official_plugin(HashTable *plugin_ht)
+{
+	assert(plugin_ht != nullptr);
+	char *version = nullptr;
+	char *plugin = nullptr;
+	char *md5 = nullptr;
+	if ((version = fetch_outmost_string_from_ht(plugin_ht, "version")) &&
+		(plugin = fetch_outmost_string_from_ht(plugin_ht, "plugin")) &&
+		(md5 = fetch_outmost_string_from_ht(plugin_ht, "md5")))
+	{
+		std::string cal_md5 = md5sum(static_cast<const void *>(plugin), strlen(plugin));
+		if (!strcmp(cal_md5.c_str(), md5))
+		{
+			std::string plugin_abs_path = std::string(openrasp_ini.root_dir) + "/plugins/official.js";
+			std::ofstream out_file(plugin_abs_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
+			if (out_file.is_open() && out_file.good())
+			{
+				out_file << plugin;
+				out_file.close();
+				oam->agent_ctrl_block->set_plugin_version(version);
+			}
+			else
+			{
+				openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write official plugin to %s."), plugin_abs_path.c_str());
+			}
+		}
+	}
+}
+
+void HeartBeatAgent::update_config(HashTable *config_ht)
+{
+	//TODO
+}
+
+void HeartBeatAgent::write_pid_to_shm(pid_t agent_pid)
+{
+	oam->agent_ctrl_block->set_plugin_agent_id(agent_pid);
 }
 
 LogAgent::LogAgent()
@@ -210,8 +235,8 @@ void LogAgent::run()
 	std::string line;
 	CURL *curl = nullptr;
 
-	LogDirInfo alarm_dir_info(root_dir + default_slash + "logs" + default_slash + ALARM_LOG_DIR_NAME, "alarm.log.", "/v1/log/attack");
-	LogDirInfo policy_dir_info(root_dir + default_slash + "logs" + default_slash + POLICY_LOG_DIR_NAME, "policy.log.", "/v1/log/policy");
+	LogDirInfo alarm_dir_info(root_dir + default_slash + "logs" + default_slash + ALARM_LOG_DIR_NAME, "alarm.log.", "/v1/agent/log/attack");
+	LogDirInfo policy_dir_info(root_dir + default_slash + "logs" + default_slash + POLICY_LOG_DIR_NAME, "policy.log.", "/v1/agent/log/policy");
 	std::vector<LogDirInfo *> log_dirs{&alarm_dir_info, &policy_dir_info};
 	try
 	{

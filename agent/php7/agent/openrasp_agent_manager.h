@@ -26,15 +26,15 @@
 #include <sys/prctl.h>
 
 #define AGENT_SET_PROC_NAME(name) prctl(PR_SET_NAME, (name), 0, 0, 0)
-#define PLUGIN_AGENT_PR_NAME "plugin-agent"
-#define LOG_AGENT_PR_NAME "log-agent"
+#define HEARTBEAT_AGENT_PR_NAME "rasp-heartbeat"
+#define LOG_AGENT_PR_NAME "rasplog"
 
 namespace openrasp
 {
 
 class ShmManager;
 class BaseAgent;
-class PluginAgent;
+class HeartBeatAgent;
 class LogAgent;
 class OpenraspCtrlBlock;
 

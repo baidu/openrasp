@@ -41,12 +41,12 @@ protected:
   std::string default_slash;
 };
 
-class PluginAgent : public BaseAgent
+class HeartBeatAgent : public BaseAgent
 {
 public:
   static volatile int signal_received;
 
-  PluginAgent();
+  HeartBeatAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);
   virtual void update_local_official_plugin(std::string plugin_abs_path, const char *plugin, const char *version);

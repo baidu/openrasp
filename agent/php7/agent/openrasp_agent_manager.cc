@@ -224,7 +224,7 @@ bool OpenraspAgentManager::process_agent_startup()
 {
 	if (openrasp_ini.plugin_update_enable)
 	{
-		agents.push_back(std::move((std::unique_ptr<BaseAgent>)new PluginAgent()));
+		agents.push_back(std::move((std::unique_ptr<BaseAgent>)new HeartBeatAgent()));
 	}
 	agents.push_back(std::move((std::unique_ptr<BaseAgent>)new LogAgent()));
 	agent_ctrl_block->set_master_pid(first_process_pid);
@@ -270,7 +270,7 @@ void OpenraspAgentManager::process_agent_shutdown()
 
 void OpenraspAgentManager::supervisor_run()
 {
-	AGENT_SET_PROC_NAME("supervisor-run");
+	AGENT_SET_PROC_NAME("rasp-supervisor");
 	struct sigaction sa_usr = {0};
 	sa_usr.sa_flags = 0;
 	sa_usr.sa_handler = supervisor_sigchld_handler;

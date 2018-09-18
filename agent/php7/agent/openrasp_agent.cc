@@ -34,7 +34,7 @@ extern "C"
 namespace openrasp
 {
 
-volatile int PluginAgent::signal_received = 0;
+volatile int HeartBeatAgent::signal_received = 0;
 volatile int LogAgent::signal_received = 0;
 
 BaseAgent::BaseAgent(std::string name)
@@ -52,17 +52,17 @@ void BaseAgent::install_signal_handler(sighandler_t signal_handler)
 	sigaction(SIGTERM, &sa_usr, NULL);
 }
 
-PluginAgent::PluginAgent()
-	: BaseAgent(PLUGIN_AGENT_PR_NAME)
+HeartBeatAgent::HeartBeatAgent()
+	: BaseAgent(HEARTBEAT_AGENT_PR_NAME)
 {
 }
 
-void PluginAgent::run()
+void HeartBeatAgent::run()
 {
 	AGENT_SET_PROC_NAME(this->name.c_str());
 	install_signal_handler(
 		[](int signal_no) {
-			PluginAgent::signal_received = signal_no;
+			HeartBeatAgent::signal_received = signal_no;
 		});
 	TSRMLS_FETCH();
 	CURL *curl = nullptr;
@@ -76,7 +76,7 @@ void PluginAgent::run()
 		for (int i = 0; i < openrasp_ini.plugin_update_interval; ++i)
 		{
 			sleep(1);
-			if (PluginAgent::signal_received == SIGTERM)
+			if (HeartBeatAgent::signal_received == SIGTERM)
 			{
 				curl_easy_cleanup(curl);
 				curl = nullptr;
@@ -146,12 +146,12 @@ void PluginAgent::run()
 	}
 }
 
-void PluginAgent::write_pid_to_shm(pid_t agent_pid)
+void HeartBeatAgent::write_pid_to_shm(pid_t agent_pid)
 {
 	oam.agent_ctrl_block->set_plugin_agent_id(agent_pid);
 }
 
-void PluginAgent::update_local_official_plugin(std::string plugin_abs_path, const char *plugin, const char *version)
+void HeartBeatAgent::update_local_official_plugin(std::string plugin_abs_path, const char *plugin, const char *version)
 {
 	TSRMLS_FETCH();
 	std::ofstream out_file(plugin_abs_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
