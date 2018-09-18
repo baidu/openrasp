@@ -267,27 +267,31 @@ v8::Isolate *get_isolate(TSRMLS_D)
     }
 
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
-    if (oam.get_plugin_update_timestamp() > process_globals.plugin_update_timestamp)
+    if (oam != nullptr)
     {
-        long timestamp = oam.get_plugin_update_timestamp();
-        if (process_globals.mtx.try_lock() &&
-            timestamp > process_globals.plugin_update_timestamp)
+        long timestamp = oam->get_plugin_update_timestamp();
+        if (timestamp > process_globals.plugin_update_timestamp)
         {
-            process_globals.is_initialized = false;
-            load_plugins(TSRMLS_C);
-            auto snapshot_blob = get_snapshot(TSRMLS_C);
-            if (snapshot_blob.data != nullptr &&
-                snapshot_blob.raw_size > 0)
+            if (process_globals.mtx.try_lock() &&
+                timestamp > process_globals.plugin_update_timestamp)
             {
-                delete[] process_globals.snapshot_blob.data;
-                process_globals.snapshot_blob = {nullptr, 0};
-                process_globals.snapshot_blob = snapshot_blob;
-                process_globals.plugin_update_timestamp = timestamp;
-                process_globals.is_initialized = true;
+                process_globals.is_initialized = false;
+                load_plugins(TSRMLS_C);
+                auto snapshot_blob = get_snapshot(TSRMLS_C);
+                if (snapshot_blob.data != nullptr &&
+                    snapshot_blob.raw_size > 0)
+                {
+                    delete[] process_globals.snapshot_blob.data;
+                    process_globals.snapshot_blob = {nullptr, 0};
+                    process_globals.snapshot_blob = snapshot_blob;
+                    process_globals.plugin_update_timestamp = timestamp;
+                    process_globals.is_initialized = true;
+                }
+                process_globals.mtx.unlock();
             }
-            process_globals.mtx.unlock();
         }
     }
+
 #endif
 
     if (UNLIKELY(process_globals.is_initialized &&

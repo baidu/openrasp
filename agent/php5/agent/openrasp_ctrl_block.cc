@@ -55,19 +55,9 @@ pid_t OpenraspCtrlBlock::get_log_agent_id()
     return log_agent_id;
 }
 
-void OpenraspCtrlBlock::set_master_pid(pid_t master_pid)
-{
-    this->master_pid = master_pid;
-}
-  
-pid_t OpenraspCtrlBlock::get_master_pid()
-{
-    return master_pid;
-}
-
 void OpenraspCtrlBlock::set_plugin_version(const char* plugin_version)
 {
-    strncpy(this->plugin_version, plugin_version, OpenraspCtrlBlock::PLIGIN_VERSION_MAX_SIZE);
+    strncpy(this->plugin_version, plugin_version, PLIGIN_VERSION_MAX_SIZE);
     last_update_time = (long)time(nullptr);
 }
 

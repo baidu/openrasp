@@ -14,38 +14,34 @@
  * limitations under the License.
  */
 
-#ifndef _OPENRASP_MM_SHMEM_MANAGER_H_
-#define _OPENRASP_MM_SHMEM_MANAGER_H_
+#ifndef _OPENRASP_SAFE_SHUTDOWN_MANAGER_H_
+#define _OPENRASP_SAFE_SHUTDOWN_MANAGER_H_
 
-#include <map>
+#include "openrasp.h"
+#include "base_manager.h"
+#include <memory>
 
 namespace openrasp
 {
 
-enum ShmemSecKey
-{
-  SHMEM_SEC_CTRL_BLOCK,
-  SHMEM_SEC_CONF_BLOCK,
-  SHMEM_SEC_MASTER_PID
-};
+class ShmManager;
 
-class ShmemSecMeta
+class SafeShutDownManager : public BaseManager
 {
 public:
-  char *mem_addr;
-  size_t mem_size;
-};
-
-class ShmManager
-{
-public:
-  char *create(enum ShmemSecKey mem_key, size_t size);
-
-  int destroy(enum ShmemSecKey mem_key);
+  SafeShutDownManager(ShmManager *mm);
+  virtual bool startup();
+  virtual bool shutdown();
+  bool is_master_current_process();
+  pid_t get_master_pid();
 
 private:
-  std::map<enum ShmemSecKey, ShmemSecMeta> _shmem_key_map;
+  pid_t *master_pid = nullptr;
+  pid_t init_process_pid;
+  pid_t search_fpm_master_pid();
 };
+
+extern std::unique_ptr<SafeShutDownManager> ssdm;
 
 } // namespace openrasp
 

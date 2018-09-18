@@ -60,6 +60,7 @@ class Openrasp_ini
     bool plugin_filter = true;
     char *clientip_header;
     int body_maxbytes = 4 * 1024;
+    bool remote_management_enable = true;
 };
 
 extern Openrasp_ini openrasp_ini;

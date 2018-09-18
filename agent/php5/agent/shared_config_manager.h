@@ -14,38 +14,35 @@
  * limitations under the License.
  */
 
-#ifndef _OPENRASP_MM_SHMEM_MANAGER_H_
-#define _OPENRASP_MM_SHMEM_MANAGER_H_
+#ifndef _OPENRASP_SHARED_CONFIG_MANAGER_H_
+#define _OPENRASP_SHARED_CONFIG_MANAGER_H_
 
+#include "openrasp.h"
+#include "base_manager.h"
+#include <memory>
 #include <map>
+#include "utils/ReadWriteLock.h"
+#include "shared_config_block.h"
 
 namespace openrasp
 {
 
-enum ShmemSecKey
-{
-  SHMEM_SEC_CTRL_BLOCK,
-  SHMEM_SEC_CONF_BLOCK,
-  SHMEM_SEC_MASTER_PID
-};
-
-class ShmemSecMeta
+class SharedConfigManager : public BaseManager
 {
 public:
-  char *mem_addr;
-  size_t mem_size;
-};
-
-class ShmManager
-{
-public:
-  char *create(enum ShmemSecKey mem_key, size_t size);
-
-  int destroy(enum ShmemSecKey mem_key);
+  SharedConfigManager(ShmManager *mm);
+  virtual bool startup();
+  virtual bool shutdown();
+  int get_check_type_white_bit_mask(std::string url);
+  bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
 
 private:
-  std::map<enum ShmemSecKey, ShmemSecMeta> _shmem_key_map;
+  VariableConfigBlock *variable_config_block;
+  ReadWriteLock *rwlock;
+  bool write_check_type_white_array_to_shm(const void *source, size_t num);
 };
+
+extern std::unique_ptr<SharedConfigManager> vcm;
 
 } // namespace openrasp
 

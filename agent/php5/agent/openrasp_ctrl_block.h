@@ -21,10 +21,11 @@
 namespace openrasp
 {
 
+#define PLIGIN_VERSION_MAX_SIZE (50)
+
 class OpenraspCtrlBlock
 {
 public:
-  static const int PLIGIN_VERSION_MAX_SIZE = 50;
   void set_supervisor_id(pid_t supervisor_id);
   pid_t get_supervisor_id();
 
@@ -34,9 +35,6 @@ public:
   void set_log_agent_id(pid_t log_agent_id);
   pid_t get_log_agent_id();
 
-  void set_master_pid(pid_t master_pid);
-  pid_t get_master_pid();
-
   void set_plugin_version(const char *plugin_version);
   const char *get_plugin_version();
   long get_last_update_time();
@@ -44,7 +42,6 @@ public:
 private:
   pid_t supervisor_id;
   pid_t log_agent_id = 0;
-  pid_t master_pid = 0;
   pid_t plugin_agent_id = 0;
   long last_update_time = 0;
   char plugin_version[PLIGIN_VERSION_MAX_SIZE + 1] = {0};

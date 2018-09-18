@@ -19,6 +19,7 @@
 
 #include <vector>
 #include <cstring>
+#include <string>
 #include <cstdio>
 
 namespace openrasp
@@ -43,43 +44,17 @@ inline T *array_resize(T *ptr, size_t origin_size, size_t new_size, T default_va
 
 class DoubleArrayTrie
 {
-  private:
-    struct node_t
+  public:
+    struct result_pair_type
     {
-        unsigned int code;
-        size_t depth;
-        size_t left;
-        size_t right;
+        int value;
+        size_t length;
     };
 
     struct unit_t
     {
         int base;
         unsigned int check;
-    };
-
-    unit_t *array_;
-    unsigned char *used_;
-    size_t size_;
-    size_t alloc_size_;
-    size_t key_size_;
-    const char **key_;
-    const size_t *length_;
-    const int *value_;
-    size_t progress_;
-    size_t next_check_pos_;
-    bool no_delete_;
-    int error_;
-
-    size_t resize(const size_t new_size);
-    size_t fetch(const node_t &parent, std::vector<node_t> &siblings);
-    size_t insert(const std::vector<node_t> &siblings);
-
-  public:
-    struct result_pair_type
-    {
-        int value;
-        size_t length;
     };
 
     explicit DoubleArrayTrie();
@@ -92,8 +67,35 @@ class DoubleArrayTrie
     size_t size() const;
     size_t total_size() const;
     size_t nonzero_size() const;
-    int build(size_t key_size, const char **key, const size_t *length = 0, const int *value = 0);
+    int build(size_t key_size, const std::vector<std::string> *key, const size_t *length = 0, const std::vector<int> *value = 0);
     size_t prefix_search(const char *key, result_pair_type *result, size_t result_len, size_t len = 0, size_t node_pos = 0) const;
+    const void *array() const;
+
+  private:
+    struct node_t
+    {
+        unsigned int code;
+        size_t depth;
+        size_t left;
+        size_t right;
+    };
+
+    unit_t *array_;
+    unsigned char *used_;
+    size_t size_;
+    size_t alloc_size_;
+    size_t key_size_;
+    const std::vector<std::string> *key_;
+    const size_t *length_;
+    const std::vector<int> *value_;
+    size_t progress_;
+    size_t next_check_pos_;
+    bool no_delete_;
+    int error_;
+
+    size_t resize(const size_t new_size);
+    size_t fetch(const node_t &parent, std::vector<node_t> &siblings);
+    size_t insert(const std::vector<node_t> &siblings);
 };
 
 } // namespace openrasp

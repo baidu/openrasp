@@ -14,39 +14,30 @@
  * limitations under the License.
  */
 
-#ifndef _READ_WRITE_LOCK_H_
-#define _READ_WRITE_LOCK_H_
+#ifndef _OPENRASP_BASE_MANAGER_H_
+#define _OPENRASP_BASE_MANAGER_H_
 
-#include <pthread.h>
+#include "openrasp.h"
+#include "mm/shm_manager.h"
 
 namespace openrasp
 {
 
-enum LOCK_TYPE
+class ShmManager;
+
+class BaseManager
 {
-    LOCK_PROCESS = 0,
-    LOCK_THREAD,
+protected:
+  ShmManager *shm_manager;
+  bool initialized = false;
+
+public:
+  BaseManager(ShmManager *mm) : shm_manager(mm){};
+  virtual bool startup() = 0;
+  virtual bool shutdown() = 0;
 };
 
-class ReadWriteLock
-{
-  public:
-    ReadWriteLock(pthread_rwlock_t *rwlock, enum LOCK_TYPE lock_type);
-    ~ReadWriteLock();
-
-    bool read_lock();
-    bool read_unlock();
-    bool read_try_lock();
-
-    bool write_lock();
-    bool write_unlock();
-    bool write_try_lock();
-
-  private:
-    int lock_type;
-    pthread_rwlock_t *rwlock;
-    pthread_rwlockattr_t rwlock_attr;
-};
+extern ShmManager sm;
 
 } // namespace openrasp
 

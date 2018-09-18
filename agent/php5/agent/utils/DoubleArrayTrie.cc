@@ -88,7 +88,12 @@ size_t DoubleArrayTrie::nonzero_size() const
     return result;
 }
 
-int DoubleArrayTrie::build(size_t key_size, const char **key, const size_t *length, const int *value)
+const void *DoubleArrayTrie::array() const
+{
+    return const_cast<const void *>(reinterpret_cast<void *>(array_));
+}
+
+int DoubleArrayTrie::build(size_t key_size, const std::vector<std::string> *key, const size_t *length, const std::vector<int> *value)
 {
     if (!key_size || !key)
     {
@@ -189,15 +194,15 @@ size_t DoubleArrayTrie::fetch(const node_t &parent, std::vector<node_t> &sibling
 
     for (size_t i = parent.left; i < parent.right; ++i)
     {
-        if ((length_ ? length_[i] : std::strlen(key_[i])) < parent.depth)
+        if ((length_ ? length_[i] : key_->at(i).length()) < parent.depth)
         {
             continue;
         }
 
-        const unsigned char *tmp = reinterpret_cast<const unsigned char *>(key_[i]);
+        const unsigned char *tmp = reinterpret_cast<const unsigned char *>(key_->at(i).c_str());
 
         unsigned int cur = 0;
-        if ((length_ ? length_[i] : std::strlen(key_[i])) != parent.depth)
+        if ((length_ ? length_[i] : key_->at(i).length()) != parent.depth)
             cur = (unsigned int)tmp[parent.depth] + 1;
 
         if (prev > cur)
@@ -299,9 +304,9 @@ size_t DoubleArrayTrie::insert(const std::vector<node_t> &siblings)
         if (!fetch(siblings[i], new_siblings))
         {
             array_[begin + siblings[i].code].base =
-                value_ ? static_cast<int>(-value_[siblings[i].left] - 1) : static_cast<int>(-siblings[i].left - 1);
+                value_ ? static_cast<int>(-value_->at(siblings[i].left) - 1) : static_cast<int>(-siblings[i].left - 1);
 
-            if (value_ && (int)(-value_[siblings[i].left] - 1) >= 0)
+            if (value_ && (int)(-value_->at(siblings[i].left) - 1) >= 0)
             {
                 error_ = -2;
                 return 0;

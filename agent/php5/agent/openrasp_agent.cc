@@ -88,7 +88,7 @@ void PluginAgent::run()
 		zval *body = nullptr;
 		MAKE_STD_ZVAL(body);
 		array_init(body);
-		add_assoc_string(body, "version", (char *)oam.agent_ctrl_block->get_plugin_version(), 1);
+		add_assoc_string(body, "version", (char *)oam->agent_ctrl_block->get_plugin_version(), 1);
 		smart_str buf_json = {0};
 		php_json_encode(&buf_json, body, 0 TSRMLS_CC);
 		if (buf_json.a > buf_json.len)
@@ -153,7 +153,7 @@ void PluginAgent::run()
 
 void PluginAgent::write_pid_to_shm(pid_t agent_pid)
 {
-	oam.agent_ctrl_block->set_plugin_agent_id(agent_pid);
+	oam->agent_ctrl_block->set_plugin_agent_id(agent_pid);
 }
 
 void PluginAgent::update_local_official_plugin(std::string plugin_abs_path, const char *plugin, const char *version)
@@ -164,7 +164,7 @@ void PluginAgent::update_local_official_plugin(std::string plugin_abs_path, cons
 	{
 		out_file << plugin;
 		out_file.close();
-		oam.agent_ctrl_block->set_plugin_version(version);
+		oam->agent_ctrl_block->set_plugin_version(version);
 	}
 	else
 	{
@@ -179,7 +179,7 @@ LogAgent::LogAgent()
 
 void LogAgent::write_pid_to_shm(pid_t agent_pid)
 {
-	oam.agent_ctrl_block->set_log_agent_id(agent_pid);
+	oam->agent_ctrl_block->set_log_agent_id(agent_pid);
 }
 
 std::string LogAgent::get_formatted_date_suffix(long timestamp)
