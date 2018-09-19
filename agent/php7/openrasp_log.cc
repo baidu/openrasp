@@ -281,6 +281,7 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
 
 static std::vector<keys_filter> alarm_filters = 
 {
+    {"REQUEST_METHOD",  "request_method",   nullptr},
     {"SERVER_NAME",     "target",           nullptr},
     {"SERVER_ADDR",     "server_ip",        nullptr},
     {"HTTP_REFERER",    "referer",          nullptr},
