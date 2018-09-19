@@ -124,7 +124,7 @@ public class AttackInfo extends EventInfo {
             // 被攻击PATH
             info.put("path", request.getRequestURI());
             //请求方法
-            info.put("request_method",request.getMethod());
+            info.put("request_method",request.getMethod().toLowerCase());
             // 用户代理
             info.put("user_agent", request.getHeader("User-Agent"));
             // 攻击的 Referrer 头
