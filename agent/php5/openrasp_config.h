@@ -20,6 +20,9 @@
 #include <vector>
 #include <unordered_set>
 #include <cstdint>
+#include <memory>
+#include "third_party/rapidjson/document.h"
+#include "third_party/cpptoml/cpptoml.h"
 
 namespace openrasp
 {
@@ -43,8 +46,15 @@ public:
   uint32_t log_max_backup = 90;
   uint32_t log_push_interval = 10;
   // blacklist whitelist
-  unordered_set<string> hooks_ignore;
-  unordered_set<string> callable_blacklists;
+  vector<string> whitelist_command;
+  vector<string> whitelist_directory;
+  vector<string> whitelist_writeFile;
+  vector<string> whitelist_readFile;
+  vector<string> whitelist_fileUpload;
+  vector<string> whitelist_rename;
+  vector<string> whitelist_copy;
+  vector<string> whitelist_include;
+  vector<string> whitelist_sql;
   // block repsonse
   uint32_t block_status_code = 302;
   string block_redirect_url;
@@ -61,16 +71,81 @@ public:
 public:
   enum FromType
   {
-    json,
-    ini
+    kJson,
+    kIni
   };
+
   OpenraspConfig(){};
   OpenraspConfig(string &config, FromType type);
   OpenraspConfig(OpenraspConfig &) = default;
   OpenraspConfig(OpenraspConfig &&) = default;
   OpenraspConfig &operator=(OpenraspConfig &) = default;
   OpenraspConfig &operator=(OpenraspConfig &&) = default;
-  void FromJson(string &json);
-  void FromIni(string &ini);
+  bool FromJson(string &json);
+  bool FromIni(string &ini);
+  bool HasError() { return has_error; };
+  string GetErrorMessage() { return error_message; };
+
+  template <typename T>
+  T Get(string key, T default_value = T())
+  {
+    static_assert(is_same<T, string>::value || is_same<T, int64_t>::value || is_same<T, double>::value || is_same<T, bool>::value,
+                  "only support std::string, int64_t, double, bool");
+    if (has_error)
+    {
+      return default_value;
+    }
+    switch (fromType)
+    {
+    case FromType::kJson:
+      return GetFromJson<T>(key, default_value);
+      break;
+    case FromType::kIni:
+      return GetFromIni<T>(key, default_value);
+      break;
+    default:
+      return default_value;
+      break;
+    }
+  };
+  template <typename T>
+  vector<T> GetArray(string key, vector<T> default_value = vector<T>())
+  {
+    static_assert(is_same<T, string>::value || is_same<T, int64_t>::value || is_same<T, double>::value || is_same<T, bool>::value,
+                  "only support std::string, int64_t, double, bool");
+    if (has_error)
+    {
+      return default_value;
+    }
+    switch (fromType)
+    {
+    case FromType::kJson:
+      return GetArrayFromJson<T>(key, default_value);
+      break;
+    case FromType::kIni:
+      return GetArrayFromIni<T>(key, default_value);
+      break;
+    default:
+      return default_value;
+      break;
+    }
+  };
+
+private:
+  FromType fromType;
+  shared_ptr<rapidjson::Document> jsonObj;
+  shared_ptr<cpptoml::table> tomlObj;
+  bool has_error = false;
+  string error_message;
+
+  template <typename T>
+  T GetFromJson(string &key, T &default_value);
+  template <typename T>
+  vector<T> GetArrayFromJson(string &key, vector<T> &default_value);
+
+  template <typename T>
+  T GetFromIni(string &key, T &default_value) { return tomlObj->get_as<T>(key).value_or(default_value); };
+  template <typename T>
+  vector<T> GetArrayFromIni(string &key, vector<T> &default_value) { return tomlObj->get_array_of<T>(key).value_or(default_value); };
 };
 } // namespace openrasp
