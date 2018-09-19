@@ -23,8 +23,9 @@
 #include <memory>
 
 #include "openrasp_log.h"
-#include "openrasp_agent_manager.h"
 #include "openrasp_shared_alloc.h"
+#include "openrasp_agent_manager.h"
+#include "safe_shutdown_manager.h"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -38,9 +39,7 @@ extern "C"
 
 namespace openrasp
 {
-
-ShmManager sm;
-OpenraspAgentManager oam(&sm);
+std::unique_ptr<OpenraspAgentManager> oam = nullptr;
 
 std::vector<std::unique_ptr<BaseAgent>> agents;
 
@@ -75,14 +74,13 @@ static void supervisor_sigchld_handler(int signal_no)
 }
 
 OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
-	: _mm(mm),
+	: BaseManager(mm),
 	  agent_ctrl_block(nullptr)
 {
 }
 
 bool OpenraspAgentManager::startup()
 {
-	first_process_pid = getpid();
 	if (check_sapi_need_alloc_shm())
 	{
 		if (!create_share_memory())
@@ -99,15 +97,8 @@ bool OpenraspAgentManager::shutdown()
 {
 	if (initialized)
 	{
-		if (strcmp(sapi_module.name, "fpm-fcgi") == 0)
-		{
-			pid_t master_pid = search_master_pid();
-			if (master_pid)
-			{
-				agent_ctrl_block->set_master_pid(master_pid);
-			}
-		}
-		if (agent_ctrl_block->get_master_pid() && getpid() != agent_ctrl_block->get_master_pid())
+		assert(ssdm != nullptr);
+		if (!ssdm->is_master_current_process())
 		{
 			return true;
 		}
@@ -121,7 +112,7 @@ bool OpenraspAgentManager::shutdown()
 bool OpenraspAgentManager::verify_ini_correct()
 {
 	TSRMLS_FETCH();
-	if (check_sapi_need_alloc_shm())
+	if (openrasp_ini.remote_management_enable && check_sapi_need_alloc_shm())
 	{
 		if (nullptr == openrasp_ini.backend_url)
 		{
@@ -154,7 +145,7 @@ bool OpenraspAgentManager::verify_ini_correct()
 
 bool OpenraspAgentManager::create_share_memory()
 {
-	char *shm_block = _mm->create(SHMEM_SEC_CTRL_BLOCK, sizeof(OpenraspCtrlBlock));
+	char *shm_block = shm_manager->create(SHMEM_SEC_CTRL_BLOCK, sizeof(OpenraspCtrlBlock));
 	if (shm_block && (agent_ctrl_block = reinterpret_cast<OpenraspCtrlBlock *>(shm_block)))
 	{
 		return true;
@@ -165,67 +156,17 @@ bool OpenraspAgentManager::create_share_memory()
 bool OpenraspAgentManager::destroy_share_memory()
 {
 	agent_ctrl_block = nullptr;
-	this->_mm->destroy(SHMEM_SEC_CTRL_BLOCK);
+	this->shm_manager->destroy(SHMEM_SEC_CTRL_BLOCK);
 	return true;
-}
-
-pid_t OpenraspAgentManager::search_master_pid()
-{
-	TSRMLS_FETCH();
-	std::vector<std::string> processes;
-	openrasp_scandir("/proc", processes,
-					 [](const char *filename) {
-						 TSRMLS_FETCH();
-						 struct stat sb;
-						 if (VCWD_STAT(("/proc/" + std::string(filename)).c_str(), &sb) == 0 && (sb.st_mode & S_IFDIR) != 0)
-						 {
-							 return true;
-						 }
-						 return false;
-					 });
-	for (std::string pid : processes)
-	{
-		std::string stat_file_path = "/proc/" + pid + "/stat";
-		if (VCWD_ACCESS(stat_file_path.c_str(), F_OK) == 0)
-		{
-			std::ifstream ifs_stat(stat_file_path);
-			std::string stat_line;
-			std::getline(ifs_stat, stat_line);
-			if (stat_line.empty())
-			{
-				continue;
-			}
-			std::stringstream stat_items(stat_line);
-			std::string item;
-			for (int i = 0; i < 4; ++i)
-			{
-				std::getline(stat_items, item, ' ');
-			}
-			int ppid = std::atoi(item.c_str());
-			if (ppid == first_process_pid)
-			{
-				std::string cmdline_file_path = "/proc/" + pid + "/cmdline";
-				std::ifstream ifs_cmdline(cmdline_file_path);
-				std::string cmdline;
-				std::getline(ifs_cmdline, cmdline);
-				if (cmdline.find("php-fpm: master process") == 0)
-				{
-					return std::atoi(pid.c_str());
-				}
-			}
-		}
-	}
-	return 0;
 }
 
 bool OpenraspAgentManager::process_agent_startup()
 {
 	if (openrasp_ini.plugin_update_enable)
 	{
-		agents.push_back(std::move((std::unique_ptr<BaseAgent>)new PluginAgent()));
+		agents.push_back(std::move((std::unique_ptr<BaseAgent>)new HeartBeatAgent()));
 	}
 	agents.push_back(std::move((std::unique_ptr<BaseAgent>)new LogAgent()));
-	agent_ctrl_block->set_master_pid(first_process_pid);
 	pid_t pid = fork();
 	if (pid < 0)
 	{
@@ -268,7 +209,7 @@ void OpenraspAgentManager::process_agent_shutdown()
 
 void OpenraspAgentManager::supervisor_run()
 {
-	AGENT_SET_PROC_NAME("supervisor-run");
+	AGENT_SET_PROC_NAME("rasp-supervisor");
 	struct sigaction sa_usr = {0};
 	sa_usr.sa_flags = 0;
 	sa_usr.sa_handler = supervisor_sigchld_handler;
@@ -302,8 +243,9 @@ void OpenraspAgentManager::supervisor_run()
 				}
 			}
 			sleep(1);
+			assert(ssdm != nullptr);
 			struct stat sb;
-			if (VCWD_STAT(("/proc/" + std::to_string(agent_ctrl_block->get_master_pid())).c_str(), &sb) == -1 &&
+			if (VCWD_STAT(("/proc/" + std::to_string(ssdm->get_master_pid())).c_str(), &sb) == -1 &&
 				errno == ENOENT)
 			{
 				process_agent_shutdown();

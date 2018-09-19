@@ -163,7 +163,7 @@ typedef enum check_type_t
     WEBSHELL_COMMAND = 1 << 15,
     WEBSHELL_FILE_PUT_CONTENTS = 1 << 16 //plus 2 (CHECK_TYPE_NR_ITEMS)
 } OpenRASPCheckType;
-const int CHECK_TYPE_NR_ITEMS = 18;
+#define CHECK_TYPE_NR_ITEMS 18
 
 extern const std::map<OpenRASPCheckType, const char *> CheckTypeNameMap;
 

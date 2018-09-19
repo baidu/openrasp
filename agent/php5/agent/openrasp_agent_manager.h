@@ -18,22 +18,23 @@
 #define _OPENRASP_AGENT_MANAGER_H_
 
 #include "openrasp.h"
-#include "mm/shm_manager.h"
+#include "base_manager.h"
 #include "openrasp_ctrl_block.h"
 #include "openrasp_agent.h"
 #include <fstream>
 #include <sys/prctl.h>
+#include <memory>
 
 #define AGENT_SET_PROC_NAME(name) prctl(PR_SET_NAME, (name), 0, 0, 0)
-#define PLUGIN_AGENT_PR_NAME "plugin-agent"
-#define LOG_AGENT_PR_NAME "log-agent"
+#define HEARTBEAT_AGENT_PR_NAME "rasp-heartbeat"
+#define LOG_AGENT_PR_NAME "rasp-log"
 
 namespace openrasp
 {
 
 class ShmManager;
 class BaseAgent;
-class PluginAgent;
+class HeartBeatAgent;
 class LogAgent;
 class OpenraspCtrlBlock;
 
@@ -53,7 +54,7 @@ public:
   }
 };
 
-class OpenraspAgentManager
+class OpenraspAgentManager : public BaseManager
 {
 
 public:
@@ -72,20 +73,15 @@ private:
   bool create_share_memory();
   bool destroy_share_memory();
   void supervisor_run();
-  pid_t search_master_pid();
   bool process_agent_startup();
   void process_agent_shutdown();
 
 private:
-  ShmManager *_mm;
-  pid_t first_process_pid;
-  bool initialized = false;
   static const int supervisor_interval = 10;
   static const int max_post_logs_account = 12;
 };
 
-extern ShmManager sm;
-extern OpenraspAgentManager oam;
+extern std::unique_ptr<OpenraspAgentManager> oam;
 
 } // namespace openrasp
 
