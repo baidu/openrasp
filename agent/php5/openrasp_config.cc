@@ -36,7 +36,7 @@ OpenraspConfig::OpenraspConfig(string &config, FromType type)
     }
 }
 template <>
-string OpenraspConfig::GetFromJson(string &key, string &default_value)
+string OpenraspConfig::GetFromJson(const string &key, const string &default_value) const
 {
     auto it = jsonObj->FindMember(key.c_str());
     if (it != jsonObj->MemberEnd() &&
@@ -50,7 +50,7 @@ string OpenraspConfig::GetFromJson(string &key, string &default_value)
     }
 }
 template <>
-int64_t OpenraspConfig::GetFromJson(string &key, int64_t &default_value)
+int64_t OpenraspConfig::GetFromJson(const string &key, const int64_t &default_value) const
 {
     auto it = jsonObj->FindMember(key.c_str());
     if (it != jsonObj->MemberEnd() &&
@@ -64,7 +64,7 @@ int64_t OpenraspConfig::GetFromJson(string &key, int64_t &default_value)
     }
 }
 template <>
-double OpenraspConfig::GetFromJson(string &key, double &default_value)
+double OpenraspConfig::GetFromJson(const string &key, const double &default_value) const
 {
     auto it = jsonObj->FindMember(key.c_str());
     if (it != jsonObj->MemberEnd() &&
@@ -78,7 +78,7 @@ double OpenraspConfig::GetFromJson(string &key, double &default_value)
     }
 }
 template <>
-bool OpenraspConfig::GetFromJson(string &key, bool &default_value)
+bool OpenraspConfig::GetFromJson(const string &key, const bool &default_value) const
 {
     auto it = jsonObj->FindMember(key.c_str());
     if (it != jsonObj->MemberEnd() &&
@@ -92,7 +92,7 @@ bool OpenraspConfig::GetFromJson(string &key, bool &default_value)
     }
 }
 template <>
-vector<string> OpenraspConfig::GetArrayFromJson(string &key, vector<string> &default_value)
+vector<string> OpenraspConfig::GetArrayFromJson(const string &key, const vector<string> &default_value) const
 {
     auto it = jsonObj->FindMember(key.c_str());
     if (it != jsonObj->MemberEnd() &&
@@ -115,7 +115,7 @@ vector<string> OpenraspConfig::GetArrayFromJson(string &key, vector<string> &def
     }
 }
 template <>
-vector<int64_t> OpenraspConfig::GetArrayFromJson(string &key, vector<int64_t> &default_value)
+vector<int64_t> OpenraspConfig::GetArrayFromJson(const string &key, const vector<int64_t> &default_value) const
 {
     auto it = jsonObj->FindMember(key.c_str());
     if (it != jsonObj->MemberEnd() &&
@@ -138,7 +138,7 @@ vector<int64_t> OpenraspConfig::GetArrayFromJson(string &key, vector<int64_t> &d
     }
 }
 template <>
-vector<double> OpenraspConfig::GetArrayFromJson(string &key, vector<double> &default_value)
+vector<double> OpenraspConfig::GetArrayFromJson(const string &key, const vector<double> &default_value) const
 {
     auto it = jsonObj->FindMember(key.c_str());
     if (it != jsonObj->MemberEnd() &&
@@ -161,7 +161,7 @@ vector<double> OpenraspConfig::GetArrayFromJson(string &key, vector<double> &def
     }
 }
 template <>
-vector<bool> OpenraspConfig::GetArrayFromJson(string &key, vector<bool> &default_value)
+vector<bool> OpenraspConfig::GetArrayFromJson(const string &key, const vector<bool> &default_value) const
 {
     auto it = jsonObj->FindMember(key.c_str());
     if (it != jsonObj->MemberEnd() &&
@@ -183,7 +183,7 @@ vector<bool> OpenraspConfig::GetArrayFromJson(string &key, vector<bool> &default
         return default_value;
     }
 }
-bool OpenraspConfig::FromJson(string &json)
+bool OpenraspConfig::FromJson(const string &json)
 {
     jsonObj = make_shared<rapidjson::Document>();
     jsonObj->Parse(json.c_str());
@@ -197,9 +197,9 @@ bool OpenraspConfig::FromJson(string &json)
     fromType = FromType::kJson;
     return true;
 }
-bool OpenraspConfig::FromIni(string &json)
+bool OpenraspConfig::FromIni(const string &ini)
 {
-    istringstream in(json);
+    istringstream in(ini);
     auto parser = cpptoml::parser(in);
     try
     {
