@@ -176,6 +176,13 @@ static void request_uri_path_filter(zval *origin_zv, zval *new_zv)
     }
 }
 
+static void request_method_to_lower(zval *origin_zv, zval *new_zv)
+{
+    zend_string *origin_request_method = Z_STR_P(origin_zv);                                                          
+    zend_string *new_request_method = php_string_tolower(origin_request_method);
+    ZVAL_STR(new_zv, new_request_method);
+}
+
 static void build_complete_url(zval *items, zval *new_zv)
 {
     assert(Z_TYPE_P(items) == IS_ARRAY);
@@ -281,7 +288,7 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
 
 static std::vector<keys_filter> alarm_filters = 
 {
-    {"REQUEST_METHOD",  "request_method",   nullptr},
+    {"REQUEST_METHOD",  "request_method",   request_method_to_lower},
     {"SERVER_NAME",     "target",           nullptr},
     {"SERVER_ADDR",     "server_ip",        nullptr},
     {"HTTP_REFERER",    "referer",          nullptr},
