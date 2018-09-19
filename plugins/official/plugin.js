@@ -1,4 +1,4 @@
-const version = '2018-0910-1900'
+const version = '2018-0919-1600'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -1553,5 +1553,5 @@ if (algorithmConfig.transformer_deser.action != 'ignore') {
     })
 }
 
-plugin.log('OpenRASP official plugin: Initialized')
+plugin.log('OpenRASP official plugin: Initialized, version', version)
 
