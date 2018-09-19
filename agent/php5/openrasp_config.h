@@ -81,13 +81,13 @@ public:
   OpenraspConfig(OpenraspConfig &&) = default;
   OpenraspConfig &operator=(OpenraspConfig &) = default;
   OpenraspConfig &operator=(OpenraspConfig &&) = default;
-  bool FromJson(string &json);
-  bool FromIni(string &ini);
-  bool HasError() { return has_error; };
-  string GetErrorMessage() { return error_message; };
+  bool FromJson(const string &json);
+  bool FromIni(const string &ini);
+  bool HasError() const { return has_error; };
+  string GetErrorMessage() const { return error_message; };
 
   template <typename T>
-  T Get(string key, T default_value = T())
+  T Get(const string &key, const T &default_value = T()) const
   {
     static_assert(is_same<T, string>::value || is_same<T, int64_t>::value || is_same<T, double>::value || is_same<T, bool>::value,
                   "only support std::string, int64_t, double, bool");
@@ -109,7 +109,7 @@ public:
     }
   };
   template <typename T>
-  vector<T> GetArray(string key, vector<T> default_value = vector<T>())
+  vector<T> GetArray(const string &key, const vector<T> &default_value = vector<T>()) const
   {
     static_assert(is_same<T, string>::value || is_same<T, int64_t>::value || is_same<T, double>::value || is_same<T, bool>::value,
                   "only support std::string, int64_t, double, bool");
@@ -139,13 +139,13 @@ private:
   string error_message;
 
   template <typename T>
-  T GetFromJson(string &key, T &default_value);
+  T GetFromJson(const string &key, const T &default_value) const;
   template <typename T>
-  vector<T> GetArrayFromJson(string &key, vector<T> &default_value);
+  vector<T> GetArrayFromJson(const string &key, const vector<T> &default_value) const;
 
   template <typename T>
-  T GetFromIni(string &key, T &default_value) { return tomlObj->get_as<T>(key).value_or(default_value); };
+  const T &GetFromIni(const string &key, const T &default_value) const { return tomlObj->get_as<T>(key).value_or(default_value); };
   template <typename T>
-  vector<T> GetArrayFromIni(string &key, vector<T> &default_value) { return tomlObj->get_array_of<T>(key).value_or(default_value); };
+  const vector<T> &GetArrayFromIni(const string &key, const vector<T> &default_value) const { return tomlObj->get_array_of<T>(key).value_or(default_value); };
 };
 } // namespace openrasp
