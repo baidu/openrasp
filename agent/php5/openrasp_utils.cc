@@ -17,6 +17,9 @@
 #include "openrasp_utils.h"
 #include "openrasp_ini.h"
 #include <cmath>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
 
 extern "C"
 {
@@ -27,6 +30,31 @@ extern "C"
 #include "ext/standard/php_string.h"
 #include "Zend/zend_builtin_functions.h"
 }
+
+#ifdef PHP_WIN32
+#include "win32/time.h"
+#include <windows.h>
+#if defined(HAVE_IPHLPAPI_WS2)
+#include <winsock2.h>
+#include <iphlpapi.h>
+#define MALLOC(x) HeapAlloc(GetProcessHeap(), 0, (x))
+#define FREE(x) HeapFree(GetProcessHeap(), 0, (x))
+#endif
+#elif defined(NETWARE)
+#include <sys/timeval.h>
+#include <sys/time.h>
+#elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+#include <sys/types.h>
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <net/if.h>
+#include <netpacket/packet.h>
+#else
+#include <unistd.h>
+#include <sys/time.h>
+#endif
 
 std::string format_debug_backtrace_str(TSRMLS_D)
 {
@@ -279,4 +307,114 @@ long get_file_st_ino(std::string filename TSRMLS_DC)
         return (long)sb.st_ino;
     }
     return 0;
+}
+
+void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)
+{
+#if defined(PHP_WIN32) && defined(HAVE_IPHLPAPI_WS2)
+    PIP_ADAPTER_INFO pAdapterInfo;
+    PIP_ADAPTER_INFO pAdapter = NULL;
+    DWORD dwRetVal = 0;
+    ULONG ulOutBufLen = sizeof(IP_ADAPTER_INFO);
+
+    pAdapterInfo = (IP_ADAPTER_INFO *)MALLOC(sizeof(IP_ADAPTER_INFO));
+    if (pAdapterInfo == NULL)
+    {
+        openrasp_error(E_WARNING, LOG_ERROR, _("Error allocating memory needed to call GetAdaptersinfo."));
+    }
+
+    if (GetAdaptersInfo(pAdapterInfo, &ulOutBufLen) == ERROR_BUFFER_OVERFLOW)
+    {
+        FREE(pAdapterInfo);
+        pAdapterInfo = (IP_ADAPTER_INFO *)MALLOC(ulOutBufLen);
+        if (pAdapterInfo == NULL)
+        {
+            openrasp_error(E_WARNING, LOG_ERROR, _("Error allocating memory needed to call GetAdaptersinfo."));
+        }
+    }
+    if (pAdapterInfo != NULL && (dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) == NO_ERROR)
+    {
+        pAdapter = pAdapterInfo;
+        while (pAdapter)
+        {
+            if_addr_map.insert(std::pair<std::string, std::string>(pAdapter->Description, pAdapter->IpAddressList.IpAddress.String));
+            pAdapter = pAdapter->Next;
+        }
+        FREE(pAdapterInfo);
+    }
+#elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+    struct ifaddrs *ifaddr, *ifa;
+    if (getifaddrs(&ifaddr) == -1)
+    {
+        openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs error: %s"), strerror(errno));
+    }
+    else
+    {
+        int n, s;
+        char host[NI_MAXHOST];
+        for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, n++)
+        {
+            if (ifa->ifa_addr == NULL)
+            {
+                continue;
+            }
+            if ((strcmp("lo", ifa->ifa_name) == 0) ||
+                !(ifa->ifa_flags & (IFF_RUNNING)))
+            {
+                continue;
+            }
+            if (ifa->ifa_addr->sa_family == AF_INET)
+            {
+                s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in),
+                                host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+                if (s != 0)
+                {
+                    openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs error: getnameinfo failed - %s."), gai_strerror(s));
+                }
+                if_addr_map.insert(std::pair<std::string, std::string>(ifa->ifa_name, host));
+            }
+        }
+        freeifaddrs(ifaddr);
+    }
+#endif
+}
+
+void fetch_hw_addrs(std::vector<std::string> &hw_addrs)
+{
+#if defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+    struct ifaddrs *ifaddr, *ifa;
+    if (getifaddrs(&ifaddr) == -1)
+    {
+        openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs error: %s"), strerror(errno));
+    }
+    else
+    {
+        int n;
+        for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, n++)
+        {
+            if (ifa->ifa_addr == NULL)
+            {
+                continue;
+            }
+            if ((strcmp("lo", ifa->ifa_name) == 0) ||
+                !(ifa->ifa_flags & (IFF_RUNNING)))
+            {
+                continue;
+            }
+            if (ifa->ifa_addr->sa_family == AF_PACKET)
+            {
+                struct sockaddr_ll *sl = (struct sockaddr_ll *)ifa->ifa_addr;
+                std::ostringstream oss;
+                oss << std::hex;
+                for (int i = 0; i < sl->sll_halen; i++)
+                {
+                    oss << std::setfill('0') << std::setw(2) << (int)(sl->sll_addr[i]) << ((i + 1 != sl->sll_halen) ? "-" : "");
+                }
+                hw_addrs.push_back(oss.str());
+            }
+        }
+        std::sort(hw_addrs.begin(), hw_addrs.end());
+        freeifaddrs(ifaddr);
+    }
+#endif
 }

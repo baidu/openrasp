@@ -117,26 +117,23 @@ PHP_MINIT_FUNCTION(openrasp)
         openrasp_error(E_WARNING, CONFIG_ERROR, _("Unsupported SAPI: %s."), sapi_module.name);
         return SUCCESS;
     }
-    openrasp::vcm.reset(new openrasp::SharedConfigManager(&openrasp::sm));
-#ifdef HAVE_OPENRASP_REMOTE_MANAGER
-    if (check_sapi_need_alloc_shm())
-    {
-        openrasp::ssdm.reset(new openrasp::SafeShutDownManager(&openrasp::sm));
-        if (openrasp_ini.remote_management_enable)
-        {
-            openrasp::oam.reset(new openrasp::OpenraspAgentManager(&openrasp::sm));
-        }
-    }
-    if (openrasp::oam && !openrasp::oam->verify_ini_correct())
-    {
-        return SUCCESS;
-    }
-#endif
     if (!make_openrasp_root_dir(TSRMLS_C))
     {
         openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir is not configured correctly in php.ini, continuing without security protection"));
         return SUCCESS;
     }
+    openrasp::ssdm.reset(new openrasp::SafeShutDownManager(&openrasp::sm));
+    openrasp::vcm.reset(new openrasp::SharedConfigManager(&openrasp::sm));
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+    if (check_sapi_need_alloc_shm() && openrasp_ini.remote_management_enable)
+    {
+        openrasp::oam.reset(new openrasp::OpenraspAgentManager(&openrasp::sm));
+    }
+    if (openrasp::oam && (!openrasp::oam->verify_ini_correct() || !openrasp::oam->agent_remote_register()))
+    {
+        return SUCCESS;
+    }
+#endif
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
     {
         return SUCCESS;
@@ -178,12 +175,12 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
         {
             openrasp::oam->shutdown();
         }
+#endif
+        openrasp::vcm->shutdown();
         if (openrasp::ssdm)
         {
             openrasp::ssdm->shutdown();
         }
-#endif
-        openrasp::vcm->shutdown();
         is_initialized = false;
     }
     UNREGISTER_INI_ENTRIES();

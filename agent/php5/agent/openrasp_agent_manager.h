@@ -63,6 +63,8 @@ public:
   bool startup();
   bool shutdown();
   bool verify_ini_correct();
+  std::string get_rasp_id();
+  bool agent_remote_register();
 
   long get_plugin_update_timestamp()
   {
@@ -75,10 +77,12 @@ private:
   void supervisor_run();
   bool process_agent_startup();
   void process_agent_shutdown();
+  bool calculate_rasp_id();
 
 private:
   static const int supervisor_interval = 10;
   static const int max_post_logs_account = 12;
+  std::string rasp_id;
 };
 
 extern std::unique_ptr<OpenraspAgentManager> oam;

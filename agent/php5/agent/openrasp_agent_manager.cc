@@ -30,9 +30,12 @@
 #include <vector>
 #include <iostream>
 #include "openrasp_ini.h"
+#include "utils/digest.h"
 
 extern "C"
 {
+#include "ext/standard/php_smart_str.h"
+#include "ext/json/php_json.h"
 #include "php_streams.h"
 #include "php_main.h"
 }
@@ -252,6 +255,106 @@ void OpenraspAgentManager::supervisor_run()
 			}
 		}
 	}
+}
+
+bool OpenraspAgentManager::calculate_rasp_id()
+{
+	std::vector<std::string> hw_addrs;
+	fetch_hw_addrs(hw_addrs);
+	if (hw_addrs.empty())
+	{
+		return false;
+	}
+	std::string buf;
+	for (auto hw_addr : hw_addrs)
+	{
+		buf += hw_addr;
+	}
+	buf += std::string(openrasp_ini.root_dir);
+	this->rasp_id = md5sum(static_cast<const void *>(buf.c_str()), buf.length());
+	return true;
+}
+
+std::string OpenraspAgentManager::get_rasp_id()
+{
+	return this->rasp_id;
+}
+
+bool OpenraspAgentManager::agent_remote_register()
+{
+	if (!calculate_rasp_id())
+	{
+		return false;
+	}
+	CURL *curl = curl_easy_init();
+	if (!curl)
+	{
+		return false;
+	}
+	ResponseInfo res_info;
+	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/rasp";
+	zval *body = nullptr;
+	MAKE_STD_ZVAL(body);
+	array_init(body);
+	add_assoc_string(body, "id", (char *)rasp_id.c_str(), 1);
+	char host_name[255] = {0};
+	if (gethostname(host_name, sizeof(host_name) - 1))
+	{
+		sprintf(host_name, "UNKNOWN_HOST");
+	}
+	add_assoc_string(body, "host_name", host_name, 1);
+	add_assoc_string(body, "language", "PHP", 1);
+	add_assoc_string(body, "language_version", OPENRASP_PHP_VERSION, 1);
+	add_assoc_string(body, "server_type", sapi_module.name, 1);
+	add_assoc_string(body, "server_version", OPENRASP_PHP_VERSION, 1);
+	add_assoc_string(body, "rasp_home", openrasp_ini.root_dir, 1);
+	smart_str buf_json = {0};
+	php_json_encode(&buf_json, body, 0 TSRMLS_CC);
+	if (buf_json.a > buf_json.len)
+	{
+		buf_json.c[buf_json.len] = '\0';
+		buf_json.len++;
+	}
+	perform_curl(curl, url_string, buf_json.c, res_info);
+	smart_str_free(&buf_json);
+	zval_ptr_dtor(&body);
+	if (CURLE_OK != res_info.res)
+	{
+		return false;
+	}
+	zval *return_value = nullptr;
+	MAKE_STD_ZVAL(return_value);
+	php_json_decode(return_value, (char *)res_info.response_string.c_str(), res_info.response_string.size(), 1, 512 TSRMLS_CC);
+	if (Z_TYPE_P(return_value) != IS_ARRAY)
+	{
+		zval_ptr_dtor(&return_value);
+		return false;
+	}
+	if (res_info.response_code >= 200 && res_info.response_code < 300)
+	{
+		long status;
+		bool has_status = fetch_outmost_long_from_ht(Z_ARRVAL_P(return_value), "status", &status);
+		char *description = fetch_outmost_string_from_ht(Z_ARRVAL_P(return_value), "description");
+		if (has_status && description)
+		{
+			if (0 == status)
+			{
+				zval_ptr_dtor(&return_value);
+				return true;
+			}
+			else
+			{
+				openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, status: %ld, description : %s."),
+							   status, description);
+			}
+		}
+	}
+	else
+	{
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, response code: %ld."), res_info.response_code);
+	}
+	zval_ptr_dtor(&return_value);
+	return false;
 }
 
 } // namespace openrasp

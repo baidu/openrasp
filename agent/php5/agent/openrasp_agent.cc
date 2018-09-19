@@ -129,7 +129,7 @@ void HeartBeatAgent::do_heartbeat(CURL *curl TSRMLS_DC)
 		{
 			if (0 < status)
 			{
-				openrasp_error(E_WARNING, AGENT_ERROR, _("Heartbeat error, http status: %ld."), status);
+				openrasp_error(E_WARNING, AGENT_ERROR, _("Heartbeat error, status: %ld."), status);
 			}
 			else if (0 == status)
 			{
