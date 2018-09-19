@@ -358,7 +358,7 @@ var forcefulBrowsing = {
 var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml)\.?$/i
 
 // 正常文件
-var cleanFileRegex = /\.(jpg|jpeg|png|gif|bmp|txt)\.?$/i
+var cleanFileRegex = /\.(jpg|jpeg|png|gif|bmp|txt)$/i
 
 // 匹配 HTML/JS 等可以用于钓鱼、domain-fronting 的文件
 var htmlFileRegex   = /\.(htm|html|js)$/i
@@ -1186,11 +1186,15 @@ plugin.register('include', function (params, context) {
     return clean
 })
 
-var writeFileLru = new LRU(algorithmConfig.cache.sqli.capacity)
+// TODO: 1.0.0 RC1 之后改成 agent 实现，通用的LRU
+var writeFileLru = new LRU(20)
+
 plugin.register('writeFile', function (params, context) {
+
     if (writeFileLru.get(params.realpath)) {
         return clean
     }
+
     // 写 NTFS 流文件，肯定不正常
     if (algorithmConfig.writeFile_NTFS.action != 'ignore')
     {
@@ -1228,6 +1232,7 @@ plugin.register('writeFile', function (params, context) {
             }
         }
     }
+
     writeFileLru.put(params.realpath)
     return clean
 })
