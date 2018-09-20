@@ -20,6 +20,7 @@ import com.baidu.openrasp.exception.ConfigLoadException;
 import com.baidu.openrasp.tool.FileUtil;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
+import com.baidu.openrasp.cloud.model.HookWhiteModel;
 import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -30,6 +31,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.Properties;
 
 
@@ -59,7 +62,10 @@ public class Config extends FileScanListener {
         BLOCK_REDIRECT_URL("block.redirect_url", "https://rasp.baidu.com/blocked/?request_id=%request_id%"),
         BLOCK_JSON("block.content_json", "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"),
         BLOCK_XML("block.content_xml", "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"),
-        BLOCK_HTML("block.content_html", "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>");
+        BLOCK_HTML("block.content_html", "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>"),
+        CLOUD_SWITCH("cloud.switch", "false"),
+        CLOUD_ADDRESS("cloud.address", ""),
+        CLOUD_APPID("cloud.appid", "");
 
 
         Item(String key, String defaultValue) {
@@ -82,6 +88,7 @@ public class Config extends FileScanListener {
         }
     }
 
+    private static final String HOOKS_WHITE = "hooks.white";
     private static final String CONFIG_DIR_NAME = "conf";
     private static final String CONFIG_FILE_NAME = "rasp.properties";
     public static final int REFLECTION_STACK_START_INDEX = 0;
@@ -110,17 +117,14 @@ public class Config extends FileScanListener {
     private String blockHtml;
     private boolean pluginFilter;
     private String clientIp;
+    private boolean cloudSwitch;
+    private String cloudAddress;
+    private String cloudAppId;
 
 
     static {
         baseDirectory = FileUtil.getBaseDir();
         CustomResponseHtml.load(baseDirectory);
-        try {
-            FileScanMonitor.addMonitor(
-                    baseDirectory, ConfigHolder.instance);
-        } catch (JNotifyException e) {
-            throw new ConfigLoadException("add listener on " + baseDirectory + " failed because:" + e.getMessage());
-        }
         LOGGER.info("baseDirectory: " + baseDirectory);
     }
 
@@ -132,7 +136,15 @@ public class Config extends FileScanListener {
         String configFilePath = this.configFileDir + File.separator + CONFIG_FILE_NAME;
         try {
             loadConfigFromFile(new File(configFilePath), true);
-            addConfigFileMonitor();
+            if (!getCloudSwitch()) {
+                try {
+                    FileScanMonitor.addMonitor(
+                            baseDirectory, ConfigHolder.instance);
+                } catch (JNotifyException e) {
+                    throw new ConfigLoadException("add listener on " + baseDirectory + " failed because:" + e.getMessage());
+                }
+                addConfigFileMonitor();
+            }
         } catch (FileNotFoundException e) {
             handleException("Could not find rasp.properties, using default settings: " + e.getMessage(), e);
         } catch (JNotifyException e) {
@@ -156,6 +168,19 @@ public class Config extends FileScanListener {
                 if (item.isProperties) {
                     setConfigFromProperties(item, properties, isInit);
                 }
+            }
+        }
+    }
+
+    public synchronized void loadConfigFromCloud(Map<String, Object> configMap, boolean isInit) {
+        for (Map.Entry<String, Object> entry : configMap.entrySet()) {
+            if (entry.getKey().startsWith(HOOKS_WHITE)) {
+                String hooksType = entry.getKey().substring(entry.getKey().lastIndexOf(".") + 1);
+                if (entry.getValue() instanceof ArrayList) {
+                    HookWhiteModel.init(hooksType, (ArrayList<String>) entry.getValue());
+                }
+            } else {
+                setConfig(entry.getKey(), String.valueOf(entry.getValue()), isInit);
             }
         }
     }
@@ -690,7 +715,31 @@ public class Config extends FileScanListener {
     public synchronized void setClientIp(String clientIp) {
         this.clientIp = clientIp;
     }
-//--------------------------统一的配置处理------------------------------------
+
+    public boolean getCloudSwitch() {
+        return cloudSwitch;
+    }
+
+    public void setCloudSwitch(String cloudSwitch) {
+        this.cloudSwitch = Boolean.parseBoolean(cloudSwitch);
+    }
+
+    public String getCloudAddress() {
+        return cloudAddress;
+    }
+
+    public void setCloudAddress(String cloudAddress) {
+        this.cloudAddress = cloudAddress;
+    }
+
+    public String getCloudAppId() {
+        return cloudAppId;
+    }
+
+    public void setCloudAppId(String cloudAppId) {
+        this.cloudAppId = cloudAppId;
+    }
+    //--------------------------统一的配置处理------------------------------------
 
     /**
      * 统一配置接口,通过 js 更改配置的入口
@@ -736,11 +785,17 @@ public class Config extends FileScanListener {
                 setBlockXml(value);
             } else if (Item.BLOCK_HTML.key.equals(key)) {
                 setBlockHtml(value);
-            } else if (Item.PLUGIN_FILTER.key.equals(key)){
+            } else if (Item.PLUGIN_FILTER.key.equals(key)) {
                 setPluginFilter(value);
-            }else if (Item.CLIENT_IP_HEADER.key.equals(key)){
+            } else if (Item.CLIENT_IP_HEADER.key.equals(key)) {
                 setClientIp(value);
-            }else {
+            } else if (Item.CLOUD_SWITCH.key.equals(key)) {
+                setCloudSwitch(value);
+            } else if (Item.CLOUD_ADDRESS.key.equals(key)) {
+                setCloudAddress(value);
+            } else if (Item.CLOUD_APPID.key.equals(key)) {
+                setCloudAppId(value);
+            } else {
                 isHit = false;
             }
             if (isHit) {

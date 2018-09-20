@@ -16,6 +16,7 @@
 
 package com.baidu.openrasp;
 
+import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
@@ -56,6 +57,7 @@ public class EngineBoot implements Module {
             return;
         }
         readVersion();
+        CloudManager.init(projectVersion);
         // 初始化插件系统
         JsPluginManager.init();
         CheckerManager.init();

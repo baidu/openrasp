@@ -1,20 +1,14 @@
-package com.baidu.openrasp.tool;
+package com.baidu.openrasp.cloud.Utils;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author anyang
+ * @Description: 字典树
+ * @date 2018/9/13 15:13
+ */
 public class DoubleArrayTrie {
-    private final static int BUF_SIZE = 16384;
-    private final static int UNIT_SIZE = 8; // size of int + int
-
     private static class Node {
         int code;
         int depth;
@@ -34,11 +28,9 @@ public class DoubleArrayTrie {
     private int value[];
     private int progress;
     private int nextCheckPos;
-    // boolean no_delete_;
     private int error_;
 
 
-    // inline _resize expanded
     private int resize(int newSize) {
         int[] base2 = new int[newSize];
         int[] check2 = new int[newSize];
@@ -110,7 +102,8 @@ public class DoubleArrayTrie {
         if (allocSize <= pos)
             resize(pos + 1);
 
-        outer: while (true) {
+        outer:
+        while (true) {
             pos++;
 
             if (allocSize <= pos)
@@ -141,13 +134,6 @@ public class DoubleArrayTrie {
 
             break;
         }
-
-        // -- Simple heuristics --
-        // if the percentage of non-empty contents in check between the
-        // index
-        // 'next_check_pos' and 'check' is greater than some constant value
-        // (e.g. 0.9),
-        // new 'next_check_pos' index is written by 'check'.
         if (1.0 * nonzero_num / (pos - nextCheckPos + 1) >= 0.95)
             nextCheckPos = pos;
 
@@ -171,8 +157,6 @@ public class DoubleArrayTrie {
                 }
 
                 progress++;
-                // if (progress_func_) (*progress_func_) (progress,
-                // keySize);
             } else {
                 int h = insert(new_siblings);
                 base[begin + siblings.get(i).code] = h;
@@ -191,55 +175,17 @@ public class DoubleArrayTrie {
         error_ = 0;
     }
 
-    // no deconstructor
-
-    // set_result omitted
-    // the search methods returns (the list of) the value(s) instead
-    // of (the list of) the pair(s) of value(s) and length(s)
-
-    // set_array omitted
-    // array omitted
-
-    void clear() {
-        // if (! no_delete_)
-        check = null;
-        base = null;
-        used = null;
-        allocSize = 0;
-        size = 0;
-        // no_delete_ = false;
-    }
-
-    public int getUnitSize() {
-        return UNIT_SIZE;
-    }
-
     public int getSize() {
         return size;
-    }
-
-    public int getTotalSize() {
-        return size * UNIT_SIZE;
-    }
-
-    public int getNonzeroSize() {
-        int result = 0;
-        for (int i = 0; i < size; i++)
-            if (check[i] != 0)
-                result++;
-        return result;
     }
 
     public int build(List<String> key) {
         return build(key, null, null, key.size());
     }
 
-    public int build(List<String> _key, int _length[], int _value[],
-                     int _keySize) {
+    private int build(List<String> _key, int _length[], int _value[], int _keySize) {
         if (_keySize > _key.size() || _key == null)
             return 0;
-
-        // progress_func_ = progress_func;
         key = _key;
         length = _length;
         keySize = _keySize;
@@ -260,90 +206,18 @@ public class DoubleArrayTrie {
         fetch(root_node, siblings);
         insert(siblings);
 
-        // size += (1 << 8 * 2) + 1; // ???
-        // if (size >= allocSize) resize (size);
-
         used = null;
         key = null;
 
         return error_;
     }
 
-    public void open(String fileName) throws IOException {
-        File file = new File(fileName);
-        size = (int) file.length() / UNIT_SIZE;
-        check = new int[size];
-        base = new int[size];
-
-        DataInputStream is = null;
-        try {
-            is = new DataInputStream(new BufferedInputStream(
-                    new FileInputStream(file), BUF_SIZE));
-            for (int i = 0; i < size; i++) {
-                base[i] = is.readInt();
-                check[i] = is.readInt();
-            }
-        } finally {
-            if (is != null)
-                is.close();
-        }
-    }
-
-    public void save(String fileName) throws IOException {
-        DataOutputStream out = null;
-        try {
-            out = new DataOutputStream(new BufferedOutputStream(
-                    new FileOutputStream(fileName)));
-            for (int i = 0; i < size; i++) {
-                out.writeInt(base[i]);
-                out.writeInt(check[i]);
-            }
-            out.close();
-        } finally {
-            if (out != null)
-                out.close();
-        }
-    }
-
-    public int exactMatchSearch(String key) {
-        return exactMatchSearch(key, 0, 0, 0);
-    }
-
-    public int exactMatchSearch(String key, int pos, int len, int nodePos) {
-        if (len <= 0)
-            len = key.length();
-        if (nodePos <= 0)
-            nodePos = 0;
-
-        int result = -1;
-
-        char[] keyChars = key.toCharArray();
-
-        int b = base[nodePos];
-        int p;
-
-        for (int i = pos; i < len; i++) {
-            p = b + (int) (keyChars[i]) + 1;
-            if (b == check[p])
-                b = base[p];
-            else
-                return result;
-        }
-
-        p = b;
-        int n = base[p];
-        if (b == check[p] && n < 0) {
-            result = -n - 1;
-        }
-        return result;
-    }
-
     public List<Integer> commonPrefixSearch(String key) {
         return commonPrefixSearch(key, 0, 0, 0);
     }
 
-    public List<Integer> commonPrefixSearch(String key, int pos, int len,
-                                            int nodePos) {
+    private List<Integer> commonPrefixSearch(String key, int pos, int len,
+                                             int nodePos) {
         if (len <= 0)
             len = key.length();
         if (nodePos <= 0)

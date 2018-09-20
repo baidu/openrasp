@@ -18,6 +18,7 @@ package com.baidu.openrasp.tool;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -25,7 +26,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * 　　* @Description: 实现对sql的LRU缓存
  * 　　* @author anyang
  * 　　* @date 2018/6/20 11:05
- *
  */
 public class LRUCache<K, V> {
 
@@ -72,7 +72,7 @@ public class LRUCache<K, V> {
     /**
      * Add an entry to this cache.
      *
-     * @param key the key with which the specified value is to be associated.
+     * @param key   the key with which the specified value is to be associated.
      * @param value a value to be associated with the specified key.
      */
     public void put(K key, V value) {
@@ -111,5 +111,19 @@ public class LRUCache<K, V> {
             lock.unlock();
         }
     }
+
+    /**
+     * Return the Set of keys in the cache.
+     */
+    public Set<K> getKeySet() {
+
+        try {
+            lock.lock();
+            return map.keySet();
+        } finally {
+            lock.unlock();
+        }
+    }
+
 
 }

@@ -16,6 +16,7 @@
 
 package com.baidu.openrasp;
 
+import com.baidu.openrasp.cloud.model.HookWhiteModel;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.exception.SecurityException;
 import com.baidu.openrasp.hook.XXEHook;
@@ -291,6 +292,11 @@ public class HookHandler {
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
     public static void doCheckWithoutRequest(CheckParameter.Type type, Object params) {
+        StringBuffer sb = requestCache.get().getRequestURL();
+        String url = sb.substring(sb.indexOf("://"+3));
+        if (!HookWhiteModel.isContainURL(type.getName(),url)){
+            return;
+        }
         long a = 0;
         if (Config.getConfig().getDebugLevel() > 0) {
             a = System.currentTimeMillis();

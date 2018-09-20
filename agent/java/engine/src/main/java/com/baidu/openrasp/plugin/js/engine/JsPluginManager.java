@@ -17,6 +17,7 @@
 package com.baidu.openrasp.plugin.js.engine;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.CloudCache;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
@@ -44,6 +45,7 @@ import java.util.TimerTask;
 public class JsPluginManager {
 
     private static final Logger LOGGER = Logger.getLogger(JsPluginManager.class.getPackage().getName() + ".log");
+    private static final String PLUGIN_NAME = "official.js";
     private static Timer timer = null;
     private static Integer watchId = null;
 
@@ -54,8 +56,12 @@ public class JsPluginManager {
      */
     public synchronized static void init() throws Exception {
         JSContextFactory.init();
-        updatePlugin();
-        initFileWatcher();
+        if (Config.getConfig().getCloudSwitch()) {
+            updateCloudPlugin();
+        } else {
+            updatePlugin();
+            initFileWatcher();
+        }
     }
 
     public synchronized static void release() {
@@ -141,6 +147,20 @@ public class JsPluginManager {
         JSContextFactory.setCheckScriptList(scripts);
 
         HookHandler.enableHook.set(oldValue);
+    }
+
+    private synchronized static void updateCloudPlugin() {
+        boolean oldValue = HookHandler.enableHook.getAndSet(false);
+        List<CheckScript> scripts = new LinkedList<CheckScript>();
+        String pluginContent = CloudCache.getCache("plugin");
+        if (pluginContent != null) {
+            scripts.add(new CheckScript(PLUGIN_NAME, pluginContent));
+        } else {
+            scripts.add(new CheckScript(PLUGIN_NAME, ""));
+        }
+        JSContextFactory.setCheckScriptList(scripts);
+        HookHandler.enableHook.set(oldValue);
+
     }
 
     /**
