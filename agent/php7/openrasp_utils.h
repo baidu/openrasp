@@ -48,5 +48,8 @@ zend_string *openrasp_format_date(char *format, int format_len, time_t ts);
 void openrasp_pcre_match(zend_string *regex, zend_string *subject, zval *return_value);
 void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter);
 void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map);
+char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
+bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result);
+HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey);
 
 #endif

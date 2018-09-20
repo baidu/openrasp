@@ -38,5 +38,8 @@ void openrasp_pcre_match(char *regex, int regex_len, char *subject, int subject_
 void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter);
 void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map);
 void fetch_hw_addrs(std::vector<std::string> &hw_addrs);
+char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
+bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result);
+HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey);
 
 #endif

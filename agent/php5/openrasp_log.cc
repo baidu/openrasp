@@ -169,39 +169,44 @@ static void build_complete_url(zval *items, zval *new_zv TSRMLS_DC)
     assert(Z_TYPE_P(items) == IS_ARRAY);
     zval **origin_zv;
     std::string buffer;
-    if (zend_hash_find(Z_ARRVAL_P(items), ZEND_STRS("REQUEST_SCHEME"), (void **)&origin_zv) == SUCCESS)
+    char* request_scheme = fetch_outmost_string_from_ht(Z_ARRVAL_P(items), "REQUEST_SCHEME");
+    if (request_scheme)
     {
-        buffer.append(Z_STRVAL_PP(origin_zv), Z_STRLEN_PP(origin_zv));
+        buffer.append(request_scheme);
     }
     else
     {
         buffer.append(ZEND_STRL("http"));
     }
     buffer.append(ZEND_STRL("://"));
-    if (zend_hash_find(Z_ARRVAL_P(items), ZEND_STRS("HTTP_HOST"), (void **)&origin_zv) == SUCCESS)
+    char* http_host = fetch_outmost_string_from_ht(Z_ARRVAL_P(items), "HTTP_HOST");
+    if (http_host)
     {
-        buffer.append(Z_STRVAL_PP(origin_zv), Z_STRLEN_PP(origin_zv));
+        buffer.append(http_host);
     }
     else
     {
-        if (zend_hash_find(Z_ARRVAL_P(items), ZEND_STRS("SERVER_NAME"), (void **)&origin_zv) == SUCCESS)
+        char* server_name = fetch_outmost_string_from_ht(Z_ARRVAL_P(items), "SERVER_NAME");
+        char* server_addr = fetch_outmost_string_from_ht(Z_ARRVAL_P(items), "SERVER_ADDR");
+        if (server_name)
         {
-            buffer.append(Z_STRVAL_PP(origin_zv), Z_STRLEN_PP(origin_zv));
+            buffer.append(server_name);
         }
-        else if (zend_hash_find(Z_ARRVAL_P(items), ZEND_STRS("SERVER_ADDR"), (void **)&origin_zv) == SUCCESS)
+        else if (server_addr)
         {
-            buffer.append(Z_STRVAL_PP(origin_zv), Z_STRLEN_PP(origin_zv));
+            buffer.append(server_addr);
         }
-        if (zend_hash_find(Z_ARRVAL_P(items), ZEND_STRS("SERVER_PORT"), (void **)&origin_zv) == SUCCESS
-        && Z_TYPE_PP(origin_zv) == IS_STRING && strncmp(Z_STRVAL_PP(origin_zv), "80", 2) != 0)
+        char* server_port = fetch_outmost_string_from_ht(Z_ARRVAL_P(items), "SERVER_PORT");
+        if (server_port && strncmp(server_port, "80", 2) != 0)
         {
             buffer.push_back(':');
-            buffer.append(Z_STRVAL_PP(origin_zv), Z_STRLEN_PP(origin_zv));
+            buffer.append(server_port);
         }
     }
-    if (zend_hash_find(Z_ARRVAL_P(items), ZEND_STRS("REQUEST_URI"), (void **)&origin_zv) == SUCCESS)
+    char* request_uri = fetch_outmost_string_from_ht(Z_ARRVAL_P(items), "REQUEST_URI");
+    if (request_uri)
     {
-        buffer.append(Z_STRVAL_PP(origin_zv), Z_STRLEN_PP(origin_zv));
+        buffer.append(request_uri);
     }
     ZVAL_STRINGL(new_zv, buffer.c_str(), buffer.length(), 1);
 }

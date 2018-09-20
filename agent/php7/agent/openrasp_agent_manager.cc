@@ -29,6 +29,7 @@
 #include <vector>
 #include <iostream>
 #include "openrasp_ini.h"
+#include "openrasp_utils.h"
 
 extern "C"
 {

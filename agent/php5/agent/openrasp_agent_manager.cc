@@ -31,6 +31,7 @@
 #include <iostream>
 #include "openrasp_ini.h"
 #include "utils/digest.h"
+#include "openrasp_utils.h"
 
 extern "C"
 {

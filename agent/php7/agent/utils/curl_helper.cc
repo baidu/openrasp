@@ -55,37 +55,4 @@ void perform_curl(CURL *curl, const std::string url_string, const char *postdata
     }
 }
 
-char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
-{
-    zval *origin_zv;
-    if ((origin_zv = zend_hash_str_find(ht, arKey, strlen(arKey))) != nullptr &&
-        Z_TYPE_P(origin_zv) == IS_STRING)
-    {
-        return Z_STRVAL_P(origin_zv);
-    }
-    return nullptr;
-}
-
-HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey)
-{
-    zval *origin_zv;
-    if ((origin_zv = zend_hash_str_find(ht, arKey, strlen(arKey))) != nullptr &&
-        Z_TYPE_P(origin_zv) == IS_ARRAY)
-    {
-        return Z_ARRVAL_P(origin_zv);
-    }
-    return nullptr;
-}
-
-bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result)
-{
-    zval *origin_zv;
-    if ((origin_zv = zend_hash_str_find(ht, arKey, strlen(arKey))) != nullptr &&
-        Z_TYPE_P(origin_zv) == IS_LONG)
-    {
-        *result = Z_LVAL_P(origin_zv);
-        return true;
-    }
-    return false;
-}
 } // namespace openrasp
