@@ -53,15 +53,15 @@ public class HttpAppender extends AppenderSkeleton {
         if (checkEntryConditions()) {
             String jsonString = new Gson().toJson(loggingEvent.getMessage());
             JsonArray jsonArray = mergeFromAppenderCache(loggingEvent.getLoggerName(), jsonString);
-            String result = cloudHttp.request(CloudRequestUrl.CLOUD_ALARM_HTTP_APPENDER_URL, new Gson().toJson(jsonArray));
+            String logger = getLogger(loggingEvent.getLoggerName());
+            String result = cloudHttp.request(getUrl(logger), new Gson().toJson(jsonArray));
             if (result != null) {
                 GenericResponse response = new Gson().fromJson(result, GenericResponse.class);
                 if (response.getResponseCode() >= 200 && response.getResponseCode() < 300) {
                     return;
                 }
             }
-            String appenderCacheKey = getLogger(loggingEvent.getLoggerName());
-            AppenderCache.setCache(appenderCacheKey, jsonString);
+            AppenderCache.setCache(logger, jsonString);
         }
     }
 
@@ -88,6 +88,17 @@ public class HttpAppender extends AppenderSkeleton {
         return name;
     }
 
+    private String getUrl(String logger){
+        String url;
+        if ("policy_alarm".equals(logger)){
+            url = CloudRequestUrl.CLOUD_POLICY_ALARM_HTTP_APPENDER_URL;
+        }else if ("alarm".equals(logger)){
+            url = CloudRequestUrl.CLOUD_ALARM_HTTP_APPENDER_URL;
+        }else {
+            url = CloudRequestUrl.CLOUD_PLUGIN_HTTP_APPENDER_URL;
+        }
+        return url;
+    }
     @Override
     public void close() {
 
