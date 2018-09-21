@@ -601,8 +601,8 @@ function is_path_endswith_userinput(parameter, target)
         }
 
         // 参数必须有跳出目录，或者是绝对路径
-        if ((has_traversal(value) || is_absolute_path(value))
-            && (value == target || target.endsWith(value)))
+        if ((value == target || target.endsWith(value)) 
+            && (has_traversal(value) || is_absolute_path(value)))
         {
             verdict = true
             return true
