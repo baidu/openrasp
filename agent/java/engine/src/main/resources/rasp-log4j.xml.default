@@ -133,8 +133,6 @@
     <!--</appender>-->
 
     <appender name="HTTPAPPENDER" class="com.baidu.openrasp.cloud.httpappender.HttpAppender">
-            <param name="connectionTimeout" value="10000"/>
-            <param name="readTimeout" value="10000"/>
             <filter class="com.baidu.openrasp.messaging.BurstFilter">
                  <param name="maxBurst" value="100" />
                  <param name="refillAmount" value="100" />

@@ -24,12 +24,7 @@ public class HttpAppender extends AppenderSkeleton {
 
     public static final Logger LOGGER = Logger.getLogger(HttpAppender.class.getPackage().getName() + ".log");
 
-    private static final int DEFAULT_CONNECTION_TIMEOUT = 10000;
-    private static final int DEFAULT_READ_TIMEOUT = 10000;
-
     private CloudHttp cloudHttp;
-    private int connectionTimeout = -1;
-    private int readTimeout = -1;
 
     public HttpAppender() {
         this.cloudHttp = new CloudHttpPool();
@@ -88,17 +83,18 @@ public class HttpAppender extends AppenderSkeleton {
         return name;
     }
 
-    private String getUrl(String logger){
+    private String getUrl(String logger) {
         String url;
-        if ("policy_alarm".equals(logger)){
+        if ("policy_alarm".equals(logger)) {
             url = CloudRequestUrl.CLOUD_POLICY_ALARM_HTTP_APPENDER_URL;
-        }else if ("alarm".equals(logger)){
+        } else if ("alarm".equals(logger)) {
             url = CloudRequestUrl.CLOUD_ALARM_HTTP_APPENDER_URL;
-        }else {
+        } else {
             url = CloudRequestUrl.CLOUD_PLUGIN_HTTP_APPENDER_URL;
         }
         return url;
     }
+
     @Override
     public void close() {
 
@@ -111,7 +107,5 @@ public class HttpAppender extends AppenderSkeleton {
 
     @Override
     public void activateOptions() {
-        connectionTimeout = connectionTimeout < DEFAULT_CONNECTION_TIMEOUT ? DEFAULT_CONNECTION_TIMEOUT : connectionTimeout;
-        readTimeout = readTimeout < DEFAULT_READ_TIMEOUT ? DEFAULT_READ_TIMEOUT : readTimeout;
     }
 }
