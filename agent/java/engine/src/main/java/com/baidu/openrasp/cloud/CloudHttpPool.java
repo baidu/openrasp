@@ -9,10 +9,9 @@ import java.util.concurrent.*;
  */
 public class CloudHttpPool extends CloudHttp {
     private final ExecutorService threadPool;
-    private final int cpuCoreNumber;
 
     public CloudHttpPool() {
-        this.cpuCoreNumber = Runtime.getRuntime().availableProcessors();
+        int cpuCoreNumber = Runtime.getRuntime().availableProcessors();
         this.threadPool = new ThreadPoolExecutor(2 * cpuCoreNumber, 5 * cpuCoreNumber, 60L, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<Runnable>(), new ThreadPoolExecutor.DiscardPolicy());
 

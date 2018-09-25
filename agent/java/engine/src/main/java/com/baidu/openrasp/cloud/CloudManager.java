@@ -22,7 +22,7 @@ public class CloudManager {
     private static final Logger LOGGER = Logger.getLogger(CloudManager.class.getPackage().getName() + ".log");
 
     public synchronized static void init(String projectVersion) {
-        if (Config.getConfig().getCloudSwitch()) {
+        if (checkEnter()) {
             new KeepAlive();
             register(projectVersion);
         }
@@ -32,13 +32,13 @@ public class CloudManager {
         try {
             Map<String, Object> params = GenerateParameters(projectVersion);
             String content = new Gson().toJson(params);
-            String url = CloudRequestUrl.CLOUD_REHISTER_URL;
+            String url = CloudRequestUrl.CLOUD_REGISTER_URL;
             String jsonString = new CloudHttp().request(url, content);
             GenericResponse response = new Gson().fromJson(jsonString, GenericResponse.class);
             if (response.getStatus() == 0 && "ok".equals(response.getDescription().toLowerCase())) {
-                System.out.println("[OpenRASP] Cloud Control Initialized");
+                System.out.println("[OpenRASP] Cloud Control Registered Successed");
             } else {
-                LOGGER.warn("Cloud control initialization failed");
+                LOGGER.warn("Cloud control registered failed");
             }
         } catch (NoSuchAlgorithmException e) {
             LOGGER.error("get id failed: " + e.getMessage(), e);
@@ -56,5 +56,13 @@ public class CloudManager {
         String raspHome = new File(Config.getConfig().getBaseDirectory()).getParent();
         params.put("rasp_home", raspHome);
         return params;
+    }
+
+    private static boolean checkEnter() {
+        if (Config.getConfig().getCloudSwitch()) {
+            return !Config.getConfig().getCloudAddress().isEmpty() &&
+                    !Config.getConfig().getCloudAddress().isEmpty();
+        }
+        return false;
     }
 }
