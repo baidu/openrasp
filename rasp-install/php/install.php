@@ -64,7 +64,7 @@ $ini_content = <<<OPENRASP
 extension=$lib_filename
 openrasp.root_dir=$root_dir
 	
-;拦截攻击后，跳转到这个URL，并增加 request_id 参数
+;拦截攻击后，跳转到这个URL
 ;openrasp.block_url=https://rasp.baidu.com/blocked/
 
 ;拦截攻击后，将状态码设置为这个值
@@ -88,7 +88,7 @@ openrasp.root_dir=$root_dir
 ;每个进程/线程每秒钟最大日志条数
 ;openrasp.log_maxburst=1000
 	
-;当SQL查询结果行数大于或等于该值，则认为是慢查询
+;当SQL查询结果行数大于或等于该值，则认为是慢查询 - 在v0.42里删除
 ;openrasp.slowquery_min_rows=500
 
 ;报警是否开启 syslog
