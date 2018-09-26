@@ -161,7 +161,7 @@ if (array_key_exists("d", $options) && !empty($options["d"])) {
 	log_tips(ERROR, "Bad command line arguments. Please use \"-h\" to check help messages.");
 }
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 检察依赖扩展 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 检查依赖扩展 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 major_tips('Check whether required PHP extensions are installed');
 $dep_exts = array('json', 'PDO');
 if (!check_dep_exts_installed($dep_exts)) {

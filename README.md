@@ -23,16 +23,18 @@ We also provide a few test cases that are corresponding to OWASP TOP 10 attacks,
 
 ##### 1. List of supported web application servers
 
-Only Java based web application servers are supported for now. The support of other web application servers will also be soon included in the coming releases.
+We've fully tested OpenRASP on the following application servers for Linux platforms:
 
-We've fully tested OpenRASP on the following application servers for Linux platforms.
+* Java
+  * Tomcat 6-8
+  * JBoss 4.X
+  * Jetty 7-9
+  * Resin 3-4
+  * SpringBoot 1-2
+* PHP
+  * 5.3-5.6, 7.0-7.2
 
-* Tomcat 6-8
-* JBoss 4.X
-* Jetty 7-9
-* Resin 3-4
-* SpringBoot 1-2
-* PHP 5.3-5.6, 7.0-7.2
+The support of other web application servers will also be soon included in the coming releases.
 
 ##### 2. Performance impact on application servers
 
