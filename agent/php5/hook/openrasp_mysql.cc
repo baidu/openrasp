@@ -23,7 +23,7 @@ extern "C" {
 HOOK_FUNCTION(mysql_connect, dbConnection);
 HOOK_FUNCTION(mysql_pconnect, dbConnection);
 PRE_HOOK_FUNCTION(mysql_query, sql);
-POST_HOOK_FUNCTION(mysql_query, sqlSlowQuery);
+// POST_HOOK_FUNCTION(mysql_query, sqlSlowQuery);
 
 static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, int persistent)
 {
