@@ -207,6 +207,8 @@ void LogAgent::run()
 
 	LogDirInfo alarm_dir_info(root_dir + default_slash + "logs" + default_slash + ALARM_LOG_DIR_NAME, "alarm.log.", "/v1/log/attack");
 	LogDirInfo policy_dir_info(root_dir + default_slash + "logs" + default_slash + POLICY_LOG_DIR_NAME, "policy.log.", "/v1/log/policy");
+	LogDirInfo plugin_dir_info(root_dir + default_slash + "logs" + default_slash + PLUGIN_LOG_DIR_NAME, "plugin.log.", "/v1/log/plugin");
+	LogDirInfo rasp_dir_info(root_dir + default_slash + "logs" + default_slash + RASP_LOG_DIR_NAME, "rasp.log.", "/v1/log/rasp");
 	std::vector<LogDirInfo *> log_dirs{&alarm_dir_info, &policy_dir_info};
 	try
 	{
@@ -278,21 +280,12 @@ void LogAgent::run()
 					ldi->ifs.clear();
 				}
 				ldi->fpos = 0;
-				std::vector<std::string> files_tobe_deleted;
-				std::string tobe_deleted_date_suffix = get_formatted_date_suffix(now - openrasp_ini.log_max_backup * 24 * 60 * 60);
-				openrasp_scandir(ldi->dir_abs_path, files_tobe_deleted,
-								 [&ldi, &tobe_deleted_date_suffix](const char *filename) {
-									 return !strncmp(filename, ldi->prefix.c_str(), ldi->prefix.size()) &&
-											std::string(filename) < (ldi->prefix + tobe_deleted_date_suffix);
-								 });
-				for (std::string delete_file : files_tobe_deleted)
-				{
-					VCWD_UNLINK(delete_file.c_str());
-				}
 			}
 		}
 		if (file_rotate)
 		{
+			std::vector<LogDirInfo *> tobe_cleaned_logdirs{&alarm_dir_info, &policy_dir_info, &plugin_dir_info, &rasp_dir_info};
+			cleanup_expired_logs(tobe_cleaned_logdirs);
 			formatted_date_suffix = get_formatted_date_suffix((long)time(NULL));
 		}
 		last_post_time = now;
@@ -329,5 +322,24 @@ bool LogAgent::post_logs_via_curl(std::string log_arr, CURL *curl, std::string u
 		return false;
 	}
 	return true;
+}
+
+void LogAgent::cleanup_expired_logs(std::vector<LogDirInfo *> &tobe_cleaned_logdirs)
+{
+	long now = (long)time(NULL);
+	for (auto item : tobe_cleaned_logdirs)
+	{
+		std::vector<std::string> files_tobe_deleted;
+		std::string tobe_deleted_date_suffix = get_formatted_date_suffix(now - openrasp_ini.log_max_backup * 24 * 60 * 60);
+		openrasp_scandir(item->dir_abs_path, files_tobe_deleted,
+						 [&item, &tobe_deleted_date_suffix](const char *filename) {
+							 return !strncmp(filename, item->prefix.c_str(), item->prefix.size()) &&
+									std::string(filename) < (item->prefix + tobe_deleted_date_suffix);
+						 }, true);
+		for (std::string delete_file : files_tobe_deleted)
+		{
+			VCWD_UNLINK(delete_file.c_str());
+		}
+	}
 }
 } // namespace openrasp
