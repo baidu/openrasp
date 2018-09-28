@@ -22,6 +22,7 @@
 
 ZEND_INI_MH(OnUpdateOpenraspDoubleGEZero);
 ZEND_INI_MH(OnUpdateOpenraspIntGEZero);
+ZEND_INI_MH(OnUpdateOpenraspIntGZero);
 ZEND_INI_MH(OnUpdateOpenraspCString);
 ZEND_INI_MH(OnUpdateOpenraspBool);
 ZEND_INI_MH(OnUpdateOpenraspSet);

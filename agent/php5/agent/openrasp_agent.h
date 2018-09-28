@@ -23,7 +23,7 @@
 
 namespace openrasp
 {
-
+class LogDirInfo;
 class BaseAgent
 {
 public:
@@ -64,6 +64,9 @@ public:
   LogAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);
+
+private:
+  void cleanup_expired_logs(std::vector<LogDirInfo *> &tobe_cleaned_logdirs);
   virtual std::string get_formatted_date_suffix(long timestamp);
   virtual bool post_logs_via_curl(std::string log_arr, CURL *curl, std::string url_string);
 };
