@@ -42,6 +42,17 @@ ZEND_INI_MH(OnUpdateOpenraspIntGEZero)
     return SUCCESS;
 }
 
+ZEND_INI_MH(OnUpdateOpenraspIntGZero)
+{
+    long tmp = zend_atol(new_value, new_value_length);
+    if (tmp <= 0 || tmp > std::numeric_limits<unsigned int>::max())
+    {
+        return FAILURE;
+    }
+    *reinterpret_cast<int *>(mh_arg1) = tmp;
+    return SUCCESS;
+}
+
 ZEND_INI_MH(OnUpdateOpenraspCString)
 {
     *reinterpret_cast<char **>(mh_arg1) = new_value_length ? new_value : nullptr;
