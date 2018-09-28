@@ -175,14 +175,15 @@ typedef struct sql_connection_entry_t
     char *username = nullptr;
 } sql_connection_entry;
 
-enum PATH_OPERATION {
-    OPENDIR         = 1 << 0,
-    RENAMESRC       = 1 << 1,
-    RENAMEDEST      = 1 << 2,
-	READING         = 1 << 3,
-    WRITING         = 1 << 4,
-    APPENDING       = 1 << 5,
-    SIMULTANEOUSRW  = 1 << 6
+enum PATH_OPERATION
+{
+    OPENDIR = 1 << 0,
+    RENAMESRC = 1 << 1,
+    RENAMEDEST = 1 << 2,
+    READING = 1 << 3,
+    WRITING = 1 << 4,
+    APPENDING = 1 << 5,
+    SIMULTANEOUSRW = 1 << 6
 };
 
 typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
@@ -297,7 +298,7 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
     POST_HOOK_FUNCTION_EX(name, global, type)
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_hook)
-
+int check_type_white_bit_mask;
 ZEND_END_MODULE_GLOBALS(openrasp_hook)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp_hook);

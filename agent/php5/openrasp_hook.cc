@@ -21,6 +21,7 @@
 #include "openrasp_v8.h"
 #include <new>
 #include <unordered_map>
+#include "agent/shared_config_manager.h"
 
 extern "C"
 {
@@ -312,7 +313,7 @@ void handle_block(TSRMLS_D)
  */
 void check(OpenRASPCheckType check_type, zval *params TSRMLS_DC)
 {
-    const char * type = CheckTypeNameMap.at(check_type);
+    const char *type = CheckTypeNameMap.at(check_type);
     char result = openrasp::openrasp_check(type, params TSRMLS_CC);
     zval_ptr_dtor(&params);
     if (result)
@@ -328,6 +329,7 @@ PHP_GINIT_FUNCTION(openrasp_hook)
 #ifdef ZTS
     new (openrasp_hook_globals) _zend_openrasp_hook_globals;
 #endif
+    openrasp_hook_globals->check_type_white_bit_mask = NO_TYPE;
 }
 
 PHP_GSHUTDOWN_FUNCTION(openrasp_hook)
@@ -356,5 +358,21 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_hook)
     return SUCCESS;
 }
 
-PHP_RINIT_FUNCTION(openrasp_hook);
+PHP_RINIT_FUNCTION(openrasp_hook)
+{
+    if (openrasp::scm != nullptr)
+    {
+        char *url = fetch_outmost_string_from_ht(Z_ARRVAL_P(OPENRASP_LOG_G(alarm_request_info)), "url");
+        if (url)
+        {
+            std::string url_str(url);
+            std::size_t found = url_str.find("://");
+            if (found != std::string::npos)
+            {
+                OPENRASP_HOOK_G(check_type_white_bit_mask) = openrasp::scm->get_check_type_white_bit_mask(url_str.substr(found));
+            }
+        }
+    }
+    return SUCCESS;
+}
 PHP_RSHUTDOWN_FUNCTION(openrasp_hook);

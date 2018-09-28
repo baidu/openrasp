@@ -35,14 +35,16 @@ public:
   virtual bool shutdown();
   int get_check_type_white_bit_mask(std::string url);
   bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
+  long get_config_last_update();
+  bool set_config_last_update(long config_update_timestamp);
 
 private:
-  VariableConfigBlock *variable_config_block;
+  SharedConfigBlock *shared_config_block;
   ReadWriteLock *rwlock;
   bool write_check_type_white_array_to_shm(const void *source, size_t num);
 };
 
-extern std::unique_ptr<SharedConfigManager> vcm;
+extern std::unique_ptr<SharedConfigManager> scm;
 
 } // namespace openrasp
 

@@ -20,14 +20,13 @@
 #include "openrasp_hook.h"
 #include "utils/DoubleArrayTrie.h"
 #include <string>
-#include <unordered_set>
 
 namespace openrasp
 {
 // #define DEFAULT_STRING_CONFIG_LENGTH (512)
 #define WRITE_ARRAY_MAX_LENGTH (CHECK_TYPE_NR_ITEMS * 10 * 200 + 128 * 2)
 
-class VariableConfigBlock
+class SharedConfigBlock
 {
 public:
   inline openrasp::DoubleArrayTrie::unit_t *get_check_type_white_array()
@@ -52,83 +51,20 @@ public:
     return true;
   }
 
-  inline long get_last_update_time()
+  inline long get_config_update_time()
   {
-    return last_update_time;
+    return config_update_time;
   }
 
-  inline long set_last_update_time(long last_update_time)
+  inline long set_config_update_time(long config_update_time)
   {
-    this->last_update_time = last_update_time;
+    this->config_update_time = config_update_time;
   }
 
 private:
-  long last_update_time = 0;
+  long config_update_time = 0;
   size_t white_array_size;
   openrasp::DoubleArrayTrie::unit_t check_type_white_array[WRITE_ARRAY_MAX_LENGTH + 1];
-  // char clientip_header[DEFAULT_STRING_CONFIG_LENGTH + 1];
-  // char block_redirect_url[DEFAULT_STRING_CONFIG_LENGTH + 1];
-  // char block_content_json[DEFAULT_STRING_CONFIG_LENGTH + 1];
-  // char block_content_xml[DEFAULT_STRING_CONFIG_LENGTH + 1];
-  // char block_content_html[DEFAULT_STRING_CONFIG_LENGTH + 1];
-  // char syslog_server_address[DEFAULT_STRING_CONFIG_LENGTH + 1];
-  // char inject_html_urlprefix[DEFAULT_STRING_CONFIG_LENGTH + 1];
-
-  // bool plugin_filter = true;
-  // bool enforce_policy = false;
-  // bool syslog_alarm_enable = false;
-
-  // int log_maxburst = 100;
-  // int syslog_facility;
-  // int block_status_code = 302;
-  // int syslog_connection_retry_interval = 200;
-
-  // unsigned int timeout_ms = 100;
-  // unsigned int log_maxstack = 10;
-  // unsigned int log_max_backup = 30;
-  // unsigned int plugin_maxstack = 100;
-  // unsigned int slowquery_min_rows = 500;
-  // unsigned int plugin_update_interval = 60;
-  // unsigned int log_push_interval = 10;
-
-  // long syslog_connection_timeout = 50;
-  // long syslog_read_timeout = 10;
-  // std::unordered_set<std::string> callable_blacklists;
-
-  // inline void set_block_redirect_url(const char *block_redirect_url)
-  // {
-  //   strncpy(this->block_redirect_url, block_redirect_url, DEFAULT_STRING_CONFIG_LENGTH);
-  // }
-
-  // inline void set_block_content_json(const char *block_content_json)
-  // {
-  //   strncpy(this->block_content_json, block_content_json, DEFAULT_STRING_CONFIG_LENGTH);
-  // }
-
-  // inline void set_block_content_xml(const char *block_content_xml)
-  // {
-  //   strncpy(this->block_content_xml, block_content_xml, DEFAULT_STRING_CONFIG_LENGTH);
-  // }
-
-  // inline void set_block_content_html(const char *block_content_html)
-  // {
-  //   strncpy(this->block_content_html, block_content_html, DEFAULT_STRING_CONFIG_LENGTH);
-  // }
-
-  // inline void set_syslog_server_address(const char *syslog_server_address)
-  // {
-  //   strncpy(this->syslog_server_address, syslog_server_address, DEFAULT_STRING_CONFIG_LENGTH);
-  // }
-
-  // inline void set_clientip_header(const char *clientip_header)
-  // {
-  //   strncpy(this->clientip_header, clientip_header, DEFAULT_STRING_CONFIG_LENGTH);
-  // }
-
-  // inline void set_inject_html_urlprefix(const char *inject_html_urlprefix)
-  // {
-  //   strncpy(this->inject_html_urlprefix, inject_html_urlprefix, DEFAULT_STRING_CONFIG_LENGTH);
-  // }
 };
 
 } // namespace openrasp

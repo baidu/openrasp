@@ -53,7 +53,7 @@ public:
 private:
   void do_heartbeat(CURL *curl TSRMLS_DC);
   void update_official_plugin(HashTable *plugin_ht);
-  void update_config(HashTable *config_ht);
+  bool update_config(zval *config_zv, long config_time);
 };
 
 class LogAgent : public BaseAgent

@@ -21,10 +21,10 @@
 namespace openrasp
 {
 ShmManager sm;
-std::unique_ptr<SharedConfigManager> vcm = nullptr;
+std::unique_ptr<SharedConfigManager> scm = nullptr;
 
 SharedConfigManager::SharedConfigManager(ShmManager *mm)
-    : BaseManager(mm), variable_config_block(nullptr), rwlock(nullptr)
+    : BaseManager(mm), shared_config_block(nullptr), rwlock(nullptr)
 {
 }
 
@@ -36,7 +36,7 @@ int SharedConfigManager::get_check_type_white_bit_mask(std::string url)
     if (rwlock != nullptr && rwlock->read_try_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
-        dat.load_existing_array((void *)variable_config_block->get_check_type_white_array(), variable_config_block->get_white_array_size());
+        dat.load_existing_array((void *)shared_config_block->get_check_type_white_array(), shared_config_block->get_white_array_size());
         size_t num = dat.prefix_search(url.c_str(), result_pair, sizeof(result_pair));
         if (num > 0)
         {
@@ -54,7 +54,7 @@ bool SharedConfigManager::write_check_type_white_array_to_shm(const void *source
     if (rwlock != nullptr && rwlock->write_try_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
-        variable_config_block->reset_white_array(source, num);
+        shared_config_block->reset_white_array(source, num);
         return true;
     }
     return false;
@@ -75,16 +75,37 @@ bool SharedConfigManager::build_check_type_white_array(std::map<std::string, int
     write_check_type_white_array_to_shm(dat.array(), dat.total_size());
 }
 
+long SharedConfigManager::get_config_last_update()
+{
+    if (rwlock != nullptr && rwlock->read_try_lock())
+    {
+        ReadUnLocker auto_unlocker(rwlock);
+        return shared_config_block->get_config_update_time();
+    }
+    return 0;
+}
+
+bool SharedConfigManager::set_config_last_update(long config_update_timestamp)
+{
+    if (rwlock != nullptr && rwlock->write_try_lock())
+    {
+        WriteUnLocker auto_unlocker(rwlock);
+        shared_config_block->set_config_update_time(config_update_timestamp);
+        return true;
+    }
+    return false;
+}
+
 bool SharedConfigManager::startup()
 {
-    char *shm_block = shm_manager->create(SHMEM_SEC_CONF_BLOCK, sizeof(VariableConfigBlock));
+    char *shm_block = shm_manager->create(SHMEM_SEC_CONF_BLOCK, sizeof(SharedConfigBlock));
     if (!shm_block)
     {
         return false;
     }
     rwlock = new ReadWriteLock((pthread_rwlock_t *)shm_block, LOCK_PROCESS);
-    memset(shm_block, 0, sizeof(VariableConfigBlock));
-    variable_config_block = reinterpret_cast<VariableConfigBlock *>(shm_block);
+    memset(shm_block, 0, sizeof(SharedConfigBlock));
+    shared_config_block = reinterpret_cast<SharedConfigBlock *>(shm_block);
     initialized = true;
     return true;
 }

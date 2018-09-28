@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "openrasp_config.h"
 #include "openrasp_agent.h"
 #include "utils/digest.h"
 #include <fstream>
@@ -22,6 +23,7 @@
 #include <algorithm>
 #include "cereal/archives/xml.hpp"
 #include "cereal/types/string.hpp"
+#include "shared_config_manager.h"
 extern "C"
 {
 #include "ext/standard/php_smart_str.h"
@@ -142,10 +144,10 @@ void HeartBeatAgent::do_heartbeat(CURL *curl TSRMLS_DC)
 					}
 					long config_time;
 					bool has_config_time = fetch_outmost_long_from_ht(data, "config_time", &config_time);
-					HashTable *config_ht = fetch_outmost_hashtable_from_ht(data, "config");
-					if (has_config_time && config_ht)
+					zval *config_zv = fetch_outmost_zval_from_ht(data, "config");
+					if (has_config_time && config_zv)
 					{
-						update_config(config_ht);
+						update_config(config_zv, config_time);
 					}
 				}
 			}
@@ -187,9 +189,50 @@ void HeartBeatAgent::update_official_plugin(HashTable *plugin_ht)
 	}
 }
 
-void HeartBeatAgent::update_config(HashTable *config_ht)
+bool HeartBeatAgent::update_config(zval *config_zv, long config_time)
 {
-	//TODO
+	if (Z_TYPE_P(config_zv) != IS_ARRAY)
+	{
+		return false;
+	}
+	smart_str buf_json = {0};
+	php_json_encode(&buf_json, config_zv, 0 TSRMLS_CC);
+	if (buf_json.a > buf_json.len)
+	{
+		buf_json.c[buf_json.len] = '\0';
+		buf_json.len++;
+	}
+	std::string config_string(buf_json.c);
+	OpenraspConfig openrasp_config(config_string, OpenraspConfig::FromType::kJson);
+	smart_str_free(&buf_json);
+	if (scm != nullptr)
+	{
+		std::map<std::string, int> url_mask_map;
+		for (auto map_iter : CheckTypeNameMap)
+		{
+			std::vector<std::string> urls;
+			openrasp_config.GetArray("hook.white." + std::string(map_iter.second), urls);
+			for (auto vector_iter : urls)
+			{
+				url_mask_map.insert(std::make_pair(vector_iter, map_iter.first));
+			}
+		}
+		scm->build_check_type_white_array(url_mask_map);
+	}
+	std::string clould_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/clould-config.json";
+	std::ofstream out_file(clould_config_file_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
+	if (out_file.is_open() && out_file.good())
+	{
+		out_file << config_string;
+		out_file.close();
+		scm->set_config_last_update(config_time);
+	}
+	else
+	{
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write cloul config to %s."), clould_config_file_path.c_str());
+		return false;
+	}
+	return true;
 }
 
 void HeartBeatAgent::write_pid_to_shm(pid_t agent_pid)

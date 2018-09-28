@@ -452,3 +452,13 @@ bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result)
 	}
 	return false;
 }
+
+zval *fetch_outmost_zval_from_ht(HashTable *ht, const char *arKey)
+{
+	zval **origin_zv;
+	if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS)
+	{
+		return *origin_zv;
+	}
+	return nullptr;
+}

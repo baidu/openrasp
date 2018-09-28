@@ -123,7 +123,7 @@ PHP_MINIT_FUNCTION(openrasp)
         return SUCCESS;
     }
     openrasp::ssdm.reset(new openrasp::SafeShutDownManager(&openrasp::sm));
-    openrasp::vcm.reset(new openrasp::SharedConfigManager(&openrasp::sm));
+    openrasp::scm.reset(new openrasp::SharedConfigManager(&openrasp::sm));
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (check_sapi_need_alloc_shm() && openrasp_ini.remote_management_enable)
     {
@@ -146,7 +146,7 @@ PHP_MINIT_FUNCTION(openrasp)
     result = PHP_MINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
-    openrasp::vcm->startup();
+    openrasp::scm->startup();
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (openrasp::ssdm)
     {
@@ -176,7 +176,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
             openrasp::oam->shutdown();
         }
 #endif
-        openrasp::vcm->shutdown();
+        openrasp::scm->shutdown();
         if (openrasp::ssdm)
         {
             openrasp::ssdm->shutdown();
@@ -196,6 +196,7 @@ PHP_RINIT_FUNCTION(openrasp)
         // openrasp_inject must be called before openrasp_log cuz of request_id
         result = PHP_RINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU);
+        result = PHP_RINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
     }
     return SUCCESS;
 }
