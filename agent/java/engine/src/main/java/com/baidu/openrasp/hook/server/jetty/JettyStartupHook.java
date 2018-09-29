@@ -18,6 +18,7 @@ package com.baidu.openrasp.hook.server.jetty;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.server.ServerStartupHook;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.model.ApplicationModel;
@@ -52,5 +53,7 @@ public class JettyStartupHook extends ServerStartupHook {
         } catch (Exception e) {
             HookHandler.LOGGER.warn("handle resin startup failed", e);
         }
+        HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_JETTY_START, CheckParameter.EMPTY_MAP);
+
     }
 }

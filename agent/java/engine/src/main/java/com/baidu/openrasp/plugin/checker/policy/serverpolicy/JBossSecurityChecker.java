@@ -1,7 +1,22 @@
-package com.baidu.openrasp.plugin.checker.policy;
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.baidu.openrasp.plugin.checker.policy.serverpolicy;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.hook.server.jboss.JBossStartupHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
@@ -21,9 +36,9 @@ import java.util.*;
  * 　　* @author anyang
  * 　　* @date 2018/7/30 15:51
  */
-public class JBossJMXSecurityChecker extends PolicyChecker {
+public class JBossSecurityChecker extends ServerPolicyChecker {
 
-    public static final String JBOSS_SECURITY_CHECK_ERROR = "jboss_security_check_error";
+    private static final String JBOSS_SECURITY_CHECK_ERROR = "jboss_security_check_error";
     private static final String SECURITY_DOMAIN = "security-domain";
     private static final String SECURITY_CONSTRAINT = "security-constraint";
     private static final String WEB_RESOURCE_COLLECTION = "web-resource-collection";
@@ -35,10 +50,8 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
     public static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
 
     @Override
-    public List<EventInfo> checkParam(CheckParameter checkParameter) {
-
+    public void checkServer(CheckParameter checkParameter, List<EventInfo> infos) {
         String jbossBaseDir = System.getProperty("jboss.home.dir");
-        List<EventInfo> infos = new LinkedList<EventInfo>();
         String serverVersion = ApplicationModel.getVersion();
         if (serverVersion != null) {
             String jbossWebXmlPath = "deploy" + File.separator + "jmx-console.war" + File.separator + "WEB-INF" + File.separator + "jboss-web.xml";
@@ -56,10 +69,7 @@ public class JBossJMXSecurityChecker extends PolicyChecker {
             checkJBossWebXml(jbossWebXmlPath, infos);
             checkWebXml(webXmlPath, infos);
         }
-
-        return infos;
     }
-
 
     /**
      * 检测JBoss的JBoss-web.xml是否配置security-domain

@@ -99,7 +99,9 @@ void HeartBeatAgent::do_heartbeat(CURL *curl TSRMLS_DC)
 	zval *body = nullptr;
 	MAKE_STD_ZVAL(body);
 	array_init(body);
-	add_assoc_string(body, "version", (char *)oam->agent_ctrl_block->get_plugin_version(), 1);
+	add_assoc_string(body, "rasp_id", (char *)oam->get_rasp_id().c_str(), 1);
+	add_assoc_string(body, "plugin_version", (char *)oam->agent_ctrl_block->get_plugin_version(), 1);
+	add_assoc_long(body, "config_time", scm ? scm->get_config_last_update() : 0);
 	smart_str buf_json = {0};
 	php_json_encode(&buf_json, body, 0 TSRMLS_CC);
 	if (buf_json.a > buf_json.len)
@@ -131,11 +133,12 @@ void HeartBeatAgent::do_heartbeat(CURL *curl TSRMLS_DC)
 		{
 			if (0 < status)
 			{
-				openrasp_error(E_WARNING, AGENT_ERROR, _("Heartbeat error, status: %ld."), status);
+				openrasp_error(E_WARNING, AGENT_ERROR, _("Heartbeat error, status: %ld, description :%s."), status, description);
 			}
 			else if (0 == status)
 			{
-				if (HashTable *data = fetch_outmost_hashtable_from_ht(Z_ARRVAL_P(return_value), "data"))
+				HashTable *data = fetch_outmost_hashtable_from_ht(Z_ARRVAL_P(return_value), "data");
+				if (data)
 				{
 					HashTable *plugin_ht = nullptr;
 					if (plugin_ht = fetch_outmost_hashtable_from_ht(data, "plugin"))
@@ -219,8 +222,8 @@ bool HeartBeatAgent::update_config(zval *config_zv, long config_time)
 		}
 		scm->build_check_type_white_array(url_mask_map);
 	}
-	std::string clould_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/clould-config.json";
-	std::ofstream out_file(clould_config_file_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
+	std::string cloud_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/cloud-config.json";
+	std::ofstream out_file(cloud_config_file_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
 	if (out_file.is_open() && out_file.good())
 	{
 		out_file << config_string;
@@ -229,7 +232,7 @@ bool HeartBeatAgent::update_config(zval *config_zv, long config_time)
 	}
 	else
 	{
-		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write clould config to %s."), clould_config_file_path.c_str());
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write cloud config to %s."), cloud_config_file_path.c_str());
 		return false;
 	}
 	return true;

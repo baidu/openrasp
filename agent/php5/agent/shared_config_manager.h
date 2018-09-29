@@ -26,6 +26,7 @@
 
 namespace openrasp
 {
+#define ROUNDUP(x, n) (((x) + ((n)-1)) & (~((n)-1)))
 
 class SharedConfigManager : public BaseManager
 {
@@ -39,6 +40,7 @@ public:
   bool set_config_last_update(long config_update_timestamp);
 
 private:
+  int meta_size;
   SharedConfigBlock *shared_config_block;
   ReadWriteLock *rwlock;
   bool write_check_type_white_array_to_shm(const void *source, size_t num);

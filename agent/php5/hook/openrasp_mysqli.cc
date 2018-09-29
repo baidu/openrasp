@@ -25,11 +25,11 @@ extern "C" {
 HOOK_FUNCTION_EX(mysqli, mysqli, DB_CONNECTION);
 HOOK_FUNCTION_EX(real_connect, mysqli, DB_CONNECTION);
 PRE_HOOK_FUNCTION_EX(query, mysqli, SQL);
-POST_HOOK_FUNCTION_EX(query, mysqli, SQL_SLOW_QUERY);
+// POST_HOOK_FUNCTION_EX(query, mysqli, SQL_SLOW_QUERY);
 HOOK_FUNCTION(mysqli_connect, DB_CONNECTION);
 HOOK_FUNCTION(mysqli_real_connect, DB_CONNECTION);
 PRE_HOOK_FUNCTION(mysqli_query, SQL);
-POST_HOOK_FUNCTION(mysqli_query, SQL_SLOW_QUERY);
+// POST_HOOK_FUNCTION(mysqli_query, SQL_SLOW_QUERY);
 PRE_HOOK_FUNCTION(mysqli_real_query, SQL);
 PRE_HOOK_FUNCTION(mysqli_prepare, SQL_PREPARED);
 PRE_HOOK_FUNCTION_EX(prepare, mysqli, SQL_PREPARED);

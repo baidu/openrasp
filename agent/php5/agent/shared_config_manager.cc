@@ -26,6 +26,7 @@ std::unique_ptr<SharedConfigManager> scm = nullptr;
 SharedConfigManager::SharedConfigManager(ShmManager *mm)
     : BaseManager(mm), shared_config_block(nullptr), rwlock(nullptr)
 {
+    meta_size = ROUNDUP(sizeof(pthread_rwlock_t), 1 << 3);
 }
 
 int SharedConfigManager::get_check_type_white_bit_mask(std::string url)
@@ -98,16 +99,18 @@ bool SharedConfigManager::set_config_last_update(long config_update_timestamp)
 
 bool SharedConfigManager::startup()
 {
-    char *shm_block = shm_manager->create(SHMEM_SEC_CONF_BLOCK, sizeof(SharedConfigBlock));
-    if (!shm_block)
+    size_t total_size = meta_size + sizeof(SharedConfigBlock);
+    char *shm_block = shm_manager->create(SHMEM_SEC_CONF_BLOCK, total_size);
+    if (shm_block)
     {
-        return false;
+        memset(shm_block, 0, total_size);
+        rwlock = new ReadWriteLock((pthread_rwlock_t *)shm_block, LOCK_PROCESS);
+        char *shm_config_block = shm_block + meta_size;
+        shared_config_block = reinterpret_cast<SharedConfigBlock *>(shm_config_block);
+        initialized = true;
+        return true;
     }
-    rwlock = new ReadWriteLock((pthread_rwlock_t *)shm_block, LOCK_PROCESS);
-    memset(shm_block, 0, sizeof(SharedConfigBlock));
-    shared_config_block = reinterpret_cast<SharedConfigBlock *>(shm_block);
-    initialized = true;
-    return true;
+    return false;
 }
 
 bool SharedConfigManager::shutdown()

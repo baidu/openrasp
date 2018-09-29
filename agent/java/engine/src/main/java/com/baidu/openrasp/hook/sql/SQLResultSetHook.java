@@ -31,7 +31,6 @@ import java.util.HashMap;
  * Created by tyy on 17-11-6.
  * 为检测慢查询添加便利 sql 查询结果的 hook 点
  */
-@HookAnnotation
 public class SQLResultSetHook extends AbstractSqlHook {
 
     /**

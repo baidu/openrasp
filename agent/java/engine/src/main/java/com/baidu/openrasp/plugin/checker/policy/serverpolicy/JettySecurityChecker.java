@@ -14,29 +14,20 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook.dubbo;
+package com.baidu.openrasp.plugin.checker.policy.serverpolicy;
 
+import com.baidu.openrasp.plugin.checker.CheckParameter;
+import com.baidu.openrasp.plugin.info.EventInfo;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 /**
- * @author anyang
- * @Description: dubbo的request请求类
- * @date 2018/8/1315:13
+ * @description: jetty基线检查
+ * @author: anyang
+ * @create: 2018/09/10 12:22
  */
-public class DubboRequest extends AbstractDubboRequest {
-
-    private static final Map<String, String[]> EMPTY_PARAM = new HashMap<String, String[]>();
-
-
-    public DubboRequest(Object request) {
-        super(request);
-    }
-
+public class JettySecurityChecker extends ServerPolicyChecker {
     @Override
-    public Map<String, String[]> getParameterMap() {
-
-        return request != null ? (Map<String, String[]>) request : EMPTY_PARAM;
+    public void checkServer(CheckParameter checkParameter, List<EventInfo> infos) {
     }
 }
