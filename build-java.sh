@@ -9,7 +9,9 @@
 #                                #
 ##################################
 
-BASE_DIR=$(dirname $(readlink -f $0))
+cd "$(dirname "$0")"
+
+BASE_DIR=$(pwd)
 echo "base dir: $BASE_DIR"
 
 PLUGIN_ROOT=$BASE_DIR/plugins/official
@@ -23,13 +25,8 @@ function log {
 	echo "================= $1 ==================="
 }
 
-function changeDirectory {
-	log "enter $(readlink -f $1)"
-	cd $1 || exit 1
-}
-
 function buildRaspInstall {
-	changeDirectory $BASE_DIR/rasp-install/java
+	cd $BASE_DIR/rasp-install/java
 	log "mvn clean package..."
 	mvn clean package || exit 1 
 	cp $BASE_DIR/rasp-install/java/target/RaspInstall.jar $OUTPUT_ROOT || exit 1
@@ -38,7 +35,7 @@ function buildRaspInstall {
 
 # 编译Rasp
 function buildRasp {
-	changeDirectory $BASE_DIR/agent/java || exit 1
+	cd $BASE_DIR/agent/java || exit 1
 	log "mvn clean package"
 	mvn clean package  || exit 1
 	cp $BASE_DIR/agent/java/boot/target/rasp.jar $OUTPUT_ROOT/rasp || exit 1
@@ -46,7 +43,7 @@ function buildRasp {
 }
 
 function buildPlugin {
-	changeDirectory $PLUGIN_ROOT || exit 1 
+	cd $PLUGIN_ROOT || exit 1 
 	cp $PLUGIN_ROOT/plugin.js $OUTPUT_ROOT/rasp/plugins/official.js || exit 1
 }
 
@@ -66,7 +63,7 @@ copyConf
 log "[4] build OpenRasp"
 buildRasp
 
-changeDirectory $OUTPUT_ROOT/..
+cd $OUTPUT_ROOT/..
 target=rasp-java.tar.gz
 tar -czvf $target $BASENAME || exit
 #mv $target $BASE_DIR || exit
