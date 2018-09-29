@@ -349,6 +349,16 @@ static void init_policy_request_info(TSRMLS_D)
     add_assoc_string(OPENRASP_LOG_G(policy_request_info), "server_type", "PHP", 1);
     add_assoc_string(OPENRASP_LOG_G(policy_request_info), "server_version", OPENRASP_PHP_VERSION, 1);
     add_assoc_zval(OPENRASP_LOG_G(policy_request_info), "server_nic", _get_ifaddr_zval());
+    if (openrasp_ini.app_id)
+    {
+        add_assoc_string(OPENRASP_LOG_G(policy_request_info), "app_id", openrasp_ini.app_id, 1);
+    }
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+    if (openrasp::oam)
+    {
+        add_assoc_string(OPENRASP_LOG_G(policy_request_info), "rasp_id", (char *)openrasp::oam->get_rasp_id().c_str(), 1);
+    }
+#endif
 }
 
 static void clear_alarm_request_info(TSRMLS_D)

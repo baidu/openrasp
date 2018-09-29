@@ -214,10 +214,17 @@ bool HeartBeatAgent::update_config(zval *config_zv, long config_time TSRMLS_DC)
 		for (auto map_iter : CheckTypeNameMap)
 		{
 			std::vector<std::string> urls;
-			openrasp_config.GetArray("hook.white." + std::string(map_iter.second), urls);
+			urls = openrasp_config.GetArray("hook.white." + std::string(map_iter.second), urls);
 			for (auto vector_iter : urls)
 			{
-				url_mask_map.insert(std::make_pair(vector_iter, map_iter.first));
+				std::string target_url = (vector_iter == "all") ? "" : vector_iter;
+				int mask = map_iter.first;
+				auto it = url_mask_map.find(target_url);
+				if (it != url_mask_map.end())
+				{
+					mask |= it->second;
+				}
+				url_mask_map[target_url] = mask;
 			}
 		}
 		scm->build_check_type_white_array(url_mask_map);

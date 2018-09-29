@@ -30,6 +30,7 @@ extern "C"
 
 static hook_handler_t global_hook_handlers[512];
 static size_t global_hook_handlers_len = 0;
+static const std::string COLON_TWO_SLASHES = "://";
 
 const std::map<OpenRASPCheckType, const char *> CheckTypeNameMap =
     {
@@ -206,8 +207,7 @@ void openrasp_buildin_php_risk_handle(zend_bool is_block, OpenRASPCheckType type
 
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC)
 {
-    //TODO 白名单
-    return false;
+    return check_type & OPENRASP_HOOK_G(check_type_white_bit_mask);
 }
 
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC)
@@ -366,10 +366,10 @@ PHP_RINIT_FUNCTION(openrasp_hook)
         if (url)
         {
             std::string url_str(url);
-            std::size_t found = url_str.find("://");
+            std::size_t found = url_str.find(COLON_TWO_SLASHES);
             if (found != std::string::npos)
             {
-                OPENRASP_HOOK_G(check_type_white_bit_mask) = openrasp::scm->get_check_type_white_bit_mask(url_str.substr(found));
+                OPENRASP_HOOK_G(check_type_white_bit_mask) = openrasp::scm->get_check_type_white_bit_mask(url_str.substr(found + COLON_TWO_SLASHES.size()));
             }
         }
     }
