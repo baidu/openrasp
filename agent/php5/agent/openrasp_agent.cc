@@ -150,7 +150,7 @@ void HeartBeatAgent::do_heartbeat(CURL *curl TSRMLS_DC)
 					zval *config_zv = fetch_outmost_zval_from_ht(data, "config");
 					if (has_config_time && config_zv)
 					{
-						update_config(config_zv, config_time);
+						update_config(config_zv, config_time TSRMLS_CC);
 					}
 				}
 			}
@@ -192,7 +192,7 @@ void HeartBeatAgent::update_official_plugin(HashTable *plugin_ht)
 	}
 }
 
-bool HeartBeatAgent::update_config(zval *config_zv, long config_time)
+bool HeartBeatAgent::update_config(zval *config_zv, long config_time TSRMLS_DC)
 {
 	if (Z_TYPE_P(config_zv) != IS_ARRAY)
 	{

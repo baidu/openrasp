@@ -283,6 +283,7 @@ std::string OpenraspAgentManager::get_rasp_id()
 
 bool OpenraspAgentManager::agent_remote_register()
 {
+	TSRMLS_FETCH();
 	if (!calculate_rasp_id())
 	{
 		return false;
