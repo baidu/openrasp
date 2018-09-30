@@ -12,6 +12,7 @@ import org.mozilla.javascript.ScriptableObject;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -33,7 +34,7 @@ public class CloudUtils {
             while ((len = inputStream.read(data)) != -1) {
                 outputStream.write(data, 0, len);
             }
-            jsonString = new String(outputStream.toByteArray(),"UTF-8");
+            jsonString = new String(outputStream.toByteArray(), "UTF-8");
             inputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -82,6 +83,24 @@ public class CloudUtils {
         ).create();
     }
 
+    public static Gson getListGsonObject() {
+        Gson gson = new GsonBuilder().registerTypeAdapter(
+                new TypeToken<ArrayList<String>>() {
+                }.getType(),
+                new JsonDeserializer<ArrayList<String>>() {
+                    public ArrayList<String> deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+                        ArrayList<String> list = new ArrayList<String>();
+                        JsonArray jsonArray = jsonElement.getAsJsonArray();
+                        for (JsonElement jsonElement1 : jsonArray) {
+                            list.add(jsonElement1.getAsString());
+                        }
+                        return list;
+                    }
+                }
+        ).create();
+        return gson;
+    }
+
     public static boolean checkCloudControlEnter() throws NoSuchAlgorithmException {
         CloudCacheModel.getInstance().setRaspId(OSUtil.getID());
         if (Config.getConfig().getCloudSwitch()) {
@@ -97,8 +116,9 @@ public class CloudUtils {
             Object object = data.get(key);
 
             if (object != null) {
-                JsonObject jsonElement = (JsonObject)object;
-                return getMapGsonObject().fromJson(jsonElement,new TypeToken<Map<String,Object>>(){}.getType());
+                JsonObject jsonElement = (JsonObject) object;
+                return getMapGsonObject().fromJson(jsonElement, new TypeToken<Map<String, Object>>() {
+                }.getType());
             }
         }
         return null;

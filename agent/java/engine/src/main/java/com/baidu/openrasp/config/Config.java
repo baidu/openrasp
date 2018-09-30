@@ -16,14 +16,17 @@
 
 package com.baidu.openrasp.config;
 
+import com.baidu.openrasp.cloud.Utils.CloudUtils;
 import com.baidu.openrasp.exception.ConfigLoadException;
 import com.baidu.openrasp.tool.FileUtil;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
 import com.baidu.openrasp.cloud.model.HookWhiteModel;
 import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -176,8 +179,9 @@ public class Config extends FileScanListener {
         for (Map.Entry<String, Object> entry : configMap.entrySet()) {
             if (entry.getKey().startsWith(HOOKS_WHITE)) {
                 String hooksType = entry.getKey().substring(entry.getKey().lastIndexOf(".") + 1);
-                if (entry.getValue() instanceof ArrayList) {
-                    HookWhiteModel.init(hooksType, (ArrayList<String>) entry.getValue());
+                if (entry.getValue() instanceof JsonArray) {
+                    ArrayList<String> list = CloudUtils.getListGsonObject().fromJson((JsonArray)entry.getValue(),new TypeToken<ArrayList<String>>(){}.getType());
+                    HookWhiteModel.init(hooksType, list);
                 }
             } else {
                 setConfig(entry.getKey(), String.valueOf(entry.getValue()), isInit);
