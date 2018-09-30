@@ -257,7 +257,7 @@ static bool make_openrasp_root_dir()
         }
     }
 #ifdef HAVE_GETTEXT
-    if (nullptr != setlocale(LC_ALL, openrasp_ini.locale ? openrasp_ini.locale : ""))
+    if (nullptr != setlocale(LC_ALL, (nullptr == openrasp_ini.locale || strcmp(openrasp_ini.locale, "") == 0) ? "C" : openrasp_ini.locale))
     {
         std::string locale_path(root_dir + DEFAULT_SLASH + "locale" + DEFAULT_SLASH);
         if (!bindtextdomain(GETTEXT_PACKAGE, locale_path.c_str()))

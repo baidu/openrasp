@@ -1,4 +1,4 @@
-const version = '2018-0919-1600'
+const version = '2018-0927-1600'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -207,9 +207,9 @@ var algorithmConfig = {
     directory_unwanted: {
         action: 'block'
     },
-    // 文件管理器 - 列出webroot之外的目录，默认关闭
-    directory_outsideWebroot: {
-        action: 'ignore'
+    // 文件管理器 - 用户输入匹配，仅当直接读取绝对路径时才检测
+    directory_userinput: {
+        action: 'block'
     },
 
     // 文件包含 - 用户输入
@@ -295,6 +295,12 @@ var algorithmConfig = {
     transformer_deser: {
         action: 'block'
     }
+}
+
+// 1.0.0 RC1 云控支持
+if (RASP.algorithmConfig)
+{
+    algorithmConfig = RASP.algorithmConfig
 }
 
 // 将所有拦截开关设置为 log
@@ -980,6 +986,7 @@ plugin.register('directory', function (params, context) {
     var realpath    = params.realpath
     var appBasePath = context.appBasePath
     var server      = context.server
+    var parameter   = context.parameter
 
     // 算法1 - 读取敏感目录
     if (algorithmConfig.directory_unwanted.action != 'ignore')
@@ -995,16 +1002,23 @@ plugin.register('directory', function (params, context) {
         }
     }
 
-    // 算法2 - 使用至少2个/../，且跳出web目录
-    if (algorithmConfig.directory_outsideWebroot.action != 'ignore')
+    // 算法2 - 用户输入匹配。主要用户检测 webshell 文件管理器，直接读取绝对路径的情况
+    if (algorithmConfig.directory_userinput.action != 'ignore')
     {
-        if (is_outside_webroot(appBasePath, realpath, path))
+        // 去除结尾的斜线, /usr/ == /usr
+        var path_noslash = path
+        if (path_noslash.endsWith('/'))
+        {
+            path_noslash = path_noslash.substr(0, path_noslash.length - 1)
+        }
+
+        if (path_noslash == realpath && is_from_userinput(parameter, path))
         {
             return {
-                action:     algorithmConfig.directory_outsideWebroot.action,
-                message:    _("Directory traversal - Accessing directory outside webroot (%1%), directory is %2%", [appBasePath, realpath]),
+                action:     algorithmConfig.directory_userinput.action,
+                message:    _("WebShell detected - Using File Manager function to access a folder: %1%", [realpath]),
                 confidence: 90
-            }
+            }            
         }
     }
 
