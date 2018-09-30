@@ -22,9 +22,6 @@ import java.util.Set;
  * @create: 2018/09/20 09:53
  */
 public class HttpAppender extends AppenderSkeleton {
-
-    public static final Logger LOGGER = Logger.getLogger(HttpAppender.class.getPackage().getName() + ".log");
-
     private CloudHttp cloudHttp;
 
     public HttpAppender() {
@@ -53,7 +50,6 @@ public class HttpAppender extends AppenderSkeleton {
             GenericResponse response = cloudHttp.request(getUrl(logger), new Gson().toJson(jsonArray));
             if (response != null) {
                 Integer responseCode = response.getResponseCode();
-                System.out.println(responseCode+"===="+response.getStatus());
                 if (responseCode != null && responseCode >= 200 && responseCode < 300) {
                     return;
                 }
