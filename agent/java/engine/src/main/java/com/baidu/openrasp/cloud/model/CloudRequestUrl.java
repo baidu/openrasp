@@ -7,6 +7,7 @@ public interface CloudRequestUrl {
     String CLOUD_HEART_BEAT_URL = cloudAddress + "/v1/agent/heartbeat";
     String CLOUD_REGISTER_URL = cloudAddress + "/v1/agent/rasp";
     String CLOUD_ALARM_HTTP_APPENDER_URL = cloudAddress + "/v1/agent/log/attack";
-    String CLOUD_POLICY_ALARM_HTTP_APPENDER_URL = cloudAddress + "v1/agent/log/policy";
-    String CLOUD_PLUGIN_HTTP_APPENDER_URL = cloudAddress + "v1/agent/log/plugin";
+    String CLOUD_POLICY_ALARM_HTTP_APPENDER_URL = cloudAddress + "/v1/agent/log/policy";
+    String CLOUD_PLUGIN_HTTP_APPENDER_URL = cloudAddress + "/v1/agent/log/plugin";
+    String CLOUD_STATISTICS_REPORT_URL = cloudAddress + "/v1/agent/report";
 }

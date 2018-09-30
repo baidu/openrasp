@@ -1,5 +1,7 @@
 package com.baidu.openrasp.cloud;
 
+import com.baidu.openrasp.cloud.Utils.CloudUtils;
+import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.config.Config;
@@ -19,38 +21,48 @@ import java.util.Map;
  * @create: 2018/09/18 15:09
  */
 public class CloudManager {
-    private static final Logger LOGGER = Logger.getLogger(CloudManager.class.getPackage().getName() + ".log");
+    public static final Logger LOGGER = Logger.getLogger(CloudManager.class.getPackage().getName() + ".log");
 
-    public synchronized static void init(String projectVersion) {
-        if (checkEnter()) {
-            new KeepAlive();
-            register(projectVersion);
+    public static void init(String projectVersion) throws Exception {
+        if (CloudUtils.checkCloudControlEnter()) {
+            String content = new Gson().toJson(KeepAlive.GenerateParameters());
+            String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
+            GenericResponse response = new CloudHttp().request(url, content);
+            if (response != null && response.getStatus() != null && response.getStatus() == 0) {
+                new KeepAlive();
+                register(projectVersion);
+                new StatisticsReport();
+            } else {
+                System.out.println("[OpenRASP] Cloud Control Send KeepAlive Failed");
+                throw new Exception();
+            }
+
         }
     }
 
-    private static void register(String projectVersion) {
-        try {
-            Map<String, Object> params = GenerateParameters(projectVersion);
-            String content = new Gson().toJson(params);
-            String url = CloudRequestUrl.CLOUD_REGISTER_URL;
-            String jsonString = new CloudHttp().request(url, content);
-            GenericResponse response = new Gson().fromJson(jsonString, GenericResponse.class);
-            if (response.getStatus() == 0 && "ok".equals(response.getDescription().toLowerCase())) {
+    private static void register(String projectVersion) throws Exception {
+
+        Map<String, Object> params = GenerateParameters(projectVersion);
+        String content = new Gson().toJson(params);
+        String url = CloudRequestUrl.CLOUD_REGISTER_URL;
+        GenericResponse response = new CloudHttp().request(url, content);
+        if (response != null) {
+            if (response.getStatus() != null && response.getStatus() == 0) {
                 System.out.println("[OpenRASP] Cloud Control Registered Successed");
             } else {
-                LOGGER.warn("Cloud control registered failed");
+                System.out.println("[OpenRASP] Cloud Control Registered Failed");
+                throw new Exception();
             }
-        } catch (NoSuchAlgorithmException e) {
-            LOGGER.error("get id failed: " + e.getMessage(), e);
         }
     }
 
-    private static Map<String, Object> GenerateParameters(String projectVersion) throws NoSuchAlgorithmException {
+    private static Map<String, Object> GenerateParameters(String projectVersion) {
         Map<String, Object> params = new HashMap<String, Object>();
-        params.put("id", OSUtil.getID());
+        params.put("id", CloudCacheModel.getInstance().getRaspId());
         params.put("version", projectVersion);
         params.put("host_name", OSUtil.getHostName());
         params.put("language", "java");
+        params.put("language_version", System.getProperty("java.version"));
         params.put("server_type", ApplicationModel.getServerName());
         params.put("server_version", ApplicationModel.getVersion());
         String raspHome = new File(Config.getConfig().getBaseDirectory()).getParent();
@@ -58,11 +70,4 @@ public class CloudManager {
         return params;
     }
 
-    private static boolean checkEnter() {
-        if (Config.getConfig().getCloudSwitch()) {
-            return !Config.getConfig().getCloudAddress().isEmpty() &&
-                    !Config.getConfig().getCloudAddress().isEmpty();
-        }
-        return false;
-    }
 }

@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -46,13 +47,14 @@ public class HttpAppender extends AppenderSkeleton {
     @Override
     protected void append(LoggingEvent loggingEvent) {
         if (checkEntryConditions()) {
-            String jsonString = new Gson().toJson(loggingEvent.getMessage());
+            String jsonString = loggingEvent.getRenderedMessage();
             JsonArray jsonArray = mergeFromAppenderCache(loggingEvent.getLoggerName(), jsonString);
             String logger = getLogger(loggingEvent.getLoggerName());
-            String result = cloudHttp.request(getUrl(logger), new Gson().toJson(jsonArray));
-            if (result != null) {
-                GenericResponse response = new Gson().fromJson(result, GenericResponse.class);
-                if (response.getResponseCode() >= 200 && response.getResponseCode() < 300) {
+            GenericResponse response = cloudHttp.request(getUrl(logger), new Gson().toJson(jsonArray));
+            if (response != null) {
+                Integer responseCode = response.getResponseCode();
+                System.out.println(responseCode+"===="+response.getStatus());
+                if (responseCode != null && responseCode >= 200 && responseCode < 300) {
                     return;
                 }
             }
@@ -61,14 +63,14 @@ public class HttpAppender extends AppenderSkeleton {
     }
 
     private JsonArray mergeFromAppenderCache(String loggerName, String currnetLog) {
+        Set<String> sets = new HashSet<String>();
+        sets.add(currnetLog);
         Set<String> set = AppenderCache.getCache(getLogger(loggerName));
-        JsonArray jsonArray = new JsonParser().parse(currnetLog).getAsJsonArray();
         if (set != null && !set.isEmpty()) {
-            for (String log : set) {
-                jsonArray.add(new JsonParser().parse(log));
-            }
+            sets.addAll(set);
         }
-        return jsonArray;
+        String json = new Gson().toJson(sets);
+        return new JsonParser().parse(json).getAsJsonArray();
     }
 
     private String getLogger(String loggerName) {

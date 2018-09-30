@@ -1,11 +1,13 @@
 package com.baidu.openrasp.cloud;
 
+import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.cloud.Utils.CloudUtils;
-import com.baidu.openrasp.cloud.model.CloudCache;
+import com.baidu.openrasp.plugin.js.engine.JsPluginManager;
 import com.google.gson.Gson;
+import com.google.gson.JsonPrimitive;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,44 +20,62 @@ import java.util.Map;
 public class KeepAlive {
     private static final int KEEPALIVE_DELAY = 60000;
 
-    static {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    Map<String, String> params = new HashMap<String, String>();
-                    params.put("plugin_version", CloudCache.getCache("plugin_version"));
-                    params.put("config_time", CloudCache.getCache("config_time"));
-                    String content = new Gson().toJson(params);
-                    String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
-                    String jsonString = new CloudHttp().request(url, content);
-                    if (jsonString != null) {
-                        GenericResponse response = new Gson().fromJson(jsonString, GenericResponse.class);
-                        handler(response);
-                    }
-                    try {
-                        Thread.sleep(KEEPALIVE_DELAY);
-                    } catch (InterruptedException e) {
-                       //continue next loop
-                    }
+    public KeepAlive() {
+        new Thread(new KeepAliveThread()).start();
+    }
+
+    class KeepAliveThread implements Runnable {
+        @Override
+        public void run() {
+            while (true) {
+                String content = new Gson().toJson(GenerateParameters());
+                String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
+                GenericResponse response = new CloudHttp().request(url, content);
+                if (response != null) {
+                    handler(response);
+                }
+                try {
+                    Thread.sleep(KEEPALIVE_DELAY);
+                } catch (InterruptedException e) {
+                    //continue next loop
                 }
             }
-        }).start();
+        }
+    }
+
+    public static Map<String, Object> GenerateParameters() {
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("rasp_id", CloudCacheModel.getInstance().getRaspId());
+        params.put("plugin_version", CloudCacheModel.getInstance().getPluginVersion());
+        params.put("config_time", CloudCacheModel.getInstance().getConfigTime());
+        return params;
     }
 
     private static void handler(GenericResponse response) {
-        if (response.getResponseCode() >= 200 && response.getResponseCode() < 300 && response.getStatus() == 0) {
-            Object configTime = response.getData().get("config_time");
+        if (response.getStatus() != null && response.getStatus() == 0) {
+            Object configTime = CloudUtils.getValueFromData(response, "config_time");
             if (configTime != null) {
-                CloudCache.setCache("config_time", String.valueOf(configTime));
+                CloudCacheModel.getInstance().setConfigTime(((JsonPrimitive) configTime).getAsLong());
             }
-            Map pluginMap = CloudUtils.getMapFromResponse(response, "plugin");
+            Map pluginMap = CloudUtils.getMapFromData(response, "plugin");
             if (pluginMap != null) {
-                CloudCache.setCache("plugin_version", String.valueOf(pluginMap.get("plugin_version")));
-                CloudCache.setCache("plugin", String.valueOf(pluginMap.get("plugin")));
+                if (pluginMap.get("plugin_version") != null) {
+                    CloudCacheModel.getInstance().setPluginVersion(((JsonPrimitive) pluginMap.get("plugin_version")).getAsString());
+                }
+                if (pluginMap.get("plugin") != null) {
+                    String plugin = ((JsonPrimitive) pluginMap.get("plugin")).getAsString();
+                    if (!plugin.equals(CloudCacheModel.getInstance().getPlugin())) {
+                        JsPluginManager.updatePluginAsync();
+                        CloudCacheModel.getInstance().setPlugin(plugin);
+                    }
+                }
             }
-            Map<String, Object> configMap = CloudUtils.getMapFromResponse(response, "config");
+            Map<String, Object> configMap = CloudUtils.getMapFromData(response, "config");
             if (configMap != null) {
+                Object object = configMap.get("algorithm.config");
+                if (object != null) {
+                    CloudCacheModel.getInstance().setAlgorithmConfig(((JsonPrimitive) object).getAsString());
+                }
                 Config.getConfig().loadConfigFromCloud(configMap, true);
             }
 

@@ -17,12 +17,14 @@
 package com.baidu.openrasp.plugin.js.engine;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.CloudCache;
+import com.baidu.openrasp.cloud.Utils.CloudUtils;
+import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.log4j.Logger;
+import org.mozilla.javascript.ScriptableObject;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -45,9 +47,10 @@ import java.util.TimerTask;
 public class JsPluginManager {
 
     private static final Logger LOGGER = Logger.getLogger(JsPluginManager.class.getPackage().getName() + ".log");
-    private static final String PLUGIN_NAME = "official.js";
+    private static final String PLUGIN_NAME = "open.official.js";
     private static Timer timer = null;
     private static Integer watchId = null;
+    private static boolean cloudSwitch;
 
     /**
      * 初始化插件引擎
@@ -56,10 +59,9 @@ public class JsPluginManager {
      */
     public synchronized static void init() throws Exception {
         JSContextFactory.init();
-        if (Config.getConfig().getCloudSwitch()) {
-            updateCloudPlugin();
-        } else {
-            updatePlugin();
+        cloudSwitch = Config.getConfig().getCloudSwitch();
+        updatePlugin();
+        if (!CloudUtils.checkCloudControlEnter()) {
             initFileWatcher();
         }
     }
@@ -126,41 +128,40 @@ public class JsPluginManager {
         // 清空 algorithm.config 配置
         Config.getConfig().setAlgorithmConfig("{}");
         boolean oldValue = HookHandler.enableHook.getAndSet(false);
-        File pluginDir = new File(Config.getConfig().getScriptDirectory());
-        LOGGER.debug("checker directory: " + pluginDir.getAbsolutePath());
-        if (!pluginDir.isDirectory()) {
-            pluginDir.mkdir();
-        }
-        FileFilter filter = FileFilterUtils.and(FileFilterUtils.sizeFileFilter(10 * 1024 * 1024, false), FileFilterUtils.suffixFileFilter(".js"));
-        File[] pluginFiles = pluginDir.listFiles(filter);
         List<CheckScript> scripts = new LinkedList<CheckScript>();
-        if (pluginFiles != null) {
-            for (File file : pluginFiles) {
-                try {
-                    scripts.add(new CheckScript(file));
-                } catch (Exception e) {
-                    LOGGER.error("", e);
+        if (cloudSwitch) {
+            String plugin = CloudCacheModel.getInstance().getPlugin();
+            if (plugin != null) {
+                scripts.add(new CheckScript(PLUGIN_NAME, plugin));
+            } else {
+                scripts.add(new CheckScript(PLUGIN_NAME, ""));
+            }
+        } else {
+            File pluginDir = new File(Config.getConfig().getScriptDirectory());
+            LOGGER.debug("checker directory: " + pluginDir.getAbsolutePath());
+            if (!pluginDir.isDirectory()) {
+                pluginDir.mkdir();
+            }
+            FileFilter filter = FileFilterUtils.and(FileFilterUtils.sizeFileFilter(10 * 1024 * 1024, false), FileFilterUtils.suffixFileFilter(".js"));
+            File[] pluginFiles = pluginDir.listFiles(filter);
+            if (pluginFiles != null) {
+                for (File file : pluginFiles) {
+                    try {
+                        scripts.add(new CheckScript(file));
+                    } catch (Exception e) {
+                        LOGGER.error("", e);
+                    }
                 }
             }
         }
-
         JSContextFactory.setCheckScriptList(scripts);
-
         HookHandler.enableHook.set(oldValue);
-    }
-
-    private synchronized static void updateCloudPlugin() {
-        boolean oldValue = HookHandler.enableHook.getAndSet(false);
-        List<CheckScript> scripts = new LinkedList<CheckScript>();
-        String pluginContent = CloudCache.getCache("plugin");
-        if (pluginContent != null) {
-            scripts.add(new CheckScript(PLUGIN_NAME, pluginContent));
-        } else {
-            scripts.add(new CheckScript(PLUGIN_NAME, ""));
+        if (cloudSwitch) {
+            String algorithmConfig = CloudCacheModel.getInstance().getAlgorithmConfig();
+            if (algorithmConfig != null) {
+                injectRhino(algorithmConfig);
+            }
         }
-        JSContextFactory.setCheckScriptList(scripts);
-        HookHandler.enableHook.set(oldValue);
-
     }
 
     /**
@@ -170,7 +171,7 @@ public class JsPluginManager {
      * <p>
      * 若产生抖动，可适量增大定时器延时
      */
-    private synchronized static void updatePluginAsync() {
+    public synchronized static void updatePluginAsync() {
         if (timer != null) {
             timer.cancel();
             timer = null;
@@ -192,5 +193,11 @@ public class JsPluginManager {
         }, 500);
     }
 
+    private static void injectRhino(String script) {
+        script = "RASP.algorithmConfig =" + script;
+        JSContext cx = (JSContext) JSContext.enter();
+        ScriptableObject globalScope = cx.initStandardObjects();
+        cx.evaluateString(globalScope, script, "algorithmConfig", 1, null);
+    }
 
 }

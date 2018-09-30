@@ -8,24 +8,24 @@ import java.util.Map;
  * @create: 2018/09/17 17:56
  */
 public class GenericResponse {
-    private int responseCode;
-    private int status;
+    private Integer responseCode;
+    private Integer status;
     private String description;
     private Map<String,Object> data;
 
-    public int getResponseCode() {
+    public Integer getResponseCode() {
         return responseCode;
     }
 
-    public void setResponseCode(int responseCode) {
+    public void setResponseCode(Integer responseCode) {
         this.responseCode = responseCode;
     }
 
-    public int getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(int status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 

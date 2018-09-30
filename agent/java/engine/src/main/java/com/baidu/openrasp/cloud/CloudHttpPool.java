@@ -1,5 +1,7 @@
 package com.baidu.openrasp.cloud;
 
+import com.baidu.openrasp.cloud.model.GenericResponse;
+
 import java.util.concurrent.*;
 
 /**
@@ -18,14 +20,14 @@ public class CloudHttpPool extends CloudHttp {
     }
 
     @Override
-    public String request(final String url, final String content) {
+    public GenericResponse request(final String url, final String content) {
         Callable callable = new Callable() {
             @Override
-            public String call() {
+            public GenericResponse call() {
                 return CloudHttpPool.super.request(url, content);
             }
         };
-        Future<String> future = threadPool.submit(callable);
+        Future<GenericResponse> future = threadPool.submit(callable);
         while (!future.isDone()) {
             try {
                 Thread.sleep(10);

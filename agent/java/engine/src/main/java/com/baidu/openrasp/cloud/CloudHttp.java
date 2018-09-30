@@ -1,14 +1,15 @@
 package com.baidu.openrasp.cloud;
 
+import com.baidu.openrasp.cloud.Utils.CloudUtils;
+import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.config.Config;
-import com.google.gson.Gson;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 
-import java.io.DataOutputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Map;
 
 /**
  * @description: 云控http请求
@@ -19,9 +20,10 @@ public class CloudHttp {
     private static final int DEFAULT_CONNECTION_TIMEOUT = 10000;
     private static final int DEFAULT_READ_TIMEOUT = 10000;
 
-    public String request(String url, String content) {
+    public GenericResponse request(String url, String content) {
         DataOutputStream out = null;
         InputStream in = null;
+        String jsonString = null;
         int responseCode;
         try {
             URL realUrl = new URL(url);
@@ -40,8 +42,9 @@ public class CloudHttp {
             out.writeBytes(content);
             out.flush();
             httpUrlConnection.connect();
-            in = httpUrlConnection.getInputStream();
             responseCode = httpUrlConnection.getResponseCode();
+            in = httpUrlConnection.getInputStream();
+            jsonString = CloudUtils.convertInputStreamToJsonString(in);
         } catch (Exception e) {
             return null;
         } finally {
@@ -56,9 +59,10 @@ public class CloudHttp {
                 e.printStackTrace();
             }
         }
-        Map<String,Object> res = new Gson().fromJson(new Gson().toJson(in),Map.class);
-        res.put("responseCode",responseCode);
-        return new Gson().toJson(res);
 
+        Gson gson = CloudUtils.getResponseGsonObject();
+        GenericResponse response = gson.fromJson(jsonString, new TypeToken<GenericResponse>() {}.getType());
+        response.setResponseCode(responseCode);
+        return response;
     }
 }
