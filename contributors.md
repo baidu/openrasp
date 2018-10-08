@@ -8,7 +8,7 @@
 * Li Xinkai
 * Tang Youyi
 
-### Special thanks to the following people
+### Special thanks to the following people (sorted by contribution date)
 
 * Lenx Wei
 * Sun MingShen
@@ -30,3 +30,4 @@
 * @小猪"\\
 * @阿远
 * @3cho
+* @.0x7coO.酒馆游侠

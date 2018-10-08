@@ -1,0 +1,54 @@
+[{
+    "id": "sqli_userinput",
+    "name": "sql",
+    "action": "block",
+    "params": {
+        "server": "mysql",
+        "query": "SELECT * FROM users WHERE id = 1 and 1=2 union select user(),2,3#"
+    },
+    "context": {
+        "parameter": {
+            "id": ["1 and 1=2 union select user(),2,3#"]
+        }
+    },
+    "description": "normal sqli test"
+},
+{
+    "id": "sqli_policy_hex",
+    "name": "sql",
+    "action": "block",
+    "params": {
+        "server": "mysql",
+        "query": "SELECT * FROM users WHERE id = 1 and 1=2 union select 0x41424344#"
+    },
+    "context": {
+        "parameter": {}
+    },
+    "description": "sqli with hex number"
+},
+{
+    "id": "sqli_policy_func",
+    "name": "sql",
+    "action": "block",
+    "params": {
+        "server": "mysql",
+        "query": "SELECT * FROM users WHERE id = sleep(3)"
+    },
+    "context": {
+        "parameter": {}
+    },
+    "description": "sqli with delay function"
+},
+{
+    "id": "sqli_policy_information_schema",
+    "name": "sql",
+    "action": "block",
+    "params": {
+        "server": "mysql",
+        "query": "select * from information_schema.tables"
+    },
+    "context": {
+        "parameter": {}
+    },
+    "description": "sqli with schema detective"
+}]

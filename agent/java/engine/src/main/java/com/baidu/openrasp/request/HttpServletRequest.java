@@ -16,12 +16,11 @@
 
 package com.baidu.openrasp.request;
 
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -171,13 +170,15 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Map<String, String[]> getParameterMap() {
+        Map<String, String[]> normalMap = new HashMap<String, String[]>();
         if (!canGetParameter) {
             if (!setCharacterEncodingFromConfig()) {
-                return EMPTY_PARAM;
+                normalMap = EMPTY_PARAM;
             }
+        } else {
+            normalMap = (Map<String, String[]>) Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
         }
-        Object ret = Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
-        return ret != null ? (Map<String, String[]>) ret : EMPTY_PARAM;
+        return getMergeMap(normalMap,fileUploadCache);
     }
 
     /**
@@ -218,29 +219,7 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Map<String, String> getServerContext() {
-        Object servletContext = getServletContextObject();
-        String serverInfo = Reflection.invokeStringMethod(servletContext, "getServerInfo", EMPTY_CLASS);
-
-        Map<String, String> ret = new HashMap<String, String>();
-        // TODO more reliable
-        ret.put("server", extractType(serverInfo));
-        ret.put("version", extractNumber(serverInfo));
-        ret.put("os", getOs(System.getProperty("os.name")));
-        ret.put("language", "java");
-        return ret;
-    }
-
-    public static String getOs(String os) {
-        if (os == null) {
-            return null;
-        }
-        os = os.toLowerCase();
-        if (os.contains("linux")) return "Linux";
-        if (os.contains("windows")) return "Windows";
-        if (os.contains("mac")) return "Mac";
-        if (os.contains("sunos")) return "SunOS";
-        if (os.contains("freebsd")) return "FreeBSD";
-        return os;
+        return ApplicationModel.getApplicationInfo();
     }
 
     /**
@@ -261,42 +240,6 @@ public final class HttpServletRequest extends AbstractRequest {
     }
 
     /**
-     * 获取服务器版本号
-     *
-     * @param serverInfo 服务器信息
-     * @return 服务器版本号
-     */
-    public static String extractNumber(String serverInfo) {
-        if (serverInfo == null) {
-            return null;
-        }
-        Matcher m = PATTERN.matcher(serverInfo);
-        return m.find() ? m.group(0) : "";
-    }
-
-    /**
-     * 增加session条目
-     *
-     * @param key   键
-     * @param value 值
-     */
-    public void setSessionAttribute(String key, String value) {
-        Object session = getSessionObject();
-        Reflection.invokeMethod(session, "setAttribute", new Class[]{String.class, Object.class}, key, value);
-    }
-
-    /**
-     * 获取指定键对应session
-     *
-     * @param key 键
-     */
-    public Object getSessionAttribute(String key) {
-        Object session = getSessionObject();
-        Object value = Reflection.invokeMethod(session, "getAttribute", new Class[]{String.class}, key);
-        return value;
-    }
-
-    /**
      * (none-javadoc)
      *
      * @see AbstractRequest#getAppBasePath()
@@ -304,42 +247,47 @@ public final class HttpServletRequest extends AbstractRequest {
     @Override
     public String getAppBasePath() {
         try {
-            Object servletContext = getServletContextObject();
-            Object realPath = Reflection.invokeMethod(servletContext, "getRealPath", new Class[]{String.class}, "/");
-            if (realPath instanceof String) {
-                String separator = System.getProperty("file.separator");
-                String rp = (String) realPath;
-                if (rp.endsWith(separator)) {
-                    rp = rp.substring(0, rp.length() - 1);
-                }
-                int index = rp.lastIndexOf(separator);
-                return rp.substring(0, index);
-            } else {
-                return "";
-            }
+            String realPath = Reflection.invokeStringMethod(request, "getRealPath", new Class[]{String.class}, "/");
+            return realPath == null ? "" : realPath;
         } catch (Exception e) {
             e.printStackTrace();
             return "";
         }
     }
 
-    //--------------------------------私有方法-------------------------------------
-
-    /**
-     * 反射获取session object
-     *
-     * @return
-     */
-    private Object getSessionObject() {
-        return Reflection.invokeMethod(request, "getSession", new Class[]{boolean.class}, true);
+    @Override
+    public String getClinetIp() {
+        String clientIp = Config.getConfig().getClientIp();
+        String realIp = getHeader(clientIp);
+        return realIp != null ? realIp : "";
     }
 
-    /**
-     * 反射获取servletContext object
-     *
-     * @return
-     */
-    private Object getServletContextObject() {
-        return Reflection.invokeMethod(getSessionObject(), "getServletContext", EMPTY_CLASS);
+    private Map<String, String[]> getMergeMap(Map<String, String[]> map1, Map<String, String[]> map2) {
+        Map<String, String[]> result = new HashMap<String, String[]>();
+        if (!map1.isEmpty()) {
+            mergeMap(map1, result);
+        }
+        if (!map2.isEmpty()) {
+            mergeMap(map2, result);
+        }
+        return result;
+    }
+
+    private void mergeMap(Map<String, String[]> src, Map<String, String[]> dst) {
+        for (Map.Entry<String, String[]> entry : src.entrySet()) {
+            if (dst.containsKey(entry.getKey())) {
+                dst.put(entry.getKey(), mergeArray(dst.get(entry.getKey()), entry.getValue()));
+            } else {
+                dst.put(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+    private String[] mergeArray(String[] s1, String[] s2) {
+        int str1Length = s1.length;
+        int str2length = s2.length;
+        s1 = Arrays.copyOf(s1, str1Length + str2length);
+        System.arraycopy(s2, 0, s1, str1Length, str2length);
+        return s1;
     }
 }

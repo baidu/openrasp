@@ -8,7 +8,7 @@ local file which need expand_path
 $plugin = <<<EOF
 plugin.register('readFile', params => {
     assert(params.path == '/aaa/bbb/../../../tmp/openrasp/tmpfile')
-    assert(params.realpath == '/tmp/openrasp/tmpfile')
+    assert(params.realpath.endsWith('/tmp/openrasp/tmpfile'))
     return block
 })
 EOF;

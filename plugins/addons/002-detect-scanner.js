@@ -35,8 +35,8 @@ plugin.register('request', function(params, context) {
   // 扫描器识别 DEMO //    
   if (foundScanner) {
     return {
-      action: 'block',
-      message: '已知的扫描器探测行为: ' + scannerUA[i],
+      action:     'block',
+      message:    '已知的扫描器探测行为，UA 特征为: ' + scannerUA[i],
       confidence: 90
     }
   }

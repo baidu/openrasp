@@ -20,9 +20,9 @@ HOOK_FUNCTION(pg_connect, dbConnection);
 HOOK_FUNCTION(pg_pconnect, dbConnection);
 PRE_HOOK_FUNCTION(pg_query, sql);
 PRE_HOOK_FUNCTION(pg_send_query, sql);
-PRE_HOOK_FUNCTION(pg_prepare, sqlPrepare);
-POST_HOOK_FUNCTION(pg_query, sqlSlowQuery);
-POST_HOOK_FUNCTION(pg_get_result, sqlSlowQuery);
+PRE_HOOK_FUNCTION(pg_prepare, sqlPrepared);
+// POST_HOOK_FUNCTION(pg_query, sqlSlowQuery);
+// POST_HOOK_FUNCTION(pg_get_result, sqlSlowQuery);
 
 void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p)
 {
@@ -269,7 +269,7 @@ void post_global_pg_get_result_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETER
     }
 }
 
-void pre_global_pg_prepare_sqlPrepare(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pg_prepare_sqlPrepared(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *pgsql_link = NULL;
 	char *query, *stmtname;

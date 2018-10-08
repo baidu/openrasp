@@ -25,9 +25,9 @@ extern "C" {
 HOOK_FUNCTION_EX(__construct, pdo, dbConnection);
 PRE_HOOK_FUNCTION_EX(query, pdo, sql);
 PRE_HOOK_FUNCTION_EX(exec, pdo, sql);
-PRE_HOOK_FUNCTION_EX(prepare, pdo, sqlPrepare);
-POST_HOOK_FUNCTION_EX(query, pdo, sqlSlowQuery);
-POST_HOOK_FUNCTION_EX(exec, pdo, sqlSlowQuery);
+PRE_HOOK_FUNCTION_EX(prepare, pdo, sqlPrepared);
+// POST_HOOK_FUNCTION_EX(query, pdo, sqlSlowQuery);
+// POST_HOOK_FUNCTION_EX(exec, pdo, sqlSlowQuery);
 
 extern void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p);
 
@@ -217,7 +217,7 @@ void post_pdo___construct_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void pre_pdo_prepare_sqlPrepare(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_pdo_prepare_sqlPrepared(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pdo_dbh_t *dbh = Z_PDO_DBH_P(getThis());
 	char *statement;

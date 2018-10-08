@@ -19,6 +19,7 @@ package com.baidu.openrasp;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.exception.SecurityException;
 import com.baidu.openrasp.hook.XXEHook;
+import com.baidu.openrasp.request.DubboRequest;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
@@ -27,9 +28,7 @@ import com.baidu.openrasp.request.HttpServletRequest;
 import com.baidu.openrasp.response.HttpServletResponse;
 import org.apache.log4j.Logger;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -66,6 +65,7 @@ public class HookHandler {
             return null;
         }
     };
+
     public static ThreadLocal<HttpServletResponse> responseCache = new ThreadLocal<HttpServletResponse>() {
         @Override
         protected HttpServletResponse initialValue() {
@@ -73,6 +73,12 @@ public class HookHandler {
         }
     };
 
+    public static ThreadLocal<Boolean> enableXssHook = new ThreadLocal<Boolean>() {
+        @Override
+        protected Boolean initialValue() {
+            return true;
+        }
+    };
     private static final Map<String, Object> EMPTY_MAP = new HashMap<String, Object>();
 
     /**
@@ -91,6 +97,27 @@ public class HookHandler {
 
     public static boolean isEnableCurrThreadHook() {
         return enableCurrThreadHook.get();
+    }
+
+    /**
+     * 用于关闭xss的hook点
+     */
+    public static void disableXssHook() {
+        enableXssHook.set(false);
+    }
+
+    /**
+     * 用于开启xss的hook点
+     */
+    public static void enableXssHook() {
+        enableXssHook.set(true);
+    }
+
+    /**
+     * 用于判断xss的hook点状态
+     */
+    public static boolean isEnableXssHook() {
+        return enableXssHook.get();
     }
 
     /**
@@ -145,10 +172,34 @@ public class HookHandler {
     }
 
     /**
+     * 请求进入Dubbo的hook点
+     *
+     * @param request 请求实体
+     */
+    public static void checkDubboRequest(Object request) {
+        if (request != null && !enableCurrThreadHook.get()) {
+            enableCurrThreadHook.set(true);
+            DubboRequest requestContainer = new DubboRequest(request);
+            requestCache.set(requestContainer);
+            XXEHook.resetLocalExpandedSystemIds();
+            doCheck(CheckParameter.Type.DUBBOREQUEST, JSContext.getUndefinedValue());
+        }
+    }
+
+    /**
      * 请求结束hook点
      * 请求结束后不可以在进入任何hook点
      */
     public static void onServiceExit() {
+        enableCurrThreadHook.set(false);
+        requestCache.set(null);
+    }
+
+    /**
+     * 请求结束dubbo hook点
+     * 请求结束后不可以在进入任何hook点
+     */
+    public static void onDubboExit() {
         enableCurrThreadHook.set(false);
         requestCache.set(null);
     }
@@ -162,6 +213,15 @@ public class HookHandler {
      */
     public static void checkFilterRequest(Object filter, Object request, Object response) {
         checkRequest(filter, request, response);
+    }
+
+    /**
+     * 在过滤器中进入dubbo的hook点
+     *
+     * @param request 请求实体
+     */
+    public static void checkDubboFilterRequest(Object request) {
+        checkDubboRequest(request);
     }
 
     public static void onInputStreamRead(int ret, Object inputStream) {

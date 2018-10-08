@@ -142,7 +142,7 @@ void pre_global_file_put_contents_webshell_file_put_contents(OPENRASP_INTERNAL_F
             add_assoc_str(&attack_params, "realpath", real_path);
             zval plugin_message;
             ZVAL_STRING(&plugin_message, _("Webshell detected - File dropper backdoor"));
-            openrasp_buildin_php_risk_handle(1, "webshell_file_put_contents", 100, &attack_params, &plugin_message);
+            openrasp_buildin_php_risk_handle(1, check_type, 100, &attack_params, &plugin_message);
         }
     }
 }
@@ -270,10 +270,57 @@ void pre_global_rename_rename(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
 
     zend_string *source_real_path = openrasp_real_path(ZSTR_VAL(source), ZSTR_LEN(source), false, RENAMESRC);
-    if (source_real_path)
+    zend_string *dest_real_path = openrasp_real_path(ZSTR_VAL(dest), ZSTR_LEN(dest), false, RENAMEDEST);
+    if (source_real_path && dest_real_path)
     {
-        zend_string *dest_real_path = openrasp_real_path(ZSTR_VAL(dest), ZSTR_LEN(dest), false, RENAMEDEST);
-        if (dest_real_path)
+        bool skip = false;
+        const char *src_scheme = fetch_url_scheme(ZSTR_VAL(source_real_path));
+        const char *tgt_scheme = fetch_url_scheme(ZSTR_VAL(dest_real_path));
+        if (src_scheme && tgt_scheme)
+        {
+            if (strcmp(src_scheme, tgt_scheme) != 0)
+            {
+                skip = true;
+            }
+        }
+        else if (!src_scheme && !tgt_scheme)
+        {
+            struct stat src_sb;
+            if (VCWD_STAT(ZSTR_VAL(source_real_path), &src_sb) == 0 && (src_sb.st_mode & S_IFDIR) != 0)
+            {
+                skip = true;
+            }
+            else
+            {
+                struct stat tgt_sb;
+                if (VCWD_STAT(ZSTR_VAL(dest_real_path), &tgt_sb) == 0)
+                {
+                    if ((tgt_sb.st_mode & S_IFDIR) != 0)
+                    {
+                        skip = true;
+                    }
+                }
+                else
+                {
+                    char *p = strrchr(ZSTR_VAL(dest_real_path), DEFAULT_SLASH);
+                    if (p == ZSTR_VAL(dest_real_path) + ZSTR_LEN(dest_real_path) - 1)
+                    {
+                        skip = true;
+                    }
+                }
+            }
+        }
+        else
+        {
+            skip = true;
+        }
+
+        if (skip)
+        {
+            zend_string_release(source_real_path);
+            zend_string_release(dest_real_path);
+        }
+        else
         {
             zval params;
             array_init(&params);
@@ -281,9 +328,14 @@ void pre_global_rename_rename(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             add_assoc_str(&params, "dest", dest_real_path);
             check(check_type, &params);
         }
-        else
-        {
-            zend_string_release(source_real_path);
-        }
+        return;
+    }
+    if (source_real_path)
+    {
+        zend_string_release(source_real_path);
+    }
+    if (dest_real_path)
+    {
+        zend_string_release(dest_real_path);
     }
 }

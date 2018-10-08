@@ -130,7 +130,7 @@ void pre_global_file_put_contents_webshell_file_put_contents(OPENRASP_INTERNAL_F
             zval *plugin_message = NULL;
             MAKE_STD_ZVAL(plugin_message);
             ZVAL_STRING(plugin_message, _("WebShell activity - Detected file dropper backdoor"), 1);
-            openrasp_buildin_php_risk_handle(1, "webshell_file_put_contents", 100, attack_params, plugin_message TSRMLS_CC);
+            openrasp_buildin_php_risk_handle(1, check_type, 100, attack_params, plugin_message TSRMLS_CC);
         }
     }
 }
@@ -272,25 +272,79 @@ void pre_global_rename_rename(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         return;
     }
 
-    if (source && target && strlen(source) == source_len && strlen(target) == target_len)
+    if (nullptr == source || nullptr == target || strlen(source) != source_len || strlen(target) != target_len)
     {
-        char *source_real_path = openrasp_real_path(source, source_len, false, RENAMESRC TSRMLS_CC);
-        if (source_real_path)
+        return;
+    }
+
+    char *source_real_path = openrasp_real_path(source, source_len, false, RENAMESRC TSRMLS_CC);
+    char *target_real_path = openrasp_real_path(target, target_len, false, RENAMEDEST TSRMLS_CC);
+    if (source_real_path && target_real_path)
+    {
+        bool skip = false;
+        const char *src_scheme = fetch_url_scheme(source_real_path);
+        const char *tgt_scheme = fetch_url_scheme(target_real_path);
+        if (src_scheme && tgt_scheme)
         {
-            char *target_real_path = openrasp_real_path(target, target_len, false, RENAMEDEST TSRMLS_CC);
-            if (target_real_path)
+            if (strcmp(src_scheme, tgt_scheme) != 0)
             {
-                zval *params;
-                MAKE_STD_ZVAL(params);
-                array_init(params);
-                add_assoc_string(params, "source", source_real_path, 0);
-                add_assoc_string(params, "dest", target_real_path, 0);
-                check("rename", params TSRMLS_CC);
+                skip = true;
+            }
+        }
+        else if (!src_scheme && !tgt_scheme)
+        {
+            struct stat src_sb;
+            if (VCWD_STAT(source_real_path, &src_sb) == 0 && (src_sb.st_mode & S_IFDIR) != 0)
+            {
+                skip = true;
             }
             else
             {
-                efree(source_real_path);
+                struct stat tgt_sb;
+                if (VCWD_STAT(target_real_path, &tgt_sb) == 0)
+                {
+                    if ((tgt_sb.st_mode & S_IFDIR) != 0)
+                    {
+                        skip = true;
+                    }
+                }
+                else
+                {
+                    char *p = strrchr(target_real_path, DEFAULT_SLASH);
+                    if (p == target_real_path + strlen(target_real_path) - 1)
+                    {
+                        skip = true;
+                    }
+                }
             }
         }
+        else
+        {
+            skip = true;
+        }
+
+        if (skip)
+        {
+            efree(source_real_path);
+            efree(target_real_path);
+        }
+        else
+        {
+            zval *params;
+            MAKE_STD_ZVAL(params);
+            array_init(params);
+            add_assoc_string(params, "source", source_real_path, 0);
+            add_assoc_string(params, "dest", target_real_path, 0);
+            check("rename", params TSRMLS_CC);
+        }
+        return;
+    }
+    if (source_real_path)
+    {
+        efree(source_real_path);
+    }
+    if (target_real_path)
+    {
+        efree(target_real_path);
     }
 }

@@ -4,8 +4,8 @@ hook file_get_contents
 <?php
 $plugin = <<<EOF
 plugin.register('readFile', params => {
-    assert(params.path == '/tmp/openrasp/tmpfile')
-    assert(params.realpath == '/tmp/openrasp/tmpfile')
+    assert(params.path.endsWith('/tmp/openrasp/tmpfile'))
+    assert(params.realpath.endsWith('/tmp/openrasp/tmpfile'))
     return block
 })
 EOF;

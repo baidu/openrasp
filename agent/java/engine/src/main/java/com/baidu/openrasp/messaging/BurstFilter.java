@@ -57,20 +57,16 @@ public class BurstFilter extends Filter {
 
     static class TokenBucket {
 
-        private long refillAmount;
         private long refillInterval;
         private long capacity;
         private long currentTokenAmount;
         private long lastConsumedTime;
 
         /**
-         *
-         * @param refillAmount
          * @param refillInterval
          * @param capacity
          */
-        public TokenBucket(long refillAmount, long refillInterval, long capacity) {
-            this.refillAmount = refillAmount;
+        public TokenBucket(long refillInterval, long capacity) {
             this.refillInterval = refillInterval;
             this.capacity = capacity;
             this.currentTokenAmount = capacity;
@@ -99,26 +95,22 @@ public class BurstFilter extends Filter {
          */
         private void refill() {
             long currentTime = System.currentTimeMillis();
-            long elapsedTimeFromLastConsumed = (long) ((currentTime / 1000) - (lastConsumedTime / 1000));
+            long elapsedTimeFromLastConsumed = (currentTime - lastConsumedTime) / 1000;
 
             if (elapsedTimeFromLastConsumed >= refillInterval) {
-                long refillTokenAmount = (elapsedTimeFromLastConsumed / refillInterval)
-                        * refillAmount;
-                currentTokenAmount = currentTokenAmount + refillTokenAmount > capacity ? capacity :
-                        currentTokenAmount + refillTokenAmount;
+                currentTokenAmount = capacity;
             }
         }
     }
 
     /**
-     *
      * @param event 需进行裁决的loggingEvent
      * @return 裁决结果
      */
+    @Override
     public int decide(LoggingEvent event) {
         if (tokenBucket == null) {
-            tokenBucket = new TokenBucket(refillAmount, refillInterval,
-                    maxBurst);
+            tokenBucket = new TokenBucket(refillInterval, maxBurst);
         }
 
         return tokenBucket.consume() ? Filter.DENY : Filter.NEUTRAL;

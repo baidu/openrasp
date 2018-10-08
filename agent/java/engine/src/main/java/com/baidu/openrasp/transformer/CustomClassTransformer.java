@@ -18,18 +18,8 @@ package com.baidu.openrasp.transformer;
 
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.*;
-import com.baidu.openrasp.hook.file.*;
-import com.baidu.openrasp.hook.server.catalina.*;
-import com.baidu.openrasp.hook.server.jetty.*;
-import com.baidu.openrasp.hook.server.resin.*;
-import com.baidu.openrasp.hook.server.websphere.*;
-import com.baidu.openrasp.hook.sql.SQLDriverManagerHook;
-import com.baidu.openrasp.hook.sql.SQLPreparedStatementHook;
-import com.baidu.openrasp.hook.sql.SQLResultSetHook;
-import com.baidu.openrasp.hook.sql.SQLStatementHook;
-import com.baidu.openrasp.hook.ssrf.CommonHttpClientHook;
-import com.baidu.openrasp.hook.ssrf.HttpClientHook;
-import com.baidu.openrasp.hook.ssrf.URLConnectionHook;
+import com.baidu.openrasp.tool.annotation.AnnotationScanner;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
@@ -40,76 +30,55 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 自定义类字节码转换器，用于hook类德 方法
  */
 public class CustomClassTransformer implements ClassFileTransformer {
-    private static final Logger LOGGER = Logger.getLogger(CustomClassTransformer.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(CustomClassTransformer.class.getName());
+    private static final String SCAN_ANNOTATION_PACKAGE = "com.baidu.openrasp.hook";
+    private static ArrayList<String> list = new ArrayList<String>();
     private static HashMap<String, ClassLoader> classLoaderCache = new HashMap<String, ClassLoader>();
 
     private HashSet<AbstractClassHook> hooks;
 
-    public CustomClassTransformer() {
-        hooks = new HashSet<AbstractClassHook>();
-
-        addHook(new WebDAVCopyResourceHook());
-        addHook(new CatalinaInputBufferHook());
-        addHook(new DeserializationHook());
-        addHook(new DiskFileItemHook());
-        addHook(new FileHook());
-        addHook(new FileInputStreamHook());
-        addHook(new FileOutputStreamHook());
-        addHook(new OgnlHook());
-        addHook(new ProcessBuilderHook());
-        addHook(new SQLDriverManagerHook());
-        addHook(new SQLStatementHook());
-        addHook(new SQLResultSetHook());
-        addHook(new WeblogicJspBaseHook());
-        addHook(new XXEHook());
-        addHook(new JspCompilationContextHook());
-        addHook(new TomcatStartupHook());
-        addHook(new ApplicationFilterHook());
-        addHook(new JettyServerHandleHook());
-        addHook(new JettyHttpInputHook());
-        addHook(new JettyServerHook());
-        addHook(new CoyoteAdapterHook());
-        addHook(new ProxyDirContextHook());
-        addHook(new JstlImportHook());
-        addHook(new URLConnectionHook());
-        addHook(new CommonHttpClientHook());
-        addHook(new HttpClientHook());
-        addHook(new CatalinaOutputBufferHook());
-        addHook(new JettyHttpOutputHook());
-        addHook(new CatalinaRequestHook());
-        addHook(new JettyRequestHook());
-        addHook(new ResinPreRequestHook());
-        addHook(new ResinRequestHook());
-        addHook(new ResinOutputCloseHook());
-        addHook(new ResinParseParamHook());
-        addHook(new ResinHttpInputHook());
-        addHook(new SQLPreparedStatementHook());
-        addHook(new FileRenameHook());
-        addHook(new WebsphereRequestHook());
-        addHook(new WebspherePreRequestHook());
-        addHook(new WebsphereParseParamHook());
-        addHook(new WebsphereHttpInputHook());
-        addHook(new WebphereHttpOutputHook());
-        addHook(new WebsphereStartupHook());
-        addHook(new WebsphereXssHook());
+    static {
+        list.add("org/apache/catalina/util/ServerInfo");
+        list.add("org/apache/commons/fileupload/servlet/ServletFileUpload");
     }
 
-    private void addHook(AbstractClassHook hook) {
+    public CustomClassTransformer() {
+        hooks = new HashSet<AbstractClassHook>();
+        addAnnotationHook();
+    }
+
+    private void addHook(AbstractClassHook hook, String className) {
         String[] ignore = Config.getConfig().getIgnoreHooks();
         for (String s : ignore) {
             if (hook.couldIgnore() && (s.equals("all") || s.equals(hook.getType()))) {
-                LOGGER.info("ignore hook type " + hook.getType());
+                LOGGER.info("ignore hook type " + hook.getType() + ", class " + className);
                 return;
             }
         }
         hooks.add(hook);
+    }
+
+    private void addAnnotationHook() {
+        Set<Class> classesSet = AnnotationScanner.getClassWithAnnotation(SCAN_ANNOTATION_PACKAGE, HookAnnotation.class);
+        for (Class clazz : classesSet) {
+            try {
+                Object object = clazz.newInstance();
+                if (object instanceof AbstractClassHook) {
+                    addHook((AbstractClassHook) object, clazz.getName());
+                }
+            } catch (Exception e) {
+                LOGGER.error("add hook failed", e);
+            }
+        }
     }
 
     /**
@@ -156,7 +125,8 @@ public class CustomClassTransformer implements ClassFileTransformer {
     }
 
     private static void handleClassLoader(ClassLoader loader, String className) {
-        if (className.equals("org/apache/catalina/util/ServerInfo")) {
+
+        if (list.contains(className)) {
             classLoaderCache.put(className.replace('/', '.'), loader);
         }
     }

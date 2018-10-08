@@ -102,6 +102,8 @@ public class AttackInfo extends EventInfo {
             info.put("request_id", request.getRequestId());
             // 攻击来源IP
             info.put("attack_source", request.getRemoteAddr());
+            // 攻击真实IP
+            info.put("client_ip",request.getClinetIp());
             // 被攻击目标域名
             info.put("target", request.getServerName());
             // 被攻击目标IP
@@ -121,6 +123,8 @@ public class AttackInfo extends EventInfo {
             }
             // 被攻击PATH
             info.put("path", request.getRequestURI());
+            //请求方法
+            info.put("request_method",request.getMethod().toLowerCase());
             // 用户代理
             info.put("user_agent", request.getHeader("User-Agent"));
             // 攻击的 Referrer 头

@@ -5,8 +5,8 @@ hook rename
 $dir = __DIR__;
 $plugin = <<<EOF
 plugin.register('rename', params => {
-    assert(params.source == '/tmp/non_exist_rename_source')
-    assert(params.dest == '/tmp/openrasp/tmpfile')
+    assert(params.source.endsWith('/tmp/non_exist_rename_source'))
+    assert(params.dest.endsWith('openrasp/tmpfile'))
     return block
 })
 EOF;

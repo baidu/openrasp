@@ -20,7 +20,7 @@ For more details visit: https://rasp.baidu.com/doc/install/software.html
 
 <?php
 if (PHP_VERSION_ID < 50300) {
-	echo sprintf("OpenRASP works on PHP 5.3 and onwards, version %s.%s is not supported\n", PHP_MAJOR_VERSION, PHP_MINOR_VERSION);
+	echo sprintf("Error: OpenRASP works on PHP 5.3 and onwards, version %s.%s is not supported\n", PHP_MAJOR_VERSION, PHP_MINOR_VERSION);
 	exit;
 }
 include_once(__DIR__ . DIRECTORY_SEPARATOR .'util.php');
@@ -64,7 +64,7 @@ $ini_content = <<<OPENRASP
 extension=$lib_filename
 openrasp.root_dir=$root_dir
 	
-;拦截攻击后，跳转到这个URL，并增加 request_id 参数
+;拦截攻击后，跳转到这个URL
 ;openrasp.block_url=https://rasp.baidu.com/blocked/
 
 ;拦截攻击后，将状态码设置为这个值
@@ -88,7 +88,7 @@ openrasp.root_dir=$root_dir
 ;每个进程/线程每秒钟最大日志条数
 ;openrasp.log_maxburst=1000
 	
-;当SQL查询结果行数大于或等于该值，则认为是慢查询
+;当SQL查询结果行数大于或等于该值，则认为是慢查询 - 在v0.42里删除
 ;openrasp.slowquery_min_rows=500
 
 ;报警是否开启 syslog
@@ -161,7 +161,7 @@ if (array_key_exists("d", $options) && !empty($options["d"])) {
 	log_tips(ERROR, "Bad command line arguments. Please use \"-h\" to check help messages.");
 }
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 检察依赖扩展 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 检查依赖扩展 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 major_tips('Check whether required PHP extensions are installed');
 $dep_exts = array('json', 'PDO');
 if (!check_dep_exts_installed($dep_exts)) {

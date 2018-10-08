@@ -27,14 +27,14 @@ HOOK_FUNCTION(mysqli_connect, dbConnection);
 HOOK_FUNCTION(mysqli_real_connect, dbConnection);
 PRE_HOOK_FUNCTION(mysqli_query, sql);
 PRE_HOOK_FUNCTION(mysqli_real_query, sql);
-PRE_HOOK_FUNCTION(mysqli_prepare, sqlPrepare);
-POST_HOOK_FUNCTION(mysqli_query, sqlSlowQuery);
+PRE_HOOK_FUNCTION(mysqli_prepare, sqlPrepared);
+// POST_HOOK_FUNCTION(mysqli_query, sqlSlowQuery);
 
 HOOK_FUNCTION_EX(__construct, mysqli, dbConnection);
 HOOK_FUNCTION_EX(real_connect, mysqli, dbConnection);
 PRE_HOOK_FUNCTION_EX(query, mysqli, sql);
-POST_HOOK_FUNCTION_EX(query, mysqli, sqlSlowQuery);
-PRE_HOOK_FUNCTION_EX(prepare, mysqli, sqlPrepare);
+// POST_HOOK_FUNCTION_EX(query, mysqli, sqlSlowQuery);
+PRE_HOOK_FUNCTION_EX(prepare, mysqli, sqlPrepared);
 
 static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, zend_bool is_real_connect, zend_bool in_ctor)
 {
@@ -292,7 +292,7 @@ void pre_global_mysqli_real_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     sql_type_handler(query, query_len, "mysql");
 }
 
-void pre_global_mysqli_prepare_sqlPrepare(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_mysqli_prepare_sqlPrepared(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     char *query = NULL;
     size_t query_len;
@@ -306,7 +306,7 @@ void pre_global_mysqli_prepare_sqlPrepare(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     sql_type_handler(query, query_len, "mysql");
 }
 
-void pre_mysqli_prepare_sqlPrepare(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_mysqli_prepare_sqlPrepared(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     char *query = NULL;
     size_t query_len;

@@ -21,26 +21,30 @@ We also provide a few test cases that are corresponding to OWASP TOP 10 attacks,
 
 ### FAQ
 
-##### 1. List of supported web application servers
+#### 1. List of supported web application servers
 
-Only Java based web application servers are supported for now. The support of other web application servers will also be soon included in the coming releases.
+We've fully tested OpenRASP on the following application servers for Linux platforms:
 
-We've fully tested OpenRASP on the following application servers for Linux platforms.
+* Java
+  * Tomcat 6-8
+  * JBoss 4.X
+  * Jetty 7-9
+  * Resin 3-4
+  * SpringBoot 1-2
+* PHP
+  * 5.3-5.6, 7.0-7.2
 
-* Tomcat 6-8
-* JBoss 4.X
-* Jetty 7-9
-* PHP 5.3-5.6, 7.0-7.2
+The support of other web application servers will also be soon included in the coming releases.
 
-##### 2. Performance impact on application servers
+#### 2. Performance impact on application servers
 
 We ran multiple intense and long-lasting stress tests prior to release. Even in the worst-case scenario (where the hook point got continuously triggered) the server’s performance was only reduced by 1~4%
 
-##### 3. Integration with existing SIEM or SOC
+#### 3. Integration with existing SIEM or SOC
 
 OpenRASP logs alarms in JSON format, which can be easily picked up by LogStash, rsyslog or Flume.
 
-##### 4. How to develop a new plugin?
+#### 4. How to develop a new plugin?
 
 A plugin receives a callback when an event occurs. It then determines if the current behavior is malicious or not and blocks the associated request if necessary.
 

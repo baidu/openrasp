@@ -43,19 +43,23 @@ public class Config extends FileScanListener {
     public enum Item {
         PLUGIN_TIMEOUT_MILLIS("plugin.timeout.millis", "100"),
         HOOKS_IGNORE("hooks.ignore", ""),
-        BLOCK_URL("block.url", "https://rasp.baidu.com/blocked"),
-        READ_FILE_EXTENSION_REGEX("readfile.extension.regex", "^(gz|7z|xz|tar|rar|zip|sql|db)$"),
         INJECT_URL_PREFIX("inject.urlprefix", ""),
         REQUEST_PARAM_ENCODING("request.param_encoding", ""),
         BODY_MAX_BYTES("body.maxbytes", "4096"),
         LOG_MAX_STACK("log.maxstack", "20"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
         SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
+        PLUGIN_FILTER("plugin.filter", "true"),
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
         SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
         BLOCK_STATUS_CODE("block.status_code", "302"),
         DEBUG("debug.level", "0"),
-        ALGORITHM_CONFIG("algorithm.config", "{}", false);
+        ALGORITHM_CONFIG("algorithm.config", "{}", false),
+        CLIENT_IP_HEADER("clientip.header","ClientIP"),
+        BLOCK_REDIRECT_URL("block.redirect_url", "https://rasp.baidu.com/blocked/?request_id=%request_id%"),
+        BLOCK_JSON("block.content_json", "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"),
+        BLOCK_XML("block.content_xml", "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"),
+        BLOCK_HTML("block.content_html", "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>");
 
 
         Item(String key, String defaultValue) {
@@ -94,7 +98,6 @@ public class Config extends FileScanListener {
     private boolean enforcePolicy;
     private String[] reflectionMonitorMethod;
     private int logMaxStackSize;
-    private String readFileExtensionRegex;
     private String blockUrl;
     private String injectUrlPrefix;
     private String requestParamEncoding;
@@ -102,6 +105,12 @@ public class Config extends FileScanListener {
     private int blockStatusCode;
     private int debugLevel;
     private JsonObject algorithmConfig;
+    private String blockJson;
+    private String blockXml;
+    private String blockHtml;
+    private boolean pluginFilter;
+    private String clientIp;
+
 
     static {
         baseDirectory = FileUtil.getBaseDir();
@@ -427,7 +436,7 @@ public class Config extends FileScanListener {
      * @param blockUrl 拦截页面url
      */
     public synchronized void setBlockUrl(String blockUrl) {
-        this.blockUrl = StringUtils.isEmpty(blockUrl) ? Item.BLOCK_URL.defaultValue : blockUrl;
+        this.blockUrl = StringUtils.isEmpty(blockUrl) ? Item.BLOCK_REDIRECT_URL.defaultValue : blockUrl;
     }
 
     /**
@@ -490,24 +499,6 @@ public class Config extends FileScanListener {
      */
     public synchronized void setEnforcePolicy(String enforcePolicy) {
         this.enforcePolicy = Boolean.parseBoolean(enforcePolicy);
-    }
-
-    /**
-     * 获取读文件需要检测的扩展名正则表达式
-     *
-     * @return
-     */
-    public synchronized String getReadFileExtensionRegex() {
-        return readFileExtensionRegex;
-    }
-
-    /**
-     * 设置读文件需要检测的扩展名正则表达式
-     *
-     * @param readFileExtensionRegex
-     */
-    public synchronized void setReadFileExtensionRegex(String readFileExtensionRegex) {
-        this.readFileExtensionRegex = readFileExtensionRegex;
     }
 
     /**
@@ -605,7 +596,101 @@ public class Config extends FileScanListener {
         this.requestParamEncoding = requestParamEncoding;
     }
 
-    //--------------------------统一的配置处理------------------------------------
+
+    /**
+     * 获取响应的contentType类型
+     *
+     * @return 返回contentType类型
+     */
+    public synchronized String getBlockJson() {
+        return blockJson;
+    }
+
+    /**
+     * 设置响应的ContentType类型
+     *
+     * @param blockJson ContentType
+     */
+    public synchronized void setBlockJson(String blockJson) {
+        this.blockJson = blockJson;
+    }
+
+
+    /**
+     * 获取响应的contentType类型
+     *
+     * @return 返回contentType类型
+     */
+    public synchronized String getBlockXml() {
+        return blockXml;
+    }
+
+    /**
+     * 设置响应的ContentType类型
+     *
+     * @param blockXml ContentType类型
+     */
+    public synchronized void setBlockXml(String blockXml) {
+        this.blockXml = blockXml;
+    }
+
+
+    /**
+     * 获取响应的contentType类型
+     *
+     * @return 返回contentType类型
+     */
+    public synchronized String getBlockHtml() {
+        return blockHtml;
+    }
+
+    /**
+     * 设置响应的ContentType类型
+     *
+     * @param blockHtml ContentType
+     */
+    public synchronized void setBlockHtml(String blockHtml) {
+        this.blockHtml = blockHtml;
+    }
+
+    /**
+     * 获取对于文件的include/reaFile等hook点，当文件不存在时，
+     * 是否调用插件的开关状态
+     *
+     * @return 返回是否进入插件
+     */
+    public synchronized boolean getPluginFilter() {
+        return pluginFilter;
+    }
+
+    /**
+     * 设置对于文件的include/reaFile等hook点，当文件不存在时，
+     * 是否调用插件的开关状态
+     *
+     * @param pluginFilter 开关状态:on/off
+     */
+    public synchronized void setPluginFilter(String pluginFilter) {
+        this.pluginFilter = Boolean.parseBoolean(pluginFilter);
+    }
+
+    /**
+     * 获取自定义的请求头，
+     *
+     * @return 返回请求头
+     */
+    public synchronized String getClientIp() {
+        return clientIp;
+    }
+
+    /**
+     * 设置自定义的请求头，
+     *
+     * @param clientIp 待设置的请求头信息
+     */
+    public synchronized void setClientIp(String clientIp) {
+        this.clientIp = clientIp;
+    }
+//--------------------------统一的配置处理------------------------------------
 
     /**
      * 统一配置接口,通过 js 更改配置的入口
@@ -617,7 +702,7 @@ public class Config extends FileScanListener {
     public boolean setConfig(String key, String value, boolean isInit) {
         try {
             boolean isHit = true;
-            if (Item.BLOCK_URL.key.equals(key)) {
+            if (Item.BLOCK_REDIRECT_URL.key.equals(key)) {
                 setBlockUrl(value);
             } else if (Item.BODY_MAX_BYTES.key.equals(key)) {
                 setBodyMaxBytes(value);
@@ -631,8 +716,6 @@ public class Config extends FileScanListener {
                 setOgnlMinLength(value);
             } else if (Item.PLUGIN_TIMEOUT_MILLIS.key.equals(key)) {
                 setPluginTimeout(value);
-            } else if (Item.READ_FILE_EXTENSION_REGEX.key.equals(key)) {
-                setReadFileExtensionRegex(value);
             } else if (Item.REFLECTION_MAX_STACK.key.equals(key)) {
                 setPluginMaxStack(value);
             } else if (Item.SECURITY_ENFORCE_POLICY.key.equals((key))) {
@@ -647,7 +730,17 @@ public class Config extends FileScanListener {
                 setAlgorithmConfig(value);
             } else if (Item.REQUEST_PARAM_ENCODING.key.equals(key)) {
                 setRequestParamEncoding(value);
-            } else {
+            } else if (Item.BLOCK_JSON.key.equals(key)) {
+                setBlockJson(value);
+            } else if (Item.BLOCK_XML.key.equals(key)) {
+                setBlockXml(value);
+            } else if (Item.BLOCK_HTML.key.equals(key)) {
+                setBlockHtml(value);
+            } else if (Item.PLUGIN_FILTER.key.equals(key)){
+                setPluginFilter(value);
+            }else if (Item.CLIENT_IP_HEADER.key.equals(key)){
+                setClientIp(value);
+            }else {
                 isHit = false;
             }
             if (isHit) {

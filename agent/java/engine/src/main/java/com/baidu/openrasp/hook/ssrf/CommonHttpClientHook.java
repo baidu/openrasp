@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook.ssrf;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.Reflection;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -29,6 +30,7 @@ import java.io.IOException;
  *
  * commons-httpclinet 框架的 http 请求 hook 点
  */
+@HookAnnotation
 public class CommonHttpClientHook extends AbstractSSRFHook {
 
     /**
@@ -38,7 +40,7 @@ public class CommonHttpClientHook extends AbstractSSRFHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "org/apache/commons/httpclient/HttpClient".equals(className);
+        return "org/apache/commons/httpclient/URI".equals(className);
     }
 
     /**
@@ -49,28 +51,21 @@ public class CommonHttpClientHook extends AbstractSSRFHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(CommonHttpClientHook.class, "checkHttpConnection",
-                "$2", Object.class);
-        insertBefore(ctClass, "executeMethod",
-                "(Lorg/apache/commons/httpclient/HostConfiguration;" +
-                        "Lorg/apache/commons/httpclient/HttpMethod;" +
-                        "Lorg/apache/commons/httpclient/HttpState;)I", src);
+                "$0,$1", Object.class, String.class);
+        insertAfter(ctClass, "parseUriReference", "(Ljava/lang/String;Z)V", src);
     }
 
-    public static void checkHttpConnection(Object httpMethod) {
+    public static void checkHttpConnection(Object object, String url) {
         String host = null;
-        Object uri = null;
         try {
-            if (httpMethod != null) {
-                uri = Reflection.invokeMethod(httpMethod, "getURI", new Class[]{});
-                if (uri != null) {
-                    host = Reflection.invokeStringMethod(uri, "getHost", new Class[]{});
-                }
+            if (object != null) {
+                host = Reflection.invokeStringMethod(object, "getHost", new Class[]{});
             }
         } catch (Throwable t) {
             HookHandler.LOGGER.warn(t.getMessage());
         }
         if (host != null) {
-            checkHttpUrl(uri.toString(), host, "commons_httpclient");
+            checkHttpUrl(url, host, "commons_httpclient");
         }
     }
 }

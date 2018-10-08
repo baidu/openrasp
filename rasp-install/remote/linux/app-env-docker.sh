@@ -22,6 +22,8 @@ function InstallJava()
 	cd rasp-*
 	java -jar RaspInstall.jar -install "$path"
 	rm -rf rasp*
+
+	curl https://packages.baidu.com/app/openrasp/999-event-logger.js -o "$path/rasp/plugins/999-event-logger.js"
 }
 
 function InstallSpringBoot()
@@ -31,6 +33,8 @@ function InstallSpringBoot()
 
 	rm -rf /rasp
 	mv rasp-*/rasp /rasp
+
+	curl https://packages.baidu.com/app/openrasp/999-event-logger.js -o /rasp/plugins/999-event-logger.js
 }
 
 function InstallPHP()
@@ -40,6 +44,8 @@ function InstallPHP()
 	
 	php rasp-*/install.php -d /opt/rasp/
 	rm -rf rasp*
+
+	curl https://packages.baidu.com/app/openrasp/999-event-logger.js -o /opt/rasp/plugins/999-event-logger.js
 }
 
 if [[ -d /tomcat/ ]]; then

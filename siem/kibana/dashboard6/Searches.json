@@ -1,0 +1,27 @@
+[
+  {
+    "_id": "Tracking",
+    "_type": "search",
+    "_source": {
+      "title": "Tracking",
+      "description": "",
+      "hits": 0,
+      "columns": [
+        "server_ip",
+        "target",
+        "url",
+        "attack_type",
+        "intercept_state",
+        "plugin_name"
+      ],
+      "sort": [
+        "attack_time",
+        "desc"
+      ],
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"index\":\"rasp-*\",\"filter\":[],\"highlight\":{\"pre_tags\":[\"@kibana-highlighted-field@\"],\"post_tags\":[\"@/kibana-highlighted-field@\"],\"fields\":{\"*\":{}},\"require_field_match\":false,\"fragment_size\":2147483647},\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}}}"
+      }
+    }
+  }
+]
