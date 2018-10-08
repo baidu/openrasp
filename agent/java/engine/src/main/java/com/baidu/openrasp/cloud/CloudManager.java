@@ -23,51 +23,20 @@ import java.util.Map;
 public class CloudManager {
     public static final Logger LOGGER = Logger.getLogger(CloudManager.class.getPackage().getName() + ".log");
 
-    public static void init(String projectVersion) throws Exception {
+    public static void init() throws Exception {
         if (CloudUtils.checkCloudControlEnter()) {
+            Register.register();
             String content = new Gson().toJson(KeepAlive.GenerateParameters());
             String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
             GenericResponse response = new CloudHttp().request(url, content);
             if (response != null && response.getStatus() != null && response.getStatus() == 0) {
                 new KeepAlive();
-                register(projectVersion);
-                new StatisticsReport();
             } else {
-                System.out.println("[OpenRASP] Cloud Control Send KeepAlive Failed");
+                System.out.println("[OpenRASP] Cloud Control Send HeartBeat Failed");
                 throw new Exception();
             }
-
+            new StatisticsReport();
         }
-    }
-
-    private static void register(String projectVersion) throws Exception {
-
-        Map<String, Object> params = GenerateParameters(projectVersion);
-        String content = new Gson().toJson(params);
-        String url = CloudRequestUrl.CLOUD_REGISTER_URL;
-        GenericResponse response = new CloudHttp().request(url, content);
-        if (response != null) {
-            if (response.getStatus() != null && response.getStatus() == 0) {
-                System.out.println("[OpenRASP] Cloud Control Registered Successed");
-            } else {
-                System.out.println("[OpenRASP] Cloud Control Registered Failed");
-                throw new Exception();
-            }
-        }
-    }
-
-    private static Map<String, Object> GenerateParameters(String projectVersion) {
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("id", CloudCacheModel.getInstance().getRaspId());
-        params.put("version", projectVersion);
-        params.put("host_name", OSUtil.getHostName());
-        params.put("language", "java");
-        params.put("language_version", System.getProperty("java.version"));
-        params.put("server_type", ApplicationModel.getServerName());
-        params.put("server_version", ApplicationModel.getVersion());
-        String raspHome = new File(Config.getConfig().getBaseDirectory()).getParent();
-        params.put("rasp_home", raspHome);
-        return params;
     }
 
 }

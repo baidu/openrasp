@@ -4,6 +4,7 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
+import com.baidu.openrasp.config.Config;
 import com.google.gson.Gson;
 
 import java.util.HashMap;
@@ -17,7 +18,7 @@ import java.util.TreeMap;
  * @create: 2018/09/28 11:21
  */
 public class StatisticsReport {
-    private static final int STATISTICS_REPORT_INTERVAL = 3600 * 1000;
+    private static final int STATISTICS_REPORT_INTERVAL = 30 * 1000;
 
     public StatisticsReport() {
         new Thread(new StatisticsReportThread()).start();

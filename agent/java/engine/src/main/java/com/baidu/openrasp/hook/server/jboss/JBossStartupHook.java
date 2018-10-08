@@ -18,6 +18,7 @@ package com.baidu.openrasp.hook.server.jboss;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.hook.server.ServerStartupHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.policy.JBossJMXSecurityChecker;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
@@ -35,7 +36,7 @@ import java.io.IOException;
  * 　　* @date 2018/7/30 15:46
  */
 @HookAnnotation
-public class JBossStartupHook extends AbstractClassHook {
+public class JBossStartupHook extends ServerStartupHook {
 
 
     @Override
@@ -43,11 +44,6 @@ public class JBossStartupHook extends AbstractClassHook {
         return "org/jboss/system/server/ServerImpl".equals(className) ||
                 "org/jboss/bootstrap/AbstractServerImpl".equals(className) ||
                 "org/jboss/bootstrap/impl/base/server/AbstractServer".equals(className);
-    }
-
-    @Override
-    public String getType() {
-        return "JBossJMXConsole";
     }
 
     @Override
@@ -65,6 +61,7 @@ public class JBossStartupHook extends AbstractClassHook {
         try {
             String serverVersion = Reflection.invokeStringMethod(object, "getVersionNumber", new Class[]{});
             ApplicationModel.init("jboss", serverVersion);
+            sendRegister();
         } catch (Exception e) {
             JBossJMXSecurityChecker.LOGGER.error("handle jboss startup failed", e);
         }

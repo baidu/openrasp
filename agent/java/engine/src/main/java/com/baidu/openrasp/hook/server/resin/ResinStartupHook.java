@@ -53,6 +53,7 @@ public class ResinStartupHook extends ServerStartupHook {
             Class versionClass = classLoader.loadClass("com.caucho.Version");
             String version = (String) versionClass.getField("VERSION").get(null);
             ApplicationModel.init("resin", version);
+            sendRegister();
         } catch (Exception e) {
             HookHandler.LOGGER.warn("handle resin startup failed", e);
         }

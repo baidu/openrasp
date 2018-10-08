@@ -16,6 +16,8 @@
 
 package com.baidu.openrasp.hook.server;
 
+import com.baidu.openrasp.cloud.Register;
+import com.baidu.openrasp.cloud.Utils.CloudUtils;
 import com.baidu.openrasp.hook.AbstractClassHook;
 
 /**
@@ -30,4 +32,9 @@ public abstract class ServerStartupHook extends AbstractClassHook {
         return "server_start";
     }
 
+    protected static void sendRegister() throws Exception {
+        if (CloudUtils.checkCloudControlEnter()){
+            Register.register();
+        }
+    }
 }

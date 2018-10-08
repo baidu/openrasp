@@ -62,6 +62,7 @@ public class TomcatStartupHook extends ServerStartupHook {
                 String version = (String) Reflection.invokeStaticMethod(
                         "org.apache.catalina.util.ServerInfo", "getServerNumber", new Class[]{});
                 ApplicationModel.init("tomcat", version);
+                sendRegister();
             }
         } catch (Exception e) {
             HookHandler.LOGGER.warn("handle resin startup failed", e);
