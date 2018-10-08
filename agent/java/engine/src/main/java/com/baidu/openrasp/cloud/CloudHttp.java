@@ -45,7 +45,7 @@ public class CloudHttp {
             responseCode = httpUrlConnection.getResponseCode();
             in = httpUrlConnection.getInputStream();
             jsonString = CloudUtils.convertInputStreamToJsonString(in);
-        } catch (Exception e) {
+        } catch (IOException e) {
             return null;
         } finally {
             try {
@@ -55,7 +55,7 @@ public class CloudHttp {
                 if (in != null) {
                     in.close();
                 }
-            } catch (Exception e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }

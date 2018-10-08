@@ -40,7 +40,9 @@ public class StatisticsReport {
                     String content = new Gson().toJson(params);
                     String url = CloudRequestUrl.CLOUD_STATISTICS_REPORT_URL;
                     GenericResponse response = new CloudHttp().request(url, content);
-                    if (response != null) {
+                    if (response == null) {
+                        CloudCacheModel.reportCache.put(entry.getKey(), entry.getValue());
+                    } else {
                         Integer responseCode = response.getResponseCode();
                         if (responseCode != null && responseCode >= 200 && responseCode < 300) {
                             CloudCacheModel.reportCache.remove(entry.getKey());

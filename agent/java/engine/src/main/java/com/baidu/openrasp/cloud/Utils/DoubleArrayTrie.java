@@ -31,7 +31,7 @@ public class DoubleArrayTrie {
     private int error_;
 
 
-    private int resize(int newSize) {
+    private int reSize(int newSize) {
         int[] base2 = new int[newSize];
         int[] check2 = new int[newSize];
         boolean used2[] = new boolean[newSize];
@@ -100,14 +100,14 @@ public class DoubleArrayTrie {
         int first = 0;
 
         if (allocSize <= pos)
-            resize(pos + 1);
+            reSize(pos + 1);
 
         outer:
         while (true) {
             pos++;
 
             if (allocSize <= pos)
-                resize(pos + 1);
+                reSize(pos + 1);
 
             if (check[pos] != 0) {
                 nonzero_num++;
@@ -119,10 +119,9 @@ public class DoubleArrayTrie {
 
             begin = pos - siblings.get(0).code;
             if (allocSize <= (begin + siblings.get(siblings.size() - 1).code)) {
-                // progress can be zero
                 double l = (1.05 > 1.0 * keySize / (progress + 1)) ? 1.05 : 1.0
                         * keySize / (progress + 1);
-                resize((int) (allocSize * l));
+                reSize((int) (allocSize * l));
             }
 
             if (used[begin])
@@ -171,7 +170,6 @@ public class DoubleArrayTrie {
         used = null;
         size = 0;
         allocSize = 0;
-        // no_delete_ = false;
         error_ = 0;
     }
 
@@ -192,7 +190,7 @@ public class DoubleArrayTrie {
         value = _value;
         progress = 0;
 
-        resize(65536 * 32);
+        reSize(65536 * 32);
 
         base[0] = 1;
         nextCheckPos = 0;
