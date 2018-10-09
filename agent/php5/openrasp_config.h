@@ -31,20 +31,20 @@ class OpenraspConfig
 {
 public:
   // plugin
-  uint32_t plugin_timeout_ms = 100;
-  uint32_t plugin_maxstack = 100;
+  int64_t plugin_timeout_ms = 100;
+  int64_t plugin_maxstack = 100;
   bool plugin_filter = true;
   // log
   string syslog_server_address;
-  uint32_t syslog_facility;
+  int64_t syslog_facility;
   bool syslog_alarm_enable = false;
-  uint32_t syslog_connection_timeout = 50;
-  uint32_t syslog_read_timeout = 10;
-  uint32_t syslog_connection_retry_interval = 200;
-  uint32_t log_maxburst = 100;
-  uint32_t log_maxstack = 10;
-  uint32_t log_max_backup = 90;
-  uint32_t log_push_interval = 10;
+  int64_t syslog_connection_timeout = 50;
+  int64_t syslog_read_timeout = 10;
+  int64_t syslog_connection_retry_interval = 200;
+  int64_t log_maxburst = 100;
+  int64_t log_maxstack = 10;
+  int64_t log_max_backup = 90;
+  int64_t log_push_interval = 10;
   // blacklist whitelist
   vector<string> whitelist_command;
   vector<string> whitelist_directory;
@@ -56,16 +56,16 @@ public:
   vector<string> whitelist_include;
   vector<string> whitelist_sql;
   // block repsonse
-  uint32_t block_status_code = 302;
+  int64_t block_status_code = 302;
   string block_redirect_url;
   string block_content_json;
   string block_content_xml;
   string block_content_html;
   // others
   string clientip_header;
-  uint32_t body_maxbytes = 4 * 1024;
+  int64_t body_maxbytes = 4 * 1024;
   string inject_html_urlprefix;
-  uint32_t slowquery_min_rows = 500;
+  int64_t slowquery_min_rows = 500;
   bool enforce_policy = false;
 
 public:
@@ -135,8 +135,8 @@ private:
   FromType fromType;
   shared_ptr<rapidjson::Document> jsonObj;
   shared_ptr<cpptoml::table> tomlObj;
-  bool has_error = false;
-  string error_message;
+  bool has_error = true;
+  string error_message = "Uninitialized";
 
   template <typename T>
   T GetFromJson(const string &key, const T &default_value) const;
