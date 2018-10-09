@@ -18,7 +18,8 @@ import java.io.IOException;
 public class OkHttpHook extends AbstractSSRFHook{
     @Override
     public boolean isClassMatched(String className) {
-        return "okhttp3/HttpUrl".equals(className);
+        return "okhttp3/HttpUrl".equals(className)||
+                "com/squareup/okhttp/HttpUrl".equals(className);
     }
 
     @Override
