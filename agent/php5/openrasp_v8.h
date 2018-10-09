@@ -45,14 +45,9 @@ inline v8::Local<v8::String> NewV8String(v8::Isolate *isolate, const char *str, 
   return v8::String::NewFromUtf8(isolate, str, v8::NewStringType::kNormal, len).ToLocalChecked();
 }
 
-inline v8::Local<v8::String> NewV8String(v8::Isolate *isolate, std::string &&str)
+inline v8::Local<v8::String> NewV8String(v8::Isolate *isolate, const std::string &str)
 {
   return NewV8String(isolate, str.c_str(), str.length());
-}
-
-inline v8::Local<v8::String> NewV8String(v8::Isolate *isolate, std::string &str)
-{
-  return NewV8String(isolate, std::move(str));
 }
 
 #define V8STRING_EX(string, type, length) \
