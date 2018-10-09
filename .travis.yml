@@ -26,7 +26,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
-    - env: OPENRASP_LANG=php7 CC=gcc-4.8 CXX=g++-4.8 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
+    - env: OPENRASP_LANG=php7 CC=gcc-5 CXX=g++-5 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
       language: php
       php: 7.0
       addons:
@@ -34,7 +34,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-4.8
+            - g++-5
     - env: OPENRASP_LANG=php7 CC=gcc-6 CXX=g++-6 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
       language: php
       php: 7.1
