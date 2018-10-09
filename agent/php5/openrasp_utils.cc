@@ -51,6 +51,7 @@ extern "C"
 #include <sys/socket.h>
 #include <net/if.h>
 #include <netpacket/packet.h>
+#include <arpa/inet.h>
 #else
 #include <unistd.h>
 #include <sys/time.h>
@@ -256,7 +257,7 @@ void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugi
             {
                 if (file_filter(ent->d_name))
                 {
-                    plugins.push_back(use_abs_path ? (dir_abs + std::string(1, DEFAULT_SLASH) + std::string(ent->d_name)): std::string(ent->d_name));
+                    plugins.push_back(use_abs_path ? (dir_abs + std::string(1, DEFAULT_SLASH) + std::string(ent->d_name)) : std::string(ent->d_name));
                 }
             }
         }
@@ -421,44 +422,71 @@ void fetch_hw_addrs(std::vector<std::string> &hw_addrs)
 
 char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
 {
-	zval **origin_zv;
-	if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
-		Z_TYPE_PP(origin_zv) == IS_STRING)
-	{
-		return Z_STRVAL_PP(origin_zv);
-	}
-	return nullptr;
+    zval **origin_zv;
+    if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
+        Z_TYPE_PP(origin_zv) == IS_STRING)
+    {
+        return Z_STRVAL_PP(origin_zv);
+    }
+    return nullptr;
 }
 
 HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey)
 {
-	zval **origin_zv;
-	if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
-		Z_TYPE_PP(origin_zv) == IS_ARRAY)
-	{
-		return Z_ARRVAL_PP(origin_zv);
-	}
-	return nullptr;
+    zval **origin_zv;
+    if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
+        Z_TYPE_PP(origin_zv) == IS_ARRAY)
+    {
+        return Z_ARRVAL_PP(origin_zv);
+    }
+    return nullptr;
 }
 
 bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result)
 {
     zval **origin_zv;
-	if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
-		Z_TYPE_PP(origin_zv) == IS_LONG)
-	{
-		*result = Z_LVAL_PP(origin_zv);
+    if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
+        Z_TYPE_PP(origin_zv) == IS_LONG)
+    {
+        *result = Z_LVAL_PP(origin_zv);
         return true;
-	}
-	return false;
+    }
+    return false;
 }
 
 zval *fetch_outmost_zval_from_ht(HashTable *ht, const char *arKey)
 {
-	zval **origin_zv;
-	if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS)
-	{
-		return *origin_zv;
-	}
-	return nullptr;
+    zval **origin_zv;
+    if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS)
+    {
+        return *origin_zv;
+    }
+    return nullptr;
+}
+
+bool fetch_source_in_ip_packets(char *local_ip, size_t len)
+{
+    const char *dns_server = "180.76.76.76";//baidu DNS server
+    int dns_port = 53;
+    struct sockaddr_in serv;
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0)
+    {
+        return false;
+    }
+    memset(&serv, 0, sizeof(serv));
+    serv.sin_family = AF_INET;
+    serv.sin_addr.s_addr = inet_addr(dns_server);
+    serv.sin_port = htons(dns_port);
+    int err = connect(sock, (const struct sockaddr *)&serv, sizeof(serv));
+    struct sockaddr_in name;
+    socklen_t namelen = sizeof(name);
+    err = getsockname(sock, (struct sockaddr *)&name, &namelen);
+    const char *p = inet_ntop(AF_INET, &name.sin_addr, local_ip, len);
+    if (nullptr == p)
+    {
+        openrasp_error(E_WARNING, LOG_ERROR, _("inet_ntop error - error number : %d , error message : %s"), errno, strerror(errno));
+    }
+    close(sock);
+    return true;
 }

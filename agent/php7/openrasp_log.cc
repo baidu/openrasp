@@ -53,6 +53,7 @@ typedef struct keys_filter_t
 
 static std::map<std::string, std::string> _if_addr_map;
 static char host_name[255];
+static char local_ip[64];
 
 /* 获取当前毫秒时间
 */
@@ -208,6 +209,16 @@ static void build_complete_url(zval *items, zval *new_zv)
 
 static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_filter> &filters)
 {
+    int added_filter_count = 0;
+    if (openrasp_ini.clientip_header && strcmp(openrasp_ini.clientip_header, ""))
+    {
+        char* tmp_clientip_header = estrdup(openrasp_ini.clientip_header);
+        char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
+        const char* server_global_hey = ("HTTP_" + std::string(uch)).c_str();
+        filters.push_back({server_global_hey, "client_ip", nullptr});
+        added_filter_count += 1;
+        efree(tmp_clientip_header);
+    }
     zval *origin_zv;
     for (keys_filter filter:filters)
     {
@@ -265,6 +276,10 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
             add_assoc_string(dest, filter.new_key_str, "");
         }
     }
+    while(added_filter_count--)
+    {
+        filters.pop_back();
+    }
 }
 
 static std::vector<keys_filter> alarm_filters = 
@@ -311,6 +326,7 @@ static void init_alarm_request_info()
     add_assoc_string(&OPENRASP_LOG_G(alarm_request_info), "server_version", OPENRASP_PHP_VERSION);
     add_assoc_string(&OPENRASP_LOG_G(alarm_request_info), "request_id", OPENRASP_INJECT_G(request_id));
     add_assoc_str(&OPENRASP_LOG_G(alarm_request_info), "body", fetch_request_body(openrasp_ini.body_maxbytes));
+    add_assoc_string(&OPENRASP_LOG_G(alarm_request_info), "local_ip", (char*)(local_ip ? local_ip : ""));
 }
 
 static void init_policy_request_info()
@@ -324,6 +340,7 @@ static void init_policy_request_info()
     zval ifaddr;
     _get_ifaddr_zval(&ifaddr);
     add_assoc_zval(&OPENRASP_LOG_G(policy_request_info), "server_nic", &ifaddr);
+    add_assoc_string(&OPENRASP_LOG_G(policy_request_info), "local_ip", (char*)(local_ip ? local_ip : ""));
 }
 
 static void clear_alarm_request_info()
@@ -810,15 +827,8 @@ PHP_MINIT_FUNCTION(openrasp_log)
     {
         openrasp_shared_alloc_startup();
     }
-    if (openrasp_ini.clientip_header && strcmp(openrasp_ini.clientip_header, ""))
-    {
-        char* tmp_clientip_header = estrdup(openrasp_ini.clientip_header);
-        char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
-        const char* server_global_hey = ("HTTP_" + std::string(uch)).c_str();
-        alarm_filters.push_back({server_global_hey, "client_ip", nullptr});
-        efree(tmp_clientip_header);
-    }
     fetch_if_addrs(_if_addr_map);
+    fetch_source_in_ip_packets(local_ip, sizeof(local_ip));
     if (gethostname(host_name, sizeof(host_name) - 1)) { 
         sprintf( host_name, "UNKNOWN_HOST" );
         openrasp_error(E_WARNING, LOG_ERROR, _("gethostname() error: %s"), strerror(errno));
