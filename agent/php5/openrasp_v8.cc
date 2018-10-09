@@ -41,6 +41,7 @@ openrasp_v8_process_globals process_globals;
 static inline void load_plugins(TSRMLS_D);
 static inline bool init_platform(TSRMLS_D);
 static inline bool shutdown_platform(TSRMLS_D);
+static inline bool load_snapshot(TSRMLS_D);
 static inline bool init_snapshot(TSRMLS_D);
 static inline bool shutdown_snapshot(TSRMLS_D);
 static inline bool init_isolate(TSRMLS_D);
@@ -146,6 +147,25 @@ static inline bool shutdown_platform(TSRMLS_D)
         v8::V8::ShutdownPlatform();
         delete process_globals.v8_platform;
         process_globals.v8_platform = nullptr;
+    }
+    return true;
+}
+
+static inline bool load_snapshot(TSRMLS_D)
+{
+    if (process_globals.snapshot_blob.data == nullptr &&
+        process_globals.snapshot_blob.raw_size == 0)
+    {
+        std::ifstream file(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("snapshot.dat"));
+        std::streampos beg = file.tellg();
+        file.seekg(0, std::ios::end);
+        std::streampos end = file.tellg();
+        file.seekg(0, std::ios::beg);
+        size_t size = end - beg;
+        char *buffer = new char[size];
+        file.read(buffer, size);
+        process_globals.snapshot_blob.data = buffer;
+        process_globals.snapshot_blob.raw_size = size;
     }
     return true;
 }

@@ -239,7 +239,7 @@ intptr_t external_references[] = {
     0,
 };
 
-v8::StartupData get_snapshot(std::vector<openrasp_v8_js_src> &plugin_list TSRMLS_DC)
+v8::StartupData get_snapshot(const std::string &config, const std::vector<openrasp_v8_js_src> &plugin_list TSRMLS_DC)
 {
     v8::SnapshotCreator creator(external_references);
     v8::Isolate *isolate = creator.GetIsolate();
@@ -283,6 +283,13 @@ v8::StartupData get_snapshot(std::vector<openrasp_v8_js_src> &plugin_list TSRMLS
                 return v8::StartupData{nullptr, 0};
             }
         }
+        if (exec_script(isolate, context, config, "config.js").IsEmpty())
+        {
+            std::stringstream stream;
+            v8error_to_stream(isolate, try_catch, stream);
+            std::string error = stream.str();
+            plugin_info(error.c_str(), error.length() TSRMLS_CC);
+        }
         for (auto &plugin_src : plugin_list)
         {
             if (exec_script(isolate, context, "(function(){\n" + plugin_src.source + "\n})()", plugin_src.filename, -1).IsEmpty())
@@ -300,7 +307,7 @@ v8::StartupData get_snapshot(std::vector<openrasp_v8_js_src> &plugin_list TSRMLS
 
 v8::StartupData get_snapshot(TSRMLS_D)
 {
-    return get_snapshot(process_globals.plugin_src_list TSRMLS_CC);
+    return get_snapshot(process_globals.plugin_config, process_globals.plugin_src_list TSRMLS_CC);
 }
 
 void alarm_info(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result TSRMLS_DC)

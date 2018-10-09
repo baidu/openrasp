@@ -86,6 +86,7 @@ public:
   std::mutex mtx;
   bool is_initialized = false;
   v8::Platform *v8_platform = nullptr;
+  std::string plugin_config;
   std::vector<openrasp_v8_js_src> plugin_src_list;
   long plugin_update_timestamp = 0;
 };
@@ -102,7 +103,7 @@ v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC);
 v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset = 0);
 v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
                                       std::string _source, std::string _filename, int _line_offset = 0);
-v8::StartupData get_snapshot(std::vector<openrasp_v8_js_src> &plugin_list TSRMLS_DC);
+v8::StartupData get_snapshot(const std::string &config, const std::vector<openrasp_v8_js_src> &plugin_list TSRMLS_DC);
 v8::StartupData get_snapshot(TSRMLS_D);
 extern intptr_t external_references[];
 void alarm_info(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result TSRMLS_DC);
