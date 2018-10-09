@@ -346,7 +346,7 @@ void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)
             {
                 continue;
             }
-            if ((strcmp("lo", ifa->ifa_name) == 0) ||
+            if ((ifa->ifa_flags & (IFF_LOOPBACK)) ||
                 !(ifa->ifa_flags & (IFF_RUNNING)))
             {
                 continue;

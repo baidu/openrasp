@@ -132,12 +132,7 @@ if test "$PHP_OPENRASP" != "no"; then
         agent/openrasp_agent.cc \
         agent/openrasp_agent_manager.cc \
         agent/utils/digest.cc \
-        agent/utils/curl_helper.cc \
-        agent/safe_shutdown_manager.cc \
-        agent/shared_config_manager.cc \
-        agent/utils/ReadWriteLock.cc \
-        agent/utils/DoubleArrayTrie.cc \
-        agent/mm/shm_manager.cc"
+        agent/utils/curl_helper.cc"
         AC_DEFINE([HAVE_OPENRASP_REMOTE_MANAGER], [1], [Have openrasp remote manager support])
         ;;
     esac
@@ -475,6 +470,11 @@ int main() {
     openrasp_v8_utils.cc \
     openrasp_security_policy.cc \
     openrasp_ini.cc \
+    agent/safe_shutdown_manager.cc \
+    agent/shared_config_manager.cc \
+    agent/utils/ReadWriteLock.cc \
+    agent/utils/DoubleArrayTrie.cc \
+    agent/mm/shm_manager.cc \
     $OPENRASP_REMOTE_MANAGER_SOURCE \
     , $ext_shared)
   ifdef([PHP_ADD_EXTENSION_DEP],

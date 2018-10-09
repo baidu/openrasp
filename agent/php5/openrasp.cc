@@ -36,9 +36,9 @@ extern "C"
 #include <new>
 #include <set>
 #include "agent/shared_config_manager.h"
+#include "agent/safe_shutdown_manager.h"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"
-#include "agent/safe_shutdown_manager.h"
 #endif
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
@@ -146,11 +146,11 @@ PHP_MINIT_FUNCTION(openrasp)
     result = PHP_MINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
     openrasp::scm->startup();
-#ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (openrasp::ssdm)
     {
         openrasp::ssdm->startup();
     }
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (openrasp::oam)
     {
         openrasp::oam->startup();

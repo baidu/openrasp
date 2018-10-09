@@ -25,7 +25,11 @@
 #include <sys/prctl.h>
 #include <memory>
 
+#if defined(__linux__)
 #define AGENT_SET_PROC_NAME(name) prctl(PR_SET_NAME, (name), 0, 0, 0)
+#else
+#define AGENT_SET_PROC_NAME(name) 
+#endif
 #define HEARTBEAT_AGENT_PR_NAME "rasp-heartbeat"
 #define LOG_AGENT_PR_NAME "rasp-log"
 

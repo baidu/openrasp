@@ -117,12 +117,10 @@ bool SharedConfigManager::shutdown()
 {
     if (initialized)
     {
-#ifdef HAVE_OPENRASP_REMOTE_MANAGER
         if (ssdm != nullptr && !ssdm->is_master_current_process())
         {
             return true;
         }
-#endif
         if (rwlock != nullptr)
         {
             delete rwlock;
