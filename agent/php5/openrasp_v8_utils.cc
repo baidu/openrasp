@@ -243,12 +243,12 @@ v8::StartupData get_snapshot(std::vector<openrasp_v8_js_src> &plugin_list TSRMLS
 {
     v8::SnapshotCreator creator(external_references);
     v8::Isolate *isolate = creator.GetIsolate();
-#ifdef PHP_WIN32
+#define DEFAULT_STACK_SIZE_IN_KB 1024 
     uintptr_t current_stack = reinterpret_cast<uintptr_t>(&current_stack);
-    uintptr_t stack_limit = current_stack - 512 * 1024;
+    uintptr_t stack_limit = current_stack - (DEFAULT_STACK_SIZE_IN_KB * 1024 / sizeof(uintptr_t));
     stack_limit = stack_limit < current_stack ? stack_limit : sizeof(stack_limit);
     isolate->SetStackLimit(stack_limit);
-#endif
+#undef DEFAULT_STACK_SIZE_IN_KB
     {
         v8::HandleScope handle_scope(isolate);
         v8::Local<v8::Context> context = v8::Context::New(isolate);
