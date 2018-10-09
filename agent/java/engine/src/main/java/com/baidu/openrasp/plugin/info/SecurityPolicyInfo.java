@@ -16,6 +16,7 @@
 
 package com.baidu.openrasp.plugin.info;
 
+import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.request.HttpServletRequest;
 import com.baidu.openrasp.tool.OSUtil;
@@ -85,6 +86,8 @@ public class SecurityPolicyInfo extends EventInfo {
         info.put("server_hostname", OSUtil.getHostName());
         // 服务器ip
         info.put("server_nic", OSUtil.getIpAddress());
+        // 服务器主ip
+        info.put("local_ip", CloudCacheModel.getInstance().getMasterIp());
         // 服务器类型
         info.put("server_type", ApplicationModel.getServerName());
         // 服务器版本

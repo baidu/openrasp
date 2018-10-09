@@ -41,6 +41,8 @@ public class CloudManager {
 
     public static void init() throws Exception {
         if (CloudUtils.checkCloudControlEnter()) {
+            String cloudAddress = Config.getConfig().getCloudAddress();
+            CloudCacheModel.getInstance().setMasterIp(OSUtil.getMasterIp(cloudAddress));
             Register.register();
             String content = new Gson().toJson(KeepAlive.GenerateParameters());
             String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;

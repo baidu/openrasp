@@ -29,6 +29,7 @@ public class CloudCacheModel {
     public long configTime = 0;
     public String algorithmConfig;
     public String raspId;
+    public String masterIp = "";
     public static HashMap<Long,Long> reportCache = new HashMap<Long, Long>();
 
     private CloudCacheModel() {
@@ -76,6 +77,14 @@ public class CloudCacheModel {
 
     public void setAlgorithmConfig(String algorithmConfig) {
         this.algorithmConfig = algorithmConfig;
+    }
+
+    public String getMasterIp() {
+        return masterIp;
+    }
+
+    public void setMasterIp(String masterIp) {
+        this.masterIp = masterIp;
     }
 
     public static CloudCacheModel getInstance() {

@@ -20,10 +20,7 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.model.NicModel;
 
 import java.math.BigInteger;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
@@ -61,9 +58,9 @@ public class OSUtil {
                     Enumeration addresses = netInterface.getInetAddresses();
                     while (addresses.hasMoreElements()) {
                         ipAddress = (InetAddress) addresses.nextElement();
-                        if (ipAddress != null && ipAddress instanceof Inet4Address) {
+                        if (ipAddress != null && ipAddress instanceof Inet4Address && !ipAddress.isLoopbackAddress()) {
                             String ip = ipAddress.getHostAddress();
-                            if (!ip.equals("0.0.0.0") && !ip.equals("127.0.0.1")) {
+                            if (!ip.equals("0.0.0.0")) {
                                 ipList.add(new NicModel(netInterface.getName(), ipAddress.getHostAddress()));
                             }
                         }
@@ -142,6 +139,31 @@ public class OSUtil {
 
     public static boolean isMacOS() {
         return System.getProperty("os.name") != null && System.getProperty("os.name").toLowerCase().contains("mac os x");
+    }
+
+    public static String getMasterIp(String requestUrl) {
+        String ip = null;
+        try {
+            URL url = new URL(requestUrl);
+            Socket socket = new Socket();
+            socket.connect(new InetSocketAddress(url.getHost(), getPort(url)),2000);
+            ip = socket.getLocalAddress().getHostAddress();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ip != null ? ip : "";
+    }
+
+    private static int getPort(URL url) {
+        int port = url.getPort();
+        if (port < 0) {
+            if ("https".equals(url.getProtocol().toLowerCase())) {
+                port = 443;
+            } else {
+                port = 80;
+            }
+        }
+        return port;
     }
 
 }

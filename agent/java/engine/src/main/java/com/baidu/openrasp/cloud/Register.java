@@ -60,6 +60,7 @@ public class Register {
         params.put("server_version", ApplicationModel.getVersion());
         String raspHome = Config.getConfig().getBaseDirectory();
         params.put("rasp_home", raspHome);
+        params.put("primary_ip",CloudCacheModel.getInstance().getMasterIp());
         return params;
     }
 }

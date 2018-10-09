@@ -16,6 +16,7 @@
 
 package com.baidu.openrasp.plugin.info;
 
+import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.tool.OSUtil;
@@ -104,6 +105,8 @@ public class AttackInfo extends EventInfo {
             info.put("attack_source", request.getRemoteAddr());
             // 攻击真实IP
             info.put("client_ip",request.getClinetIp());
+            // 服务器主ip
+            info.put("local_ip", CloudCacheModel.getInstance().getMasterIp());
             // 被攻击目标域名
             info.put("target", request.getServerName());
             // 被攻击目标IP
