@@ -44,6 +44,7 @@ extern "C"
 #include <netdb.h>
 #include <sys/socket.h>
 #include <net/if.h>
+#include <arpa/inet.h>
 #else
 #include <unistd.h>
 #include <sys/time.h>
@@ -399,4 +400,31 @@ bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result)
         return true;
     }
     return false;
+}
+
+bool fetch_source_in_ip_packets(char *local_ip, size_t len)
+{
+    const char *dns_server = "180.76.76.76";//baidu DNS server
+    int dns_port = 53;
+    struct sockaddr_in serv;
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0)
+    {
+        return false;
+    }
+    memset(&serv, 0, sizeof(serv));
+    serv.sin_family = AF_INET;
+    serv.sin_addr.s_addr = inet_addr(dns_server);
+    serv.sin_port = htons(dns_port);
+    int err = connect(sock, (const struct sockaddr *)&serv, sizeof(serv));
+    struct sockaddr_in name;
+    socklen_t namelen = sizeof(name);
+    err = getsockname(sock, (struct sockaddr *)&name, &namelen);
+    const char *p = inet_ntop(AF_INET, &name.sin_addr, local_ip, len);
+    if (nullptr == p)
+    {
+        openrasp_error(E_WARNING, LOG_ERROR, _("inet_ntop error - error number : %d , error message : %s"), errno, strerror(errno));
+    }
+    close(sock);
+    return true;
 }
