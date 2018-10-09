@@ -21,8 +21,8 @@ HOOK_FUNCTION(pg_pconnect, dbConnection);
 PRE_HOOK_FUNCTION(pg_query, sql);
 PRE_HOOK_FUNCTION(pg_send_query, sql);
 PRE_HOOK_FUNCTION(pg_prepare, sqlPrepared);
-POST_HOOK_FUNCTION(pg_query, sqlSlowQuery);
-POST_HOOK_FUNCTION(pg_get_result, sqlSlowQuery);
+// POST_HOOK_FUNCTION(pg_query, sqlSlowQuery);
+// POST_HOOK_FUNCTION(pg_get_result, sqlSlowQuery);
 
 void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p)
 {

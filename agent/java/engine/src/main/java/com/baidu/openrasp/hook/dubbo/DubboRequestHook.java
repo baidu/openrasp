@@ -67,7 +67,7 @@ public class DubboRequestHook extends AbstractClassHook {
                 if (parameterTypes[i].isPrimitive() || isWrapClass(parameterTypes[i]) || args[i] instanceof String) {
                     String[] strings = new String[1];
                     strings[0] = String.valueOf(args[i]);
-                    map.put(String.valueOf(i), strings);
+                    map.put("dubbo-"+i, strings);
                 }
 
             }
@@ -81,9 +81,7 @@ public class DubboRequestHook extends AbstractClassHook {
         try {
             return ((Class) clazz.getField("TYPE").get(null)).isPrimitive();
         } catch (Exception e) {
-
-            e.printStackTrace();
+            return false;
         }
-        return false;
     }
 }

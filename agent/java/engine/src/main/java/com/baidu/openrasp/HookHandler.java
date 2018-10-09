@@ -20,8 +20,7 @@ import com.baidu.openrasp.cloud.model.HookWhiteModel;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.exception.SecurityException;
 import com.baidu.openrasp.hook.XXEHook;
-import com.baidu.openrasp.hook.dubbo.AbstractDubboRequest;
-import com.baidu.openrasp.hook.dubbo.DubboRequest;
+import com.baidu.openrasp.request.DubboRequest;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
@@ -70,12 +69,6 @@ public class HookHandler {
         }
     };
 
-    public static ThreadLocal<AbstractDubboRequest> dubboRequestCache = new ThreadLocal<AbstractDubboRequest>() {
-        @Override
-        protected AbstractDubboRequest initialValue() {
-            return null;
-        }
-    };
     public static ThreadLocal<HttpServletResponse> responseCache = new ThreadLocal<HttpServletResponse>() {
         @Override
         protected HttpServletResponse initialValue() {
@@ -187,12 +180,10 @@ public class HookHandler {
      * @param request 请求实体
      */
     public static void checkDubboRequest(Object request) {
-
-
         if (request != null && !enableCurrThreadHook.get()) {
             enableCurrThreadHook.set(true);
             DubboRequest requestContainer = new DubboRequest(request);
-            dubboRequestCache.set(requestContainer);
+            requestCache.set(requestContainer);
             XXEHook.resetLocalExpandedSystemIds();
             doCheck(CheckParameter.Type.DUBBOREQUEST, JSContext.getUndefinedValue());
         }
@@ -213,7 +204,7 @@ public class HookHandler {
      */
     public static void onDubboExit() {
         enableCurrThreadHook.set(false);
-        dubboRequestCache.set(null);
+        requestCache.set(null);
     }
 
     /**

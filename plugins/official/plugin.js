@@ -1,4 +1,4 @@
-const version = '2018-0910-1900'
+const version = '2018-0927-1600'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -207,9 +207,9 @@ var algorithmConfig = {
     directory_unwanted: {
         action: 'block'
     },
-    // 文件管理器 - 列出webroot之外的目录，默认关闭
-    directory_outsideWebroot: {
-        action: 'ignore'
+    // 文件管理器 - 用户输入匹配，仅当直接读取绝对路径时才检测
+    directory_userinput: {
+        action: 'block'
     },
 
     // 文件包含 - 用户输入
@@ -297,6 +297,12 @@ var algorithmConfig = {
     }
 }
 
+// 1.0.0 RC1 云控支持
+if (RASP.algorithmConfig)
+{
+    algorithmConfig = RASP.algorithmConfig
+}
+
 // 将所有拦截开关设置为 log
 // Object.keys(algorithmConfig).forEach(function (name) {
 //     algorithmConfig[name].action = 'log'
@@ -358,7 +364,7 @@ var forcefulBrowsing = {
 var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml)\.?$/i
 
 // 正常文件
-var cleanFileRegex = /\.(jpg|jpeg|png|gif|bmp|txt)\.?$/i
+var cleanFileRegex = /\.(jpg|jpeg|png|gif|bmp|txt)$/i
 
 // 匹配 HTML/JS 等可以用于钓鱼、domain-fronting 的文件
 var htmlFileRegex   = /\.(htm|html|js)$/i
@@ -370,6 +376,74 @@ var ntfsRegex       = /::\$(DATA|INDEX)$/i
 var sqli_prefilter  = new RegExp(algorithmConfig.sqli_policy.filter)
 
 // 常用函数
+
+function LRU(maxLength) {
+    this.maxLength = maxLength
+    this.length = 0
+    this.head = undefined
+    this.tail = undefined
+    this.cache = {}
+}
+
+LRU.prototype.get = function (key) {
+    var node = this.cache[key]
+    if (node) {
+        this.update(node)
+        return true
+    } else {
+        return false
+    }
+}
+
+LRU.prototype.put = function (key) {
+    var node = this.cache[key]
+    if (!node) {
+        node = {
+            key: key
+        }
+    }
+    this.update(node)
+}
+
+LRU.prototype.update = function (node) {
+    if (node == this.head) {
+        return
+    } else if (node == this.tail) {
+        this.tail = node.prev
+        this.tail.next = undefined
+    } else if (node.prev && node.next) {
+        node.prev.next = node.next
+        node.next.prev = node.prev
+    } else if (!this.cache.hasOwnProperty(node.key)) {
+        this.cache[node.key] = node
+        if (this.length == 0) {
+            this.head = this.tail = node
+            this.length = 1
+            return
+        } else if (this.length == 1) {
+            this.head = node
+            this.head.next = this.tail
+            this.tail.prev = this.head
+            this.length = 2
+            return
+        } else if (++this.length > this.maxLength) {
+            delete this.cache[this.tail.key]
+            this.tail.prev.next = undefined
+            this.tail = this.tail.prev
+        }
+    } else {
+        return
+    }
+    node.prev = undefined
+    node.next = this.head
+    this.head.prev = node
+    this.head = node
+}
+
+LRU.prototype.dump = function () {
+    console.log(this.cache)
+}
+
 String.prototype.replaceAll = function(token, tokenValue) {
     // 空值判断，防止死循环
     if (! token || token.length == 0) {
@@ -533,8 +607,8 @@ function is_path_endswith_userinput(parameter, target)
         }
 
         // 参数必须有跳出目录，或者是绝对路径
-        if ((has_traversal(value) || is_absolute_path(value))
-            && (value == target || target.endsWith(value)))
+        if ((value == target || target.endsWith(value)) 
+            && (has_traversal(value) || is_absolute_path(value)))
         {
             verdict = true
             return true
@@ -595,81 +669,12 @@ if (RASP.get_jsengine() !== 'v8') {
     // 对于PHP + V8，性能还不错，我们保留JS检测逻辑
 
     // v8 全局SQL结果缓存
-    var LRU = {
-        head: undefined,
-        tail: undefined,
-        cache: {},
-        length: 0,
-        maxLength: algorithmConfig.cache.sqli.capacity,
-
-        // 查询缓存，如果在则移动到队首
-        get: function (key) {
-            var node = this.cache[key]
-            if (node) {
-                this.update(node)
-                return true
-            } else {
-                return false
-            }
-        },
-
-        // 增加缓存，如果超过大小则删除末尾元素
-        put: function (key) {
-            var node = this.cache[key]
-            if (!node) {
-                node = {
-                    key: key
-                }
-            }
-            this.update(node)
-        },
-
-        update: function (node) {
-            if (node == this.head) {
-                return
-            } else if (node == this.tail) {
-                this.tail = node.prev
-                this.tail.next = undefined
-            } else if (node.prev && node.next) {
-                node.prev.next = node.next
-                node.next.prev = node.prev
-            } else if (!this.cache.hasOwnProperty(node.key)) {
-                this.cache[node.key] = node
-                if (this.length == 0) {
-                    this.head = this.tail = node
-                    this.length = 1
-                    return
-                } else if (this.length == 1) {
-                    this.head = node
-                    this.head.next = this.tail
-                    this.tail.prev = this.head
-                    this.length = 2
-                    return
-                } else if (++this.length > this.maxLength) {
-                    delete this.cache[this.tail.key]
-                    this.tail.prev.next = undefined
-                    this.tail = this.tail.prev
-                }
-            } else {
-                return
-            }
-            node.prev = undefined
-            node.next = this.head
-            this.head.prev = node
-            this.head = node
-        },
-
-        // 调试函数，用于打印内部信息
-        dump: function () {
-            console.log(this.cache)
-            console.log('')
-        }
-    }
+    var lru = new LRU(algorithmConfig.cache.sqli.capacity)
 
     plugin.register('sql', function (params, context) {
 
         // 缓存检查
-        if (LRU.get(params.query)) {
+        if (lru.get(params.query)) {
             return clean
         }
 
@@ -869,7 +874,7 @@ if (RASP.get_jsengine() !== 'v8') {
         }
 
         // 加入缓存，对 prepared sql 特别有效
-        LRU.put(params.query)
+        lru.put(params.query)
         return clean
     })
 
@@ -981,6 +986,7 @@ plugin.register('directory', function (params, context) {
     var realpath    = params.realpath
     var appBasePath = context.appBasePath
     var server      = context.server
+    var parameter   = context.parameter
 
     // 算法1 - 读取敏感目录
     if (algorithmConfig.directory_unwanted.action != 'ignore')
@@ -996,16 +1002,23 @@ plugin.register('directory', function (params, context) {
         }
     }
 
-    // 算法2 - 使用至少2个/../，且跳出web目录
-    if (algorithmConfig.directory_outsideWebroot.action != 'ignore')
+    // 算法2 - 用户输入匹配。主要用户检测 webshell 文件管理器，直接读取绝对路径的情况
+    if (algorithmConfig.directory_userinput.action != 'ignore')
     {
-        if (is_outside_webroot(appBasePath, realpath, path))
+        // 去除结尾的斜线, /usr/ == /usr
+        var path_noslash = path
+        if (path_noslash.endsWith('/'))
+        {
+            path_noslash = path_noslash.substr(0, path_noslash.length - 1)
+        }
+
+        if (path_noslash == realpath && is_from_userinput(parameter, path))
         {
             return {
-                action:     algorithmConfig.directory_outsideWebroot.action,
-                message:    _("Directory traversal - Accessing directory outside webroot (%1%), directory is %2%", [appBasePath, realpath]),
+                action:     algorithmConfig.directory_userinput.action,
+                message:    _("WebShell detected - Using File Manager function to access a folder: %1%", [realpath]),
                 confidence: 90
-            }
+            }            
         }
     }
 
@@ -1187,8 +1200,14 @@ plugin.register('include', function (params, context) {
     return clean
 })
 
+// TODO: 1.0.0 RC1 之后改成 agent 实现，通用的LRU
+var writeFileLru = new LRU(20)
 
 plugin.register('writeFile', function (params, context) {
+
+    if (writeFileLru.get(params.realpath)) {
+        return clean
+    }
 
     // 写 NTFS 流文件，肯定不正常
     if (algorithmConfig.writeFile_NTFS.action != 'ignore')
@@ -1227,6 +1246,8 @@ plugin.register('writeFile', function (params, context) {
             }
         }
     }
+
+    writeFileLru.put(params.realpath)
     return clean
 })
 
@@ -1330,7 +1351,8 @@ plugin.register('command', function (params, context) {
                 'java.lang.reflect.Method.invoke':                                              _("Reflected command execution - Unknown vulnerability detected"),
                 'ognl.OgnlRuntime.invokeMethod':                                                _("Reflected command execution - Using OGNL library"),
                 'com.thoughtworks.xstream.XStream.unmarshal':                                   _("Reflected command execution - Using xstream library"),
-                'org.apache.commons.collections4.functors.InvokerTransformer.transform':        _("Reflected command execution - Using Transformer library"),
+                'org.apache.commons.collections4.functors.InvokerTransformer.transform':        _("Reflected command execution - Using Transformer library (v4)"),
+                'org.apache.commons.collections.functors.InvokerTransformer.transform':         _("Reflected command execution - Using Transformer library"),
                 'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':                   _("Reflected command execution - Using JNDI library"),
                 'com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze':     _("Reflected command execution - Using fastjson library"),
                 'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': _("Reflected command execution - Using SpEL expressions"),
@@ -1546,5 +1568,5 @@ if (algorithmConfig.transformer_deser.action != 'ignore') {
     })
 }
 
-plugin.log('OpenRASP official plugin: Initialized')
+plugin.log('OpenRASP official plugin: Initialized, version', version)
 

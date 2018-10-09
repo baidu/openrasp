@@ -20,7 +20,6 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.hook.server.ServerStartupHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.checker.policy.JBossJMXSecurityChecker;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.model.ApplicationModel;
@@ -31,7 +30,7 @@ import javassist.NotFoundException;
 import java.io.IOException;
 
 /**
- * 　　* @Description: JBoss的JMX Console 安全检查
+ * 　　* @Description: JBoss的基线检查
  * 　　* @author anyang
  * 　　* @date 2018/7/30 15:46
  */
@@ -63,8 +62,8 @@ public class JBossStartupHook extends ServerStartupHook {
             ApplicationModel.init("jboss", serverVersion);
             sendRegister();
         } catch (Exception e) {
-            JBossJMXSecurityChecker.LOGGER.error("handle jboss startup failed", e);
+            HookHandler.LOGGER.error("handle jboss startup failed", e);
         }
-        HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_JBOSS_JMX_CONSOLE, CheckParameter.EMPTY_MAP);
+        HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_JBOSS_START, CheckParameter.EMPTY_MAP);
     }
 }

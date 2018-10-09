@@ -18,7 +18,6 @@ package com.baidu.openrasp.request;
 
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.Reflection;
-import com.baidu.openrasp.transformer.CustomClassTransformer;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 
 import java.util.*;
@@ -171,32 +170,15 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Map<String, String[]> getParameterMap() {
-        Map<String, String[]> res = new HashMap<String, String[]>();
+        Map<String, String[]> normalMap = new HashMap<String, String[]>();
         if (!canGetParameter) {
             if (!setCharacterEncodingFromConfig()) {
-                res = EMPTY_PARAM;
+                normalMap = EMPTY_PARAM;
             }
         } else {
-            res = (Map<String, String[]>) Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
+            normalMap = (Map<String, String[]>) Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
         }
-
-        ClassLoader loader = CustomClassTransformer.getClassLoader("org.apache.commons.fileupload.servlet.ServletFileUpload");
-        boolean isMultipartContent = false;
-        if (loader != null) {
-            try {
-                isMultipartContent = (Boolean) Reflection.invokeStaticMethod(
-                        "org.apache.commons.fileupload.servlet.ServletFileUpload",
-                        "isMultipartContent",
-                        new Class[]{loader.loadClass("javax.servlet.http.HttpServletRequest")}, request);
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-        }
-        if (isMultipartContent) {
-            mergeMap(fileUploadCache, res);
-        }
-
-        return res;
+        return getMergeMap(normalMap,fileUploadCache);
     }
 
     /**
@@ -280,7 +262,18 @@ public final class HttpServletRequest extends AbstractRequest {
         return realIp != null ? realIp : "";
     }
 
-    public void mergeMap(Map<String, String[]> src, Map<String, String[]> dst) {
+    private Map<String, String[]> getMergeMap(Map<String, String[]> map1, Map<String, String[]> map2) {
+        Map<String, String[]> result = new HashMap<String, String[]>();
+        if (!map1.isEmpty()) {
+            mergeMap(map1, result);
+        }
+        if (!map2.isEmpty()) {
+            mergeMap(map2, result);
+        }
+        return result;
+    }
+
+    private void mergeMap(Map<String, String[]> src, Map<String, String[]> dst) {
         for (Map.Entry<String, String[]> entry : src.entrySet()) {
             if (dst.containsKey(entry.getKey())) {
                 dst.put(entry.getKey(), mergeArray(dst.get(entry.getKey()), entry.getValue()));
@@ -290,7 +283,7 @@ public final class HttpServletRequest extends AbstractRequest {
         }
     }
 
-    public String[] mergeArray(String[] s1, String[] s2) {
+    private String[] mergeArray(String[] s1, String[] s2) {
         int str1Length = s1.length;
         int str2length = s2.length;
         s1 = Arrays.copyOf(s1, str1Length + str2length);

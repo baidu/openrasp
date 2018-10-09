@@ -185,6 +185,15 @@ static void request_uri_path_filter(zval *origin_zv, zval *new_zv TSRMLS_DC)
     }
 }
 
+static void request_method_to_lower(zval *origin_zv, zval *new_zv TSRMLS_DC)
+{
+    char *haystack = Z_STRVAL_P(origin_zv);                                            
+    int   haystack_len = Z_STRLEN_P(origin_zv);                
+    char* tmp_request_method = estrdup(haystack);
+    char *lch = php_strtolower(tmp_request_method, strlen(tmp_request_method));
+    ZVAL_STRING(new_zv, lch, 0);
+}
+
 static void build_complete_url(zval *items, zval *new_zv TSRMLS_DC)
 {
     assert(Z_TYPE_P(items) == IS_ARRAY);
@@ -229,6 +238,16 @@ static void build_complete_url(zval *items, zval *new_zv TSRMLS_DC)
 
 static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_filter> &filters TSRMLS_DC)
 {
+    int added_filter_count = 0;
+    if (openrasp_ini.clientip_header && strcmp(openrasp_ini.clientip_header, ""))
+    {
+        char* tmp_clientip_header = estrdup(openrasp_ini.clientip_header);
+        char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
+        const char* server_global_hey = ("HTTP_" + std::string(uch)).c_str();
+        filters.push_back({server_global_hey, "client_ip", nullptr});
+        added_filter_count += 1;
+        efree(tmp_clientip_header);
+    }
     zval **origin_zv;
     for (keys_filter filter:filters)
     {
@@ -285,10 +304,15 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
             add_assoc_string(dest, filter.new_key_str, "", 1);
         }
     }
+    while(added_filter_count--)
+    {
+        filters.pop_back();
+    }
 }
 
 static std::vector<keys_filter> alarm_filters = 
 {
+    {"REQUEST_METHOD",  "request_method",   request_method_to_lower},
     {"SERVER_NAME",     "target",           nullptr},
     {"SERVER_ADDR",     "server_ip",        nullptr},
     {"HTTP_REFERER",    "referer",          nullptr},
@@ -833,14 +857,6 @@ PHP_MINIT_FUNCTION(openrasp_log)
     if (check_sapi_need_alloc_shm())
     {
         openrasp_shared_alloc_startup();
-    }
-    if (openrasp_ini.clientip_header && strcmp(openrasp_ini.clientip_header, ""))
-    {
-        char* tmp_clientip_header = estrdup(openrasp_ini.clientip_header);
-        char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
-        const char* server_global_hey = ("HTTP_" + std::string(uch)).c_str();
-        alarm_filters.push_back({server_global_hey, "client_ip", nullptr});
-        efree(tmp_clientip_header);
     }
 #if defined(PHP_WIN32) && defined(HAVE_IPHLPAPI_WS2)
     PIP_ADAPTER_INFO pAdapterInfo;

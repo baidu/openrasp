@@ -28,12 +28,12 @@ HOOK_FUNCTION(mysqli_real_connect, dbConnection);
 PRE_HOOK_FUNCTION(mysqli_query, sql);
 PRE_HOOK_FUNCTION(mysqli_real_query, sql);
 PRE_HOOK_FUNCTION(mysqli_prepare, sqlPrepared);
-POST_HOOK_FUNCTION(mysqli_query, sqlSlowQuery);
+// POST_HOOK_FUNCTION(mysqli_query, sqlSlowQuery);
 
 HOOK_FUNCTION_EX(__construct, mysqli, dbConnection);
 HOOK_FUNCTION_EX(real_connect, mysqli, dbConnection);
 PRE_HOOK_FUNCTION_EX(query, mysqli, sql);
-POST_HOOK_FUNCTION_EX(query, mysqli, sqlSlowQuery);
+// POST_HOOK_FUNCTION_EX(query, mysqli, sqlSlowQuery);
 PRE_HOOK_FUNCTION_EX(prepare, mysqli, sqlPrepared);
 
 static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, zend_bool is_real_connect, zend_bool in_ctor)

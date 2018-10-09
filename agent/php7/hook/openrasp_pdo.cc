@@ -26,8 +26,8 @@ HOOK_FUNCTION_EX(__construct, pdo, dbConnection);
 PRE_HOOK_FUNCTION_EX(query, pdo, sql);
 PRE_HOOK_FUNCTION_EX(exec, pdo, sql);
 PRE_HOOK_FUNCTION_EX(prepare, pdo, sqlPrepared);
-POST_HOOK_FUNCTION_EX(query, pdo, sqlSlowQuery);
-POST_HOOK_FUNCTION_EX(exec, pdo, sqlSlowQuery);
+// POST_HOOK_FUNCTION_EX(query, pdo, sqlSlowQuery);
+// POST_HOOK_FUNCTION_EX(exec, pdo, sqlSlowQuery);
 
 extern void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p);
 
