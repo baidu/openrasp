@@ -720,27 +720,57 @@ public class Config extends FileScanListener {
         this.clientIp = clientIp;
     }
 
-    public boolean getCloudSwitch() {
+    /**
+     * 获取云控的开关状态，
+     *
+     * @return 云控开关状态
+     */
+    public synchronized boolean getCloudSwitch() {
         return cloudSwitch;
     }
 
-    public void setCloudSwitch(String cloudSwitch) {
+    /**
+     * 设置云控的开关状态，
+     *
+     * @param cloudSwitch 待设置的云控开关状态
+     */
+    public  synchronized void setCloudSwitch(String cloudSwitch) {
         this.cloudSwitch = Boolean.parseBoolean(cloudSwitch);
     }
 
-    public String getCloudAddress() {
+    /**
+     * 获取云控地址，
+     *
+     * @return 返回云控地址
+     */
+    public synchronized String getCloudAddress() {
         return cloudAddress;
     }
 
-    public void setCloudAddress(String cloudAddress) {
+    /**
+     * 设置云控的地址，
+     *
+     * @param cloudAddress 待设置的云控地址
+     */
+    public synchronized void setCloudAddress(String cloudAddress) {
         this.cloudAddress = cloudAddress;
     }
 
-    public String getCloudAppId() {
+    /**
+     * 获取云控的请求的appid，
+     *
+     * @return 云控的请求的appid
+     */
+    public synchronized  String getCloudAppId() {
         return cloudAppId;
     }
 
-    public void setCloudAppId(String cloudAppId) {
+    /**
+     * 设置云控的appid，
+     *
+     * @param cloudAppId 待设置的云控的appid
+     */
+    public synchronized void setCloudAppId(String cloudAppId) {
         this.cloudAppId = cloudAppId;
     }
     //--------------------------统一的配置处理------------------------------------

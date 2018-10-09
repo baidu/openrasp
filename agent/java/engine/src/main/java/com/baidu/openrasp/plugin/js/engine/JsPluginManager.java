@@ -194,10 +194,9 @@ public class JsPluginManager {
     }
 
     private static void injectRhino(String script) {
-        script = "RASP.algorithmConfig =" + script;
+        script = "algorithmConfig =" + script;
         JSContext cx = (JSContext) JSContext.enter();
         ScriptableObject globalScope = cx.initStandardObjects();
-        cx.evaluateString(globalScope, script, "algorithmConfig", 1, null);
+        cx.evaluateString(globalScope, script, "RASP.algorithmConfig", 1, null);
     }
-
 }
