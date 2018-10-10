@@ -1,13 +1,27 @@
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.baidu.openrasp.cloud.Utils;
 
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.config.Config;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.tool.OSUtil;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
-import org.mozilla.javascript.ScriptableObject;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -16,11 +30,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
- * @description: 插件工具类
+ * @description: 云控工具类
  * @author: anyang
  * @create: 2018/09/17 17:40
  */
@@ -104,8 +116,10 @@ public class CloudUtils {
     public static boolean checkCloudControlEnter() throws NoSuchAlgorithmException {
         CloudCacheModel.getInstance().setRaspId(OSUtil.getID());
         if (Config.getConfig().getCloudSwitch()) {
-            return !Config.getConfig().getCloudAddress().isEmpty() &&
-                    !Config.getConfig().getCloudAppId().isEmpty();
+            String cloudAddress = Config.getConfig().getCloudAddress();
+            String cloudAppId = Config.getConfig().getCloudAppId();
+            return cloudAddress != null && !cloudAddress.trim().isEmpty() &&
+                    cloudAppId != null && !cloudAppId.trim().isEmpty();
         }
         return false;
     }
