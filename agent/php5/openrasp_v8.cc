@@ -39,8 +39,8 @@ namespace openrasp
 openrasp_v8_process_globals process_globals;
 
 static inline void load_plugins(TSRMLS_D);
-static inline bool init_platform(TSRMLS_D);
-static inline bool shutdown_platform(TSRMLS_D);
+// static inline bool init_platform(TSRMLS_D);
+// static inline bool shutdown_platform(TSRMLS_D);
 static inline bool load_snapshot(TSRMLS_D);
 static inline bool init_snapshot(TSRMLS_D);
 static inline bool shutdown_snapshot(TSRMLS_D);
@@ -130,7 +130,8 @@ unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
     return openrasp_check(isolate, type, params TSRMLS_CC);
 }
 
-static inline bool init_platform(TSRMLS_D)
+// static inline bool init_platform(TSRMLS_D)
+bool init_platform(TSRMLS_D)
 {
     if (!process_globals.v8_platform)
     {
@@ -140,7 +141,8 @@ static inline bool init_platform(TSRMLS_D)
     return true;
 }
 
-static inline bool shutdown_platform(TSRMLS_D)
+// static inline bool shutdown_platform(TSRMLS_D)
+bool shutdown_platform(TSRMLS_D)
 {
     if (process_globals.v8_platform)
     {

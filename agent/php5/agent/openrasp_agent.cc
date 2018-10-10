@@ -100,8 +100,18 @@ void HeartBeatAgent::do_heartbeat(CURL *curl TSRMLS_DC)
 	MAKE_STD_ZVAL(body);
 	array_init(body);
 	add_assoc_string(body, "rasp_id", (char *)oam->get_rasp_id().c_str(), 1);
-	add_assoc_string(body, "plugin_version", (char *)oam->agent_ctrl_block->get_plugin_version(), 1);
-	add_assoc_long(body, "config_time", scm ? scm->get_config_last_update() : 0);
+	char *plugin_version = "";
+	if (active_plugins.size() > 0)
+	{
+		plugin_version = (char *)oam->agent_ctrl_block->get_plugin_version();
+	}
+	add_assoc_string(body, "plugin_version", plugin_version, 1);
+	long config_last_update = 0;
+	if (!algorithm_config.empty() && scm)
+	{
+		config_last_update = scm->get_config_last_update();
+	}
+	add_assoc_long(body, "config_time", config_last_update);
 	smart_str buf_json = {0};
 	php_json_encode(&buf_json, body, 0 TSRMLS_CC);
 	if (buf_json.a > buf_json.len)
@@ -140,17 +150,23 @@ void HeartBeatAgent::do_heartbeat(CURL *curl TSRMLS_DC)
 				HashTable *data = fetch_outmost_hashtable_from_ht(Z_ARRVAL_P(return_value), "data");
 				if (data)
 				{
+					bool has_new_plugin = false;
+					bool has_new_algorithm_config = false;
 					HashTable *plugin_ht = nullptr;
 					if (plugin_ht = fetch_outmost_hashtable_from_ht(data, "plugin"))
 					{
-						update_official_plugin(plugin_ht);
+						has_new_plugin = update_official_plugin(plugin_ht);
 					}
 					long config_time;
 					bool has_config_time = fetch_outmost_long_from_ht(data, "config_time", &config_time);
 					zval *config_zv = fetch_outmost_zval_from_ht(data, "config");
 					if (has_config_time && config_zv)
 					{
-						update_config(config_zv, config_time TSRMLS_CC);
+						update_config(config_zv, config_time, &has_new_algorithm_config TSRMLS_CC);
+					}
+					if (has_new_plugin || has_new_algorithm_config)
+					{
+						build_plugin_snapshot(TSRMLS_C);
 					}
 				}
 			}
@@ -163,7 +179,7 @@ void HeartBeatAgent::do_heartbeat(CURL *curl TSRMLS_DC)
 	zval_ptr_dtor(&return_value);
 }
 
-void HeartBeatAgent::update_official_plugin(HashTable *plugin_ht)
+bool HeartBeatAgent::update_official_plugin(HashTable *plugin_ht)
 {
 	assert(plugin_ht != nullptr);
 	char *version = nullptr;
@@ -176,73 +192,94 @@ void HeartBeatAgent::update_official_plugin(HashTable *plugin_ht)
 		std::string cal_md5 = md5sum(static_cast<const void *>(plugin), strlen(plugin));
 		if (!strcmp(cal_md5.c_str(), md5))
 		{
-			std::string plugin_abs_path = std::string(openrasp_ini.root_dir) + "/plugins/official.js";
-			std::ofstream out_file(plugin_abs_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
-			if (out_file.is_open() && out_file.good())
-			{
-				out_file << plugin;
-				out_file.close();
-				oam->agent_ctrl_block->set_plugin_version(version);
-			}
-			else
-			{
-				openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write official plugin to %s."), plugin_abs_path.c_str());
-			}
+			active_plugins.clear();
+			active_plugins.push_back({"official.js", std::string(plugin)});
+			return true;
 		}
 	}
+	return false;
 }
 
-bool HeartBeatAgent::update_config(zval *config_zv, long config_time TSRMLS_DC)
+bool HeartBeatAgent::update_config(zval *config_zv, long config_time, bool *has_new_algorithm_config TSRMLS_DC)
 {
 	if (Z_TYPE_P(config_zv) != IS_ARRAY)
 	{
 		return false;
 	}
-	smart_str buf_json = {0};
-	php_json_encode(&buf_json, config_zv, 0 TSRMLS_CC);
-	if (buf_json.a > buf_json.len)
+	zval *algorithm_config_zv = fetch_outmost_zval_from_ht(Z_ARRVAL_P(config_zv), "algorithm.config");
+	if (algorithm_config_zv)
 	{
-		buf_json.c[buf_json.len] = '\0';
-		buf_json.len++;
+		algorithm_config = "RASP.algorithmConfig=" + json_encode_from_zval(algorithm_config_zv TSRMLS_CC);
+		*has_new_algorithm_config = true;
 	}
-	std::string config_string(buf_json.c);
-	OpenraspConfig openrasp_config(config_string, OpenraspConfig::FromType::kJson);
-	smart_str_free(&buf_json);
-	if (scm != nullptr)
+	zend_hash_del(Z_ARRVAL_P(config_zv), "algorithm.config", sizeof("algorithm.config"));
+	if (zend_hash_num_elements(Z_ARRVAL_P(config_zv)) > 0)
 	{
-		std::map<std::string, int> url_mask_map;
-		for (auto map_iter : CheckTypeNameMap)
+		std::string config_string = json_encode_from_zval(config_zv TSRMLS_CC);
+		OpenraspConfig openrasp_config(config_string, OpenraspConfig::FromType::kJson);
+		if (scm != nullptr)
 		{
-			std::vector<std::string> urls;
-			urls = openrasp_config.GetArray("hook.white." + std::string(map_iter.second), urls);
-			for (auto vector_iter : urls)
+			std::map<std::string, int> url_mask_map;
+			for (auto map_iter : CheckTypeNameMap)
 			{
-				std::string target_url = (vector_iter == "all") ? "" : vector_iter;
-				int mask = map_iter.first;
-				auto it = url_mask_map.find(target_url);
-				if (it != url_mask_map.end())
+				std::vector<std::string> urls;
+				urls = openrasp_config.GetArray("hook.white." + std::string(map_iter.second), urls);
+				for (auto vector_iter : urls)
 				{
-					mask |= it->second;
+					std::string target_url = (vector_iter == "all") ? "" : vector_iter;
+					int mask = map_iter.first;
+					auto it = url_mask_map.find(target_url);
+					if (it != url_mask_map.end())
+					{
+						mask |= it->second;
+					}
+					url_mask_map[target_url] = mask;
 				}
-				url_mask_map[target_url] = mask;
 			}
+			scm->build_check_type_white_array(url_mask_map);
 		}
-		scm->build_check_type_white_array(url_mask_map);
+		std::string cloud_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/cloud-config.json";
+		std::ofstream out_file(cloud_config_file_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
+		if (out_file.is_open() && out_file.good())
+		{
+			out_file << config_string;
+			out_file.close();
+			scm->set_config_last_update(config_time);
+		}
+		else
+		{
+			openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write cloud config to %s."), cloud_config_file_path.c_str());
+			return false;
+		}
 	}
-	std::string cloud_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/cloud-config.json";
-	std::ofstream out_file(cloud_config_file_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
+	return true;
+}
+
+bool HeartBeatAgent::build_plugin_snapshot(TSRMLS_D)
+{
+	bool result = true;
+	init_platform(TSRMLS_C);
+	v8::StartupData snapshot = get_snapshot(algorithm_config, active_plugins TSRMLS_CC);
+	shutdown_platform(TSRMLS_C);
+#ifndef _WIN32
+	mode_t oldmask = umask(0);
+#endif
+	std::string snapshot_abs_path = std::string(openrasp_ini.root_dir) + "/snapshot.dat";
+	std::ofstream out_file(snapshot_abs_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
 	if (out_file.is_open() && out_file.good())
 	{
-		out_file << config_string;
+		out_file << snapshot.data;
 		out_file.close();
-		scm->set_config_last_update(config_time);
 	}
 	else
 	{
-		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write cloud config to %s."), cloud_config_file_path.c_str());
-		return false;
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write snapshot to %s."), snapshot_abs_path.c_str());
+		result = false;
 	}
-	return true;
+#ifndef _WIN32
+	umask(oldmask);
+#endif
+	return result;
 }
 
 void HeartBeatAgent::write_pid_to_shm(pid_t agent_pid)

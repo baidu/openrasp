@@ -47,17 +47,20 @@ class HeartBeatAgent : public BaseAgent
 public:
   static volatile int signal_received;
 
+public:
   HeartBeatAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);
 
 private:
+  std::string algorithm_config;
   std::vector<openrasp_v8_js_src> active_plugins;
 
 private:
   void do_heartbeat(CURL *curl TSRMLS_DC);
-  void update_official_plugin(HashTable *plugin_ht);
-  bool update_config(zval *config_zv, long config_time TSRMLS_DC);
+  bool build_plugin_snapshot(TSRMLS_D);
+  bool update_official_plugin(HashTable *plugin_ht);
+  bool update_config(zval *config_zv, long config_time, bool *has_new_algorithm_config TSRMLS_DC);
 };
 
 class LogAgent : public BaseAgent
@@ -65,6 +68,8 @@ class LogAgent : public BaseAgent
 public:
   static volatile int signal_received;
   static const int max_post_logs_account = 512;
+
+public:
   LogAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);

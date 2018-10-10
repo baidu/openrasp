@@ -26,11 +26,13 @@
 extern "C"
 {
 #include "php_ini.h"
+#include "ext/json/php_json.h"
 #include "ext/standard/url.h"
 #include "ext/standard/file.h"
 #include "ext/date/php_date.h"
 #include "ext/pcre/php_pcre.h"
 #include "ext/standard/php_string.h"
+#include "ext/standard/php_smart_str.h"
 #include "Zend/zend_builtin_functions.h"
 }
 
@@ -523,4 +525,18 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url)
     }
     close(sock);
     return true;
+}
+
+std::string json_encode_from_zval(zval *value TSRMLS_DC)
+{
+    smart_str buf_json = {0};
+	php_json_encode(&buf_json, value, 0 TSRMLS_CC);
+	if (buf_json.a > buf_json.len)
+	{
+		buf_json.c[buf_json.len] = '\0';
+		buf_json.len++;
+	}
+	std::string result(buf_json.c);
+	smart_str_free(&buf_json);
+    return result;
 }

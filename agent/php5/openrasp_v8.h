@@ -98,6 +98,8 @@ namespace RequestContext
 v8::Local<v8::Object> New(v8::Isolate *isolate);
 }
 
+bool init_platform(TSRMLS_D);
+bool shutdown_platform(TSRMLS_D);
 void v8error_to_stream(v8::Isolate *isolate, v8::TryCatch &try_catch, std::ostream &buf);
 v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC);
 v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset = 0);
