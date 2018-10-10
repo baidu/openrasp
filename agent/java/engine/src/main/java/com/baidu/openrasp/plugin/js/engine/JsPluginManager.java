@@ -17,14 +17,12 @@
 package com.baidu.openrasp.plugin.js.engine;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.Utils.CloudUtils;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.log4j.Logger;
-import org.mozilla.javascript.ScriptableObject;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -47,7 +45,7 @@ import java.util.TimerTask;
 public class JsPluginManager {
 
     private static final Logger LOGGER = Logger.getLogger(JsPluginManager.class.getPackage().getName() + ".log");
-    private static final String PLUGIN_NAME = "open.official.js";
+    private static final String PLUGIN_NAME = "official.js";
     private static Timer timer = null;
     private static Integer watchId = null;
     private static boolean cloudSwitch;
@@ -61,7 +59,7 @@ public class JsPluginManager {
         JSContextFactory.init();
         cloudSwitch = Config.getConfig().getCloudSwitch();
         updatePlugin();
-        if (!CloudUtils.checkCloudControlEnter()) {
+        if (!cloudSwitch) {
             initFileWatcher();
         }
     }
@@ -156,12 +154,6 @@ public class JsPluginManager {
         }
         JSContextFactory.setCheckScriptList(scripts);
         HookHandler.enableHook.set(oldValue);
-        if (cloudSwitch) {
-            String algorithmConfig = CloudCacheModel.getInstance().getAlgorithmConfig();
-            if (algorithmConfig != null) {
-                injectRhino(algorithmConfig);
-            }
-        }
     }
 
     /**
@@ -191,12 +183,5 @@ public class JsPluginManager {
                 }
             }
         }, 500);
-    }
-
-    private static void injectRhino(String script) {
-        script = "algorithmConfig =" + script;
-        JSContext cx = (JSContext) JSContext.enter();
-        ScriptableObject globalScope = cx.initStandardObjects();
-        cx.evaluateString(globalScope, script, "RASP.algorithmConfig", 1, null);
     }
 }

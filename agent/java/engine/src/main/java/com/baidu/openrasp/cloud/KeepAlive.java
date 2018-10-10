@@ -21,9 +21,13 @@ import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.cloud.Utils.CloudUtils;
+import com.baidu.openrasp.plugin.js.engine.JSContext;
+import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.plugin.js.engine.JsPluginManager;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import org.mozilla.javascript.Scriptable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -81,8 +85,8 @@ public class KeepAlive {
                 if (pluginMap.get("plugin") != null) {
                     String plugin = ((JsonPrimitive) pluginMap.get("plugin")).getAsString();
                     if (!plugin.equals(CloudCacheModel.getInstance().getPlugin())) {
-                        JsPluginManager.updatePluginAsync();
                         CloudCacheModel.getInstance().setPlugin(plugin);
+                        JsPluginManager.updatePluginAsync();
                     }
                 }
             }
@@ -90,11 +94,27 @@ public class KeepAlive {
             if (configMap != null) {
                 Object object = configMap.get("algorithm.config");
                 if (object != null) {
-                    CloudCacheModel.getInstance().setAlgorithmConfig(((JsonPrimitive) object).getAsString());
+                    JsonObject jsonObject = (JsonObject)object;
+                    if (!jsonObject.toString().equals(CloudCacheModel.getInstance().getAlgorithmConfig())){
+                        CloudCacheModel.getInstance().setAlgorithmConfig(jsonObject.toString());
+                        if (Config.getConfig().getCloudSwitch()) {
+                            String algorithmConfig = CloudCacheModel.getInstance().getAlgorithmConfig();
+                            if (algorithmConfig != null) {
+                                injectRhino(algorithmConfig);
+                            }
+                        }
+                    }
                 }
                 Config.getConfig().loadConfigFromCloud(configMap, true);
             }
 
         }
+    }
+
+    private static void injectRhino(String script) {
+        script = "RASP.algorithmConfig =" + script;
+        JSContext cx = JSContextFactory.enterAndInitContext();
+        Scriptable globalScope = cx.getScope();
+        cx.evaluateString(globalScope, script, "algorithmConfig", 1, null);
     }
 }

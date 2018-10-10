@@ -63,13 +63,22 @@ public class CloudUtils {
                         GenericResponse response = new GenericResponse();
                         Map<String, Object> map = new HashMap<String, Object>();
                         JsonObject jsonObject = jsonElement.getAsJsonObject();
-                        response.setDescription(jsonObject.get("description").getAsString());
-                        response.setStatus(jsonObject.get("status").getAsInt());
-                        Set<Map.Entry<String, JsonElement>> entrySet = jsonObject.get("data").getAsJsonObject().entrySet();
-                        for (Map.Entry<String, JsonElement> entry : entrySet) {
-                            map.put(entry.getKey(), entry.getValue());
+                        JsonElement status = jsonObject.get("status");
+                        JsonElement description = jsonObject.get("description");
+                        JsonElement data = jsonObject.get("data");
+                        if (status!=null){
+                            response.setStatus(jsonObject.get("status").getAsInt());
                         }
-                        response.setData(map);
+                        if (description!=null){
+                            response.setDescription(jsonObject.get("description").getAsString());
+                        }
+                        if (data!=null){
+                            Set<Map.Entry<String, JsonElement>> entrySet = jsonObject.get("data").getAsJsonObject().entrySet();
+                            for (Map.Entry<String, JsonElement> entry : entrySet) {
+                                map.put(entry.getKey(), entry.getValue());
+                            }
+                            response.setData(map);
+                        }
                         return response;
 
                     }
@@ -85,9 +94,11 @@ public class CloudUtils {
                     public Map<String, Object> deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
                         Map<String, Object> map = new HashMap<String, Object>();
                         JsonObject jsonObject = jsonElement.getAsJsonObject();
-                        Set<Map.Entry<String, JsonElement>> entrySet = jsonObject.getAsJsonObject().entrySet();
-                        for (Map.Entry<String, JsonElement> entry : entrySet) {
-                            map.put(entry.getKey(), entry.getValue());
+                        if (jsonObject != null){
+                            Set<Map.Entry<String, JsonElement>> entrySet = jsonObject.getAsJsonObject().entrySet();
+                            for (Map.Entry<String, JsonElement> entry : entrySet) {
+                                map.put(entry.getKey(), entry.getValue());
+                            }
                         }
                         return map;
                     }
