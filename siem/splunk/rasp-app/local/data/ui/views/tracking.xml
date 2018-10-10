@@ -1,7 +1,7 @@
 <form>
   <label>攻击事件</label>
   <search id="global">
-    <query>`modsec_alert` attack_source="$source_tok$"  target="$target_tok$" url="$url_tok$" attack_params="$attack_params_tok$" server_type="$server_type_tok$" intercept_state="$intercept_state_tok$" attack_type="$attack_type_tok$" plugin_name="$plugin_name_tok$" search attack_source="$source_tok$"  target="$target_tok$" url="$url_tok$" attack_params="$attack_params_tok$" server_type="$server_type_tok$" intercept_state="$intercept_state_tok$" attack_type="$attack_type_tok$" plugin_name="$plugin_name_tok$"  | table _time attack_source  target url attack_params server_type intercept_state attack_type plugin_name</query>
+    <query>`openrasp_alert` attack_source="$source_tok$"  target="$target_tok$" url="$url_tok$" attack_params="$attack_params_tok$" server_type="$server_type_tok$" intercept_state="$intercept_state_tok$" attack_type="$attack_type_tok$" plugin_name="$plugin_name_tok$" search attack_source="$source_tok$"  target="$target_tok$" url="$url_tok$" attack_params="$attack_params_tok$" server_type="$server_type_tok$" intercept_state="$intercept_state_tok$" attack_type="$attack_type_tok$" plugin_name="$plugin_name_tok$"  | table _time attack_source  target url attack_params server_type intercept_state attack_type plugin_name</query>
     <earliest>$time_tok.earliest$</earliest>
     <latest>$time_tok.latest$</latest>
   </search>
