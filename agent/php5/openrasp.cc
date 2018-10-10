@@ -36,7 +36,6 @@ extern "C"
 #include <new>
 #include <set>
 #include "agent/shared_config_manager.h"
-#include "agent/safe_shutdown_manager.h"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"
 #endif
@@ -121,7 +120,6 @@ PHP_MINIT_FUNCTION(openrasp)
         openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir is not configured correctly in php.ini, continuing without security protection"));
         return SUCCESS;
     }
-    openrasp::ssdm.reset(new openrasp::SafeShutDownManager(&openrasp::sm));
     openrasp::scm.reset(new openrasp::SharedConfigManager(&openrasp::sm));
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (check_sapi_need_alloc_shm() && openrasp_ini.remote_management_enable)
@@ -146,10 +144,6 @@ PHP_MINIT_FUNCTION(openrasp)
     result = PHP_MINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
     openrasp::scm->startup();
-    if (openrasp::ssdm)
-    {
-        openrasp::ssdm->startup();
-    }
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (openrasp::oam)
     {
@@ -176,10 +170,6 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
         }
 #endif
         openrasp::scm->shutdown();
-        if (openrasp::ssdm)
-        {
-            openrasp::ssdm->shutdown();
-        }
         is_initialized = false;
     }
     UNREGISTER_INI_ENTRIES();

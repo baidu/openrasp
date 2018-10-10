@@ -25,7 +25,6 @@
 #include "openrasp_log.h"
 #include "openrasp_shared_alloc.h"
 #include "openrasp_agent_manager.h"
-#include "safe_shutdown_manager.h"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -85,12 +84,14 @@ OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
 
 bool OpenraspAgentManager::startup()
 {
+	init_process_pid = getpid();
 	if (check_sapi_need_alloc_shm())
 	{
 		if (!create_share_memory())
 		{
 			return false;
 		}
+		agent_ctrl_block->set_master_pid(init_process_pid);
 		process_agent_startup();
 		initialized = true;
 	}
@@ -101,8 +102,15 @@ bool OpenraspAgentManager::shutdown()
 {
 	if (initialized)
 	{
-		assert(ssdm != nullptr);
-		if (!ssdm->is_master_current_process())
+		if (strcmp(sapi_module.name, "fpm-fcgi") == 0)
+		{
+			pid_t fpm_master_pid = search_fpm_master_pid();
+			if (fpm_master_pid)
+			{
+				agent_ctrl_block->set_master_pid(fpm_master_pid);
+			}
+		}
+		if (agent_ctrl_block->get_master_pid() && getpid() != agent_ctrl_block->get_master_pid())
 		{
 			return true;
 		}
@@ -247,9 +255,8 @@ void OpenraspAgentManager::supervisor_run()
 				}
 			}
 			sleep(1);
-			assert(ssdm != nullptr);
 			struct stat sb;
-			if (VCWD_STAT(("/proc/" + std::to_string(ssdm->get_master_pid())).c_str(), &sb) == -1 &&
+			if (VCWD_STAT(("/proc/" + std::to_string(agent_ctrl_block->get_master_pid())).c_str(), &sb) == -1 &&
 				errno == ENOENT)
 			{
 				process_agent_shutdown();
@@ -281,7 +288,7 @@ std::string OpenraspAgentManager::get_rasp_id()
 	return this->rasp_id;
 }
 
-char* OpenraspAgentManager::get_local_ip()
+char *OpenraspAgentManager::get_local_ip()
 {
 	return local_ip;
 }
@@ -368,6 +375,55 @@ bool OpenraspAgentManager::agent_remote_register()
 	}
 	zval_ptr_dtor(&return_value);
 	return false;
+}
+
+pid_t OpenraspAgentManager::search_fpm_master_pid()
+{
+	TSRMLS_FETCH();
+	std::vector<std::string> processes;
+	openrasp_scandir("/proc", processes,
+					 [](const char *filename) {
+						 TSRMLS_FETCH();
+						 struct stat sb;
+						 if (VCWD_STAT(("/proc/" + std::string(filename)).c_str(), &sb) == 0 && (sb.st_mode & S_IFDIR) != 0)
+						 {
+							 return true;
+						 }
+						 return false;
+					 });
+	for (std::string pid : processes)
+	{
+		std::string stat_file_path = "/proc/" + pid + "/stat";
+		if (VCWD_ACCESS(stat_file_path.c_str(), F_OK) == 0)
+		{
+			std::ifstream ifs_stat(stat_file_path);
+			std::string stat_line;
+			std::getline(ifs_stat, stat_line);
+			if (stat_line.empty())
+			{
+				continue;
+			}
+			std::stringstream stat_items(stat_line);
+			std::string item;
+			for (int i = 0; i < 4; ++i)
+			{
+				std::getline(stat_items, item, ' ');
+			}
+			int ppid = std::atoi(item.c_str());
+			if (ppid == init_process_pid)
+			{
+				std::string cmdline_file_path = "/proc/" + pid + "/cmdline";
+				std::ifstream ifs_cmdline(cmdline_file_path);
+				std::string cmdline;
+				std::getline(ifs_cmdline, cmdline);
+				if (cmdline.find("php-fpm: master process") == 0)
+				{
+					return std::atoi(pid.c_str());
+				}
+			}
+		}
+	}
+	return 0;
 }
 
 } // namespace openrasp

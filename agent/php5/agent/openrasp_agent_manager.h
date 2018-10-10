@@ -62,8 +62,10 @@ class OpenraspAgentManager : public BaseManager
 {
 
 public:
-  OpenraspAgentManager(ShmManager *mm);
   OpenraspCtrlBlock *agent_ctrl_block;
+
+public:
+  OpenraspAgentManager(ShmManager *mm);
   bool startup();
   bool shutdown();
   bool verify_ini_correct();
@@ -83,11 +85,13 @@ private:
   bool process_agent_startup();
   void process_agent_shutdown();
   bool calculate_rasp_id();
+  pid_t search_fpm_master_pid();
 
 private:
   static const int supervisor_interval = 10;
-  std::string rasp_id;
   char local_ip[64] = {0};
+  pid_t init_process_pid;
+  std::string rasp_id;
 };
 
 extern std::unique_ptr<OpenraspAgentManager> oam;

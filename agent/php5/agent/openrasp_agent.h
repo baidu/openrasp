@@ -17,6 +17,7 @@
 #ifndef _OPENRASP_BASE_AGENT_H_
 #define _OPENRASP_BASE_AGENT_H_
 
+#include "openrasp_v8.h"
 #include "openrasp_agent_manager.h"
 #include "utils/curl_helper.h"
 #include <signal.h>
@@ -49,6 +50,9 @@ public:
   HeartBeatAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);
+
+private:
+  std::vector<openrasp_v8_js_src> active_plugins;
 
 private:
   void do_heartbeat(CURL *curl TSRMLS_DC);

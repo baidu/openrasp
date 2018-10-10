@@ -16,7 +16,6 @@
 
 #include "shared_config_manager.h"
 #include "shared_config_block.h"
-#include "safe_shutdown_manager.h"
 
 namespace openrasp
 {
@@ -117,10 +116,6 @@ bool SharedConfigManager::shutdown()
 {
     if (initialized)
     {
-        if (ssdm != nullptr && !ssdm->is_master_current_process())
-        {
-            return true;
-        }
         if (rwlock != nullptr)
         {
             delete rwlock;
