@@ -1,4 +1,4 @@
-const version = '2018-0927-1600'
+const version = '2018-1010-1600'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -48,11 +48,6 @@ var algorithmConfig = {
     sqli_userinput: {
         action:     'block',
         min_length: 15
-    },
-    // SQL注入算法#1 - 是否拦截数据库管理器
-    // 默认关闭，有需要可改为 block。此算法依赖于 sqli_userinput
-    sqli_dbmanager: {
-        action: 'ignore'
     },
     // SQL注入算法#2 - 语句规范
     sqli_policy: {
@@ -645,6 +640,41 @@ function is_from_userinput(parameter, target)
     return verdict
 }
 
+// 检查SQL逻辑是否被用户参数所修改
+function is_sql_changed(raw_tokens, userinput_idx, userinput_length)
+{
+    // 当用户输入穿越了2个token，就可以判定为SQL注入
+    var start = -1, end = raw_tokens.length, distance = 2
+
+    // 寻找 token 起始点，可以改为二分查找
+    for (var i = 0; i < raw_tokens.length; i++) 
+    {
+        if (raw_tokens[i].stop >= userinput_idx) 
+        {
+            start = i
+            break
+        }
+    }
+
+    // 寻找 token 结束点
+    // 另外，最多需要遍历 distance 个 token
+    for (var i = start; i < start + distance && i < raw_tokens.length; i++) 
+    {
+        if (raw_tokens[i].stop >= userinput_idx + userinput_length - 1) 
+        {
+            end = i
+            break
+        }
+    }
+
+    if (end - start > distance)
+    {
+        return true
+    }
+
+    return false
+}
+
 // 下个版本将会支持翻译，目前还需要暴露一个 getText 接口给插件
 function _(message, args)
 {
@@ -714,18 +744,8 @@ if (RASP.get_jsengine() !== 'v8') {
                         continue
                     }
 
-                    // 检测数据库管理器
-                    if (value.length == params.query.length && value == params.query) {
-                        if (algorithmConfig.sqli_dbmanager.action != 'ignore') {
-                            reason = _("SQLi - Database manager detected, request parameter name: %1%", [name])
-                            return true
-                        } else {
-                            continue
-                        }
-                    }
-
-                    // 简单识别用户输入
-                    var userinput_idx = params.query.indexOf(value);
+                    // 检查用户输入是否存在于SQL中
+                    var userinput_idx = params.query.indexOf(value)
                     if (userinput_idx == -1) {
                         continue
                     }
@@ -733,37 +753,17 @@ if (RASP.get_jsengine() !== 'v8') {
                     // 懒加载，需要的时候初始化 token
                     if (raw_tokens.length == 0) {
                         raw_tokens = RASP.sql_tokenize(params.query, params.server)
-                        // console.log(raw_tokens)
                     }
 
-                    // 当用户输入穿越了2个token，就可以判定为SQL注入
-                    var start = -1, end = raw_tokens.length, distance = 2
-
-                    // 寻找 token 起始点，可以改为二分查找
-                    for (var i = 0; i < raw_tokens.length; i++) {
-                        if (raw_tokens[i].stop >= userinput_idx) {
-                            start = i
-                            break
-                        }
-                    }
-
-                    // 寻找 token 结束点
-                    // 另外，最多需要遍历 distance 个 token
-                    for (var i = start; i < start + distance && i < raw_tokens.length; i++) {
-                        if (raw_tokens[i].stop >= userinput_idx + value.length - 1) {
-                            end = i;
-                            break;
-                        }
-                    }
-
-                    if (end - start > distance) {
+                    if (is_sql_changed(raw_tokens, userinput_idx, value.length)) {
                         reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
                         return true
                     }
                 }
             })
 
-            if (reason !== false) {
+            if (reason !== false) 
+            {
                 return {
                     'action':     algorithmConfig.sqli_userinput.action,
                     'confidence': 90,
