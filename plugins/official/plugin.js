@@ -207,7 +207,7 @@ var algorithmConfig = {
         action: 'block'
     },
 
-    // 文件包含 - 用户输入
+    // 文件包含 - 用户输入匹配
     include_userinput: {
         action: 'block'
     },
@@ -233,10 +233,6 @@ var algorithmConfig = {
             'compress.zlib',
             'compress.bzip2'
         ]
-    },
-    // 文件包含 - 包含web目录之外的文件，默认关闭
-    include_outsideWebroot: {
-        action: 'ignore'
     },
 
     // XXE - 使用 gopher/ftp/dict/.. 等不常见协议访问外部实体
@@ -359,7 +355,7 @@ var forcefulBrowsing = {
 var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml)\.?$/i
 
 // 正常文件
-var cleanFileRegex = /\.(jpg|jpeg|png|gif|bmp|txt)$/i
+var cleanFileRegex = /\.(jpg|jpeg|png|gif|bmp|txt|rar|zip)$/i
 
 // 匹配 HTML/JS 等可以用于钓鱼、domain-fronting 的文件
 var htmlFileRegex   = /\.(htm|html|js)$/i
@@ -711,13 +707,9 @@ if (RASP.get_jsengine() !== 'v8') {
         var reason     = false
         var min_length = algorithmConfig.sqli_userinput.min_length
         var parameters = context.parameter || {}
-
-        // 懒加载，需要的时候再初始化 token 数组
         var raw_tokens = []
 
-        // 算法1: 匹配用户输入
-        // 1. 简单识别逻辑是否发生改变
-        // 2. 识别数据库管理器
+        // 算法1: 匹配用户输入，简单识别逻辑是否发生改变
         if (algorithmConfig.sqli_userinput.action != 'ignore') {
             Object.keys(parameters).some(function (name) {
                 // 覆盖两种情况，后者仅PHP支持
@@ -735,11 +727,7 @@ if (RASP.get_jsengine() !== 'v8') {
                 for (var i = 0; i < value_list.length; i ++) {
                     var value = value_list[i]
 
-                    // 请求参数长度超过15才考虑，任何跨表查询都至少需要20个字符，其实可以写的更大点
-                    // SELECT * FROM admin
-                    // and updatexml(....)
-                    //
-                    // @TODO: 支持万能密码检测
+                    // 请求参数长度过滤，减少匹配次数
                     if (value.length <= min_length) {
                         continue
                     }
@@ -1145,6 +1133,8 @@ plugin.register('include', function (params, context) {
     var parameter = context.parameter
 
     // 用户输入检查
+    // ?file=/etc/passwd
+    // ?file=../../../../../var/log/httpd/error.log
     if (algorithmConfig.include_userinput.action != 'ignore')
     {
         if (is_path_endswith_userinput(parameter, url))
@@ -1155,26 +1145,6 @@ plugin.register('include', function (params, context) {
                 confidence: 100                
             }
         }
-    }
-
-    // 如果没有协议
-    // ?file=../../../../../var/log/httpd/error.log
-    if (url.indexOf('://') == -1) {
-        var realpath    = params.realpath
-        var appBasePath = context.appBasePath
-
-        // 是否跳出 web 目录？
-        if (algorithmConfig.include_outsideWebroot.action != 'ignore' &&
-            is_outside_webroot(appBasePath, realpath, url))
-        {
-            return {
-                action:     algorithmConfig.include_outsideWebroot.action,
-                message:    _("File inclusion - including files outside webroot", [appBasePath]),
-                confidence: 100
-            }
-        }
-
-        return clean
     }
 
     // 如果有协议
@@ -1209,10 +1179,11 @@ plugin.register('writeFile', function (params, context) {
         return clean
     }
 
-    // 写 NTFS 流文件，肯定不正常
+    // 写 NTFS 流文件，通常是为了绕过限制
     if (algorithmConfig.writeFile_NTFS.action != 'ignore')
     {
-        if (ntfsRegex.test(params.realpath)) {
+        if (ntfsRegex.test(params.realpath)) 
+        {
             return {
                 action:     algorithmConfig.writeFile_NTFS.action,
                 message:    _("File write - Writing NTFS alternative data streams", [params.realpath]),
@@ -1221,11 +1192,12 @@ plugin.register('writeFile', function (params, context) {
         }
     }
 
-    // PUT 上传
+    // PUT 上传脚本文件
     if (context.method == 'put' &&
         algorithmConfig.writeFile_PUT_script.action != 'ignore')
     {
-        if (scriptFileRegex.test(params.realpath)) {
+        if (scriptFileRegex.test(params.realpath)) 
+        {
             return {
                 action:     algorithmConfig.writeFile_PUT_script.action,
                 message:    _("File upload - Using HTTP PUT method to upload a webshell", [params.realpath]),
@@ -1238,7 +1210,8 @@ plugin.register('writeFile', function (params, context) {
     // https://rasp.baidu.com/doc/dev/official.html#case-file-write
     if (algorithmConfig.writeFile_script.action != 'ignore')
     {
-        if (scriptFileRegex.test(params.realpath)) {
+        if (scriptFileRegex.test(params.realpath)) 
+        {
             return {
                 action:     algorithmConfig.writeFile_script.action,
                 message:    _("File write - Creating or appending to a server-side script file, file is %1%", [params.realpath]),
@@ -1277,7 +1250,7 @@ plugin.register('fileUpload', function (params, context) {
         }
     }
 
-    // 是否禁止 HTML/JS 文件
+    // 是否禁止 HTML/JS 文件，主要是对抗钓鱼、CORS绕过等问题
     if (algorithmConfig.fileUpload_multipart_html.action != 'ignore') 
     {
         if (htmlFileRegex.test(params.filename)) 
