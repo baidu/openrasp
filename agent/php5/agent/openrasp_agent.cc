@@ -100,27 +100,10 @@ void HeartBeatAgent::do_heartbeat(CURL *curl TSRMLS_DC)
 	MAKE_STD_ZVAL(body);
 	array_init(body);
 	add_assoc_string(body, "rasp_id", (char *)oam->get_rasp_id().c_str(), 1);
-	char *plugin_version = "";
-	if (active_plugins.size() > 0)
-	{
-		plugin_version = (char *)oam->agent_ctrl_block->get_plugin_version();
-	}
-	add_assoc_string(body, "plugin_version", plugin_version, 1);
-	long config_last_update = 0;
-	if (!algorithm_config.empty() && scm)
-	{
-		config_last_update = scm->get_config_last_update();
-	}
-	add_assoc_long(body, "config_time", config_last_update);
-	smart_str buf_json = {0};
-	php_json_encode(&buf_json, body, 0 TSRMLS_CC);
-	if (buf_json.a > buf_json.len)
-	{
-		buf_json.c[buf_json.len] = '\0';
-		buf_json.len++;
-	}
-	perform_curl(curl, url_string, buf_json.c, res_info);
-	smart_str_free(&buf_json);
+	add_assoc_string(body, "plugin_version", (char *)oam->agent_ctrl_block->get_plugin_version(), 1);
+	add_assoc_long(body, "config_time", (scm ? scm->get_config_last_update() : 0));
+	std::string request_body = json_encode_from_zval(body TSRMLS_CC);
+	perform_curl(curl, url_string, request_body.c_str(), res_info);
 	zval_ptr_dtor(&body);
 	if (CURLE_OK != res_info.res)
 	{
@@ -166,7 +149,10 @@ void HeartBeatAgent::do_heartbeat(CURL *curl TSRMLS_DC)
 					}
 					if (has_new_plugin || has_new_algorithm_config)
 					{
-						build_plugin_snapshot(TSRMLS_C);
+						if (build_plugin_snapshot(TSRMLS_C))
+						{
+							oam->agent_ctrl_block->set_plugin_version(fetch_outmost_string_from_ht(plugin_ht, "version"));
+						}
 					}
 				}
 			}
@@ -258,6 +244,7 @@ bool HeartBeatAgent::update_config(zval *config_zv, long config_time, bool *has_
 bool HeartBeatAgent::build_plugin_snapshot(TSRMLS_D)
 {
 	bool result = true;
+	v8::V8::Initialize();
 	init_platform(TSRMLS_C);
 	v8::StartupData snapshot = get_snapshot(algorithm_config, active_plugins TSRMLS_CC);
 	shutdown_platform(TSRMLS_C);
@@ -265,10 +252,10 @@ bool HeartBeatAgent::build_plugin_snapshot(TSRMLS_D)
 	mode_t oldmask = umask(0);
 #endif
 	std::string snapshot_abs_path = std::string(openrasp_ini.root_dir) + "/snapshot.dat";
-	std::ofstream out_file(snapshot_abs_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
+	std::ofstream out_file(snapshot_abs_path, std::ofstream::binary | std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
 	if (out_file.is_open() && out_file.good())
 	{
-		out_file << snapshot.data;
+		out_file.write(snapshot.data, snapshot.raw_size);
 		out_file.close();
 	}
 	else
