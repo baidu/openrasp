@@ -28,7 +28,7 @@
 #if defined(__linux__)
 #define AGENT_SET_PROC_NAME(name) prctl(PR_SET_NAME, (name), 0, 0, 0)
 #else
-#define AGENT_SET_PROC_NAME(name) 
+#define AGENT_SET_PROC_NAME(name)
 #endif
 #define HEARTBEAT_AGENT_PR_NAME "rasp-heartbeat"
 #define LOG_AGENT_PR_NAME "rasp-log"
@@ -69,6 +69,7 @@ public:
   bool verify_ini_correct();
   std::string get_rasp_id();
   bool agent_remote_register();
+  char *get_local_ip();
 
   long get_plugin_update_timestamp()
   {
@@ -85,8 +86,8 @@ private:
 
 private:
   static const int supervisor_interval = 10;
-  static const int max_post_logs_account = 12;
   std::string rasp_id;
+  char local_ip[64] = {0};
 };
 
 extern std::unique_ptr<OpenraspAgentManager> oam;

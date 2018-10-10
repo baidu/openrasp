@@ -20,10 +20,13 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+#include <unistd.h>
+#include <fcntl.h>
 
 extern "C"
 {
 #include "php_ini.h"
+#include "ext/standard/url.h"
 #include "ext/standard/file.h"
 #include "ext/date/php_date.h"
 #include "ext/pcre/php_pcre.h"
@@ -464,20 +467,49 @@ zval *fetch_outmost_zval_from_ht(HashTable *ht, const char *arKey)
     return nullptr;
 }
 
-bool fetch_source_in_ip_packets(char *local_ip, size_t len)
+bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url)
 {
-    const char *dns_server = "180.76.76.76";//baidu DNS server
-    int dns_port = 53;
+    struct hostent *server = nullptr;
+    int backend_port = 0;
+    php_url *resource = php_url_parse_ex(url, strlen(url));
+    if (resource)
+    {
+        if (resource->host)
+        {
+            server = gethostbyname(resource->host);
+        }
+        if (resource->port)
+        {
+            backend_port = resource->port;
+        }
+        else
+        {
+            if (resource->scheme != NULL && strcmp(resource->scheme, "https") == 0)
+            {
+                backend_port = 443;
+            }
+            else
+            {
+                backend_port = 80;
+            }
+        }
+        php_url_free(resource);
+    }
+    if (nullptr == server)
+    {
+        return false;
+    }
     struct sockaddr_in serv;
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    fcntl(sock, F_SETFL, O_NONBLOCK);
     if (sock < 0)
     {
         return false;
     }
     memset(&serv, 0, sizeof(serv));
     serv.sin_family = AF_INET;
-    serv.sin_addr.s_addr = inet_addr(dns_server);
-    serv.sin_port = htons(dns_port);
+    memcpy(&(serv.sin_addr.s_addr), server->h_addr, server->h_length);
+    serv.sin_port = htons(backend_port);
     int err = connect(sock, (const struct sockaddr *)&serv, sizeof(serv));
     struct sockaddr_in name;
     socklen_t namelen = sizeof(name);
@@ -486,6 +518,8 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len)
     if (nullptr == p)
     {
         openrasp_error(E_WARNING, LOG_ERROR, _("inet_ntop error - error number : %d , error message : %s"), errno, strerror(errno));
+        close(sock);
+        return false;
     }
     close(sock);
     return true;

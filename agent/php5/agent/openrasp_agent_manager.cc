@@ -281,9 +281,18 @@ std::string OpenraspAgentManager::get_rasp_id()
 	return this->rasp_id;
 }
 
+char* OpenraspAgentManager::get_local_ip()
+{
+	return local_ip;
+}
+
 bool OpenraspAgentManager::agent_remote_register()
 {
 	TSRMLS_FETCH();
+	if (!fetch_source_in_ip_packets(local_ip, sizeof(local_ip), openrasp_ini.backend_url))
+	{
+		sprintf(local_ip, "");
+	}
 	if (!calculate_rasp_id())
 	{
 		return false;
@@ -310,6 +319,8 @@ bool OpenraspAgentManager::agent_remote_register()
 	add_assoc_string(body, "server_type", sapi_module.name, 1);
 	add_assoc_string(body, "server_version", OPENRASP_PHP_VERSION, 1);
 	add_assoc_string(body, "rasp_home", openrasp_ini.root_dir, 1);
+	add_assoc_string(body, "local_ip", local_ip, 1);
+	add_assoc_string(body, "version", PHP_OPENRASP_VERSION, 1);
 	smart_str buf_json = {0};
 	php_json_encode(&buf_json, body, 0 TSRMLS_CC);
 	if (buf_json.a > buf_json.len)

@@ -82,7 +82,6 @@ private:
   pid_t first_process_pid;
   bool initialized = false;
   static const int supervisor_interval = 10;
-  static const int max_post_logs_account = 12;
 };
 
 extern ShmManager sm;

@@ -42,6 +42,6 @@ char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
 bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result);
 HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey);
 zval *fetch_outmost_zval_from_ht(HashTable *ht, const char *arKey);
-bool fetch_source_in_ip_packets(char *local_ip, size_t len);
+bool fetch_source_in_ip_packets(char *local_ip, size_t len, char* url);
 
 #endif
