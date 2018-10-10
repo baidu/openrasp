@@ -1141,7 +1141,7 @@ plugin.register('include', function (params, context) {
         {
             return {
                 action:     algorithmConfig.include_userinput.action,
-                message:    _("File inclusion - including files specified by user input", [appBasePath]),
+                message:    _("File inclusion - including files specified by user input"),
                 confidence: 100                
             }
         }
