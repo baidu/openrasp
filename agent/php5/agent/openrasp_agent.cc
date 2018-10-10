@@ -71,7 +71,7 @@ void HeartBeatAgent::run()
 	while (true)
 	{
 		do_heartbeat(curl TSRMLS_CC);
-		for (int i = 0; i < openrasp_ini.plugin_update_interval; ++i)
+		for (int i = 0; i < HeartBeatAgent::plugin_update_interval; ++i)
 		{
 			sleep(1);
 			if (HeartBeatAgent::signal_received == SIGTERM)
@@ -405,7 +405,7 @@ void LogAgent::run()
 		catch (std::exception &e)
 		{
 		}
-		for (int i = 0; i < openrasp_ini.log_push_interval; ++i)
+		for (int i = 0; i < LogAgent::log_push_interval; ++i)
 		{
 			sleep(1);
 			if (LogAgent::signal_received == SIGTERM)

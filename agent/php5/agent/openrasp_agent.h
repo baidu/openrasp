@@ -55,6 +55,7 @@ public:
 private:
   std::string algorithm_config;
   std::vector<openrasp_v8_js_src> active_plugins;
+  static const int plugin_update_interval = 60;
 
 private:
   void do_heartbeat(CURL *curl TSRMLS_DC);
@@ -73,6 +74,9 @@ public:
   LogAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);
+
+private:
+  static const int log_push_interval = 15;
 
 private:
   void cleanup_expired_logs(std::vector<LogDirInfo *> &tobe_cleaned_logdirs);

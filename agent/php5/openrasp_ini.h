@@ -46,11 +46,8 @@ class Openrasp_ini
     unsigned int log_maxstack = 10;
     unsigned int log_max_backup = 90;
     bool enforce_policy = false;
-    std::unordered_set<std::string> hooks_ignore;
     std::unordered_set<std::string> callable_blacklists;
     char* backend_url;
-    unsigned int plugin_update_interval = 60;
-    unsigned int log_push_interval = 10;
     char *app_id;
     bool plugin_update_enable = 1;
     int block_status_code = 302;
@@ -61,7 +58,7 @@ class Openrasp_ini
     bool plugin_filter = true;
     char *clientip_header;
     int body_maxbytes = 4 * 1024;
-    bool remote_management_enable = true;
+    bool remote_management_enable = true;   
 };
 
 extern Openrasp_ini openrasp_ini;
