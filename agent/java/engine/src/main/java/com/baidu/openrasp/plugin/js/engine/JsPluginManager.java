@@ -17,6 +17,7 @@
 package com.baidu.openrasp.plugin.js.engine;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.Utils.CloudUtils;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
@@ -48,7 +49,6 @@ public class JsPluginManager {
     private static final String PLUGIN_NAME = "official.js";
     private static Timer timer = null;
     private static Integer watchId = null;
-    private static boolean cloudSwitch;
 
     /**
      * 初始化插件引擎
@@ -57,9 +57,8 @@ public class JsPluginManager {
      */
     public synchronized static void init() throws Exception {
         JSContextFactory.init();
-        cloudSwitch = Config.getConfig().getCloudSwitch();
         updatePlugin();
-        if (!cloudSwitch) {
+        if (!CloudUtils.checkCloudControlEnter()) {
             initFileWatcher();
         }
     }
@@ -127,7 +126,7 @@ public class JsPluginManager {
         Config.getConfig().setAlgorithmConfig("{}");
         boolean oldValue = HookHandler.enableHook.getAndSet(false);
         List<CheckScript> scripts = new LinkedList<CheckScript>();
-        if (cloudSwitch) {
+        if (CloudUtils.checkCloudControlEnter()) {
             String plugin = CloudCacheModel.getInstance().getPlugin();
             if (plugin != null) {
                 scripts.add(new CheckScript(PLUGIN_NAME, plugin));

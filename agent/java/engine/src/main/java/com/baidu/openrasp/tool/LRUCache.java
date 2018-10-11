@@ -125,5 +125,40 @@ public class LRUCache<K, V> {
         }
     }
 
+    /**
+     * Return the Set of Entries in the cache.
+     */
+    public Set<Map.Entry<K,V>> getEntrySet(){
+        try {
+            lock.lock();
+            return map.entrySet();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Return the real size of the cache.
+     */
+    public int realSize(){
+        try {
+            lock.lock();
+            return map.size();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Return the max size of the cache.
+     */
+    public int maxSize(){
+        try {
+            lock.lock();
+            return this.cacheSize;
+        } finally {
+            lock.unlock();
+        }
+    }
 
 }

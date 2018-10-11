@@ -175,6 +175,11 @@ public class SQLStatementHook extends AbstractSqlHook {
      * @param stmt sql语句
      */
     public static void checkSQL(String server, Object statement, String stmt) {
+        int lruCacheSize = getLRUCacheSize();
+        if (sqlCache.maxSize() != lruCacheSize) {
+            sqlCache.clear();
+            sqlCache = new LRUCache<String, String>(lruCacheSize);
+        }
         if (stmt != null && !stmt.isEmpty() && !sqlCache.isContainsKey(stmt)) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
