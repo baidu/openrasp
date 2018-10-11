@@ -470,7 +470,6 @@ int main() {
     openrasp_v8_utils.cc \
     openrasp_security_policy.cc \
     openrasp_ini.cc \
-    agent/safe_shutdown_manager.cc \
     agent/shared_config_manager.cc \
     agent/utils/ReadWriteLock.cc \
     agent/utils/DoubleArrayTrie.cc \

@@ -20,14 +20,19 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+#include <unistd.h>
+#include <fcntl.h>
 
 extern "C"
 {
 #include "php_ini.h"
+#include "ext/json/php_json.h"
+#include "ext/standard/url.h"
 #include "ext/standard/file.h"
 #include "ext/date/php_date.h"
 #include "ext/pcre/php_pcre.h"
 #include "ext/standard/php_string.h"
+#include "ext/standard/php_smart_str.h"
 #include "Zend/zend_builtin_functions.h"
 }
 
@@ -50,7 +55,7 @@ extern "C"
 #include <netdb.h>
 #include <sys/socket.h>
 #include <net/if.h>
-#include <netpacket/packet.h>
+// #include <netpacket/packet.h>
 #include <arpa/inet.h>
 #else
 #include <unistd.h>
@@ -382,42 +387,42 @@ void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)
 
 void fetch_hw_addrs(std::vector<std::string> &hw_addrs)
 {
-#if defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
-    struct ifaddrs *ifaddr, *ifa;
-    if (getifaddrs(&ifaddr) == -1)
-    {
-        openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs error: %s"), strerror(errno));
-    }
-    else
-    {
-        int n;
-        for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, n++)
-        {
-            if (ifa->ifa_addr == NULL)
-            {
-                continue;
-            }
-            if ((strcmp("lo", ifa->ifa_name) == 0) ||
-                !(ifa->ifa_flags & (IFF_RUNNING)))
-            {
-                continue;
-            }
-            if (ifa->ifa_addr->sa_family == AF_PACKET)
-            {
-                struct sockaddr_ll *sl = (struct sockaddr_ll *)ifa->ifa_addr;
-                std::ostringstream oss;
-                oss << std::hex;
-                for (int i = 0; i < sl->sll_halen; i++)
-                {
-                    oss << std::setfill('0') << std::setw(2) << (int)(sl->sll_addr[i]) << ((i + 1 != sl->sll_halen) ? "-" : "");
-                }
-                hw_addrs.push_back(oss.str());
-            }
-        }
-        std::sort(hw_addrs.begin(), hw_addrs.end());
-        freeifaddrs(ifaddr);
-    }
-#endif
+// #if defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+//     struct ifaddrs *ifaddr, *ifa;
+//     if (getifaddrs(&ifaddr) == -1)
+//     {
+//         openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs error: %s"), strerror(errno));
+//     }
+//     else
+//     {
+//         int n;
+//         for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, n++)
+//         {
+//             if (ifa->ifa_addr == NULL)
+//             {
+//                 continue;
+//             }
+//             if ((strcmp("lo", ifa->ifa_name) == 0) ||
+//                 !(ifa->ifa_flags & (IFF_RUNNING)))
+//             {
+//                 continue;
+//             }
+//             if (ifa->ifa_addr->sa_family == AF_PACKET)
+//             {
+//                 struct sockaddr_ll *sl = (struct sockaddr_ll *)ifa->ifa_addr;
+//                 std::ostringstream oss;
+//                 oss << std::hex;
+//                 for (int i = 0; i < sl->sll_halen; i++)
+//                 {
+//                     oss << std::setfill('0') << std::setw(2) << (int)(sl->sll_addr[i]) << ((i + 1 != sl->sll_halen) ? "-" : "");
+//                 }
+//                 hw_addrs.push_back(oss.str());
+//             }
+//         }
+//         std::sort(hw_addrs.begin(), hw_addrs.end());
+//         freeifaddrs(ifaddr);
+//     }
+// #endif
 }
 
 char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
@@ -464,20 +469,49 @@ zval *fetch_outmost_zval_from_ht(HashTable *ht, const char *arKey)
     return nullptr;
 }
 
-bool fetch_source_in_ip_packets(char *local_ip, size_t len)
+bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url)
 {
-    const char *dns_server = "180.76.76.76";//baidu DNS server
-    int dns_port = 53;
+    struct hostent *server = nullptr;
+    int backend_port = 0;
+    php_url *resource = php_url_parse_ex(url, strlen(url));
+    if (resource)
+    {
+        if (resource->host)
+        {
+            server = gethostbyname(resource->host);
+        }
+        if (resource->port)
+        {
+            backend_port = resource->port;
+        }
+        else
+        {
+            if (resource->scheme != NULL && strcmp(resource->scheme, "https") == 0)
+            {
+                backend_port = 443;
+            }
+            else
+            {
+                backend_port = 80;
+            }
+        }
+        php_url_free(resource);
+    }
+    if (nullptr == server)
+    {
+        return false;
+    }
     struct sockaddr_in serv;
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    fcntl(sock, F_SETFL, O_NONBLOCK);
     if (sock < 0)
     {
         return false;
     }
     memset(&serv, 0, sizeof(serv));
     serv.sin_family = AF_INET;
-    serv.sin_addr.s_addr = inet_addr(dns_server);
-    serv.sin_port = htons(dns_port);
+    memcpy(&(serv.sin_addr.s_addr), server->h_addr, server->h_length);
+    serv.sin_port = htons(backend_port);
     int err = connect(sock, (const struct sockaddr *)&serv, sizeof(serv));
     struct sockaddr_in name;
     socklen_t namelen = sizeof(name);
@@ -486,7 +520,23 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len)
     if (nullptr == p)
     {
         openrasp_error(E_WARNING, LOG_ERROR, _("inet_ntop error - error number : %d , error message : %s"), errno, strerror(errno));
+        close(sock);
+        return false;
     }
     close(sock);
     return true;
+}
+
+std::string json_encode_from_zval(zval *value TSRMLS_DC)
+{
+    smart_str buf_json = {0};
+	php_json_encode(&buf_json, value, 0 TSRMLS_CC);
+	if (buf_json.a > buf_json.len)
+	{
+		buf_json.c[buf_json.len] = '\0';
+		buf_json.len++;
+	}
+	std::string result(buf_json.c);
+	smart_str_free(&buf_json);
+    return result;
 }

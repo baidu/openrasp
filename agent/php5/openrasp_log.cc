@@ -57,7 +57,6 @@ typedef struct keys_filter_t
 
 static std::map<std::string, std::string> _if_addr_map;
 static char host_name[255];
-static char local_ip[64];
 
 /* 获取当前毫秒时间
 */
@@ -342,7 +341,6 @@ static void init_alarm_request_info(TSRMLS_D)
     add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "server_version", OPENRASP_PHP_VERSION, 1);
     add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "request_id", OPENRASP_INJECT_G(request_id), 1);
     add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "body", fetch_request_body(openrasp_ini.body_maxbytes TSRMLS_CC), 0);
-    add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "local_ip", (char*)(local_ip ? local_ip : ""), 1);
     if (openrasp_ini.app_id)
     {
         add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "app_id", openrasp_ini.app_id, 1);
@@ -351,7 +349,14 @@ static void init_alarm_request_info(TSRMLS_D)
     if (openrasp::oam)
     {
         add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "rasp_id", (char *)openrasp::oam->get_rasp_id().c_str(), 1);
+        add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "local_ip", (char *)openrasp::oam->get_local_ip(), 1);
     }
+    else
+    {
+        add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "local_ip", "", 1);
+    }
+#else
+    add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "local_ip", "", 1);
 #endif
 }
 
@@ -365,7 +370,6 @@ static void init_policy_request_info(TSRMLS_D)
     add_assoc_string(OPENRASP_LOG_G(policy_request_info), "server_type", "PHP", 1);
     add_assoc_string(OPENRASP_LOG_G(policy_request_info), "server_version", OPENRASP_PHP_VERSION, 1);
     add_assoc_zval(OPENRASP_LOG_G(policy_request_info), "server_nic", _get_ifaddr_zval());
-    add_assoc_string(OPENRASP_LOG_G(policy_request_info), "local_ip", (char*)(local_ip ? local_ip : ""), 1);
     if (openrasp_ini.app_id)
     {
         add_assoc_string(OPENRASP_LOG_G(policy_request_info), "app_id", openrasp_ini.app_id, 1);
@@ -374,7 +378,14 @@ static void init_policy_request_info(TSRMLS_D)
     if (openrasp::oam)
     {
         add_assoc_string(OPENRASP_LOG_G(policy_request_info), "rasp_id", (char *)openrasp::oam->get_rasp_id().c_str(), 1);
+        add_assoc_string(OPENRASP_LOG_G(policy_request_info), "local_ip", (char *)openrasp::oam->get_local_ip(), 1);
     }
+    else
+    {
+        add_assoc_string(OPENRASP_LOG_G(policy_request_info), "local_ip", "", 1);
+    }
+#else
+    add_assoc_string(OPENRASP_LOG_G(policy_request_info), "local_ip", "", 1);
 #endif
 }
 
@@ -866,7 +877,6 @@ PHP_MINIT_FUNCTION(openrasp_log)
         openrasp_shared_alloc_startup();
     }
     fetch_if_addrs(_if_addr_map);
-    fetch_source_in_ip_packets(local_ip, sizeof(local_ip));
     if (gethostname(host_name, sizeof(host_name) - 1)) { 
         sprintf( host_name, "UNKNOWN_HOST" );
         openrasp_error(E_WARNING, LOG_ERROR, _("gethostname error: %s"), strerror(errno));

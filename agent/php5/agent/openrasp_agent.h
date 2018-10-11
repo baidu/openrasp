@@ -17,6 +17,7 @@
 #ifndef _OPENRASP_BASE_AGENT_H_
 #define _OPENRASP_BASE_AGENT_H_
 
+#include "openrasp_v8.h"
 #include "openrasp_agent_manager.h"
 #include "utils/curl_helper.h"
 #include <signal.h>
@@ -46,14 +47,21 @@ class HeartBeatAgent : public BaseAgent
 public:
   static volatile int signal_received;
 
+public:
   HeartBeatAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);
 
 private:
+  std::string algorithm_config;
+  std::vector<openrasp_v8_js_src> active_plugins;
+  static const int plugin_update_interval = 60;
+
+private:
   void do_heartbeat(CURL *curl TSRMLS_DC);
-  void update_official_plugin(HashTable *plugin_ht);
-  bool update_config(zval *config_zv, long config_time TSRMLS_DC);
+  bool build_plugin_snapshot(TSRMLS_D);
+  bool update_official_plugin(HashTable *plugin_ht);
+  bool update_config(zval *config_zv, long config_time, bool *has_new_algorithm_config TSRMLS_DC);
 };
 
 class LogAgent : public BaseAgent
@@ -61,9 +69,14 @@ class LogAgent : public BaseAgent
 public:
   static volatile int signal_received;
   static const int max_post_logs_account = 512;
+
+public:
   LogAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);
+
+private:
+  static const int log_push_interval = 15;
 
 private:
   void cleanup_expired_logs(std::vector<LogDirInfo *> &tobe_cleaned_logdirs);
