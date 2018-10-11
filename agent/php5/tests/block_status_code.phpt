@@ -9,11 +9,13 @@ plugin.register('command', params => {
     return block
 })
 EOF;
+$conf = <<<CONF
+block_status_code=500
+CONF;
 include(__DIR__.'/skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.block_status_code=500
 --FILE--
 <?php
 header('Content-type: text/plain');

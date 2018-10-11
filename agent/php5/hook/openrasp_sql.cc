@@ -58,7 +58,7 @@ void slow_query_alarm(int rows TSRMLS_DC)
     zval *plugin_message = nullptr;
     MAKE_STD_ZVAL(plugin_message);
     char *message_str = nullptr;
-    spprintf(&message_str, 0, _("SQL slow query detected: selected %d rows, exceeding %d"), rows, openrasp_ini.slowquery_min_rows);
+    spprintf(&message_str, 0, _("SQL slow query detected: selected %d rows, exceeding %d"), rows, OPENRASP_CONFIG(slowquery_min_rows));
     ZVAL_STRING(plugin_message, message_str, 1);
     efree(message_str);
     openrasp_buildin_php_risk_handle(0, SQL_SLOW_QUERY, 100, attack_params, plugin_message TSRMLS_CC);

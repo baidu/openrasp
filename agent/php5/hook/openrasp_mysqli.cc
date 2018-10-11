@@ -119,7 +119,7 @@ static void init_mysqli_real_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sq
 //mysqli::mysqli
 void pre_mysqli_mysqli_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (openrasp_ini.enforce_policy)
+    if (OPENRASP_CONFIG(enforce_policy))
     {
         if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli__construct_conn_entry, 1))
         {
@@ -129,7 +129,7 @@ void pre_mysqli_mysqli_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 }
 void post_mysqli_mysqli_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!openrasp_ini.enforce_policy && Z_TYPE_P(this_ptr) == IS_OBJECT)
+    if (!OPENRASP_CONFIG(enforce_policy) && Z_TYPE_P(this_ptr) == IS_OBJECT)
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli__construct_conn_entry, 0);
     }
@@ -139,7 +139,7 @@ void post_mysqli_mysqli_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 //mysqli::real_connect 
 void pre_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (openrasp_ini.enforce_policy)
+    if (OPENRASP_CONFIG(enforce_policy))
     {
         if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_conn_entry, 1))
         {
@@ -149,7 +149,7 @@ void pre_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS
 }
 void post_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!openrasp_ini.enforce_policy && Z_TYPE_P(this_ptr) == IS_OBJECT)
+    if (!OPENRASP_CONFIG(enforce_policy) && Z_TYPE_P(this_ptr) == IS_OBJECT)
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_conn_entry, 0);
     }
@@ -195,7 +195,7 @@ void post_mysqli_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         args[0] = this_ptr;
         num_rows = fetch_rows_via_user_function("mysqli_affected_rows", 1, args TSRMLS_CC);
     }
-    if (num_rows >= openrasp_ini.slowquery_min_rows)
+    if (num_rows >= OPENRASP_CONFIG(slowquery_min_rows))
     {
         slow_query_alarm(num_rows TSRMLS_CC);
     }
@@ -205,7 +205,7 @@ void post_mysqli_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 //mysqli_connect
 void pre_global_mysqli_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (openrasp_ini.enforce_policy)
+    if (OPENRASP_CONFIG(enforce_policy))
     {        
         if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry, 1))
         {
@@ -214,8 +214,8 @@ void pre_global_mysqli_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETE
     }
 }
 void post_global_mysqli_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_OBJECT)
+{ 
+    if (!OPENRASP_CONFIG(enforce_policy) && Z_TYPE_P(return_value) == IS_OBJECT)
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry, 0);
     }
@@ -225,7 +225,7 @@ void post_global_mysqli_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMET
 //mysqli_real_connect
 void pre_global_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (openrasp_ini.enforce_policy)
+    if (OPENRASP_CONFIG(enforce_policy))
     {        
         if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_real_connect_conn_entry, 1))
         {
@@ -235,7 +235,7 @@ void pre_global_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PAR
 }
 void post_global_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value))
+    if (!OPENRASP_CONFIG(enforce_policy) && Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value))
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_real_connect_conn_entry, 0);
     }
@@ -281,7 +281,7 @@ void post_global_mysqli_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETE
         num_rows = fetch_rows_via_user_function("mysqli_affected_rows", 1, args TSRMLS_CC);
     }
     efree(ppp_args);
-    if (num_rows >= openrasp_ini.slowquery_min_rows)
+    if (num_rows >= OPENRASP_CONFIG(slowquery_min_rows))
     {
         slow_query_alarm(num_rows TSRMLS_CC);
     }

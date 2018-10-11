@@ -2,12 +2,14 @@
 inject urlprefix
 --SKIPIF--
 <?php
+$conf = <<<CONF
+inject_html_urlprefix="/prefix"
+CONF;
 include(__DIR__.'/skipif.inc');
 file_put_contents('/tmp/openrasp/assets/inject.html', "inject content");
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.inject_urlprefix=/prefix
 --ENV--
 return <<<END
 REQUEST_URI=/prefix/index.php

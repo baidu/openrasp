@@ -3,12 +3,14 @@ hook mysql_pconnect
 --SKIPIF--
 <?php
 if (PHP_MAJOR_VERSION >= 7) die('Skipped: no mysql extension in PHP7.');
+$conf = <<<CONF
+enforce_policy=true
+CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("mysql")) die("Skipped: mysql extension required.");
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.enforce_policy=On
 --FILE--
 <?php
 mysql_pconnect('127.0.0.1', 'root');

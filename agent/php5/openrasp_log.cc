@@ -84,7 +84,7 @@ static void init_logger_instance(int logger_id TSRMLS_DC)
     rasp_logger_entry& logger_entry = OPENRASP_LOG_G(loggers)[logger_id];
     if (!logger_entry.initialized)
     {
-        logger_entry.available_token = openrasp_ini.log_maxburst;
+        logger_entry.available_token = OPENRASP_CONFIG(log_maxburst);
         logger_entry.last_logged_time = get_millisecond(TSRMLS_C);
         char *logger_folder = nullptr;
         spprintf(&logger_folder, 0, "%s%clogs%c%s", openrasp_ini.root_dir, DEFAULT_SLASH, DEFAULT_SLASH, logger_entry.name);
@@ -223,9 +223,9 @@ static void build_complete_url(zval *items, zval *new_zv TSRMLS_DC)
 static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_filter> &filters TSRMLS_DC)
 {
     std::vector<keys_filter> total_filters(filters);
-    if (openrasp_ini.clientip_header && strcmp(openrasp_ini.clientip_header, ""))
+    if (!OPENRASP_CONFIG(clientip_header).empty())
     {
-        char* tmp_clientip_header = estrdup(openrasp_ini.clientip_header);
+        char* tmp_clientip_header = estrdup(OPENRASP_CONFIG(clientip_header).c_str());
         char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
         const char* server_global_hey = ("HTTP_" + std::string(uch)).c_str();
         total_filters.push_back({server_global_hey, "client_ip", nullptr});
@@ -335,7 +335,7 @@ static void init_alarm_request_info(TSRMLS_D)
     add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "server_type", "PHP", 1);
     add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "server_version", OPENRASP_PHP_VERSION, 1);
     add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "request_id", OPENRASP_INJECT_G(request_id), 1);
-    add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "body", fetch_request_body(openrasp_ini.body_maxbytes TSRMLS_CC), 0);
+    add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "body", fetch_request_body(OPENRASP_CONFIG(body_maxbytes) TSRMLS_CC), 0);
     if (openrasp_ini.app_id)
     {
         add_assoc_string(OPENRASP_LOG_G(alarm_request_info), "app_id", openrasp_ini.app_id, 1);
@@ -617,9 +617,9 @@ static int comsume_token_if_available(rasp_logger_entry *logger TSRMLS_DC)
     if (now_millisecond - logger->last_logged_time > RASP_LOG_TOKEN_REFILL_INTERVAL)
     {
         int refill_amount = (now_millisecond - logger->last_logged_time)
-                            / RASP_LOG_TOKEN_REFILL_INTERVAL * openrasp_ini.log_maxburst;
-        logger->available_token = logger->available_token + refill_amount > openrasp_ini.log_maxburst
-                                    ? openrasp_ini.log_maxburst
+                            / RASP_LOG_TOKEN_REFILL_INTERVAL * OPENRASP_CONFIG(log_maxburst);
+        logger->available_token = logger->available_token + refill_amount > OPENRASP_CONFIG(log_maxburst)
+                                    ? OPENRASP_CONFIG(log_maxburst)
                                     : logger->available_token + refill_amount;
     }
 

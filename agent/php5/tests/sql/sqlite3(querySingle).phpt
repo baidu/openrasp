@@ -9,12 +9,14 @@ plugin.register('sql', params => {
     return block
 })
 EOF;
+$conf = <<<CONF
+enforce_policy=false
+CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("sqlite3")) die("Skipped: sqlite3 extension required.");
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.enforce_policy=Off
 --FILE--
 <?php
 $db = new SQLite3('test.db');

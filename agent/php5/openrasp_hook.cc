@@ -22,6 +22,7 @@
 #include <new>
 #include <unordered_map>
 #include "agent/shared_config_manager.h"
+#include <algorithm>
 
 extern "C"
 {
@@ -83,7 +84,7 @@ char *openrasp_real_path(char *filename, int filename_len, bool use_include_path
         {"rar", READING},
         {"ogg", READING | WRITING | APPENDING},
         {"expect", READING | WRITING | APPENDING}};
-    if (!openrasp_ini.plugin_filter)
+    if (!OPENRASP_CONFIG(plugin_filter))
     {
         w_op |= WRITING;
     }
@@ -212,7 +213,8 @@ bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC)
 
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC)
 {
-    return openrasp_ini.callable_blacklists.find({item_name, item_name_length}) != openrasp_ini.callable_blacklists.end();
+    std::vector<std::string> blacklist_callable = OPENRASP_ARRAY_CONFIG(blacklist_callable);
+    return std::find(blacklist_callable.begin(), blacklist_callable.end(), std::string(item_name, item_name_length)) != blacklist_callable.end();
 }
 
 static std::string resolve_request_id(std::string str TSRMLS_DC)
@@ -247,11 +249,11 @@ void handle_block(TSRMLS_D)
 
     if (!SG(headers_sent))
     {
-        std::string location = resolve_request_id("Location: " + std::string(openrasp_ini.block_redirect_url) TSRMLS_CC);
+        std::string location = resolve_request_id("Location: " + std::string(OPENRASP_CONFIG(block_redirect_url)) TSRMLS_CC);
         sapi_header_line header;
         header.line = const_cast<char *>(location.c_str());
         header.line_len = location.length();
-        header.response_code = openrasp_ini.block_status_code;
+        header.response_code = OPENRASP_CONFIG(block_status_code);
         sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
     }
 
@@ -266,31 +268,31 @@ void handle_block(TSRMLS_D)
                 Z_TYPE_PP(z_accept) == IS_STRING)
             {
                 std::string accept(Z_STRVAL_PP(z_accept));
-                if (openrasp_ini.block_content_json &&
+                if (!OPENRASP_CONFIG(block_content_json).empty() &&
                     accept.find("application/json") != std::string::npos)
                 {
                     content_type = "Content-type: application/json";
-                    body = resolve_request_id(openrasp_ini.block_content_json TSRMLS_CC);
+                    body = resolve_request_id(OPENRASP_CONFIG(block_content_json) TSRMLS_CC);
                 }
-                else if (openrasp_ini.block_content_xml &&
+                else if (!OPENRASP_CONFIG(block_content_xml).empty() &&
                          accept.find("text/xml") != std::string::npos)
                 {
                     content_type = "Content-type: text/xml";
-                    body = resolve_request_id(openrasp_ini.block_content_xml TSRMLS_CC);
+                    body = resolve_request_id(OPENRASP_CONFIG(block_content_xml) TSRMLS_CC);
                 }
-                else if (openrasp_ini.block_content_xml &&
+                else if (!OPENRASP_CONFIG(block_content_xml).empty() &&
                          accept.find("application/xml") != std::string::npos)
                 {
                     content_type = "Content-type: application/xml";
-                    body = resolve_request_id(openrasp_ini.block_content_xml TSRMLS_CC);
+                    body = resolve_request_id(OPENRASP_CONFIG(block_content_xml) TSRMLS_CC);
                 }
             }
         }
         if (body.length() == 0 &&
-            openrasp_ini.block_content_html)
+            !OPENRASP_CONFIG(block_content_html).empty())
         {
             content_type = "Content-type: text/html";
-            body = resolve_request_id(openrasp_ini.block_content_html TSRMLS_CC);
+            body = resolve_request_id(OPENRASP_CONFIG(block_content_html) TSRMLS_CC);
         }
         if (body.length() > 0)
         {

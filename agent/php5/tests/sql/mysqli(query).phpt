@@ -9,6 +9,9 @@ plugin.register('sql', params => {
     return block
 })
 EOF;
+$conf = <<<CONF
+enforce_policy=false
+CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("mysqli")) die("Skipped: mysqli extension required.");
 @$con = mysqli_connect('127.0.0.1', 'root');
@@ -17,7 +20,6 @@ mysqli_close($con);
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.enforce_policy=Off
 --FILE--
 <?php
 @$con = new mysqli('127.0.0.1', 'root');

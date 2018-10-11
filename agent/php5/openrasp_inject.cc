@@ -104,7 +104,7 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_inject)
     if (inject_html.size())
     {
         bool is_match_inject_prefix = false;
-        if (openrasp_ini.inject_html_urlprefix && strlen(openrasp_ini.inject_html_urlprefix) > 0)
+        if (!OPENRASP_CONFIG(inject_html_urlprefix).empty())
         {
             is_match_inject_prefix = false;
             if (PG(http_globals)[TRACK_VARS_SERVER] || zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
@@ -112,7 +112,7 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_inject)
                 zval **value;
                 if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_URI), REQUEST_URI_HASH, (void **)&value) == SUCCESS &&
                     Z_TYPE_PP(value) == IS_STRING &&
-                    strncasecmp(Z_STRVAL_PP(value), openrasp_ini.inject_html_urlprefix, strlen(openrasp_ini.inject_html_urlprefix)) == 0)
+                    strncasecmp(Z_STRVAL_PP(value), OPENRASP_CONFIG(inject_html_urlprefix).c_str(), OPENRASP_CONFIG(inject_html_urlprefix).length()) == 0)
                 {
                     is_match_inject_prefix = true;
                 }

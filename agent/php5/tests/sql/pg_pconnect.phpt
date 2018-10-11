@@ -2,12 +2,14 @@
 hook pg_pconnect
 --SKIPIF--
 <?php
+$conf = <<<CONF
+enforce_policy=true
+CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("pgsql")) die("Skipped: pgsql extension required.");
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.enforce_policy=On
 --FILE--
 <?php
 pg_pconnect('host=127.0.0.1 port=5432 dbname=test user=postgres');

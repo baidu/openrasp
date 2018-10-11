@@ -9,12 +9,14 @@ plugin.register('command', params => {
     return block
 })
 EOF;
+$conf = <<<CONF
+block_content_html="<p>OpenRASP Request ID: %request_id%</p>"
+CONF;
 include(__DIR__.'/skipif.inc');
 ?>
 --INI--
 default_charset="UTF-8"
 openrasp.root_dir=/tmp/openrasp
-openrasp.block_content_html="<p>OpenRASP Request ID: %request_id%</p>"
 --ENV--
 return <<<END
 HTTP_ACCEPT=text/html;

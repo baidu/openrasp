@@ -79,7 +79,7 @@ std::string format_debug_backtrace_str(TSRMLS_D)
              zend_hash_has_more_elements(hash_arr) == SUCCESS;
              zend_hash_move_forward(hash_arr))
         {
-            if (++i > openrasp_ini.log_maxstack)
+            if (++i > OPENRASP_CONFIG(log_maxstack))
             {
                 break;
             }
@@ -146,7 +146,7 @@ std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D)
              zend_hash_has_more_elements(hash_arr) == SUCCESS;
              zend_hash_move_forward(hash_arr))
         {
-            if (++i > openrasp_ini.plugin_maxstack)
+            if (++i > OPENRASP_CONFIG(plugin_maxstack))
             {
                 break;
             }
@@ -530,13 +530,20 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url)
 std::string json_encode_from_zval(zval *value TSRMLS_DC)
 {
     smart_str buf_json = {0};
-	php_json_encode(&buf_json, value, 0 TSRMLS_CC);
-	if (buf_json.a > buf_json.len)
-	{
-		buf_json.c[buf_json.len] = '\0';
-		buf_json.len++;
-	}
-	std::string result(buf_json.c);
-	smart_str_free(&buf_json);
+    php_json_encode(&buf_json, value, 0 TSRMLS_CC);
+    if (buf_json.a > buf_json.len)
+    {
+        buf_json.c[buf_json.len] = '\0';
+        buf_json.len++;
+    }
+    std::string result(buf_json.c);
+    smart_str_free(&buf_json);
     return result;
+}
+
+std::string get_entire_file_content(std::ifstream &in)
+{
+    std::stringstream sstr;
+    sstr << in.rdbuf();
+    return sstr.str();
 }

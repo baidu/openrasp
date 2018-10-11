@@ -45,12 +45,10 @@ class Openrasp_ini
     unsigned int plugin_maxstack = 100;
     unsigned int log_maxstack = 10;
     unsigned int log_max_backup = 90;
-    bool enforce_policy = false;
     std::unordered_set<std::string> callable_blacklists;
     char* backend_url;
     char *app_id;
     bool plugin_update_enable = 1;
-    int block_status_code = 302;
     char *block_redirect_url;
     char *block_content_json;
     char *block_content_xml;

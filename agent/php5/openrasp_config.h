@@ -44,7 +44,6 @@ public:
   int64_t log_maxburst = 100;
   int64_t log_maxstack = 10;
   int64_t log_max_backup = 90;
-  int64_t log_push_interval = 10;
   // blacklist whitelist
   vector<string> whitelist_command;
   vector<string> whitelist_directory;
@@ -55,16 +54,17 @@ public:
   vector<string> whitelist_copy;
   vector<string> whitelist_include;
   vector<string> whitelist_sql;
+  vector<string> blacklist_callable = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
   // block repsonse
   int64_t block_status_code = 302;
-  string block_redirect_url;
-  string block_content_json;
-  string block_content_xml;
-  string block_content_html;
+  string block_redirect_url = R"(https://rasp.baidu.com/blocked/?request_id=%request_id%)";
+  string block_content_json = R"({"error":true, "reason": "Request blocked by OpenRASP", "request_id": "%request_id%"})";
+  string block_content_xml = R"(<?xml version="1.0"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>)";
+  string block_content_html = R"(</script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>)";
   // others
   string clientip_header;
-  int64_t body_maxbytes = 4 * 1024;
   string inject_html_urlprefix;
+  int64_t body_maxbytes = 4 * 1024;
   int64_t slowquery_min_rows = 500;
   bool enforce_policy = false;
 

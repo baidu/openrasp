@@ -10,11 +10,13 @@ plugin.register('command', params => {
     return block
 })
 EOF;
+$conf = <<<CONF
+plugin_timeout_ms=2000
+CONF;
 include(__DIR__.'/skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.timeout_ms=2000
 --FILE--
 <?php
 $start = round(microtime(true) * 1000);
