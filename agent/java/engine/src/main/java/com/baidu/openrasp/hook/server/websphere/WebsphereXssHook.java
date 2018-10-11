@@ -2,6 +2,7 @@ package com.baidu.openrasp.hook.server.websphere;
 
 import com.baidu.openrasp.hook.server.ServerXssHook;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -13,6 +14,7 @@ import java.io.IOException;
  * @Description: websphere的xss检测hook点
  * @date 2018/8/15 14:18
  */
+@HookAnnotation
 public class WebsphereXssHook extends ServerXssHook {
     @Override
     public boolean isClassMatched(String className) {

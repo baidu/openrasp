@@ -1,6 +1,7 @@
 package com.baidu.openrasp.hook.server.websphere;
 
 import com.baidu.openrasp.hook.server.ServerPreRequestHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -11,6 +12,7 @@ import javassist.NotFoundException;
  * @author anyang
  * @date 2018/8/13 15:13
  */
+@HookAnnotation
 public class WebspherePreRequestHook extends ServerPreRequestHook {
 
     public WebspherePreRequestHook() {

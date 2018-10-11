@@ -2,6 +2,7 @@ package com.baidu.openrasp.hook.server.websphere;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.server.ServerInputHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -13,6 +14,7 @@ import java.io.IOException;
  * @Description: 获取websphere的body
  * @date 2018/8/13 17:18
  */
+@HookAnnotation
 public class WebsphereHttpInputHook extends ServerInputHook {
     @Override
     public boolean isClassMatched(String className) {

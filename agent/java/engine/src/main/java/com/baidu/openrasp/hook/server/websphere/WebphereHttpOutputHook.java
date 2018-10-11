@@ -1,6 +1,7 @@
 package com.baidu.openrasp.hook.server.websphere;
 
 import com.baidu.openrasp.hook.server.ServerOutputCloseHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -10,6 +11,7 @@ import javassist.NotFoundException;
  * @Description: websphere 响应关闭 hook 点
  * @date 2018/8/13 17:45
  */
+@HookAnnotation
 public class WebphereHttpOutputHook extends ServerOutputCloseHook{
 
     public static String clazzName = null;

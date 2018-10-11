@@ -1,6 +1,7 @@
 package com.baidu.openrasp.hook.server.websphere;
 
 import com.baidu.openrasp.hook.server.ServerRequestHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -12,6 +13,7 @@ import java.io.IOException;
  * @author anyang
  * @date 2018/8/13 15:13
  */
+@HookAnnotation
 public class WebsphereRequestHook extends ServerRequestHook {
 
     @Override
