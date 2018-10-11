@@ -11,7 +11,7 @@
             "id": ["1 and 1=2 union select user(),2,3#"]
         }
     },
-    "description": "normal sqli test"
+    "description": "Simple userinput match test"
 },
 {
     "id": "sqli_policy_hex",
@@ -24,7 +24,7 @@
     "context": {
         "parameter": {}
     },
-    "description": "sqli with hex number"
+    "description": "SQL injection with hex values"
 },
 {
     "id": "sqli_policy_func",
@@ -37,18 +37,5 @@
     "context": {
         "parameter": {}
     },
-    "description": "sqli with delay function"
-},
-{
-    "id": "sqli_policy_information_schema",
-    "name": "sql",
-    "action": "block",
-    "params": {
-        "server": "mysql",
-        "query": "select * from information_schema.tables"
-    },
-    "context": {
-        "parameter": {}
-    },
-    "description": "sqli with schema detective"
+    "description": "SQL injection with datetime methods"
 }]
