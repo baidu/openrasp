@@ -338,7 +338,7 @@
             ],
             "constraints": [
                 {
-                    "search": "sourcetype=\"modsec:audit\" type=\"alert\"",
+                    "search": "sourcetype=\"openrasp\"",
                     "owner": "alerts"
                 }
             ],
