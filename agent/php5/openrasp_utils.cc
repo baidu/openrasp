@@ -55,7 +55,7 @@ extern "C"
 #include <netdb.h>
 #include <sys/socket.h>
 #include <net/if.h>
-#include <netpacket/packet.h>
+// #include <netpacket/packet.h>
 #include <arpa/inet.h>
 #else
 #include <unistd.h>
@@ -387,42 +387,42 @@ void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)
 
 void fetch_hw_addrs(std::vector<std::string> &hw_addrs)
 {
-#if defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
-    struct ifaddrs *ifaddr, *ifa;
-    if (getifaddrs(&ifaddr) == -1)
-    {
-        openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs error: %s"), strerror(errno));
-    }
-    else
-    {
-        int n;
-        for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, n++)
-        {
-            if (ifa->ifa_addr == NULL)
-            {
-                continue;
-            }
-            if ((strcmp("lo", ifa->ifa_name) == 0) ||
-                !(ifa->ifa_flags & (IFF_RUNNING)))
-            {
-                continue;
-            }
-            if (ifa->ifa_addr->sa_family == AF_PACKET)
-            {
-                struct sockaddr_ll *sl = (struct sockaddr_ll *)ifa->ifa_addr;
-                std::ostringstream oss;
-                oss << std::hex;
-                for (int i = 0; i < sl->sll_halen; i++)
-                {
-                    oss << std::setfill('0') << std::setw(2) << (int)(sl->sll_addr[i]) << ((i + 1 != sl->sll_halen) ? "-" : "");
-                }
-                hw_addrs.push_back(oss.str());
-            }
-        }
-        std::sort(hw_addrs.begin(), hw_addrs.end());
-        freeifaddrs(ifaddr);
-    }
-#endif
+// #if defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+//     struct ifaddrs *ifaddr, *ifa;
+//     if (getifaddrs(&ifaddr) == -1)
+//     {
+//         openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs error: %s"), strerror(errno));
+//     }
+//     else
+//     {
+//         int n;
+//         for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, n++)
+//         {
+//             if (ifa->ifa_addr == NULL)
+//             {
+//                 continue;
+//             }
+//             if ((strcmp("lo", ifa->ifa_name) == 0) ||
+//                 !(ifa->ifa_flags & (IFF_RUNNING)))
+//             {
+//                 continue;
+//             }
+//             if (ifa->ifa_addr->sa_family == AF_PACKET)
+//             {
+//                 struct sockaddr_ll *sl = (struct sockaddr_ll *)ifa->ifa_addr;
+//                 std::ostringstream oss;
+//                 oss << std::hex;
+//                 for (int i = 0; i < sl->sll_halen; i++)
+//                 {
+//                     oss << std::setfill('0') << std::setw(2) << (int)(sl->sll_addr[i]) << ((i + 1 != sl->sll_halen) ? "-" : "");
+//                 }
+//                 hw_addrs.push_back(oss.str());
+//             }
+//         }
+//         std::sort(hw_addrs.begin(), hw_addrs.end());
+//         freeifaddrs(ifaddr);
+//     }
+// #endif
 }
 
 char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)

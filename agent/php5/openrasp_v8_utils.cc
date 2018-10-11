@@ -239,11 +239,11 @@ intptr_t external_references[] = {
     0,
 };
 
-v8::StartupData get_snapshot(const std::string &config, const std::vector<openrasp_v8_js_src> &plugin_list TSRMLS_DC)
+StartupData *get_snapshot(const std::string &config, const std::vector<openrasp_v8_js_src> &plugin_list TSRMLS_DC)
 {
     v8::SnapshotCreator creator(external_references);
     v8::Isolate *isolate = creator.GetIsolate();
-#define DEFAULT_STACK_SIZE_IN_KB 1024 
+#define DEFAULT_STACK_SIZE_IN_KB 1024
     uintptr_t current_stack = reinterpret_cast<uintptr_t>(&current_stack);
     uintptr_t stack_limit = current_stack - (DEFAULT_STACK_SIZE_IN_KB * 1024 / sizeof(uintptr_t));
     stack_limit = stack_limit < current_stack ? stack_limit : sizeof(stack_limit);
@@ -280,7 +280,7 @@ v8::StartupData get_snapshot(const std::string &config, const std::vector<openra
                 std::string error = stream.str();
                 plugin_info(error.c_str(), error.length() TSRMLS_CC);
                 openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize js plugin - %s"), error.c_str());
-                return v8::StartupData{nullptr, 0};
+                return new StartupData();
             }
         }
         if (exec_script(isolate, context, config, "config.js").IsEmpty())
@@ -302,10 +302,10 @@ v8::StartupData get_snapshot(const std::string &config, const std::vector<openra
         }
         creator.SetDefaultContext(context);
     }
-    return creator.CreateBlob(v8::SnapshotCreator::FunctionCodeHandling::kClear);
+    return new StartupData(creator.CreateBlob(v8::SnapshotCreator::FunctionCodeHandling::kClear));
 }
 
-v8::StartupData get_snapshot(TSRMLS_D)
+StartupData *get_snapshot(TSRMLS_D)
 {
     return get_snapshot(process_globals.plugin_config, process_globals.plugin_src_list TSRMLS_CC);
 }

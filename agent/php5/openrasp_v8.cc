@@ -39,11 +39,6 @@ namespace openrasp
 openrasp_v8_process_globals process_globals;
 
 static inline void load_plugins(TSRMLS_D);
-// static inline bool init_platform(TSRMLS_D);
-// static inline bool shutdown_platform(TSRMLS_D);
-static inline bool load_snapshot(TSRMLS_D);
-static inline bool init_snapshot(TSRMLS_D);
-static inline bool shutdown_snapshot(TSRMLS_D);
 static inline bool init_isolate(TSRMLS_D);
 static inline bool shutdown_isolate(TSRMLS_D);
 
@@ -153,53 +148,12 @@ bool shutdown_platform(TSRMLS_D)
     return true;
 }
 
-static inline bool load_snapshot(TSRMLS_D)
-{
-    if (process_globals.snapshot_blob.data == nullptr &&
-        process_globals.snapshot_blob.raw_size == 0)
-    {
-        std::ifstream file(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("snapshot.dat"));
-        std::streampos beg = file.tellg();
-        file.seekg(0, std::ios::end);
-        std::streampos end = file.tellg();
-        file.seekg(0, std::ios::beg);
-        size_t size = end - beg;
-        char *buffer = new char[size];
-        file.read(buffer, size);
-        process_globals.snapshot_blob.data = buffer;
-        process_globals.snapshot_blob.raw_size = size;
-    }
-    return true;
-}
-
-static inline bool init_snapshot(TSRMLS_D)
-{
-    if (process_globals.snapshot_blob.data == nullptr &&
-        process_globals.snapshot_blob.raw_size == 0)
-    {
-        process_globals.snapshot_blob = get_snapshot(TSRMLS_C);
-    }
-    return true;
-}
-
-static inline bool shutdown_snapshot(TSRMLS_D)
-{
-    if (process_globals.snapshot_blob.data != nullptr &&
-        process_globals.snapshot_blob.raw_size > 0)
-    {
-        delete[] process_globals.snapshot_blob.data;
-        process_globals.snapshot_blob.data = nullptr;
-        process_globals.snapshot_blob.raw_size = 0;
-    }
-    return true;
-}
-
 static inline bool init_isolate(TSRMLS_D)
 {
     if (!OPENRASP_V8_G(is_isolate_initialized))
     {
         OPENRASP_V8_G(create_params).array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
-        OPENRASP_V8_G(create_params).snapshot_blob = &process_globals.snapshot_blob;
+        OPENRASP_V8_G(create_params).snapshot_blob = process_globals.snapshot_blob;
         OPENRASP_V8_G(create_params).external_references = external_references;
 
         v8::Isolate *isolate = v8::Isolate::New(OPENRASP_V8_G(create_params));
@@ -291,41 +245,35 @@ v8::Isolate *get_isolate(TSRMLS_D)
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (oam != nullptr)
     {
-        long timestamp = oam->get_plugin_update_timestamp();
-        if (timestamp > process_globals.plugin_update_timestamp)
+        uint64_t timestamp = oam->get_plugin_update_timestamp();
+        if (process_globals.snapshot_blob->IsExpired(timestamp))
         {
             if (process_globals.mtx.try_lock() &&
-                timestamp > process_globals.plugin_update_timestamp)
+                process_globals.snapshot_blob->IsExpired(timestamp))
             {
-                process_globals.is_initialized = false;
-                load_plugins(TSRMLS_C);
-                auto snapshot_blob = get_snapshot(TSRMLS_C);
-                if (snapshot_blob.data != nullptr &&
-                    snapshot_blob.raw_size > 0)
+                std::string filename = std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("snapshot.dat");
+                StartupData *blob = new StartupData(filename, timestamp);
+                if (blob->IsOk())
                 {
-                    delete[] process_globals.snapshot_blob.data;
-                    process_globals.snapshot_blob = {nullptr, 0};
-                    process_globals.snapshot_blob = snapshot_blob;
-                    process_globals.plugin_update_timestamp = timestamp;
-                    process_globals.is_initialized = true;
+                    delete process_globals.snapshot_blob;
+                    process_globals.snapshot_blob = blob;
                 }
                 process_globals.mtx.unlock();
             }
         }
     }
-
 #endif
 
-    if (UNLIKELY(process_globals.is_initialized &&
-                 (!OPENRASP_V8_G(is_isolate_initialized) || process_globals.plugin_update_timestamp > OPENRASP_V8_G(plugin_update_timestamp))))
+    if (UNLIKELY(process_globals.snapshot_blob &&
+                 (!OPENRASP_V8_G(is_isolate_initialized) || process_globals.snapshot_blob->timestamp > OPENRASP_V8_G(plugin_update_timestamp))))
     {
         if (process_globals.mtx.try_lock() &&
-            process_globals.is_initialized &&
-            (!OPENRASP_V8_G(is_isolate_initialized) || process_globals.plugin_update_timestamp > OPENRASP_V8_G(plugin_update_timestamp)))
+            process_globals.snapshot_blob &&
+            (!OPENRASP_V8_G(is_isolate_initialized) || process_globals.snapshot_blob->timestamp > OPENRASP_V8_G(plugin_update_timestamp)))
         {
             shutdown_isolate(TSRMLS_C);
             init_isolate(TSRMLS_C);
-            OPENRASP_V8_G(plugin_update_timestamp) = process_globals.plugin_update_timestamp;
+            OPENRASP_V8_G(plugin_update_timestamp) = process_globals.snapshot_blob->timestamp;
             process_globals.mtx.unlock();
         }
     }
@@ -398,27 +346,33 @@ PHP_MINIT_FUNCTION(openrasp_v8)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp_v8, PHP_GINIT(openrasp_v8), PHP_GSHUTDOWN(openrasp_v8));
 
+    // It can be called multiple times,
+    // but intern code initializes v8 only once
+    v8::V8::Initialize();
+
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+    if (openrasp_ini.remote_management_enable)
+    {
+        return SUCCESS;
+    }
+#endif
+
     load_plugins(TSRMLS_C);
     if (process_globals.plugin_src_list.size() <= 0)
     {
         return SUCCESS;
     }
 
-    // It can be called multiple times,
-    // but intern code initializes v8 only once
-    v8::V8::Initialize();
-
-    init_platform(TSRMLS_C);
-    init_snapshot(TSRMLS_C);
-    shutdown_platform(TSRMLS_C);
-
-    if (process_globals.snapshot_blob.data == nullptr ||
-        process_globals.snapshot_blob.raw_size <= 0)
+    if (!process_globals.snapshot_blob)
     {
-        return FAILURE;
+        init_platform(TSRMLS_C);
+        StartupData *snapshot = get_snapshot(TSRMLS_C);
+        shutdown_platform(TSRMLS_C);
+        if (snapshot->IsOk())
+        {
+            process_globals.snapshot_blob = snapshot;
+        }
     }
-
-    process_globals.is_initialized = true;
     return SUCCESS;
 }
 
@@ -431,7 +385,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
     // so skip this step for module graceful reload
     // v8::V8::Dispose();
     shutdown_platform(TSRMLS_C);
-    shutdown_snapshot(TSRMLS_C);
+    delete process_globals.snapshot_blob;
 
     return SUCCESS;
 }

@@ -243,30 +243,22 @@ bool HeartBeatAgent::update_config(zval *config_zv, long config_time, bool *has_
 
 bool HeartBeatAgent::build_plugin_snapshot(TSRMLS_D)
 {
-	bool result = true;
-	v8::V8::Initialize();
 	init_platform(TSRMLS_C);
-	v8::StartupData snapshot = get_snapshot(algorithm_config, active_plugins TSRMLS_CC);
+	StartupData *snapshot = get_snapshot(algorithm_config, active_plugins TSRMLS_CC);
 	shutdown_platform(TSRMLS_C);
-#ifndef _WIN32
-	mode_t oldmask = umask(0);
-#endif
-	std::string snapshot_abs_path = std::string(openrasp_ini.root_dir) + "/snapshot.dat";
-	std::ofstream out_file(snapshot_abs_path, std::ofstream::binary | std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
-	if (out_file.is_open() && out_file.good())
+	if (!snapshot || !snapshot->IsOk())
 	{
-		out_file.write(snapshot.data, snapshot.raw_size);
-		out_file.close();
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to generate snapshot."));
+		return false;
 	}
-	else
+	std::string snapshot_abs_path = std::string(openrasp_ini.root_dir) + "/snapshot.dat";
+	if (!snapshot->Save(snapshot_abs_path))
 	{
 		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write snapshot to %s."), snapshot_abs_path.c_str());
-		result = false;
+		return false;
 	}
-#ifndef _WIN32
-	umask(oldmask);
-#endif
-	return result;
+
+	return true;
 }
 
 void HeartBeatAgent::write_pid_to_shm(pid_t agent_pid)
