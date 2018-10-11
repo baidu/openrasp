@@ -709,44 +709,61 @@ if (RASP.get_jsengine() !== 'v8') {
         var parameters = context.parameter || {}
         var raw_tokens = []
 
+        function _run(values, name)
+        {
+            var reason = false
+
+            values.some(function (value) {
+                if (value.length <= min_length) {
+                    return false
+                }
+
+                // 检查用户输入是否存在于SQL中
+                var userinput_idx = params.query.indexOf(value)
+                if (userinput_idx == -1) {
+                    return false
+                }
+
+                // 懒加载，需要的时候初始化 token
+                if (raw_tokens.length == 0) {
+                    raw_tokens = RASP.sql_tokenize(params.query, params.server)
+                }
+
+                if (is_sql_changed(raw_tokens, userinput_idx, value.length)) {
+                    reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
+                    return true
+                }
+            })
+
+            return reason
+        }
+
         // 算法1: 匹配用户输入，简单识别逻辑是否发生改变
         if (algorithmConfig.sqli_userinput.action != 'ignore') {
             Object.keys(parameters).some(function (name) {
-                // 覆盖两种情况，后者仅PHP支持
-                //
-                // ?id=XXXX
-                // ?filter[category_id]=XXXX
-                var value_list
+                var value = parameters[name]
 
-                if (typeof parameters[name][0] == 'string') {
-                    value_list = parameters[name]
-                } else {
-                    value_list = Object.values(parameters[name][0])
+                // ?id=XXXX
+                if (typeof value[0] == 'string') {
+                    reason = _run(value, name)
                 }
 
-                for (var i = 0; i < value_list.length; i ++) {
-                    var value = value_list[i]
+                // ?filter[category_id]=XXXX
+                // ?data[key1][key2]=XXX
+                else if (typeof value[0] == 'object') {
+                    Object.keys(value[0]).forEach(function (name_1) {
+                        var value_1 = value[0][name_1]
 
-                    // 请求参数长度过滤，减少匹配次数
-                    if (value.length <= min_length) {
-                        continue
-                    }
+                        if (typeof value_1 == 'string') {
+                            reason = _run([value_1], name_1)
+                        } else {
+                            reason = _run(Object.values(value_1), name_1)
+                        }
+                    })
+                }
 
-                    // 检查用户输入是否存在于SQL中
-                    var userinput_idx = params.query.indexOf(value)
-                    if (userinput_idx == -1) {
-                        continue
-                    }
-
-                    // 懒加载，需要的时候初始化 token
-                    if (raw_tokens.length == 0) {
-                        raw_tokens = RASP.sql_tokenize(params.query, params.server)
-                    }
-
-                    if (is_sql_changed(raw_tokens, userinput_idx, value.length)) {
-                        reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
-                        return true
-                    }
+                if (reason) {
+                    return true
                 }
             })
 
