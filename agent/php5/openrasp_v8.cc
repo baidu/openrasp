@@ -243,7 +243,7 @@ v8::Isolate *get_isolate(TSRMLS_D)
     }
 
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
-    if (oam != nullptr)
+    if (openrasp_ini.remote_management_enable && oam != nullptr)
     {
         uint64_t timestamp = oam->get_plugin_update_timestamp();
         if (process_globals.snapshot_blob->IsExpired(timestamp))
@@ -350,18 +350,7 @@ PHP_MINIT_FUNCTION(openrasp_v8)
     // but intern code initializes v8 only once
     v8::V8::Initialize();
 
-#ifdef HAVE_OPENRASP_REMOTE_MANAGER
-    if (openrasp_ini.remote_management_enable)
-    {
-        return SUCCESS;
-    }
-#endif
-
     load_plugins(TSRMLS_C);
-    if (process_globals.plugin_src_list.size() <= 0)
-    {
-        return SUCCESS;
-    }
 
     if (!process_globals.snapshot_blob)
     {
