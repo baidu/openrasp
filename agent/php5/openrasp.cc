@@ -80,10 +80,10 @@ PHP_GINIT_FUNCTION(openrasp)
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (!openrasp::oam)
     {
-        load_local_config(&(openrasp_globals->config) TSRMLS_CC);
+        load_local_config(&(openrasp_globals->config)TSRMLS_CC);
     }
 #else
-    load_local_config(&(openrasp_globals->config) TSRMLS_CC);
+    load_local_config(&(openrasp_globals->config)TSRMLS_CC);
 #endif
 #endif
 }
@@ -315,7 +315,13 @@ static bool make_openrasp_root_dir(TSRMLS_D)
 
 static void load_local_config(openrasp::OpenraspConfig *config TSRMLS_DC)
 {
-    std::ifstream ifs((std::string(openrasp_ini.root_dir) + "/conf/openrasp.ini"), std::ios::in | std::ios::binary);
-    std::string conf_contents{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
-    config->FromIni(conf_contents);
+    if (openrasp_ini.root_dir)
+    {
+        std::ifstream ifs((std::string(openrasp_ini.root_dir) + "/conf/openrasp.ini"), std::ifstream::in | std::ifstream::binary);
+        if (ifs.is_open() && ifs.good())
+        {
+            std::string conf_contents{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
+            config->FromIni(conf_contents);
+        }
+    }
 }
