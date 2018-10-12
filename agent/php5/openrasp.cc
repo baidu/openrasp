@@ -42,17 +42,10 @@ extern "C"
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
-const static std::set<std::string> supported_sapis =
-    {
-        "cli",
-        "cli-server",
-        "cgi-fcgi",
-        "fpm-fcgi",
-        "apache2handler"};
-
 bool is_initialized = false;
 static bool make_openrasp_root_dir(TSRMLS_D);
 static void load_local_config(openrasp::OpenraspConfig *config TSRMLS_DC);
+static bool is_current_sapi_supported(TSRMLS_D);
 
 PHP_INI_BEGIN()
 PHP_INI_ENTRY1("openrasp.root_dir", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.root_dir)
@@ -98,10 +91,8 @@ PHP_MINIT_FUNCTION(openrasp)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp, PHP_GINIT(openrasp), PHP_GSHUTDOWN(openrasp));
     REGISTER_INI_ENTRIES();
-    auto iter = supported_sapis.find(std::string(sapi_module.name));
-    if (iter == supported_sapis.end())
+    if (!is_current_sapi_supported(TSRMLS_C))
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("Unsupported SAPI: %s."), sapi_module.name);
         return SUCCESS;
     }
     if (!make_openrasp_root_dir(TSRMLS_C))
@@ -323,4 +314,22 @@ static void load_local_config(openrasp::OpenraspConfig *config TSRMLS_DC)
             config->FromIni(conf_contents);
         }
     }
+}
+
+static bool is_current_sapi_supported(TSRMLS_D)
+{
+    const static std::set<std::string> supported_sapis =
+        {
+            "cli",
+            "cli-server",
+            "cgi-fcgi",
+            "fpm-fcgi",
+            "apache2handler"};
+    auto iter = supported_sapis.find(std::string(sapi_module.name));
+    if (iter == supported_sapis.end())
+    {
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("Unsupported SAPI: %s."), sapi_module.name);
+        return false;
+    }
+    return true;
 }
