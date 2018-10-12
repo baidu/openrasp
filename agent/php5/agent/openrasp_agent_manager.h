@@ -86,12 +86,14 @@ private:
   void process_agent_shutdown();
   bool calculate_rasp_id();
   pid_t search_fpm_master_pid();
+  void check_work_processes_survival();
 
 private:
-  static const int supervisor_interval = 10;
+  static const int task_interval = 300;
   char local_ip[64] = {0};
   pid_t init_process_pid;
   std::string rasp_id;
+  bool has_registered = false;
 };
 
 extern std::unique_ptr<OpenraspAgentManager> oam;

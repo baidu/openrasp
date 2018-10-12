@@ -231,28 +231,15 @@ void OpenraspAgentManager::supervisor_run()
 	TSRMLS_FETCH();
 	while (true)
 	{
-		for (int i = 0; i < supervisor_interval; ++i)
+		for (int i = 0; i < task_interval; ++i)
 		{
-			if (0 == i)
+			if (i % task_interval == 0 && !has_registered)
 			{
-				for (int i = 0; i < agents.size(); ++i)
-				{
-					std::unique_ptr<BaseAgent> &agent_ptr = agents[i];
-					if (!agent_ptr->is_alive)
-					{
-						pid_t pid = fork();
-						if (pid == 0)
-						{
-							agent_ptr->run();
-						}
-						else if (pid > 0)
-						{
-							agent_ptr->is_alive = true;
-							agent_ptr->agent_pid = pid;
-							agent_ptr->write_pid_to_shm(pid);
-						}
-					}
-				}
+				has_registered = agent_remote_register();
+			}
+			if (i % 10 == 0 && has_registered)
+			{
+				check_work_processes_survival();
 			}
 			sleep(1);
 			struct stat sb;
@@ -260,6 +247,28 @@ void OpenraspAgentManager::supervisor_run()
 				errno == ENOENT)
 			{
 				process_agent_shutdown();
+			}
+		}
+	}
+}
+
+void OpenraspAgentManager::check_work_processes_survival()
+{
+	for (int i = 0; i < agents.size(); ++i)
+	{
+		std::unique_ptr<BaseAgent> &agent_ptr = agents[i];
+		if (!agent_ptr->is_alive)
+		{
+			pid_t pid = fork();
+			if (pid == 0)
+			{
+				agent_ptr->run();
+			}
+			else if (pid > 0)
+			{
+				agent_ptr->is_alive = true;
+				agent_ptr->agent_pid = pid;
+				agent_ptr->write_pid_to_shm(pid);
 			}
 		}
 	}
@@ -340,6 +349,7 @@ bool OpenraspAgentManager::agent_remote_register()
 	zval_ptr_dtor(&body);
 	if (CURLE_OK != res_info.res)
 	{
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, CURL error code: %d."), res_info.res);
 		return false;
 	}
 	zval *return_value = nullptr;
