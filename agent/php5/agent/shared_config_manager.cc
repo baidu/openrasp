@@ -96,6 +96,27 @@ bool SharedConfigManager::set_config_last_update(long config_update_timestamp)
     return false;
 }
 
+long SharedConfigManager::get_log_max_backup()
+{
+    if (rwlock != nullptr && rwlock->read_try_lock())
+    {
+        ReadUnLocker auto_unlocker(rwlock);
+        return shared_config_block->get_log_max_backup();
+    }
+    return 0;
+}
+
+bool SharedConfigManager::set_log_max_backup(long log_max_backup)
+{
+    if (rwlock != nullptr && rwlock->write_try_lock())
+    {
+        WriteUnLocker auto_unlocker(rwlock);
+        shared_config_block->set_log_max_backup(log_max_backup);
+        return true;
+    }
+    return false;
+}
+
 bool SharedConfigManager::startup()
 {
     size_t total_size = meta_size + sizeof(SharedConfigBlock);

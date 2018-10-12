@@ -223,6 +223,12 @@ bool HeartBeatAgent::update_config(zval *config_zv, long config_time, bool *has_
 				}
 			}
 			scm->build_check_type_white_array(url_mask_map);
+			//update log_max_backup only its value greater than zero
+			long log_max_backup = openrasp_config.Get("log_max_backup", (int64_t)0);
+			if (log_max_backup)
+			{
+				scm->set_log_max_backup(log_max_backup);
+			}
 		}
 		std::string cloud_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/cloud-config.json";
 		std::ofstream out_file(cloud_config_file_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
@@ -255,9 +261,8 @@ bool HeartBeatAgent::build_plugin_snapshot(TSRMLS_D)
 	if (!snapshot.Save(snapshot_abs_path))
 	{
 		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write snapshot to %s."), snapshot_abs_path.c_str());
-		return false;
+		return false
 	}
-
 	return true;
 }
 
@@ -427,10 +432,15 @@ void LogAgent::cleanup_expired_logs(std::vector<LogDirInfo *> &tobe_cleaned_logd
 {
 	TSRMLS_FETCH();
 	long now = (long)time(NULL);
+	long log_max_backup = 30;
+	if (nullptr != scm && scm->get_log_max_backup() > 0)
+	{
+		log_max_backup = scm->get_log_max_backup();
+	}
 	for (auto item : tobe_cleaned_logdirs)
 	{
 		std::vector<std::string> files_tobe_deleted;
-		std::string tobe_deleted_date_suffix = get_formatted_date_suffix(now - openrasp_ini.log_max_backup * 24 * 60 * 60);
+		std::string tobe_deleted_date_suffix = get_formatted_date_suffix(now - log_max_backup * 24 * 60 * 60);
 		openrasp_scandir(item->dir_abs_path, files_tobe_deleted,
 						 [&item, &tobe_deleted_date_suffix](const char *filename) {
 							 return !strncmp(filename, item->prefix.c_str(), item->prefix.size()) &&

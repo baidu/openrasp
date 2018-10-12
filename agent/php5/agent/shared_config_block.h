@@ -56,13 +56,24 @@ public:
     return config_update_time;
   }
 
-  inline long set_config_update_time(long config_update_time)
+  inline void set_config_update_time(long config_update_time)
   {
     this->config_update_time = config_update_time;
   }
 
+  inline long get_log_max_backup()
+  {
+    return log_max_backup;
+  }
+
+  inline void set_log_max_backup(long log_max_backup)
+  {
+    this->log_max_backup = log_max_backup;
+  }
+
 private:
   long config_update_time = 0;
+  long log_max_backup = 0;
   size_t white_array_size;
   openrasp::DoubleArrayTrie::unit_t check_type_white_array[WRITE_ARRAY_MAX_LENGTH + 1];
 };
