@@ -38,6 +38,8 @@ public:
   bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
   long get_config_last_update();
   bool set_config_last_update(long config_update_timestamp);
+  long get_log_max_backup();
+  bool set_log_max_backup(long log_max_backup);
 
 private:
   int meta_size;
