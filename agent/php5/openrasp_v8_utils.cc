@@ -17,7 +17,6 @@
 #include "openrasp_v8.h"
 #include "openrasp_utils.h"
 #include "openrasp_log.h"
-#include "js/openrasp_v8_js.h"
 #include <iostream>
 #include <sstream>
 
@@ -238,77 +237,6 @@ intptr_t external_references[] = {
     reinterpret_cast<intptr_t>(v8native_log),
     0,
 };
-
-StartupData *get_snapshot(const std::string &config, const std::vector<openrasp_v8_js_src> &plugin_list TSRMLS_DC)
-{
-    v8::SnapshotCreator creator(external_references);
-    v8::Isolate *isolate = creator.GetIsolate();
-#define DEFAULT_STACK_SIZE_IN_KB 1024
-    uintptr_t current_stack = reinterpret_cast<uintptr_t>(&current_stack);
-    uintptr_t stack_limit = current_stack - (DEFAULT_STACK_SIZE_IN_KB * 1024 / sizeof(uintptr_t));
-    stack_limit = stack_limit < current_stack ? stack_limit : sizeof(stack_limit);
-    isolate->SetStackLimit(stack_limit);
-#undef DEFAULT_STACK_SIZE_IN_KB
-    {
-        v8::HandleScope handle_scope(isolate);
-        v8::Local<v8::Context> context = v8::Context::New(isolate);
-        v8::Context::Scope context_scope(context);
-        v8::TryCatch try_catch;
-        v8::Local<v8::Object> global = context->Global();
-        global->Set(V8STRING_I("global").ToLocalChecked(), global);
-        global->Set(V8STRING_I("window").ToLocalChecked(), global);
-        v8::Local<v8::Function> log = v8::Function::New(isolate, v8native_log);
-        v8::Local<v8::Object> v8_stdout = v8::Object::New(isolate);
-        v8_stdout->Set(V8STRING_I("write").ToLocalChecked(), log);
-        global->Set(V8STRING_I("stdout").ToLocalChecked(), v8_stdout);
-        global->Set(V8STRING_I("stderr").ToLocalChecked(), v8_stdout);
-
-        std::vector<openrasp_v8_js_src> internal_js_list = {
-            openrasp_v8_js_src{"console.js", {reinterpret_cast<const char *>(console_js), console_js_len}},
-            openrasp_v8_js_src{"checkpoint.js", {reinterpret_cast<const char *>(checkpoint_js), checkpoint_js_len}},
-            openrasp_v8_js_src{"error.js", {reinterpret_cast<const char *>(error_js), error_js_len}},
-            openrasp_v8_js_src{"context.js", {reinterpret_cast<const char *>(context_js), context_js_len}},
-            openrasp_v8_js_src{"sql_tokenize.js", {reinterpret_cast<const char *>(sql_tokenize_js), sql_tokenize_js_len}},
-            openrasp_v8_js_src{"rasp.js", {reinterpret_cast<const char *>(rasp_js), rasp_js_len}},
-        };
-        for (auto &js_src : internal_js_list)
-        {
-            if (exec_script(isolate, context, js_src.source, js_src.filename).IsEmpty())
-            {
-                std::stringstream stream;
-                v8error_to_stream(isolate, try_catch, stream);
-                std::string error = stream.str();
-                plugin_info(error.c_str(), error.length() TSRMLS_CC);
-                openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize js plugin - %s"), error.c_str());
-                return new StartupData();
-            }
-        }
-        if (exec_script(isolate, context, config, "config.js").IsEmpty())
-        {
-            std::stringstream stream;
-            v8error_to_stream(isolate, try_catch, stream);
-            std::string error = stream.str();
-            plugin_info(error.c_str(), error.length() TSRMLS_CC);
-        }
-        for (auto &plugin_src : plugin_list)
-        {
-            if (exec_script(isolate, context, "(function(){\n" + plugin_src.source + "\n})()", plugin_src.filename, -1).IsEmpty())
-            {
-                std::stringstream stream;
-                v8error_to_stream(isolate, try_catch, stream);
-                std::string error = stream.str();
-                plugin_info(error.c_str(), error.length() TSRMLS_CC);
-            }
-        }
-        creator.SetDefaultContext(context);
-    }
-    return new StartupData(creator.CreateBlob(v8::SnapshotCreator::FunctionCodeHandling::kClear));
-}
-
-StartupData *get_snapshot(TSRMLS_D)
-{
-    return get_snapshot(process_globals.plugin_config, process_globals.plugin_src_list TSRMLS_CC);
-}
 
 void alarm_info(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result TSRMLS_DC)
 {
