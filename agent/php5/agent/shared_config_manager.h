@@ -23,6 +23,7 @@
 #include <map>
 #include "utils/ReadWriteLock.h"
 #include "shared_config_block.h"
+#include "openrasp_config.h"
 
 namespace openrasp
 {
@@ -35,7 +36,7 @@ public:
   virtual bool startup();
   virtual bool shutdown();
   int get_check_type_white_bit_mask(std::string url);
-  bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
+  bool build_check_type_white_array(OpenraspConfig &openrasp_config);
   long get_config_last_update();
   bool set_config_last_update(long config_update_timestamp);
   long get_log_max_backup();
@@ -46,6 +47,7 @@ private:
   SharedConfigBlock *shared_config_block;
   ReadWriteLock *rwlock;
   bool write_check_type_white_array_to_shm(const void *source, size_t num);
+  bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
 };
 
 extern std::unique_ptr<SharedConfigManager> scm;

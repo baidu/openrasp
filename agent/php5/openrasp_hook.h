@@ -141,6 +141,7 @@ extern "C"
 #define MYSQLI_STORE_RESULT 0
 #define MYSQLI_USE_RESULT 1
 #define MYSQL_PORT 3306
+#define CHECK_TYPE_NR_ITEMS 18
 
 typedef enum check_type_t
 {
@@ -161,9 +162,9 @@ typedef enum check_type_t
     SSRF = 1 << 13,
     WEBSHELL_EVAL = 1 << 14,
     WEBSHELL_COMMAND = 1 << 15,
-    WEBSHELL_FILE_PUT_CONTENTS = 1 << 16 //plus 2 (CHECK_TYPE_NR_ITEMS)
+    WEBSHELL_FILE_PUT_CONTENTS = 1 << 16,
+    ALL_TYPE = (1 << 17) - 1
 } OpenRASPCheckType;
-#define CHECK_TYPE_NR_ITEMS 18
 
 extern const std::map<OpenRASPCheckType, const char *> CheckTypeNameMap;
 

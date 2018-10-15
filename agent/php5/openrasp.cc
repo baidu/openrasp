@@ -97,7 +97,6 @@ PHP_MINIT_FUNCTION(openrasp)
     }
     if (!make_openrasp_root_dir(TSRMLS_C))
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir is not configured correctly in php.ini, continuing without security protection"));
         return SUCCESS;
     }
     openrasp::scm.reset(new openrasp::SharedConfigManager(&openrasp::sm));
@@ -135,6 +134,12 @@ PHP_MINIT_FUNCTION(openrasp)
     {
         openrasp::oam->startup();
     }
+    else
+    {
+        openrasp::scm->build_check_type_white_array(OPENRASP_G(config));
+    }
+#else
+    openrasp::scm->build_check_type_white_array(OPENRASP_G(config));
 #endif
     is_initialized = true;
     return SUCCESS;
