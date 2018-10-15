@@ -740,28 +740,21 @@ if (RASP.get_jsengine() !== 'v8') {
 
         // 算法1: 匹配用户输入，简单识别逻辑是否发生改变
         if (algorithmConfig.sqli_userinput.action != 'ignore') {
+
+            // 匹配 GET/POST/multipart 参数
             Object.keys(parameters).some(function (name) {
-                var value = parameters[name]
-
+                // 覆盖场景，后者仅PHP支持
                 // ?id=XXXX
-                if (typeof value[0] == 'string') {
-                    reason = _run(value, name)
-                }
-
-                // ?filter[category_id]=XXXX
                 // ?data[key1][key2]=XXX
-                else if (typeof value[0] == 'object') {
-                    Object.keys(value[0]).forEach(function (name_1) {
-                        var value_1 = value[0][name_1]
+                var value_list
 
-                        if (typeof value_1 == 'string') {
-                            reason = _run([value_1], name_1)
-                        } else {
-                            reason = _run(Object.values(value_1), name_1)
-                        }
-                    })
-                }
+                if (typeof parameters[name][0] == 'string') {
+                    value_list = parameters[name]
+                } else {
+                    value_list = Object.values(parameters[name][0])
+                }                
 
+                reason = _run(value_list, name)
                 if (reason) {
                     return true
                 }
