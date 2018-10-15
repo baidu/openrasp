@@ -1,4 +1,4 @@
-const version = '2018-1010-1600'
+const version = '2018-1016-0000'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -543,10 +543,10 @@ function has_file_extension(path) {
     return false
 }
 
-function is_absolute_path(path, os) {
+function is_absolute_path(path, is_windows) {
 
     // Windows - C:\\windows
-    if (os == 'Windows') {
+    if (is_windows) {
 
         if (path[1] == ':')
         {
@@ -583,7 +583,7 @@ function is_outside_webroot(appBasePath, realpath, path) {
 // 
 // 或者以用户输入结尾
 // file_get_contents("/data/uploads/" . "../../../../../../../etc/passwd");
-function is_path_endswith_userinput(parameter, target)
+function is_path_endswith_userinput(parameter, target, is_windows)
 {
     var verdict = false
 
@@ -597,18 +597,26 @@ function is_path_endswith_userinput(parameter, target)
             return
         }
 
-        // 参数必须有跳出目录，或者是绝对路径
-        if ((value == target || target.endsWith(value)) 
-            && (has_traversal(value) || is_absolute_path(value)))
+        // 如果应用做了特殊处理， 比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
+        if (value.startsWith('file://') && 
+            is_absolute_path(target, is_windows) && 
+            value.endsWith(target))
         {
             verdict = true
             return true
         }
 
-        // 如果应用做了特殊处理， 比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
-        if (value.startsWith('file://') && 
-            is_absolute_path(target) && 
-            value.endsWith(target))
+        // Windows 下面
+        // 传入 ../../../conf/tomcat-users.xml
+        // 看到 c:\tomcat\webapps\root\..\..\conf\tomcat-users.xml
+        if (is_windows)
+        {
+            value = value.replaceAll('/', '\\')
+        }
+
+        // 参数必须有跳出目录，或者是绝对路径
+        if ((value == target || target.endsWith(value)) 
+            && (has_traversal(value) || is_absolute_path(value, is_windows)))
         {
             verdict = true
             return true
@@ -850,7 +858,7 @@ if (RASP.get_jsengine() !== 'v8') {
                 {
                     // `information_schema`.tables
                     // information_schema  .tables
-                	var parts = tokens_lc[i + 1].replaceAll('`', '').split('.')
+                    var parts = tokens_lc[i + 1].replaceAll('`', '').split('.')
                     if (parts.length == 2)
                     {
                         if (parts[0].trim() == 'information_schema' && parts[1].trim() == 'tables')
@@ -986,6 +994,8 @@ plugin.register('directory', function (params, context) {
     var server      = context.server
     var parameter   = context.parameter
 
+    console.log (params)
+
     // 算法1 - 读取敏感目录
     if (algorithmConfig.directory_unwanted.action != 'ignore')
     {
@@ -1041,6 +1051,7 @@ plugin.register('directory', function (params, context) {
 plugin.register('readFile', function (params, context) {
     var server    = context.server
     var parameter = context.parameter
+    var is_win    = server.os.indexOf('Windows') != -1
 
     //
     // 算法1: 简单用户输入识别，拦截任意文件下载漏洞
@@ -1050,9 +1061,11 @@ plugin.register('readFile', function (params, context) {
     //
     if (algorithmConfig.readFile_userinput.action != 'ignore')
     {
+        console.log (parameter, params.path)
+
         // ?path=/etc/./hosts
         // ?path=../../../etc/passwd
-        if (is_path_endswith_userinput(parameter, params.path))
+        if (is_path_endswith_userinput(parameter, params.path, is_win))
         {
             return {
                 action:     algorithmConfig.readFile_userinput.action,
@@ -1140,14 +1153,16 @@ plugin.register('readFile', function (params, context) {
 
 plugin.register('include', function (params, context) {
     var url       = params.url
+    var server    = context.server
     var parameter = context.parameter
+    var is_win    = server.os.indexOf('Windows') != -1
 
     // 用户输入检查
     // ?file=/etc/passwd
     // ?file=../../../../../var/log/httpd/error.log
     if (algorithmConfig.include_userinput.action != 'ignore')
     {
-        if (is_path_endswith_userinput(parameter, url))
+        if (is_path_endswith_userinput(parameter, url, is_win))
         {
             return {
                 action:     algorithmConfig.include_userinput.action,
