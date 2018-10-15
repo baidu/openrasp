@@ -243,12 +243,18 @@ bool HeartBeatAgent::build_plugin_snapshot(TSRMLS_D)
 		return false;
 	}
 	std::string snapshot_abs_path = std::string(openrasp_ini.root_dir) + "/snapshot.dat";
-	if (!snapshot.Save(snapshot_abs_path))
+#ifndef _WIN32
+	mode_t oldmask = umask(0);
+#endif
+	bool write_successful = snapshot.Save(snapshot_abs_path);
+#ifndef _WIN32
+	umask(oldmask);
+#endif
+	if (!write_successful)
 	{
 		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write snapshot to %s."), snapshot_abs_path.c_str());
-		return false
 	}
-	return true;
+	return write_successful;
 }
 
 void HeartBeatAgent::write_pid_to_shm(pid_t agent_pid)

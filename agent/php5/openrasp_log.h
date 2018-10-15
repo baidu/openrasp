@@ -83,15 +83,15 @@ typedef struct _rasp_logger_entry_t
 */
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_log)
 
+zend_bool              in_request_process;
 char                  *formatted_date_suffix;
-php_stream            *syslog_stream;
 zval                  *alarm_request_info;
 zval                  *policy_request_info;
-zend_bool              enable_alarm_syslog;
-zend_bool              in_request_process;
-long                   last_retry_time;
 long                   time_offset;
 rasp_logger_entry      loggers[TOTAL];
+
+php_stream            *syslog_stream;
+long                   syslog_reconnect_time;
 
 ZEND_END_MODULE_GLOBALS(openrasp_log)
 
