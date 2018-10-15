@@ -1,13 +1,15 @@
 --TEST--
-syslog server utl scheme
+syslog server url scheme
 --SKIPIF--
 <?php
-if (!extension_loaded("openrasp")) die("Skipped: openrasp extension required.");
+$conf = <<<CONF
+syslog_alarm_enable=true
+syslog_server_address="http://127.0.0.1:514"
+CONF;
+include(__DIR__.'/skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.syslog_alarm_enable=On
-openrasp.syslog_server_address=http://127.0.0.1:514
 --FILE--
 <?php
 
