@@ -994,8 +994,6 @@ plugin.register('directory', function (params, context) {
     var server      = context.server
     var parameter   = context.parameter
 
-    console.log (params)
-
     // 算法1 - 读取敏感目录
     if (algorithmConfig.directory_unwanted.action != 'ignore')
     {
@@ -1061,8 +1059,6 @@ plugin.register('readFile', function (params, context) {
     //
     if (algorithmConfig.readFile_userinput.action != 'ignore')
     {
-        console.log (parameter, params.path)
-
         // ?path=/etc/./hosts
         // ?path=../../../etc/passwd
         if (is_path_endswith_userinput(parameter, params.path, is_win))
