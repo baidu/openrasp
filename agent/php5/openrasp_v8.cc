@@ -154,7 +154,7 @@ static inline bool init_isolate(TSRMLS_D)
     {
         OPENRASP_V8_G(create_params).array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
         OPENRASP_V8_G(create_params).snapshot_blob = process_globals.snapshot_blob;
-        OPENRASP_V8_G(create_params).external_references = external_references;
+        OPENRASP_V8_G(create_params).external_references = process_globals.snapshot_blob->external_references;
 
         v8::Isolate *isolate = v8::Isolate::New(OPENRASP_V8_G(create_params));
         isolate->Enter();
@@ -252,8 +252,12 @@ v8::Isolate *get_isolate(TSRMLS_D)
                 process_globals.snapshot_blob->IsExpired(timestamp))
             {
                 std::string filename = std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("snapshot.dat");
-                StartupData *blob = new StartupData(filename, timestamp);
-                if (blob->IsOk())
+                Snapshot *blob = new Snapshot(filename, timestamp);
+                if (!blob->IsOk())
+                {
+                    delete blob;
+                }
+                else
                 {
                     delete process_globals.snapshot_blob;
                     process_globals.snapshot_blob = blob;
@@ -355,9 +359,13 @@ PHP_MINIT_FUNCTION(openrasp_v8)
     if (!process_globals.snapshot_blob)
     {
         init_platform(TSRMLS_C);
-        StartupData *snapshot = get_snapshot(TSRMLS_C);
+        Snapshot *snapshot = new Snapshot(process_globals.plugin_config, process_globals.plugin_src_list);
         shutdown_platform(TSRMLS_C);
-        if (snapshot->IsOk())
+        if (!snapshot->IsOk())
+        {
+            delete snapshot;
+        }
+        else
         {
             process_globals.snapshot_blob = snapshot;
         }

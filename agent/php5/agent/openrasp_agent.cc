@@ -235,26 +235,20 @@ bool HeartBeatAgent::update_config(zval *config_zv, long config_time, bool *has_
 bool HeartBeatAgent::build_plugin_snapshot(TSRMLS_D)
 {
 	init_platform(TSRMLS_C);
-	StartupData *snapshot = get_snapshot(algorithm_config, active_plugins TSRMLS_CC);
+	Snapshot snapshot(algorithm_config, active_plugins);
 	shutdown_platform(TSRMLS_C);
-	if (!snapshot || !snapshot->IsOk())
+	if (snapshot.IsOk())
 	{
 		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to generate snapshot."));
 		return false;
 	}
 	std::string snapshot_abs_path = std::string(openrasp_ini.root_dir) + "/snapshot.dat";
-#ifndef _WIN32
-	mode_t oldmask = umask(0);
-#endif
-	bool write_successful = snapshot->Save(snapshot_abs_path);
-#ifndef _WIN32
-	umask(oldmask);
-#endif
-	if (!write_successful)
+	if (!snapshot.Save(snapshot_abs_path))
 	{
 		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write snapshot to %s."), snapshot_abs_path.c_str());
+		return false
 	}
-	return write_successful;
+	return true;
 }
 
 void HeartBeatAgent::write_pid_to_shm(pid_t agent_pid)

@@ -73,52 +73,6 @@ private:
   std::timed_mutex mtx;
 };
 
-class StartupData : public v8::StartupData
-{
-public:
-  uint64_t timestamp = 0;
-  StartupData() = default;
-  StartupData(const v8::StartupData &blob) : v8::StartupData(blob){};
-  StartupData(const char *data, size_t raw_size, uint64_t timestamp = 0)
-  {
-    this->data = data;
-    this->raw_size = raw_size;
-    this->timestamp = timestamp;
-  };
-  StartupData(const std::string &path, uint64_t timestamp = 0)
-  {
-    char *buffer = nullptr;
-    size_t size = 0;
-    std::ifstream file(path);
-    if (file)
-    {
-      file.seekg(0, std::ios::end);
-      size = file.tellg();
-      file.seekg(0, std::ios::beg);
-      if (size > 0)
-      {
-        char *buffer = new char[size];
-        file.read(buffer, size);
-      }
-    }
-    StartupData(buffer, size, timestamp);
-  }
-  ~StartupData() { delete[] data; };
-  bool Save(const std::string &path)
-  {
-    std::ofstream file(path);
-    if (file)
-    {
-      file.write(data, raw_size);
-      return true;
-    }
-    // check errno when return value is false
-    return false;
-  };
-  bool IsOk() { return data && raw_size; };
-  bool IsExpired(uint64_t timestamp) { return timestamp > this->timestamp; };
-};
-
 class openrasp_v8_js_src
 {
 public:
@@ -126,10 +80,30 @@ public:
   std::string source;
 };
 
+class Snapshot : public v8::StartupData
+{
+public:
+  uint64_t timestamp = 0;
+  intptr_t external_references[2] = {
+      reinterpret_cast<intptr_t>(v8native_log),
+      0,
+  };
+  Snapshot(const v8::StartupData &blob) : v8::StartupData(blob){};
+  Snapshot(const char *data = nullptr, size_t raw_size = 0, uint64_t timestamp = 0);
+  Snapshot(const std::string &path, uint64_t timestamp = 0);
+  Snapshot(const std::string &config, const std::vector<openrasp_v8_js_src> &plugin_list);
+  ~Snapshot() { delete[] data; };
+  bool Save(const std::string &path) const; // check errno when return value is false
+  bool IsOk() const { return data && raw_size; };
+  bool IsExpired(uint64_t timestamp) const { return timestamp > this->timestamp; };
+private:
+  static void v8native_log(const v8::FunctionCallbackInfo<v8::Value> &info);
+};
+
 class openrasp_v8_process_globals
 {
 public:
-  StartupData *snapshot_blob = nullptr;
+  Snapshot *snapshot_blob = nullptr;
   std::mutex mtx;
   bool is_initialized = false;
   v8::Platform *v8_platform = nullptr;
@@ -152,8 +126,6 @@ v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC);
 v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset = 0);
 v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
                                       std::string _source, std::string _filename, int _line_offset = 0);
-StartupData *get_snapshot(const std::string &config, const std::vector<openrasp_v8_js_src> &plugin_list TSRMLS_DC);
-StartupData *get_snapshot(TSRMLS_D);
 extern intptr_t external_references[];
 void alarm_info(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result TSRMLS_DC);
 bool openrasp_check(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params TSRMLS_DC);
