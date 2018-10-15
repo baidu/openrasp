@@ -36,11 +36,11 @@ public:
   bool plugin_filter = true;
   // log
   string syslog_server_address;
-  int64_t syslog_facility;
+  int64_t syslog_facility = 1;
   bool syslog_alarm_enable = false;
   int64_t syslog_connection_timeout = 50;
   int64_t syslog_read_timeout = 10;
-  int64_t syslog_connection_retry_interval = 200;
+  int64_t syslog_reconnect_interval = 300;
   int64_t log_maxburst = 100;
   int64_t log_maxstack = 10;
   int64_t log_max_backup = 90;

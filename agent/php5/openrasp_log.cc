@@ -45,6 +45,7 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 #define RASP_LOG_TOKEN_REFILL_INTERVAL      60000
 #define RASP_STREAM_WRITE_RETRY_NUMBER      1
 
+static bool verify_syslog_address_format(TSRMLS_D);
 
 typedef void (*value_filter_t)(zval *origin_zv, zval *new_zv TSRMLS_DC);
 
@@ -406,6 +407,15 @@ static void init_openrasp_loggers(TSRMLS_D)
     for (int logger_id = 0; logger_id < TOTAL; logger_id++)
     {
         init_logger_instance(logger_id TSRMLS_CC);
+        if (ALARM_LOGGER == logger_id)
+        {
+            log_appender alarm_appender = FILE_APPENDER;
+            if (verify_syslog_address_format(TSRMLS_C))
+            {
+                alarm_appender = static_cast<log_appender>(alarm_appender | SYSLOG_APPENDER);
+            }
+            OPENRASP_LOG_G(loggers)[logger_id].appender = alarm_appender;
+        }
     }
 }
 
@@ -444,27 +454,27 @@ static php_stream **openrasp_log_stream_zval_find(rasp_logger_entry *logger, log
         if (!OPENRASP_LOG_G(syslog_stream))
         {
             long now = (long)time(NULL);
-            if ((now - OPENRASP_LOG_G(last_retry_time)) > openrasp_ini.syslog_connection_retry_interval)
+            if ((now - OPENRASP_LOG_G(syslog_reconnect_time)) > OPENRASP_CONFIG(syslog_reconnect_interval))
             {
                 struct timeval tv;
                 tv.tv_sec = 0;
-                tv.tv_usec = openrasp_ini.syslog_connection_timeout * 1000;
-                res_len = spprintf(&res, 0, "%s", openrasp_ini.syslog_server_address);
+                tv.tv_usec = OPENRASP_CONFIG(syslog_connection_timeout) * 1000;
+                res_len = spprintf(&res, 0, "%s", OPENRASP_CONFIG(syslog_server_address).c_str());
                 stream = php_stream_xport_create(res, res_len, REPORT_ERRORS, STREAM_XPORT_CLIENT | STREAM_XPORT_CONNECT, 0, &tv, NULL, NULL, NULL);        
                 if (stream)
                 {
                     tv.tv_sec = 0;
-                    tv.tv_usec = openrasp_ini.syslog_read_timeout * 1000;
+                    tv.tv_usec = OPENRASP_CONFIG(syslog_read_timeout) * 1000;
                     php_stream_set_option(stream, PHP_STREAM_OPTION_READ_TIMEOUT, 0, &tv);
                     OPENRASP_LOG_G(syslog_stream) = stream;
                     return &OPENRASP_LOG_G(syslog_stream);
                 }
                 else
                 {
-                    openrasp_error(E_WARNING, LOG_ERROR, _("Unable to contact syslog server %s"), openrasp_ini.syslog_server_address);                
+                    openrasp_error(E_WARNING, LOG_ERROR, _("Unable to contact syslog server %s"), OPENRASP_CONFIG(syslog_server_address).c_str());                
                 }
                 efree(res);
-                OPENRASP_LOG_G(last_retry_time) = now;
+                OPENRASP_LOG_G(syslog_reconnect_time) = now;
             }
         }
         else
@@ -561,7 +571,7 @@ static int openrasp_log_by_syslog(rasp_logger_entry *logger, severity_level leve
 
     long  now             = (long)time(NULL);
     time_RFC3339 = openrasp_format_date(ZEND_STRL(RASP_RFC3339_FORMAT), now);
-    priority = openrasp_ini.syslog_facility * 8 + level_int;
+    priority = OPENRASP_CONFIG(syslog_facility) * 8 + level_int;
     syslog_info_len = spprintf(&syslog_info, 0, "<%d>%s %s: %s", priority, time_RFC3339, host_name, message);
     efree(time_RFC3339);
 
@@ -828,6 +838,31 @@ int policy_info(zval *params_result TSRMLS_DC) {
     return policy_result;
 }
 
+static bool verify_syslog_address_format(TSRMLS_D)
+{
+    bool result = false;
+    bool syslog_alarm_enable = OPENRASP_CONFIG(syslog_alarm_enable);
+    std::string syslog_address = OPENRASP_CONFIG(syslog_server_address);
+    if (syslog_alarm_enable && !syslog_address.empty()) {
+        php_url *resource = php_url_parse_ex(syslog_address.c_str(), syslog_address.length());
+        if (resource) {
+            if (resource->scheme && (!strcmp(resource->scheme, "tcp") || !strcmp(resource->scheme, "udp"))) {
+                result = true;
+            }
+            else
+            {
+                openrasp_error(E_WARNING, LOG_ERROR, 
+                _("Invalid url scheme in syslog server address: '%s', expecting 'tcp:' or 'udp:'."), syslog_address.c_str());
+            }
+            php_url_free(resource);
+        } else {
+            openrasp_error(E_WARNING, LOG_ERROR, 
+                _("Invalid syslog server address: '%s', expecting 'tcp://' or 'udp://' to be present."), syslog_address.c_str());
+        }
+    }
+    return result;
+}
+
 static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_globals TSRMLS_DC)
 {
 	openrasp_log_globals->alarm_request_info 				= NULL;
@@ -835,7 +870,7 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
 	openrasp_log_globals->formatted_date_suffix 			= NULL;	
 	openrasp_log_globals->syslog_stream       				= NULL;
     openrasp_log_globals->in_request_process                = 0;
-    openrasp_log_globals->last_retry_time                   = 0;
+    openrasp_log_globals->syslog_reconnect_time             = 0;
 
     openrasp_log_globals->loggers[ALARM_LOGGER] = {ALARM_LOG_DIR_NAME,  0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
     openrasp_log_globals->loggers[POLICY_LOGGER] = {POLICY_LOG_DIR_NAME, 0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
@@ -843,22 +878,9 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
     openrasp_log_globals->loggers[RASP_LOGGER] = {RASP_LOG_DIR_NAME,   0, 0, 0l, 0, LEVEL_INFO, FILE_APPENDER, nullptr};
 
     log_appender alarm_appender = FILE_APPENDER;
-    if (openrasp_ini.syslog_alarm_enable && openrasp_ini.syslog_server_address) {
-        php_url *resource = php_url_parse_ex(openrasp_ini.syslog_server_address, strlen(openrasp_ini.syslog_server_address));
-        if (resource) {
-            if (resource->scheme && (!strcmp(resource->scheme, "tcp") || !strcmp(resource->scheme, "udp"))) {
-                alarm_appender = static_cast<log_appender>(alarm_appender | SYSLOG_APPENDER);
-            }
-            else
-            {
-                openrasp_error(E_WARNING, LOG_ERROR, 
-                _("Invalid url scheme in syslog server address: '%s', expecting 'tcp:' or 'udp:'."), openrasp_ini.syslog_server_address);
-            }
-            php_url_free(resource);
-        } else {
-            openrasp_error(E_WARNING, LOG_ERROR, 
-                _("Invalid syslog server address: '%s', expecting 'tcp://' or 'udp://' to be present."), openrasp_ini.syslog_server_address);
-        }
+    if (verify_syslog_address_format(TSRMLS_C))
+    {
+        alarm_appender = static_cast<log_appender>(alarm_appender | SYSLOG_APPENDER);
     }
     openrasp_log_globals->loggers[ALARM_LOGGER].appender     		= alarm_appender;
     openrasp_log_globals->time_offset = fetch_time_offset();

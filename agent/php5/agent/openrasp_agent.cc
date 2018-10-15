@@ -16,6 +16,7 @@
 
 #include "openrasp_config.h"
 #include "openrasp_agent.h"
+#include "openrasp_hook.h"
 #include "utils/digest.h"
 #include <fstream>
 #include <sstream>
@@ -199,50 +200,34 @@ bool HeartBeatAgent::update_config(zval *config_zv, long config_time, bool *has_
 		*has_new_algorithm_config = true;
 	}
 	zend_hash_del(Z_ARRVAL_P(config_zv), "algorithm.config", sizeof("algorithm.config"));
-	if (zend_hash_num_elements(Z_ARRVAL_P(config_zv)) > 0)
+	if (zend_hash_num_elements(Z_ARRVAL_P(config_zv)) <= 0)
 	{
-		std::string config_string = json_encode_from_zval(config_zv TSRMLS_CC);
-		OpenraspConfig openrasp_config(config_string, OpenraspConfig::FromType::kJson);
-		if (scm != nullptr)
+		return true;
+	}
+	std::string config_string = json_encode_from_zval(config_zv TSRMLS_CC);
+	OpenraspConfig openrasp_config(config_string, OpenraspConfig::FromType::kJson);
+	if (scm != nullptr)
+	{
+		scm->build_check_type_white_array(openrasp_config);
+		//update log_max_backup only its value greater than zero
+		long log_max_backup = openrasp_config.Get("log_max_backup", (int64_t)0);
+		if (log_max_backup)
 		{
-			std::map<std::string, int> url_mask_map;
-			for (auto map_iter : CheckTypeNameMap)
-			{
-				std::vector<std::string> urls;
-				urls = openrasp_config.GetArray("hook.white." + std::string(map_iter.second), urls);
-				for (auto vector_iter : urls)
-				{
-					std::string target_url = (vector_iter == "all") ? "" : vector_iter;
-					int mask = map_iter.first;
-					auto it = url_mask_map.find(target_url);
-					if (it != url_mask_map.end())
-					{
-						mask |= it->second;
-					}
-					url_mask_map[target_url] = mask;
-				}
-			}
-			scm->build_check_type_white_array(url_mask_map);
-			//update log_max_backup only its value greater than zero
-			long log_max_backup = openrasp_config.Get("log_max_backup", (int64_t)0);
-			if (log_max_backup)
-			{
-				scm->set_log_max_backup(log_max_backup);
-			}
+			scm->set_log_max_backup(log_max_backup);
 		}
-		std::string cloud_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/cloud-config.json";
-		std::ofstream out_file(cloud_config_file_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
-		if (out_file.is_open() && out_file.good())
-		{
-			out_file << config_string;
-			out_file.close();
-			scm->set_config_last_update(config_time);
-		}
-		else
-		{
-			openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write cloud config to %s."), cloud_config_file_path.c_str());
-			return false;
-		}
+	}
+	std::string cloud_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/cloud-config.json";
+	std::ofstream out_file(cloud_config_file_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
+	if (out_file.is_open() && out_file.good())
+	{
+		out_file << config_string;
+		out_file.close();
+		scm->set_config_last_update(config_time);
+	}
+	else
+	{
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write cloud config to %s."), cloud_config_file_path.c_str());
+		return false;
 	}
 	return true;
 }
@@ -258,12 +243,18 @@ bool HeartBeatAgent::build_plugin_snapshot(TSRMLS_D)
 		return false;
 	}
 	std::string snapshot_abs_path = std::string(openrasp_ini.root_dir) + "/snapshot.dat";
-	if (!snapshot.Save(snapshot_abs_path))
+#ifndef _WIN32
+	mode_t oldmask = umask(0);
+#endif
+	bool write_successful = snapshot.Save(snapshot_abs_path);
+#ifndef _WIN32
+	umask(oldmask);
+#endif
+	if (!write_successful)
 	{
 		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write snapshot to %s."), snapshot_abs_path.c_str());
-		return false
 	}
-	return true;
+	return write_successful;
 }
 
 void HeartBeatAgent::write_pid_to_shm(pid_t agent_pid)

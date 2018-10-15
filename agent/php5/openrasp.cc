@@ -56,13 +56,6 @@ PHP_INI_ENTRY1("openrasp.backend_url", nullptr, PHP_INI_SYSTEM, OnUpdateOpenrasp
 PHP_INI_ENTRY1("openrasp.app_id", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.app_id)
 PHP_INI_ENTRY1("openrasp.plugin_update_enable", "1", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.plugin_update_enable)
 PHP_INI_ENTRY1("openrasp.remote_management_enable", "1", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.remote_management_enable)
-//trans to openrasp config
-PHP_INI_ENTRY1("openrasp.syslog_server_address", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.syslog_server_address)
-PHP_INI_ENTRY1("openrasp.syslog_facility", "1", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_facility)
-PHP_INI_ENTRY1("openrasp.syslog_alarm_enable", "off", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.syslog_alarm_enable)
-PHP_INI_ENTRY1("openrasp.syslog_connection_timeout", "50", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_connection_timeout)
-PHP_INI_ENTRY1("openrasp.syslog_read_timeout", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_read_timeout)
-PHP_INI_ENTRY1("openrasp.syslog_connection_retry_interval", "300", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_connection_retry_interval)
 PHP_INI_END()
 
 PHP_GINIT_FUNCTION(openrasp)
@@ -97,7 +90,6 @@ PHP_MINIT_FUNCTION(openrasp)
     }
     if (!make_openrasp_root_dir(TSRMLS_C))
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir is not configured correctly in php.ini, continuing without security protection"));
         return SUCCESS;
     }
     openrasp::scm.reset(new openrasp::SharedConfigManager(&openrasp::sm));
@@ -135,6 +127,12 @@ PHP_MINIT_FUNCTION(openrasp)
     {
         openrasp::oam->startup();
     }
+    else
+    {
+        openrasp::scm->build_check_type_white_array(OPENRASP_G(config));
+    }
+#else
+    openrasp::scm->build_check_type_white_array(OPENRASP_G(config));
 #endif
     is_initialized = true;
     return SUCCESS;
