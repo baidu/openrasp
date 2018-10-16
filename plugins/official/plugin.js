@@ -1,4 +1,4 @@
-const version = '2018-1010-1600'
+const version = '2018-1016-0000'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -543,10 +543,10 @@ function has_file_extension(path) {
     return false
 }
 
-function is_absolute_path(path, os) {
+function is_absolute_path(path, is_windows) {
 
     // Windows - C:\\windows
-    if (os == 'Windows') {
+    if (is_windows) {
 
         if (path[1] == ':')
         {
@@ -583,7 +583,7 @@ function is_outside_webroot(appBasePath, realpath, path) {
 // 
 // 或者以用户输入结尾
 // file_get_contents("/data/uploads/" . "../../../../../../../etc/passwd");
-function is_path_endswith_userinput(parameter, target)
+function is_path_endswith_userinput(parameter, target, is_windows)
 {
     var verdict = false
 
@@ -597,18 +597,26 @@ function is_path_endswith_userinput(parameter, target)
             return
         }
 
-        // 参数必须有跳出目录，或者是绝对路径
-        if ((value == target || target.endsWith(value)) 
-            && (has_traversal(value) || is_absolute_path(value)))
+        // 如果应用做了特殊处理， 比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
+        if (value.startsWith('file://') && 
+            is_absolute_path(target, is_windows) && 
+            value.endsWith(target))
         {
             verdict = true
             return true
         }
 
-        // 如果应用做了特殊处理， 比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
-        if (value.startsWith('file://') && 
-            is_absolute_path(target) && 
-            value.endsWith(target))
+        // Windows 下面
+        // 传入 ../../../conf/tomcat-users.xml
+        // 看到 c:\tomcat\webapps\root\..\..\conf\tomcat-users.xml
+        if (is_windows)
+        {
+            value = value.replaceAll('/', '\\')
+        }
+
+        // 参数必须有跳出目录，或者是绝对路径
+        if ((value == target || target.endsWith(value)) 
+            && (has_traversal(value) || is_absolute_path(value, is_windows)))
         {
             verdict = true
             return true
@@ -709,44 +717,54 @@ if (RASP.get_jsengine() !== 'v8') {
         var parameters = context.parameter || {}
         var raw_tokens = []
 
+        function _run(values, name)
+        {
+            var reason = false
+
+            values.some(function (value) {
+                if (value.length <= min_length) {
+                    return false
+                }
+
+                // 检查用户输入是否存在于SQL中
+                var userinput_idx = params.query.indexOf(value)
+                if (userinput_idx == -1) {
+                    return false
+                }
+
+                // 懒加载，需要的时候初始化 token
+                if (raw_tokens.length == 0) {
+                    raw_tokens = RASP.sql_tokenize(params.query, params.server)
+                }
+
+                if (is_sql_changed(raw_tokens, userinput_idx, value.length)) {
+                    reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
+                    return true
+                }
+            })
+
+            return reason
+        }
+
         // 算法1: 匹配用户输入，简单识别逻辑是否发生改变
         if (algorithmConfig.sqli_userinput.action != 'ignore') {
+
+            // 匹配 GET/POST/multipart 参数
             Object.keys(parameters).some(function (name) {
-                // 覆盖两种情况，后者仅PHP支持
-                //
+                // 覆盖场景，后者仅PHP支持
                 // ?id=XXXX
-                // ?filter[category_id]=XXXX
+                // ?data[key1][key2]=XXX
                 var value_list
 
                 if (typeof parameters[name][0] == 'string') {
                     value_list = parameters[name]
                 } else {
                     value_list = Object.values(parameters[name][0])
-                }
+                }                
 
-                for (var i = 0; i < value_list.length; i ++) {
-                    var value = value_list[i]
-
-                    // 请求参数长度过滤，减少匹配次数
-                    if (value.length <= min_length) {
-                        continue
-                    }
-
-                    // 检查用户输入是否存在于SQL中
-                    var userinput_idx = params.query.indexOf(value)
-                    if (userinput_idx == -1) {
-                        continue
-                    }
-
-                    // 懒加载，需要的时候初始化 token
-                    if (raw_tokens.length == 0) {
-                        raw_tokens = RASP.sql_tokenize(params.query, params.server)
-                    }
-
-                    if (is_sql_changed(raw_tokens, userinput_idx, value.length)) {
-                        reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
-                        return true
-                    }
+                reason = _run(value_list, name)
+                if (reason) {
+                    return true
                 }
             })
 
@@ -840,7 +858,7 @@ if (RASP.get_jsengine() !== 'v8') {
                 {
                     // `information_schema`.tables
                     // information_schema  .tables
-                	var parts = tokens_lc[i + 1].replaceAll('`', '').split('.')
+                    var parts = tokens_lc[i + 1].replaceAll('`', '').split('.')
                     if (parts.length == 2)
                     {
                         if (parts[0].trim() == 'information_schema' && parts[1].trim() == 'tables')
@@ -1031,6 +1049,7 @@ plugin.register('directory', function (params, context) {
 plugin.register('readFile', function (params, context) {
     var server    = context.server
     var parameter = context.parameter
+    var is_win    = server.os.indexOf('Windows') != -1
 
     //
     // 算法1: 简单用户输入识别，拦截任意文件下载漏洞
@@ -1042,7 +1061,7 @@ plugin.register('readFile', function (params, context) {
     {
         // ?path=/etc/./hosts
         // ?path=../../../etc/passwd
-        if (is_path_endswith_userinput(parameter, params.path))
+        if (is_path_endswith_userinput(parameter, params.path, is_win))
         {
             return {
                 action:     algorithmConfig.readFile_userinput.action,
@@ -1130,14 +1149,16 @@ plugin.register('readFile', function (params, context) {
 
 plugin.register('include', function (params, context) {
     var url       = params.url
+    var server    = context.server
     var parameter = context.parameter
+    var is_win    = server.os.indexOf('Windows') != -1
 
     // 用户输入检查
     // ?file=/etc/passwd
     // ?file=../../../../../var/log/httpd/error.log
     if (algorithmConfig.include_userinput.action != 'ignore')
     {
-        if (is_path_endswith_userinput(parameter, url))
+        if (is_path_endswith_userinput(parameter, url, is_win))
         {
             return {
                 action:     algorithmConfig.include_userinput.action,
