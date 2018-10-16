@@ -43,7 +43,7 @@ extern "C" {
 #define RASP_LOG_DIR_NAME "rasp"
 
 #define DEFAULT_LOG_FILE_SUFFIX             "%Y-%m-%d"
-#define RASP_RFC3339_FORMAT                 "%Y-%m-%d%t%H:%M:%S%z"
+#define RASP_RFC3339_FORMAT                 "%Y-%m-%dT%H:%M:%S%z"
 
 typedef enum log_appender_t {
 	  FILE_APPENDER = 1 << 0, 
@@ -112,6 +112,8 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_log);
 PHP_RINIT_FUNCTION(openrasp_log);
 PHP_RSHUTDOWN_FUNCTION(openrasp_log);
 PHP_MINFO_FUNCTION(openrasp_log);
+
+int base_info(rasp_logger_entry *logger, const char *message, int message_len TSRMLS_DC);
 
 #endif /* OPENRASP_LOG_H */
 
