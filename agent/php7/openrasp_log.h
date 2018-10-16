@@ -113,8 +113,6 @@ PHP_RINIT_FUNCTION(openrasp_log);
 PHP_RSHUTDOWN_FUNCTION(openrasp_log);
 PHP_MINFO_FUNCTION(openrasp_log);
 
-int base_info(rasp_logger_entry *logger, const char *message, int message_len TSRMLS_DC);
-
 #endif /* OPENRASP_LOG_H */
 
 /*

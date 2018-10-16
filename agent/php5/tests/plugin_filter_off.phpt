@@ -1,5 +1,5 @@
 --TEST--
-plugin_filter off
+plugin.filter false
 --SKIPIF--
 <?php
 $plugin = <<<EOF
@@ -11,7 +11,7 @@ plugin.register('readFile', params => {
 })
 EOF;
 $conf = <<<CONF
-plugin_filter=false
+plugin.filter=false
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

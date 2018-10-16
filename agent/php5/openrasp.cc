@@ -65,10 +65,10 @@ PHP_GINIT_FUNCTION(openrasp)
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (!openrasp::oam)
     {
-        load_local_config(&(openrasp_globals->config)TSRMLS_CC);
+        load_local_config(&(openrasp_globals->config) TSRMLS_CC);
     }
 #else
-    load_local_config(&(openrasp_globals->config)TSRMLS_CC);
+    load_local_config(&(openrasp_globals->config) TSRMLS_CC);
 #endif
 #endif
 }

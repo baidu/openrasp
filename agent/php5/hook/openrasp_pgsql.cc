@@ -183,7 +183,7 @@ static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connectio
  */
 void pre_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (OPENRASP_CONFIG(enforce_policy))
+    if (OPENRASP_CONFIG(security.enforce_policy))
     {
         if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pg_connection_entry, 1))
         {
@@ -193,7 +193,7 @@ void pre_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 }
 void post_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!OPENRASP_CONFIG(enforce_policy) && Z_TYPE_P(return_value) == IS_RESOURCE)
+    if (!OPENRASP_CONFIG(security.enforce_policy) && Z_TYPE_P(return_value) == IS_RESOURCE)
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pg_connection_entry, 0);
     }
@@ -241,7 +241,7 @@ void post_global_pg_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         args[0] = return_value;
         num_rows = fetch_rows_via_user_function("pg_num_rows", 1, args TSRMLS_CC);
     }
-    if (num_rows >= OPENRASP_CONFIG(slowquery_min_rows))
+    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
     {
         slow_query_alarm(num_rows TSRMLS_CC);       
     }
@@ -267,7 +267,7 @@ void post_global_pg_get_result_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMET
         args[0] = return_value;
         num_rows = fetch_rows_via_user_function("pg_num_rows", 1, args TSRMLS_CC);
     }
-    if (num_rows >= OPENRASP_CONFIG(slowquery_min_rows))
+    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
     {
         slow_query_alarm(num_rows TSRMLS_CC);       
     }

@@ -10,7 +10,7 @@ plugin.register('command', params => {
 })
 EOF;
 $conf = <<<CONF
-block_status_code=500
+block.status_code=500
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

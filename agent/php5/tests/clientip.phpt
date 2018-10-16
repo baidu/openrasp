@@ -9,7 +9,7 @@ plugin.register('command', (params, context) => {
 })
 EOF;
 $conf = <<<CONF
-clientip_header="clientip"
+clientip.header="clientip"
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

@@ -2,11 +2,13 @@
 hook array_filter
 --SKIPIF--
 <?php
+$conf = <<<CONF
+callable_blacklist=["system", "exec"]
+CONF;
 include(__DIR__.'/../skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.callable_blacklists=system,exec
 --FILE--
 <?php
 array_filter(array('ls', 'whoami'), "system");

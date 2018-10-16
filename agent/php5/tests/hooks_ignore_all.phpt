@@ -14,11 +14,13 @@ plugin.register('writeFile', params => {
     return block
 })
 EOF;
+$conf = <<<CONF
+hook.white.ALL=true
+CONF;
 include(__DIR__.'/skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.hooks_ignore=all
 --FILE--
 <?php
 file_put_contents('/tmp/openrasp/tmpfile', 'test');

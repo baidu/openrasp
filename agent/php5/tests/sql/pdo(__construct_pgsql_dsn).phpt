@@ -3,7 +3,7 @@ hook PDO::__construct
 --SKIPIF--
 <?php 
 $conf = <<<CONF
-enforce_policy=true
+security.enforce_policy=true
 CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("pgsql")) die("Skipped: pgsql extension required.");

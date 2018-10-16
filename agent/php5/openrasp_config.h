@@ -31,42 +31,88 @@ class OpenraspConfig
 {
 public:
   // plugin
-  int64_t plugin_timeout_ms = 100;
-  int64_t plugin_maxstack = 100;
-  bool plugin_filter = true;
+  struct
+  {
+    struct
+    {
+      int64_t millis = 100;
+    } timeout;
+    int64_t maxstack = 100;
+    bool filter = true;
+  } plugin;
   // log
+  struct
+  {
+    int64_t maxburst = 100;
+    int64_t maxstack = 10;
+    int64_t maxbackup = 30;
+  } log;
   string syslog_server_address;
   int64_t syslog_facility = 1;
   bool syslog_alarm_enable = false;
   int64_t syslog_connection_timeout = 50;
   int64_t syslog_read_timeout = 10;
   int64_t syslog_reconnect_interval = 300;
-  int64_t log_maxburst = 100;
-  int64_t log_maxstack = 10;
-  int64_t log_max_backup = 90;
   // blacklist whitelist
-  vector<string> whitelist_command;
-  vector<string> whitelist_directory;
-  vector<string> whitelist_writeFile;
-  vector<string> whitelist_readFile;
-  vector<string> whitelist_fileUpload;
-  vector<string> whitelist_rename;
-  vector<string> whitelist_copy;
-  vector<string> whitelist_include;
-  vector<string> whitelist_sql;
-  vector<string> blacklist_callable = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
+  struct
+  {
+    struct
+    {
+      vector<string> callable;
+      vector<string> command;
+      vector<string> directory;
+      vector<string> readFile;
+      vector<string> writeFile;
+      vector<string> copy;
+      vector<string> rename;
+      vector<string> fileUpload;
+      vector<string> include;
+      vector<string> dbConnection;
+      vector<string> sql;
+      vector<string> sqlSlowQuery;
+      vector<string> sqlPrepared;
+      vector<string> ssrf;
+      vector<string> wenshell_eval;
+      vector<string> wenshell_command;
+      vector<string> webshell_file_put_contents;
+      bool All = false;
+    } white;
+  } hook;
+  vector<string> callable_blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
   // block repsonse
-  int64_t block_status_code = 302;
-  string block_redirect_url = R"(https://rasp.baidu.com/blocked/?request_id=%request_id%)";
-  string block_content_json = R"({"error":true, "reason": "Request blocked by OpenRASP", "request_id": "%request_id%"})";
-  string block_content_xml = R"(<?xml version="1.0"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>)";
-  string block_content_html = R"(</script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>)";
+  struct
+  {
+    int64_t status_code = 302;
+    string redirect_url = R"(https://rasp.baidu.com/blocked/?request_id=%request_id%)";
+    string content_json = R"({"error":true, "reason": "Request blocked by OpenRASP", "request_id": "%request_id%"})";
+    string content_xml = R"(<?xml version="1.0"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>)";
+    string content_html = R"(</script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>)";
+  } block;
   // others
-  string clientip_header;
-  string inject_html_urlprefix;
-  int64_t body_maxbytes = 4 * 1024;
+  struct
+  {
+    string urlprefix;
+  } inject;
+  struct
+  {
+    int64_t maxbytes = 4 * 1024;
+  } body;
+  struct
+  {
+    string header;
+  } clientip;
+  struct
+  {
+    bool enforce_policy = false;
+  } security;
+  struct
+  {
+    struct
+    {
+      int64_t min_rows = 500;
+    } slowquery;
+  } sql;
   int64_t slowquery_min_rows = 500;
-  bool enforce_policy = false;
 
 public:
   enum FromType
@@ -144,8 +190,27 @@ private:
   vector<T> GetArrayFromJson(const string &key, const vector<T> &default_value) const;
 
   template <typename T>
-  const T &GetFromIni(const string &key, const T &default_value) const { return tomlObj->get_as<T>(key).value_or(default_value); };
+  const T &GetFromIni(const string &key, const T &default_value) const
+  {
+    size_t pos = key.find_last_of(".");
+    if (pos != string::npos && pos != key.size() - 1 && tomlObj->contains_qualified(key))
+    {
+      auto inner = tomlObj->get_table_qualified(key.substr(0, pos));
+      return inner->get_as<T>(key.substr(pos + 1)).value_or(default_value);
+    }
+    return tomlObj->get_as<T>(key).value_or(default_value);
+  };
+
   template <typename T>
-  const vector<T> &GetArrayFromIni(const string &key, const vector<T> &default_value) const { return tomlObj->get_array_of<T>(key).value_or(default_value); };
+  const vector<T> GetArrayFromIni(const string &key, const vector<T> &default_value) const
+  {
+    size_t pos = key.find_last_of(".");
+    if (pos != string::npos && pos != key.size() - 1 && tomlObj->contains_qualified(key))
+    {
+      auto inner = tomlObj->get_table_qualified(key.substr(0, pos));
+      return inner->get_array_of<T>(key.substr(pos + 1)).value_or(default_value);
+    }
+    return tomlObj->get_array_of<T>(key).value_or(default_value);
+  };
 };
 } // namespace openrasp

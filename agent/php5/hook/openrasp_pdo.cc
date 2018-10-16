@@ -168,7 +168,7 @@ void post_pdo_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         if (!stmt || !stmt->dbh) {	
             return;	
         }	
-        if (stmt->row_count >= OPENRASP_CONFIG(slowquery_min_rows))
+        if (stmt->row_count >= OPENRASP_CONFIG(sql.slowquery.min_rows))
         {
             slow_query_alarm(stmt->row_count TSRMLS_CC);      
         }
@@ -192,7 +192,7 @@ void post_pdo_exec_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {    
     if (Z_TYPE_P(return_value) == IS_LONG)
     {	
-        if (Z_LVAL_P(return_value) >= OPENRASP_CONFIG(slowquery_min_rows))
+        if (Z_LVAL_P(return_value) >= OPENRASP_CONFIG(sql.slowquery.min_rows))
         {
             slow_query_alarm(Z_LVAL_P(return_value) TSRMLS_CC);
         }
@@ -201,7 +201,7 @@ void post_pdo_exec_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_pdo___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (OPENRASP_CONFIG(enforce_policy))
+    if (OPENRASP_CONFIG(security.enforce_policy))
     {        
         if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pdo_connection_entry, 1))
         {
@@ -212,7 +212,7 @@ void pre_pdo___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void post_pdo___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!OPENRASP_CONFIG(enforce_policy) && Z_TYPE_P(this_ptr) == IS_OBJECT)
+    if (!OPENRASP_CONFIG(security.enforce_policy) && Z_TYPE_P(this_ptr) == IS_OBJECT)
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pdo_connection_entry, 0);
     }

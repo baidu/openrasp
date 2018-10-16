@@ -4,7 +4,7 @@ hook mysql_pconnect
 <?php
 if (PHP_MAJOR_VERSION >= 7) die('Skipped: no mysql extension in PHP7.');
 $conf = <<<CONF
-enforce_policy=true
+security.enforce_policy=true
 CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("mysql")) die("Skipped: mysql extension required.");
