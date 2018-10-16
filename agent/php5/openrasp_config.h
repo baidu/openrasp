@@ -190,7 +190,7 @@ private:
   vector<T> GetArrayFromJson(const string &key, const vector<T> &default_value) const;
 
   template <typename T>
-  const T &GetFromIni(const string &key, const T &default_value) const
+  const T GetFromIni(const string &key, const T &default_value) const
   {
     size_t pos = key.find_last_of(".");
     if (pos != string::npos && pos != key.size() - 1 && tomlObj->contains_qualified(key))
