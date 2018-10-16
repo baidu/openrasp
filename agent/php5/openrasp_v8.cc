@@ -383,6 +383,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
     // v8::V8::Dispose();
     shutdown_platform(TSRMLS_C);
     delete process_globals.snapshot_blob;
+    process_globals.snapshot_blob = nullptr;
 
     return SUCCESS;
 }
