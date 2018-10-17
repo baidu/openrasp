@@ -63,8 +63,6 @@ Isolate::Data *Isolate::GetData()
 void Isolate::Dispose()
 {
     Isolate::Data *data = GetData();
-    delete data->create_params.array_buffer_allocator;
-    delete data;
     {
         v8::HandleScope handle_scope(this);
         v8::Local<v8::Context> context = GetCurrentContext();
@@ -72,6 +70,8 @@ void Isolate::Dispose()
     }
     Exit();
     v8::Isolate::Dispose();
+    delete data->create_params.array_buffer_allocator;
+    delete data;
 }
 
 bool Isolate::IsExpired(uint64_t timestamp)
