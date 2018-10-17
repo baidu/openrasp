@@ -78,4 +78,4 @@ bool Isolate::IsExpired(uint64_t timestamp)
 {
     return timestamp > GetData()->timestamp;
 }
-}
+} // namespace openrasp

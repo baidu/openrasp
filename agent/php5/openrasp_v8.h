@@ -161,36 +161,7 @@ unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC);
 } // namespace openrasp
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_v8)
-_zend_openrasp_v8_globals()
-{
-  isolate = nullptr;
-  action_hash_ignore = 0;
-  action_hash_log = 0;
-  action_hash_block = 0;
-  is_isolate_initialized = false;
-  is_env_initialized = false;
-  is_running = false;
-  plugin_update_timestamp = 0;
-}
-openrasp::Isolate *isolate;
-v8::Isolate::CreateParams create_params;
-v8::Persistent<v8::Context> context;
-v8::Persistent<v8::Object> RASP;
-v8::Persistent<v8::Function> check;
-v8::Persistent<v8::Object> request_context;
-v8::Persistent<v8::String> key_action;
-v8::Persistent<v8::String> key_message;
-v8::Persistent<v8::String> key_name;
-v8::Persistent<v8::String> key_confidence;
-v8::Persistent<v8::Function> console_log;
-v8::Persistent<v8::Function> JSON_stringify;
-int action_hash_ignore;
-int action_hash_log;
-int action_hash_block;
-bool is_isolate_initialized;
-bool is_env_initialized;
-bool is_running;
-long plugin_update_timestamp;
+openrasp::Isolate *isolate = nullptr;
 ZEND_END_MODULE_GLOBALS(openrasp_v8)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp_v8)

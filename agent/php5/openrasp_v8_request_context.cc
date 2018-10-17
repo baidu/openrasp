@@ -17,7 +17,8 @@
 #include "openrasp_v8.h"
 #include "openrasp_log.h"
 
-using namespace openrasp;
+namespace openrasp
+{
 static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
@@ -334,7 +335,7 @@ static void server_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
 #endif
     info.GetReturnValue().Set(server);
 }
-v8::Local<v8::Object> openrasp::RequestContext::New(v8::Isolate *isolate)
+v8::Local<v8::Object> RequestContext::New(v8::Isolate *isolate)
 {
     v8::Local<v8::Context> context = isolate->GetCurrentContext();
     v8::Local<v8::Object> obj = v8::Object::New(isolate);
@@ -351,3 +352,4 @@ v8::Local<v8::Object> openrasp::RequestContext::New(v8::Isolate *isolate)
     obj->SetAccessor(context, V8STRING_I("server").ToLocalChecked(), server_getter).IsNothing();
     return obj;
 }
+} // namespace openrasp
