@@ -96,8 +96,41 @@ public:
   bool Save(const std::string &path) const; // check errno when return value is false
   bool IsOk() const { return data && raw_size; };
   bool IsExpired(uint64_t timestamp) const { return timestamp > this->timestamp; };
+
 private:
   static void v8native_log(const v8::FunctionCallbackInfo<v8::Value> &info);
+};
+
+namespace RequestContext
+{
+v8::Local<v8::Object> New(v8::Isolate *isolate);
+}
+
+class Isolate : public v8::Isolate
+{
+public:
+  class Data
+  {
+  public:
+    v8::Isolate::CreateParams create_params;
+    v8::Persistent<v8::Object> RASP;
+    v8::Persistent<v8::Function> check;
+    v8::Persistent<v8::Object> request_context;
+    v8::Persistent<v8::String> key_action;
+    v8::Persistent<v8::String> key_message;
+    v8::Persistent<v8::String> key_name;
+    v8::Persistent<v8::String> key_confidence;
+    v8::Persistent<v8::Function> console_log;
+    v8::Persistent<v8::Function> JSON_stringify;
+    int action_hash_ignore = 0;
+    int action_hash_log = 0;
+    int action_hash_block = 0;
+    uint64_t timestamp = 0;
+  };
+
+  static Isolate *New(Snapshot *snapshot_blob);
+  Data *GetData();
+  void Dispose();
 };
 
 class openrasp_v8_process_globals
@@ -114,11 +147,6 @@ public:
 
 extern openrasp_v8_process_globals process_globals;
 
-namespace RequestContext
-{
-v8::Local<v8::Object> New(v8::Isolate *isolate);
-}
-
 bool init_platform(TSRMLS_D);
 bool shutdown_platform(TSRMLS_D);
 void v8error_to_stream(v8::Isolate *isolate, v8::TryCatch &try_catch, std::ostream &buf);
@@ -126,7 +154,6 @@ v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC);
 v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset = 0);
 v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
                                       std::string _source, std::string _filename, int _line_offset = 0);
-extern intptr_t external_references[];
 void alarm_info(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result TSRMLS_DC);
 bool openrasp_check(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params TSRMLS_DC);
 unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC);
