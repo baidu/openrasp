@@ -73,4 +73,9 @@ void Isolate::Dispose()
     Exit();
     v8::Isolate::Dispose();
 }
+
+bool Isolate::IsExpired(uint64_t timestamp)
+{
+    return timestamp > GetData()->timestamp;
+}
 }

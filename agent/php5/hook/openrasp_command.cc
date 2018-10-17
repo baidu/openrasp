@@ -58,7 +58,7 @@ static void check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 static void send_command_to_plugin(const char *command TSRMLS_DC)
 {
-    v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (isolate)
     {
         bool is_block = false;

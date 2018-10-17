@@ -238,13 +238,13 @@ intptr_t external_references[] = {
     0,
 };
 
-void alarm_info(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result TSRMLS_DC)
+void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result TSRMLS_DC)
 {
-    auto JSON_stringify = OPENRASP_V8_G(JSON_stringify).Get(isolate);
-    auto key_action = OPENRASP_V8_G(key_action).Get(isolate);
-    auto key_message = OPENRASP_V8_G(key_message).Get(isolate);
-    auto key_confidence = OPENRASP_V8_G(key_confidence).Get(isolate);
-    auto key_name = OPENRASP_V8_G(key_name).Get(isolate);
+    auto JSON_stringify = isolate->GetData()->JSON_stringify.Get(isolate);
+    auto key_action = isolate->GetData()->key_action.Get(isolate);
+    auto key_message = isolate->GetData()->key_message.Get(isolate);
+    auto key_confidence = isolate->GetData()->key_confidence.Get(isolate);
+    auto key_name = isolate->GetData()->key_name.Get(isolate);
 
     auto stack_trace = NewV8String(isolate, format_debug_backtrace_str(TSRMLS_C));
 

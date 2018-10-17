@@ -66,7 +66,7 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
             php_stream_close(stream);
             if (len > 0)
             {
-                v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
+                openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
                 if (!isolate)
                 {
                     efree(contents);

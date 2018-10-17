@@ -143,7 +143,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
                 }  
             }
         }
-        v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
+        openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
         if (send_to_plugin && isolate)
         {
             const char *function = nullptr;

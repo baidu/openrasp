@@ -52,7 +52,7 @@ static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
                 return;
             }
 #endif
-            v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
+            openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
             if (!isolate)
             {
                 efree(resolved_path_buff);

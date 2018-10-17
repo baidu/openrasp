@@ -54,7 +54,7 @@ static OpenRASPCheckType flag_to_type(int open_flags, bool file_exist)
 
 static void check_file_operation(OpenRASPCheckType type, char *filename, int filename_len, zend_bool use_include_path TSRMLS_DC)
 {
-    v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (!isolate)
     {
         return;
@@ -242,7 +242,7 @@ void pre_splfileobject___construct_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETE
 
 void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (!isolate)
     {
         return;
@@ -289,7 +289,7 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    v8::Isolate *isolate = openrasp::get_isolate(TSRMLS_C);
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (!isolate)
     {
         return;

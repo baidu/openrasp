@@ -39,15 +39,14 @@ namespace openrasp
 openrasp_v8_process_globals process_globals;
 
 static inline void load_plugins(TSRMLS_D);
-static inline bool init_isolate(TSRMLS_D);
-static inline bool shutdown_isolate(TSRMLS_D);
 
-bool openrasp_check(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params TSRMLS_DC)
+bool openrasp_check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params TSRMLS_DC)
 {
+    Isolate::Data *data = isolate->GetData();
     auto context = isolate->GetCurrentContext();
     v8::TryCatch try_catch;
-    auto check = OPENRASP_V8_G(check).Get(isolate);
-    auto request_context = OPENRASP_V8_G(request_context).Get(isolate);
+    auto check = data->check.Get(isolate);
+    auto request_context = data->request_context.Get(isolate);
     v8::Local<v8::Value> argv[]{type, params, request_context};
 
     v8::Local<v8::Value> rst;
@@ -60,7 +59,7 @@ bool openrasp_check(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<
     {
         if (try_catch.Message().IsEmpty())
         {
-            auto console_log = OPENRASP_V8_G(console_log).Get(isolate);
+            auto console_log = data->console_log.Get(isolate);
             auto message = v8::Object::New(isolate);
             message->Set(V8STRING_N("message").ToLocalChecked(), V8STRING_N("Javascript plugin execution timeout.").ToLocalChecked());
             message->Set(V8STRING_N("type").ToLocalChecked(), type);
@@ -81,11 +80,11 @@ bool openrasp_check(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<
     {
         return 0;
     }
-    auto key_action = OPENRASP_V8_G(key_action).Get(isolate);
-    auto key_message = OPENRASP_V8_G(key_message).Get(isolate);
-    auto key_name = OPENRASP_V8_G(key_name).Get(isolate);
-    auto key_confidence = OPENRASP_V8_G(key_confidence).Get(isolate);
-    auto JSON_stringify = OPENRASP_V8_G(JSON_stringify).Get(isolate);
+    auto key_action = data->key_action.Get(isolate);
+    auto key_message = data->key_message.Get(isolate);
+    auto key_name = data->key_name.Get(isolate);
+    auto key_confidence = data->key_confidence.Get(isolate);
+    auto JSON_stringify = data->JSON_stringify.Get(isolate);
 
     auto arr = v8::Local<v8::Array>::Cast(rst);
     int len = arr->Length();
@@ -99,11 +98,11 @@ bool openrasp_check(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<
             continue;
         }
         int action_hash = v8_action->ToString()->GetIdentityHash();
-        if (LIKELY(OPENRASP_V8_G(action_hash_ignore) == action_hash))
+        if (LIKELY(data->action_hash_ignore == action_hash))
         {
             continue;
         }
-        is_block = is_block || OPENRASP_V8_G(action_hash_block) == action_hash;
+        is_block = is_block || data->action_hash_block == action_hash;
 
         alarm_info(isolate, type, params, item TSRMLS_CC);
     }
@@ -112,7 +111,7 @@ bool openrasp_check(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<
 
 unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
 {
-    v8::Isolate *isolate = get_isolate(TSRMLS_C);
+    Isolate *isolate = OPENRASP_V8_G(isolate);
     if (UNLIKELY(!isolate))
     {
         return 0;
@@ -146,143 +145,6 @@ bool shutdown_platform(TSRMLS_D)
         process_globals.v8_platform = nullptr;
     }
     return true;
-}
-
-static inline bool init_isolate(TSRMLS_D)
-{
-    if (!OPENRASP_V8_G(is_isolate_initialized))
-    {
-        OPENRASP_V8_G(create_params).array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
-        OPENRASP_V8_G(create_params).snapshot_blob = process_globals.snapshot_blob;
-        OPENRASP_V8_G(create_params).external_references = process_globals.snapshot_blob->external_references;
-
-        v8::Isolate *isolate = v8::Isolate::New(OPENRASP_V8_G(create_params));
-        isolate->Enter();
-        v8::HandleScope handle_scope(isolate);
-        v8::Local<v8::Context> context = v8::Context::New(isolate);
-        context->Enter();
-        v8::Local<v8::String> key_action = V8STRING_I("action").ToLocalChecked();
-        v8::Local<v8::String> key_message = V8STRING_I("message").ToLocalChecked();
-        v8::Local<v8::String> key_name = V8STRING_I("name").ToLocalChecked();
-        v8::Local<v8::String> key_confidence = V8STRING_I("confidence").ToLocalChecked();
-        v8::Local<v8::Object> RASP = context->Global()
-                                         ->Get(context, V8STRING_I("RASP").ToLocalChecked())
-                                         .ToLocalChecked()
-                                         .As<v8::Object>();
-        v8::Local<v8::Function> check = RASP->Get(context, V8STRING_I("check").ToLocalChecked())
-                                            .ToLocalChecked()
-                                            .As<v8::Function>();
-        auto console_log = context->Global()
-                               ->Get(v8::String::NewFromUtf8(isolate, "console"))
-                               .As<v8::Object>()
-                               ->Get(v8::String::NewFromUtf8(isolate, "log"))
-                               .As<v8::Function>();
-        auto JSON_stringify = context->Global()
-                                  ->Get(v8::String::NewFromUtf8(isolate, "JSON"))
-                                  .As<v8::Object>()
-                                  ->Get(v8::String::NewFromUtf8(isolate, "stringify"))
-                                  .As<v8::Function>();
-
-        OPENRASP_V8_G(isolate) = isolate;
-        OPENRASP_V8_G(context).Reset(isolate, context);
-        OPENRASP_V8_G(key_action).Reset(isolate, key_action);
-        OPENRASP_V8_G(key_message).Reset(isolate, key_message);
-        OPENRASP_V8_G(key_name).Reset(isolate, key_name);
-        OPENRASP_V8_G(key_confidence).Reset(isolate, key_confidence);
-        OPENRASP_V8_G(RASP).Reset(isolate, RASP);
-        OPENRASP_V8_G(check).Reset(isolate, check);
-        OPENRASP_V8_G(request_context).Reset(isolate, RequestContext::New(isolate));
-        OPENRASP_V8_G(console_log).Reset(isolate, console_log);
-        OPENRASP_V8_G(JSON_stringify).Reset(isolate, JSON_stringify);
-
-        OPENRASP_V8_G(action_hash_ignore) = V8STRING_N("ignore").ToLocalChecked()->GetIdentityHash();
-        OPENRASP_V8_G(action_hash_log) = V8STRING_N("log").ToLocalChecked()->GetIdentityHash();
-        OPENRASP_V8_G(action_hash_block) = V8STRING_N("block").ToLocalChecked()->GetIdentityHash();
-
-        OPENRASP_V8_G(is_isolate_initialized) = true;
-    }
-    return true;
-}
-
-static inline bool shutdown_isolate(TSRMLS_D)
-{
-    if (OPENRASP_V8_G(is_isolate_initialized))
-    {
-        auto isolate = OPENRASP_V8_G(isolate);
-        {
-            v8::HandleScope handle_scope(isolate);
-            auto context = OPENRASP_V8_G(context).Get(isolate);
-            context->Exit();
-        }
-        isolate->Exit();
-
-        OPENRASP_V8_G(context).Reset();
-        OPENRASP_V8_G(key_action).Reset();
-        OPENRASP_V8_G(key_message).Reset();
-        OPENRASP_V8_G(key_name).Reset();
-        OPENRASP_V8_G(key_confidence).Reset();
-        OPENRASP_V8_G(RASP).Reset();
-        OPENRASP_V8_G(check).Reset();
-        OPENRASP_V8_G(request_context).Reset();
-        OPENRASP_V8_G(console_log).Reset();
-        OPENRASP_V8_G(JSON_stringify).Reset();
-
-        OPENRASP_V8_G(isolate)->Dispose();
-        OPENRASP_V8_G(isolate) = nullptr;
-        delete OPENRASP_V8_G(create_params).array_buffer_allocator;
-        OPENRASP_V8_G(is_isolate_initialized) = false;
-    }
-    return true;
-}
-
-v8::Isolate *get_isolate(TSRMLS_D)
-{
-    if (UNLIKELY(!process_globals.v8_platform))
-    {
-        init_platform(TSRMLS_C);
-    }
-
-#ifdef HAVE_OPENRASP_REMOTE_MANAGER
-    if (openrasp_ini.remote_management_enable && oam != nullptr)
-    {
-        uint64_t timestamp = oam->get_plugin_update_timestamp();
-        if (process_globals.snapshot_blob->IsExpired(timestamp))
-        {
-            if (process_globals.mtx.try_lock() &&
-                process_globals.snapshot_blob->IsExpired(timestamp))
-            {
-                std::string filename = std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("snapshot.dat");
-                Snapshot *blob = new Snapshot(filename, timestamp);
-                if (!blob->IsOk())
-                {
-                    delete blob;
-                }
-                else
-                {
-                    delete process_globals.snapshot_blob;
-                    process_globals.snapshot_blob = blob;
-                }
-                process_globals.mtx.unlock();
-            }
-        }
-    }
-#endif
-
-    if (UNLIKELY(process_globals.snapshot_blob &&
-                 (!OPENRASP_V8_G(is_isolate_initialized) || process_globals.snapshot_blob->timestamp > OPENRASP_V8_G(plugin_update_timestamp))))
-    {
-        if (process_globals.mtx.try_lock() &&
-            process_globals.snapshot_blob &&
-            (!OPENRASP_V8_G(is_isolate_initialized) || process_globals.snapshot_blob->timestamp > OPENRASP_V8_G(plugin_update_timestamp)))
-        {
-            shutdown_isolate(TSRMLS_C);
-            init_isolate(TSRMLS_C);
-            OPENRASP_V8_G(plugin_update_timestamp) = process_globals.snapshot_blob->timestamp;
-            process_globals.mtx.unlock();
-        }
-    }
-
-    return OPENRASP_V8_G(isolate);
 }
 
 static inline void load_plugins(TSRMLS_D)
@@ -340,7 +202,11 @@ PHP_GINIT_FUNCTION(openrasp_v8)
 
 PHP_GSHUTDOWN_FUNCTION(openrasp_v8)
 {
-    shutdown_isolate(TSRMLS_C);
+    if (openrasp_v8_globals->isolate)
+    {
+        openrasp_v8_globals->isolate->Dispose();
+        openrasp_v8_globals->isolate = nullptr;
+    }
 #ifdef ZTS
     openrasp_v8_globals->~_zend_openrasp_v8_globals();
 #endif
@@ -385,5 +251,52 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
     delete process_globals.snapshot_blob;
     process_globals.snapshot_blob = nullptr;
 
+    return SUCCESS;
+}
+
+PHP_RINIT_FUNCTION(openrasp_v8)
+{
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+    if (openrasp_ini.remote_management_enable && oam != nullptr)
+    {
+        uint64_t timestamp = oam->get_plugin_update_timestamp();
+        if (!process_globals.snapshot_blob ||
+            process_globals.snapshot_blob->IsExpired(timestamp))
+        {
+            if (process_globals.mtx.try_lock() &&
+                (!process_globals.snapshot_blob ||
+                 process_globals.snapshot_blob->IsExpired(timestamp)))
+            {
+                std::string filename = std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("snapshot.dat");
+                Snapshot *blob = new Snapshot(filename, timestamp);
+                if (!blob->IsOk())
+                {
+                    delete blob;
+                }
+                else
+                {
+                    delete process_globals.snapshot_blob;
+                    process_globals.snapshot_blob = blob;
+                }
+                process_globals.mtx.unlock();
+            }
+        }
+    }
+#endif
+    if (process_globals.snapshot_blob)
+    {
+        if (!OPENRASP_V8_G(isolate) || OPENRASP_V8_G(isolate)->IsExpired(process_globals.snapshot_blob->timestamp))
+        {
+            if (process_globals.mtx.try_lock())
+            {
+                init_platform(TSRMLS_C);
+                if (OPENRASP_V8_G(isolate))
+                {
+                    OPENRASP_V8_G(isolate)->Dispose();
+                }
+                OPENRASP_V8_G(isolate) = Isolate::New(process_globals.snapshot_blob);
+            }
+        }
+    }
     return SUCCESS;
 }

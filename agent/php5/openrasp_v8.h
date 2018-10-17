@@ -131,6 +131,7 @@ public:
   static Isolate *New(Snapshot *snapshot_blob);
   Data *GetData();
   void Dispose();
+  bool IsExpired(uint64_t timestamp);
 };
 
 class openrasp_v8_process_globals
@@ -154,10 +155,9 @@ v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC);
 v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset = 0);
 v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
                                       std::string _source, std::string _filename, int _line_offset = 0);
-void alarm_info(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result TSRMLS_DC);
-bool openrasp_check(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params TSRMLS_DC);
+void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result TSRMLS_DC);
+bool openrasp_check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params TSRMLS_DC);
 unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC);
-v8::Isolate *get_isolate(TSRMLS_D);
 } // namespace openrasp
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_v8)
@@ -172,7 +172,7 @@ _zend_openrasp_v8_globals()
   is_running = false;
   plugin_update_timestamp = 0;
 }
-v8::Isolate *isolate;
+openrasp::Isolate *isolate;
 v8::Isolate::CreateParams create_params;
 v8::Persistent<v8::Context> context;
 v8::Persistent<v8::Object> RASP;
@@ -199,6 +199,7 @@ PHP_GINIT_FUNCTION(openrasp_v8);
 PHP_GSHUTDOWN_FUNCTION(openrasp_v8);
 PHP_MINIT_FUNCTION(openrasp_v8);
 PHP_MSHUTDOWN_FUNCTION(openrasp_v8);
+PHP_RINIT_FUNCTION(openrasp_v8);
 
 #ifdef ZTS
 #define OPENRASP_V8_G(v) TSRMG(openrasp_v8_globals_id, zend_openrasp_v8_globals *, v)
