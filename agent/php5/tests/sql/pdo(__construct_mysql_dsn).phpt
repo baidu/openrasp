@@ -3,7 +3,7 @@ hook PDO::__construct (dsn)
 --SKIPIF--
 <?php 
 $conf = <<<CONF
-enforce_policy=true
+security.enforce_policy=true
 CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("mysqli")) die("Skipped: mysqli extension required.");

@@ -210,7 +210,7 @@ bool HeartBeatAgent::update_config(zval *config_zv, long config_time, bool *has_
 	{
 		scm->build_check_type_white_array(openrasp_config);
 		//update log_max_backup only its value greater than zero
-		long log_max_backup = openrasp_config.Get("log_max_backup", (int64_t)0);
+		long log_max_backup = openrasp_config.Get("log.maxbackup", openrasp_config.log.maxbackup);
 		if (log_max_backup)
 		{
 			scm->set_log_max_backup(log_max_backup);

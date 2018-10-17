@@ -79,7 +79,7 @@ std::string format_debug_backtrace_str(TSRMLS_D)
              zend_hash_has_more_elements(hash_arr) == SUCCESS;
              zend_hash_move_forward(hash_arr))
         {
-            if (++i > OPENRASP_CONFIG(log_maxstack))
+            if (++i > OPENRASP_CONFIG(log.maxstack))
             {
                 break;
             }
@@ -146,7 +146,7 @@ std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D)
              zend_hash_has_more_elements(hash_arr) == SUCCESS;
              zend_hash_move_forward(hash_arr))
         {
-            if (++i > OPENRASP_CONFIG(plugin_maxstack))
+            if (++i > OPENRASP_CONFIG(plugin.maxstack))
             {
                 break;
             }

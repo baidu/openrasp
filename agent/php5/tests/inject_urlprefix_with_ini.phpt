@@ -3,7 +3,7 @@ inject urlprefix
 --SKIPIF--
 <?php
 $conf = <<<CONF
-inject_html_urlprefix="/prefix"
+inject.urlprefix="/prefix"
 CONF;
 include(__DIR__.'/skipif.inc');
 file_put_contents('/tmp/openrasp/assets/inject.html', "inject content");

@@ -105,7 +105,7 @@ static inline void init_mysql_pconnect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, 
 //mysql_connect
 void pre_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (UNLIKELY(OPENRASP_CONFIG(enforce_policy) &&
+    if (UNLIKELY(OPENRASP_CONFIG(security.enforce_policy) &&
                check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry, 1)))
     {
         handle_block(TSRMLS_C);
@@ -113,7 +113,7 @@ void pre_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETER
 }
 void post_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (LIKELY(!OPENRASP_CONFIG(enforce_policy) &&
+    if (LIKELY(!OPENRASP_CONFIG(security.enforce_policy) &&
                Z_TYPE_P(return_value) == IS_RESOURCE))
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry, 0);
@@ -123,7 +123,7 @@ void post_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETE
 //mysql_pconnect
 void pre_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (UNLIKELY(OPENRASP_CONFIG(enforce_policy) &&
+    if (UNLIKELY(OPENRASP_CONFIG(security.enforce_policy) &&
                check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry, 1)))
     {
         handle_block(TSRMLS_C);
@@ -131,7 +131,7 @@ void pre_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETE
 }
 void post_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (LIKELY(!OPENRASP_CONFIG(enforce_policy) &&
+    if (LIKELY(!OPENRASP_CONFIG(security.enforce_policy) &&
                Z_TYPE_P(return_value) == IS_RESOURCE))
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry, 0);
@@ -167,7 +167,7 @@ void post_global_mysql_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETER
     {
         num_rows = fetch_rows_via_user_function("mysql_affected_rows", 0, NULL TSRMLS_CC);
     }
-    if (num_rows >= OPENRASP_CONFIG(slowquery_min_rows))
+    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
     {
         slow_query_alarm(num_rows TSRMLS_CC);
     }
