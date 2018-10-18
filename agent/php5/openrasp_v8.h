@@ -60,6 +60,12 @@ inline v8::Local<v8::String> NewV8String(v8::Isolate *isolate, const std::string
 #define V8STRING_I(string) \
   V8STRING_EX(string, v8::NewStringType::kInternalized, -1)
 
+class Exception : public std::string
+{
+public:
+  Exception(v8::Isolate *isolate, v8::TryCatch &try_catch);
+};
+
 class Platform
 {
 public:
