@@ -52,7 +52,7 @@ bool openrasp_check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::
     v8::Local<v8::Value> rst;
     auto task = new TimeoutTask(isolate, OPENRASP_CONFIG(plugin.timeout.millis));
     task->GetMtx().lock();
-    process_globals.v8_platform->CallOnBackgroundThread(task, v8::Platform::kShortRunningTask);
+    Platform::platform->CallOnBackgroundThread(task, v8::Platform::kShortRunningTask);
     (void)check->Call(context, check, 3, argv).ToLocal(&rst);
     task->GetMtx().unlock();
     if (UNLIKELY(rst.IsEmpty()))
@@ -122,29 +122,6 @@ unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
     auto params = v8::Local<v8::Object>::Cast(zval_to_v8val(z_params, isolate TSRMLS_CC));
 
     return openrasp_check(isolate, type, params TSRMLS_CC);
-}
-
-// static inline bool init_platform(TSRMLS_D)
-bool init_platform(TSRMLS_D)
-{
-    if (!process_globals.v8_platform)
-    {
-        process_globals.v8_platform = v8::platform::CreateDefaultPlatform(1);
-        v8::V8::InitializePlatform(process_globals.v8_platform);
-    }
-    return true;
-}
-
-// static inline bool shutdown_platform(TSRMLS_D)
-bool shutdown_platform(TSRMLS_D)
-{
-    if (process_globals.v8_platform)
-    {
-        v8::V8::ShutdownPlatform();
-        delete process_globals.v8_platform;
-        process_globals.v8_platform = nullptr;
-    }
-    return true;
 }
 
 static inline void load_plugins(TSRMLS_D)
@@ -224,9 +201,9 @@ PHP_MINIT_FUNCTION(openrasp_v8)
 
     if (!process_globals.snapshot_blob)
     {
-        init_platform(TSRMLS_C);
+        Platform::Initialize();
         Snapshot *snapshot = new Snapshot(process_globals.plugin_config, process_globals.plugin_src_list);
-        shutdown_platform(TSRMLS_C);
+        Platform::Shutdown();
         if (!snapshot->IsOk())
         {
             delete snapshot;
@@ -247,7 +224,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
     // it should generally not be necessary to dispose v8 before exiting a process,
     // so skip this step for module graceful reload
     // v8::V8::Dispose();
-    shutdown_platform(TSRMLS_C);
+    Platform::Shutdown();
     delete process_globals.snapshot_blob;
     process_globals.snapshot_blob = nullptr;
 
@@ -289,11 +266,11 @@ PHP_RINIT_FUNCTION(openrasp_v8)
         {
             if (process_globals.mtx.try_lock())
             {
-                init_platform(TSRMLS_C);
                 if (OPENRASP_V8_G(isolate))
                 {
                     OPENRASP_V8_G(isolate)->Dispose();
                 }
+                Platform::Initialize();
                 OPENRASP_V8_G(isolate) = Isolate::New(process_globals.snapshot_blob);
             }
         }

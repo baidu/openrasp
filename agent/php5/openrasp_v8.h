@@ -60,6 +60,17 @@ inline v8::Local<v8::String> NewV8String(v8::Isolate *isolate, const std::string
 #define V8STRING_I(string) \
   V8STRING_EX(string, v8::NewStringType::kInternalized, -1)
 
+class Platform
+{
+public:
+  static v8::Platform *platform;
+  static void Initialize();
+  static void Shutdown();
+
+private:
+  static std::mutex mtx;
+};
+
 class TimeoutTask : public v8::Task
 {
 public:
@@ -148,8 +159,6 @@ public:
 
 extern openrasp_v8_process_globals process_globals;
 
-bool init_platform(TSRMLS_D);
-bool shutdown_platform(TSRMLS_D);
 void v8error_to_stream(v8::Isolate *isolate, v8::TryCatch &try_catch, std::ostream &buf);
 v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC);
 v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset = 0);
