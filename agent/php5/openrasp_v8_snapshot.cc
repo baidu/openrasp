@@ -68,7 +68,7 @@ Snapshot::Snapshot(const std::string &config, const std::vector<openrasp_v8_js_s
                 std::stringstream stream;
                 v8error_to_stream(isolate, try_catch, stream);
                 std::string error = stream.str();
-                plugin_info(error.c_str(), error.length() TSRMLS_CC);
+                LOG_G(plugin_logger).log(LEVEL_INFO, error.c_str(), error.length() TSRMLS_CC);
                 openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize js plugin - %s"), error.c_str());
                 // no need to continue
                 return;
@@ -79,7 +79,7 @@ Snapshot::Snapshot(const std::string &config, const std::vector<openrasp_v8_js_s
             std::stringstream stream;
             v8error_to_stream(isolate, try_catch, stream);
             std::string error = stream.str();
-            plugin_info(error.c_str(), error.length() TSRMLS_CC);
+            LOG_G(plugin_logger).log(LEVEL_INFO, error.c_str(), error.length() TSRMLS_CC);
         }
         for (auto &plugin_src : plugin_list)
         {
@@ -88,7 +88,7 @@ Snapshot::Snapshot(const std::string &config, const std::vector<openrasp_v8_js_s
                 std::stringstream stream;
                 v8error_to_stream(isolate, try_catch, stream);
                 std::string error = stream.str();
-                plugin_info(error.c_str(), error.length() TSRMLS_CC);
+                LOG_G(plugin_logger).log(LEVEL_INFO, error.c_str(), error.length() TSRMLS_CC);
             }
         }
         creator.SetDefaultContext(context);
@@ -114,7 +114,7 @@ void Snapshot::v8native_log(const v8::FunctionCallbackInfo<v8::Value> &info)
     for (int i = 0; i < info.Length(); i++)
     {
         v8::String::Utf8Value message(info[i]);
-        plugin_info(*message, message.length() TSRMLS_CC);
+        LOG_G(plugin_logger).log(LEVEL_INFO, *message, message.length() TSRMLS_CC);
     }
 }
 } // namespace openrasp

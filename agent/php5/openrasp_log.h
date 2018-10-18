@@ -20,7 +20,8 @@
 #include "openrasp.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #ifdef HAVE_CONFIG_H
@@ -42,15 +43,16 @@ extern "C" {
 #define PLUGIN_LOG_DIR_NAME "plugin"
 #define RASP_LOG_DIR_NAME "rasp"
 
-#define DEFAULT_LOG_FILE_SUFFIX             "%Y-%m-%d"
-#define RASP_RFC3339_FORMAT                 "%Y-%m-%dT%H:%M:%S%z"
-
-typedef enum log_appender_t {
-	  FILE_APPENDER = 1 << 0, 
-    SYSLOG_APPENDER  = 1 << 1
+typedef enum log_appender_t
+{
+    NULL_APPENDER = 0,
+    FILE_APPENDER = 1 << 0,
+    SYSLOG_APPENDER = 1 << 1,
+    FSTREAM_APPENDER = 1 << 2
 } log_appender;
 
-typedef enum logger_instance_t {
+typedef enum logger_instance_t
+{
     ALARM_LOGGER,
     POLICY_LOGGER,
     PLUGIN_LOGGER,
@@ -59,23 +61,62 @@ typedef enum logger_instance_t {
 } logger_instance;
 
 //reference https://en.wikipedia.org/wiki/Syslog
-typedef enum severity_level_t {
-  LEVEL_INFO  = 6, 
-  LEVEL_DEBUG = 7,
-  LEVEL_ALL   = 8
+typedef enum severity_level_t
+{
+    LEVEL_INFO = 6,
+    LEVEL_DEBUG = 7,
+    LEVEL_ALL = 8
 } severity_level;
 
-typedef struct _rasp_logger_entry_t
+class RaspLoggerEntry
 {
-    char           *name;
-    zend_bool       accessable;
-    int             available_token;
-    long            last_logged_time;
-    zend_bool       initialized;
-    severity_level  level;
-    log_appender    appender;
-    php_stream     *stream_log;
-} rasp_logger_entry;
+  private:
+    const char *name;
+    zend_bool initialized = false;
+    zend_bool accessable = false;
+
+    int available_token = 0;
+    long last_logged_time = 0;
+
+    severity_level level = LEVEL_INFO;
+    log_appender appender = FSTREAM_APPENDER;
+    log_appender appender_mask = NULL_APPENDER;
+
+    long time_offset;
+    char *formatted_date_suffix = nullptr;
+
+    long syslog_reconnect_time;
+    zval *common_info = nullptr;
+    php_stream *stream_log = nullptr;
+    php_stream *syslog_stream = nullptr;
+
+  private:
+    void update_common_info(TSRMLS_D);
+    void close_streams(TSRMLS_D);
+    void clear_common_info();
+    void update_formatted_date_suffix();
+    void clear_formatted_date_suffix();
+    bool comsume_token_if_available(TSRMLS_D);
+    bool check_log_level(severity_level level_int);
+    bool if_need_update_formatted_file_suffix(long now);
+    bool openrasp_log_stream_available(log_appender appender_int TSRMLS_DC);
+    bool raw_log(severity_level level_int, const char *message, int message_len TSRMLS_DC);
+
+  public:
+    static const char *default_log_suffix;
+    static const char *rasp_rfc3339_format;
+
+    RaspLoggerEntry(const char *name, severity_level level, log_appender appender, log_appender appender_mask);
+    RaspLoggerEntry(const RaspLoggerEntry &src) = delete;
+    void init(log_appender appender_int TSRMLS_DC);
+    void clear(TSRMLS_D);
+    bool log(severity_level level_int, const char *message, int message_len TSRMLS_DC, bool detail = true);
+    bool log(severity_level level_int, zval *params_result TSRMLS_DC);
+    char *get_formatted_date_suffix();
+    zval *get_common_info(TSRMLS_D);
+};
+
+typedef RaspLoggerEntry rasp_logger_entry;
 
 /*
   	Declare any global variables you may need between the BEGIN
@@ -83,15 +124,10 @@ typedef struct _rasp_logger_entry_t
 */
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_log)
 
-zend_bool              in_request_process;
-char                  *formatted_date_suffix;
-zval                  *alarm_request_info;
-zval                  *policy_request_info;
-long                   time_offset;
-rasp_logger_entry      loggers[TOTAL];
-
-php_stream            *syslog_stream;
-long                   syslog_reconnect_time;
+zend_bool in_request_process;
+RaspLoggerEntry plugin_logger;
+RaspLoggerEntry alarm_logger;
+RaspLoggerEntry policy_logger;
 
 ZEND_END_MODULE_GLOBALS(openrasp_log)
 
@@ -115,13 +151,13 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp_log);
 #define OPENRASP_LOG_GP() (&openrasp_log_globals)
 #endif
 
+#define LOG_G(v) OPENRASP_LOG_G(v)
+
 PHP_MINIT_FUNCTION(openrasp_log);
 PHP_MSHUTDOWN_FUNCTION(openrasp_log);
 PHP_RINIT_FUNCTION(openrasp_log);
 PHP_RSHUTDOWN_FUNCTION(openrasp_log);
 PHP_MINFO_FUNCTION(openrasp_log);
-
-int base_info(rasp_logger_entry *logger, const char *message, int message_len TSRMLS_DC);
 
 #endif /* OPENRASP_LOG_H */
 

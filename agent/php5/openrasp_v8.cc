@@ -72,7 +72,7 @@ bool openrasp_check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::
             std::stringstream stream;
             v8error_to_stream(isolate, try_catch, stream);
             auto error = stream.str();
-            plugin_info(error.c_str(), error.length() TSRMLS_CC);
+            LOG_G(plugin_logger).log(LEVEL_INFO, error.c_str(), error.length() TSRMLS_CC);
         }
         return 0;
     }

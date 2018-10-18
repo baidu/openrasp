@@ -50,7 +50,7 @@ static void security_check(bool flag, int id, const char *msg TSRMLS_DC)
         Z_TYPE(result) = IS_ARRAY;
         add_assoc_zval(&result, "policy_id", &policy_id);
         add_assoc_zval(&result, "message", &message);
-        policy_info(&result TSRMLS_CC);
+        LOG_G(policy_logger).log(LEVEL_INFO, &result TSRMLS_CC);
         zval_dtor(&result);
     }
 }

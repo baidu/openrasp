@@ -74,10 +74,6 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp)
 #define OPENRASP_ARRAY_CONFIG(key) (OPENRASP_G(config).GetArray(ZEND_TOSTR(key), OPENRASP_G(config).key))
 
 void openrasp_error(int type, int error_code, const char *format, ...);
-int rasp_info(const char *message, int message_len TSRMLS_DC);
-int plugin_info(const char *message, int message_len TSRMLS_DC);
-int alarm_info(zval *params_result TSRMLS_DC);
-int policy_info(zval *params_result TSRMLS_DC);
 
 #ifdef UNLIKELY
 #undef UNLIKELY
