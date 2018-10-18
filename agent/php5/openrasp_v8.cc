@@ -170,7 +170,6 @@ PHP_RINIT_FUNCTION(openrasp_v8)
                     delete process_globals.snapshot_blob;
                     process_globals.snapshot_blob = blob;
                 }
-                process_globals.mtx.unlock();
             }
         }
     }
