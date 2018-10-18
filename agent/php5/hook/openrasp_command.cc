@@ -74,7 +74,7 @@ static void send_command_to_plugin(const char *command TSRMLS_DC)
             auto params = v8::Object::New(isolate);
             params->Set(openrasp::NewV8String(isolate, "command"), openrasp::NewV8String(isolate, command));
             params->Set(openrasp::NewV8String(isolate, "stack"), stack);
-            is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, CheckTypeNameMap.at(COMMAND)), params TSRMLS_CC);
+            is_block = isolate->Check(openrasp::NewV8String(isolate, CheckTypeNameMap.at(COMMAND)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (is_block)
         {

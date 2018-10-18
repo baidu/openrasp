@@ -234,9 +234,9 @@ bool HeartBeatAgent::update_config(zval *config_zv, long config_time, bool *has_
 
 bool HeartBeatAgent::build_plugin_snapshot(TSRMLS_D)
 {
-	init_platform(TSRMLS_C);
+	Platform::Initialize();
 	Snapshot snapshot(algorithm_config, active_plugins);
-	shutdown_platform(TSRMLS_C);
+	Platform::Shutdown();
 	if (!snapshot.IsOk())
 	{
 		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to generate snapshot."));

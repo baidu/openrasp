@@ -223,23 +223,9 @@ v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Contex
     return script->Run(context);
 }
 
-static void v8native_log(const v8::FunctionCallbackInfo<v8::Value> &info)
+void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)
 {
     TSRMLS_FETCH();
-    for (int i = 0; i < info.Length(); i++)
-    {
-        v8::String::Utf8Value message(info[i]);
-        LOG_G(plugin_logger).log(LEVEL_INFO, *message, message.length() TSRMLS_CC);
-    }
-}
-
-intptr_t external_references[] = {
-    reinterpret_cast<intptr_t>(v8native_log),
-    0,
-};
-
-void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result TSRMLS_DC)
-{
     auto JSON_stringify = isolate->GetData()->JSON_stringify.Get(isolate);
     auto key_action = isolate->GetData()->key_action.Get(isolate);
     auto key_message = isolate->GetData()->key_message.Get(isolate);

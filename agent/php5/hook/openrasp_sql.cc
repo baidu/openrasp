@@ -144,7 +144,7 @@ void sql_type_handler(char *query, int query_len, char *server TSRMLS_DC)
             auto params = v8::Object::New(isolate);
             params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len));
             params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server));
-            is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, CheckTypeNameMap.at(SQL), 3), params TSRMLS_CC);
+            is_block = isolate->Check(openrasp::NewV8String(isolate, CheckTypeNameMap.at(SQL), 3), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (is_block)
         {

@@ -38,115 +38,6 @@ namespace openrasp
 {
 openrasp_v8_process_globals process_globals;
 
-static inline void load_plugins(TSRMLS_D);
-
-bool openrasp_check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params TSRMLS_DC)
-{
-    Isolate::Data *data = isolate->GetData();
-    auto context = isolate->GetCurrentContext();
-    v8::TryCatch try_catch;
-    auto check = data->check.Get(isolate);
-    auto request_context = data->request_context.Get(isolate);
-    v8::Local<v8::Value> argv[]{type, params, request_context};
-
-    v8::Local<v8::Value> rst;
-    auto task = new TimeoutTask(isolate, OPENRASP_CONFIG(plugin.timeout.millis));
-    task->GetMtx().lock();
-    process_globals.v8_platform->CallOnBackgroundThread(task, v8::Platform::kShortRunningTask);
-    (void)check->Call(context, check, 3, argv).ToLocal(&rst);
-    task->GetMtx().unlock();
-    if (UNLIKELY(rst.IsEmpty()))
-    {
-        if (try_catch.Message().IsEmpty())
-        {
-            auto console_log = data->console_log.Get(isolate);
-            auto message = v8::Object::New(isolate);
-            message->Set(V8STRING_N("message").ToLocalChecked(), V8STRING_N("Javascript plugin execution timeout.").ToLocalChecked());
-            message->Set(V8STRING_N("type").ToLocalChecked(), type);
-            message->Set(V8STRING_N("params").ToLocalChecked(), params);
-            message->Set(V8STRING_N("context").ToLocalChecked(), request_context);
-            (void)console_log->Call(context, console_log, 1, reinterpret_cast<v8::Local<v8::Value> *>(&message)).IsEmpty();
-        }
-        else
-        {
-            std::stringstream stream;
-            v8error_to_stream(isolate, try_catch, stream);
-            auto error = stream.str();
-            LOG_G(plugin_logger).log(LEVEL_INFO, error.c_str(), error.length() TSRMLS_CC);
-        }
-        return 0;
-    }
-    if (UNLIKELY(!rst->IsArray()))
-    {
-        return 0;
-    }
-    auto key_action = data->key_action.Get(isolate);
-    auto key_message = data->key_message.Get(isolate);
-    auto key_name = data->key_name.Get(isolate);
-    auto key_confidence = data->key_confidence.Get(isolate);
-    auto JSON_stringify = data->JSON_stringify.Get(isolate);
-
-    auto arr = v8::Local<v8::Array>::Cast(rst);
-    int len = arr->Length();
-    bool is_block = false;
-    for (int i = 0; i < len; i++)
-    {
-        auto item = v8::Local<v8::Object>::Cast(arr->Get(i));
-        v8::Local<v8::Value> v8_action = item->Get(key_action);
-        if (UNLIKELY(!v8_action->IsString()))
-        {
-            continue;
-        }
-        int action_hash = v8_action->ToString()->GetIdentityHash();
-        if (LIKELY(data->action_hash_ignore == action_hash))
-        {
-            continue;
-        }
-        is_block = is_block || data->action_hash_block == action_hash;
-
-        alarm_info(isolate, type, params, item TSRMLS_CC);
-    }
-    return is_block;
-}
-
-unsigned char openrasp_check(const char *c_type, zval *z_params TSRMLS_DC)
-{
-    Isolate *isolate = OPENRASP_V8_G(isolate);
-    if (UNLIKELY(!isolate))
-    {
-        return 0;
-    }
-    v8::HandleScope handlescope(isolate);
-
-    auto type = V8STRING_N(c_type).ToLocalChecked();
-    auto params = v8::Local<v8::Object>::Cast(zval_to_v8val(z_params, isolate TSRMLS_CC));
-
-    return openrasp_check(isolate, type, params TSRMLS_CC);
-}
-
-// static inline bool init_platform(TSRMLS_D)
-bool init_platform(TSRMLS_D)
-{
-    if (!process_globals.v8_platform)
-    {
-        process_globals.v8_platform = v8::platform::CreateDefaultPlatform(1);
-        v8::V8::InitializePlatform(process_globals.v8_platform);
-    }
-    return true;
-}
-
-// static inline bool shutdown_platform(TSRMLS_D)
-bool shutdown_platform(TSRMLS_D)
-{
-    if (process_globals.v8_platform)
-    {
-        v8::V8::ShutdownPlatform();
-        delete process_globals.v8_platform;
-        process_globals.v8_platform = nullptr;
-    }
-    return true;
-}
-
 static inline void load_plugins(TSRMLS_D)
 {
     std::vector<openrasp_v8_js_src> plugin_src_list;
@@ -224,9 +115,9 @@ PHP_MINIT_FUNCTION(openrasp_v8)
 
     if (!process_globals.snapshot_blob)
     {
-        init_platform(TSRMLS_C);
+        Platform::Initialize();
         Snapshot *snapshot = new Snapshot(process_globals.plugin_config, process_globals.plugin_src_list);
-        shutdown_platform(TSRMLS_C);
+        Platform::Shutdown();
         if (!snapshot->IsOk())
         {
             delete snapshot;
@@ -247,7 +138,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
     // it should generally not be necessary to dispose v8 before exiting a process,
     // so skip this step for module graceful reload
     // v8::V8::Dispose();
-    shutdown_platform(TSRMLS_C);
+    Platform::Shutdown();
     delete process_globals.snapshot_blob;
     process_globals.snapshot_blob = nullptr;
 
@@ -263,7 +154,8 @@ PHP_RINIT_FUNCTION(openrasp_v8)
         if (!process_globals.snapshot_blob ||
             process_globals.snapshot_blob->IsExpired(timestamp))
         {
-            if (process_globals.mtx.try_lock() &&
+            std::unique_lock<std::mutex> lock(process_globals.mtx, std::try_to_lock);
+            if (lock &&
                 (!process_globals.snapshot_blob ||
                  process_globals.snapshot_blob->IsExpired(timestamp)))
             {
@@ -278,7 +170,6 @@ PHP_RINIT_FUNCTION(openrasp_v8)
                     delete process_globals.snapshot_blob;
                     process_globals.snapshot_blob = blob;
                 }
-                process_globals.mtx.unlock();
             }
         }
     }
@@ -287,13 +178,14 @@ PHP_RINIT_FUNCTION(openrasp_v8)
     {
         if (!OPENRASP_V8_G(isolate) || OPENRASP_V8_G(isolate)->IsExpired(process_globals.snapshot_blob->timestamp))
         {
-            if (process_globals.mtx.try_lock())
+            std::unique_lock<std::mutex> lock(process_globals.mtx, std::try_to_lock);
+            if (lock)
             {
-                init_platform(TSRMLS_C);
                 if (OPENRASP_V8_G(isolate))
                 {
                     OPENRASP_V8_G(isolate)->Dispose();
                 }
+                Platform::Initialize();
                 OPENRASP_V8_G(isolate) = Isolate::New(process_globals.snapshot_blob);
             }
         }
