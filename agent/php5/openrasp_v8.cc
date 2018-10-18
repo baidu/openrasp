@@ -240,7 +240,8 @@ PHP_RINIT_FUNCTION(openrasp_v8)
         if (!process_globals.snapshot_blob ||
             process_globals.snapshot_blob->IsExpired(timestamp))
         {
-            if (process_globals.mtx.try_lock() &&
+            std::unique_lock<std::mutex> lock(process_globals.mtx, std::try_to_lock);
+            if (lock &&
                 (!process_globals.snapshot_blob ||
                  process_globals.snapshot_blob->IsExpired(timestamp)))
             {
@@ -264,7 +265,8 @@ PHP_RINIT_FUNCTION(openrasp_v8)
     {
         if (!OPENRASP_V8_G(isolate) || OPENRASP_V8_G(isolate)->IsExpired(process_globals.snapshot_blob->timestamp))
         {
-            if (process_globals.mtx.try_lock())
+            std::unique_lock<std::mutex> lock(process_globals.mtx, std::try_to_lock);
+            if (lock)
             {
                 if (OPENRASP_V8_G(isolate))
                 {
