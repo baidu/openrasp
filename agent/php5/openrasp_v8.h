@@ -18,6 +18,7 @@
 #define OPENRASP_V8_H
 
 #include "openrasp.h"
+#include "openrasp_log.h"
 #undef COMPILER // conflict with v8 defination
 #include <v8.h>
 #include <libplatform/libplatform.h>

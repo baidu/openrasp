@@ -24,8 +24,9 @@ static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
     zval **origin_zv;
-    if (Z_TYPE_P(OPENRASP_LOG_G(alarm_request_info)) == IS_ARRAY &&
-        zend_hash_find(Z_ARRVAL_P(OPENRASP_LOG_G(alarm_request_info)), ZEND_STRS("url"), (void **)&origin_zv) == SUCCESS)
+    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info(TSRMLS_C);
+    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
+        zend_hash_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRS("url"), (void **)&origin_zv) == SUCCESS)
     {
         char *url = Z_STRVAL_PP(origin_zv);
         v8::Isolate *isolate = info.GetIsolate();

@@ -198,7 +198,7 @@ void openrasp_buildin_php_risk_handle(zend_bool is_block, OpenRASPCheckType type
     add_assoc_long(params_result, "plugin_confidence", confidence);
     add_assoc_zval(params_result, "attack_params", params);
     add_assoc_zval(params_result, "plugin_message", message);
-    alarm_info(params_result TSRMLS_CC);
+    LOG_G(alarm_logger).log(LEVEL_INFO, params_result TSRMLS_CC);
     zval_ptr_dtor(&params_result);
     if (is_block)
     {
@@ -371,7 +371,7 @@ PHP_RINIT_FUNCTION(openrasp_hook)
 {
     if (openrasp::scm != nullptr)
     {
-        char *url = fetch_outmost_string_from_ht(Z_ARRVAL_P(OPENRASP_LOG_G(alarm_request_info)), "url");
+        char *url = fetch_outmost_string_from_ht(Z_ARRVAL_P(LOG_G(alarm_logger).get_common_info(TSRMLS_C)), "url");
         if (url)
         {
             std::string url_str(url);

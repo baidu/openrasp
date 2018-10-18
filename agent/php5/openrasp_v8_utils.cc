@@ -236,7 +236,7 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
 
     std::time_t t = std::time(nullptr);
     char buffer[100] = {0};
-    size_t size = std::strftime(buffer, sizeof(buffer), "%Y-%m-%d%t%H:%M:%S%z", std::localtime(&t));
+    size_t size = std::strftime(buffer, sizeof(buffer), RaspLoggerEntry::rasp_rfc3339_format, std::localtime(&t));
     auto event_time = NewV8String(isolate, buffer, size);
 
     auto obj = v8::Object::New(isolate);
@@ -248,8 +248,8 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     obj->Set(NewV8String(isolate, "plugin_name"), result->Get(key_name));
     obj->Set(NewV8String(isolate, "stack_trace"), stack_trace);
     obj->Set(NewV8String(isolate, "event_time"), event_time);
-
-    HashTable *ht = Z_ARRVAL_P(OPENRASP_LOG_G(alarm_request_info));
+    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info(TSRMLS_C);
+    HashTable *ht = Z_ARRVAL_P(alarm_common_info);
     for (zend_hash_internal_pointer_reset(ht);
          zend_hash_has_more_elements(ht) == SUCCESS;
          zend_hash_move_forward(ht))
@@ -271,7 +271,7 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     if (JSON_stringify->Call(isolate->GetCurrentContext(), JSON_stringify, 1, reinterpret_cast<v8::Local<v8::Value> *>(&obj)).ToLocal(&val))
     {
         v8::String::Utf8Value msg(val);
-        base_info(&OPENRASP_LOG_G(loggers)[ALARM_LOGGER], *msg, msg.length() TSRMLS_CC);
+        LOG_G(alarm_logger).log(LEVEL_INFO, *msg, msg.length() TSRMLS_CC, false);
     }
 }
 

@@ -276,7 +276,7 @@ bool same_day_in_current_timezone(long src, long target, long offset)
     return ((src + offset) / day == (target + offset) / day);
 }
 
-char *openrasp_format_date(char *format, int format_len, time_t ts)
+char *openrasp_format_date(const char *format, int format_len, time_t ts)
 {
     char buffer[128];
     struct tm *tm_info;

@@ -276,7 +276,8 @@ std::string LogAgent::get_formatted_date_suffix(long timestamp)
 {
 	TSRMLS_FETCH();
 	std::string result;
-	char *tmp_formatted_date_suffix = openrasp_format_date(ZEND_STRL(DEFAULT_LOG_FILE_SUFFIX), timestamp);
+	char *tmp_formatted_date_suffix = openrasp_format_date(RaspLoggerEntry::default_log_suffix,
+														   strlen(RaspLoggerEntry::default_log_suffix), timestamp);
 	result = std::string(tmp_formatted_date_suffix);
 	efree(tmp_formatted_date_suffix);
 	return result;
