@@ -313,11 +313,18 @@ void handle_block(TSRMLS_D)
  * 调用 openrasp_check 提供的方法进行检测
  * 若需要拦截，直接返回重定向信息，并终止请求
  */
-void check(OpenRASPCheckType check_type, zval *params TSRMLS_DC)
+void check(OpenRASPCheckType check_type, zval *z_params TSRMLS_DC)
 {
-    const char *type = CheckTypeNameMap.at(check_type);
-    char result = openrasp::openrasp_check(type, params TSRMLS_CC);
-    zval_ptr_dtor(&params);
+    bool result = false;
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+    if (LIKELY(isolate))
+    {
+        v8::HandleScope handlescope(isolate);
+        auto type = NewV8String(isolate, CheckTypeNameMap.at(check_type));
+        auto params = v8::Local<v8::Object>::Cast(zval_to_v8val(z_params, isolate TSRMLS_CC));
+        zval_ptr_dtor(&z_params);
+        result = isolate->Check(type, params, OPENRASP_CONFIG(plugin.timeout.millis));
+    }
     if (result)
     {
         handle_block(TSRMLS_C);

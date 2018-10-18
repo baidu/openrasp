@@ -320,7 +320,7 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_hook);
 typedef void (*fill_param_t)(HashTable *ht);
 
 void handle_block(TSRMLS_D);
-void check(OpenRASPCheckType check_type, zval *params TSRMLS_DC);
+void check(OpenRASPCheckType check_type, zval *z_params TSRMLS_DC);
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC);
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC);
 bool openrasp_zval_in_request(zval *item TSRMLS_DC);

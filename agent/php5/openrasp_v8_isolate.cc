@@ -78,4 +78,76 @@ bool Isolate::IsExpired(uint64_t timestamp)
 {
     return timestamp > GetData()->timestamp;
 }
+
+bool Isolate::Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout)
+{
+    Isolate::Data *data = isolate->GetData();
+    auto context = isolate->GetCurrentContext();
+    v8::TryCatch try_catch;
+    auto check = data->check.Get(isolate);
+    auto request_context = data->request_context.Get(isolate);
+    v8::Local<v8::Value> argv[]{type, params, request_context};
+
+    v8::Local<v8::Value> rst;
+    auto task = new TimeoutTask(isolate, timeout);
+    task->GetMtx().lock();
+    Platform::platform->CallOnBackgroundThread(task, v8::Platform::kShortRunningTask);
+    (void)check->Call(context, check, 3, argv).ToLocal(&rst);
+    task->GetMtx().unlock();
+    if (UNLIKELY(rst.IsEmpty()))
+    {
+        auto console_log = data->console_log.Get(isolate);
+        auto stack_trace = try_catch.StackTrace();
+        if (stack_trace.IsEmpty())
+        {
+            auto message = v8::Object::New(isolate);
+            message->Set(NewV8String(isolate, "message"), NewV8String(isolate, "Javascript plugin execution timeout."));
+            message->Set(NewV8String(isolate, "type"), type);
+            message->Set(NewV8String(isolate, "params"), params);
+            message->Set(NewV8String(isolate, "context"), request_context);
+            (void)console_log->Call(context, console_log, 1, reinterpret_cast<v8::Local<v8::Value> *>(&message)).IsEmpty();
+        }
+        else
+        {
+            (void)console_log->Call(context, console_log, 1, reinterpret_cast<v8::Local<v8::Value> *>(&stack_trace)).IsEmpty();
+        }
+        return false;
+    }
+    if (UNLIKELY(!rst->IsArray()))
+    {
+        return false;
+    }
+    auto key_action = data->key_action.Get(isolate);
+    auto key_message = data->key_message.Get(isolate);
+    auto key_name = data->key_name.Get(isolate);
+    auto key_confidence = data->key_confidence.Get(isolate);
+    auto JSON_stringify = data->JSON_stringify.Get(isolate);
+
+    auto arr = v8::Local<v8::Array>::Cast(rst);
+    int len = arr->Length();
+    bool is_block = false;
+    for (int i = 0; i < len; i++)
+    {
+        auto item = v8::Local<v8::Object>::Cast(arr->Get(i));
+        v8::Local<v8::Value> v8_action = item->Get(key_action);
+        if (UNLIKELY(!v8_action->IsString()))
+        {
+            continue;
+        }
+        int action_hash = v8_action->ToString()->GetIdentityHash();
+        if (LIKELY(data->action_hash_ignore == action_hash))
+        {
+            continue;
+        }
+        is_block = is_block || data->action_hash_block == action_hash;
+
+        alarm_info(isolate, type, params, item);
+    }
+    return is_block;
+}
+
+bool Isolate::Check(v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout)
+{
+    return Check(this, type, params, timeout);
+}
 } // namespace openrasp
