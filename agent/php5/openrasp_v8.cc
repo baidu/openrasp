@@ -24,7 +24,6 @@ extern "C"
 #include "php_ini.h"
 #include "ext/standard/info.h"
 #include "php_openrasp.h"
-#include "php_scandir.h"
 }
 #include <sstream>
 #include <fstream>
@@ -37,47 +36,6 @@ extern "C"
 namespace openrasp
 {
 openrasp_v8_process_globals process_globals;
-
-static inline void load_plugins(TSRMLS_D)
-{
-    std::vector<openrasp_v8_js_src> plugin_src_list;
-    std::string plugin_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("plugins"));
-    dirent **ent = nullptr;
-    int n_plugin = php_scandir(plugin_path.c_str(), &ent, nullptr, nullptr);
-    for (int i = 0; i < n_plugin; i++)
-    {
-        const char *p = strrchr(ent[i]->d_name, '.');
-        if (p != nullptr && strcasecmp(p, ".js") == 0)
-        {
-            std::string filename(ent[i]->d_name);
-            std::string filepath(plugin_path + DEFAULT_SLASH + filename);
-            struct stat sb;
-            if (VCWD_STAT(filepath.c_str(), &sb) == 0 && (sb.st_mode & S_IFREG) != 0)
-            {
-                std::ifstream file(filepath);
-                std::streampos beg = file.tellg();
-                file.seekg(0, std::ios::end);
-                std::streampos end = file.tellg();
-                file.seekg(0, std::ios::beg);
-                // plugin file size limitation: 10 MB
-                if (10 * 1024 * 1024 >= end - beg)
-                {
-                    std::string source((std::istreambuf_iterator<char>(file)),
-                                       std::istreambuf_iterator<char>());
-                    plugin_src_list.emplace_back(openrasp_v8_js_src{filename, source});
-                }
-                else
-                {
-                    openrasp_error(E_WARNING, CONFIG_ERROR, _("Ignored Javascript plugin file '%s', as it exceeds 10 MB in file size."), filename.c_str());
-                }
-            }
-        }
-        free(ent[i]);
-    }
-    free(ent);
-    process_globals.plugin_src_list = plugin_src_list;
-}
-
 } // namespace openrasp
 
 using namespace openrasp;

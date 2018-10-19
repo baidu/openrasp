@@ -160,20 +160,19 @@ public:
   Snapshot *snapshot_blob = nullptr;
   std::mutex mtx;
   bool is_initialized = false;
-  v8::Platform *v8_platform = nullptr;
   std::string plugin_config;
   std::vector<openrasp_v8_js_src> plugin_src_list;
-  long plugin_update_timestamp = 0;
 };
 
 extern openrasp_v8_process_globals process_globals;
 
-void v8error_to_stream(v8::Isolate *isolate, v8::TryCatch &try_catch, std::ostream &buf);
-v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC);
-v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset = 0);
+v8::Local<v8::Value> zval_to_v8val(v8::Isolate *isolate, zval *val TSRMLS_DC);
+v8::MaybeLocal<v8::Script> compile_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
+                                          std::string _source, std::string _filename, int _line_offset = 0);
 v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
                                       std::string _source, std::string _filename, int _line_offset = 0);
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result);
+void load_plugins(TSRMLS_D);
 } // namespace openrasp
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_v8)

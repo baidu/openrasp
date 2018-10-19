@@ -84,7 +84,7 @@ static void querystring_getter(v8::Local<v8::Name> name, const v8::PropertyCallb
     {
         return;
     }
-    info.GetReturnValue().Set(zval_to_v8val(*value, info.GetIsolate() TSRMLS_CC));
+    info.GetReturnValue().Set(zval_to_v8val(info.GetIsolate(), *value TSRMLS_CC));
 }
 static void appBasePath_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
@@ -102,7 +102,7 @@ static void appBasePath_getter(v8::Local<v8::Name> name, const v8::PropertyCallb
     {
         return;
     }
-    info.GetReturnValue().Set(zval_to_v8val(*value, info.GetIsolate() TSRMLS_CC));
+    info.GetReturnValue().Set(zval_to_v8val(info.GetIsolate(), *value TSRMLS_CC));
 }
 static void protocol_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
@@ -120,7 +120,7 @@ static void protocol_getter(v8::Local<v8::Name> name, const v8::PropertyCallback
     {
         return;
     }
-    info.GetReturnValue().Set(zval_to_v8val(*value, info.GetIsolate() TSRMLS_CC));
+    info.GetReturnValue().Set(zval_to_v8val(info.GetIsolate(), *value TSRMLS_CC));
 }
 static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
@@ -138,7 +138,7 @@ static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallba
     {
         return;
     }
-    info.GetReturnValue().Set(zval_to_v8val(*value, info.GetIsolate() TSRMLS_CC));
+    info.GetReturnValue().Set(zval_to_v8val(info.GetIsolate(), *value TSRMLS_CC));
 }
 static void path_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
@@ -185,7 +185,7 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
         {
             continue;
         }
-        v8::Local<v8::Value> v8_value = zval_to_v8val(*value, isolate TSRMLS_CC);
+        v8::Local<v8::Value> v8_value = zval_to_v8val(isolate, *value TSRMLS_CC);
         if (!v8_value->IsArray())
         {
             v8::Local<v8::Array> v8_arr = v8::Array::New(isolate);
@@ -209,7 +209,7 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
         {
             continue;
         }
-        v8::Local<v8::Value> v8_value = zval_to_v8val(*value, isolate TSRMLS_CC);
+        v8::Local<v8::Value> v8_value = zval_to_v8val(isolate, *value TSRMLS_CC);
         if (!v8_value->IsArray())
         {
             v8::Local<v8::Array> v8_arr = v8::Array::New(isolate);
@@ -285,7 +285,7 @@ static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
             }
             p++;
         }
-        obj->Set(V8STRING_I(dup_key).ToLocalChecked(), zval_to_v8val(*value, isolate TSRMLS_CC));
+        obj->Set(V8STRING_I(dup_key).ToLocalChecked(), zval_to_v8val(isolate, *value TSRMLS_CC));
         efree(dup_key);
     }
     info.GetReturnValue().Set(obj);
