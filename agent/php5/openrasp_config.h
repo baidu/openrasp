@@ -113,6 +113,7 @@ public:
     } slowquery;
   } sql;
   int64_t slowquery_min_rows = 500;
+  int64_t lru_cache_max_size = 1000;
 
 public:
   enum FromType
