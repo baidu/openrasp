@@ -21,6 +21,7 @@
 #include "base_manager.h"
 #include "openrasp_ctrl_block.h"
 #include "openrasp_agent.h"
+#include "log_collect_item.h"
 #include <fstream>
 #include <sys/prctl.h>
 #include <memory>
@@ -41,22 +42,7 @@ class BaseAgent;
 class HeartBeatAgent;
 class LogAgent;
 class OpenraspCtrlBlock;
-
-class LogDirInfo
-{
-public:
-  const std::string dir_abs_path;
-  const std::string backend_url;
-  const std::string prefix;
-  std::ifstream ifs;
-  int fpos = 0;
-  long st_ino = 0;
-
-  LogDirInfo(const std::string dir_abs_path, const std::string prefix, const std::string backend_url)
-      : dir_abs_path(dir_abs_path), prefix(prefix), backend_url(backend_url)
-  {
-  }
-};
+class LogCollectItem;
 
 class OpenraspAgentManager : public BaseManager
 {

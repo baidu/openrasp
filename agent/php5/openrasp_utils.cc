@@ -278,6 +278,12 @@ bool same_day_in_current_timezone(long src, long target, long offset)
 
 char *openrasp_format_date(const char *format, int format_len, time_t ts)
 {
+    std::string format_date = format_time(format, format_len, ts);
+    return estrdup(format_date.c_str());
+}
+
+std::string format_time(const char *format, int format_len, time_t ts)
+{
     char buffer[128];
     struct tm *tm_info;
 
@@ -285,7 +291,7 @@ char *openrasp_format_date(const char *format, int format_len, time_t ts)
     tm_info = localtime(&ts);
 
     strftime(buffer, 64, format, tm_info);
-    return estrdup(buffer);
+    return std::string(buffer);
 }
 
 void openrasp_pcre_match(char *regex, int regex_len, char *subject, int subject_len, zval *return_value TSRMLS_DC)
@@ -305,7 +311,7 @@ void openrasp_pcre_match(char *regex, int regex_len, char *subject, int subject_
                         global, 0, flags, start_offset TSRMLS_CC);
 }
 
-long get_file_st_ino(std::string filename TSRMLS_DC)
+long get_file_st_ino(std::string &filename TSRMLS_DC)
 {
     struct stat sb;
     if (VCWD_STAT(filename.c_str(), &sb) == 0 && (sb.st_mode & S_IFREG) != 0)
@@ -541,9 +547,7 @@ std::string json_encode_from_zval(zval *value TSRMLS_DC)
     return result;
 }
 
-std::string get_entire_file_content(std::ifstream &in)
+bool file_exist(const char *abs_path TSRMLS_DC)
 {
-    std::stringstream sstr;
-    sstr << in.rdbuf();
-    return sstr.str();
+    return VCWD_ACCESS(abs_path, F_OK) == 0;
 }

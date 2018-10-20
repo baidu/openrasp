@@ -130,7 +130,10 @@ if test "$PHP_OPENRASP" != "no"; then
 
         OPENRASP_REMOTE_MANAGER_SOURCE="agent/openrasp_ctrl_block.cc \
         agent/openrasp_agent.cc \
+        agent/heartbeat_agent.cc \
+        agent/log_agent.cc \
         agent/openrasp_agent_manager.cc \
+        agent/log_collect_item.cc \
         agent/utils/digest.cc \
         agent/utils/curl_helper.cc"
         AC_DEFINE([HAVE_OPENRASP_REMOTE_MANAGER], [1], [Have openrasp remote manager support])

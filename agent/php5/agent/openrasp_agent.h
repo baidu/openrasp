@@ -24,7 +24,7 @@
 
 namespace openrasp
 {
-class LogDirInfo;
+class LogCollectItem;
 class BaseAgent
 {
 public:
@@ -79,9 +79,7 @@ private:
   static const int log_push_interval = 15;
 
 private:
-  void cleanup_expired_logs(std::vector<LogDirInfo *> &tobe_cleaned_logdirs);
-  virtual std::string get_formatted_date_suffix(long timestamp);
-  virtual bool post_logs_via_curl(std::string log_arr, CURL *curl, std::string url_string);
+  bool post_logs_via_curl(std::string &log_arr, CURL *curl, std::string &url_string);
 };
 } // namespace openrasp
 
