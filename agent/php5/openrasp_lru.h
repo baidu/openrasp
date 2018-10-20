@@ -19,11 +19,11 @@ private:
   };
   list<Item> item_list;
   unordered_map<T, typename list<Item>::iterator> item_map;
-  size_t max_size;
+  size_t max;
 
   void reorder(const typename list<Item>::iterator it)
   {
-    if (it == item_list.begin() && size() > max_size)
+    if (it == item_list.begin() && size() > max)
     {
       item_map.erase(item_list.back().key);
       item_list.pop_back();
@@ -35,7 +35,7 @@ private:
   }
 
 public:
-  LRU(size_t size = 10) : max_size(size) {}
+  LRU(size_t max = 10) : max(max) {}
 
   typename list<Item>::iterator get(const T &key)
   {
@@ -70,9 +70,9 @@ public:
     }
   }
 
-  bool contains(const T &key) const
+  bool contains(const T &key)
   {
-    return item_map.find(key) != item_map.end();
+    return get(key) != end();
   }
   bool empty() const
   {
@@ -81,6 +81,10 @@ public:
   size_t size() const
   {
     return item_list.size();
+  }
+  size_t max_size() const
+  {
+    return max;
   }
   typename list<Item>::iterator begin()
   {

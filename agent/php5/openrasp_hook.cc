@@ -33,7 +33,7 @@ static hook_handler_t global_hook_handlers[512];
 static size_t global_hook_handlers_len = 0;
 static const std::string COLON_TWO_SLASHES = "://";
 
-const std::map<OpenRASPCheckType, const char *> CheckTypeNameMap =
+const std::map<OpenRASPCheckType, const std::string> CheckTypeNameMap =
     {
         {CALLABLE, "callable"},
         {COMMAND, "command"},
@@ -193,7 +193,7 @@ void openrasp_buildin_php_risk_handle(zend_bool is_block, OpenRASPCheckType type
     MAKE_STD_ZVAL(params_result);
     array_init(params_result);
     add_assoc_string(params_result, "intercept_state", const_cast<char *>(is_block ? "block" : "log"), 1);
-    add_assoc_string(params_result, "attack_type", (char *)CheckTypeNameMap.at(type), 1);
+    add_assoc_string(params_result, "attack_type", (char *)CheckTypeNameMap.at(type).c_str(), 1);
     add_assoc_string(params_result, "plugin_name", const_cast<char *>("php_builtin_plugin"), 1);
     add_assoc_long(params_result, "plugin_confidence", confidence);
     add_assoc_zval(params_result, "attack_params", params);
@@ -321,7 +321,7 @@ void check(OpenRASPCheckType check_type, zval *z_params TSRMLS_DC)
     {
         v8::HandleScope handlescope(isolate);
         auto type = NewV8String(isolate, CheckTypeNameMap.at(check_type));
-        auto params = v8::Local<v8::Object>::Cast(zval_to_v8val(z_params, isolate TSRMLS_CC));
+        auto params = v8::Local<v8::Object>::Cast(zval_to_v8val(isolate, z_params TSRMLS_CC));
         zval_ptr_dtor(&z_params);
         result = isolate->Check(type, params, OPENRASP_CONFIG(plugin.timeout.millis));
     }
@@ -380,6 +380,11 @@ PHP_RINIT_FUNCTION(openrasp_hook)
             {
                 OPENRASP_HOOK_G(check_type_white_bit_mask) = openrasp::scm->get_check_type_white_bit_mask(url_str.substr(found + COLON_TWO_SLASHES.size()));
             }
+        }
+        if (!OPENRASP_HOOK_G(lru) ||
+            OPENRASP_HOOK_G(lru)->max_size() != OPENRASP_CONFIG(lru_cache_max_size))
+        {
+            OPENRASP_HOOK_G(lru) = new openrasp::LRU<std::string, bool>(OPENRASP_CONFIG(lru_cache_max_size));
         }
     }
     return SUCCESS;

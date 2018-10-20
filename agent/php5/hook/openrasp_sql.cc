@@ -54,7 +54,7 @@ void slow_query_alarm(int rows TSRMLS_DC)
     zval *attack_params = nullptr;
     MAKE_STD_ZVAL(attack_params);
     array_init(attack_params);
-    add_assoc_long(attack_params, "query_count",rows);
+    add_assoc_long(attack_params, "query_count", rows);
     zval *plugin_message = nullptr;
     MAKE_STD_ZVAL(plugin_message);
     char *message_str = nullptr;
@@ -138,18 +138,24 @@ void sql_type_handler(char *query, int query_len, char *server TSRMLS_DC)
     openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (isolate)
     {
+        std::string cache_key = std::string(CheckTypeNameMap.at(SQL)).append(query, query_len);
+        if (OPENRASP_HOOK_G(lru)->contains(cache_key))
+        {
+            return;
+        }
         bool is_block = false;
         {
             v8::HandleScope handle_scope(isolate);
             auto params = v8::Object::New(isolate);
             params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len));
             params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server));
-            is_block = isolate->Check(openrasp::NewV8String(isolate, CheckTypeNameMap.at(SQL), 3), params, OPENRASP_CONFIG(plugin.timeout.millis));
+            is_block = isolate->Check(openrasp::NewV8String(isolate, CheckTypeNameMap.at(SQL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (is_block)
         {
             handle_block(TSRMLS_C);
         }
+        OPENRASP_HOOK_G(lru)->set(cache_key, true);
     }
 }
 

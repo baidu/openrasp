@@ -65,30 +65,24 @@ Snapshot::Snapshot(const std::string &config, const std::vector<openrasp_v8_js_s
         {
             if (exec_script(isolate, context, js_src.source, js_src.filename).IsEmpty())
             {
-                std::stringstream stream;
-                v8error_to_stream(isolate, try_catch, stream);
-                std::string error = stream.str();
-                LOG_G(plugin_logger).log(LEVEL_INFO, error.c_str(), error.length() TSRMLS_CC);
-                openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize js plugin - %s"), error.c_str());
+                Exception e(isolate, try_catch);
+                LOG_G(plugin_logger).log(LEVEL_INFO, e.c_str(), e.length() TSRMLS_CC);
+                openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize js plugin - %s"), e.c_str());
                 // no need to continue
                 return;
             }
         }
         if (exec_script(isolate, context, config, "config.js").IsEmpty())
         {
-            std::stringstream stream;
-            v8error_to_stream(isolate, try_catch, stream);
-            std::string error = stream.str();
-            LOG_G(plugin_logger).log(LEVEL_INFO, error.c_str(), error.length() TSRMLS_CC);
+            Exception e(isolate, try_catch);
+            LOG_G(plugin_logger).log(LEVEL_INFO, e.c_str(), e.length() TSRMLS_CC);
         }
         for (auto &plugin_src : plugin_list)
         {
             if (exec_script(isolate, context, "(function(){\n" + plugin_src.source + "\n})()", plugin_src.filename, -1).IsEmpty())
             {
-                std::stringstream stream;
-                v8error_to_stream(isolate, try_catch, stream);
-                std::string error = stream.str();
-                LOG_G(plugin_logger).log(LEVEL_INFO, error.c_str(), error.length() TSRMLS_CC);
+                Exception e(isolate, try_catch);
+                LOG_G(plugin_logger).log(LEVEL_INFO, e.c_str(), e.length() TSRMLS_CC);
             }
         }
         creator.SetDefaultContext(context);
