@@ -21,6 +21,7 @@ import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.cloud.Utils.CloudUtils;
+import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.plugin.js.engine.JsPluginManager;
@@ -50,9 +51,11 @@ public class KeepAlive {
             while (true) {
                 String content = new Gson().toJson(GenerateParameters());
                 String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
-                GenericResponse response = new CloudHttp().request(url, content);
+                GenericResponse response = new CloudHttpPool().request(url, content);
                 if (response != null) {
                     handler(response);
+                }else {
+                    CloudManager.LOGGER.warn("[OpenRASP] Cloud Control Send HeartBeat Failed");
                 }
                 try {
                     Thread.sleep(KEEPALIVE_DELAY);
@@ -106,6 +109,8 @@ public class KeepAlive {
                     }
                 }
                 Config.getConfig().loadConfigFromCloud(configMap, true);
+                //云控下发配置时动态添加或者删除syslog
+                LogConfig.syslogManager();
             }
 
         }

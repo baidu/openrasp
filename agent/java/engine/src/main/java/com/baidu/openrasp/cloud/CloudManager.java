@@ -16,20 +16,7 @@
 
 package com.baidu.openrasp.cloud;
 
-import com.baidu.openrasp.cloud.Utils.CloudUtils;
-import com.baidu.openrasp.cloud.model.CloudCacheModel;
-import com.baidu.openrasp.cloud.model.CloudRequestUrl;
-import com.baidu.openrasp.cloud.model.GenericResponse;
-import com.baidu.openrasp.config.Config;
-import com.baidu.openrasp.tool.OSUtil;
-import com.baidu.openrasp.tool.model.ApplicationModel;
-import com.google.gson.Gson;
 import org.apache.log4j.Logger;
-
-import java.io.File;
-import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @description: 初始化云控配置
@@ -39,22 +26,10 @@ import java.util.Map;
 public class CloudManager {
     public static final Logger LOGGER = Logger.getLogger(CloudManager.class.getPackage().getName() + ".log");
 
-    public static void init() throws Exception {
-        if (CloudUtils.checkCloudControlEnter()) {
-            String cloudAddress = Config.getConfig().getCloudAddress();
-            CloudCacheModel.getInstance().setMasterIp(OSUtil.getMasterIp(cloudAddress));
-            Register.register();
-            String content = new Gson().toJson(KeepAlive.GenerateParameters());
-            String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
-            GenericResponse response = new CloudHttp().request(url, content);
-            if (response != null && response.getStatus() != null && response.getStatus() == 0) {
-                new KeepAlive();
-            } else {
-                System.out.println("[OpenRASP] Cloud Control Send HeartBeat Failed");
-                throw new Exception();
-            }
-            new StatisticsReport();
-        }
+    public static void init() {
+        new KeepAlive();
+        new StatisticsReport();
     }
+
 
 }

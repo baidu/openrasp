@@ -287,8 +287,9 @@ public class HookHandler {
      */
     public static void doCheckWithoutRequest(CheckParameter.Type type, Object params) {
         StringBuffer sb = requestCache.get().getRequestURL();
-        String url = sb.substring(sb.indexOf("://")+3);
-        if (HookWhiteModel.isContainURL(type.getName(),url)){
+        String url = sb.substring(sb.indexOf("://") + 3);
+        if ((Config.getConfig().getHookWhiteAll() && Config.getConfig().getCloudSwitch())
+                || HookWhiteModel.isContainURL(type.getName(), url)) {
             return;
         }
         long a = 0;

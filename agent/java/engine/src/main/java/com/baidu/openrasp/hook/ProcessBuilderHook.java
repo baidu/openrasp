@@ -61,7 +61,11 @@ public class ProcessBuilderHook extends AbstractClassHook {
     @Override
     public boolean isClassMatched(String className) {
         if (OSUtil.isLinux() || OSUtil.isMacOS()) {
-            return "java/lang/UNIXProcess".equals(className);
+            if (getJdkVersion() > 8) {
+                return "java/lang/ProcessImpl".equals(className);
+            } else {
+                return "java/lang/UNIXProcess".equals(className);
+            }
         } else if (OSUtil.isWindows()) {
             return "java/lang/ProcessImpl".equals(className);
         }
@@ -76,9 +80,15 @@ public class ProcessBuilderHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         if (ctClass.getName().contains("ProcessImpl")) {
-            String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
-                    "$1", String[].class);
-            insertBefore(ctClass, "<init>", null, src);
+            if (getJdkVersion()>8){
+                String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
+                        "$1,$2", byte[].class, byte[].class);
+                insertBefore(ctClass, "<init>", null, src);
+            }else {
+                String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
+                        "$1", String[].class);
+                insertBefore(ctClass, "<init>", null, src);
+            }
         } else if (ctClass.getName().contains("UNIXProcess")) {
             String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
                     "$1,$2", byte[].class, byte[].class);
@@ -132,5 +142,10 @@ public class ProcessBuilderHook extends AbstractClassHook {
                 HookHandler.doCheckWithoutRequest(CheckParameter.Type.COMMAND, params);
             }
         }
+    }
+
+    private int getJdkVersion() {
+        String version = System.getProperty("java.version");
+        return Integer.parseInt(version.substring(0, version.indexOf(".")));
     }
 }

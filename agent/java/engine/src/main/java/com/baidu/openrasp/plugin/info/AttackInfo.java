@@ -79,7 +79,7 @@ public class AttackInfo extends EventInfo {
 
         info.put("event_type", getType());
         // 攻击时间
-        info.put("event_time", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(createTime));
+        info.put("event_time", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss Z").format(createTime));
         // 服务器host name
         info.put("server_hostname", OSUtil.getHostName());
         // 攻击类型

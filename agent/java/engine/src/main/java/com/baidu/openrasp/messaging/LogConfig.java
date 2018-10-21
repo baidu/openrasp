@@ -17,6 +17,8 @@
 package com.baidu.openrasp.messaging;
 
 import com.baidu.openrasp.EngineBoot;
+import com.baidu.openrasp.cloud.DynamicConfigSyslogAppender;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.exception.ConfigLoadException;
 
 import java.io.*;
@@ -128,6 +130,22 @@ public class LogConfig {
                 eis.printStackTrace();
             }
             throw new ConfigLoadException("[OpenRASP] Unable to extract log4j config file: " + CONFIGFILE + ", error: " + throwable.getMessage());
+        }
+    }
+
+    /**
+     * 管理syslog
+     */
+    public static void syslogManager() {
+        if (Config.getConfig().getSyslogSwitch()) {
+            String syslogAddress = Config.getConfig().getSyslogAddress();
+            int syslogPort = Config.getConfig().getSyslogPort();
+            if (syslogAddress != null && !syslogAddress.trim().isEmpty() && syslogPort >= 0 && syslogPort <= 65535) {
+                DynamicConfigSyslogAppender.createSyslogAppender(syslogAddress, syslogPort);
+            }
+
+        } else {
+            DynamicConfigSyslogAppender.removeSyslogAppender();
         }
     }
 }

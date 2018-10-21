@@ -24,7 +24,6 @@ import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import com.google.gson.Gson;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,17 +33,36 @@ import java.util.Map;
  * @create: 2018/10/08 11:58
  */
 public class Register {
-    public static void register() throws Exception {
-        Map<String, Object> params = GenerateParameters();
-        String content = new Gson().toJson(params);
-        String url = CloudRequestUrl.CLOUD_REGISTER_URL;
-        GenericResponse response = new CloudHttp().request(url, content);
-        if (response != null) {
-            if (response.getStatus() != null && response.getStatus() == 0) {
-                System.out.println("[OpenRASP] Cloud Control Registered Successed");
-            } else {
-                System.out.println("[OpenRASP] Cloud Control Registered Failed");
-                throw new Exception();
+    private static final int REGISTER_DELAY = 300 * 1000;
+
+    public Register() {
+        new Thread(new RegisterThread()).start();
+    }
+
+    class RegisterThread implements Runnable {
+        private boolean REGISTER_FLAG = false;
+
+        @Override
+        public void run() {
+            while (!this.REGISTER_FLAG) {
+                String content = new Gson().toJson(GenerateParameters());
+                String url = CloudRequestUrl.CLOUD_REGISTER_URL;
+                GenericResponse response = new CloudHttpPool().request(url, content);
+                if (response != null) {
+                    if (response.getStatus() != null && response.getStatus() == 0) {
+                        this.REGISTER_FLAG = true;
+                        Config.getConfig().setHookWhiteAll("false");
+                        System.out.println("[OpenRASP] Cloud Control Registered Successed");
+                        CloudManager.init();
+                    }else {
+                        CloudManager.LOGGER.warn("[OpenRASP] Cloud Control Registered Failed: "+response.getDescription());
+                    }
+                }
+                try {
+                    Thread.sleep(REGISTER_DELAY);
+                } catch (InterruptedException e) {
+                    //continue next loop
+                }
             }
         }
     }
@@ -60,7 +78,7 @@ public class Register {
         params.put("server_version", ApplicationModel.getVersion());
         String raspHome = Config.getConfig().getBaseDirectory();
         params.put("rasp_home", raspHome);
-        params.put("primary_ip",CloudCacheModel.getInstance().getMasterIp());
+        params.put("primary_ip", CloudCacheModel.getInstance().getMasterIp());
         return params;
     }
 }

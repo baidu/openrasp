@@ -16,7 +16,7 @@
 
 package com.baidu.openrasp;
 
-import com.baidu.openrasp.cloud.CloudManager;
+import com.baidu.openrasp.cloud.Utils.CloudUtils;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.net.URL;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.jar.Attributes;
@@ -59,7 +60,6 @@ public class EngineBoot implements Module {
             return;
         }
         readVersion();
-        CloudManager.init();
         // 初始化插件系统
         JsPluginManager.init();
         CheckerManager.init();
@@ -82,9 +82,12 @@ public class EngineBoot implements Module {
      *
      * @return 配置是否成功
      */
-    private static boolean loadConfig(String baseDir) throws IOException {
+    private static boolean loadConfig(String baseDir) throws IOException, NoSuchAlgorithmException {
         LogConfig.completeLogConfig(baseDir);
-
+        //单机模式下动态添加获取删除syslog
+        if (!CloudUtils.checkCloudControlEnter()){
+            LogConfig.syslogManager();
+        }
         return true;
     }
 
@@ -129,10 +132,10 @@ public class EngineBoot implements Module {
         projectVersion = (projectVersion == null ? "UNKNOWN" : projectVersion);
         buildTime = (buildTime == null ? "UNKNOWN" : buildTime);
         gitCommit = (gitCommit == null ? "UNKNOWN" : gitCommit);
-        HashMap<String,String> applicationInfo = ApplicationModel.getApplicationInfo();
-        applicationInfo.put("projectVersion",projectVersion);
-        applicationInfo.put("buildTime",buildTime);
-        applicationInfo.put("gitCommit",gitCommit);
+        HashMap<String, String> applicationInfo = ApplicationModel.getApplicationInfo();
+        applicationInfo.put("projectVersion", projectVersion);
+        applicationInfo.put("buildTime", buildTime);
+        applicationInfo.put("gitCommit", gitCommit);
     }
 
 }

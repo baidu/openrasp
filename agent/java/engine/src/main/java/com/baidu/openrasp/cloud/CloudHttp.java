@@ -62,6 +62,7 @@ public class CloudHttp {
             in = httpUrlConnection.getInputStream();
             jsonString = CloudUtils.convertInputStreamToJsonString(in);
         } catch (IOException e) {
+            CloudManager.LOGGER.warn("send http request failed",e);
             return null;
         } finally {
             try {

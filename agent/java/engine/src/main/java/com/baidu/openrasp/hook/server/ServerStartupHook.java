@@ -18,7 +18,10 @@ package com.baidu.openrasp.hook.server;
 
 import com.baidu.openrasp.cloud.Register;
 import com.baidu.openrasp.cloud.Utils.CloudUtils;
+import com.baidu.openrasp.cloud.model.CloudCacheModel;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.tool.OSUtil;
 
 /**
  * Created by tyy on 18-8-10.
@@ -32,9 +35,14 @@ public abstract class ServerStartupHook extends AbstractClassHook {
         return "server_start";
     }
 
+    /**
+     * 开启云控时发送注册信息
+     */
     protected static void sendRegister() throws Exception {
-        if (CloudUtils.checkCloudControlEnter()){
-            Register.register();
+        if (CloudUtils.checkCloudControlEnter()) {
+            String cloudAddress = Config.getConfig().getCloudAddress();
+            CloudCacheModel.getInstance().setMasterIp(OSUtil.getMasterIp(cloudAddress));
+            new Register();
         }
     }
 }

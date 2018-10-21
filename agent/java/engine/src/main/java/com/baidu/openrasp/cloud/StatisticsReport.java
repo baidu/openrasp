@@ -33,7 +33,7 @@ import java.util.TreeMap;
  * @create: 2018/09/28 11:21
  */
 public class StatisticsReport {
-    private static final int STATISTICS_REPORT_INTERVAL = 30 * 1000;
+    private static final int STATISTICS_REPORT_INTERVAL = 3600 * 1000;
 
     public StatisticsReport() {
         new Thread(new StatisticsReportThread()).start();
@@ -44,7 +44,7 @@ public class StatisticsReport {
         public void run() {
             while (true) {
                 TreeMap<Long, Long> temp = new TreeMap<Long, Long>();
-                temp.put(System.nanoTime(), HookHandler.TOTAL_REQUEST_NUM.longValue());
+                temp.put(System.currentTimeMillis(), HookHandler.TOTAL_REQUEST_NUM.longValue());
                 if (!CloudCacheModel.reportCache.isEmpty()) {
                     temp.putAll(CloudCacheModel.reportCache);
                 }
@@ -55,7 +55,7 @@ public class StatisticsReport {
                     params.put("request_sum", entry.getValue());
                     String content = new Gson().toJson(params);
                     String url = CloudRequestUrl.CLOUD_STATISTICS_REPORT_URL;
-                    GenericResponse response = new CloudHttp().request(url, content);
+                    GenericResponse response = new CloudHttpPool().request(url, content);
                     if (response == null) {
                         CloudCacheModel.reportCache.put(entry.getKey(), entry.getValue());
                     } else {

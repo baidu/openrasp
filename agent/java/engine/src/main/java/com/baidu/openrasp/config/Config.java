@@ -54,6 +54,7 @@ public class Config extends FileScanListener {
         BODY_MAX_BYTES("body.maxbytes", "4096"),
         LOG_MAX_STACK("log.maxstack", "20"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
+        SQL_CACHE_CAPACITY("sql.cache.capacity", "100"),
         SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
         PLUGIN_FILTER("plugin.filter", "true"),
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
@@ -61,14 +62,18 @@ public class Config extends FileScanListener {
         BLOCK_STATUS_CODE("block.status_code", "302"),
         DEBUG("debug.level", "0"),
         ALGORITHM_CONFIG("algorithm.config", "{}", false),
-        CLIENT_IP_HEADER("clientip.header","ClientIP"),
+        CLIENT_IP_HEADER("clientip.header", "ClientIP"),
         BLOCK_REDIRECT_URL("block.redirect_url", "https://rasp.baidu.com/blocked/?request_id=%request_id%"),
         BLOCK_JSON("block.content_json", "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"),
         BLOCK_XML("block.content_xml", "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"),
         BLOCK_HTML("block.content_html", "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>"),
         CLOUD_SWITCH("cloud.switch", "false"),
         CLOUD_ADDRESS("cloud.address", ""),
-        CLOUD_APPID("cloud.appid", "");
+        CLOUD_APPID("cloud.appid", ""),
+        SYSLOG_SWITCH("syslog.switch", "false"),
+        SYSLOG_ADDRESS("syslog.address", ""),
+        SYSLOG_PORT("syslog.port", ""),
+        HOOK_WHITE_ALL("hook.white.ALL","true");
 
 
         Item(String key, String defaultValue) {
@@ -123,6 +128,11 @@ public class Config extends FileScanListener {
     private boolean cloudSwitch;
     private String cloudAddress;
     private String cloudAppId;
+    private int sqlCacheCapacity;
+    private boolean syslogSwitch;
+    private String syslogAddress;
+    private int syslogPort;
+    private boolean hookWhiteAll;
 
 
     static {
@@ -180,7 +190,8 @@ public class Config extends FileScanListener {
             if (entry.getKey().startsWith(HOOKS_WHITE)) {
                 String hooksType = entry.getKey().substring(entry.getKey().lastIndexOf(".") + 1);
                 if (entry.getValue() instanceof JsonArray) {
-                    ArrayList<String> list = CloudUtils.getListGsonObject().fromJson((JsonArray)entry.getValue(),new TypeToken<ArrayList<String>>(){}.getType());
+                    ArrayList<String> list = CloudUtils.getListGsonObject().fromJson((JsonArray) entry.getValue(), new TypeToken<ArrayList<String>>() {
+                    }.getType());
                     HookWhiteModel.init(hooksType, list);
                 }
             } else {
@@ -721,6 +732,99 @@ public class Config extends FileScanListener {
     }
 
     /**
+     * 获取sql的lruCache的大小，
+     *
+     * @return 缓存的大小
+     */
+    public synchronized int getSqlCacheCapacity() {
+        return sqlCacheCapacity;
+    }
+
+    /**
+     * 设置sql的lruCache的大小，
+     *
+     * @param sqlCacheCapacity 待设置的缓存大小，默认大小为100
+     */
+    public synchronized void setSqlCacheCapacity(String sqlCacheCapacity) {
+        this.sqlCacheCapacity = Integer.parseInt(sqlCacheCapacity);
+        if (this.sqlCacheCapacity < 0) {
+            this.sqlCacheCapacity = 100;
+        }
+    }
+
+    /**
+     * 获取是否启用syslog开关状态，
+     *
+     * @return syslog开关状态
+     */
+    public synchronized boolean getSyslogSwitch() {
+        return syslogSwitch;
+    }
+
+    /**
+     * 设置syslog开关状态，
+     *
+     * @param syslogSwitch 待设置的syslog开关状态
+     */
+    public synchronized void setSyslogSwitch(String syslogSwitch) {
+        this.syslogSwitch = Boolean.parseBoolean(syslogSwitch);
+    }
+
+    /**
+     * 获取syslog上传日志的地址，
+     *
+     * @return syslog上传日志的地址
+     */
+    public synchronized String getSyslogAddress() {
+        return syslogAddress;
+    }
+
+    /**
+     * 设置syslog上传日志的地址，
+     *
+     * @param syslogAddress 待设置的syslog上传日志的地址
+     */
+    public synchronized void setSyslogAddress(String syslogAddress) {
+        this.syslogAddress = syslogAddress;
+    }
+
+    /**
+     * 获取syslog上传日志的端口，
+     *
+     * @return syslog上传日志的端口
+     */
+    public synchronized int getSyslogPort() {
+        return syslogPort;
+    }
+
+    /**
+     * 设置syslog上传日志的端口，
+     *
+     * @param syslogPort 待设置syslog上传日志的端口
+     */
+    public synchronized void setSyslogPort(String syslogPort) {
+        this.syslogPort = Integer.parseInt(syslogPort);
+    }
+
+    /**
+     * 获取是否禁用全部hook点，
+     *
+     * @return 是否禁用全部hook点
+     */
+    public synchronized boolean getHookWhiteAll() {
+        return hookWhiteAll;
+    }
+
+    /**
+     * 设置是否禁用全部hook点，
+     *
+     * @param hookWhiteAll 是否禁用全部hook点
+     */
+    public synchronized void setHookWhiteAll(String hookWhiteAll) {
+        this.hookWhiteAll = Boolean.parseBoolean(hookWhiteAll);
+    }
+
+    /**
      * 获取云控的开关状态，
      *
      * @return 云控开关状态
@@ -734,7 +838,7 @@ public class Config extends FileScanListener {
      *
      * @param cloudSwitch 待设置的云控开关状态
      */
-    public  synchronized void setCloudSwitch(String cloudSwitch) {
+    public synchronized void setCloudSwitch(String cloudSwitch) {
         this.cloudSwitch = Boolean.parseBoolean(cloudSwitch);
     }
 
@@ -761,7 +865,7 @@ public class Config extends FileScanListener {
      *
      * @return 云控的请求的appid
      */
-    public synchronized  String getCloudAppId() {
+    public synchronized String getCloudAppId() {
         return cloudAppId;
     }
 
@@ -829,7 +933,17 @@ public class Config extends FileScanListener {
                 setCloudAddress(value);
             } else if (Item.CLOUD_APPID.key.equals(key)) {
                 setCloudAppId(value);
-            } else {
+            } else if (Item.SQL_CACHE_CAPACITY.key.equals(key)) {
+                setSqlCacheCapacity(value);
+            } else if (Item.SYSLOG_SWITCH.key.equals(key)) {
+                setSyslogSwitch(value);
+            } else if (Item.SYSLOG_ADDRESS.key.equals(key)) {
+                setSyslogAddress(value);
+            } else if (Item.SYSLOG_PORT.key.equals(key)) {
+                setSyslogPort(value);
+            } else if (Item.HOOK_WHITE_ALL.key.equals(key)){
+                setHookWhiteAll(value);
+            }else {
                 isHit = false;
             }
             if (isHit) {

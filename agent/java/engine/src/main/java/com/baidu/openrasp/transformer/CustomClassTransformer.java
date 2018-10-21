@@ -16,13 +16,12 @@
 
 package com.baidu.openrasp.transformer;
 
+import com.baidu.openrasp.ModuleLoader;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.*;
 import com.baidu.openrasp.tool.annotation.AnnotationScanner;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.LoaderClassPath;
+import javassist.*;
 import org.apache.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
@@ -115,6 +114,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
 
     private void addLoader(ClassPool classPool, ClassLoader loader) {
         classPool.appendSystemPath();
+        classPool.appendClassPath(new ClassClassPath(ModuleLoader.class));
         if (loader != null) {
             classPool.appendClassPath(new LoaderClassPath(loader));
         }

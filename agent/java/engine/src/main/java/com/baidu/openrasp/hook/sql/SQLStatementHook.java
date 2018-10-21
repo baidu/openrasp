@@ -25,8 +25,6 @@ import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.Reflection;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -41,9 +39,6 @@ import java.io.IOException;
 @HookAnnotation
 public class SQLStatementHook extends AbstractSqlHook {
 
-    private static final String CONFIG_KEY_CACHE = "cache";
-    private static final String CONFIG_KEY_SQLI = "sqli";
-    private static final String CONFIG_KEY_CAPACITY = "capacity";
     private static final int DEFAULT_LRU_CACHE_CAPACITY = 100;
 
     /**
@@ -195,27 +190,12 @@ public class SQLStatementHook extends AbstractSqlHook {
     }
 
     /**
-     * 从js配置获取lru的缓存大小，如果返回为空，那么使用默认值。
+     * 从配置中获取lru的缓存大小，如果未设置，那么使用默认值。
      */
-    public static int getLRUCacheSize() {
-        try {
-            JsonObject config = Config.getConfig().getAlgorithmConfig();
-            if (config != null) {
-                JsonElement jsonElement = config.get(CONFIG_KEY_CACHE);
-                if (jsonElement != null) {
-                    JsonElement jsonSubElement = jsonElement.getAsJsonObject().get(CONFIG_KEY_SQLI);
-                    if (jsonSubElement != null) {
-                        JsonElement value = jsonSubElement.getAsJsonObject().get(CONFIG_KEY_CAPACITY);
-                        if (value != null) {
-                            return value.getAsInt();
-                        }
-
-                    }
-                }
-            }
-        } catch (Exception e) {
-
-            JSContext.LOGGER.warn("Parse json failed because: " + e.getMessage());
+    private static int getLRUCacheSize() {
+        int sqlCacheCapacity = Config.getConfig().getSqlCacheCapacity();
+        if (sqlCacheCapacity > 0) {
+            return sqlCacheCapacity;
         }
         return DEFAULT_LRU_CACHE_CAPACITY;
     }

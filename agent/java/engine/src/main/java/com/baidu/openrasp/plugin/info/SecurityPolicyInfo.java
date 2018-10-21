@@ -79,7 +79,7 @@ public class SecurityPolicyInfo extends EventInfo {
         Map<String, Object> info = new HashMap<String, Object>();
 
         info.put("event_type", getType());
-        info.put("event_time", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(System.currentTimeMillis()));
+        info.put("event_time", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss Z").format(System.currentTimeMillis()));
         // policy id
         info.put("policy_id", this.policy.toString());
         // 服务器host name
