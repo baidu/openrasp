@@ -24,8 +24,8 @@ import javassist.NotFoundException;
 
 
 /**
- * @Description: websphere请求预处理hook点
  * @author anyang
+ * @Description: websphere请求预处理hook点
  * @date 2018/8/13 15:13
  */
 @HookAnnotation
@@ -37,12 +37,11 @@ public class WebspherePreRequestHook extends ServerPreRequestHook {
 
     @Override
     public boolean isClassMatched(String className) {
-        return "com/ibm/ws/webcontainer/servlet/ServletWrapperImpl".equals(className);
+        return "com/ibm/ws/webcontainer/WebContainer".equals(className);
     }
 
     @Override
     protected void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException {
-        String hookDesc = "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)V";
-        insertBefore(ctClass, "handleRequest", hookDesc, src);
+        insertBefore(ctClass, "handleRequest", null, src);
     }
 }
