@@ -583,7 +583,7 @@ function is_outside_webroot(appBasePath, realpath, path) {
 // 
 // 或者以用户输入结尾
 // file_get_contents("/data/uploads/" . "../../../../../../../etc/passwd");
-function is_path_endswith_userinput(parameter, target, is_windows)
+function is_path_endswith_userinput(parameter, target, realpath, is_windows)
 {
     var verdict = false
 
@@ -615,8 +615,8 @@ function is_path_endswith_userinput(parameter, target, is_windows)
         }
 
         // 参数必须有跳出目录，或者是绝对路径
-        if ((value == target || target.endsWith(value)) 
-            && (has_traversal(value) || is_absolute_path(value, is_windows)))
+        if ((value == target || target.endsWith(value))
+            && (has_traversal(value)) || target == realpath)
         {
             verdict = true
             return true
@@ -1061,7 +1061,7 @@ plugin.register('readFile', function (params, context) {
     {
         // ?path=/etc/./hosts
         // ?path=../../../etc/passwd
-        if (is_path_endswith_userinput(parameter, params.path, is_win))
+        if (is_path_endswith_userinput(parameter, params.path, params.realpath, is_win))
         {
             return {
                 action:     algorithmConfig.readFile_userinput.action,
@@ -1158,7 +1158,7 @@ plugin.register('include', function (params, context) {
     // ?file=../../../../../var/log/httpd/error.log
     if (algorithmConfig.include_userinput.action != 'ignore')
     {
-        if (is_path_endswith_userinput(parameter, url, is_win))
+        if (is_path_endswith_userinput(parameter, url, '', is_win))
         {
             return {
                 action:     algorithmConfig.include_userinput.action,
