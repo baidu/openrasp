@@ -771,9 +771,10 @@ if (RASP.get_jsengine() !== 'v8') {
             if (reason !== false) 
             {
                 return {
-                    'action':     algorithmConfig.sqli_userinput.action,
-                    'confidence': 90,
-                    'message':    reason
+                    action:     algorithmConfig.sqli_userinput.action,
+                    confidence: 90,
+                    message:    reason,
+                    algorithm:  'sqli_userinput'
                 }
             }
         }
@@ -874,7 +875,8 @@ if (RASP.get_jsengine() !== 'v8') {
                 return {
                     action:     algorithmConfig.sqli_policy.action,
                     message:    reason,
-                    confidence: 100
+                    confidence: 100,
+                    algorithm:  'sqli_policy'
                 }
             }
         }
@@ -900,9 +902,10 @@ if (RASP.get_jsengine() !== 'v8') {
                 /^(127|192|172|10)\./.test(ip[0]))
             {
                 return {
-                    action:    algorithmConfig.ssrf_userinput.action,
-                    message:   _("SSRF - Requesting intranet address: %1%", [ ip[0] ]),
-                    confidence: 100
+                    action:     algorithmConfig.ssrf_userinput.action,
+                    message:    _("SSRF - Requesting intranet address: %1%", [ ip[0] ]),
+                    confidence: 100,
+                    algorithm:  'ssrf_userinput'
                 }
             }
         }
@@ -915,7 +918,8 @@ if (RASP.get_jsengine() !== 'v8') {
                 return {
                     action:     algorithmConfig.ssrf_common.action,
                     message:    _("SSRF - Requesting known DNSLOG address: %1%", [hostname]),
-                    confidence: 100
+                    confidence: 100,
+                    algorithm:  'ssrf_common'
                 }
             }
         }
@@ -926,9 +930,10 @@ if (RASP.get_jsengine() !== 'v8') {
             if (hostname == '169.254.169.254')
             {
                 return {
-                    action:    algorithmConfig.ssrf_aws.action,
-                    message:   _("SSRF - Requesting AWS metadata address"),
-                    confidence: 100
+                    action:     algorithmConfig.ssrf_aws.action,
+                    message:    _("SSRF - Requesting AWS metadata address"),
+                    confidence: 100,
+                    algorithm:  'ssrf_aws'
                 }
             }
         }
@@ -960,7 +965,8 @@ if (RASP.get_jsengine() !== 'v8') {
                 return {
                     action:     algorithmConfig.ssrf_obfuscate.action,
                     message:    reason,
-                    confidence: 100
+                    confidence: 100,
+                    algorithm:  'ssrf_obfuscate'
                 }
             }
         }
@@ -974,9 +980,10 @@ if (RASP.get_jsengine() !== 'v8') {
             if (algorithmConfig.ssrf_protocol.protocols.indexOf(proto) != -1)
             {
                 return {
-                    action:    algorithmConfig.ssrf_protocol.action,
-                    message:   _("SSRF - Using dangerous protocol: %1%://", [proto]),
-                    confidence: 100
+                    action:     algorithmConfig.ssrf_protocol.action,
+                    message:    _("SSRF - Using dangerous protocol: %1%://", [proto]),
+                    confidence: 100,
+                    algorithm:  'ssrf_protocol'
                 }
             }
         }
@@ -1002,7 +1009,8 @@ plugin.register('directory', function (params, context) {
                 return {
                     action:     algorithmConfig.directory_unwanted.action,
                     message:    _("WebShell activity - Accessing sensitive folder: %1%", [realpath]),
-                    confidence: 100
+                    confidence: 100,
+                    algorithm:  'directory_unwanted'
                 }
             }
         }
@@ -1023,7 +1031,8 @@ plugin.register('directory', function (params, context) {
             return {
                 action:     algorithmConfig.directory_userinput.action,
                 message:    _("WebShell detected - Using File Manager function to access a folder: %1%", [realpath]),
-                confidence: 90
+                confidence: 90,
+                algorithm:  'directory_userinput'
             }            
         }
     }
@@ -1037,7 +1046,8 @@ plugin.register('directory', function (params, context) {
             return {
                 action:     algorithmConfig.directory_reflect.action,
                 message:    _("WebShell activity - Using file manager function with China Chopper WebShell"),
-                confidence: 90
+                confidence: 90,
+                algorithm:  'directory_reflect'
             }
         }
     }
@@ -1066,7 +1076,8 @@ plugin.register('readFile', function (params, context) {
             return {
                 action:     algorithmConfig.readFile_userinput.action,
                 message:    _("Path traversal - Downloading files specified by userinput, file is %1%", [params.realpath]),
-                confidence: 90
+                confidence: 90,
+                algorithm: 'readFile_userinput'
             }
         }
 
@@ -1085,7 +1096,8 @@ plugin.register('readFile', function (params, context) {
                     return {
                         action:     algorithmConfig.readFile_userinput_http.action,
                         message:    _("SSRF - Requesting http/https resource with file streaming functions, URL is %1%", [params.path]),
-                        confidence: 90
+                        confidence: 90,
+                        algorithm:  'readFile_userinput_http'
                     }
                 }
             }
@@ -1100,7 +1112,8 @@ plugin.register('readFile', function (params, context) {
                     return {
                         action:     algorithmConfig.readFile_userinput_unwanted.action,
                         message:    _("Path traversal - Requesting unwanted protocol %1%://", [proto]),
-                        confidence: 90
+                        confidence: 90,
+                        algorithm:  'readFile_userinput_unwanted'
                     }
                 }
             }
@@ -1120,14 +1133,15 @@ plugin.register('readFile', function (params, context) {
                 return {
                     action:     algorithmConfig.readFile_unwanted.action,
                     message:    _("WebShell activity - Accessing sensitive file %1%", [params.realpath]),
-                    confidence: 90
+                    confidence: 90,
+                    algorithm:  'readFile_unwanted'
                 }
             }
         }
     }
 
     //
-    // 算法3: 检查文件遍历，看是否超出web目录范围
+    // 算法3: 检查文件遍历，看是否超出web目录范围 [容易误报~]
     //
     if (algorithmConfig.readFile_outsideWebroot.action != 'ignore')
     {
@@ -1138,7 +1152,8 @@ plugin.register('readFile', function (params, context) {
             return {
                 action:     algorithmConfig.readFile_outsideWebroot.action,
                 message:    _("Path traversal - accessing files outside webroot (%1%), file is %2%", [appBasePath, params.realpath]),
-                confidence: 90
+                confidence: 90,
+                algorithm:  'readFile_outsideWebroot'
             }
         }
     }
@@ -1163,7 +1178,8 @@ plugin.register('include', function (params, context) {
             return {
                 action:     algorithmConfig.include_userinput.action,
                 message:    _("File inclusion - including files specified by user input"),
-                confidence: 100                
+                confidence: 100，
+                algorithm:  'include_userinput'
             }
         }
     }
@@ -1183,7 +1199,8 @@ plugin.register('include', function (params, context) {
             return {
                 action:     algorithmConfig.include_protocol.action,
                 message:    _("File inclusion - using unwanted protocol '%1%://' with funtion %2%()", [proto, params.function]),
-                confidence: 90
+                confidence: 90,
+                algorithm:  'include_protocol'
             }
         }
     }
@@ -1208,7 +1225,8 @@ plugin.register('writeFile', function (params, context) {
             return {
                 action:     algorithmConfig.writeFile_NTFS.action,
                 message:    _("File write - Writing NTFS alternative data streams", [params.realpath]),
-                confidence: 90
+                confidence: 95,
+                algorithm:  'writeFile_NTFS'
             }
         }
     }
@@ -1222,7 +1240,8 @@ plugin.register('writeFile', function (params, context) {
             return {
                 action:     algorithmConfig.writeFile_PUT_script.action,
                 message:    _("File upload - Using HTTP PUT method to upload a webshell", [params.realpath]),
-                confidence: 90
+                confidence: 95,
+                algorithm:  'writeFile_PUT_script'
             }
         }
     }
@@ -1236,7 +1255,8 @@ plugin.register('writeFile', function (params, context) {
             return {
                 action:     algorithmConfig.writeFile_script.action,
                 message:    _("File write - Creating or appending to a server-side script file, file is %1%", [params.realpath]),
-                confidence: 90
+                confidence: 85,
+                algorithm:  'writeFile_script'
             }
         }
     }
@@ -1257,7 +1277,8 @@ plugin.register('fileUpload', function (params, context) {
             return {
                 action:     algorithmConfig.fileUpload_multipart_script.action,
                 message:    _("File upload - Uploading a server-side script file with multipart/form-data protocol, filename: %1%", [params.filename]),
-                confidence: 90
+                confidence: 95,
+                algorithm:  'fileUpload_multipart_script'
             }
         }
 
@@ -1266,7 +1287,8 @@ plugin.register('fileUpload', function (params, context) {
             return {
                 action:     algorithmConfig.fileUpload_multipart_script.action,
                 message:    _("File upload - Uploading a server-side config file with multipart/form-data protocol, filename: %1%", [params.filename]),
-                confidence: 90
+                confidence: 95,
+                algorithm:  'fileUpload_multipart_script'
             }
         }
     }
@@ -1279,7 +1301,8 @@ plugin.register('fileUpload', function (params, context) {
             return {
                 action:     algorithmConfig.fileUpload_multipart_html.action,
                 message:    _("File upload - Uploading a HTML/JS file with multipart/form-data protocol", [params.filename]),
-                confidence: 90
+                confidence: 90,
+                algorithm:  'fileUpload_multipart_html'
             }
         }
     }    
@@ -1301,7 +1324,8 @@ if (algorithmConfig.fileUpload_webdav.action != 'ignore')
                 message:   _("File upload - Uploading a server-side script file with HTTP method %1%, file is %2%", [
                     context.method, params.dest
                 ]),
-                confidence: 100
+                confidence: 100,
+                algorithm:  'fileUpload_webdav'
             }
         }
 
@@ -1321,7 +1345,8 @@ if (algorithmConfig.rename_webshell.action != 'ignore')
                 message:   _("File upload - Renaming a non-script file to server-side script file, source file is %1%", [
                     params.source
                 ]),
-                confidence: 100
+                confidence: 90,
+                algorithm:  'rename_webshell'
             }
         }
 
@@ -1395,7 +1420,8 @@ plugin.register('command', function (params, context) {
             return {
                 action:     algorithmConfig.command_reflect.action,
                 message:    message,
-                confidence: 100
+                confidence: 100,
+                algorithm:  'command_reflect'
             }
         }
     }
@@ -1415,7 +1441,8 @@ plugin.register('command', function (params, context) {
             return {
                 action:     algorithmConfig.command_userinput.action,
                 message:    _("WebShell detected - Executing command: %1%", [cmd]),
-                confidence: 100
+                confidence: 100,
+                algorithm:  'command_userinput'
             }
         }
 
@@ -1429,7 +1456,8 @@ plugin.register('command', function (params, context) {
         return {
             action:     algorithmConfig.command_other.action,
             message:    _("Command execution - Logging all command execution by default, command is %1%", [cmd]),
-            confidence: 90
+            confidence: 90,
+            algorithm:  'command_other'
         }
     }
 
@@ -1446,7 +1474,8 @@ plugin.register('xxe', function (params, context) {
             return {
                 action:     algorithmConfig.xxe_protocol.action,
                 message:    _("XXE - Using dangerous protocol SMB"),
-                confidence: 100
+                confidence: 100,
+                algorithm:  'xxe_protocol'
             }                
         }        
     }
@@ -1461,7 +1490,8 @@ plugin.register('xxe', function (params, context) {
                 return {
                     action:     algorithmConfig.xxe_protocol.action,
                     message:    _("XXE - Using dangerous protocol %1%", [protocol]),
-                    confidence: 100
+                    confidence: 100,
+                    algorithm:  'xxe_protocol'
                 }
             }
 
@@ -1485,7 +1515,8 @@ plugin.register('xxe', function (params, context) {
                     return {
                         action:     algorithmConfig.xxe_file.action,
                         message:    _("XXE - Accessing file %1%", [address]),
-                        confidence: 90
+                        confidence: 90,
+                        algorithm:  'xxe_file'
                     }
                 }
             } 
@@ -1526,7 +1557,8 @@ if (algorithmConfig.ognl_exec.action != 'ignore')
                 return {
                     action:     algorithmConfig.ognl_exec.action,
                     message:    _("OGNL exec - Trying to exploit a OGNL expression vulnerability"),
-                    confidence: 100
+                    confidence: 100,
+                    algorithm:  'ognl_exec'
                 }
             }
 
@@ -1554,7 +1586,8 @@ if (algorithmConfig.transformer_deser.action != 'ignore') {
                 return {
                     action:     algorithmConfig.transformer_deser.action,
                     message:    _("Transformer deserialization - unknown deserialize vulnerability detected"),
-                    confidence: 100
+                    confidence: 100,
+                    algorithm:  'transformer_deser'
                 }
             }
         }
