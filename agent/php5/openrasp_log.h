@@ -79,7 +79,7 @@ class RaspLoggerEntry
     long last_logged_time = 0;
 
     severity_level level = LEVEL_INFO;
-    log_appender appender = FSTREAM_APPENDER;
+    log_appender appender = NULL_APPENDER;
     log_appender appender_mask = NULL_APPENDER;
 
     long time_offset;
@@ -97,8 +97,8 @@ class RaspLoggerEntry
     void update_formatted_date_suffix();
     void clear_formatted_date_suffix();
     bool comsume_token_if_available(TSRMLS_D);
-    bool check_log_level(severity_level level_int);
-    bool if_need_update_formatted_file_suffix(long now);
+    bool check_log_level(severity_level level_int) const;
+    bool if_need_update_formatted_file_suffix(long now) const;
     bool openrasp_log_stream_available(log_appender appender_int TSRMLS_DC);
     bool raw_log(severity_level level_int, const char *message, int message_len TSRMLS_DC);
 
@@ -106,14 +106,16 @@ class RaspLoggerEntry
     static const char *default_log_suffix;
     static const char *rasp_rfc3339_format;
 
+    RaspLoggerEntry();
     RaspLoggerEntry(const char *name, severity_level level, log_appender appender, log_appender appender_mask);
     RaspLoggerEntry(const RaspLoggerEntry &src) = delete;
+
     void init(log_appender appender_int TSRMLS_DC);
     void clear(TSRMLS_D);
     bool log(severity_level level_int, const char *message, int message_len TSRMLS_DC, bool detail = true);
     bool log(severity_level level_int, zval *params_result TSRMLS_DC);
-    char *get_formatted_date_suffix();
-    zval *get_common_info(TSRMLS_D);
+    char *get_formatted_date_suffix() const;
+    zval *get_common_info(TSRMLS_D) const;
 };
 
 typedef RaspLoggerEntry rasp_logger_entry;

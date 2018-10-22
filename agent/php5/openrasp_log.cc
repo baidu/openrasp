@@ -326,9 +326,17 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
     openrasp_log_globals->plugin_logger = std::move(RaspLoggerEntry(PLUGIN_LOG_DIR_NAME, LEVEL_INFO, FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
 }
 
+static void openrasp_log_shutdown_globals(zend_openrasp_log_globals *openrasp_log_globals TSRMLS_DC)
+{
+    //make sure release dynamic alloc memory
+    openrasp_log_globals->alarm_logger.clear(TSRMLS_C);
+    openrasp_log_globals->policy_logger.clear(TSRMLS_C);
+    openrasp_log_globals->plugin_logger.clear(TSRMLS_C);
+}
+
 PHP_MINIT_FUNCTION(openrasp_log)
 {
-    ZEND_INIT_MODULE_GLOBALS(openrasp_log, openrasp_log_init_globals, NULL);
+    ZEND_INIT_MODULE_GLOBALS(openrasp_log, openrasp_log_init_globals, openrasp_log_shutdown_globals);
     if (check_sapi_need_alloc_shm())
     {
         openrasp_shared_alloc_startup();
@@ -371,6 +379,11 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_log)
 
 const char *RaspLoggerEntry::default_log_suffix = "%Y-%m-%d";
 const char *RaspLoggerEntry::rasp_rfc3339_format = "%Y-%m-%dT%H:%M:%S%z";
+
+RaspLoggerEntry::RaspLoggerEntry()
+    : name("invalid")
+{
+}
 
 RaspLoggerEntry::RaspLoggerEntry(const char *name, severity_level level, log_appender appender, log_appender appender_mask)
     : name(name),
@@ -453,7 +466,7 @@ void RaspLoggerEntry::close_streams(TSRMLS_D)
     }
 }
 
-bool RaspLoggerEntry::check_log_level(severity_level level_int)
+bool RaspLoggerEntry::check_log_level(severity_level level_int) const
 {
     if (level >= LEVEL_DEBUG)
     {
@@ -510,7 +523,7 @@ bool RaspLoggerEntry::comsume_token_if_available(TSRMLS_D)
     return true;
 }
 
-bool RaspLoggerEntry::if_need_update_formatted_file_suffix(long now)
+bool RaspLoggerEntry::if_need_update_formatted_file_suffix(long now) const
 {
     int last_logged_second = last_logged_time / 1000;
     if (!same_day_in_current_timezone(now, last_logged_second, time_offset))
@@ -829,12 +842,12 @@ void RaspLoggerEntry::clear_common_info()
     }
 }
 
-char *RaspLoggerEntry::get_formatted_date_suffix()
+char *RaspLoggerEntry::get_formatted_date_suffix() const
 {
     return formatted_date_suffix;
 }
 
-zval *RaspLoggerEntry::get_common_info(TSRMLS_D)
+zval *RaspLoggerEntry::get_common_info(TSRMLS_D) const
 {
     return common_info;
 }

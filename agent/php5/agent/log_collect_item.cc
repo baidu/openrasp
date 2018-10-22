@@ -50,7 +50,7 @@ LogCollectItem::LogCollectItem(const std::string name, const std::string url_pat
     }
 }
 
-inline std::string LogCollectItem::get_base_dir_path()
+inline std::string LogCollectItem::get_base_dir_path() const
 {
     std::string default_slash(1, DEFAULT_SLASH);
     return std::string(openrasp_ini.root_dir) + default_slash + "logs" + default_slash + name + default_slash;
@@ -62,7 +62,7 @@ inline void LogCollectItem::update_curr_suffix()
                               strlen(RaspLoggerEntry::default_log_suffix), (long)time(NULL));
 }
 
-std::string LogCollectItem::get_active_log_file()
+std::string LogCollectItem::get_active_log_file() const
 {
     return get_base_dir_path() + name + ".log." + curr_suffix;
 }
@@ -92,7 +92,7 @@ void LogCollectItem::determine_fpos(TSRMLS_D)
     }
 }
 
-void LogCollectItem::save_status_snapshot()
+void LogCollectItem::save_status_snapshot() const
 {
     rapidjson::StringBuffer s;
     rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(s);
@@ -129,7 +129,7 @@ void LogCollectItem::update_status()
 #endif
 }
 
-std::string LogCollectItem::get_cpmplete_url()
+std::string LogCollectItem::get_cpmplete_url() const
 {
     return std::string(openrasp_ini.backend_url) + url_path;
 }
@@ -161,7 +161,7 @@ bool LogCollectItem::get_post_logs(std::string &body)
     return true;
 }
 
-bool LogCollectItem::need_rotate()
+bool LogCollectItem::need_rotate() const
 {
     long now = (long)time(NULL);
     return !same_day_in_current_timezone(now, last_post_time, LogCollectItem::time_offset);
@@ -189,7 +189,7 @@ void LogCollectItem::clear()
     st_ino = 0;
 }
 
-void LogCollectItem::cleanup_expired_logs(TSRMLS_D)
+void LogCollectItem::cleanup_expired_logs(TSRMLS_D) const
 {
     long log_max_backup = 30;
     if (nullptr != scm && scm->get_log_max_backup() > 0)
