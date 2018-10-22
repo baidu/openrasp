@@ -276,12 +276,6 @@ bool same_day_in_current_timezone(long src, long target, long offset)
     return ((src + offset) / day == (target + offset) / day);
 }
 
-char *openrasp_format_date(const char *format, int format_len, time_t ts)
-{
-    std::string format_date = format_time(format, format_len, ts);
-    return estrdup(format_date.c_str());
-}
-
 std::string format_time(const char *format, int format_len, time_t ts)
 {
     char buffer[128];
@@ -319,6 +313,18 @@ long get_file_st_ino(std::string &filename TSRMLS_DC)
         return (long)sb.st_ino;
     }
     return 0;
+}
+
+bool write_str_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len)
+{
+    std::ofstream out_file(file, mode);
+    if (out_file.is_open() && out_file.good())
+    {
+        out_file.write(content, content_len);
+        out_file.close();
+        return true;
+    }
+    return false;
 }
 
 void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)

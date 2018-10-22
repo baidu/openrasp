@@ -107,12 +107,16 @@ void LogCollectItem::save_status_snapshot() const
     writer.Int64(st_ino);
     writer.EndObject();
     std::string status_file_abs = get_base_dir_path() + LogCollectItem::status_file;
-    std::ofstream out_file(status_file_abs, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
-    if (out_file.is_open() && out_file.good())
-    {
-        out_file << s.GetString();
-        out_file.close();
-    }
+#ifndef _WIN32
+    mode_t oldmask = umask(0);
+#endif
+    write_str_to_file(status_file_abs.c_str(),
+                      std::ofstream::in | std::ofstream::out | std::ofstream::trunc,
+                      s.GetString(),
+                      s.GetSize());
+#ifndef _WIN32
+    umask(oldmask);
+#endif
 }
 
 void LogCollectItem::update_status()
@@ -120,13 +124,7 @@ void LogCollectItem::update_status()
     ifs.clear();
     fpos = ifs.tellg();
     last_post_time = (long)time(NULL);
-#ifndef _WIN32
-    mode_t oldmask = umask(0);
-#endif
     save_status_snapshot();
-#ifndef _WIN32
-    umask(oldmask);
-#endif
 }
 
 std::string LogCollectItem::get_cpmplete_url() const

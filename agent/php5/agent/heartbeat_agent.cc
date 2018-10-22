@@ -199,11 +199,18 @@ bool HeartBeatAgent::update_config(zval *config_zv, long config_time, bool *has_
 		}
 	}
 	std::string cloud_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/cloud-config.json";
-	std::ofstream out_file(cloud_config_file_path, std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
-	if (out_file.is_open() && out_file.good())
+#ifndef _WIN32
+	mode_t oldmask = umask(0);
+#endif
+	bool write_ok = write_str_to_file(cloud_config_file_path.c_str(),
+									  std::ofstream::in | std::ofstream::out | std::ofstream::trunc,
+									  config_string.c_str(),
+									  config_string.length());
+#ifndef _WIN32
+	umask(oldmask);
+#endif
+	if (write_ok)
 	{
-		out_file << config_string;
-		out_file.close();
 		scm->set_config_last_update(config_time);
 	}
 	else

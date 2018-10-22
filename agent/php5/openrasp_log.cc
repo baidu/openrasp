@@ -740,15 +740,9 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message TSRMLS_DC)
     add_assoc_zval(common_info, "stack_trace", trace);
     if (php_array_merge(Z_ARRVAL_P(common_info), Z_ARRVAL_P(z_message), 1 TSRMLS_CC))
     {
-        smart_str buf_json = {0};
-        php_json_encode(&buf_json, common_info, 0 TSRMLS_CC);
-        if (buf_json.a > buf_json.len)
-        {
-            buf_json.c[buf_json.len] = '\n';
-            buf_json.len++;
-        }
-        log_result = raw_log(level_int, buf_json.c, buf_json.len TSRMLS_CC);
-        smart_str_free(&buf_json);
+        std::string str_message = json_encode_from_zval(common_info TSRMLS_CC);
+        str_message.push_back('\n');
+        log_result = raw_log(level_int, str_message.c_str(), str_message.length() TSRMLS_CC);
         delete_merged_array_keys(Z_ARRVAL_P(common_info), Z_ARRVAL_P(z_message));
     }
     else

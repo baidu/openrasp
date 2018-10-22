@@ -19,6 +19,7 @@
 
 #include "openrasp.h"
 #include <string>
+#include <fstream>
 #include <vector>
 #include <map>
 #include <functional>
@@ -31,6 +32,7 @@ const char *fetch_url_scheme(const char *filename);
 bool file_exist(const char *abs_path TSRMLS_DC);
 long get_file_st_ino(std::string &filename TSRMLS_DC);
 int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC);
+bool write_str_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len);
 void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins,
                       std::function<bool(const char *filename)> file_filter, bool use_abs_path = false);
 
