@@ -69,6 +69,13 @@ PHP_MINIT_FUNCTION(openrasp_v8)
     // but intern code initializes v8 only once
     v8::V8::Initialize();
 
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+    if (openrasp_ini.remote_management_enable && oam != nullptr)
+    {
+        return SUCCESS;
+    }
+#endif
+
     load_plugins(TSRMLS_C);
 
     if (!process_globals.snapshot_blob)
