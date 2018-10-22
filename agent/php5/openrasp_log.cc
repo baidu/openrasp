@@ -286,8 +286,8 @@ static char *fetch_request_body(size_t max_len TSRMLS_DC)
 static bool verify_syslog_address_format(TSRMLS_D)
 {
     bool result = false;
-    bool syslog_alarm_enable = OPENRASP_CONFIG(syslog_alarm_enable);
-    std::string syslog_address = OPENRASP_CONFIG(syslog_server_address);
+    bool syslog_alarm_enable = OPENRASP_CONFIG(syslog.enable);
+    std::string syslog_address = OPENRASP_CONFIG(syslog.server_url);
     if (syslog_alarm_enable && !syslog_address.empty())
     {
         php_url *resource = php_url_parse_ex(syslog_address.c_str(), syslog_address.length());
@@ -433,6 +433,7 @@ void RaspLoggerEntry::clear_formatted_date_suffix()
     if (formatted_date_suffix != nullptr)
     {
         efree(formatted_date_suffix);
+        formatted_date_suffix = nullptr;
     }
 }
 
@@ -534,18 +535,18 @@ bool RaspLoggerEntry::openrasp_log_stream_available(log_appender appender_int TS
         else
         {
             long now = (long)time(nullptr);
-            if ((now - syslog_reconnect_time) > OPENRASP_CONFIG(syslog_reconnect_interval))
+            if ((now - syslog_reconnect_time) > OPENRASP_CONFIG(syslog.reconnect_interval))
             {
                 struct timeval tv;
                 tv.tv_sec = 0;
-                tv.tv_usec = OPENRASP_CONFIG(syslog_connection_timeout) * 1000;
-                res_len = spprintf(&res, 0, "%s", OPENRASP_CONFIG(syslog_server_address).c_str());
+                tv.tv_usec = OPENRASP_CONFIG(syslog.connection_timeout) * 1000;
+                res_len = spprintf(&res, 0, "%s", OPENRASP_CONFIG(syslog.server_url).c_str());
                 stream = php_stream_xport_create(res, res_len, REPORT_ERRORS,
                                                  STREAM_XPORT_CLIENT | STREAM_XPORT_CONNECT, 0, &tv, NULL, NULL, NULL);
                 if (stream)
                 {
                     tv.tv_sec = 0;
-                    tv.tv_usec = OPENRASP_CONFIG(syslog_read_timeout) * 1000;
+                    tv.tv_usec = OPENRASP_CONFIG(syslog.read_timeout) * 1000;
                     php_stream_set_option(stream, PHP_STREAM_OPTION_READ_TIMEOUT, 0, &tv);
                     syslog_stream = stream;
                     return true;
@@ -553,7 +554,7 @@ bool RaspLoggerEntry::openrasp_log_stream_available(log_appender appender_int TS
                 else
                 {
                     openrasp_error(E_WARNING, LOG_ERROR,
-                                   _("Unable to contact syslog server %s"), OPENRASP_CONFIG(syslog_server_address).c_str());
+                                   _("Unable to contact syslog server %s"), OPENRASP_CONFIG(syslog.server_url).c_str());
                 }
                 efree(res);
                 syslog_reconnect_time = now;
@@ -640,7 +641,7 @@ bool RaspLoggerEntry::raw_log(severity_level level_int, const char *message, int
 
             long now = (long)time(NULL);
             time_RFC3339 = openrasp_format_date(RaspLoggerEntry::rasp_rfc3339_format, strlen(RaspLoggerEntry::rasp_rfc3339_format), now);
-            priority = OPENRASP_CONFIG(syslog_facility) * 8 + level_int;
+            priority = OPENRASP_CONFIG(syslog.facility) * 8 + level_int;
             syslog_info_len = spprintf(&syslog_info, 0, "<%d>%s %s: %s", priority, time_RFC3339, host_name, message);
             efree(time_RFC3339);
             php_stream_write(syslog_stream, message, message_len);
@@ -681,9 +682,10 @@ bool RaspLoggerEntry::log(severity_level level_int, const char *message, int mes
     {
         init(FILE_APPENDER TSRMLS_CC);
     }
+    bool log_result = false;
     if (!detail)
     {
-        return raw_log(level_int, message, message_len TSRMLS_CC);
+        log_result = raw_log(level_int, message, message_len TSRMLS_CC);
     }
     else
     {
@@ -691,11 +693,15 @@ bool RaspLoggerEntry::log(severity_level level_int, const char *message, int mes
         char *time_RFC3339 = openrasp_format_date(RaspLoggerEntry::rasp_rfc3339_format,
                                                   strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
         int log_info_len = spprintf(&log_info, 0, "%s %s\n", time_RFC3339, message);
-        int log_result = raw_log(level_int, log_info, log_info_len TSRMLS_CC);
+        log_result = raw_log(level_int, log_info, log_info_len TSRMLS_CC);
         efree(time_RFC3339);
         efree(log_info);
-        return log_result;
     }
+    if (!in_request) //out of request
+    {
+        clear(TSRMLS_C);
+    }
+    return log_result;
 }
 
 bool RaspLoggerEntry::log(severity_level level_int, zval *z_message TSRMLS_DC)
@@ -743,7 +749,7 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message TSRMLS_DC)
     efree(event_time);
     if (!in_request) //out of request
     {
-        clear_common_info();
+        clear(TSRMLS_C);
     }
     return log_result;
 }

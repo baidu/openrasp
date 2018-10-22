@@ -47,12 +47,15 @@ public:
     int64_t maxstack = 10;
     int64_t maxbackup = 30;
   } log;
-  string syslog_server_address;
-  int64_t syslog_facility = 1;
-  bool syslog_alarm_enable = false;
-  int64_t syslog_connection_timeout = 50;
-  int64_t syslog_read_timeout = 10;
-  int64_t syslog_reconnect_interval = 300;
+  struct
+  {
+    string server_url;
+    int64_t facility = 1;
+    bool enable = false;
+    int64_t connection_timeout = 50;
+    int64_t read_timeout = 10;
+    int64_t reconnect_interval = 300;
+  } syslog;
   // blacklist whitelist
   struct
   {
