@@ -175,7 +175,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
                 params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
                 efree(real_path);
                 params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, function));
-                is_block = isolate->Check(openrasp::NewV8String(isolate, CheckTypeNameMap.at(INCLUDE)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+                is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(INCLUDE)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
             if (is_block)
             {

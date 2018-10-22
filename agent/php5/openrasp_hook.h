@@ -195,6 +195,7 @@ void slow_query_alarm(int rows TSRMLS_DC);
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
 void sql_type_handler(char *query, int query_len, char *server TSRMLS_DC);
 long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count, zval *params[] TSRMLS_DC);
+const std::string get_check_type_name(OpenRASPCheckType check_type);
 
 typedef enum hook_position_t
 {

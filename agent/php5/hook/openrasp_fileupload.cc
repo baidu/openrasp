@@ -79,7 +79,7 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
                     params->Set(openrasp::NewV8String(isolate, "filename"), openrasp::NewV8String(isolate, Z_STRVAL_PP(realname), Z_STRLEN_PP(realname)));
                     params->Set(openrasp::NewV8String(isolate, "content"), openrasp::NewV8String(isolate, contents, MIN(len, 4 * 1024)));
                     efree(contents);
-                    is_block = isolate->Check(openrasp::NewV8String(isolate, CheckTypeNameMap.at(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+                    is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
                 }
                 if (is_block)
                 {

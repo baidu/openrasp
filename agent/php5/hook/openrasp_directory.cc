@@ -73,7 +73,7 @@ static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
                 params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, resolved_path_buff));
                 efree(resolved_path_buff);
                 params->Set(openrasp::NewV8String(isolate, "stack"), stack);
-                is_block = isolate->Check(openrasp::NewV8String(isolate, CheckTypeNameMap.at(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+                is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
             if (is_block)
             {

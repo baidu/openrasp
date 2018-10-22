@@ -66,6 +66,19 @@ typedef struct _track_vars_pair_t
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_hook)
 
+const std::string get_check_type_name(OpenRASPCheckType check_type)
+{
+    auto it = CheckTypeNameMap.find(check_type);
+    if (it != CheckTypeNameMap.end())
+    {
+        return it->second;
+    }
+    else
+    {
+        return "unknown";
+    }
+}
+
 //return value estrdup
 char *openrasp_real_path(char *filename, int filename_len, bool use_include_path, uint32_t w_op TSRMLS_DC)
 {
@@ -193,7 +206,8 @@ void openrasp_buildin_php_risk_handle(zend_bool is_block, OpenRASPCheckType type
     MAKE_STD_ZVAL(params_result);
     array_init(params_result);
     add_assoc_string(params_result, "intercept_state", const_cast<char *>(is_block ? "block" : "log"), 1);
-    add_assoc_string(params_result, "attack_type", (char *)CheckTypeNameMap.at(type).c_str(), 1);
+    add_assoc_string(params_result, "attack_type", (char *)get_check_type_name(type).c_str(), 1);
+    add_assoc_string(params_result, "algorithm", (char *)get_check_type_name(type).c_str(), 1);
     add_assoc_string(params_result, "plugin_name", const_cast<char *>("php_builtin_plugin"), 1);
     add_assoc_long(params_result, "plugin_confidence", confidence);
     add_assoc_zval(params_result, "attack_params", params);
@@ -320,7 +334,7 @@ void check(OpenRASPCheckType check_type, zval *z_params TSRMLS_DC)
     if (LIKELY(isolate))
     {
         v8::HandleScope handlescope(isolate);
-        auto type = NewV8String(isolate, CheckTypeNameMap.at(check_type));
+        auto type = NewV8String(isolate, get_check_type_name(check_type));
         auto params = v8::Local<v8::Object>::Cast(zval_to_v8val(isolate, z_params TSRMLS_CC));
         zval_ptr_dtor(&z_params);
         result = isolate->Check(type, params, OPENRASP_CONFIG(plugin.timeout.millis));
