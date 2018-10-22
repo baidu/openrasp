@@ -27,11 +27,12 @@
 namespace openrasp
 {
 const long LogCollectItem::time_offset = fetch_time_offset();
-const std::string LogCollectItem::status_file = "status.json";
+const std::string LogCollectItem::status_file = ".status.json";
 
-LogCollectItem::LogCollectItem(const std::string name, const std::string url_path TSRMLS_DC)
+LogCollectItem::LogCollectItem(const std::string name, const std::string url_path, bool collect_enable TSRMLS_DC)
     : name(name),
-      url_path(url_path)
+      url_path(url_path),
+      collect_enable(collect_enable)
 {
     // update_curr_suffix();
     std::string status_file_abs = get_base_dir_path() + LogCollectItem::status_file;
@@ -133,27 +134,31 @@ std::string LogCollectItem::get_cpmplete_url()
     return std::string(openrasp_ini.backend_url) + url_path;
 }
 
-std::string LogCollectItem::get_post_logs()
+bool LogCollectItem::get_post_logs(std::string &body)
 {
-    std::string buffer;
+    if (!collect_enable)
+    {
+        return false;
+    }
     std::string line;
-    buffer.push_back('[');
+    body.push_back('[');
     int count = 0;
     while (std::getline(ifs, line) &&
            !line.empty() &&
            count < LogAgent::max_post_logs_account)
     {
-        buffer.append(line);
-        buffer.push_back(',');
+        body.append(line);
+        body.push_back(',');
         ++count;
     }
-    buffer.pop_back();
-    buffer.push_back(']');
+    body.pop_back();
+    body.push_back(']');
     if (0 == count)
     {
-        buffer.clear();
+        body.clear();
+        return false;
     }
-    return buffer;
+    return true;
 }
 
 bool LogCollectItem::need_rotate()

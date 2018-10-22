@@ -39,7 +39,6 @@ void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC);
 std::string format_debug_backtrace_str(TSRMLS_D);
 void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC);
 
-char *openrasp_format_date(const char *format, int format_len, time_t ts);
 std::string format_time(const char *format, int format_len, time_t ts);
 
 void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map);

@@ -57,11 +57,10 @@ void LogAgent::run()
 		});
 
 	CURL *curl = nullptr;
-	LogCollectItem alarm_dir_info(ALARM_LOG_DIR_NAME, "/v1/agent/log/attack" TSRMLS_CC);
-	LogCollectItem policy_dir_info(POLICY_LOG_DIR_NAME, "/v1/agent/log/policy" TSRMLS_CC);
-	LogCollectItem plugin_dir_info(PLUGIN_LOG_DIR_NAME, "/v1/agent/log/plugin" TSRMLS_CC);
-	LogCollectItem rasp_dir_info(RASP_LOG_DIR_NAME, "/v1/agent/log/rasp" TSRMLS_CC);
-	std::vector<LogCollectItem *> log_dirs{&alarm_dir_info, &policy_dir_info};
+	LogCollectItem alarm_dir_info(ALARM_LOG_DIR_NAME, "/v1/agent/log/attack", true TSRMLS_CC);
+	LogCollectItem policy_dir_info(POLICY_LOG_DIR_NAME, "/v1/agent/log/policy", true TSRMLS_CC);
+	LogCollectItem plugin_dir_info(PLUGIN_LOG_DIR_NAME, "/v1/agent/log/plugin", false TSRMLS_CC);
+	std::vector<LogCollectItem *> log_dirs{&alarm_dir_info, &policy_dir_info, &plugin_dir_info};
 	while (true)
 	{
 		if (nullptr == curl)
@@ -79,9 +78,9 @@ void LogAgent::run()
 			if (file_exist(ldi->get_active_log_file().c_str() TSRMLS_CC))
 			{
 				ldi->determine_fpos(TSRMLS_C);
-				std::string post_body = ldi->get_post_logs();
+				std::string post_body;
 				std::string url = ldi->get_cpmplete_url();
-				if (!post_body.empty() &&
+				if (ldi->get_post_logs(post_body) &&
 					post_logs_via_curl(post_body, curl, url))
 				{
 					ldi->update_status();

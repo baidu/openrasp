@@ -422,9 +422,11 @@ void RaspLoggerEntry::update_formatted_date_suffix()
         {
             efree(formatted_date_suffix);
         }
-        formatted_date_suffix =
-            openrasp_format_date(RaspLoggerEntry::default_log_suffix,
-                                 strlen(RaspLoggerEntry::default_log_suffix), now);
+        formatted_date_suffix = estrdup(
+            format_time(
+                RaspLoggerEntry::default_log_suffix,
+                strlen(RaspLoggerEntry::default_log_suffix), now)
+                .c_str());
     }
 }
 
@@ -635,15 +637,13 @@ bool RaspLoggerEntry::raw_log(severity_level level_int, const char *message, int
         if (openrasp_log_stream_available(SYSLOG_APPENDER TSRMLS_CC))
         {
             char *syslog_info = NULL;
-            char *time_RFC3339 = NULL;
             int syslog_info_len = 0;
             int priority = 0;
 
             long now = (long)time(NULL);
-            time_RFC3339 = openrasp_format_date(RaspLoggerEntry::rasp_rfc3339_format, strlen(RaspLoggerEntry::rasp_rfc3339_format), now);
+            std::string time_RFC3339 = format_time(RaspLoggerEntry::rasp_rfc3339_format, strlen(RaspLoggerEntry::rasp_rfc3339_format), now);
             priority = OPENRASP_CONFIG(syslog.facility) * 8 + level_int;
-            syslog_info_len = spprintf(&syslog_info, 0, "<%d>%s %s: %s", priority, time_RFC3339, host_name, message);
-            efree(time_RFC3339);
+            syslog_info_len = spprintf(&syslog_info, 0, "<%d>%s %s: %s", priority, time_RFC3339.c_str(), host_name, message);
             php_stream_write(syslog_stream, message, message_len);
             efree(syslog_info);
         }
@@ -652,10 +652,10 @@ bool RaspLoggerEntry::raw_log(severity_level level_int, const char *message, int
     if (appender & FILE_APPENDER)
     {
         char *file_path = NULL;
-        char *tmp_formatted_date_suffix = openrasp_format_date(RaspLoggerEntry::default_log_suffix,
-                                                               strlen(RaspLoggerEntry::default_log_suffix), (long)time(NULL));
+        std::string tmp_formatted_date_suffix = format_time(RaspLoggerEntry::default_log_suffix,
+                                                            strlen(RaspLoggerEntry::default_log_suffix), (long)time(NULL));
         spprintf(&file_path, 0, "%s%clogs%c%s%c%s.log.%s", openrasp_ini.root_dir, DEFAULT_SLASH, DEFAULT_SLASH,
-                 name, DEFAULT_SLASH, name, tmp_formatted_date_suffix);
+                 name, DEFAULT_SLASH, name, tmp_formatted_date_suffix.c_str());
 #ifndef _WIN32
         mode_t oldmask = umask(0);
 #endif
@@ -669,7 +669,6 @@ bool RaspLoggerEntry::raw_log(severity_level level_int, const char *message, int
         umask(oldmask);
 #endif
         efree(file_path);
-        efree(tmp_formatted_date_suffix);
     }
 
     return true;
@@ -690,11 +689,10 @@ bool RaspLoggerEntry::log(severity_level level_int, const char *message, int mes
     else
     {
         char *log_info = nullptr;
-        char *time_RFC3339 = openrasp_format_date(RaspLoggerEntry::rasp_rfc3339_format,
-                                                  strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
-        int log_info_len = spprintf(&log_info, 0, "%s %s\n", time_RFC3339, message);
+        std::string time_RFC3339 = format_time(RaspLoggerEntry::rasp_rfc3339_format,
+                                               strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
+        int log_info_len = spprintf(&log_info, 0, "%s %s\n", time_RFC3339.c_str(), message);
         log_result = raw_log(level_int, log_info, log_info_len TSRMLS_CC);
-        efree(time_RFC3339);
         efree(log_info);
     }
     if (!in_request) //out of request
@@ -713,9 +711,9 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message TSRMLS_DC)
         init(FILE_APPENDER TSRMLS_CC);
     }
     bool log_result = false;
-    char *event_time = openrasp_format_date(RaspLoggerEntry::rasp_rfc3339_format,
-                                            strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
-    add_assoc_string(common_info, "event_time", event_time, 1);
+    std::string event_time = format_time(RaspLoggerEntry::rasp_rfc3339_format,
+                                         strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
+    add_assoc_string(common_info, "event_time", estrdup(event_time.c_str()), 0);
     zval *trace = NULL;
     MAKE_STD_ZVAL(trace);
     if (in_request)
@@ -746,7 +744,6 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message TSRMLS_DC)
     }
     zend_hash_del(Z_ARRVAL_P(common_info), "stack_trace", sizeof("stack_trace"));
     zend_hash_del(Z_ARRVAL_P(common_info), "event_time", sizeof("event_time"));
-    efree(event_time);
     if (!in_request) //out of request
     {
         clear(TSRMLS_C);

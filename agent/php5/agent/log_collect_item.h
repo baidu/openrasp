@@ -39,14 +39,15 @@ private:
   int fpos = 0;
   long st_ino = 0;
   long last_post_time = 0;
+  bool collect_enable = false;
 
 public:
-  LogCollectItem(const std::string name, const std::string url_path TSRMLS_DC);
+  LogCollectItem(const std::string name, const std::string url_path, bool collect_enable TSRMLS_DC);
   inline void update_curr_suffix();
   std::string get_active_log_file();
   void determine_fpos(TSRMLS_D);
   std::string get_cpmplete_url();
-  std::string get_post_logs();
+  bool get_post_logs(std::string &body);
   void update_status();
   bool need_rotate();
   void handle_rotate(bool need_rotate TSRMLS_DC);
