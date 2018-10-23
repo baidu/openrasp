@@ -166,6 +166,18 @@ PHP_RINIT_FUNCTION(openrasp)
     if (is_initialized)
     {
         int result;
+        long config_last_update = openrasp::scm->get_config_last_update();
+        if (config_last_update && config_last_update > OPENRASP_G(config).GetLatestUpdateTime())
+        {
+            if (load_config(&OPENRASP_G(config) TSRMLS_CC, false))
+            {
+                OPENRASP_G(config).SetLatestUpdateTime(config_last_update);
+            }
+            else
+            {
+                openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to load new config."));
+            }
+        }
         // openrasp_inject must be called before openrasp_log cuz of request_id
         result = PHP_RINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU);

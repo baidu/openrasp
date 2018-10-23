@@ -137,6 +137,8 @@ public:
   bool From(const string &config, FromType type);
   bool HasError() const { return has_error; };
   string GetErrorMessage() const { return error_message; };
+  long GetLatestUpdateTime() const { return latestUpdateTime; };
+  void SetLatestUpdateTime(long latestUpdateTime) { this->latestUpdateTime = latestUpdateTime; };
 
   template <typename T>
   T Get(const string &key, const T &default_value = T()) const
@@ -189,6 +191,7 @@ private:
   shared_ptr<cpptoml::table> tomlObj;
   bool has_error = true;
   string error_message = "Uninitialized";
+  long latestUpdateTime = 0;
 
   template <typename T>
   T GetFromJson(const string &key, const T &default_value) const;
