@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <list>
+#include <functional>
 
 namespace openrasp
 {
@@ -13,19 +14,20 @@ class LRU
 private:
   struct Item
   {
-    Item(const T &k, const U &v) : key(k), value(v) {}
-    T key;
+    Item(size_t k, const U &v) : key_hash(k), value(v) {}
+    size_t key_hash;
     U value;
   };
+  hash<T> hasher;
   list<Item> item_list;
-  unordered_map<T, typename list<Item>::iterator> item_map;
+  unordered_map<size_t, typename list<Item>::iterator> item_map;
   size_t max;
 
   void reorder(const typename list<Item>::iterator it)
   {
     if (it == item_list.begin() && size() > max)
     {
-      item_map.erase(item_list.back().key);
+      item_map.erase(item_list.back().key_hash);
       item_list.pop_back();
     }
     else
@@ -39,7 +41,8 @@ public:
 
   typename list<Item>::iterator get(const T &key)
   {
-    auto it = item_map.find(key);
+    size_t key_hash = hasher(key);
+    auto it = item_map.find(key_hash);
     if (it != item_map.end())
     {
       reorder(it->second);
@@ -52,7 +55,8 @@ public:
   }
   void set(const T &key, const U &value)
   {
-    auto it = item_map.find(key);
+    size_t key_hash = hasher(key);
+    auto it = item_map.find(key_hash);
     if (it != item_map.end())
     {
       if (it->second->value != value)
@@ -63,9 +67,9 @@ public:
     }
     else
     {
-      item_list.emplace_front(key, value);
+      item_list.emplace_front(key_hash, value);
       auto it = item_list.begin();
-      item_map.emplace(key, it);
+      item_map.emplace(key_hash, it);
       reorder(it);
     }
   }
