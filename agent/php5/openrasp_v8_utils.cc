@@ -94,11 +94,7 @@ v8::Local<v8::Value> zval_to_v8val(v8::Isolate *isolate, zval *val TSRMLS_DC)
                 }
                 else
                 {
-                    v8::Local<v8::String> v8_key;
-                    if (V8STRING_I(key).ToLocal(&v8_key))
-                    {
-                        obj->Set(v8_key, v8_value);
-                    }
+                    obj->Set(NewV8String(isolate, key), v8_value);
                 }
             }
         }
