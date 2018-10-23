@@ -28,7 +28,7 @@ Snapshot::Snapshot(const std::string &path, uint64_t timestamp) : Snapshot()
     this->data = buffer;
     this->raw_size = size;
 }
-Snapshot::Snapshot(const std::string &config, const std::vector<openrasp_v8_js_src> &plugin_list) : Snapshot()
+Snapshot::Snapshot(const std::string &config, const std::vector<PluginFile> &plugin_list) : Snapshot()
 {
     TSRMLS_FETCH();
     v8::SnapshotCreator creator(external_references);
@@ -53,13 +53,13 @@ Snapshot::Snapshot(const std::string &config, const std::vector<openrasp_v8_js_s
         global->Set(NewV8String(isolate, "stdout"), v8_stdout);
         global->Set(NewV8String(isolate, "stderr"), v8_stdout);
 
-        std::vector<openrasp_v8_js_src> internal_js_list = {
-            openrasp_v8_js_src{"console.js", {reinterpret_cast<const char *>(console_js), console_js_len}},
-            openrasp_v8_js_src{"checkpoint.js", {reinterpret_cast<const char *>(checkpoint_js), checkpoint_js_len}},
-            openrasp_v8_js_src{"error.js", {reinterpret_cast<const char *>(error_js), error_js_len}},
-            openrasp_v8_js_src{"context.js", {reinterpret_cast<const char *>(context_js), context_js_len}},
-            openrasp_v8_js_src{"sql_tokenize.js", {reinterpret_cast<const char *>(sql_tokenize_js), sql_tokenize_js_len}},
-            openrasp_v8_js_src{"rasp.js", {reinterpret_cast<const char *>(rasp_js), rasp_js_len}},
+        std::vector<PluginFile> internal_js_list = {
+            PluginFile{"console.js", {reinterpret_cast<const char *>(console_js), console_js_len}},
+            PluginFile{"checkpoint.js", {reinterpret_cast<const char *>(checkpoint_js), checkpoint_js_len}},
+            PluginFile{"error.js", {reinterpret_cast<const char *>(error_js), error_js_len}},
+            PluginFile{"context.js", {reinterpret_cast<const char *>(context_js), context_js_len}},
+            PluginFile{"sql_tokenize.js", {reinterpret_cast<const char *>(sql_tokenize_js), sql_tokenize_js_len}},
+            PluginFile{"rasp.js", {reinterpret_cast<const char *>(rasp_js), rasp_js_len}},
         };
         for (auto &js_src : internal_js_list)
         {

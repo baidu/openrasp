@@ -76,7 +76,7 @@ private:
   std::timed_mutex mtx;
 };
 
-class openrasp_v8_js_src
+class PluginFile
 {
 public:
   std::string filename;
@@ -94,7 +94,7 @@ public:
   Snapshot(const v8::StartupData &blob) : v8::StartupData(blob){};
   Snapshot(const char *data = nullptr, size_t raw_size = 0, uint64_t timestamp = 0);
   Snapshot(const std::string &path, uint64_t timestamp = 0);
-  Snapshot(const std::string &config, const std::vector<openrasp_v8_js_src> &plugin_list);
+  Snapshot(const std::string &config, const std::vector<PluginFile> &plugin_list);
   ~Snapshot() { delete[] data; };
   bool Save(const std::string &path) const; // check errno when return value is false
   bool IsOk() const { return data && raw_size; };
@@ -103,11 +103,6 @@ public:
 private:
   static void v8native_log(const v8::FunctionCallbackInfo<v8::Value> &info);
 };
-
-namespace RequestContext
-{
-v8::Local<v8::Object> New(v8::Isolate *isolate);
-}
 
 class Isolate : public v8::Isolate
 {
@@ -133,6 +128,7 @@ public:
 
   static Isolate *New(Snapshot *snapshot_blob);
   Data *GetData();
+  void SetData() = delete;
   void Dispose();
   bool IsExpired(uint64_t timestamp);
   static bool Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout = 100);
@@ -148,12 +144,13 @@ public:
   std::mutex mtx;
   bool is_initialized = false;
   std::string plugin_config;
-  std::vector<openrasp_v8_js_src> plugin_src_list;
+  std::vector<PluginFile> plugin_src_list;
 };
 
 extern openrasp_v8_process_globals process_globals;
 
-v8::Local<v8::Value> zval_to_v8val(v8::Isolate *isolate, zval *val TSRMLS_DC);
+v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val TSRMLS_DC);
+v8::Local<v8::Object> NewRequestContext(v8::Isolate *isolate);
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result);
 void load_plugins(TSRMLS_D);
 } // namespace openrasp

@@ -25,7 +25,7 @@ extern "C"
 
 namespace openrasp
 {
-v8::Local<v8::Value> zval_to_v8val(v8::Isolate *isolate, zval *val TSRMLS_DC)
+v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val TSRMLS_DC)
 {
     v8::Local<v8::Value> rst = v8::Undefined(isolate);
     switch (Z_TYPE_P(val))
@@ -63,7 +63,7 @@ v8::Local<v8::Value> zval_to_v8val(v8::Isolate *isolate, zval *val TSRMLS_DC)
             {
                 ht->nApplyCount++;
             }
-            v8::Local<v8::Value> v8_value = zval_to_v8val(isolate, *value TSRMLS_CC);
+            v8::Local<v8::Value> v8_value = NewV8ValueFromZval(isolate, *value TSRMLS_CC);
             if (ht)
             {
                 ht->nApplyCount--;
@@ -185,7 +185,7 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
 
 void load_plugins(TSRMLS_D)
 {
-    std::vector<openrasp_v8_js_src> plugin_src_list;
+    std::vector<PluginFile> plugin_src_list;
     std::string plugin_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("plugins"));
     dirent **ent = nullptr;
     int n_plugin = php_scandir(plugin_path.c_str(), &ent, nullptr, php_alphasort);
@@ -209,7 +209,7 @@ void load_plugins(TSRMLS_D)
                 {
                     std::string source((std::istreambuf_iterator<char>(file)),
                                        std::istreambuf_iterator<char>());
-                    plugin_src_list.emplace_back(openrasp_v8_js_src{filename, source});
+                    plugin_src_list.emplace_back(PluginFile{filename, source});
                 }
                 else
                 {
