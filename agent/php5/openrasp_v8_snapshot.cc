@@ -45,13 +45,13 @@ Snapshot::Snapshot(const std::string &config, const std::vector<openrasp_v8_js_s
         v8::Context::Scope context_scope(context);
         v8::TryCatch try_catch;
         v8::Local<v8::Object> global = context->Global();
-        global->Set(V8STRING_I("global").ToLocalChecked(), global);
-        global->Set(V8STRING_I("window").ToLocalChecked(), global);
+        global->Set(NewV8String(isolate, "global"), global);
+        global->Set(NewV8String(isolate, "window"), global);
         v8::Local<v8::Function> log = v8::Function::New(isolate, v8native_log);
         v8::Local<v8::Object> v8_stdout = v8::Object::New(isolate);
-        v8_stdout->Set(V8STRING_I("write").ToLocalChecked(), log);
-        global->Set(V8STRING_I("stdout").ToLocalChecked(), v8_stdout);
-        global->Set(V8STRING_I("stderr").ToLocalChecked(), v8_stdout);
+        v8_stdout->Set(NewV8String(isolate, "write"), log);
+        global->Set(NewV8String(isolate, "stdout"), v8_stdout);
+        global->Set(NewV8String(isolate, "stderr"), v8_stdout);
 
         std::vector<openrasp_v8_js_src> internal_js_list = {
             openrasp_v8_js_src{"console.js", {reinterpret_cast<const char *>(console_js), console_js_len}},

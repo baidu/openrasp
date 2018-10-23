@@ -36,12 +36,6 @@
 
 namespace openrasp
 {
-#define LOG(msg) \
-  std::cerr << msg << std::endl;
-
-#define TRYCATCH() \
-  v8::TryCatch try_catch
-
 inline v8::Local<v8::String> NewV8String(v8::Isolate *isolate, const char *str, size_t len = -1)
 {
   return v8::String::NewFromUtf8(isolate, str, v8::NewStringType::kNormal, len).ToLocalChecked();
@@ -51,15 +45,6 @@ inline v8::Local<v8::String> NewV8String(v8::Isolate *isolate, const std::string
 {
   return NewV8String(isolate, str.c_str(), str.length());
 }
-
-#define V8STRING_EX(string, type, length) \
-  (v8::String::NewFromUtf8(isolate, string, type, length))
-
-#define V8STRING_N(string) \
-  V8STRING_EX(string, v8::NewStringType::kNormal, -1)
-
-#define V8STRING_I(string) \
-  V8STRING_EX(string, v8::NewStringType::kInternalized, -1)
 
 class Exception : public std::string
 {

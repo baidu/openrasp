@@ -28,13 +28,8 @@ static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<
     if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
         zend_hash_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRS("url"), (void **)&origin_zv) == SUCCESS)
     {
-        char *url = Z_STRVAL_PP(origin_zv);
         v8::Isolate *isolate = info.GetIsolate();
-        v8::Local<v8::String> v8_url;
-        if (V8STRING_EX(url, v8::NewStringType::kNormal, Z_STRLEN_PP(origin_zv)).ToLocal(&v8_url))
-        {
-            info.GetReturnValue().Set(v8_url);
-        }
+        info.GetReturnValue().Set(zval_to_v8val(isolate, *origin_zv));
     }
 }
 static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
@@ -65,7 +60,7 @@ static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
         *p = tolower(*p);
         p++;
     }
-    info.GetReturnValue().Set(V8STRING_EX(str, v8::NewStringType::kNormal, Z_STRLEN_PP(value)).ToLocalChecked());
+    info.GetReturnValue().Set(NewV8String(isolate, str));
     efree(str);
 }
 static void querystring_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
@@ -160,7 +155,7 @@ static void path_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo
     char *str = Z_STRVAL_PP(value);
     char *p = strchr(str, '?');
     int len = p == nullptr ? Z_STRLEN_PP(value) : p - str;
-    info.GetReturnValue().Set(V8STRING_EX(str, v8::NewStringType::kNormal, len).ToLocalChecked());
+    info.GetReturnValue().Set(NewV8String(isolate, str, len));
 }
 static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
@@ -192,8 +187,15 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
             v8_arr->Set(0, v8_value);
             v8_value = v8_arr;
         }
-        v8::Local<v8::Value> v8_key =
-            type == HASH_KEY_IS_STRING ? V8STRING_I(key).ToLocalChecked().As<v8::Value>() : v8::Uint32::New(isolate, idx).As<v8::Value>();
+        v8::Local<v8::Value> v8_key;
+        if (type == HASH_KEY_IS_STRING)
+        {
+            v8_key = NewV8String(isolate, key);
+        }
+        else
+        {
+            v8_key = v8::Uint32::New(isolate, idx);
+        }
         obj->Set(v8_key, v8_value);
     }
     HashTable *POST = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_POST]);
@@ -216,8 +218,15 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
             v8_arr->Set(0, v8_value);
             v8_value = v8_arr;
         }
-        v8::Local<v8::Value> v8_key =
-            type == HASH_KEY_IS_STRING ? V8STRING_I(key).ToLocalChecked().As<v8::Value>() : v8::Uint32::New(isolate, idx).As<v8::Value>();
+        v8::Local<v8::Value> v8_key;
+        if (type == HASH_KEY_IS_STRING)
+        {
+            v8_key = NewV8String(isolate, key);
+        }
+        else
+        {
+            v8_key = v8::Uint32::New(isolate, idx);
+        }
         v8::Local<v8::Value> v8_existed_value = obj->Get(v8_key);
         if (!v8_existed_value.IsEmpty() &&
             v8_existed_value->IsArray())
@@ -285,7 +294,7 @@ static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
             }
             p++;
         }
-        obj->Set(V8STRING_I(dup_key).ToLocalChecked(), zval_to_v8val(isolate, *value TSRMLS_CC));
+        obj->Set(NewV8String(isolate, dup_key), zval_to_v8val(isolate, *value TSRMLS_CC));
         efree(dup_key);
     }
     info.GetReturnValue().Set(obj);
@@ -315,23 +324,23 @@ static void server_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
     TSRMLS_FETCH();
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::Object> server = v8::Object::New(isolate);
-    server->Set(V8STRING_I("language").ToLocalChecked(), V8STRING_N("php").ToLocalChecked());
-    server->Set(V8STRING_I("name").ToLocalChecked(), V8STRING_N("PHP").ToLocalChecked());
-    server->Set(V8STRING_I("version").ToLocalChecked(), V8STRING_N(OPENRASP_PHP_VERSION).ToLocalChecked());
+    server->Set(NewV8String(isolate, "language"), NewV8String(isolate, "php"));
+    server->Set(NewV8String(isolate, "name"), NewV8String(isolate, "PHP"));
+    server->Set(NewV8String(isolate, "version"), NewV8String(isolate, OPENRASP_PHP_VERSION));
 #ifdef PHP_WIN32
-    server->Set(V8STRING_I("os").ToLocalChecked(), V8STRING_N("Windows").ToLocalChecked());
+    server->Set(NewV8String(isolate, "os"), NewV8String(isolate, "Windows"));
 #else
     if (strstr(PHP_OS, "Darwin"))
     {
-        server->Set(V8STRING_I("os").ToLocalChecked(), V8STRING_N("Mac").ToLocalChecked());
+        server->Set(NewV8String(isolate, "os"), NewV8String(isolate, "Mac"));
     }
     else if (strstr(PHP_OS, "Linux"))
     {
-        server->Set(V8STRING_I("os").ToLocalChecked(), V8STRING_N("Linux").ToLocalChecked());
+        server->Set(NewV8String(isolate, "os"), NewV8String(isolate, "Linux"));
     }
     else
     {
-        server->Set(V8STRING_I("os").ToLocalChecked(), V8STRING_N(PHP_OS).ToLocalChecked());
+        server->Set(NewV8String(isolate, "os"), NewV8String(isolate, PHP_OS));
     }
 #endif
     info.GetReturnValue().Set(server);
@@ -340,17 +349,17 @@ v8::Local<v8::Object> RequestContext::New(v8::Isolate *isolate)
 {
     v8::Local<v8::Context> context = isolate->GetCurrentContext();
     v8::Local<v8::Object> obj = v8::Object::New(isolate);
-    obj->SetAccessor(context, V8STRING_I("url").ToLocalChecked(), url_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("header").ToLocalChecked(), header_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("parameter").ToLocalChecked(), parameter_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("path").ToLocalChecked(), path_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("querystring").ToLocalChecked(), querystring_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("method").ToLocalChecked(), method_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("protocol").ToLocalChecked(), protocol_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("remoteAddr").ToLocalChecked(), remoteAddr_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("appBasePath").ToLocalChecked(), appBasePath_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("body").ToLocalChecked(), body_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("server").ToLocalChecked(), server_getter).IsNothing();
+    obj->SetAccessor(context, NewV8String(isolate, "url"), url_getter).IsNothing();
+    obj->SetAccessor(context, NewV8String(isolate, "header"), header_getter).IsNothing();
+    obj->SetAccessor(context, NewV8String(isolate, "parameter"), parameter_getter).IsNothing();
+    obj->SetAccessor(context, NewV8String(isolate, "path"), path_getter).IsNothing();
+    obj->SetAccessor(context, NewV8String(isolate, "querystring"), querystring_getter).IsNothing();
+    obj->SetAccessor(context, NewV8String(isolate, "method"), method_getter).IsNothing();
+    obj->SetAccessor(context, NewV8String(isolate, "protocol"), protocol_getter).IsNothing();
+    obj->SetAccessor(context, NewV8String(isolate, "remoteAddr"), remoteAddr_getter).IsNothing();
+    obj->SetAccessor(context, NewV8String(isolate, "appBasePath"), appBasePath_getter).IsNothing();
+    obj->SetAccessor(context, NewV8String(isolate, "body"), body_getter).IsNothing();
+    obj->SetAccessor(context, NewV8String(isolate, "server"), server_getter).IsNothing();
     return obj;
 }
 } // namespace openrasp
