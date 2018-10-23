@@ -150,4 +150,25 @@ bool Isolate::Check(v8::Local<v8::String> type, v8::Local<v8::Object> params, in
 {
     return Check(this, type, params, timeout);
 }
+
+v8::MaybeLocal<v8::Value> Isolate::ExecScript(Isolate *isolate, std::string _source, std::string _filename, int _line_offset)
+{
+    v8::HandleScope handle_scope(isolate);
+    auto context = isolate->GetCurrentContext();
+    v8::Local<v8::String> filename = NewV8String(isolate, _filename);
+    v8::Local<v8::Integer> line_offset = v8::Integer::New(isolate, _line_offset);
+    v8::Local<v8::String> source = NewV8String(isolate, _source);
+    v8::ScriptOrigin origin(filename, line_offset);
+    v8::Local<v8::Script> script;
+    if (!v8::Script::Compile(context, source, &origin).ToLocal(&script))
+    {
+        return {};
+    }
+    return script->Run(context);
+}
+
+v8::MaybeLocal<v8::Value> Isolate::ExecScript(std::string _source, std::string _filename, int _line_offset)
+{
+    return ExecScript(this, _source, _filename, _line_offset);
+}
 } // namespace openrasp

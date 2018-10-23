@@ -32,7 +32,7 @@ Snapshot::Snapshot(const std::string &config, const std::vector<openrasp_v8_js_s
 {
     TSRMLS_FETCH();
     v8::SnapshotCreator creator(external_references);
-    v8::Isolate *isolate = creator.GetIsolate();
+    Isolate *isolate = reinterpret_cast<Isolate *>(creator.GetIsolate());
 #define DEFAULT_STACK_SIZE_IN_KB 1024
     uintptr_t current_stack = reinterpret_cast<uintptr_t>(&current_stack);
     uintptr_t stack_limit = current_stack - (DEFAULT_STACK_SIZE_IN_KB * 1024 / sizeof(uintptr_t));
@@ -63,7 +63,7 @@ Snapshot::Snapshot(const std::string &config, const std::vector<openrasp_v8_js_s
         };
         for (auto &js_src : internal_js_list)
         {
-            if (exec_script(isolate, context, js_src.source, js_src.filename).IsEmpty())
+            if (isolate->ExecScript(js_src.source, js_src.filename).IsEmpty())
             {
                 Exception e(isolate, try_catch);
                 LOG_G(plugin_logger).log(LEVEL_INFO, e.c_str(), e.length() TSRMLS_CC);
@@ -72,14 +72,14 @@ Snapshot::Snapshot(const std::string &config, const std::vector<openrasp_v8_js_s
                 return;
             }
         }
-        if (exec_script(isolate, context, config, "config.js").IsEmpty())
+        if (isolate->ExecScript(config, "config.js").IsEmpty())
         {
             Exception e(isolate, try_catch);
             LOG_G(plugin_logger).log(LEVEL_INFO, e.c_str(), e.length() TSRMLS_CC);
         }
         for (auto &plugin_src : plugin_list)
         {
-            if (exec_script(isolate, context, "(function(){\n" + plugin_src.source + "\n})()", plugin_src.filename, -1).IsEmpty())
+            if (isolate->ExecScript("(function(){\n" + plugin_src.source + "\n})()", plugin_src.filename, -1).IsEmpty())
             {
                 Exception e(isolate, try_catch);
                 LOG_G(plugin_logger).log(LEVEL_INFO, e.c_str(), e.length() TSRMLS_CC);
