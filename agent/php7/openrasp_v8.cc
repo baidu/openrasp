@@ -102,6 +102,7 @@ unsigned char openrasp_check(const char *c_type, zval *z_params)
     v8::Local<v8::String> key_message = OPENRASP_V8_G(key_message).Get(isolate);
     v8::Local<v8::String> key_name = OPENRASP_V8_G(key_name).Get(isolate);
     v8::Local<v8::String> key_confidence = OPENRASP_V8_G(key_confidence).Get(isolate);
+    v8::Local<v8::String> key_algorithm = OPENRASP_V8_G(key_algorithm).Get(isolate);
 
     v8::Local<v8::Array> arr = rst.As<v8::Array>();
     int len = arr->Length();
@@ -124,9 +125,11 @@ unsigned char openrasp_check(const char *c_type, zval *z_params)
         v8::Local<v8::Value> v8_message = item->Get(key_message);
         v8::Local<v8::Value> v8_name = item->Get(key_name);
         v8::Local<v8::Value> v8_confidence = item->Get(key_confidence);
+        v8::Local<v8::Value> v8_algorithm = item->Get(key_algorithm);
         v8::String::Utf8Value utf_action(v8_action);
         v8::String::Utf8Value utf_message(v8_message);
         v8::String::Utf8Value utf_name(v8_name);
+        v8::String::Utf8Value utf_algorithm(v8_algorithm);
 
         zval result;
         array_init(&result);
@@ -136,6 +139,7 @@ unsigned char openrasp_check(const char *c_type, zval *z_params)
         add_assoc_stringl(&result, "plugin_name", *utf_name, utf_name.length());
         add_assoc_long(&result, "plugin_confidence", v8_confidence->Int32Value());
         add_assoc_zval(&result, "attack_params", z_params);
+        add_assoc_stringl(&result, "plugin_algorithm", *utf_algorithm, utf_algorithm.length());
         Z_TRY_ADDREF_P(z_params);
         alarm_info(&result);
         zval_dtor(&result);
@@ -281,6 +285,7 @@ static bool init_isolate()
         v8::Local<v8::String> key_message = V8STRING_I("message").ToLocalChecked();
         v8::Local<v8::String> key_name = V8STRING_I("name").ToLocalChecked();
         v8::Local<v8::String> key_confidence = V8STRING_I("confidence").ToLocalChecked();
+        v8::Local<v8::String> key_algorithm = V8STRING_I("algorithm").ToLocalChecked();
         v8::Local<v8::Object> RASP = context->Global()
                                          ->Get(context, V8STRING_I("RASP").ToLocalChecked())
                                          .ToLocalChecked()
@@ -295,6 +300,7 @@ static bool init_isolate()
         OPENRASP_V8_G(key_message).Reset(isolate, key_message);
         OPENRASP_V8_G(key_name).Reset(isolate, key_name);
         OPENRASP_V8_G(key_confidence).Reset(isolate, key_confidence);
+        OPENRASP_V8_G(key_algorithm).Reset(isolate, key_algorithm);
         OPENRASP_V8_G(RASP).Reset(isolate, RASP);
         OPENRASP_V8_G(check).Reset(isolate, check);
         OPENRASP_V8_G(request_context).Reset(isolate, RequestContext::New(isolate));
