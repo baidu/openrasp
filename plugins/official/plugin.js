@@ -1,4 +1,4 @@
-const version = '2018-1016-0000'
+const version = '2018-1022-1600'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -17,7 +17,7 @@ const version = '2018-1016-0000'
  */
 
 // 常用链接
-// 
+//
 // Web 攻击检测能力说明、零规则检测算法介绍
 // https://rasp.baidu.com/doc/usage/web.html
 //
@@ -580,7 +580,7 @@ function is_outside_webroot(appBasePath, realpath, path) {
 // 路径是否来自用户输入
 // file_get_contents("/etc/passwd");
 // file_get_contents("../../../../../../../etc/passwd");
-// 
+//
 // 或者以用户输入结尾
 // file_get_contents("/data/uploads/" . "../../../../../../../etc/passwd");
 function is_path_endswith_userinput(parameter, target, realpath, is_windows)
@@ -598,8 +598,8 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows)
         }
 
         // 如果应用做了特殊处理， 比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
-        if (value.startsWith('file://') && 
-            is_absolute_path(target, is_windows) && 
+        if (value.startsWith('file://') &&
+            is_absolute_path(target, is_windows) &&
             value.endsWith(target))
         {
             verdict = true
@@ -627,7 +627,7 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows)
 }
 
 // 是否来自用户输入 - 适合任意类型参数
-function is_from_userinput(parameter, target) 
+function is_from_userinput(parameter, target)
 {
     var verdict = false
 
@@ -651,9 +651,9 @@ function is_sql_changed(raw_tokens, userinput_idx, userinput_length)
     var start = -1, end = raw_tokens.length, distance = 2
 
     // 寻找 token 起始点，可以改为二分查找
-    for (var i = 0; i < raw_tokens.length; i++) 
+    for (var i = 0; i < raw_tokens.length; i++)
     {
-        if (raw_tokens[i].stop >= userinput_idx) 
+        if (raw_tokens[i].stop >= userinput_idx)
         {
             start = i
             break
@@ -662,9 +662,9 @@ function is_sql_changed(raw_tokens, userinput_idx, userinput_length)
 
     // 寻找 token 结束点
     // 另外，最多需要遍历 distance 个 token
-    for (var i = start; i < start + distance && i < raw_tokens.length; i++) 
+    for (var i = start; i < start + distance && i < raw_tokens.length; i++)
     {
-        if (raw_tokens[i].stop >= userinput_idx + userinput_length - 1) 
+        if (raw_tokens[i].stop >= userinput_idx + userinput_length - 1)
         {
             end = i
             break
@@ -687,7 +687,7 @@ function _(message, args)
     for (var i = 0; i < args.length; i ++)
     {
         var symbol = '%' + (i + 1) + '%'
-        message = message.replace(symbol, args[i])      
+        message = message.replace(symbol, args[i])
     }
 
     return message
@@ -760,7 +760,7 @@ if (RASP.get_jsengine() !== 'v8') {
                     value_list = parameters[name]
                 } else {
                     value_list = Object.values(parameters[name][0])
-                }                
+                }
 
                 reason = _run(value_list, name)
                 if (reason) {
@@ -768,7 +768,7 @@ if (RASP.get_jsengine() !== 'v8') {
                 }
             })
 
-            if (reason !== false) 
+            if (reason !== false)
             {
                 return {
                     action:     algorithmConfig.sqli_userinput.action,
@@ -865,7 +865,7 @@ if (RASP.get_jsengine() !== 'v8') {
                         if (parts[0].trim() == 'information_schema' && parts[1].trim() == 'tables')
                         {
                             reason = _("SQLi - Detected access to MySQL information_schema.tables table")
-                            break  
+                            break
                         }
                     }
                 }
@@ -1033,7 +1033,7 @@ plugin.register('directory', function (params, context) {
                 message:    _("WebShell detected - Using File Manager function to access a folder: %1%", [realpath]),
                 confidence: 90,
                 algorithm:  'directory_userinput'
-            }            
+            }
         }
     }
 
@@ -1220,7 +1220,7 @@ plugin.register('writeFile', function (params, context) {
     // 写 NTFS 流文件，通常是为了绕过限制
     if (algorithmConfig.writeFile_NTFS.action != 'ignore')
     {
-        if (ntfsRegex.test(params.realpath)) 
+        if (ntfsRegex.test(params.realpath))
         {
             return {
                 action:     algorithmConfig.writeFile_NTFS.action,
@@ -1235,7 +1235,7 @@ plugin.register('writeFile', function (params, context) {
     if (context.method == 'put' &&
         algorithmConfig.writeFile_PUT_script.action != 'ignore')
     {
-        if (scriptFileRegex.test(params.realpath)) 
+        if (scriptFileRegex.test(params.realpath))
         {
             return {
                 action:     algorithmConfig.writeFile_PUT_script.action,
@@ -1250,7 +1250,7 @@ plugin.register('writeFile', function (params, context) {
     // https://rasp.baidu.com/doc/dev/official.html#case-file-write
     if (algorithmConfig.writeFile_script.action != 'ignore')
     {
-        if (scriptFileRegex.test(params.realpath)) 
+        if (scriptFileRegex.test(params.realpath))
         {
             return {
                 action:     algorithmConfig.writeFile_script.action,
@@ -1270,9 +1270,9 @@ plugin.register('writeFile', function (params, context) {
 plugin.register('fileUpload', function (params, context) {
 
     // 是否禁止使用 multipart 上传脚本文件，或者 apache/php 服务器配置文件
-    if (algorithmConfig.fileUpload_multipart_script.action != 'ignore') 
+    if (algorithmConfig.fileUpload_multipart_script.action != 'ignore')
     {
-        if (scriptFileRegex.test(params.filename) || ntfsRegex.test(params.filename)) 
+        if (scriptFileRegex.test(params.filename) || ntfsRegex.test(params.filename))
         {
             return {
                 action:     algorithmConfig.fileUpload_multipart_script.action,
@@ -1282,7 +1282,7 @@ plugin.register('fileUpload', function (params, context) {
             }
         }
 
-        if (params.filename == ".htaccess" || params.filename == ".user.ini") 
+        if (params.filename == ".htaccess" || params.filename == ".user.ini")
         {
             return {
                 action:     algorithmConfig.fileUpload_multipart_script.action,
@@ -1294,9 +1294,9 @@ plugin.register('fileUpload', function (params, context) {
     }
 
     // 是否禁止 HTML/JS 文件，主要是对抗钓鱼、CORS绕过等问题
-    if (algorithmConfig.fileUpload_multipart_html.action != 'ignore') 
+    if (algorithmConfig.fileUpload_multipart_html.action != 'ignore')
     {
-        if (htmlFileRegex.test(params.filename)) 
+        if (htmlFileRegex.test(params.filename))
         {
             return {
                 action:     algorithmConfig.fileUpload_multipart_html.action,
@@ -1305,7 +1305,7 @@ plugin.register('fileUpload', function (params, context) {
                 algorithm:  'fileUpload_multipart_html'
             }
         }
-    }    
+    }
 
     return clean
 })
@@ -1476,8 +1476,8 @@ plugin.register('xxe', function (params, context) {
                 message:    _("XXE - Using dangerous protocol SMB"),
                 confidence: 100,
                 algorithm:  'xxe_protocol'
-            }                
-        }        
+            }
+        }
     }
 
     if (items.length >= 2) {
@@ -1502,15 +1502,15 @@ plugin.register('xxe', function (params, context) {
         //
         // 相对路径容易误报, e.g
         // file://xwork.dtd
-        if (algorithmConfig.xxe_file.action != 'ignore') 
+        if (algorithmConfig.xxe_file.action != 'ignore')
         {
-            if (address.length > 0 && protocol === 'file' && address[0] == '/') 
+            if (address.length > 0 && protocol === 'file' && address[0] == '/')
             {
                 var address_lc = address.toLowerCase()
 
                 // 过滤掉 xml、dtd
-                if (! address_lc.endsWith('.xml') && 
-                    ! address_lc.endsWith('.dtd')) 
+                if (! address_lc.endsWith('.xml') &&
+                    ! address_lc.endsWith('.dtd'))
                 {
                     return {
                         action:     algorithmConfig.xxe_file.action,
@@ -1519,7 +1519,7 @@ plugin.register('xxe', function (params, context) {
                         algorithm:  'xxe_file'
                     }
                 }
-            } 
+            }
         }
 
     }
