@@ -95,6 +95,7 @@ public class JSContext extends Context {
         String action;
         String message;
         String name;
+        String algorithm;
         int confidence;
 
         setTimeout(System.currentTimeMillis() + Config.getConfig().getPluginTimeout());
@@ -145,7 +146,15 @@ public class JSContext extends Context {
             } else {
                 confidence = new Integer(0);
             }
-            checkResults.add(new AttackInfo(parameter, action, message, name, confidence));
+            tmp = result.get("algorithm");
+            if (!(tmp instanceof CharSequence)) {
+                continue;
+            }
+            algorithm = tmp.toString();
+            if (algorithm == null) {
+                continue;
+            }
+            checkResults.add(new AttackInfo(parameter, action, message, name, algorithm, confidence));
         }
         return checkResults;
     }

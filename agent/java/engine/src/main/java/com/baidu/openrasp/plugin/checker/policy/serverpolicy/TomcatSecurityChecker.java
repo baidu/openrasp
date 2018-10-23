@@ -67,6 +67,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
             handleException(e);
         }
     }
+
     /**
      * 检测cookie的HttpOnly是否开启
      */
@@ -91,7 +92,8 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
             }
 
             if (!isHttpOnly) {
-                infos.add(new SecurityPolicyInfo(Type.COOKIE_HTTP_ONLY, "Tomcat security baseline - httpOnly should be enabled in conf/context.xml", true));
+                infos.add(new SecurityPolicyInfo(Type.COOKIE_HTTP_ONLY,
+                        "Tomcat security baseline - httpOnly should be enabled in conf/context.xml", true));
             }
         }
     }
@@ -125,7 +127,10 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                                     String userName = user.getAttribute("username");
                                     String password = user.getAttribute("password");
                                     if (weakWords.contains(userName) && weakWords.contains(password)) {
-                                        infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD, "Tomcat security baseline - detected weak username/password combination in tomcat-users.xml (username: " + userName + ")", true));
+                                        infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD,
+                                                "Tomcat security baseline - detected weak" +
+                                                        " username/password combination in " +
+                                                        userFile.getAbsolutePath() + ", username is " + userName, true));
                                     }
                                 }
                             }
@@ -224,15 +229,16 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
      */
     private void checkDefaultApp(String tomcatBaseDir, List<EventInfo> infos) {
         LinkedList<String> apps = new LinkedList<String>();
+        String defaultAppBaseDir = tomcatBaseDir + File.separator + "webapps";
         for (String dir : DEFAULT_APP_DIRS) {
-            File file = new File(tomcatBaseDir + File.separator + "webapps" + File.separator + dir);
+            File file = new File(defaultAppBaseDir + File.separator + dir);
             if (file.exists() && file.isDirectory()) {
                 apps.add(dir);
             }
         }
 
         if (!apps.isEmpty()) {
-            StringBuilder message = new StringBuilder("Tomcat security baseline - did not remove the following default webapps: ");
+            StringBuilder message = new StringBuilder("Tomcat security baseline - did not remove the following default webapps in " + defaultAppBaseDir + ":");
             for (String app : apps) {
                 message.append(app).append(", ");
             }
