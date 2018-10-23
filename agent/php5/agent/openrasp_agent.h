@@ -54,7 +54,7 @@ public:
 
 private:
   std::string algorithm_config;
-  std::vector<openrasp_v8_js_src> active_plugins;
+  std::vector<PluginFile> active_plugins;
   static const int plugin_update_interval = 60;
 
 private:

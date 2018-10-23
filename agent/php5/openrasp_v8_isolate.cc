@@ -9,7 +9,7 @@ Isolate *Isolate::New(Snapshot *snapshot_blob)
     data->create_params.snapshot_blob = snapshot_blob;
     data->create_params.external_references = snapshot_blob->external_references;
 
-    v8::Isolate *isolate = v8::Isolate::New(data->create_params);
+    Isolate *isolate = reinterpret_cast<Isolate *>(v8::Isolate::New(data->create_params));
     isolate->Enter();
     v8::HandleScope handle_scope(isolate);
     v8::Local<v8::Context> context = v8::Context::New(isolate);
@@ -48,11 +48,11 @@ Isolate *Isolate::New(Snapshot *snapshot_blob)
     data->action_hash_ignore = NewV8String(isolate, "ignore")->GetIdentityHash();
     data->action_hash_log = NewV8String(isolate, "log")->GetIdentityHash();
     data->action_hash_block = NewV8String(isolate, "block")->GetIdentityHash();
-    data->request_context.Reset(isolate, RequestContext::New(isolate));
+    data->request_context.Reset(isolate, NewRequestContext(isolate));
 
-    isolate->SetData(0, data);
+    isolate->v8::Isolate::SetData(0, data);
 
-    return reinterpret_cast<Isolate *>(isolate);
+    return isolate;
 }
 
 Isolate::Data *Isolate::GetData()

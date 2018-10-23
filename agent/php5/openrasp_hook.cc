@@ -335,7 +335,7 @@ void check(OpenRASPCheckType check_type, zval *z_params TSRMLS_DC)
     {
         v8::HandleScope handlescope(isolate);
         auto type = NewV8String(isolate, get_check_type_name(check_type));
-        auto params = v8::Local<v8::Object>::Cast(zval_to_v8val(isolate, z_params TSRMLS_CC));
+        auto params = v8::Local<v8::Object>::Cast(NewV8ValueFromZval(isolate, z_params TSRMLS_CC));
         zval_ptr_dtor(&z_params);
         result = isolate->Check(type, params, OPENRASP_CONFIG(plugin.timeout.millis));
     }
