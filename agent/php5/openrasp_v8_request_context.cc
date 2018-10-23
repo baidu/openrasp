@@ -29,7 +29,7 @@ static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<
         zend_hash_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRS("url"), (void **)&origin_zv) == SUCCESS)
     {
         v8::Isolate *isolate = info.GetIsolate();
-        info.GetReturnValue().Set(zval_to_v8val(isolate, *origin_zv));
+        info.GetReturnValue().Set(zval_to_v8val(isolate, *origin_zv TSRMLS_CC));
     }
 }
 static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
