@@ -71,8 +71,9 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp)
 #define OPENRASP_GP() (&openrasp_globals)
 #endif
 
-#define OPENRASP_CONFIG(key) (OPENRASP_G(config).Get(ZEND_TOSTR(key), OPENRASP_G(config).key))
-#define OPENRASP_ARRAY_CONFIG(key) (OPENRASP_G(config).GetArray(ZEND_TOSTR(key), OPENRASP_G(config).key))
+#define CONFIG_DEFAULT(key) (OPENRASP_G(config).key)
+#define OPENRASP_CONFIG(key) (OPENRASP_G(config).Get(ZEND_TOSTR(key), CONFIG_DEFAULT(key)))
+#define OPENRASP_ARRAY_CONFIG(key) (OPENRASP_G(config).GetArray(ZEND_TOSTR(key), CONFIG_DEFAULT(key)))
 
 void openrasp_error(int type, int error_code, const char *format, ...);
 

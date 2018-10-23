@@ -49,7 +49,8 @@ public:
   } log;
   struct
   {
-    string server_url;
+    string tag = "OpenRASP";
+    string url;
     int64_t facility = 1;
     bool enable = false;
     int64_t connection_timeout = 50;

@@ -4,7 +4,7 @@ syslog server url scheme
 <?php
 $conf = <<<CONF
 syslog.enable=true
-syslog.server_url="http://127.0.0.1:514"
+syslog.url="http://127.0.0.1:514"
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

@@ -53,6 +53,6 @@ HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey);
 zval *fetch_outmost_zval_from_ht(HashTable *ht, const char *arKey);
 std::string json_encode_from_zval(zval *value TSRMLS_DC);
 
-void openrasp_pcre_match(char *regex, int regex_len, char *subject, int subject_len, zval *return_value TSRMLS_DC);
+bool regex_match(const char *str, const char *regex);
 
 #endif

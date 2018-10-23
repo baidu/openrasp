@@ -105,6 +105,7 @@ class RaspLoggerEntry
   public:
     static const char *default_log_suffix;
     static const char *rasp_rfc3339_format;
+    static const char *syslog_time_format;
 
     RaspLoggerEntry();
     RaspLoggerEntry(const char *name, severity_level level, log_appender appender, log_appender appender_mask);
