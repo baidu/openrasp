@@ -23,17 +23,7 @@ namespace openrasp
 OpenraspConfig::OpenraspConfig(string &config, FromType type)
     : OpenraspConfig()
 {
-    switch (type)
-    {
-    case FromType::kJson:
-        FromJson(config);
-        break;
-    case FromType::kIni:
-        FromIni(config);
-        break;
-    default:
-        break;
-    }
+    From(config, type);
 }
 template <>
 string OpenraspConfig::GetFromJson(const string &key, const string &default_value) const
@@ -220,5 +210,21 @@ bool OpenraspConfig::FromIni(const string &ini)
         error_message = "Unknown Error";
         return false;
     }
+}
+bool OpenraspConfig::From(const string &config, FromType type)
+{
+    bool result = false;
+    switch (type)
+    {
+    case FromType::kJson:
+        result = FromJson(config);
+        break;
+    case FromType::kIni:
+        result = FromIni(config);
+        break;
+    default:
+        break;
+    }
+    return result;
 }
 } // namespace openrasp

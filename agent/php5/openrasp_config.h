@@ -134,6 +134,7 @@ public:
   OpenraspConfig &operator=(OpenraspConfig &&) = default;
   bool FromJson(const string &json);
   bool FromIni(const string &ini);
+  bool From(const string &config, FromType type);
   bool HasError() const { return has_error; };
   string GetErrorMessage() const { return error_message; };
 

@@ -38,15 +38,15 @@ LogCollectItem::LogCollectItem(const std::string name, const std::string url_pat
     std::string status_file_abs = get_base_dir_path() + LogCollectItem::status_file;
     if (file_exist(status_file_abs.c_str() TSRMLS_CC))
     {
-        std::ifstream in(status_file_abs);
-        std::stringstream sstr;
-        sstr << in.rdbuf();
-        std::string status_json = sstr.str();
-        OpenraspConfig openrasp_config(status_json, OpenraspConfig::FromType::kJson);
-        fpos = openrasp_config.Get<int64_t>("fpos");
-        st_ino = openrasp_config.Get<int64_t>("st_ino");
-        last_post_time = openrasp_config.Get<int64_t>("last_post_time");
-        curr_suffix = openrasp_config.Get<std::string>("curr_suffix", curr_suffix);
+        std::string status_json;
+        if (get_entire_file_content(status_file_abs.c_str(), status_json))
+        {
+            OpenraspConfig openrasp_config(status_json, OpenraspConfig::FromType::kJson);
+            fpos = openrasp_config.Get<int64_t>("fpos");
+            st_ino = openrasp_config.Get<int64_t>("st_ino");
+            last_post_time = openrasp_config.Get<int64_t>("last_post_time");
+            curr_suffix = openrasp_config.Get<std::string>("curr_suffix", curr_suffix);
+        }
     }
 }
 

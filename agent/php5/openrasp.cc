@@ -44,7 +44,7 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
 bool is_initialized = false;
 static bool make_openrasp_root_dir(TSRMLS_D);
-static void load_local_config(openrasp::OpenraspConfig *config TSRMLS_DC);
+static bool load_config(openrasp::OpenraspConfig *config TSRMLS_DC, bool is_local = true);
 static bool is_current_sapi_supported(TSRMLS_D);
 
 PHP_INI_BEGIN()
@@ -65,10 +65,10 @@ PHP_GINIT_FUNCTION(openrasp)
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (!openrasp::oam)
     {
-        load_local_config(&(openrasp_globals->config) TSRMLS_CC);
+        load_config(&(openrasp_globals->config)TSRMLS_CC);
     }
 #else
-    load_local_config(&(openrasp_globals->config) TSRMLS_CC);
+    load_config(&(openrasp_globals->config)TSRMLS_CC);
 #endif
 #endif
 }
@@ -104,10 +104,10 @@ PHP_MINIT_FUNCTION(openrasp)
     }
     else
     {
-        load_local_config(&OPENRASP_G(config) TSRMLS_CC);
+        load_config(&OPENRASP_G(config) TSRMLS_CC);
     }
 #else
-    load_local_config(&OPENRASP_G(config) TSRMLS_CC);
+    load_config(&OPENRASP_G(config) TSRMLS_CC);
 #endif
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
     {
@@ -302,17 +302,26 @@ static bool make_openrasp_root_dir(TSRMLS_D)
     return true;
 }
 
-static void load_local_config(openrasp::OpenraspConfig *config TSRMLS_DC)
+static bool load_config(openrasp::OpenraspConfig *config TSRMLS_DC, bool is_local)
 {
     if (openrasp_ini.root_dir)
     {
-        std::ifstream ifs((std::string(openrasp_ini.root_dir) + "/conf/openrasp.ini"), std::ifstream::in | std::ifstream::binary);
-        if (ifs.is_open() && ifs.good())
+        std::string config_file_path =
+            std::string(openrasp_ini.root_dir) +
+            DEFAULT_SLASH +
+            "conf" +
+            DEFAULT_SLASH +
+            (is_local ? "openrasp.ini" : "cloud-config.json");
+        openrasp::OpenraspConfig::FromType type = is_local
+                                                      ? openrasp::OpenraspConfig::FromType::kIni
+                                                      : openrasp::OpenraspConfig::FromType::kJson;
+        std::string conf_contents;
+        if (get_entire_file_content(config_file_path.c_str(), conf_contents))
         {
-            std::string conf_contents{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
-            config->FromIni(conf_contents);
+            return config->From(conf_contents, type);
         }
     }
+    return false;
 }
 
 static bool is_current_sapi_supported(TSRMLS_D)

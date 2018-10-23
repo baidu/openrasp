@@ -310,6 +310,17 @@ bool write_str_to_file(const char *file, std::ios_base::openmode mode, const cha
     return false;
 }
 
+bool get_entire_file_content(const char *file, std::string &content)
+{
+    std::ifstream ifs(file, std::ifstream::in | std::ifstream::binary);
+    if (ifs.is_open() && ifs.good())
+    {
+        content = {std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
+        return true;
+    }
+    return false;
+}
+
 void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)
 {
 #if defined(PHP_WIN32) && defined(HAVE_IPHLPAPI_WS2)
