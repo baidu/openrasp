@@ -137,6 +137,8 @@ public:
   bool IsExpired(uint64_t timestamp);
   static bool Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout = 100);
   bool Check(v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout = 100);
+  static v8::MaybeLocal<v8::Value> ExecScript(Isolate *isolate, std::string source, std::string filename, int line_offset = 0);
+  v8::MaybeLocal<v8::Value> ExecScript(std::string source, std::string filename, int line_offset = 0);
 };
 
 class openrasp_v8_process_globals
@@ -152,10 +154,6 @@ public:
 extern openrasp_v8_process_globals process_globals;
 
 v8::Local<v8::Value> zval_to_v8val(v8::Isolate *isolate, zval *val TSRMLS_DC);
-v8::MaybeLocal<v8::Script> compile_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
-                                          std::string _source, std::string _filename, int _line_offset = 0);
-v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
-                                      std::string _source, std::string _filename, int _line_offset = 0);
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result);
 void load_plugins(TSRMLS_D);
 } // namespace openrasp

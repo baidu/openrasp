@@ -131,27 +131,6 @@ v8::Local<v8::Value> zval_to_v8val(v8::Isolate *isolate, zval *val TSRMLS_DC)
     return rst;
 }
 
-v8::MaybeLocal<v8::Script> compile_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
-                                          std::string _source, std::string _filename, int _line_offset)
-{
-    v8::Local<v8::String> filename = NewV8String(isolate, _filename);
-    v8::Local<v8::Integer> line_offset = v8::Integer::New(isolate, _line_offset);
-    v8::Local<v8::String> source = NewV8String(isolate, _source);
-    v8::ScriptOrigin origin(filename, line_offset);
-    return v8::Script::Compile(context, source, &origin);
-}
-
-v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
-                                      std::string _source, std::string _filename, int _line_offset)
-{
-    v8::Local<v8::Script> script;
-    if (!compile_script(isolate, context, _source, _filename, _line_offset).ToLocal(&script))
-    {
-        return {};
-    }
-    return script->Run(context);
-}
-
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)
 {
     TSRMLS_FETCH();
