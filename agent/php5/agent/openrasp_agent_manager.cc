@@ -138,18 +138,11 @@ bool OpenraspAgentManager::verify_ini_correct()
 		}
 		else
 		{
-			zval *match_res = nullptr;
-			MAKE_STD_ZVAL(match_res);
-			char *regex = "/^[0-9a-fA-F]{40}$/";
-			const int regex_len = strlen(regex);
-			openrasp_pcre_match(regex, regex_len, openrasp_ini.app_id, strlen(openrasp_ini.app_id), match_res TSRMLS_CC);
-			if (Z_TYPE_P(match_res) != IS_LONG || Z_LVAL_P(match_res) != 1)
+			if (!regex_match(openrasp_ini.app_id, "^[0-9a-fA-F]{40}$"))
 			{
 				openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_id must have 40 characters"));
-				zval_ptr_dtor(&match_res);
 				return false;
 			}
-			zval_ptr_dtor(&match_res);
 		}
 	}
 	return true;

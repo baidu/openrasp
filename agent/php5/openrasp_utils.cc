@@ -288,23 +288,6 @@ std::string format_time(const char *format, int format_len, time_t ts)
     return std::string(buffer);
 }
 
-void openrasp_pcre_match(char *regex, int regex_len, char *subject, int subject_len, zval *return_value TSRMLS_DC)
-{
-    pcre_cache_entry *pce;
-    zval *subpats = NULL;
-    long flags = 0;
-    long start_offset = 0;
-    int global = 0;
-
-    if ((pce = pcre_get_compiled_regex_cache(regex, regex_len TSRMLS_CC)) == NULL)
-    {
-        RETURN_FALSE;
-    }
-
-    php_pcre_match_impl(pce, subject, subject_len, return_value, subpats,
-                        global, 0, flags, start_offset TSRMLS_CC);
-}
-
 long get_file_st_ino(std::string &filename TSRMLS_DC)
 {
     struct stat sb;
@@ -556,4 +539,28 @@ std::string json_encode_from_zval(zval *value TSRMLS_DC)
 bool file_exist(const char *abs_path TSRMLS_DC)
 {
     return VCWD_ACCESS(abs_path, F_OK) == 0;
+}
+
+const static size_t OVECCOUNT = 30; /* should be a multiple of 3 */
+
+bool regex_match(const char *str, const char *regex)
+{
+    pcre *re = nullptr;
+    int ovector[OVECCOUNT];
+    const char *error = nullptr;
+    int erroffset = 0;
+    int rc = 0;
+    re = pcre_compile(regex, 0, &error, &erroffset, nullptr);
+    if (re == nullptr)
+    {
+        return false;
+    }
+    rc = pcre_exec(re, nullptr, str, strlen(str), 0, 0, ovector, OVECCOUNT);
+    if (rc < 0)
+    {
+        pcre_free(re);
+        return false;
+    }
+    pcre_free(re);
+    return true;
 }
