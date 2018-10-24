@@ -147,12 +147,10 @@ public class JSContext extends Context {
                 confidence = new Integer(0);
             }
             tmp = result.get("algorithm");
-            if (!(tmp instanceof CharSequence)) {
-                continue;
-            }
-            algorithm = tmp.toString();
-            if (algorithm == null) {
-                continue;
+            if (tmp instanceof CharSequence) {
+                algorithm = tmp.toString();
+            } else {
+                algorithm = "";
             }
             checkResults.add(new AttackInfo(parameter, action, message, name, algorithm, confidence));
         }
