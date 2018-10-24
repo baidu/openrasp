@@ -93,7 +93,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
 
             if (!isHttpOnly) {
                 infos.add(new SecurityPolicyInfo(Type.COOKIE_HTTP_ONLY,
-                        "Tomcat security baseline - httpOnly should be enabled in conf/context.xml", true));
+                        "Tomcat security baseline - httpOnly should be enabled in " + contextFile.getAbsolutePath(), true));
             }
         }
     }
