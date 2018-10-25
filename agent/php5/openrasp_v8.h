@@ -149,7 +149,7 @@ public:
 
 extern openrasp_v8_process_globals process_globals;
 
-v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val TSRMLS_DC);
+v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val);
 v8::Local<v8::Object> NewRequestContext(v8::Isolate *isolate);
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result);
 void load_plugins(TSRMLS_D);

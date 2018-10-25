@@ -25,7 +25,7 @@ extern "C"
 
 namespace openrasp
 {
-v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val TSRMLS_DC)
+v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
 {
     v8::Local<v8::Value> rst = v8::Undefined(isolate);
     switch (Z_TYPE_P(val))
@@ -46,6 +46,7 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val TSRMLS_D
         {
             break;
         }
+        TSRMLS_FETCH();
         bool is_assoc = false;
         int index = 0;
         for (zend_hash_internal_pointer_reset(Z_ARRVAL_P(val)); zend_hash_has_more_elements(Z_ARRVAL_P(val)) == SUCCESS; zend_hash_move_forward(Z_ARRVAL_P(val)))
@@ -63,7 +64,7 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val TSRMLS_D
             {
                 ht->nApplyCount++;
             }
-            v8::Local<v8::Value> v8_value = NewV8ValueFromZval(isolate, *value TSRMLS_CC);
+            v8::Local<v8::Value> v8_value = NewV8ValueFromZval(isolate, *value);
             if (ht)
             {
                 ht->nApplyCount--;
