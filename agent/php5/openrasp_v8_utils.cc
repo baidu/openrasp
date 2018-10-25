@@ -186,6 +186,7 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
 
 void load_plugins()
 {
+    TSRMLS_FETCH();
     std::vector<PluginFile> plugin_src_list;
     std::string plugin_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("plugins"));
     dirent **ent = nullptr;
