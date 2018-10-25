@@ -122,7 +122,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
         }
         if (message != null) {
             result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
-                    message, 90));
+                    message, "sqli_userinput", 90));
         } else {
             // 算法2: SQL语句策略检查（模拟SQL防火墙功能）
             HashMap<String, Boolean> funcBlackList = getJsonObjectAsMap(config, CONFIG_KEY_SQLI_POLICY, "function_blacklist");
@@ -210,7 +210,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                 }
                 if (message != null) {
                     result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
-                            message, 100));
+                            message, "sqli_policy", 100));
                 }
             }
         }
