@@ -48,7 +48,7 @@ extern "C"
 #elif defined(NETWARE)
 #include <sys/timeval.h>
 #include <sys/time.h>
-#elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+#elif defined(__linux__)
 #include <sys/types.h>
 #include <ifaddrs.h>
 #include <netinet/in.h>
@@ -56,6 +56,17 @@ extern "C"
 #include <sys/socket.h>
 #include <net/if.h>
 #include <netpacket/packet.h>
+#include <arpa/inet.h>
+#elif defined(__APPLE__) && defined(__MACH__)
+#include <netdb.h>
+#include <ifaddrs.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <sys/sysctl.h>
+#include <net/if.h>
+#include <net/if_dl.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 #else
 #include <unistd.h>
@@ -393,7 +404,6 @@ void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)
 
 void fetch_hw_addrs(std::vector<std::string> &hw_addrs)
 {
-#if defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
     struct ifaddrs *ifaddr, *ifa;
     if (getifaddrs(&ifaddr) == -1)
     {
@@ -401,13 +411,13 @@ void fetch_hw_addrs(std::vector<std::string> &hw_addrs)
     }
     else
     {
-        int n;
-        for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, n++)
+        for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
         {
             if (ifa->ifa_addr == NULL)
             {
                 continue;
             }
+#if defined(__linux__)
             if ((ifa->ifa_flags & (IFF_LOOPBACK)) ||
                 !(ifa->ifa_flags & (IFF_RUNNING)))
             {
@@ -424,11 +434,24 @@ void fetch_hw_addrs(std::vector<std::string> &hw_addrs)
                 }
                 hw_addrs.push_back(oss.str());
             }
+#elif defined(__APPLE__) && defined(__MACH__)
+            if (strstr(ifa->ifa_name, "en") != ifa->ifa_name ||
+                ifa->ifa_addr->sa_family != AF_LINK)
+            {
+                continue;
+            }
+
+            struct sockaddr_dl *sdl = (struct sockaddr_dl *)(ifa->ifa_addr);
+            unsigned char *ptr = (unsigned char *)LLADDR(sdl);
+            char buf[20];
+            sprintf(buf, "%02x-%02x-%02x-%02x-%02x-%02x", *ptr, *(ptr + 1), *(ptr + 2),
+                    *(ptr + 3), *(ptr + 4), *(ptr + 5));
+            hw_addrs.emplace_back(buf);
+#endif
         }
         std::sort(hw_addrs.begin(), hw_addrs.end());
         freeifaddrs(ifaddr);
     }
-#endif
 }
 
 char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
