@@ -184,7 +184,7 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     }
 }
 
-void load_plugins(TSRMLS_D)
+void load_plugins()
 {
     std::vector<PluginFile> plugin_src_list;
     std::string plugin_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("plugins"));
@@ -210,7 +210,7 @@ void load_plugins(TSRMLS_D)
                 {
                     std::string source((std::istreambuf_iterator<char>(file)),
                                        std::istreambuf_iterator<char>());
-                    plugin_src_list.emplace_back(PluginFile{filename, source});
+                    plugin_src_list.emplace_back(filename, source);
                 }
                 else
                 {

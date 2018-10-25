@@ -76,7 +76,7 @@ PHP_MINIT_FUNCTION(openrasp_v8)
     }
 #endif
 
-    load_plugins(TSRMLS_C);
+    load_plugins();
 
     if (!process_globals.snapshot_blob)
     {

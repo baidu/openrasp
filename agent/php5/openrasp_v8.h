@@ -79,6 +79,7 @@ private:
 class PluginFile
 {
 public:
+  PluginFile(const std::string &_filename, const std::string &_source) : filename(_filename), source(_source) {}
   std::string filename;
   std::string source;
 };
@@ -152,7 +153,7 @@ extern openrasp_v8_process_globals process_globals;
 v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val);
 v8::Local<v8::Object> NewRequestContext(v8::Isolate *isolate);
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result);
-void load_plugins(TSRMLS_D);
+void load_plugins();
 } // namespace openrasp
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_v8)
