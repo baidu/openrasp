@@ -23,6 +23,8 @@
 #include <dirent.h>
 #include <algorithm>
 #include "shared_config_manager.h"
+#include "third_party/rapidjson/stringbuffer.h"
+#include "third_party/rapidjson/writer.h"
 extern "C"
 {
 #include "ext/standard/php_smart_str.h"
@@ -79,15 +81,20 @@ void HeartBeatAgent::do_heartbeat(CURL *curl TSRMLS_DC)
 	} //make sure curl is not nullptr
 	ResponseInfo res_info;
 	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/heartbeat";
-	zval *body = nullptr;
-	MAKE_STD_ZVAL(body);
-	array_init(body);
-	add_assoc_string(body, "rasp_id", (char *)oam->get_rasp_id().c_str(), 1);
-	add_assoc_string(body, "plugin_version", (char *)oam->agent_ctrl_block->get_plugin_version(), 1);
-	add_assoc_long(body, "config_time", (scm ? scm->get_config_last_update() : 0));
-	std::string request_body = json_encode_from_zval(body TSRMLS_CC);
-	perform_curl(curl, url_string, request_body.c_str(), res_info);
-	zval_ptr_dtor(&body);
+
+	rapidjson::StringBuffer s;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(s);
+
+	writer.StartObject();
+	writer.Key("rasp_id");
+	writer.String(oam->get_rasp_id().c_str());
+	writer.Key("plugin_version");
+	writer.String(oam->agent_ctrl_block->get_plugin_version());
+	writer.Key("config_time");
+	writer.Int64((scm ? scm->get_config_last_update() : 0));
+	writer.EndObject();
+
+	perform_curl(curl, url_string, s.GetString(), res_info);
 	if (CURLE_OK != res_info.res)
 	{
 		return;

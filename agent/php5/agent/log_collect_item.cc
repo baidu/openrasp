@@ -96,16 +96,18 @@ void LogCollectItem::save_status_snapshot() const
 {
     rapidjson::StringBuffer s;
     rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(s);
+
     writer.StartObject();
-    writer.String("curr_suffix");
+    writer.Key("curr_suffix");
     writer.String(curr_suffix.c_str());
-    writer.String("last_post_time");
+    writer.Key("last_post_time");
     writer.Int64(last_post_time);
-    writer.String("fpos");
+    writer.Key("fpos");
     writer.Int64(fpos);
-    writer.String("st_ino");
+    writer.Key("st_ino");
     writer.Int64(st_ino);
     writer.EndObject();
+    
     std::string status_file_abs = get_base_dir_path() + LogCollectItem::status_file;
 #ifndef _WIN32
     mode_t oldmask = umask(0);

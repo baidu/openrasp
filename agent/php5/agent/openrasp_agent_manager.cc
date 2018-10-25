@@ -31,6 +31,8 @@
 #include "openrasp_ini.h"
 #include "utils/digest.h"
 #include "openrasp_utils.h"
+#include "third_party/rapidjson/stringbuffer.h"
+#include "third_party/rapidjson/writer.h"
 
 extern "C"
 {
@@ -313,33 +315,37 @@ bool OpenraspAgentManager::agent_remote_register()
 	}
 	ResponseInfo res_info;
 	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/rasp";
-	zval *body = nullptr;
-	MAKE_STD_ZVAL(body);
-	array_init(body);
-	add_assoc_string(body, "id", (char *)rasp_id.c_str(), 1);
+
 	char host_name[255] = {0};
 	if (gethostname(host_name, sizeof(host_name) - 1))
 	{
 		sprintf(host_name, "UNKNOWN_HOST");
 	}
-	add_assoc_string(body, "host_name", host_name, 1);
-	add_assoc_string(body, "language", "PHP", 1);
-	add_assoc_string(body, "language_version", OPENRASP_PHP_VERSION, 1);
-	add_assoc_string(body, "server_type", sapi_module.name, 1);
-	add_assoc_string(body, "server_version", OPENRASP_PHP_VERSION, 1);
-	add_assoc_string(body, "rasp_home", openrasp_ini.root_dir, 1);
-	add_assoc_string(body, "local_ip", local_ip, 1);
-	add_assoc_string(body, "version", PHP_OPENRASP_VERSION, 1);
-	smart_str buf_json = {0};
-	php_json_encode(&buf_json, body, 0 TSRMLS_CC);
-	if (buf_json.a > buf_json.len)
-	{
-		buf_json.c[buf_json.len] = '\0';
-		buf_json.len++;
-	}
-	perform_curl(curl, url_string, buf_json.c, res_info);
-	smart_str_free(&buf_json);
-	zval_ptr_dtor(&body);
+	rapidjson::StringBuffer s;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(s);
+
+	writer.StartObject();
+	writer.Key("id");
+	writer.String(rasp_id.c_str());
+	writer.Key("host_name");
+	writer.String(host_name);
+	writer.Key("language");
+	writer.String("PHP");
+	writer.Key("language_version");
+	writer.String(OPENRASP_PHP_VERSION);
+	writer.Key("server_type");
+	writer.String(sapi_module.name);
+	writer.Key("server_version");
+	writer.String(OPENRASP_PHP_VERSION);
+	writer.Key("rasp_home");
+	writer.String(openrasp_ini.root_dir);
+	writer.Key("local_ip");
+	writer.String(local_ip);
+	writer.Key("version");
+	writer.String(PHP_OPENRASP_VERSION);
+	writer.EndObject();
+
+	perform_curl(curl, url_string, s.GetString(), res_info);
 	if (CURLE_OK != res_info.res)
 	{
 		openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, CURL error code: %d."), res_info.res);
