@@ -408,7 +408,7 @@ void fetch_hw_addrs(std::vector<std::string> &hw_addrs)
             {
                 continue;
             }
-            if ((strcmp("lo", ifa->ifa_name) == 0) ||
+            if ((ifa->ifa_flags & (IFF_LOOPBACK)) ||
                 !(ifa->ifa_flags & (IFF_RUNNING)))
             {
                 continue;
@@ -554,14 +554,14 @@ bool file_exist(const char *abs_path TSRMLS_DC)
 
 const static size_t OVECCOUNT = 30; /* should be a multiple of 3 */
 
-bool regex_match(const char *str, const char *regex)
+bool regex_match(const char *str, const char *regex, int options)
 {
     pcre *re = nullptr;
     int ovector[OVECCOUNT];
     const char *error = nullptr;
     int erroffset = 0;
     int rc = 0;
-    re = pcre_compile(regex, 0, &error, &erroffset, nullptr);
+    re = pcre_compile(regex, options, &error, &erroffset, nullptr);
     if (re == nullptr)
     {
         return false;
