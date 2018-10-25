@@ -613,10 +613,10 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows)
         {
             value = value.replaceAll('/', '\\')
         }
-
+        
         // 参数必须有跳出目录，或者是绝对路径
         if ((value == target || target.endsWith(value))
-            && (has_traversal(value) || target == realpath))
+            && (has_traversal(value) || value == realpath))
         {
             verdict = true
             return true
