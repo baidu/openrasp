@@ -103,7 +103,7 @@ public class AttackInfo extends EventInfo {
         // 是否拦截
         info.put("intercept_state", this.action);
         // 检测算法
-        info.put("algorithm", this.algorithm);
+        info.put("plugin_algorithm", this.algorithm);
 
         if (request != null) {
             // 请求ID
