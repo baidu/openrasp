@@ -141,13 +141,11 @@ public class LogConfig {
      */
     public static void syslogManager() {
         if (Config.getConfig().getSyslogSwitch()) {
-            System.out.println("3333333333");
             String syslogUrl = Config.getConfig().getSyslogUrl();
             try {
                 URL url = new URL(syslogUrl);
                 String syslogAddress = url.getHost();
                 int syslogPort = OSUtil.getPort(url);
-                System.out.println(syslogAddress+"===="+syslogPort);
                 if (syslogAddress != null && !syslogAddress.trim().isEmpty() && syslogPort >= 0 && syslogPort <= 65535) {
                     DynamicConfigAppender.createSyslogAppender(syslogAddress, syslogPort);
                 }

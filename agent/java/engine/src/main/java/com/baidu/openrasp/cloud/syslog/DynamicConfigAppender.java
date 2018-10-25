@@ -22,15 +22,13 @@ public class DynamicConfigAppender {
         if (logger.getAppender(SYSLOG_APPENDER_NAME) != null){
             return;
         }
-        SyslogTcpAppender appender = new SyslogTcpAppender(address,port,8);
+        RaspCustomLayout layout = new RaspCustomLayout();
+        layout.setConversionPattern("%e -%m%n");
+        SyslogTcpAppender appender = new SyslogTcpAppender(address,port,8,layout);
         appender.setName(SYSLOG_APPENDER_NAME);
         appender.setThreshold(Level.INFO);
         appender.setFacilityPrinting(true);
         appender.setReconnectionDelay(60000);
-//        RaspCustomLayout layout = new RaspCustomLayout("%e -%m%n");
-//        layout.setConversionPattern("%e -%m%n");
-        CustomLayout layout = new CustomLayout();
-        appender.setLayout(layout);
         logger.addAppender(appender);
     }
 
@@ -44,7 +42,9 @@ public class DynamicConfigAppender {
     public static void updateSyslogTag(){
         Logger logger = Logger.getLogger(LOGGER_NAME);
         if (logger.getAppender(SYSLOG_APPENDER_NAME) != null) {
-            logger.getAppender(SYSLOG_APPENDER_NAME).setLayout(new CustomLayout());
+            RaspCustomLayout layout = new RaspCustomLayout();
+            layout.setConversionPattern("%e -%m%n");
+            logger.getAppender(SYSLOG_APPENDER_NAME).setLayout(layout);
         }
     }
 
