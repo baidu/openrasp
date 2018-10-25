@@ -88,21 +88,15 @@ class Snapshot : public v8::StartupData
 {
 public:
   uint64_t timestamp = 0;
-  intptr_t external_references[2] = {
-      reinterpret_cast<intptr_t>(v8native_log),
-      0,
-  };
-  Snapshot(const v8::StartupData &blob) : v8::StartupData(blob){};
+  intptr_t *external_references;
   Snapshot(const char *data = nullptr, size_t raw_size = 0, uint64_t timestamp = 0);
+  Snapshot(const v8::StartupData &blob) : Snapshot(blob.data, blob.raw_size){};
   Snapshot(const std::string &path, uint64_t timestamp = 0);
   Snapshot(const std::string &config, const std::vector<PluginFile> &plugin_list);
-  ~Snapshot() { delete[] data; };
+  ~Snapshot();
   bool Save(const std::string &path) const; // check errno when return value is false
   bool IsOk() const { return data && raw_size; };
   bool IsExpired(uint64_t timestamp) const { return timestamp > this->timestamp; };
-
-private:
-  static void v8native_log(const v8::FunctionCallbackInfo<v8::Value> &info);
 };
 
 class Isolate : public v8::Isolate
@@ -152,6 +146,7 @@ extern openrasp_v8_process_globals process_globals;
 
 v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val);
 v8::Local<v8::Object> NewRequestContext(v8::Isolate *isolate);
+void log_callback(const v8::FunctionCallbackInfo<v8::Value> &info);
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result);
 void load_plugins();
 } // namespace openrasp

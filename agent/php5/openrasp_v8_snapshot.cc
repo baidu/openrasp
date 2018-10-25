@@ -8,6 +8,10 @@ Snapshot::Snapshot(const char *data, size_t raw_size, uint64_t timestamp)
     this->data = data;
     this->raw_size = raw_size;
     this->timestamp = timestamp;
+    this->external_references = new intptr_t[2]{
+        reinterpret_cast<intptr_t>(log_callback),
+        0,
+    };
 }
 Snapshot::Snapshot(const std::string &path, uint64_t timestamp) : Snapshot()
 {
@@ -47,7 +51,7 @@ Snapshot::Snapshot(const std::string &config, const std::vector<PluginFile> &plu
         v8::Local<v8::Object> global = context->Global();
         global->Set(NewV8String(isolate, "global"), global);
         global->Set(NewV8String(isolate, "window"), global);
-        v8::Local<v8::Function> log = v8::Function::New(isolate, v8native_log);
+        v8::Local<v8::Function> log = v8::Function::New(isolate, log_callback);
         v8::Local<v8::Object> v8_stdout = v8::Object::New(isolate);
         v8_stdout->Set(NewV8String(isolate, "write"), log);
         global->Set(NewV8String(isolate, "stdout"), v8_stdout);
@@ -91,6 +95,11 @@ Snapshot::Snapshot(const std::string &config, const std::vector<PluginFile> &plu
     this->data = snapshot.data;
     this->raw_size = snapshot.raw_size;
 }
+Snapshot::~Snapshot()
+{
+    delete[] data;
+    delete[] external_references;
+}
 bool Snapshot::Save(const std::string &path) const
 {
     std::ofstream file(path);
@@ -101,14 +110,5 @@ bool Snapshot::Save(const std::string &path) const
     }
     // check errno when return value is false
     return false;
-}
-void Snapshot::v8native_log(const v8::FunctionCallbackInfo<v8::Value> &info)
-{
-    TSRMLS_FETCH();
-    for (int i = 0; i < info.Length(); i++)
-    {
-        v8::String::Utf8Value message(info[i]);
-        LOG_G(plugin_logger).log(LEVEL_INFO, *message, message.length() TSRMLS_CC);
-    }
 }
 } // namespace openrasp

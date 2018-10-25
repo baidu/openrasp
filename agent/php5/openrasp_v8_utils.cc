@@ -132,6 +132,16 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
     return rst;
 }
 
+void log_callback(const v8::FunctionCallbackInfo<v8::Value> &info)
+{
+    TSRMLS_FETCH();
+    for (int i = 0; i < info.Length(); i++)
+    {
+        v8::String::Utf8Value message(info[i]);
+        LOG_G(plugin_logger).log(LEVEL_INFO, *message, message.length() TSRMLS_CC);
+    }
+}
+
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)
 {
     TSRMLS_FETCH();
