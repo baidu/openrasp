@@ -19,6 +19,7 @@ package com.baidu.openrasp.cloud;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
+import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.cloud.Utils.CloudUtils;
 import com.baidu.openrasp.messaging.LogConfig;
@@ -54,7 +55,7 @@ public class KeepAlive {
                 GenericResponse response = new CloudHttpPool().request(url, content);
                 if (response != null) {
                     handler(response);
-                }else {
+                } else {
                     CloudManager.LOGGER.warn("[OpenRASP] Cloud Control Send HeartBeat Failed");
                 }
                 try {
@@ -80,7 +81,7 @@ public class KeepAlive {
             if (configTime != null) {
                 CloudCacheModel.getInstance().setConfigTime(((JsonPrimitive) configTime).getAsLong());
             }
-            Map<String,Object> pluginMap = CloudUtils.getMapFromData(response, "plugin");
+            Map<String, Object> pluginMap = CloudUtils.getMapFromData(response, "plugin");
             if (pluginMap != null) {
                 if (pluginMap.get("plugin_version") != null) {
                     CloudCacheModel.getInstance().setPluginVersion(((JsonPrimitive) pluginMap.get("plugin_version")).getAsString());
@@ -97,8 +98,8 @@ public class KeepAlive {
             if (configMap != null) {
                 Object object = configMap.get("algorithm.config");
                 if (object != null) {
-                    JsonObject jsonObject = (JsonObject)object;
-                    if (!jsonObject.toString().equals(CloudCacheModel.getInstance().getAlgorithmConfig())){
+                    JsonObject jsonObject = (JsonObject) object;
+                    if (!jsonObject.toString().equals(CloudCacheModel.getInstance().getAlgorithmConfig())) {
                         CloudCacheModel.getInstance().setAlgorithmConfig(jsonObject.toString());
                         if (Config.getConfig().getCloudSwitch()) {
                             String algorithmConfig = CloudCacheModel.getInstance().getAlgorithmConfig();
@@ -110,7 +111,15 @@ public class KeepAlive {
                 }
                 Config.getConfig().loadConfigFromCloud(configMap, true);
                 //云控下发配置时动态添加或者删除syslog
-                LogConfig.syslogManager();
+                Object syslogSwitch = configMap.get("syslog.enabled");
+                if (syslogSwitch != null) {
+                    LogConfig.syslogManager();
+                }
+                //云控下发配置时动态更新syslog.tag
+                Object syslogTag = configMap.get("syslog.tag");
+                if (syslogTag != null) {
+                    DynamicConfigAppender.updateSyslogTag();
+                }
             }
 
         }

@@ -16,6 +16,7 @@
 
 package com.baidu.openrasp.cloud.Utils;
 
+import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.config.Config;
@@ -66,13 +67,13 @@ public class CloudUtils {
                         JsonElement status = jsonObject.get("status");
                         JsonElement description = jsonObject.get("description");
                         JsonElement data = jsonObject.get("data");
-                        if (status!=null){
+                        if (status != null) {
                             response.setStatus(jsonObject.get("status").getAsInt());
                         }
-                        if (description!=null){
+                        if (description != null) {
                             response.setDescription(jsonObject.get("description").getAsString());
                         }
-                        if (data!=null){
+                        if (data != null) {
                             Set<Map.Entry<String, JsonElement>> entrySet = jsonObject.get("data").getAsJsonObject().entrySet();
                             for (Map.Entry<String, JsonElement> entry : entrySet) {
                                 map.put(entry.getKey(), entry.getValue());
@@ -94,7 +95,7 @@ public class CloudUtils {
                     public Map<String, Object> deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
                         Map<String, Object> map = new HashMap<String, Object>();
                         JsonObject jsonObject = jsonElement.getAsJsonObject();
-                        if (jsonObject != null){
+                        if (jsonObject != null) {
                             Set<Map.Entry<String, JsonElement>> entrySet = jsonObject.getAsJsonObject().entrySet();
                             for (Map.Entry<String, JsonElement> entry : entrySet) {
                                 map.put(entry.getKey(), entry.getValue());
@@ -124,9 +125,13 @@ public class CloudUtils {
         return gson;
     }
 
-    public static boolean checkCloudControlEnter() throws NoSuchAlgorithmException {
-        CloudCacheModel.getInstance().setRaspId(OSUtil.getID());
+    public static boolean checkCloudControlEnter() {
         if (Config.getConfig().getCloudSwitch()) {
+            try {
+                CloudCacheModel.getInstance().setRaspId(OSUtil.getID());
+            } catch (NoSuchAlgorithmException e) {
+                CloudManager.LOGGER.warn("get rasp id failed", e);
+            }
             String cloudAddress = Config.getConfig().getCloudAddress();
             String cloudAppId = Config.getConfig().getCloudAppId();
             return cloudAddress != null && !cloudAddress.trim().isEmpty() &&

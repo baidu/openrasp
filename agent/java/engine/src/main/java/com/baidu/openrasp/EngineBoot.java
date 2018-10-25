@@ -82,7 +82,7 @@ public class EngineBoot implements Module {
      *
      * @return 配置是否成功
      */
-    private static boolean loadConfig(String baseDir) throws IOException, NoSuchAlgorithmException {
+    private static boolean loadConfig(String baseDir) throws IOException {
         LogConfig.completeLogConfig(baseDir);
         //单机模式下动态添加获取删除syslog
         if (!CloudUtils.checkCloudControlEnter()){

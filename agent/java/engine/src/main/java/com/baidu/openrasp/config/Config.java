@@ -17,7 +17,9 @@
 package com.baidu.openrasp.config;
 
 import com.baidu.openrasp.cloud.Utils.CloudUtils;
+import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.exception.ConfigLoadException;
+import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.tool.FileUtil;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
@@ -70,10 +72,10 @@ public class Config extends FileScanListener {
         CLOUD_SWITCH("cloud.switch", "false"),
         CLOUD_ADDRESS("cloud.address", ""),
         CLOUD_APPID("cloud.appid", ""),
-        SYSLOG_SWITCH("syslog.switch", "false"),
-        SYSLOG_ADDRESS("syslog.address", ""),
-        SYSLOG_PORT("syslog.port", ""),
-        HOOK_WHITE_ALL("hook.white.ALL","true");
+        SYSLOG_ENABLE("syslog.enable", "false"),
+        SYSLOG_URL("syslog.url", ""),
+        SYSLOG_TAG("syslog.tag", "OPENRASP"),
+        HOOK_WHITE_ALL("hook.white.ALL", "true");
 
 
         Item(String key, String defaultValue) {
@@ -130,8 +132,8 @@ public class Config extends FileScanListener {
     private String cloudAppId;
     private int sqlCacheCapacity;
     private boolean syslogSwitch;
-    private String syslogAddress;
-    private int syslogPort;
+    private String syslogUrl;
+    private String syslogTag;
     private boolean hookWhiteAll;
 
 
@@ -204,6 +206,11 @@ public class Config extends FileScanListener {
         if (file.getName().equals(CONFIG_FILE_NAME)) {
             try {
                 loadConfigFromFile(file, false);
+                //单机模式下动态添加获取删除syslog和动态更新syslog tag
+                if (!CloudUtils.checkCloudControlEnter()){
+                    LogConfig.syslogManager();
+                    DynamicConfigAppender.updateSyslogTag();
+                }
             } catch (IOException e) {
                 LOGGER.warn("update rasp.properties failed because: " + e.getMessage());
             }
@@ -775,35 +782,35 @@ public class Config extends FileScanListener {
      *
      * @return syslog上传日志的地址
      */
-    public synchronized String getSyslogAddress() {
-        return syslogAddress;
+    public synchronized String getSyslogUrl() {
+        return syslogUrl;
     }
 
     /**
      * 设置syslog上传日志的地址，
      *
-     * @param syslogAddress 待设置的syslog上传日志的地址
+     * @param syslogUrl 待设置的syslog上传日志的地址
      */
-    public synchronized void setSyslogAddress(String syslogAddress) {
-        this.syslogAddress = syslogAddress;
+    public synchronized void setSyslogUrl(String syslogUrl) {
+        this.syslogUrl = syslogUrl;
     }
 
     /**
-     * 获取syslog上传日志的端口，
+     * 获取syslog的layout中的tag字段信息，
      *
-     * @return syslog上传日志的端口
+     * @return syslog的layout中的tag字段信息
      */
-    public synchronized int getSyslogPort() {
-        return syslogPort;
+    public synchronized String getSyslogTag() {
+        return syslogTag;
     }
 
     /**
-     * 设置syslog上传日志的端口，
+     * 设置syslog的layout中的tag字段信息，
      *
-     * @param syslogPort 待设置syslog上传日志的端口
+     * @param syslogTag 待设置syslog的layout中的tag字段信息
      */
-    public synchronized void setSyslogPort(String syslogPort) {
-        this.syslogPort = Integer.parseInt(syslogPort);
+    public synchronized void setSyslogTag(String syslogTag) {
+        this.syslogTag = syslogTag;
     }
 
     /**
@@ -935,15 +942,16 @@ public class Config extends FileScanListener {
                 setCloudAppId(value);
             } else if (Item.SQL_CACHE_CAPACITY.key.equals(key)) {
                 setSqlCacheCapacity(value);
-            } else if (Item.SYSLOG_SWITCH.key.equals(key)) {
+            } else if (Item.SYSLOG_ENABLE.key.equals(key)) {
+                System.out.println(value+"999999999");
                 setSyslogSwitch(value);
-            } else if (Item.SYSLOG_ADDRESS.key.equals(key)) {
-                setSyslogAddress(value);
-            } else if (Item.SYSLOG_PORT.key.equals(key)) {
-                setSyslogPort(value);
-            } else if (Item.HOOK_WHITE_ALL.key.equals(key)){
+            } else if (Item.SYSLOG_URL.key.equals(key)) {
+                setSyslogUrl(value);
+            } else if (Item.SYSLOG_TAG.key.equals(key)) {
+                setSyslogTag(value);
+            } else if (Item.HOOK_WHITE_ALL.key.equals(key)) {
                 setHookWhiteAll(value);
-            }else {
+            } else {
                 isHit = false;
             }
             if (isHit) {

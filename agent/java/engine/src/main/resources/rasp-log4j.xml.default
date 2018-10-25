@@ -143,13 +143,11 @@
     <logger name="com.baidu.openrasp.plugin.checker.alarm" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="ALARM"/>
-        <appender-ref ref="HTTPAPPENDER"/>
     </logger>
 
     <logger name="com.baidu.openrasp.plugin.checker.policy_alarm" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="POLICY_ALARM"/>
-        <appender-ref ref="HTTPAPPENDER"/>
     </logger>
 
     <logger name="com.baidu.openrasp.plugin.js.engine.log" additivity="false">

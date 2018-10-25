@@ -18,6 +18,7 @@
 package com.baidu.openrasp.messaging;
 
 import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.Layout;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.net.SocketNode;
 import org.apache.log4j.net.ZeroConfSupport;
@@ -91,7 +92,7 @@ public class SyslogTcpAppender extends AppenderSkeleton {
   String facilityStr;
   boolean facilityPrinting = false;
   SyslogTcpWriter stw;
-
+  Layout layout;
   /**
    * If true, the appender will generate the HEADER (timestamp and host name)
    * part of the syslog packet.
@@ -440,7 +441,7 @@ public class SyslogTcpAppender extends AppenderSkeleton {
    * returns <code>false</code>.  
    * */
   public boolean requiresLayout() {
-    return false;
+    return true;
   }
 
   /**
@@ -569,11 +570,21 @@ public class SyslogTcpAppender extends AppenderSkeleton {
     header = val;
   }
 
+  public void setLayout(Layout layout) {
+    this.layout = layout;
+  }
+
+  public Layout getLayout() {
+    return this.layout;
+  }
+
   /**
    * Get the host name used to identify this appender.
    * @return local host name
    * @since 1.2.15
    */
+
+
   private String getLocalHostname() {
     if (localHostname == null) {
       try {

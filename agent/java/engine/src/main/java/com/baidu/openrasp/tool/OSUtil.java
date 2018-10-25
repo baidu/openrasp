@@ -154,7 +154,7 @@ public class OSUtil {
         return ip != null ? ip : "";
     }
 
-    private static int getPort(URL url) {
+    public static int getPort(URL url) {
         int port = url.getPort();
         if (port < 0) {
             if ("https".equals(url.getProtocol().toLowerCase())) {

@@ -17,11 +17,14 @@
 package com.baidu.openrasp.messaging;
 
 import com.baidu.openrasp.EngineBoot;
-import com.baidu.openrasp.cloud.DynamicConfigSyslogAppender;
+import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.exception.ConfigLoadException;
+import com.baidu.openrasp.tool.OSUtil;
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 
 /**
@@ -138,14 +141,22 @@ public class LogConfig {
      */
     public static void syslogManager() {
         if (Config.getConfig().getSyslogSwitch()) {
-            String syslogAddress = Config.getConfig().getSyslogAddress();
-            int syslogPort = Config.getConfig().getSyslogPort();
-            if (syslogAddress != null && !syslogAddress.trim().isEmpty() && syslogPort >= 0 && syslogPort <= 65535) {
-                DynamicConfigSyslogAppender.createSyslogAppender(syslogAddress, syslogPort);
+            System.out.println("3333333333");
+            String syslogUrl = Config.getConfig().getSyslogUrl();
+            try {
+                URL url = new URL(syslogUrl);
+                String syslogAddress = url.getHost();
+                int syslogPort = OSUtil.getPort(url);
+                System.out.println(syslogAddress+"===="+syslogPort);
+                if (syslogAddress != null && !syslogAddress.trim().isEmpty() && syslogPort >= 0 && syslogPort <= 65535) {
+                    DynamicConfigAppender.createSyslogAppender(syslogAddress, syslogPort);
+                }
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
             }
 
         } else {
-            DynamicConfigSyslogAppender.removeSyslogAppender();
+            DynamicConfigAppender.removeSyslogAppender();
         }
     }
 }
