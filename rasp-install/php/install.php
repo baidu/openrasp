@@ -65,7 +65,7 @@ extension=$lib_filename
 openrasp.root_dir=$root_dir
 	
 ;拦截攻击后，跳转到这个URL
-;openrasp.block_url=https://rasp.baidu.com/blocked/
+;openrasp.block_redirect_url=https://rasp.baidu.com/blocked2/
 
 ;拦截攻击后，将状态码设置为这个值
 ;openrasp.block_status_code=302

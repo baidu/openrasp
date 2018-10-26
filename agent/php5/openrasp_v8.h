@@ -114,6 +114,7 @@ v8::Persistent<v8::String> key_action;
 v8::Persistent<v8::String> key_message;
 v8::Persistent<v8::String> key_name;
 v8::Persistent<v8::String> key_confidence;
+v8::Persistent<v8::String> key_algorithm;
 int action_hash_ignore;
 int action_hash_log;
 int action_hash_block;

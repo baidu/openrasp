@@ -227,8 +227,17 @@ static void build_complete_url(zval *items, zval *new_zv)
 
 static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_filter> &filters)
 {
+    std::vector<keys_filter> total_filters(filters);
+    if (openrasp_ini.clientip_header && strcmp(openrasp_ini.clientip_header, ""))
+    {
+        char* tmp_clientip_header = estrdup(openrasp_ini.clientip_header);
+        char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
+        const char* server_global_hey = ("HTTP_" + std::string(uch)).c_str();
+        total_filters.push_back({server_global_hey, "client_ip", nullptr});
+        efree(tmp_clientip_header);
+    }
     zval *origin_zv;
-    for (keys_filter filter:filters)
+    for (keys_filter filter : total_filters)
     {
         if (src && Z_TYPE_P(src) == IS_ARRAY)
         {
@@ -828,14 +837,6 @@ PHP_MINIT_FUNCTION(openrasp_log)
     if (check_sapi_need_alloc_shm())
     {
         openrasp_shared_alloc_startup();
-    }
-    if (openrasp_ini.clientip_header && strcmp(openrasp_ini.clientip_header, ""))
-    {
-        char* tmp_clientip_header = estrdup(openrasp_ini.clientip_header);
-        char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
-        const char* server_global_hey = ("HTTP_" + std::string(uch)).c_str();
-        alarm_filters.push_back({server_global_hey, "client_ip", nullptr});
-        efree(tmp_clientip_header);
     }
 #if defined(PHP_WIN32) && defined(HAVE_IPHLPAPI_WS2)
     PIP_ADAPTER_INFO pAdapterInfo;
