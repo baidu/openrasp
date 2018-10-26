@@ -23,7 +23,7 @@ public class DynamicConfigAppender {
             return;
         }
         RaspCustomLayout layout = new RaspCustomLayout();
-        layout.setConversionPattern("%e -%m%n");
+        layout.setConversionPattern("%e: %m%n");
         SyslogTcpAppender appender = new SyslogTcpAppender(address,port,8,layout);
         appender.setName(SYSLOG_APPENDER_NAME);
         appender.setThreshold(Level.INFO);

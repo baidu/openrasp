@@ -55,6 +55,7 @@ public class Register {
                         System.out.println("[OpenRASP] Cloud Control Registered Successed");
                         CloudManager.init();
                     }else {
+                        System.out.println("[OpenRASP] Cloud Control Registered Failed");
                         CloudManager.LOGGER.warn("[OpenRASP] Cloud Control Registered Failed: "+response.getDescription());
                     }
                 }
