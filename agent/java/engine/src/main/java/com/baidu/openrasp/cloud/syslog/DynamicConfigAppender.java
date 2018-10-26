@@ -12,8 +12,8 @@ import org.apache.log4j.Logger;
  * @create: 2018/10/12 11:35
  */
 public class DynamicConfigAppender {
-    private static final String LOGGER_NAME = "com.baidu.openrasp.plugin.checker.alarm";
-    private static final String POLICY_LOGGER_NAME = "com.baidu.openrasp.plugin.checker.policy_alarm";
+    public static final String LOGGER_NAME = "com.baidu.openrasp.plugin.checker.alarm";
+    public static final String POLICY_LOGGER_NAME = "com.baidu.openrasp.plugin.checker.policy_alarm";
     private static final String SYSLOG_APPENDER_NAME = "SYSLOGTCP";
     private static final String HTTP_APPENDER_NAME = "HTTPAPPENDER";
 
@@ -48,8 +48,8 @@ public class DynamicConfigAppender {
         }
     }
 
-    public static void createHttpAppenderForAlarm(){
-        Logger alarmLogger = Logger.getLogger(LOGGER_NAME);
+    public static void createHttpAppender(String loggerName){
+        Logger logger = Logger.getLogger(loggerName);
         HttpAppender appender = new HttpAppender();
         appender.setName(HTTP_APPENDER_NAME);
         BurstFilter filter = new BurstFilter();
@@ -57,18 +57,6 @@ public class DynamicConfigAppender {
         filter.setRefillAmount(100);
         filter.setRefillInterval(1000);
         appender.addFilter(filter);
-        alarmLogger.addAppender(appender);
-    }
-
-    public static void createHttpAppenderForPolicyAlarm(){
-        Logger policyAlarmLogger = Logger.getLogger(POLICY_LOGGER_NAME);
-        BurstFilter filter = new BurstFilter();
-        filter.setMaxBurst(100);
-        filter.setRefillAmount(100);
-        filter.setRefillInterval(1000);
-        HttpAppender appender = new HttpAppender();
-        appender.setName(HTTP_APPENDER_NAME);
-        appender.addFilter(filter);
-        policyAlarmLogger.addAppender(appender);
+        logger.addAppender(appender);
     }
 }

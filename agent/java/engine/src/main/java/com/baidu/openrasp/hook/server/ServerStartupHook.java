@@ -43,8 +43,8 @@ public abstract class ServerStartupHook extends AbstractClassHook {
         if (CloudUtils.checkCloudControlEnter()) {
             String cloudAddress = Config.getConfig().getCloudAddress();
             CloudCacheModel.getInstance().setMasterIp(OSUtil.getMasterIp(cloudAddress));
-            DynamicConfigAppender.createHttpAppenderForAlarm();
-            DynamicConfigAppender.createHttpAppenderForPolicyAlarm();
+            DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.LOGGER_NAME);
+            DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.POLICY_LOGGER_NAME);
             new Register();
         }
     }
