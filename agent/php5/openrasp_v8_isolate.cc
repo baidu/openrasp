@@ -49,6 +49,7 @@ Isolate *Isolate::New(Snapshot *snapshot_blob)
     data->action_hash_log = NewV8String(isolate, "log")->GetIdentityHash();
     data->action_hash_block = NewV8String(isolate, "block")->GetIdentityHash();
     data->request_context.Reset(isolate, NewRequestContext(isolate));
+    data->request_context_templ.Reset(isolate, NewRequestContextTemplate(isolate));
 
     isolate->v8::Isolate::SetData(0, data);
 

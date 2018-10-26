@@ -155,5 +155,14 @@ PHP_RINIT_FUNCTION(openrasp_v8)
             }
         }
     }
+    if (OPENRASP_V8_G(isolate))
+    {
+        auto isolate = OPENRASP_V8_G(isolate);
+        v8::HandleScope handle_scope(isolate);
+        auto data = isolate->GetData();
+        auto request_context_templ = data->request_context_templ.Get(isolate);
+        auto request_context = request_context_templ->NewInstance();
+        data->request_context.Reset(isolate, request_context);
+    }
     return SUCCESS;
 }

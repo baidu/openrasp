@@ -109,6 +109,7 @@ public:
     v8::Persistent<v8::Object> RASP;
     v8::Persistent<v8::Function> check;
     v8::Persistent<v8::Object> request_context;
+    v8::Persistent<v8::ObjectTemplate> request_context_templ;
     v8::Persistent<v8::String> key_action;
     v8::Persistent<v8::String> key_message;
     v8::Persistent<v8::String> key_name;
@@ -146,6 +147,7 @@ extern openrasp_v8_process_globals process_globals;
 
 v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val);
 v8::Local<v8::Object> NewRequestContext(v8::Isolate *isolate);
+v8::Local<v8::ObjectTemplate> NewRequestContextTemplate(v8::Isolate *isolate);
 void log_callback(const v8::FunctionCallbackInfo<v8::Value> &info);
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result);
 void load_plugins();
