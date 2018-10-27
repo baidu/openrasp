@@ -56,5 +56,6 @@ zval *fetch_outmost_zval_from_ht(HashTable *ht, const char *arKey);
 std::string json_encode_from_zval(zval *value TSRMLS_DC);
 
 bool regex_match(const char *str, const char *regex, int options = 0);
+bool start_with(const std::string &str, const std::string &prefix);
 
 #endif

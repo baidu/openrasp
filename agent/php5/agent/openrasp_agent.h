@@ -19,7 +19,7 @@
 
 #include "openrasp_v8.h"
 #include "openrasp_agent_manager.h"
-#include "utils/curl_helper.h"
+#include "backend_response.h"
 #include <signal.h>
 
 namespace openrasp
@@ -59,9 +59,6 @@ private:
 
 private:
   void do_heartbeat(CURL *curl TSRMLS_DC);
-  bool build_plugin_snapshot(TSRMLS_D);
-  bool update_official_plugin(HashTable *plugin_ht);
-  bool update_config(zval *config_zv, long config_time, bool *has_new_algorithm_config TSRMLS_DC);
 };
 
 class LogAgent : public BaseAgent

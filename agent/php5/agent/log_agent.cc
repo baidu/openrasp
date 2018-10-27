@@ -103,12 +103,20 @@ void LogAgent::run()
 
 bool LogAgent::post_logs_via_curl(std::string &log_arr, CURL *curl, std::string &url_string)
 {
-	ResponseInfo res_info;
-	perform_curl(curl, url_string, log_arr.c_str(), res_info);
-	if (CURLE_OK != res_info.res ||
-		res_info.response_code < 200 && res_info.response_code >= 300)
+	std::shared_ptr<BackendResponse> res_info = curl_perform(curl, url_string, log_arr.c_str());
+	if (!res_info)
 	{
-		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to post logs to %s."), url_string.c_str());
+		return false;
+	}
+	if (res_info->has_error())
+	{
+		return false;
+	}
+	if (!res_info->http_code_ok())
+	{
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to post logs to %s, http status: %ld."),
+					   url_string.c_str(),
+					   res_info->get_http_code());
 		return false;
 	}
 	return true;

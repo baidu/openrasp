@@ -169,6 +169,7 @@ bool OpenraspAgentManager::destroy_share_memory()
 
 bool OpenraspAgentManager::process_agent_startup()
 {
+	calculate_rasp_id();
 	if (openrasp_ini.plugin_update_enable)
 	{
 		agents.push_back(std::move((std::unique_ptr<BaseAgent>)new HeartBeatAgent()));
@@ -302,18 +303,13 @@ bool OpenraspAgentManager::agent_remote_register()
 	TSRMLS_FETCH();
 	if (!fetch_source_in_ip_packets(local_ip, sizeof(local_ip), openrasp_ini.backend_url))
 	{
-		sprintf(local_ip, "");
-	}
-	if (!calculate_rasp_id())
-	{
-		return false;
+		local_ip[0] = 0;
 	}
 	CURL *curl = curl_easy_init();
 	if (!curl)
 	{
 		return false;
 	}
-	ResponseInfo res_info;
 	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/rasp";
 
 	char host_name[255] = {0};
@@ -345,44 +341,37 @@ bool OpenraspAgentManager::agent_remote_register()
 	writer.String(PHP_OPENRASP_VERSION);
 	writer.EndObject();
 
-	perform_curl(curl, url_string, s.GetString(), res_info);
-	if (CURLE_OK != res_info.res)
+	std::shared_ptr<BackendResponse> res_info = curl_perform(curl, url_string, s.GetString());
+	if (!res_info)
 	{
-		openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, CURL error code: %d."), res_info.res);
 		return false;
 	}
-	zval *return_value = nullptr;
-	MAKE_STD_ZVAL(return_value);
-	php_json_decode(return_value, (char *)res_info.response_string.c_str(), res_info.response_string.size(), 1, 512 TSRMLS_CC);
-	if (Z_TYPE_P(return_value) != IS_ARRAY)
+	if (res_info->has_error())
 	{
-		zval_ptr_dtor(&return_value);
 		return false;
 	}
-	if (res_info.response_code >= 200 && res_info.response_code < 300)
+	if (!res_info->http_code_ok())
 	{
-		long status;
-		bool has_status = fetch_outmost_long_from_ht(Z_ARRVAL_P(return_value), "status", &status);
-		char *description = fetch_outmost_string_from_ht(Z_ARRVAL_P(return_value), "description");
-		if (has_status && description)
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, response code: %ld."),
+					   res_info->get_http_code());
+		return false;
+	}
+	int64_t status;
+	std::string description;
+	bool has_status = res_info->fetch_status(status);
+	bool has_description = res_info->fetch_description(description);
+	if (has_status && has_description)
+	{
+		if (0 == status)
 		{
-			if (0 == status)
-			{
-				zval_ptr_dtor(&return_value);
-				return true;
-			}
-			else
-			{
-				openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, status: %ld, description : %s."),
-							   status, description);
-			}
+			return true;
+		}
+		else
+		{
+			openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, status: %ld, description : %s."),
+						   status, description.c_str());
 		}
 	}
-	else
-	{
-		openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, response code: %ld."), res_info.response_code);
-	}
-	zval_ptr_dtor(&return_value);
 	return false;
 }
 
