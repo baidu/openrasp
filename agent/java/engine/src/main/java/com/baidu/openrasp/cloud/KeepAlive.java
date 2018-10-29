@@ -72,6 +72,7 @@ public class KeepAlive {
         params.put("rasp_id", CloudCacheModel.getInstance().getRaspId());
         params.put("plugin_version", CloudCacheModel.getInstance().getPluginVersion());
         params.put("config_time", CloudCacheModel.getInstance().getConfigTime());
+        params.put("plugin_md5",CloudCacheModel.getInstance().getPluginMD5());
         return params;
     }
 
@@ -83,8 +84,11 @@ public class KeepAlive {
             }
             Map<String, Object> pluginMap = CloudUtils.getMapFromData(response, "plugin");
             if (pluginMap != null) {
-                if (pluginMap.get("plugin_version") != null) {
-                    CloudCacheModel.getInstance().setPluginVersion(((JsonPrimitive) pluginMap.get("plugin_version")).getAsString());
+                if (pluginMap.get("version") != null) {
+                    CloudCacheModel.getInstance().setPluginVersion(((JsonPrimitive) pluginMap.get("version")).getAsString());
+                }
+                if (pluginMap.get("md5") != null) {
+                    CloudCacheModel.getInstance().setPluginMD5(((JsonPrimitive) pluginMap.get("md5")).getAsString());
                 }
                 if (pluginMap.get("plugin") != null) {
                     String plugin = ((JsonPrimitive) pluginMap.get("plugin")).getAsString();
@@ -111,7 +115,7 @@ public class KeepAlive {
                 }
                 Config.getConfig().loadConfigFromCloud(configMap, true);
                 //云控下发配置时动态添加或者删除syslog
-                Object syslogSwitch = configMap.get("syslog.enabled");
+                Object syslogSwitch = configMap.get("syslog.enable");
                 if (syslogSwitch != null) {
                     LogConfig.syslogManager();
                 }

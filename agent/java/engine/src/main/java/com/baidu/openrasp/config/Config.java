@@ -75,6 +75,7 @@ public class Config extends FileScanListener {
         SYSLOG_ENABLE("syslog.enable", "false"),
         SYSLOG_URL("syslog.url", ""),
         SYSLOG_TAG("syslog.tag", "OPENRASP"),
+        SYSLOG_RECONNECT_INTERVAL("syslog.reconnect_interval","300000"),
         HOOK_WHITE_ALL("hook.white.ALL", "true");
 
 
@@ -134,6 +135,7 @@ public class Config extends FileScanListener {
     private boolean syslogSwitch;
     private String syslogUrl;
     private String syslogTag;
+    private int syslogReconnectInterval;
     private boolean hookWhiteAll;
 
 
@@ -814,6 +816,27 @@ public class Config extends FileScanListener {
     }
 
     /**
+     * 获取syslog的重连时间，
+     *
+     * @return syslog的重连时间
+     */
+    public synchronized int getSyslogReconnectInterval() {
+        return syslogReconnectInterval;
+    }
+
+    /**
+     * 设置syslog的重连时间，
+     *
+     * @param syslogReconnectInterval 待设置syslog的重连时间
+     */
+    public synchronized void setSyslogReconnectInterval(String syslogReconnectInterval) {
+        this.syslogReconnectInterval = Integer.parseInt(syslogReconnectInterval);
+        if (this.syslogReconnectInterval < 0) {
+            this.syslogReconnectInterval = 300000;
+        }
+    }
+
+    /**
      * 获取是否禁用全部hook点，
      *
      * @return 是否禁用全部hook点
@@ -943,13 +966,14 @@ public class Config extends FileScanListener {
             } else if (Item.SQL_CACHE_CAPACITY.key.equals(key)) {
                 setSqlCacheCapacity(value);
             } else if (Item.SYSLOG_ENABLE.key.equals(key)) {
-                System.out.println(value+"999999999");
                 setSyslogSwitch(value);
             } else if (Item.SYSLOG_URL.key.equals(key)) {
                 setSyslogUrl(value);
             } else if (Item.SYSLOG_TAG.key.equals(key)) {
                 setSyslogTag(value);
-            } else if (Item.HOOK_WHITE_ALL.key.equals(key)) {
+            } else if (Item.SYSLOG_RECONNECT_INTERVAL.key.equals(key)){
+                setSyslogReconnectInterval(value);
+            }else if (Item.HOOK_WHITE_ALL.key.equals(key)) {
                 setHookWhiteAll(value);
             } else {
                 isHit = false;

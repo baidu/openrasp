@@ -62,14 +62,20 @@ public class HttpAppender extends AppenderSkeleton {
             String jsonString = loggingEvent.getRenderedMessage();
             JsonArray jsonArray = mergeFromAppenderCache(loggingEvent.getLoggerName(), jsonString);
             String logger = getLogger(loggingEvent.getLoggerName());
-            GenericResponse response = cloudHttp.request(getUrl(logger), new Gson().toJson(jsonArray));
-            if (response != null) {
-                Integer responseCode = response.getResponseCode();
-                if (responseCode != null && responseCode >= 200 && responseCode < 300) {
-                    return;
+            if (logger != null) {
+                String requestUrl = getUrl(logger);
+                if (requestUrl != null) {
+                    GenericResponse response = cloudHttp.request(requestUrl, new Gson().toJson(jsonArray));
+                    if (response != null) {
+                        Integer responseCode = response.getResponseCode();
+                        if (responseCode != null && responseCode >= 200 && responseCode < 300) {
+                            return;
+                        }
+                    }
+                    AppenderCache.setCache(logger, jsonString);
                 }
             }
-            AppenderCache.setCache(logger, jsonString);
+
         }
     }
 
@@ -85,24 +91,29 @@ public class HttpAppender extends AppenderSkeleton {
     }
 
     private String getLogger(String loggerName) {
-        String name;
+        String name = null;
         if (loggerName.contains("policy_alarm")) {
+
             name = "policy_alarm";
+
         } else if (loggerName.contains("alarm")) {
+
             name = "alarm";
-        } else {
+
+        } else if (loggerName.contains("js")) {
+
             name = "plugin";
         }
         return name;
     }
 
     private String getUrl(String logger) {
-        String url;
+        String url = null;
         if ("policy_alarm".equals(logger)) {
             url = CloudRequestUrl.CLOUD_POLICY_ALARM_HTTP_APPENDER_URL;
         } else if ("alarm".equals(logger)) {
             url = CloudRequestUrl.CLOUD_ALARM_HTTP_APPENDER_URL;
-        } else {
+        } else if ("plugin".equals(logger)) {
             url = CloudRequestUrl.CLOUD_PLUGIN_HTTP_APPENDER_URL;
         }
         return url;

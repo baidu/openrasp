@@ -1,6 +1,7 @@
 package com.baidu.openrasp.cloud.syslog;
 
 import com.baidu.openrasp.cloud.httpappender.HttpAppender;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.BurstFilter;
 import com.baidu.openrasp.messaging.SyslogTcpAppender;
 import org.apache.log4j.Level;
@@ -28,7 +29,7 @@ public class DynamicConfigAppender {
         appender.setName(SYSLOG_APPENDER_NAME);
         appender.setThreshold(Level.INFO);
         appender.setFacilityPrinting(true);
-        appender.setReconnectionDelay(60000);
+        appender.setReconnectionDelay(Config.getConfig().getSyslogReconnectInterval());
         logger.addAppender(appender);
     }
 

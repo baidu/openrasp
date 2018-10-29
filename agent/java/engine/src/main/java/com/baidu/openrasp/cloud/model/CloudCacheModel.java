@@ -26,6 +26,7 @@ import java.util.HashMap;
 public class CloudCacheModel {
     public String plugin;
     public String pluginVersion = "0";
+    public String pluginMD5 = "";
     public long configTime = 0;
     public String algorithmConfig;
     public String raspId;
@@ -37,6 +38,14 @@ public class CloudCacheModel {
 
     private static class ObjectHolder {
         static CloudCacheModel instance = new CloudCacheModel();
+    }
+
+    public String getPluginMD5() {
+        return pluginMD5;
+    }
+
+    public void setPluginMD5(String pluginMD5) {
+        this.pluginMD5 = pluginMD5;
     }
 
     public String getRaspId() {
