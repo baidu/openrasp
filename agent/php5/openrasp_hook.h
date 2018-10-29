@@ -324,7 +324,7 @@ bool openrasp_zval_in_request(zval *item TSRMLS_DC);
 char *openrasp_real_path(char *filename, int filename_len, bool use_include_path, uint32_t w_op TSRMLS_DC);
 
 void slow_query_alarm(int rows TSRMLS_DC);
-void sql_type_handler(char *query, int query_len, char *server TSRMLS_DC);
+void plugin_sql_check(char *query, int query_len, char *server TSRMLS_DC);
 long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count, zval *params[] TSRMLS_DC);
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
 

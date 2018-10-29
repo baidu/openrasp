@@ -133,7 +133,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
     return need_block;
 }
 
-void sql_type_handler(char *query, int query_len, char *server TSRMLS_DC)
+void plugin_sql_check(char *query, int query_len, char *server TSRMLS_DC)
 {
     openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (isolate)

@@ -102,8 +102,8 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     convert_to_string(path);
     char *real_path = nullptr;
     const char *scheme_end = nullptr;
-    if ((Z_STRVAL_P(path) && (scheme_end = fetch_url_scheme(Z_STRVAL_P(path))) != nullptr) || (strlen(Z_STRVAL_P(path)) < 4 || 
-    (strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".php") && strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".inc"))))
+    if ((Z_STRVAL_P(path) && (scheme_end = fetch_url_scheme(Z_STRVAL_P(path))) != nullptr) || (strlen(Z_STRVAL_P(path)) < 4 ||
+                                                                                               (strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".php") && strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".inc"))))
     {
         real_path = openrasp_real_path(Z_STRVAL_P(path), Z_STRLEN_P(path), 1, READING TSRMLS_CC);
     }
@@ -131,7 +131,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
                 send_to_plugin = true;
             }
             else
-            {   
+            {
                 assert(Z_TYPE_PP(doc_root) == IS_STRING);
                 if (0 == strncmp(real_path, Z_STRVAL_PP(doc_root), Z_STRLEN_PP(doc_root)))
                 {
@@ -140,7 +140,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
                 else
                 {
                     send_to_plugin = true;
-                }  
+                }
             }
         }
         openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
