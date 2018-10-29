@@ -23,6 +23,7 @@ import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.tool.OSUtil;
+import org.apache.log4j.Logger;
 
 /**
  * Created by tyy on 18-8-10.
@@ -30,6 +31,7 @@ import com.baidu.openrasp.tool.OSUtil;
  * 用于 hook 服务器的启动函数，用于记录服务器的基本信息，同时可以用作基线检测
  */
 public abstract class ServerStartupHook extends AbstractClassHook {
+    public static final Logger LOGGER = Logger.getLogger(ServerStartupHook.class.getName());
 
     @Override
     public String getType() {
@@ -42,7 +44,11 @@ public abstract class ServerStartupHook extends AbstractClassHook {
     protected static void sendRegister() {
         if (CloudUtils.checkCloudControlEnter()) {
             String cloudAddress = Config.getConfig().getCloudAddress();
-            CloudCacheModel.getInstance().setMasterIp(OSUtil.getMasterIp(cloudAddress));
+            try {
+                CloudCacheModel.getInstance().setMasterIp(OSUtil.getMasterIp(cloudAddress));
+            } catch (Exception e) {
+                LOGGER.error("get local ip failed: ", e);
+            }
             DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.LOGGER_NAME);
             DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.POLICY_LOGGER_NAME);
             new Register();

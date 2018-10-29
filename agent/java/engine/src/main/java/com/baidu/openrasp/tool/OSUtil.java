@@ -112,7 +112,7 @@ public class OSUtil {
                         continue;
                     String macString = "";
                     for (byte b : mac) {
-                        macString += (hexByte(b)+ "-");
+                        macString += (hexByte(b) + "-");
                     }
                     macs.add(macString.substring(0, macString.length() - 1));
                 }
@@ -141,16 +141,11 @@ public class OSUtil {
         return System.getProperty("os.name") != null && System.getProperty("os.name").toLowerCase().contains("mac os x");
     }
 
-    public static String getMasterIp(String requestUrl) {
-        String ip = null;
-        try {
-            URL url = new URL(requestUrl);
-            Socket socket = new Socket();
-            socket.connect(new InetSocketAddress(url.getHost(), getPort(url)),2000);
-            ip = socket.getLocalAddress().getHostAddress();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public static String getMasterIp(String requestUrl) throws Exception {
+        URL url = new URL(requestUrl);
+        Socket socket = new Socket();
+        socket.connect(new InetSocketAddress(url.getHost(), getPort(url)), 2000);
+        String ip = socket.getLocalAddress().getHostAddress();
         return ip != null ? ip : "";
     }
 
