@@ -129,7 +129,7 @@ public class CloudUtils {
         if (Config.getConfig().getCloudSwitch()) {
             try {
                 CloudCacheModel.getInstance().setRaspId(OSUtil.getID());
-            } catch (NoSuchAlgorithmException e) {
+            } catch (Exception e) {
                 CloudManager.LOGGER.warn("get rasp id failed", e);
             }
             String cloudAddress = Config.getConfig().getCloudAddress();

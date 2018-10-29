@@ -87,7 +87,7 @@ public class OSUtil {
         return os;
     }
 
-    public static String getID() throws NoSuchAlgorithmException {
+    public static String getID() throws Exception {
         LinkedList<String> macs = OSUtil.getMacAddress();
         String macString = "";
         for (String mac : macs) {
@@ -99,26 +99,21 @@ public class OSUtil {
         return bigInt.toString(16);
     }
 
-    private static LinkedList<String> getMacAddress() {
-        Enumeration<NetworkInterface> el;
+    private static LinkedList<String> getMacAddress() throws Exception{
         LinkedList<String> macs = new LinkedList<String>();
-        try {
-            el = NetworkInterface.getNetworkInterfaces();
-            while (el.hasMoreElements()) {
-                NetworkInterface netInterface = el.nextElement();
-                if (!netInterface.isLoopback()) {
-                    byte[] mac = netInterface.getHardwareAddress();
-                    if (mac == null)
-                        continue;
-                    String macString = "";
-                    for (byte b : mac) {
-                        macString += (hexByte(b) + "-");
-                    }
-                    macs.add(macString.substring(0, macString.length() - 1));
+        Enumeration<NetworkInterface> el = NetworkInterface.getNetworkInterfaces();
+        while (el.hasMoreElements()) {
+            NetworkInterface netInterface = el.nextElement();
+            if (!netInterface.isLoopback()) {
+                byte[] mac = netInterface.getHardwareAddress();
+                if (mac == null)
+                    continue;
+                String macString = "";
+                for (byte b : mac) {
+                    macString += (hexByte(b) + "-");
                 }
+                macs.add(macString.substring(0, macString.length() - 1));
             }
-        } catch (Exception e1) {
-            e1.printStackTrace();
         }
         Collections.sort(macs);
         return macs;
