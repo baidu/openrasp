@@ -29,13 +29,15 @@ private:
 
 private:
   PluginFile active_plugin;
+  std::string plugin_md5;
   std::string plugin_version;
   std::string algorithm_config;
 
 public:
-  PluginUpdatePackage(std::string content, std::string version);
+  PluginUpdatePackage(std::string content, std::string version, std::string md5);
   void set_algorithm(std::string algorithm);
   bool build_snapshot();
+  std::string get_md5() const;
   std::string get_version() const;
 };
 } // namespace openrasp

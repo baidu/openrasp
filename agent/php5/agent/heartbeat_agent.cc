@@ -91,12 +91,14 @@ void HeartBeatAgent::do_heartbeat(CURL *curl)
 	writer.StartObject();
 	writer.Key("rasp_id");
 	writer.String(oam->get_rasp_id().c_str());
+	writer.Key("plugin_md5");
+	writer.String(oam->agent_ctrl_block->get_plugin_md5());
 	writer.Key("plugin_version");
 	writer.String(oam->agent_ctrl_block->get_plugin_version());
 	writer.Key("config_time");
 	writer.Int64((scm ? scm->get_config_last_update() : 0));
 	writer.EndObject();
-
+	
 	std::shared_ptr<BackendResponse> res_info = curl_perform(curl, url_string, s.GetString());
 
 	if (!res_info)
@@ -124,6 +126,7 @@ void HeartBeatAgent::do_heartbeat(CURL *curl)
 		{
 			openrasp_error(E_WARNING, AGENT_ERROR, _("Heartbeat error, status: %ld, description : %s."),
 						   status, description.c_str());
+			return;
 		}
 
 		/************************************plugin update************************************/
@@ -132,6 +135,7 @@ void HeartBeatAgent::do_heartbeat(CURL *curl)
 		{
 			if (plugin_update_pkg->build_snapshot())
 			{
+				oam->agent_ctrl_block->set_plugin_md5(plugin_update_pkg->get_md5().c_str());
 				oam->agent_ctrl_block->set_plugin_version(plugin_update_pkg->get_version().c_str());
 			}
 		}

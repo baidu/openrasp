@@ -21,10 +21,11 @@ namespace openrasp
 
 const std::string PluginUpdatePackage::snapshot_filename = "snapshot.dat";
 
-PluginUpdatePackage::PluginUpdatePackage(std::string content, std::string version)
+PluginUpdatePackage::PluginUpdatePackage(std::string content, std::string version, std::string md5)
     : active_plugin(version, content)
 {
   plugin_version = version;
+  plugin_md5 = md5;
 }
 
 void PluginUpdatePackage::set_algorithm(std::string algorithm)
@@ -60,6 +61,11 @@ bool PluginUpdatePackage::build_snapshot()
 std::string PluginUpdatePackage::get_version() const
 {
   return plugin_version;
+}
+
+std::string PluginUpdatePackage::get_md5() const
+{
+  return plugin_md5;
 }
 
 } // namespace openrasp
