@@ -172,7 +172,7 @@ static void build_complete_url(zval *items, zval *new_zv TSRMLS_DC)
             buffer.append(server_addr);
         }
         char *server_port = fetch_outmost_string_from_ht(Z_ARRVAL_P(items), "SERVER_PORT");
-        if (server_port && strncmp(server_port, "80", 2) != 0)
+        if (server_port && strcmp(server_port, "80") != 0)
         {
             buffer.push_back(':');
             buffer.append(server_port);

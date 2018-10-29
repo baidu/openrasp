@@ -14,24 +14,31 @@
  * limitations under the License.
  */
 
-#ifndef _OPENRASP_CURL_HELPER_H_
-#define _OPENRASP_CURL_HELPER_H_
-#include <string>
-#include <curl/curl.h>
-#include "openrasp_hook.h"
+#ifndef _PLUGIN_CONTAINER_H_
+#define _PLUGIN_CONTAINER_H_
+
+#include "openrasp_config.h"
+#include "openrasp_agent.h"
 
 namespace openrasp
 {
-
-struct ResponseInfo
+class PluginUpdatePackage
 {
-    CURLcode res;
-    std::string response_string;
-    std::string header_string;
-    long response_code;
-    double elapsed;
-};
+private:
+  static const std::string snapshot_filename;
 
-void perform_curl(CURL *curl, const std::string url_string, const char *postdata, ResponseInfo &res_info);
+private:
+  PluginFile active_plugin;
+  std::string plugin_md5;
+  std::string plugin_version;
+  std::string algorithm_config;
+
+public:
+  PluginUpdatePackage(std::string content, std::string version, std::string md5);
+  void set_algorithm(std::string algorithm);
+  bool build_snapshot();
+  std::string get_md5() const;
+  std::string get_version() const;
+};
 } // namespace openrasp
 #endif

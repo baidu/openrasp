@@ -19,12 +19,13 @@
 
 #include "openrasp_v8.h"
 #include "openrasp_agent_manager.h"
-#include "utils/curl_helper.h"
+#include "backend_response.h"
 #include <signal.h>
 
 namespace openrasp
 {
 class LogCollectItem;
+
 class BaseAgent
 {
 public:
@@ -53,15 +54,10 @@ public:
   virtual void write_pid_to_shm(pid_t agent_pid);
 
 private:
-  std::string algorithm_config;
-  std::vector<PluginFile> active_plugins;
   static const int plugin_update_interval = 60;
 
 private:
-  void do_heartbeat(CURL *curl TSRMLS_DC);
-  bool build_plugin_snapshot(TSRMLS_D);
-  bool update_official_plugin(HashTable *plugin_ht);
-  bool update_config(zval *config_zv, long config_time, bool *has_new_algorithm_config TSRMLS_DC);
+  void do_heartbeat(CURL *curl);
 };
 
 class LogAgent : public BaseAgent

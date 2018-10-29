@@ -598,3 +598,13 @@ bool regex_match(const char *str, const char *regex, int options)
     pcre_free(re);
     return true;
 }
+
+bool start_with(const std::string &str, const std::string &prefix)
+{
+    size_t len1 = str.length();
+    size_t len2 = prefix.length();
+    if (len1 < len2) {
+        return false;
+    }
+    return (!str.compare(0, len2, prefix));    
+}

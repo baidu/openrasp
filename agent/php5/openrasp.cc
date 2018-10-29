@@ -120,7 +120,6 @@ PHP_MINIT_FUNCTION(openrasp)
     int result;
     result = PHP_MINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
-    result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
     openrasp::scm->startup();
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (openrasp::oam)
@@ -134,6 +133,7 @@ PHP_MINIT_FUNCTION(openrasp)
 #else
     openrasp::scm->build_check_type_white_array(OPENRASP_G(config));
 #endif
+    result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
     is_initialized = true;
     return SUCCESS;
 }

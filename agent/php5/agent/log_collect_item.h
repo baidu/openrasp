@@ -31,27 +31,30 @@ public:
 
 private:
   static const std::string status_file;
+
+public:
+  LogCollectItem(const std::string name, const std::string url_path, bool collect_enable TSRMLS_DC);
+
+  void update_status();
+  void determine_fpos(TSRMLS_D);
+  inline void update_curr_suffix();
+
+  bool need_rotate() const;
+  void handle_rotate(bool need_rotate TSRMLS_DC);
+
+  bool get_post_logs(std::string &body);
+  std::string get_cpmplete_url() const;
+  std::string get_active_log_file() const;
+
+private:
   const std::string name;
   const std::string url_path;
   std::string curr_suffix;
-
   std::ifstream ifs;
   int fpos = 0;
   long st_ino = 0;
   long last_post_time = 0;
   bool collect_enable = false;
-
-public:
-  LogCollectItem(const std::string name, const std::string url_path, bool collect_enable TSRMLS_DC);
-  void update_status();  
-  void determine_fpos(TSRMLS_D);
-  inline void update_curr_suffix();
-  bool get_post_logs(std::string &body);
-  void handle_rotate(bool need_rotate TSRMLS_DC);
-  bool need_rotate() const;
-  std::string get_cpmplete_url() const;
-  std::string get_active_log_file() const;
-
 
 private:
   void clear();
