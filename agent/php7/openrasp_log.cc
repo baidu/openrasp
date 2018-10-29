@@ -227,18 +227,17 @@ static void build_complete_url(zval *items, zval *new_zv)
 
 static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_filter> &filters)
 {
-    int added_filter_count = 0;
+    std::vector<keys_filter> total_filters(filters);
     if (openrasp_ini.clientip_header && strcmp(openrasp_ini.clientip_header, ""))
     {
         char* tmp_clientip_header = estrdup(openrasp_ini.clientip_header);
         char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
         const char* server_global_hey = ("HTTP_" + std::string(uch)).c_str();
-        filters.push_back({server_global_hey, "client_ip", nullptr});
-        added_filter_count += 1;
+        total_filters.push_back({server_global_hey, "client_ip", nullptr});
         efree(tmp_clientip_header);
     }
     zval *origin_zv;
-    for (keys_filter filter:filters)
+    for (keys_filter filter : total_filters)
     {
         if (src && Z_TYPE_P(src) == IS_ARRAY)
         {
@@ -293,10 +292,6 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
         {
             add_assoc_string(dest, filter.new_key_str, "");
         }
-    }
-    while(added_filter_count--)
-    {
-        filters.pop_back();
     }
 }
 

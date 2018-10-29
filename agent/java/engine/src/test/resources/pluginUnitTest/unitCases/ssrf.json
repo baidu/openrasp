@@ -12,7 +12,7 @@
             "url": ["http://172.16.177.120/hello.action?redirect=123"]
         }
     },
-    "description": "normal ssrf test"
+    "description": "SSRF userinput match test"
 },
 {
     "id": "ssrf_white",
@@ -28,5 +28,5 @@
             "url": ["https://www.baidu.com/?wd=123"]
         }
     },
-    "description": "ssrf false positive test"
+    "description": "SSRF false positive test"
 }]

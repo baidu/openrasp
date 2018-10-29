@@ -61,7 +61,8 @@ public class SSRFChecker extends ConfigurableChecker {
                     String ip = (String) ips.get(0);
                     if (url.equals(value) && Pattern.matches("^(127|192|172|10)\\..*", ip)) {
                         result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                                getActionElement(config, CONFIG_KEY_SSRF_USER_INPUT), "SSRF - Requesting intranet address: " + ip));
+                                getActionElement(config, CONFIG_KEY_SSRF_USER_INPUT),
+                                "SSRF - Requesting intranet address: " + ip, "ssrf_userinput"));
                     }
                 }
             }
@@ -79,24 +80,24 @@ public class SSRFChecker extends ConfigurableChecker {
                 }
             }
             if (isFound || hostName.equals("requestb.in")) {
-                result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                        getActionElement(config, CONFIG_KEY_SSRF_COMMON), "SSRF - Requesting known DNSLOG address"));
+                result.add(AttackInfo.createLocalAttackInfo(checkParameter, getActionElement(config,
+                        CONFIG_KEY_SSRF_COMMON), "SSRF - Requesting known DNSLOG address", "ssrf_common"));
             }
         }
 
         if (result.isEmpty()) {
             if (!isModuleIgnore(config, CONFIG_KEY_SSRF_AWS)
                     && hostName.equals("169.254.169.254")) {
-                result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                        getActionElement(config, CONFIG_KEY_SSRF_AWS), "SSRF - Requesting AWS metadata address"));
+                result.add(AttackInfo.createLocalAttackInfo(checkParameter, getActionElement(config,
+                        CONFIG_KEY_SSRF_AWS), "SSRF - Requesting AWS metadata address", "ssrf_aws"));
             } else if (!isModuleIgnore(config, CONFIG_KEY_SSRF_OBFUSCATE)
                     && StringUtils.isNumeric(hostName)) {
-                result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                        getActionElement(config, CONFIG_KEY_SSRF_OBFUSCATE), "SSRF - Requesting numeric IP address"));
+                result.add(AttackInfo.createLocalAttackInfo(checkParameter, getActionElement(config,
+                        CONFIG_KEY_SSRF_OBFUSCATE), "SSRF - Requesting numeric IP address", "ssrf_obfuscate"));
             } else if (!isModuleIgnore(config, CONFIG_KEY_SSRF_OBFUSCATE)
                     && hostName.startsWith("0x") && !hostName.contains(".")) {
-                result.add(AttackInfo.createLocalAttackInfo(checkParameter,
-                        getActionElement(config, CONFIG_KEY_SSRF_OBFUSCATE), "SSRF - Requesting hexadecimal IP address"));
+                result.add(AttackInfo.createLocalAttackInfo(checkParameter, getActionElement(config,
+                        CONFIG_KEY_SSRF_OBFUSCATE), "SSRF - Requesting hexadecimal IP address", "ssrf_obfuscate"));
             }
         }
         return result;
