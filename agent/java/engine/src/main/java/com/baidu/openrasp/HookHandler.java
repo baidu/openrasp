@@ -286,11 +286,15 @@ public class HookHandler {
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
     public static void doCheckWithoutRequest(CheckParameter.Type type, Object params) {
-        StringBuffer sb = requestCache.get().getRequestURL();
-        String url = sb.substring(sb.indexOf("://") + 3);
-        if ((Config.getConfig().getHookWhiteAll() && Config.getConfig().getCloudSwitch())
-                || HookWhiteModel.isContainURL(type.getName(), url)) {
+        if (Config.getConfig().getHookWhiteAll() && Config.getConfig().getCloudSwitch()){
             return;
+        }
+        if (requestCache.get()!=null){
+            StringBuffer sb = requestCache.get().getRequestURL();
+            String url = sb.substring(sb.indexOf("://") + 3);
+            if (HookWhiteModel.isContainURL(type.getName(), url)) {
+                return;
+            }
         }
         long a = 0;
         if (Config.getConfig().getDebugLevel() > 0) {
