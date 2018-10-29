@@ -175,29 +175,4 @@ bool BackendResponse::erase_value(const char *key)
     return rapidjson::EraseValueByPointer(document, pointer);
 }
 
-// bool BackendResponse::jsonify_object_subset(const rapidjson::Pointer &pointer, std::function<bool(const char *filename)> key_filter, std::string &target)
-// {
-//     const rapidjson::Value *value = rapidjson::GetValueByPointer(document, pointer);
-//     rapidjson::Document sub_doc;
-//     if (value && value->IsObject())
-//     {
-//         for (auto it = value->MemberBegin(); it != value->MemberEnd(); ++it)
-//         {
-//             if (key_filter)
-//             {
-//                 if (key_filter(it->name.GetString().c_str()))
-//                 {
-//                     sub_doc.AddMember(it->name.GetString(), it->value, document.GetAllocator());
-//                 }
-//             }
-//         }
-//         rapidjson::StringBuffer sb;
-//         rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
-//         sub_doc.Accept(writer);
-//         target = sb.GetString();
-//         return true;
-//     }
-//     return false;
-// }
-
 } // namespace openrasp

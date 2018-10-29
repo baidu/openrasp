@@ -25,6 +25,7 @@
 namespace openrasp
 {
 class LogCollectItem;
+
 class BaseAgent
 {
 public:
@@ -53,12 +54,10 @@ public:
   virtual void write_pid_to_shm(pid_t agent_pid);
 
 private:
-  std::string algorithm_config;
-  std::vector<PluginFile> active_plugins;
   static const int plugin_update_interval = 60;
 
 private:
-  void do_heartbeat(CURL *curl TSRMLS_DC);
+  void do_heartbeat(CURL *curl);
 };
 
 class LogAgent : public BaseAgent

@@ -43,18 +43,23 @@ public:
 public:
   BackendResponse(){};
   BackendResponse(long response_code, std::string header_string, std::string response_string);
-  long get_http_code() const;
+
   bool has_error() const;
   bool http_code_ok() const;
+  long get_http_code() const;
+
+  bool fetch_status(int64_t &status);
+  bool fetch_description(std::string &description);
+
   bool erase_value(const char *key);
   bool fetch_int64(const char *key, int64_t &target);
   bool fetch_string(const char *key, std::string &target);
   bool stringify_object(const char *key, std::string &target);
-  bool fetch_status(int64_t &status);
-  bool fetch_description(std::string &description);
+
   std::shared_ptr<PluginUpdatePackage> build_plugin_update_package();
 };
 
 std::shared_ptr<BackendResponse> curl_perform(CURL *curl, const std::string &url_string, const char *postdata);
+
 } // namespace openrasp
 #endif

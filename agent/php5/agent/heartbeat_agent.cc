@@ -25,6 +25,7 @@
 #include "shared_config_manager.h"
 #include "third_party/rapidjson/stringbuffer.h"
 #include "third_party/rapidjson/writer.h"
+
 extern "C"
 {
 #include "ext/standard/php_smart_str.h"
@@ -47,15 +48,26 @@ HeartBeatAgent::HeartBeatAgent()
 void HeartBeatAgent::run()
 {
 	AGENT_SET_PROC_NAME(this->name.c_str());
+
 	install_signal_handler(
 		[](int signal_no) {
 			HeartBeatAgent::signal_received = signal_no;
 		});
-	TSRMLS_FETCH();
+
 	CURL *curl = curl_easy_init();
 	while (true)
 	{
-		do_heartbeat(curl TSRMLS_CC);
+		if (nullptr == curl)
+		{
+			curl = curl_easy_init();
+			if (nullptr == curl)
+			{
+				continue;
+			}
+		} //make sure curl is not nullptr
+
+		do_heartbeat(curl);
+
 		for (int i = 0; i < HeartBeatAgent::plugin_update_interval; ++i)
 		{
 			sleep(1);
@@ -69,17 +81,8 @@ void HeartBeatAgent::run()
 	}
 }
 
-void HeartBeatAgent::do_heartbeat(CURL *curl TSRMLS_DC)
+void HeartBeatAgent::do_heartbeat(CURL *curl)
 {
-	if (nullptr == curl)
-	{
-		curl = curl_easy_init();
-		if (nullptr == curl)
-		{
-			return;
-		}
-	} //make sure curl is not nullptr
-
 	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/heartbeat";
 
 	rapidjson::StringBuffer s;
@@ -142,6 +145,7 @@ void HeartBeatAgent::do_heartbeat(CURL *curl TSRMLS_DC)
 		std::string complete_config;
 		if (res_info->stringify_object("/data/config", complete_config))
 		{
+			/************************************shm config************************************/
 			OpenraspConfig openrasp_config(complete_config, OpenraspConfig::FromType::kJson);
 			if (scm != nullptr)
 			{
@@ -158,6 +162,8 @@ void HeartBeatAgent::do_heartbeat(CURL *curl TSRMLS_DC)
 			{
 				res_info->erase_value(("/data/config/hook.white." + std::string(map_iter.second)).c_str());
 			}
+
+			/************************************OPENRASP_G(config)************************************/
 			std::string exculde_hook_white_config;
 			if (res_info->stringify_object("/data/config", exculde_hook_white_config))
 			{

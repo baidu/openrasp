@@ -23,7 +23,6 @@
 
 namespace openrasp
 {
-// #define DEFAULT_STRING_CONFIG_LENGTH (512)
 #define WRITE_ARRAY_MAX_LENGTH (CHECK_TYPE_NR_ITEMS * 10 * 200 + 128 * 2)
 
 class SharedConfigBlock

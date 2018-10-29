@@ -18,9 +18,10 @@
 
 namespace openrasp
 {
-DoubleArrayTrie::DoubleArrayTrie() : array_(0), used_(0),
-                                     size_(0), alloc_size_(0),
-                                     no_delete_(0), error_(0)
+DoubleArrayTrie::DoubleArrayTrie()
+    : array_(0), used_(0),
+      size_(0), alloc_size_(0),
+      no_delete_(0), error_(0)
 {
 }
 

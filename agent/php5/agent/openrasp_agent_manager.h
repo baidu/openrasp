@@ -67,9 +67,11 @@ public:
 private:
   bool create_share_memory();
   bool destroy_share_memory();
-  void supervisor_run();
+
   bool process_agent_startup();
   void process_agent_shutdown();
+
+  void supervisor_run();
   bool calculate_rasp_id();
   pid_t search_fpm_master_pid();
   void check_work_processes_survival();

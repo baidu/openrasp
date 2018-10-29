@@ -26,6 +26,8 @@ class PluginUpdatePackage
 {
 private:
   static const std::string snapshot_filename;
+
+private:
   PluginFile active_plugin;
   std::string plugin_version;
   std::string algorithm_config;

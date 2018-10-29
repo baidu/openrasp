@@ -68,9 +68,10 @@ void LogAgent::run()
 			curl = curl_easy_init();
 			if (nullptr == curl)
 			{
-				return;
+				continue;
 			}
 		} //make sure curl is not nullptr
+		
 		for (int i = 0; i < log_dirs.size(); ++i)
 		{
 			LogCollectItem *ldi = log_dirs[i];

@@ -107,7 +107,7 @@ void LogCollectItem::save_status_snapshot() const
     writer.Key("st_ino");
     writer.Int64(st_ino);
     writer.EndObject();
-    
+
     std::string status_file_abs = get_base_dir_path() + LogCollectItem::status_file;
 #ifndef _WIN32
     mode_t oldmask = umask(0);
