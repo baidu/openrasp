@@ -48,7 +48,6 @@ Isolate *Isolate::New(Snapshot *snapshot_blob)
     data->action_hash_ignore = NewV8String(isolate, "ignore")->GetIdentityHash();
     data->action_hash_log = NewV8String(isolate, "log")->GetIdentityHash();
     data->action_hash_block = NewV8String(isolate, "block")->GetIdentityHash();
-    data->request_context.Reset(isolate, NewRequestContext(isolate));
     data->request_context_templ.Reset(isolate, NewRequestContextTemplate(isolate));
 
     isolate->v8::Isolate::SetData(0, data);
@@ -86,7 +85,16 @@ bool Isolate::Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::
     auto context = isolate->GetCurrentContext();
     v8::TryCatch try_catch;
     auto check = data->check.Get(isolate);
-    auto request_context = data->request_context.Get(isolate);
+    v8::Local<v8::Object> request_context;
+    if (data->request_context.IsEmpty())
+    {
+        request_context = data->request_context_templ.Get(isolate)->NewInstance();
+        data->request_context.Reset(isolate, request_context);
+    }
+    else
+    {
+        request_context = data->request_context.Get(isolate);
+    }
     v8::Local<v8::Value> argv[]{type, params, request_context};
 
     v8::Local<v8::Value> rst;

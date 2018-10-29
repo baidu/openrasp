@@ -455,38 +455,20 @@ static void server_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
     info.GetReturnValue().Set(server);
     self->SetInternalField(kServer, server);
 }
-v8::Local<v8::Object> NewRequestContext(v8::Isolate *isolate)
-{
-    v8::Local<v8::Context> context = isolate->GetCurrentContext();
-    v8::Local<v8::Object> obj = v8::Object::New(isolate);
-    obj->SetAccessor(context, NewV8String(isolate, "url"), url_getter).IsNothing();
-    obj->SetAccessor(context, NewV8String(isolate, "header"), header_getter).IsNothing();
-    obj->SetAccessor(context, NewV8String(isolate, "parameter"), parameter_getter).IsNothing();
-    obj->SetAccessor(context, NewV8String(isolate, "path"), path_getter).IsNothing();
-    obj->SetAccessor(context, NewV8String(isolate, "querystring"), querystring_getter).IsNothing();
-    obj->SetAccessor(context, NewV8String(isolate, "method"), method_getter).IsNothing();
-    obj->SetAccessor(context, NewV8String(isolate, "protocol"), protocol_getter).IsNothing();
-    obj->SetAccessor(context, NewV8String(isolate, "remoteAddr"), remoteAddr_getter).IsNothing();
-    obj->SetAccessor(context, NewV8String(isolate, "appBasePath"), appBasePath_getter).IsNothing();
-    obj->SetAccessor(context, NewV8String(isolate, "body"), body_getter).IsNothing();
-    obj->SetAccessor(context, NewV8String(isolate, "server"), server_getter).IsNothing();
-    return obj;
-}
 v8::Local<v8::ObjectTemplate> NewRequestContextTemplate(v8::Isolate *isolate)
 {
     auto obj_templ = v8::ObjectTemplate::New(isolate);
-    int index = 0;
-    obj_templ->SetAccessor(NewV8String(isolate, "url"), url_getter, nullptr, v8::Integer::New(isolate, index++));
-    obj_templ->SetAccessor(NewV8String(isolate, "header"), header_getter, nullptr, v8::Integer::New(isolate, index++));
-    obj_templ->SetAccessor(NewV8String(isolate, "parameter"), parameter_getter, nullptr, v8::Integer::New(isolate, index++));
-    obj_templ->SetAccessor(NewV8String(isolate, "path"), path_getter, nullptr, v8::Integer::New(isolate, index++));
-    obj_templ->SetAccessor(NewV8String(isolate, "querystring"), querystring_getter, nullptr, v8::Integer::New(isolate, index++));
-    obj_templ->SetAccessor(NewV8String(isolate, "method"), method_getter, nullptr, v8::Integer::New(isolate, index++));
-    obj_templ->SetAccessor(NewV8String(isolate, "protocol"), protocol_getter, nullptr, v8::Integer::New(isolate, index++));
-    obj_templ->SetAccessor(NewV8String(isolate, "remoteAddr"), remoteAddr_getter, nullptr, v8::Integer::New(isolate, index++));
-    obj_templ->SetAccessor(NewV8String(isolate, "appBasePath"), appBasePath_getter, nullptr, v8::Integer::New(isolate, index++));
-    obj_templ->SetAccessor(NewV8String(isolate, "body"), body_getter, nullptr, v8::Integer::New(isolate, index++));
-    obj_templ->SetAccessor(NewV8String(isolate, "server"), server_getter, nullptr, v8::Integer::New(isolate, index++));
+    obj_templ->SetAccessor(NewV8String(isolate, "url"), url_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "header"), header_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "parameter"), parameter_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "path"), path_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "querystring"), querystring_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "method"), method_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "protocol"), protocol_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "remoteAddr"), remoteAddr_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "appBasePath"), appBasePath_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "body"), body_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "server"), server_getter);
     obj_templ->SetInternalFieldCount(kEndForCount);
     return obj_templ;
 }
