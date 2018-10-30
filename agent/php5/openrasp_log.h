@@ -113,7 +113,7 @@ class RaspLoggerEntry
 
     void init(log_appender appender_int TSRMLS_DC);
     void clear(TSRMLS_D);
-    bool log(severity_level level_int, const char *message, int message_len TSRMLS_DC, bool detail = true);
+    bool log(severity_level level_int, const char *message, int message_len TSRMLS_DC, bool separate = true, bool detail = true);
     bool log(severity_level level_int, zval *params_result TSRMLS_DC);
     char *get_formatted_date_suffix() const;
     zval *get_common_info(TSRMLS_D) const;

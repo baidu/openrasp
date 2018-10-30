@@ -86,7 +86,7 @@ Snapshot::Snapshot(const std::string &config, const std::vector<PluginFile> &plu
             if (isolate->ExecScript(js_src.source, js_src.filename).IsEmpty())
             {
                 Exception e(isolate, try_catch);
-                LOG_G(plugin_logger).log(LEVEL_INFO, e.c_str(), e.length() TSRMLS_CC);
+                LOG_G(plugin_logger).log(LEVEL_INFO, e.c_str(), e.length() TSRMLS_CC, false, true);
                 openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize js plugin - %s"), e.c_str());
                 // no need to continue
                 return;
@@ -95,14 +95,14 @@ Snapshot::Snapshot(const std::string &config, const std::vector<PluginFile> &plu
         if (isolate->ExecScript(config, "config.js").IsEmpty())
         {
             Exception e(isolate, try_catch);
-            LOG_G(plugin_logger).log(LEVEL_INFO, e.c_str(), e.length() TSRMLS_CC);
+            LOG_G(plugin_logger).log(LEVEL_INFO, e.c_str(), e.length() TSRMLS_CC, false, true);
         }
         for (auto &plugin_src : plugin_list)
         {
             if (isolate->ExecScript("(function(){\n" + plugin_src.source + "\n})()", plugin_src.filename, -1).IsEmpty())
             {
                 Exception e(isolate, try_catch);
-                LOG_G(plugin_logger).log(LEVEL_INFO, e.c_str(), e.length() TSRMLS_CC);
+                LOG_G(plugin_logger).log(LEVEL_INFO, e.c_str(), e.length() TSRMLS_CC, false, true);
             }
         }
         creator.SetDefaultContext(context);
