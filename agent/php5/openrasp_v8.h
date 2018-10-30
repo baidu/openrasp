@@ -24,15 +24,9 @@
 #include <libplatform/libplatform.h>
 #include <v8-platform.h>
 #include <mutex>
-#include <queue>
 #include <vector>
 #include <chrono>
 #include <string>
-#include <memory>
-#include <iostream>
-#include <condition_variable>
-#include <thread>
-#include <fstream>
 
 namespace openrasp
 {
@@ -138,7 +132,6 @@ class openrasp_v8_process_globals
 public:
   Snapshot *snapshot_blob = nullptr;
   std::mutex mtx;
-  bool is_initialized = false;
   std::string plugin_config;
   std::vector<PluginFile> plugin_src_list;
 };
