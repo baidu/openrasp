@@ -35,14 +35,6 @@
 #include "third_party/rapidjson/stringbuffer.h"
 #include "third_party/rapidjson/writer.h"
 
-extern "C"
-{
-#include "ext/standard/php_smart_str.h"
-#include "ext/json/php_json.h"
-#include "php_streams.h"
-#include "php_main.h"
-}
-
 namespace openrasp
 {
 std::unique_ptr<OpenraspAgentManager> oam = nullptr;

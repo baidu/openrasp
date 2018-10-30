@@ -26,15 +26,6 @@
 #include "third_party/rapidjson/stringbuffer.h"
 #include "third_party/rapidjson/writer.h"
 
-extern "C"
-{
-#include "ext/standard/php_smart_str.h"
-#include "ext/json/php_json.h"
-#include "ext/date/php_date.h"
-#include "php_streams.h"
-#include "php_main.h"
-}
-
 namespace openrasp
 {
 
