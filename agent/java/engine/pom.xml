@@ -44,6 +44,11 @@
         </dependency>
         <dependency>
             <groupId>com.baidu.openrasp</groupId>
+            <artifactId>cmdparser</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.baidu.openrasp</groupId>
             <artifactId>rhino-shim</artifactId>
             <version>1.0</version>
         </dependency>
