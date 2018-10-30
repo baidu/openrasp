@@ -85,6 +85,7 @@ public class JSContextFactory extends ContextFactory {
 
             RASP = (ScriptableObject) ScriptableObject.getProperty(globalScope, "RASP");
             RASP.defineProperty("sql_tokenize", new JSTokenizeSql(), ScriptableObject.READONLY);
+            RASP.defineProperty("cmd_tokenize", new JSTokenizeCmd(), ScriptableObject.READONLY);
             RASP.defineProperty("config_set", new JSRASPConfig(), ScriptableObject.READONLY);
             RASP.defineProperty("get_jsengine", new BaseFunction() {
                 @Override
