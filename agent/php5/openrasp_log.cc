@@ -19,6 +19,7 @@
 #include "openrasp_utils.h"
 #include "openrasp_inject.h"
 #include "openrasp_shared_alloc.h"
+#include "utils/regex.h"
 #include <map>
 #include <vector>
 #include <string>
@@ -39,6 +40,8 @@ extern "C"
 #include "ext/standard/php_smart_str.h"
 #include "ext/json/php_json.h"
 }
+
+using openrasp::regex_match;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 

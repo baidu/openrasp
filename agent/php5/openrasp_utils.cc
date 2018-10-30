@@ -30,7 +30,6 @@ extern "C"
 #include "ext/standard/url.h"
 #include "ext/standard/file.h"
 #include "ext/date/php_date.h"
-#include "ext/pcre/php_pcre.h"
 #include "ext/standard/php_string.h"
 #include "ext/standard/php_smart_str.h"
 #include "Zend/zend_builtin_functions.h"
@@ -573,30 +572,6 @@ std::string json_encode_from_zval(zval *value TSRMLS_DC)
 bool file_exist(const char *abs_path TSRMLS_DC)
 {
     return VCWD_ACCESS(abs_path, F_OK) == 0;
-}
-
-const static size_t OVECCOUNT = 30; /* should be a multiple of 3 */
-
-bool regex_match(const char *str, const char *regex, int options)
-{
-    pcre *re = nullptr;
-    int ovector[OVECCOUNT];
-    const char *error = nullptr;
-    int erroffset = 0;
-    int rc = 0;
-    re = pcre_compile(regex, options, &error, &erroffset, nullptr);
-    if (re == nullptr)
-    {
-        return false;
-    }
-    rc = pcre_exec(re, nullptr, str, strlen(str), 0, 0, ovector, OVECCOUNT);
-    if (rc < 0)
-    {
-        pcre_free(re);
-        return false;
-    }
-    pcre_free(re);
-    return true;
 }
 
 bool start_with(const std::string &str, const std::string &prefix)

@@ -45,6 +45,9 @@ if test "$PHP_OPENRASP" != "no"; then
     * )
       PHP_ADD_LIBRARY(rt, , OPENRASP_SHARED_LIBADD)
       PHP_ADD_LIBRARY(dl, , OPENRASP_SHARED_LIBADD)
+      PHP_ADD_LIBRARY(pcreposix, 1, OPENRASP_SHARED_LIBADD)
+      PHP_ADD_LIBRARY(pcrecpp, 1, OPENRASP_SHARED_LIBADD)
+      PHP_ADD_LIBRARY(pcre, 1, OPENRASP_SHARED_LIBADD)
       OPENRASP_LIBS="-Wl,--whole-archive -Wl,$V8_LIBS -Wl,--no-whole-archive -pthread $OPENRASP_LIBS"
       ;;
   esac
@@ -134,7 +137,6 @@ if test "$PHP_OPENRASP" != "no"; then
         agent/log_agent.cc \
         agent/openrasp_agent_manager.cc \
         agent/log_collect_item.cc \
-        agent/utils/digest.cc \
         agent/plugin_update_pkg.cc \
         agent/backend_response.cc"
         AC_DEFINE([HAVE_OPENRASP_REMOTE_MANAGER], [1], [Have openrasp remote manager support])
@@ -478,9 +480,11 @@ int main() {
     openrasp_v8_exception.cc \
     openrasp_security_policy.cc \
     openrasp_ini.cc \
+    utils/ReadWriteLock.cc \
+    utils/DoubleArrayTrie.cc \
+    utils/digest.cc \
+    utils/regex.cc \
     agent/shared_config_manager.cc \
-    agent/utils/ReadWriteLock.cc \
-    agent/utils/DoubleArrayTrie.cc \
     agent/mm/shm_manager.cc \
     $OPENRASP_REMOTE_MANAGER_SOURCE \
     , $ext_shared)
