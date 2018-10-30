@@ -138,14 +138,14 @@ void log_callback(const v8::FunctionCallbackInfo<v8::Value> &info)
     for (int i = 0; i < info.Length(); i++)
     {
         v8::String::Utf8Value message(info[i]);
-        LOG_G(plugin_logger).log(LEVEL_INFO, *message, message.length() TSRMLS_CC);
+        LOG_G(plugin_logger).log(LEVEL_INFO, *message, message.length() TSRMLS_CC, false, true);
     }
 }
 
 void plugin_info(const std::string &message)
 {
     TSRMLS_FETCH();
-    LOG_G(plugin_logger).log(LEVEL_INFO, message.c_str(), message.length() TSRMLS_CC);
+    LOG_G(plugin_logger).log(LEVEL_INFO, message.c_str(), message.length() TSRMLS_CC, false, true);
 }
 
 void plugin_info(Isolate *isolate, v8::Local<v8::Value> value)
@@ -202,7 +202,7 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     if (JSON_stringify->Call(isolate->GetCurrentContext(), JSON_stringify, 1, reinterpret_cast<v8::Local<v8::Value> *>(&obj)).ToLocal(&val))
     {
         v8::String::Utf8Value msg(val);
-        LOG_G(alarm_logger).log(LEVEL_INFO, *msg, msg.length() TSRMLS_CC, false);
+        LOG_G(alarm_logger).log(LEVEL_INFO, *msg, msg.length() TSRMLS_CC, true, false);
     }
 }
 

@@ -701,7 +701,7 @@ bool RaspLoggerEntry::raw_log(severity_level level_int, const char *message, int
     return true;
 }
 
-bool RaspLoggerEntry::log(severity_level level_int, const char *message, int message_len TSRMLS_DC, bool detail)
+bool RaspLoggerEntry::log(severity_level level_int, const char *message, int message_len TSRMLS_DC, bool separate, bool detail)
 {
     bool in_request = OPENRASP_LOG_G(in_request_process);
     if (!in_request) //out of request
@@ -709,19 +709,19 @@ bool RaspLoggerEntry::log(severity_level level_int, const char *message, int mes
         init(FILE_APPENDER TSRMLS_CC);
     }
     bool log_result = false;
-    if (!detail)
+    std::string complete_log;
+    if (detail)
     {
-        log_result = raw_log(level_int, message, message_len TSRMLS_CC);
-    }
-    else
-    {
-        char *log_info = nullptr;
         std::string time_RFC3339 = format_time(RaspLoggerEntry::rasp_rfc3339_format,
                                                strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
-        int log_info_len = spprintf(&log_info, 0, "%s %s\n", time_RFC3339.c_str(), message);
-        log_result = raw_log(level_int, log_info, log_info_len TSRMLS_CC);
-        efree(log_info);
+        complete_log.append(time_RFC3339 + " ");
     }
+    complete_log.append(message);
+    if (separate)
+    {
+        complete_log.push_back('\n');
+    }
+    log_result = raw_log(level_int, complete_log.c_str(), complete_log.length() TSRMLS_CC);
     if (!in_request) //out of request
     {
         clear(TSRMLS_C);
