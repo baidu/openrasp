@@ -119,7 +119,7 @@ int include_handler(zend_execute_data *execute_data)
     }
 
     {
-        v8::Isolate *isolate = openrasp::get_isolate();
+        openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
         bool is_block = false;
         if (!send_to_plugin || !isolate)
         {
@@ -152,7 +152,7 @@ int include_handler(zend_execute_data *execute_data)
                 params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, ""));
                 break;
             }
-            is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, "include"), params);
+            is_block = isolate->Check(openrasp::NewV8String(isolate, "include"), params, openrasp_ini.timeout_ms);
         }
         if (is_block)
         {

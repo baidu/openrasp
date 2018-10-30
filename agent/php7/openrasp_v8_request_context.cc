@@ -16,27 +16,54 @@
 
 #include "openrasp_v8.h"
 #include "openrasp_log.h"
-using namespace openrasp;
+
+namespace openrasp
+{
+enum FieldIndex
+{
+    kUrl = 0,
+    kHeader,
+    kParameter,
+    kPath,
+    kQuerystring,
+    kMethod,
+    kProtocol,
+    kRemoteAddr,
+    kAppBasePath,
+    kBody,
+    kServer,
+    kEndForCount
+};
 static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    auto self = info.Holder();
+    auto cache = self->GetInternalField(kUrl);
+    if (!cache->IsUndefined())
+    {
+        info.GetReturnValue().Set(cache);
+        return;
+    }
     info.GetReturnValue().SetEmptyString();
     zval *origin_zv;
     if (Z_TYPE(OPENRASP_LOG_G(alarm_request_info)) == IS_ARRAY &&
         (origin_zv = zend_hash_str_find(Z_ARRVAL(OPENRASP_LOG_G(alarm_request_info)), ZEND_STRL("url"))) != nullptr)
-        {
-            char *url = Z_STRVAL_P(origin_zv);
-            v8::Isolate *isolate = info.GetIsolate();
-            v8::Local<v8::String> v8_url;
-            if (V8STRING_EX(url, v8::NewStringType::kNormal, Z_STRLEN_P(origin_zv)).ToLocal(&v8_url))
-            {
-                info.GetReturnValue().Set(v8_url);
-            }
-        }
+    {
+        v8::Isolate *isolate = info.GetIsolate();
+        auto obj = NewV8ValueFromZval(isolate, origin_zv);
+        info.GetReturnValue().Set(obj);
+        self->SetInternalField(kUrl, obj);
+    }
 }
 static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    auto self = info.Holder();
+    auto cache = self->GetInternalField(kMethod);
+    if (!cache->IsUndefined())
+    {
+        info.GetReturnValue().Set(cache);
+        return;
+    }
     info.GetReturnValue().SetEmptyString();
-    
 
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
@@ -58,16 +85,20 @@ static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
     }
 
     v8::Isolate *isolate = info.GetIsolate();
-    v8::Local<v8::String> v8_method;
-    if (V8STRING_EX(method.c_str(), v8::NewStringType::kNormal, method.length()).ToLocal(&v8_method))
-    {
-        info.GetReturnValue().Set(v8_method);
-    }
+    auto obj = NewV8String(isolate, method);
+    info.GetReturnValue().Set(obj);
+    self->SetInternalField(kMethod, obj);
 }
 static void querystring_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    auto self = info.Holder();
+    auto cache = self->GetInternalField(kQuerystring);
+    if (!cache->IsUndefined())
+    {
+        info.GetReturnValue().Set(cache);
+        return;
+    }
     info.GetReturnValue().SetEmptyString();
-    
 
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
@@ -78,13 +109,21 @@ static void querystring_getter(v8::Local<v8::Name> name, const v8::PropertyCallb
     zval *QUERY_STRING = zend_hash_str_find(_SERVER, ZEND_STRL("QUERY_STRING"));
     if (QUERY_STRING)
     {
-        info.GetReturnValue().Set(zval_to_v8val(QUERY_STRING, info.GetIsolate()));
+        auto obj = NewV8ValueFromZval(info.GetIsolate(), QUERY_STRING);
+        info.GetReturnValue().Set(obj);
+        self->SetInternalField(kQuerystring, obj);
     }
 }
 static void appBasePath_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    auto self = info.Holder();
+    auto cache = self->GetInternalField(kAppBasePath);
+    if (!cache->IsUndefined())
+    {
+        info.GetReturnValue().Set(cache);
+        return;
+    }
     info.GetReturnValue().SetEmptyString();
-    
 
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
@@ -95,13 +134,21 @@ static void appBasePath_getter(v8::Local<v8::Name> name, const v8::PropertyCallb
     zval *DOCUMENT_ROOT = zend_hash_str_find(_SERVER, ZEND_STRL("DOCUMENT_ROOT"));
     if (DOCUMENT_ROOT)
     {
-        info.GetReturnValue().Set(zval_to_v8val(DOCUMENT_ROOT, info.GetIsolate()));
+        auto obj = NewV8ValueFromZval(info.GetIsolate(), DOCUMENT_ROOT);
+        info.GetReturnValue().Set(obj);
+        self->SetInternalField(kAppBasePath, obj);
     }
 }
 static void protocol_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    auto self = info.Holder();
+    auto cache = self->GetInternalField(kProtocol);
+    if (!cache->IsUndefined())
+    {
+        info.GetReturnValue().Set(cache);
+        return;
+    }
     info.GetReturnValue().SetEmptyString();
-    
 
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
@@ -112,13 +159,21 @@ static void protocol_getter(v8::Local<v8::Name> name, const v8::PropertyCallback
     zval *REQUEST_SCHEME = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_SCHEME"));
     if (REQUEST_SCHEME)
     {
-        info.GetReturnValue().Set(zval_to_v8val(REQUEST_SCHEME, info.GetIsolate()));
+        auto obj = NewV8ValueFromZval(info.GetIsolate(), REQUEST_SCHEME);
+        info.GetReturnValue().Set(obj);
+        self->SetInternalField(kProtocol, obj);
     }
 }
 static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    auto self = info.Holder();
+    auto cache = self->GetInternalField(kRemoteAddr);
+    if (!cache->IsUndefined())
+    {
+        info.GetReturnValue().Set(cache);
+        return;
+    }
     info.GetReturnValue().SetEmptyString();
-    
 
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
@@ -129,13 +184,21 @@ static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallba
     zval *REMOTE_ADDR = zend_hash_str_find(_SERVER, ZEND_STRL("REMOTE_ADDR"));
     if (REMOTE_ADDR)
     {
-        info.GetReturnValue().Set(zval_to_v8val(REMOTE_ADDR, info.GetIsolate()));
+        auto obj = NewV8ValueFromZval(info.GetIsolate(), REMOTE_ADDR);
+        info.GetReturnValue().Set(obj);
+        self->SetInternalField(kRemoteAddr, obj);
     }
 }
 static void path_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    auto self = info.Holder();
+    auto cache = self->GetInternalField(kPath);
+    if (!cache->IsUndefined())
+    {
+        info.GetReturnValue().Set(cache);
+        return;
+    }
     info.GetReturnValue().SetEmptyString();
-    
 
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
@@ -154,15 +217,19 @@ static void path_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo
     size_t len = path.find_first_of('?');
 
     v8::Isolate *isolate = info.GetIsolate();
-    v8::Local<v8::String> v8_path;
-    if (V8STRING_EX(path.c_str(), v8::NewStringType::kNormal, len != std::string::npos ? len : path.length()).ToLocal(&v8_path))
-    {
-        info.GetReturnValue().Set(v8_path);
-    }
+    auto obj = NewV8String(isolate, path.c_str(), len != std::string::npos ? len : path.length());
+    info.GetReturnValue().Set(obj);
+    self->SetInternalField(kPath, obj);
 }
 static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
-    
+    auto self = info.Holder();
+    auto cache = self->GetInternalField(kParameter);
+    if (!cache->IsUndefined())
+    {
+        info.GetReturnValue().Set(cache);
+        return;
+    }
     if ((Z_TYPE(PG(http_globals)[TRACK_VARS_GET]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_GET"))) ||
         (Z_TYPE(PG(http_globals)[TRACK_VARS_POST]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_POST"))))
     {
@@ -179,7 +246,7 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     zend_ulong idx;
     ZEND_HASH_FOREACH_KEY_VAL(_GET, idx, key, value)
     {
-        v8::Local<v8::Value> v8_value = zval_to_v8val(value, isolate);
+        v8::Local<v8::Value> v8_value = NewV8ValueFromZval(isolate, value);
         if (v8_value->IsNullOrUndefined())
         {
             continue;
@@ -192,7 +259,7 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
         }
         if (key)
         {
-            obj->Set(V8STRING_I(key->val).ToLocalChecked(), v8_value);
+            obj->Set(NewV8String(isolate, key->val), v8_value);
         }
         else
         {
@@ -203,7 +270,7 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
 
     ZEND_HASH_FOREACH_KEY_VAL(_POST, idx, key, value)
     {
-        v8::Local<v8::Value> v8_value = zval_to_v8val(value, isolate);
+        v8::Local<v8::Value> v8_value = NewV8ValueFromZval(isolate, value);
         if (v8_value->IsNullOrUndefined())
         {
             continue;
@@ -217,7 +284,7 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
         v8::Local<v8::Value> v8_key;
         if (key)
         {
-            v8_key = V8STRING_I(key->val).ToLocalChecked();
+            v8_key = NewV8String(isolate, key->val);
         }
         else
         {
@@ -247,10 +314,17 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     ZEND_HASH_FOREACH_END();
 
     info.GetReturnValue().Set(obj);
+    self->SetInternalField(kParameter, obj);
 }
 static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
-    
+    auto self = info.Holder();
+    auto cache = self->GetInternalField(kHeader);
+    if (!cache->IsUndefined())
+    {
+        info.GetReturnValue().Set(cache);
+        return;
+    }
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
         return;
@@ -281,20 +355,24 @@ static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
                 ch = std::tolower(ch);
             }
         }
-        v8::Local<v8::String> v8_key;
-        if (V8STRING_EX(tmp.c_str(), v8::NewStringType::kInternalized, tmp.length()).ToLocal(&v8_key))
-        {
-            obj->Set(v8_key, zval_to_v8val(value, isolate));
-        }
+        obj->Set(NewV8String(isolate, tmp), NewV8ValueFromZval(isolate, value));
     }
     ZEND_HASH_FOREACH_END();
 
     info.GetReturnValue().Set(obj);
+    self->SetInternalField(kHeader, obj);
 }
 static void body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    auto self = info.Holder();
+    auto cache = self->GetInternalField(kBody);
+    if (!cache->IsUndefined())
+    {
+        info.GetReturnValue().Set(cache);
+        return;
+    }
     info.GetReturnValue().Set(v8::ArrayBuffer::New(info.GetIsolate(), nullptr, 0, v8::ArrayBufferCreationMode::kInternalized));
-    
+
     php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, NULL);
     if (!stream)
     {
@@ -332,47 +410,56 @@ static void body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::ArrayBuffer> arraybuffer = v8::ArrayBuffer::New(isolate, buffer, MIN(len, maxlen), v8::ArrayBufferCreationMode::kInternalized);
     info.GetReturnValue().Set(arraybuffer);
+    self->SetInternalField(kBody, arraybuffer);
 }
 static void server_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
-    
+    auto self = info.Holder();
+    auto cache = self->GetInternalField(kServer);
+    if (!cache->IsUndefined())
+    {
+        info.GetReturnValue().Set(cache);
+        return;
+    }
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::Object> server = v8::Object::New(isolate);
-    server->Set(V8STRING_I("language").ToLocalChecked(), V8STRING_N("php").ToLocalChecked());
-    server->Set(V8STRING_I("name").ToLocalChecked(), V8STRING_N("PHP").ToLocalChecked());
-    server->Set(V8STRING_I("version").ToLocalChecked(), V8STRING_N(OPENRASP_PHP_VERSION).ToLocalChecked());
+    server->Set(NewV8String(isolate, "language"), NewV8String(isolate, "php"));
+    server->Set(NewV8String(isolate, "name"), NewV8String(isolate, "PHP"));
+    server->Set(NewV8String(isolate, "version"), NewV8String(isolate, OPENRASP_PHP_VERSION));
 #ifdef PHP_WIN32
-    server->Set(V8STRING_I("os").ToLocalChecked(), V8STRING_N("Windows").ToLocalChecked());
+    server->Set(NewV8String(isolate, "os"), NewV8String(isolate, "Windows"));
 #else
     if (strstr(PHP_OS, "Darwin"))
     {
-        server->Set(V8STRING_I("os").ToLocalChecked(), V8STRING_N("Mac").ToLocalChecked());
+        server->Set(NewV8String(isolate, "os"), NewV8String(isolate, "Mac"));
     }
     else if (strstr(PHP_OS, "Linux"))
     {
-        server->Set(V8STRING_I("os").ToLocalChecked(), V8STRING_N("Linux").ToLocalChecked());
+        server->Set(NewV8String(isolate, "os"), NewV8String(isolate, "Linux"));
     }
     else
     {
-        server->Set(V8STRING_I("os").ToLocalChecked(), V8STRING_N(PHP_OS).ToLocalChecked());
+        server->Set(NewV8String(isolate, "os"), NewV8String(isolate, PHP_OS));
     }
 #endif
     info.GetReturnValue().Set(server);
+    self->SetInternalField(kServer, server);
 }
-v8::Local<v8::Object> openrasp::RequestContext::New(v8::Isolate *isolate)
+v8::Local<v8::ObjectTemplate> NewRequestContextTemplate(v8::Isolate *isolate)
 {
-    v8::Local<v8::Context> context = isolate->GetCurrentContext();
-    v8::Local<v8::Object> obj = v8::Object::New(isolate);
-    obj->SetAccessor(context, V8STRING_I("url").ToLocalChecked(), url_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("header").ToLocalChecked(), header_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("parameter").ToLocalChecked(), parameter_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("path").ToLocalChecked(), path_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("querystring").ToLocalChecked(), querystring_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("method").ToLocalChecked(), method_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("protocol").ToLocalChecked(), protocol_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("remoteAddr").ToLocalChecked(), remoteAddr_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("appBasePath").ToLocalChecked(), appBasePath_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("body").ToLocalChecked(), body_getter).IsNothing();
-    obj->SetAccessor(context, V8STRING_I("server").ToLocalChecked(), server_getter).IsNothing();
-    return obj;
+    auto obj_templ = v8::ObjectTemplate::New(isolate);
+    obj_templ->SetAccessor(NewV8String(isolate, "url"), url_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "header"), header_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "parameter"), parameter_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "path"), path_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "querystring"), querystring_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "method"), method_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "protocol"), protocol_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "remoteAddr"), remoteAddr_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "appBasePath"), appBasePath_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "body"), body_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "server"), server_getter);
+    obj_templ->SetInternalFieldCount(kEndForCount);
+    return obj_templ;
 }
+} // namespace openrasp

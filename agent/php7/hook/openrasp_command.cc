@@ -66,7 +66,7 @@ static inline void openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAMETERS
         return;
     }
 
-    v8::Isolate *isolate = openrasp::get_isolate();
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (!isolate)
     {
         return;
@@ -84,7 +84,7 @@ static inline void openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAMETERS
         auto params = v8::Object::New(isolate);
         params->Set(openrasp::NewV8String(isolate, "command"), openrasp::NewV8String(isolate, command->val, command->len));
         params->Set(openrasp::NewV8String(isolate, "stack"), stack);
-        is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params);
+        is_block = isolate->Check(openrasp::NewV8String(isolate, check_type), params, openrasp_ini.timeout_ms);
     }
     if (is_block)
     {
@@ -184,7 +184,7 @@ void pre_global_pcntl_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         }
     }
 
-    v8::Isolate *isolate = openrasp::get_isolate();
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (!isolate)
     {
         return;
@@ -202,7 +202,7 @@ void pre_global_pcntl_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         auto params = v8::Object::New(isolate);
         params->Set(openrasp::NewV8String(isolate, "command"), openrasp::NewV8String(isolate, command->val, command->len));
         params->Set(openrasp::NewV8String(isolate, "stack"), stack);
-        is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params);
+        is_block = isolate->Check(openrasp::NewV8String(isolate, check_type), params, openrasp_ini.timeout_ms);
     }
     if (is_block)
     {

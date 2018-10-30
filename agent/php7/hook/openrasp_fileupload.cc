@@ -70,7 +70,7 @@ void pre_global_move_uploaded_file_fileUpload(OPENRASP_INTERNAL_FUNCTION_PARAMET
         return;
     }
 
-    v8::Isolate *isolate = openrasp::get_isolate();
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (!isolate)
     {
         zend_string_release(buffer);
@@ -83,7 +83,7 @@ void pre_global_move_uploaded_file_fileUpload(OPENRASP_INTERNAL_FUNCTION_PARAMET
         params->Set(openrasp::NewV8String(isolate, "filename"), openrasp::NewV8String(isolate, Z_STRVAL_P(realname), Z_STRLEN_P(realname)));
         params->Set(openrasp::NewV8String(isolate, "content"), openrasp::NewV8String(isolate, buffer->val, MIN(buffer->len, 4 * 1024)));
         zend_string_release(buffer);
-        is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params);
+        is_block = isolate->Check(openrasp::NewV8String(isolate, check_type), params, openrasp_ini.timeout_ms);
     }
     if (is_block)
     {

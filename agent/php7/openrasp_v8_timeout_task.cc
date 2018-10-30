@@ -19,15 +19,15 @@
 #include <thread>
 #include <chrono>
 
-using namespace openrasp;
-
-openrasp::TimeoutTask::TimeoutTask(v8::Isolate *_isolate, int _milliseconds)
+namespace openrasp
+{
+TimeoutTask::TimeoutTask(v8::Isolate *_isolate, int _milliseconds)
     : isolate(_isolate)
 {
     time_point = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(_milliseconds);
 }
 
-void openrasp::TimeoutTask::Run()
+void TimeoutTask::Run()
 {
     do
     {
@@ -49,7 +49,8 @@ void openrasp::TimeoutTask::Run()
     std::lock_guard<std::timed_mutex> lock(mtx);
 }
 
-std::timed_mutex &openrasp::TimeoutTask::GetMtx()
+std::timed_mutex &TimeoutTask::GetMtx()
 {
     return mtx;
 }
+} // namespace openrasp

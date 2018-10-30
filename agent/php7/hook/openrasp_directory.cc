@@ -50,7 +50,7 @@ static inline void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 		return;
 	}
 
-	v8::Isolate *isolate = openrasp::get_isolate();
+	openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
 	if (!isolate)
 	{
 		zend_string_release(real_path);
@@ -71,7 +71,7 @@ static inline void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 		params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path->val, real_path->len));
 		zend_string_release(real_path);
 		params->Set(openrasp::NewV8String(isolate, "stack"), stack);
-		is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params);
+		is_block = isolate->Check(openrasp::NewV8String(isolate, check_type), params, openrasp_ini.timeout_ms);
 	}
 	if (is_block)
 	{

@@ -271,11 +271,19 @@ void handle_block()
  */
 void check(const char *type, zval *params)
 {
-    char result = openrasp::openrasp_check(type, params);
-    zval_ptr_dtor(params);
+    bool result = false;
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+    if (LIKELY(isolate))
+    {
+        v8::HandleScope handlescope(isolate);
+        auto v8_type = NewV8String(isolate, type);
+        auto v8_params = v8::Local<v8::Object>::Cast(NewV8ValueFromZval(isolate, params));
+        zval_ptr_dtor(params);
+        result = isolate->Check(v8_type, v8_params, openrasp_ini.timeout_ms);
+    }
     if (result)
     {
-        handle_block();
+        handle_block(TSRMLS_C);
     }
 }
 

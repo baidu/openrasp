@@ -63,7 +63,7 @@ static void check_file_operation(const char *check_type, char *filename, int fil
     {
         return;
     }
-    v8::Isolate *isolate = openrasp::get_isolate();
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (!isolate)
     {
         zend_string_release(real_path);
@@ -83,7 +83,7 @@ static void check_file_operation(const char *check_type, char *filename, int fil
         params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, filename, filename_len));
         params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path->val, real_path->len));
         zend_string_release(real_path);
-        is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params);
+        is_block = isolate->Check(openrasp::NewV8String(isolate, check_type), params, openrasp_ini.timeout_ms);
     }
     if (is_block)
     {
@@ -269,7 +269,7 @@ void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         zend_string_release(source_real_path);
         return;
     }
-    v8::Isolate *isolate = openrasp::get_isolate();
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (!isolate)
     {
         zend_string_release(source_real_path);
@@ -291,7 +291,7 @@ void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         zend_string_release(source_real_path);
         params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, dest_real_path->val, dest_real_path->len));
         zend_string_release(dest_real_path);
-        is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params);
+        is_block = isolate->Check(openrasp::NewV8String(isolate, check_type), params, openrasp_ini.timeout_ms);
     }
     if (is_block)
     {
@@ -366,7 +366,7 @@ void pre_global_rename_rename(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         }
         else
         {
-            v8::Isolate *isolate = openrasp::get_isolate();
+            openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
             if (!isolate)
             {
                 zend_string_release(source_real_path);
@@ -388,7 +388,7 @@ void pre_global_rename_rename(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
                 zend_string_release(source_real_path);
                 params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, dest_real_path->val, dest_real_path->len));
                 zend_string_release(dest_real_path);
-                is_block = openrasp::openrasp_check(isolate, openrasp::NewV8String(isolate, check_type), params);
+                is_block = isolate->Check(openrasp::NewV8String(isolate, check_type), params, openrasp_ini.timeout_ms);
             }
             if (is_block)
             {

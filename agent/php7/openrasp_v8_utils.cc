@@ -14,60 +14,20 @@
  * limitations under the License.
  */
 
+extern "C"
+{
+#include "php_scandir.h"
+}
 #include "openrasp_v8.h"
 #include "openrasp_utils.h"
 #include "openrasp_log.h"
-#include "js/openrasp_v8_js.h"
+#include "openrasp_ini.h"
 #include <iostream>
 #include <sstream>
 
 namespace openrasp
 {
-void v8error_to_stream(v8::Isolate *isolate, v8::TryCatch &try_catch, std::ostream &buf)
-{
-    v8::HandleScope handle_scope(isolate);
-    v8::String::Utf8Value exception(try_catch.Exception());
-    const char *exception_string = *exception;
-    v8::Local<v8::Message> message = try_catch.Message();
-    if (message.IsEmpty())
-    {
-        buf << exception_string << "\n";
-    }
-    else
-    {
-        v8::String::Utf8Value filename(message->GetScriptOrigin().ResourceName());
-        v8::Local<v8::Context> context(isolate->GetCurrentContext());
-        const char *filename_string = *filename;
-        int linenum = message->GetLineNumber(context).FromJust();
-        buf << filename_string << ":" << linenum << "\n";
-        v8::String::Utf8Value sourceline(
-            message->GetSourceLine(context).ToLocalChecked());
-        const char *sourceline_string = *sourceline;
-        buf << sourceline_string << "\n";
-        int start = message->GetStartColumn(context).FromJust();
-        for (int i = 0; i < start; i++)
-        {
-            buf << " ";
-        }
-        int end = message->GetEndColumn(context).FromJust();
-        for (int i = start; i < end; i++)
-        {
-            buf << "^";
-        }
-        buf << "\n";
-        v8::Local<v8::Value> stack_trace_string;
-        if (try_catch.StackTrace(context).ToLocal(&stack_trace_string) &&
-            stack_trace_string->IsString() &&
-            v8::Local<v8::String>::Cast(stack_trace_string)->Length() > 0)
-        {
-            v8::String::Utf8Value stack_trace(stack_trace_string);
-            const char *stack_trace_string = *stack_trace;
-            buf << stack_trace_string << "\n";
-        }
-    }
-}
-
-v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate)
+v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
 {
     v8::Local<v8::Value> rst = v8::Undefined(isolate);
     switch (Z_TYPE_P(val))
@@ -92,7 +52,7 @@ v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate)
         zend_ulong idx;
         ZEND_HASH_FOREACH_KEY_VAL(ht, idx, key, value)
         {
-            v8::Local<v8::Value> v8_value = zval_to_v8val(value, isolate);
+            v8::Local<v8::Value> v8_value = NewV8ValueFromZval(isolate, value);
             if (!is_assoc)
             {
                 if (index == idx)
@@ -117,11 +77,7 @@ v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate)
                 }
                 else
                 {
-                    v8::Local<v8::String> v8_key;
-                    if (V8STRING_EX(key->val, v8::NewStringType::kInternalized, key->len).ToLocal(&v8_key))
-                    {
-                        obj->Set(v8_key, v8_value);
-                    }
+                    obj->Set(NewV8String(isolate, key->val, key->len), v8_value);
                 }
             }
         }
@@ -163,138 +119,33 @@ v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate)
     return rst;
 }
 
-v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset)
-{
-    v8::Isolate *isolate = v8::Isolate::GetCurrent();
-    v8::Isolate::Scope isolate_scope(isolate);
-    v8::EscapableHandleScope handle_scope(isolate);
-    v8::Local<v8::Context> context = isolate->GetCurrentContext();
-    v8::Context::Scope context_scope(context);
-    v8::Local<v8::String> filename;
-    if (!V8STRING_EX(_filename.c_str(), v8::NewStringType::kNormal, _filename.length()).ToLocal(&filename))
-    {
-        return v8::MaybeLocal<v8::Script>();
-    }
-    v8::Local<v8::String> source;
-    if (!V8STRING_EX(_source.c_str(), v8::NewStringType::kNormal, _source.length()).ToLocal(&source))
-    {
-        return v8::MaybeLocal<v8::Script>();
-    }
-    v8::Local<v8::Integer> line_offset = v8::Integer::New(isolate, _line_offset);
-    v8::ScriptOrigin origin(filename, line_offset);
-    v8::MaybeLocal<v8::Script> script = v8::Script::Compile(context, source, &origin);
-    return script;
-}
-
-v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
-                                      std::string _source, std::string _filename, int _line_offset)
-{
-    v8::MaybeLocal<v8::Value> result;
-    v8::Local<v8::String> filename;
-    if (!V8STRING_EX(_filename.c_str(), v8::NewStringType::kNormal, _filename.length()).ToLocal(&filename))
-    {
-        return result;
-    }
-    v8::Local<v8::String> source;
-    if (!V8STRING_EX(_source.c_str(), v8::NewStringType::kNormal, _source.length()).ToLocal(&source))
-    {
-        return result;
-    }
-    v8::Local<v8::Integer> line_offset = v8::Integer::New(isolate, _line_offset);
-    v8::ScriptOrigin origin(filename, line_offset);
-    v8::Local<v8::Script> script;
-    if (!v8::Script::Compile(context, source, &origin).ToLocal(&script))
-    {
-        return result;
-    }
-    return script->Run(context);
-}
-
-static void v8native_log(const v8::FunctionCallbackInfo<v8::Value> &info)
+void log_callback(const v8::FunctionCallbackInfo<v8::Value> &info)
 {
     for (int i = 0; i < info.Length(); i++)
     {
         v8::String::Utf8Value message(info[i]);
-        plugin_info(*message, message.length());
+        ::plugin_info(*message, message.length());
     }
 }
 
-intptr_t external_references[] = {
-    reinterpret_cast<intptr_t>(v8native_log),
-    0,
-};
-
-v8::StartupData get_snapshot(std::vector<openrasp_v8_js_src> &plugin_list)
+void plugin_info(const std::string &message)
 {
-    v8::SnapshotCreator creator(external_references);
-    v8::Isolate *isolate = creator.GetIsolate();
-#define DEFAULT_STACK_SIZE_IN_KB 1024
-    uintptr_t current_stack = reinterpret_cast<uintptr_t>(&current_stack);
-    uintptr_t stack_limit = current_stack - (DEFAULT_STACK_SIZE_IN_KB * 1024 / sizeof(uintptr_t));
-    stack_limit = stack_limit < current_stack ? stack_limit : sizeof(stack_limit);
-    isolate->SetStackLimit(stack_limit);
-#undef DEFAULT_STACK_SIZE_IN_KB
-    {
-        v8::HandleScope handle_scope(isolate);
-        v8::Local<v8::Context> context = v8::Context::New(isolate);
-        v8::Context::Scope context_scope(context);
-        v8::TryCatch try_catch;
-        v8::Local<v8::Object> global = context->Global();
-        global->Set(V8STRING_I("global").ToLocalChecked(), global);
-        global->Set(V8STRING_I("window").ToLocalChecked(), global);
-        v8::Local<v8::Function> log = v8::Function::New(isolate, v8native_log);
-        v8::Local<v8::Object> v8_stdout = v8::Object::New(isolate);
-        v8_stdout->Set(V8STRING_I("write").ToLocalChecked(), log);
-        global->Set(V8STRING_I("stdout").ToLocalChecked(), v8_stdout);
-        global->Set(V8STRING_I("stderr").ToLocalChecked(), v8_stdout);
-
-        std::vector<openrasp_v8_js_src> internal_js_list = {
-            openrasp_v8_js_src{"console.js", {reinterpret_cast<const char *>(console_js), console_js_len}},
-            openrasp_v8_js_src{"checkpoint.js", {reinterpret_cast<const char *>(checkpoint_js), checkpoint_js_len}},
-            openrasp_v8_js_src{"error.js", {reinterpret_cast<const char *>(error_js), error_js_len}},
-            openrasp_v8_js_src{"context.js", {reinterpret_cast<const char *>(context_js), context_js_len}},
-            openrasp_v8_js_src{"sql_tokenize.js", {reinterpret_cast<const char *>(sql_tokenize_js), sql_tokenize_js_len}},
-            openrasp_v8_js_src{"rasp.js", {reinterpret_cast<const char *>(rasp_js), rasp_js_len}},
-        };
-        for (auto &js_src : internal_js_list)
-        {
-            if (exec_script(isolate, context, js_src.source, js_src.filename).IsEmpty())
-            {
-                std::stringstream stream;
-                v8error_to_stream(isolate, try_catch, stream);
-                std::string error = stream.str();
-                plugin_info(error.c_str(), error.length() TSRMLS_CC);
-                openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize js plugin - %s"), error.c_str());
-                return v8::StartupData{nullptr, 0};
-            }
-        }
-        for (auto &plugin_src : plugin_list)
-        {
-            if (exec_script(isolate, context, "(function(){\n" + plugin_src.source + "\n})()", plugin_src.filename, -1).IsEmpty())
-            {
-                std::stringstream stream;
-                v8error_to_stream(isolate, try_catch, stream);
-                std::string error = stream.str();
-                plugin_info(error.c_str(), error.length() TSRMLS_CC);
-            }
-        }
-        creator.SetDefaultContext(context);
-    }
-    return creator.CreateBlob(v8::SnapshotCreator::FunctionCodeHandling::kClear);
+    ::plugin_info((const char *)message.c_str(), message.length());
 }
 
-v8::StartupData get_snapshot()
+void plugin_info(Isolate *isolate, v8::Local<v8::Value> value)
 {
-    return get_snapshot(process_globals.plugin_src_list TSRMLS_CC);
+    auto console_log = isolate->GetData()->console_log.Get(isolate);
+    (void)console_log->Call(isolate->GetCurrentContext(), console_log, 1, reinterpret_cast<v8::Local<v8::Value> *>(&value)).IsEmpty();
 }
 
-void alarm_info(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)
+void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)
 {
-    auto JSON_stringify = OPENRASP_V8_G(JSON_stringify).Get(isolate);
-    auto key_action = OPENRASP_V8_G(key_action).Get(isolate);
-    auto key_message = OPENRASP_V8_G(key_message).Get(isolate);
-    auto key_confidence = OPENRASP_V8_G(key_confidence).Get(isolate);
-    auto key_name = OPENRASP_V8_G(key_name).Get(isolate);
+    auto JSON_stringify = isolate->GetData()->JSON_stringify.Get(isolate);
+    auto key_action = isolate->GetData()->key_action.Get(isolate);
+    auto key_message = isolate->GetData()->key_message.Get(isolate);
+    auto key_confidence = isolate->GetData()->key_confidence.Get(isolate);
+    auto key_name = isolate->GetData()->key_name.Get(isolate);
 
     auto stack_trace = NewV8String(isolate, format_debug_backtrace_str());
 
@@ -332,6 +183,46 @@ void alarm_info(v8::Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::
         v8::String::Utf8Value msg(val);
         base_info(&OPENRASP_LOG_G(loggers)[ALARM_LOGGER], *msg, msg.length());
     }
+}
+
+void load_plugins()
+{
+    std::vector<PluginFile> plugin_src_list;
+    std::string plugin_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("plugins"));
+    dirent **ent = nullptr;
+    int n_plugin = php_scandir(plugin_path.c_str(), &ent, nullptr, php_alphasort);
+    for (int i = 0; i < n_plugin; i++)
+    {
+        const char *p = strrchr(ent[i]->d_name, '.');
+        if (p != nullptr && strcasecmp(p, ".js") == 0)
+        {
+            std::string filename(ent[i]->d_name);
+            std::string filepath(plugin_path + DEFAULT_SLASH + filename);
+            struct stat sb;
+            if (VCWD_STAT(filepath.c_str(), &sb) == 0 && (sb.st_mode & S_IFREG) != 0)
+            {
+                std::ifstream file(filepath);
+                std::streampos beg = file.tellg();
+                file.seekg(0, std::ios::end);
+                std::streampos end = file.tellg();
+                file.seekg(0, std::ios::beg);
+                // plugin file size limitation: 10 MB
+                if (10 * 1024 * 1024 >= end - beg)
+                {
+                    std::string source((std::istreambuf_iterator<char>(file)),
+                                       std::istreambuf_iterator<char>());
+                    plugin_src_list.emplace_back(filename, source);
+                }
+                else
+                {
+                    openrasp_error(E_WARNING, CONFIG_ERROR, _("Ignored Javascript plugin file '%s', as it exceeds 10 MB in file size."), filename.c_str());
+                }
+            }
+        }
+        free(ent[i]);
+    }
+    free(ent);
+    process_globals.plugin_src_list = plugin_src_list;
 }
 
 } // namespace openrasp

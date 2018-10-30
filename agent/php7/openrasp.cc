@@ -156,6 +156,7 @@ PHP_RINIT_FUNCTION(openrasp)
         // openrasp_inject must be called before openrasp_log cuz of request_id
         result = PHP_RINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU);
+        result = PHP_RINIT(openrasp_v8)(INIT_FUNC_ARGS_PASSTHRU);
     }
     return SUCCESS;
 }

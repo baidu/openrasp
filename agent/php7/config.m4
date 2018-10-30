@@ -468,6 +468,10 @@ int main() {
     openrasp_v8_timeout_task.cc \
     openrasp_v8_request_context.cc \
     openrasp_v8_utils.cc \
+    openrasp_v8_snapshot.cc \
+    openrasp_v8_isolate.cc \
+    openrasp_v8_platform.cc \
+    openrasp_v8_exception.cc \
     openrasp_security_policy.cc \
     openrasp_ini.cc \
     $OPENRASP_REMOTE_MANAGER_SOURCE \
