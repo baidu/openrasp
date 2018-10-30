@@ -24,7 +24,6 @@
 #include <map>
 #include <functional>
 #include <time.h>
-#include <pcre.h>
 
 long fetch_time_offset();
 bool same_day_in_current_timezone(long src, long target, long offset);
@@ -55,7 +54,6 @@ HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey);
 zval *fetch_outmost_zval_from_ht(HashTable *ht, const char *arKey);
 std::string json_encode_from_zval(zval *value TSRMLS_DC);
 
-bool regex_match(const char *str, const char *regex, int options = 0);
 bool start_with(const std::string &str, const std::string &prefix);
 
 #endif
