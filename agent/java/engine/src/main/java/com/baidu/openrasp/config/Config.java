@@ -69,7 +69,7 @@ public class Config extends FileScanListener {
         BLOCK_JSON("block.content_json", "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"),
         BLOCK_XML("block.content_xml", "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"),
         BLOCK_HTML("block.content_html", "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>"),
-        CLOUD_SWITCH("cloud.switch", "false"),
+        CLOUD_SWITCH("cloud.enable", "false"),
         CLOUD_ADDRESS("cloud.address", ""),
         CLOUD_APPID("cloud.appid", ""),
         SYSLOG_ENABLE("syslog.enable", "false"),

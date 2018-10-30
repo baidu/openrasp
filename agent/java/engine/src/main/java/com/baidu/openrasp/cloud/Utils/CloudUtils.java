@@ -134,8 +134,12 @@ public class CloudUtils {
             }
             String cloudAddress = Config.getConfig().getCloudAddress();
             String cloudAppId = Config.getConfig().getCloudAppId();
-            return cloudAddress != null && !cloudAddress.trim().isEmpty() &&
-                    cloudAppId != null && !cloudAppId.trim().isEmpty();
+            if (cloudAddress == null || cloudAddress.trim().isEmpty() ||
+                    cloudAppId == null || cloudAppId.trim().isEmpty()) {
+                CloudManager.LOGGER.warn("Please check the settings of the cloud control:address or appid.");
+                return false;
+            }
+            return true;
         }
         return false;
     }
