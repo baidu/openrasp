@@ -121,21 +121,17 @@ bool Isolate::Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::
     task->GetMtx().unlock();
     if (UNLIKELY(rst.IsEmpty()))
     {
-        auto console_log = data->console_log.Get(isolate);
-        auto stack_trace = try_catch.StackTrace();
-        if (stack_trace.IsEmpty())
+        v8::Local<v8::Value> message = try_catch.StackTrace();
+        if (message.IsEmpty())
         {
-            auto message = v8::Object::New(isolate);
-            message->Set(NewV8String(isolate, "message"), NewV8String(isolate, "Javascript plugin execution timeout."));
-            message->Set(NewV8String(isolate, "type"), type);
-            message->Set(NewV8String(isolate, "params"), params);
-            message->Set(NewV8String(isolate, "context"), request_context);
-            (void)console_log->Call(context, console_log, 1, reinterpret_cast<v8::Local<v8::Value> *>(&message)).IsEmpty();
+            auto msg = v8::Object::New(isolate);
+            msg->Set(NewV8String(isolate, "message"), NewV8String(isolate, "Javascript plugin execution timeout."));
+            msg->Set(NewV8String(isolate, "type"), type);
+            msg->Set(NewV8String(isolate, "params"), params);
+            msg->Set(NewV8String(isolate, "context"), request_context);
+            message = msg;
         }
-        else
-        {
-            (void)console_log->Call(context, console_log, 1, reinterpret_cast<v8::Local<v8::Value> *>(&stack_trace)).IsEmpty();
-        }
+        plugin_info(isolate, message);
         return false;
     }
     if (UNLIKELY(!rst->IsArray()))

@@ -141,6 +141,8 @@ extern openrasp_v8_process_globals process_globals;
 v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val);
 v8::Local<v8::ObjectTemplate> NewRequestContextTemplate(v8::Isolate *isolate);
 void log_callback(const v8::FunctionCallbackInfo<v8::Value> &info);
+void plugin_info(const std::string &message);
+void plugin_info(Isolate *isolate, v8::Local<v8::Value> value);
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result);
 void load_plugins();
 } // namespace openrasp

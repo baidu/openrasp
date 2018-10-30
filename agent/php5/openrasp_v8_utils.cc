@@ -142,6 +142,18 @@ void log_callback(const v8::FunctionCallbackInfo<v8::Value> &info)
     }
 }
 
+void plugin_info(const std::string &message)
+{
+    TSRMLS_FETCH();
+    LOG_G(plugin_logger).log(LEVEL_INFO, message.c_str(), message.length() TSRMLS_CC);
+}
+
+void plugin_info(Isolate *isolate, v8::Local<v8::Value> value)
+{
+    auto console_log = isolate->GetData()->console_log.Get(isolate);
+    (void)console_log->Call(isolate->GetCurrentContext(), console_log, 1, reinterpret_cast<v8::Local<v8::Value> *>(&value)).IsEmpty();
+}
+
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)
 {
     TSRMLS_FETCH();
