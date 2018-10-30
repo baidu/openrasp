@@ -72,7 +72,7 @@ public class KeepAlive {
         params.put("rasp_id", CloudCacheModel.getInstance().getRaspId());
         params.put("plugin_version", CloudCacheModel.getInstance().getPluginVersion());
         params.put("config_time", CloudCacheModel.getInstance().getConfigTime());
-        params.put("plugin_md5",CloudCacheModel.getInstance().getPluginMD5());
+        params.put("plugin_md5", CloudCacheModel.getInstance().getPluginMD5());
         return params;
     }
 
@@ -84,14 +84,17 @@ public class KeepAlive {
             }
             Map<String, Object> pluginMap = CloudUtils.getMapFromData(response, "plugin");
             if (pluginMap != null) {
-                if (pluginMap.get("version") != null) {
-                    CloudCacheModel.getInstance().setPluginVersion(((JsonPrimitive) pluginMap.get("version")).getAsString());
+                Object version = pluginMap.get("version");
+                if (version instanceof JsonPrimitive) {
+                    CloudCacheModel.getInstance().setPluginVersion(((JsonPrimitive) version).getAsString());
                 }
-                if (pluginMap.get("md5") != null) {
-                    CloudCacheModel.getInstance().setPluginMD5(((JsonPrimitive) pluginMap.get("md5")).getAsString());
+                Object md5 = pluginMap.get("md5");
+                if (md5 instanceof JsonPrimitive) {
+                    CloudCacheModel.getInstance().setPluginMD5(((JsonPrimitive) md5).getAsString());
                 }
-                if (pluginMap.get("plugin") != null) {
-                    String plugin = ((JsonPrimitive) pluginMap.get("plugin")).getAsString();
+                Object object = pluginMap.get("plugin");
+                if (object instanceof JsonPrimitive) {
+                    String plugin = ((JsonPrimitive) object).getAsString();
                     if (!plugin.equals(CloudCacheModel.getInstance().getPlugin())) {
                         CloudCacheModel.getInstance().setPlugin(plugin);
                         JsPluginManager.updatePluginAsync();
@@ -101,17 +104,10 @@ public class KeepAlive {
             Map<String, Object> configMap = CloudUtils.getMapFromData(response, "config");
             if (configMap != null) {
                 Object object = configMap.get("algorithm.config");
-                if (object != null) {
+                if (object instanceof JsonObject) {
                     JsonObject jsonObject = (JsonObject) object;
-                    if (!jsonObject.toString().equals(CloudCacheModel.getInstance().getAlgorithmConfig())) {
-                        CloudCacheModel.getInstance().setAlgorithmConfig(jsonObject.toString());
-                        if (Config.getConfig().getCloudSwitch()) {
-                            String algorithmConfig = CloudCacheModel.getInstance().getAlgorithmConfig();
-                            if (algorithmConfig != null) {
-                                injectRhino(algorithmConfig);
-                            }
-                        }
-                    }
+                    String json = new Gson().toJson(jsonObject);
+                    injectRhino(json);
                 }
                 Config.getConfig().loadConfigFromCloud(configMap, true);
                 //云控下发配置时动态添加或者删除syslog

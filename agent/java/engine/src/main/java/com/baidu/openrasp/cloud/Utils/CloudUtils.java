@@ -144,8 +144,7 @@ public class CloudUtils {
         Map<String, Object> data = response.getData();
         if (data != null) {
             Object object = data.get(key);
-
-            if (object != null) {
+            if (object instanceof JsonObject) {
                 JsonObject jsonElement = (JsonObject) object;
                 return getMapGsonObject().fromJson(jsonElement, new TypeToken<Map<String, Object>>() {
                 }.getType());
