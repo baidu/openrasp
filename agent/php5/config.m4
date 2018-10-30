@@ -40,6 +40,9 @@ if test "$PHP_OPENRASP" != "no"; then
   V8_LIBS="$V8_PATH/lib/libv8_{base,libsampler,libbase,libplatform,snapshot}.a"
   case $host_os in
     darwin* )
+      PHP_ADD_LIBRARY(pcreposix, 1, OPENRASP_SHARED_LIBADD)
+      PHP_ADD_LIBRARY(pcrecpp, 1, OPENRASP_SHARED_LIBADD)
+      PHP_ADD_LIBRARY(pcre, 1, OPENRASP_SHARED_LIBADD)
       OPENRASP_LIBS="-Wl,$V8_LIBS $OPENRASP_LIBS"
       ;;
     * )
