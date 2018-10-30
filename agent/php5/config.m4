@@ -71,6 +71,7 @@ if test "$PHP_OPENRASP" != "no"; then
     xxd -i error.js >> openrasp_v8_js.h
     xxd -i rasp.js >> openrasp_v8_js.h
     xxd -i sql_tokenize.js >> openrasp_v8_js.h
+    xxd -i cmd_tokenize.js >> openrasp_v8_js.h
     popd >/dev/null 2>&1
   ], [builddir=PHP_EXT_BUILDDIR([openrasp])/js])
 

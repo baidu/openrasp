@@ -273,9 +273,14 @@ var algorithmConfig = {
     command_reflect: {
         action: 'block'
     },
+    // 命令后门 - 语法解释器检查用户输入
+    command_inject: {
+        action: 'block',
+        min_length: 8
+    },
     // 命令后门 - 匹配用户输入
     command_userinput: {
-        action: 'block'
+        action: 'ignore'
     },
     // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
     command_other: {
@@ -583,8 +588,7 @@ function is_outside_webroot(appBasePath, realpath, path) {
 // 
 // 或者以用户输入结尾
 // file_get_contents("/data/uploads/" . "../../../../../../../etc/passwd");
-function is_path_endswith_userinput(parameter, target, is_windows)
-{
+function is_path_endswith_userinput(parameter, target, is_windows) {
     var verdict = false
 
     Object.keys(parameter).some(function (key) {
@@ -600,8 +604,7 @@ function is_path_endswith_userinput(parameter, target, is_windows)
         // 如果应用做了特殊处理， 比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
         if (value.startsWith('file://') && 
             is_absolute_path(target, is_windows) && 
-            value.endsWith(target))
-        {
+            value.endsWith(target)) {
             verdict = true
             return true
         }
@@ -609,15 +612,13 @@ function is_path_endswith_userinput(parameter, target, is_windows)
         // Windows 下面
         // 传入 ../../../conf/tomcat-users.xml
         // 看到 c:\tomcat\webapps\root\..\..\conf\tomcat-users.xml
-        if (is_windows)
-        {
+        if (is_windows){
             value = value.replaceAll('/', '\\')
         }
 
         // 参数必须有跳出目录，或者是绝对路径
         if ((value == target || target.endsWith(value)) 
-            && (has_traversal(value) || is_absolute_path(value, is_windows)))
-        {
+            && (has_traversal(value) || is_absolute_path(value, is_windows))) {
             verdict = true
             return true
         }
@@ -640,21 +641,17 @@ function is_from_userinput(parameter, target)
             return true
         }
     })
-
     return verdict
 }
 
 // 检查SQL逻辑是否被用户参数所修改
-function is_sql_changed(raw_tokens, userinput_idx, userinput_length)
-{
-    // 当用户输入穿越了2个token，就可以判定为SQL注入
-    var start = -1, end = raw_tokens.length, distance = 2
+function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance) {
+    // 当用户输入穿越了多个token，就可以判定为代码注入，默认为2
+    var start = -1, end = raw_tokens.length, distance = distance || 2
 
     // 寻找 token 起始点，可以改为二分查找
-    for (var i = 0; i < raw_tokens.length; i++) 
-    {
-        if (raw_tokens[i].stop >= userinput_idx) 
-        {
+    for (var i = 0; i < raw_tokens.length; i++) {
+        if (raw_tokens[i].stop >= userinput_idx) {
             start = i
             break
         }
@@ -662,30 +659,24 @@ function is_sql_changed(raw_tokens, userinput_idx, userinput_length)
 
     // 寻找 token 结束点
     // 另外，最多需要遍历 distance 个 token
-    for (var i = start; i < start + distance && i < raw_tokens.length; i++) 
-    {
-        if (raw_tokens[i].stop >= userinput_idx + userinput_length - 1) 
-        {
+    for (var i = start; i < start + distance && i < raw_tokens.length; i++) {
+        if (raw_tokens[i].stop >= userinput_idx + userinput_length - 1) {
             end = i
             break
         }
     }
 
-    if (end - start > distance)
-    {
+    if (end - start > distance) {
         return true
     }
-
     return false
 }
 
 // 下个版本将会支持翻译，目前还需要暴露一个 getText 接口给插件
-function _(message, args)
-{
+function _(message, args) {
     args = args || []
 
-    for (var i = 0; i < args.length; i ++)
-    {
+    for (var i = 0; i < args.length; i ++) {
         var symbol = '%' + (i + 1) + '%'
         message = message.replace(symbol, args[i])      
     }
@@ -717,8 +708,7 @@ if (RASP.get_jsengine() !== 'v8') {
         var parameters = context.parameter || {}
         var raw_tokens = []
 
-        function _run(values, name)
-        {
+        function _run(values, name) {
             var reason = false
 
             values.some(function (value) {
@@ -737,7 +727,7 @@ if (RASP.get_jsengine() !== 'v8') {
                     raw_tokens = RASP.sql_tokenize(params.query, params.server)
                 }
 
-                if (is_sql_changed(raw_tokens, userinput_idx, value.length)) {
+                if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
                     reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
                     return true
                 }
@@ -1406,20 +1396,76 @@ plugin.register('command', function (params, context) {
         return clean
     }
 
-    // 算法2: 匹配用户输入
-    if (algorithmConfig.command_userinput.action != 'ignore') {
+    // 算法2: 语法解释器
+    if (algorithmConfig.command_inject.action != 'ignore') {
         var cmd = params.command
-
         // 全文匹配
-        if (is_from_userinput(context.parameter, cmd)) {
-            return {
-                action:     algorithmConfig.command_userinput.action,
-                message:    _("WebShell detected - Executing command: %1%", [cmd]),
-                confidence: 100
-            }
+
+        var reason     = false
+        var min_length = algorithmConfig.command_inject.min_length
+        var parameters = context.parameter || {}
+        var raw_tokens = []
+
+        // 检查命令逻辑是否被用户参数所修改
+        function _run(values, name)
+        {
+            var reason = false
+
+            values.some(function (value) {
+                if (value.length <= min_length) {
+                    return false
+                }
+
+                // 检查用户输入是否存在于命令中
+                var userinput_idx = cmd.indexOf(value)
+                if (userinput_idx == -1) {
+                    return false
+                }
+
+                if (cmd == value) {
+                    reason = _("WebShell detected - Executing command: %1%", [cmd])
+                    return true
+                }
+
+                // 懒加载，需要的时候初始化 token
+                if (raw_tokens.length == 0) {
+                    raw_tokens = RASP.cmd_tokenize(cmd)
+                }
+
+                if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
+                    reason = _("Command execution - Command structure altered by user input, request parameter name: %1%", [name])
+                    return true
+                }
+            })
+
+            return reason
         }
 
-        // 1.0 之前会增加命令注入检测，以及一个bash/cmd解释器，请耐心等待~
+        // 匹配 GET/POST/multipart 参数
+        Object.keys(parameters).some(function (name) {
+            // 覆盖场景，后者仅PHP支持
+            // ?id=XXXX
+            // ?data[key1][key2]=XXX
+            var value_list
+            if (typeof parameters[name][0] == 'string') {
+                value_list = parameters[name]
+            } else {
+                value_list = Object.values(parameters[name][0])
+            }                
+            reason = _run(value_list, name)
+            if (reason) {
+                return true
+            }
+        })
+
+        if (reason !== false) 
+        {
+            return {
+                'action':     algorithmConfig.command_inject.action,
+                'confidence': 90,
+                'message':    reason
+            }
+        }
     }
 
     // 算法3: 记录所有的命令执行
