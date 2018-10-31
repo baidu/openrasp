@@ -190,19 +190,6 @@ enum PATH_OPERATION
 
 typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
 typedef void (*hook_handler_t)(TSRMLS_D);
-
-void slow_query_alarm(int rows TSRMLS_DC);
-zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
-void sql_type_handler(char *query, int query_len, char *server TSRMLS_DC);
-long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count, zval *params[] TSRMLS_DC);
-const std::string get_check_type_name(OpenRASPCheckType check_type);
-
-typedef enum hook_position_t
-{
-    PRE_HOOK = 1 << 0,
-    POST_HOOK = 1 << 1
-} hook_position;
-
 typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
 /**
  * 使用这个宏定义被 hook 函数的替换函数的函数头部
@@ -322,13 +309,23 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_hook);
 
 typedef void (*fill_param_t)(HashTable *ht);
 
+void register_hook_handler(hook_handler_t hook_handler);
+
+const std::string get_check_type_name(OpenRASPCheckType check_type);
+
 void handle_block(TSRMLS_D);
 void check(OpenRASPCheckType check_type, zval *z_params TSRMLS_DC);
+void openrasp_buildin_php_risk_handle(zend_bool is_block, OpenRASPCheckType type, int confidence, zval *params, zval *message TSRMLS_DC);
+
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC);
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC);
 bool openrasp_zval_in_request(zval *item TSRMLS_DC);
-void openrasp_buildin_php_risk_handle(zend_bool is_block, OpenRASPCheckType type, int confidence, zval *params, zval *message TSRMLS_DC);
+
 char *openrasp_real_path(char *filename, int filename_len, bool use_include_path, uint32_t w_op TSRMLS_DC);
-void register_hook_handler(hook_handler_t hook_handler);
+
+void slow_query_alarm(int rows TSRMLS_DC);
+void sql_type_handler(char *query, int query_len, char *server TSRMLS_DC);
+long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count, zval *params[] TSRMLS_DC);
+zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
 
 #endif
