@@ -19,13 +19,21 @@
 
 namespace openrasp
 {
-ShmManager sm;
 std::unique_ptr<SharedConfigManager> scm = nullptr;
 
-SharedConfigManager::SharedConfigManager(ShmManager *mm)
-    : BaseManager(mm), shared_config_block(nullptr), rwlock(nullptr)
+SharedConfigManager::SharedConfigManager()
+    : shared_config_block(nullptr), rwlock(nullptr)
 {
     meta_size = ROUNDUP(sizeof(pthread_rwlock_t), 1 << 3);
+}
+
+SharedConfigManager::~SharedConfigManager()
+{
+    if (rwlock != nullptr)
+    {
+        delete rwlock;
+        rwlock = nullptr;
+    }
 }
 
 int SharedConfigManager::get_check_type_white_bit_mask(std::string url)
@@ -150,7 +158,7 @@ bool SharedConfigManager::set_log_max_backup(long log_max_backup)
 bool SharedConfigManager::startup()
 {
     size_t total_size = meta_size + sizeof(SharedConfigBlock);
-    char *shm_block = shm_manager->create(SHMEM_SEC_CONF_BLOCK, total_size);
+    char *shm_block = BaseManager::sm.create(SHMEM_SEC_CONF_BLOCK, total_size);
     if (shm_block)
     {
         memset(shm_block, 0, total_size);
@@ -172,8 +180,9 @@ bool SharedConfigManager::shutdown()
         if (rwlock != nullptr)
         {
             delete rwlock;
+            rwlock = nullptr;
         }
-        shm_manager->destroy(SHMEM_SEC_CONF_BLOCK);
+        BaseManager::sm.destroy(SHMEM_SEC_CONF_BLOCK);
         initialized = false;
     }
     return true;

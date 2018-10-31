@@ -92,11 +92,11 @@ PHP_MINIT_FUNCTION(openrasp)
     {
         return SUCCESS;
     }
-    openrasp::scm.reset(new openrasp::SharedConfigManager(&openrasp::sm));
+    openrasp::scm.reset(new openrasp::SharedConfigManager());
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (check_sapi_need_alloc_shm() && openrasp_ini.remote_management_enable)
     {
-        openrasp::oam.reset(new openrasp::OpenraspAgentManager(&openrasp::sm));
+        openrasp::oam.reset(new openrasp::OpenraspAgentManager());
         if (!openrasp::oam->verify_ini_correct())
         {
             return SUCCESS;

@@ -107,6 +107,7 @@ void HeartBeatAgent::do_heartbeat(CURL *curl)
 	}
 	if (res_info->has_error())
 	{
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Heartbeat error, fail to parse response."));
 		return;
 	}
 	if (!res_info->http_code_ok())

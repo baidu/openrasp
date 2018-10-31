@@ -27,17 +27,18 @@ class ShmManager;
 
 class BaseManager
 {
+
 protected:
-  ShmManager *shm_manager;
+  static ShmManager sm;
+
+protected:
   bool initialized = false;
 
 public:
-  BaseManager(ShmManager *mm) : shm_manager(mm){};
+  BaseManager();
   virtual bool startup() = 0;
   virtual bool shutdown() = 0;
 };
-
-extern ShmManager sm;
 
 } // namespace openrasp
 

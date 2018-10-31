@@ -51,7 +51,7 @@ public:
   OpenraspCtrlBlock *agent_ctrl_block;
 
 public:
-  OpenraspAgentManager(ShmManager *mm);
+  OpenraspAgentManager();
   bool startup();
   bool shutdown();
   bool verify_ini_correct();

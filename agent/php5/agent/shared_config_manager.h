@@ -32,7 +32,8 @@ namespace openrasp
 class SharedConfigManager : public BaseManager
 {
 public:
-  SharedConfigManager(ShmManager *mm);
+  SharedConfigManager();
+  virtual ~SharedConfigManager();
   virtual bool startup();
   virtual bool shutdown();
 

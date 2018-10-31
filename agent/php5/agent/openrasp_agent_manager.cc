@@ -79,9 +79,8 @@ static void supervisor_sigchld_handler(int signal_no)
 	}
 }
 
-OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
-	: BaseManager(mm),
-	  agent_ctrl_block(nullptr)
+OpenraspAgentManager::OpenraspAgentManager()
+	: agent_ctrl_block(nullptr)
 {
 }
 
@@ -152,7 +151,7 @@ bool OpenraspAgentManager::verify_ini_correct()
 
 bool OpenraspAgentManager::create_share_memory()
 {
-	char *shm_block = shm_manager->create(SHMEM_SEC_CTRL_BLOCK, sizeof(OpenraspCtrlBlock));
+	char *shm_block = BaseManager::sm.create(SHMEM_SEC_CTRL_BLOCK, sizeof(OpenraspCtrlBlock));
 	if (shm_block && (agent_ctrl_block = reinterpret_cast<OpenraspCtrlBlock *>(shm_block)))
 	{
 		return true;
@@ -163,7 +162,7 @@ bool OpenraspAgentManager::create_share_memory()
 bool OpenraspAgentManager::destroy_share_memory()
 {
 	agent_ctrl_block = nullptr;
-	this->shm_manager->destroy(SHMEM_SEC_CTRL_BLOCK);
+	BaseManager::sm.destroy(SHMEM_SEC_CTRL_BLOCK);
 	return true;
 }
 
@@ -348,6 +347,7 @@ bool OpenraspAgentManager::agent_remote_register()
 	}
 	if (res_info->has_error())
 	{
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, fail to parse response."));
 		return false;
 	}
 	if (!res_info->http_code_ok())
