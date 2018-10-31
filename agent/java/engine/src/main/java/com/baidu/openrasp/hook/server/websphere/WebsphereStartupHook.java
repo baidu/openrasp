@@ -78,6 +78,7 @@ public class WebsphereStartupHook extends ServerStartupHook {
                 }
             }
         }
+        sendRegister();
         HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_WEBSPHERE_START, CheckParameter.EMPTY_MAP);
     }
 
