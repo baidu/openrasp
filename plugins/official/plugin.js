@@ -1399,7 +1399,6 @@ plugin.register('command', function (params, context) {
     // 算法2: 语法解释器
     if (algorithmConfig.command_inject.action != 'ignore') {
         var cmd = params.command
-        // 全文匹配
 
         var reason     = false
         var min_length = algorithmConfig.command_inject.min_length
