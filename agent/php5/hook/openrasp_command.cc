@@ -37,7 +37,7 @@ PRE_HOOK_FUNCTION(popen, WEBSHELL_COMMAND);
 PRE_HOOK_FUNCTION(pcntl_exec, WEBSHELL_COMMAND);
 PRE_HOOK_FUNCTION(assert, WEBSHELL_EVAL);
 
-static void check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+static void check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
         zval **command;
         int argc = MIN(1, ZEND_NUM_ARGS());
@@ -56,7 +56,7 @@ static void check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         }
 }
 
-static void send_command_to_plugin(const char *command TSRMLS_DC)
+static void plugin_command_check(const char *command TSRMLS_DC)
 {
     openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (isolate)
@@ -101,12 +101,12 @@ static void openrasp_exec_ex(INTERNAL_FUNCTION_PARAMETERS, int mode)
         if (!cmd_len) {
             return;
         }
-        send_command_to_plugin(cmd TSRMLS_CC);
+        plugin_command_check(cmd TSRMLS_CC);
 }
 
 void pre_global_passthru_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_passthru_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -116,7 +116,7 @@ void pre_global_passthru_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_system_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_system_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -126,7 +126,7 @@ void pre_global_system_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_exec_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -136,7 +136,7 @@ void pre_global_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_shell_exec_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_shell_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -150,12 +150,12 @@ void pre_global_shell_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     if (!command_len) {
         return;
     }
-    send_command_to_plugin(command TSRMLS_CC);
+    plugin_command_check(command TSRMLS_CC);
 }
 
 void pre_global_proc_open_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_proc_open_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -176,12 +176,12 @@ void pre_global_proc_open_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     if (!command_len) {
         return;
     }
-    send_command_to_plugin(command TSRMLS_CC);
+    plugin_command_check(command TSRMLS_CC);
 }
 
 void pre_global_popen_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_popen_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -195,12 +195,12 @@ void pre_global_popen_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     if (!command_len) {
         return;
     }
-    send_command_to_plugin(command TSRMLS_CC);
+    plugin_command_check(command TSRMLS_CC);
 }
 
 void pre_global_pcntl_exec_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_pcntl_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -242,7 +242,7 @@ void pre_global_pcntl_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         }
     }
 
-    send_command_to_plugin(command.c_str() TSRMLS_CC);
+    plugin_command_check(command.c_str() TSRMLS_CC);
 }
 
 void pre_global_assert_WEBSHELL_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
