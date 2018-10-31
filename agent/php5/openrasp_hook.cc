@@ -206,8 +206,8 @@ void openrasp_buildin_php_risk_handle(zend_bool is_block, OpenRASPCheckType type
     MAKE_STD_ZVAL(params_result);
     array_init(params_result);
     add_assoc_string(params_result, "intercept_state", const_cast<char *>(is_block ? "block" : "log"), 1);
-    add_assoc_string(params_result, "attack_type", (char *)get_check_type_name(type).c_str(), 1);
-    add_assoc_string(params_result, "algorithm", (char *)get_check_type_name(type).c_str(), 1);
+    add_assoc_string(params_result, "attack_type", const_cast<char *>(get_check_type_name(type).c_str()), 1);
+    add_assoc_string(params_result, "plugin_algorithm", const_cast<char *>(get_check_type_name(type).c_str()), 1);
     add_assoc_string(params_result, "plugin_name", const_cast<char *>("php_builtin_plugin"), 1);
     add_assoc_long(params_result, "plugin_confidence", confidence);
     add_assoc_zval(params_result, "attack_params", params);

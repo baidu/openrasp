@@ -14,38 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef _OPENRASP_MM_SHMEM_MANAGER_H_
-#define _OPENRASP_MM_SHMEM_MANAGER_H_
-
-#include <map>
+#include "base_manager.h"
 
 namespace openrasp
 {
 
-enum ShmemSecKey
+ShmManager BaseManager::sm;
+
+BaseManager::BaseManager()
 {
-  SHMEM_SEC_CTRL_BLOCK,
-  SHMEM_SEC_CONF_BLOCK
-};
-
-class ShmemSecMeta
-{
-public:
-  char *mem_addr;
-  size_t mem_size;
-};
-
-class ShmManager
-{
-public:
-  char *create(enum ShmemSecKey mem_key, size_t size);
-
-  int destroy(enum ShmemSecKey mem_key);
-
-private:
-  std::map<enum ShmemSecKey, ShmemSecMeta> _shmem_key_map;
-};
+}
 
 } // namespace openrasp
-
-#endif

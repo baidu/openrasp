@@ -71,7 +71,7 @@ void LogAgent::run()
 				continue;
 			}
 		} //make sure curl is not nullptr
-		
+
 		for (int i = 0; i < log_dirs.size(); ++i)
 		{
 			LogCollectItem *ldi = log_dirs[i];
@@ -111,11 +111,12 @@ bool LogAgent::post_logs_via_curl(std::string &log_arr, CURL *curl, std::string 
 	}
 	if (res_info->has_error())
 	{
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Log collect error, fail to parse response."));
 		return false;
 	}
 	if (!res_info->http_code_ok())
 	{
-		openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to post logs to %s, http status: %ld."),
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Log collect error, fail to post logs to %s, http status: %ld."),
 					   url_string.c_str(),
 					   res_info->get_http_code());
 		return false;

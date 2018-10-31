@@ -19,10 +19,10 @@
 extern "C"
 {
 #ifdef PHP_WIN32
-# include "win32/inet.h"
-# include <winsock2.h>
-# include <windows.h>
-# include <Ws2tcpip.h>
+#include "win32/inet.h"
+#include <winsock2.h>
+#include <windows.h>
+#include <Ws2tcpip.h>
 #else
 #include <netinet/in.h>
 #if HAVE_ARPA_INET_H
@@ -101,7 +101,7 @@ int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *funct
         zval *ip_arr = NULL;
         MAKE_STD_ZVAL(ip_arr);
         array_init(ip_arr);
-        if (url) 
+        if (url)
         {
             if (url->host)
             {
@@ -109,9 +109,11 @@ int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *funct
                 struct in_addr in;
                 int i;
                 hp = gethostbyname(url->host);
-                if (hp != NULL && hp->h_addr_list != NULL) {
-                    for (i = 0 ; hp->h_addr_list[i] != 0 ; i++) {
-                        in = *(struct in_addr *) hp->h_addr_list[i];
+                if (hp != NULL && hp->h_addr_list != NULL)
+                {
+                    for (i = 0; hp->h_addr_list[i] != 0; i++)
+                    {
+                        in = *(struct in_addr *)hp->h_addr_list[i];
                         add_next_index_string(ip_arr, inet_ntoa(in), 1);
                     }
                 }
@@ -125,7 +127,7 @@ int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *funct
 }
 
 void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args)
-{    
+{
     zval effective_url;
     INIT_ZVAL(effective_url);
     if (call_user_function(EG(function_table), NULL, function_name, &effective_url, 2, args TSRMLS_CC) != SUCCESS &&
@@ -143,7 +145,7 @@ void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *fun
         spprintf(&message_str, 0, _("SSRF - Detected SSRF via 302 redirect, current effective url is %s"), Z_STRVAL(effective_url));
         ZVAL_STRING(plugin_message, message_str, 1);
         efree(message_str);
-        openrasp_buildin_php_risk_handle(1, check_type, 100, attack_params, plugin_message TSRMLS_CC);       
+        openrasp_buildin_php_risk_handle(1, check_type, 100, attack_params, plugin_message TSRMLS_CC);
     }
     zval_dtor(&effective_url);
     return;

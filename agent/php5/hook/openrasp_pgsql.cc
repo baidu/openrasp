@@ -37,7 +37,7 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
         cp = buf;
         while (*cp)
         {
-            if (isspace((unsigned char) *cp))
+            if (isspace((unsigned char)*cp))
             {
                 cp++;
                 continue;
@@ -50,12 +50,12 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
                 {
                     break;
                 }
-                if (isspace((unsigned char) *cp))
+                if (isspace((unsigned char)*cp))
                 {
                     *cp++ = '\0';
                     while (*cp)
                     {
-                        if (!isspace((unsigned char) *cp))
+                        if (!isspace((unsigned char)*cp))
                         {
                             break;
                         }
@@ -69,13 +69,13 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
             if (*cp != '=')
             {
                 efree(buf);
-	            return;
+                return;
             }
             *cp++ = '\0';
 
             while (*cp)
             {
-                if (!isspace((unsigned char) *cp))
+                if (!isspace((unsigned char)*cp))
                 {
                     break;
                 }
@@ -88,7 +88,7 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
                 cp2 = pval;
                 while (*cp)
                 {
-                    if (isspace((unsigned char) *cp))
+                    if (isspace((unsigned char)*cp))
                     {
                         *cp++ = '\0';
                         break;
@@ -117,7 +117,7 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
                     if (*cp == '\0')
                     {
                         efree(buf);
-	                    return;
+                        return;
                     }
                     if (*cp == '\\')
                     {
@@ -141,11 +141,11 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
             if (strcmp(pname, "user") == 0)
             {
                 sql_connection_p->username = estrdup(pval);
-            } 
+            }
             else if (strcmp(pname, "host") == 0)
             {
                 sql_connection_p->host = estrdup(pval);
-            } 
+            }
             else if (strcmp(pname, "port") == 0)
             {
                 sql_connection_p->port = atoi(pval);
@@ -158,23 +158,26 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
 
 static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
-	char *host=NULL,*port=NULL,*options=NULL,*tty=NULL,*dbname=NULL,*connstring=NULL;
-	zval **args[5];
-	int i = 0;
+    char *host = NULL, *port = NULL, *options = NULL, *tty = NULL, *dbname = NULL, *connstring = NULL;
+    zval **args[5];
+    int i = 0;
     int connect_type = 0;
 
-	if (ZEND_NUM_ARGS() < 1 || ZEND_NUM_ARGS() > 5
-			|| zend_get_parameters_array_ex(ZEND_NUM_ARGS(), args) == FAILURE) {
-		return;
-	}
+    if (ZEND_NUM_ARGS() < 1 || ZEND_NUM_ARGS() > 5 || zend_get_parameters_array_ex(ZEND_NUM_ARGS(), args) == FAILURE)
+    {
+        return;
+    }
 
-	if (ZEND_NUM_ARGS() == 1) { /* new style, using connection string */
-		connstring = Z_STRVAL_PP(args[0]);
-	} else if (ZEND_NUM_ARGS() == 2 ) { /* Safe to add conntype_option, since 2 args was illegal */
-		connstring = Z_STRVAL_PP(args[0]);
-		convert_to_long_ex(args[1]);
-		connect_type = Z_LVAL_PP(args[1]);
-	}
+    if (ZEND_NUM_ARGS() == 1)
+    { /* new style, using connection string */
+        connstring = Z_STRVAL_PP(args[0]);
+    }
+    else if (ZEND_NUM_ARGS() == 2)
+    { /* Safe to add conntype_option, since 2 args was illegal */
+        connstring = Z_STRVAL_PP(args[0]);
+        convert_to_long_ex(args[1]);
+        connect_type = Z_LVAL_PP(args[1]);
+    }
     parse_connection_string(connstring, sql_connection_p);
 }
 
@@ -217,20 +220,25 @@ void post_global_pg_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS
 void pre_global_pg_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *pgsql_link = NULL;
-	char *query;
-	int query_len, argc = ZEND_NUM_ARGS();
+    char *query;
+    int query_len, argc = ZEND_NUM_ARGS();
 
-	if (argc == 1) {
-		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &query, &query_len) == FAILURE) {
-			return;
-		}
-	} else {
-		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &pgsql_link, &query, &query_len) == FAILURE) {
-			return;
-		}
-	}
+    if (argc == 1)
+    {
+        if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &query, &query_len) == FAILURE)
+        {
+            return;
+        }
+    }
+    else
+    {
+        if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &pgsql_link, &query, &query_len) == FAILURE)
+        {
+            return;
+        }
+    }
 
-    sql_type_handler(query, query_len, "pgsql" TSRMLS_CC);
+    plugin_sql_check(query, query_len, "pgsql" TSRMLS_CC);
 }
 void post_global_pg_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
@@ -243,7 +251,7 @@ void post_global_pg_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
     if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
     {
-        slow_query_alarm(num_rows TSRMLS_CC);       
+        slow_query_alarm(num_rows TSRMLS_CC);
     }
 }
 
@@ -257,7 +265,7 @@ void pre_global_pg_send_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 /**
  * pg_get_result
- */ 
+ */
 void post_global_pg_get_result_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     long num_rows = 0;
@@ -269,25 +277,30 @@ void post_global_pg_get_result_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMET
     }
     if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
     {
-        slow_query_alarm(num_rows TSRMLS_CC);       
+        slow_query_alarm(num_rows TSRMLS_CC);
     }
 }
 
 void pre_global_pg_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *pgsql_link = NULL;
-	char *query, *stmtname;
-	int query_len, stmtname_len, argc = ZEND_NUM_ARGS();
+    char *query, *stmtname;
+    int query_len, stmtname_len, argc = ZEND_NUM_ARGS();
 
-	if (argc == 2) {
-		if (zend_parse_parameters(argc TSRMLS_CC, "ss", &stmtname, &stmtname_len, &query, &query_len) == FAILURE) {
-			return;
-		}
-	} else {
-		if (zend_parse_parameters(argc TSRMLS_CC, "rss", &pgsql_link, &stmtname, &stmtname_len, &query, &query_len) == FAILURE) {
-			return;
-		}
-	}
+    if (argc == 2)
+    {
+        if (zend_parse_parameters(argc TSRMLS_CC, "ss", &stmtname, &stmtname_len, &query, &query_len) == FAILURE)
+        {
+            return;
+        }
+    }
+    else
+    {
+        if (zend_parse_parameters(argc TSRMLS_CC, "rss", &pgsql_link, &stmtname, &stmtname_len, &query, &query_len) == FAILURE)
+        {
+            return;
+        }
+    }
 
-    sql_type_handler(query, query_len, "pgsql" TSRMLS_CC);
+    plugin_sql_check(query, query_len, "pgsql" TSRMLS_CC);
 }
