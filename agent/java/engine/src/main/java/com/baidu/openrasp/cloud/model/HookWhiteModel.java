@@ -16,7 +16,7 @@
 
 package com.baidu.openrasp.cloud.model;
 
-import com.baidu.openrasp.cloud.Utils.DoubleArrayTrie;
+import com.baidu.openrasp.cloud.utils.DoubleArrayTrie;
 
 import java.util.*;
 

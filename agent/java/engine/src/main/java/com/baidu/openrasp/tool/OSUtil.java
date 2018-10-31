@@ -87,7 +87,7 @@ public class OSUtil {
         return os;
     }
 
-    public static String getID() throws Exception {
+    public static String getRaspId() throws Exception {
         LinkedList<String> macs = OSUtil.getMacAddress();
         String macString = "";
         for (String mac : macs) {

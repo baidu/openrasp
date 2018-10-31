@@ -20,6 +20,7 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.google.gson.Gson;
 
@@ -55,16 +56,11 @@ public class StatisticsReport {
                     params.put("request_sum", entry.getValue());
                     String content = new Gson().toJson(params);
                     String url = CloudRequestUrl.CLOUD_STATISTICS_REPORT_URL;
-                    GenericResponse response = new CloudHttpPool().request(url, content);
-                    if (response == null) {
-                        CloudCacheModel.reportCache.put(entry.getKey(), entry.getValue());
+                    GenericResponse response = new CloudHttp().request(url, content);
+                    if (CloudUtils.checkRequestResult(response)) {
+                        CloudCacheModel.reportCache.remove(entry.getKey());
                     } else {
-                        Integer responseCode = response.getResponseCode();
-                        if (responseCode != null && responseCode >= 200 && responseCode < 300) {
-                            CloudCacheModel.reportCache.remove(entry.getKey());
-                        } else {
-                            CloudCacheModel.reportCache.put(entry.getKey(), entry.getValue());
-                        }
+                        CloudCacheModel.reportCache.put(entry.getKey(), entry.getValue());
                     }
                     try {
                         Thread.sleep(STATISTICS_REPORT_INTERVAL);

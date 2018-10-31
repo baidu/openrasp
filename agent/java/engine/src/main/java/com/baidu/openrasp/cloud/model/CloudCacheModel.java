@@ -16,7 +16,7 @@
 
 package com.baidu.openrasp.cloud.model;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @description: 缓存云控数据
@@ -31,7 +31,7 @@ public class CloudCacheModel {
     public String algorithmConfig;
     public String raspId;
     public String masterIp = "";
-    public static HashMap<Long,Long> reportCache = new HashMap<Long, Long>();
+    public static  ConcurrentHashMap<Long,Long> reportCache = new ConcurrentHashMap<Long, Long>();
 
     private CloudCacheModel() {
     }

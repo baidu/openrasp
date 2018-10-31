@@ -17,7 +17,7 @@
 package com.baidu.openrasp.plugin.js.engine;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.Utils.CloudUtils;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
@@ -182,5 +182,18 @@ public class JsPluginManager {
                 }
             }
         }, 500);
+    }
+
+    /**
+     * 更新异常时让插件失效
+     */
+    public synchronized static void disablePlugin(){
+        // 清空 algorithm.config 配置
+        Config.getConfig().setAlgorithmConfig("{}");
+        boolean oldValue = HookHandler.enableHook.getAndSet(false);
+        List<CheckScript> scripts = new LinkedList<CheckScript>();
+        scripts.add(new CheckScript(PLUGIN_NAME, ""));
+        JSContextFactory.setCheckScriptList(scripts);
+        HookHandler.enableHook.set(oldValue);
     }
 }

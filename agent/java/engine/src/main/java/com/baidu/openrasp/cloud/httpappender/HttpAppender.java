@@ -17,10 +17,10 @@
 package com.baidu.openrasp.cloud.httpappender;
 
 import com.baidu.openrasp.cloud.CloudHttp;
-import com.baidu.openrasp.cloud.CloudHttpPool;
 import com.baidu.openrasp.cloud.model.AppenderCache;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
@@ -40,7 +40,7 @@ public class HttpAppender extends AppenderSkeleton {
     private CloudHttp cloudHttp;
 
     public HttpAppender() {
-        this.cloudHttp = new CloudHttpPool();
+        this.cloudHttp = new CloudHttp();
     }
 
     private boolean checkEntryConditions() {
@@ -66,11 +66,8 @@ public class HttpAppender extends AppenderSkeleton {
                 String requestUrl = getUrl(logger);
                 if (requestUrl != null) {
                     GenericResponse response = cloudHttp.request(requestUrl, new Gson().toJson(jsonArray));
-                    if (response != null) {
-                        Integer responseCode = response.getResponseCode();
-                        if (responseCode != null && responseCode >= 200 && responseCode < 300) {
-                            return;
-                        }
+                    if (CloudUtils.checkRequestResult(response)) {
+                        return;
                     }
                     AppenderCache.setCache(logger, jsonString);
                 }

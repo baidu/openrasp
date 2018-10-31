@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.cloud.Utils;
+package com.baidu.openrasp.cloud.utils;
 
 import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
@@ -26,6 +26,7 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -128,18 +129,29 @@ public class CloudUtils {
     public static boolean checkCloudControlEnter() {
         if (Config.getConfig().getCloudSwitch()) {
             try {
-                CloudCacheModel.getInstance().setRaspId(OSUtil.getID());
+                CloudCacheModel.getInstance().setRaspId(OSUtil.getRaspId());
             } catch (Exception e) {
                 CloudManager.LOGGER.warn("get rasp id failed", e);
             }
             String cloudAddress = Config.getConfig().getCloudAddress();
             String cloudAppId = Config.getConfig().getCloudAppId();
-            if (cloudAddress == null || cloudAddress.trim().isEmpty() ||
-                    cloudAppId == null || cloudAppId.trim().isEmpty()) {
-                CloudManager.LOGGER.warn("Please check the settings of the cloud control:address or appid.");
+            if (cloudAddress == null || cloudAddress.trim().isEmpty()) {
+                CloudManager.LOGGER.warn("Please check the settings of the cloud control:address may be wrong");
+                return false;
+            }
+            if (cloudAppId == null || cloudAppId.trim().isEmpty()) {
+                CloudManager.LOGGER.warn("Please check the settings of the cloud control:appid may be wrong");
                 return false;
             }
             return true;
+        }
+        return false;
+    }
+
+    public static boolean checkRequestResult(GenericResponse response) {
+        if (response != null) {
+            return response.getResponseCode() != null && response.getResponseCode() >= 200 &&
+                    response.getResponseCode() < 300 && response.getStatus() != null && response.getStatus() == 0;
         }
         return false;
     }
@@ -163,5 +175,19 @@ public class CloudUtils {
             return data.get(key);
         }
         return null;
+    }
+
+    public static String getMD5(String originalString) throws NoSuchAlgorithmException {
+        char[] hexArray = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        md.update(originalString.getBytes());
+        byte[] byteArray = md.digest();
+        char[] resultCharArray = new char[byteArray.length*2];
+        int index = 0;
+        for(byte b : byteArray){
+            resultCharArray[index++] = hexArray[b>>> 4 & 0xf];
+            resultCharArray[index++] = hexArray[b& 0xf];
+        }
+        return new String(resultCharArray);
     }
 }

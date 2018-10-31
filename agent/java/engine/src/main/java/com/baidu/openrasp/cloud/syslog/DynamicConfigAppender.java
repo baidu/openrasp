@@ -54,9 +54,10 @@ public class DynamicConfigAppender {
         HttpAppender appender = new HttpAppender();
         appender.setName(HTTP_APPENDER_NAME);
         BurstFilter filter = new BurstFilter();
-        filter.setMaxBurst(100);
-        filter.setRefillAmount(100);
-        filter.setRefillInterval(1000);
+        int logMaxBurst = Config.getConfig().getLogMaxBurst();
+        filter.setMaxBurst(logMaxBurst);
+        filter.setRefillAmount(logMaxBurst);
+        filter.setRefillInterval(60000);
         appender.addFilter(filter);
         logger.addAppender(appender);
     }

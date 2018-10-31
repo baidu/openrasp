@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.cloud.Utils;
+package com.baidu.openrasp.cloud.utils;
 
 import java.util.ArrayList;
 import java.util.List;

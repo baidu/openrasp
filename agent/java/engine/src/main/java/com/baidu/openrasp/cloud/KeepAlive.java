@@ -21,7 +21,7 @@ import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.config.Config;
-import com.baidu.openrasp.cloud.Utils.CloudUtils;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
@@ -31,6 +31,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.mozilla.javascript.Scriptable;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,9 +53,9 @@ public class KeepAlive {
             while (true) {
                 String content = new Gson().toJson(GenerateParameters());
                 String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
-                GenericResponse response = new CloudHttpPool().request(url, content);
-                if (response != null) {
-                    handler(response);
+                GenericResponse response = new CloudHttp().request(url, content);
+                if (CloudUtils.checkRequestResult(response)) {
+                    handleResponse(response);
                 } else {
                     CloudManager.LOGGER.warn("[OpenRASP] Cloud Control Send HeartBeat Failed");
                 }
@@ -76,59 +77,81 @@ public class KeepAlive {
         return params;
     }
 
-    private static void handler(GenericResponse response) {
-        if (response.getStatus() != null && response.getStatus() == 0) {
-            Object configTime = CloudUtils.getValueFromData(response, "config_time");
-            if (configTime != null) {
-                CloudCacheModel.getInstance().setConfigTime(((JsonPrimitive) configTime).getAsLong());
+    private static void handleResponse(GenericResponse response) {
+        String version = null;
+        String md5 = null;
+        String oldPlugin = null;
+        String pluginContext = null;
+        String algorithmConfig = null;
+        Object configTime = CloudUtils.getValueFromData(response, "config_time");
+        if (configTime instanceof JsonPrimitive) {
+            CloudCacheModel.getInstance().setConfigTime(((JsonPrimitive) configTime).getAsLong());
+        }
+        Map<String, Object> pluginMap = CloudUtils.getMapFromData(response, "plugin");
+        Map<String, Object> configMap = CloudUtils.getMapFromData(response, "config");
+        if (pluginMap != null) {
+            if (pluginMap.get("version") instanceof JsonPrimitive) {
+                version = ((JsonPrimitive) pluginMap.get("version")).getAsString();
             }
-            Map<String, Object> pluginMap = CloudUtils.getMapFromData(response, "plugin");
-            if (pluginMap != null) {
-                Object version = pluginMap.get("version");
-                if (version instanceof JsonPrimitive) {
-                    CloudCacheModel.getInstance().setPluginVersion(((JsonPrimitive) version).getAsString());
-                }
-                Object md5 = pluginMap.get("md5");
-                if (md5 instanceof JsonPrimitive) {
-                    CloudCacheModel.getInstance().setPluginMD5(((JsonPrimitive) md5).getAsString());
-                }
-                Object object = pluginMap.get("plugin");
-                if (object instanceof JsonPrimitive) {
-                    String plugin = ((JsonPrimitive) object).getAsString();
-                    if (!plugin.equals(CloudCacheModel.getInstance().getPlugin())) {
-                        CloudCacheModel.getInstance().setPlugin(plugin);
-                        JsPluginManager.updatePluginAsync();
+            if (pluginMap.get("md5") instanceof JsonPrimitive) {
+                md5 = ((JsonPrimitive) pluginMap.get("md5")).getAsString();
+            }
+            if (pluginMap.get("plugin") instanceof JsonPrimitive) {
+                pluginContext = ((JsonPrimitive) pluginMap.get("plugin")).getAsString();
+                try {
+                    String pluginMD5 = CloudUtils.getMD5(pluginContext);
+                    if (!pluginMD5.equals(md5)){
+                       return;
                     }
+                } catch (NoSuchAlgorithmException e) {
+                    CloudManager.LOGGER.warn("Plugin MD5 Verification Failed: ",e);
                 }
+                oldPlugin = CloudCacheModel.getInstance().getPlugin();
+                CloudCacheModel.getInstance().setPlugin(pluginContext);
+                JsPluginManager.updatePluginAsync();
             }
-            Map<String, Object> configMap = CloudUtils.getMapFromData(response, "config");
-            if (configMap != null) {
-                Object object = configMap.get("algorithm.config");
-                if (object instanceof JsonObject) {
-                    JsonObject jsonObject = (JsonObject) object;
-                    String json = new Gson().toJson(jsonObject);
-                    injectRhino(json);
-                }
-                Config.getConfig().loadConfigFromCloud(configMap, true);
-                //云控下发配置时动态添加或者删除syslog
-                Object syslogSwitch = configMap.get("syslog.enable");
-                if (syslogSwitch != null) {
-                    LogConfig.syslogManager();
-                }
-                //云控下发配置时动态更新syslog.tag
-                Object syslogTag = configMap.get("syslog.tag");
-                if (syslogTag != null) {
-                    DynamicConfigAppender.updateSyslogTag();
-                }
+        }
+        if (configMap != null) {
+            Object object = configMap.get("algorithm.config");
+            if (object instanceof JsonObject) {
+                JsonObject jsonObject = (JsonObject) object;
+                algorithmConfig = new Gson().toJson(jsonObject);
             }
-
+            Config.getConfig().loadConfigFromCloud(configMap, true);
+            //云控下发配置时动态添加或者删除syslog
+            Object syslogSwitch = configMap.get("syslog.enable");
+            if (syslogSwitch != null) {
+                LogConfig.syslogManager();
+            }
+            //云控下发配置时动态更新syslog.tag
+            Object syslogTag = configMap.get("syslog.tag");
+            if (syslogTag != null) {
+                DynamicConfigAppender.updateSyslogTag();
+            }
+        }
+        if (version != null && md5 != null && pluginContext != null && algorithmConfig != null) {
+            boolean result = injectRhino(algorithmConfig);
+            if (result) {
+                CloudCacheModel.getInstance().setPluginVersion(version);
+                CloudCacheModel.getInstance().setPluginMD5(md5);
+                CloudCacheModel.getInstance().setAlgorithmConfig(algorithmConfig);
+            } else {
+                CloudCacheModel.getInstance().setPlugin(oldPlugin);
+            }
         }
     }
 
-    private static void injectRhino(String script) {
-        script = "RASP.algorithmConfig =" + script;
-        JSContext cx = JSContextFactory.enterAndInitContext();
-        Scriptable globalScope = cx.getScope();
-        cx.evaluateString(globalScope, script, "algorithmConfig", 1, null);
+    private static boolean injectRhino(String script) {
+        try {
+            script = "RASP.algorithmConfig =" + script;
+            JSContext cx = JSContextFactory.enterAndInitContext();
+            Scriptable globalScope = cx.getScope();
+            cx.evaluateString(globalScope, script, "algorithmConfig", 1, null);
+        } catch (Throwable e) {
+            CloudManager.LOGGER.error("AlgorithmConfig Inject Rhino Failed,Plugin Will Be Invalid: ", e);
+            JsPluginManager.disablePlugin();
+            return false;
+        }
+        return true;
     }
 }

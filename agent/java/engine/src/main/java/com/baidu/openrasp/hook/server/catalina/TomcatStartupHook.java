@@ -64,7 +64,7 @@ public class TomcatStartupHook extends ServerStartupHook {
                 ApplicationModel.init("tomcat", version);
             }
         } catch (Exception e) {
-            HookHandler.LOGGER.warn("handle resin startup failed", e);
+            HookHandler.LOGGER.warn("handle tomcat startup failed", e);
         }
         sendRegister();
         HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_TOMCAT_START, CheckParameter.EMPTY_MAP);

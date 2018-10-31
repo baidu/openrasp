@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.plugin.checker.policy.serverpolicy;
+package com.baidu.openrasp.plugin.checker.policy.server;
 
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
@@ -22,12 +22,14 @@ import com.baidu.openrasp.plugin.info.EventInfo;
 import java.util.List;
 
 /**
- * @description: resin基线检查
+ * @program openrasp
+ * @description: websphere基线检查
  * @author: anyang
- * @create: 2018/09/10 12:16
+ * @create: 2018/10/12 10:36
  */
-public class ResinSecurityChecker extends ServerPolicyChecker {
+public class WebsphereSecurityChecker extends ServerPolicyChecker {
     @Override
     public void checkServer(CheckParameter checkParameter, List<EventInfo> infos) {
+
     }
 }

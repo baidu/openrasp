@@ -19,6 +19,7 @@ package com.baidu.openrasp.cloud;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.tool.model.ApplicationModel;
@@ -40,24 +41,23 @@ public class Register {
     }
 
     class RegisterThread implements Runnable {
-        private boolean REGISTER_FLAG = false;
+        private boolean registerFlag = false;
 
         @Override
         public void run() {
-            while (!this.REGISTER_FLAG) {
+            while (!this.registerFlag) {
                 String content = new Gson().toJson(GenerateParameters());
                 String url = CloudRequestUrl.CLOUD_REGISTER_URL;
-                GenericResponse response = new CloudHttpPool().request(url, content);
-                if (response != null) {
-                    if (response.getStatus() != null && response.getStatus() == 0) {
-                        this.REGISTER_FLAG = true;
-                        Config.getConfig().setHookWhiteAll("false");
-                        System.out.println("[OpenRASP] Cloud Control Registered Successed");
-                        CloudManager.init();
-                    }else {
-                        System.out.println("[OpenRASP] Cloud Control Registered Failed,Please See Logs For Information.");
-                        CloudManager.LOGGER.warn("[OpenRASP] Cloud Control Registered Failed: "+response.getDescription());
-                    }
+                GenericResponse response = new CloudHttp().request(url, content);
+                if (CloudUtils.checkRequestResult(response)) {
+                    this.registerFlag = true;
+                    Config.getConfig().setHookWhiteAll("false");
+                    System.out.println("[OpenRASP] Cloud Control Registered Successed");
+                    CloudManager.init();
+                } else {
+                    System.out.println("[OpenRASP] Cloud Control Registered Failed,Please See Logs For Information.");
+                    CloudManager.LOGGER.warn("[OpenRASP] Cloud Control Registered Failed,Status Code: " + response.getResponseCode() +
+                            " ,Description: " + response.getDescription());
                 }
                 try {
                     Thread.sleep(REGISTER_DELAY);

@@ -17,7 +17,7 @@
 package com.baidu.openrasp.hook.server;
 
 import com.baidu.openrasp.cloud.Register;
-import com.baidu.openrasp.cloud.Utils.CloudUtils;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.config.Config;
@@ -47,7 +47,7 @@ public abstract class ServerStartupHook extends AbstractClassHook {
             try {
                 CloudCacheModel.getInstance().setMasterIp(OSUtil.getMasterIp(cloudAddress));
             } catch (Exception e) {
-                LOGGER.error("get local ip failed: ", e);
+                LOGGER.warn("get local ip failed: ", e);
             }
             DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.LOGGER_NAME);
             DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.POLICY_LOGGER_NAME);

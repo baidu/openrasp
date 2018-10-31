@@ -16,7 +16,7 @@
 
 package com.baidu.openrasp.config;
 
-import com.baidu.openrasp.cloud.Utils.CloudUtils;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.exception.ConfigLoadException;
 import com.baidu.openrasp.messaging.LogConfig;
@@ -75,7 +75,8 @@ public class Config extends FileScanListener {
         SYSLOG_ENABLE("syslog.enable", "false"),
         SYSLOG_URL("syslog.url", ""),
         SYSLOG_TAG("syslog.tag", "OPENRASP"),
-        SYSLOG_RECONNECT_INTERVAL("syslog.reconnect_interval","300000"),
+        SYSLOG_RECONNECT_INTERVAL("syslog.reconnect_interval", "300000"),
+        LOG_MAXBURST("log.maxburst", "100"),
         HOOK_WHITE_ALL("hook.white.ALL", "true");
 
 
@@ -137,6 +138,7 @@ public class Config extends FileScanListener {
     private String syslogTag;
     private int syslogReconnectInterval;
     private boolean hookWhiteAll;
+    private int logMaxBurst;
 
 
     static {
@@ -209,7 +211,7 @@ public class Config extends FileScanListener {
             try {
                 loadConfigFromFile(file, false);
                 //单机模式下动态添加获取删除syslog和动态更新syslog tag
-                if (!CloudUtils.checkCloudControlEnter()){
+                if (!CloudUtils.checkCloudControlEnter()) {
                     LogConfig.syslogManager();
                     DynamicConfigAppender.updateSyslogTag();
                 }
@@ -837,6 +839,27 @@ public class Config extends FileScanListener {
     }
 
     /**
+     * 获取日志每分钟上传的条数，
+     *
+     * @return 日志每分钟上传的条数
+     */
+    public synchronized int getLogMaxBurst() {
+        return logMaxBurst;
+    }
+
+    /**
+     * 设置日志每分钟上传的条数，
+     *
+     * @param logMaxBurst 待设置日志每分钟上传的条数
+     */
+    public synchronized void setLogMaxBurst(String logMaxBurst) {
+        this.logMaxBurst = Integer.parseInt(logMaxBurst);
+        if (this.logMaxBurst < 0) {
+            this.logMaxBurst = 100;
+        }
+    }
+
+    /**
      * 获取是否禁用全部hook点，
      *
      * @return 是否禁用全部hook点
@@ -971,10 +994,12 @@ public class Config extends FileScanListener {
                 setSyslogUrl(value);
             } else if (Item.SYSLOG_TAG.key.equals(key)) {
                 setSyslogTag(value);
-            } else if (Item.SYSLOG_RECONNECT_INTERVAL.key.equals(key)){
+            } else if (Item.SYSLOG_RECONNECT_INTERVAL.key.equals(key)) {
                 setSyslogReconnectInterval(value);
-            }else if (Item.HOOK_WHITE_ALL.key.equals(key)) {
+            } else if (Item.HOOK_WHITE_ALL.key.equals(key)) {
                 setHookWhiteAll(value);
+            } else if (Item.LOG_MAXBURST.key.equals(key)) {
+                setLogMaxBurst(value);
             } else {
                 isHit = false;
             }
