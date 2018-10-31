@@ -79,6 +79,7 @@ Snapshot::Snapshot(const std::string &config, const std::vector<PluginFile> &plu
             PluginFile{"error.js", {reinterpret_cast<const char *>(error_js), error_js_len}},
             PluginFile{"context.js", {reinterpret_cast<const char *>(context_js), context_js_len}},
             PluginFile{"sql_tokenize.js", {reinterpret_cast<const char *>(sql_tokenize_js), sql_tokenize_js_len}},
+            PluginFile{"cmd_tokenize.js", {reinterpret_cast<const char *>(cmd_tokenize_js), cmd_tokenize_js_len}},
             PluginFile{"rasp.js", {reinterpret_cast<const char *>(rasp_js), rasp_js_len}},
         };
         for (auto &js_src : internal_js_list)

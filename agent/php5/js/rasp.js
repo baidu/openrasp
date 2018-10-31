@@ -61,6 +61,14 @@ const RASP = class {
         }
     }
 
+    static cmd_tokenize(query) {
+        if (cmd_tokenize) {
+            return cmd_tokenize(query)
+        } else {
+            return []
+        }
+    }
+
     static get_jsengine() {
         return 'v8'
     }
