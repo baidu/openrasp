@@ -125,6 +125,7 @@ void openrasp_buildin_php_risk_handle(zend_bool is_block, OpenRASPCheckType type
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type)
 {
     //TODO
+    return false;
 }
 
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length)

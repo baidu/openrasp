@@ -9,12 +9,14 @@ plugin.register('command', params => {
     return block
 })
 EOF;
+$conf = <<<CONF
+block.content_xml="<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"
+CONF;
 include(__DIR__.'/skipif.inc');
 ?>
 --INI--
 default_charset="UTF-8"
 openrasp.root_dir=/tmp/openrasp
-openrasp.block_content_json="<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"
 --ENV--
 return <<<END
 HTTP_ACCEPT=text/xml;

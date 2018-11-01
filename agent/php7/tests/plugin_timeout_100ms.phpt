@@ -1,31 +1,38 @@
 --TEST--
-block content html
+plugin timeout
 --SKIPIF--
 <?php
 $plugin = <<<EOF
 plugin.register('command', params => {
     assert(params.command == 'echo test')
     assert(params.stack[0].endsWith('exec'))
+    while(true);
     return block
 })
 EOF;
 $conf = <<<CONF
-block.content_html="<p>OpenRASP Request ID: %request_id%</p>"
+plugin.timeout.millis=100
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>
 --INI--
-default_charset="UTF-8"
 openrasp.root_dir=/tmp/openrasp
---ENV--
-return <<<END
-HTTP_ACCEPT=text/html;
-END;
 --FILE--
 <?php
+$start = round(microtime(true) * 1000);
 exec('echo test');
+$end = round(microtime(true) * 1000);
+$interval = $end - $start;
+if ($interval > 100 && $interval < 100 * 1.5)
+{
+    echo 'ok';
+} 
+else
+{
+    var_dump($interval);
+    var_dump($start);
+    var_dump($end);
+}
 ?>
---EXPECTHEADERS--
-Content-type: text/html;charset=UTF-8
---EXPECTREGEX--
-<p>OpenRASP Request ID: .*<\/p>
+--EXPECT--
+ok

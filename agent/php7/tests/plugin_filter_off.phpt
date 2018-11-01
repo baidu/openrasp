@@ -1,5 +1,5 @@
 --TEST--
-plugin_filter off
+plugin.filter false
 --SKIPIF--
 <?php
 $plugin = <<<EOF
@@ -10,11 +10,13 @@ plugin.register('readFile', params => {
     return block
 })
 EOF;
+$conf = <<<CONF
+plugin.filter=false
+CONF;
 include(__DIR__.'/skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.plugin_filter=off
 --FILE--
 <?php
 ini_set('display_errors', 'off');

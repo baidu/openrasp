@@ -6,7 +6,7 @@ $dir = __DIR__;
 $plugin = <<<EOF
 plugin.register('rename', params => {
     assert(params.source.endsWith('/tmp/openrasp/tmpfile'))
-    assert(params.dest.endsWith('/tmp/openrasp/tmpfile'))
+    assert(params.dest.endsWith('openrasp/tmpfile'))
     return block
 })
 EOF;

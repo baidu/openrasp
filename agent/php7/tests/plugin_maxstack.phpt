@@ -10,11 +10,13 @@ plugin.register('command', params => {
     return block
 })
 EOF;
+$conf = <<<CONF
+plugin.maxstack=10
+CONF;
 include(__DIR__.'/skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.plugin_maxstack=10
 --FILE--
 <?php
 function test($deep)
