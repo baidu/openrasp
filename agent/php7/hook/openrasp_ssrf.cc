@@ -16,7 +16,8 @@
 
 #include "openrasp_hook.h"
 
-extern "C" {
+extern "C"
+{
 #ifdef PHP_WIN32
 #include "win32/inet.h"
 #include <winsock2.h>
@@ -39,9 +40,10 @@ extern "C" {
  */
 bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval args[]);
 void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval args[]);
+
 OPENRASP_HOOK_FUNCTION(curl_exec, ssrf)
 {
-    bool type_ignored = openrasp_check_type_ignored(ZEND_STRL("ssrf"));
+    bool type_ignored = openrasp_check_type_ignored(SSRF);
     zval origin_url, function_name;
     zval *zid = nullptr, *opt = nullptr;
     bool skip_hook = false;
@@ -62,13 +64,13 @@ OPENRASP_HOOK_FUNCTION(curl_exec, ssrf)
         args[1] = *opt;
         if (!skip_hook)
         {
-            skip_hook = pre_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, "ssrf", &function_name, opt, &origin_url, args);
+            skip_hook = pre_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, SSRF, &function_name, opt, &origin_url, args);
         }
     }
     origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);
     if (!type_ignored && !skip_hook)
     {
-        post_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, "ssrf", &function_name, opt, &origin_url, args);
+        post_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, SSRF, &function_name, opt, &origin_url, args);
     }
     zval_ptr_dtor(&origin_url);
     zval_ptr_dtor(&function_name);

@@ -42,7 +42,7 @@ static void connection_via_default_username_policy(char *check_message, sql_conn
     add_assoc_long(&connection_params, "port", sql_connection_p->port);
     add_assoc_string(&connection_params, "user", sql_connection_p->username);
     add_assoc_zval(&policy_array, "params", &connection_params);
-    policy_info(&policy_array);
+    LOG_G(policy_logger).log(LEVEL_INFO, &policy_array);
     zval_ptr_dtor(&policy_array);
 }
 
@@ -53,7 +53,7 @@ void slow_query_alarm(int rows)
     add_assoc_long(&attack_params, "query_count", rows);
     zval plugin_message;
     ZVAL_STR(&plugin_message, strpprintf(0, _("SQL slow query detected: selected %d rows, exceeding %d"), rows, openrasp_ini.slowquery_min_rows));
-    openrasp_buildin_php_risk_handle(0, "sqlSlowQuery", 100, &attack_params, &plugin_message);
+    openrasp_buildin_php_risk_handle(0, SQL_SLOW_QUERY, 100, &attack_params, &plugin_message);
 }
 
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy)
@@ -102,7 +102,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
                     int server_host_port_len = spprintf(&server_host_port, 0, "%s-%s:%d", conn_entry.server, conn_entry.host, conn_entry.port);
                     ulong connection_hash = zend_inline_hash_func(server_host_port, server_host_port_len);
                     openrasp_shared_alloc_lock();
-                    if (!openrasp_shared_hash_exist(connection_hash, ZSTR_VAL(OPENRASP_LOG_G(formatted_date_suffix))))
+                    if (!openrasp_shared_hash_exist(connection_hash, LOG_G(alarm_logger).get_formatted_date_suffix()))
                     {
                         connection_via_default_username_policy(check_message, &conn_entry);
                     }
@@ -124,7 +124,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
     return need_block;
 }
 
-void sql_type_handler(char *query, int query_len, const char *server)
+void plugin_sql_check(char *query, int query_len, const char *server)
 {
     openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (query && strlen(query) == query_len && isolate)
@@ -135,7 +135,7 @@ void sql_type_handler(char *query, int query_len, const char *server)
             auto params = v8::Object::New(isolate);
             params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len));
             params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server));
-            is_block = isolate->Check(openrasp::NewV8String(isolate, "sql"), params, openrasp_ini.timeout_ms);
+            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(SQL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (is_block)
         {

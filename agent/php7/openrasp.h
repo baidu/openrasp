@@ -18,7 +18,8 @@
 #define OPENRASP_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #include "php_openrasp.h"
@@ -35,6 +36,8 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+#include "openrasp_config.h"
 
 #define FSWATCH_ERROR (20001)
 #define LOG_ERROR (20002)
@@ -55,6 +58,7 @@ extern "C" {
 #endif
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp)
+openrasp::OpenraspConfig config;
 zend_bool locked;
 ZEND_END_MODULE_GLOBALS(openrasp)
 
@@ -70,13 +74,11 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp)
 // #define OPENRASP_GP() (&openrasp_globals)
 // #endif
 
-int rasp_info(const char *message, int message_len);
-int plugin_info(const char *message, int message_len);
-int alarm_info(zval *params_result);
-int policy_info(zval *params_result);
+#define CONFIG_DEFAULT(key) (OPENRASP_G(config).key)
+#define OPENRASP_CONFIG(key) (OPENRASP_G(config).Get(ZEND_TOSTR(key), CONFIG_DEFAULT(key)))
+#define OPENRASP_ARRAY_CONFIG(key) (OPENRASP_G(config).GetArray(ZEND_TOSTR(key), CONFIG_DEFAULT(key)))
+
 void openrasp_error(int type, int error_code, const char *format, ...);
-int recursive_mkdir(const char *path, int len, int mode);
-const char * fetch_url_scheme(const char *filename);
 
 #ifdef UNLIKELY
 #undef UNLIKELY

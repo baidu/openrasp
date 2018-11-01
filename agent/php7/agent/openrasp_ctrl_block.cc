@@ -16,7 +16,7 @@
 
 extern "C"
 {
-    #include <stdio.h>
+#include <stdio.h>
 }
 #include <string.h>
 #include <unistd.h>
@@ -59,21 +59,31 @@ void OpenraspCtrlBlock::set_master_pid(pid_t master_pid)
 {
     this->master_pid = master_pid;
 }
-  
+
 pid_t OpenraspCtrlBlock::get_master_pid()
 {
     return master_pid;
 }
 
-void OpenraspCtrlBlock::set_plugin_version(const char* plugin_version)
+void OpenraspCtrlBlock::set_plugin_version(const char *plugin_version)
 {
-    strncpy(this->plugin_version, plugin_version, OpenraspCtrlBlock::PLIGIN_VERSION_MAX_SIZE);
+    strncpy(this->plugin_version, plugin_version, OpenraspCtrlBlock::plugin_version_size);
     last_update_time = (long)time(nullptr);
 }
 
 const char *OpenraspCtrlBlock::get_plugin_version()
 {
     return plugin_version;
+}
+
+void OpenraspCtrlBlock::set_plugin_md5(const char *plugin_md5)
+{
+    strncpy(this->plugin_md5, plugin_md5, OpenraspCtrlBlock::plugin_md5_size);
+}
+
+const char *OpenraspCtrlBlock::get_plugin_md5()
+{
+    return plugin_md5;
 }
 
 long OpenraspCtrlBlock::get_last_update_time()

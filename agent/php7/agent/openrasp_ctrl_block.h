@@ -23,8 +23,11 @@ namespace openrasp
 
 class OpenraspCtrlBlock
 {
+private:
+  static const int plugin_md5_size = 32;
+  static const int plugin_version_size = 50;
+
 public:
-  static const int PLIGIN_VERSION_MAX_SIZE = 50;
   void set_supervisor_id(pid_t supervisor_id);
   pid_t get_supervisor_id();
 
@@ -39,15 +42,21 @@ public:
 
   void set_plugin_version(const char *plugin_version);
   const char *get_plugin_version();
+
+  void set_plugin_md5(const char *plugin_md5);
+  const char *get_plugin_md5();
+
   long get_last_update_time();
 
 private:
-  pid_t supervisor_id;
+  pid_t supervisor_id = 0;
   pid_t log_agent_id = 0;
   pid_t master_pid = 0;
   pid_t plugin_agent_id = 0;
+
   long last_update_time = 0;
-  char plugin_version[PLIGIN_VERSION_MAX_SIZE + 1] = {0};
+  char plugin_md5[OpenraspCtrlBlock::plugin_md5_size + 1] = {0};
+  char plugin_version[OpenraspCtrlBlock::plugin_version_size + 1] = {0};
 };
 
 } // namespace openrasp

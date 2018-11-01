@@ -131,14 +131,44 @@ if test "$PHP_OPENRASP" != "no"; then
 
         OPENRASP_REMOTE_MANAGER_SOURCE="agent/openrasp_ctrl_block.cc \
         agent/openrasp_agent.cc \
+        agent/heartbeat_agent.cc \
+        agent/log_agent.cc \
         agent/openrasp_agent_manager.cc \
-        agent/utils/digest.cc \
-        agent/utils/curl_helper.cc \
-        agent/mm/shm_manager.cc"
+        agent/log_collect_item.cc \
+        agent/plugin_update_pkg.cc \
+        agent/backend_response.cc"
         AC_DEFINE([HAVE_OPENRASP_REMOTE_MANAGER], [1], [Have openrasp remote manager support])
         ;;
     esac
   fi
+
+  PCRE_HEADER="/include/pcre.h"
+  AC_MSG_CHECKING([for pcre in default path])
+  for i in $SEARCH_PATH ; do
+    if test -r $i/$PCRE_HEADER; then
+      PCRE_INC_PATH=$i
+      AC_MSG_RESULT(found in $i)
+    fi
+  done
+  if test -z "$PCRE_INC_PATH"; then	
+    AC_MSG_RESULT([not found])	
+    AC_MSG_ERROR([Please reinstall the pcre distribution])	
+  fi
+  PHP_ADD_INCLUDE($PCRE_INC_PATH/include)
+
+  AC_MSG_CHECKING([for PCRE library location])
+  for i in $SEARCH_PATH ; do	
+    if test -f "$i/$PHP_LIBDIR/libpcre.a" || test -f "$i/$PHP_LIBDIR/libpcre.$SHLIB_SUFFIX_NAME"; then
+      PCRE_LIBDIR=$i	
+      AC_MSG_RESULT(found in $i)	
+    fi	
+  done
+  
+  if test -z "$PCRE_LIBDIR" ; then
+    AC_MSG_ERROR([Could not find libpcre.(a|$SHLIB_SUFFIX_NAME)])
+  fi
+  AC_MSG_RESULT([$PCRE_LIBDIR])
+  PHP_ADD_LIBRARY_WITH_PATH(pcre, $PCRE_LIBDIR, OPENRASP_SHARED_LIBADD)
 
   case $host_os in
     darwin* )
@@ -448,18 +478,19 @@ int main() {
     openrasp.cc \
     openrasp_utils.cc \
     openrasp_hook.cc \
-    hook/openrasp_array.cc \
-    hook/openrasp_include.cc \
-    hook/openrasp_fileupload.cc \
-    hook/openrasp_file.cc \
     hook/openrasp_directory.cc \
+    hook/openrasp_fileupload.cc \
+    hook/openrasp_include.cc \ 
     hook/openrasp_command.cc \
+    hook/openrasp_array.cc \
     hook/openrasp_sql.cc \
     hook/openrasp_mysqli.cc \
     hook/openrasp_pgsql.cc \
     hook/openrasp_sqlite3.cc \
     hook/openrasp_pdo.cc \
+    hook/openrasp_file.cc \
     hook/openrasp_ssrf.cc \
+    openrasp_config.cc \
     openrasp_inject.cc \
     openrasp_log.cc \
     openrasp_shared_alloc.cc  \
@@ -474,6 +505,13 @@ int main() {
     openrasp_v8_exception.cc \
     openrasp_security_policy.cc \
     openrasp_ini.cc \
+    utils/ReadWriteLock.cc \
+    utils/DoubleArrayTrie.cc \
+    utils/digest.cc \
+    utils/regex.cc \
+    agent/base_manager.cc \
+    agent/shared_config_manager.cc \
+    agent/mm/shm_manager.cc \
     $OPENRASP_REMOTE_MANAGER_SOURCE \
     , $ext_shared)
   ifdef([PHP_ADD_EXTENSION_DEP],

@@ -23,25 +23,28 @@
 #include <memory>
 
 #include "openrasp_log.h"
-#include "openrasp_agent_manager.h"
 #include "openrasp_shared_alloc.h"
+#include "openrasp_agent_manager.h"
 #include <string>
 #include <vector>
 #include <iostream>
 #include "openrasp_ini.h"
+#include "utils/digest.h"
+#include "utils/regex.h"
 #include "openrasp_utils.h"
+#include "third_party/rapidjson/stringbuffer.h"
+#include "third_party/rapidjson/writer.h"
 
 extern "C"
 {
+#include "ext/json/php_json.h"
 #include "php_streams.h"
 #include "php_main.h"
 }
 
 namespace openrasp
 {
-
-ShmManager sm;
-OpenraspAgentManager oam(&sm);
+std::unique_ptr<OpenraspAgentManager> oam = nullptr;
 
 std::vector<std::unique_ptr<BaseAgent>> agents;
 
@@ -75,21 +78,21 @@ static void supervisor_sigchld_handler(int signal_no)
 	}
 }
 
-OpenraspAgentManager::OpenraspAgentManager(ShmManager *mm)
-	: _mm(mm),
-	  agent_ctrl_block(nullptr)
+OpenraspAgentManager::OpenraspAgentManager()
+	: agent_ctrl_block(nullptr)
 {
 }
 
 bool OpenraspAgentManager::startup()
 {
-	first_process_pid = getpid();
+	init_process_pid = getpid();
 	if (check_sapi_need_alloc_shm())
 	{
 		if (!create_share_memory())
 		{
 			return false;
 		}
+		agent_ctrl_block->set_master_pid(init_process_pid);
 		process_agent_startup();
 		initialized = true;
 	}
@@ -102,10 +105,10 @@ bool OpenraspAgentManager::shutdown()
 	{
 		if (strcmp(sapi_module.name, "fpm-fcgi") == 0)
 		{
-			pid_t master_pid = search_master_pid();
-			if (master_pid)
+			pid_t fpm_master_pid = search_fpm_master_pid();
+			if (fpm_master_pid)
 			{
-				agent_ctrl_block->set_master_pid(master_pid);
+				agent_ctrl_block->set_master_pid(fpm_master_pid);
 			}
 		}
 		if (agent_ctrl_block->get_master_pid() && getpid() != agent_ctrl_block->get_master_pid())
@@ -121,43 +124,33 @@ bool OpenraspAgentManager::shutdown()
 
 bool OpenraspAgentManager::verify_ini_correct()
 {
-	TSRMLS_FETCH();
-	bool result = true;
-	if (check_sapi_need_alloc_shm())
+	if (openrasp_ini.remote_management_enable && check_sapi_need_alloc_shm())
 	{
-		if (nullptr == openrasp_ini.backend_url || strcmp(openrasp_ini.backend_url, "") == 0)
+		if (nullptr == openrasp_ini.backend_url)
 		{
 			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.backend_url is required when remote management is enabled."));
-			result = false;
+			return false;
 		}
-		if (nullptr == openrasp_ini.app_id || strcmp(openrasp_ini.app_id, "") == 0)
+		if (nullptr == openrasp_ini.app_id)
 		{
 			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_id is required when remote management is enabled."));
-			result = false;
+			return false;
 		}
 		else
 		{
-			zval match_res;
-			ZVAL_NULL(&match_res);
-			zend_string *regex = zend_string_init("/^[0-9a-fA-F]{32}$/", strlen("/^[0-9a-fA-F]{32}$/"), 0);
-			zend_string *subject = zend_string_init(openrasp_ini.app_id, strlen(openrasp_ini.app_id), 0);
-			openrasp_pcre_match(regex, subject, &match_res);
-			if (Z_TYPE(match_res) != IS_LONG || Z_LVAL(match_res) != 1)
+			if (!regex_match(openrasp_ini.app_id, "^[0-9a-fA-F]{40}$"))
 			{
-				openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_id must have 32 characters"));
-				result = false;
+				openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_id must have 40 characters"));
+				return false;
 			}
-			zval_ptr_dtor(&match_res);
-			zend_string_release(regex);
-			zend_string_release(subject);
 		}
 	}
-	return result;
+	return true;
 }
 
 bool OpenraspAgentManager::create_share_memory()
 {
-	char *shm_block = _mm->create(SHMEM_SEC_CTRL_BLOCK, sizeof(OpenraspCtrlBlock));
+	char *shm_block = BaseManager::sm.create(SHMEM_SEC_CTRL_BLOCK, sizeof(OpenraspCtrlBlock));
 	if (shm_block && (agent_ctrl_block = reinterpret_cast<OpenraspCtrlBlock *>(shm_block)))
 	{
 		return true;
@@ -168,67 +161,18 @@ bool OpenraspAgentManager::create_share_memory()
 bool OpenraspAgentManager::destroy_share_memory()
 {
 	agent_ctrl_block = nullptr;
-	this->_mm->destroy(SHMEM_SEC_CTRL_BLOCK);
+	BaseManager::sm.destroy(SHMEM_SEC_CTRL_BLOCK);
 	return true;
-}
-
-pid_t OpenraspAgentManager::search_master_pid()
-{
-	TSRMLS_FETCH();
-	std::vector<std::string> processes;
-	openrasp_scandir("/proc", processes,
-					 [](const char *filename) {
-						 TSRMLS_FETCH();
-						 struct stat sb;
-						 if (VCWD_STAT(("/proc/" + std::string(filename)).c_str(), &sb) == 0 && (sb.st_mode & S_IFDIR) != 0)
-						 {
-							 return true;
-						 }
-						 return false;
-					 });
-	for (std::string pid : processes)
-	{
-		std::string stat_file_path = "/proc/" + pid + "/stat";
-		if (VCWD_ACCESS(stat_file_path.c_str(), F_OK) == 0)
-		{
-			std::ifstream ifs_stat(stat_file_path);
-			std::string stat_line;
-			std::getline(ifs_stat, stat_line);
-			if (stat_line.empty())
-			{
-				continue;
-			}
-			std::stringstream stat_items(stat_line);
-			std::string item;
-			for (int i = 0; i < 4; ++i)
-			{
-				std::getline(stat_items, item, ' ');
-			}
-			int ppid = std::atoi(item.c_str());
-			if (ppid == first_process_pid)
-			{
-				std::string cmdline_file_path = "/proc/" + pid + "/cmdline";
-				std::ifstream ifs_cmdline(cmdline_file_path);
-				std::string cmdline;
-				std::getline(ifs_cmdline, cmdline);
-				if (cmdline.find("php-fpm: master process") == 0)
-				{
-					return std::atoi(pid.c_str());
-				}
-			}
-		}
-	}
-	return 0;
 }
 
 bool OpenraspAgentManager::process_agent_startup()
 {
+	calculate_rasp_id();
 	if (openrasp_ini.plugin_update_enable)
 	{
 		agents.push_back(std::move((std::unique_ptr<BaseAgent>)new HeartBeatAgent()));
 	}
 	agents.push_back(std::move((std::unique_ptr<BaseAgent>)new LogAgent()));
-	agent_ctrl_block->set_master_pid(first_process_pid);
 	pid_t pid = fork();
 	if (pid < 0)
 	{
@@ -278,41 +222,205 @@ void OpenraspAgentManager::supervisor_run()
 	sigaction(SIGCHLD, &sa_usr, NULL);
 
 	super_install_signal_handler();
-	TSRMLS_FETCH();
 	while (true)
 	{
-		for (int i = 0; i < supervisor_interval; ++i)
+		for (int i = 0; i < task_interval; ++i)
 		{
-			if (0 == i)
+			if (i % task_interval == 0 && !has_registered)
 			{
-				for (int i = 0; i < agents.size(); ++i)
-				{
-					std::unique_ptr<BaseAgent> &agent_ptr = agents[i];
-					if (!agent_ptr->is_alive)
-					{
-						pid_t pid = fork();
-						if (pid == 0)
-						{
-							agent_ptr->run();
-						}
-						else if (pid > 0)
-						{
-							agent_ptr->is_alive = true;
-							agent_ptr->agent_pid = pid;
-							agent_ptr->write_pid_to_shm(pid);
-						}
-					}
-				}
+				has_registered = agent_remote_register();
+			}
+			if (i % 10 == 0 && has_registered)
+			{
+				check_work_processes_survival();
 			}
 			sleep(1);
 			struct stat sb;
-			if (VCWD_STAT(("/proc/" + std::to_string(agent_ctrl_block->get_master_pid())).c_str(), &sb) == -1 &&
+			if (stat(("/proc/" + std::to_string(agent_ctrl_block->get_master_pid())).c_str(), &sb) == -1 &&
 				errno == ENOENT)
 			{
 				process_agent_shutdown();
 			}
 		}
 	}
+}
+
+void OpenraspAgentManager::check_work_processes_survival()
+{
+	for (int i = 0; i < agents.size(); ++i)
+	{
+		std::unique_ptr<BaseAgent> &agent_ptr = agents[i];
+		if (!agent_ptr->is_alive)
+		{
+			pid_t pid = fork();
+			if (pid == 0)
+			{
+				agent_ptr->run();
+			}
+			else if (pid > 0)
+			{
+				agent_ptr->is_alive = true;
+				agent_ptr->agent_pid = pid;
+				agent_ptr->write_pid_to_shm(pid);
+			}
+		}
+	}
+}
+
+bool OpenraspAgentManager::calculate_rasp_id()
+{
+	std::vector<std::string> hw_addrs;
+	fetch_hw_addrs(hw_addrs);
+	if (hw_addrs.empty())
+	{
+		return false;
+	}
+	std::string buf;
+	for (auto hw_addr : hw_addrs)
+	{
+		buf += hw_addr;
+	}
+	buf += std::string(openrasp_ini.root_dir);
+	this->rasp_id = md5sum(static_cast<const void *>(buf.c_str()), buf.length());
+	return true;
+}
+
+std::string OpenraspAgentManager::get_rasp_id()
+{
+	return this->rasp_id;
+}
+
+char *OpenraspAgentManager::get_local_ip()
+{
+	return local_ip;
+}
+
+bool OpenraspAgentManager::agent_remote_register()
+{
+	if (!fetch_source_in_ip_packets(local_ip, sizeof(local_ip), openrasp_ini.backend_url))
+	{
+		local_ip[0] = 0;
+	}
+
+	CURL *curl = curl_easy_init();
+	if (!curl)
+	{
+		return false;
+	}
+
+	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/rasp";
+
+	char host_name[255] = {0};
+	if (gethostname(host_name, sizeof(host_name) - 1))
+	{
+		sprintf(host_name, "UNKNOWN_HOST");
+	}
+	rapidjson::StringBuffer s;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(s);
+
+	writer.StartObject();
+	writer.Key("id");
+	writer.String(rasp_id.c_str());
+	writer.Key("host_name");
+	writer.String(host_name);
+	writer.Key("language");
+	writer.String("PHP");
+	writer.Key("language_version");
+	writer.String(OPENRASP_PHP_VERSION);
+	writer.Key("server_type");
+	writer.String(sapi_module.name);
+	writer.Key("server_version");
+	writer.String(OPENRASP_PHP_VERSION);
+	writer.Key("rasp_home");
+	writer.String(openrasp_ini.root_dir);
+	writer.Key("local_ip");
+	writer.String(local_ip);
+	writer.Key("version");
+	writer.String(PHP_OPENRASP_VERSION);
+	writer.EndObject();
+
+	std::shared_ptr<BackendResponse> res_info = curl_perform(curl, url_string, s.GetString());
+	if (!res_info)
+	{
+		return false;
+	}
+	if (res_info->has_error())
+	{
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, fail to parse response."));
+		return false;
+	}
+	if (!res_info->http_code_ok())
+	{
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, response code: %ld."),
+					   res_info->get_http_code());
+		return false;
+	}
+
+	int64_t status;
+	std::string description;
+	bool has_status = res_info->fetch_status(status);
+	bool has_description = res_info->fetch_description(description);
+	if (has_status && has_description)
+	{
+		if (0 == status)
+		{
+			return true;
+		}
+		else
+		{
+			openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, status: %ld, description : %s."),
+						   status, description.c_str());
+		}
+	}
+	return false;
+}
+
+pid_t OpenraspAgentManager::search_fpm_master_pid()
+{
+	std::vector<std::string> processes;
+	openrasp_scandir("/proc", processes,
+					 [](const char *filename) {
+						 struct stat sb;
+						 if (stat(("/proc/" + std::string(filename)).c_str(), &sb) == 0 && (sb.st_mode & S_IFDIR) != 0)
+						 {
+							 return true;
+						 }
+						 return false;
+					 });
+
+	for (std::string pid : processes)
+	{
+		std::string stat_file_path = "/proc/" + pid + "/stat";
+		if (access(stat_file_path.c_str(), F_OK) == 0)
+		{
+			std::ifstream ifs_stat(stat_file_path);
+			std::string stat_line;
+			std::getline(ifs_stat, stat_line);
+			if (stat_line.empty())
+			{
+				continue;
+			}
+			std::stringstream stat_items(stat_line);
+			std::string item;
+			for (int i = 0; i < 4; ++i)
+			{
+				std::getline(stat_items, item, ' ');
+			}
+			int ppid = std::atoi(item.c_str());
+			if (ppid == init_process_pid)
+			{
+				std::string cmdline_file_path = "/proc/" + pid + "/cmdline";
+				std::ifstream ifs_cmdline(cmdline_file_path);
+				std::string cmdline;
+				std::getline(ifs_cmdline, cmdline);
+				if (cmdline.find("php-fpm: master process") == 0)
+				{
+					return std::atoi(pid.c_str());
+				}
+			}
+		}
+	}
+	return 0;
 }
 
 } // namespace openrasp

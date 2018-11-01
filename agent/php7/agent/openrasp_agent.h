@@ -17,13 +17,15 @@
 #ifndef _OPENRASP_BASE_AGENT_H_
 #define _OPENRASP_BASE_AGENT_H_
 
+#include "openrasp_v8.h"
 #include "openrasp_agent_manager.h"
-#include "utils/curl_helper.h"
+#include "backend_response.h"
 #include <signal.h>
 
 namespace openrasp
 {
-class LogDirInfo;
+class LogCollectItem;
+
 class BaseAgent
 {
 public:
@@ -46,10 +48,16 @@ class HeartBeatAgent : public BaseAgent
 public:
   static volatile int signal_received;
 
+public:
   HeartBeatAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);
-  virtual void update_local_official_plugin(std::string plugin_abs_path, const char *plugin, const char *version);
+
+private:
+  static const int plugin_update_interval = 60;
+
+private:
+  void do_heartbeat(CURL *curl);
 };
 
 class LogAgent : public BaseAgent
@@ -57,14 +65,17 @@ class LogAgent : public BaseAgent
 public:
   static volatile int signal_received;
   static const int max_post_logs_account = 512;
+
+public:
   LogAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);
 
 private:
-  void cleanup_expired_logs(std::vector<LogDirInfo *> &tobe_cleaned_logdirs);
-  virtual std::string get_formatted_date_suffix(long timestamp);
-  virtual bool post_logs_via_curl(std::string log_arr, CURL *curl, std::string url_string);
+  static const int log_push_interval = 15;
+
+private:
+  bool post_logs_via_curl(std::string &log_arr, CURL *curl, std::string &url_string);
 };
 } // namespace openrasp
 

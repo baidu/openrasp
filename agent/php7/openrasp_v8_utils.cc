@@ -124,13 +124,13 @@ void log_callback(const v8::FunctionCallbackInfo<v8::Value> &info)
     for (int i = 0; i < info.Length(); i++)
     {
         v8::String::Utf8Value message(info[i]);
-        ::plugin_info(*message, message.length());
+        LOG_G(plugin_logger).log(LEVEL_INFO, *message, message.length(), false, true);
     }
 }
 
 void plugin_info(const std::string &message)
 {
-    ::plugin_info((const char *)message.c_str(), message.length());
+    LOG_G(plugin_logger).log(LEVEL_INFO, message.c_str(), message.length(), false, true);
 }
 
 void plugin_info(Isolate *isolate, v8::Local<v8::Value> value)
@@ -166,7 +166,8 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
 
     zval *value;
     zend_string *key;
-    ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL(OPENRASP_LOG_G(alarm_request_info)), key, value)
+    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
+    ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(alarm_common_info), key, value)
     {
         if (key == nullptr ||
             Z_TYPE_P(value) != IS_STRING)
@@ -181,7 +182,7 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     if (JSON_stringify->Call(isolate->GetCurrentContext(), JSON_stringify, 1, reinterpret_cast<v8::Local<v8::Value> *>(&obj)).ToLocal(&val))
     {
         v8::String::Utf8Value msg(val);
-        base_info(&OPENRASP_LOG_G(loggers)[ALARM_LOGGER], *msg, msg.length());
+        LOG_G(alarm_logger).log(LEVEL_INFO, *msg, msg.length(), true, false);
     }
 }
 

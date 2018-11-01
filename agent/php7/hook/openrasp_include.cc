@@ -44,7 +44,7 @@ int eval_handler(zend_execute_data *execute_data)
     zval *inc_filename = zend_get_zval_ptr(opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
     if (inc_filename != nullptr &&
         opline->op1_type == IS_VAR &&
-        !openrasp_check_type_ignored(ZEND_STRL("webshell_eval")) &&
+        !openrasp_check_type_ignored(WEBSHELL_EVAL) &&
         openrasp_zval_in_request(inc_filename))
     {
         zval attack_params;
@@ -53,7 +53,7 @@ int eval_handler(zend_execute_data *execute_data)
         Z_TRY_ADDREF_P(inc_filename);
         zval plugin_message;
         ZVAL_STRING(&plugin_message, _("WebShell activity - Detected China Chopper webshell (eval method)"));
-        openrasp_buildin_php_risk_handle(1, "webshell_eval", 100, &attack_params, &plugin_message);
+        openrasp_buildin_php_risk_handle(1, WEBSHELL_EVAL, 100, &attack_params, &plugin_message);
     }
     return ZEND_USER_OPCODE_DISPATCH;
 }
@@ -70,7 +70,7 @@ int include_handler(zend_execute_data *execute_data)
     {
         goto DISPATCH;
     }
-    if (openrasp_check_type_ignored(ZEND_STRL("include")))
+    if (openrasp_check_type_ignored(INCLUDE))
     {
         goto DISPATCH;
     }
@@ -152,7 +152,7 @@ int include_handler(zend_execute_data *execute_data)
                 params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, ""));
                 break;
             }
-            is_block = isolate->Check(openrasp::NewV8String(isolate, "include"), params, openrasp_ini.timeout_ms);
+            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(INCLUDE)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (is_block)
         {

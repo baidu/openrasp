@@ -40,7 +40,7 @@ static void security_check(bool flag, int id, const char *msg)
         array_init(&result);
         add_assoc_long(&result, "policy_id", id);
         add_assoc_string(&result, "message", const_cast<char *>(msg));
-        policy_info(&result);
+        LOG_G(policy_logger).log(LEVEL_INFO, &result);
         zval_dtor(&result);
     }
 }

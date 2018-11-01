@@ -19,9 +19,9 @@
 /**
  * directory相关hook点
  */
-PRE_HOOK_FUNCTION(dir, directory);
-PRE_HOOK_FUNCTION(opendir, directory);
-PRE_HOOK_FUNCTION(scandir, directory);
+PRE_HOOK_FUNCTION(dir, DIRECTORY);
+PRE_HOOK_FUNCTION(opendir, DIRECTORY);
+PRE_HOOK_FUNCTION(scandir, DIRECTORY);
 
 static inline void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
@@ -71,7 +71,7 @@ static inline void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 		params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path->val, real_path->len));
 		zend_string_release(real_path);
 		params->Set(openrasp::NewV8String(isolate, "stack"), stack);
-		is_block = isolate->Check(openrasp::NewV8String(isolate, check_type), params, openrasp_ini.timeout_ms);
+		is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
 	}
 	if (is_block)
 	{
@@ -79,15 +79,15 @@ static inline void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	}
 }
 
-void pre_global_dir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_dir_DIRECTORY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	_hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
-void pre_global_opendir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_opendir_DIRECTORY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	_hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
-void pre_global_scandir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_scandir_DIRECTORY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	_hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }

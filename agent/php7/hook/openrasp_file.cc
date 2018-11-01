@@ -15,50 +15,51 @@
  */
 
 #include "openrasp_hook.h"
+#include "openrasp_v8.h"
 
 /**
  * 文件相关hook点
  */
-PRE_HOOK_FUNCTION(file, readFile);
-PRE_HOOK_FUNCTION(readfile, readFile);
-PRE_HOOK_FUNCTION(file_get_contents, readFile);
-PRE_HOOK_FUNCTION(file_put_contents, writeFile);
-PRE_HOOK_FUNCTION(file_put_contents, webshell_file_put_contents);
-PRE_HOOK_FUNCTION(fopen, readFile);
-PRE_HOOK_FUNCTION(fopen, writeFile);
-PRE_HOOK_FUNCTION(copy, copy);
-PRE_HOOK_FUNCTION(rename, rename);
+PRE_HOOK_FUNCTION(file, READ_FILE);
+PRE_HOOK_FUNCTION(readfile, READ_FILE);
+PRE_HOOK_FUNCTION(file_get_contents, READ_FILE);
+PRE_HOOK_FUNCTION(file_put_contents, WRITE_FILE);
+PRE_HOOK_FUNCTION(file_put_contents, WEBSHELL_FILE_PUT_CONTENTS);
+PRE_HOOK_FUNCTION(fopen, READ_FILE);
+PRE_HOOK_FUNCTION(fopen, WRITE_FILE);
+PRE_HOOK_FUNCTION(copy, COPY);
+PRE_HOOK_FUNCTION(rename, RENAME);
 
-PRE_HOOK_FUNCTION_EX(__construct, splfileobject, readFile);
-PRE_HOOK_FUNCTION_EX(__construct, splfileobject, writeFile);
+PRE_HOOK_FUNCTION_EX(__construct, splfileobject, READ_FILE);
+PRE_HOOK_FUNCTION_EX(__construct, splfileobject, WRITE_FILE);
 
 extern "C" int php_stream_parse_fopen_modes(const char *mode, int *open_flags);
 
 //ref: http://pubs.opengroup.org/onlinepubs/7908799/xsh/open.html
-static const char *flag_to_type(const char *mode, bool is_file_exist)
+static OpenRASPCheckType flag_to_type(const char *mode, bool is_file_exist)
 {
     int open_flags = 0;
     if (FAILURE == php_stream_parse_fopen_modes(mode, &open_flags))
     {
-        return "";
+        return NO_TYPE;
     }
     if (open_flags == O_RDONLY)
     {
-        return "readFile";
+        return READ_FILE;
     }
     else if ((open_flags | O_CREAT) && (open_flags | O_EXCL) && !is_file_exist)
     {
-        return "";
+        return NO_TYPE;
     }
     else
     {
-        return "writeFile";
+        return WRITE_FILE;
     }
 }
 
-static void check_file_operation(const char *check_type, char *filename, int filename_len, bool use_include_path)
+static void check_file_operation(OpenRASPCheckType type, char *filename, int filename_len, bool use_include_path)
 {
-    zend_string *real_path = openrasp_real_path(filename, filename_len, use_include_path, (0 == strcmp(check_type, "writeFile") ? WRITING : READING));
+    zend_string *real_path = openrasp_real_path(filename, filename_len, use_include_path, (type == WRITE_FILE ? WRITING : READING));
     if (!real_path)
     {
         return;
@@ -83,7 +84,7 @@ static void check_file_operation(const char *check_type, char *filename, int fil
         params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, filename, filename_len));
         params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path->val, real_path->len));
         zend_string_release(real_path);
-        is_block = isolate->Check(openrasp::NewV8String(isolate, check_type), params, openrasp_ini.timeout_ms);
+        is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
     }
     if (is_block)
     {
@@ -91,7 +92,7 @@ static void check_file_operation(const char *check_type, char *filename, int fil
     }
 }
 
-void pre_global_file_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_file_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zend_string *filename;
     zend_long flags;
@@ -110,7 +111,7 @@ void pre_global_file_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     check_file_operation(check_type, ZSTR_VAL(filename), ZSTR_LEN(filename), flags & PHP_FILE_USE_INCLUDE_PATH);
 }
 
-void pre_global_readfile_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_readfile_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zend_string *filename;
     zend_bool use_include_path;
@@ -129,12 +130,12 @@ void pre_global_readfile_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     check_file_operation(check_type, ZSTR_VAL(filename), ZSTR_LEN(filename), use_include_path);
 }
 
-void pre_global_file_get_contents_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_file_get_contents_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    pre_global_readfile_readFile(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    pre_global_readfile_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_file_put_contents_webshell_file_put_contents(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_file_put_contents_WEBSHELL_FILE_PUT_CONTENTS(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *filename, *data;
     zend_long flags;
@@ -169,7 +170,7 @@ void pre_global_file_put_contents_webshell_file_put_contents(OPENRASP_INTERNAL_F
     }
 }
 
-void pre_global_file_put_contents_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_file_put_contents_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zend_string *filename;
     zval *data;
@@ -208,17 +209,17 @@ static inline void fopen_common_handler(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
 
     zend_string *real_path = openrasp_real_path(ZSTR_VAL(filename), ZSTR_LEN(filename), use_include_path, READING);
-    const char *type = flag_to_type(mode ? ZSTR_VAL(mode) : "r", real_path);
+    OpenRASPCheckType type = flag_to_type(mode ? ZSTR_VAL(mode) : "r", real_path);
     if (real_path)
     {
         zend_string_release(real_path);
     }
-    if (0 == strcmp(type, check_type))
+    if (type == check_type)
     {
         check_file_operation(check_type, ZSTR_VAL(filename), ZSTR_LEN(filename), use_include_path);
     }
 }
-void pre_global_fopen_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_fopen_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (ZEND_NUM_ARGS() >= 2)
     {
@@ -226,7 +227,7 @@ void pre_global_fopen_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void pre_global_fopen_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_fopen_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (ZEND_NUM_ARGS() >= 2)
     {
@@ -234,17 +235,17 @@ void pre_global_fopen_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void pre_splfileobject___construct_writeFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_splfileobject___construct_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     fopen_common_handler(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_splfileobject___construct_readFile(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_splfileobject___construct_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     fopen_common_handler(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zend_string *source, *dest;
 
@@ -291,7 +292,7 @@ void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         zend_string_release(source_real_path);
         params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, dest_real_path->val, dest_real_path->len));
         zend_string_release(dest_real_path);
-        is_block = isolate->Check(openrasp::NewV8String(isolate, check_type), params, openrasp_ini.timeout_ms);
+        is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
     }
     if (is_block)
     {
@@ -299,7 +300,7 @@ void pre_global_copy_copy(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void pre_global_rename_rename(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zend_string *source, *dest;
 
@@ -388,7 +389,7 @@ void pre_global_rename_rename(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
                 zend_string_release(source_real_path);
                 params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, dest_real_path->val, dest_real_path->len));
                 zend_string_release(dest_real_path);
-                is_block = isolate->Check(openrasp::NewV8String(isolate, check_type), params, openrasp_ini.timeout_ms);
+                is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
             if (is_block)
             {

@@ -24,7 +24,8 @@ namespace openrasp
 
 enum ShmemSecKey
 {
-  SHMEM_SEC_CTRL_BLOCK
+  SHMEM_SEC_CTRL_BLOCK,
+  SHMEM_SEC_CONF_BLOCK
 };
 
 class ShmemSecMeta

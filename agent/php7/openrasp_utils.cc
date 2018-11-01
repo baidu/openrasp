@@ -22,9 +22,11 @@
 extern "C"
 {
 #include "php_ini.h"
+#include "zend_smart_str.h"
 #include "ext/standard/url.h"
 #include "ext/pcre/php_pcre.h"
 #include "ext/standard/file.h"
+#include "ext/json/php_json.h"
 #include "Zend/zend_builtin_functions.h"
 }
 #include <string>
@@ -40,13 +42,25 @@ extern "C"
 #elif defined(NETWARE)
 #include <sys/timeval.h>
 #include <sys/time.h>
-#elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+#elif defined(__linux__)
 #include <sys/types.h>
 #include <ifaddrs.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <net/if.h>
+#include <netpacket/packet.h>
+#include <arpa/inet.h>
+#elif defined(__APPLE__) && defined(__MACH__)
+#include <netdb.h>
+#include <ifaddrs.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <sys/sysctl.h>
+#include <net/if.h>
+#include <net/if_dl.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 #else
 #include <unistd.h>
@@ -65,7 +79,7 @@ std::string format_debug_backtrace_str()
         zval *ele_value = NULL;
         ZEND_HASH_FOREACH_VAL(hash_arr, ele_value)
         {
-            if (++i > openrasp_ini.log_maxstack)
+            if (++i > OPENRASP_CONFIG(log.maxstack))
             {
                 break;
             }
@@ -110,7 +124,7 @@ std::string format_debug_backtrace_str()
 
 void format_debug_backtrace_str(zval *backtrace_str)
 {
-    auto trace = format_debug_backtrace_str(TSRMLS_C);
+    auto trace = format_debug_backtrace_str();
     ZVAL_STRINGL(backtrace_str, trace.c_str(), trace.length());
 }
 
@@ -126,7 +140,7 @@ std::vector<std::string> format_debug_backtrace_arr()
         zval *ele_value = NULL;
         ZEND_HASH_FOREACH_VAL(hash_arr, ele_value)
         {
-            if (++i > openrasp_ini.log_maxstack)
+            if (++i > OPENRASP_CONFIG(plugin.maxstack))
             {
                 break;
             }
@@ -241,7 +255,7 @@ void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugi
             {
                 if (file_filter(ent->d_name))
                 {
-                    plugins.push_back(use_abs_path ? (dir_abs + std::string(1, DEFAULT_SLASH) + std::string(ent->d_name)): std::string(ent->d_name));
+                    plugins.push_back(use_abs_path ? (dir_abs + std::string(1, DEFAULT_SLASH) + std::string(ent->d_name)) : std::string(ent->d_name));
                 }
             }
         }
@@ -265,30 +279,6 @@ zend_string *openrasp_format_date(char *format, int format_len, time_t ts)
 
     strftime(buffer, 64, format, tm_info);
     return zend_string_init(buffer, strlen(buffer), 0);
-}
-
-void openrasp_pcre_match(zend_string *regex, zend_string *subject, zval *return_value)
-{
-    pcre_cache_entry *pce;
-    zval *subpats = NULL;
-    zend_long flags = 0;
-    zend_long start_offset = 0;
-    int global = 0;
-
-    if (ZEND_SIZE_T_INT_OVFL(ZSTR_LEN(subject)))
-    {
-        RETURN_FALSE;
-    }
-
-    if ((pce = pcre_get_compiled_regex_cache(regex)) == NULL)
-    {
-        RETURN_FALSE;
-    }
-
-    pce->refcount++;
-    php_pcre_match_impl(pce, ZSTR_VAL(subject), (int)ZSTR_LEN(subject), return_value, subpats,
-                        global, 0, flags, start_offset);
-    pce->refcount--;
 }
 
 long get_file_st_ino(std::string filename)
@@ -369,6 +359,58 @@ void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)
         freeifaddrs(ifaddr);
     }
 #endif
+}
+
+void fetch_hw_addrs(std::vector<std::string> &hw_addrs)
+{
+    struct ifaddrs *ifaddr, *ifa;
+    if (getifaddrs(&ifaddr) == -1)
+    {
+        openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs error: %s"), strerror(errno));
+    }
+    else
+    {
+        for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
+        {
+            if (ifa->ifa_addr == NULL)
+            {
+                continue;
+            }
+#if defined(__linux__)
+            if ((ifa->ifa_flags & (IFF_LOOPBACK)) ||
+                !(ifa->ifa_flags & (IFF_RUNNING)))
+            {
+                continue;
+            }
+            if (ifa->ifa_addr->sa_family == AF_PACKET)
+            {
+                struct sockaddr_ll *sl = (struct sockaddr_ll *)ifa->ifa_addr;
+                std::ostringstream oss;
+                oss << std::hex;
+                for (int i = 0; i < sl->sll_halen; i++)
+                {
+                    oss << std::setfill('0') << std::setw(2) << (int)(sl->sll_addr[i]) << ((i + 1 != sl->sll_halen) ? "-" : "");
+                }
+                hw_addrs.push_back(oss.str());
+            }
+#elif defined(__APPLE__) && defined(__MACH__)
+            if (strstr(ifa->ifa_name, "en") != ifa->ifa_name ||
+                ifa->ifa_addr->sa_family != AF_LINK)
+            {
+                continue;
+            }
+
+            struct sockaddr_dl *sdl = (struct sockaddr_dl *)(ifa->ifa_addr);
+            unsigned char *ptr = (unsigned char *)LLADDR(sdl);
+            char buf[20];
+            sprintf(buf, "%02x-%02x-%02x-%02x-%02x-%02x", *ptr, *(ptr + 1), *(ptr + 2),
+                    *(ptr + 3), *(ptr + 4), *(ptr + 5));
+            hw_addrs.emplace_back(buf);
+#endif
+        }
+        std::sort(hw_addrs.begin(), hw_addrs.end());
+        freeifaddrs(ifaddr);
+    }
 }
 
 char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
@@ -460,5 +502,79 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url)
         return false;
     }
     close(sock);
+    return true;
+}
+
+bool file_exist(const char *abs_path)
+{
+    return VCWD_ACCESS(abs_path, F_OK) == 0;
+}
+
+bool write_str_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len)
+{
+    std::ofstream out_file(file, mode);
+    if (out_file.is_open() && out_file.good())
+    {
+        out_file.write(content, content_len);
+        out_file.close();
+        return true;
+    }
+    return false;
+}
+
+bool get_entire_file_content(const char *file, std::string &content)
+{
+    std::ifstream ifs(file, std::ifstream::in | std::ifstream::binary);
+    if (ifs.is_open() && ifs.good())
+    {
+        content = {std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
+        return true;
+    }
+    return false;
+}
+
+std::string format_time(const char *format, int format_len, time_t ts)
+{
+    char buffer[128];
+    struct tm *tm_info;
+
+    time(&ts);
+    tm_info = localtime(&ts);
+
+    strftime(buffer, 64, format, tm_info);
+    return std::string(buffer);
+}
+
+std::string json_encode_from_zval(zval *value)
+{
+    smart_str buf_json = {0};
+    php_json_encode(&buf_json, value, 0);
+    smart_str_0(&buf_json);
+    std::string result(ZSTR_VAL(buf_json.s));
+    smart_str_free(&buf_json);
+    return result;
+}
+
+const static size_t OVECCOUNT = 30; /* should be a multiple of 3 */
+
+bool regex_match(const char *str, const char *regex)
+{
+    pcre *re = nullptr;
+    int ovector[OVECCOUNT];
+    const char *error = nullptr;
+    int erroffset = 0;
+    int rc = 0;
+    re = pcre_compile(regex, 0, &error, &erroffset, nullptr);
+    if (re == nullptr)
+    {
+        return false;
+    }
+    rc = pcre_exec(re, nullptr, str, strlen(str), 0, 0, ovector, OVECCOUNT);
+    if (rc < 0)
+    {
+        pcre_free(re);
+        return false;
+    }
+    pcre_free(re);
     return true;
 }

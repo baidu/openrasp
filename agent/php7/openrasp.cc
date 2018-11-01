@@ -32,6 +32,8 @@ extern "C"
 #include "openrasp_inject.h"
 #include "openrasp_security_policy.h"
 #include <new>
+#include "openrasp_shared_alloc.h"
+#include "agent/shared_config_manager.h"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"
 #endif
@@ -40,43 +42,18 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
 bool is_initialized = false;
 static bool make_openrasp_root_dir();
+static bool is_current_sapi_supported();
+static bool load_config(openrasp::OpenraspConfig *config, bool is_local = true);
 
 PHP_INI_BEGIN()
 PHP_INI_ENTRY1("openrasp.root_dir", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.root_dir)
 #ifdef HAVE_GETTEXT
 PHP_INI_ENTRY1("openrasp.locale", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.locale)
 #endif
-// PHP_INI_ENTRY1("openrasp.slowquery_min_rows", "500", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.slowquery_min_rows)
-PHP_INI_ENTRY1("openrasp.enforce_policy", "off", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.enforce_policy)
-PHP_INI_ENTRY1("openrasp.hooks_ignore", "", PHP_INI_SYSTEM, OnUpdateOpenraspSet, &openrasp_ini.hooks_ignore)
-PHP_INI_ENTRY1("openrasp.callable_blacklists", "system,exec,passthru,proc_open,shell_exec,popen,pcntl_exec,assert", PHP_INI_SYSTEM, OnUpdateOpenraspSet, &openrasp_ini.callable_blacklists)
-PHP_INI_ENTRY1("openrasp.inject_urlprefix", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.inject_html_urlprefix)
-PHP_INI_ENTRY1("openrasp.log_maxburst", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_maxburst)
-PHP_INI_ENTRY1("openrasp.syslog_server_address", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.syslog_server_address)
-PHP_INI_ENTRY1("openrasp.syslog_facility", "1", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_facility)
-PHP_INI_ENTRY1("openrasp.syslog_alarm_enable", "off", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.syslog_alarm_enable)
-PHP_INI_ENTRY1("openrasp.syslog_connection_timeout", "50", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_connection_timeout)
-PHP_INI_ENTRY1("openrasp.syslog_read_timeout", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_read_timeout)
-PHP_INI_ENTRY1("openrasp.syslog_connection_retry_interval", "300", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.syslog_connection_retry_interval)
-PHP_INI_ENTRY1("openrasp.timeout_ms", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.timeout_ms)
-PHP_INI_ENTRY1("openrasp.plugin_maxstack", "100", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.plugin_maxstack)
-PHP_INI_ENTRY1("openrasp.log_maxstack", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_maxstack)
-
 PHP_INI_ENTRY1("openrasp.backend_url", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.backend_url)
-PHP_INI_ENTRY1("openrasp.plugin_update_interval", "60", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.plugin_update_interval)
-PHP_INI_ENTRY1("openrasp.log_push_interval", "10", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.log_push_interval)
 PHP_INI_ENTRY1("openrasp.app_id", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.app_id)
-PHP_INI_ENTRY1("openrasp.log_max_backup", "30", PHP_INI_SYSTEM, OnUpdateOpenraspIntGZero, &openrasp_ini.log_max_backup)
 PHP_INI_ENTRY1("openrasp.plugin_update_enable", "1", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.plugin_update_enable)
-
-PHP_INI_ENTRY1("openrasp.plugin_filter", "on", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.plugin_filter)
-PHP_INI_ENTRY1("openrasp.block_status_code", "302", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.block_status_code)
-PHP_INI_ENTRY1("openrasp.block_redirect_url", R"(https://rasp.baidu.com/blocked/?request_id=%request_id%)", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_redirect_url)
-PHP_INI_ENTRY1("openrasp.block_content_json", R"({"error":true, "reason": "Request blocked by OpenRASP", "request_id": "%request_id%"})", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_content_json)
-PHP_INI_ENTRY1("openrasp.block_content_xml", R"(<?xml version="1.0"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>)", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_content_xml)
-PHP_INI_ENTRY1("openrasp.block_content_html", R"(</script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>)", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.block_content_html)
-PHP_INI_ENTRY1("openrasp.clientip_header", "clientip", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.clientip_header)
-PHP_INI_ENTRY1("openrasp.body_maxbytes", "4096", PHP_INI_SYSTEM, OnUpdateOpenraspIntGEZero, &openrasp_ini.body_maxbytes)
+PHP_INI_ENTRY1("openrasp.remote_management_enable", "on", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.remote_management_enable)
 PHP_INI_END()
 
 PHP_GINIT_FUNCTION(openrasp)
@@ -100,17 +77,33 @@ PHP_MINIT_FUNCTION(openrasp)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp, PHP_GINIT(openrasp), PHP_GSHUTDOWN(openrasp));
     REGISTER_INI_ENTRIES();
-#ifdef HAVE_OPENRASP_REMOTE_MANAGER
-    if (!openrasp::oam.verify_ini_correct())
+    if (!is_current_sapi_supported(TSRMLS_C))
     {
         return SUCCESS;
     }
-#endif
     if (!make_openrasp_root_dir())
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir is not configured correctly in php.ini, continuing without security protection"));
         return SUCCESS;
     }
+    openrasp::scm.reset(new openrasp::SharedConfigManager());
+
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+    if (check_sapi_need_alloc_shm() && openrasp_ini.remote_management_enable)
+    {
+        openrasp::oam.reset(new openrasp::OpenraspAgentManager());
+        if (!openrasp::oam->verify_ini_correct())
+        {
+            return SUCCESS;
+        }
+    }
+    else
+    {
+        load_config(&OPENRASP_G(config));
+    }
+#else
+    load_config(&OPENRASP_G(config));
+#endif
+
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
     {
         return SUCCESS;
@@ -122,10 +115,22 @@ PHP_MINIT_FUNCTION(openrasp)
     int result;
     result = PHP_MINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
-    result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
+
+    openrasp::scm->startup();
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
-    openrasp::oam.startup();
+    if (openrasp::oam)
+    {
+        openrasp::oam->startup();
+    }
+    else
+    {
+        openrasp::scm->build_check_type_white_array(OPENRASP_G(config));
+    }
+#else
+    openrasp::scm->build_check_type_white_array(OPENRASP_G(config));
 #endif
+
+    result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
     is_initialized = true;
     return SUCCESS;
 }
@@ -139,9 +144,16 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
         result = PHP_MSHUTDOWN(openrasp_hook)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_v8)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_log)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
+
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
-        openrasp::oam.shutdown();
+        if (openrasp::oam)
+        {
+            openrasp::oam->shutdown();
+        }
 #endif
+        openrasp::scm->shutdown();
+
+        is_initialized = false;
     }
     UNREGISTER_INI_ENTRIES();
     ZEND_SHUTDOWN_MODULE_GLOBALS(openrasp, PHP_GSHUTDOWN(openrasp));
@@ -186,7 +198,10 @@ PHP_MINFO_FUNCTION(openrasp)
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (openrasp_ini.plugin_update_enable)
     {
-        php_info_print_table_row(2, "Plugin Version", openrasp::oam.agent_ctrl_block ? openrasp::oam.agent_ctrl_block->get_plugin_version() : "");
+        php_info_print_table_row(2, "Plugin Version",
+                                 openrasp::oam->agent_ctrl_block
+                                     ? openrasp::oam->agent_ctrl_block->get_plugin_version()
+                                     : "");
     }
 #endif
     php_info_print_table_end();
@@ -275,5 +290,45 @@ static bool make_openrasp_root_dir()
         openrasp_error(E_WARNING, CONFIG_ERROR, _("Unable to set OpenRASP locale to '%s'"), openrasp_ini.locale);
     }
 #endif
+    return true;
+}
+
+static bool load_config(openrasp::OpenraspConfig *config, bool is_local)
+{
+    if (openrasp_ini.root_dir)
+    {
+        std::string config_file_path =
+            std::string(openrasp_ini.root_dir) +
+            DEFAULT_SLASH +
+            "conf" +
+            DEFAULT_SLASH +
+            (is_local ? "openrasp.ini" : "cloud-config.json");
+        openrasp::OpenraspConfig::FromType type = is_local
+                                                      ? openrasp::OpenraspConfig::FromType::kIni
+                                                      : openrasp::OpenraspConfig::FromType::kJson;
+        std::string conf_contents;
+        if (get_entire_file_content(config_file_path.c_str(), conf_contents))
+        {
+            return config->From(conf_contents, type);
+        }
+    }
+    return false;
+}
+
+static bool is_current_sapi_supported()
+{
+    const static std::set<std::string> supported_sapis =
+        {
+            "cli",
+            "cli-server",
+            "cgi-fcgi",
+            "fpm-fcgi",
+            "apache2handler"};
+    auto iter = supported_sapis.find(std::string(sapi_module.name));
+    if (iter == supported_sapis.end())
+    {
+        openrasp_error(E_WARNING, CONFIG_ERROR, _("Unsupported SAPI: %s."), sapi_module.name);
+        return false;
+    }
     return true;
 }

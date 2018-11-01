@@ -28,11 +28,27 @@ extern "C"
 
 static hook_handler_t global_hook_handlers[512];
 static size_t global_hook_handlers_len = 0;
+static const std::string COLON_TWO_SLASHES = "://";
 
-void register_hook_handler(hook_handler_t hook_handler)
-{
-    global_hook_handlers[global_hook_handlers_len++] = hook_handler;
-}
+const std::map<OpenRASPCheckType, const std::string> CheckTypeNameMap =
+    {
+        {CALLABLE, "callable"},
+        {COMMAND, "command"},
+        {DIRECTORY, "directory"},
+        {READ_FILE, "readFile"},
+        {WRITE_FILE, "writeFile"},
+        {COPY, "copy"},
+        {RENAME, "rename"},
+        {FILE_UPLOAD, "fileUpload"},
+        {INCLUDE, "include"},
+        {DB_CONNECTION, "dbConnection"},
+        {SQL, "sql"},
+        {SQL_SLOW_QUERY, "sqlSlowQuery"},
+        {SQL_PREPARED, "sqlPrepared"},
+        {SSRF, "ssrf"},
+        {WEBSHELL_EVAL, "wenshell_eval"},
+        {WEBSHELL_COMMAND, "wenshell_command"},
+        {WEBSHELL_FILE_PUT_CONTENTS, "webshell_file_put_contents"}};
 
 typedef struct _track_vars_pair_t
 {
@@ -41,6 +57,24 @@ typedef struct _track_vars_pair_t
 } track_vars_pair;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_hook)
+
+void register_hook_handler(hook_handler_t hook_handler)
+{
+    global_hook_handlers[global_hook_handlers_len++] = hook_handler;
+}
+
+const std::string get_check_type_name(OpenRASPCheckType type)
+{
+    auto it = CheckTypeNameMap.find(type);
+    if (it != CheckTypeNameMap.end())
+    {
+        return it->second;
+    }
+    else
+    {
+        return "unknown";
+    }
+}
 
 bool openrasp_zval_in_request(zval *item)
 {
@@ -69,17 +103,18 @@ bool openrasp_zval_in_request(zval *item)
     return false;
 }
 
-void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zval *message)
+void openrasp_buildin_php_risk_handle(zend_bool is_block, OpenRASPCheckType type, int confidence, zval *params, zval *message)
 {
     zval params_result;
     array_init(&params_result);
-    add_assoc_long(&params_result, "plugin_confidence", confidence);
     add_assoc_zval(&params_result, "attack_params", params);
-    add_assoc_string(&params_result, "attack_type", const_cast<char *>(type));
     add_assoc_zval(&params_result, "plugin_message", message);
+    add_assoc_long(&params_result, "plugin_confidence", confidence);
+    add_assoc_string(&params_result, "attack_type", const_cast<char *>(get_check_type_name(type).c_str()));
+    add_assoc_string(&params_result, "plugin_algorithm", const_cast<char *>(get_check_type_name(type).c_str()));
     add_assoc_string(&params_result, "intercept_state", const_cast<char *>(is_block ? "block" : "log"));
     add_assoc_string(&params_result, "plugin_name", const_cast<char *>("php_builtin_plugin"));
-    alarm_info(&params_result);
+    LOG_G(alarm_logger).log(LEVEL_INFO, &params_result);
     zval_ptr_dtor(&params_result);
     if (is_block)
     {
@@ -87,16 +122,19 @@ void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int 
     }
 }
 
-bool openrasp_check_type_ignored(const char *item_name, uint item_name_length)
+bool openrasp_check_type_ignored(OpenRASPCheckType check_type)
 {
-    static const std::string all("all");
-    return openrasp_ini.hooks_ignore.find(all) != openrasp_ini.hooks_ignore.end() ||
-           openrasp_ini.hooks_ignore.find({item_name, item_name_length}) != openrasp_ini.hooks_ignore.end();
+    //TODO
 }
 
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length)
 {
-    return openrasp_ini.callable_blacklists.find(item_name) != openrasp_ini.callable_blacklists.end();
+    std::vector<std::string> callable_blacklist =
+        OPENRASP_ARRAY_CONFIG(callable_blacklist);
+
+    return std::find(callable_blacklist.begin(),
+                     callable_blacklist.end(),
+                     std::string(item_name, item_name_length)) != callable_blacklist.end();
 }
 
 zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, uint32_t w_op)
@@ -116,7 +154,7 @@ zend_string *openrasp_real_path(char *filename, int length, bool use_include_pat
         {"rar", READING},
         {"ogg", READING | WRITING | APPENDING},
         {"expect", READING | WRITING | APPENDING}};
-    if (!openrasp_ini.plugin_filter)
+    if (!OPENRASP_CONFIG(plugin.filter))
     {
         w_op |= WRITING;
     }
@@ -128,7 +166,7 @@ zend_string *openrasp_real_path(char *filename, int length, bool use_include_pat
         if (nullptr != p)
         {
             php_stream_wrapper *wrapper;
-            wrapper = php_stream_locate_url_wrapper(filename, nullptr, STREAM_LOCATE_WRAPPERS_ONLY TSRMLS_CC);
+            wrapper = php_stream_locate_url_wrapper(filename, nullptr, STREAM_LOCATE_WRAPPERS_ONLY);
             if (wrapper && wrapper->wops)
             {
                 if (w_op & (RENAMESRC | RENAMEDEST))
@@ -211,12 +249,12 @@ void handle_block()
 
     if (!SG(headers_sent))
     {
-        std::string location = resolve_request_id("Location: " + std::string(openrasp_ini.block_redirect_url) TSRMLS_CC);
+        std::string location = resolve_request_id("Location: " + std::string(OPENRASP_CONFIG(block.redirect_url)));
         sapi_header_line header;
         header.line = const_cast<char *>(location.c_str());
         header.line_len = location.length();
-        header.response_code = openrasp_ini.block_status_code;
-        sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
+        header.response_code = OPENRASP_CONFIG(block.status_code);
+        sapi_header_op(SAPI_HEADER_REPLACE, &header);
     }
 
     {
@@ -229,31 +267,31 @@ void handle_block()
             if (z_accept)
             {
                 std::string accept(Z_STRVAL_P(z_accept));
-                if (openrasp_ini.block_content_json &&
+                if (!OPENRASP_CONFIG(block.content_json).empty() &&
                     accept.find("application/json") != std::string::npos)
                 {
                     content_type = "Content-type: application/json";
-                    body = resolve_request_id(openrasp_ini.block_content_json TSRMLS_CC);
+                    body = resolve_request_id(OPENRASP_CONFIG(block.content_json));
                 }
-                else if (openrasp_ini.block_content_xml &&
+                else if (!OPENRASP_CONFIG(block.content_xml).empty() &&
                          accept.find("text/xml") != std::string::npos)
                 {
                     content_type = "Content-type: text/xml";
-                    body = resolve_request_id(openrasp_ini.block_content_xml TSRMLS_CC);
+                    body = resolve_request_id(OPENRASP_CONFIG(block.content_xml));
                 }
-                else if (openrasp_ini.block_content_xml &&
+                else if (!OPENRASP_CONFIG(block.content_xml).empty() &&
                          accept.find("application/xml") != std::string::npos)
                 {
                     content_type = "Content-type: application/xml";
-                    body = resolve_request_id(openrasp_ini.block_content_xml TSRMLS_CC);
+                    body = resolve_request_id(OPENRASP_CONFIG(block.content_xml));
                 }
             }
         }
         if (body.length() == 0 &&
-            openrasp_ini.block_content_html)
+            !OPENRASP_CONFIG(block.content_html).empty())
         {
             content_type = "Content-type: text/html";
-            body = resolve_request_id(openrasp_ini.block_content_html TSRMLS_CC);
+            body = resolve_request_id(OPENRASP_CONFIG(block.content_html));
         }
         if (body.length() > 0)
         {
@@ -269,21 +307,21 @@ void handle_block()
  * 调用 openrasp_check 提供的方法进行检测
  * 若需要拦截，直接返回重定向信息，并终止请求
  */
-void check(const char *type, zval *params)
+void check(OpenRASPCheckType type, zval *params)
 {
     bool result = false;
     openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (LIKELY(isolate))
     {
         v8::HandleScope handlescope(isolate);
-        auto v8_type = NewV8String(isolate, type);
+        auto v8_type = NewV8String(isolate, get_check_type_name(type));
         auto v8_params = v8::Local<v8::Object>::Cast(NewV8ValueFromZval(isolate, params));
         zval_ptr_dtor(params);
-        result = isolate->Check(v8_type, v8_params, openrasp_ini.timeout_ms);
+        result = isolate->Check(v8_type, v8_params, OPENRASP_CONFIG(plugin.timeout.millis));
     }
     if (result)
     {
-        handle_block(TSRMLS_C);
+        handle_block();
     }
 }
 
@@ -309,7 +347,7 @@ PHP_MINIT_FUNCTION(openrasp_hook)
 
     for (size_t i = 0; i < global_hook_handlers_len; i++)
     {
-        global_hook_handlers[i](TSRMLS_C);
+        global_hook_handlers[i]();
     }
 
     zend_set_user_opcode_handler(ZEND_INCLUDE_OR_EVAL, include_or_eval_handler);

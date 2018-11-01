@@ -1,0 +1,204 @@
+/*
+ * Copyright 2017-2018 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "openrasp_config.h"
+#include "openrasp_agent.h"
+#include "openrasp_hook.h"
+#include "utils/digest.h"
+#include <fstream>
+#include <sstream>
+#include <dirent.h>
+#include <algorithm>
+#include "shared_config_manager.h"
+#include "third_party/rapidjson/stringbuffer.h"
+#include "third_party/rapidjson/writer.h"
+
+extern "C"
+{
+#include "ext/json/php_json.h"
+#include "ext/date/php_date.h"
+#include "php_streams.h"
+#include "php_main.h"
+}
+
+namespace openrasp
+{
+
+volatile int HeartBeatAgent::signal_received = 0;
+
+HeartBeatAgent::HeartBeatAgent()
+	: BaseAgent(HEARTBEAT_AGENT_PR_NAME)
+{
+}
+
+void HeartBeatAgent::run()
+{
+	AGENT_SET_PROC_NAME(this->name.c_str());
+
+	install_signal_handler(
+		[](int signal_no) {
+			HeartBeatAgent::signal_received = signal_no;
+		});
+
+	CURL *curl = curl_easy_init();
+	while (true)
+	{
+		if (nullptr == curl)
+		{
+			curl = curl_easy_init();
+			if (nullptr == curl)
+			{
+				continue;
+			}
+		} //make sure curl is not nullptr
+
+		do_heartbeat(curl);
+
+		for (int i = 0; i < HeartBeatAgent::plugin_update_interval; ++i)
+		{
+			sleep(1);
+			if (HeartBeatAgent::signal_received == SIGTERM)
+			{
+				curl_easy_cleanup(curl);
+				curl = nullptr;
+				exit(0);
+			}
+		}
+	}
+}
+
+void HeartBeatAgent::do_heartbeat(CURL *curl)
+{
+	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/heartbeat";
+
+	rapidjson::StringBuffer s;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(s);
+
+	writer.StartObject();
+	writer.Key("rasp_id");
+	writer.String(oam->get_rasp_id().c_str());
+	writer.Key("plugin_md5");
+	writer.String(oam->agent_ctrl_block->get_plugin_md5());
+	writer.Key("plugin_version");
+	writer.String(oam->agent_ctrl_block->get_plugin_version());
+	writer.Key("config_time");
+	writer.Int64((scm ? scm->get_config_last_update() : 0));
+	writer.EndObject();
+	
+	std::shared_ptr<BackendResponse> res_info = curl_perform(curl, url_string, s.GetString());
+
+	if (!res_info)
+	{
+		return;
+	}
+	if (res_info->has_error())
+	{
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Heartbeat error, fail to parse response."));
+		return;
+	}
+	if (!res_info->http_code_ok())
+	{
+		openrasp_error(E_WARNING, AGENT_ERROR, _("Heartbeat error, response code: %ld."),
+					   res_info->get_http_code());
+		return;
+	}
+
+	int64_t status;
+	std::string description;
+	bool has_status = res_info->fetch_status(status);
+	bool has_description = res_info->fetch_description(description);
+	if (has_status && has_description)
+	{
+		if (0 != status)
+		{
+			openrasp_error(E_WARNING, AGENT_ERROR, _("Heartbeat error, status: %ld, description : %s."),
+						   status, description.c_str());
+			return;
+		}
+
+		/************************************plugin update************************************/
+		std::shared_ptr<PluginUpdatePackage> plugin_update_pkg = res_info->build_plugin_update_package();
+		if (plugin_update_pkg)
+		{
+			if (plugin_update_pkg->build_snapshot())
+			{
+				oam->agent_ctrl_block->set_plugin_md5(plugin_update_pkg->get_md5().c_str());
+				oam->agent_ctrl_block->set_plugin_version(plugin_update_pkg->get_version().c_str());
+			}
+		}
+
+		/************************************config update************************************/
+		int64_t config_time;
+		if (!res_info->fetch_int64("/data/config_time", config_time))
+		{
+			return;
+		}
+		std::string complete_config;
+		if (res_info->stringify_object("/data/config", complete_config))
+		{
+			/************************************shm config************************************/
+			OpenraspConfig openrasp_config(complete_config, OpenraspConfig::FromType::kJson);
+			if (scm != nullptr)
+			{
+				scm->build_check_type_white_array(openrasp_config);
+				//update log_max_backup only its value greater than zero
+				long log_max_backup = openrasp_config.Get("log.maxbackup", openrasp_config.log.maxbackup);
+				if (log_max_backup)
+				{
+					scm->set_log_max_backup(log_max_backup);
+				}
+			}
+			res_info->erase_value("/data/config/hook.white.ALL");
+			for (auto map_iter : CheckTypeNameMap)
+			{
+				res_info->erase_value(("/data/config/hook.white." + std::string(map_iter.second)).c_str());
+			}
+
+			/************************************OPENRASP_G(config)************************************/
+			std::string exculde_hook_white_config;
+			if (res_info->stringify_object("/data/config", exculde_hook_white_config))
+			{
+				std::string cloud_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/cloud-config.json";
+#ifndef _WIN32
+				mode_t oldmask = umask(0);
+#endif
+				bool write_ok = write_str_to_file(cloud_config_file_path.c_str(),
+												  std::ofstream::in | std::ofstream::out | std::ofstream::trunc,
+												  exculde_hook_white_config.c_str(),
+												  exculde_hook_white_config.length());
+#ifndef _WIN32
+				umask(oldmask);
+#endif
+				if (write_ok)
+				{
+					scm->set_config_last_update(config_time);
+				}
+				else
+				{
+					openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write cloud config to %s."), cloud_config_file_path.c_str());
+				}
+				return;
+			}
+		}
+	}
+}
+
+void HeartBeatAgent::write_pid_to_shm(pid_t agent_pid)
+{
+	oam->agent_ctrl_block->set_plugin_agent_id(agent_pid);
+}
+
+} // namespace openrasp

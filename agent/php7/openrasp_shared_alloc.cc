@@ -17,24 +17,24 @@
 #include "openrasp_shared_alloc.h"
 #include <errno.h>
 #ifdef HAVE_UNISTD_H
-# include <unistd.h>
+#include <unistd.h>
 #endif
 #include <fcntl.h>
 #ifndef ZEND_WIN32
-# include <sys/types.h>
-# include <dirent.h>
-# include <signal.h>
-# include <sys/stat.h>
-# include <stdio.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <signal.h>
+#include <sys/stat.h>
+#include <stdio.h>
 #endif
 #include "php_main.h"
 
 #ifdef HAVE_MPROTECT
-# include "sys/mman.h"
+#include "sys/mman.h"
 #endif
 
 #ifndef MIN
-# define MIN(x, y) ((x) > (y)? (y) : (x))
+#define MIN(x, y) ((x) > (y) ? (y) : (x))
 #endif
 
 #define TMP_DIR "/tmp"
@@ -55,13 +55,12 @@ static char lockfile_name[sizeof(TMP_DIR) + sizeof(SEM_FILENAME_PREFIX) + 8];
 
 static const openrasp_shared_memory_handler_entry handler_table[] = {
 #ifdef USE_MMAP
-	{ "mmap", &openrasp_alloc_mmap_handlers },
+	{"mmap", &openrasp_alloc_mmap_handlers},
 #endif
 #ifdef PHP_WIN32
-	{ "win32", &openrasp_alloc_win32_handlers },
+	{"win32", &openrasp_alloc_win32_handlers},
 #endif
-	{ NULL, NULL}
-};
+	{NULL, NULL}};
 
 int check_sapi_need_alloc_shm()
 {
@@ -89,14 +88,15 @@ void openrasp_shared_alloc_create_lock(void)
 	int val;
 
 #ifdef ZTS
-    zts_lock = tsrm_mutex_alloc();
+	zts_lock = tsrm_mutex_alloc();
 #endif
 
 	sprintf(lockfile_name, "%s/%sXXXXXX", TMP_DIR, SEM_FILENAME_PREFIX);
 	lock_file = mkstemp(lockfile_name);
 	fchmod(lock_file, 0666);
 
-	if (lock_file == -1) {
+	if (lock_file == -1)
+	{
 		openrasp_error(E_WARNING, SHM_ERROR, _("Unable to create lock file: %s (%d)"), strerror(errno), errno);
 	}
 	val = fcntl(lock_file, F_GETFD, 0);
@@ -115,14 +115,18 @@ static int openrasp_shared_alloc_try(const openrasp_shared_memory_handler_entry 
 
 	res = S_H(create_segments)(shared_segments_p, error_in);
 
-	if (res) {
+	if (res)
+	{
 		/* this model works! */
 		return res;
 	}
-	if (*shared_segments_p) {
-		if ((*shared_segments_p) && (*shared_segments_p) != (void *)-1) {
-			S_H(detach_segment)(*shared_segments_p);
-		}				
+	if (*shared_segments_p)
+	{
+		if ((*shared_segments_p) && (*shared_segments_p) != (void *)-1)
+		{
+			S_H(detach_segment)
+			(*shared_segments_p);
+		}
 		*shared_segments_p = NULL;
 	}
 	g_shared_alloc_handler = NULL;
@@ -135,31 +139,34 @@ int openrasp_shared_alloc_startup()
 	const openrasp_shared_memory_handler_entry *he;
 	int res = ALLOC_FAILURE;
 
-	
-
 	openrasp_shared_alloc_create_lock();
 
 	/* try memory handlers in order */
-	for (he = handler_table; he->name; he++) {
+	for (he = handler_table; he->name; he++)
+	{
 		res = openrasp_shared_alloc_try(he, &shared_segment_globals, &error_in);
-		if (res) {
+		if (res)
+		{
 			/* this model works! */
 			break;
 		}
 	}
 
-	if (res == FAILED_REATTACHED) {
+	if (res == FAILED_REATTACHED)
+	{
 		shared_segment_globals = NULL;
 		return res;
 	}
 
-	if (!g_shared_alloc_handler) {
+	if (!g_shared_alloc_handler)
+	{
 		openrasp_error(E_WARNING, SHM_ERROR, _("Unable to allocate shared memory segment of %ld bytes: %s: %s (%d)"),
-		sizeof(openrasp_shared_segment_globals), error_in ? error_in : "unknown", strerror(errno), errno);
+					   sizeof(openrasp_shared_segment_globals), error_in ? error_in : "unknown", strerror(errno), errno);
 		return ALLOC_FAILURE;
 	}
 
-	if (res == SUCCESSFULLY_REATTACHED) {
+	if (res == SUCCESSFULLY_REATTACHED)
+	{
 		return res;
 	}
 
@@ -170,7 +177,8 @@ void openrasp_shared_alloc_shutdown()
 {
 	if (shared_segment_globals != NULL)
 	{
-		S_H(detach_segment)(shared_segment_globals);
+		S_H(detach_segment)
+		(shared_segment_globals);
 		shared_segment_globals = NULL;
 	}
 	g_shared_alloc_handler = NULL;
@@ -181,7 +189,8 @@ void openrasp_shared_alloc_shutdown()
 
 void openrasp_shared_alloc_safe_unlock()
 {
-	if (OPENRASP_G(locked)) {
+	if (OPENRASP_G(locked))
+	{
 		openrasp_shared_alloc_unlock();
 	}
 }
@@ -207,9 +216,12 @@ void openrasp_shared_alloc_lock()
 	}
 #endif
 
-	while (1) {
-		if (fcntl(lock_file, F_SETLKW, &mem_write_lock) == -1) {
-			if (errno == EINTR) {
+	while (1)
+	{
+		if (fcntl(lock_file, F_SETLKW, &mem_write_lock) == -1)
+		{
+			if (errno == EINTR)
+			{
 				continue;
 			}
 			openrasp_error(E_WARNING, SHM_ERROR, _("Cannot create lock - %s (%d)"), strerror(errno), errno);
@@ -228,7 +240,8 @@ void openrasp_shared_alloc_unlock()
 	OPENRASP_G(locked) = 0;
 
 #ifndef ZEND_WIN32
-	if (fcntl(lock_file, F_SETLK, &mem_write_unlock) == -1) {
+	if (fcntl(lock_file, F_SETLK, &mem_write_unlock) == -1)
+	{
 		openrasp_error(E_WARNING, SHM_ERROR, _("Cannot remove lock - %s (%d)"), strerror(errno), errno);
 	}
 #ifdef ZTS
@@ -253,7 +266,7 @@ int openrasp_shared_hash_exist(ulong hash, char *date_tag)
 			strcpy(shared_segment_globals->date, date_tag);
 		}
 		int i;
-		for (i = 0; i <= MIN(shared_segment_globals->size, SQL_CONNECTION_ARRAY_SIZE); ++i)	
+		for (i = 0; i <= MIN(shared_segment_globals->size, SQL_CONNECTION_ARRAY_SIZE); ++i)
 		{
 			if (shared_segment_globals->sql_connection_hash[i] == hash)
 			{

@@ -45,8 +45,9 @@ static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<
     }
     info.GetReturnValue().SetEmptyString();
     zval *origin_zv;
-    if (Z_TYPE(OPENRASP_LOG_G(alarm_request_info)) == IS_ARRAY &&
-        (origin_zv = zend_hash_str_find(Z_ARRVAL(OPENRASP_LOG_G(alarm_request_info)), ZEND_STRL("url"))) != nullptr)
+    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
+    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
+        (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("url"))) != nullptr)
     {
         v8::Isolate *isolate = info.GetIsolate();
         auto obj = NewV8ValueFromZval(isolate, origin_zv);

@@ -14,24 +14,32 @@
  * limitations under the License.
  */
 
-#ifndef _OPENRASP_CURL_HELPER_H_
-#define _OPENRASP_CURL_HELPER_H_
-#include <string>
-#include <curl/curl.h>
-#include "openrasp_hook.h"
+#ifndef _OPENRASP_BASE_MANAGER_H_
+#define _OPENRASP_BASE_MANAGER_H_
+
+#include "openrasp.h"
+#include "mm/shm_manager.h"
 
 namespace openrasp
 {
 
-struct ResponseInfo
+class ShmManager;
+
+class BaseManager
 {
-    CURLcode res;
-    std::string response_string;
-    std::string header_string;
-    long response_code;
-    double elapsed;
+
+protected:
+  static ShmManager sm;
+
+protected:
+  bool initialized = false;
+
+public:
+  BaseManager();
+  virtual bool startup() = 0;
+  virtual bool shutdown() = 0;
 };
 
-void perform_curl(CURL *curl, const std::string url_string, const char *postdata, ResponseInfo &res_info);
 } // namespace openrasp
+
 #endif

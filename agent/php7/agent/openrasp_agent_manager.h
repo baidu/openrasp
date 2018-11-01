@@ -18,16 +18,21 @@
 #define _OPENRASP_AGENT_MANAGER_H_
 
 #include "openrasp.h"
-#include "mm/shm_manager.h"
+#include "base_manager.h"
 #include "openrasp_ctrl_block.h"
 #include "openrasp_agent.h"
-#include "openrasp_utils.h"
+#include "log_collect_item.h"
 #include <fstream>
 #include <sys/prctl.h>
+#include <memory>
 
+#if defined(__linux__)
 #define AGENT_SET_PROC_NAME(name) prctl(PR_SET_NAME, (name), 0, 0, 0)
+#else
+#define AGENT_SET_PROC_NAME(name)
+#endif
 #define HEARTBEAT_AGENT_PR_NAME "rasp-heartbeat"
-#define LOG_AGENT_PR_NAME "rasplog"
+#define LOG_AGENT_PR_NAME "rasp-log"
 
 namespace openrasp
 {
@@ -37,32 +42,22 @@ class BaseAgent;
 class HeartBeatAgent;
 class LogAgent;
 class OpenraspCtrlBlock;
+class LogCollectItem;
 
-class LogDirInfo
-{
-public:
-  const std::string dir_abs_path;
-  const std::string backend_url;
-  const std::string prefix;
-  std::ifstream ifs;
-  int fpos = 0;
-  long st_ino = 0;
-
-  LogDirInfo(const std::string dir_abs_path, const std::string prefix, const std::string backend_url)
-      : dir_abs_path(dir_abs_path), prefix(prefix), backend_url(backend_url)
-  {
-  }
-};
-
-class OpenraspAgentManager
+class OpenraspAgentManager : public BaseManager
 {
 
 public:
-  OpenraspAgentManager(ShmManager *mm);
   OpenraspCtrlBlock *agent_ctrl_block;
+
+public:
+  OpenraspAgentManager();
   bool startup();
   bool shutdown();
   bool verify_ini_correct();
+  std::string get_rasp_id();
+  bool agent_remote_register();
+  char *get_local_ip();
 
   long get_plugin_update_timestamp()
   {
@@ -72,20 +67,24 @@ public:
 private:
   bool create_share_memory();
   bool destroy_share_memory();
-  void supervisor_run();
-  pid_t search_master_pid();
+
   bool process_agent_startup();
   void process_agent_shutdown();
 
+  void supervisor_run();
+  bool calculate_rasp_id();
+  pid_t search_fpm_master_pid();
+  void check_work_processes_survival();
+
 private:
-  ShmManager *_mm;
-  pid_t first_process_pid;
-  bool initialized = false;
-  static const int supervisor_interval = 10;
+  static const int task_interval = 300;
+  char local_ip[64] = {0};
+  pid_t init_process_pid;
+  std::string rasp_id;
+  bool has_registered = false;
 };
 
-extern ShmManager sm;
-extern OpenraspAgentManager oam;
+extern std::unique_ptr<OpenraspAgentManager> oam;
 
 } // namespace openrasp
 
