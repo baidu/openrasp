@@ -40,11 +40,17 @@ if test "$PHP_OPENRASP" != "no"; then
   V8_LIBS="$V8_PATH/lib/libv8_{base,libsampler,libbase,libplatform,snapshot}.a"
   case $host_os in
     darwin* )
+      PHP_ADD_LIBRARY(pcreposix, 1, OPENRASP_SHARED_LIBADD)
+      PHP_ADD_LIBRARY(pcrecpp, 1, OPENRASP_SHARED_LIBADD)
+      PHP_ADD_LIBRARY(pcre, 1, OPENRASP_SHARED_LIBADD)
       OPENRASP_LIBS="-Wl,$V8_LIBS $OPENRASP_LIBS"
       ;;
     * )
       PHP_ADD_LIBRARY(rt, , OPENRASP_SHARED_LIBADD)
       PHP_ADD_LIBRARY(dl, , OPENRASP_SHARED_LIBADD)
+      PHP_ADD_LIBRARY(pcreposix, 1, OPENRASP_SHARED_LIBADD)
+      PHP_ADD_LIBRARY(pcrecpp, 1, OPENRASP_SHARED_LIBADD)
+      PHP_ADD_LIBRARY(pcre, 1, OPENRASP_SHARED_LIBADD)
       OPENRASP_LIBS="-Wl,--whole-archive -Wl,$V8_LIBS -Wl,--no-whole-archive -pthread $OPENRASP_LIBS"
       ;;
   esac
@@ -141,34 +147,6 @@ if test "$PHP_OPENRASP" != "no"; then
         ;;
     esac
   fi
-
-  PCRE_HEADER="/include/pcre.h"
-  AC_MSG_CHECKING([for pcre in default path])
-  for i in $SEARCH_PATH ; do
-    if test -r $i/$PCRE_HEADER; then
-      PCRE_INC_PATH=$i
-      AC_MSG_RESULT(found in $i)
-    fi
-  done
-  if test -z "$PCRE_INC_PATH"; then	
-    AC_MSG_RESULT([not found])	
-    AC_MSG_ERROR([Please reinstall the pcre distribution])	
-  fi
-  PHP_ADD_INCLUDE($PCRE_INC_PATH/include)
-
-  AC_MSG_CHECKING([for PCRE library location])
-  for i in $SEARCH_PATH ; do	
-    if test -f "$i/$PHP_LIBDIR/libpcre.a" || test -f "$i/$PHP_LIBDIR/libpcre.$SHLIB_SUFFIX_NAME"; then
-      PCRE_LIBDIR=$i	
-      AC_MSG_RESULT(found in $i)	
-    fi	
-  done
-  
-  if test -z "$PCRE_LIBDIR" ; then
-    AC_MSG_ERROR([Could not find libpcre.(a|$SHLIB_SUFFIX_NAME)])
-  fi
-  AC_MSG_RESULT([$PCRE_LIBDIR])
-  PHP_ADD_LIBRARY_WITH_PATH(pcre, $PCRE_LIBDIR, OPENRASP_SHARED_LIBADD)
 
   case $host_os in
     darwin* )
