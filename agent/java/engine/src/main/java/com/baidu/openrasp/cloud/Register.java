@@ -18,6 +18,7 @@ package com.baidu.openrasp.cloud;
 
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
+import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
@@ -56,8 +57,7 @@ public class Register {
                     CloudManager.init();
                 } else {
                     System.out.println("[OpenRASP] Cloud Control Registered Failed,Please See Logs For Information.");
-                    CloudManager.LOGGER.warn("[OpenRASP] Cloud Control Registered Failed,Status Code: " + response.getResponseCode() +
-                            " ,Description: " + response.getDescription());
+                    CloudManager.LOGGER.warn(CloudUtils.handleError(ErrorType.REGISTER_ERROR,response));
                 }
                 try {
                     Thread.sleep(REGISTER_DELAY);

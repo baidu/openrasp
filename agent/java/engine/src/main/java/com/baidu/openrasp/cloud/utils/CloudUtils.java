@@ -18,6 +18,7 @@ package com.baidu.openrasp.cloud.utils;
 
 import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
+import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.OSUtil;
@@ -189,5 +190,29 @@ public class CloudUtils {
             resultCharArray[index++] = hexArray[b& 0xf];
         }
         return new String(resultCharArray);
+    }
+
+    public static String handleError(ErrorType errorType,GenericResponse response){
+        if (response==null){
+            return errorType.toString();
+        }
+        Integer statusCode = response.getResponseCode();
+        String description = response.getDescription();
+        String message = getFormattedMessage(statusCode,description);
+        if (message.isEmpty()){
+            return errorType.toString();
+        }
+        return errorType.toString()+"."+message;
+    }
+
+    private static String getFormattedMessage(Integer code, String message) {
+        String result="";
+        if (code!=null){
+            result = result+"Status Code: "+code;
+        }
+        if (message!=null){
+            result = result+" Description: "+message;
+        }
+        return result.trim();
     }
 }

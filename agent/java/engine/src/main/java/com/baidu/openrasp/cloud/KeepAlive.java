@@ -18,6 +18,7 @@ package com.baidu.openrasp.cloud;
 
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
+import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.config.Config;
@@ -57,7 +58,7 @@ public class KeepAlive {
                 if (CloudUtils.checkRequestResult(response)) {
                     handleResponse(response);
                 } else {
-                    CloudManager.LOGGER.warn("[OpenRASP] Cloud Control Send HeartBeat Failed");
+                    CloudManager.LOGGER.warn(CloudUtils.handleError(ErrorType.HEARTBEAT_ERROR,response));
                 }
                 try {
                     Thread.sleep(KEEPALIVE_DELAY);
