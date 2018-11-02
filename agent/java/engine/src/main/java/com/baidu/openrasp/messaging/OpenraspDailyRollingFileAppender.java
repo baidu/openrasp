@@ -173,6 +173,7 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
                 break;
             default:
                 LogLog.warn("Unknown periodicity for appender ["+name+"].");
+                break;
         }
     }
 

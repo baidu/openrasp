@@ -18,8 +18,8 @@ package com.baidu.openrasp.cloud.model;
 
 import com.baidu.openrasp.tool.LRUCache;
 
-import java.util.HashMap;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @description: 缓存需要重传的日志
@@ -27,7 +27,7 @@ import java.util.Set;
  * @create: 2018/09/20 13:59
  */
 public class AppenderCache {
-    private static HashMap<String, LRUCache<String,String>> appenderCache = new HashMap<String, LRUCache<String, String>>();
+    private static ConcurrentHashMap<String, LRUCache<String,String>> appenderCache = new ConcurrentHashMap<String, LRUCache<String, String>>();
     private static final int APPENDER_LRUCACHE_SIZE = 500;
 
     public static void setCache(String key, String value) {
