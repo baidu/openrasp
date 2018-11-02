@@ -1,4 +1,4 @@
-const version = '2018-1016-0000'
+const version = '2018-1025-1600'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -17,7 +17,7 @@ const version = '2018-1016-0000'
  */
 
 // 常用链接
-// 
+//
 // Web 攻击检测能力说明、零规则检测算法介绍
 // https://rasp.baidu.com/doc/usage/web.html
 //
@@ -581,10 +581,11 @@ function is_outside_webroot(appBasePath, realpath, path) {
 // 路径是否来自用户输入
 // file_get_contents("/etc/passwd");
 // file_get_contents("../../../../../../../etc/passwd");
-// 
+//
 // 或者以用户输入结尾
 // file_get_contents("/data/uploads/" . "../../../../../../../etc/passwd");
-function is_path_endswith_userinput(parameter, target, is_windows) {
+function is_path_endswith_userinput(parameter, target, realpath, is_windows)
+{
     var verdict = false
 
     Object.keys(parameter).some(function (key) {
@@ -600,7 +601,8 @@ function is_path_endswith_userinput(parameter, target, is_windows) {
         // 如果应用做了特殊处理， 比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
         if (value.startsWith('file://') && 
             is_absolute_path(target, is_windows) && 
-            value.endsWith(target)) {
+            value.endsWith(target)) 
+        {
             verdict = true
             return true
         }
@@ -611,10 +613,11 @@ function is_path_endswith_userinput(parameter, target, is_windows) {
         if (is_windows){
             value = value.replaceAll('/', '\\')
         }
-
+        
         // 参数必须有跳出目录，或者是绝对路径
         if ((value == target || target.endsWith(value)) 
-            && (has_traversal(value) || is_absolute_path(value, is_windows))) {
+            && (has_traversal(value) || is_absolute_path(value, is_windows) || value == realpath)) 
+            {
             verdict = true
             return true
         }
@@ -624,7 +627,7 @@ function is_path_endswith_userinput(parameter, target, is_windows) {
 }
 
 // 是否来自用户输入 - 适合任意类型参数
-function is_from_userinput(parameter, target) 
+function is_from_userinput(parameter, target)
 {
     var verdict = false
 
@@ -646,8 +649,10 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance)
     var start = -1, end = raw_tokens.length, distance = distance || 2
 
     // 寻找 token 起始点，可以改为二分查找
-    for (var i = 0; i < raw_tokens.length; i++) {
-        if (raw_tokens[i].stop >= userinput_idx) {
+    for (var i = 0; i < raw_tokens.length; i++)
+    {
+        if (raw_tokens[i].stop >= userinput_idx)
+        {
             start = i
             break
         }
@@ -655,8 +660,10 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance)
 
     // 寻找 token 结束点
     // 另外，最多需要遍历 distance 个 token
-    for (var i = start; i < start + distance && i < raw_tokens.length; i++) {
-        if (raw_tokens[i].stop >= userinput_idx + userinput_length - 1) {
+    for (var i = start; i < start + distance && i < raw_tokens.length; i++)
+    {
+        if (raw_tokens[i].stop >= userinput_idx + userinput_length - 1)
+        {
             end = i
             break
         }
@@ -674,7 +681,7 @@ function _(message, args) {
 
     for (var i = 0; i < args.length; i ++) {
         var symbol = '%' + (i + 1) + '%'
-        message = message.replace(symbol, args[i])      
+        message = message.replace(symbol, args[i])
     }
 
     return message
@@ -746,7 +753,7 @@ if (RASP.get_jsengine() !== 'v8') {
                     value_list = parameters[name]
                 } else {
                     value_list = Object.values(parameters[name][0])
-                }                
+                }
 
                 reason = _run(value_list, name)
                 if (reason) {
@@ -754,12 +761,13 @@ if (RASP.get_jsengine() !== 'v8') {
                 }
             })
 
-            if (reason !== false) 
+            if (reason !== false)
             {
                 return {
-                    'action':     algorithmConfig.sqli_userinput.action,
-                    'confidence': 90,
-                    'message':    reason
+                    action:     algorithmConfig.sqli_userinput.action,
+                    confidence: 90,
+                    message:    reason,
+                    algorithm:  'sqli_userinput'
                 }
             }
         }
@@ -850,7 +858,7 @@ if (RASP.get_jsengine() !== 'v8') {
                         if (parts[0].trim() == 'information_schema' && parts[1].trim() == 'tables')
                         {
                             reason = _("SQLi - Detected access to MySQL information_schema.tables table")
-                            break  
+                            break
                         }
                     }
                 }
@@ -860,7 +868,8 @@ if (RASP.get_jsengine() !== 'v8') {
                 return {
                     action:     algorithmConfig.sqli_policy.action,
                     message:    reason,
-                    confidence: 100
+                    confidence: 100,
+                    algorithm:  'sqli_policy'
                 }
             }
         }
@@ -886,9 +895,10 @@ if (RASP.get_jsengine() !== 'v8') {
                 /^(127|192|172|10)\./.test(ip[0]))
             {
                 return {
-                    action:    algorithmConfig.ssrf_userinput.action,
-                    message:   _("SSRF - Requesting intranet address: %1%", [ ip[0] ]),
-                    confidence: 100
+                    action:     algorithmConfig.ssrf_userinput.action,
+                    message:    _("SSRF - Requesting intranet address: %1%", [ ip[0] ]),
+                    confidence: 100,
+                    algorithm:  'ssrf_userinput'
                 }
             }
         }
@@ -901,7 +911,8 @@ if (RASP.get_jsengine() !== 'v8') {
                 return {
                     action:     algorithmConfig.ssrf_common.action,
                     message:    _("SSRF - Requesting known DNSLOG address: %1%", [hostname]),
-                    confidence: 100
+                    confidence: 100,
+                    algorithm:  'ssrf_common'
                 }
             }
         }
@@ -912,9 +923,10 @@ if (RASP.get_jsengine() !== 'v8') {
             if (hostname == '169.254.169.254')
             {
                 return {
-                    action:    algorithmConfig.ssrf_aws.action,
-                    message:   _("SSRF - Requesting AWS metadata address"),
-                    confidence: 100
+                    action:     algorithmConfig.ssrf_aws.action,
+                    message:    _("SSRF - Requesting AWS metadata address"),
+                    confidence: 100,
+                    algorithm:  'ssrf_aws'
                 }
             }
         }
@@ -946,7 +958,8 @@ if (RASP.get_jsengine() !== 'v8') {
                 return {
                     action:     algorithmConfig.ssrf_obfuscate.action,
                     message:    reason,
-                    confidence: 100
+                    confidence: 100,
+                    algorithm:  'ssrf_obfuscate'
                 }
             }
         }
@@ -960,9 +973,10 @@ if (RASP.get_jsengine() !== 'v8') {
             if (algorithmConfig.ssrf_protocol.protocols.indexOf(proto) != -1)
             {
                 return {
-                    action:    algorithmConfig.ssrf_protocol.action,
-                    message:   _("SSRF - Using dangerous protocol: %1%://", [proto]),
-                    confidence: 100
+                    action:     algorithmConfig.ssrf_protocol.action,
+                    message:    _("SSRF - Using dangerous protocol: %1%://", [proto]),
+                    confidence: 100,
+                    algorithm:  'ssrf_protocol'
                 }
             }
         }
@@ -988,7 +1002,8 @@ plugin.register('directory', function (params, context) {
                 return {
                     action:     algorithmConfig.directory_unwanted.action,
                     message:    _("WebShell activity - Accessing sensitive folder: %1%", [realpath]),
-                    confidence: 100
+                    confidence: 100,
+                    algorithm:  'directory_unwanted'
                 }
             }
         }
@@ -1009,8 +1024,9 @@ plugin.register('directory', function (params, context) {
             return {
                 action:     algorithmConfig.directory_userinput.action,
                 message:    _("WebShell detected - Using File Manager function to access a folder: %1%", [realpath]),
-                confidence: 90
-            }            
+                confidence: 90,
+                algorithm:  'directory_userinput'
+            }
         }
     }
 
@@ -1023,7 +1039,8 @@ plugin.register('directory', function (params, context) {
             return {
                 action:     algorithmConfig.directory_reflect.action,
                 message:    _("WebShell activity - Using file manager function with China Chopper WebShell"),
-                confidence: 90
+                confidence: 90,
+                algorithm:  'directory_reflect'
             }
         }
     }
@@ -1047,12 +1064,13 @@ plugin.register('readFile', function (params, context) {
     {
         // ?path=/etc/./hosts
         // ?path=../../../etc/passwd
-        if (is_path_endswith_userinput(parameter, params.path, is_win))
+        if (is_path_endswith_userinput(parameter, params.path, params.realpath, is_win))
         {
             return {
                 action:     algorithmConfig.readFile_userinput.action,
                 message:    _("Path traversal - Downloading files specified by userinput, file is %1%", [params.realpath]),
-                confidence: 90
+                confidence: 90,
+                algorithm: 'readFile_userinput'
             }
         }
 
@@ -1071,7 +1089,8 @@ plugin.register('readFile', function (params, context) {
                     return {
                         action:     algorithmConfig.readFile_userinput_http.action,
                         message:    _("SSRF - Requesting http/https resource with file streaming functions, URL is %1%", [params.path]),
-                        confidence: 90
+                        confidence: 90,
+                        algorithm:  'readFile_userinput_http'
                     }
                 }
             }
@@ -1086,7 +1105,8 @@ plugin.register('readFile', function (params, context) {
                     return {
                         action:     algorithmConfig.readFile_userinput_unwanted.action,
                         message:    _("Path traversal - Requesting unwanted protocol %1%://", [proto]),
-                        confidence: 90
+                        confidence: 90,
+                        algorithm:  'readFile_userinput_unwanted'
                     }
                 }
             }
@@ -1106,14 +1126,15 @@ plugin.register('readFile', function (params, context) {
                 return {
                     action:     algorithmConfig.readFile_unwanted.action,
                     message:    _("WebShell activity - Accessing sensitive file %1%", [params.realpath]),
-                    confidence: 90
+                    confidence: 90,
+                    algorithm:  'readFile_unwanted'
                 }
             }
         }
     }
 
     //
-    // 算法3: 检查文件遍历，看是否超出web目录范围
+    // 算法3: 检查文件遍历，看是否超出web目录范围 [容易误报~]
     //
     if (algorithmConfig.readFile_outsideWebroot.action != 'ignore')
     {
@@ -1124,7 +1145,8 @@ plugin.register('readFile', function (params, context) {
             return {
                 action:     algorithmConfig.readFile_outsideWebroot.action,
                 message:    _("Path traversal - accessing files outside webroot (%1%), file is %2%", [appBasePath, params.realpath]),
-                confidence: 90
+                confidence: 90,
+                algorithm:  'readFile_outsideWebroot'
             }
         }
     }
@@ -1144,12 +1166,13 @@ plugin.register('include', function (params, context) {
     // ?file=../../../../../var/log/httpd/error.log
     if (algorithmConfig.include_userinput.action != 'ignore')
     {
-        if (is_path_endswith_userinput(parameter, url, is_win))
+        if (is_path_endswith_userinput(parameter, url, '', is_win))
         {
             return {
                 action:     algorithmConfig.include_userinput.action,
                 message:    _("File inclusion - including files specified by user input"),
-                confidence: 100                
+                confidence: 100,
+                algorithm:  'include_userinput'
             }
         }
     }
@@ -1169,7 +1192,8 @@ plugin.register('include', function (params, context) {
             return {
                 action:     algorithmConfig.include_protocol.action,
                 message:    _("File inclusion - using unwanted protocol '%1%://' with funtion %2%()", [proto, params.function]),
-                confidence: 90
+                confidence: 90,
+                algorithm:  'include_protocol'
             }
         }
     }
@@ -1189,12 +1213,13 @@ plugin.register('writeFile', function (params, context) {
     // 写 NTFS 流文件，通常是为了绕过限制
     if (algorithmConfig.writeFile_NTFS.action != 'ignore')
     {
-        if (ntfsRegex.test(params.realpath)) 
+        if (ntfsRegex.test(params.realpath))
         {
             return {
                 action:     algorithmConfig.writeFile_NTFS.action,
                 message:    _("File write - Writing NTFS alternative data streams", [params.realpath]),
-                confidence: 90
+                confidence: 95,
+                algorithm:  'writeFile_NTFS'
             }
         }
     }
@@ -1203,12 +1228,13 @@ plugin.register('writeFile', function (params, context) {
     if (context.method == 'put' &&
         algorithmConfig.writeFile_PUT_script.action != 'ignore')
     {
-        if (scriptFileRegex.test(params.realpath)) 
+        if (scriptFileRegex.test(params.realpath))
         {
             return {
                 action:     algorithmConfig.writeFile_PUT_script.action,
                 message:    _("File upload - Using HTTP PUT method to upload a webshell", [params.realpath]),
-                confidence: 90
+                confidence: 95,
+                algorithm:  'writeFile_PUT_script'
             }
         }
     }
@@ -1217,12 +1243,13 @@ plugin.register('writeFile', function (params, context) {
     // https://rasp.baidu.com/doc/dev/official.html#case-file-write
     if (algorithmConfig.writeFile_script.action != 'ignore')
     {
-        if (scriptFileRegex.test(params.realpath)) 
+        if (scriptFileRegex.test(params.realpath))
         {
             return {
                 action:     algorithmConfig.writeFile_script.action,
                 message:    _("File write - Creating or appending to a server-side script file, file is %1%", [params.realpath]),
-                confidence: 90
+                confidence: 85,
+                algorithm:  'writeFile_script'
             }
         }
     }
@@ -1236,39 +1263,42 @@ plugin.register('writeFile', function (params, context) {
 plugin.register('fileUpload', function (params, context) {
 
     // 是否禁止使用 multipart 上传脚本文件，或者 apache/php 服务器配置文件
-    if (algorithmConfig.fileUpload_multipart_script.action != 'ignore') 
+    if (algorithmConfig.fileUpload_multipart_script.action != 'ignore')
     {
-        if (scriptFileRegex.test(params.filename) || ntfsRegex.test(params.filename)) 
+        if (scriptFileRegex.test(params.filename) || ntfsRegex.test(params.filename))
         {
             return {
                 action:     algorithmConfig.fileUpload_multipart_script.action,
                 message:    _("File upload - Uploading a server-side script file with multipart/form-data protocol, filename: %1%", [params.filename]),
-                confidence: 90
+                confidence: 95,
+                algorithm:  'fileUpload_multipart_script'
             }
         }
 
-        if (params.filename == ".htaccess" || params.filename == ".user.ini") 
+        if (params.filename == ".htaccess" || params.filename == ".user.ini")
         {
             return {
                 action:     algorithmConfig.fileUpload_multipart_script.action,
                 message:    _("File upload - Uploading a server-side config file with multipart/form-data protocol, filename: %1%", [params.filename]),
-                confidence: 90
+                confidence: 95,
+                algorithm:  'fileUpload_multipart_script'
             }
         }
     }
 
     // 是否禁止 HTML/JS 文件，主要是对抗钓鱼、CORS绕过等问题
-    if (algorithmConfig.fileUpload_multipart_html.action != 'ignore') 
+    if (algorithmConfig.fileUpload_multipart_html.action != 'ignore')
     {
-        if (htmlFileRegex.test(params.filename)) 
+        if (htmlFileRegex.test(params.filename))
         {
             return {
                 action:     algorithmConfig.fileUpload_multipart_html.action,
                 message:    _("File upload - Uploading a HTML/JS file with multipart/form-data protocol", [params.filename]),
-                confidence: 90
+                confidence: 90,
+                algorithm:  'fileUpload_multipart_html'
             }
         }
-    }    
+    }
 
     return clean
 })
@@ -1287,7 +1317,8 @@ if (algorithmConfig.fileUpload_webdav.action != 'ignore')
                 message:   _("File upload - Uploading a server-side script file with HTTP method %1%, file is %2%", [
                     context.method, params.dest
                 ]),
-                confidence: 100
+                confidence: 100,
+                algorithm:  'fileUpload_webdav'
             }
         }
 
@@ -1307,7 +1338,8 @@ if (algorithmConfig.rename_webshell.action != 'ignore')
                 message:   _("File upload - Renaming a non-script file to server-side script file, source file is %1%", [
                     params.source
                 ]),
-                confidence: 100
+                confidence: 90,
+                algorithm:  'rename_webshell'
             }
         }
 
@@ -1381,7 +1413,8 @@ plugin.register('command', function (params, context) {
             return {
                 action:     algorithmConfig.command_reflect.action,
                 message:    message,
-                confidence: 100
+                confidence: 100,
+                algorithm:  'command_reflect'
             }
         }
     }
@@ -1455,9 +1488,10 @@ plugin.register('command', function (params, context) {
         if (reason !== false) 
         {
             return {
-                'action':     algorithmConfig.command_userinput.action,
-                'confidence': 90,
-                'message':    reason
+                action:     algorithmConfig.command_userinput.action,
+                confidence: 90,
+                message:    reason,
+                algorithm:  'command_userinput'
             }
         }
     }
@@ -1468,7 +1502,8 @@ plugin.register('command', function (params, context) {
         return {
             action:     algorithmConfig.command_other.action,
             message:    _("Command execution - Logging all command execution by default, command is %1%", [cmd]),
-            confidence: 90
+            confidence: 90,
+            algorithm:  'command_other'
         }
     }
 
@@ -1486,9 +1521,10 @@ plugin.register('xxe', function (params, context) {
             return {
                 action:     algorithmConfig.xxe_protocol.action,
                 message:    _("XXE - Using dangerous protocol SMB"),
-                confidence: 100
-            }                
-        }        
+                confidence: 100,
+                algorithm:  'xxe_protocol'
+            }
+        }
     }
 
     if (items.length >= 2) {
@@ -1501,7 +1537,8 @@ plugin.register('xxe', function (params, context) {
                 return {
                     action:     algorithmConfig.xxe_protocol.action,
                     message:    _("XXE - Using dangerous protocol %1%", [protocol]),
-                    confidence: 100
+                    confidence: 100,
+                    algorithm:  'xxe_protocol'
                 }
             }
 
@@ -1512,23 +1549,24 @@ plugin.register('xxe', function (params, context) {
         //
         // 相对路径容易误报, e.g
         // file://xwork.dtd
-        if (algorithmConfig.xxe_file.action != 'ignore') 
+        if (algorithmConfig.xxe_file.action != 'ignore')
         {
-            if (address.length > 0 && protocol === 'file' && address[0] == '/') 
+            if (address.length > 0 && protocol === 'file' && address[0] == '/')
             {
                 var address_lc = address.toLowerCase()
 
                 // 过滤掉 xml、dtd
-                if (! address_lc.endsWith('.xml') && 
-                    ! address_lc.endsWith('.dtd')) 
+                if (! address_lc.endsWith('.xml') &&
+                    ! address_lc.endsWith('.dtd'))
                 {
                     return {
                         action:     algorithmConfig.xxe_file.action,
                         message:    _("XXE - Accessing file %1%", [address]),
-                        confidence: 90
+                        confidence: 90,
+                        algorithm:  'xxe_file'
                     }
                 }
-            } 
+            }
         }
 
     }
@@ -1566,7 +1604,8 @@ if (algorithmConfig.ognl_exec.action != 'ignore')
                 return {
                     action:     algorithmConfig.ognl_exec.action,
                     message:    _("OGNL exec - Trying to exploit a OGNL expression vulnerability"),
-                    confidence: 100
+                    confidence: 100,
+                    algorithm:  'ognl_exec'
                 }
             }
 
@@ -1594,7 +1633,8 @@ if (algorithmConfig.transformer_deser.action != 'ignore') {
                 return {
                     action:     algorithmConfig.transformer_deser.action,
                     message:    _("Transformer deserialization - unknown deserialize vulnerability detected"),
-                    confidence: 100
+                    confidence: 100,
+                    algorithm:  'transformer_deser'
                 }
             }
         }

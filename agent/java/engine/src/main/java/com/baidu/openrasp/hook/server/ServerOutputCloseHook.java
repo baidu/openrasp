@@ -19,6 +19,7 @@ package com.baidu.openrasp.hook.server;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.hook.server.websphere.WebphereHttpOutputHook;
 import com.baidu.openrasp.response.HttpServletResponse;
 import com.baidu.openrasp.tool.Reflection;
 import javassist.CannotCompileException;
@@ -75,7 +76,12 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
         if (HookHandler.enableHook.get() && HookHandler.isEnableCurrThreadHook()) {
             try {
                 HookHandler.disableCurrThreadHook();
-                Boolean isClosed = (Boolean) Reflection.invokeMethod(output, "isClosed", new Class[]{});
+                Boolean isClosed;
+                if (WebphereHttpOutputHook.clazzName != null && "com/ibm/ws/webcontainer/srt/SRTServletResponse".equals(WebphereHttpOutputHook.clazzName)) {
+                    isClosed = (Boolean) Reflection.getField(output, "writerClosed");
+                } else {
+                    isClosed = (Boolean) Reflection.invokeMethod(output, "isClosed", new Class[]{});
+                }
                 if (isClosed != null && !isClosed) {
                     HttpServletResponse response = HookHandler.responseCache.get();
                     String contentType = null;

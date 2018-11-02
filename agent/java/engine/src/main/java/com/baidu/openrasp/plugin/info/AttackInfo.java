@@ -42,26 +42,32 @@ public class AttackInfo extends EventInfo {
     private String pluginName;
     private String message;
     private String action;
+    private String algorithm;
     private int confidence;
 
-    public static AttackInfo createLocalAttackInfo(CheckParameter parameter, String action, String message) {
-        return new AttackInfo(parameter, action, message, DEFAULT_LOCAL_PLUGIN_NAME);
+    public static AttackInfo createLocalAttackInfo(CheckParameter parameter, String action,
+                                                   String message, String algorithm) {
+        return new AttackInfo(parameter, action, message, DEFAULT_LOCAL_PLUGIN_NAME, algorithm);
     }
 
-    public static AttackInfo createLocalAttackInfo(CheckParameter parameter, String action, String message, int confidence) {
-        return new AttackInfo(parameter, action, message, DEFAULT_LOCAL_PLUGIN_NAME, confidence);
+    public static AttackInfo createLocalAttackInfo(CheckParameter parameter, String action,
+                                                   String message, String algorithm, int confidence) {
+        return new AttackInfo(parameter, action, message, DEFAULT_LOCAL_PLUGIN_NAME, algorithm, confidence);
     }
 
-    public AttackInfo(CheckParameter parameter, String action, String message, String pluginName) {
-        this(parameter, action, message, pluginName, DEFAULT_CONFIDENCE_VALUE);
+    public AttackInfo(CheckParameter parameter, String action, String message,
+                      String pluginName, String algorithm) {
+        this(parameter, action, message, pluginName, algorithm, DEFAULT_CONFIDENCE_VALUE);
     }
 
-    public AttackInfo(CheckParameter parameter, String action, String message, String pluginName, int confidence) {
+    public AttackInfo(CheckParameter parameter, String action, String message,
+                      String pluginName, String algorithm, int confidence) {
         this.message = message;
         this.pluginName = pluginName;
         this.action = action;
         this.confidence = confidence;
         this.parameter = parameter;
+        this.algorithm = algorithm;
         setBlock(CHECK_ACTION_BLOCK.equals(action));
     }
 
@@ -96,6 +102,8 @@ public class AttackInfo extends EventInfo {
         info.put("plugin_confidence", this.confidence);
         // 是否拦截
         info.put("intercept_state", this.action);
+        // 检测算法
+        info.put("plugin_algorithm", this.algorithm);
 
         if (request != null) {
             // 请求ID
@@ -103,7 +111,7 @@ public class AttackInfo extends EventInfo {
             // 攻击来源IP
             info.put("attack_source", request.getRemoteAddr());
             // 攻击真实IP
-            info.put("client_ip",request.getClinetIp());
+            info.put("client_ip", request.getClinetIp());
             // 被攻击目标域名
             info.put("target", request.getServerName());
             // 被攻击目标IP
@@ -124,7 +132,7 @@ public class AttackInfo extends EventInfo {
             // 被攻击PATH
             info.put("path", request.getRequestURI());
             //请求方法
-            info.put("request_method",request.getMethod().toLowerCase());
+            info.put("request_method", request.getMethod().toLowerCase());
             // 用户代理
             info.put("user_agent", request.getHeader("User-Agent"));
             // 攻击的 Referrer 头

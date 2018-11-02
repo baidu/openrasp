@@ -17,6 +17,7 @@
 package com.baidu.openrasp.plugin.checker.policy.serverpolicy;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.policy.PolicyChecker;
 import com.baidu.openrasp.plugin.info.EventInfo;
@@ -27,7 +28,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * @program openrasp
  * @description: 服务器基线检查基类
  * @author: anyang
  * @create: 2018/09/10 11:53
@@ -41,11 +41,11 @@ public abstract class ServerPolicyChecker extends PolicyChecker {
     public List<EventInfo> checkParam(CheckParameter checkParameter) {
         List<EventInfo> infos = new LinkedList<EventInfo>();
         checkStartUser(infos);
-        checkServer(checkParameter,infos);
+        checkServer(checkParameter, infos);
         return infos;
     }
 
-    public abstract void checkServer(CheckParameter checkParameter,List<EventInfo> infos);
+    public abstract void checkServer(CheckParameter checkParameter, List<EventInfo> infos);
 
     /**
      * 检测启动用户是否为系统管理员
@@ -68,8 +68,10 @@ public abstract class ServerPolicyChecker extends PolicyChecker {
                         }
                     }
                 }
-            } catch (Exception e) {
-                LOGGER.error(SERVER_CHECK_ERROR_LOG_CHANNEL + " :" + e.getMessage(), e);
+            } catch (Throwable t) {
+                if (Config.getConfig().isDebugEnabled()) {
+                    LOGGER.error(SERVER_CHECK_ERROR_LOG_CHANNEL + " :" + t.getMessage(), t);
+                }
             }
         }
     }

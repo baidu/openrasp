@@ -161,6 +161,7 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     auto key_action = isolate->GetData()->key_action.Get(isolate);
     auto key_message = isolate->GetData()->key_message.Get(isolate);
     auto key_confidence = isolate->GetData()->key_confidence.Get(isolate);
+    auto key_algorithm = isolate->GetData()->key_algorithm.Get(isolate);
     auto key_name = isolate->GetData()->key_name.Get(isolate);
 
     auto stack_trace = NewV8String(isolate, format_debug_backtrace_str(TSRMLS_C));
@@ -176,6 +177,7 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     obj->Set(NewV8String(isolate, "intercept_state"), result->Get(key_action));
     obj->Set(NewV8String(isolate, "plugin_message"), result->Get(key_message));
     obj->Set(NewV8String(isolate, "plugin_confidence"), result->Get(key_confidence));
+    obj->Set(NewV8String(isolate, "plugin_algorithm"), result->Get(key_algorithm));
     obj->Set(NewV8String(isolate, "plugin_name"), result->Get(key_name));
     obj->Set(NewV8String(isolate, "stack_trace"), stack_trace);
     obj->Set(NewV8String(isolate, "event_time"), event_time);

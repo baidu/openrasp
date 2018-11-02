@@ -35,6 +35,7 @@ Isolate *Isolate::New(Snapshot *snapshot_blob)
     auto key_message = NewV8String(isolate, "message");
     auto key_name = NewV8String(isolate, "name");
     auto key_confidence = NewV8String(isolate, "confidence");
+    auto key_algorithm = NewV8String(isolate, "algorithm");
     auto RASP = context->Global()
                     ->Get(context, NewV8String(isolate, "RASP"))
                     .ToLocalChecked()
@@ -57,6 +58,7 @@ Isolate *Isolate::New(Snapshot *snapshot_blob)
     data->key_message.Reset(isolate, key_message);
     data->key_name.Reset(isolate, key_name);
     data->key_confidence.Reset(isolate, key_confidence);
+    data->key_algorithm.Reset(isolate, key_algorithm);
     data->RASP.Reset(isolate, RASP);
     data->check.Reset(isolate, check);
     data->console_log.Reset(isolate, console_log);
@@ -139,9 +141,6 @@ bool Isolate::Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::
         return false;
     }
     auto key_action = data->key_action.Get(isolate);
-    auto key_message = data->key_message.Get(isolate);
-    auto key_name = data->key_name.Get(isolate);
-    auto key_confidence = data->key_confidence.Get(isolate);
     auto JSON_stringify = data->JSON_stringify.Get(isolate);
 
     auto arr = v8::Local<v8::Array>::Cast(rst);
