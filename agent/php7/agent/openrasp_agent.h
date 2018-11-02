@@ -19,6 +19,7 @@
 
 #include "openrasp_v8.h"
 #include "openrasp_agent_manager.h"
+#include "backend_request.h"
 #include "backend_response.h"
 #include <signal.h>
 
@@ -57,7 +58,7 @@ private:
   static const int plugin_update_interval = 60;
 
 private:
-  void do_heartbeat(CURL *curl);
+  void do_heartbeat();
 };
 
 class LogAgent : public BaseAgent
@@ -75,7 +76,7 @@ private:
   static const int log_push_interval = 15;
 
 private:
-  bool post_logs_via_curl(std::string &log_arr, CURL *curl, std::string &url_string);
+  bool post_logs_via_curl(std::string &log_arr, std::string &url_string);
 };
 } // namespace openrasp
 

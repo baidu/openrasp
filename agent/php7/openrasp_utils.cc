@@ -178,7 +178,7 @@ void format_debug_backtrace_arr(zval *backtrace_arr)
     }
 }
 
-void openrasp_error(int type, int error_code, const char *format, ...)
+void openrasp_error(int type, openrasp_error_code error_code, const char *format, ...)
 {
     va_list arg;
     char *message = nullptr;

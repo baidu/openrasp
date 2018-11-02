@@ -19,6 +19,7 @@
 #include "openrasp_inject.h"
 #include "openrasp_v8.h"
 #include <new>
+#include "agent/shared_config_manager.h"
 #include <unordered_map>
 
 extern "C"
@@ -124,8 +125,7 @@ void openrasp_buildin_php_risk_handle(zend_bool is_block, OpenRASPCheckType type
 
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type)
 {
-    //TODO
-    return false;
+    return check_type & OPENRASP_HOOK_G(check_type_white_bit_mask);
 }
 
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length)
@@ -361,5 +361,27 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_hook)
     return SUCCESS;
 }
 
-PHP_RINIT_FUNCTION(openrasp_hook);
+PHP_RINIT_FUNCTION(openrasp_hook)
+{
+    if (openrasp::scm != nullptr)
+    {
+        char *url = fetch_outmost_string_from_ht(Z_ARRVAL_P(LOG_G(alarm_logger).get_common_info()), "url");
+        if (url)
+        {
+            std::string url_str(url);
+            std::size_t found = url_str.find(COLON_TWO_SLASHES);
+            if (found != std::string::npos)
+            {
+                OPENRASP_HOOK_G(check_type_white_bit_mask) = openrasp::scm->get_check_type_white_bit_mask(url_str.substr(found + COLON_TWO_SLASHES.size()));
+            }
+        }
+        if (!OPENRASP_HOOK_G(lru) ||
+            OPENRASP_HOOK_G(lru)->max_size() != OPENRASP_CONFIG(lru_cache_max_size))
+        {
+            OPENRASP_HOOK_G(lru) = new openrasp::LRU<std::string, bool>(OPENRASP_CONFIG(lru_cache_max_size));
+        }
+    }
+    return SUCCESS;
+}
+
 PHP_RSHUTDOWN_FUNCTION(openrasp_hook);

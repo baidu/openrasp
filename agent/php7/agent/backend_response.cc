@@ -21,50 +21,6 @@
 namespace openrasp
 {
 
-static size_t writeFunction(void *ptr, size_t size, size_t nmemb, std::string *data)
-{
-    data->append((char *)ptr, size * nmemb);
-    return size * nmemb;
-}
-
-std::shared_ptr<BackendResponse> curl_perform(CURL *curl, const std::string &url_string, const char *postdata)
-{
-    if (curl)
-    {
-        CURLcode res = CURL_LAST;
-        long response_code;
-        std::string header_string;
-        std::string response_string;
-        struct curl_slist *chunk = nullptr;
-        std::string auth_header = "X-OpenRASP-AppID: " + std::string(openrasp_ini.app_id);
-        chunk = curl_slist_append(chunk, auth_header.c_str());
-        res = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
-        curl_easy_setopt(curl, CURLOPT_URL, url_string.c_str());
-        curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
-        curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 50L);
-        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-        if (postdata)
-        {
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postdata);
-        }
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunction);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &(response_string));
-        curl_easy_setopt(curl, CURLOPT_HEADERDATA, &(header_string));
-        res = curl_easy_perform(curl);
-        if (CURLE_OK != res)
-        {
-            openrasp_error(E_WARNING, AGENT_ERROR, _("CURL error code: %d while access %s."), res, url_string.c_str());
-        }
-        else
-        {
-            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &(response_code));
-            return make_shared<BackendResponse>(response_code, header_string, response_string);
-        }
-    }
-    return nullptr;
-}
-
 BackendResponse::BackendResponse(long response_code, std::string header_string, std::string response_string)
 {
     this->response_code = response_code;
@@ -173,6 +129,38 @@ bool BackendResponse::erase_value(const char *key)
 {
     const rapidjson::Pointer pointer(key);
     return rapidjson::EraseValueByPointer(document, pointer);
+}
+
+bool BackendResponse::verify(openrasp_error_code error_code)
+{
+    if (has_error())
+    {
+        openrasp_error(E_WARNING, error_code, _("Fail to parse response body."));
+        return false;
+    }
+    if (!http_code_ok())
+    {
+        openrasp_error(E_WARNING, error_code, _("Invalid http code: %ld."),
+                       get_http_code());
+        return false;
+    }
+
+    int64_t status;
+    std::string description;
+    bool has_status = fetch_status(status);
+    bool has_description = fetch_description(description);
+    if (has_status && has_description)
+    {
+        if (0 == status)
+        {
+            return true;
+        }
+        else
+        {
+            openrasp_error(E_WARNING, error_code, _("Invalid status: %ld, description : %s."),
+                           status, description.c_str());
+        }
+    }
 }
 
 } // namespace openrasp

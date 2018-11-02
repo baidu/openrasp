@@ -22,13 +22,6 @@
 #include <dirent.h>
 #include <algorithm>
 #include "shared_config_manager.h"
-extern "C"
-{
-#include "ext/json/php_json.h"
-#include "ext/date/php_date.h"
-#include "php_streams.h"
-#include "php_main.h"
-}
 
 namespace openrasp
 {
@@ -55,22 +48,12 @@ void LogAgent::run()
 			LogAgent::signal_received = signal_no;
 		});
 
-	CURL *curl = nullptr;
 	LogCollectItem alarm_dir_info(ALARM_LOG_DIR_NAME, "/v1/agent/log/attack", true TSRMLS_CC);
 	LogCollectItem policy_dir_info(POLICY_LOG_DIR_NAME, "/v1/agent/log/policy", true TSRMLS_CC);
 	LogCollectItem plugin_dir_info(PLUGIN_LOG_DIR_NAME, "/v1/agent/log/plugin", false TSRMLS_CC);
 	std::vector<LogCollectItem *> log_dirs{&alarm_dir_info, &policy_dir_info, &plugin_dir_info};
 	while (true)
 	{
-		if (nullptr == curl)
-		{
-			curl = curl_easy_init();
-			if (nullptr == curl)
-			{
-				continue;
-			}
-		} //make sure curl is not nullptr
-
 		for (int i = 0; i < log_dirs.size(); ++i)
 		{
 			LogCollectItem *ldi = log_dirs[i];
@@ -81,7 +64,7 @@ void LogAgent::run()
 				std::string post_body;
 				std::string url = ldi->get_cpmplete_url();
 				if (ldi->get_post_logs(post_body) &&
-					post_logs_via_curl(post_body, curl, url))
+					post_logs_via_curl(post_body, url))
 				{
 					ldi->update_status();
 				}
@@ -93,33 +76,21 @@ void LogAgent::run()
 			sleep(1);
 			if (LogAgent::signal_received == SIGTERM)
 			{
-				curl_easy_cleanup(curl);
-				curl = nullptr;
 				exit(0);
 			}
 		}
 	}
 }
 
-bool LogAgent::post_logs_via_curl(std::string &log_arr, CURL *curl, std::string &url_string)
+bool LogAgent::post_logs_via_curl(std::string &log_arr, std::string &url_string)
 {
-	std::shared_ptr<BackendResponse> res_info = curl_perform(curl, url_string, log_arr.c_str());
+	BackendRequest backend_request(url_string, log_arr.c_str());
+	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
 	{
+		openrasp_error(E_WARNING, LOGCOLLECT_ERROR, _("CURL error code: %d."), backend_request.get_curl_code());
 		return false;
 	}
-	if (res_info->has_error())
-	{
-		openrasp_error(E_WARNING, AGENT_ERROR, _("Log collect error, fail to parse response."));
-		return false;
-	}
-	if (!res_info->http_code_ok())
-	{
-		openrasp_error(E_WARNING, AGENT_ERROR, _("Log collect error, fail to post logs to %s, http status: %ld."),
-					   url_string.c_str(),
-					   res_info->get_http_code());
-		return false;
-	}
-	return true;
+	return res_info->verify(LOGCOLLECT_ERROR);
 }
 } // namespace openrasp
