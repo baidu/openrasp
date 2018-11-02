@@ -51,6 +51,8 @@ public:
   bool fetch_status(int64_t &status);
   bool fetch_description(std::string &description);
 
+  bool verify(openrasp_error_code error_code);
+
   bool erase_value(const char *key);
   bool fetch_int64(const char *key, int64_t &target);
   bool fetch_string(const char *key, std::string &target);
@@ -58,8 +60,6 @@ public:
 
   std::shared_ptr<PluginUpdatePackage> build_plugin_update_package();
 };
-
-std::shared_ptr<BackendResponse> curl_perform(CURL *curl, const std::string &url_string, const char *postdata);
 
 } // namespace openrasp
 #endif

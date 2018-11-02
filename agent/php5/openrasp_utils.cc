@@ -195,14 +195,14 @@ void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
     }
 }
 
-void openrasp_error(int type, int error_code, const char *format, ...)
+void openrasp_error(int type, openrasp_error_code code, const char *format, ...)
 {
     va_list arg;
     char *message = nullptr;
     va_start(arg, format);
     vspprintf(&message, 0, format, arg);
     va_end(arg);
-    zend_error(type, "[OpenRASP] %d %s", error_code, message);
+    zend_error(type, "[OpenRASP] %d %s", code, message);
     efree(message);
 }
 
@@ -578,8 +578,9 @@ bool start_with(const std::string &str, const std::string &prefix)
 {
     size_t len1 = str.length();
     size_t len2 = prefix.length();
-    if (len1 < len2) {
+    if (len1 < len2)
+    {
         return false;
     }
-    return (!str.compare(0, len2, prefix));    
+    return (!str.compare(0, len2, prefix));
 }

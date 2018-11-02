@@ -295,12 +295,6 @@ bool OpenraspAgentManager::agent_remote_register()
 		local_ip[0] = 0;
 	}
 
-	CURL *curl = curl_easy_init();
-	if (!curl)
-	{
-		return false;
-	}
-
 	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/rasp";
 
 	char host_name[255] = {0};
@@ -332,40 +326,14 @@ bool OpenraspAgentManager::agent_remote_register()
 	writer.String(PHP_OPENRASP_VERSION);
 	writer.EndObject();
 
-	std::shared_ptr<BackendResponse> res_info = curl_perform(curl, url_string, s.GetString());
+	BackendRequest backend_request(url_string, s.GetString());
+	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
 	{
+		openrasp_error(E_WARNING, REGISTER_ERROR, _("CURL error code: %d."), backend_request.get_curl_code());
 		return false;
 	}
-	if (res_info->has_error())
-	{
-		openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, fail to parse response."));
-		return false;
-	}
-	if (!res_info->http_code_ok())
-	{
-		openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, response code: %ld."),
-					   res_info->get_http_code());
-		return false;
-	}
-
-	int64_t status;
-	std::string description;
-	bool has_status = res_info->fetch_status(status);
-	bool has_description = res_info->fetch_description(description);
-	if (has_status && has_description)
-	{
-		if (0 == status)
-		{
-			return true;
-		}
-		else
-		{
-			openrasp_error(E_WARNING, AGENT_ERROR, _("Agent register error, status: %ld, description : %s."),
-						   status, description.c_str());
-		}
-	}
-	return false;
+	return res_info->verify(REGISTER_ERROR);
 }
 
 pid_t OpenraspAgentManager::search_fpm_master_pid()

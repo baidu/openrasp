@@ -45,34 +45,22 @@ void HeartBeatAgent::run()
 			HeartBeatAgent::signal_received = signal_no;
 		});
 
-	CURL *curl = curl_easy_init();
 	while (true)
 	{
-		if (nullptr == curl)
-		{
-			curl = curl_easy_init();
-			if (nullptr == curl)
-			{
-				continue;
-			}
-		} //make sure curl is not nullptr
-
-		do_heartbeat(curl);
+		do_heartbeat();
 
 		for (int i = 0; i < HeartBeatAgent::plugin_update_interval; ++i)
 		{
 			sleep(1);
 			if (HeartBeatAgent::signal_received == SIGTERM)
 			{
-				curl_easy_cleanup(curl);
-				curl = nullptr;
 				exit(0);
 			}
 		}
 	}
 }
 
-void HeartBeatAgent::do_heartbeat(CURL *curl)
+void HeartBeatAgent::do_heartbeat()
 {
 	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/heartbeat";
 
@@ -89,38 +77,17 @@ void HeartBeatAgent::do_heartbeat(CURL *curl)
 	writer.Key("config_time");
 	writer.Int64((scm ? scm->get_config_last_update() : 0));
 	writer.EndObject();
-	
-	std::shared_ptr<BackendResponse> res_info = curl_perform(curl, url_string, s.GetString());
 
+	BackendRequest backend_request(url_string, s.GetString());
+	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
 	{
-		return;
-	}
-	if (res_info->has_error())
-	{
-		openrasp_error(E_WARNING, AGENT_ERROR, _("Heartbeat error, fail to parse response."));
-		return;
-	}
-	if (!res_info->http_code_ok())
-	{
-		openrasp_error(E_WARNING, AGENT_ERROR, _("Heartbeat error, response code: %ld."),
-					   res_info->get_http_code());
+		openrasp_error(E_WARNING, HEARTBEAT_ERROR, _("CURL error code: %d."), backend_request.get_curl_code());
 		return;
 	}
 
-	int64_t status;
-	std::string description;
-	bool has_status = res_info->fetch_status(status);
-	bool has_description = res_info->fetch_description(description);
-	if (has_status && has_description)
+	if (res_info->verify(HEARTBEAT_ERROR))
 	{
-		if (0 != status)
-		{
-			openrasp_error(E_WARNING, AGENT_ERROR, _("Heartbeat error, status: %ld, description : %s."),
-						   status, description.c_str());
-			return;
-		}
-
 		/************************************plugin update************************************/
 		std::shared_ptr<PluginUpdatePackage> plugin_update_pkg = res_info->build_plugin_update_package();
 		if (plugin_update_pkg)
@@ -180,11 +147,12 @@ void HeartBeatAgent::do_heartbeat(CURL *curl)
 				}
 				else
 				{
-					openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write cloud config to %s."), cloud_config_file_path.c_str());
+					openrasp_error(E_WARNING, HEARTBEAT_ERROR, _("Fail to write cloud config to %s."), cloud_config_file_path.c_str());
 				}
 				return;
 			}
 		}
+		return;
 	}
 }
 

@@ -39,12 +39,18 @@ extern "C"
 
 #include "openrasp_config.h"
 
-#define LOG_ERROR (20002)
-#define SHM_ERROR (20003)
-#define CONFIG_ERROR (20004)
-#define PLUGIN_ERROR (20005)
-#define RUNTIME_ERROR (20006)
-#define AGENT_ERROR (20007)
+typedef enum openrasp_error_code_t
+{
+	LOG_ERROR = 20002,
+	SHM_ERROR,
+	CONFIG_ERROR,
+	PLUGIN_ERROR,
+	RUNTIME_ERROR,
+	AGENT_ERROR,
+	REGISTER_ERROR,
+	HEARTBEAT_ERROR,
+	LOGCOLLECT_ERROR
+} openrasp_error_code;
 
 #ifndef ZEND_SHUTDOWN_MODULE_GLOBALS
 #ifdef ZTS
@@ -75,7 +81,7 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp)
 #define OPENRASP_CONFIG(key) (OPENRASP_G(config).Get(ZEND_TOSTR(key), CONFIG_DEFAULT(key)))
 #define OPENRASP_ARRAY_CONFIG(key) (OPENRASP_G(config).GetArray(ZEND_TOSTR(key), CONFIG_DEFAULT(key)))
 
-void openrasp_error(int type, int error_code, const char *format, ...);
+void openrasp_error(int type, openrasp_error_code code, const char *format, ...);
 
 #ifdef UNLIKELY
 #undef UNLIKELY
