@@ -269,18 +269,14 @@ var algorithmConfig = {
         action: 'block'
     },
 
-    // 命令执行 - 反射，或者 eval 方式
+    // 命令执行 - java 反射、反序列化，php eval 等方式
     command_reflect: {
         action: 'block'
     },
-    // 命令后门 - 语法解释器检查用户输入
-    command_inject: {
-        action: 'block',
-        min_length: 8
-    },
-    // 命令后门 - 匹配用户输入
+    // 命令注入 - 命令执行后门，或者命令注入
     command_userinput: {
-        action: 'ignore'
+        action:     'block',
+        min_length: 8
     },
     // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
     command_other: {
@@ -1396,12 +1392,11 @@ plugin.register('command', function (params, context) {
         return clean
     }
 
-    // 算法2: 语法解释器
-    if (algorithmConfig.command_inject.action != 'ignore') {
-        var cmd = params.command
-
+    // 算法2: 检测命令注入，或者命令执行后门
+    if (algorithmConfig.command_userinput.action != 'ignore') {
+        var cmd        = params.command
         var reason     = false
-        var min_length = algorithmConfig.command_inject.min_length
+        var min_length = algorithmConfig.command_userinput.min_length
         var parameters = context.parameter || {}
         var raw_tokens = []
 
@@ -1421,7 +1416,7 @@ plugin.register('command', function (params, context) {
                     return false
                 }
 
-                if (cmd == value) {
+                if (cmd.length == value.length) {
                     reason = _("WebShell detected - Executing command: %1%", [cmd])
                     return true
                 }
@@ -1432,7 +1427,7 @@ plugin.register('command', function (params, context) {
                 }
 
                 if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
-                    reason = _("Command execution - Command structure altered by user input, request parameter name: %1%", [name])
+                    reason = _("Command injection - command structure altered by user input, request parameter name: %1%", [name])
                     return true
                 }
             })
@@ -1460,7 +1455,7 @@ plugin.register('command', function (params, context) {
         if (reason !== false) 
         {
             return {
-                'action':     algorithmConfig.command_inject.action,
+                'action':     algorithmConfig.command_userinput.action,
                 'confidence': 90,
                 'message':    reason
             }
@@ -1468,9 +1463,8 @@ plugin.register('command', function (params, context) {
     }
 
     // 算法3: 记录所有的命令执行
-    if (algorithmConfig.command_other.action == 'ignore') {
-        return clean
-    } else {
+    if (algorithmConfig.command_other.action != 'ignore') 
+    {
         return {
             action:     algorithmConfig.command_other.action,
             message:    _("Command execution - Logging all command execution by default, command is %1%", [cmd]),
@@ -1478,6 +1472,7 @@ plugin.register('command', function (params, context) {
         }
     }
 
+    return clean
 })
 
 
