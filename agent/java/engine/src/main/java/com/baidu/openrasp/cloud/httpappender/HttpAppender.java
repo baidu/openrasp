@@ -17,6 +17,7 @@
 package com.baidu.openrasp.cloud.httpappender;
 
 import com.baidu.openrasp.cloud.CloudHttp;
+import com.baidu.openrasp.cloud.CloudHttpPool;
 import com.baidu.openrasp.cloud.model.AppenderCache;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
@@ -40,7 +41,7 @@ public class HttpAppender extends AppenderSkeleton {
     private CloudHttp cloudHttp;
 
     public HttpAppender() {
-        this.cloudHttp = new CloudHttp();
+        this.cloudHttp = new CloudHttpPool();
     }
 
     private boolean checkEntryConditions() {
