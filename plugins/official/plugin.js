@@ -615,9 +615,9 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows)
         }
         
         // 参数必须有跳出目录，或者是绝对路径
-        if ((value == target || target.endsWith(value)) 
-            && (has_traversal(value) || is_absolute_path(value, is_windows))) 
-            {
+        if ((value == target || target.endsWith(value))
+            && (has_traversal(value) || value == realpath))
+        {
             verdict = true
             return true
         }
@@ -644,7 +644,8 @@ function is_from_userinput(parameter, target)
 }
 
 // 检查SQL逻辑是否被用户参数所修改
-function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance) {
+function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance) 
+{
     // 当用户输入穿越了多个token，就可以判定为代码注入，默认为2
     var start = -1, end = raw_tokens.length, distance = distance || 2
 
@@ -676,10 +677,12 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance)
 }
 
 // 下个版本将会支持翻译，目前还需要暴露一个 getText 接口给插件
-function _(message, args) {
+function _(message, args) 
+{
     args = args || []
 
-    for (var i = 0; i < args.length; i ++) {
+    for (var i = 0; i < args.length; i ++) 
+    {
         var symbol = '%' + (i + 1) + '%'
         message = message.replace(symbol, args[i])
     }
@@ -1485,7 +1488,7 @@ plugin.register('command', function (params, context) {
             }
         })
 
-        if (reason !== false) 
+        if (reason !== false)
         {
             return {
                 action:     algorithmConfig.command_userinput.action,
