@@ -34,20 +34,15 @@ var plugin  = new RASP('offical')
 // ignore -> 关闭这个算法
 
 var algorithmConfig = {
-    // LRU大小配置: 当检测结果为 ignore 时，我们会缓存处理结果以提高性能；一般不需要修改
-    cache: {
-        sqli: {
-            capacity: 100
-        }
-    },
-
     // SQL注入算法#1 - 匹配用户输入
     // 1. 用户输入长度至少 15
-    // 2. 用户输入至少包含一个SQL关键词（待定）
+    // 2. 用户输入至少包含一个SQL关键词 - 即 pre_filter，默认关闭
     // 3. 用户输入完整的出现在SQL语句中，且会导致SQL语句逻辑发生变化
     sqli_userinput: {
         action:     'block',
-        min_length: 15
+        min_length: 15,
+        pre_filter: 'select|file|from|;',
+        pre_enable: false,
     },
     // SQL注入算法#2 - 语句规范
     sqli_policy: {
@@ -55,10 +50,7 @@ var algorithmConfig = {
 
         // 粗规则 - 为了减少 tokenize 次数，当SQL语句包含一定特征时才进入
         // 另外，我们只需要处理增删改查的语句，虽然 show 语句也可以报错注入，但是算法2没必要处理
-        filter:  {
-            algorithm1:'select|file|from|;',
-            algorithm2:'^(select|insert|update|delete).*(;|\\/\\*|(?:\\d{1,2},){4}|(?:null,){4}|0x[\\da-f]{8}|\\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin))\\b'
-        },
+        pre_filter: '^(select|insert|update|delete).*(;|\\/\\*|(?:\\d{1,2},){4}|(?:null,){4}|0x[\\da-f]{8}|\\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin))\\b',
 
         feature: {
             // 是否禁止多语句执行，select ...; update ...;
@@ -368,80 +360,12 @@ var htmlFileRegex   = /\.(htm|html|js)$/i
 var ntfsRegex       = /::\$(DATA|INDEX)$/i
 
 // SQL注入算法1 - 预过滤正则
-var sqliPrefilter1  = new RegExp(algorithmConfig.sqli_policy.filter.algorithm1)
+var sqliPrefilter1  = new RegExp(algorithmConfig.sqli_policy.pre_filter)
 
 // SQL注入算法2 - 预过滤正则
-var sqliPrefilter2  = new RegExp(algorithmConfig.sqli_policy.filter.algorithm2)
+var sqliPrefilter2  = new RegExp(algorithmConfig.sqli_policy.pre_filter)
 
 // 常用函数
-
-function LRU(maxLength) {
-    this.maxLength = maxLength
-    this.length = 0
-    this.head = undefined
-    this.tail = undefined
-    this.cache = {}
-}
-
-LRU.prototype.get = function (key) {
-    var node = this.cache[key]
-    if (node) {
-        this.update(node)
-        return true
-    } else {
-        return false
-    }
-}
-
-LRU.prototype.put = function (key) {
-    var node = this.cache[key]
-    if (!node) {
-        node = {
-            key: key
-        }
-    }
-    this.update(node)
-}
-
-LRU.prototype.update = function (node) {
-    if (node == this.head) {
-        return
-    } else if (node == this.tail) {
-        this.tail = node.prev
-        this.tail.next = undefined
-    } else if (node.prev && node.next) {
-        node.prev.next = node.next
-        node.next.prev = node.prev
-    } else if (!this.cache.hasOwnProperty(node.key)) {
-        this.cache[node.key] = node
-        if (this.length == 0) {
-            this.head = this.tail = node
-            this.length = 1
-            return
-        } else if (this.length == 1) {
-            this.head = node
-            this.head.next = this.tail
-            this.tail.prev = this.head
-            this.length = 2
-            return
-        } else if (++this.length > this.maxLength) {
-            delete this.cache[this.tail.key]
-            this.tail.prev.next = undefined
-            this.tail = this.tail.prev
-        }
-    } else {
-        return
-    }
-    node.prev = undefined
-    node.next = this.head
-    this.head.prev = node
-    this.head = node
-}
-
-LRU.prototype.dump = function () {
-    console.log(this.cache)
-}
-
 String.prototype.replaceAll = function(token, tokenValue) {
     // 空值判断，防止死循环
     if (! token || token.length == 0) {
@@ -704,16 +628,7 @@ if (RASP.get_jsengine() !== 'v8') {
     RASP.config_set('algorithm.config', JSON.stringify(algorithmConfig))
 } else {
     // 对于PHP + V8，性能还不错，我们保留JS检测逻辑
-
-    // v8 全局SQL结果缓存
-    var lru = new LRU(algorithmConfig.cache.sqli.capacity)
-
     plugin.register('sql', function (params, context) {
-
-        // 缓存检查
-        if (lru.get(params.query)) {
-            return clean
-        }
 
         var reason     = false
         var min_length = algorithmConfig.sqli_userinput.min_length
@@ -734,7 +649,7 @@ if (RASP.get_jsengine() !== 'v8') {
                     return false
                 }
 
-                if (! sqliPrefilter1.test(params.query.toLowerCase())) {
+                if (algorithmConfig.sqli_userinput.pre_enable && ! sqliPrefilter1.test(params.query.toLowerCase())) {
                     return false
                 }
 
@@ -888,7 +803,6 @@ if (RASP.get_jsengine() !== 'v8') {
         }
 
         // 加入缓存，对 prepared sql 特别有效
-        lru.put(params.query)
         return clean
     })
 
@@ -1214,14 +1128,7 @@ plugin.register('include', function (params, context) {
     return clean
 })
 
-// TODO: 1.0.0 RC1 之后改成 agent 实现，通用的LRU
-var writeFileLru = new LRU(20)
-
 plugin.register('writeFile', function (params, context) {
-
-    if (writeFileLru.get(params.realpath)) {
-        return clean
-    }
 
     // 写 NTFS 流文件，通常是为了绕过限制
     if (algorithmConfig.writeFile_NTFS.action != 'ignore')
@@ -1267,7 +1174,6 @@ plugin.register('writeFile', function (params, context) {
         }
     }
 
-    writeFileLru.put(params.realpath)
     return clean
 })
 
