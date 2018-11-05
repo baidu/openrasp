@@ -33,7 +33,7 @@ Snapshot::Snapshot(const std::string &path, uint64_t timestamp) : Snapshot()
 {
     char *buffer = nullptr;
     size_t size;
-    std::ifstream file(path);
+    std::ifstream file(path, std::ios::in | std::ios::binary);
     if (file)
     {
         file.seekg(0, std::ios::end);
@@ -42,7 +42,11 @@ Snapshot::Snapshot(const std::string &path, uint64_t timestamp) : Snapshot()
         if (size > 0)
         {
             buffer = new char[size];
-            file.read(buffer, size);
+            if (!file.read(buffer, size))
+            {
+                delete buffer;
+                return;
+            }
         }
     }
     this->data = buffer;
@@ -50,7 +54,6 @@ Snapshot::Snapshot(const std::string &path, uint64_t timestamp) : Snapshot()
 }
 Snapshot::Snapshot(const std::string &config, const std::vector<PluginFile> &plugin_list) : Snapshot()
 {
-    TSRMLS_FETCH();
     v8::SnapshotCreator creator(external_references);
     Isolate *isolate = reinterpret_cast<Isolate *>(creator.GetIsolate());
 #define DEFAULT_STACK_SIZE_IN_KB 1024
@@ -88,7 +91,6 @@ Snapshot::Snapshot(const std::string &config, const std::vector<PluginFile> &plu
             {
                 Exception e(isolate, try_catch);
                 plugin_info(e);
-                openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize js plugin - %s"), e.c_str());
                 // no need to continue
                 return;
             }
@@ -119,11 +121,10 @@ Snapshot::~Snapshot()
 }
 bool Snapshot::Save(const std::string &path) const
 {
-    std::ofstream file(path);
+    std::ofstream file(path, std::ios::out | std::ios::binary | std::ios::trunc);
     if (file)
     {
-        file.write(data, raw_size);
-        return true;
+        return static_cast<bool>(file.write(data, raw_size));
     }
     // check errno when return value is false
     return false;

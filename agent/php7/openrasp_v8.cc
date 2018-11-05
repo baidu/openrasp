@@ -86,6 +86,7 @@ PHP_MINIT_FUNCTION(openrasp_v8)
         if (!snapshot->IsOk())
         {
             delete snapshot;
+            openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize builtin js code."));
         }
         else
         {

@@ -40,6 +40,7 @@ bool PluginUpdatePackage::build_snapshot()
   Platform::Shutdown();
   if (!snapshot.IsOk())
   {
+    openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize builtin js code."));
     openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to generate snapshot."));
     return false;
   }
