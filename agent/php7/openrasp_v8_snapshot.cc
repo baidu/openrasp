@@ -50,7 +50,6 @@ Snapshot::Snapshot(const std::string &path, uint64_t timestamp) : Snapshot()
 }
 Snapshot::Snapshot(const std::string &config, const std::vector<PluginFile> &plugin_list) : Snapshot()
 {
-    TSRMLS_FETCH();
     v8::SnapshotCreator creator(external_references);
     Isolate *isolate = reinterpret_cast<Isolate *>(creator.GetIsolate());
 #define DEFAULT_STACK_SIZE_IN_KB 1024

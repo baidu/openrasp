@@ -29,14 +29,14 @@ namespace openrasp
 const long LogCollectItem::time_offset = fetch_time_offset();
 const std::string LogCollectItem::status_file = ".status.json";
 
-LogCollectItem::LogCollectItem(const std::string name, const std::string url_path, bool collect_enable TSRMLS_DC)
+LogCollectItem::LogCollectItem(const std::string name, const std::string url_path, bool collect_enable)
     : name(name),
       url_path(url_path),
       collect_enable(collect_enable)
 {
     // update_curr_suffix();
     std::string status_file_abs = get_base_dir_path() + LogCollectItem::status_file;
-    if (file_exist(status_file_abs.c_str() TSRMLS_CC))
+    if (access(status_file_abs.c_str(), F_OK) == 0)
     {
         std::string status_json;
         if (get_entire_file_content(status_file_abs.c_str(), status_json))
@@ -75,11 +75,10 @@ void LogCollectItem::open_active_log()
     }
 }
 
-void LogCollectItem::determine_fpos(TSRMLS_D)
+void LogCollectItem::determine_fpos()
 {
     open_active_log();
-    std::string active_log = get_active_log_file();
-    long curr_st_ino = get_file_st_ino(active_log TSRMLS_CC);
+    long curr_st_ino = get_active_file_inode();
     if (0 != curr_st_ino && st_ino != curr_st_ino)
     {
         st_ino = curr_st_ino;
@@ -90,6 +89,17 @@ void LogCollectItem::determine_fpos(TSRMLS_D)
     {
         ifs.clear();
     }
+}
+
+long LogCollectItem::get_active_file_inode()
+{
+    std::string filename = get_active_log_file();
+    struct stat sb;
+    if (stat(filename.c_str(), &sb) == 0 && (sb.st_mode & S_IFREG) != 0)
+    {
+        return (long)sb.st_ino;
+    }
+    return 0;
 }
 
 void LogCollectItem::save_status_snapshot() const
@@ -167,12 +177,12 @@ bool LogCollectItem::need_rotate() const
     return !same_day_in_current_timezone(now, last_post_time, LogCollectItem::time_offset);
 }
 
-void LogCollectItem::handle_rotate(bool need_rotate TSRMLS_DC)
+void LogCollectItem::handle_rotate(bool need_rotate)
 {
     last_post_time = (long)time(NULL);
     if (need_rotate)
     {
-        cleanup_expired_logs(TSRMLS_C);
+        cleanup_expired_logs();
         clear();
     }
 }
@@ -189,7 +199,7 @@ void LogCollectItem::clear()
     st_ino = 0;
 }
 
-void LogCollectItem::cleanup_expired_logs(TSRMLS_D) const
+void LogCollectItem::cleanup_expired_logs() const
 {
     long log_max_backup = 30;
     if (nullptr != scm && scm->get_log_max_backup() > 0)
@@ -209,7 +219,7 @@ void LogCollectItem::cleanup_expired_logs(TSRMLS_D) const
                      true);
     for (std::string delete_file : files_tobe_deleted)
     {
-        VCWD_UNLINK(delete_file.c_str());
+        unlink(delete_file.c_str());
     }
 }
 
