@@ -360,7 +360,7 @@ var htmlFileRegex   = /\.(htm|html|js)$/i
 var ntfsRegex       = /::\$(DATA|INDEX)$/i
 
 // SQL注入算法1 - 预过滤正则
-var sqliPrefilter1  = new RegExp(algorithmConfig.sqli_policy.pre_filter)
+var sqliPrefilter1  = new RegExp(algorithmConfig.sqli_userinput.pre_filter)
 
 // SQL注入算法2 - 预过滤正则
 var sqliPrefilter2  = new RegExp(algorithmConfig.sqli_policy.pre_filter)
