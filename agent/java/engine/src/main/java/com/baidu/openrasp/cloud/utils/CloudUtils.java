@@ -179,39 +179,39 @@ public class CloudUtils {
     }
 
     public static String getMD5(String originalString) throws NoSuchAlgorithmException {
-        char[] hexArray = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
+        char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
         MessageDigest md = MessageDigest.getInstance("MD5");
         md.update(originalString.getBytes());
         byte[] byteArray = md.digest();
-        char[] resultCharArray = new char[byteArray.length*2];
+        char[] resultCharArray = new char[byteArray.length * 2];
         int index = 0;
-        for(byte b : byteArray){
-            resultCharArray[index++] = hexArray[b>>> 4 & 0xf];
-            resultCharArray[index++] = hexArray[b& 0xf];
+        for (byte b : byteArray) {
+            resultCharArray[index++] = hexArray[b >>> 4 & 0xf];
+            resultCharArray[index++] = hexArray[b & 0xf];
         }
         return new String(resultCharArray);
     }
 
-    public static String handleError(ErrorType errorType,GenericResponse response){
-        if (response==null){
+    public static String handleError(ErrorType errorType, GenericResponse response) {
+        if (response == null) {
             return errorType.toString();
         }
         Integer statusCode = response.getResponseCode();
         String description = response.getDescription();
-        String message = getFormattedMessage(statusCode,description);
-        if (message.isEmpty()){
+        String message = getFormattedMessage(statusCode, description);
+        if (message.isEmpty()) {
             return errorType.toString();
         }
-        return errorType.toString()+"."+message;
+        return errorType.toString() + "," + message;
     }
 
     private static String getFormattedMessage(Integer code, String message) {
-        String result="";
-        if (code!=null){
-            result = result+"Status Code: "+code;
+        String result = "";
+        if (code != null) {
+            result = result + "Status Code: " + code;
         }
-        if (message!=null){
-            result = result+" Description: "+message;
+        if (message != null) {
+            result = result + " Description: " + message;
         }
         return result.trim();
     }

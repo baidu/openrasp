@@ -57,7 +57,7 @@ public class Register {
                     CloudManager.init();
                 } else {
                     System.out.println("[OpenRASP] Cloud Control Registered Failed,Please See Logs For Information.");
-                    CloudManager.LOGGER.warn(CloudUtils.handleError(ErrorType.REGISTER_ERROR,response));
+                    CloudManager.LOGGER.warn(CloudUtils.handleError(ErrorType.REGISTER_ERROR, response));
                 }
                 try {
                     Thread.sleep(REGISTER_DELAY);

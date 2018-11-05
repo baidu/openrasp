@@ -58,7 +58,7 @@ public class KeepAlive {
                 if (CloudUtils.checkRequestResult(response)) {
                     handleResponse(response);
                 } else {
-                    CloudManager.LOGGER.warn(CloudUtils.handleError(ErrorType.HEARTBEAT_ERROR,response));
+                    CloudManager.LOGGER.warn(CloudUtils.handleError(ErrorType.HEARTBEAT_ERROR, response));
                 }
                 try {
                     Thread.sleep(KEEPALIVE_DELAY);
@@ -101,11 +101,11 @@ public class KeepAlive {
                 pluginContext = ((JsonPrimitive) pluginMap.get("plugin")).getAsString();
                 try {
                     String pluginMD5 = CloudUtils.getMD5(pluginContext);
-                    if (!pluginMD5.equals(md5)){
-                       return;
+                    if (!pluginMD5.equals(md5)) {
+                        return;
                     }
                 } catch (NoSuchAlgorithmException e) {
-                    CloudManager.LOGGER.warn("Plugin MD5 Verification Failed: ",e);
+                    CloudManager.LOGGER.warn("Plugin MD5 Verification Failed: ", e);
                 }
                 oldPlugin = CloudCacheModel.getInstance().getPlugin();
                 CloudCacheModel.getInstance().setPlugin(pluginContext);
