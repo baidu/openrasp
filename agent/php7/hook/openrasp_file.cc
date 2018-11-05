@@ -70,6 +70,13 @@ static void check_file_operation(OpenRASPCheckType type, char *filename, int fil
         zend_string_release(real_path);
         return;
     }
+    std::string cache_key = std::string(get_check_type_name(type))
+                                .append(filename, filename_len)
+                                .append(ZSTR_VAL(real_path), ZSTR_LEN(real_path));
+    if (OPENRASP_HOOK_G(lru)->contains(cache_key))
+    {
+        return;
+    }
     bool is_block = false;
     {
         v8::HandleScope handle_scope(isolate);
@@ -90,6 +97,7 @@ static void check_file_operation(OpenRASPCheckType type, char *filename, int fil
     {
         handle_block();
     }
+    OPENRASP_HOOK_G(lru)->set(cache_key, true);
 }
 
 void pre_global_file_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -277,6 +285,13 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         zend_string_release(dest_real_path);
         return;
     }
+    std::string cache_key = std::string(get_check_type_name(check_type))
+                                .append(ZSTR_VAL(source_real_path), ZSTR_LEN(source_real_path))
+                                .append(ZSTR_VAL(dest_real_path), ZSTR_LEN(dest_real_path));
+    if (OPENRASP_HOOK_G(lru)->contains(cache_key))
+    {
+        return;
+    }
     bool is_block = false;
     {
         v8::HandleScope handle_scope(isolate);
@@ -298,6 +313,7 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         handle_block();
     }
+    OPENRASP_HOOK_G(lru)->set(cache_key, true);
 }
 
 void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -374,6 +390,13 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
                 zend_string_release(dest_real_path);
                 return;
             }
+            std::string cache_key = std::string(get_check_type_name(check_type))
+                                        .append(ZSTR_VAL(source_real_path), ZSTR_LEN(source_real_path))
+                                        .append(ZSTR_VAL(dest_real_path), ZSTR_LEN(dest_real_path));
+            if (OPENRASP_HOOK_G(lru)->contains(cache_key))
+            {
+                return;
+            }
             bool is_block = false;
             {
                 v8::HandleScope handle_scope(isolate);
@@ -395,6 +418,7 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             {
                 handle_block();
             }
+            OPENRASP_HOOK_G(lru)->set(cache_key, true);
         }
         return;
     }

@@ -42,7 +42,7 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
 bool is_initialized = false;
 static bool make_openrasp_root_dir();
-static bool is_current_sapi_supported();
+static bool current_sapi_supported();
 static bool load_config(openrasp::OpenraspConfig *config, bool is_local = true);
 
 PHP_INI_BEGIN()
@@ -77,7 +77,7 @@ PHP_MINIT_FUNCTION(openrasp)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp, PHP_GINIT(openrasp), PHP_GSHUTDOWN(openrasp));
     REGISTER_INI_ENTRIES();
-    if (!is_current_sapi_supported(TSRMLS_C))
+    if (!current_sapi_supported())
     {
         return SUCCESS;
     }
@@ -328,7 +328,7 @@ static bool load_config(openrasp::OpenraspConfig *config, bool is_local)
     return false;
 }
 
-static bool is_current_sapi_supported()
+static bool current_sapi_supported()
 {
     const static std::set<std::string> supported_sapis =
         {

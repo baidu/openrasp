@@ -281,16 +281,6 @@ zend_string *openrasp_format_date(char *format, int format_len, time_t ts)
     return zend_string_init(buffer, strlen(buffer), 0);
 }
 
-long get_file_st_ino(std::string filename)
-{
-    struct stat sb;
-    if (VCWD_STAT(filename.c_str(), &sb) == 0 && (sb.st_mode & S_IFREG) != 0)
-    {
-        return (long)sb.st_ino;
-    }
-    return 0;
-}
-
 void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)
 {
 #if defined(PHP_WIN32) && defined(HAVE_IPHLPAPI_WS2)
@@ -503,11 +493,6 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url)
     }
     close(sock);
     return true;
-}
-
-bool file_exist(const char *abs_path)
-{
-    return VCWD_ACCESS(abs_path, F_OK) == 0;
 }
 
 bool write_str_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len)

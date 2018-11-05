@@ -319,7 +319,7 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
 {
     openrasp_log_globals->in_request_process = 0;
     log_appender alarm_appender = FSTREAM_APPENDER;
-    if (verify_syslog_address_format(TSRMLS_C))
+    if (verify_syslog_address_format())
     {
         alarm_appender = static_cast<log_appender>(alarm_appender | SYSLOG_APPENDER);
     }

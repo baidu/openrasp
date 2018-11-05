@@ -298,16 +298,6 @@ std::string format_time(const char *format, int format_len, time_t ts)
     return std::string(buffer);
 }
 
-long get_file_st_ino(std::string &filename TSRMLS_DC)
-{
-    struct stat sb;
-    if (VCWD_STAT(filename.c_str(), &sb) == 0 && (sb.st_mode & S_IFREG) != 0)
-    {
-        return (long)sb.st_ino;
-    }
-    return 0;
-}
-
 bool write_str_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len)
 {
     std::ofstream out_file(file, mode);
@@ -567,11 +557,6 @@ std::string json_encode_from_zval(zval *value TSRMLS_DC)
     std::string result(buf_json.c);
     smart_str_free(&buf_json);
     return result;
-}
-
-bool file_exist(const char *abs_path TSRMLS_DC)
-{
-    return VCWD_ACCESS(abs_path, F_OK) == 0;
 }
 
 bool start_with(const std::string &str, const std::string &prefix)

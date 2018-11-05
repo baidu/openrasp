@@ -30,7 +30,6 @@ bool same_day_in_current_timezone(long src, long target, long offset);
 const char *fetch_url_scheme(const char *filename);
 
 bool file_exist(const char *abs_path TSRMLS_DC);
-long get_file_st_ino(std::string &filename TSRMLS_DC);
 int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC);
 bool write_str_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len);
 bool get_entire_file_content(const char *file, std::string &content);

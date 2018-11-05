@@ -48,9 +48,9 @@ void LogAgent::run()
 			LogAgent::signal_received = signal_no;
 		});
 
-	LogCollectItem alarm_dir_info(ALARM_LOG_DIR_NAME, "/v1/agent/log/attack", true TSRMLS_CC);
-	LogCollectItem policy_dir_info(POLICY_LOG_DIR_NAME, "/v1/agent/log/policy", true TSRMLS_CC);
-	LogCollectItem plugin_dir_info(PLUGIN_LOG_DIR_NAME, "/v1/agent/log/plugin", false TSRMLS_CC);
+	LogCollectItem alarm_dir_info(ALARM_LOG_DIR_NAME, "/v1/agent/log/attack", true);
+	LogCollectItem policy_dir_info(POLICY_LOG_DIR_NAME, "/v1/agent/log/policy", true);
+	LogCollectItem plugin_dir_info(PLUGIN_LOG_DIR_NAME, "/v1/agent/log/plugin", false);
 	std::vector<LogCollectItem *> log_dirs{&alarm_dir_info, &policy_dir_info, &plugin_dir_info};
 	while (true)
 	{
@@ -58,9 +58,9 @@ void LogAgent::run()
 		{
 			LogCollectItem *ldi = log_dirs[i];
 			bool file_rotate = ldi->need_rotate();
-			if (file_exist(ldi->get_active_log_file().c_str() TSRMLS_CC))
+			if (access(ldi->get_active_log_file().c_str(), F_OK) == 0)
 			{
-				ldi->determine_fpos(TSRMLS_C);
+				ldi->determine_fpos();
 				std::string post_body;
 				std::string url = ldi->get_cpmplete_url();
 				if (ldi->get_post_logs(post_body) &&
@@ -69,7 +69,7 @@ void LogAgent::run()
 					ldi->update_status();
 				}
 			}
-			ldi->handle_rotate(file_rotate TSRMLS_CC);
+			ldi->handle_rotate(file_rotate);
 		}
 		for (int i = 0; i < LogAgent::log_push_interval; ++i)
 		{
