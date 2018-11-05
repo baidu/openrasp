@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "openrasp_v8.h"
+#include "openrasp_v8_bundle.h"
 #include <mutex>
 #include <thread>
 #include <chrono>

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "openrasp_v8.h"
+#include "openrasp_v8_bundle.h"
 
 namespace openrasp
 {
@@ -55,4 +55,4 @@ Exception::Exception(v8::Isolate *isolate, v8::TryCatch &try_catch) : string()
         }
     }
 }
-} // namespace openrasp_v8
+} // namespace openrasp
