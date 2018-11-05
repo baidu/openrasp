@@ -33,14 +33,14 @@ private:
   static const std::string status_file;
 
 public:
-  LogCollectItem(const std::string name, const std::string url_path, bool collect_enable TSRMLS_DC);
+  LogCollectItem(const std::string name, const std::string url_path, bool collect_enable);
 
   void update_status();
-  void determine_fpos(TSRMLS_D);
+  void determine_fpos();
   inline void update_curr_suffix();
 
   bool need_rotate() const;
-  void handle_rotate(bool need_rotate TSRMLS_DC);
+  void handle_rotate(bool need_rotate);
 
   bool get_post_logs(std::string &body);
   std::string get_cpmplete_url() const;
@@ -60,8 +60,9 @@ private:
   void clear();
   void open_active_log();
   void save_status_snapshot() const;
-  void cleanup_expired_logs(TSRMLS_D) const;
+  void cleanup_expired_logs() const;
   inline std::string get_base_dir_path() const;
+  long get_active_file_inode();
 };
 
 } // namespace openrasp
