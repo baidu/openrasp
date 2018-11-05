@@ -129,6 +129,11 @@ void plugin_sql_check(char *query, int query_len, const char *server)
     openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (query && strlen(query) == query_len && isolate)
     {
+        std::string cache_key = std::string(get_check_type_name(SQL)).append(query, query_len);
+        if (OPENRASP_HOOK_G(lru)->contains(cache_key))
+        {
+            return;
+        }
         bool is_block = false;
         {
             v8::HandleScope handle_scope(isolate);
@@ -141,6 +146,7 @@ void plugin_sql_check(char *query, int query_len, const char *server)
         {
             handle_block();
         }
+        OPENRASP_HOOK_G(lru)->set(cache_key, true);
     }
 }
 
