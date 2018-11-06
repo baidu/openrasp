@@ -75,6 +75,7 @@ static void check_file_operation(OpenRASPCheckType type, char *filename, int fil
                                 .append(ZSTR_VAL(real_path), ZSTR_LEN(real_path));
     if (OPENRASP_HOOK_G(lru)->contains(cache_key))
     {
+        zend_string_release(real_path);
         return;
     }
     bool is_block = false;
@@ -290,6 +291,8 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
                                 .append(ZSTR_VAL(dest_real_path), ZSTR_LEN(dest_real_path));
     if (OPENRASP_HOOK_G(lru)->contains(cache_key))
     {
+        zend_string_release(source_real_path);
+        zend_string_release(dest_real_path);
         return;
     }
     bool is_block = false;
@@ -395,6 +398,8 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
                                         .append(ZSTR_VAL(dest_real_path), ZSTR_LEN(dest_real_path));
             if (OPENRASP_HOOK_G(lru)->contains(cache_key))
             {
+                zend_string_release(source_real_path);
+                zend_string_release(dest_real_path);
                 return;
             }
             bool is_block = false;

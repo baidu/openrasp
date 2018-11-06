@@ -52,15 +52,18 @@ static OpenRASPCheckType flag_to_type(int open_flags, bool file_exist)
     }
 }
 
-static void check_file_operation(OpenRASPCheckType type, char *filename, int filename_len, zend_bool use_include_path TSRMLS_DC)
+static void check_file_operation(OpenRASPCheckType type, const std::string &filename, zend_bool use_include_path TSRMLS_DC)
 {
     openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (isolate)
     {
-        char *real_path = openrasp_real_path(filename, filename_len, use_include_path, (type == WRITE_FILE ? WRITING : READING) TSRMLS_CC);
+        char *real_path = openrasp_real_path(const_cast<char*>(filename.c_str()), filename.length(), use_include_path, (type == WRITE_FILE ? WRITING : READING) TSRMLS_CC);
         if (real_path)
         {
-            std::string cache_key = std::string(get_check_type_name(type)).append(filename, filename_len).append(real_path);
+            const std::string realpath(real_path);
+            efree(real_path);
+            const std::string check_type(get_check_type_name(type));
+            const std::string cache_key(check_type + filename + realpath);
             if (OPENRASP_HOOK_G(lru)->contains(cache_key))
             {
                 return;
@@ -69,9 +72,8 @@ static void check_file_operation(OpenRASPCheckType type, char *filename, int fil
             {
                 v8::HandleScope handle_scope(isolate);
                 auto params = v8::Object::New(isolate);
-                params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, filename, filename_len));
-                params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
-                efree(real_path);
+                params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, filename));
+                params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, realpath));
                 is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
             if (is_block)
@@ -96,7 +98,7 @@ void pre_global_file_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         return;
     }
     use_include_path = flags & PHP_FILE_USE_INCLUDE_PATH;
-    check_file_operation(check_type, filename, filename_len, use_include_path TSRMLS_CC);
+    check_file_operation(check_type, std::string(filename, filename_len), use_include_path TSRMLS_CC);
 }
 
 void pre_global_readfile_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -110,7 +112,7 @@ void pre_global_readfile_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         return;
     }
-    check_file_operation(check_type, filename, filename_len, use_include_path TSRMLS_CC);
+    check_file_operation(check_type, std::string(filename, filename_len), use_include_path TSRMLS_CC);
 }
 
 void pre_global_file_get_contents_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -126,7 +128,7 @@ void pre_global_file_get_contents_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETER
     {
         return;
     }
-    check_file_operation(check_type, filename, filename_len, use_include_path TSRMLS_CC);
+    check_file_operation(check_type, std::string(filename, filename_len), use_include_path TSRMLS_CC);
 }
 
 void pre_global_file_put_contents_WEBSHELL_FILE_PUT_CONTENTS(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -172,7 +174,7 @@ void pre_global_file_put_contents_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETE
         return;
     }
 
-    check_file_operation(check_type, filename, filename_len, (flags & PHP_FILE_USE_INCLUDE_PATH) TSRMLS_CC);
+    check_file_operation(check_type, std::string(filename, filename_len), (flags & PHP_FILE_USE_INCLUDE_PATH) TSRMLS_CC);
 }
 
 void pre_global_fopen_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -201,7 +203,7 @@ void pre_global_fopen_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     OpenRASPCheckType type = flag_to_type(open_flags, file_exist);
     if (type == check_type)
     {
-        check_file_operation(check_type, filename, filename_len, use_include_path TSRMLS_CC);
+        check_file_operation(check_type, std::string(filename, filename_len), use_include_path TSRMLS_CC);
     }
 }
 
@@ -236,7 +238,7 @@ void pre_splfileobject___construct_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMET
     OpenRASPCheckType type = flag_to_type(open_flags, file_exist);
     if (type == check_type)
     {
-        check_file_operation(type, filename, filename_len, use_include_path TSRMLS_CC);
+        check_file_operation(type, std::string(filename, filename_len), use_include_path TSRMLS_CC);
     }
 }
 
@@ -264,36 +266,37 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     if (source && target && strlen(source) == source_len && strlen(target) == target_len)
     {
         char *source_real_path = openrasp_real_path(source, source_len, false, READING TSRMLS_CC);
-        if (source_real_path)
+        char *target_real_path = openrasp_real_path(target, target_len, false, WRITING TSRMLS_CC);
+        if (source_real_path && target_real_path)
         {
-            char *target_real_path = openrasp_real_path(target, target_len, false, WRITING TSRMLS_CC);
-            if (target_real_path)
+            const std::string source_realpath(source_real_path);
+            const std::string target_realpath(target_real_path);
+            efree(source_real_path);
+            efree(target_real_path);
+            const std::string type(get_check_type_name(check_type));
+            const std::string cache_key(type + source_realpath + target_realpath);
+            if (OPENRASP_HOOK_G(lru)->contains(cache_key))
             {
-                std::string cache_key = std::string(get_check_type_name(check_type)).append(source_real_path).append(target_real_path);
-                if (OPENRASP_HOOK_G(lru)->contains(cache_key))
-                {
-                    return;
-                }
-                bool is_block = false;
-                {
-                    v8::HandleScope handle_scope(isolate);
-                    auto params = v8::Object::New(isolate);
-                    params->Set(openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_real_path));
-                    efree(source_real_path);
-                    params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, target_real_path));
-                    efree(target_real_path);
-                    is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
-                }
-                if (is_block)
-                {
-                    handle_block(TSRMLS_C);
-                }
-                OPENRASP_HOOK_G(lru)->set(cache_key, true);
+                return;
             }
-            else
+            bool is_block = false;
             {
-                efree(source_real_path);
+                v8::HandleScope handle_scope(isolate);
+                auto params = v8::Object::New(isolate);
+                params->Set(openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_realpath));
+                params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, target_realpath));
+                is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
+            if (is_block)
+            {
+                handle_block(TSRMLS_C);
+            }
+            OPENRASP_HOOK_G(lru)->set(cache_key, true);
+        }
+        else
+        {
+            efree(source_real_path);
+            efree(target_real_path);
         }
     }
 }
@@ -372,7 +375,12 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         }
         else
         {
-            std::string cache_key = std::string(get_check_type_name(check_type)).append(source_real_path).append(target_real_path);
+            const std::string source_realpath(source_real_path);
+            const std::string target_realpath(target_real_path);
+            efree(source_real_path);
+            efree(target_real_path);
+            const std::string type(get_check_type_name(check_type));
+            const std::string cache_key(type + source_realpath + target_realpath);
             if (OPENRASP_HOOK_G(lru)->contains(cache_key))
             {
                 return;
@@ -381,10 +389,8 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             {
                 v8::HandleScope handle_scope(isolate);
                 auto params = v8::Object::New(isolate);
-                params->Set(openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_real_path));
-                efree(source_real_path);
-                params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, target_real_path));
-                efree(target_real_path);
+                params->Set(openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_realpath));
+                params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, target_realpath));
                 is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
             if (is_block)
@@ -393,14 +399,5 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             }
             OPENRASP_HOOK_G(lru)->set(cache_key, true);
         }
-        return;
-    }
-    if (source_real_path)
-    {
-        efree(source_real_path);
-    }
-    if (target_real_path)
-    {
-        efree(target_real_path);
     }
 }
