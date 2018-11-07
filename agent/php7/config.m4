@@ -316,20 +316,6 @@ if test "$PHP_OPENRASP" != "no"; then
   EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS $ac_cv_narrowing -std=$ac_cv_cstd -Wno-deprecated-declarations -Wno-write-strings -Wno-deprecated-register"
   PHP_SUBST(EXTRA_CXXFLAGS)
 
-  AC_MSG_CHECKING([whether fully support regex])
-  AC_LANG_PUSH([C++])
-  old_CXXFLAGS=$CXXFLAGS
-  CXXFLAGS="-std=$ac_cv_cstd"
-  AC_TRY_LINK([#include <regex>], [std::cregex_token_iterator it;],
-  [
-    AC_MSG_RESULT(yes)
-    CXXFLAGS=$old_CXXFLAGS
-    AC_LANG_POP([C++])
-  ],[
-    AC_MSG_RESULT(no)
-    AC_MSG_ERROR([Please install a newer c++ compiler])
-  ])
-
   AC_MSG_CHECKING(for mmap() using MAP_ANON shared memory support)
   AC_TRY_RUN([
 #include <sys/types.h>
