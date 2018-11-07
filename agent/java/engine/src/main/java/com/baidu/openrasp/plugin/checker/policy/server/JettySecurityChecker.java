@@ -27,6 +27,15 @@ import java.util.List;
  * @create: 2018/09/10 12:22
  */
 public class JettySecurityChecker extends ServerPolicyChecker {
+
+    public JettySecurityChecker() {
+        super();
+    }
+
+    public JettySecurityChecker(boolean canBlock) {
+        super(canBlock);
+    }
+
     @Override
     public void checkServer(CheckParameter checkParameter, List<EventInfo> infos) {
     }

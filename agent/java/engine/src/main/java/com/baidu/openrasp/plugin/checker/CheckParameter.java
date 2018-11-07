@@ -61,11 +61,11 @@ public class CheckParameter {
 
         // 安全基线检测
         POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker()),
-        POLICY_TOMCAT_START("tomcatStart", new TomcatSecurityChecker()),
-        POLICY_JBOSS_START("jbossStart", new JBossSecurityChecker()),
-        POLICY_JETTY_START("jettyStart", new JettySecurityChecker()),
-        POLICY_RESIN_START("resinStart", new ResinSecurityChecker()),
-        POLICY_WEBSPHERE_START("webspherestart",new WebsphereSecurityChecker());
+        POLICY_TOMCAT_START("tomcatStart", new TomcatSecurityChecker(false)),
+        POLICY_JBOSS_START("jbossStart", new JBossSecurityChecker(false)),
+        POLICY_JETTY_START("jettyStart", new JettySecurityChecker(false)),
+        POLICY_RESIN_START("resinStart", new ResinSecurityChecker(false)),
+        POLICY_WEBSPHERE_START("websphereStart",new WebsphereSecurityChecker(false));
 
         String name;
         Checker checker;

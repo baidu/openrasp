@@ -24,13 +24,10 @@ import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.messaging.LogConfig;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.plugin.js.engine.JsPluginManager;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import org.mozilla.javascript.Scriptable;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -81,7 +78,6 @@ public class KeepAlive {
     private static void handleResponse(GenericResponse response) {
         String version = null;
         String md5 = null;
-        String oldPlugin = null;
         String pluginContext = null;
         String algorithmConfig = null;
         Object configTime = CloudUtils.getValueFromData(response, "config_time");
@@ -107,9 +103,6 @@ public class KeepAlive {
                 } catch (NoSuchAlgorithmException e) {
                     CloudManager.LOGGER.warn("Plugin MD5 Verification Failed: ", e);
                 }
-                oldPlugin = CloudCacheModel.getInstance().getPlugin();
-                CloudCacheModel.getInstance().setPlugin(pluginContext);
-                JsPluginManager.updatePluginAsync();
             }
         }
         if (configMap != null) {
@@ -131,28 +124,7 @@ public class KeepAlive {
             }
         }
         if (version != null && md5 != null && pluginContext != null && algorithmConfig != null) {
-            boolean result = injectRhino(algorithmConfig);
-            if (result) {
-                CloudCacheModel.getInstance().setPluginVersion(version);
-                CloudCacheModel.getInstance().setPluginMD5(md5);
-                CloudCacheModel.getInstance().setAlgorithmConfig(algorithmConfig);
-            } else {
-                CloudCacheModel.getInstance().setPlugin(oldPlugin);
-            }
+            JsPluginManager.updatePluginAsync(pluginContext, algorithmConfig, md5, version);
         }
-    }
-
-    private static boolean injectRhino(String script) {
-        try {
-            script = "RASP.algorithmConfig =" + script;
-            JSContext cx = JSContextFactory.enterAndInitContext();
-            Scriptable globalScope = cx.getScope();
-            cx.evaluateString(globalScope, script, "algorithmConfig", 1, null);
-        } catch (Throwable e) {
-            CloudManager.LOGGER.error("AlgorithmConfig Inject Rhino Failed,Plugin Will Be Invalid: ", e);
-            JsPluginManager.disablePlugin();
-            return false;
-        }
-        return true;
     }
 }

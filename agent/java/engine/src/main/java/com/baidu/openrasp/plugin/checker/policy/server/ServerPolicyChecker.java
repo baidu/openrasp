@@ -33,6 +33,13 @@ import java.util.List;
  * @create: 2018/09/10 11:53
  */
 public abstract class ServerPolicyChecker extends PolicyChecker {
+
+    public ServerPolicyChecker() {
+        super();
+    }
+    public ServerPolicyChecker(boolean canBlock) {
+        super(canBlock);
+    }
     private static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
     private static final String SERVER_CHECK_ERROR_LOG_CHANNEL = "server_security_check_error";
     private static final String WINDOWS_ADMIN_GROUP_ID = "S-1-5-32-544";

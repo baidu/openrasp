@@ -46,7 +46,6 @@ import java.util.TimerTask;
 public class JsPluginManager {
 
     private static final Logger LOGGER = Logger.getLogger(JsPluginManager.class.getPackage().getName() + ".log");
-    private static final String PLUGIN_NAME = "official.js";
     private static Timer timer = null;
     private static Integer watchId = null;
 
@@ -57,8 +56,8 @@ public class JsPluginManager {
      */
     public synchronized static void init() throws Exception {
         JSContextFactory.init();
-        updatePlugin();
         if (!CloudUtils.checkCloudControlEnter()) {
+            updatePlugin();
             initFileWatcher();
         }
     }
@@ -91,21 +90,21 @@ public class JsPluginManager {
                     @Override
                     public void onFileCreate(File file) {
                         if (file.getName().endsWith(".js")) {
-                            updatePluginAsync();
+                            updatePluginAsync(null, null, null, null);
                         }
                     }
 
                     @Override
                     public void onFileChange(File file) {
                         if (file.getName().endsWith(".js")) {
-                            updatePluginAsync();
+                            updatePluginAsync(null, null, null, null);
                         }
                     }
 
                     @Override
                     public void onFileDelete(File file) {
                         if (file.getName().endsWith(".js")) {
-                            updatePluginAsync();
+                            updatePluginAsync(null, null, null, null);
                         }
                     }
                 });
@@ -126,32 +125,32 @@ public class JsPluginManager {
         Config.getConfig().setAlgorithmConfig("{}");
         boolean oldValue = HookHandler.enableHook.getAndSet(false);
         List<CheckScript> scripts = new LinkedList<CheckScript>();
-        if (CloudUtils.checkCloudControlEnter()) {
-            String plugin = CloudCacheModel.getInstance().getPlugin();
-            if (plugin != null) {
-                scripts.add(new CheckScript(PLUGIN_NAME, plugin));
-            } else {
-                scripts.add(new CheckScript(PLUGIN_NAME, ""));
-            }
-        } else {
-            File pluginDir = new File(Config.getConfig().getScriptDirectory());
-            LOGGER.debug("checker directory: " + pluginDir.getAbsolutePath());
-            if (!pluginDir.isDirectory()) {
-                pluginDir.mkdir();
-            }
-            FileFilter filter = FileFilterUtils.and(FileFilterUtils.sizeFileFilter(10 * 1024 * 1024, false), FileFilterUtils.suffixFileFilter(".js"));
-            File[] pluginFiles = pluginDir.listFiles(filter);
-            if (pluginFiles != null) {
-                for (File file : pluginFiles) {
-                    try {
-                        scripts.add(new CheckScript(file));
-                    } catch (Exception e) {
-                        LOGGER.error("", e);
-                    }
+        File pluginDir = new File(Config.getConfig().getScriptDirectory());
+        LOGGER.debug("checker directory: " + pluginDir.getAbsolutePath());
+        if (!pluginDir.isDirectory()) {
+            pluginDir.mkdir();
+        }
+        FileFilter filter = FileFilterUtils.and(FileFilterUtils.sizeFileFilter(10 * 1024 * 1024, false), FileFilterUtils.suffixFileFilter(".js"));
+        File[] pluginFiles = pluginDir.listFiles(filter);
+        if (pluginFiles != null) {
+            for (File file : pluginFiles) {
+                try {
+                    scripts.add(new CheckScript(file));
+                } catch (Exception e) {
+                    LOGGER.error("", e);
                 }
             }
         }
+
         JSContextFactory.setCheckScriptList(scripts);
+        HookHandler.enableHook.set(oldValue);
+    }
+
+    private synchronized static void updatePlugin(String plugin, String algorithmConfig, String md5, String version) {
+        // 清空 algorithm.config 配置
+        Config.getConfig().setAlgorithmConfig("{}");
+        boolean oldValue = HookHandler.enableHook.getAndSet(false);
+        JSContextFactory.setCloudCheckScript(plugin, algorithmConfig, md5, version);
         HookHandler.enableHook.set(oldValue);
     }
 
@@ -162,7 +161,8 @@ public class JsPluginManager {
      * <p>
      * 若产生抖动，可适量增大定时器延时
      */
-    public synchronized static void updatePluginAsync() {
+    public synchronized static void updatePluginAsync(final String plugin, final String algorithmConfig,
+                                                      final String md5, final String version) {
         if (timer != null) {
             timer.cancel();
             timer = null;
@@ -172,7 +172,11 @@ public class JsPluginManager {
             @Override
             public void run() {
                 try {
-                    updatePlugin();
+                    if (plugin != null && algorithmConfig != null && md5 != null && version != null) {
+                        updatePlugin(plugin, algorithmConfig, md5, version);
+                    } else {
+                        updatePlugin();
+                    }
                 } catch (Exception e) {
                     LOGGER.error("", e);
                 }
@@ -182,18 +186,5 @@ public class JsPluginManager {
                 }
             }
         }, 500);
-    }
-
-    /**
-     * 更新异常时让插件失效
-     */
-    public synchronized static void disablePlugin(){
-        // 清空 algorithm.config 配置
-        Config.getConfig().setAlgorithmConfig("{}");
-        boolean oldValue = HookHandler.enableHook.getAndSet(false);
-        List<CheckScript> scripts = new LinkedList<CheckScript>();
-        scripts.add(new CheckScript(PLUGIN_NAME, ""));
-        JSContextFactory.setCheckScriptList(scripts);
-        HookHandler.enableHook.set(oldValue);
     }
 }

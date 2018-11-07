@@ -41,6 +41,13 @@ import java.util.List;
  * 检测tomcat安全规范的工具类
  */
 public class TomcatSecurityChecker extends ServerPolicyChecker {
+    public TomcatSecurityChecker() {
+        super();
+    }
+
+    public TomcatSecurityChecker(boolean canBlock) {
+        super(canBlock);
+    }
 
     private static final String TOMCAT_CHECK_ERROR_LOG_CHANNEL = "tomcat_security_check_error";
     private static final String HTTP_ONLY_ATTRIBUTE_NAME = "useHttpOnly";

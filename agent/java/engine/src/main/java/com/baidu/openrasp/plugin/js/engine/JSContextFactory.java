@@ -17,6 +17,8 @@
 package com.baidu.openrasp.plugin.js.engine;
 
 import com.baidu.openrasp.EngineBoot;
+import com.baidu.openrasp.cloud.model.CloudCacheModel;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.rhino.shim.Console;
 import com.fuxi.javaagent.rhino.shim.Shim;
@@ -37,6 +39,7 @@ import java.util.List;
  */
 public class JSContextFactory extends ContextFactory {
     private static final Logger LOGGER = Logger.getLogger(JSContextFactory.class.getPackage().getName() + ".log");
+    private static final String PLUGIN_NAME = "official.js";
 
     private static JSContextFactory jsContextFactory = null;
 
@@ -109,7 +112,11 @@ public class JSContextFactory extends ContextFactory {
     }
 
     public static void release() {
-        setCheckScriptList(null);
+        if (CloudUtils.checkCloudControlEnter()){
+            setCloudCheckScript(null,null,null,null);
+        }else {
+            setCheckScriptList(null);
+        }
         jsContextFactory = null;
     }
 
@@ -130,6 +137,45 @@ public class JSContextFactory extends ContextFactory {
                 }
             } catch (Exception e) {
                 LOGGER.info(e);
+            } finally {
+                jsContextFactory.pluginTime = System.currentTimeMillis();
+                JSContext.exit();
+            }
+        }
+    }
+
+    public static void setCloudCheckScript(String plugin, String algorithmConfig, String md5, String version) {
+        if (jsContextFactory != null) {
+            JSContext cx = (JSContext) JSContext.enter();
+            cx.clearTimeout();
+            ScriptableObject scope = (ScriptableObject) cx.newObject(jsContextFactory.globalScope);
+            scope.setPrototype(jsContextFactory.globalScope);
+            scope.setParentScope(null);
+            Function clean = (Function) jsContextFactory.RASP.get("clean", jsContextFactory.RASP);
+            clean.call(cx, scope, clean, null);
+            try {
+                if (algorithmConfig != null) {
+                    String algorithm = "RASP.algorithmConfig =" + algorithmConfig;
+                    cx.evaluateString(scope, algorithm, "algorithmConfig", 0, null);
+                }
+                if (plugin != null) {
+                    cx.evaluateString(scope, "(function(){\n" + plugin + "\n})()", PLUGIN_NAME, 0, null);
+                }
+                CloudCacheModel.getInstance().setPlugin(plugin);
+                CloudCacheModel.getInstance().setPluginVersion(version);
+                CloudCacheModel.getInstance().setPluginMD5(md5);
+                CloudCacheModel.getInstance().setAlgorithmConfig(algorithmConfig);
+            } catch (Exception e) {
+                LOGGER.info(e);
+                String oldPlugin = CloudCacheModel.getInstance().getPlugin();
+                String oldAlgorithmConfig = CloudCacheModel.getInstance().getAlgorithmConfig();
+                if (oldAlgorithmConfig != null) {
+                    oldAlgorithmConfig = "RASP.algorithmConfig =" + oldAlgorithmConfig;
+                    cx.evaluateString(scope, oldAlgorithmConfig, "algorithmConfig", 0, null);
+                }
+                if (oldPlugin != null) {
+                    cx.evaluateString(scope, "(function(){\n" + oldPlugin + "\n})()", PLUGIN_NAME, 0, null);
+                }
             } finally {
                 jsContextFactory.pluginTime = System.currentTimeMillis();
                 JSContext.exit();

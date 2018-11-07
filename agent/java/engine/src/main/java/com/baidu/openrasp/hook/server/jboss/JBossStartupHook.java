@@ -64,6 +64,6 @@ public class JBossStartupHook extends ServerStartupHook {
         } catch (Exception e) {
             HookHandler.LOGGER.error("handle jboss startup failed", e);
         }
-        HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_JBOSS_START, CheckParameter.EMPTY_MAP);
+        HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_JBOSS_START, CheckParameter.EMPTY_MAP);
     }
 }

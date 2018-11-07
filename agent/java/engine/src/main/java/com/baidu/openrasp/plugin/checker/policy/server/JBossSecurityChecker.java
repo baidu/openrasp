@@ -37,6 +37,13 @@ import java.util.*;
  * 　　* @date 2018/7/30 15:51
  */
 public class JBossSecurityChecker extends ServerPolicyChecker {
+    public JBossSecurityChecker() {
+        super();
+    }
+
+    public JBossSecurityChecker(boolean canBlock) {
+        super(canBlock);
+    }
 
     private static final String JBOSS_SECURITY_CHECK_ERROR = "jboss_security_check_error";
     private static final String SECURITY_DOMAIN = "security-domain";

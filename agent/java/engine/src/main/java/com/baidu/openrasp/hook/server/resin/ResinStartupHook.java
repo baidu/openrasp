@@ -58,7 +58,7 @@ public class ResinStartupHook extends ServerStartupHook {
         } catch (Exception e) {
             HookHandler.LOGGER.warn("handle resin startup failed", e);
         }
-        HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_RESIN_START, CheckParameter.EMPTY_MAP);
+        HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_RESIN_START, CheckParameter.EMPTY_MAP);
 
     }
 }

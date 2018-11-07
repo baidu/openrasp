@@ -280,22 +280,12 @@ public class HookHandler {
     }
 
     /**
-     * 无需在请求线程中执行的检测入口
+     * 检测入口
      *
      * @param type   检测类型
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
-    public static void doCheckWithoutRequest(CheckParameter.Type type, Object params) {
-        if (Config.getConfig().getHookWhiteAll() && Config.getConfig().getCloudSwitch()) {
-            return;
-        }
-        if (requestCache.get() != null) {
-            StringBuffer sb = requestCache.get().getRequestURL();
-            String url = sb.substring(sb.indexOf("://") + 3);
-            if (HookWhiteModel.isContainURL(type.getName(), url)) {
-                return;
-            }
-        }
+    public static void doPolicyCheckWithoutRequest(CheckParameter.Type type, Object params) {
         long a = 0;
         if (Config.getConfig().getDebugLevel() > 0) {
             a = System.currentTimeMillis();
@@ -321,6 +311,26 @@ public class HookHandler {
         if (isBlock) {
             handleBlock();
         }
+    }
+
+    /**
+     * 无需在请求线程中执行的检测入口
+     *
+     * @param type   检测类型
+     * @param params 检测参数map，key为参数名，value为检测参数值
+     */
+    public static void doCheckWithoutRequest(CheckParameter.Type type, Object params) {
+        if (Config.getConfig().getHookWhiteAll() && Config.getConfig().getCloudSwitch()) {
+            return;
+        }
+        if (requestCache.get() != null) {
+            StringBuffer sb = requestCache.get().getRequestURL();
+            String url = sb.substring(sb.indexOf("://") + 3);
+            if (HookWhiteModel.isContainURL(type.getName(), url)) {
+                return;
+            }
+        }
+        doPolicyCheckWithoutRequest(type, params);
     }
 
     /**

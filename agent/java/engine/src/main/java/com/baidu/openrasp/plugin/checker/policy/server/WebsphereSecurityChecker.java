@@ -28,6 +28,14 @@ import java.util.List;
  * @create: 2018/10/12 10:36
  */
 public class WebsphereSecurityChecker extends ServerPolicyChecker {
+    public WebsphereSecurityChecker() {
+        super();
+    }
+
+    public WebsphereSecurityChecker(boolean canBlock) {
+        super(canBlock);
+    }
+
     @Override
     public void checkServer(CheckParameter checkParameter, List<EventInfo> infos) {
 

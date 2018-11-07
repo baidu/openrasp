@@ -27,6 +27,14 @@ import java.util.List;
  * @create: 2018/09/10 12:16
  */
 public class ResinSecurityChecker extends ServerPolicyChecker {
+    public ResinSecurityChecker() {
+        super();
+    }
+
+    public ResinSecurityChecker(boolean canBlock) {
+        super(canBlock);
+    }
+
     @Override
     public void checkServer(CheckParameter checkParameter, List<EventInfo> infos) {
     }

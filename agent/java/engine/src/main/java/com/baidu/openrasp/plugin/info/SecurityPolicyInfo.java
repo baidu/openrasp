@@ -79,7 +79,7 @@ public class SecurityPolicyInfo extends EventInfo {
         Map<String, Object> info = new HashMap<String, Object>();
 
         info.put("event_type", getType());
-        info.put("event_time", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss Z").format(System.currentTimeMillis()));
+        info.put("event_time", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(System.currentTimeMillis()));
         // policy id
         info.put("policy_id", this.policy.toString());
         // 服务器host name
@@ -101,6 +101,12 @@ public class SecurityPolicyInfo extends EventInfo {
         // 攻击调用栈
         StackTraceElement[] trace = filter(new Throwable().getStackTrace());
         info.put("stack_trace", stringify(trace));
+        if (Config.getConfig().getCloudSwitch()){
+            // raspId
+            info.put("rasp_id",CloudCacheModel.getInstance().getRaspId());
+            // appId
+            info.put("app_id", Config.getConfig().getCloudAppId());
+        }
         return info;
     }
 
