@@ -172,7 +172,7 @@ public class JsPluginManager {
             @Override
             public void run() {
                 try {
-                    if (plugin != null && algorithmConfig != null && md5 != null && version != null) {
+                    if (plugin != null && md5 != null && version != null) {
                         updatePlugin(plugin, algorithmConfig, md5, version);
                     } else {
                         updatePlugin();

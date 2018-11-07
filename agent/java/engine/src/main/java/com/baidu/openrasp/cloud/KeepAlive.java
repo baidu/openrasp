@@ -76,6 +76,7 @@ public class KeepAlive {
     }
 
     private static void handleResponse(GenericResponse response) {
+        System.out.println(response.getData().toString());
         String version = null;
         String md5 = null;
         String pluginContext = null;
@@ -123,7 +124,7 @@ public class KeepAlive {
                 DynamicConfigAppender.updateSyslogTag();
             }
         }
-        if (version != null && md5 != null && pluginContext != null && algorithmConfig != null) {
+        if (version != null && md5 != null && pluginContext != null) {
             JsPluginManager.updatePluginAsync(pluginContext, algorithmConfig, md5, version);
         }
     }
