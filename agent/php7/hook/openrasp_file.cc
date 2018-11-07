@@ -256,6 +256,11 @@ void pre_splfileobject___construct_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETE
 
 void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+    if (!isolate)
+    {
+        return;
+    }
     zend_string *source, *dest;
 
     // ZEND_PARSE_PARAMETERS_START(2, 2)
@@ -277,13 +282,6 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     if (!dest_real_path)
     {
         zend_string_release(source_real_path);
-        return;
-    }
-    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-    if (!isolate)
-    {
-        zend_string_release(source_real_path);
-        zend_string_release(dest_real_path);
         return;
     }
     std::string cache_key = std::string(get_check_type_name(check_type))
@@ -317,10 +315,23 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         handle_block();
     }
     OPENRASP_HOOK_G(lru)->set(cache_key, true);
+    if (source_real_path)
+    {
+        zend_string_release(source_real_path);
+    }
+    if (dest_real_path)
+    {
+        zend_string_release(dest_real_path);
+    }
 }
 
 void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+    if (!isolate)
+    {
+        return;
+    }
     zend_string *source, *dest;
 
     // ZEND_PARSE_PARAMETERS_START(2, 2)
@@ -379,20 +390,8 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             skip = true;
         }
 
-        if (skip)
+        if (!skip)
         {
-            zend_string_release(source_real_path);
-            zend_string_release(dest_real_path);
-        }
-        else
-        {
-            openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-            if (!isolate)
-            {
-                zend_string_release(source_real_path);
-                zend_string_release(dest_real_path);
-                return;
-            }
             std::string cache_key = std::string(get_check_type_name(check_type))
                                         .append(ZSTR_VAL(source_real_path), ZSTR_LEN(source_real_path))
                                         .append(ZSTR_VAL(dest_real_path), ZSTR_LEN(dest_real_path));
@@ -425,7 +424,6 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             }
             OPENRASP_HOOK_G(lru)->set(cache_key, true);
         }
-        return;
     }
     if (source_real_path)
     {

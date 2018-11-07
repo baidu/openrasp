@@ -57,7 +57,7 @@ static void check_file_operation(OpenRASPCheckType type, const std::string &file
     openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (isolate)
     {
-        char *real_path = openrasp_real_path(const_cast<char*>(filename.c_str()), filename.length(), use_include_path, (type == WRITE_FILE ? WRITING : READING) TSRMLS_CC);
+        char *real_path = openrasp_real_path(const_cast<char *>(filename.c_str()), filename.length(), use_include_path, (type == WRITE_FILE ? WRITING : READING) TSRMLS_CC);
         if (real_path)
         {
             const std::string realpath(real_path);
@@ -271,12 +271,12 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         {
             const std::string source_realpath(source_real_path);
             const std::string target_realpath(target_real_path);
-            efree(source_real_path);
-            efree(target_real_path);
             const std::string type(get_check_type_name(check_type));
             const std::string cache_key(type + source_realpath + target_realpath);
             if (OPENRASP_HOOK_G(lru)->contains(cache_key))
             {
+                efree(source_real_path);
+                efree(target_real_path);
                 return;
             }
             bool is_block = false;
@@ -293,9 +293,12 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             }
             OPENRASP_HOOK_G(lru)->set(cache_key, true);
         }
-        else
+        if (source_real_path)
         {
             efree(source_real_path);
+        }
+        if (target_real_path)
+        {
             efree(target_real_path);
         }
     }
@@ -368,21 +371,16 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             skip = true;
         }
 
-        if (skip)
-        {
-            efree(source_real_path);
-            efree(target_real_path);
-        }
-        else
+        if (!skip)
         {
             const std::string source_realpath(source_real_path);
             const std::string target_realpath(target_real_path);
-            efree(source_real_path);
-            efree(target_real_path);
             const std::string type(get_check_type_name(check_type));
             const std::string cache_key(type + source_realpath + target_realpath);
             if (OPENRASP_HOOK_G(lru)->contains(cache_key))
             {
+                efree(source_real_path);
+                efree(target_real_path);
                 return;
             }
             bool is_block = false;
@@ -399,5 +397,13 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             }
             OPENRASP_HOOK_G(lru)->set(cache_key, true);
         }
+    }
+    if (source_real_path)
+    {
+        efree(source_real_path);
+    }
+    if (target_real_path)
+    {
+        efree(target_real_path);
     }
 }
