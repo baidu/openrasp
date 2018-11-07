@@ -62,7 +62,7 @@ int include_handler(zend_execute_data *execute_data)
     const zend_op *opline = EX(opline);
     zval params, tmp_inc_filename, *inc_filename, *document_root;
     ZVAL_NULL(&tmp_inc_filename);
-    zend_string *real_path = nullptr;
+    std::string real_path;
     inc_filename = zend_get_zval_ptr(opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
     const char *scheme_end = nullptr;
     bool send_to_plugin = false;
@@ -87,7 +87,7 @@ int include_handler(zend_execute_data *execute_data)
     {
         real_path = openrasp_real_path(Z_STRVAL_P(inc_filename), Z_STRLEN_P(inc_filename), true, READING);
     }
-    if (!real_path)
+    if (real_path.empty())
     {
         goto DISPATCH;
     }
@@ -108,7 +108,7 @@ int include_handler(zend_execute_data *execute_data)
     else
     {
         assert(Z_TYPE_P(document_root) == IS_STRING);
-        if (strncmp(ZSTR_VAL(real_path), Z_STRVAL_P(document_root), Z_STRLEN_P(document_root)) == 0)
+        if (strncmp(real_path.c_str(), Z_STRVAL_P(document_root), Z_STRLEN_P(document_root)) == 0)
         {
             send_to_plugin = false;
         }
@@ -123,7 +123,6 @@ int include_handler(zend_execute_data *execute_data)
         bool is_block = false;
         if (!send_to_plugin || !isolate)
         {
-            zend_string_release(real_path);
             goto DISPATCH;
         }
         {
@@ -132,8 +131,7 @@ int include_handler(zend_execute_data *execute_data)
             auto path = openrasp::NewV8String(isolate, Z_STRVAL_P(inc_filename), Z_STRLEN_P(inc_filename));
             params->Set(openrasp::NewV8String(isolate, "path"), path);
             params->Set(openrasp::NewV8String(isolate, "url"), path);
-            params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path->val, real_path->len));
-            zend_string_release(real_path);
+            params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
             switch (opline->extended_value)
             {
             case ZEND_INCLUDE:
@@ -161,10 +159,6 @@ int include_handler(zend_execute_data *execute_data)
     }
 
 DISPATCH:
-    if (real_path)
-    {
-        zend_string_release(real_path);
-    }
     if (Z_TYPE(tmp_inc_filename) != IS_NULL)
     {
         zval_ptr_dtor(&tmp_inc_filename);
