@@ -16,6 +16,7 @@
 
 #include "openrasp_hook.h"
 #include "openrasp_v8.h"
+#include "utils/string.h"
 
 /**
  * 文件相关hook点
@@ -33,6 +34,7 @@ PRE_HOOK_FUNCTION(rename, RENAME);
 PRE_HOOK_FUNCTION_EX(__construct, splfileobject, READ_FILE);
 PRE_HOOK_FUNCTION_EX(__construct, splfileobject, WRITE_FILE);
 
+using openrasp::end_with;
 extern "C" int php_stream_parse_fopen_modes(const char *mode, int *open_flags);
 
 //ref: http://pubs.opengroup.org/onlinepubs/7908799/xsh/open.html

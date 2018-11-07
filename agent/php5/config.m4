@@ -587,6 +587,7 @@ int main() {
     openrasp_ini.cc \
     utils/ReadWriteLock.cc \
     utils/DoubleArrayTrie.cc \
+    utils/string.cc \
     utils/digest.cc \
     utils/regex.cc \
     utils/time.cc \
