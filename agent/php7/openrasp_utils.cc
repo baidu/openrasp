@@ -234,14 +234,6 @@ const char *fetch_url_scheme(const char *filename)
     return nullptr;
 }
 
-long fetch_time_offset()
-{
-    time_t t = time(NULL);
-    struct tm lt = {0};
-    localtime_r(&t, &lt);
-    return lt.tm_gmtoff;
-}
-
 void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter, bool use_abs_path)
 {
     DIR *dir;
@@ -261,24 +253,6 @@ void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugi
         }
         closedir(dir);
     }
-}
-
-bool same_day_in_current_timezone(long src, long target, long offset)
-{
-    long day = 24 * 60 * 60;
-    return ((src + offset) / day == (target + offset) / day);
-}
-
-zend_string *openrasp_format_date(char *format, int format_len, time_t ts)
-{
-    char buffer[128];
-    struct tm *tm_info;
-
-    time(&ts);
-    tm_info = localtime(&ts);
-
-    strftime(buffer, 64, format, tm_info);
-    return zend_string_init(buffer, strlen(buffer), 0);
 }
 
 void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)
@@ -518,18 +492,6 @@ bool get_entire_file_content(const char *file, std::string &content)
     return false;
 }
 
-std::string format_time(const char *format, int format_len, time_t ts)
-{
-    char buffer[128];
-    struct tm *tm_info;
-
-    time(&ts);
-    tm_info = localtime(&ts);
-
-    strftime(buffer, 64, format, tm_info);
-    return std::string(buffer);
-}
-
 std::string json_encode_from_zval(zval *value)
 {
     smart_str buf_json = {0};
@@ -538,28 +500,4 @@ std::string json_encode_from_zval(zval *value)
     std::string result(ZSTR_VAL(buf_json.s));
     smart_str_free(&buf_json);
     return result;
-}
-
-const static size_t OVECCOUNT = 30; /* should be a multiple of 3 */
-
-bool regex_match(const char *str, const char *regex)
-{
-    pcre *re = nullptr;
-    int ovector[OVECCOUNT];
-    const char *error = nullptr;
-    int erroffset = 0;
-    int rc = 0;
-    re = pcre_compile(regex, 0, &error, &erroffset, nullptr);
-    if (re == nullptr)
-    {
-        return false;
-    }
-    rc = pcre_exec(re, nullptr, str, strlen(str), 0, 0, ovector, OVECCOUNT);
-    if (rc < 0)
-    {
-        pcre_free(re);
-        return false;
-    }
-    pcre_free(re);
-    return true;
 }

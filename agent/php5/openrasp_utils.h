@@ -23,13 +23,9 @@
 #include <vector>
 #include <map>
 #include <functional>
-#include <time.h>
 
-long fetch_time_offset();
-bool same_day_in_current_timezone(long src, long target, long offset);
 const char *fetch_url_scheme(const char *filename);
 
-bool file_exist(const char *abs_path TSRMLS_DC);
 int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC);
 bool write_str_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len);
 bool get_entire_file_content(const char *file, std::string &content);
@@ -40,8 +36,6 @@ std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D);
 void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC);
 std::string format_debug_backtrace_str(TSRMLS_D);
 void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC);
-
-std::string format_time(const char *format, int format_len, time_t ts);
 
 void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map);
 void fetch_hw_addrs(std::vector<std::string> &hw_addrs);

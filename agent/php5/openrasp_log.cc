@@ -20,6 +20,7 @@
 #include "openrasp_inject.h"
 #include "openrasp_shared_alloc.h"
 #include "utils/regex.h"
+#include "utils/time.h"
 #include <map>
 #include <vector>
 #include <string>
@@ -42,6 +43,9 @@ extern "C"
 }
 
 using openrasp::regex_match;
+using openrasp::format_time;
+using openrasp::fetch_time_offset;
+using openrasp::same_day_in_current_timezone;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 

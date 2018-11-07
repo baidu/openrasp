@@ -251,14 +251,6 @@ const char *fetch_url_scheme(const char *filename)
     return nullptr;
 }
 
-long fetch_time_offset()
-{
-    time_t t = time(NULL);
-    struct tm lt = {0};
-    localtime_r(&t, &lt);
-    return lt.tm_gmtoff;
-}
-
 void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter, bool use_abs_path)
 {
     DIR *dir;
@@ -278,24 +270,6 @@ void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugi
         }
         closedir(dir);
     }
-}
-
-bool same_day_in_current_timezone(long src, long target, long offset)
-{
-    long day = 24 * 60 * 60;
-    return ((src + offset) / day == (target + offset) / day);
-}
-
-std::string format_time(const char *format, int format_len, time_t ts)
-{
-    char buffer[128];
-    struct tm *tm_info;
-
-    time(&ts);
-    tm_info = localtime(&ts);
-
-    strftime(buffer, 64, format, tm_info);
-    return std::string(buffer);
 }
 
 bool write_str_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len)

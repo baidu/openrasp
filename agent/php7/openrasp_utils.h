@@ -36,8 +36,6 @@ extern "C"
 }
 #endif
 
-long fetch_time_offset();
-bool same_day_in_current_timezone(long src, long target, long offset);
 const char *fetch_url_scheme(const char *filename);
 
 int recursive_mkdir(const char *path, int len, int mode);
@@ -51,9 +49,6 @@ std::string format_debug_backtrace_str();
 void format_debug_backtrace_str(zval *backtrace_str);
 std::string json_encode_from_zval(zval *value);
 
-std::string format_time(const char *format, int format_len, time_t ts);
-zend_string *openrasp_format_date(char *format, int format_len, time_t ts);
-
 void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map);
 void fetch_hw_addrs(std::vector<std::string> &hw_addrs);
 bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url);
@@ -61,7 +56,5 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url);
 char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
 bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result);
 HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey);
-
-bool regex_match(const char *str, const char *regex);
 
 #endif
