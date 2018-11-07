@@ -100,7 +100,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     MAKE_STD_ZVAL(path);
     MAKE_COPY_ZVAL(&op1, path);
     convert_to_string(path);
-    char *real_path = nullptr;
+    std::string  real_path;
     const char *scheme_end = nullptr;
     if ((Z_STRVAL_P(path) && (scheme_end = fetch_url_scheme(Z_STRVAL_P(path))) != nullptr) || (strlen(Z_STRVAL_P(path)) < 4 ||
                                                                                                (strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".php") && strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".inc"))))
@@ -108,7 +108,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
         real_path = openrasp_real_path(Z_STRVAL_P(path), Z_STRLEN_P(path), 1, READING TSRMLS_CC);
     }
 
-    if (!real_path)
+    if (real_path.empty())
     {
         zval_ptr_dtor(&path);
     }
@@ -133,7 +133,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
             else
             {
                 assert(Z_TYPE_PP(doc_root) == IS_STRING);
-                if (0 == strncmp(real_path, Z_STRVAL_PP(doc_root), Z_STRLEN_PP(doc_root)))
+                if (0 == strncmp(real_path.c_str(), Z_STRVAL_PP(doc_root), Z_STRLEN_PP(doc_root)))
                 {
                     send_to_plugin = false;
                 }
@@ -173,7 +173,6 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
                 params->Set(openrasp::NewV8String(isolate, "url"), openrasp::NewV8String(isolate, Z_STRVAL_P(path), Z_STRLEN_P(path)));
                 zval_ptr_dtor(&path);
                 params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
-                efree(real_path);
                 params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, function));
                 is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(INCLUDE)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
@@ -185,7 +184,6 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
         else
         {
             //skip
-            efree(real_path);
             zval_ptr_dtor(&path);
         }
     }

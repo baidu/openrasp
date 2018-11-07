@@ -543,3 +543,13 @@ bool start_with(const std::string &str, const std::string &prefix)
     }
     return (!str.compare(0, len2, prefix));
 }
+
+bool end_with(const std::string &str, const std::string &suffix)
+{
+    size_t len1 = str.length();
+    size_t len2 = suffix.length();
+    if (len1 < len2) {
+        return false;
+    }
+    return (!str.compare(len1 - len2, len2, suffix));
+}

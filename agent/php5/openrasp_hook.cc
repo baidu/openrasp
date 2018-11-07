@@ -79,9 +79,9 @@ const std::string get_check_type_name(OpenRASPCheckType check_type)
     }
 }
 
-//return value estrdup
-char *openrasp_real_path(char *filename, int filename_len, bool use_include_path, uint32_t w_op TSRMLS_DC)
+std::string openrasp_real_path(char *filename, int filename_len, bool use_include_path, uint32_t w_op TSRMLS_DC)
 {
+    std::string result;
     static const std::unordered_map<std::string, uint32_t> opMap = {
         {"http", READING},
         {"https", READING},
@@ -166,7 +166,12 @@ char *openrasp_real_path(char *filename, int filename_len, bool use_include_path
             }
         }
     }
-    return resolved_path;
+    if (resolved_path)
+    {
+        result = std::string(resolved_path);
+        efree(resolved_path);
+    }
+    return result;
 }
 
 bool openrasp_zval_in_request(zval *item TSRMLS_DC)
