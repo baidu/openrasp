@@ -28,9 +28,12 @@ PluginUpdatePackage::PluginUpdatePackage(std::string content, std::string versio
   plugin_md5 = md5;
 }
 
-void PluginUpdatePackage::set_algorithm(std::string algorithm)
+void PluginUpdatePackage::set_algorithm(std::string &algorithm)
 {
-  algorithm_config = "RASP.algorithmConfig=" + algorithm;
+  if (!algorithm.empty())
+  {
+    algorithm_config = "RASP.algorithmConfig=" + algorithm;
+  }
 }
 
 bool PluginUpdatePackage::build_snapshot()

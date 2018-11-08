@@ -35,7 +35,7 @@ private:
 
 public:
   PluginUpdatePackage(std::string content, std::string version, std::string md5);
-  void set_algorithm(std::string algorithm);
+  void set_algorithm(std::string &algorithm);
   bool build_snapshot();
   std::string get_md5() const;
   std::string get_version() const;
