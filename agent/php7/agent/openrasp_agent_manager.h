@@ -57,7 +57,6 @@ public:
   bool verify_ini_correct();
   std::string get_rasp_id();
   bool agent_remote_register();
-  char *get_local_ip();
 
   long get_plugin_update_timestamp()
   {

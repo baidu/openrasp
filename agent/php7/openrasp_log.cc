@@ -788,10 +788,13 @@ void RaspLoggerEntry::update_common_info()
         migrate_hash_values(&common_info, migrate_src, alarm_filters);
         add_assoc_string(&common_info, "event_type", "attack");
         add_assoc_string(&common_info, "server_hostname", host_name);
-        add_assoc_string(&common_info, "server_type", "PHP");
+        add_assoc_string(&common_info, "server_type", "php");
         add_assoc_string(&common_info, "server_version", OPENRASP_PHP_VERSION);
         add_assoc_string(&common_info, "request_id", OPENRASP_INJECT_G(request_id));
         add_assoc_str(&common_info, "body", fetch_request_body(OPENRASP_CONFIG(body.maxbytes)));
+        zval ifaddr;
+        _get_ifaddr_zval(&ifaddr);
+        add_assoc_zval(&common_info, "server_nic", &ifaddr);
         if (openrasp_ini.app_id)
         {
             add_assoc_string(&common_info, "app_id", openrasp_ini.app_id);
@@ -800,14 +803,7 @@ void RaspLoggerEntry::update_common_info()
         if (openrasp::oam)
         {
             add_assoc_string(&common_info, "rasp_id", (char *)openrasp::oam->get_rasp_id().c_str());
-            add_assoc_string(&common_info, "local_ip", (char *)openrasp::oam->get_local_ip());
         }
-        else
-        {
-            add_assoc_string(&common_info, "local_ip", "");
-        }
-#else
-        add_assoc_string(&common_info, "local_ip", "");
 #endif
     }
     else if (strcmp(name, POLICY_LOG_DIR_NAME) == 0 &&
@@ -815,7 +811,7 @@ void RaspLoggerEntry::update_common_info()
     {
         add_assoc_string(&common_info, "event_type", "security_policy");
         add_assoc_string(&common_info, "server_hostname", host_name);
-        add_assoc_string(&common_info, "server_type", "PHP");
+        add_assoc_string(&common_info, "server_type", "php");
         add_assoc_string(&common_info, "server_version", OPENRASP_PHP_VERSION);
         zval ifaddr;
         _get_ifaddr_zval(&ifaddr);
@@ -828,14 +824,7 @@ void RaspLoggerEntry::update_common_info()
         if (openrasp::oam)
         {
             add_assoc_string(&common_info, "rasp_id", (char *)openrasp::oam->get_rasp_id().c_str());
-            add_assoc_string(&common_info, "local_ip", (char *)openrasp::oam->get_local_ip());
         }
-        else
-        {
-            add_assoc_string(&common_info, "local_ip", "");
-        }
-#else
-        add_assoc_string(&common_info, "local_ip", "");
 #endif
     }
 }

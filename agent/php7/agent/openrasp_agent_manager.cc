@@ -283,11 +283,6 @@ std::string OpenraspAgentManager::get_rasp_id()
 	return this->rasp_id;
 }
 
-char *OpenraspAgentManager::get_local_ip()
-{
-	return local_ip;
-}
-
 bool OpenraspAgentManager::agent_remote_register()
 {
 	if (!fetch_source_in_ip_packets(local_ip, sizeof(local_ip), openrasp_ini.backend_url))
@@ -308,7 +303,7 @@ bool OpenraspAgentManager::agent_remote_register()
 	writer.StartObject();
 	writer.Key("id");
 	writer.String(rasp_id.c_str());
-	writer.Key("host_name");
+	writer.Key("hostname");
 	writer.String(host_name);
 	writer.Key("language");
 	writer.String("PHP");
@@ -320,7 +315,7 @@ bool OpenraspAgentManager::agent_remote_register()
 	writer.String(OPENRASP_PHP_VERSION);
 	writer.Key("rasp_home");
 	writer.String(openrasp_ini.root_dir);
-	writer.Key("local_ip");
+	writer.Key("register_ip");
 	writer.String(local_ip);
 	writer.Key("version");
 	writer.String(PHP_OPENRASP_VERSION);

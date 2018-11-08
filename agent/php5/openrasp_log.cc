@@ -795,10 +795,11 @@ void RaspLoggerEntry::update_common_info(TSRMLS_D)
         migrate_hash_values(common_info, migrate_src, alarm_filters TSRMLS_CC);
         add_assoc_string(common_info, "event_type", "attack", 1);
         add_assoc_string(common_info, "server_hostname", host_name, 1);
-        add_assoc_string(common_info, "server_type", "PHP", 1);
+        add_assoc_string(common_info, "server_type", "php", 1);
         add_assoc_string(common_info, "server_version", OPENRASP_PHP_VERSION, 1);
         add_assoc_string(common_info, "request_id", OPENRASP_INJECT_G(request_id), 1);
         add_assoc_string(common_info, "body", fetch_request_body(OPENRASP_CONFIG(body.maxbytes) TSRMLS_CC), 0);
+        add_assoc_zval(common_info, "server_nic", _get_ifaddr_zval());
         if (openrasp_ini.app_id)
         {
             add_assoc_string(common_info, "app_id", openrasp_ini.app_id, 1);
@@ -807,14 +808,7 @@ void RaspLoggerEntry::update_common_info(TSRMLS_D)
         if (openrasp::oam)
         {
             add_assoc_string(common_info, "rasp_id", (char *)openrasp::oam->get_rasp_id().c_str(), 1);
-            add_assoc_string(common_info, "local_ip", (char *)openrasp::oam->get_local_ip(), 1);
         }
-        else
-        {
-            add_assoc_string(common_info, "local_ip", "", 1);
-        }
-#else
-        add_assoc_string(common_info, "local_ip", "", 1);
 #endif
     }
     else if (strcmp(name, POLICY_LOG_DIR_NAME) == 0 &&
@@ -822,7 +816,7 @@ void RaspLoggerEntry::update_common_info(TSRMLS_D)
     {
         add_assoc_string(common_info, "event_type", "security_policy", 1);
         add_assoc_string(common_info, "server_hostname", host_name, 1);
-        add_assoc_string(common_info, "server_type", "PHP", 1);
+        add_assoc_string(common_info, "server_type", "php", 1);
         add_assoc_string(common_info, "server_version", OPENRASP_PHP_VERSION, 1);
         add_assoc_zval(common_info, "server_nic", _get_ifaddr_zval());
         if (openrasp_ini.app_id)
@@ -833,14 +827,7 @@ void RaspLoggerEntry::update_common_info(TSRMLS_D)
         if (openrasp::oam)
         {
             add_assoc_string(common_info, "rasp_id", (char *)openrasp::oam->get_rasp_id().c_str(), 1);
-            add_assoc_string(common_info, "local_ip", (char *)openrasp::oam->get_local_ip(), 1);
         }
-        else
-        {
-            add_assoc_string(common_info, "local_ip", "", 1);
-        }
-#else
-        add_assoc_string(common_info, "local_ip", "", 1);
 #endif
     }
 }
