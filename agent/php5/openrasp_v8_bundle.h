@@ -126,10 +126,27 @@ public:
 };
 
 v8::Local<v8::ObjectTemplate> NewRequestContextTemplate(v8::Isolate *isolate);
-void log_callback(const v8::FunctionCallbackInfo<v8::Value> &info);
-void plugin_info(const std::string &message);
-void plugin_info(Isolate *isolate, v8::Local<v8::Value> value);
+void plugin_info(const char *message, size_t length);
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result);
+
+inline void log_callback(const v8::FunctionCallbackInfo<v8::Value> &info)
+{
+  for (int i = 0; i < info.Length(); i++)
+  {
+    v8::String::Utf8Value message(info[i]);
+    plugin_info(*message, message.length());
+  }
+}
+inline void plugin_info(const std::string &message)
+{
+  plugin_info(message.c_str(), message.length());
+}
+inline void plugin_info(Isolate *isolate, v8::Local<v8::Value> value)
+{
+  auto console_log = isolate->GetData()->console_log.Get(isolate);
+  (void)console_log->Call(isolate->GetCurrentContext(), console_log, 1, reinterpret_cast<v8::Local<v8::Value> *>(&value)).IsEmpty();
+}
+} // namespace openrasp
 
 #ifdef UNLIKELY
 #undef UNLIKELY
@@ -144,4 +161,3 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
 #define UNLIKELY(condition) (condition)
 #define LIKELY(condition) (condition)
 #endif
-} // namespace openrasp

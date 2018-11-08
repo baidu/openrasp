@@ -119,24 +119,9 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
     return rst;
 }
 
-void log_callback(const v8::FunctionCallbackInfo<v8::Value> &info)
+void plugin_info(const char *message, size_t length)
 {
-    for (int i = 0; i < info.Length(); i++)
-    {
-        v8::String::Utf8Value message(info[i]);
-        LOG_G(plugin_logger).log(LEVEL_INFO, *message, message.length(), false, true);
-    }
-}
-
-void plugin_info(const std::string &message)
-{
-    LOG_G(plugin_logger).log(LEVEL_INFO, message.c_str(), message.length(), false, true);
-}
-
-void plugin_info(Isolate *isolate, v8::Local<v8::Value> value)
-{
-    auto console_log = isolate->GetData()->console_log.Get(isolate);
-    (void)console_log->Call(isolate->GetCurrentContext(), console_log, 1, reinterpret_cast<v8::Local<v8::Value> *>(&value)).IsEmpty();
+    LOG_G(plugin_logger).log(LEVEL_INFO, message, length, false, true);
 }
 
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)
