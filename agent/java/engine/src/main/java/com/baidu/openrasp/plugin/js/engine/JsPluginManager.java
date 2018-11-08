@@ -90,21 +90,21 @@ public class JsPluginManager {
                     @Override
                     public void onFileCreate(File file) {
                         if (file.getName().endsWith(".js")) {
-                            updatePluginAsync(null, null, null, null);
+                            updatePluginAsync(null, null, null, null, null);
                         }
                     }
 
                     @Override
                     public void onFileChange(File file) {
                         if (file.getName().endsWith(".js")) {
-                            updatePluginAsync(null, null, null, null);
+                            updatePluginAsync(null, null, null, null, null);
                         }
                     }
 
                     @Override
                     public void onFileDelete(File file) {
                         if (file.getName().endsWith(".js")) {
-                            updatePluginAsync(null, null, null, null);
+                            updatePluginAsync(null, null, null, null, null);
                         }
                     }
                 });
@@ -130,7 +130,8 @@ public class JsPluginManager {
         if (!pluginDir.isDirectory()) {
             pluginDir.mkdir();
         }
-        FileFilter filter = FileFilterUtils.and(FileFilterUtils.sizeFileFilter(10 * 1024 * 1024, false), FileFilterUtils.suffixFileFilter(".js"));
+        FileFilter filter = FileFilterUtils.and(FileFilterUtils.sizeFileFilter(10 * 1024 * 1024, false),
+                FileFilterUtils.suffixFileFilter(".js"));
         File[] pluginFiles = pluginDir.listFiles(filter);
         if (pluginFiles != null) {
             for (File file : pluginFiles) {
@@ -146,11 +147,11 @@ public class JsPluginManager {
         HookHandler.enableHook.set(oldValue);
     }
 
-    private synchronized static void updatePlugin(String plugin, String algorithmConfig, String md5, String version) {
+    private synchronized static void updatePlugin(String plugin, String algorithmConfig, String md5, String version, Long deliveryTime) throws Exception {
         // 清空 algorithm.config 配置
         Config.getConfig().setAlgorithmConfig("{}");
         boolean oldValue = HookHandler.enableHook.getAndSet(false);
-        JSContextFactory.setCloudCheckScript(plugin, algorithmConfig, md5, version);
+        JSContextFactory.setCloudCheckScript(plugin, algorithmConfig, md5, version, deliveryTime);
         HookHandler.enableHook.set(oldValue);
     }
 
@@ -162,7 +163,7 @@ public class JsPluginManager {
      * 若产生抖动，可适量增大定时器延时
      */
     public synchronized static void updatePluginAsync(final String plugin, final String algorithmConfig,
-                                                      final String md5, final String version) {
+                                                      final String md5, final String version, final Long deliveryTime) {
         if (timer != null) {
             timer.cancel();
             timer = null;
@@ -173,7 +174,7 @@ public class JsPluginManager {
             public void run() {
                 try {
                     if (plugin != null && md5 != null && version != null) {
-                        updatePlugin(plugin, algorithmConfig, md5, version);
+                        updatePlugin(plugin, algorithmConfig, md5, version, deliveryTime);
                     } else {
                         updatePlugin();
                     }

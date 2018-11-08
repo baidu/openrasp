@@ -22,9 +22,7 @@ import com.baidu.openrasp.cloud.model.AppenderCache;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
@@ -60,8 +58,8 @@ public class HttpAppender extends AppenderSkeleton {
     @Override
     protected void append(LoggingEvent loggingEvent) {
         if (checkEntryConditions()) {
-            String jsonString = loggingEvent.getRenderedMessage();
-            JsonArray jsonArray = mergeFromAppenderCache(loggingEvent.getLoggerName(), jsonString);
+            JsonElement jsonElement = new JsonParser().parse(loggingEvent.getRenderedMessage());
+            JsonArray jsonArray = mergeFromAppenderCache(loggingEvent.getLoggerName(), jsonElement);
             String logger = getLogger(loggingEvent.getLoggerName());
             if (logger != null) {
                 String requestUrl = getUrl(logger);
@@ -70,22 +68,25 @@ public class HttpAppender extends AppenderSkeleton {
                     if (CloudUtils.checkRequestResult(response)) {
                         return;
                     }
-                    AppenderCache.setCache(logger, jsonString);
+                    AppenderCache.setCache(logger, jsonElement);
                 }
             }
 
         }
     }
 
-    private JsonArray mergeFromAppenderCache(String loggerName, String currnetLog) {
-        Set<String> sets = new HashSet<String>();
+    private JsonArray mergeFromAppenderCache(String loggerName, JsonElement currnetLog) {
+        Set<JsonElement> sets = new HashSet<JsonElement>();
         sets.add(currnetLog);
-        Set<String> set = AppenderCache.getCache(getLogger(loggerName));
+        Set<JsonElement> set = AppenderCache.getCache(getLogger(loggerName));
         if (set != null && !set.isEmpty()) {
             sets.addAll(set);
         }
-        String json = new Gson().toJson(sets);
-        return new JsonParser().parse(json).getAsJsonArray();
+        JsonArray jsonArray = new JsonArray();
+        for (JsonElement element : sets) {
+            jsonArray.add(element);
+        }
+        return jsonArray;
     }
 
     private String getLogger(String loggerName) {

@@ -17,6 +17,7 @@
 package com.baidu.openrasp.cloud.model;
 
 import com.baidu.openrasp.tool.LRUCache;
+import com.google.gson.JsonElement;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,22 +28,22 @@ import java.util.concurrent.ConcurrentHashMap;
  * @create: 2018/09/20 13:59
  */
 public class AppenderCache {
-    private static ConcurrentHashMap<String, LRUCache<String,String>> appenderCache = new ConcurrentHashMap<String, LRUCache<String, String>>();
+    private static ConcurrentHashMap<String, LRUCache<JsonElement,String>> appenderCache = new ConcurrentHashMap<String, LRUCache<JsonElement, String>>();
     private static final int APPENDER_LRUCACHE_SIZE = 500;
 
-    public static void setCache(String key, String value) {
+    public static void setCache(String key, JsonElement value) {
         if (appenderCache.containsKey(key)){
-            LRUCache<String,String> temp = appenderCache.get(key);
+            LRUCache<JsonElement,String> temp = appenderCache.get(key);
             temp.put(value,null);
             appenderCache.put(key,temp);
         }else {
-            LRUCache<String,String> cache = new LRUCache<String, String>(APPENDER_LRUCACHE_SIZE);
+            LRUCache<JsonElement,String> cache = new LRUCache<JsonElement, String>(APPENDER_LRUCACHE_SIZE);
             cache.put(value,null);
             appenderCache.put(key,cache);
         }
     }
 
-    public static Set<String> getCache(String key) {
+    public static Set<JsonElement> getCache(String key) {
         if (appenderCache.containsKey(key)){
             return appenderCache.get(key).getKeySet();
         }

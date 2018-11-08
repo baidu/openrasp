@@ -112,9 +112,9 @@ public class JSContextFactory extends ContextFactory {
     }
 
     public static void release() {
-        if (CloudUtils.checkCloudControlEnter()){
-            setCloudCheckScript(null,null,null,null);
-        }else {
+        if (CloudUtils.checkCloudControlEnter()) {
+            setCloudCheckScript(null, null, null, null, null);
+        } else {
             setCheckScriptList(null);
         }
         jsContextFactory = null;
@@ -144,7 +144,7 @@ public class JSContextFactory extends ContextFactory {
         }
     }
 
-    public static void setCloudCheckScript(String plugin, String algorithmConfig, String md5, String version) {
+    public static void setCloudCheckScript(String plugin, String algorithmConfig, String md5, String version, Long deliveryTime) {
         if (jsContextFactory != null) {
             JSContext cx = (JSContext) JSContext.enter();
             cx.clearTimeout();
@@ -165,7 +165,8 @@ public class JSContextFactory extends ContextFactory {
                 CloudCacheModel.getInstance().setPluginVersion(version);
                 CloudCacheModel.getInstance().setPluginMD5(md5);
                 CloudCacheModel.getInstance().setAlgorithmConfig(algorithmConfig);
-            } catch (Exception e) {
+                CloudCacheModel.getInstance().setConfigTime(deliveryTime);
+            } catch (Throwable e) {
                 LOGGER.info(e);
                 String oldPlugin = CloudCacheModel.getInstance().getPlugin();
                 String oldAlgorithmConfig = CloudCacheModel.getInstance().getAlgorithmConfig();

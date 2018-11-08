@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class CloudCacheModel {
     public String plugin;
-    public String pluginVersion = "0";
+    public String pluginVersion = "";
     public String pluginMD5 = "";
     public long configTime = 0;
     public String algorithmConfig;

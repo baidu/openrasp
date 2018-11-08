@@ -178,10 +178,10 @@ public class CloudUtils {
         return null;
     }
 
-    public static String getMD5(String originalString) throws NoSuchAlgorithmException {
+    public static String getMD5(String originalString) throws NoSuchAlgorithmException,UnsupportedEncodingException {
         char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
         MessageDigest md = MessageDigest.getInstance("MD5");
-        md.update(originalString.getBytes());
+        md.update(originalString.getBytes("UTF-8"));
         byte[] byteArray = md.digest();
         char[] resultCharArray = new char[byteArray.length * 2];
         int index = 0;

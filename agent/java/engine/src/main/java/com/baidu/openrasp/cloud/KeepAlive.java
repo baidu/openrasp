@@ -76,16 +76,17 @@ public class KeepAlive {
     }
 
     private static void handleResponse(GenericResponse response) {
+        Long deliveryTime = null;
         String version = null;
         String md5 = null;
         String pluginContext = null;
         String algorithmConfig = null;
         Object configTime = CloudUtils.getValueFromData(response, "config_time");
-        if (configTime instanceof JsonPrimitive) {
-            CloudCacheModel.getInstance().setConfigTime(((JsonPrimitive) configTime).getAsLong());
-        }
         Map<String, Object> pluginMap = CloudUtils.getMapFromData(response, "plugin");
         Map<String, Object> configMap = CloudUtils.getMapFromData(response, "config");
+        if (configTime instanceof JsonPrimitive) {
+            deliveryTime = ((JsonPrimitive) configTime).getAsLong();
+        }
         if (pluginMap != null) {
             if (pluginMap.get("version") instanceof JsonPrimitive) {
                 version = ((JsonPrimitive) pluginMap.get("version")).getAsString();
@@ -100,7 +101,7 @@ public class KeepAlive {
                     if (!pluginMD5.equals(md5)) {
                         return;
                     }
-                } catch (NoSuchAlgorithmException e) {
+                } catch (Exception e) {
                     CloudManager.LOGGER.warn("Plugin MD5 Verification Failed: ", e);
                 }
             }
@@ -111,7 +112,15 @@ public class KeepAlive {
                 JsonObject jsonObject = (JsonObject) object;
                 algorithmConfig = new Gson().toJson(jsonObject);
             }
-            Config.getConfig().loadConfigFromCloud(configMap, true);
+            try {
+                Config.getConfig().loadConfigFromCloud(configMap, true);
+                if (deliveryTime != null) {
+                    CloudCacheModel.getInstance().setConfigTime(deliveryTime);
+                }
+            } catch (Throwable e) {
+                CloudManager.LOGGER.warn("config update failed: ", e);
+            }
+
             //云控下发配置时动态添加或者删除syslog
             Object syslogSwitch = configMap.get("syslog.enable");
             if (syslogSwitch != null) {
@@ -124,7 +133,7 @@ public class KeepAlive {
             }
         }
         if (version != null && md5 != null && pluginContext != null) {
-            JsPluginManager.updatePluginAsync(pluginContext, algorithmConfig, md5, version);
+            JsPluginManager.updatePluginAsync(pluginContext, algorithmConfig, md5, version, deliveryTime);
         }
     }
 }

@@ -72,14 +72,14 @@ public class Register {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("id", CloudCacheModel.getInstance().getRaspId());
         params.put("version", ApplicationModel.getRaspVersion());
-        params.put("host_name", OSUtil.getHostName());
+        params.put("hostname", OSUtil.getHostName());
         params.put("language", "java");
         params.put("language_version", System.getProperty("java.version"));
         params.put("server_type", ApplicationModel.getServerName());
         params.put("server_version", ApplicationModel.getVersion());
         String raspHome = Config.getConfig().getBaseDirectory();
         params.put("rasp_home", raspHome);
-        params.put("primary_ip", CloudCacheModel.getInstance().getMasterIp());
+        params.put("register_ip", CloudCacheModel.getInstance().getMasterIp());
         return params;
     }
 }

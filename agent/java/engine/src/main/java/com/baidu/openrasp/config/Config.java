@@ -28,6 +28,7 @@ import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -201,7 +202,9 @@ public class Config extends FileScanListener {
                     HookWhiteModel.init(hooksType, list);
                 }
             } else {
-                setConfig(entry.getKey(), String.valueOf(entry.getValue()), isInit);
+                if (entry.getValue() instanceof JsonPrimitive) {
+                    setConfig(entry.getKey(), ((JsonPrimitive) entry.getValue()).getAsString(), isInit);
+                }
             }
         }
     }
