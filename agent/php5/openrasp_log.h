@@ -148,10 +148,8 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp_log);
 
 #ifdef ZTS
 #define OPENRASP_LOG_G(v) TSRMG(openrasp_log_globals_id, zend_openrasp_log_globals *, v)
-#define OPENRASP_LOG_GP() ((zend_openrasp_log_globals *)(*((void ***)tsrm_ls))[TSRM_UNSHUFFLE_RSRC_ID(openrasp_log_globals_id)])
 #else
 #define OPENRASP_LOG_G(v) (openrasp_log_globals.v)
-#define OPENRASP_LOG_GP() (&openrasp_log_globals)
 #endif
 
 #define LOG_G(v) OPENRASP_LOG_G(v)

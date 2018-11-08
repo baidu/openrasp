@@ -49,10 +49,8 @@ PHP_RINIT_FUNCTION(openrasp_v8);
 
 #ifdef ZTS
 #define OPENRASP_V8_G(v) TSRMG(openrasp_v8_globals_id, zend_openrasp_v8_globals *, v)
-#define OPENRASP_V8_GP() ((zend_openrasp_v8_globals *)(*((void ***)tsrm_ls))[TSRM_UNSHUFFLE_RSRC_ID(openrasp_v8_globals_id)])
 #else
 #define OPENRASP_V8_G(v) (openrasp_v8_globals.v)
-#define OPENRASP_V8_GP() (&openrasp_v8_globals)
 #endif
 
 #endif /* OPENRASP_v8_H */
