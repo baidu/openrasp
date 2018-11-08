@@ -209,7 +209,7 @@ PHP_MINFO_FUNCTION(openrasp)
     php_info_print_table_row(2, "V8 Version", ZEND_TOSTR(V8_MAJOR_VERSION) "." ZEND_TOSTR(V8_MINOR_VERSION));
     php_info_print_table_row(2, "Antlr Version", "4.7.1 (JavaScript Runtime)");
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
-    if (openrasp_ini.plugin_update_enable)
+    if (openrasp::oam)
     {
         php_info_print_table_row(2, "Plugin Version",
                                  openrasp::oam->agent_ctrl_block
