@@ -174,7 +174,6 @@ void pre_pdo_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         FAILURE == zend_parse_parameters(1 TSRMLS_CC, "s", &statement, &statement_len))
     {
         return;
-        ;
     }
 
     plugin_sql_check(statement, statement_len, const_cast<char *>(dbh->driver->driver_name) TSRMLS_CC);

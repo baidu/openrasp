@@ -296,7 +296,8 @@ void pre_global_pg_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
     else
     {
-        if (zend_parse_parameters(argc TSRMLS_CC, "rss", &pgsql_link, &stmtname, &stmtname_len, &query, &query_len) == FAILURE)
+        if (zend_parse_parameters(argc TSRMLS_CC, "rss",
+                                  &pgsql_link, &stmtname, &stmtname_len, &query, &query_len) == FAILURE)
         {
             return;
         }
