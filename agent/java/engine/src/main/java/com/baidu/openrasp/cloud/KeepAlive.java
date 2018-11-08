@@ -76,7 +76,6 @@ public class KeepAlive {
     }
 
     private static void handleResponse(GenericResponse response) {
-        System.out.println(response.getData().toString());
         String version = null;
         String md5 = null;
         String pluginContext = null;
