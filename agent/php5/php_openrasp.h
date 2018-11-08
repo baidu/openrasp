@@ -17,6 +17,11 @@
 #ifndef PHP_OPENRASP_H
 #define PHP_OPENRASP_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "php.h"
 
 extern zend_module_entry openrasp_module_entry;
@@ -62,6 +67,10 @@ extern zend_module_entry openrasp_module_entry;
 #define HASH_KEY_NON_EXISTENT HASH_KEY_NON_EXISTANT
 #endif
 /// END PHP <= 5.4 ///
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	/* PHP_OPENRASP_H */
 

@@ -23,7 +23,6 @@ extern "C"
 #include "php.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
-#include "php_openrasp.h"
 }
 #include <sstream>
 #include <fstream>

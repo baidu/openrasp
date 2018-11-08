@@ -17,12 +17,13 @@
 #ifndef OPENRASP_H
 #define OPENRASP_H
 
+#include "php_openrasp.h"
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#include "php_openrasp.h"
 
 #ifdef HAVE_GETTEXT
 #include <libintl.h>
