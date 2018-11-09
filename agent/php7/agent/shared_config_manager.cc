@@ -17,6 +17,7 @@
 #include "shared_config_manager.h"
 #include "shared_config_block.h"
 #include "utils/digest.h"
+#include "utils/net.h"
 
 namespace openrasp
 {

@@ -49,10 +49,6 @@ std::string format_debug_backtrace_str();
 void format_debug_backtrace_str(zval *backtrace_str);
 std::string json_encode_from_zval(zval *value);
 
-void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map);
-void fetch_hw_addrs(std::vector<std::string> &hw_addrs);
-bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url);
-
 char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
 bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result);
 HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey);
