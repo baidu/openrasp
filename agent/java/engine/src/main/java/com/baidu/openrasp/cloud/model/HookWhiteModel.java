@@ -19,6 +19,7 @@ package com.baidu.openrasp.cloud.model;
 import com.baidu.openrasp.cloud.utils.DoubleArrayTrie;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @description: 缓存hook点的白名单信息
@@ -26,9 +27,10 @@ import java.util.*;
  * @create: 2018/09/13 20:55
  */
 public class HookWhiteModel {
-    private static HashMap<String, Object> hookWhiteinfo = new HashMap<String, Object>();
+    private static ConcurrentHashMap<String, Object> hookWhiteinfo = new ConcurrentHashMap<String, Object>();
 
     public static void init(String type, ArrayList<String> hooks) {
+
         if (!hooks.isEmpty()) {
             if (hooks.contains("all")) {
                 hookWhiteinfo.put(type, "all");
@@ -42,7 +44,7 @@ public class HookWhiteModel {
 
     }
 
-    public static HashMap<String, Object> getHookWhiteInfo() {
+    public static ConcurrentHashMap<String, Object> getHookWhiteInfo() {
         return hookWhiteinfo;
     }
 

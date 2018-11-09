@@ -94,7 +94,7 @@ public class OSUtil {
             macString += mac;
         }
         MessageDigest md5 = MessageDigest.getInstance("md5");
-        md5.update((macString + Config.getConfig().getBaseDirectory()).getBytes());
+        md5.update((macString + Config.getConfig().getBaseDirectory() + getHostName()).getBytes());
         BigInteger bigInt = new BigInteger(1, md5.digest());
         return bigInt.toString(16);
     }

@@ -119,8 +119,8 @@ public class AttackInfo extends EventInfo {
             info.put("attack_source", request.getRemoteAddr());
             // 攻击真实IP
             info.put("client_ip",request.getClinetIp());
-            // 服务器主ip
-            info.put("local_ip", CloudCacheModel.getInstance().getMasterIp());
+            // 服务器ip
+            info.put("server_nic", OSUtil.getIpAddress());
             // 被攻击目标域名
             info.put("target", request.getServerName());
             // 被攻击目标IP
