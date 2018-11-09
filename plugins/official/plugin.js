@@ -33,6 +33,8 @@ var plugin  = new RASP('offical')
 // log    -> 打印日志，不拦截
 // ignore -> 关闭这个算法
 
+// BEGIN ALGORITHM CONFIG //
+
 var algorithmConfig = {
     // SQL注入算法#1 - 匹配用户输入
     // 1. 用户输入长度至少 15
@@ -283,6 +285,8 @@ var algorithmConfig = {
         action: 'block'
     }
 }
+
+// END ALGORITHM CONFIG //
 
 // 将所有拦截开关设置为 log
 // Object.keys(algorithmConfig).forEach(function (name) {
