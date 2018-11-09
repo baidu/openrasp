@@ -46,12 +46,21 @@ public:
   int get_check_type_white_bit_mask(std::string url);
   bool build_check_type_white_array(OpenraspConfig &openrasp_config);
 
+  std::string get_rasp_id() const;
+  std::string get_hostname() const;
+
 private:
   int meta_size;
   ReadWriteLock *rwlock;
   SharedConfigBlock *shared_config_block;
+  std::string rasp_id;
+  std::string hostname;
+
+private:
   bool write_check_type_white_array_to_shm(const void *source, size_t num);
   bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
+  bool build_hostname();
+  bool build_rasp_id();
 };
 
 extern std::unique_ptr<SharedConfigManager> scm;

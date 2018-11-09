@@ -69,13 +69,13 @@ void HeartBeatAgent::do_heartbeat()
 
 	writer.StartObject();
 	writer.Key("rasp_id");
-	writer.String(oam->get_rasp_id().c_str());
+	writer.String(scm->get_rasp_id().c_str());
 	writer.Key("plugin_md5");
 	writer.String(oam->agent_ctrl_block->get_plugin_md5());
 	writer.Key("plugin_version");
 	writer.String(oam->agent_ctrl_block->get_plugin_version());
 	writer.Key("config_time");
-	writer.Int64((scm ? scm->get_config_last_update() : 0));
+	writer.Int64((scm->get_config_last_update()));
 	writer.EndObject();
 
 	BackendRequest backend_request(url_string, s.GetString());

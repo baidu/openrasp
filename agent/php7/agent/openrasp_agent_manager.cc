@@ -25,11 +25,11 @@
 #include "openrasp_log.h"
 #include "openrasp_shared_alloc.h"
 #include "openrasp_agent_manager.h"
+#include "shared_config_manager.h"
 #include <string>
 #include <vector>
 #include <iostream>
 #include "openrasp_ini.h"
-#include "utils/digest.h"
 #include "utils/regex.h"
 #include "openrasp_utils.h"
 #include "third_party/rapidjson/stringbuffer.h"
@@ -160,7 +160,6 @@ bool OpenraspAgentManager::destroy_share_memory()
 
 bool OpenraspAgentManager::process_agent_startup()
 {
-	calculate_rasp_id();
 	if (openrasp_ini.plugin_update_enable)
 	{
 		agents.push_back(std::move((std::unique_ptr<BaseAgent>)new HeartBeatAgent()));
@@ -260,29 +259,6 @@ void OpenraspAgentManager::check_work_processes_survival()
 	}
 }
 
-bool OpenraspAgentManager::calculate_rasp_id()
-{
-	std::vector<std::string> hw_addrs;
-	fetch_hw_addrs(hw_addrs);
-	if (hw_addrs.empty())
-	{
-		return false;
-	}
-	std::string buf;
-	for (auto hw_addr : hw_addrs)
-	{
-		buf += hw_addr;
-	}
-	buf += std::string(openrasp_ini.root_dir);
-	this->rasp_id = md5sum(static_cast<const void *>(buf.c_str()), buf.length());
-	return true;
-}
-
-std::string OpenraspAgentManager::get_rasp_id()
-{
-	return this->rasp_id;
-}
-
 bool OpenraspAgentManager::agent_remote_register()
 {
 	if (!fetch_source_in_ip_packets(local_ip, sizeof(local_ip), openrasp_ini.backend_url))
@@ -292,21 +268,16 @@ bool OpenraspAgentManager::agent_remote_register()
 
 	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/rasp";
 
-	char host_name[255] = {0};
-	if (gethostname(host_name, sizeof(host_name) - 1))
-	{
-		sprintf(host_name, "UNKNOWN_HOST");
-	}
 	rapidjson::StringBuffer s;
 	rapidjson::Writer<rapidjson::StringBuffer> writer(s);
 
 	writer.StartObject();
 	writer.Key("id");
-	writer.String(rasp_id.c_str());
+	writer.String(scm->get_rasp_id().c_str());
 	writer.Key("hostname");
-	writer.String(host_name);
+	writer.String(scm->get_hostname().c_str());
 	writer.Key("language");
-	writer.String("PHP");
+	writer.String("php");
 	writer.Key("language_version");
 	writer.String(OPENRASP_PHP_VERSION);
 	writer.Key("server_type");

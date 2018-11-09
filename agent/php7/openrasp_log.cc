@@ -27,6 +27,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iterator>
+#include "agent/shared_config_manager.h"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"
 #endif
@@ -65,7 +66,6 @@ typedef struct keys_filter_t
 } keys_filter;
 
 static std::map<std::string, std::string> _if_addr_map;
-static char host_name[255];
 
 /* 获取当前毫秒时间
 */
@@ -343,11 +343,6 @@ PHP_MINIT_FUNCTION(openrasp_log)
         openrasp_shared_alloc_startup();
     }
     fetch_if_addrs(_if_addr_map);
-    if (gethostname(host_name, sizeof(host_name) - 1))
-    {
-        sprintf(host_name, "UNKNOWN_HOST");
-        openrasp_error(E_WARNING, LOG_ERROR, _("gethostname() error: %s"), strerror(errno));
-    }
     return SUCCESS;
 }
 
@@ -666,7 +661,7 @@ bool RaspLoggerEntry::raw_log(severity_level level_int, const char *message, int
             syslog_info_len = spprintf(&syslog_info, 0, "<%d>%s %s %s[%d]: %s",
                                        priority,
                                        syslog_time.c_str(),
-                                       host_name,
+                                       openrasp::scm->get_hostname().c_str(),
                                        tag.c_str(),
                                        getpid(),
                                        message);
@@ -787,11 +782,12 @@ void RaspLoggerEntry::update_common_info()
         }
         migrate_hash_values(&common_info, migrate_src, alarm_filters);
         add_assoc_string(&common_info, "event_type", "attack");
-        add_assoc_string(&common_info, "server_hostname", host_name);
+        add_assoc_string(&common_info, "server_hostname", (char *)openrasp::scm->get_hostname().c_str());
         add_assoc_string(&common_info, "server_type", "php");
         add_assoc_string(&common_info, "server_version", OPENRASP_PHP_VERSION);
         add_assoc_string(&common_info, "request_id", OPENRASP_INJECT_G(request_id));
         add_assoc_str(&common_info, "body", fetch_request_body(OPENRASP_CONFIG(body.maxbytes)));
+        add_assoc_string(&common_info, "rasp_id", (char *)openrasp::scm->get_rasp_id().c_str());
         zval ifaddr;
         _get_ifaddr_zval(&ifaddr);
         add_assoc_zval(&common_info, "server_nic", &ifaddr);
@@ -799,20 +795,15 @@ void RaspLoggerEntry::update_common_info()
         {
             add_assoc_string(&common_info, "app_id", openrasp_ini.app_id);
         }
-#ifdef HAVE_OPENRASP_REMOTE_MANAGER
-        if (openrasp::oam)
-        {
-            add_assoc_string(&common_info, "rasp_id", (char *)openrasp::oam->get_rasp_id().c_str());
-        }
-#endif
     }
     else if (strcmp(name, POLICY_LOG_DIR_NAME) == 0 &&
              (appender & appender_mask))
     {
         add_assoc_string(&common_info, "event_type", "security_policy");
-        add_assoc_string(&common_info, "server_hostname", host_name);
+        add_assoc_string(&common_info, "server_hostname", (char *)openrasp::scm->get_hostname().c_str());
         add_assoc_string(&common_info, "server_type", "php");
         add_assoc_string(&common_info, "server_version", OPENRASP_PHP_VERSION);
+        add_assoc_string(&common_info, "rasp_id", (char *)openrasp::scm->get_rasp_id().c_str());
         zval ifaddr;
         _get_ifaddr_zval(&ifaddr);
         add_assoc_zval(&common_info, "server_nic", &ifaddr);
@@ -820,12 +811,6 @@ void RaspLoggerEntry::update_common_info()
         {
             add_assoc_string(&common_info, "app_id", openrasp_ini.app_id);
         }
-#ifdef HAVE_OPENRASP_REMOTE_MANAGER
-        if (openrasp::oam)
-        {
-            add_assoc_string(&common_info, "rasp_id", (char *)openrasp::oam->get_rasp_id().c_str());
-        }
-#endif
     }
 }
 

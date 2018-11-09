@@ -93,6 +93,11 @@ PHP_MINIT_FUNCTION(openrasp)
         return SUCCESS;
     }
     openrasp::scm.reset(new openrasp::SharedConfigManager());
+    if (!openrasp::scm->startup())
+    {
+        openrasp_error(E_WARNING, RUNTIME_ERROR, _("Fail to startup SharedConfigManager."));
+        return SUCCESS;
+    }
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (check_sapi_need_alloc_shm() && openrasp_ini.remote_management_enable)
     {
@@ -120,7 +125,7 @@ PHP_MINIT_FUNCTION(openrasp)
     int result;
     result = PHP_MINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
-    openrasp::scm->startup();
+
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (openrasp::oam)
     {

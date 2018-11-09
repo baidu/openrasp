@@ -157,11 +157,13 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(alarm_common_info), key, value)
     {
         if (key == nullptr ||
-            Z_TYPE_P(value) != IS_STRING)
+            (Z_TYPE_P(value) != IS_STRING &&
+             Z_TYPE_P(value) != IS_LONG &&
+             Z_TYPE_P(value) != IS_ARRAY))
         {
             continue;
         }
-        obj->Set(NewV8String(isolate, key->val, key->len), NewV8String(isolate, Z_STRVAL_P(value), Z_STRLEN_P(value)));
+        obj->Set(NewV8String(isolate, key->val, key->len), NewV8ValueFromZval(isolate, value));
     }
     ZEND_HASH_FOREACH_END();
 

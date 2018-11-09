@@ -178,11 +178,13 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
         type = zend_hash_get_current_key(ht, &key, &idx, 0);
         if (type != HASH_KEY_IS_STRING ||
             zend_hash_get_current_data(ht, (void **)&value) != SUCCESS ||
-            Z_TYPE_PP(value) != IS_STRING)
+            (Z_TYPE_PP(value) != IS_STRING &&
+             Z_TYPE_PP(value) != IS_LONG &&
+             Z_TYPE_PP(value) != IS_ARRAY))
         {
             continue;
         }
-        obj->Set(NewV8String(isolate, key), NewV8String(isolate, Z_STRVAL_PP(value), Z_STRLEN_PP(value)));
+        obj->Set(NewV8String(isolate, key), NewV8ValueFromZval(isolate, *value));
     }
     v8::Local<v8::Value> val;
     if (JSON_stringify->Call(isolate->GetCurrentContext(), JSON_stringify, 1, reinterpret_cast<v8::Local<v8::Value> *>(&obj)).ToLocal(&val))

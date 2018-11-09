@@ -16,6 +16,7 @@
 
 #include "shared_config_manager.h"
 #include "shared_config_block.h"
+#include "utils/digest.h"
 
 namespace openrasp
 {
@@ -167,6 +168,8 @@ bool SharedConfigManager::startup()
         shared_config_block = reinterpret_cast<SharedConfigBlock *>(shm_config_block);
         std::map<std::string, int> all_type_white{{"", ALL_TYPE}};
         build_check_type_white_array(all_type_white);
+        build_hostname();
+        build_rasp_id();
         initialized = true;
         return true;
     }
@@ -186,6 +189,47 @@ bool SharedConfigManager::shutdown()
         initialized = false;
     }
     return true;
+}
+
+bool SharedConfigManager::build_hostname()
+{
+    char host_name[255] = {0};
+    if (!gethostname(host_name, sizeof(host_name) - 1))
+    {
+        hostname = std::string(host_name);
+    }
+    else
+    {
+        openrasp_error(E_WARNING, AGENT_ERROR, _("gethostname error: %s"), strerror(errno));
+    }
+}
+
+bool SharedConfigManager::build_rasp_id()
+{
+    std::vector<std::string> hw_addrs;
+    fetch_hw_addrs(hw_addrs);
+    if (hw_addrs.empty())
+    {
+        return false;
+    }
+    std::string buf;
+    for (auto hw_addr : hw_addrs)
+    {
+        buf += hw_addr;
+    }
+    buf.append(hostname).append(std::string(openrasp_ini.root_dir));
+    this->rasp_id = md5sum(static_cast<const void *>(buf.c_str()), buf.length());
+    return true;
+}
+
+std::string SharedConfigManager::get_rasp_id() const
+{
+    return this->rasp_id;
+}
+
+std::string SharedConfigManager::get_hostname() const
+{
+    return this->hostname;
 }
 
 } // namespace openrasp
