@@ -284,12 +284,6 @@ var algorithmConfig = {
     }
 }
 
-// 1.0.0 RC1 云控支持
-if (RASP.algorithmConfig)
-{
-    algorithmConfig = RASP.algorithmConfig
-}
-
 // 将所有拦截开关设置为 log
 // Object.keys(algorithmConfig).forEach(function (name) {
 //     algorithmConfig[name].action = 'log'
