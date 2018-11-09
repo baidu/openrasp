@@ -47,8 +47,8 @@ const std::map<OpenRASPCheckType, const std::string> CheckTypeNameMap =
         {SQL_SLOW_QUERY, "sqlSlowQuery"},
         {SQL_PREPARED, "sqlPrepared"},
         {SSRF, "ssrf"},
-        {WEBSHELL_EVAL, "wenshell_eval"},
-        {WEBSHELL_COMMAND, "wenshell_command"},
+        {WEBSHELL_EVAL, "webshell_eval"},
+        {WEBSHELL_COMMAND, "webshell_command"},
         {WEBSHELL_FILE_PUT_CONTENTS, "webshell_file_put_contents"}};
 
 typedef struct _track_vars_pair_t
