@@ -170,14 +170,6 @@ typedef enum check_type_t
 
 extern const std::map<OpenRASPCheckType, const std::string> CheckTypeNameMap;
 
-typedef struct sql_connection_entry_t
-{
-    char *server = nullptr;
-    char *host = nullptr;
-    int port = 0;
-    char *username = nullptr;
-} sql_connection_entry;
-
 enum PATH_OPERATION
 {
     OPENDIR = 1 << 0,
@@ -188,6 +180,30 @@ enum PATH_OPERATION
     APPENDING = 1 << 5,
     SIMULTANEOUSRW = 1 << 6
 };
+
+class SqlConnectionEntry
+{
+  private:
+    std::string connection_string;
+    std::string server;
+    std::string host;
+    std::string username;
+    int port = 0;
+   public:
+    void set_connection_string(std::string connection_string);
+    std::string get_connection_string() const;
+     void set_server(std::string server);
+    std::string get_server() const;
+     void set_host(std::string host);
+    std::string get_host() const;
+     void set_username(std::string username);
+    std::string get_username() const;
+     void set_port(int port);
+    int get_port() const;
+     std::string build_policy_msg();
+    ulong build_hash_code();
+};
+ typedef SqlConnectionEntry sql_connection_entry;
 
 typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
 typedef void (*hook_handler_t)();

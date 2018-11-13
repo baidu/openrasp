@@ -558,6 +558,7 @@ int main() {
     hook/openrasp_pdo.cc \
     hook/openrasp_file.cc \
     hook/openrasp_ssrf.cc \
+    hook/sql_connection_enrty.cc \
     openrasp_config.cc \
     openrasp_conf_holder.cc \
     openrasp_config_block.cc \
