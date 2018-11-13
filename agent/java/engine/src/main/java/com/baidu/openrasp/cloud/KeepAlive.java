@@ -80,7 +80,6 @@ public class KeepAlive {
         String version = null;
         String md5 = null;
         String pluginContext = null;
-        String algorithmConfig = null;
         Object configTime = CloudUtils.getValueFromData(response, "config_time");
         Map<String, Object> pluginMap = CloudUtils.getMapFromData(response, "plugin");
         Map<String, Object> configMap = CloudUtils.getMapFromData(response, "config");
@@ -107,11 +106,6 @@ public class KeepAlive {
             }
         }
         if (configMap != null) {
-            Object object = configMap.get("algorithm.config");
-            if (object instanceof JsonObject) {
-                JsonObject jsonObject = (JsonObject) object;
-                algorithmConfig = new Gson().toJson(jsonObject);
-            }
             try {
                 Config.getConfig().loadConfigFromCloud(configMap, true);
                 if (deliveryTime != null) {
@@ -133,7 +127,7 @@ public class KeepAlive {
             }
         }
         if (version != null && md5 != null && pluginContext != null) {
-            JsPluginManager.updatePluginAsync(pluginContext, algorithmConfig, md5, version, deliveryTime);
+            JsPluginManager.updatePluginAsync(pluginContext, md5, version, deliveryTime);
         }
     }
 }

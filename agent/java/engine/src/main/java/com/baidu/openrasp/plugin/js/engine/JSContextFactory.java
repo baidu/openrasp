@@ -113,7 +113,7 @@ public class JSContextFactory extends ContextFactory {
 
     public static void release() {
         if (CloudUtils.checkCloudControlEnter()) {
-            setCloudCheckScript(null, null, null, null, null);
+            setCloudCheckScript(null, null, null, null);
         } else {
             setCheckScriptList(null);
         }
@@ -144,7 +144,7 @@ public class JSContextFactory extends ContextFactory {
         }
     }
 
-    public static void setCloudCheckScript(String plugin, String algorithmConfig, String md5, String version, Long deliveryTime) {
+    public static void setCloudCheckScript(String plugin, String md5, String version, Long deliveryTime) {
         if (jsContextFactory != null) {
             JSContext cx = (JSContext) JSContext.enter();
             cx.clearTimeout();
@@ -154,26 +154,16 @@ public class JSContextFactory extends ContextFactory {
             Function clean = (Function) jsContextFactory.RASP.get("clean", jsContextFactory.RASP);
             clean.call(cx, scope, clean, null);
             try {
-                if (algorithmConfig != null) {
-                    String algorithm = "RASP.algorithmConfig =" + algorithmConfig;
-                    cx.evaluateString(scope, algorithm, "algorithmConfig", 0, null);
-                }
                 if (plugin != null) {
                     cx.evaluateString(scope, "(function(){\n" + plugin + "\n})()", PLUGIN_NAME, 0, null);
                 }
                 CloudCacheModel.getInstance().setPlugin(plugin);
                 CloudCacheModel.getInstance().setPluginVersion(version);
                 CloudCacheModel.getInstance().setPluginMD5(md5);
-                CloudCacheModel.getInstance().setAlgorithmConfig(algorithmConfig);
                 CloudCacheModel.getInstance().setConfigTime(deliveryTime);
             } catch (Throwable e) {
                 LOGGER.info(e);
                 String oldPlugin = CloudCacheModel.getInstance().getPlugin();
-                String oldAlgorithmConfig = CloudCacheModel.getInstance().getAlgorithmConfig();
-                if (oldAlgorithmConfig != null) {
-                    oldAlgorithmConfig = "RASP.algorithmConfig =" + oldAlgorithmConfig;
-                    cx.evaluateString(scope, oldAlgorithmConfig, "algorithmConfig", 0, null);
-                }
                 if (oldPlugin != null) {
                     cx.evaluateString(scope, "(function(){\n" + oldPlugin + "\n})()", PLUGIN_NAME, 0, null);
                 }

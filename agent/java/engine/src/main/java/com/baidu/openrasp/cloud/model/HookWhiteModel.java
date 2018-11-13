@@ -30,7 +30,7 @@ public class HookWhiteModel {
     private static ConcurrentHashMap<String, Object> hookWhiteinfo = new ConcurrentHashMap<String, Object>();
 
     public static void init(String type, ArrayList<String> hooks) {
-
+        hookWhiteinfo.clear();
         if (!hooks.isEmpty()) {
             if (hooks.contains("all")) {
                 hookWhiteinfo.put(type, "all");
