@@ -145,6 +145,13 @@ extern "C"
 #define MYSQL_PORT 3306
 #define CHECK_TYPE_NR_ITEMS 18
 
+typedef enum action_type_t
+{
+    AC_IGNORE = 0,
+    AC_LOG = 1 << 0,
+    AC_BLOCK = 1 << 1
+} OpenRASPActionType;
+
 typedef enum check_type_t
 {
     NO_TYPE = 0,
@@ -341,12 +348,15 @@ bool openrasp_check_type_ignored(OpenRASPCheckType check_type);
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length);
 
 void check(OpenRASPCheckType type, zval *params);
-void openrasp_buildin_php_risk_handle(zend_bool is_block, OpenRASPCheckType type, int confidence, zval *params, zval *message);
+void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckType type, int confidence, zval *params, zval *message);
 void handle_block();
 
 void slow_query_alarm(int rows);
 void plugin_sql_check(char *query, int query_len, const char *server);
 long fetch_rows_via_user_function(const char *f_name_str, uint32_t param_count, zval params[]);
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
+
+OpenRASPActionType string_to_action(std::string action_string);
+std::string action_to_string(OpenRASPActionType type);
 
 #endif

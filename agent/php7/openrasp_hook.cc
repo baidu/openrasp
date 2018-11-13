@@ -104,8 +104,12 @@ bool openrasp_zval_in_request(zval *item)
     return false;
 }
 
-void openrasp_buildin_php_risk_handle(zend_bool is_block, OpenRASPCheckType type, int confidence, zval *params, zval *message)
+void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckType type, int confidence, zval *params, zval *message)
 {
+    if (AC_IGNORE == action)
+    {
+        return;
+    }
     zval params_result;
     array_init(&params_result);
     add_assoc_zval(&params_result, "attack_params", params);
@@ -113,11 +117,11 @@ void openrasp_buildin_php_risk_handle(zend_bool is_block, OpenRASPCheckType type
     add_assoc_long(&params_result, "plugin_confidence", confidence);
     add_assoc_string(&params_result, "attack_type", const_cast<char *>(get_check_type_name(type).c_str()));
     add_assoc_string(&params_result, "plugin_algorithm", const_cast<char *>(get_check_type_name(type).c_str()));
-    add_assoc_string(&params_result, "intercept_state", const_cast<char *>(is_block ? "block" : "log"));
+    add_assoc_string(&params_result, "intercept_state", const_cast<char *>(action_to_string(action).c_str()));
     add_assoc_string(&params_result, "plugin_name", const_cast<char *>("php_builtin_plugin"));
     LOG_G(alarm_logger).log(LEVEL_INFO, &params_result);
     zval_ptr_dtor(&params_result);
-    if (is_block)
+    if (AC_BLOCK == action)
     {
         handle_block();
     }

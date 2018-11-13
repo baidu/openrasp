@@ -54,7 +54,7 @@ void slow_query_alarm(int rows)
     add_assoc_long(&attack_params, "query_count", rows);
     zval plugin_message;
     ZVAL_STR(&plugin_message, strpprintf(0, _("SQL slow query detected: selected %d rows, exceeding %d"), rows, openrasp_ini.slowquery_min_rows));
-    openrasp_buildin_php_risk_handle(0, SQL_SLOW_QUERY, 100, &attack_params, &plugin_message);
+    openrasp_buildin_php_risk_handle(AC_LOG, SQL_SLOW_QUERY, 100, &attack_params, &plugin_message);
 }
 
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy)

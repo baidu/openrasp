@@ -17,6 +17,7 @@
 #include "openrasp_hook.h"
 #include "openrasp_v8.h"
 #include "utils/string.h"
+#include "agent/shared_config_manager.h"
 
 /**
  * 文件相关hook点
@@ -174,7 +175,8 @@ void pre_global_file_put_contents_WEBSHELL_FILE_PUT_CONTENTS(OPENRASP_INTERNAL_F
             add_assoc_string(&attack_params, "realpath", const_cast<char*>(real_path.c_str()));
             zval plugin_message;
             ZVAL_STRING(&plugin_message, _("Webshell detected - File dropper backdoor"));
-            openrasp_buildin_php_risk_handle(1, check_type, 100, &attack_params, &plugin_message);
+            OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
+            openrasp_buildin_php_risk_handle(action, check_type, 100, &attack_params, &plugin_message);
         }
     }
 }

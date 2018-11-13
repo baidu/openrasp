@@ -138,6 +138,14 @@ PHP_MINIT_FUNCTION(openrasp)
         {
             openrasp::OpenraspConfig openrasp_config(conf_contents, OpenraspConfig::FromType::kIni);
             openrasp::scm->build_check_type_white_array(openrasp_config);
+            OpenRASPActionType callable_action = string_to_action(openrasp_config.Get<std::string>("callable.action"));
+            OpenRASPActionType webshell_eval_action = string_to_action(openrasp_config.Get<std::string>("webshell_eval.action"));
+            OpenRASPActionType webshell_command_action = string_to_action(openrasp_config.Get<std::string>("webshell_command.action"));
+            OpenRASPActionType webshell_file_put_contents_action = string_to_action(openrasp_config.Get<std::string>("webshell_file_put_contents.action"));
+            openrasp::scm->set_buildin_check_action(callable_action,
+                                                    webshell_eval_action,
+                                                    webshell_command_action,
+                                                    webshell_file_put_contents_action);
         }
     }
 

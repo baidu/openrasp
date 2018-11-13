@@ -18,7 +18,6 @@
 
 #include "openrasp.h"
 #include "openrasp_hook.h"
-#include "openrasp_action.h"
 #include "utils/DoubleArrayTrie.h"
 #include <string>
 

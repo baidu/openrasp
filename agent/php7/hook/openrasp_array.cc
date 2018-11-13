@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_hook.h"
+#include "agent/shared_config_manager.h"
 
 /**
  * callable相关hook点
@@ -34,7 +35,8 @@ static void _callable_handler(const char *functionname, uint functionname_len, O
 		add_assoc_string(&attack_params, "function", const_cast<char *>(functionname));
 		zval plugin_message;
 		ZVAL_STR(&plugin_message, strpprintf(0, _("Webshell detected: using '%s' function"), functionname));
-		openrasp_buildin_php_risk_handle(1, check_type, 100, &attack_params, &plugin_message);
+		OpenRASPActionType action = openrasp::scm->get_buildin_check_action(CALLABLE);
+		openrasp_buildin_php_risk_handle(action, check_type, 100, &attack_params, &plugin_message);
 	}
 }
 

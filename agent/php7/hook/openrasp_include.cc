@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_hook.h"
+#include "agent/shared_config_manager.h"
 extern "C"
 {
 #include "Zend/zend_vm_opcodes.h"
@@ -53,7 +54,8 @@ int eval_handler(zend_execute_data *execute_data)
         Z_TRY_ADDREF_P(inc_filename);
         zval plugin_message;
         ZVAL_STRING(&plugin_message, _("WebShell activity - Detected China Chopper webshell (eval method)"));
-        openrasp_buildin_php_risk_handle(1, WEBSHELL_EVAL, 100, &attack_params, &plugin_message);
+        OpenRASPActionType action = openrasp::scm->get_buildin_check_action(WEBSHELL_EVAL);
+        openrasp_buildin_php_risk_handle(action, WEBSHELL_EVAL, 100, &attack_params, &plugin_message);
     }
     return ZEND_USER_OPCODE_DISPATCH;
 }

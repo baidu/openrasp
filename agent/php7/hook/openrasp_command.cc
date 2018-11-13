@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_hook.h"
+#include "agent/shared_config_manager.h"
 
 /**
  * command相关hook点
@@ -53,7 +54,8 @@ static inline void openrasp_webshell_command_common(OPENRASP_INTERNAL_FUNCTION_P
         Z_ADDREF_P(command);
         zval plugin_message;
         ZVAL_STRING(&plugin_message, _("WebShell activity - Detected command execution backdoor"));
-        openrasp_buildin_php_risk_handle(1, check_type, 100, &attack_params, &plugin_message);
+        OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
+        openrasp_buildin_php_risk_handle(action, check_type, 100, &attack_params, &plugin_message);
     }
 }
 

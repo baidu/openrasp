@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-#ifndef OPENRASP_ACTION_H
-#define OPENRASP_ACTION_H
 
-#include "openrasp.h"
-#include <string>
+#include "openrasp_hook.h"
 
-typedef enum action_type_t
+OpenRASPActionType string_to_action(std::string action_string)
 {
-    AC_IGNORE = 0,
-    AC_LOG = 1 << 0,
-    AC_BLOCK = 1 << 1
-} OpenRASPActionType;
-
-inline OpenRASPActionType string_to_action(std::string action_string)
-{
-    return (action_string == "log") ? AC_LOG : ((action_string == "block") ? AC_BLOCK : AC_IGNORE);
+    return (action_string == "log") ? AC_LOG : ((action_string == "ignore") ? AC_IGNORE : AC_BLOCK);
 }
-
-#endif
+std::string action_to_string(OpenRASPActionType type)
+{
+    return (AC_BLOCK == type) ? "block" : ((AC_LOG == type) ? "log" : "ignore");
+}
