@@ -156,6 +156,8 @@ public class JBossSecurityChecker extends ServerPolicyChecker {
 
 
     public void handleError(String tagName, String path, List<EventInfo> infos) {
-        infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.JBOSS_JMX_CONSOLE, "JBoss security baseline - Auth constraint for /jmx-console/HTMLAdaptor is not enabled in " + path + "(" + tagName + " is missing or wrong)", true));
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("config_file",path);
+        infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.JBOSS_JMX_CONSOLE, "JBoss security baseline - Auth constraint for /jmx-console/HTMLAdaptor is not enabled in " + path + "(" + tagName + " is missing or wrong)", true,params));
     }
 }

@@ -56,9 +56,9 @@ public class SecurityPolicyInfo extends EventInfo {
 
     private Type policy;
     private String message;
-    private Map<String, String> params;
+    private Map<String, Object> params;
 
-    public SecurityPolicyInfo(Type policy, String message, boolean isBlock, Map<String, String> params) {
+    public SecurityPolicyInfo(Type policy, String message, boolean isBlock, Map<String, Object> params) {
         this.policy = policy;
         this.message = message;
         this.params = params;
@@ -94,7 +94,7 @@ public class SecurityPolicyInfo extends EventInfo {
         info.put("message", message);
         // 检测参数信息
         if (params != null) {
-            info.put("params", params);
+            info.put("policy_params", params);
         }
         // 攻击调用栈
         StackTraceElement[] trace = filter(new Throwable().getStackTrace());

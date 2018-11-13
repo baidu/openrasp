@@ -117,7 +117,7 @@ public class SqlConnectionChecker extends PolicyChecker {
                 " instance with high privileged account " + user + 
                 ", connectionString is " + urlWithoutParams;
             infos = new LinkedList<EventInfo>();
-            HashMap<String, String> params = new HashMap<String, String>(4);
+            HashMap<String, Object> params = new HashMap<String, Object>(4);
             params.put("server", sqlType);
             params.put("url", urlWithoutParams);
             params.put("user", user);
