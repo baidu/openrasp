@@ -76,12 +76,6 @@ std::shared_ptr<PluginUpdatePackage> BackendResponse::build_plugin_update_packag
             return nullptr;
         }
         result = make_shared<PluginUpdatePackage>(plugin, version, md5);
-        std::string algorithm;
-        if (stringify_object("/data/config/algorithm.config", algorithm))
-        {
-            result->set_algorithm(algorithm);
-        }
-        erase_value("/data/config/algorithm.config");
     }
     return result;
 }

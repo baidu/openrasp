@@ -36,7 +36,7 @@ extern "C"
 }
 #endif
 
-#include "openrasp_config.h"
+#include "openrasp_conf_holder.h"
 
 typedef enum openrasp_error_code_t
 {
@@ -63,7 +63,7 @@ typedef enum openrasp_error_code_t
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp)
 zend_bool locked;
-openrasp::OpenraspConfig config;
+openrasp::ConfigHolder config;
 ZEND_END_MODULE_GLOBALS(openrasp)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp)
@@ -74,9 +74,7 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp)
 #define OPENRASP_G(v) (openrasp_globals.v)
 #endif
 
-#define CONFIG_DEFAULT(key) (OPENRASP_G(config).key)
-#define OPENRASP_CONFIG(key) (OPENRASP_G(config).Get(ZEND_TOSTR(key), CONFIG_DEFAULT(key)))
-#define OPENRASP_ARRAY_CONFIG(key) (OPENRASP_G(config).GetArray(ZEND_TOSTR(key), CONFIG_DEFAULT(key)))
+#define OPENRASP_CONFIG(key) (OPENRASP_G(config).key)
 
 void openrasp_error(int type, openrasp_error_code code, const char *format, ...);
 

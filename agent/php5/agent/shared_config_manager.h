@@ -49,6 +49,12 @@ public:
   std::string get_rasp_id() const;
   std::string get_hostname() const;
 
+  bool set_buildin_check_action(OpenRASPActionType callable_action,
+                                OpenRASPActionType webshell_eval_action,
+                                OpenRASPActionType webshell_command_action,
+                                OpenRASPActionType webshell_file_put_contents_action);
+  OpenRASPActionType get_buildin_check_action(OpenRASPCheckType check_type);
+
 private:
   int meta_size;
   ReadWriteLock *rwlock;

@@ -18,6 +18,7 @@
 
 #include "openrasp.h"
 #include "openrasp_hook.h"
+#include "openrasp_action.h"
 #include "utils/DoubleArrayTrie.h"
 #include <string>
 
@@ -70,10 +71,58 @@ public:
     this->log_max_backup = log_max_backup;
   }
 
+  inline void set_check_type_action(OpenRASPCheckType check_type, OpenRASPActionType action_type)
+  {
+    switch (check_type)
+    {
+    case CALLABLE:
+      callable_action = action_type;
+      break;
+    case WEBSHELL_EVAL:
+      webshell_eval_action = action_type;
+      break;
+    case WEBSHELL_COMMAND:
+      webshell_command_action = action_type;
+      break;
+    case WEBSHELL_FILE_PUT_CONTENTS:
+      webshell_file_put_contents_action = action_type;
+      break;
+    default:
+      break;
+    }
+  }
+
+  inline OpenRASPActionType get_check_type_action(OpenRASPCheckType check_type) const
+  {
+    OpenRASPActionType action_type = AC_IGNORE;
+    switch (check_type)
+    {
+    case CALLABLE:
+      action_type = callable_action;
+      break;
+    case WEBSHELL_EVAL:
+      action_type = webshell_eval_action;
+      break;
+    case WEBSHELL_COMMAND:
+      action_type = webshell_command_action;
+      break;
+    case WEBSHELL_FILE_PUT_CONTENTS:
+      action_type = webshell_file_put_contents_action;
+      break;
+    default:
+      break;
+    }
+    return action_type;
+  }
+
 private:
   long config_update_time = 0;
   long log_max_backup = 0;
   size_t white_array_size;
+  OpenRASPActionType callable_action;
+  OpenRASPActionType webshell_eval_action;
+  OpenRASPActionType webshell_command_action;
+  OpenRASPActionType webshell_file_put_contents_action;
   openrasp::DoubleArrayTrie::unit_t check_type_white_array[WRITE_ARRAY_MAX_LENGTH + 1];
 };
 

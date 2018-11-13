@@ -232,7 +232,7 @@ bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC)
 
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC)
 {
-    std::vector<std::string> callable_blacklist = OPENRASP_ARRAY_CONFIG(callable_blacklist);
+    std::vector<std::string> callable_blacklist = OPENRASP_CONFIG(callable.blacklist);
     return std::find(callable_blacklist.begin(), callable_blacklist.end(), std::string(item_name, item_name_length)) != callable_blacklist.end();
 }
 
@@ -401,9 +401,9 @@ PHP_RINIT_FUNCTION(openrasp_hook)
             }
         }
         if (!OPENRASP_HOOK_G(lru) ||
-            OPENRASP_HOOK_G(lru)->max_size() != OPENRASP_CONFIG(lru_cache_max_size))
+            OPENRASP_HOOK_G(lru)->max_size() != OPENRASP_CONFIG(lru.max_size))
         {
-            OPENRASP_HOOK_G(lru) = new openrasp::LRU<std::string, bool>(OPENRASP_CONFIG(lru_cache_max_size));
+            OPENRASP_HOOK_G(lru) = new openrasp::LRU<std::string, bool>(OPENRASP_CONFIG(lru.max_size));
         }
     }
     return SUCCESS;

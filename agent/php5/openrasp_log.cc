@@ -663,7 +663,7 @@ bool RaspLoggerEntry::raw_log(severity_level level_int, const char *message, int
             std::string tag = OPENRASP_CONFIG(syslog.tag);
             if (!regex_match(tag.c_str(), "^[0-9a-zA-Z]{1,32}$"))
             {
-                tag = CONFIG_DEFAULT(syslog.tag);
+                tag = "OpenRASP";
             }
             syslog_info_len = spprintf(&syslog_info, 0, "<%d>%s %s %s[%d]: %s",
                                        priority,

@@ -571,6 +571,8 @@ int main() {
     hook/openrasp_file.cc \
     hook/openrasp_ssrf.cc \
     openrasp_config.cc \
+    openrasp_conf_holder.cc \
+    openrasp_config_block.cc \
     openrasp_inject.cc \
     openrasp_log.cc \
     openrasp_shared_alloc.cc  \

@@ -14,29 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef _PLUGIN_CONTAINER_H_
-#define _PLUGIN_CONTAINER_H_
+#ifndef OPENRASP_ACTION_H
+#define OPENRASP_ACTION_H
 
-#include "openrasp_config.h"
-#include "openrasp_agent.h"
+#include "openrasp.h"
+#include <string>
 
-namespace openrasp
+typedef enum action_type_t
 {
-class PluginUpdatePackage
+    AC_IGNORE = 0,
+    AC_LOG = 1 << 0,
+    AC_BLOCK = 1 << 1
+} OpenRASPActionType;
+
+inline OpenRASPActionType string_to_action(std::string action_string)
 {
-private:
-  static const std::string snapshot_filename;
+    return (action_string == "log") ? AC_LOG : ((action_string == "block") ? AC_BLOCK : AC_IGNORE);
+}
 
-private:
-  PluginFile active_plugin;
-  std::string plugin_md5;
-  std::string plugin_version;
-
-public:
-  PluginUpdatePackage(std::string content, std::string version, std::string md5);
-  bool build_snapshot();
-  std::string get_md5() const;
-  std::string get_version() const;
-};
-} // namespace openrasp
 #endif

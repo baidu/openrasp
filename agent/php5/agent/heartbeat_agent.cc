@@ -98,7 +98,33 @@ void HeartBeatAgent::do_heartbeat()
 				oam->agent_ctrl_block->set_plugin_version(plugin_update_pkg->get_version().c_str());
 			}
 		}
-
+		/************************************buildin action************************************/
+		std::string action;
+		OpenRASPActionType callable_action = AC_IGNORE,
+						   webshell_eval_action = AC_IGNORE,
+						   webshell_command_action = AC_IGNORE,
+						   webshell_file_put_contents_action = AC_IGNORE;
+		if (res_info->stringify_object("/data/config/algorithm.config/callable", action))
+		{
+			callable_action = string_to_action(action);
+		}
+		if (res_info->stringify_object("/data/config/algorithm.config/webshell_eval", action))
+		{
+			webshell_eval_action = string_to_action(action);
+		}
+		if (res_info->stringify_object("/data/config/algorithm.config/webshell_command", action))
+		{
+			webshell_command_action = string_to_action(action);
+		}
+		if (res_info->stringify_object("/data/config/algorithm.config/webshell_file_put_contents", action))
+		{
+			webshell_file_put_contents_action = string_to_action(action);
+		}
+		scm->set_buildin_check_action(callable_action,
+									  webshell_eval_action,
+									  webshell_command_action,
+									  webshell_file_put_contents_action);
+		res_info->erase_value("/data/config/algorithm.config");
 		/************************************config update************************************/
 		int64_t config_time;
 		if (!res_info->fetch_int64("/data/config_time", config_time))
@@ -114,7 +140,7 @@ void HeartBeatAgent::do_heartbeat()
 			{
 				scm->build_check_type_white_array(openrasp_config);
 				//update log_max_backup only its value greater than zero
-				long log_max_backup = openrasp_config.Get("log.maxbackup", openrasp_config.log.maxbackup);
+				long log_max_backup = openrasp_config.Get("log.maxbackup", (int64_t)30);
 				if (log_max_backup)
 				{
 					scm->set_log_max_backup(log_max_backup);
