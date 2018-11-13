@@ -179,7 +179,9 @@ if test "$PHP_OPENRASP" != "no"; then
 
         AC_MSG_CHECKING([for curl headers location])
         for i in $CURL_SEARCH_PATH ; do  
-          test -f $i/include/curl/easy.h && OPENRASP_CURL_INCDIR=$i/include
+          for j in $i/include $i/include/x86_64-linux-gnu; do
+            test -f $j/curl/easy.h && OPENRASP_CURL_INCDIR=$j
+          done   
         done
 
         if test -z "$OPENRASP_CURL_INCDIR"; then
