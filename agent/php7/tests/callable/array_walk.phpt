@@ -3,7 +3,7 @@ hook array_walk
 --SKIPIF--
 <?php
 $conf = <<<CONF
-callable_blacklist=["system", "exec"]
+callable.blacklist=["system", "exec"]
 CONF;
 include(__DIR__.'/../skipif.inc');
 ?>

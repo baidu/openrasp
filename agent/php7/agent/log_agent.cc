@@ -41,7 +41,6 @@ void LogAgent::write_pid_to_shm(pid_t agent_pid)
 void LogAgent::run()
 {
 	AGENT_SET_PROC_NAME(this->name.c_str());
-	TSRMLS_FETCH();
 
 	install_signal_handler(
 		[](int signal_no) {

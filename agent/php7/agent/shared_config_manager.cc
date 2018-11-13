@@ -157,6 +157,33 @@ bool SharedConfigManager::set_log_max_backup(long log_max_backup)
     return false;
 }
 
+bool SharedConfigManager::set_buildin_check_action(OpenRASPActionType callable_action,
+                                                   OpenRASPActionType webshell_eval_action,
+                                                   OpenRASPActionType webshell_command_action,
+                                                   OpenRASPActionType webshell_file_put_contents_action)
+{
+    if (rwlock != nullptr && rwlock->write_try_lock())
+    {
+        WriteUnLocker auto_unlocker(rwlock);
+        shared_config_block->set_check_type_action(CALLABLE, callable_action);
+        shared_config_block->set_check_type_action(WEBSHELL_EVAL, webshell_eval_action);
+        shared_config_block->set_check_type_action(WEBSHELL_COMMAND, webshell_command_action);
+        shared_config_block->set_check_type_action(WEBSHELL_FILE_PUT_CONTENTS, webshell_file_put_contents_action);
+        return true;
+    }
+    return false;
+}
+
+OpenRASPActionType SharedConfigManager::get_buildin_check_action(OpenRASPCheckType check_type)
+{
+    if (rwlock != nullptr && rwlock->read_try_lock())
+    {
+        ReadUnLocker auto_unlocker(rwlock);
+        return shared_config_block->get_check_type_action(check_type);
+    }
+    return AC_IGNORE;
+}
+
 bool SharedConfigManager::startup()
 {
     size_t total_size = meta_size + sizeof(SharedConfigBlock);

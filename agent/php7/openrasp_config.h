@@ -23,102 +23,13 @@
 #include <memory>
 #include "third_party/rapidjson/document.h"
 #include "third_party/cpptoml/cpptoml.h"
+#include "openrasp_config_block.h"
 
 namespace openrasp
 {
 using namespace std;
 class OpenraspConfig
 {
-public:
-  // plugin
-  struct
-  {
-    struct
-    {
-      int64_t millis = 100;
-    } timeout;
-    int64_t maxstack = 100;
-    bool filter = true;
-  } plugin;
-  // log
-  struct
-  {
-    int64_t maxburst = 100;
-    int64_t maxstack = 10;
-    int64_t maxbackup = 30;
-  } log;
-  struct
-  {
-    string tag = "OpenRASP";
-    string url;
-    int64_t facility = 1;
-    bool enable = false;
-    int64_t connection_timeout = 50;
-    int64_t read_timeout = 10;
-    int64_t reconnect_interval = 300;
-  } syslog;
-  // blacklist whitelist
-  struct
-  {
-    struct
-    {
-      vector<string> callable;
-      vector<string> command;
-      vector<string> directory;
-      vector<string> readFile;
-      vector<string> writeFile;
-      vector<string> copy;
-      vector<string> rename;
-      vector<string> fileUpload;
-      vector<string> include;
-      vector<string> dbConnection;
-      vector<string> sql;
-      vector<string> sqlSlowQuery;
-      vector<string> sqlPrepared;
-      vector<string> ssrf;
-      vector<string> wenshell_eval;
-      vector<string> wenshell_command;
-      vector<string> webshell_file_put_contents;
-      bool All = false;
-    } white;
-  } hook;
-  vector<string> callable_blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
-  // block repsonse
-  struct
-  {
-    int64_t status_code = 302;
-    string redirect_url = R"(https://rasp.baidu.com/blocked/?request_id=%request_id%)";
-    string content_json = R"({"error":true, "reason": "Request blocked by OpenRASP", "request_id": "%request_id%"})";
-    string content_xml = R"(<?xml version="1.0"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>)";
-    string content_html = R"(</script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>)";
-  } block;
-  // others
-  struct
-  {
-    string urlprefix;
-  } inject;
-  struct
-  {
-    int64_t maxbytes = 4 * 1024;
-  } body;
-  struct
-  {
-    string header;
-  } clientip;
-  struct
-  {
-    bool enforce_policy = false;
-  } security;
-  struct
-  {
-    struct
-    {
-      int64_t min_rows = 500;
-    } slowquery;
-  } sql;
-  int64_t slowquery_min_rows = 500;
-  int64_t lru_cache_max_size = 1000;
-
 public:
   enum FromType
   {
@@ -137,8 +48,6 @@ public:
   bool From(const string &config, FromType type);
   bool HasError() const { return has_error; };
   string GetErrorMessage() const { return error_message; };
-  long GetLatestUpdateTime() const { return latestUpdateTime; };
-  void SetLatestUpdateTime(long latestUpdateTime) { this->latestUpdateTime = latestUpdateTime; };
 
   template <typename T>
   T Get(const string &key, const T &default_value = T()) const
@@ -191,7 +100,6 @@ private:
   shared_ptr<cpptoml::table> tomlObj;
   bool has_error = true;
   string error_message = "Uninitialized";
-  long latestUpdateTime = 0;
 
   template <typename T>
   T GetFromJson(const string &key, const T &default_value) const;

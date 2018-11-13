@@ -28,18 +28,10 @@ PluginUpdatePackage::PluginUpdatePackage(std::string content, std::string versio
   plugin_md5 = md5;
 }
 
-void PluginUpdatePackage::set_algorithm(std::string &algorithm)
-{
-  if (!algorithm.empty())
-  {
-    algorithm_config = "RASP.algorithmConfig=" + algorithm;
-  }
-}
-
 bool PluginUpdatePackage::build_snapshot()
 {
   Platform::Initialize();
-  Snapshot snapshot(algorithm_config, {active_plugin});
+  Snapshot snapshot("", {active_plugin});
   Platform::Shutdown();
   if (!snapshot.IsOk())
   {

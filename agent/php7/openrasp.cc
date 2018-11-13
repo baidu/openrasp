@@ -38,12 +38,15 @@ extern "C"
 #include "agent/openrasp_agent_manager.h"
 #endif
 
+using openrasp::OpenraspConfig;
+
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
 bool is_initialized = false;
 static bool make_openrasp_root_dir();
 static bool current_sapi_supported();
-static bool load_config(openrasp::OpenraspConfig *config, bool is_local = true);
+static std::string get_config_abs_path(OpenraspConfig::FromType type);
+static bool update_config(openrasp::ConfigHolder *config, OpenraspConfig::FromType type = OpenraspConfig::FromType::kIni);
 
 PHP_INI_BEGIN()
 PHP_INI_ENTRY1("openrasp.root_dir", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.root_dir)
@@ -92,6 +95,7 @@ PHP_MINIT_FUNCTION(openrasp)
         return SUCCESS;
     }
 
+    bool remote_active = false;
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (check_sapi_need_alloc_shm() && openrasp_ini.remote_management_enable)
     {
@@ -100,14 +104,13 @@ PHP_MINIT_FUNCTION(openrasp)
         {
             return SUCCESS;
         }
+        remote_active = true;
     }
-    else
-    {
-        load_config(&OPENRASP_G(config));
-    }
-#else
-    load_config(&OPENRASP_G(config));
 #endif
+    if (!remote_active)
+    {
+        update_config(&OPENRASP_G(config));
+    }
 
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
     {
@@ -126,13 +129,17 @@ PHP_MINIT_FUNCTION(openrasp)
     {
         openrasp::oam->startup();
     }
-    else
-    {
-        openrasp::scm->build_check_type_white_array(OPENRASP_G(config));
-    }
-#else
-    openrasp::scm->build_check_type_white_array(OPENRASP_G(config));
 #endif
+    if (!remote_active)
+    {
+        std::string config_file_path = get_config_abs_path(OpenraspConfig::FromType::kIni);
+        std::string conf_contents;
+        if (get_entire_file_content(config_file_path.c_str(), conf_contents))
+        {
+            openrasp::OpenraspConfig openrasp_config(conf_contents, OpenraspConfig::FromType::kIni);
+            openrasp::scm->build_check_type_white_array(openrasp_config);
+        }
+    }
 
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
     is_initialized = true;
@@ -172,7 +179,7 @@ PHP_RINIT_FUNCTION(openrasp)
         long config_last_update = openrasp::scm->get_config_last_update();
         if (config_last_update && config_last_update > OPENRASP_G(config).GetLatestUpdateTime())
         {
-            if (load_config(&OPENRASP_G(config), false))
+            if (update_config(&OPENRASP_G(config), OpenraspConfig::FromType::kJson))
             {
                 OPENRASP_G(config).SetLatestUpdateTime(config_last_update);
             }
@@ -310,23 +317,36 @@ static bool make_openrasp_root_dir()
     return true;
 }
 
-static bool load_config(openrasp::OpenraspConfig *config, bool is_local)
+static std::string get_config_abs_path(OpenraspConfig::FromType type)
+{
+    std::string filename;
+    switch (type)
+    {
+    case OpenraspConfig::FromType::kIni:
+        filename = "openrasp.ini";
+        break;
+    case OpenraspConfig::FromType::kJson:
+        filename = "cloud-config.json";
+        break;
+    default:
+        break;
+    }
+    return std::string(openrasp_ini.root_dir) +
+           DEFAULT_SLASH +
+           "conf" +
+           DEFAULT_SLASH + filename;
+}
+
+static bool update_config(openrasp::ConfigHolder *config, OpenraspConfig::FromType type)
 {
     if (nullptr != openrasp_ini.root_dir && strcmp(openrasp_ini.root_dir, "") != 0)
     {
-        std::string config_file_path =
-            std::string(openrasp_ini.root_dir) +
-            DEFAULT_SLASH +
-            "conf" +
-            DEFAULT_SLASH +
-            (is_local ? "openrasp.ini" : "cloud-config.json");
-        openrasp::OpenraspConfig::FromType type = is_local
-                                                      ? openrasp::OpenraspConfig::FromType::kIni
-                                                      : openrasp::OpenraspConfig::FromType::kJson;
+        std::string config_file_path = get_config_abs_path(type);
         std::string conf_contents;
         if (get_entire_file_content(config_file_path.c_str(), conf_contents))
         {
-            return config->From(conf_contents, type);
+            openrasp::OpenraspConfig openrasp_config(conf_contents, type);
+            return config->update(&openrasp_config);
         }
     }
     return false;

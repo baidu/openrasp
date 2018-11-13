@@ -19,9 +19,9 @@
 #include "openrasp_ini.h"
 #include "openrasp_log.h"
 #include "openrasp_agent.h"
-#include "utils/time.h"
 #include "openrasp_agent_manager.h"
 #include "shared_config_manager.h"
+#include "utils/time.h"
 #include "third_party/rapidjson/stringbuffer.h"
 #include "third_party/rapidjson/prettywriter.h"
 
