@@ -144,6 +144,13 @@ extern "C"
 #define MYSQL_PORT 3306
 #define CHECK_TYPE_NR_ITEMS 18
 
+typedef enum action_type_t
+{
+    AC_IGNORE = 0,
+    AC_LOG = 1 << 0,
+    AC_BLOCK = 1 << 1
+} OpenRASPActionType;
+
 typedef enum check_type_t
 {
     NO_TYPE = 0,
@@ -337,7 +344,8 @@ const std::string get_check_type_name(OpenRASPCheckType check_type);
 
 void handle_block(TSRMLS_D);
 void check(OpenRASPCheckType check_type, zval *z_params TSRMLS_DC);
-void openrasp_buildin_php_risk_handle(zend_bool is_block, OpenRASPCheckType type, int confidence, zval *params, zval *message TSRMLS_DC);
+void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckType type, int confidence,
+                                      zval *params, zval *message TSRMLS_DC);
 
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC);
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC);
@@ -348,6 +356,10 @@ std::string openrasp_real_path(char *filename, int filename_len, bool use_includ
 void slow_query_alarm(int rows TSRMLS_DC);
 void plugin_sql_check(char *query, int query_len, char *server TSRMLS_DC);
 long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count, zval *params[] TSRMLS_DC);
-zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
+zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func,
+                                             int enforce_policy);
+
+OpenRASPActionType string_to_action(std::string action_string);
+std::string action_to_string(OpenRASPActionType type);
 
 #endif

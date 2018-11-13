@@ -557,6 +557,7 @@ int main() {
 
   PHP_NEW_EXTENSION(openrasp,
     openrasp.cc \
+    openrasp_action.cc \
     openrasp_utils.cc \
     openrasp_hook.cc \
     hook/openrasp_directory.cc \

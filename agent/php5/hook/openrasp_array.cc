@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_hook.h"
+#include "agent/shared_config_manager.h"
 
 /**
  * callable相关hook点
@@ -46,7 +47,8 @@ static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
             spprintf(&message_str, 0, _("WebShell activity - Using dangerous callback method %s()"), Z_STRVAL_P(function_name));
             ZVAL_STRING(plugin_message, message_str, 1);
             efree(message_str);
-            openrasp_buildin_php_risk_handle(1, CALLABLE, 100, attack_params, plugin_message TSRMLS_CC);
+            OpenRASPActionType action = openrasp::scm->get_buildin_check_action(CALLABLE);
+            openrasp_buildin_php_risk_handle(action, CALLABLE, 100, attack_params, plugin_message TSRMLS_CC);
         }
     }
 }
@@ -141,7 +143,8 @@ void pre_reflectionfunction___construct_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARA
             spprintf(&message_str, 0, _("Webshell detected: using '%s' function"), nsname);
             ZVAL_STRING(plugin_message, message_str, 1);
             efree(message_str);
-            openrasp_buildin_php_risk_handle(1, check_type, 100, attack_params, plugin_message TSRMLS_CC);
+            OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
+            openrasp_buildin_php_risk_handle(action, check_type, 100, attack_params, plugin_message TSRMLS_CC);
         }
         efree(lcname);
     }

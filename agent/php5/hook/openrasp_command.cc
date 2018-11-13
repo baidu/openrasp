@@ -16,6 +16,7 @@
 
 #include "openrasp_hook.h"
 #include "openrasp_v8.h"
+#include "agent/shared_config_manager.h"
 
 /**
  * command相关hook点
@@ -51,7 +52,8 @@ static void check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         zval *plugin_message = NULL;
         MAKE_STD_ZVAL(plugin_message);
         ZVAL_STRING(plugin_message, _("WebShell activity - Detected command execution backdoor"), 1);
-        openrasp_buildin_php_risk_handle(1, check_type, 100, attack_params, plugin_message TSRMLS_CC);
+        OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
+        openrasp_buildin_php_risk_handle(action, check_type, 100, attack_params, plugin_message TSRMLS_CC);
     }
 }
 
@@ -279,7 +281,8 @@ void pre_global_assert_WEBSHELL_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             zval *plugin_message = NULL;
             MAKE_STD_ZVAL(plugin_message);
             ZVAL_STRING(plugin_message, _("WebShell activity - Detected China Chopper (assert method)"), 1);
-            openrasp_buildin_php_risk_handle(1, check_type, 100, attack_params, plugin_message TSRMLS_CC);
+            OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
+            openrasp_buildin_php_risk_handle(action, check_type, 100, attack_params, plugin_message TSRMLS_CC);
         }
     }
 }

@@ -63,7 +63,7 @@ void slow_query_alarm(int rows TSRMLS_DC)
              rows, OPENRASP_CONFIG(sql.slowquery.min_rows));
     ZVAL_STRING(plugin_message, message_str, 1);
     efree(message_str);
-    openrasp_buildin_php_risk_handle(0, SQL_SLOW_QUERY, 100, attack_params, plugin_message TSRMLS_CC);
+    openrasp_buildin_php_risk_handle(AC_LOG, SQL_SLOW_QUERY, 100, attack_params, plugin_message TSRMLS_CC);
 }
 
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy)
