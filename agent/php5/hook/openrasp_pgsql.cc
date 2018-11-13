@@ -140,18 +140,18 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
 
             if (strcmp(pname, "user") == 0)
             {
-                sql_connection_p->username = estrdup(pval);
+                sql_connection_p->set_username(pval);
             }
             else if (strcmp(pname, "host") == 0)
             {
-                sql_connection_p->host = estrdup(pval);
+                sql_connection_p->set_host(pval);
             }
             else if (strcmp(pname, "port") == 0)
             {
-                sql_connection_p->port = atoi(pval);
+                sql_connection_p->set_port(atoi(pval));
             }
         }
-        sql_connection_p->server = "pgsql";
+        sql_connection_p->set_server("pgsql");
         efree(buf);
     }
 }
@@ -178,6 +178,7 @@ static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connectio
         convert_to_long_ex(args[1]);
         connect_type = Z_LVAL_PP(args[1]);
     }
+    sql_connection_p->set_connection_string(connstring);
     parse_connection_string(connstring, sql_connection_p);
 }
 

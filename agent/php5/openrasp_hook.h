@@ -169,14 +169,6 @@ typedef enum check_type_t
 
 extern const std::map<OpenRASPCheckType, const std::string> CheckTypeNameMap;
 
-typedef struct sql_connection_entry_t
-{
-    char *server = nullptr;
-    char *host = nullptr;
-    int port = 0;
-    char *username = nullptr;
-} sql_connection_entry;
-
 enum PATH_OPERATION
 {
     OPENDIR = 1 << 0,
@@ -188,9 +180,41 @@ enum PATH_OPERATION
     SIMULTANEOUSRW = 1 << 6
 };
 
-typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
+class SqlConnectionEntry
+{
+  private:
+    std::string connection_string;
+    std::string server;
+    std::string host;
+    std::string username;
+    int port = 0;
+
+  public:
+    void set_connection_string(std::string connection_string);
+    std::string get_connection_string() const;
+
+    void set_server(std::string server);
+    std::string get_server() const;
+
+    void set_host(std::string host);
+    std::string get_host() const;
+
+    void set_username(std::string username);
+    std::string get_username() const;
+
+    void set_port(int port);
+    int get_port() const;
+
+    std::string build_policy_msg();
+    ulong build_hash_code();
+};
+
+typedef SqlConnectionEntry sql_connection_entry;
+
 typedef void (*hook_handler_t)(TSRMLS_D);
 typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
+typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
+
 /**
  * 使用这个宏定义被 hook 函数的替换函数的函数头部
  * 在函数体的适当位置添加 origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU); 可继续执行原始函数

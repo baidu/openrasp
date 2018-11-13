@@ -97,13 +97,13 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
     {
         socket = default_socket;
     }
-    sql_connection_p->server = "mysql";
-    sql_connection_p->username = estrdup(username);
+    sql_connection_p->set_server("mysql");
+    sql_connection_p->set_username(username);
 
     if (hostname && strcmp(hostname, "localhost") != 0)
     {
-        sql_connection_p->host = estrdup(hostname);
-        sql_connection_p->port = port;
+        sql_connection_p->set_host(hostname);
+        sql_connection_p->set_port(port);
     }
 }
 

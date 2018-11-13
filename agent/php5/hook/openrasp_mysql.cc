@@ -87,7 +87,7 @@ static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
         if (tmp[0] != '/')
         {
             port = atoi(tmp);
-            sql_connection_p->port = port;
+            sql_connection_p->set_port(port);
             if ((tmp = strchr(tmp, ':')))
             {
                 tmp++;
@@ -98,15 +98,18 @@ static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
         {
             socket = tmp;
         }
-        sql_connection_p->host = host;
+        sql_connection_p->set_host(host);
     }
     else
     {
-        sql_connection_p->host = estrdup(host_and_port);
-        sql_connection_p->port = default_port;
+        sql_connection_p->set_host(host_and_port);
+        sql_connection_p->set_port(default_port);
     }
-    sql_connection_p->server = "mysql";
-    sql_connection_p->username = user ? estrdup(user) : nullptr;
+    sql_connection_p->set_server("mysql");
+    if (user)
+    {
+        sql_connection_p->set_username(user);
+    }
 }
 
 static inline void init_mysql_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)

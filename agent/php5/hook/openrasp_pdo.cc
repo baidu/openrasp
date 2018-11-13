@@ -60,7 +60,7 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
     {
         return;
     }
-
+    sql_connection_p->set_connection_string(data_source);
     /* parse the data source name */
     colon = strchr(data_source, ':');
 
@@ -104,10 +104,10 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
     {
         if (strncmp(server_names[index], data_source, strlen(server_names[index])) == 0)
         {
-            sql_connection_p->server = (char *)server_names[index];
+            sql_connection_p->set_server((const char *)server_names[index]);
         }
     }
-    if (strcmp(sql_connection_p->server, "mysql") == 0)
+    if (sql_connection_p->get_server() == "mysql")
     {
         struct pdo_data_src_parser mysql_vars[] = {
             {"charset", NULL, 0},
@@ -117,9 +117,9 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
             {"unix_socket", NULL, 0},
         };
         php_pdo_parse_data_source(data_source, data_source_len, mysql_vars, 5);
-        sql_connection_p->host = estrdup(mysql_vars[2].optval);
-        sql_connection_p->port = atoi(mysql_vars[3].optval);
-        sql_connection_p->username = estrdup(username);
+        sql_connection_p->set_host(mysql_vars[2].optval);
+        sql_connection_p->set_port(atoi(mysql_vars[3].optval));
+        sql_connection_p->set_username(username);
         for (int i = 0; i < 5; i++)
         {
             if (mysql_vars[i].freeme)
@@ -128,7 +128,7 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
             }
         }
     }
-    else if (strcmp(sql_connection_p->server, "pgsql") == 0)
+    else if (sql_connection_p->get_server() == "pgsql")
     {
         char *e, *p, *conn_str = nullptr;
         char *dhn_data_source = estrdup(colon + 1);
