@@ -252,6 +252,28 @@ if test "$PHP_OPENRASP" != "no"; then
   PHP_ADD_INCLUDE($OPENRASP_PCRE_INCDIR)
   PHP_ADD_LIBRARY_WITH_PATH(pcre, $OPENRASP_PCRE_LIBDIR, OPENRASP_SHARED_LIBADD)
 
+  LIBFSWATCH_SOURCE="libfswatch/c++/path_utils.cpp \
+    libfswatch/c++/fen_monitor.cpp \
+    libfswatch/c++/fsevents_monitor.cpp \
+    libfswatch/c++/monitor.cpp \
+    libfswatch/c++/filter.cpp \
+    libfswatch/c++/inotify_monitor.cpp \
+    libfswatch/c++/windows_monitor.cpp \
+    libfswatch/c++/string/string_utils.cpp \
+    libfswatch/c++/event.cpp \
+    libfswatch/c++/poll_monitor.cpp \
+    libfswatch/c++/windows/win_handle.cpp \
+    libfswatch/c++/windows/win_error_message.cpp \
+    libfswatch/c++/windows/win_strings.cpp \
+    libfswatch/c++/windows/win_paths.cpp \
+    libfswatch/c++/windows/win_directory_change_event.cpp \
+    libfswatch/c++/kqueue_monitor.cpp \
+    libfswatch/c++/libfswatch_exception.cpp \
+    libfswatch/c/libfswatch_log.cpp \
+    libfswatch/c/libfswatch.cpp \
+    libfswatch/c/cevent.cpp"
+  PHP_ADD_INCLUDE("PHP_EXT_BUILDDIR([openrasp])/libfswatch")
+
   case $host_os in
     darwin* )
       OPENRASP_LIBS="-framework CoreServices $OPENRASP_LIBS"
@@ -587,6 +609,8 @@ int main() {
     agent/base_manager.cc \
     agent/shared_config_manager.cc \
     agent/mm/shm_manager.cc \
+    openrasp_fswatch.cc \
+    $LIBFSWATCH_SOURCE \
     $OPENRASP_REMOTE_MANAGER_SOURCE \
     , $ext_shared)
   ifdef([PHP_ADD_EXTENSION_DEP],

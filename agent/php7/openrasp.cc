@@ -31,6 +31,7 @@ extern "C"
 #include "openrasp_hook.h"
 #include "openrasp_inject.h"
 #include "openrasp_security_policy.h"
+#include "openrasp_fswatch.h"
 #include <new>
 #include "openrasp_shared_alloc.h"
 #include "agent/shared_config_manager.h"
@@ -43,6 +44,7 @@ using openrasp::OpenraspConfig;
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
 bool is_initialized = false;
+bool remote_active = false;
 static bool make_openrasp_root_dir();
 static bool current_sapi_supported();
 static std::string get_config_abs_path(OpenraspConfig::FromType type);
@@ -95,7 +97,6 @@ PHP_MINIT_FUNCTION(openrasp)
         return SUCCESS;
     }
 
-    bool remote_active = false;
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (check_sapi_need_alloc_shm() && openrasp_ini.remote_management_enable)
     {
@@ -146,6 +147,7 @@ PHP_MINIT_FUNCTION(openrasp)
                                                     webshell_eval_action,
                                                     webshell_command_action,
                                                     webshell_file_put_contents_action);
+            result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
         }
     }
 
@@ -159,6 +161,10 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
     if (is_initialized)
     {
         int result;
+        if (!remote_active)
+        {
+            result = PHP_MSHUTDOWN(openrasp_fswatch)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
+        }
         result = PHP_MSHUTDOWN(openrasp_inject)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_hook)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_v8)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
@@ -171,7 +177,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
         }
 #endif
         openrasp::scm->shutdown();
-
+        remote_active = false;
         is_initialized = false;
     }
     UNREGISTER_INI_ENTRIES();
