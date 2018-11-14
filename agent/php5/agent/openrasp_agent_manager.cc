@@ -134,7 +134,7 @@ bool OpenraspAgentManager::verify_ini_correct()
 		{
 			if (!regex_match(openrasp_ini.app_id, "^[0-9a-fA-F]{40}$"))
 			{
-				openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_id must have 40 characters"));
+				openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_id must be exactly 40 characters long"));
 				return false;
 			}
 		}
