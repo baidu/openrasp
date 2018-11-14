@@ -40,6 +40,7 @@ extern "C"
 
 typedef enum openrasp_error_code_t
 {
+	FSWATCH_ERROR = 20001,
 	LOG_ERROR = 20002,
 	SHM_ERROR,
 	CONFIG_ERROR,

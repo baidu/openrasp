@@ -33,6 +33,7 @@ extern "C"
 #include "openrasp_inject.h"
 #include "openrasp_shared_alloc.h"
 #include "openrasp_security_policy.h"
+#include "openrasp_fswatch.h"
 #include <new>
 #include <set>
 #include "agent/shared_config_manager.h"
@@ -45,6 +46,7 @@ using openrasp::OpenraspConfig;
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
 bool is_initialized = false;
+bool remote_active = false;
 static bool make_openrasp_root_dir(TSRMLS_D);
 static bool update_config(openrasp::ConfigHolder *config TSRMLS_DC, OpenraspConfig::FromType type = OpenraspConfig::FromType::kIni);
 static std::string get_config_abs_path(OpenraspConfig::FromType type);
@@ -101,7 +103,7 @@ PHP_MINIT_FUNCTION(openrasp)
         openrasp_error(E_WARNING, RUNTIME_ERROR, _("Fail to startup SharedConfigManager."));
         return SUCCESS;
     }
-    bool remote_active = false;
+
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (check_sapi_need_alloc_shm() && openrasp_ini.remote_management_enable)
     {
@@ -117,6 +119,7 @@ PHP_MINIT_FUNCTION(openrasp)
     {
         update_config(&OPENRASP_G(config) TSRMLS_CC);
     }
+
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
     {
         return SUCCESS;
@@ -135,6 +138,7 @@ PHP_MINIT_FUNCTION(openrasp)
         openrasp::oam->startup();
     }
 #endif
+
     if (!remote_active)
     {
         std::string config_file_path = get_config_abs_path(OpenraspConfig::FromType::kIni);
@@ -143,7 +147,6 @@ PHP_MINIT_FUNCTION(openrasp)
         {
             openrasp::OpenraspConfig openrasp_config(conf_contents, OpenraspConfig::FromType::kIni);
             openrasp::scm->build_check_type_white_array(openrasp_config);
-            std::string action;
             OpenRASPActionType callable_action = string_to_action(openrasp_config.Get<std::string>("callable.action"));
             OpenRASPActionType webshell_eval_action = string_to_action(openrasp_config.Get<std::string>("webshell_eval.action"));
             OpenRASPActionType webshell_command_action = string_to_action(openrasp_config.Get<std::string>("webshell_command.action"));
@@ -153,6 +156,7 @@ PHP_MINIT_FUNCTION(openrasp)
                                                     webshell_command_action,
                                                     webshell_file_put_contents_action);
         }
+        result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
     }
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
     is_initialized = true;
@@ -164,6 +168,10 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
     if (is_initialized)
     {
         int result;
+        if (!remote_active)
+        {
+            result = PHP_MSHUTDOWN(openrasp_fswatch)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
+        }
         result = PHP_MSHUTDOWN(openrasp_inject)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_hook)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_v8)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
@@ -175,6 +183,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
         }
 #endif
         openrasp::scm->shutdown();
+        remote_active = false;
         is_initialized = false;
     }
     UNREGISTER_INI_ENTRIES();
