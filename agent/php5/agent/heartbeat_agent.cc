@@ -173,7 +173,8 @@ void HeartBeatAgent::do_heartbeat()
 				}
 				else
 				{
-					openrasp_error(E_WARNING, HEARTBEAT_ERROR, _("Fail to write cloud config to %s."), cloud_config_file_path.c_str());
+					openrasp_error(E_WARNING, HEARTBEAT_ERROR, _("Fail to write cloud config to %s, error %s."),
+								   cloud_config_file_path.c_str(), strerror(errno));
 				}
 				return;
 			}

@@ -35,8 +35,7 @@ bool PluginUpdatePackage::build_snapshot()
   Platform::Shutdown();
   if (!snapshot.IsOk())
   {
-    openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize builtin js code."));
-    openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to generate snapshot."));
+    openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize builtin js code, error %s."), strerror(errno));
     return false;
   }
   std::string snapshot_abs_path = std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + PluginUpdatePackage::snapshot_filename;

@@ -25,6 +25,7 @@
 #include "third_party/rapidjson/document.h"
 #include "third_party/rapidjson/pointer.h"
 #include "third_party/rapidjson/writer.h"
+#include "third_party/rapidjson/error/en.h"
 
 namespace openrasp
 {
@@ -38,6 +39,7 @@ public:
   long response_code = 0;
   std::string header_string;
   std::string response_string;
+  std::string error_msg;
   rapidjson::Document document;
 
 public:

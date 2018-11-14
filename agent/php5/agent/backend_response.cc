@@ -27,7 +27,11 @@ BackendResponse::BackendResponse(long response_code, std::string header_string, 
     this->header_string = header_string;
     this->response_string = response_string;
     document.Parse(response_string.c_str());
-    this->parse_error = document.HasParseError();
+    if (document.HasParseError())
+    {
+        error_msg = rapidjson::GetParseError_En(document.GetParseError());
+        this->parse_error = true;
+    }
 }
 
 bool BackendResponse::has_error() const
@@ -129,7 +133,7 @@ bool BackendResponse::verify(openrasp_error_code error_code)
 {
     if (has_error())
     {
-        openrasp_error(E_WARNING, error_code, _("Fail to parse response body."));
+        openrasp_error(E_WARNING, error_code, _("Fail to parse response body, error message %s."), error_msg.c_str());
         return false;
     }
     if (!http_code_ok())
@@ -145,16 +149,14 @@ bool BackendResponse::verify(openrasp_error_code error_code)
     bool has_description = fetch_description(description);
     if (has_status && has_description)
     {
-        if (0 == status)
-        {
-            return true;
-        }
-        else
+        if (0 != status)
         {
             openrasp_error(E_WARNING, error_code, _("API error: %ld, description: %s"),
                            status, description.c_str());
+            return false;
         }
     }
+    return true;
 }
 
 } // namespace openrasp
