@@ -251,7 +251,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
         }
 
         if (!apps.isEmpty()) {
-            StringBuilder message = new StringBuilder("Tomcat security baseline - did not remove the following default webapps in " + defaultAppBaseDir + ":");
+            StringBuilder message = new StringBuilder("Tomcat security baseline - did not remove the following default webapps in " + defaultAppBaseDir + ": ");
             for (String app : apps) {
                 message.append(app).append(", ");
             }
