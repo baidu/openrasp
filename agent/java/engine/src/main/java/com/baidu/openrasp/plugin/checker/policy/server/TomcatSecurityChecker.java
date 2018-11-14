@@ -256,7 +256,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                 message.append(app).append(", ");
             }
             Map<String, Object> params = new HashMap<String, Object>();
-            params.put("config_file",defaultAppBaseDir);
+            params.put("path",defaultAppBaseDir);
             params.put("apps",apps);
             infos.add(new SecurityPolicyInfo(Type.DEFAULT_APP, message.substring(0, message.length() - 2), true,params));
         }
