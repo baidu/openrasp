@@ -134,7 +134,7 @@ bool BackendResponse::verify(openrasp_error_code error_code)
     }
     if (!http_code_ok())
     {
-        openrasp_error(E_WARNING, error_code, _("Invalid http code: %ld."),
+        openrasp_error(E_WARNING, error_code, _("Unexpected http response code: %ld."),
                        get_http_code());
         return false;
     }
@@ -151,7 +151,7 @@ bool BackendResponse::verify(openrasp_error_code error_code)
         }
         else
         {
-            openrasp_error(E_WARNING, error_code, _("Invalid status: %ld, description : %s."),
+            openrasp_error(E_WARNING, error_code, _("API error: %ld, description: %s"),
                            status, description.c_str());
         }
     }
