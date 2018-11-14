@@ -125,7 +125,7 @@ void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)
                                 host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
                 if (s != 0)
                 {
-                    openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs error: getnameinfo failed - %s."), gai_strerror(s));
+                    openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs() error: getnameinfo failed - %s."), gai_strerror(s));
                 }
                 if_addr_map.insert(std::pair<std::string, std::string>(ifa->ifa_name, host));
             }
@@ -237,7 +237,7 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url)
     const char *p = inet_ntop(AF_INET, &name.sin_addr, local_ip, len);
     if (nullptr == p)
     {
-        openrasp_error(E_WARNING, LOG_ERROR, _("inet_ntop error - error number : %d , error message : %s"), errno, strerror(errno));
+        openrasp_error(E_WARNING, LOG_ERROR, _("inet_ntop() error: %s"), strerror(errno));
         close(sock);
         return false;
     }
