@@ -121,10 +121,21 @@ Snapshot::~Snapshot()
 }
 bool Snapshot::Save(const std::string &path) const
 {
-    std::ofstream file(path, std::ios::out | std::ios::binary | std::ios::trunc);
+    std::string tmp_path = path + ".tmp";
+    std::ofstream file(tmp_path, std::ios::out | std::ios::binary | std::ios::trunc);
     if (file)
     {
-        return static_cast<bool>(file.write(data, raw_size));
+        file.write(data, raw_size);
+        file.close();
+        if (!static_cast<bool>(file))
+        {
+            return false;
+        }
+        if (rename(tmp_path.c_str(), path.c_str()))
+        {
+            return false;
+        }
+        return true;
     }
     // check errno when return value is false
     return false;
