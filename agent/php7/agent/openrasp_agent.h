@@ -22,6 +22,7 @@
 #include "backend_request.h"
 #include "backend_response.h"
 #include <signal.h>
+#include "utils/time.h"
 
 namespace openrasp
 {
@@ -55,7 +56,7 @@ public:
   virtual void write_pid_to_shm(pid_t agent_pid);
 
 private:
-  static const int plugin_update_interval = 60;
+  static const long plugin_update_interval = 60;
 
 private:
   void do_heartbeat();
@@ -73,7 +74,9 @@ public:
   virtual void write_pid_to_shm(pid_t agent_pid);
 
 private:
-  static const int log_push_interval = 15;
+  static const long log_push_interval = 15;
+  static const long max_interval = 500;
+  static const double factor;
 
 private:
   bool post_logs_via_curl(std::string &log_arr, std::string &url_string);

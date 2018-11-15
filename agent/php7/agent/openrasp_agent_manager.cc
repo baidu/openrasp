@@ -297,7 +297,8 @@ bool OpenraspAgentManager::agent_remote_register()
 	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
 	{
-		openrasp_error(E_WARNING, REGISTER_ERROR, _("CURL error code: %d."), backend_request.get_curl_code());
+		openrasp_error(E_WARNING, REGISTER_ERROR, _("CURL error code: %d, url: %s."),
+					   backend_request.get_curl_code(), url_string.c_str());
 		return false;
 	}
 	return res_info->verify(REGISTER_ERROR);

@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-
 #include "time.h"
 #include <string>
+#include <math.h>
+
 namespace openrasp
 {
 
@@ -46,6 +47,14 @@ std::string format_time(const char *format, int format_len, time_t ts)
     return std::string(buffer);
 }
 
+long increase_interval_by_factor(long origin, double factor, long max)
+{
+    if (origin >= max)
+    {
+        return max;
+    }
+    long result = floor(origin * factor);
+    return result > max ? max : result;
+}
+
 } // namespace openrasp
-
-

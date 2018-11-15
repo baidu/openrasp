@@ -27,6 +27,7 @@ namespace openrasp
 {
 
 volatile int LogAgent::signal_received = 0;
+const double LogAgent::factor = 2.0;
 
 LogAgent::LogAgent()
 	: BaseAgent(LOG_AGENT_PR_NAME)
@@ -51,6 +52,8 @@ void LogAgent::run()
 	LogCollectItem policy_dir_info(POLICY_LOG_DIR_NAME, "/v1/agent/log/policy", true);
 	LogCollectItem plugin_dir_info(PLUGIN_LOG_DIR_NAME, "/v1/agent/log/plugin", false);
 	std::vector<LogCollectItem *> log_dirs{&alarm_dir_info, &policy_dir_info, &plugin_dir_info};
+
+	long current_interval = LogAgent::log_push_interval;
 	while (true)
 	{
 		for (int i = 0; i < log_dirs.size(); ++i)
@@ -62,15 +65,22 @@ void LogAgent::run()
 				ldi->determine_fpos();
 				std::string post_body;
 				std::string url = ldi->get_cpmplete_url();
-				if (ldi->get_post_logs(post_body) &&
-					post_logs_via_curl(post_body, url))
+				if (ldi->get_post_logs(post_body))
 				{
-					ldi->update_status();
+					bool result = post_logs_via_curl(post_body, url);
+					if (result)
+					{
+						ldi->update_status();
+					}
+					current_interval = result
+										   ? LogAgent::log_push_interval
+										   : increase_interval_by_factor(current_interval, LogAgent::factor, LogAgent::max_interval);
 				}
 			}
 			ldi->handle_rotate(file_rotate);
 		}
-		for (int i = 0; i < LogAgent::log_push_interval; ++i)
+
+		for (long i = 0; i < current_interval; ++i)
 		{
 			sleep(1);
 			if (LogAgent::signal_received == SIGTERM)
@@ -87,9 +97,16 @@ bool LogAgent::post_logs_via_curl(std::string &log_arr, std::string &url_string)
 	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
 	{
-		openrasp_error(E_WARNING, LOGCOLLECT_ERROR, _("CURL error code: %d."), backend_request.get_curl_code());
+		openrasp_error(E_WARNING, LOGCOLLECT_ERROR, _("CURL error code: %d, url: %s."),
+					   backend_request.get_curl_code(), url_string.c_str());
 		return false;
 	}
-	return res_info->verify(LOGCOLLECT_ERROR);
+	if (!res_info->http_code_ok())
+	{
+		openrasp_error(E_WARNING, LOGCOLLECT_ERROR, _("Unexpected http response code: %ld, url: %s."),
+					   res_info->get_http_code(), url_string.c_str());
+		return false;
+	}
+	return true;
 }
 } // namespace openrasp

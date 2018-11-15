@@ -49,7 +49,7 @@ void HeartBeatAgent::run()
 	{
 		do_heartbeat();
 
-		for (int i = 0; i < HeartBeatAgent::plugin_update_interval; ++i)
+		for (long i = 0; i < HeartBeatAgent::plugin_update_interval; ++i)
 		{
 			sleep(1);
 			if (HeartBeatAgent::signal_received == SIGTERM)
@@ -82,7 +82,8 @@ void HeartBeatAgent::do_heartbeat()
 	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
 	{
-		openrasp_error(E_WARNING, HEARTBEAT_ERROR, _("CURL error code: %d."), backend_request.get_curl_code());
+		openrasp_error(E_WARNING, HEARTBEAT_ERROR, _("CURL error code: %d, url: %s"),
+					   backend_request.get_curl_code(), url_string.c_str());
 		return;
 	}
 
