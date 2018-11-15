@@ -29,8 +29,8 @@ public class HookWhiteModel {
     private static DoubleArrayTrie hookWhiteinfo;
 
     public static void init(TreeMap<String, Integer> urls) {
-        hookWhiteinfo = new DoubleArrayTrie();
         if (!urls.isEmpty()) {
+            hookWhiteinfo = new DoubleArrayTrie();
             List<String> list = new ArrayList<String>(urls.size());
             int[] value = new int[urls.size()];
             int index = 0;
@@ -45,7 +45,7 @@ public class HookWhiteModel {
     public static boolean isContainURL(Integer code, String url) {
         if (hookWhiteinfo != null) {
             List<Integer> matched = hookWhiteinfo.commonPrefixSearch(url);
-            if (matched != null) {
+            if (matched != null && !matched.isEmpty()) {
                 int result = 0;
                 for (Integer i : matched) {
                     result = result | i;
