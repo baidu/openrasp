@@ -115,6 +115,10 @@ public class KeepAlive {
                 CloudManager.LOGGER.warn("config update failed: ", e);
             }
 
+            //动态创建http appender
+            DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.LOGGER_NAME);
+            DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.POLICY_LOGGER_NAME);
+
             //云控下发配置时动态添加或者删除syslog
             Object syslogSwitch = configMap.get("syslog.enable");
             if (syslogSwitch != null) {
