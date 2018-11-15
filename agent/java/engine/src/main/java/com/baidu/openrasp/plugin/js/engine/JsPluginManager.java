@@ -18,7 +18,6 @@ package com.baidu.openrasp.plugin.js.engine;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;

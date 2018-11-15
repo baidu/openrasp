@@ -193,8 +193,8 @@ public class DoubleArrayTrie {
         return size;
     }
 
-    public int build(List<String> key) {
-        return build(key, null, null, key.size());
+    public int build(List<String> key,int[] value) {
+        return build(key, null, value, key.size());
     }
 
     private int build(List<String> _key, int _length[], int _value[], int _keySize) {

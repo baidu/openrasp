@@ -19,7 +19,6 @@ package com.baidu.openrasp.cloud.model;
 import com.baidu.openrasp.cloud.utils.DoubleArrayTrie;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @description: 缓存hook点的白名单信息
@@ -27,34 +26,32 @@ import java.util.concurrent.ConcurrentHashMap;
  * @create: 2018/09/13 20:55
  */
 public class HookWhiteModel {
-    private static ConcurrentHashMap<String, Object> hookWhiteinfo = new ConcurrentHashMap<String, Object>();
+    private static DoubleArrayTrie hookWhiteinfo;
 
-    public static void init(String type, ArrayList<String> hooks) {
-        hookWhiteinfo.clear();
-        if (!hooks.isEmpty()) {
-            if (hooks.contains("all")) {
-                hookWhiteinfo.put(type, "all");
-            } else {
-                DoubleArrayTrie dat = new DoubleArrayTrie();
-                Collections.sort(hooks);
-                dat.build(hooks);
-                hookWhiteinfo.put(type, dat);
+    public static void init(TreeMap<String, Integer> urls) {
+        hookWhiteinfo = new DoubleArrayTrie();
+        if (!urls.isEmpty()) {
+            List<String> list = new ArrayList<String>(urls.size());
+            int[] value = new int[urls.size()];
+            int index = 0;
+            for (Map.Entry<String, Integer> entry : urls.entrySet()) {
+                list.add(entry.getKey());
+                value[index++] = entry.getValue();
             }
+            hookWhiteinfo.build(list, value);
         }
-
     }
 
-    public static ConcurrentHashMap<String, Object> getHookWhiteInfo() {
-        return hookWhiteinfo;
-    }
-
-    public static boolean isContainURL(String type, String url) {
-        Object object = hookWhiteinfo.get(type);
-        if (object instanceof String && "all".equals(String.valueOf(object))) {
-            return true;
-        } else if (object instanceof DoubleArrayTrie) {
-            List<Integer> list = ((DoubleArrayTrie) object).commonPrefixSearch(url);
-            return !list.isEmpty();
+    public static boolean isContainURL(Integer code, String url) {
+        if (hookWhiteinfo != null) {
+            List<Integer> matched = hookWhiteinfo.commonPrefixSearch(url);
+            if (matched != null) {
+                int result = 0;
+                for (Integer i : matched) {
+                    result = result | i;
+                }
+                return (code & result) != 0;
+            }
         }
         return false;
     }

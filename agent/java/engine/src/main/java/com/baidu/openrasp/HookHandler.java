@@ -326,7 +326,7 @@ public class HookHandler {
         if (requestCache.get() != null) {
             StringBuffer sb = requestCache.get().getRequestURL();
             String url = sb.substring(sb.indexOf("://") + 3);
-            if (HookWhiteModel.isContainURL(type.getName(), url)) {
+            if (HookWhiteModel.isContainURL(type.getCode(), url)) {
                 return;
             }
         }

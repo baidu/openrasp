@@ -88,11 +88,11 @@ public class FileHook extends AbstractClassHook {
                 params.put("stack", params, stackArray);
                 try {
                     params.put("realpath", params, file.getCanonicalPath());
-                } catch (IOException e) {
+                } catch (Exception e) {
                     params.put("realpath", params, file.getAbsolutePath());
                 }
             } catch (Throwable t) {
-                HookHandler.LOGGER.warn(t.getMessage());
+                HookHandler.LOGGER.warn(t.getMessage(),t);
             }
             if (params != null) {
                 HookHandler.doCheck(CheckParameter.Type.DIRECTORY, params);

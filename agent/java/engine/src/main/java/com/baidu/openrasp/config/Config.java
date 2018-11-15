@@ -20,6 +20,7 @@ import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.exception.ConfigLoadException;
 import com.baidu.openrasp.messaging.LogConfig;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.FileUtil;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
@@ -37,9 +38,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 
 /**
@@ -144,7 +143,9 @@ public class Config extends FileScanListener {
 
     static {
         baseDirectory = FileUtil.getBaseDir();
-        CustomResponseHtml.load(baseDirectory);
+        if (!getConfig().getCloudSwitch()) {
+            CustomResponseHtml.load(baseDirectory);
+        }
         LOGGER.info("baseDirectory: " + baseDirectory);
     }
 
@@ -193,13 +194,36 @@ public class Config extends FileScanListener {
     }
 
     public synchronized void loadConfigFromCloud(Map<String, Object> configMap, boolean isInit) {
+        TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
         for (Map.Entry<String, Object> entry : configMap.entrySet()) {
             if (entry.getKey().startsWith(HOOKS_WHITE)) {
-                String hooksType = entry.getKey().substring(entry.getKey().lastIndexOf(".") + 1);
-                if (entry.getValue() instanceof JsonArray) {
-                    ArrayList<String> list = CloudUtils.getListGsonObject().fromJson((JsonArray) entry.getValue(), new TypeToken<ArrayList<String>>() {
-                    }.getType());
-                    HookWhiteModel.init(hooksType, list);
+                int index = entry.getKey().lastIndexOf(".") + 1;
+                if (index < entry.getKey().length()) {
+                    String hooksType = entry.getKey().substring(index + 1).toUpperCase();
+                    try {
+                        Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
+                        if (entry.getValue() instanceof JsonArray) {
+                            ArrayList<String> list = CloudUtils.getListGsonObject().fromJson((JsonArray) entry.getValue(), new TypeToken<ArrayList<String>>() {
+                            }.getType());
+                            if (list.contains("all") || list.contains("ALL")) {
+                                if (temp.containsKey("")) {
+                                    temp.put("", temp.get("") + code);
+                                } else {
+                                    temp.put("", code);
+                                }
+                            } else {
+                                for (String url : list) {
+                                    if (temp.containsKey(url)) {
+                                        temp.put(url, temp.get(url) + code);
+                                    } else {
+                                        temp.put(url, code);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        LOGGER.warn("hook type not exist: ", e);
+                    }
                 }
             } else {
                 if (entry.getValue() instanceof JsonPrimitive) {
@@ -207,6 +231,7 @@ public class Config extends FileScanListener {
                 }
             }
         }
+        HookWhiteModel.init(temp);
     }
 
     private void reloadConfig(File file) {
