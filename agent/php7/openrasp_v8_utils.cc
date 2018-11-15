@@ -137,7 +137,7 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
 
     std::time_t t = std::time(nullptr);
     char buffer[100] = {0};
-    size_t size = std::strftime(buffer, sizeof(buffer), "%Y-%m-%d%t%H:%M:%S%z", std::localtime(&t));
+    size_t size = std::strftime(buffer, sizeof(buffer), RaspLoggerEntry::rasp_rfc3339_format, std::localtime(&t));
     auto event_time = NewV8String(isolate, buffer, size);
 
     auto obj = v8::Object::New(isolate);
