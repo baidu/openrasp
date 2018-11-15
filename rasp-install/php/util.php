@@ -47,9 +47,20 @@ function get_OS() {
 //获取 ini_scanned_path
 function get_ini_scanned_path() {
 	$ini_scanned_files = php_ini_scanned_files();
-	if ($ini_scanned_files) {
+	if (is_array($ini_scanned_files)) {
 		$ini_scanned_arr = explode(",\n", trim(php_ini_scanned_files()));
 		return dirname($ini_scanned_arr[0]);
+	} else if (is_string($ini_scanned_files)) {
+		ob_start();
+		phpinfo(1);
+		$subject = ob_get_contents();
+		ob_clean();
+		$pattern = "/^Scan this dir for additional .ini files => (.*)$/m";
+		preg_match_all($pattern, substr($subject,3), $matches);
+		if (empty($matches[1])) {
+			return false;
+		}
+		return $matches[1][0];
 	} else {
 		return false;
 	}
