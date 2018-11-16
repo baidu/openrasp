@@ -19,7 +19,7 @@
 
 OpenRASPActionType string_to_action(std::string action_string)
 {
-    return (action_string == "log") ? AC_LOG : ((action_string == "ignore") ? AC_IGNORE : AC_BLOCK);
+    return (action_string == "block") ? AC_BLOCK : ((action_string == "ignore") ? AC_IGNORE : AC_LOG);
 }
 std::string action_to_string(OpenRASPActionType type)
 {

@@ -4,6 +4,7 @@ hook array_map
 <?php
 $conf = <<<CONF
 callable.blacklist=["system", "exec"]
+callable.action="block"
 CONF;
 include(__DIR__.'/../skipif.inc');
 ?>

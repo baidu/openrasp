@@ -3,6 +3,9 @@ hook file_put_contents (webshell)
 --SKIPIF--
 <?php
 $dir = __DIR__;
+$conf = <<<CONF
+webshell_file_put_contents.action="block"
+CONF;
 include(__DIR__.'/../skipif.inc');
 ?>
 --INI--

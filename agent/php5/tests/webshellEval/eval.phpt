@@ -2,6 +2,9 @@
 hook eval (webshell)
 --SKIPIF--
 <?php
+$conf = <<<CONF
+webshell_eval.action="block"
+CONF;
 include(__DIR__.'/../skipif.inc');
 ?>
 --INI--

@@ -2,6 +2,9 @@
 hook shell_exec (webshell)
 --SKIPIF--
 <?php
+$conf = <<<CONF
+webshell_command.action="block"
+CONF;
 include(__DIR__.'/../skipif.inc');
 ?>
 --INI--

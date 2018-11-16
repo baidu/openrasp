@@ -3,6 +3,9 @@ hook assert (webshell)
 --SKIPIF--
 <?php
 if (PHP_MAJOR_VERSION >= 7) die('Skipped: assert() is now a language construct and not a function in PHP7.');
+$conf = <<<CONF
+webshell_eval.action="block"
+CONF;
 include(__DIR__.'/../skipif.inc');
 ?>
 --INI--
