@@ -100,7 +100,7 @@ public class Config extends FileScanListener {
         }
     }
 
-    private static final String HOOKS_WHITE = "hooks.white";
+    private static final String HOOKS_WHITE = "hook.white";
     private static final String CONFIG_DIR_NAME = "conf";
     private static final String CONFIG_FILE_NAME = "rasp.properties";
     public static final int REFLECTION_STACK_START_INDEX = 0;
@@ -199,7 +199,7 @@ public class Config extends FileScanListener {
             if (entry.getKey().startsWith(HOOKS_WHITE)) {
                 int index = entry.getKey().lastIndexOf(".") + 1;
                 if (index < entry.getKey().length()) {
-                    String hooksType = entry.getKey().substring(index + 1).toUpperCase();
+                    String hooksType = entry.getKey().substring(index).toUpperCase();
                     try {
                         Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
                         if (entry.getValue() instanceof JsonArray) {
