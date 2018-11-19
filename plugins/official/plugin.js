@@ -41,6 +41,7 @@ var algorithmConfig = {
     // 2. 用户输入至少包含一个SQL关键词 - 即 pre_filter，默认关闭
     // 3. 用户输入完整的出现在SQL语句中，且会导致SQL语句逻辑发生变化
     sqli_userinput: {
+        name:       '算法1 - 用户输入匹配算法',
         action:     'block',
         min_length: 15,
         pre_filter: 'select|file|from|;',
@@ -48,6 +49,7 @@ var algorithmConfig = {
     },
     // SQL注入算法#2 - 语句规范
     sqli_policy: {
+        name:    '算法2 - 拦截异常SQL语句',
         action:  'block',
 
         // 粗规则 - 为了减少 tokenize 次数，当SQL语句包含一定特征时才进入
@@ -104,14 +106,17 @@ var algorithmConfig = {
     },
     // SSRF - 来自用户输入，且为内网地址就拦截
     ssrf_userinput: {
+        name:   '算法1 - 用户输入匹配算法',
         action: 'block'
     },
     // SSRF - 是否允许访问 aws metadata
     ssrf_aws: {
+        name:   '算法2 - 拦截 AWS metadata 访问',
         action: 'block'
     },
     // SSRF - 是否允许访问 dnslog 地址
     ssrf_common: {
+        name:    '算法3 - 拦截常见 dnslog 地址',
         action:  'block',
         domains: [
             '.ceye.io',
@@ -125,11 +130,13 @@ var algorithmConfig = {
     },
     // SSRF - 是否允许访问混淆后的IP地址
     ssrf_obfuscate: {
+        name:   '算法4 - 拦截混淆地址',
         action: 'block'
     },
     // SSRF - 禁止使用 curl 读取 file:///etc/passwd、php://filter/XXXX 这样的内容
     ssrf_protocol: {
-        action: 'block',
+        name:      '算法5 - 拦截 php:// 等异常协议',
+        action:    'block',
         protocols: [
             'file',
             'gopher',
@@ -149,67 +156,82 @@ var algorithmConfig = {
 
     // 任意文件下载防护 - 来自用户输入
     readFile_userinput: {
+        name:   '算法1 - 用户输入匹配算法',
         action: 'block'
     },
     // 任意文件下载防护 - 使用 file_get_contents 等函数读取 http(s):// 内容（注意，这里不区分是否为内网地址）
     readFile_userinput_http: {
+        name:   '算法2 - 用户输入匹配算法 + http 协议',
         action: 'block'
     },
     // 任意文件下载防护 - 使用 file_get_contents 等函数读取 file://、php:// 协议
     readFile_userinput_unwanted: {
+        name:   '算法3 - 拦截 php:// 等异常协议',
         action: 'block'
     },
     // 任意文件下载防护 - 使用 ../../ 跳出 web 目录读取敏感文件
     readFile_outsideWebroot: {
+        name:   '算法4 - 禁止使用 ../ 访问web目录以外的文件',
         action: 'ignore'
     },
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
     readFile_unwanted: {
+        name:   '算法5 - 文件探针算法',
         action: 'block'
     },
 
     // 写文件操作 - NTFS 流
     writeFile_NTFS: {
+        name:   '算法1 - 拦截 NTFS ::$DATA 写入操作',
         action: 'block'
     },
     // 写文件操作 - PUT 上传脚本文件
     writeFile_PUT_script: {
+        name:   '算法2 - 拦截 PUT 方式上传 php/jsp 等脚本文件',
         action: 'block'
     },
     // 写文件操作 - 脚本文件
     // https://rasp.baidu.com/doc/dev/official.html#case-file-write
     writeFile_script: {
-        action: 'ignore'
+        name:      '算法1 - 拦截所有 php/jsp 等脚本文件的写入操作',
+        reference: 'https://rasp.baidu.com/doc/dev/official.html#case-file-write',
+        action:    'ignore'
     },
 
     // 重命名监控 - 将普通文件重命名为webshell，
     // 案例有 MOVE 方式上传后门、CVE-2018-9134 dedecms v5.7 后台重命名 getshell
     rename_webshell: {
+        name:   '算法1 - 防止通过重命名获取 WebShell，包括 MOVE 方式',
         action: 'block'
     },
     // copy_webshell: {
     //     action: 'block'
     // },
 
+    // 文件管理器 - 用户输入匹配，仅当直接读取绝对路径时才检测
+    directory_userinput: {
+        name:   '算法1 - 用户输入匹配算法',
+        action: 'block'
+    },
     // 文件管理器 - 反射方式列目录
     directory_reflect: {
+        name:   '算法2 - 拦截反射方式读取目录结构，比如中国菜刀',
         action: 'block'
     },
     // 文件管理器 - 查看敏感目录
     directory_unwanted: {
-        action: 'block'
-    },
-    // 文件管理器 - 用户输入匹配，仅当直接读取绝对路径时才检测
-    directory_userinput: {
+        name:   '算法3 - 敏感目录探针算法',
         action: 'block'
     },
 
     // 文件包含 - 用户输入匹配
     include_userinput: {
+        name:   '算法1 - 用户输入匹配算法',
         action: 'block'
     },
     // 文件包含 - 特殊协议
     include_protocol: {
+        name:   '算法2 - 拦截 jar:// 等异常协议',
         action: 'block',
         protocols: [
             'file',
@@ -234,6 +256,7 @@ var algorithmConfig = {
 
     // XXE - 使用 gopher/ftp/dict/.. 等不常见协议访问外部实体
     xxe_protocol: {
+        name:   '算法1 - 拦截 ftp:// 等异常协议',
         action: 'block',
         protocols: [
             'ftp',
@@ -245,43 +268,53 @@ var algorithmConfig = {
     },
     // XXE - 使用 file 协议读取内容，可能误报，默认 log
     xxe_file: {
-        action: 'log',
+        name:      '算法2 - 拦截 file:// 协议',
+        reference: 'https://rasp.baidu.com/doc/dev/official.html#case-xxe',
+        action:    'log',
     },
 
     // 文件上传 - COPY/MOVE 方式，仅适合 tomcat
     fileUpload_webdav: {
+        name:   '算法1 - 拦截 COPY/MOVE 方式文件上传',
         action: 'block'
     },
     // 文件上传 - Multipart 方式上传脚本文件
     fileUpload_multipart_script: {
+        name:   '算法2 - 拦截 multipart 方式文件上传（PHP/JSP 等后端脚本文件）',
         action: 'block'
     },
     // 文件上传 - Multipart 方式上传 HTML/JS 等文件
     fileUpload_multipart_html: {
+        name:   '算法3 - 拦截 multipart 方式文件上传（HTML/JS 等前端脚本文件）',
         action: 'ignore'
     },
 
     // OGNL 代码执行漏洞
     ognl_exec: {
+        name:   '算法1 - 拦截异常OGNL语句',
         action: 'block'
     },
 
     // 命令执行 - java 反射、反序列化，php eval 等方式
     command_reflect: {
+        name:   '算法1 - 拦截反射的命令执行，主要是反序列化',
         action: 'block'
     },
     // 命令注入 - 命令执行后门，或者命令注入
     command_userinput: {
+        name:       '算法2 - 用户输入匹配算法，包括命令注入检测',
         action:     'block',
         min_length: 8
     },
     // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
     command_other: {
+        name:   '算法3 - 记录或者拦截所有命令执行操作',
         action: 'log'
     },
 
     // transformer 反序列化攻击
     transformer_deser: {
+        name:   '算法1 - 拦截 transformer 反序列化攻击',
         action: 'block'
     }
 }
