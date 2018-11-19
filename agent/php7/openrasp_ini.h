@@ -51,6 +51,7 @@ public:
   unsigned int plugin_update_interval = 60;
   unsigned int log_push_interval = 10;
   char *app_id;
+  char *app_secret;
   bool plugin_update_enable = 1;
   int block_status_code = 302;
   char *block_redirect_url;

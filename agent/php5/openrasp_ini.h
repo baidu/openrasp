@@ -48,6 +48,7 @@ class Openrasp_ini
     std::unordered_set<std::string> callable_blacklists;
     char* backend_url;
     char *app_id;
+    char *app_secret;
     bool plugin_update_enable = 1;
     char *block_redirect_url;
     char *block_content_json;

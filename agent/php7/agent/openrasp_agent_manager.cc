@@ -120,12 +120,12 @@ bool OpenraspAgentManager::verify_ini_correct()
 {
 	if (openrasp_ini.remote_management_enable && check_sapi_need_alloc_shm())
 	{
-		if (nullptr == openrasp_ini.backend_url)
+		if (nullptr == openrasp_ini.backend_url || strcmp(openrasp_ini.backend_url, "") == 0)
 		{
 			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.backend_url is required when remote management is enabled."));
 			return false;
 		}
-		if (nullptr == openrasp_ini.app_id)
+		if (nullptr == openrasp_ini.app_id || strcmp(openrasp_ini.app_id, "") == 0)
 		{
 			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_id is required when remote management is enabled."));
 			return false;
@@ -134,7 +134,20 @@ bool OpenraspAgentManager::verify_ini_correct()
 		{
 			if (!regex_match(openrasp_ini.app_id, "^[0-9a-fA-F]{40}$"))
 			{
-				openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_id must be exactly 40 characters long"));
+				openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_id must be exactly 40 characters long."));
+				return false;
+			}
+		}
+		if (nullptr == openrasp_ini.app_secret || strcmp(openrasp_ini.app_secret, "") == 0)
+		{
+			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_secret is required when remote management is enabled."));
+			return false;
+		}
+		else
+		{
+			if (!regex_match(openrasp_ini.app_secret, "^[0-9a-fA-F_-]{43,45}"))
+			{
+				openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_secret configuration format is incorrect."));
 				return false;
 			}
 		}

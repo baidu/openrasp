@@ -50,8 +50,10 @@ std::shared_ptr<BackendResponse> BackendRequest::curl_perform()
         std::string header_string;
         std::string response_string;
         struct curl_slist *chunk = nullptr;
-        std::string auth_header = "X-OpenRASP-AppID: " + std::string(openrasp_ini.app_id);
-        chunk = curl_slist_append(chunk, auth_header.c_str());
+        std::string auth_header_id = "X-OpenRASP-AppID: " + std::string(openrasp_ini.app_id);
+        chunk = curl_slist_append(chunk, auth_header_id.c_str());
+        std::string auth_header_secret = "X-OpenRASP-AppSecret: " + std::string(openrasp_ini.app_secret);
+        chunk = curl_slist_append(chunk, auth_header_secret.c_str());
         curl_code = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
