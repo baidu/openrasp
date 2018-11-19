@@ -1,4 +1,4 @@
-const version = '2018-1119-1600'
+const version = '2018-1119-2100'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -36,11 +36,16 @@ var plugin  = new RASP('offical')
 // BEGIN ALGORITHM CONFIG //
 
 var algorithmConfig = {
+    // 快速设置 - 若 all_log 开启，则所有的 block 都改为 log
+    meta: {
+        all_log: false,
+    },
+
     // SQL注入算法#1 - 匹配用户输入
     // 1. 用户输入长度至少 15
     // 2. 用户输入至少包含一个SQL关键词 - 即 pre_filter，默认关闭
     // 3. 用户输入完整的出现在SQL语句中，且会导致SQL语句逻辑发生变化
-    sqli_userinput: {
+    sql_userinput: {
         name:       '算法1 - 用户输入匹配算法',
         action:     'block',
         min_length: 15,
@@ -48,7 +53,7 @@ var algorithmConfig = {
         pre_enable: false,
     },
     // SQL注入算法#2 - 语句规范
-    sqli_policy: {
+    sql_policy: {
         name:    '算法2 - 拦截异常SQL语句',
         action:  'block',
 
@@ -171,7 +176,7 @@ var algorithmConfig = {
     },
     // 任意文件下载防护 - 使用 ../../ 跳出 web 目录读取敏感文件
     readFile_outsideWebroot: {
-        name:   '算法4 - 禁止使用 ../ 访问web目录以外的文件',
+        name:   '算法4 - 禁止使用 ../../ 访问web目录以外的文件',
         action: 'ignore'
     },
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
@@ -201,7 +206,7 @@ var algorithmConfig = {
     // 重命名监控 - 将普通文件重命名为webshell，
     // 案例有 MOVE 方式上传后门、CVE-2018-9134 dedecms v5.7 后台重命名 getshell
     rename_webshell: {
-        name:   '算法1 - 防止通过重命名获取 WebShell，包括 MOVE 方式',
+        name:   '算法1 - 通过重命名方式获取 WebShell',
         action: 'block'
     },
     // copy_webshell: {
@@ -215,12 +220,12 @@ var algorithmConfig = {
     },
     // 文件管理器 - 反射方式列目录
     directory_reflect: {
-        name:   '算法2 - 拦截反射方式读取目录结构，比如中国菜刀',
+        name:   '算法2 - 通过反射条用，查看目录内容',
         action: 'block'
     },
     // 文件管理器 - 查看敏感目录
     directory_unwanted: {
-        name:   '算法3 - 敏感目录探针算法',
+        name:   '算法3 - 尝试查看敏感目录',
         action: 'block'
     },
 
@@ -231,7 +236,7 @@ var algorithmConfig = {
     },
     // 文件包含 - 特殊协议
     include_protocol: {
-        name:   '算法2 - 拦截 jar:// 等异常协议',
+        name:   '算法2 - 尝试包含 jar:// 等异常协议',
         action: 'block',
         protocols: [
             'file',
@@ -256,7 +261,7 @@ var algorithmConfig = {
 
     // XXE - 使用 gopher/ftp/dict/.. 等不常见协议访问外部实体
     xxe_protocol: {
-        name:   '算法1 - 拦截 ftp:// 等异常协议',
+        name:   '算法1 - 使用 ftp:// 等异常协议加载外部实体',
         action: 'block',
         protocols: [
             'ftp',
@@ -268,36 +273,36 @@ var algorithmConfig = {
     },
     // XXE - 使用 file 协议读取内容，可能误报，默认 log
     xxe_file: {
-        name:      '算法2 - 拦截 file:// 协议',
+        name:      '算法2 - 使用 file:// 协议读取文件',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#case-xxe',
         action:    'log',
     },
 
     // 文件上传 - COPY/MOVE 方式，仅适合 tomcat
     fileUpload_webdav: {
-        name:   '算法1 - 拦截 COPY/MOVE 方式文件上传',
+        name:   '算法1 - MOVE 方式文件上传脚本文件',
         action: 'block'
     },
     // 文件上传 - Multipart 方式上传脚本文件
     fileUpload_multipart_script: {
-        name:   '算法2 - 拦截 multipart 方式文件上传（PHP/JSP 等后端脚本文件）',
+        name:   '算法2 - Multipart 方式文件上传 PHP/JSP 等脚本文件',
         action: 'block'
     },
     // 文件上传 - Multipart 方式上传 HTML/JS 等文件
     fileUpload_multipart_html: {
-        name:   '算法3 - 拦截 multipart 方式文件上传（HTML/JS 等前端脚本文件）',
+        name:   '算法3 - Multipart 方式文件上传 HTML/JS 等文件',
         action: 'ignore'
     },
 
     // OGNL 代码执行漏洞
     ognl_exec: {
-        name:   '算法1 - 拦截异常OGNL语句',
+        name:   '算法1 - 执行异常 OGNL 语句',
         action: 'block'
     },
 
     // 命令执行 - java 反射、反序列化，php eval 等方式
     command_reflect: {
-        name:   '算法1 - 拦截反射的命令执行，主要是反序列化',
+        name:   '算法1 - 通过反射执行命令，比如反序列化利用',
         action: 'block'
     },
     // 命令注入 - 命令执行后门，或者命令注入
@@ -322,9 +327,11 @@ var algorithmConfig = {
 // END ALGORITHM CONFIG //
 
 // 将所有拦截开关设置为 log
-// Object.keys(algorithmConfig).forEach(function (name) {
-//     algorithmConfig[name].action = 'log'
-// })
+if (algorithmConfig.meta.all_log) {
+    Object.keys(algorithmConfig).forEach(function (name) {
+        algorithmConfig[name].action = 'log'
+    })
+}
 
 const clean = {
     action:     'ignore',
@@ -391,10 +398,10 @@ var htmlFileRegex   = /\.(htm|html|js)$/i
 var ntfsRegex       = /::\$(DATA|INDEX)$/i
 
 // SQL注入算法1 - 预过滤正则
-var sqliPrefilter1  = new RegExp(algorithmConfig.sqli_userinput.pre_filter)
+var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter)
 
 // SQL注入算法2 - 预过滤正则
-var sqliPrefilter2  = new RegExp(algorithmConfig.sqli_policy.pre_filter)
+var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter)
 
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue) {
@@ -662,7 +669,7 @@ if (RASP.get_jsengine() !== 'v8') {
     plugin.register('sql', function (params, context) {
 
         var reason     = false
-        var min_length = algorithmConfig.sqli_userinput.min_length
+        var min_length = algorithmConfig.sql_userinput.min_length
         var parameters = context.parameter || {}
         var raw_tokens = []
 
@@ -680,7 +687,7 @@ if (RASP.get_jsengine() !== 'v8') {
                     return false
                 }
 
-                if (algorithmConfig.sqli_userinput.pre_enable && ! sqliPrefilter1.test(params.query.toLowerCase())) {
+                if (algorithmConfig.sql_userinput.pre_enable && ! sqliPrefilter1.test(params.query.toLowerCase())) {
                     return false
                 }
 
@@ -699,7 +706,7 @@ if (RASP.get_jsengine() !== 'v8') {
         }
 
         // 算法1: 匹配用户输入，简单识别逻辑是否发生改变
-        if (algorithmConfig.sqli_userinput.action != 'ignore') {
+        if (algorithmConfig.sql_userinput.action != 'ignore') {
 
             // 匹配 GET/POST/multipart 参数
             Object.keys(parameters).some(function (name) {
@@ -723,16 +730,16 @@ if (RASP.get_jsengine() !== 'v8') {
             if (reason !== false)
             {
                 return {
-                    action:     algorithmConfig.sqli_userinput.action,
+                    action:     algorithmConfig.sql_userinput.action,
                     confidence: 90,
                     message:    reason,
-                    algorithm:  'sqli_userinput'
+                    algorithm:  'sql_userinput'
                 }
             }
         }
 
         // 算法2: SQL语句策略检查（模拟SQL防火墙功能）
-        if (algorithmConfig.sqli_policy.action != 'ignore') {
+        if (algorithmConfig.sql_policy.action != 'ignore') {
 
             // 懒加载，需要时才处理
             if (raw_tokens.length == 0) {
@@ -743,8 +750,8 @@ if (RASP.get_jsengine() !== 'v8') {
                 }
             }
 
-            var features  = algorithmConfig.sqli_policy.feature
-            var func_list = algorithmConfig.sqli_policy.function_blacklist
+            var features  = algorithmConfig.sql_policy.feature
+            var func_list = algorithmConfig.sql_policy.function_blacklist
 
             // 转换小写，避免大小写绕过
             var tokens_lc = raw_tokens.map(function(v) {
@@ -825,10 +832,10 @@ if (RASP.get_jsengine() !== 'v8') {
 
             if (reason !== false) {
                 return {
-                    action:     algorithmConfig.sqli_policy.action,
+                    action:     algorithmConfig.sql_policy.action,
                     message:    reason,
                     confidence: 100,
-                    algorithm:  'sqli_policy'
+                    algorithm:  'sql_policy'
                 }
             }
         }
