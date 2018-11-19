@@ -1,4 +1,4 @@
-const version = '2018-1119-1600'
+const version = '2018-1119-2100'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -36,6 +36,11 @@ var plugin  = new RASP('offical')
 // BEGIN ALGORITHM CONFIG //
 
 var algorithmConfig = {
+    // 快速设置 - 若 all_log 开启，则所有的 block 都改为 log
+    meta: {
+        all_log: false,
+    },
+
     // SQL注入算法#1 - 匹配用户输入
     // 1. 用户输入长度至少 15
     // 2. 用户输入至少包含一个SQL关键词 - 即 pre_filter，默认关闭
@@ -322,9 +327,11 @@ var algorithmConfig = {
 // END ALGORITHM CONFIG //
 
 // 将所有拦截开关设置为 log
-// Object.keys(algorithmConfig).forEach(function (name) {
-//     algorithmConfig[name].action = 'log'
-// })
+if (algorithmConfig.meta.all_log) {
+    Object.keys(algorithmConfig).forEach(function (name) {
+        algorithmConfig[name].action = 'log'
+    })
+}
 
 const clean = {
     action:     'ignore',
