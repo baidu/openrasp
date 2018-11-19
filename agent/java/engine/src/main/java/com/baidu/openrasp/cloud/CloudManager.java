@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.plugin.checker.policy.serverpolicy;
+package com.baidu.openrasp.cloud;
 
-import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.info.EventInfo;
-
-import java.util.List;
+import org.apache.log4j.Logger;
 
 /**
- * @description: resin基线检查
+ * @description: 初始化云控配置
  * @author: anyang
- * @create: 2018/09/10 12:16
+ * @create: 2018/09/18 15:09
  */
-public class ResinSecurityChecker extends ServerPolicyChecker {
-    @Override
-    public void checkServer(CheckParameter checkParameter, List<EventInfo> infos) {
+public class CloudManager {
+    public static final Logger LOGGER = Logger.getLogger(CloudManager.class.getPackage().getName() + ".log");
+
+    public static void init() {
+        new KeepAlive();
+        new StatisticsReport();
     }
+
+
 }

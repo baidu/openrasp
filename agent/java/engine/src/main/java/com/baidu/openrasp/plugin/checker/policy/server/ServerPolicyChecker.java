@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.plugin.checker.policy.serverpolicy;
+package com.baidu.openrasp.plugin.checker.policy.server;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
@@ -24,8 +24,11 @@ import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
 import org.apache.log4j.Logger;
 
+import java.lang.management.ManagementFactory;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @description: 服务器基线检查基类
@@ -33,6 +36,15 @@ import java.util.List;
  * @create: 2018/09/10 11:53
  */
 public abstract class ServerPolicyChecker extends PolicyChecker {
+
+    public ServerPolicyChecker() {
+        super();
+    }
+
+    public ServerPolicyChecker(boolean canBlock) {
+        super(canBlock);
+    }
+
     private static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
     private static final String SERVER_CHECK_ERROR_LOG_CHANNEL = "server_security_check_error";
     private static final String WINDOWS_ADMIN_GROUP_ID = "S-1-5-32-544";
@@ -52,9 +64,11 @@ public abstract class ServerPolicyChecker extends PolicyChecker {
      */
     private void checkStartUser(List<EventInfo> infos) {
         String osName = System.getProperty("os.name").toLowerCase();
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("pid", getProcessID());
         if (osName.startsWith("linux") || osName.startsWith("mac")) {
             if ("root".equals(System.getProperty("user.name"))) {
-                infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.START_USER, "Java security baseline - should not start application server with root account", true));
+                infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.START_USER, "Java security baseline - should not start application server with root account", true, params));
             }
         } else if (osName.startsWith("windows")) {
             try {
@@ -64,7 +78,7 @@ public abstract class ServerPolicyChecker extends PolicyChecker {
                 if (userGroups != null) {
                     for (String group : userGroups) {
                         if (group.equals(WINDOWS_ADMIN_GROUP_ID)) {
-                            infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.START_USER, "Java security baseline - should not start application server with Administrator/system account", true));
+                            infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.START_USER, "Java security baseline - should not start application server with Administrator/system account", true, params));
                         }
                     }
                 }
@@ -74,6 +88,16 @@ public abstract class ServerPolicyChecker extends PolicyChecker {
                 }
             }
         }
+    }
+
+    private int getProcessID() {
+        try {
+            String[] pids = ManagementFactory.getRuntimeMXBean().getName().split("@");
+            return Integer.parseInt(pids[0]);
+        } catch (Throwable e) {
+            LOGGER.warn("get process id failed: ", e);
+        }
+        return -1;
     }
 
 }

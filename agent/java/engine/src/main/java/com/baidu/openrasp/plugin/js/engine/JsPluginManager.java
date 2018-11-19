@@ -17,6 +17,7 @@
 package com.baidu.openrasp.plugin.js.engine;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
@@ -54,8 +55,10 @@ public class JsPluginManager {
      */
     public synchronized static void init() throws Exception {
         JSContextFactory.init();
-        updatePlugin();
-        initFileWatcher();
+        if (!CloudUtils.checkCloudControlEnter()) {
+            updatePlugin();
+            initFileWatcher();
+        }
     }
 
     public synchronized static void release() {
@@ -86,21 +89,21 @@ public class JsPluginManager {
                     @Override
                     public void onFileCreate(File file) {
                         if (file.getName().endsWith(".js")) {
-                            updatePluginAsync();
+                            updatePluginAsync(null, null, null, null);
                         }
                     }
 
                     @Override
                     public void onFileChange(File file) {
                         if (file.getName().endsWith(".js")) {
-                            updatePluginAsync();
+                            updatePluginAsync(null, null, null, null);
                         }
                     }
 
                     @Override
                     public void onFileDelete(File file) {
                         if (file.getName().endsWith(".js")) {
-                            updatePluginAsync();
+                            updatePluginAsync(null, null, null, null);
                         }
                     }
                 });
@@ -120,14 +123,15 @@ public class JsPluginManager {
         // 清空 algorithm.config 配置
         Config.getConfig().setAlgorithmConfig("{}");
         boolean oldValue = HookHandler.enableHook.getAndSet(false);
+        List<CheckScript> scripts = new LinkedList<CheckScript>();
         File pluginDir = new File(Config.getConfig().getScriptDirectory());
         LOGGER.debug("checker directory: " + pluginDir.getAbsolutePath());
         if (!pluginDir.isDirectory()) {
             pluginDir.mkdir();
         }
-        FileFilter filter = FileFilterUtils.and(FileFilterUtils.sizeFileFilter(10 * 1024 * 1024, false), FileFilterUtils.suffixFileFilter(".js"));
+        FileFilter filter = FileFilterUtils.and(FileFilterUtils.sizeFileFilter(10 * 1024 * 1024, false),
+                FileFilterUtils.suffixFileFilter(".js"));
         File[] pluginFiles = pluginDir.listFiles(filter);
-        List<CheckScript> scripts = new LinkedList<CheckScript>();
         if (pluginFiles != null) {
             for (File file : pluginFiles) {
                 try {
@@ -139,7 +143,14 @@ public class JsPluginManager {
         }
 
         JSContextFactory.setCheckScriptList(scripts);
+        HookHandler.enableHook.set(oldValue);
+    }
 
+    private synchronized static void updatePlugin(String plugin, String md5, String version, Long deliveryTime) throws Exception {
+        // 清空 algorithm.config 配置
+        Config.getConfig().setAlgorithmConfig("{}");
+        boolean oldValue = HookHandler.enableHook.getAndSet(false);
+        JSContextFactory.setCloudCheckScript(plugin, md5, version, deliveryTime);
         HookHandler.enableHook.set(oldValue);
     }
 
@@ -150,7 +161,7 @@ public class JsPluginManager {
      * <p>
      * 若产生抖动，可适量增大定时器延时
      */
-    private synchronized static void updatePluginAsync() {
+    public synchronized static void updatePluginAsync(final String plugin, final String md5, final String version, final Long deliveryTime) {
         if (timer != null) {
             timer.cancel();
             timer = null;
@@ -160,7 +171,11 @@ public class JsPluginManager {
             @Override
             public void run() {
                 try {
-                    updatePlugin();
+                    if (plugin != null && md5 != null && version != null) {
+                        updatePlugin(plugin, md5, version, deliveryTime);
+                    } else {
+                        updatePlugin();
+                    }
                 } catch (Exception e) {
                     LOGGER.error("", e);
                 }
@@ -171,6 +186,4 @@ public class JsPluginManager {
             }
         }, 500);
     }
-
-
 }

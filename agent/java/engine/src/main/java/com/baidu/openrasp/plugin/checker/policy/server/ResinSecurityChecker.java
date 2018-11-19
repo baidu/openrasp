@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.plugin.checker.policy.serverpolicy;
+package com.baidu.openrasp.plugin.checker.policy.server;
 
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
@@ -22,11 +22,19 @@ import com.baidu.openrasp.plugin.info.EventInfo;
 import java.util.List;
 
 /**
- * @description: jetty基线检查
+ * @description: resin基线检查
  * @author: anyang
- * @create: 2018/09/10 12:22
+ * @create: 2018/09/10 12:16
  */
-public class JettySecurityChecker extends ServerPolicyChecker {
+public class ResinSecurityChecker extends ServerPolicyChecker {
+    public ResinSecurityChecker() {
+        super();
+    }
+
+    public ResinSecurityChecker(boolean canBlock) {
+        super(canBlock);
+    }
+
     @Override
     public void checkServer(CheckParameter checkParameter, List<EventInfo> infos) {
     }

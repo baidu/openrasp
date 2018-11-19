@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.plugin.checker.policy.serverpolicy;
+package com.baidu.openrasp.plugin.checker.policy.server;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -37,6 +37,13 @@ import java.util.*;
  * 　　* @date 2018/7/30 15:51
  */
 public class JBossSecurityChecker extends ServerPolicyChecker {
+    public JBossSecurityChecker() {
+        super();
+    }
+
+    public JBossSecurityChecker(boolean canBlock) {
+        super(canBlock);
+    }
 
     private static final String JBOSS_SECURITY_CHECK_ERROR = "jboss_security_check_error";
     private static final String SECURITY_DOMAIN = "security-domain";
@@ -149,6 +156,8 @@ public class JBossSecurityChecker extends ServerPolicyChecker {
 
 
     public void handleError(String tagName, String path, List<EventInfo> infos) {
-        infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.JBOSS_JMX_CONSOLE, "JBoss security baseline - Auth constraint for /jmx-console/HTMLAdaptor is not enabled in " + path + "(" + tagName + " is missing or wrong)", true));
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("config_file",path);
+        infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.JBOSS_JMX_CONSOLE, "JBoss security baseline - Auth constraint for /jmx-console/HTMLAdaptor is not enabled in " + path + "(" + tagName + " is missing or wrong)", true,params));
     }
 }

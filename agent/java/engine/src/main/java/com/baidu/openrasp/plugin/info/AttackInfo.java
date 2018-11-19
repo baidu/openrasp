@@ -16,6 +16,8 @@
 
 package com.baidu.openrasp.plugin.info;
 
+import com.baidu.openrasp.cloud.model.CloudCacheModel;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.tool.OSUtil;
@@ -84,7 +86,7 @@ public class AttackInfo extends EventInfo {
 
         info.put("event_type", getType());
         // 攻击时间
-        info.put("event_time", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(createTime));
+        info.put("event_time", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(createTime));
         // 服务器host name
         info.put("server_hostname", OSUtil.getHostName());
         // 攻击类型
@@ -104,14 +106,21 @@ public class AttackInfo extends EventInfo {
         info.put("intercept_state", this.action);
         // 检测算法
         info.put("plugin_algorithm", this.algorithm);
-
+        if (Config.getConfig().getCloudSwitch()){
+            // raspId
+            info.put("rasp_id",CloudCacheModel.getInstance().getRaspId());
+            // appId
+            info.put("app_id", Config.getConfig().getCloudAppId());
+        }
         if (request != null) {
             // 请求ID
             info.put("request_id", request.getRequestId());
             // 攻击来源IP
             info.put("attack_source", request.getRemoteAddr());
             // 攻击真实IP
-            info.put("client_ip", request.getClinetIp());
+            info.put("client_ip",request.getClinetIp());
+            // 服务器ip
+            info.put("server_nic", OSUtil.getIpAddress());
             // 被攻击目标域名
             info.put("target", request.getServerName());
             // 被攻击目标IP

@@ -90,12 +90,11 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
                     }
                     if (contentType != null && contentType.contains(HttpServletResponse.CONTENT_TYPE_HTML_VALUE)) {
                         String injectPathPrefix = Config.getConfig().getInjectUrlPrefix();
-                        if (!StringUtils.isEmpty(injectPathPrefix)) {
-                            if (HookHandler.requestCache.get().getRequestURL().toString().startsWith(injectPathPrefix)) {
-                                String appendHtml = Config.getConfig().getCustomResponseScript();
-                                if (!StringUtils.isEmpty(appendHtml)) {
-                                    response.sendContent(appendHtml, false);
-                                }
+                        if (!StringUtils.isEmpty(injectPathPrefix) &&
+                                HookHandler.requestCache.get().getRequestURL().toString().startsWith(injectPathPrefix)) {
+                            String appendHtml = Config.getConfig().getCustomResponseScript();
+                            if (!StringUtils.isEmpty(appendHtml)) {
+                                response.sendContent(appendHtml, false);
                             }
                         }
                     }

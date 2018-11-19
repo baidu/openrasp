@@ -132,6 +132,13 @@
     <!--<param name="cacheFlushTime" value="60000"/>-->
     <!--</appender>-->
 
+    <appender name="HTTPAPPENDER" class="com.baidu.openrasp.cloud.httpappender.HttpAppender">
+            <filter class="com.baidu.openrasp.messaging.BurstFilter">
+                 <param name="maxBurst" value="100" />
+                 <param name="refillAmount" value="100" />
+                 <param name="refillInterval" value="1000" />
+            </filter>
+    </appender>
 
     <logger name="com.baidu.openrasp.plugin.checker.alarm" additivity="false">
         <level value="INFO"/>

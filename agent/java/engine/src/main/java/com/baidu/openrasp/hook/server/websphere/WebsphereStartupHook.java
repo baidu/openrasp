@@ -78,7 +78,8 @@ public class WebsphereStartupHook extends ServerStartupHook {
                 }
             }
         }
-        HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_WEBSPHERE_START, CheckParameter.EMPTY_MAP);
+        sendRegister();
+        HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_WEBSPHERE_START, CheckParameter.EMPTY_MAP);
     }
 
     private static Document getXMLDocument(String path) {

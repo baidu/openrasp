@@ -16,6 +16,7 @@
 
 package com.baidu.openrasp;
 
+import com.baidu.openrasp.cloud.model.HookWhiteModel;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.exception.SecurityException;
 import com.baidu.openrasp.hook.XXEHook;
@@ -30,6 +31,7 @@ import org.apache.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by zhuming01 on 5/16/17.
@@ -41,6 +43,7 @@ public class HookHandler {
     public static final String OPEN_RASP_HEADER_KEY = "X-Protected-By";
     public static final String OPEN_RASP_HEADER_VALUE = "OpenRASP";
     public static final String REQUEST_ID_HEADER_KEY = "X-Request-ID";
+    public static AtomicInteger TOTAL_REQUEST_NUM = new AtomicInteger(0);
     public static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
     // 全局开关
     public static AtomicBoolean enableHook = new AtomicBoolean(false);
@@ -212,6 +215,7 @@ public class HookHandler {
      * @param response 响应实体
      */
     public static void checkFilterRequest(Object filter, Object request, Object response) {
+        TOTAL_REQUEST_NUM.incrementAndGet();
         checkRequest(filter, request, response);
     }
 
@@ -276,12 +280,12 @@ public class HookHandler {
     }
 
     /**
-     * 无需在请求线程中执行的检测入口
+     * 检测入口
      *
      * @param type   检测类型
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
-    public static void doCheckWithoutRequest(CheckParameter.Type type, Object params) {
+    public static void doPolicyCheckWithoutRequest(CheckParameter.Type type, Object params) {
         long a = 0;
         if (Config.getConfig().getDebugLevel() > 0) {
             a = System.currentTimeMillis();
@@ -307,6 +311,26 @@ public class HookHandler {
         if (isBlock) {
             handleBlock();
         }
+    }
+
+    /**
+     * 无需在请求线程中执行的检测入口
+     *
+     * @param type   检测类型
+     * @param params 检测参数map，key为参数名，value为检测参数值
+     */
+    public static void doCheckWithoutRequest(CheckParameter.Type type, Object params) {
+        if (Config.getConfig().getHookWhiteAll() && Config.getConfig().getCloudSwitch()) {
+            return;
+        }
+        if (requestCache.get() != null) {
+            StringBuffer sb = requestCache.get().getRequestURL();
+            String url = sb.substring(sb.indexOf("://") + 3);
+            if (HookWhiteModel.isContainURL(type.getCode(), url)) {
+                return;
+            }
+        }
+        doPolicyCheckWithoutRequest(type, params);
     }
 
     /**

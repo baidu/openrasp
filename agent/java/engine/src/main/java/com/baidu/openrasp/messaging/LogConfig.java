@@ -17,9 +17,14 @@
 package com.baidu.openrasp.messaging;
 
 import com.baidu.openrasp.EngineBoot;
+import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.exception.ConfigLoadException;
+import com.baidu.openrasp.tool.OSUtil;
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 
 /**
@@ -128,6 +133,28 @@ public class LogConfig {
                 eis.printStackTrace();
             }
             throw new ConfigLoadException("[OpenRASP] Unable to extract log4j config file: " + CONFIGFILE + ", error: " + throwable.getMessage());
+        }
+    }
+
+    /**
+     * 管理syslog
+     */
+    public static void syslogManager() {
+        if (Config.getConfig().getSyslogSwitch()) {
+            String syslogUrl = Config.getConfig().getSyslogUrl();
+            try {
+                URL url = new URL(syslogUrl);
+                String syslogAddress = url.getHost();
+                int syslogPort = OSUtil.getPort(url);
+                if (syslogAddress != null && !syslogAddress.trim().isEmpty() && syslogPort >= 0 && syslogPort <= 65535) {
+                    DynamicConfigAppender.createSyslogAppender(syslogAddress, syslogPort);
+                }
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+
+        } else {
+            DynamicConfigAppender.removeSyslogAppender();
         }
     }
 }

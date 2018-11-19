@@ -16,7 +16,13 @@
 
 package com.baidu.openrasp.hook.server;
 
+import com.baidu.openrasp.cloud.Register;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.cloud.model.CloudCacheModel;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.tool.OSUtil;
+import org.apache.log4j.Logger;
 
 /**
  * Created by tyy on 18-8-10.
@@ -24,10 +30,25 @@ import com.baidu.openrasp.hook.AbstractClassHook;
  * 用于 hook 服务器的启动函数，用于记录服务器的基本信息，同时可以用作基线检测
  */
 public abstract class ServerStartupHook extends AbstractClassHook {
+    public static final Logger LOGGER = Logger.getLogger(ServerStartupHook.class.getName());
 
     @Override
     public String getType() {
         return "server_start";
     }
 
+    /**
+     * 开启云控时发送注册信息
+     */
+    protected static void sendRegister() {
+        if (CloudUtils.checkCloudControlEnter()) {
+            String cloudAddress = Config.getConfig().getCloudAddress();
+            try {
+                CloudCacheModel.getInstance().setMasterIp(OSUtil.getMasterIp(cloudAddress));
+            } catch (Exception e) {
+                LOGGER.warn("get local ip failed: ", e);
+            }
+            new Register();
+        }
+    }
 }

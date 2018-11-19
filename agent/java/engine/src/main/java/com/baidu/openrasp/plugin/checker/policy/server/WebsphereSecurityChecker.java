@@ -14,25 +14,30 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.plugin.checker.policy;
+package com.baidu.openrasp.plugin.checker.policy.server;
 
-import com.baidu.openrasp.plugin.checker.AbstractChecker;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
+import com.baidu.openrasp.plugin.info.EventInfo;
+
+import java.util.List;
 
 /**
- * Created by tyy on 17-11-14.
- *
- * 用于检测安全基线类型hook点
+ * @program openrasp
+ * @description: websphere基线检查
+ * @author: anyang
+ * @create: 2018/10/12 10:36
  */
-public abstract class PolicyChecker extends AbstractChecker {
-
-    public PolicyChecker() {
+public class WebsphereSecurityChecker extends ServerPolicyChecker {
+    public WebsphereSecurityChecker() {
         super();
-        addCheckEventListener(new PolicyCheckListener());
     }
 
-    public PolicyChecker(boolean canBlock) {
+    public WebsphereSecurityChecker(boolean canBlock) {
         super(canBlock);
-        addCheckEventListener(new PolicyCheckListener());
     }
 
+    @Override
+    public void checkServer(CheckParameter checkParameter, List<EventInfo> infos) {
+
+    }
 }

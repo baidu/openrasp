@@ -62,13 +62,10 @@ public class AnnotationScanner {
                             }
                             if (name.startsWith(newPackageName)) {
                                 int index = name.lastIndexOf('/');
-                                if ((index != -1)) {
-                                    if (name.endsWith(".class") && !entry.isDirectory()) {
-                                        packageName = name.substring(0, index).replace('/', '.');
-                                        String className = name.substring(packageName.length() + 1, name.length() - 6);
-                                        classes.add(Class.forName(packageName + '.' + className));
-
-                                    }
+                                if ((index != -1) && name.endsWith(".class") && !entry.isDirectory()) {
+                                    packageName = name.substring(0, index).replace('/', '.');
+                                    String className = name.substring(packageName.length() + 1, name.length() - 6);
+                                    classes.add(Class.forName(packageName + '.' + className));
                                 }
                             }
                         }

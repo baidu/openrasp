@@ -16,6 +16,8 @@
 
 package com.baidu.openrasp.messaging;
 
+import org.apache.log4j.helpers.LogLog;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -62,7 +64,11 @@ public class SyslogTcpWriter extends OutputStreamWriter {
     }
 
     public
-    void writeString(String string) throws IOException{
-        write("<"+(syslogFacility | level)+">" + string);
+    void writeString(String string){
+        try {
+            write("<"+(syslogFacility | level)+">" + string);
+        } catch (IOException e) {
+            LogLog.error("Failed to write ["+string+"].",e);
+        }
     }
 }

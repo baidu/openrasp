@@ -81,15 +81,17 @@ public class FileInputStreamHook extends AbstractClassHook {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             params.put("path", params, file.getPath());
+
+            String path;
             try {
-                String path = file.getCanonicalPath();
-                if (path.endsWith(".class") || !file.exists() && checkSwitch) {
-                    return;
-                }
-                params.put("realpath", params, FileUtil.getRealPath(file));
-            } catch (IOException e) {
-                e.printStackTrace();
+                path = file.getCanonicalPath();
+            } catch (Exception e) {
+                path = file.getAbsolutePath();
             }
+            if (path.endsWith(".class") || !file.exists() && checkSwitch) {
+                return;
+            }
+            params.put("realpath", params, FileUtil.getRealPath(file));
 
             HookHandler.doCheck(CheckParameter.Type.READFILE, params);
         }

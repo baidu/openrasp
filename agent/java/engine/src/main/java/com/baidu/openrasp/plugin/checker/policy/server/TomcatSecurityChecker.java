@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.plugin.checker.policy.serverpolicy;
+package com.baidu.openrasp.plugin.checker.policy.server;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -32,15 +32,20 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by tyy on 8/8/17.
  * 检测tomcat安全规范的工具类
  */
 public class TomcatSecurityChecker extends ServerPolicyChecker {
+    public TomcatSecurityChecker() {
+        super();
+    }
+
+    public TomcatSecurityChecker(boolean canBlock) {
+        super(canBlock);
+    }
 
     private static final String TOMCAT_CHECK_ERROR_LOG_CHANNEL = "tomcat_security_check_error";
     private static final String HTTP_ONLY_ATTRIBUTE_NAME = "useHttpOnly";
@@ -92,8 +97,10 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
             }
 
             if (!isHttpOnly) {
+                Map<String, Object> params = new HashMap<String, Object>();
+                params.put("config_file",contextFile.getAbsolutePath());
                 infos.add(new SecurityPolicyInfo(Type.COOKIE_HTTP_ONLY,
-                        "Tomcat security baseline - httpOnly should be enabled in " + contextFile.getAbsolutePath(), true));
+                        "Tomcat security baseline - httpOnly should be enabled in " + contextFile.getAbsolutePath(), true,params));
             }
         }
     }
@@ -127,10 +134,14 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                                     String userName = user.getAttribute("username");
                                     String password = user.getAttribute("password");
                                     if (weakWords.contains(userName) && weakWords.contains(password)) {
+                                        Map<String, Object> params = new HashMap<String, Object>();
+                                        params.put("config_file",userFile.getAbsolutePath());
+                                        params.put("username",userName);
+                                        params.put("password",password);
                                         infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD,
                                                 "Tomcat security baseline - detected weak" +
                                                         " username/password combination in " +
-                                                        userFile.getAbsolutePath() + ", username is " + userName, true));
+                                                        userFile.getAbsolutePath() + ", username is " + userName, true,params));
                                     }
                                 }
                             }
@@ -168,8 +179,10 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                             }
                             if (isFoundDefaultClass) {
                                 if (isOpenListingDirectory(servletElement)) {
+                                    Map<String, Object> params = new HashMap<String, Object>();
+                                    params.put("config_file",webFile.getAbsolutePath());
                                     infos.add(new SecurityPolicyInfo(Type.DIRECTORY_LISTING,
-                                            "Tomcat security baseline - detected open Directory Listing in conf/web.xml", true));
+                                            "Tomcat security baseline - detected open Directory Listing in conf/web.xml", true,params));
                                     return;
                                 }
                             }
@@ -238,11 +251,14 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
         }
 
         if (!apps.isEmpty()) {
-            StringBuilder message = new StringBuilder("Tomcat security baseline - did not remove the following default webapps in " + defaultAppBaseDir + ":");
+            StringBuilder message = new StringBuilder("Tomcat security baseline - did not remove the following default webapps in " + defaultAppBaseDir + ": ");
             for (String app : apps) {
                 message.append(app).append(", ");
             }
-            infos.add(new SecurityPolicyInfo(Type.DEFAULT_APP, message.substring(0, message.length() - 2), true));
+            Map<String, Object> params = new HashMap<String, Object>();
+            params.put("path",defaultAppBaseDir);
+            params.put("apps",apps);
+            infos.add(new SecurityPolicyInfo(Type.DEFAULT_APP, message.substring(0, message.length() - 2), true,params));
         }
     }
 
