@@ -54,7 +54,7 @@ public class CloudHttpPool extends CloudHttp {
         try {
             return future.get();
         } catch (Exception e) {
-            CloudManager.LOGGER.warn("send http request failed",e);
+            CloudManager.LOGGER.warn("get http result from future failed",e);
         }
         return null;
     }

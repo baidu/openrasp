@@ -72,6 +72,7 @@ public class Config extends FileScanListener {
         CLOUD_SWITCH("cloud.enable", "false"),
         CLOUD_ADDRESS("cloud.address", ""),
         CLOUD_APPID("cloud.appid", ""),
+        CLOUD_APPSECRET("cloud.appsecret", ""),
         SYSLOG_ENABLE("syslog.enable", "false"),
         SYSLOG_URL("syslog.url", ""),
         SYSLOG_TAG("syslog.tag", "OPENRASP"),
@@ -132,6 +133,7 @@ public class Config extends FileScanListener {
     private boolean cloudSwitch;
     private String cloudAddress;
     private String cloudAppId;
+    private String cloudAppSecret;
     private int sqlCacheCapacity;
     private boolean syslogSwitch;
     private String syslogUrl;
@@ -960,6 +962,25 @@ public class Config extends FileScanListener {
     public synchronized void setCloudAppId(String cloudAppId) {
         this.cloudAppId = cloudAppId;
     }
+
+    /**
+     * 获取云控的请求的appSecret，
+     *
+     * @return 云控的请求的appSecret
+     */
+    public synchronized String getCloudAppSecret() {
+        return cloudAppSecret;
+    }
+
+    /**
+     * 设置云控的appSecret，
+     *
+     * @param cloudAppSecret 待设置的云控的appid
+     */
+    public synchronized void setCloudAppSecret(String cloudAppSecret) {
+        this.cloudAppSecret = cloudAppSecret;
+    }
+
     //--------------------------统一的配置处理------------------------------------
 
     /**
@@ -1016,6 +1037,8 @@ public class Config extends FileScanListener {
                 setCloudAddress(value);
             } else if (Item.CLOUD_APPID.key.equals(key)) {
                 setCloudAppId(value);
+            } else if (Item.CLOUD_APPSECRET.key.equals(key)) {
+                setCloudAppSecret(value);
             } else if (Item.SQL_CACHE_CAPACITY.key.equals(key)) {
                 setSqlCacheCapacity(value);
             } else if (Item.SYSLOG_ENABLE.key.equals(key)) {

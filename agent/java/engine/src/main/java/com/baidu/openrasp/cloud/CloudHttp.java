@@ -48,6 +48,8 @@ public class CloudHttp {
             httpUrlConnection.setRequestProperty("Content-Type", "application/json");
             String appId = Config.getConfig().getCloudAppId();
             httpUrlConnection.setRequestProperty("X-OpenRASP-AppID", appId);
+            String appSecret = Config.getConfig().getCloudAppSecret();
+            httpUrlConnection.setRequestProperty("X-OpenRASP-AppSecret",appSecret);
             httpUrlConnection.setConnectTimeout(DEFAULT_CONNECTION_TIMEOUT);
             httpUrlConnection.setReadTimeout(DEFAULT_READ_TIMEOUT);
             httpUrlConnection.setRequestMethod("POST");
