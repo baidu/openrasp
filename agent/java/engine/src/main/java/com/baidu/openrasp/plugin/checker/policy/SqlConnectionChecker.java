@@ -119,8 +119,8 @@ public class SqlConnectionChecker extends PolicyChecker {
             infos = new LinkedList<EventInfo>();
             HashMap<String, Object> params = new HashMap<String, Object>(4);
             params.put("server", sqlType);
-            params.put("url", urlWithoutParams);
-            params.put("user", user);
+            params.put("connectionString", urlWithoutParams);
+            params.put("username", user);
             infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.SQL_CONNECTION, unsafeMessage, true, params));
         }
 
