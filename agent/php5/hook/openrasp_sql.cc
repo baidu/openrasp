@@ -42,7 +42,7 @@ static void connection_via_default_username_policy(char *check_message, sql_conn
     array_init(connection_params);
     add_assoc_string(connection_params, "server", (char *)sql_connection_p->get_server().c_str(), 1);
     add_assoc_string(connection_params, "hostname", (char *)sql_connection_p->get_host().c_str(), 1);
-    add_assoc_string(connection_params, "user", (char *)sql_connection_p->get_username().c_str(), 1);
+    add_assoc_string(connection_params, "username", (char *)sql_connection_p->get_username().c_str(), 1);
     add_assoc_string(connection_params, "connectionString", (char *)sql_connection_p->get_connection_string().c_str(), 1);
     add_assoc_long(connection_params, "port", sql_connection_p->get_port());
     add_assoc_zval(policy_array, "params", connection_params);
