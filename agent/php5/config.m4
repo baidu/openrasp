@@ -10,14 +10,14 @@ PHP_ARG_WITH(gettext, for gettext support,
 PHP_ARG_ENABLE(openrasp-remote-manager, whether to enable openrasp remote manager support,
 [  --enable-openrasp-remote-manager       Enable openrasp remote manager support (Linux Only)], no, no)
 
-PHP_ARG_WITH(openrasp-pcre, for pcre support,
-[  --with-openrasp-pcre=DIR   Include Perl Compatible Regular Expressions support], no, no)
+PHP_ARG_WITH(pcre-regex, for pcre support,
+[  --with-pcre-regex=DIR   Include Perl Compatible Regular Expressions support], no, no)
 
-PHP_ARG_WITH(openrasp-openssl, for openssl support,
-[  --with-openrasp-openssl=DIR   Include openssl support], no, no)
+PHP_ARG_WITH(openssl, for openssl support,
+[  --with-openssl=DIR   Include openssl support], no, no)
 
-PHP_ARG_WITH(openrasp-curl, for curl support,
-[  --with-openrasp-curl=DIR   Include curl support], no, no)
+PHP_ARG_WITH(curl, for curl support,
+[  --with-curl=DIR   Include curl support], no, no)
 
 if test "$PHP_OPENRASP" != "no"; then
   PHP_REQUIRE_CXX()
@@ -123,86 +123,129 @@ if test "$PHP_OPENRASP" != "no"; then
         ;;
       * )
         dnl check openssl support
-        if test "$PHP_OPENRASP_OPENSSL" != "no" && test -n "$PHP_OPENRASP_OPENSSL"; then
-          OPENSSL_SEARCH_PATH="$PHP_OPENRASP_OPENSSL $SEARCH_PATH"
-        else
-          OPENSSL_SEARCH_PATH="$SEARCH_PATH"
-        fi
+        if test "$ext_shared" != "no"; then
+          if test "$PHP_OPENSSL" != "no" && test -n "$PHP_OPENSSL"; then
+            OPENSSL_SEARCH_PATH="$PHP_OPENSSL"
+            OPENSSL_STATIC_FIRST="yes"
+          else
+            OPENSSL_SEARCH_PATH="$SEARCH_PATH"
+          fi
 
-        AC_MSG_CHECKING([for openssl headers location])
-        for i in $OPENSSL_SEARCH_PATH ; do
-          for j in $i $i/ssl $i/openssl; do    
-            test -f $j/include/openssl/evp.h && OPENRASP_OPENSSL_INCDIR=$j/include
+          AC_MSG_CHECKING([for openssl headers location])
+          for i in $OPENSSL_SEARCH_PATH ; do
+            for j in $i $i/ssl $i/openssl; do    
+              test -f $j/include/openssl/evp.h && OPENRASP_OPENSSL_INCDIR=$j/include
+            done
           done
-        done
 
-        if test -z "$OPENRASP_OPENSSL_INCDIR"; then
-          AC_MSG_ERROR([Could not find evp.h in $OPENSSL_SEARCH_PATH])
-        fi
-        AC_MSG_RESULT([$OPENRASP_OPENSSL_INCDIR])
+          if test -z "$OPENRASP_OPENSSL_INCDIR"; then
+            AC_MSG_ERROR([Could not find evp.h in $OPENSSL_SEARCH_PATH])
+          fi
+          AC_MSG_RESULT([$OPENRASP_OPENSSL_INCDIR])
+          PHP_ADD_INCLUDE($OPENRASP_OPENSSL_INCDIR)
 
-        AC_MSG_CHECKING([for ssl library location])
-        for i in $OPENSSL_SEARCH_PATH ; do
-          for j in $i/$PHP_LIBDIR $i/ssl/$PHP_LIBDIR $i/openssl/$PHP_LIBDIR $i/lib64 $i/ssl/lib64 $i/openssl/lib64 $i/lib/x86_64-linux-gnu; do
-            (test -f $j/libssl.a || test -f $j/libssl.$SHLIB_SUFFIX_NAME) && OPENRASP_SSL_LIBDIR=$j
+          AC_MSG_CHECKING([for ssl library location])
+          for i in $OPENSSL_SEARCH_PATH ; do
+            for j in $i/$PHP_LIBDIR $i/ssl/$PHP_LIBDIR $i/openssl/$PHP_LIBDIR $i/lib64 $i/ssl/lib64 $i/openssl/lib64 $i/lib/x86_64-linux-gnu; do
+              if test -f $j/libssl.a && test "$OPENSSL_STATIC_FIRST" == "yes"; then
+                OPENRASP_SSL_LIBDIR=$j
+                SSL_LIBS="$OPENRASP_SSL_LIBDIR/libssl.a"
+                case $host_os in
+                  darwin* )
+                    OPENRASP_LIBS="-Wl,$SSL_LIBS $OPENRASP_LIBS"
+                    ;;
+                  * )
+                    OPENRASP_LIBS="-Wl,--whole-archive -Wl,$SSL_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
+                    ;;
+                esac               
+              elif test -f $j/libssl.$SHLIB_SUFFIX_NAME;then
+                OPENRASP_SSL_LIBDIR=$j
+                PHP_ADD_LIBRARY_WITH_PATH(ssl, $OPENRASP_SSL_LIBDIR, OPENRASP_SHARED_LIBADD)
+              fi
+            done
           done
-        done
-  
-        if test -z "$OPENRASP_SSL_LIBDIR" ; then
-          AC_MSG_ERROR([Could not find libssl.(a|$SHLIB_SUFFIX_NAME) in $OPENSSL_SEARCH_PATH])
-        fi
-        AC_MSG_RESULT([$OPENRASP_SSL_LIBDIR])
+    
+          if test -z "$OPENRASP_SSL_LIBDIR" ; then
+            AC_MSG_ERROR([Could not find libssl.(a|$SHLIB_SUFFIX_NAME) in $OPENSSL_SEARCH_PATH])
+          fi
+          AC_MSG_RESULT([$OPENRASP_SSL_LIBDIR])
 
-        AC_MSG_CHECKING([for crypto library location])
-        for i in $OPENSSL_SEARCH_PATH ; do
-          for j in $i/$PHP_LIBDIR $i/lib64 $i/ssl/$PHP_LIBDIR $i/openssl/$PHP_LIBDIR $i/ssl/lib64 $i/openssl/lib64 $i/lib/x86_64-linux-gnu; do
-            (test -f $j/libcrypto.a || test -f $j/libcrypto.$SHLIB_SUFFIX_NAME) && OPENRASP_CRYPTO_LIBDIR=$j
+          AC_MSG_CHECKING([for crypto library location])
+          for i in $OPENSSL_SEARCH_PATH ; do
+            for j in $i/$PHP_LIBDIR $i/lib64 $i/ssl/$PHP_LIBDIR $i/openssl/$PHP_LIBDIR $i/ssl/lib64 $i/openssl/lib64 $i/lib/x86_64-linux-gnu; do
+              if test -f $j/libcrypto.a && test "$OPENSSL_STATIC_FIRST" == "yes"; then
+                OPENRASP_CRYPTO_LIBDIR=$j
+                CRYPTO_LIBS="$OPENRASP_CRYPTO_LIBDIR/libcrypto.a"
+                case $host_os in
+                  darwin* )
+                    OPENRASP_LIBS="-Wl,$CRYPTO_LIBS $OPENRASP_LIBS"
+                    ;;
+                  * )
+                    OPENRASP_LIBS="-Wl,--whole-archive -Wl,$CRYPTO_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
+                    ;;
+                esac               
+              elif test -f $j/libcrypto.$SHLIB_SUFFIX_NAME;then
+                OPENRASP_CRYPTO_LIBDIR=$j
+                PHP_ADD_LIBRARY_WITH_PATH(crypto, $OPENRASP_CRYPTO_LIBDIR, OPENRASP_SHARED_LIBADD)
+              fi
+            done
           done
-        done
-  
-        if test -z "$OPENRASP_CRYPTO_LIBDIR" ; then
-          AC_MSG_ERROR([Could not find libcrypto.(a|$SHLIB_SUFFIX_NAME) in $OPENSSL_SEARCH_PATH])
+    
+          if test -z "$OPENRASP_CRYPTO_LIBDIR" ; then
+            AC_MSG_ERROR([Could not find libcrypto.(a|$SHLIB_SUFFIX_NAME) in $OPENSSL_SEARCH_PATH])
+          fi
+          AC_MSG_RESULT([$OPENRASP_CRYPTO_LIBDIR])
         fi
-        AC_MSG_RESULT([$OPENRASP_CRYPTO_LIBDIR])
-
-        PHP_ADD_INCLUDE($OPENRASP_OPENSSL_INCDIR)
-        PHP_ADD_LIBRARY_WITH_PATH(ssl, $OPENRASP_SSL_LIBDIR, OPENRASP_SHARED_LIBADD)
-        PHP_ADD_LIBRARY_WITH_PATH(crypto, $OPENRASP_CRYPTO_LIBDIR, OPENRASP_SHARED_LIBADD)
         
         dnl check curl support
-        if test "$PHP_OPENRASP_CURL" != "no" && test -n "$PHP_OPENRASP_CURL"; then
-          CURL_SEARCH_PATH="$PHP_OPENRASP_CURL $SEARCH_PATH"
-        else
-          CURL_SEARCH_PATH="$SEARCH_PATH"
-        fi
+        if test "$ext_shared" != "no"; then
+          if test "$PHP_CURL" != "no" && test -n "$PHP_CURL"; then
+            CURL_SEARCH_PATH="$PHP_CURL"
+            CURL_STATIC_FIRST="yes"
+          else
+            CURL_SEARCH_PATH="$SEARCH_PATH"
+          fi
 
-        AC_MSG_CHECKING([for curl headers location])
-        for i in $CURL_SEARCH_PATH ; do  
-          for j in $i/include $i/include/x86_64-linux-gnu; do
-            test -f $j/curl/easy.h && OPENRASP_CURL_INCDIR=$j
-          done        
-        done
-
-        if test -z "$OPENRASP_CURL_INCDIR"; then
-          AC_MSG_ERROR([Could not find easy.h in $CURL_SEARCH_PATH])
-        fi
-        AC_MSG_RESULT([$OPENRASP_CURL_INCDIR])
-
-        AC_MSG_CHECKING([for curl library location])
-        
-        for i in $CURL_SEARCH_PATH ; do
-          for j in $i/$PHP_LIBDIR $i/lib64 $i/lib/x86_64-linux-gnu; do
-            (test -f $j/libcurl.a || test -f $j/libcurl.$SHLIB_SUFFIX_NAME) && OPENRASP_CURL_LIBDIR=$j
+          AC_MSG_CHECKING([for curl headers location])
+          for i in $CURL_SEARCH_PATH ; do  
+            for j in $i/include $i/include/x86_64-linux-gnu; do
+              test -f $j/curl/easy.h && OPENRASP_CURL_INCDIR=$j
+            done        
           done
-        done
 
-        if test -z "$OPENRASP_CURL_LIBDIR" ; then
-          AC_MSG_ERROR([Could not find libcurl.(a|$SHLIB_SUFFIX_NAME) in $CURL_SEARCH_PATH])
+          if test -z "$OPENRASP_CURL_INCDIR"; then
+            AC_MSG_ERROR([Could not find easy.h in $CURL_SEARCH_PATH])
+          fi
+          AC_MSG_RESULT([$OPENRASP_CURL_INCDIR])
+          PHP_ADD_INCLUDE($OPENRASP_CURL_INCDIR)
+
+          AC_MSG_CHECKING([for curl library location])
+          
+          for i in $CURL_SEARCH_PATH ; do
+            for j in $i/$PHP_LIBDIR $i/lib64 $i/lib/x86_64-linux-gnu; do
+              if test -f $j/libcurl.a && test "$CURL_STATIC_FIRST" == "yes"; then
+                OPENRASP_CURL_LIBDIR=$j
+                CURL_LIBS="$OPENRASP_CURL_LIBDIR/libcurl.a"
+                case $host_os in
+                  darwin* )
+                    OPENRASP_LIBS="-Wl,$CURL_LIBS $OPENRASP_LIBS"
+                    ;;
+                  * )
+                    OPENRASP_LIBS="-Wl,--whole-archive -Wl,$CURL_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
+                    ;;
+                esac                
+              elif test -f $j/libcurl.$SHLIB_SUFFIX_NAME; then
+                OPENRASP_CURL_LIBDIR=$j
+                PHP_ADD_LIBRARY_WITH_PATH(curl, $OPENRASP_CURL_LIBDIR, OPENRASP_SHARED_LIBADD)
+              fi 
+            done
+          done
+
+          if test -z "$OPENRASP_CURL_LIBDIR" ; then
+            AC_MSG_ERROR([Could not find libcurl.(a|$SHLIB_SUFFIX_NAME) in $CURL_SEARCH_PATH])
+          fi
+          AC_MSG_RESULT([$OPENRASP_CURL_LIBDIR])     
         fi
-        AC_MSG_RESULT([$OPENRASP_CURL_LIBDIR])     
-
-        PHP_ADD_INCLUDE($OPENRASP_CURL_INCDIR)
-        PHP_ADD_LIBRARY_WITH_PATH(curl, $OPENRASP_CURL_LIBDIR, OPENRASP_SHARED_LIBADD)
 
         OPENRASP_REMOTE_MANAGER_SOURCE="agent/openrasp_ctrl_block.cc \
         agent/openrasp_agent.cc \
@@ -218,38 +261,53 @@ if test "$PHP_OPENRASP" != "no"; then
     esac
   fi
 
-  if test "$PHP_OPENRASP_PCRE" != "no" && test -n "$PHP_OPENRASP_PCRE"; then
-    PCRE_SEARCH_PATH="$PHP_OPENRASP_PCRE $SEARCH_PATH"
-  else
-    PCRE_SEARCH_PATH="$SEARCH_PATH"
-  fi
+  if test "$ext_shared" != "no"; then
+    if test "$PHP_PCRE_REGEX" != "no" && test -n "$PHP_PCRE_REGEX"; then
+      PCRE_SEARCH_PATH="$PHP_PCRE_REGEX"
+      PCRE_STATIC_FIRST="yes"
+    else
+      PCRE_SEARCH_PATH="$SEARCH_PATH"
+    fi
 
-  AC_MSG_CHECKING([for PCRE headers location])
-  for i in $PCRE_SEARCH_PATH ; do
-    for j in $i $i/include $i/include/pcre $i/local/include; do
-      test -f $j/pcre.h && OPENRASP_PCRE_INCDIR=$j
+    AC_MSG_CHECKING([for PCRE headers location])
+    for i in $PCRE_SEARCH_PATH ; do
+      for j in $i $i/include $i/include/pcre $i/local/include; do
+        test -f $j/pcre.h && OPENRASP_PCRE_INCDIR=$j
+      done
     done
-  done
 
-  if test -z "$OPENRASP_PCRE_INCDIR"; then
-    AC_MSG_ERROR([Could not find pcre.h in $PCRE_SEARCH_PATH])
-  fi
-  AC_MSG_RESULT([$OPENRASP_PCRE_INCDIR])
+    if test -z "$OPENRASP_PCRE_INCDIR"; then
+      AC_MSG_ERROR([Could not find pcre.h in $PCRE_SEARCH_PATH])
+    fi
+    AC_MSG_RESULT([$OPENRASP_PCRE_INCDIR])
+    PHP_ADD_INCLUDE($OPENRASP_PCRE_INCDIR)
 
-  AC_MSG_CHECKING([for PCRE library location])
-  for i in $PCRE_SEARCH_PATH ; do
-    for j in $i $i/$PHP_LIBDIR $i/lib64 $i/lib/x86_64-linux-gnu; do
-      test -f $j/libpcre.a || test -f $j/libpcre.$SHLIB_SUFFIX_NAME && OPENRASP_PCRE_LIBDIR=$j
+    AC_MSG_CHECKING([for PCRE library location])
+    for i in $PCRE_SEARCH_PATH ; do
+      for j in $i $i/$PHP_LIBDIR $i/lib64 $i/lib/x86_64-linux-gnu; do
+        if test -f $j/libpcre.a && test "$PCRE_STATIC_FIRST" == "yes"; then
+          OPENRASP_PCRE_LIBDIR=$j
+          PCRE_LIBS="$OPENRASP_PCRE_LIBDIR/libpcre.a"
+          case $host_os in
+            darwin* )
+              OPENRASP_LIBS="-Wl,$PCRE_LIBS $OPENRASP_LIBS"
+              ;;
+            * )
+              OPENRASP_LIBS="-Wl,--whole-archive -Wl,$PCRE_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
+              ;;
+          esac
+        elif test -f $j/libpcre.$SHLIB_SUFFIX_NAME; then
+          OPENRASP_PCRE_LIBDIR=$j
+          PHP_ADD_LIBRARY_WITH_PATH(pcre, $OPENRASP_PCRE_LIBDIR, OPENRASP_SHARED_LIBADD)          
+        fi
+      done
     done
-  done
-  
-  if test -z "$OPENRASP_PCRE_LIBDIR" ; then
-    AC_MSG_ERROR([Could not find libpcre.(a|$SHLIB_SUFFIX_NAME) in $PCRE_SEARCH_PATH])
-  fi
-  AC_MSG_RESULT([$OPENRASP_PCRE_LIBDIR])
 
-  PHP_ADD_INCLUDE($OPENRASP_PCRE_INCDIR)
-  PHP_ADD_LIBRARY_WITH_PATH(pcre, $OPENRASP_PCRE_LIBDIR, OPENRASP_SHARED_LIBADD)
+    if test -z "$OPENRASP_PCRE_LIBDIR" ; then
+      AC_MSG_ERROR([Could not find libpcre.(a|$SHLIB_SUFFIX_NAME) in $PCRE_SEARCH_PATH])
+    fi
+    AC_MSG_RESULT([$OPENRASP_PCRE_LIBDIR])
+  fi
 
   LIBFSWATCH_SOURCE="libfswatch/c++/path_utils.cpp \
     libfswatch/c++/fen_monitor.cpp \
