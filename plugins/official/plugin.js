@@ -40,7 +40,7 @@ var algorithmConfig = {
     // 1. 用户输入长度至少 15
     // 2. 用户输入至少包含一个SQL关键词 - 即 pre_filter，默认关闭
     // 3. 用户输入完整的出现在SQL语句中，且会导致SQL语句逻辑发生变化
-    sqli_userinput: {
+    sql_userinput: {
         name:       '算法1 - 用户输入匹配算法',
         action:     'block',
         min_length: 15,
@@ -48,7 +48,7 @@ var algorithmConfig = {
         pre_enable: false,
     },
     // SQL注入算法#2 - 语句规范
-    sqli_policy: {
+    sql_policy: {
         name:    '算法2 - 拦截异常SQL语句',
         action:  'block',
 
@@ -391,10 +391,10 @@ var htmlFileRegex   = /\.(htm|html|js)$/i
 var ntfsRegex       = /::\$(DATA|INDEX)$/i
 
 // SQL注入算法1 - 预过滤正则
-var sqliPrefilter1  = new RegExp(algorithmConfig.sqli_userinput.pre_filter)
+var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter)
 
 // SQL注入算法2 - 预过滤正则
-var sqliPrefilter2  = new RegExp(algorithmConfig.sqli_policy.pre_filter)
+var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter)
 
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue) {
@@ -662,7 +662,7 @@ if (RASP.get_jsengine() !== 'v8') {
     plugin.register('sql', function (params, context) {
 
         var reason     = false
-        var min_length = algorithmConfig.sqli_userinput.min_length
+        var min_length = algorithmConfig.sql_userinput.min_length
         var parameters = context.parameter || {}
         var raw_tokens = []
 
@@ -680,7 +680,7 @@ if (RASP.get_jsengine() !== 'v8') {
                     return false
                 }
 
-                if (algorithmConfig.sqli_userinput.pre_enable && ! sqliPrefilter1.test(params.query.toLowerCase())) {
+                if (algorithmConfig.sql_userinput.pre_enable && ! sqliPrefilter1.test(params.query.toLowerCase())) {
                     return false
                 }
 
@@ -699,7 +699,7 @@ if (RASP.get_jsengine() !== 'v8') {
         }
 
         // 算法1: 匹配用户输入，简单识别逻辑是否发生改变
-        if (algorithmConfig.sqli_userinput.action != 'ignore') {
+        if (algorithmConfig.sql_userinput.action != 'ignore') {
 
             // 匹配 GET/POST/multipart 参数
             Object.keys(parameters).some(function (name) {
@@ -723,16 +723,16 @@ if (RASP.get_jsengine() !== 'v8') {
             if (reason !== false)
             {
                 return {
-                    action:     algorithmConfig.sqli_userinput.action,
+                    action:     algorithmConfig.sql_userinput.action,
                     confidence: 90,
                     message:    reason,
-                    algorithm:  'sqli_userinput'
+                    algorithm:  'sql_userinput'
                 }
             }
         }
 
         // 算法2: SQL语句策略检查（模拟SQL防火墙功能）
-        if (algorithmConfig.sqli_policy.action != 'ignore') {
+        if (algorithmConfig.sql_policy.action != 'ignore') {
 
             // 懒加载，需要时才处理
             if (raw_tokens.length == 0) {
@@ -743,8 +743,8 @@ if (RASP.get_jsengine() !== 'v8') {
                 }
             }
 
-            var features  = algorithmConfig.sqli_policy.feature
-            var func_list = algorithmConfig.sqli_policy.function_blacklist
+            var features  = algorithmConfig.sql_policy.feature
+            var func_list = algorithmConfig.sql_policy.function_blacklist
 
             // 转换小写，避免大小写绕过
             var tokens_lc = raw_tokens.map(function(v) {
@@ -825,10 +825,10 @@ if (RASP.get_jsengine() !== 'v8') {
 
             if (reason !== false) {
                 return {
-                    action:     algorithmConfig.sqli_policy.action,
+                    action:     algorithmConfig.sql_policy.action,
                     message:    reason,
                     confidence: 100,
-                    algorithm:  'sqli_policy'
+                    algorithm:  'sql_policy'
                 }
             }
         }
