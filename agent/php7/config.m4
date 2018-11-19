@@ -125,7 +125,7 @@ if test "$PHP_OPENRASP" != "no"; then
       * )
         dnl check openssl support
         if test "$PHP_OPENRASP_OPENSSL" != "no" && test -n "$PHP_OPENRASP_OPENSSL"; then
-          OPENSSL_SEARCH_PATH="$SEARCH_PATH $PHP_OPENRASP_OPENSSL"
+          OPENSSL_SEARCH_PATH="$PHP_OPENRASP_OPENSSL $SEARCH_PATH"
         else
           OPENSSL_SEARCH_PATH="$SEARCH_PATH"
         fi
@@ -172,7 +172,7 @@ if test "$PHP_OPENRASP" != "no"; then
         
         dnl check curl support
         if test "$PHP_OPENRASP_CURL" != "no" && test -n "$PHP_OPENRASP_CURL"; then
-          CURL_SEARCH_PATH="$SEARCH_PATH $PHP_OPENRASP_CURL"
+          CURL_SEARCH_PATH="$PHP_OPENRASP_CURL $SEARCH_PATH"
         else
           CURL_SEARCH_PATH="$SEARCH_PATH"
         fi
@@ -220,7 +220,7 @@ if test "$PHP_OPENRASP" != "no"; then
   fi
 
   if test "$PHP_OPENRASP_PCRE" != "no" && test -n "$PHP_OPENRASP_PCRE"; then
-    PCRE_SEARCH_PATH="$SEARCH_PATH $PHP_OPENRASP_PCRE"
+    PCRE_SEARCH_PATH="$PHP_OPENRASP_PCRE $SEARCH_PATH"
   else
     PCRE_SEARCH_PATH="$SEARCH_PATH"
   fi
