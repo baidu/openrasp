@@ -171,7 +171,7 @@ var algorithmConfig = {
     },
     // 任意文件下载防护 - 使用 ../../ 跳出 web 目录读取敏感文件
     readFile_outsideWebroot: {
-        name:   '算法4 - 禁止使用 ../ 访问web目录以外的文件',
+        name:   '算法4 - 禁止使用 ../../ 访问web目录以外的文件',
         action: 'ignore'
     },
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
@@ -201,7 +201,7 @@ var algorithmConfig = {
     // 重命名监控 - 将普通文件重命名为webshell，
     // 案例有 MOVE 方式上传后门、CVE-2018-9134 dedecms v5.7 后台重命名 getshell
     rename_webshell: {
-        name:   '算法1 - 防止通过重命名获取 WebShell，包括 MOVE 方式',
+        name:   '算法1 - 通过重命名方式获取 WebShell',
         action: 'block'
     },
     // copy_webshell: {
@@ -215,12 +215,12 @@ var algorithmConfig = {
     },
     // 文件管理器 - 反射方式列目录
     directory_reflect: {
-        name:   '算法2 - 拦截反射方式读取目录结构，比如中国菜刀',
+        name:   '算法2 - 通过反射条用，查看目录内容',
         action: 'block'
     },
     // 文件管理器 - 查看敏感目录
     directory_unwanted: {
-        name:   '算法3 - 敏感目录探针算法',
+        name:   '算法3 - 尝试查看敏感目录',
         action: 'block'
     },
 
@@ -231,7 +231,7 @@ var algorithmConfig = {
     },
     // 文件包含 - 特殊协议
     include_protocol: {
-        name:   '算法2 - 拦截 jar:// 等异常协议',
+        name:   '算法2 - 尝试包含 jar:// 等异常协议',
         action: 'block',
         protocols: [
             'file',
@@ -256,7 +256,7 @@ var algorithmConfig = {
 
     // XXE - 使用 gopher/ftp/dict/.. 等不常见协议访问外部实体
     xxe_protocol: {
-        name:   '算法1 - 拦截 ftp:// 等异常协议',
+        name:   '算法1 - 使用 ftp:// 等异常协议加载外部实体',
         action: 'block',
         protocols: [
             'ftp',
@@ -268,36 +268,36 @@ var algorithmConfig = {
     },
     // XXE - 使用 file 协议读取内容，可能误报，默认 log
     xxe_file: {
-        name:      '算法2 - 拦截 file:// 协议',
+        name:      '算法2 - 使用 file:// 协议读取文件',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#case-xxe',
         action:    'log',
     },
 
     // 文件上传 - COPY/MOVE 方式，仅适合 tomcat
     fileUpload_webdav: {
-        name:   '算法1 - 拦截 COPY/MOVE 方式文件上传',
+        name:   '算法1 - MOVE 方式文件上传脚本文件',
         action: 'block'
     },
     // 文件上传 - Multipart 方式上传脚本文件
     fileUpload_multipart_script: {
-        name:   '算法2 - 拦截 multipart 方式文件上传（PHP/JSP 等后端脚本文件）',
+        name:   '算法2 - Multipart 方式文件上传 PHP/JSP 等脚本文件',
         action: 'block'
     },
     // 文件上传 - Multipart 方式上传 HTML/JS 等文件
     fileUpload_multipart_html: {
-        name:   '算法3 - 拦截 multipart 方式文件上传（HTML/JS 等前端脚本文件）',
+        name:   '算法3 - Multipart 方式文件上传 HTML/JS 等文件',
         action: 'ignore'
     },
 
     // OGNL 代码执行漏洞
     ognl_exec: {
-        name:   '算法1 - 拦截异常OGNL语句',
+        name:   '算法1 - 执行异常 OGNL 语句',
         action: 'block'
     },
 
     // 命令执行 - java 反射、反序列化，php eval 等方式
     command_reflect: {
-        name:   '算法1 - 拦截反射的命令执行，主要是反序列化',
+        name:   '算法1 - 通过反射执行命令，比如反序列化利用',
         action: 'block'
     },
     // 命令注入 - 命令执行后门，或者命令注入
