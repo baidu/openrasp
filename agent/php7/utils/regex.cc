@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
+#include "openrasp.h"
 #include "regex.h"
 #include <string.h>
+
+extern "C"
+{
+#include "ext/pcre/php_pcre.h"
+}
 
 namespace openrasp
 {

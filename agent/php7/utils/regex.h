@@ -17,8 +17,6 @@
 #ifndef _OPENRASP_UTILS_REGEX_H_
 #define _OPENRASP_UTILS_REGEX_H_
 
-#include <pcre.h>
-
 namespace openrasp
 {
 bool regex_match(const char *str, const char *regex, int options = 0);
