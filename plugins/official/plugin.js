@@ -313,7 +313,7 @@ var algorithmConfig = {
     },
 
     // transformer 反序列化攻击
-    transformer_deser: {
+    deserialization_transformer: {
         name:   '算法1 - 拦截 transformer 反序列化攻击',
         action: 'block'
     }
@@ -1564,7 +1564,7 @@ if (algorithmConfig.ognl_exec.action != 'ignore')
     })
 }
 
-if (algorithmConfig.transformer_deser.action != 'ignore') {
+if (algorithmConfig.deserialization_transformer.action != 'ignore') {
     plugin.register('deserialization', function (params, context) {
         var deserializationInvalidClazz = [
             'org.apache.commons.collections.functors.InvokerTransformer',
