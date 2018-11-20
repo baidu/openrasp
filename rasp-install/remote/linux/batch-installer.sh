@@ -51,8 +51,13 @@ function do_install_java()
 			fi
 		done
 
+		if [[ ! -z "$tomcat_home" ]] && [[ ! -z "$tomcat_user" ]]; then
+			tomcat_version=$(su - "$tomcat_user" -c "JAVA_HOME=$java_home bash ${tomcat_home}/bin/catalina.sh version" | awk '/Server number/ {print $3}')
+		fi
+
 cat << EOF
-[INFO] Processing Java process (PID $pid) <<
+
+[INFO] Processing Java process (PID $pid)
 
 Java Path:       $java_path
 Java HOME:       $java_home
@@ -93,7 +98,7 @@ EOF
 			continue
 		fi
 
-		# 检查版本
+		# 检查版本		
 		tomcat_major=${tomcat_version%%.*}
 		if [[ $tomcat_major -lt 6 ]] || [[ $tomcat_major -gt 9 ]]; then
 			echo
@@ -134,7 +139,7 @@ EOF
 		jar=(rasp-*/RaspInstall.jar); jar=$(readlink -f $jar)
 
 		# 切换账号，避免root写入之后，造成权限问题
-		su - "$tomcat_user" -c "java -jar $jar $job $tomcat_home"
+		su - "$tomcat_user" -c "$java_path -jar $jar $job $tomcat_home"
 		ret=$?
 
 		if [[ $ret -ne 0 ]]; then
@@ -142,13 +147,13 @@ EOF
 			exit $ERROR_RASP_INSTALL
 		fi
 
-		# 尝试关闭应用服务器，最多等待10s
+		# 尝试关闭应用服务器，最多等待 30s
 		echo
 		echo '[INFO] Shutting down Java server'
 		"${tomcat_home}/bin/shutdown.sh"
 
 		count=0
-		while [[ $count -lt 10 ]]
+		while [[ $count -lt 30 ]]
         do
 			count=$(( $count + 1))
 			if [[ ! -d /proc/$pid ]]; then
@@ -175,7 +180,7 @@ EOF
 		echo '[INFO] Starting Java server'
 		"${tomcat_home}/bin/startup.sh"
 
-		# 检查是否成功，最多等待 30s
+		# 检查是否成功，最多等待 60s
 		count=0
 		success=0
 
