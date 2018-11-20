@@ -45,9 +45,9 @@ import java.util.ArrayList;
  */
 public class SqlStatementChecker extends ConfigurableChecker {
 
-    private static final String CONFIG_KEY_SQLI_USER_INPUT = "sqli_userinput";
+    private static final String CONFIG_KEY_SQLI_USER_INPUT = "sql_userinput";
     private static final String CONFIG_KEY_DB_MANAGER = "sqli_dbmanager";
-    private static final String CONFIG_KEY_SQLI_POLICY = "sqli_policy";
+    private static final String CONFIG_KEY_SQLI_POLICY = "sql_policy";
     private static final String CONFIG_KEY_STACKED_QUERY = "stacked_query";
     private static final String CONFIG_KEY_NO_HEX = "no_hex";
     private static final String CONFIG_KEY_INFORMATION_SCHEMA = "information_schema";
