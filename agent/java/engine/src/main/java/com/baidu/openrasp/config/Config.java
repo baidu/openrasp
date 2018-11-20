@@ -198,33 +198,45 @@ public class Config extends FileScanListener {
     public synchronized void loadConfigFromCloud(Map<String, Object> configMap, boolean isInit) {
         TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
         for (Map.Entry<String, Object> entry : configMap.entrySet()) {
-            if (entry.getKey().startsWith(HOOKS_WHITE)) {
-                int index = entry.getKey().lastIndexOf(".") + 1;
-                if (index < entry.getKey().length()) {
-                    String hooksType = entry.getKey().substring(index).toUpperCase();
-                    try {
-                        Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
-                        if (entry.getValue() instanceof JsonArray) {
-                            ArrayList<String> list = CloudUtils.getListGsonObject().fromJson((JsonArray) entry.getValue(), new TypeToken<ArrayList<String>>() {
-                            }.getType());
-                            if (list.contains("all") || list.contains("ALL")) {
-                                if (temp.containsKey("")) {
-                                    temp.put("", temp.get("") + code);
-                                } else {
-                                    temp.put("", code);
-                                }
-                            } else {
-                                for (String url : list) {
-                                    if (temp.containsKey(url)) {
-                                        temp.put(url, temp.get(url) + code);
-                                    } else {
-                                        temp.put(url, code);
+            if (entry.getKey().equals(HOOKS_WHITE)) {
+                if (entry.getValue() instanceof JsonObject) {
+                    Map<String, Object> hooks = CloudUtils.getMapGsonObject().fromJson((JsonObject) entry.getValue(), Map.class);
+                    for (Map.Entry<String, Object> hook : hooks.entrySet()) {
+                        int codeSum = 0;
+                        if (hook.getValue() instanceof ArrayList) {
+                            ArrayList<String> types = (ArrayList<String>) hook.getValue();
+                            if (hook.getKey().equals("*") && types.contains("all")) {
+                                for (CheckParameter.Type type : CheckParameter.Type.values()) {
+                                    if (type.getCode() != 0) {
+                                        codeSum = codeSum + type.getCode();
                                     }
+                                }
+                                temp.put("", codeSum);
+                                return;
+                            } else if (types.contains("all")) {
+                                for (CheckParameter.Type type : CheckParameter.Type.values()) {
+                                    if (type.getCode() != 0) {
+                                        codeSum = codeSum + type.getCode();
+                                    }
+                                }
+                                temp.put(entry.getKey(), codeSum);
+                            } else {
+                                for (String s : types) {
+                                    String hooksType = s.toUpperCase();
+                                    try {
+                                        Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
+                                        codeSum = codeSum + code;
+                                    } catch (Exception e) {
+                                        LOGGER.warn("hook type not exist: ", e);
+                                    }
+                                }
+                                if (hook.getKey().equals("*")) {
+                                    temp.put("", codeSum);
+                                } else {
+                                    temp.put(entry.getKey(), codeSum);
                                 }
                             }
                         }
-                    } catch (Exception e) {
-                        LOGGER.warn("hook type not exist: ", e);
                     }
                 }
             } else {
