@@ -35,6 +35,8 @@ function do_install_java()
 		tomcat_home=$(strings /proc/$pid/cmdline | awk -F = '/-Dcatalina.home/ {print $2}')
 		tomcat_version=$(strings /proc/$pid/environ | awk -F = '/tomcat_ver/ {print $2}')
 		tomcat_ports=$(netstat -ltpn | grep $pid/ | awk '{print $4}' | sed 's/0.0.0.0/127.0.0.1/' | tr '\n' ' ')
+		tomcat_uid=$(stat -c %u /proc/$pid)
+		tomcat_user=$(getent passwd $tomcat_uid | awk -F: '{print $1}')
 		tomcat_url=
 		javaagent_list=$(strings /proc/$pid/cmdline | grep -- -javaagent:)
 
@@ -72,6 +74,13 @@ EOF
 			continue
 		fi
 
+		# 检查 LDAP 等非本地认证的情况，这种情况下 getent 可能取不到值吧
+		if [[ -z "$tomcat_user" ]]; then
+			echo Unsupported Linux environment: unable to determine running user of Java server
+			echo Please report if you think this in error: https://github.com/baidu/openrasp
+			continue
+		fi
+
 		# 检查版本
 		tomcat_major=${tomcat_version%%.*}
 		if [[ $tomcat_major -lt 6 ]] || [[ $tomcat_major -gt 9 ]]; then
@@ -102,8 +111,13 @@ EOF
 		fi
 
 		# 开始安装
+		echo
 		echo '[INFO] Executing RaspInstall.jar'
-		java -jar rasp-*/RaspInstall.jar "$job" "$tomcat_home"
+
+		jar=(rasp-*/RaspInstall.jar); jar=$(readlink -f $jar)
+
+		# 切换账号，避免root写入之后，造成权限问题
+		su - "$tomcat_user" -c "java -jar $jar $job $tomcat_home"
 		ret=$?
 
 		if [[ $ret -ne 0 ]]; then
@@ -112,6 +126,7 @@ EOF
 		fi
 
 		# 尝试关闭应用服务器，最多等待10s
+		echo
 		echo '[INFO] Shutting down Java server'
 		"${tomcat_home}/bin/shutdown.sh"
 
@@ -120,7 +135,7 @@ EOF
         do
 			count=$(( $count + 1))
 			if [[ ! -d /proc/$pid ]]; then
-				echo Success. Java application server is stopped.
+				echo '[INFO] Java application server stopped "gracefully" ...'.
 				break
 			else
 				echo Waiting for PID $pid to disappear ... $count seconds passed
@@ -139,6 +154,7 @@ EOF
 		fi
 
 		# 尝试重新启动; 可能会有 TIME_WAIT 问题
+		echo
 		echo '[INFO] Starting Java server'
 		"${tomcat_home}/bin/startup.sh"
 
@@ -163,6 +179,7 @@ EOF
 			echo '[ERROR] Tomcat failed to start ...'
 			exit $ERROR_APP_RESTART
 		else
+			echo
 			echo '[INFO] Success. Tomcat has become active :-)'
 			curl -I $tomcat_url
 		fi
@@ -198,10 +215,6 @@ EOF
 exit
 }
 
-if [[ $(id -u) != "0" ]]; then
-	echo WARNING: Not running installer as ROOT user, will install for current account only
-fi
-
 flag_install=
 flag_uninstall=
 flag_debug=
@@ -228,6 +241,10 @@ do
 			;;
 	esac	
 done
+
+if [[ $(id -u) != "0" ]]; then
+	echo WARNING: Not running installer as ROOT user, will install for current account only
+fi
 
 if [[ ! -z $flag_install ]]; then
 	do_install_java "-install"
