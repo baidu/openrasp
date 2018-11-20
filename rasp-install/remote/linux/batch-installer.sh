@@ -18,6 +18,7 @@
 export ERROR_RASP_INSTALL=1
 export ERROR_APP_SHUTDOWN=2
 export ERROR_APP_RESTART=3
+export ERROR_USER_PERMISSION=4
 
 function do_install_java()
 {
@@ -60,6 +61,7 @@ Creation Time:   $java_ctime
 Command Line:    $java_cmdline
 
 Tomcat Home:     $tomcat_home
+Tomcat User:     $tomcat_user ($tomcat_uid)
 Tomcat Version:  $tomcat_version
 Tomcat Ports:    $tomcat_ports
 Tomcat URL:      $tomcat_url
@@ -115,7 +117,7 @@ EOF
 				echo
 				echo Unable to process Java application server: Another -javaagent is already running, aborted.
 				continue
-			fi			
+			fi
 		fi
 
 		# 检查 tomcat 是否可用
@@ -207,9 +209,14 @@ function do_install_php()
     echo
 }
 
-function pre_requisite()
+function check_prerequisite()
 {
-    echo
+    install_jar=(rasp-*/RaspInstall.jar)
+    if [[ -z "$install_jar" ]]; then
+    	echo Missing RASP package, e.g rasp-2018-11-20/RaspInstall.jar
+    	echo Please download and extract the installer: https://packages.baidu.com/app/openrasp/rasp-java.tar.gz
+    	exit
+    fi
 }
 
 function do_help()
@@ -235,6 +242,9 @@ flag_uninstall=
 flag_debug=
 flag_lang=
 flag_help=
+
+check_prerequisite
+cd "$(dirname "$0")"
 
 while getopts "hl:j:iu" arg
 do
