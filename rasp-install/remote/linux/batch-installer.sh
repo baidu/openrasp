@@ -51,8 +51,9 @@ function do_install_java()
 			fi
 		done
 
+		# tomcat 6 使用 JRE_HOME
 		if [[ ! -z "$tomcat_home" ]] && [[ ! -z "$tomcat_user" ]]; then
-			tomcat_version=$(su - "$tomcat_user" -c "JAVA_HOME=$java_home bash ${tomcat_home}/bin/catalina.sh version" | awk '/Server number/ {print $3}')
+			tomcat_version=$(su - "$tomcat_user" -c "JAVA_HOME=$java_home JRE_HOME=$java_home bash ${tomcat_home}/bin/catalina.sh version" | awk '/Server number/ {print $3}')
 		fi
 
 cat << EOF

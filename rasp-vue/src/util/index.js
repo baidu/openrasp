@@ -43,7 +43,7 @@ export function attack_type2name(id) {
 }
 
 export function api_request(url, data, cb) {
-  var prefix = "/"
+  var prefix = "http://scloud.baidu.com:8090/"
 
   axios
     .post(prefix + url, data)
