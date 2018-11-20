@@ -145,7 +145,7 @@ bool OpenraspAgentManager::verify_ini_correct()
 		}
 		else
 		{
-			if (!regex_match(openrasp_ini.app_secret, "^[0-9a-fA-F_-]{43,45}"))
+			if (!regex_match(openrasp_ini.app_secret, "^[0-9a-zA-Z_-]{43,45}"))
 			{
 				openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_secret configuration format is incorrect."));
 				return false;
