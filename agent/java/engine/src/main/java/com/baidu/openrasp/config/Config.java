@@ -26,11 +26,9 @@ import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
 import com.baidu.openrasp.cloud.model.HookWhiteModel;
 import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
-import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -219,7 +217,7 @@ public class Config extends FileScanListener {
                                         codeSum = codeSum + type.getCode();
                                     }
                                 }
-                                temp.put(entry.getKey(), codeSum);
+                                temp.put(hook.getKey(), codeSum);
                             } else {
                                 for (String s : types) {
                                     String hooksType = s.toUpperCase();
@@ -233,7 +231,7 @@ public class Config extends FileScanListener {
                                 if (hook.getKey().equals("*")) {
                                     temp.put("", codeSum);
                                 } else {
-                                    temp.put(entry.getKey(), codeSum);
+                                    temp.put(hook.getKey(), codeSum);
                                 }
                             }
                         }

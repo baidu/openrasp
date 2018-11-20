@@ -74,6 +74,7 @@ public class App {
 
         if (args.length < 2) {
             showHelp();
+            System.exit(1);
             return;
         }
         //参数0：rasp安装根目录
@@ -97,6 +98,7 @@ public class App {
             }
         } catch (Exception e) {
             System.out.println(e.getMessage() + "\n");
+            System.exit(1);
             // showHelp();
         }
     }
