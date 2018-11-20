@@ -66,9 +66,18 @@ Tomcat URL:      $tomcat_url
 JavaAgent List:  $javaagent_list
 EOF
 
+		# 如果不是root，检查 UID 是否等于进程 UID
+		if [[ $(id -u) != 0 ]] && [[ $tomcat_uid != $(id -u) ]]; then
+			echo
+			echo Permission denied: The script is not running as root, it would work for the current account only: UID=$(id -u)
+			echo PID $pid belongs to UID $tomcat_uid, skipped
+			continue
+		fi
+
 		# 检查参数
 		if [[ -z "$java_path" ]] || [[ -z "$java_home" ]] || [[ -z "$java_version" ]] || [[ -z "$tomcat_home" ]] || [[ -z "$tomcat_version" ]]
 		then
+			echo
 			echo Unsupported Java application server: not a Tomcat server.
 			echo Please report if you think this in error: https://github.com/baidu/openrasp
 			continue
@@ -76,6 +85,7 @@ EOF
 
 		# 检查 LDAP 等非本地认证的情况，这种情况下 getent 可能取不到值吧
 		if [[ -z "$tomcat_user" ]]; then
+			echo
 			echo Unsupported Linux environment: unable to determine running user of Java server
 			echo Please report if you think this in error: https://github.com/baidu/openrasp
 			continue
@@ -84,12 +94,14 @@ EOF
 		# 检查版本
 		tomcat_major=${tomcat_version%%.*}
 		if [[ $tomcat_major -lt 6 ]] || [[ $tomcat_major -gt 9 ]]; then
+			echo
 			echo Unsupported tomcat major version: $tomcat_major, only Tomcat 6.X - 8.X is supported.
 			continue
 		fi
 
 		java_major=$(echo $java_version | awk -F. '{print $2}')
 		if [[ $java_major -lt 6 ]] || [[ $java_major -gt 9 ]]; then
+			echo
 			echo Unsupported Java major version: $java_major, only Java 1.6-1.8 is supported.
 			continue
 		fi
@@ -97,8 +109,10 @@ EOF
 		# 检查冲突
 		if [[ ! -z $javaagent_list ]]; then
 			if [[ $javaagent_list =~ "/rasp/rasp.jar" ]]; then
+				echo
 				echo OpenRASP already installed, doing upgrade/uninstall operation
 			else
+				echo
 				echo Unable to process Java application server: Another -javaagent is already running, aborted.
 				continue
 			fi			
@@ -106,6 +120,7 @@ EOF
 
 		# 检查 tomcat 是否可用
 		if [[ -z "$tomcat_url" ]]; then
+			echo
 			echo Unable to determine if tomcat is alive .. no working URL available
 			continue
 		fi
