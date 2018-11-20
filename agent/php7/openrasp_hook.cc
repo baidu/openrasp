@@ -31,26 +31,6 @@ static hook_handler_t global_hook_handlers[512];
 static size_t global_hook_handlers_len = 0;
 static const std::string COLON_TWO_SLASHES = "://";
 
-const std::map<OpenRASPCheckType, const std::string> CheckTypeNameMap =
-    {
-        {CALLABLE, "callable"},
-        {COMMAND, "command"},
-        {DIRECTORY, "directory"},
-        {READ_FILE, "readFile"},
-        {WRITE_FILE, "writeFile"},
-        {COPY, "copy"},
-        {RENAME, "rename"},
-        {FILE_UPLOAD, "fileUpload"},
-        {INCLUDE, "include"},
-        {DB_CONNECTION, "dbConnection"},
-        {SQL, "sql"},
-        {SQL_SLOW_QUERY, "sqlSlowQuery"},
-        {SQL_PREPARED, "sqlPrepared"},
-        {SSRF, "ssrf"},
-        {WEBSHELL_EVAL, "webshell_eval"},
-        {WEBSHELL_COMMAND, "webshell_command"},
-        {WEBSHELL_FILE_PUT_CONTENTS, "webshell_file_put_contents"}};
-
 typedef struct _track_vars_pair_t
 {
     int id;
@@ -66,15 +46,7 @@ void register_hook_handler(hook_handler_t hook_handler)
 
 const std::string get_check_type_name(OpenRASPCheckType type)
 {
-    auto it = CheckTypeNameMap.find(type);
-    if (it != CheckTypeNameMap.end())
-    {
-        return it->second;
-    }
-    else
-    {
-        return "unknown";
-    }
+    return check_type_transfer->type_to_name(type);
 }
 
 bool openrasp_zval_in_request(zval *item)

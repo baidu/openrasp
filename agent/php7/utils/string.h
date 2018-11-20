@@ -24,6 +24,7 @@ namespace openrasp
 
 bool start_with(const std::string &str, const std::string &prefix);
 bool end_with(const std::string &str, const std::string &suffix);
+void string_replace(std::string &str, const std::string &from, const std::string &to);
 
 } // namespace openrasp
 
