@@ -82,7 +82,8 @@ EOF
 		fi
 
 		# 检查参数
-		if [[ -z "$java_path" ]] || [[ -z "$java_home" ]] || [[ -z "$java_version" ]] || [[ -z "$tomcat_home" ]]; then
+		if [[ -z "$java_path" ]] || [[ -z "$java_home" ]] || [[ -z "$java_version" ]] || [[ -z "$tomcat_home" ]] || [[ -z "$tomcat_version" ]]
+		then
 			echo
 			echo Unsupported Java application server: not a Tomcat server.
 			echo Please report if you think this in error: https://github.com/baidu/openrasp
