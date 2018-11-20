@@ -215,8 +215,8 @@ function check_prerequisite()
 
     # glob 失败
     if [[ "$install_jar" == "rasp-*/RaspInstall.jar" ]]; then
-    	echo Missing RASP package, e.g rasp-2018-11-20/RaspInstall.jar
-    	echo Please download and extract the installer: https://packages.baidu.com/app/openrasp/rasp-java.tar.gz
+    	echo OpenRASP package missing, e.g rasp-2018-11-20/RaspInstall.jar
+    	echo Please download and extract the binary package: https://packages.baidu.com/app/openrasp/rasp-java.tar.gz
     	exit
     fi
 }
@@ -231,7 +231,7 @@ Usage:
 	./batch.sh -u
 
 Additional parameter
-    -l  Specify language, php/java etc.
+    -l  Specify programming language, php/java etc. (Not implemented yet)
     -d  Be more verbose
     -h  You're reading this
 EOF
