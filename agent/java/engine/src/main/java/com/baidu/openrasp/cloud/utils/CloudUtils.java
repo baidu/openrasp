@@ -136,12 +136,17 @@ public class CloudUtils {
             }
             String cloudAddress = Config.getConfig().getCloudAddress();
             String cloudAppId = Config.getConfig().getCloudAppId();
+            String cloudAppSecret = Config.getConfig().getCloudAppSecret();
             if (cloudAddress == null || cloudAddress.trim().isEmpty()) {
                 CloudManager.LOGGER.warn("Please check the settings of the cloud control:address may be wrong");
                 return false;
             }
             if (cloudAppId == null || cloudAppId.trim().isEmpty()) {
                 CloudManager.LOGGER.warn("Please check the settings of the cloud control:appid may be wrong");
+                return false;
+            }
+            if (cloudAppSecret == null || cloudAppSecret.trim().isEmpty()) {
+                CloudManager.LOGGER.warn("Please check the settings of the cloud control:appsecret may be wrong");
                 return false;
             }
             return true;
@@ -178,7 +183,7 @@ public class CloudUtils {
         return null;
     }
 
-    public static String getMD5(String originalString) throws NoSuchAlgorithmException,UnsupportedEncodingException {
+    public static String getMD5(String originalString) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
         MessageDigest md = MessageDigest.getInstance("MD5");
         md.update(originalString.getBytes("UTF-8"));

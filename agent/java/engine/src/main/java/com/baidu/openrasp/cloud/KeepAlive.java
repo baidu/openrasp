@@ -26,7 +26,6 @@ import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.plugin.js.engine.JsPluginManager;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import java.security.NoSuchAlgorithmException;
@@ -98,6 +97,7 @@ public class KeepAlive {
                 try {
                     String pluginMD5 = CloudUtils.getMD5(pluginContext);
                     if (!pluginMD5.equals(md5)) {
+                        CloudManager.LOGGER.warn("Plugin MD5 Verification Failed.");
                         return;
                     }
                 } catch (Exception e) {
