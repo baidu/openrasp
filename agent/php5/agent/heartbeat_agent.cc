@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include "openrasp_config.h"
 #include "openrasp_agent.h"
 #include "openrasp_hook.h"
 #include "utils/digest.h"
@@ -100,31 +99,24 @@ void HeartBeatAgent::do_heartbeat()
 			}
 		}
 		/************************************buildin action************************************/
-		std::string action;
-		OpenRASPActionType callable_action = AC_IGNORE,
-						   webshell_eval_action = AC_IGNORE,
-						   webshell_command_action = AC_IGNORE,
-						   webshell_file_put_contents_action = AC_IGNORE;
-		if (res_info->stringify_object("/data/config/algorithm.config/callable", action))
-		{
-			callable_action = string_to_action(action);
-		}
-		if (res_info->stringify_object("/data/config/algorithm.config/webshell_eval", action))
-		{
-			webshell_eval_action = string_to_action(action);
-		}
-		if (res_info->stringify_object("/data/config/algorithm.config/webshell_command", action))
-		{
-			webshell_command_action = string_to_action(action);
-		}
-		if (res_info->stringify_object("/data/config/algorithm.config/webshell_file_put_contents", action))
-		{
-			webshell_file_put_contents_action = string_to_action(action);
-		}
-		scm->set_buildin_check_action(callable_action,
-									  webshell_eval_action,
-									  webshell_command_action,
-									  webshell_file_put_contents_action);
+		std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map;
+		std::string action_callable;
+		res_info->fetch_string("/data/config/algorithm.config/callable/action", action_callable);
+		buildin_action_map.insert({CALLABLE, string_to_action(action_callable)});
+
+		std::string action_webshell_eval;
+		res_info->fetch_string("/data/config/algorithm.config/webshell_eval/action", action_webshell_eval);
+		buildin_action_map.insert({WEBSHELL_EVAL, string_to_action(action_webshell_eval)});
+
+		std::string action_webshell_command;
+		res_info->fetch_string("/data/config/algorithm.config/webshell_command/action", action_webshell_command);
+		buildin_action_map.insert({WEBSHELL_COMMAND, string_to_action(action_webshell_command)});
+
+		std::string action_webshell_file_put_contents;
+		res_info->fetch_string("/data/config/algorithm.config/webshell_file_put_contents/action", action_webshell_file_put_contents);
+		buildin_action_map.insert({WEBSHELL_FILE_PUT_CONTENTS, string_to_action(action_webshell_file_put_contents)});
+
+		scm->set_buildin_check_action(buildin_action_map);
 		res_info->erase_value("/data/config/algorithm.config");
 		/************************************config update************************************/
 		int64_t config_time;
@@ -136,22 +128,34 @@ void HeartBeatAgent::do_heartbeat()
 		if (res_info->stringify_object("/data/config", complete_config))
 		{
 			/************************************shm config************************************/
-			OpenraspConfig openrasp_config(complete_config, OpenraspConfig::FromType::kJson);
 			if (scm != nullptr)
 			{
-				scm->build_check_type_white_array(openrasp_config);
 				//update log_max_backup only its value greater than zero
-				long log_max_backup = openrasp_config.Get("log.maxbackup", (int64_t)30);
-				if (log_max_backup)
+				int64_t log_max_backup = 30;
+				res_info->fetch_int64("/data/config/log.maxbackup", log_max_backup);
+				scm->set_log_max_backup(log_max_backup);
+				std::map<std::string, std::vector<std::string>> white_map = res_info->build_hook_white_map("/data/config/hook.white");
+				std::map<std::string, int> white_mask_map;
+				for (auto &white_item : white_map)
 				{
-					scm->set_log_max_backup(log_max_backup);
+					int bit_mask = NO_TYPE;
+					if (std::find(white_item.second.begin(), white_item.second.end(), "all") != white_item.second.end())
+					{
+						bit_mask = ALL_TYPE;
+					}
+					else
+					{
+						for (auto &type_name : white_item.second)
+						{
+							bit_mask |= check_type_transfer->name_to_type(type_name);
+						}
+					}
+					white_mask_map.insert({(white_item.first == "*") ? "" : white_item.first, bit_mask});
 				}
+				scm->build_check_type_white_array(white_mask_map);
 			}
-			res_info->erase_value("/data/config/hook.white.ALL");
-			for (auto map_iter : CheckTypeNameMap)
-			{
-				res_info->erase_value(("/data/config/hook.white." + std::string(map_iter.second)).c_str());
-			}
+			res_info->erase_value("/data/config/hook.white");
+			res_info->erase_value("/data/config/log.maxbackup");
 
 			/************************************OPENRASP_G(config)************************************/
 			std::string exculde_hook_white_config;

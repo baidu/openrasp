@@ -147,15 +147,18 @@ PHP_MINIT_FUNCTION(openrasp)
         if (get_entire_file_content(config_file_path.c_str(), conf_contents))
         {
             openrasp::OpenraspConfig openrasp_config(conf_contents, OpenraspConfig::FromType::kIni);
+            //TODO 单机版白名单 1.0rc2 格式修改
             openrasp::scm->build_check_type_white_array(openrasp_config);
             OpenRASPActionType callable_action = string_to_action(openrasp_config.Get<std::string>("callable.action"));
             OpenRASPActionType webshell_eval_action = string_to_action(openrasp_config.Get<std::string>("webshell_eval.action"));
             OpenRASPActionType webshell_command_action = string_to_action(openrasp_config.Get<std::string>("webshell_command.action"));
             OpenRASPActionType webshell_file_put_contents_action = string_to_action(openrasp_config.Get<std::string>("webshell_file_put_contents.action"));
-            openrasp::scm->set_buildin_check_action(callable_action,
-                                                    webshell_eval_action,
-                                                    webshell_command_action,
-                                                    webshell_file_put_contents_action);
+            std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map{
+                {CALLABLE, callable_action},
+                {WEBSHELL_EVAL, webshell_eval_action},
+                {WEBSHELL_COMMAND, webshell_command_action},
+                {WEBSHELL_FILE_PUT_CONTENTS, webshell_file_put_contents_action}};
+            openrasp::scm->set_buildin_check_action(buildin_action_map);
         }
         result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
     }

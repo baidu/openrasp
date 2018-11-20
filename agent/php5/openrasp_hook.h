@@ -22,6 +22,7 @@
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
 #include "openrasp_lru.h"
+#include "openrasp_check_type.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -142,7 +143,6 @@ extern "C"
 #define MYSQLI_STORE_RESULT 0
 #define MYSQLI_USE_RESULT 1
 #define MYSQL_PORT 3306
-#define CHECK_TYPE_NR_ITEMS 18
 
 typedef enum action_type_t
 {
@@ -150,29 +150,6 @@ typedef enum action_type_t
     AC_LOG = 1 << 0,
     AC_BLOCK = 1 << 1
 } OpenRASPActionType;
-
-typedef enum check_type_t
-{
-    NO_TYPE = 0,
-    CALLABLE = 1 << 0,
-    COMMAND = 1 << 1,
-    DIRECTORY = 1 << 2,
-    READ_FILE = 1 << 3,
-    WRITE_FILE = 1 << 4,
-    COPY = 1 << 5,
-    RENAME = 1 << 6,
-    FILE_UPLOAD = 1 << 7,
-    INCLUDE = 1 << 8,
-    DB_CONNECTION = 1 << 9,
-    SQL = 1 << 10,
-    SQL_SLOW_QUERY = 1 << 11,
-    SQL_PREPARED = 1 << 12,
-    SSRF = 1 << 13,
-    WEBSHELL_EVAL = 1 << 14,
-    WEBSHELL_COMMAND = 1 << 15,
-    WEBSHELL_FILE_PUT_CONTENTS = 1 << 16,
-    ALL_TYPE = (1 << 17) - 1
-} OpenRASPCheckType;
 
 extern const std::map<OpenRASPCheckType, const std::string> CheckTypeNameMap;
 

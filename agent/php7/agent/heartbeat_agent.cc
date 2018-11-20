@@ -151,8 +151,6 @@ void HeartBeatAgent::do_heartbeat()
 						}
 					}
 					white_mask_map.insert({(white_item.first == "*") ? "" : white_item.first, bit_mask});
-					openrasp_error(E_WARNING, HEARTBEAT_ERROR, _("%s %d"),
-								   white_item.first.c_str(), bit_mask);
 				}
 				scm->build_check_type_white_array(white_mask_map);
 			}
