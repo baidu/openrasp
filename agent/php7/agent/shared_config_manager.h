@@ -23,7 +23,6 @@
 #include <map>
 #include "utils/ReadWriteLock.h"
 #include "shared_config_block.h"
-#include "openrasp_config.h"
 
 namespace openrasp
 {
@@ -44,15 +43,13 @@ public:
   bool set_log_max_backup(long log_max_backup);
 
   int get_check_type_white_bit_mask(std::string url);
+  bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
   bool build_check_type_white_array(OpenraspConfig &openrasp_config);
 
   std::string get_rasp_id() const;
   std::string get_hostname() const;
 
-  bool set_buildin_check_action(OpenRASPActionType callable_action,
-                                OpenRASPActionType webshell_eval_action,
-                                OpenRASPActionType webshell_command_action,
-                                OpenRASPActionType webshell_file_put_contents_action);
+  bool set_buildin_check_action(std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map);
   OpenRASPActionType get_buildin_check_action(OpenRASPCheckType check_type);
 
 private:
@@ -64,7 +61,6 @@ private:
 
 private:
   bool write_check_type_white_array_to_shm(const void *source, size_t num);
-  bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
   bool build_hostname();
   bool build_rasp_id();
 };

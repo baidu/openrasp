@@ -95,14 +95,14 @@ bool SharedConfigManager::build_check_type_white_array(OpenraspConfig &openrasp_
     }
     else
     {
-        for (auto map_iter : CheckTypeNameMap)
+        for (auto name : check_type_transfer->get_all_names())
         {
             std::vector<std::string> urls;
-            urls = openrasp_config.GetArray("hook.white." + std::string(map_iter.second), urls);
+            urls = openrasp_config.GetArray("hook.white." + name, urls);
             for (auto vector_iter : urls)
             {
                 std::string target_url = (vector_iter == "all") ? "" : vector_iter;
-                int mask = map_iter.first;
+                int mask = check_type_transfer->name_to_type(name);
                 auto it = url_mask_map.find(target_url);
                 if (it != url_mask_map.end())
                 {
@@ -157,18 +157,15 @@ bool SharedConfigManager::set_log_max_backup(long log_max_backup)
     return false;
 }
 
-bool SharedConfigManager::set_buildin_check_action(OpenRASPActionType callable_action,
-                                                   OpenRASPActionType webshell_eval_action,
-                                                   OpenRASPActionType webshell_command_action,
-                                                   OpenRASPActionType webshell_file_put_contents_action)
+bool SharedConfigManager::set_buildin_check_action(std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map)
 {
     if (rwlock != nullptr && rwlock->write_try_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
-        shared_config_block->set_check_type_action(CALLABLE, callable_action);
-        shared_config_block->set_check_type_action(WEBSHELL_EVAL, webshell_eval_action);
-        shared_config_block->set_check_type_action(WEBSHELL_COMMAND, webshell_command_action);
-        shared_config_block->set_check_type_action(WEBSHELL_FILE_PUT_CONTENTS, webshell_file_put_contents_action);
+        for (auto &action : buildin_action_map)
+        {
+            shared_config_block->set_check_type_action(action.first, action.second);
+        }
         return true;
     }
     return false;

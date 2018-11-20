@@ -61,6 +61,9 @@ public:
   bool stringify_object(const char *key, std::string &target);
 
   std::shared_ptr<PluginUpdatePackage> build_plugin_update_package();
+  std::map<std::string, std::vector<std::string>> build_hook_white_map(const char *key);
+  std::vector<std::string> fetch_object_keys(const char *key);
+  std::vector<std::string> fetch_string_array(const char *key);
 };
 
 } // namespace openrasp
