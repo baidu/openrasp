@@ -159,7 +159,7 @@ function log_tips($level, $msg, $arr = null) {
 		}
 	}
 	if ($level === ERROR) {
-		exit(0); 	
+		exit(1); 	
 	}
 }
 
