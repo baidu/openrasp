@@ -1,0 +1,169 @@
+<template>
+  <div id="settings-auth" class="tab-pane fade">
+    <!-- begin auth settings -->
+
+    <!--
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          修改密码
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">
+            原密码
+          </label>
+          <input type="password" class="form-control"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            新密码
+          </label>
+          <input type="password" class="form-control"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            再次输入新密码
+          </label>
+          <input type="password" class="form-control"/>
+        </div>
+      </div>
+      <div class="card-footer text-right">
+        <div class="d-flex">
+          <button class="btn btn-primary">
+            保存
+          </button>
+        </div>
+      </div>
+    </div>
+    -->
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          TOKEN 管理
+        </h3>
+      </div>
+      <div class="card-body">
+        <vue-loading v-if="loading" type="spiningDubbles" color="rgb(90, 193, 221)" :size="{ width: '50px', height: '50px' }"></vue-loading>
+
+        <table v-if="! loading" class="table table-striped table-bordered">
+          <thead>
+            <tr>
+              <th>
+                Token
+              </th>
+              <th>
+                备注
+              </th>
+              <th>
+                操作
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in data" :key="row.token">
+              <td nowrap>
+                {{ row.token }}
+              </td>
+              <td>
+                {{ row.description }}
+              </td>
+              <td nowrap>
+                <a href="javascript:" @click="editToken(row)">
+                  编辑
+                </a>
+                <a href="javascript:" @click="deleteToken(row)">
+                  删除
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <nav v-if="! loading">
+          <b-pagination align="center" :total-rows="total" v-model="currentPage" :per-page="10">
+          </b-pagination>
+        </nav>
+      </div>
+      <div class="card-footer text-right">
+        <div class="d-flex">
+          <button class="btn btn-primary" @click="createToken()">
+            创建
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- end auth settings -->
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'AuthSettings',
+  data: function () {
+    return {
+      data: [],
+      total: 0,
+      currentPage: 1,
+      loading: false
+    }
+  },
+  mounted: function () {
+    this.loadTokens(1)
+  },
+  methods: {
+    createToken: function () {
+      var self  = this
+      var descr = prompt('请输入备注信息')
+
+      if (descr && descr.length) {
+        self.api_request('v1/api/token', {
+          description: descr
+        }, function (data) {
+          self.loadTokens(1)
+        })
+      }
+    },
+    editToken: function (data) {
+      var self  = this
+      var descr = prompt('请输入新的备注信息')
+      if (! descr)
+        return
+      
+      this.api_request('v1/api/token', {
+        description: descr,
+        token: data.token
+      }, function (data) {
+        self.loadTokens(1)
+      })
+    },
+    deleteToken: function (data) {
+      if (! confirm ('删除 ' + data.token + ' 吗')) {
+        return
+      }
+
+      var self = this
+      var body = {
+        token: data.token
+      }
+
+      this.api_request('v1/api/token/delete', body, function (data) {
+        self.loadTokens(1)
+      })
+    },
+    loadTokens: function (page) {
+      var self = this
+      var body = {
+        page: page,
+        perpage: 10
+      }
+
+      this.api_request('v1/api/token/get', body, function (data) {
+        self.data = data.data
+        self.total = data.total
+      })
+    }
+  }
+}
+</script>
