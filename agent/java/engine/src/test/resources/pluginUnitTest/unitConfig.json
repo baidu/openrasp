@@ -4,14 +4,11 @@
       "capacity": 100
     }
   },
-  "sqli_userinput": {
+  "sql_userinput": {
     "action": "block",
     "min_length": 15
   },
-  "sqli_dbmanager": {
-    "action": "ignore"
-  },
-  "sqli_policy": {
+  "sql_policy": {
     "action": "block",
     "feature": {
       "stacked_query": true,
