@@ -10,7 +10,7 @@
         <p>最多允许200个URL，单条URL长度限制为200字符</p>
         <table class="table table-bordered table-hover">
           <thead>
-            <th>
+            <th nowrap>
               #
             </th>
             <th>
@@ -25,7 +25,7 @@
           </thead>
           <tbody>
             <tr v-for="(row, index) in data" :key="index">
-              <td>
+              <td nowrap>
                 {{ index + 1 }}
               </td>
               <td>
