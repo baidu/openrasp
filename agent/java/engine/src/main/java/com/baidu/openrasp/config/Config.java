@@ -800,8 +800,8 @@ public class Config extends FileScanListener {
      */
     public synchronized void setSqlCacheCapacity(String sqlCacheCapacity) {
         this.sqlCacheCapacity = Integer.parseInt(sqlCacheCapacity);
-        if (this.sqlCacheCapacity < 0) {
-            this.sqlCacheCapacity = 100;
+        if (this.sqlCacheCapacity <= 0) {
+            this.sqlCacheCapacity = 0;
         }
     }
 

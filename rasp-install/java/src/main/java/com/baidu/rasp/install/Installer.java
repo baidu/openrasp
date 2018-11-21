@@ -26,5 +26,5 @@ import java.io.IOException;
  * All rights reserved
  */
 public interface Installer {
-    void install() throws RaspError, IOException;
+    void install(String url, String appId, String appSecret) throws RaspError, IOException;
 }

@@ -26,6 +26,7 @@ public class RaspError extends Exception {
     public static String E10002 = "[ERROR 10002] No such file or directory: ";
     public static String E10003 = "[ERROR 10003] Start script not found: ";
     public static String E10004 = "[ERROR 10004] Unable to determine application server type in: ";
+    public static String E10005 = "[ERROR 10005] Console arguments error: ";
 
     public RaspError(String message) {
         super(message);

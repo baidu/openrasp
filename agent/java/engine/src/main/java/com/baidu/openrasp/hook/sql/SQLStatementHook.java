@@ -175,7 +175,7 @@ public class SQLStatementHook extends AbstractSqlHook {
             sqlCache.clear();
             sqlCache = new LRUCache<String, String>(lruCacheSize);
         }
-        if (stmt != null && !stmt.isEmpty() && !sqlCache.isContainsKey(stmt)) {
+        if (stmt != null && !stmt.isEmpty() && (sqlCache.realSize() == 0 || !sqlCache.isContainsKey(stmt))) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             String connectionId = getSqlConnectionId(server, statement);
@@ -193,11 +193,7 @@ public class SQLStatementHook extends AbstractSqlHook {
      * 从配置中获取lru的缓存大小，如果未设置，那么使用默认值。
      */
     private static int getLRUCacheSize() {
-        int sqlCacheCapacity = Config.getConfig().getSqlCacheCapacity();
-        if (sqlCacheCapacity > 0) {
-            return sqlCacheCapacity;
-        }
-        return DEFAULT_LRU_CACHE_CAPACITY;
+        return Config.getConfig().getSqlCacheCapacity();
     }
 
 }

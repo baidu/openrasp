@@ -21,6 +21,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
+import java.util.Properties;
 
 import static com.baidu.rasp.RaspError.E10003;
 
@@ -40,12 +41,13 @@ public abstract class BaseStandardInstaller implements Installer {
     public BaseStandardInstaller(String serverName, String serverRoot) {
         this.serverName = serverName;
         this.serverRoot = serverRoot;
-        resinPath=serverRoot;
+        resinPath = serverRoot;
     }
+
     @Override
-    public void install() throws RaspError, IOException {
+    public void install(String url, String appId, String appSecret) throws RaspError, IOException {
         String jarPath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
-        File srcDir = new File(new File(jarPath).getParent() + File.separator+"rasp");
+        File srcDir = new File(new File(jarPath).getParent() + File.separator + "rasp");
         if (!(srcDir.exists() && srcDir.isDirectory())) {
             srcDir = new File("rasp");
         }
@@ -76,6 +78,9 @@ public abstract class BaseStandardInstaller implements Installer {
         String original = read(script);
         String modified = modifyStartScript(original);
         write(script, modified);
+
+        //配置云控参数
+        setCloudArgs(url,appId,appSecret);
         System.out.println("\nInstallation completed without errors.\nPlease restart application server to take effect.");
     }
 
@@ -147,6 +152,30 @@ public abstract class BaseStandardInstaller implements Installer {
             if (System.getProperty("user.name").equals("root")) {
                 runCommand(new String[]{"chmod", "-R", "o+w", folderPath});
             }
+        }
+    }
+
+    private void setCloudArgs(String url, String appId, String appSecret) {
+        try {
+            if (url != null && appId != null && appSecret != null) {
+                InputStream in = this.getClass().getResourceAsStream("/rasp.properties");
+                Properties properties = new Properties();
+                properties.load(in);
+                if (properties.getProperty("cloud.address") != null) {
+                    properties.setProperty("cloud.address", url);
+                }
+                if (properties.getProperty("cloud.appid") != null) {
+                    properties.setProperty("cloud.appid", appId);
+                }
+                if (properties.getProperty("cloud.appsecret") != null) {
+                    properties.setProperty("cloud.appsecret", appSecret);
+                }
+                if (properties.getProperty("cloud.enable") != null) {
+                    properties.setProperty("cloud.enable", "true");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("cloud control set failed: " + e.getMessage());
         }
     }
 
