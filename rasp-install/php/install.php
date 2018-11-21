@@ -29,23 +29,23 @@ include_once(__DIR__ . DIRECTORY_SEPARATOR .'util.php');
 function get_lib_2b_installed($current_os, $lib_filename)
 {
 	$machine_type_convertion = array(
-		'i586'=>'x86',
-		'AMD64'=>'x64'
+		'i586' => 'x86',
+		'AMD64' => 'x64'
 	);
 	$machine_type = php_uname('m');
 	if (array_key_exists($machine_type, $machine_type_convertion)) {
 		$machine_type = $machine_type_convertion[$machine_type];
 	}
-	$lib_abspath = sprintf("%s%sphp%s%s-php%s.%s-%s%s%s", __DIR__, 
-	DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, $current_os, PHP_MAJOR_VERSION, 
-	PHP_MINOR_VERSION, $machine_type, DIRECTORY_SEPARATOR, $lib_filename);
+	$lib_abspath = sprintf("%s%sphp%s%s-php%s.%s-%s%s%s", __DIR__,
+		DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, $current_os, PHP_MAJOR_VERSION,
+		PHP_MINOR_VERSION, $machine_type, DIRECTORY_SEPARATOR, $lib_filename);
 	return $lib_abspath;
 }
 
 function check_dep_exts_installed($dep_exts)
 {
 	if (is_array($dep_exts)) {
-		foreach($dep_exts as $key=>$value) {
+		foreach ($dep_exts as $key => $value) {
 			if (!extension_loaded($value)) {
 				return false;
 			}
@@ -56,7 +56,7 @@ function check_dep_exts_installed($dep_exts)
 	}
 }
 
-function get_ini_content($lib_filename, $root_dir)
+function get_ini_content($lib_filename, $root_dir, $remote_enable, $backend_url, $app_id, $app_secret)
 {
 $ini_content = <<<OPENRASP
 ;OPENRASP BEGIN
@@ -64,59 +64,23 @@ $ini_content = <<<OPENRASP
 extension=$lib_filename
 openrasp.root_dir=$root_dir
 	
-;拦截攻击后，跳转到这个URL
-;openrasp.block_redirect_url=https://rasp.baidu.com/blocked2/
-
-;拦截攻击后，将状态码设置为这个值
-;openrasp.block_status_code=302
-	
-;数组回调函数黑名单，命中即拦截
-;openrasp.callable_blacklists=system,exec,passthru,proc_open,shell_exec,popen,pcntl_exec,assert
-	
-;当服务器不满足安全配置规范，是否禁止服务器启动
-;openrasp.enforce_policy=Off
-	
-;hook 点黑名单，逗号分隔
-;openrasp.hooks_ignore=
-	
-;对于以下URL，修改响应并注入HTML
-;openrasp.inject_urlprefix=
-	
 ;国际化配置
 ;openrasp.locale=
-	
-;每个进程/线程每秒钟最大日志条数
-;openrasp.log_maxburst=1000
-	
-;当SQL查询结果行数大于或等于该值，则认为是慢查询 - 在v0.42里删除
-;openrasp.slowquery_min_rows=500
 
-;报警是否开启 syslog
-;openrasp.syslog_alarm_enable=Off
-	
-;用于 syslog 的 facility
-;openrasp.syslog_facility=
-	
-;syslog 服务器地址
-;openrasp.syslog_server_address=
+;云端地址
+openrasp.backend_url=$backend_url
 
-;syslog connection timeout(毫秒)
-;openrasp.syslog_connection_timeout=50
-	
-;syslog read timeout(毫秒)
-;openrasp.syslog_read_timeout=10
+;agent app_id
+openrasp.app_id=$app_id
 
-;syslog重连时间间隔(秒)
-;openrasp.syslog_connection_retry_interval=300
+;agent secret
+openrasp.app_secret=$app_secret
 
-;对于单个请求，JS插件整体超时时间（毫秒）
-;openrasp.timeout_ms=100
+;远程管理开关
+openrasp.remote_management_enable=$remote_enable
 
-;插件获取堆栈的最大深度
-;openrasp.plugin_maxstack=100
-
-;报警日志记录的最大堆栈深度
-;openrasp.log_maxstack=10
+;远程更新插件开关
+openrasp.plugin_update_enable=1
 	
 ;OPENRASP END
 	
@@ -130,20 +94,29 @@ Synopsis:
     php install.php [options]
 
 Options:
-    -d <openrasp_root>  Specify OpenRASP installation folder (required)
-	
-    --ignore-ini        Do not update PHP ini entries
+    -d <openrasp_root>  	Specify OpenRASP installation folder (required)
 
-    --ignore-plugin     Do not update the official javascript plugin
+	--backend-url <url>     Value of backend_url (required for remote management)
 
-    -h                  Show help messages
+	--app-id <id>       	Value of app_id (required for remote management)
+
+	--app-secret <secret>   Value of app_secret (required for remote management)
+
+    --ignore-ini        	Do not update PHP ini entries
+
+    --ignore-plugin     	Do not update the official javascript plugin
+
+    -h, --help              Show help messages
 
 HELP;
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 过程化安装 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 参数解析 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 $shortopts = "d:h";
-$longopts = array("ignore-ini", "ignore-plugin");
+$longopts = array("ignore-ini", "ignore-plugin", "app-id:", "app-secret:", "backend-url:", "help");
 $options = getopt($shortopts, $longopts);
+if (array_key_exists("h", $options) || array_key_exists("help", $options)) {
+	show_help($install_help_msg);
+} 
 if (array_key_exists("d", $options) && !empty($options["d"])) {
 	// 创建目录
 	if (! file_exists($options["d"])) {
@@ -155,10 +128,55 @@ if (array_key_exists("d", $options) && !empty($options["d"])) {
 		log_tips(ERROR, "Can't resolve realpath of " . $options["d"] . ": No such directory.");
 	}
 	log_tips(INFO, "openrasp.root_dir => ".$root_dir);
-} else if (array_key_exists("h", $options)) {
-	show_help($install_help_msg);
 } else {
-	log_tips(ERROR, "Bad command line arguments. Please use \"-h\" to check help messages.");
+	log_tips(ERROR, "openrasp.root_dir must be specified via option \"-d\"");
+}
+
+$remote_enable = "0";
+$backend_url = "";
+$app_id = "";
+$app_secret = "";
+if (array_key_exists("backend-url", $options)) {
+	if (!empty($options["backend-url"])) {
+		if (parse_url($options["backend-url"])) {
+			$backend_url = $options["backend-url"];
+		} else {
+			log_tips(ERROR, "backend-url option is an illegal URL.");
+		}
+	} else {
+		log_tips(ERROR, "backend-url option cannot be empty.");
+	}
+}
+
+if (array_key_exists("app-id", $options)) {
+	if (!empty($options["app-id"]))
+	{
+		if (preg_match("/^[0-9a-fA-F]{40}$/", $options["app-id"]) != 0) {
+			$app_id = $options["app-id"];
+		} else {
+			log_tips(ERROR, "app-id option format is incorrect.");
+		}
+	} else {
+		log_tips(ERROR, "app-id option cannot be empty.");
+	}
+}
+
+if (array_key_exists("app-secret", $options) && ) {
+	if (!empty($options["app-secret"])) {
+		if (preg_match("/^[0-9a-zA-Z_-]{43,45}/", $options["app-secret"]) != 0) {
+			$app_secret = $options["app-secret"];
+		} else {
+			log_tips(ERROR, "app-secret option format is incorrect.");
+		}
+	} else {
+		log_tips(ERROR, "app-secret option cannot be empty.");
+	}
+}
+
+if (!empty($backend_url) && !empty($app_id) && !empty($app_secret)) {
+	$remote_enable = "1";
+} else if (!empty($backend_url) || !empty($app_id) || !empty($app_secret)) {
+	log_tips(ERROR, "backend-url app-id app-secret options must be specified simultaneously.");
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 检查依赖扩展 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -202,8 +220,8 @@ if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
 			if ($ini_scanned_root) {
 				$ini_scanned_path = $ini_scanned_root . "mods-available";
 				foreach ($supported_sapi as $key => $value) {
-					if (file_exists($ini_scanned_root.$value) && is_dir($ini_scanned_root.$value)) {
-						$ini_symbol_links[$value] = $ini_scanned_root . $value . DIRECTORY_SEPARATOR . 'conf.d/99-openrasp.ini';	
+					if (file_exists($ini_scanned_root . $value) && is_dir($ini_scanned_root . $value)) {
+						$ini_symbol_links[$value] = $ini_scanned_root . $value . DIRECTORY_SEPARATOR . 'conf.d/99-openrasp.ini';
 					}
 				}
 			}
@@ -211,13 +229,13 @@ if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
 		if (!is_writable($ini_scanned_path)) {
 			log_tips(ERROR, $ini_scanned_path . ' is not writable, make sure you have write permissions.');
 		}
-		
-		$ini_src = $ini_scanned_path.DIRECTORY_SEPARATOR.$ini_scanned_file;
-		$handle  = fopen($ini_src, "w+");
+
+		$ini_src = $ini_scanned_path . DIRECTORY_SEPARATOR . $ini_scanned_file;
+		$handle = fopen($ini_src, "w+");
 		if ($handle) {
-			if (fwrite($handle, get_ini_content($lib_filename, $root_dir)) === FALSE) {
+			if (fwrite($handle, get_ini_content($lib_filename, $root_dir, $remote_enable, $backend_url, $app_id, $app_secret)) === FALSE) {
 				fclose($handle);
-				log_tips(ERROR, 'Cannot write to '. $ini_src);
+				log_tips(ERROR, 'Cannot write to ' . $ini_src);
 			} else {
 				log_tips(INFO, "Successfully write openrasp config to '$ini_src'");
 			}
@@ -235,30 +253,30 @@ if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
 			}
 		} else {
 			log_tips(ERROR, 'Unable to open ini file for writing: ' . $ini_src);
-		} 
+		}
 	} else if ($ini_loaded_file) {
 		$ini_files_2b_updated = array($ini_loaded_file);
 		if (OS_WIN == $current_os) {
-			$wamp_apache_ini = dirname($ini_loaded_file).DIRECTORY_SEPARATOR.'phpForApache.ini';
+			$wamp_apache_ini = dirname($ini_loaded_file) . DIRECTORY_SEPARATOR . 'phpForApache.ini';
 			if (file_exists($wamp_apache_ini)) {
 				array_push($ini_files_2b_updated, $wamp_apache_ini);
 			}
 		}
-		foreach($ini_files_2b_updated as $key=>$ini_file) {
+		foreach ($ini_files_2b_updated as $key => $ini_file) {
 			if (!is_writable($ini_file)) {
 				log_tips(ERROR, $ini_file . ' is not writable, make sure you have write permissions');
 			}
-			if (!copy($ini_file, $ini_file.'.bak')) {
+			if (!copy($ini_file, $ini_file . '.bak')) {
 				log_tips(ERROR, "Unable to backup old ini file: '$ini_file'");
 			}
-		
-			$old_ini_data = file($ini_file.'.bak');
+
+			$old_ini_data = file($ini_file . '.bak');
 			$tmp_ini_data = array();
 			$found_openrasp = UNFOUND;
 			foreach ($old_ini_data as $key => $line) {
 				if (trim($line) == ";OPENRASP BEGIN") {
 					$found_openrasp = FOUND;
-				} 
+				}
 				if (trim($line) == ";OPENRASP END") {
 					$found_openrasp = FINSH;
 				}
@@ -271,30 +289,30 @@ if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
 			} else if (FINSH === $found_openrasp) {
 				log_tips(INFO, 'Found old configuration in INI files, doing upgrades');
 			}
-			$tmp_ini_data[] = get_ini_content($lib_filename, $root_dir);
+			$tmp_ini_data[] = get_ini_content($lib_filename, $root_dir, $remote_enable, $backend_url, $app_id, $app_secret);
 			$handle = fopen($ini_file, "w+");
 			if ($handle) {
 				$write_state = TRUE;
-				foreach($tmp_ini_data as $key => $line) {
+				foreach ($tmp_ini_data as $key => $line) {
 					if (fwrite($handle, $line) === FALSE) {
 						$write_state = FALSE;
 						break;
 					}
-				 }
-				 if ($write_state === FALSE) {
-					 fclose($handle);
-					 log_tips(INFO, 'Fail write ini content to '.$ini_file.', we will restore the php.ini file.');
-					 if (!copy($ini_file.'.bak', $ini_file)) {
+				}
+				if ($write_state === FALSE) {
+					fclose($handle);
+					log_tips(INFO, 'Fail write ini content to ' . $ini_file . ', we will restore the php.ini file.');
+					if (!copy($ini_file . '.bak', $ini_file)) {
 						log_tips(ERROR, 'Fail to restore the php.ini file, you must manually restore php.ini.');
 					}
-				 } else {
-					 log_tips(INFO, 'Successfully append openrasp config to '.$ini_file);
-				 }
+				} else {
+					log_tips(INFO, 'Successfully append openrasp config to ' . $ini_file);
+				}
 				fclose($handle);
 			} else {
 				log_tips(ERROR, "Unable to open '$ini_file' for writing");
 			}
-		} 
+		}
 	} else {
 		log_tips(ERROR, 'Cannot find appropriate php.ini file.');
 	}
@@ -312,7 +330,7 @@ if (file_exists($root_dir)) {
 	}
 }
 foreach($openrasp_work_sub_folders as $key => $value) {
-	$sub_item = realpath($root_dir).DIRECTORY_SEPARATOR.$key;
+	$sub_item = realpath($root_dir) . DIRECTORY_SEPARATOR . $key;
 	if (file_exists($sub_item)) {
 		if (substr(sprintf('%o', fileperms($sub_item)), -4) != strval($value)) {
 			chmod($sub_item, $value);
@@ -322,38 +340,39 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 				major_tips("Skipped update of the official javascript plugin since '--ignore-plugin' is set");
 			} else {
 				major_tips('Updating the official javascript plugin');
-				$plugin_source_dir = __DIR__.DIRECTORY_SEPARATOR.$key;
+				$plugin_source_dir = __DIR__ . DIRECTORY_SEPARATOR . $key;
 				if (file_exists($plugin_source_dir)) {
 					$official_plugins = scandir($plugin_source_dir);
-					foreach($official_plugins as $key=>$plugin) {
+					foreach ($official_plugins as $key => $plugin) {
 						if ($plugin === '.'
-						|| $plugin === '..'
-						|| !is_file($plugin_source_dir.DIRECTORY_SEPARATOR.$plugin)
-						|| !endsWith($plugin, '.js')) {
+							|| $plugin === '..'
+							|| !is_file($plugin_source_dir . DIRECTORY_SEPARATOR . $plugin)
+							|| !endsWith($plugin, '.js')
+						) {
 							continue;
 						}
-						if (file_exists($sub_item.DIRECTORY_SEPARATOR.$plugin)) {
-							if (md5_file($plugin_source_dir.DIRECTORY_SEPARATOR.$plugin) === md5_file($sub_item.DIRECTORY_SEPARATOR.$plugin)) {
+						if (file_exists($sub_item . DIRECTORY_SEPARATOR . $plugin)) {
+							if (md5_file($plugin_source_dir . DIRECTORY_SEPARATOR . $plugin) === md5_file($sub_item . DIRECTORY_SEPARATOR . $plugin)) {
 								log_tips(INFO, 'Skipping update of ' . $plugin . ' since no changes is detected');
 								continue;
 							}
-							if (!rename($sub_item.DIRECTORY_SEPARATOR.$plugin, $sub_item.DIRECTORY_SEPARATOR.$plugin.'.bak')) {
-								log_tips(ERROR, $sub_item.DIRECTORY_SEPARATOR.$plugin.' backup failure!');
+							if (!rename($sub_item . DIRECTORY_SEPARATOR . $plugin, $sub_item . DIRECTORY_SEPARATOR . $plugin . '.bak')) {
+								log_tips(ERROR, $sub_item . DIRECTORY_SEPARATOR . $plugin . ' backup failure!');
 							}
 						}
-						if (!copy($plugin_source_dir.DIRECTORY_SEPARATOR.$plugin, $sub_item.DIRECTORY_SEPARATOR.$plugin)) {
+						if (!copy($plugin_source_dir . DIRECTORY_SEPARATOR . $plugin, $sub_item . DIRECTORY_SEPARATOR . $plugin)) {
 							log_tips(ERROR, 'Unable to update the official javascript plugin');
 						} else {
-							log_tips(INFO, 'Successfully update official plugin: '.$plugin);
+							log_tips(INFO, 'Successfully update official plugin: ' . $plugin);
 						}
 					}
 
 				}
 			}
 		} else if ($key === "locale") {
-			if (file_exists(__DIR__.DIRECTORY_SEPARATOR.$key)) {
+			if (file_exists(__DIR__ . DIRECTORY_SEPARATOR . $key)) {
 				clear_dir($sub_item);
-				recurse_copy(__DIR__.DIRECTORY_SEPARATOR.$key, $sub_item);
+				recurse_copy(__DIR__ . DIRECTORY_SEPARATOR . $key, $sub_item);
 			}
 		}
 	} else {
@@ -363,8 +382,8 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 		if (!$mkdir_res) {
 			log_tips(ERROR, "Unable to create directory: $sub_item");
 		}
-		if (file_exists(__DIR__.DIRECTORY_SEPARATOR.$key)) {
-			recurse_copy(__DIR__.DIRECTORY_SEPARATOR.$key, $sub_item);
+		if (file_exists(__DIR__ . DIRECTORY_SEPARATOR . $key)) {
+			recurse_copy(__DIR__ . DIRECTORY_SEPARATOR . $key, $sub_item);
 		}
 	}
 }
