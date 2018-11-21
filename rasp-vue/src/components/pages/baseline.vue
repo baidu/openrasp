@@ -130,7 +130,7 @@ export default {
 					app_id: this.current_app.id,
 					start_time: this.$refs.datePicker.start.unix() * 1000,
 					end_time: this.$refs.datePicker.end.unix() * 1000,
-					hostname: this.hostname
+					server_hostname: this.hostname
 				},
 				page: page,
 				perpage: 10
