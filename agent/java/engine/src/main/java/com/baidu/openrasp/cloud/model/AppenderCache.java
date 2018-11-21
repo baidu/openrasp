@@ -16,11 +16,10 @@
 
 package com.baidu.openrasp.cloud.model;
 
-import com.baidu.openrasp.tool.LRUCache;
 import com.google.gson.JsonElement;
 
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @description: 缓存需要重传的日志
@@ -28,24 +27,29 @@ import java.util.concurrent.ConcurrentHashMap;
  * @create: 2018/09/20 13:59
  */
 public class AppenderCache {
-    private static ConcurrentHashMap<String, LRUCache<JsonElement,String>> appenderCache = new ConcurrentHashMap<String, LRUCache<JsonElement, String>>();
+    private static ConcurrentHashMap<String, ConcurrentLinkedQueue<JsonElement>> appenderCache = new ConcurrentHashMap<String, ConcurrentLinkedQueue<JsonElement>>();
     private static final int APPENDER_LRUCACHE_SIZE = 500;
 
     public static void setCache(String key, JsonElement value) {
         if (appenderCache.containsKey(key)){
-            LRUCache<JsonElement,String> temp = appenderCache.get(key);
-            temp.put(value,null);
+            ConcurrentLinkedQueue<JsonElement> temp = appenderCache.get(key);
+            if (temp.size()<APPENDER_LRUCACHE_SIZE){
+                temp.add(value);
+            }else {
+                temp.poll();
+                temp.add(value);
+            }
             appenderCache.put(key,temp);
         }else {
-            LRUCache<JsonElement,String> cache = new LRUCache<JsonElement, String>(APPENDER_LRUCACHE_SIZE);
-            cache.put(value,null);
+            ConcurrentLinkedQueue<JsonElement> cache = new ConcurrentLinkedQueue<JsonElement>();
+            cache.add(value);
             appenderCache.put(key,cache);
         }
     }
 
-    public static Set<JsonElement> getCache(String key) {
+    public static ConcurrentLinkedQueue<JsonElement> getCache(String key) {
         if (appenderCache.containsKey(key)){
-            return appenderCache.get(key).getKeySet();
+            return appenderCache.get(key);
         }
         return null;
     }

@@ -60,4 +60,14 @@ public class GenericResponse {
     public void setData(Map<String, Object> data) {
         this.data = data;
     }
+
+    @Override
+    public String toString() {
+        return "GenericResponse{" +
+                "responseCode=" + responseCode +
+                ", status=" + status +
+                ", description='" + description + '\'' +
+                ", data=" + data +
+                '}';
+    }
 }

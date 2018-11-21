@@ -29,6 +29,7 @@ import org.apache.log4j.spi.LoggingEvent;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @description: 日志上传appender
@@ -71,16 +72,15 @@ public class HttpAppender extends AppenderSkeleton {
                     AppenderCache.setCache(logger, jsonElement);
                 }
             }
-
         }
     }
 
     private JsonArray mergeFromAppenderCache(String loggerName, JsonElement currnetLog) {
         Set<JsonElement> sets = new HashSet<JsonElement>();
         sets.add(currnetLog);
-        Set<JsonElement> set = AppenderCache.getCache(getLogger(loggerName));
-        if (set != null && !set.isEmpty()) {
-            sets.addAll(set);
+        ConcurrentLinkedQueue<JsonElement> queue = AppenderCache.getCache(getLogger(loggerName));
+        if (queue != null && !queue.isEmpty()) {
+            sets.addAll(queue);
         }
         JsonArray jsonArray = new JsonArray();
         for (JsonElement element : sets) {

@@ -78,7 +78,7 @@ public class App {
                 baseDir = cmd.getOptionValue("install");
                 install = "install";
             } else {
-                install = cmd.getOptionValue("uninstall");
+                baseDir = cmd.getOptionValue("uninstall");
                 install = "uninstall";
             }
             appId = cmd.getOptionValue("appid");
@@ -114,6 +114,7 @@ public class App {
         showBanner();
         try {
             argsParser(args);
+            System.out.println(install+"===="+baseDir+"====="+appSecret+"====="+appId+"===="+url);
             if ("install".equals(install)) {
                 File serverRoot = new File(baseDir);
                 InstallerFactory factory = newInstallerFactory();
@@ -128,6 +129,7 @@ public class App {
                 showHelp();
             }
         } catch (Exception e) {
+            System.out.println("eeeeeeeeeeeeee");
             System.out.println(e.getMessage() + "\n");
             System.exit(1);
         }
