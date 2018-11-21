@@ -67,7 +67,7 @@ Creation Time:   $java_ctime
 Command Line:    $java_cmdline
 
 Tomcat Home:     $tomcat_home
-Tomcat User:     $tomcat_user ($tomcat_uid)
+Tomcat User:     $tomcat_user (UID=$tomcat_uid)
 Tomcat Version:  $tomcat_version
 Tomcat Ports:    $tomcat_ports
 Tomcat URL:      $tomcat_url
@@ -137,11 +137,17 @@ EOF
 		echo
 		echo '[INFO] Executing RaspInstall.jar'
 
-		jar=(rasp-*/RaspInstall.jar); jar=$(readlink -f $jar)
+		jar=(rasp-*/RaspInstall.jar)
+		jar=$(readlink -f $jar)
 
-		# 切换账号，避免root写入之后，造成权限问题
-		su - "$tomcat_user" -c "$java_path -jar $jar $job $tomcat_home"
-		ret=$?
+		if [[ $(id -u) == 0 ]]; then
+			# 切换账号，避免root写入之后，造成权限问题
+			su - "$tomcat_user" -c "$java_path -jar $jar $job $tomcat_home"
+			ret=$?
+		else
+			$java_path -jar $jar $job $tomcat_home
+			ret=$?
+		fi
 
 		if [[ $ret -ne 0 ]]; then
 			echo RaspInstall failed with error: $ret
@@ -276,7 +282,8 @@ do
 done
 
 if [[ $(id -u) != "0" ]]; then
-	echo WARNING: Not running installer as ROOT user, will install for current account only
+	echo
+	echo Notice: Not running OpenRASP batch installer as ROOT, will install for current account only
 fi
 
 if [[ ! -z $flag_install ]]; then
