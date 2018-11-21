@@ -29,13 +29,15 @@ function do_install_java()
     if [[ "$install_jar" == "rasp-*/RaspInstall.jar" ]]; then
 
 cat << EOF    	
-OpenRASP package missing, e.g rasp-2018-11-20/RaspInstall.jar
+OpenRASP Java package missing, e.g rasp-2018-11-20/RaspInstall.jar
 Please download and extract the binary package, e.g
 
 wget https://packages.baidu.com/app/openrasp/rasp-java.tar.gz && tar -xvf rasp-java.tar.gz
 EOF
 
     	exit
+    else
+    	install_jar=$(readlink -f "$install_jar")
     fi
 
     # 开始逐个安装
@@ -232,18 +234,6 @@ EOF
 function do_install_php()
 {
     echo
-}
-
-function check_prerequisite()
-{
-    install_jar=(rasp-*/RaspInstall.jar)
-
-    # glob 失败
-    if [[ "$install_jar" == "rasp-*/RaspInstall.jar" ]]; then
-    	echo OpenRASP package missing, e.g rasp-2018-11-20/RaspInstall.jar
-    	echo Please download and extract the binary package: https://packages.baidu.com/app/openrasp/rasp-java.tar.gz
-    	exit
-    fi
 }
 
 function do_help()
