@@ -23,6 +23,22 @@ export ERROR_USER_PERMISSION=4
 function do_install_java()
 {
 	job=$1
+	   
+	# 定位 RaspInstall.jar 安装包
+	install_jar=(rasp-*/RaspInstall.jar)
+    if [[ "$install_jar" == "rasp-*/RaspInstall.jar" ]]; then
+
+cat << EOF    	
+OpenRASP package missing, e.g rasp-2018-11-20/RaspInstall.jar
+Please download and extract the binary package, e.g
+
+wget https://packages.baidu.com/app/openrasp/rasp-java.tar.gz && tar -xvf rasp-java.tar.gz
+EOF
+
+    	exit
+    fi
+
+    # 开始逐个安装
 	echo Looking for Java processes ..
 
 	for pid in $(pidof java)
@@ -137,15 +153,12 @@ EOF
 		echo
 		echo '[INFO] Executing RaspInstall.jar'
 
-		jar=(rasp-*/RaspInstall.jar)
-		jar=$(readlink -f $jar)
-
 		if [[ $(id -u) == 0 ]]; then
 			# 切换账号，避免root写入之后，造成权限问题
-			su - "$tomcat_user" -c "$java_path -jar $jar $job $tomcat_home"
+			su - "$tomcat_user" -c "$java_path -jar $install_jar $job $tomcat_home"
 			ret=$?
 		else
-			$java_path -jar $jar $job $tomcat_home
+			$java_path -jar $install_jar $job $tomcat_home
 			ret=$?
 		fi
 
@@ -257,7 +270,6 @@ flag_debug=
 flag_lang=
 flag_help=
 
-check_prerequisite
 cd "$(dirname "$0")"
 
 while getopts "hl:j:iu" arg
