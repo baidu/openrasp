@@ -200,7 +200,12 @@ EOF
 		# 尝试重新启动; 可能会有 TIME_WAIT 问题
 		echo
 		echo '[INFO] Starting Java server'
-		"${tomcat_home}/bin/startup.sh"
+
+		if [[ $(id -u) == 0 ]]; then
+			su - $tomcat_user -c "JAVA_HOME=$java_home JRE_HOME=$java_home ${tomcat_home}/bin/startup.sh"
+		else
+			JAVA_HOME=$java_home JRE_HOME=$java_home "${tomcat_home}/bin/startup.sh"
+		fi
 
 		# 检查是否成功，最多等待 60s
 		count=0
@@ -233,7 +238,7 @@ EOF
 
 function do_install_php()
 {
-    echo
+    echo Not implemented yet
 }
 
 function do_help()
@@ -246,6 +251,10 @@ Usage:
 	./batch.sh -u
 
 Additional parameter
+    -a  Value of app_id
+    -b  Value of app_secret
+    -c  Value of backend_url
+
     -l  Specify programming language, php/java etc. (Not implemented yet)
     -d  Be more verbose
     -h  You're reading this
@@ -259,10 +268,13 @@ flag_uninstall=
 flag_debug=
 flag_lang=
 flag_help=
+flag_appid=
+flag_appsecret=
+flag_backendurl=
 
 cd "$(dirname "$0")"
 
-while getopts "hl:j:iu" arg
+while getopts "hl:j:iua:b:c:" arg
 do
 	case "$arg" in
 		l)
@@ -277,10 +289,19 @@ do
 		u)
 			flag_uninstall=1
 			;;
+		a)
+			flag_appid=$OPTARG
+			;;
+		b)
+			flag_appsecret=$OPTARG
+			;;
+		c)
+			flag_backendurl=$OPTARG
+			;;
 		*)
 			do_help
 			;;
-	esac	
+	esac
 done
 
 if [[ $(id -u) != "0" ]]; then
@@ -289,7 +310,12 @@ if [[ $(id -u) != "0" ]]; then
 fi
 
 if [[ ! -z $flag_install ]]; then
-	do_install_java "-install"
+	arg="-install"
+	if [[ ! -z "$flag_appsecret" ]] && [[ ! -z "$flag_appid" ]] && [[ ! -z "$flag_backendurl" ]]; then
+		arg="-appid $flag_appid -appsecret $flag_appsecret -backendurl $flag_backendurl -install"
+	fi
+
+	do_install_java $arg
 elif [[ ! -z "$flag_uninstall" ]]; then
 	do_install_java "-uninstall"
 else
