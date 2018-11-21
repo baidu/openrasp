@@ -16,16 +16,18 @@ public class DynamicConfigAppender {
     public static final String LOGGER_NAME = "com.baidu.openrasp.plugin.checker.alarm";
     public static final String POLICY_LOGGER_NAME = "com.baidu.openrasp.plugin.checker.policy_alarm";
     private static final String SYSLOG_APPENDER_NAME = "SYSLOGTCP";
-    private static final String HTTP_APPENDER_NAME = "HTTPAPPENDER";
+    public static final String HTTP_ALARM_APPENDER_NAME = "HTTPALARMAPPENDER";
+    public static final String HTTP_POLICY_APPENDER_NAME = "HTTPPOLICYAPPENDER";
+
 
     public static void createSyslogAppender(String address, int port) {
         Logger logger = Logger.getLogger(LOGGER_NAME);
-        if (logger.getAppender(SYSLOG_APPENDER_NAME) != null){
+        if (logger.getAppender(SYSLOG_APPENDER_NAME) != null) {
             return;
         }
         RaspCustomLayout layout = new RaspCustomLayout();
         layout.setConversionPattern("%e: %m%n");
-        SyslogTcpAppender appender = new SyslogTcpAppender(address,port,8,layout);
+        SyslogTcpAppender appender = new SyslogTcpAppender(address, port, 8, layout);
         appender.setName(SYSLOG_APPENDER_NAME);
         appender.setThreshold(Level.INFO);
         appender.setFacilityPrinting(true);
@@ -40,7 +42,7 @@ public class DynamicConfigAppender {
         }
     }
 
-    public static void updateSyslogTag(){
+    public static void updateSyslogTag() {
         Logger logger = Logger.getLogger(LOGGER_NAME);
         if (logger.getAppender(SYSLOG_APPENDER_NAME) != null) {
             RaspCustomLayout layout = new RaspCustomLayout();
@@ -49,10 +51,13 @@ public class DynamicConfigAppender {
         }
     }
 
-    public static void createHttpAppender(String loggerName){
+    public static void createHttpAppender(String loggerName, String appenderName) {
         Logger logger = Logger.getLogger(loggerName);
+        if (logger.getAppender(appenderName) != null) {
+            logger.removeAppender(appenderName);
+        }
         HttpAppender appender = new HttpAppender();
-        appender.setName(HTTP_APPENDER_NAME);
+        appender.setName(appenderName);
         BurstFilter filter = new BurstFilter();
         int logMaxBurst = Config.getConfig().getLogMaxBurst();
         filter.setMaxBurst(logMaxBurst);

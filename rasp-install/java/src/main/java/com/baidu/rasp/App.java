@@ -66,9 +66,10 @@ public class App {
         options.addOption("appsecret", true, "Value of cloud.appsecret");
         options.addOption("backendurl", true, "Value of cloud.backendurl");
         options.addOption("help", false, "print options information");
+        options.addOption("h", false, "print options information");
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, args);
-        if (cmd.hasOption("help")) {
+        if (cmd.hasOption("help") || cmd.hasOption("h")) {
             showHelp();
         } else {
             if (cmd.hasOption("install") && cmd.hasOption("uninstall") || !cmd.hasOption("install") && !cmd.hasOption("uninstall")) {
@@ -95,17 +96,24 @@ public class App {
         System.out.println(banner);
     }
 
+    private static void showNotice() {
+        String notice = "Try 'java -jar RaspInstall.jar -help' for more information.";
+        System.out.println(notice);
+    }
+
     private static void showHelp() {
         String helpMsg = "Usage: \n" +
                 "  java -jar RaspInstall.jar -install /tomcat/\n" +
                 "  java -jar RaspInstall.jar -uninstall /tomcat/\n" +
                 "\n" +
-                "Additional    command line arguments: \n" +
+                "Additional command line arguments: \n" +
                 "  -install      Specify application server path\n" +
                 "  -uninstall    Specify application server path\n" +
                 "  -appid        Value of cloud.appid\n" +
                 "  -backendurl   Value of cloud.address\n" +
-                "  -appsecret    Value of cloud.appsecret\n";
+                "  -appsecret    Value of cloud.appsecret\n" +
+                "  -help         print options information\n" +
+                "  -h            print options information\n";
         System.out.println(helpMsg);
     }
 
@@ -125,7 +133,8 @@ public class App {
                 uninstaller.uninstall();
             }
         } catch (Exception e) {
-            System.out.println(e.getMessage() + "\n");
+            System.out.println(e.getMessage());
+            showNotice();
             System.exit(1);
         }
     }

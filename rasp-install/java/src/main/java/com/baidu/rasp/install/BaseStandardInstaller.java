@@ -80,7 +80,7 @@ public abstract class BaseStandardInstaller implements Installer {
         write(script, modified);
 
         //配置云控参数
-        setCloudArgs(url,appId,appSecret);
+        setCloudArgs(url, appId, appSecret);
         System.out.println("\nInstallation completed without errors.\nPlease restart application server to take effect.");
     }
 
@@ -158,21 +158,15 @@ public abstract class BaseStandardInstaller implements Installer {
     private void setCloudArgs(String url, String appId, String appSecret) {
         try {
             if (url != null && appId != null && appSecret != null) {
-                InputStream in = this.getClass().getResourceAsStream("/rasp.properties");
+                String path = getInstallPath(serverRoot) + "conf" + File.separator + "rasp.properties";
+                FileOutputStream out = new FileOutputStream(path, true);
                 Properties properties = new Properties();
-                properties.load(in);
-                if (properties.getProperty("cloud.address") != null) {
-                    properties.setProperty("cloud.address", url);
-                }
-                if (properties.getProperty("cloud.appid") != null) {
-                    properties.setProperty("cloud.appid", appId);
-                }
-                if (properties.getProperty("cloud.appsecret") != null) {
-                    properties.setProperty("cloud.appsecret", appSecret);
-                }
-                if (properties.getProperty("cloud.enable") != null) {
-                    properties.setProperty("cloud.enable", "true");
-                }
+                properties.setProperty("cloud.address", url);
+                properties.setProperty("cloud.appid", appId);
+                properties.setProperty("cloud.appsecret", appSecret);
+                properties.setProperty("cloud.enable", "true");
+                properties.store(out, "cloud control setting");
+                out.close();
             }
         } catch (Exception e) {
             System.out.println("cloud control set failed: " + e.getMessage());

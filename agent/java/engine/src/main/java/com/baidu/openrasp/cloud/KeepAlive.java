@@ -28,7 +28,6 @@ import com.baidu.openrasp.plugin.js.engine.JsPluginManager;
 import com.google.gson.Gson;
 import com.google.gson.JsonPrimitive;
 
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -114,11 +113,13 @@ public class KeepAlive {
             } catch (Throwable e) {
                 CloudManager.LOGGER.warn("config update failed: ", e);
             }
-
-            //动态创建http appender
-            DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.LOGGER_NAME);
-            DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.POLICY_LOGGER_NAME);
-
+            if (configMap.get("log.maxburst") != null) {
+                //更新http appender
+                DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.LOGGER_NAME,
+                        DynamicConfigAppender.HTTP_ALARM_APPENDER_NAME);
+                DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.POLICY_LOGGER_NAME,
+                        DynamicConfigAppender.HTTP_POLICY_APPENDER_NAME);
+            }
             //云控下发配置时动态添加或者删除syslog
             Object syslogSwitch = configMap.get("syslog.enable");
             if (syslogSwitch != null) {
