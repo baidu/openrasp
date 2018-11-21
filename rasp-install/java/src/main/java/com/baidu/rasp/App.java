@@ -60,17 +60,16 @@ public class App {
 
     private static void argsParser(String[] args) throws ParseException, RaspError {
         Options options = new Options();
-        options.addOption("install", true, "install OpenRASP agent");
-        options.addOption("uninstall", true, "uninstall OpenRASP agent");
+        options.addOption("install", true, "specify application server path");
+        options.addOption("uninstall", true, "specify application server path");
         options.addOption("appid", true, "Value of cloud.appid");
         options.addOption("appsecret", true, "Value of cloud.appsecret");
         options.addOption("backendurl", true, "Value of cloud.backendurl");
-        options.addOption("help", false, "helpMessage");
+        options.addOption("help", false, "print options information");
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, args);
         if (cmd.hasOption("help")) {
-            HelpFormatter hf = new HelpFormatter();
-            hf.printHelp("Options", options);
+            showHelp();
         } else {
             if (cmd.hasOption("install") && cmd.hasOption("uninstall") || !cmd.hasOption("install") && !cmd.hasOption("uninstall")) {
                 throw new RaspError(E10005 + "install and uninstall must only be selected one");
@@ -114,7 +113,6 @@ public class App {
         showBanner();
         try {
             argsParser(args);
-            System.out.println(install+"===="+baseDir+"====="+appSecret+"====="+appId+"===="+url);
             if ("install".equals(install)) {
                 File serverRoot = new File(baseDir);
                 InstallerFactory factory = newInstallerFactory();
@@ -125,11 +123,8 @@ public class App {
                 UninstallerFactory factory = newUninstallerFactory();
                 Uninstaller uninstaller = factory.getUninstaller(serverRoot);
                 uninstaller.uninstall();
-            } else {
-                showHelp();
             }
         } catch (Exception e) {
-            System.out.println("eeeeeeeeeeeeee");
             System.out.println(e.getMessage() + "\n");
             System.exit(1);
         }
