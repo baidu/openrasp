@@ -18,6 +18,8 @@
 #include <regex>
 #include <limits>
 
+#define MIN_HEARTBEAT_INTERVAL (60)
+
 Openrasp_ini openrasp_ini;
 
 ZEND_INI_MH(OnUpdateOpenraspIntGEZero)
@@ -68,6 +70,17 @@ ZEND_INI_MH(OnUpdateOpenraspSet)
             p->insert(it->str());
         }
     }
+    return SUCCESS;
+}
+
+ZEND_INI_MH(OnUpdateOpenraspHeartbeatInterval)
+{
+    long tmp = zend_atol(new_value->val, new_value->len);
+    if (tmp < MIN_HEARTBEAT_INTERVAL || tmp > 1800)
+    {
+        return FAILURE;
+    }
+    *reinterpret_cast<int *>(mh_arg1) = tmp;
     return SUCCESS;
 }
 

@@ -189,7 +189,7 @@ void post_pdo_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         {
             return;
         }
-        if (stmt->row_count >= openrasp_ini.slowquery_min_rows)
+        if (stmt->row_count >= OPENRASP_CONFIG(sql.slowquery.min_rows))
         {
             slow_query_alarm(stmt->row_count);
         }
@@ -214,7 +214,7 @@ void post_pdo_exec_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (Z_TYPE_P(return_value) == IS_LONG)
     {
-        if (Z_LVAL_P(return_value) >= openrasp_ini.slowquery_min_rows)
+        if (Z_LVAL_P(return_value) >= OPENRASP_CONFIG(sql.slowquery.min_rows))
         {
             slow_query_alarm(Z_LVAL_P(return_value));
         }

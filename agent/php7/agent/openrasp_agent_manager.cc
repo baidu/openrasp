@@ -304,6 +304,8 @@ bool OpenraspAgentManager::agent_remote_register()
 	writer.String(local_ip);
 	writer.Key("version");
 	writer.String(PHP_OPENRASP_VERSION);
+	writer.Key("heartbeat_interval");
+	writer.Int64(openrasp_ini.heartbeat_interval);
 	writer.EndObject();
 
 	BackendRequest backend_request(url_string, s.GetString());

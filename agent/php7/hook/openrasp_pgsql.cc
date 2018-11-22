@@ -246,7 +246,7 @@ void post_global_pg_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         num_rows = fetch_rows_via_user_function("pg_num_rows", 1, return_value);
     }
-    if (num_rows >= openrasp_ini.slowquery_min_rows)
+    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
     {
         slow_query_alarm(num_rows);
     }
@@ -270,7 +270,7 @@ void post_global_pg_get_result_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMET
     {
         num_rows = fetch_rows_via_user_function("pg_num_rows", 1, return_value);
     }
-    if (num_rows >= openrasp_ini.slowquery_min_rows)
+    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
     {
         slow_query_alarm(num_rows);
     }

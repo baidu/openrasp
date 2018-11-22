@@ -195,7 +195,7 @@ void post_mysqli_query_SQL_ALOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         num_rows = fetch_rows_via_user_function("mysqli_affected_rows", 1, getThis());
     }
-    if (num_rows >= openrasp_ini.slowquery_min_rows)
+    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
     {
         slow_query_alarm(num_rows);
     }
@@ -272,7 +272,7 @@ void post_global_mysqli_query_SQL_ALOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETE
     {
         num_rows = fetch_rows_via_user_function("mysqli_affected_rows", 1, mysql_link);
     }
-    if (num_rows >= openrasp_ini.slowquery_min_rows)
+    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
     {
         slow_query_alarm(num_rows);
     }
