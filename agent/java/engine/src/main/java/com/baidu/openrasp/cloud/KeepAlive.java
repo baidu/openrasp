@@ -95,15 +95,6 @@ public class KeepAlive {
             }
             if (pluginMap.get("plugin") instanceof JsonPrimitive) {
                 pluginContext = ((JsonPrimitive) pluginMap.get("plugin")).getAsString();
-                try {
-                    String pluginMD5 = CloudUtils.getMD5(pluginContext);
-                    if (!pluginMD5.equals(md5)) {
-                        CloudManager.LOGGER.warn("Plugin MD5 Verification Failed.");
-                        return;
-                    }
-                } catch (Exception e) {
-                    CloudManager.LOGGER.warn("Plugin MD5 Verification Failed: ", e);
-                }
             }
         }
         if (configMap != null) {
