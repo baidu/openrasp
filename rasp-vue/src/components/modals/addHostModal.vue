@@ -19,17 +19,21 @@
           <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="java-tab">
               <h4>1. 下载 Java Agent 安装包</h4>
-              <pre>wget 192.168.154.200/packages/rasp-java.tar.gz</pre>
+              <pre style="white-space: inherit; ">wget http://{{ location.host }}/packages/rasp-java.tar.gz<br/>tar -xvf rasp-java.tar.gz<br/>cd rasp-*/</pre>
               <h4>2. 执行 RaspInstall 进行安装</h4>
-              <pre>java -jar RaspInstall.jar /path/to/tomcat</pre>
+              <pre style="white-space: inherit; ">java -jar RaspInstall.jar -install /path/to/tomcat -appid {{ current_app.id }} -appsecret {{ current_app.secret }} -backendurl http://{{ location.host }}</pre>
               <h4>3. 重启 Tomcat/JBoss/SpringBoot 应用服务器</h4>
+              <pre style="white-space: inherit; ">/path/to/tomcat/bin/shutdown.sh<br/>/path/to/tomcat/bin/startup.sh</pre>
             </div>
             <div class="tab-pane fade" id="php-tab">
               <h4>1. 下载 PHP 安装包</h4>
-              <pre>wget 192.168.154.200/packages/rasp-php.tar.gz</pre>
+              <pre style="white-space: inherit; ">wget http://{{ location.host }}/packages/rasp-php.tar.gz</pre>
               <h4>2. 执行 install.php 进行安装</h4>
-              <pre>php install.php -d /opt/rasp</pre>
+              <pre style="white-space: inherit; ">php install.php -d /opt/rasp</pre>
               <h4>3. 重启 PHP-FPM 或者 Apache 服务器</h4>
+              <pre style="white-space: inherit; ">service php-fpm restart</pre>
+              <p>-或者-</p>
+              <pre style="white-space: inherit; ">apachectl -k restart</pre>
             </div>
           </div>
         </div>
@@ -45,18 +49,24 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+
 export default {
-    name: 'addHostModal',
-    data: function() {
-        return {
-            data: []
-        }
-    },
-    methods: {
-        showModal() {
-            $('#addHostModal').modal()
-        }
+  name: 'addHostModal',
+  data: function () {
+    return {
+      data: {},
+      location: location
     }
+  },
+  computed: {
+    ...mapGetters(['current_app'])
+  },
+  methods: {
+    showModal(data) {
+      $('#addHostModal').modal()
+    }
+  }
 }
 
 </script>

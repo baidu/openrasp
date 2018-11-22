@@ -43,8 +43,12 @@ export function attack_type2name(id) {
 }
 
 export function api_request(url, data, cb) {
-  var prefix = "http://scloud.baidu.com:8090/"
-  // var prefix = "/"
+  var prefix = "/"
+
+  // 本地开发
+  if (location.host == '127.0.0.1:8080') {
+    prefix = "http://scloud.baidu.com:8090/"
+  }
 
   axios
     .post(prefix + url, data)
