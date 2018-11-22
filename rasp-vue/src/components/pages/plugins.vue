@@ -6,10 +6,10 @@
           插件管理
         </h1>
         <div class="page-options d-flex">
-          <FileUpload ref="fileUpload" style="margin-right: 4px; "></FileUpload>
-          <button class="btn btn-primary" @click="doUpload()">提交</button>
-          <button class="btn btn-info" style="margin-left: 5px; " @click="loadPluginList(1)">刷新</button>
+          <FileUpload ref="fileUpload"></FileUpload>          
         </div>
+        <button class="btn btn-primary ml-2" @click="doUpload()">提交</button>
+        <button class="btn btn-info ml-2" @click="loadPluginList(1)">刷新</button>
       </div>
       <div class="card">
         <div class="card-body">

@@ -2,11 +2,10 @@
   <div id="settings-auth" class="tab-pane fade">
     <!-- begin auth settings -->
 
-    <!--
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">
-          修改密码
+          修改登录密码
         </h3>
       </div>
       <div class="card-body">
@@ -14,30 +13,29 @@
           <label class="form-label">
             原密码
           </label>
-          <input type="password" class="form-control"/>
+          <input type="password" class="form-control" v-model="oldpass" />
         </div>
         <div class="form-group">
           <label class="form-label">
             新密码
           </label>
-          <input type="password" class="form-control"/>
+          <input type="password" class="form-control" v-model="newpass1" />
         </div>
         <div class="form-group">
           <label class="form-label">
             再次输入新密码
           </label>
-          <input type="password" class="form-control"/>
+          <input type="password" class="form-control" v-model="newpass2" />
         </div>
       </div>
       <div class="card-footer text-right">
         <div class="d-flex">
-          <button class="btn btn-primary">
+          <button class="btn btn-primary" @click="changePass()">
             保存
           </button>
         </div>
       </div>
     </div>
-    -->
 
     <div class="card">
       <div class="card-header">
@@ -106,13 +104,25 @@ export default {
       data: [],
       total: 0,
       currentPage: 1,
-      loading: false
+      loading: false,
+      oldpass: '',
+      newpass1: '',
+      newpass2: ''
     }
   },
   mounted: function () {
     this.loadTokens(1)
   },
   methods: {
+    changePass: function () {
+      if (this.oldpass.length > 0 && this.newpass1.length > 0 && this.newpass1 == this.newpass2) {
+        this.api_request('v1/', {
+
+        }, function (data) {
+          alert ('密码修改成功')
+        })
+      }
+    },
     createToken: function () {
       var self  = this
       var descr = prompt('请输入备注信息')

@@ -6,18 +6,15 @@
 					操作日志
 				</h1>
 				<div class="page-options d-flex">
-					<div class="input-icon ml-2 w-100">
+					<div class="input-icon ml-2">
 						<span class="input-icon-addon">
 							<i class="fe fe-calendar">
 							</i>
 						</span>
 						<DatePicker ref="datePicker" v-on:selected="loadAudit(1)"></DatePicker>
-					</div>
-
-					<button class="btn btn-primary ml-2" @click="loadAudit(1)">
-						搜索
-					</button>
+					</div>					
 				</div>
+				<button class="btn btn-primary ml-2" @click="loadAudit(1)">搜索</button>
 			</div>
 			<div class="card">
 				<div class="card-body">
