@@ -62,7 +62,7 @@ public class DynamicConfigAppender {
         int logMaxBurst = Config.getConfig().getLogMaxBurst();
         filter.setMaxBurst(logMaxBurst);
         filter.setRefillAmount(logMaxBurst);
-        filter.setRefillInterval(60000);
+        filter.setRefillInterval(60);
         appender.addFilter(filter);
         logger.addAppender(appender);
     }

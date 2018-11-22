@@ -76,6 +76,7 @@ public class Config extends FileScanListener {
         SYSLOG_TAG("syslog.tag", "OPENRASP"),
         SYSLOG_RECONNECT_INTERVAL("syslog.reconnect_interval", "300000"),
         LOG_MAXBURST("log.maxburst", "100"),
+        HEARTBEAT_INTERVAL("cloud.heartbeatinterval", "180"),
         HOOK_WHITE_ALL("hook.white.ALL", "true");
 
 
@@ -139,6 +140,7 @@ public class Config extends FileScanListener {
     private int syslogReconnectInterval;
     private boolean hookWhiteAll;
     private int logMaxBurst;
+    private int heartbeatInterval;
 
 
     static {
@@ -985,10 +987,31 @@ public class Config extends FileScanListener {
     /**
      * 设置云控的appSecret，
      *
-     * @param cloudAppSecret 待设置的云控的appid
+     * @param cloudAppSecret 待设置的云控的appSecret
      */
     public synchronized void setCloudAppSecret(String cloudAppSecret) {
         this.cloudAppSecret = cloudAppSecret;
+    }
+
+    /**
+     * 获取云控的心跳请求间隔，
+     *
+     * @return 云控的心跳请求间隔
+     */
+    public synchronized int getHeartbeatInterval() {
+        return heartbeatInterval;
+    }
+
+    /**
+     * 设置云控的心跳请求间隔
+     *
+     * @param heartbeatInterval 待设置的云控心跳请求间隔
+     */
+    public synchronized void setHeartbeatInterval(String heartbeatInterval) {
+        this.heartbeatInterval = Integer.parseInt(heartbeatInterval);
+        if (!(this.heartbeatInterval >= 60 && this.heartbeatInterval <= 1800)) {
+            this.heartbeatInterval = 180;
+        }
     }
 
     //--------------------------统一的配置处理------------------------------------

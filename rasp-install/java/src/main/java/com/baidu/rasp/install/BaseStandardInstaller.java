@@ -165,7 +165,7 @@ public abstract class BaseStandardInstaller implements Installer {
                 properties.setProperty("cloud.appid", appId);
                 properties.setProperty("cloud.appsecret", appSecret);
                 properties.setProperty("cloud.enable", "true");
-                properties.store(out, "cloud control setting");
+                properties.store(out, "云控配置");
                 out.close();
             }
         } catch (Exception e) {
