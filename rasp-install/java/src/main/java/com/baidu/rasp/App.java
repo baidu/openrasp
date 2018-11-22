@@ -28,7 +28,10 @@ import org.apache.commons.cli.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLDecoder;
 
 import static com.baidu.rasp.RaspError.E10005;
 
@@ -97,7 +100,14 @@ public class App {
     }
 
     private static void showNotice() {
-        String notice = "Try 'java -jar RaspInstall.jar -help' for more information.";
+        URL localUrl = App.class.getProtectionDomain().getCodeSource().getLocation();
+        String notice;
+        try {
+            String path = URLDecoder.decode(localUrl.getFile().replace("+", "%2B"), "UTF-8");
+            notice = "Try 'java -jar " + path + " -help' for more information.";
+        } catch (UnsupportedEncodingException e) {
+            notice = "Try 'java -jar <path/to/RaspInstall.jar> -help' for more information.";
+        }
         System.out.println(notice);
     }
 
