@@ -29,7 +29,7 @@
               <h4>1. 下载 PHP 安装包</h4>
               <pre style="white-space: inherit; ">wget http://{{ location.host }}/packages/rasp-php.tar.gz</pre>
               <h4>2. 执行 install.php 进行安装</h4>
-              <pre style="white-space: inherit; ">php install.php -d /opt/rasp</pre>
+              <pre style="white-space: inherit; ">php install.php -d /opt/rasp --app-id {{ current_app.id }} --app-secret {{ current_app.secret }} --backend-url http://{{ location.host }}</pre>
               <h4>3. 重启 PHP-FPM 或者 Apache 服务器</h4>
               <pre style="white-space: inherit; ">service php-fpm restart</pre>
               <p>-或者-</p>
