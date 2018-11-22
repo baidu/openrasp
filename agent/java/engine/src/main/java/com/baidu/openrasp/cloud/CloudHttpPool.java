@@ -31,7 +31,7 @@ public class CloudHttpPool extends CloudHttp {
     public CloudHttpPool() {
         int cpuCoreNumber = Runtime.getRuntime().availableProcessors();
         this.threadPool = new ThreadPoolExecutor(2 * cpuCoreNumber, 5 * cpuCoreNumber, 60L, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<Runnable>(), new ThreadPoolExecutor.DiscardPolicy());
+                new LinkedBlockingQueue<Runnable>(), new CustomThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
 
     }
 
@@ -48,14 +48,23 @@ public class CloudHttpPool extends CloudHttp {
             try {
                 Thread.sleep(10);
             } catch (InterruptedException e) {
-                CloudManager.LOGGER.warn("send http request failed",e);
+                CloudManager.LOGGER.warn("send http request failed", e);
             }
         }
         try {
             return future.get();
         } catch (Exception e) {
-            CloudManager.LOGGER.warn("get http result from future failed",e);
+            CloudManager.LOGGER.warn("get http result from future failed", e);
         }
         return null;
+    }
+
+    class CustomThreadFactory implements ThreadFactory {
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = Executors.defaultThreadFactory().newThread(r);
+            t.setDaemon(true);
+            return t;
+        }
     }
 }
