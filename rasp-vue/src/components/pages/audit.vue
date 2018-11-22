@@ -6,7 +6,17 @@
 					操作审计
 				</h1>
 				<div class="page-options d-flex">
+					<div class="input-icon ml-2 w-100">
+						<span class="input-icon-addon">
+							<i class="fe fe-calendar">
+							</i>
+						</span>
+						<DatePicker ref="datePicker" v-on:selected="loadAudit(1)"></DatePicker>
+					</div>
 
+					<button class="btn btn-primary ml-2" @click="loadAudit(1)">
+						搜索
+					</button>
 				</div>
 			</div>
 			<div class="card">
@@ -23,11 +33,13 @@
 							</tr>
 						</thead>
 						<tbody>
-							<tr>
-								<td>2018-10-26 10:11:05</td>
-								<td>修改报警设置</td>
-								<td>admin</td>
-								<td>192.168.1.1</td>
+							<tr v-for="row in data" :key="row.id">
+								<td nowrap>
+									{{ moment(row.event_time).format('YYYY-MM-DD HH:mm:ss') }}
+								</td>
+								<td>{{ row.content }}</td>
+								<td nowrap>{{ row.user }}</td>
+								<td nowrap>{{ row.ip }}</td>
 							</tr>
 						</tbody>
 					</table>
@@ -42,38 +54,62 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import DatePicker from "@/components/DatePicker"
+import { mapGetters } from "vuex"
 
 export default {
-	name: 'audit',
-	data: function () {
-		return {
+  name: "audit",
+  data: function() {
+    return {
       data: [],
       loading: false,
       currentPage: 1,
       srcip: "",
       total: 0
-		}
-	},
+    }
+  },
   watch: {
-    currentPage: function (newVal, oldVal) {
+    currentPage: function(newVal, oldVal) {
       this.loadAudit(newVal)
     },
     current_app() {
-      this.loadAudit(1);
+      this.loadAudit(1)
     }
-  },	
-	mounted: function () {
+  },
+  mounted: function() {},
+  computed: {
+    ...mapGetters(["current_app"])
+  },
+  activated: function() {
+    if (!this.loading && !this.data.length) {
+      this.loading = true
+      this.loadAudit(1)
+    }
+  },
+  methods: {
+    loadAudit: function(page) {
+      var self = this
+      var body = {
+        page: page,
+		perpage: 10,
+		start_time: this.$refs.datePicker.start.unix() * 1000,
+        end_time: this.$refs.datePicker.end.unix() * 1000,
+        data: {
+          
+        }
+      }
 
-	},
-	methods: {
-		loadAudit: function (page) {
-
-		}
-	},
-	components: {
-
-	}
+      self.loading = true
+      self.api_request("v1/api/operation/search", body, function(data) {
+        self.data = data.data
+        self.total = data.total
+        self.loading = false
+      })
+    }
+  },
+  components: {
+	  DatePicker
+  }
 }
 </script>
 
