@@ -3,7 +3,7 @@
 		<div class="container">
 			<div class="page-header">
 				<h1 class="page-title">
-					操作审计
+					操作日志
 				</h1>
 				<div class="page-options d-flex">
 					<div class="input-icon ml-2 w-100">
