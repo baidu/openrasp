@@ -55,6 +55,10 @@ public:
   }
   void set(const T &key, const U &value)
   {
+    if (max <= 0)
+    {
+      return;
+    }
     size_t key_hash = hasher(key);
     auto it = item_map.find(key_hash);
     if (it != item_map.end())

@@ -30,10 +30,16 @@ namespace openrasp
 using namespace std;
 class OpenraspConfig;
 
+void g_zero_filter(int64_t &value, const int64_t &dafault);
+void ge_zero_filter(int64_t &value, const int64_t &dafault);
+void regex_filter(string &value, const string &regex, const string &dafault);
+
 // plugin
 class PluginBlock
 {
 public:
+  const static int64_t default_timeout_millis;
+  const static int64_t default_maxstack;
   struct
   {
     int64_t millis = 100;
@@ -47,6 +53,8 @@ public:
 class LogBlock
 {
 public:
+  const static int64_t default_maxburst;
+  const static int64_t default_maxstack;
   int64_t maxburst = 100;
   int64_t maxstack = 10;
   void update(OpenraspConfig *openrasp_config);
@@ -56,6 +64,10 @@ class SyslogBlock
 {
 public:
   const static std::string default_tag;
+  const static int64_t default_facility;
+  const static int64_t default_connection_timeout;
+  const static int64_t default_read_timeout;
+  const static int64_t default_reconnect_interval;
   string tag = "OpenRASP";
   string url;
   int64_t facility = 1;
@@ -70,6 +82,7 @@ public:
 class BlockBlock
 {
 public:
+  const static int64_t default_status_code;
   int64_t status_code = 302;
   string redirect_url = R"(https://rasp.baidu.com/blocked/?request_id=%request_id%)";
   string content_json = R"({"error":true, "reason": "Request blocked by OpenRASP", "request_id": "%request_id%"})";
@@ -88,6 +101,7 @@ public:
 class BodyBlock
 {
 public:
+  const static int64_t default_maxbytes;
   int64_t maxbytes = 4 * 1024;
   void update(OpenraspConfig *openrasp_config);
 };
@@ -109,6 +123,7 @@ public:
 class SqlBlock
 {
 public:
+  const static int64_t default_slowquery_min_rows;
   struct
   {
     int64_t min_rows = 500;
@@ -119,6 +134,7 @@ public:
 class LruBlock
 {
 public:
+  const static int64_t default_max_size;
   int64_t max_size = 1024;
   void update(OpenraspConfig *openrasp_config);
 };

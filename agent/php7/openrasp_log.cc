@@ -656,10 +656,6 @@ bool RaspLoggerEntry::raw_log(severity_level level_int, const char *message, int
             std::string syslog_time = format_time(RaspLoggerEntry::syslog_time_format, strlen(RaspLoggerEntry::syslog_time_format), now);
             int priority = OPENRASP_CONFIG(syslog.facility) * 8 + level_int;
             std::string tag = OPENRASP_CONFIG(syslog.tag);
-            if (!regex_match(tag.c_str(), "^[0-9a-zA-Z]{1,32}$"))
-            {
-                tag = openrasp::SyslogBlock::default_tag;
-            }
             syslog_info_len = spprintf(&syslog_info, 0, "<%d>%s %s %s[%d]: %s",
                                        priority,
                                        syslog_time.c_str(),
