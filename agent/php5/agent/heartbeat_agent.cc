@@ -48,7 +48,7 @@ void HeartBeatAgent::run()
 	{
 		do_heartbeat();
 
-		for (long i = 0; i < HeartBeatAgent::plugin_update_interval; ++i)
+		for (long i = 0; i < openrasp_ini.heartbeat_interval; ++i)
 		{
 			sleep(1);
 			if (HeartBeatAgent::signal_received == SIGTERM)

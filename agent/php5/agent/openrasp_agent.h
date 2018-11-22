@@ -56,9 +56,6 @@ public:
   virtual void write_pid_to_shm(pid_t agent_pid);
 
 private:
-  static const long plugin_update_interval = 60;
-
-private:
   void do_heartbeat();
 };
 
