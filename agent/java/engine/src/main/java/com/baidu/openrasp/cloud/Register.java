@@ -38,7 +38,9 @@ public class Register {
     private static final int REGISTER_DELAY = 300 * 1000;
 
     public Register() {
-        new Thread(new RegisterThread()).start();
+        Thread thread = new Thread(new RegisterThread());
+        thread.setDaemon(true);
+        thread.start();
     }
 
     class RegisterThread implements Runnable {

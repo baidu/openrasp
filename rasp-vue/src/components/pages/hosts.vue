@@ -41,28 +41,35 @@
 									上次通信
 								</th>
 								<th>
+									状态
+								</th>
+								<th>
 									操作
 								</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr v-for="row in data" :key="row.id">
-								<td nowrap>
+								<td>
 									{{ row.hostname }}
 								</td>
 								<td nowrap>
 									10.58.230.19
 								</td>
 								<td nowrap>
-									{{ row.language | capitalize }}/{{ row.version }} <br>
+									{{ row.language}}/{{ row.version }} <br>
 									official/{{ row.plugin_version }}
 								</td>
-								<td nowrap>
+								<td>
 									{{ row.rasp_home }}
 								</td>
-								<td>
-									{{ moment(row.last_heartbeat_time).format('YYYY-MM-DD hh:mm:ss') }}
-									<span class="danger" v-if="! row.online">{{ 离线 }}</span>
+								<td nowrap>
+									{{ moment(row.last_heartbeat_time * 1000).format('YYYY-MM-DD') }} <br />
+									{{ moment(row.last_heartbeat_time * 1000).format('hh:mm:ss') }}
+								</td>
+								<td nowrap>
+									<span class="text-danger" v-if="! row.online">离线</span>
+									<span v-if="row.online">正常</span>
 								</td>
 								<td nowrap>
 									<a href="javascript:" @click="doDelete(row)">删除</a>
@@ -131,10 +138,10 @@ export default {
 			})
 		},
 		doDelete: function (data) {
-			if (!confirm("确认删除?")) {
+			if (!confirm("确认删除? 删除前请先在主机端卸载 OpenRASP agent")) {
 				return
 			}
-			var body = {				
+			var body = {
 				id: data.id
 			}
 

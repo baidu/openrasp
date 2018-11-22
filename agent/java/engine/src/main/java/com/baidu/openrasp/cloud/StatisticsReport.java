@@ -37,7 +37,9 @@ public class StatisticsReport {
     private static final int STATISTICS_REPORT_INTERVAL = 3600 * 1000;
 
     public StatisticsReport() {
-        new Thread(new StatisticsReportThread()).start();
+        Thread thread = new Thread(new StatisticsReportThread());
+        thread.setDaemon(true);
+        thread.start();
     }
 
     class StatisticsReportThread implements Runnable {

@@ -40,7 +40,9 @@ public class KeepAlive {
     private static final int KEEPALIVE_DELAY = 60000;
 
     public KeepAlive() {
-        new Thread(new KeepAliveThread()).start();
+        Thread thread = new Thread(new KeepAliveThread());
+        thread.setDaemon(true);
+        thread.start();
     }
 
     class KeepAliveThread implements Runnable {
