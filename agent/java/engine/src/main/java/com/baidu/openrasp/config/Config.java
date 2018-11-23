@@ -1086,6 +1086,8 @@ public class Config extends FileScanListener {
                 setHookWhiteAll(value);
             } else if (Item.LOG_MAXBURST.key.equals(key)) {
                 setLogMaxBurst(value);
+            } else if (Item.HEARTBEAT_INTERVAL.key.equals(key)) {
+                setHeartbeatInterval(value);
             } else {
                 isHit = false;
             }
