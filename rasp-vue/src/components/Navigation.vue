@@ -19,11 +19,11 @@
               </span>
             </a>
             <div class="dropdown-menu dropdown-menu-left dropdown-menu-arrow">
-                <a :key="row.id" class="dropdown-item" href="javascript:" v-for="row in app_list" @click.prevent="changeApp(row)">
+              <a :key="row.id" class="dropdown-item" href="javascript:" v-for="row in app_list" @click.prevent="changeApp(row)">
                 <i class="dropdown-icon fe fe-lock">
                 </i>
                 {{ row.name }} ( {{ row.lang }} {{ row.id }} )
-                </a>
+              </a>
               <div class="dropdown-divider">
               </div>
               <a class="dropdown-item" href="javascript:">
@@ -39,44 +39,20 @@
                 添加主机
               </a>
             </div>
-            <div class="dropdown d-none d-md-flex">
-              <a class="nav-link icon" data-toggle="dropdown">
-                <i class="fe fe-bell">
-                </i>
-                <span class="nav-unread">
+            <div class="dropdown">
+              <a href="javascript:" class="nav-link pr-0 leading-none" data-toggle="dropdown">
+                <span class="ml-2 d-none d-lg-block">
+                  <span class="text-default">admin <i class="fa fa-caret-down"></i></span>
+                  <small class="text-muted d-block mt-1">管理员权限</small>
                 </span>
               </a>
-              <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
-                <a href="javascript:" class="dropdown-item d-flex">
-                  <span class="avatar mr-3 align-self-center" style="background-image: url(/static/images/lang/nodejs.jpg)">
-                  </span>
-                  <div>
-                    <strong>
-                      test2
-                    </strong>
-                    受到攻击: 183.123.22.2，SQL注入
-                    <div class="small text-muted">
-                      10 分钟前
-                    </div>
-                  </div>
+              <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow" x-placement="bottom-end">
+                <a class="dropdown-item" href="javascript:">
+                  <i class="dropdown-icon fe fe-settings"></i> 用户设置
                 </a>
-                <a href="#" class="dropdown-item d-flex">
-                  <span class="avatar mr-3 align-self-center" style="background-image: url(/static/images/lang/java.png)">
-                  </span>
-                  <div>
-                    <strong>
-                      test3
-                    </strong>
-                    受到攻击: 183.123.22.2，文件目录遍历
-                    <div class="small text-muted">
-                      30 分钟前
-                    </div>
-                  </div>
-                </a>
-                <div class="dropdown-divider">
-                </div>
-                <a href="#" class="dropdown-item text-center text-muted-dark">
-                  全部忽略
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="javascript:" @click="doLogout()">
+                  <i class="dropdown-icon fe fe-log-out"></i> 退出登录
                 </a>
               </div>
             </div>
@@ -167,41 +143,47 @@
 
 </template>
 <script>
-import addHostModal from '@/components/modals/addHostModal.vue'
-import { mapGetters, mapActions, mapMutations } from 'vuex'
+import addHostModal from "@/components/modals/addHostModal.vue"
+import { mapGetters, mapActions, mapMutations } from "vuex"
 
 export default {
-  name: 'Navigation',
-  data: function () {
+  name: "Navigation",
+  data: function() {
     return {
       urlHasId: false
     }
   },
   computed: {
-    ...mapGetters(['current_app', 'app_list'])
+    ...mapGetters(["current_app", "app_list"])
   },
   methods: {
-    ...mapActions(['loadAppList']),
-    ...mapMutations(['setCurrentApp']),
-    showAddHostModal: function () {
+    ...mapActions(["loadAppList"]),
+    ...mapMutations(["setCurrentApp", "setAuthStatus"]),
+    showAddHostModal() {
       this.$refs.addHost.showModal()
     },
     changeApp(data) {
-      this.setCurrentApp(data);
+      this.setCurrentApp(data)
+    },
+    doLogout() {
+      var self = this
+      self.api_request('v1/user/logout', {}, function (data) {
+        self.setAuthStatus(false)
+      })
     }
   },
   mounted() {
     if (this.$route.params.app_id) {
-      this.loadAppList(this.$route.params.app_id);
+      this.loadAppList(this.$route.params.app_id)
     } else {
-      this.loadAppList();
+      this.loadAppList()
     }
   },
   watch: {
     current_app(newValue) {
       var name = this.$route.name
-      if (! name) {
-        name = 'dashboard'
+      if (!name) {
+        name = "dashboard"
       }
 
       this.$router.push({
@@ -209,12 +191,11 @@ export default {
         params: {
           app_id: newValue.id
         }
-      });
+      })
     }
   },
   components: {
     addHostModal
   }
 }
-
 </script>

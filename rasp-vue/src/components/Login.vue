@@ -7,7 +7,7 @@
                 </div> -->
                 <form class="card" @submit="doLogin()">
                     <div class="card-body p-6">
-                        <div class="card-title">管理后台登录</div>
+                        <div class="card-title">OpenRASP 管理后台登录</div>
                         <div class="form-group">
                             <label class="form-label">用户名</label>
                             <input type="text" class="form-control" v-model="username">
