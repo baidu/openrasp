@@ -46,7 +46,7 @@ export function api_request(url, data, cb, err_cb) {
   var prefix = "/"
 
   // 本地开发
-  if (location.host == '127.0.0.1:8080') {
+  if (location.host == '127.0.0.1:8080' || location.host == 'localhost:8080') {
     prefix = "http://scloud.baidu.com:8090/"
 
     axios.defaults.headers['X-OpenRASP-Token'] = '9256a3555fbd4f24f7a2ba915a32261ab4c720fc'

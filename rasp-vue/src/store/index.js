@@ -52,12 +52,7 @@ const store = new Vuex.Store({
         function(errno, descr) {
           // 认证失败检查
           if (errno == 401) {
-            router.replace({
-              path: "login",
-              query: { 
-                redirect: router.currentRoute.fullPath
-              }
-            })
+            commit("setAuthStatus", false)
           }
         }
       )

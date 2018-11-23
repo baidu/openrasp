@@ -5,7 +5,7 @@
         <div class="d-flex">
           <div class="dropdown">
             <a href="javascript:" class="nav-link pr-0 leading-none" data-toggle="dropdown" style="padding-left: 0">
-              <span class="avatar" style="background-image: url(/static/images/lang/java.png)">
+              <span class="avatar" v-bind:style="{ 'background-image': 'url(/static/images/lang/' + current_app.language + '.png)' }">
               </span>
               <span class="ml-2 d-none d-lg-block">
                 <span class="text-muted" style="margin-left: -2px; ">

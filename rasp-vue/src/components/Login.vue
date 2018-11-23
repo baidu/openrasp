@@ -31,8 +31,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-import router from '../router'
+import { mapMutations } from 'vuex'
 
 export default {
     name: 'Login',
@@ -42,7 +41,16 @@ export default {
             password: 'admin@123'
         }
     },
+    mounted: function () {
+        var self = this
+        this.api_request('v1/api/app/get', {}, function (data) {}, function (errno, descr) {
+            if (errno != 401) {
+                self.setAuthStatus(1)
+            }
+        })
+    },
     methods: {
+        ...mapMutations(['setAuthStatus']),
         doLogin: function () {
             var self = this
             var body = {
@@ -50,17 +58,11 @@ export default {
                 password: this.password
             }
 
-            // @FIXME
-            var path = self.$route.params.redirect ? self.$route.params.redirect : '#/dashboard/'
-            console.log (path)
+            // self.setAuthStatus(1)
+            // return
 
             self.api_request('v1/user/login', body, function (data) {
-                location.href = path
-                location.reload()
-
-                // self.$router.replace({
-                //     path: path
-                // })
+                self.setAuthStatus(1)
             })
 
             return false
