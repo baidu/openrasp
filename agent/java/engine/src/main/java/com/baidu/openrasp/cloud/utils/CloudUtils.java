@@ -132,8 +132,10 @@ public class CloudUtils {
             try {
                 CloudCacheModel.getInstance().setRaspId(OSUtil.getRaspId());
             } catch (Exception e) {
-                CloudManager.LOGGER.warn("get rasp id failed", e);
+                CloudManager.LOGGER.warn("Unable to generate unique rasp_id:", e);
+                return false;
             }
+
             String cloudAddress = Config.getConfig().getCloudAddress();
             String cloudAppId = Config.getConfig().getCloudAppId();
             String cloudAppSecret = Config.getConfig().getCloudAppSecret();

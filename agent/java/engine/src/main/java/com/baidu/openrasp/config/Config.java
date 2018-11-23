@@ -227,7 +227,7 @@ public class Config extends FileScanListener {
                                         Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
                                         codeSum = codeSum + code;
                                     } catch (Exception e) {
-                                        LOGGER.warn("hook type not exist: ", e);
+                                        LOGGER.warn("Hook type " + s + " does not exist: ", e);
                                     }
                                 }
                                 if (hook.getKey().equals("*")) {
