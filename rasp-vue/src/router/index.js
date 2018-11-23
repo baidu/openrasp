@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
+import Login from '@/components/Login'
 import dashboard from '@/components/pages/dashboard'
 import baseline from '@/components/pages/baseline'
 import hosts from '@/components/pages/hosts'
@@ -13,6 +14,11 @@ Vue.use(Router)
 
 const router = new Router({
   routes: [
+    {
+      path: '/login/',
+      name: 'login',
+      component: Login
+    },
     {
       path: '/dashboard/:app_id/',
       name: 'dashboard',

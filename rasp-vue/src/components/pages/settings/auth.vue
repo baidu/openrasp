@@ -116,11 +116,14 @@ export default {
   methods: {
     changePass: function () {
       if (this.oldpass.length > 0 && this.newpass1.length > 0 && this.newpass1 == this.newpass2) {
-        this.api_request('v1/', {
-
+        this.api_request('v1/user/update', {
+          old_password: this.oldpass,
+          new_password: this.newpass1
         }, function (data) {
           alert ('密码修改成功')
         })
+      } else {
+        alert ('两次密码输入不一致，请重新输入')
       }
     },
     createToken: function () {

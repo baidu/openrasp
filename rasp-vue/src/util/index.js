@@ -42,12 +42,14 @@ export function attack_type2name(id) {
   return id
 }
 
-export function api_request(url, data, cb) {
+export function api_request(url, data, cb, err_cb) {
   var prefix = "/"
 
   // 本地开发
   if (location.host == '127.0.0.1:8080') {
     prefix = "http://scloud.baidu.com:8090/"
+
+    axios.defaults.headers['X-OpenRASP-Token'] = '9256a3555fbd4f24f7a2ba915a32261ab4c720fc'
   }
 
   axios
@@ -56,7 +58,11 @@ export function api_request(url, data, cb) {
       if (response.status != 200) {
         alert("HTTP 请求出错: 响应码 " + response.status)
       } else if (response.data.status != 0) {
-        alert("API 接口出错: " + response.data.description)
+        if (err_cb) {
+          err_cb(response.data.status, response.data.description)
+        } else {
+          alert("API 接口出错: " + response.data.status + " - " + response.data.description)
+        }
       } else {
         console.log (url, response.data.data)
         cb(response.data.data)
