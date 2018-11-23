@@ -82,8 +82,8 @@ public class Register {
         String raspHome = Config.getConfig().getBaseDirectory();
         params.put("rasp_home", raspHome);
         params.put("register_ip", CloudCacheModel.getInstance().getMasterIp());
-//        int heartbeatInterval = Config.getConfig().getHeartbeatInterval();
-//        params.put("heartbeat_interval",heartbeatInterval);
+        int heartbeatInterval = Config.getConfig().getHeartbeatInterval();
+        params.put("heartbeat_interval",heartbeatInterval);
         return params;
     }
 }

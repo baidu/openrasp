@@ -37,7 +37,6 @@ import java.util.Map;
  * @create: 2018/09/17 16:55
  */
 public class KeepAlive {
-    private static final int KEEPALIVE_DELAY = 60000;
 
     public KeepAlive() {
         Thread thread = new Thread(new KeepAliveThread());
@@ -58,8 +57,8 @@ public class KeepAlive {
                     CloudManager.LOGGER.warn(CloudUtils.handleError(ErrorType.HEARTBEAT_ERROR, response));
                 }
                 try {
-                    Thread.sleep(KEEPALIVE_DELAY);
-                } catch (InterruptedException e) {
+                    Thread.sleep(Config.getConfig().getHeartbeatInterval());
+                } catch (Exception e) {
                     //continue next loop
                 }
             }
