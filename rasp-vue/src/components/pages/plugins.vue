@@ -107,7 +107,7 @@ export default {
       }
 
       axios({
-        url: "http://scloud.baidu.com:8090/v1/api/plugin/download",
+        url: "/v1/api/plugin/download",
         method: "POST",
         data: JSON.stringify(body),
         responseType: "blob"
