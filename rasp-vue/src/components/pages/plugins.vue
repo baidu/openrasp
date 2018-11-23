@@ -6,7 +6,7 @@
           插件管理
         </h1>
         <div class="page-options d-flex">
-          <FileUpload ref="fileUpload"></FileUpload>          
+          <FileUpload ref="fileUpload"></FileUpload>
         </div>
         <button class="btn btn-primary ml-2" @click="doUpload()">提交</button>
         <button class="btn btn-info ml-2" @click="loadPluginList(1)">刷新</button>
@@ -33,7 +33,7 @@
                 </td>
                 <td>
                   <a href="javascript:" @click="doSelect(row)">推送</a> &nbsp;
-                  <a href="javascript:">下载</a> &nbsp;
+                  <a href="javascript:" @click="doDownload(row)">下载</a> &nbsp;
                   <a href="javascript:" @click="doDelete(row)">删除</a>
                 </td>
               </tr>
@@ -52,12 +52,13 @@
 </template>
 
 <script>
+import axios from 'axios'
 import FileUpload from "@/components/FileUpload"
-import { mapGetters, mapActions, mapMutations } from 'vuex'
+import { mapGetters, mapActions, mapMutations } from "vuex"
 
 export default {
   name: "plugins",
-  data: function () {
+  data: function() {
     return {
       currentPage: 1,
       total: 1,
@@ -65,41 +66,61 @@ export default {
       loading: false
     }
   },
-	watch: {
-		'currentPage': function (newVal, oldVal) {
-			this.loadPluginList(newVal)
-		},
-		current_app () {
-      this.loadPluginList(1);
-    }
-  }, 
-  computed: {
-    ...mapGetters(['current_app'])
-  },
-  activated: function() {
-    if (this.current_app.id && !this.loading && !this.data.length) {      
+  watch: {
+    currentPage: function(newVal, oldVal) {
+      this.loadPluginList(newVal)
+    },
+    current_app() {
       this.loadPluginList(1)
     }
-  },  
+  },
+  computed: {
+    ...mapGetters(["current_app"])
+  },
+  activated: function() {
+    if (this.current_app.id && !this.loading && !this.data.length) {
+      this.loadPluginList(1)
+    }
+  },
   methods: {
-    ...mapActions(['loadAppList']),
+    ...mapActions(["loadAppList"]),
     loadPluginList: function(page) {
       var self = this
-      var data = { 
+      var data = {
         page: page,
-        perpage: 10, 
-        app_id: this.current_app.id,
+        perpage: 10,
+        app_id: this.current_app.id
       }
 
       this.loading = true
-      this.api_request('v1/api/app/plugin/get', data, function (data) {
-        self.data  = data.data
+      this.api_request("v1/api/app/plugin/get", data, function(data) {
+        self.data = data.data
         self.total = data.total
 
         self.loading = false
       })
     },
-    doUpload: function () {
+    doDownload: function(row) {
+      var self = this
+      var body = {
+        id: row.id
+      }
+
+      axios({
+        url: "http://scloud.baidu.com:8090/v1/api/plugin/download",
+        method: "POST",
+        data: JSON.stringify(body),
+        responseType: "blob"
+      }).then(response => {
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement("a")
+        link.href = url
+        link.setAttribute("download", "plugin.js") //or any other extension
+        document.body.appendChild(link)
+        link.click()
+      })
+    },
+    doUpload: function() {
       var self = this
       var file = this.$refs.fileUpload.file
 
@@ -110,29 +131,29 @@ export default {
         this.api_request(
           "v1/api/plugin?app_id=" + self.current_app.id,
           data,
-          function (data) {
+          function(data) {
             self.loadPluginList(1)
             self.$refs.fileUpload.clear()
           }
         )
       }
     },
-    doDelete: function (row) {
+    doDelete: function(row) {
       var self = this
       var body = {
         id: row.id
       }
 
-      if (! confirm('确认删除?')) {
+      if (!confirm("确认删除?")) {
         return
       }
 
-      this.api_request('v1/api/plugin/delete', body, function (data) {
-        self.loadPluginList(1)  
+      this.api_request("v1/api/plugin/delete", body, function(data) {
+        self.loadPluginList(1)
       })
     },
-    doSelect: function (row) {
-      if (! confirm('确认下发?')) {
+    doSelect: function(row) {
+      if (!confirm("确认下发?")) {
         return
       }
 
@@ -142,10 +163,10 @@ export default {
         plugin_id: row.id
       }
 
-      this.api_request('v1/api/app/plugin/select', body, function (data) {
+      this.api_request("v1/api/app/plugin/select", body, function(data) {
         self.loadAppList()
       })
-    }  
+    }
   },
   components: {
     FileUpload
