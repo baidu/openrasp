@@ -29,9 +29,11 @@ import org.apache.commons.cli.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.util.regex.Pattern;
 
 import static com.baidu.rasp.RaspError.E10005;
 
@@ -44,6 +46,9 @@ public class App {
     public static String appSecret;
     public static String baseDir;
     public static String url;
+
+    public static final String REGEX_APPID = "^[a-z0-9]{40,40}$";
+    public static final String REGEX_APPSECRET = "^[a-zA-Z0-9_-]{43,45}$";
 
     private static InstallerFactory newInstallerFactory() {
         if (System.getProperty("os.name").startsWith("Windows")) {
@@ -93,6 +98,28 @@ public class App {
         }
     }
 
+    private static void checkArgs() throws RaspError {
+        if (appId != null) {
+            Pattern pattern = Pattern.compile(REGEX_APPID);
+            if (!pattern.matcher(appId).matches()) {
+                throw new RaspError(E10005 + "appid error");
+            }
+        }
+        if (appSecret != null) {
+            Pattern pattern = Pattern.compile(REGEX_APPSECRET);
+            if (!pattern.matcher(appSecret).matches()) {
+                throw new RaspError(E10005 + "appSecret error");
+            }
+        }
+        if (url != null) {
+            try {
+                new URL(url);
+            } catch (MalformedURLException e) {
+                throw new RaspError(E10005 + "backendurl error");
+            }
+        }
+    }
+
     private static void showBanner() {
         String banner = "OpenRASP Installer for Java app servers - Copyright 2017-2018 Baidu Inc.\n" +
                 "For more details visit: https://rasp.baidu.com/doc/install/software.html\n";
@@ -131,6 +158,7 @@ public class App {
         showBanner();
         try {
             argsParser(args);
+            checkArgs();
             if ("install".equals(install)) {
                 File serverRoot = new File(baseDir);
                 InstallerFactory factory = newInstallerFactory();
