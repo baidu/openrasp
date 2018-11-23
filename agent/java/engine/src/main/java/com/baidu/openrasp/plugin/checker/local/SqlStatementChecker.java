@@ -227,7 +227,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
         if (result.isEmpty()) {
             String query = (String) checkParameter.getParam("query");
             if (SQLStatementHook.sqlCache.maxSize() != 0) {
-                SQLStatementHook.sqlCache.put(query, null);
+                SQLStatementHook.sqlCache.put(query.trim(), null);
             }
         }
         return result;

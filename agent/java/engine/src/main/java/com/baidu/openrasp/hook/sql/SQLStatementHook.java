@@ -175,7 +175,7 @@ public class SQLStatementHook extends AbstractSqlHook {
             sqlCache.clear();
             sqlCache = new LRUCache<String, String>(lruCacheSize);
         }
-        if (stmt != null && !stmt.isEmpty() && (sqlCache.maxSize() == 0 || !sqlCache.isContainsKey(stmt))) {
+        if (stmt != null && !stmt.isEmpty() && (sqlCache.maxSize() == 0 || !sqlCache.isContainsKey(stmt.trim()))) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             String connectionId = getSqlConnectionId(server, statement);

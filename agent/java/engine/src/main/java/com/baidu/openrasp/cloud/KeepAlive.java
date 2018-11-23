@@ -57,7 +57,7 @@ public class KeepAlive {
                     CloudManager.LOGGER.warn(CloudUtils.handleError(ErrorType.HEARTBEAT_ERROR, response));
                 }
                 try {
-                    Thread.sleep(Config.getConfig().getHeartbeatInterval());
+                    Thread.sleep(Config.getConfig().getHeartbeatInterval()*1000);
                 } catch (Exception e) {
                     //continue next loop
                 }

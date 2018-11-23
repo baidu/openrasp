@@ -54,7 +54,7 @@ public class Config extends FileScanListener {
         BODY_MAX_BYTES("body.maxbytes", "4096"),
         LOG_MAX_STACK("log.maxstack", "20"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
-        SQL_CACHE_CAPACITY("sql.cache.capacity", "100"),
+        SQL_CACHE_CAPACITY("lru.max_size", "100"),
         SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
         PLUGIN_FILTER("plugin.filter", "true"),
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
