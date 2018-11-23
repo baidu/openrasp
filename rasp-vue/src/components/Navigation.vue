@@ -47,10 +47,10 @@
                 </span>
               </a>
               <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow" x-placement="bottom-end">
-                <a class="dropdown-item" href="javascript:">
+                <!-- <a class="dropdown-item" href="javascript:">
                   <i class="dropdown-icon fe fe-settings"></i> 用户设置
                 </a>
-                <div class="dropdown-divider"></div>
+                <div class="dropdown-divider"></div> -->
                 <a class="dropdown-item" href="javascript:" @click="doLogout()">
                   <i class="dropdown-icon fe fe-log-out"></i> 退出登录
                 </a>
