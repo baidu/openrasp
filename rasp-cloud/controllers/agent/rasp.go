@@ -34,7 +34,7 @@ func (o *RaspController) Post() {
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, rasp)
 
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if rasp.Id == "" {
 		o.ServeError(http.StatusBadRequest, "rasp id cannot be empty")
@@ -75,17 +75,22 @@ func (o *RaspController) Post() {
 	if len(rasp.ServerVersion) >= 50 {
 		o.ServeError(http.StatusBadRequest, "the length of rasp server version must be less than 50")
 	}
-	if rasp.LocalIp != "" {
+	if rasp.RegisterIp != "" {
 		valid := validation.Validation{}
-		if result := valid.IP(rasp.LocalIp, "IP"); !result.Ok {
+		if result := valid.IP(rasp.RegisterIp, "IP"); !result.Ok {
 			o.ServeError(http.StatusBadRequest, "rasp primary_ip format error: "+result.Error.Message)
 		}
+	}
+	if rasp.HeartbeatInterval <= 0 {
+		o.ServeError(http.StatusBadRequest, "heartbeat_interval must be greater than 0")
 	}
 
 	rasp.LastHeartbeatTime = time.Now().Unix()
 	err = models.UpsertRaspById(rasp.Id, rasp)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to add rasp: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to add rasp", err)
 	}
+	models.AddOperation(rasp.AppId, models.OperationTypeRegisterRasp, o.Ctx.Input.IP(),
+		"registered the rasp: " + rasp.Id + ",hostname is: " + rasp.HostName)
 	o.Serve(rasp)
 }

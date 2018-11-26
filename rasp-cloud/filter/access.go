@@ -53,7 +53,7 @@ func initAccessLogger() {
 	if isExists, _ := tools.PathExists("logs/access"); !isExists {
 		err := os.MkdirAll("logs/access", os.ModePerm)
 		if err != nil {
-			tools.Panic("failed to create logs/access dir: " + err.Error())
+			tools.Panic("failed to create logs/access dir", err)
 		}
 	}
 
@@ -63,6 +63,6 @@ func initAccessLogger() {
 	err := accessLogger.SetLogger(logs.AdapterFile,
 		`{"filename":"logs/access/access.log","daily":true,"maxdays":10,"perm":"0777"}`)
 	if err != nil {
-		tools.Panic("failed to init access log: " + err.Error())
+		tools.Panic("failed to init access log", err)
 	}
 }

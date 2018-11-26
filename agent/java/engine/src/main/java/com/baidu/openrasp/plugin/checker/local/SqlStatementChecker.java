@@ -226,8 +226,8 @@ public class SqlStatementChecker extends ConfigurableChecker {
         // 检测无威胁的sql加入sql缓存
         if (result.isEmpty()) {
             String query = (String) checkParameter.getParam("query");
-            if (SQLStatementHook.sqlCache.realSize()!=0){
-                SQLStatementHook.sqlCache.put(query, null);
+            if (SQLStatementHook.sqlCache.maxSize() != 0) {
+                SQLStatementHook.sqlCache.put(query.trim(), null);
             }
         }
         return result;

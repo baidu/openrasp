@@ -24,7 +24,6 @@ Vue.mixin({
 })
 
 Vue.prototype.$http = axios
-axios.defaults.headers['X-OpenRASP-Token'] = '9256a3555fbd4f24f7a2ba915a32261ab4c720fc'
 
 /* eslint-disable no-new */
 new Vue({

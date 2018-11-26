@@ -30,14 +30,14 @@ func (o *ReportController) Post() {
 	var reportData *models.ReportData
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &reportData)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if reportData.RaspId == "" {
 		o.ServeError(http.StatusBadRequest, "rasp_id cannot be empty")
 	}
 	rasp, err := models.GetRaspById(reportData.RaspId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get rasp: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
 	}
 	if reportData.Time <= 0 {
 		o.ServeError(http.StatusBadRequest, "time param must be greater than 0")
@@ -47,7 +47,7 @@ func (o *ReportController) Post() {
 	}
 	err = models.AddReportData(reportData, rasp.AppId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to insert report data: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to insert report data", err)
 	}
 	o.Serve(reportData)
 }

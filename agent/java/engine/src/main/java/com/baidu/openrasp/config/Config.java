@@ -54,7 +54,7 @@ public class Config extends FileScanListener {
         BODY_MAX_BYTES("body.maxbytes", "4096"),
         LOG_MAX_STACK("log.maxstack", "20"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
-        SQL_CACHE_CAPACITY("sql.cache.capacity", "100"),
+        SQL_CACHE_CAPACITY("lru.max_size", "100"),
         SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
         PLUGIN_FILTER("plugin.filter", "true"),
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
@@ -74,6 +74,7 @@ public class Config extends FileScanListener {
         SYSLOG_ENABLE("syslog.enable", "false"),
         SYSLOG_URL("syslog.url", ""),
         SYSLOG_TAG("syslog.tag", "OPENRASP"),
+        SYSLOG_FACILITY("syslog.facility", "1"),
         SYSLOG_RECONNECT_INTERVAL("syslog.reconnect_interval", "300000"),
         LOG_MAXBURST("log.maxburst", "100"),
         HEARTBEAT_INTERVAL("cloud.heartbeatinterval", "180"),
@@ -141,6 +142,7 @@ public class Config extends FileScanListener {
     private boolean hookWhiteAll;
     private int logMaxBurst;
     private int heartbeatInterval;
+    private int syslogFacility;
 
 
     static {
@@ -227,7 +229,7 @@ public class Config extends FileScanListener {
                                         Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
                                         codeSum = codeSum + code;
                                     } catch (Exception e) {
-                                        LOGGER.warn("hook type not exist: ", e);
+                                        LOGGER.warn("Hook type " + s + " does not exist: ", e);
                                     }
                                 }
                                 if (hook.getKey().equals("*")) {
@@ -862,6 +864,27 @@ public class Config extends FileScanListener {
     }
 
     /**
+     * 获取syslog的facility字段信息
+     *
+     * @return syslog的facility字段信息
+     */
+    public synchronized int getSyslogFacility() {
+        return syslogFacility;
+    }
+
+    /**
+     * 设置syslog的facility字段信息，
+     *
+     * @param syslogFacility 待设置syslog的facility字段信息
+     */
+    public synchronized void setSyslogFacility(String syslogFacility) {
+        this.syslogFacility = Integer.parseInt(syslogFacility);
+        if (!(this.syslogFacility >= 0 && this.syslogFacility <= 23)) {
+            this.syslogFacility = 1;
+        }
+    }
+
+    /**
      * 获取syslog的重连时间，
      *
      * @return syslog的重连时间
@@ -1080,12 +1103,16 @@ public class Config extends FileScanListener {
                 setSyslogUrl(value);
             } else if (Item.SYSLOG_TAG.key.equals(key)) {
                 setSyslogTag(value);
+            } else if (Item.SYSLOG_FACILITY.key.equals(key)) {
+                setSyslogFacility(value);
             } else if (Item.SYSLOG_RECONNECT_INTERVAL.key.equals(key)) {
                 setSyslogReconnectInterval(value);
             } else if (Item.HOOK_WHITE_ALL.key.equals(key)) {
                 setHookWhiteAll(value);
             } else if (Item.LOG_MAXBURST.key.equals(key)) {
                 setLogMaxBurst(value);
+            } else if (Item.HEARTBEAT_INTERVAL.key.equals(key)) {
+                setHeartbeatInterval(value);
             } else {
                 isHit = false;
             }

@@ -14,6 +14,8 @@ export var attack_types = {
   'webdav':                     '任意文件上传 (PUT)',
   'fileUpload':                 '任意文件上传',
   'deserialization':            'Transformer 反序列化',
+  'webshell':                   'WebShell 后门',
+  'xss':                        'XSS 跨站脚本攻击',
   'callable':                   'WebShell - 变形后门',
   'webshell_eval':              'WebShell - 中国菜刀',
   'webshell_command':           'WebShell - 命令执行',
@@ -42,12 +44,14 @@ export function attack_type2name(id) {
   return id
 }
 
-export function api_request(url, data, cb) {
+export function api_request(url, data, cb, err_cb) {
   var prefix = "/"
 
   // 本地开发
-  if (location.host == '127.0.0.1:8080') {
+  if (location.host == '127.0.0.1:8080' || location.host == 'localhost:8080') {
     prefix = "http://scloud.baidu.com:8090/"
+
+    axios.defaults.headers['X-OpenRASP-Token'] = '9256a3555fbd4f24f7a2ba915a32261ab4c720fc'
   }
 
   axios
@@ -56,7 +60,11 @@ export function api_request(url, data, cb) {
       if (response.status != 200) {
         alert("HTTP 请求出错: 响应码 " + response.status)
       } else if (response.data.status != 0) {
-        alert("API 接口出错: " + response.data.description)
+        if (err_cb) {
+          err_cb(response.data.status, response.data.description)
+        } else {
+          alert("API 接口出错: " + response.data.status + " - " + response.data.description)
+        }
       } else {
         console.log (url, response.data.data)
         cb(response.data.data)

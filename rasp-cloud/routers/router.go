@@ -92,6 +92,11 @@ func InitRouter(startType string) {
 				&api.ReportController{},
 			),
 		),
+		beego.NSNamespace("/operation",
+			beego.NSInclude(
+				&api.OperationController{},
+			),
+		),
 	)
 	userNS := beego.NewNamespace("/user", beego.NSInclude(&api.UserController{}))
 	ns := beego.NewNamespace("/v1")
@@ -102,7 +107,7 @@ func InitRouter(startType string) {
 	} else if startType == "" {
 		ns.Namespace(foregroudNS, agentNS, userNS)
 	} else {
-		tools.Panic("The start type is not supported: " + startType)
+		tools.Panic("The start type is not supported: "+startType, nil)
 	}
 	beego.AddNamespace(ns)
 }

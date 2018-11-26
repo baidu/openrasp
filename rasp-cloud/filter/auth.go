@@ -24,12 +24,14 @@ import (
 func init() {
 	beego.InsertFilter("/v1/agent/*", beego.BeforeRouter, authAgent)
 	beego.InsertFilter("/v1/api/*", beego.BeforeRouter, authApi)
+	beego.InsertFilter("/v1/user/islogin", beego.BeforeRouter, authApi)
 }
 
 func authAgent(ctx *context.Context) {
 	appId := ctx.Input.Header("X-OpenRASP-AppID")
+	appSecret := ctx.Input.Header("X-OpenRASP-AppSecret")
 	app, err := models.GetAppById(appId)
-	if appId == "" || err != nil || app == nil {
+	if appId == "" || err != nil || app == nil || appSecret != app.Secret {
 		ctx.Output.JSON(map[string]interface{}{
 			"status": http.StatusUnauthorized, "description": http.StatusText(http.StatusUnauthorized)},
 			false, false)
@@ -39,8 +41,8 @@ func authAgent(ctx *context.Context) {
 func authApi(ctx *context.Context) {
 	cookie := ctx.GetCookie(models.AuthCookieName)
 	if has, err := models.HasCookie(cookie); !has || err != nil {
-		token := ctx.Input.Header("RASP-AUTH-ST-TOKEN")
-		if has, err = models.HasTokent(token); !has || err != nil {
+		token := ctx.Input.Header(models.AuthTokenName)
+		if has, err = models.HasToken(token); !has || err != nil {
 			ctx.Output.JSON(map[string]interface{}{
 				"status": http.StatusUnauthorized, "description": http.StatusText(http.StatusUnauthorized)},
 				false, false)

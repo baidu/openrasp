@@ -132,21 +132,23 @@ public class CloudUtils {
             try {
                 CloudCacheModel.getInstance().setRaspId(OSUtil.getRaspId());
             } catch (Exception e) {
-                CloudManager.LOGGER.warn("get rasp id failed", e);
+                CloudManager.LOGGER.warn("Unable to generate unique rasp_id:", e);
+                return false;
             }
+
             String cloudAddress = Config.getConfig().getCloudAddress();
             String cloudAppId = Config.getConfig().getCloudAppId();
             String cloudAppSecret = Config.getConfig().getCloudAppSecret();
             if (cloudAddress == null || cloudAddress.trim().isEmpty()) {
-                CloudManager.LOGGER.warn("Please check the settings of the cloud control:address may be wrong");
+                CloudManager.LOGGER.warn("Cloud control configuration error: cloud.address is not configured");
                 return false;
             }
             if (cloudAppId == null || cloudAppId.trim().isEmpty()) {
-                CloudManager.LOGGER.warn("Please check the settings of the cloud control:appid may be wrong");
+                CloudManager.LOGGER.warn("Cloud control configuration error: cloud.appid is not configured");
                 return false;
             }
             if (cloudAppSecret == null || cloudAppSecret.trim().isEmpty()) {
-                CloudManager.LOGGER.warn("Please check the settings of the cloud control:appsecret may be wrong");
+                CloudManager.LOGGER.warn("Cloud control configuration error: cloud.appsecret is not configured");
                 return false;
             }
             return true;
