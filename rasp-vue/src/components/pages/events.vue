@@ -65,7 +65,7 @@
                   {{ moment(row.event_time).format('HH:mm:ss') }}
                 </td>
                 <td style="max-width: 500px; ">
-                  <a href="javascript:" target="_blank">
+                  <a v-bind:href="row.url" target="_blank">
                     {{ row.url }}
                   </a>
                 </td>

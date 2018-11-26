@@ -14,11 +14,11 @@ Vue.use(Router)
 
 const router = new Router({
   routes: [
-    {
-      path: '/login/',
-      name: 'login',
-      component: Login
-    },
+    // {
+    //   path: '/login/',
+    //   name: 'login',
+    //   component: Login
+    // },
     {
       path: '/dashboard/:app_id/',
       name: 'dashboard',

@@ -31,11 +31,11 @@ type ReportData struct {
 var (
 	ReportIndexName      = "openrasp-report-data"
 	AliasReportIndexName = "real-openrasp-report-data"
-	reportType           = "doc"
+	reportType           = "report-data"
 	ReportEsMapping      = `
 		{
 			"mappings": {
-				"_default_": {
+				"report-data": {
 					"_all": {
 						"enabled": false
 					},
@@ -69,13 +69,14 @@ func AddReportData(reportData *ReportData, appId string) error {
 	return es.Insert(AliasReportIndexName+"-"+appId, reportType, reportData)
 }
 
-func GetHistoryRequestSum(startTime int64, endTime int64, interval string, timeZone string, appId string,
-	raspId string) (error, []map[string]interface{}) {
+func GetHistoryRequestSum(startTime int64, endTime int64, interval string, timeZone string,
+	appId string) (error, []map[string]interface{}) {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(10*time.Second))
 	defer cancel()
 	timeAggrName := "aggr_time"
 	sumAggrName := "request_sum"
-	timeAggr := elastic.NewDateHistogramAggregation().Field("time").TimeZone(timeZone).Interval(interval)
+	timeAggr := elastic.NewDateHistogramAggregation().Field("time").TimeZone(timeZone).
+		Interval(interval).ExtendedBounds(startTime, endTime)
 	requestSumAggr := elastic.NewSumAggregation().Field("request_sum")
 	timeAggr.SubAggregation(sumAggrName, requestSumAggr)
 	timeQuery := elastic.NewRangeQuery("time").Gte(startTime).Lte(endTime)

@@ -19,9 +19,17 @@ type ErrorController struct {
 }
 
 func (o *ErrorController) Error404() {
-	o.ServeError(404)
+	o.ServeStatusCode(404)
 }
 
 func (o *ErrorController) Error500() {
-	o.ServeError(500)
+	o.ServeStatusCode(500)
+}
+
+func (o *ErrorController) Error503() {
+	o.ServeStatusCode(503)
+}
+
+func (o *ErrorController) Error502() {
+	o.ServeStatusCode(502)
 }

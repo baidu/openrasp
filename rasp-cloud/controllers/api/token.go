@@ -19,38 +19,40 @@ import (
 	"net/http"
 	"rasp-cloud/models"
 	"encoding/json"
+	"math"
 )
 
 type TokenController struct {
 	controllers.BaseController
 }
 
-// @router / [get]
+// @router /get [post]
 func (o *TokenController) Get() {
-	page, err := o.GetInt("page")
+	var param map[string]int
+	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get page param: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
+	page := param["page"]
 	if page <= 0 {
 		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
 	}
-	perpage, err := o.GetInt("perpage")
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get perpage param: "+err.Error())
-	}
+	perpage := param["perpage"]
 	if perpage <= 0 {
 		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
 	}
-	total, tokens, err := models.GetAllTokent(page, perpage)
+	total, tokens, err := models.GetAllToken(page, perpage)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get tokens: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get tokens", err)
 	}
 	if tokens == nil {
 		tokens = make([]*models.Token, 0)
 	}
 	var result = make(map[string]interface{})
 	result["total"] = total
-	result["count"] = len(tokens)
+	result["total_page"] = math.Ceil(float64(total) / float64(perpage))
+	result["page"] = page
+	result["perpage"] = perpage
 	result["data"] = tokens
 	o.Serve(result)
 }
@@ -60,14 +62,14 @@ func (o *TokenController) Post() {
 	var token *models.Token
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &token)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if len(token.Description) > 1024 {
 		o.ServeError(http.StatusBadRequest, "the length of the token description must be less than 1024")
 	}
 	token, err = models.AddToken(token)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to create new token: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to create new token", err)
 	}
 	o.Serve(token)
 }
@@ -77,14 +79,18 @@ func (o *TokenController) Delete() {
 	var token *models.Token
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &token)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if len(token.Token) == 0 {
 		o.ServeError(http.StatusBadRequest, "the token param cannot be empty")
 	}
+	currentToken := o.Ctx.Input.Header(models.AuthTokenName)
+	if currentToken == token.Token {
+		o.ServeError(http.StatusBadRequest, "can not delete the token currently in use")
+	}
 	token, err = models.RemoveToken(token.Token)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to remove token: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to remove token", err)
 	}
 	o.Serve(token)
 }
