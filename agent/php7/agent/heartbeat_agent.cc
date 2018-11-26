@@ -46,6 +46,7 @@ void HeartBeatAgent::run()
 
 	while (true)
 	{
+		LOG_G(rasp_logger).set_level(scm->get_debug_level() != 0 ? LEVEL_DEBUG : LEVEL_INFO);
 		do_heartbeat();
 
 		for (long i = 0; i < openrasp_ini.heartbeat_interval; ++i)
@@ -134,6 +135,9 @@ void HeartBeatAgent::do_heartbeat()
 				int64_t log_max_backup = 30;
 				res_info->fetch_int64("/data/config/log.maxbackup", log_max_backup);
 				scm->set_log_max_backup(log_max_backup);
+				int64_t debug_level = 0;
+				res_info->fetch_int64("/data/config/debug.level", debug_level);
+				scm->set_debug_level(debug_level);
 				std::map<std::string, std::vector<std::string>> white_map = res_info->build_hook_white_map("/data/config/hook.white");
 				std::map<std::string, int> white_mask_map;
 				for (auto &white_item : white_map)

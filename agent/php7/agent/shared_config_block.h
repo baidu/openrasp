@@ -70,6 +70,16 @@ public:
     this->log_max_backup = log_max_backup;
   }
 
+  inline long get_debug_level()
+  {
+    return debug_level;
+  }
+
+  inline void set_debug_level(long debug_level)
+  {
+    this->debug_level = debug_level;
+  }
+
   inline void set_check_type_action(OpenRASPCheckType check_type, OpenRASPActionType action_type)
   {
     switch (check_type)
@@ -117,6 +127,7 @@ public:
 private:
   long config_update_time = 0;
   long log_max_backup = 0;
+  long debug_level = 0;
   size_t white_array_size;
   OpenRASPActionType callable_action;
   OpenRASPActionType webshell_eval_action;
