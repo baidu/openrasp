@@ -35,7 +35,7 @@
 									{{ moment(row.event_time).format('YYYY-MM-DD HH:mm:ss') }}
 								</td>
 								<td>{{ row.content }}</td>
-								<td nowrap>{{ row.user }}</td>
+								<td nowrap>{{ row.user.length ? row.user : '-' }}</td>
 								<td nowrap>{{ row.ip }}</td>
 							</tr>
 						</tbody>
