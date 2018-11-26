@@ -15469,6 +15469,7 @@ a.tag-addon:hover {
   font-size: 87.5%;
 }
 
+/*
 .browser {
   width: 1.25rem;
   height: 1.25rem;
@@ -17166,6 +17167,7 @@ svg {
   line-height: 20px;
   padding-left: 3px;
 }
+*/
 
 /**
  * selectize.css (v0.12.4)
@@ -17543,8 +17545,8 @@ svg {
 
 @font-face {
   font-family: "feather";
-  src: url("../fonts/feather/feather-webfont.eot?t=1501841394106");
-  src: url("../fonts/feather/feather-webfont.eot?t=1501841394106#iefix") format("embedded-opentype"), url("../fonts/feather/feather-webfont.woff?t=1501841394106") format("woff"), url("../fonts/feather/feather-webfont.ttf?t=1501841394106") format("truetype"), url("../fonts/feather/feather-webfont.svg?t=1501841394106#feather") format("svg");
+  src: url("../fonts/feather/feather-webfont.eot");
+  src: url("../fonts/feather/feather-webfont.eot") format("embedded-opentype"), url("../fonts/feather/feather-webfont.woff?t=1501841394106") format("woff"), url("../fonts/feather/feather-webfont.ttf?t=1501841394106") format("truetype"), url("../fonts/feather/feather-webfont.svg?t=1501841394106#feather") format("svg");
 }
 
 .fe {
