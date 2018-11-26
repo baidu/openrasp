@@ -5,7 +5,7 @@
         <div class="d-flex">
           <div class="dropdown">
             <a href="javascript:" class="nav-link pr-0 leading-none" data-toggle="dropdown" style="padding-left: 0">
-              <span class="avatar" v-bind:style="{ 'background-image': 'url(/static/images/lang/' + current_app.language + '.png)' }">
+              <span class="avatar" v-bind:style="{ 'background-image': current_app.language ? 'url(/static/images/lang/' + current_app.language + '.png)' : undefined }">
               </span>
               <span class="ml-2 d-none d-lg-block">
                 <span class="text-muted" style="margin-left: -2px; ">
@@ -108,7 +108,7 @@
                 <router-link :to="{ name: 'audit', params: { app_id: current_app.id } }" class="nav-link">
                   <i class="fe fe-user-check">
                   </i>
-                  操作日志
+                  操作审计
                 </router-link>
               </li>
               <li class="nav-item dropdown">
