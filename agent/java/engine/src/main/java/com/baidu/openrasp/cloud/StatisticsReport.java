@@ -64,14 +64,12 @@ public class StatisticsReport {
                     } else {
                         CloudCacheModel.reportCache.put(entry.getKey(), entry.getValue());
                     }
-                    try {
-                        Thread.sleep(STATISTICS_REPORT_INTERVAL);
-                    } catch (InterruptedException e) {
-                        CloudCacheModel.reportCache.put(entry.getKey(), entry.getValue());
-                    }
-
                 }
-
+                try {
+                    Thread.sleep(STATISTICS_REPORT_INTERVAL);
+                } catch (InterruptedException e) {
+                    //next loop
+                }
             }
         }
     }
