@@ -48,13 +48,13 @@ public class CloudHttpPool extends CloudHttp {
             try {
                 Thread.sleep(10);
             } catch (InterruptedException e) {
-                CloudManager.LOGGER.warn("send http request failed", e);
+                //next loop
             }
         }
         try {
             return future.get();
         } catch (Exception e) {
-            CloudManager.LOGGER.warn("get http result from future failed", e);
+            CloudManager.LOGGER.warn("get http result for" + url + "from future failed", e);
         }
         return null;
     }
