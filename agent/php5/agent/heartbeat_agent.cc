@@ -44,8 +44,10 @@ void HeartBeatAgent::run()
 			HeartBeatAgent::signal_received = signal_no;
 		});
 
+	TS_FETCH_WRAPPER();
 	while (true)
 	{
+		LOG_G(rasp_logger).set_level(scm->get_debug_level() != 0 ? LEVEL_DEBUG : LEVEL_INFO);
 		do_heartbeat();
 
 		for (long i = 0; i < openrasp_ini.heartbeat_interval; ++i)
@@ -100,22 +102,13 @@ void HeartBeatAgent::do_heartbeat()
 		}
 		/************************************buildin action************************************/
 		std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map;
-		std::string action_callable;
-		res_info->fetch_string("/data/config/algorithm.config/callable/action", action_callable);
-		buildin_action_map.insert({CALLABLE, string_to_action(action_callable)});
-
-		std::string action_webshell_eval;
-		res_info->fetch_string("/data/config/algorithm.config/webshell_eval/action", action_webshell_eval);
-		buildin_action_map.insert({WEBSHELL_EVAL, string_to_action(action_webshell_eval)});
-
-		std::string action_webshell_command;
-		res_info->fetch_string("/data/config/algorithm.config/webshell_command/action", action_webshell_command);
-		buildin_action_map.insert({WEBSHELL_COMMAND, string_to_action(action_webshell_command)});
-
-		std::string action_webshell_file_put_contents;
-		res_info->fetch_string("/data/config/algorithm.config/webshell_file_put_contents/action", action_webshell_file_put_contents);
-		buildin_action_map.insert({WEBSHELL_FILE_PUT_CONTENTS, string_to_action(action_webshell_file_put_contents)});
-
+		const std::vector<OpenRASPCheckType> buildin_types = check_type_transfer->get_buildin_types();
+		for (auto type : buildin_types)
+		{
+			std::string action;
+			res_info->fetch_string(("/data/config/algorithm.config/" + check_type_transfer->type_to_name(type) + "/action").c_str(), action);
+			buildin_action_map.insert({type, string_to_action(action)});
+		}
 		scm->set_buildin_check_action(buildin_action_map);
 		res_info->erase_value("/data/config/algorithm.config");
 		/************************************config update************************************/
@@ -134,6 +127,9 @@ void HeartBeatAgent::do_heartbeat()
 				int64_t log_max_backup = 30;
 				res_info->fetch_int64("/data/config/log.maxbackup", log_max_backup);
 				scm->set_log_max_backup(log_max_backup);
+				int64_t debug_level = 0;
+				res_info->fetch_int64("/data/config/debug.level", debug_level);
+				scm->set_debug_level(debug_level);
 				std::map<std::string, std::vector<std::string>> white_map = res_info->build_hook_white_map("/data/config/hook.white");
 				std::map<std::string, int> white_mask_map;
 				for (auto &white_item : white_map)

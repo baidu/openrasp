@@ -157,6 +157,27 @@ bool SharedConfigManager::set_log_max_backup(long log_max_backup)
     return false;
 }
 
+long SharedConfigManager::get_debug_level()
+{
+    if (rwlock != nullptr && rwlock->read_try_lock())
+    {
+        ReadUnLocker auto_unlocker(rwlock);
+        return shared_config_block->get_debug_level();
+    }
+    return 0;
+}
+
+bool SharedConfigManager::set_debug_level(long debug_level)
+{
+    if (rwlock != nullptr && rwlock->write_try_lock())
+    {
+        WriteUnLocker auto_unlocker(rwlock);
+        shared_config_block->set_debug_level(debug_level);
+        return true;
+    }
+    return false;
+}
+
 bool SharedConfigManager::set_buildin_check_action(std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map)
 {
     if (rwlock != nullptr && rwlock->write_try_lock())

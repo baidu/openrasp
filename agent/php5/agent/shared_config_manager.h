@@ -42,6 +42,9 @@ public:
   long get_log_max_backup();
   bool set_log_max_backup(long log_max_backup);
 
+  long get_debug_level();
+  bool set_debug_level(long debug_level);
+
   int get_check_type_white_bit_mask(std::string url);
   bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
   bool build_check_type_white_array(OpenraspConfig &openrasp_config);

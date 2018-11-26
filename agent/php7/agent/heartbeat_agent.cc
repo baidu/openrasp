@@ -44,6 +44,7 @@ void HeartBeatAgent::run()
 			HeartBeatAgent::signal_received = signal_no;
 		});
 
+	TS_FETCH_WRAPPER();
 	while (true)
 	{
 		LOG_G(rasp_logger).set_level(scm->get_debug_level() != 0 ? LEVEL_DEBUG : LEVEL_INFO);

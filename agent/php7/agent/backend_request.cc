@@ -45,8 +45,9 @@ BackendRequest::~BackendRequest()
 
 std::shared_ptr<BackendResponse> BackendRequest::curl_perform()
 {
+    TS_FETCH_WRAPPER();
     std::string req_msg = "URL: " + url + "\nbody: " + (post_data ? (post_data) : "");
-    LOG_G(rasp_logger).log(LEVEL_DEBUG, req_msg.c_str(), req_msg.length());
+    LOG_G(rasp_logger).log(LEVEL_DEBUG, req_msg.c_str(), req_msg.length() TSRMLS_CC);
     if (curl)
     {
         long response_code;
@@ -75,7 +76,7 @@ std::shared_ptr<BackendResponse> BackendRequest::curl_perform()
         {
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &(response_code));
             std::string res_msg = "Response_code: " + std::to_string(response_code) + "\nheader_string: " + header_string + "body:" + response_string;
-            LOG_G(rasp_logger).log(LEVEL_DEBUG, res_msg.c_str(), res_msg.length());
+            LOG_G(rasp_logger).log(LEVEL_DEBUG, res_msg.c_str(), res_msg.length() TSRMLS_CC);
             return make_shared<BackendResponse>(response_code, header_string, response_string);
         }
     }

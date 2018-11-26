@@ -51,11 +51,14 @@ void LogAgent::run()
 	LogCollectItem alarm_dir_info(ALARM_LOG_DIR_NAME, "/v1/agent/log/attack", true);
 	LogCollectItem policy_dir_info(POLICY_LOG_DIR_NAME, "/v1/agent/log/policy", true);
 	LogCollectItem plugin_dir_info(PLUGIN_LOG_DIR_NAME, "/v1/agent/log/plugin", false);
+	LogCollectItem rasp_dir_info(RASP_LOG_DIR_NAME, "/v1/agent/log/rasp", false);
 	std::vector<LogCollectItem *> log_dirs{&alarm_dir_info, &policy_dir_info, &plugin_dir_info};
 
 	long current_interval = LogAgent::log_push_interval;
+	TS_FETCH_WRAPPER();
 	while (true)
 	{
+		LOG_G(rasp_logger).set_level(scm->get_debug_level() != 0 ? LEVEL_DEBUG : LEVEL_INFO);
 		for (int i = 0; i < log_dirs.size(); ++i)
 		{
 			LogCollectItem *ldi = log_dirs[i];

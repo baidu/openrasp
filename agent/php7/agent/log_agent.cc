@@ -55,6 +55,7 @@ void LogAgent::run()
 	std::vector<LogCollectItem *> log_dirs{&alarm_dir_info, &policy_dir_info, &plugin_dir_info};
 
 	long current_interval = LogAgent::log_push_interval;
+	TS_FETCH_WRAPPER();
 	while (true)
 	{
 		LOG_G(rasp_logger).set_level(scm->get_debug_level() != 0 ? LEVEL_DEBUG : LEVEL_INFO);

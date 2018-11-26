@@ -26,39 +26,41 @@
 
 typedef enum check_type_t
 {
-    NO_TYPE = 0,
-    CALLABLE = 1 << 0,
-    COMMAND = 1 << 1,
-    DIRECTORY = 1 << 2,
-    READ_FILE = 1 << 3,
-    WRITE_FILE = 1 << 4,
-    COPY = 1 << 5,
-    RENAME = 1 << 6,
-    FILE_UPLOAD = 1 << 7,
-    INCLUDE = 1 << 8,
-    DB_CONNECTION = 1 << 9,
-    SQL = 1 << 10,
-    SQL_SLOW_QUERY = 1 << 11,
-    SQL_PREPARED = 1 << 12,
-    SSRF = 1 << 13,
-    WEBSHELL_EVAL = 1 << 14,
-    WEBSHELL_COMMAND = 1 << 15,
-    WEBSHELL_FILE_PUT_CONTENTS = 1 << 16,
-    ALL_TYPE = (1 << 17) - 1
+  NO_TYPE = 0,
+  CALLABLE = 1 << 0,
+  COMMAND = 1 << 1,
+  DIRECTORY = 1 << 2,
+  READ_FILE = 1 << 3,
+  WRITE_FILE = 1 << 4,
+  COPY = 1 << 5,
+  RENAME = 1 << 6,
+  FILE_UPLOAD = 1 << 7,
+  INCLUDE = 1 << 8,
+  DB_CONNECTION = 1 << 9,
+  SQL = 1 << 10,
+  SQL_SLOW_QUERY = 1 << 11,
+  SQL_PREPARED = 1 << 12,
+  SSRF = 1 << 13,
+  WEBSHELL_EVAL = 1 << 14,
+  WEBSHELL_COMMAND = 1 << 15,
+  WEBSHELL_FILE_PUT_CONTENTS = 1 << 16,
+  ALL_TYPE = (1 << 17) - 1
 } OpenRASPCheckType;
 
 class CheckTypeTransfer
 {
-  private:
-    std::map<OpenRASPCheckType, const std::string> check_type_to_name;
-    std::map<const std::string, OpenRASPCheckType> name_to_check_type;
-    void insert(OpenRASPCheckType type, const std::string &name);
+private:
+  std::map<OpenRASPCheckType, const std::string> check_type_to_name;
+  std::map<const std::string, OpenRASPCheckType> name_to_check_type;
+  std::vector<OpenRASPCheckType> buildin_check_type;
+  void insert(OpenRASPCheckType type, const std::string &name, bool is_buildin = false);
 
-  public:
-    CheckTypeTransfer();
-    std::string type_to_name(OpenRASPCheckType type) const;
-    OpenRASPCheckType name_to_type(std::string &name) const;
-    std::vector<std::string> get_all_names() const;
+public:
+  CheckTypeTransfer();
+  std::string type_to_name(OpenRASPCheckType type) const;
+  OpenRASPCheckType name_to_type(std::string &name) const;
+  std::vector<std::string> get_all_names() const;
+  const std::vector<OpenRASPCheckType>& get_buildin_types() const;
 };
 
 extern std::unique_ptr<CheckTypeTransfer> check_type_transfer;
