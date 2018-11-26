@@ -19,12 +19,16 @@ import (
 	"log"
 )
 
-func Panic(message string) {
+func Panic(message string, err error) {
+	if err != nil {
+		message = message + ": " + err.Error()
+	}
 	logs.Error(message)
 	log.Panic(message)
 }
 
-func Fatal(message string) {
-	logs.Error(message)
-	log.Fatal(message)
+func Fatal(message string, err error) {
+	errMsg := message + ": " + err.Error()
+	logs.Error(errMsg)
+	log.Fatal(errMsg)
 }

@@ -44,7 +44,7 @@ var (
 func init() {
 	count, err := mongo.Count(userCollectionName)
 	if err != nil {
-		tools.Panic("failed to get the count of user collection")
+		tools.Panic("failed to get the count of user collection", err)
 	}
 	if count <= 0 {
 		index := &mgo.Index{
@@ -55,11 +55,11 @@ func init() {
 		}
 		err = mongo.CreateIndex(userCollectionName, index)
 		if err != nil {
-			tools.Panic("failed to create name index for user collection: " + err.Error())
+			tools.Panic("failed to create name index for user collection", err)
 		}
 		hash, err := generateHashedPassword("admin@123")
 		if err != nil {
-			tools.Panic("failed to generate the default hashed password: " + err.Error())
+			tools.Panic("failed to generate the default hashed password", err)
 		}
 		userId = mongo.GenerateObjectId()
 		user := User{
@@ -69,13 +69,13 @@ func init() {
 		}
 		err = mongo.Insert(userCollectionName, user)
 		if err != nil {
-			tools.Panic("failed to create default user: " + err.Error())
+			tools.Panic("failed to create default user", err)
 		}
 	} else {
 		var user *User
 		err := mongo.FindOne(userCollectionName, bson.M{}, &user)
 		if err != nil {
-			tools.Panic("failed to get admin user: " + err.Error())
+			tools.Panic("failed to get admin user", err)
 		}
 		userId = user.Id
 	}

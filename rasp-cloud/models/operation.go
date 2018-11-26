@@ -59,7 +59,7 @@ const (
 func init() {
 	count, err := mongo.Count(operationCollectionName)
 	if err != nil {
-		tools.Panic("failed to get operation collection count: " + err.Error())
+		tools.Panic("failed to get operation collection count", err)
 	}
 	if count <= 0 {
 		index := &mgo.Index{
@@ -70,7 +70,7 @@ func init() {
 		}
 		err = mongo.CreateIndex(operationCollectionName, index)
 		if err != nil {
-			tools.Panic("failed to create app_id index for operation collection: " + err.Error())
+			tools.Panic("failed to create app_id index for operation collection", err)
 		}
 
 		index = &mgo.Index{
@@ -81,7 +81,7 @@ func init() {
 		}
 		err = mongo.CreateIndex(operationCollectionName, index)
 		if err != nil {
-			tools.Panic("failed to create operate_time index for operation collection: " + err.Error())
+			tools.Panic("failed to create operate_time index for operation collection", err)
 		}
 	}
 }

@@ -35,7 +35,7 @@ func (o *RaspController) Search() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
@@ -48,7 +48,7 @@ func (o *RaspController) Search() {
 	}
 	total, rasps, err := models.FindRasp(param.Data, param.Page, param.Perpage)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get rasp: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
 	}
 	if rasps == nil {
 		rasps = make([]*models.Rasp, 0)
@@ -67,21 +67,21 @@ func (o *RaspController) Delete() {
 	var rasp = &models.Rasp{}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, rasp)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if rasp.Id == "" {
 		o.ServeError(http.StatusBadRequest, "the id cannot be empty")
 	}
 	rasp, err = models.GetRaspById(rasp.Id)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get rasp by id: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get rasp by id", err)
 	}
 	if rasp.Online {
 		o.ServeError(http.StatusBadRequest, "can not delete online rasp")
 	}
 	err = models.RemoveRaspById(rasp.Id)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to remove rasp： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to remove rasp", err)
 	}
 	models.AddOperation(rasp.AppId, models.OperationTypeDeleteRasp, o.Ctx.Input.IP(), "deleted the rasp: "+rasp.Id)
 	o.ServeWithEmptyData()

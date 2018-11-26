@@ -43,7 +43,7 @@ func (o *PluginController) Upload() {
 	}
 	_, err := models.GetAppById(appId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get app: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get app", err)
 	}
 	uploadFile, info, err := o.GetFile("plugin")
 	if uploadFile == nil {
@@ -51,7 +51,7 @@ func (o *PluginController) Upload() {
 	}
 	defer uploadFile.Close()
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "parse uploadFile error: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "parse uploadFile error", err)
 	}
 	if info.Size == 0 {
 		o.ServeError(http.StatusBadRequest, "the upload file cannot be empty")
@@ -65,12 +65,12 @@ func (o *PluginController) Upload() {
 	}
 	pluginContent, err := ioutil.ReadAll(uploadFile)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to read upload plugin: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to read upload plugin", err)
 	}
 	pluginReader := bufio.NewReader(bytes.NewReader(pluginContent))
 	firstLine, err := pluginReader.ReadString('\n')
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to read the plugin.js in the zip file: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to read the plugin.js in the zip file", err)
 	}
 	var newVersion string
 	if newVersion = regexp.MustCompile(`'.+'|".+"`).FindString(firstLine); newVersion == "" {
@@ -91,20 +91,20 @@ func (o *PluginController) Upload() {
 	jsVm := otto.New()
 	_, err = jsVm.Run(string(pluginContent[algorithmStart:algorithmEnd]) + "\n algorithmContent=JSON.stringify(algorithmConfig)")
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get algorithm config from plugin: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get algorithm config from plugin", err)
 	}
 	algorithmContent, err := jsVm.Get("algorithmContent")
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get algorithm config from plugin: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get algorithm config from plugin", err)
 	}
 	var algorithmData map[string]interface{}
 	err = json.Unmarshal([]byte(algorithmContent.String()), &algorithmData)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to unmarshal algorithm json data: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to unmarshal algorithm json data", err)
 	}
 	latestPlugin, err := models.AddPlugin(newVersion, pluginContent, appId, algorithmData)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to add plugin to mongodb: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to add plugin to mongodb", err)
 	}
 	models.AddOperation(appId, models.OperationTypeUploadPlugin, o.Ctx.Input.IP(),
 		"uploaded the plugin: "+latestPlugin.Id)
@@ -116,7 +116,7 @@ func (o *PluginController) Get() {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	pluginId := param["id"]
 	if pluginId == "" {
@@ -124,7 +124,7 @@ func (o *PluginController) Get() {
 	}
 	plugin, err := models.GetPluginById(pluginId, false)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get plugin: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get plugin", err)
 	}
 	o.Serve(plugin)
 }
@@ -134,7 +134,7 @@ func (o *PluginController) Download() {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	pluginId := param["id"]
 	if pluginId == "" {
@@ -142,7 +142,7 @@ func (o *PluginController) Download() {
 	}
 	plugin, err := models.GetPluginById(pluginId, true)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get plugin: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get plugin", err)
 	}
 	o.Ctx.Output.Header("Content-Type", "text/plain")
 	o.Ctx.Output.Header("Content-Disposition", "attachment;filename=plugin-"+plugin.Version+".js")
@@ -154,7 +154,7 @@ func (o *PluginController) Delete() {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	pluginId := param["id"]
 	if pluginId == "" {
@@ -162,19 +162,19 @@ func (o *PluginController) Delete() {
 	}
 	plugin, err := models.GetPluginById(pluginId, false)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "can not get the plugin: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "can not get the plugin", err)
 	}
 	var app *models.App
 	err = mongo.FindOne("app", bson.M{"selected_plugin_id": pluginId}, &app)
 	if err != nil && err != mgo.ErrNotFound {
-		o.ServeError(http.StatusBadRequest, "failed to get app: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get app", err)
 	}
 	if app != nil {
 		o.ServeError(http.StatusBadRequest, "failed to delete the plugin,it is used by app: "+app.Id)
 	}
 	err = models.DeletePlugin(pluginId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to delete the plugin: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to delete the plugin", err)
 	}
 	models.AddOperation(plugin.AppId, models.OperationTypeDeletePlugin, o.Ctx.Input.IP(),
 		"deleted the plugin: "+plugin.Id)

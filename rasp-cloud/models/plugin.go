@@ -59,7 +59,7 @@ func init() {
 	}
 	count, err := mongo.Count(pluginCollectionName)
 	if err != nil {
-		tools.Panic("failed to get plugin collection count: " + err.Error())
+		tools.Panic("failed to get plugin collection count", err)
 	}
 	if count <= 0 {
 		index := &mgo.Index{
@@ -70,7 +70,7 @@ func init() {
 		}
 		err := mongo.CreateIndex(pluginCollectionName, index)
 		if err != nil {
-			tools.Panic("failed to create app_id index for plugin collection: " + err.Error())
+			tools.Panic("failed to create app_id index for plugin collection", err)
 		}
 		index = &mgo.Index{
 			Key:        []string{"upload_time"},
@@ -80,7 +80,7 @@ func init() {
 		}
 		err = mongo.CreateIndex(pluginCollectionName, index)
 		if err != nil {
-			tools.Panic("failed to create upload_time index for plugin collection: " + err.Error())
+			tools.Panic("failed to create upload_time index for plugin collection", err)
 		}
 	}
 }

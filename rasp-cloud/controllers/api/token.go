@@ -31,7 +31,7 @@ func (o *TokenController) Get() {
 	var param map[string]int
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	page := param["page"]
 	if page <= 0 {
@@ -43,7 +43,7 @@ func (o *TokenController) Get() {
 	}
 	total, tokens, err := models.GetAllToken(page, perpage)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get tokens: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get tokens", err)
 	}
 	if tokens == nil {
 		tokens = make([]*models.Token, 0)
@@ -62,14 +62,14 @@ func (o *TokenController) Post() {
 	var token *models.Token
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &token)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if len(token.Description) > 1024 {
 		o.ServeError(http.StatusBadRequest, "the length of the token description must be less than 1024")
 	}
 	token, err = models.AddToken(token)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to create new token: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to create new token", err)
 	}
 	o.Serve(token)
 }
@@ -79,7 +79,7 @@ func (o *TokenController) Delete() {
 	var token *models.Token
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &token)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if len(token.Token) == 0 {
 		o.ServeError(http.StatusBadRequest, "the token param cannot be empty")
@@ -90,7 +90,7 @@ func (o *TokenController) Delete() {
 	}
 	token, err = models.RemoveToken(token.Token)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to remove token: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to remove token", err)
 	}
 	o.Serve(token)
 }

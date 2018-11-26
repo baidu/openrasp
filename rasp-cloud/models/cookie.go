@@ -35,7 +35,7 @@ const (
 func init() {
 	count, err := mongo.Count(cookieCollectionName)
 	if err != nil {
-		tools.Panic("failed to get cookie collection count： " + err.Error())
+		tools.Panic("failed to get cookie collection count", err)
 	}
 	if count <= 0 {
 		expireTime, err := beego.AppConfig.Int("CookieExpireTime")
@@ -50,7 +50,7 @@ func init() {
 		}
 		err = mongo.CreateIndex(cookieCollectionName, index)
 		if err != nil {
-			tools.Panic("failed to create index for app collection: " + err.Error())
+			tools.Panic("failed to create index for app collection", err)
 		}
 	}
 }

@@ -46,7 +46,7 @@ const (
 func init() {
 	count, err := mongo.Count(raspCollectionName)
 	if err != nil {
-		tools.Panic("failed to get rasp collection count: " + err.Error())
+		tools.Panic("failed to get rasp collection count", err)
 	}
 	if count <= 0 {
 		index := &mgo.Index{
@@ -57,7 +57,7 @@ func init() {
 		}
 		err = mongo.CreateIndex(raspCollectionName, index)
 		if err != nil {
-			tools.Panic("failed to create index for rasp collection: " + err.Error())
+			tools.Panic("failed to create index for rasp collection", err)
 		}
 	}
 }

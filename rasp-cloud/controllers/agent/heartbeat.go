@@ -40,27 +40,27 @@ func (o *HeartbeatController) Post() {
 	var heartbeat heartbeatParam
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &heartbeat)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	rasp, err := models.GetRaspById(heartbeat.RaspId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get rasp: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
 	}
 	rasp.LastHeartbeatTime = time.Now().Unix()
 	rasp.PluginVersion = heartbeat.PluginVersion
 	err = models.UpsertRaspById(heartbeat.RaspId, rasp)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to update rasp: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to update rasp", err)
 	}
 	pluginMd5 := heartbeat.PluginMd5
 	configTime := heartbeat.ConfigTime
 	appId := o.Ctx.Input.Header("X-OpenRASP-AppID")
 	app, err := models.GetAppById(appId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "cannot get the app: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "cannot get the app", err)
 	}
 	if app == nil {
-		o.ServeError(http.StatusBadRequest, "cannot get the app： "+app.Id)
+		o.ServeError(http.StatusBadRequest, "cannot get the app", err)
 	}
 
 	result := make(map[string]interface{})
@@ -68,7 +68,7 @@ func (o *HeartbeatController) Post() {
 	// handle plugin
 	selectedPlugin, err := models.GetSelectedPlugin(appId,true)
 	if err != nil && err != mgo.ErrNotFound {
-		o.ServeError(http.StatusBadRequest, "failed to get selected plugin： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get selected plugin", err)
 	}
 	if selectedPlugin != nil {
 		if pluginMd5 != selectedPlugin.Md5 {

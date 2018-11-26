@@ -122,7 +122,7 @@ var (
 func init() {
 	count, err := mongo.Count(appCollectionName)
 	if err != nil {
-		tools.Panic("failed to get app collection count: " + err.Error())
+		tools.Panic("failed to get app collection count", err)
 	}
 	if count <= 0 {
 		index := &mgo.Index{
@@ -133,12 +133,12 @@ func init() {
 		}
 		err = mongo.CreateIndex(appCollectionName, index)
 		if err != nil {
-			tools.Panic("failed to create index for app collection: " + err.Error())
+			tools.Panic("failed to create index for app collection", err)
 		}
 	}
 	alarmDuration := beego.AppConfig.DefaultInt64("AlarmDuration", 120)
 	if alarmDuration <= 0 {
-		tools.Panic("the 'AlarmDuration' config must be greater than 0")
+		tools.Panic("the 'AlarmDuration' config must be greater than 0", nil)
 	}
 	go startAlarmTicker(time.Second * time.Duration(alarmDuration))
 }
