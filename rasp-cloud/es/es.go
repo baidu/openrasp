@@ -22,6 +22,8 @@ import (
 	"strconv"
 	"github.com/astaxie/beego"
 	"rasp-cloud/tools"
+	"errors"
+	"encoding/json"
 )
 
 var (
@@ -65,7 +67,7 @@ func deleteExpiredData() {
 		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(10*time.Second))
 		_, err := ElasticClient.DeleteByQuery(index).QueryString("@timestamp:<" + expiredTime).Do(ctx)
 		if err != nil {
-
+			beego.Error("failed to delete expired data from index: " + index)
 		}
 		cancel()
 	}
@@ -115,4 +117,24 @@ func Insert(index string, docType string, doc interface{}) (err error) {
 	defer cancel()
 	_, err = ElasticClient.Index().Index(index).Type(docType).BodyJson(doc).Do(ctx)
 	return
+}
+
+func BulkInsert(docType string, docs []map[string]interface{}) (err error) {
+	bulkService := ElasticClient.Bulk()
+	for _, doc := range docs {
+		if doc["app_id"] == nil {
+			content, _ := json.Marshal(doc)
+			return errors.New("failed to get app_id param from alarm: " + string(content))
+		}
+		if appId, ok := doc["app_id"].(string); ok {
+			bulkService.Add(elastic.NewBulkIndexRequest().
+				Index("real-openrasp-" + docType + "-" + appId).Type(docType).OpType("create").Doc(doc))
+		} else {
+			return errors.New("the type of alarm's app_id param is not string")
+		}
+	}
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(10*time.Second))
+	defer cancel()
+	_, err = bulkService.Do(ctx)
+	return err
 }

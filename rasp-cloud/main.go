@@ -31,6 +31,7 @@ func main() {
 	beego.BConfig.Listen.Graceful = true
 	handleCmdArgs()
 	initLogger()
+	beego.SetStaticPath("//", "dist")
 	beego.ErrorController(&controllers.ErrorController{})
 	beego.Run()
 }
@@ -42,8 +43,12 @@ func handleCmdArgs() {
 }
 
 func initLogger() {
-	if isExists, _ := tools.PathExists("logs/api"); !isExists {
-		err := os.MkdirAll("logs/api", os.ModePerm)
+	currentPath, err := tools.GetCurrentPath()
+	if err != nil {
+		tools.Panic("failed to get current path: " + err.Error())
+	}
+	if isExists, _ := tools.PathExists(currentPath + "/logs/api"); !isExists {
+		err := os.MkdirAll(currentPath+"/logs/api", os.ModePerm)
 		if err != nil {
 			tools.Panic("failed to create logs/api dir")
 		}
@@ -55,5 +60,8 @@ func initLogger() {
 		logs.SetLevel(beego.LevelDebug)
 	} else {
 		logs.SetLevel(beego.LevelInformational)
+		beego.BConfig.EnableErrorsShow = false
+		beego.BConfig.EnableErrorsRender = false
+
 	}
 }

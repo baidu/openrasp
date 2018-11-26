@@ -17,7 +17,7 @@ package logs
 import (
 	"fmt"
 	"crypto/md5"
-	"encoding/json"
+	"github.com/astaxie/beego"
 )
 
 type RaspLog struct {
@@ -30,7 +30,7 @@ var (
 	PolicyEsMapping      = `
 	{
 		"mappings": {
-			"_default_": {
+			"policy-alarm": {
 				"_all": {
 					"enabled": false
 				},
@@ -58,7 +58,8 @@ var (
 								"ignore_above": 256
 							},
 							"ip": {
-								"type": "ip"
+								"type": "keyword",
+								"ignore_above": 256
 							}
 						}
 					},
@@ -71,7 +72,8 @@ var (
 						"ignore_above": 256
 					},
 					"local_ip": {
-						"type": "ip"
+						"type": "keyword",
+                        "ignore_above": 256
 					},
 					"event_time": {
 						"type": "date"
@@ -89,7 +91,7 @@ var (
 						"type": "keyword",
 						"ignore_above": 64
 					},
-					"param": {
+					"policy_params": {
 						"type": "object",
 						"enabled":"false"
 					}
@@ -101,15 +103,17 @@ var (
 )
 
 func AddPolicyAlarm(alarm map[string]interface{}) error {
-	if stack, ok := alarm["stack_trace"]; ok && stack != nil {
+	defer func() {
+		if r := recover(); r != nil {
+			beego.Error("failed to add policy alarm: ", r)
+		}
+	}()
+	if stack, ok := alarm["stack_trace"]; ok && stack != nil && stack != "" {
 		_, ok = stack.(string)
 		if ok {
 			alarm["stack_md5"] = fmt.Sprintf("%x", md5.Sum([]byte(stack.(string))))
 		}
 	}
-	content, err := json.Marshal(alarm)
-	if err == nil {
-		AddAlarmFunc(AttackAlarmType, content)
-	}
-	return err
+
+	return AddAlarmFunc(PolicyAlarmType, alarm)
 }

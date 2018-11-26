@@ -16,22 +16,24 @@ package api
 
 import (
 	"rasp-cloud/controllers"
+	"encoding/json"
 	"net/http"
 	"rasp-cloud/models"
-	"encoding/json"
 	"math"
 )
 
-type RaspController struct {
+type OperationController struct {
 	controllers.BaseController
 }
 
 // @router /search [post]
-func (o *RaspController) Search() {
+func (o *OperationController) Search() {
 	var param struct {
-		Data    *models.Rasp `json:"data" `
-		Page    int          `json:"page"`
-		Perpage int          `json:"perpage"`
+		Data      *models.Operation `json:"data"`
+		StartTime int64             `json:"start_time"`
+		EndTime   int64             `json:"end_time"`
+		Page      int               `json:"page"`
+		Perpage   int               `json:"perpage"`
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
@@ -46,43 +48,25 @@ func (o *RaspController) Search() {
 	if param.Perpage <= 0 {
 		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
 	}
-	total, rasps, err := models.FindRasp(param.Data, param.Page, param.Perpage)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get rasp: "+err.Error())
+	if param.StartTime <= 0 {
+		o.ServeError(http.StatusBadRequest, "start_time must be greater than 0")
 	}
-	if rasps == nil {
-		rasps = make([]*models.Rasp, 0)
+	if param.EndTime <= 0 {
+		o.ServeError(http.StatusBadRequest, "end_time must be greater than 0")
 	}
+	if param.StartTime > param.EndTime {
+		o.ServeError(http.StatusBadRequest, "start_time cannot be greater than end_time")
+	}
+
 	var result = make(map[string]interface{})
+	total, operations, err := models.FindOperation(param.Data, param.StartTime, param.EndTime, param.Page, param.Perpage)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to get plugins: "+err.Error())
+	}
 	result["total"] = total
 	result["total_page"] = math.Ceil(float64(total) / float64(param.Perpage))
 	result["page"] = param.Page
 	result["perpage"] = param.Perpage
-	result["data"] = rasps
+	result["data"] = operations
 	o.Serve(result)
-}
-
-// @router /delete [post]
-func (o *RaspController) Delete() {
-	var rasp = &models.Rasp{}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, rasp)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
-	}
-	if rasp.Id == "" {
-		o.ServeError(http.StatusBadRequest, "the id cannot be empty")
-	}
-	rasp, err = models.GetRaspById(rasp.Id)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get rasp by id: "+err.Error())
-	}
-	if rasp.Online {
-		o.ServeError(http.StatusBadRequest, "can not delete online rasp")
-	}
-	err = models.RemoveRaspById(rasp.Id)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to remove rasp： "+err.Error())
-	}
-	models.AddOperation(rasp.AppId, models.OperationTypeDeleteRasp, o.Ctx.Input.IP(), "deleted the rasp: "+rasp.Id)
-	o.ServeWithEmptyData()
 }

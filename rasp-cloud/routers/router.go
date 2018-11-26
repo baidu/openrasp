@@ -92,6 +92,11 @@ func InitRouter(startType string) {
 				&api.ReportController{},
 			),
 		),
+		beego.NSNamespace("/operation",
+			beego.NSInclude(
+				&api.OperationController{},
+			),
+		),
 	)
 	userNS := beego.NewNamespace("/user", beego.NSInclude(&api.UserController{}))
 	ns := beego.NewNamespace("/v1")

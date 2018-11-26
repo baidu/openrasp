@@ -50,7 +50,7 @@ func init() {
 		}
 		err = mongo.CreateIndex(cookieCollectionName, index)
 		if err != nil {
-			tools.Panic("failed to create index for app collection")
+			tools.Panic("failed to create index for app collection: " + err.Error())
 		}
 	}
 }
@@ -66,4 +66,8 @@ func HasCookie(id string) (bool, error) {
 		return false, err
 	}
 	return true, err
+}
+
+func RemoveCookie(id string) error {
+	return mongo.RemoveId(cookieCollectionName, id)
 }
