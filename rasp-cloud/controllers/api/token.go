@@ -19,29 +19,29 @@ import (
 	"net/http"
 	"rasp-cloud/models"
 	"encoding/json"
+	"math"
 )
 
 type TokenController struct {
 	controllers.BaseController
 }
 
-// @router / [get]
+// @router /get [post]
 func (o *TokenController) Get() {
-	page, err := o.GetInt("page")
+	var param map[string]int
+	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get page param: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
 	}
+	page := param["page"]
 	if page <= 0 {
 		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
 	}
-	perpage, err := o.GetInt("perpage")
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get perpage param: "+err.Error())
-	}
+	perpage := param["perpage"]
 	if perpage <= 0 {
 		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
 	}
-	total, tokens, err := models.GetAllTokent(page, perpage)
+	total, tokens, err := models.GetAllToken(page, perpage)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get tokens: "+err.Error())
 	}
@@ -50,7 +50,9 @@ func (o *TokenController) Get() {
 	}
 	var result = make(map[string]interface{})
 	result["total"] = total
-	result["count"] = len(tokens)
+	result["total_page"] = math.Ceil(float64(total) / float64(perpage))
+	result["page"] = page
+	result["perpage"] = perpage
 	result["data"] = tokens
 	o.Serve(result)
 }
@@ -81,6 +83,10 @@ func (o *TokenController) Delete() {
 	}
 	if len(token.Token) == 0 {
 		o.ServeError(http.StatusBadRequest, "the token param cannot be empty")
+	}
+	currentToken := o.Ctx.Input.Header(models.AuthTokenName)
+	if currentToken == token.Token {
+		o.ServeError(http.StatusBadRequest, "can not delete the token currently in use")
 	}
 	token, err = models.RemoveToken(token.Token)
 	if err != nil {

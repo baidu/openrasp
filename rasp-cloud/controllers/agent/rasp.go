@@ -75,11 +75,14 @@ func (o *RaspController) Post() {
 	if len(rasp.ServerVersion) >= 50 {
 		o.ServeError(http.StatusBadRequest, "the length of rasp server version must be less than 50")
 	}
-	if rasp.LocalIp != "" {
+	if rasp.RegisterIp != "" {
 		valid := validation.Validation{}
-		if result := valid.IP(rasp.LocalIp, "IP"); !result.Ok {
+		if result := valid.IP(rasp.RegisterIp, "IP"); !result.Ok {
 			o.ServeError(http.StatusBadRequest, "rasp primary_ip format error: "+result.Error.Message)
 		}
+	}
+	if rasp.HeartbeatInterval <= 0 {
+		o.ServeError(http.StatusBadRequest, "heartbeat_interval must be greater than 0")
 	}
 
 	rasp.LastHeartbeatTime = time.Now().Unix()
@@ -87,5 +90,7 @@ func (o *RaspController) Post() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to add rasp: "+err.Error())
 	}
+	models.AddOperation(rasp.AppId, models.OperationTypeRegisterRasp, o.Ctx.Input.IP(),
+		"registered the rasp: " + rasp.Id + ",hostname is: " + rasp.HostName)
 	o.Serve(rasp)
 }

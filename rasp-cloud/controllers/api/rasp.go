@@ -19,60 +19,45 @@ import (
 	"net/http"
 	"rasp-cloud/models"
 	"encoding/json"
+	"math"
 )
 
 type RaspController struct {
 	controllers.BaseController
 }
 
-// @router /find [post]
-func (o *RaspController) Post() {
-	var data map[string]interface{}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &data)
+// @router /search [post]
+func (o *RaspController) Search() {
+	var param struct {
+		Data    *models.Rasp `json:"data" `
+		Page    int          `json:"page"`
+		Perpage int          `json:"perpage"`
+	}
+	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
 	}
-	pageParam := data["page"]
-	if pageParam == nil {
-		o.ServeError(http.StatusBadRequest, "failed to get page param: "+"the page param cannot be empty")
+	if param.Data == nil {
+		o.ServeError(http.StatusBadRequest, "search data can not be empty")
 	}
-	page, ok := pageParam.(float64)
-	if !ok {
-		o.ServeError(http.StatusBadRequest, "the page param must be integer")
-	}
-	if page <= 0 {
+	if param.Page <= 0 {
 		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
 	}
-	perpageParam := data["perpage"]
-	if perpageParam == nil {
-		o.ServeError(http.StatusBadRequest, "failed to get page perparam: "+"the perpage param cannot be empty")
-	}
-	perpage, ok := perpageParam.(float64)
-	if !ok {
-		o.ServeError(http.StatusBadRequest, "the perpage param must be integer")
-	}
-	if perpage <= 0 {
+	if param.Perpage <= 0 {
 		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
 	}
-	raspDataParam := data["data"]
-	if raspDataParam == nil || raspDataParam == "" {
-		o.ServeError(http.StatusBadRequest, "the data param cannot be empty")
-	}
-	raspData, ok := raspDataParam.(map[string]interface{})
-	if !ok {
-		o.ServeError(http.StatusBadRequest, "the type of data param must be object")
-	}
-	if raspData["id"] != nil {
-		raspData["_id"] = raspData["id"]
-		delete(raspData, "id")
-	}
-	total, rasps, err := models.FindRasp(raspData, int(page), int(perpage))
+	total, rasps, err := models.FindRasp(param.Data, param.Page, param.Perpage)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get rasp from mongodb: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get rasp: "+err.Error())
+	}
+	if rasps == nil {
+		rasps = make([]*models.Rasp, 0)
 	}
 	var result = make(map[string]interface{})
 	result["total"] = total
-	result["count"] = len(rasps)
+	result["total_page"] = math.Ceil(float64(total) / float64(param.Perpage))
+	result["page"] = param.Page
+	result["perpage"] = param.Perpage
 	result["data"] = rasps
 	o.Serve(result)
 }
@@ -87,9 +72,17 @@ func (o *RaspController) Delete() {
 	if rasp.Id == "" {
 		o.ServeError(http.StatusBadRequest, "the id cannot be empty")
 	}
+	rasp, err = models.GetRaspById(rasp.Id)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to get rasp by id: "+err.Error())
+	}
+	if rasp.Online {
+		o.ServeError(http.StatusBadRequest, "can not delete online rasp")
+	}
 	err = models.RemoveRaspById(rasp.Id)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to remove rasp： "+err.Error())
 	}
-	o.ServeWithoutData()
+	models.AddOperation(rasp.AppId, models.OperationTypeDeleteRasp, o.Ctx.Input.IP(), "deleted the rasp: "+rasp.Id)
+	o.ServeWithEmptyData()
 }

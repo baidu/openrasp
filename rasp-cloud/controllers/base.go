@@ -24,17 +24,29 @@ type BaseController struct {
 	beego.Controller
 }
 
+func (o *BaseController) Prepare() {
+	o.Ctx.Output.Header("X-Powered-By", "OpenRASP")
+	o.Ctx.Output.Header("Access-Control-Allow-Origin", "*")
+	o.Ctx.Output.Header("Access-Control-Allow-Headers", "*")
+	o.Ctx.Output.Header("Access-Control-Allow-Methods", "*")
+}
+
 func (o *BaseController) Serve(data interface{}) {
 	o.Data["json"] = map[string]interface{}{"status": 0, "description": "ok", "data": data}
 	o.ServeJSON()
 }
 
-func (o *BaseController) ServeWithoutData() {
-	o.Data["json"] = map[string]interface{}{"status": 0, "description": "ok"}
+func (o *BaseController) ServeWithEmptyData() {
+	o.Data["json"] = map[string]interface{}{"status": 0, "description": "ok", "data": make(map[string]interface{})}
 	o.ServeJSON()
 }
 
 func (o *BaseController) ServeError(code int, description ...string) {
+	o.ServeStatusCode(code, description...)
+	panic(description)
+}
+
+func (o *BaseController) ServeStatusCode(code int, description ...string) {
 	var des string
 	if len(description) == 0 {
 		des = http.StatusText(code)
@@ -43,5 +55,4 @@ func (o *BaseController) ServeError(code int, description ...string) {
 	}
 	o.Data["json"] = map[string]interface{}{"status": code, "description": des}
 	o.ServeJSON()
-	panic(description)
 }

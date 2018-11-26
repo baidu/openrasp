@@ -28,56 +28,32 @@ type HeartbeatController struct {
 	controllers.BaseController
 }
 
+type heartbeatParam struct {
+	RaspId        string `json:"rasp_id"`
+	PluginVersion string `json:"plugin_version"`
+	PluginMd5     string `json:"plugin_md5"`
+	ConfigTime    int64  `json:"config_time"`
+}
+
 // @router / [post]
 func (o *HeartbeatController) Post() {
-	var heartbeat map[string]interface{}
+	var heartbeat heartbeatParam
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &heartbeat)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
 	}
-	raspIdParam := heartbeat["rasp_id"]
-	if raspIdParam == nil {
-		o.ServeError(http.StatusBadRequest, "rasp_id cannot be empty")
-	}
-	raspId, ok := raspIdParam.(string)
-	if !ok {
-		o.ServeError(http.StatusBadRequest, "the type of rasp_id must be string")
-	}
-	rasp, err := models.GetRaspById(raspId)
+	rasp, err := models.GetRaspById(heartbeat.RaspId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get rasp: "+err.Error())
 	}
 	rasp.LastHeartbeatTime = time.Now().Unix()
-	pluginVersion := heartbeat["plugin_version"]
-	if pluginVersion == nil {
-		o.ServeError(http.StatusBadRequest, "plugin_version cannot be empty")
-	}
-	pluginVersion, ok = pluginVersion.(string)
-	if !ok {
-		o.ServeError(http.StatusBadRequest, "the type of plugin_version must be string")
-	}
-	rasp.PluginVersion = pluginVersion.(string)
-	pluginMd5 := heartbeat["plugin_md5"]
-	if pluginVersion == nil {
-		o.ServeError(http.StatusBadRequest, "plugin_md5 cannot be empty")
-	}
-	pluginMd5, ok = pluginMd5.(string)
-	if !ok {
-		o.ServeError(http.StatusBadRequest, "the type of plugin_md5 must be string")
-	}
-	err = models.UpsertRaspById(raspId, rasp)
+	rasp.PluginVersion = heartbeat.PluginVersion
+	err = models.UpsertRaspById(heartbeat.RaspId, rasp)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update rasp: "+err.Error())
 	}
-	configTimeParam := heartbeat["config_time"]
-	if configTimeParam == nil {
-		o.ServeError(http.StatusBadRequest, "config_time cannot be empty")
-	}
-	configTime, ok := configTimeParam.(float64)
-	if !ok {
-		o.ServeError(http.StatusBadRequest, "the type of config_time must be integer")
-	}
-
+	pluginMd5 := heartbeat.PluginMd5
+	configTime := heartbeat.ConfigTime
 	appId := o.Ctx.Input.Header("X-OpenRASP-AppID")
 	app, err := models.GetAppById(appId)
 	if err != nil {
@@ -89,22 +65,35 @@ func (o *HeartbeatController) Post() {
 
 	result := make(map[string]interface{})
 	isUpdate := false
-	// 处理插件
-	selectedPlugin, err := models.GetSelectedPlugin(appId)
+	// handle plugin
+	selectedPlugin, err := models.GetSelectedPlugin(appId,true)
 	if err != nil && err != mgo.ErrNotFound {
-		o.ServeError(http.StatusBadRequest, "failed to get latest plugin： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get selected plugin： "+err.Error())
 	}
-	if selectedPlugin != nil && pluginMd5.(string) != selectedPlugin.Md5 {
-		isUpdate = true
+	if selectedPlugin != nil {
+		if pluginMd5 != selectedPlugin.Md5 {
+			isUpdate = true
+		}
+		if app.ConfigTime > 0 && app.ConfigTime > int64(configTime) {
+			isUpdate = true
+		}
 	}
-	if app.ConfigTime > 0 && app.ConfigTime > int64(configTime) {
-		isUpdate = true
-	}
-
 	if isUpdate {
+		whitelistConfig := make(map[string]interface{})
+		for _, configItem := range app.WhitelistConfig {
+			whiteHookTypes := make([]string, 0, len(configItem.Hook))
+			for hookType, isWhite := range configItem.Hook {
+				if isWhite {
+					whiteHookTypes = append(whiteHookTypes, hookType)
+				}
+			}
+			whitelistConfig[configItem.Url] = whiteHookTypes
+		}
+		app.GeneralConfig["algorithm.config"] = selectedPlugin.AlgorithmConfig
+		app.GeneralConfig["hook.white"] = whitelistConfig
 		result["plugin"] = selectedPlugin
 		result["config_time"] = app.ConfigTime
-		result["config"] = app.RaspConfig
+		result["config"] = app.GeneralConfig
 	}
 	o.Serve(result)
 }

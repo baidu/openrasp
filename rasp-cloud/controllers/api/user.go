@@ -45,22 +45,29 @@ func (o *UserController) Login() {
 	if len(logUser) > 512 || len(logPasswd) > 512 {
 		o.ServeError(http.StatusBadRequest, "the length of username or password cannot be greater than 512")
 	}
-	if logUser == models.GetLoginUser() && logPasswd == models.GetLoginPasswd() {
-		cookie := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(10000)) + logUser + "openrasp"+
-			strconv.FormatInt(time.Now().UnixNano(), 10))))
-		err := models.NewCookie(cookie)
-		if err != nil {
-			o.ServeError(http.StatusUnauthorized, "failed to create cookie: "+err.Error())
-		}
-		o.Ctx.SetCookie(models.AuthCookieName, cookie)
-		o.ServeWithoutData()
-	} else {
-		o.ServeError(http.StatusUnauthorized, "username or password is incorrect")
+	err = models.VerifyUser(logUser, logPasswd)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "username or password is incorrect")
 	}
+	cookie := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(10000)) + logUser + "openrasp"+
+		strconv.FormatInt(time.Now().UnixNano(), 10))))
+	err = models.NewCookie(cookie)
+	if err != nil {
+		o.ServeError(http.StatusUnauthorized, "failed to create cookie: "+err.Error())
+	}
+	o.Ctx.SetCookie(models.AuthCookieName, cookie)
+	o.ServeWithEmptyData()
 }
 
-// @router /logout [get]
+// @router /islogin [get,post]
+func (o *UserController) IsLogin() {
+	o.ServeWithEmptyData()
+}
+
+// @router /logout [get,post]
 func (o *UserController) Logout() {
 	o.Ctx.SetCookie(models.AuthCookieName, "")
-	o.ServeWithoutData()
+	cookie := o.Ctx.GetCookie(models.AuthCookieName)
+	models.RemoveCookie(cookie)
+	o.ServeWithEmptyData()
 }

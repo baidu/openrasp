@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"rasp-cloud/models"
 	"net/http"
+	"math"
 )
 
 // Operations about policy alarm message
@@ -29,26 +30,29 @@ type PolicyAlarmController struct {
 
 // @router /search [post]
 func (o *PolicyAlarmController) Search() {
-	var param = &logs.SearchLogParam{}
+	var param = &logs.SearchPolicyParam{}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if param.AppId != "" {
-		_, err := models.GetAppById(param.AppId)
-		if err != nil {
-			o.ServeError(http.StatusBadRequest, "cannot get the app: "+param.AppId)
-		}
-	} else {
-		param.AppId = "*"
-	}
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "json decode error： "+err.Error())
 	}
-	if param.StartTime <= 0 {
+	if param.Data == nil {
+		o.ServeError(http.StatusBadRequest, "search data can not be empty")
+	}
+	if param.Data.AppId != "" {
+		_, err := models.GetAppById(param.Data.AppId)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "cannot get the app: "+param.Data.AppId)
+		}
+	} else {
+		param.Data.AppId = "*"
+	}
+	if param.Data.StartTime <= 0 {
 		o.ServeError(http.StatusBadRequest, "start_time must be greater than 0")
 	}
-	if param.EndTime <= 0 {
+	if param.Data.EndTime <= 0 {
 		o.ServeError(http.StatusBadRequest, "end_time must be greater than 0")
 	}
-	if param.StartTime > param.EndTime {
+	if param.Data.StartTime > param.Data.EndTime {
 		o.ServeError(http.StatusBadRequest, "start_time cannot be greater than end_time")
 	}
 	if param.Page <= 0 {
@@ -57,13 +61,28 @@ func (o *PolicyAlarmController) Search() {
 	if param.Perpage <= 0 {
 		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
 	}
-	total, result, err := logs.SearchLogs(param.StartTime, param.EndTime, param.Data, "event_time",
-		param.Page, param.Perpage, false, logs.AliasPolicyIndexName+"-"+param.AppId)
+	content, err := json.Marshal(param.Data)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to encode search data: "+err.Error())
+	}
+	var searchData map[string]interface{}
+	err = json.Unmarshal(content, &searchData)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to decode search data: "+err.Error())
+	}
+	delete(searchData, "start_time")
+	delete(searchData, "end_time")
+	delete(searchData, "app_id")
+	total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime, searchData, "event_time",
+		param.Page, param.Perpage, false, logs.AliasPolicyIndexName+"-"+param.Data.AppId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to search data from es: "+err.Error())
 	}
 	o.Serve(map[string]interface{}{
-		"total": total,
-		"data":  result,
+		"total":      total,
+		"total_page": math.Ceil(float64(total) / float64(param.Perpage)),
+		"page":       param.Page,
+		"perpage":    param.Perpage,
+		"data":       result,
 	})
 }

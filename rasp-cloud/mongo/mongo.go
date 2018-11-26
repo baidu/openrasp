@@ -19,6 +19,11 @@ import (
 	"time"
 	"github.com/astaxie/beego"
 	"rasp-cloud/tools"
+	"gopkg.in/mgo.v2/bson"
+	"strconv"
+	"math/rand"
+	"fmt"
+	"crypto/sha1"
 )
 
 var (
@@ -75,14 +80,15 @@ func UpsertId(collection string, id interface{}, doc interface{}) error {
 	return err
 }
 
-func FindAll(collection string, query interface{}, result interface{}, skip int, limit int) (count int, err error) {
+func FindAll(collection string, query interface{}, result interface{}, skip int, limit int,
+	sortFields ...string) (count int, err error) {
 	newSession := NewSession()
 	defer newSession.Close()
 	count, err = newSession.DB(DbName).C(collection).Find(query).Count()
 	if err != nil {
 		return
 	}
-	err = newSession.DB(DbName).C(collection).Find(query).Skip(skip).Limit(limit).All(result)
+	err = newSession.DB(DbName).C(collection).Find(query).Skip(skip).Limit(limit).Sort(sortFields...).All(result)
 	return
 }
 
@@ -125,11 +131,24 @@ func FindAllBySort(collection string, query interface{}, skip int, limit int, re
 func UpdateId(collection string, id interface{}, doc interface{}) error {
 	newSession := NewSession()
 	defer newSession.Close()
-	return newSession.DB(DbName).C(collection).UpdateId(id, doc)
+	return newSession.DB(DbName).C(collection).UpdateId(id, bson.M{"$set": doc})
 }
 
 func RemoveId(collection string, id interface{}) error {
 	newSession := NewSession()
 	defer newSession.Close()
 	return newSession.DB(DbName).C(collection).RemoveId(id)
+}
+
+func RemoveAll(collection string, selector interface{}) error {
+	newSession := NewSession()
+	defer newSession.Close()
+	_, err := newSession.DB(DbName).C(collection).RemoveAll(selector)
+	return err
+}
+
+func GenerateObjectId() string {
+	random := string(bson.NewObjectId()) +
+		strconv.FormatInt(time.Now().UnixNano(), 10) + strconv.Itoa(rand.Intn(10000))
+	return fmt.Sprintf("%x", sha1.Sum([]byte(random)))
 }
