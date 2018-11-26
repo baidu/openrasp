@@ -40,7 +40,10 @@
                   <span class="selectgroup-button">完全忽略</span>
                 </label>
               </div>
-              <p style="display: inline; margin-left: 10px; ">{{ item.name }} </p>
+              <p style="display: inline; margin-left: 10px; ">
+                {{ item.name }} 
+                <a v-if="data[item.key].reference" target="_blank" v-bind:href="data[item.key].reference">[帮助文档]</a>
+              </p>
             </form>
 
             <!--
