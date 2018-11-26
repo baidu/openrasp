@@ -107,7 +107,7 @@ bool openrasp_check_type_ignored(OpenRASPCheckType check_type)
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length)
 {
     std::vector<std::string> callable_blacklist =
-        OPENRASP_CONFIG(callable.blacklist);
+        OPENRASP_CONFIG(webshell_callable.blacklist);
 
     return std::find(callable_blacklist.begin(),
                      callable_blacklist.end(),

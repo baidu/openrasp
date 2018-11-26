@@ -48,7 +48,7 @@ public:
   SecurityBlock security;
   SqlBlock sql;
   LruBlock lru;
-  CallableBlock callable;
+  CallableBlock webshell_callable;
 
 private:
   long latestUpdateTime = 0;

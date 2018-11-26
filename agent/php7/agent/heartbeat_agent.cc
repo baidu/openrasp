@@ -101,22 +101,13 @@ void HeartBeatAgent::do_heartbeat()
 		}
 		/************************************buildin action************************************/
 		std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map;
-		std::string action_callable;
-		res_info->fetch_string("/data/config/algorithm.config/callable/action", action_callable);
-		buildin_action_map.insert({CALLABLE, string_to_action(action_callable)});
-
-		std::string action_webshell_eval;
-		res_info->fetch_string("/data/config/algorithm.config/webshell_eval/action", action_webshell_eval);
-		buildin_action_map.insert({WEBSHELL_EVAL, string_to_action(action_webshell_eval)});
-
-		std::string action_webshell_command;
-		res_info->fetch_string("/data/config/algorithm.config/webshell_command/action", action_webshell_command);
-		buildin_action_map.insert({WEBSHELL_COMMAND, string_to_action(action_webshell_command)});
-
-		std::string action_webshell_file_put_contents;
-		res_info->fetch_string("/data/config/algorithm.config/webshell_file_put_contents/action", action_webshell_file_put_contents);
-		buildin_action_map.insert({WEBSHELL_FILE_PUT_CONTENTS, string_to_action(action_webshell_file_put_contents)});
-
+		const std::vector<OpenRASPCheckType> buildin_types = check_type_transfer->get_buildin_types();
+		for (auto type : buildin_types)
+		{
+			std::string action;
+			res_info->fetch_string(("/data/config/algorithm.config/" + check_type_transfer->type_to_name(type) + "/action").c_str(), action);
+			buildin_action_map.insert({type, string_to_action(action)});
+		}
 		scm->set_buildin_check_action(buildin_action_map);
 		res_info->erase_value("/data/config/algorithm.config");
 		/************************************config update************************************/
