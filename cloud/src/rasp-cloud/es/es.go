@@ -67,7 +67,7 @@ func deleteExpiredData() {
 		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(10*time.Second))
 		_, err := ElasticClient.DeleteByQuery(index).QueryString("@timestamp:<" + expiredTime).Do(ctx)
 		if err != nil {
-			beego.Error("failed to delete expired data from index: " + index)
+			beego.Error("failed to delete expired data from index " + index + ": " + err.Error())
 		}
 		cancel()
 	}
