@@ -15,11 +15,11 @@
 package api
 
 import (
-	"rasp-cloud/controllers"
-	"net/http"
-	"rasp-cloud/models"
 	"encoding/json"
 	"math"
+	"net/http"
+	"rasp-cloud/controllers"
+	"rasp-cloud/models"
 )
 
 type TokenController struct {
@@ -31,7 +31,7 @@ func (o *TokenController) Get() {
 	var param map[string]int
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	page := param["page"]
 	if page <= 0 {
@@ -62,7 +62,7 @@ func (o *TokenController) Post() {
 	var token *models.Token
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &token)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if len(token.Description) > 1024 {
 		o.ServeError(http.StatusBadRequest, "the length of the token description must be less than 1024")
@@ -79,7 +79,7 @@ func (o *TokenController) Delete() {
 	var token *models.Token
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &token)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if len(token.Token) == 0 {
 		o.ServeError(http.StatusBadRequest, "the token param cannot be empty")

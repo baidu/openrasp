@@ -35,7 +35,7 @@ public class WindowsInstallerFactory extends InstallerFactory {
         if (serverName.equals(RESIN)) {
             return new ResinInstaller(serverName, serverRoot);
         }
-        System.out.println("Invalid server name: " + serverName);
+        System.out.println("Unexpected server name: " + serverName);
         return null;
     }
 }

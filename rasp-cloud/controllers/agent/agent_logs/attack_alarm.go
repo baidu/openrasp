@@ -16,9 +16,9 @@ package agent_logs
 
 import (
 	"encoding/json"
-	"rasp-cloud/models/logs"
 	"net/http"
 	"rasp-cloud/controllers"
+	"rasp-cloud/models/logs"
 )
 
 // Operations about attack alarm message
@@ -30,7 +30,7 @@ type AttackAlarmController struct {
 func (o *AttackAlarmController) Post() {
 	var alarms []map[string]interface{}
 	if err := json.Unmarshal(o.Ctx.Input.RequestBody, &alarms); err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	count := 0
 	for _, alarm := range alarms {

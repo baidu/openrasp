@@ -169,7 +169,7 @@ public abstract class BaseStandardInstaller implements Installer {
                 out.close();
             }
         } catch (Exception e) {
-            System.out.println("cloud control set failed: " + e.getMessage());
+            System.out.println("Unable to update rasp.properties: failed to add cloud control settings: " + e.getMessage());
         }
     }
 

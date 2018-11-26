@@ -15,11 +15,11 @@
 package api
 
 import (
-	"rasp-cloud/controllers"
-	"net/http"
-	"rasp-cloud/models"
 	"encoding/json"
 	"math"
+	"net/http"
+	"rasp-cloud/controllers"
+	"rasp-cloud/models"
 )
 
 type RaspController struct {
@@ -35,7 +35,7 @@ func (o *RaspController) Search() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
@@ -67,7 +67,7 @@ func (o *RaspController) Delete() {
 	var rasp = &models.Rasp{}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, rasp)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if rasp.Id == "" {
 		o.ServeError(http.StatusBadRequest, "the id cannot be empty")

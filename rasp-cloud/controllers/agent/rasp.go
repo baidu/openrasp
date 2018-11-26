@@ -15,12 +15,12 @@
 package agent
 
 import (
-	"rasp-cloud/models"
 	"encoding/json"
+	"github.com/astaxie/beego/validation"
 	"net/http"
 	"rasp-cloud/controllers"
+	"rasp-cloud/models"
 	"time"
-	"github.com/astaxie/beego/validation"
 )
 
 type RaspController struct {
@@ -34,7 +34,7 @@ func (o *RaspController) Post() {
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, rasp)
 
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if rasp.Id == "" {
 		o.ServeError(http.StatusBadRequest, "rasp id cannot be empty")
@@ -91,6 +91,6 @@ func (o *RaspController) Post() {
 		o.ServeError(http.StatusBadRequest, "failed to add rasp", err)
 	}
 	models.AddOperation(rasp.AppId, models.OperationTypeRegisterRasp, o.Ctx.Input.IP(),
-		"registered the rasp: " + rasp.Id + ",hostname is: " + rasp.HostName)
+		"registered the rasp: "+rasp.Id+",hostname is: "+rasp.HostName)
 	o.Serve(rasp)
 }

@@ -15,11 +15,11 @@
 package agent
 
 import (
-	"rasp-cloud/models"
-	"net/http"
 	"encoding/json"
-	"rasp-cloud/controllers"
 	"gopkg.in/mgo.v2"
+	"net/http"
+	"rasp-cloud/controllers"
+	"rasp-cloud/models"
 	"time"
 )
 
@@ -40,7 +40,7 @@ func (o *HeartbeatController) Post() {
 	var heartbeat heartbeatParam
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &heartbeat)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	rasp, err := models.GetRaspById(heartbeat.RaspId)
 	if err != nil {
@@ -66,7 +66,7 @@ func (o *HeartbeatController) Post() {
 	result := make(map[string]interface{})
 	isUpdate := false
 	// handle plugin
-	selectedPlugin, err := models.GetSelectedPlugin(appId,true)
+	selectedPlugin, err := models.GetSelectedPlugin(appId, true)
 	if err != nil && err != mgo.ErrNotFound {
 		o.ServeError(http.StatusBadRequest, "failed to get selected plugin", err)
 	}

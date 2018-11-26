@@ -2,10 +2,10 @@ package api
 
 import (
 	"encoding/json"
-	"net/http"
 	"fmt"
-	"rasp-cloud/models"
+	"net/http"
 	"rasp-cloud/controllers"
+	"rasp-cloud/models"
 )
 
 type ReportController struct {
@@ -21,7 +21,7 @@ func (o *ReportController) Search() {
 	var query map[string]interface{}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &query)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	startTimeParam := query["start_time"]
 	if startTimeParam == nil {
@@ -76,7 +76,7 @@ func (o *ReportController) Search() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get app", err)
 	}
-	err, result := models.GetHistoryRequestSum(int64(startTime), int64(endTime), interval, timeZone, appId,)
+	err, result := models.GetHistoryRequestSum(int64(startTime), int64(endTime), interval, timeZone, appId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get request sum form ES", err)
 	}

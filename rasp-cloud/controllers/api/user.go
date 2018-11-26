@@ -15,14 +15,14 @@
 package api
 
 import (
-	"rasp-cloud/controllers"
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
 	"math/rand"
-	"strconv"
 	"net/http"
+	"rasp-cloud/controllers"
 	"rasp-cloud/models"
-	"encoding/json"
+	"strconv"
 	"time"
 )
 
@@ -35,7 +35,7 @@ func (o *UserController) Login() {
 	var loginData map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &loginData)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	logUser := loginData["username"]
 	logPasswd := loginData["password"]
@@ -49,7 +49,7 @@ func (o *UserController) Login() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "username or password is incorrect")
 	}
-	cookie := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(10000)) + logUser + "openrasp"+
+	cookie := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(10000))+logUser+"openrasp"+
 		strconv.FormatInt(time.Now().UnixNano(), 10))))
 	err = models.NewCookie(cookie)
 	if err != nil {

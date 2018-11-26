@@ -15,9 +15,9 @@
 package agent
 
 import (
-	"rasp-cloud/controllers"
 	"encoding/json"
 	"net/http"
+	"rasp-cloud/controllers"
 	"rasp-cloud/models"
 )
 
@@ -30,7 +30,7 @@ func (o *ReportController) Post() {
 	var reportData *models.ReportData
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &reportData)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if reportData.RaspId == "" {
 		o.ServeError(http.StatusBadRequest, "rasp_id cannot be empty")

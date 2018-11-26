@@ -15,19 +15,19 @@
 package api
 
 import (
-	"rasp-cloud/models"
-	"path"
-	"net/http"
-	"rasp-cloud/controllers"
-	"encoding/json"
-	"rasp-cloud/mongo"
-	"gopkg.in/mgo.v2/bson"
-	"gopkg.in/mgo.v2"
-	"io/ioutil"
-	"bytes"
 	"bufio"
-	"regexp"
+	"bytes"
+	"encoding/json"
 	"github.com/robertkrimen/otto"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+	"io/ioutil"
+	"net/http"
+	"path"
+	"rasp-cloud/controllers"
+	"rasp-cloud/models"
+	"rasp-cloud/mongo"
+	"regexp"
 )
 
 // Operations about plugin
@@ -116,7 +116,7 @@ func (o *PluginController) Get() {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	pluginId := param["id"]
 	if pluginId == "" {
@@ -134,7 +134,7 @@ func (o *PluginController) Download() {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	pluginId := param["id"]
 	if pluginId == "" {
@@ -154,7 +154,7 @@ func (o *PluginController) Delete() {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	pluginId := param["id"]
 	if pluginId == "" {

@@ -15,17 +15,17 @@
 package api
 
 import (
-	"net/http"
-	"rasp-cloud/models"
-	"rasp-cloud/controllers"
 	"encoding/json"
-	"time"
 	"github.com/astaxie/beego/validation"
-	"strconv"
 	"gopkg.in/mgo.v2"
-	"math"
 	"gopkg.in/mgo.v2/bson"
+	"math"
+	"net/http"
+	"rasp-cloud/controllers"
+	"rasp-cloud/models"
+	"strconv"
 	"sync"
+	"time"
 )
 
 // Operations about app
@@ -49,7 +49,7 @@ func (o *AppController) GetApp() {
 	var data pageParam
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &data)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if data.AppId == "" {
 		if data.Page <= 0 {
@@ -86,7 +86,7 @@ func (o *AppController) GetRasps() {
 	var param pageParam
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if param.Page <= 0 {
 		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
@@ -122,7 +122,7 @@ func (o *AppController) GetAppSecret() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if param.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
@@ -143,7 +143,7 @@ func (o *AppController) RegenerateAppSecret() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if param.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
@@ -167,7 +167,7 @@ func (o *AppController) UpdateAppGeneralConfig() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if param.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
@@ -193,7 +193,7 @@ func (o *AppController) UpdateAppWhiteListConfig() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if param.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
@@ -219,7 +219,7 @@ func (o *AppController) UpdateAppAlgorithmConfig() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if param.PluginId == "" {
 		o.ServeError(http.StatusBadRequest, "plugin_id can not be empty")
@@ -243,7 +243,7 @@ func (o *AppController) Post() {
 
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, app)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if app.Name == "" {
 		o.ServeError(http.StatusBadRequest, "app name cannot be empty")
@@ -316,7 +316,7 @@ func (o *AppController) ConfigApp() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if param.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
@@ -445,7 +445,7 @@ func (o *AppController) Delete() {
 	var app = &models.App{}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, app)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if app.Id == "" {
 		o.ServeError(http.StatusBadRequest, "the id cannot be empty")
@@ -479,12 +479,12 @@ func (o *AppController) Delete() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to remove operation log by app_id", err)
 	}
-	models.AddOperation(app.Id, models.OperationTypeDeleteApp, o.Ctx.Input.IP(),  "deleted the app")
+	models.AddOperation(app.Id, models.OperationTypeDeleteApp, o.Ctx.Input.IP(), "deleted the app")
 	o.ServeWithEmptyData()
 }
 
 func (o *AppController) validAppArrayParam(param []string, paramName string,
-	valid func(interface{}, string) (*validation.Result)) ([]string) {
+	valid func(interface{}, string) *validation.Result) []string {
 	if param != nil {
 		if len(param) > 128 {
 			o.ServeError(http.StatusBadRequest,
@@ -557,7 +557,7 @@ func (o *AppController) ConfigAlarm() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if param.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
@@ -598,7 +598,7 @@ func (o *AppController) GetPlugins() {
 	var param pageParam
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	if param.Page <= 0 {
 		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
@@ -632,7 +632,7 @@ func (o *AppController) GetSelectedPlugin() {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	appId := param["app_id"]
 	if appId == "" {
@@ -654,7 +654,7 @@ func (o *AppController) SetSelectedPlugin() {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	appId := param["app_id"]
 	if appId == "" {
@@ -669,7 +669,7 @@ func (o *AppController) SetSelectedPlugin() {
 		o.ServeError(http.StatusBadRequest, "failed to set selected plugin", err)
 	}
 	models.AddOperation(appId, models.OperationTypeSetSelectedPlugin, o.Ctx.Input.IP(),
-		"set up selected plugin: " + pluginId)
+		"set up selected plugin: "+pluginId)
 	o.ServeWithEmptyData()
 }
 
@@ -678,7 +678,7 @@ func (o *AppController) TestEmail() {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	appId := param["app_id"]
 	if appId == "" {
@@ -699,7 +699,7 @@ func (o *AppController) TestDing(config map[string]interface{}) {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	appId := param["app_id"]
 	if appId == "" {
@@ -720,7 +720,7 @@ func (o *AppController) TestHttp(config map[string]interface{}) {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error", err)
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 	appId := param["app_id"]
 	if appId == "" {
