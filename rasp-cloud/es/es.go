@@ -34,7 +34,7 @@ var (
 func init() {
 	client, err := elastic.NewClient(elastic.SetURL(beego.AppConfig.String("EsAddr")))
 	if err != nil {
-		tools.Panic("init ES failed: " + err.Error())
+		tools.Panic("init ES failed", err)
 	}
 	ttlIndexes <- make(map[string]time.Duration)
 	go startTTL(24 * time.Hour)

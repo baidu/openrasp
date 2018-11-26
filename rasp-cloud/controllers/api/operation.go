@@ -37,7 +37,7 @@ func (o *OperationController) Search() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
@@ -61,7 +61,7 @@ func (o *OperationController) Search() {
 	var result = make(map[string]interface{})
 	total, operations, err := models.FindOperation(param.Data, param.StartTime, param.EndTime, param.Page, param.Perpage)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get plugins: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get plugins", err)
 	}
 	result["total"] = total
 	result["total_page"] = math.Ceil(float64(total) / float64(param.Perpage))

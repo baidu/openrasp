@@ -90,7 +90,7 @@ func init() {
 		startEsAlarmLogPush()
 		AddAlarmFunc = AddLogWithES
 	} else {
-		tools.Panic("Unrecognized the value of RaspLogMode config")
+		tools.Panic("Unrecognized the value of RaspLogMode config", nil)
 	}
 	alarmBufferSize := beego.AppConfig.DefaultInt("AlarmBufferSize", 300)
 	esAttackAlarmBuffer = make(chan map[string]interface{}, alarmBufferSize)
@@ -105,13 +105,13 @@ func initRaspLoggers() {
 func initAlarmFileLogger(dirName string, fileName string) *logs.BeeLogger {
 	currentPath, err := tools.GetCurrentPath()
 	if err != nil {
-		tools.Panic("failed to init alarm logger: " + err.Error())
+		tools.Panic("failed to init alarm logger", err)
 	}
 	dirName = currentPath + dirName
 	if isExists, _ := tools.PathExists(dirName); !isExists {
 		err := os.MkdirAll(dirName, os.ModePerm)
 		if err != nil {
-			tools.Panic("failed to init alarm logger: " + err.Error())
+			tools.Panic("failed to init alarm logger", err)
 		}
 	}
 
@@ -120,7 +120,7 @@ func initAlarmFileLogger(dirName string, fileName string) *logs.BeeLogger {
 	err = logger.SetLogger(tools.AdapterAlarmFile,
 		`{"filename":"`+logPath+`", "daily":true, "maxdays":10, "perm":"0777"}`)
 	if err != nil {
-		tools.Panic("failed to init alarm logger: " + err.Error())
+		tools.Panic("failed to init alarm logger", err)
 	}
 	return logger
 }

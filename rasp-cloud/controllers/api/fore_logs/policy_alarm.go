@@ -33,7 +33,7 @@ func (o *PolicyAlarmController) Search() {
 	var param = &logs.SearchPolicyParam{}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json decode error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json decode error", err)
 	}
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
@@ -63,12 +63,12 @@ func (o *PolicyAlarmController) Search() {
 	}
 	content, err := json.Marshal(param.Data)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to encode search data: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to encode search data", err)
 	}
 	var searchData map[string]interface{}
 	err = json.Unmarshal(content, &searchData)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to decode search data: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to decode search data", err)
 	}
 	delete(searchData, "start_time")
 	delete(searchData, "end_time")
@@ -76,7 +76,7 @@ func (o *PolicyAlarmController) Search() {
 	total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime, searchData, "event_time",
 		param.Page, param.Perpage, false, logs.AliasPolicyIndexName+"-"+param.Data.AppId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to search data from es: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
 	}
 	o.Serve(map[string]interface{}{
 		"total":      total,

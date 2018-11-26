@@ -45,7 +45,7 @@ func init() {
 	session, err = mgo.DialWithInfo(dialInfo)
 
 	if err != nil {
-		tools.Panic("init mongodb failed: " + err.Error())
+		tools.Panic("init mongodb failed", err)
 	}
 
 	session.SetMode(mgo.Monotonic, true)

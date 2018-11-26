@@ -45,9 +45,9 @@ extern "C"
 }
 
 using openrasp::fetch_if_addrs;
-using openrasp::regex_match;
-using openrasp::format_time;
 using openrasp::fetch_time_offset;
+using openrasp::format_time;
+using openrasp::regex_match;
 using openrasp::same_day_in_current_timezone;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
@@ -335,6 +335,7 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
     openrasp_log_globals->alarm_logger = std::move(RaspLoggerEntry(ALARM_LOG_DIR_NAME, LEVEL_INFO, alarm_appender, static_cast<log_appender>(FSTREAM_APPENDER | SYSLOG_APPENDER)));
     openrasp_log_globals->policy_logger = std::move(RaspLoggerEntry(POLICY_LOG_DIR_NAME, LEVEL_INFO, FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
     openrasp_log_globals->plugin_logger = std::move(RaspLoggerEntry(PLUGIN_LOG_DIR_NAME, LEVEL_INFO, FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
+    openrasp_log_globals->rasp_logger = std::move(RaspLoggerEntry(RASP_LOG_DIR_NAME, LEVEL_INFO, FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
 }
 
 PHP_MINIT_FUNCTION(openrasp_log)
@@ -363,6 +364,7 @@ PHP_RINIT_FUNCTION(openrasp_log)
     OPENRASP_LOG_G(alarm_logger).init(static_cast<log_appender>(FSTREAM_APPENDER | SYSLOG_APPENDER));
     OPENRASP_LOG_G(plugin_logger).init(FSTREAM_APPENDER);
     OPENRASP_LOG_G(policy_logger).init(FSTREAM_APPENDER);
+    OPENRASP_LOG_G(rasp_logger).init(FSTREAM_APPENDER);
     return SUCCESS;
 }
 
@@ -371,6 +373,7 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_log)
     OPENRASP_LOG_G(alarm_logger).clear();
     OPENRASP_LOG_G(plugin_logger).clear();
     OPENRASP_LOG_G(policy_logger).clear();
+    OPENRASP_LOG_G(rasp_logger).clear();
     OPENRASP_LOG_G(in_request_process) = 0;
     return SUCCESS;
 }
@@ -829,4 +832,9 @@ char *RaspLoggerEntry::get_formatted_date_suffix() const
 zval *RaspLoggerEntry::get_common_info()
 {
     return &common_info;
+}
+
+void RaspLoggerEntry::set_level(severity_level level)
+{
+    this->level = level;
 }

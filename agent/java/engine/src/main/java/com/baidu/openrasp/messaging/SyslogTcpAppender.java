@@ -200,7 +200,7 @@ public class SyslogTcpAppender extends AppenderSkeleton {
         this.address = address;
         this.remoteHost = address.getHostName();
         this.port = port;
-        this.syslogFacility = syslogFacility;
+        this.syslogFacility = syslogFacility*8;
         this.layout = layout;
         this.initSyslogFacilityStr();
         connect(address, port);
@@ -213,7 +213,7 @@ public class SyslogTcpAppender extends AppenderSkeleton {
         this.port = port;
         this.address = getAddressByName(host);
         this.remoteHost = host;
-        this.syslogFacility = syslogFacility;
+        this.syslogFacility = syslogFacility*8;
         this.layout = layout;
         this.initSyslogFacilityStr();
         connect(address, port);

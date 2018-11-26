@@ -49,7 +49,7 @@ func (o *AppController) GetApp() {
 	var data pageParam
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &data)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if data.AppId == "" {
 		if data.Page <= 0 {
@@ -61,7 +61,7 @@ func (o *AppController) GetApp() {
 		var result = make(map[string]interface{})
 		total, apps, err := models.GetAllApp(data.Page, data.Perpage)
 		if err != nil {
-			o.ServeError(http.StatusBadRequest, "failed to get apps: "+err.Error())
+			o.ServeError(http.StatusBadRequest, "failed to get apps", err)
 		}
 		if apps == nil {
 			apps = make([]models.App, 0)
@@ -75,7 +75,7 @@ func (o *AppController) GetApp() {
 	} else {
 		app, err := models.GetAppById(data.AppId)
 		if err != nil {
-			o.ServeError(http.StatusBadRequest, "failed to get app: "+err.Error())
+			o.ServeError(http.StatusBadRequest, "failed to get app", err)
 		}
 		o.Serve(app)
 	}
@@ -86,7 +86,7 @@ func (o *AppController) GetRasps() {
 	var param pageParam
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if param.Page <= 0 {
 		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
@@ -97,7 +97,7 @@ func (o *AppController) GetRasps() {
 
 	app, err := models.GetAppById(param.AppId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get app: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get app", err)
 	}
 	if app == nil {
 		o.ServeError(http.StatusBadRequest, "the app doesn't exist")
@@ -105,7 +105,7 @@ func (o *AppController) GetRasps() {
 	var result = make(map[string]interface{})
 	total, rasps, err := models.GetRaspByAppId(app.Id, param.Page, param.Perpage)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get apps: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get apps", err)
 	}
 	result["total"] = total
 	result["total_page"] = math.Ceil(float64(total) / float64(param.Perpage))
@@ -122,14 +122,14 @@ func (o *AppController) GetAppSecret() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if param.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
 	}
 	secret, err := models.GetSecretByAppId(param.AppId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get secret： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get secret", err)
 	}
 	o.Serve(map[string]string{
 		"secret": secret,
@@ -143,14 +143,14 @@ func (o *AppController) RegenerateAppSecret() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if param.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
 	}
 	secret, err := models.RegenerateSecret(param.AppId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get secret： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get secret", err)
 	}
 	models.AddOperation(param.AppId, models.OperationTypeRegenerateSecret,
 		o.Ctx.Input.IP(), "regenerated the secret")
@@ -167,7 +167,7 @@ func (o *AppController) UpdateAppGeneralConfig() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if param.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
@@ -178,7 +178,7 @@ func (o *AppController) UpdateAppGeneralConfig() {
 	o.validateAppConfig(param.Config)
 	app, err := models.UpdateGeneralConfig(param.AppId, param.Config)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to update app general config: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to update app general config", err)
 	}
 	models.AddOperation(param.AppId, models.OperationTypeUpdateGenerateConfig,
 		o.Ctx.Input.IP(), "updated the general configuration")
@@ -193,7 +193,7 @@ func (o *AppController) UpdateAppWhiteListConfig() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if param.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
@@ -204,7 +204,7 @@ func (o *AppController) UpdateAppWhiteListConfig() {
 	o.validateWhiteListConfig(param.Config)
 	app, err := models.UpdateWhiteListConfig(param.AppId, param.Config)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to update app whitelist config: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to update app whitelist config", err)
 	}
 	models.AddOperation(param.AppId, models.OperationTypeUpdateWhitelistConfig,
 		o.Ctx.Input.IP(), "updated the whitelist configuration")
@@ -219,7 +219,7 @@ func (o *AppController) UpdateAppAlgorithmConfig() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if param.PluginId == "" {
 		o.ServeError(http.StatusBadRequest, "plugin_id can not be empty")
@@ -230,7 +230,7 @@ func (o *AppController) UpdateAppAlgorithmConfig() {
 	o.validateAppConfig(param.Config)
 	appId, err := models.UpdateAlgorithmConfig(param.PluginId, param.Config)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to update algorithm config: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to update algorithm config", err)
 	}
 	models.AddOperation(appId, models.OperationTypeUpdateAlgorithmConfig,
 		o.Ctx.Input.IP(), "updated the whitelist configuration")
@@ -243,7 +243,7 @@ func (o *AppController) Post() {
 
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, app)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if app.Name == "" {
 		o.ServeError(http.StatusBadRequest, "app name cannot be empty")
@@ -300,7 +300,7 @@ func (o *AppController) Post() {
 	models.HandleApp(app, true)
 	app, err = models.AddApp(app)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "create app failed: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "create app failed", err)
 	}
 	models.AddOperation(app.Id, models.OperationTypeAddApp, o.Ctx.Input.IP(), "created the app: "+app.Name)
 	o.Serve(app)
@@ -316,14 +316,14 @@ func (o *AppController) ConfigApp() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if param.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
 	}
 	_, err = models.GetAppById(param.AppId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get app: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get app", err)
 	}
 	if param.Name == "" {
 		o.ServeError(http.StatusBadRequest, "app name cannot be empty")
@@ -353,7 +353,7 @@ func (o *AppController) ConfigApp() {
 	updateData := bson.M{"name": param.Name, "language": param.Language, "description": param.Description}
 	app, err := models.UpdateAppById(param.AppId, updateData)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to update app config: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to update app config", err)
 	}
 	operationData, err := json.Marshal(updateData)
 	models.AddOperation(app.Id, models.OperationTypeEditApp, o.Ctx.Input.IP(), "edited the app: "+string(operationData))
@@ -445,7 +445,7 @@ func (o *AppController) Delete() {
 	var app = &models.App{}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, app)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if app.Id == "" {
 		o.ServeError(http.StatusBadRequest, "the id cannot be empty")
@@ -454,30 +454,30 @@ func (o *AppController) Delete() {
 	defer mutex.Unlock()
 	count, err := models.GetAppCount()
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get app count: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get app count", err)
 	}
 	if count <= 1 {
 		o.ServeError(http.StatusBadRequest, "failed to remove app: keep at least one app")
 	}
 	err = models.RemoveAppById(app.Id)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to remove app： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to remove app", err)
 	}
 	err = models.RemoveRaspByAppId(app.Id)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to remove rasp by app_id： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to remove rasp by app_id", err)
 	}
 	err = models.RemovePluginByAppId(app.Id)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to remove plugin by app_id： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to remove plugin by app_id", err)
 	}
 	err = models.RemovePluginByAppId(app.Id)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to remove plugin by app_id： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to remove plugin by app_id", err)
 	}
 	err = models.RemoveOperationByAppId(app.Id)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to remove operation log by app_id： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to remove operation log by app_id", err)
 	}
 	models.AddOperation(app.Id, models.OperationTypeDeleteApp, o.Ctx.Input.IP(),  "deleted the app")
 	o.ServeWithEmptyData()
@@ -557,14 +557,14 @@ func (o *AppController) ConfigAlarm() {
 	}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if param.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
 	}
 	_, err = models.GetAppById(param.AppId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get app: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get app", err)
 	}
 	var updateData bson.M
 	if param.EmailAlarmConf != nil {
@@ -578,15 +578,15 @@ func (o *AppController) ConfigAlarm() {
 	}
 	content, err := json.Marshal(param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to encode param to json: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to encode param to json", err)
 	}
 	err = json.Unmarshal(content, &updateData)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to decode param json: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to decode param json", err)
 	}
 	app, err := models.UpdateAppById(param.AppId, updateData)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to update alarm config: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to update alarm config", err)
 	}
 	models.AddOperation(app.Id, models.OperationTypeUpdateAlarmConfig, o.Ctx.Input.IP(),
 		"updated the alarm configuration")
@@ -598,7 +598,7 @@ func (o *AppController) GetPlugins() {
 	var param pageParam
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if param.Page <= 0 {
 		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
@@ -609,7 +609,7 @@ func (o *AppController) GetPlugins() {
 
 	app, err := models.GetAppById(param.AppId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get app: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get app", err)
 	}
 	if app == nil {
 		o.ServeError(http.StatusBadRequest, "the app doesn't exist")
@@ -617,7 +617,7 @@ func (o *AppController) GetPlugins() {
 	var result = make(map[string]interface{})
 	total, plugins, err := models.GetPluginsByApp(param.AppId, (param.Page-1)*param.Perpage, param.Perpage)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get plugins: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get plugins", err)
 	}
 	result["total"] = total
 	result["total_page"] = math.Ceil(float64(total) / float64(param.Perpage))
@@ -632,7 +632,7 @@ func (o *AppController) GetSelectedPlugin() {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	appId := param["app_id"]
 	if appId == "" {
@@ -644,7 +644,7 @@ func (o *AppController) GetSelectedPlugin() {
 		return
 	}
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get selected plugin: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get selected plugin", err)
 	}
 	o.Serve(plugin)
 }
@@ -654,7 +654,7 @@ func (o *AppController) SetSelectedPlugin() {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	appId := param["app_id"]
 	if appId == "" {
@@ -666,7 +666,7 @@ func (o *AppController) SetSelectedPlugin() {
 	}
 	err = models.SetSelectedPlugin(appId, pluginId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to set selected plugin: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to set selected plugin", err)
 	}
 	models.AddOperation(appId, models.OperationTypeSetSelectedPlugin, o.Ctx.Input.IP(),
 		"set up selected plugin: " + pluginId)
@@ -678,7 +678,7 @@ func (o *AppController) TestEmail() {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	appId := param["app_id"]
 	if appId == "" {
@@ -686,11 +686,11 @@ func (o *AppController) TestEmail() {
 	}
 	app, err := models.GetAppById(appId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "can not find the app: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "can not find the app", err)
 	}
 	err = models.PushEmailAttackAlarm(app, 0, nil, true)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to test email alarm: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to test email alarm", err)
 	}
 }
 
@@ -699,7 +699,7 @@ func (o *AppController) TestDing(config map[string]interface{}) {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	appId := param["app_id"]
 	if appId == "" {
@@ -707,11 +707,11 @@ func (o *AppController) TestDing(config map[string]interface{}) {
 	}
 	app, err := models.GetAppById(appId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "can not find the app: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "can not find the app", err)
 	}
 	err = models.PushDingAttackAlarm(app, 0, nil, true)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to test ding ding alarm: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to test ding ding alarm", err)
 	}
 }
 
@@ -720,7 +720,7 @@ func (o *AppController) TestHttp(config map[string]interface{}) {
 	var param map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	appId := param["app_id"]
 	if appId == "" {
@@ -728,10 +728,10 @@ func (o *AppController) TestHttp(config map[string]interface{}) {
 	}
 	app, err := models.GetAppById(appId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "can not find the app: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "can not find the app", err)
 	}
 	err = models.PushHttpAttackAlarm(app, 0, nil, true)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to test http alarm: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to test http alarm", err)
 	}
 }

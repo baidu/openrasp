@@ -30,7 +30,7 @@ type PolicyAlarmController struct {
 func (o *PolicyAlarmController) Post() {
 	var alarms []map[string]interface{}
 	if err := json.Unmarshal(o.Ctx.Input.RequestBody, &alarms); err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	count := 0
 	for _, alarm := range alarms {

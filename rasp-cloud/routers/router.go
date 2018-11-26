@@ -107,7 +107,7 @@ func InitRouter(startType string) {
 	} else if startType == "" {
 		ns.Namespace(foregroudNS, agentNS, userNS)
 	} else {
-		tools.Panic("The start type is not supported: " + startType)
+		tools.Panic("The start type is not supported: "+startType, nil)
 	}
 	beego.AddNamespace(ns)
 }

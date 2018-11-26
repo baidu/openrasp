@@ -50,7 +50,7 @@ bool ConfigHolder::update(OpenraspConfig *openrasp_config)
   security.update(openrasp_config);
   sql.update(openrasp_config);
   lru.update(openrasp_config);
-  callable.update(openrasp_config);
+  webshell_callable.update(openrasp_config);
   return true;
 }
 

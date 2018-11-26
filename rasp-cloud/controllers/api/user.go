@@ -35,7 +35,7 @@ func (o *UserController) Login() {
 	var loginData map[string]string
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &loginData)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	logUser := loginData["username"]
 	logPasswd := loginData["password"]
@@ -53,7 +53,7 @@ func (o *UserController) Login() {
 		strconv.FormatInt(time.Now().UnixNano(), 10))))
 	err = models.NewCookie(cookie)
 	if err != nil {
-		o.ServeError(http.StatusUnauthorized, "failed to create cookie: "+err.Error())
+		o.ServeError(http.StatusUnauthorized, "failed to create cookie", err)
 	}
 	o.Ctx.SetCookie(models.AuthCookieName, cookie)
 	o.ServeWithEmptyData()

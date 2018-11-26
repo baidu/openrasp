@@ -195,7 +195,7 @@ var (
 func init() {
 	currentPath, err := tools.GetCurrentPath()
 	if err != nil {
-		panic("failed to get current directory path: " + err.Error())
+		tools.Panic("failed to get current directory path", err)
 	}
 	geoIpDbPath = currentPath + "/geoip/GeoLite2-City.mmdb"
 }

@@ -34,7 +34,7 @@ func (o *RaspController) Post() {
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, rasp)
 
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	if rasp.Id == "" {
 		o.ServeError(http.StatusBadRequest, "rasp id cannot be empty")
@@ -88,7 +88,7 @@ func (o *RaspController) Post() {
 	rasp.LastHeartbeatTime = time.Now().Unix()
 	err = models.UpsertRaspById(rasp.Id, rasp)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to add rasp: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to add rasp", err)
 	}
 	models.AddOperation(rasp.AppId, models.OperationTypeRegisterRasp, o.Ctx.Input.IP(),
 		"registered the rasp: " + rasp.Id + ",hostname is: " + rasp.HostName)

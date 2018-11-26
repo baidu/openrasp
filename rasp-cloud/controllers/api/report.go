@@ -21,7 +21,7 @@ func (o *ReportController) Search() {
 	var query map[string]interface{}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &query)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "json format error", err)
 	}
 	startTimeParam := query["start_time"]
 	if startTimeParam == nil {
@@ -74,11 +74,11 @@ func (o *ReportController) Search() {
 	}
 	_, err = models.GetAppById(appId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get app： "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get app", err)
 	}
 	err, result := models.GetHistoryRequestSum(int64(startTime), int64(endTime), interval, timeZone, appId,)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get request sum form ES: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to get request sum form ES", err)
 	}
 	o.Serve(result)
 

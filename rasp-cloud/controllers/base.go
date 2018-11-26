@@ -41,8 +41,11 @@ func (o *BaseController) ServeWithEmptyData() {
 	o.ServeJSON()
 }
 
-func (o *BaseController) ServeError(code int, description ...string) {
-	o.ServeStatusCode(code, description...)
+func (o *BaseController) ServeError(code int, description string, err ...error) {
+	if len(err) > 0 && err[0] != nil {
+		description = description + ": " + err[0].Error()
+	}
+	o.ServeStatusCode(code, description)
 	panic(description)
 }
 
