@@ -228,6 +228,7 @@ void OpenraspAgentManager::supervisor_run()
 	sigaction(SIGCHLD, &sa_usr, NULL);
 
 	super_install_signal_handler();
+	TS_FETCH_WRAPPER();
 	while (true)
 	{
 		LOG_G(rasp_logger).set_level(scm->get_debug_level() != 0 ? LEVEL_DEBUG : LEVEL_INFO);

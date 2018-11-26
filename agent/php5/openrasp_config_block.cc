@@ -153,7 +153,7 @@ const vector<string> CallableBlock::default_blacklist = {"system", "exec", "pass
 
 void CallableBlock::update(OpenraspConfig *openrasp_config)
 {
-  blacklist = openrasp_config->GetArray("callable.blacklist", CallableBlock::default_blacklist);
+  blacklist = openrasp_config->GetArray("webshell_callable.blacklist", CallableBlock::default_blacklist);
 }
 
 } // namespace openrasp

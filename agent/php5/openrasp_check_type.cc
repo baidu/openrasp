@@ -16,15 +16,19 @@
 
 #include "openrasp_check_type.h"
 
-void CheckTypeTransfer::insert(OpenRASPCheckType type, const std::string &name)
+void CheckTypeTransfer::insert(OpenRASPCheckType type, const std::string &name, bool is_buildin)
 {
   check_type_to_name.insert({type, name});
   name_to_check_type.insert({name, type});
+  if (is_buildin)
+  {
+    buildin_check_type.push_back(type);
+  }
 }
 
 CheckTypeTransfer::CheckTypeTransfer()
 {
-  insert(CALLABLE, "callable");
+  insert(CALLABLE, "webshell_callable", true);
   insert(COMMAND, "command");
   insert(DIRECTORY, "directory");
   insert(READ_FILE, "readFile");
@@ -38,9 +42,9 @@ CheckTypeTransfer::CheckTypeTransfer()
   insert(SQL_SLOW_QUERY, "sqlSlowQuery");
   insert(SQL_PREPARED, "sqlPrepared");
   insert(SSRF, "ssrf");
-  insert(WEBSHELL_EVAL, "webshell_eval");
-  insert(WEBSHELL_COMMAND, "webshell_command");
-  insert(WEBSHELL_FILE_PUT_CONTENTS, "webshell_file_put_contents");
+  insert(WEBSHELL_EVAL, "webshell_eval", true);
+  insert(WEBSHELL_COMMAND, "webshell_command", true);
+  insert(WEBSHELL_FILE_PUT_CONTENTS, "webshell_file_put_contents", true);
 }
 
 std::string CheckTypeTransfer::type_to_name(OpenRASPCheckType type) const
@@ -77,6 +81,11 @@ std::vector<std::string> CheckTypeTransfer::get_all_names() const
     names.push_back(item.first);
   }
   return names;
+}
+
+const std::vector<OpenRASPCheckType>& CheckTypeTransfer::get_buildin_types() const
+{
+  return buildin_check_type;
 }
 
 std::unique_ptr<CheckTypeTransfer> check_type_transfer(new CheckTypeTransfer());
