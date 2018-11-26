@@ -1,4 +1,4 @@
-const version = '2018-1125-1030'
+const version = '2018-1126-1430'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -320,6 +320,32 @@ var algorithmConfig = {
     // transformer 反序列化攻击
     deserialization_transformer: {
         name:   '算法1 - 拦截 transformer 反序列化攻击',
+        action: 'block'
+    },
+
+    // php 专有算法
+    xss_echo: {
+        name:   '算法1 - PHP: 禁止直接输出 GPC 参数',
+        action: 'log'
+    },
+
+    webshell_eval: {
+        name:   '算法1 - 拦截简单的 PHP 中国菜刀后门',
+        action: 'block'
+    },
+
+    webshell_command: {
+        name:   '算法2 - 拦截简单的 PHP 命令执行后门',
+        action: 'block'
+    },
+
+    webshell_file_put_contents: {
+        name:   '算法3 - 拦截简单的 PHP 文件上传后门',
+        action: 'block'
+    },
+
+    webshell_callable: {
+        name:   '算法4 - 拦截简单的 PHP array_map/walk/filter 后门',
         action: 'block'
     }
 }
