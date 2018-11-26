@@ -19,5 +19,6 @@
 /plugin/
 /logs/
 /openrasp-logs/
+/dist/
 rasp-cloud*
 lastupdate.tmp
