@@ -76,6 +76,13 @@ export default {
     var self = this
 
     Object.keys(attack_types).forEach(function(key) {
+      
+      // FIXME: 目前PHP几个webshell_XXX没有统一成 webshell 类型，
+      // 所以 webshell 这个类型没必要显示出来
+      if (key == 'webshell') {
+        return
+      }
+
       data.push({
         name: attack_types[key],
         id: key,

@@ -55,10 +55,10 @@ public class Register {
                 if (CloudUtils.checkRequestResult(response)) {
                     this.registerFlag = true;
                     Config.getConfig().setHookWhiteAll("false");
-                    System.out.println("[OpenRASP] Cloud Control Registered Successed");
+                    System.out.println("[OpenRASP] RASP agent successfully registered, enabling remote management");
                     CloudManager.init();
                 } else {
-                    System.out.println("[OpenRASP] Cloud Control Registered Failed,Please See Logs For Information.");
+                    System.out.println("[OpenRASP] Failed to register RASP agent, please refer to rasp logs for details");
                     CloudManager.LOGGER.warn(CloudUtils.handleError(ErrorType.REGISTER_ERROR, response));
                 }
                 try {

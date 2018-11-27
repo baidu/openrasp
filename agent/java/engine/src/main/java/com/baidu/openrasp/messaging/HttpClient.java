@@ -62,13 +62,13 @@ public class HttpClient {
             wr.close();
             int responseCode = httpURLConnection.getResponseCode();
             if (responseCode >= 300) {
-                System.out.println("[OpenRASP] " + responseCode + "return while posting attack info to " + requestUrl);
+                System.out.println("[OpenRASP] Unexpected HTTP status code " + responseCode + " while posting attack event logs to " + requestUrl);
             }
         } catch (MalformedURLException me) {
-            System.out.println("[OpenRASP] " + me.getMessage());
+            System.out.println("[OpenRASP] Bad URL exception: " + me.getMessage());
             me.printStackTrace();
         } catch (Exception e) {
-            System.out.println("[OpenRASP] " + e.getMessage());
+            System.out.println("[OpenRASP] Request exception: " + e.getMessage());
             e.printStackTrace();
         } finally {
             if (httpURLConnection != null) {
