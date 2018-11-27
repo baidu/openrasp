@@ -134,16 +134,16 @@ void HeartBeatAgent::do_heartbeat()
 				std::map<std::string, int> white_mask_map;
 				for (auto &white_item : white_map)
 				{
-					int bit_mask = NO_TYPE;
+					int bit_mask = 0;
 					if (std::find(white_item.second.begin(), white_item.second.end(), "all") != white_item.second.end())
 					{
-						bit_mask = ALL_TYPE;
+						bit_mask = (1 << ALL_TYPE - 1);
 					}
 					else
 					{
 						for (auto &type_name : white_item.second)
 						{
-							bit_mask |= check_type_transfer->name_to_type(type_name);
+							bit_mask |= (1 << check_type_transfer->name_to_type(type_name));
 						}
 					}
 					white_mask_map.insert({(white_item.first == "*") ? "" : white_item.first, bit_mask});

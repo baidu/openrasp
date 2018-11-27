@@ -45,6 +45,7 @@ CheckTypeTransfer::CheckTypeTransfer()
   insert(WEBSHELL_EVAL, "webshell_eval", true);
   insert(WEBSHELL_COMMAND, "webshell_command", true);
   insert(WEBSHELL_FILE_PUT_CONTENTS, "webshell_file_put_contents", true);
+  insert(XSS_ECHO, "xss_echo", true);
 }
 
 std::string CheckTypeTransfer::type_to_name(OpenRASPCheckType type) const
@@ -69,7 +70,7 @@ OpenRASPCheckType CheckTypeTransfer::name_to_type(std::string &name) const
   }
   else
   {
-    return NO_TYPE;
+    return INVALID_TYPE;
   }
 }
 

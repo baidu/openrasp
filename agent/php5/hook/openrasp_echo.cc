@@ -31,7 +31,7 @@ int echo_handler(ZEND_OPCODE_HANDLER_ARGS)
         Z_ADDREF_P(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr);
         zval *plugin_message = NULL;
         MAKE_STD_ZVAL(plugin_message);
-        ZVAL_STRING(plugin_message, _("echo GET/POST/COOKIE parameter directly"), 1);
+        ZVAL_STRING(plugin_message, _("XSS activity - echo GET/POST/COOKIE parameter directly"), 1);
         OpenRASPActionType action = openrasp::scm->get_buildin_check_action(XSS_ECHO);
         openrasp_buildin_php_risk_handle(action, XSS_ECHO, 100, attack_params, plugin_message TSRMLS_CC);
     }
