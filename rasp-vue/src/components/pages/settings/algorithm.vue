@@ -8,8 +8,8 @@
         </h3>
       </div>
       <div class="card-body">
-        <p v-if="! current_app.selected_plugin_id && ! current_app.selected_plugin_id.length">你还没有选择插件，请在「插件管理」中进行设置</p>
-        <div class="form-group" v-if="current_app.selected_plugin_id.length">
+        <p v-if="! current_app.selected_plugin_id || ! current_app.selected_plugin_id.length">你还没有选择插件，请在「插件管理」中进行设置</p>
+        <div class="form-group" v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length">
           <div class="form-label">快速设置</div>
           <label class="custom-switch">
             <input type="checkbox" name="custom-switch-checkbox" v-model="data.meta.all_log" class="custom-switch-input" />
@@ -20,7 +20,7 @@
             </span>
           </label>
         </div>
-        <div class="form-group" v-for="row in items" :key="row.name" v-if="current_app.selected_plugin_id.length">
+        <div class="form-group" v-for="row in items" :key="row.name" v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length">
           <div class="form-label">
             {{ attack_type2name(row.name) }}
           </div>
@@ -60,7 +60,7 @@
           </div>
         </div>
       </div>
-      <div class="card-footer text-right" v-if="current_app.selected_plugin_id.length">
+      <div class="card-footer text-right" v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length">
         <div class="d-flex">
           <button type="submit" class="btn btn-primary" @click="saveConfig()">
             保存
