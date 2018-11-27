@@ -655,6 +655,7 @@ int main() {
     hook/openrasp_file.cc \
     hook/openrasp_ssrf.cc \
     hook/sql_connection_enrty.cc \
+    hook/openrasp_echo.cc \
     openrasp_config.cc \
     openrasp_conf_holder.cc \
     openrasp_config_block.cc \

@@ -117,6 +117,7 @@ class RaspLoggerEntry
     bool log(severity_level level_int, zval *params_result TSRMLS_DC);
     char *get_formatted_date_suffix() const;
     zval *get_common_info(TSRMLS_D) const;
+    void set_level(severity_level level);
 };
 
 typedef RaspLoggerEntry rasp_logger_entry;
@@ -131,6 +132,7 @@ zend_bool in_request_process;
 RaspLoggerEntry plugin_logger;
 RaspLoggerEntry alarm_logger;
 RaspLoggerEntry policy_logger;
+RaspLoggerEntry rasp_logger;
 
 ZEND_END_MODULE_GLOBALS(openrasp_log)
 

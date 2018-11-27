@@ -74,6 +74,7 @@ public class Config extends FileScanListener {
         SYSLOG_ENABLE("syslog.enable", "false"),
         SYSLOG_URL("syslog.url", ""),
         SYSLOG_TAG("syslog.tag", "OPENRASP"),
+        SYSLOG_FACILITY("syslog.facility", "1"),
         SYSLOG_RECONNECT_INTERVAL("syslog.reconnect_interval", "300000"),
         LOG_MAXBURST("log.maxburst", "100"),
         HEARTBEAT_INTERVAL("cloud.heartbeatinterval", "180"),
@@ -141,6 +142,7 @@ public class Config extends FileScanListener {
     private boolean hookWhiteAll;
     private int logMaxBurst;
     private int heartbeatInterval;
+    private int syslogFacility;
 
 
     static {
@@ -862,6 +864,27 @@ public class Config extends FileScanListener {
     }
 
     /**
+     * 获取syslog的facility字段信息
+     *
+     * @return syslog的facility字段信息
+     */
+    public synchronized int getSyslogFacility() {
+        return syslogFacility;
+    }
+
+    /**
+     * 设置syslog的facility字段信息，
+     *
+     * @param syslogFacility 待设置syslog的facility字段信息
+     */
+    public synchronized void setSyslogFacility(String syslogFacility) {
+        this.syslogFacility = Integer.parseInt(syslogFacility);
+        if (!(this.syslogFacility >= 0 && this.syslogFacility <= 23)) {
+            this.syslogFacility = 1;
+        }
+    }
+
+    /**
      * 获取syslog的重连时间，
      *
      * @return syslog的重连时间
@@ -1080,6 +1103,8 @@ public class Config extends FileScanListener {
                 setSyslogUrl(value);
             } else if (Item.SYSLOG_TAG.key.equals(key)) {
                 setSyslogTag(value);
+            } else if (Item.SYSLOG_FACILITY.key.equals(key)) {
+                setSyslogFacility(value);
             } else if (Item.SYSLOG_RECONNECT_INTERVAL.key.equals(key)) {
                 setSyslogReconnectInterval(value);
             } else if (Item.HOOK_WHITE_ALL.key.equals(key)) {

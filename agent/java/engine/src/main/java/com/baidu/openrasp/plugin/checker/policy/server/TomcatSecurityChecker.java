@@ -66,7 +66,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                 System.out.println("[OpenRASP] Tomcat security baseline - inspection completed");
             } else {
                 LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                        "can not find tomcat base directory"));
+                        "Unable to locate tomcat base directory: failed to read system property \"catalina.base\""));
             }
         } catch (Exception e) {
             handleException(e);
@@ -78,9 +78,15 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
      */
     private void checkHttpOnlyIsOpen(String tomcatBaseDir, List<EventInfo> infos) {
         File contextFile = new File(tomcatBaseDir + File.separator + "conf/context.xml");
-        if (!(contextFile.exists() && contextFile.canRead())) {
+        if (!contextFile.exists()) {
             LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "can not load file conf/context.xml"));
+                    "Unable to load conf/context.xml: no such file"));
+            return;
+        }
+
+        if (!contextFile.canRead()) {
+            LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+                    "Unable to load conf/context.xml: file is not readable"));
             return;
         }
 

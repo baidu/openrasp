@@ -1,6 +1,6 @@
 <template>
   <div class="custom-file">
-    <input type="file" class="custom-file-input" @change="handleFileChange($event.target.name, $event.target.files)">
+    <input type="file" class="custom-file-input" ref="fileInput" @change="handleFileChange($event.target.name, $event.target.files)">
     <label class="custom-file-label" v-if="file">{{ file.name }}</label>
     <label class="custom-file-label" v-if="! file">选择插件</label>
   </div>
@@ -20,6 +20,7 @@ export default {
   },
   methods: {
     clear: function() {
+      this.$refs.fileInput.value = ''
       this.file = undefined
     },
     handleFileChange(name, files) {

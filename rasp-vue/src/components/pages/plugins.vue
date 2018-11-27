@@ -159,12 +159,12 @@ export default {
 
       var self = this
       var body = {
-        app_id: this.current_app.id,
+        app_id: self.current_app.id,
         plugin_id: row.id
       }
 
-      this.api_request("v1/api/app/plugin/select", body, function(data) {
-        self.loadAppList()
+      self.api_request("v1/api/app/plugin/select", body, function(data) {
+        self.loadAppList(self.current_app.id)
       })
     }
   },

@@ -18,7 +18,7 @@
 #define PHP_OPENRASP_H
 
 // bug fix, isfinite is not defined in gcc 4.8
-#if (__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#if (__GNUC__ == 4 && (__GNUC_MINOR__ == 8 || __GNUC_MINOR__ == 9))
 #include <cmath>
 #define isfinite std::isfinite
 #endif
@@ -29,18 +29,18 @@ extern "C"
 #endif
 #include "php.h"
 
-extern zend_module_entry openrasp_module_entry;
+  extern zend_module_entry openrasp_module_entry;
 #define phpext_openrasp_ptr &openrasp_module_entry
 
 #define PHP_OPENRASP_VERSION "0.1.0" /* Replace with version number for your extension */
 #define OPENRASP_PHP_VERSION ZEND_TOSTR(PHP_MAJOR_VERSION.PHP_MINOR_VERSION.PHP_RELEASE_VERSION)
 
 #ifdef PHP_WIN32
-#	define PHP_OPENRASP_API __declspec(dllexport)
+#define PHP_OPENRASP_API __declspec(dllexport)
 #elif defined(__GNUC__) && __GNUC__ >= 4
-#	define PHP_OPENRASP_API __attribute__ ((visibility("default")))
+#define PHP_OPENRASP_API __attribute__((visibility("default")))
 #else
-#	define PHP_OPENRASP_API
+#define PHP_OPENRASP_API
 #endif
 
 #ifdef ZTS
@@ -80,8 +80,7 @@ extern zend_module_entry openrasp_module_entry;
 #undef isfinite
 #endif
 
-#endif	/* PHP_OPENRASP_H */
-
+#endif /* PHP_OPENRASP_H */
 
 /*
  * Local variables:

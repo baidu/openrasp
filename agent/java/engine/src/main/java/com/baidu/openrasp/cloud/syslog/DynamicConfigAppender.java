@@ -4,6 +4,7 @@ import com.baidu.openrasp.cloud.httpappender.HttpAppender;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.BurstFilter;
 import com.baidu.openrasp.messaging.SyslogTcpAppender;
+import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -22,12 +23,10 @@ public class DynamicConfigAppender {
 
     public static void createSyslogAppender(String address, int port) {
         Logger logger = Logger.getLogger(LOGGER_NAME);
-        if (logger.getAppender(SYSLOG_APPENDER_NAME) != null) {
-            return;
-        }
         RaspCustomLayout layout = new RaspCustomLayout();
         layout.setConversionPattern("%e: %m%n");
-        SyslogTcpAppender appender = new SyslogTcpAppender(address, port, 8, layout);
+        int syslogFacility = Config.getConfig().getSyslogFacility();
+        SyslogTcpAppender appender = new SyslogTcpAppender(address, port, syslogFacility, layout);
         appender.setName(SYSLOG_APPENDER_NAME);
         appender.setThreshold(Level.INFO);
         appender.setFacilityPrinting(true);

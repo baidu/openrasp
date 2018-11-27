@@ -101,13 +101,13 @@ void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckTy
 
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type)
 {
-    return check_type & OPENRASP_HOOK_G(check_type_white_bit_mask);
+    return (1 << check_type) & OPENRASP_HOOK_G(check_type_white_bit_mask);
 }
 
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length)
 {
     std::vector<std::string> callable_blacklist =
-        OPENRASP_CONFIG(callable.blacklist);
+        OPENRASP_CONFIG(webshell_callable.blacklist);
 
     return std::find(callable_blacklist.begin(),
                      callable_blacklist.end(),
@@ -309,12 +309,14 @@ void check(OpenRASPCheckType type, zval *params)
 }
 
 extern int include_or_eval_handler(zend_execute_data *execute_data);
+extern int echo_handler(zend_execute_data *execute_data);
 
 PHP_GINIT_FUNCTION(openrasp_hook)
 {
 #ifdef ZTS
     new (openrasp_hook_globals) _zend_openrasp_hook_globals;
 #endif
+    openrasp_hook_globals->check_type_white_bit_mask = 0;
 }
 
 PHP_GSHUTDOWN_FUNCTION(openrasp_hook)
@@ -334,6 +336,7 @@ PHP_MINIT_FUNCTION(openrasp_hook)
     }
 
     zend_set_user_opcode_handler(ZEND_INCLUDE_OR_EVAL, include_or_eval_handler);
+    zend_set_user_opcode_handler(ZEND_ECHO, echo_handler);
     return SUCCESS;
 }
 

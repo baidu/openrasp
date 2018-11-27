@@ -18,6 +18,7 @@
 #define _OPENRASP_BASE_AGENT_H_
 
 #include "openrasp_v8.h"
+#include "openrasp_log.h"
 #include "openrasp_agent_manager.h"
 #include "backend_request.h"
 #include "backend_response.h"
