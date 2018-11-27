@@ -151,7 +151,7 @@ export default {
         config: this.data
       }
 
-      this.api_request('v1/api/app/algorithm/config', body, function (data) {
+      this.api_request('v1/api/plugin/algorithm/config', body, function (data) {
         alert('保存成功')
       })
     }
