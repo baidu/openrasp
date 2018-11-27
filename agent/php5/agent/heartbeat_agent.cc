@@ -137,7 +137,7 @@ void HeartBeatAgent::do_heartbeat()
 					int bit_mask = 0;
 					if (std::find(white_item.second.begin(), white_item.second.end(), "all") != white_item.second.end())
 					{
-						bit_mask = (1 << ALL_TYPE - 1);
+						bit_mask = (1 << ALL_TYPE) - 1;
 					}
 					else
 					{
