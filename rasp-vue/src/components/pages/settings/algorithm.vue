@@ -8,7 +8,7 @@
         </h3>
       </div>
       <div class="card-body">
-        <p v-if="! current_app.selected_plugin_id.length">你还没有选择插件，请在「插件管理」中进行设置</p>
+        <p v-if="! current_app.selected_plugin_id && ! current_app.selected_plugin_id.length">你还没有选择插件，请在「插件管理」中进行设置</p>
         <div class="form-group" v-if="current_app.selected_plugin_id.length">
           <div class="form-label">快速设置</div>
           <label class="custom-switch">
@@ -150,7 +150,7 @@ export default {
     saveConfig: function () {
       var self = this
       var body = {
-        plugin_id: this.current_app.selected_plugin_id,
+        id: this.current_app.selected_plugin_id,
         config: this.data
       }
 
