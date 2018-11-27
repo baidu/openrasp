@@ -61,11 +61,7 @@ public class ProcessBuilderHook extends AbstractClassHook {
     @Override
     public boolean isClassMatched(String className) {
         if (OSUtil.isLinux() || OSUtil.isMacOS()) {
-            if (getJdkVersion() > 8) {
-                return "java/lang/ProcessImpl".equals(className);
-            } else {
-                return "java/lang/UNIXProcess".equals(className);
-            }
+            return "java/lang/UNIXProcess".equals(className);
         } else if (OSUtil.isWindows()) {
             return "java/lang/ProcessImpl".equals(className);
         }
@@ -80,15 +76,9 @@ public class ProcessBuilderHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         if (ctClass.getName().contains("ProcessImpl")) {
-            if (getJdkVersion()>8){
-                String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
-                        "$1,$2", byte[].class, byte[].class);
-                insertBefore(ctClass, "<init>", null, src);
-            }else {
-                String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
-                        "$1", String[].class);
-                insertBefore(ctClass, "<init>", null, src);
-            }
+            String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
+                    "$1", String[].class);
+            insertBefore(ctClass, "<init>", null, src);
         } else if (ctClass.getName().contains("UNIXProcess")) {
             String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
                     "$1,$2", byte[].class, byte[].class);
@@ -130,7 +120,7 @@ public class ProcessBuilderHook extends AbstractClassHook {
             try {
                 JSContext cx = JSContextFactory.enterAndInitContext();
                 params = cx.newObject(cx.getScope());
-                params.put("command", params, StringUtils.join(command," "));
+                params.put("command", params, StringUtils.join(command, " "));
                 List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
                         Config.getConfig().getPluginMaxStack());
                 Scriptable stackArray = cx.newArray(cx.getScope(), stackInfo.toArray());
@@ -142,10 +132,5 @@ public class ProcessBuilderHook extends AbstractClassHook {
                 HookHandler.doCheckWithoutRequest(CheckParameter.Type.COMMAND, params);
             }
         }
-    }
-
-    private int getJdkVersion() {
-        String version = System.getProperty("java.version");
-        return Integer.parseInt(version.substring(0, version.indexOf(".")));
     }
 }
