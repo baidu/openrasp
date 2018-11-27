@@ -76,7 +76,7 @@ func (o *RaspController) Delete() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get rasp by id", err)
 	}
-	if rasp.Online {
+	if *rasp.Online {
 		o.ServeError(http.StatusBadRequest, "can not delete online rasp")
 	}
 	err = models.RemoveRaspById(rasp.Id)

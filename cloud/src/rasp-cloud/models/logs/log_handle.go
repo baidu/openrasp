@@ -46,14 +46,14 @@ type SearchAttackParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
 	Data *struct {
-		AppId        string   `json:"app_id,omitempty"`
-		StartTime    int64    `json:"start_time"`
-		EndTime      int64    `json:"end_time"`
-		RaspId       string   `json:"rasp_id,omitempty"`
-		HostName     string   `json:"server_hostname,omitempty"`
-		AttackSource string   `json:"attack_source,omitempty"`
-		AttackUrl    string   `json:"url,omitempty"`
-		AttackType   []string `json:"attack_type,omitempty"`
+		AppId        string    `json:"app_id,omitempty"`
+		StartTime    int64     `json:"start_time"`
+		EndTime      int64     `json:"end_time"`
+		RaspId       string    `json:"rasp_id,omitempty"`
+		HostName     string    `json:"server_hostname,omitempty"`
+		AttackSource string    `json:"attack_source,omitempty"`
+		AttackUrl    string    `json:"url,omitempty"`
+		AttackType   *[]string `json:"attack_type,omitempty"`
 	} `json:"data"`
 }
 
@@ -61,12 +61,12 @@ type SearchPolicyParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
 	Data *struct {
-		AppId     string   `json:"app_id,omitempty"`
-		StartTime int64    `json:"start_time"`
-		EndTime   int64    `json:"end_time"`
-		RaspId    string   `json:"rasp_id,omitempty"`
-		HostName  string   `json:"server_hostname,omitempty"`
-		PolicyId  []string `json:"policy_id,omitempty"`
+		AppId     string    `json:"app_id,omitempty"`
+		StartTime int64     `json:"start_time"`
+		EndTime   int64     `json:"end_time"`
+		RaspId    string    `json:"rasp_id,omitempty"`
+		HostName  string    `json:"server_hostname,omitempty"`
+		PolicyId  *[]string `json:"policy_id,omitempty"`
 	} `json:"data"`
 }
 

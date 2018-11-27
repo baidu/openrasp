@@ -165,6 +165,14 @@ func init() {
 
 	beego.GlobalControllerRouter["rasp-cloud/controllers/api:PluginController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:PluginController"],
 		beego.ControllerComments{
+			Method: "RestoreAlgorithmConfig",
+			Router: `/algorithm/restore`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams: param.Make(),
+			Params: nil})
+
+	beego.GlobalControllerRouter["rasp-cloud/controllers/api:PluginController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:PluginController"],
+		beego.ControllerComments{
 			Method: "Delete",
 			Router: `/delete`,
 			AllowHTTPMethods: []string{"post"},
@@ -256,6 +264,14 @@ func init() {
 			Method: "Logout",
 			Router: `/logout`,
 			AllowHTTPMethods: []string{"get","post"},
+			MethodParams: param.Make(),
+			Params: nil})
+
+	beego.GlobalControllerRouter["rasp-cloud/controllers/api:UserController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:UserController"],
+		beego.ControllerComments{
+			Method: "Update",
+			Router: `/update`,
+			AllowHTTPMethods: []string{"post"},
 			MethodParams: param.Make(),
 			Params: nil})
 

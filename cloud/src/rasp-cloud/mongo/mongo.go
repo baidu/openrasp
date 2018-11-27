@@ -122,10 +122,15 @@ func FindOneBySort(collection string, query interface{}, result interface{}, sor
 	return newSession.DB(DbName).C(collection).Find(query).Sort(sortFields...).One(result)
 }
 
-func FindAllBySort(collection string, query interface{}, skip int, limit int, result interface{}, sortFields ...string) error {
+func FindAllBySort(collection string, query interface{}, skip int, limit int, result interface{},
+	sortFields ...string) (count int, err error) {
 	newSession := NewSession()
 	defer newSession.Close()
-	return newSession.DB(DbName).C(collection).Find(query).Sort(sortFields...).Skip(skip).Limit(limit).All(result)
+	count, err = newSession.DB(DbName).C(collection).Find(query).Count()
+	if err != nil {
+		return
+	}
+	return count, newSession.DB(DbName).C(collection).Find(query).Sort(sortFields...).Skip(skip).Limit(limit).All(result)
 }
 
 func UpdateId(collection string, id interface{}, doc interface{}) error {

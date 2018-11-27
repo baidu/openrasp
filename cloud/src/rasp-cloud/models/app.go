@@ -378,7 +378,7 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 				Total:        total - int64(len(alarms)),
 				Alarms:       alarms,
 				AppName:      app.Name,
-				DetailedLink: beego.AppConfig.String("Domain") + "/logs/search?page=1&perpage=15&app_id=" + app.Id,
+				DetailedLink: beego.AppConfig.String("Domain") + "/#/events/" + app.Id,
 			})
 			if err != nil {
 				beego.Error("failed to execute email template: " + err.Error())
@@ -471,7 +471,7 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 			dingText = "OpenRASP test message from app: " + app.Name
 		} else {
 			dingText = "来自 OpenRAS 的报警\n共有 " + strconv.FormatInt(total, 10) + " 条报警信息来自 APP：" + app.Name + "，详细信息：" +
-				beego.AppConfig.String("Domain") + "/logs/search?page=1&perpage=15&app_id=" + app.Id
+				beego.AppConfig.String("Domain") + "/#/events/" + app.Id
 		}
 		if len(dingCong.RecvUser) > 0 {
 			body["touser"] = strings.Join(dingCong.RecvUser, "|")
