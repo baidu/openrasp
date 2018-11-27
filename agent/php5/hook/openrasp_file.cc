@@ -47,7 +47,7 @@ static OpenRASPCheckType flag_to_type(int open_flags, bool file_exist)
     }
     else if ((open_flags | O_CREAT) && (open_flags | O_EXCL) && !file_exist)
     {
-        return NO_TYPE;
+        return INVALID_TYPE;
     }
     else
     {

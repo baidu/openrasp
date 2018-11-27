@@ -23,7 +23,7 @@
 
 namespace openrasp
 {
-#define WRITE_ARRAY_MAX_LENGTH (CHECK_TYPE_NR_ITEMS * 10 * 200 + 128 * 2)
+#define WRITE_ARRAY_MAX_LENGTH (ALL_TYPE * 10 * 200 + 128 * 2)
 
 class SharedConfigBlock
 {
@@ -82,44 +82,18 @@ public:
 
   inline void set_check_type_action(OpenRASPCheckType check_type, OpenRASPActionType action_type)
   {
-    switch (check_type)
+    if (check_type > INVALID_TYPE && check_type < ALL_TYPE)
     {
-    case CALLABLE:
-      callable_action = action_type;
-      break;
-    case WEBSHELL_EVAL:
-      webshell_eval_action = action_type;
-      break;
-    case WEBSHELL_COMMAND:
-      webshell_command_action = action_type;
-      break;
-    case WEBSHELL_FILE_PUT_CONTENTS:
-      webshell_file_put_contents_action = action_type;
-      break;
-    default:
-      break;
+      actions[check_type] = action_type;
     }
   }
 
   inline OpenRASPActionType get_check_type_action(OpenRASPCheckType check_type) const
   {
     OpenRASPActionType action_type = AC_IGNORE;
-    switch (check_type)
+    if (check_type > INVALID_TYPE && check_type < ALL_TYPE)
     {
-    case CALLABLE:
-      action_type = callable_action;
-      break;
-    case WEBSHELL_EVAL:
-      action_type = webshell_eval_action;
-      break;
-    case WEBSHELL_COMMAND:
-      action_type = webshell_command_action;
-      break;
-    case WEBSHELL_FILE_PUT_CONTENTS:
-      action_type = webshell_file_put_contents_action;
-      break;
-    default:
-      break;
+      action_type = actions[check_type];
     }
     return action_type;
   }
@@ -129,10 +103,7 @@ private:
   long log_max_backup = 0;
   long debug_level = 0;
   size_t white_array_size;
-  OpenRASPActionType callable_action;
-  OpenRASPActionType webshell_eval_action;
-  OpenRASPActionType webshell_command_action;
-  OpenRASPActionType webshell_file_put_contents_action;
+  OpenRASPActionType actions[ALL_TYPE] = {AC_LOG};
   openrasp::DoubleArrayTrie::unit_t check_type_white_array[WRITE_ARRAY_MAX_LENGTH + 1];
 };
 

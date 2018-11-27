@@ -40,9 +40,9 @@ SharedConfigManager::~SharedConfigManager()
 
 int SharedConfigManager::get_check_type_white_bit_mask(std::string url)
 {
-    DoubleArrayTrie::result_pair_type result_pair[CHECK_TYPE_NR_ITEMS];
+    DoubleArrayTrie::result_pair_type result_pair[ALL_TYPE];
     DoubleArrayTrie dat;
-    int white_bit_mask = NO_TYPE;
+    int white_bit_mask = 0;
     if (rwlock != nullptr && rwlock->read_try_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
@@ -79,7 +79,6 @@ bool SharedConfigManager::build_check_type_white_array(std::map<std::string, int
         urls.push_back(iter->first);
         values.push_back(iter->second);
     }
-    DoubleArrayTrie::result_pair_type result_pair[CHECK_TYPE_NR_ITEMS];
     DoubleArrayTrie dat;
     dat.build(urls.size(), &urls, 0, &values);
     write_check_type_white_array_to_shm(dat.array(), dat.total_size());
@@ -91,7 +90,7 @@ bool SharedConfigManager::build_check_type_white_array(OpenraspConfig &openrasp_
     bool all_type_white = openrasp_config.Get("hook.white.ALL", false);
     if (all_type_white)
     {
-        url_mask_map[""] = ALL_TYPE;
+        url_mask_map[""] = (1 << ALL_TYPE) - 1;
     }
     else
     {
@@ -102,7 +101,7 @@ bool SharedConfigManager::build_check_type_white_array(OpenraspConfig &openrasp_
             for (auto vector_iter : urls)
             {
                 std::string target_url = (vector_iter == "all") ? "" : vector_iter;
-                int mask = check_type_transfer->name_to_type(name);
+                int mask = (1 << check_type_transfer->name_to_type(name));
                 auto it = url_mask_map.find(target_url);
                 if (it != url_mask_map.end())
                 {
@@ -212,7 +211,7 @@ bool SharedConfigManager::startup()
         rwlock = new ReadWriteLock((pthread_rwlock_t *)shm_block, LOCK_PROCESS);
         char *shm_config_block = shm_block + meta_size;
         shared_config_block = reinterpret_cast<SharedConfigBlock *>(shm_config_block);
-        std::map<std::string, int> all_type_white{{"", ALL_TYPE}};
+        std::map<std::string, int> all_type_white{{"", ~0}};
         build_check_type_white_array(all_type_white);
         build_hostname();
         build_rasp_id();
