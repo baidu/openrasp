@@ -19,6 +19,7 @@ package com.baidu.openrasp.plugin.js.engine;
 import com.baidu.openrasp.EngineBoot;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.rhino.shim.Console;
 import com.fuxi.javaagent.rhino.shim.Shim;
@@ -163,10 +164,15 @@ public class JSContextFactory extends ContextFactory {
                 CloudCacheModel.getInstance().setPluginMD5(md5);
                 CloudCacheModel.getInstance().setConfigTime(deliveryTime);
             } catch (Throwable e) {
-                LOGGER.info(e);
-                String oldPlugin = CloudCacheModel.getInstance().getPlugin();
-                if (oldPlugin != null) {
-                    cx.evaluateString(scope, "(function(){\n" + oldPlugin + "\n})()", PLUGIN_NAME, 0, null);
+                LOGGER.warn("new plugin update failed: ",e);
+                try {
+                    String oldPlugin = CloudCacheModel.getInstance().getPlugin();
+                    if (oldPlugin != null) {
+                        cx.evaluateString(scope, "(function(){\n" + oldPlugin + "\n})()", PLUGIN_NAME, 0, null);
+                    }
+                } catch (Throwable e1) {
+                    LOGGER.warn("old plugin rollback failed , will lose protection",e);
+                    Config.getConfig().setHookWhiteAll("true");
                 }
             } finally {
                 jsContextFactory.pluginTime = System.currentTimeMillis();
