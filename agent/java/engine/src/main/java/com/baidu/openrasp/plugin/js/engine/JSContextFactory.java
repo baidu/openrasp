@@ -163,15 +163,17 @@ public class JSContextFactory extends ContextFactory {
                 CloudCacheModel.getInstance().setPluginVersion(version);
                 CloudCacheModel.getInstance().setPluginMD5(md5);
                 CloudCacheModel.getInstance().setConfigTime(deliveryTime);
+                Config.getConfig().setHookWhiteAll("false");
             } catch (Throwable e) {
-                LOGGER.warn("new plugin update failed: ",e);
+                LOGGER.warn("new plugin update failed , will rollback old plugin: ", e);
                 try {
                     String oldPlugin = CloudCacheModel.getInstance().getPlugin();
                     if (oldPlugin != null) {
                         cx.evaluateString(scope, "(function(){\n" + oldPlugin + "\n})()", PLUGIN_NAME, 0, null);
                     }
+                    Config.getConfig().setHookWhiteAll("false");
                 } catch (Throwable e1) {
-                    LOGGER.warn("old plugin rollback failed , will lose protection",e);
+                    LOGGER.warn("old plugin rollback failed , will lose protection", e);
                     Config.getConfig().setHookWhiteAll("true");
                 }
             } finally {
