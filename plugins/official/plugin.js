@@ -1,4 +1,4 @@
-const version = '2018-1126-1430'
+const version = '2018-1128-1430'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -302,7 +302,7 @@ var algorithmConfig = {
 
     // 命令执行 - java 反射、反序列化，php eval 等方式
     command_reflect: {
-        name:   '算法1 - 通过反射执行命令，比如反序列化利用',
+        name:   '算法1 - 通过反射执行命令，比如反序列化、加密的PHP后门',
         action: 'block'
     },
     // 命令注入 - 命令执行后门，或者命令注入
@@ -358,6 +358,9 @@ if (algorithmConfig.meta.all_log) {
         algorithmConfig[name].action = 'log'
     })
 }
+
+// 配置挂载到全局 RASP 变量
+RASP.algorithmConfig = algorithmConfig
 
 const clean = {
     action:     'ignore',
