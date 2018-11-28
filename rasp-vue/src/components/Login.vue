@@ -43,10 +43,10 @@ export default {
     },
     mounted: function () {
         var self = this
-        this.api_request('v1/user/islogin', {}, function (data) {}, function (errno, descr) {
-            if (errno != 401) {
-                self.setAuthStatus(1)
-            }
+        this.api_request('v1/user/islogin', {}, function (data) {
+            self.setAuthStatus(1)
+        }, function (errno, descr) {
+            
         })
     },
     methods: {
