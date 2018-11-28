@@ -263,6 +263,10 @@ if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
 			if (!empty($ini_symbol_links) && is_array($ini_symbol_links)) {
 				log_tips(INFO, "Detected symbol links of openrasp.ini:", $ini_symbol_links);
 				foreach ($ini_symbol_links as $key => $value) {
+					if (!file_exists(dirname($value))) {
+						log_tips(INFO, "Cuz of parent dir not exist, skip create symbol links: '$value'");
+						continue;
+					}
 					if (file_exists($value) && readlink($value) === $ini_src) {
 						continue;
 					}
