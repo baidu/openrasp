@@ -33,13 +33,14 @@ import (
 )
 
 type Plugin struct {
-	Id              string                 `json:"id" bson:"_id,omitempty"`
-	AppId           string                 `json:"app_id" bson:"app_id"`
-	UploadTime      int64                  `json:"upload_time" bson:"upload_time"`
-	Version         string                 `json:"version" bson:"version"`
-	Md5             string                 `json:"md5" bson:"md5"`
-	Content         string                 `json:"plugin,omitempty" bson:"content"`
-	AlgorithmConfig map[string]interface{} `json:"algorithm_config" bson:"algorithm_config"`
+	Id                     string                 `json:"id" bson:"_id,omitempty"`
+	AppId                  string                 `json:"app_id" bson:"app_id"`
+	UploadTime             int64                  `json:"upload_time" bson:"upload_time"`
+	Version                string                 `json:"version" bson:"version"`
+	Md5                    string                 `json:"md5" bson:"md5"`
+	Content                string                 `json:"plugin,omitempty" bson:"content"`
+	DefaultAlgorithmConfig map[string]interface{} `bson:"default_algorithm_config"`
+	AlgorithmConfig        map[string]interface{} `json:"algorithm_config" bson:"algorithm_config"`
 }
 
 const (
@@ -89,13 +90,14 @@ func AddPlugin(version string, content []byte, appId string,
 	defaultAlgorithmConfig map[string]interface{}) (plugin *Plugin, err error) {
 	newMd5 := fmt.Sprintf("%x", md5.Sum(content))
 	plugin = &Plugin{
-		Id:              generatePluginId(appId),
-		Version:         version,
-		Md5:             newMd5,
-		Content:         string(content),
-		UploadTime:      time.Now().UnixNano() / 1000000,
-		AppId:           appId,
-		AlgorithmConfig: defaultAlgorithmConfig,
+		Id:                     generatePluginId(appId),
+		Version:                version,
+		Md5:                    newMd5,
+		Content:                string(content),
+		UploadTime:             time.Now().UnixNano() / 1000000,
+		AppId:                  appId,
+		DefaultAlgorithmConfig: defaultAlgorithmConfig,
+		AlgorithmConfig:        defaultAlgorithmConfig,
 	}
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -140,12 +142,51 @@ func SetSelectedPlugin(appId string, pluginId string) error {
 	return mongo.UpdateId(appCollectionName, appId, bson.M{"selected_plugin_id": pluginId})
 }
 
+func RestoreDefaultConfiguration(pluginId string) (appId string, err error) {
+	plugin, err := GetPluginById(pluginId, true)
+	if err != nil {
+		return "", err
+	}
+	return handleAlgorithmConfig(plugin, plugin.DefaultAlgorithmConfig)
+}
+
 func UpdateAlgorithmConfig(pluginId string, config map[string]interface{}) (appId string, err error) {
 	plugin, err := GetPluginById(pluginId, true)
 	if err != nil {
 		return "", err
 	}
-	content, err := json.Marshal(config)
+	if err := validAlgorithmConfig(plugin, config); err != nil {
+		return "", err
+	}
+	return handleAlgorithmConfig(plugin, config)
+}
+
+func validAlgorithmConfig(plugin *Plugin, config map[string]interface{}) error {
+	errMsg := "failed to match the new config format to default algorithm config format"
+	for key, defaultValue := range plugin.DefaultAlgorithmConfig {
+		if c, ok := config[key]; !ok || (c == nil && defaultValue != nil) {
+			return errors.New(errMsg + ", " + "can not find the key '" + key + "' in new config")
+		}
+		if defaultValue != nil {
+			if defaultItem, ok := defaultValue.(map[string]interface{}); ok {
+				if item, ok := config[key].(map[string]interface{}); ok {
+					for subKey := range defaultItem {
+						if _, ok := item[subKey]; !ok {
+							return errors.New(errMsg + ", " + "can not find the key '" +
+								key + "." + subKey + "' in new config")
+						}
+					}
+				} else {
+					return errors.New(errMsg + ", " + "the key '" + key + "' must be an object")
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func handleAlgorithmConfig(plugin *Plugin, config map[string]interface{}) (appId string, err error) {
+	content, err := json.MarshalIndent(config, "", "\t")
 	if err != nil {
 		return "", err
 	}

@@ -23,7 +23,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"net/http"
-	"path"
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
 	"rasp-cloud/mongo"
@@ -56,13 +55,6 @@ func (o *PluginController) Upload() {
 	if info.Size == 0 {
 		o.ServeError(http.StatusBadRequest, "the upload file cannot be empty")
 	}
-	fileName := info.Filename
-	if len(fileName) <= 0 || len(fileName) > 50 {
-		o.ServeError(http.StatusBadRequest, "the length of upload uploadFile name must be (0,50]")
-	}
-	if path.Ext(fileName) != ".js" {
-		o.ServeError(http.StatusBadRequest, "the upload file name suffix must be .js")
-	}
 	pluginContent, err := ioutil.ReadAll(uploadFile)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to read upload plugin", err)
@@ -70,7 +62,7 @@ func (o *PluginController) Upload() {
 	pluginReader := bufio.NewReader(bytes.NewReader(pluginContent))
 	firstLine, err := pluginReader.ReadString('\n')
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to read the plugin.js in the zip file", err)
+		o.ServeError(http.StatusBadRequest, "failed to read the plugin file", err)
 	}
 	var newVersion string
 	if newVersion = regexp.MustCompile(`'.+'|".+"`).FindString(firstLine); newVersion == "" {
@@ -147,6 +139,26 @@ func (o *PluginController) Download() {
 	o.Ctx.Output.Header("Content-Type", "text/plain")
 	o.Ctx.Output.Header("Content-Disposition", "attachment;filename=plugin-"+plugin.Version+".js")
 	o.Ctx.Output.Body([]byte(plugin.Content))
+}
+
+// @router /algorithm/restore [post]
+func (o *PluginController) RestoreAlgorithmConfig() {
+	var param map[string]string
+	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
+	}
+	pluginId := param["id"]
+	if pluginId == "" {
+		o.ServeError(http.StatusBadRequest, "plugin_id cannot be empty")
+	}
+	appId, err := models.RestoreDefaultConfiguration(pluginId)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to restore the default algorithm config", err)
+	}
+	models.AddOperation(appId, models.OperationTypeRestorePlugin, o.Ctx.Input.IP(),
+		"restore the default algorithm config for plugin: "+pluginId)
+	o.ServeWithEmptyData()
 }
 
 // @router /delete [post]

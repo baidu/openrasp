@@ -8,8 +8,8 @@
         </h3>
       </div>
       <div class="card-body">
-        <p v-if="! current_app.selected_plugin_id.length">你还没有选择插件，请在「插件管理」中进行设置</p>
-        <div class="form-group" v-if="current_app.selected_plugin_id.length">
+        <p v-if="! current_app.selected_plugin_id || ! current_app.selected_plugin_id.length">你还没有选择插件，请在「插件管理」中进行设置</p>
+        <div class="form-group" v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length">
           <div class="form-label">快速设置</div>
           <label class="custom-switch">
             <input type="checkbox" name="custom-switch-checkbox" v-model="data.meta.all_log" class="custom-switch-input" />
@@ -20,7 +20,7 @@
             </span>
           </label>
         </div>
-        <div class="form-group" v-for="row in items" :key="row.name" v-if="current_app.selected_plugin_id.length">
+        <div class="form-group" v-for="row in items" :key="row.name" v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length">
           <div class="form-label">
             {{ attack_type2name(row.name) }}
           </div>
@@ -60,12 +60,13 @@
           </div>
         </div>
       </div>
-      <div class="card-footer text-right" v-if="current_app.selected_plugin_id.length">
-        <div class="d-flex">
-          <button type="submit" class="btn btn-primary" @click="saveConfig()">
-            保存
-          </button>
-        </div>
+      <div class="card-footer" v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length">
+        <button type="submit" class="btn btn-primary" @click="saveConfig()">
+          保存
+        </button>
+        <button type="submit" class="btn btn-info pull-right" @click="resetConfig()">
+          重置
+        </button>
       </div>
     </div>
     <!-- end algorithm settings -->
@@ -150,12 +151,27 @@ export default {
     saveConfig: function () {
       var self = this
       var body = {
-        plugin_id: this.current_app.selected_plugin_id,
+        id: this.current_app.selected_plugin_id,
         config: this.data
       }
 
-      this.api_request('v1/api/app/algorithm/config', body, function (data) {
+      this.api_request('v1/api/plugin/algorithm/config', body, function (data) {
         alert('保存成功')
+      })
+    },
+    resetConfig: function () {
+      if (! confirm ('还原默认配置？')) {
+        return
+      }
+      
+      var self = this
+      var body = {
+        id: this.current_app.selected_plugin_id
+      }
+
+      self.api_request('v1/api/plugin/algorithm/restore', body, function (data) {
+        alert('恢复成功，点击刷新')
+        self.loadConfig()
       })
     }
   }

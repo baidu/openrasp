@@ -64,6 +64,29 @@ func (o *UserController) IsLogin() {
 	o.ServeWithEmptyData()
 }
 
+// @router /update [post]
+func (o *UserController) Update() {
+	var param struct {
+		OldPwd string `json:"old_password"`
+		NewPwd string `json:"new_password"`
+	}
+	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
+	}
+	if param.OldPwd == "" {
+		o.ServeError(http.StatusBadRequest, "old_password can not be empty")
+	}
+	if param.NewPwd == "" {
+		o.ServeError(http.StatusBadRequest, "new_password can not be empty")
+	}
+	err = models.UpdatePassword(param.OldPwd, param.NewPwd)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, err.Error())
+	}
+	o.ServeWithEmptyData()
+}
+
 // @router /logout [get,post]
 func (o *UserController) Logout() {
 	o.Ctx.SetCookie(models.AuthCookieName, "")

@@ -20,6 +20,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"time"
+	"strconv"
 )
 
 type Rasp struct {
@@ -35,7 +36,7 @@ type Rasp struct {
 	RaspHome          string `json:"rasp_home" bson:"rasp_home,omitempty"`
 	PluginVersion     string `json:"plugin_version" bson:"plugin_version,omitempty"`
 	HeartbeatInterval int64  `json:"heartbeat_interval" bson:"heartbeat_interval,omitempty"`
-	Online            bool   `json:"online" bson:"online,omitempty"`
+	Online            *bool  `json:"online" bson:"online,omitempty"`
 	LastHeartbeatTime int64  `json:"last_heartbeat_time" bson:"last_heartbeat_time,omitempty"`
 }
 
@@ -81,11 +82,38 @@ func RemoveRaspByAppId(appId string) (err error) {
 }
 
 func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp, err error) {
-	count, err = mongo.FindAll(raspCollectionName, selector, &result, perpage*(page-1), perpage)
-
-	if err == nil {
-		for _, rasp := range result {
-			HandleRasp(rasp)
+	if selector.Online != nil {
+		var bsonContent []byte
+		bsonContent, err = bson.Marshal(selector)
+		if err != nil {
+			return
+		}
+		bsonModel := bson.M{}
+		err = bson.Unmarshal(bsonContent, &bsonModel)
+		if err != nil {
+			return
+		}
+		delete(bsonModel, "online")
+		if *selector.Online {
+			bsonModel["$where"] = "this.last_heartbeat_time+this.heartbeat_interval+180 >= " +
+				strconv.FormatInt(time.Now().Unix(), 10)
+		} else {
+			bsonModel["$where"] = "this.last_heartbeat_time+this.heartbeat_interval+180 < " +
+				strconv.FormatInt(time.Now().Unix(), 10)
+		}
+		count, err = mongo.FindAll(raspCollectionName, bsonModel, &result, perpage*(page-1), perpage)
+		if err == nil {
+			for _, rasp := range result {
+				rasp.Online = selector.Online
+			}
+		}
+	} else {
+		count, err = mongo.FindAllBySort(raspCollectionName, selector, perpage*(page-1), perpage,
+			&result, "id")
+		if err == nil {
+			for _, rasp := range result {
+				HandleRasp(rasp)
+			}
 		}
 	}
 	return
@@ -100,12 +128,14 @@ func GetRaspById(id string) (rasp *Rasp, err error) {
 }
 
 func HandleRasp(rasp *Rasp) {
-	heartbeatInterval := rasp.HeartbeatInterval + 120
+	var online bool
+	heartbeatInterval := rasp.HeartbeatInterval + 180
 	if time.Now().Unix()-rasp.LastHeartbeatTime > heartbeatInterval {
-		rasp.Online = false
+		online = false
 	} else {
-		rasp.Online = true
+		online = true
 	}
+	rasp.Online = &online
 }
 
 func RemoveRaspById(id string) (err error) {
