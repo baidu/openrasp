@@ -60,11 +60,11 @@
           </div>
         </div>
       </div>
-      <div class="card-footer text-right" v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length">
+      <div class="card-footer" v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length">
         <button type="submit" class="btn btn-primary" @click="saveConfig()">
           保存
         </button>
-        <button type="submit" class="btn btn-info" @click="resetConfig()">
+        <button type="submit" class="btn btn-info pull-right" @click="resetConfig()">
           重置
         </button>
       </div>
