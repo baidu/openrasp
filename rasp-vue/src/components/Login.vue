@@ -43,7 +43,7 @@ export default {
     },
     mounted: function () {
         var self = this
-        this.api_request('v1/api/app/get', {}, function (data) {}, function (errno, descr) {
+        this.api_request('v1/user/islogin', {}, function (data) {}, function (errno, descr) {
             if (errno != 401) {
                 self.setAuthStatus(1)
             }

@@ -151,8 +151,19 @@ export default {
         config: this.data
       }
 
-      this.api_request('v1/api/app/algorithm/config', body, function (data) {
+      self.api_request('v1/api/app/algorithm/config', body, function (data) {
         alert('保存成功')
+      })
+    },
+    resetConfig: function () {
+      var self = this
+      var body = {
+        id: this.current_app.selected_plugin_id
+      }
+
+      self.api_request('v1/api/plugin/algorithm/restore', body, function (data) {
+        alert('恢复成功，点击刷新')
+        self.loadConfig()
       })
     }
   }
