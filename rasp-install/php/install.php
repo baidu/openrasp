@@ -161,7 +161,7 @@ if (array_key_exists("app-id", $options)) {
 	}
 }
 
-if (array_key_exists("app-secret", $options) && ) {
+if (array_key_exists("app-secret", $options)) {
 	if (!empty($options["app-secret"])) {
 		if (preg_match("/^[0-9a-zA-Z_-]{43,45}/", $options["app-secret"]) != 0) {
 			$app_secret = $options["app-secret"];

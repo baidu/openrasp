@@ -17,6 +17,7 @@
 package com.baidu.openrasp.messaging;
 
 import com.baidu.openrasp.EngineBoot;
+import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.exception.ConfigLoadException;
@@ -145,12 +146,14 @@ public class LogConfig {
             try {
                 URL url = new URL(syslogUrl);
                 String syslogAddress = url.getHost();
-                int syslogPort = OSUtil.getPort(url);
+                int syslogPort = url.getPort();
                 if (syslogAddress != null && !syslogAddress.trim().isEmpty() && syslogPort >= 0 && syslogPort <= 65535) {
                     DynamicConfigAppender.createSyslogAppender(syslogAddress, syslogPort);
+                } else {
+                    CloudManager.LOGGER.warn("syslog url: " + syslogUrl + " is error");
                 }
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                CloudManager.LOGGER.warn("syslog url: " + syslogUrl + " parsed error", e);
             }
 
         } else {

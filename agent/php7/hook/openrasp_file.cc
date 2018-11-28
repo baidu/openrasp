@@ -45,7 +45,7 @@ static OpenRASPCheckType flag_to_type(const char *mode, bool is_file_exist)
     int open_flags = 0;
     if (FAILURE == php_stream_parse_fopen_modes(mode, &open_flags))
     {
-        return NO_TYPE;
+        return INVALID_TYPE;
     }
     if (open_flags == O_RDONLY)
     {
@@ -53,7 +53,7 @@ static OpenRASPCheckType flag_to_type(const char *mode, bool is_file_exist)
     }
     else if ((open_flags | O_CREAT) && (open_flags | O_EXCL) && !is_file_exist)
     {
-        return NO_TYPE;
+        return INVALID_TYPE;
     }
     else
     {

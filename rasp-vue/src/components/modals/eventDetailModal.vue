@@ -31,7 +31,7 @@
               <div class="h6">
                 报警消息
               </div>
-              <p>
+              <p style="word-break: break-all; ">
                 [{{ attack_type2name(data.attack_type) }}] {{ data.plugin_message }}
               </p>
               <attack_params ref="attack_params"></attack_params>
@@ -63,7 +63,9 @@
               <div class="h6">
                 请求 UA
               </div>
-              <p>{{ data.user_agent }}</p>
+              <p style="word-break: break-all; ">
+                {{ data.user_agent }}
+              </p>
               <div class="h6" v-if="data.body">
                 请求 BODY
               </div>
@@ -83,7 +85,7 @@
               <div class="h6">
                 应用版本
               </div>
-              <p>{{ data.server_type | capitalize }}/{{ data.server_version }}</p>
+              <p style="word-break: break-all; ">{{ data.server_type | capitalize }}/{{ data.server_version }}</p>
             </div>
             <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
               暂无

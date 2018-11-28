@@ -11,6 +11,12 @@
   </div>
 </template>
 
+<style lang="scss">
+  @import './assets/css/dashboard.css';
+  @import './assets/css/daterangepicker.css';
+  @import './assets/css/custom.css';
+</style>
+
 <script>
 import Navigation from "@/components/Navigation"
 import Footer from "@/components/Footer"
