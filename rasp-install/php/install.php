@@ -56,6 +56,24 @@ function check_dep_exts_installed($dep_exts)
 	}
 }
 
+function update_file_if_need($src, $dest, $description = "")
+{
+	if (file_exists($dest)) {
+		if (md5_file($src) === md5_file($dest)) {
+			log_tips(INFO, 'Skipping update of ' . $description . ' since no changes is detected');
+			return;
+		}
+		if (!rename($dest, $dest . '.bak')) {
+			log_tips(ERROR, $dest . ' backup failure!');
+		}
+	}
+	if (!copy($src, $dest)) {
+		log_tips(ERROR, 'Unable to update the ' . $description);
+	} else {
+		log_tips(INFO, 'Successfully update ' . $description . ': ' . $dest);
+	}
+}
+
 function get_ini_content($lib_filename, $root_dir, $remote_enable, $backend_url, $app_id, $app_secret)
 {
 $ini_content = <<<OPENRASP
@@ -96,15 +114,17 @@ Synopsis:
 Options:
     -d <openrasp_root>  	Specify OpenRASP installation folder (required)
 
-	--backend-url <url>     Value of backend_url (required for remote management)
+    --backend-url <url>     Value of backend_url (required for remote management)
 
-	--app-id <id>       	Value of app_id (required for remote management)
+    --app-id <id>       	Value of app_id (required for remote management)
 
-	--app-secret <secret>   Value of app_secret (required for remote management)
+    --app-secret <secret>   Value of app_secret (required for remote management)
 
     --ignore-ini        	Do not update PHP ini entries
 
     --ignore-plugin     	Do not update the official javascript plugin
+
+    --ignore-conf     	    Do not update the openrasp config in root_dir/conf directory
 
     -h, --help              Show help messages
 
@@ -112,7 +132,7 @@ HELP;
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 参数解析 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 $shortopts = "d:h";
-$longopts = array("ignore-ini", "ignore-plugin", "app-id:", "app-secret:", "backend-url:", "help");
+$longopts = array("ignore-ini", "ignore-plugin", "ignore-conf", "app-id:", "app-secret:", "backend-url:", "help");
 $options = getopt($shortopts, $longopts);
 if (array_key_exists("h", $options) || array_key_exists("help", $options)) {
 	show_help($install_help_msg);
@@ -351,28 +371,26 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 						) {
 							continue;
 						}
-						if (file_exists($sub_item . DIRECTORY_SEPARATOR . $plugin)) {
-							if (md5_file($plugin_source_dir . DIRECTORY_SEPARATOR . $plugin) === md5_file($sub_item . DIRECTORY_SEPARATOR . $plugin)) {
-								log_tips(INFO, 'Skipping update of ' . $plugin . ' since no changes is detected');
-								continue;
-							}
-							if (!rename($sub_item . DIRECTORY_SEPARATOR . $plugin, $sub_item . DIRECTORY_SEPARATOR . $plugin . '.bak')) {
-								log_tips(ERROR, $sub_item . DIRECTORY_SEPARATOR . $plugin . ' backup failure!');
-							}
-						}
-						if (!copy($plugin_source_dir . DIRECTORY_SEPARATOR . $plugin, $sub_item . DIRECTORY_SEPARATOR . $plugin)) {
-							log_tips(ERROR, 'Unable to update the official javascript plugin');
-						} else {
-							log_tips(INFO, 'Successfully update official plugin: ' . $plugin);
-						}
+						update_file_if_need($plugin_source_dir . DIRECTORY_SEPARATOR . $plugin, 
+						$sub_item . DIRECTORY_SEPARATOR . $plugin,  "official plugin");
 					}
-
 				}
 			}
 		} else if ($key === "locale") {
 			if (file_exists(__DIR__ . DIRECTORY_SEPARATOR . $key)) {
 				clear_dir($sub_item);
 				recurse_copy(__DIR__ . DIRECTORY_SEPARATOR . $key, $sub_item);
+			}
+		} else if ($key === "conf") {
+			if (array_key_exists("ignore-conf", $options)) {
+				major_tips("Skipped update of openrasp config since '--ignore-conf' is set");
+			} else {
+				major_tips('Updating the openrasp config');
+				$conf_dir = __DIR__ . DIRECTORY_SEPARATOR . $key;
+				if (file_exists($conf_dir)) {
+					update_file_if_need($conf_dir . DIRECTORY_SEPARATOR . "openrasp.toml", 
+					$sub_item . DIRECTORY_SEPARATOR . "openrasp.toml",  "openrasp config");
+				}
 			}
 		}
 	} else {

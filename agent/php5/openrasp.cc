@@ -356,7 +356,7 @@ static std::string get_config_abs_path(OpenraspConfig::FromType type)
     switch (type)
     {
     case OpenraspConfig::FromType::kIni:
-        filename = "openrasp.ini";
+        filename = "openrasp.toml";
         break;
     case OpenraspConfig::FromType::kJson:
         filename = "cloud-config.json";

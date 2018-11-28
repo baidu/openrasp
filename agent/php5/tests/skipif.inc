@@ -11,7 +11,7 @@ EOF;
 if (!file_put_contents($js_file, $plugin_header)) die("Skipped: can not create " . $js_file);
 if (isset($plugin)) file_put_contents($js_file, $plugin, FILE_APPEND);
 
-$conf_file = ini_get("openrasp.root_dir") . "/conf/openrasp.ini";
+$conf_file = ini_get("openrasp.root_dir") . "/conf/openrasp.toml";
 $conf_header = <<<CONFHEADER
 # config for test
 
