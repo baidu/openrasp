@@ -117,7 +117,7 @@ EOF
 			continue
 		fi
 
-		# 检查版本		
+		# 检查版本
 		tomcat_major=${tomcat_version%%.*}
 		if [[ $tomcat_major -lt 6 ]] || [[ $tomcat_major -gt 9 ]]; then
 			echo

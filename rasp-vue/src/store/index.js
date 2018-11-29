@@ -1,7 +1,6 @@
 import Vue from "vue"
 import Vuex from "vuex"
 import { api_request } from "../util"
-import router from '../router'
 
 Vue.use(Vuex)
 
