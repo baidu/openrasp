@@ -211,32 +211,6 @@ func (o *AppController) UpdateAppWhiteListConfig() {
 	o.Serve(app)
 }
 
-// @router /algorithm/config [post]
-func (o *AppController) UpdateAppAlgorithmConfig() {
-	var param struct {
-		PluginId string                 `json:"plugin_id"`
-		Config   map[string]interface{} `json:"config"`
-	}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
-	}
-	if param.PluginId == "" {
-		o.ServeError(http.StatusBadRequest, "plugin_id can not be empty")
-	}
-	if param.Config == nil {
-		o.ServeError(http.StatusBadRequest, "config can not be empty")
-	}
-	o.validateAppConfig(param.Config)
-	appId, err := models.UpdateAlgorithmConfig(param.PluginId, param.Config)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to update algorithm config", err)
-	}
-	models.AddOperation(appId, models.OperationTypeUpdateAlgorithmConfig,
-		o.Ctx.Input.IP(), "updated the whitelist configuration")
-	o.ServeWithEmptyData()
-}
-
 // @router / [post]
 func (o *AppController) Post() {
 	var app = &models.App{}
@@ -372,16 +346,13 @@ func (o *AppController) validEmailConf(conf *models.EmailAlarmConf) {
 		o.ServeError(http.StatusBadRequest, "the length of email subject cannot be greater than 256")
 	}
 	if conf.UserName == "" {
-		o.ServeError(http.StatusBadRequest, "the email from_addr cannot be empty")
+		o.ServeError(http.StatusBadRequest, "the email username cannot be empty")
 	}
 	if len(conf.UserName) > 256 {
-		o.ServeError(http.StatusBadRequest, "the length of email from_addr cannot be greater than 256")
+		o.ServeError(http.StatusBadRequest, "the length of email username cannot be greater than 256")
 	}
 	if conf.UserName == "" {
-		o.ServeError(http.StatusBadRequest, "the email from_addr cannot be empty")
-	}
-	if result := valid.Email(conf.UserName, "email"); !result.Ok {
-		o.ServeError(http.StatusBadRequest, "the email from_addr format error: "+result.Error.Message)
+		o.ServeError(http.StatusBadRequest, "the email username cannot be empty")
 	}
 	if conf.Password == "" {
 		o.ServeError(http.StatusBadRequest, "the email password cannot be empty")

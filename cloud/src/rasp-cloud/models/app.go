@@ -100,7 +100,7 @@ const (
 )
 
 var (
-	lastAlarmTime        = time.Now()
+	lastAlarmTime        = time.Now().UnixNano() / 1000000
 	DefaultGeneralConfig = map[string]interface{}{
 		"clientip.header":    "ClientIP",
 		"block.status_code":  302,
@@ -166,10 +166,10 @@ func handleAttackAlarm() {
 		beego.Error("failed to get apps for the alarm: " + err.Error())
 		return
 	}
-	now := time.Now()
+	now := time.Now().UnixNano() / 1000000
 	for _, app := range apps {
-		total, result, err := logs.SearchLogs(lastAlarmTime.Unix()*1000, now.Unix()*1000, nil, "event_time",
-			1, 3, false, logs.AliasAttackIndexName+"-"+app.Id)
+		total, result, err := logs.SearchLogs(lastAlarmTime, now, nil, "event_time",
+			1, 10, false, logs.AliasAttackIndexName+"-"+app.Id)
 		if err != nil {
 			beego.Error("failed to get alarm from es: " + err.Error())
 			continue
@@ -178,7 +178,7 @@ func handleAttackAlarm() {
 			PushAttackAlarm(&app, total, result, false)
 		}
 	}
-	lastAlarmTime = now
+	lastAlarmTime = now + 1
 }
 
 func handleRaspExpiredAlarm() {
