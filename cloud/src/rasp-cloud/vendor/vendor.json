@@ -3,214 +3,82 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "E5J492QM9JS3izvpXS+QM+F7C0c=",
+			"checksumSHA1": "+kmN6E/RGacvrndv+1Satyk/Jm0=",
 			"path": "github.com/astaxie/beego",
-			"revision": ""
+			"revision": "b0e2bbce2a45fcfda684b47968387fa0866ada06",
+			"revisionTime": "2018-11-19T06:40:43Z"
 		},
 		{
-			"checksumSHA1": "m+xzAT4nURcPGkMePX2zklJK/lI=",
+			"checksumSHA1": "JvDySyr+rfWQ9sp+ciwxxWywea0=",
 			"path": "github.com/astaxie/beego/config",
-			"revision": ""
+			"revision": "b0e2bbce2a45fcfda684b47968387fa0866ada06",
+			"revisionTime": "2018-11-19T06:40:43Z"
 		},
 		{
-			"checksumSHA1": "tDeHBdiXEzOuHzb/3Zp2ilRZjNU=",
+			"checksumSHA1": "RxjyYqHZGr4NrlXRKQejteNlxk0=",
 			"path": "github.com/astaxie/beego/context",
-			"revision": ""
+			"revision": "b0e2bbce2a45fcfda684b47968387fa0866ada06",
+			"revisionTime": "2018-11-19T06:40:43Z"
 		},
 		{
 			"checksumSHA1": "iHY0XMPlj5EfCxMN4NEmvBgdhDM=",
 			"path": "github.com/astaxie/beego/context/param",
-			"revision": ""
+			"revision": "b0e2bbce2a45fcfda684b47968387fa0866ada06",
+			"revisionTime": "2018-11-19T06:40:43Z"
 		},
 		{
 			"checksumSHA1": "N5kHk4qbc10N2Lp9ltA2G76qNxs=",
 			"path": "github.com/astaxie/beego/grace",
-			"revision": ""
+			"revision": "b0e2bbce2a45fcfda684b47968387fa0866ada06",
+			"revisionTime": "2018-11-19T06:40:43Z"
 		},
 		{
-			"checksumSHA1": "dWgEPq8x7MKYs5/W94TLusoh1b8=",
-			"path": "github.com/astaxie/beego/httplib",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "qUGcbdW9eTbpihdEeQEToFhhDzY=",
+			"checksumSHA1": "OksAzF6VvpfTlte99lpVNV+iSnY=",
 			"path": "github.com/astaxie/beego/logs",
-			"revision": ""
+			"revision": "b0e2bbce2a45fcfda684b47968387fa0866ada06",
+			"revisionTime": "2018-11-19T06:40:43Z"
 		},
 		{
-			"checksumSHA1": "EDaMYv6yHO6Xu9J8loeGIUOvGoE=",
+			"checksumSHA1": "M/+EB+ZcyzY8JovWILhJ8gFCCOQ=",
 			"path": "github.com/astaxie/beego/session",
-			"revision": ""
+			"revision": "b0e2bbce2a45fcfda684b47968387fa0866ada06",
+			"revisionTime": "2018-11-19T06:40:43Z"
 		},
 		{
-			"checksumSHA1": "EOoY9qbCsWnu5FlZZnMKUKkLcMk=",
+			"checksumSHA1": "UGYM5ci8rhhkur7NqejqItZRHBY=",
 			"path": "github.com/astaxie/beego/toolbox",
-			"revision": ""
+			"revision": "b0e2bbce2a45fcfda684b47968387fa0866ada06",
+			"revisionTime": "2018-11-19T06:40:43Z"
 		},
 		{
 			"checksumSHA1": "W7HBzu7HlF18vCfNPgax7xvHXB0=",
 			"path": "github.com/astaxie/beego/utils",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "+mWpTLP462ZpvSOfcRcnPdBlaxM=",
-			"path": "github.com/astaxie/beego/validation",
-			"revision": ""
+			"revision": "b0e2bbce2a45fcfda684b47968387fa0866ada06",
+			"revisionTime": "2018-11-19T06:40:43Z"
 		},
 		{
 			"checksumSHA1": "Ckkk75h7Xhrc3b+QJ3oqbIrGsaY=",
 			"path": "github.com/mailru/easyjson",
-			"revision": ""
+			"revision": "60711f1a8329503b04e1c88535f419d0bb440bff",
+			"revisionTime": "2018-08-23T13:54:43Z"
 		},
 		{
 			"checksumSHA1": "T8soMJArSZrYnhmdpAnq1bVxQ6Q=",
 			"path": "github.com/mailru/easyjson/buffer",
-			"revision": ""
+			"revision": "60711f1a8329503b04e1c88535f419d0bb440bff",
+			"revisionTime": "2018-08-23T13:54:43Z"
 		},
 		{
-			"checksumSHA1": "QeTIchKCNtGC+EiHvhfWxTJG04U=",
+			"checksumSHA1": "zErZOOMVWCO/Z1WGWBAG9VdccQc=",
 			"path": "github.com/mailru/easyjson/jlexer",
-			"revision": ""
+			"revision": "60711f1a8329503b04e1c88535f419d0bb440bff",
+			"revisionTime": "2018-08-23T13:54:43Z"
 		},
 		{
 			"checksumSHA1": "4BAeeJ7JywEQyR6GqRrxfSfN2/Q=",
 			"path": "github.com/mailru/easyjson/jwriter",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "Rdg7WdPBQEL+gsnwsWZEFG9BGj8=",
-			"path": "github.com/olivere/elastic",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "r7eEvesetOsRfZLJ+Z4kvTv3xGI=",
-			"path": "github.com/olivere/elastic/config",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "AmcqvKDAUGvVsrf8NDCQ/B8cMj4=",
-			"path": "github.com/olivere/elastic/uritemplates",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "GSadhwjiMi8zISYoyC1arYREbKE=",
-			"path": "github.com/oschwald/geoip2-golang",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "a1WxG0wMDGFnjojQghwu1i1SDhk=",
-			"path": "github.com/oschwald/maxminddb-golang",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "ljd3FhYRJ91cLZz3wsH9BQQ2JbA=",
-			"path": "github.com/pkg/errors",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "WdorbyEJiNbjIOiQzM4TLb/XA7Q=",
-			"path": "github.com/robertkrimen/otto",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "q1HKpLIWi3tTT5W5LqMlwPcGmyQ=",
-			"path": "github.com/robertkrimen/otto/ast",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "L0KsB2EzTlPgv0iae3q3SukNW7U=",
-			"path": "github.com/robertkrimen/otto/dbg",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "euDLJKhw4doeTSxjEoezjxYXLzs=",
-			"path": "github.com/robertkrimen/otto/file",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "w5wu2avr5PWCJy5dlEhlY3rwb+w=",
-			"path": "github.com/robertkrimen/otto/parser",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "7J/7NaYRqKhBvZ+dTIutsEoEgFw=",
-			"path": "github.com/robertkrimen/otto/registry",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "/jMXYuXycBpTqWhRyJ2xsqvHvQI=",
-			"path": "github.com/robertkrimen/otto/token",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "ETfjuu5F8ejF27iatik4uPga2VQ=",
-			"path": "golang.org/x/crypto/acme",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "Yjacru/DE9yXphaefh67NrjNgAk=",
-			"path": "golang.org/x/crypto/acme/autocert",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "oCH3J96RWvO8W4xjix47PModpio=",
-			"path": "golang.org/x/crypto/bcrypt",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "oVPHWesOmZ02vLq2fglGvf+AMgk=",
-			"path": "golang.org/x/crypto/blowfish",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "8yhiJ/mIoy6gHFbJGmj8TR81tvo=",
-			"path": "golang.org/x/sys/unix",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "m5QCvoZ2KaoLTG9VWjYNonM08b8=",
-			"path": "golang.org/x/sys/windows",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "bS5Kp6YjeXz4nvvS55CqIBP+HzM=",
-			"path": "gopkg.in/mgo.v2",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "/xRHTpN8WOK4nmZjJ1f96ER1b/o=",
-			"path": "gopkg.in/mgo.v2/bson",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "XQsrqoNT1U0KzLxOFcAZVvqhLfk=",
-			"path": "gopkg.in/mgo.v2/internal/json",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "LEvMCnprte47qdAxWvQ/zRxVF1U=",
-			"path": "gopkg.in/mgo.v2/internal/sasl",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "+1WDRPaOphSCmRMxVPIPBV4aubc=",
-			"path": "gopkg.in/mgo.v2/internal/scram",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "4BwmmgQUhWtizsR2soXND0nqZ1I=",
-			"path": "gopkg.in/sourcemap.v1",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "GDXPA04g0Dfwu2w++JiOKkYuZEc=",
-			"path": "gopkg.in/sourcemap.v1/base64vlq",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "ZSWoOPUNRr5+3dhkLK3C4cZAQPk=",
-			"path": "gopkg.in/yaml.v2",
-			"revision": ""
+			"revision": "60711f1a8329503b04e1c88535f419d0bb440bff",
+			"revisionTime": "2018-08-23T13:54:43Z"
 		}
 	],
 	"rootPath": "rasp-cloud"
