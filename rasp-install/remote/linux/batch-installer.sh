@@ -58,11 +58,13 @@ EOF
 		tomcat_user=$(getent passwd $tomcat_uid | awk -F: '{print $1}')
 		tomcat_url=
 		javaagent_list=$(strings /proc/$pid/cmdline | grep -- -javaagent:)
+		has_openrasp=$(strings /proc/$pid/cmdline | grep -- '-javaagent:.*/rasp/rasp.jar')
+		is_uninstall=$(echo $job | grep -- -uninstall)
 
 		# 枚举监听的端口，定位任意一个可用的 HTTP/HTTPS URL
 		for url in $tomcat_ports
 		do
-			status=$(curl -k -s -o /dev/null -w "%{http_code}" http://$url)
+			status=$(curl --max-time 10 -k -s -o /dev/null -w "%{http_code}" http://$url)
 			if [[ $status != "000" ]]; then
 				tomcat_url=$url
 				break
@@ -90,6 +92,7 @@ Tomcat Version:  $tomcat_version
 Tomcat Ports:    $tomcat_ports
 Tomcat URL:      $tomcat_url
 JavaAgent List:  $javaagent_list
+Has OpenRASP:    $has_openrasp
 EOF
 
 		# 如果不是root，检查 UID 是否等于进程 UID
@@ -117,7 +120,7 @@ EOF
 			continue
 		fi
 
-		# 检查版本		
+		# 检查版本
 		tomcat_major=${tomcat_version%%.*}
 		if [[ $tomcat_major -lt 6 ]] || [[ $tomcat_major -gt 9 ]]; then
 			echo
@@ -148,6 +151,13 @@ EOF
 		if [[ -z "$tomcat_url" ]]; then
 			echo
 			echo Unable to determine if tomcat is alive .. no working URL available
+			continue
+		fi
+
+		# 如果是卸载，检查是不是安装了 openrasp
+		if [[ ! -z $is_uninstall ]] && [[ -z $has_openrasp ]]; then
+			echo
+			echo OpenRASP is not installed for this Tomcat server, skipped
 			continue
 		fi
 

@@ -54,7 +54,7 @@
 									{{ row.hostname }}
 								</td>
 								<td nowrap>
-									10.58.230.19
+									{{ row.register_ip }}
 								</td>
 								<td nowrap>
 									{{ row.language}}/{{ row.version }} <br>
