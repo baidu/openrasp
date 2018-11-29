@@ -24,6 +24,7 @@
 #include <vector>
 #include <chrono>
 #include <string>
+#include <map>
 
 namespace openrasp
 {
@@ -75,6 +76,7 @@ public:
   std::string source;
 };
 
+class Isolate;
 class Snapshot : public v8::StartupData
 {
 public:
@@ -83,7 +85,8 @@ public:
   Snapshot(const char *data = nullptr, size_t raw_size = 0, uint64_t timestamp = 0);
   Snapshot(const v8::StartupData &blob) : Snapshot(blob.data, blob.raw_size){};
   Snapshot(const std::string &path, uint64_t timestamp = 0);
-  Snapshot(const std::string &config, const std::vector<PluginFile> &plugin_list);
+  Snapshot(const std::string &config, const std::vector<PluginFile> &plugin_list,
+           const std::function<void(Isolate *isolate)> action_extractor = {});
   ~Snapshot();
   bool Save(const std::string &path) const; // check errno when return value is false
   bool IsOk() const { return data && raw_size; };
@@ -123,6 +126,7 @@ public:
   bool Check(v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout = 100);
   static v8::MaybeLocal<v8::Value> ExecScript(Isolate *isolate, std::string source, std::string filename, int line_offset = 0);
   v8::MaybeLocal<v8::Value> ExecScript(std::string source, std::string filename, int line_offset = 0);
+  static void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string> &buildin_action_map);
 };
 
 v8::Local<v8::ObjectTemplate> NewRequestContextTemplate(v8::Isolate *isolate);

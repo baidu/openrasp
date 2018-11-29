@@ -28,6 +28,7 @@ extern "C"
 #include <fstream>
 #include "openrasp_v8.h"
 #include "openrasp_ini.h"
+#include "agent/shared_config_manager.h"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"
 #endif
@@ -80,7 +81,11 @@ PHP_MINIT_FUNCTION(openrasp_v8)
     if (!process_globals.snapshot_blob)
     {
         Platform::Initialize();
-        Snapshot *snapshot = new Snapshot(process_globals.plugin_config, process_globals.plugin_src_list);
+        std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
+        Snapshot *snapshot = new Snapshot(process_globals.plugin_config, process_globals.plugin_src_list,
+                                          [&buildin_action_map](Isolate *isolate) {
+                                              Isolate::extract_buildin_action(isolate, buildin_action_map);
+                                          });
         Platform::Shutdown();
         if (!snapshot->IsOk())
         {
@@ -90,6 +95,12 @@ PHP_MINIT_FUNCTION(openrasp_v8)
         else
         {
             process_globals.snapshot_blob = snapshot;
+            std::map<OpenRASPCheckType, OpenRASPActionType> type_action_map;
+            for (auto iter = buildin_action_map.begin(); iter != buildin_action_map.end(); iter++)
+            {
+                type_action_map.insert({check_type_transfer->name_to_type(iter->first), string_to_action(iter->second)});
+            }
+            openrasp::scm->set_buildin_check_action(type_action_map);
         }
     }
     return SUCCESS;

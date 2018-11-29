@@ -2,9 +2,14 @@
 hook eval (webshell) action log
 --SKIPIF--
 <?php
-$conf = <<<CONF
-webshell_eval.action="log"
-CONF;
+$plugin = <<<EOF
+RASP.algorithmConfig = {
+    webshell_eval: {
+        name:   '算法1 - 拦截简单的 PHP 中国菜刀后门',
+        action: 'log'
+    }
+}
+EOF;
 include(__DIR__.'/../skipif.inc');
 ?>
 --INI--
