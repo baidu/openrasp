@@ -25,6 +25,7 @@
 #include <chrono>
 #include <string>
 #include <map>
+#include <functional>
 
 namespace openrasp
 {
