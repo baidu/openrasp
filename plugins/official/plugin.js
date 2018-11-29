@@ -692,7 +692,11 @@ function _(message, args)
 if (RASP.get_jsengine() !== 'v8') {
     // 在java语言下面，为了提高性能，SQLi/SSRF检测逻辑改为java实现
     // 所以，我们需要把一部分配置传递给java
-    RASP.config_set('algorithm.config', JSON.stringify(algorithmConfig))
+
+    // 1.0.0 RC2 会删除 RASP.config_set，统一在全局的 RASP.algorithmConfig 获取配置
+    if (RASP.config_set) {
+        RASP.config_set('algorithm.config', JSON.stringify(algorithmConfig))
+    }
 } else {
     // 对于PHP + V8，性能还不错，我们保留JS检测逻辑
     plugin.register('sql', function (params, context) {
