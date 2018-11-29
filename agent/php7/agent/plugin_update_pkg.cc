@@ -15,6 +15,7 @@
  */
 
 #include "plugin_update_pkg.h"
+#include "agent/shared_config_manager.h"
 
 namespace openrasp
 {
@@ -31,7 +32,11 @@ PluginUpdatePackage::PluginUpdatePackage(std::string content, std::string versio
 bool PluginUpdatePackage::build_snapshot()
 {
   Platform::Initialize();
-  Snapshot snapshot("", {active_plugin});
+  std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
+  Snapshot snapshot("", {active_plugin},
+                    [&buildin_action_map](Isolate *isolate) {
+                      Isolate::extract_buildin_action(isolate, buildin_action_map);
+                    });
   Platform::Shutdown();
   if (!snapshot.IsOk())
   {
@@ -50,6 +55,12 @@ bool PluginUpdatePackage::build_snapshot()
   {
     openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write snapshot to %s."), snapshot_abs_path.c_str());
   }
+  std::map<OpenRASPCheckType, OpenRASPActionType> type_action_map;
+  for (auto iter = buildin_action_map.begin(); iter != buildin_action_map.end(); iter++)
+  {
+    type_action_map.insert({check_type_transfer->name_to_type(iter->first), string_to_action(iter->second)});
+  }
+  openrasp::scm->set_buildin_check_action(type_action_map);
   return build_successful;
 }
 

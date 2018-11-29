@@ -61,7 +61,7 @@ std::string CheckTypeTransfer::type_to_name(OpenRASPCheckType type) const
   }
 }
 
-OpenRASPCheckType CheckTypeTransfer::name_to_type(std::string &name) const
+OpenRASPCheckType CheckTypeTransfer::name_to_type(const std::string &name) const
 {
   auto it = name_to_check_type.find(name);
   if (it != name_to_check_type.end())
@@ -84,9 +84,14 @@ std::vector<std::string> CheckTypeTransfer::get_all_names() const
   return names;
 }
 
-const std::vector<OpenRASPCheckType>& CheckTypeTransfer::get_buildin_types() const
+std::map<std::string, std::string> CheckTypeTransfer::get_buildin_action_map() const
 {
-  return buildin_check_type;
+  std::map<std::string, std::string> buildin_action_map;
+  for (OpenRASPCheckType buildin_type : buildin_check_type)
+  {
+    buildin_action_map.insert({type_to_name(buildin_type), ""});
+  }
+  return buildin_action_map;
 }
 
 std::unique_ptr<CheckTypeTransfer> check_type_transfer(new CheckTypeTransfer());

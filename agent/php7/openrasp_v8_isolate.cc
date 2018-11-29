@@ -191,4 +191,65 @@ v8::MaybeLocal<v8::Value> Isolate::ExecScript(std::string _source, std::string _
 {
     return ExecScript(this, _source, _filename, _line_offset);
 }
+
+void Isolate::extract_buildin_action(Isolate *isolate, std::map<std::string, std::string> &buildin_action_map)
+{
+    auto context = isolate->GetCurrentContext();
+    auto RASP = context->Global()
+                    ->Get(context, NewV8String(isolate, "RASP"))
+                    .ToLocalChecked()
+                    .As<v8::Object>();
+    auto algorithm_config_ml = RASP->Get(context, NewV8String(isolate, "algorithmConfig"));
+    if (algorithm_config_ml.IsEmpty())
+    {
+        return;
+    }
+    auto algorithmConfig_l = algorithm_config_ml.ToLocalChecked();
+    if (!algorithmConfig_l->IsObject())
+    {
+        return;
+    }
+    auto algorithmConfig = algorithmConfig_l.As<v8::Object>();
+    auto props_ml = algorithmConfig->GetOwnPropertyNames(context);
+    if (props_ml.IsEmpty())
+    {
+        return;
+    }
+    auto props = props_ml.ToLocalChecked();
+    for (int i = 0, l = props->Length(); i < l; i++)
+    {
+        auto localKey = props->Get(i);
+        if (!localKey->IsString())
+        {
+            continue;
+        }
+        std::string key = *v8::String::Utf8Value(localKey);
+        auto iter = buildin_action_map.find(key);
+        if (iter != buildin_action_map.end())
+        {
+            auto action_obj_ml = algorithmConfig->Get(context, localKey);
+            if (action_obj_ml.IsEmpty())
+            {
+                continue;
+            }
+            auto action_obj_l = action_obj_ml.ToLocalChecked();
+            if (!action_obj_l->IsObject())
+            {
+                continue;
+            }
+            auto action_obj = action_obj_l.As<v8::Object>();
+            auto action_ml = action_obj->Get(context, NewV8String(isolate, "action"));
+            if (action_ml.IsEmpty())
+            {
+                continue;
+            }
+            auto action_l = action_ml.ToLocalChecked();
+            if (action_l->IsString())
+            {
+                std::string val = *v8::String::Utf8Value(action_l);
+                buildin_action_map[key] = val;
+            }
+        }
+    }
+}
 } // namespace openrasp

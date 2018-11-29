@@ -57,9 +57,9 @@ private:
 public:
   CheckTypeTransfer();
   std::string type_to_name(OpenRASPCheckType type) const;
-  OpenRASPCheckType name_to_type(std::string &name) const;
+  OpenRASPCheckType name_to_type(const std::string &name) const;
   std::vector<std::string> get_all_names() const;
-  const std::vector<OpenRASPCheckType> &get_buildin_types() const;
+  std::map<std::string, std::string> get_buildin_action_map() const;
 };
 
 extern std::unique_ptr<CheckTypeTransfer> check_type_transfer;

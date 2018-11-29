@@ -2,9 +2,14 @@
 hook system (webshell) action log
 --SKIPIF--
 <?php
-$conf = <<<CONF
-webshell_command.action="log"
-CONF;
+$plugin = <<<EOF
+RASP.algorithmConfig = {
+    webshell_command: {
+        name:   '算法2 - 拦截简单的 PHP 命令执行后门',
+        action: 'log'
+    }
+}
+EOF;
 include(__DIR__.'/../skipif.inc');
 ?>
 --INI--

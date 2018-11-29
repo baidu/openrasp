@@ -100,17 +100,6 @@ void HeartBeatAgent::do_heartbeat()
 				oam->agent_ctrl_block->set_plugin_version(plugin_update_pkg->get_version().c_str());
 			}
 		}
-		/************************************buildin action************************************/
-		std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map;
-		const std::vector<OpenRASPCheckType> buildin_types = check_type_transfer->get_buildin_types();
-		for (auto type : buildin_types)
-		{
-			std::string action;
-			res_info->fetch_string(("/data/config/algorithm.config/" + check_type_transfer->type_to_name(type) + "/action").c_str(), action);
-			buildin_action_map.insert({type, string_to_action(action)});
-		}
-		scm->set_buildin_check_action(buildin_action_map);
-		res_info->erase_value("/data/config/algorithm.config");
 		/************************************config update************************************/
 		int64_t config_time;
 		if (!res_info->fetch_int64("/data/config_time", config_time))
