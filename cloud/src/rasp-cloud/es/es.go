@@ -128,12 +128,12 @@ func BulkInsert(docType string, docs []map[string]interface{}) (err error) {
 		}
 		if appId, ok := doc["app_id"].(string); ok {
 			bulkService.Add(elastic.NewBulkIndexRequest().
-				Index("real-openrasp-" + docType + "-" + appId).Type(docType).OpType("create").Doc(doc))
+				Index("real-openrasp-" + docType + "-" + appId).Type(docType).OpType("index").Doc(doc))
 		} else {
 			return errors.New("the type of alarm's app_id param is not string")
 		}
 	}
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(10*time.Second))
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
 	defer cancel()
 	_, err = bulkService.Do(ctx)
 	return err

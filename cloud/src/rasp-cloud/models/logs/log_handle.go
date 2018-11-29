@@ -80,13 +80,13 @@ var (
 )
 
 func init() {
-	es.RegisterTTL(24*365*time.Hour, AliasAttackIndexName+"-*")
+	es.RegisterTTL(10*time.Minute, AliasAttackIndexName+"-*")
 	es.RegisterTTL(24*365*time.Hour, AliasPolicyIndexName+"-*")
-	if beego.AppConfig.String("RaspLogMode") == "file" ||
-		beego.AppConfig.String("RaspLogMode") == "" {
+	alarmLogMode := beego.AppConfig.DefaultString("AlarmLogMode", "file")
+	if alarmLogMode == "file" {
 		AddAlarmFunc = AddLogWithFile
 		initRaspLoggers()
-	} else if beego.AppConfig.String("RaspLogMode") == "es" {
+	} else if alarmLogMode == "es" {
 		startEsAlarmLogPush()
 		AddAlarmFunc = AddLogWithES
 	} else {
@@ -127,32 +127,42 @@ func initAlarmFileLogger(dirName string, fileName string) *logs.BeeLogger {
 
 func startEsAlarmLogPush() {
 	go func() {
-		defer func() {
-			if r := recover(); r != nil {
-				beego.Error("failed to push es alarm log: ", r)
-			}
-		}()
 		for {
-			select {
-			case alarm := <-esAttackAlarmBuffer:
-				alarms := make([]map[string]interface{}, 0, 200)
-				alarms = append(alarms, alarm)
-				for len(esAttackAlarmBuffer) > 0 && len(alarms) < 200 {
-					alarm := <-esAttackAlarmBuffer
-					alarms = append(alarms, alarm)
-				}
-				es.BulkInsert(AttackAlarmType, alarms)
-			case alarm := <-esPolicyAlarmBuffer:
-				alarms := make([]map[string]interface{}, 0, 200)
-				alarms = append(alarms, alarm)
-				for len(esPolicyAlarmBuffer) > 0 && len(alarms) < 200 {
-					alarm := <-esPolicyAlarmBuffer
-					alarms = append(alarms, alarm)
-				}
-				es.BulkInsert(PolicyAlarmType, alarms)
-			}
+			handleEsLogPush()
 		}
 	}()
+}
+
+func handleEsLogPush() {
+	defer func() {
+		if r := recover(); r != nil {
+			beego.Error("failed to push es alarm log: ", r)
+		}
+	}()
+	select {
+	case alarm := <-esAttackAlarmBuffer:
+		alarms := make([]map[string]interface{}, 0, 200)
+		alarms = append(alarms, alarm)
+		for len(esAttackAlarmBuffer) > 0 && len(alarms) < 200 {
+			alarm := <-esAttackAlarmBuffer
+			alarms = append(alarms, alarm)
+		}
+		err := es.BulkInsert(AttackAlarmType, alarms)
+		if err != nil {
+			beego.Error("failed to execute es bulk insert: " + err.Error())
+		}
+	case alarm := <-esPolicyAlarmBuffer:
+		alarms := make([]map[string]interface{}, 0, 200)
+		alarms = append(alarms, alarm)
+		for len(esPolicyAlarmBuffer) > 0 && len(alarms) < 200 {
+			alarm := <-esPolicyAlarmBuffer
+			alarms = append(alarms, alarm)
+		}
+		err := es.BulkInsert(PolicyAlarmType, alarms)
+		if err != nil {
+			beego.Error("failed to execute es bulk insert: " + err.Error())
+		}
+	}
 }
 
 func AddLogWithFile(alarmType string, alarm map[string]interface{}) error {

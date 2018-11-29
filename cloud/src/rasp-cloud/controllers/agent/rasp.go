@@ -39,11 +39,8 @@ func (o *RaspController) Post() {
 	if rasp.Id == "" {
 		o.ServeError(http.StatusBadRequest, "rasp id cannot be empty")
 	}
-	if len(rasp.Id) < 16 {
-		o.ServeError(http.StatusBadRequest, "rasp id cannot be less than 16")
-	}
-	if len(rasp.Id) >= 512 {
-		o.ServeError(http.StatusBadRequest, "the length of rasp id must be less than 512")
+	if len(rasp.Id) < 16 || len(rasp.Id) > 512 {
+		o.ServeError(http.StatusBadRequest, "the length of rasp id must be between 16~512")
 	}
 	if rasp.Version == "" {
 		o.ServeError(http.StatusBadRequest, "rasp_version cannot be empty")
