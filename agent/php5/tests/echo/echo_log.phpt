@@ -2,9 +2,14 @@
 hook echo
 --SKIPIF--
 <?php
-$conf = <<<CONF
-xss_echo.action="log"
-CONF;
+$plugin = <<<EOF
+RASP.algorithmConfig = {
+     xss_echo: {
+        name:   '算法1 - PHP: 禁止直接输出 GPC 参数',
+        action: 'log'
+    }
+}
+EOF;
 include(__DIR__.'/../skipif.inc');
 ?>
 --INI--

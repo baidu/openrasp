@@ -50,10 +50,10 @@ public class JettyStartupHook extends ServerStartupHook {
         try {
             ApplicationModel.init("jetty",
                     Reflection.invokeStringMethod(server, "getVersion", new Class[]{}));
-            sendRegister();
         } catch (Exception e) {
             HookHandler.LOGGER.warn("handle resin startup failed", e);
         }
+        sendRegister();
         HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_JETTY_START, CheckParameter.EMPTY_MAP);
 
     }

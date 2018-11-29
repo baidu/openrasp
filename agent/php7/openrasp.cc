@@ -142,16 +142,8 @@ PHP_MINIT_FUNCTION(openrasp)
             openrasp::OpenraspConfig openrasp_config(conf_contents, OpenraspConfig::FromType::kIni);
             //TODO 单机版白名单 1.0rc2 格式修改
             openrasp::scm->build_check_type_white_array(openrasp_config);
-            std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map;
-            const std::vector<OpenRASPCheckType> buildin_types = check_type_transfer->get_buildin_types();
-            for (auto type : buildin_types)
-            {
-                OpenRASPActionType action = string_to_action(openrasp_config.Get<std::string>(check_type_transfer->type_to_name(type) + ".action"));
-                buildin_action_map.insert({type, action});
-            }
-            openrasp::scm->set_buildin_check_action(buildin_action_map);
-            result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
         }
+        result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
     }
 
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);

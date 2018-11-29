@@ -3,9 +3,14 @@ hook file_put_contents (webshell)
 --SKIPIF--
 <?php
 $dir = __DIR__;
-$conf = <<<CONF
-webshell_file_put_contents.action="log"
-CONF;
+$plugin = <<<EOF
+RASP.algorithmConfig = {
+    webshell_file_put_contents: {
+        name:   '算法3 - 拦截简单的 PHP 文件上传后门',
+        action: 'log'
+    }
+}
+EOF;
 include(__DIR__.'/../skipif.inc');
 ?>
 --INI--

@@ -141,6 +141,31 @@ func (o *PluginController) Download() {
 	o.Ctx.Output.Body([]byte(plugin.Content))
 }
 
+// @router /algorithm/config [post]
+func (o *PluginController) UpdateAppAlgorithmConfig() {
+	var param struct {
+		PluginId string                 `json:"id"`
+		Config   map[string]interface{} `json:"config"`
+	}
+	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
+	}
+	if param.PluginId == "" {
+		o.ServeError(http.StatusBadRequest, "plugin id can not be empty")
+	}
+	if param.Config == nil {
+		o.ServeError(http.StatusBadRequest, "config can not be empty")
+	}
+	appId, err := models.UpdateAlgorithmConfig(param.PluginId, param.Config)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to update algorithm config", err)
+	}
+	models.AddOperation(appId, models.OperationTypeUpdateAlgorithmConfig,
+		o.Ctx.Input.IP(), "updated the whitelist configuration")
+	o.ServeWithEmptyData()
+}
+
 // @router /algorithm/restore [post]
 func (o *PluginController) RestoreAlgorithmConfig() {
 	var param map[string]string

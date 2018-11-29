@@ -136,9 +136,11 @@ public class JSContextFactory extends ContextFactory {
                     for (CheckScript checkScript : checkScriptList) {
                         cx.evaluateString(scope, "(function(){\n" + checkScript.getContent() + "\n})()", checkScript.getName(), 0, null);
                     }
+                    Config.getConfig().setHookWhiteAll("false");
                 }
             } catch (Exception e) {
                 LOGGER.info(e);
+                Config.getConfig().setHookWhiteAll("true");
             } finally {
                 jsContextFactory.pluginTime = System.currentTimeMillis();
                 JSContext.exit();

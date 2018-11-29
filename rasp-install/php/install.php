@@ -112,17 +112,17 @@ Synopsis:
     php install.php [options]
 
 Options:
-    -d <openrasp_root>  	Specify OpenRASP installation folder (required)
+    -d <openrasp_root>      Specify OpenRASP installation folder (required)
 
     --backend-url <url>     Value of backend_url (required for remote management)
 
-    --app-id <id>       	Value of app_id (required for remote management)
+    --app-id <id>           Value of app_id (required for remote management)
 
     --app-secret <secret>   Value of app_secret (required for remote management)
 
-    --ignore-ini        	Do not update PHP ini entries
+    --ignore-ini            Do not update PHP ini entries
 
-    --ignore-plugin     	Do not update the official javascript plugin
+    --ignore-plugin         Do not update the official javascript plugin
 
     --ignore-conf     	    Do not update the openrasp config in root_dir/conf directory
 

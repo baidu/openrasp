@@ -320,7 +320,7 @@ public class HookHandler {
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
     public static void doCheckWithoutRequest(CheckParameter.Type type, Object params) {
-        if (Config.getConfig().getHookWhiteAll() && Config.getConfig().getCloudSwitch()) {
+        if (Config.getConfig().getHookWhiteAll()) {
             return;
         }
         if (requestCache.get() != null) {
