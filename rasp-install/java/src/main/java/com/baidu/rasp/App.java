@@ -80,15 +80,18 @@ public class App {
         if (cmd.hasOption("help") || cmd.hasOption("h")) {
             showHelp();
         } else {
-            if (cmd.hasOption("install") && cmd.hasOption("uninstall") || !cmd.hasOption("install") && !cmd.hasOption("uninstall")) {
-                throw new RaspError(E10005 + "install and uninstall must only be selected one");
+            if (cmd.hasOption("install") && cmd.hasOption("uninstall")) {
+                throw new RaspError(E10005 + "Can't use -install and -uninstall simultaneously");
             } else if (cmd.hasOption("install")) {
                 baseDir = cmd.getOptionValue("install");
                 install = "install";
-            } else {
+            } else if (cmd.hasOption("uninstall")) {
                 baseDir = cmd.getOptionValue("uninstall");
                 install = "uninstall";
+            } else {
+                throw new RaspError(E10005 + "One of -install and -uninstall must be specified");
             }
+
             appId = cmd.getOptionValue("appid");
             appSecret = cmd.getOptionValue("appsecret");
             url = cmd.getOptionValue("backendurl");
