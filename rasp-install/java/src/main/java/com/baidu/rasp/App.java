@@ -80,20 +80,23 @@ public class App {
         if (cmd.hasOption("help") || cmd.hasOption("h")) {
             showHelp();
         } else {
-            if (cmd.hasOption("install") && cmd.hasOption("uninstall") || !cmd.hasOption("install") && !cmd.hasOption("uninstall")) {
-                throw new RaspError(E10005 + "install and uninstall must only be selected one");
+            if (cmd.hasOption("install") && cmd.hasOption("uninstall")) {
+                throw new RaspError(E10005 + "Can't use -install and -uninstall simultaneously");
             } else if (cmd.hasOption("install")) {
                 baseDir = cmd.getOptionValue("install");
                 install = "install";
-            } else {
+            } else if (cmd.hasOption("uninstall")) {
                 baseDir = cmd.getOptionValue("uninstall");
                 install = "uninstall";
+            } else {
+                throw new RaspError(E10005 + "One of -install and -uninstall must be specified");
             }
+
             appId = cmd.getOptionValue("appid");
             appSecret = cmd.getOptionValue("appsecret");
             url = cmd.getOptionValue("backendurl");
             if (!(appId != null && appSecret != null && url != null || appId == null && appSecret == null && url == null)) {
-                throw new RaspError(E10005 + "url and appId and appSecret must be set at the same time");
+                throw new RaspError(E10005 + "-backendurl, -appid and -appsecret must be set simultaneously");
             }
         }
     }
@@ -102,20 +105,20 @@ public class App {
         if (appId != null) {
             Pattern pattern = Pattern.compile(REGEX_APPID);
             if (!pattern.matcher(appId).matches()) {
-                throw new RaspError(E10005 + "appid error");
+                throw new RaspError(E10005 + "appid must be exactly 40 characters in length");
             }
         }
         if (appSecret != null) {
             Pattern pattern = Pattern.compile(REGEX_APPSECRET);
             if (!pattern.matcher(appSecret).matches()) {
-                throw new RaspError(E10005 + "appSecret error");
+                throw new RaspError(E10005 + "appsecret must have 43~45 characters");
             }
         }
         if (url != null) {
             try {
                 new URL(url);
             } catch (MalformedURLException e) {
-                throw new RaspError(E10005 + "backendurl error");
+                throw new RaspError(E10005 + "backendurl must be a valid URL, e.g http://192.168.1.1");
             }
         }
     }
