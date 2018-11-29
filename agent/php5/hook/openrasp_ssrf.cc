@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_hook.h"
+#include "openrasp_v8.h"
 
 extern "C"
 {
@@ -89,39 +90,44 @@ int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *funct
     {
         return 1;
     }
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+    if (isolate)
     {
-        zval *params;
-        MAKE_STD_ZVAL(params);
-        array_init(params);
-        add_assoc_zval(params, "url", origin_url);
-        Z_ADDREF_P(origin_url);
-        add_assoc_string(params, "function", estrdup("curl_exec"), 0);
-        php_url *url = php_url_parse_ex(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url));
-        add_assoc_string(params, "hostname", (url && url->host) ? estrdup(url->host) : estrdup(""), 0);
-        zval *ip_arr = NULL;
-        MAKE_STD_ZVAL(ip_arr);
-        array_init(ip_arr);
-        if (url)
+        bool is_block = false;
         {
-            if (url->host)
+            v8::HandleScope handle_scope(isolate);
+            auto params = v8::Object::New(isolate);
+            params->Set(openrasp::NewV8String(isolate, "url"), openrasp::NewV8String(isolate, Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url)));
+            params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "curl_exec"));
+            php_url *url = php_url_parse_ex(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url));
+            params->Set(openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, url && url->host ? url->host : ""));
+            auto ip_arr = v8::Array::New(isolate);
+            if (url)
             {
-                struct hostent *hp;
-                struct in_addr in;
-                int i;
-                hp = gethostbyname(url->host);
-                if (hp != NULL && hp->h_addr_list != NULL)
+                if (url->host)
                 {
-                    for (i = 0; hp->h_addr_list[i] != 0; i++)
+                    struct hostent *hp;
+                    struct in_addr in;
+                    int i;
+                    hp = gethostbyname(url->host);
+                    if (hp != NULL && hp->h_addr_list != NULL)
                     {
-                        in = *(struct in_addr *)hp->h_addr_list[i];
-                        add_next_index_string(ip_arr, inet_ntoa(in), 1);
+                        for (i = 0; hp->h_addr_list[i] != 0; i++)
+                        {
+                            in = *(struct in_addr *)hp->h_addr_list[i];
+                            ip_arr->Set(i, openrasp::NewV8String(isolate, inet_ntoa(in)));
+                        }
                     }
                 }
+                php_url_free(url);
             }
-            php_url_free(url);
+            params->Set(openrasp::NewV8String(isolate, "ip"), ip_arr);
+            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
-        add_assoc_zval(params, "ip", ip_arr);
-        check(check_type, params TSRMLS_CC);
+        if (is_block)
+        {
+            handle_block(TSRMLS_C);
+        }
     }
     return 0;
 }
