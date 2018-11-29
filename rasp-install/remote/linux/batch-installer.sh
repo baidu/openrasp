@@ -315,7 +315,7 @@ if [[ ! -z $flag_install ]]; then
 		arg="-appid $flag_appid -appsecret $flag_appsecret -backendurl $flag_backendurl -install"
 	fi
 
-	do_install_java $arg
+	do_install_java "$arg"
 elif [[ ! -z "$flag_uninstall" ]]; then
 	do_install_java "-uninstall"
 else
