@@ -62,7 +62,7 @@ EOF
 		# 枚举监听的端口，定位任意一个可用的 HTTP/HTTPS URL
 		for url in $tomcat_ports
 		do
-			status=$(curl -k -s -o /dev/null -w "%{http_code}" http://$url)
+			status=$(curl --max-time 10 -k -s -o /dev/null -w "%{http_code}" http://$url)
 			if [[ $status != "000" ]]; then
 				tomcat_url=$url
 				break
