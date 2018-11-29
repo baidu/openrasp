@@ -36,6 +36,8 @@ extern "C"
 #endif
 }
 
+std::string cache_key;
+
 /**
  * ssrf相关hook点
  */
@@ -75,6 +77,7 @@ OPENRASP_HOOK_FUNCTION(curl_exec, ssrf)
     }
     zval_ptr_dtor(&origin_url);
     zval_ptr_dtor(&function_name);
+    OPENRASP_HOOK_G(lru)->set(cache_key, true);
 }
 
 bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval args[])
@@ -116,6 +119,17 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
                 php_url_free(url);
             }
             params->Set(openrasp::NewV8String(isolate, "ip"), ip_arr);
+            {
+                v8::Local<v8::String> json;
+                if (v8::JSON::Stringify(isolate->GetCurrentContext(), params).ToLocal(&json))
+                {
+                    cache_key = std::string(*v8::String::Utf8Value(json));
+                    if (OPENRASP_HOOK_G(lru)->contains(cache_key))
+                    {
+                        return true;
+                    }
+                }
+            }
             is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (is_block)
