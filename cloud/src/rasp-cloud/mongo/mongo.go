@@ -28,14 +28,12 @@ import (
 
 var (
 	session *mgo.Session
-	DbName  = beego.AppConfig.String("MongoDBName")
+	DbName  = beego.AppConfig.DefaultString("MongoDBName", "openrasp")
 )
 
 func init() {
-	poolLimit, err := beego.AppConfig.Int("MongoPoolLimit")
-	if err != nil {
-		poolLimit = 1024
-	}
+	var err error
+	poolLimit := beego.AppConfig.DefaultInt("MongoPoolLimit", 1024)
 	dialInfo := &mgo.DialInfo{
 		Addrs:     []string{beego.AppConfig.String("MongoDBAddr")},
 		Direct:    false,
