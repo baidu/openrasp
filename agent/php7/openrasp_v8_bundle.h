@@ -111,7 +111,6 @@ public:
     v8::Persistent<v8::String> key_confidence;
     v8::Persistent<v8::String> key_algorithm;
     v8::Persistent<v8::Function> console_log;
-    v8::Persistent<v8::Function> JSON_stringify;
     int action_hash_ignore = 0;
     int action_hash_log = 0;
     int action_hash_block = 0;

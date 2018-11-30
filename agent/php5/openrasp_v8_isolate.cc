@@ -48,11 +48,6 @@ Isolate *Isolate::New(Snapshot *snapshot_blob)
                            .As<v8::Object>()
                            ->Get(NewV8String(isolate, "log"))
                            .As<v8::Function>();
-    auto JSON_stringify = context->Global()
-                              ->Get(NewV8String(isolate, "JSON"))
-                              .As<v8::Object>()
-                              ->Get(NewV8String(isolate, "stringify"))
-                              .As<v8::Function>();
 
     data->key_action.Reset(isolate, key_action);
     data->key_message.Reset(isolate, key_message);
@@ -62,7 +57,6 @@ Isolate *Isolate::New(Snapshot *snapshot_blob)
     data->RASP.Reset(isolate, RASP);
     data->check.Reset(isolate, check);
     data->console_log.Reset(isolate, console_log);
-    data->JSON_stringify.Reset(isolate, JSON_stringify);
     data->action_hash_ignore = NewV8String(isolate, "ignore")->GetIdentityHash();
     data->action_hash_log = NewV8String(isolate, "log")->GetIdentityHash();
     data->action_hash_block = NewV8String(isolate, "block")->GetIdentityHash();
@@ -141,7 +135,6 @@ bool Isolate::Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::
         return false;
     }
     auto key_action = data->key_action.Get(isolate);
-    auto JSON_stringify = data->JSON_stringify.Get(isolate);
 
     auto arr = v8::Local<v8::Array>::Cast(rst);
     int len = arr->Length();

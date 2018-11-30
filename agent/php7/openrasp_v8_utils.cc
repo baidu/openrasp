@@ -126,7 +126,6 @@ void plugin_info(const char *message, size_t length)
 
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)
 {
-    auto JSON_stringify = isolate->GetData()->JSON_stringify.Get(isolate);
     auto key_action = isolate->GetData()->key_action.Get(isolate);
     auto key_message = isolate->GetData()->key_message.Get(isolate);
     auto key_confidence = isolate->GetData()->key_confidence.Get(isolate);
@@ -168,7 +167,7 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     ZEND_HASH_FOREACH_END();
 
     v8::Local<v8::Value> val;
-    if (JSON_stringify->Call(isolate->GetCurrentContext(), JSON_stringify, 1, reinterpret_cast<v8::Local<v8::Value> *>(&obj)).ToLocal(&val))
+    if (v8::JSON::Stringify(isolate->GetCurrentContext(), obj).ToLocal(&val))
     {
         v8::String::Utf8Value msg(val);
         LOG_G(alarm_logger).log(LEVEL_INFO, *msg, msg.length(), true, false);
