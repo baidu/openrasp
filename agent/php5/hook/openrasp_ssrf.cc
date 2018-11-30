@@ -104,6 +104,7 @@ int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *funct
             params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "curl_exec"));
             php_url *url = php_url_parse_ex(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url));
             params->Set(openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, url && url->host ? url->host : ""));
+            uint32_t ip_sum = 0;
             auto ip_arr = v8::Array::New(isolate);
             if (url)
             {
@@ -118,6 +119,7 @@ int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *funct
                         for (i = 0; hp->h_addr_list[i] != 0; i++)
                         {
                             in = *(struct in_addr *)hp->h_addr_list[i];
+                            ip_sum += in.s_addr;
                             ip_arr->Set(i, openrasp::NewV8String(isolate, inet_ntoa(in)));
                         }
                     }
@@ -126,14 +128,10 @@ int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *funct
             }
             params->Set(openrasp::NewV8String(isolate, "ip"), ip_arr);
             {
-                v8::Local<v8::String> json;
-                if (v8::JSON::Stringify(isolate->GetCurrentContext(), params).ToLocal(&json))
+                cache_key = std::string(get_check_type_name(check_type) + std::string(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url)) + std::to_string(ip_sum));
+                if (OPENRASP_HOOK_G(lru)->contains(cache_key))
                 {
-                    cache_key = std::string(*v8::String::Utf8Value(json));
-                    if (OPENRASP_HOOK_G(lru)->contains(cache_key))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
             is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
