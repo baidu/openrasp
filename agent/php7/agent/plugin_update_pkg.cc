@@ -35,7 +35,7 @@ bool PluginUpdatePackage::build_snapshot()
   std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
   Snapshot snapshot("", {active_plugin},
                     [&buildin_action_map](Isolate *isolate) {
-                      Isolate::extract_buildin_action(isolate, buildin_action_map);
+                      extract_buildin_action(isolate, buildin_action_map);
                     });
   Platform::Shutdown();
   if (!snapshot.IsOk())

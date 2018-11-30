@@ -214,4 +214,31 @@ void load_plugins()
     process_globals.plugin_src_list = plugin_src_list;
 }
 
+void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string> &buildin_action_map)
+{
+    v8::HandleScope handle_scope(isolate);
+    auto rst = isolate->ExecScript(R"(
+        Object.keys(RASP.algorithmConfig || {})
+            .filter(key => typeof key === 'string' && typeof RASP.algorithmConfig[key] === 'object' && typeof RASP.algorithmConfig[key].action === 'string')
+            .map(key => [key, RASP.algorithmConfig[key].action])
+    )", "extract_buildin_action");
+    if (rst.IsEmpty())
+    {
+        return;
+    }
+    auto arr = rst.ToLocalChecked().As<v8::Array>();
+    auto len = arr->Length();
+    for (size_t i = 0; i < len; i++)
+    {
+        auto item = arr->Get(i).As<v8::Array>();
+        v8::String::Utf8Value key(item->Get(0));
+        v8::String::Utf8Value value(item->Get(1));
+        auto iter = buildin_action_map.find({*key, key.length()});
+        if (iter != buildin_action_map.end())
+        {
+            iter->second = std::string(*value, value.length());
+        }
+    }
+}
+
 } // namespace openrasp

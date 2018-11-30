@@ -84,7 +84,7 @@ PHP_MINIT_FUNCTION(openrasp_v8)
         std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
         Snapshot *snapshot = new Snapshot(process_globals.plugin_config, process_globals.plugin_src_list,
                                           [&buildin_action_map](Isolate *isolate) {
-                                              Isolate::extract_buildin_action(isolate, buildin_action_map);
+                                              extract_buildin_action(isolate, buildin_action_map);
                                           });
         Platform::Shutdown();
         if (!snapshot->IsOk())

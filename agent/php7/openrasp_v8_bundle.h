@@ -126,12 +126,12 @@ public:
   bool Check(v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout = 100);
   static v8::MaybeLocal<v8::Value> ExecScript(Isolate *isolate, std::string source, std::string filename, int line_offset = 0);
   v8::MaybeLocal<v8::Value> ExecScript(std::string source, std::string filename, int line_offset = 0);
-  static void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string> &buildin_action_map);
 };
 
 v8::Local<v8::ObjectTemplate> NewRequestContextTemplate(v8::Isolate *isolate);
 void plugin_info(const char *message, size_t length);
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result);
+void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string> &buildin_action_map);
 
 inline void log_callback(const v8::FunctionCallbackInfo<v8::Value> &info)
 {
