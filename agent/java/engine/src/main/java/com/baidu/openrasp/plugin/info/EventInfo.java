@@ -16,6 +16,7 @@
 
 package com.baidu.openrasp.plugin.info;
 
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.google.gson.Gson;
 
@@ -49,11 +50,16 @@ public abstract class EventInfo {
 
     @Override
     public String toString() {
-        if (json == null) {
-            Map<String, Object> info = getInfo();
-            json = new Gson().toJson(info);
+        try {
+            if (json == null) {
+                Map<String, Object> info = getInfo();
+                json = new Gson().toJson(info);
+            }
+            return json;
+        } catch (Exception e) {
+            HookHandler.LOGGER.error("failed to print event log",e);
+            return null;
         }
-        return json;
     }
 
     protected StackTraceElement[] filter(StackTraceElement[] trace) {
