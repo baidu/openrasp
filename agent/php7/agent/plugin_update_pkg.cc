@@ -32,11 +32,7 @@ PluginUpdatePackage::PluginUpdatePackage(std::string content, std::string versio
 bool PluginUpdatePackage::build_snapshot()
 {
   Platform::Initialize();
-  std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
-  Snapshot snapshot("", {active_plugin},
-                    [&buildin_action_map](Isolate *isolate) {
-                      extract_buildin_action(isolate, buildin_action_map);
-                    });
+  Snapshot snapshot("", {active_plugin});
   Platform::Shutdown();
   if (!snapshot.IsOk())
   {
@@ -55,6 +51,12 @@ bool PluginUpdatePackage::build_snapshot()
   {
     openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write snapshot to %s."), snapshot_abs_path.c_str());
   }
+  std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
+  Platform::Initialize();
+  Isolate *isolate = Isolate::New(snapshot);
+  extract_buildin_action(isolate, buildin_action_map);
+  isolate->Dispose();
+  Platform::Shutdown();
   std::map<OpenRASPCheckType, OpenRASPActionType> type_action_map;
   for (auto iter = buildin_action_map.begin(); iter != buildin_action_map.end(); iter++)
   {

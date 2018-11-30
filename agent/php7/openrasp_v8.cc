@@ -81,12 +81,7 @@ PHP_MINIT_FUNCTION(openrasp_v8)
     if (!process_globals.snapshot_blob)
     {
         Platform::Initialize();
-        std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
-        Snapshot *snapshot = new Snapshot(process_globals.plugin_config, process_globals.plugin_src_list,
-                                          [&buildin_action_map](Isolate *isolate) {
-                                              extract_buildin_action(isolate, buildin_action_map);
-                                          });
-        Platform::Shutdown();
+        Snapshot *snapshot = new Snapshot(process_globals.plugin_config, process_globals.plugin_src_list);
         if (!snapshot->IsOk())
         {
             delete snapshot;
@@ -96,12 +91,17 @@ PHP_MINIT_FUNCTION(openrasp_v8)
         {
             process_globals.snapshot_blob = snapshot;
             std::map<OpenRASPCheckType, OpenRASPActionType> type_action_map;
+            std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
+            Isolate *isolate = Isolate::New(snapshot);
+            extract_buildin_action(isolate, buildin_action_map);
+            isolate->Dispose();
             for (auto iter = buildin_action_map.begin(); iter != buildin_action_map.end(); iter++)
             {
                 type_action_map.insert({check_type_transfer->name_to_type(iter->first), string_to_action(iter->second)});
             }
             openrasp::scm->set_buildin_check_action(type_action_map);
         }
+        Platform::Shutdown();
     }
     return SUCCESS;
 }
