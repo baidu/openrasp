@@ -17,20 +17,21 @@
 package com.baidu.openrasp.hook.sql;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
-import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.Reflection;
 
+import com.google.gson.Gson;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
 import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by zhuming01 on 7/18/17.
@@ -38,13 +39,6 @@ import java.io.IOException;
  */
 @HookAnnotation
 public class SQLStatementHook extends AbstractSqlHook {
-
-    private static final int DEFAULT_LRU_CACHE_CAPACITY = 100;
-
-    /**
-     * sql缓存，保存最近检测无威胁的sql语句，缓存大小可配置
-     */
-    public static LRUCache<String, String> sqlCache = new LRUCache<String, String>(getLRUCacheSize());
 
     /**
      * (none-javadoc)
@@ -170,12 +164,7 @@ public class SQLStatementHook extends AbstractSqlHook {
      * @param stmt sql语句
      */
     public static void checkSQL(String server, Object statement, String stmt) {
-        int lruCacheSize = getLRUCacheSize();
-        if (sqlCache.maxSize() != lruCacheSize) {
-            sqlCache.clear();
-            sqlCache = new LRUCache<String, String>(lruCacheSize);
-        }
-        if (stmt != null && !stmt.isEmpty() && (sqlCache.maxSize() == 0 || !sqlCache.isContainsKey(stmt.trim()))) {
+        if (stmt != null && !stmt.isEmpty() && !HookHandler.commonLRUCache.isContainsKey(server.trim() + stmt.trim())) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             String connectionId = getSqlConnectionId(server, statement);
@@ -187,13 +176,6 @@ public class SQLStatementHook extends AbstractSqlHook {
 
             HookHandler.doCheck(CheckParameter.Type.SQL, params);
         }
-    }
-
-    /**
-     * 从配置中获取lru的缓存大小，如果未设置，那么使用默认值。
-     */
-    private static int getLRUCacheSize() {
-        return Config.getConfig().getSqlCacheCapacity();
     }
 
 }
