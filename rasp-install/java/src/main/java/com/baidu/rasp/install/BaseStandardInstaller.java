@@ -161,9 +161,9 @@ public abstract class BaseStandardInstaller implements Installer {
                 String path = getInstallPath(serverRoot) + "conf" + File.separator + "rasp.properties";
                 FileOutputStream out = new FileOutputStream(path, true);
                 Properties properties = new Properties();
-                properties.setProperty("cloud.address", url);
-                properties.setProperty("cloud.appid", appId);
-                properties.setProperty("cloud.appsecret", appSecret);
+                properties.setProperty("cloud.backend_url", url);
+                properties.setProperty("cloud.app_id", appId);
+                properties.setProperty("cloud.app_secret", appSecret);
                 properties.setProperty("cloud.enable", "true");
                 properties.store(out, "云控配置");
                 out.close();

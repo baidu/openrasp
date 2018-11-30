@@ -1,40 +1,69 @@
 #!/bin/bash
 #
-# To build the OpenRASP cloud control
-# 
-# The output file is rasp-cloud.tar.gz
+# Build our VUE frontend and golang api server
+# Output to rasp-cloud.tar.gz
 #
-set -e
 
-function log {
-	echo "================= $1 ==================="
+set -ex
+
+function check_prerequisite()
+{
+    npm=$(which npm)
+    go=$(which go)
+
+    if [[ -z "$npm" ]]; then
+        echo NodeJS is required to build VUE frontend
+        exit
+    fi
+
+    if [[ -z "$go" ]]; then
+        echo GO binary is required to build backend API server
+        exit
+    fi
 }
 
-function initPath {
-	pushd ../../
-        GOPATH="$(pwd)"
-        log "set \$GOPATH=$GOPATH"
-        PATH="$GOPATH/bin:$PATH"
-        log "set \$PATH=$PATH"
-	popd
+function repack()
+{
+    tar=$1
+    name=$2
+    output=$3
+
+    rm -rf tmp "$output"
+
+    mkdir tmp
+    tar xf "$tar" -C tmp
+
+    mv tmp "$name"
+    tar --numeric-owner --owner=0 --group=0 -czf "$output" "$name"
 }
 
-function buildRaspCloud {
-	go get -u github.com/beego/bee
+function build_cloud()
+{
+    cd cloud
+
+    export GOPATH=$(pwd)
+    export PATH=$PATH:$GOPATH/bin
+
+    go get -u github.com/beego/bee
+
+    cd src/rasp-cloud
     bee pack
-    cp rasp-cloud.tar.gz ../../../
-    log "build complete"
+
+    repack rasp-cloud.tar.gz rasp-cloud-$(date +%Y-%m-%d) ../../../rasp-cloud.tar.gz
 }
 
-cd "$(dirname "$0")/cloud/src/rasp-cloud"
-base_dir=$(pwd)
-log "base_dir: $base_dir"
-initPath
-buildRaspCloud
+function build_vue()
+{
+    cd rasp-vue
+    npm install
+    npm run build
 
+    rm -rf ../cloud/src/rasp-cloud/dist
+    mv dist ../cloud/src/rasp-cloud/
+}
 
+cd "$(dirname "$0")"
 
-
-
-
-
+check_prerequisite
+(build_vue)
+(build_cloud)

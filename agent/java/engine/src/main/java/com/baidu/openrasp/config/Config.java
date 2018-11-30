@@ -16,12 +16,14 @@
 
 package com.baidu.openrasp.config;
 
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.exception.ConfigLoadException;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.FileUtil;
+import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
 import com.baidu.openrasp.cloud.model.HookWhiteModel;
@@ -68,16 +70,16 @@ public class Config extends FileScanListener {
         BLOCK_XML("block.content_xml", "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"),
         BLOCK_HTML("block.content_html", "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>"),
         CLOUD_SWITCH("cloud.enable", "false"),
-        CLOUD_ADDRESS("cloud.address", ""),
-        CLOUD_APPID("cloud.appid", ""),
-        CLOUD_APPSECRET("cloud.appsecret", ""),
+        CLOUD_ADDRESS("cloud.backend_url", ""),
+        CLOUD_APPID("cloud.app_id", ""),
+        CLOUD_APPSECRET("cloud.app_secret", ""),
         SYSLOG_ENABLE("syslog.enable", "false"),
         SYSLOG_URL("syslog.url", ""),
         SYSLOG_TAG("syslog.tag", "OPENRASP"),
         SYSLOG_FACILITY("syslog.facility", "1"),
         SYSLOG_RECONNECT_INTERVAL("syslog.reconnect_interval", "300000"),
         LOG_MAXBURST("log.maxburst", "100"),
-        HEARTBEAT_INTERVAL("cloud.heartbeatinterval", "180"),
+        HEARTBEAT_INTERVAL("cloud.heartbeat_interval", "180"),
         HOOK_WHITE_ALL("hook.white.ALL", "true");
 
 
@@ -806,6 +808,10 @@ public class Config extends FileScanListener {
         this.sqlCacheCapacity = Integer.parseInt(sqlCacheCapacity);
         if (this.sqlCacheCapacity <= 0) {
             this.sqlCacheCapacity = 0;
+        }
+        if (HookHandler.commonLRUCache.maxSize() != this.sqlCacheCapacity) {
+            HookHandler.commonLRUCache.clear();
+            HookHandler.commonLRUCache = new LRUCache<String, String>(this.sqlCacheCapacity);
         }
     }
 

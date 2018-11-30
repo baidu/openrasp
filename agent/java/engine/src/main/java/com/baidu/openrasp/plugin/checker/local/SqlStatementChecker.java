@@ -28,6 +28,7 @@ import com.baidu.openrasp.plugin.info.AttackInfo;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.tool.JsonStringify;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.antlr.v4.runtime.Token;
@@ -225,9 +226,10 @@ public class SqlStatementChecker extends ConfigurableChecker {
         }
         // 检测无威胁的sql加入sql缓存
         if (result.isEmpty()) {
-            String query = (String) checkParameter.getParam("query");
-            if (SQLStatementHook.sqlCache.maxSize() != 0) {
-                SQLStatementHook.sqlCache.put(query.trim(), null);
+            if (HookHandler.commonLRUCache.maxSize() != 0) {
+                String key = checkParameter.getParam("server").toString().trim()+
+                        checkParameter.getParam("query").toString().trim();
+                HookHandler.commonLRUCache.put(key, null);
             }
         }
         return result;

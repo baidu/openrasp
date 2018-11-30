@@ -27,6 +27,7 @@ import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.request.HttpServletRequest;
 import com.baidu.openrasp.response.HttpServletResponse;
+import com.baidu.openrasp.tool.LRUCache;
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -83,6 +84,9 @@ public class HookHandler {
         }
     };
     private static final Map<String, Object> EMPTY_MAP = new HashMap<String, Object>();
+    private static final int DEFAULT_LRU_CACHE_CAPACITY = 100;
+    //全局lru的缓存
+    public static LRUCache<String, String> commonLRUCache = new LRUCache<String, String>(DEFAULT_LRU_CACHE_CAPACITY);
 
     /**
      * 用于关闭当前的线程的hook点
@@ -320,7 +324,7 @@ public class HookHandler {
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
     public static void doCheckWithoutRequest(CheckParameter.Type type, Object params) {
-        if (Config.getConfig().getHookWhiteAll()) {
+        if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
             return;
         }
         if (requestCache.get() != null) {
