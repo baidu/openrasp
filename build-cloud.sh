@@ -12,9 +12,9 @@ function log {
 
 function initPath {
 	pushd ../../
-        GOPATH="$(pwd)"
+        export GOPATH="$(pwd)"
         log "set \$GOPATH=$GOPATH"
-        PATH="$GOPATH/bin:$PATH"
+        export PATH="$GOPATH/bin:$PATH"
         log "set \$PATH=$PATH"
 	popd
 }
@@ -22,6 +22,7 @@ function initPath {
 function buildRaspCloud {
 	go get -u github.com/beego/bee
     bee pack
+    rm -f ../../../rasp-cloud.tar.gz
     cp rasp-cloud.tar.gz ../../../
     log "build complete"
 }
