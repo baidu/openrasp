@@ -626,6 +626,7 @@ int main() {
     openrasp.cc \
     openrasp_action.cc \
     openrasp_check_type.cc \
+    openrasp_content_type.cc \
     openrasp_utils.cc \
     openrasp_hook.cc \
     hook/openrasp_directory.cc \

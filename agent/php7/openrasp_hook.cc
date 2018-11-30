@@ -21,11 +21,14 @@
 #include <new>
 #include "agent/shared_config_manager.h"
 #include <unordered_map>
+#include "openrasp_content_type.h"
 
 extern "C"
 {
 #include "ext/standard/php_fopen_wrappers.h"
 }
+
+using openrasp::OpenRASPContentType;
 
 static hook_handler_t global_hook_handlers[512];
 static size_t global_hook_handlers_len = 0;
@@ -241,43 +244,58 @@ void handle_block()
     }
 
     {
-        std::string content_type;
-        std::string body;
-        if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY ||
-            zend_is_auto_global_str(ZEND_STRL("_SERVER")))
+        OpenRASPContentType::ContentType k_type = OpenRASPContentType::ContentType::cNull;
+        std::string existing_content_type;
+        for (zend_llist_element *element = SG(sapi_headers).headers.head; element; element = element->next)
         {
-            zval *z_accept = zend_hash_str_find(Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRL("HTTP_ACCEPT"));
-            if (z_accept)
+            sapi_header_struct *sapi_header = (sapi_header_struct *)element->data;
+            if (sapi_header->header_len > 0 &&
+                strncasecmp(sapi_header->header, "content-type", sizeof("content-type") - 1) == 0)
             {
-                std::string accept(Z_STRVAL_P(z_accept));
-                if (!OPENRASP_CONFIG(block.content_json).empty() &&
-                    accept.find("application/json") != std::string::npos)
+                existing_content_type = std::string(sapi_header->header);
+                break;
+            }
+        }
+        k_type = OpenRASPContentType::classify_content_type(existing_content_type);
+        if (k_type == OpenRASPContentType::ContentType::cNull)
+        {
+            if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY ||
+                zend_is_auto_global_str(ZEND_STRL("_SERVER")))
+            {
+                zval *z_accept = zend_hash_str_find(Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRL("HTTP_ACCEPT"));
+                if (z_accept)
                 {
-                    content_type = "Content-type: application/json";
-                    body = resolve_request_id(OPENRASP_CONFIG(block.content_json));
-                }
-                else if (!OPENRASP_CONFIG(block.content_xml).empty() &&
-                         accept.find("text/xml") != std::string::npos)
-                {
-                    content_type = "Content-type: text/xml";
-                    body = resolve_request_id(OPENRASP_CONFIG(block.content_xml));
-                }
-                else if (!OPENRASP_CONFIG(block.content_xml).empty() &&
-                         accept.find("application/xml") != std::string::npos)
-                {
-                    content_type = "Content-type: application/xml";
-                    body = resolve_request_id(OPENRASP_CONFIG(block.content_xml));
+                    std::string accept(Z_STRVAL_P(z_accept));
+                    k_type = OpenRASPContentType::classify_accept(accept);
                 }
             }
         }
-        if (body.length() == 0 &&
-            !OPENRASP_CONFIG(block.content_html).empty())
+        std::string content_type;
+        std::string block_content;
+        switch (k_type)
         {
+        case OpenRASPContentType::ContentType::cApplicationJson:
+            content_type = "Content-type: application/json";
+            block_content = (OPENRASP_CONFIG(block.content_json));
+            break;
+        case OpenRASPContentType::ContentType::cApplicationXml:
+            content_type = "Content-type: application/xml";
+            block_content = (OPENRASP_CONFIG(block.content_xml));
+            break;
+        case OpenRASPContentType::ContentType::cTextXml:
+            content_type = "Content-type: text/xml";
+            block_content = (OPENRASP_CONFIG(block.content_xml));
+            break;
+        case OpenRASPContentType::ContentType::cTextHtml:
+        case OpenRASPContentType::ContentType::cNull:
+        default:
             content_type = "Content-type: text/html";
-            body = resolve_request_id(OPENRASP_CONFIG(block.content_html));
+            block_content = (OPENRASP_CONFIG(block.content_html));
+            break;
         }
-        if (body.length() > 0)
+        if (!block_content.empty())
         {
+            std::string body = resolve_request_id(block_content);
             sapi_add_header(const_cast<char *>(content_type.c_str()), content_type.length(), 1);
             php_output_write(body.c_str(), body.length());
             php_output_flush();
