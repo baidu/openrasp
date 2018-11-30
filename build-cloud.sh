@@ -22,6 +22,21 @@ function check_prerequisite()
     fi
 }
 
+function repack()
+{
+    tar=$1
+    name=$2
+    output=$3
+
+    rm -rf tmp "$output"
+
+    mkdir tmp
+    tar xf "$tar" -C tmp
+
+    mv tmp "$name"
+    tar --numeric-owner --owner=0 --group=0 -czf "$output" "$name"
+}
+
 function build_cloud()
 {
     cd cloud
@@ -34,8 +49,7 @@ function build_cloud()
     cd src/rasp-cloud
     bee pack
 
-    rm -f ../../../rasp-cloud.tar.gz
-    cp rasp-cloud.tar.gz ../../../
+    repack rasp-cloud.tar.gz rasp-cloud-$(date +%Y-%m-%d) ../../../rasp-cloud.tar.gz
 }
 
 function build_vue()
