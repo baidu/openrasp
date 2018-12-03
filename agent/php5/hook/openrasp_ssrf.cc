@@ -36,18 +36,16 @@ extern "C"
 #endif
 }
 
-std::string cache_key;
-
 /**
  * ssrf相关hook点
  */
-int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args);
+bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args);
 void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args);
 OPENRASP_HOOK_FUNCTION(curl_exec, ssrf)
 {
     bool type_ignored = openrasp_check_type_ignored(SSRF TSRMLS_CC);
     zval function_name, opt, origin_url, *args[2];
-    int skip_post = 1;
+    bool skip_post = true;
     if (!type_ignored)
     {
         INIT_ZVAL(function_name);
@@ -68,10 +66,9 @@ OPENRASP_HOOK_FUNCTION(curl_exec, ssrf)
         zval_dtor(&opt);
         zval_dtor(&origin_url);
     }
-    OPENRASP_HOOK_G(lru)->set(cache_key, true);
 }
 
-int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args)
+bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args)
 {
     zval **zid;
 
@@ -80,22 +77,23 @@ int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *funct
         zend_get_parameters_ex(argc, &zid) != SUCCESS ||
         Z_TYPE_PP(zid) != IS_RESOURCE)
     {
-        return 1;
+        return true;
     }
     if (!zend_get_constant(ZEND_STRL("CURLINFO_EFFECTIVE_URL"), opt TSRMLS_CC))
     {
-        return 1;
+        return true;
     }
     args[0] = *zid;
     args[1] = opt;
     if (call_user_function(EG(function_table), NULL, function_name, origin_url, 2, args TSRMLS_CC) != SUCCESS ||
         Z_TYPE_P(origin_url) != IS_STRING)
     {
-        return 1;
+        return true;
     }
     openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (isolate)
     {
+        std::string cache_key;
         bool is_block = false;
         {
             v8::HandleScope handle_scope(isolate);
@@ -140,8 +138,9 @@ int pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *funct
         {
             handle_block(TSRMLS_C);
         }
+        OPENRASP_HOOK_G(lru)->set(cache_key, true);
     }
-    return 0;
+    return false;
 }
 
 void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args)
