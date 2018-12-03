@@ -34,7 +34,7 @@
 						<tbody>
 							<tr v-for="row in data" :key="row.id">
 								<td nowrap>
-									{{ moment(row.event_time).format('YYYY-MM-DD HH:mm:ss') }}
+									{{ moment(row.time).format('YYYY-MM-DD HH:mm:ss') }}
 								</td>
 								<td>{{ row.content }}</td>
 								<td nowrap>{{ row.user.length ? row.user : '-' }}</td>
