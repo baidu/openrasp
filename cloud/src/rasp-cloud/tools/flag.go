@@ -15,30 +15,24 @@
 package tools
 
 import (
-	"github.com/astaxie/beego/logs"
-	"strconv"
-	"log"
+	"flag"
+	"fmt"
 )
 
 const (
-	ErrCodeLogInitFailed        = 30001 + iota
-	ErrCodeMongoInitFailed
-	ErrCodeESInitFailed
-	ErrCodeConfigInitFailed
-	ErrCodeStartTypeNotSupport
-	ErrCodeGeneratePasswdFailed
+	StartTypeForeground = "panel"
+	StartTypeAgent      = "agent"
+	StartTypeAll        = "all"
 )
 
-func Panic(errCode int, message string, err error) {
-	if err != nil {
-		message = "[" + strconv.Itoa(errCode) + "] " + message + ": " + err.Error()
-	}
-	logs.Error(message)
-	log.Panic(message)
-}
+var StartType *string
 
-func Fatal(message string, err error) {
-	errMsg := message + ": " + err.Error()
-	logs.Error(errMsg)
-	log.Fatal(errMsg)
+func init() {
+	StartType = flag.String("type", "", "use to provide different routers")
+	flag.Parse()
+	fmt.Println("===== start type: " + *StartType + "=====")
+	if *StartType == "" {
+		allType := StartTypeAll
+		StartType = &allType
+	}
 }

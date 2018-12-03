@@ -44,7 +44,7 @@ var (
 func init() {
 	count, err := mongo.Count(userCollectionName)
 	if err != nil {
-		tools.Panic("failed to get the count of user collection", err)
+		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get the count of user collection", err)
 	}
 	if count <= 0 {
 		index := &mgo.Index{
@@ -55,11 +55,11 @@ func init() {
 		}
 		err = mongo.CreateIndex(userCollectionName, index)
 		if err != nil {
-			tools.Panic("failed to create name index for user collection", err)
+			tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create name index for user collection", err)
 		}
 		hash, err := generateHashedPassword("admin@123")
 		if err != nil {
-			tools.Panic("failed to generate the default hashed password", err)
+			tools.Panic(tools.ErrCodeGeneratePasswdFailed, "failed to generate the default hashed password", err)
 		}
 		userId = mongo.GenerateObjectId()
 		user := User{
@@ -69,13 +69,13 @@ func init() {
 		}
 		err = mongo.Insert(userCollectionName, user)
 		if err != nil {
-			tools.Panic("failed to create default user", err)
+			tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create default user", err)
 		}
 	} else {
 		var user *User
 		err := mongo.FindOne(userCollectionName, bson.M{}, &user)
 		if err != nil {
-			tools.Panic("failed to get admin user", err)
+			tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get admin user", err)
 		}
 		userId = user.Id
 	}
@@ -151,6 +151,6 @@ func UpdatePassword(oldPwd string, newPwd string) error {
 	if err != nil {
 		return errors.New("failed to update new password")
 	}
-	err = mongo.UpdateId(userCollectionName, userId, bson.M{"password":pwd})
+	err = mongo.UpdateId(userCollectionName, userId, bson.M{"password": pwd})
 	return err
 }

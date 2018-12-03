@@ -15,42 +15,35 @@
 package main
 
 import (
+	"rasp-cloud/tools"
 	_ "rasp-cloud/models"
 	_ "rasp-cloud/filter"
 	_ "rasp-cloud/controllers"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"os"
-	"rasp-cloud/tools"
-	"flag"
-	"rasp-cloud/routers"
 	"rasp-cloud/controllers"
+	"rasp-cloud/routers"
 )
 
 func main() {
 	beego.BConfig.Listen.Graceful = true
-	handleCmdArgs()
+	routers.InitRouter()
 	initLogger()
 	beego.SetStaticPath("//", "dist")
 	beego.ErrorController(&controllers.ErrorController{})
 	beego.Run()
 }
 
-func handleCmdArgs() {
-	startType := flag.String("type", "", "use to provide different routers")
-	flag.Parse()
-	routers.InitRouter(*startType)
-}
-
 func initLogger() {
 	currentPath, err := tools.GetCurrentPath()
 	if err != nil {
-		tools.Panic("failed to get current path", err)
+		tools.Panic(tools.ErrCodeLogInitFailed, "failed to get current path", err)
 	}
 	if isExists, _ := tools.PathExists(currentPath + "/logs/api"); !isExists {
 		err := os.MkdirAll(currentPath+"/logs/api", os.ModePerm)
 		if err != nil {
-			tools.Panic("failed to create logs/api dir", err)
+			tools.Panic(tools.ErrCodeLogInitFailed, "failed to create logs/api dir", err)
 		}
 	}
 	logs.SetLogFuncCall(true)
@@ -62,6 +55,5 @@ func initLogger() {
 		logs.SetLevel(beego.LevelInformational)
 		beego.BConfig.EnableErrorsShow = false
 		beego.BConfig.EnableErrorsRender = false
-
 	}
 }

@@ -144,6 +144,7 @@ extern "C"
 #define MYSQLI_STORE_RESULT 0
 #define MYSQLI_USE_RESULT 1
 #define MYSQL_PORT 3306
+#define SAFE_STRING(a) ((a) ? a : "")
 
 typedef enum action_type_t
 {
@@ -170,22 +171,29 @@ class SqlConnectionEntry
     std::string server;
     std::string host;
     std::string username;
+    std::string socket;
     int port = 0;
-   public:
+    bool using_socket = true;
+
+  public:
     void set_connection_string(std::string connection_string);
     std::string get_connection_string() const;
-     void set_server(std::string server);
+    void set_server(std::string server);
     std::string get_server() const;
-     void set_host(std::string host);
+    void set_host(std::string host);
     std::string get_host() const;
-     void set_username(std::string username);
+    void set_username(std::string username);
     std::string get_username() const;
-     void set_port(int port);
+    void set_socket(std::string socket);
+    std::string get_socket() const;
+    void set_port(int port);
     int get_port() const;
-     std::string build_policy_msg();
+    std::string build_policy_msg();
     ulong build_hash_code();
+    void set_using_socket(bool using_socket);
+    bool get_using_socket() const;
 };
- typedef SqlConnectionEntry sql_connection_entry;
+typedef SqlConnectionEntry sql_connection_entry;
 
 typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
 typedef void (*hook_handler_t)();

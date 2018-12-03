@@ -23,7 +23,7 @@ import (
 	"rasp-cloud/tools"
 )
 
-func InitRouter(startType string) {
+func InitRouter() {
 	agentNS := beego.NewNamespace("/agent",
 		beego.NSNamespace("/heartbeat",
 			beego.NSInclude(
@@ -100,14 +100,15 @@ func InitRouter(startType string) {
 	)
 	userNS := beego.NewNamespace("/user", beego.NSInclude(&api.UserController{}))
 	ns := beego.NewNamespace("/v1")
-	if startType == "foreground" {
+	startType := *tools.StartType
+	if startType == tools.StartTypeForeground {
 		ns.Namespace(foregroudNS, userNS)
-	} else if startType == "agent" {
+	} else if startType == tools.StartTypeAgent {
 		ns.Namespace(agentNS)
-	} else if startType == "" {
+	} else if startType == tools.StartTypeAll {
 		ns.Namespace(foregroudNS, agentNS, userNS)
 	} else {
-		tools.Panic("The start type is not supported: "+startType, nil)
+		tools.Panic(tools.ErrCodeStartTypeNotSupport, "The start type is not supported: "+startType, nil)
 	}
 	beego.AddNamespace(ns)
 }

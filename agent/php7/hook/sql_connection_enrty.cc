@@ -38,6 +38,7 @@ void SqlConnectionEntry::set_host(std::string host)
 {
   this->host = host;
 }
+
 std::string SqlConnectionEntry::get_host() const
 {
   return host;
@@ -52,6 +53,16 @@ std::string SqlConnectionEntry::get_username() const
   return username;
 }
 
+void SqlConnectionEntry::set_socket(std::string socket)
+{
+  this->socket = socket;
+}
+
+std::string SqlConnectionEntry::get_socket() const
+{
+  return socket;
+}
+
 void SqlConnectionEntry::set_port(int port)
 {
   this->port = port;
@@ -63,16 +74,32 @@ int SqlConnectionEntry::get_port() const
 
 std::string SqlConnectionEntry::build_policy_msg()
 {
+
   std::ostringstream oss;
   oss << "Database security - Connecting to a "
       << server
       << " instance using the high privileged account: "
-      << username << " - (" << host << ":" << port << ")";
+      << username;
+  if (get_using_socket())
+  {
+    oss << " (via unix domain socket)";
+  }
   return oss.str();
 }
 
 ulong SqlConnectionEntry::build_hash_code()
 {
-  std::string server_host_port = server + "-" + host + ":" + std::to_string(port);
+  std::string server_host_port = server + "-" + host + ":" +
+                                 (get_using_socket() ? socket : std::to_string(port));
   return zend_inline_hash_func(server_host_port.c_str(), server_host_port.length());
+}
+
+void SqlConnectionEntry::set_using_socket(bool using_socket)
+{
+  this->using_socket = using_socket;
+}
+
+bool SqlConnectionEntry::get_using_socket() const
+{
+  return using_socket;
 }

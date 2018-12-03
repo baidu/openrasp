@@ -100,13 +100,11 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
         socket = default_socket;
     }
     sql_connection_p->set_server("mysql");
-    sql_connection_p->set_username(username);
-
-    if (hostname && strcmp(hostname, "localhost") != 0)
-    {
-        sql_connection_p->set_host(hostname);
-        sql_connection_p->set_port(port);
-    }
+    sql_connection_p->set_username(SAFE_STRING(username));
+    sql_connection_p->set_host(SAFE_STRING(hostname));
+    sql_connection_p->set_using_socket(nullptr == hostname || strcmp("localhost", hostname) == 0);
+    sql_connection_p->set_socket(SAFE_STRING(socket));
+    sql_connection_p->set_port(port);
 }
 
 static void init_global_mysqli_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
