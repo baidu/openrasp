@@ -148,6 +148,10 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
                 {
                     sql_connection_p->set_using_socket((sb.st_mode & S_IFDIR) != 0 || (sb.st_mode & S_IFSOCK) != 0);
                 }
+                else
+                {
+                    sql_connection_p->set_using_socket(false);
+                }
             }
             else if (strcmp(pname, "port") == 0)
             {

@@ -116,7 +116,7 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
             {"port", "3306", 0},
             {"unix_socket", NULL, 0},
         };
-        php_pdo_parse_data_source(data_source, data_source_len, mysql_vars, 5);
+        int matches = php_pdo_parse_data_source(colon + 1, strlen(colon + 1), mysql_vars, 5);
         sql_connection_p->set_host(mysql_vars[2].optval);
         sql_connection_p->set_using_socket(nullptr == mysql_vars[2].optval || strcmp("localhost", mysql_vars[2].optval) == 0);
         sql_connection_p->set_port(atoi(mysql_vars[3].optval));

@@ -36,10 +36,6 @@ std::string SqlConnectionEntry::get_server() const
 
 void SqlConnectionEntry::set_host(std::string host)
 {
-  if (host.empty() || ("localhost" == host))
-  {
-    using_socket = true;
-  }
   this->host = host;
 }
 
