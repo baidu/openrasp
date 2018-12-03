@@ -100,6 +100,7 @@ const (
 )
 
 var (
+	domain               string
 	lastAlarmTime        = time.Now().UnixNano() / 1000000
 	DefaultGeneralConfig = map[string]interface{}{
 		"clientip.header":    "ClientIP",
@@ -120,9 +121,14 @@ var (
 )
 
 func init() {
+	domain = beego.AppConfig.String("Domain")
+	if domain == "" {
+		tools.Panic(tools.ErrCodeConfigInitFailed,
+			"the 'Domain' config in the app.conf can not be empty", nil)
+	}
 	count, err := mongo.Count(appCollectionName)
 	if err != nil {
-		tools.Panic("failed to get app collection count", err)
+		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get app collection count", err)
 	}
 	if count <= 0 {
 		index := &mgo.Index{
@@ -133,14 +139,17 @@ func init() {
 		}
 		err = mongo.CreateIndex(appCollectionName, index)
 		if err != nil {
-			tools.Panic("failed to create index for app collection", err)
+			tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
 		}
 	}
 	alarmDuration := beego.AppConfig.DefaultInt64("AlarmDuration", 120)
 	if alarmDuration <= 0 {
-		tools.Panic("the 'AlarmDuration' config must be greater than 0", nil)
+		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'AlarmDuration' config must be greater than 0", nil)
 	}
-	go startAlarmTicker(time.Second * time.Duration(alarmDuration))
+	if *tools.StartType == tools.StartTypeAll ||
+		*tools.StartType == tools.StartTypeForeground {
+		go startAlarmTicker(time.Second * time.Duration(alarmDuration))
+	}
 }
 
 func startAlarmTicker(duration time.Duration) {
@@ -378,7 +387,7 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 				Total:        total - int64(len(alarms)),
 				Alarms:       alarms,
 				AppName:      app.Name,
-				DetailedLink: beego.AppConfig.String("Domain") + "/#/events/" + app.Id,
+				DetailedLink: domain + "/#/events/" + app.Id,
 			})
 			if err != nil {
 				beego.Error("failed to execute email template: " + err.Error())
@@ -470,8 +479,8 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 		if isTest {
 			dingText = "OpenRASP test message from app: " + app.Name
 		} else {
-			dingText = "来自 OpenRAS 的报警\n共有 " + strconv.FormatInt(total, 10) + " 条报警信息来自 APP：" + app.Name + "，详细信息：" +
-				beego.AppConfig.String("Domain") + "/#/events/" + app.Id
+			dingText = "来自 OpenRAS 的报警\n共有 " + strconv.FormatInt(total, 10) + " 条报警信息来自 APP：" +
+				app.Name + "，详细信息：" + domain + "/#/events/" + app.Id
 		}
 		if len(dingCong.RecvUser) > 0 {
 			body["touser"] = strings.Join(dingCong.RecvUser, "|")
