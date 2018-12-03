@@ -27,7 +27,7 @@
               <div class="h6">
                 报警时间
               </div>
-              <p>{{ moment(data.event_time).format('YYYY-MM-DD hh:mm:ss') }}</p>
+              <p>{{ moment(data.event_time).format('YYYY-MM-DD HH:mm:ss') }}</p>
               <div class="h6">
                 报警消息
               </div>
@@ -117,9 +117,6 @@ export default {
   },
   methods: {
     attack_type2name: attack_type2name,
-    moment: function (...a) {
-      return moment(...a)
-    },
     showModal(data) {
       this.data = data
       this.$refs.attack_params.setData(data)
