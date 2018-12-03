@@ -118,7 +118,9 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
         };
         php_pdo_parse_data_source(data_source, data_source_len, mysql_vars, 5);
         sql_connection_p->set_host(mysql_vars[2].optval);
+        sql_connection_p->set_using_socket(nullptr == mysql_vars[2].optval || strcmp("localhost", mysql_vars[2].optval) == 0);
         sql_connection_p->set_port(atoi(mysql_vars[3].optval));
+        sql_connection_p->set_socket(SAFE_STRING(mysql_vars[4].optval));
         sql_connection_p->set_username(username);
         for (int i = 0; i < 5; i++)
         {
