@@ -30,7 +30,6 @@ func main() {
 	beego.BConfig.Listen.Graceful = true
 	routers.InitRouter()
 	initLogger()
-	beego.SetStaticPath("//", "dist")
 	beego.ErrorController(&controllers.ErrorController{})
 	beego.Run()
 }

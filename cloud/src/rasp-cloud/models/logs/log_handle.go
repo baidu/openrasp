@@ -53,6 +53,7 @@ type SearchAttackParam struct {
 		HostName     string    `json:"server_hostname,omitempty"`
 		AttackSource string    `json:"attack_source,omitempty"`
 		AttackUrl    string    `json:"url,omitempty"`
+		LocalIp      string    `json:"local_ip,omitempty"`
 		AttackType   *[]string `json:"attack_type,omitempty"`
 	} `json:"data"`
 }
@@ -66,6 +67,7 @@ type SearchPolicyParam struct {
 		EndTime   int64     `json:"end_time"`
 		RaspId    string    `json:"rasp_id,omitempty"`
 		HostName  string    `json:"server_hostname,omitempty"`
+		LocalIp   string    `json:"local_ip,omitempty"`
 		PolicyId  *[]string `json:"policy_id,omitempty"`
 	} `json:"data"`
 }
@@ -215,6 +217,9 @@ func SearchLogs(startTime int64, endTime int64, query map[string]interface{}, so
 				} else {
 					queries = append(queries, elastic.NewTermQuery(key, value))
 				}
+			} else if key == "local_ip" {
+				queries = append(queries,
+					elastic.NewNestedQuery("server_nic", elastic.NewTermQuery("server_nic.ip", value)))
 			} else {
 				queries = append(queries, elastic.NewTermQuery(key, value))
 			}
