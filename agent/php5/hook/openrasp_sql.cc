@@ -30,12 +30,12 @@ extern "C"
 /**
  * sql connection alarm
  */
-static void connection_via_default_username_policy(char *check_message, sql_connection_entry *sql_connection_p TSRMLS_DC)
+static void connection_via_default_username_policy(sql_connection_entry *sql_connection_p TSRMLS_DC)
 {
     zval *policy_array = nullptr;
     MAKE_STD_ZVAL(policy_array);
     array_init(policy_array);
-    add_assoc_string(policy_array, "message", check_message, 1);
+    add_assoc_string(policy_array, "message", (char *)sql_connection_p->build_policy_msg().c_str(), 1);
     add_assoc_long(policy_array, "policy_id", 3006);
     zval *connection_params = nullptr;
     MAKE_STD_ZVAL(connection_params);
@@ -43,6 +43,7 @@ static void connection_via_default_username_policy(char *check_message, sql_conn
     add_assoc_string(connection_params, "server", (char *)sql_connection_p->get_server().c_str(), 1);
     add_assoc_string(connection_params, "hostname", (char *)sql_connection_p->get_host().c_str(), 1);
     add_assoc_string(connection_params, "username", (char *)sql_connection_p->get_username().c_str(), 1);
+    add_assoc_string(connection_params, "socket", (char *)sql_connection_p->get_socket().c_str(), 1);
     add_assoc_string(connection_params, "connectionString", (char *)sql_connection_p->get_connection_string().c_str(), 1);
     add_assoc_long(connection_params, "port", sql_connection_p->get_port());
     add_assoc_zval(policy_array, "params", connection_params);
@@ -78,7 +79,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
         {"oci", "sys"}};
 
     sql_connection_entry conn_entry;
-    std::string check_message;
+    bool high_privileged_found = false;
     zend_bool need_block = 0;
 
     connection_init_func(INTERNAL_FUNCTION_PARAM_PASSTHRU, &conn_entry);
@@ -92,16 +93,16 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
         {
             if (conn_entry.get_username() == pos.first->second)
             {
-                check_message = conn_entry.build_policy_msg();
+                high_privileged_found = true;
                 break;
             }
             pos.first++;
         }
-        if (!check_message.empty())
+        if (high_privileged_found)
         {
             if (enforce_policy)
             {
-                connection_via_default_username_policy((char *)check_message.c_str(), &conn_entry TSRMLS_CC);
+                connection_via_default_username_policy(&conn_entry TSRMLS_CC);
                 need_block = 1;
             }
             else
@@ -112,7 +113,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
                     openrasp_shared_alloc_lock(TSRMLS_C);
                     if (!openrasp_shared_hash_exist(connection_hash, LOG_G(alarm_logger).get_formatted_date_suffix()))
                     {
-                        connection_via_default_username_policy((char *)check_message.c_str(), &conn_entry TSRMLS_CC);
+                        connection_via_default_username_policy(&conn_entry TSRMLS_CC);
                     }
                     openrasp_shared_alloc_unlock(TSRMLS_C);
                 }
