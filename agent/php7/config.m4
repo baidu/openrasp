@@ -398,6 +398,24 @@ if test "$PHP_OPENRASP" != "no"; then
   EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS $ac_cv_narrowing -std=$ac_cv_cstd -Wno-deprecated-declarations -Wno-write-strings -Wno-deprecated-register"
   PHP_SUBST(EXTRA_CXXFLAGS)
 
+  AC_MSG_CHECKING(for check isfinite declared)
+  AC_LANG_PUSH([C++])
+  AC_TRY_RUN([
+#include <math.h>
+#include <cmath>
+#include <math.h>
+
+int main() {
+  double value = 12.3456;
+  if (isfinite(value)) {}
+  return 0;
+}
+],dnl
+  AC_DEFINE(HAVE_ISFINITE, 1, [Define if you have isfinite declared])
+  msg=yes, msg=no, msg=no)
+	AC_LANG_POP([C++])
+  AC_MSG_RESULT([$msg])
+
   AC_MSG_CHECKING(for mmap() using MAP_ANON shared memory support)
   AC_TRY_RUN([
 #include <sys/types.h>
