@@ -65,17 +65,17 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
         if (in_ctor)
         {
             if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sssslsl",
-                                      &hostname, &hostname_len, &username, &username_len, &passwd, &passwd_len, &dbname, &dbname_len, &port, &socket, &socket_len,
-                                      &flags) == FAILURE)
+                                      &hostname, &hostname_len, &username, &username_len, &passwd, &passwd_len, &dbname,
+                                      &dbname_len, &port, &socket, &socket_len, &flags) == FAILURE)
             {
                 return;
             }
         }
         else
         {
-            if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "o|sssslsl", &object,
-                                             &hostname, &hostname_len, &username, &username_len, &passwd, &passwd_len, &dbname, &dbname_len, &port, &socket, &socket_len,
-                                             &flags) == FAILURE)
+            if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "o|sssslsl", &object, &hostname,
+                                             &hostname_len, &username, &username_len, &passwd, &passwd_len, &dbname,
+                                             &dbname_len, &port, &socket, &socket_len, &flags) == FAILURE)
             {
                 return;
             }
@@ -98,13 +98,11 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
         socket = default_socket;
     }
     sql_connection_p->set_server("mysql");
-    sql_connection_p->set_username(username);
-
-    if (hostname && strcmp(hostname, "localhost") != 0)
-    {
-        sql_connection_p->set_host(hostname);
-        sql_connection_p->set_port(port);
-    }
+    sql_connection_p->set_username(SAFE_STRING(username));
+    sql_connection_p->set_host(SAFE_STRING(hostname));
+    sql_connection_p->set_using_socket(nullptr == hostname || strcmp("localhost", hostname) == 0);
+    sql_connection_p->set_socket(SAFE_STRING(socket));
+    sql_connection_p->set_port(port);
 }
 
 static void init_global_mysqli_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)

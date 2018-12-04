@@ -35,13 +35,13 @@ static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
     static char *default_host = INI_STR("mysql.default_host");
     static char *default_user = INI_STR("mysql.default_user");
     static char *default_password = INI_STR("mysql.default_password");
+    static char *default_socket = INI_STR("mysql.default_socket");
     static long default_port = INI_INT("mysql.default_port");
 
     if (default_port <= 0)
     {
         default_port = MYSQL_PORT;
     }
-
     if (PG(sql_safe_mode))
     {
         if (ZEND_NUM_ARGS() > 0)
@@ -80,6 +80,10 @@ static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
             user = default_user;
         }
     }
+    sql_connection_p->set_server("mysql");
+    socket = default_socket;
+    bool using_socket = false;
+
     if (host_and_port && (tmp = strchr(host_and_port, ':')))
     {
         host = estrndup(host_and_port, tmp - host_and_port);
@@ -92,24 +96,26 @@ static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
             {
                 tmp++;
                 socket = tmp;
+                using_socket = true;
             }
         }
         else
         {
             socket = tmp;
+            using_socket = true;
         }
         sql_connection_p->set_host(host);
+        using_socket = (strcmp("localhost", host) == 0);
     }
     else
     {
-        sql_connection_p->set_host(host_and_port);
+        sql_connection_p->set_host(SAFE_STRING(host_and_port));
+        using_socket = (host_and_port == nullptr || strncmp(host_and_port, "localhost", strlen("localhost")) == 0);
         sql_connection_p->set_port(default_port);
     }
-    sql_connection_p->set_server("mysql");
-    if (user)
-    {
-        sql_connection_p->set_username(user);
-    }
+    sql_connection_p->set_using_socket(using_socket);
+    sql_connection_p->set_socket(SAFE_STRING(socket));
+    sql_connection_p->set_username(SAFE_STRING(user));
 }
 
 static inline void init_mysql_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)

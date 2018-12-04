@@ -121,11 +121,6 @@ var (
 )
 
 func init() {
-	domain = beego.AppConfig.String("Domain")
-	if domain == "" {
-		tools.Panic(tools.ErrCodeConfigInitFailed,
-			"the 'Domain' config in the app.conf can not be empty", nil)
-	}
 	count, err := mongo.Count(appCollectionName)
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get app collection count", err)
@@ -148,6 +143,11 @@ func init() {
 	}
 	if *tools.StartType == tools.StartTypeAll ||
 		*tools.StartType == tools.StartTypeForeground {
+		domain = beego.AppConfig.String("Domain")
+		if domain == "" {
+			tools.Panic(tools.ErrCodeConfigInitFailed,
+				"the 'Domain' config in the app.conf can not be empty", nil)
+		}
 		go startAlarmTicker(time.Second * time.Duration(alarmDuration))
 	}
 }

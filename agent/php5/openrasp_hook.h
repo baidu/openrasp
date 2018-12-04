@@ -143,6 +143,7 @@ extern "C"
 #define MYSQLI_STORE_RESULT 0
 #define MYSQLI_USE_RESULT 1
 #define MYSQL_PORT 3306
+#define SAFE_STRING(a) ((a) ? a : "")
 
 typedef enum action_type_t
 {
@@ -171,7 +172,9 @@ class SqlConnectionEntry
     std::string server;
     std::string host;
     std::string username;
+    std::string socket;
     int port = 0;
+    bool using_socket = true;
 
   public:
     void set_connection_string(std::string connection_string);
@@ -186,11 +189,17 @@ class SqlConnectionEntry
     void set_username(std::string username);
     std::string get_username() const;
 
+    void set_socket(std::string socket);
+    std::string get_socket() const;
+
     void set_port(int port);
     int get_port() const;
 
     std::string build_policy_msg();
     ulong build_hash_code();
+
+    void set_using_socket(bool using_socket);
+    bool get_using_socket() const;
 };
 
 typedef SqlConnectionEntry sql_connection_entry;

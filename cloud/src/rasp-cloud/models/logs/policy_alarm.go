@@ -71,10 +71,6 @@ var (
 						"type": "keyword",
 						"ignore_above": 256
 					},
-					"local_ip": {
-						"type": "keyword",
-                        "ignore_above": 256
-					},
 					"event_time": {
 						"type": "date"
 					},

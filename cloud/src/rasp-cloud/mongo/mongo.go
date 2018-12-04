@@ -35,7 +35,9 @@ func init() {
 	var err error
 	poolLimit := beego.AppConfig.DefaultInt("MongoPoolLimit", 1024)
 	dialInfo := &mgo.DialInfo{
-		Addrs:     []string{beego.AppConfig.String("MongoDBAddr")},
+		Addrs:     []string{beego.AppConfig.DefaultString("MongoDBAddr", "")},
+		Username:  beego.AppConfig.DefaultString("MongoDBUser", ""),
+		Password:  beego.AppConfig.DefaultString("MongoDBPwd", ""),
 		Direct:    false,
 		Timeout:   time.Second * 20,
 		PoolLimit: poolLimit,

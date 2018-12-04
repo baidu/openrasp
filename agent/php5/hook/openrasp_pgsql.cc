@@ -145,13 +145,22 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
             else if (strcmp(pname, "host") == 0)
             {
                 sql_connection_p->set_host(pval);
+                TSRMLS_FETCH();
+                struct stat sb;
+                if (VCWD_STAT(pval, &sb) == 0)
+                {
+                    sql_connection_p->set_using_socket((sb.st_mode & S_IFDIR) != 0 || (sb.st_mode & S_IFSOCK) != 0);
+                }
+                else
+                {
+                    sql_connection_p->set_using_socket(false);
+                }
             }
             else if (strcmp(pname, "port") == 0)
             {
                 sql_connection_p->set_port(atoi(pval));
             }
         }
-        sql_connection_p->set_server("pgsql");
         efree(buf);
     }
 }
@@ -167,7 +176,7 @@ static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connectio
     {
         return;
     }
-
+    sql_connection_p->set_server("pgsql");
     if (ZEND_NUM_ARGS() == 1)
     { /* new style, using connection string */
         connstring = Z_STRVAL_PP(args[0]);
@@ -178,8 +187,11 @@ static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connectio
         convert_to_long_ex(args[1]);
         connect_type = Z_LVAL_PP(args[1]);
     }
-    sql_connection_p->set_connection_string(connstring);
-    parse_connection_string(connstring, sql_connection_p);
+    if (connstring)
+    {
+        sql_connection_p->set_connection_string(connstring);
+        parse_connection_string(connstring, sql_connection_p);
+    }
 }
 
 /**
