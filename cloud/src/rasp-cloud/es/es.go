@@ -32,7 +32,9 @@ var (
 )
 
 func init() {
-	client, err := elastic.NewClient(elastic.SetURL(beego.AppConfig.String("EsAddr")))
+	client, err := elastic.NewClient(elastic.SetURL(beego.AppConfig.String("EsAddr")),
+		elastic.SetBasicAuth(beego.AppConfig.DefaultString("EsUser", ""),
+			beego.AppConfig.DefaultString("EsPwd", "")))
 	if err != nil {
 		tools.Panic(tools.ErrCodeESInitFailed, "init ES failed", err)
 	}
