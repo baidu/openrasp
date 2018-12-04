@@ -217,6 +217,7 @@ void load_plugins()
 void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string> &buildin_action_map)
 {
     v8::HandleScope handle_scope(isolate);
+    auto context = isolate->GetCurrentContext();
     auto rst = isolate->ExecScript(R"(
         Object.keys(RASP.algorithmConfig || {})
             .filter(key => typeof key === 'string' && typeof RASP.algorithmConfig[key] === 'object' && typeof RASP.algorithmConfig[key].action === 'string')
@@ -230,9 +231,14 @@ void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string>
     auto len = arr->Length();
     for (size_t i = 0; i < len; i++)
     {
-        auto item = arr->Get(i).As<v8::Array>();
-        v8::String::Utf8Value key(item->Get(0));
-        v8::String::Utf8Value value(item->Get(1));
+        v8::HandleScope handle_scope(isolate);
+        v8::Local<v8::Value> item;
+        if (!arr->Get(context, i).ToLocal(&item) || !item->IsArray())
+        {
+            continue;
+        }
+        v8::String::Utf8Value key(item.As<v8::Array>()->Get(0));
+        v8::String::Utf8Value value(item.As<v8::Array>()->Get(1));
         auto iter = buildin_action_map.find({*key, key.length()});
         if (iter != buildin_action_map.end())
         {

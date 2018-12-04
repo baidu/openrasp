@@ -26,6 +26,12 @@ Isolate *Isolate::New(Snapshot *snapshot_blob)
     data->create_params.external_references = snapshot_blob->external_references;
 
     Isolate *isolate = reinterpret_cast<Isolate *>(v8::Isolate::New(data->create_params));
+#define DEFAULT_STACK_SIZE_IN_KB 1024
+    uintptr_t current_stack = reinterpret_cast<uintptr_t>(&current_stack);
+    uintptr_t stack_limit = current_stack - (DEFAULT_STACK_SIZE_IN_KB * 1024 / sizeof(uintptr_t));
+    stack_limit = stack_limit < current_stack ? stack_limit : sizeof(stack_limit);
+    isolate->SetStackLimit(stack_limit);
+#undef DEFAULT_STACK_SIZE_IN_KB
     isolate->Enter();
     v8::HandleScope handle_scope(isolate);
     v8::Local<v8::Context> context = v8::Context::New(isolate);

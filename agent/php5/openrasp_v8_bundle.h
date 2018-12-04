@@ -146,8 +146,10 @@ inline void plugin_info(const std::string &message)
 }
 inline void plugin_info(Isolate *isolate, v8::Local<v8::Value> value)
 {
+  v8::HandleScope handle_scope(isolate);
+  auto context = isolate->GetCurrentContext();
   auto console_log = isolate->GetData()->console_log.Get(isolate);
-  (void)console_log->Call(isolate->GetCurrentContext(), console_log, 1, reinterpret_cast<v8::Local<v8::Value> *>(&value)).IsEmpty();
+  (void)console_log->Call(context, console_log, 1, reinterpret_cast<v8::Local<v8::Value> *>(&value)).IsEmpty();
 }
 } // namespace openrasp
 
