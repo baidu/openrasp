@@ -129,10 +129,12 @@ public class SQLDriverManagerHook extends AbstractClassHook {
      * @param properties 连接属性
      */
     public static void checkSqlConnection(String url, Properties properties) {
+        if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
+            return;
+        }
         HashMap<String, Object> params = new HashMap<String, Object>(4);
         params.put("url", url);
         params.put("properties", properties);
-        HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_SQL_CONNECTION, params);
-
+        HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_SQL_CONNECTION, params);
     }
 }
