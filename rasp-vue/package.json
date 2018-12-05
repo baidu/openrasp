@@ -17,6 +17,7 @@
     "bootstrap-vue": "^2.0.0-rc.11",
     "c3": "^0.6.10",
     "daterangepicker": "^3.0.3",
+    "is-ip": "^2.0.0",
     "jquery": "^3.3.1",
     "moment": "^2.22.2",
     "node-sass": "^4.10.0",

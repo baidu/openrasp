@@ -86,6 +86,7 @@
 <script>
 import baselineDetailModal from '@/components/modals/baselineDetailModal'
 import DatePicker from '@/components/DatePicker'
+import isIp from 'is-ip'
 import { mapGetters } from 'vuex'
 
 export default {
@@ -125,12 +126,19 @@ export default {
       var body = {
         data: {
           app_id: this.current_app.id,
-          start_time: this.$refs.datePicker.start.unix() * 1000,
-          end_time: this.$refs.datePicker.end.unix() * 1000,
-          server_hostname: this.hostname
+          start_time: this.$refs.datePicker.start.valueOf(),
+          end_time: this.$refs.datePicker.end.valueOf()
         },
         page: page,
         perpage: 10
+      }
+
+      if (this.hostname) {
+        if (isIp(this.hostname)) {
+          body.data.local_ip = this.hostname
+        } else {
+          body.data.server_hostname = this.hostname
+        }
       }
 
       this.loading = true
