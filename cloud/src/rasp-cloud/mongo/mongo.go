@@ -32,6 +32,7 @@ var (
 )
 
 func init() {
+	var err error
 	mongoAddr := beego.AppConfig.DefaultString("MongoDBAddr", "")
 	if mongoAddr == "" {
 		tools.Panic(tools.ErrCodeConfigInitFailed,
@@ -46,7 +47,7 @@ func init() {
 		Timeout:   time.Second * 20,
 		PoolLimit: poolLimit,
 	}
-	session, err := mgo.DialWithInfo(dialInfo)
+	session, err = mgo.DialWithInfo(dialInfo)
 
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "init mongodb failed", err)
