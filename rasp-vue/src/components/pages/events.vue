@@ -8,18 +8,16 @@
         <div class="page-options d-flex">
           <div class="input-icon ml-2 w-50">
             <span class="input-icon-addon">
-              <i class="fe fe-calendar">
-              </i>
+              <i class="fe fe-calendar" />
             </span>
-            <DatePicker ref="datePicker" v-on:selected="loadEvents(1)"></DatePicker>
+            <DatePicker ref="datePicker" @selected="loadEvents(1)" />
           </div>
-          <EventTypePicker ref="eventTypePicker" v-on:selected="loadEvents(1)"></EventTypePicker>
+          <EventTypePicker ref="eventTypePicker" @selected="loadEvents(1)" />
           <div class="input-icon ml-2">
             <span class="input-icon-addon">
-              <i class="fe fe-search">
-              </i>
+              <i class="fe fe-search" />
             </span>
-            <input type="text" class="form-control w-10" placeholder="攻击来源" v-model="srcip" />
+            <input v-model="srcip" type="text" class="form-control w-10" placeholder="攻击来源">
           </div>
           <button class="btn btn-primary ml-2" @click="loadEvents(1)">
             搜索
@@ -28,8 +26,7 @@
       </div>
       <div class="card">
         <div class="card-body">
-
-          <vue-loading v-if="loading" type="spiningDubbles" color="rgb(90, 193, 221)" :size="{ width: '50px', height: '50px' }"></vue-loading>
+          <VueLoading v-if="loading" type="spiningDubbles" color="rgb(90, 193, 221)" :size="{ width: '50px', height: '50px' }" />
 
           <table v-if="! loading" class="table table-striped table-bordered">
             <thead>
@@ -61,11 +58,11 @@
               <tr v-for="row in data" :key="row.id">
                 <td nowrap>
                   {{ moment(row.event_time).format('YYYY-MM-DD') }}
-                  <br />
+                  <br>
                   {{ moment(row.event_time).format('HH:mm:ss') }}
                 </td>
                 <td style="max-width: 500px; ">
-                  <a v-bind:href="row.url" target="_blank">
+                  <a :href="row.url" target="_blank">
                     {{ row.url }}
                   </a>
                 </td>
@@ -85,7 +82,7 @@
                   {{ row.plugin_message }}
                 </td>
                 <td nowrap>
-                  <a href="javascript:" @click="showEventDetail(row)" target="_blank">
+                  <a href="javascript:" target="_blank" @click="showEventDetail(row)">
                     查看详情
                   </a>
                 </td>
@@ -93,89 +90,75 @@
             </tbody>
           </table>
           <nav v-if="! loading">
-            <b-pagination align="center" :total-rows="total" v-model="currentPage" :per-page="10">
-            </b-pagination>
+            <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" />
           </nav>
         </div>
       </div>
     </div>
 
-    <eventDetailModal ref="showEventDetail"></eventDetailModal>
+    <EventDetailModal ref="showEventDetail" />
   </div>
-
 </template>
 
 <script>
-import eventDetailModal from "@/components/modals/eventDetailModal"
-import DatePicker from "@/components/DatePicker"
-import EventTypePicker from "@/components/EventTypePicker"
-import { attack_type2name, block_status2name } from '../../util'
+import EventDetailModal from '@/components/modals/eventDetailModal'
+import DatePicker from '@/components/DatePicker'
+import EventTypePicker from '@/components/EventTypePicker'
+import { attack_type2name, block_status2name, request } from '../../util'
 import { mapGetters } from 'vuex'
 
 export default {
-  name: "events",
-  data: function () {
+  name: 'Events',
+  components: {
+    EventDetailModal,
+    DatePicker,
+    EventTypePicker
+  },
+  data() {
     return {
       data: [],
       loading: false,
       currentPage: 1,
-      srcip: "",
+      srcip: '',
       total: 0
-    }
-  },
-  watch: {
-    currentPage: function (newVal, oldVal) {
-      this.loadEvents(newVal)
-    },
-    current_app() {
-      this.loadEvents(1);
     }
   },
   computed: {
     ...mapGetters(['current_app'])
   },
-  activated: function () {
-    if (!this.loading && !this.data.length) {
-      this.loading = true
-      this.loadEvents(1)
+  watch: {
+    currentPage(newVal, oldVal) {
+      this.loadEvents(newVal)
     }
   },
+  activated() {
+    this.loadEvents(1)
+  },
   methods: {
-    attack_type2name: attack_type2name,
-    block_status2name: block_status2name,
-    showEventDetail: function (data) {
+    attack_type2name,
+    block_status2name,
+    showEventDetail(data) {
       this.$refs.showEventDetail.showModal(data)
     },
-    loadEvents: function (page) {
-      var self = this
-      var body = {
+    loadEvents(page) {
+      this.loading = true
+      return request.post('v1/api/log/attack/search', {
         data: {
-          start_time: this.$refs.datePicker.start.unix() * 1000,
-          end_time: this.$refs.datePicker.end.unix() * 1000,
+          start_time: this.$refs.datePicker.start.valueOf(),
+          end_time: this.$refs.datePicker.end.valueOf(),
           attack_type: this.$refs.eventTypePicker.selected(),
           attack_source: this.srcip,
           app_id: this.current_app.id
         },
         page: page,
         perpage: 10
-      }
-
-      this.loading = true
-      this.api_request("v1/api/log/attack/search", body, function (
-        data
-      ) {
-        self.data = data.data
-        self.total = data.total
-        self.loading = false
+      }).then(res => {
+        this.data = res.data
+        this.total = res.total
+        this.loading = false
       })
     }
-  },
-  components: {
-    eventDetailModal,
-    DatePicker,
-    EventTypePicker
   }
 }
 </script>
-
 

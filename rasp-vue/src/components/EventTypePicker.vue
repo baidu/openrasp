@@ -7,9 +7,8 @@
       <div class="row">
         <div class="col-6">
           <label class="custom-switch">
-            <input type="checkbox" v-model="all_checked" checked="all_checked" @change="toggle_all()" class="custom-switch-input" />
-            <span class="custom-switch-indicator">
-            </span>
+            <input v-model="all_checked" type="checkbox" checked="all_checked" class="custom-switch-input" @change="toggle_all()">
+            <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
               全选
             </span>
@@ -17,11 +16,10 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-6" v-for="c in categories" :key="c.id">
+        <div v-for="c in categories" :key="c.id" class="col-6">
           <label class="custom-switch">
-            <input type="checkbox" v-model="c.checked" checked="c.checked" @change="$emit('selected')" class="custom-switch-input" />
-            <span class="custom-switch-indicator">
-            </span>
+            <input v-model="c.checked" type="checkbox" checked="c.checked" class="custom-switch-input" @change="$emit('selected')">
+            <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
               {{ c.name }}
             </span>
@@ -43,18 +41,38 @@
 </template>
 
 <script>
-import { attack_types } from "../util"
+import { attack_types } from '../util'
 
 export default {
-  name: "EventTypePicker",
+  name: 'EventTypePicker',
   data: function() {
     return {
       categories: [],
       all_checked: true
     }
   },
+  mounted: function() {
+    var data = []
+    var self = this
+
+    Object.keys(attack_types).forEach(function(key) {
+      // FIXME: 目前PHP几个webshell_XXX没有统一成 webshell 类型，
+      // 所以 webshell 这个类型没必要显示出来
+      if (key == 'webshell') {
+        return
+      }
+
+      data.push({
+        name: attack_types[key],
+        id: key,
+        checked: true
+      })
+    })
+
+    this.categories = data
+  },
   methods: {
-    toggle_all: function () {
+    toggle_all: function() {
       this.categories.forEach((row) => {
         row.checked = this.all_checked
       })
@@ -70,27 +88,6 @@ export default {
 
       return types
     }
-  },
-  mounted: function() {
-    var data = []
-    var self = this
-
-    Object.keys(attack_types).forEach(function(key) {
-      
-      // FIXME: 目前PHP几个webshell_XXX没有统一成 webshell 类型，
-      // 所以 webshell 这个类型没必要显示出来
-      if (key == 'webshell') {
-        return
-      }
-
-      data.push({
-        name: attack_types[key],
-        id: key,
-        checked: true
-      })
-    })
-
-    this.categories = data
   }
 }
 </script>

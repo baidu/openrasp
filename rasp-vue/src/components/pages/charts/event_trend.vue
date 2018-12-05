@@ -1,14 +1,17 @@
 <template>
-  <vue-c3 :handler="trend_handler" style="height: 15rem;"></vue-c3>
+  <VueC3 :handler="trend_handler" style="height: 15rem;" />
 </template>
 
 <script>
-import Vue from "vue"
-import VueC3 from "vue-c3"
-import { attack_types } from "../../../util"
+import Vue from 'vue'
+import VueC3 from 'vue-c3'
+import { attack_types } from '../../../util'
 
 export default {
-  name: "event_trend",
+  name: 'EventTrend',
+  components: {
+    VueC3
+  },
   data: function() {
     return {
       trend_handler: new Vue()
@@ -27,15 +30,15 @@ export default {
         },
         data: {
           columns: data.data,
-          type: "area",
-          groups: [["data1", "data2"]],
+          type: 'area',
+          groups: [['data1', 'data2']],
           colors: {
-            data1: "#467fcf",
-            data2: "#5eba00"
+            data1: '#467fcf',
+            data2: '#5eba00'
           },
           names: {
-            data1: "拦截数量",
-            data2: "日志数量"
+            data1: '拦截数量',
+            data2: '日志数量'
           }
         },
         axis: {
@@ -57,10 +60,10 @@ export default {
           }
         },
         legend: {
-          position: "inset",
+          position: 'inset',
           padding: 0,
           inset: {
-            anchor: "top-left",
+            anchor: 'top-left',
             x: 20,
             y: 8,
             step: 10
@@ -82,11 +85,8 @@ export default {
           show: false
         }
       }
-      this.trend_handler.$emit("init", trend_chart)
+      this.trend_handler.$emit('init', trend_chart)
     }
-  },
-  components: {
-    VueC3
   }
 }
 </script>

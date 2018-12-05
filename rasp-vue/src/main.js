@@ -5,23 +5,22 @@ import App from './App'
 import router from './router'
 import axios from 'axios'
 import BootstrapVue from 'bootstrap-vue'
-
-import bootstrap       from 'bootstrap'
-import daterangepicker from 'daterangepicker'
+Vue.use(BootstrapVue)
+import 'bootstrap'
+import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap-vue/dist/bootstrap-vue.css'
+import '@/assets/css/dashboard.css'
+import '@/assets/css/daterangepicker.css'
+import '@/assets/css/custom.css'
 
 import 'expose-loader?bootbox!bootbox'
 
 window.$ = window.jQuery = require('jquery')
 
-Vue.use(BootstrapVue)
 Vue.config.productionTip = false
 
 import './mixins'
 import store from './store'
-
-Vue.mixin({
-  store: store
-})
 
 Vue.prototype.$http = axios
 
@@ -29,6 +28,6 @@ Vue.prototype.$http = axios
 new Vue({
   el: '#app',
   router,
-  components: { App },
-  template: '<App/>'
+  store,
+  render: h => h(App)
 })

@@ -1,6 +1,6 @@
-import Vue from "vue"
-import Vuex from "vuex"
-import { api_request } from "../util"
+import Vue from 'vue'
+import Vuex from 'vuex'
+import { request } from '../util'
 
 Vue.use(Vuex)
 
@@ -22,39 +22,25 @@ const store = new Vuex.Store({
     }
   },
   actions: {
-    loadAppList: function({ commit }, appId) {
-      api_request(
-        "v1/api/app/get",
-        { page: 1, perpage: 100 },
-        function(data) {
-          data = data.data
-
-          commit("setAppList", data)
-          if (appId) {
-            let app
-            data.some(function(row) {
-              if (row.id == appId) {
-                app = row
-                return true
-              }
-            })
-            if (app) {
-              commit("setCurrentApp", app)
-            } else {
-              alert("没有这个应用: " + appId)
-              commit("setCurrentApp", data[0])
-            }
+    loadAppList({ commit }, appId) {
+      request.post('v1/api/app/get', {
+        page: 1,
+        perpage: 100
+      }).then(res => {
+        const { data } = res
+        commit('setAppList', data)
+        if (appId) {
+          const app = data.find(row => row.id === appId)
+          if (app) {
+            commit('setCurrentApp', app)
           } else {
-            commit("setCurrentApp", data[0])
+            alert('没有这个应用: ' + appId)
+            commit('setCurrentApp', data[0])
           }
-        },
-        function(errno, descr) {
-          // 认证失败检查
-          if (errno == 401) {
-            commit("setAuthStatus", false)
-          }
+        } else {
+          commit('setCurrentApp', data[0])
         }
-      )
+      })
     }
   },
   getters: {
