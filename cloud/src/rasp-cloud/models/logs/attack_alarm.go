@@ -186,6 +186,7 @@ var (
 	}
 	`
 	geoIpDbPath string
+	geoIpDb     *geoip2.Reader
 )
 
 func init() {
@@ -194,6 +195,10 @@ func init() {
 		tools.Panic(tools.ErrCodeLogInitFailed, "failed to get current directory path", err)
 	}
 	geoIpDbPath = currentPath + "/geoip/GeoLite2-City.mmdb"
+	geoIpDb, err = geoip2.Open(geoIpDbPath)
+	if err != nil {
+		tools.Panic(tools.ErrCodeGeoipInit, "failed to open geoip database", err)
+	}
 }
 
 func AddAttackAlarm(alarm map[string]interface{}) error {
@@ -216,13 +221,8 @@ func setAlarmLocation(alarm map[string]interface{}) {
 	if attackSource, ok := alarm["attack_source"]; ok && attackSource != nil {
 		_, ok = attackSource.(string)
 		if ok {
-			db, err := geoip2.Open(geoIpDbPath)
-			if err != nil {
-				beego.Error("failed to open geoip database: " + err.Error())
-			}
-			defer db.Close()
 			attackIp := net.ParseIP(attackSource.(string))
-			record, err := db.City(attackIp)
+			record, err := geoIpDb.City(attackIp)
 			if err != nil {
 				beego.Error("failed to parse attack ip to location: " + err.Error())
 			}

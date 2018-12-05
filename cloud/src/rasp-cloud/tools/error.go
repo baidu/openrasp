@@ -27,11 +27,13 @@ const (
 	ErrCodeConfigInitFailed
 	ErrCodeStartTypeNotSupport
 	ErrCodeGeneratePasswdFailed
+	ErrCodeGeoipInit
 )
 
 func Panic(errCode int, message string, err error) {
+	message = "[" + strconv.Itoa(errCode) + "] " + message
 	if err != nil {
-		message = "[" + strconv.Itoa(errCode) + "] " + message + ": " + err.Error()
+		message = message + ": " + err.Error()
 	}
 	logs.Error(message)
 	log.Panic(message)

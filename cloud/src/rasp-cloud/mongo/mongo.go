@@ -32,17 +32,21 @@ var (
 )
 
 func init() {
-	var err error
+	mongoAddr := beego.AppConfig.DefaultString("MongoDBAddr", "")
+	if mongoAddr == "" {
+		tools.Panic(tools.ErrCodeConfigInitFailed,
+			"the 'MongoDBAddr' config item in app.conf can not be empty", nil)
+	}
 	poolLimit := beego.AppConfig.DefaultInt("MongoPoolLimit", 1024)
 	dialInfo := &mgo.DialInfo{
-		Addrs:     []string{beego.AppConfig.DefaultString("MongoDBAddr", "")},
+		Addrs:     []string{mongoAddr},
 		Username:  beego.AppConfig.DefaultString("MongoDBUser", ""),
 		Password:  beego.AppConfig.DefaultString("MongoDBPwd", ""),
 		Direct:    false,
 		Timeout:   time.Second * 20,
 		PoolLimit: poolLimit,
 	}
-	session, err = mgo.DialWithInfo(dialInfo)
+	session, err := mgo.DialWithInfo(dialInfo)
 
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "init mongodb failed", err)

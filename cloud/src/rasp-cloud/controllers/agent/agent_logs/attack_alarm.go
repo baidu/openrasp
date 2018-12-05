@@ -35,7 +35,7 @@ func (o *AttackAlarmController) Post() {
 	}
 	count := 0
 	for _, alarm := range alarms {
-		alarm["@timestamp"] = time.Now().Nanosecond() / 1000000
+		alarm["@timestamp"] = time.Now().UnixNano() / 1000000
 		err := logs.AddAttackAlarm(alarm)
 		if err == nil {
 			count++
