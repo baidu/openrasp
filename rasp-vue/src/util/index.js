@@ -75,3 +75,36 @@ export function api_request(url, data, cb, err_cb) {
     })
 }
 
+export const request = axios.create({
+  baseURL: process.env.NODE_ENV === 'production' ? '/' : 'http://scloud.baidu.com:8090/',
+  timeout: 8000 // 请求超时时间
+})
+request.interceptors.request.use(
+  config => {
+    if (process.env.NODE_ENV !== 'production') {
+      config.headers['X-OpenRASP-Token'] = '9256a3555fbd4f24f7a2ba915a32261ab4c720fc'
+    }
+    return config
+  },
+  error => {
+    console.error(error)
+    Promise.reject(error)
+  }
+)
+request.interceptors.response.use(
+  response => {
+    const res = response.data
+    if (res.status !== 0) {
+      if (res.status === 401) {
+        location.reload()
+      }
+      return Promise.reject(res)
+    } else {
+      return res.data
+    }
+  },
+  error => {
+    console.error(error)
+    return Promise.reject(error)
+  }
+)
