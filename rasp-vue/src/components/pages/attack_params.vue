@@ -5,7 +5,7 @@
                 数据库类型
             </div>
             <p>
-                {{ data.attack_params.query }}
+                {{ data.attack_params.server }}
             </p>
             <div class="h6">
                 执行的SQL语句
