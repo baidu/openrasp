@@ -98,7 +98,7 @@ openrasp.app_secret=$app_secret
 openrasp.remote_management_enable=$remote_enable
 
 ;远程更新插件开关
-openrasp.plugin_update_enable=1
+openrasp.heartbeat_enable=1
 	
 ;OPENRASP END
 	
