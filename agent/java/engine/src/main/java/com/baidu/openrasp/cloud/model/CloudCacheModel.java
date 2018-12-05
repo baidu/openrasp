@@ -16,7 +16,7 @@
 
 package com.baidu.openrasp.cloud.model;
 
-import java.util.concurrent.ConcurrentHashMap;
+import com.baidu.openrasp.tool.LRUCache;
 
 /**
  * @description: 缓存云控数据
@@ -24,6 +24,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * @create: 2018/09/29 16:08
  */
 public class CloudCacheModel {
+
+    private static final int CACHE_SIZE = 500;
+
     public String plugin;
     public String pluginVersion = "";
     public String pluginMD5 = "";
@@ -31,7 +34,7 @@ public class CloudCacheModel {
     public String algorithmConfig;
     public String raspId;
     public String masterIp = "";
-    public static  ConcurrentHashMap<Long,Long> reportCache = new ConcurrentHashMap<Long, Long>();
+    public static LRUCache<Long, Long> reportCache = new LRUCache<Long, Long>(CACHE_SIZE);
 
     private CloudCacheModel() {
     }
