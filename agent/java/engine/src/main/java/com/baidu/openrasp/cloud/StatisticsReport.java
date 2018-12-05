@@ -34,7 +34,7 @@ import java.util.TreeMap;
  * @create: 2018/09/28 11:21
  */
 public class StatisticsReport {
-    private static final int STATISTICS_REPORT_INTERVAL = 3600 * 1000;
+    private static final int STATISTICS_REPORT_INTERVAL = 5 * 1000;
 
     public StatisticsReport() {
         Thread thread = new Thread(new StatisticsReportThread());
@@ -48,8 +48,10 @@ public class StatisticsReport {
             while (true) {
                 TreeMap<Long, Long> temp = new TreeMap<Long, Long>();
                 temp.put(System.currentTimeMillis(), HookHandler.TOTAL_REQUEST_NUM.longValue());
-                if (!CloudCacheModel.reportCache.isEmpty()) {
-                    temp.putAll(CloudCacheModel.reportCache);
+                if (CloudCacheModel.reportCache.realSize() != 0) {
+                    for (Map.Entry<Long, Long> entry : CloudCacheModel.reportCache.getEntrySet()) {
+                        temp.put(entry.getKey(), entry.getValue());
+                    }
                 }
                 for (Map.Entry<Long, Long> entry : temp.entrySet()) {
                     Map<String, Object> params = new HashMap<String, Object>();
