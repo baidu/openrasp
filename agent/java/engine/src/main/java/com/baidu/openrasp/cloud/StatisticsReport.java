@@ -34,7 +34,7 @@ import java.util.TreeMap;
  * @create: 2018/09/28 11:21
  */
 public class StatisticsReport {
-    private static final int STATISTICS_REPORT_INTERVAL = 5 * 1000;
+    private static final int STATISTICS_REPORT_INTERVAL = 3600 * 1000;
 
     public StatisticsReport() {
         Thread thread = new Thread(new StatisticsReportThread());
