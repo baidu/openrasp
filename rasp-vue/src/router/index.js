@@ -9,48 +9,83 @@ import settings from '@/components/pages/settings'
 import plugins from '@/components/pages/plugins'
 import audit from '@/components/pages/audit'
 import events from '@/components/pages/events'
+import Layout from '@/views/layout'
 
 Vue.use(Router)
 
 const router = new Router({
   routes: [
     {
-      path: '/dashboard/:app_id/',
-      name: 'dashboard',
-      component: dashboard
+      path: '/login',
+      name: 'login',
+      component: Login
+    },
+    {
+      path: '/dashboard/:app_id',
+      component: Layout,
+      children: [{
+        path: '',
+        name: 'dashboard',
+        component: dashboard
+      }]
     },
     {
       path: '/hosts/:app_id/',
-      name: 'hosts',
-      component: hosts
+      component: Layout,
+      children: [{
+        path: '',
+        name: 'hosts',
+        component: hosts
+      }]
     },
     {
       path: '/audit/:app_id/',
       name: 'audit',
-      component: audit
+      component: Layout,
+      children: [{
+        path: '',
+        name: 'audit',
+        component: audit
+      }]
     },
     {
       path: '/settings/:app_id/',
-      name: 'settings',
-      component: settings
+      component: Layout,
+      children: [{
+        path: '',
+        name: 'settings',
+        component: settings
+      }]
     },
     {
       path: '/plugins/:app_id/',
-      name: 'plugins',
-      component: plugins
+      component: Layout,
+      children: [{
+        path: '',
+        name: 'plugins',
+        component: plugins
+      }]
     },
     {
       path: '/baseline/:app_id/',
-      name: 'baseline',
-      component: baseline
-    },         
+      component: Layout,
+      children: [{
+        path: '',
+        name: 'baseline',
+        component: baseline
+      }]
+    },
     {
       path: '/events/:app_id/',
-      name: 'events',
-      component: events
-    }        
+      component: Layout,
+      children: [{
+        path: '',
+        name: 'events',
+        component: events
+      }]
+    }
   ],
-  linkExactActiveClass: "active",
+  linkExactActiveClass: 'active'
 })
 
 // router.replace({ path: '*', redirect: '/' })
