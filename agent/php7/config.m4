@@ -639,6 +639,17 @@ int main() {
   else
     AC_MSG_RESULT([not found])
   fi
+
+  AC_MSG_CHECKING([for build time])
+  if command -v date >/dev/null 2>&1; then
+    build_time="$(date '+%Y-%m-%d %H:%M:%S')"
+    if test -n "${build_time}"; then
+      AC_DEFINE_UNQUOTED([OPENRASP_BUILD_TIME], ["${build_time}"], [Using current time as build time])
+      AC_MSG_RESULT([found])
+    fi
+  else
+    AC_MSG_RESULT([not found])
+  fi
   
   PHP_NEW_EXTENSION(openrasp,
     openrasp.cc \
