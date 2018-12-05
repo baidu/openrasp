@@ -17,6 +17,10 @@
 #ifndef PHP_OPENRASP_H
 #define PHP_OPENRASP_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 // bug fix, isfinite is not declared
 #ifndef HAVE_ISFINITE
 #include <cmath>
@@ -45,10 +49,6 @@ extern "C"
 
 #ifdef ZTS
 #include "TSRM.h"
-#endif
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
 #endif
 
 /// BEGIN PHP <= 5.4 ///
