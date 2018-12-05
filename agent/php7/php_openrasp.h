@@ -17,8 +17,8 @@
 #ifndef PHP_OPENRASP_H
 #define PHP_OPENRASP_H
 
-// bug fix, isfinite is not defined in gcc 4.8
-#if (__GNUC__ == 4 && (__GNUC_MINOR__ == 8 || __GNUC_MINOR__ == 9))
+// bug fix, isfinite is not declared
+#ifndef HAVE_ISFINITE
 #include <cmath>
 #define isfinite std::isfinite
 #endif
@@ -76,7 +76,7 @@ extern "C"
 }
 #endif
 
-#if (__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#ifndef HAVE_ISFINITE
 #undef isfinite
 #endif
 
