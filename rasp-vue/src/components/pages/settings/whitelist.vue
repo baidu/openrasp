@@ -61,7 +61,7 @@
       </div>
     </div>
 
-    <whitelistEditModal ref="whitelistEditModal" v-on:save="onEdit($event)"></whitelistEditModal>
+    <whitelistEditModal ref="whitelistEditModal" @save="onEdit($event)" />
   </div>
 </template>
 
@@ -72,7 +72,7 @@ import { attack_type2name } from '../../../util/'
 
 export default {
   name: 'WhitelistSettings',
-  data: function () {
+  data: function() {
     return {
       data: [],
       whitelist_all: false
@@ -83,9 +83,9 @@ export default {
   },
   methods: {
     attack_type2name: attack_type2name,
-    whitelist2str (row) {
+    whitelist2str(row) {
       var tmp = []
-      Object.keys(row).forEach (function (key) {
+      Object.keys(row).forEach(function(key) {
         if (row[key]) {
           tmp.push(attack_type2name(key))
         }
@@ -93,39 +93,38 @@ export default {
 
       return tmp
     },
-    setData: function (data) {
+    setData: function(data) {
       this.data = data
     },
-    onEdit: function (event) {
-      if (event.index == undefined) {
+    onEdit: function(event) {
+      if (event.index === undefined) {
         this.data.push(event.data)
       } else {
         this.data.splice(event.index, 1, event.data)
       }
     },
-    showModal: function (data, index) {
-      if (index == undefined && self.data.length >= 200) {
+    showModal: function(data, index) {
+      if (index === undefined && this.data.length >= 200) {
         alert('为了保证性能，白名单最多支持 200 条')
         return
       }
 
       this.$refs.whitelistEditModal.showModal(data, index)
     },
-    deleteItem: function (index) {
-      if (! confirm ('确认删除'))
-        return     
+    deleteItem: function(index) {
+      if (!confirm('确认删除')) { return }
 
       this.data.splice(index, 1)
     },
-    doSave: function () {
+    doSave: function() {
       var self = this
       var body = {
         app_id: this.current_app.id,
         config: this.data
       }
 
-      this.api_request('v1/api/app/whitelist/config', body, function (data) {
-        alert ('保存成功')
+      this.api_request('v1/api/app/whitelist/config', body, function(data) {
+        alert('保存成功')
       })
     }
   },
