@@ -103,6 +103,8 @@ public abstract class BaseStandardInstaller implements Installer {
                 FileOutputStream outputStream = new FileOutputStream(reserve);
                 FileInputStream inputStream = new FileInputStream(target);
                 IOUtils.copy(inputStream, outputStream);
+                outputStream.close();
+                inputStream.close();
                 System.out.println("- Already backup rasp.properties to oldRasp.properties");
             } else {
                 System.out.println("- Create " + target.getAbsolutePath());

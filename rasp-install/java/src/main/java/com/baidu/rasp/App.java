@@ -74,7 +74,7 @@ public class App {
         options.addOption("appid", true, "Value of cloud.appid");
         options.addOption("appsecret", true, "Value of cloud.appsecret");
         options.addOption("backendurl", true, "Value of cloud.backendurl");
-        options.addOption("ignoreConf", false, "If the parameter exists, reserved rasp.properties");
+        options.addOption("ignoreconf", false, "If the parameter exists, reserved rasp.properties");
         options.addOption("help", false, "print options information");
         options.addOption("h", false, "print options information");
         CommandLineParser parser = new PosixParser();
@@ -94,7 +94,7 @@ public class App {
                 throw new RaspError(E10005 + "One of -install and -uninstall must be specified");
             }
 
-            ignoreConfig = cmd.hasOption("ignoreConf");
+            ignoreConfig = cmd.hasOption("ignoreconf");
             appId = cmd.getOptionValue("appid");
             appSecret = cmd.getOptionValue("appsecret");
             url = cmd.getOptionValue("backendurl");
@@ -155,7 +155,7 @@ public class App {
                 "  -appid        Value of cloud.appid\n" +
                 "  -backendurl   Value of cloud.address\n" +
                 "  -appsecret    Value of cloud.appsecret\n" +
-                "  -ignoreConf   If the parameter exists, reserved rasp.properties\n" +
+                "  -ignoreconf   If the parameter exists, reserved rasp.properties\n" +
                 "  -help         print options information\n" +
                 "  -h            print options information\n";
         System.out.println(helpMsg);
