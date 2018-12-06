@@ -89,7 +89,7 @@ func (o *HeartbeatController) Post() {
 			}
 			whitelistConfig[configItem.Url] = whiteHookTypes
 		}
-		app.GeneralConfig["algorithm.config"] = selectedPlugin.AlgorithmConfig
+		//app.GeneralConfig["algorithm.config"] = selectedPlugin.AlgorithmConfig
 		app.GeneralConfig["hook.white"] = whitelistConfig
 		result["plugin"] = selectedPlugin
 		result["config_time"] = app.ConfigTime
