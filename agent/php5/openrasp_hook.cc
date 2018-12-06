@@ -206,7 +206,7 @@ void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckTy
 
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC)
 {
-    return LOG_G(in_request_process) &&
+    return !LOG_G(in_request_process) ||
            ((1 << check_type) & OPENRASP_HOOK_G(check_type_white_bit_mask));
 }
 
