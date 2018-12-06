@@ -46,7 +46,9 @@ func init() {
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get the count of user collection", err)
 	}
-	if count <= 0 {
+
+	if count <= 0 && (*tools.StartType == tools.StartTypeForeground || *tools.StartType == tools.StartTypeAll) {
+
 		index := &mgo.Index{
 			Key:        []string{"name"},
 			Unique:     true,
@@ -71,6 +73,7 @@ func init() {
 		if err != nil {
 			tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create default user", err)
 		}
+
 	} else {
 		var user *User
 		err := mongo.FindOne(userCollectionName, bson.M{}, &user)
@@ -79,6 +82,7 @@ func init() {
 		}
 		userId = user.Id
 	}
+
 }
 
 func generateHashedPassword(password string) (string, error) {
