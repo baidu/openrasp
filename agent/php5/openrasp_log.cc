@@ -400,6 +400,7 @@ RaspLoggerEntry::RaspLoggerEntry(const char *name, severity_level level, log_app
       appender(appender),
       appender_mask(appender_mask)
 {
+    syslog_reconnect_time = 0;
 }
 
 void RaspLoggerEntry::init(log_appender appender_int TSRMLS_DC)
