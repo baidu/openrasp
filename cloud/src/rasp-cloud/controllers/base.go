@@ -24,13 +24,6 @@ type BaseController struct {
 	beego.Controller
 }
 
-func (o *BaseController) Prepare() {
-	o.Ctx.Output.Header("X-Powered-By", "OpenRASP")
-	o.Ctx.Output.Header("Access-Control-Allow-Origin", "*")
-	o.Ctx.Output.Header("Access-Control-Allow-Headers", "*")
-	o.Ctx.Output.Header("Access-Control-Allow-Methods", "*")
-}
-
 func (o *BaseController) Serve(data interface{}) {
 	o.Data["json"] = map[string]interface{}{"status": 0, "description": "ok", "data": data}
 	o.ServeJSON()

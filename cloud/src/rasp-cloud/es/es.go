@@ -32,6 +32,11 @@ var (
 )
 
 func init() {
+	esAddr := beego.AppConfig.String("EsAddr")
+	if esAddr == "" {
+		tools.Panic(tools.ErrCodeConfigInitFailed,
+			"the 'EsAddr' config item in app.conf can not be empty", nil)
+	}
 	client, err := elastic.NewClient(elastic.SetURL(beego.AppConfig.String("EsAddr")),
 		elastic.SetBasicAuth(beego.AppConfig.DefaultString("EsUser", ""),
 			beego.AppConfig.DefaultString("EsPwd", "")))
@@ -69,7 +74,9 @@ func deleteExpiredData() {
 		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(10*time.Second))
 		_, err := ElasticClient.DeleteByQuery(index).QueryString("@timestamp:<" + expiredTime).Do(ctx)
 		if err != nil {
-			beego.Error("failed to delete expired data from index " + index + ": " + err.Error())
+			beego.Error("failed to delete expired data for index " + index + ": " + err.Error())
+		} else {
+			beego.Info("delete expired data successfully for index " + index)
 		}
 		cancel()
 	}

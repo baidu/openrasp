@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"rasp-cloud/controllers"
 	"rasp-cloud/models/logs"
+	"time"
 )
 
 // Operations about policy alarm message
@@ -34,6 +35,7 @@ func (o *PolicyAlarmController) Post() {
 	}
 	count := 0
 	for _, alarm := range alarms {
+		alarm["@timestamp"] = time.Now().UnixNano() / 1000000
 		err := logs.AddPolicyAlarm(alarm)
 		if err == nil {
 			count++

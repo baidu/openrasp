@@ -82,7 +82,7 @@ var (
 )
 
 func init() {
-	es.RegisterTTL(10*time.Minute, AliasAttackIndexName+"-*")
+	es.RegisterTTL(24*365*time.Hour, AliasAttackIndexName+"-*")
 	es.RegisterTTL(24*365*time.Hour, AliasPolicyIndexName+"-*")
 	alarmLogMode := beego.AppConfig.DefaultString("AlarmLogMode", "file")
 	if alarmLogMode == "file" {
