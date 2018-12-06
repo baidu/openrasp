@@ -90,15 +90,14 @@ public abstract class BaseStandardInstaller implements Installer {
             File target = new File(dir + sep + "conf" + sep + "rasp.properties");
 
             System.out.println("Generating \"rasp.properties\"\n- " + target.getAbsolutePath());
-            if (target.exists() && !App.ignoreConfig) {
+            if (target.exists() && App.keepConfig) {
                 System.out.println("- Already exists and reserved rasp.properties, continuing ..");
                 return true;
             }
             if (target.exists()) {
                 File reserve = new File(dir + sep + "conf" + sep + "oldRasp.properties");
                 if (!reserve.exists()) {
-                   boolean res= reserve.createNewFile();
-                   System.out.println(res);
+                  reserve.createNewFile();
                 }
                 FileOutputStream outputStream = new FileOutputStream(reserve);
                 FileInputStream inputStream = new FileInputStream(target);
@@ -188,6 +187,7 @@ public abstract class BaseStandardInstaller implements Installer {
                 writer.write("cloud.app_secret="+appSecret);
                 writer.write(LINE_SEP);
                 writer.write("cloud.enable=true");
+                writer.write(LINE_SEP);
                 writer.close();
             }
         } catch (Exception e) {

@@ -46,7 +46,7 @@ public class App {
     public static String appSecret;
     public static String baseDir;
     public static String url;
-    public static boolean ignoreConfig = false;
+    public static boolean keepConfig = false;
 
     public static final String REGEX_APPID = "^[a-z0-9]{40,40}$";
     public static final String REGEX_APPSECRET = "^[a-zA-Z0-9_-]{43,45}$";
@@ -74,7 +74,7 @@ public class App {
         options.addOption("appid", true, "Value of cloud.appid");
         options.addOption("appsecret", true, "Value of cloud.appsecret");
         options.addOption("backendurl", true, "Value of cloud.backendurl");
-        options.addOption("ignoreconf", false, "If the parameter exists, reserved rasp.properties");
+        options.addOption("keepconf", false, "If the parameter exists, reserved rasp.properties");
         options.addOption("help", false, "print options information");
         options.addOption("h", false, "print options information");
         CommandLineParser parser = new PosixParser();
@@ -94,7 +94,7 @@ public class App {
                 throw new RaspError(E10005 + "One of -install and -uninstall must be specified");
             }
 
-            ignoreConfig = cmd.hasOption("ignoreconf");
+            keepConfig = cmd.hasOption("keepconf");
             appId = cmd.getOptionValue("appid");
             appSecret = cmd.getOptionValue("appsecret");
             url = cmd.getOptionValue("backendurl");
@@ -155,7 +155,7 @@ public class App {
                 "  -appid        Value of cloud.appid\n" +
                 "  -backendurl   Value of cloud.address\n" +
                 "  -appsecret    Value of cloud.appsecret\n" +
-                "  -ignoreconf   Do not overwrite rasp.properties\n" +
+                "  -keepconf     If the parameter exists, reserved rasp.properties\n" +
                 "  -help/-h      Show this dialog\n";
         System.out.println(helpMsg);
     }
