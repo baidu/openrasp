@@ -95,7 +95,7 @@ public abstract class BaseStandardInstaller implements Installer {
                 return true;
             }
             if (target.exists()) {
-                File reserve = new File(dir + sep + "conf" + sep + "oldRasp.properties");
+                File reserve = new File(dir + sep + "conf" + sep + "rasp.properties.bak");
                 if (!reserve.exists()) {
                   reserve.createNewFile();
                 }
@@ -104,7 +104,7 @@ public abstract class BaseStandardInstaller implements Installer {
                 IOUtils.copy(inputStream, outputStream);
                 outputStream.close();
                 inputStream.close();
-                System.out.println("- Already backup rasp.properties to oldRasp.properties");
+                System.out.println("- Backed up rasp.properties to rasp.properties.bak");
             } else {
                 System.out.println("- Create " + target.getAbsolutePath());
                 target.getParentFile().mkdir();
@@ -117,7 +117,7 @@ public abstract class BaseStandardInstaller implements Installer {
             writer.close();
 
             //配置云控参数
-            setCloudArgs(App.url,App.appId,App.appSecret);
+            setCloudArgs(App.url, App.appId, App.appSecret);
         } catch (IOException e) {
             e.printStackTrace();
             return false;

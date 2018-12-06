@@ -155,7 +155,7 @@ public class App {
                 "  -appid        Value of cloud.appid\n" +
                 "  -backendurl   Value of cloud.address\n" +
                 "  -appsecret    Value of cloud.appsecret\n" +
-                "  -keepconf     If the parameter exists, reserved rasp.properties\n" +
+                "  -keepconf     Do not overwrite rasp.properties\n" +
                 "  -help/-h      Show this dialog\n";
         System.out.println(helpMsg);
     }
