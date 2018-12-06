@@ -251,13 +251,14 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
     void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);       \
     OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                      \
     {                                                                                 \
-        bool type_ignored = openrasp_check_type_ignored(type);                        \
-        if (!type_ignored)                                                            \
+        bool pre_type_ignored = openrasp_check_type_ignored(type);                    \
+        if (!pre_type_ignored)                                                        \
         {                                                                             \
             pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (type));  \
         }                                                                             \
         origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                            \
-        if (!type_ignored)                                                            \
+        bool post_type_ignored = openrasp_check_type_ignored(type);                   \
+        if (!post_type_ignored)                                                       \
         {                                                                             \
             post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (type)); \
         }                                                                             \
