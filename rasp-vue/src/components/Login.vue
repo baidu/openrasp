@@ -1,7 +1,7 @@
 <template>
   <div class="container">
-    <div class="row">
-      <div class="col col-login mx-auto">
+    <div class="row" style="height: 100vh;">
+      <div class="col col-login m-auto">
         <!-- <div class="text-center mb-6">
                     <img src="/static/images/openrasp.png" class="h-6" alt="">
                 </div> -->
