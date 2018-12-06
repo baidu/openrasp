@@ -116,7 +116,7 @@ var (
 		"plugin.filter":             true,
 		"plugin.maxstack":           100,
 		"ognl.expression.minlength": 30,
-		"log.maxstack":              10,
+		"log.maxstack":              50,
 	}
 )
 

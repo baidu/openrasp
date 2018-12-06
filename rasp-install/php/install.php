@@ -120,11 +120,11 @@ Options:
 
     --app-secret <secret>   Value of app_secret (required for remote management)
 
-    --ignore-ini            Do not update PHP ini entries
+    --keep-ini              Do not update PHP ini entries
 
-    --ignore-plugin         Do not update the official javascript plugin
+    --keep-plugin           Do not update the official javascript plugin
 
-    --ignore-conf     	    Do not update the openrasp config in root_dir/conf directory
+    --keep-conf             Do not update the openrasp config in root_dir/conf directory
 
     -h, --help              Show help messages
 
@@ -230,7 +230,7 @@ if (!copy($lib_source_path, $lib_dest_path)) {
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 更新ini配置 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
-	major_tips("Skipped update of php.ini since '--ignore-ini' is set");
+	major_tips("Skipped update of php.ini since '--keep-ini' is set");
 } else {
 	major_tips('Updating php.ini');
 	if ($ini_scanned_path) {
@@ -361,7 +361,7 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 		}
 		if ($key === "plugins") {
 			if (array_key_exists("ignore-plugin", $options)) {
-				major_tips("Skipped update of the official javascript plugin since '--ignore-plugin' is set");
+				major_tips("Skipped update of the official javascript plugin since '--keep-plugin' is set");
 			} else {
 				major_tips('Updating the official javascript plugin');
 				$plugin_source_dir = __DIR__ . DIRECTORY_SEPARATOR . $key;
@@ -387,7 +387,7 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 			}
 		} else if ($key === "conf") {
 			if (array_key_exists("ignore-conf", $options)) {
-				major_tips("Skipped update of openrasp config since '--ignore-conf' is set");
+				major_tips("Skipped update of openrasp config since '--keep-conf' is set");
 			} else {
 				major_tips('Updating the openrasp config');
 				$conf_dir = __DIR__ . DIRECTORY_SEPARATOR . $key;
