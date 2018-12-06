@@ -48,7 +48,9 @@
               <div class="h6">
                 请求 URL
               </div>
-              <p style="word-break: break-all; ">POST <a @href="data.url" target="_blank">{{ data.url }}</a></p>
+              <p style="word-break: break-all; ">
+                {{ data.request_method.toUpperCase() }} <a @href="data.url" target="_blank">{{ data.url }}</a>
+              </p>
               <div class="h6">
                 请求来源
               </div>
@@ -59,17 +61,19 @@
               <div class="h6">
                 请求 Referer
               </div>
-              <p style="white-space: normal; word-break: break-all; ">{{ data.referer }}</p>
+              <p style="white-space: normal; word-break: break-all; ">
+                {{ data.referer ? data.referer : '-' }}
+              </p>
               <div class="h6">
                 请求 UA
               </div>
               <p style="word-break: break-all; ">
-                {{ data.user_agent }}
+                {{ data.user_agent ? data.user_agent : '-' }}
               </p>
               <div class="h6" v-if="data.body">
                 请求 BODY
               </div>
-              <pre style="white-space: normal; word-break: break-all; " v-if="data.body">{{ data.body }}</pre>
+              <pre style="white-space: normal; word-break: break-all; " v-if="data.body">{{ data.body ? data.body : '-' }}</pre>
             </div>
             <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
               <div class="h6">
