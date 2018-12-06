@@ -111,12 +111,6 @@ export default {
   computed: {
     ...mapGetters(['current_app'])
   },
-  activated: function() {
-    if (!this.loading && !this.data.length) {
-      this.loading = true
-      this.loadEvents(1)
-    }
-  },
   methods: {
     showBaselineDetailModal: function(data) {
       this.$refs.baselineDetailModal.showModal(data)

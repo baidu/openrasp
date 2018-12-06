@@ -38,7 +38,7 @@
 </template>
 
 <script>
-import { mapMutations } from 'vuex'
+import { request } from '@/util'
 
 export default {
   name: 'Login',
@@ -48,31 +48,16 @@ export default {
       password: 'admin@123'
     }
   },
-  mounted: function() {
-    var self = this
-    this.api_request('v1/user/islogin', {}, function(data) {
-      self.setAuthStatus(1)
-    }, function(errno, descr) {
-
-    })
-  },
   methods: {
-    ...mapMutations(['setAuthStatus']),
     doLogin: function() {
-      var self = this
-      var body = {
+      return request.post('v1/user/login', {
         username: this.username,
         password: this.password
-      }
-
-      // self.setAuthStatus(1)
-      // return
-
-      self.api_request('v1/user/login', body, function(data) {
-        self.setAuthStatus(1)
+      }).then(res => {
+        this.$router.replace({
+          name: 'dashboard'
+        })
       })
-
-      return false
     }
   }
 }

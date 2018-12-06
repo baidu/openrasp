@@ -1,4 +1,5 @@
 import axios from 'axios'
+import Cookie from 'js-cookie'
 
 export var attack_types = {
   'sql': 'SQL 注入',
@@ -77,7 +78,7 @@ export function api_request(url, data, cb, err_cb) {
 
 export const request = axios.create({
   baseURL: process.env.NODE_ENV === 'production' ? '/' : 'http://scloud.baidu.com:8090/',
-  timeout: 8000 // 请求超时时间
+  timeout: 8000
 })
 request.interceptors.request.use(
   config => {
@@ -96,6 +97,7 @@ request.interceptors.response.use(
     const res = response.data
     if (res.status !== 0) {
       if (res.status === 401) {
+        Cookie.set('RASP_AUTH_ID')
         location.reload()
       }
       return Promise.reject(res)

@@ -7,8 +7,7 @@ Vue.use(Vuex)
 const store = new Vuex.Store({
   state: {
     app_list: [],
-    current_app: {},
-    is_authed: false
+    current_app: {}
   },
   mutations: {
     setCurrentApp(state, data) {
@@ -16,9 +15,6 @@ const store = new Vuex.Store({
     },
     setAppList(state, data) {
       this.state.app_list = data
-    },
-    setAuthStatus(state, data) {
-      this.state.is_authed = data
     }
   },
   actions: {
@@ -45,8 +41,7 @@ const store = new Vuex.Store({
   },
   getters: {
     app_list: state => state.app_list,
-    current_app: state => state.current_app,
-    is_authed: state => state.is_authed
+    current_app: state => state.current_app
   }
 })
 

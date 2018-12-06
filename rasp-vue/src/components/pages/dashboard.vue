@@ -171,11 +171,6 @@ export default {
       this.loadChartData()
     }
   },
-  created: function() {
-    if (this.current_app) {
-      this.loadChartData()
-    }
-  },
   methods: {
     loadChartData: function() {
       var self = this

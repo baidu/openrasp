@@ -118,12 +118,6 @@ export default {
       this.loadRaspList(1)
     }
   },
-  activated: function() {
-    if (!this.loading && !this.data.length) {
-      this.loading = true
-      this.loadRaspList(1)
-    }
-  },
   methods: {
     loadRaspList: function(page) {
       var self = this

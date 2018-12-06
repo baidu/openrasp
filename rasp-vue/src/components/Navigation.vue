@@ -133,6 +133,8 @@
 <script>
 import AddHostModal from '@/components/modals/addHostModal.vue'
 import { mapGetters, mapActions, mapMutations } from 'vuex'
+import { request } from '@/util'
+import Cookie from 'js-cookie'
 
 export default {
   name: 'Navigation',
@@ -143,8 +145,16 @@ export default {
     ...mapGetters(['current_app', 'app_list'])
   },
   watch: {
-    '$route'(to, from) {
+    '$route'() {
       this.loadAppList(this.$route.params.app_id)
+    },
+    current_app(val) {
+      this.$router.push({
+        name: this.$route.name,
+        params: {
+          app_id: val.id
+        }
+      })
     }
   },
   mounted() {
@@ -156,7 +166,7 @@ export default {
   },
   methods: {
     ...mapActions(['loadAppList']),
-    ...mapMutations(['setCurrentApp', 'setAuthStatus']),
+    ...mapMutations(['setCurrentApp']),
     showAddHostModal() {
       this.$refs.addHost.showModal()
     },
@@ -169,10 +179,11 @@ export default {
       })
     },
     doLogout() {
-      var self = this
-      self.api_request('v1/user/logout', {}, function(data) {
-        self.setAuthStatus(false)
-      })
+      return request.post('v1/user/logout', {})
+        .then(res => {
+          Cookie.set('RASP_AUTH_ID')
+          location.reload()
+        })
     }
   }
 }

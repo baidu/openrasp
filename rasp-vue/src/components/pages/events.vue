@@ -129,10 +129,10 @@ export default {
   watch: {
     currentPage(newVal, oldVal) {
       this.loadEvents(newVal)
+    },
+    current_app() {
+      this.loadEvents(1)
     }
-  },
-  activated() {
-    this.loadEvents(1)
   },
   methods: {
     attack_type2name,

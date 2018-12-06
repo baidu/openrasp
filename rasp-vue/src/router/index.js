@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+import Cookie from 'js-cookie'
 
 import Login from '@/components/Login'
 import dashboard from '@/components/pages/dashboard'
@@ -21,71 +22,65 @@ const router = new Router({
       component: Login
     },
     {
-      path: '/dashboard/:app_id',
+      path: '/',
       component: Layout,
       children: [{
-        path: '',
+        path: 'dashboard/:app_id',
         name: 'dashboard',
         component: dashboard
-      }]
-    },
-    {
-      path: '/hosts/:app_id/',
-      component: Layout,
-      children: [{
-        path: '',
+      }, {
+        path: 'hosts/:app_id/',
         name: 'hosts',
         component: hosts
-      }]
-    },
-    {
-      path: '/audit/:app_id/',
-      name: 'audit',
-      component: Layout,
-      children: [{
-        path: '',
+      }, {
+        path: 'audit/:app_id/',
         name: 'audit',
         component: audit
-      }]
-    },
-    {
-      path: '/settings/:app_id/',
-      component: Layout,
-      children: [{
-        path: '',
+      }, {
+        path: 'settings/:app_id/',
         name: 'settings',
         component: settings
-      }]
-    },
-    {
-      path: '/plugins/:app_id/',
-      component: Layout,
-      children: [{
-        path: '',
+      }, {
+        path: 'plugins/:app_id/',
         name: 'plugins',
         component: plugins
-      }]
-    },
-    {
-      path: '/baseline/:app_id/',
-      component: Layout,
-      children: [{
-        path: '',
+      }, {
+        path: 'baseline/:app_id/',
         name: 'baseline',
         component: baseline
+      }, {
+        path: 'events/:app_id/',
+        name: 'events',
+        component: events
+      }, {
+        path: '*',
+        redirect: {
+          name: 'dashboard'
+        }
       }]
     },
     {
-      path: '/events/:app_id/',
-      component: Layout,
-      children: [{
-        path: '',
-        name: 'events',
-        component: events
-      }]
+      path: '*',
+      redirect: {
+        name: 'dashboard'
+      }
     }
   ],
   linkExactActiveClass: 'active'
+})
+
+router.beforeEach((to, from, next) => {
+  if (to.name === 'login') {
+    next()
+    return
+  }
+  if (!Cookie.get('RASP_AUTH_ID') && process.env.NODE_ENV === 'production') {
+    next({
+      name: 'login'
+    })
+    return
+  }
+  next()
 })
 
 // router.replace({ path: '*', redirect: '/' })
