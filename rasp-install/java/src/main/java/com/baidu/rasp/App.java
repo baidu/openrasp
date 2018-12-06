@@ -150,14 +150,13 @@ public class App {
                 "  java -jar RaspInstall.jar -uninstall /tomcat/\n" +
                 "\n" +
                 "Additional command line arguments: \n" +
-                "  -install      Specify application server path\n" +
-                "  -uninstall    Specify application server path\n" +
+                "  -install      Install OpenRASP\n" +
+                "  -uninstall    Uninstall OpenRASP\n" +
                 "  -appid        Value of cloud.appid\n" +
                 "  -backendurl   Value of cloud.address\n" +
                 "  -appsecret    Value of cloud.appsecret\n" +
-                "  -ignoreconf   If the parameter exists, reserved rasp.properties\n" +
-                "  -help         print options information\n" +
-                "  -h            print options information\n";
+                "  -ignoreconf   Do not overwrite rasp.properties\n" +
+                "  -help/-h      Show this dialog\n";
         System.out.println(helpMsg);
     }
 
