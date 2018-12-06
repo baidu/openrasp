@@ -89,7 +89,7 @@
               <div class="h6">
                 应用版本
               </div>
-              <p style="word-break: break-all; ">{{ data.server_type | capitalize }}/{{ data.server_version }}</p>
+              <p style="word-break: break-all; ">{{ data.server_type }}/{{ data.server_version }}</p>
             </div>
             <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
               暂无
