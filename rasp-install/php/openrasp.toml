@@ -12,7 +12,7 @@
 ##每个进程/线程每秒钟最大日志条数
 # maxburst = 100
 ##报警日志记录的最大堆栈深度
-# maxstack = 10
+# maxstack = 50
 
 [syslog]
 ##报警是否开启 syslog
