@@ -86,7 +86,7 @@ public:
   Snapshot(const char *data = nullptr, size_t raw_size = 0, uint64_t timestamp = 0);
   Snapshot(const v8::StartupData &blob) : Snapshot(blob.data, blob.raw_size){};
   Snapshot(const std::string &path, uint64_t timestamp = 0);
-  Snapshot(const std::string &config, const std::vector<PluginFile> &plugin_list);
+  Snapshot(const std::string &config, const std::vector<PluginFile> &plugin_list, uint64_t timestamp = 0);
   ~Snapshot();
   bool Save(const std::string &path) const; // check errno when return value is false
   bool IsOk() const { return data && raw_size; };

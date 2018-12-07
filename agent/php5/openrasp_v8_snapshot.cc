@@ -51,8 +51,9 @@ Snapshot::Snapshot(const std::string &path, uint64_t timestamp) : Snapshot()
     }
     this->data = buffer;
     this->raw_size = size;
+    this->timestamp = timestamp;
 }
-Snapshot::Snapshot(const std::string &config, const std::vector<PluginFile> &plugin_list) : Snapshot()
+Snapshot::Snapshot(const std::string &config, const std::vector<PluginFile> &plugin_list, uint64_t timestamp) : Snapshot()
 {
     v8::SnapshotCreator creator(external_references);
     Isolate *isolate = reinterpret_cast<Isolate *>(creator.GetIsolate());
@@ -113,6 +114,7 @@ Snapshot::Snapshot(const std::string &config, const std::vector<PluginFile> &plu
     v8::StartupData snapshot = creator.CreateBlob(v8::SnapshotCreator::FunctionCodeHandling::kClear);
     this->data = snapshot.data;
     this->raw_size = snapshot.raw_size;
+    this->timestamp = timestamp;
 }
 Snapshot::~Snapshot()
 {
