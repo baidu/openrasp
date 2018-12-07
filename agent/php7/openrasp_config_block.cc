@@ -59,7 +59,7 @@ void PluginBlock::update(OpenraspConfig *openrasp_config)
 };
 
 const int64_t LogBlock::default_maxburst = 100;
-const int64_t LogBlock::default_maxstack = 10;
+const int64_t LogBlock::default_maxstack = 50;
 
 void LogBlock::update(OpenraspConfig *openrasp_config)
 {
