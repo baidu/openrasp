@@ -63,6 +63,7 @@ private:
   void cleanup_expired_logs() const;
   inline std::string get_base_dir_path() const;
   long get_active_file_inode();
+  bool log_content_qualified(const std::string &content);
 };
 
 } // namespace openrasp

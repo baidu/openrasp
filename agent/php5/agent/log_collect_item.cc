@@ -145,6 +145,24 @@ std::string LogCollectItem::get_cpmplete_url() const
     return std::string(openrasp_ini.backend_url) + url_path;
 }
 
+bool LogCollectItem::log_content_qualified(const std::string &content)
+{
+    if (content.empty())
+    {
+        return false;
+    }
+    if (nullptr == openrasp_ini.app_id)
+    {
+        return false;
+    }
+    std::string app_id_block = "\"app_id\":\"" + std::string(openrasp_ini.app_id) + "\"";
+    if (content.find(app_id_block) == std::string::npos)
+    {
+        return false;
+    }
+    return true;
+}
+
 bool LogCollectItem::get_post_logs(std::string &body)
 {
     if (!collect_enable)
@@ -155,7 +173,7 @@ bool LogCollectItem::get_post_logs(std::string &body)
     body.push_back('[');
     int count = 0;
     while (std::getline(ifs, line) &&
-           !line.empty() &&
+           log_content_qualified(line) &&
            count < LogAgent::max_post_logs_account)
     {
         body.append(line);
