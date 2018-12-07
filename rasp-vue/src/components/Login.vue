@@ -45,7 +45,7 @@ export default {
   data: function() {
     return {
       username: 'openrasp',
-      password: 'admin@123'
+      password: ''
     }
   },
   methods: {
