@@ -40,7 +40,6 @@ std::string format_time(const char *format, int format_len, time_t ts)
     char buffer[128];
     struct tm *tm_info;
 
-    time(&ts);
     tm_info = localtime(&ts);
 
     strftime(buffer, 64, format, tm_info);
