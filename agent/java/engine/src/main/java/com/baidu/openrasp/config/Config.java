@@ -54,7 +54,7 @@ public class Config extends FileScanListener {
         INJECT_URL_PREFIX("inject.urlprefix", ""),
         REQUEST_PARAM_ENCODING("request.param_encoding", ""),
         BODY_MAX_BYTES("body.maxbytes", "4096"),
-        LOG_MAX_STACK("log.maxstack", "20"),
+        LOG_MAX_STACK("log.maxstack", "50"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
         SQL_CACHE_CAPACITY("lru.max_size", "100"),
         SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
