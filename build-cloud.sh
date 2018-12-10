@@ -40,7 +40,9 @@ function repack()
 
     mv tmp "$name"
     tar --numeric-owner --owner=0 --group=0 -czf "$output" "$name"
-    rm -rf "$name"
+
+    # 删除临时文件，以前的包
+    rm -rf "$name" "$tar"
 }
 
 function build_cloud()
