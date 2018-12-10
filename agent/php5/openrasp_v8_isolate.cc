@@ -18,7 +18,7 @@
 
 namespace openrasp
 {
-Isolate *Isolate::New(Snapshot *snapshot_blob)
+Isolate *Isolate::New(Snapshot *snapshot_blob, uint64_t timestamp)
 {
     Isolate::Data *data = new Isolate::Data();
     data->create_params.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
@@ -67,6 +67,7 @@ Isolate *Isolate::New(Snapshot *snapshot_blob)
     data->action_hash_log = NewV8String(isolate, "log")->GetIdentityHash();
     data->action_hash_block = NewV8String(isolate, "block")->GetIdentityHash();
     data->request_context_templ.Reset(isolate, NewRequestContextTemplate(isolate));
+    data->timestamp = timestamp;
 
     isolate->v8::Isolate::SetData(0, data);
 

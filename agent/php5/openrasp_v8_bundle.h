@@ -116,7 +116,7 @@ public:
     uint64_t timestamp = 0;
   };
 
-  static Isolate *New(Snapshot *snapshot_blob);
+  static Isolate *New(Snapshot *snapshot_blob, uint64_t timestamp = 0);
   Data *GetData();
   void SetData() = delete;
   void Dispose();
