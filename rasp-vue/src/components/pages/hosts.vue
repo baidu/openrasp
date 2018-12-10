@@ -84,7 +84,7 @@
             </tbody>
           </table>
           <nav v-if="! loading">
-            <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" />
+            <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" @change="loadRaspList($event)" />
           </nav>
         </div>
       </div>
@@ -110,25 +110,18 @@ export default {
   computed: {
     ...mapGetters(['current_app'])
   },
-  watch: {
-    'currentPage': function(newVal, oldVal) {
-      this.loadRaspList(newVal)
-    },
-    current_app() {
-      this.loadRaspList(1)
-    }
+  mounted() {
+    this.loadRaspList(1)
   },
   methods: {
     loadRaspList: function(page) {
-      var self = this
-      var body = {
+      const body = {
         data: {
           app_id: this.current_app.id
         },
         page: page,
         perpage: 10
       }
-
       if (this.hostname) {
         if (isIp(this.hostname)) {
           body.data.register_ip = this.hostname
@@ -136,11 +129,12 @@ export default {
           body.data.hostname = this.hostname
         }
       }
-
-      this.api_request('v1/api/rasp/search', body, function(data) {
-        self.data = data.data
-        self.total = data.total
-        self.loading = false
+      this.loading = true
+      return this.request.post('v1/api/rasp/search', body).then(res => {
+        this.currentPage = page
+        this.data = res.data
+        this.total = res.total
+        this.loading = false
       })
     },
     doDelete: function(data) {

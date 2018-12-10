@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Cookie from 'js-cookie'
+import store from '@/store'
 
 import Login from '@/components/Login'
 import dashboard from '@/components/pages/dashboard'
@@ -23,6 +24,18 @@ const router = new Router({
     },
     {
       path: '/',
+      beforeEnter(to, from, next) {
+        if (!Cookie.get('RASP_AUTH_ID') && process.env.NODE_ENV === 'production') {
+          next({ name: 'login' })
+        } else {
+          store.dispatch('loadAppList', to.params.app_id)
+            .then(() => next())
+            .catch(err => {
+              console.error(err)
+              next({ name: '500' })
+            })
+        }
+      },
       component: Layout,
       children: [{
         path: 'dashboard/:app_id',
@@ -67,20 +80,6 @@ const router = new Router({
     }
   ],
   linkExactActiveClass: 'active'
-})
-
-router.beforeEach((to, from, next) => {
-  if (to.name === 'login') {
-    next()
-    return
-  }
-  if (!Cookie.get('RASP_AUTH_ID') && process.env.NODE_ENV === 'production') {
-    next({
-      name: 'login'
-    })
-    return
-  }
-  next()
 })
 
 // router.replace({ path: '*', redirect: '/' })

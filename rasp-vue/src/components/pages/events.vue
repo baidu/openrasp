@@ -90,7 +90,7 @@
             </tbody>
           </table>
           <nav v-if="! loading">
-            <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" />
+            <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" @change="loadEvents($event)" />
           </nav>
         </div>
       </div>
@@ -104,7 +104,7 @@
 import EventDetailModal from '@/components/modals/eventDetailModal'
 import DatePicker from '@/components/DatePicker'
 import EventTypePicker from '@/components/EventTypePicker'
-import { attack_type2name, block_status2name, request } from '../../util'
+import { attack_type2name, block_status2name } from '../../util'
 import { mapGetters } from 'vuex'
 
 export default {
@@ -126,13 +126,8 @@ export default {
   computed: {
     ...mapGetters(['current_app'])
   },
-  watch: {
-    currentPage(newVal, oldVal) {
-      this.loadEvents(newVal)
-    },
-    current_app() {
-      this.loadEvents(1)
-    }
+  mounted() {
+    this.loadEvents(1)
   },
   methods: {
     attack_type2name,
@@ -142,7 +137,7 @@ export default {
     },
     loadEvents(page) {
       this.loading = true
-      return request.post('v1/api/log/attack/search', {
+      return this.request.post('v1/api/log/attack/search', {
         data: {
           start_time: this.$refs.datePicker.start.valueOf(),
           end_time: this.$refs.datePicker.end.valueOf(),
@@ -153,6 +148,7 @@ export default {
         page: page,
         perpage: 10
       }).then(res => {
+        this.currentPage = page
         this.data = res.data
         this.total = res.total
         this.loading = false

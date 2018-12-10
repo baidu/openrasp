@@ -73,7 +73,7 @@
             </tbody>
           </table>
           <nav v-if="! loading">
-            <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" />
+            <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" @change="loadEvents($event)" />
           </nav>
         </div>
       </div>
@@ -91,6 +91,10 @@ import { mapGetters } from 'vuex'
 
 export default {
   name: 'Baseline',
+  components: {
+    baselineDetailModal,
+    DatePicker
+  },
   data: function() {
     return {
       data: [],
@@ -100,24 +104,18 @@ export default {
       total: 0
     }
   },
-  watch: {
-    currentPage: function(newVal, oldVal) {
-      this.loadEvents(newVal)
-    },
-    current_app(newVal, oldVal) {
-      this.loadEvents(1)
-    }
-  },
   computed: {
     ...mapGetters(['current_app'])
+  },
+  mounted() {
+    this.loadEvents(1)
   },
   methods: {
     showBaselineDetailModal: function(data) {
       this.$refs.baselineDetailModal.showModal(data)
     },
-    loadEvents: function(page) {
-      var self = this
-      var body = {
+    loadEvents(page) {
+      const body = {
         data: {
           app_id: this.current_app.id,
           start_time: this.$refs.datePicker.start.valueOf(),
@@ -126,7 +124,6 @@ export default {
         page: page,
         perpage: 10
       }
-
       if (this.hostname) {
         if (isIp(this.hostname)) {
           body.data.local_ip = this.hostname
@@ -134,20 +131,14 @@ export default {
           body.data.server_hostname = this.hostname
         }
       }
-
       this.loading = true
-      this.api_request('v1/api/log/policy/search', body, function(
-        data
-      ) {
-        self.data = data.data
-        self.total = data.total
-        self.loading = false
+      return this.request.post('v1/api/log/policy/search', body).then(res => {
+        this.currentPage = page
+        this.data = res.data
+        this.total = res.total
+        this.loading = false
       })
     }
-  },
-  components: {
-    baselineDetailModal,
-    DatePicker
   }
 }
 </script>
