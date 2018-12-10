@@ -55,7 +55,7 @@ function build_cloud()
 function build_vue()
 {
     cd rasp-vue
-    npm install
+    npm install --unsafe-perm
     npm run build
 
     rm -rf ../cloud/src/rasp-cloud/dist
