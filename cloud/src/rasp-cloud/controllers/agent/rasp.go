@@ -83,6 +83,7 @@ func (o *RaspController) Post() {
 	}
 
 	rasp.LastHeartbeatTime = time.Now().Unix()
+	rasp.RegisterTime = time.Now().Unix()
 	err = models.UpsertRaspById(rasp.Id, rasp)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to add rasp", err)

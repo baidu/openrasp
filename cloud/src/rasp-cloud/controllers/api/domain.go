@@ -12,28 +12,19 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-package tools
+package api
 
 import (
-	"flag"
-	"fmt"
+	"rasp-cloud/controllers"
+	"rasp-cloud/models"
 )
 
-const (
-	StartTypeForeground = "panel"
-	StartTypeAgent      = "agent"
-	StartTypeReset      = "reset"
-	StartTypeDefault    = "default"
-)
+// Operations about agent domain
+type AgentDomainController struct {
+	controllers.BaseController
+}
 
-var StartType *string
-
-func init() {
-	StartType = flag.String("type", "", "use to provide different routers")
-	flag.Parse()
-	fmt.Println("===== start type: " + *StartType + "=====")
-	if *StartType == "" {
-		allType := StartTypeDefault
-		StartType = &allType
-	}
+// @router /get [post]
+func (o *AppController) GetAgentDomain() {
+	o.Serve(map[string]string{"agent_domain": models.AgentDomain})
 }

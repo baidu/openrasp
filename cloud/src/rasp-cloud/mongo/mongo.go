@@ -157,6 +157,12 @@ func RemoveAll(collection string, selector interface{}) error {
 	return err
 }
 
+func Indexes(collection string) (indexes []mgo.Index, err error) {
+	newSession := NewSession()
+	defer newSession.Close()
+	return newSession.DB(DbName).C(collection).Indexes()
+}
+
 func GenerateObjectId() string {
 	random := string(bson.NewObjectId()) +
 		strconv.FormatInt(time.Now().UnixNano(), 10) + strconv.Itoa(rand.Intn(10000))

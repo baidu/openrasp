@@ -28,6 +28,7 @@ const (
 	ErrCodeStartTypeNotSupport
 	ErrCodeGeneratePasswdFailed
 	ErrCodeGeoipInit
+	ErrCodeResetUserFailed
 )
 
 func Panic(errCode int, message string, err error) {

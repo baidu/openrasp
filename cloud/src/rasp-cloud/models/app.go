@@ -141,7 +141,7 @@ func init() {
 	if alarmDuration <= 0 {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'AlarmDuration' config must be greater than 0", nil)
 	}
-	if *tools.StartType == tools.StartTypeAll ||
+	if *tools.StartType == tools.StartTypeDefault ||
 		*tools.StartType == tools.StartTypeForeground {
 		domain = beego.AppConfig.String("Domain")
 		if domain == "" {

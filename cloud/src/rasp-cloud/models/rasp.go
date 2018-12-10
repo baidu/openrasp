@@ -38,6 +38,7 @@ type Rasp struct {
 	HeartbeatInterval int64  `json:"heartbeat_interval" bson:"heartbeat_interval,omitempty"`
 	Online            *bool  `json:"online" bson:"online,omitempty"`
 	LastHeartbeatTime int64  `json:"last_heartbeat_time" bson:"last_heartbeat_time,omitempty"`
+	RegisterTime      int64  `json:"register_time" bson:"register_time,omitempty"`
 }
 
 const (
@@ -45,21 +46,27 @@ const (
 )
 
 func init() {
-	count, err := mongo.Count(raspCollectionName)
-	if err != nil {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get rasp collection count", err)
+	index := &mgo.Index{
+		Key:        []string{"app_id"},
+		Unique:     false,
+		Background: true,
+		Name:       "app_id",
 	}
-	if count <= 0 {
-		index := &mgo.Index{
-			Key:        []string{"app_id"},
-			Unique:     false,
-			Background: true,
-			Name:       "app_id",
-		}
-		err = mongo.CreateIndex(raspCollectionName, index)
-		if err != nil {
-			tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for rasp collection", err)
-		}
+	err := mongo.CreateIndex(raspCollectionName, index)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed,
+			"failed to create app_id index for rasp collection", err)
+	}
+	index = &mgo.Index{
+		Key:        []string{"register_time"},
+		Unique:     false,
+		Background: true,
+		Name:       "register_time",
+	}
+	err = mongo.CreateIndex(raspCollectionName, index)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed,
+			"failed to create register_time index for rasp collection", err)
 	}
 }
 
@@ -109,7 +116,7 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 		}
 	} else {
 		count, err = mongo.FindAllBySort(raspCollectionName, selector, perpage*(page-1), perpage,
-			&result, "id")
+			&result, "-register_time")
 		if err == nil {
 			for _, rasp := range result {
 				HandleRasp(rasp)

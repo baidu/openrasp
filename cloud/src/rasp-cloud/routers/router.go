@@ -97,6 +97,11 @@ func InitRouter() {
 				&api.OperationController{},
 			),
 		),
+		beego.NSNamespace("/agentdomain",
+			beego.NSInclude(
+				&api.AgentDomainController{},
+			),
+		),
 	)
 	userNS := beego.NewNamespace("/user", beego.NSInclude(&api.UserController{}))
 	ns := beego.NewNamespace("/v1")
@@ -105,12 +110,12 @@ func InitRouter() {
 		ns.Namespace(foregroudNS, userNS)
 	} else if startType == tools.StartTypeAgent {
 		ns.Namespace(agentNS)
-	} else if startType == tools.StartTypeAll {
+	} else if startType == tools.StartTypeDefault {
 		ns.Namespace(foregroudNS, agentNS, userNS)
 	} else {
 		tools.Panic(tools.ErrCodeStartTypeNotSupport, "The start type is not supported: "+startType, nil)
 	}
-	if startType == tools.StartTypeForeground || startType == tools.StartTypeAll {
+	if startType == tools.StartTypeForeground || startType == tools.StartTypeDefault {
 		beego.SetStaticPath("//", "dist")
 	}
 	beego.AddNamespace(ns)

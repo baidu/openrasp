@@ -24,6 +24,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego"
+	"fmt"
+	"os"
 )
 
 const (
@@ -47,7 +49,7 @@ func init() {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get the count of user collection", err)
 	}
 
-	if count <= 0 && (*tools.StartType == tools.StartTypeForeground || *tools.StartType == tools.StartTypeAll) {
+	if count <= 0 {
 
 		index := &mgo.Index{
 			Key:        []string{"name"},
@@ -83,6 +85,23 @@ func init() {
 		userId = user.Id
 	}
 
+	if *tools.StartType == tools.StartTypeReset {
+		err := resetUser()
+		if err != nil {
+			tools.Panic(tools.ErrCodeResetUserFailed, "failed to reset administrator", err)
+		}
+		fmt.Println("reset the administrator successfully")
+		os.Exit(0)
+	}
+}
+
+func resetUser() error {
+	pwd, err := generateHashedPassword("admin@123")
+	if err != nil {
+		return errors.New("failed to generate password")
+	}
+	err = mongo.UpdateId(userCollectionName, userId, bson.M{"password": pwd, "name": userName})
+	return err
 }
 
 func generateHashedPassword(password string) (string, error) {

@@ -12,28 +12,21 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-package tools
+package models
 
 import (
-	"flag"
-	"fmt"
+	"github.com/astaxie/beego"
+	"rasp-cloud/tools"
 )
 
-const (
-	StartTypeForeground = "panel"
-	StartTypeAgent      = "agent"
-	StartTypeReset      = "reset"
-	StartTypeDefault    = "default"
+var (
+	AgentDomain string
 )
-
-var StartType *string
 
 func init() {
-	StartType = flag.String("type", "", "use to provide different routers")
-	flag.Parse()
-	fmt.Println("===== start type: " + *StartType + "=====")
-	if *StartType == "" {
-		allType := StartTypeDefault
-		StartType = &allType
+	AgentDomain = beego.AppConfig.String("AgentDomain")
+	if AgentDomain == "" {
+		tools.Panic(tools.ErrCodeConfigInitFailed,
+			"the 'AgentDomain' config in the app.conf can not be empty", nil)
 	}
 }

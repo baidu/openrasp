@@ -89,7 +89,7 @@ func init() {
 	}
 }
 
-func AddOperation(appId string, typeId int, ip string, content string) error {
+func AddOperation(appId string, typeId int, ip string, content string, user ...string) error {
 	userName, err := GetLoginUserName()
 	if err != nil {
 		var operation = &Operation{
