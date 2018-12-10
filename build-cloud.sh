@@ -40,6 +40,7 @@ function repack()
 
     mv tmp "$name"
     tar --numeric-owner --owner=0 --group=0 -czf "$output" "$name"
+    rm -rf "$name"
 }
 
 function build_cloud()
