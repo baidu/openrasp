@@ -32,6 +32,7 @@
 #include "openrasp_ini.h"
 #include "utils/regex.h"
 #include "utils/net.h"
+#include "utils/os.h"
 #include "openrasp_utils.h"
 #include "third_party/rapidjson/stringbuffer.h"
 #include "third_party/rapidjson/writer.h"
@@ -243,9 +244,7 @@ void OpenraspAgentManager::supervisor_run()
 				check_work_processes_survival();
 			}
 			sleep(1);
-			struct stat sb;
-			if (stat(("/proc/" + std::to_string(agent_ctrl_block->get_master_pid())).c_str(), &sb) == -1 &&
-				errno == ENOENT)
+			if (!pid_alive(std::to_string(agent_ctrl_block->get_master_pid())))
 			{
 				process_agent_shutdown();
 			}

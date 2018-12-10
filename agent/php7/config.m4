@@ -696,6 +696,7 @@ int main() {
     utils/regex.cc \
     utils/time.cc \
     utils/net.cc \
+    utils/os.cc \
     agent/base_manager.cc \
     agent/shared_config_manager.cc \
     agent/mm/shm_manager.cc \
