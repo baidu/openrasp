@@ -27,8 +27,8 @@ PHP_MINIT_FUNCTION(openrasp_security_policy)
     SECURITY_CHECK(PG(display_errors) == 0, 4003, _("display_errors should be turned off to insulate your code from probing"));
     if (INI_STR("yaml.decode_php"))
     {
-        SECURITY_CHECK(STRTOBOOL(INI_STR("yaml.decode_php"), strlen(INI_STR("yaml.decode_php"))) == false, 4004, 
-            _("yaml.decode_php should be turned off to prevent serialized php objects which have the explicit tag \"!php/object\" from being unserialized"));
+        SECURITY_CHECK(STRTOBOOL(INI_STR("yaml.decode_php"), strlen(INI_STR("yaml.decode_php"))) == false, 4004,
+                       _("yaml.decode_php should be turned off to prevent serialized php objects which have the explicit tag \"!php/object\" from being unserialized"));
     }
     return SUCCESS;
 }
@@ -49,6 +49,11 @@ static void security_check(bool flag, int id, const char *msg TSRMLS_DC)
         zend_hash_init(Z_ARRVAL(result), 0, 0, 0, 0);
         Z_TYPE(result) = IS_ARRAY;
         add_assoc_zval(&result, "policy_id", &policy_id);
+        zval *policy_params = nullptr;
+        MAKE_STD_ZVAL(policy_params);
+        array_init(policy_params);
+        add_assoc_long(policy_params, "pid", getpid());
+        add_assoc_zval(&result, "policy_params", policy_params);
         add_assoc_zval(&result, "message", &message);
         LOG_G(policy_logger).log(LEVEL_INFO, &result TSRMLS_CC);
         zval_dtor(&result);
