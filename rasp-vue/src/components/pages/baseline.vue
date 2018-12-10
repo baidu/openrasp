@@ -107,6 +107,9 @@ export default {
   computed: {
     ...mapGetters(['current_app'])
   },
+  watch: {
+    current_app() { this.loadEvents(1) }
+  },
   mounted() {
     this.loadEvents(1)
   },

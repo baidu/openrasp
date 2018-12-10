@@ -2,9 +2,7 @@
   <div id="main" class="page">
     <div style="min-height: calc(100vh - 67px)">
       <Navigation />
-      <KeepAlive>
-        <RouterView style="min-height: 100%; margin-bottom: -50px;" />
-      </KeepAlive>
+      <RouterView style="min-height: 100%; margin-bottom: -50px;" />
     </div>
     <Footer style="height: 67px" />
   </div>

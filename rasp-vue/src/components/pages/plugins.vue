@@ -78,7 +78,10 @@ export default {
   computed: {
     ...mapGetters(['current_app'])
   },
-  mounted: function() {
+  watch: {
+    current_app() { this.loadPluginList(1) }
+  },
+  mounted() {
     this.loadPluginList(1)
   },
   methods: {

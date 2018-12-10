@@ -110,6 +110,9 @@ export default {
   computed: {
     ...mapGetters(['current_app'])
   },
+  watch: {
+    current_app() { this.loadRaspList(1) }
+  },
   mounted() {
     this.loadRaspList(1)
   },

@@ -73,6 +73,9 @@ export default {
   computed: {
     ...mapGetters(['current_app'])
   },
+  watch: {
+    current_app() { this.loadAudit(1) }
+  },
   mounted() {
     this.loadAudit(1)
   },
