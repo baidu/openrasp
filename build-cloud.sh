@@ -28,10 +28,15 @@ function repack()
     name=$2
     output=$3
 
+    git_root=$(dirname $(readlink -f "$output"))
     rm -rf tmp "$output"
 
     mkdir tmp
     tar xf "$tar" -C tmp
+
+    # 安装默认插件
+    mkdir tmp/resources
+    cp "$git_root"/plugins/official/plugin.js tmp/resources
 
     mv tmp "$name"
     tar --numeric-owner --owner=0 --group=0 -czf "$output" "$name"
