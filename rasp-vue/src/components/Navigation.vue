@@ -144,26 +144,6 @@ export default {
   computed: {
     ...mapGetters(['current_app', 'app_list'])
   },
-  watch: {
-    '$route'() {
-      this.loadAppList(this.$route.params.app_id)
-    },
-    current_app(val) {
-      this.$router.push({
-        name: this.$route.name,
-        params: {
-          app_id: val.id
-        }
-      })
-    }
-  },
-  mounted() {
-    if (this.$route.params.app_id) {
-      this.loadAppList(this.$route.params.app_id)
-    } else {
-      this.loadAppList()
-    }
-  },
   methods: {
     ...mapActions(['loadAppList']),
     ...mapMutations(['setCurrentApp']),
@@ -171,6 +151,7 @@ export default {
       this.$refs.addHost.showModal()
     },
     changeApp(data) {
+      this.setCurrentApp(data)
       this.$router.push({
         name: this.$route.name,
         params: {

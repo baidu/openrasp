@@ -16,6 +16,7 @@
 
 #include "openrasp_security_policy.h"
 #include "openrasp_ini.h"
+#include <string>
 static void security_check(bool flag, int id, const char *msg);
 #define SECURITY_CHECK(flag, id, msg) security_check(flag, id, msg)
 #define STRTOBOOL strtobool
@@ -39,6 +40,10 @@ static void security_check(bool flag, int id, const char *msg)
         zval result;
         array_init(&result);
         add_assoc_long(&result, "policy_id", id);
+        zval policy_params;
+        array_init(&policy_params);
+        add_assoc_long(&policy_params, "pid", getpid());
+        add_assoc_zval(&result, "policy_params", &policy_params);
         add_assoc_string(&result, "message", const_cast<char *>(msg));
         LOG_G(policy_logger).log(LEVEL_INFO, &result);
         zval_dtor(&result);

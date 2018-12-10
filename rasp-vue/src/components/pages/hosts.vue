@@ -6,6 +6,30 @@
           Agent 管理
         </h1>
         <div class="page-options d-flex">
+          <div>
+            <b-dropdown text="主机状态" class="">
+              <div class="row px-2">
+                <div class="col-6">
+                  <label class="custom-switch">
+                    <input v-model="filter.online" type="checkbox" checked="filter.online" class="custom-switch-input" @change="$emit('selected')">
+                    <span class="custom-switch-indicator" />
+                    <span class="custom-switch-description">
+                      在线
+                    </span>
+                  </label>
+                </div>
+                <div class="col-6">
+                  <label class="custom-switch">
+                    <input v-model="filter.offline" type="checkbox" checked="filter.offline" class="custom-switch-input" @change="$emit('selected')">
+                    <span class="custom-switch-indicator" />
+                    <span class="custom-switch-description">
+                      离线
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </b-dropdown>
+          </div>
           <div class="input-icon ml-2">
             <span class="input-icon-addon">
               <i class="fe fe-search" />
@@ -84,7 +108,7 @@
             </tbody>
           </table>
           <nav v-if="! loading">
-            <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" />
+            <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" @change="loadRaspList($event)" />
           </nav>
         </div>
       </div>
@@ -104,31 +128,42 @@ export default {
       loading: false,
       currentPage: 1,
       total: 0,
-      hostname: ''
+      hostname: '',
+      filter: {
+        online: true,
+        offline: true
+      }
     }
   },
   computed: {
     ...mapGetters(['current_app'])
   },
   watch: {
-    'currentPage': function(newVal, oldVal) {
-      this.loadRaspList(newVal)
-    },
-    current_app() {
-      this.loadRaspList(1)
+    current_app() { this.loadRaspList(1) },
+    filter: {
+      handler() { this.loadRaspList(1) },
+      deep: true
     }
   },
+  mounted() {
+    this.loadRaspList(1)
+  },
   methods: {
-    loadRaspList: function(page) {
-      var self = this
-      var body = {
+    loadRaspList(page) {
+      if (!this.filter.online && !this.filter.offline) {
+        this.currentPage = page
+        this.data = []
+        this.total = 0
+        this.loading = false
+        return
+      }
+      const body = {
         data: {
           app_id: this.current_app.id
         },
         page: page,
         perpage: 10
       }
-
       if (this.hostname) {
         if (isIp(this.hostname)) {
           body.data.register_ip = this.hostname
@@ -136,11 +171,17 @@ export default {
           body.data.hostname = this.hostname
         }
       }
-
-      this.api_request('v1/api/rasp/search', body, function(data) {
-        self.data = data.data
-        self.total = data.total
-        self.loading = false
+      if (this.filter.online && !this.filter.offline) {
+        body.data.online = true
+      } else if (!this.filter.online && this.filter.offline) {
+        body.data.online = false
+      }
+      this.loading = true
+      return this.request.post('v1/api/rasp/search', body).then(res => {
+        this.currentPage = page
+        this.data = res.data
+        this.total = res.total
+        this.loading = false
       })
     },
     doDelete: function(data) {
