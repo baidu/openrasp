@@ -104,7 +104,7 @@ openrasp.heartbeat_enable=1
 openrasp.heartbeat_interval=180
 	
 ;OPENRASP END
-	
+
 OPENRASP;
 return $ini_content;
 }
