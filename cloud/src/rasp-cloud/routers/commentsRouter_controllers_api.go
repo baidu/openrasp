@@ -7,6 +7,15 @@ import (
 
 func init() {
 
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:AgentDomainController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:AgentDomainController"],
+        beego.ControllerComments{
+            Method: "GetAgentDomain",
+            Router: `/get`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
     beego.GlobalControllerRouter["rasp-cloud/controllers/api:AppController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:AppController"],
         beego.ControllerComments{
             Method: "Post",
@@ -75,15 +84,6 @@ func init() {
     beego.GlobalControllerRouter["rasp-cloud/controllers/api:AppController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:AppController"],
         beego.ControllerComments{
             Method: "GetApp",
-            Router: `/get`,
-            AllowHTTPMethods: []string{"post"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["rasp-cloud/controllers/api:AppController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:AppController"],
-        beego.ControllerComments{
-            Method: "GetAgentDomain",
             Router: `/get`,
             AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),

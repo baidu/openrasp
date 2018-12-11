@@ -30,6 +30,9 @@ import (
 	"crypto/sha1"
 	"rasp-cloud/tools"
 	"gopkg.in/mgo.v2"
+	"bufio"
+	"bytes"
+	"github.com/robertkrimen/otto"
 )
 
 type Plugin struct {
@@ -88,7 +91,49 @@ func init() {
 	}
 }
 
-func AddPlugin(version string, content []byte, appId string,
+func AddPlugin(pluginContent []byte, appId string) (plugin *Plugin, err error) {
+
+	pluginReader := bufio.NewReader(bytes.NewReader(pluginContent))
+	firstLine, err := pluginReader.ReadString('\n')
+	if err != nil {
+		return nil, errors.New("failed to read the plugin file: " + err.Error())
+	}
+	var newVersion string
+	if newVersion = regexp.MustCompile(`'.+'|".+"`).FindString(firstLine); newVersion == "" {
+		return nil, errors.New("failed to find the plugin version")
+	}
+	newVersion = newVersion[1 : len(newVersion)-1]
+	algorithmStartMsg := "// BEGIN ALGORITHM CONFIG //"
+	algorithmEndMsg := "// END ALGORITHM CONFIG //"
+	algorithmStart := bytes.Index(pluginContent, []byte(algorithmStartMsg))
+	if algorithmStart < 0 {
+		return nil, errors.New("failed to find the start of algorithmConfig variable: " + algorithmStartMsg)
+	}
+	algorithmStart = algorithmStart + len([]byte(algorithmStartMsg))
+	algorithmEnd := bytes.Index(pluginContent, []byte(algorithmEndMsg))
+	if algorithmEnd < 0 {
+		return nil, errors.New("failed to find the end of algorithmConfig variable: " + algorithmEndMsg)
+	}
+	jsVm := otto.New()
+	_, err = jsVm.Run(string(pluginContent[algorithmStart:algorithmEnd]) +
+		"\n algorithmContent=JSON.stringify(algorithmConfig)")
+	if err != nil {
+		return nil, errors.New("failed to get algorithm config from plugin: " + err.Error())
+	}
+	algorithmContent, err := jsVm.Get("algorithmContent")
+	if err != nil {
+		return nil, errors.New("failed to get algorithm config from plugin: " + err.Error())
+	}
+	var algorithmData map[string]interface{}
+	err = json.Unmarshal([]byte(algorithmContent.String()), &algorithmData)
+	if err != nil {
+		return nil, errors.New("failed to unmarshal algorithm json data: " + err.Error())
+	}
+	return addPluginToDb(newVersion, pluginContent, appId, algorithmData)
+
+}
+
+func addPluginToDb(version string, content []byte, appId string,
 	defaultAlgorithmConfig map[string]interface{}) (plugin *Plugin, err error) {
 	newMd5 := fmt.Sprintf("%x", md5.Sum(content))
 	plugin = &Plugin{
@@ -105,16 +150,18 @@ func AddPlugin(version string, content []byte, appId string,
 	defer mutex.Unlock()
 
 	var count int
-	_, oldPlugins, err := GetPluginsByApp(appId, MaxPlugins-1, 0)
-	if err != nil {
-		return
-	}
-	count = len(oldPlugins)
-	if count > 0 {
-		for _, oldPlugin := range oldPlugins {
-			err = mongo.RemoveId(pluginCollectionName, oldPlugin.Id)
-			if err != nil {
-				return
+	if MaxPlugins > 0 {
+		_, oldPlugins, err := GetPluginsByApp(appId, MaxPlugins-1, 0)
+		if err != nil {
+			return nil, err
+		}
+		count = len(oldPlugins)
+		if count > 0 {
+			for _, oldPlugin := range oldPlugins {
+				err = mongo.RemoveId(pluginCollectionName, oldPlugin.Id)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}

@@ -24,6 +24,7 @@
 #include "shared_config_manager.h"
 #include "third_party/rapidjson/stringbuffer.h"
 #include "third_party/rapidjson/writer.h"
+#include "utils/os.h"
 
 namespace openrasp
 {
@@ -53,7 +54,8 @@ void HeartBeatAgent::run()
 		for (long i = 0; i < openrasp_ini.heartbeat_interval; ++i)
 		{
 			sleep(1);
-			if (HeartBeatAgent::signal_received == SIGTERM)
+			if (!pid_alive(std::to_string(oam->agent_ctrl_block->get_master_pid())) ||
+				HeartBeatAgent::signal_received == SIGTERM)
 			{
 				exit(0);
 			}

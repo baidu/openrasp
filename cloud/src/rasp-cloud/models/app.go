@@ -24,7 +24,6 @@ import (
 	"gopkg.in/mgo.v2"
 	"crypto/sha1"
 	"gopkg.in/mgo.v2/bson"
-	"rasp-cloud/es"
 	"rasp-cloud/models/logs"
 	"github.com/astaxie/beego"
 	"net/smtp"
@@ -37,6 +36,8 @@ import (
 	"errors"
 	"crypto/sha256"
 	"encoding/base64"
+	"io/ioutil"
+	"rasp-cloud/es"
 )
 
 type App struct {
@@ -97,6 +98,7 @@ type dingResponse struct {
 
 const (
 	appCollectionName = "app"
+	defaultAppName    = "PHP 示例应用"
 )
 
 var (
@@ -126,6 +128,7 @@ func init() {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get app collection count", err)
 	}
 	if count <= 0 {
+		createDefaultUser()
 		index := &mgo.Index{
 			Key:        []string{"name"},
 			Unique:     true,
@@ -136,6 +139,7 @@ func init() {
 		if err != nil {
 			tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
 		}
+
 	}
 	alarmDuration := beego.AppConfig.DefaultInt64("AlarmDuration", 120)
 	if alarmDuration <= 0 {
@@ -150,6 +154,40 @@ func init() {
 		}
 		go startAlarmTicker(time.Second * time.Duration(alarmDuration))
 	}
+}
+
+func createDefaultUser() {
+	app, err := AddApp(&App{
+		Name:        defaultAppName,
+		Description: "default app",
+		Language:    "php",
+	})
+	if err != nil {
+		tools.Panic(tools.ErrCodeInitDefaultAppFailed, "failed to create default app", err)
+	}
+	fmt.Println("Succeed to create default app, name: " + defaultAppName)
+	// if setting default plugin fails, continue to initialize
+	currentPath, err := tools.GetCurrentPath()
+	if err != nil {
+		beego.Warn("failed to create default plugin", err)
+		return
+	}
+	content, err := ioutil.ReadFile(currentPath + "/resources/plugin.js")
+	if err != nil {
+		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to get default plugin: "+err.Error())
+		return
+	}
+	plugin, err := AddPlugin(content, app.Id)
+	if err != nil {
+		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to insert default plugin: "+err.Error())
+		return
+	}
+	err = SetSelectedPlugin(app.Id, plugin.Id)
+	if err != nil {
+		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to select default plugin for app: "+err.Error())
+		return
+	}
+	fmt.Println("Succeed to set up default plugin for app, version: " + plugin.Version)
 }
 
 func startAlarmTicker(duration time.Duration) {

@@ -28,13 +28,21 @@ function repack()
     name=$2
     output=$3
 
+    git_root=$(dirname $(readlink -f "$output"))
     rm -rf tmp "$output"
 
     mkdir tmp
     tar xf "$tar" -C tmp
 
+    # 安装默认插件
+    mkdir tmp/resources
+    cp "$git_root"/plugins/official/plugin.js tmp/resources
+
     mv tmp "$name"
     tar --numeric-owner --owner=0 --group=0 -czf "$output" "$name"
+
+    # 删除临时文件，以前的包
+    rm -rf "$name" "$tar"
 }
 
 function build_cloud()
@@ -47,7 +55,7 @@ function build_cloud()
     go get -u github.com/beego/bee
 
     cd src/rasp-cloud
-    bee pack
+    bee pack -exr=vendor
 
     repack rasp-cloud.tar.gz rasp-cloud-$(date +%Y-%m-%d) ../../../rasp-cloud.tar.gz
 }

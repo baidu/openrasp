@@ -80,7 +80,8 @@ func deleteExpiredData() {
 			if r != nil {
 				deleteNum = r.Deleted
 			}
-			beego.Info("delete expired data successfully for index, number: " + strconv.FormatInt(deleteNum, 10))
+			beego.Info("delete expired data successfully for index " + index + ", total: " +
+				strconv.FormatInt(deleteNum, 10))
 		}
 		cancel()
 	}

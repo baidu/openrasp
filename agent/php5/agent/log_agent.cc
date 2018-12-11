@@ -22,6 +22,7 @@
 #include <dirent.h>
 #include <algorithm>
 #include "shared_config_manager.h"
+#include "utils/os.h"
 
 namespace openrasp
 {
@@ -86,7 +87,8 @@ void LogAgent::run()
 		for (long i = 0; i < current_interval; ++i)
 		{
 			sleep(1);
-			if (LogAgent::signal_received == SIGTERM)
+			if (!pid_alive(std::to_string(oam->agent_ctrl_block->get_master_pid())) ||
+				LogAgent::signal_received == SIGTERM)
 			{
 				exit(0);
 			}
