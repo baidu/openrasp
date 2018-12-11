@@ -55,7 +55,7 @@ function build_cloud()
     go get -u github.com/beego/bee
 
     cd src/rasp-cloud
-    bee pack
+    bee pack -exr=vendor
 
     repack rasp-cloud.tar.gz rasp-cloud-$(date +%Y-%m-%d) ../../../rasp-cloud.tar.gz
 }

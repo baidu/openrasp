@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	ErrCodeLogInitFailed        = 30001 + iota
+	ErrCodeLogInitFailed          = 30001 + iota
 	ErrCodeMongoInitFailed
 	ErrCodeESInitFailed
 	ErrCodeConfigInitFailed
@@ -29,6 +29,7 @@ const (
 	ErrCodeGeneratePasswdFailed
 	ErrCodeGeoipInit
 	ErrCodeResetUserFailed
+	ErrCodeInitDefaultAppFailed
 )
 
 func Panic(errCode int, message string, err error) {

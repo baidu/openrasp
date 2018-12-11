@@ -89,23 +89,31 @@ func init() {
 	}
 }
 
-func AddOperation(appId string, typeId int, ip string, content string, user ...string) error {
-	userName, err := GetLoginUserName()
-	if err != nil {
-		var operation = &Operation{
-			AppId:   appId,
-			TypeId:  typeId,
-			Ip:      ip,
-			Id:      generateOperationId(),
-			User:    userName,
-			Time:    time.Now().UnixNano() / 1000000,
-			Content: content,
-		}
-		err := mongo.Insert(operationCollectionName, operation)
+func AddOperation(appId string, typeId int, ip string, content string, userName ...string) error {
+	var user string
+	var err error
+	if len(userName) == 0 {
+		user, err = GetLoginUserName()
 		if err != nil {
-			beego.Error("failed to add operation with content: " + operation.Content + ",error is: " + err.Error())
+			beego.Error("failed to add operation with content: " + content + ",can not get username: " + err.Error())
+			return err
 		}
-		return err
+	} else {
+		user = userName[0]
+	}
+
+	var operation = &Operation{
+		AppId:   appId,
+		TypeId:  typeId,
+		Ip:      ip,
+		Id:      generateOperationId(),
+		User:    user,
+		Time:    time.Now().UnixNano() / 1000000,
+		Content: content,
+	}
+	err = mongo.Insert(operationCollectionName, operation)
+	if err != nil {
+		beego.Error("failed to add operation with content: " + operation.Content + ",error is: " + err.Error())
 	}
 	return err
 }

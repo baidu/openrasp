@@ -24,9 +24,11 @@ var (
 )
 
 func init() {
-	AgentDomain = beego.AppConfig.String("AgentDomain")
-	if AgentDomain == "" {
-		tools.Panic(tools.ErrCodeConfigInitFailed,
-			"the 'AgentDomain' config in the app.conf can not be empty", nil)
+	if *tools.StartType == tools.StartTypeForeground || *tools.StartType == tools.StartTypeDefault {
+		AgentDomain = beego.AppConfig.String("AgentDomain")
+		if AgentDomain == "" {
+			tools.Panic(tools.ErrCodeConfigInitFailed,
+				"the 'AgentDomain' config in the app.conf can not be empty", nil)
+		}
 	}
 }
