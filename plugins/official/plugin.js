@@ -176,8 +176,9 @@ var algorithmConfig = {
     },
     // 任意文件下载防护 - 使用 ../../ 跳出 web 目录读取敏感文件
     readFile_outsideWebroot: {
-        name:   '算法4 - 禁止使用 ../../ 访问web目录以外的文件',
-        action: 'ignore'
+        name:      '算法4 - 禁止使用 ../../ 访问web目录以外的文件',
+        action:    'ignore',
+        reference: 'https://rasp.baidu.com/doc/dev/official.html#case-out-webroot'
     },
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
     readFile_unwanted: {
