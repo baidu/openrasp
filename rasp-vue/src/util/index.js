@@ -97,8 +97,8 @@ request.interceptors.response.use(
     const res = response.data
     if (res.status !== 0) {
       if (res.status === 401) {
-        Cookie.set('RASP_AUTH_ID')
-        location.reload()
+        Cookie.set('RASP_AUTH_ID', null)
+        location.href = '/#/login'
       }
       return Promise.reject(res)
     } else {

@@ -17,7 +17,7 @@
               </span>
             </a>
             <div class="dropdown-menu dropdown-menu-left dropdown-menu-arrow">
-              <a v-for="row in app_list" :key="row.id" class="dropdown-item" href="javascript:" @click.prevent="changeApp(row)">
+              <a v-for="row in app_list" :key="row.id" class="dropdown-item" href="javascript:" @click.prevent="setCurrentApp(row)">
                 <i class="dropdown-icon fe fe-lock" />
                 {{ row.name }} ( {{ row.lang }} {{ row.id }} )
               </a>
@@ -144,26 +144,27 @@ export default {
   computed: {
     ...mapGetters(['current_app', 'app_list'])
   },
+  watch: {
+    current_app(app) {
+      this.$router.push({
+        name: this.$route.name,
+        params: {
+          app_id: app.id
+        }
+      })
+    }
+  },
   methods: {
     ...mapActions(['loadAppList']),
     ...mapMutations(['setCurrentApp']),
     showAddHostModal() {
       this.$refs.addHost.showModal()
     },
-    changeApp(data) {
-      this.setCurrentApp(data)
-      this.$router.push({
-        name: this.$route.name,
-        params: {
-          app_id: data.id
-        }
-      })
-    },
     doLogout() {
       return request.post('v1/user/logout', {})
         .then(res => {
-          Cookie.set('RASP_AUTH_ID')
-          location.reload()
+          Cookie.set('RASP_AUTH_ID', null)
+          location.href = '/#/login'
         })
     }
   }
