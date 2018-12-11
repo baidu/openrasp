@@ -82,6 +82,9 @@ export default {
     current_app() { this.loadPluginList(1) }
   },
   mounted() {
+    if (!this.current_app.id) {
+      return
+    }
     this.loadPluginList(1)
   },
   methods: {

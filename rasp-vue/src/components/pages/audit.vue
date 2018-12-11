@@ -77,6 +77,9 @@ export default {
     current_app() { this.loadAudit(1) }
   },
   mounted() {
+    if (!this.current_app.id) {
+      return
+    }
     this.loadAudit(1)
   },
   methods: {

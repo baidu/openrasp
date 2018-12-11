@@ -146,6 +146,9 @@ export default {
     }
   },
   mounted() {
+    if (!this.current_app.id) {
+      return
+    }
     this.loadRaspList(1)
   },
   methods: {

@@ -167,9 +167,13 @@ export default {
     ...mapGetters(['current_app'])
   },
   watch: {
-    current_app() {
-      this.loadChartData()
+    current_app() { this.loadChartData() }
+  },
+  mounted() {
+    if (!this.current_app.id) {
+      return
     }
+    this.loadChartData()
   },
   methods: {
     loadChartData: function() {

@@ -111,6 +111,9 @@ export default {
     current_app() { this.loadEvents(1) }
   },
   mounted() {
+    if (!this.current_app.id) {
+      return
+    }
     this.loadEvents(1)
   },
   methods: {
