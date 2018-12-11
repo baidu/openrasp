@@ -15,10 +15,7 @@
 package api
 
 import (
-	"bufio"
-	"bytes"
 	"encoding/json"
-	"github.com/robertkrimen/otto"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
@@ -26,7 +23,6 @@ import (
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
 	"rasp-cloud/mongo"
-	"regexp"
 )
 
 // Operations about plugin
@@ -59,44 +55,10 @@ func (o *PluginController) Upload() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to read upload plugin", err)
 	}
-	pluginReader := bufio.NewReader(bytes.NewReader(pluginContent))
-	firstLine, err := pluginReader.ReadString('\n')
+
+	latestPlugin, err := models.AddPlugin(pluginContent, appId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to read the plugin file", err)
-	}
-	var newVersion string
-	if newVersion = regexp.MustCompile(`'.+'|".+"`).FindString(firstLine); newVersion == "" {
-		o.ServeError(http.StatusBadRequest, "failed to find the plugin version")
-	}
-	newVersion = newVersion[1 : len(newVersion)-1]
-	algorithmStartMsg := "// BEGIN ALGORITHM CONFIG //"
-	algorithmEndMsg := "// END ALGORITHM CONFIG //"
-	algorithmStart := bytes.Index(pluginContent, []byte(algorithmStartMsg))
-	if algorithmStart < 0 {
-		o.ServeError(http.StatusBadRequest, "failed to find the start of algorithmConfig variable: "+algorithmStartMsg)
-	}
-	algorithmStart = algorithmStart + len([]byte(algorithmStartMsg))
-	algorithmEnd := bytes.Index(pluginContent, []byte(algorithmEndMsg))
-	if algorithmEnd < 0 {
-		o.ServeError(http.StatusBadRequest, "failed to find the end of algorithmConfig variable: "+algorithmEndMsg)
-	}
-	jsVm := otto.New()
-	_, err = jsVm.Run(string(pluginContent[algorithmStart:algorithmEnd]) + "\n algorithmContent=JSON.stringify(algorithmConfig)")
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get algorithm config from plugin", err)
-	}
-	algorithmContent, err := jsVm.Get("algorithmContent")
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get algorithm config from plugin", err)
-	}
-	var algorithmData map[string]interface{}
-	err = json.Unmarshal([]byte(algorithmContent.String()), &algorithmData)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to unmarshal algorithm json data", err)
-	}
-	latestPlugin, err := models.AddPlugin(newVersion, pluginContent, appId, algorithmData)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to add plugin to mongodb", err)
+		o.ServeError(http.StatusBadRequest, "failed to add plugin", err)
 	}
 	models.AddOperation(appId, models.OperationTypeUploadPlugin, o.Ctx.Input.IP(),
 		"uploaded the plugin: "+latestPlugin.Id)

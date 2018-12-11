@@ -89,6 +89,6 @@ func (o *RaspController) Post() {
 		o.ServeError(http.StatusBadRequest, "failed to add rasp", err)
 	}
 	models.AddOperation(rasp.AppId, models.OperationTypeRegisterRasp, o.Ctx.Input.IP(),
-		"registered the rasp: "+rasp.Id+",hostname is: "+rasp.HostName)
+		"registered the rasp: "+rasp.Id+",hostname is: "+rasp.HostName, "")
 	o.Serve(rasp)
 }
