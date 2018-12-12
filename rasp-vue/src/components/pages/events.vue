@@ -82,7 +82,7 @@
                   {{ row.plugin_message }}
                 </td>
                 <td nowrap>
-                  <a href="javascript:" target="_blank" @click="showEventDetail(row)">
+                  <a href="javascript:" @click="showEventDetail(row)">
                     查看详情
                   </a>
                 </td>
