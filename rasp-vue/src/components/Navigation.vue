@@ -133,7 +133,6 @@
 <script>
 import AddHostModal from '@/components/modals/addHostModal.vue'
 import { mapGetters, mapActions, mapMutations } from 'vuex'
-import { request } from '@/util'
 import Cookie from 'js-cookie'
 
 export default {
@@ -161,7 +160,7 @@ export default {
       this.$refs.addHost.showModal()
     },
     doLogout() {
-      return request.post('v1/user/logout', {})
+      return this.request.post('v1/user/logout', {})
         .then(res => {
           Cookie.set('RASP_AUTH_ID', null)
           location.href = '/#/login'

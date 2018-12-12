@@ -94,12 +94,18 @@ request.interceptors.request.use(
 )
 request.interceptors.response.use(
   response => {
+    if (response.status !== 200) {
+      alert('HTTP 请求出错: 响应码 ' + response.status)
+      return
+    }
     const res = response.data
     if (res.status !== 0) {
       if (res.status === 401) {
         Cookie.set('RASP_AUTH_ID', null)
         location.href = '/#/login'
+        return
       }
+      alert('API 接口出错: ' + res.status + ' - ' + res.description)
       return Promise.reject(res)
     } else {
       return res.data
