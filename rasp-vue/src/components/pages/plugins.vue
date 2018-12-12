@@ -30,7 +30,7 @@
             </thead>
             <tbody>
               <tr v-for="row in data" :key="row.id">
-                <td>{{ moment(row.upload_time).format('YYYY-MM-DD hh:mm:ss') }}</td>
+                <td>{{ moment(row.upload_time).format('YYYY-MM-DD HH:mm:ss') }}</td>
                 <td>official: {{ row.version }}</td>
                 <td>
                   <span v-if="current_app.selected_plugin_id == row.id">
