@@ -74,7 +74,7 @@ public class App {
         options.addOption("appid", true, "Value of cloud.appid");
         options.addOption("appsecret", true, "Value of cloud.appsecret");
         options.addOption("backendurl", true, "Value of cloud.backendurl");
-        options.addOption("keepconf", false, "If the parameter exists, reserved rasp.properties");
+        options.addOption("keepconf", false, "If the parameter exists, reserved rasp.yaml");
         options.addOption("help", false, "print options information");
         options.addOption("h", false, "print options information");
         CommandLineParser parser = new PosixParser();
@@ -155,7 +155,7 @@ public class App {
                 "  -appid        Value of cloud.appid\n" +
                 "  -backendurl   Value of cloud.address\n" +
                 "  -appsecret    Value of cloud.appsecret\n" +
-                "  -keepconf     Do not overwrite rasp.properties\n" +
+                "  -keepconf     Do not overwrite rasp.yaml\n" +
                 "  -help/-h      Show this dialog\n";
         System.out.println(helpMsg);
     }

@@ -14,7 +14,7 @@ const watchFileOptions = {
     interval: 400
 };
 const SERVER_HOME = process.env['SERVER_HOME'];
-const CONF_FILE = SERVER_HOME + '/rasp/conf/rasp.properties';
+const CONF_FILE = SERVER_HOME + '/rasp/conf/rasp.yaml';
 const RASP_LOG_FILE = SERVER_HOME + '/rasp/logs/rasp/rasp.log';
 chai.should();
 axios.defaults.headers.common['Test-Test'] = 'Test-Test';

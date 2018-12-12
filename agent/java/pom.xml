@@ -135,6 +135,10 @@
                                     <shadedPattern>com.baidu.openrasp</shadedPattern>
                                 </relocation>
                                 <relocation>
+                                    <pattern>org.yaml</pattern>
+                                    <shadedPattern>com.baidu.openrasp</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>org.apache.log4j</pattern>
                                     <shadedPattern>com.baidu.openrasp.log4j</shadedPattern>
                                 </relocation>

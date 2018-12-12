@@ -33,6 +33,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -80,6 +81,7 @@ public class Config extends FileScanListener {
         SYSLOG_RECONNECT_INTERVAL("syslog.reconnect_interval", "300000"),
         LOG_MAXBURST("log.maxburst", "100"),
         HEARTBEAT_INTERVAL("cloud.heartbeat_interval", "180"),
+        HOOK_WHITE("hook.white", ""),
         HOOK_WHITE_ALL("hook.white.ALL", "true");
 
 
@@ -105,7 +107,7 @@ public class Config extends FileScanListener {
 
     private static final String HOOKS_WHITE = "hook.white";
     private static final String CONFIG_DIR_NAME = "conf";
-    private static final String CONFIG_FILE_NAME = "rasp.properties";
+    private static final String CONFIG_FILE_NAME = "rasp.yaml";
     public static final int REFLECTION_STACK_START_INDEX = 0;
     public static final Logger LOGGER = Logger.getLogger(Config.class.getName());
     public static String baseDirectory;
@@ -173,7 +175,7 @@ public class Config extends FileScanListener {
                 addConfigFileMonitor();
             }
         } catch (FileNotFoundException e) {
-            handleException("Could not find rasp.properties, using default settings: " + e.getMessage(), e);
+            handleException("Could not find rasp.yaml, using default settings: " + e.getMessage(), e);
         } catch (JNotifyException e) {
             handleException("add listener on " + configFileDir + " failed because:" + e.getMessage(), e);
         } catch (IOException e) {
@@ -181,17 +183,32 @@ public class Config extends FileScanListener {
         }
     }
 
+    @SuppressWarnings({"unchecked"})
     private synchronized void loadConfigFromFile(File file, boolean isInit) throws IOException {
-        Properties properties = new Properties();
+        Map<String, Object> properties = null;
         try {
             if (file.exists()) {
-                FileInputStream input = new FileInputStream(file);
-                properties.load(input);
-                input.close();
+                Yaml yaml = new Yaml();
+                properties = yaml.loadAs(new FileInputStream(file), Map.class);
             }
         } finally {
             // 出现解析问题使用默认值
-            for (Item item : Item.values()) {
+            for (Config.Item item : Config.Item.values()) {
+                if (item.key.equals("hook.white")) {
+                    if (properties != null) {
+                        Object object = properties.get(item.key);
+                        if (object instanceof Map) {
+                            Map<String, Object> hooks = (Map<String, Object>) object;
+                            TreeMap<String, Integer> temp = parseHookWhite(hooks);
+                            if (!temp.isEmpty()) {
+                                HookWhiteModel.init(temp);
+                            }
+                        } else {
+                            HookWhiteModel.hookWhiteinfo = null;
+                        }
+                    }
+                    continue;
+                }
                 if (item.isProperties) {
                     setConfigFromProperties(item, properties, isInit);
                 }
@@ -204,44 +221,9 @@ public class Config extends FileScanListener {
         for (Map.Entry<String, Object> entry : configMap.entrySet()) {
             if (entry.getKey().equals(HOOKS_WHITE)) {
                 if (entry.getValue() instanceof JsonObject) {
+                    @SuppressWarnings("unchecked")
                     Map<String, Object> hooks = CloudUtils.getMapGsonObject().fromJson((JsonObject) entry.getValue(), Map.class);
-                    for (Map.Entry<String, Object> hook : hooks.entrySet()) {
-                        int codeSum = 0;
-                        if (hook.getValue() instanceof ArrayList) {
-                            ArrayList<String> types = (ArrayList<String>) hook.getValue();
-                            if (hook.getKey().equals("*") && types.contains("all")) {
-                                for (CheckParameter.Type type : CheckParameter.Type.values()) {
-                                    if (type.getCode() != 0) {
-                                        codeSum = codeSum + type.getCode();
-                                    }
-                                }
-                                temp.put("", codeSum);
-                                return;
-                            } else if (types.contains("all")) {
-                                for (CheckParameter.Type type : CheckParameter.Type.values()) {
-                                    if (type.getCode() != 0) {
-                                        codeSum = codeSum + type.getCode();
-                                    }
-                                }
-                                temp.put(hook.getKey(), codeSum);
-                            } else {
-                                for (String s : types) {
-                                    String hooksType = s.toUpperCase();
-                                    try {
-                                        Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
-                                        codeSum = codeSum + code;
-                                    } catch (Exception e) {
-                                        LOGGER.warn("Hook type " + s + " does not exist: ", e);
-                                    }
-                                }
-                                if (hook.getKey().equals("*")) {
-                                    temp.put("", codeSum);
-                                } else {
-                                    temp.put(hook.getKey(), codeSum);
-                                }
-                            }
-                        }
-                    }
+                    temp.putAll(parseHookWhite(hooks));
                 }
             } else {
                 if (entry.getValue() instanceof JsonPrimitive) {
@@ -264,7 +246,7 @@ public class Config extends FileScanListener {
                     DynamicConfigAppender.updateSyslogTag();
                 }
             } catch (IOException e) {
-                LOGGER.warn("update rasp.properties failed because: " + e.getMessage());
+                LOGGER.warn("update rasp.yaml failed because: " + e.getMessage());
             }
         }
     }
@@ -291,9 +273,15 @@ public class Config extends FileScanListener {
         });
     }
 
-    private void setConfigFromProperties(Item item, Properties properties, boolean isInit) {
+    private void setConfigFromProperties(Config.Item item, Map<String, Object> properties, boolean isInit) {
         String key = item.key;
-        String value = properties.getProperty(item.key, item.defaultValue);
+        String value = item.defaultValue;
+        if (properties != null) {
+            Object object = properties.get(item.key);
+            if (object != null) {
+                value = String.valueOf(object);
+            }
+        }
         try {
             setConfig(key, value, isInit);
         } catch (Exception e) {
@@ -1143,4 +1131,46 @@ public class Config extends FileScanListener {
         return true;
     }
 
+    private TreeMap<String, Integer> parseHookWhite(Map<String, Object> hooks) {
+        TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
+        for (Map.Entry<String, Object> hook : hooks.entrySet()) {
+            int codeSum = 0;
+            if (hook.getValue() instanceof ArrayList) {
+                @SuppressWarnings("unchecked")
+                ArrayList<String> types = (ArrayList<String>) hook.getValue();
+                if (hook.getKey().equals("*") && types.contains("all")) {
+                    for (CheckParameter.Type type : CheckParameter.Type.values()) {
+                        if (type.getCode() != 0) {
+                            codeSum = codeSum + type.getCode();
+                        }
+                    }
+                    temp.put("", codeSum);
+                    return temp;
+                } else if (types.contains("all")) {
+                    for (CheckParameter.Type type : CheckParameter.Type.values()) {
+                        if (type.getCode() != 0) {
+                            codeSum = codeSum + type.getCode();
+                        }
+                    }
+                    temp.put(hook.getKey(), codeSum);
+                } else {
+                    for (String s : types) {
+                        String hooksType = s.toUpperCase();
+                        try {
+                            Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
+                            codeSum = codeSum + code;
+                        } catch (Exception e) {
+                            LOGGER.warn("Hook type " + s + " does not exist: ", e);
+                        }
+                    }
+                    if (hook.getKey().equals("*")) {
+                        temp.put("", codeSum);
+                    } else {
+                        temp.put(hook.getKey(), codeSum);
+                    }
+                }
+            }
+        }
+        return temp;
+    }
 }

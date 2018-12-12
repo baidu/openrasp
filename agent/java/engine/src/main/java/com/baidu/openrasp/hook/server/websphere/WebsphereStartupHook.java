@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook.server.websphere;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.server.ServerStartupHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
@@ -79,7 +80,9 @@ public class WebsphereStartupHook extends ServerStartupHook {
             }
         }
         sendRegister();
-        HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_WEBSPHERE_START, CheckParameter.EMPTY_MAP);
+        if (!CloudUtils.checkCloudControlEnter()){
+            HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_WEBSPHERE_START, CheckParameter.EMPTY_MAP);
+        }
     }
 
     private static Document getXMLDocument(String path) {

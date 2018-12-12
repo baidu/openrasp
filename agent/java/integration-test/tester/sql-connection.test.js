@@ -8,7 +8,7 @@ const axios = require('axios');
 const fs = require('fs');
 const timeout = ms => new Promise(resolve => setTimeout(resolve, ms));
 const SERVER_HOME = process.env['SERVER_HOME'];
-const CONF_FILE = SERVER_HOME + '/rasp/conf/rasp.properties';
+const CONF_FILE = SERVER_HOME + '/rasp/conf/rasp.yaml';
 const POLICY_ALARM_FILE = SERVER_HOME + '/rasp/logs/policy_alarm/policy_alarm.log';
 const RASP_LOG_FILE = SERVER_HOME + '/rasp/logs/rasp/rasp.log';
 const watchFileOptions = {

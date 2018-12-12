@@ -26,7 +26,7 @@ import java.util.*;
  * @create: 2018/09/13 20:55
  */
 public class HookWhiteModel {
-    private static DoubleArrayTrie hookWhiteinfo;
+    public static DoubleArrayTrie hookWhiteinfo;
 
     public static void init(TreeMap<String, Integer> urls) {
         if (!urls.isEmpty()) {
