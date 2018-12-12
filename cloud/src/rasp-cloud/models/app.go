@@ -128,7 +128,6 @@ func init() {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get app collection count", err)
 	}
 	if count <= 0 {
-		createDefaultUser()
 		index := &mgo.Index{
 			Key:        []string{"name"},
 			Unique:     true,
@@ -139,7 +138,6 @@ func init() {
 		if err != nil {
 			tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
 		}
-
 	}
 	alarmDuration := beego.AppConfig.DefaultInt64("AlarmDuration", 120)
 	if alarmDuration <= 0 {
@@ -151,6 +149,9 @@ func init() {
 		if domain == "" {
 			tools.Panic(tools.ErrCodeConfigInitFailed,
 				"the 'Domain' config in the app.conf can not be empty", nil)
+		}
+		if count <= 0 {
+			createDefaultUser()
 		}
 		go startAlarmTicker(time.Second * time.Duration(alarmDuration))
 	}
