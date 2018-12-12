@@ -38,7 +38,7 @@
               <a href="javascript:" class="nav-link pr-0 leading-none" data-toggle="dropdown">
                 <span class="ml-2 d-none d-lg-block">
                   <span class="text-default">
-                    admin <i class="fa fa-caret-down" />
+                    openrasp <i class="fa fa-caret-down" />
                   </span>
                   <small class="text-muted d-block mt-1">
                     管理员权限
