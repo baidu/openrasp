@@ -279,11 +279,11 @@ func generateSecret(app *App) string {
 	return base64Data[0 : len(base64Data)-1]
 }
 
-func GetAllApp(page int, perpage int) (count int, result []App, err error) {
+func GetAllApp(page int, perpage int) (count int, result []*App, err error) {
 	count, err = mongo.FindAll(appCollectionName, nil, &result, perpage*(page-1), perpage, "name")
 	if err == nil && result != nil {
 		for _, app := range result {
-			HandleApp(&app, false)
+			HandleApp(app, false)
 		}
 	}
 	return

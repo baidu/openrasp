@@ -64,7 +64,7 @@ func (o *AppController) GetApp() {
 			o.ServeError(http.StatusBadRequest, "failed to get apps", err)
 		}
 		if apps == nil {
-			apps = make([]models.App, 0)
+			apps = make([]*models.App, 0)
 		}
 		result["total"] = total
 		result["total_page"] = math.Ceil(float64(total) / float64(data.Perpage))
