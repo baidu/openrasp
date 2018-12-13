@@ -41,7 +41,7 @@ func (o *PolicyAlarmController) Search() {
 	if param.Data.AppId != "" {
 		_, err := models.GetAppById(param.Data.AppId)
 		if err != nil {
-			o.ServeError(http.StatusBadRequest, "cannot get the app: "+param.Data.AppId)
+			o.ServeError(http.StatusBadRequest, "cannot get the app: "+param.Data.AppId, err)
 		}
 	} else {
 		param.Data.AppId = "*"

@@ -244,6 +244,7 @@ func AddApp(app *App) (result *App, err error) {
 	if mongo.FindOne(appCollectionName, bson.M{"name": app.Name}, &App{}) != mgo.ErrNotFound {
 		return nil, errors.New("duplicate app name")
 	}
+	HandleApp(app, true)
 	err = es.CreateEsIndex(logs.PolicyIndexName+"-"+app.Id, logs.AliasPolicyIndexName+"-"+app.Id, logs.PolicyEsMapping)
 	if err != nil {
 		return
@@ -340,6 +341,10 @@ func HandleApp(app *App, isCreate bool) {
 		}
 		if app.DingAlarmConf.CorpSecret != "" {
 			app.DingAlarmConf.CorpSecret = "************"
+		}
+	} else {
+		if app.GeneralConfig == nil {
+			app.GeneralConfig = DefaultGeneralConfig
 		}
 	}
 	if app.WhitelistConfig == nil {

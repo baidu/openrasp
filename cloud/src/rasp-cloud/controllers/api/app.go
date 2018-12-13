@@ -260,8 +260,6 @@ func (o *AppController) Post() {
 		o.validateAppConfig(app.GeneralConfig)
 		configTime := time.Now().UnixNano()
 		app.ConfigTime = configTime
-	} else {
-		app.GeneralConfig = models.DefaultGeneralConfig
 	}
 
 	if app.WhitelistConfig != nil {
@@ -271,7 +269,6 @@ func (o *AppController) Post() {
 	} else {
 		app.WhitelistConfig = make([]models.WhitelistConfigItem, 0)
 	}
-	models.HandleApp(app, true)
 	app, err = models.AddApp(app)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "create app failed", err)
