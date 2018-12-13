@@ -10,7 +10,8 @@ plugin.register('command', params => {
 })
 EOF;
 $conf = <<<CONF
-block.redirect_url="/block?request_id="
+block:
+  redirect_url: "/block?request_id="
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

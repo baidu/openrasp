@@ -30,10 +30,15 @@ using namespace std;
 class ConfigHolder
 {
 public:
+  enum FromType
+  {
+    kJson,
+    kYaml
+  };
+
+public:
   ConfigHolder(){};
-  ConfigHolder(string &config, OpenraspConfig::FromType type);
-  bool init(string &config, OpenraspConfig::FromType type);
-  bool update(OpenraspConfig *openrasp_config);
+  bool update(BaseReader *reader);
   long GetLatestUpdateTime() const;
   void SetLatestUpdateTime(long latestUpdateTime);
 

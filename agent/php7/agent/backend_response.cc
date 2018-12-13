@@ -21,18 +21,16 @@
 
 namespace openrasp
 {
+const int64_t BackendResponse::default_int64 = -999;
 
 BackendResponse::BackendResponse(long response_code, std::string header_string, std::string response_string)
 {
     this->response_code = response_code;
     this->header_string = header_string;
     this->response_string = response_string;
-    document.Parse(response_string.c_str());
-    if (document.HasParseError())
-    {
-        error_msg = rapidjson::GetParseError_En(document.GetParseError());
-        this->parse_error = true;
-    }
+    jreader.load(response_string.c_str());
+    this->parse_error = jreader.has_error();
+    this->error_msg = jreader.get_error_msg();
 }
 
 bool BackendResponse::has_error() const
@@ -50,24 +48,22 @@ bool BackendResponse::http_code_ok() const
     return (response_code >= 200 && response_code < 300);
 }
 
-bool BackendResponse::fetch_status(int64_t &status)
+int64_t BackendResponse::fetch_status()
 {
-    return fetch_int64("/status", status);
+    return jreader.fetch_int64({"status"}, BackendResponse::default_int64);
 }
 
-bool BackendResponse::fetch_description(std::string &description)
+std::string BackendResponse::fetch_description()
 {
-    return fetch_string("/description", description);
+    return jreader.fetch_string({"description"}, "");
 }
 
 std::shared_ptr<PluginUpdatePackage> BackendResponse::build_plugin_update_package()
 {
-    std::string plugin;
-    std::string md5;
-    std::string version;
     std::shared_ptr<PluginUpdatePackage> result = nullptr;
-    if (fetch_string("/data/plugin/plugin", plugin) &&
-        fetch_string("/data/plugin/md5", md5))
+    std::string plugin = fetch_string({"data", "plugin", "plugin"}, "");
+    std::string md5 = fetch_string({"data", "plugin", "md5"}, "");
+    if (!plugin.empty() && !md5.empty())
     {
         std::string cal_md5 =
             md5sum(static_cast<const void *>(plugin.c_str()), plugin.length());
@@ -75,8 +71,8 @@ std::shared_ptr<PluginUpdatePackage> BackendResponse::build_plugin_update_packag
         {
             return nullptr;
         }
-        bool has_version = fetch_string("/data/plugin/version", version);
-        if (!has_version)
+        std::string version = fetch_string({"data", "plugin", "version"}, "");
+        if (version.empty())
         {
             return nullptr;
         }
@@ -85,49 +81,24 @@ std::shared_ptr<PluginUpdatePackage> BackendResponse::build_plugin_update_packag
     return result;
 }
 
-bool BackendResponse::fetch_int64(const char *key, int64_t &target)
+int64_t BackendResponse::fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value)
 {
-    const rapidjson::Pointer pointer(key);
-    const rapidjson::Value *value = rapidjson::GetValueByPointer(document, pointer);
-    if (value && value->IsInt64())
-    {
-        target = value->GetInt64();
-        return true;
-    }
-    return false;
+    return jreader.fetch_int64(keys, default_value);
 }
 
-bool BackendResponse::fetch_string(const char *key, std::string &target)
+std::string BackendResponse::fetch_string(const std::vector<std::string> &keys, const std::string &default_value)
 {
-    const rapidjson::Pointer pointer(key);
-    const rapidjson::Value *value = rapidjson::GetValueByPointer(document, pointer);
-    if (value && value->IsString())
-    {
-        target = value->GetString();
-        return true;
-    }
-    return false;
+    return jreader.fetch_string(keys, default_value);
 }
 
-bool BackendResponse::stringify_object(const char *key, std::string &target)
+std::string BackendResponse::stringify_object(const std::vector<std::string> &keys, bool pretty)
 {
-    const rapidjson::Pointer pointer(key);
-    const rapidjson::Value *value = rapidjson::GetValueByPointer(document, pointer);
-    if (value && value->IsObject())
-    {
-        rapidjson::StringBuffer sb;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
-        value->Accept(writer);
-        target = sb.GetString();
-        return true;
-    }
-    return true;
+    return jreader.dump(keys, pretty);
 }
 
-bool BackendResponse::erase_value(const char *key)
+void BackendResponse::erase_value(const std::vector<std::string> &keys)
 {
-    const rapidjson::Pointer pointer(key);
-    return rapidjson::EraseValueByPointer(document, pointer);
+    jreader.erase(keys);
 }
 
 bool BackendResponse::verify(openrasp_error_code error_code)
@@ -144,61 +115,37 @@ bool BackendResponse::verify(openrasp_error_code error_code)
         return false;
     }
 
-    int64_t status;
-    std::string description;
-    bool has_status = fetch_status(status);
-    bool has_description = fetch_description(description);
-    if (has_status && has_description)
+    int64_t status = fetch_status();
+    std::string description = fetch_description();
+    if (0 != status)
     {
-        if (0 != status)
-        {
-            openrasp_error(E_WARNING, error_code, _("API error: %ld, description: %s"),
-                           status, description.c_str());
-            return false;
-        }
+        openrasp_error(E_WARNING, error_code, _("API error: %ld, description: %s"),
+                       status, description.c_str());
+        return false;
     }
     return true;
 }
 
-std::vector<std::string> BackendResponse::fetch_object_keys(const char *key)
+std::vector<std::string> BackendResponse::fetch_object_keys(const std::vector<std::string> &keys)
 {
-    std::vector<std::string> keys;
-    const rapidjson::Pointer pointer(key);
-    const rapidjson::Value *value = rapidjson::GetValueByPointer(document, pointer);
-    if (value && value->IsObject())
-    {
-        for (auto itr = value->MemberBegin(); itr != value->MemberEnd(); ++itr)
-        {
-            keys.push_back(itr->name.GetString());
-        }
-    }
-    return keys;
+    return jreader.fetch_object_keys(keys);
 }
 
-std::vector<std::string> BackendResponse::fetch_string_array(const char *key)
+std::vector<std::string> BackendResponse::fetch_string_array(const std::vector<std::string> &keys)
 {
-    std::vector<std::string> values;
-    const rapidjson::Pointer pointer(key);
-    const rapidjson::Value *value = rapidjson::GetValueByPointer(document, pointer);
-    if (value && value->IsArray())
-    {
-        for (auto &v : value->GetArray())
-        {
-            values.push_back(v.GetString());
-        }
-    }
-    return values;
+    return jreader.fetch_strings(keys, {});
 }
 
-std::map<std::string, std::vector<std::string>> BackendResponse::build_hook_white_map(const char *key)
+std::map<std::string, std::vector<std::string>> BackendResponse::build_hook_white_map(const std::vector<std::string> &keys)
 {
     std::map<std::string, std::vector<std::string>> hook_white_map;
-    std::vector<std::string> keys = fetch_object_keys(key);
-    for (auto &key_item : keys)
+    std::vector<std::string> url_keys = fetch_object_keys(keys);
+    std::vector<std::string> tmp_keys(keys);
+    for (auto &key_item : url_keys)
     {
-        std::string json_ptr(key_item);
-        string_replace(json_ptr, "/", "~1");//https://tools.ietf.org/html/rfc6901
-        std::vector<std::string> white_types = fetch_string_array((std::string(key) + "/" + json_ptr).c_str());
+        tmp_keys.push_back(key_item);
+        std::vector<std::string> white_types = fetch_string_array(tmp_keys);
+        tmp_keys.pop_back();
         hook_white_map.insert({key_item, white_types});
     }
     return hook_white_map;

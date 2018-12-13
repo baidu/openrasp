@@ -21,15 +21,24 @@
 namespace openrasp
 {
 
+JsonReader::JsonReader()
+{
+}
+
 JsonReader::JsonReader(const std::string &json_str)
+{
+  load(json_str);
+}
+
+void JsonReader::load(const std::string &content)
 {
   try
   {
-    json::parse(json_str);
+    j = json::parse(content);
   }
   catch (json::parse_error &e)
   {
-    has_error = true;
+    error = true;
     std::ostringstream oss;
     oss << "message: " << e.what() << ';'
         << "exception id: " << e.id << ';'
@@ -50,7 +59,7 @@ const std::string JsonReader::_to_pointer(const std::vector<std::string> &keys)
   return pointer_str;
 }
 
-std::string JsonReader::fetch_string(const std::vector<std::string> &keys, std::string &default_value)
+std::string JsonReader::fetch_string(const std::vector<std::string> &keys, const std::string &default_value)
 {
   json::json_pointer ptr = json::json_pointer(_to_pointer(keys));
   try
@@ -63,7 +72,7 @@ std::string JsonReader::fetch_string(const std::vector<std::string> &keys, std::
   }
 }
 
-int64_t JsonReader::fetch_int64(const std::vector<std::string> &keys, int64_t &default_value)
+int64_t JsonReader::fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value)
 {
   json::json_pointer ptr = json::json_pointer(_to_pointer(keys));
   try
@@ -76,7 +85,7 @@ int64_t JsonReader::fetch_int64(const std::vector<std::string> &keys, int64_t &d
   }
 }
 
-bool JsonReader::fetch_bool(const std::vector<std::string> &keys, bool &default_value)
+bool JsonReader::fetch_bool(const std::vector<std::string> &keys, const bool &default_value)
 {
   json::json_pointer ptr = json::json_pointer(_to_pointer(keys));
   try
@@ -113,9 +122,8 @@ std::vector<std::string> JsonReader::fetch_object_keys(const std::vector<std::st
   return result;
 }
 
-std::vector<std::string> JsonReader::fetch_strings(const std::vector<std::string> &keys)
+std::vector<std::string> JsonReader::fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value)
 {
-  std::vector<std::string> default_value;
   json::json_pointer ptr = json::json_pointer(_to_pointer(keys));
   try
   {
@@ -124,6 +132,20 @@ std::vector<std::string> JsonReader::fetch_strings(const std::vector<std::string
   catch (...)
   {
     return default_value;
+  }
+}
+
+std::string JsonReader::dump(const std::vector<std::string> &keys, bool pretty)
+{
+  json::json_pointer ptr = json::json_pointer(_to_pointer(keys));
+  try
+  {
+    json::reference ref = j.at(ptr);
+    return ref.dump(pretty ? 4 : -1);
+  }
+  catch (...)
+  {
+    return "";
   }
 }
 

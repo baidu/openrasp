@@ -10,7 +10,8 @@ plugin.register('command', params => {
 })
 EOF;
 $conf = <<<CONF
-block.content_xml="<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"
+block:
+  content_xml: "<?xml version=\"1.0\"?><doc><error>true</error><reason>blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>
@@ -28,4 +29,4 @@ exec('echo test');
 --EXPECTHEADERS--
 Content-type: text/xml;charset=UTF-8
 --EXPECTREGEX--
-<\?xml version="1.0"\?><doc><error>true<\/error><reason>Request blocked by OpenRASP<\/reason><request_id>.*<\/request_id><\/doc>
+<\?xml version="1.0"\?><doc><error>true<\/error><reason>blocked by OpenRASP<\/reason><request_id>.*<\/request_id><\/doc>

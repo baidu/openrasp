@@ -15,7 +15,9 @@ plugin.register('writeFile', params => {
 })
 EOF;
 $conf = <<<CONF
-hook.white.ALL=true
+hook.white:
+  "*":
+    - "all"
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

@@ -11,7 +11,9 @@ RASP.algorithmConfig = {
 }
 EOF;
 $conf = <<<CONF
-webshell_callable.blacklist=["exec"]
+webshell_callable:
+  blacklist:
+    - "exec"
 CONF;
 include(__DIR__.'/../skipif.inc');
 ?>

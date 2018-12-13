@@ -11,7 +11,8 @@ plugin.register('command', params => {
 })
 EOF;
 $conf = <<<CONF
-plugin.maxstack=10
+plugin:
+  maxstack: 10
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

@@ -15,56 +15,97 @@
  */
 
 #include "YamlReader.h"
+#include <fstream>
 
 namespace openrasp
 {
+YamlReader::YamlReader()
+{
+}
 
 YamlReader::YamlReader(const std::string &yaml_str)
 {
-  node = YAML::Load(yaml_str);
+  load(yaml_str);
 }
-std::string YamlReader::fetch_string(const std::vector<std::string> &keys, std::string &default_value)
+
+void YamlReader::load(const std::string &content)
 {
-  Node current;
   try
   {
-    for (std::string key : keys)
+    node = YAML::Load(content);
+  }
+  catch (YAML::ParserException &e)
+  {
+    error = true;
+    std::ostringstream oss;
+    oss << "message: " << e.what();
+    error_msg = oss.str();
+  }
+}
+
+std::string YamlReader::fetch_string(const std::vector<std::string> &keys, const std::string &default_value)
+{
+  std::vector<Node> nodes;
+  try
+  {
+    for (size_t i = 0; i < keys.size(); ++i)
     {
-      current = current.IsDefined() ? current[key] : node[key];
+      if (0 == i)
+      {
+        nodes.push_back(node[keys[i]]);
+      }
+      else
+      {
+        nodes.push_back(nodes[i - 1][keys[i]]);
+      }
     }
-    return current.as<std::string>();
+    return nodes[keys.size() - 1].as<std::string>();
   }
   catch (...)
   {
     return default_value;
   }
 }
-int64_t YamlReader::fetch_int64(const std::vector<std::string> &keys, int64_t &default_value)
+int64_t YamlReader::fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value)
 {
-  Node current;
+  std::vector<Node> nodes;
   try
   {
-    for (std::string key : keys)
+    for (size_t i = 0; i < keys.size(); ++i)
     {
-      current = current.IsDefined() ? current[key] : node[key];
+      if (0 == i)
+      {
+        nodes.push_back(node[keys[i]]);
+      }
+      else
+      {
+        nodes.push_back(nodes[i - 1][keys[i]]);
+      }
     }
-    return current.as<int64_t>();
+    return nodes[keys.size() - 1].as<int64_t>();
   }
   catch (...)
   {
     return default_value;
   }
 }
-bool YamlReader::fetch_bool(const std::vector<std::string> &keys, bool &default_value)
+bool YamlReader::fetch_bool(const std::vector<std::string> &keys, const bool &default_value)
 {
-  Node current;
+  std::vector<Node> nodes;
   try
   {
-    for (std::string key : keys)
+    for (size_t i = 0; i < keys.size(); ++i)
     {
-      current = current.IsDefined() ? current[key] : node[key];
+      if (0 == i)
+      {
+        nodes.push_back(node[keys[i]]);
+      }
+      else
+      {
+        nodes.push_back(nodes[i - 1][keys[i]]);
+      }
     }
-    return current.as<bool>();
+    return nodes[keys.size() - 1].as<bool>();
   }
   catch (...)
   {
@@ -73,14 +114,21 @@ bool YamlReader::fetch_bool(const std::vector<std::string> &keys, bool &default_
 }
 void YamlReader::erase(const std::vector<std::string> &keys)
 {
-  Node current;
+  std::vector<Node> nodes;
   try
   {
-    for (size_t i = 0; i < keys.size() - 1; ++i)
+    for (size_t i = 0; i < keys.size(); ++i)
     {
-      current = current.IsDefined() ? current[keys[i]] : node[keys[i]];
+      if (0 == i)
+      {
+        nodes.push_back(node[keys[i]]);
+      }
+      else
+      {
+        nodes.push_back(nodes[i - 1][keys[i]]);
+      }
     }
-    current.remove(keys[keys.size() - 1]);
+    nodes[keys.size() - 2].remove(keys[keys.size() - 1]);
   }
   catch (...)
   {
@@ -89,16 +137,23 @@ void YamlReader::erase(const std::vector<std::string> &keys)
 std::vector<std::string> YamlReader::fetch_object_keys(const std::vector<std::string> &keys)
 {
   std::vector<std::string> result;
-  Node current;
+  std::vector<Node> nodes;
   try
   {
-    for (std::string key : keys)
+    for (size_t i = 0; i < keys.size(); ++i)
     {
-      current = current.IsDefined() ? current[key] : node[key];
+      if (0 == i)
+      {
+        nodes.push_back(node[keys[i]]);
+      }
+      else
+      {
+        nodes.push_back(nodes[i - 1][keys[i]]);
+      }
     }
-    if (current.IsMap())
+    if (nodes[keys.size() - 1].IsMap())
     {
-      for (YAML::const_iterator it = current.begin(); it != current.end(); ++it)
+      for (YAML::const_iterator it = nodes[keys.size() - 1].begin(); it != nodes[keys.size() - 1].end(); ++it)
       {
         result.push_back(it->first.as<std::string>());
       }
@@ -109,28 +164,37 @@ std::vector<std::string> YamlReader::fetch_object_keys(const std::vector<std::st
   }
   return result;
 }
-std::vector<std::string> YamlReader::fetch_strings(const std::vector<std::string> &keys)
+std::vector<std::string> YamlReader::fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value)
 {
-  std::vector<std::string> default_value;
-  Node current;
+  std::vector<Node> nodes;
   try
   {
-    for (std::string key : keys)
+    std::vector<std::string> result;
+    for (size_t i = 0; i < keys.size(); ++i)
     {
-      current = current.IsDefined() ? current[key] : node[key];
-    }
-    if (current.IsSequence())
-    {
-      for (YAML::const_iterator it = current.begin(); it != current.end(); ++it)
+      if (0 == i)
       {
-        default_value.push_back(it->as<std::string>());
+        nodes.push_back(node[keys[i]]);
+      }
+      else
+      {
+        nodes.push_back(nodes[i - 1][keys[i]]);
       }
     }
+
+    if (nodes[keys.size() - 1].IsSequence())
+    {
+      for (YAML::const_iterator it = nodes[keys.size() - 1].begin(); it != nodes[keys.size() - 1].end(); ++it)
+      {
+        result.push_back(it->as<std::string>());
+      }
+    }
+    return result;
   }
   catch (...)
   {
+    return default_value;
   }
-  return default_value;
 }
 
 } // namespace openrasp

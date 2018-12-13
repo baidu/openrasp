@@ -17,8 +17,19 @@
 #ifndef _OPENRASP_UTILS_JSON_READER_H_
 #define _OPENRASP_UTILS_JSON_READER_H_
 
+#ifdef snprintf
+#undef snprintf
+#endif
+#define snprintf snprintf
+//php define snprintf ... 
+
 #include "BaseReader.h"
 #include "third_party/json/json.hpp"
+
+#ifdef snprintf
+#undef snprintf
+#endif
+#define snprintf ap_php_snprintf
 
 namespace openrasp
 {
@@ -31,15 +42,16 @@ private:
   json j;
 
 public:
+  JsonReader();
   JsonReader(const std::string &json_str);
-
-protected:
-    virtual std::string fetch_string(const std::vector<std::string> &keys, std::string &default_value);
-    virtual int64_t fetch_int64(const std::vector<std::string> &keys, int64_t &default_value);
-    virtual bool fetch_bool(const std::vector<std::string> &keys, bool &default_value);
-    virtual void erase(const std::vector<std::string> &keys);
-    virtual std::vector<std::string> fetch_object_keys(const std::vector<std::string> &keys);
-    virtual std::vector<std::string> fetch_strings(const std::vector<std::string> &keys);
+  virtual std::string fetch_string(const std::vector<std::string> &keys, const std::string &default_value);
+  virtual int64_t fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value);
+  virtual bool fetch_bool(const std::vector<std::string> &keys, const bool &default_value);
+  virtual void erase(const std::vector<std::string> &keys);
+  virtual std::vector<std::string> fetch_object_keys(const std::vector<std::string> &keys);
+  virtual std::vector<std::string> fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value);
+  virtual void load(const std::string &content);
+  std::string dump(const std::vector<std::string> &keys, bool pretty = false);
 
 private:
   const std::string _to_pointer(const std::vector<std::string> &keys);

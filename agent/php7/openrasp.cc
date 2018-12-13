@@ -38,8 +38,10 @@ extern "C"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"
 #endif
+#include "utils/JsonReader.h"
+#include "utils/YamlReader.h"
 
-using openrasp::OpenraspConfig;
+using openrasp::ConfigHolder;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
@@ -47,8 +49,8 @@ bool is_initialized = false;
 bool remote_active = false;
 static bool make_openrasp_root_dir();
 static bool current_sapi_supported();
-static std::string get_config_abs_path(OpenraspConfig::FromType type);
-static bool update_config(openrasp::ConfigHolder *config, OpenraspConfig::FromType type = OpenraspConfig::FromType::kIni);
+static std::string get_config_abs_path(ConfigHolder::FromType type);
+static bool update_config(openrasp::ConfigHolder *config, ConfigHolder::FromType type = ConfigHolder::FromType::kYaml);
 
 PHP_INI_BEGIN()
 PHP_INI_ENTRY1("openrasp.root_dir", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.root_dir)
@@ -135,13 +137,22 @@ PHP_MINIT_FUNCTION(openrasp)
 #endif
     if (!remote_active)
     {
-        std::string config_file_path = get_config_abs_path(OpenraspConfig::FromType::kIni);
+        std::string config_file_path = get_config_abs_path(ConfigHolder::FromType::kYaml);
         std::string conf_contents;
         if (get_entire_file_content(config_file_path.c_str(), conf_contents))
         {
-            openrasp::OpenraspConfig openrasp_config(conf_contents, OpenraspConfig::FromType::kIni);
-            //TODO 单机版白名单 1.0rc2 格式修改
-            openrasp::scm->build_check_type_white_array(openrasp_config);
+            openrasp::YamlReader yreader(conf_contents);
+            std::vector<std::string> hook_white_key({"hook.white"});
+            std::map<std::string, std::vector<std::string>> hook_white_map;
+            std::vector<std::string> url_keys = yreader.fetch_object_keys(hook_white_key);
+            for (auto &key_item : url_keys)
+            {
+                hook_white_key.push_back(key_item);
+                std::vector<std::string> white_types = yreader.fetch_strings(hook_white_key, {});
+                hook_white_key.pop_back();
+                hook_white_map.insert({key_item, white_types});
+            }
+            openrasp::scm->build_check_type_white_array(hook_white_map);
         }
         result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
     }
@@ -188,7 +199,7 @@ PHP_RINIT_FUNCTION(openrasp)
         long config_last_update = openrasp::scm->get_config_last_update();
         if (config_last_update && config_last_update > OPENRASP_G(config).GetLatestUpdateTime())
         {
-            if (update_config(&OPENRASP_G(config), OpenraspConfig::FromType::kJson))
+            if (update_config(&OPENRASP_G(config), ConfigHolder::FromType::kJson))
             {
                 OPENRASP_G(config).SetLatestUpdateTime(config_last_update);
             }
@@ -339,18 +350,17 @@ static bool make_openrasp_root_dir()
     return true;
 }
 
-static std::string get_config_abs_path(OpenraspConfig::FromType type)
+static std::string get_config_abs_path(ConfigHolder::FromType type)
 {
     std::string filename;
     switch (type)
     {
-    case OpenraspConfig::FromType::kIni:
-        filename = "openrasp.toml";
-        break;
-    case OpenraspConfig::FromType::kJson:
+    case ConfigHolder::FromType::kJson:
         filename = "cloud-config.json";
         break;
+    case ConfigHolder::FromType::kYaml:
     default:
+        filename = "openrasp.yml";
         break;
     }
     return std::string(openrasp_ini.root_dir) +
@@ -359,7 +369,7 @@ static std::string get_config_abs_path(OpenraspConfig::FromType type)
            DEFAULT_SLASH + filename;
 }
 
-static bool update_config(openrasp::ConfigHolder *config, OpenraspConfig::FromType type)
+static bool update_config(openrasp::ConfigHolder *config, ConfigHolder::FromType type)
 {
     if (nullptr != openrasp_ini.root_dir && strcmp(openrasp_ini.root_dir, "") != 0)
     {
@@ -367,8 +377,20 @@ static bool update_config(openrasp::ConfigHolder *config, OpenraspConfig::FromTy
         std::string conf_contents;
         if (get_entire_file_content(config_file_path.c_str(), conf_contents))
         {
-            openrasp::OpenraspConfig openrasp_config(conf_contents, type);
-            return config->update(&openrasp_config);
+            openrasp::JsonReader jreader;
+            openrasp::YamlReader yreader;
+            switch (type)
+            {
+            case ConfigHolder::FromType::kJson:
+                jreader.load(conf_contents);
+                return config->update(&jreader);
+                break;
+            case ConfigHolder::FromType::kYaml:
+            default:
+                yreader.load(conf_contents);
+                return config->update(&yreader);
+                break;
+            }
         }
     }
     return false;

@@ -22,6 +22,7 @@
 #include "openrasp_agent_manager.h"
 #include "shared_config_manager.h"
 #include "utils/time.h"
+#include "utils/JsonReader.h"
 #include "third_party/rapidjson/stringbuffer.h"
 #include "third_party/rapidjson/prettywriter.h"
 
@@ -42,11 +43,11 @@ LogCollectItem::LogCollectItem(const std::string name, const std::string url_pat
         std::string status_json;
         if (get_entire_file_content(status_file_abs.c_str(), status_json))
         {
-            OpenraspConfig openrasp_config(status_json, OpenraspConfig::FromType::kJson);
-            fpos = openrasp_config.Get<int64_t>("fpos");
-            st_ino = openrasp_config.Get<int64_t>("st_ino");
-            last_post_time = openrasp_config.Get<int64_t>("last_post_time");
-            curr_suffix = openrasp_config.Get<std::string>("curr_suffix", curr_suffix);
+            JsonReader jreader(status_json);
+            fpos = jreader.fetch_int64({"fpos"}, 0);
+            st_ino = jreader.fetch_int64({"st_ino"}, 0);
+            last_post_time = jreader.fetch_int64({"last_post_time"}, 0);
+            curr_suffix = jreader.fetch_string({"curr_suffix"}, curr_suffix);
         }
     }
 }
