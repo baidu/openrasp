@@ -35,9 +35,11 @@ private:
 public:
   LogCollectItem(const std::string name, const std::string url_path, bool collect_enable);
 
-  void update_status();
+  void update_fpos();
+  void update_last_post_time();
   void determine_fpos();
   inline void update_curr_suffix();
+  void save_status_snapshot() const;
 
   bool need_rotate() const;
   void handle_rotate(bool need_rotate);
@@ -59,7 +61,6 @@ private:
 private:
   void clear();
   void open_active_log();
-  void save_status_snapshot() const;
   void cleanup_expired_logs() const;
   inline std::string get_base_dir_path() const;
   long get_active_file_inode();
