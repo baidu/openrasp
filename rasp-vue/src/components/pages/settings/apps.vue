@@ -48,7 +48,7 @@
           </tbody>
         </table>
         <nav v-if="! loading">
-          <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" />
+          <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" @change="loadApps" />
         </nav>
       </div>
       <div class="card-footer text-right">
@@ -72,6 +72,9 @@ import { mapGetters, mapActions, mapMutations } from 'vuex'
 
 export default {
   name: 'AppSettings',
+  components: {
+    appEditModal
+  },
   data: function() {
     return {
       data: [],
@@ -80,25 +83,24 @@ export default {
       currentPage: 1
     }
   },
+  watch: {
+    current_app() { this.loadApps(1) }
+  },
   mounted: function() {
     this.loadApps(1)
   },
   methods: {
     ...mapActions(['loadAppList']),
-    loadApps: function(page) {
-      var self = this
-      var body = {
+    loadApps(page) {
+      this.loading = true
+      return this.request.post('v1/api/app/get', {
         page: page,
         perpage: 10
-      }
-
-      self.loading = true
-
-      this.api_request('v1/api/app/get', body, function(data) {
-        self.loading = false
-
-        self.data = data.data
-        self.total = data.total
+      }).then(res => {
+        this.currentPage = page
+        this.data = res.data
+        this.total = res.total
+        this.loading = false
       })
     },
     deleteApp: function(data) {
@@ -134,9 +136,6 @@ export default {
         self.loadAppList()
       })
     }
-  },
-  components: {
-    appEditModal
   }
 }
 </script>

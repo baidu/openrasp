@@ -80,7 +80,7 @@
           </tbody>
         </table>
         <nav v-if="! loading">
-          <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" />
+          <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" @change="loadTokens" />
         </nav>
       </div>
       <div class="card-footer text-right">
@@ -163,16 +163,16 @@ export default {
         self.loadTokens(1)
       })
     },
-    loadTokens: function(page) {
-      var self = this
-      var body = {
+    loadTokens(page) {
+      this.loading = true
+      return this.request.post('v1/api/token/get', {
         page: page,
         perpage: 10
-      }
-
-      this.api_request('v1/api/token/get', body, function(data) {
-        self.data = data.data
-        self.total = data.total
+      }).then(res => {
+        this.currentPage = page
+        this.data = res.data
+        this.total = res.total
+        this.loading = false
       })
     }
   }
