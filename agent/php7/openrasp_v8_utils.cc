@@ -35,11 +35,10 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
     case IS_ARRAY:
     {
         HashTable *ht = Z_ARRVAL_P(val);
-        if (!ht || ZEND_HASH_GET_APPLY_COUNT(ht) > 1)
+        if (!ht)
         {
             break;
         }
-        ZEND_HASH_INC_APPLY_COUNT(ht);
 
         v8::Local<v8::Array> arr;
         v8::Local<v8::Object> obj;
@@ -82,7 +81,6 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
             }
         }
         ZEND_HASH_FOREACH_END();
-        ZEND_HASH_DEC_APPLY_COUNT(ht);
         break;
     }
     case IS_STRING:

@@ -83,6 +83,9 @@ export default {
       currentPage: 1
     }
   },
+  computed: {
+    ...mapGetters(['current_app'])
+  },
   watch: {
     current_app() { this.loadApps(1) }
   },
@@ -125,16 +128,12 @@ export default {
         description: data.description
       }, is_edit)
     },
-    onEdit: function(event) {
-      console.log(event)
-
-      var self = this
-      var url = event.is_edit ? 'v1/api/app/config' : 'v1/api/app'
-
-      this.api_request(url, event.data, function(data) {
-        self.loadApps(1)
-        self.loadAppList()
-      })
+    onEdit({ is_edit, data }) {
+      this.request.post(is_edit ? 'v1/api/app/config' : 'v1/api/app', data)
+        .then(() => {
+          this.loadApps(1)
+          this.loadAppList(this.current_app.id)
+        })
     }
   }
 }
