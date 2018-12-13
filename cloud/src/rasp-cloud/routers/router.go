@@ -105,7 +105,7 @@ func InitRouter() {
 	)
 	userNS := beego.NewNamespace("/user", beego.NSInclude(&api.UserController{}))
 	ns := beego.NewNamespace("/v1")
-	startType := *tools.StartType
+	startType := *tools.StartFlag.StartType
 	if startType == tools.StartTypeForeground {
 		ns.Namespace(foregroudNS, userNS)
 	} else if startType == tools.StartTypeAgent {

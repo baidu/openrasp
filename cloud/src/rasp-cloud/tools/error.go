@@ -30,6 +30,7 @@ const (
 	ErrCodeGeoipInit
 	ErrCodeResetUserFailed
 	ErrCodeInitDefaultAppFailed
+	ErrCodeInitChildProcessFailed
 )
 
 func Panic(errCode int, message string, err error) {
