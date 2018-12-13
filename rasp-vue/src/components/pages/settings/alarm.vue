@@ -1,5 +1,5 @@
 <template>
-  <div id="settings-alarm" class="tab-pane fade">
+  <div>
     <!-- begin alarm settings -->
     <div class="card">
       <div class="card-header">
@@ -21,37 +21,36 @@
               [帮助文档]
             </a>
           </label>
-          <input type="text" class="form-control" v-model="data.email_alarm_conf.recv_addr" />
+          <input v-model="data.email_alarm_conf.recv_addr" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             报警标题
           </label>
-          <input type="text" class="form-control" v-model="data.email_alarm_conf.subject" />
+          <input v-model="data.email_alarm_conf.subject" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             邮件服务器地址
           </label>
-          <input type="text" class="form-control" v-model="data.email_alarm_conf.server_addr" />
+          <input v-model="data.email_alarm_conf.server_addr" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             邮箱账号
           </label>
-          <input type="email" class="form-control" v-model="data.email_alarm_conf.username" />
+          <input v-model="data.email_alarm_conf.username" type="email" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             邮箱密码
           </label>
-          <input type="text" class="form-control" v-model="data.email_alarm_conf.password" />
+          <input v-model="data.email_alarm_conf.password" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="custom-switch">
-            <input type="checkbox" v-model="data.email_alarm_conf.enable" checked="data.email_alarm_conf.enable" class="custom-switch-input" />
-            <span class="custom-switch-indicator">
-            </span>
+            <input v-model="data.email_alarm_conf.enable" type="checkbox" checked="data.email_alarm_conf.enable" class="custom-switch-input">
+            <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
               开启邮件报警
             </span>
@@ -81,13 +80,12 @@
               [帮助文档]
             </a>
           </label>
-          <input type="text" class="form-control" v-model="data.http_alarm_conf.recv_addr" />
+          <input v-model="data.http_alarm_conf.recv_addr" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="custom-switch">
-            <input type="checkbox" v-model="data.http_alarm_conf.enable" checked="data.http_alarm_conf.enable" class="custom-switch-input" />
-            <span class="custom-switch-indicator">
-            </span>
+            <input v-model="data.http_alarm_conf.enable" type="checkbox" checked="data.http_alarm_conf.enable" class="custom-switch-input">
+            <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
               开启报警推送
             </span>
@@ -117,42 +115,41 @@
               [帮助文档]
             </a>
           </label>
-          <input type="text" class="form-control" v-model="data.ding_alarm_conf.recv_user" />
+          <input v-model="data.ding_alarm_conf.recv_user" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             推送部门列表
           </label>
-          <input type="text" class="form-control" v-model="data.ding_alarm_conf.recv_party" />
+          <input v-model="data.ding_alarm_conf.recv_party" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             Corp ID
           </label>
-          <input type="text" class="form-control" v-model="data.ding_alarm_conf.corp_id" />
+          <input v-model="data.ding_alarm_conf.corp_id" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             Corp Secret
           </label>
-          <input type="text" class="form-control" v-model="data.ding_alarm_conf.corp_secret" />
+          <input v-model="data.ding_alarm_conf.corp_secret" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             Agent ID
           </label>
-          <input type="text" class="form-control" v-model="data.ding_alarm_conf.agent_id" />
+          <input v-model="data.ding_alarm_conf.agent_id" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="custom-switch">
-            <input type="checkbox" v-model="data.ding_alarm_conf.enable" checked="data.ding_alarm_conf.enable" class="custom-switch-input" />
-            <span class="custom-switch-indicator">
-            </span>
+            <input v-model="data.ding_alarm_conf.enable" type="checkbox" checked="data.ding_alarm_conf.enable" class="custom-switch-input">
+            <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
               开启钉钉推送
             </span>
           </label>
-        </div>        
+        </div>
       </div>
       <div class="card-footer">
         <button type="submit" class="btn btn-primary" @click="saveSettings('ding')">
@@ -167,13 +164,12 @@
   </div>
 </template>
 
-
 <script>
 import { mapGetters } from 'vuex'
 
 export default {
-  name: "AlarmSettings",
-  data: function () {
+  name: 'AlarmSettings',
+  data: function() {
     return {
       data: {
         email_alarm_conf: {
@@ -188,10 +184,10 @@ export default {
     ...mapGetters(['current_app'])
   },
   methods: {
-    setData: function (data) {
+    setData: function(data) {
       this.data = data
     },
-    saveSettings: function (type) {
+    saveSettings: function(type) {
       var self = this
       var body = {
         app_id: this.current_app.id
@@ -201,7 +197,7 @@ export default {
       switch (type) {
         case 'email':
           body['email_alarm_conf'] = self.data.email_alarm_conf
-          if (typeof body.email_alarm_conf.recv_addr == 'string') {
+          if (typeof body.email_alarm_conf.recv_addr === 'string') {
             body.email_alarm_conf.recv_addr = body.email_alarm_conf.recv_addr.split(/\s*[,;]\s*/)
           }
 
@@ -209,18 +205,18 @@ export default {
           break
         case 'ding':
           body['ding_alarm_conf'] = self.data.ding_alarm_conf
-          if (typeof body.ding_alarm_conf.recv_user == 'string') {
+          if (typeof body.ding_alarm_conf.recv_user === 'string') {
             body.ding_alarm_conf.recv_user = body.ding_alarm_conf.recv_user.split(/\s*[,;]\s*/)
           }
-          if (typeof body.ding_alarm_conf.recv_party == 'string') {
+          if (typeof body.ding_alarm_conf.recv_party === 'string') {
             body.ding_alarm_conf.recv_party = body.ding_alarm_conf.recv_party.split(/\s*[,;]\s*/)
-          }          
+          }
 
           msg = '钉钉报警设置保存成功'
           break
         case 'http':
           body['http_alarm_conf'] = self.data.http_alarm_conf
-          if (typeof body.http_alarm_conf.recv_addr == 'string') {
+          if (typeof body.http_alarm_conf.recv_addr === 'string') {
             body.http_alarm_conf.recv_addr = [body.http_alarm_conf.recv_addr]
           }
 
@@ -229,21 +225,21 @@ export default {
       }
       // console.log (type, body)
 
-      this.api_request('v1/api/app/alarm/config', body, function (data) {
+      this.api_request('v1/api/app/alarm/config', body, function(data) {
         alert(msg)
       })
     },
-    testSettings: function (type) {
+    testSettings: function(type) {
       var self = this
       var body = {
         app_id: this.current_app.id
       }
       var url = 'v1/api/app/' + type + '/test'
 
-      this.api_request(url, body, function (data) {
+      this.api_request(url, body, function(data) {
         alert('发送成功')
       })
     }
   }
-};
+}
 </script>

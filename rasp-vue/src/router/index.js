@@ -50,7 +50,7 @@ const router = new Router({
         name: 'audit',
         component: audit
       }, {
-        path: 'settings/:app_id/',
+        path: 'settings/:setting_tab/:app_id/',
         name: 'settings',
         component: settings
       }, {

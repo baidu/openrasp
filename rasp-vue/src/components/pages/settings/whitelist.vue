@@ -1,5 +1,5 @@
 <template>
-  <div id="settings-whitelist" class="tab-pane fade">
+  <div>
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">

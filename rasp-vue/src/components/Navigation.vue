@@ -22,10 +22,10 @@
                 {{ row.name }} ( {{ row.lang }} {{ row.id }} )
               </a>
               <div class="dropdown-divider" />
-              <a class="dropdown-item" href="javascript:">
+              <router-link class="dropdown-item" :to="{name: 'settings', params: {setting_tab: 'app'}}">
                 <i class="dropdown-icon fe fe-settings" />
                 应用管理
-              </a>
+              </router-link>
             </div>
           </div>
           <div class="d-flex order-lg-2 ml-auto">

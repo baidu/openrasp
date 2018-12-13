@@ -1,5 +1,5 @@
 <template>
-  <div id="settings-algorithm" class="tab-pane fade">
+  <div>
     <!-- begin algorithm settings -->
     <div class="card">
       <div class="card-header">
