@@ -396,7 +396,6 @@ func PushAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isT
 func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isTest bool) error {
 	var emailConf = app.EmailAlarmConf
 	if emailConf.UserName != "" && len(emailConf.RecvAddr) > 0 && emailConf.ServerAddr != "" {
-		auth := smtp.PlainAuth("", emailConf.UserName, emailConf.Password, emailConf.ServerAddr)
 		var subject string
 		var msg string
 		var body string
@@ -444,6 +443,10 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 			msg += fmt.Sprintf("%s: %s\r\n", k, v)
 		}
 		msg += "\r\n" + body
+		auth := smtp.PlainAuth("", emailConf.UserName, emailConf.Password, emailConf.ServerAddr)
+		if emailConf.UserName == "" || emailConf.Password == "" {
+			auth = nil
+		}
 		err = smtp.SendMail(emailConf.ServerAddr, auth, emailConf.UserName, emailConf.RecvAddr, []byte(msg))
 		if err != nil {
 			beego.Error("failed to push email alarms: " + err.Error())
