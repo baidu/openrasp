@@ -298,8 +298,17 @@ static bool make_openrasp_root_dir()
         return false;
     }
     std::string root_dir(path);
+    std::string default_slash(1, DEFAULT_SLASH);
     efree(path);
-    std::vector<std::string> sub_dir_list{"assets", "conf", "logs", "plugins", "locale"};
+    std::vector<std::string> sub_dir_list{
+        "assets",
+        "conf",
+        "plugins",
+        "locale",
+        "logs" + default_slash + ALARM_LOG_DIR_NAME,
+        "logs" + default_slash + POLICY_LOG_DIR_NAME,
+        "logs" + default_slash + PLUGIN_LOG_DIR_NAME,
+        "logs" + default_slash + RASP_LOG_DIR_NAME};
     for (auto dir : sub_dir_list)
     {
         std::string path(root_dir + DEFAULT_SLASH + dir);

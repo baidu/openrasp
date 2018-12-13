@@ -38,7 +38,7 @@
               <a href="javascript:" class="nav-link pr-0 leading-none" data-toggle="dropdown">
                 <span class="ml-2 d-none d-lg-block">
                   <span class="text-default">
-                    admin <i class="fa fa-caret-down" />
+                    openrasp <i class="fa fa-caret-down" />
                   </span>
                   <small class="text-muted d-block mt-1">
                     管理员权限
@@ -133,7 +133,6 @@
 <script>
 import AddHostModal from '@/components/modals/addHostModal.vue'
 import { mapGetters, mapActions, mapMutations } from 'vuex'
-import { request } from '@/util'
 import Cookie from 'js-cookie'
 
 export default {
@@ -161,7 +160,7 @@ export default {
       this.$refs.addHost.showModal()
     },
     doLogout() {
-      return request.post('v1/user/logout', {})
+      return this.request.post('v1/user/logout', {})
         .then(res => {
           Cookie.set('RASP_AUTH_ID', null)
           location.href = '/#/login'

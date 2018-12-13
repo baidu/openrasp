@@ -36,7 +36,10 @@ function repack()
 
     # 安装默认插件
     mkdir tmp/resources
+    rm -rf tmp/dist
+
     cp "$git_root"/plugins/official/plugin.js tmp/resources
+    mv "$git_root"/rasp-vue/dist tmp
 
     mv tmp "$name"
     tar --numeric-owner --owner=0 --group=0 -czf "$output" "$name"
@@ -52,7 +55,9 @@ function build_cloud()
     export GOPATH=$(pwd)
     export PATH=$PATH:$GOPATH/bin
 
-    go get -u github.com/beego/bee
+    if [[ -z "$NO_BEE_INSTALL" ]]; then
+        go get -u github.com/beego/bee
+    fi
 
     cd src/rasp-cloud
     bee pack -exr=vendor
@@ -63,11 +68,12 @@ function build_cloud()
 function build_vue()
 {
     cd rasp-vue
-    npm ci --unsafe-perm
-    npm run build
 
-    rm -rf ../cloud/src/rasp-cloud/dist
-    mv dist ../cloud/src/rasp-cloud/
+    if [[ -z "$NO_NPM_INSTALL" ]]; then
+        npm ci --unsafe-perm
+    fi
+
+    npm run build
 }
 
 cd "$(dirname "$0")"
@@ -75,3 +81,4 @@ cd "$(dirname "$0")"
 check_prerequisite
 (build_vue)
 (build_cloud)
+

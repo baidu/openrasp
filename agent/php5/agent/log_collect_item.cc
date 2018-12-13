@@ -132,12 +132,15 @@ void LogCollectItem::save_status_snapshot() const
 #endif
 }
 
-void LogCollectItem::update_status()
+void LogCollectItem::update_fpos()
 {
     ifs.clear();
     fpos = ifs.tellg();
+}
+
+void LogCollectItem::update_last_post_time()
+{
     last_post_time = (long)time(NULL);
-    save_status_snapshot();
 }
 
 std::string LogCollectItem::get_cpmplete_url() const
@@ -172,13 +175,24 @@ bool LogCollectItem::get_post_logs(std::string &body)
     std::string line;
     body.push_back('[');
     int count = 0;
+    bool qualified_log_found = false;
     while (std::getline(ifs, line) &&
-           log_content_qualified(line) &&
            count < LogAgent::max_post_logs_account)
     {
-        body.append(line);
-        body.push_back(',');
-        ++count;
+        if (log_content_qualified(line))
+        {
+            qualified_log_found = true;
+            body.append(line);
+            body.push_back(',');
+            ++count;
+        }
+        else
+        {
+            if (!qualified_log_found)
+            {
+                update_fpos();
+            }
+        }
     }
     body.pop_back();
     body.push_back(']');

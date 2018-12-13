@@ -83,13 +83,11 @@ export default {
   computed: {
     ...mapGetters(['current_app'])
   },
-  mounted: function() {
-
-  },
-  activated: function() {
-	  if (this.current_app.id && !this.loading && Object.keys(this.data).length === 0) {
-      this.loadSettings()
+  mounted() {
+    if (!this.current_app.id) {
+      return
     }
+    this.loadSettings()
   },
   methods: {
     loadSettings: function() {

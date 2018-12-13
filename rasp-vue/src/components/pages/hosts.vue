@@ -89,7 +89,7 @@
                 </td>
                 <td nowrap>
                   {{ moment(row.last_heartbeat_time * 1000).format('YYYY-MM-DD') }} <br>
-                  {{ moment(row.last_heartbeat_time * 1000).format('hh:mm:ss') }}
+                  {{ moment(row.last_heartbeat_time * 1000).format('HH:mm:ss') }}
                 </td>
                 <td nowrap>
                   <span v-if="! row.online" class="text-danger">

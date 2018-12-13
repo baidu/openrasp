@@ -65,7 +65,7 @@
                   [{{ row.policy_id }}] {{ row.message }}
                 </td>
                 <td nowrap>
-                  <a href="javascript:" target="_blank" @click="showBaselineDetailModal(row)">
+                  <a href="javascript:" @click="showBaselineDetailModal(row)">
                     查看详情
                   </a>
                 </td>
