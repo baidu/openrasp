@@ -53,7 +53,7 @@ void LogAgent::run()
 	LogCollectItem policy_dir_info(POLICY_LOG_DIR_NAME, "/v1/agent/log/policy", true);
 	LogCollectItem plugin_dir_info(PLUGIN_LOG_DIR_NAME, "/v1/agent/log/plugin", false);
 	LogCollectItem rasp_dir_info(RASP_LOG_DIR_NAME, "/v1/agent/log/rasp", false);
-	std::vector<LogCollectItem *> log_dirs{&alarm_dir_info, &policy_dir_info, &plugin_dir_info};
+	std::vector<LogCollectItem *> log_dirs{&alarm_dir_info, &policy_dir_info, &plugin_dir_info, &rasp_dir_info};
 
 	long current_interval = LogAgent::log_push_interval;
 	TS_FETCH_WRAPPER();
@@ -74,7 +74,9 @@ void LogAgent::run()
 					bool result = post_logs_via_curl(post_body, url);
 					if (result)
 					{
-						ldi->update_status();
+						ldi->update_fpos();
+						ldi->update_last_post_time();
+						ldi->save_status_snapshot();
 					}
 					current_interval = result
 										   ? LogAgent::log_push_interval
