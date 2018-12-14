@@ -19,7 +19,6 @@ package com.baidu.openrasp.plugin.js.engine;
 import com.baidu.openrasp.EngineBoot;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.rhino.shim.Console;
 import com.fuxi.javaagent.rhino.shim.Shim;
@@ -44,8 +43,8 @@ public class JSContextFactory extends ContextFactory {
 
     private static JSContextFactory jsContextFactory = null;
 
-    private ScriptableObject globalScope = null;
-    private ScriptableObject RASP = null;
+    private static ScriptableObject globalScope = null;
+    private static ScriptableObject RASP = null;
     private long pluginTime = 0;
 
     private JSContextFactory() throws Exception {
@@ -54,58 +53,10 @@ public class JSContextFactory extends ContextFactory {
         cx.clearTimeout();
         try {
             globalScope = cx.initStandardObjects();
-
-            globalScope.defineProperty("global", globalScope, ScriptableObject.READONLY);
-
-            ScriptableObject.defineClass(globalScope, JSStdout.class);
-            Object jsstdout = cx.newObject(globalScope, "Stdout");
-            globalScope.defineProperty("stdout", jsstdout, ScriptableObject.READONLY);
-            globalScope.defineProperty("stderr", jsstdout, ScriptableObject.READONLY);
-
-            ScriptableObject.defineClass(globalScope, JSRequestContext.class);
-
-            Script shim;
-            shim = new Shim();
-            shim.exec(cx, globalScope);
-            shim = new Console();
-            shim.exec(cx, globalScope);
-
-            InputStream is;
-            String name;
-            String script;
-
-            name = "error.js";
-            is = EngineBoot.class.getResourceAsStream("/environment/" + name);
-            script = IOUtils.toString(is, "UTF-8");
-            cx.evaluateString(globalScope, script, name, 1, null);
-            name = "checkpoint.js";
-            is = EngineBoot.class.getResourceAsStream("/environment/" + name);
-            script = IOUtils.toString(is, "UTF-8");
-            cx.evaluateString(globalScope, script, name, 1, null);
-            name = "rasp.js";
-            is = EngineBoot.class.getResourceAsStream("/environment/" + name);
-            script = IOUtils.toString(is, "UTF-8");
-            cx.evaluateString(globalScope, script, name, 1, null);
-
-            RASP = (ScriptableObject) ScriptableObject.getProperty(globalScope, "RASP");
-            RASP.defineProperty("sql_tokenize", new JSTokenizeSql(), ScriptableObject.READONLY);
-            RASP.defineProperty("cmd_tokenize", new JSTokenizeCmd(), ScriptableObject.READONLY);
-            RASP.defineProperty("config_set", new JSRASPConfig(), ScriptableObject.READONLY);
-            RASP.defineProperty("get_jsengine", new BaseFunction() {
-                @Override
-                public Object call(Context cx, Scriptable scope, Scriptable thisObj, Object[] args) {
-                    return "rhino";
-                }
-
-                @Override
-                public Object getDefaultValue(Class<?> hint) {
-                    return "[Function: get_jsengine]";
-                }
-            }, ScriptableObject.READONLY);
+            RASP = perpareLoadPlugin(cx, globalScope);
         } finally {
             JSContext.exit();
         }
-
         System.out.println("[OpenRASP] JSContextFactory Initialized");
     }
 
@@ -127,10 +78,10 @@ public class JSContextFactory extends ContextFactory {
             JSContext cx = (JSContext) JSContext.enter();
             cx.clearTimeout();
             try {
-                ScriptableObject scope = (ScriptableObject) cx.newObject(jsContextFactory.globalScope);
-                scope.setPrototype(jsContextFactory.globalScope);
+                ScriptableObject scope = (ScriptableObject) cx.newObject(globalScope);
+                scope.setPrototype(globalScope);
                 scope.setParentScope(null);
-                Function clean = (Function) jsContextFactory.RASP.get("clean", jsContextFactory.RASP);
+                Function clean = (Function) RASP.get("clean", RASP);
                 clean.call(cx, scope, clean, null);
                 if (checkScriptList != null) {
                     for (CheckScript checkScript : checkScriptList) {
@@ -138,7 +89,7 @@ public class JSContextFactory extends ContextFactory {
                     }
                 }
             } catch (Exception e) {
-                LOGGER.info(e);
+                LOGGER.warn("new plugin update failed : ",e);
             } finally {
                 jsContextFactory.pluginTime = System.currentTimeMillis();
                 JSContext.exit();
@@ -148,34 +99,25 @@ public class JSContextFactory extends ContextFactory {
 
     public static void setCloudCheckScript(String plugin, String md5, String version, Long deliveryTime) {
         if (jsContextFactory != null) {
-            JSContext cx = (JSContext) JSContext.enter();
-            cx.clearTimeout();
-            ScriptableObject scope = (ScriptableObject) cx.newObject(jsContextFactory.globalScope);
-            scope.setPrototype(jsContextFactory.globalScope);
-            scope.setParentScope(null);
-            Function clean = (Function) jsContextFactory.RASP.get("clean", jsContextFactory.RASP);
-            clean.call(cx, scope, clean, null);
             try {
+                JSContext cx = (JSContext) JSContext.enter();
+                cx.clearTimeout();
+                ScriptableObject global = cx.initStandardObjects();
+                ScriptableObject tempRASP = perpareLoadPlugin(cx, global);
+                ScriptableObject tempScope = (ScriptableObject) cx.newObject(global);
+                tempScope.setPrototype(global);
+                tempScope.setParentScope(null);
                 if (plugin != null) {
-                    cx.evaluateString(scope, "(function(){\n" + plugin + "\n})()", PLUGIN_NAME, 0, null);
+                    cx.evaluateString(tempScope, "(function(){\n" + plugin + "\n})()", PLUGIN_NAME, 0, null);
                 }
                 CloudCacheModel.getInstance().setPlugin(plugin);
                 CloudCacheModel.getInstance().setPluginVersion(version);
                 CloudCacheModel.getInstance().setPluginMD5(md5);
                 CloudCacheModel.getInstance().setConfigTime(deliveryTime);
-                Config.getConfig().setHookWhiteAll("false");
+                globalScope = global;
+                RASP = tempRASP;
             } catch (Throwable e) {
-                LOGGER.warn("new plugin update failed , will rollback old plugin: ", e);
-                try {
-                    String oldPlugin = CloudCacheModel.getInstance().getPlugin();
-                    if (oldPlugin != null) {
-                        cx.evaluateString(scope, "(function(){\n" + oldPlugin + "\n})()", PLUGIN_NAME, 0, null);
-                    }
-                    Config.getConfig().setHookWhiteAll("false");
-                } catch (Throwable e1) {
-                    LOGGER.warn("old plugin rollback failed , will lose protection", e);
-                    Config.getConfig().setHookWhiteAll("true");
-                }
+                LOGGER.warn("new plugin update failed : ", e);
             } finally {
                 jsContextFactory.pluginTime = System.currentTimeMillis();
                 JSContext.exit();
@@ -198,11 +140,11 @@ public class JSContextFactory extends ContextFactory {
         }
         if (cx.getPluginTime() < jsContextFactory.pluginTime) {
             cx.setPluginTime(System.currentTimeMillis());
-            Scriptable scope = cx.newObject(jsContextFactory.globalScope);
-            scope.setPrototype(jsContextFactory.globalScope);
+            Scriptable scope = cx.newObject(globalScope);
+            scope.setPrototype(globalScope);
             scope.setParentScope(null);
 
-            NativeObject checkPoints = (NativeObject) jsContextFactory.RASP.get("checkPoints", jsContextFactory.RASP);
+            NativeObject checkPoints = (NativeObject) RASP.get("checkPoints", RASP);
             List<List<CheckProcess>> checkPointList = new ArrayList<List<CheckProcess>>(CheckParameter.Type.values().length);
             for (int i = 0; i < CheckParameter.Type.values().length; i++) {
                 NativeArray functions = (NativeArray) checkPoints.get(CheckParameter.Type.values()[i].toString());
@@ -278,5 +220,53 @@ public class JSContextFactory extends ContextFactory {
         if (jscx.isTimeout()) {
             JSContext.reportError("Error: Plugin Execution Timeout");
         }
+    }
+
+    private static ScriptableObject perpareLoadPlugin(JSContext cx, ScriptableObject scope) throws Exception {
+
+        scope.defineProperty("global", scope, ScriptableObject.READONLY);
+        ScriptableObject.defineClass(scope, JSStdout.class);
+        Object jsstdout = cx.newObject(scope, "Stdout");
+        scope.defineProperty("stdout", jsstdout, ScriptableObject.READONLY);
+        scope.defineProperty("stderr", jsstdout, ScriptableObject.READONLY);
+        ScriptableObject.defineClass(scope, JSRequestContext.class);
+        Script shim;
+        shim = new Shim();
+        shim.exec(cx, scope);
+        shim = new Console();
+        shim.exec(cx, scope);
+
+        InputStream is;
+        String name;
+        String script;
+
+        name = "error.js";
+        is = EngineBoot.class.getResourceAsStream("/environment/" + name);
+        script = IOUtils.toString(is, "UTF-8");
+        cx.evaluateString(scope, script, name, 1, null);
+        name = "checkpoint.js";
+        is = EngineBoot.class.getResourceAsStream("/environment/" + name);
+        script = IOUtils.toString(is, "UTF-8");
+        cx.evaluateString(scope, script, name, 1, null);
+        name = "rasp.js";
+        is = EngineBoot.class.getResourceAsStream("/environment/" + name);
+        script = IOUtils.toString(is, "UTF-8");
+        cx.evaluateString(scope, script, name, 1, null);
+        ScriptableObject RASP = (ScriptableObject) ScriptableObject.getProperty(scope, "RASP");
+        RASP.defineProperty("sql_tokenize", new JSTokenizeSql(), ScriptableObject.READONLY);
+        RASP.defineProperty("cmd_tokenize", new JSTokenizeCmd(), ScriptableObject.READONLY);
+        RASP.defineProperty("config_set", new JSRASPConfig(), ScriptableObject.READONLY);
+        RASP.defineProperty("get_jsengine", new BaseFunction() {
+            @Override
+            public Object call(Context cx, Scriptable scope, Scriptable thisObj, Object[] args) {
+                return "rhino";
+            }
+
+            @Override
+            public Object getDefaultValue(Class<?> hint) {
+                return "[Function: get_jsengine]";
+            }
+        }, ScriptableObject.READONLY);
+        return RASP;
     }
 }

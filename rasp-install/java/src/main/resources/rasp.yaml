@@ -28,9 +28,9 @@
 
 # 云控配置
 # cloud.enable: true
-# cloud.address: http://172.23.232.4:8080
-# cloud.appid: 428e953b270ffb772fa5331ab994695c7b363028
-# cloud.appsecret: J8zjAdW-k5peQu2pM6-cLbVfDcVWMrfIiqBBERgKKJM
+# cloud.backend_url: http://172.23.232.4:8080
+# cloud.app_id: 428e953b270ffb772fa5331ab994695c7b363028
+# cloud.app_secret: J8zjAdW-k5peQu2pM6-cLbVfDcVWMrfIiqBBERgKKJM
 
 # syslog配置
 # syslog.enable=true

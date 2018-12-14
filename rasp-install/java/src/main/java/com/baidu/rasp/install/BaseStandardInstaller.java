@@ -181,7 +181,7 @@ public abstract class BaseStandardInstaller implements Installer {
                 if (yamlFile.exists()){
                     Map<String,Object> map = new HashMap<String, Object>();
                     map.put("cloud.enable", true);
-                    map.put("cloud.backend_ur", url);
+                    map.put("cloud.backend_url", url);
                     map.put("cloud.app_id", appId);
                     map.put("cloud.app_secret", appSecret);
                     FileWriter writer = new FileWriter(yamlFile,true);
