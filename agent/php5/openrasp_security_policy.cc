@@ -53,6 +53,7 @@ static void security_check(bool flag, int id, const char *msg TSRMLS_DC)
         MAKE_STD_ZVAL(policy_params);
         array_init(policy_params);
         add_assoc_long(policy_params, "pid", getpid());
+        add_assoc_string(policy_params, "sapi", const_cast<char *>(sapi_module.name ? sapi_module.name : ""), 1);
         add_assoc_zval(&result, "policy_params", policy_params);
         add_assoc_zval(&result, "message", &message);
         LOG_G(policy_logger).log(LEVEL_INFO, &result TSRMLS_CC);

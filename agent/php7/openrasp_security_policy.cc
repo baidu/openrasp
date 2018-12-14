@@ -43,6 +43,7 @@ static void security_check(bool flag, int id, const char *msg)
         zval policy_params;
         array_init(&policy_params);
         add_assoc_long(&policy_params, "pid", getpid());
+        add_assoc_string(&policy_params, "sapi", const_cast<char *>(sapi_module.name ? sapi_module.name : ""));
         add_assoc_zval(&result, "policy_params", &policy_params);
         add_assoc_string(&result, "message", const_cast<char *>(msg));
         LOG_G(policy_logger).log(LEVEL_INFO, &result);
