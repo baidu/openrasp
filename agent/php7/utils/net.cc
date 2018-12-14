@@ -196,7 +196,7 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url)
     {
         if (resource->host)
         {
-            // server = gethostbyname(resource->host);
+            server = gethostbyname(resource->host);
         }
         if (resource->port)
         {
@@ -204,14 +204,14 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url)
         }
         else
         {
-            // if (resource->scheme != NULL && strcmp(resource->scheme, "https") == 0)
-            // {
-            //     backend_port = 443;
-            // }
-            // else
-            // {
-            //     backend_port = 80;
-            // }
+            if (resource->scheme != NULL && strcmp(resource->scheme, "https") == 0)
+            {
+                backend_port = 443;
+            }
+            else
+            {
+                backend_port = 80;
+            }
         }
         php_url_free(resource);
     }

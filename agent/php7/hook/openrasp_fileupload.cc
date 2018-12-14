@@ -23,12 +23,11 @@ PRE_HOOK_FUNCTION(move_uploaded_file, FILE_UPLOAD);
 
 void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval args[2];
-    zval *name = &args[0], *dest = &args[1];
+    zval *name, *dest;
     int argc = MIN(2, ZEND_NUM_ARGS());
 
     if (argc < 2 ||
-        zend_get_parameters_array_ex(argc, args) != SUCCESS ||
+        zend_get_parameters_ex(argc, &name, &dest) != SUCCESS ||
         Z_TYPE_P(name) != IS_STRING ||
         Z_TYPE_P(dest) != IS_STRING ||
         !zend_hash_exists(SG(rfc1867_uploaded_files), Z_STR_P(name)) ||

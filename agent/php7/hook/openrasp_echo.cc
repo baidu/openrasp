@@ -28,7 +28,7 @@ static zend_free_op should_free;
 int echo_handler(zend_execute_data *execute_data)
 {
     const zend_op *opline = EX(opline);
-    zval *inc_filename = zend_get_zval_ptr(opline, opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
+    zval *inc_filename = zend_get_zval_ptr(opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
     if (inc_filename != nullptr &&
         opline->op1_type == IS_VAR &&
         !openrasp_check_type_ignored(XSS_ECHO) &&
