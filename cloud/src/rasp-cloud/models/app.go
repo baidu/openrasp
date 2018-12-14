@@ -425,6 +425,7 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 		if isTest {
 			subject = "OpenRASP ALARM TEST"
 			alarms = TestAlarmData
+			total = int64(len(TestAlarmData))
 		} else if emailConf.Subject == "" {
 			subject = "OpenRASP ALARM"
 		} else {

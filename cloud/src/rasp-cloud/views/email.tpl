@@ -7,6 +7,7 @@
             <th>target</th>
             <th>attack type</th>
             <th>status</th>
+            <th>detail</th>
         </tr>
     </thead>
     <tbody>
@@ -18,6 +19,7 @@
                 <td>{{.target}}</td>
                 <td>{{.attack_type}}</td>
                 <td>{{.intercept_state}}</td>
+                <td><a href="{{$.DetailedLink}}/{{.id}}">detail</a></td>
             </tr>
         {{end}}
     </tbody>
