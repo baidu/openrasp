@@ -69,7 +69,6 @@
 <script>
 import appEditModal from '../../modals/appEditModal'
 import { mapGetters, mapActions, mapMutations } from 'vuex'
-
 export default {
   name: 'AppSettings',
   components: {
@@ -82,6 +81,9 @@ export default {
       total: 0,
       currentPage: 1
     }
+  },
+  computed: {
+    ...mapGetters(['current_app'])
   },
   watch: {
     current_app() { this.loadApps(1) }
@@ -107,12 +109,10 @@ export default {
       if (!confirm('确认操作')) {
         return
       }
-
       var self = this
       var body = {
         id: data.id
       }
-
       this.api_request('v1/api/app/delete', body, function(data) {
         self.loadApps(1)
       })
@@ -125,16 +125,12 @@ export default {
         description: data.description
       }, is_edit)
     },
-    onEdit: function(event) {
-      console.log(event)
-
-      var self = this
-      var url = event.is_edit ? 'v1/api/app/config' : 'v1/api/app'
-
-      this.api_request(url, event.data, function(data) {
-        self.loadApps(1)
-        self.loadAppList()
-      })
+    onEdit({ is_edit, data }) {
+      this.request.post(is_edit ? 'v1/api/app/config' : 'v1/api/app', data)
+        .then(() => {
+          this.loadApps(1)
+          this.loadAppList(this.current_app.id)
+        })
     }
   }
 }
