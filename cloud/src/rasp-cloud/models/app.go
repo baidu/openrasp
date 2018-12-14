@@ -102,8 +102,18 @@ const (
 )
 
 var (
-	domain               string
-	lastAlarmTime        = time.Now().UnixNano() / 1000000
+	domain        string
+	lastAlarmTime = time.Now().UnixNano() / 1000000
+	TestAlarmData = []map[string]interface{}{
+		{
+			"id":              "elWWWmcBwrQ8pNw9uLwS",
+			"event_time":      time.Now().String(),
+			"attack_source":   "test.openrasp.com",
+			"target":          "localhost",
+			"attack_type":     "sql",
+			"intercept_state": "block",
+		},
+	}
 	DefaultGeneralConfig = map[string]interface{}{
 		"clientip.header":    "ClientIP",
 		"block.status_code":  302,
@@ -395,7 +405,7 @@ func PushAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isT
 
 func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isTest bool) error {
 	var emailConf = app.EmailAlarmConf
-	if emailConf.UserName != "" && len(emailConf.RecvAddr) > 0 && emailConf.ServerAddr != "" {
+	if len(emailConf.RecvAddr) > 0 && emailConf.ServerAddr != "" {
 		var subject string
 		var msg string
 		var body string
@@ -411,40 +421,40 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 		head["From"] = emailAddr.String()
 		head["To"] = strings.Join(emailConf.RecvAddr, ",")
 		head["Content-Type"] = "text/html; charset=UTF-8"
+
 		if isTest {
 			subject = "OpenRASP ALARM TEST"
-			body = "OpenRASP test message from app: " + app.Name
+			alarms = TestAlarmData
+		} else if emailConf.Subject == "" {
+			subject = "OpenRASP ALARM"
 		} else {
-			if emailConf.Subject == "" {
-				subject = "OpenRASP ALARM"
-			} else {
-				subject = emailConf.Subject
-			}
-			t, err := template.ParseFiles("views/email.tpl")
-			if err != nil {
-				beego.Error("failed to render email template: " + err.Error())
-				return err
-			}
-			var alarmData = new(bytes.Buffer)
-			err = t.Execute(alarmData, &emailTemplateParam{
-				Total:        total - int64(len(alarms)),
-				Alarms:       alarms,
-				AppName:      app.Name,
-				DetailedLink: domain + "/#/events/" + app.Id,
-			})
-			if err != nil {
-				beego.Error("failed to execute email template: " + err.Error())
-				return err
-			}
-			body = alarmData.String()
+			subject = emailConf.Subject
 		}
+		t, err := template.ParseFiles("views/email.tpl")
+		if err != nil {
+			beego.Error("failed to render email template: " + err.Error())
+			return err
+		}
+		var alarmData = new(bytes.Buffer)
+		err = t.Execute(alarmData, &emailTemplateParam{
+			Total:        total - int64(len(alarms)),
+			Alarms:       alarms,
+			AppName:      app.Name,
+			DetailedLink: domain + "/#/events/" + app.Id,
+		})
+		if err != nil {
+			beego.Error("failed to execute email template: " + err.Error())
+			return err
+		}
+		body = alarmData.String()
+
 		head["Subject"] = subject
 		for k, v := range head {
 			msg += fmt.Sprintf("%s: %s\r\n", k, v)
 		}
 		msg += "\r\n" + body
 		auth := smtp.PlainAuth("", emailConf.UserName, emailConf.Password, emailConf.ServerAddr)
-		if emailConf.UserName == "" || emailConf.Password == "" {
+		if emailConf.Password == "" {
 			auth = nil
 		}
 		err = smtp.SendMail(emailConf.ServerAddr, auth, emailConf.UserName, emailConf.RecvAddr, []byte(msg))

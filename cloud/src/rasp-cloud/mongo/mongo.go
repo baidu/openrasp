@@ -45,6 +45,7 @@ func init() {
 		Password:  beego.AppConfig.DefaultString("MongoDBPwd", ""),
 		Direct:    false,
 		Timeout:   time.Second * 20,
+		FailFast:  true,
 		PoolLimit: poolLimit,
 	}
 	session, err = mgo.DialWithInfo(dialInfo)
