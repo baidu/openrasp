@@ -55,11 +55,11 @@ func init() {
 	}
 	initLogger()
 	initEnvConf()
-	beego.Info("===== start type: " + *StartFlag.StartType + "=====")
 	if *StartFlag.StartType == "" {
 		allType := StartTypeDefault
 		StartFlag.StartType = &allType
 	}
+	beego.Info("===== start type: " + *StartFlag.StartType + " =====")
 }
 
 func fork() (err error) {
