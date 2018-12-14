@@ -1623,10 +1623,10 @@ if (algorithmConfig.deserialization_transformer.action != 'ignore') {
         for (var index in deserializationInvalidClazz) {
             if (clazz === deserializationInvalidClazz[index]) {
                 return {
-                    action:     algorithmConfig.transformer_deser.action,
+                    action:     algorithmConfig.deserialization_transformer.action,
                     message:    _("Transformer deserialization - unknown deserialize vulnerability detected"),
                     confidence: 100,
-                    algorithm:  'transformer_deser'
+                    algorithm:  'deserialization_transformer'
                 }
             }
         }
