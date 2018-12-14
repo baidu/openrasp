@@ -21,9 +21,11 @@ import (
 	"flag"
 	"log"
 	"os/exec"
+	"fmt"
 )
 
 const (
+	Version             = "1.0RC1"
 	StartTypeForeground = "panel"
 	StartTypeAgent      = "agent"
 	StartTypeReset      = "reset"
@@ -34,6 +36,7 @@ type Flag struct {
 	StartType *string
 	Password  *string
 	Daemon    *bool
+	Version   *bool
 }
 
 var (
@@ -44,13 +47,18 @@ func init() {
 	StartFlag.StartType = flag.String("type", "", "use to provide different routers")
 	StartFlag.Password = flag.String("password", "", "use to provide password")
 	StartFlag.Daemon = flag.Bool("d", false, "use to run as daemon process")
+	StartFlag.Version = flag.Bool("version", false, "use to get version")
 	flag.Parse()
+	if *StartFlag.Version {
+		fmt.Println(Version)
+		os.Exit(0)
+	}
 	if *StartFlag.Daemon {
 		err := fork()
 		if err != nil {
 			Panic(ErrCodeInitChildProcessFailed, "failed to launch child process, error", err)
 		}
-		log.Println("start successfully, for details please check the log in 'logs/api/' directory")
+		log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
 		os.Exit(0)
 	}
 	initLogger()

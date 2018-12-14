@@ -107,7 +107,7 @@ var (
 	TestAlarmData = []map[string]interface{}{
 		{
 			"id":              "elWWWmcBwrQ8pNw9uLwS",
-			"event_time":      time.Now().String(),
+			"event_time":      time.Now().Format(time.RFC3339),
 			"attack_source":   "test.openrasp.com",
 			"target":          "localhost",
 			"attack_type":     "sql",
