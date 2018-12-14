@@ -254,7 +254,9 @@ bool SharedConfigManager::build_rasp_id()
     {
         buf += hw_addr;
     }
-    buf.append(hostname).append(std::string(openrasp_ini.root_dir));
+    buf.append(hostname)
+        .append(openrasp_ini.root_dir ? openrasp_ini.root_dir : "")
+        .append(sapi_module.name ? sapi_module.name : "");
     this->rasp_id = md5sum(static_cast<const void *>(buf.c_str()), buf.length());
     return true;
 }

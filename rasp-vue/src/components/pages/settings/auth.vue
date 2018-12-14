@@ -1,5 +1,5 @@
 <template>
-  <div id="settings-auth" class="tab-pane fade">
+  <div>
     <!-- begin auth settings -->
 
     <div class="card">
@@ -13,19 +13,19 @@
           <label class="form-label">
             原密码
           </label>
-          <input type="password" class="form-control" v-model="oldpass" />
+          <input v-model="oldpass" type="password" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             新密码
           </label>
-          <input type="password" class="form-control" v-model="newpass1" />
+          <input v-model="newpass1" type="password" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             再次输入新密码
           </label>
-          <input type="password" class="form-control" v-model="newpass2" />
+          <input v-model="newpass2" type="password" class="form-control">
         </div>
       </div>
       <div class="card-footer text-right">
@@ -44,7 +44,7 @@
         </h3>
       </div>
       <div class="card-body">
-        <vue-loading v-if="loading" type="spiningDubbles" color="rgb(90, 193, 221)" :size="{ width: '50px', height: '50px' }"></vue-loading>
+        <vue-loading v-if="loading" type="spiningDubbles" color="rgb(90, 193, 221)" :size="{ width: '50px', height: '50px' }" />
 
         <table v-if="! loading" class="table table-striped table-bordered">
           <thead>
@@ -80,8 +80,7 @@
           </tbody>
         </table>
         <nav v-if="! loading">
-          <b-pagination align="center" :total-rows="total" v-model="currentPage" :per-page="10">
-          </b-pagination>
+          <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" @change="loadTokens" />
         </nav>
       </div>
       <div class="card-footer text-right">
@@ -99,7 +98,7 @@
 <script>
 export default {
   name: 'AuthSettings',
-  data: function () {
+  data: function() {
     return {
       data: [],
       total: 0,
@@ -110,49 +109,48 @@ export default {
       newpass2: ''
     }
   },
-  mounted: function () {
+  mounted: function() {
     this.loadTokens(1)
   },
   methods: {
-    changePass: function () {
+    changePass: function() {
       if (this.oldpass.length > 0 && this.newpass1.length > 0 && this.newpass1 == this.newpass2) {
         this.api_request('v1/user/update', {
           old_password: this.oldpass,
           new_password: this.newpass1
-        }, function (data) {
-          alert ('密码修改成功')
+        }, function(data) {
+          alert('密码修改成功')
         })
       } else {
-        alert ('两次密码输入不一致，请重新输入')
+        alert('两次密码输入不一致，请重新输入')
       }
     },
-    createToken: function () {
-      var self  = this
+    createToken: function() {
+      var self = this
       var descr = prompt('请输入备注信息')
 
       if (descr && descr.length) {
         self.api_request('v1/api/token', {
           description: descr
-        }, function (data) {
+        }, function(data) {
           self.loadTokens(1)
         })
       }
     },
-    editToken: function (data) {
-      var self  = this
+    editToken: function(data) {
+      var self = this
       var descr = prompt('请输入新的备注信息')
-      if (! descr)
-        return
-      
+      if (!descr) { return }
+
       this.api_request('v1/api/token', {
         description: descr,
         token: data.token
-      }, function (data) {
+      }, function(data) {
         self.loadTokens(1)
       })
     },
-    deleteToken: function (data) {
-      if (! confirm ('删除 ' + data.token + ' 吗')) {
+    deleteToken: function(data) {
+      if (!confirm('删除 ' + data.token + ' 吗')) {
         return
       }
 
@@ -161,20 +159,20 @@ export default {
         token: data.token
       }
 
-      this.api_request('v1/api/token/delete', body, function (data) {
+      this.api_request('v1/api/token/delete', body, function(data) {
         self.loadTokens(1)
       })
     },
-    loadTokens: function (page) {
-      var self = this
-      var body = {
+    loadTokens(page) {
+      this.loading = true
+      return this.request.post('v1/api/token/get', {
         page: page,
         perpage: 10
-      }
-
-      this.api_request('v1/api/token/get', body, function (data) {
-        self.data = data.data
-        self.total = data.total
+      }).then(res => {
+        this.currentPage = page
+        this.data = res.data
+        this.total = res.total
+        this.loading = false
       })
     }
   }

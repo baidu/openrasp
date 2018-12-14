@@ -27,7 +27,7 @@
               <h4>1. 下载 Java Agent 安装包</h4>
               <pre style="white-space: inherit; ">wget http://{{ location.host }}/packages/rasp-java.tar.gz<br>tar -xvf rasp-java.tar.gz<br>cd rasp-*/</pre>
               <h4>2. 执行 RaspInstall 进行安装</h4>
-              <pre style="white-space: inherit; ">java -jar RaspInstall.jar -install /path/to/tomcat -appid {{ current_app.id }} -appsecret {{ current_app.secret }} -backendurl http://{{ agent_domain }}</pre>
+              <pre style="white-space: inherit; ">java -jar RaspInstall.jar -install /path/to/tomcat -appid {{ current_app.id }} -appsecret {{ current_app.secret }} -backendurl {{ agent_domain }}</pre>
               <h4>3. 重启 Tomcat/JBoss/SpringBoot 应用服务器</h4>
               <pre style="white-space: inherit; ">/path/to/tomcat/bin/shutdown.sh<br>/path/to/tomcat/bin/startup.sh</pre>
             </div>
@@ -35,7 +35,7 @@
               <h4>1. 下载 PHP 安装包</h4>
               <pre style="white-space: inherit; ">wget http://{{ location.host }}/packages/rasp-php.tar.gz</pre>
               <h4>2. 执行 install.php 进行安装</h4>
-              <pre style="white-space: inherit; ">php install.php -d /opt/rasp --app-id {{ current_app.id }} --app-secret {{ current_app.secret }} --backend-url http://{{ agent_domain }}</pre>
+              <pre style="white-space: inherit; ">php install.php -d /opt/rasp --app-id {{ current_app.id }} --app-secret {{ current_app.secret }} --backend-url {{ agent_domain }}</pre>
               <h4>3. 重启 PHP-FPM 或者 Apache 服务器</h4>
               <pre style="white-space: inherit; ">service php-fpm restart</pre>
               <p>-或者-</p>

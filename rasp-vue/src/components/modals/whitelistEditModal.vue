@@ -1,36 +1,36 @@
 <template>
-  <div class="modal no-fade" id="whitelistEditModal" tabindex="-1" role="dialog">
+  <div id="whitelistEditModal" class="modal no-fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">添加/编辑 白名单</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+          <h5 class="modal-title">
+            添加/编辑 白名单
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" />
         </div>
         <div class="modal-body">
           <div class="form-group">
             <label>URL - 不区分 http/https</label>
-            <input type="text" class="form-control" v-model="data.url" maxlen="200">
+            <input v-model="data.url" type="text" class="form-control" maxlen="200">
           </div>
           <div class="form-group">
             <label>检测点</label>
             <div class="row">
               <div class="col-12">
                 <label class="custom-switch">
-                  <input type="checkbox" v-model="data.hook.all" checked="data.hook.all" class="custom-switch-input"/>
-                  <span class="custom-switch-indicator">
-                  </span>
+                  <input v-model="data.hook.all" type="checkbox" checked="data.hook.all" class="custom-switch-input">
+                  <span class="custom-switch-indicator" />
                   <span class="custom-switch-description">
                     关闭所有检测点
                   </span>
                 </label>
               </div>
             </div>
-            <div class="row" v-if="! data.hook.all">
-              <div class="col-6" v-for="(item, key) in attack_types" :key="key">
+            <div v-if="! data.hook.all" class="row">
+              <div v-for="(item, key) in attack_types" :key="key" class="col-6">
                 <label class="custom-switch">
-                  <input type="checkbox" v-model="data.hook[key]" checked="data.hook[key]" class="custom-switch-input"/>
-                  <span class="custom-switch-indicator">
-                  </span>
+                  <input v-model="data.hook[key]" type="checkbox" checked="data.hook[key]" class="custom-switch-input">
+                  <span class="custom-switch-indicator" />
                   <span class="custom-switch-description">
                     {{ item }}
                   </span>
@@ -40,8 +40,12 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-primary" data-dismiss="modal" @click="saveApp()">保存</button>
-          <button class="btn btn-default" data-dismiss="modal">关闭</button>
+          <button class="btn btn-primary" @click="saveApp()">
+            保存
+          </button>
+          <button class="btn btn-default" data-dismiss="modal">
+            关闭
+          </button>
         </div>
       </div>
     </div>
@@ -52,8 +56,8 @@
 import { attack_types } from '../../util/'
 
 export default {
-  name: 'whitelistEditModal',
-  data: function () {
+  name: 'WhitelistEditModal',
+  data: function() {
     return {
       data: {
         hook: {}
@@ -62,17 +66,22 @@ export default {
       attack_types: attack_types
     }
   },
-  mounted: function () {
+  mounted: function() {
 
   },
   methods: {
     showModal(newData, index) {
-      this.data  = JSON.parse(JSON.stringify(newData))
+      this.data = JSON.parse(JSON.stringify(newData))
       this.index = index
 
       $('#whitelistEditModal').modal()
     },
-    saveApp: function () {
+    saveApp() {
+      if (!this.data.url || this.data.url.startsWith('http')) {
+        alert('请填写正确的URL')
+        return
+      }
+      $('#whitelistEditModal').modal('hide')
       this.$emit('save', {
         data: this.data,
         index: this.index

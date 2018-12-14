@@ -64,7 +64,7 @@ func (o *AppController) GetApp() {
 			o.ServeError(http.StatusBadRequest, "failed to get apps", err)
 		}
 		if apps == nil {
-			apps = make([]models.App, 0)
+			apps = make([]*models.App, 0)
 		}
 		result["total"] = total
 		result["total_page"] = math.Ceil(float64(total) / float64(data.Perpage))
@@ -260,8 +260,6 @@ func (o *AppController) Post() {
 		o.validateAppConfig(app.GeneralConfig)
 		configTime := time.Now().UnixNano()
 		app.ConfigTime = configTime
-	} else {
-		app.GeneralConfig = models.DefaultGeneralConfig
 	}
 
 	if app.WhitelistConfig != nil {
@@ -271,7 +269,6 @@ func (o *AppController) Post() {
 	} else {
 		app.WhitelistConfig = make([]models.WhitelistConfigItem, 0)
 	}
-	models.HandleApp(app, true)
 	app, err = models.AddApp(app)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "create app failed", err)
@@ -345,17 +342,8 @@ func (o *AppController) validEmailConf(conf *models.EmailAlarmConf) {
 	if len(conf.Subject) > 256 {
 		o.ServeError(http.StatusBadRequest, "the length of email subject cannot be greater than 256")
 	}
-	if conf.UserName == "" {
-		o.ServeError(http.StatusBadRequest, "the email username cannot be empty")
-	}
 	if len(conf.UserName) > 256 {
 		o.ServeError(http.StatusBadRequest, "the length of email username cannot be greater than 256")
-	}
-	if conf.UserName == "" {
-		o.ServeError(http.StatusBadRequest, "the email username cannot be empty")
-	}
-	if conf.Password == "" {
-		o.ServeError(http.StatusBadRequest, "the email password cannot be empty")
 	}
 	if len(conf.Password) > 256 {
 		o.ServeError(http.StatusBadRequest, "the length of email password cannot be greater than 256")
@@ -663,6 +651,7 @@ func (o *AppController) TestEmail() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to test email alarm", err)
 	}
+	o.ServeWithEmptyData()
 }
 
 // @router /ding/test [post]
@@ -684,6 +673,7 @@ func (o *AppController) TestDing(config map[string]interface{}) {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to test ding ding alarm", err)
 	}
+	o.ServeWithEmptyData()
 }
 
 // @router /http/test [post]
@@ -705,4 +695,5 @@ func (o *AppController) TestHttp(config map[string]interface{}) {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to test http alarm", err)
 	}
+	o.ServeWithEmptyData()
 }

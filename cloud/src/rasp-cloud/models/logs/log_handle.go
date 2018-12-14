@@ -233,6 +233,12 @@ func SearchLogs(startTime int64, endTime int64, query map[string]interface{}, so
 		Sort(sortField, ascending).
 		From((page - 1) * perpage).Size(perpage).Do(ctx)
 	if err != nil {
+		if queryResult != nil && queryResult.Error != nil {
+			errMsg, err := json.Marshal(queryResult.Error)
+			if err != nil {
+				beego.Error(string(errMsg))
+			}
+		}
 		return 0, nil, err
 	}
 	result := make([]map[string]interface{}, 0)

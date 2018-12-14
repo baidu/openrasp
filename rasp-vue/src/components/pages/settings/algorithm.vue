@@ -1,5 +1,5 @@
 <template>
-  <div id="settings-algorithm" class="tab-pane fade">
+  <div>
     <!-- begin algorithm settings -->
     <div class="card">
       <div class="card-header">
@@ -8,19 +8,22 @@
         </h3>
       </div>
       <div class="card-body">
-        <p v-if="! current_app.selected_plugin_id || ! current_app.selected_plugin_id.length">你还没有选择插件，请在「插件管理」中进行设置</p>
-        <div class="form-group" v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length">
-          <div class="form-label">快速设置</div>
+        <p v-if="! current_app.selected_plugin_id || ! current_app.selected_plugin_id.length">
+          你还没有选择插件，请在「插件管理」中进行设置
+        </p>
+        <div v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length" class="form-group">
+          <div class="form-label">
+            快速设置
+          </div>
           <label class="custom-switch">
-            <input type="checkbox" name="custom-switch-checkbox" v-model="data.meta.all_log" class="custom-switch-input" />
-            <span class="custom-switch-indicator">
-            </span>
+            <input v-model="data.meta.all_log" type="checkbox" name="custom-switch-checkbox" class="custom-switch-input">
+            <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
               将所有算法设置为「记录日志」模式
             </span>
           </label>
         </div>
-        <div class="form-group" v-for="row in items" :key="row.name" v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length">
+        <div v-for="row in items" v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length" :key="row.name" class="form-group">
           <div class="form-label">
             {{ attack_type2name(row.name) }}
           </div>
@@ -28,21 +31,29 @@
             <form disabled="true">
               <div class="selectgroup">
                 <label class="selectgroup-item">
-                  <input type="radio" name="value" value="block" class="selectgroup-input" v-model="data[item.key].action">
-                  <span class="selectgroup-button">拦截攻击</span>
+                  <input v-model="data[item.key].action" type="radio" name="value" value="block" class="selectgroup-input">
+                  <span class="selectgroup-button">
+                    拦截攻击
+                  </span>
                 </label>
                 <label class="selectgroup-item">
-                  <input type="radio" name="value" value="log" class="selectgroup-input" v-model="data[item.key].action">
-                  <span class="selectgroup-button">记录日志</span>
+                  <input v-model="data[item.key].action" type="radio" name="value" value="log" class="selectgroup-input">
+                  <span class="selectgroup-button">
+                    记录日志
+                  </span>
                 </label>
                 <label class="selectgroup-item">
-                  <input type="radio" name="value" value="ignore" class="selectgroup-input" v-model="data[item.key].action">
-                  <span class="selectgroup-button">完全忽略</span>
+                  <input v-model="data[item.key].action" type="radio" name="value" value="ignore" class="selectgroup-input">
+                  <span class="selectgroup-button">
+                    完全忽略
+                  </span>
                 </label>
               </div>
               <p style="display: inline; margin-left: 10px; ">
-                {{ item.name }} 
-                <a v-if="data[item.key].reference" target="_blank" v-bind:href="data[item.key].reference">[帮助文档]</a>
+                {{ item.name }}
+                <a v-if="data[item.key].reference" target="_blank" :href="data[item.key].reference">
+                  [帮助文档]
+                </a>
               </p>
             </form>
 
@@ -54,13 +65,13 @@
               <span class="custom-switch-description">
                 {{ item.name }}
               </span>
-            </label> 
+            </label>
             <br />
             -->
           </div>
         </div>
       </div>
-      <div class="card-footer" v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length">
+      <div v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length" class="card-footer">
         <button type="submit" class="btn btn-primary" @click="saveConfig()">
           保存
         </button>
@@ -79,7 +90,7 @@ import { mapGetters } from 'vuex'
 
 export default {
   name: 'AlgorithmSettings',
-  data: function () {
+  data: function() {
     return {
       items: {},
       data: {
@@ -89,22 +100,21 @@ export default {
       }
     }
   },
-  watch: {
-    current_app() {
-      this.loadConfig();
-    }
-  },
   computed: {
     ...mapGetters(['current_app'])
   },
-  activated: function () {
-    if (!this.data.length && this.current_app.selected_plugin_id) {
-      this.loadConfig()
+  watch: {
+    current_app() { this.loadConfig() }
+  },
+  mounted() {
+    if (!this.current_app.id) {
+      return
     }
+    this.loadConfig()
   },
   methods: {
     attack_type2name: attack_type2name,
-    loadConfig: function () {
+    loadConfig: function() {
       if (!this.current_app.selected_plugin_id.length) {
         return
       }
@@ -118,14 +128,13 @@ export default {
         return a.name.localeCompare(b.name)
       }
 
-      this.api_request('v1/api/plugin/get', body, function (data) {
-        var tmp = data.algorithm_config, hooks = {}
+      this.api_request('v1/api/plugin/get', body, function(data) {
+        var tmp = data.algorithm_config; var hooks = {}
         self.data = data.algorithm_config
 
         // 格式换砖
-        Object.keys(tmp).forEach(function (key) {
-          if (key.indexOf('_') == -1)
-            return
+        Object.keys(tmp).forEach(function(key) {
+          if (key.indexOf('_') == -1) { return }
 
           var hook = key.split('_')[0]
           if (!hooks[hook]) {
@@ -141,35 +150,35 @@ export default {
           })
         })
 
-        Object.keys(hooks).forEach(function (key) {
+        Object.keys(hooks).forEach(function(key) {
           hooks[key]['items'].sort(compare)
         })
 
         self.items = Object.values(hooks)
       })
     },
-    saveConfig: function () {
+    saveConfig: function() {
       var self = this
       var body = {
         id: this.current_app.selected_plugin_id,
         config: this.data
       }
 
-      this.api_request('v1/api/plugin/algorithm/config', body, function (data) {
+      this.api_request('v1/api/plugin/algorithm/config', body, function(data) {
         alert('保存成功')
       })
     },
-    resetConfig: function () {
-      if (! confirm ('还原默认配置？')) {
+    resetConfig: function() {
+      if (!confirm('还原默认配置？')) {
         return
       }
-      
+
       var self = this
       var body = {
         id: this.current_app.selected_plugin_id
       }
 
-      self.api_request('v1/api/plugin/algorithm/restore', body, function (data) {
+      self.api_request('v1/api/plugin/algorithm/restore', body, function(data) {
         alert('恢复成功，点击刷新')
         self.loadConfig()
       })

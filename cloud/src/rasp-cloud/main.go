@@ -15,13 +15,11 @@
 package main
 
 import (
-	"rasp-cloud/tools"
+	_ "rasp-cloud/tools"
 	_ "rasp-cloud/models"
 	_ "rasp-cloud/filter"
 	_ "rasp-cloud/controllers"
 	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/logs"
-	"os"
 	"rasp-cloud/controllers"
 	"rasp-cloud/routers"
 )
@@ -29,30 +27,8 @@ import (
 func main() {
 	beego.BConfig.Listen.Graceful = true
 	routers.InitRouter()
-	initLogger()
 	beego.ErrorController(&controllers.ErrorController{})
 	beego.Run()
 }
 
-func initLogger() {
-	currentPath, err := tools.GetCurrentPath()
-	if err != nil {
-		tools.Panic(tools.ErrCodeLogInitFailed, "failed to get current path", err)
-	}
-	if isExists, _ := tools.PathExists(currentPath + "/logs/api"); !isExists {
-		err := os.MkdirAll(currentPath+"/logs/api", os.ModePerm)
-		if err != nil {
-			tools.Panic(tools.ErrCodeLogInitFailed, "failed to create logs/api dir", err)
-		}
-	}
-	logs.SetLogFuncCall(true)
-	logs.SetLogger(logs.AdapterFile,
-		`{"filename":"logs/api/agent-cloud.log","daily":true,"maxdays":10,"perm":"0777"}`)
-	if beego.BConfig.RunMode == "dev" {
-		logs.SetLevel(beego.LevelDebug)
-	} else {
-		logs.SetLevel(beego.LevelInformational)
-		beego.BConfig.EnableErrorsShow = false
-		beego.BConfig.EnableErrorsRender = false
-	}
-}
+

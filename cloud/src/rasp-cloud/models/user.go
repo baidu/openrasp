@@ -24,7 +24,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego"
-	"fmt"
 	"os"
 )
 
@@ -85,20 +84,27 @@ func init() {
 		userId = user.Id
 	}
 
-	if *tools.StartType == tools.StartTypeReset {
-		err := resetUser()
+	if *tools.StartFlag.StartType == tools.StartTypeReset {
+		if *tools.StartFlag.Password == "" {
+			tools.Panic(tools.ErrCodeResetUserFailed, "the password can not be empty", err)
+		}
+		err := resetUser(*tools.StartFlag.Password)
 		if err != nil {
 			tools.Panic(tools.ErrCodeResetUserFailed, "failed to reset administrator", err)
 		}
-		fmt.Println("reset the administrator successfully")
+		beego.Info("reset the administrator successfully")
 		os.Exit(0)
 	}
 }
 
-func resetUser() error {
-	pwd, err := generateHashedPassword("admin@123")
+func resetUser(newPwd string) error {
+	err := validPassword(newPwd)
 	if err != nil {
-		return errors.New("failed to generate password")
+		return errors.New("new password format error: " + err.Error())
+	}
+	pwd, err := generateHashedPassword(newPwd)
+	if err != nil {
+		return errors.New("failed to generate password: " + err.Error())
 	}
 	err = mongo.UpdateId(userCollectionName, userId, bson.M{"password": pwd, "name": userName})
 	return err

@@ -24,7 +24,8 @@ var (
 )
 
 func init() {
-	if *tools.StartType == tools.StartTypeForeground || *tools.StartType == tools.StartTypeDefault {
+	if *tools.StartFlag.StartType == tools.StartTypeForeground ||
+		*tools.StartFlag.StartType == tools.StartTypeDefault {
 		AgentDomain = beego.AppConfig.String("AgentDomain")
 		if AgentDomain == "" {
 			tools.Panic(tools.ErrCodeConfigInitFailed,

@@ -143,8 +143,8 @@ func init() {
 	if alarmDuration <= 0 {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'AlarmDuration' config must be greater than 0", nil)
 	}
-	if *tools.StartType == tools.StartTypeDefault ||
-		*tools.StartType == tools.StartTypeForeground {
+	if *tools.StartFlag.StartType == tools.StartTypeDefault ||
+		*tools.StartFlag.StartType == tools.StartTypeForeground {
 		domain = beego.AppConfig.String("Domain")
 		if domain == "" {
 			tools.Panic(tools.ErrCodeConfigInitFailed,
@@ -166,7 +166,7 @@ func createDefaultUser() {
 	if err != nil {
 		tools.Panic(tools.ErrCodeInitDefaultAppFailed, "failed to create default app", err)
 	}
-	fmt.Println("Succeed to create default app, name: " + defaultAppName)
+	beego.Info("Succeed to create default app, name: " + defaultAppName)
 	// if setting default plugin fails, continue to initialize
 	currentPath, err := tools.GetCurrentPath()
 	if err != nil {
@@ -188,7 +188,7 @@ func createDefaultUser() {
 		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to select default plugin for app: "+err.Error())
 		return
 	}
-	fmt.Println("Succeed to set up default plugin for app, version: " + plugin.Version)
+	beego.Info("Succeed to set up default plugin for app, version: " + plugin.Version)
 }
 
 func startAlarmTicker(duration time.Duration) {
@@ -244,6 +244,7 @@ func AddApp(app *App) (result *App, err error) {
 	if mongo.FindOne(appCollectionName, bson.M{"name": app.Name}, &App{}) != mgo.ErrNotFound {
 		return nil, errors.New("duplicate app name")
 	}
+	HandleApp(app, true)
 	err = es.CreateEsIndex(logs.PolicyIndexName+"-"+app.Id, logs.AliasPolicyIndexName+"-"+app.Id, logs.PolicyEsMapping)
 	if err != nil {
 		return
@@ -278,11 +279,11 @@ func generateSecret(app *App) string {
 	return base64Data[0 : len(base64Data)-1]
 }
 
-func GetAllApp(page int, perpage int) (count int, result []App, err error) {
+func GetAllApp(page int, perpage int) (count int, result []*App, err error) {
 	count, err = mongo.FindAll(appCollectionName, nil, &result, perpage*(page-1), perpage, "name")
 	if err == nil && result != nil {
 		for _, app := range result {
-			HandleApp(&app, false)
+			HandleApp(app, false)
 		}
 	}
 	return
@@ -341,6 +342,10 @@ func HandleApp(app *App, isCreate bool) {
 		if app.DingAlarmConf.CorpSecret != "" {
 			app.DingAlarmConf.CorpSecret = "************"
 		}
+	} else {
+		if app.GeneralConfig == nil {
+			app.GeneralConfig = DefaultGeneralConfig
+		}
 	}
 	if app.WhitelistConfig == nil {
 		app.WhitelistConfig = make([]WhitelistConfigItem, 0)
@@ -391,7 +396,6 @@ func PushAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isT
 func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isTest bool) error {
 	var emailConf = app.EmailAlarmConf
 	if emailConf.UserName != "" && len(emailConf.RecvAddr) > 0 && emailConf.ServerAddr != "" {
-		auth := smtp.PlainAuth("", emailConf.UserName, emailConf.Password, emailConf.ServerAddr)
 		var subject string
 		var msg string
 		var body string
@@ -439,6 +443,10 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 			msg += fmt.Sprintf("%s: %s\r\n", k, v)
 		}
 		msg += "\r\n" + body
+		auth := smtp.PlainAuth("", emailConf.UserName, emailConf.Password, emailConf.ServerAddr)
+		if emailConf.UserName == "" || emailConf.Password == "" {
+			auth = nil
+		}
 		err = smtp.SendMail(emailConf.ServerAddr, auth, emailConf.UserName, emailConf.RecvAddr, []byte(msg))
 		if err != nil {
 			beego.Error("failed to push email alarms: " + err.Error())

@@ -1,5 +1,5 @@
 <template>
-  <div id="settings-general" class="tab-pane fade show active">
+  <div>
     <!-- begin general settings -->
     <div class="card">
       <div class="card-header">
@@ -15,13 +15,13 @@
               [帮助文档]
             </a>
           </label>
-          <input type="text" class="form-control" name="example-text-input" v-model="data['clientip.header']" />
+          <input v-model="data['clientip.header']" type="text" class="form-control" name="example-text-input">
         </div>
         <div class="form-group">
           <label class="form-label">
             自定义拦截状态码
           </label>
-          <select class="custom-select" v-model="data['block.status_code']">
+          <select v-model="data['block.status_code']" class="custom-select">
             <option value="302">
               302
             </option>
@@ -43,7 +43,7 @@
               [帮助文档]
             </a>
           </label>
-          <input type="text" class="form-control" name="example-text-input" v-model="data['block.redirect_url']" />
+          <input v-model="data['block.redirect_url']" type="text" class="form-control" name="example-text-input">
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -52,8 +52,7 @@
               [帮助文档]
             </a>
           </label>
-          <textarea type="text" class="form-control" v-model="data['block.content_html']">
-          </textarea>
+          <textarea v-model="data['block.content_html']" type="text" class="form-control" />
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -62,8 +61,7 @@
               [帮助文档]
             </a>
           </label>
-          <textarea type="text" class="form-control" v-model="data['block.content_xml']">
-          </textarea>
+          <textarea v-model="data['block.content_xml']" type="text" class="form-control" />
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -72,8 +70,7 @@
               [帮助文档]
             </a>
           </label>
-          <textarea type="text" class="form-control" v-model="data['block.content_json']">
-          </textarea>
+          <textarea v-model="data['block.content_json']" type="text" class="form-control" />
         </div>
       </div>
       <div class="card-footer text-right">
@@ -93,7 +90,7 @@ import { mapGetters } from 'vuex'
 
 export default {
   name: 'GeneralSettings',
-  data: function () {
+  data: function() {
     return {
       data: {
         rasp_config: {}
@@ -102,20 +99,20 @@ export default {
   },
   computed: {
     ...mapGetters(['current_app'])
-  },  
+  },
   methods: {
-    setData: function (data) {
+    setData: function(data) {
       this.data = data
     },
-    doSave: function () {
+    doSave: function() {
       var self = this
       var body = {
         app_id: this.current_app.id,
         config: self.data
       }
 
-      this.api_request('v1/api/app/general/config', body, function (data) {
-        alert ('保存成功')
+      this.api_request('v1/api/app/general/config', body, function(data) {
+        alert('保存成功')
       })
     }
   }

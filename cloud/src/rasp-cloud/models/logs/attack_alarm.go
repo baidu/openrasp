@@ -25,6 +25,7 @@ import (
 	"github.com/astaxie/beego"
 	"net"
 	"rasp-cloud/tools"
+	"encoding/json"
 )
 
 type AttackAlarm struct {
@@ -255,6 +256,12 @@ func AggregationAttackWithTime(startTime int64, endTime int64, interval string, 
 		Size(0).
 		Do(ctx)
 	if err != nil {
+		if aggrResult != nil && aggrResult.Error != nil {
+			errMsg, err := json.Marshal(aggrResult.Error)
+			if err != nil {
+				beego.Error(string(errMsg))
+			}
+		}
 		return nil, err
 	}
 
@@ -301,6 +308,12 @@ func AggregationAttackWithUserAgent(startTime int64, endTime int64, size int,
 		Size(0).
 		Do(ctx)
 	if err != nil {
+		if aggrResult != nil && aggrResult.Error != nil {
+			errMsg, err := json.Marshal(aggrResult.Error)
+			if err != nil {
+				beego.Error(string(errMsg))
+			}
+		}
 		return nil, err
 	}
 	result := make([][]interface{}, 0)
@@ -330,6 +343,12 @@ func AggregationAttackWithType(startTime int64, endTime int64, size int,
 		Size(0).
 		Do(ctx)
 	if err != nil {
+		if aggrResult != nil && aggrResult.Error != nil {
+			errMsg, err := json.Marshal(aggrResult.Error)
+			if err != nil {
+				beego.Error(string(errMsg))
+			}
+		}
 		return nil, err
 	}
 	result := make([][]interface{}, 0)
