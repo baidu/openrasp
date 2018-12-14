@@ -163,6 +163,11 @@ bool LogCollectItem::log_content_qualified(const std::string &content)
     {
         return false;
     }
+    std::string rasp_id_block = "\"rasp_id\":\"" + scm->get_rasp_id() + "\"";
+    if (content.find(rasp_id_block) == std::string::npos)
+    {
+        return false;
+    }
     return true;
 }
 
