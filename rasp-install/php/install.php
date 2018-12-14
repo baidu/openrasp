@@ -395,8 +395,8 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 				major_tips('Updating the openrasp config');
 				$conf_dir = __DIR__ . DIRECTORY_SEPARATOR . $key;
 				if (file_exists($conf_dir)) {
-					update_file_if_need($conf_dir . DIRECTORY_SEPARATOR . "openrasp.toml", 
-					$sub_item . DIRECTORY_SEPARATOR . "openrasp.toml",  "openrasp config");
+					update_file_if_need($conf_dir . DIRECTORY_SEPARATOR . "openrasp.yml", 
+					$sub_item . DIRECTORY_SEPARATOR . "openrasp.yml",  "openrasp config");
 				}
 			}
 		}
