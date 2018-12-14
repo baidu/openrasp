@@ -22,9 +22,8 @@
 #include <dirent.h>
 #include <algorithm>
 #include "shared_config_manager.h"
-#include "third_party/rapidjson/stringbuffer.h"
-#include "third_party/rapidjson/writer.h"
 #include "utils/os.h"
+#include "utils/JsonWriter.h"
 
 namespace openrasp
 {
@@ -67,21 +66,14 @@ void HeartBeatAgent::do_heartbeat()
 {
 	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/heartbeat";
 
-	rapidjson::StringBuffer s;
-	rapidjson::Writer<rapidjson::StringBuffer> writer(s);
+	JsonWriter json_writer;
+	json_writer.write_string({"rasp_id"}, scm->get_rasp_id());
+	json_writer.write_string({"plugin_md5"}, oam->agent_ctrl_block->get_plugin_md5());
+	json_writer.write_string({"plugin_version"}, oam->agent_ctrl_block->get_plugin_version());
+	json_writer.write_int64({"config_time"}, scm->get_config_last_update());
+	std::string json_content = json_writer.dump();
 
-	writer.StartObject();
-	writer.Key("rasp_id");
-	writer.String(scm->get_rasp_id().c_str());
-	writer.Key("plugin_md5");
-	writer.String(oam->agent_ctrl_block->get_plugin_md5());
-	writer.Key("plugin_version");
-	writer.String(oam->agent_ctrl_block->get_plugin_version());
-	writer.Key("config_time");
-	writer.Int64((scm->get_config_last_update()));
-	writer.EndObject();
-
-	BackendRequest backend_request(url_string, s.GetString());
+	BackendRequest backend_request(url_string, json_content.c_str());
 	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
 	{
@@ -103,50 +95,30 @@ void HeartBeatAgent::do_heartbeat()
 			}
 		}
 		/************************************config update************************************/
-		int64_t config_time;
-		if (!res_info->fetch_int64("/data/config_time", config_time))
+		int64_t config_time = res_info->fetch_int64({"data", "config_time"});
+		if (config_time < 0) //timestamp should not less than zero
 		{
 			return;
 		}
-		std::string complete_config;
-		if (res_info->stringify_object("/data/config", complete_config))
+		std::string complete_config = res_info->stringify_object({"data", "config"}, true);
+		if (!complete_config.empty())
 		{
 			/************************************shm config************************************/
 			if (scm != nullptr)
 			{
 				//update log_max_backup only its value greater than zero
-				int64_t log_max_backup = 30;
-				res_info->fetch_int64("/data/config/log.maxbackup", log_max_backup);
-				scm->set_log_max_backup(log_max_backup);
-				int64_t debug_level = 0;
-				res_info->fetch_int64("/data/config/debug.level", debug_level);
+				int64_t log_max_backup = res_info->fetch_int64({"data", "config", "log.maxbackup"});
+				scm->set_log_max_backup(log_max_backup > 0 ? log_max_backup : 30);
+				int64_t debug_level = res_info->fetch_int64({"data", "config", "debug.level"}, 0);
 				scm->set_debug_level(debug_level);
-				std::map<std::string, std::vector<std::string>> white_map = res_info->build_hook_white_map("/data/config/hook.white");
-				std::map<std::string, int> white_mask_map;
-				for (auto &white_item : white_map)
-				{
-					int bit_mask = 0;
-					if (std::find(white_item.second.begin(), white_item.second.end(), "all") != white_item.second.end())
-					{
-						bit_mask = (1 << ALL_TYPE) - 1;
-					}
-					else
-					{
-						for (auto &type_name : white_item.second)
-						{
-							bit_mask |= (1 << check_type_transfer->name_to_type(type_name));
-						}
-					}
-					white_mask_map.insert({(white_item.first == "*") ? "" : white_item.first, bit_mask});
-				}
-				scm->build_check_type_white_array(white_mask_map);
+				std::map<std::string, std::vector<std::string>> white_map = res_info->build_hook_white_map({"data", "config", "hook.white"});
+				scm->build_check_type_white_array(white_map);
 			}
-			res_info->erase_value("/data/config/hook.white");
-			res_info->erase_value("/data/config/log.maxbackup");
+			res_info->erase_value({"data", "config", "hook.white"});
 
 			/************************************OPENRASP_G(config)************************************/
-			std::string exculde_hook_white_config;
-			if (res_info->stringify_object("/data/config", exculde_hook_white_config))
+			std::string exculde_hook_white_config = res_info->stringify_object({"data", "config"}, true);
+			if (!exculde_hook_white_config.empty())
 			{
 				std::string cloud_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/cloud-config.json";
 #ifndef _WIN32

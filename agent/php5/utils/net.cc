@@ -19,6 +19,10 @@
 #include <string>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
+
 
 #ifdef PHP_WIN32
 #include "win32/time.h"
@@ -246,4 +250,3 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url)
 }
 
 } // namespace openrasp
-

@@ -23,6 +23,7 @@
 #include <map>
 #include "utils/ReadWriteLock.h"
 #include "shared_config_block.h"
+#include "utils/BaseReader.h"
 
 namespace openrasp
 {
@@ -47,7 +48,7 @@ public:
 
   int get_check_type_white_bit_mask(std::string url);
   bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
-  bool build_check_type_white_array(OpenraspConfig &openrasp_config);
+  bool build_check_type_white_array(std::map<std::string, std::vector<std::string>> &url_type_map);
 
   std::string get_rasp_id() const;
   std::string get_hostname() const;

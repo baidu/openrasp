@@ -331,6 +331,38 @@ if test "$PHP_OPENRASP" != "no"; then
     libfswatch/c/cevent.cpp"
   PHP_ADD_INCLUDE("PHP_EXT_BUILDDIR([openrasp])/libfswatch")
 
+  YAML_CPP_SOURCE="third_party/yaml-cpp/src/binary.cpp \
+    third_party/yaml-cpp/src/contrib/graphbuilderadapter.cpp \
+    third_party/yaml-cpp/src/contrib/graphbuilder.cpp \
+    third_party/yaml-cpp/src/convert.cpp \
+    third_party/yaml-cpp/src/directives.cpp \
+    third_party/yaml-cpp/src/emit.cpp \
+    third_party/yaml-cpp/src/emitfromevents.cpp \
+    third_party/yaml-cpp/src/emitter.cpp \
+    third_party/yaml-cpp/src/emitterstate.cpp \
+    third_party/yaml-cpp/src/emitterutils.cpp \
+    third_party/yaml-cpp/src/exceptions.cpp \
+    third_party/yaml-cpp/src/exp.cpp \
+    third_party/yaml-cpp/src/memory.cpp \
+    third_party/yaml-cpp/src/nodebuilder.cpp \
+    third_party/yaml-cpp/src/node.cpp \
+    third_party/yaml-cpp/src/node_data.cpp \
+    third_party/yaml-cpp/src/nodeevents.cpp \
+    third_party/yaml-cpp/src/null.cpp \
+    third_party/yaml-cpp/src/ostream_wrapper.cpp \
+    third_party/yaml-cpp/src/parse.cpp \
+    third_party/yaml-cpp/src/parser.cpp \
+    third_party/yaml-cpp/src/regex_yaml.cpp \
+    third_party/yaml-cpp/src/scanner.cpp \
+    third_party/yaml-cpp/src/scanscalar.cpp \
+    third_party/yaml-cpp/src/scantag.cpp \
+    third_party/yaml-cpp/src/scantoken.cpp \
+    third_party/yaml-cpp/src/simplekey.cpp \
+    third_party/yaml-cpp/src/singledocparser.cpp \
+    third_party/yaml-cpp/src/stream.cpp \
+    third_party/yaml-cpp/src/tag.cpp"
+  PHP_ADD_INCLUDE("PHP_EXT_BUILDDIR([openrasp])/third_party/yaml-cpp/include")
+
   case $host_os in
     darwin* )
       OPENRASP_LIBS="-framework CoreServices $OPENRASP_LIBS"
@@ -668,7 +700,6 @@ int main() {
     hook/openrasp_ssrf.cc \
     hook/sql_connection_enrty.cc \
     hook/openrasp_echo.cc \
-    openrasp_config.cc \
     openrasp_conf_holder.cc \
     openrasp_config_block.cc \
     openrasp_inject.cc \
@@ -693,11 +724,15 @@ int main() {
     utils/time.cc \
     utils/net.cc \
     utils/os.cc \
+    utils/JsonReader.cc \
+    utils/JsonWriter.cc \
+    utils/YamlReader.cc \
     agent/base_manager.cc \
     agent/shared_config_manager.cc \
     agent/mm/shm_manager.cc \
     openrasp_fswatch.cc \
     $LIBFSWATCH_SOURCE \
+    $YAML_CPP_SOURCE \
     $OPENRASP_REMOTE_MANAGER_SOURCE \
     , $ext_shared)
   ifdef([PHP_ADD_EXTENSION_DEP],

@@ -17,7 +17,6 @@
 #ifndef _PLUGIN_CONTAINER_H_
 #define _PLUGIN_CONTAINER_H_
 
-#include "openrasp_config.h"
 #include "openrasp_agent.h"
 
 namespace openrasp

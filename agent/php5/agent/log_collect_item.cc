@@ -22,8 +22,8 @@
 #include "openrasp_agent_manager.h"
 #include "shared_config_manager.h"
 #include "utils/time.h"
-#include "third_party/rapidjson/stringbuffer.h"
-#include "third_party/rapidjson/prettywriter.h"
+#include "utils/JsonReader.h"
+#include "utils/JsonWriter.h"
 
 namespace openrasp
 {
@@ -42,11 +42,11 @@ LogCollectItem::LogCollectItem(const std::string name, const std::string url_pat
         std::string status_json;
         if (get_entire_file_content(status_file_abs.c_str(), status_json))
         {
-            OpenraspConfig openrasp_config(status_json, OpenraspConfig::FromType::kJson);
-            fpos = openrasp_config.Get<int64_t>("fpos");
-            st_ino = openrasp_config.Get<int64_t>("st_ino");
-            last_post_time = openrasp_config.Get<int64_t>("last_post_time");
-            curr_suffix = openrasp_config.Get<std::string>("curr_suffix", curr_suffix);
+            JsonReader json_reader(status_json);
+            fpos = json_reader.fetch_int64({"fpos"}, 0);
+            st_ino = json_reader.fetch_int64({"st_ino"}, 0);
+            last_post_time = json_reader.fetch_int64({"last_post_time"}, 0);
+            curr_suffix = json_reader.fetch_string({"curr_suffix"}, curr_suffix);
         }
     }
 }
@@ -105,19 +105,12 @@ long LogCollectItem::get_active_file_inode()
 
 void LogCollectItem::save_status_snapshot() const
 {
-    rapidjson::StringBuffer s;
-    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(s);
-
-    writer.StartObject();
-    writer.Key("curr_suffix");
-    writer.String(curr_suffix.c_str());
-    writer.Key("last_post_time");
-    writer.Int64(last_post_time);
-    writer.Key("fpos");
-    writer.Int64(fpos);
-    writer.Key("st_ino");
-    writer.Int64(st_ino);
-    writer.EndObject();
+    JsonWriter json_writer;
+    json_writer.write_string({"curr_suffix"}, curr_suffix);
+    json_writer.write_int64({"last_post_time"}, last_post_time);
+    json_writer.write_int64({"fpos"}, fpos);
+    json_writer.write_int64({"st_ino"}, st_ino);
+    std::string json_content = json_writer.dump(true);
 
     std::string status_file_abs = get_base_dir_path() + LogCollectItem::status_file;
 #ifndef _WIN32
@@ -125,8 +118,8 @@ void LogCollectItem::save_status_snapshot() const
 #endif
     write_str_to_file(status_file_abs.c_str(),
                       std::ofstream::in | std::ofstream::out | std::ofstream::trunc,
-                      s.GetString(),
-                      s.GetSize());
+                      json_content.c_str(),
+                      json_content.length());
 #ifndef _WIN32
     umask(oldmask);
 #endif

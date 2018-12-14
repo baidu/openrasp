@@ -3,7 +3,8 @@ hook PDO::__construct remote host
 --SKIPIF--
 <?php 
 $conf = <<<CONF
-security.enforce_policy=true
+security:
+  enforce_policy: true
 CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("mysqli")) die("Skipped: mysqli extension required.");

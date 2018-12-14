@@ -21,11 +21,8 @@
 #include <curl/curl.h>
 #include <functional>
 #include "plugin_update_pkg.h"
+#include "utils/JsonReader.h"
 #include "openrasp_hook.h"
-#include "third_party/rapidjson/document.h"
-#include "third_party/rapidjson/pointer.h"
-#include "third_party/rapidjson/writer.h"
-#include "third_party/rapidjson/error/en.h"
 
 namespace openrasp
 {
@@ -34,13 +31,15 @@ class PluginUpdatePackage;
 
 class BackendResponse
 {
+
 public:
+  static const int64_t default_int64;
   bool parse_error = false;
   long response_code = 0;
   std::string header_string;
   std::string response_string;
   std::string error_msg;
-  rapidjson::Document document;
+  JsonReader json_reader;
 
 public:
   BackendResponse(){};
@@ -50,20 +49,20 @@ public:
   bool http_code_ok() const;
   long get_http_code() const;
 
-  bool fetch_status(int64_t &status);
-  bool fetch_description(std::string &description);
+  int64_t fetch_status();
+  std::string fetch_description();
 
   bool verify(openrasp_error_code error_code);
 
-  bool erase_value(const char *key);
-  bool fetch_int64(const char *key, int64_t &target);
-  bool fetch_string(const char *key, std::string &target);
-  bool stringify_object(const char *key, std::string &target);
+  int64_t fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value = BackendResponse::default_int64);
+  std::string fetch_string(const std::vector<std::string> &keys, const std::string &default_value = "");
+  std::string stringify_object(const std::vector<std::string> &keys, bool pretty = false);
+  void erase_value(const std::vector<std::string> &keys);
 
   std::shared_ptr<PluginUpdatePackage> build_plugin_update_package();
-  std::map<std::string, std::vector<std::string>> build_hook_white_map(const char *key);
-  std::vector<std::string> fetch_object_keys(const char *key);
-  std::vector<std::string> fetch_string_array(const char *key);
+  std::vector<std::string> fetch_object_keys(const std::vector<std::string> &keys);
+  std::vector<std::string> fetch_string_array(const std::vector<std::string> &keys);
+  std::map<std::string, std::vector<std::string>> build_hook_white_map(const std::vector<std::string> &keys);
 };
 
 } // namespace openrasp

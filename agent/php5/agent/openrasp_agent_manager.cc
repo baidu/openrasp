@@ -33,9 +33,8 @@
 #include "utils/regex.h"
 #include "utils/net.h"
 #include "utils/os.h"
+#include "utils/JsonWriter.h"
 #include "openrasp_utils.h"
-#include "third_party/rapidjson/stringbuffer.h"
-#include "third_party/rapidjson/writer.h"
 
 namespace openrasp
 {
@@ -283,33 +282,20 @@ bool OpenraspAgentManager::agent_remote_register()
 
 	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/rasp";
 
-	rapidjson::StringBuffer s;
-	rapidjson::Writer<rapidjson::StringBuffer> writer(s);
+	JsonWriter json_writer;
+	json_writer.write_string({"id"}, scm->get_rasp_id());
+	json_writer.write_string({"hostname"}, scm->get_hostname());
+	json_writer.write_string({"language"}, "php");
+	json_writer.write_string({"language_version"}, OPENRASP_PHP_VERSION);
+	json_writer.write_string({"server_type"}, sapi_module.name);
+	json_writer.write_string({"server_version"}, OPENRASP_PHP_VERSION);
+	json_writer.write_string({"rasp_home"}, openrasp_ini.root_dir);
+	json_writer.write_string({"register_ip"}, local_ip);
+	json_writer.write_string({"version"}, PHP_OPENRASP_VERSION);
+	json_writer.write_int64({"heartbeat_interval"}, openrasp_ini.heartbeat_interval);
+	std::string json_content = json_writer.dump();
 
-	writer.StartObject();
-	writer.Key("id");
-	writer.String(scm->get_rasp_id().c_str());
-	writer.Key("hostname");
-	writer.String(scm->get_hostname().c_str());
-	writer.Key("language");
-	writer.String("php");
-	writer.Key("language_version");
-	writer.String(OPENRASP_PHP_VERSION);
-	writer.Key("server_type");
-	writer.String(sapi_module.name);
-	writer.Key("server_version");
-	writer.String(OPENRASP_PHP_VERSION);
-	writer.Key("rasp_home");
-	writer.String(openrasp_ini.root_dir);
-	writer.Key("register_ip");
-	writer.String(local_ip);
-	writer.Key("version");
-	writer.String(PHP_OPENRASP_VERSION);
-	writer.Key("heartbeat_interval");
-	writer.Int64(openrasp_ini.heartbeat_interval);
-	writer.EndObject();
-
-	BackendRequest backend_request(url_string, s.GetString());
+	BackendRequest backend_request(url_string, json_content.c_str());
 	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
 	{
