@@ -1,4 +1,4 @@
-const version = '2018-1211-1600'
+const version = '2018-1214-1500'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -1623,10 +1623,10 @@ if (algorithmConfig.deserialization_transformer.action != 'ignore') {
         for (var index in deserializationInvalidClazz) {
             if (clazz === deserializationInvalidClazz[index]) {
                 return {
-                    action:     algorithmConfig.transformer_deser.action,
+                    action:     algorithmConfig.deserialization_transformer.action,
                     message:    _("Transformer deserialization - unknown deserialize vulnerability detected"),
                     confidence: 100,
-                    algorithm:  'transformer_deser'
+                    algorithm:  'deserialization_transformer'
                 }
             }
         }

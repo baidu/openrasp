@@ -521,12 +521,15 @@ func (o *AppController) ConfigAlarm() {
 	if param.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
 	}
-	_, err = models.GetAppById(param.AppId)
+	app, err := models.GetAppById(param.AppId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get app", err)
 	}
 	var updateData bson.M
 	if param.EmailAlarmConf != nil {
+		if param.EmailAlarmConf.Password == "************" {
+			param.EmailAlarmConf.Password = app.EmailAlarmConf.Password
+		}
 		o.validEmailConf(param.EmailAlarmConf)
 	}
 	if param.HttpAlarmConf != nil {
@@ -543,7 +546,7 @@ func (o *AppController) ConfigAlarm() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to decode param json", err)
 	}
-	app, err := models.UpdateAppById(param.AppId, updateData)
+	app, err = models.UpdateAppById(param.AppId, updateData)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update alarm config", err)
 	}
