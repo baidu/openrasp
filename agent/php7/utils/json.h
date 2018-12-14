@@ -14,47 +14,28 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef _OPENRASP_UTILS_JSON_H_
+#define _OPENRASP_UTILS_JSON_H_
 
 #include <string>
 #include <vector>
-#include <unordered_set>
-#include <cstdint>
-#include "openrasp_config_block.h"
+#include "string.h"
 
 namespace openrasp
 {
-using namespace std;
 
-class ConfigHolder
+inline const std::string to_json_pointer(const std::vector<std::string> &keys)
 {
-public:
-  enum FromType
+  std::string pointer_str;
+  for (std::string key : keys)
   {
-    kJson,
-    kYaml
-  };
+    string_replace(key, "/", "~1"); //https://tools.ietf.org/html/rfc6901
+    pointer_str.push_back('/');
+    pointer_str.append(key);
+  }
+  return pointer_str;
+}
 
-public:
-  ConfigHolder(){};
-  bool update(BaseReader *reader);
-  long GetLatestUpdateTime() const;
-  void SetLatestUpdateTime(long latestUpdateTime);
-
-public:
-  PluginBlock plugin;
-  LogBlock log;
-  SyslogBlock syslog;
-  BlockBlock block;
-  InjectBlock inject;
-  BodyBlock body;
-  ClientipBlock clientip;
-  SecurityBlock security;
-  SqlBlock sql;
-  LruBlock lru;
-  CallableBlock webshell_callable;
-
-private:
-  long latestUpdateTime = 0;
-};
 } // namespace openrasp
+
+#endif

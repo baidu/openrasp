@@ -19,6 +19,10 @@
 #include <string>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
+
 
 #ifdef PHP_WIN32
 #include "win32/time.h"

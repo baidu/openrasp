@@ -377,13 +377,13 @@ static bool update_config(openrasp::ConfigHolder *config, ConfigHolder::FromType
         std::string conf_contents;
         if (get_entire_file_content(config_file_path.c_str(), conf_contents))
         {
-            openrasp::JsonReader jreader;
+            openrasp::JsonReader json_reader;
             openrasp::YamlReader yreader;
             switch (type)
             {
             case ConfigHolder::FromType::kJson:
-                jreader.load(conf_contents);
-                return config->update(&jreader);
+                json_reader.load(conf_contents);
+                return config->update(&json_reader);
                 break;
             case ConfigHolder::FromType::kYaml:
             default:

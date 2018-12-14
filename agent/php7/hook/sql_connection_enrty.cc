@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_hook.h"
+#include <sstream>
 
 void SqlConnectionEntry::set_connection_string(std::string connection_string)
 {

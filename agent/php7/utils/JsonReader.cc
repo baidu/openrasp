@@ -16,7 +16,7 @@
 
 #include <sstream>
 #include "JsonReader.h"
-#include "utils/string.h"
+#include "utils/json.h"
 
 namespace openrasp
 {
@@ -47,21 +47,9 @@ void JsonReader::load(const std::string &content)
   }
 }
 
-const std::string JsonReader::_to_pointer(const std::vector<std::string> &keys)
-{
-  std::string pointer_str;
-  for (std::string key : keys)
-  {
-    string_replace(key, "/", "~1"); //https://tools.ietf.org/html/rfc6901
-    pointer_str.push_back('/');
-    pointer_str.append(key);
-  }
-  return pointer_str;
-}
-
 std::string JsonReader::fetch_string(const std::vector<std::string> &keys, const std::string &default_value)
 {
-  json::json_pointer ptr = json::json_pointer(_to_pointer(keys));
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
     return j.at(ptr);
@@ -74,7 +62,7 @@ std::string JsonReader::fetch_string(const std::vector<std::string> &keys, const
 
 int64_t JsonReader::fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value)
 {
-  json::json_pointer ptr = json::json_pointer(_to_pointer(keys));
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
     return j.at(ptr);
@@ -87,7 +75,7 @@ int64_t JsonReader::fetch_int64(const std::vector<std::string> &keys, const int6
 
 bool JsonReader::fetch_bool(const std::vector<std::string> &keys, const bool &default_value)
 {
-  json::json_pointer ptr = json::json_pointer(_to_pointer(keys));
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
     return j.at(ptr);
@@ -100,14 +88,14 @@ bool JsonReader::fetch_bool(const std::vector<std::string> &keys, const bool &de
 
 void JsonReader::erase(const std::vector<std::string> &keys)
 {
-  json::json_pointer ptr = json::json_pointer(_to_pointer(keys));
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   j.erase(ptr);
 }
 
 std::vector<std::string> JsonReader::fetch_object_keys(const std::vector<std::string> &keys)
 {
   std::vector<std::string> result;
-  json::json_pointer ptr = json::json_pointer(_to_pointer(keys));
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
     json::reference ref = j.at(ptr);
@@ -124,7 +112,7 @@ std::vector<std::string> JsonReader::fetch_object_keys(const std::vector<std::st
 
 std::vector<std::string> JsonReader::fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value)
 {
-  json::json_pointer ptr = json::json_pointer(_to_pointer(keys));
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
     return j.at(ptr);
@@ -137,7 +125,7 @@ std::vector<std::string> JsonReader::fetch_strings(const std::vector<std::string
 
 std::string JsonReader::dump(const std::vector<std::string> &keys, bool pretty)
 {
-  json::json_pointer ptr = json::json_pointer(_to_pointer(keys));
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
     json::reference ref = j.at(ptr);

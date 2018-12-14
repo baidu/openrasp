@@ -39,7 +39,7 @@ public:
   std::string header_string;
   std::string response_string;
   std::string error_msg;
-  JsonReader jreader;
+  JsonReader json_reader;
 
 public:
   BackendResponse(){};

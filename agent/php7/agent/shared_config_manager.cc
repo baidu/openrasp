@@ -18,6 +18,7 @@
 #include "shared_config_block.h"
 #include "utils/digest.h"
 #include "utils/net.h"
+#include <algorithm>
 
 namespace openrasp
 {

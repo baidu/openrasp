@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include "openrasp_config.h"
 #include "openrasp_agent.h"
 #include "openrasp_hook.h"
 #include <fstream>

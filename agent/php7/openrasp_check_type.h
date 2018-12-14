@@ -21,6 +21,7 @@
 #include <string>
 #include <memory>
 #include <set>
+#include <map>
 
 typedef enum check_type_t
 {

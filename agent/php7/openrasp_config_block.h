@@ -21,9 +21,6 @@
 #include <unordered_set>
 #include <cstdint>
 #include <memory>
-#include "third_party/rapidjson/document.h"
-#include "third_party/cpptoml/cpptoml.h"
-#include "openrasp_config.h"
 #include "utils/BaseReader.h"
 
 namespace openrasp

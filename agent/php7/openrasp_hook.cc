@@ -19,6 +19,8 @@
 #include "openrasp_inject.h"
 #include "openrasp_v8.h"
 #include <new>
+#include <map>
+#include <algorithm>
 #include "agent/shared_config_manager.h"
 #include <unordered_map>
 #include "openrasp_content_type.h"

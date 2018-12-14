@@ -22,9 +22,8 @@
 #include <dirent.h>
 #include <algorithm>
 #include "shared_config_manager.h"
-#include "third_party/rapidjson/stringbuffer.h"
-#include "third_party/rapidjson/writer.h"
 #include "utils/os.h"
+#include "utils/JsonWriter.h"
 
 namespace openrasp
 {
@@ -67,21 +66,14 @@ void HeartBeatAgent::do_heartbeat()
 {
 	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/heartbeat";
 
-	rapidjson::StringBuffer s;
-	rapidjson::Writer<rapidjson::StringBuffer> writer(s);
+	JsonWriter json_writer;
+	json_writer.write_string({"rasp_id"}, scm->get_rasp_id());
+	json_writer.write_string({"plugin_md5"}, oam->agent_ctrl_block->get_plugin_md5());
+	json_writer.write_string({"plugin_version"}, oam->agent_ctrl_block->get_plugin_version());
+	json_writer.write_int64({"config_time"}, scm->get_config_last_update());
+	std::string json_content = json_writer.dump();
 
-	writer.StartObject();
-	writer.Key("rasp_id");
-	writer.String(scm->get_rasp_id().c_str());
-	writer.Key("plugin_md5");
-	writer.String(oam->agent_ctrl_block->get_plugin_md5());
-	writer.Key("plugin_version");
-	writer.String(oam->agent_ctrl_block->get_plugin_version());
-	writer.Key("config_time");
-	writer.Int64((scm->get_config_last_update()));
-	writer.EndObject();
-
-	BackendRequest backend_request(url_string, s.GetString());
+	BackendRequest backend_request(url_string, json_content.c_str());
 	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
 	{
@@ -125,7 +117,7 @@ void HeartBeatAgent::do_heartbeat()
 			res_info->erase_value({"data", "config", "hook.white"});
 
 			/************************************OPENRASP_G(config)************************************/
-			std::string exculde_hook_white_config = res_info->stringify_object({"data", "config"});
+			std::string exculde_hook_white_config = res_info->stringify_object({"data", "config"}, true);
 			if (!exculde_hook_white_config.empty())
 			{
 				std::string cloud_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/cloud-config.json";

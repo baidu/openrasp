@@ -704,7 +704,6 @@ int main() {
     hook/openrasp_ssrf.cc \
     hook/sql_connection_enrty.cc \
     hook/openrasp_echo.cc \
-    openrasp_config.cc \
     openrasp_conf_holder.cc \
     openrasp_config_block.cc \
     openrasp_inject.cc \
@@ -730,6 +729,7 @@ int main() {
     utils/net.cc \
     utils/os.cc \
     utils/JsonReader.cc \
+    utils/JsonWriter.cc \
     utils/YamlReader.cc \
     agent/base_manager.cc \
     agent/shared_config_manager.cc \

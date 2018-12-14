@@ -52,9 +52,6 @@ public:
   virtual std::vector<std::string> fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value);
   virtual void load(const std::string &content);
   std::string dump(const std::vector<std::string> &keys, bool pretty = false);
-
-private:
-  const std::string _to_pointer(const std::vector<std::string> &keys);
 };
 
 } // namespace openrasp

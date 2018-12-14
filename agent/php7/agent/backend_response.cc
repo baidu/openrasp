@@ -28,9 +28,9 @@ BackendResponse::BackendResponse(long response_code, std::string header_string, 
     this->response_code = response_code;
     this->header_string = header_string;
     this->response_string = response_string;
-    jreader.load(response_string.c_str());
-    this->parse_error = jreader.has_error();
-    this->error_msg = jreader.get_error_msg();
+    json_reader.load(response_string.c_str());
+    this->parse_error = json_reader.has_error();
+    this->error_msg = json_reader.get_error_msg();
 }
 
 bool BackendResponse::has_error() const
@@ -50,12 +50,12 @@ bool BackendResponse::http_code_ok() const
 
 int64_t BackendResponse::fetch_status()
 {
-    return jreader.fetch_int64({"status"}, BackendResponse::default_int64);
+    return json_reader.fetch_int64({"status"}, BackendResponse::default_int64);
 }
 
 std::string BackendResponse::fetch_description()
 {
-    return jreader.fetch_string({"description"}, "");
+    return json_reader.fetch_string({"description"}, "");
 }
 
 std::shared_ptr<PluginUpdatePackage> BackendResponse::build_plugin_update_package()
@@ -83,22 +83,22 @@ std::shared_ptr<PluginUpdatePackage> BackendResponse::build_plugin_update_packag
 
 int64_t BackendResponse::fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value)
 {
-    return jreader.fetch_int64(keys, default_value);
+    return json_reader.fetch_int64(keys, default_value);
 }
 
 std::string BackendResponse::fetch_string(const std::vector<std::string> &keys, const std::string &default_value)
 {
-    return jreader.fetch_string(keys, default_value);
+    return json_reader.fetch_string(keys, default_value);
 }
 
 std::string BackendResponse::stringify_object(const std::vector<std::string> &keys, bool pretty)
 {
-    return jreader.dump(keys, pretty);
+    return json_reader.dump(keys, pretty);
 }
 
 void BackendResponse::erase_value(const std::vector<std::string> &keys)
 {
-    jreader.erase(keys);
+    json_reader.erase(keys);
 }
 
 bool BackendResponse::verify(openrasp_error_code error_code)
@@ -128,12 +128,12 @@ bool BackendResponse::verify(openrasp_error_code error_code)
 
 std::vector<std::string> BackendResponse::fetch_object_keys(const std::vector<std::string> &keys)
 {
-    return jreader.fetch_object_keys(keys);
+    return json_reader.fetch_object_keys(keys);
 }
 
 std::vector<std::string> BackendResponse::fetch_string_array(const std::vector<std::string> &keys)
 {
-    return jreader.fetch_strings(keys, {});
+    return json_reader.fetch_strings(keys, {});
 }
 
 std::map<std::string, std::vector<std::string>> BackendResponse::build_hook_white_map(const std::vector<std::string> &keys)

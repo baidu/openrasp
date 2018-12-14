@@ -14,28 +14,40 @@
  * limitations under the License.
  */
 
-#ifndef _PLUGIN_CONTAINER_H_
-#define _PLUGIN_CONTAINER_H_
+#ifndef _OPENRASP_UTILS_JSON_WRITER_H_
+#define _OPENRASP_UTILS_JSON_WRITER_H_
 
-#include "openrasp_agent.h"
+#ifdef snprintf
+#undef snprintf
+#endif
+#define snprintf snprintf
+//php define snprintf ...
+
+#include "third_party/json/json.hpp"
+
+#ifdef snprintf
+#undef snprintf
+#endif
+#define snprintf ap_php_snprintf
 
 namespace openrasp
 {
-class PluginUpdatePackage
+
+using json = nlohmann::json;
+
+class JsonWriter
 {
 private:
-  static const std::string snapshot_filename;
-
-private:
-  PluginFile active_plugin;
-  std::string plugin_md5;
-  std::string plugin_version;
+  json j;
 
 public:
-  PluginUpdatePackage(std::string content, std::string version, std::string md5);
-  bool build_snapshot();
-  std::string get_md5() const;
-  std::string get_version() const;
+  JsonWriter();
+  void write_bool(const std::vector<std::string> &keys, const bool &value);
+  void write_int64(const std::vector<std::string> &keys, const int64_t &value);
+  void write_string(const std::vector<std::string> &keys, const std::string &value);
+  std::string dump(bool pretty = false);
 };
+
 } // namespace openrasp
+
 #endif
