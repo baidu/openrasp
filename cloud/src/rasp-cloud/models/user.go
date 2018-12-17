@@ -25,6 +25,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego"
 	"os"
+	"rasp-cloud/environment"
 )
 
 const (
@@ -84,11 +85,11 @@ func init() {
 		userId = user.Id
 	}
 
-	if *tools.StartFlag.StartType == tools.StartTypeReset {
-		if *tools.StartFlag.Password == "" {
+	if *environment.StartFlag.StartType == environment.StartTypeReset {
+		if *environment.StartFlag.Password == "" {
 			tools.Panic(tools.ErrCodeResetUserFailed, "the password can not be empty", err)
 		}
-		err := resetUser(*tools.StartFlag.Password)
+		err := resetUser(*environment.StartFlag.Password)
 		if err != nil {
 			tools.Panic(tools.ErrCodeResetUserFailed, "failed to reset administrator", err)
 		}
@@ -100,7 +101,7 @@ func init() {
 func resetUser(newPwd string) error {
 	err := validPassword(newPwd)
 	if err != nil {
-		return errors.New("new password format error: " + err.Error())
+		return errors.New("invalid password: " + err.Error())
 	}
 	pwd, err := generateHashedPassword(newPwd)
 	if err != nil {

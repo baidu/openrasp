@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"crypto/md5"
+	"rasp-cloud/environment"
 )
 
 var (
@@ -33,21 +34,23 @@ var (
 )
 
 func init() {
-	esAddr := beego.AppConfig.String("EsAddr")
-	if esAddr == "" {
-		tools.Panic(tools.ErrCodeConfigInitFailed,
-			"the 'EsAddr' config item in app.conf can not be empty", nil)
-	}
-	client, err := elastic.NewClient(elastic.SetURL(beego.AppConfig.String("EsAddr")),
-		elastic.SetBasicAuth(beego.AppConfig.DefaultString("EsUser", ""),
-			beego.AppConfig.DefaultString("EsPwd", "")))
-	if err != nil {
-		tools.Panic(tools.ErrCodeESInitFailed, "init ES failed", err)
-	}
-	ttlIndexes <- make(map[string]time.Duration)
-	go startTTL(24 * time.Hour)
+	if *environment.StartFlag.StartType != environment.StartTypeReset {
+		esAddr := beego.AppConfig.String("EsAddr")
+		if esAddr == "" {
+			tools.Panic(tools.ErrCodeConfigInitFailed,
+				"the 'EsAddr' config item in app.conf can not be empty", nil)
+		}
+		client, err := elastic.NewClient(elastic.SetURL(beego.AppConfig.String("EsAddr")),
+			elastic.SetBasicAuth(beego.AppConfig.DefaultString("EsUser", ""),
+				beego.AppConfig.DefaultString("EsPwd", "")))
+		if err != nil {
+			tools.Panic(tools.ErrCodeESInitFailed, "init ES failed", err)
+		}
+		ttlIndexes <- make(map[string]time.Duration)
+		go startTTL(24 * time.Hour)
 
-	ElasticClient = client
+		ElasticClient = client
+	}
 }
 
 func startTTL(duration time.Duration) {
