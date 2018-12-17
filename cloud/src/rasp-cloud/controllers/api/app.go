@@ -59,7 +59,7 @@ func (o *AppController) GetApp() {
 			o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
 		}
 		var result = make(map[string]interface{})
-		total, apps, err := models.GetAllApp(data.Page, data.Perpage)
+		total, apps, err := models.GetAllApp(data.Page, data.Perpage, true)
 		if err != nil {
 			o.ServeError(http.StatusBadRequest, "failed to get apps", err)
 		}
@@ -521,13 +521,13 @@ func (o *AppController) ConfigAlarm() {
 	if param.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
 	}
-	app, err := models.GetAppById(param.AppId)
+	app, err := models.GetAppByIdWithoutMask(param.AppId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get app", err)
 	}
 	var updateData bson.M
 	if param.EmailAlarmConf != nil {
-		if param.EmailAlarmConf.Password == "************" {
+		if param.EmailAlarmConf.Password == models.SecreteMask {
 			param.EmailAlarmConf.Password = app.EmailAlarmConf.Password
 		}
 		o.validEmailConf(param.EmailAlarmConf)
@@ -536,6 +536,9 @@ func (o *AppController) ConfigAlarm() {
 		o.validHttpAlarm(param.HttpAlarmConf)
 	}
 	if param.DingAlarmConf != nil {
+		if param.DingAlarmConf.CorpSecret == models.SecreteMask {
+			param.DingAlarmConf.CorpSecret = app.DingAlarmConf.CorpSecret
+		}
 		o.validDingConf(param.DingAlarmConf)
 	}
 	content, err := json.Marshal(param)
@@ -646,7 +649,7 @@ func (o *AppController) TestEmail() {
 	if appId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id cannot be empty")
 	}
-	app, err := models.GetAppById(appId)
+	app, err := models.GetAppByIdWithoutMask(appId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "can not find the app", err)
 	}
@@ -668,7 +671,7 @@ func (o *AppController) TestDing(config map[string]interface{}) {
 	if appId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id cannot be empty")
 	}
-	app, err := models.GetAppById(appId)
+	app, err := models.GetAppByIdWithoutMask(appId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "can not find the app", err)
 	}
@@ -690,7 +693,7 @@ func (o *AppController) TestHttp(config map[string]interface{}) {
 	if appId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id cannot be empty")
 	}
-	app, err := models.GetAppById(appId)
+	app, err := models.GetAppByIdWithoutMask(appId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "can not find the app", err)
 	}

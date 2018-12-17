@@ -12,12 +12,12 @@
     <tbody>
         {{range .Alarms}}
             <tr>
-                <td>{{.id}}</td>
                 <td>{{.event_time}}</td>
                 <td>{{.attack_type}}</td>
                 <td>{{.attack_source}}</td>
                 <td>{{.target}}</td>
                 <td>{{.intercept_state}}</td>
+                <td><a href="{{$.DetailedLink}}/{{.id}}">detail</a></td>
             </tr>
         {{end}}
     </tbody>

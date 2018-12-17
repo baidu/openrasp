@@ -21,9 +21,14 @@ import (
 	"flag"
 	"log"
 	"os/exec"
+	"fmt"
+	"golang.org/x/crypto/ssh/terminal"
+	"syscall"
+	"bytes"
 )
 
 const (
+	Version             = "1.0RC1"
 	StartTypeForeground = "panel"
 	StartTypeAgent      = "agent"
 	StartTypeReset      = "reset"
@@ -34,6 +39,7 @@ type Flag struct {
 	StartType *string
 	Password  *string
 	Daemon    *bool
+	Version   *bool
 }
 
 var (
@@ -42,15 +48,39 @@ var (
 
 func init() {
 	StartFlag.StartType = flag.String("type", "", "use to provide different routers")
-	StartFlag.Password = flag.String("password", "", "use to provide password")
 	StartFlag.Daemon = flag.Bool("d", false, "use to run as daemon process")
+	StartFlag.Version = flag.Bool("version", false, "use to get version")
 	flag.Parse()
+
+	if *StartFlag.Version {
+		fmt.Println(Version)
+		os.Exit(0)
+	}
+	if *StartFlag.StartType == "reset" {
+		fmt.Print("Enter new admin password: ")
+		pwd1, err := terminal.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+
+		}
+		fmt.Print("\nRetype new admin password: ")
+		pwd2, err := terminal.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+
+		}
+		if bytes.Compare(pwd1, pwd2) != 0 {
+			fmt.Println("Sorry, passwords do not match")
+			os.Exit(ErrCodeResetUserFailed)
+		} else {
+			pwd := string(pwd1)
+			StartFlag.Password = &pwd
+		}
+	}
 	if *StartFlag.Daemon {
 		err := fork()
 		if err != nil {
 			Panic(ErrCodeInitChildProcessFailed, "failed to launch child process, error", err)
 		}
-		log.Println("start successfully, for details please check the log in 'logs/api/' directory")
+		log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
 		os.Exit(0)
 	}
 	initLogger()

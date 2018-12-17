@@ -46,6 +46,7 @@ type SearchAttackParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
 	Data *struct {
+		Id           string    `json:"_id,omitempty"`
 		AppId        string    `json:"app_id,omitempty"`
 		StartTime    int64     `json:"start_time"`
 		EndTime      int64     `json:"end_time"`
@@ -62,6 +63,7 @@ type SearchPolicyParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
 	Data *struct {
+		Id           string    `json:"_id,omitempty"`
 		AppId     string    `json:"app_id,omitempty"`
 		StartTime int64     `json:"start_time"`
 		EndTime   int64     `json:"end_time"`

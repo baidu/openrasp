@@ -18,6 +18,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	"strconv"
 	"log"
+	"os"
 )
 
 const (
@@ -39,11 +40,14 @@ func Panic(errCode int, message string, err error) {
 		message = message + ": " + err.Error()
 	}
 	logs.Error(message)
-	log.Panic(message)
+	os.Exit(errCode)
 }
 
-func Fatal(message string, err error) {
-	errMsg := message + ": " + err.Error()
-	logs.Error(errMsg)
-	log.Fatal(errMsg)
+func Fatal(errCode int, message string, err error) {
+	message = "[" + strconv.Itoa(errCode) + "] " + message
+	if err != nil {
+		message = message + ": " + err.Error()
+	}
+	logs.Error(message)
+	log.Fatal()
 }
