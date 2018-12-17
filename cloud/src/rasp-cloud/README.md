@@ -1,5 +1,3 @@
-# OpenRASP Cloud Control
+# OpenRASP remote management tool
 
-### Introduction
-
-You know, for OpenRASP cloud control.
+This repository contains source code for OpenRASP backend API server. For more information please referer to [https://rasp.baidu.com](https://rasp.baidu.com)

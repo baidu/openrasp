@@ -76,3 +76,6 @@ log "Created $target"
 
 log "SUCCESS!"
 
+rm -rf $BASENAME
+
+
