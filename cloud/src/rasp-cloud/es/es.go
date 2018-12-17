@@ -22,8 +22,9 @@ import (
 	"strconv"
 	"github.com/astaxie/beego"
 	"rasp-cloud/tools"
-	"errors"
 	"encoding/json"
+	"fmt"
+	"crypto/md5"
 )
 
 var (
@@ -143,14 +144,33 @@ func BulkInsert(docType string, docs []map[string]interface{}) (err error) {
 	bulkService := ElasticClient.Bulk()
 	for _, doc := range docs {
 		if doc["app_id"] == nil {
-			content, _ := json.Marshal(doc)
-			return errors.New("failed to get app_id param from alarm: " + string(content))
+			beego.Error("failed to get app_id param from alarm: " + fmt.Sprintf("%+v", doc))
 		}
 		if appId, ok := doc["app_id"].(string); ok {
-			bulkService.Add(elastic.NewBulkIndexRequest().
-				Index("real-openrasp-" + docType + "-" + appId).Type(docType).OpType("index").Doc(doc))
+			if docType == "policy-alarm" {
+				idContent := ""
+				idContent += fmt.Sprint(doc["rasp_id"])
+				idContent += fmt.Sprint(doc["policy_id"])
+				idContent += fmt.Sprint(doc["stack_md5"])
+				id := fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
+				bulkService.Add(elastic.NewBulkUpdateRequest().
+					Index("real-openrasp-" + docType + "-" + appId).
+					Type(docType).
+					Id(id).
+					DocAsUpsert(true).
+					Doc(doc))
+				fmt.Println(id)
+			} else {
+				if appId, ok := doc["app_id"].(string); ok {
+					bulkService.Add(elastic.NewBulkIndexRequest().
+						Index("real-openrasp-" + docType + "-" + appId).
+						Type(docType).
+						OpType("index").
+						Doc(doc))
+				}
+			}
 		} else {
-			return errors.New("the type of alarm's app_id param is not string")
+			beego.Error("the type of alarm's app_id param is not string: " + fmt.Sprintf("%+v", doc))
 		}
 	}
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))

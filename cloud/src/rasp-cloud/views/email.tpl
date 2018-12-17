@@ -1,7 +1,6 @@
 <table border="1" cellspacing="0" cellpadding="5">
     <thead>
         <tr>
-            <th>id</th>
             <th>attack time</th>
             <th>source</th>
             <th>target</th>
@@ -13,7 +12,6 @@
     <tbody>
         {{range .Alarms}}
             <tr>
-                <td>{{.id}}</td>
                 <td>{{.event_time}}</td>
                 <td>{{.attack_source}}</td>
                 <td>{{.target}}</td>

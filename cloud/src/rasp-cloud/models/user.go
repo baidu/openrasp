@@ -92,7 +92,7 @@ func init() {
 		if err != nil {
 			tools.Panic(tools.ErrCodeResetUserFailed, "failed to reset administrator", err)
 		}
-		beego.Info("reset the administrator successfully")
+		beego.Info("reset the administrator password successfully")
 		os.Exit(0)
 	}
 }
