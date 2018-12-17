@@ -15,7 +15,7 @@
 package main
 
 import (
-	_ "rasp-cloud/tools"
+	_ "rasp-cloud/environment"
 	_ "rasp-cloud/models"
 	_ "rasp-cloud/filter"
 	_ "rasp-cloud/controllers"

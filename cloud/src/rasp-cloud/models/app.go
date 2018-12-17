@@ -38,6 +38,7 @@ import (
 	"encoding/base64"
 	"io/ioutil"
 	"rasp-cloud/es"
+	"rasp-cloud/environment"
 )
 
 type App struct {
@@ -157,8 +158,8 @@ func init() {
 	if alarmDuration <= 0 {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'AlarmDuration' config must be greater than 0", nil)
 	}
-	if *tools.StartFlag.StartType == tools.StartTypeDefault ||
-		*tools.StartFlag.StartType == tools.StartTypeForeground {
+	if *environment.StartFlag.StartType == environment.StartTypeDefault ||
+		*environment.StartFlag.StartType == environment.StartTypeForeground {
 		domain = beego.AppConfig.String("Domain")
 		if domain == "" {
 			tools.Panic(tools.ErrCodeConfigInitFailed,
