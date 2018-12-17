@@ -128,7 +128,7 @@ PHP_MINIT_FUNCTION(openrasp)
     result = PHP_MINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
 
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
-    if (openrasp::oam)
+    if (remote_active && openrasp::oam)
     {
         openrasp::oam->startup();
     }
@@ -166,12 +166,14 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
         result = PHP_MSHUTDOWN(openrasp_log)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
 
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
-        if (openrasp::oam)
+        if (remote_active && openrasp::oam)
         {
             openrasp::oam->shutdown();
         }
 #endif
         openrasp::scm->shutdown();
+        openrasp::oam.reset();
+        openrasp::scm.reset();
         remote_active = false;
         is_initialized = false;
     }
@@ -233,7 +235,7 @@ PHP_MINFO_FUNCTION(openrasp)
     php_info_print_table_row(2, "V8 Version", ZEND_TOSTR(V8_MAJOR_VERSION) "." ZEND_TOSTR(V8_MINOR_VERSION));
     php_info_print_table_row(2, "Antlr Version", "4.7.1 (JavaScript Runtime)");
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
-    if (openrasp::oam)
+    if (remote_active && openrasp::oam)
     {
         php_info_print_table_row(2, "Plugin Version",
                                  openrasp::oam->agent_ctrl_block
