@@ -16,7 +16,7 @@
       <div class="card-body">
         <div class="form-group">
           <label class="form-label">
-            推送邮箱地址 - 逗号后者分号分隔
+            推送邮箱地址 - 逗号或者分号分隔
             <a href="javascript:">
               [帮助文档]
             </a>
@@ -110,7 +110,7 @@
       <div class="card-body">
         <div class="form-group">
           <label class="form-label">
-            推送用户列表 - 逗号后者分号分隔
+            推送用户列表 - 逗号或者分号分隔
             <a href="javascript:">
               [帮助文档]
             </a>
