@@ -38,6 +38,7 @@ import (
 	"encoding/base64"
 	"io/ioutil"
 	"rasp-cloud/es"
+	"rasp-cloud/environment"
 )
 
 type App struct {
@@ -157,8 +158,8 @@ func init() {
 	if alarmDuration <= 0 {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'AlarmDuration' config must be greater than 0", nil)
 	}
-	if *tools.StartFlag.StartType == tools.StartTypeDefault ||
-		*tools.StartFlag.StartType == tools.StartTypeForeground {
+	if *environment.StartFlag.StartType == environment.StartTypeDefault ||
+		*environment.StartFlag.StartType == environment.StartTypeForeground {
 		domain = beego.AppConfig.String("Domain")
 		if domain == "" {
 			tools.Panic(tools.ErrCodeConfigInitFailed,
@@ -474,6 +475,10 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 			beego.Error("failed to push email alarms: " + err.Error())
 			return err
 		}
+	} else {
+		beego.Error(
+			"failed to send email alarm: the email receiving address and email server address can not be empty", emailConf)
+		return errors.New("the email receiving address and email server address can not be empty")
 	}
 	beego.Debug("succeed in pushing email alarm for app: " + app.Name)
 	return nil
@@ -505,6 +510,9 @@ func PushHttpAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 				return err
 			}
 		}
+	} else {
+		beego.Error("failed to send http alarm: the http receiving address can not be empty", httpConf)
+		return errors.New("the http receiving address can not be empty")
 	}
 	beego.Debug("succeed in pushing http alarm for app: " + app.Name + " ,with urls: " +
 		fmt.Sprintf("%v", httpConf.RecvAddr))
@@ -548,8 +556,8 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 		if isTest {
 			dingText = "OpenRASP test message from app: " + app.Name + ", time: " + time.Now().Format(time.RFC3339)
 		} else {
-			dingText = "来自 OpenRAS 的报警\n共有 " + strconv.FormatInt(total, 10) + " 条报警信息来自 APP：" +
-				app.Name + "，详细信息：" + domain + "/#/events/" + app.Id
+			dingText = "时间：" + time.Now().Format(time.RFC3339) + "， 来自 OpenRAS 的报警\n共有 " +
+				strconv.FormatInt(total, 10) + " 条报警信息来自 APP：" + app.Name + "，详细信息：" + domain + "/#/events/" + app.Id
 		}
 		if len(dingCong.RecvUser) > 0 {
 			body["touser"] = strings.Join(dingCong.RecvUser, "|")
@@ -584,6 +592,9 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 			beego.Error(err.Error())
 			return err
 		}
+	} else {
+		beego.Error("failed to send ding ding alarm: invalid ding ding alarm conf", dingCong)
+		return errors.New("invalid ding ding alarm conf")
 	}
 	beego.Debug("succeed in pushing ding ding alarm for app: " + app.Name + " ,with corp id: " + dingCong.CorpId)
 	return nil

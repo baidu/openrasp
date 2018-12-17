@@ -21,6 +21,7 @@ import (
 	"rasp-cloud/controllers/api"
 	"rasp-cloud/controllers/api/fore_logs"
 	"rasp-cloud/tools"
+	"rasp-cloud/environment"
 )
 
 func InitRouter() {
@@ -105,17 +106,17 @@ func InitRouter() {
 	)
 	userNS := beego.NewNamespace("/user", beego.NSInclude(&api.UserController{}))
 	ns := beego.NewNamespace("/v1")
-	startType := *tools.StartFlag.StartType
-	if startType == tools.StartTypeForeground {
+	startType := *environment.StartFlag.StartType
+	if startType == environment.StartTypeForeground {
 		ns.Namespace(foregroudNS, userNS)
-	} else if startType == tools.StartTypeAgent {
+	} else if startType == environment.StartTypeAgent {
 		ns.Namespace(agentNS)
-	} else if startType == tools.StartTypeDefault {
+	} else if startType == environment.StartTypeDefault {
 		ns.Namespace(foregroudNS, agentNS, userNS)
 	} else {
 		tools.Panic(tools.ErrCodeStartTypeNotSupport, "The start type is not supported: "+startType, nil)
 	}
-	if startType == tools.StartTypeForeground || startType == tools.StartTypeDefault {
+	if startType == environment.StartTypeForeground || startType == environment.StartTypeDefault {
 		beego.SetStaticPath("//", "dist")
 	}
 	beego.AddNamespace(ns)

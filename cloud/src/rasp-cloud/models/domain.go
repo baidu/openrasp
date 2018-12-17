@@ -17,6 +17,7 @@ package models
 import (
 	"github.com/astaxie/beego"
 	"rasp-cloud/tools"
+	"rasp-cloud/environment"
 )
 
 var (
@@ -24,8 +25,8 @@ var (
 )
 
 func init() {
-	if *tools.StartFlag.StartType == tools.StartTypeForeground ||
-		*tools.StartFlag.StartType == tools.StartTypeDefault {
+	if *environment.StartFlag.StartType == environment.StartTypeForeground ||
+		*environment.StartFlag.StartType == environment.StartTypeDefault {
 		AgentDomain = beego.AppConfig.String("AgentDomain")
 		if AgentDomain == "" {
 			tools.Panic(tools.ErrCodeConfigInitFailed,

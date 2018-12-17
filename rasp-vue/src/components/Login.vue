@@ -19,7 +19,7 @@
             <div class="form-group">
               <label class="form-label">
                 密码
-                <a href="https://rasp.baidu.com/doc" target="_blank" class="float-right small">
+                <a href="https://rasp.baidu.com/doc/install/panel.html#forget-password" target="_blank" class="float-right small">
                   忘记密码?
                 </a>
               </label>

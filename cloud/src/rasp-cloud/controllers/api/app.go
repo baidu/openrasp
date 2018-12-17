@@ -653,6 +653,9 @@ func (o *AppController) TestEmail() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "can not find the app", err)
 	}
+	if !app.EmailAlarmConf.Enable {
+		o.ServeError(http.StatusBadRequest, "please enable the email alarm first")
+	}
 	err = models.PushEmailAttackAlarm(app, 0, nil, true)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to test email alarm", err)
@@ -675,6 +678,9 @@ func (o *AppController) TestDing(config map[string]interface{}) {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "can not find the app", err)
 	}
+	if !app.DingAlarmConf.Enable {
+		o.ServeError(http.StatusBadRequest, "please enable the ding ding alarm first")
+	}
 	err = models.PushDingAttackAlarm(app, 0, nil, true)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to test ding ding alarm", err)
@@ -696,6 +702,9 @@ func (o *AppController) TestHttp(config map[string]interface{}) {
 	app, err := models.GetAppByIdWithoutMask(appId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "can not find the app", err)
+	}
+	if !app.HttpAlarmConf.Enable {
+		o.ServeError(http.StatusBadRequest, "please enable the http alarm first")
 	}
 	err = models.PushHttpAttackAlarm(app, 0, nil, true)
 	if err != nil {
