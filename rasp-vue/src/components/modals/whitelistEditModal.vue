@@ -77,10 +77,15 @@ export default {
       $('#whitelistEditModal').modal()
     },
     saveApp() {
-      if (!this.data.url || this.data.url.startsWith('http')) {
-        alert('请填写正确的URL')
+      if (! this.data.url) {
         return
       }
+
+      if (this.data.url.startsWith('http://') || this.data.url.startsWith('https://')) {
+        alert('URL 无需以 http/https 开头，请删除')
+        return
+      }
+      
       $('#whitelistEditModal').modal('hide')
       this.$emit('save', {
         data: this.data,

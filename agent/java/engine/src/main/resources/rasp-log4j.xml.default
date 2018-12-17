@@ -22,6 +22,11 @@
         <layout class="com.baidu.openrasp.log4j.PatternLayout">
             <param name="ConversionPattern" value="%m%n"/>
         </layout>
+        <filter class="com.baidu.openrasp.messaging.BurstFilter">
+            <param name="maxBurst" value="100" />
+            <param name="refillAmount" value="100" />
+            <param name="refillInterval" value="60" />
+        </filter>
     </appender>
 
     <appender name="POLICY_ALARM" class="com.baidu.openrasp.messaging.OpenraspDailyRollingFileAppender">
@@ -34,6 +39,11 @@
         <layout class="com.baidu.openrasp.log4j.PatternLayout">
             <param name="ConversionPattern" value="%m%n"/>
         </layout>
+        <filter class="com.baidu.openrasp.messaging.BurstFilter">
+            <param name="maxBurst" value="100" />
+            <param name="refillAmount" value="100" />
+            <param name="refillInterval" value="60" />
+        </filter>
     </appender>
 
     <appender name="PLUGIN" class="com.baidu.openrasp.messaging.OpenraspDailyRollingFileAppender">
@@ -46,6 +56,11 @@
         <layout class="com.baidu.openrasp.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d %-5p [%t][%c] %m%n"/>
         </layout>
+        <filter class="com.baidu.openrasp.messaging.BurstFilter">
+            <param name="maxBurst" value="100" />
+            <param name="refillAmount" value="100" />
+            <param name="refillInterval" value="60" />
+        </filter>
     </appender>
 
     <appender name="RASP" class="com.baidu.openrasp.messaging.OpenraspDailyRollingFileAppender">
@@ -62,10 +77,11 @@
         <!-- BurstFilter: log rate limit filter used for appender -->
         <!-- maxBurst: max log burst -->
         <!-- refill %refillAmount% available log token amount per %refillInterval% seconds -->
-        <!--<filter class="com.baidu.openrasp.messaging.BurstFilter">-->
-        <!--<param name="maxBurst" value="10000" />-->
-        <!--<param name="refillInterval" value="10" />-->
-        <!--</filter>-->
+        <filter class="com.baidu.openrasp.messaging.BurstFilter">
+            <param name="maxBurst" value="100" />
+            <param name="refillAmount" value="100" />
+            <param name="refillInterval" value="60" />
+        </filter>
     </appender>
 
     <!-- Configuration templates of syslog(TCP) -->

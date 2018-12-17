@@ -21,20 +21,7 @@
           <label class="form-label">
             自定义拦截状态码
           </label>
-          <select v-model="data['block.status_code']" class="custom-select">
-            <option value="302">
-              302
-            </option>
-            <option value="403">
-              403
-            </option>
-            <option value="404">
-              404
-            </option>
-            <option value="500">
-              500
-            </option>
-          </select>
+          <b-form-select v-model="data['block.status_code']" :options="[302, 403, 404, 500]" />
         </div>
         <div class="form-group">
           <label class="form-label">
