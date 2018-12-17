@@ -16,12 +16,12 @@
       <div class="card-body">
         <div class="form-group">
           <label class="form-label">
-            推送邮箱地址
+            推送邮箱地址 - 逗号后者分号分隔
             <a href="javascript:">
               [帮助文档]
             </a>
           </label>
-          <input v-model="data.email_alarm_conf.recv_addr" type="text" class="form-control">
+          <input v-model="data.email_alarm_conf.recv_addr" type="text" class="form-control" placeholder="user1@example.com; user2@example.com">
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -110,7 +110,7 @@
       <div class="card-body">
         <div class="form-group">
           <label class="form-label">
-            推送用户列表
+            推送用户列表 - 逗号后者分号分隔
             <a href="javascript:">
               [帮助文档]
             </a>
@@ -160,6 +160,51 @@
         </button>
       </div>
     </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          Syslog 报警配置
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">
+            服务器地址
+            <a href="javascript:">
+              [帮助文档]
+            </a>
+          </label>
+          <input v-model="data.syslog_alarm_conf.url" type="text" class="form-control" placeholder="tcp://1.1.1.1:6666">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            Facility
+          </label>
+          <input v-model="data.syslog_alarm_conf.facility" type="text" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            Tag
+          </label>
+          <input v-model="data.syslog_alarm_conf.tag" type="text" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="custom-switch">
+            <input v-model="data.syslog_alarm_conf.enable" type="checkbox" checked="data.syslog_alarm_conf.enable" class="custom-switch-input">
+            <span class="custom-switch-indicator" />
+            <span class="custom-switch-description">
+              开启 syslog 日志
+            </span>
+          </label>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button type="submit" class="btn btn-primary" @click="saveSettings('syslog')">
+          保存
+        </button>
+      </div>
+    </div>    
     <!-- end alarm settings -->
   </div>
 </template>
@@ -176,7 +221,8 @@ export default {
           recv_addr: []
         },
         ding_alarm_conf: {},
-        http_alarm_conf: {}
+        http_alarm_conf: {},
+        syslog_alarm_conf: {}
       }
     }
   },
