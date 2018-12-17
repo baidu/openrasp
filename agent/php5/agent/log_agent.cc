@@ -103,13 +103,13 @@ bool LogAgent::post_logs_via_curl(std::string &log_arr, std::string &url_string)
 	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
 	{
-		openrasp_error(E_WARNING, LOGCOLLECT_ERROR, _("CURL error code: %d, url: %s."),
+		openrasp_error(LEVEL_ERR, LOGCOLLECT_ERROR, _("CURL error code: %d, url: %s."),
 					   backend_request.get_curl_code(), url_string.c_str());
 		return false;
 	}
 	if (!res_info->http_code_ok())
 	{
-		openrasp_error(E_WARNING, LOGCOLLECT_ERROR, _("Unexpected http response code: %ld, url: %s."),
+		openrasp_error(LEVEL_ERR, LOGCOLLECT_ERROR, _("Unexpected http response code: %ld, url: %s."),
 					   res_info->get_http_code(), url_string.c_str());
 		return false;
 	}

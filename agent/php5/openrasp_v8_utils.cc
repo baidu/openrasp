@@ -224,7 +224,7 @@ void load_plugins()
                 }
                 else
                 {
-                    openrasp_error(E_WARNING, CONFIG_ERROR, _("Ignored Javascript plugin file '%s', as it exceeds 10 MB in file size."), filename.c_str());
+                    openrasp_error(LEVEL_ERR, CONFIG_ERROR, _("Ignored Javascript plugin file '%s', as it exceeds 10 MB in file size."), filename.c_str());
                 }
             }
         }

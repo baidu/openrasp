@@ -152,8 +152,6 @@ typedef enum action_type_t
     AC_BLOCK = 1 << 1
 } OpenRASPActionType;
 
-extern const std::map<OpenRASPCheckType, const std::string> CheckTypeNameMap;
-
 enum PATH_OPERATION
 {
     OPENDIR = 1 << 0,

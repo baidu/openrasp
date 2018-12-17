@@ -63,9 +63,14 @@ typedef enum logger_instance_t
 //reference https://en.wikipedia.org/wiki/Syslog
 typedef enum severity_level_t
 {
+    LEVEL_EMERG = 0,
+    LEVEL_ALERT = 1,
+    LEVEL_CRIT = 2,
+    LEVEL_ERR = 3,
+    LEVEL_WARNING = 4,
+    LEVEL_NOTICE = 5,
     LEVEL_INFO = 6,
-    LEVEL_DEBUG = 7,
-    LEVEL_ALL = 8
+    LEVEL_DEBUG = 7
 } severity_level;
 
 class RaspLoggerEntry
@@ -118,6 +123,9 @@ class RaspLoggerEntry
     char *get_formatted_date_suffix() const;
     zval *get_common_info(TSRMLS_D) const;
     void set_level(severity_level level);
+
+    static std::string get_level_name(severity_level level);
+    static void inner_error(int type, const char *format, ...);
 };
 
 typedef RaspLoggerEntry rasp_logger_entry;

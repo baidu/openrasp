@@ -20,6 +20,7 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+#include "openrasp_log.h"
 
 extern "C"
 {
@@ -155,17 +156,6 @@ void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
     }
 }
 
-void openrasp_error(int type, openrasp_error_code code, const char *format, ...)
-{
-    va_list arg;
-    char *message = nullptr;
-    va_start(arg, format);
-    vspprintf(&message, 0, format, arg);
-    va_end(arg);
-    zend_error(type, "[OpenRASP] %d %s", code, message);
-    efree(message);
-}
-
 int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC)
 {
     struct stat sb;
@@ -190,7 +180,7 @@ int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC)
         {
             return 1;
         }
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("Could not create directory '%s': %s"), path, strerror(errno));
+        openrasp_error(LEVEL_ERR, CONFIG_ERROR, _("Could not create directory '%s': %s"), path, strerror(errno));
     }
     return 0;
 }

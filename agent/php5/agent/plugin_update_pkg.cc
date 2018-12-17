@@ -36,7 +36,7 @@ bool PluginUpdatePackage::build_snapshot()
   Platform::Shutdown();
   if (!snapshot.IsOk())
   {
-    openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize builtin js code, error %s."), strerror(errno));
+    openrasp_error(LEVEL_ERR, PLUGIN_ERROR, _("Fail to initialize builtin js code, error %s."), strerror(errno));
     return false;
   }
   std::string snapshot_abs_path = std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + PluginUpdatePackage::snapshot_filename;
@@ -49,7 +49,7 @@ bool PluginUpdatePackage::build_snapshot()
 #endif
   if (!build_successful)
   {
-    openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write snapshot to %s."), snapshot_abs_path.c_str());
+    openrasp_error(LEVEL_ERR, AGENT_ERROR, _("Fail to write snapshot to %s."), snapshot_abs_path.c_str());
   }
   std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
   Platform::Initialize();

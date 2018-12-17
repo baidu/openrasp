@@ -77,7 +77,7 @@ void HeartBeatAgent::do_heartbeat()
 	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
 	{
-		openrasp_error(E_WARNING, HEARTBEAT_ERROR, _("CURL error code: %d, url: %s"),
+		openrasp_error(LEVEL_ERR, HEARTBEAT_ERROR, _("CURL error code: %d, url: %s"),
 					   backend_request.get_curl_code(), url_string.c_str());
 		return;
 	}
@@ -137,7 +137,7 @@ void HeartBeatAgent::do_heartbeat()
 				}
 				else
 				{
-					openrasp_error(E_WARNING, HEARTBEAT_ERROR, _("Fail to write cloud config to %s, error %s."),
+					openrasp_error(LEVEL_ERR, HEARTBEAT_ERROR, _("Fail to write cloud config to %s, error %s."),
 								   cloud_config_file_path.c_str(), strerror(errno));
 				}
 				return;

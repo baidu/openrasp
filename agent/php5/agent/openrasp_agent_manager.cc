@@ -122,32 +122,32 @@ bool OpenraspAgentManager::verify_ini_correct()
 	{
 		if (nullptr == openrasp_ini.backend_url || strcmp(openrasp_ini.backend_url, "") == 0)
 		{
-			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.backend_url is required when remote management is enabled."));
+			openrasp_error(LEVEL_ERR, CONFIG_ERROR, _("openrasp.backend_url is required when remote management is enabled."));
 			return false;
 		}
 		if (nullptr == openrasp_ini.app_id || strcmp(openrasp_ini.app_id, "") == 0)
 		{
-			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_id is required when remote management is enabled."));
+			openrasp_error(LEVEL_ERR, CONFIG_ERROR, _("openrasp.app_id is required when remote management is enabled."));
 			return false;
 		}
 		else
 		{
 			if (!regex_match(openrasp_ini.app_id, "^[0-9a-fA-F]{40}$"))
 			{
-				openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_id must be exactly 40 characters long."));
+				openrasp_error(LEVEL_ERR, CONFIG_ERROR, _("openrasp.app_id must be exactly 40 characters long."));
 				return false;
 			}
 		}
 		if (nullptr == openrasp_ini.app_secret || strcmp(openrasp_ini.app_secret, "") == 0)
 		{
-			openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_secret is required when remote management is enabled."));
+			openrasp_error(LEVEL_ERR, CONFIG_ERROR, _("openrasp.app_secret is required when remote management is enabled."));
 			return false;
 		}
 		else
 		{
 			if (!regex_match(openrasp_ini.app_secret, "^[0-9a-zA-Z_-]{43,45}"))
 			{
-				openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.app_secret configuration format is incorrect."));
+				openrasp_error(LEVEL_ERR, CONFIG_ERROR, _("openrasp.app_secret configuration format is incorrect."));
 				return false;
 			}
 		}
@@ -299,7 +299,7 @@ bool OpenraspAgentManager::agent_remote_register()
 	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
 	{
-		openrasp_error(E_WARNING, REGISTER_ERROR, _("CURL error code: %d, url: %s."),
+		openrasp_error(LEVEL_ERR, REGISTER_ERROR, _("CURL error code: %d, url: %s."),
 					   backend_request.get_curl_code(), url_string.c_str());
 		return false;
 	}
