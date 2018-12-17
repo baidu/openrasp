@@ -204,7 +204,7 @@
           保存
         </button>
       </div>
-    </div>    
+    </div>
     <!-- end alarm settings -->
   </div>
 </template>
@@ -222,7 +222,12 @@ export default {
         },
         ding_alarm_conf: {},
         http_alarm_conf: {},
-        syslog_alarm_conf: {}
+        syslog_alarm_conf: {
+          url: '',
+          facility: '',
+          tag: '',
+          enable: false
+        }
       }
     }
   },
@@ -231,7 +236,9 @@ export default {
   },
   methods: {
     setData: function(data) {
-      this.data = data
+      Object.keys(this.data).forEach(key => {
+        Object.assign(this.data[key], data[key] || {})
+      })
     },
     saveSettings: function(type) {
       var self = this

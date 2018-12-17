@@ -123,7 +123,8 @@ export default {
         self.$refs.alarmSettings.setData({
           ding_alarm_conf: data.ding_alarm_conf,
           http_alarm_conf: data.http_alarm_conf,
-          email_alarm_conf: data.email_alarm_conf
+          email_alarm_conf: data.email_alarm_conf,
+          syslog_alarm_conf: data.syslog_alarm_conf
         })
       })
     },
