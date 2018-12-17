@@ -475,6 +475,10 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 			beego.Error("failed to push email alarms: " + err.Error())
 			return err
 		}
+	} else {
+		beego.Error(
+			"failed to send email alarm: the email receiving address and email server address can not be empty", emailConf)
+		return errors.New("the email receiving address and email server address can not be empty")
 	}
 	beego.Debug("succeed in pushing email alarm for app: " + app.Name)
 	return nil
@@ -506,6 +510,9 @@ func PushHttpAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 				return err
 			}
 		}
+	} else {
+		beego.Error("failed to send http alarm: the http receiving address can not be empty", httpConf)
+		return errors.New("the http receiving address can not be empty")
 	}
 	beego.Debug("succeed in pushing http alarm for app: " + app.Name + " ,with urls: " +
 		fmt.Sprintf("%v", httpConf.RecvAddr))
@@ -585,6 +592,9 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 			beego.Error(err.Error())
 			return err
 		}
+	} else {
+		beego.Error("failed to send ding ding alarm: invalid ding ding alarm conf", dingCong)
+		return errors.New("invalid ding ding alarm conf")
 	}
 	beego.Debug("succeed in pushing ding ding alarm for app: " + app.Name + " ,with corp id: " + dingCong.CorpId)
 	return nil
