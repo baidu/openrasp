@@ -26,5 +26,5 @@ type AgentDomainController struct {
 
 // @router /get [post]
 func (o *AgentDomainController) GetAgentDomain() {
-	o.Serve(map[string]string{"agent_domain": models.AgentDomain})
+	o.Serve(map[string]string{"agent_domain": models.AgentServerURL})
 }
