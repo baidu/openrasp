@@ -211,7 +211,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { defaultConfig } from '@/util'
+import { getDefaultConfig } from '@/util'
 
 export default {
   name: 'AlarmSettings',
@@ -219,7 +219,7 @@ export default {
     data: {
       type: Object,
       default() {
-        return Object.assign({}, defaultConfig)
+        return getDefaultConfig()
       }
     }
   },

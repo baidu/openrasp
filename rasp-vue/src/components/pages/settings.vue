@@ -70,7 +70,7 @@ import WhitelistSettings from '@/components/pages/settings/whitelist'
 import AlgorithmSettings from '@/components/pages/settings/algorithm'
 import { mapGetters } from 'vuex'
 import defaultsDeep from 'lodash.defaultsdeep'
-import { defaultConfig } from '@/util'
+import { getDefaultConfig } from '@/util'
 
 export default {
   name: 'Settings',
@@ -95,9 +95,7 @@ export default {
     setting_tab() { return this.$route.params.setting_tab }
   },
   watch: {
-    current_app() {
-      this.loadSettings()
-    },
+    current_app() { this.loadSettings() },
     setting_tab: 'setTabIndex'
   },
   mounted() {
@@ -114,7 +112,7 @@ export default {
         app_id: this.current_app.id
       }).then(data => {
         this.loading = false
-        this.data = defaultsDeep(defaultConfig, data)
+        this.data = defaultsDeep(getDefaultConfig(), data)
         this.$refs.generalSettings.setData(this.data.general_config)
         this.$refs.whitelistSettings.setData(this.data.whitelist_config)
       })
