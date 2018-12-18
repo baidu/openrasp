@@ -438,7 +438,7 @@ func (o *AppController) Delete() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to remove operation log by app_id", err)
 	}
-	models.AddOperation(app.Id, models.OperationTypeDeleteApp, o.Ctx.Input.IP(), "deleted the app")
+	models.AddOperation(app.Id, models.OperationTypeDeleteApp, o.Ctx.Input.IP(), "deleted the app: "+app.Name)
 	o.ServeWithEmptyData()
 }
 
