@@ -241,7 +241,6 @@ export default {
       })
     },
     saveSettings: function(type) {
-      var self = this
       var body = {
         app_id: this.current_app.id
       }
@@ -249,26 +248,26 @@ export default {
 
       switch (type) {
         case 'email':
-          body['email_alarm_conf'] = self.data.email_alarm_conf
+          body['email_alarm_conf'] = this.data.email_alarm_conf
           if (typeof body.email_alarm_conf.recv_addr === 'string') {
-            body.email_alarm_conf.recv_addr = body.email_alarm_conf.recv_addr.split(/\s*[,;]\s*/)
+            body.email_alarm_conf.recv_addr = body.email_alarm_conf.recv_addr.split(/\s*[,;]\s*/).filter(item => !!item)
           }
 
           msg = '邮件报警设置保存成功'
           break
         case 'ding':
-          body['ding_alarm_conf'] = self.data.ding_alarm_conf
+          body['ding_alarm_conf'] = this.data.ding_alarm_conf
           if (typeof body.ding_alarm_conf.recv_user === 'string') {
-            body.ding_alarm_conf.recv_user = body.ding_alarm_conf.recv_user.split(/\s*[,;]\s*/)
+            body.ding_alarm_conf.recv_user = body.ding_alarm_conf.recv_user.split(/\s*[,;]\s*/).filter(item => !!item)
           }
           if (typeof body.ding_alarm_conf.recv_party === 'string') {
-            body.ding_alarm_conf.recv_party = body.ding_alarm_conf.recv_party.split(/\s*[,;]\s*/)
+            body.ding_alarm_conf.recv_party = body.ding_alarm_conf.recv_party.split(/\s*[,;]\s*/).filter(item => !!item)
           }
 
           msg = '钉钉报警设置保存成功'
           break
         case 'http':
-          body['http_alarm_conf'] = self.data.http_alarm_conf
+          body['http_alarm_conf'] = this.data.http_alarm_conf
           if (typeof body.http_alarm_conf.recv_addr === 'string') {
             body.http_alarm_conf.recv_addr = [body.http_alarm_conf.recv_addr]
           }
@@ -276,11 +275,11 @@ export default {
           msg = 'HTTP 推送设置保存成功'
           break
       }
-      // console.log (type, body)
 
-      this.api_request('v1/api/app/alarm/config', body, function(data) {
-        alert(msg)
-      })
+      this.request.post('v1/api/app/alarm/config', body)
+        .then(() => {
+          alert(msg)
+        })
     },
     testSettings: function(type) {
       var self = this
