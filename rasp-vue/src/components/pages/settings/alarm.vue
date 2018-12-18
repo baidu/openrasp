@@ -181,7 +181,7 @@
           <label class="form-label">
             Facility
           </label>
-          <input v-model="data.syslog_alarm_conf.facility" type="number" class="form-control">
+          <b-form-input v-model="data.syslog_alarm_conf.facility" type="number" class="form-control" />
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -273,6 +273,16 @@ export default {
           }
 
           msg = 'HTTP 推送设置保存成功'
+          break
+
+        case 'syslog':
+          body.syslog_alarm_conf = this.data.syslog_alarm_conf
+          try {
+            body.syslog_alarm_conf.facility = parseInt(body.syslog_alarm_conf.facility)
+          } catch (err) {
+            body.syslog_alarm_conf.facility = null
+          }
+          msg = 'Syslog 报警设置保存成功'
           break
       }
 
