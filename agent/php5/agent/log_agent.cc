@@ -42,6 +42,7 @@ void LogAgent::write_pid_to_shm(pid_t agent_pid)
 
 void LogAgent::run()
 {
+	pid_t supervisor_pid = getppid();
 	AGENT_SET_PROC_NAME(this->name.c_str());
 
 	install_signal_handler(
@@ -90,6 +91,7 @@ void LogAgent::run()
 		{
 			sleep(1);
 			if (!pid_alive(std::to_string(oam->agent_ctrl_block->get_master_pid())) ||
+				!pid_alive(std::to_string(supervisor_pid)) ||
 				LogAgent::signal_received == SIGTERM)
 			{
 				exit(0);
