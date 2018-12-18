@@ -10,7 +10,7 @@
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>URL - 不区分 http/https</label>
+            <label>URL - 不区分 http/https，格式如 rasp.baidu.com/phpmyadmin/</label>
             <input v-model="data.url" type="text" class="form-control" maxlen="200">
           </div>
           <div class="form-group">
