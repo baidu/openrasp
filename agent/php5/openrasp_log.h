@@ -125,7 +125,7 @@ class RaspLoggerEntry
     void set_level(severity_level level);
 
     static std::string get_level_name(severity_level level);
-    static void inner_error(int type, const char *format, ...);
+    static void inner_error(int type, openrasp_error_code code, const char *format, ...);
 };
 
 typedef RaspLoggerEntry rasp_logger_entry;
@@ -169,6 +169,9 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_log);
 PHP_RINIT_FUNCTION(openrasp_log);
 PHP_RSHUTDOWN_FUNCTION(openrasp_log);
 PHP_MINFO_FUNCTION(openrasp_log);
+
+bool log_module_initialized();
+void update_log_level();
 
 #endif /* OPENRASP_LOG_H */
 

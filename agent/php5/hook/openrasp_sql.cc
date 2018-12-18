@@ -107,7 +107,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
             }
             else
             {
-                if (check_sapi_need_alloc_shm())
+                if (need_alloc_shm_current_sapi())
                 {
                     ulong connection_hash = conn_entry.build_hash_code();
                     openrasp_shared_alloc_lock(TSRMLS_C);

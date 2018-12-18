@@ -22,12 +22,7 @@
 
 namespace openrasp
 {
-
-#if (PHP_MAJOR_VERSION == 5)
-#define TS_FETCH_WRAPPER() TSRMLS_FETCH()
-#else
-#define TS_FETCH_WRAPPER()
-#endif
+  
 class ShmManager;
 
 class BaseManager

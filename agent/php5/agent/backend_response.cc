@@ -105,12 +105,12 @@ bool BackendResponse::verify(openrasp_error_code error_code)
 {
     if (has_error())
     {
-        openrasp_error(LEVEL_ERR, error_code, _("Fail to parse response body, error message %s."), error_msg.c_str());
+        openrasp_error(LEVEL_WARNING, error_code, _("Fail to parse response body, error message %s."), error_msg.c_str());
         return false;
     }
     if (!http_code_ok())
     {
-        openrasp_error(LEVEL_ERR, error_code, _("Unexpected http response code: %ld."),
+        openrasp_error(LEVEL_WARNING, error_code, _("Unexpected http response code: %ld."),
                        get_http_code());
         return false;
     }
@@ -119,7 +119,7 @@ bool BackendResponse::verify(openrasp_error_code error_code)
     std::string description = fetch_description();
     if (0 != status)
     {
-        openrasp_error(LEVEL_ERR, error_code, _("API error: %ld, description: %s"),
+        openrasp_error(LEVEL_WARNING, error_code, _("API error: %ld, description: %s"),
                        status, description.c_str());
         return false;
     }
@@ -149,6 +149,11 @@ std::map<std::string, std::vector<std::string>> BackendResponse::build_hook_whit
         hook_white_map.insert({key_item, white_types});
     }
     return hook_white_map;
+}
+
+std::string BackendResponse::to_string() const
+{
+    return "Response_code: " + std::to_string(response_code) + "\nheader_string: " + header_string + "body:" + response_string;
 }
 
 } // namespace openrasp

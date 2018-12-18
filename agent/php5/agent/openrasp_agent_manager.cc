@@ -80,7 +80,7 @@ OpenraspAgentManager::OpenraspAgentManager()
 bool OpenraspAgentManager::startup()
 {
 	init_process_pid = getpid();
-	if (check_sapi_need_alloc_shm())
+	if (need_alloc_shm_current_sapi())
 	{
 		if (!create_share_memory())
 		{
@@ -118,36 +118,36 @@ bool OpenraspAgentManager::shutdown()
 
 bool OpenraspAgentManager::verify_ini_correct()
 {
-	if (openrasp_ini.remote_management_enable && check_sapi_need_alloc_shm())
+	if (openrasp_ini.remote_management_enable && need_alloc_shm_current_sapi())
 	{
 		if (nullptr == openrasp_ini.backend_url || strcmp(openrasp_ini.backend_url, "") == 0)
 		{
-			openrasp_error(LEVEL_ERR, CONFIG_ERROR, _("openrasp.backend_url is required when remote management is enabled."));
+			openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.backend_url is required when remote management is enabled."));
 			return false;
 		}
 		if (nullptr == openrasp_ini.app_id || strcmp(openrasp_ini.app_id, "") == 0)
 		{
-			openrasp_error(LEVEL_ERR, CONFIG_ERROR, _("openrasp.app_id is required when remote management is enabled."));
+			openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_id is required when remote management is enabled."));
 			return false;
 		}
 		else
 		{
 			if (!regex_match(openrasp_ini.app_id, "^[0-9a-fA-F]{40}$"))
 			{
-				openrasp_error(LEVEL_ERR, CONFIG_ERROR, _("openrasp.app_id must be exactly 40 characters long."));
+				openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_id must be exactly 40 characters long."));
 				return false;
 			}
 		}
 		if (nullptr == openrasp_ini.app_secret || strcmp(openrasp_ini.app_secret, "") == 0)
 		{
-			openrasp_error(LEVEL_ERR, CONFIG_ERROR, _("openrasp.app_secret is required when remote management is enabled."));
+			openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_secret is required when remote management is enabled."));
 			return false;
 		}
 		else
 		{
 			if (!regex_match(openrasp_ini.app_secret, "^[0-9a-zA-Z_-]{43,45}"))
 			{
-				openrasp_error(LEVEL_ERR, CONFIG_ERROR, _("openrasp.app_secret configuration format is incorrect."));
+				openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_secret configuration format is incorrect."));
 				return false;
 			}
 		}
@@ -222,10 +222,9 @@ void OpenraspAgentManager::supervisor_run()
 	sigaction(SIGCHLD, &sa_usr, NULL);
 
 	super_install_signal_handler();
-	TS_FETCH_WRAPPER();
 	while (true)
 	{
-		LOG_G(rasp_logger).set_level(scm->get_debug_level() != 0 ? LEVEL_DEBUG : LEVEL_INFO);
+		update_log_level();
 		for (int i = 0; i < task_interval; ++i)
 		{
 			if (i % task_interval == 0 && !has_registered)
@@ -290,13 +289,15 @@ bool OpenraspAgentManager::agent_remote_register()
 	std::string json_content = json_writer.dump();
 
 	BackendRequest backend_request(url_string, json_content.c_str());
+	openrasp_error(LEVEL_DEBUG, REGISTER_ERROR, _("url:%s body:%s"), url_string.c_str(), json_content.c_str());
 	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
 	{
-		openrasp_error(LEVEL_ERR, REGISTER_ERROR, _("CURL error code: %d, url: %s."),
+		openrasp_error(LEVEL_WARNING, REGISTER_ERROR, _("CURL error code: %d, url: %s."),
 					   backend_request.get_curl_code(), url_string.c_str());
 		return false;
 	}
+	openrasp_error(LEVEL_DEBUG, REGISTER_ERROR, _("%s"), res_info->to_string().c_str());
 	return res_info->verify(REGISTER_ERROR);
 }
 

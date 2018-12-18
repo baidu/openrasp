@@ -34,20 +34,28 @@ void openrasp_error(int type, openrasp_error_code code, const char *format, ...)
     va_start(arg, format);
     vspprintf(&message, 0, format, arg);
     va_end(arg);
-    JsonWriter json_writer;
-    json_writer.write_string({"level"}, RaspLoggerEntry::get_level_name((severity_level)type));
-    json_writer.write_int64({"err_code"}, (int64_t)code);
-    if (openrasp_ini.app_id)
+    if (log_module_initialized())
     {
-        json_writer.write_string({"app_id"}, openrasp_ini.app_id);
+        JsonWriter json_writer;
+        json_writer.write_string({"level"}, RaspLoggerEntry::get_level_name((severity_level)type));
+        json_writer.write_int64({"err_code"}, (int64_t)code);
+        if (openrasp_ini.app_id)
+        {
+            json_writer.write_string({"app_id"}, openrasp_ini.app_id);
+        }
+        json_writer.write_string({"rasp_id"}, openrasp::scm->get_rasp_id());
+        std::string log_time = openrasp::format_time(RaspLoggerEntry::rasp_rfc3339_format,
+                                                     strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
+        json_writer.write_string({"time"}, log_time);
+        json_writer.write_string({"message"}, message);
+        std::string error_content = json_writer.dump();
+        TSRMLS_FETCH();
+        LOG_G(rasp_logger).log((severity_level)type, error_content.c_str(), error_content.length() TSRMLS_CC, true, false);
     }
-    json_writer.write_string({"rasp_id"}, openrasp::scm->get_rasp_id());
-    std::string log_time = openrasp::format_time(RaspLoggerEntry::rasp_rfc3339_format,
-                                   strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
-    json_writer.write_string({"time"}, log_time);
-    json_writer.write_string({"message"}, message);
-    std::string error_content = json_writer.dump();
-    TSRMLS_FETCH();
-    LOG_G(rasp_logger).log((severity_level)type, error_content.c_str(), error_content.length() TSRMLS_CC);
+    else
+    {
+        //always convert to E_WARNING level
+        zend_error(E_WARNING, "[OpenRASP] %d %s", code, message);
+    }
     efree(message);
 }

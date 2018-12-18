@@ -67,6 +67,7 @@ typedef struct keys_filter_t
     value_filter_t value_filter;
 } keys_filter;
 
+static bool is_initialized = false;
 static std::map<std::string, std::string> _if_addr_map;
 
 /* 获取当前毫秒时间
@@ -308,14 +309,14 @@ static bool verify_syslog_address_format(TSRMLS_D)
             }
             else
             {
-                RaspLoggerEntry::inner_error(E_WARNING,
+                RaspLoggerEntry::inner_error(E_WARNING, LOG_ERROR,
                                              _("Invalid url scheme in syslog server address: '%s', expecting 'tcp:' or 'udp:'."), syslog_address.c_str());
             }
             php_url_free(resource);
         }
         else
         {
-            RaspLoggerEntry::inner_error(E_WARNING,
+            RaspLoggerEntry::inner_error(E_WARNING, LOG_ERROR,
                                          _("Invalid syslog server address: '%s', expecting 'tcp://' or 'udp://' to be present."), syslog_address.c_str());
         }
     }
@@ -348,20 +349,22 @@ static void openrasp_log_shutdown_globals(zend_openrasp_log_globals *openrasp_lo
 PHP_MINIT_FUNCTION(openrasp_log)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp_log, openrasp_log_init_globals, openrasp_log_shutdown_globals);
-    if (check_sapi_need_alloc_shm())
+    if (need_alloc_shm_current_sapi())
     {
         openrasp_shared_alloc_startup();
     }
     fetch_if_addrs(_if_addr_map);
+    is_initialized = true;
     return SUCCESS;
 }
 
 PHP_MSHUTDOWN_FUNCTION(openrasp_log)
 {
-    if (check_sapi_need_alloc_shm())
+    if (need_alloc_shm_current_sapi())
     {
         openrasp_shared_alloc_shutdown();
     }
+    is_initialized = false;
     return SUCCESS;
 }
 
@@ -557,7 +560,7 @@ bool RaspLoggerEntry::openrasp_log_stream_available(log_appender appender_int TS
                 }
                 else
                 {
-                    RaspLoggerEntry::inner_error(E_WARNING,
+                    RaspLoggerEntry::inner_error(E_WARNING, LOG_ERROR,
                                                  _("Unable to contact syslog server %s"), OPENRASP_CONFIG(syslog.url).c_str());
                 }
                 efree(res);
@@ -581,7 +584,7 @@ bool RaspLoggerEntry::openrasp_log_stream_available(log_appender appender_int TS
             }
             else if (VCWD_ACCESS(file_path, W_OK) != 0)
             {
-                RaspLoggerEntry::inner_error(E_WARNING, _("Unable to open '%s' for writing"), file_path);
+                RaspLoggerEntry::inner_error(E_WARNING, LOG_ERROR, _("Unable to open '%s' for writing"), file_path);
                 efree(file_path);
                 break;
             }
@@ -590,7 +593,7 @@ bool RaspLoggerEntry::openrasp_log_stream_available(log_appender appender_int TS
             {
                 if (need_create_file && FAILURE == VCWD_CHMOD(file_path, RASP_LOG_FILE_MODE))
                 {
-                    RaspLoggerEntry::inner_error(E_WARNING, _("Unable to chmod file: %s."), file_path);
+                    RaspLoggerEntry::inner_error(E_WARNING, LOG_ERROR, _("Unable to chmod file: %s."), file_path);
                 }
                 stream_log = stream;
                 efree(file_path);
@@ -598,7 +601,7 @@ bool RaspLoggerEntry::openrasp_log_stream_available(log_appender appender_int TS
             }
             else
             {
-                RaspLoggerEntry::inner_error(E_WARNING, _("Fail to open php_stream of %s!"), file_path);
+                RaspLoggerEntry::inner_error(E_WARNING, LOG_ERROR, _("Fail to open php_stream of %s!"), file_path);
             }
             efree(file_path);
         }
@@ -742,7 +745,7 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message TSRMLS_DC)
     }
     else
     {
-        RaspLoggerEntry::inner_error(E_WARNING, _("Fail to merge request parameters during %s logging."), name);
+        RaspLoggerEntry::inner_error(E_WARNING, LOG_ERROR, _("Fail to merge request parameters during %s logging."), name);
     }
     zend_hash_del(Z_ARRVAL_P(common_info), "stack_trace", sizeof("stack_trace"));
     zend_hash_del(Z_ARRVAL_P(common_info), "event_time", sizeof("event_time"));
@@ -844,13 +847,24 @@ std::string RaspLoggerEntry::get_level_name(severity_level level)
     }
 }
 
-void RaspLoggerEntry::inner_error(int type, const char *format, ...)
+void RaspLoggerEntry::inner_error(int type, openrasp_error_code code, const char *format, ...)
 {
     va_list arg;
     char *message = nullptr;
     va_start(arg, format);
     vspprintf(&message, 0, format, arg);
     va_end(arg);
-    zend_error(type, "[OpenRASP] %s", message);
+    zend_error(type, "[OpenRASP] %d %s", code, message);
     efree(message);
+}
+
+bool log_module_initialized()
+{
+    return is_initialized;
+}
+
+void update_log_level()
+{
+    TSRMLS_FETCH();
+    LOG_G(rasp_logger).set_level(openrasp::scm->get_debug_level() != 0 ? LEVEL_DEBUG : LEVEL_INFO);
 }

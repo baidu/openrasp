@@ -48,6 +48,7 @@ public:
   bool has_error() const;
   bool http_code_ok() const;
   long get_http_code() const;
+  std::string to_string() const;
 
   int64_t fetch_status();
   std::string fetch_description();

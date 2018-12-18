@@ -55,10 +55,9 @@ void LogAgent::run()
 	std::vector<LogCollectItem *> log_dirs{&alarm_dir_info, &policy_dir_info, &plugin_dir_info, &rasp_dir_info};
 
 	long current_interval = LogAgent::log_push_interval;
-	TS_FETCH_WRAPPER();
 	while (true)
 	{
-		LOG_G(rasp_logger).set_level(scm->get_debug_level() != 0 ? LEVEL_DEBUG : LEVEL_INFO);
+		update_log_level();
 		for (int i = 0; i < log_dirs.size(); ++i)
 		{
 			LogCollectItem *ldi = log_dirs[i];
@@ -100,16 +99,17 @@ void LogAgent::run()
 bool LogAgent::post_logs_via_curl(std::string &log_arr, std::string &url_string)
 {
 	BackendRequest backend_request(url_string, log_arr.c_str());
+	openrasp_error(LEVEL_DEBUG, LOGCOLLECT_ERROR, _("url:%s body:%s"), url_string.c_str(), log_arr.c_str());
 	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
 	{
-		openrasp_error(LEVEL_ERR, LOGCOLLECT_ERROR, _("CURL error code: %d, url: %s."),
+		openrasp_error(LEVEL_WARNING, LOGCOLLECT_ERROR, _("CURL error code: %d, url: %s."),
 					   backend_request.get_curl_code(), url_string.c_str());
 		return false;
 	}
 	if (!res_info->http_code_ok())
 	{
-		openrasp_error(LEVEL_ERR, LOGCOLLECT_ERROR, _("Unexpected http response code: %ld, url: %s."),
+		openrasp_error(LEVEL_WARNING, LOGCOLLECT_ERROR, _("Unexpected http response code: %ld, url: %s."),
 					   res_info->get_http_code(), url_string.c_str());
 		return false;
 	}
