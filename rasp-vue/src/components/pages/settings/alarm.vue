@@ -171,7 +171,7 @@
         <div class="form-group">
           <label class="form-label">
             服务器地址
-            <a href="javascript:">
+            <a href="https://rasp.baidu.com/doc/setup/others.html#common-syslog" target="_blank">
               [帮助文档]
             </a>
           </label>
