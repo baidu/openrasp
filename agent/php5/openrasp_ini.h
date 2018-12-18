@@ -37,7 +37,6 @@ public:
   char *backend_url;
   char *app_id;
   char *app_secret;
-  bool heartbeat_enable = 1;
   bool remote_management_enable = true;
 };
 
