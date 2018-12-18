@@ -708,6 +708,7 @@ int main() {
     openrasp_config_block.cc \
     openrasp_inject.cc \
     openrasp_log.cc \
+    openrasp_error.cc \
     openrasp_shared_alloc.cc  \
     openrasp_shared_alloc_mmap.cc  \
     openrasp_v8.cc \

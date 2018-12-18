@@ -96,12 +96,12 @@ PHP_MINIT_FUNCTION(openrasp)
     openrasp::scm.reset(new openrasp::SharedConfigManager());
     if (!openrasp::scm->startup())
     {
-        openrasp_error(E_WARNING, RUNTIME_ERROR, _("Fail to startup SharedConfigManager."));
+        openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("Fail to startup SharedConfigManager."));
         return SUCCESS;
     }
 
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
-    if (check_sapi_need_alloc_shm() && openrasp_ini.remote_management_enable)
+    if (need_alloc_shm_current_sapi() && openrasp_ini.remote_management_enable)
     {
         openrasp::oam.reset(new openrasp::OpenraspAgentManager());
         if (!openrasp::oam->verify_ini_correct())
@@ -206,7 +206,7 @@ PHP_RINIT_FUNCTION(openrasp)
             }
             else
             {
-                openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to load new config."));
+                openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Fail to load new config."));
             }
         }
         // openrasp_inject must be called before openrasp_log cuz of request_id
@@ -294,18 +294,18 @@ static bool make_openrasp_root_dir()
     char *path = openrasp_ini.root_dir;
     if (!path)
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be an empty path"));
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be an empty path"));
         return false;
     }
     if (!IS_ABSOLUTE_PATH(path, strlen(path)))
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be a relative path"));
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be a relative path"));
         return false;
     }
     path = expand_filepath(path, nullptr);
     if (!path || strnlen(path, 2) == 1)
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be a root path"));
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be a root path"));
         efree(path);
         return false;
     }
@@ -326,7 +326,7 @@ static bool make_openrasp_root_dir()
         std::string path(root_dir + DEFAULT_SLASH + dir);
         if (!recursive_mkdir(path.c_str(), path.length(), 0777))
         {
-            openrasp_error(E_WARNING, CONFIG_ERROR, _("openrasp.root_dir must be a writable path"));
+            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.root_dir must be a writable path"));
             return false;
         }
     }
@@ -336,16 +336,16 @@ static bool make_openrasp_root_dir()
         std::string locale_path(root_dir + DEFAULT_SLASH + "locale" + DEFAULT_SLASH);
         if (!bindtextdomain(GETTEXT_PACKAGE, locale_path.c_str()))
         {
-            openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to bindtextdomain - %s"), strerror(errno));
+            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Fail to bindtextdomain - %s"), strerror(errno));
         }
         if (!textdomain(GETTEXT_PACKAGE))
         {
-            openrasp_error(E_WARNING, CONFIG_ERROR, _("Fail to textdomain - %s"), strerror(errno));
+            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Fail to textdomain - %s"), strerror(errno));
         }
     }
     else
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("Unable to set OpenRASP locale to '%s'"), openrasp_ini.locale);
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Unable to set OpenRASP locale to '%s'"), openrasp_ini.locale);
     }
 #endif
     return true;
@@ -409,7 +409,7 @@ static bool current_sapi_supported()
     auto iter = supported_sapis.find(std::string(sapi_module.name));
     if (iter == supported_sapis.end())
     {
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("Unsupported SAPI: %s."), sapi_module.name);
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Unsupported SAPI: %s."), sapi_module.name);
         return false;
     }
     return true;

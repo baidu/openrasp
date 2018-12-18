@@ -85,7 +85,7 @@ typedef struct _handler_entry {
 	openrasp_shared_memory_handlers *handler;
 } openrasp_shared_memory_handler_entry;
 
-int check_sapi_need_alloc_shm();
+int need_alloc_shm_current_sapi();
 int openrasp_shared_alloc_startup();
 void openrasp_shared_alloc_shutdown();
 

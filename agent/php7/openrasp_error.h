@@ -14,32 +14,25 @@
  * limitations under the License.
  */
 
-#ifndef _OPENRASP_BASE_MANAGER_H_
-#define _OPENRASP_BASE_MANAGER_H_
+#ifndef OPENRASP_ERROR_H
+#define OPENRASP_ERROR_H
 
 #include "openrasp.h"
-#include "mm/shm_manager.h"
 
-namespace openrasp
+typedef enum openrasp_error_code_t
 {
-  
-class ShmManager;
+	FSWATCH_ERROR = 20001,
+	LOG_ERROR = 20002,
+	SHM_ERROR,
+	CONFIG_ERROR,
+	PLUGIN_ERROR,
+	RUNTIME_ERROR,
+	AGENT_ERROR,
+	REGISTER_ERROR,
+	HEARTBEAT_ERROR,
+	LOGCOLLECT_ERROR
+} openrasp_error_code;
 
-class BaseManager
-{
-
-protected:
-  static ShmManager sm;
-
-protected:
-  bool initialized = false;
-
-public:
-  BaseManager();
-  virtual bool startup() = 0;
-  virtual bool shutdown() = 0;
-};
-
-} // namespace openrasp
+void openrasp_error(int type, openrasp_error_code code, const char *format, ...);
 
 #endif

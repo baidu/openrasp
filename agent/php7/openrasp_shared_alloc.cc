@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_shared_alloc.h"
+#include "openrasp_log.h"
 #include <errno.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -62,7 +63,7 @@ static const openrasp_shared_memory_handler_entry handler_table[] = {
 #endif
 	{NULL, NULL}};
 
-int check_sapi_need_alloc_shm()
+int need_alloc_shm_current_sapi()
 {
 	static const char *supported_sapis[] = {
 		"fpm-fcgi",
@@ -97,7 +98,7 @@ void openrasp_shared_alloc_create_lock(void)
 
 	if (lock_file == -1)
 	{
-		openrasp_error(E_WARNING, SHM_ERROR, _("Unable to create lock file: %s (%d)"), strerror(errno), errno);
+		openrasp_error(LEVEL_WARNING, SHM_ERROR, _("Unable to create lock file: %s (%d)"), strerror(errno), errno);
 	}
 	val = fcntl(lock_file, F_GETFD, 0);
 	val |= FD_CLOEXEC;
@@ -160,7 +161,7 @@ int openrasp_shared_alloc_startup()
 
 	if (!g_shared_alloc_handler)
 	{
-		openrasp_error(E_WARNING, SHM_ERROR, _("Unable to allocate shared memory segment of %ld bytes: %s: %s (%d)"),
+		openrasp_error(LEVEL_WARNING, SHM_ERROR, _("Unable to allocate shared memory segment of %ld bytes: %s: %s (%d)"),
 					   sizeof(openrasp_shared_segment_globals), error_in ? error_in : "unknown", strerror(errno), errno);
 		return ALLOC_FAILURE;
 	}
@@ -224,7 +225,7 @@ void openrasp_shared_alloc_lock()
 			{
 				continue;
 			}
-			openrasp_error(E_WARNING, SHM_ERROR, _("Cannot create lock - %s (%d)"), strerror(errno), errno);
+			openrasp_error(LEVEL_WARNING, SHM_ERROR, _("Cannot create lock - %s (%d)"), strerror(errno), errno);
 		}
 		break;
 	}
@@ -242,7 +243,7 @@ void openrasp_shared_alloc_unlock()
 #ifndef ZEND_WIN32
 	if (fcntl(lock_file, F_SETLK, &mem_write_unlock) == -1)
 	{
-		openrasp_error(E_WARNING, SHM_ERROR, _("Cannot remove lock - %s (%d)"), strerror(errno), errno);
+		openrasp_error(LEVEL_WARNING, SHM_ERROR, _("Cannot remove lock - %s (%d)"), strerror(errno), errno);
 	}
 #ifdef ZTS
 	tsrm_mutex_unlock(zts_lock);

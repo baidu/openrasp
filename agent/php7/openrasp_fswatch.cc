@@ -45,7 +45,7 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
                                   [](std::pair<std::string, int> i) { return i.first.compare(sapi_module.name) == 0; });
     if (supported_sapi == supported_sapis.end())
     {
-        //openrasp_error(E_WARNING, CONFIG_ERROR, _("SAPI %s does not support automatic reloading, file monitor is deactivated"), sapi_module.name);
+        //openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("SAPI %s does not support automatic reloading, file monitor is deactivated"), sapi_module.name);
         return SUCCESS;
     }
 #else
@@ -79,7 +79,7 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
 #ifndef PHP_WIN32
                     if (raise(supported_sapi->second))
                     {
-                        openrasp_error(E_WARNING, CONFIG_ERROR, _("Failed to reload %s"), sapi_module.name);
+                        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Failed to reload %s"), sapi_module.name);
                     }
 #else
                     ap_signal_parent(2);
@@ -87,7 +87,7 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
                 }
                 catch (...)
                 {
-                    openrasp_error(E_WARNING, CONFIG_ERROR, _("An exception occurred while reloading master process, but this message may not be visible"));
+                    openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("An exception occurred while reloading master process, but this message may not be visible"));
                 }
             } TSRMLS_CC);
 
@@ -118,11 +118,11 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
             }
             catch (std::exception &conf)
             {
-                openrasp_error(E_WARNING, FSWATCH_ERROR, _("Fswatch error: %s"), conf.what());
+                openrasp_error(LEVEL_WARNING, FSWATCH_ERROR, _("Fswatch error: %s"), conf.what());
             }
             catch (...)
             {
-                openrasp_error(E_WARNING, FSWATCH_ERROR, _("Fswatch error: unknown error"));
+                openrasp_error(LEVEL_WARNING, FSWATCH_ERROR, _("Fswatch error: unknown error"));
             }
             delete monitor;
             monitor = nullptr;
@@ -130,11 +130,11 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
     }
     catch (std::exception &conf)
     {
-        openrasp_error(E_WARNING, FSWATCH_ERROR, _("Failed to initialize fswatch: %s"), conf.what());
+        openrasp_error(LEVEL_WARNING, FSWATCH_ERROR, _("Failed to initialize fswatch: %s"), conf.what());
     }
     catch (...)
     {
-        openrasp_error(E_WARNING, FSWATCH_ERROR, _("Failed to initialize fswatch: unknown error."));
+        openrasp_error(LEVEL_WARNING, FSWATCH_ERROR, _("Failed to initialize fswatch: unknown error."));
     }
 
     master_pid = getpid();

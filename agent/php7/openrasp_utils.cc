@@ -17,6 +17,7 @@
 #include "openrasp.h"
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
+#include "openrasp_log.h"
 extern "C"
 {
 #include "php_ini.h"
@@ -139,17 +140,6 @@ void format_debug_backtrace_arr(zval *backtrace_arr)
     }
 }
 
-void openrasp_error(int type, openrasp_error_code error_code, const char *format, ...)
-{
-    va_list arg;
-    char *message = nullptr;
-    va_start(arg, format);
-    vspprintf(&message, 0, format, arg);
-    va_end(arg);
-    zend_error(type, "[OpenRASP] %d %s", error_code, message);
-    efree(message);
-}
-
 int recursive_mkdir(const char *path, int len, int mode)
 {
     struct stat sb;
@@ -174,7 +164,7 @@ int recursive_mkdir(const char *path, int len, int mode)
         {
             return 1;
         }
-        openrasp_error(E_WARNING, CONFIG_ERROR, _("Could not create directory '%s': %s"), path, strerror(errno));
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Could not create directory '%s': %s"), path, strerror(errno));
     }
     return 0;
 }

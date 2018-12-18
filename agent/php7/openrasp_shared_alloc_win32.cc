@@ -97,7 +97,7 @@ void openrasp_shared_alloc_create_lock(void)
 {
 	memory_mutex = CreateMutex(NULL, FALSE, create_name_with_username(OPENRASP_MUTEX_NAME));
 	if (!memory_mutex) {
-		openrasp_error(E_WARNING, SHM_ERROR, _("Cannot create mutex"));
+		openrasp_error(LEVEL_WARNING, SHM_ERROR, _("Cannot create mutex"));
 		return;
 	}
 	ReleaseMutex(memory_mutex);
@@ -108,7 +108,7 @@ void openrasp_shared_alloc_lock_win32(void)
 	DWORD waitRes = WaitForSingleObject(memory_mutex, INFINITE);
 
 	if (waitRes == WAIT_FAILED) {
-		openrasp_error(E_WARNING, SHM_ERROR, _("Cannot lock mutex"));
+		openrasp_error(LEVEL_WARNING, SHM_ERROR, _("Cannot lock mutex"));
 	}
 }
 
@@ -128,13 +128,13 @@ static int openrasp_shared_alloc_reattach(openrasp_shared_segment_globals **shar
 
 	err = GetLastError();
 	if (!fp) {
-		openrasp_error(E_WARNING, SHM_ERROR, _("Unable to open base address file"));
+		openrasp_error(LEVEL_WARNING, SHM_ERROR, _("Unable to open base address file"));
 		*error_in="fopen";
 		return ALLOC_FAILURE;
 	}
 	if (!fscanf(fp, "%p", &wanted_mapping_base)) {
 		err = GetLastError();
-		openrasp_error(E_WARNING, SHM_ERROR, _("Unable to read base address"));
+		openrasp_error(LEVEL_WARNING, SHM_ERROR, _("Unable to read base address"));
 		*error_in="read mapping base";
 		fclose(fp);
 		return ALLOC_FAILURE;
@@ -146,7 +146,7 @@ static int openrasp_shared_alloc_reattach(openrasp_shared_segment_globals **shar
 	    info.State != MEM_FREE ||
 	    info.RegionSize < requested_size) {
 	    err = ERROR_INVALID_ADDRESS;
-		openrasp_error(E_WARNING, SHM_ERROR, _("Unable to reattach to base address, requested address space isn't free"));
+		openrasp_error(LEVEL_WARNING, SHM_ERROR, _("Unable to reattach to base address, requested address space isn't free"));
 		return ALLOC_FAILURE;
    	}
 
@@ -154,7 +154,7 @@ static int openrasp_shared_alloc_reattach(openrasp_shared_segment_globals **shar
 	err = GetLastError();
 
 	if (mapping_base == NULL) {
-		openrasp_error(E_WARNING, SHM_ERROR, _("Unable to reattach to base address: %d"), err);
+		openrasp_error(LEVEL_WARNING, SHM_ERROR, _("Unable to reattach to base address: %d"), err);
 		if (err == ERROR_INVALID_ADDRESS) {			
 			return ALLOC_FAILURE;
 		}
@@ -211,7 +211,7 @@ static int create_segments(openrasp_shared_segment_globals **shared_segments_p, 
 
 	if (map_retries == MAX_MAP_RETRIES) {
 		openrasp_shared_alloc_unlock_win32();
-		openrasp_error(E_WARNING, SHM_ERROR, _("Unable to open file mapping"));
+		openrasp_error(LEVEL_WARNING, SHM_ERROR, _("Unable to open file mapping"));
 		*error_in = "OpenFileMapping";
 		return ALLOC_FAILURE;
 	}
@@ -220,7 +220,7 @@ static int create_segments(openrasp_shared_segment_globals **shared_segments_p, 
 	*shared_segments_p = (openrasp_shared_segment_globals *) calloc(1, requested_size);
 	if (!*shared_segments_p) {
 		openrasp_shared_alloc_unlock_win32();
-		openrasp_error(E_WARNING, SHM_ERROR, _("calloc() failed"));
+		openrasp_error(LEVEL_WARNING, SHM_ERROR, _("calloc() failed"));
 		*error_in = "calloc";
 		return ALLOC_FAILURE;
 	}
@@ -230,7 +230,7 @@ static int create_segments(openrasp_shared_segment_globals **shared_segments_p, 
 	err = GetLastError();
 	if (memfile == NULL) {
 		openrasp_shared_alloc_unlock_win32();
-		openrasp_error(E_WARNING, SHM_ERROR, _("Unable to create file mapping"));
+		openrasp_error(LEVEL_WARNING, SHM_ERROR, _("Unable to create file mapping"));
 		*error_in = "CreateFileMapping";
 		return ALLOC_FAILURE;
 	}
@@ -274,7 +274,7 @@ static int create_segments(openrasp_shared_segment_globals **shared_segments_p, 
 	err = GetLastError();
 	if (mapping_base == NULL) {
 		openrasp_shared_alloc_unlock_win32();
-		openrasp_error(E_WARNING, SHM_ERROR, _("Unable to create view for file mapping"));
+		openrasp_error(LEVEL_WARNING, SHM_ERROR, _("Unable to create view for file mapping"));
 		*error_in = "MapViewOfFile";
 		return ALLOC_FAILURE;
 	} else {
@@ -283,7 +283,7 @@ static int create_segments(openrasp_shared_segment_globals **shared_segments_p, 
 		err = GetLastError();
 		if (!fp) {
 			openrasp_shared_alloc_unlock_win32();
-			openrasp_error(E_WARNING, SHM_ERROR, _("Unable to write base address"));
+			openrasp_error(LEVEL_WARNING, SHM_ERROR, _("Unable to write base address"));
 			return ALLOC_FAILURE;
 		}
 		fprintf(fp, "%p\n", mapping_base);

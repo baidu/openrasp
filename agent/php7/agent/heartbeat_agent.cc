@@ -44,10 +44,9 @@ void HeartBeatAgent::run()
 			HeartBeatAgent::signal_received = signal_no;
 		});
 
-	TS_FETCH_WRAPPER();
 	while (true)
 	{
-		LOG_G(rasp_logger).set_level(scm->get_debug_level() != 0 ? LEVEL_DEBUG : LEVEL_INFO);
+		update_log_level();
 		do_heartbeat();
 
 		for (long i = 0; i < openrasp_ini.heartbeat_interval; ++i)
@@ -74,14 +73,15 @@ void HeartBeatAgent::do_heartbeat()
 	std::string json_content = json_writer.dump();
 
 	BackendRequest backend_request(url_string, json_content.c_str());
+	openrasp_error(LEVEL_DEBUG, HEARTBEAT_ERROR, _("url:%s body:%s"), url_string.c_str(), json_content.c_str());
 	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
 	{
-		openrasp_error(E_WARNING, HEARTBEAT_ERROR, _("CURL error code: %d, url: %s"),
+		openrasp_error(LEVEL_WARNING, HEARTBEAT_ERROR, _("CURL error code: %d, url: %s"),
 					   backend_request.get_curl_code(), url_string.c_str());
 		return;
 	}
-
+	openrasp_error(LEVEL_DEBUG, HEARTBEAT_ERROR, _("%s"), res_info->to_string().c_str());
 	if (res_info->verify(HEARTBEAT_ERROR))
 	{
 		/************************************plugin update************************************/
@@ -100,7 +100,7 @@ void HeartBeatAgent::do_heartbeat()
 		{
 			return;
 		}
-		std::string complete_config = res_info->stringify_object({"data", "config"});
+		std::string complete_config = res_info->stringify_object({"data", "config"}, true);
 		if (!complete_config.empty())
 		{
 			/************************************shm config************************************/
@@ -137,7 +137,7 @@ void HeartBeatAgent::do_heartbeat()
 				}
 				else
 				{
-					openrasp_error(E_WARNING, HEARTBEAT_ERROR, _("Fail to write cloud config to %s, error %s."),
+					openrasp_error(LEVEL_WARNING, HEARTBEAT_ERROR, _("Fail to write cloud config to %s, error %s."),
 								   cloud_config_file_path.c_str(), strerror(errno));
 				}
 				return;
