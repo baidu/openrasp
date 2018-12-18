@@ -181,7 +181,7 @@
           <label class="form-label">
             Facility
           </label>
-          <input v-model="data.syslog_alarm_conf.facility" type="text" class="form-control">
+          <input v-model="data.syslog_alarm_conf.facility" type="number" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
