@@ -211,35 +211,25 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import { defaultConfig } from '@/util'
 
 export default {
   name: 'AlarmSettings',
-  data: function() {
-    return {
-      data: {
-        email_alarm_conf: {
-          recv_addr: []
-        },
-        ding_alarm_conf: {},
-        http_alarm_conf: {},
-        syslog_alarm_conf: {
-          url: '',
-          facility: '',
-          tag: '',
-          enable: false
-        }
+  props: {
+    data: {
+      type: Object,
+      default() {
+        return Object.assign({}, defaultConfig)
       }
     }
+  },
+  data: function() {
+    return {}
   },
   computed: {
     ...mapGetters(['current_app'])
   },
   methods: {
-    setData: function(data) {
-      Object.keys(this.data).forEach(key => {
-        Object.assign(this.data[key], data[key] || {})
-      })
-    },
     saveSettings: function(type) {
       var body = {
         app_id: this.current_app.id

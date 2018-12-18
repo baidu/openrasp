@@ -29,6 +29,22 @@ export var status_types = {
   'ignore': '忽略放行'
 }
 
+export const defaultConfig = {
+  'general_config': {},
+  'whitelist_config': [],
+  'email_alarm_conf': {
+    'recv_addr': []
+  },
+  'ding_alarm_conf': {
+    'recv_user': [],
+    'recv_party': []
+  },
+  'http_alarm_conf': {
+    'recv_addr': []
+  },
+  'syslog_alarm_conf': {}
+}
+
 export function block_status2name(status) {
   if (status_types[status]) {
     return status_types[status]

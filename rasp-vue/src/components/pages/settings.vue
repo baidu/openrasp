@@ -18,7 +18,7 @@
             </span>
             报警设置
           </template>
-          <AlarmSettings ref="alarmSettings" />
+          <AlarmSettings ref="alarmSettings" :data="data" />
         </b-tab>
         <b-tab title-link-class="list-group-item border-0 w-100" title-item-class="px-0">
           <template slot="title">
@@ -68,8 +68,9 @@ import AuthSettings from '@/components/pages/settings/auth'
 import GeneralSettings from '@/components/pages/settings/general'
 import WhitelistSettings from '@/components/pages/settings/whitelist'
 import AlgorithmSettings from '@/components/pages/settings/algorithm'
-
 import { mapGetters } from 'vuex'
+import defaultsDeep from 'lodash.defaultsdeep'
+import { defaultConfig } from '@/util'
 
 export default {
   name: 'Settings',
@@ -85,7 +86,7 @@ export default {
     return {
       tab_names: ['general', 'alarm', 'whitelist', 'algorithm', 'auth', 'app'],
       tab_index: 0,
-      data: {},
+      data: undefined,
       loading: false
     }
   },
@@ -108,24 +109,14 @@ export default {
   },
   methods: {
     loadSettings: function() {
-      var self = this
-      var body = {
+      this.loading = true
+      this.request.post('v1/api/app/get', {
         app_id: this.current_app.id
-      }
-
-      self.loading = true
-
-      this.api_request('v1/api/app/get', body, function(data) {
-        self.loading = false
-
-        self.$refs.generalSettings.setData(data.general_config)
-      	self.$refs.whitelistSettings.setData(data.whitelist_config)
-        self.$refs.alarmSettings.setData({
-          ding_alarm_conf: data.ding_alarm_conf,
-          http_alarm_conf: data.http_alarm_conf,
-          email_alarm_conf: data.email_alarm_conf,
-          syslog_alarm_conf: data.syslog_alarm_conf
-        })
+      }).then(data => {
+        this.loading = false
+        this.data = defaultsDeep(defaultConfig, data)
+        this.$refs.generalSettings.setData(this.data.general_config)
+        this.$refs.whitelistSettings.setData(this.data.whitelist_config)
       })
     },
     setTabIndex(val) {
