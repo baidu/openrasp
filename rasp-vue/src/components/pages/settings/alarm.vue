@@ -175,23 +175,23 @@
               [帮助文档]
             </a>
           </label>
-          <input v-model="data.syslog_alarm_conf.url" type="text" class="form-control" placeholder="tcp://1.1.1.1:6666">
+          <input v-model="data.general_config['syslog.url']" type="text" class="form-control" placeholder="tcp://1.1.1.1:6666">
         </div>
         <div class="form-group">
           <label class="form-label">
             Facility
           </label>
-          <b-form-input v-model="data.syslog_alarm_conf.facility" type="number" class="form-control" />
+          <b-form-input v-model="data.general_config['syslog.facility']" type="number" class="form-control" />
         </div>
         <div class="form-group">
           <label class="form-label">
             Tag
           </label>
-          <input v-model="data.syslog_alarm_conf.tag" type="text" class="form-control">
+          <input v-model="data.general_config['syslog.tag']" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="custom-switch">
-            <input v-model="data.syslog_alarm_conf.enable" type="checkbox" checked="data.syslog_alarm_conf.enable" class="custom-switch-input">
+            <input v-model="data.general_config['syslog.enable']" type="checkbox" checked="data.general_config['syslog.enable']" class="custom-switch-input">
             <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
               开启 syslog 日志
@@ -231,6 +231,20 @@ export default {
   },
   methods: {
     saveSettings: function(type) {
+      if (type === 'syslog') {
+        try {
+          this.data.general_config['syslog.facility'] = parseInt(this.data.general_config['syslog.facility'])
+        } catch (err) {
+          this.data.general_config['syslog.facility'] = null
+        }
+        msg = 'Syslog 报警设置保存成功'
+        return this.request.post('v1/api/app/general/config', {
+          app_id: this.current_app.id,
+          config: this.data.general_config
+        }).then(() => {
+          alert(msg)
+        })
+      }
       var body = {
         app_id: this.current_app.id
       }
@@ -264,19 +278,9 @@ export default {
 
           msg = 'HTTP 推送设置保存成功'
           break
-
-        case 'syslog':
-          body.syslog_alarm_conf = this.data.syslog_alarm_conf
-          try {
-            body.syslog_alarm_conf.facility = parseInt(body.syslog_alarm_conf.facility)
-          } catch (err) {
-            body.syslog_alarm_conf.facility = null
-          }
-          msg = 'Syslog 报警设置保存成功'
-          break
       }
 
-      this.request.post('v1/api/app/alarm/config', body)
+      return this.request.post('v1/api/app/alarm/config', body)
         .then(() => {
           alert(msg)
         })

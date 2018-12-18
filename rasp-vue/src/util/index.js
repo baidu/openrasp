@@ -41,8 +41,7 @@ export const defaultConfig = {
   },
   'http_alarm_conf': {
     'recv_addr': []
-  },
-  'syslog_alarm_conf': {}
+  }
 }
 
 export function block_status2name(status) {
