@@ -25,6 +25,7 @@ import (
 	"github.com/olivere/elastic"
 	"context"
 	"path"
+	"fmt"
 )
 
 type AggrTimeParam struct {
@@ -46,6 +47,7 @@ type SearchAttackParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
 	Data *struct {
+		Id           string    `json:"_id,omitempty"`
 		AppId        string    `json:"app_id,omitempty"`
 		StartTime    int64     `json:"start_time"`
 		EndTime      int64     `json:"end_time"`
@@ -62,6 +64,7 @@ type SearchPolicyParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
 	Data *struct {
+		Id        string    `json:"_id,omitempty"`
 		AppId     string    `json:"app_id,omitempty"`
 		StartTime int64     `json:"start_time"`
 		EndTime   int64     `json:"end_time"`
@@ -189,11 +192,13 @@ func AddLogWithES(alarmType string, alarm map[string]interface{}) error {
 		select {
 		case esAttackAlarmBuffer <- alarm:
 		default:
+			logs.Error("failed to write attack alarm ,the buffer is full: " + fmt.Sprintf("%+v", alarm))
 		}
 	} else if alarmType == PolicyAlarmType {
 		select {
 		case esPolicyAlarmBuffer <- alarm:
 		default:
+			logs.Error("failed to write policy alarm ,the buffer is full: " + fmt.Sprintf("%+v", alarm))
 		}
 	}
 	return nil

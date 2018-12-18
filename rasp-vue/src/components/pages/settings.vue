@@ -1,8 +1,8 @@
 <template>
   <div class="my-3 my-md-5">
     <div class="container">
-      <b-tabs v-model="tab_index" vertical nav-wrapper-class="col-3" nav-class="list-group list-group-transparent" class="w-100" @input="onTabIndex">
-        <b-tab title-link-class="list-group-item border-0 w-100">
+      <b-tabs v-model="tab_index" vertical nav-wrapper-class="col-3" no-fade nav-class="list-group list-group-transparent mx-0" class="w-100" @input="onTabIndex">
+        <b-tab title-link-class="list-group-item border-0 w-100" title-item-class="px-0">
           <template slot="title">
             <span class="icon mr-3">
               <i class="fe fe-settings" />
@@ -11,7 +11,7 @@
           </template>
           <GeneralSettings ref="generalSettings" />
         </b-tab>
-        <b-tab title-link-class="list-group-item border-0 w-100">
+        <b-tab title-link-class="list-group-item border-0 w-100" title-item-class="px-0">
           <template slot="title">
             <span class="icon mr-3">
               <i class="fe fe-alert-triangle" />
@@ -20,7 +20,7 @@
           </template>
           <AlarmSettings ref="alarmSettings" />
         </b-tab>
-        <b-tab title-link-class="list-group-item border-0 w-100">
+        <b-tab title-link-class="list-group-item border-0 w-100" title-item-class="px-0">
           <template slot="title">
             <span class="icon mr-3">
               <i class="fe fe-list" />
@@ -29,7 +29,7 @@
           </template>
           <WhitelistSettings ref="whitelistSettings" />
         </b-tab>
-        <b-tab title-link-class="list-group-item border-0 w-100">
+        <b-tab title-link-class="list-group-item border-0 w-100" title-item-class="px-0">
           <template slot="title">
             <span class="icon mr-3">
               <i class="fe fe-filter" />
@@ -38,7 +38,7 @@
           </template>
           <AlgorithmSettings ref="algorithmSettings" />
         </b-tab>
-        <b-tab title-link-class="list-group-item border-0 w-100">
+        <b-tab title-link-class="list-group-item border-0 w-100" title-item-class="px-0">
           <template slot="title">
             <span class="icon mr-3">
               <i class="fe fe-user" />
@@ -47,7 +47,7 @@
           </template>
           <AuthSettings ref="authSettings" />
         </b-tab>
-        <b-tab title-link-class="list-group-item border-0 w-100">
+        <b-tab title-link-class="list-group-item border-0 w-100" title-item-class="px-0">
           <template slot="title">
             <span class="icon mr-3">
               <i class="fe fe-server" />
@@ -123,7 +123,8 @@ export default {
         self.$refs.alarmSettings.setData({
           ding_alarm_conf: data.ding_alarm_conf,
           http_alarm_conf: data.http_alarm_conf,
-          email_alarm_conf: data.email_alarm_conf
+          email_alarm_conf: data.email_alarm_conf,
+          syslog_alarm_conf: data.syslog_alarm_conf
         })
       })
     },

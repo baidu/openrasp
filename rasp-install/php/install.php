@@ -97,9 +97,6 @@ openrasp.app_secret=$app_secret
 ;远程管理开关
 openrasp.remote_management_enable=$remote_enable
 
-;心跳开关
-openrasp.heartbeat_enable=1
-
 ;心跳时间间隔
 openrasp.heartbeat_interval=180
 	

@@ -174,10 +174,7 @@ bool OpenraspAgentManager::destroy_share_memory()
 
 bool OpenraspAgentManager::process_agent_startup()
 {
-	if (openrasp_ini.heartbeat_enable)
-	{
-		agents.push_back(std::move((std::unique_ptr<BaseAgent>)new HeartBeatAgent()));
-	}
+	agents.push_back(std::move((std::unique_ptr<BaseAgent>)new HeartBeatAgent()));
 	agents.push_back(std::move((std::unique_ptr<BaseAgent>)new LogAgent()));
 	pid_t pid = fork();
 	if (pid < 0)
@@ -204,13 +201,10 @@ void OpenraspAgentManager::process_agent_shutdown()
 	{
 		kill(log_agent_id, SIGKILL);
 	}
-	if (openrasp_ini.heartbeat_enable)
+	pid_t plugin_agent_id = agent_ctrl_block->get_plugin_agent_id();
+	if (plugin_agent_id > 0)
 	{
-		pid_t plugin_agent_id = agent_ctrl_block->get_plugin_agent_id();
-		if (plugin_agent_id > 0)
-		{
-			kill(plugin_agent_id, SIGKILL);
-		}
+		kill(plugin_agent_id, SIGKILL);
 	}
 	pid_t supervisor_id = agent_ctrl_block->get_supervisor_id();
 	if (supervisor_id > 0)

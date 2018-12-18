@@ -12,7 +12,7 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-package tools
+package environment
 
 import (
 	"os"
@@ -21,9 +21,15 @@ import (
 	"flag"
 	"log"
 	"os/exec"
+	"fmt"
+	"golang.org/x/crypto/ssh/terminal"
+	"syscall"
+	"bytes"
+	"rasp-cloud/tools"
 )
 
 const (
+	Version             = "1.0RC1"
 	StartTypeForeground = "panel"
 	StartTypeAgent      = "agent"
 	StartTypeReset      = "reset"
@@ -34,6 +40,7 @@ type Flag struct {
 	StartType *string
 	Password  *string
 	Daemon    *bool
+	Version   *bool
 }
 
 var (
@@ -42,15 +49,41 @@ var (
 
 func init() {
 	StartFlag.StartType = flag.String("type", "", "use to provide different routers")
-	StartFlag.Password = flag.String("password", "", "use to provide password")
 	StartFlag.Daemon = flag.Bool("d", false, "use to run as daemon process")
+	StartFlag.Version = flag.Bool("version", false, "use to get version")
 	flag.Parse()
+
+	if *StartFlag.Version {
+		fmt.Println(Version)
+		os.Exit(0)
+	}
+	if *StartFlag.StartType == StartTypeReset {
+		fmt.Print("Enter new admin password: ")
+		pwd1, err := terminal.ReadPassword(int(syscall.Stdin))
+		fmt.Println()
+		if err != nil {
+			fmt.Print("failed to read password from terminal: " + err.Error())
+		}
+		fmt.Print("Retype new admin password: ")
+		pwd2, err := terminal.ReadPassword(int(syscall.Stdin))
+		fmt.Println()
+		if err != nil {
+			fmt.Print("failed to read password from terminal: " + err.Error())
+		}
+		if bytes.Compare(pwd1, pwd2) != 0 {
+			fmt.Println("Sorry, passwords do not match")
+			os.Exit(tools.ErrCodeResetUserFailed)
+		} else {
+			pwd := string(pwd1)
+			StartFlag.Password = &pwd
+		}
+	}
 	if *StartFlag.Daemon {
 		err := fork()
 		if err != nil {
-			Panic(ErrCodeInitChildProcessFailed, "failed to launch child process, error", err)
+			tools.Panic(tools.ErrCodeInitChildProcessFailed, "failed to launch child process, error", err)
 		}
-		log.Println("start successfully, for details please check the log in 'logs/api/' directory")
+		log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
 		os.Exit(0)
 	}
 	initLogger()
@@ -80,14 +113,14 @@ func fork() (err error) {
 }
 
 func initLogger() {
-	currentPath, err := GetCurrentPath()
+	currentPath, err := tools.GetCurrentPath()
 	if err != nil {
-		Panic(ErrCodeLogInitFailed, "failed to get current path", err)
+		tools.Panic(tools.ErrCodeLogInitFailed, "failed to get current path", err)
 	}
-	if isExists, _ := PathExists(currentPath + "/logs/api"); !isExists {
+	if isExists, _ := tools.PathExists(currentPath + "/logs/api"); !isExists {
 		err := os.MkdirAll(currentPath+"/logs/api", os.ModePerm)
 		if err != nil {
-			Panic(ErrCodeLogInitFailed, "failed to create logs/api dir", err)
+			tools.Panic(tools.ErrCodeLogInitFailed, "failed to create logs/api dir", err)
 		}
 	}
 	logs.SetLogFuncCall(true)

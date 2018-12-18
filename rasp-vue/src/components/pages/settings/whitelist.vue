@@ -8,51 +8,30 @@
       </div>
       <div class="card-body">
         <p>最多允许200个URL，单条URL长度限制为200字符</p>
-        <table class="table table-bordered table-hover">
-          <thead>
-            <th nowrap>
-              #
-            </th>
-            <th>
-              URL
-            </th>
-            <th>
-              检测点
-            </th>
-            <th>
-              操作
-            </th>
-          </thead>
-          <tbody>
-            <tr v-for="(row, index) in data" :key="index">
-              <td nowrap>
-                {{ index + 1 }}
-              </td>
-              <td>
-                {{ row.url }}
-              </td>
-              <td>
-                <span v-if="row.hook['all']">
-                  所有 Hook 点
-                </span>
-                <span v-if="! row.hook['all']">
-                  {{ whitelist2str(row.hook).join(', ') }}
-                </span>
-              </td>
-              <td nowrap>
-                <a href="javascript:" @click="showModal(row, index)">
-                  编辑
-                </a>
-                <a href="javascript:" @click="deleteItem(index)">
-                  删除
-                </a>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <b-table hover bordered :items="data" :fields="fields">
+          <template slot="index" slot-scope="scope">
+            {{ scope.index + 1 }}
+          </template>
+          <template slot="hook" slot-scope="scope">
+            <span v-if="scope.value.all">
+              所有 Hook 点
+            </span>
+            <span v-if="!scope.value.all">
+              {{ whitelist2str(scope.value) }}
+            </span>
+          </template>
+          <template slot="command" slot-scope="scope">
+            <a href="javascript:" @click="showModal(scope.index)">
+              编辑
+            </a>
+            <a href="javascript:" @click="deleteItem(scope.index)">
+              删除
+            </a>
+          </template>
+        </b-table>
       </div>
       <div class="card-footer">
-        <button class="btn btn-info" @click="showModal({hook: {}})">
+        <button class="btn btn-info" @click="showModal(data.length)">
           添加
         </button>
         <button class="btn btn-primary pull-right" @click="doSave()">
@@ -61,75 +40,115 @@
       </div>
     </div>
 
-    <whitelistEditModal ref="whitelistEditModal" @save="onEdit($event)" />
+    <b-modal id="modal1" ref="modal" title="添加/编辑 白名单" hide-header-close @hidden="hideModal()">
+      <div class="form-group">
+        <label>URL - 不区分 http/https</label>
+        <input v-model="modalData.url" type="text" class="form-control" maxlen="200">
+      </div>
+      <div class="form-group">
+        <label>检测点</label>
+        <div class="row">
+          <div class="col-12">
+            <label class="custom-switch">
+              <input v-model="modalData.hook.all" type="checkbox" checked="modalData.hook.all" class="custom-switch-input">
+              <span class="custom-switch-indicator" />
+              <span class="custom-switch-description">
+                关闭所有检测点
+              </span>
+            </label>
+          </div>
+        </div>
+        <div v-if="!modalData.hook.all" class="row">
+          <div v-for="(item, key) in attack_types" :key="key" class="col-6">
+            <label class="custom-switch">
+              <input v-model="modalData.hook[key]" type="checkbox" checked="modalData.hook[key]" class="custom-switch-input">
+              <span class="custom-switch-indicator" />
+              <span class="custom-switch-description">
+                {{ item }}
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div slot="modal-footer" class="w-100">
+        <b-button class="float-right ml-2" variant="default" @click="hideModal()">
+          关闭
+        </b-button>
+        <b-button class="float-right ml-2" variant="primary" @click="hideModal(true)">
+          保存
+        </b-button>
+      </div>
+    </b-modal>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
-import whitelistEditModal from '../../modals/whitelistEditModal'
-import { attack_type2name } from '../../../util/'
+import { attack_type2name, attack_types } from '@/util/'
 
 export default {
   name: 'WhitelistSettings',
   data: function() {
     return {
       data: [],
-      whitelist_all: false
+      index: 0,
+      fields: [
+        { key: 'index', label: '#' },
+        { key: 'url', label: 'URL' },
+        { key: 'hook', label: '检测点' },
+        { key: 'command', label: '操作' }
+      ],
+      modalData: { url: '', hook: {}},
+      attack_types
     }
   },
   computed: {
     ...mapGetters(['current_app'])
   },
   methods: {
-    attack_type2name: attack_type2name,
     whitelist2str(row) {
-      var tmp = []
-      Object.keys(row).forEach(function(key) {
-        if (row[key]) {
-          tmp.push(attack_type2name(key))
-        }
-      })
-
-      return tmp
+      return Object.keys(row).filter(key => row[key]).map(key => attack_type2name(key)).join(', ')
     },
     setData: function(data) {
       this.data = data
     },
-    onEdit: function(event) {
-      if (event.index === undefined) {
-        this.data.push(event.data)
-      } else {
-        this.data.splice(event.index, 1, event.data)
-      }
-    },
-    showModal: function(data, index) {
+    showModal(index) {
       if (index === undefined && this.data.length >= 200) {
         alert('为了保证性能，白名单最多支持 200 条')
         return
       }
-
-      this.$refs.whitelistEditModal.showModal(data, index)
+      this.index = index
+      Object.assign(this.modalData, JSON.parse(JSON.stringify(this.data[index] || {})))
+      this.$refs.modal.show()
+    },
+    hideModal(save) {
+      if (save === true) {
+        if (!this.modalData.url) {
+          return
+        }
+        if (this.modalData.url.startsWith('http://') || this.modalData.url.startsWith('https://')) {
+          alert('URL 无需以 http/https 开头，请删除')
+          return
+        }
+        this.$set(this.data, this.index, this.modalData)
+      }
+      this.modalData = { url: '', hook: {}}
+      this.$refs.modal.hide()
     },
     deleteItem: function(index) {
-      if (!confirm('确认删除')) { return }
-
+      if (!confirm('确认删除')) {
+        return
+      }
       this.data.splice(index, 1)
     },
-    doSave: function() {
-      var self = this
-      var body = {
+    doSave() {
+      return this.request.post('v1/api/app/whitelist/config', {
         app_id: this.current_app.id,
         config: this.data
-      }
-
-      this.api_request('v1/api/app/whitelist/config', body, function(data) {
+      }).then(() => {
         alert('保存成功')
       })
     }
-  },
-  components: {
-    whitelistEditModal
   }
 }
 </script>

@@ -62,7 +62,6 @@ PHP_INI_ENTRY1("openrasp.locale", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCStri
 PHP_INI_ENTRY1("openrasp.backend_url", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.backend_url)
 PHP_INI_ENTRY1("openrasp.app_id", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.app_id)
 PHP_INI_ENTRY1("openrasp.app_secret", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.app_secret)
-PHP_INI_ENTRY1("openrasp.heartbeat_enable", "1", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.heartbeat_enable)
 PHP_INI_ENTRY1("openrasp.remote_management_enable", "0", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.remote_management_enable)
 PHP_INI_ENTRY1("openrasp.heartbeat_interval", "180", PHP_INI_SYSTEM, OnUpdateOpenraspHeartbeatInterval, &openrasp_ini.heartbeat_interval)
 PHP_INI_END()
@@ -137,7 +136,7 @@ PHP_MINIT_FUNCTION(openrasp)
     result = PHP_MINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
 
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
-    if (openrasp::oam)
+    if (remote_active && openrasp::oam)
     {
         openrasp::oam->startup();
     }
@@ -183,12 +182,14 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
         result = PHP_MSHUTDOWN(openrasp_v8)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_log)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
-        if (openrasp::oam)
+        if (remote_active && openrasp::oam)
         {
             openrasp::oam->shutdown();
         }
 #endif
         openrasp::scm->shutdown();
+        openrasp::oam.reset();
+        openrasp::scm.reset();
         remote_active = false;
         is_initialized = false;
     }
@@ -250,7 +251,7 @@ PHP_MINFO_FUNCTION(openrasp)
     php_info_print_table_row(2, "V8 Version", ZEND_TOSTR(V8_MAJOR_VERSION) "." ZEND_TOSTR(V8_MINOR_VERSION));
     php_info_print_table_row(2, "Antlr Version", "4.7.1 (JavaScript Runtime)");
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
-    if (openrasp::oam)
+    if (remote_active && openrasp::oam)
     {
         php_info_print_table_row(2, "Plugin Version",
                                  openrasp::oam->agent_ctrl_block

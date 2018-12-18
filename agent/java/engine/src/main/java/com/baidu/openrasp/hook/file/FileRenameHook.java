@@ -76,7 +76,7 @@ public class FileRenameHook extends AbstractClassHook {
             }
 
 
-            HookHandler.doCheck(CheckParameter.Type.FILERENAME, params);
+            HookHandler.doCheck(CheckParameter.Type.RENAME, params);
 
         }
     }

@@ -17,19 +17,20 @@ package models
 import (
 	"github.com/astaxie/beego"
 	"rasp-cloud/tools"
+	"rasp-cloud/environment"
 )
 
 var (
-	AgentDomain string
+	AgentServerURL string
 )
 
 func init() {
-	if *tools.StartFlag.StartType == tools.StartTypeForeground ||
-		*tools.StartFlag.StartType == tools.StartTypeDefault {
-		AgentDomain = beego.AppConfig.String("AgentDomain")
-		if AgentDomain == "" {
+	if *environment.StartFlag.StartType == environment.StartTypeForeground ||
+		*environment.StartFlag.StartType == environment.StartTypeDefault {
+		AgentServerURL = beego.AppConfig.String("AgentServerURL")
+		if AgentServerURL == "" {
 			tools.Panic(tools.ErrCodeConfigInitFailed,
-				"the 'AgentDomain' config in the app.conf can not be empty", nil)
+				"the 'AgentServerURL' config in the app.conf can not be empty", nil)
 		}
 	}
 }

@@ -38,7 +38,7 @@ func init() {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get cookie collection count", err)
 	}
 	if count <= 0 {
-		expireTime, err := beego.AppConfig.Int("CookieExpireTime")
+		expireTime, err := beego.AppConfig.Int("CookieLifeTime")
 		if err != nil || expireTime <= 0 {
 			expireTime = 7 * 24
 		}
