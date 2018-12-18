@@ -157,6 +157,9 @@ func init() {
 	alarmCheckInterval := beego.AppConfig.DefaultInt64("AlarmCheckInterval", 120)
 	if alarmCheckInterval <= 0 {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'AlarmCheckInterval' config must be greater than 0", nil)
+	} else if alarmCheckInterval < 10 {
+		beego.Warning("the value of 'AlarmCheckInterval' config is less than 10, it will be set to 10")
+		alarmCheckInterval = 10
 	}
 	if *environment.StartFlag.StartType == environment.StartTypeDefault ||
 		*environment.StartFlag.StartType == environment.StartTypeForeground {

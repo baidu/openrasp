@@ -39,6 +39,12 @@ func init() {
 			"the 'MongoDBAddr' config item in app.conf can not be empty", nil)
 	}
 	poolLimit := beego.AppConfig.DefaultInt("MongoDBPoolLimit", 1024)
+	if poolLimit <= 0 {
+		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'poolLimit' config must be greater than 0", nil)
+	} else if poolLimit < 10 {
+		beego.Warning("the value of 'poolLimit' config is less than 10, it will be set to 10")
+		poolLimit = 10
+	}
 	dialInfo := &mgo.DialInfo{
 		Addrs:     []string{mongoAddr},
 		Username:  beego.AppConfig.DefaultString("MongoDBUser", ""),
