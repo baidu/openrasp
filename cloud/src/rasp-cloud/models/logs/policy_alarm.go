@@ -110,6 +110,10 @@ func AddPolicyAlarm(alarm map[string]interface{}) error {
 			alarm["stack_md5"] = fmt.Sprintf("%x", md5.Sum([]byte(stack.(string))))
 		}
 	}
-
+	idContent := ""
+	idContent += fmt.Sprint(alarm["rasp_id"])
+	idContent += fmt.Sprint(alarm["policy_id"])
+	idContent += fmt.Sprint(alarm["stack_md5"])
+	alarm["upsert_id"] = fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
 	return AddAlarmFunc(PolicyAlarmType, alarm)
 }

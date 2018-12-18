@@ -21,16 +21,16 @@ import (
 )
 
 var (
-	AgentDomain string
+	AgentServerURL string
 )
 
 func init() {
 	if *environment.StartFlag.StartType == environment.StartTypeForeground ||
 		*environment.StartFlag.StartType == environment.StartTypeDefault {
-		AgentDomain = beego.AppConfig.String("AgentDomain")
-		if AgentDomain == "" {
+		AgentServerURL = beego.AppConfig.String("AgentServerURL")
+		if AgentServerURL == "" {
 			tools.Panic(tools.ErrCodeConfigInitFailed,
-				"the 'AgentDomain' config in the app.conf can not be empty", nil)
+				"the 'AgentServerURL' config in the app.conf can not be empty", nil)
 		}
 	}
 }

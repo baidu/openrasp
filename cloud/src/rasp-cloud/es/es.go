@@ -24,7 +24,6 @@ import (
 	"rasp-cloud/tools"
 	"encoding/json"
 	"fmt"
-	"crypto/md5"
 	"rasp-cloud/environment"
 )
 
@@ -151,18 +150,13 @@ func BulkInsert(docType string, docs []map[string]interface{}) (err error) {
 		}
 		if appId, ok := doc["app_id"].(string); ok {
 			if docType == "policy-alarm" {
-				idContent := ""
-				idContent += fmt.Sprint(doc["rasp_id"])
-				idContent += fmt.Sprint(doc["policy_id"])
-				idContent += fmt.Sprint(doc["stack_md5"])
-				id := fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
+
 				bulkService.Add(elastic.NewBulkUpdateRequest().
 					Index("real-openrasp-" + docType + "-" + appId).
 					Type(docType).
-					Id(id).
+					Id(fmt.Sprint(doc["upsert_id"])).
 					DocAsUpsert(true).
 					Doc(doc))
-				fmt.Println(id)
 			} else {
 				if appId, ok := doc["app_id"].(string); ok {
 					bulkService.Add(elastic.NewBulkIndexRequest().
