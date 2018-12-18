@@ -286,15 +286,9 @@ export default {
         })
     },
     testSettings: function(type) {
-      var self = this
-      var body = {
-        app_id: this.current_app.id
-      }
-      var url = 'v1/api/app/' + type + '/test'
-
-      this.api_request(url, body, function(data) {
-        alert('发送成功')
-      })
+      this.saveSettings(type)
+        .then(() => this.request.post('v1/api/app/' + type + '/test', { app_id: this.current_app.id }))
+        .then(() => alert('发送成功'))
     }
   }
 }
