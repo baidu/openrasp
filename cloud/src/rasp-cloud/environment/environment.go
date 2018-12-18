@@ -106,7 +106,7 @@ func fork() (err error) {
 			args = append(args, arg)
 		}
 	}
-	log.Println("args: ", args)
+	log.Println("args:", args)
 	cmd := exec.Command(path, args...)
 	err = cmd.Start()
 	return

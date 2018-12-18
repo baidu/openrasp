@@ -221,7 +221,7 @@ var algorithmConfig = {
     },
     // 文件管理器 - 反射方式列目录
     directory_reflect: {
-        name:   '算法2 - 通过反射条用，查看目录内容',
+        name:   '算法2 - 通过反射调用，查看目录内容',
         action: 'block'
     },
     // 文件管理器 - 查看敏感目录
@@ -303,7 +303,7 @@ var algorithmConfig = {
 
     // 命令执行 - java 反射、反序列化，php eval 等方式
     command_reflect: {
-        name:   '算法1 - 通过反射执行命令，比如反序列化、加密的PHP后门',
+        name:   '算法1 - 通过反射执行命令，比如反序列化、加密后门',
         action: 'block'
     },
     // 命令注入 - 命令执行后门，或者命令注入

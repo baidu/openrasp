@@ -52,7 +52,7 @@ cat uninstall.log
 
 # 上传所有日志和状态代码
 echo Uploading logs
-curl http://packages.baidu-int.com:8066/collect.php --connect-timeout 20 --max-time 60 \
+curl REPORT_URL --connect-timeout 20 --max-time 60 \
 	-F job=$job \
 	-F hostname=$(hostname) \
 	-F install_return=$ret1 -F install_log=@install.log \
