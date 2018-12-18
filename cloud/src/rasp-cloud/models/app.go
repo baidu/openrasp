@@ -203,7 +203,8 @@ func createDefaultUser() {
 	}
 	err = SetSelectedPlugin(app.Id, plugin.Id)
 	if err != nil {
-		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to select default plugin for app: "+err.Error())
+		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to select default plugin for app: " + err.Error()+
+			", app_id: "+ app.Id+ ", plugin_id: "+ plugin.Id)
 		return
 	}
 	beego.Info("Succeed to set up default plugin for app, version: " + plugin.Version)

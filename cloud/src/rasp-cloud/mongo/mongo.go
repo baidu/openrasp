@@ -61,7 +61,7 @@ func init() {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "init mongodb failed", err)
 	}
 
-	session.SetMode(mgo.Monotonic, true)
+	session.SetMode(mgo.Strong, true)
 }
 
 func NewSession() *mgo.Session {
