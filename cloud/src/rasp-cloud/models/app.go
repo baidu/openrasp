@@ -163,7 +163,7 @@ func init() {
 		panelServerURL = beego.AppConfig.String("PanelServerURL")
 		if panelServerURL == "" {
 			tools.Panic(tools.ErrCodeConfigInitFailed,
-				"the 'Domain' config in the app.conf can not be empty", nil)
+				"the 'PanelServerURL' config in the app.conf can not be empty", nil)
 		}
 		if count <= 0 {
 			createDefaultUser()
@@ -490,7 +490,7 @@ func PushHttpAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 		body := make(map[string]interface{})
 		body["app_id"] = app.Id
 		if isTest {
-			body["data"] = map[string]interface{}{"test": "test"}
+			body["data"] = TestAlarmData
 		} else {
 			body["data"] = alarms
 		}
