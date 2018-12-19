@@ -16,10 +16,7 @@
 
 package com.baidu.openrasp.cloud;
 
-import com.baidu.openrasp.cloud.model.CloudCacheModel;
-import com.baidu.openrasp.cloud.model.CloudRequestUrl;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.model.GenericResponse;
+import com.baidu.openrasp.cloud.model.*;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
@@ -107,10 +104,8 @@ public class KeepAlive {
             }
             if (configMap.get("log.maxburst") != null) {
                 //更新http appender
-                DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.LOGGER_NAME,
-                        DynamicConfigAppender.HTTP_ALARM_APPENDER_NAME);
-                DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.POLICY_LOGGER_NAME,
-                        DynamicConfigAppender.HTTP_POLICY_APPENDER_NAME);
+                DynamicConfigAppender.fileAppenderAddBurstFilter();
+                DynamicConfigAppender.httpAppenderAddBurstFilter();
             }
             //云控下发配置时动态添加或者删除syslog
             Object syslogSwitch = configMap.get("syslog.enable");

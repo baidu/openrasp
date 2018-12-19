@@ -104,7 +104,7 @@ public class SqlConnectionChecker extends PolicyChecker {
                 }
             }
         } catch (Exception e) {
-            LOGGER.warn("check sql connection fail cause by:" + e.getMessage());
+            LOGGER.warn("check sql connection fail cause by:", e);
         }
 
         boolean isSafe = checkUser(user, sqlType);
@@ -113,9 +113,9 @@ public class SqlConnectionChecker extends PolicyChecker {
                 alarmTimeCache.clear();
             }
             alarmTimeCache.put(url, System.currentTimeMillis());
-            String unsafeMessage = "Database security baseline - Connecting to a " + sqlType + 
-                " instance with high privileged account " + user + 
-                ", connectionString is " + urlWithoutParams;
+            String unsafeMessage = "Database security baseline - Connecting to a " + sqlType +
+                    " instance with high privileged account " + user +
+                    ", connectionString is " + urlWithoutParams;
             infos = new LinkedList<EventInfo>();
             HashMap<String, Object> params = new HashMap<String, Object>(4);
             params.put("server", sqlType);

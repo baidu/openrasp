@@ -302,7 +302,7 @@ public class HookHandler {
             isBlock = CheckerManager.check(type, parameter);
         } catch (Exception e) {
             LOGGER.warn("plugin check error: " + e.getClass().getName()
-                    + " because: " + e.getMessage() + " stacktrace: " + e.getStackTrace());
+                    + " because: " + e.getMessage() + " stacktrace: ", e);
         } finally {
             enableCurrThreadHook.set(enableHookCache);
         }

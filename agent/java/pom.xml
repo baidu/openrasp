@@ -159,6 +159,10 @@
                                     <shadedPattern>com.baidu.openrasp.stringtemplate</shadedPattern>
                                 </relocation>
                                 <relocation>
+                                    <pattern>org.stringtemplate</pattern>
+                                    <shadedPattern>com.baidu.openrasp.stringtemplate</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>st4hidden.org.antlr</pattern>
                                     <shadedPattern>com.baidu.openrasp.st4hidden.org.antlr</shadedPattern>
                                 </relocation>

@@ -27,7 +27,7 @@ import java.net.URI;
 
 /**
  * Created by tyy on 17-12-8.
- *
+ * <p>
  * httpclient 框架的请求 http 的 hook 点
  */
 @HookAnnotation
@@ -64,7 +64,7 @@ public class HttpClientHook extends AbstractSSRFHook {
                 hostName = uri.toURL().getHost();
             }
         } catch (Throwable t) {
-            HookHandler.LOGGER.warn(t.getMessage());
+            HookHandler.LOGGER.warn(t.getMessage(), t);
         }
         if (hostName != null) {
             checkHttpUrl(url, hostName, "httpclient");

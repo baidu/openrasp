@@ -55,7 +55,7 @@ public class EngineBoot implements Module {
                 "/ /_/ / /_/ /  __/ / / / _, _/ ___ |___/ / ____/ \n" +
                 "\\____/ .___/\\___/_/ /_/_/ |_/_/  |_/____/_/      \n" +
                 "    /_/                                          \n\n");
-        if (!loadConfig(FileUtil.getBaseDir())) {
+        if (!loadConfig()) {
             return;
         }
         readVersion();
@@ -81,10 +81,10 @@ public class EngineBoot implements Module {
      *
      * @return 配置是否成功
      */
-    private static boolean loadConfig(String baseDir) throws IOException {
-        LogConfig.completeLogConfig(baseDir);
+    private static boolean loadConfig() throws Exception {
+        LogConfig.ConfigFileAppender();
         //单机模式下动态添加获取删除syslog
-        if (!CloudUtils.checkCloudControlEnter()){
+        if (!CloudUtils.checkCloudControlEnter()) {
             LogConfig.syslogManager();
         }
         return true;

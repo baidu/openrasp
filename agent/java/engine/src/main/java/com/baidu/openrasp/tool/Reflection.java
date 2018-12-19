@@ -85,7 +85,7 @@ public class Reflection {
             object = field.get(paramClass);
         } catch (Exception e) {
 
-            LOGGER.error(e.getMessage());
+            LOGGER.error(e.getMessage(), e);
         }
         return object;
     }
@@ -122,7 +122,7 @@ public class Reflection {
             }
             return method.invoke(object, parameters);
         } catch (Exception e) {
-            LOGGER.warn(e.getMessage());
+            LOGGER.warn(e.getMessage(), e);
         }
         return null;
     }

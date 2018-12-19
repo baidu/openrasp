@@ -158,14 +158,14 @@ public class CloudUtils {
 
     public static boolean checkRequestResult(GenericResponse response) {
         if (response != null) {
-            if (Config.getConfig().getDebugLevel() > 0) {
-                CloudManager.LOGGER.warn(response.toString());
+            if (Config.getConfig().isDebugEnabled()) {
+                CloudManager.LOGGER.info(response.toString());
             }
             return response.getResponseCode() != null && response.getResponseCode() >= 200 &&
                     response.getResponseCode() < 300 && response.getStatus() != null && response.getStatus() == 0;
         } else {
-            if (Config.getConfig().getDebugLevel() > 0) {
-                CloudManager.LOGGER.warn("http request failed");
+            if (Config.getConfig().isDebugEnabled()) {
+                CloudManager.LOGGER.info("http request failed");
             }
         }
         return false;

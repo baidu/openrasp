@@ -130,7 +130,7 @@ public class CustomResponseHtml extends FileScanListener {
                 try {
                     setContent(FileUtils.readFileToString(file));
                 } catch (IOException e) {
-                    Config.LOGGER.warn(file.getAbsoluteFile() + " update fail because:" + e.getMessage());
+                    Config.LOGGER.warn(file.getAbsoluteFile() + " update fail because:" + e.getMessage(), e);
                 }
             } else {
                 setContent("");

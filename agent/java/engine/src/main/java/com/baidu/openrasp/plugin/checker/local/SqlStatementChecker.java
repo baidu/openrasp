@@ -216,7 +216,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
         try {
             result = checkSql(checkParameter, parameterMap, config);
         } catch (Exception e) {
-            JSContext.LOGGER.warn("Exception while running builtin sqli plugin: " + e.getMessage());
+            JSContext.LOGGER.warn("Exception while running builtin sqli plugin: ", e);
         }
 
         // js 插件检测
@@ -227,7 +227,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
         // 检测无威胁的sql加入sql缓存
         if (result.isEmpty()) {
             if (HookHandler.commonLRUCache.maxSize() != 0) {
-                String key = checkParameter.getParam("server").toString().trim()+
+                String key = checkParameter.getParam("server").toString().trim() +
                         checkParameter.getParam("query").toString().trim();
                 HookHandler.commonLRUCache.put(key, null);
             }

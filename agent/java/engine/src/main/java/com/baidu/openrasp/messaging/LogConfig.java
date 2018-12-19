@@ -16,15 +16,10 @@
 
 package com.baidu.openrasp.messaging;
 
-import com.baidu.openrasp.EngineBoot;
 import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.config.Config;
-import com.baidu.openrasp.exception.ConfigLoadException;
-import com.baidu.openrasp.tool.OSUtil;
 
-import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 
@@ -34,107 +29,13 @@ import java.net.URL;
  */
 public class LogConfig {
 
-    static final String SEPARATOR;
-    static final String DELIMITER;
-    static final String CONFIGFOLDER;
-    static final String CONFIGFILE;
-    static final String BUMMYTARGETPATH;
-
-    static {
-        DELIMITER = System.getProperty("line.separator");
-        SEPARATOR = System.getProperty("file.separator");
-        CONFIGFOLDER = "conf";
-        CONFIGFILE = "rasp-log4j.xml";
-        BUMMYTARGETPATH = "[[TARGET PATH]]";
-    }
-
     /**
-     * @param raspRootDirectory rasp根目录
+     * 创建rasp.log、alarm.log、policy_alarm.log和plugin.log 的appender
      */
-    public static void completeLogConfig(String raspRootDirectory) {
-        String logConfigFile = raspRootDirectory + SEPARATOR + CONFIGFOLDER + SEPARATOR + CONFIGFILE;
-        if (!isLogConfigFileExist(logConfigFile)) {
-            extractLogConfigFile(raspRootDirectory);
-        }
-    }
-
-    /**
-     * @param logConfigFile 日志配置文件
-     * @return 配置文件已存在返回true, 否则false
-     */
-    private static boolean isLogConfigFileExist(String logConfigFile) {
-        File configFile = new File(logConfigFile);
-        if (configFile.exists() && configFile.isFile()) {
-            System.out.println("[OpenRASP] Log config file already exists, continuing ...");
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @param raspRootDirectory rasp根目录
-     * @return 导出文件成功返回true, 否则false
-     */
-    private static void extractLogConfigFile(String raspRootDirectory) {
-        InputStream inputStream = null;
-        FileWriter fileWriter = null;
-        BufferedReader bufferedReader = null;
-        BufferedWriter bufferedWriter = null;
-        try {
-            new File(raspRootDirectory + SEPARATOR + CONFIGFOLDER).mkdirs();
-            String raspRootAbsPath = new File(raspRootDirectory).getAbsolutePath();
-            if (SEPARATOR.equals("\\")) {
-                raspRootAbsPath = raspRootDirectory.replaceAll("\\\\", "/");
-            }
-            inputStream = EngineBoot.class.getResourceAsStream("/" + CONFIGFILE + ".default");
-            fileWriter = new FileWriter(raspRootDirectory + SEPARATOR + CONFIGFOLDER + SEPARATOR + CONFIGFILE);
-            bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-            bufferedWriter = new BufferedWriter(fileWriter);
-            String lineContent = null;
-            while ((lineContent = bufferedReader.readLine()) != null) {
-                String trimedLine = lineContent.trim();
-                if (!trimedLine.startsWith("<!--") && trimedLine.startsWith("<param name=\"File\"")
-                        && lineContent.contains(BUMMYTARGETPATH)) {
-                    lineContent = lineContent.replace(BUMMYTARGETPATH, raspRootAbsPath);
-                }
-                bufferedWriter.write(lineContent);
-                bufferedWriter.newLine();
-            }
-            bufferedWriter.close();
-            bufferedReader.close();
-            fileWriter.close();
-            inputStream.close();
-        } catch (Throwable throwable) {
-            try {
-                if (bufferedWriter != null) {
-                    bufferedWriter.close();
-                }
-            } catch (IOException ebw) {
-                ebw.printStackTrace();
-            }
-            try {
-                if (bufferedReader != null) {
-                    bufferedWriter.close();
-                }
-            } catch (IOException ebr) {
-                ebr.printStackTrace();
-            }
-            try {
-                if (fileWriter != null) {
-                    fileWriter.close();
-                }
-            } catch (IOException efw) {
-                efw.printStackTrace();
-            }
-            try {
-                if (inputStream != null) {
-                    inputStream.close();
-                }
-            } catch (IOException eis) {
-                eis.printStackTrace();
-            }
-            throw new ConfigLoadException("[OpenRASP] Unable to extract log4j config file: " + CONFIGFILE + ", error: " + throwable.getMessage());
-        }
+    public static void ConfigFileAppender() throws Exception{
+        DynamicConfigAppender.initLog4jLogger();
+        DynamicConfigAppender.fileAppenderAddBurstFilter();
+        System.out.println("[OpenRASP] Log4j initialized successfully");
     }
 
     /**

@@ -1,12 +1,17 @@
 package com.baidu.openrasp.cloud.syslog;
 
 import com.baidu.openrasp.cloud.httpappender.HttpAppender;
+import com.baidu.openrasp.cloud.model.AppenderMappedLogger;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.BurstFilter;
+import com.baidu.openrasp.messaging.OpenraspDailyRollingFileAppender;
 import com.baidu.openrasp.messaging.SyslogTcpAppender;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import com.baidu.openrasp.tool.FileUtil;
+import org.apache.log4j.*;
+import org.apache.log4j.helpers.LogLog;
+import org.apache.log4j.helpers.OnlyOnceErrorHandler;
+
+import java.io.File;
 
 /**
  * @description: 根据配置动态开启syslog
@@ -15,11 +20,7 @@ import org.apache.log4j.Logger;
  */
 public class DynamicConfigAppender {
     public static final String LOGGER_NAME = "com.baidu.openrasp.plugin.checker.alarm";
-    public static final String POLICY_LOGGER_NAME = "com.baidu.openrasp.plugin.checker.policy_alarm";
     private static final String SYSLOG_APPENDER_NAME = "SYSLOGTCP";
-    public static final String HTTP_ALARM_APPENDER_NAME = "HTTPALARMAPPENDER";
-    public static final String HTTP_POLICY_APPENDER_NAME = "HTTPPOLICYAPPENDER";
-
 
     public static void createSyslogAppender(String address, int port) {
         Logger logger = Logger.getLogger(LOGGER_NAME);
@@ -52,17 +53,113 @@ public class DynamicConfigAppender {
 
     public static void createHttpAppender(String loggerName, String appenderName) {
         Logger logger = Logger.getLogger(loggerName);
+        System.out.println(loggerName+"====="+logger);
         if (logger.getAppender(appenderName) != null) {
             logger.removeAppender(appenderName);
         }
         HttpAppender appender = new HttpAppender();
         appender.setName(appenderName);
+        appender.addFilter(createBurstFilter());
+        logger.addAppender(appender);
+    }
+
+    public static void createRootHttpAppender(){
+        Logger logger = Logger.getRootLogger();
+        HttpAppender appender = new HttpAppender();
+        appender.setName(AppenderMappedLogger.HTTP_ROOT.getAppender());
+        appender.addFilter(createBurstFilter());
+        logger.addAppender(appender);
+    }
+
+    /**
+     * 初始化log4j的logger，并添加fileAppender
+     */
+    public static void initLog4jLogger() throws Exception {
+//        LogLog.setInternalDebugging(true);
+        for (AppenderMappedLogger type : AppenderMappedLogger.values()) {
+            if (type.ordinal() <= 3) {
+                if ("root".equals(type.getLogger())) {
+                    BasicConfigurator.configure(createFileAppender(type.getAppender(), type.getTargetPath()));
+                    Logger.getRootLogger().setLevel(Level.INFO);
+                } else {
+                    Logger logger = Logger.getLogger(type.getLogger());
+                    logger.setLevel(Level.INFO);
+                    logger.setAdditivity(false);
+                    logger.addAppender(createFileAppender(type.getAppender(), type.getTargetPath()));
+                }
+            }
+        }
+    }
+
+    /**
+     * 创建fileAppender
+     */
+    public static OpenraspDailyRollingFileAppender createFileAppender(String appender, String targetPath) throws Exception {
+        OpenraspDailyRollingFileAppender fileAppender = new OpenraspDailyRollingFileAppender();
+        fileAppender.setName(appender);
+        fileAppender.setErrorHandler(new OnlyOnceErrorHandler());
+        String raspBaseDir = FileUtil.getBaseDir();
+        File file = new File(raspBaseDir + targetPath);
+        if (!file.exists()) {
+            if (!file.getParentFile().exists()) {
+                file.getParentFile().mkdirs();
+            }
+            file.createNewFile();
+        }
+        fileAppender.setFile(raspBaseDir + targetPath);
+        fileAppender.setAppend(true);
+        fileAppender.setDatePattern("'.'yyyy-MM-dd");
+        fileAppender.setEncoding("UTF-8");
+        PatternLayout layout = new PatternLayout();
+        if ("PLUGIN".equals(appender)) {
+            layout.setConversionPattern("%d %-5p [%t][%c] %m%n");
+        } else {
+            layout.setConversionPattern("%m%n");
+        }
+        fileAppender.setLayout(layout);
+        fileAppender.activateOptions();
+        return fileAppender;
+    }
+
+    /**
+     * 为fileAppender添加限速filter
+     */
+    public static void fileAppenderAddBurstFilter() {
+        for (AppenderMappedLogger type : AppenderMappedLogger.values()) {
+            if (type.ordinal() <= 3) {
+                if ("root".equals(type.getLogger())) {
+                    Logger.getRootLogger().getAppender(type.getAppender()).clearFilters();
+                    Logger.getRootLogger().getAppender(type.getAppender()).addFilter(createBurstFilter());
+                } else {
+                    Logger logger = Logger.getLogger(type.getLogger());
+                    logger.getAppender(type.getAppender()).clearFilters();
+                    logger.getAppender(type.getAppender()).addFilter(createBurstFilter());
+                }
+            }
+        }
+    }
+
+    /**
+     * 为httpAppender添加限速filter
+     */
+    public static void httpAppenderAddBurstFilter() {
+        Logger.getRootLogger().getAppender(AppenderMappedLogger.HTTP_ROOT.getAppender()).clearFilters();
+        Logger.getRootLogger().getAppender(AppenderMappedLogger.HTTP_ROOT.getAppender()).addFilter(createBurstFilter());
+        Logger.getLogger(AppenderMappedLogger.HTTP_ALARM.getLogger()).getAppender(AppenderMappedLogger.HTTP_ALARM.getAppender()).clearFilters();
+        Logger.getLogger(AppenderMappedLogger.HTTP_ALARM.getLogger()).getAppender(AppenderMappedLogger.HTTP_ALARM.getAppender()).addFilter(createBurstFilter());
+        Logger.getLogger(AppenderMappedLogger.HTTP_POLICY_ALARM.getLogger()).getAppender(AppenderMappedLogger.HTTP_POLICY_ALARM.getAppender()).clearFilters();
+        Logger.getLogger(AppenderMappedLogger.HTTP_POLICY_ALARM.getLogger()).getAppender(AppenderMappedLogger.HTTP_POLICY_ALARM.getAppender()).addFilter(createBurstFilter());
+    }
+
+    /**
+     * 创建日志限速filter
+     */
+    public static BurstFilter createBurstFilter() {
         BurstFilter filter = new BurstFilter();
         int logMaxBurst = Config.getConfig().getLogMaxBurst();
         filter.setMaxBurst(logMaxBurst);
         filter.setRefillAmount(logMaxBurst);
         filter.setRefillInterval(60);
-        appender.addFilter(filter);
-        logger.addAppender(appender);
+        return filter;
     }
 }

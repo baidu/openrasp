@@ -84,7 +84,7 @@ public abstract class ServerPolicyChecker extends PolicyChecker {
                 }
             } catch (Throwable t) {
                 if (Config.getConfig().isDebugEnabled()) {
-                    LOGGER.error(SERVER_CHECK_ERROR_LOG_CHANNEL + " :" + t.getMessage(), t);
+                    LOGGER.info(SERVER_CHECK_ERROR_LOG_CHANNEL + " :" + t.getMessage(), t);
                 }
             }
         }
