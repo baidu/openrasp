@@ -356,7 +356,9 @@ var algorithmConfig = {
 // 将所有拦截开关设置为 log
 if (algorithmConfig.meta.all_log) {
     Object.keys(algorithmConfig).forEach(function (name) {
-        algorithmConfig[name].action = 'log'
+        if (algorithmConfig[name].action == 'block') {
+           algorithmConfig[name].action = 'log'
+        }
     })
 }
 
