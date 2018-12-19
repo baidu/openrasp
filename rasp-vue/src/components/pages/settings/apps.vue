@@ -83,7 +83,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['current_app'])
+    ...mapGetters(['current_app', 'app_list'])
   },
   watch: {
     current_app() { this.loadApps(1) }
@@ -93,6 +93,7 @@ export default {
   },
   methods: {
     ...mapActions(['loadAppList']),
+    ...mapMutations(['setCurrentApp']),
     loadApps(page) {
       this.loading = true
       return this.request.post('v1/api/app/get', {
@@ -105,17 +106,14 @@ export default {
         this.loading = false
       })
     },
-    deleteApp: function(data) {
+    deleteApp(data) {
       if (!confirm('确认操作')) {
         return
       }
-      var self = this
-      var body = {
-        id: data.id
-      }
-      this.api_request('v1/api/app/delete', body, function(data) {
-        self.loadApps(1)
-      })
+      return this.request.post('v1/api/app/delete', { id: data.id })
+        .then(() => {
+          return this.setCurrentApp(this.app_list.filter(app => app.id !== data.id)[0])
+        })
     },
     editApp: function(data, is_edit) {
       this.$refs.appEditModal.showModal({
