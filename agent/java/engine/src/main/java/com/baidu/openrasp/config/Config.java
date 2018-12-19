@@ -246,7 +246,7 @@ public class Config extends FileScanListener {
                     DynamicConfigAppender.updateSyslogTag();
                 }
             } catch (IOException e) {
-                LOGGER.warn("update rasp.yaml failed because: " + e.getMessage());
+                LOGGER.warn("update rasp.yaml failed because: ", e);
             }
         }
     }
@@ -288,12 +288,12 @@ public class Config extends FileScanListener {
             // 出现解析问题使用默认值
             value = item.defaultValue;
             setConfig(key, item.defaultValue, false);
-            LOGGER.warn("set config " + item.key + " failed, use default value : " + value);
+            LOGGER.warn("set config " + item.key + " failed, use default value : " + value, e);
         }
     }
 
     private void handleException(String message, Exception e) {
-        LOGGER.warn(message);
+        LOGGER.warn(message, e);
         System.out.println(message);
     }
 
@@ -370,7 +370,7 @@ public class Config extends FileScanListener {
                 reloadConfig(new File(configFileDir + File.separator + CONFIG_FILE_NAME));
             }
         } catch (Exception e) {
-            LOGGER.warn("update " + directory.getAbsolutePath() + " failed because: " + e.getMessage());
+            LOGGER.warn("update " + directory.getAbsolutePath() + " failed because: " + e.getMessage(), e);
         }
     }
 

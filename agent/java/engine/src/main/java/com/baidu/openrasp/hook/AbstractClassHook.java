@@ -77,7 +77,7 @@ public abstract class AbstractClassHook {
         } catch (Exception e) {
             e.printStackTrace();
             if (Config.getConfig().isDebugEnabled()) {
-                LOGGER.error("transform class " + ctClass.getName() + " failed", e);
+                LOGGER.info("transform class " + ctClass.getName() + " failed", e);
             }
         }
         return null;
@@ -130,7 +130,7 @@ public abstract class AbstractClassHook {
             }
         } else {
             if (Config.getConfig().isDebugEnabled()) {
-                LOGGER.warn("can not find method " + methodName + " " + desc + " in class " + ctClass.getName());
+                LOGGER.info("can not find method " + methodName + " " + desc + " in class " + ctClass.getName());
             }
         }
 
@@ -172,7 +172,7 @@ public abstract class AbstractClassHook {
             }
         } else {
             if (Config.getConfig().isDebugEnabled()) {
-                LOGGER.warn("can not find method " + methodName + " " + desc + " in class " + ctClass.getName());
+                LOGGER.info("can not find method " + methodName + " " + desc + " in class " + ctClass.getName());
             }
         }
 
@@ -240,7 +240,7 @@ public abstract class AbstractClassHook {
             LOGGER.info("insert before method " + method.getLongName());
         } catch (CannotCompileException e) {
             if (Config.getConfig().isDebugEnabled()) {
-                LOGGER.error("insert before method " + method.getLongName() + " failed", e);
+                LOGGER.info("insert before method " + method.getLongName() + " failed", e);
             }
             throw e;
         }

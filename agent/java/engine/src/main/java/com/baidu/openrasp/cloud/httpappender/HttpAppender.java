@@ -22,8 +22,10 @@ import com.baidu.openrasp.cloud.model.AppenderCache;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.plugin.info.ExceptInfo;
 import com.google.gson.*;
 import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.Level;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
 
@@ -59,17 +61,26 @@ public class HttpAppender extends AppenderSkeleton {
     @Override
     protected void append(LoggingEvent loggingEvent) {
         if (checkEntryConditions()) {
-            JsonElement jsonElement = new JsonParser().parse(loggingEvent.getRenderedMessage());
-            JsonArray jsonArray = mergeFromAppenderCache(loggingEvent.getLoggerName(), jsonElement);
             String logger = getLogger(loggingEvent.getLoggerName());
-            if (logger != null) {
-                String requestUrl = getUrl(logger);
-                if (requestUrl != null) {
-                    GenericResponse response = cloudHttp.request(requestUrl, new Gson().toJson(jsonArray));
-                    if (CloudUtils.checkRequestResult(response)) {
-                        return;
+            JsonElement jsonElement = null;
+            if ("root".equals(logger)) {
+                if ((loggingEvent.getLevel().equals(Level.WARN) || loggingEvent.getLevel().equals(Level.ERROR))) {
+                    jsonElement = new JsonParser().parse(generateJson(loggingEvent));
+                }
+            } else {
+                jsonElement = new JsonParser().parse(loggingEvent.getRenderedMessage());
+            }
+            if (jsonElement != null) {
+                JsonArray jsonArray = mergeFromAppenderCache(loggingEvent.getLoggerName(), jsonElement);
+                if (logger != null) {
+                    String requestUrl = getUrl(logger);
+                    if (requestUrl != null) {
+                        GenericResponse response = cloudHttp.request(requestUrl, new Gson().toJson(jsonArray));
+                        if (CloudUtils.checkRequestResult(response)) {
+                            return;
+                        }
+                        AppenderCache.setCache(logger, jsonElement);
                     }
-                    AppenderCache.setCache(logger, jsonElement);
                 }
             }
         }
@@ -90,7 +101,7 @@ public class HttpAppender extends AppenderSkeleton {
     }
 
     private String getLogger(String loggerName) {
-        String name = null;
+        String name;
         if (loggerName.contains("policy_alarm")) {
 
             name = "policy_alarm";
@@ -102,6 +113,10 @@ public class HttpAppender extends AppenderSkeleton {
         } else if (loggerName.contains("js")) {
 
             name = "plugin";
+
+        } else {
+
+            name = "root";
         }
         return name;
     }
@@ -114,8 +129,23 @@ public class HttpAppender extends AppenderSkeleton {
             url = CloudRequestUrl.CLOUD_ALARM_HTTP_APPENDER_URL;
         } else if ("plugin".equals(logger)) {
             url = CloudRequestUrl.CLOUD_PLUGIN_HTTP_APPENDER_URL;
+        } else {
+            url = CloudRequestUrl.CLOUD_Exception_HTTP_APPENDER_URL;
         }
         return url;
+    }
+
+    /**
+     * 处理log4j的ROOT logger上传日志的loggingEvent
+     */
+    private String generateJson(LoggingEvent loggingEvent) {
+        String level = loggingEvent.getLevel().toString();
+        String message = loggingEvent.getRenderedMessage();
+        int errorCode = 1234;
+        Throwable t = loggingEvent.getThrowableInformation().getThrowable();
+        StackTraceElement[] traceElements = t != null ? t.getStackTrace() : new StackTraceElement[]{};
+        ExceptInfo info = new ExceptInfo(level, message, errorCode, Thread.currentThread().getId(), traceElements);
+        return new Gson().toJson(info.getInfo());
     }
 
     @Override

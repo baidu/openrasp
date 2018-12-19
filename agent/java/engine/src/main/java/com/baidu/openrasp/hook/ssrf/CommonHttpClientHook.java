@@ -27,7 +27,7 @@ import java.io.IOException;
 
 /**
  * Created by tyy on 17-12-7.
- *
+ * <p>
  * commons-httpclinet 框架的 http 请求 hook 点
  */
 @HookAnnotation
@@ -62,7 +62,7 @@ public class CommonHttpClientHook extends AbstractSSRFHook {
                 host = Reflection.invokeStringMethod(object, "getHost", new Class[]{});
             }
         } catch (Throwable t) {
-            HookHandler.LOGGER.warn(t.getMessage());
+            HookHandler.LOGGER.warn(t.getMessage(), t);
         }
         if (host != null) {
             checkHttpUrl(url, host, "commons_httpclient");

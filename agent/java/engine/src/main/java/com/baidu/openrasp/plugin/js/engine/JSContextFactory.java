@@ -19,9 +19,11 @@ package com.baidu.openrasp.plugin.js.engine;
 import com.baidu.openrasp.EngineBoot;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.rhino.shim.Console;
 import com.fuxi.javaagent.rhino.shim.Shim;
+import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.*;
@@ -88,8 +90,10 @@ public class JSContextFactory extends ContextFactory {
                         cx.evaluateString(scope, "(function(){\n" + checkScript.getContent() + "\n})()", checkScript.getName(), 0, null);
                     }
                 }
+                //插件更新成功后，设置algorithmConfig
+                algorithmConfigSet();
             } catch (Exception e) {
-                LOGGER.warn("new plugin update failed : ",e);
+                LOGGER.warn("new plugin update failed : ", e);
             } finally {
                 jsContextFactory.pluginTime = System.currentTimeMillis();
                 JSContext.exit();
@@ -116,6 +120,8 @@ public class JSContextFactory extends ContextFactory {
                 CloudCacheModel.getInstance().setConfigTime(deliveryTime);
                 globalScope = global;
                 RASP = tempRASP;
+                //插件更新成功后，设置algorithmConfig
+                algorithmConfigSet();
             } catch (Throwable e) {
                 LOGGER.warn("new plugin update failed : ", e);
             } finally {
@@ -222,6 +228,10 @@ public class JSContextFactory extends ContextFactory {
         }
     }
 
+    /**
+     * 初始化globalScope和RASP
+     *
+     */
     private static ScriptableObject perpareLoadPlugin(JSContext cx, ScriptableObject scope) throws Exception {
 
         scope.defineProperty("global", scope, ScriptableObject.READONLY);
@@ -268,5 +278,18 @@ public class JSContextFactory extends ContextFactory {
             }
         }, ScriptableObject.READONLY);
         return RASP;
+    }
+
+    /**
+     * 插件更新成功后，设置algorithmConfig
+     *
+     */
+    private static void algorithmConfigSet() {
+        if (RASP != null) {
+            Object config = RASP.get("algorithmConfig");
+            if (config != null) {
+                Config.getConfig().setAlgorithmConfig(new Gson().toJson(config));
+            }
+        }
     }
 }

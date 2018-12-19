@@ -126,7 +126,7 @@ public class ProcessBuilderHook extends AbstractClassHook {
                 Scriptable stackArray = cx.newArray(cx.getScope(), stackInfo.toArray());
                 params.put("stack", params, stackArray);
             } catch (Throwable t) {
-                HookHandler.LOGGER.warn(t.getMessage());
+                HookHandler.LOGGER.warn(t.getMessage(), t);
             }
             if (params != null) {
                 HookHandler.doCheckWithoutRequest(CheckParameter.Type.COMMAND, params);

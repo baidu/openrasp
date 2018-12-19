@@ -28,7 +28,7 @@ import java.net.URLConnection;
 
 /**
  * Created by tyy on 17-12-7.
- *
+ * <p>
  * jdk 中进行 http 请求的 hook 点
  */
 @HookAnnotation
@@ -64,7 +64,7 @@ public class URLConnectionHook extends AbstractSSRFHook {
 
             }
         } catch (Exception e) {
-            HookHandler.LOGGER.warn(e.getMessage());
+            HookHandler.LOGGER.warn(e.getMessage(), e);
         }
         if (url != null) {
             checkHttpUrl(url.toString(), urlConnection.getURL().getHost(), "url_open_connection");
