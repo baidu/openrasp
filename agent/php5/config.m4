@@ -126,7 +126,6 @@ if test "$PHP_OPENRASP" != "no"; then
         if test "$ext_shared" != "no"; then
           if test "$PHP_OPENSSL" != "no" && test -n "$PHP_OPENSSL"; then
             OPENSSL_SEARCH_PATH="$PHP_OPENSSL"
-            OPENSSL_STATIC_FIRST="yes"
           else
             OPENSSL_SEARCH_PATH="$SEARCH_PATH"
           fi
@@ -147,7 +146,10 @@ if test "$PHP_OPENRASP" != "no"; then
           AC_MSG_CHECKING([for ssl library location])
           for i in $OPENSSL_SEARCH_PATH ; do
             for j in $i/$PHP_LIBDIR $i/ssl/$PHP_LIBDIR $i/openssl/$PHP_LIBDIR $i/lib64 $i/ssl/lib64 $i/openssl/lib64 $i/lib/x86_64-linux-gnu; do
-              if test -f $j/libssl.a && test "$OPENSSL_STATIC_FIRST" == "yes"; then
+              if test -f $j/libssl.$SHLIB_SUFFIX_NAME;then
+                OPENRASP_SSL_LIBDIR=$j
+                PHP_ADD_LIBRARY_WITH_PATH(ssl, $OPENRASP_SSL_LIBDIR, OPENRASP_SHARED_LIBADD)
+              elif test -f $j/libssl.a; then
                 OPENRASP_SSL_LIBDIR=$j
                 SSL_LIBS="$OPENRASP_SSL_LIBDIR/libssl.a"
                 case $host_os in
@@ -157,10 +159,10 @@ if test "$PHP_OPENRASP" != "no"; then
                   * )
                     OPENRASP_LIBS="-Wl,--whole-archive -Wl,$SSL_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
                     ;;
-                esac               
-              elif test -f $j/libssl.$SHLIB_SUFFIX_NAME;then
-                OPENRASP_SSL_LIBDIR=$j
-                PHP_ADD_LIBRARY_WITH_PATH(ssl, $OPENRASP_SSL_LIBDIR, OPENRASP_SHARED_LIBADD)
+                esac
+              fi
+              if test -n "$OPENRASP_SSL_LIBDIR" ; then
+                break 2
               fi
             done
           done
@@ -173,20 +175,23 @@ if test "$PHP_OPENRASP" != "no"; then
           AC_MSG_CHECKING([for crypto library location])
           for i in $OPENSSL_SEARCH_PATH ; do
             for j in $i/$PHP_LIBDIR $i/lib64 $i/ssl/$PHP_LIBDIR $i/openssl/$PHP_LIBDIR $i/ssl/lib64 $i/openssl/lib64 $i/lib/x86_64-linux-gnu; do
-              if test -f $j/libcrypto.a && test "$OPENSSL_STATIC_FIRST" == "yes"; then
-                OPENRASP_CRYPTO_LIBDIR=$j
-                CRYPTO_LIBS="$OPENRASP_CRYPTO_LIBDIR/libcrypto.a"
-                case $host_os in
-                  darwin* )
-                    OPENRASP_LIBS="-Wl,$CRYPTO_LIBS $OPENRASP_LIBS"
-                    ;;
-                  * )
-                    OPENRASP_LIBS="-Wl,--whole-archive -Wl,$CRYPTO_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
-                    ;;
-                esac               
-              elif test -f $j/libcrypto.$SHLIB_SUFFIX_NAME;then
+              if test -f $j/libcrypto.$SHLIB_SUFFIX_NAME;then
                 OPENRASP_CRYPTO_LIBDIR=$j
                 PHP_ADD_LIBRARY_WITH_PATH(crypto, $OPENRASP_CRYPTO_LIBDIR, OPENRASP_SHARED_LIBADD)
+              elif test -f $j/libcrypto.a; then
+                OPENRASP_CRYPTO_LIBDIR=$j
+                SSL_LIBS="$OPENRASP_CRYPTO_LIBDIR/libcrypto.a"
+                case $host_os in
+                  darwin* )
+                    OPENRASP_LIBS="-Wl,$SSL_LIBS $OPENRASP_LIBS"
+                    ;;
+                  * )
+                    OPENRASP_LIBS="-Wl,--whole-archive -Wl,$SSL_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
+                    ;;
+                esac
+              fi
+              if test -n "$OPENRASP_CRYPTO_LIBDIR" ; then
+                break 2
               fi
             done
           done
@@ -201,7 +206,6 @@ if test "$PHP_OPENRASP" != "no"; then
         if test "$ext_shared" != "no"; then
           if test "$PHP_CURL" != "no" && test -n "$PHP_CURL"; then
             CURL_SEARCH_PATH="$PHP_CURL"
-            CURL_STATIC_FIRST="yes"
           else
             CURL_SEARCH_PATH="$SEARCH_PATH"
           fi
@@ -223,20 +227,23 @@ if test "$PHP_OPENRASP" != "no"; then
           
           for i in $CURL_SEARCH_PATH ; do
             for j in $i/$PHP_LIBDIR $i/lib64 $i/lib/x86_64-linux-gnu; do
-              if test -f $j/libcurl.a && test "$CURL_STATIC_FIRST" == "yes"; then
-                OPENRASP_CURL_LIBDIR=$j
-                CURL_LIBS="$OPENRASP_CURL_LIBDIR/libcurl.a"
-                case $host_os in
-                  darwin* )
-                    OPENRASP_LIBS="-Wl,$CURL_LIBS $OPENRASP_LIBS"
-                    ;;
-                  * )
-                    OPENRASP_LIBS="-Wl,--whole-archive -Wl,$CURL_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
-                    ;;
-                esac                
-              elif test -f $j/libcurl.$SHLIB_SUFFIX_NAME; then
+              if test -f $j/libcurl.$SHLIB_SUFFIX_NAME;then
                 OPENRASP_CURL_LIBDIR=$j
                 PHP_ADD_LIBRARY_WITH_PATH(curl, $OPENRASP_CURL_LIBDIR, OPENRASP_SHARED_LIBADD)
+              elif test -f $j/libcurl.a; then
+                OPENRASP_CURL_LIBDIR=$j
+                SSL_LIBS="$OPENRASP_CURL_LIBDIR/libcurl.a"
+                case $host_os in
+                  darwin* )
+                    OPENRASP_LIBS="-Wl,$SSL_LIBS $OPENRASP_LIBS"
+                    ;;
+                  * )
+                    OPENRASP_LIBS="-Wl,--whole-archive -Wl,$SSL_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
+                    ;;
+                esac
+              fi
+              if test -n "$OPENRASP_CURL_LIBDIR" ; then
+                break 2
               fi 
             done
           done
@@ -264,7 +271,6 @@ if test "$PHP_OPENRASP" != "no"; then
   if test "$ext_shared" != "no"; then
     if test "$PHP_PCRE_REGEX" != "no" && test -n "$PHP_PCRE_REGEX"; then
       PCRE_SEARCH_PATH="$PHP_PCRE_REGEX"
-      PCRE_STATIC_FIRST="yes"
     else
       PCRE_SEARCH_PATH="$SEARCH_PATH"
     fi
@@ -285,20 +291,23 @@ if test "$PHP_OPENRASP" != "no"; then
     AC_MSG_CHECKING([for PCRE library location])
     for i in $PCRE_SEARCH_PATH ; do
       for j in $i $i/$PHP_LIBDIR $i/lib64 $i/lib/x86_64-linux-gnu; do
-        if test -f $j/libpcre.a && test "$PCRE_STATIC_FIRST" == "yes"; then
+        if test -f $j/libpcre.$SHLIB_SUFFIX_NAME;then
           OPENRASP_PCRE_LIBDIR=$j
-          PCRE_LIBS="$OPENRASP_PCRE_LIBDIR/libpcre.a"
+          PHP_ADD_LIBRARY_WITH_PATH(pcre, $OPENRASP_PCRE_LIBDIR, OPENRASP_SHARED_LIBADD)
+        elif test -f $j/libpcre.a; then
+          OPENRASP_PCRE_LIBDIR=$j
+          SSL_LIBS="$OPENRASP_PCRE_LIBDIR/libpcre.a"
           case $host_os in
             darwin* )
-              OPENRASP_LIBS="-Wl,$PCRE_LIBS $OPENRASP_LIBS"
+              OPENRASP_LIBS="-Wl,$SSL_LIBS $OPENRASP_LIBS"
               ;;
             * )
-              OPENRASP_LIBS="-Wl,--whole-archive -Wl,$PCRE_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
+              OPENRASP_LIBS="-Wl,--whole-archive -Wl,$SSL_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
               ;;
           esac
-        elif test -f $j/libpcre.$SHLIB_SUFFIX_NAME; then
-          OPENRASP_PCRE_LIBDIR=$j
-          PHP_ADD_LIBRARY_WITH_PATH(pcre, $OPENRASP_PCRE_LIBDIR, OPENRASP_SHARED_LIBADD)          
+        fi
+        if test -n "$OPENRASP_PCRE_LIBDIR" ; then
+          break 2
         fi
       done
     done
