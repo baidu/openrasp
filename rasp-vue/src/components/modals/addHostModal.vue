@@ -11,6 +11,11 @@
         <div class="modal-body" style="padding-top: 0">
           <ul id="myTab" class="nav nav-tabs" role="tablist">
             <li class="nav-item">
+              <a class="nav-link" data-toggle="tab" href="#common-tab">
+                基础信息
+              </a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link active" data-toggle="tab" href="#java-tab">
                 Java 服务器
               </a>
@@ -23,6 +28,14 @@
           </ul>
           <br>
           <div id="myTabContent" class="tab-content">
+            <div id="common-tab" class="tab-pane fade">
+              <h4>AppID</h4>
+              <pre>{{ current_app.id }}</pre>
+              <h4>AppSecret</h4>
+              <pre>{{ current_app.secret }}</pre>
+              <h4>BackendURL</h4>
+              <pre>{{ agent_domain }}</pre>
+            </div>
             <div id="java-tab" class="tab-pane fade show active">
               <h4>1. 下载 Java Agent 安装包</h4>
               <pre style="white-space: inherit; ">wget https://packages.baidu.com/app/openrasp/rasp-java.tar.gz<br>tar -xvf rasp-java.tar.gz<br>cd rasp-*/</pre>
@@ -40,7 +53,7 @@
               <pre style="white-space: inherit; ">service php-fpm restart</pre>
               <p>-或者-</p>
               <pre style="white-space: inherit; ">apachectl -k restart</pre>
-            </div>
+            </div>          
           </div>
         </div>
         <div class="modal-footer">
