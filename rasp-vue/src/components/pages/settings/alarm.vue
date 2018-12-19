@@ -175,23 +175,23 @@
               [帮助文档]
             </a>
           </label>
-          <input v-model="data.syslog_alarm_conf.url" type="text" class="form-control" placeholder="tcp://1.1.1.1:6666">
+          <input v-model="data.general_config['syslog.url']" type="text" class="form-control" placeholder="tcp://1.1.1.1:6666">
         </div>
         <div class="form-group">
           <label class="form-label">
             Facility
           </label>
-          <input v-model="data.syslog_alarm_conf.facility" type="number" class="form-control">
+          <b-form-input v-model="data.general_config['syslog.facility']" type="number" class="form-control" />
         </div>
         <div class="form-group">
           <label class="form-label">
             Tag
           </label>
-          <input v-model="data.syslog_alarm_conf.tag" type="text" class="form-control">
+          <input v-model="data.general_config['syslog.tag']" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="custom-switch">
-            <input v-model="data.syslog_alarm_conf.enable" type="checkbox" checked="data.syslog_alarm_conf.enable" class="custom-switch-input">
+            <input v-model="data.general_config['syslog.enable']" type="checkbox" checked="data.general_config['syslog.enable']" class="custom-switch-input">
             <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
               开启 syslog 日志
@@ -211,36 +211,40 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import { getDefaultConfig } from '@/util'
 
 export default {
   name: 'AlarmSettings',
-  data: function() {
-    return {
-      data: {
-        email_alarm_conf: {
-          recv_addr: []
-        },
-        ding_alarm_conf: {},
-        http_alarm_conf: {},
-        syslog_alarm_conf: {
-          url: '',
-          facility: '',
-          tag: '',
-          enable: false
-        }
+  props: {
+    data: {
+      type: Object,
+      default() {
+        return getDefaultConfig()
       }
     }
+  },
+  data: function() {
+    return {}
   },
   computed: {
     ...mapGetters(['current_app'])
   },
   methods: {
-    setData: function(data) {
-      Object.keys(this.data).forEach(key => {
-        Object.assign(this.data[key], data[key] || {})
-      })
-    },
     saveSettings: function(type) {
+      if (type === 'syslog') {
+        try {
+          this.data.general_config['syslog.facility'] = parseInt(this.data.general_config['syslog.facility'])
+        } catch (err) {
+          this.data.general_config['syslog.facility'] = null
+        }
+        msg = 'Syslog 报警设置保存成功'
+        return this.request.post('v1/api/app/general/config', {
+          app_id: this.current_app.id,
+          config: this.data.general_config
+        }).then(() => {
+          alert(msg)
+        })
+      }
       var body = {
         app_id: this.current_app.id
       }
@@ -276,21 +280,15 @@ export default {
           break
       }
 
-      this.request.post('v1/api/app/alarm/config', body)
+      return this.request.post('v1/api/app/alarm/config', body)
         .then(() => {
           alert(msg)
         })
     },
     testSettings: function(type) {
-      var self = this
-      var body = {
-        app_id: this.current_app.id
-      }
-      var url = 'v1/api/app/' + type + '/test'
-
-      this.api_request(url, body, function(data) {
-        alert('发送成功')
-      })
+      this.saveSettings(type)
+        .then(() => this.request.post('v1/api/app/' + type + '/test', { app_id: this.current_app.id }))
+        .then(() => alert('发送成功'))
     }
   }
 }

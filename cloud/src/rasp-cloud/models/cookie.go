@@ -38,9 +38,9 @@ func init() {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get cookie collection count", err)
 	}
 	if count <= 0 {
-		expireTime, err := beego.AppConfig.Int("CookieLifeTime")
-		if err != nil || expireTime <= 0 {
-			expireTime = 7 * 24
+		expireTime := beego.AppConfig.DefaultInt("CookieLifeTime", 7*24)
+		if expireTime <= 0 {
+			tools.Panic(tools.ErrCodeMongoInitFailed, "the 'CookieLifeTime' config must be greater than 0", nil)
 		}
 		index := &mgo.Index{
 			Key:         []string{"time"},

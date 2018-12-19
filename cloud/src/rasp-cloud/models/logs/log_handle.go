@@ -98,6 +98,12 @@ func init() {
 		tools.Panic(tools.ErrCodeConfigInitFailed, "Unrecognized the value of RaspLogMode config", nil)
 	}
 	alarmBufferSize := beego.AppConfig.DefaultInt("AlarmBufferSize", 300)
+	if alarmBufferSize <= 0{
+		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'AlarmBufferSize' config must be greater than 0", nil)
+	} else if alarmBufferSize < 100 {
+		beego.Warning("the value of 'AlarmBufferSize' config is less than 100, it will be set to 100")
+		alarmBufferSize = 100
+	}
 	esAttackAlarmBuffer = make(chan map[string]interface{}, alarmBufferSize)
 	esPolicyAlarmBuffer = make(chan map[string]interface{}, alarmBufferSize)
 }
