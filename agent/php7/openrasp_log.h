@@ -124,7 +124,8 @@ class RaspLoggerEntry
     zval *get_common_info();
     void set_level(severity_level level);
 
-    static std::string get_level_name(severity_level level);
+    static std::string level_to_name(severity_level level);
+    static int name_to_level(const std::string &name);
     static void inner_error(int type, openrasp_error_code code, const char *format, ...);
 };
 

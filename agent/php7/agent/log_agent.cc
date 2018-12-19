@@ -49,10 +49,10 @@ void LogAgent::run()
 			LogAgent::signal_received = signal_no;
 		});
 
-	LogCollectItem alarm_dir_info(ALARM_LOG_DIR_NAME, "/v1/agent/log/attack", true);
-	LogCollectItem policy_dir_info(POLICY_LOG_DIR_NAME, "/v1/agent/log/policy", true);
-	LogCollectItem plugin_dir_info(PLUGIN_LOG_DIR_NAME, "/v1/agent/log/plugin", false);
-	LogCollectItem rasp_dir_info(RASP_LOG_DIR_NAME, "/v1/agent/log/rasp", false);
+	LogCollectItem alarm_dir_info(ALARM_LOGGER, true);
+	LogCollectItem policy_dir_info(POLICY_LOGGER, true);
+	LogCollectItem plugin_dir_info(PLUGIN_LOGGER, false);
+	LogCollectItem rasp_dir_info(RASP_LOGGER, false);
 	std::vector<LogCollectItem *> log_dirs{&alarm_dir_info, &policy_dir_info, &plugin_dir_info, &rasp_dir_info};
 
 	long current_interval = LogAgent::log_push_interval;
@@ -62,8 +62,13 @@ void LogAgent::run()
 		for (int i = 0; i < log_dirs.size(); ++i)
 		{
 			LogCollectItem *ldi = log_dirs[i];
+			if (ldi->has_error())
+			{
+				continue;
+			}
 			bool file_rotate = ldi->need_rotate();
-			if (access(ldi->get_active_log_file().c_str(), F_OK) == 0)
+			if (ldi->get_collect_enable() &&
+				access(ldi->get_active_log_file().c_str(), F_OK) == 0)
 			{
 				ldi->determine_fpos();
 				std::string post_body;
@@ -109,6 +114,7 @@ bool LogAgent::post_logs_via_curl(std::string &log_arr, std::string &url_string)
 					   backend_request.get_curl_code(), url_string.c_str());
 		return false;
 	}
+	openrasp_error(LEVEL_DEBUG, LOGCOLLECT_ERROR, _("%s"), res_info->to_string().c_str());
 	if (!res_info->http_code_ok())
 	{
 		openrasp_error(LEVEL_WARNING, LOGCOLLECT_ERROR, _("Unexpected http response code: %ld, url: %s."),

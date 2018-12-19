@@ -843,7 +843,7 @@ void RaspLoggerEntry::set_level(severity_level level)
     this->level = level;
 }
 
-std::string RaspLoggerEntry::get_level_name(severity_level level)
+std::string RaspLoggerEntry::level_to_name(severity_level level)
 {
     static const std::map<severity_level, const std::string> level_name_map =
         {{LEVEL_EMERG, "emerg"},
@@ -861,6 +861,27 @@ std::string RaspLoggerEntry::get_level_name(severity_level level)
     else
     {
         return "unknown";
+    }
+}
+
+int RaspLoggerEntry::name_to_level(const std::string &name)
+{
+    static const std::map<const std::string, int> name_level_map =
+        {{"emerg", LEVEL_EMERG},
+         {"alert", LEVEL_ALERT},
+         {"crit", LEVEL_CRIT},
+         {"err", LEVEL_ERR},
+         {"warning", LEVEL_WARNING},
+         {"notice", LEVEL_NOTICE},
+         {"debug", LEVEL_DEBUG}};
+    auto it = name_level_map.find(name);
+    if (it != name_level_map.end())
+    {
+        return it->second;
+    }
+    else
+    {
+        return -1;
     }
 }
 

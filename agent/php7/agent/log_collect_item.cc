@@ -29,13 +29,29 @@ namespace openrasp
 {
 const long LogCollectItem::time_offset = fetch_time_offset();
 const std::string LogCollectItem::status_file = ".status.json";
+const std::map<int, const std::string> LogCollectItem::instance_url_map =
+    {
+        {ALARM_LOGGER, "/v1/agent/log/attack"},
+        {POLICY_LOGGER, "/v1/agent/log/policy"},
+        {PLUGIN_ERROR, "/v1/agent/log/plugin"},
+        {RASP_LOGGER, "/v1/agent/log/rasp"}};
 
-LogCollectItem::LogCollectItem(const std::string name, const std::string url_path, bool collect_enable)
-    : name(name),
-      url_path(url_path),
+const std::map<int, const std::string> LogCollectItem::instance_name_map =
+    {
+        {ALARM_LOGGER, ALARM_LOG_DIR_NAME},
+        {POLICY_LOGGER, POLICY_LOG_DIR_NAME},
+        {PLUGIN_ERROR, PLUGIN_LOG_DIR_NAME},
+        {RASP_LOGGER, RASP_LOG_DIR_NAME}};
+
+LogCollectItem::LogCollectItem(int instance_id, bool collect_enable)
+    : instance_id(instance_id),
       collect_enable(collect_enable)
 {
-    // update_curr_suffix();
+    if (!is_instance_valid())
+    {
+        error = true;
+        return;
+    }
     std::string status_file_abs = get_base_dir_path() + LogCollectItem::status_file;
     if (access(status_file_abs.c_str(), F_OK) == 0)
     {
@@ -51,10 +67,21 @@ LogCollectItem::LogCollectItem(const std::string name, const std::string url_pat
     }
 }
 
+bool LogCollectItem::has_error() const
+{
+    return error;
+}
+
+bool LogCollectItem::get_collect_enable() const
+{
+    return collect_enable;
+}
+
 inline std::string LogCollectItem::get_base_dir_path() const
 {
     std::string default_slash(1, DEFAULT_SLASH);
-    return std::string(openrasp_ini.root_dir) + default_slash + "logs" + default_slash + name + default_slash;
+    return std::string(openrasp_ini.root_dir) + default_slash + "logs" + default_slash +
+           get_name() + default_slash;
 }
 
 inline void LogCollectItem::update_curr_suffix()
@@ -65,7 +92,7 @@ inline void LogCollectItem::update_curr_suffix()
 
 std::string LogCollectItem::get_active_log_file() const
 {
-    return get_base_dir_path() + name + ".log." + curr_suffix;
+    return get_base_dir_path() + get_name() + ".log." + curr_suffix;
 }
 
 void LogCollectItem::open_active_log()
@@ -138,7 +165,7 @@ void LogCollectItem::update_last_post_time()
 
 std::string LogCollectItem::get_cpmplete_url() const
 {
-    return std::string(openrasp_ini.backend_url) + url_path;
+    return std::string(openrasp_ini.backend_url) + get_url_path();
 }
 
 bool LogCollectItem::log_content_qualified(const std::string &content)
@@ -151,25 +178,32 @@ bool LogCollectItem::log_content_qualified(const std::string &content)
     {
         return false;
     }
-    std::string app_id_block = "\"app_id\":\"" + std::string(openrasp_ini.app_id) + "\"";
-    if (content.find(app_id_block) == std::string::npos)
+    JsonReader json_reader(content);
+    std::string app_id = json_reader.fetch_string({"app_id"}, "");
+    if (app_id != std::string(openrasp_ini.app_id))
     {
         return false;
     }
-    std::string rasp_id_block = "\"rasp_id\":\"" + scm->get_rasp_id() + "\"";
-    if (content.find(rasp_id_block) == std::string::npos)
+    std::string rasp_id = json_reader.fetch_string({"rasp_id"}, "");
+    if (rasp_id != scm->get_rasp_id())
     {
         return false;
+    }
+    if (instance_id == RASP_LOGGER)
+    {
+        static const int collect_level = LEVEL_WARNING;
+        std::string level_name = json_reader.fetch_string({"level"}, "");
+        int level = RaspLoggerEntry::name_to_level(level_name);
+        if (level < 0 || level > collect_level)
+        {
+            return false;
+        }
     }
     return true;
 }
 
 bool LogCollectItem::get_post_logs(std::string &body)
 {
-    if (!collect_enable)
-    {
-        return false;
-    }
     std::string line;
     body.push_back('[');
     int count = 0;
@@ -242,16 +276,46 @@ void LogCollectItem::cleanup_expired_logs() const
     std::string tobe_deleted_date_suffix =
         format_time(RaspLoggerEntry::default_log_suffix,
                     strlen(RaspLoggerEntry::default_log_suffix), now - log_max_backup * 24 * 60 * 60);
+    std::string log_name = get_name();
     openrasp_scandir(get_base_dir_path(), files_tobe_deleted,
-                     [this, &tobe_deleted_date_suffix](const char *filename) {
-                         return !strncmp(filename, (this->name + ".log.").c_str(), (this->name + ".log.").size()) &&
-                                std::string(filename) < (this->name + ".log." + tobe_deleted_date_suffix);
+                     [&log_name, &tobe_deleted_date_suffix](const char *filename) {
+                         return !strncmp(filename, (log_name + ".log.").c_str(), (log_name + ".log.").size()) &&
+                                std::string(filename) < (log_name + ".log." + tobe_deleted_date_suffix);
                      },
                      true);
     for (std::string delete_file : files_tobe_deleted)
     {
         unlink(delete_file.c_str());
     }
+}
+
+const std::string LogCollectItem::get_name() const
+{
+    auto it = LogCollectItem::instance_name_map.find(instance_id);
+    if (it != LogCollectItem::instance_name_map.end())
+    {
+        return it->second;
+    }
+    return "unknown";
+}
+const std::string LogCollectItem::get_url_path() const
+{
+    auto it = LogCollectItem::instance_url_map.find(instance_id);
+    if (it != LogCollectItem::instance_url_map.end())
+    {
+        return it->second;
+    }
+    return "unknown";
+}
+
+bool LogCollectItem::is_instance_valid() const
+{
+    auto it = LogCollectItem::instance_name_map.find(instance_id);
+    if (it != LogCollectItem::instance_name_map.end())
+    {
+        return true;
+    }
+    return false;
 }
 
 } // namespace openrasp

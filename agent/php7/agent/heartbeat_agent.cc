@@ -29,6 +29,7 @@ namespace openrasp
 {
 
 volatile int HeartBeatAgent::signal_received = 0;
+static const std::string heartbeat_url_path = "/v1/agent/heartbeat";
 
 HeartBeatAgent::HeartBeatAgent()
 	: BaseAgent(HEARTBEAT_AGENT_PR_NAME)
@@ -64,7 +65,7 @@ void HeartBeatAgent::run()
 
 void HeartBeatAgent::do_heartbeat()
 {
-	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/heartbeat";
+	std::string url_string = std::string(openrasp_ini.backend_url) + heartbeat_url_path;
 
 	JsonWriter json_writer;
 	json_writer.write_string({"rasp_id"}, scm->get_rasp_id());
