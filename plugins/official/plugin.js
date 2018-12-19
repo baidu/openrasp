@@ -315,7 +315,7 @@ var algorithmConfig = {
     // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
     command_other: {
         name:   '算法3 - 记录或者拦截所有命令执行操作',
-        action: 'log'
+        action: 'ignore'
     },
 
     // transformer 反序列化攻击
