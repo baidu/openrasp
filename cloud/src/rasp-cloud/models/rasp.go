@@ -89,20 +89,20 @@ func RemoveRaspByAppId(appId string) (err error) {
 }
 
 func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp, err error) {
+	var bsonContent []byte
+	bsonContent, err = bson.Marshal(selector)
+	if err != nil {
+		return
+	}
+	bsonModel := bson.M{}
+	err = bson.Unmarshal(bsonContent, &bsonModel)
+	if err != nil {
+		return
+	}
+	if bsonModel["hostname"] != nil {
+		bsonModel["hostname"] = bson.M{"$regex": bsonModel["hostname"], "$options": "$i"}
+	}
 	if selector.Online != nil {
-		var bsonContent []byte
-		bsonContent, err = bson.Marshal(selector)
-		if err != nil {
-			return
-		}
-		bsonModel := bson.M{}
-		err = bson.Unmarshal(bsonContent, &bsonModel)
-		if err != nil {
-			return
-		}
-		if bsonModel["hostname"] != nil {
-			bsonModel["hostname"] = bson.M{"$regex": bson.RegEx{Pattern: bsonModel["hostname"].(string), Options: "i"}}
-		}
 		delete(bsonModel, "online")
 		if *selector.Online {
 			bsonModel["$where"] = "this.last_heartbeat_time+this.heartbeat_interval+180 >= " +
@@ -111,17 +111,14 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 			bsonModel["$where"] = "this.last_heartbeat_time+this.heartbeat_interval+180 < " +
 				strconv.FormatInt(time.Now().Unix(), 10)
 		}
-		count, err = mongo.FindAll(raspCollectionName, bsonModel, &result, perpage*(page-1), perpage)
-		if err == nil {
-			for _, rasp := range result {
+	}
+	count, err = mongo.FindAllBySort(raspCollectionName, bsonModel, perpage*(page-1), perpage,
+		&result, "-register_time")
+	if err == nil {
+		for _, rasp := range result {
+			if selector.Online != nil {
 				rasp.Online = selector.Online
-			}
-		}
-	} else {
-		count, err = mongo.FindAllBySort(raspCollectionName, selector, perpage*(page-1), perpage,
-			&result, "-register_time")
-		if err == nil {
-			for _, rasp := range result {
+			} else {
 				HandleRasp(rasp)
 			}
 		}
