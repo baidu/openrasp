@@ -18,7 +18,7 @@ self="$(readlink -f "$0")"
 trap 'rm -rf $tmp' EXIT
 
 cd "$tmp"
-tail -c TAR_SIZE $self | tar -xzf -
+tail -c TAR_SIZE "$self" | tar -xzf -
 
 if [[ "$job" == "-i" ]]; then
 	echo Installing OpenRASP

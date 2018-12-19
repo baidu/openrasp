@@ -1,4 +1,4 @@
-const version = '2018-1214-1500'
+const version = '2018-1219-1500'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -38,7 +38,7 @@ var plugin  = new RASP('offical')
 var algorithmConfig = {
     // 快速设置 - 若 all_log 开启，则所有的 block 都改为 log
     meta: {
-        all_log: false,
+        all_log: true,
     },
 
     // SQL注入算法#1 - 匹配用户输入
@@ -315,7 +315,7 @@ var algorithmConfig = {
     // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
     command_other: {
         name:   '算法3 - 记录或者拦截所有命令执行操作',
-        action: 'log'
+        action: 'ignore'
     },
 
     // transformer 反序列化攻击
@@ -356,7 +356,9 @@ var algorithmConfig = {
 // 将所有拦截开关设置为 log
 if (algorithmConfig.meta.all_log) {
     Object.keys(algorithmConfig).forEach(function (name) {
-        algorithmConfig[name].action = 'log'
+        if (algorithmConfig[name].action == 'block') {
+           algorithmConfig[name].action = 'log'
+        }
     })
 }
 
