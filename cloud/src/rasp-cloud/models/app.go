@@ -169,14 +169,14 @@ func init() {
 				"the 'PanelServerURL' config in the app.conf can not be empty", nil)
 		}
 		if count <= 0 {
-			createDefaultUser()
+			createDefaultApp()
 		}
 		go startAlarmTicker(time.Second * time.Duration(alarmCheckInterval))
 	}
 }
 
-func createDefaultUser() {
-	app, err := AddApp(&App{
+func createDefaultApp() {
+	_, err := AddApp(&App{
 		Name:        defaultAppName,
 		Description: "default app",
 		Language:    "php",
@@ -184,30 +184,6 @@ func createDefaultUser() {
 	if err != nil {
 		tools.Panic(tools.ErrCodeInitDefaultAppFailed, "failed to create default app", err)
 	}
-	beego.Info("Succeed to create default app, name: " + defaultAppName)
-	// if setting default plugin fails, continue to initialize
-	currentPath, err := tools.GetCurrentPath()
-	if err != nil {
-		beego.Warn("failed to create default plugin", err)
-		return
-	}
-	content, err := ioutil.ReadFile(currentPath + "/resources/plugin.js")
-	if err != nil {
-		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to get default plugin: "+err.Error())
-		return
-	}
-	plugin, err := AddPlugin(content, app.Id)
-	if err != nil {
-		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to insert default plugin: "+err.Error())
-		return
-	}
-	err = SetSelectedPlugin(app.Id, plugin.Id)
-	if err != nil {
-		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to select default plugin for app: " + err.Error()+
-			", app_id: "+ app.Id+ ", plugin_id: "+ plugin.Id)
-		return
-	}
-	beego.Info("Succeed to set up default plugin for app, version: " + plugin.Version)
 }
 
 func startAlarmTicker(interval time.Duration) {
@@ -279,10 +255,38 @@ func AddApp(app *App) (result *App, err error) {
 	// ES must be created before mongo
 	err = mongo.Insert(appCollectionName, app)
 	if err != nil {
-		return
+		return nil, errors.New("failed to insert app to db: " + err.Error())
 	}
 	result = app
+	beego.Info("Succeed to create app, name: " + app.Name)
+	selectDefaultPlugin(app)
 	return
+}
+
+func selectDefaultPlugin(app *App) {
+	// if setting default plugin fails, continue to initialize
+	currentPath, err := tools.GetCurrentPath()
+	if err != nil {
+		beego.Warn("failed to create default plugin", err)
+		return
+	}
+	content, err := ioutil.ReadFile(currentPath + "/resources/plugin.js")
+	if err != nil {
+		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to get default plugin: "+err.Error())
+		return
+	}
+	plugin, err := AddPlugin(content, app.Id)
+	if err != nil {
+		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to insert default plugin: "+err.Error())
+		return
+	}
+	err = SetSelectedPlugin(app.Id, plugin.Id)
+	if err != nil {
+		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to select default plugin for app: " + err.Error()+
+			", app_id: "+ app.Id+ ", plugin_id: "+ plugin.Id)
+		return
+	}
+	beego.Info("Succeed to set up default plugin for app, version: " + plugin.Version)
 }
 
 func generateAppId(app *App) string {
@@ -294,7 +298,8 @@ func generateSecret(app *App) string {
 	random := "openrasp_app" + app.Name + app.Id +
 		strconv.FormatInt(time.Now().UnixNano(), 10) + strconv.Itoa(rand.Intn(10000))
 	sha256Data := sha256.Sum256([]byte(random))
-	base64Data := base64.URLEncoding.EncodeToString(sha256Data[0:])
+	base64Data := base64.NewEncoding("OPQRSTYZabcdefgABCDEFGHIJKLMNhijklmnopqrUVWXstuvwxyz01234567891q").
+		EncodeToString(sha256Data[0:])
 	return base64Data[0 : len(base64Data)-1]
 }
 

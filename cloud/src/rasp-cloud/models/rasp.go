@@ -100,6 +100,9 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 		if err != nil {
 			return
 		}
+		if bsonModel["hostname"] != nil {
+			bsonModel["hostname"] = bson.M{"$regex": bson.RegEx{Pattern: bsonModel["hostname"].(string), Options: "i"}}
+		}
 		delete(bsonModel, "online")
 		if *selector.Online {
 			bsonModel["$where"] = "this.last_heartbeat_time+this.heartbeat_interval+180 >= " +
