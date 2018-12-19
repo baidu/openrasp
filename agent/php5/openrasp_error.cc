@@ -37,7 +37,7 @@ void openrasp_error(int type, openrasp_error_code code, const char *format, ...)
     if (log_module_initialized())
     {
         JsonWriter json_writer;
-        json_writer.write_string({"level"}, RaspLoggerEntry::get_level_name((severity_level)type));
+        json_writer.write_string({"level"}, RaspLoggerEntry::level_to_name((severity_level)type));
         json_writer.write_int64({"err_code"}, (int64_t)code);
         if (openrasp_ini.app_id)
         {

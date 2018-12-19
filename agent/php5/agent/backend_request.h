@@ -30,6 +30,7 @@ class BackendResponse;
 
 class BackendRequest
 {
+
 private:
   CURL *curl = nullptr;
   CURLcode curl_code;

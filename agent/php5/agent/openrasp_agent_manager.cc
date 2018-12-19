@@ -41,6 +41,7 @@ namespace openrasp
 std::unique_ptr<OpenraspAgentManager> oam = nullptr;
 
 std::vector<std::unique_ptr<BaseAgent>> agents;
+static const std::string register_url_path = "/v1/agent/rasp";
 
 static void super_signal_handler(int signal_no)
 {
@@ -273,7 +274,7 @@ bool OpenraspAgentManager::agent_remote_register()
 		local_ip[0] = 0;
 	}
 
-	std::string url_string = std::string(openrasp_ini.backend_url) + "/v1/agent/rasp";
+	std::string url_string = std::string(openrasp_ini.backend_url) + register_url_path;
 
 	JsonWriter json_writer;
 	json_writer.write_string({"id"}, scm->get_rasp_id());
