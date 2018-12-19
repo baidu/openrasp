@@ -12,7 +12,7 @@
           <ul id="myTab" class="nav nav-tabs" role="tablist">
             <li class="nav-item">
               <a class="nav-link" data-toggle="tab" href="#common-tab">
-                基础信息
+                参数信息
               </a>
             </li>
             <li class="nav-item">
