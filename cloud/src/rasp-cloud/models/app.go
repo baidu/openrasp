@@ -157,13 +157,16 @@ func init() {
 	alarmCheckInterval := beego.AppConfig.DefaultInt64("AlarmCheckInterval", 120)
 	if alarmCheckInterval <= 0 {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'AlarmCheckInterval' config must be greater than 0", nil)
+	} else if alarmCheckInterval < 10 {
+		beego.Warning("the value of 'AlarmCheckInterval' config is less than 10, it will be set to 10")
+		alarmCheckInterval = 10
 	}
 	if *environment.StartFlag.StartType == environment.StartTypeDefault ||
 		*environment.StartFlag.StartType == environment.StartTypeForeground {
 		panelServerURL = beego.AppConfig.String("PanelServerURL")
 		if panelServerURL == "" {
 			tools.Panic(tools.ErrCodeConfigInitFailed,
-				"the 'Domain' config in the app.conf can not be empty", nil)
+				"the 'PanelServerURL' config in the app.conf can not be empty", nil)
 		}
 		if count <= 0 {
 			createDefaultUser()
@@ -200,7 +203,8 @@ func createDefaultUser() {
 	}
 	err = SetSelectedPlugin(app.Id, plugin.Id)
 	if err != nil {
-		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to select default plugin for app: "+err.Error())
+		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to select default plugin for app: " + err.Error()+
+			", app_id: "+ app.Id+ ", plugin_id: "+ plugin.Id)
 		return
 	}
 	beego.Info("Succeed to set up default plugin for app, version: " + plugin.Version)
@@ -490,7 +494,7 @@ func PushHttpAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 		body := make(map[string]interface{})
 		body["app_id"] = app.Id
 		if isTest {
-			body["data"] = map[string]interface{}{"test": "test"}
+			body["data"] = TestAlarmData
 		} else {
 			body["data"] = alarms
 		}

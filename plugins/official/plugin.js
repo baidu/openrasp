@@ -1,4 +1,4 @@
-const version = '2018-1214-1500'
+const version = '2018-1219-1500'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -38,7 +38,7 @@ var plugin  = new RASP('offical')
 var algorithmConfig = {
     // 快速设置 - 若 all_log 开启，则所有的 block 都改为 log
     meta: {
-        all_log: false,
+        all_log: true,
     },
 
     // SQL注入算法#1 - 匹配用户输入
@@ -221,7 +221,7 @@ var algorithmConfig = {
     },
     // 文件管理器 - 反射方式列目录
     directory_reflect: {
-        name:   '算法2 - 通过反射条用，查看目录内容',
+        name:   '算法2 - 通过反射调用，查看目录内容',
         action: 'block'
     },
     // 文件管理器 - 查看敏感目录
@@ -303,7 +303,7 @@ var algorithmConfig = {
 
     // 命令执行 - java 反射、反序列化，php eval 等方式
     command_reflect: {
-        name:   '算法1 - 通过反射执行命令，比如反序列化、加密的PHP后门',
+        name:   '算法1 - 通过反射执行命令，比如反序列化、加密后门',
         action: 'block'
     },
     // 命令注入 - 命令执行后门，或者命令注入
@@ -356,7 +356,9 @@ var algorithmConfig = {
 // 将所有拦截开关设置为 log
 if (algorithmConfig.meta.all_log) {
     Object.keys(algorithmConfig).forEach(function (name) {
-        algorithmConfig[name].action = 'log'
+        if (algorithmConfig[name].action == 'block') {
+           algorithmConfig[name].action = 'log'
+        }
     })
 }
 

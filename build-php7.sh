@@ -47,7 +47,11 @@ phpize
 if [[ $php_os == "macos" ]]; then
 	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext=/usr/local/homebrew/opt/gettext -q ${extra_config_opt}
 else
-	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext --enable-openrasp-remote-manager -q ${extra_config_opt}
+	curl https://packages.baidu.com/app/openrasp/static-lib.tar.bz2 -o /tmp/static-lib.tar.bz2
+	tar -xf /tmp/static-lib.tar.bz2 -C /tmp/
+
+	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext --enable-openrasp-remote-manager \
+		--with-curl=/tmp/static-lib --with-openssl=/tmp/static-lib --with-pcre-regex=/tmp/static-lib -q ${extra_config_opt}
 fi
 
 make

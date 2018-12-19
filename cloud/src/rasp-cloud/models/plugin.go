@@ -57,6 +57,9 @@ var (
 
 func init() {
 	if value, err := beego.AppConfig.Int("MaxPlugins"); err != nil || value <= 0 {
+		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'AlarmBufferSize' config must be greater than 0", nil)
+	} else if value < 10 {
+		beego.Warning("the value of 'MaxPlugins' config is less than 10, it will be set to 10")
 		MaxPlugins = 10
 	} else {
 		MaxPlugins = value

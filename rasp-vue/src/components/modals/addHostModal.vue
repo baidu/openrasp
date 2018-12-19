@@ -44,9 +44,9 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary mr-auto" href="https://rasp.baidu.com/doc/install/software.html" target="_blank">
+          <a class="btn btn-secondary mr-auto" href="https://rasp.baidu.com/doc/install/software.html" target="_blank">
             了解更多
-          </button>
+          </a>
           <button class="btn btn-primary" data-dismiss="modal">
             关闭
           </button>
