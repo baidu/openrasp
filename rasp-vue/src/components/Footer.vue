@@ -16,7 +16,7 @@
           </div>
         </div>
         <div class="col-12 col-lg-auto mt-3 mt-lg-0 text-center">
-          Copyright © 2018 <a href="https://rasp.baidu.com" target="_blank">Baidu Inc</a>，本页面基于 <a href="https://github.com/tabler/tabler" target="_blank">Tabler</a> 开源模板开发
+          Copyright © 2018 Baidu, Inc. 当前版本 1.0.0 RC1
         </div>
       </div>
     </div>

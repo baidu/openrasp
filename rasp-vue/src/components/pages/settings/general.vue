@@ -15,7 +15,7 @@
               [帮助文档]
             </a>
           </label>
-          <input v-model="data['clientip.header']" type="text" class="form-control" name="example-text-input">
+          <input v-model="data['clientip.header']" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -26,16 +26,13 @@
         <div class="form-group">
           <label class="form-label">
             自定义拦截跳转页面
-            <a href="javascript:">
-              [帮助文档]
-            </a>
           </label>
-          <input v-model="data['block.redirect_url']" type="text" class="form-control" name="example-text-input">
+          <input v-model="data['block.redirect_url']" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             自定义HTML响应内容
-            <a href="javascript:">
+            <a href="https://rasp.baidu.com/doc/setup/others.html#common-block" target="_blank">
               [帮助文档]
             </a>
           </label>
@@ -44,7 +41,7 @@
         <div class="form-group">
           <label class="form-label">
             自定义XML响应内容
-            <a href="javascript:">
+            <a href="https://rasp.baidu.com/doc/setup/others.html#common-block" target="_blank">
               [帮助文档]
             </a>
           </label>
@@ -53,7 +50,7 @@
         <div class="form-group">
           <label class="form-label">
             自定义JSON响应内容
-            <a href="javascript:">
+            <a href="https://rasp.baidu.com/doc/setup/others.html#common-block" target="_blank">
               [帮助文档]
             </a>
           </label>
