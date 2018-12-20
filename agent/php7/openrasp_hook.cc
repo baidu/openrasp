@@ -24,6 +24,7 @@
 #include "agent/shared_config_manager.h"
 #include <unordered_map>
 #include "openrasp_content_type.h"
+#include "openrasp_check_type.h"
 
 extern "C"
 {
@@ -106,8 +107,20 @@ void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckTy
 
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type)
 {
-    return !LOG_G(in_request_process) ||
-           ((1 << check_type) & OPENRASP_HOOK_G(check_type_white_bit_mask));
+    if (!LOG_G(in_request_process))
+    {
+        return true;
+    }
+    if ((1 << check_type) & OPENRASP_HOOK_G(check_type_white_bit_mask))
+    {
+        return true;
+    }
+    if (check_type_transfer->is_buildin_check_type(check_type) &&
+        openrasp::scm->get_buildin_check_action(check_type) == AC_IGNORE)
+    {
+        return true;
+    }
+    return false;
 }
 
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length)
@@ -228,6 +241,19 @@ static std::string resolve_request_id(std::string str)
     return str;
 }
 
+void set_location_header()
+{
+    if (!SG(headers_sent))
+    {
+        std::string location = resolve_request_id("Location: " + OPENRASP_CONFIG(block.redirect_url));
+        sapi_header_line header;
+        header.line = const_cast<char *>(location.c_str());
+        header.line_len = location.length();
+        header.response_code = OPENRASP_CONFIG(block.status_code);
+        sapi_header_op(SAPI_HEADER_REPLACE, &header);
+    }
+}
+
 void handle_block()
 {
     int status = php_output_get_status();
@@ -235,16 +261,7 @@ void handle_block()
     {
         php_output_discard_all();
     }
-
-    if (!SG(headers_sent))
-    {
-        std::string location = resolve_request_id("Location: " + std::string(OPENRASP_CONFIG(block.redirect_url)));
-        sapi_header_line header;
-        header.line = const_cast<char *>(location.c_str());
-        header.line_len = location.length();
-        header.response_code = OPENRASP_CONFIG(block.status_code);
-        sapi_header_op(SAPI_HEADER_REPLACE, &header);
-    }
+    set_location_header();
 
     {
         OpenRASPContentType::ContentType k_type = OpenRASPContentType::ContentType::cNull;

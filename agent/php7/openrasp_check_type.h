@@ -44,6 +44,7 @@ typedef enum check_type_t
   WEBSHELL_COMMAND,
   WEBSHELL_FILE_PUT_CONTENTS,
   XSS_ECHO,
+  XSS,
   ALL_TYPE
 } OpenRASPCheckType;
 
@@ -61,6 +62,7 @@ public:
   OpenRASPCheckType name_to_type(const std::string &name) const;
   std::vector<std::string> get_all_names() const;
   std::map<std::string, std::string> get_buildin_action_map() const;
+  bool is_buildin_check_type(OpenRASPCheckType type) const;
 };
 
 extern std::unique_ptr<CheckTypeTransfer> check_type_transfer;

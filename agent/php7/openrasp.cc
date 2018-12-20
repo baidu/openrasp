@@ -31,6 +31,7 @@ extern "C"
 #include "openrasp_hook.h"
 #include "openrasp_inject.h"
 #include "openrasp_security_policy.h"
+#include "openrasp_output_detect.h"
 #include "openrasp_fswatch.h"
 #include <new>
 #include "openrasp_shared_alloc.h"
@@ -157,6 +158,7 @@ PHP_MINIT_FUNCTION(openrasp)
     }
 
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
+    result = PHP_MINIT(openrasp_output_detect)(INIT_FUNC_ARGS_PASSTHRU);
     is_initialized = true;
     return SUCCESS;
 }
@@ -214,6 +216,7 @@ PHP_RINIT_FUNCTION(openrasp)
         result = PHP_RINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_v8)(INIT_FUNC_ARGS_PASSTHRU);
+        result = PHP_RINIT(openrasp_output_detect)(INIT_FUNC_ARGS_PASSTHRU);
     }
     return SUCCESS;
 }

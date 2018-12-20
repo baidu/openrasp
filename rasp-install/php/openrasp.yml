@@ -76,8 +76,11 @@ webshell_callable:
     - "assert"
 
 xss:
+  #参数过滤正则表达式
   filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"
+  #参数参数最小长度
   min_param_length: 15
+  #最多检测参数数目
   max_detection_num: 10
 
 hook.white:

@@ -144,4 +144,17 @@ public:
   void update(BaseReader *reader);
 };
 
+// xss
+class XssBlock
+{
+public:
+  const static int64_t default_min_param_length;
+  const static int64_t default_max_detection_num;
+
+  string filter_regex;
+  int64_t min_param_length = 15;
+  int64_t max_detection_num = 10;
+  void update(BaseReader *reader);
+};
+
 } // namespace openrasp
