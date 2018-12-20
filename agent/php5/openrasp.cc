@@ -33,6 +33,7 @@ extern "C"
 #include "openrasp_inject.h"
 #include "openrasp_shared_alloc.h"
 #include "openrasp_security_policy.h"
+#include "openrasp_output_detect.h"
 #include "openrasp_fswatch.h"
 #include <new>
 #include <set>
@@ -65,6 +66,23 @@ PHP_INI_ENTRY1("openrasp.app_secret", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspC
 PHP_INI_ENTRY1("openrasp.remote_management_enable", "0", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.remote_management_enable)
 PHP_INI_ENTRY1("openrasp.heartbeat_interval", "180", PHP_INI_SYSTEM, OnUpdateOpenraspHeartbeatInterval, &openrasp_ini.heartbeat_interval)
 PHP_INI_END()
+
+#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION <= 3)
+static PHP_FUNCTION(openrasp_ob_handler);
+ZEND_BEGIN_ARG_INFO_EX(arginfo_openrasp_ob_handler, 0, 0, 1)
+ZEND_ARG_INFO(0, input)
+ZEND_ARG_INFO(0, mode)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry openrasp_functions[] = {
+    PHP_FE(openrasp_ob_handler, arginfo_openrasp_ob_handler)
+        PHP_FE_END};
+
+static PHP_FUNCTION(openrasp_ob_handler)
+{
+    openrasp_detect_output(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+#endif
 
 PHP_GINIT_FUNCTION(openrasp)
 {
@@ -164,6 +182,7 @@ PHP_MINIT_FUNCTION(openrasp)
         result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
     }
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
+    result = PHP_MINIT(openrasp_output_detect)(INIT_FUNC_ARGS_PASSTHRU);
     is_initialized = true;
     return SUCCESS;
 }
@@ -220,6 +239,7 @@ PHP_RINIT_FUNCTION(openrasp)
         result = PHP_RINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_v8)(INIT_FUNC_ARGS_PASSTHRU);
+        result = PHP_RINIT(openrasp_output_detect)(INIT_FUNC_ARGS_PASSTHRU);
     }
     return SUCCESS;
 }
@@ -283,7 +303,11 @@ zend_module_entry openrasp_module_entry = {
     STANDARD_MODULE_HEADER,
 #endif
     "openrasp",
+#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION <= 3)
+    openrasp_functions,
+#else
     NULL,
+#endif
     PHP_MINIT(openrasp),
     PHP_MSHUTDOWN(openrasp),
     PHP_RINIT(openrasp),

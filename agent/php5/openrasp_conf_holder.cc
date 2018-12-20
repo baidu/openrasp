@@ -37,6 +37,7 @@ bool ConfigHolder::update(BaseReader *reader)
   sql.update(reader);
   lru.update(reader);
   webshell_callable.update(reader);
+  xss.update(reader);
   return true;
 }
 

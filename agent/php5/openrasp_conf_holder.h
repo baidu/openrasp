@@ -53,6 +53,7 @@ public:
   SqlBlock sql;
   LruBlock lru;
   CallableBlock webshell_callable;
+  XssBlock xss;
 
 private:
   long latestUpdateTime = 0;

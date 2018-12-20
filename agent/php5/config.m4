@@ -707,6 +707,7 @@ int main() {
     hook/openrasp_pdo.cc \
     hook/openrasp_file.cc \
     hook/openrasp_ssrf.cc \
+    openrasp_output_detect.cc \
     hook/sql_connection_enrty.cc \
     hook/openrasp_echo.cc \
     openrasp_conf_holder.cc \

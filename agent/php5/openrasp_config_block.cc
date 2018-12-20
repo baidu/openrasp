@@ -156,4 +156,14 @@ void CallableBlock::update(BaseReader *reader)
   blacklist = reader->fetch_strings({"webshell_callable", "blacklist"}, CallableBlock::default_blacklist);
 }
 
+const int64_t XssBlock::default_min_param_length = 15;
+const int64_t XssBlock::default_max_detection_num = 10;
+
+void XssBlock::update(BaseReader *reader)
+{
+  filter_regex = reader->fetch_string({"xss", "filter_regex"}, "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]");
+  min_param_length = reader->fetch_int64({"xss", "min_param_length"}, XssBlock::default_min_param_length);
+  max_detection_num = reader->fetch_int64({"xss", "max_detection_num"}, XssBlock::default_max_detection_num);
+}
+
 } // namespace openrasp

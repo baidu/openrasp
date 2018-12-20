@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_check_type.h"
+#include <algorithm>
 
 void CheckTypeTransfer::insert(OpenRASPCheckType type, const std::string &name, bool is_buildin)
 {
@@ -46,6 +47,7 @@ CheckTypeTransfer::CheckTypeTransfer()
   insert(WEBSHELL_COMMAND, "webshell_command", true);
   insert(WEBSHELL_FILE_PUT_CONTENTS, "webshell_file_put_contents", true);
   insert(XSS_ECHO, "xss_echo", true);
+  insert(XSS, "xss", true);
 }
 
 std::string CheckTypeTransfer::type_to_name(OpenRASPCheckType type) const
@@ -92,6 +94,15 @@ std::map<std::string, std::string> CheckTypeTransfer::get_buildin_action_map() c
     buildin_action_map.insert({type_to_name(buildin_type), ""});
   }
   return buildin_action_map;
+}
+
+bool CheckTypeTransfer::is_buildin_check_type(OpenRASPCheckType type) const
+{
+  if (std::find(buildin_check_type.begin(), buildin_check_type.end(), type) != buildin_check_type.end())
+  {
+    return true;
+  }
+  return false;
 }
 
 std::unique_ptr<CheckTypeTransfer> check_type_transfer(new CheckTypeTransfer());

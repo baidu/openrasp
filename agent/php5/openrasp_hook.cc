@@ -24,6 +24,7 @@
 #include "agent/shared_config_manager.h"
 #include <algorithm>
 #include "openrasp_content_type.h"
+#include "openrasp_check_type.h"
 
 extern "C"
 {
@@ -206,8 +207,20 @@ void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckTy
 
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC)
 {
-    return !LOG_G(in_request_process) ||
-           ((1 << check_type) & OPENRASP_HOOK_G(check_type_white_bit_mask));
+    if (!LOG_G(in_request_process))
+    {
+        return true;
+    }
+    if ((1 << check_type) & OPENRASP_HOOK_G(check_type_white_bit_mask))
+    {
+        return true;
+    }
+    if (check_type_transfer->is_buildin_check_type(check_type) &&
+        openrasp::scm->get_buildin_check_action(check_type) == AC_IGNORE)
+    {
+        return true;
+    }
+    return false;
 }
 
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC)
@@ -229,6 +242,19 @@ static std::string resolve_request_id(std::string str TSRMLS_DC)
     return str;
 }
 
+void set_location_header(TSRMLS_D)
+{
+    if (!SG(headers_sent))
+    {
+        std::string location = resolve_request_id("Location: " + OPENRASP_CONFIG(block.redirect_url) TSRMLS_CC);
+        sapi_header_line header;
+        header.line = const_cast<char *>(location.c_str());
+        header.line_len = location.length();
+        header.response_code = OPENRASP_CONFIG(block.status_code);
+        sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
+    }
+}
+
 void handle_block(TSRMLS_D)
 {
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION == 3)
@@ -246,15 +272,7 @@ void handle_block(TSRMLS_D)
 #error "Unsupported PHP version, please contact OpenRASP team for more information"
 #endif
 
-    if (!SG(headers_sent))
-    {
-        std::string location = resolve_request_id("Location: " + std::string(OPENRASP_CONFIG(block.redirect_url)) TSRMLS_CC);
-        sapi_header_line header;
-        header.line = const_cast<char *>(location.c_str());
-        header.line_len = location.length();
-        header.response_code = OPENRASP_CONFIG(block.status_code);
-        sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
-    }
+    set_location_header(TSRMLS_C);
 
     {
         OpenRASPContentType::ContentType k_type = OpenRASPContentType::ContentType::cNull;
