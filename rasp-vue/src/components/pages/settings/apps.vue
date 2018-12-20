@@ -112,7 +112,11 @@ export default {
       }
       return this.request.post('v1/api/app/delete', { id: data.id })
         .then(() => {
-          return this.setCurrentApp(this.app_list.filter(app => app.id !== data.id)[0])
+          const app = data.id === this.current_app.id
+            ? this.app_list.find(app => app.id !== data.id)
+            : this.current_app
+          this.loadApps(1)
+          this.loadAppList(app.id)
         })
     },
     editApp: function(data, is_edit) {
@@ -126,7 +130,7 @@ export default {
     onEdit({ is_edit, data }) {
       this.request.post(is_edit ? 'v1/api/app/config' : 'v1/api/app', data)
         .then(() => {
-          this.loadApps(1)
+          this.loadApps(is_edit ? 1 : this.currentPage)
           this.loadAppList(this.current_app.id)
         })
     }

@@ -17,9 +17,6 @@
         <div class="form-group">
           <label class="form-label">
             推送邮箱地址 - 逗号或者分号分隔
-            <a href="javascript:">
-              [帮助文档]
-            </a>
           </label>
           <input v-model="data.email_alarm_conf.recv_addr" type="text" class="form-control" placeholder="user1@example.com; user2@example.com">
         </div>
@@ -76,11 +73,8 @@
         <div class="form-group">
           <label class="form-label">
             HTTP/HTTPS URL
-            <a href="javascript:">
-              [帮助文档]
-            </a>
           </label>
-          <input v-model="data.http_alarm_conf.recv_addr" type="text" class="form-control">
+          <input v-model="data.http_alarm_conf.recv_addr" type="text" class="form-control" placeholder="http://myserver/myurl">
         </div>
         <div class="form-group">
           <label class="custom-switch">
