@@ -21,7 +21,7 @@ import com.baidu.openrasp.plugin.checker.js.JsChecker;
 import com.baidu.openrasp.plugin.checker.local.SSRFChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlStatementChecker;
-import com.baidu.openrasp.plugin.checker.policy.serverpolicy.*;
+import com.baidu.openrasp.plugin.checker.policy.server.*;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.google.gson.Gson;
@@ -39,40 +39,42 @@ public class CheckParameter {
 
     public enum Type {
         // js插件检测
-        SQL("sql", new SqlStatementChecker()),
-        COMMAND("command", new JsChecker()),
-        DIRECTORY("directory", new JsChecker()),
-        REQUEST("request", new JsChecker()),
-        DUBBOREQUEST("dubboRequest", new JsChecker()),
-        READFILE("readFile", new JsChecker()),
-        WRITEFILE("writeFile", new JsChecker()),
-        FILEUPLOAD("fileUpload", new JsChecker()),
-        FILERENAME("rename", new JsChecker()),
-        XXE("xxe", new JsChecker()),
-        OGNL("ognl", new JsChecker()),
-        DESERIALIZATION("deserialization", new JsChecker()),
+        SQL("sql", new SqlStatementChecker(), 1),
+        COMMAND("command", new JsChecker(), 1 << 1),
+        DIRECTORY("directory", new JsChecker(), 1 << 2),
+        REQUEST("request", new JsChecker(), 1 << 3),
+        DUBBOREQUEST("dubboRequest", new JsChecker(), 1 << 4),
+        READFILE("readFile", new JsChecker(), 1 << 5),
+        WRITEFILE("writeFile", new JsChecker(), 1 << 6),
+        FILEUPLOAD("fileUpload", new JsChecker(), 1 << 7),
+        RENAME("rename", new JsChecker(), 1 << 8),
+        XXE("xxe", new JsChecker(), 1 << 9),
+        OGNL("ognl", new JsChecker(), 1 << 10),
+        DESERIALIZATION("deserialization", new JsChecker(), 1 << 11),
         //        REFLECTION("reflection", new JsChecker()),
-        WEBDAV("webdav", new JsChecker()),
-        INCLUDE("include", new JsChecker()),
-        SSRF("ssrf", new SSRFChecker()),
+        WEBDAV("webdav", new JsChecker(), 1 << 12),
+        INCLUDE("include", new JsChecker(), 1 << 13),
+        SSRF("ssrf", new SSRFChecker(), 1 << 14),
 
         // java本地检测
-        SQL_SLOW_QUERY("sqlSlowQuery", new SqlResultChecker(false)),
+        SQL_SLOW_QUERY("sqlSlowQuery", new SqlResultChecker(false), 0),
 
         // 安全基线检测
-        POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker()),
-        POLICY_TOMCAT_START("tomcatStart", new TomcatSecurityChecker()),
-        POLICY_JBOSS_START("jbossStart", new JBossSecurityChecker()),
-        POLICY_JETTY_START("jettyStart", new JettySecurityChecker()),
-        POLICY_RESIN_START("resinStart", new ResinSecurityChecker()),
-        POLICY_WEBSPHERE_START("webspherestart",new WebsphereSecurityChecker());
+        POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker(), 0),
+        POLICY_TOMCAT_START("tomcatStart", new TomcatSecurityChecker(false), 0),
+        POLICY_JBOSS_START("jbossStart", new JBossSecurityChecker(false), 0),
+        POLICY_JETTY_START("jettyStart", new JettySecurityChecker(false), 0),
+        POLICY_RESIN_START("resinStart", new ResinSecurityChecker(false), 0),
+        POLICY_WEBSPHERE_START("websphereStart", new WebsphereSecurityChecker(false), 0);
 
         String name;
         Checker checker;
+        Integer code;
 
-        Type(String name, Checker checker) {
+        Type(String name, Checker checker, Integer code) {
             this.name = name;
             this.checker = checker;
+            this.code = code;
         }
 
         public String getName() {
@@ -81,6 +83,10 @@ public class CheckParameter {
 
         public Checker getChecker() {
             return checker;
+        }
+
+        public Integer getCode() {
+            return code;
         }
 
         @Override
@@ -104,9 +110,8 @@ public class CheckParameter {
 
     /**
      * 用于单元测试的构造函数
-     *
      */
-    public CheckParameter(Type type, Object params,AbstractRequest request) {
+    public CheckParameter(Type type, Object params, AbstractRequest request) {
         this.type = type;
         this.params = params;
         this.request = request;

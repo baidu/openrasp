@@ -7,8 +7,17 @@ PHP_ARG_WITH(v8, for v8 support,
 PHP_ARG_WITH(gettext, for gettext support,
 [  --with-gettext=DIR   Set the path to gettext], no, no)
 
-PHP_ARG_WITH(antlr4, for native antlr4 support,
-[  --with-antlr4=DIR       Set the path to antlr4], no, no)
+PHP_ARG_ENABLE(openrasp-remote-manager, whether to enable openrasp remote manager support,
+[  --enable-openrasp-remote-manager       Enable openrasp remote manager support (Linux Only)], no, no)
+
+PHP_ARG_WITH(pcre-regex, for pcre support,
+[  --with-pcre-regex=DIR   Include Perl Compatible Regular Expressions support], no, no)
+
+PHP_ARG_WITH(openssl, for openssl support,
+[  --with-openssl=DIR   Include openssl support], no, no)
+
+PHP_ARG_WITH(curl, for curl support,
+[  --with-curl=DIR   Include curl support], no, no)
 
 if test "$PHP_OPENRASP" != "no"; then
   PHP_REQUIRE_CXX()
@@ -65,6 +74,7 @@ if test "$PHP_OPENRASP" != "no"; then
     xxd -i error.js >> openrasp_v8_js.h
     xxd -i rasp.js >> openrasp_v8_js.h
     xxd -i sql_tokenize.js >> openrasp_v8_js.h
+    xxd -i cmd_tokenize.js >> openrasp_v8_js.h
     popd >/dev/null 2>&1
   ], [builddir=PHP_EXT_BUILDDIR([openrasp])/js])
 
@@ -107,31 +117,205 @@ if test "$PHP_OPENRASP" != "no"; then
     OPENRASP_LIBS="$GETTEXT_LIBS $OPENRASP_LIBS"
   fi
 
-  if test "$PHP_ANTLR4" != "no"; then
-    SEARCH_FOR="include/antlr4-runtime/antlr4-runtime.h"
-    if test -r $PHP_ANTLR4/$SEARCH_FOR; then
-      ANTLR4_PATH=$PHP_ANTLR4
-    else
-      AC_MSG_CHECKING([for antlr4 files in default path])
-      for i in $SEARCH_PATH ; do
-        if test -r $i/$SEARCH_FOR; then
-          ANTLR4_PATH=$i
-          AC_MSG_RESULT(found in $i)
+  if test "$PHP_OPENRASP_REMOTE_MANAGER" != "no"; then
+    case $host_os in
+      darwin* )
+        ;;
+      * )
+        dnl check openssl support
+        if test "$ext_shared" != "no"; then
+          if test "$PHP_OPENSSL" != "no" && test -n "$PHP_OPENSSL"; then
+            OPENSSL_SEARCH_PATH="$PHP_OPENSSL"
+          else
+            OPENSSL_SEARCH_PATH="$SEARCH_PATH"
+          fi
+
+          AC_MSG_CHECKING([for openssl headers location])
+          for i in $OPENSSL_SEARCH_PATH ; do
+            for j in $i $i/ssl $i/openssl; do    
+              test -f $j/include/openssl/evp.h && OPENRASP_OPENSSL_INCDIR=$j/include
+            done
+          done
+
+          if test -z "$OPENRASP_OPENSSL_INCDIR"; then
+            AC_MSG_ERROR([Could not find evp.h in $OPENSSL_SEARCH_PATH])
+          fi
+          AC_MSG_RESULT([$OPENRASP_OPENSSL_INCDIR])
+          PHP_ADD_INCLUDE($OPENRASP_OPENSSL_INCDIR)
+
+          AC_MSG_CHECKING([for ssl library location])
+          for i in $OPENSSL_SEARCH_PATH ; do
+            for j in $i/$PHP_LIBDIR $i/ssl/$PHP_LIBDIR $i/openssl/$PHP_LIBDIR $i/lib64 $i/ssl/lib64 $i/openssl/lib64 $i/lib/x86_64-linux-gnu; do
+              if test -f $j/libssl.$SHLIB_SUFFIX_NAME;then
+                OPENRASP_SSL_LIBDIR=$j
+                PHP_ADD_LIBRARY_WITH_PATH(ssl, $OPENRASP_SSL_LIBDIR, OPENRASP_SHARED_LIBADD)
+              elif test -f $j/libssl.a; then
+                OPENRASP_SSL_LIBDIR=$j
+                SSL_LIBS="$OPENRASP_SSL_LIBDIR/libssl.a"
+                case $host_os in
+                  darwin* )
+                    OPENRASP_LIBS="-Wl,$SSL_LIBS $OPENRASP_LIBS"
+                    ;;
+                  * )
+                    OPENRASP_LIBS="-Wl,--whole-archive -Wl,$SSL_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
+                    ;;
+                esac
+              fi
+              if test -n "$OPENRASP_SSL_LIBDIR" ; then
+                break 2
+              fi
+            done
+          done
+    
+          if test -z "$OPENRASP_SSL_LIBDIR" ; then
+            AC_MSG_ERROR([Could not find libssl.(a|$SHLIB_SUFFIX_NAME) in $OPENSSL_SEARCH_PATH])
+          fi
+          AC_MSG_RESULT([$OPENRASP_SSL_LIBDIR])
+
+          AC_MSG_CHECKING([for crypto library location])
+          for i in $OPENSSL_SEARCH_PATH ; do
+            for j in $i/$PHP_LIBDIR $i/lib64 $i/ssl/$PHP_LIBDIR $i/openssl/$PHP_LIBDIR $i/ssl/lib64 $i/openssl/lib64 $i/lib/x86_64-linux-gnu; do
+              if test -f $j/libcrypto.$SHLIB_SUFFIX_NAME;then
+                OPENRASP_CRYPTO_LIBDIR=$j
+                PHP_ADD_LIBRARY_WITH_PATH(crypto, $OPENRASP_CRYPTO_LIBDIR, OPENRASP_SHARED_LIBADD)
+              elif test -f $j/libcrypto.a; then
+                OPENRASP_CRYPTO_LIBDIR=$j
+                SSL_LIBS="$OPENRASP_CRYPTO_LIBDIR/libcrypto.a"
+                case $host_os in
+                  darwin* )
+                    OPENRASP_LIBS="-Wl,$SSL_LIBS $OPENRASP_LIBS"
+                    ;;
+                  * )
+                    OPENRASP_LIBS="-Wl,--whole-archive -Wl,$SSL_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
+                    ;;
+                esac
+              fi
+              if test -n "$OPENRASP_CRYPTO_LIBDIR" ; then
+                break 2
+              fi
+            done
+          done
+    
+          if test -z "$OPENRASP_CRYPTO_LIBDIR" ; then
+            AC_MSG_ERROR([Could not find libcrypto.(a|$SHLIB_SUFFIX_NAME) in $OPENSSL_SEARCH_PATH])
+          fi
+          AC_MSG_RESULT([$OPENRASP_CRYPTO_LIBDIR])
         fi
-      done
+        
+        dnl check curl support
+        if test "$ext_shared" != "no"; then
+          if test "$PHP_CURL" != "no" && test -n "$PHP_CURL"; then
+            CURL_SEARCH_PATH="$PHP_CURL"
+          else
+            CURL_SEARCH_PATH="$SEARCH_PATH"
+          fi
+
+          AC_MSG_CHECKING([for curl headers location])
+          for i in $CURL_SEARCH_PATH ; do  
+            for j in $i/include $i/include/x86_64-linux-gnu; do
+              test -f $j/curl/easy.h && OPENRASP_CURL_INCDIR=$j
+            done        
+          done
+
+          if test -z "$OPENRASP_CURL_INCDIR"; then
+            AC_MSG_ERROR([Could not find easy.h in $CURL_SEARCH_PATH])
+          fi
+          AC_MSG_RESULT([$OPENRASP_CURL_INCDIR])
+          PHP_ADD_INCLUDE($OPENRASP_CURL_INCDIR)
+
+          AC_MSG_CHECKING([for curl library location])
+          
+          for i in $CURL_SEARCH_PATH ; do
+            for j in $i/$PHP_LIBDIR $i/lib64 $i/lib/x86_64-linux-gnu; do
+              if test -f $j/libcurl.$SHLIB_SUFFIX_NAME;then
+                OPENRASP_CURL_LIBDIR=$j
+                PHP_ADD_LIBRARY_WITH_PATH(curl, $OPENRASP_CURL_LIBDIR, OPENRASP_SHARED_LIBADD)
+              elif test -f $j/libcurl.a; then
+                OPENRASP_CURL_LIBDIR=$j
+                SSL_LIBS="$OPENRASP_CURL_LIBDIR/libcurl.a"
+                case $host_os in
+                  darwin* )
+                    OPENRASP_LIBS="-Wl,$SSL_LIBS $OPENRASP_LIBS"
+                    ;;
+                  * )
+                    OPENRASP_LIBS="-Wl,--whole-archive -Wl,$SSL_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
+                    ;;
+                esac
+              fi
+              if test -n "$OPENRASP_CURL_LIBDIR" ; then
+                break 2
+              fi 
+            done
+          done
+
+          if test -z "$OPENRASP_CURL_LIBDIR" ; then
+            AC_MSG_ERROR([Could not find libcurl.(a|$SHLIB_SUFFIX_NAME) in $CURL_SEARCH_PATH])
+          fi
+          AC_MSG_RESULT([$OPENRASP_CURL_LIBDIR])     
+        fi
+
+        OPENRASP_REMOTE_MANAGER_SOURCE="agent/openrasp_ctrl_block.cc \
+        agent/openrasp_agent.cc \
+        agent/heartbeat_agent.cc \
+        agent/log_agent.cc \
+        agent/openrasp_agent_manager.cc \
+        agent/log_collect_item.cc \
+        agent/plugin_update_pkg.cc \
+        agent/backend_request.cc \
+        agent/backend_response.cc"
+        AC_DEFINE([HAVE_OPENRASP_REMOTE_MANAGER], [1], [Have openrasp remote manager support])
+        ;;
+    esac
+  fi
+
+  if test "$ext_shared" != "no"; then
+    if test "$PHP_PCRE_REGEX" != "no" && test -n "$PHP_PCRE_REGEX"; then
+      PCRE_SEARCH_PATH="$PHP_PCRE_REGEX"
+    else
+      PCRE_SEARCH_PATH="$SEARCH_PATH"
     fi
 
-    if test -z "$ANTLR4_PATH"; then
-      AC_MSG_RESULT([not found])
-      AC_MSG_ERROR([Please reinstall the antlr4 distribution])
+    AC_MSG_CHECKING([for PCRE headers location])
+    for i in $PCRE_SEARCH_PATH ; do
+      for j in $i $i/include $i/include/pcre $i/local/include; do
+        test -f $j/pcre.h && OPENRASP_PCRE_INCDIR=$j
+      done
+    done
+
+    if test -z "$OPENRASP_PCRE_INCDIR"; then
+      AC_MSG_ERROR([Could not find pcre.h in $PCRE_SEARCH_PATH])
     fi
-    
-    AC_DEFINE([HAVE_NATIVE_ANTLR4], [1], [Have native antlr4 support])
-    PHP_ADD_INCLUDE($ANTLR4_PATH/include)
-    PHP_ADD_INCLUDE($ANTLR4_PATH/include/antlr4-runtime)
-    ANTLR4_SOURCES="antlr/SQLParser.cpp antlr/SQLLexer.cpp"
-    ANTLR4_LIBS="$ANTLR4_PATH/lib/libantlr4-runtime.a"
-    OPENRASP_LIBS="$ANTLR4_LIBS $OPENRASP_LIBS"
+    AC_MSG_RESULT([$OPENRASP_PCRE_INCDIR])
+    PHP_ADD_INCLUDE($OPENRASP_PCRE_INCDIR)
+
+    AC_MSG_CHECKING([for PCRE library location])
+    for i in $PCRE_SEARCH_PATH ; do
+      for j in $i $i/$PHP_LIBDIR $i/lib64 $i/lib/x86_64-linux-gnu; do
+        if test -f $j/libpcre.$SHLIB_SUFFIX_NAME;then
+          OPENRASP_PCRE_LIBDIR=$j
+          PHP_ADD_LIBRARY_WITH_PATH(pcre, $OPENRASP_PCRE_LIBDIR, OPENRASP_SHARED_LIBADD)
+        elif test -f $j/libpcre.a; then
+          OPENRASP_PCRE_LIBDIR=$j
+          SSL_LIBS="$OPENRASP_PCRE_LIBDIR/libpcre.a"
+          case $host_os in
+            darwin* )
+              OPENRASP_LIBS="-Wl,$SSL_LIBS $OPENRASP_LIBS"
+              ;;
+            * )
+              OPENRASP_LIBS="-Wl,--whole-archive -Wl,$SSL_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
+              ;;
+          esac
+        fi
+        if test -n "$OPENRASP_PCRE_LIBDIR" ; then
+          break 2
+        fi
+      done
+    done
+
+    if test -z "$OPENRASP_PCRE_LIBDIR" ; then
+      AC_MSG_ERROR([Could not find libpcre.(a|$SHLIB_SUFFIX_NAME) in $PCRE_SEARCH_PATH])
+    fi
+    AC_MSG_RESULT([$OPENRASP_PCRE_LIBDIR])
   fi
 
   LIBFSWATCH_SOURCE="libfswatch/c++/path_utils.cpp \
@@ -154,7 +338,8 @@ if test "$PHP_OPENRASP" != "no"; then
     libfswatch/c/libfswatch_log.cpp \
     libfswatch/c/libfswatch.cpp \
     libfswatch/c/cevent.cpp"
-  PHP_ADD_INCLUDE(PHP_EXT_BUILDDIR([openrasp])/libfswatch)
+  PHP_ADD_INCLUDE("PHP_EXT_BUILDDIR([openrasp])/libfswatch")
+
   case $host_os in
     darwin* )
       OPENRASP_LIBS="-framework CoreServices $OPENRASP_LIBS"
@@ -221,19 +406,19 @@ if test "$PHP_OPENRASP" != "no"; then
   EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS $ac_cv_narrowing -std=$ac_cv_cstd -Wno-deprecated-declarations -Wno-write-strings -Wno-deprecated-register"
   PHP_SUBST(EXTRA_CXXFLAGS)
 
-  AC_MSG_CHECKING([whether fully support regex])
-  AC_LANG_PUSH([C++])
-  old_CXXFLAGS=$CXXFLAGS
-  CXXFLAGS="-std=$ac_cv_cstd"
-  AC_TRY_LINK([#include <regex>], [std::cregex_token_iterator it;],
-  [
-    AC_MSG_RESULT(yes)
-    CXXFLAGS=$old_CXXFLAGS
-    AC_LANG_POP([C++])
-  ],[
-    AC_MSG_RESULT(no)
-    AC_MSG_ERROR([Please install a newer c++ compiler])
-  ])
+  # AC_MSG_CHECKING([whether fully support regex])
+  # AC_LANG_PUSH([C++])
+  # old_CXXFLAGS=$CXXFLAGS
+  # CXXFLAGS="-std=$ac_cv_cstd"
+  # AC_TRY_LINK([#include <regex>], [std::cregex_token_iterator it;],
+  # [
+  #   AC_MSG_RESULT(yes)
+  #   CXXFLAGS=$old_CXXFLAGS
+  #   AC_LANG_POP([C++])
+  # ],[
+  #   AC_MSG_RESULT(no)
+  #   AC_MSG_ERROR([Please install a newer c++ compiler])
+  # ])
 
   AC_MSG_CHECKING(for mmap() using MAP_ANON shared memory support)
   AC_TRY_RUN([
@@ -459,8 +644,22 @@ int main() {
     AC_MSG_RESULT([not found])
   fi
 
+  AC_MSG_CHECKING([for build time])
+  if command -v date >/dev/null 2>&1; then
+    build_time="$(date '+%Y-%m-%d %H:%M:%S')"
+    if test -n "${build_time}"; then
+      AC_DEFINE_UNQUOTED([OPENRASP_BUILD_TIME], ["${build_time}"], [Using current time as build time])
+      AC_MSG_RESULT([found])
+    fi
+  else
+    AC_MSG_RESULT([not found])
+  fi
+
   PHP_NEW_EXTENSION(openrasp,
     openrasp.cc \
+    openrasp_action.cc \
+    openrasp_check_type.cc \
+    openrasp_content_type.cc \
     openrasp_utils.cc \
     openrasp_hook.cc \
     hook/openrasp_directory.cc \
@@ -476,19 +675,39 @@ int main() {
     hook/openrasp_pdo.cc \
     hook/openrasp_file.cc \
     hook/openrasp_ssrf.cc \
+    hook/sql_connection_enrty.cc \
+    hook/openrasp_echo.cc \
+    openrasp_config.cc \
+    openrasp_conf_holder.cc \
+    openrasp_config_block.cc \
     openrasp_inject.cc \
     openrasp_log.cc \
-    openrasp_shared_alloc.c  \
-    openrasp_shared_alloc_mmap.c  \
+    openrasp_shared_alloc.cc  \
+    openrasp_shared_alloc_mmap.cc  \
     openrasp_v8.cc \
     openrasp_v8_timeout_task.cc \
     openrasp_v8_request_context.cc \
     openrasp_v8_utils.cc \
+    openrasp_v8_snapshot.cc \
+    openrasp_v8_isolate.cc \
+    openrasp_v8_platform.cc \
+    openrasp_v8_exception.cc \
     openrasp_security_policy.cc \
     openrasp_ini.cc \
+    utils/ReadWriteLock.cc \
+    utils/DoubleArrayTrie.cc \
+    utils/string.cc \
+    utils/digest.cc \
+    utils/regex.cc \
+    utils/time.cc \
+    utils/net.cc \
+    utils/os.cc \
+    agent/base_manager.cc \
+    agent/shared_config_manager.cc \
+    agent/mm/shm_manager.cc \
     openrasp_fswatch.cc \
     $LIBFSWATCH_SOURCE \
-    $ANTLR4_SOURCES \
+    $OPENRASP_REMOTE_MANAGER_SOURCE \
     , $ext_shared)
   ifdef([PHP_ADD_EXTENSION_DEP],
   [

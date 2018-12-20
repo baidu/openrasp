@@ -28,6 +28,7 @@ import com.baidu.openrasp.plugin.info.AttackInfo;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.tool.JsonStringify;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.antlr.v4.runtime.Token;
@@ -45,9 +46,9 @@ import java.util.ArrayList;
  */
 public class SqlStatementChecker extends ConfigurableChecker {
 
-    private static final String CONFIG_KEY_SQLI_USER_INPUT = "sqli_userinput";
+    private static final String CONFIG_KEY_SQL_USER_INPUT = "sql_userinput";
     private static final String CONFIG_KEY_DB_MANAGER = "sqli_dbmanager";
-    private static final String CONFIG_KEY_SQLI_POLICY = "sqli_policy";
+    private static final String CONFIG_KEY_SQL_POLICY = "sql_policy";
     private static final String CONFIG_KEY_STACKED_QUERY = "stacked_query";
     private static final String CONFIG_KEY_NO_HEX = "no_hex";
     private static final String CONFIG_KEY_INFORMATION_SCHEMA = "information_schema";
@@ -68,25 +69,15 @@ public class SqlStatementChecker extends ConfigurableChecker {
         }
         // 算法1: 匹配用户输入
         // 1. 简单识别逻辑是否发生改变
-        // 2. 识别数据库管理器
-        String action = getActionElement(config, CONFIG_KEY_SQLI_USER_INPUT);
-        int paramterLength = getIntElement(config, CONFIG_KEY_SQLI_USER_INPUT, CONFIG_KEY_MIN_LENGTH);
+        String action = getActionElement(config, CONFIG_KEY_SQL_USER_INPUT);
+        int paramterMinLength = getIntElement(config, CONFIG_KEY_SQL_USER_INPUT, CONFIG_KEY_MIN_LENGTH);
+
         if (!EventInfo.CHECK_ACTION_IGNORE.equals(action) && action != null && parameterMap != null) {
             for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
                 String[] v = entry.getValue();
                 String value = v[0];
-                if (value.length() <= paramterLength) {
+                if (value.length() <= paramterMinLength) {
                     continue;
-                }
-                if (value.length() == query.length() && value.equals(query)) {
-                    String managerAction = getActionElement(config, CONFIG_KEY_DB_MANAGER);
-                    if (!EventInfo.CHECK_ACTION_IGNORE.equals(managerAction) && managerAction != null) {
-                        message = "SQLi - Database manager detected, request parameter name: " + entry.getKey();
-                        action = managerAction;
-                        break;
-                    } else {
-                        continue;
-                    }
                 }
 
                 // 简单识别用户输入
@@ -122,16 +113,16 @@ public class SqlStatementChecker extends ConfigurableChecker {
         }
         if (message != null) {
             result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
-                    message, "sqli_userinput", 90));
+                    message, "sql_userinput", 90));
         } else {
             // 算法2: SQL语句策略检查（模拟SQL防火墙功能）
-            HashMap<String, Boolean> funcBlackList = getJsonObjectAsMap(config, CONFIG_KEY_SQLI_POLICY, "function_blacklist");
+            HashMap<String, Boolean> funcBlackList = getJsonObjectAsMap(config, CONFIG_KEY_SQL_POLICY, "function_blacklist");
 
-            action = getActionElement(config, CONFIG_KEY_SQLI_POLICY);
+            action = getActionElement(config, CONFIG_KEY_SQL_POLICY);
             if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
                 int i = -1;
                 if (tokens != null) {
-                    HashMap<String, Boolean> modules = getJsonObjectAsMap(config, CONFIG_KEY_SQLI_POLICY, "feature");
+                    HashMap<String, Boolean> modules = getJsonObjectAsMap(config, CONFIG_KEY_SQL_POLICY, "feature");
 
                     // token 转换小写
                     for (int z = 0; z < tokens.length; z++) {
@@ -210,7 +201,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                 }
                 if (message != null) {
                     result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
-                            message, "sqli_policy", 100));
+                            message, "sql_policy", 100));
                 }
             }
         }
@@ -235,8 +226,11 @@ public class SqlStatementChecker extends ConfigurableChecker {
         }
         // 检测无威胁的sql加入sql缓存
         if (result.isEmpty()) {
-            String query = (String) checkParameter.getParam("query");
-            SQLStatementHook.sqlCache.put(query, null);
+            if (HookHandler.commonLRUCache.maxSize() != 0) {
+                String key = checkParameter.getParam("server").toString().trim()+
+                        checkParameter.getParam("query").toString().trim();
+                HookHandler.commonLRUCache.put(key, null);
+            }
         }
         return result;
     }

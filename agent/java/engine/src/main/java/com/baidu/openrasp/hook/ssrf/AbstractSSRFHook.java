@@ -21,15 +21,17 @@ import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.google.gson.Gson;
 import org.mozilla.javascript.Scriptable;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.util.Collections;
 import java.util.LinkedList;
 
 /**
  * Created by tyy on 17-12-9.
- *
+ * <p>
  * SSRF hook点基类
  */
 public abstract class AbstractSSRFHook extends AbstractClassHook {
@@ -68,9 +70,13 @@ public abstract class AbstractSSRFHook extends AbstractClassHook {
         } catch (Throwable t) {
             // ignore
         }
+        Collections.sort(ip);
         Scriptable array = cx.newArray(cx.getScope(), ip.toArray());
         params.put("ip", params, array);
-        HookHandler.doCheck(CheckParameter.Type.SSRF, params);
+        //如果在lru缓存中不进检测
+        if (!HookHandler.commonLRUCache.isContainsKey(new Gson().toJson(params))) {
+            HookHandler.doCheck(CheckParameter.Type.SSRF, params);
+        }
     }
 
 }

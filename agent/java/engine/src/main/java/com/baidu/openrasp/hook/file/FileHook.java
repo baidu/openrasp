@@ -24,6 +24,7 @@ import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.StackTrace;
+import com.google.gson.Gson;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -88,13 +89,15 @@ public class FileHook extends AbstractClassHook {
                 params.put("stack", params, stackArray);
                 try {
                     params.put("realpath", params, file.getCanonicalPath());
-                } catch (IOException e) {
+                } catch (Exception e) {
                     params.put("realpath", params, file.getAbsolutePath());
                 }
             } catch (Throwable t) {
-                HookHandler.LOGGER.warn(t.getMessage());
+                HookHandler.LOGGER.warn(t.getMessage(), t);
             }
-            if (params != null) {
+            String hookType = CheckParameter.Type.DIRECTORY.getName();
+            //如果在lru缓存中不进检测
+            if (params != null && !HookHandler.commonLRUCache.isContainsKey(hookType + new Gson().toJson(params))) {
                 HookHandler.doCheck(CheckParameter.Type.DIRECTORY, params);
             }
         }

@@ -47,7 +47,6 @@ public class JBossStartupHook extends ServerStartupHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-
         String src = getInvokeStaticSrc(JBossStartupHook.class, "checkJBossJMXConsole", "$0", Object.class);
         insertBefore(ctClass, "start", null, src);
     }
@@ -63,6 +62,6 @@ public class JBossStartupHook extends ServerStartupHook {
         } catch (Exception e) {
             HookHandler.LOGGER.error("handle jboss startup failed", e);
         }
-        HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_JBOSS_START, CheckParameter.EMPTY_MAP);
+        HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_JBOSS_START, CheckParameter.EMPTY_MAP);
     }
 }

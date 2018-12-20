@@ -17,28 +17,38 @@
 #ifndef PHP_OPENRASP_H
 #define PHP_OPENRASP_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+// bug fix, isfinite is not declared
+#ifndef HAVE_ISFINITE
+#include <cmath>
+#define isfinite std::isfinite
+#endif
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 #include "php.h"
 
-extern zend_module_entry openrasp_module_entry;
+  extern zend_module_entry openrasp_module_entry;
 #define phpext_openrasp_ptr &openrasp_module_entry
 
-#define PHP_OPENRASP_VERSION "0.1.0" /* Replace with version number for your extension */
+#define PHP_OPENRASP_VERSION "1.0.0 RC1" /* Replace with version number for your extension */
 #define OPENRASP_PHP_VERSION ZEND_TOSTR(PHP_MAJOR_VERSION.PHP_MINOR_VERSION.PHP_RELEASE_VERSION)
 
 #ifdef PHP_WIN32
-#	define PHP_OPENRASP_API __declspec(dllexport)
+#define PHP_OPENRASP_API __declspec(dllexport)
 #elif defined(__GNUC__) && __GNUC__ >= 4
-#	define PHP_OPENRASP_API __attribute__ ((visibility("default")))
+#define PHP_OPENRASP_API __attribute__((visibility("default")))
 #else
-#	define PHP_OPENRASP_API
+#define PHP_OPENRASP_API
 #endif
 
 #ifdef ZTS
 #include "TSRM.h"
-#endif
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
 #endif
 
 /// BEGIN PHP <= 5.4 ///
@@ -62,9 +72,15 @@ extern zend_module_entry openrasp_module_entry;
 #define HASH_KEY_NON_EXISTENT HASH_KEY_NON_EXISTANT
 #endif
 /// END PHP <= 5.4 ///
+#ifdef __cplusplus
+}
+#endif
 
-#endif	/* PHP_OPENRASP_H */
+#ifndef HAVE_ISFINITE
+#undef isfinite
+#endif
 
+#endif /* PHP_OPENRASP_H */
 
 /*
  * Local variables:

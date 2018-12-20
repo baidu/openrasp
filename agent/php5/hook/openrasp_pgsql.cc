@@ -16,13 +16,13 @@
 
 #include "openrasp_hook.h"
 
-HOOK_FUNCTION(pg_connect, dbConnection);
-HOOK_FUNCTION(pg_pconnect, dbConnection);
-PRE_HOOK_FUNCTION(pg_query, sql);
-// POST_HOOK_FUNCTION(pg_query, sqlSlowQuery);
-PRE_HOOK_FUNCTION(pg_send_query, sql);
-// POST_HOOK_FUNCTION(pg_get_result, sqlSlowQuery);
-PRE_HOOK_FUNCTION(pg_prepare, sqlPrepared);
+HOOK_FUNCTION(pg_connect, DB_CONNECTION);
+HOOK_FUNCTION(pg_pconnect, DB_CONNECTION);
+PRE_HOOK_FUNCTION(pg_query, SQL);
+// POST_HOOK_FUNCTION(pg_query, SQL_SLOW_QUERY);
+PRE_HOOK_FUNCTION(pg_send_query, SQL);
+// POST_HOOK_FUNCTION(pg_get_result, SQL_SLOW_QUERY);
+PRE_HOOK_FUNCTION(pg_prepare, SQL_PREPARED);
 
 void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p)
 {
@@ -37,7 +37,7 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
         cp = buf;
         while (*cp)
         {
-            if (isspace((unsigned char) *cp))
+            if (isspace((unsigned char)*cp))
             {
                 cp++;
                 continue;
@@ -50,12 +50,12 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
                 {
                     break;
                 }
-                if (isspace((unsigned char) *cp))
+                if (isspace((unsigned char)*cp))
                 {
                     *cp++ = '\0';
                     while (*cp)
                     {
-                        if (!isspace((unsigned char) *cp))
+                        if (!isspace((unsigned char)*cp))
                         {
                             break;
                         }
@@ -69,13 +69,13 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
             if (*cp != '=')
             {
                 efree(buf);
-	            return;
+                return;
             }
             *cp++ = '\0';
 
             while (*cp)
             {
-                if (!isspace((unsigned char) *cp))
+                if (!isspace((unsigned char)*cp))
                 {
                     break;
                 }
@@ -88,7 +88,7 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
                 cp2 = pval;
                 while (*cp)
                 {
-                    if (isspace((unsigned char) *cp))
+                    if (isspace((unsigned char)*cp))
                     {
                         *cp++ = '\0';
                         break;
@@ -117,7 +117,7 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
                     if (*cp == '\0')
                     {
                         efree(buf);
-	                    return;
+                        return;
                     }
                     if (*cp == '\\')
                     {
@@ -140,50 +140,66 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
 
             if (strcmp(pname, "user") == 0)
             {
-                sql_connection_p->username = estrdup(pval);
-            } 
+                sql_connection_p->set_username(pval);
+            }
             else if (strcmp(pname, "host") == 0)
             {
-                sql_connection_p->host = estrdup(pval);
-            } 
+                sql_connection_p->set_host(pval);
+                TSRMLS_FETCH();
+                struct stat sb;
+                if (VCWD_STAT(pval, &sb) == 0)
+                {
+                    sql_connection_p->set_using_socket((sb.st_mode & S_IFDIR) != 0 || (sb.st_mode & S_IFSOCK) != 0);
+                }
+                else
+                {
+                    sql_connection_p->set_using_socket(false);
+                }
+            }
             else if (strcmp(pname, "port") == 0)
             {
-                sql_connection_p->port = atoi(pval);
+                sql_connection_p->set_port(atoi(pval));
             }
         }
-        sql_connection_p->server = "pgsql";
         efree(buf);
     }
 }
 
 static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
-	char *host=NULL,*port=NULL,*options=NULL,*tty=NULL,*dbname=NULL,*connstring=NULL;
-	zval **args[5];
-	int i = 0;
+    char *host = NULL, *port = NULL, *options = NULL, *tty = NULL, *dbname = NULL, *connstring = NULL;
+    zval **args[5];
+    int i = 0;
     int connect_type = 0;
 
-	if (ZEND_NUM_ARGS() < 1 || ZEND_NUM_ARGS() > 5
-			|| zend_get_parameters_array_ex(ZEND_NUM_ARGS(), args) == FAILURE) {
-		return;
-	}
-
-	if (ZEND_NUM_ARGS() == 1) { /* new style, using connection string */
-		connstring = Z_STRVAL_PP(args[0]);
-	} else if (ZEND_NUM_ARGS() == 2 ) { /* Safe to add conntype_option, since 2 args was illegal */
-		connstring = Z_STRVAL_PP(args[0]);
-		convert_to_long_ex(args[1]);
-		connect_type = Z_LVAL_PP(args[1]);
-	}
-    parse_connection_string(connstring, sql_connection_p);
+    if (ZEND_NUM_ARGS() < 1 || ZEND_NUM_ARGS() > 5 || zend_get_parameters_array_ex(ZEND_NUM_ARGS(), args) == FAILURE)
+    {
+        return;
+    }
+    sql_connection_p->set_server("pgsql");
+    if (ZEND_NUM_ARGS() == 1)
+    { /* new style, using connection string */
+        connstring = Z_STRVAL_PP(args[0]);
+    }
+    else if (ZEND_NUM_ARGS() == 2)
+    { /* Safe to add conntype_option, since 2 args was illegal */
+        connstring = Z_STRVAL_PP(args[0]);
+        convert_to_long_ex(args[1]);
+        connect_type = Z_LVAL_PP(args[1]);
+    }
+    if (connstring)
+    {
+        sql_connection_p->set_connection_string(connstring);
+        parse_connection_string(connstring, sql_connection_p);
+    }
 }
 
 /**
  * pg_connect
  */
-void pre_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (openrasp_ini.enforce_policy)
+    if (OPENRASP_CONFIG(security.enforce_policy))
     {
         if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pg_connection_entry, 1))
         {
@@ -191,9 +207,9 @@ void pre_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         }
     }
 }
-void post_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_RESOURCE)
+    if (!OPENRASP_CONFIG(security.enforce_policy) && Z_TYPE_P(return_value) == IS_RESOURCE)
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pg_connection_entry, 0);
     }
@@ -202,37 +218,42 @@ void post_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 /**
  * pg_pconnect 
  */
-void pre_global_pg_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pg_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    pre_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    pre_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
-void post_global_pg_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_global_pg_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    post_global_pg_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    post_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 /**
  * pg_query
  */
-void pre_global_pg_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pg_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *pgsql_link = NULL;
-	char *query;
-	int query_len, argc = ZEND_NUM_ARGS();
+    char *query;
+    int query_len, argc = ZEND_NUM_ARGS();
 
-	if (argc == 1) {
-		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &query, &query_len) == FAILURE) {
-			return;
-		}
-	} else {
-		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &pgsql_link, &query, &query_len) == FAILURE) {
-			return;
-		}
-	}
+    if (argc == 1)
+    {
+        if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &query, &query_len) == FAILURE)
+        {
+            return;
+        }
+    }
+    else
+    {
+        if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &pgsql_link, &query, &query_len) == FAILURE)
+        {
+            return;
+        }
+    }
 
-    sql_type_handler(query, query_len, "pgsql" TSRMLS_CC);
+    plugin_sql_check(query, query_len, "pgsql" TSRMLS_CC);
 }
-void post_global_pg_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_global_pg_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     long num_rows = 0;
     if (Z_TYPE_P(return_value) == IS_RESOURCE)
@@ -241,24 +262,24 @@ void post_global_pg_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         args[0] = return_value;
         num_rows = fetch_rows_via_user_function("pg_num_rows", 1, args TSRMLS_CC);
     }
-    if (num_rows >= openrasp_ini.slowquery_min_rows)
+    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
     {
-        slow_query_alarm(num_rows TSRMLS_CC);       
+        slow_query_alarm(num_rows TSRMLS_CC);
     }
 }
 
 /**
  * pg_send_query
  */
-void pre_global_pg_send_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pg_send_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    pre_global_pg_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    pre_global_pg_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 /**
  * pg_get_result
- */ 
-void post_global_pg_get_result_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+ */
+void post_global_pg_get_result_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     long num_rows = 0;
     if (Z_TYPE_P(return_value) == IS_RESOURCE)
@@ -267,27 +288,33 @@ void post_global_pg_get_result_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETER
         args[0] = return_value;
         num_rows = fetch_rows_via_user_function("pg_num_rows", 1, args TSRMLS_CC);
     }
-    if (num_rows >= openrasp_ini.slowquery_min_rows)
+    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
     {
-        slow_query_alarm(num_rows TSRMLS_CC);       
+        slow_query_alarm(num_rows TSRMLS_CC);
     }
 }
 
-void pre_global_pg_prepare_sqlPrepared(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_pg_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *pgsql_link = NULL;
-	char *query, *stmtname;
-	int query_len, stmtname_len, argc = ZEND_NUM_ARGS();
+    char *query, *stmtname;
+    int query_len, stmtname_len, argc = ZEND_NUM_ARGS();
 
-	if (argc == 2) {
-		if (zend_parse_parameters(argc TSRMLS_CC, "ss", &stmtname, &stmtname_len, &query, &query_len) == FAILURE) {
-			return;
-		}
-	} else {
-		if (zend_parse_parameters(argc TSRMLS_CC, "rss", &pgsql_link, &stmtname, &stmtname_len, &query, &query_len) == FAILURE) {
-			return;
-		}
-	}
+    if (argc == 2)
+    {
+        if (zend_parse_parameters(argc TSRMLS_CC, "ss", &stmtname, &stmtname_len, &query, &query_len) == FAILURE)
+        {
+            return;
+        }
+    }
+    else
+    {
+        if (zend_parse_parameters(argc TSRMLS_CC, "rss",
+                                  &pgsql_link, &stmtname, &stmtname_len, &query, &query_len) == FAILURE)
+        {
+            return;
+        }
+    }
 
-    sql_type_handler(query, query_len, "pgsql" TSRMLS_CC);
+    plugin_sql_check(query, query_len, "pgsql" TSRMLS_CC);
 }

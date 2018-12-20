@@ -15,25 +15,26 @@
  */
 
 #include "openrasp_hook.h"
+#include "agent/shared_config_manager.h"
 
 /**
  * command相关hook点
  */
-PRE_HOOK_FUNCTION(passthru, command);
-PRE_HOOK_FUNCTION(system, command);
-PRE_HOOK_FUNCTION(exec, command);
-PRE_HOOK_FUNCTION(shell_exec, command);
-PRE_HOOK_FUNCTION(proc_open, command);
-PRE_HOOK_FUNCTION(popen, command);
-PRE_HOOK_FUNCTION(pcntl_exec, command);
+PRE_HOOK_FUNCTION(passthru, COMMAND);
+PRE_HOOK_FUNCTION(system, COMMAND);
+PRE_HOOK_FUNCTION(exec, COMMAND);
+PRE_HOOK_FUNCTION(shell_exec, COMMAND);
+PRE_HOOK_FUNCTION(proc_open, COMMAND);
+PRE_HOOK_FUNCTION(popen, COMMAND);
+PRE_HOOK_FUNCTION(pcntl_exec, COMMAND);
 
-PRE_HOOK_FUNCTION(passthru, webshell_command);
-PRE_HOOK_FUNCTION(system, webshell_command);
-PRE_HOOK_FUNCTION(exec, webshell_command);
-PRE_HOOK_FUNCTION(shell_exec, webshell_command);
-PRE_HOOK_FUNCTION(proc_open, webshell_command);
-PRE_HOOK_FUNCTION(popen, webshell_command);
-PRE_HOOK_FUNCTION(pcntl_exec, webshell_command);
+PRE_HOOK_FUNCTION(passthru, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(system, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(exec, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(shell_exec, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(proc_open, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(popen, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(pcntl_exec, WEBSHELL_COMMAND);
 
 static inline void openrasp_webshell_command_common(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
@@ -53,11 +54,40 @@ static inline void openrasp_webshell_command_common(OPENRASP_INTERNAL_FUNCTION_P
         Z_ADDREF_P(command);
         zval plugin_message;
         ZVAL_STRING(&plugin_message, _("WebShell activity - Detected command execution backdoor"));
-        openrasp_buildin_php_risk_handle(1, check_type, 100, &attack_params, &plugin_message);
+        OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
+        openrasp_buildin_php_risk_handle(action, check_type, 100, &attack_params, &plugin_message);
     }
 }
 
-static inline void openrasp_command_common(INTERNAL_FUNCTION_PARAMETERS)
+static inline void plugin_command_check(const zend_string *command, OpenRASPCheckType check_type)
+{
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+    if (!isolate)
+    {
+        return;
+    }
+    bool is_block = false;
+    {
+        v8::HandleScope handle_scope(isolate);
+        auto arr = format_debug_backtrace_arr();
+        size_t len = arr.size();
+        auto stack = v8::Array::New(isolate, len);
+        for (size_t i = 0; i < len; i++)
+        {
+            stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
+        }
+        auto params = v8::Object::New(isolate);
+        params->Set(openrasp::NewV8String(isolate, "command"), openrasp::NewV8String(isolate, command->val, command->len));
+        params->Set(openrasp::NewV8String(isolate, "stack"), stack);
+        is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+    }
+    if (is_block)
+    {
+        handle_block();
+    }
+}
+
+static inline void openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zend_string *command;
 
@@ -66,83 +96,75 @@ static inline void openrasp_command_common(INTERNAL_FUNCTION_PARAMETERS)
         return;
     }
 
-    zval params;
-    array_init(&params);
-    add_assoc_str(&params, "command", command);
-    zend_string_addref(command);
-    zval stack;
-    array_init(&stack);
-    format_debug_backtrace_arr(&stack);
-    add_assoc_zval(&params, "stack", &stack);
-    check("command", &params);
+    plugin_command_check(command, check_type);
 }
 
-void pre_global_passthru_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_passthru_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     openrasp_webshell_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_passthru_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_passthru_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    openrasp_command_common(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_system_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    openrasp_webshell_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
-}
-
-void pre_global_system_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    openrasp_command_common(INTERNAL_FUNCTION_PARAM_PASSTHRU);
-}
-
-void pre_global_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_system_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     openrasp_webshell_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_system_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    openrasp_command_common(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_shell_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    openrasp_webshell_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
-}
-
-void pre_global_shell_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    openrasp_command_common(INTERNAL_FUNCTION_PARAM_PASSTHRU);
-}
-
-void pre_global_proc_open_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_exec_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     openrasp_webshell_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_proc_open_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    openrasp_command_common(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_popen_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    openrasp_webshell_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
-}
-
-void pre_global_popen_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    openrasp_command_common(INTERNAL_FUNCTION_PARAM_PASSTHRU);
-}
-
-void pre_global_pcntl_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_shell_exec_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     openrasp_webshell_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_pcntl_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_shell_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+void pre_global_proc_open_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    openrasp_webshell_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+void pre_global_proc_open_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+void pre_global_popen_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    openrasp_webshell_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+void pre_global_popen_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+void pre_global_pcntl_exec_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    openrasp_webshell_command_common(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+void pre_global_pcntl_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zend_string *command;
     zval *args;
@@ -169,13 +191,5 @@ void pre_global_pcntl_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         }
     }
 
-    zval params;
-    array_init(&params);
-    add_assoc_str(&params, "command", command);
-    zend_string_addref(command);
-    zval stack;
-    array_init(&stack);
-    format_debug_backtrace_arr(&stack);
-    add_assoc_zval(&params, "stack", &stack);
-    check("command", &params);
+    plugin_command_check(command, check_type);
 }

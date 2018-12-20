@@ -2,11 +2,21 @@
 hook array_map
 --SKIPIF--
 <?php
+$plugin = <<<EOF
+RASP.algorithmConfig = {
+     webshell_callable: {
+        name:   '算法4 - 拦截简单的 PHP array_map/walk/filter 后门',
+        action: 'block'
+    }
+}
+EOF;
+$conf = <<<CONF
+webshell_callable.blacklist=["system", "exec"]
+CONF;
 include(__DIR__.'/../skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.callable_blacklists=system,exec
 --FILE--
 <?php
 array_map("system", array('ls', 'ls'));

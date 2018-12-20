@@ -1,0 +1,5 @@
+/bin/
+/pkg/
+.idea
+.cache
+/src/github*

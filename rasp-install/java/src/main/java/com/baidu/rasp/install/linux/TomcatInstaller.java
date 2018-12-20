@@ -46,7 +46,7 @@ public class TomcatInstaller extends BaseStandardInstaller {
 
     @Override
     protected String getInstallPath(String serverRoot) {
-        return serverRoot + "/rasp/";
+        return serverRoot + "/rasp";
         
         // String catalineBase;
         // if (serverRoot == null) {

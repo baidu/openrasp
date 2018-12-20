@@ -99,9 +99,9 @@ public class ReflectionHook extends AbstractClassHook {
                     }
                 }
             } finally {
-                if (params != null) {
+//                if (params != null) {
 //                    HookHandler.doCheckWithoutRequest(CheckParameter.Type.REFLECTION, params);
-                }
+//                }
                 HookHandler.enableCurrThreadHook();
             }
         }

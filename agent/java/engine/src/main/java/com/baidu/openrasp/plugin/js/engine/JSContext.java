@@ -16,10 +16,12 @@
 
 package com.baidu.openrasp.plugin.js.engine;
 
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.AttackInfo;
 import com.baidu.openrasp.plugin.info.EventInfo;
+import com.google.gson.Gson;
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.*;
 
@@ -153,6 +155,25 @@ public class JSContext extends Context {
                 algorithm = "";
             }
             checkResults.add(new AttackInfo(parameter, action, message, name, algorithm, confidence));
+        }
+        // 检测无威胁的文件相关请求加入lru缓存
+        if (checkResults.isEmpty()) {
+            String hookType = parameter.getType().getName();
+            if ("directory".equals(hookType)) {
+                if (HookHandler.commonLRUCache.maxSize() != 0) {
+                    HookHandler.commonLRUCache.put(hookType + new Gson().toJson(parameter.getParams()), null);
+                }
+            }
+            if ("readFile".equals(hookType)) {
+                if (HookHandler.commonLRUCache.maxSize() != 0) {
+                    HookHandler.commonLRUCache.put(hookType + new Gson().toJson(parameter.getParams()), null);
+                }
+            }
+            if ("writeFile".equals(hookType)) {
+                if (HookHandler.commonLRUCache.maxSize() != 0) {
+                    HookHandler.commonLRUCache.put(hookType + new Gson().toJson(parameter.getParams()), null);
+                }
+            }
         }
         return checkResults;
     }

@@ -15,17 +15,18 @@
  */
 
 #include "openrasp_hook.h"
+#include "agent/shared_config_manager.h"
 
 /**
  * callable相关hook点
  */
-PRE_HOOK_FUNCTION(array_walk, callable);
-PRE_HOOK_FUNCTION(array_map, callable);
-PRE_HOOK_FUNCTION(array_filter, callable);
+PRE_HOOK_FUNCTION(array_walk, CALLABLE);
+PRE_HOOK_FUNCTION(array_map, CALLABLE);
+PRE_HOOK_FUNCTION(array_filter, CALLABLE);
 
-PRE_HOOK_FUNCTION_EX(__construct, reflectionfunction, callable);
+PRE_HOOK_FUNCTION_EX(__construct, reflectionfunction, CALLABLE);
 
-static void _callable_handler(const char *functionname, uint functionname_len, const char *check_type)
+static void _callable_handler(const char *functionname, uint functionname_len, OpenRASPCheckType check_type)
 {
 	if (openrasp_check_callable_black(functionname, functionname_len))
 	{
@@ -34,11 +35,12 @@ static void _callable_handler(const char *functionname, uint functionname_len, c
 		add_assoc_string(&attack_params, "function", const_cast<char *>(functionname));
 		zval plugin_message;
 		ZVAL_STR(&plugin_message, strpprintf(0, _("Webshell detected: using '%s' function"), functionname));
-		openrasp_buildin_php_risk_handle(1, check_type, 100, &attack_params, &plugin_message);
+		OpenRASPActionType action = openrasp::scm->get_buildin_check_action(CALLABLE);
+		openrasp_buildin_php_risk_handle(action, check_type, 100, &attack_params, &plugin_message);
 	}
 }
 
-static void check_callable_function(zend_fcall_info fci, const char *check_type)
+static void check_callable_function(zend_fcall_info fci, OpenRASPCheckType check_type)
 {
 	if (!ZEND_FCI_INITIALIZED(fci))
 	{
@@ -51,7 +53,7 @@ static void check_callable_function(zend_fcall_info fci, const char *check_type)
 	}
 }
 
-void pre_global_array_filter_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_array_filter_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	if (ZEND_NUM_ARGS() > 1)
 	{
@@ -67,12 +69,12 @@ void pre_global_array_filter_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	}
 }
 
-void pre_global_array_walk_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_array_walk_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-	pre_global_array_filter_callable(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	pre_global_array_filter_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_array_map_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_array_map_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	zend_fcall_info fci = empty_fcall_info;
 	zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
@@ -90,7 +92,7 @@ void pre_global_array_map_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	check_callable_function(fci, check_type);
 }
 
-void pre_reflectionfunction___construct_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_reflectionfunction___construct_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	zval *closure = NULL;
 	char *lcname, *nsname;

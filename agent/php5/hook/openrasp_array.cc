@@ -15,28 +15,29 @@
  */
 
 #include "openrasp_hook.h"
+#include "agent/shared_config_manager.h"
 
 /**
  * callable相关hook点
  */
-PRE_HOOK_FUNCTION(array_walk, callable);
-PRE_HOOK_FUNCTION(array_map, callable);
-PRE_HOOK_FUNCTION(array_filter, callable);
+PRE_HOOK_FUNCTION(array_walk, CALLABLE);
+PRE_HOOK_FUNCTION(array_map, CALLABLE);
+PRE_HOOK_FUNCTION(array_filter, CALLABLE);
 
-PRE_HOOK_FUNCTION_EX(__construct, reflectionfunction, callable);
+PRE_HOOK_FUNCTION_EX(__construct, reflectionfunction, CALLABLE);
 
 static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
 {
-	if (!ZEND_FCI_INITIALIZED(fci))
-	{
-		return;
-	}
-	zval *function_name = fci.function_name;
-	if (Z_TYPE_P(function_name) == IS_STRING && Z_STRLEN_P(function_name) > 0)
-	{
-		if (openrasp_check_callable_black(Z_STRVAL_P(function_name), Z_STRLEN_P(function_name) TSRMLS_CC))
-		{
-			zval *attack_params = NULL;
+    if (!ZEND_FCI_INITIALIZED(fci))
+    {
+        return;
+    }
+    zval *function_name = fci.function_name;
+    if (Z_TYPE_P(function_name) == IS_STRING && Z_STRLEN_P(function_name) > 0)
+    {
+        if (openrasp_check_callable_black(Z_STRVAL_P(function_name), Z_STRLEN_P(function_name) TSRMLS_CC))
+        {
+            zval *attack_params = NULL;
             MAKE_STD_ZVAL(attack_params);
             array_init(attack_params);
             add_assoc_string(attack_params, "function", Z_STRVAL_P(function_name), 1);
@@ -46,54 +47,59 @@ static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
             spprintf(&message_str, 0, _("WebShell activity - Using dangerous callback method %s()"), Z_STRVAL_P(function_name));
             ZVAL_STRING(plugin_message, message_str, 1);
             efree(message_str);
-            openrasp_buildin_php_risk_handle(1, "callable", 100, attack_params, plugin_message TSRMLS_CC);
-		}
-	}
+            OpenRASPActionType action = openrasp::scm->get_buildin_check_action(CALLABLE);
+            openrasp_buildin_php_risk_handle(action, CALLABLE, 100, attack_params, plugin_message TSRMLS_CC);
+        }
+    }
 }
 
-void pre_global_array_filter_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_array_filter_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *array;
-	long use_type = 0;
-	zend_fcall_info fci = empty_fcall_info;
-	zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
+    long use_type = 0;
+    zend_fcall_info fci = empty_fcall_info;
+    zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "a|fl", &array, &fci, &fci_cache, &use_type) == FAILURE) {
-		return;
-	}
-    if (ZEND_NUM_ARGS() > 1) {
-		check_callable_function(fci TSRMLS_CC);
-	}
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "a|fl", &array, &fci, &fci_cache, &use_type) == FAILURE)
+    {
+        return;
+    }
+    if (ZEND_NUM_ARGS() > 1)
+    {
+        check_callable_function(fci TSRMLS_CC);
+    }
 }
 
-void pre_global_array_map_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_array_map_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval ***arrays = NULL;
-	int n_arrays = 0;
-	zend_fcall_info fci = empty_fcall_info;
-	zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
+    int n_arrays = 0;
+    zend_fcall_info fci = empty_fcall_info;
+    zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "f!+", &fci, &fci_cache, &arrays, &n_arrays) == FAILURE) {
-		return;
-	}
-	check_callable_function(fci TSRMLS_CC);
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "f!+", &fci, &fci_cache, &arrays, &n_arrays) == FAILURE)
+    {
+        return;
+    }
+    check_callable_function(fci TSRMLS_CC);
     efree(arrays);
 }
 
-void pre_global_array_walk_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_array_walk_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     HashTable *array;
-	zval *userdata = NULL;
-	zend_fcall_info fci;
-	zend_fcall_info_cache fci_cache;
+    zval *userdata = NULL;
+    zend_fcall_info fci;
+    zend_fcall_info_cache fci_cache;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Hf|z/", &array, &fci, &fci_cache, &userdata) == FAILURE) {
-		return;
-	}
-	check_callable_function(fci TSRMLS_CC);
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Hf|z/", &array, &fci, &fci_cache, &userdata) == FAILURE)
+    {
+        return;
+    }
+    check_callable_function(fci TSRMLS_CC);
 }
 
-void pre_reflectionfunction___construct_callable(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_reflectionfunction___construct_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *name;
     zval *closure = NULL;
@@ -102,11 +108,11 @@ void pre_reflectionfunction___construct_callable(OPENRASP_INTERNAL_FUNCTION_PARA
     char *name_str;
     int name_len;
 
-	if (zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, ZEND_NUM_ARGS() TSRMLS_CC, "o", &closure) == SUCCESS) 
-	{
+    if (zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, ZEND_NUM_ARGS() TSRMLS_CC, "o", &closure) == SUCCESS)
+    {
         return;
-	} 
-	else if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &name_str, &name_len) == SUCCESS)
+    }
+    else if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &name_str, &name_len) == SUCCESS)
     {
         char *nsname;
 
@@ -137,7 +143,8 @@ void pre_reflectionfunction___construct_callable(OPENRASP_INTERNAL_FUNCTION_PARA
             spprintf(&message_str, 0, _("Webshell detected: using '%s' function"), nsname);
             ZVAL_STRING(plugin_message, message_str, 1);
             efree(message_str);
-            openrasp_buildin_php_risk_handle(1, check_type, 100, attack_params, plugin_message TSRMLS_CC);
+            OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
+            openrasp_buildin_php_risk_handle(action, check_type, 100, attack_params, plugin_message TSRMLS_CC);
         }
         efree(lcname);
     }

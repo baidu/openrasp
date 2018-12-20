@@ -17,11 +17,13 @@
 #ifndef OPENRASP_H
 #define OPENRASP_H
 
+#include "php_openrasp.h"
+
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-#include "php_openrasp.h"
 
 #ifdef HAVE_GETTEXT
 #include <libintl.h>
@@ -32,12 +34,25 @@ extern "C" {
 #define _(STRING) (STRING)
 #endif
 
-#define FSWATCH_ERROR (20001)
-#define LOG_ERROR (20002)
-#define SHM_ERROR (20003)
-#define CONFIG_ERROR (20004)
-#define PLUGIN_ERROR (20005)
-#define RUNTIME_ERROR (20006)
+#ifdef __cplusplus
+}
+#endif
+
+#include "openrasp_conf_holder.h"
+
+typedef enum openrasp_error_code_t
+{
+	FSWATCH_ERROR = 20001,
+	LOG_ERROR = 20002,
+	SHM_ERROR,
+	CONFIG_ERROR,
+	PLUGIN_ERROR,
+	RUNTIME_ERROR,
+	AGENT_ERROR,
+	REGISTER_ERROR,
+	HEARTBEAT_ERROR,
+	LOGCOLLECT_ERROR
+} openrasp_error_code;
 
 #ifndef ZEND_SHUTDOWN_MODULE_GLOBALS
 #ifdef ZTS
@@ -50,6 +65,7 @@ extern "C" {
 #endif
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp)
+openrasp::ConfigHolder  config;
 zend_bool locked;
 ZEND_END_MODULE_GLOBALS(openrasp)
 
@@ -65,19 +81,22 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp)
 // #define OPENRASP_GP() (&openrasp_globals)
 // #endif
 
-unsigned char openrasp_check(const char *c_type, zval *z_params);
-int rasp_info(const char *message, int message_len);
-int plugin_info(const char *message, int message_len);
-int alarm_info(zval *params_result);
-int policy_info(zval *params_result);
-void format_debug_backtrace_str(zval *backtrace_str);
-void format_debug_backtrace_arr(zval *backtrace_arr);
-void openrasp_error(int type, int error_code, const char *format, ...);
-int recursive_mkdir(const char *path, int len, int mode);
-const char * fetch_url_scheme(const char *filename);
+#define OPENRASP_CONFIG(key) (OPENRASP_G(config).key)
 
-#ifdef __cplusplus
-}
+void openrasp_error(int type, openrasp_error_code error_code, const char *format, ...);
+
+#ifdef UNLIKELY
+#undef UNLIKELY
+#endif
+#ifdef LIKELY
+#undef LIKELY
+#endif
+#if defined(__GNUC__) || defined(__clang__)
+#define UNLIKELY(condition) (__builtin_expect(!!(condition), 0))
+#define LIKELY(condition) (__builtin_expect(!!(condition), 1))
+#else
+#define UNLIKELY(condition) (condition)
+#define LIKELY(condition) (condition)
 #endif
 
 #endif

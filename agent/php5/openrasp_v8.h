@@ -18,109 +18,25 @@
 #define OPENRASP_V8_H
 
 #include "openrasp.h"
-#undef COMPILER // conflict with v8 defination
-#include <v8.h>
-#include <libplatform/libplatform.h>
-#include <v8-platform.h>
-#include <mutex>
-#include <queue>
-#include <vector>
-#include <chrono>
-#include <string>
-#include <memory>
-#include <iostream>
-#include <condition_variable>
-#include <thread>
+#include "openrasp_v8_bundle.h"
 
 namespace openrasp
 {
-#define LOG(msg) \
-  std::cerr << msg << std::endl;
-
-#define TRYCATCH() \
-  v8::TryCatch try_catch
-
-#define V8STRING_EX(string, type, length) \
-  (v8::String::NewFromUtf8(isolate, string, type, length))
-
-#define V8STRING_N(string) \
-  V8STRING_EX(string, v8::NewStringType::kNormal, -1)
-
-#define V8STRING_I(string) \
-  V8STRING_EX(string, v8::NewStringType::kInternalized, -1)
-
-class TimeoutTask : public v8::Task
-{
-public:
-  TimeoutTask(v8::Isolate *_isolate, int _milliseconds = 100);
-  void Run() override;
-  std::timed_mutex &GetMtx();
-
-private:
-  v8::Isolate *isolate;
-  std::chrono::time_point<std::chrono::high_resolution_clock> time_point;
-  std::timed_mutex mtx;
-};
-
-class openrasp_v8_plugin_src
-{
-public:
-  std::string filename;
-  std::string source;
-};
-
 class openrasp_v8_process_globals
 {
 public:
-  v8::StartupData snapshot_blob;
-  std::mutex lock;
-  bool is_initialized = false;
-  v8::Platform *v8_platform = nullptr;
-  std::vector<openrasp_v8_plugin_src> plugin_src_list;
+  Snapshot *snapshot_blob = nullptr;
+  std::mutex mtx;
+  std::string plugin_config;
+  std::vector<PluginFile> plugin_src_list;
 };
-
 extern openrasp_v8_process_globals process_globals;
-
-namespace RequestContext
-{
-v8::Local<v8::Object> New(v8::Isolate *isolate);
-}
-
-void v8error_to_stream(v8::Isolate *isolate, v8::TryCatch &try_catch, std::ostream &buf);
-v8::Local<v8::Value> zval_to_v8val(zval *val, v8::Isolate *isolate TSRMLS_DC);
-v8::MaybeLocal<v8::Script> compile_script(std::string _source, std::string _filename, int _line_offset = 0);
-v8::MaybeLocal<v8::Value> exec_script(v8::Isolate *isolate, v8::Local<v8::Context> context,
-                                      std::string _source, std::string _filename, int _line_offset = 0);
+v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val);
+void load_plugins();
 } // namespace openrasp
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_v8)
-_zend_openrasp_v8_globals()
-{
-  isolate = nullptr;
-  action_hash_ignore = 0;
-  action_hash_log = 0;
-  action_hash_block = 0;
-  is_isolate_initialized = false;
-  is_env_initialized = false;
-  is_running = false;
-}
-v8::Isolate *isolate;
-v8::Isolate::CreateParams create_params;
-v8::Persistent<v8::Context> context;
-v8::Persistent<v8::Object> RASP;
-v8::Persistent<v8::Function> check;
-v8::Persistent<v8::Object> request_context;
-v8::Persistent<v8::String> key_action;
-v8::Persistent<v8::String> key_message;
-v8::Persistent<v8::String> key_name;
-v8::Persistent<v8::String> key_confidence;
-v8::Persistent<v8::String> key_algorithm;
-int action_hash_ignore;
-int action_hash_log;
-int action_hash_block;
-bool is_isolate_initialized;
-bool is_env_initialized;
-bool is_running;
+openrasp::Isolate *isolate = nullptr;
 ZEND_END_MODULE_GLOBALS(openrasp_v8)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp_v8)
@@ -129,29 +45,12 @@ PHP_GINIT_FUNCTION(openrasp_v8);
 PHP_GSHUTDOWN_FUNCTION(openrasp_v8);
 PHP_MINIT_FUNCTION(openrasp_v8);
 PHP_MSHUTDOWN_FUNCTION(openrasp_v8);
+PHP_RINIT_FUNCTION(openrasp_v8);
 
 #ifdef ZTS
 #define OPENRASP_V8_G(v) TSRMG(openrasp_v8_globals_id, zend_openrasp_v8_globals *, v)
-#define OPENRASP_V8_GP() ((zend_openrasp_v8_globals *)(*((void ***)tsrm_ls))[TSRM_UNSHUFFLE_RSRC_ID(openrasp_v8_globals_id)])
 #else
 #define OPENRASP_V8_G(v) (openrasp_v8_globals.v)
-#define OPENRASP_V8_GP() (&openrasp_v8_globals)
-#endif
-
-#ifdef HAVE_NATIVE_ANTLR4
-#include <antlr4-runtime/antlr4-runtime.h>
-#include "antlr/SQLLexer.h"
-class TokenizeErrorListener : public antlr4::BaseErrorListener
-{
-public:
-  virtual void syntaxError(antlr4::Recognizer *recognizer, antlr4::Token *offendingSymbol, size_t line, size_t charPositionInLine,
-                           const std::string &msg, std::exception_ptr e)
-  {
-    std::string _sql_statement = ((openrasp::SQLLexer *)recognizer)->getInputStream()->toString();
-    std::string err_msg = "RASP.sql_tokenize() error: line " + std::to_string(line) + ":" + std::to_string(charPositionInLine) + " " + msg + " in SQL statement:" + PHP_EOL + _sql_statement;
-    plugin_info(err_msg.c_str(), err_msg.length() TSRMLS_CC);
-  }
-};
 #endif
 
 #endif /* OPENRASP_v8_H */

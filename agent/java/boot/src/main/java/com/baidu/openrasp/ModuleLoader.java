@@ -21,6 +21,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.net.URLDecoder;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;

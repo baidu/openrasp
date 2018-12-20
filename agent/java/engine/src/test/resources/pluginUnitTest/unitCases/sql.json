@@ -1,5 +1,5 @@
 [{
-    "id": "sqli_userinput",
+    "id": "sql_userinput",
     "name": "sql",
     "action": "block",
     "params": {
@@ -14,7 +14,7 @@
     "description": "Simple userinput match test"
 },
 {
-    "id": "sqli_policy_hex",
+    "id": "sql_policy_hex",
     "name": "sql",
     "action": "block",
     "params": {
@@ -27,7 +27,7 @@
     "description": "SQL injection with hex values"
 },
 {
-    "id": "sqli_policy_func",
+    "id": "sql_policy_func",
     "name": "sql",
     "action": "block",
     "params": {

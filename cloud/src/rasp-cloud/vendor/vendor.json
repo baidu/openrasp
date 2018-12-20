@@ -1,0 +1,201 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "JvDySyr+rfWQ9sp+ciwxxWywea0=",
+			"path": "github.com/astaxie/beego/config",
+			"revision": "b0e2bbce2a45fcfda684b47968387fa0866ada06",
+			"revisionTime": "2018-11-19T06:40:43Z"
+		},
+		{
+			"checksumSHA1": "N5kHk4qbc10N2Lp9ltA2G76qNxs=",
+			"path": "github.com/astaxie/beego/grace",
+			"revision": "b0e2bbce2a45fcfda684b47968387fa0866ada06",
+			"revisionTime": "2018-11-19T06:40:43Z"
+		},
+		{
+			"checksumSHA1": "dXvvTC4ePe3mebX2nOoJcLKJwnc=",
+			"path": "github.com/astaxie/beego/plugins/cors",
+			"revision": "1b6edafc96ad27b6515fafeccd7339dda3e997b1",
+			"revisionTime": "2018-11-30T13:54:26Z"
+		},
+		{
+			"checksumSHA1": "M/+EB+ZcyzY8JovWILhJ8gFCCOQ=",
+			"path": "github.com/astaxie/beego/session",
+			"revision": "b0e2bbce2a45fcfda684b47968387fa0866ada06",
+			"revisionTime": "2018-11-19T06:40:43Z"
+		},
+		{
+			"checksumSHA1": "UGYM5ci8rhhkur7NqejqItZRHBY=",
+			"path": "github.com/astaxie/beego/toolbox",
+			"revision": "b0e2bbce2a45fcfda684b47968387fa0866ada06",
+			"revisionTime": "2018-11-19T06:40:43Z"
+		},
+		{
+			"checksumSHA1": "W7HBzu7HlF18vCfNPgax7xvHXB0=",
+			"path": "github.com/astaxie/beego/utils",
+			"revision": "b0e2bbce2a45fcfda684b47968387fa0866ada06",
+			"revisionTime": "2018-11-19T06:40:43Z"
+		},
+		{
+			"checksumSHA1": "yIkYzW7bzAD81zHyuCNmEj4+oxQ=",
+			"path": "github.com/gopherjs/gopherjs/js",
+			"revision": "d547d1d9531ed93dbdebcbff7f83e7c876a1e0ee",
+			"revisionTime": "2018-11-03T18:53:06Z"
+		},
+		{
+			"checksumSHA1": "cIiyvAduLLFvu+tg1Qr5Jw3jeWo=",
+			"path": "github.com/jtolds/gls",
+			"revision": "b4936e06046bbecbb94cae9c18127ebe510a2cb9",
+			"revisionTime": "2018-11-10T20:28:10Z"
+		},
+		{
+			"checksumSHA1": "Ckkk75h7Xhrc3b+QJ3oqbIrGsaY=",
+			"path": "github.com/mailru/easyjson",
+			"revision": "60711f1a8329503b04e1c88535f419d0bb440bff",
+			"revisionTime": "2018-08-23T13:54:43Z"
+		},
+		{
+			"checksumSHA1": "T8soMJArSZrYnhmdpAnq1bVxQ6Q=",
+			"path": "github.com/mailru/easyjson/buffer",
+			"revision": "60711f1a8329503b04e1c88535f419d0bb440bff",
+			"revisionTime": "2018-08-23T13:54:43Z"
+		},
+		{
+			"checksumSHA1": "zErZOOMVWCO/Z1WGWBAG9VdccQc=",
+			"path": "github.com/mailru/easyjson/jlexer",
+			"revision": "60711f1a8329503b04e1c88535f419d0bb440bff",
+			"revisionTime": "2018-08-23T13:54:43Z"
+		},
+		{
+			"checksumSHA1": "4BAeeJ7JywEQyR6GqRrxfSfN2/Q=",
+			"path": "github.com/mailru/easyjson/jwriter",
+			"revision": "60711f1a8329503b04e1c88535f419d0bb440bff",
+			"revisionTime": "2018-08-23T13:54:43Z"
+		},
+		{
+			"checksumSHA1": "IytCogq/Zt4BvXmkMVhvRGU2lSQ=",
+			"path": "github.com/olivere/elastic",
+			"revision": "0f13c62d4153081f2be7d0e136353b57dd3f1619",
+			"revisionTime": "2018-11-17T16:12:32Z",
+			"version": "v6.2.13",
+			"versionExact": "v6.2.13"
+		},
+		{
+			"checksumSHA1": "v/phfIsGFjsgpJqe4BEKbGmMYAY=",
+			"path": "github.com/olivere/elastic/config",
+			"revision": "0f13c62d4153081f2be7d0e136353b57dd3f1619",
+			"revisionTime": "2018-11-17T16:12:32Z",
+			"version": "v6.2.13",
+			"versionExact": "v6.2.13"
+		},
+		{
+			"checksumSHA1": "a1WxG0wMDGFnjojQghwu1i1SDhk=",
+			"path": "github.com/oschwald/maxminddb-golang",
+			"revision": "ed835b22606182ff576f244643e52b25b7d6c4e7",
+			"revisionTime": "2018-10-14T22:18:51Z"
+		},
+		{
+			"checksumSHA1": "q1HKpLIWi3tTT5W5LqMlwPcGmyQ=",
+			"path": "github.com/robertkrimen/otto/ast",
+			"revision": "15f95af6e78dcd2030d8195a138bd88d4f403546",
+			"revisionTime": "2018-06-17T13:11:54Z"
+		},
+		{
+			"checksumSHA1": "L0KsB2EzTlPgv0iae3q3SukNW7U=",
+			"path": "github.com/robertkrimen/otto/dbg",
+			"revision": "15f95af6e78dcd2030d8195a138bd88d4f403546",
+			"revisionTime": "2018-06-17T13:11:54Z"
+		},
+		{
+			"checksumSHA1": "euDLJKhw4doeTSxjEoezjxYXLzs=",
+			"path": "github.com/robertkrimen/otto/file",
+			"revision": "15f95af6e78dcd2030d8195a138bd88d4f403546",
+			"revisionTime": "2018-06-17T13:11:54Z"
+		},
+		{
+			"checksumSHA1": "w5wu2avr5PWCJy5dlEhlY3rwb+w=",
+			"path": "github.com/robertkrimen/otto/parser",
+			"revision": "15f95af6e78dcd2030d8195a138bd88d4f403546",
+			"revisionTime": "2018-06-17T13:11:54Z"
+		},
+		{
+			"checksumSHA1": "7J/7NaYRqKhBvZ+dTIutsEoEgFw=",
+			"path": "github.com/robertkrimen/otto/registry",
+			"revision": "15f95af6e78dcd2030d8195a138bd88d4f403546",
+			"revisionTime": "2018-06-17T13:11:54Z"
+		},
+		{
+			"checksumSHA1": "/jMXYuXycBpTqWhRyJ2xsqvHvQI=",
+			"path": "github.com/robertkrimen/otto/token",
+			"revision": "15f95af6e78dcd2030d8195a138bd88d4f403546",
+			"revisionTime": "2018-06-17T13:11:54Z"
+		},
+		{
+			"path": "golang.org/x/crypto/acme/autocert",
+			"revision": ""
+		},
+		{
+			"path": "golang.org/x/crypto/bcrypt",
+			"revision": ""
+		},
+		{
+			"path": "golang.org/x/sys/unix",
+			"revision": ""
+		},
+		{
+			"path": "golang.org/x/sys/windows",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "bS5Kp6YjeXz4nvvS55CqIBP+HzM=",
+			"path": "gopkg.in/mgo.v2",
+			"revision": "9856a29383ce1c59f308dd1cf0363a79b5bef6b5",
+			"revisionTime": "2018-07-05T11:36:04Z"
+		},
+		{
+			"checksumSHA1": "/xRHTpN8WOK4nmZjJ1f96ER1b/o=",
+			"path": "gopkg.in/mgo.v2/bson",
+			"revision": "9856a29383ce1c59f308dd1cf0363a79b5bef6b5",
+			"revisionTime": "2018-07-05T11:36:04Z"
+		},
+		{
+			"checksumSHA1": "XQsrqoNT1U0KzLxOFcAZVvqhLfk=",
+			"path": "gopkg.in/mgo.v2/internal/json",
+			"revision": "9856a29383ce1c59f308dd1cf0363a79b5bef6b5",
+			"revisionTime": "2018-07-05T11:36:04Z"
+		},
+		{
+			"checksumSHA1": "LEvMCnprte47qdAxWvQ/zRxVF1U=",
+			"path": "gopkg.in/mgo.v2/internal/sasl",
+			"revision": "9856a29383ce1c59f308dd1cf0363a79b5bef6b5",
+			"revisionTime": "2018-07-05T11:36:04Z"
+		},
+		{
+			"checksumSHA1": "+1WDRPaOphSCmRMxVPIPBV4aubc=",
+			"path": "gopkg.in/mgo.v2/internal/scram",
+			"revision": "9856a29383ce1c59f308dd1cf0363a79b5bef6b5",
+			"revisionTime": "2018-07-05T11:36:04Z"
+		},
+		{
+			"checksumSHA1": "4BwmmgQUhWtizsR2soXND0nqZ1I=",
+			"path": "gopkg.in/sourcemap.v1",
+			"revision": "6e83acea0053641eff084973fee085f0c193c61a",
+			"revisionTime": "2017-02-13T14:20:43Z"
+		},
+		{
+			"checksumSHA1": "GDXPA04g0Dfwu2w++JiOKkYuZEc=",
+			"path": "gopkg.in/sourcemap.v1/base64vlq",
+			"revision": "6e83acea0053641eff084973fee085f0c193c61a",
+			"revisionTime": "2017-02-13T14:20:43Z"
+		},
+		{
+			"checksumSHA1": "ZSWoOPUNRr5+3dhkLK3C4cZAQPk=",
+			"path": "gopkg.in/yaml.v2",
+			"revision": "5420a8b6744d3b0345ab293f6fcba19c978f1183",
+			"revisionTime": "2018-03-28T19:50:20Z"
+		}
+	],
+	"rootPath": "rasp-cloud"
+}

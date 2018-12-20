@@ -46,4 +46,8 @@ public class ApplicationModel {
         return applicationInfo.get("server");
     }
 
+    public static String getRaspVersion(){
+        return applicationInfo.get("projectVersion");
+    }
+
 }

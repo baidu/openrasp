@@ -120,7 +120,7 @@ public class ProcessBuilderHook extends AbstractClassHook {
             try {
                 JSContext cx = JSContextFactory.enterAndInitContext();
                 params = cx.newObject(cx.getScope());
-                params.put("command", params, StringUtils.join(command," "));
+                params.put("command", params, StringUtils.join(command, " "));
                 List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
                         Config.getConfig().getPluginMaxStack());
                 Scriptable stackArray = cx.newArray(cx.getScope(), stackInfo.toArray());

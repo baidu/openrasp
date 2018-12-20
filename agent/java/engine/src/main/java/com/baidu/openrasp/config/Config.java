@@ -16,13 +16,21 @@
 
 package com.baidu.openrasp.config;
 
+import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.exception.ConfigLoadException;
+import com.baidu.openrasp.messaging.LogConfig;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.FileUtil;
+import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
+import com.baidu.openrasp.cloud.model.HookWhiteModel;
 import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -30,7 +38,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Properties;
+import java.util.*;
 
 
 /**
@@ -46,8 +54,9 @@ public class Config extends FileScanListener {
         INJECT_URL_PREFIX("inject.urlprefix", ""),
         REQUEST_PARAM_ENCODING("request.param_encoding", ""),
         BODY_MAX_BYTES("body.maxbytes", "4096"),
-        LOG_MAX_STACK("log.maxstack", "20"),
+        LOG_MAX_STACK("log.maxstack", "50"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
+        SQL_CACHE_CAPACITY("lru.max_size", "100"),
         SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
         PLUGIN_FILTER("plugin.filter", "true"),
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
@@ -55,11 +64,23 @@ public class Config extends FileScanListener {
         BLOCK_STATUS_CODE("block.status_code", "302"),
         DEBUG("debug.level", "0"),
         ALGORITHM_CONFIG("algorithm.config", "{}", false),
-        CLIENT_IP_HEADER("clientip.header","ClientIP"),
+        CLIENT_IP_HEADER("clientip.header", "ClientIP"),
         BLOCK_REDIRECT_URL("block.redirect_url", "https://rasp.baidu.com/blocked/?request_id=%request_id%"),
         BLOCK_JSON("block.content_json", "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"),
         BLOCK_XML("block.content_xml", "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"),
-        BLOCK_HTML("block.content_html", "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>");
+        BLOCK_HTML("block.content_html", "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>"),
+        CLOUD_SWITCH("cloud.enable", "false"),
+        CLOUD_ADDRESS("cloud.backend_url", ""),
+        CLOUD_APPID("cloud.app_id", ""),
+        CLOUD_APPSECRET("cloud.app_secret", ""),
+        SYSLOG_ENABLE("syslog.enable", "false"),
+        SYSLOG_URL("syslog.url", ""),
+        SYSLOG_TAG("syslog.tag", "OPENRASP"),
+        SYSLOG_FACILITY("syslog.facility", "1"),
+        SYSLOG_RECONNECT_INTERVAL("syslog.reconnect_interval", "300000"),
+        LOG_MAXBURST("log.maxburst", "100"),
+        HEARTBEAT_INTERVAL("cloud.heartbeat_interval", "180"),
+        HOOK_WHITE_ALL("hook.white.ALL", "true");
 
 
         Item(String key, String defaultValue) {
@@ -82,6 +103,7 @@ public class Config extends FileScanListener {
         }
     }
 
+    private static final String HOOKS_WHITE = "hook.white";
     private static final String CONFIG_DIR_NAME = "conf";
     private static final String CONFIG_FILE_NAME = "rasp.properties";
     public static final int REFLECTION_STACK_START_INDEX = 0;
@@ -110,16 +132,25 @@ public class Config extends FileScanListener {
     private String blockHtml;
     private boolean pluginFilter;
     private String clientIp;
+    private boolean cloudSwitch;
+    private String cloudAddress;
+    private String cloudAppId;
+    private String cloudAppSecret;
+    private int sqlCacheCapacity;
+    private boolean syslogSwitch;
+    private String syslogUrl;
+    private String syslogTag;
+    private int syslogReconnectInterval;
+    private boolean hookWhiteAll;
+    private int logMaxBurst;
+    private int heartbeatInterval;
+    private int syslogFacility;
 
 
     static {
         baseDirectory = FileUtil.getBaseDir();
-        CustomResponseHtml.load(baseDirectory);
-        try {
-            FileScanMonitor.addMonitor(
-                    baseDirectory, ConfigHolder.instance);
-        } catch (JNotifyException e) {
-            throw new ConfigLoadException("add listener on " + baseDirectory + " failed because:" + e.getMessage());
+        if (!getConfig().getCloudSwitch()) {
+            CustomResponseHtml.load(baseDirectory);
         }
         LOGGER.info("baseDirectory: " + baseDirectory);
     }
@@ -132,7 +163,15 @@ public class Config extends FileScanListener {
         String configFilePath = this.configFileDir + File.separator + CONFIG_FILE_NAME;
         try {
             loadConfigFromFile(new File(configFilePath), true);
-            addConfigFileMonitor();
+            if (!getCloudSwitch()) {
+                try {
+                    FileScanMonitor.addMonitor(
+                            baseDirectory, ConfigHolder.instance);
+                } catch (JNotifyException e) {
+                    throw new ConfigLoadException("add listener on " + baseDirectory + " failed because:" + e.getMessage());
+                }
+                addConfigFileMonitor();
+            }
         } catch (FileNotFoundException e) {
             handleException("Could not find rasp.properties, using default settings: " + e.getMessage(), e);
         } catch (JNotifyException e) {
@@ -160,10 +199,70 @@ public class Config extends FileScanListener {
         }
     }
 
+    public synchronized void loadConfigFromCloud(Map<String, Object> configMap, boolean isInit) {
+        TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
+        for (Map.Entry<String, Object> entry : configMap.entrySet()) {
+            if (entry.getKey().equals(HOOKS_WHITE)) {
+                if (entry.getValue() instanceof JsonObject) {
+                    Map<String, Object> hooks = CloudUtils.getMapGsonObject().fromJson((JsonObject) entry.getValue(), Map.class);
+                    for (Map.Entry<String, Object> hook : hooks.entrySet()) {
+                        int codeSum = 0;
+                        if (hook.getValue() instanceof ArrayList) {
+                            ArrayList<String> types = (ArrayList<String>) hook.getValue();
+                            if (hook.getKey().equals("*") && types.contains("all")) {
+                                for (CheckParameter.Type type : CheckParameter.Type.values()) {
+                                    if (type.getCode() != 0) {
+                                        codeSum = codeSum + type.getCode();
+                                    }
+                                }
+                                temp.put("", codeSum);
+                                return;
+                            } else if (types.contains("all")) {
+                                for (CheckParameter.Type type : CheckParameter.Type.values()) {
+                                    if (type.getCode() != 0) {
+                                        codeSum = codeSum + type.getCode();
+                                    }
+                                }
+                                temp.put(hook.getKey(), codeSum);
+                            } else {
+                                for (String s : types) {
+                                    String hooksType = s.toUpperCase();
+                                    try {
+                                        Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
+                                        codeSum = codeSum + code;
+                                    } catch (Exception e) {
+                                        LOGGER.warn("Hook type " + s + " does not exist: ", e);
+                                    }
+                                }
+                                if (hook.getKey().equals("*")) {
+                                    temp.put("", codeSum);
+                                } else {
+                                    temp.put(hook.getKey(), codeSum);
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (entry.getValue() instanceof JsonPrimitive) {
+                    setConfig(entry.getKey(), ((JsonPrimitive) entry.getValue()).getAsString(), isInit);
+                }
+            }
+        }
+        if (!temp.isEmpty()) {
+            HookWhiteModel.init(temp);
+        }
+    }
+
     private void reloadConfig(File file) {
         if (file.getName().equals(CONFIG_FILE_NAME)) {
             try {
                 loadConfigFromFile(file, false);
+                //单机模式下动态添加获取删除syslog和动态更新syslog tag
+                if (!CloudUtils.checkCloudControlEnter()) {
+                    LogConfig.syslogManager();
+                    DynamicConfigAppender.updateSyslogTag();
+                }
             } catch (IOException e) {
                 LOGGER.warn("update rasp.properties failed because: " + e.getMessage());
             }
@@ -690,7 +789,261 @@ public class Config extends FileScanListener {
     public synchronized void setClientIp(String clientIp) {
         this.clientIp = clientIp;
     }
-//--------------------------统一的配置处理------------------------------------
+
+    /**
+     * 获取sql的lruCache的大小，
+     *
+     * @return 缓存的大小
+     */
+    public synchronized int getSqlCacheCapacity() {
+        return sqlCacheCapacity;
+    }
+
+    /**
+     * 设置sql的lruCache的大小，
+     *
+     * @param sqlCacheCapacity 待设置的缓存大小，默认大小为100
+     */
+    public synchronized void setSqlCacheCapacity(String sqlCacheCapacity) {
+        this.sqlCacheCapacity = Integer.parseInt(sqlCacheCapacity);
+        if (this.sqlCacheCapacity <= 0) {
+            this.sqlCacheCapacity = 0;
+        }
+        if (HookHandler.commonLRUCache.maxSize() != this.sqlCacheCapacity) {
+            HookHandler.commonLRUCache.clear();
+            HookHandler.commonLRUCache = new LRUCache<String, String>(this.sqlCacheCapacity);
+        }
+    }
+
+    /**
+     * 获取是否启用syslog开关状态，
+     *
+     * @return syslog开关状态
+     */
+    public synchronized boolean getSyslogSwitch() {
+        return syslogSwitch;
+    }
+
+    /**
+     * 设置syslog开关状态，
+     *
+     * @param syslogSwitch 待设置的syslog开关状态
+     */
+    public synchronized void setSyslogSwitch(String syslogSwitch) {
+        this.syslogSwitch = Boolean.parseBoolean(syslogSwitch);
+    }
+
+    /**
+     * 获取syslog上传日志的地址，
+     *
+     * @return syslog上传日志的地址
+     */
+    public synchronized String getSyslogUrl() {
+        return syslogUrl;
+    }
+
+    /**
+     * 设置syslog上传日志的地址，
+     *
+     * @param syslogUrl 待设置的syslog上传日志的地址
+     */
+    public synchronized void setSyslogUrl(String syslogUrl) {
+        this.syslogUrl = syslogUrl;
+    }
+
+    /**
+     * 获取syslog的layout中的tag字段信息，
+     *
+     * @return syslog的layout中的tag字段信息
+     */
+    public synchronized String getSyslogTag() {
+        return syslogTag;
+    }
+
+    /**
+     * 设置syslog的layout中的tag字段信息，
+     *
+     * @param syslogTag 待设置syslog的layout中的tag字段信息
+     */
+    public synchronized void setSyslogTag(String syslogTag) {
+        this.syslogTag = syslogTag;
+    }
+
+    /**
+     * 获取syslog的facility字段信息
+     *
+     * @return syslog的facility字段信息
+     */
+    public synchronized int getSyslogFacility() {
+        return syslogFacility;
+    }
+
+    /**
+     * 设置syslog的facility字段信息，
+     *
+     * @param syslogFacility 待设置syslog的facility字段信息
+     */
+    public synchronized void setSyslogFacility(String syslogFacility) {
+        this.syslogFacility = Integer.parseInt(syslogFacility);
+        if (!(this.syslogFacility >= 0 && this.syslogFacility <= 23)) {
+            this.syslogFacility = 1;
+        }
+    }
+
+    /**
+     * 获取syslog的重连时间，
+     *
+     * @return syslog的重连时间
+     */
+    public synchronized int getSyslogReconnectInterval() {
+        return syslogReconnectInterval;
+    }
+
+    /**
+     * 设置syslog的重连时间，
+     *
+     * @param syslogReconnectInterval 待设置syslog的重连时间
+     */
+    public synchronized void setSyslogReconnectInterval(String syslogReconnectInterval) {
+        this.syslogReconnectInterval = Integer.parseInt(syslogReconnectInterval);
+        if (this.syslogReconnectInterval < 0) {
+            this.syslogReconnectInterval = 300000;
+        }
+    }
+
+    /**
+     * 获取日志每分钟上传的条数，
+     *
+     * @return 日志每分钟上传的条数
+     */
+    public synchronized int getLogMaxBurst() {
+        return logMaxBurst;
+    }
+
+    /**
+     * 设置日志每分钟上传的条数，
+     *
+     * @param logMaxBurst 待设置日志每分钟上传的条数
+     */
+    public synchronized void setLogMaxBurst(String logMaxBurst) {
+        this.logMaxBurst = Integer.parseInt(logMaxBurst);
+        if (this.logMaxBurst < 0) {
+            this.logMaxBurst = 100;
+        }
+    }
+
+    /**
+     * 获取是否禁用全部hook点，
+     *
+     * @return 是否禁用全部hook点
+     */
+    public synchronized boolean getHookWhiteAll() {
+        return hookWhiteAll;
+    }
+
+    /**
+     * 设置是否禁用全部hook点，
+     *
+     * @param hookWhiteAll 是否禁用全部hook点
+     */
+    public synchronized void setHookWhiteAll(String hookWhiteAll) {
+        this.hookWhiteAll = Boolean.parseBoolean(hookWhiteAll);
+    }
+
+    /**
+     * 获取云控的开关状态，
+     *
+     * @return 云控开关状态
+     */
+    public synchronized boolean getCloudSwitch() {
+        return cloudSwitch;
+    }
+
+    /**
+     * 设置云控的开关状态，
+     *
+     * @param cloudSwitch 待设置的云控开关状态
+     */
+    public synchronized void setCloudSwitch(String cloudSwitch) {
+        this.cloudSwitch = Boolean.parseBoolean(cloudSwitch);
+    }
+
+    /**
+     * 获取云控地址，
+     *
+     * @return 返回云控地址
+     */
+    public synchronized String getCloudAddress() {
+        return cloudAddress;
+    }
+
+    /**
+     * 设置云控的地址，
+     *
+     * @param cloudAddress 待设置的云控地址
+     */
+    public synchronized void setCloudAddress(String cloudAddress) {
+        this.cloudAddress = cloudAddress;
+    }
+
+    /**
+     * 获取云控的请求的appid，
+     *
+     * @return 云控的请求的appid
+     */
+    public synchronized String getCloudAppId() {
+        return cloudAppId;
+    }
+
+    /**
+     * 设置云控的appid，
+     *
+     * @param cloudAppId 待设置的云控的appid
+     */
+    public synchronized void setCloudAppId(String cloudAppId) {
+        this.cloudAppId = cloudAppId;
+    }
+
+    /**
+     * 获取云控的请求的appSecret，
+     *
+     * @return 云控的请求的appSecret
+     */
+    public synchronized String getCloudAppSecret() {
+        return cloudAppSecret;
+    }
+
+    /**
+     * 设置云控的appSecret，
+     *
+     * @param cloudAppSecret 待设置的云控的appSecret
+     */
+    public synchronized void setCloudAppSecret(String cloudAppSecret) {
+        this.cloudAppSecret = cloudAppSecret;
+    }
+
+    /**
+     * 获取云控的心跳请求间隔，
+     *
+     * @return 云控的心跳请求间隔
+     */
+    public synchronized int getHeartbeatInterval() {
+        return heartbeatInterval;
+    }
+
+    /**
+     * 设置云控的心跳请求间隔
+     *
+     * @param heartbeatInterval 待设置的云控心跳请求间隔
+     */
+    public synchronized void setHeartbeatInterval(String heartbeatInterval) {
+        this.heartbeatInterval = Integer.parseInt(heartbeatInterval);
+        if (!(this.heartbeatInterval >= 60 && this.heartbeatInterval <= 1800)) {
+            this.heartbeatInterval = 180;
+        }
+    }
+
+    //--------------------------统一的配置处理------------------------------------
 
     /**
      * 统一配置接口,通过 js 更改配置的入口
@@ -736,11 +1089,37 @@ public class Config extends FileScanListener {
                 setBlockXml(value);
             } else if (Item.BLOCK_HTML.key.equals(key)) {
                 setBlockHtml(value);
-            } else if (Item.PLUGIN_FILTER.key.equals(key)){
+            } else if (Item.PLUGIN_FILTER.key.equals(key)) {
                 setPluginFilter(value);
-            }else if (Item.CLIENT_IP_HEADER.key.equals(key)){
+            } else if (Item.CLIENT_IP_HEADER.key.equals(key)) {
                 setClientIp(value);
-            }else {
+            } else if (Item.CLOUD_SWITCH.key.equals(key)) {
+                setCloudSwitch(value);
+            } else if (Item.CLOUD_ADDRESS.key.equals(key)) {
+                setCloudAddress(value);
+            } else if (Item.CLOUD_APPID.key.equals(key)) {
+                setCloudAppId(value);
+            } else if (Item.CLOUD_APPSECRET.key.equals(key)) {
+                setCloudAppSecret(value);
+            } else if (Item.SQL_CACHE_CAPACITY.key.equals(key)) {
+                setSqlCacheCapacity(value);
+            } else if (Item.SYSLOG_ENABLE.key.equals(key)) {
+                setSyslogSwitch(value);
+            } else if (Item.SYSLOG_URL.key.equals(key)) {
+                setSyslogUrl(value);
+            } else if (Item.SYSLOG_TAG.key.equals(key)) {
+                setSyslogTag(value);
+            } else if (Item.SYSLOG_FACILITY.key.equals(key)) {
+                setSyslogFacility(value);
+            } else if (Item.SYSLOG_RECONNECT_INTERVAL.key.equals(key)) {
+                setSyslogReconnectInterval(value);
+            } else if (Item.HOOK_WHITE_ALL.key.equals(key)) {
+                setHookWhiteAll(value);
+            } else if (Item.LOG_MAXBURST.key.equals(key)) {
+                setLogMaxBurst(value);
+            } else if (Item.HEARTBEAT_INTERVAL.key.equals(key)) {
+                setHeartbeatInterval(value);
+            } else {
                 isHit = false;
             }
             if (isHit) {

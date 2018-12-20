@@ -19,9 +19,9 @@
 /**
  * fileupload相关hook点
  */
-PRE_HOOK_FUNCTION(move_uploaded_file, fileUpload);
+PRE_HOOK_FUNCTION(move_uploaded_file, FILE_UPLOAD);
 
-void pre_global_move_uploaded_file_fileUpload(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *name, *dest;
     int argc = MIN(2, ZEND_NUM_ARGS());
@@ -69,10 +69,24 @@ void pre_global_move_uploaded_file_fileUpload(OPENRASP_INTERNAL_FUNCTION_PARAMET
     {
         return;
     }
-    zval params;
-    array_init(&params);
-    add_assoc_zval(&params, "filename", realname);
-    Z_ADDREF_P(realname);
-    add_assoc_str(&params, "content", buffer);
-    check(check_type, &params);
+
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+    if (!isolate)
+    {
+        zend_string_release(buffer);
+        return;
+    }
+    bool is_block = false;
+    {
+        v8::HandleScope handle_scope(isolate);
+        auto params = v8::Object::New(isolate);
+        params->Set(openrasp::NewV8String(isolate, "filename"), openrasp::NewV8String(isolate, Z_STRVAL_P(realname), Z_STRLEN_P(realname)));
+        params->Set(openrasp::NewV8String(isolate, "content"), openrasp::NewV8String(isolate, buffer->val, MIN(buffer->len, 4 * 1024)));
+        zend_string_release(buffer);
+        is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+    }
+    if (is_block)
+    {
+        handle_block();
+    }
 }

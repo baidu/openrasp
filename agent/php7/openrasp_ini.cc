@@ -18,12 +18,29 @@
 #include <regex>
 #include <limits>
 
+#ifdef PHP_DEBUG
+#define MIN_HEARTBEAT_INTERVAL (10)
+#else
+#define MIN_HEARTBEAT_INTERVAL (60)
+#endif
+
 Openrasp_ini openrasp_ini;
 
 ZEND_INI_MH(OnUpdateOpenraspIntGEZero)
 {
     long tmp = zend_atol(new_value->val, new_value->len);
     if (tmp < 0 || tmp > std::numeric_limits<unsigned int>::max())
+    {
+        return FAILURE;
+    }
+    *reinterpret_cast<int *>(mh_arg1) = tmp;
+    return SUCCESS;
+}
+
+ZEND_INI_MH(OnUpdateOpenraspIntGZero)
+{
+    long tmp = zend_atol(new_value->val, new_value->len);
+    if (tmp <= 0 || tmp > std::numeric_limits<unsigned int>::max())
     {
         return FAILURE;
     }
@@ -57,6 +74,17 @@ ZEND_INI_MH(OnUpdateOpenraspSet)
             p->insert(it->str());
         }
     }
+    return SUCCESS;
+}
+
+ZEND_INI_MH(OnUpdateOpenraspHeartbeatInterval)
+{
+    long tmp = zend_atol(new_value->val, new_value->len);
+    if (tmp < MIN_HEARTBEAT_INTERVAL || tmp > 1800)
+    {
+        return FAILURE;
+    }
+    *reinterpret_cast<int *>(mh_arg1) = tmp;
     return SUCCESS;
 }
 

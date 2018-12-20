@@ -87,9 +87,9 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
                 }
                 catch (...)
                 {
-                    openrasp_error(E_WARNING, CONFIG_ERROR, _("An exception occurred while reloading master process, but this message may not be outputed"));
+                    openrasp_error(E_WARNING, CONFIG_ERROR, _("An exception occurred while reloading master process, but this message may not be visible"));
                 }
-            });
+            } TSRMLS_CC);
 
         std::vector<fsw_event_type_filter> event_filters;
         event_filters.push_back(fsw_event_type_filter{fsw_event_flag::IsFile});
@@ -105,6 +105,7 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
         path_filters.push_back(fsw::monitor_filter{".*", fsw_filter_type::filter_exclude, false, false});
         path_filters.push_back(fsw::monitor_filter{R"([/\\]plugins([/\\][^/\\]+\.js)?$)", fsw_filter_type::filter_include, false, false});
         path_filters.push_back(fsw::monitor_filter{R"([/\\]assets([/\\]inject\.html)?$)", fsw_filter_type::filter_include, false, false});
+        path_filters.push_back(fsw::monitor_filter{R"([/\\]conf([/\\]openrasp\.toml)?$)", fsw_filter_type::filter_include, false, false});
         monitor->set_filters(path_filters);
 
         monitor->set_recursive(false);

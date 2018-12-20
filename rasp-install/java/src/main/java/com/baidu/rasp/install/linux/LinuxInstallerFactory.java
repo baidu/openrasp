@@ -36,7 +36,7 @@ public class LinuxInstallerFactory extends InstallerFactory {
         if (serverName.equals(RESIN)) {
             return new com.baidu.rasp.install.windows.ResinInstaller(serverName, serverRoot);
         }
-        System.out.println("Invalid server name: " + serverName);
+        System.out.println("Unexpected server name: " + serverName);
         return null;
     }
 }

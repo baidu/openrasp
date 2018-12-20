@@ -16,80 +16,106 @@
 
 #include "openrasp_hook.h"
 
-extern "C" {
+extern "C"
+{
 #include "zend_ini.h"
 }
 
-HOOK_FUNCTION(mysql_connect, dbConnection);
-HOOK_FUNCTION(mysql_pconnect, dbConnection);
-PRE_HOOK_FUNCTION(mysql_query, sql);
-// POST_HOOK_FUNCTION(mysql_query, sqlSlowQuery);
+HOOK_FUNCTION(mysql_connect, DB_CONNECTION);
+HOOK_FUNCTION(mysql_pconnect, DB_CONNECTION);
+PRE_HOOK_FUNCTION(mysql_query, SQL);
+// POST_HOOK_FUNCTION(mysql_query, SQL_SLOW_QUERY);
 
 static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, int persistent)
 {
-    char *user=NULL, *passwd=NULL, *host_and_port=NULL, *socket=NULL, *host=NULL, *tmp=NULL;
-    int  user_len = 0, passwd_len = 0, host_len = 0, port = MYSQL_PORT;
-    long client_flags = 0; 
+    char *user = NULL, *passwd = NULL, *host_and_port = NULL, *socket = NULL, *host = NULL, *tmp = NULL;
+    int user_len = 0, passwd_len = 0, host_len = 0, port = MYSQL_PORT;
+    long client_flags = 0;
     zend_bool new_link = 0;
     static char *default_host = INI_STR("mysql.default_host");
     static char *default_user = INI_STR("mysql.default_user");
     static char *default_password = INI_STR("mysql.default_password");
+    static char *default_socket = INI_STR("mysql.default_socket");
     static long default_port = INI_INT("mysql.default_port");
 
-	if (default_port <= 0) {
-		default_port = MYSQL_PORT;
-	}
-
-    if (PG(sql_safe_mode)) 
+    if (default_port <= 0)
     {
-		if (ZEND_NUM_ARGS()>0) {
-			return;
-		}
-		host_and_port=passwd=NULL;
-		user=php_get_current_user(TSRMLS_C);
-	} 
-    else 
-    {
-        if (persistent) {
-			if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|s!s!s!l", &host_and_port, &host_len,
-									&user, &user_len, &passwd, &passwd_len,
-									&client_flags)==FAILURE) {
-				return;
-        	}
-		} else {
-			if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|s!s!s!bl", &host_and_port, &host_len,
-										&user, &user_len, &passwd, &passwd_len,
-										&new_link, &client_flags)==FAILURE) {
-				return;
-			}
-		}
-		if (!host_and_port) {
-			host_and_port = default_host;
-		}
-		if (!user) {
-			user = default_user;
-		}
+        default_port = MYSQL_PORT;
     }
-    if (host_and_port && (tmp=strchr(host_and_port, ':'))) {
-		host = estrndup(host_and_port, tmp-host_and_port);
-		tmp++;
-		if (tmp[0] != '/') {
-			port = atoi(tmp);
-            sql_connection_p->port = port;
-			if ((tmp=strchr(tmp, ':'))) {
-				tmp++;
-				socket=tmp;
-			}
-		} else {
-			socket = tmp;
-		}
-        sql_connection_p->host = host;
-	} else {
-        sql_connection_p->host = estrdup(host_and_port);
-        sql_connection_p->port = default_port;
-	}
-    sql_connection_p->server = "mysql";
-    sql_connection_p->username = user ? estrdup(user) : nullptr;
+    if (PG(sql_safe_mode))
+    {
+        if (ZEND_NUM_ARGS() > 0)
+        {
+            return;
+        }
+        host_and_port = passwd = NULL;
+        user = php_get_current_user(TSRMLS_C);
+    }
+    else
+    {
+        if (persistent)
+        {
+            if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|s!s!s!l", &host_and_port, &host_len,
+                                      &user, &user_len, &passwd, &passwd_len,
+                                      &client_flags) == FAILURE)
+            {
+                return;
+            }
+        }
+        else
+        {
+            if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|s!s!s!bl", &host_and_port, &host_len,
+                                      &user, &user_len, &passwd, &passwd_len,
+                                      &new_link, &client_flags) == FAILURE)
+            {
+                return;
+            }
+        }
+        if (!host_and_port)
+        {
+            host_and_port = default_host;
+        }
+        if (!user)
+        {
+            user = default_user;
+        }
+    }
+    sql_connection_p->set_server("mysql");
+    socket = default_socket;
+    bool using_socket = false;
+
+    if (host_and_port && (tmp = strchr(host_and_port, ':')))
+    {
+        host = estrndup(host_and_port, tmp - host_and_port);
+        tmp++;
+        if (tmp[0] != '/')
+        {
+            port = atoi(tmp);
+            sql_connection_p->set_port(port);
+            if ((tmp = strchr(tmp, ':')))
+            {
+                tmp++;
+                socket = tmp;
+                using_socket = true;
+            }
+        }
+        else
+        {
+            socket = tmp;
+            using_socket = true;
+        }
+        sql_connection_p->set_host(host);
+        using_socket = (strcmp("localhost", host) == 0);
+    }
+    else
+    {
+        sql_connection_p->set_host(SAFE_STRING(host_and_port));
+        using_socket = (host_and_port == nullptr || strncmp(host_and_port, "localhost", strlen("localhost")) == 0);
+        sql_connection_p->set_port(default_port);
+    }
+    sql_connection_p->set_using_socket(using_socket);
+    sql_connection_p->set_socket(SAFE_STRING(socket));
+    sql_connection_p->set_username(SAFE_STRING(user));
 }
 
 static inline void init_mysql_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
@@ -103,59 +129,57 @@ static inline void init_mysql_pconnect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, 
 }
 
 //mysql_connect
-void pre_global_mysql_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (openrasp_ini.enforce_policy)
-    {        
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry, 1))
-        {
-            handle_block(TSRMLS_C);
-        }
+    if (UNLIKELY(OPENRASP_CONFIG(security.enforce_policy) &&
+                 check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry, 1)))
+    {
+        handle_block(TSRMLS_C);
     }
 }
-void post_global_mysql_connect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_RESOURCE)
+    if (LIKELY(!OPENRASP_CONFIG(security.enforce_policy) &&
+               Z_TYPE_P(return_value) == IS_RESOURCE))
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry, 0);
     }
 }
 
 //mysql_pconnect
-void pre_global_mysql_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (openrasp_ini.enforce_policy)
-    {        
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry, 1))
-        {
-            handle_block(TSRMLS_C);
-        }
+    if (UNLIKELY(OPENRASP_CONFIG(security.enforce_policy) &&
+                 check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry, 1)))
+    {
+        handle_block(TSRMLS_C);
     }
 }
-void post_global_mysql_pconnect_dbConnection(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!openrasp_ini.enforce_policy && Z_TYPE_P(return_value) == IS_RESOURCE)
+    if (LIKELY(!OPENRASP_CONFIG(security.enforce_policy) &&
+               Z_TYPE_P(return_value) == IS_RESOURCE))
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry, 0);
     }
 }
 
-
 //mysql_query
-void pre_global_mysql_query_sql(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{    
-	char *query;
-	int query_len;
-	zval *mysql_link = NULL;
+void pre_global_mysql_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    char *query;
+    int query_len;
+    zval *mysql_link = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|r", &query, &query_len, &mysql_link) == FAILURE) {
-		return;
-	}
+    if (UNLIKELY(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|r", &query, &query_len, &mysql_link) == FAILURE))
+    {
+        return;
+    }
 
-    sql_type_handler(query, query_len, "mysql" TSRMLS_CC);
+    plugin_sql_check(query, query_len, "mysql" TSRMLS_CC);
 }
 
-void post_global_mysql_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_global_mysql_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     long num_rows = 0;
     if (Z_TYPE_P(return_value) == IS_RESOURCE)
@@ -168,7 +192,7 @@ void post_global_mysql_query_sqlSlowQuery(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         num_rows = fetch_rows_via_user_function("mysql_affected_rows", 0, NULL TSRMLS_CC);
     }
-    if (num_rows >= openrasp_ini.slowquery_min_rows)
+    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
     {
         slow_query_alarm(num_rows TSRMLS_CC);
     }

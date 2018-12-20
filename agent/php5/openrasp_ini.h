@@ -22,38 +22,22 @@
 
 ZEND_INI_MH(OnUpdateOpenraspDoubleGEZero);
 ZEND_INI_MH(OnUpdateOpenraspIntGEZero);
+ZEND_INI_MH(OnUpdateOpenraspIntGZero);
 ZEND_INI_MH(OnUpdateOpenraspCString);
 ZEND_INI_MH(OnUpdateOpenraspBool);
 ZEND_INI_MH(OnUpdateOpenraspSet);
+ZEND_INI_MH(OnUpdateOpenraspHeartbeatInterval);
 
 class Openrasp_ini
 {
-  public:
-    char *root_dir;
-    char *locale;
-    unsigned int timeout_ms = 100;
-    char *syslog_server_address;
-    int log_maxburst = 1000;
-    int syslog_facility;
-    bool syslog_alarm_enable = false;
-    long syslog_connection_timeout = 50;
-    long syslog_read_timeout = 10;
-    int syslog_connection_retry_interval = 200;
-    char *inject_html_urlprefix;
-    unsigned int slowquery_min_rows = 500;
-    unsigned int plugin_maxstack = 100;
-    unsigned int log_maxstack = 10;
-    bool enforce_policy = false;
-    std::unordered_set<std::string> hooks_ignore;
-    std::unordered_set<std::string> callable_blacklists;
-    int block_status_code = 302;
-    char *block_redirect_url;
-    char *block_content_json;
-    char *block_content_xml;
-    char *block_content_html;
-    bool plugin_filter = true;
-    char *clientip_header;
-    int body_maxbytes = 4 * 1024;
+public:
+  char *root_dir;
+  char *locale;
+  unsigned int heartbeat_interval = 180;
+  char *backend_url;
+  char *app_id;
+  char *app_secret;
+  bool remote_management_enable = true;
 };
 
 extern Openrasp_ini openrasp_ini;

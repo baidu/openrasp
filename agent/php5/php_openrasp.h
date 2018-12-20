@@ -17,12 +17,17 @@
 #ifndef PHP_OPENRASP_H
 #define PHP_OPENRASP_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "php.h"
 
 extern zend_module_entry openrasp_module_entry;
 #define phpext_openrasp_ptr &openrasp_module_entry
 
-#define PHP_OPENRASP_VERSION "0.1.0" /* Replace with version number for your extension */
+#define PHP_OPENRASP_VERSION "1.0.0 RC1" /* Replace with version number for your extension */
 #define OPENRASP_PHP_VERSION ZEND_TOSTR(PHP_MAJOR_VERSION.PHP_MINOR_VERSION.PHP_RELEASE_VERSION)
 
 #ifdef PHP_WIN32
@@ -62,6 +67,10 @@ extern zend_module_entry openrasp_module_entry;
 #define HASH_KEY_NON_EXISTENT HASH_KEY_NON_EXISTANT
 #endif
 /// END PHP <= 5.4 ///
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	/* PHP_OPENRASP_H */
 

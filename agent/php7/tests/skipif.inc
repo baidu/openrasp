@@ -5,12 +5,17 @@ $js_file = ini_get("openrasp.root_dir") . "/plugins/test.js";
 $plugin_header = <<<EOF
 const plugin = new RASP('test')
 const block = {action: 'block'}
-function assert(flag)
-{
-    if (!flag) throw new Error('assertion error')
-}
+const assert = console.assert
 
 EOF;
 if (!file_put_contents($js_file, $plugin_header)) die("Skipped: can not create " . $js_file);
 if (isset($plugin)) file_put_contents($js_file, $plugin, FILE_APPEND);
+
+$conf_file = ini_get("openrasp.root_dir") . "/conf/openrasp.toml";
+$conf_header = <<<CONFHEADER
+# config for test
+
+CONFHEADER;
+if (!file_put_contents($conf_file, $conf_header)) die("Skipped: can not create " . $conf_file);
+if (isset($conf)) file_put_contents($conf_file, $conf, FILE_APPEND);
 ?>

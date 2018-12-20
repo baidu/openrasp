@@ -17,6 +17,9 @@
 package com.baidu.openrasp.plugin.js.engine;
 
 import com.baidu.openrasp.EngineBoot;
+import com.baidu.openrasp.cloud.model.CloudCacheModel;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.fuxi.javaagent.rhino.shim.Console;
 import com.fuxi.javaagent.rhino.shim.Shim;
@@ -37,6 +40,7 @@ import java.util.List;
  */
 public class JSContextFactory extends ContextFactory {
     private static final Logger LOGGER = Logger.getLogger(JSContextFactory.class.getPackage().getName() + ".log");
+    private static final String PLUGIN_NAME = "official.js";
 
     private static JSContextFactory jsContextFactory = null;
 
@@ -85,6 +89,7 @@ public class JSContextFactory extends ContextFactory {
 
             RASP = (ScriptableObject) ScriptableObject.getProperty(globalScope, "RASP");
             RASP.defineProperty("sql_tokenize", new JSTokenizeSql(), ScriptableObject.READONLY);
+            RASP.defineProperty("cmd_tokenize", new JSTokenizeCmd(), ScriptableObject.READONLY);
             RASP.defineProperty("config_set", new JSRASPConfig(), ScriptableObject.READONLY);
             RASP.defineProperty("get_jsengine", new BaseFunction() {
                 @Override
@@ -109,7 +114,11 @@ public class JSContextFactory extends ContextFactory {
     }
 
     public static void release() {
-        setCheckScriptList(null);
+        if (CloudUtils.checkCloudControlEnter()) {
+            setCloudCheckScript(null, null, null, null);
+        } else {
+            setCheckScriptList(null);
+        }
         jsContextFactory = null;
     }
 
@@ -130,6 +139,43 @@ public class JSContextFactory extends ContextFactory {
                 }
             } catch (Exception e) {
                 LOGGER.info(e);
+            } finally {
+                jsContextFactory.pluginTime = System.currentTimeMillis();
+                JSContext.exit();
+            }
+        }
+    }
+
+    public static void setCloudCheckScript(String plugin, String md5, String version, Long deliveryTime) {
+        if (jsContextFactory != null) {
+            JSContext cx = (JSContext) JSContext.enter();
+            cx.clearTimeout();
+            ScriptableObject scope = (ScriptableObject) cx.newObject(jsContextFactory.globalScope);
+            scope.setPrototype(jsContextFactory.globalScope);
+            scope.setParentScope(null);
+            Function clean = (Function) jsContextFactory.RASP.get("clean", jsContextFactory.RASP);
+            clean.call(cx, scope, clean, null);
+            try {
+                if (plugin != null) {
+                    cx.evaluateString(scope, "(function(){\n" + plugin + "\n})()", PLUGIN_NAME, 0, null);
+                }
+                CloudCacheModel.getInstance().setPlugin(plugin);
+                CloudCacheModel.getInstance().setPluginVersion(version);
+                CloudCacheModel.getInstance().setPluginMD5(md5);
+                CloudCacheModel.getInstance().setConfigTime(deliveryTime);
+                Config.getConfig().setHookWhiteAll("false");
+            } catch (Throwable e) {
+                LOGGER.warn("new plugin update failed , will rollback old plugin: ", e);
+                try {
+                    String oldPlugin = CloudCacheModel.getInstance().getPlugin();
+                    if (oldPlugin != null) {
+                        cx.evaluateString(scope, "(function(){\n" + oldPlugin + "\n})()", PLUGIN_NAME, 0, null);
+                    }
+                    Config.getConfig().setHookWhiteAll("false");
+                } catch (Throwable e1) {
+                    LOGGER.warn("old plugin rollback failed , will lose protection", e);
+                    Config.getConfig().setHookWhiteAll("true");
+                }
             } finally {
                 jsContextFactory.pluginTime = System.currentTimeMillis();
                 JSContext.exit();

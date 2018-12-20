@@ -6,7 +6,7 @@ $dir = __DIR__;
 $plugin = <<<EOF
 plugin.register('copy', params => {
     assert(params.source == 'http://www.example.com/')
-    assert(params.dest.endsWith('/tmp/openrasp/tmpfile'))
+    assert(params.dest.endsWith('openrasp/tmpfile'))
     return block
 })
 EOF;

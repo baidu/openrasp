@@ -8,11 +8,13 @@ plugin.register('command', (params, context) => {
     return {action: 'log'}
 })
 EOF;
+$conf = <<<CONF
+clientip.header="clientip"
+CONF;
 include(__DIR__.'/skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.clientip_header=clientip
 --CGI--
 --ENV--
 return <<<END

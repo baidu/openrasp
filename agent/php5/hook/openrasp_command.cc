@@ -15,181 +15,208 @@
  */
 
 #include "openrasp_hook.h"
+#include "openrasp_v8.h"
+#include "agent/shared_config_manager.h"
 
 /**
  * command相关hook点
  */
-PRE_HOOK_FUNCTION(passthru, command);
-PRE_HOOK_FUNCTION(system, command);
-PRE_HOOK_FUNCTION(exec, command);
-PRE_HOOK_FUNCTION(shell_exec, command);
-PRE_HOOK_FUNCTION(proc_open, command);
-PRE_HOOK_FUNCTION(popen, command);
-PRE_HOOK_FUNCTION(pcntl_exec, command);
+PRE_HOOK_FUNCTION(passthru, COMMAND);
+PRE_HOOK_FUNCTION(system, COMMAND);
+PRE_HOOK_FUNCTION(exec, COMMAND);
+PRE_HOOK_FUNCTION(shell_exec, COMMAND);
+PRE_HOOK_FUNCTION(proc_open, COMMAND);
+PRE_HOOK_FUNCTION(popen, COMMAND);
+PRE_HOOK_FUNCTION(pcntl_exec, COMMAND);
 
-PRE_HOOK_FUNCTION(passthru, webshell_command);
-PRE_HOOK_FUNCTION(system, webshell_command);
-PRE_HOOK_FUNCTION(exec, webshell_command);
-PRE_HOOK_FUNCTION(shell_exec, webshell_command);
-PRE_HOOK_FUNCTION(proc_open, webshell_command);
-PRE_HOOK_FUNCTION(popen, webshell_command);
-PRE_HOOK_FUNCTION(pcntl_exec, webshell_command);
-PRE_HOOK_FUNCTION(assert, webshell_eval);
+PRE_HOOK_FUNCTION(passthru, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(system, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(exec, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(shell_exec, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(proc_open, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(popen, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(pcntl_exec, WEBSHELL_COMMAND);
+PRE_HOOK_FUNCTION(assert, WEBSHELL_EVAL);
 
-static void check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+static void check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-        zval **command;
-        int argc = MIN(1, ZEND_NUM_ARGS());
-        if (argc == 1 && zend_get_parameters_ex(argc, &command) == SUCCESS
-        && openrasp_zval_in_request(*command TSRMLS_CC))
-        {
-            zval *attack_params = NULL;
-            MAKE_STD_ZVAL(attack_params);
-            array_init(attack_params);
-            add_assoc_zval(attack_params, "command", *command);
-            Z_ADDREF_PP(command);
-            zval *plugin_message = NULL;
-            MAKE_STD_ZVAL(plugin_message);
-            ZVAL_STRING(plugin_message, _("WebShell activity - Detected command execution backdoor"), 1);
-            openrasp_buildin_php_risk_handle(1, check_type, 100, attack_params, plugin_message TSRMLS_CC);
-        }
+    zval **command;
+    int argc = MIN(1, ZEND_NUM_ARGS());
+    if (argc == 1 && zend_get_parameters_ex(argc, &command) == SUCCESS && openrasp_zval_in_request(*command TSRMLS_CC))
+    {
+        zval *attack_params = NULL;
+        MAKE_STD_ZVAL(attack_params);
+        array_init(attack_params);
+        add_assoc_zval(attack_params, "command", *command);
+        Z_ADDREF_PP(command);
+        zval *plugin_message = NULL;
+        MAKE_STD_ZVAL(plugin_message);
+        ZVAL_STRING(plugin_message, _("WebShell activity - Detected command execution backdoor"), 1);
+        OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
+        openrasp_buildin_php_risk_handle(action, check_type, 100, attack_params, plugin_message TSRMLS_CC);
+    }
 }
 
-static void send_command_to_plugin(char * cmd TSRMLS_DC)
+static void plugin_command_check(const char *command TSRMLS_DC)
 {
-    zval *params;
-    MAKE_STD_ZVAL(params);
-    array_init(params);
-    add_assoc_string(params, "command", cmd, 1);
-    zval *stack = NULL;
-    MAKE_STD_ZVAL(stack);
-    array_init(stack);
-    format_debug_backtrace_arr(stack TSRMLS_CC);
-    add_assoc_zval(params, "stack", stack);
-    check("command", params TSRMLS_CC);
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+    if (isolate)
+    {
+        bool is_block = false;
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto arr = format_debug_backtrace_arr(TSRMLS_C);
+            size_t len = arr.size();
+            auto stack = v8::Array::New(isolate, len);
+            for (size_t i = 0; i < len; i++)
+            {
+                stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
+            }
+            auto params = v8::Object::New(isolate);
+            params->Set(openrasp::NewV8String(isolate, "command"), openrasp::NewV8String(isolate, command));
+            params->Set(openrasp::NewV8String(isolate, "stack"), stack);
+            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(COMMAND)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+        }
+        if (is_block)
+        {
+            handle_block(TSRMLS_C);
+        }
+    }
 }
 
 static void openrasp_exec_ex(INTERNAL_FUNCTION_PARAMETERS, int mode)
 {
-        char *cmd;
-        int cmd_len;
-        zval *ret_code=NULL, *ret_array=NULL;
-        int ret;
-        if (mode) {
-            if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|z/", &cmd, &cmd_len, &ret_code) == FAILURE) {
-                return;
-            }
-        } else {
-            if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|z/z/", &cmd, &cmd_len, &ret_array, &ret_code) == FAILURE) {
-                return;
-            }
-        }
-        if (!cmd_len) {
+    char *cmd;
+    int cmd_len;
+    zval *ret_code = NULL, *ret_array = NULL;
+    int ret;
+    if (mode)
+    {
+        if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|z/", &cmd, &cmd_len, &ret_code) == FAILURE)
+        {
             return;
         }
-        send_command_to_plugin(cmd TSRMLS_CC);
+    }
+    else
+    {
+        if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|z/z/", &cmd, &cmd_len, &ret_array, &ret_code) == FAILURE)
+        {
+            return;
+        }
+    }
+    if (!cmd_len)
+    {
+        return;
+    }
+    plugin_command_check(cmd TSRMLS_CC);
 }
 
-void pre_global_passthru_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_passthru_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_passthru_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_passthru_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     openrasp_exec_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, 3);
 }
 
-void pre_global_system_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_system_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_system_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_system_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     openrasp_exec_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, 1);
 }
 
-void pre_global_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_exec_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     openrasp_exec_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0);
 }
 
-void pre_global_shell_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_shell_exec_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_shell_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_shell_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-	char *command;
-	int command_len;
+    char *command;
+    int command_len;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &command, &command_len) == FAILURE) {
-		return;
-	}
-    if (!command_len) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &command, &command_len) == FAILURE)
+    {
         return;
     }
-    send_command_to_plugin(command TSRMLS_CC);
+    if (!command_len)
+    {
+        return;
+    }
+    plugin_command_check(command TSRMLS_CC);
 }
 
-void pre_global_proc_open_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_proc_open_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_proc_open_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_proc_open_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-	char *command;
-	int command_len = 0;
-	zval *descriptorspec;
-	zval *pipes;
+    char *command;
+    int command_len = 0;
+    zval *descriptorspec;
+    zval *pipes;
     zval *cwd = NULL;
-	zval *environment = NULL;
-	zval *other_options = NULL;
+    zval *environment = NULL;
+    zval *other_options = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "saz|z!z!z!", &command,
-				&command_len, &descriptorspec, &pipes, &cwd, &environment,
-				&other_options) == FAILURE) {
-		return;
-	}
-    if (!command_len) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "saz|z!z!z!", &command,
+                              &command_len, &descriptorspec, &pipes, &cwd, &environment,
+                              &other_options) == FAILURE)
+    {
         return;
     }
-    send_command_to_plugin(command TSRMLS_CC);
-}
-
-void pre_global_popen_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
-}
-
-void pre_global_popen_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-	char *command, *mode;
-	int command_len, mode_len;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &command, &command_len, &mode, &mode_len) == FAILURE) {
-		return;
-	}
-    if (!command_len) {
+    if (!command_len)
+    {
         return;
     }
-    send_command_to_plugin(command TSRMLS_CC);
+    plugin_command_check(command TSRMLS_CC);
 }
 
-void pre_global_pcntl_exec_webshell_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_popen_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    check_command_args_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_global_pcntl_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_popen_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    char *command, *mode;
+    int command_len, mode_len;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &command, &command_len, &mode, &mode_len) == FAILURE)
+    {
+        return;
+    }
+    if (!command_len)
+    {
+        return;
+    }
+    plugin_command_check(command TSRMLS_CC);
+}
+
+void pre_global_pcntl_exec_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+void pre_global_pcntl_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *args = NULL, *envs = NULL;
     zval **element;
@@ -199,50 +226,50 @@ void pre_global_pcntl_exec_command(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     char **current_arg;
     char *path;
     int path_len;
-        
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|aa", &path, &path_len, &args, &envs) == FAILURE) {
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|aa", &path, &path_len, &args, &envs) == FAILURE)
+    {
         return;
     }
-    zval *command;
-    MAKE_STD_ZVAL(command);
-    if (ZEND_NUM_ARGS() > 1) {
-        zval *args_str;
-        MAKE_STD_ZVAL(args_str);
-        zval *delim;
-        MAKE_STD_ZVAL(delim);
-        ZVAL_STRINGL(delim, " ", 1, 1);
-        php_implode(delim, args, args_str TSRMLS_CC);
-        char *cmd = nullptr;
-        spprintf(&cmd, 0, "%s %s", path, Z_STRVAL_P(args_str));
-        ZVAL_STRING(command, cmd, 1);
-        efree(cmd);
-        zval_ptr_dtor(&args_str);
-    } else {
-        ZVAL_STRINGL(command, path, path_len, 1);
+
+    std::string command(path, path_len);
+    if (ZEND_NUM_ARGS() > 1)
+    {
+        HashTable *ht = Z_ARRVAL_P(args);
+        for (zend_hash_internal_pointer_reset(ht);
+             zend_hash_has_more_elements(ht) == SUCCESS;
+             zend_hash_move_forward(ht))
+        {
+            char *key;
+            ulong idx;
+            int type;
+            zval **value;
+            type = zend_hash_get_current_key(ht, &key, &idx, 0);
+            if (type == HASH_KEY_IS_STRING ||
+                zend_hash_get_current_data(ht, (void **)&value) != SUCCESS ||
+                Z_TYPE_PP(value) != IS_STRING)
+            {
+                continue;
+            }
+            command.append(" ").append(Z_STRVAL_PP(value), Z_STRLEN_PP(value));
+        }
     }
-    zval *params;
-    MAKE_STD_ZVAL(params);
-    array_init(params);
-    add_assoc_zval(params, "command", command);
-    zval *stack = NULL;
-    MAKE_STD_ZVAL(stack);
-    array_init(stack);
-    format_debug_backtrace_arr(stack TSRMLS_CC);
-    add_assoc_zval(params, "stack", stack);
-    check("command", params TSRMLS_CC);
+
+    plugin_command_check(command.c_str() TSRMLS_CC);
 }
 
-void pre_global_assert_webshell_eval(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_assert_WEBSHELL_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **assertion;
-	int description_len = 0;
-	char *description = NULL;
+    int description_len = 0;
+    char *description = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Z|s", &assertion, &description, &description_len) == FAILURE) {
-		return;
-	}
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Z|s", &assertion, &description, &description_len) == FAILURE)
+    {
+        return;
+    }
 
-	if (Z_TYPE_PP(assertion) == IS_STRING) 
+    if (Z_TYPE_PP(assertion) == IS_STRING)
     {
         if (openrasp_zval_in_request(*assertion TSRMLS_CC))
         {
@@ -254,7 +281,8 @@ void pre_global_assert_webshell_eval(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             zval *plugin_message = NULL;
             MAKE_STD_ZVAL(plugin_message);
             ZVAL_STRING(plugin_message, _("WebShell activity - Detected China Chopper (assert method)"), 1);
-            openrasp_buildin_php_risk_handle(1, check_type, 100, attack_params, plugin_message TSRMLS_CC);
+            OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
+            openrasp_buildin_php_risk_handle(action, check_type, 100, attack_params, plugin_message TSRMLS_CC);
         }
     }
 }

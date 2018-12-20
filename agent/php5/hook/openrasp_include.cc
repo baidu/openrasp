@@ -15,6 +15,8 @@
  */
 
 #include "openrasp_hook.h"
+#include "openrasp_v8.h"
+#include "agent/shared_config_manager.h"
 
 int include_handler(ZEND_OPCODE_HANDLER_ARGS);
 int eval_handler(ZEND_OPCODE_HANDLER_ARGS);
@@ -32,7 +34,7 @@ int include_or_eval_handler(ZEND_OPCODE_HANDLER_ARGS)
 int eval_handler(ZEND_OPCODE_HANDLER_ARGS)
 {
     zend_op *opline = execute_data->opline;
-    if (!openrasp_check_type_ignored(ZEND_STRL("webshell_eval") TSRMLS_CC) &&
+    if (!openrasp_check_type_ignored(WEBSHELL_EVAL TSRMLS_CC) &&
         OPENRASP_OP1_TYPE(opline) == IS_VAR &&
         openrasp_zval_in_request(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC))
     {
@@ -44,7 +46,8 @@ int eval_handler(ZEND_OPCODE_HANDLER_ARGS)
         zval *plugin_message = NULL;
         MAKE_STD_ZVAL(plugin_message);
         ZVAL_STRING(plugin_message, _("WebShell activity - Detected China Chopper webshell (eval method)"), 1);
-        openrasp_buildin_php_risk_handle(1, "webshell_eval", 100, attack_params, plugin_message TSRMLS_CC);
+        OpenRASPActionType action = openrasp::scm->get_buildin_check_action(WEBSHELL_EVAL);
+        openrasp_buildin_php_risk_handle(action, WEBSHELL_EVAL, 100, attack_params, plugin_message TSRMLS_CC);
     }
     return ZEND_USER_OPCODE_DISPATCH;
 }
@@ -91,7 +94,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
         return ZEND_USER_OPCODE_DISPATCH;
     }
     }
-    if (openrasp_check_type_ignored(ZEND_STRL("include") TSRMLS_CC))
+    if (openrasp_check_type_ignored(INCLUDE TSRMLS_CC))
     {
         return ZEND_USER_OPCODE_DISPATCH;
     }
@@ -99,15 +102,15 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     MAKE_STD_ZVAL(path);
     MAKE_COPY_ZVAL(&op1, path);
     convert_to_string(path);
-    char *real_path = nullptr;
+    std::string  real_path;
     const char *scheme_end = nullptr;
-    if (Z_STRVAL_P(path) && (scheme_end = fetch_url_scheme(Z_STRVAL_P(path))) != nullptr || (strlen(Z_STRVAL_P(path)) < 4 || 
-    (strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".php") && strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".inc"))))
+    if ((Z_STRVAL_P(path) && (scheme_end = fetch_url_scheme(Z_STRVAL_P(path))) != nullptr) || (strlen(Z_STRVAL_P(path)) < 4 ||
+                                                                                               (strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".php") && strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".inc"))))
     {
         real_path = openrasp_real_path(Z_STRVAL_P(path), Z_STRLEN_P(path), 1, READING TSRMLS_CC);
     }
 
-    if (!real_path)
+    if (real_path.empty())
     {
         zval_ptr_dtor(&path);
     }
@@ -130,28 +133,22 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
                 send_to_plugin = true;
             }
             else
-            {   
+            {
                 assert(Z_TYPE_PP(doc_root) == IS_STRING);
-                if (0 == strncmp(real_path, Z_STRVAL_PP(doc_root), Z_STRLEN_PP(doc_root)))
+                if (0 == strncmp(real_path.c_str(), Z_STRVAL_PP(doc_root), Z_STRLEN_PP(doc_root)))
                 {
                     send_to_plugin = false;
                 }
                 else
                 {
                     send_to_plugin = true;
-                }  
-            }            
+                }
+            }
         }
-        if (send_to_plugin)
+        openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+        if (send_to_plugin && isolate)
         {
-            zval *params;
-            MAKE_STD_ZVAL(params);
-            array_init(params);
-            add_assoc_zval(params, "path", path);
-            add_assoc_zval(params, "url", path);
-            Z_ADDREF_P(path);
-            add_assoc_string(params, "realpath", real_path, 0);
-            char *function = nullptr;
+            const char *function = nullptr;
             switch (OPENRASP_INCLUDE_OR_EVAL_TYPE(execute_data->opline))
             {
             case ZEND_INCLUDE:
@@ -170,13 +167,25 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
                 function = "";
                 break;
             }
-            add_assoc_string(params, "function", function, 1);
-            check("include", params TSRMLS_CC);
+            bool is_block = false;
+            {
+                v8::HandleScope handle_scope(isolate);
+                auto params = v8::Object::New(isolate);
+                params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, Z_STRVAL_P(path), Z_STRLEN_P(path)));
+                params->Set(openrasp::NewV8String(isolate, "url"), openrasp::NewV8String(isolate, Z_STRVAL_P(path), Z_STRLEN_P(path)));
+                zval_ptr_dtor(&path);
+                params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
+                params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, function));
+                is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(INCLUDE)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+            }
+            if (is_block)
+            {
+                handle_block(TSRMLS_C);
+            }
         }
         else
         {
             //skip
-            efree(real_path);
             zval_ptr_dtor(&path);
         }
     }

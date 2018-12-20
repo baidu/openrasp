@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_hook.h"
+#include "agent/shared_config_manager.h"
 extern "C"
 {
 #include "Zend/zend_vm_opcodes.h"
@@ -44,7 +45,7 @@ int eval_handler(zend_execute_data *execute_data)
     zval *inc_filename = zend_get_zval_ptr(opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
     if (inc_filename != nullptr &&
         opline->op1_type == IS_VAR &&
-        !openrasp_check_type_ignored(ZEND_STRL("webshell_eval")) &&
+        !openrasp_check_type_ignored(WEBSHELL_EVAL) &&
         openrasp_zval_in_request(inc_filename))
     {
         zval attack_params;
@@ -53,7 +54,8 @@ int eval_handler(zend_execute_data *execute_data)
         Z_TRY_ADDREF_P(inc_filename);
         zval plugin_message;
         ZVAL_STRING(&plugin_message, _("WebShell activity - Detected China Chopper webshell (eval method)"));
-        openrasp_buildin_php_risk_handle(1, "webshell_eval", 100, &attack_params, &plugin_message);
+        OpenRASPActionType action = openrasp::scm->get_buildin_check_action(WEBSHELL_EVAL);
+        openrasp_buildin_php_risk_handle(action, WEBSHELL_EVAL, 100, &attack_params, &plugin_message);
     }
     return ZEND_USER_OPCODE_DISPATCH;
 }
@@ -62,7 +64,7 @@ int include_handler(zend_execute_data *execute_data)
     const zend_op *opline = EX(opline);
     zval params, tmp_inc_filename, *inc_filename, *document_root;
     ZVAL_NULL(&tmp_inc_filename);
-    zend_string *real_path = nullptr;
+    std::string real_path;
     inc_filename = zend_get_zval_ptr(opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
     const char *scheme_end = nullptr;
     bool send_to_plugin = false;
@@ -70,7 +72,7 @@ int include_handler(zend_execute_data *execute_data)
     {
         goto DISPATCH;
     }
-    if (openrasp_check_type_ignored(ZEND_STRL("include")))
+    if (openrasp_check_type_ignored(INCLUDE))
     {
         goto DISPATCH;
     }
@@ -81,13 +83,13 @@ int include_handler(zend_execute_data *execute_data)
         convert_to_string(&tmp_inc_filename);
         inc_filename = &tmp_inc_filename;
     }
-    if (Z_STRVAL_P(inc_filename) && (scheme_end = fetch_url_scheme(Z_STRVAL_P(inc_filename))) != nullptr || 
-    (strlen(Z_STRVAL_P(inc_filename)) < 4 || (strcmp(Z_STRVAL_P(inc_filename) + Z_STRLEN_P(inc_filename) - 4, ".php") && 
-    strcmp(Z_STRVAL_P(inc_filename) + Z_STRLEN_P(inc_filename) - 4, ".inc"))))
+    if ((Z_STRVAL_P(inc_filename) && (scheme_end = fetch_url_scheme(Z_STRVAL_P(inc_filename))) != nullptr) ||
+        (strlen(Z_STRVAL_P(inc_filename)) < 4 || (strcmp(Z_STRVAL_P(inc_filename) + Z_STRLEN_P(inc_filename) - 4, ".php") &&
+                                                  strcmp(Z_STRVAL_P(inc_filename) + Z_STRLEN_P(inc_filename) - 4, ".inc"))))
     {
         real_path = openrasp_real_path(Z_STRVAL_P(inc_filename), Z_STRLEN_P(inc_filename), true, READING);
     }
-    if (!real_path)
+    if (real_path.empty())
     {
         goto DISPATCH;
     }
@@ -108,7 +110,7 @@ int include_handler(zend_execute_data *execute_data)
     else
     {
         assert(Z_TYPE_P(document_root) == IS_STRING);
-        if (strncmp(ZSTR_VAL(real_path), Z_STRVAL_P(document_root), Z_STRLEN_P(document_root)) == 0)
+        if (strncmp(real_path.c_str(), Z_STRVAL_P(document_root), Z_STRLEN_P(document_root)) == 0)
         {
             send_to_plugin = false;
         }
@@ -117,42 +119,48 @@ int include_handler(zend_execute_data *execute_data)
             send_to_plugin = true;
         }
     }
-    if (!send_to_plugin)
-    {
-        goto DISPATCH;
-    }
 
-    array_init(&params);
-    add_assoc_zval(&params, "path", inc_filename);
-    Z_TRY_ADDREF_P(inc_filename);
-    add_assoc_zval(&params, "url", inc_filename);
-    Z_TRY_ADDREF_P(inc_filename);
-    add_assoc_str(&params, "realpath", real_path);
-    switch (opline->extended_value)
     {
-    case ZEND_INCLUDE:
-        add_assoc_string(&params, "function", "include");
-        break;
-    case ZEND_INCLUDE_ONCE:
-        add_assoc_string(&params, "function", "include_once");
-        break;
-    case ZEND_REQUIRE:
-        add_assoc_string(&params, "function", "require");
-        break;
-    case ZEND_REQUIRE_ONCE:
-        add_assoc_string(&params, "function", "require_once");
-        break;
-    default:
-        add_assoc_string(&params, "function", "");
-        break;
+        openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+        bool is_block = false;
+        if (!send_to_plugin || !isolate)
+        {
+            goto DISPATCH;
+        }
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto params = v8::Object::New(isolate);
+            auto path = openrasp::NewV8String(isolate, Z_STRVAL_P(inc_filename), Z_STRLEN_P(inc_filename));
+            params->Set(openrasp::NewV8String(isolate, "path"), path);
+            params->Set(openrasp::NewV8String(isolate, "url"), path);
+            params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
+            switch (opline->extended_value)
+            {
+            case ZEND_INCLUDE:
+                params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "include"));
+                break;
+            case ZEND_INCLUDE_ONCE:
+                params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "include_once"));
+                break;
+            case ZEND_REQUIRE:
+                params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "require"));
+                break;
+            case ZEND_REQUIRE_ONCE:
+                params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "require_once"));
+                break;
+            default:
+                params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, ""));
+                break;
+            }
+            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(INCLUDE)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+        }
+        if (is_block)
+        {
+            handle_block();
+        }
     }
-    check("include", &params);
 
 DISPATCH:
-    if (real_path)
-    {
-        zend_string_release(real_path);
-    }
     if (Z_TYPE(tmp_inc_filename) != IS_NULL)
     {
         zval_ptr_dtor(&tmp_inc_filename);

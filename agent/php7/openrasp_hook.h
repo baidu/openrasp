@@ -20,6 +20,10 @@
 #include "openrasp.h"
 #include "openrasp_log.h"
 #include "openrasp_ini.h"
+#include "openrasp_v8.h"
+#include "openrasp_utils.h"
+#include "openrasp_lru.h"
+#include "openrasp_check_type.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -71,7 +75,7 @@ extern "C"
 #endif
 #endif
 
-#define OPENRASP_INTERNAL_FUNCTION_PARAMETERS INTERNAL_FUNCTION_PARAMETERS, const char *check_type
+#define OPENRASP_INTERNAL_FUNCTION_PARAMETERS INTERNAL_FUNCTION_PARAMETERS, OpenRASPCheckType check_type
 #define OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU INTERNAL_FUNCTION_PARAM_PASSTHRU, check_type
 
 /* {{{ defines */
@@ -140,14 +144,14 @@ extern "C"
 #define MYSQLI_STORE_RESULT 0
 #define MYSQLI_USE_RESULT 1
 #define MYSQL_PORT 3306
+#define SAFE_STRING(a) ((a) ? a : "")
 
-typedef struct sql_connection_entry_t
+typedef enum action_type_t
 {
-    char *server = nullptr;
-    char *host = nullptr;
-    int port = 0;
-    char *username = nullptr;
-} sql_connection_entry;
+    AC_IGNORE = 0,
+    AC_LOG = 1 << 0,
+    AC_BLOCK = 1 << 1
+} OpenRASPActionType;
 
 enum PATH_OPERATION
 {
@@ -160,15 +164,39 @@ enum PATH_OPERATION
     SIMULTANEOUSRW = 1 << 6
 };
 
+class SqlConnectionEntry
+{
+  private:
+    std::string connection_string;
+    std::string server;
+    std::string host;
+    std::string username;
+    std::string socket;
+    int port = 0;
+    bool using_socket = true;
+
+  public:
+    void set_connection_string(std::string connection_string);
+    std::string get_connection_string() const;
+    void set_server(std::string server);
+    std::string get_server() const;
+    void set_host(std::string host);
+    std::string get_host() const;
+    void set_username(std::string username);
+    std::string get_username() const;
+    void set_socket(std::string socket);
+    std::string get_socket() const;
+    void set_port(int port);
+    int get_port() const;
+    std::string build_policy_msg();
+    ulong build_hash_code();
+    void set_using_socket(bool using_socket);
+    bool get_using_socket() const;
+};
+typedef SqlConnectionEntry sql_connection_entry;
+
 typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
 typedef void (*hook_handler_t)();
-
-typedef enum hook_position_t
-{
-    PRE_HOOK = 1 << 0,
-    POST_HOOK = 1 << 1
-} hook_position;
-
 typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
 /**
  * 使用这个宏定义被 hook 函数的替换函数的函数头部
@@ -211,65 +239,67 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
     {                                                                                                            \
         hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, origin_##scope##_##name##_##type); \
     }                                                                                                            \
-    void scope##_##name##_##type##_handler()                                                             \
+    void scope##_##name##_##type##_handler()                                                                     \
         DEFINE_HOOK_HANDLER_EX(name, scope, type) int scope##_##name##_##type = []() {register_hook_handler(scope##_##name##_##type##_handler);return 0; }();                      \
     inline void hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function)
 
 #define OPENRASP_HOOK_FUNCTION(name, type) \
     OPENRASP_HOOK_FUNCTION_EX(name, global, type)
 
-#define HOOK_FUNCTION_EX(name, scope, type)                                                       \
-    void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                    \
-    void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                   \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                  \
-    {                                                                                             \
-        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)));   \
-        if (!type_ignored)                                                                        \
-        {                                                                                         \
-            pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type)));  \
-        }                                                                                         \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                        \
-        if (!type_ignored)                                                                        \
-        {                                                                                         \
-            post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type))); \
-        }                                                                                         \
+#define HOOK_FUNCTION_EX(name, scope, type)                                           \
+    void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);        \
+    void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);       \
+    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                      \
+    {                                                                                 \
+        bool pre_type_ignored = openrasp_check_type_ignored(type);                    \
+        if (!pre_type_ignored)                                                        \
+        {                                                                             \
+            pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (type));  \
+        }                                                                             \
+        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                            \
+        bool post_type_ignored = openrasp_check_type_ignored(type);                   \
+        if (!post_type_ignored)                                                       \
+        {                                                                             \
+            post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (type)); \
+        }                                                                             \
     }
 
 #define HOOK_FUNCTION(name, type) \
     HOOK_FUNCTION_EX(name, global, type)
 
-#define PRE_HOOK_FUNCTION_EX(name, scope, type)                                                  \
-    void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                   \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                 \
-    {                                                                                            \
-        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)));  \
-        if (!type_ignored)                                                                       \
-        {                                                                                        \
-            pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type))); \
-        }                                                                                        \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                       \
+#define PRE_HOOK_FUNCTION_EX(name, scope, type)                                      \
+    void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);       \
+    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                     \
+    {                                                                                \
+        bool type_ignored = openrasp_check_type_ignored(type);                       \
+        if (!type_ignored)                                                           \
+        {                                                                            \
+            pre_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (type)); \
+        }                                                                            \
+        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                           \
     }
 
 #define PRE_HOOK_FUNCTION(name, type) \
     PRE_HOOK_FUNCTION_EX(name, global, type)
 
-#define POST_HOOK_FUNCTION_EX(name, scope, type)                                                  \
-    void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);                   \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                  \
-    {                                                                                             \
-        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                                        \
-        bool type_ignored = openrasp_check_type_ignored(ZEND_STRL(ZEND_TOSTR(type)));   \
-        if (!type_ignored)                                                                        \
-        {                                                                                         \
-            post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (ZEND_TOSTR(type))); \
-        }                                                                                         \
+#define POST_HOOK_FUNCTION_EX(name, scope, type)                                      \
+    void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);       \
+    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                      \
+    {                                                                                 \
+        origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                            \
+        bool type_ignored = openrasp_check_type_ignored(type);                        \
+        if (!type_ignored)                                                            \
+        {                                                                             \
+            post_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAM_PASSTHRU, (type)); \
+        }                                                                             \
     }
 
 #define POST_HOOK_FUNCTION(name, type) \
     POST_HOOK_FUNCTION_EX(name, global, type)
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_hook)
-
+int check_type_white_bit_mask;
+openrasp::LRU<std::string, bool> *lru;
 ZEND_END_MODULE_GLOBALS(openrasp_hook)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp_hook);
@@ -291,17 +321,26 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_hook);
 
 typedef void (*fill_param_t)(HashTable *ht);
 
-void handle_block();
-bool openrasp_zval_in_request(zval *item);
-void check(const char *type, zval *params);
+std::string openrasp_real_path(char *filename, int length, bool use_include_path, uint32_t w_op);
+
 void register_hook_handler(hook_handler_t hook_handler);
-bool openrasp_check_type_ignored(const char *item_name, uint item_name_length);
+
+const std::string get_check_type_name(OpenRASPCheckType type);
+
+bool openrasp_zval_in_request(zval *item);
+bool openrasp_check_type_ignored(OpenRASPCheckType check_type);
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length);
-void openrasp_buildin_php_risk_handle(zend_bool is_block, const char *type, int confidence, zval *params, zval *message);
-zend_string *openrasp_real_path(char *filename, int length, bool use_include_path, uint32_t w_op);
+
+void check(OpenRASPCheckType type, zval *params);
+void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckType type, int confidence, zval *params, zval *message);
+void handle_block();
+
 void slow_query_alarm(int rows);
-zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
-void sql_type_handler(char *query, int query_len, const char *server);
+void plugin_sql_check(char *query, int query_len, const char *server);
 long fetch_rows_via_user_function(const char *f_name_str, uint32_t param_count, zval params[]);
+zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
+
+OpenRASPActionType string_to_action(std::string action_string);
+std::string action_to_string(OpenRASPActionType type);
 
 #endif

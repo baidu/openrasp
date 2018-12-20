@@ -15,8 +15,10 @@
  */
 
 #include "openrasp_hook.h"
+#include "openrasp_v8.h"
 
-extern "C" {
+extern "C"
+{
 #ifdef PHP_WIN32
 #include "win32/inet.h"
 #include <winsock2.h>
@@ -39,9 +41,10 @@ extern "C" {
  */
 bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval args[]);
 void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval args[]);
+
 OPENRASP_HOOK_FUNCTION(curl_exec, ssrf)
 {
-    bool type_ignored = openrasp_check_type_ignored(ZEND_STRL("ssrf"));
+    bool type_ignored = openrasp_check_type_ignored(SSRF);
     zval origin_url, function_name;
     zval *zid = nullptr, *opt = nullptr;
     bool skip_hook = false;
@@ -62,13 +65,13 @@ OPENRASP_HOOK_FUNCTION(curl_exec, ssrf)
         args[1] = *opt;
         if (!skip_hook)
         {
-            skip_hook = pre_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, "ssrf", &function_name, opt, &origin_url, args);
+            skip_hook = pre_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, SSRF, &function_name, opt, &origin_url, args);
         }
     }
     origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);
     if (!type_ignored && !skip_hook)
     {
-        post_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, "ssrf", &function_name, opt, &origin_url, args);
+        post_global_curl_exec_ssrf(INTERNAL_FUNCTION_PARAM_PASSTHRU, SSRF, &function_name, opt, &origin_url, args);
     }
     zval_ptr_dtor(&origin_url);
     zval_ptr_dtor(&function_name);
@@ -81,44 +84,55 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
     {
         return true;
     }
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+    if (isolate)
     {
-        zval params;
-        array_init(&params);
-        add_assoc_zval(&params, "url", origin_url);
-        Z_TRY_ADDREF_P(origin_url);
-        add_assoc_string(&params, "function", const_cast<char *>("curl_exec"));
-        php_url *url = php_url_parse_ex(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url));
-        if (url && url->host)
+        std::string cache_key;
+        bool is_block = false;
         {
-            add_assoc_str(&params, "hostname", (zend_string_init(url->host, strlen(url->host), 0)));
-        }
-        else
-        {
-            add_assoc_string(&params, "hostname", "");
-        }
-        zval ip_arr;
-        array_init(&ip_arr);
-        if (url)
-        {
-            if (url->host)
+            v8::HandleScope handle_scope(isolate);
+            auto params = v8::Object::New(isolate);
+            params->Set(openrasp::NewV8String(isolate, "url"), openrasp::NewV8String(isolate, Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url)));
+            params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "curl_exec"));
+            php_url *url = php_url_parse_ex(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url));
+            params->Set(openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, url && url->host ? url->host : ""));
+            uint32_t ip_sum = 0;
+            auto ip_arr = v8::Array::New(isolate);
+            if (url)
             {
-                struct hostent *hp;
-                struct in_addr in;
-                int i;
-                hp = gethostbyname(url->host);
-                if (hp != NULL && hp->h_addr_list != NULL)
+                if (url->host)
                 {
-                    for (i = 0; hp->h_addr_list[i] != 0; i++)
+                    struct hostent *hp;
+                    struct in_addr in;
+                    int i;
+                    hp = gethostbyname(url->host);
+                    if (hp != NULL && hp->h_addr_list != NULL)
                     {
-                        in = *(struct in_addr *)hp->h_addr_list[i];
-                        add_next_index_string(&ip_arr, inet_ntoa(in));
+                        for (i = 0; hp->h_addr_list[i] != 0; i++)
+                        {
+                            in = *(struct in_addr *)hp->h_addr_list[i];
+                            ip_sum += in.s_addr;
+                            ip_arr->Set(i, openrasp::NewV8String(isolate, inet_ntoa(in)));
+                        }
                     }
                 }
+                php_url_free(url);
             }
-            php_url_free(url);
+            params->Set(openrasp::NewV8String(isolate, "ip"), ip_arr);
+            {
+                cache_key = std::string(get_check_type_name(check_type) + std::string(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url)) + std::to_string(ip_sum));
+                if (OPENRASP_HOOK_G(lru)->contains(cache_key))
+                {
+                    return false;
+                }
+            }
+            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
-        add_assoc_zval(&params, "ip", &ip_arr);
-        check(check_type, &params);
+        if (is_block)
+        {
+            handle_block(TSRMLS_C);
+        }
+        OPENRASP_HOOK_G(lru)->set(cache_key, true);
     }
     return false;
 }
@@ -137,7 +151,7 @@ void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *fun
         add_assoc_string(&attack_params, "url", Z_STRVAL(effective_url));
         zval plugin_message;
         ZVAL_STR(&plugin_message, strpprintf(0, _("Detected SSRF via 302 redirect, effective url is %s"), Z_STRVAL(effective_url)));
-        openrasp_buildin_php_risk_handle(1, check_type, 100, &attack_params, &plugin_message);
+        openrasp_buildin_php_risk_handle(AC_BLOCK, check_type, 100, &attack_params, &plugin_message);
     }
     zval_ptr_dtor(&effective_url);
     return;

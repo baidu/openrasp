@@ -16,11 +16,14 @@
 
 package com.baidu.rasp.install;
 
+import com.baidu.rasp.App;
 import com.baidu.rasp.RaspError;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.ReaderInputStream;
 
 import java.io.*;
+import java.util.Properties;
 
 import static com.baidu.rasp.RaspError.E10003;
 
@@ -40,12 +43,13 @@ public abstract class BaseStandardInstaller implements Installer {
     public BaseStandardInstaller(String serverName, String serverRoot) {
         this.serverName = serverName;
         this.serverRoot = serverRoot;
-        resinPath=serverRoot;
+        resinPath = serverRoot;
     }
+
     @Override
     public void install() throws RaspError, IOException {
         String jarPath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
-        File srcDir = new File(new File(jarPath).getParent() + File.separator+"rasp");
+        File srcDir = new File(new File(jarPath).getParent() + File.separator + "rasp");
         if (!(srcDir.exists() && srcDir.isDirectory())) {
             srcDir = new File("rasp");
         }
@@ -86,18 +90,34 @@ public abstract class BaseStandardInstaller implements Installer {
             File target = new File(dir + sep + "conf" + sep + "rasp.properties");
 
             System.out.println("Generating \"rasp.properties\"\n- " + target.getAbsolutePath());
-            if (target.exists()) {
-                System.out.println("- Already exists, continuing ..");
+            if (target.exists() && App.keepConfig) {
+                System.out.println("- Already exists and reserved rasp.properties, continuing ..");
                 return true;
             }
-            System.out.println("- Create " + target.getAbsolutePath());
-            target.getParentFile().mkdir();
-            target.createNewFile();
+            if (target.exists()) {
+                File reserve = new File(dir + sep + "conf" + sep + "rasp.properties.bak");
+                if (!reserve.exists()) {
+                  reserve.createNewFile();
+                }
+                FileOutputStream outputStream = new FileOutputStream(reserve);
+                FileInputStream inputStream = new FileInputStream(target);
+                IOUtils.copy(inputStream, outputStream);
+                outputStream.close();
+                inputStream.close();
+                System.out.println("- Backed up rasp.properties to rasp.properties.bak");
+            } else {
+                System.out.println("- Create " + target.getAbsolutePath());
+                target.getParentFile().mkdir();
+                target.createNewFile();
+            }
             FileWriter writer = new FileWriter(target);
             InputStream is = this.getClass().getResourceAsStream("/rasp.properties");
             IOUtils.copy(is, writer, "UTF-8");
             is.close();
             writer.close();
+
+            //配置云控参数
+            setCloudArgs(App.url, App.appId, App.appSecret);
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -147,6 +167,31 @@ public abstract class BaseStandardInstaller implements Installer {
             if (System.getProperty("user.name").equals("root")) {
                 runCommand(new String[]{"chmod", "-R", "o+w", folderPath});
             }
+        }
+    }
+
+    private void setCloudArgs(String url, String appId, String appSecret) {
+
+        try {
+            if (url != null && appId != null && appSecret != null) {
+                String path = getInstallPath(serverRoot) + File.separator + "conf" + File.separator + "rasp.properties";
+                FileOutputStream out = new FileOutputStream(path, true);
+                OutputStreamWriter writer=new OutputStreamWriter(out);
+                writer.write(LINE_SEP);
+                writer.write("#云控的配置");
+                writer.write(LINE_SEP);
+                writer.write("cloud.backend_url="+url);
+                writer.write(LINE_SEP);
+                writer.write("cloud.app_id="+appId);
+                writer.write(LINE_SEP);
+                writer.write("cloud.app_secret="+appSecret);
+                writer.write(LINE_SEP);
+                writer.write("cloud.enable=true");
+                writer.write(LINE_SEP);
+                writer.close();
+            }
+        } catch (Exception e) {
+            System.out.println("Unable to update rasp.properties: failed to add cloud control settings: " + e.getMessage());
         }
     }
 

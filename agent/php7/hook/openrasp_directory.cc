@@ -19,12 +19,18 @@
 /**
  * directory相关hook点
  */
-PRE_HOOK_FUNCTION(dir, directory);
-PRE_HOOK_FUNCTION(opendir, directory);
-PRE_HOOK_FUNCTION(scandir, directory);
+PRE_HOOK_FUNCTION(dir, DIRECTORY);
+PRE_HOOK_FUNCTION(opendir, DIRECTORY);
+PRE_HOOK_FUNCTION(scandir, DIRECTORY);
 
 static inline void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
+	openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+	if (!isolate)
+	{
+		return;
+	}
+
 	zend_string *dirname;
 
 	if (zend_parse_parameters(MIN(1, ZEND_NUM_ARGS()), "P", &dirname) != SUCCESS)
@@ -44,31 +50,43 @@ static inline void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 		return;
 	}
 	php_stream_close(dirp);
-	zend_string *real_path = openrasp_real_path(ZSTR_VAL(dirname), ZSTR_LEN(dirname), false, OPENDIR);
-	if (real_path)
+	std::string real_path = openrasp_real_path(ZSTR_VAL(dirname), ZSTR_LEN(dirname), false, OPENDIR);
+	if (real_path.empty())
 	{
-		zval params;
-		array_init(&params);
-		add_assoc_str(&params, "path", dirname);
-		zend_string_addref(dirname);
-		add_assoc_str(&params, "realpath", real_path);
-		zval stack;
-		array_init(&stack);
-		format_debug_backtrace_arr(&stack);
-		add_assoc_zval(&params, "stack", &stack);
-		check(check_type, &params);
+		return;
+	}
+
+	bool is_block = false;
+	{
+		v8::HandleScope handle_scope(isolate);
+		auto arr = format_debug_backtrace_arr();
+		size_t len = arr.size();
+		auto stack = v8::Array::New(isolate, len);
+		for (size_t i = 0; i < len; i++)
+		{
+			stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
+		}
+		auto params = v8::Object::New(isolate);
+		params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, dirname->val, dirname->len));
+		params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
+		params->Set(openrasp::NewV8String(isolate, "stack"), stack);
+		is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+	}
+	if (is_block)
+	{
+		handle_block();
 	}
 }
 
-void pre_global_dir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_dir_DIRECTORY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	_hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
-void pre_global_opendir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_opendir_DIRECTORY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	_hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
-void pre_global_scandir_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_scandir_DIRECTORY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	_hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }

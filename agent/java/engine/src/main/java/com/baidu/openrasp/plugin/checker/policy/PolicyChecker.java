@@ -26,6 +26,12 @@ import com.baidu.openrasp.plugin.checker.AbstractChecker;
 public abstract class PolicyChecker extends AbstractChecker {
 
     public PolicyChecker() {
+        super();
+        addCheckEventListener(new PolicyCheckListener());
+    }
+
+    public PolicyChecker(boolean canBlock) {
+        super(canBlock);
         addCheckEventListener(new PolicyCheckListener());
     }
 

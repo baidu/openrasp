@@ -24,6 +24,7 @@ import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.FileUtil;
+import com.google.gson.Gson;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -81,17 +82,23 @@ public class FileInputStreamHook extends AbstractClassHook {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             params.put("path", params, file.getPath());
-            try {
-                String path = file.getCanonicalPath();
-                if (path.endsWith(".class") || !file.exists() && checkSwitch) {
-                    return;
-                }
-                params.put("realpath", params, FileUtil.getRealPath(file));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
 
-            HookHandler.doCheck(CheckParameter.Type.READFILE, params);
+            String path;
+            try {
+                path = file.getCanonicalPath();
+            } catch (Exception e) {
+                path = file.getAbsolutePath();
+            }
+            if (path.endsWith(".class") || !file.exists() && checkSwitch) {
+                return;
+            }
+            params.put("realpath", params, FileUtil.getRealPath(file));
+
+            String hookType = CheckParameter.Type.READFILE.getName();
+            //如果在lru缓存中不进检测
+            if (!HookHandler.commonLRUCache.isContainsKey(hookType + new Gson().toJson(params))) {
+                HookHandler.doCheck(CheckParameter.Type.READFILE, params);
+            }
         }
     }
 }

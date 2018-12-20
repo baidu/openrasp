@@ -9,11 +9,13 @@ plugin.register('command', params => {
     return block
 })
 EOF;
+$conf = <<<CONF
+block.redirect_url="/block?request_id="
+CONF;
 include(__DIR__.'/skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
-openrasp.block_redirect_url="/block?request_id="
 --FILE--
 <?php
 exec('echo test');

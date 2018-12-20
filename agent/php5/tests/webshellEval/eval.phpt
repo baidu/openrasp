@@ -2,6 +2,14 @@
 hook eval (webshell)
 --SKIPIF--
 <?php
+$plugin = <<<EOF
+RASP.algorithmConfig = {
+    webshell_eval: {
+        name:   '算法1 - 拦截简单的 PHP 中国菜刀后门',
+        action: 'block'
+    }
+}
+EOF;
 include(__DIR__.'/../skipif.inc');
 ?>
 --INI--

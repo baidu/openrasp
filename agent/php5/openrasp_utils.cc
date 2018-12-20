@@ -17,18 +17,22 @@
 #include "openrasp_utils.h"
 #include "openrasp_ini.h"
 #include <cmath>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
 
 extern "C"
 {
 #include "php_ini.h"
+#include "ext/json/php_json.h"
 #include "ext/standard/file.h"
 #include "ext/date/php_date.h"
-#include "ext/pcre/php_pcre.h"
 #include "ext/standard/php_string.h"
+#include "ext/standard/php_smart_str.h"
 #include "Zend/zend_builtin_functions.h"
 }
 
-void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
+std::string format_debug_backtrace_str(TSRMLS_D)
 {
     zval trace_arr;
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION <= 3)
@@ -36,16 +40,16 @@ void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
 #else
     zend_fetch_debug_backtrace(&trace_arr, 0, 0, 0 TSRMLS_CC);
 #endif
+    std::string buffer;
     if (Z_TYPE(trace_arr) == IS_ARRAY)
     {
         int i = 0;
-        std::string buffer;
         HashTable *hash_arr = Z_ARRVAL(trace_arr);
         for (zend_hash_internal_pointer_reset(hash_arr);
              zend_hash_has_more_elements(hash_arr) == SUCCESS;
              zend_hash_move_forward(hash_arr))
         {
-            if (++i > openrasp_ini.log_maxstack)
+            if (++i > OPENRASP_CONFIG(log.maxstack))
             {
                 break;
             }
@@ -80,19 +84,22 @@ void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
             }
             buffer.append(")\n");
         }
-        if (buffer.length() > 0)
-        {
-            ZVAL_STRINGL(backtrace_str, buffer.c_str(), buffer.length() - 1, 1);
-        }
-        else
-        {
-            ZVAL_STRING(backtrace_str, "", 1);
-        }
     }
     zval_dtor(&trace_arr);
+    if (buffer.length() > 0)
+    {
+        buffer.pop_back();
+    }
+    return buffer;
 }
 
-void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
+void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC)
+{
+    auto trace = format_debug_backtrace_str(TSRMLS_C);
+    ZVAL_STRINGL(backtrace_str, trace.c_str(), trace.length(), 1);
+}
+
+std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D)
 {
     zval trace_arr;
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION <= 3)
@@ -100,6 +107,7 @@ void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
 #else
     zend_fetch_debug_backtrace(&trace_arr, 0, 0, 0 TSRMLS_CC);
 #endif
+    std::vector<std::string> array;
     if (Z_TYPE(trace_arr) == IS_ARRAY)
     {
         int i = 0;
@@ -108,7 +116,7 @@ void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
              zend_hash_has_more_elements(hash_arr) == SUCCESS;
              zend_hash_move_forward(hash_arr))
         {
-            if (++i > openrasp_ini.plugin_maxstack)
+            if (++i > OPENRASP_CONFIG(plugin.maxstack))
             {
                 break;
             }
@@ -131,20 +139,30 @@ void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
                 buffer.push_back('@');
                 buffer.append(Z_STRVAL_PP(trace_ele), Z_STRLEN_PP(trace_ele));
             }
-            add_next_index_stringl(backtrace_arr, buffer.c_str(), buffer.length(), 1);
+            array.push_back(buffer);
         }
     }
     zval_dtor(&trace_arr);
+    return array;
 }
 
-void openrasp_error(int type, int error_code, const char *format, ...)
+void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
+{
+    auto array = format_debug_backtrace_arr(TSRMLS_C);
+    for (auto &str : array)
+    {
+        add_next_index_stringl(backtrace_arr, str.c_str(), str.length(), 1);
+    }
+}
+
+void openrasp_error(int type, openrasp_error_code code, const char *format, ...)
 {
     va_list arg;
     char *message = nullptr;
     va_start(arg, format);
     vspprintf(&message, 0, format, arg);
     va_end(arg);
-    zend_error(type, "[OpenRASP] %d %s", error_code, message);
+    zend_error(type, "[OpenRASP] %d %s", code, message);
     efree(message);
 }
 
@@ -193,15 +211,7 @@ const char *fetch_url_scheme(const char *filename)
     return nullptr;
 }
 
-long fetch_time_offset()
-{
-    time_t t = time(NULL);
-    struct tm lt = {0};
-    localtime_r(&t, &lt);
-    return lt.tm_gmtoff;
-}
-
-void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter)
+void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter, bool use_abs_path)
 {
     DIR *dir;
     std::string result;
@@ -214,7 +224,7 @@ void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugi
             {
                 if (file_filter(ent->d_name))
                 {
-                    plugins.push_back(std::string(ent->d_name));
+                    plugins.push_back(use_abs_path ? (dir_abs + std::string(1, DEFAULT_SLASH) + std::string(ent->d_name)) : std::string(ent->d_name));
                 }
             }
         }
@@ -222,47 +232,83 @@ void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugi
     }
 }
 
-bool same_day_in_current_timezone(long src, long target, long offset)
+bool write_str_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len)
 {
-    long day = 24 * 60 * 60;
-    return ((src + offset) / day == (target + offset) / day);
-}
-
-char *openrasp_format_date(char *format, int format_len, time_t ts)
-{
-    char buffer[128];
-    struct tm *tm_info;
-
-    time(&ts);
-    tm_info = localtime(&ts);
-
-    strftime(buffer, 64, format, tm_info);
-    return estrdup(buffer);
-}
-
-void openrasp_pcre_match(char *regex, int regex_len, char *subject, int subject_len, zval *return_value TSRMLS_DC)
-{
-    pcre_cache_entry *pce;
-    zval *subpats = NULL;
-    long flags = 0;
-    long start_offset = 0;
-    int global = 0;
-
-    if ((pce = pcre_get_compiled_regex_cache(regex, regex_len TSRMLS_CC)) == NULL)
+    std::ofstream out_file(file, mode);
+    if (out_file.is_open() && out_file.good())
     {
-        RETURN_FALSE;
+        out_file.write(content, content_len);
+        out_file.close();
+        return true;
     }
-
-    php_pcre_match_impl(pce, subject, subject_len, return_value, subpats,
-                        global, 0, flags, start_offset TSRMLS_CC);
+    return false;
 }
 
-long get_file_st_ino(std::string filename TSRMLS_DC)
+bool get_entire_file_content(const char *file, std::string &content)
 {
-    struct stat sb;
-    if (VCWD_STAT(filename.c_str(), &sb) == 0 && (sb.st_mode & S_IFREG) != 0)
+    std::ifstream ifs(file, std::ifstream::in | std::ifstream::binary);
+    if (ifs.is_open() && ifs.good())
     {
-        return (long)sb.st_ino;
+        content = {std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
+        return true;
     }
-    return 0;
+    return false;
+}
+
+char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
+{
+    zval **origin_zv;
+    if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
+        Z_TYPE_PP(origin_zv) == IS_STRING)
+    {
+        return Z_STRVAL_PP(origin_zv);
+    }
+    return nullptr;
+}
+
+HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey)
+{
+    zval **origin_zv;
+    if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
+        Z_TYPE_PP(origin_zv) == IS_ARRAY)
+    {
+        return Z_ARRVAL_PP(origin_zv);
+    }
+    return nullptr;
+}
+
+bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result)
+{
+    zval **origin_zv;
+    if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
+        Z_TYPE_PP(origin_zv) == IS_LONG)
+    {
+        *result = Z_LVAL_PP(origin_zv);
+        return true;
+    }
+    return false;
+}
+
+zval *fetch_outmost_zval_from_ht(HashTable *ht, const char *arKey)
+{
+    zval **origin_zv;
+    if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS)
+    {
+        return *origin_zv;
+    }
+    return nullptr;
+}
+
+std::string json_encode_from_zval(zval *value TSRMLS_DC)
+{
+    smart_str buf_json = {0};
+    php_json_encode(&buf_json, value, 0 TSRMLS_CC);
+    if (buf_json.a > buf_json.len)
+    {
+        buf_json.c[buf_json.len] = '\0';
+        buf_json.len++;
+    }
+    std::string result(buf_json.c);
+    smart_str_free(&buf_json);
+    return result;
 }

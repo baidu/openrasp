@@ -24,6 +24,7 @@ import com.baidu.openrasp.plugin.checker.js.JsChecker;
 import com.baidu.openrasp.plugin.info.AttackInfo;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -117,6 +118,12 @@ public class SSRFChecker extends ConfigurableChecker {
         List<EventInfo> jsResults = new JsChecker().checkParam(checkParameter);
         if (jsResults != null && jsResults.size() > 0) {
             result.addAll(jsResults);
+        }
+        // 检测无威胁的url加入lru缓存
+        if (result.isEmpty()) {
+            if (HookHandler.commonLRUCache.maxSize() != 0) {
+                HookHandler.commonLRUCache.put(new Gson().toJson(checkParameter.getParams()), null);
+            }
         }
         return result;
     }

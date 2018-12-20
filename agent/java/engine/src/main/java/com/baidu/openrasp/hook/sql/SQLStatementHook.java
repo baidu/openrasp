@@ -17,22 +17,21 @@
 package com.baidu.openrasp.hook.sql;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
-import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.Reflection;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.Gson;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
 import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by zhuming01 on 7/18/17.
@@ -40,16 +39,6 @@ import java.io.IOException;
  */
 @HookAnnotation
 public class SQLStatementHook extends AbstractSqlHook {
-
-    private static final String CONFIG_KEY_CACHE = "cache";
-    private static final String CONFIG_KEY_SQLI = "sqli";
-    private static final String CONFIG_KEY_CAPACITY = "capacity";
-    private static final int DEFAULT_LRU_CACHE_CAPACITY = 100;
-
-    /**
-     * sql缓存，保存最近检测无威胁的sql语句，缓存大小可配置
-     */
-    public static LRUCache<String, String> sqlCache = new LRUCache<String, String>(getLRUCacheSize());
 
     /**
      * (none-javadoc)
@@ -175,7 +164,7 @@ public class SQLStatementHook extends AbstractSqlHook {
      * @param stmt sql语句
      */
     public static void checkSQL(String server, Object statement, String stmt) {
-        if (stmt != null && !stmt.isEmpty() && !sqlCache.isContainsKey(stmt)) {
+        if (stmt != null && !stmt.isEmpty() && !HookHandler.commonLRUCache.isContainsKey(server.trim() + stmt.trim())) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             String connectionId = getSqlConnectionId(server, statement);
@@ -187,32 +176,6 @@ public class SQLStatementHook extends AbstractSqlHook {
 
             HookHandler.doCheck(CheckParameter.Type.SQL, params);
         }
-    }
-
-    /**
-     * 从js配置获取lru的缓存大小，如果返回为空，那么使用默认值。
-     */
-    public static int getLRUCacheSize() {
-        try {
-            JsonObject config = Config.getConfig().getAlgorithmConfig();
-            if (config != null) {
-                JsonElement jsonElement = config.get(CONFIG_KEY_CACHE);
-                if (jsonElement != null) {
-                    JsonElement jsonSubElement = jsonElement.getAsJsonObject().get(CONFIG_KEY_SQLI);
-                    if (jsonSubElement != null) {
-                        JsonElement value = jsonSubElement.getAsJsonObject().get(CONFIG_KEY_CAPACITY);
-                        if (value != null) {
-                            return value.getAsInt();
-                        }
-
-                    }
-                }
-            }
-        } catch (Exception e) {
-
-            JSContext.LOGGER.warn("Parse json failed because: " + e.getMessage());
-        }
-        return DEFAULT_LRU_CACHE_CAPACITY;
     }
 
 }

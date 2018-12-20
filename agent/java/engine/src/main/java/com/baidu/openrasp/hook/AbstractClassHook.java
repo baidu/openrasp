@@ -75,6 +75,7 @@ public abstract class AbstractClassHook {
             hookMethod(ctClass);
             return ctClass.toBytecode();
         } catch (Exception e) {
+            e.printStackTrace();
             if (Config.getConfig().isDebugEnabled()) {
                 LOGGER.error("transform class " + ctClass.getName() + " failed", e);
             }

@@ -1,11 +1,4 @@
 #!/bin/bash
-#
-# To enable native antlr support, do
-# 
-# wget https://packages.baidu.com/app/openrasp/libantlr4-linux.tar.gz -O /tmp/libantlr4.tar.gz
-# tar -xf /tmp/libantlr4.tar.gz -C /tmp
-# extra_config_opt="--with-antlr4=/tmp/libantlr4" bash build-php.sh
-# 
 # 中文 PHP 扩展编译说明
 # https://rasp.baidu.com/doc/hacking/compile/php.html
 
@@ -47,7 +40,11 @@ phpize
 if [[ $php_os == "macos" ]]; then
 	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext=/usr/local/homebrew/opt/gettext -q ${extra_config_opt}
 else
-	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext -q ${extra_config_opt}
+	curl https://packages.baidu.com/app/openrasp/static-lib.tar.bz2 -o /tmp/static-lib.tar.bz2
+	tar -xf /tmp/static-lib.tar.bz2 -C /tmp/
+
+	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext --enable-openrasp-remote-manager \
+		--with-curl=/tmp/static-lib --with-openssl=/tmp/static-lib --with-pcre-regex=/tmp/static-lib -q ${extra_config_opt}
 fi
 
 make
@@ -62,6 +59,7 @@ phpize --clean
 mkdir -p "$output_base"/{conf,assets,logs,locale,plugins}
 cp ../../plugins/official/plugin.js "$output_base"/plugins/official.js
 cp ../../rasp-install/php/*.php "$output_base"
+cp ../../rasp-install/php/openrasp.toml "$output_base"/conf/openrasp.toml
 
 # 生成并拷贝mo文件
 ./scripts/locale.sh
