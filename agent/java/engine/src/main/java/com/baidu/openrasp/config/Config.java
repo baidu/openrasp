@@ -82,7 +82,12 @@ public class Config extends FileScanListener {
         LOG_MAXBURST("log.maxburst", "100"),
         HEARTBEAT_INTERVAL("cloud.heartbeat_interval", "180"),
         HOOK_WHITE("hook.white", ""),
-        HOOK_WHITE_ALL("hook.white.ALL", "true");
+        HOOK_WHITE_ALL("hook.white.ALL", "true"),
+        XSS_FILTER_REGEX("xss.filter_regex", "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"),
+        XSS_MIN_PARAM_LENGTH("xss.min_param_length", "15"),
+        XSS_MAX_DETECTION_NUM("xss.max_detection_num", "10"),
+        DECOMPILE_ENABLE("decompile.enable", "false"),
+        RESPONSE_HEADERS("response.headers", "");
 
 
         Item(String key, String defaultValue) {
@@ -106,6 +111,7 @@ public class Config extends FileScanListener {
     }
 
     private static final String HOOKS_WHITE = "hook.white";
+    private static final String RESPONSE_HEADERS = "response.headers";
     private static final String CONFIG_DIR_NAME = "conf";
     private static final String CONFIG_FILE_NAME = "rasp.yaml";
     public static final int REFLECTION_STACK_START_INDEX = 0;
@@ -147,6 +153,11 @@ public class Config extends FileScanListener {
     private int logMaxBurst;
     private int heartbeatInterval;
     private int syslogFacility;
+    private String xssRegex;
+    private int xssMinParamLength;
+    private int xssMaxDetectionNum;
+    private boolean decompileEnable;
+    private ArrayList<String> responseHeaders;
 
 
     static {
@@ -194,7 +205,7 @@ public class Config extends FileScanListener {
         } finally {
             // 出现解析问题使用默认值
             for (Config.Item item : Config.Item.values()) {
-                if (item.key.equals("hook.white")) {
+                if (item.key.equals(HOOKS_WHITE)) {
                     if (properties != null) {
                         Object object = properties.get(item.key);
                         if (object instanceof Map) {
@@ -208,6 +219,14 @@ public class Config extends FileScanListener {
                         }
                     }
                     continue;
+                } else if (item.key.equals(RESPONSE_HEADERS)) {
+                    if (properties != null) {
+                        Object object = properties.get(item.key);
+                        if (object instanceof ArrayList) {
+                            setResponseHeaders((ArrayList) object);
+                        }
+                    }
+                    continue;
                 }
                 if (item.isProperties) {
                     setConfigFromProperties(item, properties, isInit);
@@ -216,14 +235,18 @@ public class Config extends FileScanListener {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public synchronized void loadConfigFromCloud(Map<String, Object> configMap, boolean isInit) {
         TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
         for (Map.Entry<String, Object> entry : configMap.entrySet()) {
             if (entry.getKey().equals(HOOKS_WHITE)) {
                 if (entry.getValue() instanceof JsonObject) {
-                    @SuppressWarnings("unchecked")
                     Map<String, Object> hooks = CloudUtils.getMapGsonObject().fromJson((JsonObject) entry.getValue(), Map.class);
                     temp.putAll(parseHookWhite(hooks));
+                }
+            } else if (entry.getKey().equals(RESPONSE_HEADERS)) {
+                if (entry.getValue() instanceof ArrayList) {
+                    setResponseHeaders((ArrayList) entry.getValue());
                 }
             } else {
                 if (entry.getValue() instanceof JsonPrimitive) {
@@ -1031,6 +1054,96 @@ public class Config extends FileScanListener {
         }
     }
 
+    /**
+     * 获取body_xss的正则表达式
+     *
+     * @return body_xss的正则表达式
+     */
+    public synchronized String getXssRegex() {
+        return xssRegex;
+    }
+
+    /**
+     * 设置body_xss的正则表达式
+     *
+     * @param xssRegex 待设置body_xss的正则表达式
+     */
+    public synchronized void setXssRegex(String xssRegex) {
+        this.xssRegex = xssRegex;
+    }
+
+    /**
+     * 获取body_xss的参数最小的检测长度
+     *
+     * @return body_xss的参数最小的检测长度
+     */
+    public synchronized int getXssMinParamLength() {
+        return xssMinParamLength;
+    }
+
+    /**
+     * 设置body_xss的参数最小检测长度
+     *
+     * @param xssMinParamLength 待设置body_xss的参数最小检测长度
+     */
+    public synchronized void setXssMinParamLength(String xssMinParamLength) {
+        this.xssMinParamLength = Integer.parseInt(xssMinParamLength);
+    }
+
+    /**
+     * 获取body_xss的匹配最小检测长度的的参数数量
+     *
+     * @return body_xss的匹配最小检测长度的的参数数量
+     */
+    public synchronized int getXssMaxDetectionNum() {
+        return xssMaxDetectionNum;
+    }
+
+    /**
+     * 设置body_xss的匹配最小检测长度的的参数数量
+     *
+     * @param xssMaxDetectionNum 待设置body_xss的匹配最小检测长度的的参数数量
+     */
+    public synchronized void setXssMaxDetectionNum(String xssMaxDetectionNum) {
+        this.xssMaxDetectionNum = Integer.parseInt(xssMaxDetectionNum);
+    }
+
+    /**
+     * 获取java反编译的开关状态
+     *
+     * @return java反编译的开关状态
+     */
+    public synchronized boolean getDecompileEnable() {
+        return decompileEnable;
+    }
+
+    /**
+     * 设置java反编译的开关状态
+     *
+     * @param decompileEnable 待设置java反编译的开关状态
+     */
+    public synchronized void setDecompileEnable(String decompileEnable) {
+        this.decompileEnable = Boolean.parseBoolean(decompileEnable);
+    }
+
+    /**
+     * 获取response header数组
+     *
+     * @return response header数组
+     */
+    public synchronized ArrayList<String> getResponseHeaders() {
+        return responseHeaders;
+    }
+
+    /**
+     * 设置response header数组
+     *
+     * @param responseHeaders 待设置response header数组
+     */
+    public synchronized void setResponseHeaders(ArrayList<String> responseHeaders) {
+        this.responseHeaders = responseHeaders;
+    }
+
     //--------------------------统一的配置处理------------------------------------
 
     /**
@@ -1107,6 +1220,14 @@ public class Config extends FileScanListener {
                 setLogMaxBurst(value);
             } else if (Item.HEARTBEAT_INTERVAL.key.equals(key)) {
                 setHeartbeatInterval(value);
+            } else if (Item.XSS_FILTER_REGEX.key.equals(key)) {
+                setXssRegex(value);
+            } else if (Item.XSS_MIN_PARAM_LENGTH.key.equals(key)) {
+                setXssMinParamLength(value);
+            } else if (Item.XSS_MAX_DETECTION_NUM.key.equals(key)) {
+                setXssMaxDetectionNum(value);
+            } else if (Item.DECOMPILE_ENABLE.key.equals(key)) {
+                setDecompileEnable(value);
             } else {
                 isHit = false;
             }

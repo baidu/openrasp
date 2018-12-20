@@ -171,6 +171,8 @@ public class HookHandler {
             HttpServletResponse responseContainer = new HttpServletResponse(response);
             responseContainer.setHeader(OPEN_RASP_HEADER_KEY, OPEN_RASP_HEADER_VALUE);
             responseContainer.setHeader(REQUEST_ID_HEADER_KEY, requestContainer.getRequestId());
+            //设置响应的用户自定义头部
+            setUserDefinedResponseHeader(responseContainer);
             requestCache.set(requestContainer);
             responseCache.set(responseContainer);
             XXEHook.resetLocalExpandedSystemIds();
@@ -281,6 +283,21 @@ public class HookHandler {
             responseCache.get().sendError();
         }
         throw securityException;
+    }
+
+    /**
+     * 设置用户的自定义header
+     *
+     * @param response http请求的response
+     */
+    private static void setUserDefinedResponseHeader(HttpServletResponse response) {
+        ArrayList<String> headers = Config.getConfig().getResponseHeaders();
+        for (String header : headers) {
+            String[] temp = header.split(":");
+            if (temp.length == 2) {
+                response.setHeader(temp[0].trim(), temp[1].trim());
+            }
+        }
     }
 
     /**

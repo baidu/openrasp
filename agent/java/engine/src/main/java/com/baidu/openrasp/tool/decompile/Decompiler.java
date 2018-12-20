@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.tool.decomplie;
+package com.baidu.openrasp.tool.decompile;
 
 import com.baidu.openrasp.tool.LRUCache;
 import com.strobel.assembler.metadata.MetadataSystem;
