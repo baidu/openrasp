@@ -42,6 +42,9 @@ EOF
     	install_jar=$(readlink -f "$install_jar")
     fi
 
+	# 不限制 virtual memory / max memory size，防止 JVM 出错
+	ulimit -m unlimited -v unlimited
+
     # 开始逐个安装
 	echo Looking for Java processes ..
 
