@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+set -x
+
 export ERROR_RASP_INSTALL=1
 export ERROR_APP_SHUTDOWN=2
 export ERROR_APP_RESTART=3
