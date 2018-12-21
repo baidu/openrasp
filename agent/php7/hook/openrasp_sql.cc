@@ -43,7 +43,7 @@ static void connection_via_default_username_policy(sql_connection_entry *sql_con
     add_assoc_string(&connection_params, "socket", (char *)sql_connection_p->get_socket().c_str());
     add_assoc_string(&connection_params, "connectionString", (char *)sql_connection_p->get_connection_string().c_str());
     add_assoc_long(&connection_params, "port", sql_connection_p->get_port());
-    add_assoc_zval(&policy_array, "params", &connection_params);
+    add_assoc_zval(&policy_array, "policy_params", &connection_params);
     LOG_G(policy_logger).log(LEVEL_INFO, &policy_array);
     zval_ptr_dtor(&policy_array);
 }
