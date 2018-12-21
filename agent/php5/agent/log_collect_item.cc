@@ -34,7 +34,7 @@ const std::map<int, const std::string> LogCollectItem::instance_url_map =
         {ALARM_LOGGER, "/v1/agent/log/attack"},
         {POLICY_LOGGER, "/v1/agent/log/policy"},
         {PLUGIN_ERROR, "/v1/agent/log/plugin"},
-        {RASP_LOGGER, "/v1/agent/log/rasp"}};
+        {RASP_LOGGER, "/v1/agent/log/error"}};
 
 const std::map<int, const std::string> LogCollectItem::instance_name_map =
     {
