@@ -33,7 +33,7 @@
 #include "openrasp_ini.h"
 #include "utils/regex.h"
 #include "utils/net.h"
-#include "utils/os.h"
+#include "agent/utils/os.h"
 #include "openrasp_utils.h"
 
 namespace openrasp

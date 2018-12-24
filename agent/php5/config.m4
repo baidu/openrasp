@@ -254,7 +254,8 @@ if test "$PHP_OPENRASP" != "no"; then
           AC_MSG_RESULT([$OPENRASP_CURL_LIBDIR])     
         fi
 
-        OPENRASP_REMOTE_MANAGER_SOURCE="agent/openrasp_ctrl_block.cc \
+        OPENRASP_REMOTE_MANAGER_SOURCE="agent/utils/os.cc \
+        agent/openrasp_ctrl_block.cc \
         agent/openrasp_agent.cc \
         agent/heartbeat_agent.cc \
         agent/log_agent.cc \
@@ -734,7 +735,6 @@ int main() {
     utils/regex.cc \
     utils/time.cc \
     utils/net.cc \
-    utils/os.cc \
     utils/JsonReader.cc \
     utils/YamlReader.cc \
     agent/base_manager.cc \

@@ -23,7 +23,7 @@
 #include <dirent.h>
 #include <algorithm>
 #include "shared_config_manager.h"
-#include "utils/os.h"
+#include "agent/utils/os.h"
 
 namespace openrasp
 {
