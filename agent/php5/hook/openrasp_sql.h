@@ -22,39 +22,39 @@
 
 class SqlConnectionEntry
 {
-  private:
-    std::string connection_string;
-    std::string server;
-    std::string host;
-    std::string username;
-    std::string socket;
-    int port = 0;
-    bool using_socket = true;
+private:
+  std::string connection_string;
+  std::string server;
+  std::string host;
+  std::string username;
+  std::string socket;
+  int port = 0;
+  bool using_socket = true;
 
-  public:
-    void set_connection_string(std::string connection_string);
-    std::string get_connection_string() const;
+public:
+  void set_connection_string(std::string connection_string);
+  std::string get_connection_string() const;
 
-    void set_server(std::string server);
-    std::string get_server() const;
+  void set_server(std::string server);
+  std::string get_server() const;
 
-    void set_host(std::string host);
-    std::string get_host() const;
+  void set_host(std::string host);
+  std::string get_host() const;
 
-    void set_username(std::string username);
-    std::string get_username() const;
+  void set_username(std::string username);
+  std::string get_username() const;
 
-    void set_socket(std::string socket);
-    std::string get_socket() const;
+  void set_socket(std::string socket);
+  std::string get_socket() const;
 
-    void set_port(int port);
-    int get_port() const;
+  void set_port(int port);
+  int get_port() const;
 
-    std::string build_policy_msg();
-    ulong build_hash_code();
+  std::string build_policy_msg();
+  ulong build_hash_code();
 
-    void set_using_socket(bool using_socket);
-    bool get_using_socket() const;
+  void set_using_socket(bool using_socket);
+  bool get_using_socket() const;
 };
 
 typedef SqlConnectionEntry sql_connection_entry;
@@ -65,6 +65,6 @@ void plugin_sql_check(char *query, int query_len, char *server TSRMLS_DC);
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func,
                                              int enforce_policy);
 bool mysql_error_code_filtered(long err_code);
-void sql_error_alarm(char *server, long err_code, const std::string &err_msg TSRMLS_DC);                                       
+void sql_error_alarm(char *server, char *query, const std::string &err_code, const std::string &err_msg TSRMLS_DC);
 
 #endif

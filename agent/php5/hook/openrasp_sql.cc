@@ -30,12 +30,6 @@ extern "C"
 #include "zend_ini.h"
 }
 
-static const std::set<long> mysql_error_codes = {
-    1060,
-    1062,
-    1064,
-    1105,
-    1690};
 /**
  * sql connection alarm
  */
@@ -144,6 +138,12 @@ void plugin_sql_check(char *query, int query_len, char *server TSRMLS_DC)
 
 bool mysql_error_code_filtered(long err_code)
 {
+    static const std::set<long> mysql_error_codes = {
+        1060,
+        1062,
+        1064,
+        1105,
+        1690};
     auto it = mysql_error_codes.find(err_code);
     if (it != mysql_error_codes.end())
     {
@@ -152,18 +152,19 @@ bool mysql_error_code_filtered(long err_code)
     return false;
 }
 
-void sql_error_alarm(char *server, long err_code, const std::string &err_msg TSRMLS_DC)
+void sql_error_alarm(char *server, char *query, const std::string &err_code, const std::string &err_msg TSRMLS_DC)
 {
     zval *attack_params = nullptr;
     MAKE_STD_ZVAL(attack_params);
     array_init(attack_params);
     add_assoc_string(attack_params, "server", server, 1);
-    add_assoc_long(attack_params, "error_code", err_code);
+    add_assoc_string(attack_params, "query", query, 1);
+    add_assoc_string(attack_params, "error_code", (char *)err_code.c_str(), 1);
     add_assoc_string(attack_params, "error_msg", (char *)err_msg.c_str(), 1);
     zval *plugin_message = nullptr;
     MAKE_STD_ZVAL(plugin_message);
     char *message_str = nullptr;
-    spprintf(&message_str, 0, _("%s error detected: error code %ld."), server, err_code);
+    spprintf(&message_str, 0, _("%s error detected: error code %s."), server, err_code.c_str());
     ZVAL_STRING(plugin_message, message_str, 1);
     efree(message_str);
     OpenRASPActionType action = openrasp::scm->get_buildin_check_action(SQL_ERROR);

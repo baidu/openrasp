@@ -16,6 +16,7 @@
 
 #include "openrasp_sql.h"
 #include "openrasp_hook.h"
+#include <string>
 
 extern "C"
 {
@@ -207,7 +208,7 @@ void post_global_mysql_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             return;
         }
         std::string error_msg = fetch_mysql_error(param_num, args TSRMLS_CC);
-        sql_error_alarm("mysql", error_code, error_msg TSRMLS_CC);
+        sql_error_alarm("mysql", query, std::to_string(error_code), error_msg TSRMLS_CC);
     }
 }
 
@@ -231,10 +232,12 @@ static std::string fetch_mysql_error(uint32_t param_count, zval *params[] TSRMLS
     zval function_name, retval;
     INIT_ZVAL(function_name);
     ZVAL_STRING(&function_name, "mysql_error", 0);
-    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, param_count, params TSRMLS_CC) == SUCCESS &&
-        Z_TYPE(retval) == IS_STRING)
+    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, param_count, params TSRMLS_CC) == SUCCESS)
     {
-        error_msg = std::string(Z_STRVAL(retval));
+        if (Z_TYPE(retval) == IS_STRING)
+        {
+            error_msg = std::string(Z_STRVAL(retval));
+        }
         zval_dtor(&retval);
     }
     return error_msg;

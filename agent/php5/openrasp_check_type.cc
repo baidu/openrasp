@@ -47,7 +47,7 @@ CheckTypeTransfer::CheckTypeTransfer()
   insert(WEBSHELL_FILE_PUT_CONTENTS, "webshell_file_put_contents", true);
   insert(XSS_ECHO, "xss_echo", true);
   insert(XSS, "xss", true);
-  insert(SQL_ERROR, "sqlError", true);
+  insert(SQL_ERROR, "sqlException", true);
 }
 
 std::string CheckTypeTransfer::type_to_name(OpenRASPCheckType type) const
