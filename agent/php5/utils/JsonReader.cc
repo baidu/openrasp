@@ -137,4 +137,25 @@ std::string JsonReader::dump(const std::vector<std::string> &keys, bool pretty)
   }
 }
 
+std::string JsonReader::dump(bool pretty)
+{
+  return dump({}, pretty);
+}
+
+void JsonReader::write_bool(const std::vector<std::string> &keys, const bool &value)
+{
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
+  j[ptr] = value;
+}
+void JsonReader::write_int64(const std::vector<std::string> &keys, const int64_t &value)
+{
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
+  j[ptr] = value;
+}
+void JsonReader::write_string(const std::vector<std::string> &keys, const std::string &value)
+{
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
+  j[ptr] = value;
+}
+
 } // namespace openrasp

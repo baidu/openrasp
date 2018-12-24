@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "utils/JsonReader.h"
 #include "log_collect_item.h"
 #include "openrasp_utils.h"
 #include "openrasp_ini.h"
@@ -22,8 +23,6 @@
 #include "openrasp_agent_manager.h"
 #include "shared_config_manager.h"
 #include "utils/time.h"
-#include "utils/JsonReader.h"
-#include "utils/JsonWriter.h"
 
 namespace openrasp
 {
@@ -132,12 +131,12 @@ long LogCollectItem::get_active_file_inode()
 
 void LogCollectItem::save_status_snapshot() const
 {
-    JsonWriter json_writer;
-    json_writer.write_string({"curr_suffix"}, curr_suffix);
-    json_writer.write_int64({"last_post_time"}, last_post_time);
-    json_writer.write_int64({"fpos"}, fpos);
-    json_writer.write_int64({"st_ino"}, st_ino);
-    std::string json_content = json_writer.dump(true);
+    JsonReader json_reader;
+    json_reader.write_string({"curr_suffix"}, curr_suffix);
+    json_reader.write_int64({"last_post_time"}, last_post_time);
+    json_reader.write_int64({"fpos"}, fpos);
+    json_reader.write_int64({"st_ino"}, st_ino);
+    std::string json_content = json_reader.dump(true);
 
     std::string status_file_abs = get_base_dir_path() + LogCollectItem::status_file;
 #ifndef _WIN32

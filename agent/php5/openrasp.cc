@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "utils/JsonReader.h"
+#include "utils/YamlReader.h"
 #include "openrasp.h"
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
@@ -41,8 +43,6 @@ extern "C"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"
 #endif
-#include "utils/JsonReader.h"
-#include "utils/YamlReader.h"
 
 using openrasp::ConfigHolder;
 

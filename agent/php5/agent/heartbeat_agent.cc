@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "utils/JsonReader.h"
 #include "openrasp_agent.h"
 #include "openrasp_hook.h"
 #include "utils/digest.h"
@@ -23,7 +24,6 @@
 #include <algorithm>
 #include "shared_config_manager.h"
 #include "utils/os.h"
-#include "utils/JsonWriter.h"
 
 namespace openrasp
 {
@@ -67,12 +67,12 @@ void HeartBeatAgent::do_heartbeat()
 {
 	std::string url_string = std::string(openrasp_ini.backend_url) + heartbeat_url_path;
 
-	JsonWriter json_writer;
-	json_writer.write_string({"rasp_id"}, scm->get_rasp_id());
-	json_writer.write_string({"plugin_md5"}, oam->agent_ctrl_block->get_plugin_md5());
-	json_writer.write_string({"plugin_version"}, oam->agent_ctrl_block->get_plugin_version());
-	json_writer.write_int64({"config_time"}, scm->get_config_last_update());
-	std::string json_content = json_writer.dump();
+	JsonReader json_reader;
+	json_reader.write_string({"rasp_id"}, scm->get_rasp_id());
+	json_reader.write_string({"plugin_md5"}, oam->agent_ctrl_block->get_plugin_md5());
+	json_reader.write_string({"plugin_version"}, oam->agent_ctrl_block->get_plugin_version());
+	json_reader.write_int64({"config_time"}, scm->get_config_last_update());
+	std::string json_content = json_reader.dump();
 
 	BackendRequest backend_request(url_string, json_content.c_str());
 	openrasp_error(LEVEL_DEBUG, HEARTBEAT_ERROR, _("url:%s body:%s"), url_string.c_str(), json_content.c_str());

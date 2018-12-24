@@ -16,12 +16,12 @@
 
 #ifndef _OPENRASP_CURL_RESPONSE_H_
 #define _OPENRASP_CURL_RESPONSE_H_
+#include "utils/JsonReader.h"
 #include <string>
 #include <memory>
 #include <curl/curl.h>
 #include <functional>
 #include "plugin_update_pkg.h"
-#include "utils/JsonReader.h"
 #include "openrasp_hook.h"
 
 namespace openrasp

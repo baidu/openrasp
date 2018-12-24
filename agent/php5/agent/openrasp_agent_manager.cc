@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "utils/JsonReader.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -33,7 +34,6 @@
 #include "utils/regex.h"
 #include "utils/net.h"
 #include "utils/os.h"
-#include "utils/JsonWriter.h"
 #include "openrasp_utils.h"
 
 namespace openrasp
@@ -276,18 +276,18 @@ bool OpenraspAgentManager::agent_remote_register()
 
 	std::string url_string = std::string(openrasp_ini.backend_url) + register_url_path;
 
-	JsonWriter json_writer;
-	json_writer.write_string({"id"}, scm->get_rasp_id());
-	json_writer.write_string({"hostname"}, scm->get_hostname());
-	json_writer.write_string({"language"}, "php");
-	json_writer.write_string({"language_version"}, OPENRASP_PHP_VERSION);
-	json_writer.write_string({"server_type"}, sapi_module.name);
-	json_writer.write_string({"server_version"}, OPENRASP_PHP_VERSION);
-	json_writer.write_string({"rasp_home"}, openrasp_ini.root_dir);
-	json_writer.write_string({"register_ip"}, local_ip);
-	json_writer.write_string({"version"}, PHP_OPENRASP_VERSION);
-	json_writer.write_int64({"heartbeat_interval"}, openrasp_ini.heartbeat_interval);
-	std::string json_content = json_writer.dump();
+	JsonReader json_reader;
+	json_reader.write_string({"id"}, scm->get_rasp_id());
+	json_reader.write_string({"hostname"}, scm->get_hostname());
+	json_reader.write_string({"language"}, "php");
+	json_reader.write_string({"language_version"}, OPENRASP_PHP_VERSION);
+	json_reader.write_string({"server_type"}, sapi_module.name);
+	json_reader.write_string({"server_version"}, OPENRASP_PHP_VERSION);
+	json_reader.write_string({"rasp_home"}, openrasp_ini.root_dir);
+	json_reader.write_string({"register_ip"}, local_ip);
+	json_reader.write_string({"version"}, PHP_OPENRASP_VERSION);
+	json_reader.write_int64({"heartbeat_interval"}, openrasp_ini.heartbeat_interval);
+	std::string json_content = json_reader.dump();
 
 	BackendRequest backend_request(url_string, json_content.c_str());
 	openrasp_error(LEVEL_DEBUG, REGISTER_ERROR, _("url:%s body:%s"), url_string.c_str(), json_content.c_str());

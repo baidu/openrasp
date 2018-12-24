@@ -17,19 +17,8 @@
 #ifndef _OPENRASP_UTILS_JSON_READER_H_
 #define _OPENRASP_UTILS_JSON_READER_H_
 
-#ifdef snprintf
-#undef snprintf
-#endif
-#define snprintf snprintf
-//php define snprintf ... 
-
 #include "BaseReader.h"
 #include "third_party/json/json.hpp"
-
-#ifdef snprintf
-#undef snprintf
-#endif
-#define snprintf ap_php_snprintf
 
 namespace openrasp
 {
@@ -51,7 +40,13 @@ public:
   virtual std::vector<std::string> fetch_object_keys(const std::vector<std::string> &keys);
   virtual std::vector<std::string> fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value);
   virtual void load(const std::string &content);
+  //write op
+  void write_bool(const std::vector<std::string> &keys, const bool &value);
+  void write_int64(const std::vector<std::string> &keys, const int64_t &value);
+  void write_string(const std::vector<std::string> &keys, const std::string &value);
+  //Serialization
   std::string dump(const std::vector<std::string> &keys, bool pretty = false);
+  std::string dump(bool pretty = false);
 };
 
 } // namespace openrasp
