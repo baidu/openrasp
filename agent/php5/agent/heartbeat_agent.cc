@@ -24,7 +24,7 @@
 #include "shared_config_manager.h"
 #include "third_party/rapidjson/stringbuffer.h"
 #include "third_party/rapidjson/writer.h"
-#include "utils/os.h"
+#include "agent/utils/os.h"
 
 namespace openrasp
 {
