@@ -76,9 +76,15 @@ EOF
 			fi
 		done
 
-		# tomcat 6 使用 JRE_HOME
+		# tomcat 6 使用 JRE_HOME，且无法从环境变量里获取版本号
 		if [[ ! -z "$tomcat_home" ]] && [[ ! -z "$tomcat_user" ]]; then
-			tomcat_version=$(JAVA_HOME=$java_home JRE_HOME=$java_home bash ${tomcat_home}/bin/catalina.sh version | awk '/Server number/ {print $3}')
+
+			if [[ $(id -u) == 0 ]]; then
+				tomcat_version=$(su - "$tomcat_user" -c "JAVA_HOME=$java_home JRE_HOME=$java_home bash ${tomcat_home}/bin/catalina.sh version | awk '/Server number/ {print $3}'")
+			else
+				tomcat_version=$(JAVA_HOME=$java_home JRE_HOME=$java_home bash ${tomcat_home}/bin/catalina.sh version | awk '/Server number/ {print $3}')
+			fi
+
 		fi
 
 cat << EOF
