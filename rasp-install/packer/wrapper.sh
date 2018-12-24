@@ -15,10 +15,18 @@ fi
 tmp=$(mktemp -d)
 self="$(readlink -f "$0")"
 
+if [[ -z "$tmp" ]]; then
+	echo mktemp ERROR: Unexpected empty result
+	exit 1
+fi
+
 trap 'rm -rf $tmp' EXIT
 
 cd "$tmp"
 tail -c TAR_SIZE "$self" | tar -xzf -
+
+# 保证root写入的文件，其他账号可读，e.g umask
+chmod 777 -R "$tmp"
 
 if [[ "$job" == "-i" ]]; then
 	echo Installing OpenRASP
