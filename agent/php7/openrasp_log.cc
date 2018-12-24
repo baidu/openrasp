@@ -475,32 +475,11 @@ void RaspLoggerEntry::close_streams()
 
 bool RaspLoggerEntry::check_log_level(severity_level level_int) const
 {
-    if (level >= LEVEL_DEBUG)
-    {
-        return true;
-    }
-    if (level < LEVEL_INFO)
+    if (level < LEVEL_EMERG)
     {
         return false;
     }
-    switch (level_int)
-    {
-    case LEVEL_DEBUG:
-        if (level >= LEVEL_DEBUG)
-        {
-            return true;
-        }
-        break;
-    case LEVEL_INFO:
-        if (level >= LEVEL_INFO)
-        {
-            return true;
-        }
-        break;
-    default:
-        return false;
-    }
-    return false;
+    return (level >= level_int);
 }
 
 bool RaspLoggerEntry::comsume_token_if_available()
