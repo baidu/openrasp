@@ -32,7 +32,7 @@
 #include "openrasp_ini.h"
 #include "utils/regex.h"
 #include "utils/net.h"
-#include "utils/os.h"
+#include "agent/utils/os.h"
 #include "openrasp_utils.h"
 #include "third_party/rapidjson/stringbuffer.h"
 #include "third_party/rapidjson/writer.h"
