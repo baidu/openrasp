@@ -11,7 +11,6 @@ plugin.register('command', (params, context) => {
 EOF;
 include(__DIR__.'/skipif.inc');
 ?>
---CGI--
 --INI--
 openrasp.root_dir=/tmp/openrasp
 --ENV--
