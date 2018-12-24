@@ -304,16 +304,22 @@ static bool verify_syslog_address_format()
         php_url *resource = php_url_parse_ex(syslog_address.c_str(), syslog_address.length());
         if (resource)
         {
-            if (resource->scheme && (!strcmp(resource->scheme, "tcp") || !strcmp(resource->scheme, "udp")))
+            std::string scheme;
+            if (resource->scheme)
             {
-                result = true;
-            }
-            else
-            {
-                openrasp_error(E_WARNING, LOG_ERROR,
-                               _("Invalid url scheme in syslog server address: '%s', expecting 'tcp:' or 'udp:'."), syslog_address.c_str());
+#if (PHP_MINOR_VERSION < 3)
+                scheme = std::string(resource->scheme);
+#else
+                scheme = std::string(resource->scheme->val, resource->scheme->len);
+#endif
             }
             php_url_free(resource);
+            if (scheme.find("tcp") == 0 || scheme.find("udp") == 0)
+            {
+                return true;
+            }
+            openrasp_error(E_WARNING, LOG_ERROR,
+                           _("Invalid url scheme in syslog server address: '%s', expecting 'tcp:' or 'udp:'."), syslog_address.c_str());
         }
         else
         {

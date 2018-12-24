@@ -94,29 +94,32 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
             auto params = v8::Object::New(isolate);
             params->Set(openrasp::NewV8String(isolate, "url"), openrasp::NewV8String(isolate, Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url)));
             params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "curl_exec"));
+            std::string host;
             php_url *url = php_url_parse_ex(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url));
-            params->Set(openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, url && url->host ? url->host : ""));
-            uint32_t ip_sum = 0;
-            auto ip_arr = v8::Array::New(isolate);
             if (url)
             {
                 if (url->host)
                 {
-                    struct hostent *hp;
-                    struct in_addr in;
-                    int i;
-                    hp = gethostbyname(url->host);
-                    if (hp != NULL && hp->h_addr_list != NULL)
-                    {
-                        for (i = 0; hp->h_addr_list[i] != 0; i++)
-                        {
-                            in = *(struct in_addr *)hp->h_addr_list[i];
-                            ip_sum += in.s_addr;
-                            ip_arr->Set(i, openrasp::NewV8String(isolate, inet_ntoa(in)));
-                        }
-                    }
+#if (PHP_MINOR_VERSION < 3)
+                    host = std::string(url->host);
+#else
+                    host = std::string(url->host->val, url->host->len);
+#endif
                 }
                 php_url_free(url);
+            }
+            params->Set(openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, host));
+            uint32_t ip_sum = 0;
+            auto ip_arr = v8::Array::New(isolate);
+            struct hostent *hp = gethostbyname(host.c_str());
+            if (hp && hp->h_addr_list)
+            {
+                for (int i = 0; hp->h_addr_list[i] != 0; i++)
+                {
+                    struct in_addr in = *(struct in_addr *)hp->h_addr_list[i];
+                    ip_sum += in.s_addr;
+                    ip_arr->Set(i, openrasp::NewV8String(isolate, inet_ntoa(in)));
+                }
             }
             params->Set(openrasp::NewV8String(isolate, "ip"), ip_arr);
             {
