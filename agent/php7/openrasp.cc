@@ -171,7 +171,9 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
         }
 #endif
         openrasp::scm->shutdown();
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
         openrasp::oam.reset();
+#endif
         openrasp::scm.reset();
         remote_active = false;
         is_initialized = false;
