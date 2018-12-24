@@ -222,11 +222,11 @@ EOF
 			JAVA_HOME=$java_home JRE_HOME=$java_home "${tomcat_home}/bin/startup.sh"
 		fi
 
-		# 检查是否成功，最多等待 60s
+		# 检查是否成功，最多等待 15s
 		count=0
 		success=0
 
-		while [[ $count -lt 60 ]]
+		while [[ $count -lt 15 ]]
         do
         	count=$(( $count + 1))
         	status=$(curl -s -o /dev/null -w "%{http_code}" $tomcat_url)
