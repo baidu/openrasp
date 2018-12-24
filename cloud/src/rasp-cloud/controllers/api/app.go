@@ -153,7 +153,7 @@ func (o *AppController) RegenerateAppSecret() {
 		o.ServeError(http.StatusBadRequest, "failed to get secret", err)
 	}
 	models.AddOperation(param.AppId, models.OperationTypeRegenerateSecret,
-		o.Ctx.Input.IP(), "regenerated the secret")
+		o.Ctx.Input.IP(), "Reset AppSecret of "+param.AppId)
 	o.Serve(map[string]string{
 		"secret": secret,
 	})
@@ -181,7 +181,7 @@ func (o *AppController) UpdateAppGeneralConfig() {
 		o.ServeError(http.StatusBadRequest, "failed to update app general config", err)
 	}
 	models.AddOperation(param.AppId, models.OperationTypeUpdateGenerateConfig,
-		o.Ctx.Input.IP(), "updated the general configuration")
+		o.Ctx.Input.IP(), "Updated general config of "+param.AppId)
 	o.Serve(app)
 }
 
@@ -207,7 +207,7 @@ func (o *AppController) UpdateAppWhiteListConfig() {
 		o.ServeError(http.StatusBadRequest, "failed to update app whitelist config", err)
 	}
 	models.AddOperation(param.AppId, models.OperationTypeUpdateWhitelistConfig,
-		o.Ctx.Input.IP(), "updated the whitelist configuration")
+		o.Ctx.Input.IP(), "Updated whitelist config of "+param.AppId)
 	o.Serve(app)
 }
 
@@ -226,7 +226,7 @@ func (o *AppController) Post() {
 		o.ServeError(http.StatusBadRequest, "the length of app name cannot be greater than 64")
 	}
 	if app.Language == "" {
-		o.ServeError(http.StatusBadRequest, "app language cannot be empty")
+		o.ServeError(http.StatusBadRequest, "app programming language cannot be empty")
 	}
 	if len(app.Language) > 64 {
 		o.ServeError(http.StatusBadRequest, "the length of app language name cannot be greater than 64")
@@ -239,13 +239,13 @@ func (o *AppController) Post() {
 		}
 	}
 	if !languageSupported {
-		o.ServeError(http.StatusBadRequest, "can not support the language: "+app.Language)
+		o.ServeError(http.StatusBadRequest, "Unsupported programming language: "+app.Language)
 	}
 	if len(app.Description) > 1024 {
-		o.ServeError(http.StatusBadRequest, "the length of app description can not be greater than 1024")
+		o.ServeError(http.StatusBadRequest, "the length of the app description can not be greater than 1024")
 	}
 	if len(app.SelectedPluginId) > 1024 {
-		o.ServeError(http.StatusBadRequest, "the length of app selected_plugin_id can not be greater than 1024")
+		o.ServeError(http.StatusBadRequest, "the length of the app selected_plugin_id can not be greater than 1024")
 	}
 	if app.EmailAlarmConf.Enable {
 		o.validEmailConf(&app.EmailAlarmConf)
@@ -273,7 +273,7 @@ func (o *AppController) Post() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "create app failed", err)
 	}
-	models.AddOperation(app.Id, models.OperationTypeAddApp, o.Ctx.Input.IP(), "created the app: "+app.Name)
+	models.AddOperation(app.Id, models.OperationTypeAddApp, o.Ctx.Input.IP(), "New app created with name "+app.Name)
 	o.Serve(app)
 }
 
@@ -327,7 +327,7 @@ func (o *AppController) ConfigApp() {
 		o.ServeError(http.StatusBadRequest, "failed to update app config", err)
 	}
 	operationData, err := json.Marshal(updateData)
-	models.AddOperation(app.Id, models.OperationTypeEditApp, o.Ctx.Input.IP(), "edited the app: "+string(operationData))
+	models.AddOperation(app.Id, models.OperationTypeEditApp, o.Ctx.Input.IP(), "Updated app info for "+param.AppId+": "+string(operationData))
 	o.Serve(app)
 }
 
@@ -438,7 +438,7 @@ func (o *AppController) Delete() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to remove operation log by app_id", err)
 	}
-	models.AddOperation(app.Id, models.OperationTypeDeleteApp, o.Ctx.Input.IP(), "deleted the app: "+app.Name)
+	models.AddOperation(app.Id, models.OperationTypeDeleteApp, o.Ctx.Input.IP(), "Deleted app with name "+app.Name)
 	o.ServeWithEmptyData()
 }
 
@@ -554,7 +554,7 @@ func (o *AppController) ConfigAlarm() {
 		o.ServeError(http.StatusBadRequest, "failed to update alarm config", err)
 	}
 	models.AddOperation(app.Id, models.OperationTypeUpdateAlarmConfig, o.Ctx.Input.IP(),
-		"updated the alarm configuration")
+		"Alarm configuration updated for "+param.AppId)
 	o.Serve(app)
 }
 
@@ -634,7 +634,7 @@ func (o *AppController) SetSelectedPlugin() {
 		o.ServeError(http.StatusBadRequest, "failed to set selected plugin", err)
 	}
 	models.AddOperation(appId, models.OperationTypeSetSelectedPlugin, o.Ctx.Input.IP(),
-		"set up selected plugin: "+pluginId)
+		"Deployed plugin for "+appId+": "+pluginId)
 	o.ServeWithEmptyData()
 }
 
