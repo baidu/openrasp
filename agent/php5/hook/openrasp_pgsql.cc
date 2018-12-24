@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
+#include "openrasp_sql.h"
 #include "openrasp_hook.h"
 
 HOOK_FUNCTION(pg_connect, DB_CONNECTION);
 HOOK_FUNCTION(pg_pconnect, DB_CONNECTION);
 PRE_HOOK_FUNCTION(pg_query, SQL);
-// POST_HOOK_FUNCTION(pg_query, SQL_SLOW_QUERY);
 PRE_HOOK_FUNCTION(pg_send_query, SQL);
-// POST_HOOK_FUNCTION(pg_get_result, SQL_SLOW_QUERY);
 PRE_HOOK_FUNCTION(pg_prepare, SQL_PREPARED);
 
 void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p)
@@ -253,20 +252,6 @@ void pre_global_pg_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
     plugin_sql_check(query, query_len, "pgsql" TSRMLS_CC);
 }
-void post_global_pg_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    long num_rows = 0;
-    if (Z_TYPE_P(return_value) == IS_RESOURCE)
-    {
-        zval *args[1];
-        args[0] = return_value;
-        num_rows = fetch_rows_via_user_function("pg_num_rows", 1, args TSRMLS_CC);
-    }
-    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
-    {
-        slow_query_alarm(num_rows TSRMLS_CC);
-    }
-}
 
 /**
  * pg_send_query
@@ -274,24 +259,6 @@ void post_global_pg_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 void pre_global_pg_send_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pre_global_pg_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
-}
-
-/**
- * pg_get_result
- */
-void post_global_pg_get_result_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    long num_rows = 0;
-    if (Z_TYPE_P(return_value) == IS_RESOURCE)
-    {
-        zval *args[1];
-        args[0] = return_value;
-        num_rows = fetch_rows_via_user_function("pg_num_rows", 1, args TSRMLS_CC);
-    }
-    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
-    {
-        slow_query_alarm(num_rows TSRMLS_CC);
-    }
 }
 
 void pre_global_pg_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)

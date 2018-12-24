@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "openrasp_sql.h"
 #include "openrasp_hook.h"
 
 extern "C"
@@ -24,7 +25,10 @@ extern "C"
 HOOK_FUNCTION(mysql_connect, DB_CONNECTION);
 HOOK_FUNCTION(mysql_pconnect, DB_CONNECTION);
 PRE_HOOK_FUNCTION(mysql_query, SQL);
-// POST_HOOK_FUNCTION(mysql_query, SQL_SLOW_QUERY);
+POST_HOOK_FUNCTION(mysql_query, SQL_ERROR);
+
+static long fetch_mysql_errno(uint32_t param_count, zval *params[] TSRMLS_DC);
+static std::string fetch_mysql_error(uint32_t param_count, zval *params[] TSRMLS_DC);
 
 static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, int persistent)
 {
@@ -179,21 +183,59 @@ void pre_global_mysql_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     plugin_sql_check(query, query_len, "mysql" TSRMLS_CC);
 }
 
-void post_global_mysql_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_global_mysql_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    long num_rows = 0;
-    if (Z_TYPE_P(return_value) == IS_RESOURCE)
+    if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
     {
+        char *query;
+        int query_len;
+        zval *mysql_link = nullptr;
+        if (UNLIKELY(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|r", &query, &query_len, &mysql_link) == FAILURE))
+        {
+            return;
+        }
         zval *args[1];
-        args[0] = return_value;
-        num_rows = fetch_rows_via_user_function("mysql_num_rows", 1, args TSRMLS_CC);
+        int param_num = 0;
+        if (nullptr != mysql_link)
+        {
+            args[0] = mysql_link;
+            param_num = 1;
+        }
+        long error_code = fetch_mysql_errno(param_num, args TSRMLS_CC);
+        if (!mysql_error_code_filtered(error_code))
+        {
+            return;
+        }
+        std::string error_msg = fetch_mysql_error(param_num, args TSRMLS_CC);
+        sql_error_alarm("mysql", error_code, error_msg TSRMLS_CC);
     }
-    else if (Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value))
+}
+
+static long fetch_mysql_errno(uint32_t param_count, zval *params[] TSRMLS_DC)
+{
+    long error_code = 0;
+    zval function_name, retval;
+    INIT_ZVAL(function_name);
+    ZVAL_STRING(&function_name, "mysql_errno", 0);
+    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, param_count, params TSRMLS_CC) == SUCCESS &&
+        Z_TYPE(retval) == IS_LONG)
     {
-        num_rows = fetch_rows_via_user_function("mysql_affected_rows", 0, NULL TSRMLS_CC);
+        error_code = Z_LVAL(retval);
     }
-    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
+    return error_code;
+}
+
+static std::string fetch_mysql_error(uint32_t param_count, zval *params[] TSRMLS_DC)
+{
+    std::string error_msg;
+    zval function_name, retval;
+    INIT_ZVAL(function_name);
+    ZVAL_STRING(&function_name, "mysql_error", 0);
+    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, param_count, params TSRMLS_CC) == SUCCESS &&
+        Z_TYPE(retval) == IS_STRING)
     {
-        slow_query_alarm(num_rows TSRMLS_CC);
+        error_msg = std::string(Z_STRVAL(retval));
+        zval_dtor(&retval);
     }
+    return error_msg;
 }

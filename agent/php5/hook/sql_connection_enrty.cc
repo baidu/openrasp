@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "openrasp_hook.h"
+#include "openrasp_sql.h"
 #include <sstream>
 
 void SqlConnectionEntry::set_connection_string(std::string connection_string)

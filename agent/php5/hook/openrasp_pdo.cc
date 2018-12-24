@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "openrasp_sql.h"
 #include "openrasp_hook.h"
 
 extern "C"
@@ -24,9 +25,7 @@ extern "C"
 
 HOOK_FUNCTION_EX(__construct, pdo, DB_CONNECTION);
 PRE_HOOK_FUNCTION_EX(query, pdo, SQL);
-// POST_HOOK_FUNCTION_EX(query, pdo, SQL_SLOW_QUERY);
 PRE_HOOK_FUNCTION_EX(exec, pdo, SQL);
-// POST_HOOK_FUNCTION_EX(exec, pdo, SQL_SLOW_QUERY);
 PRE_HOOK_FUNCTION_EX(prepare, pdo, SQL_PREPARED);
 
 extern void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p);
@@ -181,22 +180,6 @@ void pre_pdo_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     plugin_sql_check(statement, statement_len, const_cast<char *>(dbh->driver->driver_name) TSRMLS_CC);
 }
 
-void post_pdo_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (Z_TYPE_P(return_value) == IS_OBJECT)
-    {
-        pdo_stmt_t *stmt = (pdo_stmt_t *)zend_object_store_get_object(return_value TSRMLS_CC);
-        if (!stmt || !stmt->dbh)
-        {
-            return;
-        }
-        if (stmt->row_count >= OPENRASP_CONFIG(sql.slowquery.min_rows))
-        {
-            slow_query_alarm(stmt->row_count TSRMLS_CC);
-        }
-    }
-}
-
 void pre_pdo_exec_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pdo_dbh_t *dbh = reinterpret_cast<pdo_dbh_t *>(zend_object_store_get_object(getThis() TSRMLS_CC));
@@ -209,17 +192,6 @@ void pre_pdo_exec_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
 
     plugin_sql_check(statement, statement_len, const_cast<char *>(dbh->driver->driver_name) TSRMLS_CC);
-}
-
-void post_pdo_exec_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (Z_TYPE_P(return_value) == IS_LONG)
-    {
-        if (Z_LVAL_P(return_value) >= OPENRASP_CONFIG(sql.slowquery.min_rows))
-        {
-            slow_query_alarm(Z_LVAL_P(return_value) TSRMLS_CC);
-        }
-    }
 }
 
 void pre_pdo___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)

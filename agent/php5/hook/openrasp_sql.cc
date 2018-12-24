@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
+#include "openrasp_sql.h"
 #include "openrasp_hook.h"
 #include "openrasp_ini.h"
 #include "openrasp_v8.h"
 #include "openrasp_shared_alloc.h"
 #include <string>
 #include <map>
+#include <set>
+#include "agent/shared_config_manager.h"
 
 extern "C"
 {
@@ -27,6 +30,12 @@ extern "C"
 #include "zend_ini.h"
 }
 
+static const std::set<long> mysql_error_codes = {
+    1060,
+    1062,
+    1064,
+    1105,
+    1690};
 /**
  * sql connection alarm
  */
@@ -49,22 +58,6 @@ static void connection_via_default_username_policy(sql_connection_entry *sql_con
     add_assoc_zval(policy_array, "policy_params", connection_params);
     LOG_G(policy_logger).log(LEVEL_INFO, policy_array TSRMLS_CC);
     zval_ptr_dtor(&policy_array);
-}
-
-void slow_query_alarm(int rows TSRMLS_DC)
-{
-    zval *attack_params = nullptr;
-    MAKE_STD_ZVAL(attack_params);
-    array_init(attack_params);
-    add_assoc_long(attack_params, "query_count", rows);
-    zval *plugin_message = nullptr;
-    MAKE_STD_ZVAL(plugin_message);
-    char *message_str = nullptr;
-    spprintf(&message_str, 0, _("SQL slow query detected: selected %d rows, exceeding %ld"),
-             rows, OPENRASP_CONFIG(sql.slowquery.min_rows));
-    ZVAL_STRING(plugin_message, message_str, 1);
-    efree(message_str);
-    openrasp_buildin_php_risk_handle(AC_LOG, SQL_SLOW_QUERY, 100, attack_params, plugin_message TSRMLS_CC);
 }
 
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy)
@@ -149,14 +142,30 @@ void plugin_sql_check(char *query, int query_len, char *server TSRMLS_DC)
     }
 }
 
-long fetch_rows_via_user_function(const char *f_name_str, zend_uint param_count, zval *params[] TSRMLS_DC)
+bool mysql_error_code_filtered(long err_code)
 {
-    zval function_name, retval;
-    INIT_ZVAL(function_name);
-    ZVAL_STRING(&function_name, f_name_str, 0);
-    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, param_count, params TSRMLS_CC) == SUCCESS && Z_TYPE(retval) == IS_LONG)
+    auto it = mysql_error_codes.find(err_code);
+    if (it != mysql_error_codes.end())
     {
-        return Z_LVAL(retval);
+        return true;
     }
-    return 0;
+    return false;
+}
+
+void sql_error_alarm(char *server, long err_code, const std::string &err_msg TSRMLS_DC)
+{
+    zval *attack_params = nullptr;
+    MAKE_STD_ZVAL(attack_params);
+    array_init(attack_params);
+    add_assoc_string(attack_params, "server", server, 1);
+    add_assoc_long(attack_params, "error_code", err_code);
+    add_assoc_string(attack_params, "error_msg", (char *)err_msg.c_str(), 1);
+    zval *plugin_message = nullptr;
+    MAKE_STD_ZVAL(plugin_message);
+    char *message_str = nullptr;
+    spprintf(&message_str, 0, _("%s error detected: error code %ld."), server, err_code);
+    ZVAL_STRING(plugin_message, message_str, 1);
+    efree(message_str);
+    OpenRASPActionType action = openrasp::scm->get_buildin_check_action(SQL_ERROR);
+    openrasp_buildin_php_risk_handle(action, SQL_ERROR, 100, attack_params, plugin_message TSRMLS_CC);
 }

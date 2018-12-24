@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "openrasp_sql.h"
 #include "openrasp_hook.h"
 
 extern "C"
@@ -26,11 +27,9 @@ extern "C"
 HOOK_FUNCTION_EX(mysqli, mysqli, DB_CONNECTION);
 HOOK_FUNCTION_EX(real_connect, mysqli, DB_CONNECTION);
 PRE_HOOK_FUNCTION_EX(query, mysqli, SQL);
-// POST_HOOK_FUNCTION_EX(query, mysqli, SQL_SLOW_QUERY);
 HOOK_FUNCTION(mysqli_connect, DB_CONNECTION);
 HOOK_FUNCTION(mysqli_real_connect, DB_CONNECTION);
 PRE_HOOK_FUNCTION(mysqli_query, SQL);
-// POST_HOOK_FUNCTION(mysqli_query, SQL_SLOW_QUERY);
 PRE_HOOK_FUNCTION(mysqli_real_query, SQL);
 PRE_HOOK_FUNCTION(mysqli_prepare, SQL_PREPARED);
 PRE_HOOK_FUNCTION_EX(prepare, mysqli, SQL_PREPARED);
@@ -176,39 +175,6 @@ void pre_mysqli_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     plugin_sql_check(query, query_len, "mysql" TSRMLS_CC);
 }
 
-void post_mysqli_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    long resultmode = MYSQLI_STORE_RESULT;
-    int argc = ZEND_NUM_ARGS();
-    if (2 == argc)
-    {
-        zval ***ppp_args = (zval ***)safe_emalloc(argc, sizeof(zval **), 0);
-        if (zend_get_parameters_array_ex(argc, ppp_args) == SUCCESS &&
-            Z_TYPE_PP(ppp_args[1]) == IS_LONG)
-        {
-            resultmode = Z_LVAL_PP(ppp_args[1]);
-        }
-        efree(ppp_args);
-    }
-    long num_rows = 0;
-    if (resultmode == MYSQLI_STORE_RESULT && Z_TYPE_P(return_value) == IS_OBJECT)
-    {
-        zval *args[1];
-        args[0] = return_value;
-        num_rows = fetch_rows_via_user_function("mysqli_num_rows", 1, args TSRMLS_CC);
-    }
-    else if (Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value))
-    {
-        zval *args[1];
-        args[0] = this_ptr;
-        num_rows = fetch_rows_via_user_function("mysqli_affected_rows", 1, args TSRMLS_CC);
-    }
-    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
-    {
-        slow_query_alarm(num_rows TSRMLS_CC);
-    }
-}
-
 //mysqli_connect
 void pre_global_mysqli_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
@@ -260,37 +226,6 @@ void pre_global_mysqli_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         return;
     }
     plugin_sql_check(query, query_len, "mysql" TSRMLS_CC);
-}
-void post_global_mysqli_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    long resultmode = MYSQLI_STORE_RESULT;
-    int argc = ZEND_NUM_ARGS();
-    zval ***ppp_args = (zval ***)safe_emalloc(argc, sizeof(zval **), 0);
-    if (zend_get_parameters_array_ex(argc, ppp_args) == SUCCESS)
-    {
-        if (3 == argc && Z_TYPE_PP(ppp_args[2]) == IS_LONG)
-        {
-            resultmode = Z_LVAL_PP(ppp_args[2]);
-        }
-    }
-    long num_rows = 0;
-    if (resultmode == MYSQLI_STORE_RESULT && Z_TYPE_P(return_value) == IS_OBJECT)
-    {
-        zval *args[1];
-        args[0] = return_value;
-        num_rows = fetch_rows_via_user_function("mysqli_num_rows", 1, args TSRMLS_CC);
-    }
-    else if (Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value))
-    {
-        zval *args[1];
-        args[0] = *ppp_args[0];
-        num_rows = fetch_rows_via_user_function("mysqli_affected_rows", 1, args TSRMLS_CC);
-    }
-    efree(ppp_args);
-    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
-    {
-        slow_query_alarm(num_rows TSRMLS_CC);
-    }
 }
 
 //mysqli_real_query
