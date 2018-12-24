@@ -51,7 +51,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
     private static final String HTTP_ONLY_ATTRIBUTE_NAME = "useHttpOnly";
     private static final String[] TOMCAT_MANAGER_ROLES = new String[]{"admin-gui", "manager-gui", "manager", "admin"};
     private static final String[] WEAK_WORDS = new String[]{"both", "tomcat", "admin", "manager", "123456", "root"};
-    private static final String[] DEFAULT_APP_DIRS = new String[]{"ROOT", "manager", "host-manager", "docs"};
+    private static final String[] DEFAULT_APP_DIRS = new String[]{"manager", "host-manager", "docs"};
     private static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
 
     @Override
