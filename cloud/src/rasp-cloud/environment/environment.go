@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	Version             = "1.0RC1"
+	Version             = "1.0.0RC1"
 	StartTypeForeground = "panel"
 	StartTypeAgent      = "agent"
 	StartTypeReset      = "reset"
