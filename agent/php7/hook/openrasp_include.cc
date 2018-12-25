@@ -42,9 +42,12 @@ int include_or_eval_handler(zend_execute_data *execute_data)
 int eval_handler(zend_execute_data *execute_data)
 {
     const zend_op *opline = EX(opline);
+#if (PHP_MINOR_VERSION < 3)
     zval *inc_filename = zend_get_zval_ptr(opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
+#else
+    zval *inc_filename = zend_get_zval_ptr(opline, opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
+#endif
     if (inc_filename != nullptr &&
-        opline->op1_type == IS_VAR &&
         !openrasp_check_type_ignored(WEBSHELL_EVAL) &&
         openrasp_zval_in_request(inc_filename))
     {
@@ -65,7 +68,11 @@ int include_handler(zend_execute_data *execute_data)
     zval params, tmp_inc_filename, *inc_filename, *document_root;
     ZVAL_NULL(&tmp_inc_filename);
     std::string real_path;
+#if (PHP_MINOR_VERSION < 3)
     inc_filename = zend_get_zval_ptr(opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
+#else
+    inc_filename = zend_get_zval_ptr(opline, opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
+#endif
     const char *scheme_end = nullptr;
     bool send_to_plugin = false;
     if (inc_filename == nullptr)

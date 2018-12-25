@@ -2,6 +2,7 @@
 hook curl_exec
 --SKIPIF--
 <?php
+if (!function_exists("curl_init")) die("Skipped: curl is disabled.");
 $plugin = <<<EOF
 plugin.register('ssrf', params => {
     assert(params.url == 'http://requestb.in')

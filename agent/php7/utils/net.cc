@@ -201,7 +201,11 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url)
     {
         if (resource->host)
         {
+#if (PHP_MINOR_VERSION < 3)
             server = gethostbyname(resource->host);
+#else
+            server = gethostbyname(resource->host->val);
+#endif
         }
         if (resource->port)
         {
@@ -209,7 +213,13 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url)
         }
         else
         {
-            if (resource->scheme != NULL && strcmp(resource->scheme, "https") == 0)
+            std::string scheme;
+#if (PHP_MINOR_VERSION < 3)
+            scheme = std::string(resource->scheme);
+#else
+            scheme = std::string(resource->scheme->val, resource->scheme->len);
+#endif
+            if (scheme.find("https") == 0)
             {
                 backend_port = 443;
             }

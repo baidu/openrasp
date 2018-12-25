@@ -2,6 +2,7 @@
 hook curl_exec lru
 --SKIPIF--
 <?php
+if (!function_exists("curl_init")) die("Skipped: curl is disabled.");
 $plugin = <<<EOF
 let f = false
 plugin.register('ssrf', params => {

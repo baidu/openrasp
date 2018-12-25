@@ -305,7 +305,16 @@ static bool verify_syslog_address_format()
         php_url *resource = php_url_parse_ex(syslog_address.c_str(), syslog_address.length());
         if (resource)
         {
-            if (resource->scheme && (!strcmp(resource->scheme, "tcp") || !strcmp(resource->scheme, "udp")))
+            std::string scheme;
+            if (resource->scheme)
+            {
+#if (PHP_MINOR_VERSION < 3)
+                scheme = std::string(resource->scheme);
+#else
+                scheme = std::string(resource->scheme->val, resource->scheme->len);
+#endif
+            }
+            if (scheme.find("tcp") == 0 || scheme.find("udp") == 0)
             {
                 result = true;
             }
