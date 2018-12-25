@@ -27,6 +27,7 @@ HOOK_FUNCTION_EX(__construct, pdo, DB_CONNECTION);
 PRE_HOOK_FUNCTION_EX(query, pdo, SQL);
 POST_HOOK_FUNCTION_EX(query, pdo, SQL_ERROR);
 PRE_HOOK_FUNCTION_EX(exec, pdo, SQL);
+POST_HOOK_FUNCTION_EX(exec, pdo, SQL_ERROR);
 PRE_HOOK_FUNCTION_EX(prepare, pdo, SQL_PREPARED);
 
 static bool fetch_pdo_error_info(char *driver_name, zval *statement, std::string &error_code, std::string &errro_msg TSRMLS_DC);
@@ -179,7 +180,6 @@ void pre_pdo_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         return;
     }
-
     plugin_sql_check(statement, statement_len, const_cast<char *>(dbh->driver->driver_name) TSRMLS_CC);
 }
 
@@ -214,16 +214,12 @@ void post_pdo_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_pdo_exec_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    pdo_dbh_t *dbh = reinterpret_cast<pdo_dbh_t *>(zend_object_store_get_object(getThis() TSRMLS_CC));
-    char *statement;
-    int statement_len;
+    pre_pdo_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
 
-    if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &statement, &statement_len))
-    {
-        return;
-    }
-
-    plugin_sql_check(statement, statement_len, const_cast<char *>(dbh->driver->driver_name) TSRMLS_CC);
+void post_pdo_exec_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    post_pdo_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_pdo___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)

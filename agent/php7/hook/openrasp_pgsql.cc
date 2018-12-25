@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "openrasp_sql.h"
 #include "openrasp_hook.h"
 
 HOOK_FUNCTION(pg_connect, DB_CONNECTION);
@@ -251,18 +252,6 @@ void pre_global_pg_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
     plugin_sql_check(query, query_len, "pgsql");
 }
-void post_global_pg_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    long num_rows = 0;
-    if (Z_TYPE_P(return_value) == IS_RESOURCE)
-    {
-        num_rows = fetch_rows_via_user_function("pg_num_rows", 1, return_value);
-    }
-    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
-    {
-        slow_query_alarm(num_rows);
-    }
-}
 
 /**
  * pg_send_query
@@ -270,22 +259,6 @@ void post_global_pg_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 void pre_global_pg_send_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pre_global_pg_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
-}
-
-/**
- * pg_get_result
- */
-void post_global_pg_get_result_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    long num_rows = 0;
-    if (Z_TYPE_P(return_value) == IS_RESOURCE)
-    {
-        num_rows = fetch_rows_via_user_function("pg_num_rows", 1, return_value);
-    }
-    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
-    {
-        slow_query_alarm(num_rows);
-    }
 }
 
 void pre_global_pg_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)

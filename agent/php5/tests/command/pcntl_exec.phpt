@@ -2,6 +2,7 @@
 hook pcntl_exec
 --SKIPIF--
 <?php
+if (!function_exists("pcntl_exec")) die("Skipped: pcntl is disabled.");
 $plugin = <<<EOF
 plugin.register('command', params => {
     assert(params.command == 'cd / &')
