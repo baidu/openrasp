@@ -62,13 +62,15 @@ func init() {
 		pwd1, err := terminal.ReadPassword(int(syscall.Stdin))
 		fmt.Println()
 		if err != nil {
-			fmt.Print("failed to read password from terminal: " + err.Error())
+			fmt.Println("failed to read password from terminal: " + err.Error())
+			os.Exit(tools.ErrCodeResetUserFailed)
 		}
 		fmt.Print("Retype new admin password: ")
 		pwd2, err := terminal.ReadPassword(int(syscall.Stdin))
 		fmt.Println()
 		if err != nil {
-			fmt.Print("failed to read password from terminal: " + err.Error())
+			fmt.Println("failed to read password from terminal: " + err.Error())
+			os.Exit(tools.ErrCodeResetUserFailed)
 		}
 		if bytes.Compare(pwd1, pwd2) != 0 {
 			fmt.Println("Sorry, passwords do not match")
