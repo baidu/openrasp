@@ -270,7 +270,7 @@ static bool fetch_pdo_error_info(char *driver_name, zval *statement, std::string
     {
         return false;
     }
-    bool result = true;
+    bool result = false;
     zval function_name, retval;
     INIT_ZVAL(function_name);
     ZVAL_STRING(&function_name, "errorinfo", 0);
@@ -291,10 +291,7 @@ static bool fetch_pdo_error_info(char *driver_name, zval *statement, std::string
                     mysql_error_code_filtered(Z_LVAL_PP(tmp)))
                 {
                     error_code = std::to_string(Z_LVAL_PP(tmp));
-                }
-                else
-                {
-                    result = false;
+                    result = true;
                 }
             }
         }
