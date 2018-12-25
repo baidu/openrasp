@@ -16,7 +16,6 @@
 
 #include "openrasp.h"
 #include "regex.h"
-#include <string.h>
 
 extern "C"
 {
@@ -43,13 +42,9 @@ bool regex_match(const char *str, const char *regex, int options)
         return false;
     }
     rc = pcre_exec(re, nullptr, str, strlen(str), 0, 0, ovector, OVECCOUNT);
-    if (rc < 0)
-    {
-        pcre_free(re);
-        return false;
-    }
     pcre_free(re);
-    return true;
+
+    return rc >= 0;
 }
 
 #else
