@@ -24,7 +24,7 @@ openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
 @$con = mysqli_connect('127.0.0.1', 'root');
-mysqli_real_query($con, "select exp(~(select*from(select user())x))");
+mysqli_real_query($con, "select GeometryCollection((select 1 from (select * from (select user())a)b))");
 mysqli_close($con);
 ?>
 --EXPECTREGEX--

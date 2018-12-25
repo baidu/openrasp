@@ -1,5 +1,5 @@
 --TEST--
-hook PDO::exec
+hook PDO::exec error
 --SKIPIF--
 <?php
 $plugin = <<<EOF
@@ -25,7 +25,7 @@ openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
 $con = new PDO('mysql:host=127.0.0.1;port=3306', 'root');
-$con->exec("select exp(~(select*from(select user())x))");
+$con->exec("select GeometryCollection((select 1 from (select * from (select user())a)b))");
 ?>
 --EXPECTREGEX--
 <\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>
