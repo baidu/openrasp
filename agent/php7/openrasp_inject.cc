@@ -118,17 +118,9 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_inject)
         }
         if (is_match_inject_prefix)
         {
-            char target_header[] = "text/html";
-            for (zend_llist_element *element = SG(sapi_headers).headers.head; element; element = element->next)
+            if (strncasecmp(SG(sapi_headers).mimetype, "text/html", sizeof("text/html") - 1) == 0)
             {
-                sapi_header_struct *sapi_header = (sapi_header_struct *)element->data;
-                if (sapi_header->header_len > 0 &&
-                    strncasecmp(sapi_header->header, "content-type", sizeof("content-type") - 1) == 0 &&
-                    php_stristr(sapi_header->header, target_header, sapi_header->header_len, strlen(target_header)) != nullptr)
-                {
-                    php_output_write(inject_html.data(), inject_html.size());
-                    break;
-                }
+                php_output_write(inject_html.data(), inject_html.size());
             }
         }
     }
