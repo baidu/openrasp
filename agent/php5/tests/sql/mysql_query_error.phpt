@@ -5,7 +5,7 @@ hook mysql_query error
 if (PHP_MAJOR_VERSION >= 7) die('Skipped: no mysql extension in PHP7.');
 $plugin = <<<EOF
 RASP.algorithmConfig = {
-     sqlException: {
+     sql_exception: {
         action: 'block'
     }
 }

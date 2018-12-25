@@ -4,7 +4,7 @@ hook mysqli_query error
 <?php
 $plugin = <<<EOF
 RASP.algorithmConfig = {
-     sqlException: {
+     sql_exception: {
         action: 'block'
     }
 }
