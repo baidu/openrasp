@@ -92,6 +92,7 @@ class InjectBlock
 {
 public:
   string urlprefix;
+  vector<string> headers;
   void update(BaseReader *reader);
 };
 

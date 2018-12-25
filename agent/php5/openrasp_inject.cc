@@ -95,6 +95,14 @@ PHP_RINIT_FUNCTION(openrasp_inject)
         header.response_code = 0;
         sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
     }
+    for (const auto &it : OPENRASP_CONFIG(inject.headers))
+    {
+        sapi_header_line header;
+        header.line = const_cast<char *>(it.c_str());
+        header.line_len = it.length();
+        header.response_code = 0;
+        sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
+    }
     return SUCCESS;
 }
 PHP_RSHUTDOWN_FUNCTION(openrasp_inject)
