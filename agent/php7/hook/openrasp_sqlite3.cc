@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "openrasp_sql.h"
 #include "openrasp_hook.h"
 
 PRE_HOOK_FUNCTION_EX(exec, sqlite3, SQL);

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "openrasp_sql.h"
 #include "openrasp_hook.h"
 
 extern "C"
@@ -26,13 +27,19 @@ extern "C"
 HOOK_FUNCTION(mysqli_connect, DB_CONNECTION);
 HOOK_FUNCTION(mysqli_real_connect, DB_CONNECTION);
 PRE_HOOK_FUNCTION(mysqli_query, SQL);
+POST_HOOK_FUNCTION(mysqli_query, SQL_ERROR);
 PRE_HOOK_FUNCTION(mysqli_real_query, SQL);
+POST_HOOK_FUNCTION(mysqli_real_query, SQL_ERROR);
 PRE_HOOK_FUNCTION(mysqli_prepare, SQL_PREPARED);
 
 HOOK_FUNCTION_EX(__construct, mysqli, DB_CONNECTION);
 HOOK_FUNCTION_EX(real_connect, mysqli, DB_CONNECTION);
 PRE_HOOK_FUNCTION_EX(query, mysqli, SQL);
+POST_HOOK_FUNCTION_EX(query, mysqli, SQL_ERROR);
 PRE_HOOK_FUNCTION_EX(prepare, mysqli, SQL_PREPARED);
+
+static long fetch_mysqli_errno(uint32_t param_count, zval params[]);
+static std::string fetch_mysqli_error(uint32_t param_count, zval params[]);
 
 static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, zend_bool is_real_connect, zend_bool in_ctor)
 {
@@ -175,27 +182,24 @@ void pre_mysqli_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     plugin_sql_check(query, query_len, "mysql");
 }
 
-void post_mysqli_query_SQL_ALOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_mysqli_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *query = NULL;
-    size_t query_len;
-    long resultmode = MYSQLI_STORE_RESULT;
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|l", &query, &query_len, &resultmode) == FAILURE)
+    if (Z_TYPE_P(return_value) == IS_FALSE)
     {
-        return;
-    }
-    long num_rows = 0;
-    if (resultmode == MYSQLI_STORE_RESULT && Z_TYPE_P(return_value) == IS_OBJECT)
-    {
-        num_rows = fetch_rows_via_user_function("mysqli_num_rows", 1, return_value);
-    }
-    else if (Z_TYPE_P(return_value) == IS_TRUE)
-    {
-        num_rows = fetch_rows_via_user_function("mysqli_affected_rows", 1, getThis());
-    }
-    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
-    {
-        slow_query_alarm(num_rows);
+        char *query = NULL;
+        size_t query_len;
+        long resultmode = MYSQLI_STORE_RESULT;
+        if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|l", &query, &query_len, &resultmode) == FAILURE)
+        {
+            return;
+        }
+        long error_code = fetch_mysqli_errno(1, getThis());
+        if (!mysql_error_code_filtered(error_code))
+        {
+            return;
+        }
+        std::string error_msg = fetch_mysqli_error(1, getThis());
+        sql_error_alarm("mysql", query, std::to_string(error_code), error_msg);
     }
 }
 
@@ -250,29 +254,26 @@ void pre_global_mysqli_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     plugin_sql_check(query, query_len, "mysql");
 }
 
-void post_global_mysqli_query_SQL_ALOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_global_mysqli_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *mysql_link;
-    char *query = NULL;
-    size_t query_len;
-    long resultmode = MYSQLI_STORE_RESULT;
+    if (Z_TYPE_P(return_value) == IS_FALSE)
+    {
+        zval *mysql_link;
+        char *query = NULL;
+        size_t query_len;
+        long resultmode = MYSQLI_STORE_RESULT;
 
-    if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "os|l", &mysql_link, &query, &query_len, &resultmode) == FAILURE)
-    {
-        return;
-    }
-    long num_rows = 0;
-    if (resultmode == MYSQLI_STORE_RESULT && Z_TYPE_P(return_value) == IS_OBJECT)
-    {
-        num_rows = fetch_rows_via_user_function("mysqli_num_rows", 1, return_value);
-    }
-    else if (Z_TYPE_P(return_value) == IS_TRUE)
-    {
-        num_rows = fetch_rows_via_user_function("mysqli_affected_rows", 1, mysql_link);
-    }
-    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
-    {
-        slow_query_alarm(num_rows);
+        if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "os|l", &mysql_link, &query, &query_len, &resultmode) == FAILURE)
+        {
+            return;
+        }
+        long error_code = fetch_mysqli_errno(1, mysql_link);
+        if (!mysql_error_code_filtered(error_code))
+        {
+            return;
+        }
+        std::string error_msg = fetch_mysqli_error(1, mysql_link);
+        sql_error_alarm("mysql", query, std::to_string(error_code), error_msg);
     }
 }
 
@@ -287,8 +288,12 @@ void pre_global_mysqli_real_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         return;
     }
-
     plugin_sql_check(query, query_len, "mysql");
+}
+
+void post_global_mysqli_real_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    post_global_mysqli_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_mysqli_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -315,4 +320,35 @@ void pre_mysqli_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         return;
     }
     plugin_sql_check(query, query_len, "mysql");
+}
+
+static long fetch_mysqli_errno(uint32_t param_count, zval params[])
+{
+    long error_code = 0;
+    zval function_name, retval;
+    ZVAL_STRING(&function_name, "mysqli_errno");
+    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, param_count, params) == SUCCESS &&
+        Z_TYPE(retval) == IS_LONG)
+    {
+        error_code = Z_LVAL(retval);
+    }
+    zval_ptr_dtor(&function_name);
+    return error_code;
+}
+
+static std::string fetch_mysqli_error(uint32_t param_count, zval params[])
+{
+    std::string error_msg;
+    zval function_name, retval;
+    ZVAL_STRING(&function_name, "mysqli_error");
+    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, param_count, params) == SUCCESS)
+    {
+        if (Z_TYPE(retval) == IS_STRING)
+        {
+            error_msg = std::string(Z_STRVAL(retval));
+        }
+        zval_ptr_dtor(&retval);
+    }
+    zval_ptr_dtor(&function_name);
+    return error_msg;
 }

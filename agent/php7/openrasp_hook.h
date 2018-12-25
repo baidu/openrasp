@@ -164,38 +164,6 @@ enum PATH_OPERATION
     SIMULTANEOUSRW = 1 << 6
 };
 
-class SqlConnectionEntry
-{
-  private:
-    std::string connection_string;
-    std::string server;
-    std::string host;
-    std::string username;
-    std::string socket;
-    int port = 0;
-    bool using_socket = true;
-
-  public:
-    void set_connection_string(std::string connection_string);
-    std::string get_connection_string() const;
-    void set_server(std::string server);
-    std::string get_server() const;
-    void set_host(std::string host);
-    std::string get_host() const;
-    void set_username(std::string username);
-    std::string get_username() const;
-    void set_socket(std::string socket);
-    std::string get_socket() const;
-    void set_port(int port);
-    int get_port() const;
-    std::string build_policy_msg();
-    ulong build_hash_code();
-    void set_using_socket(bool using_socket);
-    bool get_using_socket() const;
-};
-typedef SqlConnectionEntry sql_connection_entry;
-
-typedef void (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
 typedef void (*hook_handler_t)();
 typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
 /**
@@ -335,11 +303,6 @@ void check(OpenRASPCheckType type, zval *params);
 void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckType type, int confidence, zval *params, zval *message);
 void handle_block();
 void set_location_header();
-
-void slow_query_alarm(int rows);
-void plugin_sql_check(char *query, int query_len, const char *server);
-long fetch_rows_via_user_function(const char *f_name_str, uint32_t param_count, zval params[]);
-zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy);
 
 OpenRASPActionType string_to_action(std::string action_string);
 std::string action_to_string(OpenRASPActionType type);

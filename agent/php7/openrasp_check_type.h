@@ -39,6 +39,7 @@ typedef enum check_type_t
   SQL,
   SQL_SLOW_QUERY,
   SQL_PREPARED,
+  SQL_ERROR,
   SSRF,
   WEBSHELL_EVAL,
   WEBSHELL_COMMAND,
