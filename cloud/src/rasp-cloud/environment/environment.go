@@ -15,21 +15,21 @@
 package environment
 
 import (
-	"os"
-	"github.com/astaxie/beego/logs"
-	"github.com/astaxie/beego"
-	"flag"
-	"log"
-	"os/exec"
-	"fmt"
-	"golang.org/x/crypto/ssh/terminal"
-	"syscall"
 	"bytes"
+	"flag"
+	"fmt"
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
+	"golang.org/x/crypto/ssh/terminal"
+	"log"
+	"os"
+	"os/exec"
 	"rasp-cloud/tools"
+	"syscall"
 )
 
 const (
-	Version             = "1.0.0RC1"
+	Version             = "1.0.0-RC1"
 	StartTypeForeground = "panel"
 	StartTypeAgent      = "agent"
 	StartTypeReset      = "reset"
