@@ -711,6 +711,7 @@ int main() {
     openrasp_output_detect.cc \
     hook/sql_connection_enrty.cc \
     hook/openrasp_echo.cc \
+    hook/openrasp_putenv.cc \
     openrasp_conf_holder.cc \
     openrasp_config_block.cc \
     openrasp_inject.cc \
