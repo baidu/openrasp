@@ -1362,7 +1362,7 @@ plugin.register('command', function (params, context) {
                 'com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze':     _("Reflected command execution - Using fastjson library"),
                 'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': _("Reflected command execution - Using SpEL expressions"),
                 'freemarker.template.utility.Execute.exec':                                     _("Reflected command execution - Using FreeMarker template"),
-                'org.jboss.el.MethodExpressionImpl.invoke':                                     _("Reflected command execution - Using JBoss EL method"),
+                'org.jboss.el.util.ReflectionUtil.invokeMethod':                                _("Reflected command execution - Using JBoss EL method"),
             }
 
             for (var i = 2; i < params.stack.length; i ++) {
