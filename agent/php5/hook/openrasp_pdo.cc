@@ -32,6 +32,7 @@ PRE_HOOK_FUNCTION_EX(prepare, pdo, SQL_PREPARED);
 POST_HOOK_FUNCTION_EX(prepare, pdo, SQL_ERROR);
 
 static bool fetch_pdo_error_info(char *driver_name, zval *statement, std::string &error_code, std::string &errro_msg TSRMLS_DC);
+static bool fetch_pdo_exception_info(char *driver_name, pdo_dbh_t *dbh, std::string &error_code, std::string &errro_msg TSRMLS_DC);
 
 extern void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p);
 
@@ -188,6 +189,10 @@ void post_pdo_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pdo_dbh_t *dbh = reinterpret_cast<pdo_dbh_t *>(zend_object_store_get_object(getThis() TSRMLS_CC));
     char *driver_name = (char *)dbh->driver->driver_name;
+    if (strcmp(driver_name, "mysql"))
+    {
+        return;
+    }
     char *statement;
     int statement_len;
 
@@ -198,16 +203,19 @@ void post_pdo_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
     std::string error_code;
     std::string error_msg;
-    zval *object_p = nullptr;
-    if (Z_TYPE_P(return_value) == IS_OBJECT)
+
+    if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
     {
-        object_p = return_value;
+        if (dbh->error_mode == PDO_ERRMODE_EXCEPTION)
+        {
+            fetch_pdo_exception_info(driver_name, dbh, error_code, error_msg TSRMLS_CC);
+        }
+        else
+        {
+            fetch_pdo_error_info(driver_name, this_ptr, error_code, error_msg TSRMLS_CC);
+        }
     }
-    else if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
-    {
-        object_p = this_ptr;
-    }
-    if (object_p && fetch_pdo_error_info(driver_name, object_p, error_code, error_msg TSRMLS_CC))
+    if (!error_code.empty())
     {
         sql_error_alarm(driver_name, statement, error_code, error_msg TSRMLS_CC);
     }
@@ -264,12 +272,6 @@ void post_pdo_prepare_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 static bool fetch_pdo_error_info(char *driver_name, zval *statement, std::string &error_code, std::string &errro_msg TSRMLS_DC)
 {
-    if (strcmp(driver_name, "mysql") &&
-        strcmp(driver_name, "pgsql") &&
-        strcmp(driver_name, "sqlite"))
-    {
-        return false;
-    }
     bool result = false;
     zval function_name, retval;
     INIT_ZVAL(function_name);
@@ -296,6 +298,41 @@ static bool fetch_pdo_error_info(char *driver_name, zval *statement, std::string
             }
         }
         zval_dtor(&retval);
+    }
+    return result;
+}
+
+static bool fetch_pdo_exception_info(char *driver_name, pdo_dbh_t *dbh, std::string &error_code, std::string &errro_msg TSRMLS_DC)
+{
+    bool result = false;
+    zval *info = NULL;
+    if (dbh->methods->fetch_err)
+    {
+        MAKE_STD_ZVAL(info);
+        array_init(info);
+        if (dbh->methods->fetch_err(dbh, dbh->query_stmt, info TSRMLS_CC))
+        {
+            zval **tmp;
+            if (zend_hash_index_find(Z_ARRVAL_P(info), 1, (void **)&tmp) == SUCCESS &&
+                Z_TYPE_PP(tmp) == IS_STRING)
+            {
+                errro_msg = std::string(Z_STRVAL_PP(tmp));
+            }
+            if (zend_hash_index_find(Z_ARRVAL_P(info), 0, (void **)&tmp) == SUCCESS)
+            {
+                if (0 == strcmp(driver_name, "mysql") &&
+                    Z_TYPE_PP(tmp) == IS_LONG &&
+                    mysql_error_code_filtered(Z_LVAL_PP(tmp)))
+                {
+                    error_code = std::to_string(Z_LVAL_PP(tmp));
+                    result = true;
+                }
+            }
+        }
+    }
+    if (info)
+    {
+        zval_ptr_dtor(&info);
     }
     return result;
 }
