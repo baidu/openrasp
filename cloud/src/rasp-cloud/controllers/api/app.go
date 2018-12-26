@@ -418,7 +418,7 @@ func (o *AppController) Delete() {
 	if count <= 1 {
 		o.ServeError(http.StatusBadRequest, "failed to remove app: keep at least one app")
 	}
-	err = models.RemoveAppById(app.Id)
+	app, err = models.RemoveAppById(app.Id)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to remove app", err)
 	}
@@ -429,14 +429,6 @@ func (o *AppController) Delete() {
 	err = models.RemovePluginByAppId(app.Id)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to remove plugin by app_id", err)
-	}
-	err = models.RemovePluginByAppId(app.Id)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to remove plugin by app_id", err)
-	}
-	err = models.RemoveOperationByAppId(app.Id)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to remove operation log by app_id", err)
 	}
 	models.AddOperation(app.Id, models.OperationTypeDeleteApp, o.Ctx.Input.IP(), "Deleted app with name "+app.Name)
 	o.ServeWithEmptyData()
