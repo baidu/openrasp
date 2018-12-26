@@ -28,6 +28,7 @@
 
 extern "C"
 {
+#include "Zend/zend_exceptions.h"
 #include "ext/standard/php_fopen_wrappers.h"
 }
 
@@ -321,6 +322,7 @@ void handle_block()
             php_output_flush();
         }
     }
+    zend_clear_exception();
     zend_bailout();
 }
 

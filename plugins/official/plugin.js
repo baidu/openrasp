@@ -1,4 +1,4 @@
-const version = '2018-1219-1500'
+const version = '2018-1224-1930'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -348,13 +348,18 @@ var algorithmConfig = {
     webshell_callable: {
         name:   '算法4 - 拦截简单的 PHP array_map/walk/filter 后门',
         action: 'block'
+    },
+
+    webshell_ld_preload: {
+        name:   '算法5 - 拦截基于 LD_PRELOAD 的后门',
+        action: 'block'
     }
 }
 
 // END ALGORITHM CONFIG //
 
-// 将所有拦截开关设置为 log
-if (algorithmConfig.meta.all_log) {
+// 将所有拦截开关设置为 log; 如果是单元测试模式，忽略此选项
+if (algorithmConfig.meta.all_log && ! RASP.is_unittest) {
     Object.keys(algorithmConfig).forEach(function (name) {
         if (algorithmConfig[name].action == 'block') {
            algorithmConfig[name].action = 'log'

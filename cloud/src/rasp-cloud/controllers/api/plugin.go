@@ -61,7 +61,7 @@ func (o *PluginController) Upload() {
 		o.ServeError(http.StatusBadRequest, "failed to add plugin", err)
 	}
 	models.AddOperation(appId, models.OperationTypeUploadPlugin, o.Ctx.Input.IP(),
-		"uploaded the plugin: "+latestPlugin.Id)
+		"New plugin uploaded: "+latestPlugin.Id)
 	o.Serve(latestPlugin)
 }
 
@@ -124,7 +124,7 @@ func (o *PluginController) UpdateAppAlgorithmConfig() {
 		o.ServeError(http.StatusBadRequest, "failed to update algorithm config", err)
 	}
 	models.AddOperation(appId, models.OperationTypeUpdateAlgorithmConfig,
-		o.Ctx.Input.IP(), "updated the whitelist configuration")
+		o.Ctx.Input.IP(), "Algorithm config updated for plugin: "+param.PluginId)
 	o.ServeWithEmptyData()
 }
 
@@ -144,7 +144,7 @@ func (o *PluginController) RestoreAlgorithmConfig() {
 		o.ServeError(http.StatusBadRequest, "failed to restore the default algorithm config", err)
 	}
 	models.AddOperation(appId, models.OperationTypeRestorePlugin, o.Ctx.Input.IP(),
-		"restore the default algorithm config for plugin: "+pluginId)
+		"Restored algorithm config for plugin: "+pluginId)
 	o.ServeWithEmptyData()
 }
 
@@ -176,6 +176,6 @@ func (o *PluginController) Delete() {
 		o.ServeError(http.StatusBadRequest, "failed to delete the plugin", err)
 	}
 	models.AddOperation(plugin.AppId, models.OperationTypeDeletePlugin, o.Ctx.Input.IP(),
-		"deleted the plugin: "+plugin.Id)
+		"Deleted plugin: "+plugin.Id)
 	o.ServeWithEmptyData()
 }

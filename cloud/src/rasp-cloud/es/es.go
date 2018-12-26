@@ -33,6 +33,7 @@ var (
 )
 
 func init() {
+	ttlIndexes <- make(map[string]time.Duration)
 	if *environment.StartFlag.StartType != environment.StartTypeReset {
 		esAddr := beego.AppConfig.String("EsAddr")
 		if esAddr == "" {
@@ -45,7 +46,6 @@ func init() {
 		if err != nil {
 			tools.Panic(tools.ErrCodeESInitFailed, "init ES failed", err)
 		}
-		ttlIndexes <- make(map[string]time.Duration)
 		go startTTL(24 * time.Hour)
 
 		ElasticClient = client
