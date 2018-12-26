@@ -111,13 +111,6 @@
         </div>
 
         <div v-if="data.policy_id == '3006'">
-            <div class="h6" v-if="data.policy_params.connectionString">
-                connectionString
-            </div>
-            <p v-if="data.policy_params.connectionString">
-                {{ data.policy_params.connectionString }}
-            </p>
-
             <div class="h6">
                 数据库类型
             </div>
@@ -131,6 +124,21 @@
             <p>
                 {{ data.policy_params.username }}
             </p>
+
+            <div class="h6" v-if="data.policy_params.connectionString">
+                connectionString
+            </div>
+            <p v-if="data.policy_params.connectionString">
+                {{ data.policy_params.connectionString }}
+            </p>
+
+            <div class="h6" v-if="data.policy_params.socket">
+                UNIX socket 路径
+            </div>
+            <p v-if="data.policy_params.socket">
+                {{ data.policy_params.socket }}
+            </p>
+
             <div class="h6">
                 应用堆栈
             </div>
