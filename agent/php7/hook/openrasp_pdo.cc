@@ -30,8 +30,10 @@ POST_HOOK_FUNCTION_EX(query, pdo, SQL_ERROR);
 PRE_HOOK_FUNCTION_EX(exec, pdo, SQL);
 POST_HOOK_FUNCTION_EX(exec, pdo, SQL_ERROR);
 PRE_HOOK_FUNCTION_EX(prepare, pdo, SQL_PREPARED);
+POST_HOOK_FUNCTION_EX(prepare, pdo, SQL_ERROR);
 
 static bool fetch_pdo_error_info(char *driver_name, zval *statement, std::string &error_code, std::string &errro_msg);
+static bool fetch_pdo_exception_info(char *driver_name, pdo_dbh_t *dbh, std::string &error_code, std::string &errro_msg);
 
 extern void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p);
 
@@ -190,9 +192,12 @@ void post_pdo_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pdo_dbh_t *dbh = Z_PDO_DBH_P(getThis());
     char *driver_name = (char *)dbh->driver->driver_name;
+    if (strcmp(driver_name, "mysql"))
+    {
+        return;
+    }
     char *statement;
     size_t statement_len;
-
     if (!ZEND_NUM_ARGS() ||
         FAILURE == zend_parse_parameters(1, "s", &statement, &statement_len))
     {
@@ -200,16 +205,18 @@ void post_pdo_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
     std::string error_code;
     std::string error_msg;
-    zval *object_p = nullptr;
-    if (Z_TYPE_P(return_value) == IS_OBJECT)
+    if (Z_TYPE_P(return_value) == IS_FALSE)
     {
-        object_p = return_value;
+        if (dbh->error_mode == PDO_ERRMODE_EXCEPTION)
+        {
+            fetch_pdo_exception_info(driver_name, dbh, error_code, error_msg);
+        }
+        else
+        {
+            fetch_pdo_error_info(driver_name, getThis(), error_code, error_msg);
+        }
     }
-    else if (Z_TYPE_P(return_value) == IS_FALSE)
-    {
-        object_p = getThis();
-    }
-    if (object_p && fetch_pdo_error_info(driver_name, object_p, error_code, error_msg))
+    if (!error_code.empty())
     {
         sql_error_alarm(driver_name, statement, error_code, error_msg);
     }
@@ -257,13 +264,14 @@ void pre_pdo_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     plugin_sql_check(statement, statement_len, dbh->driver->driver_name);
 }
 
+void post_pdo_prepare_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    post_pdo_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
 static bool fetch_pdo_error_info(char *driver_name, zval *statement, std::string &error_code, std::string &errro_msg)
 {
-    if (strcmp(driver_name, "mysql"))
-    {
-        return false;
-    }
-    bool result = true;
+    bool result = false;
     zval function_name, retval;
     ZVAL_STRING(&function_name, "errorinfo");
     if (call_user_function(EG(function_table), statement, &function_name, &retval, 0, nullptr) == SUCCESS)
@@ -283,15 +291,44 @@ static bool fetch_pdo_error_info(char *driver_name, zval *statement, std::string
                     mysql_error_code_filtered(Z_LVAL_P(tmp)))
                 {
                     error_code = std::to_string(Z_LVAL_P(tmp));
-                }
-                else
-                {
-                    result = false;
+                    result = true;
                 }
             }
         }
         zval_ptr_dtor(&retval);
     }
     zval_ptr_dtor(&function_name);
+    return result;
+}
+
+static bool fetch_pdo_exception_info(char *driver_name, pdo_dbh_t *dbh, std::string &error_code, std::string &errro_msg)
+{
+    bool result = false;
+    zval info;
+    ZVAL_UNDEF(&info);
+    if (dbh->methods->fetch_err)
+    {
+        array_init(&info);
+        if (dbh->methods->fetch_err(dbh, dbh->query_stmt, &info))
+        {
+            zval *item = nullptr;
+            if ((item = zend_hash_index_find(Z_ARRVAL(info), 1)) != nullptr &&
+                Z_TYPE_P(item) == IS_STRING)
+            {
+                errro_msg = std::string(Z_STRVAL_P(item));
+            }
+            if ((item = zend_hash_index_find(Z_ARRVAL(info), 0)) != nullptr)
+            {
+                if (0 == strcmp(driver_name, "mysql") &&
+                    Z_TYPE_P(item) == IS_LONG &&
+                    mysql_error_code_filtered(Z_LVAL_P(item)))
+                {
+                    error_code = std::to_string(Z_LVAL_P(item));
+                    result = true;
+                }
+            }
+        }
+    }
+    zval_ptr_dtor(&info);
     return result;
 }

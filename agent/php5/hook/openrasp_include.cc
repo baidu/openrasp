@@ -102,10 +102,11 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
     MAKE_STD_ZVAL(path);
     MAKE_COPY_ZVAL(&op1, path);
     convert_to_string(path);
-    std::string  real_path;
+    std::string real_path;
     const char *scheme_end = nullptr;
-    if ((Z_STRVAL_P(path) && (scheme_end = fetch_url_scheme(Z_STRVAL_P(path))) != nullptr) || (strlen(Z_STRVAL_P(path)) < 4 ||
-                                                                                               (strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".php") && strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".inc"))))
+    if ((nullptr != Z_STRVAL_P(path) && (scheme_end = fetch_url_scheme(Z_STRVAL_P(path))) != nullptr) ||
+        (strlen(Z_STRVAL_P(path)) < 4 || (strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".php") &&
+                                          strcmp(Z_STRVAL_P(path) + Z_STRLEN_P(path) - 4, ".inc"))))
     {
         real_path = openrasp_real_path(Z_STRVAL_P(path), Z_STRLEN_P(path), 1, READING TSRMLS_CC);
     }

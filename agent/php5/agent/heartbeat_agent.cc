@@ -106,16 +106,13 @@ void HeartBeatAgent::do_heartbeat()
 		if (!complete_config.empty())
 		{
 			/************************************shm config************************************/
-			if (scm != nullptr)
-			{
-				//update log_max_backup only its value greater than zero
-				int64_t log_max_backup = res_info->fetch_int64({"data", "config", "log.maxbackup"});
-				scm->set_log_max_backup(log_max_backup > 0 ? log_max_backup : 30);
-				int64_t debug_level = res_info->fetch_int64({"data", "config", "debug.level"}, 0);
-				scm->set_debug_level(debug_level);
-				std::map<std::string, std::vector<std::string>> white_map = res_info->build_hook_white_map({"data", "config", "hook.white"});
-				scm->build_check_type_white_array(white_map);
-			}
+			//update log_max_backup only its value greater than zero
+			int64_t log_max_backup = res_info->fetch_int64({"data", "config", "log.maxbackup"});
+			scm->set_log_max_backup(log_max_backup > 0 ? log_max_backup : 30);
+			int64_t debug_level = res_info->fetch_int64({"data", "config", "debug.level"}, 0);
+			scm->set_debug_level(debug_level);
+			std::map<std::string, std::vector<std::string>> white_map = res_info->build_hook_white_map({"data", "config", "hook.white"});
+			scm->build_check_type_white_array(white_map);
 			res_info->erase_value({"data", "config", "hook.white"});
 
 			/************************************OPENRASP_G(config)************************************/

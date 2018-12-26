@@ -44,7 +44,7 @@ Snapshot::Snapshot(const std::string &path, uint64_t timestamp) : Snapshot()
             buffer = new char[size];
             if (!file.read(buffer, size))
             {
-                delete buffer;
+                delete[] buffer;
                 return;
             }
         }

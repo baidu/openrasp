@@ -35,7 +35,9 @@ POST_HOOK_FUNCTION(mysqli_query, SQL_ERROR);
 PRE_HOOK_FUNCTION(mysqli_real_query, SQL);
 POST_HOOK_FUNCTION(mysqli_real_query, SQL_ERROR);
 PRE_HOOK_FUNCTION(mysqli_prepare, SQL_PREPARED);
+POST_HOOK_FUNCTION(mysqli_prepare, SQL_ERROR);
 PRE_HOOK_FUNCTION_EX(prepare, mysqli, SQL_PREPARED);
+POST_HOOK_FUNCTION_EX(prepare, mysqli, SQL_ERROR);
 
 static long fetch_mysqli_errno(uint32_t param_count, zval *params[] TSRMLS_DC);
 static std::string fetch_mysqli_error(uint32_t param_count, zval *params[] TSRMLS_DC);
@@ -322,6 +324,11 @@ void pre_global_mysqli_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETER
     plugin_sql_check(query, query_len, "mysql" TSRMLS_CC);
 }
 
+void post_global_mysqli_prepare_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    post_global_mysqli_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
 void pre_mysqli_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     char *query = NULL;
@@ -332,6 +339,11 @@ void pre_mysqli_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         return;
     }
     plugin_sql_check(query, query_len, "mysql" TSRMLS_CC);
+}
+
+void post_mysqli_prepare_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    post_mysqli_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 static long fetch_mysqli_errno(uint32_t param_count, zval *params[] TSRMLS_DC)
