@@ -348,6 +348,11 @@ var algorithmConfig = {
     webshell_callable: {
         name:   '算法4 - 拦截简单的 PHP array_map/walk/filter 后门',
         action: 'block'
+    },
+
+    webshell_ld_preload: {
+        name:   '算法5 - 拦截基于 LD_PRELOAD 的后门',
+        action: 'block'
     }
 }
 
