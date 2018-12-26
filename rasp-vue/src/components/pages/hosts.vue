@@ -53,7 +53,7 @@
                   主机名
                 </th>
                 <th>
-                  IP
+                  注册 IP
                 </th>
                 <th>
                   RASP 版本

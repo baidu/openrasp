@@ -15,21 +15,21 @@
 package environment
 
 import (
-	"os"
-	"github.com/astaxie/beego/logs"
-	"github.com/astaxie/beego"
-	"flag"
-	"log"
-	"os/exec"
-	"fmt"
-	"golang.org/x/crypto/ssh/terminal"
-	"syscall"
 	"bytes"
+	"flag"
+	"fmt"
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
+	"golang.org/x/crypto/ssh/terminal"
+	"log"
+	"os"
+	"os/exec"
 	"rasp-cloud/tools"
+	"syscall"
 )
 
 const (
-	Version             = "1.0RC1"
+	Version             = "1.0.0-RC1"
 	StartTypeForeground = "panel"
 	StartTypeAgent      = "agent"
 	StartTypeReset      = "reset"
@@ -62,13 +62,15 @@ func init() {
 		pwd1, err := terminal.ReadPassword(int(syscall.Stdin))
 		fmt.Println()
 		if err != nil {
-			fmt.Print("failed to read password from terminal: " + err.Error())
+			fmt.Println("failed to read password from terminal: " + err.Error())
+			os.Exit(tools.ErrCodeResetUserFailed)
 		}
 		fmt.Print("Retype new admin password: ")
 		pwd2, err := terminal.ReadPassword(int(syscall.Stdin))
 		fmt.Println()
 		if err != nil {
-			fmt.Print("failed to read password from terminal: " + err.Error())
+			fmt.Println("failed to read password from terminal: " + err.Error())
+			os.Exit(tools.ErrCodeResetUserFailed)
 		}
 		if bytes.Compare(pwd1, pwd2) != 0 {
 			fmt.Println("Sorry, passwords do not match")

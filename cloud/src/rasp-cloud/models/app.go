@@ -402,8 +402,12 @@ func UpdateWhiteListConfig(appId string, config []WhitelistConfigItem) (app *App
 	return UpdateAppById(appId, bson.M{"whitelist_config": config, "config_time": time.Now().UnixNano()})
 }
 
-func RemoveAppById(id string) (err error) {
-	return mongo.RemoveId(appCollectionName, id)
+func RemoveAppById(id string) (app *App, err error) {
+	err = mongo.FindId(appCollectionName, id, &app)
+	if err != nil {
+		return
+	}
+	return app, mongo.RemoveId(appCollectionName, id)
 }
 
 func GetAppCount() (count int, err error) {
