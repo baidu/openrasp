@@ -37,7 +37,7 @@ public class TomcatStartupHook extends ServerStartupHook {
 
     @Override
     public boolean isClassMatched(String className) {
-        return "org/apache/catalina/startup/Catalina".equals(className);
+        return "org/apache/catalina/core/StandardServer".equals(className);
     }
 
     /**
@@ -48,7 +48,7 @@ public class TomcatStartupHook extends ServerStartupHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(TomcatStartupHook.class, "checkTomcatStartup", "");
-        insertBefore(ctClass, "start", null, src);
+        insertBefore(ctClass, "startInternal", null, src);
     }
 
     /**
