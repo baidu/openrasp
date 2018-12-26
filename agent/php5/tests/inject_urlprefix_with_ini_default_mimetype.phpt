@@ -2,6 +2,7 @@
 inject urlprefix
 --SKIPIF--
 <?php
+if (version_compare(PHP_VERSION, '5.6.0', '<')) die("Skipped: PHP_VERSION < 5.6.0");
 $conf = <<<CONF
 inject:
   urlprefix: "/prefix"
