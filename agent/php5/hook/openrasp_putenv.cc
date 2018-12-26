@@ -17,9 +17,6 @@
 #include "openrasp_hook.h"
 #include "agent/shared_config_manager.h"
 
-/**
- * command相关hook点
- */
 PRE_HOOK_FUNCTION(putenv, WEBSHELL_LD_PRELOAD);
 
 void pre_global_putenv_WEBSHELL_LD_PRELOAD(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -32,7 +29,7 @@ void pre_global_putenv_WEBSHELL_LD_PRELOAD(OPENRASP_INTERNAL_FUNCTION_PARAMETERS
     }
     if (!openrasp_check_type_ignored(check_type) &&
         env != nullptr &&
-        strncmp(env, "LD_PRELOAD", sizeof("LD_PRELOAD") - 1) == 0)
+        strncmp(env, "LD_PRELOAD=", sizeof("LD_PRELOAD=") - 1) == 0)
     {
         zval *attack_params = NULL;
         MAKE_STD_ZVAL(attack_params);
