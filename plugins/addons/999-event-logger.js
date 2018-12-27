@@ -1,3 +1,5 @@
+const version = '2018-1000-0000'
+
 //
 // OpenRASP plugin: event logger demo
 // 
@@ -10,6 +12,12 @@ const clean = {
     message:    'Looks fine to me',
     confidence: 0
 }
+
+// BEGIN ALGORITHM CONFIG //
+
+var algorithmConfig = {}
+
+// END ALGORITHM CONFIG //
 
 plugin.register('directory', function (params, context) {
     plugin.log('Listing directory content: ' + params.realpath)
