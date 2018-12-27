@@ -1,3 +1,6 @@
+const plugin_version = '2018-1000-1000'
+const plugin_name    = '888-block-all'
+
 // 本插件用于测试拦截效果
 // 
 // 这个插件的逻辑是，不管请求是否正常，一律拦截

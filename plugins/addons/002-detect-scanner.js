@@ -1,4 +1,7 @@
-var plugin = new RASP('offical')
+const plugin_version = '2018-1000-1000'
+const plugin_name    = '002-detect-scanner'
+
+var plugin = new RASP(plugin_name)
 var clean  = {
   action: 'ignore',
   message: '无风险',
