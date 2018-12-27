@@ -18,7 +18,8 @@
 
 #include "openrasp.h"
 #include "openrasp_log.h"
-extern "C" {
+extern "C"
+{
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -27,6 +28,14 @@ extern "C" {
 #include "php_main.h"
 #include "php_output.h"
 }
+
+ZEND_BEGIN_MODULE_GLOBALS(openrasp_output_detect)
+bool output_detect;
+ZEND_END_MODULE_GLOBALS(openrasp_output_detect)
+
+ZEND_EXTERN_MODULE_GLOBALS(openrasp_output_detect);
+
+#define OUTPUT_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(openrasp_output_detect, v)
 
 PHP_MINIT_FUNCTION(openrasp_output_detect);
 PHP_RINIT_FUNCTION(openrasp_output_detect);

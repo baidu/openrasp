@@ -27,7 +27,7 @@ void pre_global_putenv_WEBSHELL_LD_PRELOAD(OPENRASP_INTERNAL_FUNCTION_PARAMETERS
     {
         return;
     }
-    if (!openrasp_check_type_ignored(check_type) &&
+    if (!openrasp_check_type_ignored(check_type TSRMLS_CC) &&
         env != nullptr &&
         strncmp(env, "LD_PRELOAD=", sizeof("LD_PRELOAD=") - 1) == 0)
     {

@@ -182,7 +182,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
         {
             openrasp::oam->shutdown();
         }
-        openrasp::oam.reset();        
+        openrasp::oam.reset();
 #endif
         openrasp::scm->shutdown();
         openrasp::scm.reset();

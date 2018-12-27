@@ -18,6 +18,7 @@
 #include "openrasp_ini.h"
 #include "openrasp_inject.h"
 #include "openrasp_v8.h"
+#include "openrasp_output_detect.h"
 #include <new>
 #include <map>
 #include <algorithm>
@@ -257,6 +258,10 @@ void set_location_header()
 
 void handle_block()
 {
+    if (OUTPUT_G(output_detect))
+    {
+        return;
+    }
     int status = php_output_get_status();
     if (status & PHP_OUTPUT_WRITTEN)
     {
