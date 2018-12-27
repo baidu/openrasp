@@ -41,7 +41,7 @@
                   <a href="javascript:" @click="doSelect(row)">
                     推送
                   </a> &nbsp;
-                  <a :href="'/v1/api/plugin/download?id='+row.id" target="_black">
+                  <a :href="'/v1/api/plugin/download?id='+row.id" target="_blank">
                     下载
                   </a> &nbsp;
                   <a href="javascript:" @click="doDelete(row)">
