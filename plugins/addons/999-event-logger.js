@@ -1,11 +1,12 @@
-const version = '2018-1000-0000'
+const plugin_version = '2018-1000-1000'
+const plugin_name    = 'event-logger'
 
 //
-// OpenRASP plugin: event logger demo
+// OpenRASP plugin: event logger
 // 
 
 'use strict'
-var plugin  = new RASP('event-logger')
+var plugin  = new RASP(plugin_name)
 
 const clean = {
     action:     'ignore',
