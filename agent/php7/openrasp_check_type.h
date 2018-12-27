@@ -37,7 +37,6 @@ typedef enum check_type_t
   INCLUDE,
   DB_CONNECTION,
   SQL,
-  SQL_SLOW_QUERY,
   SQL_PREPARED,
   SQL_ERROR,
   SSRF,
@@ -46,7 +45,7 @@ typedef enum check_type_t
   WEBSHELL_FILE_PUT_CONTENTS,
   WEBSHELL_LD_PRELOAD,
   XSS_ECHO,
-  XSS,
+  XSS_USER_INPUT,
   ALL_TYPE
 } OpenRASPCheckType;
 

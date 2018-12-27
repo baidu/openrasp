@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-#include "openrasp_security_policy.h"
+#include "openrasp_output_detect.h"
 #include "openrasp_hook.h"
 #include "openrasp_ini.h"
 #include "agent/shared_config_manager.h"
 #include "utils/regex.h"
 
+ZEND_DECLARE_MODULE_GLOBALS(openrasp_output_detect)
+
 static void _check_header_content_type_if_html(void *data, void *arg);
-static int _detect_param_occur_in_html_output(const char *param);
+static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionType action);
 static bool _gpc_parameter_filter(const zval *param);
 static bool _is_content_type_html();
 
@@ -31,12 +33,18 @@ static int openrasp_output_handler(void **nothing, php_output_context *output_co
 
 static int openrasp_output_handler(void **nothing, php_output_context *output_context)
 {
+    OUTPUT_G(output_detect) = true;
     int status = FAILURE;
     if (_is_content_type_html() &&
         (output_context->op & PHP_OUTPUT_HANDLER_START) &&
         (output_context->op & PHP_OUTPUT_HANDLER_FINAL))
     {
-        status = _detect_param_occur_in_html_output(output_context->in.data);
+        OpenRASPActionType action = openrasp::scm->get_buildin_check_action(XSS_USER_INPUT);
+        status = _detect_param_occur_in_html_output(output_context->in.data, action);
+        if (status == SUCCESS)
+        {
+            status = (AC_BLOCK == action) ? SUCCESS : FAILURE;
+        }
         if (status == SUCCESS)
         {
             set_location_header();
@@ -95,7 +103,7 @@ static bool _gpc_parameter_filter(const zval *param)
     return false;
 }
 
-static int _detect_param_occur_in_html_output(const char *param)
+static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionType action)
 {
     int status = FAILURE;
     if (Z_TYPE(PG(http_globals)[TRACK_VARS_GET]) != IS_ARRAY &&
@@ -105,7 +113,6 @@ static int _detect_param_occur_in_html_output(const char *param)
     }
     zval *global = &PG(http_globals)[TRACK_VARS_GET];
     int count = 0;
-    OpenRASPActionType action = openrasp::scm->get_buildin_check_action(XSS);
     zval *val;
     ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(global), val)
     {
@@ -118,7 +125,7 @@ static int _detect_param_occur_in_html_output(const char *param)
                 add_assoc_long(&attack_params, "count", count);
                 zval plugin_message;
                 ZVAL_STRING(&plugin_message, _("Excessively suspected xss parameters"));
-                openrasp_buildin_php_risk_handle(action, XSS, 100, &attack_params, &plugin_message);
+                openrasp_buildin_php_risk_handle(action, XSS_USER_INPUT, 100, &attack_params, &plugin_message);
                 return SUCCESS;
             }
             if (NULL != strstr(param, Z_STRVAL_P(val)))
@@ -128,7 +135,7 @@ static int _detect_param_occur_in_html_output(const char *param)
                 add_assoc_string(&attack_params, "parameter", Z_STRVAL_P(val));
                 zval plugin_message;
                 ZVAL_STR(&plugin_message, strpprintf(0, _("Reflected XSS attack detected: using get parameter: '%s'"), Z_STRVAL_P(val)));
-                openrasp_buildin_php_risk_handle(action, XSS, 100, &attack_params, &plugin_message);
+                openrasp_buildin_php_risk_handle(action, XSS_USER_INPUT, 100, &attack_params, &plugin_message);
                 return SUCCESS;
             }
         }
@@ -144,15 +151,22 @@ static bool _is_content_type_html()
     return is_html;
 }
 
+static void openrasp_output_detect_init_globals(zend_openrasp_output_detect_globals *openrasp_output_detect_globals)
+{
+    openrasp_output_detect_globals->output_detect = false;
+}
+
 PHP_MINIT_FUNCTION(openrasp_output_detect)
 {
+    ZEND_INIT_MODULE_GLOBALS(openrasp_output_detect, openrasp_output_detect_init_globals, nullptr);
     php_output_handler_alias_register(ZEND_STRL("openrasp_ob_handler"), openrasp_output_handler_init);
     return SUCCESS;
 }
 
 PHP_RINIT_FUNCTION(openrasp_output_detect)
 {
-    if (!openrasp_check_type_ignored(XSS))
+    OUTPUT_G(output_detect) = false;
+    if (!openrasp_check_type_ignored(XSS_USER_INPUT))
     {
         openrasp_clean_output_start(ZEND_STRL("openrasp_ob_handler"));
     }

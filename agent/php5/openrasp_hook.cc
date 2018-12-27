@@ -19,6 +19,7 @@
 #include "openrasp_utils.h"
 #include "openrasp_inject.h"
 #include "openrasp_v8.h"
+#include "openrasp_output_detect.h"
 #include <new>
 #include <unordered_map>
 #include "agent/shared_config_manager.h"
@@ -257,6 +258,10 @@ void set_location_header(TSRMLS_D)
 
 void handle_block(TSRMLS_D)
 {
+    if (OUTPUT_G(output_detect))
+    {
+        return;
+    }
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION == 3)
     if (OG(ob_nesting_level) && (OG(active_ob_buffer).status || OG(active_ob_buffer).erase))
     {

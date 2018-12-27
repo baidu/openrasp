@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-#include "openrasp_security_policy.h"
+#include "openrasp_output_detect.h"
 #include "openrasp_hook.h"
 #include "openrasp_ini.h"
 #include "agent/shared_config_manager.h"
 #include "utils/regex.h"
 
+ZEND_DECLARE_MODULE_GLOBALS(openrasp_output_detect)
+
 static void _check_header_content_type_if_html(void *data, void *arg TSRMLS_DC);
-static int _detect_param_occur_in_html_output(const char *param TSRMLS_DC);
+static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionType action TSRMLS_DC);
 static bool _gpc_parameter_filter(const zval *param TSRMLS_DC);
 static bool _is_content_type_html(TSRMLS_D);
 
@@ -29,6 +31,7 @@ static bool _is_content_type_html(TSRMLS_D);
 
 void openrasp_detect_output(INTERNAL_FUNCTION_PARAMETERS)
 {
+    OUTPUT_G(output_detect) = true;
     char *input;
     int input_len;
     long mode;
@@ -39,7 +42,12 @@ void openrasp_detect_output(INTERNAL_FUNCTION_PARAMETERS)
     }
     if (_is_content_type_html(TSRMLS_C))
     {
-        int status = _detect_param_occur_in_html_output(input TSRMLS_CC);
+        OpenRASPActionType action = openrasp::scm->get_buildin_check_action(XSS_USER_INPUT);
+        int status = _detect_param_occur_in_html_output(input, action TSRMLS_CC);
+        if (status == SUCCESS)
+        {
+            status = (AC_BLOCK == action) ? SUCCESS : FAILURE;
+        }
         if (status == SUCCESS)
         {
             set_location_header(TSRMLS_C);
@@ -56,13 +64,19 @@ static int openrasp_output_handler(void **nothing, php_output_context *output_co
 
 static int openrasp_output_handler(void **nothing, php_output_context *output_context)
 {
-    int status = FAILURE;
     PHP_OUTPUT_TSRMLS(output_context);
+    OUTPUT_G(output_detect) = true;
+    int status = FAILURE;
     if (_is_content_type_html(TSRMLS_C) &&
         (output_context->op & PHP_OUTPUT_HANDLER_START) &&
         (output_context->op & PHP_OUTPUT_HANDLER_FINAL))
     {
-        status = _detect_param_occur_in_html_output(output_context->in.data TSRMLS_CC);
+        OpenRASPActionType action = openrasp::scm->get_buildin_check_action(XSS_USER_INPUT);
+        status = _detect_param_occur_in_html_output(output_context->in.data, action TSRMLS_CC);
+        if (status == SUCCESS)
+        {
+            status = (AC_BLOCK == action) ? SUCCESS : FAILURE;
+        }
         if (status == SUCCESS)
         {
             set_location_header(TSRMLS_C);
@@ -123,7 +137,7 @@ static bool _gpc_parameter_filter(const zval *param TSRMLS_DC)
     return false;
 }
 
-static int _detect_param_occur_in_html_output(const char *param TSRMLS_DC)
+static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionType action TSRMLS_DC)
 {
     int status = FAILURE;
     if (!PG(http_globals)[TRACK_VARS_GET] &&
@@ -134,7 +148,6 @@ static int _detect_param_occur_in_html_output(const char *param TSRMLS_DC)
     }
     HashTable *ht = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_GET]);
     int count = 0;
-    OpenRASPActionType action = openrasp::scm->get_buildin_check_action(XSS);
     for (zend_hash_internal_pointer_reset(ht);
          zend_hash_has_more_elements(ht) == SUCCESS;
          zend_hash_move_forward(ht))
@@ -155,7 +168,7 @@ static int _detect_param_occur_in_html_output(const char *param TSRMLS_DC)
                 zval *plugin_message = NULL;
                 MAKE_STD_ZVAL(plugin_message);
                 ZVAL_STRING(plugin_message, _("Excessively suspected xss parameters"), 1);
-                openrasp_buildin_php_risk_handle(action, XSS, 100, attack_params, plugin_message TSRMLS_CC);
+                openrasp_buildin_php_risk_handle(action, XSS_USER_INPUT, 100, attack_params, plugin_message TSRMLS_CC);
                 return SUCCESS;
             }
             if (NULL != strstr(param, Z_STRVAL_PP(ele_value)))
@@ -170,7 +183,7 @@ static int _detect_param_occur_in_html_output(const char *param TSRMLS_DC)
                 spprintf(&message_str, 0, _("Reflected XSS attack detected: using get parameter: '%s'"), Z_STRVAL_PP(ele_value));
                 ZVAL_STRING(plugin_message, message_str, 1);
                 efree(message_str);
-                openrasp_buildin_php_risk_handle(action, XSS, 100, attack_params, plugin_message TSRMLS_CC);
+                openrasp_buildin_php_risk_handle(action, XSS_USER_INPUT, 100, attack_params, plugin_message TSRMLS_CC);
                 return SUCCESS;
             }
         }
@@ -185,8 +198,14 @@ static bool _is_content_type_html(TSRMLS_D)
     return is_html;
 }
 
+static void openrasp_output_detect_init_globals(zend_openrasp_output_detect_globals *openrasp_output_detect_globals)
+{
+    openrasp_output_detect_globals->output_detect = false;
+}
+
 PHP_MINIT_FUNCTION(openrasp_output_detect)
 {
+    ZEND_INIT_MODULE_GLOBALS(openrasp_output_detect, openrasp_output_detect_init_globals, nullptr);
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION > 3)
     php_output_handler_alias_register(ZEND_STRL("openrasp_ob_handler"), openrasp_output_handler_init TSRMLS_CC);
 #endif
@@ -195,7 +214,8 @@ PHP_MINIT_FUNCTION(openrasp_output_detect)
 
 PHP_RINIT_FUNCTION(openrasp_output_detect)
 {
-    if (!openrasp_check_type_ignored(XSS TSRMLS_CC))
+    OUTPUT_G(output_detect) = false;
+    if (!openrasp_check_type_ignored(XSS_USER_INPUT TSRMLS_CC))
     {
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION <= 3)
         if (php_start_ob_buffer_named("openrasp_ob_handler", 0, 1 TSRMLS_CC) == FAILURE)
