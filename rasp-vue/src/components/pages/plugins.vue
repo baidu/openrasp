@@ -41,7 +41,7 @@
                   <a href="javascript:" @click="doSelect(row)">
                     推送
                   </a> &nbsp;
-                  <a href="javascript:" @click="doDownload(row)">
+                  <a :href="'/v1/api/plugin/download?id='+row.id" target="_black">
                     下载
                   </a> &nbsp;
                   <a href="javascript:" @click="doDelete(row)">
@@ -100,26 +100,6 @@ export default {
         this.data = res.data
         this.total = res.total
         this.loading = false
-      })
-    },
-    doDownload: function(row) {
-      var self = this
-      var body = {
-        id: row.id
-      }
-
-      axios({
-        url: '/v1/api/plugin/download',
-        method: 'POST',
-        data: JSON.stringify(body),
-        responseType: 'blob'
-      }).then(response => {
-        const url = window.URL.createObjectURL(new Blob([response.data]))
-        const link = document.createElement('a')
-        link.href = url
-        link.setAttribute('download', 'plugin.js') // or any other extension
-        document.body.appendChild(link)
-        link.click()
       })
     },
     doUpload: function() {
