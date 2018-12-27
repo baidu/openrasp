@@ -47,20 +47,24 @@ public class TomcatStartupHook extends ServerStartupHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(TomcatStartupHook.class, "checkTomcatStartup", "");
+        String src = getInvokeStaticSrc(TomcatStartupHook.class, "checkTomcatStartup", "$0", Object.class);
         insertBefore(ctClass, "startInternal", null, src);
+        insertBefore(ctClass, "start", null, src);
     }
 
     /**
      * tomcat启动时检测安全规范
      */
-    public static void checkTomcatStartup() {
+    public static void checkTomcatStartup(Object object) {
         try {
-            String serverInfo = (String) Reflection.invokeStaticMethod("org.apache.catalina.util.ServerInfo",
-                    "getServerInfo", new Class[]{});
+            ClassLoader loader = object.getClass().getClassLoader();
+            if (loader == null) {
+                loader = ClassLoader.getSystemClassLoader();
+            }
+            Class clazz = loader.loadClass("org.apache.catalina.util.ServerInfo");
+            String serverInfo = (String) Reflection.invokeMethod(null, clazz, "getServerInfo", new Class[]{});
             if (serverInfo != null && serverInfo.toLowerCase().contains("tomcat")) {
-                String version = (String) Reflection.invokeStaticMethod(
-                        "org.apache.catalina.util.ServerInfo", "getServerNumber", new Class[]{});
+                String version = (String) Reflection.invokeMethod(null, clazz, "getServerNumber", new Class[]{});
                 ApplicationModel.init("tomcat", version);
             }
         } catch (Exception e) {

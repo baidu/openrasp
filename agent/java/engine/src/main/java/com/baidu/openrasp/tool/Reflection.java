@@ -114,7 +114,7 @@ public class Reflection {
         }
     }
 
-    private static Object invokeMethod(Object object, Class clazz, String methodName, Class[] paramTypes, Object... parameters) {
+    public static Object invokeMethod(Object object, Class clazz, String methodName, Class[] paramTypes, Object... parameters) {
         try {
             Method method = clazz.getMethod(methodName, paramTypes);
             if (!method.isAccessible()) {
