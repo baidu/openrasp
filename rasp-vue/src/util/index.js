@@ -17,7 +17,7 @@ export var attack_types = {
   'deserialization': 'Transformer 反序列化',
   'webshell': 'WebShell 后门',
   'xss': 'XSS 跨站脚本攻击',
-  'callable': 'WebShell - 变形后门',
+  'webshell_callable': 'WebShell - 变形后门',
   'webshell_eval': 'WebShell - 中国菜刀',
   'webshell_command': 'WebShell - 命令执行',
   'webshell_file_put_contents': 'WebShell - 后门上传'
