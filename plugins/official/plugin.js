@@ -893,15 +893,25 @@ if (RASP.get_jsengine() !== 'v8') {
         // 算法1 - 当参数来自用户输入，且为内网IP，判定为SSRF攻击
         if (algorithmConfig.ssrf_userinput.action != 'ignore')
         {
-            if (ip.length &&
-                is_from_userinput(context.parameter, url) &&
-                /^(127|192|172|10)\./.test(ip[0]))
+            if (is_from_userinput(context.parameter, url))
             {
-                return {
-                    action:     algorithmConfig.ssrf_userinput.action,
-                    message:    _("SSRF - Requesting intranet address: %1%", [ ip[0] ]),
-                    confidence: 100,
-                    algorithm:  'ssrf_userinput'
+                if (ip.length && /^(127|192|172|10)\./.test(ip[0]))
+                {
+                    return {
+                        action:     algorithmConfig.ssrf_userinput.action,
+                        message:    _("SSRF - Requesting intranet address: %1%", [ ip[0] ]),
+                        confidence: 100,
+                        algorithm:  'ssrf_userinput'
+                    }
+                }
+                else if (hostname == '[::]') 
+                {
+                    return {
+                        action:     algorithmConfig.ssrf_userinput.action,
+                        message:    _("SSRF - Requesting intranet address: %1%", [ hostname ]),
+                        confidence: 100,
+                        algorithm:  'ssrf_userinput'
+                    }
                 }
             }
         }
