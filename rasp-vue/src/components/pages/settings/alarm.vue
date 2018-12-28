@@ -42,7 +42,7 @@
           <label class="form-label">
             邮箱密码
           </label>
-          <input v-model="data.email_alarm_conf.password" type="text" class="form-control">
+          <input v-model="data.email_alarm_conf.password" type="password" class="form-control">
         </div>
         <div class="form-group">
           <label class="custom-switch">
