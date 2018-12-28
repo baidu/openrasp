@@ -37,6 +37,9 @@
                 {{ row.description }}
               </td>
               <td>
+                <a href="javascript:" @click.prevent="setCurrentApp(row)">
+                  切换
+                </a>
                 <a href="javascript:" @click="editApp(row, true)">
                   编辑
                 </a>
@@ -53,7 +56,7 @@
       </div>
       <div class="card-footer text-right">
         <div class="d-flex">
-          <button class="btn btn-primary" @click="editApp({})">
+          <button class="btn btn-primary" @click="editApp({language: 'java'})">
             添加
           </button>
         </div>
