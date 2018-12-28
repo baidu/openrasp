@@ -70,6 +70,7 @@ PHP_MINIT_FUNCTION(openrasp_fswatch)
         std::vector<std::string> paths;
         paths.push_back(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("plugins"));
         paths.push_back(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("assets"));
+        paths.push_back(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("conf"));
 
         monitor = fsw::monitor_factory::create_monitor(
             fsw_monitor_type::system_default_monitor_type, paths,
