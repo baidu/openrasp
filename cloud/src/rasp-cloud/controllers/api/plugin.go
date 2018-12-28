@@ -83,23 +83,18 @@ func (o *PluginController) Get() {
 	o.Serve(plugin)
 }
 
-// @router /download [post]
+// @router /download [get]
 func (o *PluginController) Download() {
-	var param map[string]string
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
-	}
-	pluginId := param["id"]
-	if pluginId == "" {
-		o.ServeError(http.StatusBadRequest, "plugin_id cannot be empty")
-	}
+	pluginId := o.GetString("id")
 	plugin, err := models.GetPluginById(pluginId, true)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get plugin", err)
 	}
 	o.Ctx.Output.Header("Content-Type", "text/plain")
-	o.Ctx.Output.Header("Content-Disposition", "attachment;filename=plugin-"+plugin.Version+".js")
+	if plugin.Name == "" {
+		plugin.Name = "plugin"
+	}
+	o.Ctx.Output.Header("Content-Disposition", "attachment;filename="+plugin.Name+"-"+plugin.Version+".js")
 	o.Ctx.Output.Body([]byte(plugin.Content))
 }
 

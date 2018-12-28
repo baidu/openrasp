@@ -254,9 +254,7 @@ public class Config extends FileScanListener {
                 }
             }
         }
-        if (!temp.isEmpty()) {
-            HookWhiteModel.init(temp);
-        }
+        HookWhiteModel.init(temp);
     }
 
     private void reloadConfig(File file) {

@@ -38,6 +38,7 @@ import (
 type Plugin struct {
 	Id                     string                 `json:"id" bson:"_id,omitempty"`
 	AppId                  string                 `json:"app_id" bson:"app_id"`
+	Name                   string                 `json:"name" bson:"name"`
 	UploadTime             int64                  `json:"upload_time" bson:"upload_time"`
 	Version                string                 `json:"version" bson:"version"`
 	Md5                    string                 `json:"md5" bson:"md5"`
@@ -101,11 +102,20 @@ func AddPlugin(pluginContent []byte, appId string) (plugin *Plugin, err error) {
 	if err != nil {
 		return nil, errors.New("failed to read the plugin file: " + err.Error())
 	}
+	secondLine, err := pluginReader.ReadString('\n')
+	if err != nil {
+		return nil, errors.New("failed to read the plugin file: " + err.Error())
+	}
 	var newVersion string
+	var newPluginName string
 	if newVersion = regexp.MustCompile(`'.+'|".+"`).FindString(firstLine); newVersion == "" {
 		return nil, errors.New("failed to find the plugin version")
 	}
 	newVersion = newVersion[1 : len(newVersion)-1]
+	if newPluginName = regexp.MustCompile(`'.+'|".+"`).FindString(secondLine); newPluginName == "" {
+		return nil, errors.New("failed to find the plugin name")
+	}
+	newPluginName = newPluginName[1 : len(newPluginName)-1]
 	algorithmStartMsg := "// BEGIN ALGORITHM CONFIG //"
 	algorithmEndMsg := "// END ALGORITHM CONFIG //"
 	algorithmStart := bytes.Index(pluginContent, []byte(algorithmStartMsg))
@@ -132,16 +142,17 @@ func AddPlugin(pluginContent []byte, appId string) (plugin *Plugin, err error) {
 	if err != nil {
 		return nil, errors.New("failed to unmarshal algorithm json data: " + err.Error())
 	}
-	return addPluginToDb(newVersion, pluginContent, appId, algorithmData)
+	return addPluginToDb(newVersion, newPluginName, pluginContent, appId, algorithmData)
 
 }
 
-func addPluginToDb(version string, content []byte, appId string,
+func addPluginToDb(version string, name string, content []byte, appId string,
 	defaultAlgorithmConfig map[string]interface{}) (plugin *Plugin, err error) {
 	newMd5 := fmt.Sprintf("%x", md5.Sum(content))
 	plugin = &Plugin{
 		Id:                     generatePluginId(appId),
 		Version:                version,
+		Name:                   name,
 		Md5:                    newMd5,
 		Content:                string(content),
 		UploadTime:             time.Now().UnixNano() / 1000000,
@@ -252,6 +263,7 @@ func handleAlgorithmConfig(plugin *Plugin, config map[string]interface{}) (appId
 	}
 	algorithmContent := regexp.MustCompile(regex).ReplaceAllString(plugin.Content, newContent)
 	newMd5 := fmt.Sprintf("%x", md5.Sum([]byte(algorithmContent)))
+	fmt.Println(algorithmContent)
 	return plugin.AppId, mongo.UpdateId(pluginCollectionName, plugin.Id, bson.M{"content": algorithmContent,
 		"algorithm_config": config, "md5": newMd5})
 }

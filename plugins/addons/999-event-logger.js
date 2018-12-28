@@ -1,15 +1,24 @@
+const plugin_version = '2018-1000-1000'
+const plugin_name    = 'event-logger'
+
 //
-// OpenRASP plugin: event logger demo
+// OpenRASP plugin: event logger
 // 
 
 'use strict'
-var plugin  = new RASP('event-logger')
+var plugin  = new RASP(plugin_name)
 
 const clean = {
     action:     'ignore',
     message:    'Looks fine to me',
     confidence: 0
 }
+
+// BEGIN ALGORITHM CONFIG //
+
+var algorithmConfig = {}
+
+// END ALGORITHM CONFIG //
 
 plugin.register('directory', function (params, context) {
     plugin.log('Listing directory content: ' + params.realpath)

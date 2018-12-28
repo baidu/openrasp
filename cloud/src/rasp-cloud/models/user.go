@@ -15,17 +15,17 @@
 package models
 
 import (
-	"rasp-cloud/tools"
-	"regexp"
-	"rasp-cloud/mongo"
-	"gopkg.in/mgo.v2"
-	"golang.org/x/crypto/bcrypt"
-	"gopkg.in/mgo.v2/bson"
-	"github.com/pkg/errors"
-	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 	"os"
 	"rasp-cloud/environment"
+	"rasp-cloud/mongo"
+	"rasp-cloud/tools"
+	"regexp"
 )
 
 const (
@@ -120,7 +120,7 @@ func generateHashedPassword(password string) (string, error) {
 	return string(hash), nil
 }
 
-func ComparePassword(hashedPassword string, password string) (error) {
+func ComparePassword(hashedPassword string, password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	if err != nil && err != bcrypt.ErrMismatchedHashAndPassword {
 		logs.Error("CompareHashAndPassword function error: " + err.Error())
@@ -132,8 +132,7 @@ func validPassword(password string) error {
 	hasNum := regexp.MustCompile(".*[0-9].*").Match([]byte(password))
 	hasLetter := regexp.MustCompile(".*([a-z]|[A-Z]).*").Match([]byte(password))
 	if len(password) < 8 || len(password) > 50 || !hasNum || !hasLetter {
-		return errors.New("the length of password must be between [8,50]," +
-			"password must contain numbers and letters")
+		return errors.New("password must contain both letters and numbers, and the length of password must be between [8, 50]")
 	}
 	return nil
 }
@@ -175,7 +174,7 @@ func UpdatePassword(oldPwd string, newPwd string) error {
 	}
 	err = validPassword(newPwd)
 	if err != nil {
-		return errors.New("new password format error: " + err.Error())
+		return errors.New("Password does not meet complexity requirements: " + err.Error())
 	}
 	pwd, err := generateHashedPassword(newPwd)
 	if err != nil {

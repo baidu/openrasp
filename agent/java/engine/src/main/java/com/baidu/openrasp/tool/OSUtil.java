@@ -39,7 +39,11 @@ public class OSUtil {
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
-        return inetAddress.getHostName();
+        if (inetAddress != null) {
+            return inetAddress.getHostName();
+        } else {
+            return "im-not-resolvable";
+        }
     }
 
     public static LinkedList<NicModel> getIpAddress() {
@@ -99,7 +103,7 @@ public class OSUtil {
         return bigInt.toString(16);
     }
 
-    private static LinkedList<String> getMacAddress() throws Exception{
+    private static LinkedList<String> getMacAddress() throws Exception {
         LinkedList<String> macs = new LinkedList<String>();
         Enumeration<NetworkInterface> el = NetworkInterface.getNetworkInterfaces();
         while (el.hasMoreElements()) {

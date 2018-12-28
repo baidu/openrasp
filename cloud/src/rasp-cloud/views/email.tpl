@@ -1,12 +1,12 @@
 <table border="1" cellspacing="0" cellpadding="5">
     <thead>
         <tr>
-            <th>ID</th>
             <th>报警时间</th>
             <th>报警类型</th>
             <th>攻击来源</th>
             <th>攻击目标</th>
             <th>拦截状态</th>
+            <th>报警详情</th>
         </tr>
     </thead>
     <tbody>
@@ -24,4 +24,4 @@
 </table>
 <br>
 
-若要查看更多 {{.AppName}} 应用的报警，请点击这里 <a href="{{.DetailedLink}}">{{.DetailedLink}}</a>
+若要查看更多 "<b>{{.AppName}}</b>" 的报警，请点击这里 <a href="{{.DetailedLink}}">{{.DetailedLink}}</a>

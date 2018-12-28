@@ -25,11 +25,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"rasp-cloud/environment"
+	"strings"
 )
 
 var (
 	ElasticClient *elastic.Client
 	ttlIndexes    = make(chan map[string]time.Duration, 1)
+	minEsVersion  = "5.6.0"
 )
 
 func init() {
@@ -40,7 +42,7 @@ func init() {
 			tools.Panic(tools.ErrCodeConfigInitFailed,
 				"the 'EsAddr' config item in app.conf can not be empty", nil)
 		}
-		client, err := elastic.NewClient(elastic.SetURL(beego.AppConfig.String("EsAddr")),
+		client, err := elastic.NewClient(elastic.SetURL(esAddr),
 			elastic.SetBasicAuth(beego.AppConfig.DefaultString("EsUser", ""),
 				beego.AppConfig.DefaultString("EsPwd", "")))
 		if err != nil {
@@ -48,7 +50,17 @@ func init() {
 		}
 		go startTTL(24 * time.Hour)
 
+		version, err := client.ElasticsearchVersion(esAddr)
+		if err != nil {
+			tools.Panic(tools.ErrCodeESInitFailed, "failed to get es version", err)
+		}
+		beego.Info("ES version: " + version)
+		if strings.Compare(version, minEsVersion) < 0 {
+			tools.Panic(tools.ErrCodeESInitFailed, "unable to support the ElasticSearch with a version lower than "+
+				minEsVersion+ ","+ " the current version is "+ version, nil)
+		}
 		ElasticClient = client
+
 	}
 }
 

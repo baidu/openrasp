@@ -1,4 +1,5 @@
-const version = '2018-1224-1930'
+const plugin_version = '2018-1227-1200'
+const plugin_name    = 'official'
 
 /*
  * Copyright 2017-2018 Baidu Inc.
@@ -25,7 +26,7 @@ const version = '2018-1224-1930'
 // https://rasp.baidu.com/doc/usage/cve.html
 
 'use strict'
-var plugin  = new RASP('offical')
+var plugin  = new RASP(plugin_name)
 
 // 检测逻辑开关
 //
@@ -310,7 +311,7 @@ var algorithmConfig = {
     command_userinput: {
         name:       '算法2 - 用户输入匹配算法，包括命令注入检测',
         action:     'block',
-        min_length: 8
+        min_length: 2
     },
     // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
     command_other: {
@@ -718,7 +719,8 @@ if (RASP.get_jsengine() !== 'v8') {
             var reason = false
 
             values.some(function (value) {
-                if (value.length <= min_length) {
+                // 最短长度限制
+                if (value.length < min_length) {
                     return false
                 }
 
@@ -896,15 +898,25 @@ if (RASP.get_jsengine() !== 'v8') {
         // 算法1 - 当参数来自用户输入，且为内网IP，判定为SSRF攻击
         if (algorithmConfig.ssrf_userinput.action != 'ignore')
         {
-            if (ip.length &&
-                is_from_userinput(context.parameter, url) &&
-                /^(127|192|172|10)\./.test(ip[0]))
+            if (is_from_userinput(context.parameter, url))
             {
-                return {
-                    action:     algorithmConfig.ssrf_userinput.action,
-                    message:    _("SSRF - Requesting intranet address: %1%", [ ip[0] ]),
-                    confidence: 100,
-                    algorithm:  'ssrf_userinput'
+                if (ip.length && /^(127|192|172|10)\./.test(ip[0]))
+                {
+                    return {
+                        action:     algorithmConfig.ssrf_userinput.action,
+                        message:    _("SSRF - Requesting intranet address: %1%", [ ip[0] ]),
+                        confidence: 100,
+                        algorithm:  'ssrf_userinput'
+                    }
+                }
+                else if (hostname == '[::]') 
+                {
+                    return {
+                        action:     algorithmConfig.ssrf_userinput.action,
+                        message:    _("SSRF - Requesting intranet address: %1%", [ hostname ]),
+                        confidence: 100,
+                        algorithm:  'ssrf_userinput'
+                    }
                 }
             }
         }
@@ -1367,7 +1379,7 @@ plugin.register('command', function (params, context) {
                 'com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze':     _("Reflected command execution - Using fastjson library"),
                 'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': _("Reflected command execution - Using SpEL expressions"),
                 'freemarker.template.utility.Execute.exec':                                     _("Reflected command execution - Using FreeMarker template"),
-                'org.jboss.el.MethodExpressionImpl.invoke':                                     _("Reflected command execution - Using JBoss EL method"),
+                'org.jboss.el.util.ReflectionUtil.invokeMethod':                                _("Reflected command execution - Using JBoss EL method"),
             }
 
             for (var i = 2; i < params.stack.length; i ++) {
@@ -1641,5 +1653,5 @@ if (algorithmConfig.deserialization_transformer.action != 'ignore') {
     })
 }
 
-plugin.log('OpenRASP official plugin: Initialized, version', version)
+plugin.log('OpenRASP official plugin: Initialized, version', plugin_version)
 

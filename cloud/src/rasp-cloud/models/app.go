@@ -39,6 +39,8 @@ import (
 	"io/ioutil"
 	"rasp-cloud/es"
 	"rasp-cloud/environment"
+	"crypto/tls"
+	"net"
 )
 
 type App struct {
@@ -47,6 +49,7 @@ type App struct {
 	Secret           string                 `json:"secret"  bson:"secret"`
 	Language         string                 `json:"language"  bson:"language"`
 	Description      string                 `json:"description"  bson:"description"`
+	CreateTime       int64                  `json:"create_time"  bson:"create_time"`
 	ConfigTime       int64                  `json:"config_time"  bson:"config_time"`
 	GeneralConfig    map[string]interface{} `json:"general_config"  bson:"general_config"`
 	WhitelistConfig  []WhitelistConfigItem  `json:"whitelist_config"  bson:"whitelist_config"`
@@ -68,6 +71,7 @@ type EmailAlarmConf struct {
 	Password   string   `json:"password" bson:"password"`
 	Subject    string   `json:"subject" bson:"subject"`
 	RecvAddr   []string `json:"recv_addr" bson:"recv_addr"`
+	TlsEnable  bool     `json:"tls_enable" bson:"tls_enable"`
 }
 
 type DingAlarmConf struct {
@@ -236,6 +240,7 @@ func handleRaspExpiredAlarm() {
 func AddApp(app *App) (result *App, err error) {
 	app.Id = generateAppId(app)
 	app.Secret = generateSecret(app)
+	app.CreateTime = time.Now().Unix()
 	if mongo.FindOne(appCollectionName, bson.M{"name": app.Name}, &App{}) != mgo.ErrNotFound {
 		return nil, errors.New("duplicate app name")
 	}
@@ -431,37 +436,39 @@ func PushAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isT
 func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isTest bool) error {
 	var emailConf = app.EmailAlarmConf
 	if len(emailConf.RecvAddr) > 0 && emailConf.ServerAddr != "" {
-		var subject string
-		var msg string
-		var body string
-		var emailAddr = &mail.Address{}
-		var head = make(map[string]string)
+		var (
+			subject   string
+			msg       string
+			emailAddr = &mail.Address{Address: emailConf.UserName}
+		)
 		hostName, err := os.Hostname()
-		emailAddr.Address = emailConf.UserName
 		if err == nil {
 			emailAddr.Name = hostName
 		} else {
 			emailAddr.Name = "OpenRASP"
 		}
-		head["From"] = emailAddr.String()
-		head["To"] = strings.Join(emailConf.RecvAddr, ",")
-		head["Content-Type"] = "text/html; charset=UTF-8"
-
-		if isTest {
-			subject = "OpenRASP ALARM TEST"
-			alarms = TestAlarmData
-			total = int64(len(TestAlarmData))
-		} else if emailConf.Subject == "" {
-			subject = "OpenRASP ALARM"
+		if emailConf.Subject == "" {
+			subject = "OpenRASP alarm"
 		} else {
 			subject = emailConf.Subject
+		}
+		if isTest {
+			subject = "【测试邮件】" + subject
+			alarms = TestAlarmData
+			total = int64(len(TestAlarmData))
+		}
+		head := map[string]string{
+			"from":         emailAddr.String(),
+			"To":           strings.Join(emailConf.RecvAddr, ","),
+			"Content-Type": "text/html; charset=UTF-8",
+			"Subject":      subject,
 		}
 		t, err := template.ParseFiles("views/email.tpl")
 		if err != nil {
 			beego.Error("failed to render email template: " + err.Error())
 			return err
 		}
-		var alarmData = new(bytes.Buffer)
+		alarmData := new(bytes.Buffer)
 		err = t.Execute(alarmData, &emailTemplateParam{
 			Total:        total - int64(len(alarms)),
 			Alarms:       alarms,
@@ -472,21 +479,25 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 			beego.Error("failed to execute email template: " + err.Error())
 			return err
 		}
-		body = alarmData.String()
-
-		head["Subject"] = subject
 		for k, v := range head {
 			msg += fmt.Sprintf("%s: %s\r\n", k, v)
 		}
-		msg += "\r\n" + body
-		auth := smtp.PlainAuth("", emailConf.UserName, emailConf.Password, emailConf.ServerAddr)
+		msg += "\r\n" + alarmData.String()
+		host, _, err := net.SplitHostPort(emailConf.ServerAddr)
+		if err != nil {
+			errMsg := "failed to get email serve host: " + err.Error()
+			beego.Error(errMsg)
+			return errors.New(errMsg)
+		}
+		auth := smtp.PlainAuth("", emailConf.UserName, emailConf.Password, host)
 		if emailConf.Password == "" {
 			auth = nil
 		}
-		err = smtp.SendMail(emailConf.ServerAddr, auth, emailConf.UserName, emailConf.RecvAddr, []byte(msg))
-		if err != nil {
-			beego.Error("failed to push email alarms: " + err.Error())
-			return err
+
+		if emailConf.TlsEnable {
+			return sendEmailWithTls(emailConf, auth, msg)
+		} else {
+			return sendNormalEmail(emailConf, auth, msg)
 		}
 	} else {
 		beego.Error(
@@ -495,6 +506,81 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 	}
 	beego.Debug("succeed in pushing email alarm for app: " + app.Name)
 	return nil
+}
+
+func sendNormalEmail(emailConf EmailAlarmConf, auth smtp.Auth, msg string) (err error) {
+	err = smtp.SendMail(emailConf.ServerAddr, auth, emailConf.UserName, emailConf.RecvAddr, []byte(msg))
+	if err != nil {
+		beego.Error("failed to push email alarms: " + err.Error())
+		return
+	}
+	return
+}
+
+func sendEmailWithTls(emailConf EmailAlarmConf, auth smtp.Auth, msg string) error {
+	client, err := smtpTlsDial(emailConf.ServerAddr)
+	defer client.Close()
+	if err != nil {
+		errMsg := "failed to start tls: " + err.Error()
+		beego.Error(errMsg)
+		return errors.New(errMsg)
+	}
+	if auth != nil {
+		if ok, _ := client.Extension("AUTH"); ok {
+			if err = client.Auth(auth); err != nil {
+				errMsg := "failed to auth with tls: " + err.Error()
+				beego.Error(errMsg)
+				return errors.New(errMsg)
+			}
+		}
+	}
+	if err = client.Mail(emailConf.UserName); err != nil {
+		errMsg := "failed to mail from 'emailConf.UserName': " + err.Error()
+		beego.Error(errMsg)
+		return errors.New(errMsg)
+	}
+
+	for _, addr := range emailConf.RecvAddr {
+		if err = client.Rcpt(addr); err != nil {
+			errMsg := "failed to push email to " + addr + " with tls: " + err.Error()
+			beego.Error(errMsg)
+			return errors.New(errMsg)
+		}
+	}
+
+	writer, err := client.Data()
+	defer writer.Close()
+	if err != nil {
+		errMsg := "failed to get writer for email with tls: " + err.Error()
+		beego.Error(errMsg)
+		return errors.New(errMsg)
+	}
+
+	_, err = writer.Write([]byte(msg))
+	if err != nil {
+		errMsg := "failed to write msg with tls: " + err.Error()
+		beego.Error(errMsg)
+		return errors.New(errMsg)
+	}
+
+	client.Quit()
+	return nil
+}
+
+func smtpTlsDial(addr string) (*smtp.Client, error) {
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		errMsg := "failed to get email serve host: " + err.Error()
+		beego.Error(errMsg)
+		return nil, errors.New(errMsg)
+	}
+	conn, err := tls.Dial("tcp", addr, nil)
+	if err != nil {
+		errMsg := "smtp dialing error: " + err.Error()
+		beego.Error(errMsg)
+		return nil, errors.New(errMsg)
+	}
+	return smtp.NewClient(conn, host)
 }
 
 func PushHttpAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isTest bool) error {

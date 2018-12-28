@@ -19,7 +19,7 @@
             <div class="dropdown-menu dropdown-menu-left dropdown-menu-arrow">
               <a v-for="row in app_list" :key="row.id" class="dropdown-item" href="javascript:" @click.prevent="setCurrentApp(row)">
                 <i class="dropdown-icon fe fe-lock" />
-                {{ row.name }} ( {{ row.lang }} {{ row.id }} )
+                {{ row.name }}
               </a>
               <div class="dropdown-divider" />
               <router-link class="dropdown-item" :to="{name: 'settings', params: {setting_tab: 'app'}}">

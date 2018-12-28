@@ -1,9 +1,12 @@
+const plugin_version = '2018-1000-1000'
+const plugin_name    = '001-xss-demo'
+
 // Java 版本需要设置 request.param_encoding 之后才能使用
 // PHP  版本不支持 request hook 点，所以没有这个检测
 //  
 //  https://rasp.baidu.com/doc/setup/others.html
 
-var plugin = new RASP('offical')
+var plugin = new RASP(plugin_name)
 var clean  = {
     action: 'ignore',
     message: '无风险',

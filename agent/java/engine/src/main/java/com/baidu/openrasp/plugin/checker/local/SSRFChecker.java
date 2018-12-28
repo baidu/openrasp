@@ -54,19 +54,33 @@ public class SSRFChecker extends ConfigurableChecker {
         String url = (String) checkParameter.getParam("url");
         List ips = (List) checkParameter.getParam("ip");
 
-        if (!isModuleIgnore(config, CONFIG_KEY_SSRF_USER_INPUT)) {
-            if (ips.size() > 0) {
-                for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
-                    String[] v = entry.getValue();
-                    String value = v[0];
-                    String ip = (String) ips.get(0);
-                    if (url.equals(value) && Pattern.matches("^(127|192|172|10)\\..*", ip)) {
-                        result.add(AttackInfo.createLocalAttackInfo(checkParameter,
+        if (!isModuleIgnore(config, CONFIG_KEY_SSRF_USER_INPUT)) {             
+            for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+                String[] v = entry.getValue();
+                String value = v[0];
+
+                if (url.equals(value)) {
+
+                    // 拦截内网地址
+                    if (ips.size() > 0) 
+                    {
+                        String ip = (String) ips.get(0);
+                        if (Pattern.matches("^(127|192|172|10)\\..*", ip)) {
+                            result.add(AttackInfo.createLocalAttackInfo(checkParameter,
                                 getActionElement(config, CONFIG_KEY_SSRF_USER_INPUT),
                                 "SSRF - Requesting intranet address: " + ip, "ssrf_userinput"));
+                        }
+                    } 
+                    
+                    // 拦截 localhost 另类写法
+                    if ("[::]".equals(hostName)) 
+                    {
+                        result.add(AttackInfo.createLocalAttackInfo(checkParameter,
+                            getActionElement(config, CONFIG_KEY_SSRF_USER_INPUT),
+                            "SSRF - Requesting intranet address: " + hostName, "ssrf_userinput"));
                     }
                 }
-            }
+            }            
         }
 
         if (result.isEmpty() && !isModuleIgnore(config, CONFIG_KEY_SSRF_COMMON)) {
@@ -82,7 +96,7 @@ public class SSRFChecker extends ConfigurableChecker {
             }
             if (isFound || hostName.equals("requestb.in")) {
                 result.add(AttackInfo.createLocalAttackInfo(checkParameter, getActionElement(config,
-                        CONFIG_KEY_SSRF_COMMON), "SSRF - Requesting known DNSLOG address", "ssrf_common"));
+                        CONFIG_KEY_SSRF_COMMON), "SSRF - Requesting known DNSLOG address: " + hostName, "ssrf_common"));
             }
         }
 
