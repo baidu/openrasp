@@ -115,7 +115,7 @@
         <div class="form-group">
           <label class="form-label">
             推送用户列表 - 逗号或者分号分隔
-            <a href="javascript:">
+            <a target="_blank" href="https://rasp.baidu.com/doc/setup/panel.html#dingding-alarm">
               [帮助文档]
             </a>
           </label>
