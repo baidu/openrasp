@@ -53,6 +53,16 @@
             </span>
           </label>
         </div>
+
+        <div class="form-group">
+          <label class="custom-switch">
+            <input v-model="data.email_alarm_conf.tls_enable" type="checkbox" checked="data.email_alarm_conf.enable" class="custom-switch-input">
+            <span class="custom-switch-indicator" />
+            <span class="custom-switch-description">
+              强制开启 TLS <a target="_blank" href="https://rasp.baidu.com/doc/setup/panel.html#email-alarm">[帮助文档]</a>
+            </span>
+          </label>
+        </div>
       </div>
       <div class="card-footer">
         <button type="submit" class="btn btn-primary" @click="saveSettings('email')">
