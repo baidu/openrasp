@@ -1638,5 +1638,5 @@ if (algorithmConfig.deserialization_transformer.action != 'ignore') {
     })
 }
 
-plugin.log('OpenRASP official plugin: Initialized, version', version)
+plugin.log('OpenRASP official plugin: Initialized, version', plugin_version)
 

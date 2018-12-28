@@ -24,4 +24,4 @@
 </table>
 <br>
 
-若要查看更多 <b>{{.AppName}}</b> 应用的报警，请点击这里 <a href="{{.DetailedLink}}">{{.DetailedLink}}</a>
+若要查看更多 "<b>{{.AppName}}</b>" 的报警，请点击这里 <a href="{{.DetailedLink}}">{{.DetailedLink}}</a>
