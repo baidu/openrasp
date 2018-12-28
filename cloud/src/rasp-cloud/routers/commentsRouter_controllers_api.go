@@ -213,7 +213,7 @@ func init() {
         beego.ControllerComments{
             Method: "Download",
             Router: `/download`,
-            AllowHTTPMethods: []string{"post"},
+            AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})

@@ -24,11 +24,13 @@ import (
 	"math/rand"
 	"fmt"
 	"crypto/sha1"
+	"strings"
 )
 
 var (
-	session *mgo.Session
-	DbName  = beego.AppConfig.DefaultString("MongoDBName", "openrasp")
+	minMongoVersion = "3.6.0"
+	session         *mgo.Session
+	DbName          = beego.AppConfig.DefaultString("MongoDBName", "openrasp")
 )
 
 func init() {
@@ -56,7 +58,15 @@ func init() {
 	}
 	beego.AppConfig.DefaultString("MongoDBPwd", "")
 	session, err = mgo.DialWithInfo(dialInfo)
-
+	info, err := session.BuildInfo()
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get mongodb version", err)
+	}
+	beego.Info("MongoDB version: " + info.Version)
+	if strings.Compare(info.Version, minMongoVersion) < 0 {
+		tools.Panic(tools.ErrCodeMongoInitFailed, "unable to support the MongoDB with a version lower than "+
+			minMongoVersion+ ","+ " the current version is "+ info.Version, nil)
+	}
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "init mongodb failed", err)
 	}

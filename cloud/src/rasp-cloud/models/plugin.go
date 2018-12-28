@@ -263,6 +263,7 @@ func handleAlgorithmConfig(plugin *Plugin, config map[string]interface{}) (appId
 	}
 	algorithmContent := regexp.MustCompile(regex).ReplaceAllString(plugin.Content, newContent)
 	newMd5 := fmt.Sprintf("%x", md5.Sum([]byte(algorithmContent)))
+	fmt.Println(algorithmContent)
 	return plugin.AppId, mongo.UpdateId(pluginCollectionName, plugin.Id, bson.M{"content": algorithmContent,
 		"algorithm_config": config, "md5": newMd5})
 }
