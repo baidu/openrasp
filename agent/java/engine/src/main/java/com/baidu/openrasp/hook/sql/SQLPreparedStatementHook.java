@@ -138,6 +138,14 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
             } catch (CannotCompileException e) {
                 insertBefore(ctClass, "executeBatchInternal", null, checkSqlSrc);
             }
+            addCatch(ctClass, "execute", null);
+            addCatch(ctClass, "executeUpdate", null);
+            addCatch(ctClass, "executeQuery", null);
+            try {
+                addCatch(ctClass, "executeBatch", null);
+            } catch (CannotCompileException e) {
+                addCatch(ctClass, "executeBatchInternal", null);
+            }
         } else if (SQL_TYPE_DB2.equals(this.type)) {
             checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
                     "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);

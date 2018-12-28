@@ -23,15 +23,11 @@ import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.Reflection;
 
-import com.google.gson.Gson;
-import javassist.CannotCompileException;
-import javassist.CtClass;
-import javassist.NotFoundException;
+import javassist.*;
 import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.SQLException;
 
 /**
  * Created by zhuming01 on 7/18/17.
@@ -138,6 +134,10 @@ public class SQLStatementHook extends AbstractSqlHook {
                 "(Ljava/lang/String;)Ljava/sql/ResultSet;", checkSqlSrc);
         insertBefore(ctClass, "addBatch",
                 "(Ljava/lang/String;)V", checkSqlSrc);
+        addCatch(ctClass, "execute", null);
+        addCatch(ctClass, "executeUpdate", null);
+        addCatch(ctClass, "executeQuery", null);
+        addCatch(ctClass, "addBatch", null);
     }
 
     public static String getSqlConnectionId(String type, Object statement) {
@@ -178,4 +178,20 @@ public class SQLStatementHook extends AbstractSqlHook {
         }
     }
 
+    /**
+     * SQL执行异常检测
+     *
+     * @param server 数据库类型
+     * @param e sql执行抛出的异常
+     * @param stmt sql语句
+     */
+    public static void checkSQLErrorCode(String server, SQLException e, String stmt) {
+        JSContext cx = JSContextFactory.enterAndInitContext();
+        Scriptable params = cx.newObject(cx.getScope());
+        params.put("server", params, server);
+        params.put("query", params, stmt);
+        params.put("errorCode", params, String.valueOf(e.getErrorCode()));
+        params.put("message", params, e.getMessage());
+        HookHandler.doCheck(CheckParameter.Type.SQL, params);
+    }
 }

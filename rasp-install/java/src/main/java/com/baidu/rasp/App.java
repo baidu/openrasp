@@ -160,7 +160,7 @@ public class App {
         System.out.println(helpMsg);
     }
 
-    public static void main(String[] args) throws IOException, URISyntaxException {
+    public static void main(String[] args){
         showBanner();
         try {
             argsParser(args);

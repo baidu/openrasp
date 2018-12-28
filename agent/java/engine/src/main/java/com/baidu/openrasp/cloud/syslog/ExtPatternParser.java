@@ -28,6 +28,7 @@ public class ExtPatternParser extends PatternParser {
                 break;
             default:
                 super.finalizeConverter(c);
+                break;
         }
     }
 

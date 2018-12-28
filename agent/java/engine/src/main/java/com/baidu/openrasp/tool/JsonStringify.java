@@ -61,6 +61,7 @@ public class JsonStringify {
                     break;
                 default:
                     tmpString.append(c);
+                    break;
             }
         }
         return tmpString.toString();

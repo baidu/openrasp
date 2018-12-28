@@ -22,22 +22,22 @@ public enum ErrorType {
     STATISTICSREPORT_ERROR(3000,"Cloud Control Statistics,Report Failed"),
     HTTPAPPENDER_ERROR(3001,"Cloud Control Log Upload Failed");
     public int code;
-    public String name;
-    ErrorType(int code,String name) {
+    public String message;
+    ErrorType(int code,String message) {
         this.code = code;
-        this.name = name;
+        this.message = message;
     }
 
     public int getCode(){
         return code;
     }
 
-    public String getName(){
-        return name;
+    public String getMessage(){
+        return message;
     }
 
     @Override
     public String toString() {
-        return code+":"+name;
+        return code+":"+message;
     }
 }

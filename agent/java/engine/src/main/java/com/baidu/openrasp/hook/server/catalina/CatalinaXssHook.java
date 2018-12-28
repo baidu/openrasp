@@ -84,14 +84,26 @@ public class CatalinaXssHook extends ServerXssHook {
                 }
 
             } else if ("jboss".equalsIgnoreCase(serverName)) {
-                Object byteChunk = Reflection.getField(object, "bb");
-                byte[] buffer = (byte[]) Reflection.getField(byteChunk, "buff");
-                int start = (Integer) Reflection.getField(byteChunk, "start");
-                int end = (Integer) Reflection.getField(byteChunk, "end");
-                if (end > start) {
-                    byte[] temp = new byte[end - start + 1];
-                    System.arraycopy(buffer, start, temp, 0, end - start);
-                    content = new String(temp, "utf-8");
+                if (serverVersion.startsWith("4")) {
+                    Object byteChunk = Reflection.getField(object, "bb");
+                    byte[] buffer = (byte[]) Reflection.getField(byteChunk, "buff");
+                    int start = (Integer) Reflection.getField(byteChunk, "start");
+                    int end = (Integer) Reflection.getField(byteChunk, "end");
+                    if (end > start) {
+                        byte[] temp = new byte[end - start + 1];
+                        System.arraycopy(buffer, start, temp, 0, end - start);
+                        content = new String(temp, "utf-8");
+                    }
+                } else if (serverVersion.startsWith("5") || serverVersion.startsWith("6")) {
+                    Object charChunk = Reflection.getField(object, "cb");
+                    char[] buffer = (char[]) Reflection.getField(charChunk, "buff");
+                    int start = (Integer) Reflection.getField(charChunk, "start");
+                    int end = (Integer) Reflection.getField(charChunk, "end");
+                    if (end > start) {
+                        char[] temp = new char[end - start + 1];
+                        System.arraycopy(buffer, start, temp, 0, end - start);
+                        content = new String(temp);
+                    }
                 }
             }
             if (content != null && HookHandler.requestCache.get() != null) {
@@ -102,8 +114,6 @@ public class CatalinaXssHook extends ServerXssHook {
         } catch (Exception e) {
             HookHandler.LOGGER.warn(ApplicationModel.getServerName() + " xss detectde failed: ", e);
         }
-
-
     }
 
 }

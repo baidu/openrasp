@@ -202,7 +202,7 @@ public abstract class AbstractClassHook {
      * @return 所有符合要求的方法实例
      * @see javassist.bytecode.Descriptor
      */
-    private LinkedList<CtBehavior> getMethod(CtClass ctClass, String methodName, String desc) {
+    protected LinkedList<CtBehavior> getMethod(CtClass ctClass, String methodName, String desc) {
         if ("<init>".equals(methodName)) {
             return getConstructor(ctClass, desc);
         }

@@ -109,14 +109,14 @@ public class HookHandler {
     /**
      * 用于关闭xss的hook点
      */
-    public static void disableXssHook() {
+    public static void disableBodyXssHook() {
         enableXssHook.set(false);
     }
 
     /**
      * 用于开启xss的hook点
      */
-    public static void enableXssHook() {
+    public static void enableBodyXssHook() {
         enableXssHook.set(true);
     }
 

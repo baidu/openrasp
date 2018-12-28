@@ -17,6 +17,9 @@
 package com.baidu.openrasp.hook.sql;
 
 import com.baidu.openrasp.hook.AbstractClassHook;
+import javassist.*;
+
+import java.util.LinkedList;
 
 /**
  * Created by tyy on 17-11-6.
@@ -45,5 +48,24 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
 
     public void setExceptions(String[] exceptions) {
         this.exceptions = exceptions;
+    }
+
+    /**
+     *
+     * 捕捉hook method抛出的异常
+     */
+    public void addCatch(CtClass ctClass, String methodName, String desc) throws NotFoundException, CannotCompileException {
+        LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc);
+        if (methods != null && methods.size() > 0) {
+            for (CtBehavior method : methods) {
+                if (method != null) {
+                    //目前只支持对mysql的执行异常检测
+                    if (type.equals("mysql")) {
+                        String errorSrc = "com.baidu.openrasp.hook.sql.SQLStatementHook.checkSQLErrorCode(" + "\"" + type + "\"" + ",$e,$1);";
+                        method.addCatch("{" + errorSrc + " throw $e;}", ClassPool.getDefault().get("java.sql.SQLException"));
+                    }
+                }
+            }
+        }
     }
 }
