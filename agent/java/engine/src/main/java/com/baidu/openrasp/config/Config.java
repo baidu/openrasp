@@ -79,7 +79,7 @@ public class Config extends FileScanListener {
         SYSLOG_FACILITY("syslog.facility", "1"),
         SYSLOG_RECONNECT_INTERVAL("syslog.reconnect_interval", "300000"),
         LOG_MAXBURST("log.maxburst", "100"),
-        HEARTBEAT_INTERVAL("cloud.heartbeat_interval", "180"),
+        HEARTBEAT_INTERVAL("cloud.heartbeat_interval", "30"),
         HOOK_WHITE_ALL("hook.white.ALL", "true");
 
 
@@ -249,9 +249,7 @@ public class Config extends FileScanListener {
                 }
             }
         }
-        if (!temp.isEmpty()) {
-            HookWhiteModel.init(temp);
-        }
+        HookWhiteModel.init(temp);
     }
 
     private void reloadConfig(File file) {
