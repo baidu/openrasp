@@ -202,6 +202,8 @@ public class Config extends FileScanListener {
                 Yaml yaml = new Yaml();
                 properties = yaml.loadAs(new FileInputStream(file), Map.class);
             }
+        } catch (Exception e) {
+            LOGGER.warn("rasp.yaml parsing failed： ", e);
         } finally {
             TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
             // 出现解析问题使用默认值
