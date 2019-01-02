@@ -18,11 +18,12 @@ package com.baidu.openrasp.tool;
 
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.model.NicModel;
+import org.apache.commons.io.IOUtils;
 
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.*;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedList;
@@ -37,12 +38,12 @@ public class OSUtil {
                 inetAddress = InetAddress.getLocalHost();
             }
         } catch (UnknownHostException e) {
-            e.printStackTrace();
+            inetAddress = null;
         }
         if (inetAddress != null) {
             return inetAddress.getHostName();
         } else {
-            return "im-not-resolvable";
+            return execReadToString();
         }
     }
 
@@ -158,6 +159,16 @@ public class OSUtil {
             }
         }
         return port;
+    }
+
+
+    private static String execReadToString() {
+        try {
+            InputStream in = Runtime.getRuntime().exec("hostname").getInputStream();
+            return IOUtils.toString(in);
+        } catch (Exception e) {
+            return "im-not-resolvable";
+        }
     }
 
 }
