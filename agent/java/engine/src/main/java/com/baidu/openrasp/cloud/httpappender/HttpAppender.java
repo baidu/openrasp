@@ -130,7 +130,7 @@ public class HttpAppender extends AppenderSkeleton {
         } else if ("plugin".equals(logger)) {
             url = CloudRequestUrl.CLOUD_PLUGIN_HTTP_APPENDER_URL;
         } else {
-            url = CloudRequestUrl.CLOUD_Exception_HTTP_APPENDER_URL;
+            url = CloudRequestUrl.CLOUD_EXCEPTION_HTTP_APPENDER_URL;
         }
         return url;
     }
@@ -141,10 +141,9 @@ public class HttpAppender extends AppenderSkeleton {
     private String generateJson(LoggingEvent loggingEvent) {
         String level = loggingEvent.getLevel().toString();
         String message = loggingEvent.getRenderedMessage();
-        int errorCode = 1234;
         Throwable t = loggingEvent.getThrowableInformation().getThrowable();
         StackTraceElement[] traceElements = t != null ? t.getStackTrace() : new StackTraceElement[]{};
-        ExceptInfo info = new ExceptInfo(level, message, errorCode, Thread.currentThread().getId(), traceElements);
+        ExceptInfo info = new ExceptInfo(level, message, Thread.currentThread().getId(), traceElements);
         return new Gson().toJson(info.getInfo());
     }
 

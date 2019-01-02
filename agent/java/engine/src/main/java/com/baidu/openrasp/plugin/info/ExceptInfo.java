@@ -34,21 +34,19 @@ public class ExceptInfo {
     private String appId;
     private String level;
     private String message;
-    private Integer errorCode;
     private Long createTime;
     private Long pid;
     private String stackTrace;
 
-    public ExceptInfo(String level, String message, Integer errorCode, Long pid, StackTraceElement[] trace) {
-        this(Config.getConfig().getCloudAppId(), level, message, errorCode, System.currentTimeMillis(), pid, trace);
+    public ExceptInfo(String level, String message, Long pid, StackTraceElement[] trace) {
+        this(Config.getConfig().getCloudAppId(), level, message, System.currentTimeMillis(), pid, trace);
     }
 
-    public ExceptInfo(String appId, String level, String message, Integer errorCode, Long createTime, Long pid
+    public ExceptInfo(String appId, String level, String message, Long createTime, Long pid
             , StackTraceElement[] trace) {
         this.appId = appId;
         this.level = level;
         this.message = message;
-        this.errorCode = errorCode;
         this.createTime = createTime;
         this.pid = pid;
         this.stackTrace = stringify(trace);
@@ -63,7 +61,6 @@ public class ExceptInfo {
         info.put("rasp_id", CloudCacheModel.getInstance().getRaspId());
         info.put("app_id", this.appId);
         info.put("exception_level", this.level);
-        info.put("error_code", this.errorCode);
         info.put("message", this.message);
         info.put("stack_trace", this.stackTrace);
         return info;
@@ -91,14 +88,6 @@ public class ExceptInfo {
 
     public void setMessage(String message) {
         this.message = message;
-    }
-
-    public Integer getErrorCode() {
-        return errorCode;
-    }
-
-    public void setErrorCode(Integer errorCode) {
-        this.errorCode = errorCode;
     }
 
     public Long getCreateTime() {

@@ -203,6 +203,7 @@ public class Config extends FileScanListener {
                 properties = yaml.loadAs(new FileInputStream(file), Map.class);
             }
         } finally {
+            TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
             // 出现解析问题使用默认值
             for (Config.Item item : Config.Item.values()) {
                 if (item.key.equals(HOOKS_WHITE)) {
@@ -210,13 +211,11 @@ public class Config extends FileScanListener {
                         Object object = properties.get(item.key);
                         if (object instanceof Map) {
                             Map<String, Object> hooks = (Map<String, Object>) object;
-                            TreeMap<String, Integer> temp = parseHookWhite(hooks);
-                            if (!temp.isEmpty()) {
-                                HookWhiteModel.init(temp);
-                            }
-                        } else {
-                            HookWhiteModel.hookWhiteinfo = null;
+                            temp.putAll(parseHookWhite(hooks));
                         }
+                    }
+                    if (!temp.isEmpty()) {
+                        HookWhiteModel.init(temp);
                     }
                     continue;
                 } else if (item.key.equals(RESPONSE_HEADERS)) {

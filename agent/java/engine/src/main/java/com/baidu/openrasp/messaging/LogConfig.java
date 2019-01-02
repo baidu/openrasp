@@ -30,7 +30,9 @@ import java.net.URL;
 public class LogConfig {
 
     /**
+     * 初始化log4j的logger
      * 创建rasp.log、alarm.log、policy_alarm.log和plugin.log 的appender
+     * 为appender增加限速
      */
     public static void ConfigFileAppender() throws Exception{
         DynamicConfigAppender.initLog4jLogger();

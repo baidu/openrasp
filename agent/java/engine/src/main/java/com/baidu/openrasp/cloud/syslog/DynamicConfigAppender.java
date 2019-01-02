@@ -53,7 +53,6 @@ public class DynamicConfigAppender {
 
     public static void createHttpAppender(String loggerName, String appenderName) {
         Logger logger = Logger.getLogger(loggerName);
-        System.out.println(loggerName+"====="+logger);
         if (logger.getAppender(appenderName) != null) {
             logger.removeAppender(appenderName);
         }
@@ -63,7 +62,7 @@ public class DynamicConfigAppender {
         logger.addAppender(appender);
     }
 
-    public static void createRootHttpAppender(){
+    public static void createRootHttpAppender() {
         Logger logger = Logger.getRootLogger();
         HttpAppender appender = new HttpAppender();
         appender.setName(AppenderMappedLogger.HTTP_ROOT.getAppender());
@@ -75,7 +74,6 @@ public class DynamicConfigAppender {
      * 初始化log4j的logger，并添加fileAppender
      */
     public static void initLog4jLogger() throws Exception {
-//        LogLog.setInternalDebugging(true);
         for (AppenderMappedLogger type : AppenderMappedLogger.values()) {
             if (type.ordinal() <= 3) {
                 if ("root".equals(type.getLogger())) {
@@ -89,6 +87,8 @@ public class DynamicConfigAppender {
                 }
             }
         }
+        //初始化时是否开启log4j的debug的功能
+        enableDebug();
     }
 
     /**
@@ -161,5 +161,18 @@ public class DynamicConfigAppender {
         filter.setRefillAmount(logMaxBurst);
         filter.setRefillInterval(60);
         return filter;
+    }
+
+    /**
+     * log4j debug开关
+     */
+    public static void enableDebug() {
+        if (Config.getConfig().isDebugEnabled()) {
+            LogLog.setInternalDebugging(true);
+            System.out.println("[OpenRASP] Log4j debug enabled");
+        } else {
+            LogLog.setInternalDebugging(false);
+            System.out.println("[OpenRASP] Log4j debug closed");
+        }
     }
 }

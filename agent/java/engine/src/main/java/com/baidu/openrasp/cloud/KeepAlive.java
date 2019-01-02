@@ -99,23 +99,25 @@ public class KeepAlive {
                 if (deliveryTime != null) {
                     CloudCacheModel.getInstance().setConfigTime(deliveryTime);
                 }
+                if (configMap.get("log.maxburst") != null) {
+                    //更新http appender
+                    DynamicConfigAppender.fileAppenderAddBurstFilter();
+                    DynamicConfigAppender.httpAppenderAddBurstFilter();
+                }
+                //云控下发配置时动态添加或者删除syslog
+                Object syslogSwitch = configMap.get("syslog.enable");
+                if (syslogSwitch != null) {
+                    LogConfig.syslogManager();
+                }
+                //云控下发配置时动态更新syslog.tag
+                Object syslogTag = configMap.get("syslog.tag");
+                if (syslogTag != null) {
+                    DynamicConfigAppender.updateSyslogTag();
+                }
+                //是否开启log4j的debug功能
+                DynamicConfigAppender.enableDebug();
             } catch (Throwable e) {
                 CloudManager.LOGGER.warn("config update failed: ", e);
-            }
-            if (configMap.get("log.maxburst") != null) {
-                //更新http appender
-                DynamicConfigAppender.fileAppenderAddBurstFilter();
-                DynamicConfigAppender.httpAppenderAddBurstFilter();
-            }
-            //云控下发配置时动态添加或者删除syslog
-            Object syslogSwitch = configMap.get("syslog.enable");
-            if (syslogSwitch != null) {
-                LogConfig.syslogManager();
-            }
-            //云控下发配置时动态更新syslog.tag
-            Object syslogTag = configMap.get("syslog.tag");
-            if (syslogTag != null) {
-                DynamicConfigAppender.updateSyslogTag();
             }
         }
         if (version != null && md5 != null && pluginContext != null) {
