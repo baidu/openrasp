@@ -102,25 +102,25 @@ public class KeepAlive {
                 if (deliveryTime != null) {
                     CloudCacheModel.getInstance().setConfigTime(deliveryTime);
                 }
+                if (configMap.get("log.maxburst") != null) {
+                    //更新http appender
+                    DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.LOGGER_NAME,
+                            DynamicConfigAppender.HTTP_ALARM_APPENDER_NAME);
+                    DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.POLICY_LOGGER_NAME,
+                            DynamicConfigAppender.HTTP_POLICY_APPENDER_NAME);
+                }
+                //云控下发配置时动态添加或者删除syslog
+                Object syslogSwitch = configMap.get("syslog.enable");
+                if (syslogSwitch != null) {
+                    LogConfig.syslogManager();
+                }
+                //云控下发配置时动态更新syslog.tag
+                Object syslogTag = configMap.get("syslog.tag");
+                if (syslogTag != null) {
+                    DynamicConfigAppender.updateSyslogTag();
+                }
             } catch (Throwable e) {
                 CloudManager.LOGGER.warn("config update failed: ", e);
-            }
-            if (configMap.get("log.maxburst") != null) {
-                //更新http appender
-                DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.LOGGER_NAME,
-                        DynamicConfigAppender.HTTP_ALARM_APPENDER_NAME);
-                DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.POLICY_LOGGER_NAME,
-                        DynamicConfigAppender.HTTP_POLICY_APPENDER_NAME);
-            }
-            //云控下发配置时动态添加或者删除syslog
-            Object syslogSwitch = configMap.get("syslog.enable");
-            if (syslogSwitch != null) {
-                LogConfig.syslogManager();
-            }
-            //云控下发配置时动态更新syslog.tag
-            Object syslogTag = configMap.get("syslog.tag");
-            if (syslogTag != null) {
-                DynamicConfigAppender.updateSyslogTag();
             }
         }
         if (version != null && md5 != null && pluginContext != null) {
