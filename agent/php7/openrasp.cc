@@ -69,6 +69,14 @@ PHP_GINIT_FUNCTION(openrasp)
 #endif
 #ifdef ZTS
     new (openrasp_globals) _zend_openrasp_globals;
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+    if (!openrasp::oam)
+    {
+        update_config(&(openrasp_globals->config));
+    }
+#else
+    update_config(&(openrasp_globals->config));
+#endif
 #endif
 }
 
