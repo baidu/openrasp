@@ -519,12 +519,12 @@ func sendNormalEmail(emailConf EmailAlarmConf, auth smtp.Auth, msg string) (err 
 
 func sendEmailWithTls(emailConf EmailAlarmConf, auth smtp.Auth, msg string) error {
 	client, err := smtpTlsDial(emailConf.ServerAddr)
-	defer client.Close()
 	if err != nil {
 		errMsg := "failed to start tls: " + err.Error()
 		beego.Error(errMsg)
 		return errors.New(errMsg)
 	}
+	defer client.Close()
 	if auth != nil {
 		if ok, _ := client.Extension("AUTH"); ok {
 			if err = client.Auth(auth); err != nil {
@@ -549,12 +549,12 @@ func sendEmailWithTls(emailConf EmailAlarmConf, auth smtp.Auth, msg string) erro
 	}
 
 	writer, err := client.Data()
-	defer writer.Close()
 	if err != nil {
 		errMsg := "failed to get writer for email with tls: " + err.Error()
 		beego.Error(errMsg)
 		return errors.New(errMsg)
 	}
+	defer writer.Close()
 
 	_, err = writer.Write([]byte(msg))
 	if err != nil {

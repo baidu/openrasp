@@ -42,7 +42,7 @@
           <label class="form-label">
             邮箱密码
           </label>
-          <input v-model="data.email_alarm_conf.password" type="text" class="form-control">
+          <input v-model="data.email_alarm_conf.password" type="password" class="form-control">
         </div>
         <div class="form-group">
           <label class="custom-switch">
@@ -50,6 +50,16 @@
             <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
               开启邮件报警
+            </span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="custom-switch">
+            <input v-model="data.email_alarm_conf.tls_enable" type="checkbox" checked="data.email_alarm_conf.enable" class="custom-switch-input">
+            <span class="custom-switch-indicator" />
+            <span class="custom-switch-description">
+              强制开启 TLS <a target="_blank" href="https://rasp.baidu.com/doc/setup/panel.html#email-alarm">[帮助文档]</a>
             </span>
           </label>
         </div>
@@ -105,7 +115,7 @@
         <div class="form-group">
           <label class="form-label">
             推送用户列表 - 逗号或者分号分隔
-            <a href="javascript:">
+            <a target="_blank" href="https://rasp.baidu.com/doc/setup/panel.html#dingding-alarm">
               [帮助文档]
             </a>
           </label>
