@@ -127,8 +127,9 @@ PHP_RINIT_FUNCTION(openrasp_v8)
     if (openrasp_ini.remote_management_enable && oam != nullptr)
     {
         uint64_t timestamp = oam->get_plugin_update_timestamp();
-        if (!process_globals.snapshot_blob ||
-            process_globals.snapshot_blob->IsExpired(timestamp))
+        if (timestamp > 0 &&
+            (!process_globals.snapshot_blob ||
+             process_globals.snapshot_blob->IsExpired(timestamp)))
         {
             std::unique_lock<std::mutex> lock(process_globals.mtx, std::try_to_lock);
             if (lock &&

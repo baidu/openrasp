@@ -17,14 +17,19 @@
               </span>
             </a>
             <div class="dropdown-menu dropdown-menu-left dropdown-menu-arrow">
-              <a v-for="row in app_list" :key="row.id" class="dropdown-item" href="javascript:" @click.prevent="setCurrentApp(row)">
-                <i class="dropdown-icon fe fe-lock" />
-                {{ row.name }}
-              </a>
+              <div class="form-group" style="margin: 6px 15px 10px 15px; ">
+                <input type="text" class="form-control form-control-sm" v-model="keyword">
+              </div>
+              <div style="max-height: 300px; overflow: scroll; ">
+                <a v-for="row in app_list_filtered" :key="row.id" class="dropdown-item" href="javascript:" @click.prevent="setCurrentApp(row)">
+                  <i class="dropdown-icon fe fe-lock" />
+                  {{ row.name }}
+                </a>
+              </div>
               <div class="dropdown-divider" />
-              <router-link class="dropdown-item" :to="{name: 'settings', params: {setting_tab: 'app'}}">
+              <router-link :class="{'dropdown-item': true, 'active': false}" :to="{name: 'settings', params: {setting_tab: 'app'}}">
                 <i class="dropdown-icon fe fe-settings" />
-                应用管理
+                应用管理 ({{ app_list.length }})
               </router-link>
             </div>
           </div>
@@ -140,8 +145,19 @@ export default {
   components: {
     AddHostModal
   },
+  data: function() {
+    return {
+      keyword: ''
+    }
+  },
   computed: {
-    ...mapGetters(['current_app', 'app_list'])
+    ...mapGetters(['current_app', 'app_list']),
+    app_list_filtered: function() {
+      var keyword = this.keyword.toLowerCase()
+      return this.app_list.filter(function (app) {
+        return app.name.toLowerCase().indexOf(keyword) != -1
+      })
+    }
   },
   watch: {
     current_app(app) {
