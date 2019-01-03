@@ -100,7 +100,21 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 		return
 	}
 	if bsonModel["hostname"] != nil {
-		bsonModel["hostname"] = bson.M{"$regex": bsonModel["hostname"], "$options": "$i"}
+		bsonModel["$or"] = []bson.M{
+			{
+				"hostname": bson.M{
+					"$regex":   bsonModel["hostname"],
+					"$options": "$i",
+				},
+			},
+			{
+				"register_ip": bson.M{
+					"$regex":   bsonModel["hostname"],
+					"$options": "$i",
+				},
+			},
+		}
+		delete(bsonModel, "hostname")
 	}
 	if selector.Online != nil {
 		delete(bsonModel, "online")
