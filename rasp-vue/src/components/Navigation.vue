@@ -20,7 +20,7 @@
               <div class="form-group" style="margin: 6px 15px 10px 15px; ">
                 <input type="text" class="form-control form-control-sm" v-model="keyword">
               </div>
-              <div style="height: 300px; overflow: scroll; ">
+              <div style="max-height: 300px; overflow: scroll; ">
                 <a v-for="row in app_list_filtered" :key="row.id" class="dropdown-item" href="javascript:" @click.prevent="setCurrentApp(row)">
                   <i class="dropdown-icon fe fe-lock" />
                   {{ row.name }}
