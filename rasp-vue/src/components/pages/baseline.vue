@@ -131,11 +131,12 @@ export default {
         perpage: 10
       }
       if (this.hostname) {
-        if (isIp(this.hostname)) {
-          body.data.local_ip = this.hostname
-        } else {
-          body.data.server_hostname = this.hostname
-        }
+        body.data.server_hostname = this.hostname
+        // if (isIp(this.hostname)) {
+        //   body.data.local_ip = this.hostname
+        // } else {
+        //   body.data.server_hostname = this.hostname
+        // }
       }
       this.loading = true
       return this.request.post('v1/api/log/policy/search', body).then(res => {

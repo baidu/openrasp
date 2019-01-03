@@ -39,7 +39,7 @@ var plugin  = new RASP(plugin_name)
 var algorithmConfig = {
     // 快速设置 - 若 all_log 开启，则所有的 block 都改为 log
     meta: {
-        all_log: true,
+        all_log: false,
     },
 
     // SQL注入算法#1 - 匹配用户输入
