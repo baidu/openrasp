@@ -36,8 +36,9 @@ function get_lib_2b_installed($current_os, $lib_filename)
 	if (array_key_exists($machine_type, $machine_type_convertion)) {
 		$machine_type = $machine_type_convertion[$machine_type];
 	}
-	$lib_abspath = sprintf("%s%sphp%s%s-php%s.%s-%s%s%s", __DIR__,
-		DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, $current_os, PHP_MAJOR_VERSION,
+	$zts_suffix = ZEND_THREAD_SAFE ? "-ts" : "";
+	$lib_abspath = sprintf("%s%sphp%s%s%s-php%s.%s-%s%s%s", __DIR__,
+		DIRECTORY_SEPARATOR, $zts_suffix, DIRECTORY_SEPARATOR, $current_os, PHP_MAJOR_VERSION,
 		PHP_MINOR_VERSION, $machine_type, DIRECTORY_SEPARATOR, $lib_filename);
 	return $lib_abspath;
 }
@@ -215,7 +216,9 @@ if (!is_writable($extension_dir)) {
 	log_tips(ERROR, "Extension directory '$extension_dir' is not writable, make sure you have write permissions");
 }
 if (!file_exists($lib_source_path)) {
-	log_tips(ERROR, "Unsupported system or php version: " . phpversion() . "\nUname: " . php_uname() . "\nExpecting '$lib_source_path' to be present.");
+	log_tips(ERROR, "Unsupported system or php: " . phpversion() . "\nUname: " . php_uname() .
+		"\nExpecting '$lib_source_path' to be present." .
+		"\nPlease check your system, php version and ZTS state.");
 }
 $lib_dest_path = $extension_dir.DIRECTORY_SEPARATOR.$lib_filename;
 if (file_exists($lib_dest_path)
