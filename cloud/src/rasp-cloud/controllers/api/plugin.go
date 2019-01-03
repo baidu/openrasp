@@ -164,7 +164,7 @@ func (o *PluginController) Delete() {
 		o.ServeError(http.StatusBadRequest, "failed to get app", err)
 	}
 	if app != nil {
-		o.ServeError(http.StatusBadRequest, "failed to delete the plugin,it is used by app: "+app.Id)
+		o.ServeError(http.StatusBadRequest, "Unable to delete a plugin in use. Plugin is used by appid: "+app.Id)
 	}
 	err = models.DeletePlugin(pluginId)
 	if err != nil {
