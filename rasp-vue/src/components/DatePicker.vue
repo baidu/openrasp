@@ -1,5 +1,5 @@
 <template>
-  <input type="text" name="dates" class="form-control pull-right">
+  <input type="text" name="dates" class="form-control pull-right" autocomplete="off">
 </template>
 
 <script>

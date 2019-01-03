@@ -34,7 +34,7 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model="hostname" type="text" class="form-control w-10" placeholder="搜索主机或者IP">
+            <input v-model="hostname" type="text" class="form-control w-10" placeholder="搜索主机或者IP" @keyup.enter="loadRaspList(1)">
           </div>
 
           <button class="btn btn-primary ml-2" @click="loadRaspList(1)">
