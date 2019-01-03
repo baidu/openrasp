@@ -161,7 +161,6 @@ public class OSUtil {
         return port;
     }
 
-
     private static String execReadToString() {
         try {
             InputStream in = Runtime.getRuntime().exec("hostname").getInputStream();
