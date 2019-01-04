@@ -153,7 +153,7 @@ public class AttackInfo extends EventInfo {
             if (Config.getConfig().getDecompileEnable()){
                 String appBasePath = request.getAppBasePath();
                 if (!appBasePath.isEmpty()){
-                    info.put("user_src", Decompiler.getAlarmPoint(trace,appBasePath));
+                    info.put("source_code", Decompiler.getAlarmPoint(trace,appBasePath));
                 }
             }
         }

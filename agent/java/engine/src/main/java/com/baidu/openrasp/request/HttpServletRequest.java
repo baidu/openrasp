@@ -20,6 +20,7 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 
+import java.net.URL;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -178,7 +179,7 @@ public final class HttpServletRequest extends AbstractRequest {
         } else {
             normalMap = (Map<String, String[]>) Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
         }
-        return getMergeMap(normalMap,fileUploadCache);
+        return getMergeMap(normalMap, fileUploadCache);
     }
 
     /**
@@ -247,7 +248,12 @@ public final class HttpServletRequest extends AbstractRequest {
     @Override
     public String getAppBasePath() {
         try {
-            String realPath = Reflection.invokeStringMethod(request, "getRealPath", new Class[]{String.class}, "/");
+            String realPath;
+            if ("weblogic".equals(ApplicationModel.getServerName())) {
+                realPath = getRealPathForWeblogic();
+            } else {
+                realPath = Reflection.invokeStringMethod(request, "getRealPath", new Class[]{String.class}, "/");
+            }
             return realPath == null ? "" : realPath;
         } catch (Exception e) {
             e.printStackTrace();
@@ -289,5 +295,18 @@ public final class HttpServletRequest extends AbstractRequest {
         s1 = Arrays.copyOf(s1, str1Length + str2length);
         System.arraycopy(s2, 0, s1, str1Length, str2length);
         return s1;
+    }
+
+    private String getRealPathForWeblogic() {
+        try {
+            Object servletContext = Reflection.invokeMethod(request, "getServletContext", new Class[]{});
+            URL url = (URL) Reflection.invokeMethod(servletContext, "getResource", new Class[]{String.class}, "/");
+            if (url != null) {
+                return url.getPath();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

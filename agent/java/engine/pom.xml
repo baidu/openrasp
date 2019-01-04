@@ -90,22 +90,22 @@
         <dependency>
             <groupId>org.bitbucket.mstrobel</groupId>
             <artifactId>procyon-core</artifactId>
-            <version>LATEST</version>
+            <version>0.5.32</version>
         </dependency>
         <dependency>
             <groupId>org.bitbucket.mstrobel</groupId>
             <artifactId>procyon-expressions</artifactId>
-            <version>LATEST</version>
+            <version>0.5.32</version>
         </dependency>
         <dependency>
             <groupId>org.bitbucket.mstrobel</groupId>
             <artifactId>procyon-reflection</artifactId>
-            <version>LATEST</version>
+            <version>0.5.32</version>
         </dependency>
         <dependency>
             <groupId>org.bitbucket.mstrobel</groupId>
             <artifactId>procyon-compilertools</artifactId>
-            <version>LATEST</version>
+            <version>0.5.32</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

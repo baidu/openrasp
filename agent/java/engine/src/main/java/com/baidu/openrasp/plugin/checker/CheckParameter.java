@@ -67,7 +67,8 @@ public class CheckParameter {
         POLICY_JBOSS_START("jbossStart", new JBossSecurityChecker(false), 0),
         POLICY_JETTY_START("jettyStart", new JettySecurityChecker(false), 0),
         POLICY_RESIN_START("resinStart", new ResinSecurityChecker(false), 0),
-        POLICY_WEBSPHERE_START("websphereStart", new WebsphereSecurityChecker(false), 0);
+        POLICY_WEBSPHERE_START("websphereStart", new WebsphereSecurityChecker(false), 0),
+        POLICY_WEBLOGIC_START("weblogicStart",new WeblogicSecurityChecker(false),0);
 
         String name;
         Checker checker;
