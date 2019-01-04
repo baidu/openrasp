@@ -172,4 +172,9 @@ void XssBlock::update(BaseReader *reader)
   max_detection_num = reader->fetch_int64({"xss", "max_detection_num"}, XssBlock::default_max_detection_num);
 }
 
+void DecompileBlock::update(BaseReader *reader)
+{
+  enable = reader->fetch_bool({"decompile", "enable"}, false);
+};
+
 } // namespace openrasp

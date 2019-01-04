@@ -18,6 +18,7 @@
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
 #include "openrasp_log.h"
+#include "utils/debug_trace.h"
 extern "C"
 {
 #include "php_ini.h"
@@ -29,10 +30,12 @@ extern "C"
 }
 #include <string>
 
-std::string format_debug_backtrace_str()
+using openrasp::DebugTrace;
+
+static std::vector<DebugTrace> build_debug_trace(long limit)
 {
     zval trace_arr;
-    std::string buffer;
+    std::vector<DebugTrace> array;
     zend_fetch_debug_backtrace(&trace_arr, 0, 0, 0);
     if (Z_TYPE(trace_arr) == IS_ARRAY)
     {
@@ -41,7 +44,7 @@ std::string format_debug_backtrace_str()
         zval *ele_value = NULL;
         ZEND_HASH_FOREACH_VAL(hash_arr, ele_value)
         {
-            if (++i > OPENRASP_CONFIG(log.maxstack))
+            if (++i > limit)
             {
                 break;
             }
@@ -49,34 +52,39 @@ std::string format_debug_backtrace_str()
             {
                 continue;
             }
+            DebugTrace trace_item;
             zval *trace_ele;
             if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("file"))) != NULL &&
                 Z_TYPE_P(trace_ele) == IS_STRING)
             {
-                buffer.append(Z_STRVAL_P(trace_ele), Z_STRLEN_P(trace_ele));
+                trace_item.set_file(Z_STRVAL_P(trace_ele));
             }
-            buffer.push_back('(');
             if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("function"))) != NULL &&
                 Z_TYPE_P(trace_ele) == IS_STRING)
             {
-                buffer.append(Z_STRVAL_P(trace_ele), Z_STRLEN_P(trace_ele));
+                trace_item.set_function(Z_STRVAL_P(trace_ele));
             }
-            buffer.push_back(':');
-            //line number
             if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("line"))) != NULL &&
                 Z_TYPE_P(trace_ele) == IS_LONG)
             {
-                buffer.append(std::to_string(Z_LVAL_P(trace_ele)));
+                trace_item.set_line(Z_LVAL_P(trace_ele));
             }
-            else
-            {
-                buffer.append("-1");
-            }
-            buffer.append(")\n");
+            array.push_back(trace_item);
         }
         ZEND_HASH_FOREACH_END();
     }
     zval_dtor(&trace_arr);
+    return array;
+}
+
+std::string format_debug_backtrace_str()
+{
+    std::vector<DebugTrace> trace = build_debug_trace(OPENRASP_CONFIG(log.maxstack));
+    std::string buffer;
+    for (DebugTrace &item : trace)
+    {
+        buffer.append(item.to_log_string() + "\n");
+    }
     if (buffer.length() > 0)
     {
         buffer.pop_back();
@@ -90,44 +98,25 @@ void format_debug_backtrace_str(zval *backtrace_str)
     ZVAL_STRINGL(backtrace_str, trace.c_str(), trace.length());
 }
 
+std::vector<std::string> format_source_code_arr()
+{
+    std::vector<DebugTrace> trace = build_debug_trace(OPENRASP_CONFIG(log.maxstack));
+    std::vector<std::string> array;
+    for (DebugTrace &item : trace)
+    {
+        array.push_back(item.get_source_code());
+    }
+    return array;
+}
+
 std::vector<std::string> format_debug_backtrace_arr()
 {
-    zval trace_arr;
+    std::vector<DebugTrace> trace = build_debug_trace(OPENRASP_CONFIG(plugin.maxstack));
     std::vector<std::string> array;
-    zend_fetch_debug_backtrace(&trace_arr, 0, 0, 0);
-    if (Z_TYPE(trace_arr) == IS_ARRAY)
+    for (DebugTrace &item : trace)
     {
-        int i = 0;
-        HashTable *hash_arr = Z_ARRVAL(trace_arr);
-        zval *ele_value = NULL;
-        ZEND_HASH_FOREACH_VAL(hash_arr, ele_value)
-        {
-            if (++i > OPENRASP_CONFIG(plugin.maxstack))
-            {
-                break;
-            }
-            if (Z_TYPE_P(ele_value) != IS_ARRAY)
-            {
-                continue;
-            }
-            std::string buffer;
-            zval *trace_ele;
-            if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("file"))) != NULL &&
-                Z_TYPE_P(trace_ele) == IS_STRING)
-            {
-                buffer.append(Z_STRVAL_P(trace_ele), Z_STRLEN_P(trace_ele));
-            }
-            if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("function"))) != NULL &&
-                Z_TYPE_P(trace_ele) == IS_STRING)
-            {
-                buffer.push_back('@');
-                buffer.append(Z_STRVAL_P(trace_ele), Z_STRLEN_P(trace_ele));
-            }
-            array.push_back(buffer);
-        }
-        ZEND_HASH_FOREACH_END();
+        array.push_back(item.to_plugin_string());
     }
-    zval_dtor(&trace_arr);
     return array;
 }
 

@@ -54,6 +54,7 @@ public:
   LruBlock lru;
   CallableBlock webshell_callable;
   XssBlock xss;
+  DecompileBlock decompile;
 
 private:
   long latestUpdateTime = 0;

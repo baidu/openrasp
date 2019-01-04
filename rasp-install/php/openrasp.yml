@@ -83,6 +83,10 @@ xss:
   #最多检测参数数目
   max_detection_num: 10
 
+decompile:
+  #是否开启源码溯源
+  enable: false
+
 hook.white:
 # white url list for each check type  
 # url format: start from host and must match with url in alarm.log

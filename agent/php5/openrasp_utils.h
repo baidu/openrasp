@@ -32,6 +32,7 @@ bool get_entire_file_content(const char *file, std::string &content);
 void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins,
                       std::function<bool(const char *filename)> file_filter, bool use_abs_path = false);
 
+std::vector<std::string> format_source_code_arr(TSRMLS_D);
 std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D);
 void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC);
 std::string format_debug_backtrace_str(TSRMLS_D);

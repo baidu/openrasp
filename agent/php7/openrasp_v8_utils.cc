@@ -147,6 +147,17 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     obj->Set(NewV8String(isolate, "plugin_name"), result->Get(key_name));
     obj->Set(NewV8String(isolate, "stack_trace"), stack_trace);
     obj->Set(NewV8String(isolate, "event_time"), event_time);
+    if (OPENRASP_CONFIG(decompile.enable))
+    {
+        auto src = format_source_code_arr();
+        size_t len = src.size();
+        auto source_code = v8::Array::New(isolate, len);
+        for (size_t i = 0; i < len; i++)
+        {
+            source_code->Set(i, openrasp::NewV8String(isolate, src[i]));
+        }
+        obj->Set(NewV8String(isolate, "source_code"), source_code);
+    }
 
     zval *value;
     zend_string *key;
@@ -220,7 +231,8 @@ void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string>
         Object.keys(RASP.algorithmConfig || {})
             .filter(key => typeof key === 'string' && typeof RASP.algorithmConfig[key] === 'object' && typeof RASP.algorithmConfig[key].action === 'string')
             .map(key => [key, RASP.algorithmConfig[key].action])
-    )", "extract_buildin_action");
+    )",
+                                   "extract_buildin_action");
     if (rst.IsEmpty())
     {
         return;

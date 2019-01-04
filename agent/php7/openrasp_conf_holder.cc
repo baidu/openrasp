@@ -38,6 +38,7 @@ bool ConfigHolder::update(BaseReader *reader)
   lru.update(reader);
   webshell_callable.update(reader);
   xss.update(reader);
+  decompile.update(reader);
   return true;
 }
 

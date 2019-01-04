@@ -734,6 +734,8 @@ int main() {
     utils/string.cc \
     utils/digest.cc \
     utils/regex.cc \
+    utils/debug_trace.cc \
+    utils/file.cc \  
     utils/time.cc \
     utils/net.cc \
     utils/JsonReader.cc \

@@ -158,4 +158,11 @@ public:
   void update(BaseReader *reader);
 };
 
+class DecompileBlock
+{
+public:
+  bool enable = false;
+  void update(BaseReader *reader);
+};
+
 } // namespace openrasp
