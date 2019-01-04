@@ -98,7 +98,7 @@ func init() {
 		tools.Panic(tools.ErrCodeConfigInitFailed, "Unrecognized the value of RaspLogMode config", nil)
 	}
 	alarmBufferSize := beego.AppConfig.DefaultInt("AlarmBufferSize", 300)
-	if alarmBufferSize <= 0{
+	if alarmBufferSize <= 0 {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'AlarmBufferSize' config must be greater than 0", nil)
 	} else if alarmBufferSize < 100 {
 		beego.Warning("the value of 'AlarmBufferSize' config is less than 100, it will be set to 100")
@@ -213,36 +213,51 @@ func AddLogWithES(alarmType string, alarm map[string]interface{}) error {
 func SearchLogs(startTime int64, endTime int64, query map[string]interface{}, sortField string, page int,
 	perpage int, ascending bool, index ...string) (int64, []map[string]interface{}, error) {
 	var total int64
-	queries := make([]elastic.Query, 0, len(query)+1)
+	filterQueries := make([]elastic.Query, 0, len(query)+1)
+	shouldQueries := make([]elastic.Query, 0, len(query)+1)
 	if query != nil {
 		for key, value := range query {
 			if key == "attack_type" {
 				if v, ok := value.([]interface{}); ok {
-					queries = append(queries, elastic.NewTermsQuery(key, v...))
+					filterQueries = append(filterQueries, elastic.NewTermsQuery(key, v...))
 				} else {
-					queries = append(queries, elastic.NewTermQuery(key, value))
+					filterQueries = append(filterQueries, elastic.NewTermQuery(key, value))
 				}
 			} else if key == "policy_id" {
 				if v, ok := value.([]interface{}); ok {
-					queries = append(queries, elastic.NewTermsQuery(key, v...))
+					filterQueries = append(filterQueries, elastic.NewTermsQuery(key, v...))
 				} else {
-					queries = append(queries, elastic.NewTermQuery(key, value))
+					filterQueries = append(filterQueries, elastic.NewTermQuery(key, value))
 				}
 			} else if key == "local_ip" {
-				queries = append(queries,
+				filterQueries = append(filterQueries,
 					elastic.NewNestedQuery("server_nic", elastic.NewTermQuery("server_nic.ip", value)))
+			} else if key == "attack_source" {
+				filterQueries = append(filterQueries, elastic.NewWildcardQuery(key, "*"+fmt.Sprint(value)+"*"))
+			} else if key == "server_hostname" {
+				shouldQueries = append(shouldQueries,
+					elastic.NewWildcardQuery("server_hostname", "*"+fmt.Sprint(value)+"*"))
+				shouldQueries = append(shouldQueries,
+					elastic.NewNestedQuery("server_nic",
+						elastic.NewWildcardQuery("server_nic.ip", "*"+fmt.Sprint(value)+"*")))
 			} else {
-				queries = append(queries, elastic.NewTermQuery(key, value))
+				filterQueries = append(filterQueries, elastic.NewTermQuery(key, value))
 			}
 		}
 	}
-	queries = append(queries, elastic.NewRangeQuery("event_time").Gte(startTime).Lte(endTime))
+	filterQueries = append(filterQueries, elastic.NewRangeQuery("event_time").Gte(startTime).Lte(endTime))
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(10*time.Second))
 	defer cancel()
+	boolQuery := elastic.NewBoolQuery().Filter(filterQueries...)
+	if len(shouldQueries) > 0 {
+		boolQuery.Should(shouldQueries...).MinimumNumberShouldMatch(1)
+	}
 	queryResult, err := es.ElasticClient.Search(index...).
-		Query(elastic.NewBoolQuery().Must(queries...)).
+		Query(boolQuery).
 		Sort(sortField, ascending).
-		From((page - 1) * perpage).Size(perpage).Do(ctx)
+		From((page - 1) * perpage).
+		Size(perpage).
+		Do(ctx)
 	if err != nil {
 		if queryResult != nil && queryResult.Error != nil {
 			errMsg, err := json.Marshal(queryResult.Error)

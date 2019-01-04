@@ -265,7 +265,7 @@ function do_install_php()
 function do_help()
 {
 cat << EOF
-OpenRASP batch install/uninstall tool - Copyright @2018 Baidu Inc.
+OpenRASP batch install/uninstall tool - Copyright 2017-2019 Baidu Inc
 
 Usage:
 	./batch.sh -i

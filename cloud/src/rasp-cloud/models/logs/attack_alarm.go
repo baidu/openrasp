@@ -37,6 +37,16 @@ var (
 	AliasAttackIndexName = "real-openrasp-attack-alarm"
 	AttackEsMapping      = `
 	{
+		"settings": {
+			"analysis": {
+				"normalizer": {
+					"lowercase_normalizer": {
+						"type": "custom",
+						"filter": ["lowercase"]
+					}
+				}     
+			}
+		},
 		"mappings": {
 			"attack-alarm": {
 				"_all": {
@@ -80,7 +90,8 @@ var (
 					},
 					"url": {
 						"type": "keyword",
-						"ignore_above": 256
+						"ignore_above": 256,
+						"normalizer": "lowercase_normalizer"
 					},
 					"event_type": {
 						"type": "keyword",
@@ -88,7 +99,8 @@ var (
 					},
 					"server_hostname": {
 						"type": "keyword",
-						"ignore_above": 256
+						"ignore_above": 256,
+						"normalizer": "lowercase_normalizer"
 					},
 					"stack_md5": {
 						"type": "keyword",

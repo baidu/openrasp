@@ -29,6 +29,16 @@ var (
 	AliasPolicyIndexName = "real-openrasp-policy-alarm"
 	PolicyEsMapping      = `
 	{
+		"settings": {
+			"analysis": {
+				"normalizer": {
+					"lowercase_normalizer": {
+						"type": "custom",
+						"filter": ["lowercase"]
+					}
+				}     
+			}
+		},
 		"mappings": {
 			"policy-alarm": {
 				"_all": {
@@ -44,7 +54,8 @@ var (
 					},
 					"server_hostname": {
 						"type": "keyword",
-						"ignore_above": 256
+						"ignore_above": 256,
+						"normalizer": "lowercase_normalizer"
 					},
 					"server_type": {
 						"type": "keyword",

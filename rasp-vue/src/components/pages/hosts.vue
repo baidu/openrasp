@@ -168,11 +168,12 @@ export default {
         perpage: 10
       }
       if (this.hostname) {
-        if (isIp(this.hostname)) {
-          body.data.register_ip = this.hostname
-        } else {
-          body.data.hostname = this.hostname
-        }
+        body.data.hostname = this.hostname
+        // if (isIp(this.hostname)) {
+        //   body.data.register_ip = this.hostname
+        // } else {
+        //  body.data.hostname = this.hostname
+        // }
       }
       if (this.filter.online && !this.filter.offline) {
         body.data.online = true
