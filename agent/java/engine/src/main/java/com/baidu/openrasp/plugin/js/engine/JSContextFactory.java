@@ -17,6 +17,7 @@
 package com.baidu.openrasp.plugin.js.engine;
 
 import com.baidu.openrasp.EngineBoot;
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
@@ -90,6 +91,8 @@ public class JSContextFactory extends ContextFactory {
                         cx.evaluateString(scope, "(function(){\n" + checkScript.getContent() + "\n})()", checkScript.getName(), 0, null);
                     }
                 }
+                //插件更新成功后，清空全局的LRU缓存
+                HookHandler.commonLRUCache.clear();
                 //插件更新成功后，设置algorithmConfig
                 algorithmConfigSet();
             } catch (Exception e) {
@@ -120,6 +123,8 @@ public class JSContextFactory extends ContextFactory {
                 CloudCacheModel.getInstance().setConfigTime(deliveryTime);
                 globalScope = global;
                 RASP = tempRASP;
+                //插件更新成功后，清空全局的LRU缓存
+                HookHandler.commonLRUCache.clear();
                 //插件更新成功后，设置algorithmConfig
                 algorithmConfigSet();
             } catch (Throwable e) {
