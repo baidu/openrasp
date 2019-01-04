@@ -267,7 +267,7 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_hook)
 int check_type_white_bit_mask;
-openrasp::LRU<std::string, bool> *lru;
+openrasp::LRU<std::string, bool> lru;
 ZEND_END_MODULE_GLOBALS(openrasp_hook)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp_hook);

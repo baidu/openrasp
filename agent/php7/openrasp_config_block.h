@@ -118,17 +118,6 @@ public:
   void update(BaseReader *reader);
 };
 
-class SqlBlock
-{
-public:
-  const static int64_t default_slowquery_min_rows;
-  struct
-  {
-    int64_t min_rows = 500;
-  } slowquery;
-  void update(BaseReader *reader);
-};
-
 class LruBlock
 {
 public:

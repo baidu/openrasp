@@ -10,10 +10,9 @@ RASP.algorithmConfig = {
 }
 EOF;
 $conf = <<<CONF
-xss:
-  filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"
-  min_param_length: 15
-  max_detection_num: 10
+xss.filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"
+xss.min_param_length: 15
+xss.max_detection_num: 10
 CONF;
 include(__DIR__.'/../skipif.inc');
 ?>

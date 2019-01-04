@@ -3,8 +3,7 @@ hook pg_connect via unix domain socket
 --SKIPIF--
 <?php
 $conf = <<<CONF
-security:
-  enforce_policy: true
+security.enforce_policy: true
 CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("pgsql")) die("Skipped: pgsql extension required.");

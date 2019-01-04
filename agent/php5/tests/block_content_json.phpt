@@ -10,8 +10,7 @@ plugin.register('command', params => {
 })
 EOF;
 $conf = <<<CONF
-block:
-  content_json: "{\"error\":true, \"reason\": \"blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"
+block.content_json: "{\"error\":true, \"reason\": \"blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

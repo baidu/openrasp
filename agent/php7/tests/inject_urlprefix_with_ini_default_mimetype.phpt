@@ -4,8 +4,7 @@ inject urlprefix
 <?php
 if (version_compare(PHP_VERSION, '5.6.0', '<')) die("Skipped: PHP_VERSION < 5.6.0");
 $conf = <<<CONF
-inject:
-  urlprefix: "/prefix"
+inject.urlprefix: "/prefix"
 CONF;
 include(__DIR__.'/skipif.inc');
 file_put_contents('/tmp/openrasp/assets/inject.html', "inject content");

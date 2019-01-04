@@ -66,7 +66,7 @@ static void check_file_operation(OpenRASPCheckType type, const std::string &file
             const std::string realpath(real_path);
             const std::string check_type(get_check_type_name(type));
             const std::string cache_key(check_type + filename + realpath);
-            if (OPENRASP_HOOK_G(lru)->contains(cache_key))
+            if (OPENRASP_HOOK_G(lru).contains(cache_key))
             {
                 return;
             }
@@ -82,7 +82,7 @@ static void check_file_operation(OpenRASPCheckType type, const std::string &file
             {
                 handle_block(TSRMLS_C);
             }
-            OPENRASP_HOOK_G(lru)->set(cache_key, true);
+            OPENRASP_HOOK_G(lru).set(cache_key, true);
         }
     }
 }
@@ -273,7 +273,7 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         {
             const std::string type(get_check_type_name(check_type));
             const std::string cache_key(type + source_real_path + target_real_path);
-            if (OPENRASP_HOOK_G(lru)->contains(cache_key))
+            if (OPENRASP_HOOK_G(lru).contains(cache_key))
             {
                 return;
             }
@@ -289,7 +289,7 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             {
                 handle_block(TSRMLS_C);
             }
-            OPENRASP_HOOK_G(lru)->set(cache_key, true);
+            OPENRASP_HOOK_G(lru).set(cache_key, true);
         }
     }
 }
@@ -364,7 +364,7 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         {
             const std::string type(get_check_type_name(check_type));
             const std::string cache_key(type + source_real_path + target_real_path);
-            if (OPENRASP_HOOK_G(lru)->contains(cache_key))
+            if (OPENRASP_HOOK_G(lru).contains(cache_key))
             {
                 return;
             }
@@ -380,7 +380,7 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             {
                 handle_block(TSRMLS_C);
             }
-            OPENRASP_HOOK_G(lru)->set(cache_key, true);
+            OPENRASP_HOOK_G(lru).set(cache_key, true);
         }
     }
 }

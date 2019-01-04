@@ -3,9 +3,8 @@ syslog server url scheme
 --SKIPIF--
 <?php
 $conf = <<<CONF
-syslog:
-  enable: true
-  url: "http://127.0.0.1:514"
+syslog.enable: true
+syslog.url: "http://127.0.0.1:514"
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

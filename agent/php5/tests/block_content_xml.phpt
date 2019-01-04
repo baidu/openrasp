@@ -10,8 +10,7 @@ plugin.register('command', params => {
 })
 EOF;
 $conf = <<<CONF
-block:
-  content_xml: "<?xml version=\"1.0\"?><doc><error>true</error><reason>blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"
+block.content_xml: "<?xml version=\"1.0\"?><doc><error>true</error><reason>blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

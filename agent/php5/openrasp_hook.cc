@@ -376,6 +376,7 @@ PHP_GINIT_FUNCTION(openrasp_hook)
     new (openrasp_hook_globals) _zend_openrasp_hook_globals;
 #endif
     openrasp_hook_globals->check_type_white_bit_mask = 0;
+    openrasp_hook_globals->lru.reset(OPENRASP_CONFIG(lru.max_size));
 }
 
 PHP_GSHUTDOWN_FUNCTION(openrasp_hook)
@@ -419,10 +420,9 @@ PHP_RINIT_FUNCTION(openrasp_hook)
                 OPENRASP_HOOK_G(check_type_white_bit_mask) = openrasp::scm->get_check_type_white_bit_mask(url_str.substr(found + COLON_TWO_SLASHES.size()));
             }
         }
-        if (!OPENRASP_HOOK_G(lru) ||
-            OPENRASP_HOOK_G(lru)->max_size() != OPENRASP_CONFIG(lru.max_size))
+        if (OPENRASP_HOOK_G(lru).max_size() != OPENRASP_CONFIG(lru.max_size))
         {
-            OPENRASP_HOOK_G(lru) = new openrasp::LRU<std::string, bool>(OPENRASP_CONFIG(lru.max_size));
+            OPENRASP_HOOK_G(lru).reset(OPENRASP_CONFIG(lru.max_size));
         }
     }
     return SUCCESS;

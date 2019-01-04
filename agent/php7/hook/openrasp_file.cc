@@ -76,7 +76,7 @@ static void check_file_operation(OpenRASPCheckType type, char *filename, int fil
     std::string cache_key = std::string(get_check_type_name(type))
                                 .append(filename, filename_len)
                                 .append(real_path);
-    if (OPENRASP_HOOK_G(lru)->contains(cache_key))
+    if (OPENRASP_HOOK_G(lru).contains(cache_key))
     {
         return;
     }
@@ -99,7 +99,7 @@ static void check_file_operation(OpenRASPCheckType type, char *filename, int fil
     {
         handle_block();
     }
-    OPENRASP_HOOK_G(lru)->set(cache_key, true);
+    OPENRASP_HOOK_G(lru).set(cache_key, true);
 }
 
 void pre_global_file_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -284,7 +284,7 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     std::string cache_key = std::string(get_check_type_name(check_type))
                                 .append(source_real_path)
                                 .append(dest_real_path);
-    if (OPENRASP_HOOK_G(lru)->contains(cache_key))
+    if (OPENRASP_HOOK_G(lru).contains(cache_key))
     {
         return;
     }
@@ -307,7 +307,7 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         handle_block();
     }
-    OPENRASP_HOOK_G(lru)->set(cache_key, true);
+    OPENRASP_HOOK_G(lru).set(cache_key, true);
 }
 
 void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -379,7 +379,7 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             std::string cache_key = std::string(get_check_type_name(check_type))
                                         .append(source_real_path)
                                         .append(dest_real_path);
-            if (OPENRASP_HOOK_G(lru)->contains(cache_key))
+            if (OPENRASP_HOOK_G(lru).contains(cache_key))
             {
                 return;
             }
@@ -402,7 +402,7 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             {
                 handle_block();
             }
-            OPENRASP_HOOK_G(lru)->set(cache_key, true);
+            OPENRASP_HOOK_G(lru).set(cache_key, true);
         }
     }
 }

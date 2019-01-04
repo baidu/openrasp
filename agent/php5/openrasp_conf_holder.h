@@ -50,7 +50,6 @@ public:
   BodyBlock body;
   ClientipBlock clientip;
   SecurityBlock security;
-  SqlBlock sql;
   LruBlock lru;
   CallableBlock webshell_callable;
   XssBlock xss;

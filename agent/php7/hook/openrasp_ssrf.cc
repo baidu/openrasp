@@ -124,7 +124,7 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
             params->Set(openrasp::NewV8String(isolate, "ip"), ip_arr);
             {
                 cache_key = std::string(get_check_type_name(check_type) + std::string(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url)) + std::to_string(ip_sum));
-                if (OPENRASP_HOOK_G(lru)->contains(cache_key))
+                if (OPENRASP_HOOK_G(lru).contains(cache_key))
                 {
                     return false;
                 }
@@ -135,7 +135,7 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
         {
             handle_block(TSRMLS_C);
         }
-        OPENRASP_HOOK_G(lru)->set(cache_key, true);
+        OPENRASP_HOOK_G(lru).set(cache_key, true);
     }
     return false;
 }

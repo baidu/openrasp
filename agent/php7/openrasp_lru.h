@@ -86,6 +86,16 @@ public:
   {
     return item_list.empty();
   }
+  void clear()
+  {
+    item_list.clear();
+    item_map.clear();
+  }
+  void reset(size_t max = 10)
+  {
+    clear();
+    this->max = max;
+  }
   size_t size() const
   {
     return item_list.size();

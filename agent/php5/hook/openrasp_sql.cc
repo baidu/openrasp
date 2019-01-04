@@ -116,7 +116,7 @@ void plugin_sql_check(char *query, int query_len, char *server TSRMLS_DC)
     if (isolate)
     {
         std::string cache_key = std::string(get_check_type_name(SQL)).append(query, query_len);
-        if (OPENRASP_HOOK_G(lru)->contains(cache_key))
+        if (OPENRASP_HOOK_G(lru).contains(cache_key))
         {
             return;
         }
@@ -132,7 +132,7 @@ void plugin_sql_check(char *query, int query_len, char *server TSRMLS_DC)
         {
             handle_block(TSRMLS_C);
         }
-        OPENRASP_HOOK_G(lru)->set(cache_key, true);
+        OPENRASP_HOOK_G(lru).set(cache_key, true);
     }
 }
 

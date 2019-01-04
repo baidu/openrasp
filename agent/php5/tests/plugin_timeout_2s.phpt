@@ -11,9 +11,7 @@ plugin.register('command', params => {
 })
 EOF;
 $conf = <<<CONF
-plugin:
-  timeout:
-    millis: 2000
+plugin.timeout.millis: 2000
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

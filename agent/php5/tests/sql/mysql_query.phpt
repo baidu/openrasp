@@ -11,8 +11,7 @@ plugin.register('sql', params => {
 })
 EOF;
 $conf = <<<CONF
-security:
-  enforce_policy: false
+security.enforce_policy: false
 CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("mysql")) die("Skipped: mysql extension required.");

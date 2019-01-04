@@ -10,8 +10,7 @@ plugin.register('command', params => {
 })
 EOF;
 $conf = <<<CONF
-decompile:
-  enable: true
+decompile.enable: true
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

@@ -10,8 +10,7 @@ plugin.register('command', params => {
 })
 EOF;
 $conf = <<<CONF
-block:
-  content_html: "<p>OpenRASP Request ID: %request_id%</p>"
+block.content_html: "<p>OpenRASP Request ID: %request_id%</p>"
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

@@ -27,6 +27,7 @@ extern "C"
 #include <sstream>
 #include <fstream>
 #include "openrasp_v8.h"
+#include "openrasp_hook.h"
 #include "openrasp_ini.h"
 #include "agent/shared_config_manager.h"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
@@ -146,6 +147,7 @@ PHP_RINIT_FUNCTION(openrasp_v8)
                 {
                     delete process_globals.snapshot_blob;
                     process_globals.snapshot_blob = blob;
+                    OPENRASP_HOOK_G(lru).clear();
                 }
             }
         }

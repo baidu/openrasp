@@ -34,7 +34,6 @@ bool ConfigHolder::update(BaseReader *reader)
   body.update(reader);
   clientip.update(reader);
   security.update(reader);
-  sql.update(reader);
   lru.update(reader);
   webshell_callable.update(reader);
   xss.update(reader);
