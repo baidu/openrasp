@@ -22,6 +22,7 @@
 extern "C"
 {
 #include "php_ini.h"
+#include "php_streams.h"
 #include "zend_smart_str.h"
 #include "ext/pcre/php_pcre.h"
 #include "ext/standard/file.h"
@@ -260,4 +261,20 @@ std::string json_encode_from_zval(zval *value)
     std::string result(ZSTR_VAL(buf_json.s));
     smart_str_free(&buf_json);
     return result;
+}
+
+zend_string *fetch_request_body(size_t max_len)
+{
+    php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, NULL);
+    if (!stream)
+    {
+        return zend_string_init("", strlen(""), 0);
+    }
+    zend_string *buf = php_stream_copy_to_mem(stream, max_len, 0);
+    php_stream_close(stream);
+    if (!buf)
+    {
+        return zend_string_init("", strlen(""), 0);
+    }
+    return buf;
 }

@@ -276,23 +276,6 @@ static std::vector<keys_filter> alarm_filters =
         {"REQUEST_URI", "path", request_uri_path_filter},
         {"REQUEST_SCHEME HTTP_HOST SERVER_NAME SERVER_ADDR SERVER_PORT REQUEST_URI", "url", build_complete_url}};
 
-static char *fetch_request_body(size_t max_len TSRMLS_DC)
-{
-    php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, NULL);
-    if (!stream)
-    {
-        return estrdup("");
-    }
-    char *buf = nullptr;
-    int len = php_stream_copy_to_mem(stream, &buf, max_len, 0);
-    php_stream_close(stream);
-    if (len <= 0 || !buf)
-    {
-        return estrdup("");
-    }
-    return buf;
-}
-
 static bool verify_syslog_address_format(TSRMLS_D)
 {
     bool result = false;

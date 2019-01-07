@@ -44,4 +44,6 @@ HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey);
 zval *fetch_outmost_zval_from_ht(HashTable *ht, const char *arKey);
 std::string json_encode_from_zval(zval *value TSRMLS_DC);
 
+char *fetch_request_body(size_t max_len TSRMLS_DC);
+
 #endif

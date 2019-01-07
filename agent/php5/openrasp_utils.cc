@@ -26,6 +26,7 @@
 extern "C"
 {
 #include "php_ini.h"
+#include "php_streams.h"
 #include "ext/json/php_json.h"
 #include "ext/standard/file.h"
 #include "ext/date/php_date.h"
@@ -285,4 +286,21 @@ std::string json_encode_from_zval(zval *value TSRMLS_DC)
     std::string result(buf_json.c);
     smart_str_free(&buf_json);
     return result;
+}
+
+char *fetch_request_body(size_t max_len TSRMLS_DC)
+{
+    php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, NULL);
+    if (!stream)
+    {
+        return estrdup("");
+    }
+    char *buf = nullptr;
+    int len = php_stream_copy_to_mem(stream, &buf, max_len, 0);
+    php_stream_close(stream);
+    if (len <= 0 || !buf)
+    {
+        return estrdup("");
+    }
+    return buf;
 }

@@ -16,6 +16,8 @@
 
 #include "openrasp_v8.h"
 #include "openrasp_log.h"
+#include "openrasp_utils.h"
+#include "openrasp_content_type.h"
 
 namespace openrasp
 {
@@ -32,6 +34,7 @@ enum FieldIndex
     kAppBasePath,
     kBody,
     kServer,
+    kJsonBody,
     kEndForCount
 };
 static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
@@ -446,6 +449,59 @@ static void server_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
     info.GetReturnValue().Set(server);
     self->SetInternalField(kServer, server);
 }
+
+static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
+{
+    auto self = info.Holder();
+    auto cache = self->GetInternalField(kJsonBody);
+    if (!cache->IsUndefined())
+    {
+        info.GetReturnValue().Set(cache);
+        return;
+    }
+    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
+    {
+        return;
+    }
+    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
+    v8::Isolate *isolate = info.GetIsolate();
+    v8::Local<v8::Object> obj = v8::Object::New(isolate);
+
+    std::string complete_body= "{}";
+    zval *origin_zv;
+    if ((origin_zv = zend_hash_str_find(_SERVER, "HTTP_CONTENT_TYPE", strlen("HTTP_CONTENT_TYPE"))) != nullptr &&
+        Z_TYPE_P(origin_zv) == IS_STRING)
+    {
+        std::string content_type_vlaue = std::string(Z_STRVAL_P(origin_zv));
+        OpenRASPContentType::ContentType k_type = OpenRASPContentType::classify_content_type(content_type_vlaue);
+        if (OpenRASPContentType::ContentType::cApplicationJson == k_type)
+        {
+            zend_string *body = fetch_request_body(PHP_STREAM_COPY_ALL);
+            complete_body = std::string(ZSTR_VAL(body));
+            zend_string_release(body);
+        }
+    }
+    v8::TryCatch trycatch(isolate);
+    auto v8_body = NewV8String(isolate, complete_body);
+    auto v8_json_obj = v8::JSON::Parse(isolate->GetCurrentContext(), v8_body);
+    if (v8_json_obj.IsEmpty())
+    {
+        v8::Local<v8::Value> exception = trycatch.Exception();
+        v8::String::Utf8Value exception_str(exception);
+        openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("Fail to parse json body, cuz of %s."), *exception_str);
+    }
+    else
+    {
+        auto v8_json_obj_l = v8_json_obj.ToLocalChecked();
+        if (v8_json_obj_l->IsObject())
+        {
+            obj = v8_json_obj_l.As<v8::Object>();
+        }
+    }
+    info.GetReturnValue().Set(obj);
+    self->SetInternalField(kJsonBody, obj);
+}
+
 v8::Local<v8::ObjectTemplate> NewRequestContextTemplate(v8::Isolate *isolate)
 {
     auto obj_templ = v8::ObjectTemplate::New(isolate);
@@ -460,6 +516,7 @@ v8::Local<v8::ObjectTemplate> NewRequestContextTemplate(v8::Isolate *isolate)
     obj_templ->SetAccessor(NewV8String(isolate, "appBasePath"), appBasePath_getter);
     obj_templ->SetAccessor(NewV8String(isolate, "body"), body_getter);
     obj_templ->SetAccessor(NewV8String(isolate, "server"), server_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "json"), json_body_getter);
     obj_templ->SetInternalFieldCount(kEndForCount);
     return obj_templ;
 }
