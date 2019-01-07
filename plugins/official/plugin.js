@@ -1173,7 +1173,7 @@ plugin.register('include', function (params, context) {
     var server    = context.server
     var parameter = context.parameter
     var is_win    = server.os.indexOf('Windows') != -1
-    var realpath = params.realpath
+    var realpath  = params.realpath
 
     // 用户输入检查
     // ?file=/etc/passwd
