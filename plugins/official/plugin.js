@@ -60,7 +60,7 @@ var algorithmConfig = {
 
         // 粗规则 - 为了减少 tokenize 次数，当SQL语句包含一定特征时才进入
         // 另外，我们只需要处理增删改查的语句，虽然 show 语句也可以报错注入，但是算法2没必要处理
-        pre_filter: '^(select|insert|update|delete).*(;|\\/\\*|(?:\\d{1,2},){4}|(?:null,){4}|0x[\\da-f]{8}|\\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin))\\b',
+        pre_filter: '^(select|insert|update|delete).*(;|\\/\\*|(?:\\d{1,2}\\s*,\\s*){2}|(?:null\\s*,\\s*){2}|0x[\\da-f]{8}|\\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin))\\b',
 
         feature: {
             // 是否禁止多语句执行，select ...; update ...;
