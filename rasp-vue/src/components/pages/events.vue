@@ -68,7 +68,9 @@
                 </td>
 
                 <td nowrap>
-                  {{ row.attack_source }}
+                  <a target="_blank" :href="'https://www.virustotal.com/#/ip-address/' + (row.client_ip ? row.client_ip : row.attack_source)">
+                    {{ row.client_ip ? row.client_ip : row.attack_source }}
+                  </a>
                 </td>
                 <td nowrap>
                   {{ block_status2name(row.intercept_state) }}

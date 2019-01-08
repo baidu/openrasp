@@ -72,6 +72,12 @@
                   {{ data.attack_location.location_zh_cn }}
                 </span>
               </p>
+              <div class="h6" v-if="data.client_ip">
+                客户端真实 IP
+              </div>
+              <p v-if="data.client_ip">
+                {{ data.client_ip }}
+              </p>              
               <div class="h6">
                 请求 Referer
               </div>
