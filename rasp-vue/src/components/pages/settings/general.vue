@@ -11,7 +11,7 @@
         <div class="form-group">
           <label class="form-label">
             真实 IP header
-            <a href="javascript:">
+            <a target="_blank" href="https://rasp.baidu.com/doc/setup/panel.html#reverse-proxy">
               [帮助文档]
             </a>
           </label>

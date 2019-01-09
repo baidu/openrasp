@@ -15,17 +15,17 @@
 package logs
 
 import (
-	"github.com/astaxie/beego"
-	"rasp-cloud/tools"
-	"github.com/astaxie/beego/logs"
-	"os"
-	"rasp-cloud/es"
-	"time"
-	"encoding/json"
-	"github.com/olivere/elastic"
 	"context"
-	"path"
+	"encoding/json"
 	"fmt"
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
+	"github.com/olivere/elastic"
+	"os"
+	"path"
+	"rasp-cloud/es"
+	"rasp-cloud/tools"
+	"time"
 )
 
 type AggrTimeParam struct {
@@ -46,7 +46,7 @@ type AggrFieldParam struct {
 type SearchAttackParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
-	Data *struct {
+	Data    *struct {
 		Id           string    `json:"_id,omitempty"`
 		AppId        string    `json:"app_id,omitempty"`
 		StartTime    int64     `json:"start_time"`
@@ -63,7 +63,7 @@ type SearchAttackParam struct {
 type SearchPolicyParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
-	Data *struct {
+	Data    *struct {
 		Id        string    `json:"_id,omitempty"`
 		AppId     string    `json:"app_id,omitempty"`
 		StartTime int64     `json:"start_time"`
@@ -188,7 +188,7 @@ func AddLogWithFile(alarmType string, alarm map[string]interface{}) error {
 			return err
 		}
 	} else {
-		logs.Error("failed to write rasp log ,unrecognized log type: " + alarmType)
+		logs.Error("failed to write rasp log, unrecognized log type: " + alarmType)
 	}
 	return nil
 }
@@ -198,13 +198,13 @@ func AddLogWithES(alarmType string, alarm map[string]interface{}) error {
 		select {
 		case esAttackAlarmBuffer <- alarm:
 		default:
-			logs.Error("failed to write attack alarm ,the buffer is full: " + fmt.Sprintf("%+v", alarm))
+			logs.Error("Failed to write attack alarm to ES, the buffer is full. Consider increase AlarmBufferSize value: " + fmt.Sprintf("%+v", alarm))
 		}
 	} else if alarmType == PolicyAlarmType {
 		select {
 		case esPolicyAlarmBuffer <- alarm:
 		default:
-			logs.Error("failed to write policy alarm ,the buffer is full: " + fmt.Sprintf("%+v", alarm))
+			logs.Error("Failed to write policy alarm to ES, the buffer is full. Consider increase AlarmBufferSize value: " + fmt.Sprintf("%+v", alarm))
 		}
 	}
 	return nil

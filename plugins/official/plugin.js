@@ -1,4 +1,4 @@
-const plugin_version = '2018-1227-1200'
+const plugin_version = '2019-0107-2300'
 const plugin_name    = 'official'
 
 /*
@@ -1178,13 +1178,14 @@ plugin.register('include', function (params, context) {
     var server    = context.server
     var parameter = context.parameter
     var is_win    = server.os.indexOf('Windows') != -1
+    var realpath  = params.realpath
 
     // 用户输入检查
     // ?file=/etc/passwd
     // ?file=../../../../../var/log/httpd/error.log
     if (algorithmConfig.include_userinput.action != 'ignore')
     {
-        if (is_path_endswith_userinput(parameter, url, '', is_win))
+        if (is_path_endswith_userinput(parameter, url, realpath, is_win))
         {
             return {
                 action:     algorithmConfig.include_userinput.action,
