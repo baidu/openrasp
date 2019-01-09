@@ -109,7 +109,7 @@ export var status_types = {
 export function getDefaultConfig() {
   return {
     general_config: {
-      custom_headers: {}
+      'inject.custom_headers': {}
     },
     whitelist_config: [],
     email_alarm_conf: {
