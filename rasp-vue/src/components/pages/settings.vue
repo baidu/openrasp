@@ -41,6 +41,15 @@
         <b-tab title-link-class="list-group-item border-0 w-100" title-item-class="px-0">
           <template slot="title">
             <span class="icon mr-3">
+              <i class="fe fe-shield" />
+            </span>
+            应用加固
+          </template>
+          <HardeningSettings ref="hardeningSettings" />
+        </b-tab>
+        <b-tab title-link-class="list-group-item border-0 w-100" title-item-class="px-0">
+          <template slot="title">
+            <span class="icon mr-3">
               <i class="fe fe-user" />
             </span>
             登录认证
@@ -68,6 +77,7 @@ import AuthSettings from '@/components/pages/settings/auth'
 import GeneralSettings from '@/components/pages/settings/general'
 import WhitelistSettings from '@/components/pages/settings/whitelist'
 import AlgorithmSettings from '@/components/pages/settings/algorithm'
+import HardeningSettings from '@/components/pages/settings/hardening'
 import { mapGetters } from 'vuex'
 import defaultsDeep from 'lodash.defaultsdeep'
 import { getDefaultConfig } from '@/util'
@@ -80,7 +90,8 @@ export default {
     AppSettings,
     AuthSettings,
     AlgorithmSettings,
-    GeneralSettings
+    GeneralSettings,
+    HardeningSettings
   },
   data: function() {
     return {
@@ -114,6 +125,7 @@ export default {
         this.loading = false
         this.data = defaultsDeep(getDefaultConfig(), data)
         this.$refs.generalSettings.setData(this.data.general_config)
+        this.$refs.hardeningSettings.setData(this.data.general_config)
         this.$refs.whitelistSettings.setData(this.data.whitelist_config)
       })
     },

@@ -1,60 +1,5 @@
 <template>
   <div>
-    <div class="card">
-      <div class="card-header">
-        <h3 class="card-title">
-          加固设置
-        </h3>
-      </div>
-      <div class="card-body">
-        <div
-          v-for="row in browser_headers"
-          :key="row.name"
-          class="form-group"
-        >
-          <div class="form-label">
-            {{ row.descr }} <a href="https://rasp.baidu.com/doc/">[帮助文档]</a>
-          </div>
-          <form disabled="true">
-            <div class="selectgroup">
-              <label
-                class="selectgroup-item"
-                v-for="option in row.options"
-                :key="option.name"
-              >
-                <input
-                  type="radio"
-                  name="value"
-                  value="block"
-                  class="selectgroup-input"
-                >
-                <span class="selectgroup-button">
-                  {{ option.name }}
-                </span>
-              </label>
-            </div>
-          </form>
-        </div>
-
-      </div>
-
-      <div class="card-footer">
-        <button
-          type="submit"
-          class="btn btn-primary"
-          @click="saveConfig()"
-        >
-          保存
-        </button>
-        <button
-          type="submit"
-          class="btn btn-info pull-right"
-          @click="resetConfig()"
-        >
-          重置
-        </button>
-      </div>
-    </div>
     <!-- begin algorithm settings -->
     <div class="card">
       <div class="card-header">
@@ -193,11 +138,11 @@ import {
   attack_type2name,
   block_status2name,
   browser_headers
-} from "../../../util";
-import { mapGetters } from "vuex";
+} from '../../../util'
+import { mapGetters } from 'vuex'
 
 export default {
-  name: "AlgorithmSettings",
+  name: 'AlgorithmSettings',
   data: function() {
     return {
       items: {},
@@ -205,96 +150,96 @@ export default {
         meta: {}
       },
       browser_headers: browser_headers
-    };
+    }
   },
   computed: {
-    ...mapGetters(["current_app"])
+    ...mapGetters(['current_app'])
   },
   watch: {
     current_app() {
-      this.loadConfig();
+      this.loadConfig()
     }
   },
   mounted() {
     if (!this.current_app.id) {
-      return;
+      return
     }
-    this.loadConfig();
+    this.loadConfig()
   },
   methods: {
     attack_type2name: attack_type2name,
     loadConfig: function() {
       if (!this.current_app.selected_plugin_id.length) {
-        return;
+        return
       }
 
-      var self = this;
+      var self = this
       var body = {
         id: this.current_app.selected_plugin_id
-      };
-
-      function compare(a, b) {
-        return a.name.localeCompare(b.name);
       }
 
-      this.api_request("v1/api/plugin/get", body, function(data) {
-        var tmp = data.algorithm_config;
-        var hooks = {};
-        self.data = data.algorithm_config;
+      function compare(a, b) {
+        return a.name.localeCompare(b.name)
+      }
+
+      this.api_request('v1/api/plugin/get', body, function(data) {
+        var tmp = data.algorithm_config
+        var hooks = {}
+        self.data = data.algorithm_config
 
         // 格式换砖
         Object.keys(tmp).forEach(function(key) {
-          if (key.indexOf("_") == -1) {
-            return;
+          if (key.indexOf('_') == -1) {
+            return
           }
 
-          var hook = key.split("_")[0];
+          var hook = key.split('_')[0]
           if (!hooks[hook]) {
             hooks[hook] = {
               name: hook,
               items: []
-            };
+            }
           }
 
-          hooks[hook]["items"].push({
-            name: tmp[key]["name"],
+          hooks[hook]['items'].push({
+            name: tmp[key]['name'],
             key: key
-          });
-        });
+          })
+        })
 
         Object.keys(hooks).forEach(function(key) {
-          hooks[key]["items"].sort(compare);
-        });
+          hooks[key]['items'].sort(compare)
+        })
 
-        self.items = Object.values(hooks);
-      });
+        self.items = Object.values(hooks)
+      })
     },
     saveConfig: function() {
-      var self = this;
+      var self = this
       var body = {
         id: this.current_app.selected_plugin_id,
         config: this.data
-      };
-
-      this.api_request("v1/api/plugin/algorithm/config", body, function(data) {
-        alert("保存成功");
-      });
-    },
-    resetConfig: function() {
-      if (!confirm("还原默认配置？")) {
-        return;
       }
 
-      var self = this;
+      this.api_request('v1/api/plugin/algorithm/config', body, function(data) {
+        alert('保存成功')
+      })
+    },
+    resetConfig: function() {
+      if (!confirm('还原默认配置？')) {
+        return
+      }
+
+      var self = this
       var body = {
         id: this.current_app.selected_plugin_id
-      };
+      }
 
-      self.api_request("v1/api/plugin/algorithm/restore", body, function(data) {
-        alert("恢复成功，点击刷新");
-        self.loadConfig();
-      });
+      self.api_request('v1/api/plugin/algorithm/restore', body, function(data) {
+        alert('恢复成功，点击刷新')
+        self.loadConfig()
+      })
     }
   }
-};
+}
 </script>
