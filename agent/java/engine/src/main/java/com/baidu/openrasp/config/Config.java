@@ -56,6 +56,7 @@ public class Config extends FileScanListener {
         REQUEST_PARAM_ENCODING("request.param_encoding", ""),
         BODY_MAX_BYTES("body.maxbytes", "4096"),
         LOG_MAX_STACK("log.maxstack", "50"),
+        LOG_MAX_BACKUP("log.maxbackup", "30"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
         SQL_CACHE_CAPACITY("lru.max_size", "100"),
         SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
@@ -158,6 +159,7 @@ public class Config extends FileScanListener {
     private int xssMaxDetectionNum;
     private boolean decompileEnable;
     private ArrayList<String> responseHeaders;
+    private int logMaxBackUp;
 
 
     static {
@@ -1143,6 +1145,27 @@ public class Config extends FileScanListener {
         this.responseHeaders = responseHeaders;
     }
 
+    /**
+     * 获取log4j最大日志备份天数
+     *
+     * @return log4j最大日志备份天数
+     */
+    public synchronized int getLogMaxBackUp() {
+        return logMaxBackUp;
+    }
+
+    /**
+     * 设置log4j最大日志备份天数,默认30天
+     *
+     * @param logMaxBackUp log4j最大日志备份天数
+     */
+    public void setLogMaxBackUp(String logMaxBackUp) {
+        this.logMaxBackUp = Integer.parseInt(logMaxBackUp);
+        if (this.logMaxBackUp < 0) {
+            this.logMaxBackUp = 30;
+        }
+    }
+
     //--------------------------统一的配置处理------------------------------------
 
     /**
@@ -1227,6 +1250,8 @@ public class Config extends FileScanListener {
                 setXssMaxDetectionNum(value);
             } else if (Item.DECOMPILE_ENABLE.key.equals(key)) {
                 setDecompileEnable(value);
+            } else if (Item.LOG_MAX_BACKUP.key.equals(key)) {
+                setLogMaxBackUp(value);
             } else {
                 isHit = false;
             }

@@ -86,16 +86,22 @@ public class Decompiler {
                 Class clazz = Thread.currentThread().getContextClassLoader().loadClass(entry.getKey());
                 String src = getDecompilerString(clazz.getResourceAsStream(simpleName), entry.getKey());
                 if (!src.isEmpty()) {
+                    boolean isFind = false;
                     for (String line : src.split(System.getProperty("line.separator"))) {
                         String matched = Decompiler.matchStringByRegularExpression(line, traceFilter.class_lineNumber.get(entry.getKey()));
                         if (!"".equals(matched)) {
+                            isFind = true;
                             result.put(description, matched);
                             decompileCache.put(description, matched);
                             break;
                         }
                     }
+                    if (!isFind) {
+                        result.put(description, "");
+                    }
+                } else {
+                    result.put(description, "");
                 }
-                result.put(description, "");
             } catch (Exception e) {
                 result.put(description, "");
             }

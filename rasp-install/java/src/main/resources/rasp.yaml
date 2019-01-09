@@ -8,6 +8,7 @@
 # clientip.header=ClientIP
 # sql.cache.capacity: 100
 # log.maxburst: 100
+# log.maxbackup: 30
 # hook 点配置
 # hooks.ignore=http_output
 # debug.level=0
