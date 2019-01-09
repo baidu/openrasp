@@ -61,7 +61,7 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
                 if (method != null) {
                     //目前只支持对mysql的执行异常检测
                     if (type.equals("mysql")) {
-                        String errorSrc = "com.baidu.openrasp.hook.sql.SQLStatementHook.checkSQLErrorCode(" + "\"" + type + "\"" + ",$e,$1);";
+                        String errorSrc = "com.baidu.openrasp.hook.sql.SQLStatementHook.checkSQLErrorCode(" + "\"" + type + "\"" + ",$e);";
                         method.addCatch("{" + errorSrc + " throw $e;}", ClassPool.getDefault().get("java.sql.SQLException"));
                     }
                 }

@@ -282,4 +282,14 @@ public class LocalPluginTestRequest extends AbstractRequest {
     public String getClinetIp() {
         return null;
     }
+
+    /**
+     * 获取请求的contentType
+     *
+     * @return contentType
+     */
+    @Override
+    public String getContentType() {
+        return null;
+    }
 }

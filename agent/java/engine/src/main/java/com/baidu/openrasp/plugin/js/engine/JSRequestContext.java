@@ -21,6 +21,8 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.request.EmptyRequest;
 import com.baidu.openrasp.request.HttpServletRequest;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.mozilla.javascript.*;
 import org.mozilla.javascript.annotations.JSConstructor;
 
@@ -29,7 +31,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
 
+import static com.baidu.openrasp.cloud.utils.CloudUtils.getMapGsonObject;
+
 public class JSRequestContext extends ScriptableObject {
+    private static final String CONTENT_TYPE_JSON_VALUE = "application/json";
+
     private static Set<Object> properties = new HashSet<Object>(Arrays.asList(
             "path",
             "method",
@@ -37,6 +43,7 @@ public class JSRequestContext extends ScriptableObject {
             "querystring",
             "protocol",
             "body",
+            "json",
             "header",
             "parameter",
             "remoteAddr",
@@ -177,4 +184,25 @@ public class JSRequestContext extends ScriptableObject {
         return server;
     }
 
+    public Object jsGet_json() {
+        Scriptable json = cx.newObject(scope);
+        byte[] body = javaContext.getBody();
+        if (body != null) {
+            String contentType = javaContext.getContentType();
+            if (contentType != null && contentType.startsWith(CONTENT_TYPE_JSON_VALUE)) {
+                try {
+                    JsonObject jsonObject = new JsonParser().parse(new String(body)).getAsJsonObject();
+                    Map<String, Object> map = getMapGsonObject().fromJson(jsonObject, Map.class);
+                    for (Map.Entry<String, Object> entry : map.entrySet()) {
+                        String key = entry.getKey();
+                        Object value = entry.getValue();
+                        json.put(key, json, value);
+                    }
+                } catch (Exception e) {
+                    HookHandler.LOGGER.warn("failed to parse body to json", e);
+                }
+            }
+        }
+        return json;
+    }
 }

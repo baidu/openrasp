@@ -85,6 +85,16 @@ public final class HttpServletRequest extends AbstractRequest {
     /**
      * (none-javadoc)
      *
+     * @see AbstractRequest#getContentType()
+     */
+    @Override
+    public String getContentType() {
+        return Reflection.invokeStringMethod(request, "getContentType", EMPTY_CLASS);
+    }
+
+    /**
+     * (none-javadoc)
+     *
      * @see AbstractRequest#getContextPath()
      */
     @Override

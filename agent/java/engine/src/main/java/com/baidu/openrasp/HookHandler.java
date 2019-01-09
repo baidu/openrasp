@@ -292,10 +292,12 @@ public class HookHandler {
      */
     private static void setUserDefinedResponseHeader(HttpServletResponse response) {
         ArrayList<String> headers = Config.getConfig().getResponseHeaders();
-        for (String header : headers) {
-            String[] temp = header.split(":");
-            if (temp.length == 2) {
-                response.setHeader(temp[0].trim(), temp[1].trim());
+        if (headers != null && !headers.isEmpty()) {
+            for (String header : headers) {
+                String[] temp = header.split(":");
+                if (temp.length == 2) {
+                    response.setHeader(temp[0].trim(), temp[1].trim());
+                }
             }
         }
     }

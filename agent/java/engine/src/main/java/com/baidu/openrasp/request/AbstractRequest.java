@@ -242,6 +242,13 @@ public abstract class AbstractRequest {
     public abstract String getAppBasePath();
 
     /**
+     * 获取请求的contentType
+     *
+     * @return contentType
+     */
+    public abstract String getContentType();
+
+    /**
      * 获取自定义的clientip
      *
      * @return 自定义的clientip
