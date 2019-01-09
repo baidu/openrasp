@@ -118,4 +118,9 @@ public class EmptyRequest extends AbstractRequest {
     public String getClinetIp() {
         return null;
     }
+
+    @Override
+    public String getContentType() {
+        return null;
+    }
 }

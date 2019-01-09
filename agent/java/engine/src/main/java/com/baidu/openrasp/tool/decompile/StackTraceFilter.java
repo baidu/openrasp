@@ -17,10 +17,7 @@
 package com.baidu.openrasp.tool.decompile;
 
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @description: 过滤堆栈查找用户代码
@@ -28,8 +25,8 @@ import java.util.Set;
  * @create: 2018/10/21 15:07
  */
 public class StackTraceFilter {
-    public Map<String, String> class_method = new HashMap<String, String>();
-    public Map<String, Integer> class_lineNumber = new HashMap<String, Integer>();
+    public Map<String, String> class_method = new LinkedHashMap<String, String>();
+    public Map<String, Integer> class_lineNumber = new LinkedHashMap<String, Integer>();
     private static Set<String> fiterSet = new HashSet<String>();
 
     static {
@@ -54,19 +51,10 @@ public class StackTraceFilter {
         fiterSet.add("net.");
     }
 
-    public void filter(StackTraceElement[] trace) {
+    public void handleStackTrace(StackTraceElement[] trace) {
         for (StackTraceElement element : trace) {
-            boolean isMatched = false;
-            for (String filterString : fiterSet) {
-                if (element.getClassName().startsWith(filterString)) {
-                    isMatched =true;
-                    break;
-                }
-            }
-            if (!isMatched){
-                class_method.put(element.getClassName(), element.getMethodName());
-                class_lineNumber.put(element.getClassName(), element.getLineNumber());
-            }
+            class_method.put(element.getClassName(), element.getMethodName());
+            class_lineNumber.put(element.getClassName(), element.getLineNumber());
         }
     }
 }

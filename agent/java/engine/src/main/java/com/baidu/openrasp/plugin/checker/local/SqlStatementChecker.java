@@ -69,19 +69,13 @@ public class SqlStatementChecker extends ConfigurableChecker {
 
     public List<EventInfo> checkSql(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
         List<EventInfo> result = new LinkedList<EventInfo>();
-        String query = (String) checkParameter.getParam("query");
-        String sqlType = (String) checkParameter.getParam("server");
-        String errorCode = (String) checkParameter.getParam("errorCode");
         String action = getActionElement(config, CONFIG_KEY_SQL_EXCEPTION);
         String message = null;
-        ArrayList<TokenResult> rawTokens = TokenGenerator.detailTokenize(query, new TokenizeErrorListener());
-        String[] tokens = new String[rawTokens.size()];
-        for (int j = 0; j < rawTokens.size(); j++) {
-            tokens[j] = rawTokens.get(j).getText();
-        }
         //检测sql执行报错注入
         if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
-            if (sqlType != null && errorCode != null && query != null && sqlErrorCode.contains(errorCode)) {
+            String sqlType = (String) checkParameter.getParam("server");
+            String errorCode = (String) checkParameter.getParam("errorCode");
+            if (sqlType != null && errorCode != null && sqlErrorCode.contains(errorCode)) {
                 message = (String) checkParameter.getParam("message");
             }
         }
@@ -89,6 +83,12 @@ public class SqlStatementChecker extends ConfigurableChecker {
             result.add(AttackInfo.createLocalAttackInfo(checkParameter, action,
                     message, "sql_exception", 90));
         } else {
+            String query = (String) checkParameter.getParam("query");
+            ArrayList<TokenResult> rawTokens = TokenGenerator.detailTokenize(query, new TokenizeErrorListener());
+            String[] tokens = new String[rawTokens.size()];
+            for (int j = 0; j < rawTokens.size(); j++) {
+                tokens[j] = rawTokens.get(j).getText();
+            }
             // 算法1: 匹配用户输入
             // 1. 简单识别逻辑是否发生改变
             action = getActionElement(config, CONFIG_KEY_SQL_USER_INPUT);

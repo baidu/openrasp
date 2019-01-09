@@ -183,13 +183,11 @@ public class SQLStatementHook extends AbstractSqlHook {
      *
      * @param server 数据库类型
      * @param e sql执行抛出的异常
-     * @param stmt sql语句
      */
-    public static void checkSQLErrorCode(String server, SQLException e, String stmt) {
+    public static void checkSQLErrorCode(String server, SQLException e) {
         JSContext cx = JSContextFactory.enterAndInitContext();
         Scriptable params = cx.newObject(cx.getScope());
         params.put("server", params, server);
-        params.put("query", params, stmt);
         params.put("errorCode", params, String.valueOf(e.getErrorCode()));
         params.put("message", params, e.getMessage());
         HookHandler.doCheck(CheckParameter.Type.SQL, params);

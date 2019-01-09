@@ -281,4 +281,14 @@ public class CoyoteRequest extends AbstractRequest {
     public String getClinetIp() {
         return null;
     }
+
+    /**
+     * (none-javadoc)
+     *
+     * @see AbstractRequest#getContentType()
+     */
+    @Override
+    public String getContentType() {
+        return null;
+    }
 }
