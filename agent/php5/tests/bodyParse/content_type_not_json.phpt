@@ -12,12 +12,9 @@ include(__DIR__.'/../skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
---ENV--
-return <<<END
-HTTP_CONTENT_TYPE=application/xml;
-END;
 --CGI--
---POST--
+--POST_RAW--
+Content-Type: application/xml
 {"name":"JSON_BODY"}
 --FILE--
 <?php

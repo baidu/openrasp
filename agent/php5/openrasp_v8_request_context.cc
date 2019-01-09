@@ -478,7 +478,8 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     HashTable *SERVER = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]);
     std::string complete_body = "{}";
     zval **origin_zv;
-    if (zend_hash_find(SERVER, ZEND_STRS("HTTP_CONTENT_TYPE"), (void **)&origin_zv) == SUCCESS &&
+    if ((zend_hash_find(SERVER, ZEND_STRS("HTTP_CONTENT_TYPE"), (void **)&origin_zv) == SUCCESS ||
+         zend_hash_find(SERVER, ZEND_STRS("CONTENT_TYPE"), (void **)&origin_zv) == SUCCESS) &&
         Z_TYPE_PP(origin_zv) == IS_STRING)
     {
         std::string content_type_vlaue = std::string(Z_STRVAL_PP(origin_zv));

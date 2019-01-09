@@ -467,9 +467,10 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::Object> obj = v8::Object::New(isolate);
 
-    std::string complete_body= "{}";
+    std::string complete_body = "{}";
     zval *origin_zv;
-    if ((origin_zv = zend_hash_str_find(_SERVER, "HTTP_CONTENT_TYPE", strlen("HTTP_CONTENT_TYPE"))) != nullptr &&
+    if (((origin_zv = zend_hash_str_find(_SERVER, ZEND_STRL("HTTP_CONTENT_TYPE"))) != nullptr ||
+         (origin_zv = zend_hash_str_find(_SERVER, ZEND_STRL("CONTENT_TYPE"))) != nullptr) &&
         Z_TYPE_P(origin_zv) == IS_STRING)
     {
         std::string content_type_vlaue = std::string(Z_STRVAL_P(origin_zv));

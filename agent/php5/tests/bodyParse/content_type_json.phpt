@@ -1,5 +1,5 @@
 --TEST--
-json body parse
+json body parse application/json
 --SKIPIF--
 <?php
 $plugin = <<<EOF
@@ -12,12 +12,9 @@ include(__DIR__.'/../skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
---ENV--
-return <<<END
-HTTP_CONTENT_TYPE=application/json;
-END;
 --CGI--
---POST--
+--POST_RAW--
+Content-Type: application/json
 {"name":"JSON_BODY"}
 --FILE--
 <?php
