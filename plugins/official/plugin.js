@@ -1,4 +1,4 @@
-const plugin_version = '2018-1227-1200'
+const plugin_version = '2019-0110-1100'
 const plugin_name    = 'official'
 
 /*
@@ -1067,6 +1067,12 @@ plugin.register('readFile', function (params, context) {
     var parameter = context.parameter
     var is_win    = server.os.indexOf('Windows') != -1
 
+    // weblogic 下面，所有war包读取操作全部忽略
+    if (server['server'] === 'weblogic' && params.realpath.endsWith('.war'))
+    {
+    	return clean
+    }
+
     //
     // 算法1: 简单用户输入识别，拦截任意文件下载漏洞
     //
@@ -1173,7 +1179,7 @@ plugin.register('include', function (params, context) {
     var server    = context.server
     var parameter = context.parameter
     var is_win    = server.os.indexOf('Windows') != -1
-    var realpath = params.realpath
+    var realpath  = params.realpath
 
     // 用户输入检查
     // ?file=/etc/passwd
