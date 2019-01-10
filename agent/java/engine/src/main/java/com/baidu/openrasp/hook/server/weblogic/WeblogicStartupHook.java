@@ -50,10 +50,25 @@ public class WeblogicStartupHook extends ServerStartupHook {
         try {
             Class clazz = sevrer.getClass().getClassLoader().loadClass("weblogic.version");
             String version = (String) Reflection.invokeStaticMethod(clazz.getName(), "getVersions", new Class[]{});
-            ApplicationModel.init("weblogic", version);
+            if (version != null) {
+                int index = getFirstNumIndexFromString(version);
+                if (index >= 0) {
+                    version = version.substring(index);
+                    ApplicationModel.init("weblogic", version);
+                }
+            }
         } catch (Exception e) {
             HookHandler.LOGGER.warn("handle weblogic startup failed", e);
         }
         HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_WEBLOGIC_START, CheckParameter.EMPTY_MAP);
+    }
+
+    private static int getFirstNumIndexFromString(String version) {
+        for (int i = 0; i < version.length(); i++) {
+            if (version.charAt(i) >= '0' && version.charAt(i) <= '9') {
+                return i;
+            }
+        }
+        return -1;
     }
 }

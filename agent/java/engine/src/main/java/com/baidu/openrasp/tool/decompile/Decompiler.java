@@ -71,7 +71,7 @@ public class Decompiler {
         return "";
     }
 
-    public static Map<String, String> getAlarmPoint(StackTraceElement[] stackTraceElements, String appBasePath) {
+    public static ArrayList<String> getAlarmPoint(StackTraceElement[] stackTraceElements, String appBasePath) {
         Map<String, String> result = new LinkedHashMap<String, String>();
         StackTraceFilter traceFilter = new StackTraceFilter();
         traceFilter.handleStackTrace(stackTraceElements);
@@ -106,6 +106,10 @@ public class Decompiler {
                 result.put(description, "");
             }
         }
-        return result;
+        ArrayList<String> list = new ArrayList<String>(result.size());
+        for (Map.Entry<String, String> entry : result.entrySet()) {
+            list.add(entry.getValue());
+        }
+        return list;
     }
 }

@@ -59,7 +59,9 @@ public class JBossStartupHook extends ServerStartupHook {
 
         try {
             String serverVersion = Reflection.invokeStringMethod(object, "getVersionNumber", new Class[]{});
-            ApplicationModel.init("jboss", serverVersion);
+            if (serverVersion != null) {
+                ApplicationModel.init("jboss", serverVersion);
+            }
         } catch (Exception e) {
             HookHandler.LOGGER.error("handle jboss startup failed", e);
         }
