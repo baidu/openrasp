@@ -88,7 +88,7 @@ public class Config extends FileScanListener {
         XSS_MIN_PARAM_LENGTH("xss.min_param_length", "15"),
         XSS_MAX_DETECTION_NUM("xss.max_detection_num", "10"),
         DECOMPILE_ENABLE("decompile.enable", "false"),
-        RESPONSE_HEADERS("response.headers", "");
+        RESPONSE_HEADERS("inject.custom_headers", "");
 
 
         Item(String key, String defaultValue) {
@@ -112,7 +112,7 @@ public class Config extends FileScanListener {
     }
 
     private static final String HOOKS_WHITE = "hook.white";
-    private static final String RESPONSE_HEADERS = "response.headers";
+    private static final String RESPONSE_HEADERS = "inject.custom_headers";
     private static final String CONFIG_DIR_NAME = "conf";
     private static final String CONFIG_FILE_NAME = "rasp.yaml";
     public static final int REFLECTION_STACK_START_INDEX = 0;
@@ -158,7 +158,7 @@ public class Config extends FileScanListener {
     private int xssMinParamLength;
     private int xssMaxDetectionNum;
     private boolean decompileEnable;
-    private ArrayList<String> responseHeaders;
+    private Map<String, String> responseHeaders;
     private int logMaxBackUp;
 
 
@@ -225,8 +225,9 @@ public class Config extends FileScanListener {
                 } else if (item.key.equals(RESPONSE_HEADERS)) {
                     if (properties != null) {
                         Object object = properties.get(item.key);
-                        if (object instanceof ArrayList) {
-                            setResponseHeaders((ArrayList) object);
+                        if (object instanceof Map) {
+                            Map<String, String> headers = (Map<String, String>) object;
+                            setResponseHeaders(headers);
                         }
                     }
                     continue;
@@ -248,8 +249,9 @@ public class Config extends FileScanListener {
                     temp.putAll(parseHookWhite(hooks));
                 }
             } else if (entry.getKey().equals(RESPONSE_HEADERS)) {
-                if (entry.getValue() instanceof ArrayList) {
-                    setResponseHeaders((ArrayList) entry.getValue());
+                if (entry.getValue() instanceof Map) {
+                    Map<String, String> headers = (Map<String, String>) (entry.getValue());
+                    setResponseHeaders(headers);
                 }
             } else {
                 if (entry.getValue() instanceof JsonPrimitive) {
@@ -1132,7 +1134,7 @@ public class Config extends FileScanListener {
      *
      * @return response header数组
      */
-    public synchronized ArrayList<String> getResponseHeaders() {
+    public synchronized Map<String, String> getResponseHeaders() {
         return responseHeaders;
     }
 
@@ -1141,7 +1143,7 @@ public class Config extends FileScanListener {
      *
      * @param responseHeaders 待设置response header数组
      */
-    public synchronized void setResponseHeaders(ArrayList<String> responseHeaders) {
+    public synchronized void setResponseHeaders(Map<String, String> responseHeaders) {
         this.responseHeaders = responseHeaders;
     }
 
