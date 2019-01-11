@@ -268,8 +268,16 @@ public class Config extends FileScanListener {
                 loadConfigFromFile(file, false);
                 //单机模式下动态添加获取删除syslog和动态更新syslog tag
                 if (!CloudUtils.checkCloudControlEnter()) {
+                    //关闭或者打开syslog服务
                     LogConfig.syslogManager();
+                    //更新syslog tag标志
                     DynamicConfigAppender.updateSyslogTag();
+                    //是否开启log4j的debug
+                    DynamicConfigAppender.enableDebug();
+                    //更新log4j的日志限速
+                    DynamicConfigAppender.fileAppenderAddBurstFilter();
+                    //更新log4j的日志最大备份天数
+                    DynamicConfigAppender.setLogMaxBackup();
                 }
             } catch (IOException e) {
                 LOGGER.warn("update rasp.yaml failed because: ", e);

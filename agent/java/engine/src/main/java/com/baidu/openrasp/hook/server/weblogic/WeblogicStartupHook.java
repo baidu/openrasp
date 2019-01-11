@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook.server.weblogic;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.server.ServerStartupHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
@@ -60,7 +61,10 @@ public class WeblogicStartupHook extends ServerStartupHook {
         } catch (Exception e) {
             HookHandler.LOGGER.warn("handle weblogic startup failed", e);
         }
-        HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_WEBLOGIC_START, CheckParameter.EMPTY_MAP);
+        sendRegister();
+        if (!CloudUtils.checkCloudControlEnter()) {
+            HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_WEBLOGIC_START, CheckParameter.EMPTY_MAP);
+        }
     }
 
     private static int getFirstNumIndexFromString(String version) {

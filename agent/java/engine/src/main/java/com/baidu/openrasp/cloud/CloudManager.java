@@ -50,6 +50,8 @@ public class CloudManager {
             HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_RESIN_START, CheckParameter.EMPTY_MAP);
         } else if ("websphere".equals(serverName)) {
             HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_WEBSPHERE_START, CheckParameter.EMPTY_MAP);
+        } else if ("weblogic".equals(serverName)) {
+            HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_WEBLOGIC_START, CheckParameter.EMPTY_MAP);
         }
     }
 
