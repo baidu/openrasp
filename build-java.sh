@@ -48,7 +48,7 @@ function buildPlugin {
 }
 
 function copyConf {
-	cp $BASE_DIR/rasp-install/java/src/main/resources/rasp.properties $OUTPUT_ROOT/rasp/conf/rasp.properties || exit 1
+	cp $BASE_DIR/rasp-install/java/src/main/resources/rasp.yaml $OUTPUT_ROOT/rasp/conf/rasp.yaml || exit 1
 }
 
 log "[1] build RaspInstall.jar" 
@@ -57,7 +57,7 @@ buildRaspInstall
 log "[2] copy OpenRasp Plugin"
 buildPlugin
 
-log "[3] copy rasp.properties"
+log "[3] copy rasp.yaml"
 copyConf
 
 log "[4] build OpenRasp"

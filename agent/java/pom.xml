@@ -147,6 +147,22 @@
                                     <shadedPattern>log4j.rasp.configuration</shadedPattern>
                                 </relocation>
                                 <relocation>
+                                    <pattern>log4j.xml</pattern>
+                                    <shadedPattern>log4j.rasp.xml</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>log4j.properties</pattern>
+                                    <shadedPattern>log4j.rasp.properties</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>log4j.configuratorClass</pattern>
+                                    <shadedPattern>log4j.rasp.configuratorClass</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>log4j.defaultInitOverride</pattern>
+                                    <shadedPattern>log4j.rasp.defaultInitOverride</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>org.abego</pattern>
                                     <shadedPattern>com.baidu.openrasp.abego</shadedPattern>
                                 </relocation>

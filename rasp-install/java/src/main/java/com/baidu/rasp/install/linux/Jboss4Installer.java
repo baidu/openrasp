@@ -32,7 +32,6 @@ public class Jboss4Installer extends BaseStandardInstaller {
     private static String OPENRASP_CONFIG =
             "### BEGIN OPENRASP - DO NOT MODIFY ###\n" +
             "\tJAVA_OPTS=\"-javaagent:${JBOSS_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"\n" +
-            "\tJAVA_OPTS=\"-Dlog4j.rasp.configuration=file://${JBOSS_HOME}/rasp/conf/rasp-log4j.xml ${JAVA_OPTS}\"\n" +
             "### END OPENRASP ###\n";
     private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*/rasp/).*");
 
