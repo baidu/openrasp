@@ -93,11 +93,14 @@ export var attack_types = {
   fileUpload: '任意文件上传',
   deserialization: 'Transformer 反序列化',
   webshell: 'WebShell 后门',
-  xss: 'XSS 跨站脚本攻击',
+  xss_echo: 'Echo XSS 跨站脚本攻击',
   webshell_callable: 'WebShell - 变形后门',
   webshell_eval: 'WebShell - 中国菜刀',
   webshell_command: 'WebShell - 命令执行',
-  webshell_file_put_contents: 'WebShell - 后门上传'
+  webshell_file_put_contents: 'WebShell - 后门上传',
+  xss_userinput: 'BODY XSS 跨站脚本攻击',
+  sql_exception: 'SQL 语句异常',
+  webshell_ld_preload: 'WebShell - LD_PRELOAD 后门'
 }
 
 export var status_types = {
