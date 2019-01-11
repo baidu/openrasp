@@ -40,7 +40,7 @@
       </div>
     </div>
 
-    <b-modal id="modal1" ref="modal" title="添加/编辑 白名单" hide-header-close @hidden="hideModal()">
+    <b-modal ref="modal" title="添加/编辑 白名单" size="lg" hide-header-close @hidden="hideModal()">
       <div class="form-group">
         <label>URL - 不区分 http/https</label>
         <input v-model="modalData.url" type="text" class="form-control" maxlen="200">

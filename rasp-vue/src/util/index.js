@@ -80,6 +80,7 @@ export var browser_headers = [
 
 export var attack_types = {
   sql: 'SQL 注入',
+  sql_exception: 'SQL 语句异常',
   command: '命令执行',
   xxe: 'XXE 外部实体加载',
   directory: '目录遍历',
@@ -92,14 +93,13 @@ export var attack_types = {
   webdav: '任意文件上传 (PUT)',
   fileUpload: '任意文件上传',
   deserialization: 'Transformer 反序列化',
-  webshell: 'WebShell 后门',
   xss_echo: 'Echo XSS 跨站脚本攻击',
+  xss_userinput: 'BODY XSS 跨站脚本攻击',
+  // webshell: 'WebShell 后门',
   webshell_callable: 'WebShell - 变形后门',
   webshell_eval: 'WebShell - 中国菜刀',
   webshell_command: 'WebShell - 命令执行',
   webshell_file_put_contents: 'WebShell - 后门上传',
-  xss_userinput: 'BODY XSS 跨站脚本攻击',
-  sql_exception: 'SQL 语句异常',
   webshell_ld_preload: 'WebShell - LD_PRELOAD 后门'
 }
 
@@ -129,19 +129,11 @@ export function getDefaultConfig() {
 }
 
 export function block_status2name(status) {
-  if (status_types[status]) {
-    return status_types[status]
-  }
-
-  return status
+  return status_types[status] || status
 }
 
 export function attack_type2name(id) {
-  if (attack_types[id]) {
-    return attack_types[id]
-  }
-
-  return id
+  return attack_types[id] || id
 }
 
 export function api_request(url, data, cb, err_cb) {

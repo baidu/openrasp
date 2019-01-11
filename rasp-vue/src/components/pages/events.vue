@@ -12,7 +12,34 @@
             </span>
             <DatePicker ref="datePicker" @selected="loadEvents(1)" />
           </div>
-          <EventTypePicker ref="eventTypePicker" @selected="loadEvents(1)" />
+          <b-dropdown text="主机状态" class="ml-2" right>
+            <b-container style="width: 500px;">
+              <b-form-row>
+                <b-col>
+                  <label class="custom-switch">
+                    <input type="checkbox" class="custom-switch-input" checked @change="selectAll">
+                    <span class="custom-switch-indicator" />
+                    <span class="custom-switch-description">
+                      全选
+                    </span>
+                  </label>
+                </b-col>
+                <div class="w-100" />
+                <template v-for="(value, key, index) in attack_types">
+                  <b-col :key="key">
+                    <label class="custom-switch">
+                      <input v-model="selected" type="checkbox" class="custom-switch-input" :value="key">
+                      <span class="custom-switch-indicator" />
+                      <span class="custom-switch-description">
+                        {{ value }}
+                      </span>
+                    </label>
+                  </b-col>
+                  <div v-if="index % 2 === 1" class="w-100" />
+                </template>
+              </b-form-row>
+            </b-container>
+          </b-dropdown>
           <div class="input-icon ml-2">
             <span class="input-icon-addon">
               <i class="fe fe-search" />
@@ -105,16 +132,14 @@
 <script>
 import EventDetailModal from '@/components/modals/eventDetailModal'
 import DatePicker from '@/components/DatePicker'
-import EventTypePicker from '@/components/EventTypePicker'
-import { attack_type2name, block_status2name } from '../../util'
+import { attack_type2name, block_status2name, attack_types } from '@/util'
 import { mapGetters } from 'vuex'
 
 export default {
   name: 'Events',
   components: {
     EventDetailModal,
-    DatePicker,
-    EventTypePicker
+    DatePicker
   },
   data() {
     return {
@@ -122,14 +147,17 @@ export default {
       loading: false,
       currentPage: 1,
       srcip: '',
-      total: 0
+      total: 0,
+      attack_types,
+      selected: Object.keys(attack_types)
     }
   },
   computed: {
     ...mapGetters(['current_app'])
   },
   watch: {
-    current_app() { this.loadEvents(1) }
+    current_app() { this.loadEvents(1) },
+    selected() { this.loadEvents(1) }
   },
   mounted() {
     if (!this.current_app.id) {
@@ -138,6 +166,9 @@ export default {
     this.loadEvents(1)
   },
   methods: {
+    selectAll({ target }) {
+      this.selected = target.checked ? Object.keys(this.attack_types) : []
+    },
     attack_type2name,
     block_status2name,
     showEventDetail(data) {
@@ -149,7 +180,7 @@ export default {
         data: {
           start_time: this.$refs.datePicker.start.valueOf(),
           end_time: this.$refs.datePicker.end.valueOf(),
-          attack_type: this.$refs.eventTypePicker.selected(),
+          attack_type: this.selected,
           attack_source: this.srcip,
           app_id: this.current_app.id
         },
