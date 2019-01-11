@@ -26,183 +26,187 @@ import (
 	"net"
 	"rasp-cloud/tools"
 	"encoding/json"
+	"rasp-cloud/conf"
 )
 
-type AttackAlarm struct {
-	content string
-}
-
 var (
-	AttackIndexName      = "openrasp-attack-alarm"
-	AliasAttackIndexName = "real-openrasp-attack-alarm"
-	AttackEsMapping      = `
-	{
-		"settings": {
-			"analysis": {
-				"normalizer": {
-					"lowercase_normalizer": {
-						"type": "custom",
-						"filter": ["lowercase"]
-					}
-				}     
-			}
-		},
-		"mappings": {
-			"attack-alarm": {
-				"_all": {
-					"enabled": false
-				},
-				"properties": {
-					"@timestamp":{
-                   		"type":"date"
-         			},
-					"request_method": {
-						"type": "keyword",
-						"ignore_above": 50
-					},
-					"target": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"server_ip": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"client_ip": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"referer": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"user_agent": {
-						"type": "keyword",
-						"ignore_above": 512
-					},
-					"attack_source": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"path": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"url": {
-						"type": "keyword",
-						"ignore_above": 256,
-						"normalizer": "lowercase_normalizer"
-					},
-					"event_type": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"server_hostname": {
-						"type": "keyword",
-						"ignore_above": 256,
-						"normalizer": "lowercase_normalizer"
-					},
-					"stack_md5": {
-						"type": "keyword",
-						"ignore_above": 64
-					},
-					"server_type": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"server_version": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"request_id": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"body": {
-						"type": "keyword"
-					},
-					"app_id": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"rasp_id": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"event_time": {
-						"type": "date"
-					},
-					"stack_trace": {
-						"type": "keyword"
-					},
-					"intercept_state": {
-						"type": "keyword",
-						"ignore_above": 64
-					},
-					"attack_type": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"attack_location": {
-						"type": "object",
-						"properties": {
-							"location_zh_cn":{
-								"type": "keyword",
-								"ignore_above": 256
-							},
-							"location_en":{
-								"type": "keyword",
-								"ignore_above": 256
-							},
-							"longitude":{
-								"type": "double"
-							},
-							"latitude":{
-								"type": "double"
-							}
+	AttackAlarmInfo = AlarmLogInfo{
+		EsType:       "attack-alarm",
+		EsIndex:      "openrasp-attack-alarm",
+		EsAliasIndex: "real-openrasp-attack-alarm",
+		TtlTime:      24 * 365 * time.Hour,
+		AlarmBuffer:  make(chan map[string]interface{}, conf.AppConfig.AlarmBufferSize),
+		FileLogger:   initAlarmFileLogger("/openrasp-logs/attack-alarm", "attack.log"),
+		EsMapping: `
+		{
+			"settings": {
+				"analysis": {
+					"normalizer": {
+						"lowercase_normalizer": {
+							"type": "custom",
+							"filter": ["lowercase"]
 						}
+					}     
+				}
+			},
+			"mappings": {
+				"attack-alarm": {
+					"_all": {
+						"enabled": false
 					},
-					"plugin_algorithm":{
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"plugin_name": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"plugin_confidence": {
-						"type": "short"
-					},
-					"attack_params": {
-						"type": "object",
-						"enabled":"false"
-					},
-					"plugin_message": {
-						"type": "keyword"
-					},
-					"server_nic": {
-						"type": "nested",
-						"properties": {
-							"name": {
-								"type": "keyword",
-								"ignore_above": 256
-							},
-							"ip": {
-								"type": "keyword",
-								"ignore_above": 256
+					"properties": {
+						"@timestamp":{
+							"type":"date"
+						},
+						"request_method": {
+							"type": "keyword",
+							"ignore_above": 50
+						},
+						"target": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"server_ip": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"client_ip": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"referer": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"user_agent": {
+							"type": "keyword",
+							"ignore_above": 512
+						},
+						"attack_source": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"path": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"url": {
+							"type": "keyword",
+							"ignore_above": 256,
+							"normalizer": "lowercase_normalizer"
+						},
+						"event_type": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"server_hostname": {
+							"type": "keyword",
+							"ignore_above": 256,
+							"normalizer": "lowercase_normalizer"
+						},
+						"stack_md5": {
+							"type": "keyword",
+							"ignore_above": 64
+						},
+						"server_type": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"server_version": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"request_id": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"body": {
+							"type": "keyword"
+						},
+						"app_id": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"rasp_id": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"event_time": {
+							"type": "date"
+						},
+						"stack_trace": {
+							"type": "keyword"
+						},
+						"intercept_state": {
+							"type": "keyword",
+							"ignore_above": 64
+						},
+						"attack_type": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"attack_location": {
+							"type": "object",
+							"properties": {
+								"location_zh_cn":{
+									"type": "keyword",
+									"ignore_above": 256
+								},
+								"location_en":{
+									"type": "keyword",
+									"ignore_above": 256
+								},
+								"longitude":{
+									"type": "double"
+								},
+								"latitude":{
+									"type": "double"
+								}
+							}
+						},
+						"plugin_algorithm":{
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"plugin_name": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"plugin_confidence": {
+							"type": "short"
+						},
+						"attack_params": {
+							"type": "object",
+							"enabled":"false"
+						},
+						"plugin_message": {
+							"type": "keyword"
+						},
+						"server_nic": {
+							"type": "nested",
+							"properties": {
+								"name": {
+									"type": "keyword",
+									"ignore_above": 256
+								},
+								"ip": {
+									"type": "keyword",
+									"ignore_above": 256
+								}
 							}
 						}
 					}
 				}
 			}
 		}
+	`,
 	}
-	`
 	geoIpDbPath string
 	geoIpDb     *geoip2.Reader
 )
 
 func init() {
+	registerAlarmInfo(&AttackAlarmInfo)
 	currentPath, err := tools.GetCurrentPath()
 	if err != nil {
 		tools.Panic(tools.ErrCodeLogInitFailed, "failed to get current directory path", err)
@@ -227,7 +231,7 @@ func AddAttackAlarm(alarm map[string]interface{}) error {
 		}
 	}
 	setAlarmLocation(alarm)
-	return AddAlarmFunc(AttackAlarmType, alarm)
+	return AddAlarmFunc(AttackAlarmInfo.EsType, alarm)
 }
 
 func setAlarmLocation(alarm map[string]interface{}) {
@@ -262,7 +266,7 @@ func AggregationAttackWithTime(startTime int64, endTime int64, interval string, 
 	interceptAggr := elastic.NewTermsAggregation().Field("intercept_state")
 	timeAggr.SubAggregation(interceptAggrName, interceptAggr)
 	timeQuery := elastic.NewRangeQuery("event_time").Gte(startTime).Lte(endTime)
-	aggrResult, err := es.ElasticClient.Search(AliasAttackIndexName + "-" + appId).
+	aggrResult, err := es.ElasticClient.Search(AttackAlarmInfo.EsAliasIndex + "-" + appId).
 		Query(elastic.NewBoolQuery().Must(timeQuery)).
 		Aggregation(timeAggrName, timeAggr).
 		Size(0).
@@ -314,7 +318,7 @@ func AggregationAttackWithUserAgent(startTime int64, endTime int64, size int,
 	uaAggr := elastic.NewTermsAggregation().Field("user_agent").Size(size).OrderByCount(false)
 	timeQuery := elastic.NewRangeQuery("event_time").Gte(startTime).Lte(endTime)
 	aggrName := "aggr_ua"
-	aggrResult, err := es.ElasticClient.Search(AliasAttackIndexName + "-" + appId).
+	aggrResult, err := es.ElasticClient.Search(AttackAlarmInfo.EsAliasIndex + "-" + appId).
 		Query(timeQuery).
 		Aggregation(aggrName, uaAggr).
 		Size(0).
@@ -349,7 +353,7 @@ func AggregationAttackWithType(startTime int64, endTime int64, size int,
 	typeAggr := elastic.NewTermsAggregation().Field("attack_type").Size(size).OrderByCount(false)
 	timeQuery := elastic.NewRangeQuery("event_time").Gte(startTime).Lte(endTime)
 	aggrName := "aggr_type"
-	aggrResult, err := es.ElasticClient.Search(AliasAttackIndexName + "-" + appId).
+	aggrResult, err := es.ElasticClient.Search(AttackAlarmInfo.EsAliasIndex + "-" + appId).
 		Query(timeQuery).
 		Aggregation(aggrName, typeAggr).
 		Size(0).

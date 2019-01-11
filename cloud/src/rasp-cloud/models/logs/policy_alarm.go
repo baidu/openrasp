@@ -18,96 +18,104 @@ import (
 	"fmt"
 	"crypto/md5"
 	"github.com/astaxie/beego"
+	"time"
+	"rasp-cloud/conf"
 )
 
-type RaspLog struct {
-	content string
-}
-
 var (
-	PolicyIndexName      = "openrasp-policy-alarm"
-	AliasPolicyIndexName = "real-openrasp-policy-alarm"
-	PolicyEsMapping      = `
-	{
-		"settings": {
-			"analysis": {
-				"normalizer": {
-					"lowercase_normalizer": {
-						"type": "custom",
-						"filter": ["lowercase"]
-					}
-				}     
-			}
-		},
-		"mappings": {
-			"policy-alarm": {
-				"_all": {
-					"enabled": false
-				},
-				"properties": {
-					"@timestamp":{
-						"type":"date"
-         			},
-					"event_type": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"server_hostname": {
-						"type": "keyword",
-						"ignore_above": 256,
-						"normalizer": "lowercase_normalizer"
-					},
-					"server_type": {
-						"type": "keyword",
-						"ignore_above": 64
-					},
-					"server_nic": {
-						"type": "nested",
-						"properties": {
-							"name": {
-								"type": "keyword",
-								"ignore_above": 256
-							},
-							"ip": {
-								"type": "keyword",
-								"ignore_above": 256
-							}
+	PolicyAlarmInfo = AlarmLogInfo{
+		EsType:       "policy-alarm",
+		EsIndex:      "openrasp-policy-alarm",
+		EsAliasIndex: "real-openrasp-policy-alarm",
+		TtlTime:      24 * 365 * time.Hour,
+		AlarmBuffer:  make(chan map[string]interface{}, conf.AppConfig.AlarmBufferSize),
+		FileLogger:   initAlarmFileLogger("/openrasp-logs/policy-alarm", "policy.log"),
+		EsMapping: `
+		{
+			"settings": {
+				"analysis": {
+					"normalizer": {
+						"lowercase_normalizer": {
+							"type": "custom",
+							"filter": ["lowercase"]
 						}
+					}
+				}
+			},
+			"mappings": {
+				"policy-alarm": {
+					"_all": {
+						"enabled": false
 					},
-					"app_id": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"rasp_id": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"event_time": {
-						"type": "date"
-					},
-					"stack_trace": {
-						"type": "keyword"
-					},
-					"policy_id": {
-						"type": "long"
-					},
-					"message": {
-						"type": "keyword"
-					},
-					"stack_md5": {
-						"type": "keyword",
-						"ignore_above": 64
-					},
-					"policy_params": {
-						"type": "object",
-						"enabled":"false"
+					"properties": {
+						"@timestamp":{
+							"type":"date"
+						},
+						"event_type": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"server_hostname": {
+							"type": "keyword",
+							"ignore_above": 256,
+							"normalizer": "lowercase_normalizer"
+						},
+						"server_type": {
+							"type": "keyword",
+							"ignore_above": 64
+						},
+						"server_nic": {
+							"type": "nested",
+							"properties": {
+								"name": {
+									"type": "keyword",
+									"ignore_above": 256
+								},
+								"ip": {
+									"type": "keyword",
+									"ignore_above": 256
+								}
+							}
+						},
+						"app_id": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"rasp_id": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"event_time": {
+							"type": "date"
+						},
+						"stack_trace": {
+							"type": "keyword"
+						},
+						"policy_id": {
+							"type": "long"
+						},
+						"message": {
+							"type": "keyword"
+						},
+						"stack_md5": {
+							"type": "keyword",
+							"ignore_above": 64
+						},
+						"policy_params": {
+							"type": "object",
+							"enabled":"false"
+						}
 					}
 				}
 			}
 		}
+		`,
 	}
-`
 )
+
+func init() {
+	registerAlarmInfo(&PolicyAlarmInfo)
+}
 
 func AddPolicyAlarm(alarm map[string]interface{}) error {
 	defer func() {
@@ -136,5 +144,5 @@ func AddPolicyAlarm(alarm map[string]interface{}) error {
 		}
 	}
 	alarm["upsert_id"] = fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
-	return AddAlarmFunc(PolicyAlarmType, alarm)
+	return AddAlarmFunc(PolicyAlarmInfo.EsType, alarm)
 }

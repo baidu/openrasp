@@ -1,4 +1,4 @@
-//Copyright 2017-2019 Baidu Inc.
+//Copyright 2017-2018 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -12,19 +12,33 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-package api
+package agent_logs
 
 import (
+	"encoding/json"
+	"net/http"
 	"rasp-cloud/controllers"
-	"rasp-cloud/conf"
+	"rasp-cloud/models/logs"
+	"time"
 )
 
-// Operations about agent domain
-type AgentDomainController struct {
+type ErrorController struct {
 	controllers.BaseController
 }
 
-// @router /get [post]
-func (o *AgentDomainController) GetAgentDomain() {
-	o.Serve(map[string]string{"agent_domain": conf.AppConfig.AgentServerURL})
+// @router / [post]
+func (o *ErrorController) Post() {
+	var alarms []map[string]interface{}
+	if err := json.Unmarshal(o.Ctx.Input.RequestBody, &alarms); err != nil {
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
+	}
+	count := 0
+	for _, alarm := range alarms {
+		alarm["@timestamp"] = time.Now().UnixNano() / 1000000
+		err := logs.AddErrorAlarm(alarm)
+		if err == nil {
+			count++
+		}
+	}
+	o.Serve(map[string]uint64{"count": uint64(count)})
 }

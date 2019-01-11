@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"crypto/md5"
 	"rasp-cloud/mongo"
-	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
 	"sync"
 	"time"
@@ -33,6 +32,7 @@ import (
 	"bufio"
 	"bytes"
 	"github.com/robertkrimen/otto"
+	"rasp-cloud/conf"
 )
 
 type Plugin struct {
@@ -52,19 +52,10 @@ const (
 )
 
 var (
-	mutex      sync.Mutex
-	MaxPlugins int
+	mutex sync.Mutex
 )
 
 func init() {
-	if value, err := beego.AppConfig.Int("MaxPlugins"); err != nil || value <= 0 {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'AlarmBufferSize' config must be greater than 0", nil)
-	} else if value < 10 {
-		beego.Warning("the value of 'MaxPlugins' config is less than 10, it will be set to 10")
-		MaxPlugins = 10
-	} else {
-		MaxPlugins = value
-	}
 	count, err := mongo.Count(pluginCollectionName)
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get plugin collection count", err)
@@ -164,8 +155,8 @@ func addPluginToDb(version string, name string, content []byte, appId string,
 	defer mutex.Unlock()
 
 	var count int
-	if MaxPlugins > 0 {
-		_, oldPlugins, err := GetPluginsByApp(appId, MaxPlugins-1, 0)
+	if conf.AppConfig.MaxPlugins > 0 {
+		_, oldPlugins, err := GetPluginsByApp(appId, conf.AppConfig.MaxPlugins-1, 0)
 		if err != nil {
 			return nil, err
 		}
@@ -263,7 +254,6 @@ func handleAlgorithmConfig(plugin *Plugin, config map[string]interface{}) (appId
 	}
 	algorithmContent := regexp.MustCompile(regex).ReplaceAllString(plugin.Content, newContent)
 	newMd5 := fmt.Sprintf("%x", md5.Sum([]byte(algorithmContent)))
-	fmt.Println(algorithmContent)
 	return plugin.AppId, mongo.UpdateId(pluginCollectionName, plugin.Id, bson.M{"content": algorithmContent,
 		"algorithm_config": config, "md5": newMd5})
 }

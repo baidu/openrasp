@@ -155,7 +155,7 @@ func (o *AttackAlarmController) Search() {
 	delete(searchData, "end_time")
 	delete(searchData, "app_id")
 	total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime, searchData, "event_time",
-		param.Page, param.Perpage, false, logs.AliasAttackIndexName+"-"+param.Data.AppId)
+		param.Page, param.Perpage, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+param.Data.AppId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
 	}

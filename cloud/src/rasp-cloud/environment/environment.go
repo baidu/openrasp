@@ -26,28 +26,15 @@ import (
 	"os/exec"
 	"rasp-cloud/tools"
 	"syscall"
+	"rasp-cloud/conf"
 )
 
 const (
-	Version             = "1.0.0-RC1"
-	StartTypeForeground = "panel"
-	StartTypeAgent      = "agent"
-	StartTypeReset      = "reset"
-	StartTypeDefault    = "default"
-)
-
-type Flag struct {
-	StartType *string
-	Password  *string
-	Daemon    *bool
-	Version   *bool
-}
-
-var (
-	StartFlag = &Flag{}
+	Version = "1.0.0-RC1"
 )
 
 func init() {
+	StartFlag := &conf.Flag{}
 	StartFlag.StartType = flag.String("type", "", "use to provide different routers")
 	StartFlag.Daemon = flag.Bool("d", false, "use to run as daemon process")
 	StartFlag.Version = flag.Bool("version", false, "use to get version")
@@ -57,7 +44,7 @@ func init() {
 		fmt.Println(Version)
 		os.Exit(0)
 	}
-	if *StartFlag.StartType == StartTypeReset {
+	if *StartFlag.StartType == conf.StartTypeReset {
 		fmt.Print("Enter new admin password: ")
 		pwd1, err := terminal.ReadPassword(int(syscall.Stdin))
 		fmt.Println()
@@ -91,9 +78,10 @@ func init() {
 	initLogger()
 	initEnvConf()
 	if *StartFlag.StartType == "" {
-		allType := StartTypeDefault
+		allType := conf.StartTypeDefault
 		StartFlag.StartType = &allType
 	}
+	conf.InitConfig(StartFlag)
 	beego.Info("===== start type: " + *StartFlag.StartType + " =====")
 }
 

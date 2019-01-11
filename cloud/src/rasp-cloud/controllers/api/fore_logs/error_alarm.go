@@ -1,4 +1,4 @@
-//Copyright 2017-2019 Baidu Inc.
+//Copyright 2017-2018 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -16,21 +16,20 @@ package fore_logs
 
 import (
 	"rasp-cloud/controllers"
-	"rasp-cloud/models/logs"
 	"encoding/json"
-	"rasp-cloud/models"
 	"net/http"
+	"rasp-cloud/models"
+	"rasp-cloud/models/logs"
 	"math"
 )
 
-// Operations about policy alarm message
-type PolicyAlarmController struct {
+type ErrorController struct {
 	controllers.BaseController
 }
 
 // @router /search [post]
-func (o *PolicyAlarmController) Search() {
-	var param = &logs.SearchPolicyParam{}
+func (o *ErrorController) Search() {
+	var param = &logs.SearchErrorParam{}
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "json decode error", err)
@@ -74,7 +73,7 @@ func (o *PolicyAlarmController) Search() {
 	delete(searchData, "end_time")
 	delete(searchData, "app_id")
 	total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime, searchData, "event_time",
-		param.Page, param.Perpage, false, logs.PolicyAlarmInfo.EsAliasIndex+"-"+param.Data.AppId)
+		param.Page, param.Perpage, false, logs.ErrorAlarmInfo.EsAliasIndex+"-"+param.Data.AppId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
 	}
