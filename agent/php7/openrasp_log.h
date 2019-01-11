@@ -18,6 +18,7 @@
 #define OPENRASP_LOG_H
 
 #include "openrasp.h"
+#include <map>
 
 #ifdef __cplusplus
 extern "C"
@@ -167,6 +168,7 @@ PHP_MINFO_FUNCTION(openrasp_log);
 
 bool log_module_initialized();
 void update_log_level();
+std::map<std::string, std::string> get_if_addr_map();
 
 #endif /* OPENRASP_LOG_H */
 

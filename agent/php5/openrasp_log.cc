@@ -872,3 +872,8 @@ void update_log_level()
     TSRMLS_FETCH();
     LOG_G(rasp_logger).set_level(openrasp::scm->get_debug_level() != 0 ? LEVEL_DEBUG : LEVEL_INFO);
 }
+
+std::map<std::string, std::string> get_if_addr_map()
+{
+    return _if_addr_map;
+}

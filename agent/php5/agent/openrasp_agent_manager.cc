@@ -302,6 +302,11 @@ bool OpenraspAgentManager::agent_remote_register()
 	return res_info->verify(REGISTER_ERROR);
 }
 
+pid_t OpenraspAgentManager::get_master_pid()
+{
+	return agent_ctrl_block->get_master_pid();
+}
+
 pid_t OpenraspAgentManager::search_fpm_master_pid()
 {
 	std::vector<std::string> processes;
