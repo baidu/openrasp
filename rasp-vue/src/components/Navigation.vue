@@ -55,6 +55,9 @@
                   <i class="dropdown-icon fe fe-settings"></i> 用户设置
                 </a>
                 <div class="dropdown-divider"></div> -->
+                <a class="dropdown-item" href="https://rasp.baidu.com/#section-support" target="_blank">
+                  <i class="dropdown-icon fa fa-qq" /> 技术支持
+                </a>
                 <a class="dropdown-item" href="javascript:" @click="doLogout()">
                   <i class="dropdown-icon fe fe-log-out" /> 退出登录
                 </a>
@@ -126,12 +129,12 @@
                   帮助文档
                 </a>
               </li>
-              <li class="nav-item">
+              <!-- <li class="nav-item">
                 <a href="https://rasp.baidu.com/#section-support" target="_blank" class="nav-link">
                   <i class="fa fa-qq" />
                   技术支持
                 </a>
-              </li>
+              </li> -->
             </ul>
           </div>
         </div>
