@@ -52,7 +52,7 @@ void LogAgent::run()
 	LogCollectItem alarm_dir_info(ALARM_LOGGER, true);
 	LogCollectItem policy_dir_info(POLICY_LOGGER, true);
 	LogCollectItem plugin_dir_info(PLUGIN_LOGGER, false);
-	LogCollectItem rasp_dir_info(RASP_LOGGER, false);
+	LogCollectItem rasp_dir_info(RASP_LOGGER, true);
 	std::vector<LogCollectItem *> log_dirs{&alarm_dir_info, &policy_dir_info, &plugin_dir_info, &rasp_dir_info};
 
 	long current_interval = LogAgent::log_push_interval;
