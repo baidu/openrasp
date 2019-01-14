@@ -18,7 +18,7 @@
             </a>
             <div class="dropdown-menu dropdown-menu-left dropdown-menu-arrow">
               <div class="form-group" style="margin: 6px 15px 10px 15px; ">
-                <input type="text" class="form-control form-control-sm" v-model="keyword">
+                <input v-model="keyword" type="text" class="form-control form-control-sm">
               </div>
               <div style="max-height: 300px; overflow: scroll; ">
                 <a v-for="row in app_list_filtered" :key="row.id" class="dropdown-item" href="javascript:" @click.prevent="setCurrentApp(row)">
@@ -55,6 +55,9 @@
                   <i class="dropdown-icon fe fe-settings"></i> 用户设置
                 </a>
                 <div class="dropdown-divider"></div> -->
+                <a class="dropdown-item" href="https://rasp.baidu.com/#section-support" target="_blank">
+                  <i class="dropdown-icon fa fa-qq" /> 技术支持
+                </a>
                 <a class="dropdown-item" href="javascript:" @click="doLogout()">
                   <i class="dropdown-icon fe fe-log-out" /> 退出登录
                 </a>
@@ -82,6 +85,12 @@
                 <RouterLink :to="{ name: 'events', params: { app_id: current_app.id } }" class="nav-link">
                   <i class="fe fe-bell" />
                   攻击事件
+                </RouterLink>
+              </li>
+              <li class="nav-item">
+                <RouterLink :to="{ name: 'exceptions', params: { app_id: current_app.id } }" class="nav-link">
+                  <i class="fe fe-alert-circle" />
+                  异常日志
                 </RouterLink>
               </li>
               <li class="nav-item dropdown">
@@ -120,12 +129,12 @@
                   帮助文档
                 </a>
               </li>
-              <li class="nav-item">
+              <!-- <li class="nav-item">
                 <a href="https://rasp.baidu.com/#section-support" target="_blank" class="nav-link">
                   <i class="fa fa-qq" />
                   技术支持
                 </a>
-              </li>
+              </li> -->
             </ul>
           </div>
         </div>
@@ -154,7 +163,7 @@ export default {
     ...mapGetters(['current_app', 'app_list']),
     app_list_filtered: function() {
       var keyword = this.keyword.toLowerCase()
-      return this.app_list.filter(function (app) {
+      return this.app_list.filter(function(app) {
         return app.name.toLowerCase().indexOf(keyword) != -1
       })
     }
