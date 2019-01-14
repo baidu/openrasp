@@ -40,10 +40,10 @@
       </div>
     </div>
 
-    <b-modal ref="modal" title="添加/编辑 白名单" size="lg" hide-header-close @hidden="hideModal()">
+    <b-modal ref="modal" title="添加/编辑 白名单" size="lg" hide-header-close @hidden="hideModal()" @shown="$refs.focus.focus()">
       <div class="form-group">
         <label>URL - 不区分 http/https</label>
-        <input v-model="modalData.url" type="text" class="form-control" maxlen="200">
+        <input ref="focus" v-model="modalData.url" type="text" class="form-control" maxlen="200">
       </div>
       <div class="form-group">
         <label>检测点</label>
