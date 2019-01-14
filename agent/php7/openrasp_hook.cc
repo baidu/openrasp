@@ -406,14 +406,10 @@ PHP_RINIT_FUNCTION(openrasp_hook)
                 OPENRASP_HOOK_G(check_type_white_bit_mask) = openrasp::scm->get_check_type_white_bit_mask(url_str.substr(found + COLON_TWO_SLASHES.size()));
             }
         }
-        std::ofstream out("/tmp/a.log", std::ios::app);
-        out << OPENRASP_HOOK_G(lru).max_size() << "\n";
-        out << OPENRASP_CONFIG(lru.max_size) << "\n";
         if (OPENRASP_HOOK_G(lru).max_size() != OPENRASP_CONFIG(lru.max_size))
         {
             OPENRASP_HOOK_G(lru).reset(OPENRASP_CONFIG(lru.max_size));
         }
-        out << OPENRASP_HOOK_G(lru).max_size() << "\n\n";
     }
     return SUCCESS;
 }
