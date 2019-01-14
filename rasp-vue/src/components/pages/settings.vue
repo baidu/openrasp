@@ -95,7 +95,7 @@ export default {
   },
   data: function() {
     return {
-      tab_names: ['general', 'alarm', 'whitelist', 'algorithm', 'auth', 'app'],
+      tab_names: ['general', 'alarm', 'whitelist', 'algorithm', 'hardening', 'auth', 'app'],
       tab_index: 0,
       data: undefined,
       loading: false
