@@ -59,7 +59,7 @@ export default {
   computed: {
     ...mapGetters(['current_app']),
     custom_headers() {
-      return this.data['inject.custom_headers']
+      return this.data['inject.custom_headers'] || {}
     }
   },
   methods: {
