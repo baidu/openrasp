@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2018 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.baidu.rasp.install.linux;
+package com.baidu.rasp.install.windows;
 
 import com.baidu.rasp.RaspError;
 import com.baidu.rasp.install.BaseStandardInstaller;
@@ -25,17 +25,19 @@ import java.util.regex.Pattern;
 import static com.baidu.rasp.RaspError.E10001;
 
 /**
- * Created by OpenRASP on 5/15/17.
+ * @description: weblogic安装
+ * @author: anyang
+ * @create: 2018/09/06 16:01
  */
-public class Jboss4Installer extends BaseStandardInstaller {
+public class WeblogicInstaller extends BaseStandardInstaller {
 
     private static String OPENRASP_CONFIG =
-            "### BEGIN OPENRASP - DO NOT MODIFY ###\n" +
-            "\tJAVA_OPTS=\"-javaagent:${JBOSS_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"\n" +
-            "### END OPENRASP ###\n";
-    private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*/rasp/).*");
+            "rem BEGIN OPENRASP - DO NOT MODIFY" + LINE_SEP+
+            "set JAVA_OPTIONS=\"-javaagent:%DOMAIN_HOME%/rasp/rasp.jar %JAVA_OPTIONS%\"" + LINE_SEP +
+            "rem END OPENRASP" + LINE_SEP;
+    private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTIONS.*/rasp/).*");
 
-    Jboss4Installer(String serverName, String serverRoot) {
+    public WeblogicInstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
     }
 
@@ -46,7 +48,7 @@ public class Jboss4Installer extends BaseStandardInstaller {
 
     @Override
     protected String getScript(String installPath) {
-        return installPath + "/../bin/run.sh";
+        return installPath + "/../bin/startWebLogic.cmd";
     }
 
     @Override
@@ -54,29 +56,24 @@ public class Jboss4Installer extends BaseStandardInstaller {
         int modifyConfigState = NOTFOUND;
         StringBuilder sb = new StringBuilder();
         Scanner scanner = new Scanner(content);
-        while (scanner.hasNextLine()) {
+        while (scanner.hasNext()){
             String line = scanner.nextLine();
-            if (FOUND == modifyConfigState) {
-                sb.append(OPENRASP_CONFIG);
-                modifyConfigState = DONE;
-            }
-
-            if (DONE == modifyConfigState) {
-                if (OPENRASP_REGEX.matcher(line).matches()) {
-                    continue;
-                }
-            }
-
-            if (line.startsWith("JAVA_OPTS=") && NOTFOUND == modifyConfigState) {
+            if (line.startsWith("set JAVA_OPTIONS") && line.contains("set JAVA_OPTIONS=\"${SAVE_JAVA_OPTIONS}\"")) {
                 modifyConfigState = FOUND;
+                sb.append(line).append("\n");
+                sb.append(OPENRASP_CONFIG);
+                continue;
             }
-
-            sb.append(line).append(LINE_SEP);
+            // 删除已经存在的配置项
+            if (OPENRASP_REGEX.matcher(line).matches()) {
+                continue;
+            }
+            sb.append(line).append("\n");
         }
         if (NOTFOUND == modifyConfigState) {
-            throw new RaspError(E10001 + "\"JAVA_OPTS=\"");
+            throw new RaspError(E10001 + "set JAVA_OPTIONS=\"${SAVE_JAVA_OPTIONS}\"");
         }
+
         return sb.toString();
     }
-
 }

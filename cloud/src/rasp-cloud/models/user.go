@@ -22,10 +22,10 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"os"
-	"rasp-cloud/environment"
 	"rasp-cloud/mongo"
 	"rasp-cloud/tools"
 	"regexp"
+	"rasp-cloud/conf"
 )
 
 const (
@@ -85,11 +85,11 @@ func init() {
 		userId = user.Id
 	}
 
-	if *environment.StartFlag.StartType == environment.StartTypeReset {
-		if *environment.StartFlag.Password == "" {
+	if *conf.AppConfig.Flag.StartType == conf.StartTypeReset {
+		if *conf.AppConfig.Flag.Password == "" {
 			tools.Panic(tools.ErrCodeResetUserFailed, "the password can not be empty", err)
 		}
-		err := resetUser(*environment.StartFlag.Password)
+		err := resetUser(*conf.AppConfig.Flag.Password)
 		if err != nil {
 			tools.Panic(tools.ErrCodeResetUserFailed, "failed to reset administrator", err)
 		}

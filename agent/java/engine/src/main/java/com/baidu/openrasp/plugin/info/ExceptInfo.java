@@ -18,6 +18,7 @@ package com.baidu.openrasp.plugin.info;
 
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.tool.OSUtil;
 import com.google.gson.Gson;
 
 import java.sql.Timestamp;
@@ -35,14 +36,14 @@ public class ExceptInfo {
     private String level;
     private String message;
     private Long createTime;
-    private Long pid;
+    private int pid;
     private String stackTrace;
 
-    public ExceptInfo(String level, String message, Long pid, StackTraceElement[] trace) {
+    public ExceptInfo(String level, String message, int pid, StackTraceElement[] trace) {
         this(Config.getConfig().getCloudAppId(), level, message, System.currentTimeMillis(), pid, trace);
     }
 
-    public ExceptInfo(String appId, String level, String message, Long createTime, Long pid
+    public ExceptInfo(String appId, String level, String message, Long createTime, int pid
             , StackTraceElement[] trace) {
         this.appId = appId;
         this.level = level;
@@ -60,9 +61,11 @@ public class ExceptInfo {
         info.put("event_time", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(createTime));
         info.put("rasp_id", CloudCacheModel.getInstance().getRaspId());
         info.put("app_id", this.appId);
-        info.put("exception_level", this.level);
+        info.put("level", this.level);
         info.put("message", this.message);
         info.put("stack_trace", this.stackTrace);
+        info.put("server_hostname", OSUtil.getHostName());
+        info.put("server_nic", OSUtil.getIpAddress());
         return info;
     }
 
@@ -98,11 +101,11 @@ public class ExceptInfo {
         this.createTime = createTime;
     }
 
-    public Long getPid() {
+    public int getPid() {
         return pid;
     }
 
-    public void setPid(Long pid) {
+    public void setPid(int pid) {
         this.pid = pid;
     }
 

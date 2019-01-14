@@ -25,42 +25,33 @@ import (
 	"fmt"
 	"crypto/sha1"
 	"strings"
+	"rasp-cloud/conf"
 )
 
 var (
 	minMongoVersion = "3.6.0"
 	session         *mgo.Session
-	DbName          = beego.AppConfig.DefaultString("MongoDBName", "openrasp")
+	DbName          = conf.AppConfig.MongoDBName
 )
 
 func init() {
 	var err error
-	mongoAddr := beego.AppConfig.DefaultString("MongoDBAddr", "")
-	if mongoAddr == "" {
-		tools.Panic(tools.ErrCodeConfigInitFailed,
-			"the 'MongoDBAddr' config item in app.conf can not be empty", nil)
-	}
-	poolLimit := beego.AppConfig.DefaultInt("MongoDBPoolLimit", 1024)
-	if poolLimit <= 0 {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'poolLimit' config must be greater than 0", nil)
-	} else if poolLimit < 10 {
-		beego.Warning("the value of 'poolLimit' config is less than 10, it will be set to 10")
-		poolLimit = 10
-	}
 	dialInfo := &mgo.DialInfo{
-		Addrs:     []string{mongoAddr},
-		Username:  beego.AppConfig.DefaultString("MongoDBUser", ""),
-		Password:  beego.AppConfig.DefaultString("MongoDBPwd", ""),
+		Addrs:     []string{conf.AppConfig.MongoDBAddr},
+		Username:  conf.AppConfig.MongoDBUser,
+		Password:  conf.AppConfig.MongoDBPwd,
 		Direct:    false,
 		Timeout:   time.Second * 20,
 		FailFast:  true,
-		PoolLimit: poolLimit,
+		PoolLimit: conf.AppConfig.MongoDBPoolLimit,
 	}
-	beego.AppConfig.DefaultString("MongoDBPwd", "")
 	session, err = mgo.DialWithInfo(dialInfo)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed, "failed find MongoDB server: ", err)
+	}
 	info, err := session.BuildInfo()
 	if err != nil {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get mongodb version", err)
+		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get MongoDB version", err)
 	}
 	beego.Info("MongoDB version: " + info.Version)
 	if strings.Compare(info.Version, minMongoVersion) < 0 {
@@ -68,7 +59,7 @@ func init() {
 			minMongoVersion+ ","+ " the current version is "+ info.Version, nil)
 	}
 	if err != nil {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "init mongodb failed", err)
+		tools.Panic(tools.ErrCodeMongoInitFailed, "init MongoDB failed", err)
 	}
 
 	session.SetMode(mgo.Strong, true)

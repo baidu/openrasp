@@ -26,6 +26,7 @@ import (
 	"rasp-cloud/es"
 	"rasp-cloud/tools"
 	"time"
+	"rasp-cloud/conf"
 )
 
 type AggrTimeParam struct {
@@ -46,7 +47,7 @@ type AggrFieldParam struct {
 type SearchAttackParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
-	Data    *struct {
+	Data *struct {
 		Id           string    `json:"_id,omitempty"`
 		AppId        string    `json:"app_id,omitempty"`
 		StartTime    int64     `json:"start_time"`
@@ -63,7 +64,7 @@ type SearchAttackParam struct {
 type SearchPolicyParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
-	Data    *struct {
+	Data *struct {
 		Id        string    `json:"_id,omitempty"`
 		AppId     string    `json:"app_id,omitempty"`
 		StartTime int64     `json:"start_time"`
@@ -75,42 +76,49 @@ type SearchPolicyParam struct {
 	} `json:"data"`
 }
 
+type SearchErrorParam struct {
+	Page    int `json:"page"`
+	Perpage int `json:"perpage"`
+	Data *struct {
+		Id        string    `json:"_id,omitempty"`
+		AppId     string    `json:"app_id,omitempty"`
+		StartTime int64     `json:"start_time"`
+		EndTime   int64     `json:"end_time"`
+		RaspId    string    `json:"rasp_id,omitempty"`
+		HostName  string    `json:"server_hostname,omitempty"`
+		LocalIp   string    `json:"local_ip,omitempty"`
+	} `json:"data"`
+}
+
+type AlarmLogInfo struct {
+	EsType       string
+	EsIndex      string
+	EsAliasIndex string
+	EsMapping    string
+	TtlTime      time.Duration
+	FileLogger   *logs.BeeLogger
+	AlarmBuffer  chan map[string]interface{}
+}
+
 var (
-	AttackAlarmType     = "attack-alarm"
-	PolicyAlarmType     = "policy-alarm"
-	AddAlarmFunc        func(string, map[string]interface{}) error
-	esAttackAlarmBuffer chan map[string]interface{}
-	esPolicyAlarmBuffer chan map[string]interface{}
-	alarmFileLoggers    = make(map[string]*logs.BeeLogger)
+	AddAlarmFunc func(string, map[string]interface{}) error
+	alarmInfos   = make(map[string]*AlarmLogInfo)
 )
 
 func init() {
-	es.RegisterTTL(24*365*time.Hour, AliasAttackIndexName+"-*")
-	es.RegisterTTL(24*365*time.Hour, AliasPolicyIndexName+"-*")
-	alarmLogMode := beego.AppConfig.DefaultString("AlarmLogMode", "file")
-	if alarmLogMode == "file" {
+	if conf.AppConfig.AlarmLogMode == "file" {
 		AddAlarmFunc = AddLogWithFile
-		initRaspLoggers()
-	} else if alarmLogMode == "es" {
+	} else if conf.AppConfig.AlarmLogMode == "es" {
 		startEsAlarmLogPush()
 		AddAlarmFunc = AddLogWithES
 	} else {
 		tools.Panic(tools.ErrCodeConfigInitFailed, "Unrecognized the value of RaspLogMode config", nil)
 	}
-	alarmBufferSize := beego.AppConfig.DefaultInt("AlarmBufferSize", 300)
-	if alarmBufferSize <= 0 {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'AlarmBufferSize' config must be greater than 0", nil)
-	} else if alarmBufferSize < 100 {
-		beego.Warning("the value of 'AlarmBufferSize' config is less than 100, it will be set to 100")
-		alarmBufferSize = 100
-	}
-	esAttackAlarmBuffer = make(chan map[string]interface{}, alarmBufferSize)
-	esPolicyAlarmBuffer = make(chan map[string]interface{}, alarmBufferSize)
 }
 
-func initRaspLoggers() {
-	alarmFileLoggers[AttackAlarmType] = initAlarmFileLogger("/openrasp-logs/attack-alarm", "attack.log")
-	alarmFileLoggers[PolicyAlarmType] = initAlarmFileLogger("/openrasp-logs/policy-alarm", "policy.log")
+func registerAlarmInfo(info *AlarmLogInfo) {
+	alarmInfos[info.EsType] = info
+	es.RegisterTTL(info.TtlTime, info.EsAliasIndex+"-*")
 }
 
 func initAlarmFileLogger(dirName string, fileName string) *logs.BeeLogger {
@@ -151,38 +159,49 @@ func handleEsLogPush() {
 		}
 	}()
 	select {
-	case alarm := <-esAttackAlarmBuffer:
+	case alarm := <-AttackAlarmInfo.AlarmBuffer:
 		alarms := make([]map[string]interface{}, 0, 200)
 		alarms = append(alarms, alarm)
-		for len(esAttackAlarmBuffer) > 0 && len(alarms) < 200 {
-			alarm := <-esAttackAlarmBuffer
+		for len(AttackAlarmInfo.AlarmBuffer) > 0 && len(alarms) < 200 {
+			alarm := <-AttackAlarmInfo.AlarmBuffer
 			alarms = append(alarms, alarm)
 		}
-		err := es.BulkInsert(AttackAlarmType, alarms)
+		err := es.BulkInsert(AttackAlarmInfo.EsType, alarms)
 		if err != nil {
-			beego.Error("failed to execute es bulk insert: " + err.Error())
+			beego.Error("failed to execute es bulk insert for attack alarm: " + err.Error())
 		}
-	case alarm := <-esPolicyAlarmBuffer:
+	case alarm := <-PolicyAlarmInfo.AlarmBuffer:
 		alarms := make([]map[string]interface{}, 0, 200)
 		alarms = append(alarms, alarm)
-		for len(esPolicyAlarmBuffer) > 0 && len(alarms) < 200 {
-			alarm := <-esPolicyAlarmBuffer
+		for len(PolicyAlarmInfo.AlarmBuffer) > 0 && len(alarms) < 200 {
+			alarm := <-PolicyAlarmInfo.AlarmBuffer
 			alarms = append(alarms, alarm)
 		}
-		err := es.BulkInsert(PolicyAlarmType, alarms)
+		err := es.BulkInsert(PolicyAlarmInfo.EsType, alarms)
 		if err != nil {
-			beego.Error("failed to execute es bulk insert: " + err.Error())
+			beego.Error("failed to execute es bulk insert for policy alarm: " + err.Error())
+		}
+	case alarm := <-ErrorAlarmInfo.AlarmBuffer:
+		alarms := make([]map[string]interface{}, 0, 200)
+		alarms = append(alarms, alarm)
+		for len(ErrorAlarmInfo.AlarmBuffer) > 0 && len(alarms) < 200 {
+			alarm := <-ErrorAlarmInfo.AlarmBuffer
+			alarms = append(alarms, alarm)
+		}
+		err := es.BulkInsert(ErrorAlarmInfo.EsType, alarms)
+		if err != nil {
+			beego.Error("failed to execute es bulk insert for error alarm: " + err.Error())
 		}
 	}
 }
 
 func AddLogWithFile(alarmType string, alarm map[string]interface{}) error {
-	if logger, ok := alarmFileLoggers[alarmType]; ok && logger != nil {
+	if info, ok := alarmInfos[alarmType]; ok && info.FileLogger != nil {
 		content, err := json.Marshal(alarm)
 		if err != nil {
 			return err
 		}
-		_, err = logger.Write(content)
+		_, err = info.FileLogger.Write(content)
 		if err != nil {
 			logs.Error("failed to write rasp log: " + err.Error())
 			return err
@@ -194,18 +213,11 @@ func AddLogWithFile(alarmType string, alarm map[string]interface{}) error {
 }
 
 func AddLogWithES(alarmType string, alarm map[string]interface{}) error {
-	if alarmType == AttackAlarmType {
-		select {
-		case esAttackAlarmBuffer <- alarm:
-		default:
-			logs.Error("Failed to write attack alarm to ES, the buffer is full. Consider increase AlarmBufferSize value: " + fmt.Sprintf("%+v", alarm))
-		}
-	} else if alarmType == PolicyAlarmType {
-		select {
-		case esPolicyAlarmBuffer <- alarm:
-		default:
-			logs.Error("Failed to write policy alarm to ES, the buffer is full. Consider increase AlarmBufferSize value: " + fmt.Sprintf("%+v", alarm))
-		}
+	select {
+	case alarmInfos[alarmType].AlarmBuffer <- alarm:
+	default:
+		logs.Error("Failed to write attack alarm to ES, " +
+			"the buffer is full. Consider increase AlarmBufferSize value: " + fmt.Sprintf("%+v", alarm))
 	}
 	return nil
 }
@@ -282,4 +294,14 @@ func SearchLogs(startTime int64, endTime int64, query map[string]interface{}, so
 		}
 	}
 	return total, result, nil
+}
+
+func CreateAlarmIndexWithAppId(appId string) (err error) {
+	for _, alarmInfo := range alarmInfos {
+		err = es.CreateEsIndex(alarmInfo.EsIndex+"-"+appId, alarmInfo.EsAliasIndex+"-"+appId, alarmInfo.EsMapping)
+		if err != nil {
+			return
+		}
+	}
+	return
 }

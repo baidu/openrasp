@@ -36,6 +36,9 @@ public class LinuxInstallerFactory extends InstallerFactory {
         if (serverName.equals(RESIN)) {
             return new com.baidu.rasp.install.windows.ResinInstaller(serverName, serverRoot);
         }
+        if (serverName.equals(WEBLOGIC)){
+            return new WeblogicInstaller(serverName,serverRoot);
+        }
         System.out.println("Unexpected server name: " + serverName);
         return null;
     }

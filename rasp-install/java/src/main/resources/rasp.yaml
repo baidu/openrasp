@@ -8,6 +8,7 @@
 # clientip.header=ClientIP
 # sql.cache.capacity: 100
 # log.maxburst: 100
+# log.maxbackup: 30
 # hook 点配置
 # hooks.ignore=http_output
 # debug.level=0
@@ -16,7 +17,8 @@
 #   www.test.com/test1: [sql,ssrf],
 #   www.test.com/test2: [sql,ssrf]
 # }
-# response.headers: ['X-Content-Type-Options: nosniff']
+#inject.custom_headers:
+#   X-Content-Type-Options: nosniff
 # 拦截相关配置
 # block.redirect_url=https://rasp.baidu.com/blocked/?request_id=%request_id%
 # block.content_json={"error":true, "reason": "Request blocked by OpenRASP", "request_id": %request_id%}

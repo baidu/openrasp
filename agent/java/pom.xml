@@ -10,7 +10,7 @@
 
     <groupId>com.baidu.openrasp</groupId>
     <artifactId>openrasp</artifactId>
-    <version>1.0.0-RC1</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <scm>
@@ -29,7 +29,7 @@
             <dependency>
                 <groupId>com.baidu.openrasp</groupId>
                 <artifactId>rasp-boot</artifactId>
-                <version>1.0.0-RC1</version>
+                <version>1.0.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -145,6 +145,22 @@
                                 <relocation>
                                     <pattern>log4j.configuration</pattern>
                                     <shadedPattern>log4j.rasp.configuration</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>log4j.xml</pattern>
+                                    <shadedPattern>log4j.rasp.xml</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>log4j.properties</pattern>
+                                    <shadedPattern>log4j.rasp.properties</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>log4j.configuratorClass</pattern>
+                                    <shadedPattern>log4j.rasp.configuratorClass</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>log4j.defaultInitOverride</pattern>
+                                    <shadedPattern>log4j.rasp.defaultInitOverride</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.abego</pattern>

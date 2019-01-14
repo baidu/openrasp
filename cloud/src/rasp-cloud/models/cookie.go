@@ -19,7 +19,7 @@ import (
 	"rasp-cloud/mongo"
 	"rasp-cloud/tools"
 	"gopkg.in/mgo.v2"
-	"github.com/astaxie/beego"
+	"rasp-cloud/conf"
 )
 
 type Cookie struct {
@@ -38,15 +38,11 @@ func init() {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get cookie collection count", err)
 	}
 	if count <= 0 {
-		expireTime := beego.AppConfig.DefaultInt("CookieLifeTime", 7*24)
-		if expireTime <= 0 {
-			tools.Panic(tools.ErrCodeMongoInitFailed, "the 'CookieLifeTime' config must be greater than 0", nil)
-		}
 		index := &mgo.Index{
 			Key:         []string{"time"},
 			Background:  true,
 			Name:        "time",
-			ExpireAfter: time.Duration(expireTime) * time.Hour,
+			ExpireAfter: time.Duration(conf.AppConfig.CookieLifeTime) * time.Hour,
 		}
 		err = mongo.CreateIndex(cookieCollectionName, index)
 		if err != nil {

@@ -31,6 +31,7 @@ public abstract class InstallerFactory {
     protected static final String TOMCAT = "Tomcat";
     protected static final String JBOSS = "JBoss 4-6";
     protected static final String RESIN = "Resin";
+    protected static final String WEBLOGIC = "Weblogic";
 
     protected abstract Installer getInstaller(String serverName, String serverRoot);
 
@@ -44,6 +45,7 @@ public abstract class InstallerFactory {
             System.out.println("List of currently supported servers are:");
             System.out.println("- " + TOMCAT);
             System.out.println("- " + RESIN);
+            System.out.println("-" + WEBLOGIC);
             System.out.println("- " + JBOSS + "\n");
             throw new RaspError(E10004 + serverRoot.getPath());
         }
@@ -66,6 +68,10 @@ public abstract class InstallerFactory {
         if (new File(serverRoot, "bin/httpd.sh").exists()
                 || new File(serverRoot, "bin/resin.sh").exists()) {
             return RESIN;
+        }
+        if (new File(serverRoot, "bin/startWebLogic.sh").exists()
+                || new File(serverRoot, "bin/startWebLogic.bat").exists()) {
+            return WEBLOGIC;
         }
         return null;
     }

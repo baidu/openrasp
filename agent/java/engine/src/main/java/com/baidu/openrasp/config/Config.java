@@ -56,6 +56,7 @@ public class Config extends FileScanListener {
         REQUEST_PARAM_ENCODING("request.param_encoding", ""),
         BODY_MAX_BYTES("body.maxbytes", "4096"),
         LOG_MAX_STACK("log.maxstack", "50"),
+        LOG_MAX_BACKUP("log.maxbackup", "30"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
         SQL_CACHE_CAPACITY("lru.max_size", "100"),
         SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
@@ -87,7 +88,7 @@ public class Config extends FileScanListener {
         XSS_MIN_PARAM_LENGTH("xss.min_param_length", "15"),
         XSS_MAX_DETECTION_NUM("xss.max_detection_num", "10"),
         DECOMPILE_ENABLE("decompile.enable", "false"),
-        RESPONSE_HEADERS("response.headers", "");
+        RESPONSE_HEADERS("inject.custom_headers", "");
 
 
         Item(String key, String defaultValue) {
@@ -111,7 +112,7 @@ public class Config extends FileScanListener {
     }
 
     private static final String HOOKS_WHITE = "hook.white";
-    private static final String RESPONSE_HEADERS = "response.headers";
+    private static final String RESPONSE_HEADERS = "inject.custom_headers";
     private static final String CONFIG_DIR_NAME = "conf";
     private static final String CONFIG_FILE_NAME = "rasp.yaml";
     public static final int REFLECTION_STACK_START_INDEX = 0;
@@ -157,7 +158,8 @@ public class Config extends FileScanListener {
     private int xssMinParamLength;
     private int xssMaxDetectionNum;
     private boolean decompileEnable;
-    private ArrayList<String> responseHeaders;
+    private Map<String, String> responseHeaders;
+    private int logMaxBackUp;
 
 
     static {
@@ -223,8 +225,9 @@ public class Config extends FileScanListener {
                 } else if (item.key.equals(RESPONSE_HEADERS)) {
                     if (properties != null) {
                         Object object = properties.get(item.key);
-                        if (object instanceof ArrayList) {
-                            setResponseHeaders((ArrayList) object);
+                        if (object instanceof Map) {
+                            Map<String, String> headers = (Map<String, String>) object;
+                            setResponseHeaders(headers);
                         }
                     }
                     continue;
@@ -246,8 +249,9 @@ public class Config extends FileScanListener {
                     temp.putAll(parseHookWhite(hooks));
                 }
             } else if (entry.getKey().equals(RESPONSE_HEADERS)) {
-                if (entry.getValue() instanceof ArrayList) {
-                    setResponseHeaders((ArrayList) entry.getValue());
+                if (entry.getValue() instanceof Map) {
+                    Map<String, String> headers = (Map<String, String>) (entry.getValue());
+                    setResponseHeaders(headers);
                 }
             } else {
                 if (entry.getValue() instanceof JsonPrimitive) {
@@ -264,8 +268,16 @@ public class Config extends FileScanListener {
                 loadConfigFromFile(file, false);
                 //单机模式下动态添加获取删除syslog和动态更新syslog tag
                 if (!CloudUtils.checkCloudControlEnter()) {
+                    //关闭或者打开syslog服务
                     LogConfig.syslogManager();
+                    //更新syslog tag标志
                     DynamicConfigAppender.updateSyslogTag();
+                    //是否开启log4j的debug
+                    DynamicConfigAppender.enableDebug();
+                    //更新log4j的日志限速
+                    DynamicConfigAppender.fileAppenderAddBurstFilter();
+                    //更新log4j的日志最大备份天数
+                    DynamicConfigAppender.setLogMaxBackup();
                 }
             } catch (IOException e) {
                 LOGGER.warn("update rasp.yaml failed because: ", e);
@@ -1130,7 +1142,7 @@ public class Config extends FileScanListener {
      *
      * @return response header数组
      */
-    public synchronized ArrayList<String> getResponseHeaders() {
+    public synchronized Map<String, String> getResponseHeaders() {
         return responseHeaders;
     }
 
@@ -1139,8 +1151,29 @@ public class Config extends FileScanListener {
      *
      * @param responseHeaders 待设置response header数组
      */
-    public synchronized void setResponseHeaders(ArrayList<String> responseHeaders) {
+    public synchronized void setResponseHeaders(Map<String, String> responseHeaders) {
         this.responseHeaders = responseHeaders;
+    }
+
+    /**
+     * 获取log4j最大日志备份天数
+     *
+     * @return log4j最大日志备份天数
+     */
+    public synchronized int getLogMaxBackUp() {
+        return logMaxBackUp;
+    }
+
+    /**
+     * 设置log4j最大日志备份天数,默认30天
+     *
+     * @param logMaxBackUp log4j最大日志备份天数
+     */
+    public void setLogMaxBackUp(String logMaxBackUp) {
+        this.logMaxBackUp = Integer.parseInt(logMaxBackUp);
+        if (this.logMaxBackUp < 0) {
+            this.logMaxBackUp = 30;
+        }
     }
 
     //--------------------------统一的配置处理------------------------------------
@@ -1227,6 +1260,8 @@ public class Config extends FileScanListener {
                 setXssMaxDetectionNum(value);
             } else if (Item.DECOMPILE_ENABLE.key.equals(key)) {
                 setDecompileEnable(value);
+            } else if (Item.LOG_MAX_BACKUP.key.equals(key)) {
+                setLogMaxBackUp(value);
             } else {
                 isHit = false;
             }

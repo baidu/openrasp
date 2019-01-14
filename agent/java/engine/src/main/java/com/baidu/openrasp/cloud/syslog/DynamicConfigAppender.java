@@ -87,6 +87,8 @@ public class DynamicConfigAppender {
                 }
             }
         }
+
+        setLogMaxBackup();
         //初始化时是否开启log4j的debug的功能
         enableDebug();
     }
@@ -173,6 +175,31 @@ public class DynamicConfigAppender {
         } else {
             LogLog.setInternalDebugging(false);
             System.out.println("[OpenRASP] Log4j debug closed");
+        }
+    }
+
+    /**
+     * 为fileAppender设置最大日志备份天数
+     */
+    public static void setLogMaxBackup() {
+        int logMaxBackup = Config.getConfig().getLogMaxBackUp();
+        for (AppenderMappedLogger type : AppenderMappedLogger.values()) {
+            if (type.ordinal() <= 3) {
+                if ("root".equals(type.getLogger())) {
+                    Appender appender = Logger.getRootLogger().getAppender(type.getAppender());
+                    if (appender != null) {
+                        OpenraspDailyRollingFileAppender fileAppender = (OpenraspDailyRollingFileAppender) appender;
+                        fileAppender.setMaxBackupIndex(logMaxBackup);
+                    }
+                } else {
+                    Logger logger = Logger.getLogger(type.getLogger());
+                    Appender appender = logger.getAppender(type.getAppender());
+                    if (appender != null) {
+                        OpenraspDailyRollingFileAppender fileAppender = (OpenraspDailyRollingFileAppender) appender;
+                        fileAppender.setMaxBackupIndex(logMaxBackup);
+                    }
+                }
+            }
         }
     }
 }

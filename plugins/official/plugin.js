@@ -1,4 +1,4 @@
-const plugin_version = '2019-0107-2300'
+const plugin_version = '2019-0110-1100'
 const plugin_name    = 'official'
 
 /*
@@ -60,7 +60,7 @@ var algorithmConfig = {
 
         // 粗规则 - 为了减少 tokenize 次数，当SQL语句包含一定特征时才进入
         // 另外，我们只需要处理增删改查的语句，虽然 show 语句也可以报错注入，但是算法2没必要处理
-        pre_filter: '^(select|insert|update|delete).*(;|\\/\\*|(?:\\d{1,2},){4}|(?:null,){4}|0x[\\da-f]{8}|\\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin))\\b',
+        pre_filter: '^(select|insert|update|delete).*(;|\\/\\*|(?:\\d{1,2}\\s*,\\s*){2}|(?:null\\s*,\\s*){2}|0x[\\da-f]{8}|\\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin))\\b',
 
         feature: {
             // 是否禁止多语句执行，select ...; update ...;
@@ -1071,6 +1071,12 @@ plugin.register('readFile', function (params, context) {
     var server    = context.server
     var parameter = context.parameter
     var is_win    = server.os.indexOf('Windows') != -1
+
+    // weblogic 下面，所有war包读取操作全部忽略
+    if (server['server'] === 'weblogic' && params.realpath.endsWith('.war'))
+    {
+    	return clean
+    }
 
     //
     // 算法1: 简单用户输入识别，拦截任意文件下载漏洞

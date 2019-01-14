@@ -56,6 +56,7 @@ public:
   bool shutdown();
   bool verify_ini_correct();
   bool agent_remote_register();
+  pid_t get_master_pid();
 
   long get_plugin_update_timestamp()
   {

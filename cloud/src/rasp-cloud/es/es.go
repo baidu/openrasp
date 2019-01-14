@@ -24,8 +24,8 @@ import (
 	"rasp-cloud/tools"
 	"encoding/json"
 	"fmt"
-	"rasp-cloud/environment"
 	"strings"
+	"rasp-cloud/conf"
 )
 
 var (
@@ -36,15 +36,10 @@ var (
 
 func init() {
 	ttlIndexes <- make(map[string]time.Duration)
-	if *environment.StartFlag.StartType != environment.StartTypeReset {
-		esAddr := beego.AppConfig.String("EsAddr")
-		if esAddr == "" {
-			tools.Panic(tools.ErrCodeConfigInitFailed,
-				"the 'EsAddr' config item in app.conf can not be empty", nil)
-		}
+	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
+		esAddr := conf.AppConfig.EsAddr
 		client, err := elastic.NewClient(elastic.SetURL(esAddr),
-			elastic.SetBasicAuth(beego.AppConfig.DefaultString("EsUser", ""),
-				beego.AppConfig.DefaultString("EsPwd", "")))
+			elastic.SetBasicAuth(conf.AppConfig.EsUser, conf.AppConfig.EsPwd))
 		if err != nil {
 			tools.Panic(tools.ErrCodeESInitFailed, "init ES failed", err)
 		}
@@ -60,7 +55,6 @@ func init() {
 				minEsVersion+ ","+ " the current version is "+ version, nil)
 		}
 		ElasticClient = client
-
 	}
 }
 
@@ -130,15 +124,18 @@ func CreateEsIndex(index string, aliasIndex string, mapping string) error {
 		}
 		logs.Info("create es index: " + createResult.Index)
 		if err != nil {
+			beego.Error("failed to create index with name " + index + ": " + err.Error())
 			return err
 		}
 		exists, err = ElasticClient.IndexExists(aliasIndex).Do(ctx)
 		if err != nil {
+
 			return err
 		}
 		if !exists {
 			_, err := ElasticClient.Alias().Add(index, aliasIndex).Do(ctx)
 			if err != nil {
+				beego.Error("failed to create alias index with name " + index + ": " + err.Error())
 				return err
 			}
 			logs.Info("create es index alias: " + aliasIndex)

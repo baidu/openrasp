@@ -38,9 +38,9 @@ import (
 	"encoding/base64"
 	"io/ioutil"
 	"rasp-cloud/es"
-	"rasp-cloud/environment"
 	"crypto/tls"
 	"net"
+	"rasp-cloud/conf"
 )
 
 type App struct {
@@ -108,9 +108,8 @@ const (
 )
 
 var (
-	panelServerURL string
-	lastAlarmTime  = time.Now().UnixNano() / 1000000
-	TestAlarmData  = []map[string]interface{}{
+	lastAlarmTime = time.Now().UnixNano() / 1000000
+	TestAlarmData = []map[string]interface{}{
 		{
 			"event_time":      time.Now().Format("2006-01-01 15:04:05"),
 			"attack_source":   "220.181.57.191",
@@ -158,24 +157,12 @@ func init() {
 			tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
 		}
 	}
-	alarmCheckInterval := beego.AppConfig.DefaultInt64("AlarmCheckInterval", 120)
-	if alarmCheckInterval <= 0 {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'AlarmCheckInterval' config must be greater than 0", nil)
-	} else if alarmCheckInterval < 10 {
-		beego.Warning("the value of 'AlarmCheckInterval' config is less than 10, it will be set to 10")
-		alarmCheckInterval = 10
-	}
-	if *environment.StartFlag.StartType == environment.StartTypeDefault ||
-		*environment.StartFlag.StartType == environment.StartTypeForeground {
-		panelServerURL = beego.AppConfig.String("PanelServerURL")
-		if panelServerURL == "" {
-			tools.Panic(tools.ErrCodeConfigInitFailed,
-				"the 'PanelServerURL' config in the app.conf can not be empty", nil)
-		}
+	if *conf.AppConfig.Flag.StartType == conf.StartTypeDefault ||
+		*conf.AppConfig.Flag.StartType == conf.StartTypeForeground {
 		if count <= 0 {
 			createDefaultApp()
 		}
-		go startAlarmTicker(time.Second * time.Duration(alarmCheckInterval))
+		go startAlarmTicker(time.Second * time.Duration(conf.AppConfig.AlarmCheckInterval))
 	}
 }
 
@@ -216,7 +203,7 @@ func handleAttackAlarm() {
 	now := time.Now().UnixNano() / 1000000
 	for _, app := range apps {
 		total, result, err := logs.SearchLogs(lastAlarmTime, now, nil, "event_time",
-			1, 10, false, logs.AliasAttackIndexName+"-"+app.Id)
+			1, 10, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+app.Id)
 		if err != nil {
 			beego.Error("failed to get alarm from es: " + err.Error())
 			continue
@@ -245,11 +232,7 @@ func AddApp(app *App) (result *App, err error) {
 		return nil, errors.New("duplicate app name")
 	}
 	HandleApp(app, true)
-	err = es.CreateEsIndex(logs.PolicyIndexName+"-"+app.Id, logs.AliasPolicyIndexName+"-"+app.Id, logs.PolicyEsMapping)
-	if err != nil {
-		return
-	}
-	err = es.CreateEsIndex(logs.AttackIndexName+"-"+app.Id, logs.AliasAttackIndexName+"-"+app.Id, logs.AttackEsMapping)
+	err = logs.CreateAlarmIndexWithAppId(app.Id)
 	if err != nil {
 		return
 	}
@@ -473,7 +456,7 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 			Total:        total - int64(len(alarms)),
 			Alarms:       alarms,
 			AppName:      app.Name,
-			DetailedLink: panelServerURL + "/#/events/" + app.Id,
+			DetailedLink: conf.AppConfig.PanelServerURL + "/#/events/" + app.Id,
 		})
 		if err != nil {
 			beego.Error("failed to execute email template: " + err.Error())
@@ -656,7 +639,8 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 			dingText = "OpenRASP test message from app: " + app.Name + ", time: " + time.Now().Format(time.RFC3339)
 		} else {
 			dingText = "时间：" + time.Now().Format(time.RFC3339) + "， 来自 OpenRAS 的报警\n共有 " +
-				strconv.FormatInt(total, 10) + " 条报警信息来自 APP：" + app.Name + "，详细信息：" + panelServerURL + "/#/events/" + app.Id
+				strconv.FormatInt(total, 10) + " 条报警信息来自 APP：" + app.Name + "，详细信息：" +
+				conf.AppConfig.PanelServerURL + "/#/events/" + app.Id
 		}
 		if len(dingCong.RecvUser) > 0 {
 			body["touser"] = strings.Join(dingCong.RecvUser, "|")

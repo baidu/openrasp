@@ -38,7 +38,6 @@ public class TomcatInstaller extends BaseStandardInstaller {
     private static String OPENRASP_CONFIG =
             "rem BEGIN OPENRASP - DO NOT MODIFY" + LINE_SEP +
             "if \"%ACTION%\" == \"start\" set JAVA_OPTS=\"-javaagent:%CATALINA_HOME%\\rasp\\rasp.jar\" %JAVA_OPTS%" + LINE_SEP +
-            "if \"%ACTION%\" == \"start\" set JAVA_OPTS=\"-Dlog4j.rasp.configuration=file:%CATALINA_HOME%\\rasp\\conf\\rasp-log4j.xml\" %JAVA_OPTS%" + LINE_SEP +
             "rem END OPENRASP" + LINE_SEP;
     private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*\\\\rasp\\\\).*");
 

@@ -46,7 +46,15 @@ void openrasp_error(int type, openrasp_error_code code, const char *format, ...)
         json_reader.write_string({"rasp_id"}, openrasp::scm->get_rasp_id());
         std::string log_time = openrasp::format_time(RaspLoggerEntry::rasp_rfc3339_format,
                                                      strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
-        json_reader.write_string({"time"}, log_time);
+        json_reader.write_string({"event_time"}, log_time);
+        json_reader.write_string({"server_hostname"}, openrasp::scm->get_hostname());
+        json_reader.write_map({"server_nic"}, get_if_addr_map());
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+        if (openrasp::oam != nullptr)
+        {
+            json_reader.write_int64({"pid"}, openrasp::oam->get_master_pid());
+        }
+#endif
         json_reader.write_string({"message"}, message);
         std::string error_content = json_reader.dump();
         TSRMLS_FETCH();

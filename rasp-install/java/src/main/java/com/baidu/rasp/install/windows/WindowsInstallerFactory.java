@@ -35,6 +35,9 @@ public class WindowsInstallerFactory extends InstallerFactory {
         if (serverName.equals(RESIN)) {
             return new ResinInstaller(serverName, serverRoot);
         }
+        if (serverName.equals(WEBLOGIC)) {
+            return new WeblogicInstaller(serverName, serverRoot);
+        }
         System.out.println("Unexpected server name: " + serverName);
         return null;
     }

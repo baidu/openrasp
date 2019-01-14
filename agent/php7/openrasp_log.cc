@@ -818,13 +818,13 @@ void RaspLoggerEntry::set_level(severity_level level)
 std::string RaspLoggerEntry::level_to_name(severity_level level)
 {
     static const std::map<severity_level, const std::string> level_name_map =
-        {{LEVEL_EMERG, "emerg"},
-         {LEVEL_ALERT, "alert"},
-         {LEVEL_CRIT, "crit"},
-         {LEVEL_ERR, "err"},
-         {LEVEL_WARNING, "warning"},
-         {LEVEL_NOTICE, "notice"},
-         {LEVEL_DEBUG, "debug"}};
+        {{LEVEL_EMERG, "EMERG"},
+         {LEVEL_ALERT, "ALERT"},
+         {LEVEL_CRIT, "CRIT"},
+         {LEVEL_ERR, "ERROR"},
+         {LEVEL_WARNING, "WARN"},
+         {LEVEL_NOTICE, "NOTICE"},
+         {LEVEL_DEBUG, "DEBUG"}};
     auto it = level_name_map.find(level);
     if (it != level_name_map.end())
     {
@@ -832,20 +832,20 @@ std::string RaspLoggerEntry::level_to_name(severity_level level)
     }
     else
     {
-        return "unknown";
+        return "UNKNOWN";
     }
 }
 
 int RaspLoggerEntry::name_to_level(const std::string &name)
 {
     static const std::map<const std::string, int> name_level_map =
-        {{"emerg", LEVEL_EMERG},
-         {"alert", LEVEL_ALERT},
-         {"crit", LEVEL_CRIT},
-         {"err", LEVEL_ERR},
-         {"warning", LEVEL_WARNING},
-         {"notice", LEVEL_NOTICE},
-         {"debug", LEVEL_DEBUG}};
+        {{"EMERG", LEVEL_EMERG},
+         {"ALERT", LEVEL_ALERT},
+         {"CRIT", LEVEL_CRIT},
+         {"ERROR", LEVEL_ERR},
+         {"WARN", LEVEL_WARNING},
+         {"NOTICE", LEVEL_NOTICE},
+         {"DEBUG", LEVEL_DEBUG}};
     auto it = name_level_map.find(name);
     if (it != name_level_map.end())
     {
@@ -876,4 +876,9 @@ bool log_module_initialized()
 void update_log_level()
 {
     LOG_G(rasp_logger).set_level(openrasp::scm->get_debug_level() != 0 ? LEVEL_DEBUG : LEVEL_INFO);
+}
+
+std::map<std::string, std::string> get_if_addr_map()
+{
+    return _if_addr_map;
 }
