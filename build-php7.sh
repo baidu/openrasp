@@ -17,6 +17,7 @@ script_base="$(readlink -f $(dirname "$0"))"
 # PHP 版本和架构
 php_version=$(php -r 'echo PHP_MAJOR_VERSION, ".", PHP_MINOR_VERSION;')
 php_arch=$(uname -m)
+php_zts=$(php -r 'echo ZEND_THREAD_SAFE ? "-ts" : "";')
 php_os=
 
 case "$(uname -s)" in
@@ -38,7 +39,7 @@ tar -xf /tmp/libv8-5.9.tar.gz -C /tmp/
 
 # 确定编译目录
 output_base="$script_base/rasp-php-$(date +%Y-%m-%d)"
-output_ext="$output_base/php/${php_os}-php${php_version}-${php_arch}"
+output_ext="$output_base/php${php_zts}/${php_os}-php${php_version}-${php_arch}"
 
 # 编译
 cd agent/php7
