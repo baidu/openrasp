@@ -1,0 +1,127 @@
+<template>
+  <div class="my-3 my-md-5">
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">
+          异常日志
+        </h1>
+        <div class="page-options d-flex">
+          <div class="input-icon ml-2 w-50">
+            <span class="input-icon-addon">
+              <i class="fe fe-calendar" />
+            </span>
+            <DatePicker ref="datePicker" @selected="fetchData(1)" />
+          </div>
+          <div class="input-icon ml-2">
+            <span class="input-icon-addon">
+              <i class="fe fe-search" />
+            </span>
+            <b-form-input v-model="hostname" type="text" class="form-control w-10" placeholder="搜索主机或者IP" @keyup.enter="fetchData(1)" />
+          </div>
+          <button class="btn btn-primary ml-2" @click="fetchData(1)">
+            搜索
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <vue-loading v-if="loading" type="spiningDubbles" color="rgb(90, 193, 221)" :size="{ width: '50px', height: '50px' }" />
+          <b-table hover bordered :items="data" :fields="fields">
+            <template slot="event_time" slot-scope="scope">
+              {{ moment(scope.event_time).format('YYYY-MM-DD') }}
+              <br>
+              {{ moment(scope.event_time).format('HH:mm:ss') }}
+            </template>
+            <!-- <template slot="hook" slot-scope="scope">
+              <span v-if="scope.value.all">
+                所有 Hook 点
+              </span>
+              <span v-if="!scope.value.all">
+                {{ whitelist2str(scope.value) }}
+              </span>
+            </template>
+            <template slot="command" slot-scope="scope">
+              <a href="javascript:" @click="showModal(scope.index)">
+                编辑
+              </a>
+              <a href="javascript:" @click="deleteItem(scope.index)">
+                删除
+              </a>
+            </template> -->
+          </b-table>
+          <nav v-if="!loading">
+            <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" @change="fetchData" />
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <EventDetailModal ref="showEventDetail" />
+  </div>
+</template>
+
+<script>
+import EventDetailModal from '@/components/modals/eventDetailModal'
+import DatePicker from '@/components/DatePicker'
+import { attack_type2name, block_status2name, attack_types } from '@/util'
+import { mapGetters } from 'vuex'
+import isIp from 'is-ip'
+
+export default {
+  name: 'Exceptions',
+  components: {
+    EventDetailModal,
+    DatePicker
+  },
+  data() {
+    return {
+      data: [],
+      loading: false,
+      currentPage: 1,
+      hostname: '',
+      total: 0,
+      fields: [
+        { key: 'event_time', label: '异常时间' },
+        { key: 'level', label: '级别' },
+        { key: 'server_hostname', label: '主机信息' },
+        { key: 'message', label: '内容' }
+      ]
+    }
+  },
+  computed: {
+    ...mapGetters(['current_app'])
+  },
+  watch: {
+    current_app() { this.fetchData(1) },
+    selected() { this.fetchData(1) }
+  },
+  mounted() {
+    if (!this.current_app.id) {
+      return
+    }
+    this.fetchData(1)
+  },
+  methods: {
+    fetchData(page) {
+      const body = {
+        data: {
+          start_time: this.$refs.datePicker.start.valueOf(),
+          end_time: this.$refs.datePicker.end.valueOf(),
+          app_id: this.current_app.id,
+          server_hostname: this.hostname || undefined
+        },
+        page: page,
+        perpage: 10
+      }
+      return this.request.post('/v1/api/log/error/search', body)
+        .then(res => {
+          this.currentPage = page
+          this.data = res.data
+          this.total = res.total
+          this.loading = false
+        })
+    }
+  }
+}
+</script>
+

@@ -18,7 +18,7 @@
             </a>
             <div class="dropdown-menu dropdown-menu-left dropdown-menu-arrow">
               <div class="form-group" style="margin: 6px 15px 10px 15px; ">
-                <input type="text" class="form-control form-control-sm" v-model="keyword">
+                <input v-model="keyword" type="text" class="form-control form-control-sm">
               </div>
               <div style="max-height: 300px; overflow: scroll; ">
                 <a v-for="row in app_list_filtered" :key="row.id" class="dropdown-item" href="javascript:" @click.prevent="setCurrentApp(row)">
@@ -82,6 +82,12 @@
                 <RouterLink :to="{ name: 'events', params: { app_id: current_app.id } }" class="nav-link">
                   <i class="fe fe-bell" />
                   攻击事件
+                </RouterLink>
+              </li>
+              <li class="nav-item">
+                <RouterLink :to="{ name: 'exceptions', params: { app_id: current_app.id } }" class="nav-link">
+                  <i class="fe fe-alert-circle" />
+                  异常日志
                 </RouterLink>
               </li>
               <li class="nav-item dropdown">
@@ -154,7 +160,7 @@ export default {
     ...mapGetters(['current_app', 'app_list']),
     app_list_filtered: function() {
       var keyword = this.keyword.toLowerCase()
-      return this.app_list.filter(function (app) {
+      return this.app_list.filter(function(app) {
         return app.name.toLowerCase().indexOf(keyword) != -1
       })
     }
