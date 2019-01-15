@@ -37,7 +37,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"io/ioutil"
-	"rasp-cloud/es"
 	"crypto/tls"
 	"net"
 	"rasp-cloud/conf"
@@ -164,6 +163,34 @@ func init() {
 		}
 		go startAlarmTicker(time.Second * time.Duration(conf.AppConfig.AlarmCheckInterval))
 	}
+	initEsIndex()
+}
+
+func initEsIndex() error {
+	var apps []*App
+	_, err := mongo.FindAllWithoutLimit(appCollectionName, nil, &apps)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get all app", err)
+	}
+	for _, app := range apps {
+		err := createEsIndexWithAppId(app.Id)
+		if err != nil {
+			tools.Panic(tools.ErrCodeESInitFailed, "failed to init es index for app "+app.Name, err)
+		}
+	}
+	return nil
+}
+
+func createEsIndexWithAppId(appId string) error {
+	err := logs.CreateAlarmEsIndex(appId)
+	if err != nil {
+		return errors.New("failed to create alarm es index, " + err.Error())
+	}
+	err = CreateReportDataEsIndex(appId)
+	if err != nil {
+		return errors.New("failed to create report data es index, " + err.Error())
+	}
+	return nil
 }
 
 func createDefaultApp() {
@@ -232,13 +259,9 @@ func AddApp(app *App) (result *App, err error) {
 		return nil, errors.New("duplicate app name")
 	}
 	HandleApp(app, true)
-	err = logs.CreateAlarmIndexWithAppId(app.Id)
+	err = createEsIndexWithAppId(app.Id)
 	if err != nil {
-		return
-	}
-	err = es.CreateEsIndex(ReportIndexName+"-"+app.Id, AliasReportIndexName+"-"+app.Id, ReportEsMapping)
-	if err != nil {
-		return
+		return nil, errors.New("failed to create es index for app " + app.Name + ", " + err.Error())
 	}
 	// ES must be created before mongo
 	err = mongo.Insert(appCollectionName, app)

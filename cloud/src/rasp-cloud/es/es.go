@@ -30,6 +30,7 @@ import (
 
 var (
 	ElasticClient *elastic.Client
+	Version       string
 	ttlIndexes    = make(chan map[string]time.Duration, 1)
 	minEsVersion  = "5.6.0"
 )
@@ -45,14 +46,14 @@ func init() {
 		}
 		go startTTL(24 * time.Hour)
 
-		version, err := client.ElasticsearchVersion(esAddr)
+		Version, err = client.ElasticsearchVersion(esAddr)
 		if err != nil {
 			tools.Panic(tools.ErrCodeESInitFailed, "failed to get es version", err)
 		}
-		beego.Info("ES version: " + version)
-		if strings.Compare(version, minEsVersion) < 0 {
+		beego.Info("ES version: " + Version)
+		if strings.Compare(Version, minEsVersion) < 0 {
 			tools.Panic(tools.ErrCodeESInitFailed, "unable to support the ElasticSearch with a version lower than "+
-				minEsVersion+ ","+ " the current version is "+ version, nil)
+				minEsVersion+ ","+ " the current version is "+ Version, nil)
 		}
 		ElasticClient = client
 	}
@@ -110,7 +111,18 @@ func RegisterTTL(duration time.Duration, index string) {
 	ttls[index] = duration
 }
 
-func CreateEsIndex(index string, aliasIndex string, mapping string) error {
+func CreateTemplate(name string, body string) error {
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
+	defer cancel()
+	_, err := elastic.NewIndicesPutTemplateService(ElasticClient).Name(name).BodyString(body).Do(ctx)
+	if err != nil {
+		return err
+	}
+	beego.Info("put es template: " + name)
+	return nil
+}
+
+func CreateEsIndex(index string) error {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
 	defer cancel()
 	exists, err := ElasticClient.IndexExists(index).Do(ctx)
@@ -118,7 +130,7 @@ func CreateEsIndex(index string, aliasIndex string, mapping string) error {
 		return err
 	}
 	if !exists {
-		createResult, err := ElasticClient.CreateIndex(index).Body(mapping).Do(ctx)
+		createResult, err := ElasticClient.CreateIndex(index).Do(ctx)
 		if err != nil {
 			return err
 		}
@@ -126,19 +138,6 @@ func CreateEsIndex(index string, aliasIndex string, mapping string) error {
 		if err != nil {
 			beego.Error("failed to create index with name " + index + ": " + err.Error())
 			return err
-		}
-		exists, err = ElasticClient.IndexExists(aliasIndex).Do(ctx)
-		if err != nil {
-
-			return err
-		}
-		if !exists {
-			_, err := ElasticClient.Alias().Add(index, aliasIndex).Do(ctx)
-			if err != nil {
-				beego.Error("failed to create alias index with name " + index + ": " + err.Error())
-				return err
-			}
-			logs.Info("create es index alias: " + aliasIndex)
 		}
 	}
 	return nil

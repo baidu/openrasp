@@ -106,6 +106,18 @@ func FindAll(collection string, query interface{}, result interface{}, skip int,
 	return
 }
 
+func FindAllWithoutLimit(collection string, query interface{}, result interface{},
+	sortFields ...string) (count int, err error) {
+	newSession := NewSession()
+	defer newSession.Close()
+	count, err = newSession.DB(DbName).C(collection).Find(query).Count()
+	if err != nil {
+		return
+	}
+	err = newSession.DB(DbName).C(collection).Find(query).Sort(sortFields...).All(result)
+	return
+}
+
 func FindAllWithSelect(collection string, query interface{}, result interface{}, selector interface{},
 	skip int, limit int) (count int, err error) {
 	newSession := NewSession()
