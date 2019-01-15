@@ -742,6 +742,21 @@ if (RASP.get_jsengine() !== 'v8') {
         var parameters = context.parameter || {}
         var raw_tokens = []
 
+        var base_key_json = "json_context_var_"
+        var var_count = 0
+        function get_json_values(json_obj){
+            for (item in json_obj){
+                if(typeof json_obj[item] == "string"){
+                    parameters[base_key_json + String(var_count)] = [json_obj[item]]
+                    var_count++
+                }
+                else if(typeof json_obj[item] == "object"){
+                    get_json_values(json_obj[item])
+                }
+            }
+        }
+        get_json_values(context.json)
+        
         function _run(values, name) {
             var reason = false
 
