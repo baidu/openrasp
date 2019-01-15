@@ -1,4 +1,4 @@
-const plugin_version = '2019-0110-1100'
+const plugin_version = '2019-0114-1500'
 const plugin_name    = 'official'
 
 /*
@@ -632,6 +632,33 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows)
     return verdict
 }
 
+// 检查是否包含用户输入 - 适合目录
+function is_path_containing_userinput(parameter, target)
+{
+    var verdict = false
+
+    Object.keys(parameter).some(function (key) {
+        var value = parameter[key]
+            value = value[0]
+
+        // 只处理字符串类型的
+        if (typeof value != 'string') {
+            return
+        }
+
+        // java 下面，传入 /usr/ 会变成 /usr，所以少匹配一个字符
+        var value_noslash = value.substr(0, value.length - 1)
+
+        // 只处理非数组、hash情况
+        if (has_traversal(value) && target.indexOf(value_noslash) != -1) {
+            verdict = true
+            return true
+        }
+
+    })
+    return verdict
+}
+
 // 是否来自用户输入 - 适合任意类型参数
 function is_from_userinput(parameter, target)
 {
@@ -1006,11 +1033,15 @@ if (RASP.get_jsengine() !== 'v8') {
 
 
 plugin.register('directory', function (params, context) {
+
     var path        = params.path
     var realpath    = params.realpath
     var appBasePath = context.appBasePath
     var server      = context.server
     var parameter   = context.parameter
+
+    var is_win      = server.os.indexOf('Windows') != -1
+    var language    = server.language
 
     // 算法1 - 读取敏感目录
     if (algorithmConfig.directory_unwanted.action != 'ignore')
@@ -1027,21 +1058,14 @@ plugin.register('directory', function (params, context) {
         }
     }
 
-    // 算法2 - 用户输入匹配。主要用户检测 webshell 文件管理器，直接读取绝对路径的情况
+    // 算法2 - 用户输入匹配。
     if (algorithmConfig.directory_userinput.action != 'ignore')
     {
-        // 去除结尾的斜线, /usr/ == /usr
-        var path_noslash = path
-        if (path_noslash.endsWith('/'))
-        {
-            path_noslash = path_noslash.substr(0, path_noslash.length - 1)
-        }
-
-        if (path_noslash == realpath && is_from_userinput(parameter, path))
+        if (is_path_containing_userinput(parameter, params.path))
         {
             return {
                 action:     algorithmConfig.directory_userinput.action,
-                message:    _("WebShell detected - Using File Manager function to access a folder: %1%", [realpath]),
+                message:    _("Path traversal - Accessing folder specified by userinput, folder is %1%", [realpath]),
                 confidence: 90,
                 algorithm:  'directory_userinput'
             }
@@ -1052,7 +1076,7 @@ plugin.register('directory', function (params, context) {
     if (algorithmConfig.directory_reflect.action != 'ignore')
     {
         // 目前，只有 PHP 支持通过堆栈方式，拦截列目录功能
-        if (server.language == 'php' && validate_stack_php(params.stack))
+        if (language == 'php' && validate_stack_php(params.stack))
         {
             return {
                 action:     algorithmConfig.directory_reflect.action,
