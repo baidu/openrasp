@@ -705,25 +705,36 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message TSRMLS_DC)
         init(FILE_APPENDER TSRMLS_CC);
     }
     bool log_result = false;
-    std::string event_time = format_time(RaspLoggerEntry::rasp_rfc3339_format,
-                                         strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
-    add_assoc_string(common_info, "event_time", estrdup(event_time.c_str()), 0);
-    zval *trace = NULL;
-    MAKE_STD_ZVAL(trace);
-    zval *source_code_arr = NULL;
-    MAKE_STD_ZVAL(source_code_arr);
-    array_init(source_code_arr);
-    if (in_request)
     {
-        format_debug_backtrace_str(trace TSRMLS_CC);
-        format_source_code_arr(source_code_arr TSRMLS_CC);
+        std::string event_time = format_time(RaspLoggerEntry::rasp_rfc3339_format,
+                                             strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
+        add_assoc_string(common_info, "event_time", estrdup(event_time.c_str()), 0);
     }
-    else
     {
-        ZVAL_STRING(trace, "", 1);
+        zval *trace = NULL;
+        MAKE_STD_ZVAL(trace);
+        if (in_request)
+        {
+            format_debug_backtrace_str(trace TSRMLS_CC);
+        }
+        else
+        {
+            ZVAL_STRING(trace, "", 1);
+        }
+        add_assoc_zval(common_info, "stack_trace", trace);
     }
-    add_assoc_zval(common_info, "stack_trace", trace);
-    add_assoc_zval(common_info, "source_code", source_code_arr);
+    if (OPENRASP_CONFIG(decompile.enable))
+    {
+        zval *source_code_arr = NULL;
+        MAKE_STD_ZVAL(source_code_arr);
+        array_init(source_code_arr);
+        if (in_request)
+        {
+            format_source_code_arr(source_code_arr TSRMLS_CC);
+        }
+        add_assoc_zval(common_info, "source_code", source_code_arr);
+    }
+
     if (php_array_merge(Z_ARRVAL_P(common_info), Z_ARRVAL_P(z_message), 1 TSRMLS_CC))
     {
         std::string str_message = json_encode_from_zval(common_info TSRMLS_CC);
@@ -735,8 +746,11 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message TSRMLS_DC)
     {
         RaspLoggerEntry::inner_error(E_WARNING, LOG_ERROR, _("Fail to merge request parameters during %s logging."), name);
     }
+    if (OPENRASP_CONFIG(decompile.enable))
+    {
+        zend_hash_del(Z_ARRVAL_P(common_info), "source_code", sizeof("source_code"));
+    }
     zend_hash_del(Z_ARRVAL_P(common_info), "stack_trace", sizeof("stack_trace"));
-    zend_hash_del(Z_ARRVAL_P(common_info), "source_code", sizeof("source_code"));
     zend_hash_del(Z_ARRVAL_P(common_info), "event_time", sizeof("event_time"));
     if (!in_request) //out of request
     {

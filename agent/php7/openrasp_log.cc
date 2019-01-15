@@ -709,23 +709,33 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message)
         init(FILE_APPENDER);
     }
     bool log_result = false;
-    std::string event_time = format_time(RaspLoggerEntry::rasp_rfc3339_format,
-                                         strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
-    add_assoc_string(&common_info, "event_time", const_cast<char *>(event_time.c_str()));
-    zval trace;
-    zval source_code_arr;
-    array_init(&source_code_arr);
-    if (in_request)
     {
-        format_debug_backtrace_str(&trace);
-        format_source_code_arr(&source_code_arr);
+        std::string event_time = format_time(RaspLoggerEntry::rasp_rfc3339_format,
+                                             strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
+        add_assoc_string(&common_info, "event_time", const_cast<char *>(event_time.c_str()));
     }
-    else
     {
-        ZVAL_STRING(&trace, "");
+        zval trace;
+        if (in_request)
+        {
+            format_debug_backtrace_str(&trace);
+        }
+        else
+        {
+            ZVAL_STRING(&trace, "");
+        }
+        add_assoc_zval(&common_info, "stack_trace", &trace);
     }
-    add_assoc_zval(&common_info, "stack_trace", &trace);
-    add_assoc_zval(&common_info, "source_code", &source_code_arr);
+    if (OPENRASP_CONFIG(decompile.enable))
+    {
+        zval source_code_arr;
+        array_init(&source_code_arr);
+        if (in_request)
+        {
+            format_source_code_arr(&source_code_arr);
+        }
+        add_assoc_zval(&common_info, "source_code", &source_code_arr);
+    }
     if (php_array_merge(Z_ARRVAL(common_info), Z_ARRVAL_P(z_message)))
     {
         std::string str_message = json_encode_from_zval(&common_info);
@@ -737,8 +747,11 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message)
     {
         RaspLoggerEntry::inner_error(E_WARNING, LOG_ERROR, _("Fail to merge request parameters during %s logging."), name);
     }
+    if (OPENRASP_CONFIG(decompile.enable))
+    {
+        zend_hash_str_del(Z_ARRVAL(common_info), ZEND_STRL("source_code"));
+    }
     zend_hash_str_del(Z_ARRVAL(common_info), ZEND_STRL("stack_trace"));
-    zend_hash_str_del(Z_ARRVAL(common_info), ZEND_STRL("source_code"));
     zend_hash_str_del(Z_ARRVAL(common_info), ZEND_STRL("event_time"));
     if (!in_request) //out of request
     {
