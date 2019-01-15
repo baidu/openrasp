@@ -44,6 +44,7 @@ bool get_entire_file_content(const char *file, std::string &content);
 void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter, bool use_abs_path = false);
 
 std::vector<std::string> format_source_code_arr();
+void format_source_code_arr(zval *source_code_arr);
 std::vector<std::string> format_debug_backtrace_arr();
 void format_debug_backtrace_arr(zval *backtrace_arr);
 std::string format_debug_backtrace_str();

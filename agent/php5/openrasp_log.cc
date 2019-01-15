@@ -710,15 +710,20 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message TSRMLS_DC)
     add_assoc_string(common_info, "event_time", estrdup(event_time.c_str()), 0);
     zval *trace = NULL;
     MAKE_STD_ZVAL(trace);
+    zval *source_code_arr = NULL;
+    MAKE_STD_ZVAL(source_code_arr);
+    array_init(source_code_arr);
     if (in_request)
     {
         format_debug_backtrace_str(trace TSRMLS_CC);
+        format_source_code_arr(source_code_arr TSRMLS_CC);
     }
     else
     {
         ZVAL_STRING(trace, "", 1);
     }
     add_assoc_zval(common_info, "stack_trace", trace);
+    add_assoc_zval(common_info, "source_code", source_code_arr);
     if (php_array_merge(Z_ARRVAL_P(common_info), Z_ARRVAL_P(z_message), 1 TSRMLS_CC))
     {
         std::string str_message = json_encode_from_zval(common_info TSRMLS_CC);
@@ -731,6 +736,7 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message TSRMLS_DC)
         RaspLoggerEntry::inner_error(E_WARNING, LOG_ERROR, _("Fail to merge request parameters during %s logging."), name);
     }
     zend_hash_del(Z_ARRVAL_P(common_info), "stack_trace", sizeof("stack_trace"));
+    zend_hash_del(Z_ARRVAL_P(common_info), "source_code", sizeof("source_code"));
     zend_hash_del(Z_ARRVAL_P(common_info), "event_time", sizeof("event_time"));
     if (!in_request) //out of request
     {
