@@ -16,9 +16,11 @@ const watchFileOptions = {
 const SERVER_HOME = process.env['SERVER_HOME'];
 const CONF_FILE = SERVER_HOME + '/rasp/conf/rasp.yaml';
 const RASP_LOG_FILE = SERVER_HOME + '/rasp/logs/rasp/rasp.log';
+const PLUGIN_LOG = SERVER_HOME + '/rasp/logs/plugin/plugin.log';
 chai.should();
 axios.defaults.headers.common['Test-Test'] = 'Test-Test';
 axios.defaults.validateStatus = status => status !== undefined;
+axios.defaults.transformResponse = []
 
 describe(process.env['SERVER'] || 'server', function () {
     before(function () {
@@ -45,13 +47,19 @@ describe(process.env['SERVER'] || 'server', function () {
         let form = new FormData();
         form.append('test', new Buffer(10), {
             filename: 'test.txt',
-            contentType: 'test/plain',
+            contentType: 'text/plain',
             knownLength: 10
         });
         return axios.post('fileUpload' + '.jsp?test=a&test=b', form, {
             headers: form.getHeaders()
         }).should.eventually.have.property('data')
             .match(/blocked/);
+
+            // .then(rst => {
+            // const content = require('fs').readFileSync(PLUGIN_LOG).toString()
+            // console.log(content)
+            // console.log(rst.data)
+        // })
     });
     let checkPoints = ['command', 'deserialization', 'directory',
         'ognl', 'readFile', 'request', 'writeFile', 'xxe', 'jstlImport', 'sqlite', 'postgresql', 'mysql','http-commonclient','http-httpclient','http-urlconnection',
@@ -69,6 +77,6 @@ describe(process.env['SERVER'] || 'server', function () {
             .should.eventually.have.property('data')
             .match(/blocked/);
         });
-        fs.writeFileSync(CONF_FILE, '\nrequest.param_encoding=utf-8');
+        fs.writeFileSync(CONF_FILE, '\nrequest.param_encoding: utf-8');
     });
 });

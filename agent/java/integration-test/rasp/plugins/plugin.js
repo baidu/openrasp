@@ -80,7 +80,7 @@ plugin.register('writeFile', function (params, context) {
 });
 
 plugin.register('fileUpload', function (params, context) {
-    checkContext(context);
+    checkContext(context,true);
     plugin.log('fileUpload', params);
     if (context.body) {
         return {
