@@ -121,6 +121,15 @@ std::vector<std::string> format_source_code_arr(TSRMLS_D)
     return array;
 }
 
+void format_source_code_arr(zval *source_code_arr TSRMLS_DC)
+{
+    auto array = format_source_code_arr(TSRMLS_C);
+    for (auto &str : array)
+    {
+        add_next_index_stringl(source_code_arr, str.c_str(), str.length(), 1);
+    }
+}
+
 std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D)
 {
     std::vector<DebugTrace> trace = build_debug_trace(OPENRASP_CONFIG(plugin.maxstack) TSRMLS_CC);

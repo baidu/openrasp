@@ -32,36 +32,14 @@ var (
 	ReportIndexName      = "openrasp-report-data"
 	AliasReportIndexName = "real-openrasp-report-data"
 	reportType           = "report-data"
-	ReportEsMapping      = `
-		{
-			"mappings": {
-				"report-data": {
-					"_all": {
-						"enabled": false
-					},
-					"properties": {
-						"@timestamp":{
-							"type":"date"
-         				},
-						"time": {
-							"type": "date"
-						},
-						"request_sum": {
-							"type": "long"
-						},
-						"rasp_id": {
-							"type": "keyword",
-							"ignore_above" : 256
-						}
-					}
-				}
-			}
-		}
-	`
 )
 
 func init() {
 	es.RegisterTTL(24*100*time.Hour, AliasReportIndexName+"-*")
+}
+
+func CreateReportDataEsIndex(appId string) error {
+	return es.CreateEsIndex(ReportIndexName + "-" + appId)
 }
 
 func AddReportData(reportData *ReportData, appId string) error {

@@ -32,14 +32,14 @@ const std::map<int, const std::string> LogCollectItem::instance_url_map =
     {
         {ALARM_LOGGER, "/v1/agent/log/attack"},
         {POLICY_LOGGER, "/v1/agent/log/policy"},
-        {PLUGIN_ERROR, "/v1/agent/log/plugin"},
+        {PLUGIN_LOGGER, "/v1/agent/log/plugin"},
         {RASP_LOGGER, "/v1/agent/log/error"}};
 
 const std::map<int, const std::string> LogCollectItem::instance_name_map =
     {
         {ALARM_LOGGER, ALARM_LOG_DIR_NAME},
         {POLICY_LOGGER, POLICY_LOG_DIR_NAME},
-        {PLUGIN_ERROR, PLUGIN_LOG_DIR_NAME},
+        {PLUGIN_LOGGER, PLUGIN_LOG_DIR_NAME},
         {RASP_LOGGER, RASP_LOG_DIR_NAME}};
 
 LogCollectItem::LogCollectItem(int instance_id, bool collect_enable)
