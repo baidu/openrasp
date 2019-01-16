@@ -740,26 +740,11 @@ if (RASP.get_jsengine() !== 'v8') {
         var reason     = false
         var min_length = algorithmConfig.sql_userinput.min_length
         var parameters = context.parameter || {}
+        var json_parameters = context.json || {}
         var raw_tokens = []
 
-        var base_key_json = "json_context_var_"
-        var var_count = 0
-        function get_json_values(json_obj){
-            for (item in json_obj){
-                if(typeof json_obj[item] == "string"){
-                    parameters[base_key_json + String(var_count)] = [json_obj[item]]
-                    var_count++
-                }
-                else if(typeof json_obj[item] == "object"){
-                    get_json_values(json_obj[item])
-                }
-            }
-        }
-        get_json_values(context.json)
-        
         function _run(values, name) {
             var reason = false
-
             values.some(function (value) {
                 // 最短长度限制
                 if (value.length < min_length) {
@@ -786,7 +771,6 @@ if (RASP.get_jsengine() !== 'v8') {
                     return true
                 }
             })
-
             return reason
         }
 
@@ -811,6 +795,24 @@ if (RASP.get_jsengine() !== 'v8') {
                     return true
                 }
             })
+
+            if(Object.keys(json_parameters).length > 0){
+                jsons = [json_parameters]
+                while(jsons.length > 0 && reason === false){
+                    json_obj = jsons.pop()
+                    for (item in json_obj){
+                        if(typeof json_obj[item] == "string"){
+                            reason = _run([json_obj[item]], "json input")
+                            if(reason !== false){
+                                break;
+                            }
+                        }
+                        else if(typeof json_obj[item] == "object"){
+                            jsons.push(json_obj[item])
+                        }
+                    }
+                }
+            }
 
             if (reason !== false)
             {
