@@ -87,12 +87,6 @@
                   攻击事件
                 </RouterLink>
               </li>
-              <li class="nav-item">
-                <RouterLink :to="{ name: 'exceptions', params: { app_id: current_app.id } }" class="nav-link">
-                  <i class="fe fe-alert-circle" />
-                  异常日志
-                </RouterLink>
-              </li>
               <li class="nav-item dropdown">
                 <RouterLink :to="{ name: 'baseline', params: { app_id: current_app.id } }" class="nav-link">
                   <i class="fe fe-check-square" />
@@ -109,6 +103,12 @@
                 <RouterLink :to="{ name: 'plugins', params: { app_id: current_app.id } }" class="nav-link">
                   <i class="fe fe-zap" />
                   插件管理
+                </RouterLink>
+              </li>
+              <li class="nav-item">
+                <RouterLink :to="{ name: 'exceptions', params: { app_id: current_app.id } }" class="nav-link">
+                  <i class="fe fe-alert-circle" />
+                  异常日志
                 </RouterLink>
               </li>
               <li class="nav-item">
