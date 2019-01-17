@@ -58,7 +58,6 @@ describe(process.env['SERVER'] || 'server', function () {
             let data = fs.readFileSync(POLICY_ALARM_FILE, {
                 encoding: 'utf8'
             });
-            console.log(resData);
             data.should.equal(timestamp+'')
             resData.should.not.contains('blocked')
             done();

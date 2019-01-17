@@ -54,12 +54,6 @@ describe(process.env['SERVER'] || 'server', function () {
             headers: form.getHeaders()
         }).should.eventually.have.property('data')
             .match(/blocked/);
-
-            // .then(rst => {
-            // const content = require('fs').readFileSync(PLUGIN_LOG).toString()
-            // console.log(content)
-            // console.log(rst.data)
-        // })
     });
     let checkPoints = ['command', 'deserialization', 'directory',
         'ognl', 'readFile', 'request', 'writeFile', 'xxe', 'jstlImport', 'sqlite', 'postgresql', 'mysql','http-commonclient','http-httpclient','http-urlconnection',
