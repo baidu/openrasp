@@ -337,6 +337,11 @@ var algorithmConfig = {
         action: 'log'
     },
 
+    xss_userinput: {
+        name:   '算法2 - 拦截输出在响应里的反射 XSS',
+        action: 'block'
+    },    
+
     webshell_eval: {
         name:   '算法1 - 拦截简单的 PHP 中国菜刀后门',
         action: 'block'
