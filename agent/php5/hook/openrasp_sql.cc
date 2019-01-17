@@ -165,7 +165,10 @@ void sql_error_alarm(char *server, char *query, const std::string &err_code, con
     zval *plugin_message = nullptr;
     MAKE_STD_ZVAL(plugin_message);
     char *message_str = nullptr;
-    spprintf(&message_str, 0, _("%s error detected: error code %s."), server, err_code.c_str());
+    spprintf(&message_str, 0, _("%s error %s detected: %s."),
+             server,
+             err_code.c_str(),
+             err_msg.c_str());
     ZVAL_STRING(plugin_message, message_str, 1);
     efree(message_str);
     OpenRASPActionType action = openrasp::scm->get_buildin_check_action(SQL_ERROR);

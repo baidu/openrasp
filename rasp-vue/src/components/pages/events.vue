@@ -12,7 +12,7 @@
             </span>
             <DatePicker ref="datePicker" @selected="loadEvents(1)" />
           </div>
-          <b-dropdown text="主机状态" class="ml-2" right>
+          <b-dropdown text="攻击类型" class="ml-2" right>
             <b-container style="width: 500px;">
               <b-form-row>
                 <b-col>
