@@ -313,9 +313,15 @@ var algorithmConfig = {
         action:     'block',
         min_length: 2
     },
+    // 命令注入 - 常见命令
+    command_common: {
+        name:    '算法3 - 识别常用渗透命令（探针）',
+        action:  'block',
+        pattern: 'cat.*/etc/passwd'
+    },
     // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
     command_other: {
-        name:   '算法3 - 记录或者拦截所有命令执行操作',
+        name:   '算法4 - 记录或者拦截所有命令执行操作',
         action: 'ignore'
     },
 
@@ -440,6 +446,9 @@ var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter)
 
 // SQL注入算法2 - 预过滤正则
 var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter)
+
+// 命令执行探针 - 常用渗透命令
+var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern)
 
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue) {
@@ -1555,7 +1564,22 @@ plugin.register('command', function (params, context) {
         }
     }
 
-    // 算法3: 记录所有的命令执行
+    // 算法3: 常用渗透命令
+    if (algorithmConfig.command_common.action != 'ignore')
+    {
+        var reason = false
+        if (cmdPostPattern.test(params.command))
+        {           
+            return {
+                action:     algorithmConfig.command_common.action,
+                message:    _("Webshell detected - Executing potentially dangerous command, command is %1%", [cmd]),
+                confidence: 95,
+                algorithm:  'command_common'
+            }    
+        }     
+    }
+
+    // 算法4: 记录所有的命令执行
     if (algorithmConfig.command_other.action != 'ignore') 
     {
         return {
