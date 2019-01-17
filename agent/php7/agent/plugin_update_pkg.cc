@@ -49,7 +49,7 @@ bool PluginUpdatePackage::build_snapshot()
 #endif
   if (!build_successful)
   {
-    openrasp_error(LEVEL_WARNING, AGENT_ERROR, _("Fail to write snapshot to %s."), snapshot_abs_path.c_str());
+    openrasp_error(LEVEL_WARNING, PLUGIN_ERROR, _("Fail to write snapshot to %s."), snapshot_abs_path.c_str());
   }
   std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
   Platform::Initialize();

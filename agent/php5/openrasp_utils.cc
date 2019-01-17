@@ -174,7 +174,7 @@ int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC)
         {
             return 1;
         }
-        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Could not create directory '%s': %s"), path, strerror(errno));
+        openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("Could not create directory '%s': %s"), path, strerror(errno));
     }
     return 0;
 }

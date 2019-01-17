@@ -357,7 +357,7 @@ static bool make_openrasp_root_dir(TSRMLS_D)
         std::string path(root_dir + DEFAULT_SLASH + dir);
         if (!recursive_mkdir(path.c_str(), path.length(), 0777 TSRMLS_CC))
         {
-            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.root_dir must be a writable path"));
+            openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("openrasp.root_dir must be a writable path"));
             return false;
         }
     }
@@ -440,7 +440,7 @@ static bool current_sapi_supported(TSRMLS_D)
     auto iter = supported_sapis.find(std::string(sapi_module.name));
     if (iter == supported_sapis.end())
     {
-        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Unsupported SAPI: %s."), sapi_module.name);
+        openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("Unsupported SAPI: %s."), sapi_module.name);
         return false;
     }
     return true;
