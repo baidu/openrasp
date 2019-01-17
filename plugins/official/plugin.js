@@ -1,4 +1,4 @@
-const plugin_version = '2019-0115-1600'
+const plugin_version = '2019-0117-1630'
 const plugin_name    = 'official'
 
 /*
@@ -331,15 +331,22 @@ var algorithmConfig = {
         action: 'block'
     },
 
+    // xss 用户输入匹配算法
+    // 1. 当用户输入长度超过15，匹配上标签正则，且出现在响应里，直接拦截
+    // 2. 当用户输入长度超过15，匹配上标签正则这样的参数个数超过 10，判定为扫描攻击，直接拦截
+    xss_userinput: {
+        name:   '算法2 - 拦截输出在响应里的反射 XSS',
+        action: 'log',
+
+        filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]",
+        min_length: 15,
+        max_detection_num: 10
+    },
+
     // php 专有算法
     xss_echo: {
         name:   '算法1 - PHP: 禁止直接输出 GPC 参数',
         action: 'log'
-    },
-
-    xss_userinput: {
-        name:   '算法2 - 拦截输出在响应里的反射 XSS',
-        action: 'block'
     },    
 
     webshell_eval: {
@@ -359,7 +366,10 @@ var algorithmConfig = {
 
     webshell_callable: {
         name:   '算法4 - 拦截简单的 PHP array_map/walk/filter 后门',
-        action: 'block'
+        action: 'block',
+        functions: [
+            'system', 'exec', 'passthru', 'proc_open', 'shell_exec', 'popen', 'pcntl_exec', 'assert'
+        ]
     },
 
     webshell_ld_preload: {
