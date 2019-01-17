@@ -15,6 +15,27 @@
             </p>
         </div>
 
+        <div v-if="data.attack_type == 'sql_exception'">
+            <div class="h6">
+                数据库类型
+            </div>
+            <p>
+                {{ data.attack_params.server }}
+            </p>            
+            <div class="h6">
+                执行的SQL语句
+            </div>
+            <p>
+                {{ data.attack_params.query }}
+            </p>
+            <div class="h6">
+                错误信息
+            </div>
+            <p>
+                [{{ data.attack_params.error_code }}] {{ data.attack_params.error_msg }}
+            </p>
+        </div>        
+
         <div v-if="data.attack_type == 'directory'">
             <div class="h6">
                 读取的目录
