@@ -257,4 +257,97 @@ void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string>
     }
 }
 
+void extract_callable_blacklist(Isolate *isolate, std::vector<std::string> &callable_blacklist)
+{
+    v8::HandleScope handle_scope(isolate);
+    auto context = isolate->GetCurrentContext();
+    auto rst = isolate->ExecScript(R"(
+        (function () {
+            var blacklist
+            try {
+                blacklist = RASP.algorithmConfig.webshell_callable.functions
+            } catch (_) {
+
+            }
+            if (blacklist === undefined || !Array.isArray(blacklist)) {
+                blacklist = ["system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"]
+            }
+            return blacklist
+        })()
+    )",
+                                   "extract_callable_blacklist");
+    if (!rst.IsEmpty())
+    {
+        callable_blacklist.clear();
+        auto arr = rst.ToLocalChecked().As<v8::Array>();
+        auto len = arr->Length();
+        for (size_t i = 0; i < len; i++)
+        {
+            v8::HandleScope handle_scope(isolate);
+            v8::Local<v8::Value> item;
+            if (!arr->Get(context, i).ToLocal(&item) || !item->IsString())
+            {
+                continue;
+            }
+            v8::String::Utf8Value value(item);
+            callable_blacklist.push_back(std::string(*value, value.length()));
+        }
+    }
+}
+
+void extract_xss_config(Isolate *isolate, std::string &filter_regex, int64_t &min_length, int64_t &max_detection_num)
+{
+    v8::HandleScope handle_scope(isolate);
+    auto context = isolate->GetCurrentContext();
+    auto rst = isolate->ExecScript(R"(
+        (function () {
+            var filter_regex = "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"
+            var min_length = 15
+            var max_detection_num = 10
+            try {
+                var xss_userinput = RASP.algorithmConfig.xss_userinput
+                if (typeof xss_userinput.filter_regex === 'string') {
+                    filter_regex = xss_userinput.filter_regex
+                }
+                if (Number.isInteger(xss_userinput.min_length)) {
+                    min_length = xss_userinput.min_length
+                }
+                if (Number.isInteger(xss_userinput.max_detection_num)) {
+                    max_detection_num = xss_userinput.max_detection_num
+                }
+            } catch (_) {
+
+            }
+            return [filter_regex, min_length, max_detection_num]
+        })()
+    )",
+                                   "extract_xss_config");
+    if (!rst.IsEmpty())
+    {
+
+        auto arr = rst.ToLocalChecked().As<v8::Array>();
+        auto len = arr->Length();
+        if (3 == len)
+        {
+            v8::HandleScope handle_scope(isolate);
+            v8::Local<v8::Value> item0;
+            if (arr->Get(context, 0).ToLocal(&item0) && item0->IsString())
+            {
+                v8::String::Utf8Value value(item0);
+                filter_regex = std::string(*value, value.length());
+            }
+            v8::Local<v8::Value> item1;
+            if (arr->Get(context, 1).ToLocal(&item1) && item1->IsNumber())
+            {
+                min_length = item1->IntegerValue();
+            }
+            v8::Local<v8::Value> item2;
+            if (arr->Get(context, 2).ToLocal(&item2) && item2->IsNumber())
+            {
+                max_detection_num = item2->IntegerValue();
+            }
+        }
+    }
+}
+
 } // namespace openrasp

@@ -53,24 +53,6 @@ security.enforce_policy: false
 #正常攻击LRU缓存最大容量
 lru.max_size: 1024
 
-#callable回调函数名黑名单
-webshell_callable.blacklist:
-  - "system"
-  - "exec"
-  - "passthru"
-  - "proc_open"
-  - "shell_exec"
-  - "popen"
-  - "pcntl_exec"
-  - "assert"
-
-#参数过滤正则表达式
-xss.filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"
-#参数参数最小长度
-xss.min_param_length: 15
-#最多检测参数数目
-xss.max_detection_num: 10
-
 #是否开启源码溯源
 decompile.enable: false
 
