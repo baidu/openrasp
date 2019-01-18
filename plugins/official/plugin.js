@@ -53,6 +53,7 @@ var algorithmConfig = {
         pre_filter: 'select|file|from|;',
         pre_enable: false,
     },
+
     // SQL注入算法#2 - 语句规范
     sql_policy: {
         name:    '算法2 - 拦截异常SQL语句',
@@ -110,6 +111,13 @@ var algorithmConfig = {
             bin:              true
         }
     },
+
+    sql_exception: {
+        name:      '算法3 - 检测SQL语句异常',
+        action:    'log',
+        reference: 'https://rasp.baidu.com/doc/dev/official.html#sql-exception'
+    },
+
     // SSRF - 来自用户输入，且为内网地址就拦截
     ssrf_userinput: {
         name:   '算法1 - 用户输入匹配算法',
