@@ -35,8 +35,6 @@ bool ConfigHolder::update(BaseReader *reader)
   clientip.update(reader);
   security.update(reader);
   lru.update(reader);
-  webshell_callable.update(reader);
-  xss.update(reader);
   decompile.update(reader);
   return true;
 }
@@ -49,6 +47,12 @@ long ConfigHolder::GetLatestUpdateTime() const
 void ConfigHolder::SetLatestUpdateTime(long latestUpdateTime)
 {
   this->latestUpdateTime = latestUpdateTime;
+}
+
+bool ConfigHolder::updateAlgorithmConfig()
+{
+  webshell_callable.update();
+  xss.update();
 }
 
 } // namespace openrasp

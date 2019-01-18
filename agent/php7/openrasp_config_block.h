@@ -126,12 +126,20 @@ public:
   void update(BaseReader *reader);
 };
 
+class DecompileBlock
+{
+public:
+  bool enable = false;
+  void update(BaseReader *reader);
+};
+
+//read from plugin
 class CallableBlock
 {
 public:
   const static vector<string> default_blacklist;
   vector<string> blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
-  void update(BaseReader *reader);
+  void update();
 };
 
 // xss
@@ -140,18 +148,12 @@ class XssBlock
 public:
   const static int64_t default_min_param_length;
   const static int64_t default_max_detection_num;
+  const static std::string default_filter_regex;
 
   string filter_regex;
   int64_t min_param_length = 15;
   int64_t max_detection_num = 10;
-  void update(BaseReader *reader);
-};
-
-class DecompileBlock
-{
-public:
-  bool enable = false;
-  void update(BaseReader *reader);
+  void update();
 };
 
 } // namespace openrasp
