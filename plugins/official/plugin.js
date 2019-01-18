@@ -317,7 +317,7 @@ var algorithmConfig = {
     command_common: {
         name:    '算法3 - 识别常用渗透命令（探针）',
         action:  'block',
-        pattern: 'cat.*/etc/passwd|nc.{1,30}-e.{1,100}/bin/(?:ba)?sh|bash\s-.{0,4}i.{1,20}/dev/tcp/|subprocess.call\(.{0,6}/bin/(?:ba)?sh|fsockopen\(.{1,50}/bin/(?:ba)?sh|perl.{1,80}socket.{1,120}open.{1,80}exec\(.{1,5}/bin/(?:ba)?sh|([\|\&`;\x0d\x0a]|$\([^\(]).{1,3}(ping|nslookup|curl|wget|mail)'
+        pattern: 'cat.*/etc/passwd|nc.{1,30}-e.{1,100}/bin/(?:ba)?sh|bash\\s-.{0,4}i.{1,20}/dev/tcp/|subprocess.call\\(.{0,6}/bin/(?:ba)?sh|fsockopen\\(.{1,50}/bin/(?:ba)?sh|perl.{1,80}socket.{1,120}open.{1,80}exec\\(.{1,5}/bin/(?:ba)?sh|([\\|\\&`;\\x0d\\x0a]|$\\([^\\(]).{1,3}(ping|nslookup|curl|wget|mail)'
     },
     // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
     command_other: {
@@ -821,18 +821,20 @@ if (RASP.get_jsengine() !== 'v8') {
             })
 
             if(Object.keys(json_parameters).length > 0){
-                jsons = [json_parameters]
+                var jsons = [ [json_parameters, "input_json"] ]
                 while(jsons.length > 0 && reason === false){
-                    json_obj = jsons.pop()
+                    var json_arr = jsons.pop()
+                    var crt_json_key = json_arr[1]
+                    var json_obj = json_arr[0]
                     for (item in json_obj){
                         if(typeof json_obj[item] == "string"){
-                            reason = _run([json_obj[item]], "json input")
+                            reason = _run([json_obj[item]], crt_json_key + "->" + item)
                             if(reason !== false){
                                 break;
                             }
                         }
                         else if(typeof json_obj[item] == "object"){
-                            jsons.push(json_obj[item])
+                            jsons.push([json_obj[item], crt_json_key + "->" + item])
                         }
                     }
                 }
