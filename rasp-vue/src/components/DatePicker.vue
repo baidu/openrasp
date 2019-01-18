@@ -1,5 +1,5 @@
 <template>
-  <input ref="daterangepicker" type="text" name="daterange" class="form-control">
+  <input ref="daterangepicker" type="text" name="daterange" class="form-control" autocomplete="off">
 </template>
 
 <script>
