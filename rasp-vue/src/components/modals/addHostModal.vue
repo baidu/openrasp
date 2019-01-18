@@ -46,7 +46,7 @@
             </div>
             <div id="php-tab" class="tab-pane fade">
               <h4>1. 下载 PHP 安装包</h4>
-              <pre style="white-space: inherit; ">curl https://packages.baidu.com/app/openrasp/rasp-php-linux.tar.bz2 -o rasp-php-linux.tar.bz2</pre>
+              <pre style="white-space: inherit; ">curl https://packages.baidu.com/app/openrasp/rasp-php-linux.tar.bz2 -o rasp-php-linux.tar.bz2<br>tar -xvf rasp-php-linux.tar.bz2<br>cd rasp-*/</pre>
               <h4>2. 执行 install.php 进行安装</h4>
               <pre style="white-space: inherit; ">php install.php -d /opt/rasp --app-id {{ current_app.id }} --app-secret {{ current_app.secret }} --backend-url {{ agent_domain }}</pre>
               <h4>3. 重启 PHP-FPM 或者 Apache 服务器</h4>
