@@ -6,6 +6,7 @@
 <%
 	Boolean isMultipart = ServletFileUpload.isMultipartContent(request);
 	if (isMultipart) {
+		request.getParameter("test");
 		DiskFileItemFactory factory = new DiskFileItemFactory();
 		ServletFileUpload upload = new ServletFileUpload(factory);
 		List<FileItem> items = upload.parseRequest(request);

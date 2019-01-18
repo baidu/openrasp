@@ -19,6 +19,7 @@ chai.expect();
 chai.should();
 axios.defaults.headers.common['Test-Test'] = 'Test-Test';
 axios.defaults.validateStatus = status => status !== undefined;
+axios.defaults.transformResponse = []
 
 describe(process.env['SERVER'] || 'server', function () {
     before(function () {
@@ -80,7 +81,7 @@ describe(process.env['SERVER'] || 'server', function () {
                 })
             }
         });
-        fs.writeFileSync(CONF_FILE,'\nsecurity.enforce_policy=true');
+        fs.writeFileSync(CONF_FILE,'\nsecurity.enforce_policy: true');
     });
     it('should block when security.enforce_policy=false and request_url=http://127.0.0.1:8080/app/sql-not-connectable.jsp and ', function (done) {
         fs.watchFile(RASP_LOG_FILE, watchFileOptions, () => {
@@ -95,6 +96,6 @@ describe(process.env['SERVER'] || 'server', function () {
                 })
             }
         });
-        fs.writeFileSync(CONF_FILE,'\nsecurity.enforce_policy=true\nblock.status_code=400');
+        fs.writeFileSync(CONF_FILE,'\nsecurity.enforce_policy: true\nblock.status_code: 400');
     });
 });
