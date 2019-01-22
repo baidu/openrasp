@@ -112,18 +112,24 @@
         </div>                    
 
         <div v-if="data.attack_type == 'fileUpload'">
+            <div class="h6" v-if="data.attack_params.name">
+                Multipart 参数名称
+            </div>
+            <p v-if="data.attack_params.name">
+                {{ data.attack_params.name }}
+            </p>
+
             <div class="h6">
                 上传的文件名
             </div>
             <p>
                 {{ data.attack_params.filename }}
             </p>
+            
             <div class="h6">
                 上传的文件内容 - 前4KB
             </div>
-            <p>
-                {{ data.attack_params.content }}
-            </p>
+            <pre>{{ data.attack_params.content }}</pre>
         </div>
 
         <div v-if="data.attack_type == 'rename'">
