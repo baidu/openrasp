@@ -39,7 +39,10 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
     }
 
     zval *realname = nullptr, *file;
-    ZEND_HASH_FOREACH_VAL(Z_ARRVAL(PG(http_globals)[TRACK_VARS_FILES]), file)
+    zend_string *key;
+    std::string form_data_name;
+    zend_ulong idx;
+    ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL(PG(http_globals)[TRACK_VARS_FILES]), idx, key, file)
     {
         zval *tmp_name = NULL;
         if (Z_TYPE_P(file) != IS_ARRAY ||
@@ -51,6 +54,15 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
         }
         if ((realname = zend_hash_str_find(Z_ARRVAL_P(file), ZEND_STRL("name"))) != NULL)
         {
+            if (key != nullptr)
+            {
+                form_data_name = std::string(ZSTR_VAL(key));
+            }
+            else
+            {
+                zend_long actual = idx;
+                form_data_name = std::to_string(actual);
+            }
             break;
         }
     }
@@ -81,6 +93,7 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
     {
         v8::HandleScope handle_scope(isolate);
         auto params = v8::Object::New(isolate);
+        params->Set(openrasp::NewV8String(isolate, "name"), openrasp::NewV8String(isolate, form_data_name));
         params->Set(openrasp::NewV8String(isolate, "filename"), openrasp::NewV8String(isolate, Z_STRVAL_P(realname), Z_STRLEN_P(realname)));
         params->Set(openrasp::NewV8String(isolate, "content"), openrasp::NewV8String(isolate, buffer->val, MIN(buffer->len, 4 * 1024)));
         zend_string_release(buffer);
