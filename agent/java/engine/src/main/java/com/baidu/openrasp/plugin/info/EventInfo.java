@@ -17,6 +17,8 @@
 package com.baidu.openrasp.plugin.info;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.google.gson.Gson;
 
@@ -57,7 +59,9 @@ public abstract class EventInfo {
             }
             return json;
         } catch (Exception e) {
-            HookHandler.LOGGER.error("failed to print event log",e);
+            String message = "failed to print event log";
+            int errorCode = ErrorType.HOOK_ERROR.getCode();
+            HookHandler.LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
             return null;
         }
     }

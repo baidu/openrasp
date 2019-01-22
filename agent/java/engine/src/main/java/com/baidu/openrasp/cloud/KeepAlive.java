@@ -51,7 +51,9 @@ public class KeepAlive {
                 if (CloudUtils.checkRequestResult(response)) {
                     handleResponse(response);
                 } else {
-                    CloudManager.LOGGER.warn(CloudUtils.handleError(ErrorType.HEARTBEAT_ERROR, response));
+                    String message = CloudUtils.handleError(ErrorType.HEARTBEAT_ERROR, response);
+                    int errorCode = ErrorType.HEARTBEAT_ERROR.getCode();
+                    CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
                 }
                 try {
                     Thread.sleep(Config.getConfig().getHeartbeatInterval() * 1000);
@@ -121,7 +123,9 @@ public class KeepAlive {
                     DynamicConfigAppender.setLogMaxBackup();
                 }
             } catch (Throwable e) {
-                CloudManager.LOGGER.warn("config update failed: ", e);
+                String message = "config update failed";
+                int errorCode = ErrorType.CONFIG_ERROR.getCode();
+                CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             }
         }
         if (version != null && md5 != null && pluginContext != null) {

@@ -37,17 +37,19 @@ public class ExceptInfo {
     private String message;
     private Long createTime;
     private int pid;
+    private int errorCode;
     private String stackTrace;
 
-    public ExceptInfo(String level, String message, int pid, StackTraceElement[] trace) {
-        this(Config.getConfig().getCloudAppId(), level, message, System.currentTimeMillis(), pid, trace);
+    public ExceptInfo(String level, String message, int errorCode, int pid, StackTraceElement[] trace) {
+        this(Config.getConfig().getCloudAppId(), level, message, errorCode, System.currentTimeMillis(), pid, trace);
     }
 
-    public ExceptInfo(String appId, String level, String message, Long createTime, int pid
+    public ExceptInfo(String appId, String level, String message, int errorCode, Long createTime, int pid
             , StackTraceElement[] trace) {
         this.appId = appId;
         this.level = level;
         this.message = message;
+        this.errorCode = errorCode;
         this.createTime = createTime;
         this.pid = pid;
         this.stackTrace = stringify(trace);
@@ -62,6 +64,7 @@ public class ExceptInfo {
         info.put("rasp_id", CloudCacheModel.getInstance().getRaspId());
         info.put("app_id", this.appId);
         info.put("level", this.level);
+        info.put("error_code", this.errorCode);
         info.put("message", this.message);
         info.put("stack_trace", this.stackTrace);
         info.put("server_hostname", OSUtil.getHostName());

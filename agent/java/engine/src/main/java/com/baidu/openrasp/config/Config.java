@@ -17,6 +17,7 @@
 package com.baidu.openrasp.config;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.exception.ConfigLoadException;
@@ -58,7 +59,7 @@ public class Config extends FileScanListener {
         LOG_MAX_STACK("log.maxstack", "50"),
         LOG_MAX_BACKUP("log.maxbackup", "30"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
-        SQL_CACHE_CAPACITY("lru.max_size", "100"),
+        SQL_CACHE_CAPACITY("lru.max_size", "1000"),
         SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
         PLUGIN_FILTER("plugin.filter", "true"),
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
@@ -84,9 +85,6 @@ public class Config extends FileScanListener {
         HEARTBEAT_INTERVAL("cloud.heartbeat_interval", "180"),
         HOOK_WHITE("hook.white", ""),
         HOOK_WHITE_ALL("hook.white.ALL", "true"),
-        XSS_FILTER_REGEX("xss.filter_regex", "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"),
-        XSS_MIN_PARAM_LENGTH("xss.min_param_length", "15"),
-        XSS_MAX_DETECTION_NUM("xss.max_detection_num", "10"),
         DECOMPILE_ENABLE("decompile.enable", "false"),
         RESPONSE_HEADERS("inject.custom_headers", "");
 
@@ -154,9 +152,6 @@ public class Config extends FileScanListener {
     private int logMaxBurst;
     private int heartbeatInterval;
     private int syslogFacility;
-    private String xssRegex;
-    private int xssMinParamLength;
-    private int xssMaxDetectionNum;
     private boolean decompileEnable;
     private Map<String, String> responseHeaders;
     private int logMaxBackUp;
@@ -205,7 +200,9 @@ public class Config extends FileScanListener {
                 properties = yaml.loadAs(new FileInputStream(file), Map.class);
             }
         } catch (Exception e) {
-            LOGGER.warn("rasp.yaml parsing failed： ", e);
+            String message = "rasp.yaml parsing failed";
+            int errorCode = ErrorType.CONFIG_ERROR.getCode();
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
         } finally {
             TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
             // 出现解析问题使用默认值
@@ -280,7 +277,9 @@ public class Config extends FileScanListener {
                     DynamicConfigAppender.setLogMaxBackup();
                 }
             } catch (IOException e) {
-                LOGGER.warn("update rasp.yaml failed because: ", e);
+                String message = "update rasp.yaml failed";
+                int errorCode = ErrorType.CONFIG_ERROR.getCode();
+                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
             }
         }
     }
@@ -322,12 +321,15 @@ public class Config extends FileScanListener {
             // 出现解析问题使用默认值
             value = item.defaultValue;
             setConfig(key, item.defaultValue, false);
-            LOGGER.warn("set config " + item.key + " failed, use default value : " + value, e);
+            String message = "set config " + item.key + " failed, use default value : " + value;
+            int errorCode = ErrorType.CONFIG_ERROR.getCode();
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
         }
     }
 
     private void handleException(String message, Exception e) {
-        LOGGER.warn(message, e);
+        int errorCode = ErrorType.CONFIG_ERROR.getCode();
+        LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
         System.out.println(message);
     }
 
@@ -404,7 +406,9 @@ public class Config extends FileScanListener {
                 reloadConfig(new File(configFileDir + File.separator + CONFIG_FILE_NAME));
             }
         } catch (Exception e) {
-            LOGGER.warn("update " + directory.getAbsolutePath() + " failed because: " + e.getMessage(), e);
+            String message = "update " + directory.getAbsolutePath() + " failed";
+            int errorCode = ErrorType.CONFIG_ERROR.getCode();
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
         }
     }
 
@@ -1066,60 +1070,6 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取body_xss的正则表达式
-     *
-     * @return body_xss的正则表达式
-     */
-    public synchronized String getXssRegex() {
-        return xssRegex;
-    }
-
-    /**
-     * 设置body_xss的正则表达式
-     *
-     * @param xssRegex 待设置body_xss的正则表达式
-     */
-    public synchronized void setXssRegex(String xssRegex) {
-        this.xssRegex = xssRegex;
-    }
-
-    /**
-     * 获取body_xss的参数最小的检测长度
-     *
-     * @return body_xss的参数最小的检测长度
-     */
-    public synchronized int getXssMinParamLength() {
-        return xssMinParamLength;
-    }
-
-    /**
-     * 设置body_xss的参数最小检测长度
-     *
-     * @param xssMinParamLength 待设置body_xss的参数最小检测长度
-     */
-    public synchronized void setXssMinParamLength(String xssMinParamLength) {
-        this.xssMinParamLength = Integer.parseInt(xssMinParamLength);
-    }
-
-    /**
-     * 获取body_xss的匹配最小检测长度的的参数数量
-     *
-     * @return body_xss的匹配最小检测长度的的参数数量
-     */
-    public synchronized int getXssMaxDetectionNum() {
-        return xssMaxDetectionNum;
-    }
-
-    /**
-     * 设置body_xss的匹配最小检测长度的的参数数量
-     *
-     * @param xssMaxDetectionNum 待设置body_xss的匹配最小检测长度的的参数数量
-     */
-    public synchronized void setXssMaxDetectionNum(String xssMaxDetectionNum) {
-        this.xssMaxDetectionNum = Integer.parseInt(xssMaxDetectionNum);
-    }
-
-    /**
      * 获取java反编译的开关状态
      *
      * @return java反编译的开关状态
@@ -1252,12 +1202,6 @@ public class Config extends FileScanListener {
                 setLogMaxBurst(value);
             } else if (Item.HEARTBEAT_INTERVAL.key.equals(key)) {
                 setHeartbeatInterval(value);
-            } else if (Item.XSS_FILTER_REGEX.key.equals(key)) {
-                setXssRegex(value);
-            } else if (Item.XSS_MIN_PARAM_LENGTH.key.equals(key)) {
-                setXssMinParamLength(value);
-            } else if (Item.XSS_MAX_DETECTION_NUM.key.equals(key)) {
-                setXssMaxDetectionNum(value);
             } else if (Item.DECOMPILE_ENABLE.key.equals(key)) {
                 setDecompileEnable(value);
             } else if (Item.LOG_MAX_BACKUP.key.equals(key)) {
@@ -1315,7 +1259,9 @@ public class Config extends FileScanListener {
                             Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
                             codeSum = codeSum + code;
                         } catch (Exception e) {
-                            LOGGER.warn("Hook type " + s + " does not exist: ", e);
+                            String message = "Hook type " + s + " does not exist";
+                            int errorCode = ErrorType.CONFIG_ERROR.getCode();
+                            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
                         }
                     }
                     if (hook.getKey().equals("*")) {

@@ -16,7 +16,9 @@
 
 package com.baidu.openrasp;
 
+import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.HookWhiteModel;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.exception.SecurityException;
 import com.baidu.openrasp.hook.XXEHook;
@@ -317,8 +319,9 @@ public class HookHandler {
             CheckParameter parameter = new CheckParameter(type, params);
             isBlock = CheckerManager.check(type, parameter);
         } catch (Exception e) {
-            LOGGER.warn("plugin check error: " + e.getClass().getName()
-                    + " because: " + e.getMessage() + " stacktrace: ", e);
+            String message = "plugin check error: " + e.getClass().getName() + " because: " + e.getMessage();
+            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         } finally {
             enableCurrThreadHook.set(enableHookCache);
         }

@@ -18,6 +18,8 @@ package com.baidu.openrasp.plugin.checker.local;
 
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.js.JsChecker;
@@ -126,7 +128,9 @@ public class SSRFChecker extends ConfigurableChecker {
         try {
             result = checkSSRF(checkParameter, parameterMap, config);
         } catch (Exception e) {
-            JSContext.LOGGER.warn("Exception while executing builtin SSRF plugin, was:" + e.getMessage());
+            String message = "Exception while executing builtin SSRF plugin, was:" + e.getMessage();
+            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+            JSContext.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         }
 
         List<EventInfo> jsResults = new JsChecker().checkParam(checkParameter);

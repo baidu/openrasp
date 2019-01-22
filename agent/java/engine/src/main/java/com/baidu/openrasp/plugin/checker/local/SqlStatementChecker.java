@@ -17,6 +17,9 @@
 package com.baidu.openrasp.plugin.checker.local;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.CloudManager;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.plugin.antlr.TokenGenerator;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.sql.SQLStatementHook;
@@ -58,11 +61,15 @@ public class SqlStatementChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_UNION_NULL = "union_null";
     private static final String CONFIG_KEY_INTO_OUTFILE = "into_outfile";
     private static final String CONFIG_KEY_MIN_LENGTH = "min_length";
+    private static final int DEFAULT_MIN_LENGTH = 15;
 
     private static ArrayList<String> sqlErrorCode = new ArrayList<String>();
+
     static {
+        sqlErrorCode.add("1060");
         sqlErrorCode.add("1062");
         sqlErrorCode.add("1105");
+        sqlErrorCode.add("1367");
         sqlErrorCode.add("1690");
         sqlErrorCode.add("1060");
     }
@@ -93,7 +100,9 @@ public class SqlStatementChecker extends ConfigurableChecker {
             // 1. 简单识别逻辑是否发生改变
             action = getActionElement(config, CONFIG_KEY_SQL_USER_INPUT);
             int paramterMinLength = getIntElement(config, CONFIG_KEY_SQL_USER_INPUT, CONFIG_KEY_MIN_LENGTH);
-
+            if (paramterMinLength < 0) {
+                paramterMinLength = DEFAULT_MIN_LENGTH;
+            }
             if (!EventInfo.CHECK_ACTION_IGNORE.equals(action) && action != null && parameterMap != null) {
                 for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
                     String[] v = entry.getValue();
@@ -239,7 +248,9 @@ public class SqlStatementChecker extends ConfigurableChecker {
         try {
             result = checkSql(checkParameter, parameterMap, config);
         } catch (Exception e) {
-            JSContext.LOGGER.warn("Exception while running builtin sqli plugin: ", e);
+            String message = "Exception while running builtin sqli plugin";
+            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+            JSContext.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         }
 
         // js 插件检测

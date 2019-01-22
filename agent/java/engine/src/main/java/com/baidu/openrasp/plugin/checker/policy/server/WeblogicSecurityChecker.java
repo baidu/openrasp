@@ -17,6 +17,8 @@
 package com.baidu.openrasp.plugin.checker.policy.server;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.policy.PolicyChecker;
 import com.baidu.openrasp.plugin.info.EventInfo;
@@ -60,7 +62,9 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
     private void checkManagerPassword(String domainPath, List<EventInfo> infos) {
         File bootProperties = new File(domainPath + File.separator + BOOT_PROPERTIES_PATH);
         if (!(bootProperties.exists() && bootProperties.canRead())) {
-            LOGGER.warn(WEBLOGIC_CHECK_ERROR_LOG_CHANNEL + ": can not load file " + BOOT_PROPERTIES_PATH);
+            String message = WEBLOGIC_CHECK_ERROR_LOG_CHANNEL + ": can not load file " + BOOT_PROPERTIES_PATH;
+            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
         }
         String encryptedPassword = getProperties(bootProperties, "password");
         String decryptedPassword = decrypt(encryptedPassword, domainPath);
@@ -78,7 +82,9 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
             prop.load(InputStream);
             value = prop.getProperty(keyWord);
         } catch (Exception e) {
-            LOGGER.warn(WEBLOGIC_CHECK_ERROR_LOG_CHANNEL + ": can not find " + keyWord);
+            String message = WEBLOGIC_CHECK_ERROR_LOG_CHANNEL + ": can not find " + keyWord;
+            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         }
         return value != null ? value : "";
     }
@@ -93,7 +99,9 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
                 decryptedString = Reflection.invokeStringMethod(clearOrEncryptedService, "decrypt", new Class[]{String.class}, decrypted);
             }
         } catch (Exception e) {
-            LOGGER.warn(WEBLOGIC_CHECK_ERROR_LOG_CHANNEL + ": can not decrypt the encryptedString");
+            String message = WEBLOGIC_CHECK_ERROR_LOG_CHANNEL + ": can not decrypt the encryptedString";
+            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         }
         return decryptedString != null ? decryptedString : "";
     }

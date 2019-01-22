@@ -17,6 +17,8 @@
 package com.baidu.openrasp.hook.ssrf;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -64,7 +66,9 @@ public class URLConnectionHook extends AbstractSSRFHook {
 
             }
         } catch (Exception e) {
-            HookHandler.LOGGER.warn(e.getMessage(), e);
+            String message = e.getMessage();
+            int errorCode = ErrorType.HOOK_ERROR.getCode();
+            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
         }
         if (url != null) {
             checkHttpUrl(url.toString(), urlConnection.getURL().getHost(), "url_open_connection");

@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook.server.weblogic;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.server.ServerStartupHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -59,7 +60,9 @@ public class WeblogicStartupHook extends ServerStartupHook {
                 }
             }
         } catch (Exception e) {
-            HookHandler.LOGGER.warn("handle weblogic startup failed", e);
+            String message = "handle weblogic startup failed";
+            int errorCode = ErrorType.HOOK_ERROR.getCode();
+            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         }
         sendRegister();
         if (!CloudUtils.checkCloudControlEnter()) {

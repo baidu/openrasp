@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook.server.jetty;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.server.ServerStartupHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -52,10 +53,12 @@ public class JettyStartupHook extends ServerStartupHook {
             ApplicationModel.init("jetty",
                     Reflection.invokeStringMethod(server, "getVersion", new Class[]{}));
         } catch (Exception e) {
-            HookHandler.LOGGER.warn("handle resin startup failed", e);
+            String message = "handle jetty startup failed";
+            int errorCode = ErrorType.HOOK_ERROR.getCode();
+            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         }
         sendRegister();
-        if (!CloudUtils.checkCloudControlEnter()){
+        if (!CloudUtils.checkCloudControlEnter()) {
             HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_JETTY_START, CheckParameter.EMPTY_MAP);
         }
     }
