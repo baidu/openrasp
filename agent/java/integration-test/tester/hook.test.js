@@ -65,6 +65,14 @@ describe(process.env['SERVER'] || 'server', function () {
                 .match(/blocked/);
         });
     });
+    var env = process.env['SERVER'] || 'server';
+    if (env == 'dubbo') {
+        it('dubbo', function () {
+            return axios.get('http://127.0.0.1:8080/dubbo-consumer/mysql.do')
+                .should.eventually.have.property('data')
+                .match(/blocked/);
+        });
+    }
     it('paramEncodingConfig', function () {
         fs.watchFile(RASP_LOG_FILE, watchFileOptions, () => {
             return axios.get("param-encoding" + '.jsp?test=a&test=b')

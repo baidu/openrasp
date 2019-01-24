@@ -8,6 +8,14 @@ if [[ $SERVER == "springboot" ]]; then
     mvn clean package
 
     popd
+elif [[ $SERVER == "dubbo" ]]; then
+	pushd dubbo-master/
+
+	mvn clean package
+
+	popd
+
+	jar cvf app.war -C app/ .
 else
 	jar cvf app.war -C app/ .
 fi
