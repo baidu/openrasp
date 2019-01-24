@@ -16,6 +16,8 @@
 
 package com.baidu.openrasp.plugin.checker.local;
 
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.AttackChecker;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
@@ -34,7 +36,7 @@ import java.util.HashMap;
  */
 public abstract class ConfigurableChecker extends AttackChecker {
 
-    private static final int DEFAULT_MIN_LENGTH = 15;
+    private static final int DEFAULT_MIN_LENGTH = -1;
 
     protected String getActionElement(JsonObject config, String key) {
         return getStringElement(config, key, "action");
@@ -110,9 +112,11 @@ public abstract class ConfigurableChecker extends AttackChecker {
 
 
     private void logJsonError(Exception e) {
-        JSContext.LOGGER.warn("Parse json failed because: " + e.getMessage() +
+        String message = "Parse json failed because: " + e.getMessage() +
                 System.getProperty("line.separator") +
-                "        Please check algorithmConfig in js");
+                "        Please check algorithmConfig in js";
+        int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+        JSContext.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
     }
 
 }

@@ -92,8 +92,7 @@ public class ModuleLoader {
                         method.invoke(ClassLoader.getSystemClassLoader(), originFile.toURI().toURL());
                         moduleClass = moduleClassLoader.loadClass(moduleEnterClassName);
                         module = moduleClass.newInstance();
-                    } else if (ClassLoader.getSystemClassLoader().getClass().getName().startsWith("com.oracle") &&
-                            ClassLoader.getSystemClassLoader().getClass().getName().contains("weblogic")) {
+                    } else if (isCustomClassloader()) {
                         moduleClassLoader = ClassLoader.getSystemClassLoader();
                         Method method = moduleClassLoader.getClass().getDeclaredMethod("appendToClassPathForInstrumentation", String.class);
                         method.setAccessible(true);
@@ -137,6 +136,24 @@ public class ModuleLoader {
                     instance = new ModuleLoader(agentArg, inst);
                 }
             }
+        }
+    }
+
+
+    /**
+     * 判断是否是weblogic或者jdk9、10和11
+     */
+    private boolean isCustomClassloader() {
+        try {
+            String classLoader = ClassLoader.getSystemClassLoader().getClass().getName();
+            if (classLoader.startsWith("com.oracle") && classLoader.contains("weblogic")) {
+                return true;
+            }
+            String javaVersion = System.getProperty("java.version");
+            return javaVersion != null && (javaVersion.startsWith("1.9") || javaVersion.startsWith("10.")
+                    || javaVersion.startsWith("11."));
+        } catch (Exception e) {
+            return false;
         }
     }
 

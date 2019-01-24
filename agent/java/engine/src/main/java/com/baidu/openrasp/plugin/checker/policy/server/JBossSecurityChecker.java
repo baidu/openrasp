@@ -17,6 +17,8 @@
 package com.baidu.openrasp.plugin.checker.policy.server;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
@@ -70,8 +72,9 @@ public class JBossSecurityChecker extends ServerPolicyChecker {
                 jbossWebXmlPath = jbossBaseDir + File.separator + "common" + File.separator + jbossWebXmlPath;
                 webXmlPath = jbossBaseDir + File.separator + "common" + File.separator + webXmlPath;
             } else {
-
-                LOGGER.error(JBOSS_SECURITY_CHECK_ERROR + " :" + "JBoss supported 4.x-7.x");
+                String message = JBOSS_SECURITY_CHECK_ERROR + " :" + "JBoss supported 4.x-7.x";
+                int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+                LOGGER.error(CloudUtils.getExceptionObject(message,errorCode));
             }
             checkJBossWebXml(jbossWebXmlPath, infos);
             checkWebXml(webXmlPath, infos);
@@ -135,7 +138,9 @@ public class JBossSecurityChecker extends ServerPolicyChecker {
             return builder.parse(file);
         } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error(JBOSS_SECURITY_CHECK_ERROR + ": " + e.getMessage(), e);
+            String message = JBOSS_SECURITY_CHECK_ERROR + ": " + e.getMessage();
+            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+            LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
         }
         return null;
     }

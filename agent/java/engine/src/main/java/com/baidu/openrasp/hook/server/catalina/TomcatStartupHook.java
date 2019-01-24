@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook.server.catalina;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.server.ServerStartupHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -69,7 +70,9 @@ public class TomcatStartupHook extends ServerStartupHook {
                 ApplicationModel.init("tomcat", version);
             }
         } catch (Exception e) {
-            HookHandler.LOGGER.warn("handle tomcat startup failed", e);
+            String message = "handle tomcat startup failed";
+            int errorCode = ErrorType.HOOK_ERROR.getCode();
+            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
         }
         sendRegister();
         if (!CloudUtils.checkCloudControlEnter()){

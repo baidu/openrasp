@@ -59,7 +59,9 @@ public class Register {
                     CloudManager.init();
                 } else {
                     System.out.println("[OpenRASP] Failed to register RASP agent, please refer to rasp logs for details");
-                    CloudManager.LOGGER.warn(CloudUtils.handleError(ErrorType.REGISTER_ERROR, response));
+                    String message = CloudUtils.handleError(ErrorType.REGISTER_ERROR, response);
+                    int errorCode = ErrorType.REGISTER_ERROR.getCode();
+                    CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
                 }
                 try {
                     Thread.sleep(REGISTER_DELAY);

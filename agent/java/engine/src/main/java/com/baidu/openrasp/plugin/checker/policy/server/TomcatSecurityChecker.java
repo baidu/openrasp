@@ -17,6 +17,8 @@
 package com.baidu.openrasp.plugin.checker.policy.server;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
@@ -66,8 +68,10 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                     checkDefaultApp(tomcatBaseDir, infos);
                     System.out.println("[OpenRASP] Tomcat security baseline - inspection completed");
                 } else {
-                    LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                            "Unable to locate tomcat base directory: failed to read system property \"catalina.base\""));
+                    String message = getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+                            "Unable to locate tomcat base directory: failed to read system property \"catalina.base\"");
+                    int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+                    LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
                 }
             } catch (Exception e) {
                 handleException(e);
@@ -81,14 +85,18 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
     private void checkHttpOnlyIsOpen(String tomcatBaseDir, List<EventInfo> infos) {
         File contextFile = new File(tomcatBaseDir + File.separator + "conf/context.xml");
         if (!contextFile.exists()) {
-            LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "Unable to load conf/context.xml: no such file"));
+            String message = getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+                    "Unable to load conf/context.xml: no such file");
+            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
             return;
         }
 
         if (!contextFile.canRead()) {
-            LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "Unable to load conf/context.xml: file is not readable"));
+            String message = getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+                    "Unable to load conf/context.xml: file is not readable");
+            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
             return;
         }
 
@@ -119,8 +127,10 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
     private void checkManagerPassword(String tomcatBaseDir, List<EventInfo> infos) {
         File userFile = new File(tomcatBaseDir + File.separator + "conf/tomcat-users.xml");
         if (!(userFile.exists() && userFile.canRead())) {
-            LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "can not load file conf/tomcat-users.xml"));
+            String message = getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+                    "can not load file conf/tomcat-users.xml");
+            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
             return;
         }
 
@@ -174,8 +184,10 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
     private void checkDirectoryListing(String tomcatBaseDir, List<EventInfo> infos) {
         File webFile = new File(tomcatBaseDir + File.separator + "conf/web.xml");
         if (!(webFile.exists() && webFile.canRead())) {
-            LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "can not load file conf/web.xml"));
+            String message = getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+                    "can not load file conf/web.xml");
+            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
             return;
         }
         Element rootElement = getXmlFileRootElement(webFile);
@@ -282,8 +294,9 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
     }
 
     private void handleException(Exception e) {
-        e.printStackTrace();
-        LOGGER.error(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL, e.getMessage()), e);
+        String message = getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL, e.getMessage());
+        int errorCode = ErrorType.HOOK_ERROR.getCode();
+        LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
     }
 
     private String getFormattedMessage(String title, String message) {

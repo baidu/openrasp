@@ -103,7 +103,7 @@ var algorithmConfig = {
 
             // 盲注函数，如有误报可删掉一些函数
             hex:              true,
-            char:             true,
+            char:             false,
             chr:              true,
             mid:              true,
             ord:              true,

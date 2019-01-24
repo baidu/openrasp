@@ -16,6 +16,8 @@
 
 package com.baidu.openrasp.tool.annotation;
 
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.exception.AnnotationScannerException;
 import com.baidu.openrasp.transformer.CustomClassTransformer;
 
@@ -74,7 +76,9 @@ public class AnnotationScanner {
                 }
             }
         } catch (Exception e) {
-            CustomClassTransformer.LOGGER.error("find and add class failed", e);
+            String message = "find and add class failed";
+            int errorCode = ErrorType.HOOK_ERROR.getCode();
+            CustomClassTransformer.LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
             throw new AnnotationScannerException(e);
         }
         for (Class clazz : classes) {
@@ -106,7 +110,9 @@ public class AnnotationScanner {
                     try {
                         classes.add(AnnotationScanner.class.getClassLoader().loadClass(packageName + '.' + className));
                     } catch (Exception e) {
-                        CustomClassTransformer.LOGGER.error("find and add class failed", e);
+                        String message = "find and add class failed";
+                        int errorCode = ErrorType.HOOK_ERROR.getCode();
+                        CustomClassTransformer.LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
                         throw new AnnotationScannerException(e);
 
                     }

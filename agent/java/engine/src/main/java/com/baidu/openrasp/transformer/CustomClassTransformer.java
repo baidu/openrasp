@@ -17,6 +17,8 @@
 package com.baidu.openrasp.transformer;
 
 import com.baidu.openrasp.ModuleLoader;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.*;
 import com.baidu.openrasp.tool.annotation.AnnotationScanner;
@@ -72,7 +74,9 @@ public class CustomClassTransformer implements ClassFileTransformer {
                     addHook((AbstractClassHook) object, clazz.getName());
                 }
             } catch (Exception e) {
-                LOGGER.error("add hook failed", e);
+                String message = "add hook failed";
+                int errorCode = ErrorType.HOOK_ERROR.getCode();
+                LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
             }
         }
     }

@@ -21,6 +21,7 @@ import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -61,7 +62,7 @@ public class DiskFileItemHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(DiskFileItemHook.class, "checkFileUpload",
-                "getName(),get()", String.class, byte[].class);
+                "getName(),get(),$1", String.class, byte[].class, Object.class);
         insertAfter(ctClass, "setHeaders", null, src, true);
     }
 
@@ -71,8 +72,8 @@ public class DiskFileItemHook extends AbstractClassHook {
      * @param name    文件名
      * @param content 文件数据
      */
-    public static void checkFileUpload(String name, byte[] content) {
-        if (name != null && content != null) {
+    public static void checkFileUpload(String name, byte[] content, Object object) {
+        if (name != null && content != null && object != null) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             params.put("filename", params, name);
@@ -85,8 +86,26 @@ public class DiskFileItemHook extends AbstractClassHook {
                 e.printStackTrace();
                 params.put("content", params, "[rasp error:" + e.getMessage() + "]");
             }
+            String customFileName = Reflection.invokeStringMethod(object, "getHeader", new Class[]{String.class}, "content-disposition");
+            if (customFileName != null) {
+                customFileName = getFileName(customFileName);
+            }
+            params.put("name", params, customFileName != null ? customFileName : "");
 
             HookHandler.doCheck(CheckParameter.Type.FILEUPLOAD, params);
         }
+    }
+
+    private static String getFileName(String name) {
+        String[] fields = name.split(";");
+        for (String field : fields) {
+            if (!field.contains("filename") && field.contains("name")) {
+                int index = field.indexOf("=");
+                if (index > 0 && index < field.length() - 1) {
+                    return field.substring(index + 1);
+                }
+            }
+        }
+        return null;
     }
 }

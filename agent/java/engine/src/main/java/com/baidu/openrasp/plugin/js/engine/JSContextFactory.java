@@ -18,7 +18,9 @@ package com.baidu.openrasp.plugin.js.engine;
 
 import com.baidu.openrasp.EngineBoot;
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
+import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -96,7 +98,9 @@ public class JSContextFactory extends ContextFactory {
                 //插件更新成功后，设置algorithmConfig
                 algorithmConfigSet();
             } catch (Exception e) {
-                LOGGER.warn("new plugin update failed : ", e);
+                String message = "new plugin update failed";
+                int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
             } finally {
                 jsContextFactory.pluginTime = System.currentTimeMillis();
                 JSContext.exit();
@@ -128,7 +132,9 @@ public class JSContextFactory extends ContextFactory {
                 //插件更新成功后，设置algorithmConfig
                 algorithmConfigSet();
             } catch (Throwable e) {
-                LOGGER.warn("new plugin update failed : ", e);
+                String message = "new plugin update failed";
+                int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
             } finally {
                 jsContextFactory.pluginTime = System.currentTimeMillis();
                 JSContext.exit();

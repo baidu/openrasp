@@ -182,14 +182,15 @@ public class SQLStatementHook extends AbstractSqlHook {
      * SQL执行异常检测
      *
      * @param server 数据库类型
-     * @param e sql执行抛出的异常
+     * @param e      sql执行抛出的异常
      */
     public static void checkSQLErrorCode(String server, SQLException e) {
         JSContext cx = JSContextFactory.enterAndInitContext();
         Scriptable params = cx.newObject(cx.getScope());
         params.put("server", params, server);
         params.put("errorCode", params, String.valueOf(e.getErrorCode()));
-        params.put("message", params, e.getMessage());
+        String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
+        params.put("message", params, message);
         HookHandler.doCheck(CheckParameter.Type.SQL, params);
     }
 }

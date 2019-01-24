@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook.server.resin;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.server.ServerStartupHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -56,7 +57,9 @@ public class ResinStartupHook extends ServerStartupHook {
             String version = (String) versionClass.getField("VERSION").get(null);
             ApplicationModel.init("resin", version);
         } catch (Exception e) {
-            HookHandler.LOGGER.warn("handle resin startup failed", e);
+            String message = "handle resin startup failed";
+            int errorCode = ErrorType.HOOK_ERROR.getCode();
+            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
         }
         sendRegister();
         if (!CloudUtils.checkCloudControlEnter()){
