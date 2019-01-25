@@ -115,6 +115,7 @@ void InjectBlock::update(BaseReader *reader)
 {
   urlprefix = reader->fetch_string({"inject.urlprefix"});
   const auto custom_headers_keys = reader->fetch_object_keys({"inject.custom_headers"});
+  headers.clear();
   for (const auto &key : custom_headers_keys)
   {
     const auto &value = reader->fetch_string({"inject.custom_headers", key});

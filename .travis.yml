@@ -116,6 +116,9 @@ matrix:
     - env: OPENRASP_LANG=java SERVER=springboot
       language: java
       jdk: openjdk7
+    - env: OPENRASP_LANG=java SERVER=dubbo
+      language: java
+      jdk: openjdk7
 before_script:
   - bash ./travis/$OPENRASP_LANG/before_script.sh
 script:
