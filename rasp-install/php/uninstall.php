@@ -173,6 +173,14 @@ foreach($openrasp_work_sub_folders as $key => $value) {
     clear_dir($sub_item);
     rmdir($sub_item);
 }
+$snapshot = realpath($root_dir).DIRECTORY_SEPARATOR."snapshot.dat";
+if (file_exists($snapshot) && is_file($snapshot)) {
+    if (is_writable($snapshot)) {
+        unlink($snapshot);
+    } else {
+        log_tips(INFO, "Fail to delete snapshot.dat, you can manually remove it.");
+    }
+}
 if (rmdir($root_dir)) {
     log_tips(INFO, "'$root_dir' removed");
 } else {
