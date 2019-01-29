@@ -125,7 +125,7 @@ var algorithmConfig = {
     },
     // SSRF - 是否允许访问 aws metadata
     ssrf_aws: {
-        name:   '算法2 - 拦截 AWS metadata 访问',
+        name:   '算法2 - 拦截 AWS/Aliyun metadata 访问',
         action: 'block'
     },
     // SSRF - 是否允许访问 dnslog 地址
@@ -1013,10 +1013,10 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
-        // 算法3 - 检测AWS私有地址
+        // 算法3 - 检测 AWS/Aliyun 私有地址
         if (algorithmConfig.ssrf_aws.action != 'ignore')
         {
-            if (hostname == '169.254.169.254')
+            if (hostname == '169.254.169.254' || hostname == '100.100.100.200')
             {
                 return {
                     action:     algorithmConfig.ssrf_aws.action,
