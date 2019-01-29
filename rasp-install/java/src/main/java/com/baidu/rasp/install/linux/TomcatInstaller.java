@@ -33,11 +33,13 @@ import static com.baidu.rasp.RaspError.E10001;
  */
 public class TomcatInstaller extends BaseStandardInstaller {
 
-    private static String OPENRASP_CONFIG = 
-        "### BEGIN OPENRASP - DO NOT MODIFY ###\n" + 
+    private static String OPENRASP_CONFIG =
+        "### BEGIN OPENRASP - DO NOT MODIFY ###\n" +
         "\tJAVA_OPTS=\"-javaagent:${CATALINA_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"\n" +
         "### END OPENRASP ###\n";
+    private static String JDK_JAVA_OPTIONS = "JDK_JAVA_OPTIONS=\"$JDK_JAVA_OPTIONS --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED\"\n";
     private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*/rasp/).*");
+    private static Pattern JDK_JAVA_OPTIONS_REGEX = Pattern.compile("^JDK_JAVA_OPTIONS.*jdk\\.internal\\.loader.*");
 
     TomcatInstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
@@ -46,7 +48,7 @@ public class TomcatInstaller extends BaseStandardInstaller {
     @Override
     protected String getInstallPath(String serverRoot) {
         return serverRoot + "/rasp";
-        
+
         // String catalineBase;
         // if (serverRoot == null) {
         //     String output = runCommand(new String[]{"bash", "-c", "ps -elf | grep catalina.base"});
@@ -66,6 +68,8 @@ public class TomcatInstaller extends BaseStandardInstaller {
 
     @Override
     protected String modifyStartScript(String content) throws RaspError {
+        boolean versionFlag = checkTomcatVersion();
+        boolean jdk_java_options = false;
         StringBuilder sb = new StringBuilder();
         Scanner scanner = new Scanner(content);
         int modifyConfigState = NOTFOUND;
@@ -74,15 +78,23 @@ public class TomcatInstaller extends BaseStandardInstaller {
             String line = scanner.nextLine();
 
             // 插入点: [ $1 = "start" ] 或者 [ $1 = "run" ]
-            if (! line.startsWith("#") && (line.contains("\"$1\" = \"start\"") || line.contains("\"$1\" = \"run\""))) {
+            if (!line.startsWith("#") && (line.contains("\"$1\" = \"start\"") || line.contains("\"$1\" = \"run\""))) {
                 modifyConfigState = FOUND;
                 sb.append(line).append("\n");
                 sb.append(OPENRASP_CONFIG);
                 continue;
             }
 
+            //添加jdk9以上的版本的依赖
+            if (line.startsWith("JDK_JAVA_OPTIONS=") && !line.contains("export") && versionFlag && !jdk_java_options) {
+                jdk_java_options = true;
+                sb.append(line).append("\n");
+                sb.append(JDK_JAVA_OPTIONS);
+                continue;
+            }
+
             // 删除已经存在的配置项
-            if (OPENRASP_REGEX.matcher(line).matches()) {
+            if (OPENRASP_REGEX.matcher(line).matches() || JDK_JAVA_OPTIONS_REGEX.matcher(line).matches()) {
                 continue;
             }
 
@@ -93,6 +105,9 @@ public class TomcatInstaller extends BaseStandardInstaller {
             throw new RaspError(E10001 + "[\"$1\" = \"start\"] or [\"$1\" = \"run\"]");
         }
 
+        if (versionFlag && !jdk_java_options) {
+            throw new RaspError(E10001 + "JDK_JAVA_OPTIONS=");
+        }
         return sb.toString();
     }
 

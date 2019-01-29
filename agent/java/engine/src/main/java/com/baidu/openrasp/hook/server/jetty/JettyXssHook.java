@@ -55,17 +55,22 @@ public class JettyXssHook extends ServerXssHook {
 
 
     public static void getJettyOutputBuffer(Object object) {
+        HashMap<String, Object> params = null;
         try {
             Object buffer = Reflection.getSuperField(object, "_buffer");
-            String content = new String(buffer.toString().getBytes(), "utf-8");
-            if (HookHandler.requestCache.get() != null) {
-                HashMap<String, Object> params = ServerXss.generateXssParameters(content);
-                HookHandler.doCheck(CheckParameter.Type.XSS, params);
+            if (buffer != null) {
+                String content = new String(buffer.toString().getBytes(), "utf-8");
+                if (HookHandler.requestCache.get() != null) {
+                    params = ServerXss.generateXssParameters(content);
+                }
             }
         } catch (Exception e) {
             String message = ApplicationModel.getServerName() + " xss detectde failed";
             int errorCode = ErrorType.HOOK_ERROR.getCode();
             HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+        }
+        if (params != null) {
+            HookHandler.doCheck(CheckParameter.Type.XSS, params);
         }
     }
 }

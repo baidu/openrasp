@@ -200,6 +200,13 @@ public abstract class BaseStandardInstaller implements Installer {
         }
     }
 
+    //判断tomcat的版本是否大于8
+    protected boolean checkTomcatVersion(){
+        String javaVersion = System.getProperty("java.version");
+        return javaVersion != null && (javaVersion.startsWith("1.9") || javaVersion.startsWith("10.")
+                || javaVersion.startsWith("11."));
+    }
+
     protected abstract String getInstallPath(String serverRoot);
 
     protected abstract String getScript(String installPath);

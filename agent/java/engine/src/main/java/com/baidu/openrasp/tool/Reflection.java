@@ -125,10 +125,7 @@ public class Reflection {
             }
             return method.invoke(object, parameters);
         } catch (Exception e) {
-            String message = e.getMessage();
-            int errorCode = ErrorType.RUNTIME_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            return null;
         }
-        return null;
     }
 }

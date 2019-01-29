@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 public class TomcatUninstaller extends BaseStandardUninstaller {
 
     private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*/rasp/).*");
+    private static Pattern JDK_JAVA_OPTIONS_REGEX = Pattern.compile("^JDK_JAVA_OPTIONS.*jdk\\.internal\\.loader.*");
 
     public TomcatUninstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
@@ -50,9 +51,10 @@ public class TomcatUninstaller extends BaseStandardUninstaller {
     protected String recoverStartScript(String content) {
         StringBuilder sb = new StringBuilder();
         Scanner scanner = new Scanner(content);
+        boolean versionFlag = checkTomcatVersion();
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
-            if (OPENRASP_REGEX.matcher(line).matches()) {
+            if (OPENRASP_REGEX.matcher(line).matches() || (JDK_JAVA_OPTIONS_REGEX.matcher(line).matches() && versionFlag)) {
                 continue;
             }
             sb.append(line).append(LINE_SEP);

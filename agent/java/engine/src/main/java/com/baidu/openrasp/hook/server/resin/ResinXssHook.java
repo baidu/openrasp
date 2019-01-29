@@ -53,18 +53,21 @@ public class ResinXssHook extends ServerXssHook {
 
     public static void getResinOutputBuffer(char[] buffer, int len, boolean isOutputStreamOnly) {
         if (len > 0 && !isOutputStreamOnly) {
+            HashMap<String, Object> params = null;
             try {
                 char[] temp = new char[len];
                 System.arraycopy(buffer, 0, temp, 0, len);
                 String content = new String(temp);
                 if (HookHandler.requestCache.get() != null) {
-                    HashMap<String, Object> params = ServerXss.generateXssParameters(content);
-                    HookHandler.doCheck(CheckParameter.Type.XSS, params);
+                    params = ServerXss.generateXssParameters(content);
                 }
             } catch (Exception e) {
                 String message = ApplicationModel.getServerName() + " xss detectde failed";
                 int errorCode = ErrorType.HOOK_ERROR.getCode();
                 HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            }
+            if (params != null) {
+                HookHandler.doCheck(CheckParameter.Type.XSS, params);
             }
         }
     }
