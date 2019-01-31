@@ -51,7 +51,7 @@ var algorithmConfig = {
         action:     'block',
         min_length: 15,
         pre_filter: 'select|file|from|;',
-        pre_enable: false,
+        pre_enable: true,
     },
 
     // SQL注入算法#2 - 语句规范
