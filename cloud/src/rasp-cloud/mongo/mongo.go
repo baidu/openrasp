@@ -55,9 +55,13 @@ func init() {
 		Timeout:   time.Second * 20,
 		FailFast:  true,
 		PoolLimit: poolLimit,
+		Database:  DbName,
 	}
 	beego.AppConfig.DefaultString("MongoDBPwd", "")
 	session, err = mgo.DialWithInfo(dialInfo)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to init mongodb session", err)
+	}
 	info, err := session.BuildInfo()
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get mongodb version", err)
