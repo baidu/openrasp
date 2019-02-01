@@ -1457,6 +1457,7 @@ plugin.register('command', function (params, context) {
                 'com.thoughtworks.xstream.XStream.unmarshal':                                   _("Reflected command execution - Using xstream library"),
                 'org.apache.commons.collections4.functors.InvokerTransformer.transform':        _("Reflected command execution - Using Transformer library (v4)"),
                 'org.apache.commons.collections.functors.InvokerTransformer.transform':         _("Reflected command execution - Using Transformer library"),
+                'org.apache.commons.collections.functors.ChainedTransformer.transform':         _("Reflected command execution - Using Transformer library"),
                 'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':                   _("Reflected command execution - Using JNDI library"),
                 'com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze':     _("Reflected command execution - Using fastjson library"),
                 'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': _("Reflected command execution - Using SpEL expressions"),
@@ -1725,6 +1726,7 @@ if (algorithmConfig.ognl_exec.action != 'ignore')
 if (algorithmConfig.deserialization_transformer.action != 'ignore') {
     plugin.register('deserialization', function (params, context) {
         var deserializationInvalidClazz = [
+            'org.apache.commons.collections.functors.ChainedTransformer.transform',
             'org.apache.commons.collections.functors.InvokerTransformer',
             'org.apache.commons.collections.functors.InstantiateTransformer',
             'org.apache.commons.collections4.functors.InvokerTransformer',
