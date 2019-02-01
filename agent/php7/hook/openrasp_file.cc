@@ -83,16 +83,20 @@ static void check_file_operation(OpenRASPCheckType type, char *filename, int fil
     bool is_block = false;
     {
         v8::HandleScope handle_scope(isolate);
-        auto arr = format_debug_backtrace_arr();
-        size_t len = arr.size();
-        auto stack = v8::Array::New(isolate, len);
-        for (size_t i = 0; i < len; i++)
-        {
-            stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
-        }
         auto params = v8::Object::New(isolate);
         params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, filename, filename_len));
         params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
+        if (type == WRITE_FILE)
+        {
+            auto arr = format_debug_backtrace_arr();
+            size_t len = arr.size();
+            auto stack = v8::Array::New(isolate, len);
+            for (size_t i = 0; i < len; i++)
+            {
+                stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
+            }
+            params->Set(openrasp::NewV8String(isolate, "stack"), stack);
+        }
         is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
     }
     if (is_block)
@@ -291,13 +295,6 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     bool is_block = false;
     {
         v8::HandleScope handle_scope(isolate);
-        auto arr = format_debug_backtrace_arr();
-        size_t len = arr.size();
-        auto stack = v8::Array::New(isolate, len);
-        for (size_t i = 0; i < len; i++)
-        {
-            stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
-        }
         auto params = v8::Object::New(isolate);
         params->Set(openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_real_path));
         params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, dest_real_path));
@@ -386,13 +383,6 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             bool is_block = false;
             {
                 v8::HandleScope handle_scope(isolate);
-                auto arr = format_debug_backtrace_arr();
-                size_t len = arr.size();
-                auto stack = v8::Array::New(isolate, len);
-                for (size_t i = 0; i < len; i++)
-                {
-                    stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
-                }
                 auto params = v8::Object::New(isolate);
                 params->Set(openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_real_path));
                 params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, dest_real_path));
