@@ -16,7 +16,7 @@
             </a>
           </label>
           <input v-model="data['clientip.header']" type="text" class="form-control">
-        </div>
+        </div>      
         <div class="form-group">
           <label class="form-label">
             自定义拦截状态码
@@ -56,6 +56,18 @@
           </label>
           <textarea v-model="data['block.content_json']" type="text" class="form-control" />
         </div>
+        <div class="form-group">
+          <label class="custom-switch">
+            <input v-model="data['decompile.enable']" type="checkbox" checked="data['decompile.enable']" class="custom-switch-input">
+            <span class="custom-switch-indicator" />
+            <span class="custom-switch-description">
+              开启反汇编功能
+              <a target="_blank" href="javascript:">
+                [帮助文档]
+              </a>              
+            </span>
+          </label>
+        </div>          
       </div>
       <div class="card-footer text-right">
         <div class="d-flex">
