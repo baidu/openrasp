@@ -36,7 +36,7 @@ block.content_json: "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\
 #拦截攻击后，若期望响应类型为XML，则根据此模板显示内容
 block.content_xml: "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"
 #拦截攻击后，若期望响应类型不为JSON/XML，则根据此模板显示内容
-block.content_html: "<p>OpenRASP Request ID: %request_id%</p>"
+block.content_html: "</script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>"
 
 #对于以下URL，修改响应并注入HTML
 inject.urlprefix: ""
