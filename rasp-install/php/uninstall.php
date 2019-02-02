@@ -19,6 +19,7 @@ OpenRASP Uninstaller for PHP servers - Copyright 2017-2019 Baidu Inc.
 For more details visit: https://rasp.baidu.com/doc/install/software.html
 
 <?php
+error_reporting(E_ALL);
 if (PHP_VERSION_ID < 50300) {
     echo sprintf("OpenRASP works on PHP 5.3 and onwards, version %s.%s is not supported\n", PHP_MAJOR_VERSION, PHP_MINOR_VERSION);
     exit;
