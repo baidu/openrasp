@@ -665,7 +665,7 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows)
 }
 
 // 检查是否包含用户输入 - 适合目录
-function is_path_containing_userinput(parameter, target)
+function is_path_containing_userinput(parameter, target, is_windows)
 {
     var verdict = false
 
@@ -676,6 +676,10 @@ function is_path_containing_userinput(parameter, target)
         // 只处理字符串类型的
         if (typeof value != 'string') {
             return
+        }
+
+        if (is_windows) {
+            value = value.replaceAll('/', '\\')
         }
 
         // java 下面，传入 /usr/ 会变成 /usr，所以少匹配一个字符
@@ -1091,7 +1095,7 @@ plugin.register('directory', function (params, context) {
     var server      = context.server
     var parameter   = context.parameter
 
-    var is_win      = server.os.indexOf('Windows') != -1
+    var is_windows  = server.os.indexOf('Windows') != -1
     var language    = server.language
 
     // 算法1 - 读取敏感目录
@@ -1112,7 +1116,7 @@ plugin.register('directory', function (params, context) {
     // 算法2 - 用户输入匹配。
     if (algorithmConfig.directory_userinput.action != 'ignore')
     {
-        if (is_path_containing_userinput(parameter, params.path))
+        if (is_path_containing_userinput(parameter, params.path, is_windows))
         {
             return {
                 action:     algorithmConfig.directory_userinput.action,
