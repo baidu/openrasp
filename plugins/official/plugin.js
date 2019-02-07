@@ -43,15 +43,15 @@ var algorithmConfig = {
     },
 
     // SQL注入算法#1 - 匹配用户输入
-    // 1. 用户输入长度至少 15
-    // 2. 用户输入至少包含一个SQL关键词 - 即 pre_filter，默认关闭
+    // 1. 用户输入长度至少 10
+    // 2. 用户输入至少包含一个SQL关键词 - 即 pre_filter，[默认关闭]
     // 3. 用户输入完整的出现在SQL语句中，且会导致SQL语句逻辑发生变化
     sql_userinput: {
         name:       '算法1 - 用户输入匹配算法',
         action:     'block',
-        min_length: 15,
+        min_length: 10,
         pre_filter: 'select|file|from|;',
-        pre_enable: true,
+        pre_enable: false,
     },
 
     // SQL注入算法#2 - 语句规范
@@ -465,6 +465,9 @@ var htmlFileRegex   = /\.(htm|html|js)$/i
 // 其他的 stream 都没啥用
 var ntfsRegex       = /::\$(DATA|INDEX)$/i
 
+// 已知用户输入匹配算法误报: 传入 1,2,3,4 -> IN(1,2,3,4)
+var commaNumRegex   = /^[0-9,]+$/
+
 // SQL注入算法1 - 预过滤正则
 var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter)
 
@@ -794,7 +797,14 @@ if (RASP.get_jsengine() !== 'v8') {
                     return false
                 }
 
-                if (algorithmConfig.sql_userinput.pre_enable && ! sqliPrefilter1.test(params.query.toLowerCase())) {
+                // 过滤已知误报
+                // 1,2,3,4,5 -> IN(1,2,3,4,5)
+                if (commaNumRegex.test(value)) {
+                    return false
+                }
+
+                // 预过滤正则，如果开启
+                if (algorithmConfig.sql_userinput.pre_enable && ! sqliPrefilter1.test(value)) {
                     return false
                 }
 
@@ -1155,7 +1165,7 @@ plugin.register('readFile', function (params, context) {
     // weblogic 下面，所有war包读取操作全部忽略
     if (server['server'] === 'weblogic' && params.realpath.endsWith('.war'))
     {
-    	return clean
+        return clean
     }
 
     //
