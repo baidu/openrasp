@@ -9,7 +9,7 @@
       <div v-for="row in browser_headers" :key="row.name" class="form-group">
         <label class="form-label">
           {{ row.descr }}
-          <a :href="'https://rasp.baidu.com/doc/usage/hardening.html#' + row.name">
+          <a :href="'https://rasp.baidu.com/doc/usage/hardening.html#' + row.name" target="_blank">
             [帮助文档]
           </a>
         </label>
