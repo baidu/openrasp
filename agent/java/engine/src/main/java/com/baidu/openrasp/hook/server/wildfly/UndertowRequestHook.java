@@ -16,6 +16,7 @@
 
 package com.baidu.openrasp.hook.server.wildfly;
 
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.server.ServerRequestHook;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
@@ -26,8 +27,8 @@ import java.io.IOException;
 
 /**
  * Created by izpz on 18-10-26.
- *
- * wildfly 解析参数的 hook 点
+ * <p>
+ * wildfly 请求&参数解析的 hook 点
  */
 @HookAnnotation
 public class UndertowRequestHook extends ServerRequestHook {
@@ -39,7 +40,7 @@ public class UndertowRequestHook extends ServerRequestHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return className.endsWith("io/undertow/servlet/handlers/ServletInitialHandler");
+        return "io/undertow/servlet/handlers/ServletInitialHandler".equals(className);
     }
 
     /**
@@ -49,8 +50,12 @@ public class UndertowRequestHook extends ServerRequestHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
+        String paramSrc = getInvokeStaticSrc(HookHandler.class, "onParseParameters", "");
+        insertBefore(ctClass, "handleFirstRequest", null, paramSrc);
+
+        String requestSrc = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
                 "$2,$4,$5", Object.class, Object.class, Object.class);
-        insertBefore(ctClass, "handleFirstRequest", null, src);
+        insertBefore(ctClass, "handleFirstRequest", null, requestSrc);
+
     }
 }
