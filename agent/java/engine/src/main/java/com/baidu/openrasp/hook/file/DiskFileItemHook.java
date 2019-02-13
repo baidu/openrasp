@@ -62,7 +62,7 @@ public class DiskFileItemHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(DiskFileItemHook.class, "checkFileUpload",
-                "getName(),get(),$1", String.class, byte[].class, Object.class);
+                "getName(),get(),$0", String.class, byte[].class, Object.class);
         insertAfter(ctClass, "setHeaders", null, src, true);
     }
 
@@ -72,8 +72,8 @@ public class DiskFileItemHook extends AbstractClassHook {
      * @param name    文件名
      * @param content 文件数据
      */
-    public static void checkFileUpload(String name, byte[] content, Object object) {
-        if (name != null && content != null && object != null) {
+    public static void checkFileUpload(String name, byte[] content, Object file) {
+        if (name != null && content != null && file != null) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             params.put("filename", params, name);
@@ -86,26 +86,13 @@ public class DiskFileItemHook extends AbstractClassHook {
                 e.printStackTrace();
                 params.put("content", params, "[rasp error:" + e.getMessage() + "]");
             }
-            String customFileName = Reflection.invokeStringMethod(object, "getHeader", new Class[]{String.class}, "content-disposition");
-            if (customFileName != null) {
-                customFileName = getFileName(customFileName);
+            boolean isFiled = (Boolean) Reflection.invokeMethod(file, "isFormField", new Class[]{});
+            if (!isFiled) {
+                String fileName = Reflection.invokeStringMethod(file, "getFieldName", new Class[]{});
+                params.put("name", params, fileName != null ? fileName : "");
             }
-            params.put("name", params, customFileName != null ? customFileName : "");
 
             HookHandler.doCheck(CheckParameter.Type.FILEUPLOAD, params);
         }
-    }
-
-    private static String getFileName(String name) {
-        String[] fields = name.split(";");
-        for (String field : fields) {
-            if (!field.contains("filename") && field.contains("name")) {
-                int index = field.indexOf("=");
-                if (index > 0 && index < field.length() - 1) {
-                    return field.substring(index + 1);
-                }
-            }
-        }
-        return null;
     }
 }
