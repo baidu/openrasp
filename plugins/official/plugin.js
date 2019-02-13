@@ -355,7 +355,9 @@ var algorithmConfig = {
     // php 专有算法
     xss_echo: {
         name:   '算法1 - PHP: 禁止直接输出 GPC 参数',
-        action: 'log'
+        action: 'log',
+
+        filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"
     },    
 
     webshell_eval: {
