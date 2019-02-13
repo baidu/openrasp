@@ -133,6 +133,7 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
 void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string> &buildin_action_map);
 void extract_callable_blacklist(Isolate *isolate, std::vector<std::string> &callable_blacklist);
 void extract_xss_config(Isolate *isolate, std::string &filter_regex, int64_t &min_length, int64_t &max_detection_num);
+void extract_xss_echo_config(Isolate *isolate, std::string &filter_regex);
 
 inline void log_callback(const v8::FunctionCallbackInfo<v8::Value> &info)
 {

@@ -16,12 +16,16 @@
 
 #include "openrasp_hook.h"
 #include "agent/shared_config_manager.h"
+#include "utils/regex.h"
+
+static bool echo_parameter_filter(const zval *inc_filename TSRMLS_DC);
 
 int echo_handler(ZEND_OPCODE_HANDLER_ARGS)
 {
     zend_op *opline = execute_data->opline;
     if (!openrasp_check_type_ignored(XSS_ECHO TSRMLS_CC) &&
         OPENRASP_OP1_TYPE(opline) == IS_VAR &&
+        echo_parameter_filter(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC) &&
         openrasp_zval_in_request(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC))
     {
         zval *attack_params;
@@ -36,4 +40,15 @@ int echo_handler(ZEND_OPCODE_HANDLER_ARGS)
         openrasp_buildin_php_risk_handle(action, XSS_ECHO, 100, attack_params, plugin_message TSRMLS_CC);
     }
     return ZEND_USER_OPCODE_DISPATCH;
+}
+
+static bool echo_parameter_filter(const zval *inc_filename TSRMLS_DC)
+{
+    if (Z_TYPE_P(inc_filename) == IS_STRING &&
+        (OPENRASP_CONFIG(xss.echo_filter_regex).empty() ||
+         openrasp::regex_match(Z_STRVAL_P(inc_filename), OPENRASP_CONFIG(xss.echo_filter_regex).c_str())))
+    {
+        return true;
+    }
+    return false;
 }

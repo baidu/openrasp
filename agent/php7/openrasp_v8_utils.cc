@@ -350,4 +350,32 @@ void extract_xss_config(Isolate *isolate, std::string &filter_regex, int64_t &mi
     }
 }
 
+void extract_xss_echo_config(Isolate *isolate, std::string &filter_regex)
+{
+    v8::HandleScope handle_scope(isolate);
+    auto context = isolate->GetCurrentContext();
+    auto rst = isolate->ExecScript(R"(
+        (function () {
+            var filter_regex = "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"
+            try {
+                var xss_echo = RASP.algorithmConfig.xss_echo
+                if (typeof xss_echo.filter_regex === 'string') {
+                    filter_regex = xss_echo.filter_regex
+                }
+            } catch (_) {
+
+            }
+            return filter_regex
+        })()
+    )",
+                                   "extract_xss_echo_config");
+    if (!rst.IsEmpty())
+    {
+        v8::HandleScope handle_scope(isolate);
+        v8::Local<v8::String> v8_filter_regex = rst.ToLocalChecked().As<v8::String>();
+        v8::String::Utf8Value value(v8_filter_regex);
+        filter_regex = std::string(*value, value.length());
+    }
+}
+
 } // namespace openrasp

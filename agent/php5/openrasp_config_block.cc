@@ -114,8 +114,8 @@ void BlockBlock::update(BaseReader *reader)
 void InjectBlock::update(BaseReader *reader)
 {
   urlprefix = reader->fetch_string({"inject.urlprefix"});
-  headers.clear();
   const auto custom_headers_keys = reader->fetch_object_keys({"inject.custom_headers"});
+  headers.clear();
   for (const auto &key : custom_headers_keys)
   {
     const auto &value = reader->fetch_string({"inject.custom_headers", key});
@@ -169,9 +169,11 @@ void CallableBlock::update()
 const int64_t XssBlock::default_min_param_length = 15;
 const int64_t XssBlock::default_max_detection_num = 10;
 const std::string XssBlock::default_filter_regex = "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]";
+const std::string XssBlock::default_echo_filter_regex = "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]";
 
 void XssBlock::update()
 {
+  echo_filter_regex = XssBlock::default_echo_filter_regex;
   filter_regex = XssBlock::default_filter_regex;
   min_param_length = XssBlock::default_min_param_length;
   max_detection_num = XssBlock::default_max_detection_num;
@@ -179,6 +181,7 @@ void XssBlock::update()
   if (nullptr != OPENRASP_V8_G(isolate))
   {
     extract_xss_config(OPENRASP_V8_G(isolate), filter_regex, min_param_length, max_detection_num);
+    extract_xss_echo_config(OPENRASP_V8_G(isolate), echo_filter_regex);
   }
 }
 
