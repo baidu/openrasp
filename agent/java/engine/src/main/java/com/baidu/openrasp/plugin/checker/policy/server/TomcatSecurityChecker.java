@@ -167,9 +167,8 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                                             params.put("username", userName);
                                             params.put("password", password);
                                             infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD,
-                                                    "Tomcat security baseline - detected weak" +
-                                                            " username/password combination in " +
-                                                            userFile.getAbsolutePath() + ", username is " + userName, true, params));
+                                                    "Tomcat security baseline - detected empty password in /tomcat/conf/tomcat-users.xml, " +
+                                                            "username is" + userName, true, params));
                                         }
                                     }
                                 }

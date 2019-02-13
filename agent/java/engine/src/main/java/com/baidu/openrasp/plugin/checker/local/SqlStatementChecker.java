@@ -71,7 +71,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
         sqlErrorCode.add("1105");
         sqlErrorCode.add("1367");
         sqlErrorCode.add("1690");
-        sqlErrorCode.add("1060");
+        sqlErrorCode.add("1064");
     }
 
     public List<EventInfo> checkSql(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
