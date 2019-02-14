@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <memory>
 #include "utils/BaseReader.h"
+#include "openrasp_v8_bundle.h"
 
 namespace openrasp
 {
@@ -140,6 +141,9 @@ public:
   const static vector<string> default_blacklist;
   vector<string> blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
   void update();
+
+private:
+  void extract_callable_blacklist(Isolate *isolate);
 };
 
 // xss
@@ -156,6 +160,10 @@ public:
   int64_t min_param_length = 15;
   int64_t max_detection_num = 10;
   void update();
+
+private:
+  void extract_userinput_config(Isolate *isolate);
+  void extract_echo_config(Isolate *isolate);
 };
 
 } // namespace openrasp
