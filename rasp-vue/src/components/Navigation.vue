@@ -141,6 +141,12 @@
       </div>
     </div>
 
+    <div class="alert alert-warning" v-if="! current_app.selected_plugin_id || ! current_app.selected_plugin_id.length">
+      <div class="container">
+        <strong>注意!</strong> 当前应用没有配置任何检测插件，请前往 <router-link :to="{name: 'plugins'}">插件页面</router-link> 进行配置
+      </div>
+    </div>
+
     <AddHostModal ref="addHost" />
   </div>
 </template>
