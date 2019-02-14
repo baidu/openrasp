@@ -1,3 +1,7 @@
+# 若开启远程管理，只会使用部分本地配置，请知晓
+# https://rasp.baidu.com/doc/setup/others.html#java-standalone
+# 
+# 
 # 插件配置
 # plugin.timeout.millis=100
 # body.maxbytes=4096
