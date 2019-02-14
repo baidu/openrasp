@@ -62,8 +62,8 @@ public class WebsphereDetector extends ServerDetector {
                     }
                 }
             }
-        } catch (Throwable e) {
-            HookHandler.LOGGER.warn("handle websphere startup failed", e);
+        } catch (Throwable t) {
+            logDetectError("handle webspere startup failed", t);
         } finally {
             ApplicationModel.initServerInfo("websphere", version);
         }

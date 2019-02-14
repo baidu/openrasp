@@ -33,11 +33,12 @@ import static com.baidu.rasp.RaspError.E10001;
  */
 public class TomcatInstaller extends BaseStandardInstaller {
 
-    private static String OPENRASP_CONFIG = 
-        "### BEGIN OPENRASP - DO NOT MODIFY ###\n" + 
-        "\tJAVA_OPTS=\"-javaagent:${CATALINA_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"\n" +
-        "### END OPENRASP ###\n";
-    private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*/rasp/).*");
+    private static String OPENRASP_START_TAG = "### BEGIN OPENRASP - DO NOT MODIFY ###\n";
+    private static String OPENRASP_END_TAG = "### END OPENRASP ###\n";
+    private static String JAVA_AGENT_CONFIG = "\tJAVA_OPTS=\"-javaagent:${CATALINA_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"\n";
+    private static String JDK_JAVA_OPTIONS =
+            "JDK_JAVA_OPTIONS=\"$JDK_JAVA_OPTIONS --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED\"\n" +
+                    "export JDK_JAVA_OPTIONS\n";
 
     TomcatInstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
@@ -46,7 +47,7 @@ public class TomcatInstaller extends BaseStandardInstaller {
     @Override
     protected String getInstallPath(String serverRoot) {
         return serverRoot + "/rasp";
-        
+
         // String catalineBase;
         // if (serverRoot == null) {
         //     String output = runCommand(new String[]{"bash", "-c", "ps -elf | grep catalina.base"});
@@ -66,33 +67,45 @@ public class TomcatInstaller extends BaseStandardInstaller {
 
     @Override
     protected String modifyStartScript(String content) throws RaspError {
+        boolean versionFlag = checkTomcatVersion();
         StringBuilder sb = new StringBuilder();
         Scanner scanner = new Scanner(content);
         int modifyConfigState = NOTFOUND;
+        boolean isDelete = false;
 
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
 
             // 插入点: [ $1 = "start" ] 或者 [ $1 = "run" ]
-            if (! line.startsWith("#") && (line.contains("\"$1\" = \"start\"") || line.contains("\"$1\" = \"run\""))) {
+            if (!line.startsWith("#") && (line.contains("\"$1\" = \"start\"") || line.contains("\"$1\" = \"run\""))) {
                 modifyConfigState = FOUND;
                 sb.append(line).append("\n");
-                sb.append(OPENRASP_CONFIG);
+                sb.append(OPENRASP_START_TAG);
+                sb.append(JAVA_AGENT_CONFIG);
+                //jdk版本8以上插入依赖包
+                if (versionFlag){
+                    sb.append(JDK_JAVA_OPTIONS);
+                }
+                sb.append(OPENRASP_END_TAG);
                 continue;
             }
 
-            // 删除已经存在的配置项
-            if (OPENRASP_REGEX.matcher(line).matches()) {
+            if (line.contains("BEGIN OPENRASP")){
+                isDelete = true;
                 continue;
             }
-
-            sb.append(line).append("\n");
+            if (line.contains("END OPENRASP")){
+                isDelete = false;
+                continue;
+            }
+            if (!isDelete){
+                sb.append(line).append("\n");
+            }
         }
 
         if (NOTFOUND == modifyConfigState) {
             throw new RaspError(E10001 + "[\"$1\" = \"start\"] or [\"$1\" = \"run\"]");
         }
-
         return sb.toString();
     }
 

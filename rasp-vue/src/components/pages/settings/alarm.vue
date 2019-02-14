@@ -30,13 +30,13 @@
           <label class="form-label">
             邮件服务器地址
           </label>
-          <input v-model="data.email_alarm_conf.server_addr" type="text" class="form-control">
+          <input v-model="data.email_alarm_conf.server_addr" type="text" class="form-control" placeholder="smtp.163.com:25">
         </div>
         <div class="form-group">
           <label class="form-label">
             邮箱账号
           </label>
-          <input v-model="data.email_alarm_conf.username" type="email" class="form-control">
+          <input v-model="data.email_alarm_conf.username" type="email" class="form-control" placeholder="hello@163.com">
         </div>
         <div class="form-group">
           <label class="form-label">

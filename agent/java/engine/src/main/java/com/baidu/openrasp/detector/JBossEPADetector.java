@@ -27,8 +27,8 @@ public class JBossEPADetector extends ServerDetector {
             getPackageMethod.setAccessible(true);
             Package jbossBootPackage = (Package) getPackageMethod.invoke(classLoader, "org.jboss.modules");
             serverVersion = jbossBootPackage.getSpecificationVersion();
-        } catch (Throwable e) {
-            HookHandler.LOGGER.error("handle jboss epa startup failed", e);
+        } catch (Throwable t) {
+            logDetectError("handle jboss epa startup failed", t);
         } finally {
             ApplicationModel.initServerInfo("jboss epa", serverVersion);
         }

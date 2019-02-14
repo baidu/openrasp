@@ -17,6 +17,7 @@
 package com.baidu.openrasp.plugin.js.engine;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
@@ -137,7 +138,9 @@ public class JsPluginManager {
                 try {
                     scripts.add(new CheckScript(file));
                 } catch (Exception e) {
-                    LOGGER.error("", e);
+                    String message = e.getMessage();
+                    int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+                    LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
                 }
             }
         }
@@ -177,7 +180,9 @@ public class JsPluginManager {
                         updatePlugin();
                     }
                 } catch (Exception e) {
-                    LOGGER.error("", e);
+                    String message = e.getMessage();
+                    int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+                    LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
                 }
                 if (timer != null) {
                     timer.cancel();

@@ -17,6 +17,8 @@
 package com.baidu.openrasp.hook.file;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -93,7 +95,9 @@ public class FileHook extends AbstractClassHook {
                     params.put("realpath", params, file.getAbsolutePath());
                 }
             } catch (Throwable t) {
-                HookHandler.LOGGER.warn(t.getMessage(), t);
+                String message = t.getMessage();
+                int errorCode = ErrorType.HOOK_ERROR.getCode();
+                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), t);
             }
             String hookType = CheckParameter.Type.DIRECTORY.getName();
             //如果在lru缓存中不进检测

@@ -45,8 +45,8 @@ public class WeblogicDetector extends ServerDetector {
                     serverVersion = serverVersion.substring(index);
                 }
             }
-        } catch (Throwable e) {
-            HookHandler.LOGGER.warn("handle weblogic startup failed", e);
+        } catch (Throwable t) {
+            logDetectError("handle weblogic startup failed", t);
         } finally {
             ApplicationModel.initServerInfo("weblogic", serverVersion);
         }

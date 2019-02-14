@@ -24,4 +24,4 @@ system('cd');
 passthru('tail -n 1 /tmp/openrasp/logs/alarm/alarm.log.'.date("Y-m-d"));
 ?>
 --EXPECTREGEX--
-^((?!"source_code":\["system\('cd'\);"\]).)*$
+.*"source_code":\[\].*

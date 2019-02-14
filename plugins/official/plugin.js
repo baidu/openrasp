@@ -1,4 +1,4 @@
-const plugin_version = '2019-0115-1600'
+const plugin_version = '2019-0118-1830'
 const plugin_name    = 'official'
 
 /*
@@ -43,16 +43,17 @@ var algorithmConfig = {
     },
 
     // SQL注入算法#1 - 匹配用户输入
-    // 1. 用户输入长度至少 15
-    // 2. 用户输入至少包含一个SQL关键词 - 即 pre_filter，默认关闭
+    // 1. 用户输入长度至少 10
+    // 2. 用户输入至少包含一个SQL关键词 - 即 pre_filter，[默认关闭]
     // 3. 用户输入完整的出现在SQL语句中，且会导致SQL语句逻辑发生变化
     sql_userinput: {
         name:       '算法1 - 用户输入匹配算法',
         action:     'block',
-        min_length: 15,
+        min_length: 10,
         pre_filter: 'select|file|from|;',
         pre_enable: false,
     },
+
     // SQL注入算法#2 - 语句规范
     sql_policy: {
         name:    '算法2 - 拦截异常SQL语句',
@@ -102,7 +103,7 @@ var algorithmConfig = {
 
             // 盲注函数，如有误报可删掉一些函数
             hex:              true,
-            char:             true,
+            char:             false,
             chr:              true,
             mid:              true,
             ord:              true,
@@ -110,6 +111,13 @@ var algorithmConfig = {
             bin:              true
         }
     },
+
+    sql_exception: {
+        name:      '算法3 - 检测SQL语句异常',
+        action:    'log',
+        reference: 'https://rasp.baidu.com/doc/dev/official.html#sql-exception'
+    },
+
     // SSRF - 来自用户输入，且为内网地址就拦截
     ssrf_userinput: {
         name:   '算法1 - 用户输入匹配算法',
@@ -117,7 +125,7 @@ var algorithmConfig = {
     },
     // SSRF - 是否允许访问 aws metadata
     ssrf_aws: {
-        name:   '算法2 - 拦截 AWS metadata 访问',
+        name:   '算法2 - 拦截 AWS/Aliyun metadata 访问',
         action: 'block'
     },
     // SSRF - 是否允许访问 dnslog 地址
@@ -129,6 +137,7 @@ var algorithmConfig = {
             '.vcap.me',
             '.xip.name',
             '.xip.io',
+            'sslip.io',
             '.nip.io',
             '.burpcollaborator.net',
             '.tu4.org'
@@ -313,9 +322,15 @@ var algorithmConfig = {
         action:     'block',
         min_length: 2
     },
+    // 命令注入 - 常见命令
+    command_common: {
+        name:    '算法3 - 识别常用渗透命令（探针）',
+        action:  'log',
+        pattern: 'cat.*/etc/passwd|nc.{1,30}-e.{1,100}/bin/(?:ba)?sh|bash\\s-.{0,4}i.{1,20}/dev/tcp/|subprocess.call\\(.{0,6}/bin/(?:ba)?sh|fsockopen\\(.{1,50}/bin/(?:ba)?sh|perl.{1,80}socket.{1,120}open.{1,80}exec\\(.{1,5}/bin/(?:ba)?sh|([\\|\\&`;\\x0d\\x0a]|$\\([^\\(]).{0,3}(ping|nslookup|curl|wget|mail).{1,10}[a-zA-Z0-9_\\-]{1,15}\\.[a-zA-Z0-9_\\-]{1,15}'
+    },
     // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
     command_other: {
-        name:   '算法3 - 记录或者拦截所有命令执行操作',
+        name:   '算法4 - 记录或者拦截所有命令执行操作',
         action: 'ignore'
     },
 
@@ -325,11 +340,25 @@ var algorithmConfig = {
         action: 'block'
     },
 
+    // xss 用户输入匹配算法
+    // 1. 当用户输入长度超过15，匹配上标签正则，且出现在响应里，直接拦截
+    // 2. 当用户输入长度超过15，匹配上标签正则这样的参数个数超过 10，判定为扫描攻击，直接拦截
+    xss_userinput: {
+        name:   '算法2 - 拦截输出在响应里的反射 XSS',
+        action: 'log',
+
+        filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]",
+        min_length: 15,
+        max_detection_num: 10
+    },
+
     // php 专有算法
     xss_echo: {
         name:   '算法1 - PHP: 禁止直接输出 GPC 参数',
-        action: 'log'
-    },
+        action: 'log',
+
+        filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"
+    },    
 
     webshell_eval: {
         name:   '算法1 - 拦截简单的 PHP 中国菜刀后门',
@@ -348,7 +377,10 @@ var algorithmConfig = {
 
     webshell_callable: {
         name:   '算法4 - 拦截简单的 PHP array_map/walk/filter 后门',
-        action: 'block'
+        action: 'block',
+        functions: [
+            'system', 'exec', 'passthru', 'proc_open', 'shell_exec', 'popen', 'pcntl_exec', 'assert'
+        ]
     },
 
     webshell_ld_preload: {
@@ -435,11 +467,17 @@ var htmlFileRegex   = /\.(htm|html|js)$/i
 // 其他的 stream 都没啥用
 var ntfsRegex       = /::\$(DATA|INDEX)$/i
 
+// 已知用户输入匹配算法误报: 传入 1,2,3,4 -> IN(1,2,3,4)
+var commaNumRegex   = /^[0-9,]+$/
+
 // SQL注入算法1 - 预过滤正则
 var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter)
 
 // SQL注入算法2 - 预过滤正则
 var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter)
+
+// 命令执行探针 - 常用渗透命令
+var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern)
 
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue) {
@@ -633,7 +671,7 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows)
 }
 
 // 检查是否包含用户输入 - 适合目录
-function is_path_containing_userinput(parameter, target)
+function is_path_containing_userinput(parameter, target, is_windows)
 {
     var verdict = false
 
@@ -644,6 +682,10 @@ function is_path_containing_userinput(parameter, target)
         // 只处理字符串类型的
         if (typeof value != 'string') {
             return
+        }
+
+        if (is_windows) {
+            value = value.replaceAll('/', '\\')
         }
 
         // java 下面，传入 /usr/ 会变成 /usr，所以少匹配一个字符
@@ -757,7 +799,14 @@ if (RASP.get_jsengine() !== 'v8') {
                     return false
                 }
 
-                if (algorithmConfig.sql_userinput.pre_enable && ! sqliPrefilter1.test(params.query.toLowerCase())) {
+                // 过滤已知误报
+                // 1,2,3,4,5 -> IN(1,2,3,4,5)
+                if (commaNumRegex.test(value)) {
+                    return false
+                }
+
+                // 预过滤正则，如果开启
+                if (algorithmConfig.sql_userinput.pre_enable && ! sqliPrefilter1.test(value)) {
                     return false
                 }
 
@@ -797,18 +846,20 @@ if (RASP.get_jsengine() !== 'v8') {
             })
 
             if(Object.keys(json_parameters).length > 0){
-                jsons = [json_parameters]
+                var jsons = [ [json_parameters, "input_json"] ]
                 while(jsons.length > 0 && reason === false){
-                    json_obj = jsons.pop()
+                    var json_arr = jsons.pop()
+                    var crt_json_key = json_arr[1]
+                    var json_obj = json_arr[0]
                     for (item in json_obj){
                         if(typeof json_obj[item] == "string"){
-                            reason = _run([json_obj[item]], "json input")
+                            reason = _run([json_obj[item]], crt_json_key + "->" + item)
                             if(reason !== false){
                                 break;
                             }
                         }
                         else if(typeof json_obj[item] == "object"){
-                            jsons.push(json_obj[item])
+                            jsons.push([json_obj[item], crt_json_key + "->" + item])
                         }
                     }
                 }
@@ -979,10 +1030,10 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
-        // 算法3 - 检测AWS私有地址
+        // 算法3 - 检测 AWS/Aliyun 私有地址
         if (algorithmConfig.ssrf_aws.action != 'ignore')
         {
-            if (hostname == '169.254.169.254')
+            if (hostname == '169.254.169.254' || hostname == '100.100.100.200')
             {
                 return {
                     action:     algorithmConfig.ssrf_aws.action,
@@ -1057,7 +1108,7 @@ plugin.register('directory', function (params, context) {
     var server      = context.server
     var parameter   = context.parameter
 
-    var is_win      = server.os.indexOf('Windows') != -1
+    var is_windows  = server.os.indexOf('Windows') != -1
     var language    = server.language
 
     // 算法1 - 读取敏感目录
@@ -1078,7 +1129,7 @@ plugin.register('directory', function (params, context) {
     // 算法2 - 用户输入匹配。
     if (algorithmConfig.directory_userinput.action != 'ignore')
     {
-        if (is_path_containing_userinput(parameter, params.path))
+        if (is_path_containing_userinput(parameter, params.path, is_windows))
         {
             return {
                 action:     algorithmConfig.directory_userinput.action,
@@ -1116,7 +1167,7 @@ plugin.register('readFile', function (params, context) {
     // weblogic 下面，所有war包读取操作全部忽略
     if (server['server'] === 'weblogic' && params.realpath.endsWith('.war'))
     {
-    	return clean
+        return clean
     }
 
     //
@@ -1423,6 +1474,7 @@ plugin.register('command', function (params, context) {
                 'com.thoughtworks.xstream.XStream.unmarshal':                                   _("Reflected command execution - Using xstream library"),
                 'org.apache.commons.collections4.functors.InvokerTransformer.transform':        _("Reflected command execution - Using Transformer library (v4)"),
                 'org.apache.commons.collections.functors.InvokerTransformer.transform':         _("Reflected command execution - Using Transformer library"),
+                'org.apache.commons.collections.functors.ChainedTransformer.transform':         _("Reflected command execution - Using Transformer library"),
                 'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':                   _("Reflected command execution - Using JNDI library"),
                 'com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze':     _("Reflected command execution - Using fastjson library"),
                 'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': _("Reflected command execution - Using SpEL expressions"),
@@ -1555,7 +1607,22 @@ plugin.register('command', function (params, context) {
         }
     }
 
-    // 算法3: 记录所有的命令执行
+    // 算法3: 常用渗透命令
+    if (algorithmConfig.command_common.action != 'ignore')
+    {
+        var reason = false
+        if (cmdPostPattern.test(params.command))
+        {           
+            return {
+                action:     algorithmConfig.command_common.action,
+                message:    _("Webshell detected - Executing potentially dangerous command, command is %1%", [cmd]),
+                confidence: 95,
+                algorithm:  'command_common'
+            }    
+        }     
+    }
+
+    // 算法4: 记录所有的命令执行
     if (algorithmConfig.command_other.action != 'ignore') 
     {
         return {
@@ -1676,6 +1743,7 @@ if (algorithmConfig.ognl_exec.action != 'ignore')
 if (algorithmConfig.deserialization_transformer.action != 'ignore') {
     plugin.register('deserialization', function (params, context) {
         var deserializationInvalidClazz = [
+            'org.apache.commons.collections.functors.ChainedTransformer.transform',
             'org.apache.commons.collections.functors.InvokerTransformer',
             'org.apache.commons.collections.functors.InstantiateTransformer',
             'org.apache.commons.collections4.functors.InvokerTransformer',

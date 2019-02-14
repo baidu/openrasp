@@ -18,6 +18,8 @@ package com.baidu.openrasp.plugin.js.engine;
 
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.request.EmptyRequest;
 import com.baidu.openrasp.request.HttpServletRequest;
@@ -129,7 +131,9 @@ public class JSRequestContext extends ScriptableObject {
                 }
             });
         } catch (Exception e) {
-            HookHandler.LOGGER.warn("js failed to get body", e);
+            String message = "js failed to get body";
+            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             return cx.newObject(scope);
         }
         return buffer;
@@ -199,7 +203,9 @@ public class JSRequestContext extends ScriptableObject {
                         json.put(key, json, value);
                     }
                 } catch (Exception e) {
-                    HookHandler.LOGGER.warn("failed to parse body to json", e);
+                    String message = "failed to parse body to json";
+                    int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+                    HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
                 }
             }
         }

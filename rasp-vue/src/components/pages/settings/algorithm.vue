@@ -187,7 +187,7 @@ export default {
         var hooks = {}
         self.data = data.algorithm_config
 
-        // 格式换砖
+        // 格式转换
         Object.keys(tmp).forEach(function(key) {
           if (key.indexOf('_') == -1) {
             return

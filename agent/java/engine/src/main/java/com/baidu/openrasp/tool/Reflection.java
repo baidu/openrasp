@@ -16,6 +16,8 @@
 
 package com.baidu.openrasp.tool;
 
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.transformer.CustomClassTransformer;
 import org.apache.log4j.Logger;
 
@@ -84,8 +86,9 @@ public class Reflection {
             field.setAccessible(true);
             object = field.get(paramClass);
         } catch (Exception e) {
-
-            LOGGER.error(e.getMessage(), e);
+            String message = e.getMessage();
+            int errorCode = ErrorType.RUNTIME_ERROR.getCode();
+            LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
         }
         return object;
     }
@@ -116,8 +119,7 @@ public class Reflection {
             }
             return method.invoke(object, parameters);
         } catch (Exception e) {
-            LOGGER.warn(e.getMessage(), e);
+            return null;
         }
-        return null;
     }
 }

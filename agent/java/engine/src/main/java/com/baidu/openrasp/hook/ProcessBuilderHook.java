@@ -17,6 +17,8 @@
 package com.baidu.openrasp.hook;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
@@ -60,12 +62,16 @@ public class ProcessBuilderHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        if (OSUtil.isLinux() || OSUtil.isMacOS()) {
-            return "java/lang/UNIXProcess".equals(className);
-        } else if (OSUtil.isWindows()) {
+        if (getJdkVersion()) {
             return "java/lang/ProcessImpl".equals(className);
+        } else {
+            if (OSUtil.isLinux() || OSUtil.isMacOS()) {
+                return "java/lang/UNIXProcess".equals(className);
+            } else if (OSUtil.isWindows()) {
+                return "java/lang/ProcessImpl".equals(className);
+            }
+            return false;
         }
-        return false;
     }
 
     /**
@@ -76,9 +82,15 @@ public class ProcessBuilderHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         if (ctClass.getName().contains("ProcessImpl")) {
-            String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
-                    "$1", String[].class);
-            insertBefore(ctClass, "<init>", null, src);
+            if (getJdkVersion()){
+                String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
+                        "$1,$2", byte[].class, byte[].class);
+                insertBefore(ctClass, "<init>", null, src);
+            }else {
+                String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
+                        "$1", String[].class);
+                insertBefore(ctClass, "<init>", null, src);
+            }
         } else if (ctClass.getName().contains("UNIXProcess")) {
             String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
                     "$1,$2", byte[].class, byte[].class);
@@ -126,11 +138,21 @@ public class ProcessBuilderHook extends AbstractClassHook {
                 Scriptable stackArray = cx.newArray(cx.getScope(), stackInfo.toArray());
                 params.put("stack", params, stackArray);
             } catch (Throwable t) {
-                HookHandler.LOGGER.warn(t.getMessage(), t);
+                String message = t.getMessage();
+                int errorCode = ErrorType.HOOK_ERROR.getCode();
+                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), t);
             }
             if (params != null) {
                 HookHandler.doCheckWithoutRequest(CheckParameter.Type.COMMAND, params);
             }
         }
+    }
+
+    /**
+     * 判断jdk的版本是否大于8
+     */
+    private boolean getJdkVersion() {
+        String javaVersion = System.getProperty("java.version");
+        return javaVersion.startsWith("1.9") || javaVersion.startsWith("10.") || javaVersion.startsWith("11.");
     }
 }

@@ -21,6 +21,7 @@ import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -61,7 +62,7 @@ public class DiskFileItemHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(DiskFileItemHook.class, "checkFileUpload",
-                "getName(),get()", String.class, byte[].class);
+                "getName(),get(),$0", String.class, byte[].class, Object.class);
         insertAfter(ctClass, "setHeaders", null, src, true);
     }
 
@@ -71,8 +72,8 @@ public class DiskFileItemHook extends AbstractClassHook {
      * @param name    文件名
      * @param content 文件数据
      */
-    public static void checkFileUpload(String name, byte[] content) {
-        if (name != null && content != null) {
+    public static void checkFileUpload(String name, byte[] content, Object file) {
+        if (name != null && content != null && file != null) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             params.put("filename", params, name);
@@ -84,6 +85,11 @@ public class DiskFileItemHook extends AbstractClassHook {
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
                 params.put("content", params, "[rasp error:" + e.getMessage() + "]");
+            }
+            boolean isFiled = (Boolean) Reflection.invokeMethod(file, "isFormField", new Class[]{});
+            if (!isFiled) {
+                String fileName = Reflection.invokeStringMethod(file, "getFieldName", new Class[]{});
+                params.put("name", params, fileName != null ? fileName : "");
             }
 
             HookHandler.doCheck(CheckParameter.Type.FILEUPLOAD, params);

@@ -113,7 +113,7 @@ public class DynamicConfigAppender {
         fileAppender.setDatePattern("'.'yyyy-MM-dd");
         fileAppender.setEncoding("UTF-8");
         PatternLayout layout = new PatternLayout();
-        if ("PLUGIN".equals(appender)) {
+        if ("PLUGIN".equals(appender) || "RASP".equals(appender)) {
             layout.setConversionPattern("%d %-5p [%t][%c] %m%n");
         } else {
             layout.setConversionPattern("%m%n");

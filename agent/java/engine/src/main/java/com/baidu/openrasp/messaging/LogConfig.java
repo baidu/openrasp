@@ -17,7 +17,9 @@
 package com.baidu.openrasp.messaging;
 
 import com.baidu.openrasp.cloud.CloudManager;
+import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 
 import java.net.URL;
@@ -34,7 +36,7 @@ public class LogConfig {
      * 创建rasp.log、alarm.log、policy_alarm.log和plugin.log 的appender
      * 为appender增加限速
      */
-    public static void ConfigFileAppender() throws Exception{
+    public static void ConfigFileAppender() throws Exception {
         DynamicConfigAppender.initLog4jLogger();
         DynamicConfigAppender.fileAppenderAddBurstFilter();
         System.out.println("[OpenRASP] Log4j initialized successfully");
@@ -53,10 +55,14 @@ public class LogConfig {
                 if (syslogAddress != null && !syslogAddress.trim().isEmpty() && syslogPort >= 0 && syslogPort <= 65535) {
                     DynamicConfigAppender.createSyslogAppender(syslogAddress, syslogPort);
                 } else {
-                    CloudManager.LOGGER.warn("syslog url: " + syslogUrl + " is error");
+                    String message = "syslog url: " + syslogUrl + " is error";
+                    int errorCode = ErrorType.CONFIG_ERROR.getCode();
+                    CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
                 }
             } catch (Exception e) {
-                CloudManager.LOGGER.warn("syslog url: " + syslogUrl + " parsed error", e);
+                String message = "syslog url: " + syslogUrl + " parsed error";
+                int errorCode = ErrorType.CONFIG_ERROR.getCode();
+                CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             }
 
         } else {

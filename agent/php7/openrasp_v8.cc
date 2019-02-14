@@ -165,7 +165,8 @@ PHP_RINIT_FUNCTION(openrasp_v8)
                     OPENRASP_V8_G(isolate)->Dispose();
                 }
                 Platform::Initialize();
-                OPENRASP_V8_G(isolate) = Isolate::New(process_globals.snapshot_blob);
+                OPENRASP_V8_G(isolate) = Isolate::New(process_globals.snapshot_blob, process_globals.snapshot_blob->timestamp);
+                OPENRASP_G(config).updateAlgorithmConfig();
             }
         }
     }

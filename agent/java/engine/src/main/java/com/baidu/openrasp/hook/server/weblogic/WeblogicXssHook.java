@@ -17,6 +17,8 @@
 package com.baidu.openrasp.hook.server.weblogic;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.server.ServerXssHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
@@ -49,16 +51,23 @@ public class WeblogicXssHook extends ServerXssHook {
         insertBefore(ctClass, "flush", "()V", src);
     }
 
-    public static void getWeblogicOutputBuffer(Object object){
+    public static void getWeblogicOutputBuffer(Object object) {
+        HashMap<String, Object> params = null;
         try {
-            ByteBuffer byteBuffer = (ByteBuffer) Reflection.getField(object,"buf");
-            String content = new String(byteBuffer.array());
-            if (HookHandler.requestCache.get() != null) {
-                HashMap<String, Object> params = ServerXss.generateXssParameters(content);
-                HookHandler.doCheck(CheckParameter.Type.XSS, params);
+            ByteBuffer byteBuffer = (ByteBuffer) Reflection.getField(object, "buf");
+            if (byteBuffer != null) {
+                String content = new String(byteBuffer.array());
+                if (HookHandler.requestCache.get() != null) {
+                    params = ServerXss.generateXssParameters(content);
+                }
             }
         } catch (Exception e) {
-            HookHandler.LOGGER.warn(ApplicationModel.getServerName() + " xss detectde failed: ", e);
+            String message = ApplicationModel.getServerName() + " xss detectde failed";
+            int errorCode = ErrorType.HOOK_ERROR.getCode();
+            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+        }
+        if (params != null) {
+            HookHandler.doCheck(CheckParameter.Type.XSS, params);
         }
     }
 }

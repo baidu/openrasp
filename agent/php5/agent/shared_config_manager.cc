@@ -238,7 +238,7 @@ bool SharedConfigManager::build_hostname()
     }
     else
     {
-        openrasp_error(LEVEL_WARNING, AGENT_ERROR, _("gethostname error: %s"), strerror(errno));
+        openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("gethostname error: %s"), strerror(errno));
     }
 }
 

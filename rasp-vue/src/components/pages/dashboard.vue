@@ -1,5 +1,5 @@
 <template>
-  <div class="my-3 my-md-4">
+  <div class="my-3 my-md-5">
     <div class="container">
       <div v-if="false" class="row row-cards">
         <div class="col-6 col-sm-4 col-lg-2">

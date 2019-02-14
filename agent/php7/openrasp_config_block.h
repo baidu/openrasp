@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <memory>
 #include "utils/BaseReader.h"
+#include "openrasp_v8_bundle.h"
 
 namespace openrasp
 {
@@ -126,12 +127,23 @@ public:
   void update(BaseReader *reader);
 };
 
+class DecompileBlock
+{
+public:
+  bool enable = false;
+  void update(BaseReader *reader);
+};
+
+//read from plugin
 class CallableBlock
 {
 public:
   const static vector<string> default_blacklist;
   vector<string> blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
-  void update(BaseReader *reader);
+  void update();
+
+private:
+  void extract_callable_blacklist(Isolate *isolate);
 };
 
 // xss
@@ -140,18 +152,18 @@ class XssBlock
 public:
   const static int64_t default_min_param_length;
   const static int64_t default_max_detection_num;
+  const static std::string default_filter_regex;
+  const static std::string default_echo_filter_regex;
 
+  string echo_filter_regex;
   string filter_regex;
   int64_t min_param_length = 15;
   int64_t max_detection_num = 10;
-  void update(BaseReader *reader);
-};
+  void update();
 
-class DecompileBlock
-{
-public:
-  bool enable = false;
-  void update(BaseReader *reader);
+private:
+  void extract_userinput_config(Isolate *isolate);
+  void extract_echo_config(Isolate *isolate);
 };
 
 } // namespace openrasp

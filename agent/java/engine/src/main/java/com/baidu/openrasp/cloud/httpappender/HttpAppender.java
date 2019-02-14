@@ -20,6 +20,7 @@ import com.baidu.openrasp.cloud.CloudHttp;
 import com.baidu.openrasp.cloud.CloudHttpPool;
 import com.baidu.openrasp.cloud.model.AppenderCache;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
+import com.baidu.openrasp.cloud.model.ExceptionModel;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.plugin.info.ExceptInfo;
@@ -28,6 +29,7 @@ import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
+import org.apache.log4j.spi.ThrowableInformation;
 
 import java.lang.management.ManagementFactory;
 import java.util.HashSet;
@@ -141,10 +143,13 @@ public class HttpAppender extends AppenderSkeleton {
      */
     private String generateJson(LoggingEvent loggingEvent) {
         String level = loggingEvent.getLevel().toString();
-        String message = loggingEvent.getRenderedMessage();
-        Throwable t = loggingEvent.getThrowableInformation().getThrowable();
+        ExceptionModel model = (ExceptionModel) loggingEvent.getMessage();
+        String message = model.getMessage();
+        int errorCode = model.getErrorCode();
+        ThrowableInformation information = loggingEvent.getThrowableInformation();
+        Throwable t = information != null ? information.getThrowable() : null;
         StackTraceElement[] traceElements = t != null ? t.getStackTrace() : new StackTraceElement[]{};
-        ExceptInfo info = new ExceptInfo(level, message, getProcessID(), traceElements);
+        ExceptInfo info = new ExceptInfo(level, message, errorCode, getProcessID(), traceElements);
         return new Gson().toJson(info.getInfo());
     }
 

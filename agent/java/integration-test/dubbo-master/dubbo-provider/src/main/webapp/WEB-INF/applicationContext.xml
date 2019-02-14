@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!-- @version $Id: applicationContext.xml 561608 2007-08-01 00:33:12Z vgritsenko $ -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:configurator="http://cocoon.apache.org/schema/configurator"
+       xmlns:avalon="http://cocoon.apache.org/schema/avalon"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.0.xsd
+                           http://cocoon.apache.org/schema/configurator http://cocoon.apache.org/schema/configurator/cocoon-configurator-1.0.1.xsd
+                           http://cocoon.apache.org/schema/avalon http://cocoon.apache.org/schema/avalon/cocoon-avalon-1.0.xsd">
+
+  <!-- Activate Cocoon Spring Configurator -->
+  <configurator:settings/>
+
+  <!-- Configure Log4j -->
+  <bean name="org.apache.cocoon.spring.configurator.log4j"
+        class="org.apache.cocoon.spring.configurator.log4j.Log4JConfigurator"
+        scope="singleton">
+    <property name="settings" ref="org.apache.cocoon.configuration.Settings"/>
+    <property name="resource" value="/WEB-INF/log4j.xml"/>
+  </bean>
+
+  <!-- Activate Avalon Bridge -->
+  <avalon:bridge/>
+
+</beans>

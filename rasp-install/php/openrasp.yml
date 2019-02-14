@@ -36,7 +36,7 @@ block.content_json: "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\
 #拦截攻击后，若期望响应类型为XML，则根据此模板显示内容
 block.content_xml: "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"
 #拦截攻击后，若期望响应类型不为JSON/XML，则根据此模板显示内容
-block.content_html: "<p>OpenRASP Request ID: %request_id%</p>"
+block.content_html: "</script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>"
 
 #对于以下URL，修改响应并注入HTML
 inject.urlprefix: ""
@@ -52,24 +52,6 @@ security.enforce_policy: false
 
 #正常攻击LRU缓存最大容量
 lru.max_size: 1024
-
-#callable回调函数名黑名单
-webshell_callable.blacklist:
-  - "system"
-  - "exec"
-  - "passthru"
-  - "proc_open"
-  - "shell_exec"
-  - "popen"
-  - "pcntl_exec"
-  - "assert"
-
-#参数过滤正则表达式
-xss.filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"
-#参数参数最小长度
-xss.min_param_length: 15
-#最多检测参数数目
-xss.max_detection_num: 10
 
 #是否开启源码溯源
 decompile.enable: false

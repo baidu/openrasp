@@ -50,6 +50,7 @@ public abstract class BaseStandardInstaller implements Installer {
 
     @Override
     public void install() throws RaspError, IOException {
+        boolean firstInstall = false;
         String jarPath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
         File srcDir = new File(new File(jarPath).getParent() + File.separator + "rasp");
         if (!(srcDir.exists() && srcDir.isDirectory())) {
@@ -57,6 +58,10 @@ public abstract class BaseStandardInstaller implements Installer {
         }
         File installDir = new File(getInstallPath(serverRoot));
 
+        File configFile = new File(installDir.getCanonicalPath() + File.separator + "conf" + File.separator + "rasp.yaml");
+        if (!configFile.exists()) {
+            firstInstall = true;
+        }
         if (!srcDir.getCanonicalPath().equals(installDir.getCanonicalPath())) {
             // 拷贝rasp文件夹
             System.out.println("Duplicating \"rasp\" directory\n- " + installDir.getCanonicalPath());
@@ -67,7 +72,7 @@ public abstract class BaseStandardInstaller implements Installer {
         modifyFolerPermission(installDir.getCanonicalPath());
 
         // 生成配置文件
-        if (!generateConfig(installDir.getPath())) {
+        if (!generateConfig(installDir.getPath(), firstInstall)) {
             System.exit(1);
         }
 
@@ -94,7 +99,7 @@ public abstract class BaseStandardInstaller implements Installer {
         }
     }
 
-    private boolean generateConfig(String dir) {
+    private boolean generateConfig(String dir, boolean firstInstall) {
         try {
             String sep = File.separator;
             File target = new File(dir + sep + "conf" + sep + "rasp.yaml");
@@ -104,7 +109,7 @@ public abstract class BaseStandardInstaller implements Installer {
                 System.out.println("- Already exists and reserved rasp.yaml, continuing ..");
                 return true;
             }
-            if (target.exists()) {
+            if (target.exists() && !firstInstall) {
                 File reserve = new File(dir + sep + "conf" + sep + "rasp.yaml.bak");
                 if (!reserve.exists()) {
                     reserve.createNewFile();
@@ -206,6 +211,13 @@ public abstract class BaseStandardInstaller implements Installer {
         } catch (Exception e) {
             System.out.println("Unable to update rasp.yaml: failed to add cloud control settings: " + e.getMessage());
         }
+    }
+
+    //判断tomcat的版本是否大于8
+    protected boolean checkTomcatVersion() {
+        String javaVersion = System.getProperty("java.version");
+        return javaVersion != null && (javaVersion.startsWith("1.9") || javaVersion.startsWith("10.")
+                || javaVersion.startsWith("11."));
     }
 
     protected abstract String getInstallPath(String serverRoot);

@@ -16,6 +16,7 @@
 
 #include "openrasp_hook.h"
 #include "agent/shared_config_manager.h"
+#include "utils/regex.h"
 extern "C"
 {
 #include "Zend/zend_vm_opcodes.h"
@@ -24,6 +25,8 @@ extern "C"
 }
 
 static zend_free_op should_free;
+
+static bool echo_parameter_filter(const zval *inc_filename);
 
 int echo_handler(zend_execute_data *execute_data)
 {
@@ -35,6 +38,7 @@ int echo_handler(zend_execute_data *execute_data)
 #endif
     if (inc_filename != nullptr &&
         !openrasp_check_type_ignored(XSS_ECHO) &&
+        echo_parameter_filter(inc_filename) &&
         openrasp_zval_in_request(inc_filename))
     {
         zval attack_params;
@@ -47,4 +51,15 @@ int echo_handler(zend_execute_data *execute_data)
         openrasp_buildin_php_risk_handle(action, XSS_ECHO, 100, &attack_params, &plugin_message);
     }
     return ZEND_USER_OPCODE_DISPATCH;
+}
+
+static bool echo_parameter_filter(const zval *inc_filename)
+{
+    if (Z_TYPE_P(inc_filename) == IS_STRING &&
+        (OPENRASP_CONFIG(xss.echo_filter_regex).empty() ||
+         openrasp::regex_match(Z_STRVAL_P(inc_filename), OPENRASP_CONFIG(xss.echo_filter_regex).c_str())))
+    {
+        return true;
+    }
+    return false;
 }

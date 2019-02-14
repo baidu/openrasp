@@ -17,10 +17,12 @@
 package com.baidu.openrasp.hook.file;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
+import com.baidu.openrasp.tool.StackTrace;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.FileUtil;
 import com.google.gson.Gson;
@@ -31,6 +33,7 @@ import org.mozilla.javascript.Scriptable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by lxk on 6/8/17.
@@ -83,6 +86,10 @@ public class FileOutputStreamHook extends AbstractClassHook {
             params.put("name", params, file.getName());
             params.put("realpath", params, FileUtil.getRealPath(file));
             params.put("content", params, "");
+            List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
+                    Config.getConfig().getPluginMaxStack());
+            Scriptable stackArray = cx.newArray(cx.getScope(), stackInfo.toArray());
+            params.put("stack", params, stackArray);
             String hookType = CheckParameter.Type.WRITEFILE.getName();
             //如果在lru缓存中不进检测
             if (!HookHandler.commonLRUCache.isContainsKey(hookType + new Gson().toJson(params))) {

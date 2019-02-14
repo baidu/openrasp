@@ -16,7 +16,6 @@
 
 package com.baidu.openrasp.detector;
 
-import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 
@@ -44,8 +43,8 @@ public class TomcatDetector extends ServerDetector {
             if (!isJboss(classLoader)) {
                 version = (String) Reflection.invokeMethod(null, clazz, "getServerNumber", new Class[]{});
             }
-        } catch (Throwable e) {
-            HookHandler.LOGGER.warn("handle tomcat startup failed", e);
+        } catch (Throwable t) {
+            logDetectError("handle tomcat startup failed", t);
         } finally {
             if (!isJboss(classLoader)) {
                 ApplicationModel.initServerInfo("tomcat", version);

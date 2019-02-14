@@ -28,7 +28,10 @@ import java.util.List;
 
 public class XssChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_XSS_USER_INPUT = "xss_userinput";
-
+    private static final String EXCEED_LENGTH_COUNT = "max_detection_num";
+    private static final String XSS_PARAMETER_LENGTH = "min_length";
+    private static final int DEFAULT_MIN_LENGTH = 15;
+    private static final int DEFAULT_MAX_DETECTION_NUM = 10;
 
     @Override
     public List<EventInfo> checkParam(CheckParameter checkParameter) {
@@ -52,8 +55,14 @@ public class XssChecker extends ConfigurableChecker {
                 result.add(AttackInfo.createLocalAttackInfo(checkParameter, EventInfo.CHECK_ACTION_BLOCK, message, CONFIG_KEY_XSS_USER_INPUT));
             } else {
                 if (exceedCount != null) {
-                    int exceedLengthCount = Config.getConfig().getXssMaxDetectionNum();
-                    int xssParameterLength = Config.getConfig().getXssMinParamLength();
+                    int exceedLengthCount = getIntElement(config, CONFIG_KEY_XSS_USER_INPUT, EXCEED_LENGTH_COUNT);
+                    if (exceedLengthCount < 0) {
+                        exceedLengthCount = DEFAULT_MAX_DETECTION_NUM;
+                    }
+                    int xssParameterLength = getIntElement(config, CONFIG_KEY_XSS_USER_INPUT, XSS_PARAMETER_LENGTH);
+                    if (xssParameterLength < 0) {
+                        xssParameterLength = DEFAULT_MIN_LENGTH;
+                    }
                     if (exceedCount >= exceedLengthCount) {
                         message = "所有的请求参数中长度大于等于" + xssParameterLength + "并且匹配XSS正则的数量超过了" + exceedLengthCount;
                     }

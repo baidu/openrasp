@@ -17,6 +17,8 @@
 package com.baidu.openrasp.plugin.checker.policy.server;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.policy.PolicyChecker;
@@ -95,7 +97,9 @@ public abstract class ServerPolicyChecker extends PolicyChecker {
             String[] pids = ManagementFactory.getRuntimeMXBean().getName().split("@");
             return Integer.parseInt(pids[0]);
         } catch (Throwable e) {
-            LOGGER.warn("get process id failed: ", e);
+            String message = "get process id failed";
+            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
         }
         return -1;
     }

@@ -156,9 +156,10 @@ void sql_error_alarm(char *server, char *query, const std::string &err_code, con
     add_assoc_string(&attack_params, "error_code", (char *)err_code.c_str());
     add_assoc_string(&attack_params, "error_msg", (char *)err_msg.c_str());
     zval plugin_message;
-    ZVAL_STR(&plugin_message, strpprintf(0, _("%s error detected: error code %s."),
+    ZVAL_STR(&plugin_message, strpprintf(0, _("%s error %s detected: %s."),
                                          server,
-                                         err_code.c_str()));
+                                         err_code.c_str(),
+                                         err_msg.c_str()));
     OpenRASPActionType action = openrasp::scm->get_buildin_check_action(SQL_ERROR);
     openrasp_buildin_php_risk_handle(action, SQL_ERROR, 100, &attack_params, &plugin_message);
 }

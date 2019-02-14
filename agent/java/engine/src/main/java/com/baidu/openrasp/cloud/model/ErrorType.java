@@ -17,27 +17,35 @@
 package com.baidu.openrasp.cloud.model;
 
 public enum ErrorType {
-    REGISTER_ERROR(2008,"Cloud Control Registered Failed"),
-    HEARTBEAT_ERROR(2009,"Cloud Control Send HeartBeat Failed"),
-    STATISTICSREPORT_ERROR(3000,"Cloud Control Statistics,Report Failed"),
-    HTTPAPPENDER_ERROR(3001,"Cloud Control Log Upload Failed");
-    public int code;
-    public String message;
-    ErrorType(int code,String message) {
+    FSWATCH_ERROR(20001, "File Watch Error"),
+    RUNTIME_ERROR(20002, "Common Error"),
+    CONFIG_ERROR(20004, "Config Error"),
+    PLUGIN_ERROR(20005, "Plugin Error"),
+    REQUEST_ERROR(20006, "Request Error"),
+    HOOK_ERROR(20007, "Hook Error"),
+    REGISTER_ERROR(20008, "Cloud Control Registered Failed"),
+    HEARTBEAT_ERROR(20009, "Cloud Control Send HeartBeat Failed"),
+    STATISTICSREPORT_ERROR(20010, "Cloud Control Statistics,Report Failed"),
+    HTTPAPPENDER_ERROR(20011, "Cloud Control Log Upload Failed"),
+    DETECT_SERVER_ERROR(20012, "detect server Error");
+    private int code;
+    private String message;
+
+    ErrorType(int code, String message) {
         this.code = code;
         this.message = message;
     }
 
-    public int getCode(){
+    public int getCode() {
         return code;
     }
 
-    public String getMessage(){
+    public String getMessage() {
         return message;
     }
 
     @Override
     public String toString() {
-        return code+":"+message;
+        return code + ":" + message;
     }
 }

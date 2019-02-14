@@ -45,10 +45,10 @@
                 [{{ attack_type2name(data.attack_type) }}] {{ data.plugin_message }}
               </p>
               <attack_params ref="attack_params" />
-              <div class="h6">
+              <div class="h6" v-if="data.stack_trace">
                 应用堆栈
               </div>
-              <pre>{{ data.stack_trace }}</pre>
+              <pre v-if="data.stack_trace">{{ data.stack_trace }}</pre>
             </div>
             <div id="home" class="tab-pane fade" role="tabpanel" aria-labelledby="home-tab">
               <div class="h6">

@@ -17,6 +17,7 @@ const watchFileOptions = {
 chai.should();
 axios.defaults.headers.common['Test-Test'] = 'Test-Test';
 axios.defaults.validateStatus = status => status !== undefined;
+axios.defaults.transformResponse = []
 
 describe(process.env['SERVER'] || 'server', function () {
     before(function () {

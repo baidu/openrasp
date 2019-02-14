@@ -16,7 +16,9 @@
 
 package com.baidu.openrasp.cloud;
 
+import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.GenericResponse;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 
 import java.util.concurrent.*;
 
@@ -54,7 +56,9 @@ public class CloudHttpPool extends CloudHttp {
         try {
             return future.get();
         } catch (Exception e) {
-            CloudManager.LOGGER.warn("get http result for" + url + "from future failed", e);
+            String message = "get http result for" + url + "from future failed";
+            int errorCode = ErrorType.REQUEST_ERROR.getCode();
+            CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         }
         return null;
     }

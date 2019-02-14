@@ -20,6 +20,7 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.Register;
 import com.baidu.openrasp.cloud.model.AppenderMappedLogger;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
+import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
@@ -56,13 +57,16 @@ public abstract class ServerDetector {
 
     public abstract void handleServerInfo(ClassLoader classLoader, ProtectionDomain domain);
 
+
     protected void sendRegister() {
         if (CloudUtils.checkCloudControlEnter()) {
             String cloudAddress = Config.getConfig().getCloudAddress();
             try {
                 CloudCacheModel.getInstance().setMasterIp(OSUtil.getMasterIp(cloudAddress));
             } catch (Exception e) {
-                LOGGER.warn("get local ip failed: ", e);
+                String message = "get local ip failed";
+                int errorCode = ErrorType.REGISTER_ERROR.getCode();
+                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             }
             //初始化创建http appender
             DynamicConfigAppender.createRootHttpAppender();
@@ -71,8 +75,6 @@ public abstract class ServerDetector {
             DynamicConfigAppender.createHttpAppender(AppenderMappedLogger.HTTP_POLICY_ALARM.getLogger(),
                     AppenderMappedLogger.HTTP_POLICY_ALARM.getAppender());
             new Register();
-        } else {
-            checkServerPolicy();
         }
     }
 
@@ -94,6 +96,11 @@ public abstract class ServerDetector {
         } else if ("weblogic".equals(serverName)) {
             HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WEBLOGIC, CheckParameter.EMPTY_MAP);
         }
+    }
+
+    public void logDetectError(String message, Throwable t) {
+        int errorCode = ErrorType.DETECT_SERVER_ERROR.getCode();
+        HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), t);
     }
 
 }

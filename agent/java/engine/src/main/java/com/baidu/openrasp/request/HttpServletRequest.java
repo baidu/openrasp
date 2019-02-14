@@ -266,7 +266,6 @@ public final class HttpServletRequest extends AbstractRequest {
             }
             return realPath == null ? "" : realPath;
         } catch (Exception e) {
-            e.printStackTrace();
             return "";
         }
     }
@@ -308,14 +307,11 @@ public final class HttpServletRequest extends AbstractRequest {
     }
 
     private String getRealPathForWeblogic() {
-        try {
-            Object servletContext = Reflection.invokeMethod(request, "getServletContext", new Class[]{});
-            URL url = (URL) Reflection.invokeMethod(servletContext, "getResource", new Class[]{String.class}, "/");
-            if (url != null) {
-                return url.getPath();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        Object httpSession = Reflection.invokeMethod(request, "getSession", new Class[]{});
+        Object servletContext = Reflection.invokeMethod(httpSession, "getServletContext", new Class[]{});
+        URL url = (URL) Reflection.invokeMethod(servletContext, "getResource", new Class[]{String.class}, "/");
+        if (url != null) {
+            return url.getPath();
         }
         return null;
     }

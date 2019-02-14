@@ -19,6 +19,14 @@ OpenRASP Installer for PHP servers - Copyright 2017-2019 Baidu Inc.
 For more details visit: https://rasp.baidu.com/doc/install/software.html
 
 <?php
+error_reporting(E_ALL);
+$open_basedir = ini_get('open_basedir');
+if (! empty ($open_basedir))
+{
+	echo "WARNING: open_basedir is configured and might affect the installation process";
+	echo "         current value: $open_basedir\n";
+}
+
 if (PHP_VERSION_ID < 50300) {
 	echo sprintf("Error: OpenRASP works on PHP 5.3 and onwards, version %s.%s is not supported\n", PHP_MAJOR_VERSION, PHP_MINOR_VERSION);
 	exit;

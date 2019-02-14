@@ -53,7 +53,7 @@ public class DubboRequest extends AbstractRequest {
 
     @Override
     public String getProtocol() {
-        return null;
+        return "dubbo";
     }
 
     @Override

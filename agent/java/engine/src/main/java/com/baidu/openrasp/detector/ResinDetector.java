@@ -37,8 +37,8 @@ public class ResinDetector extends ServerDetector {
         try {
             Class versionClass = classLoader.loadClass("com.caucho.Version");
             serverVersion = (String) versionClass.getField("VERSION").get(null);
-        } catch (Throwable e) {
-            HookHandler.LOGGER.warn("handle resin startup failed", e);
+        } catch (Throwable t) {
+            logDetectError("handle jetty startup failed", t);
         } finally {
             ApplicationModel.initServerInfo("resin", serverVersion);
         }

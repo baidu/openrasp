@@ -49,8 +49,8 @@ public class JBossDetector extends ServerDetector {
             getPackageMethod.setAccessible(true);
             Package jbossBootPackage = (Package) getPackageMethod.invoke(classLoader, "org.jboss");
             serverVersion = jbossBootPackage.getSpecificationVersion();
-        } catch (Throwable e) {
-            HookHandler.LOGGER.error("handle jboss startup failed", e);
+        } catch (Throwable t) {
+            logDetectError("handle jboss startup failed", t);
         } finally {
             ApplicationModel.initServerInfo("jboss", serverVersion);
         }

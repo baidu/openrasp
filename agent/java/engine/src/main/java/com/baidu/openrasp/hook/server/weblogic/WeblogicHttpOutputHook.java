@@ -42,6 +42,6 @@ public class WeblogicHttpOutputHook extends ServerOutputCloseHook {
 
     @Override
     protected void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException {
-        insertBefore(ctClass, "finish", "()V", src);
+        insertBefore(ctClass, "commit", "()V", src);
     }
 }

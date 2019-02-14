@@ -5,6 +5,7 @@ hook move_uploaded_file
 if (php_sapi_name()=='cli') die('skip:  forces the use of the CGI binary');
 $plugin = <<<EOF
 plugin.register('fileUpload', params => {
+    assert(params.name == 'pics')
     assert(params.filename == 'file1.txt')
     assert(params.content == 'abcdef123456789')
     return block
