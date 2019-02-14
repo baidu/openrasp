@@ -157,8 +157,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                                         params.put("username", userName);
                                         params.put("password", password);
                                         infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD,
-                                                "Tomcat security baseline - password is empty" +
-                                                        " username/password combination in " +
+                                                "Tomcat security baseline - detected empty password in " +
                                                         userFile.getAbsolutePath() + ", username is " + userName, true, params));
                                     } else {
                                         if (weakWords.contains(userName) && weakWords.contains(password)) {
@@ -167,8 +166,8 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                                             params.put("username", userName);
                                             params.put("password", password);
                                             infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD,
-                                                    "Tomcat security baseline - detected empty password in /tomcat/conf/tomcat-users.xml, " +
-                                                            "username is" + userName, true, params));
+                                                    "Tomcat security baseline - detected weak username/password combination in " + userFile.getAbsolutePath() +
+                                                            ", username is" + userName, true, params));
                                         }
                                     }
                                 }
@@ -295,7 +294,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
     private void handleException(Exception e) {
         String message = getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL, e.getMessage());
         int errorCode = ErrorType.HOOK_ERROR.getCode();
-        LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
+        LOGGER.error(CloudUtils.getExceptionObject(message, errorCode), e);
     }
 
     private String getFormattedMessage(String title, String message) {

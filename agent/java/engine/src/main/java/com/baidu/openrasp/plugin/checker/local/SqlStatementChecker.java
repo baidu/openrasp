@@ -44,7 +44,7 @@ import java.util.ArrayList;
 
 /**
  * Created by tyy on 17-12-20.
- * <p>
+ *
  * 检测 sql 语句的 java 版本
  */
 public class SqlStatementChecker extends ConfigurableChecker {
@@ -66,12 +66,13 @@ public class SqlStatementChecker extends ConfigurableChecker {
     private static ArrayList<String> sqlErrorCode = new ArrayList<String>();
 
     static {
-        sqlErrorCode.add("1060");
-        sqlErrorCode.add("1062");
-        sqlErrorCode.add("1105");
-        sqlErrorCode.add("1367");
-        sqlErrorCode.add("1690");
-        sqlErrorCode.add("1064");
+        sqlErrorCode.add("1060");//Duplicate column name '%s'
+        sqlErrorCode.add("1062");//Duplicate entry '%s' for key %d
+        sqlErrorCode.add("1105");//Unknown error
+        sqlErrorCode.add("1367");//Illegal non geometric
+        sqlErrorCode.add("1690");//BIGINT UNSIGNED value is out of range
+        sqlErrorCode.add("1064");//%s near '%s' at line %d
+        sqlErrorCode.add("1045");//Access denied for user '%s'@'%s' (using password: %s)
     }
 
     public List<EventInfo> checkSql(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
