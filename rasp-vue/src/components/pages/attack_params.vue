@@ -233,7 +233,7 @@
             </p>
         </div>
         
-        <div v-if="data.attack_type == 'callable'">
+        <div v-if="data.attack_type == 'webshell_callable'">
             <div class="h6">
                 后门要执行的函数
             </div>
