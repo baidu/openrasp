@@ -47,7 +47,12 @@ std::string DebugTrace::to_plugin_string() const
 
 std::string DebugTrace::get_source_code() const
 {
-    return get_line_content(file, line);
+    std::string source_code = get_line_content(file, line);
+    if (!source_code.empty() && source_code.back() == '\r')
+    {
+        source_code.erase(source_code.length() - 1, 1);
+    }
+    return source_code;
 }
 
 } // namespace openrasp
