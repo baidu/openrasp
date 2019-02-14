@@ -1,38 +1,28 @@
 package test
 
 import (
-	"net/http"
-	"net/http/httptest"
+	_ "rasp-cloud/tests/inits"
+	_ "rasp-cloud/environment"
+	_ "rasp-cloud/models"
+	//_ "rasp-cloud/filter"
+	_ "rasp-cloud/controllers"
 	"testing"
-	"runtime"
-	"path/filepath"
-	_ "rasp-cloud/routers"
-
 	"github.com/astaxie/beego"
 	. "github.com/smartystreets/goconvey/convey"
+	"rasp-cloud/routers"
+	"rasp-cloud/controllers"
+	"rasp-cloud/conf"
 )
 
 func init() {
-	_, file, _, _ := runtime.Caller(1)
-	apppath, _ := filepath.Abs(filepath.Dir(filepath.Join(file, ".." + string(filepath.Separator))))
-	beego.TestBeegoInit(apppath)
+	routers.InitRouter()
+	beego.ErrorController(&controllers.ErrorController{})
 }
 
-// TestGet is a sample to run an endpoint test
-func TestGet(t *testing.T) {
-	r, _ := http.NewRequest("GET", "/v1/object", nil)
-	w := httptest.NewRecorder()
-	beego.BeeApp.Handlers.ServeHTTP(w, r)
-
-	beego.Trace("testing", "TestGet", "Code[%d]\n%s", w.Code, w.Body.String())
-
-	Convey("Subject: Test Station Endpoint\n", t, func() {
-	        Convey("Status Code Should Be 200", func() {
-	                So(w.Code, ShouldEqual, 200)
-	        })
-	        Convey("The Result Should Not Be Empty", func() {
-	                So(w.Body.Len(), ShouldBeGreaterThan, 0)
-	        })
+func TestAppConfig(t *testing.T) {
+	startType := conf.StartTypeDefault
+	conf.InitConfig(&conf.Flag{StartType: &startType})
+	Convey("Subject: Test Config Init\n", t, func() {
+		So(*conf.AppConfig.Flag.StartType, ShouldEqual, conf.StartTypeDefault)
 	})
 }
-

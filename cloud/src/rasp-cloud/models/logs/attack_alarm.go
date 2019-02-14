@@ -92,6 +92,10 @@ func setAlarmLocation(alarm map[string]interface{}) {
 	}
 }
 
+func SearchAttackWithVulnAggr() {
+
+}
+
 func AggregationAttackWithTime(startTime int64, endTime int64, interval string, timeZone string,
 	appId string) (map[string]interface{}, error) {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(10*time.Second))

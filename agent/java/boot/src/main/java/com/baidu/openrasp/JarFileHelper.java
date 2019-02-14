@@ -45,7 +45,7 @@ public class JarFileHelper {
      *
      * @return jar包路径
      */
-    private static String getLocalJarPath() {
+    public static String getLocalJarPath() {
         URL localUrl = Agent.class.getProtectionDomain().getCodeSource().getLocation();
         String path = null;
         try {

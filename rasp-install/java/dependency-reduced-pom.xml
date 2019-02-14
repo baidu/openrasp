@@ -37,6 +37,15 @@
       </plugin>
     </plugins>
   </build>
+  <dependencies>
+    <dependency>
+      <groupId>jdk.tools</groupId>
+      <artifactId>jdk.tools</artifactId>
+      <version>1.8</version>
+      <scope>system</scope>
+      <systemPath>/opt/jdk1.8.0_111/lib/tools.jar</systemPath>
+    </dependency>
+  </dependencies>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>

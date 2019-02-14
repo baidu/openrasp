@@ -101,13 +101,7 @@ public class Reflection {
      */
     public static Object invokeStaticMethod(String className, String methodName, Class[] paramTypes, Object... parameters) {
         try {
-            Class clazz = null;
-            ClassLoader loader = CustomClassTransformer.getClassLoader(className);
-            if (loader != null) {
-                clazz = loader.loadClass(className);
-            } else {
-                clazz = Class.forName(className);
-            }
+            Class clazz = Class.forName(className);
             return invokeMethod(null, clazz, methodName, paramTypes, parameters);
         } catch (Exception e) {
             return null;

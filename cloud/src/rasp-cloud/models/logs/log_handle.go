@@ -48,16 +48,17 @@ type SearchAttackParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
 	Data *struct {
-		Id           string    `json:"_id,omitempty"`
-		AppId        string    `json:"app_id,omitempty"`
-		StartTime    int64     `json:"start_time"`
-		EndTime      int64     `json:"end_time"`
-		RaspId       string    `json:"rasp_id,omitempty"`
-		HostName     string    `json:"server_hostname,omitempty"`
-		AttackSource string    `json:"attack_source,omitempty"`
-		AttackUrl    string    `json:"url,omitempty"`
-		LocalIp      string    `json:"local_ip,omitempty"`
-		AttackType   *[]string `json:"attack_type,omitempty"`
+		Id             string    `json:"_id,omitempty"`
+		AppId          string    `json:"app_id,omitempty"`
+		StartTime      int64     `json:"start_time"`
+		EndTime        int64     `json:"end_time"`
+		RaspId         string    `json:"rasp_id,omitempty"`
+		HostName       string    `json:"server_hostname,omitempty"`
+		AttackSource   string    `json:"attack_source,omitempty"`
+		AttackUrl      string    `json:"url,omitempty"`
+		LocalIp        string    `json:"local_ip,omitempty"`
+		AttackType     *[]string `json:"attack_type,omitempty"`
+		InterceptState string    `json:"intercept_state,omitempty"`
 	} `json:"data"`
 }
 
@@ -91,12 +92,12 @@ type SearchErrorParam struct {
 }
 
 type AlarmLogInfo struct {
-	EsType          string
-	EsIndex         string
-	EsAliasIndex    string
-	TtlTime         time.Duration
-	FileLogger      *logs.BeeLogger
-	AlarmBuffer     chan map[string]interface{}
+	EsType       string
+	EsIndex      string
+	EsAliasIndex string
+	TtlTime      time.Duration
+	FileLogger   *logs.BeeLogger
+	AlarmBuffer  chan map[string]interface{}
 }
 
 var (
@@ -297,7 +298,7 @@ func SearchLogs(startTime int64, endTime int64, query map[string]interface{}, so
 
 func CreateAlarmEsIndex(appId string) (err error) {
 	for _, alarmInfo := range alarmInfos {
-		err = es.CreateEsIndex(alarmInfo.EsIndex+"-"+appId)
+		err = es.CreateEsIndex(alarmInfo.EsIndex + "-" + appId)
 		if err != nil {
 			return
 		}

@@ -30,10 +30,7 @@ type ErrorController struct {
 // @router /search [post]
 func (o *ErrorController) Search() {
 	var param = &logs.SearchErrorParam{}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json decode error", err)
-	}
+	o.UnMarshalJson(&param)
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
 	}

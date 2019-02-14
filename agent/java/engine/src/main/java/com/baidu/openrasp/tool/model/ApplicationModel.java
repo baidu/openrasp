@@ -16,6 +16,8 @@
 
 package com.baidu.openrasp.tool.model;
 
+import com.baidu.openrasp.HookHandler;
+
 import java.util.HashMap;
 
 /**
@@ -25,13 +27,22 @@ import java.util.HashMap;
  */
 public class ApplicationModel {
 
-    private static HashMap<String, String> applicationInfo = new HashMap<String, String>(8);
+    private static HashMap<String, String> applicationInfo;
 
-    public static void init(String serverName, String version) {
-        applicationInfo.put("server", serverName);
-        applicationInfo.put("version", version);
+    static {
+        applicationInfo = new HashMap<String, String>(8);
         applicationInfo.put("os", System.getProperty("os.name"));
         applicationInfo.put("language", "java");
+        applicationInfo.put("server", "");
+        applicationInfo.put("version", "");
+    }
+
+    public static void initServerInfo(String serverName, String version) {
+        serverName = (serverName == null ? "" : serverName);
+        version = (version == null ? "" : version);
+        applicationInfo.put("server", serverName);
+        applicationInfo.put("version", version);
+        HookHandler.LOGGER.info("detect server: " + serverName + "/" + version);
     }
 
     public static HashMap<String, String> getApplicationInfo() {
@@ -46,7 +57,7 @@ public class ApplicationModel {
         return applicationInfo.get("server");
     }
 
-    public static String getRaspVersion(){
+    public static String getRaspVersion() {
         return applicationInfo.get("projectVersion");
     }
 

@@ -18,10 +18,14 @@ package com.baidu.openrasp.transformer;
 
 import com.baidu.openrasp.ModuleLoader;
 import com.baidu.openrasp.config.Config;
-import com.baidu.openrasp.hook.*;
+import com.baidu.openrasp.detector.ServerDetectorManager;
+import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.tool.annotation.AnnotationScanner;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
-import javassist.*;
+import javassist.ClassClassPath;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.LoaderClassPath;
 import org.apache.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
@@ -29,7 +33,10 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 自定义类字节码转换器，用于hook类德 方法
@@ -40,15 +47,10 @@ public class CustomClassTransformer implements ClassFileTransformer {
     private static ArrayList<String> list = new ArrayList<String>();
     private static HashMap<String, ClassLoader> classLoaderCache = new HashMap<String, ClassLoader>();
 
-    private HashSet<AbstractClassHook> hooks;
-
-    static {
-        list.add("org/apache/catalina/util/ServerInfo");
-        list.add("org/apache/commons/fileupload/servlet/ServletFileUpload");
-    }
+    private HashSet<AbstractClassHook> hooks = new HashSet<AbstractClassHook>();
+    private ServerDetectorManager serverDetector = ServerDetectorManager.getInstance();
 
     public CustomClassTransformer() {
-        hooks = new HashSet<AbstractClassHook>();
         addAnnotationHook();
     }
 
@@ -105,8 +107,18 @@ public class CustomClassTransformer implements ClassFileTransformer {
                 }
             }
         }
+        serverDetector.detectServer(className, loader, domain);
         handleClassLoader(loader, className);
         return classfileBuffer;
+    }
+
+    public boolean isClassMatched(String className) {
+        for (final AbstractClassHook hook : getHooks()) {
+            if (hook.isClassMatched(className)) {
+                return true;
+            }
+        }
+        return serverDetector.isClassMatched(className);
     }
 
     private void addLoader(ClassPool classPool, ClassLoader loader) {
@@ -122,7 +134,6 @@ public class CustomClassTransformer implements ClassFileTransformer {
     }
 
     private static void handleClassLoader(ClassLoader loader, String className) {
-
         if (list.contains(className)) {
             classLoaderCache.put(className.replace('/', '.'), loader);
         }

@@ -15,7 +15,6 @@
 package api
 
 import (
-	"encoding/json"
 	"math"
 	"net/http"
 	"rasp-cloud/controllers"
@@ -33,10 +32,7 @@ func (o *RaspController) Search() {
 		Page    int          `json:"page"`
 		Perpage int          `json:"perpage"`
 	}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
-	}
+	o.UnMarshalJson(&param)
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
 	}
@@ -65,14 +61,11 @@ func (o *RaspController) Search() {
 // @router /delete [post]
 func (o *RaspController) Delete() {
 	var rasp = &models.Rasp{}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, rasp)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
-	}
+	o.UnMarshalJson(rasp)
 	if rasp.Id == "" {
 		o.ServeError(http.StatusBadRequest, "the id cannot be empty")
 	}
-	rasp, err = models.GetRaspById(rasp.Id)
+	rasp, err := models.GetRaspById(rasp.Id)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get rasp by id", err)
 	}

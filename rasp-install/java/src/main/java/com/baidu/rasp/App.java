@@ -16,6 +16,7 @@
 
 package com.baidu.rasp;
 
+import com.baidu.rasp.install.AttachInstaller;
 import com.baidu.rasp.install.Installer;
 import com.baidu.rasp.install.InstallerFactory;
 import com.baidu.rasp.install.linux.LinuxInstallerFactory;
@@ -27,10 +28,8 @@ import com.baidu.rasp.uninstall.windows.WindowsUninstallerFactory;
 import org.apache.commons.cli.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.regex.Pattern;
@@ -46,6 +45,8 @@ public class App {
     public static String appSecret;
     public static String baseDir;
     public static String url;
+    public static int pid;
+    public static boolean isAttach = false;
     public static boolean keepConfig = false;
 
     public static final String REGEX_APPID = "^[a-z0-9]{40,40}$";
@@ -77,6 +78,8 @@ public class App {
         options.addOption("keepconf", false, "If the parameter exists, reserved rasp.yaml");
         options.addOption("help", false, "print options information");
         options.addOption("h", false, "print options information");
+        options.addOption("attach", false, "If the parameter exists, use 'attach' mode to install the rasp");
+        options.addOption("pid", true, "If the 'attach' parameter exists, specify the pid that the rasp attach to");
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, args);
         if (cmd.hasOption("help") || cmd.hasOption("h")) {
@@ -87,6 +90,17 @@ public class App {
             } else if (cmd.hasOption("install")) {
                 baseDir = cmd.getOptionValue("install");
                 install = "install";
+                if (cmd.hasOption("attach")) {
+                    isAttach = true;
+                    if (!cmd.hasOption("pid")) {
+                        throw new RaspError(E10005 + "The -pid must be specified in attach mode");
+                    }
+                    try {
+                        pid = Integer.parseInt(cmd.getOptionValue("pid"));
+                    } catch (NumberFormatException e) {
+                        throw new RaspError(E10005 + "The -pid parameter must be integer");
+                    }
+                }
             } else if (cmd.hasOption("uninstall")) {
                 baseDir = cmd.getOptionValue("uninstall");
                 install = "uninstall";
@@ -160,7 +174,7 @@ public class App {
         System.out.println(helpMsg);
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         showBanner();
         try {
             argsParser(args);
@@ -178,6 +192,7 @@ public class App {
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
+            e.printStackTrace();
             showNotice();
             System.exit(1);
         }

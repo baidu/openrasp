@@ -17,11 +17,9 @@
 package com.baidu.openrasp;
 
 import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
 import com.baidu.openrasp.plugin.js.engine.JsPluginManager;
-import com.baidu.openrasp.tool.FileUtil;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import com.baidu.openrasp.transformer.CustomClassTransformer;
 import org.apache.log4j.Logger;
@@ -47,7 +45,7 @@ public class EngineBoot implements Module {
     private static String gitCommit;
 
     @Override
-    public void start(String agentArg, Instrumentation inst) throws Exception {
+    public void start(String mode, Instrumentation inst) throws Exception {
         System.out.println("\n\n" +
                 "   ____                   ____  ___   _____ ____ \n" +
                 "  / __ \\____  ___  ____  / __ \\/   | / ___// __ \\\n" +
@@ -71,7 +69,7 @@ public class EngineBoot implements Module {
     }
 
     @Override
-    public void release() {
+    public void release(String mode) {
         JsPluginManager.release();
         CheckerManager.release();
     }
@@ -101,11 +99,9 @@ public class EngineBoot implements Module {
         inst.addTransformer(customClassTransformer, true);
         Class[] loadedClasses = inst.getAllLoadedClasses();
         for (Class clazz : loadedClasses) {
-            for (final AbstractClassHook hook : customClassTransformer.getHooks()) {
-                if (hook.isClassMatched(clazz.getName().replace(".", "/"))) {
-                    if (inst.isModifiableClass(clazz) && !clazz.getName().startsWith("java.lang.invoke.LambdaForm")) {
-                        retransformClasses.add(clazz);
-                    }
+            if (customClassTransformer.isClassMatched(clazz.getName().replace(".", "/"))) {
+                if (inst.isModifiableClass(clazz) && !clazz.getName().startsWith("java.lang.invoke.LambdaForm")) {
+                    retransformClasses.add(clazz);
                 }
             }
         }

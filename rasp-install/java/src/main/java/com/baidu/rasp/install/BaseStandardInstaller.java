@@ -82,9 +82,17 @@ public abstract class BaseStandardInstaller implements Installer {
         String original = read(script);
         String modified = modifyStartScript(original);
         write(script, modified);
-        System.out.println("\nInstallation completed without errors.\nPlease restart application server to take effect.");
-    }
 
+        if (App.isAttach) {
+            System.out.println("Attach the rasp to process with pid " + App.pid);
+            new AttachInstaller(App.pid + "", App.baseDir).install();
+        }
+
+        System.out.println("\nInstallation completed without errors.");
+        if (!App.isAttach) {
+            System.out.println("Please restart application server to take effect.");
+        }
+    }
 
     private boolean generateConfig(String dir) {
         try {
@@ -99,7 +107,7 @@ public abstract class BaseStandardInstaller implements Installer {
             if (target.exists()) {
                 File reserve = new File(dir + sep + "conf" + sep + "rasp.yaml.bak");
                 if (!reserve.exists()) {
-                  reserve.createNewFile();
+                    reserve.createNewFile();
                 }
                 FileOutputStream outputStream = new FileOutputStream(reserve);
                 FileInputStream inputStream = new FileInputStream(target);
@@ -178,13 +186,13 @@ public abstract class BaseStandardInstaller implements Installer {
             if (url != null && appId != null && appSecret != null) {
                 String path = getInstallPath(serverRoot) + File.separator + "conf" + File.separator + "rasp.yaml";
                 File yamlFile = new File(path);
-                if (yamlFile.exists()){
-                    Map<String,Object> map = new HashMap<String, Object>();
+                if (yamlFile.exists()) {
+                    Map<String, Object> map = new HashMap<String, Object>();
                     map.put("cloud.enable", true);
                     map.put("cloud.backend_url", url);
                     map.put("cloud.app_id", appId);
                     map.put("cloud.app_secret", appSecret);
-                    FileWriter writer = new FileWriter(yamlFile,true);
+                    FileWriter writer = new FileWriter(yamlFile, true);
                     writer.write(LINE_SEP);
                     writer.write("#云控配置");
                     writer.write(LINE_SEP);
@@ -192,7 +200,7 @@ public abstract class BaseStandardInstaller implements Installer {
                     options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
                     options.setPrettyFlow(true);
                     Yaml yaml = new Yaml(options);
-                    yaml.dump(map,writer);
+                    yaml.dump(map, writer);
                 }
             }
         } catch (Exception e) {

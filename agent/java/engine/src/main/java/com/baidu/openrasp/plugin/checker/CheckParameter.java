@@ -59,16 +59,16 @@ public class CheckParameter {
 
         // java本地检测
         SQL_SLOW_QUERY("sqlSlowQuery", new SqlResultChecker(false), 0),
-        XSS("xss",new XssChecker(),0),
+        XSS("xss", new XssChecker(), 0),
 
         // 安全基线检测
         POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker(), 0),
-        POLICY_TOMCAT_START("tomcatStart", new TomcatSecurityChecker(false), 0),
-        POLICY_JBOSS_START("jbossStart", new JBossSecurityChecker(false), 0),
-        POLICY_JETTY_START("jettyStart", new JettySecurityChecker(false), 0),
-        POLICY_RESIN_START("resinStart", new ResinSecurityChecker(false), 0),
-        POLICY_WEBSPHERE_START("websphereStart", new WebsphereSecurityChecker(false), 0),
-        POLICY_WEBLOGIC_START("weblogicStart",new WeblogicSecurityChecker(false),0);
+        POLICY_SERVER_TOMCAT("tomcatServer", new TomcatSecurityChecker(false), 0),
+        POLICY_SERVER_JBOSS("jbossServer", new JBossSecurityChecker(false), 0),
+        POLICY_SERVER_JETTY("jettyServer", new JettySecurityChecker(false), 0),
+        POLICY_SERVER_RESIN("resinServer", new ResinSecurityChecker(false), 0),
+        POLICY_SERVER_WEBSPHERE("websphereServer", new WebsphereSecurityChecker(false), 0),
+        POLICY_SERVER_WEBLOGIC("weblogicServer", new WeblogicSecurityChecker(false), 0);
 
         String name;
         Checker checker;

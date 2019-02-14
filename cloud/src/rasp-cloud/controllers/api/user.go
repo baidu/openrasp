@@ -16,7 +16,6 @@ package api
 
 import (
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -33,10 +32,7 @@ type UserController struct {
 // @router /login [post]
 func (o *UserController) Login() {
 	var loginData map[string]string
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &loginData)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
-	}
+	o.UnMarshalJson(&loginData)
 	logUser := loginData["username"]
 	logPasswd := loginData["password"]
 	if logUser == "" || logPasswd == "" {
@@ -45,7 +41,7 @@ func (o *UserController) Login() {
 	if len(logUser) > 512 || len(logPasswd) > 512 {
 		o.ServeError(http.StatusBadRequest, "the length of username or password cannot be greater than 512")
 	}
-	err = models.VerifyUser(logUser, logPasswd)
+	err := models.VerifyUser(logUser, logPasswd)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "username or password is incorrect")
 	}
@@ -70,17 +66,14 @@ func (o *UserController) Update() {
 		OldPwd string `json:"old_password"`
 		NewPwd string `json:"new_password"`
 	}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json format error： "+err.Error())
-	}
+	o.UnMarshalJson(&param)
 	if param.OldPwd == "" {
 		o.ServeError(http.StatusBadRequest, "old_password can not be empty")
 	}
 	if param.NewPwd == "" {
 		o.ServeError(http.StatusBadRequest, "new_password can not be empty")
 	}
-	err = models.UpdatePassword(param.OldPwd, param.NewPwd)
+	err := models.UpdatePassword(param.OldPwd, param.NewPwd)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, err.Error())
 	}

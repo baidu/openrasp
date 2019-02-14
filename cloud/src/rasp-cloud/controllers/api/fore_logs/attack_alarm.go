@@ -32,12 +32,9 @@ type AttackAlarmController struct {
 // @router /aggr/time [post]
 func (o *AttackAlarmController) AggregationWithTime() {
 	var param = &logs.AggrTimeParam{}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json decode error", err)
-	}
+	o.UnMarshalJson(&param)
 	if param.AppId != "" {
-		_, err = models.GetAppById(param.AppId)
+		_, err := models.GetAppById(param.AppId)
 		if err != nil {
 			o.ServeError(http.StatusBadRequest, "failed to get the app: "+param.AppId)
 		}
@@ -80,10 +77,7 @@ func (o *AttackAlarmController) AggregationWithTime() {
 // @router /aggr/type [post]
 func (o *AttackAlarmController) AggregationWithType() {
 	var param = &logs.AggrFieldParam{}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json decode error", err)
-	}
+	o.UnMarshalJson(&param)
 	o.validFieldAggrParam(param)
 	result, err :=
 		logs.AggregationAttackWithType(param.StartTime, param.EndTime, param.Size, param.AppId)
@@ -96,10 +90,7 @@ func (o *AttackAlarmController) AggregationWithType() {
 // @router /aggr/ua [post]
 func (o *AttackAlarmController) AggregationWithUserAgent() {
 	var param = &logs.AggrFieldParam{}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json decode error", err)
-	}
+	o.UnMarshalJson(&param)
 	o.validFieldAggrParam(param)
 	result, err :=
 		logs.AggregationAttackWithUserAgent(param.StartTime, param.EndTime, param.Size, param.AppId)
@@ -112,10 +103,7 @@ func (o *AttackAlarmController) AggregationWithUserAgent() {
 // @router /search [post]
 func (o *AttackAlarmController) Search() {
 	var param = &logs.SearchAttackParam{}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json decode error", err)
-	}
+	o.UnMarshalJson(&param)
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
 	}

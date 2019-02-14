@@ -15,7 +15,6 @@
 package agent
 
 import (
-	"encoding/json"
 	"gopkg.in/mgo.v2"
 	"net/http"
 	"rasp-cloud/controllers"
@@ -38,10 +37,7 @@ type heartbeatParam struct {
 // @router / [post]
 func (o *HeartbeatController) Post() {
 	var heartbeat heartbeatParam
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &heartbeat)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
-	}
+	o.UnMarshalJson(&heartbeat)
 	rasp, err := models.GetRaspById(heartbeat.RaspId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get rasp", err)

@@ -15,7 +15,6 @@
 package api
 
 import (
-	"encoding/json"
 	"math"
 	"net/http"
 	"rasp-cloud/controllers"
@@ -35,10 +34,7 @@ func (o *OperationController) Search() {
 		Page      int               `json:"page"`
 		Perpage   int               `json:"perpage"`
 	}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
-	}
+	o.UnMarshalJson(&param)
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
 	}

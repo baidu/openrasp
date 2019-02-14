@@ -31,9 +31,29 @@ public class Agent {
      * @param inst     {@link Instrumentation}
      */
     public static void premain(String agentArg, Instrumentation inst) {
+        init(Module.START_MODE_NORMAL, inst);
+    }
+
+    /**
+     * attack 机制加载 agent
+     *
+     * @param agentArg 启动参数
+     * @param inst     {@link Instrumentation}
+     */
+    public static void agentmain(String agentArg, Instrumentation inst) {
+        init(Module.START_MODE_ATTACH, inst);
+    }
+
+    /**
+     * attack 机制加载 agent
+     *
+     * @param mode 启动模式
+     * @param inst {@link Instrumentation}
+     */
+    public static synchronized void init(String mode, Instrumentation inst) {
         try {
             JarFileHelper.addJarToBootstrap(inst);
-            ModuleLoader.load(agentArg, inst);
+            ModuleLoader.load(mode, inst);
         } catch (Exception e) {
             System.err.println("[OpenRASP] Failed to initialize, will continue without security protection.");
             e.printStackTrace();

@@ -15,7 +15,6 @@
 package agent
 
 import (
-	"encoding/json"
 	"github.com/astaxie/beego/validation"
 	"net/http"
 	"rasp-cloud/controllers"
@@ -31,11 +30,7 @@ type RaspController struct {
 func (o *RaspController) Post() {
 	var rasp = &models.Rasp{}
 	rasp.AppId = o.Ctx.Input.Header("X-OpenRASP-AppID")
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, rasp)
-
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
-	}
+	o.UnMarshalJson(rasp)
 	if rasp.Id == "" {
 		o.ServeError(http.StatusBadRequest, "rasp id cannot be empty")
 	}
@@ -75,7 +70,7 @@ func (o *RaspController) Post() {
 	if rasp.RegisterIp != "" {
 		valid := validation.Validation{}
 		if result := valid.IP(rasp.RegisterIp, "IP"); !result.Ok {
-			o.ServeError(http.StatusBadRequest, "rasp primary_ip format error: "+result.Error.Message)
+			o.ServeError(http.StatusBadRequest, "rasp register_ip format error: "+result.Error.Message)
 		}
 	}
 	if rasp.HeartbeatInterval <= 0 {
@@ -84,7 +79,7 @@ func (o *RaspController) Post() {
 
 	rasp.LastHeartbeatTime = time.Now().Unix()
 	rasp.RegisterTime = time.Now().Unix()
-	err = models.UpsertRaspById(rasp.Id, rasp)
+	err := models.UpsertRaspById(rasp.Id, rasp)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to add rasp", err)
 	}

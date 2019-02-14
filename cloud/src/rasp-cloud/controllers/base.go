@@ -17,6 +17,7 @@ package controllers
 import (
 	"github.com/astaxie/beego"
 	"net/http"
+	"encoding/json"
 )
 
 // base controller
@@ -51,4 +52,11 @@ func (o *BaseController) ServeStatusCode(code int, description ...string) {
 	}
 	o.Data["json"] = map[string]interface{}{"status": code, "description": des}
 	o.ServeJSON()
+}
+
+func (o *BaseController) UnMarshalJson(v interface{}) {
+	err := json.Unmarshal(o.Ctx.Input.RequestBody, v)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
+	}
 }

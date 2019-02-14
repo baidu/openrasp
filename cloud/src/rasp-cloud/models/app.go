@@ -136,6 +136,7 @@ var (
 		"syslog.url":                "",
 		"syslog.facility":           1,
 		"syslog.enable":             false,
+		"decompile.enable":          false,
 	}
 )
 

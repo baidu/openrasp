@@ -69,10 +69,10 @@ public class ModuleLoader {
     /**
      * 构造所有模块
      *
-     * @param agentArg premain 传入的命令行参数
-     * @param inst     {@link java.lang.instrument.Instrumentation}
+     * @param mode 启动模式
+     * @param inst {@link java.lang.instrument.Instrumentation}
      */
-    private ModuleLoader(String agentArg, Instrumentation inst) throws Exception {
+    private ModuleLoader(String mode, Instrumentation inst) throws Exception {
         for (int i = 0; i < jars.length; i++) {
             Object module = null;
             try {
@@ -109,7 +109,7 @@ public class ModuleLoader {
                     }
                     if (module instanceof Module) {
                         try {
-                            moduleClass.getMethod("start", String.class, Instrumentation.class).invoke(module, agentArg, inst);
+                            moduleClass.getMethod("start", String.class, Instrumentation.class).invoke(module, mode, inst);
                         } catch (Exception e) {
                             moduleClass.getMethod("release").invoke(module);
                             throw e;
@@ -127,14 +127,14 @@ public class ModuleLoader {
     /**
      * 加载所有 RASP 模块
      *
-     * @param agentArg premain 传入的命令行参数
-     * @param inst     {@link java.lang.instrument.Instrumentation}
+     * @param mode 启动模式
+     * @param inst {@link java.lang.instrument.Instrumentation}
      */
-    public static synchronized void load(String agentArg, Instrumentation inst) throws Exception {
+    public static synchronized void load(String mode, Instrumentation inst) throws Exception {
         if (instance == null) {
             synchronized (ModuleLoader.class) {
                 if (instance == null) {
-                    instance = new ModuleLoader(agentArg, inst);
+                    instance = new ModuleLoader(mode, inst);
                 }
             }
         }

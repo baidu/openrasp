@@ -15,18 +15,18 @@
 package environment
 
 import (
-	"bytes"
 	"flag"
-	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
-	"golang.org/x/crypto/ssh/terminal"
 	"log"
 	"os"
 	"os/exec"
 	"rasp-cloud/tools"
-	"syscall"
 	"rasp-cloud/conf"
+	"fmt"
+	"golang.org/x/crypto/ssh/terminal"
+	"syscall"
+	"bytes"
 )
 
 const (
@@ -107,15 +107,16 @@ func initLogger() {
 	if err != nil {
 		tools.Panic(tools.ErrCodeLogInitFailed, "failed to get current path", err)
 	}
-	if isExists, _ := tools.PathExists(currentPath + "/logs/api"); !isExists {
-		err := os.MkdirAll(currentPath+"/logs/api", os.ModePerm)
+	logPath := currentPath + "/logs/api"
+	if isExists, _ := tools.PathExists(logPath); !isExists {
+		err := os.MkdirAll(logPath, os.ModePerm)
 		if err != nil {
 			tools.Panic(tools.ErrCodeLogInitFailed, "failed to create logs/api dir", err)
 		}
 	}
 	logs.SetLogFuncCall(true)
 	logs.SetLogger(logs.AdapterFile,
-		`{"filename":"logs/api/agent-cloud.log","daily":true,"maxdays":10,"perm":"0777"}`)
+		`{"filename":"`+logPath+`/agent-cloud.log","daily":true,"maxdays":10,"perm":"0777"}`)
 
 }
 

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"rasp-cloud/controllers"
@@ -19,10 +18,7 @@ var (
 // @router /dashboard [post]
 func (o *ReportController) Search() {
 	var query map[string]interface{}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &query)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
-	}
+	o.UnMarshalJson(&query)
 	startTimeParam := query["start_time"]
 	if startTimeParam == nil {
 		o.ServeError(http.StatusBadRequest, "start_time cannot be empty")
@@ -72,7 +68,7 @@ func (o *ReportController) Search() {
 	if !ok {
 		o.ServeError(http.StatusBadRequest, "app_id must be string")
 	}
-	_, err = models.GetAppById(appId)
+	_, err := models.GetAppById(appId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get app", err)
 	}
