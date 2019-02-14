@@ -723,17 +723,14 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message TSRMLS_DC)
         }
         add_assoc_zval(common_info, "stack_trace", trace);
     }
-    if (OPENRASP_CONFIG(decompile.enable))
+    zval *source_code_arr = NULL;
+    MAKE_STD_ZVAL(source_code_arr);
+    array_init(source_code_arr);
+    if (OPENRASP_CONFIG(decompile.enable) && in_request)
     {
-        zval *source_code_arr = NULL;
-        MAKE_STD_ZVAL(source_code_arr);
-        array_init(source_code_arr);
-        if (in_request)
-        {
-            format_source_code_arr(source_code_arr TSRMLS_CC);
-        }
-        add_assoc_zval(common_info, "source_code", source_code_arr);
+        format_source_code_arr(source_code_arr TSRMLS_CC);
     }
+    add_assoc_zval(common_info, "source_code", source_code_arr);
 
     if (php_array_merge(Z_ARRVAL_P(common_info), Z_ARRVAL_P(z_message), 1 TSRMLS_CC))
     {
