@@ -47,7 +47,7 @@ func init() {
 	}
 	session, err = mgo.DialWithInfo(dialInfo)
 	if err != nil {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "failed find MongoDB server: ", err)
+		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to find MongoDB server: ", err)
 	}
 	info, err := session.BuildInfo()
 	if err != nil {

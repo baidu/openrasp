@@ -58,7 +58,7 @@ type SearchAttackParam struct {
 		AttackUrl      string    `json:"url,omitempty"`
 		LocalIp        string    `json:"local_ip,omitempty"`
 		AttackType     *[]string `json:"attack_type,omitempty"`
-		InterceptState string    `json:"intercept_state,omitempty"`
+		InterceptState *[]string `json:"intercept_state,omitempty"`
 	} `json:"data"`
 }
 
@@ -230,6 +230,12 @@ func SearchLogs(startTime int64, endTime int64, query map[string]interface{}, so
 	if query != nil {
 		for key, value := range query {
 			if key == "attack_type" {
+				if v, ok := value.([]interface{}); ok {
+					filterQueries = append(filterQueries, elastic.NewTermsQuery(key, v...))
+				} else {
+					filterQueries = append(filterQueries, elastic.NewTermQuery(key, value))
+				}
+			} else if key == "intercept_state" {
 				if v, ok := value.([]interface{}); ok {
 					filterQueries = append(filterQueries, elastic.NewTermsQuery(key, v...))
 				} else {
