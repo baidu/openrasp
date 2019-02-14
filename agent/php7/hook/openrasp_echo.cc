@@ -38,8 +38,8 @@ int echo_handler(zend_execute_data *execute_data)
 #endif
     if (inc_filename != nullptr &&
         !openrasp_check_type_ignored(XSS_ECHO) &&
-        echo_parameter_filter(inc_filename) &&
-        openrasp_zval_in_request(inc_filename))
+        openrasp_zval_in_request(inc_filename) &&
+        echo_parameter_filter(inc_filename))
     {
         zval attack_params;
         array_init(&attack_params);

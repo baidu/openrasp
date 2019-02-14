@@ -25,8 +25,8 @@ int echo_handler(ZEND_OPCODE_HANDLER_ARGS)
     zend_op *opline = execute_data->opline;
     if (!openrasp_check_type_ignored(XSS_ECHO TSRMLS_CC) &&
         OPENRASP_OP1_TYPE(opline) == IS_VAR &&
-        echo_parameter_filter(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC) &&
-        openrasp_zval_in_request(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC))
+        openrasp_zval_in_request(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC) &&
+        echo_parameter_filter(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC))
     {
         zval *attack_params;
         MAKE_STD_ZVAL(attack_params);
