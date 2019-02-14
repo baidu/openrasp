@@ -726,16 +726,13 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message)
         }
         add_assoc_zval(&common_info, "stack_trace", &trace);
     }
-    if (OPENRASP_CONFIG(decompile.enable))
+    zval source_code_arr;
+    array_init(&source_code_arr);
+    if (OPENRASP_CONFIG(decompile.enable) && in_request)
     {
-        zval source_code_arr;
-        array_init(&source_code_arr);
-        if (in_request)
-        {
-            format_source_code_arr(&source_code_arr);
-        }
-        add_assoc_zval(&common_info, "source_code", &source_code_arr);
+        format_source_code_arr(&source_code_arr);
     }
+    add_assoc_zval(&common_info, "source_code", &source_code_arr);
     if (php_array_merge(Z_ARRVAL(common_info), Z_ARRVAL_P(z_message)))
     {
         std::string str_message = json_encode_from_zval(&common_info);
