@@ -95,7 +95,6 @@ export var attack_types = {
   deserialization: 'Transformer 反序列化',
   xss_echo: 'Echo XSS 跨站脚本攻击',
   xss_userinput: 'BODY XSS 跨站脚本攻击',
-  // webshell: 'WebShell 后门',
   webshell_callable: 'WebShell - 变形后门',
   webshell_eval: 'WebShell - 中国菜刀',
   webshell_command: 'WebShell - 命令执行',
@@ -133,6 +132,14 @@ export function block_status2name(status) {
 }
 
 export function attack_type2name(id) {
+  if (id == 'webshell') {
+    return 'WebShell 网站后门'
+  }
+
+  if (id == 'xss') {
+    return 'XSS 跨站脚本攻击'
+  }
+
   return attack_types[id] || id
 }
 
