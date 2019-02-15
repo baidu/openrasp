@@ -96,7 +96,7 @@ public class FileInputStreamHook extends AbstractClassHook {
 
             String hookType = CheckParameter.Type.READFILE.getName();
             //如果在lru缓存中不进检测
-            if (!HookHandler.commonLRUCache.isContainsKey(hookType + new Gson().toJson(params))) {
+            if (!Config.commonLRUCache.isContainsKey(hookType + new Gson().toJson(params))) {
                 HookHandler.doCheck(CheckParameter.Type.READFILE, params);
             }
         }

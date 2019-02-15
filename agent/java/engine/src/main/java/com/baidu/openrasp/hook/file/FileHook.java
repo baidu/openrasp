@@ -101,7 +101,7 @@ public class FileHook extends AbstractClassHook {
             }
             String hookType = CheckParameter.Type.DIRECTORY.getName();
             //如果在lru缓存中不进检测
-            if (params != null && !HookHandler.commonLRUCache.isContainsKey(hookType + new Gson().toJson(params))) {
+            if (params != null && !Config.commonLRUCache.isContainsKey(hookType + new Gson().toJson(params))) {
                 HookHandler.doCheck(CheckParameter.Type.DIRECTORY, params);
             }
         }

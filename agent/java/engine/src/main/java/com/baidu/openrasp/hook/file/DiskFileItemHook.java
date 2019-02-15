@@ -17,6 +17,8 @@
 package com.baidu.openrasp.hook.file;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
@@ -29,7 +31,6 @@ import javassist.NotFoundException;
 import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 /**
@@ -82,9 +83,11 @@ public class DiskFileItemHook extends AbstractClassHook {
                     content = Arrays.copyOf(content, 4 * 1024);
                 }
                 params.put("content", params, new String(content, "UTF-8"));
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-                params.put("content", params, "[rasp error:" + e.getMessage() + "]");
+            } catch (Exception e) {
+                String message = e.getMessage();
+                int errorCode = ErrorType.HOOK_ERROR.getCode();
+                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                params.put("content", params, "");
             }
             boolean isFiled = (Boolean) Reflection.invokeMethod(file, "isFormField", new Class[]{});
             if (!isFiled) {

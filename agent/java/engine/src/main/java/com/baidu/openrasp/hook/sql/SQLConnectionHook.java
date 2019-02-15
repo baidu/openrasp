@@ -69,6 +69,7 @@ public class SQLConnectionHook extends AbstractClassHook {
             Scriptable params = cx.newObject(cx.getScope());
             params.put("server", params, server);
             params.put("errorCode", params, errorCode);
+            params.put("query", params, "");
             String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
             params.put("message", params, message);
             HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.SQL, params);
@@ -79,12 +80,14 @@ public class SQLConnectionHook extends AbstractClassHook {
      * 捕捉hook method抛出的异常
      */
     public void addCatch(CtClass ctClass, String methodName, String desc) throws NotFoundException, CannotCompileException {
-        LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc);
-        if (methods != null && methods.size() > 0) {
-            for (CtBehavior method : methods) {
-                if (method != null && "mysql".equals(this.type)) {
-                    String errorSrc = "com.baidu.openrasp.hook.sql.SQLConnectionHook.checkSQLErrorCode(" + "\"" + type + "\"" + ",$e);";
-                    method.addCatch("{" + errorSrc + " throw $e;}", ClassPool.getDefault().get("java.sql.SQLException"));
+        if ("mysql".equals(this.type)) {
+            LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc);
+            if (methods != null && methods.size() > 0) {
+                for (CtBehavior method : methods) {
+                    if (method != null) {
+                        String errorSrc = "com.baidu.openrasp.hook.sql.SQLConnectionHook.checkSQLErrorCode(" + "\"" + type + "\"" + ",$e);";
+                        method.addCatch("{" + errorSrc + " throw $e;}", ClassPool.getDefault().get("java.sql.SQLException"));
+                    }
                 }
             }
         }

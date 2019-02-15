@@ -14,7 +14,7 @@ const watchFileOptions = {
     interval: 400
 };
 const SERVER_HOME = process.env['SERVER_HOME'];
-const CONF_FILE = SERVER_HOME + '/rasp/conf/rasp.yaml';
+const CONF_FILE = SERVER_HOME + '/rasp/conf/openrasp.yml';
 const RASP_LOG_FILE = SERVER_HOME + '/rasp/logs/rasp/rasp.log';
 const PLUGIN_LOG = SERVER_HOME + '/rasp/logs/plugin/plugin.log';
 chai.should();

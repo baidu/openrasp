@@ -75,7 +75,7 @@ public class App {
         options.addOption("appid", true, "Value of cloud.appid");
         options.addOption("appsecret", true, "Value of cloud.appsecret");
         options.addOption("backendurl", true, "Value of cloud.backendurl");
-        options.addOption("keepconf", false, "If the parameter exists, reserved rasp.yaml");
+        options.addOption("keepconf", false, "If the parameter exists, reserved openrasp.yml");
         options.addOption("help", false, "print options information");
         options.addOption("h", false, "print options information");
         options.addOption("attach", false, "If the parameter exists, use 'attach' mode to install the rasp");
@@ -169,7 +169,7 @@ public class App {
                 "  -appid        Value of cloud.appid\n" +
                 "  -backendurl   Value of cloud.address\n" +
                 "  -appsecret    Value of cloud.appsecret\n" +
-                "  -keepconf     Do not overwrite rasp.yaml\n" +
+                "  -keepconf     Do not overwrite openrasp.yml\n" +
                 "  -help/-h      Show this dialog\n";
         System.out.println(helpMsg);
     }

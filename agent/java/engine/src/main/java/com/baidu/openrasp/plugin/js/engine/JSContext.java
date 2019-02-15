@@ -160,18 +160,18 @@ public class JSContext extends Context {
         if (checkResults.isEmpty()) {
             String hookType = parameter.getType().getName();
             if ("directory".equals(hookType)) {
-                if (HookHandler.commonLRUCache.maxSize() != 0) {
-                    HookHandler.commonLRUCache.put(hookType + new Gson().toJson(parameter.getParams()), null);
+                if (Config.commonLRUCache.maxSize() != 0) {
+                    Config.commonLRUCache.put(hookType + new Gson().toJson(parameter.getParams()), null);
                 }
             }
             if ("readFile".equals(hookType)) {
-                if (HookHandler.commonLRUCache.maxSize() != 0) {
-                    HookHandler.commonLRUCache.put(hookType + new Gson().toJson(parameter.getParams()), null);
+                if (Config.commonLRUCache.maxSize() != 0) {
+                    Config.commonLRUCache.put(hookType + new Gson().toJson(parameter.getParams()), null);
                 }
             }
             if ("writeFile".equals(hookType)) {
-                if (HookHandler.commonLRUCache.maxSize() != 0) {
-                    HookHandler.commonLRUCache.put(hookType + new Gson().toJson(parameter.getParams()), null);
+                if (Config.commonLRUCache.maxSize() != 0) {
+                    Config.commonLRUCache.put(hookType + new Gson().toJson(parameter.getParams()), null);
                 }
             }
         }

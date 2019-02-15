@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook.ssrf;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
@@ -74,7 +75,7 @@ public abstract class AbstractSSRFHook extends AbstractClassHook {
         Scriptable array = cx.newArray(cx.getScope(), ip.toArray());
         params.put("ip", params, array);
         //如果在lru缓存中不进检测
-        if (!HookHandler.commonLRUCache.isContainsKey(new Gson().toJson(params))) {
+        if (!Config.commonLRUCache.isContainsKey(new Gson().toJson(params))) {
             HookHandler.doCheck(CheckParameter.Type.SSRF, params);
         }
     }

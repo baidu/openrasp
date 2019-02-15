@@ -92,7 +92,7 @@ public class FileOutputStreamHook extends AbstractClassHook {
             params.put("stack", params, stackArray);
             String hookType = CheckParameter.Type.WRITEFILE.getName();
             //如果在lru缓存中不进检测
-            if (!HookHandler.commonLRUCache.isContainsKey(hookType + new Gson().toJson(params))) {
+            if (!Config.commonLRUCache.isContainsKey(hookType + new Gson().toJson(params))) {
                 HookHandler.doCheck(CheckParameter.Type.WRITEFILE, params);
             }
         }

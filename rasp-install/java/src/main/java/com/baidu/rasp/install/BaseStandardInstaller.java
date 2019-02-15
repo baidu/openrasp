@@ -58,7 +58,7 @@ public abstract class BaseStandardInstaller implements Installer {
         }
         File installDir = new File(getInstallPath(serverRoot));
 
-        File configFile = new File(installDir.getCanonicalPath() + File.separator + "conf" + File.separator + "rasp.yaml");
+        File configFile = new File(installDir.getCanonicalPath() + File.separator + "conf" + File.separator + "openrasp.yml");
         if (!configFile.exists()) {
             firstInstall = true;
         }
@@ -102,15 +102,15 @@ public abstract class BaseStandardInstaller implements Installer {
     private boolean generateConfig(String dir, boolean firstInstall) {
         try {
             String sep = File.separator;
-            File target = new File(dir + sep + "conf" + sep + "rasp.yaml");
+            File target = new File(dir + sep + "conf" + sep + "openrasp.yml");
 
-            System.out.println("Generating \"rasp.yaml\"\n- " + target.getAbsolutePath());
+            System.out.println("Generating \"openrasp.yml\"\n- " + target.getAbsolutePath());
             if (target.exists() && App.keepConfig) {
-                System.out.println("- Already exists and reserved rasp.yaml, continuing ..");
+                System.out.println("- Already exists and reserved openrasp.yml, continuing ..");
                 return true;
             }
             if (target.exists() && !firstInstall) {
-                File reserve = new File(dir + sep + "conf" + sep + "rasp.yaml.bak");
+                File reserve = new File(dir + sep + "conf" + sep + "openrasp.yml.bak");
                 if (!reserve.exists()) {
                     reserve.createNewFile();
                 }
@@ -119,14 +119,14 @@ public abstract class BaseStandardInstaller implements Installer {
                 IOUtils.copy(inputStream, outputStream);
                 outputStream.close();
                 inputStream.close();
-                System.out.println("- Backed up rasp.yaml to rasp.yaml.bak");
+                System.out.println("- Backed up openrasp.yml to openrasp.yml.bak");
             } else {
                 System.out.println("- Create " + target.getAbsolutePath());
                 target.getParentFile().mkdir();
                 target.createNewFile();
             }
             FileWriter writer = new FileWriter(target);
-            InputStream is = this.getClass().getResourceAsStream("/rasp.yaml");
+            InputStream is = this.getClass().getResourceAsStream("/openrasp.yml");
             IOUtils.copy(is, writer, "UTF-8");
             is.close();
             writer.close();
@@ -189,7 +189,7 @@ public abstract class BaseStandardInstaller implements Installer {
 
         try {
             if (url != null && appId != null && appSecret != null) {
-                String path = getInstallPath(serverRoot) + File.separator + "conf" + File.separator + "rasp.yaml";
+                String path = getInstallPath(serverRoot) + File.separator + "conf" + File.separator + "openrasp.yml";
                 File yamlFile = new File(path);
                 if (yamlFile.exists()) {
                     Map<String, Object> map = new HashMap<String, Object>();
@@ -209,7 +209,7 @@ public abstract class BaseStandardInstaller implements Installer {
                 }
             }
         } catch (Exception e) {
-            System.out.println("Unable to update rasp.yaml: failed to add cloud control settings: " + e.getMessage());
+            System.out.println("Unable to update openrasp.yml: failed to add cloud control settings: " + e.getMessage());
         }
     }
 

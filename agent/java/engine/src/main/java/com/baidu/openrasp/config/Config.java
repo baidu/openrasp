@@ -16,7 +16,6 @@
 
 package com.baidu.openrasp.config;
 
-import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
@@ -59,7 +58,7 @@ public class Config extends FileScanListener {
         LOG_MAX_STACK("log.maxstack", "50"),
         LOG_MAX_BACKUP("log.maxbackup", "30"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
-        SQL_CACHE_CAPACITY("lru.max_size", "1000"),
+        SQL_CACHE_CAPACITY("lru.max_size", "1024"),
         SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
         PLUGIN_FILTER("plugin.filter", "true"),
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
@@ -112,11 +111,13 @@ public class Config extends FileScanListener {
     private static final String HOOKS_WHITE = "hook.white";
     private static final String RESPONSE_HEADERS = "inject.custom_headers";
     private static final String CONFIG_DIR_NAME = "conf";
-    private static final String CONFIG_FILE_NAME = "rasp.yaml";
+    private static final String CONFIG_FILE_NAME = "openrasp.yml";
     public static final int REFLECTION_STACK_START_INDEX = 0;
     public static final Logger LOGGER = Logger.getLogger(Config.class.getName());
     public static String baseDirectory;
     private static Integer watchId;
+    //全局lru的缓存
+    public static LRUCache<String, String> commonLRUCache;
 
     private String configFileDir;
     private int pluginMaxStack;
@@ -162,6 +163,8 @@ public class Config extends FileScanListener {
         if (!getConfig().getCloudSwitch()) {
             CustomResponseHtml.load(baseDirectory);
         }
+        //初始化全局缓存
+        commonLRUCache = new LRUCache<String, String>(getConfig().getSqlCacheCapacity());
         LOGGER.info("baseDirectory: " + baseDirectory);
     }
 
@@ -183,7 +186,7 @@ public class Config extends FileScanListener {
                 addConfigFileMonitor();
             }
         } catch (FileNotFoundException e) {
-            handleException("Could not find rasp.yaml, using default settings: " + e.getMessage(), e);
+            handleException("Could not find openrasp.yml, using default settings: " + e.getMessage(), e);
         } catch (JNotifyException e) {
             handleException("add listener on " + configFileDir + " failed because:" + e.getMessage(), e);
         } catch (IOException e) {
@@ -200,9 +203,9 @@ public class Config extends FileScanListener {
                 properties = yaml.loadAs(new FileInputStream(file), Map.class);
             }
         } catch (Exception e) {
-            String message = "rasp.yaml parsing failed";
+            String message = "openrasp.yml parsing failed";
             int errorCode = ErrorType.CONFIG_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         } finally {
             TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
             // 出现解析问题使用默认值
@@ -240,6 +243,10 @@ public class Config extends FileScanListener {
     public synchronized void loadConfigFromCloud(Map<String, Object> configMap, boolean isInit) {
         TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
         for (Map.Entry<String, Object> entry : configMap.entrySet()) {
+            //开启云控必须参数不能云控
+            if (entry.getKey().startsWith("cloud.")) {
+                continue;
+            }
             if (entry.getKey().equals(HOOKS_WHITE)) {
                 if (entry.getValue() instanceof JsonObject) {
                     Map<String, Object> hooks = CloudUtils.getMapGsonObject().fromJson((JsonObject) entry.getValue(), Map.class);
@@ -277,9 +284,9 @@ public class Config extends FileScanListener {
                     DynamicConfigAppender.setLogMaxBackup();
                 }
             } catch (IOException e) {
-                String message = "update rasp.yaml failed";
+                String message = "update openrasp.yml failed";
                 int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
+                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             }
         }
     }
@@ -323,13 +330,13 @@ public class Config extends FileScanListener {
             setConfig(key, item.defaultValue, false);
             String message = "set config " + item.key + " failed, use default value : " + value;
             int errorCode = ErrorType.CONFIG_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         }
     }
 
     private void handleException(String message, Exception e) {
         int errorCode = ErrorType.CONFIG_ERROR.getCode();
-        LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
+        LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         System.out.println(message);
     }
 
@@ -408,7 +415,7 @@ public class Config extends FileScanListener {
         } catch (Exception e) {
             String message = "update " + directory.getAbsolutePath() + " failed";
             int errorCode = ErrorType.CONFIG_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         }
     }
 
@@ -835,9 +842,8 @@ public class Config extends FileScanListener {
         if (this.sqlCacheCapacity <= 0) {
             this.sqlCacheCapacity = 0;
         }
-        if (HookHandler.commonLRUCache.maxSize() != this.sqlCacheCapacity) {
-            HookHandler.commonLRUCache.clear();
-            HookHandler.commonLRUCache = new LRUCache<String, String>(this.sqlCacheCapacity);
+        if (Config.commonLRUCache == null || Config.commonLRUCache.maxSize() != this.sqlCacheCapacity) {
+            Config.commonLRUCache = new LRUCache<String, String>(this.sqlCacheCapacity);
         }
     }
 
@@ -1261,7 +1267,7 @@ public class Config extends FileScanListener {
                         } catch (Exception e) {
                             String message = "Hook type " + s + " does not exist";
                             int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
+                            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
                         }
                     }
                     if (hook.getKey().equals("*")) {

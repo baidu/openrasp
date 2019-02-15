@@ -139,8 +139,8 @@ public class SSRFChecker extends ConfigurableChecker {
         }
         // 检测无威胁的url加入lru缓存
         if (result.isEmpty()) {
-            if (HookHandler.commonLRUCache.maxSize() != 0) {
-                HookHandler.commonLRUCache.put(new Gson().toJson(checkParameter.getParams()), null);
+            if (Config.commonLRUCache.maxSize() != 0) {
+                Config.commonLRUCache.put(new Gson().toJson(checkParameter.getParams()), null);
             }
         }
         return result;

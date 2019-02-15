@@ -159,16 +159,15 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                                         infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD,
                                                 "Tomcat security baseline - detected empty password in " +
                                                         userFile.getAbsolutePath() + ", username is " + userName, true, params));
-                                    } else {
-                                        if (weakWords.contains(userName) && weakWords.contains(password)) {
-                                            Map<String, Object> params = new HashMap<String, Object>();
-                                            params.put("config_file", userFile.getAbsolutePath());
-                                            params.put("username", userName);
-                                            params.put("password", password);
-                                            infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD,
-                                                    "Tomcat security baseline - detected weak username/password combination in " + userFile.getAbsolutePath() +
-                                                            ", username is" + userName, true, params));
-                                        }
+                                    }
+                                    if (weakWords.contains(userName) && weakWords.contains(password)) {
+                                        Map<String, Object> params = new HashMap<String, Object>();
+                                        params.put("config_file", userFile.getAbsolutePath());
+                                        params.put("username", userName);
+                                        params.put("password", password);
+                                        infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD,
+                                                "Tomcat security baseline - detected weak username/password combination in " + userFile.getAbsolutePath() +
+                                                        ", username is " + userName, true, params));
                                     }
                                 }
                             }

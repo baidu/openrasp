@@ -94,7 +94,7 @@ public class JSContextFactory extends ContextFactory {
                     }
                 }
                 //插件更新成功后，清空全局的LRU缓存
-                HookHandler.commonLRUCache.clear();
+                Config.commonLRUCache.clear();
                 //插件更新成功后，设置algorithmConfig
                 algorithmConfigSet();
             } catch (Exception e) {
@@ -128,7 +128,7 @@ public class JSContextFactory extends ContextFactory {
                 globalScope = global;
                 RASP = tempRASP;
                 //插件更新成功后，清空全局的LRU缓存
-                HookHandler.commonLRUCache.clear();
+                Config.commonLRUCache.clear();
                 //插件更新成功后，设置algorithmConfig
                 algorithmConfigSet();
             } catch (Throwable e) {

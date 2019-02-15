@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook.sql;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
@@ -164,7 +165,7 @@ public class SQLStatementHook extends AbstractSqlHook {
      * @param stmt sql语句
      */
     public static void checkSQL(String server, Object statement, String stmt) {
-        if (stmt != null && !stmt.isEmpty() && !HookHandler.commonLRUCache.isContainsKey(server.trim() + stmt.trim())) {
+        if (stmt != null && !stmt.isEmpty() && !Config.commonLRUCache.isContainsKey(server.trim() + stmt.trim())) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             String connectionId = getSqlConnectionId(server, statement);
@@ -184,10 +185,19 @@ public class SQLStatementHook extends AbstractSqlHook {
      * @param server 数据库类型
      * @param e      sql执行抛出的异常
      */
-    public static void checkSQLErrorCode(String server, SQLException e) {
+    public static void checkSQLErrorCode(String server, SQLException e, Object[] object) {
         JSContext cx = JSContextFactory.enterAndInitContext();
         Scriptable params = cx.newObject(cx.getScope());
         params.put("server", params, server);
+        try {
+            if (object != null && object.length > 0) {
+                params.put("query", params, String.valueOf(object[0]));
+            } else {
+                params.put("query", params, "");
+            }
+        } catch (Exception e1) {
+            params.put("query", params, "");
+        }
         params.put("errorCode", params, String.valueOf(e.getErrorCode()));
         String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
         params.put("message", params, message);
