@@ -76,7 +76,12 @@ ZEND_END_ARG_INFO()
 
 static const zend_function_entry openrasp_functions[] = {
     PHP_FE(openrasp_ob_handler, arginfo_openrasp_ob_handler)
-        PHP_FE_END};
+#if PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION == 3 && PHP_RELEASE_VERSION < 7
+        {NULL, NULL, NULL}
+#else
+        PHP_FE_END
+#endif
+};
 
 static PHP_FUNCTION(openrasp_ob_handler)
 {
