@@ -50,7 +50,7 @@ void openrasp_detect_output(INTERNAL_FUNCTION_PARAMETERS)
         }
         if (status == SUCCESS)
         {
-            set_location_header(TSRMLS_C);
+            reset_response(TSRMLS_C);
             RETVAL_STRING("", 1);
         }
     }
@@ -79,7 +79,7 @@ static int openrasp_output_handler(void **nothing, php_output_context *output_co
         }
         if (status == SUCCESS)
         {
-            set_location_header(TSRMLS_C);
+            reset_response(TSRMLS_C);
         }
     }
     return status;

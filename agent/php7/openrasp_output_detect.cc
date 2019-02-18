@@ -47,7 +47,7 @@ static int openrasp_output_handler(void **nothing, php_output_context *output_co
         }
         if (status == SUCCESS)
         {
-            set_location_header();
+            reset_response();
         }
     }
     return status;
