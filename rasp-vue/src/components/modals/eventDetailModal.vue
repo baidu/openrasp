@@ -53,7 +53,7 @@
               <div class="h6" v-if="data.source_code && data.source_code.length">
                 应用源代码
               </div>
-              <pre v-if="data.stack_trace">{{ data.source_code.join("\n") }}</pre>
+              <pre v-if="data.source_code && data.source_code.length">{{ data.source_code.join("\n") }}</pre>
 
             </div>
             <div id="home" class="tab-pane fade" role="tabpanel" aria-labelledby="home-tab">
