@@ -72,44 +72,41 @@ public class Decompiler {
     }
 
     public static ArrayList<String> getAlarmPoint(StackTraceElement[] stackTraceElements, String appBasePath) {
-        Map<String, String> result = new LinkedHashMap<String, String>();
-        StackTraceFilter traceFilter = new StackTraceFilter();
-        traceFilter.handleStackTrace(stackTraceElements);
-        for (Map.Entry<String, Integer> entry : traceFilter.class_lineNumber.entrySet()) {
-            String description = entry.getKey() + "." + traceFilter.class_method.get(entry.getKey()) + "(" + entry.getValue() + ")";
+        ArrayList<String> result = new ArrayList<String>();
+        for (StackTraceElement element: stackTraceElements){
+            String className = element.getClassName();
+            String methodName = element.getMethodName();
+            int lineNumber = element.getLineNumber();
+            String description = className + "." + methodName + "(" + lineNumber + ")";
             if (decompileCache.isContainsKey(description)) {
-                result.put(description, decompileCache.get(description));
+                result.add(decompileCache.get(description));
                 continue;
             }
             try {
-                String simpleName = entry.getKey().substring(entry.getKey().lastIndexOf(".") + 1) + ".class";
-                Class clazz = Thread.currentThread().getContextClassLoader().loadClass(entry.getKey());
-                String src = getDecompilerString(clazz.getResourceAsStream(simpleName), entry.getKey());
+                String simpleName =className.substring(className.lastIndexOf(".") + 1) + ".class";
+                Class clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+                String src = getDecompilerString(clazz.getResourceAsStream(simpleName), className);
                 if (!src.isEmpty()) {
                     boolean isFind = false;
                     for (String line : src.split(System.getProperty("line.separator"))) {
-                        String matched = Decompiler.matchStringByRegularExpression(line, traceFilter.class_lineNumber.get(entry.getKey()));
+                        String matched = Decompiler.matchStringByRegularExpression(line, lineNumber);
                         if (!"".equals(matched)) {
                             isFind = true;
-                            result.put(description, matched);
+                            result.add(matched);
                             decompileCache.put(description, matched);
                             break;
                         }
                     }
                     if (!isFind) {
-                        result.put(description, "");
+                        result.add( "");
                     }
                 } else {
-                    result.put(description, "");
+                    result.add( "");
                 }
             } catch (Exception e) {
-                result.put(description, "");
+                result.add("");
             }
         }
-        ArrayList<String> list = new ArrayList<String>(result.size());
-        for (Map.Entry<String, String> entry : result.entrySet()) {
-            list.add(entry.getValue());
-        }
-        return list;
+        return result;
     }
 }
