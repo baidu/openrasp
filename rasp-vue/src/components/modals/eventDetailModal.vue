@@ -45,15 +45,19 @@
                 [{{ attack_type2name(data.attack_type) }}] {{ data.plugin_message }}
               </p>
               <attack_params ref="attack_params" />
+
               <div class="h6" v-if="data.stack_trace">
                 应用堆栈
               </div>
               <pre v-if="data.stack_trace">{{ data.stack_trace }}</pre>
               
-              <div class="h6" v-if="data.source_code && data.source_code.length">
-                应用源代码
+              <div v-if="data.merged_code">
+                <div class="h6">
+                  应用源代码
+                </div>
+                <pre><div v-for="(row, index) in data.merged_code" :key="index">{{data.merged_code.length - index}}. {{row.stack}}<br/>{{row.code}}
+                </div></pre>
               </div>
-              <pre v-if="data.source_code && data.source_code.length">{{ data.source_code.join("\n") }}</pre>
 
             </div>
             <div id="home" class="tab-pane fade" role="tabpanel" aria-labelledby="home-tab">
@@ -149,7 +153,10 @@ export default {
     return {
       data: {
         url: '',
-        attack_location: {}
+        attack_location: {},
+        source_code: [],
+        stack_trace: '',
+        merged_code: []
       }
     }
   },
@@ -158,8 +165,31 @@ export default {
     showModal(data) {
       this.data = data
       this.$refs.attack_params.setData(data)
+      this.mergeStackAndSource(data)
 
       $('#showEventDetailModal').modal()
+    },
+    mergeStackAndSource(data) {
+      if (! data.source_code) {
+        return
+      }
+      
+      let stack_trace = data.stack_trace.split("\n")
+      if (stack_trace.length != data.source_code.length) {
+        console.error("Error: stack_trace size " + stack_trace.length + " is different from source_code size " + data.source_code.length)
+        return
+      }
+
+      this.data.merged_code = []
+      for (let i = 0; i < stack_trace.length; i ++) {
+        var stack = stack_trace[i]
+        var code  = data.source_code[i].trim()
+
+        this.data.merged_code.push({
+          stack: stack,
+          code: code
+        })
+      }
     }
   }
 }
