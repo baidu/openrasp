@@ -54,6 +54,7 @@ void openrasp_detect_output(INTERNAL_FUNCTION_PARAMETERS)
             RETVAL_STRING("", 1);
         }
     }
+    RETVAL_STRINGL(input, input_len, 1);
 }
 
 #else
