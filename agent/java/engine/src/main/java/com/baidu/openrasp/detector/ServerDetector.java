@@ -75,6 +75,8 @@ public abstract class ServerDetector {
             DynamicConfigAppender.createHttpAppender(AppenderMappedLogger.HTTP_POLICY_ALARM.getLogger(),
                     AppenderMappedLogger.HTTP_POLICY_ALARM.getAppender());
             new Register();
+        }else {
+            checkServerPolicy();
         }
     }
 
