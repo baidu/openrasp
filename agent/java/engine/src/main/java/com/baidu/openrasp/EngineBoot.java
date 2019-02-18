@@ -21,6 +21,7 @@ import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
 import com.baidu.openrasp.plugin.js.engine.JsPluginManager;
 import com.baidu.openrasp.tool.model.ApplicationModel;
+import com.baidu.openrasp.tool.model.BuildRASPModel;
 import com.baidu.openrasp.transformer.CustomClassTransformer;
 import org.apache.log4j.Logger;
 
@@ -127,10 +128,8 @@ public class EngineBoot implements Module {
         projectVersion = (projectVersion == null ? "UNKNOWN" : projectVersion);
         buildTime = (buildTime == null ? "UNKNOWN" : buildTime);
         gitCommit = (gitCommit == null ? "UNKNOWN" : gitCommit);
-        HashMap<String, String> applicationInfo = ApplicationModel.getApplicationInfo();
-        applicationInfo.put("projectVersion", projectVersion);
-        applicationInfo.put("buildTime", buildTime);
-        applicationInfo.put("gitCommit", gitCommit);
+        //缓存rasp的build信息
+        BuildRASPModel.initRaspInfo(projectVersion,buildTime,gitCommit);
     }
 
 }

@@ -24,6 +24,7 @@ import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.tool.model.ApplicationModel;
+import com.baidu.openrasp.tool.model.BuildRASPModel;
 import com.google.gson.Gson;
 
 import java.util.HashMap;
@@ -55,7 +56,8 @@ public class Register {
                 if (CloudUtils.checkRequestResult(response)) {
                     this.registerFlag = true;
                     Config.getConfig().setHookWhiteAll("false");
-                    System.out.println("[OpenRASP] RASP agent successfully registered, enabling remote management");
+                    System.out.println("[OpenRASP] RASP agent successfully registered, enabling remote management, please refer to rasp logs for details");
+                    CloudManager.LOGGER.info("[OpenRASP] RASP agent successfully registered,registration details are as follows: \n" + content);
                     CloudManager.init();
                 } else {
                     System.out.println("[OpenRASP] Failed to register RASP agent, please refer to rasp logs for details");
@@ -75,7 +77,7 @@ public class Register {
     private static Map<String, Object> GenerateParameters() {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("id", CloudCacheModel.getInstance().getRaspId());
-        params.put("version", ApplicationModel.getRaspVersion());
+        params.put("version", BuildRASPModel.getRaspVersion());
         params.put("hostname", OSUtil.getHostName());
         params.put("language", "java");
         params.put("language_version", System.getProperty("java.version"));
@@ -85,7 +87,7 @@ public class Register {
         params.put("rasp_home", raspHome);
         params.put("register_ip", CloudCacheModel.getInstance().getMasterIp());
         int heartbeatInterval = Config.getConfig().getHeartbeatInterval();
-        params.put("heartbeat_interval",heartbeatInterval);
+        params.put("heartbeat_interval", heartbeatInterval);
         return params;
     }
 }

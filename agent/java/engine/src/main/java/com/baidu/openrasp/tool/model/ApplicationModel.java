@@ -31,7 +31,16 @@ public class ApplicationModel {
 
     static {
         applicationInfo = new HashMap<String, String>(8);
-        applicationInfo.put("os", System.getProperty("os.name"));
+        String serverName = System.getProperty("os.name");
+        if (serverName != null && serverName.startsWith("Linux")) {
+            applicationInfo.put("os", "Linux");
+        } else if (serverName != null && serverName.startsWith("Windows")) {
+            applicationInfo.put("os", "Windows");
+        } else if (serverName != null && serverName.startsWith("Mac")) {
+            applicationInfo.put("os", "Mac");
+        } else {
+            applicationInfo.put("os", serverName);
+        }
         applicationInfo.put("language", "java");
         applicationInfo.put("server", "");
         applicationInfo.put("version", "");
@@ -55,10 +64,6 @@ public class ApplicationModel {
 
     public static String getServerName() {
         return applicationInfo.get("server");
-    }
-
-    public static String getRaspVersion() {
-        return applicationInfo.get("projectVersion");
     }
 
 }
