@@ -243,7 +243,7 @@ static std::string resolve_request_id(std::string str TSRMLS_DC)
     return str;
 }
 
-void set_location_header(TSRMLS_D)
+void set_location_header(int response_code TSRMLS_DC)
 {
     if (!SG(headers_sent))
     {
@@ -251,8 +251,18 @@ void set_location_header(TSRMLS_D)
         sapi_header_line header;
         header.line = const_cast<char *>(location.c_str());
         header.line_len = location.length();
-        header.response_code = OPENRASP_CONFIG(block.status_code);
+        header.response_code = response_code;
         sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
+    }
+}
+
+void reset_response(TSRMLS_D)
+{
+    int response_code = OPENRASP_CONFIG(block.status_code);
+    SG(sapi_headers).http_response_code = response_code;
+    if (response_code >= 300 && response_code < 400)
+    {
+        set_location_header(response_code TSRMLS_CC);
     }
 }
 
@@ -277,7 +287,7 @@ void handle_block(TSRMLS_D)
 #error "Unsupported PHP version, please contact OpenRASP team for more information"
 #endif
 
-    set_location_header(TSRMLS_C);
+    reset_response(TSRMLS_C);
 
     {
         OpenRASPContentType::ContentType k_type = OpenRASPContentType::ContentType::cNull;

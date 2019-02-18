@@ -168,10 +168,15 @@ void CallableBlock::update()
 
 void CallableBlock::extract_callable_blacklist(Isolate *isolate)
 {
-  v8::HandleScope handle_scope(isolate);
-  auto context = isolate->GetCurrentContext();
-  auto rst = isolate->ExecScript(R"(
-        (function () {
+  std::string blacklist_strings;
+  blacklist_strings.append("[");
+  for (const auto &item : CallableBlock::default_blacklist)
+  {
+    blacklist_strings.append("\"").append(item).append("\",");
+  }
+  blacklist_strings.append("]");
+  std::string script;
+  script.append(R"( (function () {
             var blacklist
             try {
                 blacklist = RASP.algorithmConfig.webshell_callable.functions
@@ -179,12 +184,15 @@ void CallableBlock::extract_callable_blacklist(Isolate *isolate)
 
             }
             if (blacklist === undefined || !Array.isArray(blacklist)) {
-                blacklist = ["system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"]
+                blacklist = )")
+      .append(blacklist_strings)
+      .append(R"(
             }
             return blacklist
-        })()
-    )",
-                                 "extract_callable_blacklist");
+        })())");
+  v8::HandleScope handle_scope(isolate);
+  auto context = isolate->GetCurrentContext();
+  auto rst = isolate->ExecScript(script, "extract_callable_blacklist");
   if (!rst.IsEmpty())
   {
     blacklist.clear();

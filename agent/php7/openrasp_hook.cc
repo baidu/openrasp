@@ -243,7 +243,7 @@ static std::string resolve_request_id(std::string str)
     return str;
 }
 
-void set_location_header()
+void set_location_header(int response_code)
 {
     if (!SG(headers_sent))
     {
@@ -251,8 +251,18 @@ void set_location_header()
         sapi_header_line header;
         header.line = const_cast<char *>(location.c_str());
         header.line_len = location.length();
-        header.response_code = OPENRASP_CONFIG(block.status_code);
+        header.response_code = response_code;
         sapi_header_op(SAPI_HEADER_REPLACE, &header);
+    }
+}
+
+void reset_response()
+{
+    int response_code = OPENRASP_CONFIG(block.status_code);
+    SG(sapi_headers).http_response_code = response_code;
+    if (response_code >= 300 && response_code < 400)
+    {
+        set_location_header(response_code);
     }
 }
 
@@ -267,7 +277,7 @@ void handle_block()
     {
         php_output_discard_all();
     }
-    set_location_header();
+    reset_response();
 
     {
         OpenRASPContentType::ContentType k_type = OpenRASPContentType::ContentType::cNull;
