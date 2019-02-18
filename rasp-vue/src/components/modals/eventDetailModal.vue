@@ -174,7 +174,7 @@ export default {
         return
       }
       
-      let stack_trace = data.stack_trace.split("\n")
+      let stack_trace = data.stack_trace.trim().split("\n")
       if (stack_trace.length != data.source_code.length) {
         console.error("Error: stack_trace size '" + stack_trace.length + "' is different from source_code size '" + data.source_code.length + "', skipped")
         return
@@ -187,7 +187,7 @@ export default {
 
         this.data.merged_code.push({
           stack: stack,
-          code: code
+          code: code.length ? code : "(空)"
         })
       }
     }
