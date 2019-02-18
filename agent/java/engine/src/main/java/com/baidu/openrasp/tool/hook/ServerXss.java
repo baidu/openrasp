@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
  */
 public class ServerXss {
     private static final int DEFAULT_MIN_LENGTH = 15;
+    private static final String DEFAULT_XSS_REGEX = "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]";
     private static final String CONFIG_KEY_XSS_USER_INPUT = "xss_userinput";
     private static final String XSS_PARAMETER_LENGTH = "min_length";
     private static final String XSS_REGEX = "filter_regex";
@@ -36,6 +37,9 @@ public class ServerXss {
         JsonObject config = Config.getConfig().getAlgorithmConfig();
         int parameterLength = getIntElement(config, CONFIG_KEY_XSS_USER_INPUT, XSS_PARAMETER_LENGTH);
         String regex = getStringElement(config, CONFIG_KEY_XSS_USER_INPUT, XSS_REGEX);
+        if (regex == null) {
+            regex = DEFAULT_XSS_REGEX;
+        }
         HashMap<String, Object> params = null;
         Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
         int exceedLengthCount = 0;

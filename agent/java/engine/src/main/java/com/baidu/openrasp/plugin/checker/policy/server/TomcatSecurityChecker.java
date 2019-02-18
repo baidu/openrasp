@@ -128,7 +128,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
         File userFile = new File(tomcatBaseDir + File.separator + "conf/tomcat-users.xml");
         if (!(userFile.exists() && userFile.canRead())) {
             String message = getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "can not load file conf/tomcat-users.xml");
+                    "can not load file conf/tomcat-users.xml: no such file or file is not readable");
             int errorCode = ErrorType.PLUGIN_ERROR.getCode();
             LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
             return;
@@ -182,7 +182,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
         File webFile = new File(tomcatBaseDir + File.separator + "conf/web.xml");
         if (!(webFile.exists() && webFile.canRead())) {
             String message = getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "can not load file conf/web.xml");
+                    "can not load file conf/web.xml: no such file or file is not readable");
             int errorCode = ErrorType.PLUGIN_ERROR.getCode();
             LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
             return;

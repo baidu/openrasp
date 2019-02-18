@@ -96,7 +96,7 @@ public class AttackInfo extends EventInfo {
         info.put("attack_params", parameter.getParams());
         // 攻击调用栈
         StackTraceElement[] trace = filter(new Throwable().getStackTrace());
-        info.put("stack_trace", stringify(trace));
+        info.put("stack_trace", stringify(trace) != null ? stringify(trace).trim() : null);
         // 检测插件
         info.put("plugin_name", this.pluginName);
         // 插件消息
@@ -107,9 +107,9 @@ public class AttackInfo extends EventInfo {
         info.put("intercept_state", this.action);
         // 检测算法
         info.put("plugin_algorithm", this.algorithm);
-        if (Config.getConfig().getCloudSwitch()){
+        if (Config.getConfig().getCloudSwitch()) {
             // raspId
-            info.put("rasp_id",CloudCacheModel.getInstance().getRaspId());
+            info.put("rasp_id", CloudCacheModel.getInstance().getRaspId());
             // appId
             info.put("app_id", Config.getConfig().getCloudAppId());
         }
@@ -119,7 +119,7 @@ public class AttackInfo extends EventInfo {
             // 攻击来源IP
             info.put("attack_source", request.getRemoteAddr());
             // 攻击真实IP
-            info.put("client_ip",request.getClinetIp());
+            info.put("client_ip", request.getClinetIp());
             // 服务器ip
             info.put("server_nic", OSUtil.getIpAddress());
             // 被攻击目标域名
@@ -150,10 +150,10 @@ public class AttackInfo extends EventInfo {
             String referer = request.getHeader("Referer");
             info.put("referer", referer == null ? "" : referer);
             //Java反编译开关打开时，启用
-            if (Config.getConfig().getDecompileEnable()){
+            if (Config.getConfig().getDecompileEnable()) {
                 String appBasePath = request.getAppBasePath();
-                if (!appBasePath.isEmpty()){
-                    info.put("source_code", Decompiler.getAlarmPoint(trace,appBasePath));
+                if (!appBasePath.isEmpty()) {
+                    info.put("source_code", Decompiler.getAlarmPoint(trace, appBasePath));
                 }
             }
         }
