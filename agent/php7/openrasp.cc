@@ -214,10 +214,6 @@ PHP_RINIT_FUNCTION(openrasp)
             {
                 OPENRASP_G(config).SetLatestUpdateTime(config_last_update);
             }
-            else
-            {
-                openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Fail to load new config."));
-            }
         }
         // openrasp_inject must be called before openrasp_log cuz of request_id
         result = PHP_RINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
@@ -389,20 +385,35 @@ static bool update_config(openrasp::ConfigHolder *config, ConfigHolder::FromType
         std::string conf_contents;
         if (get_entire_file_content(config_file_path.c_str(), conf_contents))
         {
-            openrasp::JsonReader json_reader;
-            openrasp::YamlReader yreader;
+            std::shared_ptr<openrasp::BaseReader> config_reader = nullptr;
             switch (type)
             {
             case ConfigHolder::FromType::kJson:
-                json_reader.load(conf_contents);
-                return config->update(&json_reader);
+                config_reader.reset(new openrasp::JsonReader());
                 break;
             case ConfigHolder::FromType::kYaml:
             default:
-                yreader.load(conf_contents);
-                return config->update(&yreader);
+                config_reader.reset(new openrasp::YamlReader());
                 break;
             }
+            if (config_reader)
+            {
+                config_reader->load(conf_contents);
+                if (config_reader->has_error())
+                {
+                    openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Fail to parse config, cuz of %s."),
+                                   config_reader->get_error_msg().c_str());
+                }
+                else
+                {
+                    return config->update(config_reader.get());
+                }
+            }
+        }
+        else
+        {
+            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Fail to read config, cuz of %s."), strerror(errno));
+            return false;
         }
     }
     return false;

@@ -83,4 +83,10 @@ CURLcode BackendRequest::get_curl_code() const
 {
     return curl_code;
 }
+
+const char *BackendRequest::get_curl_err_msg() const
+{
+    return curl_easy_strerror(curl_code);
+}
+
 } // namespace openrasp

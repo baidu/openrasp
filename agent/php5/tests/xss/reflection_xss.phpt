@@ -5,15 +5,15 @@ hook output detect (reflection xss)
 $plugin = <<<EOF
 RASP.algorithmConfig = {
      xss_userinput: {
-        action: 'block'
+        action: 'block',
+        filter_regex: "<![\\\\-\\\\[A-Za-z]|<([A-Za-z]{1,12})[\\\\/ >]",
+        min_length: 15,
+        max_detection_num: 10
     }
 }
 EOF;
 $conf = <<<CONF
 block.redirect_url: "/block?request_id="
-xss.filter_regex: "<![\\\\-\\\\[A-Za-z]|<([A-Za-z]{1,12})[\\\\/ >]"
-xss.min_param_length: 15
-xss.max_detection_num: 10
 
 CONF;
 include(__DIR__.'/../skipif.inc');
