@@ -176,7 +176,7 @@ export default {
       
       let stack_trace = data.stack_trace.split("\n")
       if (stack_trace.length != data.source_code.length) {
-        console.error("Error: stack_trace size " + stack_trace.length + " is different from source_code size " + data.source_code.length)
+        console.error("Error: stack_trace size '" + stack_trace.length + "' is different from source_code size '" + data.source_code.length + "', skipped")
         return
       }
 
