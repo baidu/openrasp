@@ -58,6 +58,7 @@
                 <a class="dropdown-item" href="https://rasp.baidu.com/#section-support" target="_blank">
                   <i class="dropdown-icon fa fa-qq" /> 技术支持
                 </a>
+                <div class="dropdown-divider"></div>
                 <a class="dropdown-item" href="javascript:" @click="doLogout()">
                   <i class="dropdown-icon fe fe-log-out" /> 退出登录
                 </a>

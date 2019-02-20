@@ -89,9 +89,10 @@ export default {
         page: page,
         perpage: 10,
         start_time: this.$refs.datePicker.start.valueOf(),
-        end_time: this.$refs.datePicker.end.valueOf(),
-        app_id: this.current_app.id,
-        data: {}
+        end_time: this.$refs.datePicker.end.valueOf(),        
+        data: {
+          app_id: this.current_app.id,
+        }
       }).then(res => {
         this.currentPage = page
         this.data = res.data

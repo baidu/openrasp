@@ -82,6 +82,7 @@ export default {
       total: 0,
       fields: [
         { key: 'event_time', label: '异常时间' },
+        { key: 'error_code', label: '异常编号' },
         { key: 'level', label: '级别' },
         { key: 'server_hostname', label: '主机信息' },
         { key: 'message', label: '内容' }
