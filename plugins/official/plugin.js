@@ -266,7 +266,9 @@ var algorithmConfig = {
             'php',
             'phar',
             'compress.zlib',
-            'compress.bzip2'
+            'compress.bzip2',
+            'zip',
+            'rar'
         ]
     },
 
@@ -608,13 +610,16 @@ function is_absolute_path(path, is_windows) {
 function is_outside_webroot(appBasePath, realpath, path) {
     var verdict = false
 
-    // servlet 3.X 之后可能会获取不到 appBasePath，或者为空
-    // 提前加个判断，防止因为bug导致误报
-    if (! appBasePath || appBasePath.length == 0) {
-        verdict = false
-    }
-    else if (realpath.indexOf(appBasePath) == -1 && has_traversal(path)) {
-        verdict = true
+    // 如果指定path 为 null 则不校验目录穿越
+    if (path == null || has_traversal(path)) {
+        // servlet 3.X 之后可能会获取不到 appBasePath，或者为空
+        // 提前加个判断，防止因为bug导致误报
+        if (! appBasePath || appBasePath.length == 0) {
+            verdict = false
+        }
+        else if (realpath.indexOf(appBasePath) == -1) {
+            verdict = true
+        }
     }
 
     return verdict
@@ -654,7 +659,7 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows)
         // Windows 下面
         // 传入 ../../../conf/tomcat-users.xml
         // 看到 c:\tomcat\webapps\root\..\..\conf\tomcat-users.xml
-        if (is_windows){
+        if (is_windows) {
             value = value.replaceAll('/', '\\')
             target = target.replaceAll('/', '\\')
             realpath = realpath.replaceAll('/', '\\')
@@ -792,7 +797,7 @@ if (RASP.get_jsengine() !== 'v8') {
             var reason = false
             values.some(function (value) {
                 // 不处理3维及以上的数组
-                if (typeof value != "string"){
+                if (typeof value != "string") {
                     return false
                 }
 
@@ -853,20 +858,20 @@ if (RASP.get_jsengine() !== 'v8') {
                 }
             })
 
-            if(Object.keys(json_parameters).length > 0){
+            if(Object.keys(json_parameters).length > 0) {
                 var jsons = [ [json_parameters, "input_json"] ]
-                while(jsons.length > 0 && reason === false){
+                while(jsons.length > 0 && reason === false) {
                     var json_arr = jsons.pop()
                     var crt_json_key = json_arr[1]
                     var json_obj = json_arr[0]
-                    for (item in json_obj){
-                        if(typeof json_obj[item] == "string"){
+                    for (item in json_obj) {
+                        if(typeof json_obj[item] == "string") {
                             reason = _run([json_obj[item]], crt_json_key + "->" + item)
-                            if(reason !== false){
+                            if(reason !== false) {
                                 break;
                             }
                         }
-                        else if(typeof json_obj[item] == "object"){
+                        else if(typeof json_obj[item] == "object") {
                             jsons.push([json_obj[item], crt_json_key + "->" + item])
                         }
                     }
@@ -1069,10 +1074,10 @@ if (RASP.get_jsengine() !== 'v8') {
             {
                 reason = _("SSRF - Requesting numeric IP address: %1%", [hostname])
             }
-            else if (hostname.startsWith('0x') && hostname.indexOf('.') === -1)
-            {
-                reason = _("SSRF - Requesting hexadecimal IP address: %1%", [hostname])
-            }
+            // else if (hostname.startsWith('0x') && hostname.indexOf('.') === -1)
+            // {
+            //     reason = _("SSRF - Requesting hexadecimal IP address: %1%", [hostname])
+            // }
 
             if (reason)
             {
@@ -1116,7 +1121,7 @@ plugin.register('directory', function (params, context) {
     var server      = context.server
     var parameter   = context.parameter
 
-    var is_windows  = server.os.toLowerCase().indexOf('windows') != -1
+    var is_windows  = server.os.indexOf('Windows') != -1
     var language    = server.language
 
     // 算法1 - 读取敏感目录
@@ -1170,7 +1175,7 @@ plugin.register('directory', function (params, context) {
 plugin.register('readFile', function (params, context) {
     var server    = context.server
     var parameter = context.parameter
-    var is_win    = server.os.toLowerCase().indexOf('windows') != -1
+    var is_win    = server.os.indexOf('Windows') != -1
 
     // weblogic 下面，所有war包读取操作全部忽略
     if (server['server'] === 'weblogic' && params.realpath.endsWith('.war'))
@@ -1280,7 +1285,7 @@ plugin.register('include', function (params, context) {
     var url       = params.url
     var server    = context.server
     var parameter = context.parameter
-    var is_win    = server.os.toLowerCase().indexOf('windows') != -1
+    var is_win    = server.os.indexOf('Windows') != -1
     var realpath  = params.realpath
 
     // 用户输入检查
@@ -1443,17 +1448,19 @@ if (algorithmConfig.fileUpload_webdav.action != 'ignore')
 if (algorithmConfig.rename_webshell.action != 'ignore')
 {
     plugin.register('rename', function (params, context) {
-
-        // 源文件是干净的文件，目标文件是脚本文件，判定为重命名方式写后门
-        if (cleanFileRegex.test(params.source) && scriptFileRegex.test(params.dest))
-        {
-            return {
-                action:    algorithmConfig.rename_webshell.action,
-                message:   _("File upload - Renaming a non-script file to server-side script file, source file is %1%", [
-                    params.source
-                ]),
-                confidence: 90,
-                algorithm:  'rename_webshell'
+        // 目标文件在webroot内才认为是写后门
+        if (!is_outside_webroot(context.appBasePath, params.dest, null)) {
+            // 源文件是干净的文件，目标文件是脚本文件，判定为重命名方式写后门
+            if (cleanFileRegex.test(params.source) && scriptFileRegex.test(params.dest))
+            {
+                return {
+                    action:    algorithmConfig.rename_webshell.action,
+                    message:   _("File upload - Renaming a non-script file to server-side script file, source file is %1%", [
+                        params.source
+                    ]),
+                    confidence: 90,
+                    algorithm:  'rename_webshell'
+                }
             }
         }
 
@@ -1645,7 +1652,7 @@ plugin.register('command', function (params, context) {
 // 注意: 由于libxml2无法挂钩，所以PHP暂时不支持XXE检测
 plugin.register('xxe', function (params, context) {
     var server    = context.server
-    var is_win    = server.os.toLowerCase().indexOf('windows') != -1
+    var is_win    = server.os.indexOf('Windows') != -1
     var items     = params.entity.split('://')
 
     if (algorithmConfig.xxe_protocol.action != 'ignore') {
