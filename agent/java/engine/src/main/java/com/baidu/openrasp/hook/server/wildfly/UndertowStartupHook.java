@@ -20,6 +20,7 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.server.ServerStartupHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
+import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.CannotCompileException;
@@ -42,7 +43,7 @@ public class UndertowStartupHook extends ServerStartupHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "org/xnio/Xnio".equals(className);
+        return "org/jboss/as/server/BootstrapImpl".equals(className);
     }
 
     /**
@@ -53,7 +54,7 @@ public class UndertowStartupHook extends ServerStartupHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(UndertowStartupHook.class, "handleUndertowStartup", "$0");
-        insertAfter(ctClass, "createWorker", "(Lorg/xnio/OptionMap;)Lorg/xnio/XnioWorker;", src, true);
+        insertAfter(ctClass, "internalBootstrap", null, src);
     }
 
     public static void handleUndertowStartup(Object server) {
@@ -62,9 +63,18 @@ public class UndertowStartupHook extends ServerStartupHook {
             if (classLoader == null) {
                 classLoader = ClassLoader.getSystemClassLoader();
             }
-            Class versionClass = classLoader.loadClass("org.xnio.Version");
-            String version = (String) versionClass.getField("VERSION").get(null);
-            ApplicationModel.init("undertow", version);
+
+            Object moduleLoader = Reflection.invokeStaticMethod("org.jboss.modules.ModuleLoader",
+                    "forClassLoader", new Class[]{ClassLoader.class}, classLoader);
+            Object moduleIdentifier = Reflection.invokeStaticMethod("org.jboss.modules.ModuleIdentifier",
+                    "create", new Class[]{String.class}, "org.jboss.as.version");
+            Object module = Reflection.invokeMethod(moduleLoader, "loadModule",
+                    new Class[]{moduleIdentifier.getClass()}, moduleIdentifier);
+
+            ClassLoader moduleClassLoader = (ClassLoader) Reflection.invokeMethod(module, "getClassLoader", new Class[]{});
+            Class versionClass = moduleClassLoader.loadClass("org.jboss.as.version.Version");
+            String version = (String) versionClass.getField("AS_VERSION").get(null);
+            ApplicationModel.init("wildfly", version);
         } catch (Exception e) {
             HookHandler.LOGGER.warn("handle undertow startup failed", e);
         }

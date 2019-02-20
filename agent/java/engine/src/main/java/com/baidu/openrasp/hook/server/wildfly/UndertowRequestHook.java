@@ -16,7 +16,6 @@
 
 package com.baidu.openrasp.hook.server.wildfly;
 
-import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.server.ServerRequestHook;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
@@ -28,7 +27,7 @@ import java.io.IOException;
 /**
  * Created by izpz on 18-10-26.
  * <p>
- * wildfly 请求&参数解析的 hook 点
+ * wildfly 请求解析的 hook 点
  */
 @HookAnnotation
 public class UndertowRequestHook extends ServerRequestHook {
@@ -50,12 +49,30 @@ public class UndertowRequestHook extends ServerRequestHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String paramSrc = getInvokeStaticSrc(HookHandler.class, "onParseParameters", "");
-        insertBefore(ctClass, "handleFirstRequest", null, paramSrc);
-
         String requestSrc = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
                 "$2,$4,$5", Object.class, Object.class, Object.class);
         insertBefore(ctClass, "handleFirstRequest", null, requestSrc);
 
+//        int version = Integer.valueOf(ApplicationModel.getVersion().split(".")[0]);
+//        if (version>10) {
+//            requestSrc = getInvokeStaticSrc(UndertowRequestHook.class, "getUndertowRequestSrc", "$2", Object.class);
+//        } else {
+//            requestSrc = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
+//                    "$2,$4,$5", Object.class, Object.class, Object.class);
+//
+//        }
     }
+
+//    public static void getUndertowRequestSrc(Object object){
+//        try {
+//            Object request =  Reflection.getField(object,"servletRequest");
+//            Object response =  Reflection.getField(object,"servletResponse");
+//
+//            if (HookHandler.requestCache.get() != null) {
+//                HookHandler.checkFilterRequest(null, request, response);
+//            }
+//        } catch (Exception e) {
+//            HookHandler.LOGGER.warn("");
+//        }
+//    }
 }

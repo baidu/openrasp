@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.baidu.openrasp.hook.server.wildfly;
 
-import com.baidu.openrasp.hook.server.ServerPreRequestHook;
+import com.baidu.openrasp.hook.server.ServerParamHook;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -25,22 +24,15 @@ import javassist.NotFoundException;
 /**
  * Created by izpz on 18-10-26.
  * <p>
- * wildfly 请求预处理hook点
+ * wildfly 解析参数的 hook 点
  */
 @HookAnnotation
-public class UndertowPreRequestHook extends ServerPreRequestHook {
+public class UndertowParamHook extends ServerParamHook {
 
-    /**
-     * 用于判断类名与当前需要hook的类是否相同
-     *
-     * @param className 用于匹配的类名
-     * @return 是否匹配
-     */
     @Override
     public boolean isClassMatched(String className) {
-        return "io/undertow/servlet/handlers/ServletInitialHandler".equals(className);
+        return "io/undertow/server/protocol/http/HttpRequestParser".equals(className);
     }
-
 
     /**
      * hook 方法
@@ -50,6 +42,6 @@ public class UndertowPreRequestHook extends ServerPreRequestHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException {
-        insertBefore(ctClass, "dispatchRequest", null, src);
+        insertBefore(ctClass, "handle", null, src);
     }
 }

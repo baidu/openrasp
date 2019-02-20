@@ -20,7 +20,6 @@ import com.baidu.openrasp.hook.server.ServerInputHook;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
-import javassist.CtMethod;
 import javassist.NotFoundException;
 
 import java.io.IOException;
