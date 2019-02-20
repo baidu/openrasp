@@ -100,9 +100,10 @@
                   </span>
                 </td>
                 <td nowrap>
-                  <a href="javascript:" @click="doDelete(row)">
+                  <a href="javascript:" @click="doDelete(row)" v-if="! row.online">
                     删除
                   </a>
+                  <span v-if="row.online">-</span>
                 </td>
               </tr>
             </tbody>

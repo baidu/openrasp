@@ -7,11 +7,17 @@
         </h1>
 
         <div class="page-options d-flex">
-          <div class="input-icon ml-2 w-100">
+          <div class="input-icon ml-2 w-50">
             <span class="input-icon-addon">
               <i class="fe fe-calendar" />
             </span>
             <DatePicker ref="datePicker" @selected="loadAudit(1)" />
+          </div>
+          <div class="input-icon ml-2">
+            <span class="input-icon-addon">
+              <i class="fe fe-search" />
+            </span>
+            <input v-model="ip" type="text" class="form-control w-10" placeholder="搜索IP" @keyup.enter="loadAudit(1)">
           </div>
           <button class="btn btn-primary ml-2" @click="loadAudit(1)">
             搜索
@@ -66,7 +72,7 @@ export default {
       data: [],
       loading: false,
       currentPage: 1,
-      srcip: '',
+      ip: '',
       total: 0
     }
   },
@@ -89,9 +95,10 @@ export default {
         page: page,
         perpage: 10,
         start_time: this.$refs.datePicker.start.valueOf(),
-        end_time: this.$refs.datePicker.end.valueOf(),        
+        end_time: this.$refs.datePicker.end.valueOf(),
         data: {
           app_id: this.current_app.id,
+          ip: this.ip
         }
       }).then(res => {
         this.currentPage = page

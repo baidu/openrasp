@@ -24,7 +24,7 @@ export default {
       this.file = undefined
     },
     handleFileChange(name, files) {
-      console.log ('got', files)
+      // console.log ('got', files)
       
       this.file = files[0]
       this.$emit('input', files[0])
