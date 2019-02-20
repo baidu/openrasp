@@ -161,7 +161,7 @@ void sql_error_alarm(char *server, char *query, const std::string &err_code, con
     add_assoc_string(attack_params, "server", server, 1);
     add_assoc_string(attack_params, "query", query, 1);
     add_assoc_string(attack_params, "error_code", (char *)err_code.c_str(), 1);
-    add_assoc_string(attack_params, "error_msg", (char *)err_msg.c_str(), 1);
+    // add_assoc_string(attack_params, "error_msg", (char *)err_msg.c_str(), 1);
     zval *plugin_message = nullptr;
     MAKE_STD_ZVAL(plugin_message);
     char *message_str = nullptr;
