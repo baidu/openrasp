@@ -25,7 +25,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">
-            自定义拦截跳转页面
+            自定义拦截跳转页面 [仅自定义拦截状态码为302生效]
           </label>
           <input v-model="data['block.redirect_url']" type="text" class="form-control">
         </div>
