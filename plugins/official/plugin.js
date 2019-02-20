@@ -507,12 +507,11 @@ String.prototype.replaceAll = function(token, tokenValue) {
 function has_traversal (path) {
 
     // 左右斜杠，一视同仁
-    var path2 = path.replaceAll('\\', '/')
-
+    var path2 = "/" + path.replaceAll('\\', '/') + "/"
     // 覆盖 ../../
     // 以及 /../../
-    var left  = path2.indexOf('..')
-    var right = path2.lastIndexOf('..')
+    var left  = path2.indexOf('/../')
+    var right = path2.lastIndexOf('/../')
 
     if (left != -1 && right != -1 && left != right)
     {
@@ -1066,7 +1065,7 @@ if (RASP.get_jsengine() !== 'v8') {
         {
             var reason = false
 
-            if (/^0*[1-9]\d{0,9}/.test(hostname))
+            if (!isNaN(hostname))
             {
                 reason = _("SSRF - Requesting numeric IP address: %1%", [hostname])
             }
@@ -1647,7 +1646,7 @@ plugin.register('command', function (params, context) {
 plugin.register('xxe', function (params, context) {
     var server    = context.server
     var is_win    = server.os.toLowerCase().indexOf('windows') != -1
-    var items = params.entity.split('://')
+    var items     = params.entity.split('://')
 
     if (algorithmConfig.xxe_protocol.action != 'ignore') {
         // 检查 windows + SMB 协议，防止泄露 NTLM 信息
