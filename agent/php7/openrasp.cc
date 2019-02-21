@@ -410,11 +410,6 @@ static bool update_config(openrasp::ConfigHolder *config, ConfigHolder::FromType
                 }
             }
         }
-        else
-        {
-            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Unable to read %s, cuz of %s."), config_file_path.c_str(), strerror(errno));
-            return false;
-        }
     }
     return false;
 }
