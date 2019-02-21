@@ -165,4 +165,19 @@ void JsonReader::write_map(const std::vector<std::string> &keys, const std::map<
   j[ptr] = j_map;
 }
 
+void JsonReader::write_map_to_array(const std::vector<std::string> &keys, const std::string fkey, const std::string skey,
+                                    const std::map<std::string, std::string> &value)
+{
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
+  json array = json::array();
+  for (auto iter : value)
+  {
+    json item;
+    item[fkey] = iter.first;
+    item[skey] = iter.second;
+    array.push_back(item);
+  }
+  j[ptr] = array;
+}
+
 } // namespace openrasp
