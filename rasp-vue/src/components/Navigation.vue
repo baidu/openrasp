@@ -119,7 +119,7 @@
                 </RouterLink>
               </li>
               <li class="nav-item dropdown">
-                <RouterLink :to="{ name: 'settings', params: { app_id: current_app.id } }" class="nav-link">
+                <RouterLink :to="{ name: 'settings', params: { setting_tab: 'general', app_id: current_app.id } }" class="nav-link">
                   <i class="fe fe-settings" />
                   系统设置
                 </RouterLink>
