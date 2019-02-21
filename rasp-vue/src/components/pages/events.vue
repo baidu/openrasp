@@ -12,6 +12,23 @@
             </span>
             <DatePicker ref="datePicker" @selected="loadEvents(1)" />
           </div>
+          <b-dropdown text="拦截状态" class="ml-2" right>
+            <b-container style="width: 250px;">
+              <b-form-row>
+                <template v-for="(value, key) in status_types">
+                  <b-col :key="key">
+                    <label class="custom-switch">
+                      <input v-model="selected_status" type="checkbox" class="custom-switch-input" :value="key">
+                      <span class="custom-switch-indicator" />
+                      <span class="custom-switch-description">
+                        {{ value }}
+                      </span>
+                    </label>
+                  </b-col>
+                </template>
+              </b-form-row>
+            </b-container>
+          </b-dropdown>          
           <b-dropdown text="攻击类型" class="ml-2" right>
             <b-container style="width: 500px;">
               <b-form-row>
@@ -132,7 +149,7 @@
 <script>
 import EventDetailModal from '@/components/modals/eventDetailModal'
 import DatePicker from '@/components/DatePicker'
-import { attack_type2name, block_status2name, attack_types } from '@/util'
+import { attack_type2name, block_status2name, attack_types, status_types } from '@/util'
 import { mapGetters } from 'vuex'
 
 export default {
@@ -149,6 +166,8 @@ export default {
       srcip: '',
       total: 0,
       attack_types,
+      status_types,
+      selected_status: Object.keys(status_types),
       selected: Object.keys(attack_types)
     }
   },
@@ -157,7 +176,8 @@ export default {
   },
   watch: {
     current_app() { this.loadEvents(1) },
-    selected() { this.loadEvents(1) }
+    selected() { this.loadEvents(1) },
+    selected_status() { this.loadEvents(1) }
   },
   mounted() {
     if (!this.current_app.id) {
@@ -166,6 +186,9 @@ export default {
     this.loadEvents(1)
   },
   methods: {
+    selectAllStatus({ target }) {
+      this.selected_status = target.checked ? Object.keys(this.status_types) : []
+    },    
     selectAll({ target }) {
       this.selected = target.checked ? Object.keys(this.attack_types) : []
     },
@@ -182,7 +205,8 @@ export default {
           end_time: this.$refs.datePicker.end.valueOf(),
           attack_type: this.selected,
           attack_source: this.srcip,
-          app_id: this.current_app.id
+          app_id: this.current_app.id,
+          intercept_state: this.selected_status
         },
         page: page,
         perpage: 10

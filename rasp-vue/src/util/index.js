@@ -138,7 +138,7 @@ export var attack_types = {
 export var status_types = {
   block: '拦截请求',
   log: '记录日志',
-  ignore: '忽略放行'
+  // ignore: '忽略放行'
 }
 
 export function getDefaultConfig() {
