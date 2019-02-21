@@ -19,6 +19,17 @@
         <div class="card-body">
           <vue-loading v-if="loading" type="spiningDubbles" color="rgb(90, 193, 221)" :size="{ width: '50px', height: '50px' }" />
 
+          <nav v-if="! loading && total > 0">
+            <ul class="pagination pull-left">
+              <li class="active">
+                <span style="margin-top: 0.5em; display: block; ">
+                  <strong>{{ total }}</strong> 结果，显示 {{ currentPage }} / {{ ceil(total / 10) }} 页
+                </span>
+              </li>
+            </ul>
+            <b-pagination v-model="currentPage" align="right" :total-rows="total" :per-page="10" @change="loadPluginList" />
+          </nav>
+
           <table v-if="! loading" class="table table-bordered">
             <thead>
               <tr>
@@ -51,9 +62,20 @@
               </tr>
             </tbody>
           </table>
-          <nav v-if="! loading">
-            <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" @change="loadPluginList($event)" />
+          
+          <p v-if="! loading && total == 0" class="text-center">暂无数据</p>
+
+          <nav v-if="! loading && total > 10">
+            <ul class="pagination pull-left">
+              <li class="active">
+                <span style="margin-top: 0.5em; display: block; ">
+                  <strong>{{ total }}</strong> 结果，显示 {{ currentPage }} / {{ ceil(total / 10) }} 页
+                </span>
+              </li>
+            </ul>
+            <b-pagination v-model="currentPage" align="right" :total-rows="total" :per-page="10" @change="loadPluginList" />
           </nav>
+
         </div>
       </div>
     </div>
@@ -89,6 +111,7 @@ export default {
   },
   methods: {
     ...mapActions(['loadAppList']),
+    ceil: Math.ceil,
     loadPluginList(page) {
       this.loading = true
       return this.request.post('v1/api/app/plugin/get', {
