@@ -1,24 +1,26 @@
 {
-  "cache": {
-    "sqli": {
-      "capacity": 100
-    }
+  "meta": {
+    "all_log": false
   },
   "sql_userinput": {
+    "name": "算法1 - 用户输入匹配算法",
     "action": "block",
-    "min_length": 15
+    "min_length": 10,
+    "pre_filter": "select|file|from",
+    "pre_enable": false
   },
   "sql_policy": {
+    "name": "算法2 - 拦截异常SQL语句",
     "action": "block",
+    "pre_filter": "^(select|insert|update|delete).*(;|\\/\\*|(?:\\d{1,2}\\s*,\\s*){2}|(?:null\\s*,\\s*){2}|0x[\\da-f]{8}|\\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin))\\b",
     "feature": {
       "stacked_query": true,
       "no_hex": true,
       "version_comment": true,
       "function_blacklist": true,
       "union_null": true,
-      "constant_compare": false,
       "into_outfile": true,
-      "information_schema":true
+      "information_schema": false
     },
     "function_blacklist": {
       "load_file": true,
@@ -29,7 +31,7 @@
       "updatexml": true,
       "extractvalue": true,
       "hex": true,
-      "char": true,
+      "char": false,
       "chr": true,
       "mid": true,
       "ord": true,
@@ -37,28 +39,39 @@
       "bin": true
     }
   },
+  "sql_exception": {
+    "name": "算法3 - 检测SQL语句异常",
+    "action": "log",
+    "reference": "https://rasp.baidu.com/doc/dev/official.html#sql-exception"
+  },
   "ssrf_userinput": {
+    "name": "算法1 - 用户输入匹配算法",
     "action": "block"
   },
   "ssrf_aws": {
+    "name": "算法2 - 拦截 AWS/Aliyun metadata 访问",
     "action": "block"
   },
   "ssrf_common": {
+    "name": "算法3 - 拦截常见 dnslog 地址",
     "action": "block",
     "domains": [
       ".ceye.io",
       ".vcap.me",
       ".xip.name",
       ".xip.io",
+      "sslip.io",
       ".nip.io",
       ".burpcollaborator.net",
       ".tu4.org"
     ]
   },
   "ssrf_obfuscate": {
+    "name": "算法4 - 拦截混淆地址",
     "action": "block"
   },
   "ssrf_protocol": {
+    "name": "算法5 - 拦截 php:// 等异常协议",
     "action": "block",
     "protocols": [
       "file",
@@ -73,45 +86,61 @@
     ]
   },
   "readFile_userinput": {
+    "name": "算法1 - 用户输入匹配算法",
     "action": "block"
   },
   "readFile_userinput_http": {
+    "name": "算法2 - 用户输入匹配算法 + http 协议",
     "action": "block"
   },
   "readFile_userinput_unwanted": {
+    "name": "算法3 - 拦截 php:// 等异常协议",
     "action": "block"
   },
-  "readFile_traversal": {
-    "action": "block"
+  "readFile_outsideWebroot": {
+    "name": "算法4 - 禁止使用 ../../ 访问web目录以外的文件",
+    "action": "ignore",
+    "reference": "https://rasp.baidu.com/doc/dev/official.html#case-out-webroot"
   },
   "readFile_unwanted": {
+    "name": "算法5 - 文件探针算法",
     "action": "block"
   },
   "writeFile_NTFS": {
+    "name": "算法1 - 拦截 NTFS ::$DATA 写入操作",
     "action": "block"
   },
   "writeFile_PUT_script": {
+    "name": "算法2 - 拦截 PUT 方式上传 php/jsp 等脚本文件",
     "action": "block"
   },
   "writeFile_script": {
-    "action": "log"
+    "name": "算法1 - 拦截所有 php/jsp 等脚本文件的写入操作",
+    "reference": "https://rasp.baidu.com/doc/dev/official.html#case-file-write",
+    "action": "ignore"
   },
   "rename_webshell": {
+    "name": "算法1 - 通过重命名方式获取 WebShell",
     "action": "block"
   },
-  "copy_webshell": {
+  "directory_userinput": {
+    "name": "算法1 - 用户输入匹配算法",
     "action": "block"
   },
   "directory_reflect": {
+    "name": "算法2 - 通过反射调用，查看目录内容",
     "action": "block"
   },
   "directory_unwanted": {
+    "name": "算法3 - 尝试查看敏感目录",
     "action": "block"
   },
-  "directory_outsideWebroot": {
+  "include_userinput": {
+    "name": "算法1 - 用户输入匹配算法",
     "action": "block"
   },
   "include_protocol": {
+    "name": "算法2 - 尝试包含 jar:// 等异常协议",
     "action": "block",
     "protocols": [
       "file",
@@ -124,19 +153,13 @@
       "php",
       "phar",
       "compress.zlib",
-      "compress.bzip2"
+      "compress.bzip2",
+      "zip",
+      "rar"
     ]
   },
-  "include_dir": {
-    "action": "block"
-  },
-  "include_unwanted": {
-    "action": "block"
-  },
-  "include_outsideWebroot": {
-    "action": "block"
-  },
   "xxe_protocol": {
+    "name": "算法1 - 使用 ftp:// 等异常协议加载外部实体",
     "action": "block",
     "protocols": [
       "ftp",
@@ -147,27 +170,88 @@
     ]
   },
   "xxe_file": {
+    "name": "算法2 - 使用 file:// 协议读取文件",
+    "reference": "https://rasp.baidu.com/doc/dev/official.html#case-xxe",
     "action": "log"
   },
   "fileUpload_webdav": {
+    "name": "算法1 - MOVE 方式文件上传脚本文件",
     "action": "block"
   },
-  "fileUpload_multipart": {
+  "fileUpload_multipart_script": {
+    "name": "算法2 - Multipart 方式文件上传 PHP/JSP 等脚本文件",
     "action": "block"
+  },
+  "fileUpload_multipart_html": {
+    "name": "算法3 - Multipart 方式文件上传 HTML/JS 等文件",
+    "action": "ignore"
   },
   "ognl_exec": {
+    "name": "算法1 - 执行异常 OGNL 语句",
     "action": "block"
   },
   "command_reflect": {
+    "name": "算法1 - 通过反射执行命令，比如反序列化、加密后门",
     "action": "block"
   },
   "command_userinput": {
-    "action": "block"
+    "name": "算法2 - 用户输入匹配算法，包括命令注入检测",
+    "action": "block",
+    "min_length": 2
+  },
+  "command_common": {
+    "name": "算法3 - 识别常用渗透命令（探针）",
+    "action": "log",
+    "pattern": "cat.*/etc/passwd|nc.{1,30}-e.{1,100}/bin/(?:ba)?sh|bash\\s-.{0,4}i.{1,20}/dev/tcp/|subprocess.call\\(.{0,6}/bin/(?:ba)?sh|fsockopen\\(.{1,50}/bin/(?:ba)?sh|perl.{1,80}socket.{1,120}open.{1,80}exec\\(.{1,5}/bin/(?:ba)?sh|([\\|\\&`;\\x0d\\x0a]|$\\([^\\(]).{0,3}(ping|nslookup|curl|wget|mail).{1,10}[a-zA-Z0-9_\\-]{1,15}\\.[a-zA-Z0-9_\\-]{1,15}"
   },
   "command_other": {
-    "action": "log"
+    "name": "算法4 - 记录或者拦截所有命令执行操作",
+    "action": "ignore"
   },
-  "transformer_deser": {
+  "deserialization_transformer": {
+    "name": "算法1 - 拦截 transformer 反序列化攻击",
+    "action": "block"
+  },
+  "xss_userinput": {
+    "name": "算法2 - 拦截输出在响应里的反射 XSS",
+    "action": "log",
+    "filter_regex": "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]",
+    "min_length": 15,
+    "max_detection_num": 10
+  },
+  "xss_echo": {
+    "name": "算法1 - PHP: 禁止直接输出 GPC 参数",
+    "action": "log",
+    "filter_regex": "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"
+  },
+  "webshell_eval": {
+    "name": "算法1 - 拦截简单的 PHP 中国菜刀后门",
+    "action": "block"
+  },
+  "webshell_command": {
+    "name": "算法2 - 拦截简单的 PHP 命令执行后门",
+    "action": "block"
+  },
+  "webshell_file_put_contents": {
+    "name": "算法3 - 拦截简单的 PHP 文件上传后门",
+    "action": "block"
+  },
+  "webshell_callable": {
+    "name": "算法4 - 拦截简单的 PHP array_map/walk/filter 后门",
+    "action": "block",
+    "functions": [
+      "system",
+      "exec",
+      "passthru",
+      "proc_open",
+      "shell_exec",
+      "popen",
+      "pcntl_exec",
+      "assert"
+    ]
+  },
+  "webshell_ld_preload": {
+    "name": "算法5 - 拦截基于 LD_PRELOAD 的后门",
     "action": "block"
   }
 }
