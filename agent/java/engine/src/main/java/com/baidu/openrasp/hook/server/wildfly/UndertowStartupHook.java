@@ -43,7 +43,7 @@ public class UndertowStartupHook extends ServerStartupHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "org/jboss/as/server/BootstrapImpl".equals(className);
+        return "org/jboss/as/server/services/net/NetworkInterfaceService".equals(className);
     }
 
     /**
@@ -54,26 +54,30 @@ public class UndertowStartupHook extends ServerStartupHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(UndertowStartupHook.class, "handleUndertowStartup", "$0");
-        insertAfter(ctClass, "internalBootstrap", null, src);
+        insertBefore(ctClass, "start", null, src);
     }
 
     public static void handleUndertowStartup(Object server) {
         try {
+            String version = "";
             ClassLoader classLoader = server.getClass().getClassLoader();
             if (classLoader == null) {
                 classLoader = ClassLoader.getSystemClassLoader();
             }
-
             Object moduleLoader = Reflection.invokeStaticMethod("org.jboss.modules.ModuleLoader",
                     "forClassLoader", new Class[]{ClassLoader.class}, classLoader);
             Object moduleIdentifier = Reflection.invokeStaticMethod("org.jboss.modules.ModuleIdentifier",
                     "create", new Class[]{String.class}, "org.jboss.as.version");
-            Object module = Reflection.invokeMethod(moduleLoader, "loadModule",
-                    new Class[]{moduleIdentifier.getClass()}, moduleIdentifier);
+            if (moduleIdentifier != null) {
+                Object module = Reflection.invokeMethod(moduleLoader, "loadModule",
+                        new Class[]{moduleIdentifier.getClass()}, moduleIdentifier);
 
-            ClassLoader moduleClassLoader = (ClassLoader) Reflection.invokeMethod(module, "getClassLoader", new Class[]{});
-            Class versionClass = moduleClassLoader.loadClass("org.jboss.as.version.Version");
-            String version = (String) versionClass.getField("AS_VERSION").get(null);
+                ClassLoader moduleClassLoader = (ClassLoader) Reflection.invokeMethod(module, "getClassLoader", new Class[]{});
+                if (moduleClassLoader != null) {
+                    Class versionClass = moduleClassLoader.loadClass("org.jboss.as.version.Version");
+                    version = (String) versionClass.getField("AS_VERSION").get(null);
+                }
+            }
             ApplicationModel.init("wildfly", version);
         } catch (Exception e) {
             HookHandler.LOGGER.warn("handle undertow startup failed", e);

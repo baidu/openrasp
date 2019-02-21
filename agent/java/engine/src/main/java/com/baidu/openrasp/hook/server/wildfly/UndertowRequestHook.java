@@ -50,29 +50,7 @@ public class UndertowRequestHook extends ServerRequestHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String requestSrc = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
-                "$2,$4,$5", Object.class, Object.class, Object.class);
+                "$0,$1", Object.class,Object.class);
         insertBefore(ctClass, "handleFirstRequest", null, requestSrc);
-
-//        int version = Integer.valueOf(ApplicationModel.getVersion().split(".")[0]);
-//        if (version>10) {
-//            requestSrc = getInvokeStaticSrc(UndertowRequestHook.class, "getUndertowRequestSrc", "$2", Object.class);
-//        } else {
-//            requestSrc = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
-//                    "$2,$4,$5", Object.class, Object.class, Object.class);
-//
-//        }
     }
-
-//    public static void getUndertowRequestSrc(Object object){
-//        try {
-//            Object request =  Reflection.getField(object,"servletRequest");
-//            Object response =  Reflection.getField(object,"servletResponse");
-//
-//            if (HookHandler.requestCache.get() != null) {
-//                HookHandler.checkFilterRequest(null, request, response);
-//            }
-//        } catch (Exception e) {
-//            HookHandler.LOGGER.warn("");
-//        }
-//    }
 }
