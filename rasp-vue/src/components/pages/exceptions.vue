@@ -47,6 +47,10 @@
             <template slot="message" slot-scope="scope">
               [{{ scope.item.level }}] {{ scope.item.message }}
             </template>
+            <template slot="server_hostname" slot-scope="scope">
+              {{ scope.item.server_hostname }}<br/>
+              <span v-for="nic in scope.item.server_nic" :key="nic.name">{{ nic.name }}: {{ nic.ip }}</span><br/>
+            </template>
           </b-table>
 
           <p v-if="! loading && total == 0" class="text-center">暂无数据</p>
