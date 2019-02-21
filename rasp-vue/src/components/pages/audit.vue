@@ -32,6 +32,7 @@
             <thead>
               <tr>
                 <th>操作时间</th>
+                <th>操作类型</th>
                 <th>操作内容</th>
                 <th>操作人</th>
                 <th>IP 地址</th>
@@ -42,6 +43,7 @@
                 <td nowrap>
                   {{ moment(row.time).format('YYYY-MM-DD HH:mm:ss') }}
                 </td>
+                <td nowrap>{{ audit_types[row.type_id] }}</td>
                 <td>{{ row.content }}</td>
                 <td nowrap>
                   {{ row.user.length ? row.user : '-' }}
@@ -62,6 +64,7 @@
 </template>
 
 <script>
+import { audit_types } from '@/util'
 import DatePicker from '@/components/DatePicker'
 import { mapGetters } from 'vuex'
 
@@ -69,6 +72,7 @@ export default {
   name: 'Audit',
   data: function() {
     return {
+      audit_types: audit_types,
       data: [],
       loading: false,
       currentPage: 1,

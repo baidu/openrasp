@@ -1,6 +1,24 @@
 import axios from 'axios'
 import Cookie from 'js-cookie'
 
+// 起始 type_id: 1001
+export var audit_types = {
+  1002: 'Agent 注册',
+  1003: 'Agent 删除',
+  1004: '重置 AppSecret',
+  1005: '下发通用配置',
+  1006: '下发白名单配置',
+  1007: '下发算法配置',
+  1008: '下发报警配置',
+  1009: '下发检测插件',
+  1010: '上传插件',
+  1011: '删除插件',
+  1012: '创建应用',
+  1013: '删除应用',
+  1014: '更新应用信息',
+  1015: '重置插件配置'
+}
+
 export var browser_headers = [
   {
     name: 'X-Frame-Options',
