@@ -72,7 +72,7 @@ export default {
   name: 'Audit',
   data: function() {
     return {
-      audit_types: audit_types,
+      audit_types,
       data: [],
       loading: false,
       currentPage: 1,

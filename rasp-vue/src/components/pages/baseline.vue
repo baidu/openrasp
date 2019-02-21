@@ -5,13 +5,43 @@
         <h1 class="page-title">
           基线检查
         </h1>
-        <div class="page-options d-flex">
+        <div class="page-options d-flex">         
+
           <div class="input-icon ml-2 w-50">
             <span class="input-icon-addon">
               <i class="fe fe-calendar" />
             </span>
             <DatePicker ref="datePicker" @selected="loadEvents(1)" />
           </div>
+
+          <b-dropdown text="基线类型" class="ml-2" right>
+            <b-container style="width: 500px;">
+              <b-form-row>
+                <b-col>
+                  <label class="custom-switch">
+                    <input type="checkbox" class="custom-switch-input" checked @change="selectAll">
+                    <span class="custom-switch-indicator" />
+                    <span class="custom-switch-description">
+                      全选
+                    </span>
+                  </label>
+                </b-col>
+                <div class="w-100" />
+                <template v-for="(value, key, index) in baseline_types">
+                  <b-col :key="key">
+                    <label class="custom-switch">
+                      <input v-model="selected" type="checkbox" class="custom-switch-input" :value="key">
+                      <span class="custom-switch-indicator" />
+                      <span class="custom-switch-description">
+                        {{ value }}
+                      </span>
+                    </label>
+                  </b-col>
+                  <div v-if="index % 2 === 1" class="w-100" />
+                </template>
+              </b-form-row>
+            </b-container>
+          </b-dropdown>          
 
           <div class="input-icon ml-2">
             <span class="input-icon-addon">
@@ -88,6 +118,7 @@ import baselineDetailModal from '@/components/modals/baselineDetailModal'
 import DatePicker from '@/components/DatePicker'
 import isIp from 'is-ip'
 import { mapGetters } from 'vuex'
+import { baseline_types } from '@/util'
 
 export default {
   name: 'Baseline',
@@ -101,14 +132,17 @@ export default {
       loading: false,
       currentPage: 1,
       hostname: '',
-      total: 0
+      total: 0,
+      baseline_types,
+      selected: Object.keys(baseline_types)
     }
   },
   computed: {
     ...mapGetters(['current_app'])
   },
   watch: {
-    current_app() { this.loadEvents(1) }
+    current_app() { this.loadEvents(1) },
+    selected() { this.loadEvents(1) }
   },
   mounted() {
     if (!this.current_app.id) {
@@ -117,6 +151,9 @@ export default {
     this.loadEvents(1)
   },
   methods: {
+    selectAll({ target }) {
+      this.selected = target.checked ? Object.keys(this.baseline_types) : []
+    },
     showBaselineDetailModal: function(data) {
       this.$refs.baselineDetailModal.showModal(data)
     },
@@ -125,7 +162,8 @@ export default {
         data: {
           app_id: this.current_app.id,
           start_time: this.$refs.datePicker.start.valueOf(),
-          end_time: this.$refs.datePicker.end.valueOf()
+          end_time: this.$refs.datePicker.end.valueOf(),
+          policy_id: this.selected,
         },
         page: page,
         perpage: 10

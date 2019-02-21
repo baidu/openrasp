@@ -96,6 +96,21 @@ export var browser_headers = [
   }
 ]
 
+export var baseline_types = {
+  3001: 'Cookie httpOnly 检查',
+  3002: '进程启动账号检查',
+  3003: '后台弱口令检查',
+  3004: '不安全的默认应用检查',
+  3005: '开放目录检查',
+  3006: '数据库连接账号审计',
+  3007: 'JBoss 后台无认证检查',
+
+  4001: 'allow_url_include 配置审计',
+  4002: 'expose_php 配置审计',
+  4003: 'display_errors 配置审计',
+  4004: 'yaml.decode_php 配置审计'
+}
+
 export var attack_types = {
   sql: 'SQL 注入',
   sql_exception: 'SQL 语句异常',
