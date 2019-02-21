@@ -28,26 +28,13 @@
           <vue-loading v-if="loading" type="spiningDubbles" color="rgb(90, 193, 221)" :size="{ width: '50px', height: '50px' }" />
           <b-table hover bordered :items="data" :fields="fields">
             <template slot="event_time" slot-scope="scope">
-              {{ moment(scope.event_time).format('YYYY-MM-DD') }}
+              {{ moment(scope.item.event_time).format('YYYY-MM-DD') }}
               <br>
-              {{ moment(scope.event_time).format('HH:mm:ss') }}
+              {{ moment(scope.item.event_time).format('HH:mm:ss') }}
             </template>
-            <!-- <template slot="hook" slot-scope="scope">
-              <span v-if="scope.value.all">
-                所有 Hook 点
-              </span>
-              <span v-if="!scope.value.all">
-                {{ whitelist2str(scope.value) }}
-              </span>
+            <template slot="message" slot-scope="scope">
+              [{{ scope.item.level }}] {{ scope.item.message }}
             </template>
-            <template slot="command" slot-scope="scope">
-              <a href="javascript:" @click="showModal(scope.index)">
-                编辑
-              </a>
-              <a href="javascript:" @click="deleteItem(scope.index)">
-                删除
-              </a>
-            </template> -->
           </b-table>
           <nav v-if="!loading">
             <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" @change="fetchData" />
@@ -82,8 +69,8 @@ export default {
       total: 0,
       fields: [
         { key: 'event_time', label: '异常时间', class: 'text-nowrap' },
-        { key: 'error_code', label: '异常编号' },
-        { key: 'level', label: '级别', class: 'text-nowrap' },
+        { key: 'error_code', label: '异常编号', class: 'text-nowrap' },
+        // { key: 'level', label: '级别', class: 'text-nowrap' },
         { key: 'server_hostname', label: '主机信息' },
         { key: 'message', label: '内容' }
       ]
