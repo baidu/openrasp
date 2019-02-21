@@ -33,6 +33,8 @@ import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.mozilla.javascript.NativeArray;
 
+import java.lang.reflect.Array;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +51,7 @@ public class SSRFChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_SSRF_COMMON = "ssrf_common";
     private static final String CONFIG_KEY_SSRF_OBFUSCATE = "ssrf_obfuscate";
     private static final String CONFIG_KEY_SSRF_USER_INPUT = "ssrf_userinput";
+    private static final String CONFIG_KEY_SSRF_PROTOCOL = "ssrf_protocol";
 
     public List<EventInfo> checkSSRF(CheckParameter checkParameter, Map<String, String[]> parameterMap, JsonObject config) {
         List<EventInfo> result = new LinkedList<EventInfo>();
@@ -56,6 +59,7 @@ public class SSRFChecker extends ConfigurableChecker {
         String url = (String) checkParameter.getParam("url");
         List ips = (List) checkParameter.getParam("ip");
 
+        // 算法1 - 当参数来自用户输入，且为内网IP，判定为SSRF攻击
         if (!isModuleIgnore(config, CONFIG_KEY_SSRF_USER_INPUT)) {             
             for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
                 String[] v = entry.getValue();
@@ -85,6 +89,7 @@ public class SSRFChecker extends ConfigurableChecker {
             }            
         }
 
+        // 算法2 - 检查常见探测域名
         if (result.isEmpty() && !isModuleIgnore(config, CONFIG_KEY_SSRF_COMMON)) {
             boolean isFound = false;
             JsonArray domains = getJsonObjectAsArray(config, CONFIG_KEY_SSRF_COMMON, "domains");
@@ -96,17 +101,19 @@ public class SSRFChecker extends ConfigurableChecker {
                     }
                 }
             }
-            if (isFound || hostName.equals("requestb.in")) {
+            if (isFound || hostName.equals("requestb.in") ||  hostName.equals("transfer.sh")) {
                 result.add(AttackInfo.createLocalAttackInfo(checkParameter, getActionElement(config,
                         CONFIG_KEY_SSRF_COMMON), "SSRF - Requesting known DNSLOG address: " + hostName, "ssrf_common"));
             }
         }
 
         if (result.isEmpty()) {
+            // 算法3 - 检测 AWS/Aliyun 私有地址
             if (!isModuleIgnore(config, CONFIG_KEY_SSRF_AWS)
-                    && hostName.equals("169.254.169.254")) {
+                    && (hostName.equals("169.254.169.254") || hostName.equals("100.100.100.200"))) {
                 result.add(AttackInfo.createLocalAttackInfo(checkParameter, getActionElement(config,
                         CONFIG_KEY_SSRF_AWS), "SSRF - Requesting AWS metadata address", "ssrf_aws"));
+            // 算法4 - ssrf_obfuscate
             } else if (!isModuleIgnore(config, CONFIG_KEY_SSRF_OBFUSCATE)
                     && StringUtils.isNumeric(hostName)) {
                 result.add(AttackInfo.createLocalAttackInfo(checkParameter, getActionElement(config,
@@ -115,6 +122,18 @@ public class SSRFChecker extends ConfigurableChecker {
                     && hostName.startsWith("0x") && !hostName.contains(".")) {
                 result.add(AttackInfo.createLocalAttackInfo(checkParameter, getActionElement(config,
                         CONFIG_KEY_SSRF_OBFUSCATE), "SSRF - Requesting hexadecimal IP address", "ssrf_obfuscate"));
+            }
+        }
+
+        // 算法5 - 特殊协议检查
+        if (result.isEmpty()) {
+            String proto =  url.split(":")[0].toLowerCase();
+            JsonArray protocolConfig = getJsonObjectAsArray(config, CONFIG_KEY_SSRF_PROTOCOL, "protocols");
+            for(int i=0;i<protocolConfig.size();i++){
+                if (protocolConfig.get(i).getAsString().equals(proto)) {
+                    result.add(AttackInfo.createLocalAttackInfo(checkParameter, getActionElement(config,
+                            CONFIG_KEY_SSRF_PROTOCOL), "SSRF - Using dangerous protocol" + proto + "://", "ssrf_protocol"));
+                }
             }
         }
         return result;
