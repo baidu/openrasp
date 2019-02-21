@@ -6,7 +6,7 @@
           攻击事件
         </h1>
         <div class="page-options d-flex">
-          <div class="input-icon ml-2 w-50">
+          <div class="input-icon ml-2">
             <span class="input-icon-addon">
               <i class="fe fe-calendar" />
             </span>
