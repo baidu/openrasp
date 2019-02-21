@@ -142,7 +142,7 @@
       </div>
     </div>
 
-    <div class="alert alert-warning" v-if="! current_app.selected_plugin_id || ! current_app.selected_plugin_id.length">
+    <div class="alert alert-warning" v-if="no_plugin">
       <div class="container">
         <strong>注意!</strong> 当前应用没有配置任何检测插件，请前往 <router-link :to="{name: 'plugins'}">插件页面</router-link> 进行配置
       </div>
@@ -163,7 +163,8 @@ export default {
   },
   data: function() {
     return {
-      keyword: ''
+      keyword: '',
+      no_plugin: false
     }
   },
   computed: {
@@ -177,6 +178,8 @@ export default {
   },
   watch: {
     current_app(app) {
+      this.no_plugin = ! this.current_app.selected_plugin_id || ! this.current_app.selected_plugin_id.length
+
       this.$router.push({
         name: this.$route.name,
         params: {
@@ -198,6 +201,9 @@ export default {
           location.href = '/#/login'
         })
     }
+  },
+  mounted: function() {
+
   }
 }
 </script>
