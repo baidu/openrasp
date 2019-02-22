@@ -196,7 +196,23 @@
             <p>
                 {{ data.attack_params.ip.join(", ") }}
             </p>                     
-        </div>  
+        </div>
+
+        <div v-if="data.attack_type == 'xss_echo' || data.attack_type == 'xss_userinput'">
+            <div class="h6">
+                XSS 参数名称
+            </div>
+            <p>
+                {{ data.attack_params.name }}
+            </p>
+
+            <div class="h6">
+                XSS 利用代码
+            </div>
+            <p>
+                {{ data.attack_params.value }}
+            </p>            
+        </div>        
 
         <!-- 以下为 php 原生 -->
 
