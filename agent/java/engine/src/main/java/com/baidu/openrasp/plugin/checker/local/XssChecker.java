@@ -16,59 +16,70 @@
 
 package com.baidu.openrasp.plugin.checker.local;
 
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.AttackInfo;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.google.gson.JsonObject;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class XssChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_XSS_USER_INPUT = "xss_userinput";
     private static final String EXCEED_LENGTH_COUNT = "max_detection_num";
     private static final String XSS_PARAMETER_LENGTH = "min_length";
+    private static final String XSS_REGEX = "filter_regex";
     private static final int DEFAULT_MIN_LENGTH = 15;
     private static final int DEFAULT_MAX_DETECTION_NUM = 10;
+    private static final String DEFAULT_XSS_REGEX = "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]";
 
     @Override
     public List<EventInfo> checkParam(CheckParameter checkParameter) {
         JsonObject config = Config.getConfig().getAlgorithmConfig();
         String action = getActionElement(config, CONFIG_KEY_XSS_USER_INPUT);
-        String message = null;
         LinkedList<EventInfo> result = new LinkedList<EventInfo>();
-        Integer exceedCount = (Integer) checkParameter.getParam("exceed_count");
-        @SuppressWarnings("unchecked")
-        List<String> paramList = (ArrayList<String>) checkParameter.getParam("param_list");
         String content = String.valueOf(checkParameter.getParam("html_body"));
         if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
-            if (content != null && !paramList.isEmpty()) {
-                for (String param : paramList) {
-                    if (content.contains(param)) {
-                        message = "请求参数" + param + "存在XSS攻击风险";
-                    }
+            if (HookHandler.requestCache.get() != null && content != null) {
+                Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
+                String regex = getStringElement(config, CONFIG_KEY_XSS_USER_INPUT, XSS_REGEX);
+                if (regex == null) {
+                    regex = DEFAULT_XSS_REGEX;
                 }
-            }
-            if (message != null) {
-                result.add(AttackInfo.createLocalAttackInfo(checkParameter, EventInfo.CHECK_ACTION_BLOCK, message, CONFIG_KEY_XSS_USER_INPUT));
-            } else {
-                if (exceedCount != null) {
-                    int exceedLengthCount = getIntElement(config, CONFIG_KEY_XSS_USER_INPUT, EXCEED_LENGTH_COUNT);
-                    if (exceedLengthCount < 0) {
-                        exceedLengthCount = DEFAULT_MAX_DETECTION_NUM;
-                    }
-                    int xssParameterLength = getIntElement(config, CONFIG_KEY_XSS_USER_INPUT, XSS_PARAMETER_LENGTH);
-                    if (xssParameterLength < 0) {
-                        xssParameterLength = DEFAULT_MIN_LENGTH;
-                    }
-                    if (exceedCount >= exceedLengthCount) {
-                        message = "所有的请求参数中长度大于等于" + xssParameterLength + "并且匹配XSS正则的数量超过了" + exceedLengthCount;
-                    }
+                Pattern pattern = Pattern.compile(regex);
+
+                int xssParameterLength = getIntElement(config, CONFIG_KEY_XSS_USER_INPUT, XSS_PARAMETER_LENGTH);
+                if (xssParameterLength < 0) {
+                    xssParameterLength = DEFAULT_MIN_LENGTH;
                 }
-                if (message != null) {
-                    result.add(AttackInfo.createLocalAttackInfo(checkParameter, EventInfo.CHECK_ACTION_BLOCK, message, CONFIG_KEY_XSS_USER_INPUT));
+                int exceedLengthCount = getIntElement(config, CONFIG_KEY_XSS_USER_INPUT, EXCEED_LENGTH_COUNT);
+                if (exceedLengthCount < 0) {
+                    exceedLengthCount = DEFAULT_MAX_DETECTION_NUM;
+                }
+                int count = 0;
+                for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+                    for (String value : entry.getValue()) {
+                        Matcher matcher = pattern.matcher(value);
+                        boolean isMatch = matcher.find();
+                        if (value.length() >= xssParameterLength && isMatch) {
+                            count++;
+                            if (content.contains(value)) {
+                                String message = "请求参数: " + entry.getKey() + " 参数值为: " + value + " 存在XSS攻击风险";
+                                result.add(AttackInfo.createLocalAttackInfo(checkParameter, EventInfo.CHECK_ACTION_BLOCK, message, CONFIG_KEY_XSS_USER_INPUT));
+                                return result;
+                            }
+                            if (count > exceedLengthCount) {
+                                String message = "请求参数长度大于等于" + xssParameterLength + "并且匹配XSS正则的数量超过了" + exceedLengthCount;
+                                result.add(AttackInfo.createLocalAttackInfo(checkParameter, EventInfo.CHECK_ACTION_BLOCK, message, CONFIG_KEY_XSS_USER_INPUT));
+                                return result;
+                            }
+                        }
+                    }
                 }
             }
         }
