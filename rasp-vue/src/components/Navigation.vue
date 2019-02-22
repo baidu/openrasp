@@ -54,10 +54,10 @@
                 <!-- <a class="dropdown-item" href="javascript:">
                   <i class="dropdown-icon fe fe-settings"></i> 用户设置
                 </a>
-                <div class="dropdown-divider"></div> -->
-                <RouterLink class="dropdown-item" :to="{ name: 'exceptions', params: { app_id: current_app.id } }">
-                  <i class="dropdown-icon fe fe-alert-circle" />
-                  异常日志
+                <div class="dropdown-divider"></div> -->                            
+                <RouterLink class="dropdown-item" :to="{ name: 'audit', params: { app_id: current_app.id } }">
+                  <i class="dropdown-icon fe fe-user-check" />
+                  操作审计
                 </RouterLink>
                 <a class="dropdown-item" href="https://rasp.baidu.com/#section-support" target="_blank">
                   <i class="dropdown-icon fa fa-qq" /> 技术支持
@@ -117,9 +117,9 @@
                 </RouterLink>
               </li>
               <li class="nav-item">
-                <RouterLink :to="{ name: 'audit', params: { app_id: current_app.id } }" class="nav-link">
-                  <i class="fe fe-user-check" />
-                  操作审计
+                <RouterLink :to="{ name: 'exceptions', params: { app_id: current_app.id } }" class="nav-link">
+                  <i class="fe fe-alert-circle" />
+                  异常日志
                 </RouterLink>
               </li>
               <li class="nav-item dropdown">

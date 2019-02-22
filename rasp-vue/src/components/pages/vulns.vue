@@ -124,8 +124,11 @@
 
                 <td nowrap>
                   <a target="_blank" :href="'https://www.virustotal.com/#/ip-address/' + (row.client_ip ? row.client_ip : row.attack_source)">
-                    {{ row.client_ip ? row.client_ip : row.attack_source }}
+                    {{ row.client_ip ? row.client_ip : row.attack_source }}                  
                   </a>
+                  
+                  <br/>
+                  利用 {{ row.attack_count }} 次
                 </td>
                 <td nowrap>
                   {{ block_status2name(row.intercept_state) }}
