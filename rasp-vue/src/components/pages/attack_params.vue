@@ -71,7 +71,7 @@
                 写入的文件
             </div>
             <p>
-                {{ data.attack_params.name }}
+                {{ data.attack_params.path }}
             </p>
             <div class="h6">
                 写入的文件 - 真实路径
