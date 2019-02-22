@@ -85,7 +85,6 @@ public class FileOutputStreamHook extends AbstractClassHook {
             Scriptable params = cx.newObject(cx.getScope());
             params.put("path", params, file.getName());
             params.put("realpath", params, FileUtil.getRealPath(file));
-            params.put("content", params, "");
             List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
                     Config.getConfig().getPluginMaxStack());
             Scriptable stackArray = cx.newArray(cx.getScope(), stackInfo.toArray());
