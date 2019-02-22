@@ -139,7 +139,7 @@ import {
   block_status2name,
   browser_headers
 } from '../../../util'
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions, mapMutations } from "vuex";
 
 export default {
   name: 'AlgorithmSettings',
@@ -167,6 +167,8 @@ export default {
     this.loadConfig()
   },
   methods: {
+    ...mapActions(["loadAppList"]),
+    ...mapMutations(["setCurrentApp"]),
     attack_type2name: attack_type2name,
     loadConfig: function() {
       if (!this.current_app.selected_plugin_id.length) {
@@ -222,6 +224,7 @@ export default {
       }
 
       this.api_request('v1/api/plugin/algorithm/config', body, function(data) {
+        self.loadAppList(self.current_app.id);
         alert('保存成功')
       })
     },
@@ -236,8 +239,9 @@ export default {
       }
 
       self.api_request('v1/api/plugin/algorithm/restore', body, function(data) {
-        alert('恢复成功，点击刷新')
+        self.loadAppList(self.current_app.id);
         self.loadConfig()
+        alert('恢复成功')
       })
     }
   }

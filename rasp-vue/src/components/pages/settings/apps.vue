@@ -66,14 +66,13 @@
     <appEditModal ref="appEditModal" @save="onEdit($event)" />
     <!-- end app settings -->
   </div>
-  </div\>
 </template>
 
 <script>
-import appEditModal from '../../modals/appEditModal'
-import { mapGetters, mapActions, mapMutations } from 'vuex'
+import appEditModal from "../../modals/appEditModal";
+import { mapGetters, mapActions, mapMutations } from "vuex";
 export default {
-  name: 'AppSettings',
+  name: "AppSettings",
   components: {
     appEditModal
   },
@@ -83,60 +82,70 @@ export default {
       loading: false,
       total: 0,
       currentPage: 1
-    }
+    };
   },
   computed: {
-    ...mapGetters(['current_app', 'app_list'])
+    ...mapGetters(["current_app", "app_list"])
   },
   watch: {
-    current_app() { this.loadApps(1) }
+    current_app() {
+      this.loadApps(1);
+    }
   },
   mounted: function() {
-    this.loadApps(1)
+    this.loadApps(1);
   },
   methods: {
-    ...mapActions(['loadAppList']),
-    ...mapMutations(['setCurrentApp']),
+    ...mapActions(["loadAppList"]),
+    ...mapMutations(["setCurrentApp"]),
     loadApps(page) {
-      this.loading = true
-      return this.request.post('v1/api/app/get', {
-        page: page,
-        perpage: 10
-      }).then(res => {
-        this.currentPage = page
-        this.data = res.data
-        this.total = res.total
-        this.loading = false
-      })
+      this.loading = true;
+      return this.request
+        .post("v1/api/app/get", {
+          page: page,
+          perpage: 10
+        })
+        .then(res => {
+          this.currentPage = page;
+          this.data = res.data;
+          this.total = res.total;
+          this.loading = false;
+        });
     },
     deleteApp(data) {
-      if (!confirm('确认操作')) {
-        return
+      if (!confirm("确认操作")) {
+        return;
       }
-      return this.request.post('v1/api/app/delete', { id: data.id })
+      return this.request
+        .post("v1/api/app/delete", { id: data.id })
         .then(() => {
-          const app = data.id === this.current_app.id
-            ? this.app_list.find(app => app.id !== data.id)
-            : this.current_app
-          this.loadApps(1)
-          this.loadAppList(app.id)
-        })
+          const app =
+            data.id === this.current_app.id
+              ? this.app_list.find(app => app.id !== data.id)
+              : this.current_app;
+          this.loadApps(1);
+          this.loadAppList(app.id);
+        });
     },
     editApp: function(data, is_edit) {
-      this.$refs.appEditModal.showModal({
-        app_id: data.id,
-        name: data.name,
-        language: data.language,
-        description: data.description
-      }, is_edit)
+      this.$refs.appEditModal.showModal(
+        {
+          app_id: data.id,
+          name: data.name,
+          language: data.language,
+          description: data.description
+        },
+        is_edit
+      );
     },
     onEdit({ is_edit, data }) {
-      this.request.post(is_edit ? 'v1/api/app/config' : 'v1/api/app', data)
+      this.request
+        .post(is_edit ? "v1/api/app/config" : "v1/api/app", data)
         .then(() => {
-          this.loadApps(is_edit ? 1 : this.currentPage)
-          this.loadAppList(this.current_app.id)
-        })
+          this.loadApps(is_edit ? 1 : this.currentPage);
+          this.loadAppList(this.current_app.id);
+        });
     }
   }
-}
+};
 </script>

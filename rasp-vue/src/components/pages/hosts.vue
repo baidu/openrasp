@@ -140,8 +140,8 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
 import isIp from 'is-ip'
+import { mapGetters, mapActions, mapMutations } from "vuex";
 
 export default {
   name: 'Hosts',
@@ -216,14 +216,16 @@ export default {
       if (!confirm('确认删除? 删除前请先在主机端卸载 OpenRASP agent')) {
         return
       }
+      var self = this
       var body = {
-        id: data.id
+        id: data.id,
+        app_id: this.current_app.id
       }
 
       this.api_request('v1/api/rasp/delete', body, function(
         data
       ) {
-        this.loadRaspList()
+        self.loadRaspList(1)
       })
     }
   }
