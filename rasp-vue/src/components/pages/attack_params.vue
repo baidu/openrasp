@@ -28,12 +28,14 @@
             <p>
                 {{ data.attack_params.query }}
             </p>
+            <!--
             <div class="h6">
                 错误信息
             </div>
             <p>
                 [{{ data.attack_params.error_code }}] {{ data.attack_params.error_msg }}
             </p>
+            -->
         </div>        
 
         <div v-if="data.attack_type == 'directory'">
@@ -199,17 +201,17 @@
         </div>
 
         <div v-if="data.attack_type == 'xss_echo' || data.attack_type == 'xss_userinput'">
-            <div class="h6">
+            <div class="h6" v-if="data.attack_params.name">
                 XSS 参数名称
             </div>
-            <p>
+            <p v-if="data.attack_params.name">
                 {{ data.attack_params.name }}
             </p>
 
-            <div class="h6">
+            <div class="h6" v-if="data.attack_params.value">
                 XSS 利用代码
             </div>
-            <p>
+            <p v-if="data.attack_params.value">
                 {{ data.attack_params.value }}
             </p>            
         </div>        
