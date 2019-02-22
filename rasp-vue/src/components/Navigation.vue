@@ -152,6 +152,12 @@
       </div>
     </div>
 
+    <div class="alert alert-warning" v-if="all_log">
+      <div class="container">
+        当前以观察模式运行，可前往 <router-link :to="{name: 'settings', params: {setting_tab: 'algorithm'}}">防护设置</router-link> 关闭
+      </div>
+    </div>    
+
     <AddHostModal ref="addHost" />
   </div>
 </template>
@@ -168,7 +174,8 @@ export default {
   data: function() {
     return {
       keyword: '',
-      no_plugin: false
+      no_plugin: false,
+      all_log: false
     }
   },
   computed: {
@@ -183,6 +190,12 @@ export default {
   watch: {
     current_app(app) {
       this.no_plugin = ! this.current_app.selected_plugin_id || ! this.current_app.selected_plugin_id.length
+      this.all_log = false
+
+      // 检查是否开启日志模式
+      if (! this.no_plugin) {
+        this.all_log = this.current_app.algorithm_config.meta.all_log
+      }
 
       this.$router.push({
         name: this.$route.name,

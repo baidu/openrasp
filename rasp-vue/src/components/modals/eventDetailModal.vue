@@ -126,7 +126,7 @@
               </p>
             </div>
             <div id="contact" class="tab-pane fade" role="tabpanel" aria-labelledby="contact-tab">
-              暂无
+              <fix_solutions ref="fix_solutions"></fix_solutions>
             </div>
           </div>
         </div>
@@ -143,11 +143,13 @@
 <script>
 import { attack_type2name } from '../../util'
 import attack_params from '../pages/attack_params'
+import fix_solutions from '../pages/fix_solutions'
 
 export default {
   name: 'EventDetailModal',
   components: {
-    attack_params
+    attack_params,
+    fix_solutions
   },
   data: function() {
     return {
@@ -165,6 +167,7 @@ export default {
     showModal(data) {
       this.data = data
       this.$refs.attack_params.setData(data)
+      this.$refs.fix_solutions.setData(data)
       this.mergeStackAndSource(data)
 
       $('#showEventDetailModal').modal()
