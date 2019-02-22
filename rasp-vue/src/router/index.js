@@ -11,6 +11,7 @@ import settings from '@/components/pages/settings'
 import plugins from '@/components/pages/plugins'
 import audit from '@/components/pages/audit'
 import events from '@/components/pages/events'
+import vulns from '@/components/pages/vulns'
 import exceptions from '@/components/pages/exceptions'
 import Layout from '@/views/layout'
 
@@ -66,6 +67,10 @@ const router = new Router({
         path: 'events/:app_id/',
         name: 'events',
         component: events
+      }, {
+        path: 'vulns/:app_id/',
+        name: 'vulns',
+        component: vulns
       }, {
         path: 'exceptions/:app_id/',
         name: 'exceptions',

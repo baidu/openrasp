@@ -55,6 +55,10 @@
                   <i class="dropdown-icon fe fe-settings"></i> 用户设置
                 </a>
                 <div class="dropdown-divider"></div> -->
+                <RouterLink class="dropdown-item" :to="{ name: 'exceptions', params: { app_id: current_app.id } }">
+                  <i class="dropdown-icon fe fe-alert-circle" />
+                  异常日志
+                </RouterLink>
                 <a class="dropdown-item" href="https://rasp.baidu.com/#section-support" target="_blank">
                   <i class="dropdown-icon fa fa-qq" /> 技术支持
                 </a>
@@ -95,6 +99,12 @@
                 </RouterLink>
               </li>
               <li class="nav-item">
+                <RouterLink :to="{ name: 'vulns', params: { app_id: current_app.id } }" class="nav-link">
+                  <i class="fe fe-eye" />
+                  漏洞列表
+                </RouterLink>
+              </li>
+              <li class="nav-item">
                 <RouterLink :to="{ name: 'hosts', params: { app_id: current_app.id } }" class="nav-link">
                   <i class="fe fe-cloud" />
                   主机管理
@@ -104,12 +114,6 @@
                 <RouterLink :to="{ name: 'plugins', params: { app_id: current_app.id } }" class="nav-link">
                   <i class="fe fe-zap" />
                   插件管理
-                </RouterLink>
-              </li>
-              <li class="nav-item">
-                <RouterLink :to="{ name: 'exceptions', params: { app_id: current_app.id } }" class="nav-link">
-                  <i class="fe fe-alert-circle" />
-                  异常日志
                 </RouterLink>
               </li>
               <li class="nav-item">
