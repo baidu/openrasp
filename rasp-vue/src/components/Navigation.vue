@@ -154,7 +154,7 @@
 
     <div class="alert alert-warning" v-if="all_log">
       <div class="container">
-        当前以观察模式运行，可前往 <router-link :to="{name: 'settings', params: {setting_tab: 'algorithm'}}">防护设置</router-link> 关闭
+        当前以「记录日志」模式运行，可前往 <router-link :to="{name: 'settings', params: {setting_tab: 'algorithm'}}">防护设置</router-link> 关闭
       </div>
     </div>    
 
