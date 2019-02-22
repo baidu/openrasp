@@ -37,6 +37,7 @@ public class ServerDetectorManager {
         detectors.add(new WeblogicDetector());
         detectors.add(new ResinDetector());
         detectors.add(new WebsphereDetector());
+        detectors.add(new UndertowDetector());
     }
 
     public static ServerDetectorManager getInstance() {
