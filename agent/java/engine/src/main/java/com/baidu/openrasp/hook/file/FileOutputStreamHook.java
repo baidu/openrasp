@@ -83,7 +83,7 @@ public class FileOutputStreamHook extends AbstractClassHook {
         if (file != null) {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
-            params.put("name", params, file.getName());
+            params.put("path", params, file.getName());
             params.put("realpath", params, FileUtil.getRealPath(file));
             params.put("content", params, "");
             List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
