@@ -23,7 +23,6 @@ import com.baidu.openrasp.hook.server.ServerXssHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
-import com.baidu.openrasp.tool.hook.ServerXss;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -55,21 +54,19 @@ public class JettyXssHook extends ServerXssHook {
 
 
     public static void getJettyOutputBuffer(Object object) {
-        HashMap<String, Object> params = null;
+        HashMap<String, Object> params = new HashMap<String, Object>();
         try {
             Object buffer = Reflection.getSuperField(object, "_buffer");
             if (buffer != null) {
                 String content = new String(buffer.toString().getBytes(), "utf-8");
-                if (HookHandler.requestCache.get() != null) {
-                    params = ServerXss.generateXssParameters(content);
-                }
+                params.put("html_body", content);
             }
         } catch (Exception e) {
             String message = ApplicationModel.getServerName() + " xss detectde failed";
             int errorCode = ErrorType.HOOK_ERROR.getCode();
             HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         }
-        if (params != null) {
+        if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
             HookHandler.doCheck(CheckParameter.Type.XSS, params);
         }
     }
