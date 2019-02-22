@@ -103,7 +103,7 @@
               <div v-if="data.body" class="h6">
                 请求 BODY
               </div>
-              <pre v-if="data.body" style="white-space: normal; word-break: break-all; ">{{ data.body ? data.body : '-' }}</pre>
+              <pre v-if="data.body" style="word-break: break-all; ">{{ data.body ? data.body : '-' }}</pre>
             </div>
             <div id="profile" class="tab-pane fade" role="tabpanel" aria-labelledby="profile-tab">
               <div class="h6">
@@ -170,7 +170,7 @@ export default {
       $('#showEventDetailModal').modal()
     },
     mergeStackAndSource(data) {
-      if (! data.source_code) {
+      if (! data.source_code || ! data.source_code.length) {
         return
       }
       
