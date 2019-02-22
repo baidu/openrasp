@@ -43,11 +43,10 @@ public class ServerXss {
         HashMap<String, Object> params = null;
         Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
         int exceedLengthCount = 0;
+        Pattern pattern = Pattern.compile(regex);
         List<String> paramList = new ArrayList<String>();
         for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
-
             for (String value : entry.getValue()) {
-                Pattern pattern = Pattern.compile(regex);
                 Matcher matcher = pattern.matcher(value);
                 boolean isMatch = matcher.find();
                 if (value.length() >= parameterLength && isMatch) {

@@ -150,7 +150,7 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public String getParameter(String key) {
-        if (!canGetParameter) {
+        if (!(ApplicationModel.getServerName().equals("undertow") || canGetParameter)) {
             if (!setCharacterEncodingFromConfig()) {
                 return null;
             }
@@ -165,7 +165,8 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Enumeration<String> getParameterNames() {
-        if (!canGetParameter) {
+
+        if (!(ApplicationModel.getServerName().equals("undertow") || canGetParameter)) {
             if (!setCharacterEncodingFromConfig()) {
                 return null;
             }
@@ -182,7 +183,7 @@ public final class HttpServletRequest extends AbstractRequest {
     @Override
     public Map<String, String[]> getParameterMap() {
         Map<String, String[]> normalMap = new HashMap<String, String[]>();
-        if (ApplicationModel.getServerName().equals("wildfly") || canGetParameter) {
+        if (ApplicationModel.getServerName().equals("undertow") || canGetParameter) {
             normalMap = (Map<String, String[]>) Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
         } else {
             if (!setCharacterEncodingFromConfig()) {
