@@ -194,7 +194,7 @@
                 IP 信息
             </div>
             <p>
-                {{ data.attack_params.ip }}
+                {{ data.attack_params.ip.join(", ") }}
             </p>                     
         </div>  
 
