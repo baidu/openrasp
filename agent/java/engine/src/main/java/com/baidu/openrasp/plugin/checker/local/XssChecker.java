@@ -69,12 +69,20 @@ public class XssChecker extends ConfigurableChecker {
                         if (value.length() >= xssParameterLength && isMatch) {
                             count++;
                             if (content.contains(value)) {
-                                String message = "请求参数: " + entry.getKey() + " 参数值为: " + value + " 存在XSS攻击风险";
+                                String message = "Reflected XSS attack detected, parameter name: " + entry.getKey();
+                                Map<String, Object> params = (Map<String, Object>) checkParameter.getParams();
+                                params.remove("html_body");
+                                params.put("name", entry.getKey());
+                                params.put("value", value);
                                 result.add(AttackInfo.createLocalAttackInfo(checkParameter, EventInfo.CHECK_ACTION_BLOCK, message, CONFIG_KEY_XSS_USER_INPUT));
                                 return result;
                             }
                             if (count > exceedLengthCount) {
-                                String message = "请求参数长度大于等于" + xssParameterLength + "并且匹配XSS正则的数量超过了" + exceedLengthCount;
+                                String message = "Reflected XSS attack detected: more than " + exceedLengthCount + " html tags detected in userinput";
+                                Map<String, Object> params = (Map<String, Object>) checkParameter.getParams();
+                                params.remove("html_body");
+                                params.put("name", "");
+                                params.put("value", "");
                                 result.add(AttackInfo.createLocalAttackInfo(checkParameter, EventInfo.CHECK_ACTION_BLOCK, message, CONFIG_KEY_XSS_USER_INPUT));
                                 return result;
                             }
