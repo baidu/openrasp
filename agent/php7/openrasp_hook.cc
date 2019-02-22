@@ -59,6 +59,12 @@ const std::string get_check_type_name(OpenRASPCheckType type)
 
 bool openrasp_zval_in_request(zval *item)
 {
+    return !fetch_name_in_request(item).empty();
+}
+
+std::string fetch_name_in_request(zval *item)
+{
+    std::string name;
     static const track_vars_pair pairs[] = {{TRACK_VARS_POST, "_POST"},
                                             {TRACK_VARS_GET, "_GET"},
                                             {TRACK_VARS_COOKIE, "_COOKIE"}};
@@ -69,19 +75,29 @@ bool openrasp_zval_in_request(zval *item)
         if (Z_TYPE_P(global) != IS_ARRAY &&
             !zend_is_auto_global_str(const_cast<char *>(pairs[index].name), strlen(pairs[index].name)))
         {
-            return false;
+            return name;
         }
         zval *val;
-        ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(global), val)
+        zend_string *key;
+        zend_ulong idx;
+        ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(global), idx, key, val)
         {
             if (Z_COUNTED_P(item) == Z_COUNTED_P(val))
             {
-                return true;
+                if (key != nullptr)
+                {
+                    return std::string(ZSTR_VAL(key));
+                }
+                else
+                {
+                    zend_long actual = idx;
+                    return std::to_string(actual);
+                }
             }
         }
         ZEND_HASH_FOREACH_END();
     }
-    return false;
+    return name;
 }
 
 void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckType type, int confidence, zval *params, zval *message)

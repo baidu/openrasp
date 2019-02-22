@@ -153,6 +153,14 @@ static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionT
          zend_hash_has_more_elements(ht) == SUCCESS;
          zend_hash_move_forward(ht))
     {
+        char *key;
+        ulong idx;
+        int type;
+        type = zend_hash_get_current_key(ht, &key, &idx, 0);
+        if (type == HASH_KEY_NON_EXISTENT)
+        {
+            continue;
+        }
         zval **ele_value;
         if (zend_hash_get_current_data(ht, (void **)&ele_value) != SUCCESS)
         {
@@ -174,14 +182,25 @@ static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionT
             }
             if (NULL != strstr(param, Z_STRVAL_PP(ele_value)))
             {
+                std::string name;
+                if (type == HASH_KEY_IS_STRING)
+                {
+                    name = std::string(key);
+                }
+                else if (type == HASH_KEY_IS_LONG)
+                {
+                    long actual = idx;
+                    name = std::to_string(actual);
+                }
                 zval *attack_params = NULL;
                 MAKE_STD_ZVAL(attack_params);
                 array_init(attack_params);
-                add_assoc_string(attack_params, "parameter", Z_STRVAL_PP(ele_value), 1);
+                add_assoc_string(attack_params, "name", const_cast<char *>(name.c_str()), 1);
+                add_assoc_string(attack_params, "value", Z_STRVAL_PP(ele_value), 1);
                 zval *plugin_message = NULL;
                 MAKE_STD_ZVAL(plugin_message);
                 char *message_str = NULL;
-                spprintf(&message_str, 0, _("Reflected XSS attack detected: using get parameter: '%s'"), Z_STRVAL_PP(ele_value));
+                spprintf(&message_str, 0, _("Reflected XSS attack detected: parameter name: %s"), name.c_str());
                 ZVAL_STRING(plugin_message, message_str, 1);
                 efree(message_str);
                 openrasp_buildin_php_risk_handle(action, XSS_USER_INPUT, 100, attack_params, plugin_message TSRMLS_CC);

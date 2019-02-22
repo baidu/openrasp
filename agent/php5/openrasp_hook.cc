@@ -152,6 +152,12 @@ std::string openrasp_real_path(char *filename, int filename_len, bool use_includ
 
 bool openrasp_zval_in_request(zval *item TSRMLS_DC)
 {
+    return !fetch_name_in_request(item TSRMLS_CC).empty();
+}
+
+std::string fetch_name_in_request(zval *item TSRMLS_DC)
+{
+    std::string name;
     static const track_vars_pair pairs[] = {{TRACK_VARS_POST, "_POST"},
                                             {TRACK_VARS_GET, "_GET"},
                                             {TRACK_VARS_COOKIE, "_COOKIE"}};
@@ -160,13 +166,21 @@ bool openrasp_zval_in_request(zval *item TSRMLS_DC)
     {
         if (!PG(http_globals)[pairs[index].id] && !zend_is_auto_global(pairs[index].name, strlen(pairs[index].name) TSRMLS_CC) && Z_TYPE_P(PG(http_globals)[pairs[index].id]) != IS_ARRAY)
         {
-            return 0;
+            return name;
         }
         HashTable *ht = Z_ARRVAL_P(PG(http_globals)[pairs[index].id]);
         for (zend_hash_internal_pointer_reset(ht);
              zend_hash_has_more_elements(ht) == SUCCESS;
              zend_hash_move_forward(ht))
         {
+            char *key;
+            ulong idx;
+            int type;
+            type = zend_hash_get_current_key(ht, &key, &idx, 0);
+            if (type == HASH_KEY_NON_EXISTENT)
+            {
+                continue;
+            }
             zval **ele_value;
             if (zend_hash_get_current_data(ht, (void **)&ele_value) != SUCCESS)
             {
@@ -174,11 +188,19 @@ bool openrasp_zval_in_request(zval *item TSRMLS_DC)
             }
             if (item == *ele_value)
             {
-                return 1;
+                if (type == HASH_KEY_IS_STRING)
+                {
+                    return std::string(key);
+                }
+                else if (type == HASH_KEY_IS_LONG)
+                {
+                    long actual = idx;
+                    return std::to_string(actual);
+                }
             }
         }
     }
-    return 0;
+    return name;
 }
 
 void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckType type, int confidence, zval *params,
