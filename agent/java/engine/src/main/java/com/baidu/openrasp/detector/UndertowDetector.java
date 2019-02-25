@@ -29,7 +29,7 @@ import java.security.ProtectionDomain;
 public class UndertowDetector extends ServerDetector {
     @Override
     public boolean isClassMatched(String className) {
-        return "org/wildfly/extension/undertow/UndertowService".equals(className);
+        return "io/undertow/server/HttpHandler".equals(className);
     }
 
     @Override
