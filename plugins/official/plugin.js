@@ -1070,7 +1070,7 @@ if (RASP.get_jsengine() !== 'v8') {
         {
             var reason = false
 
-            if (!isNaN(hostname))
+            if (!isNaN(hostname) && hostname != "")
             {
                 reason = _("SSRF - Requesting numeric IP address: %1%", [hostname])
             }
