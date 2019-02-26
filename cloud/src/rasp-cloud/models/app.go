@@ -56,6 +56,7 @@ type App struct {
 	EmailAlarmConf   EmailAlarmConf         `json:"email_alarm_conf" bson:"email_alarm_conf"`
 	DingAlarmConf    DingAlarmConf          `json:"ding_alarm_conf" bson:"ding_alarm_conf"`
 	HttpAlarmConf    HttpAlarmConf          `json:"http_alarm_conf" bson:"http_alarm_conf"`
+	AlgorithmConfig  map[string]interface{} `json:"algorithm_config"`
 }
 
 type WhitelistConfigItem struct {
@@ -230,7 +231,7 @@ func handleAttackAlarm() {
 	}
 	now := time.Now().UnixNano() / 1000000
 	for _, app := range apps {
-		total, result, err := logs.SearchLogs(lastAlarmTime, now, nil, "event_time",
+		total, result, err := logs.SearchLogs(lastAlarmTime, now, false, nil, "event_time",
 			1, 10, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+app.Id)
 		if err != nil {
 			beego.Error("failed to get alarm from es: " + err.Error())
@@ -292,7 +293,7 @@ func selectDefaultPlugin(app *App) {
 		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to insert default plugin: "+err.Error())
 		return
 	}
-	err = SetSelectedPlugin(app.Id, plugin.Id)
+	_, err = SetSelectedPlugin(app.Id, plugin.Id)
 	if err != nil {
 		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to select default plugin for app: " + err.Error()+
 			", app_id: "+ app.Id+ ", plugin_id: "+ plugin.Id)
@@ -365,7 +366,7 @@ func RegenerateSecret(appId string) (secret string, err error) {
 	return
 }
 
-func HandleApp(app *App, isCreate bool) {
+func HandleApp(app *App, isCreate bool) error {
 	if app.EmailAlarmConf.RecvAddr == nil {
 		app.EmailAlarmConf.RecvAddr = make([]string, 0)
 	}
@@ -396,6 +397,19 @@ func HandleApp(app *App, isCreate bool) {
 	if app.GeneralConfig == nil {
 		app.GeneralConfig = make(map[string]interface{})
 	}
+
+	app.AlgorithmConfig = make(map[string]interface{})
+	plugin, err := GetSelectedPlugin(app.Id, false)
+	if err != nil {
+		if err != mgo.ErrNotFound {
+			return err
+		}
+		return nil
+	}
+	if plugin.AlgorithmConfig != nil {
+		app.AlgorithmConfig = plugin.AlgorithmConfig
+	}
+	return nil
 }
 
 func UpdateAppById(id string, doc interface{}) (app *App, err error) {

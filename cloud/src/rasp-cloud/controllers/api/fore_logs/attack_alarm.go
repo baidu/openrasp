@@ -102,7 +102,43 @@ func (o *AttackAlarmController) AggregationWithUserAgent() {
 
 // @router /search [post]
 func (o *AttackAlarmController) Search() {
-	var param = &logs.SearchAttackParam{}
+	param, searchData := o.handleAttackSearchParam()
+	total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime,
+		false, searchData, "event_time", param.Page,
+		param.Perpage, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+param.Data.AppId)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
+	}
+	o.Serve(map[string]interface{}{
+		"total":      total,
+		"total_page": math.Ceil(float64(total) / float64(param.Perpage)),
+		"page":       param.Page,
+		"perpage":    param.Perpage,
+		"data":       result,
+	})
+}
+
+// @router /aggr/vuln [post]
+func (o *AttackAlarmController) AggregationVuln() {
+	param, searchData := o.handleAttackSearchParam()
+	total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime,
+		true, searchData, "event_time", param.Page,
+		param.Perpage, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+param.Data.AppId)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
+	}
+	o.Serve(map[string]interface{}{
+		"total":      total,
+		"total_page": math.Ceil(float64(total) / float64(param.Perpage)),
+		"page":       param.Page,
+		"perpage":    param.Perpage,
+		"data":       result,
+	})
+}
+
+func (o *AttackAlarmController) handleAttackSearchParam() (param *logs.SearchAttackParam,
+	searchData map[string]interface{}) {
+	param = &logs.SearchAttackParam{}
 	o.UnMarshalJson(&param)
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
@@ -134,7 +170,6 @@ func (o *AttackAlarmController) Search() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to encode search data", err)
 	}
-	var searchData map[string]interface{}
 	err = json.Unmarshal(content, &searchData)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to decode search data", err)
@@ -142,18 +177,7 @@ func (o *AttackAlarmController) Search() {
 	delete(searchData, "start_time")
 	delete(searchData, "end_time")
 	delete(searchData, "app_id")
-	total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime, searchData, "event_time",
-		param.Page, param.Perpage, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+param.Data.AppId)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
-	}
-	o.Serve(map[string]interface{}{
-		"total":      total,
-		"total_page": math.Ceil(float64(total) / float64(param.Perpage)),
-		"page":       param.Page,
-		"perpage":    param.Perpage,
-		"data":       result,
-	})
+	return
 }
 
 func (o *AttackAlarmController) validFieldAggrParam(param *logs.AggrFieldParam) {

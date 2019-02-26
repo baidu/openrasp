@@ -85,7 +85,8 @@ func GetRaspByAppId(id string, page int, perpage int) (count int, result []*Rasp
 }
 
 func RemoveRaspByAppId(appId string) (err error) {
-	return mongo.RemoveAll(raspCollectionName, bson.M{"app_id": appId})
+	_, err = mongo.RemoveAll(raspCollectionName, bson.M{"app_id": appId})
+	return
 }
 
 func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp, err error) {
@@ -140,6 +141,10 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 	return
 }
 
+func FindAllRasp(selector *Rasp) (count int, result []*Rasp, err error) {
+	return FindRasp(selector, 0, 0)
+}
+
 func GetRaspById(id string) (rasp *Rasp, err error) {
 	err = mongo.FindId(raspCollectionName, id, &rasp)
 	if err == nil {
@@ -161,4 +166,14 @@ func HandleRasp(rasp *Rasp) {
 
 func RemoveRaspById(id string) (err error) {
 	return mongo.RemoveId(raspCollectionName, id)
+}
+
+func RemoveRaspByRegisterIp(ip string, appId string) (int, error) {
+	offlineWhere := "this.last_heartbeat_time+this.heartbeat_interval+180 < " +
+		strconv.FormatInt(time.Now().Unix(), 10)
+	info, err := mongo.RemoveAll(raspCollectionName, bson.M{"app_id": appId, "register_ip": ip, "$where": offlineWhere})
+	if err != nil {
+		return 0, err
+	}
+	return info.Removed, nil
 }

@@ -101,6 +101,9 @@ func (o *AppController) GetRasps() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get apps", err)
 	}
+	if rasps == nil {
+		rasps = make([]*models.Rasp, 0)
+	}
 	result["total"] = total
 	result["total_page"] = math.Ceil(float64(total) / float64(param.Perpage))
 	result["page"] = param.Page
@@ -589,12 +592,12 @@ func (o *AppController) SetSelectedPlugin() {
 	if pluginId == "" {
 		o.ServeError(http.StatusBadRequest, "plugin_id cannot be empty")
 	}
-	err := models.SetSelectedPlugin(appId, pluginId)
+	plugin, err := models.SetSelectedPlugin(appId, pluginId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to set selected plugin", err)
 	}
 	models.AddOperation(appId, models.OperationTypeSetSelectedPlugin, o.Ctx.Input.IP(),
-		"Deployed plugin for "+appId+": "+pluginId)
+		"Deployed plugin "+plugin.Name+": "+plugin.Version+" ["+plugin.Id+"]")
 	o.ServeWithEmptyData()
 }
 

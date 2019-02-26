@@ -39,7 +39,7 @@ func init() {
 	ttlIndexes <- make(map[string]time.Duration)
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
 		esAddr := conf.AppConfig.EsAddr
-		client, err := elastic.NewClient(elastic.SetURL(esAddr),
+		client, err := elastic.NewSimpleClient(elastic.SetURL(esAddr),
 			elastic.SetBasicAuth(conf.AppConfig.EsUser, conf.AppConfig.EsPwd))
 		if err != nil {
 			tools.Panic(tools.ErrCodeESInitFailed, "init ES failed", err)

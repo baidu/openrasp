@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
+	"github.com/astaxie/beego/validation"
 )
 
 type RaspController struct {
@@ -62,20 +63,42 @@ func (o *RaspController) Search() {
 func (o *RaspController) Delete() {
 	var rasp = &models.Rasp{}
 	o.UnMarshalJson(rasp)
-	if rasp.Id == "" {
-		o.ServeError(http.StatusBadRequest, "the id cannot be empty")
+	if rasp.AppId == "" {
+		o.ServeError(http.StatusBadRequest, "the app_id can not be empty")
 	}
-	rasp, err := models.GetRaspById(rasp.Id)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get rasp by id", err)
+	if rasp.Id == "" && rasp.RegisterIp == "" {
+		o.ServeError(http.StatusBadRequest, "the id and register_ip cannot be empty at the same time")
 	}
-	if *rasp.Online {
-		o.ServeError(http.StatusBadRequest, "can not delete online rasp")
+	if rasp.Id != "" {
+		_, rasps, err := models.FindRasp(rasp, 1, 1)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
+		}
+		if len(rasps) == 0 {
+			o.ServeError(http.StatusBadRequest, "can not find the rasp")
+		}
+		err = models.RemoveRaspById(rasp.Id)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "failed to remove rasp", err)
+		}
+		models.AddOperation(rasp.AppId, models.OperationTypeDeleteRasp, o.Ctx.Input.IP(), "Deleted RASP agent: "+rasp.Id)
+		o.Serve(map[string]interface{}{
+			"count": 1,
+		})
+	} else if rasp.RegisterIp != "" {
+		valid := validation.Validation{}
+		if result := valid.IP(rasp.RegisterIp, "IP"); !result.Ok {
+			o.ServeError(http.StatusBadRequest, "rasp register_ip format error"+result.Error.Message)
+		}
+		removedCount, err := models.RemoveRaspByRegisterIp(rasp.RegisterIp, rasp.AppId)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "failed to remove rasp by register ip", err)
+		}
+		models.AddOperation(rasp.AppId, models.OperationTypeDeleteRasp, o.Ctx.Input.IP(),
+			"Deleted RASP agent by register ip: "+rasp.RegisterIp)
+		o.Serve(map[string]interface{}{
+			"count": removedCount,
+		})
 	}
-	err = models.RemoveRaspById(rasp.Id)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to remove rasp", err)
-	}
-	models.AddOperation(rasp.AppId, models.OperationTypeDeleteRasp, o.Ctx.Input.IP(), "Deleted RASP agent: "+rasp.Id)
-	o.ServeWithEmptyData()
+
 }
