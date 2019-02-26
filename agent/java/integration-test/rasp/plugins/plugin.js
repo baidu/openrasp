@@ -72,7 +72,7 @@ plugin.register('readFile', function (params, context) {
 plugin.register('writeFile', function (params, context) {
     checkContext(context);
     plugin.log('writeFile', params);
-    if (params.name === 'writeFileTest') {
+    if (params.path === 'writeFileTest') {
         return {
             action: 'block'
         }

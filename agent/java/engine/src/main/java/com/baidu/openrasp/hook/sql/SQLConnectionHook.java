@@ -68,7 +68,7 @@ public class SQLConnectionHook extends AbstractClassHook {
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             params.put("server", params, server);
-            params.put("errorCode", params, errorCode);
+            params.put("error_code", params, errorCode);
             params.put("query", params, "");
             String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
             params.put("message", params, message);

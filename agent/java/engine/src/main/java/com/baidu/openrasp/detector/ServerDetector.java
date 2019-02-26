@@ -75,7 +75,7 @@ public abstract class ServerDetector {
             DynamicConfigAppender.createHttpAppender(AppenderMappedLogger.HTTP_POLICY_ALARM.getLogger(),
                     AppenderMappedLogger.HTTP_POLICY_ALARM.getAppender());
             new Register();
-        }else {
+        } else {
             checkServerPolicy();
         }
     }
@@ -97,6 +97,8 @@ public abstract class ServerDetector {
             HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WEBSPHERE, CheckParameter.EMPTY_MAP);
         } else if ("weblogic".equals(serverName)) {
             HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WEBLOGIC, CheckParameter.EMPTY_MAP);
+        } else if ("undertow".equals(serverName)) {
+            HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WILDFLY, CheckParameter.EMPTY_MAP);
         }
     }
 

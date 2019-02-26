@@ -68,7 +68,8 @@ public class CheckParameter {
         POLICY_SERVER_JETTY("jettyServer", new JettySecurityChecker(false), 0),
         POLICY_SERVER_RESIN("resinServer", new ResinSecurityChecker(false), 0),
         POLICY_SERVER_WEBSPHERE("websphereServer", new WebsphereSecurityChecker(false), 0),
-        POLICY_SERVER_WEBLOGIC("weblogicServer", new WeblogicSecurityChecker(false), 0);
+        POLICY_SERVER_WEBLOGIC("weblogicServer", new WeblogicSecurityChecker(false), 0),
+        POLICY_SERVER_WILDFLY("wildflyServer", new WildflySecurityChecker(false), 0);
 
         String name;
         Checker checker;
