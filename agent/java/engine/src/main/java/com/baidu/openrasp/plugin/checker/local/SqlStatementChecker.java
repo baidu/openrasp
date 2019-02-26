@@ -17,12 +17,10 @@
 package com.baidu.openrasp.plugin.checker.local;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.plugin.antlr.TokenGenerator;
 import com.baidu.openrasp.config.Config;
-import com.baidu.openrasp.hook.sql.SQLStatementHook;
 import com.baidu.openrasp.plugin.antlr.TokenResult;
 import com.baidu.openrasp.plugin.antlr.TokenizeErrorListener;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -85,7 +83,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
         if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
             String query = (String) checkParameter.getParam("query");
             String sqlType = (String) checkParameter.getParam("server");
-            String errorCode = (String) checkParameter.getParam("errorCode");
+            String errorCode = (String) checkParameter.getParam("error_code");
             if (query != null && sqlType != null && errorCode != null && sqlErrorCode.contains(errorCode)) {
                 message = (String) checkParameter.getParam("message");
             }
