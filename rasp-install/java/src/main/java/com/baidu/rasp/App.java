@@ -191,8 +191,11 @@ public class App {
                 uninstaller.uninstall();
             }
         } catch (Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
+            if (e instanceof RaspError) {
+                System.out.println(e.getMessage());
+            } else {
+                e.printStackTrace();
+            }
             showNotice();
             System.exit(1);
         }

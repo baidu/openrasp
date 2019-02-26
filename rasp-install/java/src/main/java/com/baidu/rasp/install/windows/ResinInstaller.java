@@ -79,7 +79,6 @@ public class ResinInstaller extends BaseStandardInstaller {
             version = Integer.valueOf(sb.reverse().toString());
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
         return version;
@@ -121,13 +120,9 @@ public class ResinInstaller extends BaseStandardInstaller {
 
     @Override
     protected String getScript(String installPath) {
-
         if (getVersion(installPath) == 3) {
-
             return new File(installPath).getParent() + File.separator + "conf" + File.separator + "resin.conf";
-
         } else {
-
             return new File(installPath).getParent() + File.separator + "conf" + File.separator + "cluster-default.xml";
         }
     }
