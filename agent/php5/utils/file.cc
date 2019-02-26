@@ -50,4 +50,16 @@ std::string get_line_content(const std::string &file_path, long num)
     return content;
 }
 
+bool write_string_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len)
+{
+    std::ofstream out_file(file, mode);
+    if (out_file.is_open() && out_file.good())
+    {
+        out_file.write(content, content_len);
+        out_file.close();
+        return true;
+    }
+    return false;
+}
+
 } // namespace openrasp

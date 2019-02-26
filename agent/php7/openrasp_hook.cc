@@ -357,28 +357,6 @@ void handle_block()
     zend_bailout();
 }
 
-/**
- * 调用 openrasp_check 提供的方法进行检测
- * 若需要拦截，直接返回重定向信息，并终止请求
- */
-void check(OpenRASPCheckType type, zval *params)
-{
-    bool result = false;
-    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-    if (LIKELY(isolate))
-    {
-        v8::HandleScope handlescope(isolate);
-        auto v8_type = NewV8String(isolate, get_check_type_name(type));
-        auto v8_params = v8::Local<v8::Object>::Cast(NewV8ValueFromZval(isolate, params));
-        zval_ptr_dtor(params);
-        result = isolate->Check(v8_type, v8_params, OPENRASP_CONFIG(plugin.timeout.millis));
-    }
-    if (result)
-    {
-        handle_block();
-    }
-}
-
 extern int include_or_eval_handler(zend_execute_data *execute_data);
 extern int echo_handler(zend_execute_data *execute_data);
 

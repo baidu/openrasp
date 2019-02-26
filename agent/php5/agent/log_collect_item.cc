@@ -15,6 +15,7 @@
  */
 
 #include "utils/JsonReader.h"
+#include "utils/file.h"
 #include "log_collect_item.h"
 #include "openrasp_utils.h"
 #include "openrasp_ini.h"
@@ -142,7 +143,7 @@ void LogCollectItem::save_status_snapshot() const
 #ifndef _WIN32
     mode_t oldmask = umask(0);
 #endif
-    write_str_to_file(status_file_abs.c_str(),
+    write_string_to_file(status_file_abs.c_str(),
                       std::ofstream::in | std::ofstream::out | std::ofstream::trunc,
                       json_content.c_str(),
                       json_content.length());

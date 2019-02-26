@@ -217,41 +217,6 @@ char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
     return nullptr;
 }
 
-HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey)
-{
-    zval *origin_zv;
-    if ((origin_zv = zend_hash_str_find(ht, arKey, strlen(arKey))) != nullptr &&
-        Z_TYPE_P(origin_zv) == IS_ARRAY)
-    {
-        return Z_ARRVAL_P(origin_zv);
-    }
-    return nullptr;
-}
-
-bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result)
-{
-    zval *origin_zv;
-    if ((origin_zv = zend_hash_str_find(ht, arKey, strlen(arKey))) != nullptr &&
-        Z_TYPE_P(origin_zv) == IS_LONG)
-    {
-        *result = Z_LVAL_P(origin_zv);
-        return true;
-    }
-    return false;
-}
-
-bool write_str_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len)
-{
-    std::ofstream out_file(file, mode);
-    if (out_file.is_open() && out_file.good())
-    {
-        out_file.write(content, content_len);
-        out_file.close();
-        return true;
-    }
-    return false;
-}
-
 bool get_entire_file_content(const char *file, std::string &content)
 {
     std::ifstream ifs(file, std::ifstream::in | std::ifstream::binary);

@@ -217,18 +217,6 @@ void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugi
     }
 }
 
-bool write_str_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len)
-{
-    std::ofstream out_file(file, mode);
-    if (out_file.is_open() && out_file.good())
-    {
-        out_file.write(content, content_len);
-        out_file.close();
-        return true;
-    }
-    return false;
-}
-
 bool get_entire_file_content(const char *file, std::string &content)
 {
     std::ifstream ifs(file, std::ifstream::in | std::ifstream::binary);
@@ -247,39 +235,6 @@ char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
         Z_TYPE_PP(origin_zv) == IS_STRING)
     {
         return Z_STRVAL_PP(origin_zv);
-    }
-    return nullptr;
-}
-
-HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey)
-{
-    zval **origin_zv;
-    if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
-        Z_TYPE_PP(origin_zv) == IS_ARRAY)
-    {
-        return Z_ARRVAL_PP(origin_zv);
-    }
-    return nullptr;
-}
-
-bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result)
-{
-    zval **origin_zv;
-    if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
-        Z_TYPE_PP(origin_zv) == IS_LONG)
-    {
-        *result = Z_LVAL_PP(origin_zv);
-        return true;
-    }
-    return false;
-}
-
-zval *fetch_outmost_zval_from_ht(HashTable *ht, const char *arKey)
-{
-    zval **origin_zv;
-    if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS)
-    {
-        return *origin_zv;
     }
     return nullptr;
 }

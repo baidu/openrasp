@@ -377,28 +377,6 @@ void handle_block(TSRMLS_D)
     zend_bailout();
 }
 
-/**
- * 调用 openrasp_check 提供的方法进行检测
- * 若需要拦截，直接返回重定向信息，并终止请求
- */
-void check(OpenRASPCheckType check_type, zval *z_params TSRMLS_DC)
-{
-    bool result = false;
-    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-    if (LIKELY(isolate))
-    {
-        v8::HandleScope handlescope(isolate);
-        auto type = NewV8String(isolate, get_check_type_name(check_type));
-        auto params = v8::Local<v8::Object>::Cast(NewV8ValueFromZval(isolate, z_params));
-        zval_ptr_dtor(&z_params);
-        result = isolate->Check(type, params, OPENRASP_CONFIG(plugin.timeout.millis));
-    }
-    if (result)
-    {
-        handle_block(TSRMLS_C);
-    }
-}
-
 extern int include_or_eval_handler(ZEND_OPCODE_HANDLER_ARGS);
 extern int echo_handler(ZEND_OPCODE_HANDLER_ARGS);
 

@@ -18,6 +18,7 @@
 #define _OPENRASP_UTILS_FILE_H_
 
 #include <string>
+#include <fstream>
 
 namespace openrasp
 {
@@ -25,6 +26,7 @@ namespace openrasp
 bool file_exists(const std::string &file_path);
 bool file_readable(const std::string &file_path);
 std::string get_line_content(const std::string &file_path, long num);
+bool write_string_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len);
 
 } // namespace openrasp
 
