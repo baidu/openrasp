@@ -1,14 +1,12 @@
 --TEST--
-hook curl_exec empty host
+hook curl_exec bad url
 --SKIPIF--
 <?php
 if (!function_exists("curl_init")) die("Skipped: curl is disabled.");
 $plugin = <<<EOF
 plugin.register('ssrf', params => {
-    assert(params.url == '1q2w3e4r5t6y7u8i9o0p')
+    assert(params.url == '/1q2w3e4r5t6y7u8i9o0p')
     assert(params.function == 'curl_exec')
-    assert(params.hostname == '1q2w3e4r5t6y7u8i9o0p')
-    assert(Array.isArray(params.ip))
     return block
 })
 EOF;
@@ -17,7 +15,7 @@ include(__DIR__.'/../skipif.inc');
 --INI--
 openrasp.root_dir=/tmp/openrasp
 --GET--
-url=1q2w3e4r5t6y7u8i9o0p
+url=/1q2w3e4r5t6y7u8i9o0p
 --FILE--
 <?php 
 	$url = @$_GET['url'];

@@ -84,23 +84,15 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
     {
         return true;
     }
-    std::string host;
-    php_url *url = php_url_parse_ex(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url));
-    if (url)
-    {
-        if (url->host)
-        {
-#if (PHP_MINOR_VERSION < 3)
-            host = std::string(url->host);
-#else
-            host = std::string(url->host->val, url->host->len);
-#endif
-        }
-        php_url_free(url);
-    }
+    std::string url_string(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url));
+    std::string host = get_host_from_url(url_string);
     if (host.empty())
     {
-        return false;
+        host = get_host_from_url("http://" + url_string);
+        if (host.empty())
+        {
+            return false;
+        }
     }
     openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (isolate)

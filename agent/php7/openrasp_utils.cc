@@ -25,6 +25,7 @@ extern "C"
 #include "php_streams.h"
 #include "zend_smart_str.h"
 #include "ext/pcre/php_pcre.h"
+#include "ext/standard/url.h"
 #include "ext/standard/file.h"
 #include "ext/json/php_json.h"
 #include "Zend/zend_builtin_functions.h"
@@ -286,4 +287,23 @@ zend_string *fetch_request_body(size_t max_len)
         return zend_string_init("", strlen(""), 0);
     }
     return buf;
+}
+
+std::string get_host_from_url(std::string origin_url)
+{
+    std::string host;
+    php_url *url = php_url_parse_ex(origin_url.c_str(), origin_url.length());
+    if (url)
+    {
+        if (url->host)
+        {
+#if (PHP_MINOR_VERSION < 3)
+            host = std::string(url->host);
+#else
+            host = std::string(url->host->val, url->host->len);
+#endif
+        }
+        php_url_free(url);
+    }
+    return host;
 }

@@ -28,6 +28,7 @@ extern "C"
 #include "php_ini.h"
 #include "php_streams.h"
 #include "ext/json/php_json.h"
+#include "ext/standard/url.h"
 #include "ext/standard/file.h"
 #include "ext/date/php_date.h"
 #include "ext/standard/php_string.h"
@@ -312,4 +313,19 @@ char *fetch_request_body(size_t max_len TSRMLS_DC)
         return estrdup("");
     }
     return buf;
+}
+
+std::string get_host_from_url(std::string origin_url)
+{
+    std::string host;
+    php_url *url = php_url_parse_ex(origin_url.c_str(), origin_url.length());
+    if (url)
+    {
+        if (url->host)
+        {
+            host = std::string(url->host);
+        }
+        php_url_free(url);
+    }
+    return host;
 }
