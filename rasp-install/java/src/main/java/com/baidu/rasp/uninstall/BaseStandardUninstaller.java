@@ -16,18 +16,20 @@
 
 package com.baidu.rasp.uninstall;
 
+import com.baidu.rasp.App;
+import com.baidu.rasp.Attacher;
 import com.baidu.rasp.RaspError;
 import com.baidu.rasp.install.BaseStandardInstaller;
 
 import java.io.File;
 import java.io.IOException;
 
-import static com.baidu.rasp.RaspError.E10003;
 import static com.baidu.rasp.RaspError.E10002;
+import static com.baidu.rasp.RaspError.E10003;
 
 /**
- * @Description: 自动卸载基础类
  * @author anyang
+ * @Description: 自动卸载基础类
  * @date 2018/4/25 19:37
  */
 public abstract class BaseStandardUninstaller implements Uninstaller {
@@ -44,6 +46,10 @@ public abstract class BaseStandardUninstaller implements Uninstaller {
     public void uninstall() throws RaspError, IOException {
         File installDir = new File(getInstallPath(serverRoot));
         BaseStandardInstaller.modifyFolerPermission(installDir.getCanonicalPath());
+        if (App.isAttach) {
+            System.out.println("Attach the rasp to process with pid " + App.pid);
+            new Attacher(App.pid + "", App.baseDir).doAttach(Attacher.MODE_UNINSTALL);
+        }
         // 删除文件
         delRaspFolder(getInstallPath(serverRoot));
         // 找到要修改的启动脚本
@@ -97,7 +103,7 @@ public abstract class BaseStandardUninstaller implements Uninstaller {
     }
 
     //判断tomcat的版本是否大于8
-    protected boolean checkTomcatVersion(){
+    protected boolean checkTomcatVersion() {
         String javaVersion = System.getProperty("java.version");
         return javaVersion != null && (javaVersion.startsWith("1.9") || javaVersion.startsWith("10.")
                 || javaVersion.startsWith("11."));

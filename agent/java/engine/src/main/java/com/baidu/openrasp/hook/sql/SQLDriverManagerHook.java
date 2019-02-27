@@ -135,6 +135,6 @@ public class SQLDriverManagerHook extends AbstractClassHook {
         HashMap<String, Object> params = new HashMap<String, Object>(4);
         params.put("url", url);
         params.put("properties", properties);
-        HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_SQL_CONNECTION, params);
+        HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SQL_CONNECTION, params);
     }
 }

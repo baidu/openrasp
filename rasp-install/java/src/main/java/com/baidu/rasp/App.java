@@ -16,7 +16,6 @@
 
 package com.baidu.rasp;
 
-import com.baidu.rasp.install.AttachInstaller;
 import com.baidu.rasp.install.Installer;
 import com.baidu.rasp.install.InstallerFactory;
 import com.baidu.rasp.install.linux.LinuxInstallerFactory;
@@ -87,9 +86,16 @@ public class App {
         } else {
             if (cmd.hasOption("install") && cmd.hasOption("uninstall")) {
                 throw new RaspError(E10005 + "Can't use -install and -uninstall simultaneously");
-            } else if (cmd.hasOption("install")) {
-                baseDir = cmd.getOptionValue("install");
-                install = "install";
+            } else {
+                if (cmd.hasOption("install")) {
+                    baseDir = cmd.getOptionValue("install");
+                    install = "install";
+                } else if (cmd.hasOption("uninstall")) {
+                    baseDir = cmd.getOptionValue("uninstall");
+                    install = "uninstall";
+                } else {
+                    throw new RaspError(E10005 + "One of -install and -uninstall must be specified");
+                }
                 if (cmd.hasOption("attach")) {
                     isAttach = true;
                     if (!cmd.hasOption("pid")) {
@@ -101,11 +107,6 @@ public class App {
                         throw new RaspError(E10005 + "The -pid parameter must be integer");
                     }
                 }
-            } else if (cmd.hasOption("uninstall")) {
-                baseDir = cmd.getOptionValue("uninstall");
-                install = "uninstall";
-            } else {
-                throw new RaspError(E10005 + "One of -install and -uninstall must be specified");
             }
 
             keepConfig = cmd.hasOption("keepconf");

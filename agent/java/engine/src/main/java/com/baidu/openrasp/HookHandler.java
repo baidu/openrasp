@@ -303,7 +303,10 @@ public class HookHandler {
      * @param type   检测类型
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
-    public static void doPolicyCheckWithoutRequest(CheckParameter.Type type, Object params) {
+    public static void doRealCheckWithoutRequest(CheckParameter.Type type, Object params) {
+        if (!enableHook.get()) {
+            return;
+        }
         long a = 0;
         if (Config.getConfig().getDebugLevel() > 0) {
             a = System.currentTimeMillis();
@@ -351,7 +354,7 @@ public class HookHandler {
                 }
             }
         }
-        doPolicyCheckWithoutRequest(type, params);
+        doRealCheckWithoutRequest(type, params);
     }
 
     /**
@@ -361,7 +364,7 @@ public class HookHandler {
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
     public static void doCheck(CheckParameter.Type type, Object params) {
-        if (enableHook.get() && enableCurrThreadHook.get()) {
+        if (enableCurrThreadHook.get()) {
             doCheckWithoutRequest(type, params);
         }
     }

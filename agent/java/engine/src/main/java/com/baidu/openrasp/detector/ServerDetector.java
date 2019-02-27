@@ -86,19 +86,19 @@ public abstract class ServerDetector {
     public static void checkServerPolicy() {
         String serverName = ApplicationModel.getServerName();
         if ("tomcat".equals(serverName)) {
-            HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_TOMCAT, CheckParameter.EMPTY_MAP);
+            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_TOMCAT, CheckParameter.EMPTY_MAP);
         } else if ("jboss".equals(serverName)) {
-            HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_JBOSS, CheckParameter.EMPTY_MAP);
+            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_JBOSS, CheckParameter.EMPTY_MAP);
         } else if ("jetty".equals(serverName)) {
-            HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_JETTY, CheckParameter.EMPTY_MAP);
+            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_JETTY, CheckParameter.EMPTY_MAP);
         } else if ("resin".equals(serverName)) {
-            HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_RESIN, CheckParameter.EMPTY_MAP);
+            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_RESIN, CheckParameter.EMPTY_MAP);
         } else if ("websphere".equals(serverName)) {
-            HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WEBSPHERE, CheckParameter.EMPTY_MAP);
+            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WEBSPHERE, CheckParameter.EMPTY_MAP);
         } else if ("weblogic".equals(serverName)) {
-            HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WEBLOGIC, CheckParameter.EMPTY_MAP);
+            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WEBLOGIC, CheckParameter.EMPTY_MAP);
         } else if ("undertow".equals(serverName)) {
-            HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WILDFLY, CheckParameter.EMPTY_MAP);
+            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WILDFLY, CheckParameter.EMPTY_MAP);
         }
     }
 

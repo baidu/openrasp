@@ -18,6 +18,8 @@ package com.baidu.openrasp;
 
 import java.lang.instrument.Instrumentation;
 
+import static com.baidu.openrasp.Module.*;
+
 /**
  * Created by tyy on 3/27/17.
  * 加载agent的入口类，先于主函数加载
@@ -31,7 +33,7 @@ public class Agent {
      * @param inst     {@link Instrumentation}
      */
     public static void premain(String agentArg, Instrumentation inst) {
-        init(Module.START_MODE_NORMAL, inst);
+        init(START_MODE_NORMAL, START_ACTION_INSTALL, inst);
     }
 
     /**
@@ -41,7 +43,7 @@ public class Agent {
      * @param inst     {@link Instrumentation}
      */
     public static void agentmain(String agentArg, Instrumentation inst) {
-        init(Module.START_MODE_ATTACH, inst);
+        init(Module.START_MODE_ATTACH, agentArg, inst);
     }
 
     /**
@@ -50,11 +52,11 @@ public class Agent {
      * @param mode 启动模式
      * @param inst {@link Instrumentation}
      */
-    public static synchronized void init(String mode, Instrumentation inst) {
+    public static synchronized void init(String mode, String action, Instrumentation inst) {
         try {
             JarFileHelper.addJarToBootstrap(inst);
-            ModuleLoader.load(mode, inst);
-        } catch (Exception e) {
+            ModuleLoader.load(mode, action, inst);
+        } catch (Throwable e) {
             System.err.println("[OpenRASP] Failed to initialize, will continue without security protection.");
             e.printStackTrace();
         }
