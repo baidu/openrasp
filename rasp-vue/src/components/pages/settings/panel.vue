@@ -8,7 +8,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">
-          管理后台地址 [用户生成报警邮件URL]
+          管理后台地址 [用于生成报警邮件URL]
         </label>
         <input
           v-model="data['panel_url']"
@@ -18,7 +18,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">
-          Agent 服务器列表
+          Agent 服务器列表 [用于生成 "添加主机" 里的安装命令]
         </label>
         <textarea
           type="text"
