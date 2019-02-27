@@ -30,6 +30,19 @@
               将所有算法设置为「记录日志」模式
             </span>
           </label>
+
+          <label class="custom-switch">
+            <input
+              v-model="data.meta.is_dev"
+              type="checkbox"
+              name="custom-switch-checkbox"
+              class="custom-switch-input"
+            >
+            <span class="custom-switch-indicator" />
+            <span class="custom-switch-description">
+              切换为 「开发模式」，开启一些消耗性能的检测算法
+            </span>
+          </label>
         </div>
         <div
           v-for="row in items"
