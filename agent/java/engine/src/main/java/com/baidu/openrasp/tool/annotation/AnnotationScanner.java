@@ -78,7 +78,7 @@ public class AnnotationScanner {
         } catch (Exception e) {
             String message = "find and add class failed";
             int errorCode = ErrorType.HOOK_ERROR.getCode();
-            CustomClassTransformer.LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
+            CustomClassTransformer.LOGGER.error(CloudUtils.getExceptionObject(message, errorCode), e);
             throw new AnnotationScannerException(e);
         }
         for (Class clazz : classes) {
@@ -112,7 +112,7 @@ public class AnnotationScanner {
                     } catch (Exception e) {
                         String message = "find and add class failed";
                         int errorCode = ErrorType.HOOK_ERROR.getCode();
-                        CustomClassTransformer.LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
+                        CustomClassTransformer.LOGGER.error(CloudUtils.getExceptionObject(message, errorCode), e);
                         throw new AnnotationScannerException(e);
 
                     }

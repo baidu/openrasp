@@ -99,7 +99,7 @@ public abstract class ServerPolicyChecker extends PolicyChecker {
         } catch (Throwable e) {
             String message = "get process id failed";
             int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
+            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         }
         return -1;
     }

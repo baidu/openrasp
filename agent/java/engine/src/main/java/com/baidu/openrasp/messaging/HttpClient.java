@@ -36,9 +36,9 @@ public class HttpClient {
 
     /**
      * 用于post推送報警的http client
-     *
      */
-    public HttpClient() {}
+    public HttpClient() {
+    }
 
     protected void request(String requestUrl, String attackInfoJson, int connectionTimeout, int readTimeout) {
         HttpURLConnection httpURLConnection = null;

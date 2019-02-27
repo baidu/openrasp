@@ -18,7 +18,6 @@ package com.baidu.openrasp.plugin.checker.local;
 
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.AttackChecker;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.google.gson.Gson;
@@ -108,7 +107,6 @@ public abstract class ConfigurableChecker extends AttackChecker {
         }
         return DEFAULT_MIN_LENGTH;
     }
-
 
 
     private void logJsonError(Exception e) {

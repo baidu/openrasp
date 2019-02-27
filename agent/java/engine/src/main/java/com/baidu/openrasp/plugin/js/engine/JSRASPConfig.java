@@ -26,12 +26,12 @@ import org.mozilla.javascript.Scriptable;
  */
 public class JSRASPConfig extends BaseFunction {
     /**
-     * @see BaseFunction#call(Context, Scriptable, Scriptable, Object[])
      * @param cx
      * @param scope
      * @param thisObj
      * @param args
      * @return
+     * @see BaseFunction#call(Context, Scriptable, Scriptable, Object[])
      */
     @Override
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -50,9 +50,10 @@ public class JSRASPConfig extends BaseFunction {
     /**
      * 提供获取该对象默认值的方法
      * console.log(thisObj) 即会输出此方法返回的值
-     * @see Scriptable#getDefaultValue(Class)
+     *
      * @param hint
      * @return
+     * @see Scriptable#getDefaultValue(Class)
      */
     @Override
     public Object getDefaultValue(Class<?> hint) {

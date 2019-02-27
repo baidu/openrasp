@@ -18,13 +18,8 @@ package com.baidu.rasp.install.linux;
 
 import com.baidu.rasp.RaspError;
 import com.baidu.rasp.install.BaseStandardInstaller;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 
-import java.io.*;
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.baidu.rasp.RaspError.E10001;
 
@@ -83,22 +78,22 @@ public class TomcatInstaller extends BaseStandardInstaller {
                 sb.append(OPENRASP_START_TAG);
                 sb.append(JAVA_AGENT_CONFIG);
                 //jdk版本8以上插入依赖包
-                if (versionFlag){
+                if (versionFlag) {
                     sb.append(JDK_JAVA_OPTIONS);
                 }
                 sb.append(OPENRASP_END_TAG);
                 continue;
             }
 
-            if (line.contains("BEGIN OPENRASP")){
+            if (line.contains("BEGIN OPENRASP")) {
                 isDelete = true;
                 continue;
             }
-            if (line.contains("END OPENRASP")){
+            if (line.contains("END OPENRASP")) {
                 isDelete = false;
                 continue;
             }
-            if (!isDelete){
+            if (!isDelete) {
                 sb.append(line).append("\n");
             }
         }

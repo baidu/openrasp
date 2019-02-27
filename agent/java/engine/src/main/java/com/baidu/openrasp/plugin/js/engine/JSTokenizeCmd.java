@@ -16,8 +16,8 @@
 
 package com.baidu.openrasp.plugin.js.engine;
 
-import com.baidu.openrasp.plugin.antlr.TokenGenerator;
 import com.baidu.openrasp.plugin.antlr.CmdTokenizeErrorListener;
+import com.baidu.openrasp.plugin.antlr.TokenGenerator;
 import com.baidu.openrasp.plugin.antlr.TokenResult;
 import org.mozilla.javascript.BaseFunction;
 import org.mozilla.javascript.Context;

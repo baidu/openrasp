@@ -24,7 +24,6 @@ import com.baidu.openrasp.tool.Reflection;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayOutputStream;
-import java.io.CharArrayReader;
 import java.io.CharArrayWriter;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -70,7 +69,6 @@ public abstract class AbstractRequest {
 
     /**
      * constructor 测试时使用的构造函数
-     *
      */
     public AbstractRequest(int request) {
     }

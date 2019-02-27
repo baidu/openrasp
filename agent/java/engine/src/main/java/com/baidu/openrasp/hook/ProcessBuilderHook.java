@@ -23,9 +23,9 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
-import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.tool.StackTrace;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -82,11 +82,11 @@ public class ProcessBuilderHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         if (ctClass.getName().contains("ProcessImpl")) {
-            if (getJdkVersion()){
+            if (getJdkVersion()) {
                 String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
                         "$1,$2", byte[].class, byte[].class);
                 insertBefore(ctClass, "<init>", null, src);
-            }else {
+            } else {
                 String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
                         "$1", String[].class);
                 insertBefore(ctClass, "<init>", null, src);

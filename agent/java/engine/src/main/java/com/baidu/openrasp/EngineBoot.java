@@ -20,7 +20,6 @@ import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
 import com.baidu.openrasp.plugin.js.engine.JsPluginManager;
-import com.baidu.openrasp.tool.model.ApplicationModel;
 import com.baidu.openrasp.tool.model.BuildRASPModel;
 import com.baidu.openrasp.transformer.CustomClassTransformer;
 import org.apache.log4j.Logger;
@@ -29,8 +28,6 @@ import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 

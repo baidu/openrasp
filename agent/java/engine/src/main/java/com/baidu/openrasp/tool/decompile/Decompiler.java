@@ -17,7 +17,9 @@
 package com.baidu.openrasp.tool.decompile;
 
 import com.baidu.openrasp.tool.LRUCache;
-import com.strobel.assembler.metadata.*;
+import com.strobel.assembler.metadata.ArrayTypeLoader;
+import com.strobel.assembler.metadata.MetadataSystem;
+import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.DecompilationOptions;
 import com.strobel.decompiler.DecompilerSettings;
 import com.strobel.decompiler.languages.BytecodeOutputOptions;
@@ -25,8 +27,8 @@ import com.strobel.decompiler.languages.java.JavaFormattingOptions;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
-import java.io.*;
-import java.util.*;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -73,7 +75,7 @@ public class Decompiler {
 
     public static ArrayList<String> getAlarmPoint(StackTraceElement[] stackTraceElements, String appBasePath) {
         ArrayList<String> result = new ArrayList<String>();
-        for (StackTraceElement element: stackTraceElements){
+        for (StackTraceElement element : stackTraceElements) {
             String className = element.getClassName();
             String methodName = element.getMethodName();
             int lineNumber = element.getLineNumber();
@@ -83,7 +85,7 @@ public class Decompiler {
                 continue;
             }
             try {
-                String simpleName =className.substring(className.lastIndexOf(".") + 1) + ".class";
+                String simpleName = className.substring(className.lastIndexOf(".") + 1) + ".class";
                 Class clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
                 String src = getDecompilerString(clazz.getResourceAsStream(simpleName), className);
                 if (!src.isEmpty()) {
@@ -98,10 +100,10 @@ public class Decompiler {
                         }
                     }
                     if (!isFind) {
-                        result.add( "");
+                        result.add("");
                     }
                 } else {
-                    result.add( "");
+                    result.add("");
                 }
             } catch (Exception e) {
                 result.add("");

@@ -18,7 +18,6 @@ package com.baidu.rasp.install.linux;
 
 import com.baidu.rasp.install.Installer;
 import com.baidu.rasp.install.InstallerFactory;
-import com.baidu.rasp.install.windows.*;
 
 /**
  * Created by OpenRASP on 5/19/17.
@@ -36,8 +35,8 @@ public class LinuxInstallerFactory extends InstallerFactory {
         if (serverName.equals(RESIN)) {
             return new com.baidu.rasp.install.windows.ResinInstaller(serverName, serverRoot);
         }
-        if (serverName.equals(WEBLOGIC)){
-            return new WeblogicInstaller(serverName,serverRoot);
+        if (serverName.equals(WEBLOGIC)) {
+            return new WeblogicInstaller(serverName, serverRoot);
         }
         System.out.println("Unexpected server name: " + serverName);
         return null;

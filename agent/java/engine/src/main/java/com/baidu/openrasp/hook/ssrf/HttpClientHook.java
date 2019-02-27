@@ -68,7 +68,7 @@ public class HttpClientHook extends AbstractSSRFHook {
         } catch (Throwable t) {
             String message = t.getMessage();
             int errorCode = ErrorType.HOOK_ERROR.getCode();
-            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),t);
+            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), t);
         }
         if (hostName != null) {
             checkHttpUrl(url, hostName, "httpclient");

@@ -29,7 +29,7 @@ import java.io.IOException;
  *
  * 用于记录用户获取参数的 hook 点
  */
-public abstract class ServerParamHook extends AbstractClassHook{
+public abstract class ServerParamHook extends AbstractClassHook {
 
     /**
      * (none-javadoc)

@@ -61,7 +61,7 @@ public abstract class EventInfo {
         } catch (Exception e) {
             String message = "failed to print event log";
             int errorCode = ErrorType.HOOK_ERROR.getCode();
-            HookHandler.LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
+            HookHandler.LOGGER.error(CloudUtils.getExceptionObject(message, errorCode), e);
             return null;
         }
     }

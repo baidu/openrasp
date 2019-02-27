@@ -16,8 +16,8 @@
 
 package com.baidu.rasp.uninstall.windows;
 
-import com.baidu.rasp.uninstall.BaseStandardUninstaller;
 import com.baidu.rasp.install.windows.ResinInstaller;
+import com.baidu.rasp.uninstall.BaseStandardUninstaller;
 
 import java.io.File;
 import java.util.Scanner;
@@ -27,7 +27,6 @@ import java.util.regex.Pattern;
  * @author anyang
  * @Description:resin自动卸载
  * @date 2018/4/25 19:36
- *
  */
 public class ResinUninstaller extends BaseStandardUninstaller {
 

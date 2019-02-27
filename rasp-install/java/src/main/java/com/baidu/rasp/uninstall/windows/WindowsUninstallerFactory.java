@@ -23,7 +23,6 @@ import com.baidu.rasp.uninstall.UninstallerFactory;
  * @author anyang
  * @Description:
  * @date 2018/4/25 19:36
- *
  */
 public class WindowsUninstallerFactory extends UninstallerFactory {
 

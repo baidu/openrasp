@@ -28,6 +28,6 @@ public class ExceptionModel {
 
     @Override
     public String toString() {
-        return "[E"+errorCode+"] "+ message+": ";
+        return "[E" + errorCode + "] " + message + ": ";
     }
 }

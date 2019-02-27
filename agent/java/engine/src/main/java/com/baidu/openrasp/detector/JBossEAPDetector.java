@@ -1,11 +1,8 @@
 package com.baidu.openrasp.detector;
 
-import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 
-import java.io.File;
 import java.lang.reflect.Method;
-import java.net.URLDecoder;
 import java.security.ProtectionDomain;
 
 /**

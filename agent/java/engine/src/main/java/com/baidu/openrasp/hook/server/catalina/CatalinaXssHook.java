@@ -29,7 +29,7 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
 
 /**
  * @author anyang

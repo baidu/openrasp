@@ -38,7 +38,7 @@ public class WeblogicParseParamHook extends ServerParamHook {
     @Override
     protected void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException {
         insertBefore(ctClass, "parseQueryParams", null, src);
-        insertBefore(ctClass,"parseExtraQueryParams",null,src);
+        insertBefore(ctClass, "parseExtraQueryParams", null, src);
     }
 
 }

@@ -68,7 +68,7 @@ public class URLConnectionHook extends AbstractSSRFHook {
         } catch (Exception e) {
             String message = e.getMessage();
             int errorCode = ErrorType.HOOK_ERROR.getCode();
-            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
+            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         }
         if (url != null) {
             checkHttpUrl(url.toString(), urlConnection.getURL().getHost(), "url_open_connection");

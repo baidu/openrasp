@@ -19,8 +19,8 @@ package com.baidu.openrasp.plugin.checker.local;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.baidu.openrasp.plugin.antlr.TokenGenerator;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.plugin.antlr.TokenGenerator;
 import com.baidu.openrasp.plugin.antlr.TokenResult;
 import com.baidu.openrasp.plugin.antlr.TokenizeErrorListener;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -28,18 +28,10 @@ import com.baidu.openrasp.plugin.checker.js.JsChecker;
 import com.baidu.openrasp.plugin.info.AttackInfo;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.tool.JsonStringify;
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.antlr.v4.runtime.Token;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -112,7 +104,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
                         continue;
                     }
 
-                    if (Pattern.matches("^[0-9, ]+$", value)){
+                    if (Pattern.matches("^[0-9, ]+$", value)) {
                         continue;
                     }
 

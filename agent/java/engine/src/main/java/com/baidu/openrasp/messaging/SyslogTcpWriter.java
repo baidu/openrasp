@@ -53,22 +53,19 @@ public class SyslogTcpWriter extends OutputStreamWriter {
         this.syslogFacility = syslogFacility;
     }
 
-    public
-    void setLevel(int level) {
+    public void setLevel(int level) {
         this.level = level;
     }
 
-    public
-    void setSyslogFacility(int syslogFacility) {
+    public void setSyslogFacility(int syslogFacility) {
         this.syslogFacility = syslogFacility;
     }
 
-    public
-    void writeString(String string){
+    public void writeString(String string) {
         try {
-            write("<"+(syslogFacility | level)+">" + string);
+            write("<" + (syslogFacility | level) + ">" + string);
         } catch (IOException e) {
-            LogLog.error("Failed to write ["+string+"].",e);
+            LogLog.error("Failed to write [" + string + "].", e);
         }
     }
 }
