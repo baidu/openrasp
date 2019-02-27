@@ -36,7 +36,6 @@ extern "C"
 #include "openrasp_output_detect.h"
 #include "openrasp_fswatch.h"
 #include <new>
-#include "openrasp_shared_alloc.h"
 #include "agent/shared_config_manager.h"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"

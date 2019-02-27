@@ -18,7 +18,6 @@
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
 #include "openrasp_inject.h"
-#include "openrasp_shared_alloc.h"
 #include "utils/regex.h"
 #include "utils/time.h"
 #include "utils/net.h"
@@ -49,6 +48,8 @@ using openrasp::fetch_time_offset;
 using openrasp::format_time;
 using openrasp::regex_match;
 using openrasp::same_day_in_current_timezone;
+
+std::unique_ptr<openrasp::SharedLogManager> slm = nullptr;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 
@@ -334,7 +335,8 @@ PHP_MINIT_FUNCTION(openrasp_log)
     ZEND_INIT_MODULE_GLOBALS(openrasp_log, openrasp_log_init_globals, openrasp_log_shutdown_globals);
     if (need_alloc_shm_current_sapi())
     {
-        openrasp_shared_alloc_startup();
+        slm.reset(new openrasp::SharedLogManager());
+        slm->startup();
     }
     fetch_if_addrs(_if_addr_map);
     is_initialized = true;
@@ -343,9 +345,9 @@ PHP_MINIT_FUNCTION(openrasp_log)
 
 PHP_MSHUTDOWN_FUNCTION(openrasp_log)
 {
-    if (need_alloc_shm_current_sapi())
+    if (need_alloc_shm_current_sapi() && slm != nullptr)
     {
-        openrasp_shared_alloc_shutdown();
+        slm->shutdown();
     }
     is_initialized = false;
     return SUCCESS;

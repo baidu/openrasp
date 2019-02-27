@@ -24,7 +24,6 @@
 #include <memory>
 
 #include "openrasp_log.h"
-#include "openrasp_shared_alloc.h"
 #include "openrasp_agent_manager.h"
 #include "shared_config_manager.h"
 #include <string>

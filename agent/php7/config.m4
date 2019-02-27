@@ -721,8 +721,6 @@ int main() {
     openrasp_inject.cc \
     openrasp_log.cc \
     openrasp_error.cc \
-    openrasp_shared_alloc.cc  \
-    openrasp_shared_alloc_mmap.cc  \
     openrasp_v8.cc \
     openrasp_v8_timeout_task.cc \
     openrasp_v8_request_context.cc \
@@ -745,6 +743,7 @@ int main() {
     utils/JsonReader.cc \
     utils/YamlReader.cc \
     agent/base_manager.cc \
+    agent/shared_log_manager.cc \
     agent/shared_config_manager.cc \
     agent/mm/shm_manager.cc \
     openrasp_fswatch.cc \
