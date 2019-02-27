@@ -274,8 +274,6 @@ static std::vector<keys_filter> alarm_filters =
         {"REQUEST_METHOD", "request_method", request_method_to_lower},
         {"SERVER_NAME", "target", nullptr},
         {"SERVER_ADDR", "server_ip", nullptr},
-        {"HTTP_REFERER", "referer", nullptr},
-        {"HTTP_USER_AGENT", "user_agent", nullptr},
         {"REMOTE_ADDR", "attack_source", nullptr},
         {"REQUEST_URI", "path", request_uri_path_filter},
         {"REQUEST_SCHEME HTTP_HOST SERVER_NAME SERVER_ADDR SERVER_PORT REQUEST_URI", "url", build_complete_url}};
@@ -789,6 +787,24 @@ void RaspLoggerEntry::update_common_info()
         {
             add_assoc_string(&common_info, "app_id", openrasp_ini.app_id);
         }
+        zval z_header;
+        array_init(&z_header);
+        if (migrate_src)
+        {
+            zval *value;
+            zend_string *key;
+            ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(migrate_src), key, value)
+            {
+                std::string header_key = convert_to_header_key(key->val, key->len);
+                if (!header_key.empty())
+                {
+                    add_assoc_zval(&z_header, header_key.c_str(), value);
+                    Z_TRY_ADDREF_P(value);
+                }
+            }
+            ZEND_HASH_FOREACH_END();
+        }
+        add_assoc_zval(&common_info, "header", &z_header);
     }
     else if (strcmp(name, POLICY_LOG_DIR_NAME) == 0 &&
              (appender & appender_mask))

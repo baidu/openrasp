@@ -43,5 +43,6 @@ std::string json_encode_from_zval(zval *value TSRMLS_DC);
 char *fetch_request_body(size_t max_len TSRMLS_DC);
 std::string get_host_from_url(std::string origin_url);
 bool need_alloc_shm_current_sapi();
+std::string convert_to_header_key(char *key, size_t length);
 
 #endif

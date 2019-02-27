@@ -293,3 +293,25 @@ bool need_alloc_shm_current_sapi()
     }
     return 0;
 }
+
+std::string convert_to_header_key(char *key, size_t length)
+{
+    if (key == nullptr ||
+        strncmp(key, "HTTP_", 5) != 0)
+    {
+        return "";
+    }
+    std::string result(key + 5, length - 5);
+    for (auto &ch : result)
+    {
+        if (ch == '_')
+        {
+            ch = '-';
+        }
+        else
+        {
+            ch = std::tolower(ch);
+        }
+    }
+    return result;
+}
