@@ -65,6 +65,15 @@
           </template>
           <AppSettings ref="appSettings" />
         </b-tab>
+        <b-tab title-link-class="list-group-item border-0 w-100" title-item-class="px-0">
+          <template slot="title">
+            <span class="icon mr-3">
+              <i class="fe fe-settings" />
+            </span>
+            后台设置
+          </template>
+          <PanelSettings ref="panelSettings" />
+        </b-tab>
       </b-tabs>
     </div>
   </div>
@@ -78,6 +87,7 @@ import GeneralSettings from '@/components/pages/settings/general'
 import WhitelistSettings from '@/components/pages/settings/whitelist'
 import AlgorithmSettings from '@/components/pages/settings/algorithm'
 import HardeningSettings from '@/components/pages/settings/hardening'
+import PanelSettings from '@/components/pages/settings/panel'
 import { mapGetters } from 'vuex'
 import defaultsDeep from 'lodash.defaultsdeep'
 import { getDefaultConfig } from '@/util'
@@ -91,11 +101,12 @@ export default {
     AuthSettings,
     AlgorithmSettings,
     GeneralSettings,
-    HardeningSettings
+    HardeningSettings,
+    PanelSettings
   },
   data: function() {
     return {
-      tab_names: ['general', 'alarm', 'whitelist', 'algorithm', 'hardening', 'auth', 'app'],
+      tab_names: ['general', 'alarm', 'whitelist', 'algorithm', 'hardening', 'auth', 'app', 'panel'],
       tab_index: 0,
       data: undefined,
       loading: false
