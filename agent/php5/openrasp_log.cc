@@ -271,8 +271,6 @@ static std::vector<keys_filter> alarm_filters =
         {"REQUEST_METHOD", "request_method", request_method_to_lower},
         {"SERVER_NAME", "target", nullptr},
         {"SERVER_ADDR", "server_ip", nullptr},
-        {"HTTP_REFERER", "referer", nullptr},
-        {"HTTP_USER_AGENT", "user_agent", nullptr},
         {"REMOTE_ADDR", "attack_source", nullptr},
         {"REQUEST_URI", "path", request_uri_path_filter},
         {"REQUEST_SCHEME HTTP_HOST SERVER_NAME SERVER_ADDR SERVER_PORT REQUEST_URI", "url", build_complete_url}};
@@ -787,6 +785,33 @@ void RaspLoggerEntry::update_common_info(TSRMLS_D)
         {
             add_assoc_string(common_info, "app_id", openrasp_ini.app_id, 1);
         }
+
+        zval *z_header = NULL;
+        MAKE_STD_ZVAL(z_header);
+        array_init(z_header);
+        if (migrate_src)
+        {
+            for (zend_hash_internal_pointer_reset(Z_ARRVAL_P(migrate_src));
+                 zend_hash_has_more_elements(Z_ARRVAL_P(migrate_src)) == SUCCESS;
+                 zend_hash_move_forward(Z_ARRVAL_P(migrate_src)))
+            {
+                char *key;
+                ulong idx;
+                int type;
+                zval **value;
+                std::string header_key;
+                type = zend_hash_get_current_key(Z_ARRVAL_P(migrate_src), &key, &idx, 0);
+                if (type == HASH_KEY_IS_STRING &&
+                    !(header_key = convert_to_header_key(key, strlen(key))).empty() &&
+                    zend_hash_get_current_data(Z_ARRVAL_P(migrate_src), (void **)&value) == SUCCESS &&
+                    Z_TYPE_PP(value) == IS_STRING)
+                {
+                    add_assoc_zval(z_header, header_key.c_str(), *value);
+                    Z_ADDREF_PP(value);
+                }
+            }
+        }
+        add_assoc_zval(common_info, "header", z_header);
     }
     else if (strcmp(name, POLICY_LOG_DIR_NAME) == 0 &&
              (appender & appender_mask))

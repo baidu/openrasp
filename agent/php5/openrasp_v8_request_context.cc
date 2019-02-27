@@ -362,36 +362,15 @@ static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
         ulong idx;
         int type;
         zval **value;
+        std::string header_key;
         type = zend_hash_get_current_key(SERVER, &key, &idx, 0);
-        if (type != HASH_KEY_IS_STRING ||
-            strncmp(key, "HTTP_", 5) != 0 ||
-            zend_hash_get_current_data(SERVER, (void **)&value) != SUCCESS ||
-            Z_TYPE_PP(value) != IS_STRING)
+        if (type == HASH_KEY_IS_STRING &&
+            !(header_key = convert_to_header_key(key, strlen(key))).empty() &&
+            zend_hash_get_current_data(SERVER, (void **)&value) == SUCCESS &&
+            Z_TYPE_PP(value) == IS_STRING)
         {
-            continue;
+            obj->Set(NewV8String(isolate, header_key), NewV8ValueFromZval(isolate, *value));
         }
-        key += 5;
-        char *dup_key = nullptr;
-        dup_key = estrndup(key, strlen(key));
-        if (!dup_key)
-        {
-            continue;
-        }
-        char *p = dup_key;
-        while (*p)
-        {
-            if ('_' == *p)
-            {
-                *p = '-';
-            }
-            else
-            {
-                *p = tolower(*p);
-            }
-            p++;
-        }
-        obj->Set(NewV8String(isolate, dup_key), NewV8ValueFromZval(isolate, *value));
-        efree(dup_key);
     }
     info.GetReturnValue().Set(obj);
     self->SetInternalField(kHeader, obj);
