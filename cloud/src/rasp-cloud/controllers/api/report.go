@@ -12,7 +12,6 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-
 package api
 
 import (
@@ -33,7 +32,7 @@ var (
 // @router /dashboard [post]
 func (o *ReportController) Search() {
 	var query map[string]interface{}
-	o.UnMarshalJson(&query)
+	o.UnmarshalJson(&query)
 	startTimeParam := query["start_time"]
 	if startTimeParam == nil {
 		o.ServeError(http.StatusBadRequest, "start_time cannot be empty")

@@ -30,5 +30,3 @@ func main() {
 	beego.ErrorController(&controllers.ErrorController{})
 	beego.Run()
 }
-
-

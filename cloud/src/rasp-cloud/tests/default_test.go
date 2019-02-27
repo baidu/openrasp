@@ -8,7 +8,6 @@ import (
 	_ "rasp-cloud/controllers"
 	"testing"
 	"github.com/astaxie/beego"
-	. "github.com/smartystreets/goconvey/convey"
 	"rasp-cloud/routers"
 	"rasp-cloud/controllers"
 	"rasp-cloud/conf"

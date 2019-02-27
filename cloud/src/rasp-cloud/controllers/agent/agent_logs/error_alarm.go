@@ -27,7 +27,7 @@ type ErrorController struct {
 // @router / [post]
 func (o *ErrorController) Post() {
 	var alarms []map[string]interface{}
-	o.UnMarshalJson(&alarms)
+	o.UnmarshalJson(&alarms)
 	count := 0
 	for _, alarm := range alarms {
 		alarm["@timestamp"] = time.Now().UnixNano() / 1000000

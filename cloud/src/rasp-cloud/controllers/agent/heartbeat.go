@@ -37,7 +37,7 @@ type heartbeatParam struct {
 // @router / [post]
 func (o *HeartbeatController) Post() {
 	var heartbeat heartbeatParam
-	o.UnMarshalJson(&heartbeat)
+	o.UnmarshalJson(&heartbeat)
 	rasp, err := models.GetRaspById(heartbeat.RaspId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get rasp", err)

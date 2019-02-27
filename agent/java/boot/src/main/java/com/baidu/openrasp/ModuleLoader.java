@@ -82,6 +82,8 @@ public class ModuleLoader {
                 engineContainer.release(mode);
 
                 engineContainer = null;
+            } else {
+                System.out.println("[OpenRASP] The OpenRASP has not be bean initialized");
             }
         } catch (Throwable throwable) {
             // ignore
@@ -97,11 +99,14 @@ public class ModuleLoader {
     public static synchronized void load(String mode, String action, Instrumentation inst) throws Throwable {
         if (Module.START_ACTION_INSTALL.equals(action)) {
             if (instance == null) {
-                synchronized (ModuleLoader.class) {
-                    if (instance == null) {
-                        instance = new ModuleLoader(mode, inst);
-                    }
+                try {
+                    instance = new ModuleLoader(mode, inst);
+                } catch (Throwable t) {
+                    instance = null;
+                    throw t;
                 }
+            } else {
+                System.out.println("[OpenRASP] The OpenRASP has bean initialized and cannot be initialized again");
             }
         } else if (Module.START_ACTION_UNINSTALL.equals(action)) {
             release(mode);

@@ -27,7 +27,7 @@ type ReportController struct {
 // @router / [post]
 func (o *ReportController) Post() {
 	var reportData *models.ReportData
-	o.UnMarshalJson(&reportData)
+	o.UnmarshalJson(&reportData)
 	if reportData.RaspId == "" {
 		o.ServeError(http.StatusBadRequest, "rasp_id cannot be empty")
 	}

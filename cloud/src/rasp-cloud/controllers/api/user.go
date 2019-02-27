@@ -32,7 +32,7 @@ type UserController struct {
 // @router /login [post]
 func (o *UserController) Login() {
 	var loginData map[string]string
-	o.UnMarshalJson(&loginData)
+	o.UnmarshalJson(&loginData)
 	logUser := loginData["username"]
 	logPasswd := loginData["password"]
 	if logUser == "" || logPasswd == "" {
@@ -45,7 +45,7 @@ func (o *UserController) Login() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "username or password is incorrect")
 	}
-	cookie := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(10000))+logUser+"openrasp"+
+	cookie := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(10000)) + logUser + "openrasp"+
 		strconv.FormatInt(time.Now().UnixNano(), 10))))
 	err = models.NewCookie(cookie)
 	if err != nil {
@@ -66,7 +66,7 @@ func (o *UserController) Update() {
 		OldPwd string `json:"old_password"`
 		NewPwd string `json:"new_password"`
 	}
-	o.UnMarshalJson(&param)
+	o.UnmarshalJson(&param)
 	if param.OldPwd == "" {
 		o.ServeError(http.StatusBadRequest, "old_password can not be empty")
 	}

@@ -33,7 +33,7 @@ func (o *RaspController) Search() {
 		Page    int          `json:"page"`
 		Perpage int          `json:"perpage"`
 	}
-	o.UnMarshalJson(&param)
+	o.UnmarshalJson(&param)
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
 	}
@@ -62,7 +62,7 @@ func (o *RaspController) Search() {
 // @router /delete [post]
 func (o *RaspController) Delete() {
 	var rasp = &models.Rasp{}
-	o.UnMarshalJson(rasp)
+	o.UnmarshalJson(rasp)
 	if rasp.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "the app_id can not be empty")
 	}
