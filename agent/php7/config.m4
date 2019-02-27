@@ -19,6 +19,9 @@ PHP_ARG_WITH(openssl, for openssl support,
 PHP_ARG_WITH(curl, for curl support,
 [  --with-curl=DIR   Include curl support], no, no)
 
+PHP_ARG_ENABLE(fswatch, Enable fswatch,
+[  --enable-fswatch      Enable fswatch], no, no)
+
 if test "$PHP_OPENRASP" != "no"; then
   PHP_REQUIRE_CXX()
   if test "$PHP_JSON" = "no" && test "$ext_shared" = "no"; then
@@ -320,27 +323,31 @@ if test "$PHP_OPENRASP" != "no"; then
     AC_MSG_RESULT([$OPENRASP_PCRE_LIBDIR])
   fi
 
-  LIBFSWATCH_SOURCE="libfswatch/c++/path_utils.cpp \
-    libfswatch/c++/fen_monitor.cpp \
-    libfswatch/c++/fsevents_monitor.cpp \
-    libfswatch/c++/monitor.cpp \
-    libfswatch/c++/filter.cpp \
-    libfswatch/c++/inotify_monitor.cpp \
-    libfswatch/c++/windows_monitor.cpp \
-    libfswatch/c++/string/string_utils.cpp \
-    libfswatch/c++/event.cpp \
-    libfswatch/c++/poll_monitor.cpp \
-    libfswatch/c++/windows/win_handle.cpp \
-    libfswatch/c++/windows/win_error_message.cpp \
-    libfswatch/c++/windows/win_strings.cpp \
-    libfswatch/c++/windows/win_paths.cpp \
-    libfswatch/c++/windows/win_directory_change_event.cpp \
-    libfswatch/c++/kqueue_monitor.cpp \
-    libfswatch/c++/libfswatch_exception.cpp \
-    libfswatch/c/libfswatch_log.cpp \
-    libfswatch/c/libfswatch.cpp \
-    libfswatch/c/cevent.cpp"
-  PHP_ADD_INCLUDE("PHP_EXT_BUILDDIR([openrasp])/libfswatch")
+  if test "$PHP_FSWATCH" != "no"; then
+    LIBFSWATCH_SOURCE="openrasp_fswatch.cc \
+      libfswatch/c++/path_utils.cpp \
+      libfswatch/c++/fen_monitor.cpp \
+      libfswatch/c++/fsevents_monitor.cpp \
+      libfswatch/c++/monitor.cpp \
+      libfswatch/c++/filter.cpp \
+      libfswatch/c++/inotify_monitor.cpp \
+      libfswatch/c++/windows_monitor.cpp \
+      libfswatch/c++/string/string_utils.cpp \
+      libfswatch/c++/event.cpp \
+      libfswatch/c++/poll_monitor.cpp \
+      libfswatch/c++/windows/win_handle.cpp \
+      libfswatch/c++/windows/win_error_message.cpp \
+      libfswatch/c++/windows/win_strings.cpp \
+      libfswatch/c++/windows/win_paths.cpp \
+      libfswatch/c++/windows/win_directory_change_event.cpp \
+      libfswatch/c++/kqueue_monitor.cpp \
+      libfswatch/c++/libfswatch_exception.cpp \
+      libfswatch/c/libfswatch_log.cpp \
+      libfswatch/c/libfswatch.cpp \
+      libfswatch/c/cevent.cpp"
+    PHP_ADD_INCLUDE("PHP_EXT_BUILDDIR([openrasp])/libfswatch")
+    AC_DEFINE([HAVE_FSWATCH], [1], [Enable fswatch support])
+  fi
 
   YAML_CPP_SOURCE="third_party/yaml-cpp/src/binary.cpp \
     third_party/yaml-cpp/src/contrib/graphbuilderadapter.cpp \
@@ -721,8 +728,6 @@ int main() {
     openrasp_inject.cc \
     openrasp_log.cc \
     openrasp_error.cc \
-    openrasp_shared_alloc.cc  \
-    openrasp_shared_alloc_mmap.cc  \
     openrasp_v8.cc \
     openrasp_v8_timeout_task.cc \
     openrasp_v8_request_context.cc \
@@ -745,9 +750,9 @@ int main() {
     utils/JsonReader.cc \
     utils/YamlReader.cc \
     agent/base_manager.cc \
+    agent/shared_log_manager.cc \
     agent/shared_config_manager.cc \
     agent/mm/shm_manager.cc \
-    openrasp_fswatch.cc \
     $LIBFSWATCH_SOURCE \
     $YAML_CPP_SOURCE \
     $OPENRASP_REMOTE_MANAGER_SOURCE \

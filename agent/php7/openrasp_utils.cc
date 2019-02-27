@@ -22,6 +22,7 @@
 extern "C"
 {
 #include "php_ini.h"
+#include "php_main.h"
 #include "php_streams.h"
 #include "zend_smart_str.h"
 #include "ext/pcre/php_pcre.h"
@@ -271,4 +272,24 @@ std::string get_host_from_url(std::string origin_url)
         php_url_free(url);
     }
     return host;
+}
+
+bool need_alloc_shm_current_sapi()
+{
+    static const char *supported_sapis[] = {
+        "fpm-fcgi",
+        "apache2handler",
+        NULL};
+    const char **sapi_name;
+    if (sapi_module.name)
+    {
+        for (sapi_name = supported_sapis; *sapi_name; sapi_name++)
+        {
+            if (strcmp(sapi_module.name, *sapi_name) == 0)
+            {
+                return 1;
+            }
+        }
+    }
+    return 0;
 }

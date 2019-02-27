@@ -34,9 +34,10 @@ extern "C"
 #include "openrasp_inject.h"
 #include "openrasp_security_policy.h"
 #include "openrasp_output_detect.h"
+#ifdef HAVE_FSWATCH
 #include "openrasp_fswatch.h"
+#endif
 #include <new>
-#include "openrasp_shared_alloc.h"
 #include "agent/shared_config_manager.h"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"
@@ -162,7 +163,9 @@ PHP_MINIT_FUNCTION(openrasp)
             }
             openrasp::scm->build_check_type_white_array(hook_white_map);
         }
+#ifdef HAVE_FSWATCH
         result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
+#endif
     }
 
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
@@ -178,7 +181,9 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
         int result;
         if (!remote_active)
         {
+#ifdef HAVE_FSWATCH
             result = PHP_MSHUTDOWN(openrasp_fswatch)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
+#endif
         }
         result = PHP_MSHUTDOWN(openrasp_inject)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_MSHUTDOWN(openrasp_hook)(SHUTDOWN_FUNC_ARGS_PASSTHRU);

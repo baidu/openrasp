@@ -53,5 +53,6 @@ char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
 
 zend_string *fetch_request_body(size_t max_len);
 std::string get_host_from_url(std::string origin_url);
+bool need_alloc_shm_current_sapi();
 
 #endif

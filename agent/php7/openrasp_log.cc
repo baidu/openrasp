@@ -18,7 +18,6 @@
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
 #include "openrasp_inject.h"
-#include "openrasp_shared_alloc.h"
 #include "utils/regex.h"
 #include "utils/time.h"
 #include "utils/net.h"
@@ -55,6 +54,8 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 #define RASP_LOG_FILE_MODE (mode_t)0666
 #define RASP_LOG_TOKEN_REFILL_INTERVAL 60000
 #define RASP_STREAM_WRITE_RETRY_NUMBER 1
+
+std::unique_ptr<openrasp::SharedLogManager> slm = nullptr;
 
 static bool verify_syslog_address_format();
 
@@ -337,7 +338,8 @@ PHP_MINIT_FUNCTION(openrasp_log)
     ZEND_INIT_MODULE_GLOBALS(openrasp_log, openrasp_log_init_globals, NULL);
     if (need_alloc_shm_current_sapi())
     {
-        openrasp_shared_alloc_startup();
+        slm.reset(new openrasp::SharedLogManager());
+        slm->startup();
     }
     fetch_if_addrs(_if_addr_map);
     is_initialized = true;
@@ -346,9 +348,9 @@ PHP_MINIT_FUNCTION(openrasp_log)
 
 PHP_MSHUTDOWN_FUNCTION(openrasp_log)
 {
-    if (need_alloc_shm_current_sapi())
+    if (need_alloc_shm_current_sapi() && slm != nullptr)
     {
-        openrasp_shared_alloc_shutdown();
+        slm->shutdown();
     }
     is_initialized = false;
     return SUCCESS;

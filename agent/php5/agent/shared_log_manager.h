@@ -14,31 +14,33 @@
  * limitations under the License.
  */
 
-#ifndef _OPENRASP_BASE_MANAGER_H_
-#define _OPENRASP_BASE_MANAGER_H_
+#ifndef _OPENRASP_SHARED_LOG_MANAGER_H_
+#define _OPENRASP_SHARED_LOG_MANAGER_H_
 
 #include "openrasp.h"
-#include "mm/shm_manager.h"
+#include "base_manager.h"
+#include <memory>
+#include <map>
+#include "utils/ReadWriteLock.h"
+#include "shared_log_block.h"
 
 namespace openrasp
 {
-#define ROUNDUP(x, n) (((x) + ((n)-1)) & (~((n)-1)))
 
-class ShmManager;
-
-class BaseManager
+class SharedLogManager : public BaseManager
 {
-
-protected:
-  static ShmManager sm;
-
-protected:
-  bool initialized = false;
-
 public:
-  BaseManager();
-  virtual bool startup() = 0;
-  virtual bool shutdown() = 0;
+  SharedLogManager();
+  virtual ~SharedLogManager();
+  virtual bool startup();
+  virtual bool shutdown();
+
+  bool log_exist(long timestamp, ulong log_hash);
+
+private:
+  int meta_size;
+  ReadWriteLock *rwlock;
+  SharedLogBlock *shared_log_block;
 };
 
 } // namespace openrasp
