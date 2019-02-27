@@ -7,14 +7,13 @@
           防护设置
         </h3>
       </div>
-      <div class="card-body">
-        <p v-if="! current_app.selected_plugin_id || ! current_app.selected_plugin_id.length">
+      <div class="card-body" v-if="! current_app.selected_plugin_id || ! current_app.selected_plugin_id.length">
+        <p>
           你还没有选择插件，请在「插件管理」中进行设置
         </p>
-        <div
-          v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length"
-          class="form-group"
-        >
+      </div>
+      <div class="card-body" v-else>        
+        <div class="form-group">
           <div class="form-label">
             快速设置
           </div>
@@ -46,7 +45,6 @@
         </div>
         <div
           v-for="row in items"
-          v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length"
           :key="row.name"
           class="form-group"
         >
