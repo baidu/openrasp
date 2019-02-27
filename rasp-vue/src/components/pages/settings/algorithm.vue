@@ -40,7 +40,7 @@
             >
             <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
-              切换为 「开发模式」，开启一些消耗性能的检测算法
+              启动「研发模式」，开启一些消耗性能的检测算法
             </span>
           </label>
         </div>
