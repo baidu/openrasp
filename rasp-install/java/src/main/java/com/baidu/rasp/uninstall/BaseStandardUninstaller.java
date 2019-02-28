@@ -63,8 +63,10 @@ public abstract class BaseStandardUninstaller implements Uninstaller {
         String original = BaseStandardInstaller.read(script);
         String modified = recoverStartScript(original);
         BaseStandardInstaller.write(script, modified);
-        System.out.println("\nUninstallation completed without errors.\nPlease restart application server to take effect.");
 
+        if (!App.isAttach) {
+            System.out.println("\nUninstallation completed without errors.\nPlease restart application server to take effect.");
+        }
     }
 
     public void delAllFile(String path) throws RaspError {

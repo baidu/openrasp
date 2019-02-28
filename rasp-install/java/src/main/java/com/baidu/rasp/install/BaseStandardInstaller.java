@@ -90,7 +90,7 @@ public abstract class BaseStandardInstaller implements Installer {
         write(script, modified);
 
         if (App.isAttach) {
-            System.out.println("Attach the rasp to process with pid " + App.pid);
+            System.out.println("\nAttach the rasp to process: " + App.pid);
             new Attacher(App.pid + "", App.baseDir).doAttach(Attacher.MODE_INSTALL);
         }
 
