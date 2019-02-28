@@ -54,7 +54,7 @@ func (o *BaseController) ServeStatusCode(code int, description ...string) {
 	o.ServeJSON()
 }
 
-func (o *BaseController) UnMarshalJson(v interface{}) {
+func (o *BaseController) UnmarshalJson(v interface{}) {
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, v)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)

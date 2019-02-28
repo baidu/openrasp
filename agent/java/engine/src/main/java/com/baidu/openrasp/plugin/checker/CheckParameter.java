@@ -22,8 +22,8 @@ import com.baidu.openrasp.plugin.checker.local.SSRFChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlStatementChecker;
 import com.baidu.openrasp.plugin.checker.local.XssChecker;
-import com.baidu.openrasp.plugin.checker.policy.server.*;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
+import com.baidu.openrasp.plugin.checker.policy.server.*;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.google.gson.Gson;
 

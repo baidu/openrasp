@@ -50,7 +50,7 @@ public class UndertowRequestHook extends ServerRequestHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String requestSrc = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
-                "$0,$1", Object.class,Object.class);
+                "$0,$1", Object.class, Object.class);
         insertBefore(ctClass, "handleFirstRequest", null, requestSrc);
     }
 }

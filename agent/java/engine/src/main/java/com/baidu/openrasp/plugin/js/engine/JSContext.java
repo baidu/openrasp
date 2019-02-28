@@ -16,7 +16,6 @@
 
 package com.baidu.openrasp.plugin.js.engine;
 
-import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.AttackInfo;

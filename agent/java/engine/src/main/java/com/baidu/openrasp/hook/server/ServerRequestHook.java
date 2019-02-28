@@ -19,11 +19,6 @@ package com.baidu.openrasp.hook.server;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.tool.Reflection;
-import javassist.CannotCompileException;
-import javassist.CtClass;
-import javassist.NotFoundException;
-
-import java.io.IOException;
 
 /**
  * Created by tyy on 18-2-8.
@@ -54,7 +49,7 @@ public abstract class ServerRequestHook extends AbstractClassHook {
         HookHandler.checkFilterRequest(filter, request, response);
     }
 
-    public static void checkRequest(Object undertow, Object http){
+    public static void checkRequest(Object undertow, Object http) {
         try {
             ClassLoader classLoader = undertow.getClass().getClassLoader();
             if (classLoader == null) {
@@ -63,10 +58,10 @@ public abstract class ServerRequestHook extends AbstractClassHook {
             Class attachmentKeyClass = classLoader.loadClass("io.undertow.util.AttachmentKey");
             Class serverRequest = classLoader.loadClass("io.undertow.servlet.handlers.ServletRequestContext");
             Object attachmentKey = serverRequest.getField("ATTACHMENT_KEY").get(null);
-            Object context = Reflection.invokeMethod(http,"getAttachment",new Class[]{attachmentKeyClass},attachmentKey);
-            Object filter = Reflection.invokeMethod(context,"getCurrentServlet",new Class[]{});
-            Object request = Reflection.invokeMethod(context,"getServletRequest",new Class[]{});
-            Object response = Reflection.invokeMethod(context,"getServletResponse",new Class[]{});
+            Object context = Reflection.invokeMethod(http, "getAttachment", new Class[]{attachmentKeyClass}, attachmentKey);
+            Object filter = Reflection.invokeMethod(context, "getCurrentServlet", new Class[]{});
+            Object request = Reflection.invokeMethod(context, "getServletRequest", new Class[]{});
+            Object response = Reflection.invokeMethod(context, "getServletResponse", new Class[]{});
 
             HookHandler.checkFilterRequest(filter, request, response);
         } catch (Exception e) {

@@ -40,8 +40,6 @@ type RaspAppConfig struct {
 	AlarmBufferSize    int
 	AlarmCheckInterval int64
 	CookieLifeTime     int
-	PanelServerURL     string
-	AgentServerURL     string
 	Flag               *Flag
 }
 
@@ -104,17 +102,6 @@ func InitConfig(startFlag *Flag) {
 	AppConfig.CookieLifeTime = beego.AppConfig.DefaultInt("CookieLifeTime", 7*24)
 	if AppConfig.CookieLifeTime <= 0 {
 		failLoadConfig("the 'CookieLifeTime' config must be greater than 0")
-	}
-	if *AppConfig.Flag.StartType == StartTypeForeground ||
-		*AppConfig.Flag.StartType == StartTypeDefault {
-		AppConfig.PanelServerURL = beego.AppConfig.String("PanelServerURL")
-		if AppConfig.PanelServerURL == "" {
-			failLoadConfig("the 'PanelServerURL' config in the app.conf can not be empty")
-		}
-		AppConfig.AgentServerURL = beego.AppConfig.String("AgentServerURL")
-		if AppConfig.AgentServerURL == "" {
-			failLoadConfig("the 'AgentServerURL' config in the app.conf can not be empty")
-		}
 	}
 }
 

@@ -31,7 +31,7 @@ type PolicyAlarmController struct {
 // @router /search [post]
 func (o *PolicyAlarmController) Search() {
 	var param = &logs.SearchPolicyParam{}
-	o.UnMarshalJson(&param)
+	o.UnmarshalJson(&param)
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
 	}

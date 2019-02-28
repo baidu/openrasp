@@ -108,9 +108,9 @@ func InitRouter() {
 				&api.OperationController{},
 			),
 		),
-		beego.NSNamespace("/agentdomain",
+		beego.NSNamespace("/server",
 			beego.NSInclude(
-				&api.AgentDomainController{},
+				&api.ServerController{},
 			),
 		),
 	)

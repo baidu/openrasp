@@ -140,7 +140,7 @@ public class JsPluginManager {
                 } catch (Exception e) {
                     String message = e.getMessage();
                     int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-                    LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
+                    LOGGER.error(CloudUtils.getExceptionObject(message, errorCode), e);
                 }
             }
         }
@@ -182,7 +182,7 @@ public class JsPluginManager {
                 } catch (Exception e) {
                     String message = e.getMessage();
                     int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-                    LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
+                    LOGGER.error(CloudUtils.getExceptionObject(message, errorCode), e);
                 }
                 if (timer != null) {
                     timer.cancel();

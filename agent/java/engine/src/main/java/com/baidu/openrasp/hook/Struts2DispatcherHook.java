@@ -18,7 +18,6 @@ package com.baidu.openrasp.hook;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.server.ServerRequestHook;
-import com.baidu.openrasp.hook.server.catalina.ApplicationFilterHook;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;

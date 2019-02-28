@@ -19,7 +19,6 @@ package com.baidu.rasp.uninstall.windows;
 import com.baidu.rasp.uninstall.BaseStandardUninstaller;
 
 import java.util.Scanner;
-import java.util.regex.Pattern;
 
 /**
  * Created by anyang on 2018/4/24.

@@ -38,8 +38,8 @@ public class LinuxUninstallerFactory extends UninstallerFactory {
         if (serverName.equals(RESIN)) {
             return new ResinUninstaller(serverName, serverRoot);
         }
-        if (serverName.equals(WEBLOGIC)){
-            return new WeblogicUninstaller(serverName,serverRoot);
+        if (serverName.equals(WEBLOGIC)) {
+            return new WeblogicUninstaller(serverName, serverRoot);
         }
         System.out.println("Invalid server name: " + serverName);
         return null;

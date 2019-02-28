@@ -13,6 +13,6 @@ public class CmdTokenizeErrorListener extends BaseErrorListener {
 
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-        LOGGER.info("RASP.cmd_tokenize() error: line " + line + ":" + charPositionInLine + " at " + offendingSymbol + ": " + msg + " in Command statement:" + LINE_SEP + ((Lexer)recognizer).getInputStream().toString());
+        LOGGER.info("RASP.cmd_tokenize() error: line " + line + ":" + charPositionInLine + " at " + offendingSymbol + ": " + msg + " in Command statement:" + LINE_SEP + ((Lexer) recognizer).getInputStream().toString());
     }
 }

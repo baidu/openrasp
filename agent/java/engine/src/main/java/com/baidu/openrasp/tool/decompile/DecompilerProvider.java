@@ -42,6 +42,7 @@ public class DecompilerProvider {
             public void writeDefinition(String text, Object definition, boolean isLocal) {
                 super.writeDefinition(text, definition, isLocal);
             }
+
             @Override
             public void writeReference(String text, Object reference, boolean isLocal) {
                 super.writeReference(text, reference, isLocal);

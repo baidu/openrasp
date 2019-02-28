@@ -31,17 +31,17 @@ import java.io.IOException;
  * @create: 2018/10/09 19:40
  */
 @HookAnnotation
-public class OkHttpHook extends AbstractSSRFHook{
+public class OkHttpHook extends AbstractSSRFHook {
     @Override
     public boolean isClassMatched(String className) {
-        return "okhttp3/HttpUrl".equals(className)||
+        return "okhttp3/HttpUrl".equals(className) ||
                 "com/squareup/okhttp/HttpUrl".equals(className);
     }
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(OkHttpHook.class, "checkOkHttpUrl",
-                "$1,$_", String.class,Object.class);
+                "$1,$_", String.class, Object.class);
         insertAfter(ctClass, "parse", "(Ljava/lang/String;)Lokhttp3/HttpUrl;", src);
         insertAfter(ctClass, "parse", "(Ljava/lang/String;)Lcom/squareup/okhttp/HttpUrl;", src);
     }

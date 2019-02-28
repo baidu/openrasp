@@ -31,7 +31,7 @@ public class AsyncHttpClient extends HttpClient {
     public AsyncHttpClient() {
         super();
         cpuCoreSize = Runtime.getRuntime().availableProcessors();
-        threadPool = new ThreadPoolExecutor(cpuCoreSize + 1, 5 * cpuCoreSize +1, 60L, TimeUnit.SECONDS,
+        threadPool = new ThreadPoolExecutor(cpuCoreSize + 1, 5 * cpuCoreSize + 1, 60L, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<Runnable>(), new ThreadPoolExecutor.DiscardPolicy());
     }
 
@@ -47,6 +47,7 @@ public class AsyncHttpClient extends HttpClient {
 
     /**
      * 判断当阻塞队列size小于cpucore数目
+     *
      * @return
      */
     public boolean shouldSend() {

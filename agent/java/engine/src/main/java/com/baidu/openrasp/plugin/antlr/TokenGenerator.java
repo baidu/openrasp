@@ -1,14 +1,12 @@
 package com.baidu.openrasp.plugin.antlr;
 
-import com.baidu.openrasp.plugin.antlr.TokenResult;
+import com.baidu.openrasp.Bash;
+import com.baidu.openrasp.SQLLexer;
 import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.Token;
 
 import java.util.ArrayList;
-
-import com.baidu.openrasp.SQLLexer;
-import com.baidu.openrasp.Bash;
 
 /**
  * Created by lxk on 3/19/18.

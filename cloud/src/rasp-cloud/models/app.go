@@ -93,6 +93,7 @@ type emailTemplateParam struct {
 	Alarms       []map[string]interface{}
 	DetailedLink string
 	AppName      string
+	HttpPort     int
 }
 
 type dingResponse struct {
@@ -490,11 +491,13 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 			return err
 		}
 		alarmData := new(bytes.Buffer)
+		panelUrl, port := getPanelServerUrl()
 		err = t.Execute(alarmData, &emailTemplateParam{
 			Total:        total - int64(len(alarms)),
 			Alarms:       alarms,
 			AppName:      app.Name,
-			DetailedLink: conf.AppConfig.PanelServerURL + "/#/events/" + app.Id,
+			DetailedLink: panelUrl + "/#/events/" + app.Id,
+			HttpPort:     port,
 		})
 		if err != nil {
 			beego.Error("failed to execute email template: " + err.Error())
@@ -527,6 +530,21 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 	}
 	beego.Debug("succeed in pushing email alarm for app: " + app.Name)
 	return nil
+}
+
+func getPanelServerUrl() (string, int) {
+	serverUrl, err := GetServerUrl()
+
+	if err != nil && err != mgo.ErrNotFound {
+		beego.Error("failed to get panel url for alarm: " + err.Error())
+	}
+
+	port := beego.AppConfig.DefaultInt("httpport", 8080)
+	if serverUrl == nil || len(serverUrl.PanelUrl) == 0 {
+		return "", port
+	}
+
+	return serverUrl.PanelUrl, port
 }
 
 func sendNormalEmail(emailConf EmailAlarmConf, auth smtp.Auth, msg string) (err error) {
@@ -676,9 +694,13 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 		if isTest {
 			dingText = "OpenRASP test message from app: " + app.Name + ", time: " + time.Now().Format(time.RFC3339)
 		} else {
+			panelUrl, _ := getPanelServerUrl()
+			if len(panelUrl) == 0 {
+				panelUrl = "http://127.0.0.1"
+			}
 			dingText = "时间：" + time.Now().Format(time.RFC3339) + "， 来自 OpenRAS 的报警\n共有 " +
 				strconv.FormatInt(total, 10) + " 条报警信息来自 APP：" + app.Name + "，详细信息：" +
-				conf.AppConfig.PanelServerURL + "/#/events/" + app.Id
+				panelUrl + "/#/events/" + app.Id
 		}
 		if len(dingCong.RecvUser) > 0 {
 			body["touser"] = strings.Join(dingCong.RecvUser, "|")

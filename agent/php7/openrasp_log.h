@@ -18,6 +18,7 @@
 #define OPENRASP_LOG_H
 
 #include "openrasp.h"
+#include "agent/shared_log_manager.h"
 #include <map>
 
 #ifdef __cplusplus
@@ -43,6 +44,8 @@ extern "C"
 #define POLICY_LOG_DIR_NAME "policy"
 #define PLUGIN_LOG_DIR_NAME "plugin"
 #define RASP_LOG_DIR_NAME "rasp"
+
+extern std::unique_ptr<openrasp::SharedLogManager> slm;
 
 typedef enum log_appender_t
 {

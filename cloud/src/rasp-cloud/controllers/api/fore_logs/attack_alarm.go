@@ -32,7 +32,7 @@ type AttackAlarmController struct {
 // @router /aggr/time [post]
 func (o *AttackAlarmController) AggregationWithTime() {
 	var param = &logs.AggrTimeParam{}
-	o.UnMarshalJson(&param)
+	o.UnmarshalJson(&param)
 	if param.AppId != "" {
 		_, err := models.GetAppById(param.AppId)
 		if err != nil {
@@ -77,7 +77,7 @@ func (o *AttackAlarmController) AggregationWithTime() {
 // @router /aggr/type [post]
 func (o *AttackAlarmController) AggregationWithType() {
 	var param = &logs.AggrFieldParam{}
-	o.UnMarshalJson(&param)
+	o.UnmarshalJson(&param)
 	o.validFieldAggrParam(param)
 	result, err :=
 		logs.AggregationAttackWithType(param.StartTime, param.EndTime, param.Size, param.AppId)
@@ -90,7 +90,7 @@ func (o *AttackAlarmController) AggregationWithType() {
 // @router /aggr/ua [post]
 func (o *AttackAlarmController) AggregationWithUserAgent() {
 	var param = &logs.AggrFieldParam{}
-	o.UnMarshalJson(&param)
+	o.UnmarshalJson(&param)
 	o.validFieldAggrParam(param)
 	result, err :=
 		logs.AggregationAttackWithUserAgent(param.StartTime, param.EndTime, param.Size, param.AppId)
@@ -139,7 +139,7 @@ func (o *AttackAlarmController) AggregationVuln() {
 func (o *AttackAlarmController) handleAttackSearchParam() (param *logs.SearchAttackParam,
 	searchData map[string]interface{}) {
 	param = &logs.SearchAttackParam{}
-	o.UnMarshalJson(&param)
+	o.UnmarshalJson(&param)
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
 	}

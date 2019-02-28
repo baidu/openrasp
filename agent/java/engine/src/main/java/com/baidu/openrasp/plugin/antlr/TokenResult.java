@@ -8,22 +8,21 @@ public class TokenResult {
     private String text;
     private int start, stop;
 
-    public TokenResult(String tokenText, int startIndex, int stopIndex)
-    {
+    public TokenResult(String tokenText, int startIndex, int stopIndex) {
         this.text = tokenText;
         this.start = startIndex;
         this.stop = stopIndex;
     }
 
-    public String getText() { return this.text; }
+    public String getText() {
+        return this.text;
+    }
 
-    public int getStart()
-    {
+    public int getStart() {
         return this.start;
     }
 
-    public int getStop()
-    {
+    public int getStop() {
         return this.stop;
     }
 }

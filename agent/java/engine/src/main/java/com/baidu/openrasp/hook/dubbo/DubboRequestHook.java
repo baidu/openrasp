@@ -18,8 +18,8 @@ package com.baidu.openrasp.hook.dubbo;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
-import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -67,7 +67,7 @@ public class DubboRequestHook extends AbstractClassHook {
                 if (parameterTypes[i].isPrimitive() || isWrapClass(parameterTypes[i]) || args[i] instanceof String) {
                     String[] strings = new String[1];
                     strings[0] = String.valueOf(args[i]);
-                    map.put("dubbo-"+i, strings);
+                    map.put("dubbo-" + i, strings);
                 }
 
             }

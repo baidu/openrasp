@@ -31,24 +31,24 @@ public class AppenderCache {
     private static final int APPENDER_LRUCACHE_SIZE = 500;
 
     public static void setCache(String key, JsonElement value) {
-        if (appenderCache.containsKey(key)){
+        if (appenderCache.containsKey(key)) {
             ConcurrentLinkedQueue<JsonElement> temp = appenderCache.get(key);
-            if (temp.size()<APPENDER_LRUCACHE_SIZE){
+            if (temp.size() < APPENDER_LRUCACHE_SIZE) {
                 temp.add(value);
-            }else {
+            } else {
                 temp.poll();
                 temp.add(value);
             }
-            appenderCache.put(key,temp);
-        }else {
+            appenderCache.put(key, temp);
+        } else {
             ConcurrentLinkedQueue<JsonElement> cache = new ConcurrentLinkedQueue<JsonElement>();
             cache.add(value);
-            appenderCache.put(key,cache);
+            appenderCache.put(key, cache);
         }
     }
 
     public static ConcurrentLinkedQueue<JsonElement> getCache(String key) {
-        if (appenderCache.containsKey(key)){
+        if (appenderCache.containsKey(key)) {
             return appenderCache.get(key);
         }
         return null;

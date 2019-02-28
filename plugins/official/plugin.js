@@ -37,9 +37,13 @@ var plugin  = new RASP(plugin_name)
 // BEGIN ALGORITHM CONFIG //
 
 var algorithmConfig = {
-    // 快速设置 - 若 all_log 开启，则所有的 block 都改为 log
+    // 快速设置
     meta: {
+        // 若 all_log 开启，表示为观察模式，会将所有的 block 都改为 log
         all_log: true,
+
+        // 若 is_dev 开启，表示为线下环境，将开启更多消耗性能的检测算法
+        is_dev:  false
     },
 
     // SQL注入算法#1 - 匹配用户输入

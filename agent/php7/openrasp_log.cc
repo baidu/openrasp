@@ -18,7 +18,6 @@
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
 #include "openrasp_inject.h"
-#include "openrasp_shared_alloc.h"
 #include "utils/regex.h"
 #include "utils/time.h"
 #include "utils/net.h"
@@ -55,6 +54,8 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 #define RASP_LOG_FILE_MODE (mode_t)0666
 #define RASP_LOG_TOKEN_REFILL_INTERVAL 60000
 #define RASP_STREAM_WRITE_RETRY_NUMBER 1
+
+std::unique_ptr<openrasp::SharedLogManager> slm = nullptr;
 
 static bool verify_syslog_address_format();
 
@@ -273,8 +274,6 @@ static std::vector<keys_filter> alarm_filters =
         {"REQUEST_METHOD", "request_method", request_method_to_lower},
         {"SERVER_NAME", "target", nullptr},
         {"SERVER_ADDR", "server_ip", nullptr},
-        {"HTTP_REFERER", "referer", nullptr},
-        {"HTTP_USER_AGENT", "user_agent", nullptr},
         {"REMOTE_ADDR", "attack_source", nullptr},
         {"REQUEST_URI", "path", request_uri_path_filter},
         {"REQUEST_SCHEME HTTP_HOST SERVER_NAME SERVER_ADDR SERVER_PORT REQUEST_URI", "url", build_complete_url}};
@@ -337,7 +336,8 @@ PHP_MINIT_FUNCTION(openrasp_log)
     ZEND_INIT_MODULE_GLOBALS(openrasp_log, openrasp_log_init_globals, NULL);
     if (need_alloc_shm_current_sapi())
     {
-        openrasp_shared_alloc_startup();
+        slm.reset(new openrasp::SharedLogManager());
+        slm->startup();
     }
     fetch_if_addrs(_if_addr_map);
     is_initialized = true;
@@ -346,9 +346,9 @@ PHP_MINIT_FUNCTION(openrasp_log)
 
 PHP_MSHUTDOWN_FUNCTION(openrasp_log)
 {
-    if (need_alloc_shm_current_sapi())
+    if (need_alloc_shm_current_sapi() && slm != nullptr)
     {
-        openrasp_shared_alloc_shutdown();
+        slm->shutdown();
     }
     is_initialized = false;
     return SUCCESS;
@@ -787,6 +787,24 @@ void RaspLoggerEntry::update_common_info()
         {
             add_assoc_string(&common_info, "app_id", openrasp_ini.app_id);
         }
+        zval z_header;
+        array_init(&z_header);
+        if (migrate_src)
+        {
+            zval *value;
+            zend_string *key;
+            ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(migrate_src), key, value)
+            {
+                std::string header_key = convert_to_header_key(key->val, key->len);
+                if (!header_key.empty())
+                {
+                    add_assoc_zval(&z_header, header_key.c_str(), value);
+                    Z_TRY_ADDREF_P(value);
+                }
+            }
+            ZEND_HASH_FOREACH_END();
+        }
+        add_assoc_zval(&common_info, "header", &z_header);
     }
     else if (strcmp(name, POLICY_LOG_DIR_NAME) == 0 &&
              (appender & appender_mask))

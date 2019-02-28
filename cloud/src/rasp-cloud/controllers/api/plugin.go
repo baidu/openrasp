@@ -67,7 +67,7 @@ func (o *PluginController) Upload() {
 // @router /get [post]
 func (o *PluginController) Get() {
 	var param map[string]string
-	o.UnMarshalJson(&param)
+	o.UnmarshalJson(&param)
 	pluginId := param["id"]
 	if pluginId == "" {
 		o.ServeError(http.StatusBadRequest, "plugin_id cannot be empty")
@@ -100,7 +100,7 @@ func (o *PluginController) UpdateAppAlgorithmConfig() {
 		PluginId string                 `json:"id"`
 		Config   map[string]interface{} `json:"config"`
 	}
-	o.UnMarshalJson(&param)
+	o.UnmarshalJson(&param)
 	if param.PluginId == "" {
 		o.ServeError(http.StatusBadRequest, "plugin id can not be empty")
 	}
@@ -119,7 +119,7 @@ func (o *PluginController) UpdateAppAlgorithmConfig() {
 // @router /algorithm/restore [post]
 func (o *PluginController) RestoreAlgorithmConfig() {
 	var param map[string]string
-	o.UnMarshalJson(&param)
+	o.UnmarshalJson(&param)
 	pluginId := param["id"]
 	if pluginId == "" {
 		o.ServeError(http.StatusBadRequest, "plugin_id cannot be empty")
@@ -136,7 +136,7 @@ func (o *PluginController) RestoreAlgorithmConfig() {
 // @router /delete [post]
 func (o *PluginController) Delete() {
 	var param map[string]string
-	o.UnMarshalJson(&param)
+	o.UnmarshalJson(&param)
 	pluginId := param["id"]
 	if pluginId == "" {
 		o.ServeError(http.StatusBadRequest, "plugin_id cannot be empty")

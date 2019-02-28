@@ -21,4 +21,4 @@ exec('echo test');
 passthru('tail -n 1 /tmp/openrasp/logs/alarm/alarm.log.'.date("Y-m-d"));
 ?>
 --EXPECTREGEX--
-.*"user_agent":"".*
+.*"header":\[\].*

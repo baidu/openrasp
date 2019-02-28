@@ -28,24 +28,25 @@ import java.util.regex.Pattern;
 import static com.baidu.rasp.RaspError.E10001;
 
 /**
-　　* @Description: resin自动安装
-　　* @author anyang
-　　* @date 2018/4/25 19:31
-　　*/
+ * 　　* @Description: resin自动安装
+ * 　　* @author anyang
+ * 　　* @date 2018/4/25 19:31
+ */
 public class ResinInstaller extends BaseStandardInstaller {
 
     private static Pattern OPENRASP_REGEX_WINDOWS = Pattern.compile(".*(\\s*OPENRASP\\s*|\\s*<jvm-arg>.*\\\\rasp\\\\).*");
     private static Pattern OPENRASP_REGEX_LINUX = Pattern.compile(".*(\\s*OPENRASP\\s*|\\s*<jvm-arg>.*/rasp/).*");
+
     public ResinInstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
     }
 
     public String getOpenRASPConfig() {
-        String configStart ="\t<!-- BEGIN OPENRASP - DO NOT MODIFY -->";
+        String configStart = "\t<!-- BEGIN OPENRASP - DO NOT MODIFY -->";
         String configEnd = "\t<!-- END OPENRASP -->";
-        String path = "\t<jvm-arg>-javaagent:" +BaseStandardInstaller.resinPath + File.separator + "rasp" + File.separator + "rasp.jar</jvm-arg>";
+        String path = "\t<jvm-arg>-javaagent:" + BaseStandardInstaller.resinPath + File.separator + "rasp" + File.separator + "rasp.jar</jvm-arg>";
 
-        return configStart + LINE_SEP + path + LINE_SEP +  configEnd + LINE_SEP;
+        return configStart + LINE_SEP + path + LINE_SEP + configEnd + LINE_SEP;
     }
 
     public static int getVersion(String installPath) {

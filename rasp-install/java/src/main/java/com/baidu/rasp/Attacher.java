@@ -14,43 +14,38 @@
  * limitations under the License.
  */
 
-package com.baidu.rasp.install;
+package com.baidu.rasp;
 
-import com.baidu.rasp.RaspError;
 import com.sun.tools.attach.VirtualMachine;
 
 import java.io.File;
 
 /**
- * Created by tyy on 19-1-22.
+ * Created by tyy on 19-2-26.
  */
-public class AttachInstaller implements Installer {
+public class Attacher {
 
     public static final String MODE_INSTALL = "install";
+    public static final String MODE_UNINSTALL = "uninstall";
 
     private String pid;
 
     private String baseDir;
 
-    public AttachInstaller(String pid, String baseDir) {
+    public Attacher(String pid, String baseDir) {
         this.pid = pid;
         this.baseDir = baseDir;
     }
 
-    @Override
-    public void install() throws RaspError {
+    public void doAttach(String action) throws RaspError {
         try {
             VirtualMachine virtualMachine = VirtualMachine.attach(pid);
-            virtualMachine.loadAgent(baseDir + File.separator + "rasp" + File.separator + "rasp.jar", MODE_INSTALL);
+            virtualMachine.loadAgent(baseDir + File.separator + "rasp" + File.separator + "rasp.jar", action);
             virtualMachine.detach();
         } catch (Throwable t) {
             t.printStackTrace();
             throw new RaspError(RaspError.E10006 + "Failed to attach Rasp.jar to server: " + t.getMessage());
         }
-    }
-
-    String getPid() {
-        return pid;
     }
 
 }

@@ -342,24 +342,11 @@ static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
     zend_string *key;
     ZEND_HASH_FOREACH_STR_KEY_VAL(_SERVER, key, value)
     {
-        if (key == NULL ||
-            strncmp(key->val, "HTTP_", 5) != 0)
+        std::string tmp = convert_to_header_key(key->val, key->len);
+        if (!tmp.empty())
         {
-            continue;
+            obj->Set(NewV8String(isolate, tmp), NewV8ValueFromZval(isolate, value));
         }
-        std::string tmp(key->val + 5, key->len - 5);
-        for (auto &ch : tmp)
-        {
-            if (ch == '_')
-            {
-                ch = '-';
-            }
-            else
-            {
-                ch = std::tolower(ch);
-            }
-        }
-        obj->Set(NewV8String(isolate, tmp), NewV8ValueFromZval(isolate, value));
     }
     ZEND_HASH_FOREACH_END();
 

@@ -34,7 +34,7 @@ func (o *OperationController) Search() {
 		Page      int               `json:"page"`
 		Perpage   int               `json:"perpage"`
 	}
-	o.UnMarshalJson(&param)
+	o.UnmarshalJson(&param)
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
 	}

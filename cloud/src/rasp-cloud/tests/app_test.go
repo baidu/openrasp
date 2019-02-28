@@ -54,17 +54,19 @@ func TestHandleApp(t *testing.T) {
 		})
 	})
 
-	func TestConfigApp(t *testing.T) {
+	func
+	TestConfigApp(t * testing.T)
+	{
 
 	}
 
-	func TestDeleteApp(t *testing.T) {
+	func
+	TestDeleteApp(t * testing.T)
+	{
 
 	}
-
 
 }
-
 
 func TestAlarm(t *testing.T) {
 	func

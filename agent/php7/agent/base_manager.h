@@ -22,7 +22,8 @@
 
 namespace openrasp
 {
-  
+#define ROUNDUP(x, n) (((x) + ((n)-1)) & (~((n)-1)))
+
 class ShmManager;
 
 class BaseManager

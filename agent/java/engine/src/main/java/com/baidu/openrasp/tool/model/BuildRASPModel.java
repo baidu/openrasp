@@ -50,11 +50,11 @@ public class BuildRASPModel {
         return raspInfo.get("projectVersion");
     }
 
-    public static String getBuildTime(){
+    public static String getBuildTime() {
         return raspInfo.get("buildTime");
     }
 
-    public static String getGitCommit(){
+    public static String getGitCommit() {
         return raspInfo.get("gitCommit");
     }
 

@@ -28,12 +28,13 @@ import javassist.NotFoundException;
  * @date 2018/8/13 17:45
  */
 @HookAnnotation
-public class WebsphereHttpOutputHook extends ServerOutputCloseHook{
+public class WebsphereHttpOutputHook extends ServerOutputCloseHook {
 
     public static String clazzName = null;
+
     @Override
     public boolean isClassMatched(String className) {
-        if ("com/ibm/ws/webcontainer/srt/SRTServletResponse".equals(className)){
+        if ("com/ibm/ws/webcontainer/srt/SRTServletResponse".equals(className)) {
             clazzName = className;
             return true;
         }

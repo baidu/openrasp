@@ -26,6 +26,7 @@
 extern "C"
 {
 #include "php_ini.h"
+#include "php_main.h"
 #include "php_streams.h"
 #include "ext/json/php_json.h"
 #include "ext/standard/url.h"
@@ -270,17 +271,61 @@ char *fetch_request_body(size_t max_len TSRMLS_DC)
     return buf;
 }
 
-std::string get_host_from_url(std::string origin_url)
+bool need_alloc_shm_current_sapi()
 {
-    std::string host;
+    static const char *supported_sapis[] = {
+        "fpm-fcgi",
+        "apache2handler",
+        NULL};
+    const char **sapi_name;
+    if (sapi_module.name)
+    {
+        for (sapi_name = supported_sapis; *sapi_name; sapi_name++)
+        {
+            if (strcmp(sapi_module.name, *sapi_name) == 0)
+            {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+std::string convert_to_header_key(char *key, size_t length)
+{
+    if (key == nullptr ||
+        strncmp(key, "HTTP_", 5) != 0)
+    {
+        return "";
+    }
+    std::string result(key + 5, length - 5);
+    for (auto &ch : result)
+    {
+        if (ch == '_')
+        {
+            ch = '-';
+        }
+        else
+        {
+            ch = std::tolower(ch);
+        }
+    }
+    return result;
+}
+
+bool openrasp_parse_url(const std::string &origin_url, std::string &host, std::string &port)
+{
     php_url *url = php_url_parse_ex(origin_url.c_str(), origin_url.length());
     if (url)
     {
         if (url->host)
         {
             host = std::string(url->host);
+            port = std::to_string(url->port);
+            php_url_free(url);
+            return true;
         }
         php_url_free(url);
     }
-    return host;
+    return false;
 }
