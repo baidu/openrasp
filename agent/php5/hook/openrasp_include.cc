@@ -149,7 +149,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
         openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
         if (send_to_plugin && isolate)
         {
-            const char *function = nullptr;
+            std::string function;
             switch (OPENRASP_INCLUDE_OR_EVAL_TYPE(execute_data->opline))
             {
             case ZEND_INCLUDE:
@@ -165,7 +165,6 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
                 function = "require_once";
                 break;
             default:
-                function = "";
                 break;
             }
             bool is_block = false;

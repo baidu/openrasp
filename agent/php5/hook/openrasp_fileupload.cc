@@ -84,13 +84,9 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
             php_stream_close(stream);
             if (len > 0)
             {
-                openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-                if (!isolate)
-                {
-                    efree(contents);
-                    return;
-                }
                 bool is_block = false;
+                openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+                if (isolate)
                 {
                     v8::HandleScope handle_scope(isolate);
                     auto params = v8::Object::New(isolate);
@@ -100,6 +96,7 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
                     efree(contents);
                     is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
                 }
+                efree(contents);
                 if (is_block)
                 {
                     handle_block(TSRMLS_C);

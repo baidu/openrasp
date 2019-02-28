@@ -104,8 +104,7 @@ int include_handler(zend_execute_data *execute_data)
     {
         send_to_plugin = true;
     }
-    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY &&
-        !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
+    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
     {
         send_to_plugin = true;
     }
@@ -141,24 +140,25 @@ int include_handler(zend_execute_data *execute_data)
             params->Set(openrasp::NewV8String(isolate, "path"), path);
             params->Set(openrasp::NewV8String(isolate, "url"), path);
             params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
+            std::string function;
             switch (opline->extended_value)
             {
             case ZEND_INCLUDE:
-                params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "include"));
+                function = "include";
                 break;
             case ZEND_INCLUDE_ONCE:
-                params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "include_once"));
+                function = "include_once";
                 break;
             case ZEND_REQUIRE:
-                params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "require"));
+                function = "require";
                 break;
             case ZEND_REQUIRE_ONCE:
-                params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "require_once"));
+                function = "require_once";
                 break;
             default:
-                params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, ""));
                 break;
             }
+            params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, function));
             is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(INCLUDE)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (is_block)
