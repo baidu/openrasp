@@ -63,15 +63,15 @@ public class URLConnectionHook extends AbstractSSRFHook {
         try {
             if (urlConnection != null) {
                 url = urlConnection.getURL();
-
             }
         } catch (Exception e) {
             String message = e.getMessage();
             int errorCode = ErrorType.HOOK_ERROR.getCode();
-            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
+            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         }
         if (url != null) {
-            checkHttpUrl(url.toString(), urlConnection.getURL().getHost(), "url_open_connection");
+            int port = urlConnection.getURL().getPort();
+            checkHttpUrl(url.toString(), urlConnection.getURL().getHost(), port > 0 ? ("" + port) : "", "url_open_connection");
         }
     }
 

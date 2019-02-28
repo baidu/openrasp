@@ -46,13 +46,18 @@ public class OkHttpHook extends AbstractSSRFHook{
         insertAfter(ctClass, "parse", "(Ljava/lang/String;)Lcom/squareup/okhttp/HttpUrl;", src);
     }
 
-    public static void checkOkHttpUrl(String url, Object httpUrl){
+    public static void checkOkHttpUrl(String url, Object httpUrl) {
         String host = null;
-        if (httpUrl!=null){
+        String port = "";
+        if (httpUrl != null) {
             host = Reflection.invokeStringMethod(httpUrl, "host", new Class[]{});
+            Object object = Reflection.invokeMethod(httpUrl, "port", new Class[]{});
+            if (object != null) {
+                port = String.valueOf(object);
+            }
         }
         if (host != null) {
-            checkHttpUrl(url, host, "okhttp");
+            checkHttpUrl(url, host, port, "okhttp");
         }
     }
 }

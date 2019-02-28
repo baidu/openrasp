@@ -75,9 +75,8 @@ public class Decompiler {
         ArrayList<String> result = new ArrayList<String>();
         for (StackTraceElement element: stackTraceElements){
             String className = element.getClassName();
-            String methodName = element.getMethodName();
             int lineNumber = element.getLineNumber();
-            String description = className + "." + methodName + "(" + lineNumber + ")";
+            String description = element.toString();
             if (decompileCache.isContainsKey(description)) {
                 result.add(decompileCache.get(description));
                 continue;
