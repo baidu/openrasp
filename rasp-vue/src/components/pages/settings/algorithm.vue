@@ -29,7 +29,7 @@
               将所有算法设置为「记录日志」模式
             </span>
           </label>
-
+          <br>
           <label class="custom-switch">
             <input
               v-model="data.meta.is_dev"

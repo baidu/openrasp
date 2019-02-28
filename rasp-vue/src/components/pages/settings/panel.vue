@@ -11,7 +11,7 @@
           管理后台地址 [用于生成报警邮件URL]
         </label>
         <input
-          v-model="data['panel_url']"
+          v-model="data.panel_url"
           type="text"
           class="form-control"
         />
@@ -23,6 +23,8 @@
         <textarea
           type="text"
           class="form-control"
+          v-model="data.agent_urls_text"
+          rows="5"
         />
       </div>      
       <div slot="footer">
@@ -43,34 +45,44 @@ export default {
     return {
       data: { 
         panel_url: '',
-        agent_url: []
+        agent_url: [],
+        agent_urls_text: ''
       },
     };
   },
   computed: {
     ...mapGetters(["current_app"]),
   },
+  mounted: function() {
+    this.loadData()
+  },
   methods: {
-    getData(data) {
-      data["inject.custom_headers"] = data["inject.custom_headers"] || {};
-      this.browser_headers.forEach(header => {
-        if (
-          !header.options.some(
-            option =>
-              option.value === data["inject.custom_headers"][header.name]
-          )
-        ) {
-          header.options.push({
-            name: data["inject.custom_headers"][header.name],
-            value: data["inject.custom_headers"][header.name]
-          });
-        }
+    loadData(data) {
+      this.request
+        .post("v1/api/server/url/get", {})
+        .then((res) => {
+          this.data = res
+          this.data.agent_urls_text = res.agent_urls.join("\n")
       });
-      this.data = data;
+    },
+    parseAgentURL: function() {
+      var tmp = []
+      this.data.agent_urls_text.split("\n").forEach(function (item) {
+        item = item.trim()
+        if (item.length) {
+          tmp.push(item)
+        }
+      })
+
+      return tmp
     },
     saveData: function() {
+      var data = {
+        panel_url: this.data.panel_url,
+        agent_urls: this.parseAgentURL()
+      }
       return this.request
-        .post("v1/api/server/url", this.data)
+        .post("v1/api/server/url", data)
         .then(() => {
           alert("保存成功");
         });
