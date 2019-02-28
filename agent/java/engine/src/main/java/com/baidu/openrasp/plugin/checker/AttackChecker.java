@@ -21,7 +21,7 @@ package com.baidu.openrasp.plugin.checker;
  *
  * 攻击类型 hook 点检测
  */
-public abstract class AttackChecker extends AbstractChecker{
+public abstract class AttackChecker extends AbstractChecker {
 
     public AttackChecker() {
         super();

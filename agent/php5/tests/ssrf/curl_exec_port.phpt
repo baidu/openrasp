@@ -1,13 +1,14 @@
 --TEST--
-hook curl_exec empty host
+hook curl_exec with port
 --SKIPIF--
 <?php
 if (!function_exists("curl_init")) die("Skipped: curl is disabled.");
 $plugin = <<<EOF
 plugin.register('ssrf', params => {
-    assert(params.url == '1q2w3e4r5t6y7u8i9o0p')
+    assert(params.url == 'http://127.0.0.1:80')
     assert(params.function == 'curl_exec')
-    assert(params.hostname == '1q2w3e4r5t6y7u8i9o0p')
+    assert(params.hostname == '127.0.0.1')
+	assert(params.port == '80')
     assert(Array.isArray(params.ip))
     return block
 })
@@ -17,7 +18,7 @@ include(__DIR__.'/../skipif.inc');
 --INI--
 openrasp.root_dir=/tmp/openrasp
 --GET--
-url=1q2w3e4r5t6y7u8i9o0p
+url=http://127.0.0.1:80
 --FILE--
 <?php 
 	$url = @$_GET['url'];
@@ -34,13 +35,10 @@ url=1q2w3e4r5t6y7u8i9o0p
 				$header = substr($data, 0, $headerSize);
 				$body = substr($data, $headerSize);
 				echo $body;
-			} else {
-				echo "no check";	
 			}
-		} else {
-			echo "no check";
 		}
+		
 	}
 ?>
 --EXPECTREGEX--
-no check
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

@@ -20,10 +20,10 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.request.AbstractRequest;
 import com.google.gson.Gson;
 
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 报警事件信息类
@@ -61,7 +61,7 @@ public abstract class EventInfo {
         } catch (Exception e) {
             String message = "failed to print event log";
             int errorCode = ErrorType.HOOK_ERROR.getCode();
-            HookHandler.LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
+            HookHandler.LOGGER.error(CloudUtils.getExceptionObject(message, errorCode), e);
             return null;
         }
     }
@@ -82,6 +82,21 @@ public abstract class EventInfo {
             ret.append("\n");
         }
         return ret.toString();
+    }
+
+    protected Map<String, String> getRequestHeader(AbstractRequest request) {
+        Map<String, String> header = new HashMap<String, String>();
+        if (request != null) {
+            Enumeration<String> headerNames = request.getHeaderNames();
+            if (headerNames != null) {
+                while (headerNames.hasMoreElements()) {
+                    String key = headerNames.nextElement();
+                    String value = request.getHeader(key);
+                    header.put(key.toLowerCase(), value);
+                }
+            }
+        }
+        return header;
     }
 
 }

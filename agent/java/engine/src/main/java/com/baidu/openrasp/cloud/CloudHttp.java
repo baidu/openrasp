@@ -17,14 +17,15 @@
 package com.baidu.openrasp.cloud;
 
 import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.model.ExceptionModel;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.cloud.model.GenericResponse;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
-import com.google.gson.*;
+import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import java.io.*;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;

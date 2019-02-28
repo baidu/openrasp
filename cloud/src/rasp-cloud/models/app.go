@@ -56,6 +56,7 @@ type App struct {
 	EmailAlarmConf   EmailAlarmConf         `json:"email_alarm_conf" bson:"email_alarm_conf"`
 	DingAlarmConf    DingAlarmConf          `json:"ding_alarm_conf" bson:"ding_alarm_conf"`
 	HttpAlarmConf    HttpAlarmConf          `json:"http_alarm_conf" bson:"http_alarm_conf"`
+	AlgorithmConfig  map[string]interface{} `json:"algorithm_config"`
 }
 
 type WhitelistConfigItem struct {
@@ -92,6 +93,7 @@ type emailTemplateParam struct {
 	Alarms       []map[string]interface{}
 	DetailedLink string
 	AppName      string
+	HttpPort     int
 }
 
 type dingResponse struct {
@@ -230,7 +232,7 @@ func handleAttackAlarm() {
 	}
 	now := time.Now().UnixNano() / 1000000
 	for _, app := range apps {
-		total, result, err := logs.SearchLogs(lastAlarmTime, now, nil, "event_time",
+		total, result, err := logs.SearchLogs(lastAlarmTime, now, false, nil, "event_time",
 			1, 10, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+app.Id)
 		if err != nil {
 			beego.Error("failed to get alarm from es: " + err.Error())
@@ -292,7 +294,7 @@ func selectDefaultPlugin(app *App) {
 		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to insert default plugin: "+err.Error())
 		return
 	}
-	err = SetSelectedPlugin(app.Id, plugin.Id)
+	_, err = SetSelectedPlugin(app.Id, plugin.Id)
 	if err != nil {
 		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to select default plugin for app: " + err.Error()+
 			", app_id: "+ app.Id+ ", plugin_id: "+ plugin.Id)
@@ -365,7 +367,7 @@ func RegenerateSecret(appId string) (secret string, err error) {
 	return
 }
 
-func HandleApp(app *App, isCreate bool) {
+func HandleApp(app *App, isCreate bool) error {
 	if app.EmailAlarmConf.RecvAddr == nil {
 		app.EmailAlarmConf.RecvAddr = make([]string, 0)
 	}
@@ -396,6 +398,19 @@ func HandleApp(app *App, isCreate bool) {
 	if app.GeneralConfig == nil {
 		app.GeneralConfig = make(map[string]interface{})
 	}
+
+	app.AlgorithmConfig = make(map[string]interface{})
+	plugin, err := GetSelectedPlugin(app.Id, false)
+	if err != nil {
+		if err != mgo.ErrNotFound {
+			return err
+		}
+		return nil
+	}
+	if plugin.AlgorithmConfig != nil {
+		app.AlgorithmConfig = plugin.AlgorithmConfig
+	}
+	return nil
 }
 
 func UpdateAppById(id string, doc interface{}) (app *App, err error) {
@@ -476,11 +491,13 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 			return err
 		}
 		alarmData := new(bytes.Buffer)
+		panelUrl, port := getPanelServerUrl()
 		err = t.Execute(alarmData, &emailTemplateParam{
 			Total:        total - int64(len(alarms)),
 			Alarms:       alarms,
 			AppName:      app.Name,
-			DetailedLink: conf.AppConfig.PanelServerURL + "/#/events/" + app.Id,
+			DetailedLink: panelUrl + "/#/events/" + app.Id,
+			HttpPort:     port,
 		})
 		if err != nil {
 			beego.Error("failed to execute email template: " + err.Error())
@@ -513,6 +530,21 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 	}
 	beego.Debug("succeed in pushing email alarm for app: " + app.Name)
 	return nil
+}
+
+func getPanelServerUrl() (string, int) {
+	serverUrl, err := GetServerUrl()
+
+	if err != nil && err != mgo.ErrNotFound {
+		beego.Error("failed to get panel url for alarm: " + err.Error())
+	}
+
+	port := beego.AppConfig.DefaultInt("httpport", 8080)
+	if serverUrl == nil || len(serverUrl.PanelUrl) == 0 {
+		return "", port
+	}
+
+	return serverUrl.PanelUrl, port
 }
 
 func sendNormalEmail(emailConf EmailAlarmConf, auth smtp.Auth, msg string) (err error) {
@@ -662,9 +694,13 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 		if isTest {
 			dingText = "OpenRASP test message from app: " + app.Name + ", time: " + time.Now().Format(time.RFC3339)
 		} else {
+			panelUrl, _ := getPanelServerUrl()
+			if len(panelUrl) == 0 {
+				panelUrl = "http://127.0.0.1"
+			}
 			dingText = "时间：" + time.Now().Format(time.RFC3339) + "， 来自 OpenRAS 的报警\n共有 " +
 				strconv.FormatInt(total, 10) + " 条报警信息来自 APP：" + app.Name + "，详细信息：" +
-				conf.AppConfig.PanelServerURL + "/#/events/" + app.Id
+				panelUrl + "/#/events/" + app.Id
 		}
 		if len(dingCong.RecvUser) > 0 {
 			body["touser"] = strings.Join(dingCong.RecvUser, "|")

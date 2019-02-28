@@ -31,7 +31,7 @@ type PolicyAlarmController struct {
 // @router /search [post]
 func (o *PolicyAlarmController) Search() {
 	var param = &logs.SearchPolicyParam{}
-	o.UnMarshalJson(&param)
+	o.UnmarshalJson(&param)
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
 	}
@@ -70,7 +70,7 @@ func (o *PolicyAlarmController) Search() {
 	delete(searchData, "start_time")
 	delete(searchData, "end_time")
 	delete(searchData, "app_id")
-	total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime, searchData, "event_time",
+	total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime, false, searchData, "event_time",
 		param.Page, param.Perpage, false, logs.PolicyAlarmInfo.EsAliasIndex+"-"+param.Data.AppId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to search data from es", err)

@@ -150,6 +150,6 @@ func FindOperation(data *Operation, startTime int64, endTime int64,
 	return
 }
 
-func RemoveOperationByAppId(appId string) (error) {
+func RemoveOperationByAppId(appId string) (*mgo.ChangeInfo, error) {
 	return mongo.RemoveAll(operationCollectionName, bson.M{"app_id": appId})
 }

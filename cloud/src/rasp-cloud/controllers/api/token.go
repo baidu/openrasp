@@ -28,7 +28,7 @@ type TokenController struct {
 // @router /get [post]
 func (o *TokenController) Get() {
 	var param map[string]int
-	o.UnMarshalJson(&param)
+	o.UnmarshalJson(&param)
 	page := param["page"]
 	if page <= 0 {
 		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
@@ -56,7 +56,7 @@ func (o *TokenController) Get() {
 // @router / [post]
 func (o *TokenController) Post() {
 	var token *models.Token
-	o.UnMarshalJson(&token)
+	o.UnmarshalJson(&token)
 	if len(token.Description) > 1024 {
 		o.ServeError(http.StatusBadRequest, "the length of the token description must be less than 1024")
 	}
@@ -70,7 +70,7 @@ func (o *TokenController) Post() {
 // @router /delete [post]
 func (o *TokenController) Delete() {
 	var token *models.Token
-	o.UnMarshalJson(&token)
+	o.UnmarshalJson(&token)
 	if len(token.Token) == 0 {
 		o.ServeError(http.StatusBadRequest, "the token param cannot be empty")
 	}

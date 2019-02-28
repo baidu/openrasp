@@ -18,7 +18,6 @@ package com.baidu.openrasp.hook.sql;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;

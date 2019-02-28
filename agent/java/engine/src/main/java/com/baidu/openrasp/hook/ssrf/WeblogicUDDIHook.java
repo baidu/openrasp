@@ -57,7 +57,8 @@ public class WeblogicUDDIHook extends AbstractSSRFHook {
                 HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             }
             if (url != null) {
-                checkHttpUrl(weblogicURL, url.getHost(), "weblogic_UDDI");
+                int port = url.getPort();
+                checkHttpUrl(weblogicURL, url.getHost(), port > 0 ? ("" + port) : "", "weblogic_UDDI");
             }
         }
     }

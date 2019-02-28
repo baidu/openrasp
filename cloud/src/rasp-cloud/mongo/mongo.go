@@ -44,6 +44,7 @@ func init() {
 		Timeout:   time.Second * 20,
 		FailFast:  true,
 		PoolLimit: conf.AppConfig.MongoDBPoolLimit,
+		Database:  DbName,
 	}
 	session, err = mgo.DialWithInfo(dialInfo)
 	if err != nil {
@@ -171,11 +172,10 @@ func RemoveId(collection string, id interface{}) error {
 	return newSession.DB(DbName).C(collection).RemoveId(id)
 }
 
-func RemoveAll(collection string, selector interface{}) error {
+func RemoveAll(collection string, selector interface{}) (*mgo.ChangeInfo, error) {
 	newSession := NewSession()
 	defer newSession.Close()
-	_, err := newSession.DB(DbName).C(collection).RemoveAll(selector)
-	return err
+	return newSession.DB(DbName).C(collection).RemoveAll(selector)
 }
 
 func Indexes(collection string) (indexes []mgo.Index, err error) {

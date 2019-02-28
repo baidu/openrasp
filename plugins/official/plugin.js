@@ -1,4 +1,4 @@
-const plugin_version = '2019-0222-1030'
+const plugin_version = '2019-0225-1830'
 const plugin_name    = 'official'
 
 /*
@@ -37,9 +37,13 @@ var plugin  = new RASP(plugin_name)
 // BEGIN ALGORITHM CONFIG //
 
 var algorithmConfig = {
-    // 快速设置 - 若 all_log 开启，则所有的 block 都改为 log
+    // 快速设置
     meta: {
-        all_log: false,
+        // 若 all_log 开启，表示为观察模式，会将所有的 block 都改为 log
+        all_log: true,
+
+        // 若 is_dev 开启，表示为线下环境，将开启更多消耗性能的检测算法
+        is_dev:  false
     },
 
     // SQL注入算法#1 - 匹配用户输入
@@ -1498,6 +1502,7 @@ plugin.register('command', function (params, context) {
                 'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': _("Reflected command execution - Using SpEL expressions"),
                 'freemarker.template.utility.Execute.exec':                                     _("Reflected command execution - Using FreeMarker template"),
                 'org.jboss.el.util.ReflectionUtil.invokeMethod':                                _("Reflected command execution - Using JBoss EL method"),
+                'com.sun.jndi.rmi.registry.RegistryContext.lookup':                             _("Reflected command execution - Using JNDI registry service"),
             }
 
             for (var i = 2; i < params.stack.length; i ++) {

@@ -1,17 +1,14 @@
 package com.baidu.openrasp.detector;
 
-import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 
-import java.io.File;
 import java.lang.reflect.Method;
-import java.net.URLDecoder;
 import java.security.ProtectionDomain;
 
 /**
  * Created by tyy on 19-2-13.
  */
-public class JBossEPADetector extends ServerDetector {
+public class JBossEAPDetector extends ServerDetector {
 
 
     @Override
@@ -28,9 +25,9 @@ public class JBossEPADetector extends ServerDetector {
             Package jbossBootPackage = (Package) getPackageMethod.invoke(classLoader, "org.jboss.modules");
             serverVersion = jbossBootPackage.getSpecificationVersion();
         } catch (Throwable t) {
-            logDetectError("handle jboss epa startup failed", t);
+            logDetectError("handle jboss eap startup failed", t);
         } finally {
-            ApplicationModel.initServerInfo("jboss epa", serverVersion);
+            ApplicationModel.initServerInfo("jboss eap", serverVersion);
         }
     }
 

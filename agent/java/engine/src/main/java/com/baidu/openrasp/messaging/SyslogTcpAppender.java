@@ -20,7 +20,6 @@ package com.baidu.openrasp.messaging;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Layout;
 import org.apache.log4j.helpers.LogLog;
-import org.apache.log4j.helpers.SyslogQuietWriter;
 import org.apache.log4j.net.SocketNode;
 import org.apache.log4j.net.ZeroConfSupport;
 import org.apache.log4j.spi.ErrorCode;
@@ -200,7 +199,7 @@ public class SyslogTcpAppender extends AppenderSkeleton {
         this.address = address;
         this.remoteHost = address.getHostName();
         this.port = port;
-        this.syslogFacility = syslogFacility*8;
+        this.syslogFacility = syslogFacility * 8;
         this.layout = layout;
         this.initSyslogFacilityStr();
         connect(address, port);
@@ -213,7 +212,7 @@ public class SyslogTcpAppender extends AppenderSkeleton {
         this.port = port;
         this.address = getAddressByName(host);
         this.remoteHost = host;
-        this.syslogFacility = syslogFacility*8;
+        this.syslogFacility = syslogFacility * 8;
         this.layout = layout;
         this.initSyslogFacilityStr();
         connect(address, port);
@@ -476,11 +475,11 @@ public class SyslogTcpAppender extends AppenderSkeleton {
                 if (layout == null || layout.ignoresThrowable()) {
                     String[] s = event.getThrowableStrRep();
                     if (s != null) {
-                        for(int i = 0; i < s.length; i++) {
+                        for (int i = 0; i < s.length; i++) {
                             if (s[i].startsWith("\t")) {
-                                stw.write(hdr+TAB+s[i].substring(1));
+                                stw.write(hdr + TAB + s[i].substring(1));
                             } else {
-                                stw.write(hdr+s[i]);
+                                stw.write(hdr + s[i]);
                             }
                         }
                     }

@@ -34,10 +34,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
+import java.lang.instrument.Instrumentation;
+import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Set;
 
 /**
@@ -46,14 +48,44 @@ import java.util.Set;
 public class CustomClassTransformer implements ClassFileTransformer {
     public static final Logger LOGGER = Logger.getLogger(CustomClassTransformer.class.getName());
     private static final String SCAN_ANNOTATION_PACKAGE = "com.baidu.openrasp.hook";
-    private static ArrayList<String> list = new ArrayList<String>();
     private static HashMap<String, ClassLoader> classLoaderCache = new HashMap<String, ClassLoader>();
 
+    private Instrumentation inst;
     private HashSet<AbstractClassHook> hooks = new HashSet<AbstractClassHook>();
     private ServerDetectorManager serverDetector = ServerDetectorManager.getInstance();
 
-    public CustomClassTransformer() {
+    public CustomClassTransformer(Instrumentation inst) {
+        this.inst = inst;
+        inst.addTransformer(this, true);
         addAnnotationHook();
+    }
+
+    public void release() {
+        inst.removeTransformer(this);
+        try {
+            retransform();
+        } catch (UnmodifiableClassException e) {
+            int errorCode = ErrorType.HOOK_ERROR.getCode();
+            LOGGER.error(CloudUtils.getExceptionObject("retransform classes failed", errorCode), e);
+        }
+    }
+
+    public void retransform() throws UnmodifiableClassException {
+        LinkedList<Class> retransformClasses = new LinkedList<Class>();
+        Class[] loadedClasses = inst.getAllLoadedClasses();
+        for (Class clazz : loadedClasses) {
+            if (isClassMatched(clazz.getName().replace(".", "/"))) {
+                if (inst.isModifiableClass(clazz) && !clazz.getName().startsWith("java.lang.invoke.LambdaForm")) {
+                    retransformClasses.add(clazz);
+                }
+            }
+        }
+        // hook已经加载的类，或者是回滚已经加载的类
+        Class[] classes = new Class[retransformClasses.size()];
+        retransformClasses.toArray(classes);
+        if (classes.length > 0) {
+            inst.retransformClasses(classes);
+        }
     }
 
     private void addHook(AbstractClassHook hook, String className) {
@@ -78,7 +110,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
             } catch (Exception e) {
                 String message = "add hook failed";
                 int errorCode = ErrorType.HOOK_ERROR.getCode();
-                LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
+                LOGGER.error(CloudUtils.getExceptionObject(message, errorCode), e);
             }
         }
     }
@@ -112,7 +144,6 @@ public class CustomClassTransformer implements ClassFileTransformer {
             }
         }
         serverDetector.detectServer(className, loader, domain);
-        handleClassLoader(loader, className);
         return classfileBuffer;
     }
 
@@ -130,16 +161,6 @@ public class CustomClassTransformer implements ClassFileTransformer {
         classPool.appendClassPath(new ClassClassPath(ModuleLoader.class));
         if (loader != null) {
             classPool.appendClassPath(new LoaderClassPath(loader));
-        }
-    }
-
-    public static ClassLoader getClassLoader(String className) {
-        return classLoaderCache.get(className);
-    }
-
-    private static void handleClassLoader(ClassLoader loader, String className) {
-        if (list.contains(className)) {
-            classLoaderCache.put(className.replace('/', '.'), loader);
         }
     }
 

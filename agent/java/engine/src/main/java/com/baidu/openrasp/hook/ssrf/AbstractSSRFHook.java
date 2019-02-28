@@ -54,12 +54,13 @@ public abstract class AbstractSSRFHook extends AbstractClassHook {
      * @param hostName http 请求的 host
      * @param function http 请求的方式
      */
-    protected static void checkHttpUrl(String url, String hostName, String function) {
+    protected static void checkHttpUrl(String url, String hostName, String port,String function) {
         JSContext cx = JSContextFactory.enterAndInitContext();
         Scriptable params = cx.newObject(cx.getScope());
         params.put("url", params, url);
         params.put("hostname", params, hostName);
         params.put("function", params, function);
+        params.put("port",params,port);
         LinkedList<String> ip = new LinkedList<String>();
         try {
             InetAddress[] addresses = InetAddress.getAllByName(hostName);

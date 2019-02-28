@@ -22,10 +22,10 @@ import com.fuxi.javaagent.contentobjects.jnotify.Observer;
 import org.apache.log4j.Logger;
 
 /**
-　　* @Description: 监测并收集jnotify的内部错误，写入rasp.log
-　　* @author anyang
-　　* @date 2018/5/14 11:12
-　　*/
+ * 　　* @Description: 监测并收集jnotify的内部错误，写入rasp.log
+ * 　　* @author anyang
+ * 　　* @date 2018/5/14 11:12
+ */
 public class JnotifyWatcher implements Observer {
 
     private static final Logger LOGGER = Logger.getLogger(JnotifyWatcher.class.getName());
@@ -33,9 +33,9 @@ public class JnotifyWatcher implements Observer {
 
     @Override
     public void update(String s) {
-        this.message=s;
+        this.message = s;
         String message = "JNotify encounters an internal error";
         int errorCode = ErrorType.FSWATCH_ERROR.getCode();
-        LOGGER.error(CloudUtils.getExceptionObject(message,errorCode));
+        LOGGER.error(CloudUtils.getExceptionObject(message, errorCode));
     }
 }

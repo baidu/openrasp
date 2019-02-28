@@ -38,13 +38,13 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
 
     // The code assumes that the following constants are in a increasing
     // sequence.
-    static final int TOP_OF_TROUBLE=-1;
+    static final int TOP_OF_TROUBLE = -1;
     static final int TOP_OF_MINUTE = 0;
-    static final int TOP_OF_HOUR   = 1;
-    static final int HALF_DAY      = 2;
-    static final int TOP_OF_DAY    = 3;
-    static final int TOP_OF_WEEK   = 4;
-    static final int TOP_OF_MONTH  = 5;
+    static final int TOP_OF_HOUR = 1;
+    static final int HALF_DAY = 2;
+    static final int TOP_OF_DAY = 3;
+    static final int TOP_OF_WEEK = 4;
+    static final int TOP_OF_MONTH = 5;
 
     /**
      * 最大日志文件备份数目,需大于等于0
@@ -54,26 +54,27 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
     private int maxBackupIndex = 30;
 
     /**
-     The date pattern. By default, the pattern is set to
-     "'.'yyyy-MM-dd" meaning daily rollover.
+     * The date pattern. By default, the pattern is set to
+     * "'.'yyyy-MM-dd" meaning daily rollover.
      */
     private String datePattern = "'.'yyyy-MM-dd";
 
     /**
-     The log file will be renamed to the value of the
-     scheduledFilename variable when the next interval is entered. For
-     example, if the rollover period is one hour, the log file will be
-     renamed to the value of "scheduledFilename" at the beginning of
-     the next hour.
-
-     The precise time when a rollover occurs depends on logging
-     activity.
+     * The log file will be renamed to the value of the
+     * scheduledFilename variable when the next interval is entered. For
+     * example, if the rollover period is one hour, the log file will be
+     * renamed to the value of "scheduledFilename" at the beginning of
+     * the next hour.
+     *
+     * The precise time when a rollover occurs depends on logging
+     * activity.
      */
     private String scheduledFilename;
 
     /**
-     The next time we estimate a rollover should occur. */
-    private long nextCheck = System.currentTimeMillis () - 1;
+     * The next time we estimate a rollover should occur.
+     */
+    private long nextCheck = System.currentTimeMillis() - 1;
 
     Date now = new Date();
 
@@ -88,15 +89,15 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
 
 
     /**
-     The default constructor does nothing. */
+     * The default constructor does nothing.
+     */
     public OpenraspDailyRollingFileAppender() {
     }
 
     /**
-     Instantiate a <code>OpenraspDailyRollingFileAppender</code> and open the
-     file designated by <code>filename</code>. The opened filename will
-     become the ouput destination for this appender.
-
+     * Instantiate a <code>OpenraspDailyRollingFileAppender</code> and open the
+     * file designated by <code>filename</code>. The opened filename will
+     * become the ouput destination for this appender.
      */
     public OpenraspDailyRollingFileAppender(Layout layout, String filename,
                                             String datePattern) throws IOException {
@@ -116,63 +117,65 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
     }
 
     /**
-     The <b>DatePattern</b> takes a string in the same format as
-     expected by {@link SimpleDateFormat}. This options determines the
-     rollover schedule.
+     * The <b>DatePattern</b> takes a string in the same format as
+     * expected by {@link SimpleDateFormat}. This options determines the
+     * rollover schedule.
      */
     public void setDatePattern(String pattern) {
         datePattern = pattern;
     }
 
-    /** Returns the value of the <b>DatePattern</b> option. */
+    /**
+     * Returns the value of the <b>DatePattern</b> option.
+     */
     public String getDatePattern() {
         return datePattern;
     }
 
     public void activateOptions() {
         super.activateOptions();
-        if(datePattern != null && fileName != null) {
+        if (datePattern != null && fileName != null) {
             now.setTime(System.currentTimeMillis());
             sdf = new SimpleDateFormat(datePattern);
             int type = computeCheckPeriod();
             printPeriodicity(type);
             rc.setType(type);
             File file = new File(fileName);
-            scheduledFilename = fileName+sdf.format(new Date(file.lastModified()));
+            scheduledFilename = fileName + sdf.format(new Date(file.lastModified()));
 
         } else {
             LogLog.error("Either File or DatePattern options are not set for appender ["
-                    +name+"].");
+                    + name + "].");
         }
     }
 
     void printPeriodicity(int type) {
-        switch(type) {
+        switch (type) {
             case TOP_OF_MINUTE:
-                LogLog.debug("Appender ["+name+"] to be rolled every minute.");
+                LogLog.debug("Appender [" + name + "] to be rolled every minute.");
                 break;
             case TOP_OF_HOUR:
-                LogLog.debug("Appender ["+name
-                        +"] to be rolled on top of every hour.");
+                LogLog.debug("Appender [" + name
+                        + "] to be rolled on top of every hour.");
                 break;
             case HALF_DAY:
-                LogLog.debug("Appender ["+name
-                        +"] to be rolled at midday and midnight.");
+                LogLog.debug("Appender [" + name
+                        + "] to be rolled at midday and midnight.");
                 break;
             case TOP_OF_DAY:
-                LogLog.debug("Appender ["+name
-                        +"] to be rolled at midnight.");
+                LogLog.debug("Appender [" + name
+                        + "] to be rolled at midnight.");
                 break;
             case TOP_OF_WEEK:
-                LogLog.debug("Appender ["+name
-                        +"] to be rolled at start of week.");
+                LogLog.debug("Appender [" + name
+                        + "] to be rolled at start of week.");
                 break;
             case TOP_OF_MONTH:
-                LogLog.debug("Appender ["+name
-                        +"] to be rolled at start of every month.");
+                LogLog.debug("Appender [" + name
+                        + "] to be rolled at start of every month.");
                 break;
             default:
-                LogLog.warn("Unknown periodicity for appender ["+name+"].");
+                LogLog.warn("Unknown periodicity for appender [" + name + "].");
                 break;
         }
     }
@@ -191,16 +194,16 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
         OpenraspRollingCalendar rollingCalendar = new OpenraspRollingCalendar(gmtTimeZone, Locale.getDefault());
         // set sate to 1970-01-01 00:00:00 GMT
         Date epoch = new Date(0);
-        if(datePattern != null) {
-            for(int i = TOP_OF_MINUTE; i <= TOP_OF_MONTH; i++) {
+        if (datePattern != null) {
+            for (int i = TOP_OF_MINUTE; i <= TOP_OF_MONTH; i++) {
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat(datePattern);
                 simpleDateFormat.setTimeZone(gmtTimeZone); // do all date formatting in GMT
                 String r0 = simpleDateFormat.format(epoch);
                 rollingCalendar.setType(i);
                 Date next = new Date(rollingCalendar.getNextCheckMillis(epoch));
-                String r1 =  simpleDateFormat.format(next);
+                String r1 = simpleDateFormat.format(next);
                 //System.out.println("Type = "+i+", r0 = "+r0+", r1 = "+r1);
-                if(r0 != null && r1 != null && !r0.equals(r1)) {
+                if (r0 != null && r1 != null && !r0.equals(r1)) {
                     return i;
                 }
             }
@@ -209,7 +212,7 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
     }
 
     /**
-     Rollover the current file to a new file.
+     * Rollover the current file to a new file.
      */
     void rollOver() throws IOException {
 
@@ -219,7 +222,7 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
             return;
         }
 
-        String datedFilename = fileName+sdf.format(now);
+        String datedFilename = fileName + sdf.format(now);
         // It is too early to roll over because we are still within the
         // bounds of the current interval. Rollover will occur once the
         // next interval is reached.
@@ -230,21 +233,21 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
         // close current file, and rename it to datedFilename
         this.closeFile();
 
-        File target  = new File(scheduledFilename);
+        File target = new File(scheduledFilename);
         if (target.exists()) {
             target.delete();
         }
 
         final File file = new File(fileName);
         boolean result = file.renameTo(target);
-        if(result) {
-            LogLog.debug(fileName +" -> "+ scheduledFilename);
+        if (result) {
+            LogLog.debug(fileName + " -> " + scheduledFilename);
         } else {
-            LogLog.error("Failed to rename ["+fileName+"] to ["+scheduledFilename+"].");
+            LogLog.error("Failed to rename [" + fileName + "] to [" + scheduledFilename + "].");
         }
 
         File parent = file.getParentFile();
-        LogLog.debug("roll over folder -> "+ parent.getAbsolutePath());
+        LogLog.debug("roll over folder -> " + parent.getAbsolutePath());
         final Date removeDate = new Date(rc.getRemoveMillis(now, maxBackupIndex));
         String[] removedFiles = parent.list(new FilenameFilter() {
             @Override
@@ -266,8 +269,8 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
             }
         });
 
-        for(int i = 0; i < removedFiles.length; ++i) {
-            File removeTarget  = new File(parent, removedFiles[i]);
+        for (int i = 0; i < removedFiles.length; ++i) {
+            File removeTarget = new File(parent, removedFiles[i]);
             if (removeTarget.exists()) {
                 removeTarget.delete();
                 LogLog.debug("remove " + removedFiles[i]);
@@ -278,9 +281,8 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
             // This will also close the file. This is OK since multiple
             // close operations are safe.
             this.setFile(fileName, true, this.bufferedIO, this.bufferSize);
-        }
-        catch(IOException e) {
-            errorHandler.error("setFile("+fileName+", true) call failed.");
+        } catch (IOException e) {
+            errorHandler.error("setFile(" + fileName + ", true) call failed.");
         }
         scheduledFilename = datedFilename;
     }
@@ -292,7 +294,7 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
      * <p>Before actually logging, this method will check whether it is
      * time to do a rollover. If it is, it will schedule the next
      * rollover time and then rollover.
-     * */
+     */
     protected void subAppend(LoggingEvent event) {
         long n = System.currentTimeMillis();
         if (n >= nextCheck) {
@@ -300,8 +302,7 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
             nextCheck = rc.getNextCheckMillis(now);
             try {
                 rollOver();
-            }
-            catch(IOException ioe) {
+            } catch (IOException ioe) {
                 if (ioe instanceof InterruptedIOException) {
                     Thread.currentThread().interrupt();
                 }
@@ -313,10 +314,10 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
 }
 
 /**
- *  OpenraspRollingCalendar is a helper class to OpenraspDailyRollingFileAppender.
- *  Given a periodicity type and the current time, it computes the
- *  start of the next interval.
- * */
+ * OpenraspRollingCalendar is a helper class to OpenraspDailyRollingFileAppender.
+ * Given a periodicity type and the current time, it computes the
+ * start of the next interval.
+ */
 class OpenraspRollingCalendar extends GregorianCalendar {
     private static final long serialVersionUID = -1788133458110660402L;
 
@@ -341,7 +342,7 @@ class OpenraspRollingCalendar extends GregorianCalendar {
     public Date getNextCheckDate(Date now) {
         this.setTime(now);
 
-        switch(type) {
+        switch (type) {
             case OpenraspDailyRollingFileAppender.TOP_OF_MINUTE:
                 this.set(Calendar.SECOND, 0);
                 this.set(Calendar.MILLISECOND, 0);
@@ -358,7 +359,7 @@ class OpenraspRollingCalendar extends GregorianCalendar {
                 this.set(Calendar.SECOND, 0);
                 this.set(Calendar.MILLISECOND, 0);
                 int hour = get(Calendar.HOUR_OF_DAY);
-                if(hour < 12) {
+                if (hour < 12) {
                     this.set(Calendar.HOUR_OF_DAY, 12);
                 } else {
                     this.set(Calendar.HOUR_OF_DAY, 0);
@@ -400,7 +401,7 @@ class OpenraspRollingCalendar extends GregorianCalendar {
 
     public Date getRemoveDate(Date now, int backupIndex) {
         this.setTime(now);
-        switch(type) {
+        switch (type) {
             case OpenraspDailyRollingFileAppender.TOP_OF_MINUTE:
                 this.set(Calendar.SECOND, 0);
                 this.set(Calendar.MILLISECOND, 0);
@@ -421,7 +422,7 @@ class OpenraspRollingCalendar extends GregorianCalendar {
                 int backupRemainder = backupIndex % 2;
                 this.add(Calendar.DAY_OF_MONTH, (-1) * backupDay);
                 if (backupRemainder == 1) {
-                    if(hour > 12) {
+                    if (hour > 12) {
                         this.set(Calendar.HOUR_OF_DAY, 0);
                     } else {
                         this.set(Calendar.HOUR_OF_DAY, 12);

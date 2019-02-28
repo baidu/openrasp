@@ -21,10 +21,11 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
-import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.Reflection;
-
-import javassist.*;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
+import javassist.CannotCompileException;
+import javassist.CtClass;
+import javassist.NotFoundException;
 import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;

@@ -18,6 +18,7 @@ package com.baidu.rasp.install.windows;
 
 import com.baidu.rasp.RaspError;
 import com.baidu.rasp.install.BaseStandardInstaller;
+
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -63,7 +64,7 @@ public class TomcatInstaller extends BaseStandardInstaller {
                 sb.append(OPENRASP_START_TAG);
                 sb.append(OPENRASP_CONFIG);
                 //jdk版本大于8加入依赖包
-                if (versionFlag){
+                if (versionFlag) {
                     sb.append(JDK_JAVA_OPTIONS);
                 }
                 sb.append(OPENRASP_END_TAG);

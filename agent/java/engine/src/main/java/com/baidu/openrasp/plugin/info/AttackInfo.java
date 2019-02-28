@@ -130,6 +130,8 @@ public class AttackInfo extends EventInfo {
             Map<String, String> serverInfo = request.getServerContext();
             info.put("server_type", serverInfo != null ? serverInfo.get("server") : null);
             info.put("server_version", serverInfo != null ? serverInfo.get("version") : null);
+            //请求header
+            info.put("header", getRequestHeader(request));
             // 被攻击URL
             StringBuffer requestURL = request.getRequestURL();
             String queryString = request.getQueryString();
@@ -144,11 +146,6 @@ public class AttackInfo extends EventInfo {
             //请求方法
             String method = request.getMethod();
             info.put("request_method", method != null ? method.toLowerCase() : null);
-            // 用户代理
-            info.put("user_agent", request.getHeader("User-Agent"));
-            // 攻击的 Referrer 头
-            String referer = request.getHeader("Referer");
-            info.put("referer", referer == null ? "" : referer);
             //Java反编译开关打开时，启用
             if (Config.getConfig().getDecompileEnable()) {
                 String appBasePath = request.getAppBasePath();

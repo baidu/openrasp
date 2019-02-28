@@ -21,8 +21,8 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
-import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.TimeUtils;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -135,6 +135,6 @@ public class SQLDriverManagerHook extends AbstractClassHook {
         HashMap<String, Object> params = new HashMap<String, Object>(4);
         params.put("url", url);
         params.put("properties", properties);
-        HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_SQL_CONNECTION, params);
+        HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SQL_CONNECTION, params);
     }
 }

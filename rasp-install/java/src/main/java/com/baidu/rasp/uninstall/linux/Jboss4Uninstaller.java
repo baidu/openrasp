@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2017-2019 Baidu Inc.
  *
@@ -14,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.baidu.rasp.uninstall.linux;
 
 import com.baidu.rasp.uninstall.BaseStandardUninstaller;
@@ -23,8 +23,8 @@ import java.util.Scanner;
 import java.util.regex.Pattern;
 
 /**
- * @Description:jboss自动卸载
  * @author anyang
+ * @Description:jboss自动卸载
  * @date 2018/4/25 19:33
  */
 public class Jboss4Uninstaller extends BaseStandardUninstaller {

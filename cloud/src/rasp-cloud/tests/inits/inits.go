@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"encoding/json"
 	"testing"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 type Response struct {

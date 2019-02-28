@@ -300,7 +300,6 @@ std::string fetch_name_in_request(zval *item);
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type);
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length);
 
-void check(OpenRASPCheckType type, zval *params);
 void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckType type, int confidence, zval *params, zval *message);
 void handle_block();
 void reset_response();

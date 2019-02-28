@@ -272,7 +272,7 @@ public abstract class AbstractClassHook {
         } catch (CannotCompileException e) {
             String message = "insert after method " + method.getLongName() + " failed";
             int errorCode = ErrorType.HOOK_ERROR.getCode();
-            LOGGER.error(CloudUtils.getExceptionObject(message,errorCode),e);
+            LOGGER.error(CloudUtils.getExceptionObject(message, errorCode), e);
             throw e;
         }
     }

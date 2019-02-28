@@ -77,16 +77,6 @@ OpenRASPCheckType CheckTypeTransfer::name_to_type(const std::string &name) const
   }
 }
 
-std::vector<std::string> CheckTypeTransfer::get_all_names() const
-{
-  std::vector<std::string> names;
-  for (auto &item : name_to_check_type)
-  {
-    names.push_back(item.first);
-  }
-  return names;
-}
-
 std::map<std::string, std::string> CheckTypeTransfer::get_buildin_action_map() const
 {
   std::map<std::string, std::string> buildin_action_map;

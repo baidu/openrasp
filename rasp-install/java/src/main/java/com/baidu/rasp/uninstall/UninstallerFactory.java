@@ -26,10 +26,9 @@ import static com.baidu.rasp.RaspError.E10002;
 import static com.baidu.rasp.RaspError.E10004;
 
 /**
- * @Description:
  * @author anyang
+ * @Description:
  * @date 2018/4/25 19:38
- *
  */
 public abstract class UninstallerFactory {
 

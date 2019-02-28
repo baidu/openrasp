@@ -22,16 +22,18 @@ import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.exception.SecurityException;
 import com.baidu.openrasp.hook.XXEHook;
-import com.baidu.openrasp.request.DubboRequest;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.request.AbstractRequest;
+import com.baidu.openrasp.request.DubboRequest;
 import com.baidu.openrasp.request.HttpServletRequest;
 import com.baidu.openrasp.response.HttpServletResponse;
 import org.apache.log4j.Logger;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -303,7 +305,10 @@ public class HookHandler {
      * @param type   检测类型
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
-    public static void doPolicyCheckWithoutRequest(CheckParameter.Type type, Object params) {
+    public static void doRealCheckWithoutRequest(CheckParameter.Type type, Object params) {
+        if (!enableHook.get()) {
+            return;
+        }
         long a = 0;
         if (Config.getConfig().getDebugLevel() > 0) {
             a = System.currentTimeMillis();
@@ -351,7 +356,7 @@ public class HookHandler {
                 }
             }
         }
-        doPolicyCheckWithoutRequest(type, params);
+        doRealCheckWithoutRequest(type, params);
     }
 
     /**
@@ -361,7 +366,7 @@ public class HookHandler {
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
     public static void doCheck(CheckParameter.Type type, Object params) {
-        if (enableHook.get() && enableCurrThreadHook.get()) {
+        if (enableCurrThreadHook.get()) {
             doCheckWithoutRequest(type, params);
         }
     }

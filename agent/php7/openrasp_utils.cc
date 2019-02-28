@@ -22,9 +22,11 @@
 extern "C"
 {
 #include "php_ini.h"
+#include "php_main.h"
 #include "php_streams.h"
 #include "zend_smart_str.h"
 #include "ext/pcre/php_pcre.h"
+#include "ext/standard/url.h"
 #include "ext/standard/file.h"
 #include "ext/json/php_json.h"
 #include "Zend/zend_builtin_functions.h"
@@ -216,41 +218,6 @@ char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
     return nullptr;
 }
 
-HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey)
-{
-    zval *origin_zv;
-    if ((origin_zv = zend_hash_str_find(ht, arKey, strlen(arKey))) != nullptr &&
-        Z_TYPE_P(origin_zv) == IS_ARRAY)
-    {
-        return Z_ARRVAL_P(origin_zv);
-    }
-    return nullptr;
-}
-
-bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result)
-{
-    zval *origin_zv;
-    if ((origin_zv = zend_hash_str_find(ht, arKey, strlen(arKey))) != nullptr &&
-        Z_TYPE_P(origin_zv) == IS_LONG)
-    {
-        *result = Z_LVAL_P(origin_zv);
-        return true;
-    }
-    return false;
-}
-
-bool write_str_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len)
-{
-    std::ofstream out_file(file, mode);
-    if (out_file.is_open() && out_file.good())
-    {
-        out_file.write(content, content_len);
-        out_file.close();
-        return true;
-    }
-    return false;
-}
-
 bool get_entire_file_content(const char *file, std::string &content)
 {
     std::ifstream ifs(file, std::ifstream::in | std::ifstream::binary);
@@ -286,4 +253,67 @@ zend_string *fetch_request_body(size_t max_len)
         return zend_string_init("", strlen(""), 0);
     }
     return buf;
+}
+
+bool need_alloc_shm_current_sapi()
+{
+    static const char *supported_sapis[] = {
+        "fpm-fcgi",
+        "apache2handler",
+        NULL};
+    const char **sapi_name;
+    if (sapi_module.name)
+    {
+        for (sapi_name = supported_sapis; *sapi_name; sapi_name++)
+        {
+            if (strcmp(sapi_module.name, *sapi_name) == 0)
+            {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+std::string convert_to_header_key(char *key, size_t length)
+{
+    if (key == nullptr ||
+        strncmp(key, "HTTP_", 5) != 0)
+    {
+        return "";
+    }
+    std::string result(key + 5, length - 5);
+    for (auto &ch : result)
+    {
+        if (ch == '_')
+        {
+            ch = '-';
+        }
+        else
+        {
+            ch = std::tolower(ch);
+        }
+    }
+    return result;
+}
+
+bool openrasp_parse_url(const std::string &origin_url, std::string &host, std::string &port)
+{
+    php_url *url = php_url_parse_ex(origin_url.c_str(), origin_url.length());
+    if (url)
+    {
+        if (url->host)
+        {
+#if (PHP_MINOR_VERSION < 3)
+            host = std::string(url->host);
+#else
+            host = std::string(url->host->val, url->host->len);
+#endif
+            port = std::to_string(url->port);
+            php_url_free(url);
+            return true;
+        }
+        php_url_free(url);
+    }
+    return false;
 }

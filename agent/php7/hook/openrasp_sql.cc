@@ -18,7 +18,6 @@
 #include "openrasp_hook.h"
 #include "openrasp_ini.h"
 #include "openrasp_v8.h"
-#include "openrasp_shared_alloc.h"
 #include <string>
 #include <map>
 #include "agent/shared_config_manager.h"
@@ -88,15 +87,14 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
             }
             else
             {
-                if (need_alloc_shm_current_sapi())
+                if (slm != nullptr)
                 {
                     ulong connection_hash = conn_entry.build_hash_code();
-                    openrasp_shared_alloc_lock();
-                    if (!openrasp_shared_hash_exist(connection_hash, LOG_G(alarm_logger).get_formatted_date_suffix()))
+                    long timestamp = (long)time(nullptr);
+                    if (!slm->log_exist(timestamp, connection_hash))
                     {
                         connection_via_default_username_policy(&conn_entry);
                     }
-                    openrasp_shared_alloc_unlock();
                 }
             }
         }

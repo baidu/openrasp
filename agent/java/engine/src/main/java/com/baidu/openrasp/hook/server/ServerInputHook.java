@@ -23,7 +23,7 @@ import com.baidu.openrasp.hook.AbstractClassHook;
  *
  * 用于从服务器请求中获取 body 的 hook 点基类
  */
-public abstract class ServerInputHook extends AbstractClassHook{
+public abstract class ServerInputHook extends AbstractClassHook {
 
     /**
      * (none-javadoc)

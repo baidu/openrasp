@@ -28,7 +28,7 @@ type AttackAlarmController struct {
 // @router / [post]
 func (o *AttackAlarmController) Post() {
 	var alarms []map[string]interface{}
-	o.UnMarshalJson(&alarms)
+	o.UnmarshalJson(&alarms)
 
 	count := 0
 	for _, alarm := range alarms {

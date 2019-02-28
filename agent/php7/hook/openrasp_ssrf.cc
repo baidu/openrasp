@@ -84,23 +84,15 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
     {
         return true;
     }
+    std::string url_string(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url));
     std::string host;
-    php_url *url = php_url_parse_ex(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url));
-    if (url)
+    std::string port;
+    if (!openrasp_parse_url(url_string, host, port))
     {
-        if (url->host)
+        if (!openrasp_parse_url("http://" + url_string, host, port))
         {
-#if (PHP_MINOR_VERSION < 3)
-            host = std::string(url->host);
-#else
-            host = std::string(url->host->val, url->host->len);
-#endif
+            return false;
         }
-        php_url_free(url);
-    }
-    if (host.empty())
-    {
-        return false;
     }
     openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (isolate)
@@ -113,6 +105,7 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
             params->Set(openrasp::NewV8String(isolate, "url"), openrasp::NewV8String(isolate, Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url)));
             params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "curl_exec"));
             params->Set(openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, host));
+            params->Set(openrasp::NewV8String(isolate, "port"), openrasp::NewV8String(isolate, port));
             uint32_t ip_sum = 0;
             auto ip_arr = v8::Array::New(isolate);
             struct hostent *hp = gethostbyname(host.c_str());

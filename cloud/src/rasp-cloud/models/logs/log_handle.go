@@ -222,9 +222,27 @@ func AddLogWithES(alarmType string, alarm map[string]interface{}) error {
 	return nil
 }
 
-func SearchLogs(startTime int64, endTime int64, query map[string]interface{}, sortField string, page int,
-	perpage int, ascending bool, index ...string) (int64, []map[string]interface{}, error) {
+func getVulnAggr(attackTimeTopHitName string) (*elastic.TermsAggregation) {
+	attackMaxAggrName := "attack_max_aggr"
+	attackTimeTopHitAggr := elastic.NewTopHitsAggregation().
+		Size(1).
+		Sort("event_time", false).
+		DocvalueFields("event_time", "attack_type", "intercept_state", "url",
+		"path", "rasp_id", "attack_source", "plugin_algorithm", "server_ip", "server_hostname")
+	attackTimeMaxAggr := elastic.NewMaxAggregation().Field("event_time")
+	return elastic.NewTermsAggregation().
+		Field("stack_md5").
+		Size(10000).
+		Order(attackMaxAggrName, false).
+		SubAggregation(attackMaxAggrName, attackTimeMaxAggr).
+		SubAggregation(attackTimeTopHitName, attackTimeTopHitAggr)
+}
+
+func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[string]interface{}, sortField string,
+	page int, perpage int, ascending bool, index ...string) (int64, []map[string]interface{}, error) {
 	var total int64
+	var attackAggrName = "attack_aggr"
+	var attackTimeTopHitName = "attack_time_top_hit"
 	filterQueries := make([]elastic.Query, 0, len(query)+1)
 	shouldQueries := make([]elastic.Query, 0, len(query)+1)
 	if query != nil {
@@ -264,18 +282,24 @@ func SearchLogs(startTime int64, endTime int64, query map[string]interface{}, so
 		}
 	}
 	filterQueries = append(filterQueries, elastic.NewRangeQuery("event_time").Gte(startTime).Lte(endTime))
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(10*time.Second))
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
 	defer cancel()
 	boolQuery := elastic.NewBoolQuery().Filter(filterQueries...)
 	if len(shouldQueries) > 0 {
 		boolQuery.Should(shouldQueries...).MinimumNumberShouldMatch(1)
 	}
-	queryResult, err := es.ElasticClient.Search(index...).
-		Query(boolQuery).
-		Sort(sortField, ascending).
-		From((page - 1) * perpage).
-		Size(perpage).
-		Do(ctx)
+
+	queryService := es.ElasticClient.Search(index...).Query(boolQuery)
+
+	if isAttachAggr {
+		attackAggr := getVulnAggr(attackTimeTopHitName)
+		queryService.Aggregation(attackAggrName, attackAggr).Size(0)
+	} else {
+		queryService.From((page - 1) * perpage).Size(perpage).Sort(sortField, ascending)
+	}
+
+	queryResult, err := queryService.Do(ctx)
+
 	if err != nil {
 		if queryResult != nil && queryResult.Error != nil {
 			errMsg, err := json.Marshal(queryResult.Error)
@@ -285,20 +309,53 @@ func SearchLogs(startTime int64, endTime int64, query map[string]interface{}, so
 		}
 		return 0, nil, err
 	}
+
 	result := make([]map[string]interface{}, 0)
-	if queryResult != nil && queryResult.Hits != nil && queryResult.Hits.Hits != nil {
-		hits := queryResult.Hits.Hits
-		total = queryResult.Hits.TotalHits
-		result = make([]map[string]interface{}, len(hits))
-		for index, item := range hits {
-			result[index] = make(map[string]interface{})
-			err := json.Unmarshal(*item.Source, &result[index])
-			result[index]["id"] = item.Id
-			if err != nil {
-				return 0, nil, err
+	if !isAttachAggr {
+		if queryResult != nil && queryResult.Hits != nil && queryResult.Hits.Hits != nil {
+			hits := queryResult.Hits.Hits
+			total = queryResult.Hits.TotalHits
+			result = make([]map[string]interface{}, len(hits))
+			for index, item := range hits {
+				result[index] = make(map[string]interface{})
+				err := json.Unmarshal(*item.Source, &result[index])
+				if err != nil {
+					return 0, nil, err
+				}
+				result[index]["id"] = item.Id
 			}
 		}
+	} else {
+		if queryResult != nil && queryResult.Aggregations != nil {
+			if terms, ok := queryResult.Aggregations.Terms(attackAggrName); ok && terms.Buckets != nil {
+				total = int64(len(terms.Buckets))
+				result = make([]map[string]interface{}, 0, perpage)
+				for i := 0; i < perpage; i++ {
+					index := i + (page-1)*perpage
+					if index >= int(total) {
+						break
+					}
+					value := make(map[string]interface{})
+					item := terms.Buckets[index]
+					if topHit, ok := item.TopHits(attackTimeTopHitName); ok &&
+						topHit.Hits != nil && topHit.Hits.Hits != nil {
+						hits := topHit.Hits.Hits
+						if len(hits) > 0 {
+							err := json.Unmarshal(*hits[0].Source, &value)
+							if err != nil {
+								return 0, nil, err
+							}
+							value["id"] = hits[0].Id
+							value["attack_count"] = terms.Buckets[index].DocCount
+							result = append(result, value)
+						}
+					}
+				}
+			}
+
+		}
 	}
+
 	return total, result, nil
 }
 

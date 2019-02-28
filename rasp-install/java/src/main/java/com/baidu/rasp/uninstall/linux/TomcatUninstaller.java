@@ -20,7 +20,6 @@ import com.baidu.rasp.uninstall.BaseStandardUninstaller;
 
 import java.io.File;
 import java.util.Scanner;
-import java.util.regex.Pattern;
 
 /**
  * @author anyang

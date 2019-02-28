@@ -171,10 +171,10 @@ public class DynamicConfigAppender {
     public static void enableDebug() {
         if (Config.getConfig().isDebugEnabled()) {
             LogLog.setInternalDebugging(true);
-            System.out.println("[OpenRASP] Log4j debug enabled");
+            System.out.println("[OpenRASP] Log4j debug mode enabled");
         } else {
             LogLog.setInternalDebugging(false);
-            System.out.println("[OpenRASP] Log4j debug closed");
+            System.out.println("[OpenRASP] Log4j debug mode disabled");
         }
     }
 

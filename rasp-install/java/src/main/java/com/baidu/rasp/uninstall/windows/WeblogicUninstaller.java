@@ -46,7 +46,7 @@ public class WeblogicUninstaller extends BaseStandardUninstaller {
     }
 
     @Override
-    protected String recoverStartScript(String content){
+    protected String recoverStartScript(String content) {
         StringBuilder sb = new StringBuilder();
         Scanner scanner = new Scanner(content);
         while (scanner.hasNextLine()) {

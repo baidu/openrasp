@@ -26,28 +26,6 @@
 
 Openrasp_ini openrasp_ini;
 
-ZEND_INI_MH(OnUpdateOpenraspIntGEZero)
-{
-    long tmp = zend_atol(new_value->val, new_value->len);
-    if (tmp < 0 || tmp > std::numeric_limits<unsigned int>::max())
-    {
-        return FAILURE;
-    }
-    *reinterpret_cast<int *>(mh_arg1) = tmp;
-    return SUCCESS;
-}
-
-ZEND_INI_MH(OnUpdateOpenraspIntGZero)
-{
-    long tmp = zend_atol(new_value->val, new_value->len);
-    if (tmp <= 0 || tmp > std::numeric_limits<unsigned int>::max())
-    {
-        return FAILURE;
-    }
-    *reinterpret_cast<int *>(mh_arg1) = tmp;
-    return SUCCESS;
-}
-
 ZEND_INI_MH(OnUpdateOpenraspCString)
 {
     *reinterpret_cast<char **>(mh_arg1) = new_value->val;
@@ -58,22 +36,6 @@ ZEND_INI_MH(OnUpdateOpenraspBool)
 {
     bool *tmp = reinterpret_cast<bool *>(mh_arg1);
     *tmp = strtobool(new_value->val, new_value->len);
-    return SUCCESS;
-}
-
-ZEND_INI_MH(OnUpdateOpenraspSet)
-{
-    std::unordered_set<std::string> *p = reinterpret_cast<std::unordered_set<std::string> *>(mh_arg1);
-    p->clear();
-    if (new_value)
-    {
-        std::regex re(R"([\s,]+)");
-        const std::cregex_token_iterator end;
-        for (std::cregex_token_iterator it(new_value->val, new_value->val + new_value->len, re, -1); it != end; it++)
-        {
-            p->insert(it->str());
-        }
-    }
     return SUCCESS;
 }
 

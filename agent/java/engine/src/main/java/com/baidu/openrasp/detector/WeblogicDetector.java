@@ -16,9 +16,6 @@
 
 package com.baidu.openrasp.detector;
 
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 

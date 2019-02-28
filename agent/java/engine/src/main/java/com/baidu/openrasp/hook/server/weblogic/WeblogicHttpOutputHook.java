@@ -33,7 +33,7 @@ public class WeblogicHttpOutputHook extends ServerOutputCloseHook {
 
     @Override
     public boolean isClassMatched(String className) {
-        if ("weblogic/servlet/internal/ServletOutputStreamImpl".equals(className)){
+        if ("weblogic/servlet/internal/ServletOutputStreamImpl".equals(className)) {
             clazzName = className;
             return true;
         }

@@ -17,8 +17,6 @@
 package com.baidu.openrasp.plugin.js.engine;
 
 import com.baidu.openrasp.EngineBoot;
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
@@ -100,7 +98,7 @@ public class JSContextFactory extends ContextFactory {
             } catch (Exception e) {
                 String message = "new plugin update failed";
                 int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
+                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             } finally {
                 jsContextFactory.pluginTime = System.currentTimeMillis();
                 JSContext.exit();
@@ -134,7 +132,7 @@ public class JSContextFactory extends ContextFactory {
             } catch (Throwable e) {
                 String message = "new plugin update failed";
                 int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode),e);
+                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             } finally {
                 jsContextFactory.pluginTime = System.currentTimeMillis();
                 JSContext.exit();
@@ -241,7 +239,6 @@ public class JSContextFactory extends ContextFactory {
 
     /**
      * 初始化globalScope和RASP
-     *
      */
     private static ScriptableObject perpareLoadPlugin(JSContext cx, ScriptableObject scope) throws Exception {
 
@@ -293,7 +290,6 @@ public class JSContextFactory extends ContextFactory {
 
     /**
      * 插件更新成功后，设置algorithmConfig
-     *
      */
     private static void algorithmConfigSet() {
         if (RASP != null) {

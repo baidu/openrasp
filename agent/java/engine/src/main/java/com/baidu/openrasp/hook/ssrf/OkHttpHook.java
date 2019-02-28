@@ -31,28 +31,33 @@ import java.io.IOException;
  * @create: 2018/10/09 19:40
  */
 @HookAnnotation
-public class OkHttpHook extends AbstractSSRFHook{
+public class OkHttpHook extends AbstractSSRFHook {
     @Override
     public boolean isClassMatched(String className) {
-        return "okhttp3/HttpUrl".equals(className)||
+        return "okhttp3/HttpUrl".equals(className) ||
                 "com/squareup/okhttp/HttpUrl".equals(className);
     }
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(OkHttpHook.class, "checkOkHttpUrl",
-                "$1,$_", String.class,Object.class);
+                "$1,$_", String.class, Object.class);
         insertAfter(ctClass, "parse", "(Ljava/lang/String;)Lokhttp3/HttpUrl;", src);
         insertAfter(ctClass, "parse", "(Ljava/lang/String;)Lcom/squareup/okhttp/HttpUrl;", src);
     }
 
-    public static void checkOkHttpUrl(String url, Object httpUrl){
+    public static void checkOkHttpUrl(String url, Object httpUrl) {
         String host = null;
-        if (httpUrl!=null){
+        String port = "";
+        if (httpUrl != null) {
             host = Reflection.invokeStringMethod(httpUrl, "host", new Class[]{});
+            Object object = Reflection.invokeMethod(httpUrl, "port", new Class[]{});
+            if (object != null) {
+                port = String.valueOf(object);
+            }
         }
         if (host != null) {
-            checkHttpUrl(url, host, "okhttp");
+            checkHttpUrl(url, host, port, "okhttp");
         }
     }
 }

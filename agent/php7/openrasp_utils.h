@@ -19,7 +19,6 @@
 
 #include "openrasp.h"
 #include <string>
-#include <fstream>
 #include <vector>
 #include <map>
 #include <functional>
@@ -39,7 +38,6 @@ extern "C"
 const char *fetch_url_scheme(const char *filename);
 
 int recursive_mkdir(const char *path, int len, int mode);
-bool write_str_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len);
 bool get_entire_file_content(const char *file, std::string &content);
 void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter, bool use_abs_path = false);
 
@@ -52,9 +50,10 @@ void format_debug_backtrace_str(zval *backtrace_str);
 std::string json_encode_from_zval(zval *value);
 
 char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
-bool fetch_outmost_long_from_ht(HashTable *ht, const char *arKey, long *result);
-HashTable *fetch_outmost_hashtable_from_ht(HashTable *ht, const char *arKey);
 
 zend_string *fetch_request_body(size_t max_len);
+bool need_alloc_shm_current_sapi();
+std::string convert_to_header_key(char *key, size_t length);
+bool openrasp_parse_url(const std::string &origin_url, std::string &host, std::string &port);
 
 #endif

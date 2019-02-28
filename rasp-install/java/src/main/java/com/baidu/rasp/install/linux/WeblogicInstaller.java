@@ -33,8 +33,8 @@ public class WeblogicInstaller extends BaseStandardInstaller {
 
     private static String OPENRASP_CONFIG =
             "### BEGIN OPENRASP - DO NOT MODIFY ###\n" +
-            "JAVA_OPTIONS=\"-javaagent:${DOMAIN_HOME}/rasp/rasp.jar ${JAVA_OPTIONS}\"\n" +
-            "### END OPENRASP ###\n";
+                    "JAVA_OPTIONS=\"-javaagent:${DOMAIN_HOME}/rasp/rasp.jar ${JAVA_OPTIONS}\"\n" +
+                    "### END OPENRASP ###\n";
     private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTIONS.*/rasp/).*");
 
     public WeblogicInstaller(String serverName, String serverRoot) {
@@ -56,7 +56,7 @@ public class WeblogicInstaller extends BaseStandardInstaller {
         int modifyConfigState = NOTFOUND;
         StringBuilder sb = new StringBuilder();
         Scanner scanner = new Scanner(content);
-        while (scanner.hasNext()){
+        while (scanner.hasNext()) {
             String line = scanner.nextLine();
             if (line.startsWith("JAVA_OPTIONS") && line.contains("JAVA_OPTIONS=\"${SAVE_JAVA_OPTIONS}\"")) {
                 modifyConfigState = FOUND;

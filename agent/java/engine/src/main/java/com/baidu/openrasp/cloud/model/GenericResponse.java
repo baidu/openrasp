@@ -27,7 +27,7 @@ public class GenericResponse {
     private Integer responseCode;
     private Integer status;
     private String description;
-    private Map<String,Object> data;
+    private Map<String, Object> data;
 
     public Integer getResponseCode() {
         return responseCode;

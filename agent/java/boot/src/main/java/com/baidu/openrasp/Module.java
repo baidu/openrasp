@@ -29,8 +29,11 @@ public interface Module {
     String START_MODE_ATTACH = "attach";
     String START_MODE_NORMAL = "normal";
 
-    void start(String mode, Instrumentation inst) throws Exception;
+    String START_ACTION_INSTALL = "install";
+    String START_ACTION_UNINSTALL = "uninstall";
 
-    void release(String mode);
+    void start(String mode, Instrumentation inst) throws Throwable;
+
+    void release(String mode) throws Throwable;
 
 }

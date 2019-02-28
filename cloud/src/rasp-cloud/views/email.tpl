@@ -24,4 +24,10 @@
 </table>
 <br>
 
-若要查看更多 "<b>{{.AppName}}</b>" 的报警，请点击这里 <a href="{{.DetailedLink}}">{{.DetailedLink}}</a>
+若要查看更多 "<b>{{.AppName}}</b>" 的报警，请点击这里
+{{if .DetailedLink}}
+    <a href="{{.DetailedLink}}">{{.DetailedLink}}</a>
+{{else}}
+    http://127.0.0.1:{{.HttpPort}}
+{{end}}
+

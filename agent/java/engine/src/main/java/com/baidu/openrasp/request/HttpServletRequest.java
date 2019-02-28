@@ -21,7 +21,10 @@ import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 
 import java.net.URL;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**

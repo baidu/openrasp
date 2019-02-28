@@ -16,7 +16,7 @@
 
 package com.baidu.openrasp.cloud.model;
 
-        import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.config.Config;
 
 public interface CloudRequestUrl {
     String cloudAddress = Config.getConfig().getCloudAddress();

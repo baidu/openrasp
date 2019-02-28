@@ -32,7 +32,7 @@ public class ServerDetectorManager {
     private ServerDetectorManager() {
         detectors.add(new TomcatDetector());
         detectors.add(new JBossDetector());
-        detectors.add(new JBossEPADetector());
+        detectors.add(new JBossEAPDetector());
         detectors.add(new JettyDetector());
         detectors.add(new WeblogicDetector());
         detectors.add(new ResinDetector());

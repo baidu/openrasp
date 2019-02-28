@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2017-2019 Baidu Inc.
  *
@@ -59,7 +58,7 @@ public class FileRenameHook extends AbstractClassHook {
 
     public static void checkFileRename(File source, File dest) {
         boolean checkSwitch = Config.getConfig().getPluginFilter();
-        if (!checkSwitch||source != null && !source.isDirectory() && dest != null && !dest.isDirectory()) {
+        if (!checkSwitch || source != null && !source.isDirectory() && dest != null && !dest.isDirectory()) {
 
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
