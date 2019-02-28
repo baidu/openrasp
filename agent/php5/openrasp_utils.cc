@@ -271,21 +271,6 @@ char *fetch_request_body(size_t max_len TSRMLS_DC)
     return buf;
 }
 
-std::string get_host_from_url(std::string origin_url)
-{
-    std::string host;
-    php_url *url = php_url_parse_ex(origin_url.c_str(), origin_url.length());
-    if (url)
-    {
-        if (url->host)
-        {
-            host = std::string(url->host);
-        }
-        php_url_free(url);
-    }
-    return host;
-}
-
 bool need_alloc_shm_current_sapi()
 {
     static const char *supported_sapis[] = {
@@ -326,4 +311,21 @@ std::string convert_to_header_key(char *key, size_t length)
         }
     }
     return result;
+}
+
+bool openrasp_parse_url(const std::string &origin_url, std::string &host, std::string &port)
+{
+    php_url *url = php_url_parse_ex(origin_url.c_str(), origin_url.length());
+    if (url)
+    {
+        if (url->host)
+        {
+            host = std::string(url->host);
+            port = std::to_string(url->port);
+            php_url_free(url);
+            return true;
+        }
+        php_url_free(url);
+    }
+    return false;
 }
