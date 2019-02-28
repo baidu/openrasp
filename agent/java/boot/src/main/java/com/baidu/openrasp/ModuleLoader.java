@@ -70,7 +70,7 @@ public class ModuleLoader {
      * @param inst {@link java.lang.instrument.Instrumentation}
      */
     private ModuleLoader(String mode, Instrumentation inst) throws Throwable {
-        engineContainer = new ModuleContainer(ENGINE_JAR, moduleClassLoader);
+        engineContainer = new ModuleContainer(ENGINE_JAR);
         engineContainer.start(mode, inst);
     }
 

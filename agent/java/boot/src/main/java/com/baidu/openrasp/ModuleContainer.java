@@ -24,7 +24,7 @@ import java.net.URLClassLoader;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 
-import static com.baidu.openrasp.ModuleLoader.baseDirectory;
+import static com.baidu.openrasp.ModuleLoader.*;
 
 /**
  * Created by tyy on 19-2-26.
@@ -34,7 +34,7 @@ public class ModuleContainer implements Module {
     private Module module;
     private String moduleName;
 
-    public ModuleContainer(String jarName, ClassLoader moduleClassLoader) throws Throwable {
+    public ModuleContainer(String jarName) throws Throwable {
         try {
             File originFile = new File(baseDirectory + File.separator + jarName);
             JarFile jarFile = new JarFile(originFile);
