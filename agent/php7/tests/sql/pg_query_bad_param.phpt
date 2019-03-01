@@ -1,14 +1,7 @@
 --TEST--
-hook pg_send_query
+hook pg_query bad param
 --SKIPIF--
 <?php
-$plugin = <<<EOF
-plugin.register('sql', params => {
-    assert(params.query == 'SELECT a FROM b')
-    assert(params.server == 'pgsql')
-    return block
-})
-EOF;
 $conf = <<<CONF
 security.enforce_policy: false
 CONF;
@@ -23,8 +16,8 @@ openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
 include('pg.inc');
-pg_send_query($con, 'SELECT a FROM b');
+pg_query(null, null);
 pg_close($con);
 ?>
 --EXPECTREGEX--
-<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>
+Warning: pg_query\(\) expects.*

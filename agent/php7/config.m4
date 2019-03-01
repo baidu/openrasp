@@ -400,6 +400,12 @@ if test "$PHP_OPENRASP" != "no"; then
     AC_MSG_RESULT([yes])
   fi
 
+  if test $PHP_DEBUG -eq 1; then
+    CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
+    CXXFLAGS="$CXXFLAGS -fprofile-arcs -ftest-coverage"
+    PHP_ADD_LIBRARY(gcov, , OPENRASP_SHARED_LIBADD)
+  fi
+
   EXTRA_LIBS="$OPENRASP_LIBS $EXTRA_LIBS"
   OPENRASP_SHARED_LIBADD="$OPENRASP_LIBS $OPENRASP_SHARED_LIBADD"
   PHP_SUBST(OPENRASP_SHARED_LIBADD)

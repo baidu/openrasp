@@ -1,12 +1,10 @@
 --TEST--
-hook PDO::exec
+hook mysqli::query
 --SKIPIF--
 <?php
 $plugin = <<<EOF
 plugin.register('sql', params => {
-    assert(params.query == 'SELECT a FROM b')
-    assert(params.server == 'mysql')
-    return block
+    return ignore
 })
 EOF;
 $conf = <<<CONF
@@ -14,7 +12,6 @@ security.enforce_policy: false
 CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("mysqli")) die("Skipped: mysqli extension required.");
-if (!extension_loaded("pdo")) die("Skipped: pdo extension required.");
 @$con = mysqli_connect('127.0.0.1', 'root');
 if (mysqli_connect_errno()) die("Skipped: can not connect to MySQL " . mysqli_connect_error());
 mysqli_close($con);
@@ -23,8 +20,8 @@ mysqli_close($con);
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-include('pdo_mysql.inc');
-$con->exec('SELECT a FROM b');
+@$con = new mysqli('127.0.0.1', 'root');
+$con->query('SELECT a FROM b');
+$con->close();
 ?>
 --EXPECTREGEX--
-<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

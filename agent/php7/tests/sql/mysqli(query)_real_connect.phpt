@@ -1,20 +1,19 @@
 --TEST--
-hook PDO::query exception
+hook mysqli::query
 --SKIPIF--
 <?php
 $plugin = <<<EOF
-RASP.algorithmConfig = {
-     sql_exception: {
-        action: 'block'
-    }
-}
+plugin.register('sql', params => {
+    assert(params.query == 'SELECT a FROM b')
+    assert(params.server == 'mysql')
+    return block
+})
 EOF;
 $conf = <<<CONF
 security.enforce_policy: false
 CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("mysqli")) die("Skipped: mysqli extension required.");
-if (!extension_loaded("pdo")) die("Skipped: pdo extension required.");
 @$con = mysqli_connect('127.0.0.1', 'root');
 if (mysqli_connect_errno()) die("Skipped: can not connect to MySQL " . mysqli_connect_error());
 mysqli_close($con);
@@ -23,13 +22,17 @@ mysqli_close($con);
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-try {
-  include('pdo_mysql.inc');
-  $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-  $con->query("select exp(~(select*from(select user())x))");
-} catch (PDOException $e) {
-    echo 'error message: ' . $e->getMessage();
+$mysqli = mysqli_init();
+if (!$mysqli) {
+    die('mysqli_init failed');
 }
+
+if (!$mysqli->real_connect('127.0.0.1', 'root')) {
+    die('Connect Error (' . mysqli_connect_errno() . ') '
+            . mysqli_connect_error());
+}
+$mysqli->query('SELECT a FROM b');
+$mysqli->close();
 ?>
 --EXPECTREGEX--
 <\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>
