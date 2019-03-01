@@ -22,9 +22,10 @@ mysqli_close($con);
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-@$con = mysqli_connect('127.0.0.1', 'root');
-mysqli_real_query($con, "SELECT a FROM b");
-mysqli_close($con);
+$link = mysqli_init();
+mysqli_real_connect($link, '127.0.0.1', 'root');
+mysqli_real_query($link, "SELECT a FROM b");
+mysqli_close($link);
 ?>
 --EXPECTREGEX--
 <\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

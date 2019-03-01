@@ -1,13 +1,13 @@
 --TEST--
-hook PDO::query exception
+hook PDO::prepare
 --SKIPIF--
 <?php
 $plugin = <<<EOF
-RASP.algorithmConfig = {
-     sql_exception: {
-        action: 'block'
-    }
-}
+plugin.register('sql', params => {
+    assert(params.query == 'SELECT a FROM b WHERE c < :c')
+    assert(params.server == 'mysql')
+    return block
+})
 EOF;
 $conf = <<<CONF
 security.enforce_policy: false
@@ -23,13 +23,9 @@ mysqli_close($con);
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-try {
-  include('pdo_mysql.inc');
-  $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-  $con->query("select exp(~(select*from(select user())x))");
-} catch (PDOException $e) {
-    echo 'error message: ' . $e->getMessage();
-}
+include('pdo_mysql.inc');
+$con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$con->prepare('SELECT a FROM b WHERE c < :c', array(PDO::ATTR_CURSOR => PDO::CURSOR_ERROR));
 ?>
 --EXPECTREGEX--
-<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>
+Fatal error: Uncaught Error: Undefined class constant.*

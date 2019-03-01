@@ -1,14 +1,7 @@
 --TEST--
-hook PDO::query exception
+hook PDO::query bad param
 --SKIPIF--
 <?php
-$plugin = <<<EOF
-RASP.algorithmConfig = {
-     sql_exception: {
-        action: 'block'
-    }
-}
-EOF;
 $conf = <<<CONF
 security.enforce_policy: false
 CONF;
@@ -23,13 +16,8 @@ mysqli_close($con);
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-try {
-  include('pdo_mysql.inc');
-  $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-  $con->query("select exp(~(select*from(select user())x))");
-} catch (PDOException $e) {
-    echo 'error message: ' . $e->getMessage();
-}
+include('pdo_mysql.inc');
+$con->query();
 ?>
 --EXPECTREGEX--
-<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>
+Warning: PDO::query\(\) expects.*
