@@ -41,7 +41,7 @@
                 <pre>{{ current_app.id }}</pre>
                 <h4>AppSecret</h4>
                 <pre>{{ current_app.secret }}</pre>
-                <h4>BackendURL</h4>
+                <h4>BackendURL<small v-if="agent_urls.length > 1" style="margin-left: 5px;">[任选一个即可]</small></h4>
                 <pre>{{ agent_urls.join("\n") }}</pre>
               </div>
               <div id="java-tab" class="tab-pane fade show active">

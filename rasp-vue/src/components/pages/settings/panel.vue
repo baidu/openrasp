@@ -8,7 +8,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">
-          管理后台地址 [用于生成报警邮件URL]
+          管理后台地址 [用于生成邮件里的报警链接]
         </label>
         <input
           v-model="data.panel_url"
