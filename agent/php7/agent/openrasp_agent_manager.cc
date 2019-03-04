@@ -31,9 +31,16 @@
 #include <iostream>
 #include "openrasp_ini.h"
 #include "utils/regex.h"
+#include "utils/file.h"
 #include "utils/net.h"
 #include "agent/utils/os.h"
 #include "openrasp_utils.h"
+
+#ifdef PHP_DEBUG
+#define SIGNAL_KILL_AGENT SIGTERM
+#else
+#define SIGNAL_KILL_AGENT SIGKILL
+#endif
 
 namespace openrasp
 {
@@ -199,17 +206,17 @@ void OpenraspAgentManager::process_agent_shutdown()
 	pid_t log_agent_id = agent_ctrl_block->get_log_agent_id();
 	if (log_agent_id > 0)
 	{
-		kill(log_agent_id, SIGKILL);
+		kill(log_agent_id, SIGNAL_KILL_AGENT);
 	}
 	pid_t plugin_agent_id = agent_ctrl_block->get_plugin_agent_id();
 	if (plugin_agent_id > 0)
 	{
-		kill(plugin_agent_id, SIGKILL);
+		kill(plugin_agent_id, SIGNAL_KILL_AGENT);
 	}
 	pid_t supervisor_id = agent_ctrl_block->get_supervisor_id();
 	if (supervisor_id > 0)
 	{
-		kill(supervisor_id, SIGKILL);
+		kill(supervisor_id, SIGNAL_KILL_AGENT);
 	}
 }
 
@@ -323,7 +330,7 @@ pid_t OpenraspAgentManager::search_fpm_master_pid()
 	for (std::string pid : processes)
 	{
 		std::string stat_file_path = "/proc/" + pid + "/stat";
-		if (access(stat_file_path.c_str(), F_OK) == 0)
+		if (file_exists(stat_file_path))
 		{
 			std::ifstream ifs_stat(stat_file_path);
 			std::string stat_line;

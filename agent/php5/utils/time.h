@@ -27,7 +27,7 @@ long fetch_time_offset();
 bool same_day_in_current_timezone(long src, long target, long offset);
 std::string format_time(const char *format, int format_len, time_t ts);
 
-long increase_interval_by_factor(long origin, double factor, long max);
+unsigned long increase_interval_by_factor(unsigned long origin, double factor, unsigned long max);
 
 } // namespace openrasp
 

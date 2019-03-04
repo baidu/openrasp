@@ -33,7 +33,6 @@ public:
   virtual std::string fetch_string(const std::vector<std::string> &keys, const std::string &default_value = "") = 0;
   virtual int64_t fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value = 0) = 0;
   virtual bool fetch_bool(const std::vector<std::string> &keys, const bool &default_value = false) = 0;
-  virtual void erase(const std::vector<std::string> &keys) = 0;
   virtual std::vector<std::string> fetch_object_keys(const std::vector<std::string> &keys) = 0;
   virtual std::vector<std::string> fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value = std::vector<std::string>()) = 0;
   virtual void load(const std::string &content) = 0;

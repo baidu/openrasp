@@ -46,13 +46,14 @@ std::string format_time(const char *format, int format_len, time_t ts)
     return std::string(buffer);
 }
 
-long increase_interval_by_factor(long origin, double factor, long max)
+unsigned long increase_interval_by_factor(unsigned long origin, double factor, unsigned long max)
 {
     if (origin >= max)
     {
         return max;
     }
-    long result = floor(origin * factor);
+    factor = factor >= 0 ? factor : (0 - factor);
+    unsigned long result = floor(origin * factor);
     return result > max ? max : result;
 }
 

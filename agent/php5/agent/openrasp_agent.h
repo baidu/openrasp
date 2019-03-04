@@ -72,8 +72,8 @@ public:
   virtual void write_pid_to_shm(pid_t agent_pid);
 
 private:
-  static const long log_push_interval = 15;
-  static const long max_interval = 500;
+  static const unsigned long log_push_interval = 15;
+  static const unsigned long max_interval = 500;
   static const double factor;
 
 private:

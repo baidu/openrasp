@@ -112,28 +112,6 @@ bool YamlReader::fetch_bool(const std::vector<std::string> &keys, const bool &de
     return default_value;
   }
 }
-void YamlReader::erase(const std::vector<std::string> &keys)
-{
-  std::vector<Node> nodes;
-  try
-  {
-    for (size_t i = 0; i < keys.size(); ++i)
-    {
-      if (0 == i)
-      {
-        nodes.push_back(node[keys[i]]);
-      }
-      else
-      {
-        nodes.push_back(nodes[i - 1][keys[i]]);
-      }
-    }
-    nodes[keys.size() - 2].remove(keys[keys.size() - 1]);
-  }
-  catch (...)
-  {
-  }
-}
 std::vector<std::string> YamlReader::fetch_object_keys(const std::vector<std::string> &keys)
 {
   std::vector<std::string> result;

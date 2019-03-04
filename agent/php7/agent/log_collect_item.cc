@@ -53,7 +53,7 @@ LogCollectItem::LogCollectItem(int instance_id, bool collect_enable)
         return;
     }
     std::string status_file_abs = get_base_dir_path() + LogCollectItem::status_file;
-    if (access(status_file_abs.c_str(), F_OK) == 0)
+    if (file_exists(status_file_abs))
     {
         std::string status_json;
         if (get_entire_file_content(status_file_abs.c_str(), status_json))
@@ -144,9 +144,9 @@ void LogCollectItem::save_status_snapshot() const
     mode_t oldmask = umask(0);
 #endif
     write_string_to_file(status_file_abs.c_str(),
-                      std::ofstream::in | std::ofstream::out | std::ofstream::trunc,
-                      json_content.c_str(),
-                      json_content.length());
+                         std::ofstream::in | std::ofstream::out | std::ofstream::trunc,
+                         json_content.c_str(),
+                         json_content.length());
 #ifndef _WIN32
     umask(oldmask);
 #endif

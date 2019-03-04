@@ -43,58 +43,24 @@ ReadWriteLock::~ReadWriteLock()
   pthread_rwlock_destroy(rwlock);
 }
 
-bool ReadWriteLock::read_lock()
-{
-  if (pthread_rwlock_rdlock(rwlock) != 0)
-  {
-    return false;
-  }
-  return true;
-}
-
 bool ReadWriteLock::read_unlock()
 {
-  if (pthread_rwlock_unlock(rwlock) != 0)
-  {
-    return false;
-  }
-  return true;
+  return pthread_rwlock_unlock(rwlock) == 0;
 }
 
 bool ReadWriteLock::read_try_lock()
 {
-  if (pthread_rwlock_tryrdlock(rwlock) != 0)
-  {
-    return false;
-  }
-  return true;
-}
-
-bool ReadWriteLock::write_lock()
-{
-  if (pthread_rwlock_wrlock(rwlock) != 0)
-  {
-    return false;
-  }
-  return true;
+  return pthread_rwlock_tryrdlock(rwlock) == 0;
 }
 
 bool ReadWriteLock::write_unlock()
 {
-  if (pthread_rwlock_unlock(rwlock) != 0)
-  {
-    return false;
-  }
-  return true;
+  return pthread_rwlock_unlock(rwlock) == 0;
 }
 
 bool ReadWriteLock::write_try_lock()
 {
-  if (pthread_rwlock_trywrlock(rwlock) != 0)
-  {
-    return false;
-  }
-  return true;
+  return pthread_rwlock_trywrlock(rwlock) == 0;
 }
 
 } // namespace openrasp

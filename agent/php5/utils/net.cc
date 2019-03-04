@@ -24,7 +24,6 @@
 #include <algorithm>
 #include "openrasp_log.h"
 
-
 #ifdef PHP_WIN32
 #include "win32/time.h"
 #include <windows.h>
@@ -220,34 +219,27 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url)
         }
         php_url_free(resource);
     }
-    if (nullptr == server)
+    if (nullptr != server)
     {
-        return false;
+        struct sockaddr_in serv;
+        int sock = socket(AF_INET, SOCK_STREAM, 0);
+        fcntl(sock, F_SETFL, O_NONBLOCK);
+        if (sock >= 0)
+        {
+            memset(&serv, 0, sizeof(serv));
+            serv.sin_family = AF_INET;
+            memcpy(&(serv.sin_addr.s_addr), server->h_addr, server->h_length);
+            serv.sin_port = htons(backend_port);
+            int err = connect(sock, (const struct sockaddr *)&serv, sizeof(serv));
+            struct sockaddr_in name;
+            socklen_t namelen = sizeof(name);
+            err = getsockname(sock, (struct sockaddr *)&name, &namelen);
+            const char *p = inet_ntop(AF_INET, &name.sin_addr, local_ip, len);
+            close(sock);
+            return nullptr != p;
+        }
     }
-    struct sockaddr_in serv;
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    fcntl(sock, F_SETFL, O_NONBLOCK);
-    if (sock < 0)
-    {
-        return false;
-    }
-    memset(&serv, 0, sizeof(serv));
-    serv.sin_family = AF_INET;
-    memcpy(&(serv.sin_addr.s_addr), server->h_addr, server->h_length);
-    serv.sin_port = htons(backend_port);
-    int err = connect(sock, (const struct sockaddr *)&serv, sizeof(serv));
-    struct sockaddr_in name;
-    socklen_t namelen = sizeof(name);
-    err = getsockname(sock, (struct sockaddr *)&name, &namelen);
-    const char *p = inet_ntop(AF_INET, &name.sin_addr, local_ip, len);
-    if (nullptr == p)
-    {
-        openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("inet_ntop() error: %s"), strerror(errno));
-        close(sock);
-        return false;
-    }
-    close(sock);
-    return true;
+    return false;
 }
 
 } // namespace openrasp
