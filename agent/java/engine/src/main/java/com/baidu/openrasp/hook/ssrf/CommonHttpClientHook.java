@@ -59,12 +59,12 @@ public class CommonHttpClientHook extends AbstractSSRFHook {
 
     public static void checkHttpConnection(Object object, String url) {
         String host = null;
-        String port = null;
+        String port = "";
         try {
             if (object != null) {
                 host = Reflection.invokeStringMethod(object, "getHost", new Class[]{});
-                Object obj = Reflection.invokeMethod(object, "getPort", new Class[]{});
-                if (obj != null) {
+                Integer obj = (Integer) Reflection.invokeMethod(object, "getPort", new Class[]{});
+                if (obj != null && obj > 0) {
                     port = String.valueOf(obj);
                 }
             }
@@ -73,7 +73,7 @@ public class CommonHttpClientHook extends AbstractSSRFHook {
             int errorCode = ErrorType.HOOK_ERROR.getCode();
             HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), t);
         }
-        if (host != null && port != null) {
+        if (host != null) {
             checkHttpUrl(url, host, port, "commons_httpclient");
         }
     }
