@@ -57,6 +57,7 @@ type SearchAttackParam struct {
 		AttackSource   string    `json:"attack_source,omitempty"`
 		AttackUrl      string    `json:"url,omitempty"`
 		LocalIp        string    `json:"local_ip,omitempty"`
+		StackMd5       string    `json:"stack_md5,omitempty"`
 		AttackType     *[]string `json:"attack_type,omitempty"`
 		InterceptState *[]string `json:"intercept_state,omitempty"`
 	} `json:"data"`
@@ -323,6 +324,11 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 					return 0, nil, err
 				}
 				result[index]["id"] = item.Id
+				delete(result[index], "_@timestamp")
+				delete(result[index], "@timestamp")
+				delete(result[index], "@version")
+				delete(result[index], "tags")
+				delete(result[index], "host")
 			}
 		}
 	} else {

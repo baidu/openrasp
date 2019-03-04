@@ -83,11 +83,10 @@ public class Register {
         params.put("language_version", System.getProperty("java.version"));
         params.put("server_type", ApplicationModel.getServerName());
         params.put("server_version", ApplicationModel.getVersion());
-        String raspHome = Config.getConfig().getBaseDirectory();
-        params.put("rasp_home", raspHome);
+        params.put("rasp_home", Config.getConfig().getBaseDirectory());
         params.put("register_ip", CloudCacheModel.getInstance().getMasterIp());
-        int heartbeatInterval = Config.getConfig().getHeartbeatInterval();
-        params.put("heartbeat_interval", heartbeatInterval);
+        params.put("heartbeat_interval", Config.getConfig().getHeartbeatInterval());
+        params.put("environ", ApplicationModel.getSystemEnv());
         return params;
     }
 }

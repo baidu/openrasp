@@ -20,8 +20,6 @@ func init() {
 
 func TestHandleApp(t *testing.T) {
 
-	var appId string
-
 	Convey("Subject: Test App Post Api\n", t, func() {
 		r := inits.GetResponse(t, "POST", "/v1/api/app", `{}`)
 		Convey("the app id must be exist", func() {
@@ -54,47 +52,34 @@ func TestHandleApp(t *testing.T) {
 		})
 	})
 
-	func
-	TestConfigApp(t * testing.T)
-	{
+}
+func TestConfigApp(t *testing.T) {
 
-	}
+}
 
-	func
-	TestDeleteApp(t * testing.T)
-	{
+func TestConfigAlarm(t *testing.T) {
 
-	}
+}
+func TestTestEmail(t *testing.T) {
+
+}
+
+func TestTestDing(t *testing.T) {
+
+}
+
+func TestTestHttp(t *testing.T) {
+
+}
+func TestPushAlarm(t *testing.T) {
+}
+
+func TestDeleteApp(t *testing.T) {
 
 }
 
 func TestAlarm(t *testing.T) {
-	func
-	TestConfigAlarm(t * testing.T)
-	{
 
-	}
-	func
-	TestTestEmail(t * testing.T)
-	{
-
-	}
-
-	func
-	TestTestDing(t * testing.T)
-	{
-
-	}
-
-	func
-	TestTestHttp(t * testing.T)
-	{
-
-	}
-	func
-	TestPushAlarm()
-	{
-	}
 }
 
 func TestConfigWhiteList(t *testing.T) {

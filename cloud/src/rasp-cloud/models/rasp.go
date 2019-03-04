@@ -24,21 +24,22 @@ import (
 )
 
 type Rasp struct {
-	Id                string `json:"id" bson:"_id,omitempty"`
-	AppId             string `json:"app_id" bson:"app_id,omitempty"`
-	Version           string `json:"version" bson:"version,omitempty"`
-	HostName          string `json:"hostname" bson:"hostname,omitempty"`
-	RegisterIp        string `json:"register_ip" bson:"register_ip,omitempty"`
-	Language          string `json:"language" bson:"language,omitempty"`
-	LanguageVersion   string `json:"language_version" bson:"language_version,omitempty"`
-	ServerType        string `json:"server_type" bson:"server_type,omitempty"`
-	ServerVersion     string `json:"server_version" bson:"server_version,omitempty"`
-	RaspHome          string `json:"rasp_home" bson:"rasp_home,omitempty"`
-	PluginVersion     string `json:"plugin_version" bson:"plugin_version,omitempty"`
-	HeartbeatInterval int64  `json:"heartbeat_interval" bson:"heartbeat_interval,omitempty"`
-	Online            *bool  `json:"online" bson:"online,omitempty"`
-	LastHeartbeatTime int64  `json:"last_heartbeat_time" bson:"last_heartbeat_time,omitempty"`
-	RegisterTime      int64  `json:"register_time" bson:"register_time,omitempty"`
+	Id                string            `json:"id" bson:"_id,omitempty"`
+	AppId             string            `json:"app_id" bson:"app_id,omitempty"`
+	Version           string            `json:"version" bson:"version,omitempty"`
+	HostName          string            `json:"hostname" bson:"hostname,omitempty"`
+	RegisterIp        string            `json:"register_ip" bson:"register_ip,omitempty"`
+	Language          string            `json:"language" bson:"language,omitempty"`
+	LanguageVersion   string            `json:"language_version" bson:"language_version,omitempty"`
+	ServerType        string            `json:"server_type" bson:"server_type,omitempty"`
+	ServerVersion     string            `json:"server_version" bson:"server_version,omitempty"`
+	RaspHome          string            `json:"rasp_home" bson:"rasp_home,omitempty"`
+	PluginVersion     string            `json:"plugin_version" bson:"plugin_version,omitempty"`
+	HeartbeatInterval int64             `json:"heartbeat_interval" bson:"heartbeat_interval,omitempty"`
+	Online            *bool             `json:"online" bson:"online,omitempty"`
+	LastHeartbeatTime int64             `json:"last_heartbeat_time" bson:"last_heartbeat_time,omitempty"`
+	RegisterTime      int64             `json:"register_time" bson:"register_time,omitempty"`
+	Environ           map[string]string `json:"environ" bson:"environ,omitempty"`
 }
 
 const (
@@ -162,6 +163,9 @@ func HandleRasp(rasp *Rasp) {
 		online = true
 	}
 	rasp.Online = &online
+	if rasp.Environ == nil {
+		rasp.Environ = map[string]string{}
+	}
 }
 
 func RemoveRaspById(id string) (err error) {
