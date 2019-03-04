@@ -51,8 +51,8 @@ public class OkHttpHook extends AbstractSSRFHook {
         String port = "";
         if (httpUrl != null) {
             host = Reflection.invokeStringMethod(httpUrl, "host", new Class[]{});
-            Object object = Reflection.invokeMethod(httpUrl, "port", new Class[]{});
-            if (object != null) {
+            Integer object = (Integer)Reflection.invokeMethod(httpUrl, "port", new Class[]{});
+            if (object != null && object > 0) {
                 port = String.valueOf(object);
             }
         }

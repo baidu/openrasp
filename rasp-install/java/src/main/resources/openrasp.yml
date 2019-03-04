@@ -3,20 +3,20 @@
 # 
 # 
 # 插件配置
-# plugin.timeout.millis=100
-# body.maxbytes=4096
-# plugin.filter=true
-# plugin.maxstack=100
-# ognl.expression.minlength=30
-# log.maxstack=10
-# clientip.header=ClientIP
-# sql.cache.capacity: 100
+# plugin.timeout.millis: 100
+# body.maxbytes: 4096
+# plugin.filter: true
+# plugin.maxstack: 100
+# ognl.expression.minlength: 30
+# log.maxstack: 10
+# clientip.header: ClientIP
+# lru.max_size: 100
 # log.maxburst: 100
 # log.maxbackup: 30
+# decompile.enable: false
 # hook 点配置
-# hooks.ignore=http_output
-# debug.level=0
-# hook.white.ALL: true
+# hooks.ignore: http_output
+# debug.level: 0
 # hook.white: {
 #   www.test.com/test1: [sql,ssrf],
 #   www.test.com/test2: [sql,ssrf]
@@ -24,24 +24,26 @@
 #inject.custom_headers:
 #   X-Content-Type-Options: nosniff
 # 拦截相关配置
-# block.redirect_url=https://rasp.baidu.com/blocked/?request_id=%request_id%
-# block.content_json={"error":true, "reason": "Request blocked by OpenRASP", "request_id": %request_id%}
-# block.content_xml=<?xml version="1.0"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>
-# block.content_html=</script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>
+# block.redirect_url: https://rasp.baidu.com/blocked/?request_id=%request_id%
+# block.content_json: {"error":true, "reason": "Request blocked by OpenRASP", "request_id": %request_id%}
+# block.content_xml: <?xml version="1.0"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>
+# block.content_html: </script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>
 
 # 基线配置
-# security.enforce_policy=false
+# security.enforce_policy: false
 
 # 云控配置
 # cloud.enable: true
 # cloud.backend_url: http://172.23.232.4:8080
 # cloud.app_id: 428e953b270ffb772fa5331ab994695c7b363028
 # cloud.app_secret: J8zjAdW-k5peQu2pM6-cLbVfDcVWMrfIiqBBERgKKJM
+# cloud.heartbeat_interval: 180
 
 # syslog配置
-# syslog.enable=true
-# syslog.url=http://172.24.180.174:8848
-# syslog.tag=OPENRASP
-# syslog.reconnect_interval=300000
+# syslog.enable: true
+# syslog.url: http://172.24.180.174:8848
+# syslog.tag: OPENRASP
+# syslog.reconnect_interval: 300000
+# syslog.facility: 1
 
 
