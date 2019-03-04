@@ -75,6 +75,10 @@
             检查服务器上是否存在 webshell 后门，即使用 call_user_func/array_walk/.. 调用 system/exec/... 等函数的方式。此算法没有误报。
         </div>
 
+        <div v-if="data.attack_type == 'webshell_ld_preload'">
+            检查服务器上是否存在 webshell 后门，即使用 putenv + LD_PRELOAD + mail 方式执行任意命令的后门。
+        </div>        
+
         <div v-if="data.attack_type == 'xss_userinput' || data.attack_type == 'xss_echo'">
             检查应用是否直接输出了用户传入的参数，可以考虑使用 ESAPI 进行转义
         </div>
