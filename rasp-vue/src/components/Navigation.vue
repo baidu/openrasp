@@ -87,6 +87,12 @@
                 </RouterLink>
               </li>
               <li class="nav-item">
+                <RouterLink :to="{ name: 'vulns', params: { app_id: current_app.id } }" class="nav-link">
+                  <i class="fe fe-eye" />
+                  漏洞列表
+                </RouterLink>
+              </li>
+              <li class="nav-item">
                 <RouterLink :to="{ name: 'events', params: { app_id: current_app.id } }" class="nav-link">
                   <i class="fe fe-bell" />
                   攻击事件
@@ -96,12 +102,6 @@
                 <RouterLink :to="{ name: 'baseline', params: { app_id: current_app.id } }" class="nav-link">
                   <i class="fe fe-check-square" />
                   安全基线
-                </RouterLink>
-              </li>
-              <li class="nav-item">
-                <RouterLink :to="{ name: 'vulns', params: { app_id: current_app.id } }" class="nav-link">
-                  <i class="fe fe-eye" />
-                  漏洞列表
                 </RouterLink>
               </li>
               <li class="nav-item">
