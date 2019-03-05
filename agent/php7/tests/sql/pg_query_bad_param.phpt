@@ -7,7 +7,7 @@ security.enforce_policy: false
 CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("pgsql")) die("Skipped: pgsql extension required.");
-include('pg.inc');
+include('pg_connect.inc');
 if (!$con) die("Skipped: can not connect to postgresql");
 pg_close($con);
 ?>
@@ -15,7 +15,7 @@ pg_close($con);
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-include('pg.inc');
+include('pg_connect.inc');
 pg_query(null, null);
 pg_close($con);
 ?>

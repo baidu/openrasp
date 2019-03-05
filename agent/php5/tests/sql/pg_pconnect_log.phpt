@@ -1,5 +1,5 @@
 --TEST--
-hook pg_send_query bad param
+hook pg_pconnect security.enforce_policy: false
 --SKIPIF--
 <?php
 $conf = <<<CONF
@@ -7,17 +7,11 @@ security.enforce_policy: false
 CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("pgsql")) die("Skipped: pgsql extension required.");
-include('pg_connect.inc');
-if (!$con) die("Skipped: can not connect to postgresql");
-pg_close($con);
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-include('pg_connect.inc');
-pg_send_query(array());
-pg_close($con);
+include('pg_pconnect.inc');
 ?>
 --EXPECTREGEX--
-Warning: pg_send_query\(\) expects.*

@@ -1,5 +1,5 @@
 --TEST--
-hook pg_send_query bad param
+hook pg_prepare default connection bad param
 --SKIPIF--
 <?php
 $conf = <<<CONF
@@ -16,8 +16,8 @@ openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
 include('pg_connect.inc');
-pg_send_query(array());
+pg_prepare(array(), 'SELECT a FROM b WHERE c=$1');
 pg_close($con);
 ?>
 --EXPECTREGEX--
-Warning: pg_send_query\(\) expects.*
+Warning: pg_prepare\(\) expects.*

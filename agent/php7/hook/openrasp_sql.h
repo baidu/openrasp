@@ -34,20 +34,29 @@ private:
 public:
   void set_connection_string(std::string connection_string);
   std::string get_connection_string() const;
+
   void set_server(std::string server);
   std::string get_server() const;
+
   void set_host(std::string host);
   std::string get_host() const;
+
   void set_username(std::string username);
   std::string get_username() const;
+
   void set_socket(std::string socket);
   std::string get_socket() const;
+
   void set_port(int port);
   int get_port() const;
+
   std::string build_policy_msg();
   ulong build_hash_code();
+
   void set_using_socket(bool using_socket);
   bool get_using_socket() const;
+
+  void set_name_value(const char *name, const char *val);
 };
 
 typedef SqlConnectionEntry sql_connection_entry;
@@ -59,5 +68,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
 
 bool mysql_error_code_filtered(long err_code);
 void sql_error_alarm(char *server, char *query, const std::string &err_code, const std::string &err_msg);
+
+void pg_conninfo_parse(char *connstring, std::function<void(const char *pname, const char *pval)> info_store_func);
 
 #endif

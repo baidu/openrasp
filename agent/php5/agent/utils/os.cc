@@ -22,12 +22,7 @@ namespace openrasp
 bool pid_alive(const std::string &pid)
 {
     struct stat sb;
-    if (stat(("/proc/" + pid).c_str(), &sb) == -1 &&
-        errno == ENOENT)
-    {
-        return false;
-    }
-    return true;
+    return stat(("/proc/" + pid).c_str(), &sb) == 0 || errno != ENOENT;
 }
 
 } // namespace openrasp

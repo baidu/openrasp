@@ -721,6 +721,7 @@ int main() {
     hook/openrasp_sql.cc \
     hook/openrasp_mysqli.cc \
     hook/openrasp_pgsql.cc \
+    hook/openrasp_pgsql_utils.cc \
     hook/openrasp_sqlite3.cc \
     hook/openrasp_pdo.cc \
     hook/openrasp_file.cc \

@@ -1,7 +1,14 @@
 --TEST--
-hook pg_send_query bad param
+hook pg_prepare default connection
 --SKIPIF--
 <?php
+$plugin = <<<EOF
+plugin.register('sql', params => {
+    assert(params.query == 'SELECT a FROM b WHERE c=$1')
+    assert(params.server == 'pgsql')
+    return block
+})
+EOF;
 $conf = <<<CONF
 security.enforce_policy: false
 CONF;
@@ -16,8 +23,8 @@ openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
 include('pg_connect.inc');
-pg_send_query(array());
+pg_prepare('my_query', 'SELECT a FROM b WHERE c=$1');
 pg_close($con);
 ?>
 --EXPECTREGEX--
-Warning: pg_send_query\(\) expects.*
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

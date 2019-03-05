@@ -17,6 +17,9 @@
 #include "openrasp_sql.h"
 #include "openrasp_hook.h"
 #include <sstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 void SqlConnectionEntry::set_connection_string(std::string connection_string)
 {
@@ -104,4 +107,29 @@ void SqlConnectionEntry::set_using_socket(bool using_socket)
 bool SqlConnectionEntry::get_using_socket() const
 {
   return using_socket;
+}
+
+void SqlConnectionEntry::set_name_value(const char *name, const char *val)
+{
+  if (strcmp(name, "user") == 0)
+  {
+    set_username(val);
+  }
+  else if (strcmp(name, "host") == 0)
+  {
+    set_host(val);
+    struct stat sb;
+    if (stat(val, &sb) == 0)
+    {
+      set_using_socket((sb.st_mode & S_IFDIR) != 0 || (sb.st_mode & S_IFSOCK) != 0);
+    }
+    else
+    {
+      set_using_socket(false);
+    }
+  }
+  else if (strcmp(name, "port") == 0)
+  {
+    set_port(atoi(val));
+  }
 }
