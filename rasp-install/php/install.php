@@ -131,9 +131,11 @@ Options:
 
     --keep-ini              Do not update PHP ini entries
 
-    --keep-plugin           Do not update the official javascript plugin
+    --keep-plugin           Do not update the official javascript plugin (higher priority than --without-plugin)
 
     --keep-conf             Do not update the openrasp config in root_dir/conf directory
+
+    --without-plugin        Do not install the official javascript plugin
 
     -h, --help              Show help messages
 
@@ -141,7 +143,7 @@ HELP;
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 参数解析 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 $shortopts = "d:h";
-$longopts = array("ignore-ini", "ignore-plugin", "ignore-conf", "app-id:", "app-secret:", "backend-url:", "help");
+$longopts = array("without-plugin", "keep-ini", "keep-plugin", "keep-conf", "app-id:", "app-secret:", "backend-url:", "help");
 $options = getopt($shortopts, $longopts);
 if (array_key_exists("h", $options) || array_key_exists("help", $options)) {
 	show_help($install_help_msg);
@@ -240,7 +242,7 @@ if (!copy($lib_source_path, $lib_dest_path)) {
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 更新ini配置 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
+if (extension_loaded('openrasp') && array_key_exists("keep-ini", $options)) {
 	major_tips("Skipped update of php.ini since '--keep-ini' is set");
 } else {
 	major_tips('Updating php.ini');
@@ -371,14 +373,14 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 			chmod($sub_item, $value);
 		}
 		if ($key === "plugins") {
-			if (array_key_exists("ignore-plugin", $options)) {
+			if (array_key_exists("keep-plugin", $options)) {
 				major_tips("Skipped update of the official javascript plugin since '--keep-plugin' is set");
 			} else {
 				major_tips('Updating the official javascript plugin');
 				$plugin_source_dir = __DIR__ . DIRECTORY_SEPARATOR . $key;
 				if (file_exists($plugin_source_dir)) {
 					$official_plugins = scandir($plugin_source_dir);
-					foreach ($official_plugins as $key => $plugin) {
+					foreach ($official_plugins as $pkey => $plugin) {
 						if ($plugin === '.'
 							|| $plugin === '..'
 							|| !is_file($plugin_source_dir . DIRECTORY_SEPARATOR . $plugin)
@@ -386,8 +388,8 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 						) {
 							continue;
 						}
-						update_file_if_need($plugin_source_dir . DIRECTORY_SEPARATOR . $plugin, 
-						$sub_item . DIRECTORY_SEPARATOR . $plugin,  "official plugin");
+						update_file_if_need($plugin_source_dir . DIRECTORY_SEPARATOR . $plugin,
+							$sub_item . DIRECTORY_SEPARATOR . $plugin, "official plugin");
 					}
 				}
 			}
@@ -397,14 +399,14 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 				recurse_copy(__DIR__ . DIRECTORY_SEPARATOR . $key, $sub_item);
 			}
 		} else if ($key === "conf") {
-			if (array_key_exists("ignore-conf", $options)) {
+			if (array_key_exists("keep-conf", $options)) {
 				major_tips("Skipped update of openrasp config since '--keep-conf' is set");
 			} else {
 				major_tips('Updating the openrasp config');
 				$conf_dir = __DIR__ . DIRECTORY_SEPARATOR . $key;
 				if (file_exists($conf_dir)) {
-					update_file_if_need($conf_dir . DIRECTORY_SEPARATOR . "openrasp.yml", 
-					$sub_item . DIRECTORY_SEPARATOR . "openrasp.yml",  "openrasp config");
+					update_file_if_need($conf_dir . DIRECTORY_SEPARATOR . "openrasp.yml",
+						$sub_item . DIRECTORY_SEPARATOR . "openrasp.yml", "openrasp config");
 				}
 			}
 		}
@@ -417,6 +419,15 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 		}
 		if (file_exists(__DIR__ . DIRECTORY_SEPARATOR . $key)) {
 			recurse_copy(__DIR__ . DIRECTORY_SEPARATOR . $key, $sub_item);
+		}
+	}
+	if ($key === "plugins") {
+		if (array_key_exists("without-plugin", $options)) {
+			clear_dir($sub_item);
+			major_tips("All javascript plugins will be removed since '--without-plugin' is set");
+		} else if ($remote_enable === "1") {
+			clear_dir($sub_item);
+			major_tips('All javascript plugins will be removed since remote management is turned on');
 		}
 	}
 }

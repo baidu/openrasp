@@ -54,7 +54,7 @@ void PluginBlock::update(BaseReader *reader)
   g_zero_filter(timeout.millis, PluginBlock::default_timeout_millis);
 
   maxstack = reader->fetch_int64({"plugin.maxstack"}, PluginBlock::default_maxstack);
-  g_zero_filter(maxstack, PluginBlock::default_maxstack);
+  ge_zero_filter(maxstack, PluginBlock::default_maxstack);
 
   filter = reader->fetch_bool({"plugin.filter"}, true);
 };
@@ -65,10 +65,10 @@ const int64_t LogBlock::default_maxstack = 50;
 void LogBlock::update(BaseReader *reader)
 {
   maxburst = reader->fetch_int64({"log.maxburst"}, LogBlock::default_maxburst);
-  g_zero_filter(maxburst, LogBlock::default_maxburst);
+  ge_zero_filter(maxburst, LogBlock::default_maxburst);
 
   maxstack = reader->fetch_int64({"log.maxstack"}, LogBlock::default_maxstack);
-  g_zero_filter(maxstack, LogBlock::default_maxstack);
+  ge_zero_filter(maxstack, LogBlock::default_maxstack);
 };
 
 const std::string SyslogBlock::default_tag = "OpenRASP";
@@ -86,7 +86,7 @@ void SyslogBlock::update(BaseReader *reader)
   enable = reader->fetch_bool({"syslog.enable"}, false);
 
   facility = reader->fetch_int64({"syslog.facility"}, SyslogBlock::default_facility);
-  g_zero_filter(facility, SyslogBlock::default_facility);
+  ge_zero_filter(facility, SyslogBlock::default_facility);
 
   connection_timeout = reader->fetch_int64({"syslog.connection_timeout"}, SyslogBlock::default_connection_timeout);
   g_zero_filter(connection_timeout, SyslogBlock::default_connection_timeout);
@@ -128,7 +128,7 @@ const int64_t BodyBlock::default_maxbytes = 4 * 1024;
 void BodyBlock::update(BaseReader *reader)
 {
   maxbytes = reader->fetch_int64({"body.maxbytes"}, BodyBlock::default_maxbytes);
-  g_zero_filter(maxbytes, BodyBlock::default_maxbytes);
+  ge_zero_filter(maxbytes, BodyBlock::default_maxbytes);
 };
 
 void ClientipBlock::update(BaseReader *reader)
