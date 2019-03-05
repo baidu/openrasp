@@ -1,4 +1,4 @@
-const plugin_version = '2019-0225-1830'
+const plugin_version = '2019-0305-1830'
 const plugin_name    = 'official'
 
 /*
@@ -47,13 +47,13 @@ var algorithmConfig = {
     },
 
     // SQL注入算法#1 - 匹配用户输入
-    // 1. 用户输入长度至少 10
+    // 1. 用户输入长度至少 8
     // 2. 用户输入至少包含一个SQL关键词 - 即 pre_filter，[默认关闭]
     // 3. 用户输入完整的出现在SQL语句中，且会导致SQL语句逻辑发生变化
     sql_userinput: {
         name:       '算法1 - 用户输入匹配算法',
         action:     'block',
-        min_length: 10,
+        min_length: 8,
         pre_filter: 'select|file|from|;',
         pre_enable: false,
     },

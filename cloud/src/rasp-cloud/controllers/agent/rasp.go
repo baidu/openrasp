@@ -77,6 +77,21 @@ func (o *RaspController) Post() {
 		o.ServeError(http.StatusBadRequest, "heartbeat_interval must be greater than 0")
 	}
 
+	if rasp.Environ == nil {
+		rasp.Environ = map[string]string{}
+	}
+
+	for k, v := range rasp.Environ {
+		if len(k) > 4096 {
+			o.ServeError(http.StatusBadRequest,
+				"the length of environ key cannot be greater than 4096")
+		}
+		if len(v) > 4096 {
+			o.ServeError(http.StatusBadRequest,
+				"the length of environ value cannot be greater than 4096")
+		}
+	}
+
 	rasp.LastHeartbeatTime = time.Now().Unix()
 	rasp.RegisterTime = time.Now().Unix()
 	err := models.UpsertRaspById(rasp.Id, rasp)

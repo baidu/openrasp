@@ -46,6 +46,13 @@ public class Attacher {
             t.printStackTrace();
             throw new RaspError(RaspError.E10006 + "Failed to attach Rasp.jar to server: " + t.getMessage());
         }
+
+        if (MODE_UNINSTALL.equals(action)) {
+            System.out.println("Success to uninstall the OpenRASP with Attach mode, the OpenRASP has no effect.");
+        } else if (MODE_INSTALL.equals(action)) {
+            System.out.println("Success to install the OpenRASP with Attach mode, the OpenRASP has taken effect");
+        }
+
     }
 
 }

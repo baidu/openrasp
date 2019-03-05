@@ -104,7 +104,7 @@ public class Decompiler {
                 } else {
                     result.add("");
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 result.add("");
             }
         }
