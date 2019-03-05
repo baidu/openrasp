@@ -27,6 +27,9 @@ extern "C"
 {
 #include "ext/pdo/php_pdo_driver.h"
 #include "zend_ini.h"
+#ifdef HAVE_LINE_COVERAGE
+    void __gcov_flush();
+#endif
 }
 
 /**
@@ -103,6 +106,9 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
                     }
                 }
             }
+#ifdef HAVE_LINE_COVERAGE
+            __gcov_flush();
+#endif
         }
     }
     return need_block;

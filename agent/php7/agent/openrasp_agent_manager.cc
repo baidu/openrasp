@@ -36,7 +36,7 @@
 #include "agent/utils/os.h"
 #include "openrasp_utils.h"
 
-#ifdef PHP_DEBUG
+#ifdef HAVE_LINE_COVERAGE
 #define SIGNAL_KILL_AGENT SIGTERM
 #else
 #define SIGNAL_KILL_AGENT SIGKILL
