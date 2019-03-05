@@ -255,8 +255,8 @@ public class Config extends FileScanListener {
                     temp.putAll(parseHookWhite(hooks));
                 }
             } else if (entry.getKey().equals(RESPONSE_HEADERS)) {
-                if (entry.getValue() instanceof Map) {
-                    Map<String, String> headers = (Map<String, String>) (entry.getValue());
+                if (entry.getValue() instanceof JsonObject) {
+                    Map<String, String> headers = CloudUtils.getMapGsonObject().fromJson((JsonObject) entry.getValue(), Map.class);
                     setResponseHeaders(headers);
                 }
             } else {
