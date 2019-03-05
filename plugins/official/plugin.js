@@ -53,7 +53,7 @@ var algorithmConfig = {
     sql_userinput: {
         name:       '算法1 - 用户输入匹配算法',
         action:     'block',
-        min_length: 10,
+        min_length: 8,
         pre_filter: 'select|file|from|;',
         pre_enable: false,
     },
