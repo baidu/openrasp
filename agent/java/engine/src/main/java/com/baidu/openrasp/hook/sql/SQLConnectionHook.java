@@ -72,7 +72,7 @@ public class SQLConnectionHook extends AbstractClassHook {
             params.put("query", params, "");
             String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
             params.put("message", params, message);
-            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.SQL, params);
+            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.SQLEXCEPTION, params);
         }
     }
 
