@@ -43,3 +43,4 @@ error-output.txt
 test.db
 !tests/include/
 !third_party/yaml-cpp/include/
+output
