@@ -147,7 +147,7 @@ public class AttackInfo extends EventInfo {
             String method = request.getMethod();
             info.put("request_method", method != null ? method.toLowerCase() : null);
             //Java反编译开关打开时，启用
-            if (Config.getConfig().getDecompileEnable()) {
+            if (Config.getConfig().getDecompileEnable() && checkTomcatVersion()) {
                 String appBasePath = request.getAppBasePath();
                 if (!appBasePath.isEmpty()) {
                     info.put("source_code", Decompiler.getAlarmPoint(trace, appBasePath));
@@ -158,6 +158,11 @@ public class AttackInfo extends EventInfo {
         return info;
     }
 
+    private boolean checkTomcatVersion() {
+        String javaVersion = System.getProperty("java.version");
+        return javaVersion != null && (javaVersion.startsWith("1.6") || javaVersion.startsWith("1.7")
+                || javaVersion.startsWith("1.8"));
+    }
     @Override
     public String getType() {
         return TYPE_ATTACK;

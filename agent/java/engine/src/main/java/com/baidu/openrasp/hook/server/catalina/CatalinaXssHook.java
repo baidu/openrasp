@@ -29,6 +29,7 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 
 /**
@@ -50,6 +51,8 @@ public class CatalinaXssHook extends ServerXssHook {
         String src = getInvokeStaticSrc(CatalinaXssHook.class, "getCatalinaOutputBuffer", "$0", Object.class);
         insertBefore(ctClass, "close", "()V", src);
 
+        String tomcat9Src = getInvokeStaticSrc(CatalinaXssHook.class, "getOutputBufferForTomcat9", "$1", ByteBuffer.class);
+        insertBefore(ctClass, "realWriteBytes", null, tomcat9Src);
     }
 
     public static void getCatalinaOutputBuffer(Object object) {
@@ -117,6 +120,26 @@ public class CatalinaXssHook extends ServerXssHook {
         }
         if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
             HookHandler.doCheck(CheckParameter.Type.XSS, params);
+        }
+    }
+
+    public static void getOutputBufferForTomcat9(ByteBuffer buffer) {
+        String serverName = ApplicationModel.getServerName();
+        String serverVersion = ApplicationModel.getVersion();
+        if ("tomcat".equalsIgnoreCase(serverName) && serverVersion.startsWith("9") && buffer != null) {
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            try {
+                byte[] bytes = buffer.array();
+                String content = new String(bytes);
+                params.put("html_body", content);
+            } catch (Exception e) {
+                String message = ApplicationModel.getServerName() + " xss detectde failed";
+                int errorCode = ErrorType.HOOK_ERROR.getCode();
+                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            }
+            if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
+                HookHandler.doCheck(CheckParameter.Type.XSS, params);
+            }
         }
     }
 

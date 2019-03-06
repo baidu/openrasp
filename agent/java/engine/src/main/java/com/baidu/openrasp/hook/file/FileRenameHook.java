@@ -58,8 +58,10 @@ public class FileRenameHook extends AbstractClassHook {
 
     public static void checkFileRename(File source, File dest) {
         boolean checkSwitch = Config.getConfig().getPluginFilter();
-        if (!checkSwitch || source != null && !source.isDirectory() && dest != null && !dest.isDirectory()) {
-
+        if (source != null && !source.isDirectory() && dest != null && !dest.isDirectory()) {
+            if (checkSwitch && !source.exists()){
+                return;
+            }
             JSContext cx = JSContextFactory.enterAndInitContext();
             Scriptable params = cx.newObject(cx.getScope());
             try {
@@ -73,10 +75,7 @@ public class FileRenameHook extends AbstractClassHook {
             } catch (IOException e) {
                 params.put("dest", params, dest.getAbsolutePath());
             }
-
-
             HookHandler.doCheck(CheckParameter.Type.RENAME, params);
-
         }
     }
 }
