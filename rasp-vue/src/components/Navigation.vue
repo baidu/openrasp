@@ -220,7 +220,19 @@ export default {
     }
   },
   mounted: function() {
+    this.request.post('v1/api/server/url/get', {}).then(res => {
+      if (! res.panel_url) {
+        console.log('panel_url not set, initializing')
+        var current_url = location.href.split(/\?|#/)[0]
 
+        this.request.post('v1/api/server/url', {
+          panel_url: current_url,
+          agent_urls: [current_url]
+        }).then(res => {})
+      } else {
+        console.log('panel_url already configured')
+      }
+    })
   }
 }
 </script>
