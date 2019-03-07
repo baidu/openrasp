@@ -57,7 +57,7 @@ var algorithmConfig = {
         pre_filter: 'select|file|from|;',
         pre_enable: false,
     },
-
+    
     // SQL注入算法#2 - 语句规范
     sql_policy: {
         name:    '算法2 - 拦截异常SQL语句',
@@ -484,6 +484,12 @@ var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter)
 
 // 命令执行探针 - 常用渗透命令
 var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern)
+
+// dev模式开启更多消耗性能的检测算法; 如果是单元测试模式，忽略此选项
+if (algorithmConfig.meta.is_dev && ! RASP.is_unittest) {
+    algorithmConfig.sql_userinput.pre_enable = false
+    commaNumRegex = /^$/
+}
 
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue) {
