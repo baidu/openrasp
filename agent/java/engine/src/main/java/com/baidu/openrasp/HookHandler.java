@@ -167,6 +167,8 @@ public class HookHandler {
         if (servlet != null && request != null && !enableCurrThreadHook.get()) {
             // 默认是关闭hook的，只有处理过HTTP request的线程才打开
             enableCurrThreadHook.set(true);
+            //新的请求开启body xss hook点
+            enableBodyXssHook();
             HttpServletRequest requestContainer = new HttpServletRequest(request);
             HttpServletResponse responseContainer = new HttpServletResponse(response);
             responseContainer.setHeader(OPEN_RASP_HEADER_KEY, OPEN_RASP_HEADER_VALUE);
@@ -188,6 +190,8 @@ public class HookHandler {
     public static void checkDubboRequest(Object request) {
         if (request != null && !enableCurrThreadHook.get()) {
             enableCurrThreadHook.set(true);
+            //新的请求开启body xss hook点
+            enableBodyXssHook();
             DubboRequest requestContainer = new DubboRequest(request);
             requestCache.set(requestContainer);
             XXEHook.resetLocalExpandedSystemIds();
