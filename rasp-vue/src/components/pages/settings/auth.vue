@@ -40,7 +40,8 @@
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">
-          TOKEN 管理
+          TOKEN 管理 
+          <a href="https://rasp.baidu.com/doc/hacking/cloud-api.html#panel-api-description" target="_blank" style="color: #467fcf">[帮助文档]</a>
         </h3>
       </div>
       <div class="card-body">
