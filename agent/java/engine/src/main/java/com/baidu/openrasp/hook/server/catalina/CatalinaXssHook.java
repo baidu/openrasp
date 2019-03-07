@@ -52,7 +52,7 @@ public class CatalinaXssHook extends ServerXssHook {
         insertBefore(ctClass, "close", "()V", src);
 
         String tomcat9Src = getInvokeStaticSrc(CatalinaXssHook.class, "getOutputBufferForTomcat9", "$1", ByteBuffer.class);
-        insertBefore(ctClass, "realWriteBytes", null, tomcat9Src);
+        insertBefore(ctClass, "realWriteBytes", "(Ljava/nio/ByteBuffer;)V", tomcat9Src);
     }
 
     public static void getCatalinaOutputBuffer(Object object) {
