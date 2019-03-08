@@ -476,7 +476,7 @@ var cleanFileRegex = /\.(jpg|jpeg|png|gif|bmp|txt|rar|zip)$/i
 var htmlFileRegex   = /\.(htm|html|js)$/i
 
 // 匹配 EXE/DLL 等可以执行的文件
-var exeFileRegex    = /\.(exe|dll|scr|vbs|jar)$/i
+var exeFileRegex    = /\.(exe|dll|scr|vbs|cmd|bat|jar)$/i
 
 // 其他的 stream 都没啥用
 var ntfsRegex       = /::\$(DATA|INDEX)$/i
