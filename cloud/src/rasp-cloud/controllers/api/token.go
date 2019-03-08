@@ -30,13 +30,9 @@ func (o *TokenController) Get() {
 	var param map[string]int
 	o.UnmarshalJson(&param)
 	page := param["page"]
-	if page <= 0 {
-		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
-	}
 	perpage := param["perpage"]
-	if perpage <= 0 {
-		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
-	}
+	o.ValidPage(page, perpage)
+
 	total, tokens, err := models.GetAllToken(page, perpage)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get tokens", err)

@@ -49,12 +49,7 @@ func (o *AppController) GetApp() {
 	var data pageParam
 	o.UnmarshalJson(&data)
 	if data.AppId == "" {
-		if data.Page <= 0 {
-			o.ServeError(http.StatusBadRequest, "page must be greater than 0")
-		}
-		if data.Perpage <= 0 {
-			o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
-		}
+		o.ValidPage(data.Page, data.Perpage)
 		var result = make(map[string]interface{})
 		total, apps, err := models.GetAllApp(data.Page, data.Perpage, true)
 		if err != nil {
@@ -82,12 +77,7 @@ func (o *AppController) GetApp() {
 func (o *AppController) GetRasps() {
 	var param pageParam
 	o.UnmarshalJson(&param)
-	if param.Page <= 0 {
-		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
-	}
-	if param.Perpage <= 0 {
-		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
-	}
+	o.ValidPage(param.Page, param.Perpage)
 
 	app, err := models.GetAppById(param.AppId)
 	if err != nil {
@@ -366,7 +356,7 @@ func (o *AppController) validDingConf(conf *models.DingAlarmConf) {
 		o.ServeError(http.StatusBadRequest, "the ding ding agent_id cannot be empty")
 	}
 	if len(conf.AgentId) > 256 {
-		o.ServeError(http.StatusBadRequest, "the length of ding agent_id cannot be greater than 128")
+		o.ServeError(http.StatusBadRequest, "the length of ding agent_id cannot be greater than 256")
 	}
 	conf.RecvUser = o.validAppArrayParam(conf.RecvUser, "ding recv_user", nil)
 	conf.RecvParty = o.validAppArrayParam(conf.RecvParty, "ding recv_party", nil)
@@ -448,10 +438,18 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 		if value == nil {
 			o.ServeError(http.StatusBadRequest, "the value of "+key+" config cannot be nil")
 		}
+		if key == "" {
+			o.ServeError(http.StatusBadRequest,
+				"the config key can not be empty")
+		}
+		if len(key) > 512 {
+			o.ServeError(http.StatusBadRequest,
+				"the length of config key '"+key+"' must be less than 512")
+		}
 		if v, ok := value.(string); ok {
-			if len(v) >= 512 {
+			if len(v) >= 2048 {
 				o.ServeError(http.StatusBadRequest,
-					"the length of config key "+key+" must less tha 1024")
+					"the value's length of config key '"+key+"' must be less than 2048")
 			}
 		}
 	}
@@ -533,12 +531,7 @@ func (o *AppController) ConfigAlarm() {
 func (o *AppController) GetPlugins() {
 	var param pageParam
 	o.UnmarshalJson(&param)
-	if param.Page <= 0 {
-		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
-	}
-	if param.Perpage <= 0 {
-		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
-	}
+	o.ValidPage(param.Page, param.Perpage)
 
 	app, err := models.GetAppById(param.AppId)
 	if err != nil {
@@ -570,13 +563,15 @@ func (o *AppController) GetSelectedPlugin() {
 		o.ServeError(http.StatusBadRequest, "app_id cannot be empty")
 	}
 	plugin, err := models.GetSelectedPlugin(appId, false)
-	if mgo.ErrNotFound == err || plugin == nil {
-		o.ServeWithEmptyData()
-		return
-	}
+
 	if err != nil {
+		if mgo.ErrNotFound == err {
+			o.ServeWithEmptyData()
+			return
+		}
 		o.ServeError(http.StatusBadRequest, "failed to get selected plugin", err)
 	}
+
 	o.Serve(plugin)
 }
 

@@ -212,13 +212,13 @@ func startAlarmTicker(interval time.Duration) {
 	for {
 		select {
 		case <-ticker.C:
-			handleAttackAlarm()
+			HandleAttackAlarm()
 			handleRaspExpiredAlarm()
 		}
 	}
 }
 
-func handleAttackAlarm() {
+func HandleAttackAlarm() {
 	defer func() {
 		if r := recover(); r != nil {
 			beego.Error("failed to handle alarm: ", r)
@@ -359,7 +359,7 @@ func GetSecretByAppId(appId string) (secret string, err error) {
 func RegenerateSecret(appId string) (secret string, err error) {
 	var app *App
 	err = mongo.FindId(appCollectionName, appId, &app)
-	if err == nil {
+	if err != nil {
 		return
 	}
 	newSecret := generateSecret(app)
@@ -407,7 +407,7 @@ func HandleApp(app *App, isCreate bool) error {
 		}
 		return nil
 	}
-	if plugin.AlgorithmConfig != nil {
+	if plugin != nil && plugin.AlgorithmConfig != nil {
 		app.AlgorithmConfig = plugin.AlgorithmConfig
 	}
 	return nil
@@ -509,9 +509,7 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 		msg += "\r\n" + alarmData.String()
 		host, _, err := net.SplitHostPort(emailConf.ServerAddr)
 		if err != nil {
-			errMsg := "failed to get email serve host: " + err.Error()
-			beego.Error(errMsg)
-			return errors.New(errMsg)
+			return handleError("failed to get email serve host: " + err.Error())
 		}
 		auth := smtp.PlainAuth("", emailConf.UserName, emailConf.Password, host)
 		if emailConf.Password == "" {
@@ -559,65 +557,59 @@ func sendNormalEmail(emailConf EmailAlarmConf, auth smtp.Auth, msg string) (err 
 func sendEmailWithTls(emailConf EmailAlarmConf, auth smtp.Auth, msg string) error {
 	client, err := smtpTlsDial(emailConf.ServerAddr)
 	if err != nil {
-		errMsg := "failed to start tls: " + err.Error()
-		beego.Error(errMsg)
-		return errors.New(errMsg)
+		return handleError("failed to start tls: " + err.Error())
 	}
-	defer client.Close()
+	if client.Text != nil {
+		defer client.Close()
+	}
 	if auth != nil {
 		if ok, _ := client.Extension("AUTH"); ok {
 			if err = client.Auth(auth); err != nil {
-				errMsg := "failed to auth with tls: " + err.Error()
-				beego.Error(errMsg)
-				return errors.New(errMsg)
+				return handleError("failed to auth with tls: " + err.Error())
 			}
 		}
 	}
 	if err = client.Mail(emailConf.UserName); err != nil {
-		errMsg := "failed to mail from 'emailConf.UserName': " + err.Error()
-		beego.Error(errMsg)
-		return errors.New(errMsg)
+		return handleError("failed to mail from 'emailConf.UserName': " + err.Error())
 	}
 
 	for _, addr := range emailConf.RecvAddr {
 		if err = client.Rcpt(addr); err != nil {
-			errMsg := "failed to push email to " + addr + " with tls: " + err.Error()
-			beego.Error(errMsg)
-			return errors.New(errMsg)
+			return handleError("failed to push email to " + addr + " with tls: " + err.Error())
 		}
 	}
 
 	writer, err := client.Data()
 	if err != nil {
-		errMsg := "failed to get writer for email with tls: " + err.Error()
-		beego.Error(errMsg)
-		return errors.New(errMsg)
+		return handleError("failed to get writer for email with tls: " + err.Error())
 	}
 	defer writer.Close()
 
 	_, err = writer.Write([]byte(msg))
 	if err != nil {
-		errMsg := "failed to write msg with tls: " + err.Error()
-		beego.Error(errMsg)
-		return errors.New(errMsg)
+		return handleError("failed to write msg with tls: " + err.Error())
 	}
 
-	client.Quit()
+	if client.Text != nil {
+		client.Quit()
+	}
+
 	return nil
+}
+
+func handleError(msg string) error {
+	beego.Error(msg)
+	return errors.New(msg)
 }
 
 func smtpTlsDial(addr string) (*smtp.Client, error) {
 	host, _, err := net.SplitHostPort(addr)
 	if err != nil {
-		errMsg := "failed to get email serve host: " + err.Error()
-		beego.Error(errMsg)
-		return nil, errors.New(errMsg)
+		return nil, handleError("failed to get email serve host: " + err.Error())
 	}
-	conn, err := tls.Dial("tcp", addr, nil)
+	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: time.Second * 10}, "tcp", addr, nil)
 	if err != nil {
-		errMsg := "smtp dialing error: " + err.Error()
-		beego.Error(errMsg)
-		return nil, errors.New(errMsg)
+		return nil, handleError("smtp dialing error: " + err.Error())
 	}
 	return smtp.NewClient(conn, host)
 }
@@ -649,8 +641,7 @@ func PushHttpAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 			}
 		}
 	} else {
-		beego.Error("failed to send http alarm: the http receiving address can not be empty", httpConf)
-		return errors.New("the http receiving address can not be empty")
+		return handleError("failed to send http alarm: the http receiving address can not be empty")
 	}
 	beego.Debug("succeed in pushing http alarm for app: " + app.Name + " ,with urls: " +
 		fmt.Sprintf("%v", httpConf.RecvAddr))
@@ -669,24 +660,18 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 		response, err := request.Response()
 		errMsg := "failed to get ding ding token with corp id: " + dingCong.CorpId
 		if err != nil {
-			beego.Error(errMsg + ", with error: " + err.Error())
-			return err
+			return handleError(errMsg + ", with error: " + err.Error())
 		}
 		if response.StatusCode != 200 {
-			err := errors.New(errMsg + ", with status code: " + strconv.Itoa(response.StatusCode))
-			beego.Error(err.Error())
-			return err
+			return handleError(errMsg + ", with status code: " + strconv.Itoa(response.StatusCode))
 		}
 		var result dingResponse
 		err = request.ToJSON(&result)
 		if err != nil {
-			beego.Error(errMsg + ", with error: " + err.Error())
-			return err
+			return handleError(errMsg + ", with error: " + err.Error())
 		}
 		if result.ErrCode != 0 {
-			err := errors.New(errMsg + ", with errmsg: " + result.ErrMsg)
-			beego.Error(err.Error())
-			return err
+			return handleError(errMsg + ", with errmsg: " + result.ErrMsg)
 		}
 		token := result.AccessToken
 		body := make(map[string]interface{})
@@ -717,27 +702,20 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 		response, err = request.Response()
 		errMsg = "failed to push ding ding alarms with corp id: " + dingCong.CorpId
 		if err != nil {
-			beego.Error(errMsg + ", with error: " + err.Error())
-			return err
+			return handleError(errMsg + ", with error: " + err.Error())
 		}
 		if response.StatusCode != 200 {
-			err := errors.New(errMsg + ", with status code: " + strconv.Itoa(response.StatusCode))
-			beego.Error(err.Error())
-			return err
+			return handleError(errMsg + ", with status code: " + strconv.Itoa(response.StatusCode))
 		}
 		err = request.ToJSON(&result)
 		if err != nil {
-			beego.Error(errMsg + ", with error: " + err.Error())
-			return err
+			return handleError(errMsg + ", with error: " + err.Error())
 		}
 		if result.ErrCode != 0 {
-			err := errors.New(errMsg + ", with errmsg: " + result.ErrMsg)
-			beego.Error(err.Error())
-			return err
+			return handleError(errMsg + ", with errmsg: " + result.ErrMsg)
 		}
 	} else {
-		beego.Error("failed to send ding ding alarm: invalid ding ding alarm conf", dingCong)
-		return errors.New("invalid ding ding alarm conf")
+		return handleError("failed to send ding ding alarm: invalid ding ding alarm conf")
 	}
 	beego.Debug("succeed in pushing ding ding alarm for app: " + app.Name + " ,with corp id: " + dingCong.CorpId)
 	return nil

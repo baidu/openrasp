@@ -1,26 +1,19 @@
 package test
 
 import (
-	_ "rasp-cloud/tests/inits"
-	_ "rasp-cloud/environment"
-	_ "rasp-cloud/models"
-	//_ "rasp-cloud/filter"
-	_ "rasp-cloud/controllers"
 	"testing"
-	"github.com/astaxie/beego"
-	"rasp-cloud/routers"
-	"rasp-cloud/controllers"
-	"rasp-cloud/conf"
 	. "github.com/smartystreets/goconvey/convey"
+	"rasp-cloud/tests/inits"
 )
 
-func init() {
-	routers.InitRouter()
-	beego.ErrorController(&controllers.ErrorController{})
-}
+func Test404(t *testing.T) {
+	Convey("Subject: Test 404\n", t, func() {
+		r := inits.GetResponseRecorder("POST", "/v1/api/notexist", "")
+		So(r.Code, ShouldEqual, 404)
+	})
 
-func TestAppConfig(t *testing.T) {
-	Convey("Subject: Test Config Init\n", t, func() {
-		So(*conf.AppConfig.Flag.StartType, ShouldEqual, conf.StartTypeDefault)
+	Convey("Subject: Test Ping\n", t, func() {
+		r := inits.GetResponse("GET", "/v1/ping", "")
+		So(r.Status, ShouldEqual, 0)
 	})
 }
