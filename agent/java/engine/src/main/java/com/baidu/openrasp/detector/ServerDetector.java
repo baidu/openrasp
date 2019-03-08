@@ -68,12 +68,6 @@ public abstract class ServerDetector {
                 int errorCode = ErrorType.REGISTER_ERROR.getCode();
                 LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             }
-            //初始化创建http appender
-            DynamicConfigAppender.createRootHttpAppender();
-            DynamicConfigAppender.createHttpAppender(AppenderMappedLogger.HTTP_ALARM.getLogger(),
-                    AppenderMappedLogger.HTTP_ALARM.getAppender());
-            DynamicConfigAppender.createHttpAppender(AppenderMappedLogger.HTTP_POLICY_ALARM.getLogger(),
-                    AppenderMappedLogger.HTTP_POLICY_ALARM.getAppender());
             new Register();
         } else {
             checkServerPolicy();
