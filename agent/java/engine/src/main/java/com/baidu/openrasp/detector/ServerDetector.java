@@ -44,16 +44,17 @@ public abstract class ServerDetector {
      * @param className   类名
      * @param classLoader 类的加载器
      */
-    public void handleServer(String className, ClassLoader classLoader, ProtectionDomain domain) {
-        handleServerInfo(classLoader, domain);
-        if (isClassMatched(className)) {
+    public boolean handleServer(String className, ClassLoader classLoader, ProtectionDomain domain) {
+        boolean isDetected = handleServerInfo(classLoader, domain);
+        if (isDetected) {
             sendRegister();
         }
+        return isDetected;
     }
 
     public abstract boolean isClassMatched(String className);
 
-    public abstract void handleServerInfo(ClassLoader classLoader, ProtectionDomain domain);
+    public abstract boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain);
 
 
     protected void sendRegister() {

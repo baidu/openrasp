@@ -29,11 +29,11 @@ public class TomcatDetector extends ServerDetector {
 
     @Override
     public boolean isClassMatched(String className) {
-        return "org/apache/catalina/core/StandardServer".equals(className);
+        return "org/apache/catalina/Server".equals(className);
     }
 
     @Override
-    public void handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
+    public boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
         String version = "";
         try {
             if (classLoader == null) {
@@ -45,11 +45,12 @@ public class TomcatDetector extends ServerDetector {
             }
         } catch (Throwable t) {
             logDetectError("handle tomcat startup failed", t);
-        } finally {
-            if (!isJboss(classLoader)) {
-                ApplicationModel.initServerInfo("tomcat", version);
-            }
         }
+        if (!isJboss(classLoader)) {
+            ApplicationModel.initServerInfo("tomcat", version);
+            return true;
+        }
+        return false;
     }
 
     private boolean isJboss(ClassLoader classLoader) {

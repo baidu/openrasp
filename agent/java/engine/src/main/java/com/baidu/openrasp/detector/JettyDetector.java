@@ -32,7 +32,7 @@ public class JettyDetector extends ServerDetector {
     }
 
     @Override
-    public void handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
+    public boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
         String serverVersion = "";
         try {
             Method getPackageMethod = ClassLoader.class.getDeclaredMethod("getPackage", String.class);
@@ -42,9 +42,9 @@ public class JettyDetector extends ServerDetector {
             serverVersion = jettyBootPackage.getImplementationVersion();
         } catch (Throwable e) {
             HookHandler.LOGGER.error("handle jetty startup failed", e);
-        } finally {
-            ApplicationModel.initServerInfo("jetty", serverVersion);
         }
+        ApplicationModel.initServerInfo("jetty", serverVersion);
+        return true;
     }
 
 }

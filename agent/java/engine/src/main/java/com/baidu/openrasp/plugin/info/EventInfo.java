@@ -23,7 +23,10 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.google.gson.Gson;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 报警事件信息类
@@ -69,7 +72,7 @@ public abstract class EventInfo {
     protected StackTraceElement[] filter(StackTraceElement[] trace) {
         int i = 0;
         // 去除插件本身调用栈
-        while (trace[i].getClassName().startsWith("com.baidu.openrasp") && i < trace.length) {
+        while (i < trace.length && trace[i].getClassName().startsWith("com.baidu.openrasp")) {
             i++;
         }
         return Arrays.copyOfRange(trace, i, Math.min(i + Config.getConfig().getLogMaxStackSize(), trace.length));

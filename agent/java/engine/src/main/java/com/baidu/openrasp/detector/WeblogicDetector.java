@@ -31,7 +31,7 @@ public class WeblogicDetector extends ServerDetector {
     }
 
     @Override
-    public void handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
+    public boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
         String serverVersion = "";
         try {
             Class clazz = classLoader.loadClass("weblogic.version");
@@ -44,9 +44,9 @@ public class WeblogicDetector extends ServerDetector {
             }
         } catch (Throwable t) {
             logDetectError("handle weblogic startup failed", t);
-        } finally {
-            ApplicationModel.initServerInfo("weblogic", serverVersion);
         }
+        ApplicationModel.initServerInfo("weblogic", serverVersion);
+        return true;
     }
 
     private int getFirstNumIndexFromString(String version) {

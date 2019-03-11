@@ -17,7 +17,7 @@ public class JBossEAPDetector extends ServerDetector {
     }
 
     @Override
-    public void handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
+    public boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
         String serverVersion = "";
         try {
             Method getPackageMethod = ClassLoader.class.getDeclaredMethod("getPackage", String.class);
@@ -26,9 +26,9 @@ public class JBossEAPDetector extends ServerDetector {
             serverVersion = jbossBootPackage.getSpecificationVersion();
         } catch (Throwable t) {
             logDetectError("handle jboss eap startup failed", t);
-        } finally {
-            ApplicationModel.initServerInfo("jboss eap", serverVersion);
         }
+        ApplicationModel.initServerInfo("jboss eap", serverVersion);
+        return true;
     }
 
 }

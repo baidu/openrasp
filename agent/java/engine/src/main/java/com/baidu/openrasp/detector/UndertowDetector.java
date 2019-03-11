@@ -33,7 +33,7 @@ public class UndertowDetector extends ServerDetector {
     }
 
     @Override
-    public void handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
+    public boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
         String version = "";
         try {
             if (classLoader == null) {
@@ -41,9 +41,10 @@ public class UndertowDetector extends ServerDetector {
             }
             Class clazz = classLoader.loadClass("io.undertow.Version");
             version = (String) Reflection.invokeMethod(null, clazz, "getVersionString", new Class[]{});
-            ApplicationModel.initServerInfo("undertow", version);
         } catch (Exception e) {
             logDetectError("handle undertow startup failed", e);
         }
+        ApplicationModel.initServerInfo("undertow", version);
+        return true;
     }
 }

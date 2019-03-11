@@ -143,7 +143,9 @@ public class CustomClassTransformer implements ClassFileTransformer {
                 }
             }
         }
-        serverDetector.detectServer(className, loader, domain);
+        if (!serverDetector.isDetected.get()) {
+            serverDetector.detectServer(className, loader, domain);
+        }
         return classfileBuffer;
     }
 
