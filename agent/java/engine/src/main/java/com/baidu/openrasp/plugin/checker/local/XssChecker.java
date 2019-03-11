@@ -74,7 +74,7 @@ public class XssChecker extends ConfigurableChecker {
                                 params.remove("html_body");
                                 params.put("name", entry.getKey());
                                 params.put("value", value);
-                                result.add(AttackInfo.createLocalAttackInfo(checkParameter, EventInfo.CHECK_ACTION_BLOCK, message, CONFIG_KEY_XSS_USER_INPUT));
+                                result.add(AttackInfo.createLocalAttackInfo(checkParameter, action, message, CONFIG_KEY_XSS_USER_INPUT));
                                 return result;
                             }
                             if (count > exceedLengthCount) {
@@ -83,7 +83,7 @@ public class XssChecker extends ConfigurableChecker {
                                 params.remove("html_body");
                                 params.put("name", "");
                                 params.put("value", "");
-                                result.add(AttackInfo.createLocalAttackInfo(checkParameter, EventInfo.CHECK_ACTION_BLOCK, message, CONFIG_KEY_XSS_USER_INPUT));
+                                result.add(AttackInfo.createLocalAttackInfo(checkParameter, action, message, CONFIG_KEY_XSS_USER_INPUT));
                                 return result;
                             }
                         }
