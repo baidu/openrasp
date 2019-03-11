@@ -1,4 +1,4 @@
-const plugin_version = '2019-0305-1830'
+const plugin_version = '2019-0308-0930'
 const plugin_name    = 'official'
 
 /*
@@ -57,7 +57,7 @@ var algorithmConfig = {
         pre_filter: 'select|file|from|;',
         pre_enable: false,
     },
-
+    
     // SQL注入算法#2 - 语句规范
     sql_policy: {
         name:    '算法2 - 拦截异常SQL语句',
@@ -310,6 +310,11 @@ var algorithmConfig = {
         name:   '算法3 - Multipart 方式文件上传 HTML/JS 等文件',
         action: 'ignore'
     },
+    // 文件上传 - Multipart 方式上传 DLL/EXE 等文件
+    fileUpload_multipart_exe: {
+        name:   '算法3 - Multipart 方式文件上传 DLL/EXE 等文件',
+        action: 'ignore'
+    },    
 
     // OGNL 代码执行漏洞
     ognl_exec: {
@@ -470,6 +475,9 @@ var cleanFileRegex = /\.(jpg|jpeg|png|gif|bmp|txt|rar|zip)$/i
 // 匹配 HTML/JS 等可以用于钓鱼、domain-fronting 的文件
 var htmlFileRegex   = /\.(htm|html|js)$/i
 
+// 匹配 EXE/DLL 等可以执行的文件
+var exeFileRegex    = /\.(exe|dll|scr|vbs|cmd|bat|jar)$/i
+
 // 其他的 stream 都没啥用
 var ntfsRegex       = /::\$(DATA|INDEX)$/i
 
@@ -484,6 +492,12 @@ var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter)
 
 // 命令执行探针 - 常用渗透命令
 var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern)
+
+// dev模式开启更多消耗性能的检测算法; 如果是单元测试模式，忽略此选项
+if (algorithmConfig.meta.is_dev && ! RASP.is_unittest) {
+    algorithmConfig.sql_userinput.pre_enable = false
+    commaNumRegex = /^$/
+}
 
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue) {
@@ -1422,9 +1436,23 @@ plugin.register('fileUpload', function (params, context) {
         {
             return {
                 action:     algorithmConfig.fileUpload_multipart_html.action,
-                message:    _("File upload - Uploading a HTML/JS file with multipart/form-data protocol", [params.filename]),
+                message:    _("File upload - Uploading a HTML/JS file with multipart/form-data protocol, filename: %1%", [params.filename]),
                 confidence: 90,
                 algorithm:  'fileUpload_multipart_html'
+            }
+        }
+    }
+
+    // 是否禁止 EXE/DLL 文件，防止被用于后门下载站点
+    if (algorithmConfig.fileUpload_multipart_exe.action != 'ignore')
+    {
+        if (exeFileRegex.test(params.filename))
+        {
+            return {
+                action:     algorithmConfig.fileUpload_multipart_exe.action,
+                message:    _("File upload - Uploading a Executable file with multipart/form-data protocol, filename: %1%", [params.filename]),
+                confidence: 90,
+                algorithm:  'fileUpload_multipart_exe'
             }
         }
     }
