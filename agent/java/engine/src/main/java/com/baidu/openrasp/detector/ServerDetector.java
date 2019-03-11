@@ -18,10 +18,8 @@ package com.baidu.openrasp.detector;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.Register;
-import com.baidu.openrasp.cloud.model.AppenderMappedLogger;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -70,7 +68,15 @@ public abstract class ServerDetector {
             }
             new Register();
         } else {
-            checkServerPolicy();
+            // 避免基线检测在 transformer 线程中造成提前加载需要 hook 的类
+            Thread policyThread = new Thread() {
+                @Override
+                public void run() {
+                    checkServerPolicy();
+                }
+            };
+            policyThread.setDaemon(true);
+            policyThread.start();
         }
     }
 
