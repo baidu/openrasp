@@ -28,13 +28,13 @@
                 <td align="center" bgcolor="#148e81" style="padding: 20px 20px 20px 20px; color: #ffffff; font-family: Arial, sans-serif; font-size: 36px; font-weight: bold;">
                     攻击事件
                 </td>
-            </tr>
+            </tr>            
+            {{range .Alarms}}
             <tr>
                 <td bgcolor="#ffffff" style="padding: 20px 20px 10px 20px; color: #555555; font-family: Arial, sans-serif; font-size: 20px; line-height: 30px;">
-                    <b style="word-break: break-all;">1. [SQL注入] {{.target}}</b>
+                    <b style="word-break: break-all;">1. {{.attack_type}} {{.target}}</b>
                 </td>
             </tr>
-            {{range .Alarms}}
             <tr>
                 <td bgcolor="#ffffff" style="padding: 0 20px 20px 20px; color: #555555; font-family: Arial, sans-serif; font-size: 15px; line-height: 24px; border-bottom: 1px solid #f6f6f6;">
                     <dl>
