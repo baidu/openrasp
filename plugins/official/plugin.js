@@ -1080,14 +1080,12 @@ if (RASP.get_jsengine() !== 'v8') {
                 {
                     // `information_schema`.tables
                     // information_schema  .tables
-                    var parts = tokens_lc[i + 1].replaceAll('`', '').split('.')
-                    if (parts.length == 2)
+                    var part1 = tokens_lc[i + 1].replaceAll('`', '')
+                    var part2 = tokens_lc[i + 3].replaceAll('`', '')
+                    if (part1 == 'information_schema' && part2 == 'tables' )
                     {
-                        if (parts[0].trim() == 'information_schema' && parts[1].trim() == 'tables')
-                        {
-                            reason = _("SQLi - Detected access to MySQL information_schema.tables table")
-                            break
-                        }
+                        reason = _("SQLi - Detected access to MySQL information_schema.tables table")
+                        break
                     }
                 }
             }
