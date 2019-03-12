@@ -101,13 +101,6 @@ public class DynamicConfigAppender {
         fileAppender.setName(appender);
         fileAppender.setErrorHandler(new OnlyOnceErrorHandler());
         String raspBaseDir = FileUtil.getBaseDir();
-        File file = new File(raspBaseDir + targetPath);
-        if (!file.exists()) {
-            if (!file.getParentFile().exists()) {
-                file.getParentFile().mkdirs();
-            }
-            file.createNewFile();
-        }
         fileAppender.setFile(raspBaseDir + targetPath);
         fileAppender.setAppend(true);
         fileAppender.setDatePattern("'.'yyyy-MM-dd");
