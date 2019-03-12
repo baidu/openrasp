@@ -852,8 +852,8 @@ function lcs_search(str1, str2){
     }
     var result_pos_set = new Set(result_pos)
     var result_str = new Set()
-    for ( var item of result_pos_set) {
-        result_str.add( str1.substr( item, result ) )
+    for (var item of result_pos_set) {
+        result_str.add(str1.substr(item, result))
     }
     return Array.from(result_str)
 }
