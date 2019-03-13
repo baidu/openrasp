@@ -32,26 +32,26 @@
             {{range .Alarms}}
             <tr>
                 <td bgcolor="#ffffff" style="padding: 20px 20px 10px 20px; color: #555555; font-family: Arial, sans-serif; font-size: 20px; line-height: 30px;">
-                    <b style="word-break: break-all;">1. {{.attack_type}} {{.target}}</b>
+                    <b style="word-break: break-all;"> {{.index}}. [{{.attack_type}}] {{.domain}}</b>
                 </td>
             </tr>
             <tr>
                 <td bgcolor="#ffffff" style="padding: 0 20px 20px 20px; color: #555555; font-family: Arial, sans-serif; font-size: 15px; line-height: 24px; border-bottom: 1px solid #f6f6f6;">
                     <dl>
-                        <dt style="float: left"><b>攻击时间:</b></dt>
+                        <dt style="float: left"><b>攻击时间: </b></dt>
                         <dd style="margin-left: 70px;">{{.event_time}}</dd>
 
-                        <dt style="float: left"><b>攻击类型:</b></dt>
+                        <dt style="float: left"><b>攻击类型: </b></dt>
                         <dd style="margin-left: 70px;">{{.attack_type}}</dd>
 
-                        <dt style="float: left"><b>拦截状态:</b></dt>
+                        <dt style="float: left"><b>拦截状态: </b></dt>
                         <dd style="margin-left: 70px;">{{.intercept_state}}</dd>
 
-                        <dt style="float: left"><b>攻击来源:</b></dt>
+                        <dt style="float: left"><b>攻击来源: </b></dt>
                         <dd style="margin-left: 70px;">{{.attack_source}}</dd>
 
-                        <dt style="float: left"><b>攻击目标:</b></dt>
-                        <dd style="margin-left: 70px;">{{.target}}</dd>
+                        <dt style="float: left"><b>攻击目标: </b></dt>
+                        <dd style="margin-left: 70px;">{{.url}}</dd>
                     </dl>
                 </td>
             </tr>

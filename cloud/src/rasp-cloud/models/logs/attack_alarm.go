@@ -40,6 +40,35 @@ var (
 	}
 	geoIpDbPath string
 	geoIpDb     *geoip2.Reader
+
+	AttackTypeMap = map[string]string{
+		"sql":                        "SQL 注入",
+		"sql_exception":              "SQL 语句异常",
+		"command":                    "命令执行",
+		"xxe":                        "XXE 外部实体加载",
+		"directory":                  "目录遍历",
+		"rename":                     "文件重命名",
+		"readFile":                   "任意文件下载",
+		"include":                    "任意文件包含",
+		"writeFile":                  "任意文件写入",
+		"ssrf":                       "SSRF 服务端请求伪造",
+		"ognl":                       "OGNL 代码执行",
+		"webdav":                     "任意文件上传 (PUT)",
+		"fileUpload":                 "任意文件上传",
+		"deserialization":            "Transformer 反序列化",
+		"xss_echo":                   "Echo XSS 跨站脚本攻击",
+		"xss_userinput":              "BODY XSS 跨站脚本攻击",
+		"webshell_callable":          "WebShell - 变形后门",
+		"webshell_eval":              "WebShell - 中国菜刀",
+		"webshell_command":           "WebShell - 命令执行",
+		"webshell_file_put_contents": "WebShell - 后门上传",
+		"webshell_ld_preload":        "WebShell - LD_PRELOAD 后门",
+	}
+
+	AttackInterceptMap = map[string]string{
+		"block": "拦截请求",
+		"log":   "记录日志",
+	}
 )
 
 func init() {

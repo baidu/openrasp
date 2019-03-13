@@ -40,6 +40,7 @@ import (
 	"crypto/tls"
 	"net"
 	"rasp-cloud/conf"
+	"net/url"
 )
 
 type App struct {
@@ -112,11 +113,18 @@ var (
 	lastAlarmTime = time.Now().UnixNano() / 1000000
 	TestAlarmData = []map[string]interface{}{
 		{
-			"event_time":      time.Now().Format("2006-01-01 15:04:05"),
+			"event_time":      time.Now().Format("2006-01-01 15:06:05"),
 			"attack_source":   "220.181.57.191",
-			"target":          "localhost",
 			"attack_type":     "sql",
 			"intercept_state": "block",
+			"url":             "http://www.example.com/article.php?id=1",
+		},
+		{
+			"event_time":      time.Now().Format("2006-01-01 15:03:01"),
+			"attack_source":   "220.23.38.115",
+			"attack_type":     "command",
+			"intercept_state": "log",
+			"url":             "http://www.example.com/login.php?id=2",
 		},
 	}
 	DefaultGeneralConfig = map[string]interface{}{
@@ -484,6 +492,7 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 		}
 		alarmData := new(bytes.Buffer)
 		panelUrl, port := getPanelServerUrl()
+		handleAlarms(alarms)
 		err = t.Execute(alarmData, &emailTemplateParam{
 			Total:        total - int64(len(alarms)),
 			Alarms:       alarms,
@@ -499,6 +508,13 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 			msg += fmt.Sprintf("%s: %s\r\n", k, v)
 		}
 		msg += "\r\n" + alarmData.String()
+		if !strings.Contains(emailConf.ServerAddr, ":") {
+			if emailConf.TlsEnable {
+				emailConf.ServerAddr += ":465"
+			} else {
+				emailConf.ServerAddr += ":25"
+			}
+		}
 		host, _, err := net.SplitHostPort(emailConf.ServerAddr)
 		if err != nil {
 			return handleError("failed to get email serve host: " + err.Error())
@@ -507,7 +523,6 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 		if emailConf.Password == "" {
 			auth = nil
 		}
-
 		if emailConf.TlsEnable {
 			return sendEmailWithTls(emailConf, auth, msg)
 		} else {
@@ -517,6 +532,41 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 		beego.Error(
 			"failed to send email alarm: the email receiving address and email server address can not be empty", emailConf)
 		return errors.New("the email receiving address and email server address can not be empty")
+	}
+}
+
+func handleAlarms(alarms []map[string]interface{}) {
+	for index, alarm := range alarms {
+		alarm["index"] = index + 1
+		if alarm["intercept_state"] != nil {
+			if intercept, ok := alarm["intercept_state"].(string); ok {
+				if intercept, ok := logs.AttackInterceptMap[intercept]; ok {
+					alarm["intercept_state"] = intercept
+				}
+			}
+		}
+
+		isFound := false
+		if alarm["attack_type"] != nil {
+			if attackType, ok := alarm["attack_type"].(string); ok {
+				if attackType, ok := logs.AttackTypeMap[attackType]; ok {
+					alarm["attack_type"] = attackType
+					isFound = true
+				}
+			}
+		}
+		if !isFound {
+			alarm["attack_type"] = "其他类型"
+		}
+
+		if alarm["url"] != nil {
+			if attackUrl, ok := alarm["url"].(string); ok && attackUrl != "" {
+				attackUrl, err := url.Parse(attackUrl)
+				if err == nil {
+					alarm["domain"] = attackUrl.Host
+				}
+			}
+		}
 	}
 }
 
