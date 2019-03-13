@@ -143,12 +143,6 @@ func FindOne(collection string, query interface{}, result interface{}) error {
 	return newSession.DB(DbName).C(collection).Find(query).One(result)
 }
 
-func FindOneBySort(collection string, query interface{}, result interface{}, sortFields ...string) error {
-	newSession := NewSession()
-	defer newSession.Close()
-	return newSession.DB(DbName).C(collection).Find(query).Sort(sortFields...).One(result)
-}
-
 func FindAllBySort(collection string, query interface{}, skip int, limit int, result interface{},
 	sortFields ...string) (count int, err error) {
 	newSession := NewSession()
@@ -176,12 +170,6 @@ func RemoveAll(collection string, selector interface{}) (*mgo.ChangeInfo, error)
 	newSession := NewSession()
 	defer newSession.Close()
 	return newSession.DB(DbName).C(collection).RemoveAll(selector)
-}
-
-func Indexes(collection string) (indexes []mgo.Index, err error) {
-	newSession := NewSession()
-	defer newSession.Close()
-	return newSession.DB(DbName).C(collection).Indexes()
 }
 
 func GenerateObjectId() string {

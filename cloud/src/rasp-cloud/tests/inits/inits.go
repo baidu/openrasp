@@ -20,6 +20,8 @@ type Response struct {
 }
 
 func init() {
+	tools.GetCurrentPath()
+	tools.PathExists("/xxx/xxx/xxxxxxx")
 	apppath, _ := filepath.Abs(filepath.Dir("./"))
 	monkey.Patch(tools.GetCurrentPath, func() (string, error) {
 		return apppath, nil

@@ -56,33 +56,27 @@ var (
 )
 
 func init() {
-	count, err := mongo.Count(pluginCollectionName)
-	if err != nil {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get plugin collection count", err)
+	index := &mgo.Index{
+		Key:        []string{"app_id"},
+		Unique:     false,
+		Background: true,
+		Name:       "app_id",
 	}
-	if count <= 0 {
-		index := &mgo.Index{
-			Key:        []string{"app_id"},
-			Unique:     false,
-			Background: true,
-			Name:       "app_id",
-		}
-		err := mongo.CreateIndex(pluginCollectionName, index)
-		if err != nil {
-			tools.Panic(tools.ErrCodeMongoInitFailed,
-				"failed to create app_id index for plugin collection", err)
-		}
-		index = &mgo.Index{
-			Key:        []string{"upload_time"},
-			Unique:     false,
-			Background: true,
-			Name:       "upload_time",
-		}
-		err = mongo.CreateIndex(pluginCollectionName, index)
-		if err != nil {
-			tools.Panic(tools.ErrCodeMongoInitFailed,
-				"failed to create upload_time index for plugin collection", err)
-		}
+	err := mongo.CreateIndex(pluginCollectionName, index)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed,
+			"failed to create app_id index for plugin collection", err)
+	}
+	index = &mgo.Index{
+		Key:        []string{"upload_time"},
+		Unique:     false,
+		Background: true,
+		Name:       "upload_time",
+	}
+	err = mongo.CreateIndex(pluginCollectionName, index)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed,
+			"failed to create upload_time index for plugin collection", err)
 	}
 }
 

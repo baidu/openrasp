@@ -41,6 +41,9 @@ func (o *ReportController) Search() {
 	if !ok {
 		o.ServeError(http.StatusBadRequest, "start_time must be number")
 	}
+	if startTime <= 0 {
+		o.ServeError(http.StatusBadRequest, "start_time must be greater than 0")
+	}
 	endTimeParam := query["end_time"]
 	if endTimeParam == nil {
 		o.ServeError(http.StatusBadRequest, "end_time cannot be empty")
@@ -48,6 +51,9 @@ func (o *ReportController) Search() {
 	endTime, ok := endTimeParam.(float64)
 	if !ok {
 		o.ServeError(http.StatusBadRequest, "end_time must be number")
+	}
+	if endTime <= 0 {
+		o.ServeError(http.StatusBadRequest, "end_time must be greater than 0")
 	}
 	intervalParam := query["interval"]
 	if intervalParam == nil {
@@ -75,16 +81,16 @@ func (o *ReportController) Search() {
 		o.ServeError(http.StatusBadRequest, "the interval must be in"+fmt.Sprintf("%v", intervals))
 	}
 	appIdParam := query["app_id"]
-	if appIdParam == nil {
-		appIdParam = "*"
-	}
-	appId, ok := appIdParam.(string)
-	if !ok {
-		o.ServeError(http.StatusBadRequest, "app_id must be string")
-	}
-	_, err := models.GetAppById(appId)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get app", err)
+	appId := "*"
+	if appIdParam != nil {
+		appId, ok = appIdParam.(string)
+		if !ok {
+			o.ServeError(http.StatusBadRequest, "app_id must be string")
+		}
+		_, err := models.GetAppById(appId)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "failed to get app", err)
+		}
 	}
 	err, result := models.GetHistoryRequestSum(int64(startTime), int64(endTime), interval, timeZone, appId)
 	if err != nil {

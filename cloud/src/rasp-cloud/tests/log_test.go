@@ -29,7 +29,7 @@ func TestPostLog(t *testing.T) {
             "attack_type" : "sql",
             "body" : "------WebKitFormBoundarywDlHUATC0PUJIDfu\r\nContent-Disposition: form-data; name=\"id\"\r\n\r\n1 or 88=88 or 77=77 or 99=99 \r\n------WebKitFormBoundarywDlHUATC0PUJIDfu--\r\n",
             "client_ip" : "",
-            "event_time" : "2018-11-20T20:47:03+0800",
+            "event_time" : "1551882976000",
             "event_type" : "attack",
             "intercept_state" : "block",
             "path" : "/vulns/013-multipart-mysql.jsp",
@@ -84,7 +84,7 @@ func TestPostLog(t *testing.T) {
           "server_version" : "8.0.50.0",
           "event_type" : "security_policy",
           "message" : "Database security baseline - Connecting to a mysql instance with high privileged account root, connectionString is jdbc:mysql://127.0.0.1:3306/jeecmsv8",
-          "event_time" : "2018-11-21T23:26:04+0800",
+          "event_time" : "1551882976000",
           "type" : "policy-alarm",
           "server_hostname" : "gzns-scloud-api-db02.gzns.baidu.com",
           "policy_id" : "3006",
@@ -110,7 +110,7 @@ func TestPostLog(t *testing.T) {
           "stack_trace" : "java.net.URL.<init>(URL.java:600)\njava.net.URL.<init>(URL.java:490)\njava.net.URL.<init>(URL.java:439)\ncom.baidu.openrasp.messaging.LogConfig.syslogManager(LogConfig.java:52)\ncom.baidu.openrasp.cloud.KeepAlive.handleResponse(KeepAlive.java:112)\ncom.baidu.openrasp.cloud.KeepAlive.access$000(KeepAlive.java:36)\ncom.baidu.openrasp.cloud.KeepAlive$KeepAliveThread.run(KeepAlive.java:52)\njava.lang.Thread.run(Thread.java:748)\n",
           "pid" : 7672,
           "message" : "syslog url: tcp://172.24.180.174:8848 parsed error",
-          "event_time" : "2019-03-09T08:59:40+0800",
+          "event_time" : "1551882976000",
           "host" : "nmg01-scloud-siem-admin.nmg01.baidu.com",
           "error_code" : 20004,
           "path" : "/home/work/openrasp-server-agent/openrasp-logs/error-alarm/error.log",
@@ -173,8 +173,8 @@ func getNormalSearchData() map[string]interface{} {
 		"perpage": 1,
 		"data": map[string]interface{}{
 			"app_id":     start.TestApp.Id,
-			"start_time": time.Now().Second() * 1000000,
-			"end_time":   time.Now().Second() * 1000000,
+			"start_time": 1,
+			"end_time":   time.Now().Second() * 10000000000000,
 		},
 	}
 }
@@ -276,7 +276,7 @@ func getAggrParam() map[string]interface{} {
 		"end_time":   1551882976000,
 		"interval":   "day",
 		"size":       10,
-		"start_time": 1549463776000,
+		"start_time": 1549463775000,
 		"time_zone":  "+08:00",
 	}
 }
@@ -310,6 +310,13 @@ func TestAttackLogAggr(t *testing.T) {
 			data := getAggrParam()
 			data["app_id"] = ""
 			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/type", inits.GetJson(data))
+			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when app_id is empty for vuln search", func() {
+			data := getNormalSearchData()
+			data["app_id"] = nil
+			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/vuln", inits.GetJson(data))
 			So(r.Status, ShouldEqual, 0)
 		})
 
@@ -360,7 +367,7 @@ func TestAttackLogAggr(t *testing.T) {
 
 func TestAddLogWithFile(t *testing.T) {
 	Convey("Subject: Test Add Log With File\n", t, func() {
-		Convey("when log is valid", func() {
+		Convey("when es addr is empty", func() {
 			err := logs.AddLogWithFile("attack-alarm", map[string]interface{}{})
 			So(err, ShouldEqual, nil)
 		})

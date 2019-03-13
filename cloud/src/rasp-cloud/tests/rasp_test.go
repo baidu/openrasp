@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"github.com/astaxie/beego/context"
 	"rasp-cloud/tests/start"
+	"rasp-cloud/models"
+	"fmt"
 )
 
 func TestRaspRegister(t *testing.T) {
@@ -155,10 +157,77 @@ func TestSearchRasp(t *testing.T) {
 
 func TestDeleteRasp(t *testing.T) {
 	Convey("Subject: Test Rasp Delete Api\n", t, func() {
-		Convey("when the length of environ value is greater than 4096", func() {
-			rasp := *start.TestRasp
-			rasp.Environ = map[string]string{"123": inits.GetLongString(4097)}
-			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(rasp))
+		Convey("delete the rasp with id", func() {
+			rasp := &models.Rasp{
+				Id:                "123456789987654321654987654312",
+				AppId:             start.TestApp.Id,
+				Language:          "java",
+				Version:           "1.0",
+				HostName:          "ubuntu",
+				RegisterIp:        "10.23.25.36",
+				LanguageVersion:   "1.8",
+				ServerType:        "tomcat",
+				RaspHome:          "/home/work/tomcat8",
+				PluginVersion:     "2019-03-10-10000",
+				HeartbeatInterval: 180,
+				LastHeartbeatTime: 1551781949000,
+				RegisterTime:      1551781949000,
+				Environ:           map[string]string{},
+			}
+			models.UpsertRaspById(rasp.Id, rasp)
+			r := inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
+				"id":     rasp.Id,
+				"app_id": rasp.AppId,
+			}))
+			fmt.Println(r.Desc)
+			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("delete the rasp with register_ip", func() {
+			rasp := &models.Rasp{
+				Id:                "123456789987654321654987654312",
+				AppId:             start.TestApp.Id,
+				Language:          "java",
+				Version:           "1.0",
+				HostName:          "ubuntu",
+				RegisterIp:        "123.23.23.23",
+				LanguageVersion:   "1.8",
+				ServerType:        "tomcat",
+				RaspHome:          "/home/work/tomcat8",
+				PluginVersion:     "2019-03-10-10000",
+				HeartbeatInterval: 180,
+				LastHeartbeatTime: 1551781949000,
+				RegisterTime:      1551781949000,
+				Environ:           map[string]string{},
+			}
+			models.UpsertRaspById(rasp.Id, rasp)
+			r := inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
+				"register_ip": rasp.RegisterIp,
+				"app_id":      rasp.AppId,
+			}))
+			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when the rasp_id doesn't exist", func() {
+			r := inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
+				"id":     "123456789",
+				"app_id": start.TestApp.Id,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the app_id is empty", func() {
+			r := inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
+				"register_ip": "123465789",
+				"app_id":      "",
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the search param is empty", func() {
+			r := inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+			}))
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 	})

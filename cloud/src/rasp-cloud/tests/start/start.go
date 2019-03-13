@@ -18,7 +18,7 @@ var TestApp = &models.App{
 	Language:    "java",
 	Description: "test app",
 }
-
+var online = false
 var TestRasp = &models.Rasp{
 	Id:                "1234567890abc121321354545135135",
 	Language:          "java",
@@ -33,6 +33,7 @@ var TestRasp = &models.Rasp{
 	LastHeartbeatTime: 1551781949000,
 	RegisterTime:      1551781949000,
 	Environ:           map[string]string{},
+	Online:            &online,
 }
 
 func init() {

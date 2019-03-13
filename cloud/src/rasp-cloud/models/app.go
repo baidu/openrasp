@@ -166,7 +166,9 @@ func init() {
 		}
 		go startAlarmTicker(time.Second * time.Duration(conf.AppConfig.AlarmCheckInterval))
 	}
-	initEsIndex()
+	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
+		initEsIndex()
+	}
 }
 
 func initEsIndex() error {
@@ -213,7 +215,6 @@ func startAlarmTicker(interval time.Duration) {
 		select {
 		case <-ticker.C:
 			HandleAttackAlarm()
-			handleRaspExpiredAlarm()
 		}
 	}
 }
@@ -243,15 +244,6 @@ func HandleAttackAlarm() {
 		}
 	}
 	lastAlarmTime = now + 1
-}
-
-func handleRaspExpiredAlarm() {
-	//defer func() {
-	//	if r := recover(); r != nil {
-	//		beego.Error("failed to handle alarm: ", r)
-	//	}
-	//}()
-	//Rasp
 }
 
 func AddApp(app *App) (result *App, err error) {
@@ -526,8 +518,6 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 			"failed to send email alarm: the email receiving address and email server address can not be empty", emailConf)
 		return errors.New("the email receiving address and email server address can not be empty")
 	}
-	beego.Debug("succeed in pushing email alarm for app: " + app.Name)
-	return nil
 }
 
 func getPanelServerUrl() (string, int) {
@@ -630,14 +620,11 @@ func PushHttpAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 			request.SetTimeout(10*time.Second, 10*time.Second)
 			response, err := request.Response()
 			if err != nil {
-				beego.Error("failed to push http alarms to: " + addr + ", with error: " + err.Error())
-				return err
+				return handleError("failed to push http alarms to: " + addr + ", with error: " + err.Error())
 			}
 			if response.StatusCode > 299 || response.StatusCode < 200 {
-				err := errors.New("failed to push http alarms to: " + addr + ", with status code: " +
+				return handleError("failed to push http alarms to: " + addr + ", with status code: " +
 					strconv.Itoa(response.StatusCode))
-				beego.Error(err.Error())
-				return err
 			}
 		}
 	} else {

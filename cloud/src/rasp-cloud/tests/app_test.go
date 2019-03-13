@@ -30,12 +30,12 @@ func TestHandleApp(t *testing.T) {
 
 	Convey("Subject: Test App Post Api\n", t, func() {
 
-		//Convey("when app data valid", func() {
-		//	app := getValidApp()
-		//	r := inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
-		//	defer models.RemoveAppById(r.Data["id"].(string))
-		//	So(r.Status, ShouldEqual, 0)
-		//})
+		Convey("when app data valid", func() {
+			app := getValidApp()
+			r := inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
+			defer models.RemoveAppById(r.Data.(map[string]interface{})["id"].(string))
+			So(r.Status, ShouldEqual, 0)
+		})
 
 		Convey("app name can not be empty", func() {
 			app := getValidApp()
@@ -103,6 +103,13 @@ func TestHandleApp(t *testing.T) {
 		Convey("the app id must be exist", func() {
 			r := inits.GetResponse("POST", "/v1/api/app/get", `{"id":"not exist app id"}`)
 			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the app_id doesn't exist", func() {
+			r := inits.GetResponse("POST", "/v1/api/app/get", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+			}))
+			So(r.Status, ShouldEqual, 0)
 		})
 
 		Convey("get all app with paging", func() {
