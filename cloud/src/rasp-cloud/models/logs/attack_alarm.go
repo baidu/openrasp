@@ -41,7 +41,7 @@ var (
 	geoIpDbPath string
 	geoIpDb     *geoip2.Reader
 
-	AttackTypeMap = map[string]string{
+	AttackTypeMap = map[interface{}]string{
 		"sql":                        "SQL 注入",
 		"sql_exception":              "SQL 语句异常",
 		"command":                    "命令执行",
@@ -65,7 +65,7 @@ var (
 		"webshell_ld_preload":        "WebShell - LD_PRELOAD 后门",
 	}
 
-	AttackInterceptMap = map[string]string{
+	AttackInterceptMap = map[interface{}]string{
 		"block": "拦截请求",
 		"log":   "记录日志",
 	}
