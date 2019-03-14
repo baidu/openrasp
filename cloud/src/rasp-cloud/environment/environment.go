@@ -45,35 +45,10 @@ func init() {
 		os.Exit(0)
 	}
 	if *StartFlag.StartType == conf.StartTypeReset {
-		fmt.Print("Enter new admin password: ")
-		pwd1, err := terminal.ReadPassword(int(syscall.Stdin))
-		fmt.Println()
-		if err != nil {
-			fmt.Println("failed to read password from terminal: " + err.Error())
-			os.Exit(tools.ErrCodeResetUserFailed)
-		}
-		fmt.Print("Retype new admin password: ")
-		pwd2, err := terminal.ReadPassword(int(syscall.Stdin))
-		fmt.Println()
-		if err != nil {
-			fmt.Println("failed to read password from terminal: " + err.Error())
-			os.Exit(tools.ErrCodeResetUserFailed)
-		}
-		if bytes.Compare(pwd1, pwd2) != 0 {
-			fmt.Println("Sorry, passwords do not match")
-			os.Exit(tools.ErrCodeResetUserFailed)
-		} else {
-			pwd := string(pwd1)
-			StartFlag.Password = &pwd
-		}
+		HandleReset(StartFlag)
 	}
 	if *StartFlag.Daemon {
-		err := fork()
-		if err != nil {
-			tools.Panic(tools.ErrCodeInitChildProcessFailed, "failed to launch child process, error", err)
-		}
-		log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
-		os.Exit(0)
+		HandleDaemon()
 	}
 	initLogger()
 	initEnvConf()
@@ -83,6 +58,39 @@ func init() {
 	}
 	conf.InitConfig(StartFlag)
 	beego.Info("===== start type: " + *StartFlag.StartType + " =====")
+}
+
+func HandleReset(startFlag *conf.Flag) {
+	fmt.Print("Enter new admin password: ")
+	pwd1, err := terminal.ReadPassword(int(syscall.Stdin))
+	fmt.Println()
+	if err != nil {
+		fmt.Println("failed to read password from terminal: " + err.Error())
+		os.Exit(tools.ErrCodeResetUserFailed)
+	}
+	fmt.Print("Retype new admin password: ")
+	pwd2, err := terminal.ReadPassword(int(syscall.Stdin))
+	fmt.Println()
+	if err != nil {
+		fmt.Println("failed to read password from terminal: " + err.Error())
+		os.Exit(tools.ErrCodeResetUserFailed)
+	}
+	if bytes.Compare(pwd1, pwd2) != 0 {
+		fmt.Println("Sorry, passwords do not match")
+		os.Exit(tools.ErrCodeResetUserFailed)
+	} else {
+		pwd := string(pwd1)
+		startFlag.Password = &pwd
+	}
+}
+
+func HandleDaemon() {
+	err := fork()
+	if err != nil {
+		tools.Panic(tools.ErrCodeInitChildProcessFailed, "failed to launch child process, error", err)
+	}
+	log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
+	os.Exit(0)
 }
 
 func fork() (err error) {

@@ -49,7 +49,7 @@
             </template>
             <template slot="server_hostname" slot-scope="scope">
               {{ scope.item.server_hostname }}<br/>
-              <span v-for="nic in scope.item.server_nic" :key="nic.name">{{ nic.name }}: {{ nic.ip }}</span><br/>
+              <span v-for="nic in scope.item.server_nic" :key="nic.name">{{ nic.name }}: {{ nic.ip }}<br/></span>
             </template>
           </b-table>
 

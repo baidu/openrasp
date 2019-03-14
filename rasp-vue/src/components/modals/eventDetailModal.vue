@@ -87,19 +87,45 @@
               </div>
               <p v-if="data.client_ip">
                 {{ data.client_ip }}
-              </p>              
-              <div class="h6">
-                请求 Referer
+              </p>            
+
+              <div v-if="data.header">
+                <div class="h6" v-if="data.header.referer">
+                  请求 Referer
+                </div>
+                <p style="white-space: normal; word-break: break-all; " v-if="data.header.referer">
+                  {{ data.header.referer }}
+                </p>
+
+                <div class="h6" v-if="data.header.user_agent">
+                  请求 UA
+                </div>
+                <p style="word-break: break-all; " v-if="data.header.user_agent">
+                  {{ data.header.user_agent }}
+                </p>
+
+                <div class="h6">
+                  完整 Header 信息
+                </div>
+                <pre>{{mergeHeaders(data.header)}}</pre>
               </div>
-              <p style="white-space: normal; word-break: break-all; ">
-                {{ data.referer ? data.referer : '-' }}
-              </p>
-              <div class="h6">
-                请求 UA
-              </div>
-              <p style="word-break: break-all; ">
-                {{ data.user_agent ? data.user_agent : '-' }}
-              </p>
+
+              <!-- 兼容没有 header 字段的老版本 -->
+              <div v-else>
+                <div class="h6">
+                  请求 Referer
+                </div>
+                <p style="white-space: normal; word-break: break-all; ">
+                  {{ data.referer ? data.referer : '-' }}
+                </p>
+                <div class="h6">
+                  请求 UA
+                </div>
+                <p style="word-break: break-all; ">
+                  {{ data.user_agent ? data.user_agent : '-' }}
+                </p>
+              </div>              
+
               <div v-if="data.body" class="h6">
                 请求 BODY
               </div>
@@ -171,6 +197,14 @@ export default {
       this.mergeStackAndSource(data)
 
       $('#showEventDetailModal').modal()
+    },
+    mergeHeaders(data) {
+      var result = ''
+      for (let key in data) {
+        result = result + "\n" + key + ": " + data[key]
+      }
+
+      return result.trim()
     },
     mergeStackAndSource(data) {
       if (! data.source_code || ! data.source_code.length) {

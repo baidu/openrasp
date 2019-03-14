@@ -35,14 +35,9 @@ func (o *OperationController) Search() {
 		Perpage   int               `json:"perpage"`
 	}
 	o.UnmarshalJson(&param)
+	o.ValidPage(param.Page, param.Perpage)
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
-	}
-	if param.Page <= 0 {
-		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
-	}
-	if param.Perpage <= 0 {
-		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
 	}
 	if param.StartTime <= 0 {
 		o.ServeError(http.StatusBadRequest, "start_time must be greater than 0")

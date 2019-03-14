@@ -22,7 +22,6 @@ import (
 	"strconv"
 	"github.com/astaxie/beego"
 	"rasp-cloud/tools"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"rasp-cloud/conf"
@@ -64,12 +63,12 @@ func startTTL(duration time.Duration) {
 	for {
 		select {
 		case <-ticker.C:
-			deleteExpiredData()
+			DeleteExpiredData()
 		}
 	}
 }
 
-func deleteExpiredData() {
+func DeleteExpiredData() {
 	defer func() {
 		if r := recover(); r != nil {
 			beego.Error(r)
@@ -85,10 +84,7 @@ func deleteExpiredData() {
 		r, err := ElasticClient.DeleteByQuery(index).QueryString("@timestamp:<" + expiredTime).Do(ctx)
 		if err != nil {
 			if r != nil && r.Failures != nil {
-				errMsg, err := json.Marshal(r.Failures)
-				if err != nil {
-					beego.Error(string(errMsg))
-				}
+				beego.Error(r.Failures)
 			}
 			beego.Error("failed to delete expired data for index " + index + ": " + err.Error())
 		} else {

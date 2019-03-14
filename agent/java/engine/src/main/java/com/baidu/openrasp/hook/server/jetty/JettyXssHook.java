@@ -29,6 +29,7 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 
 /**
@@ -41,14 +42,17 @@ public class JettyXssHook extends ServerXssHook {
 
     @Override
     public boolean isClassMatched(String className) {
-        return "org/eclipse/jetty/server/AbstractHttpConnection".equals(className);
+        return "org/eclipse/jetty/server/AbstractHttpConnection".equals(className) ||
+                "org/eclipse/jetty/server/HttpChannel".equals(className);
     }
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
 
-        String src = getInvokeStaticSrc(JettyXssHook.class, "getJettyOutputBuffer", "_generator", Object.class);
-        insertBefore(ctClass, "completeResponse", "()V", src);
+        String src1 = getInvokeStaticSrc(JettyXssHook.class, "getJettyOutputBuffer", "_generator", Object.class);
+        insertBefore(ctClass, "completeResponse", "()V", src1);
+        String src2 = getInvokeStaticSrc(JettyXssHook.class, "getJetty9OutputBuffer", "$1", ByteBuffer.class);
+        insertBefore(ctClass, "write", null, src2);
 
     }
 
@@ -68,6 +72,23 @@ public class JettyXssHook extends ServerXssHook {
         }
         if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
             HookHandler.doCheck(CheckParameter.Type.XSS, params);
+        }
+    }
+
+    public static void getJetty9OutputBuffer(ByteBuffer buffer) {
+        if (buffer != null) {
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            try {
+                String content = new String(buffer.array());
+                params.put("html_body", content);
+            } catch (Exception e) {
+                String message = ApplicationModel.getServerName() + " xss detectde failed";
+                int errorCode = ErrorType.HOOK_ERROR.getCode();
+                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            }
+            if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
+                HookHandler.doCheck(CheckParameter.Type.XSS, params);
+            }
         }
     }
 }

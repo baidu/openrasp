@@ -16,6 +16,8 @@
 
 package com.baidu.openrasp.cloud;
 
+import com.baidu.openrasp.cloud.model.AppenderMappedLogger;
+import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.detector.ServerDetector;
 import org.apache.log4j.Logger;
 
@@ -28,6 +30,12 @@ public class CloudManager {
     public static final Logger LOGGER = Logger.getLogger(CloudManager.class.getPackage().getName() + ".log");
 
     public static void init() {
+        //注册成功之后初始化创建http appender
+        DynamicConfigAppender.createRootHttpAppender();
+        DynamicConfigAppender.createHttpAppender(AppenderMappedLogger.HTTP_ALARM.getLogger(),
+                AppenderMappedLogger.HTTP_ALARM.getAppender());
+        DynamicConfigAppender.createHttpAppender(AppenderMappedLogger.HTTP_POLICY_ALARM.getLogger(),
+                AppenderMappedLogger.HTTP_POLICY_ALARM.getAppender());
         ServerDetector.checkServerPolicy();
         new KeepAlive();
         new StatisticsReport();

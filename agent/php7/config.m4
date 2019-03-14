@@ -25,6 +25,9 @@ PHP_ARG_ENABLE(fswatch, Enable fswatch,
 PHP_ARG_ENABLE(line-coverage, Enable line coverage,
 [  --enable-line-coverage      Enable line coverage], no, no)
 
+PHP_ARG_ENABLE(cli-support, Enable cli support,
+[  --enable-cli-support      Enable cli support], no, no)
+
 if test "$PHP_OPENRASP" != "no"; then
   PHP_REQUIRE_CXX()
   if test "$PHP_JSON" = "no" && test "$ext_shared" = "no"; then
@@ -350,6 +353,10 @@ if test "$PHP_OPENRASP" != "no"; then
       libfswatch/c/cevent.cpp"
     PHP_ADD_INCLUDE("PHP_EXT_BUILDDIR([openrasp])/libfswatch")
     AC_DEFINE([HAVE_FSWATCH], [1], [Enable fswatch support])
+  fi
+
+  if test "$PHP_CLI_SUPPORT" != "no"; then
+    AC_DEFINE([HAVE_CLI_SUPPORT], [1], [Enable cli support])
   fi
 
   YAML_CPP_SOURCE="third_party/yaml-cpp/src/binary.cpp \

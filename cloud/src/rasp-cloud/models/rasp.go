@@ -142,10 +142,6 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 	return
 }
 
-func FindAllRasp(selector *Rasp) (count int, result []*Rasp, err error) {
-	return FindRasp(selector, 0, 0)
-}
-
 func GetRaspById(id string) (rasp *Rasp, err error) {
 	err = mongo.FindId(raspCollectionName, id, &rasp)
 	if err == nil {

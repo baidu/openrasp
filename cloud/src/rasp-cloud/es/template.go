@@ -14,6 +14,8 @@
 
 package es
 
+import "rasp-cloud/conf"
+
 var attackAlarmTemplate = `
 		{
 			"template":"openrasp-attack-alarm-*",
@@ -371,8 +373,10 @@ var reportDataTemplate = `
 	`
 
 func init() {
-	CreateTemplate("report-data-template", reportDataTemplate)
-	CreateTemplate("error-alarm-template", errorAlarmTemplate)
-	CreateTemplate("attack-alarm-template", attackAlarmTemplate)
-	CreateTemplate("policy-alarm-template", policyAlarmTemplate)
+	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
+		CreateTemplate("report-data-template", reportDataTemplate)
+		CreateTemplate("error-alarm-template", errorAlarmTemplate)
+		CreateTemplate("attack-alarm-template", attackAlarmTemplate)
+		CreateTemplate("policy-alarm-template", policyAlarmTemplate)
+	}
 }

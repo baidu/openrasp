@@ -43,7 +43,10 @@ var algorithmConfig = {
         all_log: true,
 
         // 若 is_dev 开启，表示为线下环境，将开启更多消耗性能的检测算法
-        is_dev:  false
+        is_dev:  false,
+
+        // schema 版本
+        schema_version: 1
     },
 
     // SQL注入算法#1 - 匹配用户输入
@@ -207,15 +210,15 @@ var algorithmConfig = {
         name:   '算法1 - 拦截 NTFS ::$DATA 写入操作',
         action: 'block'
     },
-    // 写文件操作 - PUT 上传脚本文件
-    writeFile_PUT_script: {
-        name:   '算法2 - 拦截 PUT 方式上传 php/jsp 等脚本文件',
-        action: 'block'
-    },
+    // 写文件操作 - PUT 上传脚本文件 - 无法关联实际上传的文件和写文件操作，暂时注释掉
+    // writeFile_PUT_script: {
+    //     name:   '算法2 - 拦截 PUT 方式上传 php/jsp 等脚本文件',
+    //     action: 'block'
+    // },
     // 写文件操作 - 脚本文件
     // https://rasp.baidu.com/doc/dev/official.html#case-file-write
     writeFile_script: {
-        name:      '算法1 - 拦截所有 php/jsp 等脚本文件的写入操作',
+        name:      '算法2 - 拦截所有 php/jsp 等脚本文件的写入操作',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#case-file-write',
         action:    'ignore'
     },
@@ -1459,20 +1462,20 @@ plugin.register('writeFile', function (params, context) {
         }
     }
 
-    // PUT 上传脚本文件
-    if (context.method == 'put' &&
-        algorithmConfig.writeFile_PUT_script.action != 'ignore')
-    {
-        if (scriptFileRegex.test(params.realpath))
-        {
-            return {
-                action:     algorithmConfig.writeFile_PUT_script.action,
-                message:    _("File upload - Using HTTP PUT method to upload a webshell", [params.realpath]),
-                confidence: 95,
-                algorithm:  'writeFile_PUT_script'
-            }
-        }
-    }
+    // PUT 上传脚本文件 - 有个关联问题需要解决，暂时注释掉
+    // if (context.method == 'put' &&
+    //     algorithmConfig.writeFile_PUT_script.action != 'ignore')
+    // {
+    //     if (scriptFileRegex.test(params.realpath))
+    //     {
+    //         return {
+    //             action:     algorithmConfig.writeFile_PUT_script.action,
+    //             message:    _("File upload - Using HTTP PUT method to upload a webshell", [params.realpath]),
+    //             confidence: 95,
+    //             algorithm:  'writeFile_PUT_script'
+    //         }
+    //     }
+    // }
 
     // 关于这个算法，请参考这个插件定制文档
     // https://rasp.baidu.com/doc/dev/official.html#case-file-write

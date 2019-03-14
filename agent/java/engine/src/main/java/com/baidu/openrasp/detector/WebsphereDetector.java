@@ -44,7 +44,7 @@ public class WebsphereDetector extends ServerDetector {
     }
 
     @Override
-    public void handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
+    public boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
         String version = "";
         try {
             String wasInstallRoot = System.getProperty(WAS_INSTALL_ROOT);
@@ -63,9 +63,10 @@ public class WebsphereDetector extends ServerDetector {
             }
         } catch (Throwable t) {
             logDetectError("handle webspere startup failed", t);
-        } finally {
-            ApplicationModel.initServerInfo("websphere", version);
         }
+        ApplicationModel.initServerInfo("websphere", version);
+        return true;
+
     }
 
     private Document getXMLDocument(String path) {

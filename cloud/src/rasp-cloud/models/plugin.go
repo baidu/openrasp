@@ -56,33 +56,27 @@ var (
 )
 
 func init() {
-	count, err := mongo.Count(pluginCollectionName)
-	if err != nil {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get plugin collection count", err)
+	index := &mgo.Index{
+		Key:        []string{"app_id"},
+		Unique:     false,
+		Background: true,
+		Name:       "app_id",
 	}
-	if count <= 0 {
-		index := &mgo.Index{
-			Key:        []string{"app_id"},
-			Unique:     false,
-			Background: true,
-			Name:       "app_id",
-		}
-		err := mongo.CreateIndex(pluginCollectionName, index)
-		if err != nil {
-			tools.Panic(tools.ErrCodeMongoInitFailed,
-				"failed to create app_id index for plugin collection", err)
-		}
-		index = &mgo.Index{
-			Key:        []string{"upload_time"},
-			Unique:     false,
-			Background: true,
-			Name:       "upload_time",
-		}
-		err = mongo.CreateIndex(pluginCollectionName, index)
-		if err != nil {
-			tools.Panic(tools.ErrCodeMongoInitFailed,
-				"failed to create upload_time index for plugin collection", err)
-		}
+	err := mongo.CreateIndex(pluginCollectionName, index)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed,
+			"failed to create app_id index for plugin collection", err)
+	}
+	index = &mgo.Index{
+		Key:        []string{"upload_time"},
+		Unique:     false,
+		Background: true,
+		Name:       "upload_time",
+	}
+	err = mongo.CreateIndex(pluginCollectionName, index)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed,
+			"failed to create upload_time index for plugin collection", err)
 	}
 }
 
@@ -163,6 +157,14 @@ func addPluginToDb(version string, name string, content []byte, appId string,
 		count = len(oldPlugins)
 		if count > 0 {
 			for _, oldPlugin := range oldPlugins {
+				app := &App{}
+				err = mongo.FindOne("app", bson.M{"selected_plugin_id": oldPlugin.Id}, app)
+				if err != nil && err != mgo.ErrNotFound {
+					return nil, err
+				}
+				if app != nil {
+					continue
+				}
 				err = mongo.RemoveId(pluginCollectionName, oldPlugin.Id)
 				if err != nil {
 					return nil, err
@@ -183,7 +185,7 @@ func generatePluginId(appId string) string {
 func GetSelectedPlugin(appId string, hasContent bool) (plugin *Plugin, err error) {
 	var app *App
 	if err = mongo.FindId(appCollectionName, appId, &app); err != nil {
-		return
+		return nil, errors.New("can not get app," + err.Error())
 	}
 	return GetPluginById(app.SelectedPluginId, hasContent)
 }
@@ -294,9 +296,4 @@ func DeletePlugin(pluginId string) error {
 func RemovePluginByAppId(appId string) error {
 	_, err := mongo.RemoveAll(pluginCollectionName, bson.M{"app_id": appId})
 	return err
-}
-
-func NewPlugin(version string, content []byte, appId string) *Plugin {
-	newMd5 := fmt.Sprintf("%x", md5.Sum(content))
-	return &Plugin{Version: version, Md5: newMd5, Content: string(content)}
 }

@@ -37,12 +37,7 @@ func (o *RaspController) Search() {
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
 	}
-	if param.Page <= 0 {
-		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
-	}
-	if param.Perpage <= 0 {
-		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
-	}
+	o.ValidPage(param.Page, param.Perpage)
 	total, rasps, err := models.FindRasp(param.Data, param.Page, param.Perpage)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get rasp", err)

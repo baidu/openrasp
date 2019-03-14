@@ -79,7 +79,11 @@ public class FileHook extends AbstractClassHook {
      * @param file 文件对象
      */
     public static void checkListFiles(File file) {
+        boolean checkSwitch = Config.getConfig().getPluginFilter();
         if (file != null) {
+            if (checkSwitch && !file.exists()) {
+                return;
+            }
             Scriptable params = null;
             try {
                 JSContext cx = JSContextFactory.enterAndInitContext();

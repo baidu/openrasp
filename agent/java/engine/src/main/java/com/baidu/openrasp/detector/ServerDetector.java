@@ -18,10 +18,8 @@ package com.baidu.openrasp.detector;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.Register;
-import com.baidu.openrasp.cloud.model.AppenderMappedLogger;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -46,16 +44,17 @@ public abstract class ServerDetector {
      * @param className   类名
      * @param classLoader 类的加载器
      */
-    public void handleServer(String className, ClassLoader classLoader, ProtectionDomain domain) {
-        handleServerInfo(classLoader, domain);
-        if (isClassMatched(className)) {
+    public boolean handleServer(String className, ClassLoader classLoader, ProtectionDomain domain) {
+        boolean isDetected = handleServerInfo(classLoader, domain);
+        if (isDetected) {
             sendRegister();
         }
+        return isDetected;
     }
 
     public abstract boolean isClassMatched(String className);
 
-    public abstract void handleServerInfo(ClassLoader classLoader, ProtectionDomain domain);
+    public abstract boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain);
 
 
     protected void sendRegister() {
@@ -68,15 +67,17 @@ public abstract class ServerDetector {
                 int errorCode = ErrorType.REGISTER_ERROR.getCode();
                 LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             }
-            //初始化创建http appender
-            DynamicConfigAppender.createRootHttpAppender();
-            DynamicConfigAppender.createHttpAppender(AppenderMappedLogger.HTTP_ALARM.getLogger(),
-                    AppenderMappedLogger.HTTP_ALARM.getAppender());
-            DynamicConfigAppender.createHttpAppender(AppenderMappedLogger.HTTP_POLICY_ALARM.getLogger(),
-                    AppenderMappedLogger.HTTP_POLICY_ALARM.getAppender());
             new Register();
         } else {
-            checkServerPolicy();
+            // 避免基线检测在 transformer 线程中造成提前加载需要 hook 的类
+            Thread policyThread = new Thread() {
+                @Override
+                public void run() {
+                    checkServerPolicy();
+                }
+            };
+            policyThread.setDaemon(true);
+            policyThread.start();
         }
     }
 

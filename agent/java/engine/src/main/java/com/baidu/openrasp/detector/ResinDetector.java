@@ -31,15 +31,15 @@ public class ResinDetector extends ServerDetector {
     }
 
     @Override
-    public void handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
+    public boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
         String serverVersion = "";
         try {
             Class versionClass = classLoader.loadClass("com.caucho.Version");
             serverVersion = (String) versionClass.getField("VERSION").get(null);
         } catch (Throwable t) {
             logDetectError("handle jetty startup failed", t);
-        } finally {
-            ApplicationModel.initServerInfo("resin", serverVersion);
         }
+        ApplicationModel.initServerInfo("resin", serverVersion);
+        return true;
     }
 }
