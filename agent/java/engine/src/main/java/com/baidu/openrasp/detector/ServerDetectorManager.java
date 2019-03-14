@@ -20,12 +20,14 @@ import com.baidu.openrasp.HookHandler;
 
 import java.security.ProtectionDomain;
 import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by tyy on 19-2-12.
  */
 public class ServerDetectorManager {
 
+    public AtomicBoolean isDetected = new AtomicBoolean(false);
     private static final ServerDetectorManager instance = new ServerDetectorManager();
     private HashSet<ServerDetector> detectors = new HashSet<ServerDetector>();
 
@@ -50,11 +52,11 @@ public class ServerDetectorManager {
      * @param className   类名
      * @param classLoader 该类的加载器
      */
-    public void detectServer(String className, ClassLoader classLoader, ProtectionDomain domain) {
+    public synchronized void detectServer(String className, ClassLoader classLoader, ProtectionDomain domain) {
         for (ServerDetector detector : detectors) {
-            if (detector.isClassMatched(className)) {
+            if (detector.isClassMatched(className) && detector.handleServer(className, classLoader, domain)) {
                 HookHandler.LOGGER.info("detect server class: " + className);
-                detector.handleServer(className, classLoader, domain);
+                isDetected.set(true);
             }
         }
     }

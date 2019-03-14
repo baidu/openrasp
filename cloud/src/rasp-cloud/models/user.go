@@ -89,7 +89,7 @@ func init() {
 		if *conf.AppConfig.Flag.Password == "" {
 			tools.Panic(tools.ErrCodeResetUserFailed, "the password can not be empty", err)
 		}
-		err := resetUser(*conf.AppConfig.Flag.Password)
+		err := ResetUser(*conf.AppConfig.Flag.Password)
 		if err != nil {
 			tools.Panic(tools.ErrCodeResetUserFailed, "failed to reset administrator", err)
 		}
@@ -98,7 +98,7 @@ func init() {
 	}
 }
 
-func resetUser(newPwd string) error {
+func ResetUser(newPwd string) error {
 	err := validPassword(newPwd)
 	if err != nil {
 		return errors.New("invalid password: " + err.Error())
@@ -146,14 +146,14 @@ func GetLoginUserName() (userName string, err error) {
 	return user.Name, nil
 }
 
-func GetHashedLoginPassword() (pwd string, err error) {
-	var user *User
-	err = mongo.FindId(userCollectionName, userId, &user)
-	if err != nil {
-		return
-	}
-	return user.Password, nil
-}
+//func GetHashedLoginPassword() (pwd string, err error) {
+//	var user *User
+//	err = mongo.FindId(userCollectionName, userId, &user)
+//	if err != nil {
+//		return
+//	}
+//	return user.Password, nil
+//}
 
 func VerifyUser(userName string, pwd string) error {
 	var user *User

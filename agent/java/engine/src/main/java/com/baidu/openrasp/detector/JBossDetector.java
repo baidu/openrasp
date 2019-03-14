@@ -36,7 +36,7 @@ public class JBossDetector extends ServerDetector {
     }
 
     @Override
-    public void handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
+    public boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
         String serverVersion = "";
         try {
             String path = domain.getCodeSource().getLocation().getFile();
@@ -50,8 +50,8 @@ public class JBossDetector extends ServerDetector {
             serverVersion = jbossBootPackage.getSpecificationVersion();
         } catch (Throwable t) {
             logDetectError("handle jboss startup failed", t);
-        } finally {
-            ApplicationModel.initServerInfo("jboss", serverVersion);
         }
+        ApplicationModel.initServerInfo("jboss", serverVersion);
+        return true;
     }
 }

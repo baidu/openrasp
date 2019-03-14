@@ -42,6 +42,7 @@ func (o *ErrorController) Search() {
 	} else {
 		param.Data.AppId = "*"
 	}
+	o.ValidPage(param.Page, param.Perpage)
 	if param.Data.StartTime <= 0 {
 		o.ServeError(http.StatusBadRequest, "start_time must be greater than 0")
 	}
@@ -50,12 +51,6 @@ func (o *ErrorController) Search() {
 	}
 	if param.Data.StartTime > param.Data.EndTime {
 		o.ServeError(http.StatusBadRequest, "start_time cannot be greater than end_time")
-	}
-	if param.Page <= 0 {
-		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
-	}
-	if param.Perpage <= 0 {
-		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
 	}
 	content, err := json.Marshal(param.Data)
 	if err != nil {

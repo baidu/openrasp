@@ -52,10 +52,7 @@ func (o *HeartbeatController) Post() {
 	configTime := heartbeat.ConfigTime
 	appId := o.Ctx.Input.Header("X-OpenRASP-AppID")
 	app, err := models.GetAppById(appId)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "cannot get the app", err)
-	}
-	if app == nil {
+	if err != nil || app == nil {
 		o.ServeError(http.StatusBadRequest, "cannot get the app", err)
 	}
 

@@ -22,6 +22,7 @@ import (
 	"rasp-cloud/controllers/api/fore_logs"
 	"rasp-cloud/tools"
 	"rasp-cloud/conf"
+	"rasp-cloud/controllers"
 )
 
 func InitRouter() {
@@ -115,7 +116,9 @@ func InitRouter() {
 		),
 	)
 	userNS := beego.NewNamespace("/user", beego.NSInclude(&api.UserController{}))
+	pingNS := beego.NewNamespace("/ping", beego.NSInclude(&controllers.PingController{}))
 	ns := beego.NewNamespace("/v1")
+	ns.Namespace(pingNS)
 	startType := *conf.AppConfig.Flag.StartType
 	if startType == conf.StartTypeForeground {
 		ns.Namespace(foregroudNS, userNS)

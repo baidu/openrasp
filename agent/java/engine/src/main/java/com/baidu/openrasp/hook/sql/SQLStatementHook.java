@@ -17,6 +17,8 @@
 package com.baidu.openrasp.hook.sql;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
@@ -187,6 +189,13 @@ public class SQLStatementHook extends AbstractSqlHook {
      * @param e      sql执行抛出的异常
      */
     public static void checkSQLErrorCode(String server, SQLException e, Object[] object) {
+        //检测获取errorcode 获取异常的时候，打日志
+        if (e.getErrorCode() == 0) {
+            String message = "Get error code exception,check mysql version and database driver compatibility issues.";
+            int errorCode = ErrorType.HOOK_ERROR.getCode();
+            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
+            return;
+        }
         JSContext cx = JSContextFactory.enterAndInitContext();
         Scriptable params = cx.newObject(cx.getScope());
         params.put("server", params, server);

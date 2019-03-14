@@ -57,50 +57,54 @@ var (
 func InitConfig(startFlag *Flag) {
 	AppConfig.Flag = startFlag
 	AppConfig.EsAddr = beego.AppConfig.String("EsAddr")
-	if AppConfig.EsAddr == "" {
-		failLoadConfig("the 'EsAddr' config item in app.conf can not be empty")
-	}
 	AppConfig.EsUser = beego.AppConfig.DefaultString("EsUser", "")
 	AppConfig.EsPwd = beego.AppConfig.DefaultString("EsPwd", "")
 	AppConfig.MongoDBAddr = beego.AppConfig.DefaultString("MongoDBAddr", "")
-	if AppConfig.MongoDBAddr == "" {
-		failLoadConfig("the 'MongoDBAddr' config item in app.conf can not be empty")
-	}
 	AppConfig.MongoDBPoolLimit = beego.AppConfig.DefaultInt("MongoDBPoolLimit", 1024)
-	if AppConfig.MongoDBPoolLimit <= 0 {
-		failLoadConfig("the 'poolLimit' config must be greater than 0")
-	} else if AppConfig.MongoDBPoolLimit < 10 {
-		beego.Warning("the value of 'poolLimit' config is less than 10, it will be set to 10")
-		AppConfig.MongoDBPoolLimit = 10
-	}
 	AppConfig.MongoDBName = beego.AppConfig.DefaultString("MongoDBName", "openrasp")
 	AppConfig.MongoDBUser = beego.AppConfig.DefaultString("MongoDBUser", "")
 	AppConfig.MongoDBPwd = beego.AppConfig.DefaultString("MongoDBPwd", "")
+	AppConfig.AlarmLogMode = beego.AppConfig.DefaultString("AlarmLogMode", "file")
+	AppConfig.AlarmBufferSize = beego.AppConfig.DefaultInt("AlarmBufferSize", 300)
+	AppConfig.AlarmCheckInterval = beego.AppConfig.DefaultInt64("AlarmCheckInterval", 120)
+	AppConfig.CookieLifeTime = beego.AppConfig.DefaultInt("CookieLifeTime", 7*24)
+	ValidRaspConf(AppConfig)
+}
+
+func ValidRaspConf(config *RaspAppConfig) {
+	if config.EsAddr == "" {
+		failLoadConfig("the 'EsAddr' config item in app.conf can not be empty")
+	}
+	if config.MongoDBAddr == "" {
+		failLoadConfig("the 'MongoDBAddr' config item in app.conf can not be empty")
+	}
+	if config.MongoDBPoolLimit <= 0 {
+		failLoadConfig("the 'poolLimit' config must be greater than 0")
+	} else if config.MongoDBPoolLimit < 10 {
+		beego.Warning("the value of 'poolLimit' config is less than 10, it will be set to 10")
+		config.MongoDBPoolLimit = 10
+	}
 	if value, err := beego.AppConfig.Int("MaxPlugins"); err != nil || value <= 0 {
 		failLoadConfig("the 'AlarmBufferSize' config must be greater than 0")
 	} else if value < 10 {
 		beego.Warning("the value of 'MaxPlugins' config is less than 10, it will be set to 10")
-		AppConfig.MaxPlugins = 10
+		config.MaxPlugins = 10
 	} else {
-		AppConfig.MaxPlugins = value
+		config.MaxPlugins = value
 	}
-	AppConfig.AlarmLogMode = beego.AppConfig.DefaultString("AlarmLogMode", "file")
-	AppConfig.AlarmBufferSize = beego.AppConfig.DefaultInt("AlarmBufferSize", 300)
-	if AppConfig.AlarmBufferSize <= 0 {
+	if config.AlarmBufferSize <= 0 {
 		failLoadConfig("the 'AlarmBufferSize' config must be greater than 0")
-	} else if AppConfig.AlarmBufferSize < 100 {
+	} else if config.AlarmBufferSize < 100 {
 		beego.Warning("the value of 'AlarmBufferSize' config is less than 100, it will be set to 100")
-		AppConfig.AlarmBufferSize = 100
+		config.AlarmBufferSize = 100
 	}
-	AppConfig.AlarmCheckInterval = beego.AppConfig.DefaultInt64("AlarmCheckInterval", 120)
-	if AppConfig.AlarmCheckInterval <= 0 {
+	if config.AlarmCheckInterval <= 0 {
 		failLoadConfig("the 'AlarmCheckInterval' config must be greater than 0")
-	} else if AppConfig.AlarmCheckInterval < 10 {
+	} else if config.AlarmCheckInterval < 10 {
 		beego.Warning("the value of 'AlarmCheckInterval' config is less than 10, it will be set to 10")
-		AppConfig.AlarmCheckInterval = 10
+		config.AlarmCheckInterval = 10
 	}
-	AppConfig.CookieLifeTime = beego.AppConfig.DefaultInt("CookieLifeTime", 7*24)
-	if AppConfig.CookieLifeTime <= 0 {
+	if config.CookieLifeTime <= 0 {
 		failLoadConfig("the 'CookieLifeTime' config must be greater than 0")
 	}
 }

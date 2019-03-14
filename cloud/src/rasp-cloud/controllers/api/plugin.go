@@ -39,14 +39,16 @@ func (o *PluginController) Upload() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get app", err)
 	}
+
 	uploadFile, info, err := o.GetFile("plugin")
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "parse uploadFile error", err)
+	}
 	if uploadFile == nil {
 		o.ServeError(http.StatusBadRequest, "must have the plugin parameter")
 	}
 	defer uploadFile.Close()
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "parse uploadFile error", err)
-	}
+
 	if info.Size == 0 {
 		o.ServeError(http.StatusBadRequest, "the upload file cannot be empty")
 	}

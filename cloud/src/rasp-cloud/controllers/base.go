@@ -60,3 +60,12 @@ func (o *BaseController) UnmarshalJson(v interface{}) {
 		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 }
+
+func (o *BaseController) ValidPage(page int, perpage int) {
+	if page <= 0 {
+		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
+	}
+	if perpage <= 0 {
+		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
+	}
+}

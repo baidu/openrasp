@@ -59,8 +59,8 @@ public class CheckParameter {
         SQLEXCEPTION("sql_exception", new SqlStatementChecker(), 1 << 15),
 
         // java本地检测
+        XSS("xss_userinput", new XssChecker(), 1 << 16),
         SQL_SLOW_QUERY("sqlSlowQuery", new SqlResultChecker(false), 0),
-        XSS("xss", new XssChecker(), 0),
 
         // 安全基线检测
         POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker(), 0),
