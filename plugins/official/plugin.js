@@ -1,4 +1,4 @@
-const plugin_version = '2019-0308-0930'
+const plugin_version = '2019-0314-1130'
 const plugin_name    = 'official'
 
 /*
@@ -43,7 +43,10 @@ var algorithmConfig = {
         all_log: true,
 
         // 若 is_dev 开启，表示为线下环境，将开启更多消耗性能的检测算法
-        is_dev:  false
+        is_dev:  false,
+
+        // schema 版本
+        schema_version: 1
     },
 
     // SQL注入算法#1 - 匹配用户输入
