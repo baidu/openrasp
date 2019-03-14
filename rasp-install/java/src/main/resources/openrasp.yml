@@ -11,16 +11,20 @@
 # log.maxstack: 10
 # clientip.header: ClientIP
 # lru.max_size: 100
+# inject.urlprefix：
 # log.maxburst: 100
 # log.maxbackup: 30
 # decompile.enable: false
 # hook 点配置
 # hooks.ignore: http_output
 # debug.level: 0
-# hook.white: {
-#   www.test.com/test1: [sql,ssrf],
-#   www.test.com/test2: [sql,ssrf]
-# }
+#hook.white:
+#  "localhost:8080/vulns/011-ssrf-commons-httpclient.jsp":
+#    - "sql"
+#    - "ssrf"
+#  "www.test.com/test2":
+#    - "sql"
+#    - "ssrf"
 #inject.custom_headers:
 #   X-Content-Type-Options: nosniff
 # 拦截相关配置
