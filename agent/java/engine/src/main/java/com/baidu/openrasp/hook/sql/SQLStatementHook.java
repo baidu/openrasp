@@ -211,6 +211,6 @@ public class SQLStatementHook extends AbstractSqlHook {
         params.put("error_code", params, String.valueOf(e.getErrorCode()));
         String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
         params.put("message", params, message);
-        HookHandler.doCheck(CheckParameter.Type.SQLEXCEPTION, params);
+        HookHandler.doCheck(CheckParameter.Type.SQL_EXCEPTION, params);
     }
 }

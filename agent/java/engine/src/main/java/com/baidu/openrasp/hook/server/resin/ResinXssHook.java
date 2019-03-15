@@ -64,7 +64,7 @@ public class ResinXssHook extends ServerXssHook {
                 HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             }
             if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
-                HookHandler.doCheck(CheckParameter.Type.XSS, params);
+                HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
             }
         }
     }
