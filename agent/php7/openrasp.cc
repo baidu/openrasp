@@ -423,7 +423,9 @@ static bool current_sapi_supported()
 {
     const static std::set<std::string> supported_sapis =
         {
+#ifdef HAVE_CLI_SUPPORT
             "cli",
+#endif
             "cli-server",
             "cgi-fcgi",
             "fpm-fcgi",
@@ -431,7 +433,6 @@ static bool current_sapi_supported()
     auto iter = supported_sapis.find(std::string(sapi_module.name));
     if (iter == supported_sapis.end())
     {
-        openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("Unsupported SAPI: %s."), sapi_module.name);
         return false;
     }
     return true;

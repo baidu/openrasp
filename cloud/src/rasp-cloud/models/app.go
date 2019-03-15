@@ -110,23 +110,7 @@ const (
 )
 
 var (
-	lastAlarmTime = time.Now().UnixNano() / 1000000
-	TestAlarmData = []map[string]interface{}{
-		{
-			"event_time":      time.Now().Format("2006-01-01 15:06:05"),
-			"attack_source":   "220.181.57.191",
-			"attack_type":     "sql",
-			"intercept_state": "block",
-			"url":             "http://www.example.com/article.php?id=1",
-		},
-		{
-			"event_time":      time.Now().Format("2006-01-01 15:03:01"),
-			"attack_source":   "220.23.38.115",
-			"attack_type":     "command",
-			"intercept_state": "log",
-			"url":             "http://www.example.com/login.php?id=2",
-		},
-	}
+	lastAlarmTime        = time.Now().UnixNano() / 1000000
 	DefaultGeneralConfig = map[string]interface{}{
 		"clientip.header":    "ClientIP",
 		"block.status_code":  302,
@@ -455,6 +439,25 @@ func PushAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isT
 	}
 }
 
+func getTestAlarmData() []map[string]interface{} {
+	return []map[string]interface{}{
+		{
+			"event_time":      time.Now().Format("2006-01-01 15:06:05"),
+			"attack_source":   "220.181.57.191",
+			"attack_type":     "sql",
+			"intercept_state": "block",
+			"url":             "http://www.example.com/article.php?id=1",
+		},
+		{
+			"event_time":      time.Now().Format("2006-01-01 15:03:01"),
+			"attack_source":   "220.23.38.115",
+			"attack_type":     "command",
+			"intercept_state": "log",
+			"url":             "http://www.example.com/login.php?id=2",
+		},
+	}
+}
+
 func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isTest bool) error {
 	var emailConf = app.EmailAlarmConf
 	if len(emailConf.RecvAddr) > 0 && emailConf.ServerAddr != "" {
@@ -476,14 +479,19 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 		}
 		if isTest {
 			subject = "【测试邮件】" + subject
-			alarms = TestAlarmData
-			total = int64(len(TestAlarmData))
+			alarms = getTestAlarmData()
+			total = int64(len(alarms))
 		}
 		head := map[string]string{
-			"from":         emailAddr.String(),
-			"To":           strings.Join(emailConf.RecvAddr, ","),
-			"Content-Type": "text/html; charset=UTF-8",
-			"Subject":      subject,
+			"from":              emailAddr.String(),
+			"To":                strings.Join(emailConf.RecvAddr, ","),
+			"Subject":           subject,
+			"Content-Type":      "text/html; charset=UTF-8",
+			"X-Priority":        "3",
+			"X-MSMail-Priority": "Normal",
+			"X-Mailer":          "Microsoft Outlook Express 6.00.2900.2869",
+			"X-MimeOLE":         "Produced By Microsoft MimeOLE V6.00.2900.2869",
+			"ReturnReceipt":     "1",
 		}
 		t, err := template.ParseFiles("views/email.tpl")
 		if err != nil {
@@ -538,24 +546,13 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 func handleAlarms(alarms []map[string]interface{}) {
 	for index, alarm := range alarms {
 		alarm["index"] = index + 1
-		if alarm["intercept_state"] != nil {
-			if intercept, ok := alarm["intercept_state"].(string); ok {
-				if intercept, ok := logs.AttackInterceptMap[intercept]; ok {
-					alarm["intercept_state"] = intercept
-				}
-			}
+		if intercept, ok := logs.AttackInterceptMap[alarm["intercept_state"]]; ok {
+			alarm["intercept_state"] = intercept
 		}
 
-		isFound := false
-		if alarm["attack_type"] != nil {
-			if attackType, ok := alarm["attack_type"].(string); ok {
-				if attackType, ok := logs.AttackTypeMap[attackType]; ok {
-					alarm["attack_type"] = attackType
-					isFound = true
-				}
-			}
-		}
-		if !isFound {
+		if attackType, ok := logs.AttackTypeMap[alarm["attack_type"]]; ok {
+			alarm["attack_type"] = attackType
+		} else {
 			alarm["attack_type"] = "其他类型"
 		}
 
@@ -647,7 +644,7 @@ func smtpTlsDial(addr string) (*smtp.Client, error) {
 	if err != nil {
 		return nil, handleError("failed to get email serve host: " + err.Error())
 	}
-	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: time.Second * 10}, "tcp", addr, nil)
+	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: time.Second * 5}, "tcp", addr, nil)
 	if err != nil {
 		return nil, handleError("smtp dialing error: " + err.Error())
 	}
@@ -660,7 +657,7 @@ func PushHttpAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 		body := make(map[string]interface{})
 		body["app_id"] = app.Id
 		if isTest {
-			body["data"] = TestAlarmData
+			body["data"] = getTestAlarmData()
 		} else {
 			body["data"] = alarms
 		}
