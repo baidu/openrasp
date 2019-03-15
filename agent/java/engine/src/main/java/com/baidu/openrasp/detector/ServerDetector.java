@@ -47,6 +47,7 @@ public abstract class ServerDetector {
     public boolean handleServer(String className, ClassLoader classLoader, ProtectionDomain domain) {
         boolean isDetected = handleServerInfo(classLoader, domain);
         if (isDetected) {
+            HookHandler.enableHook.set(true);
             sendRegister();
         }
         return isDetected;

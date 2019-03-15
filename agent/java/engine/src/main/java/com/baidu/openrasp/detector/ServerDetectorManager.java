@@ -17,6 +17,7 @@
 package com.baidu.openrasp.detector;
 
 import com.baidu.openrasp.HookHandler;
+import org.apache.log4j.Logger;
 
 import java.security.ProtectionDomain;
 import java.util.HashSet;
@@ -26,6 +27,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by tyy on 19-2-12.
  */
 public class ServerDetectorManager {
+
+    private static final Logger LOGGER = Logger.getLogger(ServerDetectorManager.class.getName());
 
     public AtomicBoolean isDetected = new AtomicBoolean(false);
     private static final ServerDetectorManager instance = new ServerDetectorManager();
@@ -53,11 +56,16 @@ public class ServerDetectorManager {
      * @param classLoader 该类的加载器
      */
     public synchronized void detectServer(String className, ClassLoader classLoader, ProtectionDomain domain) {
-        for (ServerDetector detector : detectors) {
-            if (detector.isClassMatched(className) && detector.handleServer(className, classLoader, domain)) {
-                HookHandler.LOGGER.info("detect server class: " + className);
-                isDetected.set(true);
+        try {
+            for (ServerDetector detector : detectors) {
+                if (detector.isClassMatched(className) && detector.handleServer(className, classLoader, domain)) {
+                    HookHandler.LOGGER.info("detect server class: " + className);
+                    isDetected.set(true);
+                }
             }
+        } catch (Throwable e) {
+            e.printStackTrace();
+            LOGGER.warn("detect class " + className + " failed", e);
         }
     }
 
