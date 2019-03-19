@@ -45,7 +45,7 @@ public class WeblogicDetector extends ServerDetector {
         } catch (Throwable t) {
             logDetectError("handle weblogic startup failed", t);
         }
-        ApplicationModel.initServerInfo("weblogic", serverVersion);
+        ApplicationModel.setServerInfo("weblogic", serverVersion);
         return true;
     }
 

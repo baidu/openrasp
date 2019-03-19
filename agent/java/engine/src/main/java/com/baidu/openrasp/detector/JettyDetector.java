@@ -43,7 +43,7 @@ public class JettyDetector extends ServerDetector {
         } catch (Throwable e) {
             HookHandler.LOGGER.error("handle jetty startup failed", e);
         }
-        ApplicationModel.initServerInfo("jetty", serverVersion);
+        ApplicationModel.setServerInfo("jetty", serverVersion);
         return true;
     }
 

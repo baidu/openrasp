@@ -27,7 +27,7 @@ public class JBossEAPDetector extends ServerDetector {
         } catch (Throwable t) {
             logDetectError("handle jboss eap startup failed", t);
         }
-        ApplicationModel.initServerInfo("jboss eap", serverVersion);
+        ApplicationModel.setServerInfo("jboss eap", serverVersion);
         return true;
     }
 

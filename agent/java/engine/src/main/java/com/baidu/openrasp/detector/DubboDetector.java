@@ -21,25 +21,17 @@ import com.baidu.openrasp.tool.model.ApplicationModel;
 import java.security.ProtectionDomain;
 
 /**
- * Created by tyy on 19-2-12.
+ * Created by tyy on 19-3-18.
  */
-public class ResinDetector extends ServerDetector {
-
+public class DubboDetector extends ServerDetector {
     @Override
     public boolean isClassMatched(String className) {
-        return "com/caucho/server/resin/Resin".equals(className);
+        return "com/alibaba/dubbo/rpc/filter/GenericFilter".equals(className);
     }
 
     @Override
     public boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
-        String serverVersion = "";
-        try {
-            Class versionClass = classLoader.loadClass("com.caucho.Version");
-            serverVersion = (String) versionClass.getField("VERSION").get(null);
-        } catch (Throwable t) {
-            logDetectError("handle jetty startup failed", t);
-        }
-        ApplicationModel.setServerInfo("resin", serverVersion);
+        ApplicationModel.setExtraInfo("dubbo");
         return true;
     }
 }

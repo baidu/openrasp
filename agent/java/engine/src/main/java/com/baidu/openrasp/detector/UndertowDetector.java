@@ -44,7 +44,7 @@ public class UndertowDetector extends ServerDetector {
         } catch (Exception e) {
             logDetectError("handle undertow startup failed", e);
         }
-        ApplicationModel.initServerInfo("undertow", version);
+        ApplicationModel.setServerInfo("undertow", version);
         return true;
     }
 }
