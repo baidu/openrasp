@@ -38,6 +38,12 @@ public class LinuxInstallerFactory extends InstallerFactory {
         if (serverName.equals(WEBLOGIC)) {
             return new WeblogicInstaller(serverName, serverRoot);
         }
+        if (serverName.equals(WILDFLY)) {
+            return new WildflyInstaller(serverName, serverRoot);
+        }
+        if (serverName.equals(JBOSSEAP)) {
+            return new JbossEAPInstaller(serverName, serverRoot);
+        }
         System.out.println("Unexpected server name: " + serverName);
         return null;
     }

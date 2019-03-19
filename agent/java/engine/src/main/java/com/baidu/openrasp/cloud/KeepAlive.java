@@ -47,7 +47,7 @@ public class KeepAlive {
             while (true) {
                 String content = new Gson().toJson(GenerateParameters());
                 String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
-                GenericResponse response = new CloudHttp().request(url, content);
+                GenericResponse response = new CloudHttp().commonRequest(url, content);
                 if (CloudUtils.checkRequestResult(response)) {
                     handleResponse(response);
                 } else {

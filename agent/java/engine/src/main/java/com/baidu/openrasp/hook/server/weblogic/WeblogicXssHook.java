@@ -51,20 +51,23 @@ public class WeblogicXssHook extends ServerXssHook {
     }
 
     public static void getWeblogicOutputBuffer(Object object) {
-        HashMap<String, Object> params = new HashMap<String, Object>();
-        try {
-            ByteBuffer byteBuffer = (ByteBuffer) Reflection.getField(object, "buf");
-            if (byteBuffer != null) {
-                String content = new String(byteBuffer.array());
-                params.put("html_body", content);
+        if (HookHandler.isEnableXssHook()){
+            HookHandler.disableBodyXssHook();
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            try {
+                ByteBuffer byteBuffer = (ByteBuffer) Reflection.getField(object, "buf");
+                if (byteBuffer != null) {
+                    String content = new String(byteBuffer.array());
+                    params.put("html_body", content);
+                }
+            } catch (Exception e) {
+                String message = ApplicationModel.getServerName() + " xss detectde failed";
+                int errorCode = ErrorType.HOOK_ERROR.getCode();
+                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             }
-        } catch (Exception e) {
-            String message = ApplicationModel.getServerName() + " xss detectde failed";
-            int errorCode = ErrorType.HOOK_ERROR.getCode();
-            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
-        }
-        if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
-            HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+            if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
+                HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+            }
         }
     }
 }

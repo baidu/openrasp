@@ -59,7 +59,7 @@ public class StatisticsReport {
                     params.put("request_sum", entry.getValue());
                     String content = new Gson().toJson(params);
                     String url = CloudRequestUrl.CLOUD_STATISTICS_REPORT_URL;
-                    GenericResponse response = new CloudHttp().request(url, content);
+                    GenericResponse response = new CloudHttp().commonRequest(url, content);
                     if (CloudUtils.checkRequestResult(response)) {
                         CloudCacheModel.reportCache.remove(entry.getKey());
                     } else {

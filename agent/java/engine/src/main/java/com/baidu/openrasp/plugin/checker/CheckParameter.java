@@ -66,6 +66,7 @@ public class CheckParameter {
         POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker(), 0),
         POLICY_SERVER_TOMCAT("tomcatServer", new TomcatSecurityChecker(false), 0),
         POLICY_SERVER_JBOSS("jbossServer", new JBossSecurityChecker(false), 0),
+        POLICY_SERVER_JBOSSEAP("jbossEAPServer", new JBossEAPSecurityChecker(false), 0),
         POLICY_SERVER_JETTY("jettyServer", new JettySecurityChecker(false), 0),
         POLICY_SERVER_RESIN("resinServer", new ResinSecurityChecker(false), 0),
         POLICY_SERVER_WEBSPHERE("websphereServer", new WebsphereSecurityChecker(false), 0),

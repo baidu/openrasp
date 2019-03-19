@@ -52,7 +52,7 @@ public class Register {
             while (!this.registerFlag) {
                 String content = new Gson().toJson(GenerateParameters());
                 String url = CloudRequestUrl.CLOUD_REGISTER_URL;
-                GenericResponse response = new CloudHttp().request(url, content);
+                GenericResponse response = new CloudHttp().commonRequest(url, content);
                 if (CloudUtils.checkRequestResult(response)) {
                     this.registerFlag = true;
                     Config.getConfig().setHookWhiteAll("false");

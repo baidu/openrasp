@@ -11,7 +11,7 @@
 # log.maxstack: 10
 # clientip.header: ClientIP
 # lru.max_size: 100
-# inject.urlprefix：
+# inject.urlprefix:
 # log.maxburst: 100
 # log.maxbackup: 30
 # decompile.enable: false
