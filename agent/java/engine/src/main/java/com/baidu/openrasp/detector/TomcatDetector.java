@@ -59,6 +59,9 @@ public class TomcatDetector extends ServerDetector {
             Method getPackageMethod = ClassLoader.class.getDeclaredMethod("getPackage", String.class);
             getPackageMethod.setAccessible(true);
             jbossBootPackage = (Package) getPackageMethod.invoke(classLoader, "org.jboss");
+            if (jbossBootPackage == null) {
+                jbossBootPackage = (Package) getPackageMethod.invoke(classLoader, "org.jboss.modules");
+            }
         } catch (Throwable e) {
             // ignore
         }
