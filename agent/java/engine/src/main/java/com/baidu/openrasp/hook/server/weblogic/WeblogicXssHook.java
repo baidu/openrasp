@@ -21,7 +21,6 @@ import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.server.ServerXssHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.CannotCompileException;
@@ -29,7 +28,7 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.util.HashMap;
 
 /**
@@ -46,18 +45,17 @@ public class WeblogicXssHook extends ServerXssHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(WeblogicXssHook.class, "getWeblogicOutputBuffer", "$0", Object.class);
-        insertBefore(ctClass, "flush", "()V", src);
+        String src = getInvokeStaticSrc(WeblogicXssHook.class, "getWeblogicOutputBuffer", "$1", CharBuffer.class);
+        insertBefore(ctClass, "write", "(Ljava/nio/CharBuffer;)V", src);
     }
 
-    public static void getWeblogicOutputBuffer(Object object) {
-        if (HookHandler.isEnableXssHook()){
+    public static void getWeblogicOutputBuffer(CharBuffer buffer) {
+        if (HookHandler.isEnableXssHook()) {
             HookHandler.disableBodyXssHook();
             HashMap<String, Object> params = new HashMap<String, Object>();
             try {
-                ByteBuffer byteBuffer = (ByteBuffer) Reflection.getField(object, "buf");
-                if (byteBuffer != null) {
-                    String content = new String(byteBuffer.array());
+                if (buffer != null) {
+                    String content = buffer.toString();
                     params.put("html_body", content);
                 }
             } catch (Exception e) {
