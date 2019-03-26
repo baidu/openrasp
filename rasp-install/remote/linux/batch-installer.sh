@@ -325,6 +325,15 @@ do
 	esac
 done
 
+# reject default parameter
+if [[ $flag_appid == "APPID" ]]; then
+	echo ERROR: bad app id: APPID
+	exit
+elif [[ $flag_appsecret == "APPSECRET" ]]; then
+	echo ERROR: bad app secret: APPSECRET
+	exit
+fi
+
 if [[ $(id -u) != "0" ]]; then
 	echo
 	echo Notice: Not running OpenRASP batch installer as ROOT, will install for current account only
