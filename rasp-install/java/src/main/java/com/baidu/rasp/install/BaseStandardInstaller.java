@@ -55,7 +55,7 @@ public abstract class BaseStandardInstaller implements Installer {
         String jarPath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
         File srcDir = new File(new File(jarPath).getParent() + File.separator + "rasp");
         if (!(srcDir.exists() && srcDir.isDirectory())) {
-            srcDir = new File("rasp");
+            srcDir.mkdirs();
         }
         File installDir = new File(getInstallPath(serverRoot));
 
