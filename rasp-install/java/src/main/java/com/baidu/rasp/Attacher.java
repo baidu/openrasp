@@ -43,7 +43,6 @@ public class Attacher {
             virtualMachine.loadAgent(baseDir + File.separator + "rasp" + File.separator + "rasp.jar", action);
             virtualMachine.detach();
         } catch (Throwable t) {
-            t.printStackTrace();
             throw new RaspError(RaspError.E10006 + "Failed to attach Rasp.jar to server: " + t.getMessage());
         }
 

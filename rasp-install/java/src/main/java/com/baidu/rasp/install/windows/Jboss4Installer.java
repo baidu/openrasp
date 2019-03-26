@@ -35,7 +35,7 @@ public class Jboss4Installer extends BaseStandardInstaller {
                     "rem END OPENRASP" + LINE_SEP;
     private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*\\\\rasp\\\\).*");
 
-    Jboss4Installer(String serverName, String serverRoot) {
+    public Jboss4Installer(String serverName, String serverRoot) {
         super(serverName, serverRoot);
     }
 

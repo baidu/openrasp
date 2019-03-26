@@ -38,7 +38,7 @@ public class TomcatInstaller extends BaseStandardInstaller {
     private static Pattern JDK_JAVA_OPTIONS_REGEX = Pattern.compile(".*JDK_JAVA_OPTIONS.*jdk\\.internal\\.loader.*");
 
 
-    TomcatInstaller(String serverName, String serverRoot) {
+    public TomcatInstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
     }
 
