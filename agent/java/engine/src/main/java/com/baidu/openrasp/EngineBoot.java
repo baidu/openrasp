@@ -64,7 +64,6 @@ public class EngineBoot implements Module {
                 + buildTime + ")]";
         System.out.println(message);
         Logger.getLogger(EngineBoot.class.getName()).info(message);
-        HookHandler.enableHook.set(true);
     }
 
     @Override

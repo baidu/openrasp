@@ -1,6 +1,6 @@
 <template>
   <div id="addHostModal" class="modal no-fade" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
@@ -24,6 +24,16 @@
                 </a>
               </li>
               <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#batch-tab">
+                  批量部署
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#docker-tab">
+                  Docker 部署
+                </a>
+              </li>
+              <li class="nav-item">
                 <a class="nav-link active" data-toggle="tab" href="#java-tab">
                   Java 服务器
                 </a>
@@ -43,6 +53,36 @@
                 <pre>{{ current_app.secret }}</pre>
                 <h4>BackendURL<small v-if="agent_urls.length > 1" style="margin-left: 5px;">[任选一个即可]</small></h4>
                 <pre>{{ agent_urls.join("\n") }}</pre>
+              </div>
+              <div id="batch-tab" class="tab-pane fade">
+                <div class="alert alert-warning">
+                  批量部署脚本，会自动安装并重启应用，更多信息请看
+                  <a target="_blank" href="https://rasp.baidu.com/doc/install/deploy.html" class="active router-link-active">大规模部署</a>
+                  文档
+                </div>
+                <h4>1. 下载自动安装程序</h4>
+                <pre style="white-space: inherit; ">curl https://packages.baidu.com/app/openrasp/rasp-installer.sh -o rasp-installer.sh</pre>
+                <h4>2. 执行脚本</h4>
+                <pre style="white-space: inherit; ">bash rasp-installer.sh -i -a {{ current_app.id }} -b {{ current_app.secret }} -c {{ agent_urls[agent_url_id] }}</pre>
+              </div>
+              <div id="docker-tab" class="tab-pane fade">
+                <div class="alert alert-warning">
+                  在构建镜像阶段加入 OpenRASP 即可，更多信息请看
+                  <a target="_blank" href="https://rasp.baidu.com/doc/install/deploy.html#container" class="active router-link-active">大规模部署</a>
+                  文档
+                </div>
+                <h4>Java 容器示例</h4>
+                <pre>ADD https://packages.baidu.com/app/openrasp/rasp-java.tar.gz /tmp
+RUN cd /tmp \
+    && tar -xf rasp-java.tar.* \
+    && /jdk/bin/java -jar rasp-*/RaspInstall.jar -install /tomcat/ -appid {{ current_app.id }} -appsecret {{ current_app.secret }} -backendurl {{ agent_urls[agent_url_id] }} \
+    && rm -rf rasp-*</pre>
+                <h4>PHP 容器示例</h4>
+                <pre>ADD https://packages.baidu.com/app/openrasp/rasp-php-linux.tar.bz2 /tmp/
+RUN cd /tmp \
+    && tar -xf rasp-php-linux.tar.bz2 \
+    && php rasp-php-*/install.php -d /opt/rasp/ --backend-url {{ agent_urls[agent_url_id] }} --app-id {{ current_app.id }} --app-secret {{ current_app.secret }} \
+    && rm -rf rasp-php*</pre>
               </div>
               <div id="java-tab" class="tab-pane fade show active">
                 <h4>1. 下载 Java Agent 安装包</h4>

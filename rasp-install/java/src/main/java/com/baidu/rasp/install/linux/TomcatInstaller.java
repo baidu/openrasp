@@ -35,7 +35,7 @@ public class TomcatInstaller extends BaseStandardInstaller {
             "JDK_JAVA_OPTIONS=\"$JDK_JAVA_OPTIONS --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED\"\n" +
                     "export JDK_JAVA_OPTIONS\n";
 
-    TomcatInstaller(String serverName, String serverRoot) {
+    public TomcatInstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
     }
 

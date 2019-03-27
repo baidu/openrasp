@@ -78,8 +78,9 @@ public class HttpAppender extends AppenderSkeleton {
                 if (logger != null) {
                     String requestUrl = getUrl(logger);
                     if (requestUrl != null) {
-                        GenericResponse response = cloudHttp.request(requestUrl, new Gson().toJson(jsonArray));
-                        if (CloudUtils.checkRequestResult(response)) {
+                        GenericResponse response = cloudHttp.logRequest(requestUrl, new Gson().toJson(jsonArray));
+                        Integer responseCode = response.getResponseCode();
+                        if (responseCode != null && responseCode >= 200 && responseCode < 300) {
                             return;
                         }
                         AppenderCache.setCache(logger, jsonElement);

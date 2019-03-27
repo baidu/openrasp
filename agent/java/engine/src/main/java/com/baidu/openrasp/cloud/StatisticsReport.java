@@ -59,8 +59,9 @@ public class StatisticsReport {
                     params.put("request_sum", entry.getValue());
                     String content = new Gson().toJson(params);
                     String url = CloudRequestUrl.CLOUD_STATISTICS_REPORT_URL;
-                    GenericResponse response = new CloudHttp().request(url, content);
-                    if (CloudUtils.checkRequestResult(response)) {
+                    GenericResponse response = new CloudHttp().commonRequest(url, content);
+                    Integer responseCode = response.getResponseCode();
+                    if (responseCode != null && responseCode >= 200 && responseCode < 300) {
                         CloudCacheModel.reportCache.remove(entry.getKey());
                     } else {
                         CloudCacheModel.reportCache.put(entry.getKey(), entry.getValue());

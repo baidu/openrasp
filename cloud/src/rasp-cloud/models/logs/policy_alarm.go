@@ -53,7 +53,11 @@ func AddPolicyAlarm(alarm map[string]interface{}) error {
 	idContent += fmt.Sprint(alarm["rasp_id"])
 	idContent += fmt.Sprint(alarm["policy_id"])
 	idContent += fmt.Sprint(alarm["stack_md5"])
-	if alarm["policy_id"] == "3006" && alarm["policy_params"] != nil {
+	if alarm["policy_id"] == "3007" && alarm["policy_params"] != nil {
+		if policyParam, ok := alarm["policy_params"].(map[string]interface{}); ok && len(policyParam) > 0 {
+			idContent += fmt.Sprint(policyParam["type"])
+		}
+	} else if alarm["policy_id"] == "3006" && alarm["policy_params"] != nil {
 		if policyParam, ok := alarm["policy_params"].(map[string]interface{}); ok && len(policyParam) > 0 {
 			idContent += fmt.Sprint(policyParam["connectionString"])
 			idContent += fmt.Sprint(policyParam["port"])

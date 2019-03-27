@@ -29,7 +29,6 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 
 /**
@@ -43,17 +42,17 @@ public class JettyXssHook extends ServerXssHook {
     @Override
     public boolean isClassMatched(String className) {
         return "org/eclipse/jetty/server/AbstractHttpConnection".equals(className) ||
-                "org/eclipse/jetty/server/HttpChannel".equals(className);
+                "org/eclipse/jetty/server/Utf8HttpWriter".equals(className) ||
+                "org/eclipse/jetty/server/Iso88591HttpWriter".equals(className) ||
+                "org/eclipse/jetty/server/EncodingHttpWriter".equals(className);
     }
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-
         String src1 = getInvokeStaticSrc(JettyXssHook.class, "getJettyOutputBuffer", "_generator", Object.class);
         insertBefore(ctClass, "completeResponse", "()V", src1);
-        String src2 = getInvokeStaticSrc(JettyXssHook.class, "getJetty9OutputBuffer", "$1", ByteBuffer.class);
+        String src2 = getInvokeStaticSrc(JettyXssHook.class, "getJetty9OutputBuffer", "$1,$2,$3", char[].class, int.class, int.class);
         insertBefore(ctClass, "write", null, src2);
-
     }
 
 
@@ -71,15 +70,17 @@ public class JettyXssHook extends ServerXssHook {
             HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         }
         if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
-            HookHandler.doCheck(CheckParameter.Type.XSS, params);
+            HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
         }
     }
 
-    public static void getJetty9OutputBuffer(ByteBuffer buffer) {
-        if (buffer != null) {
+    public static void getJetty9OutputBuffer(char[] buffer, int offset, int length) {
+        if (buffer != null && length > 0) {
             HashMap<String, Object> params = new HashMap<String, Object>();
             try {
-                String content = new String(buffer.array());
+                char[] temp = new char[length];
+                System.arraycopy(buffer, offset, temp, 0, length);
+                String content = new String(temp);
                 params.put("html_body", content);
             } catch (Exception e) {
                 String message = ApplicationModel.getServerName() + " xss detectde failed";
@@ -87,7 +88,7 @@ public class JettyXssHook extends ServerXssHook {
                 HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             }
             if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
-                HookHandler.doCheck(CheckParameter.Type.XSS, params);
+                HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
             }
         }
     }

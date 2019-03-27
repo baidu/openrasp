@@ -36,7 +36,7 @@ import static com.baidu.rasp.RaspError.E10003;
  */
 public abstract class BaseStandardInstaller implements Installer {
     private String serverName;
-    private String serverRoot;
+    protected String serverRoot;
     public static String resinPath;
     public static int NOTFOUND = 0;
     public static int FOUND = 1;
@@ -55,7 +55,7 @@ public abstract class BaseStandardInstaller implements Installer {
         String jarPath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
         File srcDir = new File(new File(jarPath).getParent() + File.separator + "rasp");
         if (!(srcDir.exists() && srcDir.isDirectory())) {
-            srcDir = new File("rasp");
+            srcDir.mkdirs();
         }
         File installDir = new File(getInstallPath(serverRoot));
 
@@ -219,6 +219,24 @@ public abstract class BaseStandardInstaller implements Installer {
         String javaVersion = System.getProperty("java.version");
         return javaVersion != null && (javaVersion.startsWith("1.9") || javaVersion.startsWith("10.")
                 || javaVersion.startsWith("11."));
+    }
+
+    //获取指定目录下指定前缀的jar文件
+    protected static String findFile(String path, final String prefix) {
+        File baseDir = new File(path);
+        if (baseDir.exists() && baseDir.isDirectory()) {
+            File[] files = baseDir.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File file) {
+                    return file.isFile() && file.getName().startsWith(prefix) &&
+                            file.getName().endsWith(".jar");
+                }
+            });
+            if (files != null && files.length == 1) {
+                return files[0].getAbsolutePath();
+            }
+        }
+        return null;
     }
 
     protected abstract String getInstallPath(String serverRoot);

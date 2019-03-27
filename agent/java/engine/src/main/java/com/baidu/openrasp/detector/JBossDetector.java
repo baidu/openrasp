@@ -51,7 +51,7 @@ public class JBossDetector extends ServerDetector {
         } catch (Throwable t) {
             logDetectError("handle jboss startup failed", t);
         }
-        ApplicationModel.initServerInfo("jboss", serverVersion);
+        ApplicationModel.setServerInfo("jboss", serverVersion);
         return true;
     }
 }

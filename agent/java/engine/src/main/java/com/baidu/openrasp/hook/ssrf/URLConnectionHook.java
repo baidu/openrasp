@@ -43,7 +43,8 @@ public class URLConnectionHook extends AbstractSSRFHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "sun/net/www/protocol/http/HttpURLConnection".equals(className);
+        return "sun/net/www/protocol/http/HttpURLConnection".equals(className) ||
+                "weblogic/net/http/HttpURLConnection".equals(className);
     }
 
     /**

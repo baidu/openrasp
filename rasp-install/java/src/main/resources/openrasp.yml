@@ -11,23 +11,31 @@
 # log.maxstack: 10
 # clientip.header: ClientIP
 # lru.max_size: 100
+# inject.urlprefix:
 # log.maxburst: 100
 # log.maxbackup: 30
 # decompile.enable: false
 # hook 点配置
 # hooks.ignore: http_output
 # debug.level: 0
-# hook.white: {
-#   www.test.com/test1: [sql,ssrf],
-#   www.test.com/test2: [sql,ssrf]
-# }
+#hook.white:
+#  "localhost:8080/vulns/011-ssrf-commons-httpclient.jsp":
+#    - "sql"
+#    - "ssrf"
+#  "www.test.com/test2":
+#    - "sql"
+#    - "ssrf"
 #inject.custom_headers:
 #   X-Content-Type-Options: nosniff
 # 拦截相关配置
-# block.redirect_url: https://rasp.baidu.com/blocked/?request_id=%request_id%
-# block.content_json: {"error":true, "reason": "Request blocked by OpenRASP", "request_id": %request_id%}
-# block.content_xml: <?xml version="1.0"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>
-# block.content_html: </script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>
+#拦截攻击后，跳转到这个URL
+#block.redirect_url: "https://rasp.baidu.com/blocked/?request_id=%request_id%"
+#拦截攻击后，若期望响应类型为JSON，则根据此模板显示内容
+#block.content_json: "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"
+#拦截攻击后，若期望响应类型为XML，则根据此模板显示内容
+#block.content_xml: "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"
+#拦截攻击后，若期望响应类型不为JSON/XML，则根据此模板显示内容
+#block.content_html: "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>"
 
 # 基线配置
 # security.enforce_policy: false

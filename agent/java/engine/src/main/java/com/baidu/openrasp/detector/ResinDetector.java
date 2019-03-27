@@ -39,7 +39,7 @@ public class ResinDetector extends ServerDetector {
         } catch (Throwable t) {
             logDetectError("handle jetty startup failed", t);
         }
-        ApplicationModel.initServerInfo("resin", serverVersion);
+        ApplicationModel.setServerInfo("resin", serverVersion);
         return true;
     }
 }

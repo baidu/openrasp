@@ -17,6 +17,7 @@
 package com.baidu.openrasp.detector;
 
 import com.baidu.openrasp.HookHandler;
+import org.apache.log4j.Logger;
 
 import java.security.ProtectionDomain;
 import java.util.HashSet;
@@ -27,7 +28,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class ServerDetectorManager {
 
-    public AtomicBoolean isDetected = new AtomicBoolean(false);
+    private static final Logger LOGGER = Logger.getLogger(ServerDetectorManager.class.getName());
+
     private static final ServerDetectorManager instance = new ServerDetectorManager();
     private HashSet<ServerDetector> detectors = new HashSet<ServerDetector>();
 
@@ -40,6 +42,7 @@ public class ServerDetectorManager {
         detectors.add(new ResinDetector());
         detectors.add(new WebsphereDetector());
         detectors.add(new UndertowDetector());
+        detectors.add(new DubboDetector());
     }
 
     public static ServerDetectorManager getInstance() {
@@ -53,11 +56,15 @@ public class ServerDetectorManager {
      * @param classLoader 该类的加载器
      */
     public synchronized void detectServer(String className, ClassLoader classLoader, ProtectionDomain domain) {
-        for (ServerDetector detector : detectors) {
-            if (detector.isClassMatched(className) && detector.handleServer(className, classLoader, domain)) {
-                HookHandler.LOGGER.info("detect server class: " + className);
-                isDetected.set(true);
+        try {
+            for (ServerDetector detector : detectors) {
+                if (detector.isClassMatched(className) && detector.handleServer(className, classLoader, domain)) {
+                    HookHandler.LOGGER.info("detect server class: " + className);
+                }
             }
+        } catch (Throwable e) {
+            e.printStackTrace();
+            LOGGER.warn("detect class " + className + " failed", e);
         }
     }
 

@@ -50,23 +50,26 @@ public class WebsphereXssHook extends ServerXssHook {
     }
 
     public static void getWebsphereOutputBuffer(Object object) {
-        HashMap<String, Object> params = new HashMap<String, Object>();
-        try {
-            char[] buffer = (char[]) Reflection.getField(object, "buf");
-            int len = (Integer) Reflection.getField(object, "count");
-            char[] temp = new char[len];
-            if (buffer != null) {
-                System.arraycopy(buffer, 0, temp, 0, len);
-                String content = new String(temp);
-                params.put("html_body", content);
+        if (HookHandler.isEnableXssHook()){
+            HookHandler.disableBodyXssHook();
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            try {
+                char[] buffer = (char[]) Reflection.getField(object, "buf");
+                int len = (Integer) Reflection.getField(object, "count");
+                char[] temp = new char[len];
+                if (buffer != null) {
+                    System.arraycopy(buffer, 0, temp, 0, len);
+                    String content = new String(temp);
+                    params.put("html_body", content);
+                }
+            } catch (Exception e) {
+                String message = ApplicationModel.getServerName() + " xss detectde failed";
+                int errorCode = ErrorType.HOOK_ERROR.getCode();
+                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             }
-        } catch (Exception e) {
-            String message = ApplicationModel.getServerName() + " xss detectde failed";
-            int errorCode = ErrorType.HOOK_ERROR.getCode();
-            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
-        }
-        if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
-            HookHandler.doCheck(CheckParameter.Type.XSS, params);
+            if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
+                HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+            }
         }
     }
 }

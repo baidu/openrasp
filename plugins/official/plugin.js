@@ -1161,10 +1161,10 @@ if (RASP.get_jsengine() !== 'v8') {
             }
         }
 
-        // 算法3 - 检测 AWS/Aliyun 私有地址
+        // 算法3 - 检测 AWS/Aliyun/GoogleCloud 私有地址
         if (algorithmConfig.ssrf_aws.action != 'ignore')
         {
-            if (hostname == '169.254.169.254' || hostname == '100.100.100.200')
+            if (hostname == '169.254.169.254' || hostname == '100.100.100.200' || hostname == 'metadata.google.internal')
             {
                 return {
                     action:     algorithmConfig.ssrf_aws.action,

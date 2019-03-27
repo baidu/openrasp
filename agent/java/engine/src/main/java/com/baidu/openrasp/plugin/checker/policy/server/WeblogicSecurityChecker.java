@@ -25,13 +25,8 @@ import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
 import com.baidu.openrasp.tool.Reflection;
 import org.apache.log4j.Logger;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.io.*;
+import java.util.*;
 
 /**
  * @description: weblogic基线检查
@@ -40,8 +35,7 @@ import java.util.Properties;
  */
 public class WeblogicSecurityChecker extends ServerPolicyChecker {
     private static final String WEBLOGIC_CHECK_ERROR_LOG_CHANNEL = "weblogic_security_check_error";
-    private static final String BOOT_PROPERTIES_PATH = "servers" + File.separator + "AdminServer" + File.separator + "security" + File.separator + "boot.properties";
-    private static final String[] WEAK_WORDS = new String[]{"weblogic", "weblogic1", "weblogic123", "admin", "123456"};
+    private static final String[] WEAK_WORDS = new String[]{"weblogic", "weblogic1", "weblogic123", "admin", "123456", "welcome1"};
     private static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
 
     public WeblogicSecurityChecker() {
@@ -58,17 +52,20 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
     }
 
     private void checkManagerPassword(String domainPath, List<EventInfo> infos) {
-        File bootProperties = new File(domainPath + File.separator + BOOT_PROPERTIES_PATH);
-        if (!(bootProperties.exists() && bootProperties.canRead())) {
-            String message = WEBLOGIC_CHECK_ERROR_LOG_CHANNEL + ": can not load file " + BOOT_PROPERTIES_PATH;
-            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
-        }
-        String encryptedPassword = getProperties(bootProperties, "password");
-        String decryptedPassword = decrypt(encryptedPassword, domainPath);
-        List<String> checkList = Arrays.asList(WEAK_WORDS);
-        if (checkList.contains(decryptedPassword)) {
-            infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.MANAGER_PASSWORD, "Weblogic security baseline - the password \"" + decryptedPassword + "\" is detected weak password combination in " + BOOT_PROPERTIES_PATH, true));
+        List<String> paths = searchFiles(new File(domainPath), "boot.properties");
+        if (paths.size() > 0) {
+            File bootProperties = new File(paths.get(0));
+            if (!(bootProperties.exists() && bootProperties.canRead())) {
+                String message = WEBLOGIC_CHECK_ERROR_LOG_CHANNEL + ": can not load file " + paths.get(0);
+                int errorCode = ErrorType.PLUGIN_ERROR.getCode();
+                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
+            }
+            String encryptedPassword = getProperties(bootProperties, "password");
+            String decryptedPassword = decrypt(encryptedPassword, domainPath);
+            List<String> checkList = Arrays.asList(WEAK_WORDS);
+            if (checkList.contains(decryptedPassword)) {
+                infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.MANAGER_PASSWORD, "Weblogic security baseline - the password \"" + decryptedPassword + "\" is detected weak password combination in " + paths.get(0), true));
+            }
         }
     }
 
@@ -90,7 +87,7 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
     private String decrypt(String decrypted, String path) {
         String decryptedString = null;
         try {
-            ClassLoader classLoader = WeblogicSecurityChecker.class.getClassLoader();
+            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             Object encryptionService = Reflection.invokeStaticMethod("weblogic.security.internal.SerializedSystemIni", "getEncryptionService", new Class[]{String.class}, path);
             if (encryptionService != null) {
                 Object clearOrEncryptedService = classLoader.loadClass("weblogic.security.internal.encryption.ClearOrEncryptedService").getDeclaredConstructor(classLoader.loadClass("weblogic.security.internal.encryption.EncryptionService")).newInstance(encryptionService);
@@ -102,5 +99,27 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
             LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
         }
         return decryptedString != null ? decryptedString : "";
+    }
+
+    private List<String> searchFiles(File folder, final String keyword) {
+        List<String> result = new ArrayList<String>();
+        if (folder.isFile()) {
+            result.add(folder.getAbsolutePath());
+        }
+        File[] subFolders = folder.listFiles(new FileFilter() {
+            public boolean accept(File file) {
+                return file.isDirectory() || file.getName().equals(keyword);
+            }
+        });
+        if (subFolders != null) {
+            for (File file : subFolders) {
+                if (file.isFile()) {
+                    result.add(file.getAbsolutePath());
+                } else {
+                    result.addAll(searchFiles(file, keyword));
+                }
+            }
+        }
+        return result;
     }
 }

@@ -123,4 +123,9 @@ public class EmptyRequest extends AbstractRequest {
     public String getContentType() {
         return null;
     }
+
+    @Override
+    public String getCharacterEncoding() {
+        return null;
+    }
 }

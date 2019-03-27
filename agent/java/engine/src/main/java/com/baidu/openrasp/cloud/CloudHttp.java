@@ -22,9 +22,9 @@ import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import org.apache.log4j.helpers.LogLog;
 
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -35,11 +35,35 @@ import java.net.URLConnection;
  * @author: anyang
  * @create: 2018/09/17 16:56
  */
-public class CloudHttp {
+public class CloudHttp implements Request {
     private static final int DEFAULT_CONNECTION_TIMEOUT = 10000;
     private static final int DEFAULT_READ_TIMEOUT = 10000;
 
-    public GenericResponse request(String url, String content) {
+    @Override
+    public GenericResponse commonRequest(String url, String content) {
+        try {
+            return request(url, content);
+        } catch (Exception e) {
+            String message = "HTTP request to " + url + " failed";
+            int errorCode = ErrorType.REQUEST_ERROR.getCode();
+            CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            return null;
+        }
+    }
+
+    @Override
+    public GenericResponse logRequest(String url, String content) {
+        try {
+            return request(url, content);
+        } catch (Exception e) {
+            String message = "HTTP request to " + url + " failed";
+            int errorCode = ErrorType.REQUEST_ERROR.getCode();
+            LogLog.warn(CloudUtils.getExceptionObject(message, errorCode).toString(), e);
+            return null;
+        }
+    }
+
+    public GenericResponse request(String url, String content) throws Exception{
         DataOutputStream out = null;
         InputStream in = null;
         String jsonString = null;
@@ -60,30 +84,20 @@ public class CloudHttp {
             httpUrlConnection.setDoOutput(true);
             httpUrlConnection.setDoInput(true);
             out = new DataOutputStream(httpUrlConnection.getOutputStream());
-            out.writeBytes(content);
+            out.write(content.getBytes("UTF-8"));
             out.flush();
             httpUrlConnection.connect();
             responseCode = httpUrlConnection.getResponseCode();
             in = httpUrlConnection.getInputStream();
             jsonString = CloudUtils.convertInputStreamToJsonString(in);
-        } catch (IOException e) {
-            String message = "HTTP request to " + url + " failed";
-            int errorCode = ErrorType.REQUEST_ERROR.getCode();
-            CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
-            return null;
         } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-                if (in != null) {
-                    in.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (out != null) {
+                out.close();
+            }
+            if (in != null) {
+                in.close();
             }
         }
-
         Gson gson = CloudUtils.getResponseGsonObject();
         GenericResponse response = gson.fromJson(jsonString, new TypeToken<GenericResponse>() {
         }.getType());

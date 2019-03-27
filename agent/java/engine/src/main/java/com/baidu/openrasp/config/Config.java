@@ -220,11 +220,10 @@ public class Config extends FileScanListener {
                             temp.putAll(parseHookWhite(hooks));
                         }
                     }
-                    if (!temp.isEmpty()) {
-                        HookWhiteModel.init(temp);
-                    }
+                    HookWhiteModel.init(temp);
                     continue;
-                } else if (item.key.equals(RESPONSE_HEADERS)) {
+                }
+                if (item.key.equals(RESPONSE_HEADERS)) {
                     if (properties != null) {
                         Object object = properties.get(item.key);
                         if (object instanceof Map) {

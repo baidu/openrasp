@@ -14,6 +14,7 @@ fi
 # 自解压
 tmp=$(mktemp -d)
 self="$(readlink -f "$0")"
+report_url=REPORT_URL
 
 if [[ -z "$tmp" ]]; then
 	echo mktemp ERROR: Unexpected empty result
@@ -59,11 +60,16 @@ cat install.log
 cat uninstall.log
 
 # 上传所有日志和状态代码
-echo Uploading logs
-curl REPORT_URL --connect-timeout 20 --max-time 60 \
-	-F job=$job \
-	-F hostname=$(hostname) \
-	-F install_return=$ret1 -F install_log=@install.log \
-	-F uninstall_return=$ret2 -F uninstall_log=@uninstall.log
+if [[ "$report_url" != "disabled" ]]; then
+	echo Uploading logs
+	curl $report_url --connect-timeout 20 --max-time 60 \
+		-F job=$job \
+		-F hostname=$(hostname) \
+		-F install_return=$ret1 -F install_log=@install.log \
+		-F uninstall_return=$ret2 -F uninstall_log=@uninstall.log
+else
+	echo report_url not set, skipped
+fi
 
 exit
+

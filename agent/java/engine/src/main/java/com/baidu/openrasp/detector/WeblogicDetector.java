@@ -16,9 +16,9 @@
 
 package com.baidu.openrasp.detector;
 
-import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 
+import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
 
 /**
@@ -34,27 +34,14 @@ public class WeblogicDetector extends ServerDetector {
     public boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
         String serverVersion = "";
         try {
-            Class clazz = classLoader.loadClass("weblogic.version");
-            serverVersion = (String) Reflection.invokeStaticMethod(clazz.getName(), "getVersions", new Class[]{});
-            if (serverVersion != null) {
-                int index = getFirstNumIndexFromString(serverVersion);
-                if (index >= 0) {
-                    serverVersion = serverVersion.substring(index);
-                }
-            }
+            Method getPackageMethod = ClassLoader.class.getDeclaredMethod("getPackage", String.class);
+            getPackageMethod.setAccessible(true);
+            Package weblogicBootPackage = (Package) getPackageMethod.invoke(classLoader, "weblogic");
+            serverVersion = weblogicBootPackage.getImplementationVersion();
         } catch (Throwable t) {
             logDetectError("handle weblogic startup failed", t);
         }
-        ApplicationModel.initServerInfo("weblogic", serverVersion);
+        ApplicationModel.setServerInfo("weblogic", serverVersion);
         return true;
-    }
-
-    private int getFirstNumIndexFromString(String version) {
-        for (int i = 0; i < version.length(); i++) {
-            if (version.charAt(i) >= '0' && version.charAt(i) <= '9') {
-                return i;
-            }
-        }
-        return -1;
     }
 }

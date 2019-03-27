@@ -56,16 +56,17 @@ public class CheckParameter {
         WEBDAV("webdav", new JsChecker(), 1 << 12),
         INCLUDE("include", new JsChecker(), 1 << 13),
         SSRF("ssrf", new SSRFChecker(), 1 << 14),
-        SQLEXCEPTION("sql_exception", new SqlStatementChecker(), 1 << 15),
+        SQL_EXCEPTION("sql_exception", new SqlStatementChecker(), 1 << 15),
 
         // java本地检测
-        XSS("xss_userinput", new XssChecker(), 1 << 16),
+        XSS_USERINPUT("xss_userinput", new XssChecker(), 1 << 16),
         SQL_SLOW_QUERY("sqlSlowQuery", new SqlResultChecker(false), 0),
 
         // 安全基线检测
         POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker(), 0),
         POLICY_SERVER_TOMCAT("tomcatServer", new TomcatSecurityChecker(false), 0),
         POLICY_SERVER_JBOSS("jbossServer", new JBossSecurityChecker(false), 0),
+        POLICY_SERVER_JBOSSEAP("jbossEAPServer", new JBossEAPSecurityChecker(false), 0),
         POLICY_SERVER_JETTY("jettyServer", new JettySecurityChecker(false), 0),
         POLICY_SERVER_RESIN("resinServer", new ResinSecurityChecker(false), 0),
         POLICY_SERVER_WEBSPHERE("websphereServer", new WebsphereSecurityChecker(false), 0),
