@@ -82,7 +82,14 @@ public class DiskFileItemHook extends AbstractClassHook {
                 if (content.length > 4 * 1024) {
                     content = Arrays.copyOf(content, 4 * 1024);
                 }
-                params.put("content", params, new String(content, "UTF-8"));
+                String characterEncoding = "UTF-8";
+                if (HookHandler.requestCache.get() != null) {
+                    String encoding = HookHandler.requestCache.get().getCharacterEncoding();
+                    if (encoding != null && !encoding.isEmpty()) {
+                        characterEncoding = encoding;
+                    }
+                }
+                params.put("content", params, new String(content, characterEncoding));
             } catch (Exception e) {
                 String message = e.getMessage();
                 int errorCode = ErrorType.HOOK_ERROR.getCode();

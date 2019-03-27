@@ -292,4 +292,13 @@ public class LocalPluginTestRequest extends AbstractRequest {
     public String getContentType() {
         return null;
     }
+
+    /**
+     * 返回body的编码类型
+     *
+     * @return CharacterEncoding
+     */
+    public String getCharacterEncoding(){
+        return null;
+    }
 }

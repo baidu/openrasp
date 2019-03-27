@@ -291,4 +291,14 @@ public class CoyoteRequest extends AbstractRequest {
     public String getContentType() {
         return null;
     }
+
+    /**
+     * (none-javadoc)
+     *
+     * @see AbstractRequest#getCharacterEncoding()
+     */
+    @Override
+    public String getCharacterEncoding() {
+        return null;
+    }
 }

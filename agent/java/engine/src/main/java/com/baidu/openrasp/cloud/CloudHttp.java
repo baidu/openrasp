@@ -84,7 +84,7 @@ public class CloudHttp implements Request {
             httpUrlConnection.setDoOutput(true);
             httpUrlConnection.setDoInput(true);
             out = new DataOutputStream(httpUrlConnection.getOutputStream());
-            out.writeBytes(content);
+            out.write(content.getBytes("UTF-8"));
             out.flush();
             httpUrlConnection.connect();
             responseCode = httpUrlConnection.getResponseCode();
