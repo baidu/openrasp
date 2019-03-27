@@ -879,14 +879,14 @@ if (RASP.get_jsengine() !== 'v8') {
                 }
             })
 
-            if(Object.keys(json_parameters).length > 0) {
+            if (Object.keys(json_parameters).length > 0) {
                 var jsons = [ [json_parameters, "input_json"] ]
-                while(jsons.length > 0 && reason === false) {
+                while (jsons.length > 0 && reason === false) {
                     var json_arr = jsons.pop()
                     var crt_json_key = json_arr[1]
                     var json_obj = json_arr[0]
                     for (item in json_obj) {
-                        if(typeof json_obj[item] == "string") {
+                        if (typeof json_obj[item] == "string") {
                             reason = _run([json_obj[item]], crt_json_key + "->" + item)
                             if(reason !== false) {
                                 break;
