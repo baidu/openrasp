@@ -29,7 +29,7 @@ public class BaseStandardInstallerTest {
     public void testRunCommand() {
         try {
             String res = BaseStandardInstaller.runCommand(new String[]{"pwd"});
-            assertEquals("/Users/anyang/idea/openrasp/rasp-install/java", res);
+            assertNotNull(res);
         } catch (Exception e) {
             //
         }
