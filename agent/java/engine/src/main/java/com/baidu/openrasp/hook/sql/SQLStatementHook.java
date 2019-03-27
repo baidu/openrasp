@@ -191,7 +191,7 @@ public class SQLStatementHook extends AbstractSqlHook {
     public static void checkSQLErrorCode(String server, SQLException e, Object[] object) {
         //检测获取errorcode 获取异常的时候，打日志
         if (e.getErrorCode() == 0) {
-            String message = "Get error code exception,check mysql version and database driver compatibility issues.";
+            String message = "Get error code exceptions,check mysql version and database driver compatibility issues.";
             int errorCode = ErrorType.HOOK_ERROR.getCode();
             HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
             return;

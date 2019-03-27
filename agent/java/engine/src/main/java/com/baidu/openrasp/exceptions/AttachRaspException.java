@@ -14,35 +14,21 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.exception;
+package com.baidu.openrasp.exceptions;
 
 /**
- * Created by tyy on 4/10/17.
- *
- * 用于做 hook 点拦截的异常
+ * Created by tyy on 19-1-24.
+ * 处理 Attach 模式启动情况下的异常信息
  */
-public class SecurityException extends RuntimeException {
-
-    /**
-     * (none-javadoc)
-     *
-     * @see RuntimeException#RuntimeException()
-     */
-    public SecurityException() {
-        super();
-    }
+public class AttachRaspException extends RuntimeException {
 
     /**
      * constructor
      *
-     * @param message 安全异常信息
+     * @param message Attach 启动异常信息
      */
-    public SecurityException(String message) {
+    public AttachRaspException(String message) {
         super(message);
     }
 
-    @Override
-    public StackTraceElement[] getStackTrace() {
-        return new StackTraceElement[0];
-    }
 }

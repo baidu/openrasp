@@ -18,7 +18,7 @@ package com.baidu.openrasp.config;
 
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.baidu.openrasp.exception.ConfigLoadException;
+import com.baidu.openrasp.exceptions.ConfigLoadException;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
 import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;

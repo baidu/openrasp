@@ -18,7 +18,7 @@ package com.baidu.openrasp.tool.annotation;
 
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.baidu.openrasp.exception.AnnotationScannerException;
+import com.baidu.openrasp.exceptions.AnnotationScannerException;
 import com.baidu.openrasp.transformer.CustomClassTransformer;
 
 import java.io.File;
