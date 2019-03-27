@@ -17,45 +17,45 @@ public class AppTest {
                     "-appid", "9b3554a97673f1f8f5c929310298037a660d3b7a",
                     "-appsecret", "Lng_oIYW-cf2OZUBSywxY6UnBqRizF0cTg9HGi2VVeE",
                     "-backendurl", "http://scloud.baidu.com:8087"};
-            App.main(installTomcat);
+            App.operateServer(installTomcat);
             String[] installBackup = {"-install", "/Users/anyang/Desktop/jacoco/sum/apache-tomcat-8.5.30/",
                     "-appid", "9b3554a97673f1f8f5c929310298037a660d3b7a",
                     "-appsecret", "Lng_oIYW-cf2OZUBSywxY6UnBqRizF0cTg9HGi2VVeE",
                     "-backendurl", "http://scloud.baidu.com:8087",
                     "-keepconf", "true"};
-            App.main(installBackup);
+            App.operateServer(installBackup);
             String[] uninstallTomcat = {"-uninstall", "/Users/anyang/Desktop/jacoco/sum/apache-tomcat-8.5.30/"};
-            App.main(uninstallTomcat);
+            App.operateServer(uninstallTomcat);
 
             String[] installJboss = {"-install", "/Users/anyang/Desktop/jacoco/sum/jboss-5.0.1.GA/",
                     "-appid", "9b3554a97673f1f8f5c929310298037a660d3b7a",
                     "-appsecret", "Lng_oIYW-cf2OZUBSywxY6UnBqRizF0cTg9HGi2VVeE",
                     "-backendurl", "http://scloud.baidu.com:8087"};
-            App.main(installJboss);
+            App.operateServer(installJboss);
             String[] uninstallJboss = {"-uninstall", "/Users/anyang/Desktop/jacoco/sum/jboss-5.0.1.GA/"};
-            App.main(uninstallJboss);
+            App.operateServer(uninstallJboss);
 
             String[] installResin4 = {"-install", "/Users/anyang/Desktop/jacoco/sum/resin-4.0.56/",
                     "-appid", "9b3554a97673f1f8f5c929310298037a660d3b7a",
                     "-appsecret", "Lng_oIYW-cf2OZUBSywxY6UnBqRizF0cTg9HGi2VVeE",
                     "-backendurl", "http://scloud.baidu.com:8087"};
-            App.main(installResin4);
+            App.operateServer(installResin4);
             String[] uninstallResin4 = {"-uninstall", "/Users/anyang/Desktop/jacoco/sum/resin-4.0.56/"};
-            App.main(uninstallResin4);
+            App.operateServer(uninstallResin4);
 
             String[] installResin3 = {"-install", "/Users/anyang/Desktop/jacoco/sum/resin-3.1.15/",
                     "-appid", "9b3554a97673f1f8f5c929310298037a660d3b7a",
                     "-appsecret", "Lng_oIYW-cf2OZUBSywxY6UnBqRizF0cTg9HGi2VVeE",
                     "-backendurl", "http://scloud.baidu.com:8087"};
-            App.main(installResin3);
+            App.operateServer(installResin3);
             String[] uninstallResin3 = {"-uninstall", "/Users/anyang/Desktop/jacoco/sum/resin-3.1.15/"};
-            App.main(uninstallResin3);
+            App.operateServer(uninstallResin3);
 
             String[] installJbossEAP = {"-install", "/Users/anyang/Desktop/jacoco/sum/jboss-as-7.1.1.Final/",
                     "-appid", "9b3554a97673f1f8f5c929310298037a660d3b7a",
                     "-appsecret", "Lng_oIYW-cf2OZUBSywxY6UnBqRizF0cTg9HGi2VVeE",
                     "-backendurl", "http://scloud.baidu.com:8087"};
-            App.main(installJbossEAP);
+            App.operateServer(installJbossEAP);
 //        String[] uninstallJbossEAP = { "-uninstall", "/Users/anyang/Desktop/jacoco/sum/jboss-as-7.1.1.Final/"};
 //        App.main(uninstallJbossEAP);
 
@@ -63,7 +63,7 @@ public class AppTest {
                     "-appid", "9b3554a97673f1f8f5c929310298037a660d3b7a",
                     "-appsecret", "Lng_oIYW-cf2OZUBSywxY6UnBqRizF0cTg9HGi2VVeE",
                     "-backendurl", "http://scloud.baidu.com:8087"};
-            App.main(installWildfly);
+            App.operateServer(installWildfly);
 //        String[] uninstallWildfly= { "-uninstall", "/Users/anyang/Desktop/jacoco/sum/wildfly-8.0.0.Final/"};
 //        App.main(uninstallWildfly);
         } catch (Exception e) {

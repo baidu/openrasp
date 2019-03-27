@@ -27,6 +27,7 @@ import com.baidu.rasp.uninstall.windows.WindowsUninstallerFactory;
 import org.apache.commons.cli.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -172,22 +173,26 @@ public class App {
         System.out.println(helpMsg);
     }
 
-    public static void main(String[] args) {
+    public static void operateServer(String[] args) throws RaspError, ParseException, IOException {
         showBanner();
+        argsParser(args);
+        checkArgs();
+        if ("install".equals(install)) {
+            File serverRoot = new File(baseDir);
+            InstallerFactory factory = newInstallerFactory();
+            Installer installer = factory.getInstaller(serverRoot);
+            installer.install();
+        } else if ("uninstall".equals(install)) {
+            File serverRoot = new File(baseDir);
+            UninstallerFactory factory = newUninstallerFactory();
+            Uninstaller uninstaller = factory.getUninstaller(serverRoot);
+            uninstaller.uninstall();
+        }
+    }
+
+    public static void main(String[] args) {
         try {
-            argsParser(args);
-            checkArgs();
-            if ("install".equals(install)) {
-                File serverRoot = new File(baseDir);
-                InstallerFactory factory = newInstallerFactory();
-                Installer installer = factory.getInstaller(serverRoot);
-                installer.install();
-            } else if ("uninstall".equals(install)) {
-                File serverRoot = new File(baseDir);
-                UninstallerFactory factory = newUninstallerFactory();
-                Uninstaller uninstaller = factory.getUninstaller(serverRoot);
-                uninstaller.uninstall();
-            }
+            operateServer(args);
         } catch (Exception e) {
             if (e instanceof RaspError) {
                 System.out.println(e.getMessage());

@@ -144,7 +144,7 @@ public class OSUtil {
     public static String getMasterIp(String requestUrl) throws Exception {
         URL url = new URL(requestUrl);
         Socket socket = new Socket();
-        socket.connect(new InetSocketAddress(url.getHost(), getPort(url)), 2000);
+        socket.connect(new InetSocketAddress(url.getHost(), getPort(url)), 10000);
         String ip = socket.getLocalAddress().getHostAddress();
         return ip != null ? ip : "";
     }
