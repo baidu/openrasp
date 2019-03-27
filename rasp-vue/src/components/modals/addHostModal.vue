@@ -63,7 +63,7 @@
                 <h4>1. 下载自动安装程序</h4>
                 <pre style="white-space: inherit; ">curl https://packages.baidu.com/app/openrasp/rasp-installer.sh -o rasp-installer.sh</pre>
                 <h4>2. 执行脚本</h4>
-                <pre style="white-space: inherit; ">bash rasp-installer.sh -a {{ current_app.id }} -b {{ current_app.secret }} -c {{ agent_urls[agent_url_id] }}</pre>
+                <pre style="white-space: inherit; ">bash rasp-installer.sh -i -a {{ current_app.id }} -b {{ current_app.secret }} -c {{ agent_urls[agent_url_id] }}</pre>
               </div>
               <div id="docker-tab" class="tab-pane fade">
                 <div class="alert alert-warning">
