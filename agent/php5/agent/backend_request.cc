@@ -45,7 +45,6 @@ BackendRequest::~BackendRequest()
 
 std::shared_ptr<BackendResponse> BackendRequest::curl_perform()
 {
-    std::string req_msg = "URL: " + url + "\nbody: " + (post_data ? (post_data) : "");
     if (curl)
     {
         long response_code;
