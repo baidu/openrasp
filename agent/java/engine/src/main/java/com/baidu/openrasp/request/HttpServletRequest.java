@@ -274,6 +274,16 @@ public final class HttpServletRequest extends AbstractRequest {
         }
     }
 
+    /**
+     * (none-javadoc)
+     *
+     * @see AbstractRequest#getCharacterEncoding()
+     */
+    @Override
+    public String getCharacterEncoding() {
+        return Reflection.invokeStringMethod(request, "getCharacterEncoding", EMPTY_CLASS);
+    }
+
     @Override
     public String getClinetIp() {
         String clientIp = Config.getConfig().getClientIp();

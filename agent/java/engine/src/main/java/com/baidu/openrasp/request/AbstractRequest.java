@@ -333,6 +333,13 @@ public abstract class AbstractRequest {
         }
     }
 
+    /**
+     * 返回body的编码类型
+     *
+     * @return CharacterEncoding
+     */
+    public abstract String getCharacterEncoding();
+
     protected boolean setCharacterEncodingFromConfig() {
         try {
             String paramEncoding = Config.getConfig().getRequestParamEncoding();
