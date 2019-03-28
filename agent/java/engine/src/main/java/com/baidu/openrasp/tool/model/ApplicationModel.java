@@ -63,9 +63,11 @@ public class ApplicationModel {
         HookHandler.LOGGER.info("detect server: " + serverName + "/" + version);
     }
 
-    public static synchronized void setExtraInfo(String extra) {
+    public static synchronized void setExtraInfo(String extra, String extraVersion) {
         extra = (extra == null ? "" : extra);
         applicationInfo.put("extra", extra);
+        extraVersion = (extraVersion == null ? "" : extraVersion);
+        applicationInfo.put("extraVersion", extraVersion);
         HookHandler.LOGGER.info("detect extra server info: " + extra);
     }
 
@@ -78,7 +80,11 @@ public class ApplicationModel {
     }
 
     public static String getVersion() {
-        return applicationInfo.get("version");
+        String result = applicationInfo.get("version");
+        if (StringUtils.isEmpty(result)) {
+            result = applicationInfo.get("extraVersion");
+        }
+        return result;
     }
 
     public static String getServerName() {

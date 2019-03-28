@@ -16,7 +16,6 @@
 
 package com.baidu.openrasp.detector;
 
-import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 
 import java.lang.reflect.Method;
@@ -41,7 +40,7 @@ public class JettyDetector extends ServerDetector {
                     "org.eclipse.jetty.server");
             serverVersion = jettyBootPackage.getImplementationVersion();
         } catch (Throwable e) {
-            HookHandler.LOGGER.error("handle jetty startup failed", e);
+            logDetectError("handle jetty startup failed", e);
         }
         ApplicationModel.setServerInfo("jetty", serverVersion);
         return true;

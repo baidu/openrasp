@@ -21,7 +21,6 @@ import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
-import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.*;
 import org.mozilla.javascript.Scriptable;
 
@@ -34,7 +33,6 @@ import java.util.LinkedList;
  * @author: anyang
  * @create: 2019/02/14 11:43
  */
-@HookAnnotation
 public class SQLConnectionHook extends AbstractClassHook {
     private String type;
 

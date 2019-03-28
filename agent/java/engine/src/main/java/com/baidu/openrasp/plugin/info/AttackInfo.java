@@ -22,6 +22,7 @@ import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.tool.decompile.Decompiler;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -127,9 +128,8 @@ public class AttackInfo extends EventInfo {
             // 被攻击目标IP
             info.put("server_ip", request.getLocalAddr());
             // 被攻击目标服务器类型和版本
-            Map<String, String> serverInfo = request.getServerContext();
-            info.put("server_type", serverInfo != null ? serverInfo.get("server") : null);
-            info.put("server_version", serverInfo != null ? serverInfo.get("version") : null);
+            info.put("server_type", ApplicationModel.getServerName());
+            info.put("server_version", ApplicationModel.getVersion());
             //请求header
             info.put("header", getRequestHeader(request));
             // 被攻击URL
