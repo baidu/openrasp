@@ -72,6 +72,24 @@ public abstract class ConfigurableChecker extends AttackChecker {
         return result;
     }
 
+    protected HashMap<String, Integer> getJsonObjectAsIntMap(JsonObject config, String key, String subKey) {
+        HashMap<String, Integer> result = null;
+        try {
+            JsonElement value = getElement(config, key, subKey);
+            if (value != null) {
+                Gson gson = new Gson();
+                result = gson.fromJson(value, new TypeToken<HashMap<String, Integer>>() {
+                }.getType());
+            }
+        } catch (Exception e) {
+            logJsonError(e);
+        }
+        if (result == null) {
+            result = new HashMap<String, Integer>();
+        }
+        return result;
+    }
+
     protected String getStringElement(JsonObject config, String key, String subKey) {
         try {
             JsonElement value = getElement(config, key, subKey);
