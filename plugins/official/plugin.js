@@ -72,7 +72,8 @@ var algorithmConfig = {
 
         feature: {
             // 是否禁止多语句执行，select ...; update ...;
-            stacked_query:      true,
+            // 有一定误报的可能，比如多个 update
+            stacked_query:      false,
 
             // 是否禁止16进制字符串，select 0x41424344
             no_hex:             true,
