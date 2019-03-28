@@ -153,6 +153,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
             } else {
                 // 算法2: SQL语句策略检查（模拟SQL防火墙功能）
                 HashMap<String, Boolean> funcBlackList = getJsonObjectAsMap(config, CONFIG_KEY_SQL_POLICY, "function_blacklist");
+                HashMap<String, Integer> funcCountList = getJsonObjectAsIntMap(config, CONFIG_KEY_SQL_POLICY, "function_count");
 
                 action = getActionElement(config, CONFIG_KEY_SQL_POLICY);
                 String prefilter = getStringElement(config, CONFIG_KEY_SQL_POLICY, "pre_filter");
@@ -223,6 +224,19 @@ public class SqlStatementChecker extends ConfigurableChecker {
                                             message = "SQLi - Detected dangerous method call " + tokens[i - 1] + "() in sql query";
                                             break;
                                         }
+
+                                        if (funcCountList.containsKey(tokens[i - 1])) {
+                                            Integer count = funcCountList.get(tokens[i - 1]);
+                                            if( -- count > 0) {
+                                                funcCountList.put(tokens[i - 1], count);
+                                            }
+                                            else {
+                                                funcCountList = getJsonObjectAsIntMap(config, CONFIG_KEY_SQL_POLICY, "function_count");
+                                                message = "SQLi - Detected multiple call to dangerous method " + tokens[i - 1] + "() in sql query (" + funcCountList.get(tokens[i - 1]) + " times)";
+                                                break;
+                                            }
+                                        }
+
                                     } else if (i < tokens.length - 2 && tokens[i].equals("into")
                                             && (tokens[i + 1].equals("outfile") || tokens[i + 1].equals("dumpfile"))
                                             && modules.containsKey(CONFIG_KEY_INTO_OUTFILE)
