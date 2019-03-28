@@ -1141,7 +1141,7 @@ function _throws(shouldThrow, block, expected, message) {
             (message ? ' ' + message : '.');
 
   if (shouldThrow && !actual) {
-    fail(actual, expected, 'Missing expected exception' + message);
+    fail(actual, expected, 'Missing expected exceptions' + message);
   }
 
   var userProvidedMessage = typeof message === 'string';
@@ -1152,7 +1152,7 @@ function _throws(shouldThrow, block, expected, message) {
       userProvidedMessage &&
       expectedException(actual, expected)) ||
       isUnexpectedException) {
-    fail(actual, expected, 'Got unwanted exception' + message);
+    fail(actual, expected, 'Got unwanted exceptions' + message);
   }
 
   if ((shouldThrow && actual && expected &&
