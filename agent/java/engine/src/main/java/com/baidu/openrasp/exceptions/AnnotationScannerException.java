@@ -14,29 +14,15 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.exception;
+package com.baidu.openrasp.exceptions;
 
 /**
- * Created by tyy on 9/21/17.
- * 加载配置时发生的错误
+ * @description: 扫描特定注解异常类
+ * @author: anyang
+ * @create: 2018/08/30 17:36
  */
-public class ConfigLoadException extends RuntimeException {
-
-    public ConfigLoadException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public ConfigLoadException(Throwable cause) {
+public class AnnotationScannerException extends RuntimeException {
+    public AnnotationScannerException(Throwable cause) {
         super(cause);
     }
-
-    /**
-     * constructor
-     *
-     * @param message 加载配置异常信息
-     */
-    public ConfigLoadException(String message) {
-        super(message);
-    }
-
 }
