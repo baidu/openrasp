@@ -1154,7 +1154,7 @@ if (RASP.get_jsengine() !== 'v8') {
         {
             if (is_from_userinput(context.parameter, url))
             {
-                if (ip.length && /^(127|192|172|10)\./.test(ip[0]))
+                if (ip.length && /^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(ip[0]))
                 {
                     return {
                         action:     algorithmConfig.ssrf_userinput.action,
