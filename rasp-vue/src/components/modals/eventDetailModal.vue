@@ -78,7 +78,7 @@
               </div>
               <p>
                 {{ data.attack_source }}
-                <span v-if="data.attack_location.location_zh_cn != '-'">
+                <span v-if="data.attack_location && data.attack_location.location_zh_cn != '-'">
                   {{ data.attack_location.location_zh_cn }}
                 </span>
               </p>
