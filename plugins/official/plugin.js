@@ -115,13 +115,13 @@ var algorithmConfig = {
             // 盲注函数，如有误报可删掉一些函数
             hex:              true,
             mid:              true,
-            char:             false,
             ord:              true,
             ascii:            true,
             bin:              true
         },
         function_count: {
             chr:              5,
+            char:             5
         }
     },
 
@@ -184,8 +184,8 @@ var algorithmConfig = {
 
     // 任意文件下载防护 - 来自用户输入
     readFile_userinput: {
-        name:   '算法1 - 用户输入匹配算法',
-        action: 'block',
+        name:       '算法1 - 用户输入匹配算法',
+        action:     'block',
         lcs_search: false
     },
     // 任意文件下载防护 - 使用 file_get_contents 等函数读取 http(s):// 内容（注意，这里不区分是否为内网地址）
@@ -1020,16 +1020,18 @@ if (RASP.get_jsengine() !== 'v8') {
                 }
             }
 
-            var features  = algorithmConfig.sql_policy.feature
-            var func_list = algorithmConfig.sql_policy.function_blacklist
+            var features        = algorithmConfig.sql_policy.feature
+            var func_list       = algorithmConfig.sql_policy.function_blacklist
             var func_count_list = algorithmConfig.sql_policy.function_count
+
+            // 黑名单函数计数
+            var func_count_arr  = {}
 
             // 转换小写，避免大小写绕过
             var tokens_lc = raw_tokens.map(function(v) {
                 return v.text.toLowerCase()
             })
 
-            var function_count_arr = Array()
             for (var i = 1; i < tokens_lc.length; i ++)
             {
                 if (features['union_null'] && tokens_lc[i] === 'select')
@@ -1072,28 +1074,31 @@ if (RASP.get_jsengine() !== 'v8') {
                 else if (features['function_blacklist'] && i > 0 && tokens_lc[i][0] === '(')
                 {
                     var func_name = tokens_lc[i - 1]
-                    if (func_list[func_name]) {
+                    if (func_list[func_name])
+                    {
                         reason = _("SQLi - Detected dangerous method call %1%() in sql query", [func_name])
                         break
                     }
-                    if (features['function_count'])
+
+                    if (features['function_count'] && func_count_list[func_name])
                     {
-                        if (func_count_list[func_name] > 0) {
-                            if (function_count_arr[func_name] > 0){
-                                function_count_arr[func_name]++
-                            }
-                            else{
-                                function_count_arr[func_name] = 1
-                            }
-                            if (function_count_arr[func_name] >= func_count_list[func_name]){
-                                reason = _("SQLi - Detected dangerous method %1%() more than %2% times in sql query", [func_name, function_count_arr[func_name]])
-                                break
-                            }
+                        if (! func_count_arr[func_name])
+                        {
+                            func_count_arr[func_name] = 1
+                        }
+                        else
+                        {
+                            func_count_arr[func_name] ++
+                        }
+
+                        // 超过次数拦截
+                        if (func_count_arr[func_name] >= func_count_list[func_name]) 
+                        {
+                            reason = _("SQLi - Detected multiple call to dangerous method %1%() in sql query (%2% times)", [func_name, func_count_arr[func_name]])
+                            break
                         }
                     }
-                }
-                
-                
+                }            
                 else if (features['into_outfile'] && i < tokens_lc.length - 2 && tokens_lc[i] == 'into')
                 {
                     if (tokens_lc[i + 1] == 'outfile' || tokens_lc[i + 1] == 'dumpfile')
