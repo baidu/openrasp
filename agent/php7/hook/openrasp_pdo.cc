@@ -25,6 +25,7 @@ extern "C"
 }
 
 HOOK_FUNCTION_EX(__construct, pdo, DB_CONNECTION);
+POST_HOOK_FUNCTION_EX(__construct, pdo, SQL_ERROR);
 PRE_HOOK_FUNCTION_EX(query, pdo, SQL);
 POST_HOOK_FUNCTION_EX(query, pdo, SQL_ERROR);
 PRE_HOOK_FUNCTION_EX(exec, pdo, SQL);
@@ -32,8 +33,8 @@ POST_HOOK_FUNCTION_EX(exec, pdo, SQL_ERROR);
 PRE_HOOK_FUNCTION_EX(prepare, pdo, SQL_PREPARED);
 POST_HOOK_FUNCTION_EX(prepare, pdo, SQL_ERROR);
 
-static bool fetch_pdo_error_info(char *driver_name, zval *statement, std::string &error_code, std::string &errro_msg);
-static bool fetch_pdo_exception_info(char *driver_name, pdo_dbh_t *dbh, std::string &error_code, std::string &errro_msg);
+static bool fetch_pdo_error_info(const char *driver_name, zval *statement, std::string &error_code, std::string &errro_msg);
+static bool fetch_pdo_exception_info(const char *driver_name, pdo_dbh_t *dbh, std::string &error_code, std::string &errro_msg);
 
 extern void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p);
 
@@ -218,7 +219,7 @@ void post_pdo_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
     if (!error_code.empty())
     {
-        sql_error_alarm(driver_name, statement, error_code, error_msg);
+        sql_query_error_alarm(driver_name, statement, error_code, error_msg);
     }
 }
 
@@ -249,6 +250,23 @@ void post_pdo___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
+void post_pdo___construct_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    if (Z_TYPE_P(getThis()) == IS_OBJECT)
+    {
+        sql_connection_entry conn_entry;
+        init_pdo_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, &conn_entry);
+        pdo_dbh_t *dbh = Z_PDO_DBH_P(getThis());
+        std::string error_code;
+        std::string error_msg;
+        fetch_pdo_exception_info(conn_entry.get_server().c_str(), dbh, error_code, error_msg);
+        if (!error_code.empty())
+        {
+            sql_connect_error_alarm(&conn_entry, error_code, error_msg);
+        }
+    }
+}
+
 void pre_pdo_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pdo_dbh_t *dbh = Z_PDO_DBH_P(getThis());
@@ -269,7 +287,7 @@ void post_pdo_prepare_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     post_pdo_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-static bool fetch_pdo_error_info(char *driver_name, zval *statement, std::string &error_code, std::string &errro_msg)
+static bool fetch_pdo_error_info(const char *driver_name, zval *statement, std::string &error_code, std::string &errro_msg)
 {
     bool result = false;
     zval function_name, retval;
@@ -301,7 +319,7 @@ static bool fetch_pdo_error_info(char *driver_name, zval *statement, std::string
     return result;
 }
 
-static bool fetch_pdo_exception_info(char *driver_name, pdo_dbh_t *dbh, std::string &error_code, std::string &errro_msg)
+static bool fetch_pdo_exception_info(const char *driver_name, pdo_dbh_t *dbh, std::string &error_code, std::string &errro_msg)
 {
     bool result = false;
     zval info;

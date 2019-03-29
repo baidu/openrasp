@@ -137,6 +137,7 @@ void plugin_sql_check(char *query, int query_len, const char *server)
 bool mysql_error_code_filtered(long err_code)
 {
     static const std::set<long> mysql_error_codes = {
+        1045,
         1060,
         1062,
         1064,
@@ -151,17 +152,36 @@ bool mysql_error_code_filtered(long err_code)
     return false;
 }
 
-void sql_error_alarm(char *server, char *query, const std::string &err_code, const std::string &err_msg)
+void sql_query_error_alarm(char *server, char *query, const std::string &err_code, const std::string &err_msg)
 {
     zval attack_params;
     array_init(&attack_params);
     add_assoc_string(&attack_params, "server", server);
     add_assoc_string(&attack_params, "query", query);
     add_assoc_string(&attack_params, "error_code", (char *)err_code.c_str());
-    // add_assoc_string(&attack_params, "error_msg", (char *)err_msg.c_str());
     zval plugin_message;
     ZVAL_STR(&plugin_message, strpprintf(0, _("%s error %s detected: %s."),
                                          server,
+                                         err_code.c_str(),
+                                         err_msg.c_str()));
+    OpenRASPActionType action = openrasp::scm->get_buildin_check_action(SQL_ERROR);
+    openrasp_buildin_php_risk_handle(action, SQL_ERROR, 100, &attack_params, &plugin_message);
+}
+
+void sql_connect_error_alarm(sql_connection_entry *sql_connection_p, const std::string &err_code, const std::string &err_msg)
+{
+    zval attack_params;
+    array_init(&attack_params);
+    add_assoc_string(&attack_params, "server", (char *)sql_connection_p->get_server().c_str());
+    add_assoc_string(&attack_params, "hostname", (char *)sql_connection_p->get_host().c_str());
+    add_assoc_string(&attack_params, "username", (char *)sql_connection_p->get_username().c_str());
+    add_assoc_string(&attack_params, "socket", (char *)sql_connection_p->get_socket().c_str());
+    add_assoc_string(&attack_params, "connectionString", (char *)sql_connection_p->get_connection_string().c_str());
+    add_assoc_long(&attack_params, "port", sql_connection_p->get_port());
+    add_assoc_string(&attack_params, "error_code", (char *)err_code.c_str());
+    zval plugin_message;
+    ZVAL_STR(&plugin_message, strpprintf(0, _("%s error %s detected: %s."),
+                                         sql_connection_p->get_server().c_str(),
                                          err_code.c_str(),
                                          err_msg.c_str()));
     OpenRASPActionType action = openrasp::scm->get_buildin_check_action(SQL_ERROR);
