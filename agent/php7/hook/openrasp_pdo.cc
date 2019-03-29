@@ -324,7 +324,7 @@ static bool fetch_pdo_exception_info(const char *driver_name, pdo_dbh_t *dbh, st
     bool result = false;
     zval info;
     ZVAL_UNDEF(&info);
-    if (dbh->methods->fetch_err)
+    if (dbh && dbh->methods && dbh->methods->fetch_err)
     {
         array_init(&info);
         if (dbh->methods->fetch_err(dbh, dbh->query_stmt, &info))

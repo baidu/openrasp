@@ -261,7 +261,7 @@ void post_global_mysqli_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMET
 //mysqli_connect error
 void post_global_mysqli_connect_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (Z_TYPE_P(return_value) == IS_OBJECT)
+    if (Z_TYPE_P(return_value) == IS_FALSE)
     {
         mysqli_connect_error_intercept(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry);
     }
