@@ -1156,12 +1156,6 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
         var reason   = false
         var action   = 'ignore'
 
-        // 1.0 RC1 没有过滤 hostname 为空的情况，为了保证兼容性在这里加个判断
-        if (hostname.length === 0)
-        {
-            return clean
-        }
-
         // 算法1 - 当参数来自用户输入，且为内网IP，判定为SSRF攻击
         if (algorithmConfig.ssrf_userinput.action != 'ignore')
         {
@@ -1229,7 +1223,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
         {
             var reason = false
 
-            if (!isNaN(hostname))
+            if (!isNaN(hostname) && hostname.length != 0)
             {
                 reason = _("SSRF - Requesting numeric IP address: %1%", [hostname])
             }
