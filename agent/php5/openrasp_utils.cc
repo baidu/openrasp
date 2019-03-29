@@ -313,19 +313,22 @@ std::string convert_to_header_key(char *key, size_t length)
     return result;
 }
 
-bool openrasp_parse_url(const std::string &origin_url, std::string &host, std::string &port)
+bool openrasp_parse_url(const std::string &origin_url, std::string &scheme, std::string &host, std::string &port)
 {
     php_url *url = php_url_parse_ex(origin_url.c_str(), origin_url.length());
     if (url)
     {
+        if (url->scheme)
+        {
+            scheme = std::string(url->scheme);
+        }
         if (url->host)
         {
             host = std::string(url->host);
             port = std::to_string(url->port);
-            php_url_free(url);
-            return true;
         }
         php_url_free(url);
+        return true;
     }
     return false;
 }

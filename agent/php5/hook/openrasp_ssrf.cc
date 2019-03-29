@@ -91,11 +91,12 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
         return true;
     }
     std::string url_string(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url));
+    std::string scheme;
     std::string host;
     std::string port;
-    if (!openrasp_parse_url(url_string, host, port))
+    if (!openrasp_parse_url(url_string, scheme, host, port) || scheme.empty())
     {
-        if (!openrasp_parse_url("http://" + url_string, host, port))
+        if (!openrasp_parse_url("http://" + url_string, scheme, host, port))
         {
             return false;
         }
@@ -112,9 +113,9 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
             params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "curl_exec"));
             params->Set(openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, host));
             params->Set(openrasp::NewV8String(isolate, "port"), openrasp::NewV8String(isolate, port));
-            uint32_t ip_sum = 0;
             auto ip_arr = v8::Array::New(isolate);
             struct hostent *hp = gethostbyname(host.c_str());
+            uint32_t ip_sum = 0;
             if (hp && hp->h_addr_list)
             {
                 for (int i = 0; hp->h_addr_list[i] != 0; i++)
