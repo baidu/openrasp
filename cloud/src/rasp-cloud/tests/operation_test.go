@@ -6,6 +6,9 @@ import (
 	"rasp-cloud/tests/inits"
 	"time"
 	"rasp-cloud/tests/start"
+	"github.com/bouk/monkey"
+	"rasp-cloud/models"
+	"errors"
 )
 
 func getOperationData() map[string]interface{} {
@@ -28,6 +31,7 @@ func getOperationData() map[string]interface{} {
 
 func TestOperationSearch(t *testing.T) {
 	Convey("Subject: Test Operation Search Api\n", t, func() {
+
 		Convey("when param is valid", func() {
 			r := inits.GetResponse("POST", "/v1/api/operation/search",
 				inits.GetJson(getOperationData()))
@@ -64,6 +68,16 @@ func TestOperationSearch(t *testing.T) {
 			data["end_time"] = 10
 			r := inits.GetResponse("POST", "/v1/api/operation/search",
 				inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the mongodb error", func() {
+			monkey.Patch(models.FindOperation, func(data *models.Operation, startTime int64, endTime int64,
+				page int, perpage int) (count int, result []models.Operation, err error) {
+				return 0, nil, errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/api/operation/search",
+				inits.GetJson(getOperationData()))
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 

@@ -11,6 +11,8 @@ import (
 	"github.com/pkg/errors"
 	"rasp-cloud/tests/start"
 	"rasp-cloud/mongo"
+	"fmt"
+	"gopkg.in/mgo.v2"
 )
 
 func getValidApp() map[string]interface{} {
@@ -20,9 +22,28 @@ func getValidApp() map[string]interface{} {
 		"language":         "java",
 		"general_config":   map[string]interface{}{},
 		"whitelist_config": []map[string]interface{}{},
-		"email_alarm_conf": map[string]interface{}{},
-		"ding_alarm_conf":  map[string]interface{}{},
-		"http_alarm_conf":  map[string]interface{}{},
+
+		"email_alarm_conf": map[string]interface{}{
+			"enable":      true,
+			"server_addr": "smtp.sina.com:456",
+			"username":    "j524697@sina.cn",
+			"password":    "123456789",
+			"subject":     "openrasp",
+			"recv_addr":   []string{"j524697@sina.cn"},
+			"tls_enable":  true,
+		},
+		"ding_alarm_conf": map[string]interface{}{
+			"enable":      true,
+			"agent_id":    "manager6632",
+			"corp_id":     "ding70235c2f4657eb6378f",
+			"corp_secret": "123456789",
+			"recv_user":   []string{"2263285838022"},
+			"recv_party":  []string{"92843"},
+		},
+		"http_alarm_conf": map[string]interface{}{
+			"enable":    true,
+			"recv_addr": []string{"http://172.23.22.14:8088/upload"},
+		},
 	}
 }
 
@@ -65,6 +86,13 @@ func TestHandleApp(t *testing.T) {
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
+		Convey("when the length of language is greater than 64", func() {
+			app := getValidApp()
+			app["language"] = inits.GetLongString(65)
+			r := inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
 		Convey("when description length is greater than 1024", func() {
 			app := getValidApp()
 			app["description"] = inits.GetLongString(1025)
@@ -92,7 +120,7 @@ func TestHandleApp(t *testing.T) {
 			})
 			defer monkey.Unpatch(models.AddApp)
 			app := getValidApp()
-			app["selected_plugin_id"] = inits.GetLongString(1025)
+			app["whitelist_config"] = nil
 			r := inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
@@ -123,7 +151,32 @@ func TestHandleApp(t *testing.T) {
 		})
 
 		Convey("perpage param must be greater than 0", func() {
-			r := inits.GetResponse("POST", "/v1/api/app/get", `{"page":-1,"perpage":-10}`)
+			r := inits.GetResponse("POST", "/v1/api/app/get", `{"page":10,"perpage":-10}`)
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when mongo has errors", func() {
+			monkey.Patch(models.GetAllApp, func(int, int, bool) (int, []*models.App, error) {
+				return 0, nil, errors.New("")
+			})
+			defer monkey.Unpatch(models.GetAllApp)
+			r := inits.GetResponse("POST", "/v1/api/app/get", `{"page":1,"perpage":10}`)
+			So(r.Status, ShouldBeGreaterThan, 0)
+
+			monkey.Patch(models.GetAllApp, func(int, int, bool) (int, []*models.App, error) {
+				return 0, nil, nil
+			})
+			defer monkey.Unpatch(models.GetAllApp)
+			r = inits.GetResponse("POST", "/v1/api/app/get", `{"page":1,"perpage":10}`)
+			So(r.Status, ShouldEqual, 0)
+
+			monkey.Patch(models.GetAppById, func(string) (*models.App, error) {
+				return nil, errors.New("")
+			})
+			defer monkey.Unpatch(models.GetAppById)
+			r = inits.GetResponse("POST", "/v1/api/app/get", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+			}))
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 	})
@@ -149,6 +202,40 @@ func TestGetRasp(t *testing.T) {
 				"perpage": 1,
 			}))
 			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the mongodb has errors", func() {
+			monkey.Patch(models.GetAppById, func(string) (*models.App, error) {
+				return nil, nil
+			})
+			r := inits.GetResponse("POST", "/v1/api/app/rasp/get", inits.GetJson(map[string]interface{}{
+				"app_id":  start.TestApp.Id,
+				"page":    1,
+				"perpage": 1,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.GetAppById)
+
+			monkey.Patch(models.GetRaspByAppId, func(string, int, int) (int, []*models.Rasp, error) {
+				return 0, nil, errors.New("")
+			})
+			defer monkey.Unpatch(models.GetRaspByAppId)
+			r = inits.GetResponse("POST", "/v1/api/app/rasp/get", inits.GetJson(map[string]interface{}{
+				"app_id":  start.TestApp.Id,
+				"page":    1,
+				"perpage": 1,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+
+			monkey.Patch(models.GetRaspByAppId, func(string, int, int) (int, []*models.Rasp, error) {
+				return 0, nil, nil
+			})
+			r = inits.GetResponse("POST", "/v1/api/app/rasp/get", inits.GetJson(map[string]interface{}{
+				"app_id":  start.TestApp.Id,
+				"page":    1,
+				"perpage": 1,
+			}))
+			So(r.Status, ShouldEqual, 0)
 		})
 
 	})
@@ -275,6 +362,30 @@ func TestConfigGenerate(t *testing.T) {
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
+		Convey("when one of config value is nil", func() {
+			r := inits.GetResponse("POST", "/v1/api/app/general/config", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+				"config": map[string]interface{}{
+					"clientip.header": nil,
+				},
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when mongodb has error", func() {
+			monkey.Patch(models.UpdateGeneralConfig, func(string, map[string]interface{}) (*models.App, error) {
+				return nil, errors.New("")
+			})
+			defer monkey.Unpatch(models.UpdateGeneralConfig)
+			r := inits.GetResponse("POST", "/v1/api/app/general/config", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+				"config": map[string]interface{}{
+					"clientip.header": "ClientIP",
+				},
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
 	})
 }
 
@@ -294,6 +405,27 @@ func TestConfigWhitelist(t *testing.T) {
 				},
 			}))
 			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when the white list base format is invalid", func() {
+			r := inits.GetResponse("POST", "/v1/api/app/whitelist/config", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+				"config": []map[string]interface{}{
+					{
+						"url": "http://127.0.0.1:8086/path",
+						"hook": map[string]bool{
+							inits.GetLongString(150): true,
+						},
+					},
+				},
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			data := make([]map[string]interface{}, 201, 201)
+			r = inits.GetResponse("POST", "/v1/api/app/whitelist/config", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+				"config": data,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
 		Convey("when app_id is empty", func() {
@@ -410,6 +542,21 @@ func TestConfigAlarm(t *testing.T) {
 				},
 			}))
 			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when the mongodb has errors", func() {
+			monkey.Patch(models.UpdateAppById, func(string, interface{}) (*models.App, error) {
+				return nil, errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/api/app/alarm/config", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+				"http_alarm_conf": map[string]interface{}{
+					"enable":    true,
+					"recv_addr": []string{"http://172.23.232.144:8088/upload"},
+				},
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.UpdateAppById)
 		})
 
 		Convey("when app_id is empty", func() {
@@ -637,6 +784,21 @@ func TestConfigAlarm(t *testing.T) {
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
+		Convey("when one of ding recv_user and recv_party is empty", func() {
+			r := inits.GetResponse("POST", "/v1/api/app/alarm/config", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+				"ding_alarm_conf": map[string]interface{}{
+					"enable":      true,
+					"agent_id":    "manager6632",
+					"corp_id":     "ding70235c2f4657eb6378f",
+					"corp_secret": "************",
+					"recv_user":   nil,
+					"recv_party":  []string{"92843"},
+				},
+			}))
+			So(r.Status, ShouldEqual, 0)
+		})
+
 		Convey("when count of ding recv_user is greater than 128", func() {
 			r := inits.GetResponse("POST", "/v1/api/app/alarm/config", inits.GetJson(map[string]interface{}{
 				"app_id": start.TestApp.Id,
@@ -785,6 +947,16 @@ func TestConfigApp(t *testing.T) {
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
+		Convey("when the length of language is 0", func() {
+			r := inits.GetResponse("POST", "/v1/api/app/config", inits.GetJson(map[string]interface{}{
+				"app_id":      start.TestApp.Id,
+				"language":    "",
+				"name":        "test_app",
+				"description": "test app",
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
 		Convey("when app name is empty", func() {
 			r := inits.GetResponse("POST", "/v1/api/app/config", inits.GetJson(map[string]interface{}{
 				"app_id":      start.TestApp.Id,
@@ -811,6 +983,20 @@ func TestConfigApp(t *testing.T) {
 				"language":    "java",
 				"name":        "test_app",
 				"description": inits.GetLongString(1025),
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the mongodb has errors", func() {
+			monkey.Patch(models.UpdateAppById, func(string, interface{}) (*models.App, error) {
+				return nil, errors.New("")
+			})
+			defer monkey.Unpatch(models.UpdateAppById)
+			r := inits.GetResponse("POST", "/v1/api/app/config", inits.GetJson(map[string]interface{}{
+				"app_id":      start.TestApp.Id,
+				"language":    "java",
+				"name":        "test_app",
+				"description": "",
 			}))
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
@@ -847,6 +1033,70 @@ func TestDeleteApp(t *testing.T) {
 			So(r.Status, ShouldEqual, 0)
 		})
 
+		Convey("when the mongodb has errors", func() {
+
+			var deleteAppId = "1111111111111111111111"
+			mongo.UpsertId("app", deleteAppId, map[string]interface{}{
+				"name":        "test_delete",
+				"language":    "java",
+				"description": "test delete",
+			})
+
+			monkey.Patch(models.RemoveAppById, func(id string) (app *models.App, err error) {
+				return &models.App{Id: deleteAppId}, nil
+			})
+			defer monkey.Unpatch(models.RemoveAppById)
+
+			monkey.Patch(models.GetAppCount, func() (count int, err error) {
+				return 0, errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/api/app/delete", inits.GetJson(map[string]interface{}{
+				"id": deleteAppId,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.GetAppCount)
+
+			monkey.Patch(models.GetAppCount, func() (count int, err error) {
+				return 10, nil
+			})
+			monkey.Patch(models.RemoveRaspByAppId, func(id string) (err error) {
+				return errors.New("")
+			})
+			r = inits.GetResponse("POST", "/v1/api/app/delete", inits.GetJson(map[string]interface{}{
+				"id": deleteAppId,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.RemoveRaspByAppId)
+
+			monkey.Patch(models.RemovePluginByAppId, func(appId string) error {
+				return errors.New("")
+			})
+			r = inits.GetResponse("POST", "/v1/api/app/delete", inits.GetJson(map[string]interface{}{
+				"id": deleteAppId,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.RemovePluginByAppId)
+
+			monkey.Patch(models.GetAppCount, func() (count int, err error) {
+				return 1, nil
+			})
+			r = inits.GetResponse("POST", "/v1/api/app/delete", inits.GetJson(map[string]interface{}{
+				"id": deleteAppId,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.GetAppCount)
+
+			monkey.Patch(models.RemoveAppById, func(id string) (app *models.App, err error) {
+				return nil, errors.New("")
+			})
+			r = inits.GetResponse("POST", "/v1/api/app/delete", inits.GetJson(map[string]interface{}{
+				"id": deleteAppId,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.RemoveAppById)
+
+		})
+
 	})
 }
 
@@ -880,6 +1130,30 @@ func TestGetPlugins(t *testing.T) {
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
+		Convey("when the mongodb has errors", func() {
+			monkey.Patch(models.GetAppById, func(id string) (app *models.App, err error) {
+				return nil, nil
+			})
+			r := inits.GetResponse("POST", "/v1/api/app/plugin/get", inits.GetJson(map[string]interface{}{
+				"app_id":  start.TestApp.Id,
+				"page":    1,
+				"perpage": 1,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.GetAppById)
+
+			monkey.Patch(models.GetPluginsByApp, func(string, int, int) (int, []models.Plugin, error) {
+				return 0, nil, errors.New("")
+			})
+			r = inits.GetResponse("POST", "/v1/api/app/plugin/get", inits.GetJson(map[string]interface{}{
+				"app_id":  start.TestApp.Id,
+				"page":    1,
+				"perpage": 1,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.GetPluginsByApp)
+		})
+
 	})
 }
 
@@ -905,6 +1179,17 @@ func TestGetSelectedPlugin(t *testing.T) {
 				"app_id": "",
 			}))
 			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the mongodb has errors", func() {
+			monkey.Patch(models.GetSelectedPlugin, func(string, bool) (*models.Plugin, error) {
+				return nil, mgo.ErrNotFound
+			})
+			r := inits.GetResponse("POST", "/v1/api/app/plugin/select/get", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+			}))
+			So(r.Status, ShouldEqual, 0)
+			monkey.Unpatch(models.GetSelectedPlugin)
 		})
 
 	})
@@ -963,6 +1248,30 @@ func TestTestEmail(t *testing.T) {
 			So(r.Status, ShouldEqual, 0)
 		})
 
+		Convey("when email alarm is not enable", func() {
+			monkey.Patch(models.GetAppByIdWithoutMask, func(id string) (app *models.App, err error) {
+				app, _ = models.GetAppById(start.TestApp.Id)
+				app.EmailAlarmConf.Enable = false
+				return
+			})
+			r := inits.GetResponse("POST", "/v1/api/app/email/test", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.GetAppByIdWithoutMask)
+		})
+
+		Convey("when the email has errors", func() {
+			monkey.Patch(models.PushEmailAttackAlarm, func(*models.App, int64, []map[string]interface{}, bool) error {
+				return errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/api/app/email/test", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.PushEmailAttackAlarm)
+		})
+
 		Convey("when app_id doesn't exist", func() {
 			r := inits.GetResponse("POST", "/v1/api/app/email/test", inits.GetJson(map[string]interface{}{
 				"app_id": "0000000000000000000",
@@ -1009,6 +1318,30 @@ func TestTestDing(t *testing.T) {
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
+		Convey("when ding alarm is not enable", func() {
+			monkey.Patch(models.GetAppByIdWithoutMask, func(id string) (app *models.App, err error) {
+				app, _ = models.GetAppById(start.TestApp.Id)
+				app.DingAlarmConf.Enable = false
+				return
+			})
+			r := inits.GetResponse("POST", "/v1/api/app/ding/test", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.GetAppByIdWithoutMask)
+		})
+
+		Convey("when the ding ding has errors", func() {
+			monkey.Patch(models.PushDingAttackAlarm, func(*models.App, int64, []map[string]interface{}, bool) error {
+				return errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/api/app/ding/test", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.PushDingAttackAlarm)
+		})
+
 	})
 }
 
@@ -1039,6 +1372,30 @@ func TestTestHttp(t *testing.T) {
 				"app_id": "",
 			}))
 			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when ding alarm is not enable", func() {
+			monkey.Patch(models.GetAppByIdWithoutMask, func(id string) (app *models.App, err error) {
+				app, _ = models.GetAppById(start.TestApp.Id)
+				app.HttpAlarmConf.Enable = false
+				return
+			})
+			r := inits.GetResponse("POST", "/v1/api/app/http/test", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.GetAppByIdWithoutMask)
+		})
+
+		Convey("when the http has errors", func() {
+			monkey.Patch(models.PushHttpAttackAlarm, func(*models.App, int64, []map[string]interface{}, bool) error {
+				return errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/api/app/http/test", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.PushHttpAttackAlarm)
 		})
 
 	})

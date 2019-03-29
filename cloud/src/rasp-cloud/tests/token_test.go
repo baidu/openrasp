@@ -7,6 +7,8 @@ import (
 	"github.com/bouk/monkey"
 	"rasp-cloud/models"
 	"errors"
+	"reflect"
+	"github.com/astaxie/beego/context"
 )
 
 func TestGetToken(t *testing.T) {
@@ -81,6 +83,7 @@ func TestPostToken(t *testing.T) {
 
 func TestDeleteToken(t *testing.T) {
 	Convey("Subject: Test Delete Token Api\n", t, func() {
+
 		Convey("when the param is valid", func() {
 			token := &models.Token{
 				Token:       "1234567893216549876314",
@@ -91,6 +94,19 @@ func TestDeleteToken(t *testing.T) {
 				"token": token.Token,
 			}))
 			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when the mongodb has errors", func() {
+			monkey.PatchInstanceMethod(reflect.TypeOf(&context.BeegoInput{}), "Header",
+				func(input *context.BeegoInput, key string) string {
+					return "123456789"
+				},
+			)
+			defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&context.BeegoInput{}), "Header")
+			r := inits.GetResponse("POST", "/v1/api/token/delete", inits.GetJson(map[string]interface{}{
+				"token": "123456789",
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
 		Convey("when the token is empty", func() {

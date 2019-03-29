@@ -126,6 +126,8 @@ var (
 		"plugin.maxstack":           100,
 		"ognl.expression.minlength": 30,
 		"log.maxstack":              50,
+		"log.maxburst":              100,
+		"log.maxbackup":             30,
 		"syslog.tag":                "OpenRASP",
 		"syslog.url":                "",
 		"syslog.facility":           1,
@@ -139,18 +141,18 @@ func init() {
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get app collection count", err)
 	}
-	if count <= 0 {
-		index := &mgo.Index{
-			Key:        []string{"name"},
-			Unique:     true,
-			Background: true,
-			Name:       "app_name",
-		}
-		err = mongo.CreateIndex(appCollectionName, index)
-		if err != nil {
-			tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
-		}
+
+	index := &mgo.Index{
+		Key:        []string{"name"},
+		Unique:     true,
+		Background: true,
+		Name:       "app_name",
 	}
+	err = mongo.CreateIndex(appCollectionName, index)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
+	}
+
 	if *conf.AppConfig.Flag.StartType == conf.StartTypeDefault ||
 		*conf.AppConfig.Flag.StartType == conf.StartTypeForeground {
 		if count <= 0 {
@@ -533,9 +535,8 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 		}
 		if emailConf.TlsEnable {
 			return sendEmailWithTls(emailConf, auth, msg)
-		} else {
-			return sendNormalEmail(emailConf, auth, msg)
 		}
+		return sendNormalEmail(emailConf, auth, msg)
 	} else {
 		beego.Error(
 			"failed to send email alarm: the email receiving address and email server address can not be empty", emailConf)

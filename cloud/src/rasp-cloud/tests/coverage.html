@@ -62,37 +62,37 @@
 				
 				<option value="file3">rasp-cloud/controllers/agent/agent_logs/policy_alarm.go (100.0%)</option>
 				
-				<option value="file4">rasp-cloud/controllers/agent/heartbeat.go (92.3%)</option>
+				<option value="file4">rasp-cloud/controllers/agent/heartbeat.go (100.0%)</option>
 				
-				<option value="file5">rasp-cloud/controllers/agent/rasp.go (95.7%)</option>
+				<option value="file5">rasp-cloud/controllers/agent/rasp.go (100.0%)</option>
 				
-				<option value="file6">rasp-cloud/controllers/agent/report.go (86.7%)</option>
+				<option value="file6">rasp-cloud/controllers/agent/report.go (100.0%)</option>
 				
-				<option value="file7">rasp-cloud/controllers/api/app.go (89.3%)</option>
+				<option value="file7">rasp-cloud/controllers/api/app.go (99.4%)</option>
 				
-				<option value="file8">rasp-cloud/controllers/api/fore_logs/attack_alarm.go (80.9%)</option>
+				<option value="file8">rasp-cloud/controllers/api/fore_logs/attack_alarm.go (97.9%)</option>
 				
-				<option value="file9">rasp-cloud/controllers/api/fore_logs/error_alarm.go (90.0%)</option>
+				<option value="file9">rasp-cloud/controllers/api/fore_logs/error_alarm.go (93.3%)</option>
 				
-				<option value="file10">rasp-cloud/controllers/api/fore_logs/policy_alarm.go (90.0%)</option>
+				<option value="file10">rasp-cloud/controllers/api/fore_logs/policy_alarm.go (93.3%)</option>
 				
-				<option value="file11">rasp-cloud/controllers/api/operation.go (95.2%)</option>
+				<option value="file11">rasp-cloud/controllers/api/operation.go (100.0%)</option>
 				
-				<option value="file12">rasp-cloud/controllers/api/plugin.go (91.2%)</option>
+				<option value="file12">rasp-cloud/controllers/api/plugin.go (98.8%)</option>
 				
-				<option value="file13">rasp-cloud/controllers/api/rasp.go (86.0%)</option>
+				<option value="file13">rasp-cloud/controllers/api/rasp.go (100.0%)</option>
 				
-				<option value="file14">rasp-cloud/controllers/api/report.go (95.9%)</option>
+				<option value="file14">rasp-cloud/controllers/api/report.go (100.0%)</option>
 				
-				<option value="file15">rasp-cloud/controllers/api/server.go (84.0%)</option>
+				<option value="file15">rasp-cloud/controllers/api/server.go (100.0%)</option>
 				
-				<option value="file16">rasp-cloud/controllers/api/token.go (97.2%)</option>
+				<option value="file16">rasp-cloud/controllers/api/token.go (100.0%)</option>
 				
-				<option value="file17">rasp-cloud/controllers/api/user.go (96.9%)</option>
+				<option value="file17">rasp-cloud/controllers/api/user.go (100.0%)</option>
 				
-				<option value="file18">rasp-cloud/controllers/base.go (95.2%)</option>
+				<option value="file18">rasp-cloud/controllers/base.go (100.0%)</option>
 				
-				<option value="file19">rasp-cloud/controllers/error.go (25.0%)</option>
+				<option value="file19">rasp-cloud/controllers/error.go (100.0%)</option>
 				
 				<option value="file20">rasp-cloud/controllers/ping.go (100.0%)</option>
 				
@@ -102,21 +102,21 @@
 				
 				<option value="file23">rasp-cloud/es/template.go (100.0%)</option>
 				
-				<option value="file24">rasp-cloud/models/app.go (84.1%)</option>
+				<option value="file24">rasp-cloud/models/app.go (83.1%)</option>
 				
-				<option value="file25">rasp-cloud/models/cookie.go (86.7%)</option>
+				<option value="file25">rasp-cloud/models/cookie.go (90.9%)</option>
 				
-				<option value="file26">rasp-cloud/models/logs/attack_alarm.go (75.2%)</option>
+				<option value="file26">rasp-cloud/models/logs/attack_alarm.go (80.0%)</option>
 				
 				<option value="file27">rasp-cloud/models/logs/error_alarm.go (80.0%)</option>
 				
-				<option value="file28">rasp-cloud/models/logs/log_handle.go (73.5%)</option>
+				<option value="file28">rasp-cloud/models/logs/log_handle.go (80.6%)</option>
 				
-				<option value="file29">rasp-cloud/models/logs/policy_alarm.go (95.5%)</option>
+				<option value="file29">rasp-cloud/models/logs/policy_alarm.go (88.0%)</option>
 				
-				<option value="file30">rasp-cloud/models/operation.go (86.0%)</option>
+				<option value="file30">rasp-cloud/models/operation.go (94.9%)</option>
 				
-				<option value="file31">rasp-cloud/models/plugin.go (80.8%)</option>
+				<option value="file31">rasp-cloud/models/plugin.go (88.5%)</option>
 				
 				<option value="file32">rasp-cloud/models/rasp.go (86.0%)</option>
 				
@@ -126,9 +126,9 @@
 				
 				<option value="file35">rasp-cloud/models/token.go (100.0%)</option>
 				
-				<option value="file36">rasp-cloud/models/user.go (66.2%)</option>
+				<option value="file36">rasp-cloud/models/user.go (75.7%)</option>
 				
-				<option value="file37">rasp-cloud/mongo/mongo.go (88.9%)</option>
+				<option value="file37">rasp-cloud/mongo/mongo.go (94.4%)</option>
 				
 				<option value="file38">rasp-cloud/routers/commentsRouter_controllers.go (100.0%)</option>
 				
@@ -450,13 +450,13 @@ func (o *HeartbeatController) Post() <span class="cov8" title="1">{
         var heartbeat heartbeatParam
         o.UnmarshalJson(&amp;heartbeat)
         rasp, err := models.GetRaspById(heartbeat.RaspId)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
         }</span>
         <span class="cov8" title="1">rasp.LastHeartbeatTime = time.Now().Unix()
         rasp.PluginVersion = heartbeat.PluginVersion
         err = models.UpsertRaspById(heartbeat.RaspId, rasp)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to update rasp", err)
         }</span>
         <span class="cov8" title="1">pluginMd5 := heartbeat.PluginMd5
@@ -471,7 +471,7 @@ func (o *HeartbeatController) Post() <span class="cov8" title="1">{
         isUpdate := false
         // handle plugin
         selectedPlugin, err := models.GetSelectedPlugin(appId, true)
-        if err != nil &amp;&amp; err != mgo.ErrNotFound </span><span class="cov0" title="0">{
+        if err != nil &amp;&amp; err != mgo.ErrNotFound </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get selected plugin", err)
         }</span>
         <span class="cov8" title="1">if selectedPlugin != nil </span><span class="cov8" title="1">{
@@ -542,7 +542,7 @@ func (o *RaspController) Post() <span class="cov8" title="1">{
         <span class="cov8" title="1">if len(rasp.Id) &lt; 16 || len(rasp.Id) &gt; 512 </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "the length of rasp id must be between 16~512")
         }</span>
-        <span class="cov8" title="1">if rasp.Version == "" </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if rasp.Version == "" </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "rasp_version cannot be empty")
         }</span>
         <span class="cov8" title="1">if len(rasp.Version) &gt;= 50 </span><span class="cov8" title="1">{
@@ -600,7 +600,7 @@ func (o *RaspController) Post() <span class="cov8" title="1">{
         <span class="cov8" title="1">rasp.LastHeartbeatTime = time.Now().Unix()
         rasp.RegisterTime = time.Now().Unix()
         err := models.UpsertRaspById(rasp.Id, rasp)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to add rasp", err)
         }</span>
         <span class="cov8" title="1">models.AddOperation(rasp.AppId, models.OperationTypeRegisterRasp, o.Ctx.Input.IP(),
@@ -643,7 +643,7 @@ func (o *ReportController) Post() <span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "rasp_id cannot be empty")
         }</span>
         <span class="cov8" title="1">rasp, err := models.GetRaspById(reportData.RaspId)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
         }</span>
         <span class="cov8" title="1">if reportData.Time &lt;= 0 </span><span class="cov8" title="1">{
@@ -653,7 +653,7 @@ func (o *ReportController) Post() <span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "request_sum param cannot be less than 0")
         }</span>
         <span class="cov8" title="1">err = models.AddReportData(reportData, rasp.AppId)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to insert report data", err)
         }</span>
         <span class="cov8" title="1">o.Serve(reportData)</span>
@@ -714,10 +714,10 @@ func (o *AppController) GetApp() <span class="cov8" title="1">{
                 o.ValidPage(data.Page, data.Perpage)
                 var result = make(map[string]interface{})
                 total, apps, err := models.GetAllApp(data.Page, data.Perpage, true)
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov8" title="1">{
                         o.ServeError(http.StatusBadRequest, "failed to get apps", err)
                 }</span>
-                <span class="cov8" title="1">if apps == nil </span><span class="cov0" title="0">{
+                <span class="cov8" title="1">if apps == nil </span><span class="cov8" title="1">{
                         apps = make([]*models.App, 0)
                 }</span>
                 <span class="cov8" title="1">result["total"] = total
@@ -728,7 +728,7 @@ func (o *AppController) GetApp() <span class="cov8" title="1">{
                 o.Serve(result)</span>
         } else<span class="cov8" title="1"> {
                 app, err := models.GetAppById(data.AppId)
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov8" title="1">{
                         o.ServeError(http.StatusBadRequest, "failed to get app", err)
                 }</span>
                 <span class="cov8" title="1">o.Serve(app)</span>
@@ -745,15 +745,15 @@ func (o *AppController) GetRasps() <span class="cov8" title="1">{
         if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get app", err)
         }</span>
-        <span class="cov8" title="1">if app == nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if app == nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "the app doesn't exist")
         }</span>
         <span class="cov8" title="1">var result = make(map[string]interface{})
         total, rasps, err := models.GetRaspByAppId(app.Id, param.Page, param.Perpage)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get apps", err)
         }</span>
-        <span class="cov8" title="1">if rasps == nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if rasps == nil </span><span class="cov8" title="1">{
                 rasps = make([]*models.Rasp, 0)
         }</span>
         <span class="cov8" title="1">result["total"] = total
@@ -818,7 +818,7 @@ func (o *AppController) UpdateAppGeneralConfig() <span class="cov8" title="1">{
         }</span>
         <span class="cov8" title="1">o.validateAppConfig(param.Config)
         app, err := models.UpdateGeneralConfig(param.AppId, param.Config)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to update app general config", err)
         }</span>
         <span class="cov8" title="1">models.AddOperation(param.AppId, models.OperationTypeUpdateGenerateConfig,
@@ -865,7 +865,7 @@ func (o *AppController) Post() <span class="cov8" title="1">{
         <span class="cov8" title="1">if app.Language == "" </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "app programming language cannot be empty")
         }</span>
-        <span class="cov8" title="1">if len(app.Language) &gt; 64 </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if len(app.Language) &gt; 64 </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "the length of app language name cannot be greater than 64")
         }</span>
         <span class="cov8" title="1">languageSupported := false
@@ -884,13 +884,13 @@ func (o *AppController) Post() <span class="cov8" title="1">{
         <span class="cov8" title="1">if len(app.SelectedPluginId) &gt; 1024 </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "the length of the app selected_plugin_id can not be greater than 1024")
         }</span>
-        <span class="cov8" title="1">if app.EmailAlarmConf.Enable </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if app.EmailAlarmConf.Enable </span><span class="cov8" title="1">{
                 o.validEmailConf(&amp;app.EmailAlarmConf)
         }</span>
-        <span class="cov8" title="1">if app.HttpAlarmConf.Enable </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if app.HttpAlarmConf.Enable </span><span class="cov8" title="1">{
                 o.validHttpAlarm(&amp;app.HttpAlarmConf)
         }</span>
-        <span class="cov8" title="1">if app.DingAlarmConf.Enable </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if app.DingAlarmConf.Enable </span><span class="cov8" title="1">{
                 o.validDingConf(&amp;app.DingAlarmConf)
         }</span>
         <span class="cov8" title="1">if app.GeneralConfig != nil </span><span class="cov8" title="1">{
@@ -903,11 +903,11 @@ func (o *AppController) Post() <span class="cov8" title="1">{
                 o.validateWhiteListConfig(app.WhitelistConfig)
                 configTime := time.Now().UnixNano()
                 app.ConfigTime = configTime
-        }</span> else<span class="cov0" title="0"> {
+        }</span> else<span class="cov8" title="1"> {
                 app.WhitelistConfig = make([]models.WhitelistConfigItem, 0)
         }</span>
         <span class="cov8" title="1">app, err := models.AddApp(app)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "create app failed", err)
         }</span>
         <span class="cov8" title="1">models.AddOperation(app.Id, models.OperationTypeAddApp, o.Ctx.Input.IP(), "New app created with name "+app.Name)
@@ -937,7 +937,7 @@ func (o *AppController) ConfigApp() <span class="cov8" title="1">{
         <span class="cov8" title="1">if len(param.Name) &gt; 64 </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "the length of app name cannot be greater than 64")
         }</span>
-        <span class="cov8" title="1">if param.Language == "" </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if param.Language == "" </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "app language cannot be empty")
         }</span>
         <span class="cov8" title="1">if len(param.Language) &gt; 64 </span><span class="cov8" title="1">{
@@ -958,7 +958,7 @@ func (o *AppController) ConfigApp() <span class="cov8" title="1">{
         }</span>
         <span class="cov8" title="1">updateData := bson.M{"name": param.Name, "language": param.Language, "description": param.Description}
         app, err := models.UpdateAppById(param.AppId, updateData)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to update app config", err)
         }</span>
         <span class="cov8" title="1">operationData, err := json.Marshal(updateData)
@@ -1045,22 +1045,22 @@ func (o *AppController) Delete() <span class="cov8" title="1">{
         <span class="cov8" title="1">mutex.Lock()
         defer mutex.Unlock()
         count, err := models.GetAppCount()
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get app count", err)
         }</span>
         <span class="cov8" title="1">if count &lt;= 1 </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to remove app: keep at least one app")
         }</span>
         <span class="cov8" title="1">app, err = models.RemoveAppById(app.Id)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to remove app", err)
         }</span>
         <span class="cov8" title="1">err = models.RemoveRaspByAppId(app.Id)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to remove rasp by app_id", err)
         }</span>
         <span class="cov8" title="1">err = models.RemovePluginByAppId(app.Id)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to remove plugin by app_id", err)
         }</span>
         <span class="cov8" title="1">models.AddOperation(app.Id, models.OperationTypeDeleteApp, o.Ctx.Input.IP(), "Deleted app with name "+app.Name)
@@ -1070,11 +1070,7 @@ func (o *AppController) Delete() <span class="cov8" title="1">{
 func (o *AppController) validAppArrayParam(param []string, paramName string,
         valid func(interface{}, string) *validation.Result) []string <span class="cov8" title="1">{
         if param != nil </span><span class="cov8" title="1">{
-                if len(param) &gt; 128 </span><span class="cov0" title="0">{
-                        o.ServeError(http.StatusBadRequest,
-                                "the count of "+paramName+" cannot be greater than 128")
-                }</span>
-                <span class="cov8" title="1">for i, v := range param </span><span class="cov8" title="1">{
+                for i, v := range param </span><span class="cov8" title="1">{
                         if len(v) &gt; 256 </span><span class="cov8" title="1">{
                                 o.ServeError(http.StatusBadRequest,
                                         "the element's length of "+paramName+" cannot be greater than 256")
@@ -1086,18 +1082,15 @@ func (o *AppController) validAppArrayParam(param []string, paramName string,
                                 }</span>
                         }
                 }
-        } else<span class="cov0" title="0"> {
+        } else<span class="cov8" title="1"> {
                 param = make([]string, 0)
         }</span>
         <span class="cov8" title="1">return param</span>
 }
 
 func (o *AppController) validateAppConfig(config map[string]interface{}) <span class="cov8" title="1">{
-        if config == nil </span><span class="cov0" title="0">{
-                o.ServeError(http.StatusBadRequest, "the config cannot be nil")
-        }</span>
-        <span class="cov8" title="1">for key, value := range config </span><span class="cov8" title="1">{
-                if value == nil </span><span class="cov0" title="0">{
+        for key, value := range config </span><span class="cov8" title="1">{
+                if value == nil </span><span class="cov8" title="1">{
                         o.ServeError(http.StatusBadRequest, "the value of "+key+" config cannot be nil")
                 }</span>
                 <span class="cov8" title="1">if key == "" </span><span class="cov8" title="1">{
@@ -1118,10 +1111,7 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) <span c
 }
 
 func (o *AppController) validateWhiteListConfig(config []models.WhitelistConfigItem) <span class="cov8" title="1">{
-        if config == nil </span><span class="cov0" title="0">{
-                o.ServeError(http.StatusBadRequest, "the config cannot be nil")
-        }</span>
-        <span class="cov8" title="1">if len(config) &gt; 200 </span><span class="cov0" title="0">{
+        if len(config) &gt; 200 </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest,
                         "the count of whitelist config items must be between (0,200]")
         }</span>
@@ -1131,7 +1121,7 @@ func (o *AppController) validateWhiteListConfig(config []models.WhitelistConfigI
                                 "the length of whitelist config url must be between [1,200]")
                 }</span>
                 <span class="cov8" title="1">for key := range value.Hook </span><span class="cov8" title="1">{
-                        if len(key) &gt; 128 </span><span class="cov0" title="0">{
+                        if len(key) &gt; 128 </span><span class="cov8" title="1">{
                                 o.ServeError(http.StatusBadRequest,
                                         "the length of hook's type can not be greater 128")
                         }</span>
@@ -1181,7 +1171,7 @@ func (o *AppController) ConfigAlarm() <span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to decode param json", err)
         }</span>
         <span class="cov8" title="1">app, err = models.UpdateAppById(param.AppId, updateData)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to update alarm config", err)
         }</span>
         <span class="cov8" title="1">models.AddOperation(app.Id, models.OperationTypeUpdateAlarmConfig, o.Ctx.Input.IP(),
@@ -1199,12 +1189,12 @@ func (o *AppController) GetPlugins() <span class="cov8" title="1">{
         if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get app", err)
         }</span>
-        <span class="cov8" title="1">if app == nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if app == nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "the app doesn't exist")
         }</span>
         <span class="cov8" title="1">var result = make(map[string]interface{})
         total, plugins, err := models.GetPluginsByApp(param.AppId, (param.Page-1)*param.Perpage, param.Perpage)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get plugins", err)
         }</span>
         <span class="cov8" title="1">result["total"] = total
@@ -1227,7 +1217,7 @@ func (o *AppController) GetSelectedPlugin() <span class="cov8" title="1">{
         <span class="cov8" title="1">plugin, err := models.GetSelectedPlugin(appId, false)
 
         if err != nil </span><span class="cov8" title="1">{
-                if mgo.ErrNotFound == err </span><span class="cov0" title="0">{
+                if mgo.ErrNotFound == err </span><span class="cov8" title="1">{
                         o.ServeWithEmptyData()
                         return
                 }</span>
@@ -1270,11 +1260,11 @@ func (o *AppController) TestEmail() <span class="cov8" title="1">{
         if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "can not find the app", err)
         }</span>
-        <span class="cov8" title="1">if !app.EmailAlarmConf.Enable </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if !app.EmailAlarmConf.Enable </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "please enable the email alarm first")
         }</span>
         <span class="cov8" title="1">err = models.PushEmailAttackAlarm(app, 0, nil, true)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to test email alarm", err)
         }</span>
         <span class="cov8" title="1">o.ServeWithEmptyData()</span>
@@ -1292,11 +1282,11 @@ func (o *AppController) TestDing(config map[string]interface{}) <span class="cov
         if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "can not find the app", err)
         }</span>
-        <span class="cov8" title="1">if !app.DingAlarmConf.Enable </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if !app.DingAlarmConf.Enable </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "please enable the ding ding alarm first")
         }</span>
         <span class="cov8" title="1">err = models.PushDingAttackAlarm(app, 0, nil, true)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to test ding ding alarm", err)
         }</span>
         <span class="cov8" title="1">o.ServeWithEmptyData()</span>
@@ -1314,11 +1304,11 @@ func (o *AppController) TestHttp(config map[string]interface{}) <span class="cov
         if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "can not find the app", err)
         }</span>
-        <span class="cov8" title="1">if !app.HttpAlarmConf.Enable </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if !app.HttpAlarmConf.Enable </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "please enable the http alarm first")
         }</span>
         <span class="cov8" title="1">err = models.PushHttpAttackAlarm(app, 0, nil, true)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to test http alarm", err)
         }</span>
         <span class="cov8" title="1">o.ServeWithEmptyData()</span>
@@ -1362,40 +1352,40 @@ func (o *AttackAlarmController) AggregationWithTime() <span class="cov8" title="
         o.UnmarshalJson(&amp;param)
         if param.AppId != "" </span><span class="cov8" title="1">{
                 _, err := models.GetAppById(param.AppId)
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov8" title="1">{
                         o.ServeError(http.StatusBadRequest, "failed to get the app: "+param.AppId)
                 }</span>
-        } else<span class="cov0" title="0"> {
+        } else<span class="cov8" title="1"> {
                 param.AppId = "*"
         }</span>
-        <span class="cov8" title="1">if param.StartTime &lt;= 0 </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if param.StartTime &lt;= 0 </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "start_time must be greater than 0")
         }</span>
-        <span class="cov8" title="1">if param.EndTime &lt;= 0 </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if param.EndTime &lt;= 0 </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "end_time must be greater than 0")
         }</span>
-        <span class="cov8" title="1">if param.StartTime &gt; param.EndTime </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if param.StartTime &gt; param.EndTime </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "start_time cannot be greater than end_time")
         }</span>
         <span class="cov8" title="1">duration := time.Duration(param.EndTime-param.StartTime) * time.Millisecond
-        if duration &gt; 366*24*time.Hour </span><span class="cov0" title="0">{
+        if duration &gt; 366*24*time.Hour </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "time duration can not be greater than 366 days")
         }</span>
-        <span class="cov8" title="1">if param.Interval == "" </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if param.Interval == "" </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "interval cannot be empty")
         }</span>
-        <span class="cov8" title="1">if param.TimeZone == "" </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if param.TimeZone == "" </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "time_zone cannot be empty")
         }</span>
-        <span class="cov8" title="1">if len(param.Interval) &gt; 32 </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if len(param.Interval) &gt; 32 </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "the length of interval cannot be greater than 32")
         }</span>
-        <span class="cov8" title="1">if len(param.TimeZone) &gt; 32 </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if len(param.TimeZone) &gt; 32 </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "the length of time_zone cannot be greater than 32")
         }</span>
         <span class="cov8" title="1">result, err :=
                 logs.AggregationAttackWithTime(param.StartTime, param.EndTime, param.Interval, param.TimeZone, param.AppId)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get aggregation from es", err)
         }</span>
         <span class="cov8" title="1">o.Serve(result)</span>
@@ -1408,7 +1398,7 @@ func (o *AttackAlarmController) AggregationWithType() <span class="cov8" title="
         o.validFieldAggrParam(param)
         result, err :=
                 logs.AggregationAttackWithType(param.StartTime, param.EndTime, param.Size, param.AppId)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get aggregation from es", err)
         }</span>
         <span class="cov8" title="1">o.Serve(result)</span>
@@ -1421,7 +1411,7 @@ func (o *AttackAlarmController) AggregationWithUserAgent() <span class="cov8" ti
         o.validFieldAggrParam(param)
         result, err :=
                 logs.AggregationAttackWithUserAgent(param.StartTime, param.EndTime, param.Size, param.AppId)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get aggregation from es", err)
         }</span>
         <span class="cov8" title="1">o.Serve(result)</span>
@@ -1433,7 +1423,7 @@ func (o *AttackAlarmController) Search() <span class="cov8" title="1">{
         total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime,
                 false, searchData, "event_time", param.Page,
                 param.Perpage, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+param.Data.AppId)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
         }</span>
         <span class="cov8" title="1">o.Serve(map[string]interface{}{
@@ -1451,7 +1441,7 @@ func (o *AttackAlarmController) AggregationVuln() <span class="cov8" title="1">{
         total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime,
                 true, searchData, "event_time", param.Page,
                 param.Perpage, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+param.Data.AppId)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
         }</span>
         <span class="cov8" title="1">o.Serve(map[string]interface{}{
@@ -1521,7 +1511,7 @@ func (o *AttackAlarmController) validFieldAggrParam(param *logs.AggrFieldParam) 
                 o.ServeError(http.StatusBadRequest, "start_time cannot be greater than end_time")
         }</span>
         <span class="cov8" title="1">duration := time.Duration(param.EndTime-param.StartTime) * time.Millisecond
-        if duration &gt; 366*24*time.Hour </span><span class="cov0" title="0">{
+        if duration &gt; 366*24*time.Hour </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "time duration can not be greater than 366 days")
         }</span>
         <span class="cov8" title="1">if param.Size &lt;= 0 </span><span class="cov8" title="1">{
@@ -1598,7 +1588,7 @@ func (o *ErrorController) Search() <span class="cov8" title="1">{
         delete(searchData, "app_id")
         total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime, false, searchData, "event_time",
                 param.Page, param.Perpage, false, logs.ErrorAlarmInfo.EsAliasIndex+"-"+param.Data.AppId)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
         }</span>
         <span class="cov8" title="1">o.Serve(map[string]interface{}{
@@ -1680,7 +1670,7 @@ func (o *PolicyAlarmController) Search() <span class="cov8" title="1">{
         delete(searchData, "app_id")
         total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime, false, searchData, "event_time",
                 param.Page, param.Perpage, false, logs.PolicyAlarmInfo.EsAliasIndex+"-"+param.Data.AppId)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
         }</span>
         <span class="cov8" title="1">o.Serve(map[string]interface{}{
@@ -1746,7 +1736,7 @@ func (o *OperationController) Search() <span class="cov8" title="1">{
 
         <span class="cov8" title="1">var result = make(map[string]interface{})
         total, operations, err := models.FindOperation(param.Data, param.StartTime, param.EndTime, param.Page, param.Perpage)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "Failed to get plugin list", err)
         }</span>
         <span class="cov8" title="1">result["total"] = total
@@ -1792,11 +1782,11 @@ type PluginController struct {
 // @router / [post]
 func (o *PluginController) Upload() <span class="cov8" title="1">{
         appId := o.GetString("app_id")
-        if appId == "" </span><span class="cov0" title="0">{
+        if appId == "" </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "app_id can not be empty")
         }</span>
         <span class="cov8" title="1">_, err := models.GetAppById(appId)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get app", err)
         }</span>
 
@@ -1849,7 +1839,7 @@ func (o *PluginController) Download() <span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get plugin", err)
         }</span>
         <span class="cov8" title="1">o.Ctx.Output.Header("Content-Type", "text/plain")
-        if plugin.Name == "" </span><span class="cov0" title="0">{
+        if plugin.Name == "" </span><span class="cov8" title="1">{
                 plugin.Name = "plugin"
         }</span>
         <span class="cov8" title="1">o.Ctx.Output.Header("Content-Disposition", "attachment;filename="+plugin.Name+"-"+plugin.Version+".js")
@@ -1870,7 +1860,7 @@ func (o *PluginController) UpdateAppAlgorithmConfig() <span class="cov8" title="
                 o.ServeError(http.StatusBadRequest, "config can not be empty")
         }</span>
         <span class="cov8" title="1">appId, err := models.UpdateAlgorithmConfig(param.PluginId, param.Config)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to update algorithm config", err)
         }</span>
         <span class="cov8" title="1">models.AddOperation(appId, models.OperationTypeUpdateAlgorithmConfig,
@@ -1909,14 +1899,14 @@ func (o *PluginController) Delete() <span class="cov8" title="1">{
         }</span>
         <span class="cov8" title="1">var app *models.App
         err = mongo.FindOne("app", bson.M{"selected_plugin_id": pluginId}, &amp;app)
-        if err != nil &amp;&amp; err != mgo.ErrNotFound </span><span class="cov0" title="0">{
+        if err != nil &amp;&amp; err != mgo.ErrNotFound </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get app", err)
         }</span>
         <span class="cov8" title="1">if app != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "Unable to delete a plugin in use. Plugin is used by appid: "+app.Id)
         }</span>
         <span class="cov8" title="1">err = models.DeletePlugin(pluginId)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to delete the plugin", err)
         }</span>
         <span class="cov8" title="1">models.AddOperation(plugin.AppId, models.OperationTypeDeletePlugin, o.Ctx.Input.IP(),
@@ -1961,12 +1951,12 @@ func (o *RaspController) Search() <span class="cov8" title="1">{
                 Perpage int          `json:"perpage"`
         }
         o.UnmarshalJson(&amp;param)
-        if param.Data == nil </span><span class="cov0" title="0">{
+        if param.Data == nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "search data can not be empty")
         }</span>
         <span class="cov8" title="1">o.ValidPage(param.Page, param.Perpage)
         total, rasps, err := models.FindRasp(param.Data, param.Page, param.Perpage)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
         }</span>
         <span class="cov8" title="1">if rasps == nil </span><span class="cov8" title="1">{
@@ -1993,14 +1983,14 @@ func (o *RaspController) Delete() <span class="cov8" title="1">{
         }</span>
         <span class="cov8" title="1">if rasp.Id != "" </span><span class="cov8" title="1">{
                 _, rasps, err := models.FindRasp(rasp, 1, 1)
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov8" title="1">{
                         o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
                 }</span>
                 <span class="cov8" title="1">if len(rasps) == 0 </span><span class="cov8" title="1">{
                         o.ServeError(http.StatusBadRequest, "can not find the rasp")
                 }</span>
                 <span class="cov8" title="1">err = models.RemoveRaspById(rasp.Id)
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov8" title="1">{
                         o.ServeError(http.StatusBadRequest, "failed to remove rasp", err)
                 }</span>
                 <span class="cov8" title="1">models.AddOperation(rasp.AppId, models.OperationTypeDeleteRasp, o.Ctx.Input.IP(), "Deleted RASP agent: "+rasp.Id)
@@ -2009,11 +1999,11 @@ func (o *RaspController) Delete() <span class="cov8" title="1">{
                 })</span>
         } else<span class="cov8" title="1"> if rasp.RegisterIp != "" </span><span class="cov8" title="1">{
                 valid := validation.Validation{}
-                if result := valid.IP(rasp.RegisterIp, "IP"); !result.Ok </span><span class="cov0" title="0">{
+                if result := valid.IP(rasp.RegisterIp, "IP"); !result.Ok </span><span class="cov8" title="1">{
                         o.ServeError(http.StatusBadRequest, "rasp register_ip format error"+result.Error.Message)
                 }</span>
                 <span class="cov8" title="1">removedCount, err := models.RemoveRaspByRegisterIp(rasp.RegisterIp, rasp.AppId)
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov8" title="1">{
                         o.ServeError(http.StatusBadRequest, "failed to remove rasp by register ip", err)
                 }</span>
                 <span class="cov8" title="1">models.AddOperation(rasp.AppId, models.OperationTypeDeleteRasp, o.Ctx.Input.IP(),
@@ -2116,12 +2106,12 @@ func (o *ReportController) Search() <span class="cov8" title="1">{
                         o.ServeError(http.StatusBadRequest, "app_id must be string")
                 }</span>
                 <span class="cov8" title="1">_, err := models.GetAppById(appId)
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov8" title="1">{
                         o.ServeError(http.StatusBadRequest, "failed to get app", err)
                 }</span>
         }
         <span class="cov8" title="1">err, result := models.GetHistoryRequestSum(int64(startTime), int64(endTime), interval, timeZone, appId)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to get request sum form ES", err)
         }</span>
         <span class="cov8" title="1">o.Serve(result)</span>
@@ -2161,8 +2151,9 @@ type ServerController struct {
 func (o *ServerController) GetUrl() <span class="cov8" title="1">{
         serverUrl, err := models.GetServerUrl()
         if err != nil </span><span class="cov8" title="1">{
-                if mgo.ErrNotFound == err </span><span class="cov0" title="0">{
+                if mgo.ErrNotFound == err </span><span class="cov8" title="1">{
                         o.Serve(models.ServerUrl{AgentUrls: []string{}})
+                        return
                 }</span>
                 <span class="cov8" title="1">o.ServeError(http.StatusBadRequest, "failed to get serverUrl", err)</span>
         }
@@ -2178,7 +2169,7 @@ func (o *ServerController) PutUrl() <span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "Invalid panel url: "+serverUrl.PanelUrl)
         }</span>
 
-        <span class="cov8" title="1">if len(serverUrl.PanelUrl) &gt; 512 </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if len(serverUrl.PanelUrl) &gt; 512 </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "the length of panel url cannot be greater than 512")
         }</span>
 
@@ -2191,14 +2182,14 @@ func (o *ServerController) PutUrl() <span class="cov8" title="1">{
                         if len(agentUrl) &gt; 512 </span><span class="cov8" title="1">{
                                 o.ServeError(http.StatusBadRequest, "the length of agent url cannot be greater than 512")
                         }</span>
-                        <span class="cov8" title="1">if !validHttpUrl(agentUrl) </span><span class="cov0" title="0">{
+                        <span class="cov8" title="1">if !validHttpUrl(agentUrl) </span><span class="cov8" title="1">{
                                 o.ServeError(http.StatusBadRequest, "Invalid agent url: "+agentUrl)
                         }</span>
                 }
         }
 
         <span class="cov8" title="1">err := models.PutServerUrl(serverUrl)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "failed to put server url", err)
         }</span>
 
@@ -2283,7 +2274,7 @@ func (o *TokenController) Delete() <span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "the token param cannot be empty")
         }</span>
         <span class="cov8" title="1">currentToken := o.Ctx.Input.Header(models.AuthTokenName)
-        if currentToken == token.Token </span><span class="cov0" title="0">{
+        if currentToken == token.Token </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "can not delete the token currently in use")
         }</span>
         <span class="cov8" title="1">token, err := models.RemoveToken(token.Token)
@@ -2344,7 +2335,7 @@ func (o *UserController) Login() <span class="cov8" title="1">{
         <span class="cov8" title="1">cookie := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(10000)) + logUser + "openrasp"+
                 strconv.FormatInt(time.Now().UnixNano(), 10))))
         err = models.NewCookie(cookie)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusUnauthorized, "failed to create cookie", err)
         }</span>
         <span class="cov8" title="1">o.Ctx.SetCookie(models.AuthCookieName, cookie)
@@ -2452,7 +2443,7 @@ func (o *BaseController) ValidPage(page int, perpage int) <span class="cov8" tit
         if page &lt;= 0 </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "page must be greater than 0")
         }</span>
-        <span class="cov8" title="1">if perpage &lt;= 0 </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if perpage &lt;= 0 </span><span class="cov8" title="1">{
                 o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
         }</span>
 }
@@ -2482,15 +2473,15 @@ func (o *ErrorController) Error404() <span class="cov8" title="1">{
         o.ServeStatusCode(404)
 }</span>
 
-func (o *ErrorController) Error500() <span class="cov0" title="0">{
+func (o *ErrorController) Error500() <span class="cov8" title="1">{
         o.ServeStatusCode(500)
 }</span>
 
-func (o *ErrorController) Error503() <span class="cov0" title="0">{
+func (o *ErrorController) Error503() <span class="cov8" title="1">{
         o.ServeStatusCode(503)
 }</span>
 
-func (o *ErrorController) Error502() <span class="cov0" title="0">{
+func (o *ErrorController) Error502() <span class="cov8" title="1">{
         o.ServeStatusCode(502)
 }</span>
 </pre>
@@ -3257,6 +3248,7 @@ import (
         "crypto/tls"
         "net"
         "rasp-cloud/conf"
+        "net/url"
 )
 
 type App struct {
@@ -3326,16 +3318,7 @@ const (
 )
 
 var (
-        lastAlarmTime = time.Now().UnixNano() / 1000000
-        TestAlarmData = []map[string]interface{}{
-                {
-                        "event_time":      time.Now().Format("2006-01-01 15:04:05"),
-                        "attack_source":   "220.181.57.191",
-                        "target":          "localhost",
-                        "attack_type":     "sql",
-                        "intercept_state": "block",
-                },
-        }
+        lastAlarmTime        = time.Now().UnixNano() / 1000000
         DefaultGeneralConfig = map[string]interface{}{
                 "clientip.header":    "ClientIP",
                 "block.status_code":  302,
@@ -3351,6 +3334,8 @@ var (
                 "plugin.maxstack":           100,
                 "ognl.expression.minlength": 30,
                 "log.maxstack":              50,
+                "log.maxburst":              100,
+                "log.maxbackup":             30,
                 "syslog.tag":                "OpenRASP",
                 "syslog.url":                "",
                 "syslog.facility":           1,
@@ -3364,21 +3349,21 @@ func init() <span class="cov8" title="1">{
         if err != nil </span><span class="cov0" title="0">{
                 tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get app collection count", err)
         }</span>
-        <span class="cov8" title="1">if count &lt;= 0 </span><span class="cov8" title="1">{
-                index := &amp;mgo.Index{
-                        Key:        []string{"name"},
-                        Unique:     true,
-                        Background: true,
-                        Name:       "app_name",
-                }
-                err = mongo.CreateIndex(appCollectionName, index)
-                if err != nil </span><span class="cov0" title="0">{
-                        tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
-                }</span>
+
+        <span class="cov8" title="1">index := &amp;mgo.Index{
+                Key:        []string{"name"},
+                Unique:     true,
+                Background: true,
+                Name:       "app_name",
         }
+        err = mongo.CreateIndex(appCollectionName, index)
+        if err != nil </span><span class="cov0" title="0">{
+                tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
+        }</span>
+
         <span class="cov8" title="1">if *conf.AppConfig.Flag.StartType == conf.StartTypeDefault ||
                 *conf.AppConfig.Flag.StartType == conf.StartTypeForeground </span><span class="cov8" title="1">{
-                if count &lt;= 0 </span><span class="cov8" title="1">{
+                if count &lt;= 0 </span><span class="cov0" title="0">{
                         createDefaultApp()
                 }</span>
                 <span class="cov8" title="1">go startAlarmTicker(time.Second * time.Duration(conf.AppConfig.AlarmCheckInterval))</span>
@@ -3415,7 +3400,7 @@ func createEsIndexWithAppId(appId string) error <span class="cov8" title="1">{
         <span class="cov8" title="1">return nil</span>
 }
 
-func createDefaultApp() <span class="cov8" title="1">{
+func createDefaultApp() <span class="cov0" title="0">{
         _, err := AddApp(&amp;App{
                 Name:        defaultAppName,
                 Description: "default app",
@@ -3597,14 +3582,14 @@ func HandleApp(app *App, isCreate bool) error <span class="cov8" title="1">{
                         app.DingAlarmConf.CorpSecret = SecreteMask
                 }</span>
         } else<span class="cov8" title="1"> {
-                if app.GeneralConfig == nil </span><span class="cov8" title="1">{
+                if app.GeneralConfig == nil </span><span class="cov0" title="0">{
                         app.GeneralConfig = DefaultGeneralConfig
                 }</span>
         }
         <span class="cov8" title="1">if app.WhitelistConfig == nil </span><span class="cov8" title="1">{
                 app.WhitelistConfig = make([]WhitelistConfigItem, 0)
         }</span>
-        <span class="cov8" title="1">if app.GeneralConfig == nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if app.GeneralConfig == nil </span><span class="cov8" title="1">{
                 app.GeneralConfig = make(map[string]interface{})
         }</span>
 
@@ -3614,7 +3599,7 @@ func HandleApp(app *App, isCreate bool) error <span class="cov8" title="1">{
                 if err != mgo.ErrNotFound </span><span class="cov8" title="1">{
                         return err
                 }</span>
-                <span class="cov0" title="0">return nil</span>
+                <span class="cov8" title="1">return nil</span>
         }
         <span class="cov8" title="1">if plugin != nil &amp;&amp; plugin.AlgorithmConfig != nil </span><span class="cov8" title="1">{
                 app.AlgorithmConfig = plugin.AlgorithmConfig
@@ -3640,7 +3625,7 @@ func UpdateWhiteListConfig(appId string, config []WhitelistConfigItem) (app *App
 
 func RemoveAppById(id string) (app *App, err error) <span class="cov8" title="1">{
         err = mongo.FindId(appCollectionName, id, &amp;app)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return
         }</span>
         <span class="cov8" title="1">return app, mongo.RemoveId(appCollectionName, id)</span>
@@ -3664,6 +3649,25 @@ func PushAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isT
         }
 }
 
+func getTestAlarmData() []map[string]interface{} <span class="cov8" title="1">{
+        return []map[string]interface{}{
+                {
+                        "event_time":      time.Now().Format("2006-01-01 15:06:05"),
+                        "attack_source":   "220.181.57.191",
+                        "attack_type":     "sql",
+                        "intercept_state": "block",
+                        "url":             "http://www.example.com/article.php?id=1",
+                },
+                {
+                        "event_time":      time.Now().Format("2006-01-01 15:03:01"),
+                        "attack_source":   "220.23.38.115",
+                        "attack_type":     "command",
+                        "intercept_state": "log",
+                        "url":             "http://www.example.com/login.php?id=2",
+                },
+        }
+}</span>
+
 func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isTest bool) error <span class="cov8" title="1">{
         var emailConf = app.EmailAlarmConf
         if len(emailConf.RecvAddr) &gt; 0 &amp;&amp; emailConf.ServerAddr != "" </span><span class="cov8" title="1">{
@@ -3685,14 +3689,19 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
                 }</span>
                 <span class="cov8" title="1">if isTest </span><span class="cov8" title="1">{
                         subject = "【测试邮件】" + subject
-                        alarms = TestAlarmData
-                        total = int64(len(TestAlarmData))
+                        alarms = getTestAlarmData()
+                        total = int64(len(alarms))
                 }</span>
                 <span class="cov8" title="1">head := map[string]string{
-                        "from":         emailAddr.String(),
-                        "To":           strings.Join(emailConf.RecvAddr, ","),
-                        "Content-Type": "text/html; charset=UTF-8",
-                        "Subject":      subject,
+                        "from":              emailAddr.String(),
+                        "To":                strings.Join(emailConf.RecvAddr, ","),
+                        "Subject":           subject,
+                        "Content-Type":      "text/html; charset=UTF-8",
+                        "X-Priority":        "3",
+                        "X-MSMail-Priority": "Normal",
+                        "X-Mailer":          "Microsoft Outlook Express 6.00.2900.2869",
+                        "X-MimeOLE":         "Produced By Microsoft MimeOLE V6.00.2900.2869",
+                        "ReturnReceipt":     "1",
                 }
                 t, err := template.ParseFiles("views/email.tpl")
                 if err != nil </span><span class="cov0" title="0">{
@@ -3701,6 +3710,7 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
                 }</span>
                 <span class="cov8" title="1">alarmData := new(bytes.Buffer)
                 panelUrl, port := getPanelServerUrl()
+                handleAlarms(alarms)
                 err = t.Execute(alarmData, &amp;emailTemplateParam{
                         Total:        total - int64(len(alarms)),
                         Alarms:       alarms,
@@ -3716,7 +3726,14 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
                         msg += fmt.Sprintf("%s: %s\r\n", k, v)
                 }</span>
                 <span class="cov8" title="1">msg += "\r\n" + alarmData.String()
-                host, _, err := net.SplitHostPort(emailConf.ServerAddr)
+                if !strings.Contains(emailConf.ServerAddr, ":") </span><span class="cov0" title="0">{
+                        if emailConf.TlsEnable </span><span class="cov0" title="0">{
+                                emailConf.ServerAddr += ":465"
+                        }</span> else<span class="cov0" title="0"> {
+                                emailConf.ServerAddr += ":25"
+                        }</span>
+                }
+                <span class="cov8" title="1">host, _, err := net.SplitHostPort(emailConf.ServerAddr)
                 if err != nil </span><span class="cov0" title="0">{
                         return handleError("failed to get email serve host: " + err.Error())
                 }</span>
@@ -3724,17 +3741,39 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
                 if emailConf.Password == "" </span><span class="cov0" title="0">{
                         auth = nil
                 }</span>
-
                 <span class="cov8" title="1">if emailConf.TlsEnable </span><span class="cov8" title="1">{
                         return sendEmailWithTls(emailConf, auth, msg)
-                }</span> else<span class="cov8" title="1"> {
-                        return sendNormalEmail(emailConf, auth, msg)
                 }</span>
+                <span class="cov8" title="1">return sendNormalEmail(emailConf, auth, msg)</span>
         } else<span class="cov0" title="0"> {
                 beego.Error(
                         "failed to send email alarm: the email receiving address and email server address can not be empty", emailConf)
                 return errors.New("the email receiving address and email server address can not be empty")
         }</span>
+}
+
+func handleAlarms(alarms []map[string]interface{}) <span class="cov8" title="1">{
+        for index, alarm := range alarms </span><span class="cov8" title="1">{
+                alarm["index"] = index + 1
+                if intercept, ok := logs.AttackInterceptMap[alarm["intercept_state"]]; ok </span><span class="cov8" title="1">{
+                        alarm["intercept_state"] = intercept
+                }</span>
+
+                <span class="cov8" title="1">if attackType, ok := logs.AttackTypeMap[alarm["attack_type"]]; ok </span><span class="cov8" title="1">{
+                        alarm["attack_type"] = attackType
+                }</span> else<span class="cov0" title="0"> {
+                        alarm["attack_type"] = "其他类型"
+                }</span>
+
+                <span class="cov8" title="1">if alarm["url"] != nil </span><span class="cov8" title="1">{
+                        if attackUrl, ok := alarm["url"].(string); ok &amp;&amp; attackUrl != "" </span><span class="cov8" title="1">{
+                                attackUrl, err := url.Parse(attackUrl)
+                                if err == nil </span><span class="cov8" title="1">{
+                                        alarm["domain"] = attackUrl.Host
+                                }</span>
+                        }
+                }
+        }
 }
 
 func getPanelServerUrl() (string, int) <span class="cov8" title="1">{
@@ -3745,11 +3784,11 @@ func getPanelServerUrl() (string, int) <span class="cov8" title="1">{
         }</span>
 
         <span class="cov8" title="1">port := beego.AppConfig.DefaultInt("httpport", 8080)
-        if serverUrl == nil || len(serverUrl.PanelUrl) == 0 </span><span class="cov8" title="1">{
+        if serverUrl == nil || len(serverUrl.PanelUrl) == 0 </span><span class="cov0" title="0">{
                 return "", port
         }</span>
 
-        <span class="cov0" title="0">return serverUrl.PanelUrl, port</span>
+        <span class="cov8" title="1">return serverUrl.PanelUrl, port</span>
 }
 
 func sendNormalEmail(emailConf EmailAlarmConf, auth smtp.Auth, msg string) (err error) <span class="cov8" title="1">{
@@ -3814,7 +3853,7 @@ func smtpTlsDial(addr string) (*smtp.Client, error) <span class="cov8" title="1"
         if err != nil </span><span class="cov0" title="0">{
                 return nil, handleError("failed to get email serve host: " + err.Error())
         }</span>
-        <span class="cov8" title="1">conn, err := tls.DialWithDialer(&amp;net.Dialer{Timeout: time.Second * 10}, "tcp", addr, nil)
+        <span class="cov8" title="1">conn, err := tls.DialWithDialer(&amp;net.Dialer{Timeout: time.Second * 5}, "tcp", addr, nil)
         if err != nil </span><span class="cov8" title="1">{
                 return nil, handleError("smtp dialing error: " + err.Error())
         }</span>
@@ -3827,7 +3866,7 @@ func PushHttpAttackAlarm(app *App, total int64, alarms []map[string]interface{},
                 body := make(map[string]interface{})
                 body["app_id"] = app.Id
                 if isTest </span><span class="cov8" title="1">{
-                        body["data"] = TestAlarmData
+                        body["data"] = getTestAlarmData()
                 }</span> else<span class="cov8" title="1"> {
                         body["data"] = alarms
                 }</span>
@@ -3884,7 +3923,7 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
                         dingText = "OpenRASP test message from app: " + app.Name + ", time: " + time.Now().Format(time.RFC3339)
                 }</span> else<span class="cov8" title="1"> {
                         panelUrl, _ := getPanelServerUrl()
-                        if len(panelUrl) == 0 </span><span class="cov8" title="1">{
+                        if len(panelUrl) == 0 </span><span class="cov0" title="0">{
                                 panelUrl = "http://127.0.0.1"
                         }</span>
                         <span class="cov8" title="1">dingText = "时间：" + time.Now().Format(time.RFC3339) + "， 来自 OpenRAS 的报警\n共有 " +
@@ -3961,22 +4000,16 @@ const (
 )
 
 func init() <span class="cov8" title="1">{
-        count, err := mongo.Count(cookieCollectionName)
-        if err != nil </span><span class="cov0" title="0">{
-                tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get cookie collection count", err)
-        }</span>
-        <span class="cov8" title="1">if count &lt;= 0 </span><span class="cov8" title="1">{
-                index := &amp;mgo.Index{
-                        Key:         []string{"time"},
-                        Background:  true,
-                        Name:        "time",
-                        ExpireAfter: time.Duration(conf.AppConfig.CookieLifeTime) * time.Hour,
-                }
-                err = mongo.CreateIndex(cookieCollectionName, index)
-                if err != nil </span><span class="cov0" title="0">{
-                        tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
-                }</span>
+        index := &amp;mgo.Index{
+                Key:         []string{"time"},
+                Background:  true,
+                Name:        "time",
+                ExpireAfter: time.Duration(conf.AppConfig.CookieLifeTime) * time.Hour,
         }
+        err := mongo.CreateIndex(cookieCollectionName, index)
+        if err != nil </span><span class="cov0" title="0">{
+                tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
+        }</span>
 }
 
 func NewCookie(id string) error <span class="cov8" title="1">{
@@ -4039,6 +4072,35 @@ var (
         }
         geoIpDbPath string
         geoIpDb     *geoip2.Reader
+
+        AttackTypeMap = map[interface{}]string{
+                "sql":                        "SQL 注入",
+                "sql_exception":              "SQL 语句异常",
+                "command":                    "命令执行",
+                "xxe":                        "XXE 外部实体加载",
+                "directory":                  "目录遍历",
+                "rename":                     "文件重命名",
+                "readFile":                   "任意文件下载",
+                "include":                    "任意文件包含",
+                "writeFile":                  "任意文件写入",
+                "ssrf":                       "SSRF 服务端请求伪造",
+                "ognl":                       "OGNL 代码执行",
+                "webdav":                     "任意文件上传 (PUT)",
+                "fileUpload":                 "任意文件上传",
+                "deserialization":            "Transformer 反序列化",
+                "xss_echo":                   "Echo XSS 跨站脚本攻击",
+                "xss_userinput":              "BODY XSS 跨站脚本攻击",
+                "webshell_callable":          "WebShell - 变形后门",
+                "webshell_eval":              "WebShell - 中国菜刀",
+                "webshell_command":           "WebShell - 命令执行",
+                "webshell_file_put_contents": "WebShell - 后门上传",
+                "webshell_ld_preload":        "WebShell - LD_PRELOAD 后门",
+        }
+
+        AttackInterceptMap = map[interface{}]string{
+                "block": "拦截请求",
+                "log":   "记录日志",
+        }
 )
 
 func init() <span class="cov8" title="1">{
@@ -4131,8 +4193,8 @@ func AggregationAttackWithTime(startTime int64, endTime int64, interval string, 
                         for index, timeTerm := range terms.Buckets </span><span class="cov8" title="1">{
                                 labels[index] = timeTerm.Key
                                 if interceptTerm, ok := timeTerm.Terms(interceptAggrName); ok </span><span class="cov8" title="1">{
-                                        for _, item := range interceptTerm.Buckets </span><span class="cov0" title="0">{
-                                                if item.Key == "block" </span><span class="cov0" title="0">{
+                                        for _, item := range interceptTerm.Buckets </span><span class="cov8" title="1">{
+                                                if item.Key == "block" </span><span class="cov8" title="1">{
                                                         dataResult[0][index] = item.DocCount
                                                 }</span> else<span class="cov0" title="0"> if item.Key == "log" </span><span class="cov0" title="0">{
                                                         dataResult[1][index] = item.DocCount
@@ -4172,7 +4234,7 @@ func AggregationAttackWithUserAgent(startTime int64, endTime int64, size int,
         if aggrResult != nil &amp;&amp; aggrResult.Aggregations != nil </span><span class="cov8" title="1">{
                 if terms, ok := aggrResult.Aggregations.Terms(aggrName); ok &amp;&amp; terms.Buckets != nil </span><span class="cov8" title="1">{
                         result = make([][]interface{}, len(terms.Buckets))
-                        for index, item := range terms.Buckets </span><span class="cov0" title="0">{
+                        for index, item := range terms.Buckets </span><span class="cov8" title="1">{
                                 result[index] = make([]interface{}, 2, 2)
                                 result[index][0] = item.Key
                                 result[index][1] = item.DocCount
@@ -4432,7 +4494,7 @@ func handleEsLogPush() <span class="cov8" title="1">{
                         alarms = append(alarms, alarm)
                 }</span>
                 <span class="cov8" title="1">err := es.BulkInsert(PolicyAlarmInfo.EsType, alarms)
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov8" title="1">{
                         beego.Error("failed to execute es bulk insert for policy alarm: " + err.Error())
                 }</span>
         case alarm := &lt;-ErrorAlarmInfo.AlarmBuffer:<span class="cov8" title="1">
@@ -4591,17 +4653,17 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
                                         if index &gt;= int(total) </span><span class="cov8" title="1">{
                                                 break</span>
                                         }
-                                        <span class="cov0" title="0">value := make(map[string]interface{})
+                                        <span class="cov8" title="1">value := make(map[string]interface{})
                                         item := terms.Buckets[index]
                                         if topHit, ok := item.TopHits(attackTimeTopHitName); ok &amp;&amp;
-                                                topHit.Hits != nil &amp;&amp; topHit.Hits.Hits != nil </span><span class="cov0" title="0">{
+                                                topHit.Hits != nil &amp;&amp; topHit.Hits.Hits != nil </span><span class="cov8" title="1">{
                                                 hits := topHit.Hits.Hits
-                                                if len(hits) &gt; 0 </span><span class="cov0" title="0">{
+                                                if len(hits) &gt; 0 </span><span class="cov8" title="1">{
                                                         err := json.Unmarshal(*hits[0].Source, &amp;value)
                                                         if err != nil </span><span class="cov0" title="0">{
                                                                 return 0, nil, err
                                                         }</span>
-                                                        <span class="cov0" title="0">value["id"] = hits[0].Id
+                                                        <span class="cov8" title="1">value["id"] = hits[0].Id
                                                         value["attack_count"] = terms.Buckets[index].DocCount
                                                         result = append(result, value)</span>
                                                 }
@@ -4681,7 +4743,11 @@ func AddPolicyAlarm(alarm map[string]interface{}) error <span class="cov8" title
         idContent += fmt.Sprint(alarm["rasp_id"])
         idContent += fmt.Sprint(alarm["policy_id"])
         idContent += fmt.Sprint(alarm["stack_md5"])
-        if alarm["policy_id"] == "3006" &amp;&amp; alarm["policy_params"] != nil </span><span class="cov8" title="1">{
+        if alarm["policy_id"] == "3007" &amp;&amp; alarm["policy_params"] != nil </span><span class="cov0" title="0">{
+                if policyParam, ok := alarm["policy_params"].(map[string]interface{}); ok &amp;&amp; len(policyParam) &gt; 0 </span><span class="cov0" title="0">{
+                        idContent += fmt.Sprint(policyParam["type"])
+                }</span>
+        } else<span class="cov8" title="1"> if alarm["policy_id"] == "3006" &amp;&amp; alarm["policy_params"] != nil </span><span class="cov8" title="1">{
                 if policyParam, ok := alarm["policy_params"].(map[string]interface{}); ok &amp;&amp; len(policyParam) &gt; 0 </span><span class="cov8" title="1">{
                         idContent += fmt.Sprint(policyParam["connectionString"])
                         idContent += fmt.Sprint(policyParam["port"])
@@ -4756,35 +4822,30 @@ const (
 )
 
 func init() <span class="cov8" title="1">{
-        count, err := mongo.Count(operationCollectionName)
-        if err != nil </span><span class="cov0" title="0">{
-                tools.Panic(tools.ErrCodeConfigInitFailed, "failed to get operation collection count", err)
-        }</span>
-        <span class="cov8" title="1">if count &lt;= 0 </span><span class="cov8" title="1">{
-                index := &amp;mgo.Index{
-                        Key:        []string{"app_id"},
-                        Unique:     false,
-                        Background: true,
-                        Name:       "app_id",
-                }
-                err = mongo.CreateIndex(operationCollectionName, index)
-                if err != nil </span><span class="cov0" title="0">{
-                        tools.Panic(tools.ErrCodeConfigInitFailed,
-                                "failed to create app_id index for operation collection", err)
-                }</span>
-
-                <span class="cov8" title="1">index = &amp;mgo.Index{
-                        Key:        []string{"time"},
-                        Unique:     false,
-                        Background: true,
-                        Name:       "time",
-                }
-                err = mongo.CreateIndex(operationCollectionName, index)
-                if err != nil </span><span class="cov0" title="0">{
-                        tools.Panic(tools.ErrCodeConfigInitFailed,
-                                "failed to create operate_time index for operation collection", err)
-                }</span>
+        index := &amp;mgo.Index{
+                Key:        []string{"app_id"},
+                Unique:     false,
+                Background: true,
+                Name:       "app_id",
         }
+        err := mongo.CreateIndex(operationCollectionName, index)
+        if err != nil </span><span class="cov0" title="0">{
+                tools.Panic(tools.ErrCodeConfigInitFailed,
+                        "failed to create app_id index for operation collection", err)
+        }</span>
+
+        <span class="cov8" title="1">index = &amp;mgo.Index{
+                Key:        []string{"time"},
+                Unique:     false,
+                Background: true,
+                Name:       "time",
+        }
+        err = mongo.CreateIndex(operationCollectionName, index)
+        if err != nil </span><span class="cov0" title="0">{
+                tools.Panic(tools.ErrCodeConfigInitFailed,
+                        "failed to create operate_time index for operation collection", err)
+        }</span>
+
 }
 
 func AddOperation(appId string, typeId int, ip string, content string, userName ...string) error <span class="cov8" title="1">{
@@ -4792,7 +4853,7 @@ func AddOperation(appId string, typeId int, ip string, content string, userName 
         var err error
         if len(userName) == 0 </span><span class="cov8" title="1">{
                 user, err = GetLoginUserName()
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov8" title="1">{
                         beego.Error("failed to add operation with content: " + content + ",can not get username: " + err.Error())
                         return err
                 }</span>
@@ -4810,7 +4871,7 @@ func AddOperation(appId string, typeId int, ip string, content string, userName 
                 Content: content,
         }
         err = mongo.Insert(operationCollectionName, operation)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 beego.Error("failed to add operation with content: " + operation.Content + ",error is: " + err.Error())
         }</span>
         <span class="cov8" title="1">return err</span>
@@ -5006,14 +5067,14 @@ func addPluginToDb(version string, name string, content []byte, appId string,
                         return nil, err
                 }</span>
                 <span class="cov8" title="1">count = len(oldPlugins)
-                if count &gt; 0 </span><span class="cov0" title="0">{
-                        for _, oldPlugin := range oldPlugins </span><span class="cov0" title="0">{
+                if count &gt; 0 </span><span class="cov8" title="1">{
+                        for _, oldPlugin := range oldPlugins </span><span class="cov8" title="1">{
                                 app := &amp;App{}
                                 err = mongo.FindOne("app", bson.M{"selected_plugin_id": oldPlugin.Id}, app)
                                 if err != nil &amp;&amp; err != mgo.ErrNotFound </span><span class="cov0" title="0">{
                                         return nil, err
                                 }</span>
-                                <span class="cov0" title="0">if app != nil </span><span class="cov0" title="0">{
+                                <span class="cov8" title="1">if app != nil </span><span class="cov8" title="1">{
                                         continue</span>
                                 }
                                 <span class="cov0" title="0">err = mongo.RemoveId(pluginCollectionName, oldPlugin.Id)
@@ -5043,7 +5104,7 @@ func GetSelectedPlugin(appId string, hasContent bool) (plugin *Plugin, err error
 
 func SetSelectedPlugin(appId string, pluginId string) (plugin *Plugin, err error) <span class="cov8" title="1">{
         plugin, err = GetPluginById(pluginId, false)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return
         }</span>
         <span class="cov8" title="1">return plugin, mongo.UpdateId(appCollectionName, appId, bson.M{"selected_plugin_id": pluginId})</span>
@@ -5059,10 +5120,10 @@ func RestoreDefaultConfiguration(pluginId string) (appId string, err error) <spa
 
 func UpdateAlgorithmConfig(pluginId string, config map[string]interface{}) (appId string, err error) <span class="cov8" title="1">{
         plugin, err := GetPluginById(pluginId, true)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return "", err
         }</span>
-        <span class="cov8" title="1">if err := validAlgorithmConfig(plugin, config); err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if err := validAlgorithmConfig(plugin, config); err != nil </span><span class="cov8" title="1">{
                 return "", err
         }</span>
         <span class="cov8" title="1">return handleAlgorithmConfig(plugin, config)</span>
@@ -5071,7 +5132,7 @@ func UpdateAlgorithmConfig(pluginId string, config map[string]interface{}) (appI
 func validAlgorithmConfig(plugin *Plugin, config map[string]interface{}) error <span class="cov8" title="1">{
         errMsg := "failed to match the new config format to default algorithm config format"
         for key, defaultValue := range plugin.DefaultAlgorithmConfig </span><span class="cov8" title="1">{
-                if c, ok := config[key]; !ok || (c == nil &amp;&amp; defaultValue != nil) </span><span class="cov0" title="0">{
+                if c, ok := config[key]; !ok || (c == nil &amp;&amp; defaultValue != nil) </span><span class="cov8" title="1">{
                         return errors.New(errMsg + ", " + "can not find the key '" + key + "' in new config")
                 }</span>
                 <span class="cov8" title="1">if defaultValue != nil </span><span class="cov8" title="1">{
@@ -5572,24 +5633,23 @@ func init() <span class="cov8" title="1">{
         if err != nil </span><span class="cov0" title="0">{
                 tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get the count of user collection", err)
         }</span>
+        <span class="cov8" title="1">index := &amp;mgo.Index{
+                Key:        []string{"name"},
+                Unique:     true,
+                Background: true,
+                Name:       "name",
+        }
+        err = mongo.CreateIndex(userCollectionName, index)
+        if err != nil </span><span class="cov0" title="0">{
+                tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create name index for user collection", err)
+        }</span>
+        <span class="cov8" title="1">if count &lt;= 0 </span><span class="cov0" title="0">{
 
-        <span class="cov8" title="1">if count &lt;= 0 </span><span class="cov8" title="1">{
-
-                index := &amp;mgo.Index{
-                        Key:        []string{"name"},
-                        Unique:     true,
-                        Background: true,
-                        Name:       "name",
-                }
-                err = mongo.CreateIndex(userCollectionName, index)
-                if err != nil </span><span class="cov0" title="0">{
-                        tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create name index for user collection", err)
-                }</span>
-                <span class="cov8" title="1">hash, err := generateHashedPassword("admin@123")
+                hash, err := generateHashedPassword("admin@123")
                 if err != nil </span><span class="cov0" title="0">{
                         tools.Panic(tools.ErrCodeGeneratePasswdFailed, "failed to generate the default hashed password", err)
                 }</span>
-                <span class="cov8" title="1">userId = mongo.GenerateObjectId()
+                <span class="cov0" title="0">userId = mongo.GenerateObjectId()
                 user := User{
                         Id:       userId,
                         Name:     userName,
@@ -5600,13 +5660,13 @@ func init() <span class="cov8" title="1">{
                         tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create default user", err)
                 }</span>
 
-        } else<span class="cov0" title="0"> {
+        } else<span class="cov8" title="1"> {
                 var user *User
-                err := mongo.FindOne(userCollectionName, bson.M{}, &amp;user)
+                err = mongo.FindOne(userCollectionName, bson.M{}, &amp;user)
                 if err != nil </span><span class="cov0" title="0">{
                         tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get admin user", err)
                 }</span>
-                <span class="cov0" title="0">userId = user.Id</span>
+                <span class="cov8" title="1">userId = user.Id</span>
         }
 
         <span class="cov8" title="1">if *conf.AppConfig.Flag.StartType == conf.StartTypeReset </span><span class="cov0" title="0">{
@@ -5624,11 +5684,11 @@ func init() <span class="cov8" title="1">{
 
 func ResetUser(newPwd string) error <span class="cov8" title="1">{
         err := validPassword(newPwd)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return errors.New("invalid password: " + err.Error())
         }</span>
         <span class="cov8" title="1">pwd, err := generateHashedPassword(newPwd)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return errors.New("failed to generate password: " + err.Error())
         }</span>
         <span class="cov8" title="1">err = mongo.UpdateId(userCollectionName, userId, bson.M{"password": pwd, "name": userName})
@@ -5637,7 +5697,7 @@ func ResetUser(newPwd string) error <span class="cov8" title="1">{
 
 func generateHashedPassword(password string) (string, error) <span class="cov8" title="1">{
         hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 beego.Error("failed to generate hashed password: " + err.Error())
                 return "", err
         }</span>
@@ -5646,7 +5706,7 @@ func generateHashedPassword(password string) (string, error) <span class="cov8" 
 
 func ComparePassword(hashedPassword string, password string) error <span class="cov8" title="1">{
         err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-        if err != nil &amp;&amp; err != bcrypt.ErrMismatchedHashAndPassword </span><span class="cov0" title="0">{
+        if err != nil &amp;&amp; err != bcrypt.ErrMismatchedHashAndPassword </span><span class="cov8" title="1">{
                 logs.Error("CompareHashAndPassword function error: " + err.Error())
         }</span>
         <span class="cov8" title="1">return err</span>
@@ -5664,7 +5724,7 @@ func validPassword(password string) error <span class="cov8" title="1">{
 func GetLoginUserName() (userName string, err error) <span class="cov8" title="1">{
         var user *User
         err = mongo.FindId(userCollectionName, userId, &amp;user)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return
         }</span>
         <span class="cov8" title="1">return user.Name, nil</span>
@@ -5682,7 +5742,7 @@ func GetLoginUserName() (userName string, err error) <span class="cov8" title="1
 func VerifyUser(userName string, pwd string) error <span class="cov8" title="1">{
         var user *User
         err := mongo.FindId(userCollectionName, userId, &amp;user)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return err
         }</span>
         <span class="cov8" title="1">if userName != user.Name </span><span class="cov8" title="1">{
@@ -5693,7 +5753,7 @@ func VerifyUser(userName string, pwd string) error <span class="cov8" title="1">
 
 func UpdatePassword(oldPwd string, newPwd string) error <span class="cov8" title="1">{
         err := VerifyUser(userName, oldPwd)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return errors.New("old password is incorrect")
         }</span>
         <span class="cov8" title="1">err = validPassword(newPwd)
@@ -5701,7 +5761,7 @@ func UpdatePassword(oldPwd string, newPwd string) error <span class="cov8" title
                 return errors.New("Password does not meet complexity requirements: " + err.Error())
         }</span>
         <span class="cov8" title="1">pwd, err := generateHashedPassword(newPwd)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return errors.New("failed to update new password")
         }</span>
         <span class="cov8" title="1">err = mongo.UpdateId(userCollectionName, userId, bson.M{"password": pwd})
@@ -5811,7 +5871,7 @@ func FindAll(collection string, query interface{}, result interface{}, skip int,
         newSession := NewSession()
         defer newSession.Close()
         count, err = newSession.DB(DbName).C(collection).Find(query).Count()
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return
         }</span>
         <span class="cov8" title="1">err = newSession.DB(DbName).C(collection).Find(query).Skip(skip).Limit(limit).Sort(sortFields...).All(result)
@@ -5823,7 +5883,7 @@ func FindAllWithoutLimit(collection string, query interface{}, result interface{
         newSession := NewSession()
         defer newSession.Close()
         count, err = newSession.DB(DbName).C(collection).Find(query).Count()
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return
         }</span>
         <span class="cov8" title="1">err = newSession.DB(DbName).C(collection).Find(query).Sort(sortFields...).All(result)
@@ -5835,7 +5895,7 @@ func FindAllWithSelect(collection string, query interface{}, result interface{},
         newSession := NewSession()
         defer newSession.Close()
         count, err = newSession.DB(DbName).C(collection).Find(query).Count()
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return
         }</span>
         <span class="cov8" title="1">err = newSession.DB(DbName).C(collection).Find(query).Select(selector).Skip(skip).Limit(limit).All(result)
@@ -5859,7 +5919,7 @@ func FindAllBySort(collection string, query interface{}, skip int, limit int, re
         newSession := NewSession()
         defer newSession.Close()
         count, err = newSession.DB(DbName).C(collection).Find(query).Count()
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return
         }</span>
         <span class="cov8" title="1">return count, newSession.DB(DbName).C(collection).Find(query).Sort(sortFields...).Skip(skip).Limit(limit).All(result)</span>

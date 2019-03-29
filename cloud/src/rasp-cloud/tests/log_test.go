@@ -7,6 +7,8 @@ import (
 	"rasp-cloud/tests/start"
 	"time"
 	"rasp-cloud/models/logs"
+	"github.com/bouk/monkey"
+	"errors"
 )
 
 func TestPostLog(t *testing.T) {
@@ -188,6 +190,22 @@ func TestLogSearch(t *testing.T) {
 			So(r.Status, ShouldEqual, 0)
 		})
 
+		Convey("when the es has errors in log search", func() {
+			monkey.Patch(logs.SearchLogs, func(startTime int64, endTime int64, isAttachAggr bool, query map[string]interface{}, sortField string,
+				page int, perpage int, ascending bool, index ...string) (int64, []map[string]interface{}, error) {
+				return 0, nil, errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/api/log/attack/search", inits.GetJson(getAttackLogSearchData()))
+			So(r.Status, ShouldBeGreaterThan, 0)
+
+			r = inits.GetResponse("POST", "/v1/api/log/policy/search", inits.GetJson(getAttackLogSearchData()))
+			So(r.Status, ShouldBeGreaterThan, 0)
+
+			r = inits.GetResponse("POST", "/v1/api/log/error/search", inits.GetJson(getAttackLogSearchData()))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(logs.SearchLogs)
+		})
+
 		Convey("when log type is policy", func() {
 			r := inits.GetResponse("POST", "/v1/api/log/policy/search",
 				inits.GetJson(getPolicyLogSearchData()))
@@ -313,6 +331,20 @@ func TestAttackLogAggr(t *testing.T) {
 			So(r.Status, ShouldEqual, 0)
 		})
 
+		Convey("when aggr app_id does not exist in time aggr", func() {
+			data := getAggrParam()
+			data["app_id"] = "222222222222222222"
+			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/time", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when aggr app_id is empty in time aggr", func() {
+			data := getAggrParam()
+			data["app_id"] = ""
+			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/time", inits.GetJson(data))
+			So(r.Status, ShouldEqual, 0)
+		})
+
 		Convey("when app_id is empty for vuln search", func() {
 			data := getNormalSearchData()
 			data["app_id"] = nil
@@ -351,8 +383,8 @@ func TestAttackLogAggr(t *testing.T) {
 
 		Convey("when time interval is greater than 1 year", func() {
 			data := getAggrParam()
-			data["start_time"] = 0
-			data["end_time"] = time.Now().Nanosecond()
+			data["start_time"] = 1
+			data["end_time"] = time.Now().UnixNano()/1000000
 			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/type", inits.GetJson(data))
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
@@ -360,6 +392,101 @@ func TestAttackLogAggr(t *testing.T) {
 		Convey("when aggr with vuln", func() {
 			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/vuln", inits.GetJson(getAttackLogSearchData()))
 			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when start time is less than 0 in time aggr", func() {
+			data := getAggrParam()
+			data["start_time"] = -10
+			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/time", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when end time is less than 0 in time aggr", func() {
+			data := getAggrParam()
+			data["end_time"] = -10
+			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/time", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when start time is less than end_time in time aggr", func() {
+			data := getAggrParam()
+			data["start_time"] = 10
+			data["end_time"] = 5
+			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/time", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when time interval is greater than 1 year in time aggr", func() {
+			data := getAggrParam()
+			data["start_time"] = 1
+			data["end_time"] = time.Now().UnixNano()/1000000
+			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/time", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when time interval is empty", func() {
+			data := getAggrParam()
+			data["interval"] = ""
+			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/time", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when time zone is empty", func() {
+			data := getAggrParam()
+			data["time_zone"] = ""
+			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/time", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the length of time interval is greater than 32", func() {
+			data := getAggrParam()
+			data["interval"] = inits.GetLongString(33)
+			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/time", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the length of time zone is greater than 32", func() {
+			data := getAggrParam()
+			data["time_zone"] = inits.GetLongString(33)
+			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/time", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the es has errors", func() {
+			monkey.Patch(logs.AggregationAttackWithTime, func(int64, int64, string, string,
+				string) (map[string]interface{}, error) {
+				return nil, errors.New("")
+			})
+			data := getAggrParam()
+			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/time", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(logs.AggregationAttackWithTime)
+
+			monkey.Patch(logs.AggregationAttackWithType, func(startTime int64, endTime int64, size int,
+				appId string) ([][]interface{}, error) {
+				return nil, errors.New("")
+			})
+			data = getAggrParam()
+			r = inits.GetResponse("POST", "/v1/api/log/attack/aggr/type", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(logs.AggregationAttackWithType)
+
+			monkey.Patch(logs.AggregationAttackWithUserAgent, func(startTime int64, endTime int64, size int,
+				appId string) ([][]interface{}, error) {
+				return nil, errors.New("")
+			})
+			data = getAggrParam()
+			r = inits.GetResponse("POST", "/v1/api/log/attack/aggr/ua", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(logs.AggregationAttackWithUserAgent)
+
+			monkey.Patch(logs.SearchLogs, func(startTime int64, endTime int64, isAttachAggr bool, query map[string]interface{}, sortField string,
+				page int, perpage int, ascending bool, index ...string) (int64, []map[string]interface{}, error) {
+				return 0, nil, errors.New("")
+			})
+			r = inits.GetResponse("POST", "/v1/api/log/attack/aggr/vuln", inits.GetJson(getAttackLogSearchData()))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(logs.SearchLogs)
 		})
 
 	})

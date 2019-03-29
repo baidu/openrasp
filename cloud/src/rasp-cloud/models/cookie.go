@@ -33,21 +33,15 @@ const (
 )
 
 func init() {
-	count, err := mongo.Count(cookieCollectionName)
-	if err != nil {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get cookie collection count", err)
+	index := &mgo.Index{
+		Key:         []string{"time"},
+		Background:  true,
+		Name:        "time",
+		ExpireAfter: time.Duration(conf.AppConfig.CookieLifeTime) * time.Hour,
 	}
-	if count <= 0 {
-		index := &mgo.Index{
-			Key:         []string{"time"},
-			Background:  true,
-			Name:        "time",
-			ExpireAfter: time.Duration(conf.AppConfig.CookieLifeTime) * time.Hour,
-		}
-		err = mongo.CreateIndex(cookieCollectionName, index)
-		if err != nil {
-			tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
-		}
+	err := mongo.CreateIndex(cookieCollectionName, index)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
 	}
 }
 
