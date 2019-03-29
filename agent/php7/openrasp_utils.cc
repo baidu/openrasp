@@ -304,7 +304,11 @@ bool openrasp_parse_url(const std::string &origin_url, std::string &scheme, std:
     {
         if (url->scheme)
         {
+#if (PHP_MINOR_VERSION < 3)
             scheme = std::string(url->scheme);
+#else
+            scheme = std::string(url->scheme->val, url->scheme->len);
+#endif
         }
         if (url->host)
         {
