@@ -52,20 +52,5 @@ ZEND_INI_MH(OnUpdateOpenraspHeartbeatInterval)
 
 bool strtobool(const char *str, int len)
 {
-    if (len == 2 && strcasecmp("on", str) == 0)
-    {
-        return true;
-    }
-    else if (len == 3 && strcasecmp("yes", str) == 0)
-    {
-        return true;
-    }
-    else if (len == 4 && strcasecmp("true", str) == 0)
-    {
-        return true;
-    }
-    else
-    {
-        return atoi(str);
-    }
+     return atoi(str);
 }

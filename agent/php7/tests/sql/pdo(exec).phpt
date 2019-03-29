@@ -23,7 +23,7 @@ mysqli_close($con);
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-$con = new PDO('mysql:host=127.0.0.1;port=3306', 'root');
+include('pdo_mysql.inc');
 $con->exec('SELECT a FROM b');
 ?>
 --EXPECTREGEX--

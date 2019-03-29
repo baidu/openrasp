@@ -22,6 +22,9 @@ PHP_ARG_WITH(curl, for curl support,
 PHP_ARG_ENABLE(fswatch, Enable fswatch,
 [  --enable-fswatch      Enable fswatch], no, no)
 
+PHP_ARG_ENABLE(line-coverage, Enable line coverage,
+[  --enable-line-coverage      Enable line coverage], no, no)
+
 PHP_ARG_ENABLE(cli-support, Enable cli support,
 [  --enable-cli-support      Enable cli support], no, no)
 
@@ -406,6 +409,13 @@ if test "$PHP_OPENRASP" != "no"; then
     AC_MSG_RESULT([yes])
   fi
 
+  if test "$PHP_LINE_COVERAGE" != "no"; then
+    CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
+    CXXFLAGS="$CXXFLAGS -fprofile-arcs -ftest-coverage"
+    PHP_ADD_LIBRARY(gcov, , OPENRASP_SHARED_LIBADD)
+    AC_DEFINE([HAVE_LINE_COVERAGE], [1], [Enable line coverage support])
+  fi
+  
   EXTRA_LIBS="$OPENRASP_LIBS $EXTRA_LIBS"
   OPENRASP_SHARED_LIBADD="$OPENRASP_LIBS $OPENRASP_SHARED_LIBADD"
   PHP_SUBST(OPENRASP_SHARED_LIBADD)
@@ -718,6 +728,7 @@ int main() {
     hook/openrasp_mysql.cc \
     hook/openrasp_mysqli.cc \
     hook/openrasp_pgsql.cc \
+    hook/openrasp_pgsql_utils.cc \
     hook/openrasp_sqlite3.cc \
     hook/openrasp_pdo.cc \
     hook/openrasp_file.cc \

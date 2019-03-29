@@ -1,4 +1,4 @@
-const plugin_version = '2019-0328-1500'
+const plugin_version = '2019-0308-0930'
 const plugin_name    = 'official'
 
 /*
@@ -84,6 +84,9 @@ var algorithmConfig = {
             // 函数黑名单，具体列表见下方，select load_file(...)
             function_blacklist: true,
 
+            // 敏感函数频次， 具体列表见下方，select chr(123)||chr(123)||chr(123)=chr(123)||chr(123)||chr(123)
+            function_count:     true,
+
             // 拦截 union select NULL,NULL 或者 union select 1,2,3,4
             union_null:         true,
 
@@ -117,8 +120,6 @@ var algorithmConfig = {
             bin:              true
         },
         function_count: {
-            // 敏感函数频次，e.g chr(13) 出现一次可能是误报，但是多次就不太可能了
-            // select chr(123)||chr(123)||chr(123)=chr(123)||chr(123)||chr(123)
             chr:              5,
             char:             5
         }
@@ -239,8 +240,8 @@ var algorithmConfig = {
 
     // 文件管理器 - 用户输入匹配，仅当直接读取绝对路径时才检测
     directory_userinput: {
-        name:       '算法1 - 用户输入匹配算法',
-        action:     'block',
+        name:   '算法1 - 用户输入匹配算法',
+        action: 'block',
         lcs_search: false
     },
     // 文件管理器 - 反射方式列目录
@@ -256,8 +257,8 @@ var algorithmConfig = {
 
     // 文件包含 - 用户输入匹配
     include_userinput: {
-        name:       '算法1 - 用户输入匹配算法',
-        action:     'block',
+        name:   '算法1 - 用户输入匹配算法',
+        action: 'block',
         lcs_search: false
     },
     // 文件包含 - 特殊协议
@@ -714,13 +715,13 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows, is_
             simplifiedValue = value.replaceAll('//','/')
         }
         var simplifiedValues
-        if (is_lcs_search) {
-            simplifiedValues = lcs_search(simplifiedValue, simplifiedTarget)
+        if ( is_lcs_search ) {
+            simplifiedValues = lcs_search( simplifiedValue, simplifiedTarget )
         }
         else {
             simplifiedValues = [simplifiedValue]
         }
-        for (var i = 0, len = simplifiedValues.length; i < len; i++) {
+        for(var i = 0, len = simplifiedValues.length; i < len; i++) {
             simplifiedValue = simplifiedValues[i]
             // 参数必须有跳出目录，或者是绝对路径
             if ((target.endsWith(value) || simplifiedTarget.endsWith(simplifiedValue))
@@ -771,7 +772,7 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
             }
             values = [value]
         }
-        for (var i = 0, len = values.length; i < len; i++) {
+        for(var i = 0, len = values.length; i < len; i++) {
             // 只处理非数组、hash情况
             if (has_traversal(values[i]) && target.indexOf(values[i]) != -1) {
                 verdict = true
@@ -879,7 +880,7 @@ function lcs_search(str1, str2){
     return Array.from(result_str)
 }
 
-// 报警格式化函数
+// 下个版本将会支持翻译，目前还需要暴露一个 getText 接口给插件
 function _(message, args) 
 {
     args = args || []
@@ -934,7 +935,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 }
 
                 // 检查用户输入是否存在于SQL中
-                for (var i = 0, len = check_value.length; i < len; i++) {
+                for(var i = 0, len = check_value.length; i < len; i++) {
                     value = check_value[i]
                 
                     var userinput_idx = params.query.indexOf(value)
@@ -1092,8 +1093,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                         break
                     }
 
-                    // 黑名单函数 - 计数算法
-                    if (func_count_list[func_name])
+                    if (features['function_count'] && func_count_list[func_name])
                     {
                         if (! func_count_arr[func_name])
                         {
@@ -1126,8 +1126,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                     // information_schema  .tables
                     var part1 = tokens_lc[i + 1].replaceAll('`', '')
                     var part2 = tokens_lc[i + 3].replaceAll('`', '')
-
-                    if (part1 == 'information_schema' && part2 == 'tables')
+                    if (part1 == 'information_schema' && part2 == 'tables' )
                     {
                         reason = _("SQLi - Detected access to MySQL information_schema.tables table")
                         break
@@ -1168,7 +1167,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
         {
             if (is_from_userinput(context.parameter, url))
             {
-                if (ip.length && /^(127|192\.168|172|10)\./.test(ip[0]))
+                if (ip.length && /^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(ip[0]))
                 {
                     return {
                         action:     algorithmConfig.ssrf_userinput.action,

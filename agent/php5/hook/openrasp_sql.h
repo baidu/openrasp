@@ -55,6 +55,8 @@ public:
 
   void set_using_socket(bool using_socket);
   bool get_using_socket() const;
+
+  void set_name_value(const char *name, const char *val);
 };
 
 typedef SqlConnectionEntry sql_connection_entry;
@@ -66,5 +68,7 @@ zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_
                                              int enforce_policy);
 bool mysql_error_code_filtered(long err_code);
 void sql_error_alarm(char *server, char *query, const std::string &err_code, const std::string &err_msg TSRMLS_DC);
+
+void pg_conninfo_parse(char *connstring, std::function<void(const char *pname, const char *pval)> info_store_func);
 
 #endif

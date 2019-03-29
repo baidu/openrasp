@@ -24,7 +24,7 @@ openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
 try {
-  $con = new PDO('mysql:host=127.0.0.1;port=3306', 'root');
+  include('pdo_mysql.inc');
   $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   $con->query("select exp(~(select*from(select user())x))");
 } catch (PDOException $e) {

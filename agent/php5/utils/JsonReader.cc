@@ -142,11 +142,6 @@ std::string JsonReader::dump(bool pretty)
   return dump({}, pretty);
 }
 
-void JsonReader::write_bool(const std::vector<std::string> &keys, const bool &value)
-{
-  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
-  j[ptr] = value;
-}
 void JsonReader::write_int64(const std::vector<std::string> &keys, const int64_t &value)
 {
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
@@ -156,13 +151,6 @@ void JsonReader::write_string(const std::vector<std::string> &keys, const std::s
 {
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   j[ptr] = value;
-}
-
-void JsonReader::write_map(const std::vector<std::string> &keys, const std::map<std::string, std::string> &value)
-{
-  json j_map(value);
-  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
-  j[ptr] = j_map;
 }
 
 void JsonReader::write_map_to_array(const std::vector<std::string> &keys, const std::string fkey, const std::string skey,

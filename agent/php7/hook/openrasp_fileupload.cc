@@ -72,35 +72,29 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
         realname = dest;
     }
     php_stream *stream = php_stream_open_wrapper(Z_STRVAL_P(name), "rb", 0, NULL);
-    if (!stream)
+    if (stream)
     {
-        return;
-    }
-    zend_string *buffer = php_stream_copy_to_mem(stream, 4 * 1024, 0);
-    stream->is_persistent ? php_stream_pclose(stream) : php_stream_close(stream);
-    if (!buffer)
-    {
-        return;
-    }
-
-    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-    if (!isolate)
-    {
-        zend_string_release(buffer);
-        return;
-    }
-    bool is_block = false;
-    {
-        v8::HandleScope handle_scope(isolate);
-        auto params = v8::Object::New(isolate);
-        params->Set(openrasp::NewV8String(isolate, "name"), openrasp::NewV8String(isolate, form_data_name));
-        params->Set(openrasp::NewV8String(isolate, "filename"), openrasp::NewV8String(isolate, Z_STRVAL_P(realname), Z_STRLEN_P(realname)));
-        params->Set(openrasp::NewV8String(isolate, "content"), openrasp::NewV8String(isolate, buffer->val, MIN(buffer->len, 4 * 1024)));
-        zend_string_release(buffer);
-        is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
-    }
-    if (is_block)
-    {
-        handle_block();
+        zend_string *buffer = php_stream_copy_to_mem(stream, 4 * 1024, 0);
+        stream->is_persistent ? php_stream_pclose(stream) : php_stream_close(stream);
+        if (buffer)
+        {
+            bool is_block = false;
+            openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+            if (isolate)
+            {
+                v8::HandleScope handle_scope(isolate);
+                auto params = v8::Object::New(isolate);
+                params->Set(openrasp::NewV8String(isolate, "name"), openrasp::NewV8String(isolate, form_data_name));
+                params->Set(openrasp::NewV8String(isolate, "filename"), openrasp::NewV8String(isolate, Z_STRVAL_P(realname), Z_STRLEN_P(realname)));
+                params->Set(openrasp::NewV8String(isolate, "content"), openrasp::NewV8String(isolate, buffer->val, MIN(buffer->len, 4 * 1024)));
+                zend_string_release(buffer);
+                is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+            }
+            zend_string_release(buffer);
+            if (is_block)
+            {
+                handle_block();
+            }
+        }
     }
 }
