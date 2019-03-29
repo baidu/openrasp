@@ -15,15 +15,8 @@ import (
 	"io/ioutil"
 	"io"
 	"rasp-cloud/models"
+	"rasp-cloud/mongo"
 )
-
-func getPluginData() map[string]interface{} {
-
-	return map[string]interface{}{
-
-	}
-
-}
 
 func TestUploadPlugin(t *testing.T) {
 	Convey("Subject: Test Operation Search Api\n", t, func() {
@@ -39,6 +32,16 @@ func TestUploadPlugin(t *testing.T) {
 		Convey("when param is valid", func() {
 			r := inits.GetResponse("POST", "/v1/api/plugin?app_id="+start.TestApp.Id, "")
 			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when app_id does not exist", func() {
+			r := inits.GetResponse("POST", "/v1/api/plugin?app_id=ssssssssssssss", "")
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when app_id is empty", func() {
+			r := inits.GetResponse("POST", "/v1/api/plugin", "")
+			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
 		Convey("when get file has error", func() {
@@ -72,8 +75,12 @@ func TestUploadPlugin(t *testing.T) {
 			r = inits.GetResponse("POST", "/v1/api/plugin?app_id="+start.TestApp.Id,
 				inits.GetJson(getOperationData()))
 			So(r.Status, ShouldBeGreaterThan, 0)
-			monkey.UnpatchInstanceMethod(reflect.TypeOf(&beego.Controller{}), "GetFile")
 
+			monkey.PatchInstanceMethod(reflect.TypeOf(&beego.Controller{}), "GetFile",
+				func(*beego.Controller, string) (multipart.File, *multipart.FileHeader, error) {
+					return nil, &multipart.FileHeader{Size: 1}, nil
+				},
+			)
 			monkey.Patch(ioutil.ReadAll, func(io.Reader) ([]byte, error) {
 				return []byte{}, errors.New("")
 			})
@@ -81,6 +88,7 @@ func TestUploadPlugin(t *testing.T) {
 			r = inits.GetResponse("POST", "/v1/api/plugin?app_id="+start.TestApp.Id,
 				inits.GetJson(getOperationData()))
 			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.UnpatchInstanceMethod(reflect.TypeOf(&beego.Controller{}), "GetFile")
 
 			monkey.Patch(ioutil.ReadAll, func(io.Reader) ([]byte, error) {
 				return nil, nil
@@ -220,6 +228,17 @@ func TestPluginDownload(t *testing.T) {
 			So(r.Header().Get("Content-Disposition"), ShouldStartWith, "attachment;filename=")
 		})
 
+		Convey("when plugin name is empty", func() {
+			monkey.Patch(models.GetPluginById, func(string, bool) (*models.Plugin, error) {
+				return &models.Plugin{Name: ""}, nil
+			})
+			r := inits.GetResponseRecorder("GET",
+				"/v1/api/plugin/download?id="+start.TestApp.SelectedPluginId, "")
+			So(r.Code, ShouldEqual, 200)
+			So(r.Header().Get("Content-Disposition"), ShouldStartWith, "attachment;filename=")
+			monkey.Unpatch(models.GetPluginById)
+		})
+
 		Convey("when the plugin id is empty", func() {
 			r := inits.GetResponse("GET",
 				"/v1/api/plugin/download?id=", "")
@@ -240,6 +259,34 @@ func TestUpdateAlgorithm(t *testing.T) {
 				"config": algorithm,
 			}))
 			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when the mongodb has errors", func() {
+			monkey.Patch(models.UpdateAlgorithmConfig, func(string, map[string]interface{}) (string, error) {
+				return "", errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/api/plugin/algorithm/config", inits.GetJson(map[string]interface{}{
+				"id":     start.TestApp.SelectedPluginId,
+				"config": algorithm,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.UpdateAlgorithmConfig)
+
+			monkey.Patch(models.GetPluginById, func(id string, hasContent bool) (*models.Plugin, error) {
+				return nil, errors.New("")
+			})
+			r = inits.GetResponse("POST", "/v1/api/plugin/algorithm/config", inits.GetJson(map[string]interface{}{
+				"id":     start.TestApp.SelectedPluginId,
+				"config": algorithm,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.GetPluginById)
+
+			r = inits.GetResponse("POST", "/v1/api/plugin/algorithm/config", inits.GetJson(map[string]interface{}{
+				"id":     start.TestApp.SelectedPluginId,
+				"config": map[string]interface{}{},
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
 		Convey("when the plugin id is empty", func() {
@@ -310,6 +357,28 @@ func TestDeleteAlgorithm(t *testing.T) {
 	plugin, _ = models.AddPlugin([]byte(plugin.Content), start.TestApp.Id)
 
 	Convey("Subject: Test Plugin Restore Algorithm Api\n", t, func() {
+
+		Convey("when the mongodb has errors", func() {
+			monkey.Patch(mongo.FindOne, func(collection string, query interface{}, result interface{}) error {
+				return errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/api/plugin/delete", inits.GetJson(map[string]interface{}{
+				"id": plugin.Id,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+
+			monkey.Unpatch(mongo.FindOne)
+
+			monkey.Patch(models.DeletePlugin, func(pluginId string) error {
+				return errors.New("")
+			})
+			r = inits.GetResponse("POST", "/v1/api/plugin/delete", inits.GetJson(map[string]interface{}{
+				"id": plugin.Id,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.DeletePlugin)
+		})
+
 		Convey("when the param is valid", func() {
 			r := inits.GetResponse("POST", "/v1/api/plugin/delete", inits.GetJson(map[string]interface{}{
 				"id": plugin.Id,
@@ -337,5 +406,6 @@ func TestDeleteAlgorithm(t *testing.T) {
 			}))
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
+
 	})
 }

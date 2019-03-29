@@ -45,8 +45,10 @@ public class UndertowXssHook extends ServerXssHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(UndertowXssHook.class, "getUndertowOutputBuffer", "$1", CharBuffer.class);
-        insertBefore(ctClass, "write", "(Ljava/nio/CharBuffer;)V", src);
+        String src1 = getInvokeStaticSrc(UndertowXssHook.class, "getUndertowOutputBuffer", "$1", CharBuffer.class);
+        String src2 = getInvokeStaticSrc(UndertowXssHook.class, "getUndertowOutputBuffer", "$1,$2,$3", String.class,int.class,int.class);
+        insertBefore(ctClass, "write", "(Ljava/nio/CharBuffer;)V", src1);
+        insertBefore(ctClass,"write","(Ljava/lang/String;II)V",src2);
     }
 
     public static void getUndertowOutputBuffer(CharBuffer buffer) {
@@ -65,4 +67,14 @@ public class UndertowXssHook extends ServerXssHook {
             }
         }
     }
+    public static void getUndertowOutputBuffer(String buffer,int off, int len) {
+        if (buffer != null) {
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("html_body", buffer);
+            if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
+                HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+            }
+        }
+    }
+
 }

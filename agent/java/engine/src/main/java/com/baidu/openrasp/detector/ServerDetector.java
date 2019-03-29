@@ -25,10 +25,12 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.tool.model.ApplicationModel;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileReader;
 import java.net.URLDecoder;
 import java.security.ProtectionDomain;
 
@@ -129,10 +131,20 @@ public abstract class ServerDetector {
                     }
                 });
                 return files != null && files.length > 0;
+            }else {
+                return detectWildfly(homeFile.getCanonicalPath());
             }
-
         } catch (Exception e) {
             logDetectError("identified wildfly and jboss eap failed", e);
+        }
+        return false;
+    }
+
+    private boolean detectWildfly(String severRoot) throws Exception {
+        File baseDir = new File(severRoot);
+        if (baseDir.exists() && baseDir.isDirectory()) {
+            String content = IOUtils.toString(new FileReader(new File(baseDir.getCanonicalPath() + File.separator + "README.txt")));
+            return content != null && content.toLowerCase().contains("wildfly");
         }
         return false;
     }

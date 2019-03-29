@@ -16,10 +16,36 @@ import (
 	"rasp-cloud/mongo"
 	"rasp-cloud/models/logs"
 	"time"
+	"rasp-cloud/controllers"
 )
 
 func Test404(t *testing.T) {
 	Convey("Subject: Test 404\n", t, func() {
+		r := inits.GetResponseRecorder("POST", "/v1/api/notexist", "")
+		So(r.Code, ShouldEqual, 404)
+	})
+}
+
+func TestError(t *testing.T) {
+	Convey("Subject: Test 500\n", t, func() {
+		c := &controllers.ErrorController{}
+		monkey.PatchInstanceMethod(reflect.TypeOf(&controllers.BaseController{}), "ServeStatusCode",
+			func(*controllers.BaseController, int, ...string) {
+				return
+			},
+		)
+		defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&controllers.BaseController{}), "ServeStatusCode")
+		c.Error500()
+		c.Error502()
+		c.Error503()
+	})
+
+	Convey("Subject: Test 503\n", t, func() {
+		r := inits.GetResponseRecorder("POST", "/v1/api/notexist", "")
+		So(r.Code, ShouldEqual, 404)
+	})
+
+	Convey("Subject: Test 502\n", t, func() {
 		r := inits.GetResponseRecorder("POST", "/v1/api/notexist", "")
 		So(r.Code, ShouldEqual, 404)
 	})
