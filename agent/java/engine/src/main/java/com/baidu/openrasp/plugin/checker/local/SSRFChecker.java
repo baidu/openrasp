@@ -105,7 +105,7 @@ public class SSRFChecker extends ConfigurableChecker {
         if (result.isEmpty()) {
             // 算法3 - 检测 AWS/Aliyun 私有地址
             if (!isModuleIgnore(config, CONFIG_KEY_SSRF_AWS)
-                    && (hostName.equals("169.254.169.254") || hostName.equals("100.100.100.200"))) {
+                    && (hostName.equals("169.254.169.254") || hostName.equals("100.100.100.200") || hostName.equals("metadata.google.internal"))) {
                 result.add(AttackInfo.createLocalAttackInfo(checkParameter, getActionElement(config,
                         CONFIG_KEY_SSRF_AWS), "SSRF - Requesting AWS metadata address", "ssrf_aws"));
                 // 算法4 - ssrf_obfuscate
