@@ -23,6 +23,7 @@ import com.baidu.openrasp.hook.server.weblogic.WeblogicHttpOutputHook;
 import com.baidu.openrasp.hook.server.websphere.WebsphereHttpOutputHook;
 import com.baidu.openrasp.response.HttpServletResponse;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -78,10 +79,13 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
             try {
                 HookHandler.disableCurrThreadHook();
                 Boolean isClosed;
+                String serverName = ApplicationModel.getServerName();
                 if ("com/ibm/ws/webcontainer/srt/SRTServletResponse".equals(WebsphereHttpOutputHook.clazzName)) {
                     isClosed = (Boolean) Reflection.getField(output, "writerClosed");
                 } else if ("weblogic/servlet/internal/ServletOutputStreamImpl".equals(WeblogicHttpOutputHook.clazzName)) {
                     isClosed = (Boolean) Reflection.getField(output, "commitCalled");
+                } else if (serverName.equals("undertow")) {
+                    isClosed = (Boolean) Reflection.getField(output, "closed");
                 } else {
                     isClosed = (Boolean) Reflection.invokeMethod(output, "isClosed", new Class[]{});
                 }

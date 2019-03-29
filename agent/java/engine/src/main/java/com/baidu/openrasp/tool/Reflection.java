@@ -16,8 +16,10 @@
 
 package com.baidu.openrasp.tool;
 
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.Field;
@@ -118,6 +120,8 @@ public class Reflection {
             }
             return method.invoke(object, parameters);
         } catch (Exception e) {
+            int errorCode = ErrorType.REFLECTION_ERROR.getCode();
+            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject("reflection call failed", errorCode), e);
             return null;
         }
     }

@@ -37,7 +37,7 @@ public class UndertowOutputHook extends ServerOutputCloseHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "io/undertow/servlet/spec/ServletOutputStreamImpl".equals(className);
+        return "io/undertow/servlet/spec/ServletPrintWriter".equals(className);
     }
 
     /**
