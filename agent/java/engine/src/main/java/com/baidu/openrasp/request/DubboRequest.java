@@ -17,6 +17,8 @@
 package com.baidu.openrasp.request;
 
 
+import com.baidu.openrasp.tool.model.ApplicationModel;
+
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -113,9 +115,7 @@ public class DubboRequest extends AbstractRequest {
 
     @Override
     public Map<String, String> getServerContext() {
-        HashMap<String, String> serverContext = new HashMap<String, String>(4);
-        serverContext.put("language", "java");
-        return serverContext;
+        return ApplicationModel.getApplicationInfo();
     }
 
     @Override

@@ -18,6 +18,7 @@ package com.baidu.openrasp.detector;
 
 import com.baidu.openrasp.tool.model.ApplicationModel;
 
+import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
 
 /**
@@ -31,7 +32,19 @@ public class DubboDetector extends ServerDetector {
 
     @Override
     public boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
-        ApplicationModel.setExtraInfo("dubbo");
+        String serverVersion = "";
+        try {
+            Method getPackageMethod = ClassLoader.class.getDeclaredMethod("getPackage", String.class);
+            getPackageMethod.setAccessible(true);
+            Package dubboBootPackage = (Package) getPackageMethod.invoke(classLoader,
+                    "com.alibaba.dubbo.rpc");
+            if (dubboBootPackage != null) {
+                serverVersion = dubboBootPackage.getImplementationVersion();
+            }
+        } catch (Throwable e) {
+            logDetectError("handle dubbo startup failed", e);
+        }
+        ApplicationModel.setExtraInfo("dubbo", serverVersion);
         return true;
     }
 }

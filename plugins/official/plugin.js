@@ -1,4 +1,4 @@
-const plugin_version = '2019-0328-1130'
+const plugin_version = '2019-0328-1500'
 const plugin_name    = 'official'
 
 /*
@@ -495,24 +495,33 @@ var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter)
 // 命令执行探针 - 常用渗透命令
 var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern)
 
-// 将所有拦截开关设置为 log; 如果是单元测试模式，忽略此选项
-if (algorithmConfig.meta.all_log && ! RASP.is_unittest) {
-    Object.keys(algorithmConfig).forEach(function (name) {
-        if (algorithmConfig[name].action == 'block') {
-           algorithmConfig[name].action = 'log'
-        }
-    })
-}
+if (! RASP.is_unittest)
+{
+   // 记录日志模式: 将所有 block 改为 log
+   if (algorithmConfig.meta.all_log)
+   {
+        Object.keys(algorithmConfig).forEach(function (name) {
+            if (algorithmConfig[name].action == 'block') 
+            {
+               algorithmConfig[name].action = 'log'
+            }
+        })
+    }
 
-// dev 模式开启更多消耗性能的检测算法; 如果是单元测试模式，忽略此选项
-if (algorithmConfig.meta.is_dev && ! RASP.is_unittest) {
-    algorithmConfig.sql_userinput.pre_enable = false
+    // 研发模式: 
+    // 1. 开启更多消耗性能的检测算法
+    // 2. 非攻击情况，检测到漏洞也报警
+    if (algorithmConfig.meta.is_dev) 
+    {
+        // 关闭 select 预过滤正则
+        algorithmConfig.sql_userinput.pre_enable = false
 
-    // 关闭 1,2,3 误报过滤
-    commaNumRegex = /^$/
+        // 关闭 1,2,3 误报过滤
+        commaNumRegex = /^$/
 
-    // 关闭 xss_echo 非攻击过滤
-    algorithmConfig.xss_echo.filter_regex = ""
+        // 关闭 xss_echo 非攻击过滤
+        algorithmConfig.xss_echo.filter_regex = ""
+    }
 }
 
 // 常用函数

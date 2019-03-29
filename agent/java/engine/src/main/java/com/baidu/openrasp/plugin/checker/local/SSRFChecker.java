@@ -67,7 +67,7 @@ public class SSRFChecker extends ConfigurableChecker {
                     // 拦截内网地址
                     if (ips.size() > 0) {
                         String ip = (String) ips.get(0);
-                        if (Pattern.matches("^(127|192|172|10)\\..*", ip)) {
+                        if (Pattern.matches("^(127|192\.168|172|10)\\..*", ip)) {
                             result.add(AttackInfo.createLocalAttackInfo(checkParameter,
                                     getActionElement(config, CONFIG_KEY_SSRF_USER_INPUT),
                                     "SSRF - Requesting intranet address: " + ip, "ssrf_userinput"));
@@ -105,7 +105,7 @@ public class SSRFChecker extends ConfigurableChecker {
         if (result.isEmpty()) {
             // 算法3 - 检测 AWS/Aliyun 私有地址
             if (!isModuleIgnore(config, CONFIG_KEY_SSRF_AWS)
-                    && (hostName.equals("169.254.169.254") || hostName.equals("100.100.100.200"))) {
+                    && (hostName.equals("169.254.169.254") || hostName.equals("100.100.100.200") || hostName.equals("metadata.google.internal"))) {
                 result.add(AttackInfo.createLocalAttackInfo(checkParameter, getActionElement(config,
                         CONFIG_KEY_SSRF_AWS), "SSRF - Requesting AWS metadata address", "ssrf_aws"));
                 // 算法4 - ssrf_obfuscate

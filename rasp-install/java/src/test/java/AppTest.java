@@ -1,7 +1,9 @@
 import com.baidu.rasp.App;
 import com.baidu.rasp.RaspError;
+import org.apache.commons.cli.ParseException;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 
 /**
@@ -18,57 +20,97 @@ public class AppTest {
                     "-appsecret", "Lng_oIYW-cf2OZUBSywxY6UnBqRizF0cTg9HGi2VVeE",
                     "-backendurl", "http://scloud.baidu.com:8087"};
             App.operateServer(installTomcat);
+        } catch (Exception e) {
+            //
+        }
+
+        try {
             String[] installBackup = {"-install", "/Users/anyang/Desktop/jacoco/sum/apache-tomcat-8.5.30/",
                     "-appid", "9b3554a97673f1f8f5c929310298037a660d3b7a",
                     "-appsecret", "Lng_oIYW-cf2OZUBSywxY6UnBqRizF0cTg9HGi2VVeE",
                     "-backendurl", "http://scloud.baidu.com:8087",
                     "-keepconf", "true"};
             App.operateServer(installBackup);
+        } catch (Exception e) {
+            //
+        }
+        try {
             String[] uninstallTomcat = {"-uninstall", "/Users/anyang/Desktop/jacoco/sum/apache-tomcat-8.5.30/"};
             App.operateServer(uninstallTomcat);
-
+        } catch (Exception e) {
+            //
+        }
+        try {
             String[] installJboss = {"-install", "/Users/anyang/Desktop/jacoco/sum/jboss-5.0.1.GA/",
                     "-appid", "9b3554a97673f1f8f5c929310298037a660d3b7a",
                     "-appsecret", "Lng_oIYW-cf2OZUBSywxY6UnBqRizF0cTg9HGi2VVeE",
                     "-backendurl", "http://scloud.baidu.com:8087"};
             App.operateServer(installJboss);
+        } catch (Exception e) {
+            //
+        }
+        try {
             String[] uninstallJboss = {"-uninstall", "/Users/anyang/Desktop/jacoco/sum/jboss-5.0.1.GA/"};
             App.operateServer(uninstallJboss);
-
+        } catch (Exception e) {
+            //
+        }
+        try {
             String[] installResin4 = {"-install", "/Users/anyang/Desktop/jacoco/sum/resin-4.0.56/",
                     "-appid", "9b3554a97673f1f8f5c929310298037a660d3b7a",
                     "-appsecret", "Lng_oIYW-cf2OZUBSywxY6UnBqRizF0cTg9HGi2VVeE",
                     "-backendurl", "http://scloud.baidu.com:8087"};
             App.operateServer(installResin4);
+        } catch (Exception e) {
+            //
+        }
+        try {
             String[] uninstallResin4 = {"-uninstall", "/Users/anyang/Desktop/jacoco/sum/resin-4.0.56/"};
             App.operateServer(uninstallResin4);
-
+        } catch (Exception e) {
+            //
+        }
+        try {
             String[] installResin3 = {"-install", "/Users/anyang/Desktop/jacoco/sum/resin-3.1.15/",
                     "-appid", "9b3554a97673f1f8f5c929310298037a660d3b7a",
                     "-appsecret", "Lng_oIYW-cf2OZUBSywxY6UnBqRizF0cTg9HGi2VVeE",
                     "-backendurl", "http://scloud.baidu.com:8087"};
             App.operateServer(installResin3);
+        } catch (Exception e) {
+            //
+        }
+        try {
             String[] uninstallResin3 = {"-uninstall", "/Users/anyang/Desktop/jacoco/sum/resin-3.1.15/"};
             App.operateServer(uninstallResin3);
-
+        } catch (Exception e) {
+            //
+        }
+        try {
             String[] installJbossEAP = {"-install", "/Users/anyang/Desktop/jacoco/sum/jboss-as-7.1.1.Final/",
                     "-appid", "9b3554a97673f1f8f5c929310298037a660d3b7a",
                     "-appsecret", "Lng_oIYW-cf2OZUBSywxY6UnBqRizF0cTg9HGi2VVeE",
                     "-backendurl", "http://scloud.baidu.com:8087"};
             App.operateServer(installJbossEAP);
-//        String[] uninstallJbossEAP = { "-uninstall", "/Users/anyang/Desktop/jacoco/sum/jboss-as-7.1.1.Final/"};
-//        App.main(uninstallJbossEAP);
-
+        } catch (Exception e) {
+            //
+        }
+        try {
             String[] installWildfly = {"-install", "/Users/anyang/Desktop/jacoco/sum/wildfly-8.0.0.Final/",
                     "-appid", "9b3554a97673f1f8f5c929310298037a660d3b7a",
                     "-appsecret", "Lng_oIYW-cf2OZUBSywxY6UnBqRizF0cTg9HGi2VVeE",
                     "-backendurl", "http://scloud.baidu.com:8087"};
             App.operateServer(installWildfly);
-//        String[] uninstallWildfly= { "-uninstall", "/Users/anyang/Desktop/jacoco/sum/wildfly-8.0.0.Final/"};
-//        App.main(uninstallWildfly);
         } catch (Exception e) {
             //
         }
+
+//        String[] uninstallJbossEAP = { "-uninstall", "/Users/anyang/Desktop/jacoco/sum/jboss-as-7.1.1.Final/"};
+//        App.main(uninstallJbossEAP);
+
+
+//        String[] uninstallWildfly= { "-uninstall", "/Users/anyang/Desktop/jacoco/sum/wildfly-8.0.0.Final/"};
+//        App.main(uninstallWildfly);
+
     }
 
     @Test

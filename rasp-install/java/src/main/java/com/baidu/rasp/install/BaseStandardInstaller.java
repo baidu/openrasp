@@ -72,6 +72,13 @@ public abstract class BaseStandardInstaller implements Installer {
         System.out.println("Make \"rasp\" directory writable\n");
         modifyFolerPermission(installDir.getCanonicalPath());
 
+        //安装rasp开启云控，删除官方插件
+        if (App.url != null && App.appId != null && App.appSecret != null) {
+            File plugin = new File(installDir.getCanonicalPath() + File.separator + "plugins" + File.separator + "official.js");
+            if (plugin.exists()) {
+                plugin.delete();
+            }
+        }
         // 生成配置文件
         if (!generateConfig(installDir.getPath(), firstInstall)) {
             System.exit(1);
