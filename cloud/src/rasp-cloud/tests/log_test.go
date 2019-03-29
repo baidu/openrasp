@@ -9,6 +9,9 @@ import (
 	"rasp-cloud/models/logs"
 	"github.com/bouk/monkey"
 	"errors"
+	"reflect"
+	"github.com/olivere/elastic"
+	"context"
 )
 
 func TestPostLog(t *testing.T) {
@@ -384,7 +387,7 @@ func TestAttackLogAggr(t *testing.T) {
 		Convey("when time interval is greater than 1 year", func() {
 			data := getAggrParam()
 			data["start_time"] = 1
-			data["end_time"] = time.Now().UnixNano()/1000000
+			data["end_time"] = time.Now().UnixNano() / 1000000
 			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/type", inits.GetJson(data))
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
@@ -419,7 +422,7 @@ func TestAttackLogAggr(t *testing.T) {
 		Convey("when time interval is greater than 1 year in time aggr", func() {
 			data := getAggrParam()
 			data["start_time"] = 1
-			data["end_time"] = time.Now().UnixNano()/1000000
+			data["end_time"] = time.Now().UnixNano() / 1000000
 			r := inits.GetResponse("POST", "/v1/api/log/attack/aggr/time", inits.GetJson(data))
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
@@ -487,6 +490,22 @@ func TestAttackLogAggr(t *testing.T) {
 			r = inits.GetResponse("POST", "/v1/api/log/attack/aggr/vuln", inits.GetJson(getAttackLogSearchData()))
 			So(r.Status, ShouldBeGreaterThan, 0)
 			monkey.Unpatch(logs.SearchLogs)
+
+			monkey.PatchInstanceMethod(reflect.TypeOf(&elastic.SearchService{}), "Do",
+				func(*elastic.SearchService, context.Context) (*elastic.SearchResult, error) {
+					return &elastic.SearchResult{Error: &elastic.ErrorDetails{}}, errors.New("")
+				},
+			)
+			data = getAggrParam()
+			r = inits.GetResponse("POST", "/v1/api/log/attack/aggr/type", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			r = inits.GetResponse("POST", "/v1/api/log/attack/aggr/ua", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			r = inits.GetResponse("POST", "/v1/api/log/attack/aggr/vuln", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			r = inits.GetResponse("POST", "/v1/api/log/attack/aggr/time", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.UnpatchInstanceMethod(reflect.TypeOf(&elastic.SearchService{}), "Do")
 		})
 
 	})

@@ -106,7 +106,7 @@
 				
 				<option value="file25">rasp-cloud/models/cookie.go (90.9%)</option>
 				
-				<option value="file26">rasp-cloud/models/logs/attack_alarm.go (80.0%)</option>
+				<option value="file26">rasp-cloud/models/logs/attack_alarm.go (91.4%)</option>
 				
 				<option value="file27">rasp-cloud/models/logs/error_alarm.go (80.0%)</option>
 				
@@ -4169,14 +4169,14 @@ func AggregationAttackWithTime(startTime int64, endTime int64, interval string, 
                 Aggregation(timeAggrName, timeAggr).
                 Size(0).
                 Do(ctx)
-        if err != nil </span><span class="cov0" title="0">{
-                if aggrResult != nil &amp;&amp; aggrResult.Error != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
+                if aggrResult != nil &amp;&amp; aggrResult.Error != nil </span><span class="cov8" title="1">{
                         errMsg, err := json.Marshal(aggrResult.Error)
                         if err != nil </span><span class="cov0" title="0">{
                                 beego.Error(string(errMsg))
                         }</span>
                 }
-                <span class="cov0" title="0">return nil, err</span>
+                <span class="cov8" title="1">return nil, err</span>
         }
 
         <span class="cov8" title="1">var dataResult = make([][]int64, 2)
@@ -4221,14 +4221,14 @@ func AggregationAttackWithUserAgent(startTime int64, endTime int64, size int,
                 Aggregation(aggrName, uaAggr).
                 Size(0).
                 Do(ctx)
-        if err != nil </span><span class="cov0" title="0">{
-                if aggrResult != nil &amp;&amp; aggrResult.Error != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
+                if aggrResult != nil &amp;&amp; aggrResult.Error != nil </span><span class="cov8" title="1">{
                         errMsg, err := json.Marshal(aggrResult.Error)
                         if err != nil </span><span class="cov0" title="0">{
                                 beego.Error(string(errMsg))
                         }</span>
                 }
-                <span class="cov0" title="0">return nil, err</span>
+                <span class="cov8" title="1">return nil, err</span>
         }
         <span class="cov8" title="1">result := make([][]interface{}, 0)
         if aggrResult != nil &amp;&amp; aggrResult.Aggregations != nil </span><span class="cov8" title="1">{
@@ -4256,14 +4256,14 @@ func AggregationAttackWithType(startTime int64, endTime int64, size int,
                 Aggregation(aggrName, typeAggr).
                 Size(0).
                 Do(ctx)
-        if err != nil </span><span class="cov0" title="0">{
-                if aggrResult != nil &amp;&amp; aggrResult.Error != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
+                if aggrResult != nil &amp;&amp; aggrResult.Error != nil </span><span class="cov8" title="1">{
                         errMsg, err := json.Marshal(aggrResult.Error)
                         if err != nil </span><span class="cov0" title="0">{
                                 beego.Error(string(errMsg))
                         }</span>
                 }
-                <span class="cov0" title="0">return nil, err</span>
+                <span class="cov8" title="1">return nil, err</span>
         }
         <span class="cov8" title="1">result := make([][]interface{}, 0)
         if aggrResult != nil &amp;&amp; aggrResult.Aggregations != nil </span><span class="cov8" title="1">{
@@ -4494,7 +4494,7 @@ func handleEsLogPush() <span class="cov8" title="1">{
                         alarms = append(alarms, alarm)
                 }</span>
                 <span class="cov8" title="1">err := es.BulkInsert(PolicyAlarmInfo.EsType, alarms)
-                if err != nil </span><span class="cov8" title="1">{
+                if err != nil </span><span class="cov0" title="0">{
                         beego.Error("failed to execute es bulk insert for policy alarm: " + err.Error())
                 }</span>
         case alarm := &lt;-ErrorAlarmInfo.AlarmBuffer:<span class="cov8" title="1">
@@ -4505,7 +4505,7 @@ func handleEsLogPush() <span class="cov8" title="1">{
                         alarms = append(alarms, alarm)
                 }</span>
                 <span class="cov8" title="1">err := es.BulkInsert(ErrorAlarmInfo.EsType, alarms)
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov8" title="1">{
                         beego.Error("failed to execute es bulk insert for error alarm: " + err.Error())
                 }</span>
         }
@@ -4618,7 +4618,7 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 
         if err != nil </span><span class="cov0" title="0">{
                 if queryResult != nil &amp;&amp; queryResult.Error != nil </span><span class="cov0" title="0">{
-                        beego.Error(queryResult.Error)
+                        beego.Error(queryResult.Error, index)
                 }</span>
                 <span class="cov0" title="0">return 0, nil, err</span>
         }

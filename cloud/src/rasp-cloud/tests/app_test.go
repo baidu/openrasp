@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 	"rasp-cloud/tests/start"
 	"rasp-cloud/mongo"
-	"fmt"
 	"gopkg.in/mgo.v2"
 )
 
