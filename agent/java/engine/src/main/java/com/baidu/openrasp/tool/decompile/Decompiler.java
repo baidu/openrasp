@@ -73,7 +73,7 @@ public class Decompiler {
         return "";
     }
 
-    public static ArrayList<String> getAlarmPoint(StackTraceElement[] stackTraceElements, String appBasePath) {
+    public static ArrayList<String> getAlarmPoint(StackTraceElement[] stackTraceElements) {
         ArrayList<String> result = new ArrayList<String>();
         for (StackTraceElement element : stackTraceElements) {
             String className = element.getClassName();
