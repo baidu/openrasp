@@ -306,7 +306,7 @@ static bool fetch_pdo_exception_info(char *driver_name, pdo_dbh_t *dbh, std::str
 {
     bool result = false;
     zval *info = NULL;
-    if (dbh->methods->fetch_err)
+    if (dbh && dbh->methods && dbh->methods->fetch_err)
     {
         MAKE_STD_ZVAL(info);
         array_init(info);
