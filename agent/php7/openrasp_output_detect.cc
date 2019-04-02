@@ -124,6 +124,7 @@ static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionT
             {
                 zval attack_params;
                 array_init(&attack_params);
+                add_assoc_string(&attack_params, "type", "");
                 add_assoc_string(&attack_params, "name", "");
                 add_assoc_string(&attack_params, "value", "");
                 zval plugin_message;
@@ -145,10 +146,11 @@ static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionT
                 }
                 zval attack_params;
                 array_init(&attack_params);
+                add_assoc_string(&attack_params, "type", "_GET");
                 add_assoc_string(&attack_params, "name", const_cast<char *>(name.c_str()));
                 add_assoc_string(&attack_params, "value", Z_STRVAL_P(val));
                 zval plugin_message;
-                ZVAL_STR(&plugin_message, strpprintf(0, _("Reflected XSS attack detected: parameter name: %s"), name.c_str()));
+                ZVAL_STR(&plugin_message, strpprintf(0, _("Reflected XSS attack detected: parameter: $_GET['%s']"), name.c_str()));
                 openrasp_buildin_php_risk_handle(action, XSS_USER_INPUT, 100, &attack_params, &plugin_message);
                 return SUCCESS;
             }
