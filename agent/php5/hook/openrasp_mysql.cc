@@ -24,7 +24,9 @@ extern "C"
 }
 
 HOOK_FUNCTION(mysql_connect, DB_CONNECTION);
+POST_HOOK_FUNCTION(mysql_connect, SQL_ERROR);
 HOOK_FUNCTION(mysql_pconnect, DB_CONNECTION);
+POST_HOOK_FUNCTION(mysql_pconnect, SQL_ERROR);
 PRE_HOOK_FUNCTION(mysql_query, SQL);
 POST_HOOK_FUNCTION(mysql_query, SQL_ERROR);
 
@@ -133,6 +135,19 @@ static inline void init_mysql_pconnect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, 
     init_mysql_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 1);
 }
 
+static void mysql_connect_error_intercept(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func)
+{
+    long error_code = fetch_mysql_errno(0, nullptr TSRMLS_CC);
+    if (!mysql_error_code_filtered(error_code))
+    {
+        return;
+    }
+    std::string error_msg = fetch_mysql_error(0, nullptr TSRMLS_CC);
+    sql_connection_entry conn_entry;
+    connection_init_func(INTERNAL_FUNCTION_PARAM_PASSTHRU, &conn_entry);
+    sql_connect_error_alarm(&conn_entry, std::to_string(error_code), error_msg TSRMLS_CC);
+}
+
 //mysql_connect
 void pre_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
@@ -151,6 +166,14 @@ void post_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETE
     }
 }
 
+void post_global_mysql_connect_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
+    {
+        mysql_connect_error_intercept(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry);
+    }
+}
+
 //mysql_pconnect
 void pre_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
@@ -166,6 +189,14 @@ void post_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMET
                Z_TYPE_P(return_value) == IS_RESOURCE))
     {
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry, 0);
+    }
+}
+
+void post_global_mysql_pconnect_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
+    {
+        mysql_connect_error_intercept(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry);
     }
 }
 
