@@ -59,10 +59,11 @@ const std::string get_check_type_name(OpenRASPCheckType type)
 
 bool openrasp_zval_in_request(zval *item)
 {
-    return !fetch_name_in_request(item).empty();
+    std::string var_type;
+    return !fetch_name_in_request(item, var_type).empty();
 }
 
-std::string fetch_name_in_request(zval *item)
+std::string fetch_name_in_request(zval *item, std::string &var_type)
 {
     std::string name;
     static const track_vars_pair pairs[] = {{TRACK_VARS_POST, "_POST"},
@@ -86,16 +87,21 @@ std::string fetch_name_in_request(zval *item)
             {
                 if (key != nullptr)
                 {
-                    return std::string(ZSTR_VAL(key));
+                    name = std::string(ZSTR_VAL(key));
                 }
                 else
                 {
                     zend_long actual = idx;
-                    return std::to_string(actual);
+                    name = std::to_string(actual);
                 }
             }
         }
         ZEND_HASH_FOREACH_END();
+        if (!name.empty())
+        {
+            var_type = std::string(pairs[index].name);
+            return name;
+        }
     }
     return name;
 }
