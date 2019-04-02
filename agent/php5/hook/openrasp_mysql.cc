@@ -208,7 +208,7 @@ void post_global_mysql_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             return;
         }
         std::string error_msg = fetch_mysql_error(param_num, args TSRMLS_CC);
-        sql_error_alarm("mysql", query, std::to_string(error_code), error_msg TSRMLS_CC);
+        sql_query_error_alarm("mysql", query, std::to_string(error_code), error_msg TSRMLS_CC);
     }
 }
 

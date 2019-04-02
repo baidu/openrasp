@@ -67,7 +67,8 @@ void plugin_sql_check(char *query, int query_len, char *server TSRMLS_DC);
 zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func,
                                              int enforce_policy);
 bool mysql_error_code_filtered(long err_code);
-void sql_error_alarm(char *server, char *query, const std::string &err_code, const std::string &err_msg TSRMLS_DC);
+void sql_query_error_alarm(char *server, char *query, const std::string &err_code, const std::string &err_msg TSRMLS_DC);
+void sql_connect_error_alarm(sql_connection_entry *sql_connection_p, const std::string &err_code, const std::string &err_msg TSRMLS_DC);
 
 void pg_conninfo_parse(char *connstring, std::function<void(const char *pname, const char *pval)> info_store_func);
 
