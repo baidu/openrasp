@@ -157,7 +157,7 @@ public class AttackInfo extends EventInfo {
 
     private boolean checkTomcatVersion() {
         String javaVersion = System.getProperty("java.version");
-        return javaVersion != null && (javaVersion.startsWith("1.6") || javaVersion.startsWith("1.7")
+        return javaVersion != null && (javaVersion.startsWith("1.7")
                 || javaVersion.startsWith("1.8"));
     }
 
