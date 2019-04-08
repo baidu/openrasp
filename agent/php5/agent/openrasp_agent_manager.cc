@@ -93,7 +93,7 @@ bool OpenraspAgentManager::startup()
 		{
 			return false;
 		}
-		agent_ctrl_block->set_master_pid(init_process_pid);
+		set_master_pid(init_process_pid);
 		process_agent_startup();
 		initialized = true;
 	}
@@ -109,10 +109,10 @@ bool OpenraspAgentManager::shutdown()
 			pid_t fpm_master_pid = search_fpm_master_pid();
 			if (fpm_master_pid)
 			{
-				agent_ctrl_block->set_master_pid(fpm_master_pid);
+				set_master_pid(fpm_master_pid);
 			}
 		}
-		if (agent_ctrl_block->get_master_pid() && getpid() != agent_ctrl_block->get_master_pid())
+		if (get_master_pid() && getpid() != get_master_pid())
 		{
 			return true;
 		}
@@ -195,7 +195,7 @@ bool OpenraspAgentManager::process_agent_startup()
 	}
 	else
 	{
-		agent_ctrl_block->set_supervisor_id(pid);
+		set_supervisor_id(pid);
 	}
 	return true;
 }
@@ -203,17 +203,17 @@ bool OpenraspAgentManager::process_agent_startup()
 void OpenraspAgentManager::process_agent_shutdown()
 {
 	agents.clear();
-	pid_t log_agent_id = agent_ctrl_block->get_log_agent_id();
+	pid_t log_agent_id = get_log_agent_id();
 	if (log_agent_id > 0)
 	{
 		kill(log_agent_id, SIGNAL_KILL_AGENT);
 	}
-	pid_t plugin_agent_id = agent_ctrl_block->get_plugin_agent_id();
+	pid_t plugin_agent_id = get_plugin_agent_id();
 	if (plugin_agent_id > 0)
 	{
 		kill(plugin_agent_id, SIGNAL_KILL_AGENT);
 	}
-	pid_t supervisor_id = agent_ctrl_block->get_supervisor_id();
+	pid_t supervisor_id = get_supervisor_id();
 	if (supervisor_id > 0)
 	{
 		kill(supervisor_id, SIGNAL_KILL_AGENT);
@@ -243,7 +243,7 @@ void OpenraspAgentManager::supervisor_run()
 				check_work_processes_survival();
 			}
 			sleep(1);
-			if (!pid_alive(std::to_string(agent_ctrl_block->get_master_pid())))
+			if (!pid_alive(std::to_string(get_master_pid())))
 			{
 				process_agent_shutdown();
 			}
@@ -309,11 +309,6 @@ bool OpenraspAgentManager::agent_remote_register()
 	return res_info->verify(REGISTER_ERROR);
 }
 
-pid_t OpenraspAgentManager::get_master_pid()
-{
-	return agent_ctrl_block->get_master_pid();
-}
-
 pid_t OpenraspAgentManager::search_fpm_master_pid()
 {
 	std::vector<std::string> processes;
@@ -360,6 +355,111 @@ pid_t OpenraspAgentManager::search_fpm_master_pid()
 		}
 	}
 	return 0;
+}
+
+void OpenraspAgentManager::set_supervisor_id(pid_t supervisor_id)
+{
+	if (agent_ctrl_block)
+	{
+		agent_ctrl_block->set_supervisor_id(supervisor_id);
+	}
+}
+
+pid_t OpenraspAgentManager::get_supervisor_id()
+{
+	if (agent_ctrl_block)
+	{
+		return agent_ctrl_block->get_supervisor_id();
+	}
+	return 0;
+}
+
+void OpenraspAgentManager::set_plugin_agent_id(pid_t plugin_agent_id)
+{
+	if (agent_ctrl_block)
+	{
+		agent_ctrl_block->set_plugin_agent_id(plugin_agent_id);
+	}
+}
+
+pid_t OpenraspAgentManager::get_plugin_agent_id()
+{
+	if (agent_ctrl_block)
+	{
+		return agent_ctrl_block->get_plugin_agent_id();
+	}
+	return 0;
+}
+
+void OpenraspAgentManager::set_log_agent_id(pid_t log_agent_id)
+{
+	if (agent_ctrl_block)
+	{
+		agent_ctrl_block->set_log_agent_id(log_agent_id);
+	}
+}
+
+pid_t OpenraspAgentManager::get_log_agent_id()
+{
+	if (agent_ctrl_block)
+	{
+		return agent_ctrl_block->get_log_agent_id();
+	}
+	return 0;
+}
+
+void OpenraspAgentManager::set_master_pid(pid_t master_pid)
+{
+	if (agent_ctrl_block)
+	{
+		agent_ctrl_block->set_master_pid(master_pid);
+	}
+}
+
+pid_t OpenraspAgentManager::get_master_pid()
+{
+	if (agent_ctrl_block)
+	{
+		return agent_ctrl_block->get_master_pid();
+	}
+	return 0;
+}
+
+void OpenraspAgentManager::set_plugin_version(const char *plugin_version)
+{
+	if (agent_ctrl_block)
+	{
+		agent_ctrl_block->set_plugin_version(plugin_version);
+	}
+}
+const char *OpenraspAgentManager::get_plugin_version()
+{
+	if (agent_ctrl_block)
+	{
+		return agent_ctrl_block->get_plugin_version();
+	}
+	return nullptr;
+}
+
+void OpenraspAgentManager::set_plugin_md5(const char *plugin_md5)
+{
+	if (agent_ctrl_block)
+	{
+		agent_ctrl_block->set_plugin_md5(plugin_md5);
+	}
+}
+const char *OpenraspAgentManager::get_plugin_md5()
+{
+	if (agent_ctrl_block)
+	{
+		return agent_ctrl_block->get_plugin_md5();
+	}
+	return nullptr;
+}
+
+long OpenraspAgentManager::get_plugin_update_timestamp()
+{
+	return (!initialized || nullptr == agent_ctrl_block) ? 0 : agent_ctrl_block->get_last_update_time();
 }
 
 } // namespace openrasp

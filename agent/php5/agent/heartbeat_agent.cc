@@ -57,7 +57,7 @@ void HeartBeatAgent::run()
 		for (long i = 0; i < openrasp_ini.heartbeat_interval; ++i)
 		{
 			sleep(1);
-			if (!pid_alive(std::to_string(oam->agent_ctrl_block->get_master_pid())) ||
+			if (!pid_alive(std::to_string(oam->get_master_pid())) ||
 				!pid_alive(std::to_string(supervisor_pid)) ||
 				HeartBeatAgent::signal_received == SIGTERM)
 			{
@@ -74,8 +74,8 @@ bool HeartBeatAgent::do_heartbeat()
 
 	JsonReader json_reader;
 	json_reader.write_string({"rasp_id"}, scm->get_rasp_id());
-	json_reader.write_string({"plugin_md5"}, oam->agent_ctrl_block->get_plugin_md5());
-	json_reader.write_string({"plugin_version"}, oam->agent_ctrl_block->get_plugin_version());
+	json_reader.write_string({"plugin_md5"}, oam->get_plugin_md5());
+	json_reader.write_string({"plugin_version"}, oam->get_plugin_version());
 	json_reader.write_int64({"config_time"}, scm->get_config_last_update());
 	std::string json_content = json_reader.dump();
 
@@ -98,8 +98,8 @@ bool HeartBeatAgent::do_heartbeat()
 		{
 			if (plugin_update_pkg->build_snapshot())
 			{
-				oam->agent_ctrl_block->set_plugin_md5(plugin_update_pkg->get_md5().c_str());
-				oam->agent_ctrl_block->set_plugin_version(plugin_update_pkg->get_version().c_str());
+				oam->set_plugin_md5(plugin_update_pkg->get_md5().c_str());
+				oam->set_plugin_version(plugin_update_pkg->get_version().c_str());
 				openrasp_error(LEVEL_DEBUG, HEARTBEAT_ERROR, _("Successfully build snapshot, version: %s, md5: %s."),
 							   plugin_update_pkg->get_version().c_str(), plugin_update_pkg->get_md5().c_str());
 				result = true;
@@ -152,13 +152,13 @@ bool HeartBeatAgent::do_heartbeat()
 				}
 			}
 		}
-		return result;
 	}
+	return result;
 }
 
 void HeartBeatAgent::write_pid_to_shm(pid_t agent_pid)
 {
-	oam->agent_ctrl_block->set_plugin_agent_id(agent_pid);
+	oam->set_plugin_agent_id(agent_pid);
 }
 
 } // namespace openrasp

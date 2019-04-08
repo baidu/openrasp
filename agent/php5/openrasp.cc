@@ -283,10 +283,8 @@ PHP_MINFO_FUNCTION(openrasp)
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (remote_active && openrasp::oam)
     {
-        php_info_print_table_row(2, "Plugin Version",
-                                 openrasp::oam->agent_ctrl_block
-                                     ? openrasp::oam->agent_ctrl_block->get_plugin_version()
-                                     : "");
+        const char *plugin_version = openrasp::oam->get_plugin_version();
+        php_info_print_table_row(2, "Plugin Version", plugin_version ? plugin_version : "");
     }
 #endif
     php_info_print_table_end();
