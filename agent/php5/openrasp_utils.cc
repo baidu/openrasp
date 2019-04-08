@@ -325,6 +325,9 @@ bool openrasp_parse_url(const std::string &origin_url, std::string &scheme, std:
         if (url->host)
         {
             host = std::string(url->host);
+        }
+        if (url->port)
+        {
             port = std::to_string(url->port);
         }
         php_url_free(url);
