@@ -49,7 +49,10 @@ void HeartBeatAgent::run()
 	while (true)
 	{
 		update_log_level();
-		do_heartbeat();
+		if (do_heartbeat())
+		{
+			continue;
+		}
 
 		for (long i = 0; i < openrasp_ini.heartbeat_interval; ++i)
 		{
@@ -64,8 +67,9 @@ void HeartBeatAgent::run()
 	}
 }
 
-void HeartBeatAgent::do_heartbeat()
+bool HeartBeatAgent::do_heartbeat()
 {
+	bool result = false;
 	std::string url_string = std::string(openrasp_ini.backend_url) + heartbeat_url_path;
 
 	JsonReader json_reader;
@@ -83,7 +87,7 @@ void HeartBeatAgent::do_heartbeat()
 		openrasp_error(LEVEL_WARNING, HEARTBEAT_ERROR, _("CURL error: %s (%d), url: %s"),
 					   backend_request.get_curl_err_msg(), backend_request.get_curl_code(),
 					   url_string.c_str());
-		return;
+		return result;
 	}
 	openrasp_error(LEVEL_DEBUG, HEARTBEAT_ERROR, _("%s"), res_info->to_string().c_str());
 	if (res_info->verify(HEARTBEAT_ERROR))
@@ -96,56 +100,60 @@ void HeartBeatAgent::do_heartbeat()
 			{
 				oam->agent_ctrl_block->set_plugin_md5(plugin_update_pkg->get_md5().c_str());
 				oam->agent_ctrl_block->set_plugin_version(plugin_update_pkg->get_version().c_str());
+				openrasp_error(LEVEL_DEBUG, HEARTBEAT_ERROR, _("Successfully build snapshot, version: %s, md5: %s."),
+							   plugin_update_pkg->get_version().c_str(), plugin_update_pkg->get_md5().c_str());
+				result = true;
 			}
 		}
 		/************************************config update************************************/
 		int64_t config_time = res_info->fetch_int64({"data", "config_time"});
-		if (config_time < 0) //timestamp should not less than zero
+		if (config_time >= 0) //timestamp should not less than zero
 		{
-			return;
-		}
-		std::string complete_config = res_info->stringify_object({"data", "config"}, true);
-		if (!complete_config.empty())
-		{
-			/************************************shm config************************************/
-			//update log_max_backup only its value greater than zero
-			int64_t log_max_backup = res_info->fetch_int64({"data", "config", "log.maxbackup"});
-			scm->set_log_max_backup(log_max_backup > 0 ? log_max_backup : 30);
-			int64_t debug_level = res_info->fetch_int64({"data", "config", "debug.level"}, 0);
-			scm->set_debug_level(debug_level);
-			std::map<std::string, std::vector<std::string>> white_map = res_info->build_hook_white_map({"data", "config", "hook.white"});
-			scm->build_check_type_white_array(white_map);
-			res_info->erase_value({"data", "config", "hook.white"});
-
-			/************************************OPENRASP_G(config)************************************/
-			std::string exculde_hook_white_config = res_info->stringify_object({"data", "config"}, true);
-			if (!exculde_hook_white_config.empty())
+			std::string complete_config = res_info->stringify_object({"data", "config"}, true);
+			if (!complete_config.empty())
 			{
-				std::string cloud_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/cloud-config.json";
-#ifndef _WIN32
-				mode_t oldmask = umask(0);
-#endif
-				bool write_ok = write_string_to_file(cloud_config_file_path.c_str(),
-												  std::ofstream::in | std::ofstream::out | std::ofstream::trunc,
-												  exculde_hook_white_config.c_str(),
-												  exculde_hook_white_config.length());
-#ifndef _WIN32
-				umask(oldmask);
-#endif
-				if (write_ok)
+				/************************************shm config************************************/
+				//update log_max_backup only its value greater than zero
+				int64_t log_max_backup = res_info->fetch_int64({"data", "config", "log.maxbackup"});
+				scm->set_log_max_backup(log_max_backup > 0 ? log_max_backup : 30);
+				int64_t debug_level = res_info->fetch_int64({"data", "config", "debug.level"}, 0);
+				scm->set_debug_level(debug_level);
+				std::map<std::string, std::vector<std::string>> white_map = res_info->build_hook_white_map({"data", "config", "hook.white"});
+				scm->build_check_type_white_array(white_map);
+				res_info->erase_value({"data", "config", "hook.white"});
+
+				/************************************OPENRASP_G(config)************************************/
+				std::string exculde_hook_white_config = res_info->stringify_object({"data", "config"}, true);
+				if (!exculde_hook_white_config.empty())
 				{
-					scm->set_config_last_update(config_time);
+					std::string cloud_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/cloud-config.json";
+#ifndef _WIN32
+					mode_t oldmask = umask(0);
+#endif
+					bool write_ok = write_string_to_file(cloud_config_file_path.c_str(),
+														 std::ofstream::in | std::ofstream::out | std::ofstream::trunc,
+														 exculde_hook_white_config.c_str(),
+														 exculde_hook_white_config.length());
+#ifndef _WIN32
+					umask(oldmask);
+#endif
+					if (write_ok)
+					{
+						scm->set_config_last_update(config_time);
+						openrasp_error(LEVEL_DEBUG, HEARTBEAT_ERROR, _("Successfully update config, config time: %ld."),
+									   config_time);
+						result = true;
+					}
+					else
+					{
+						openrasp_error(LEVEL_WARNING, HEARTBEAT_ERROR, _("Fail to write cloud config to %s, error %s."),
+									   cloud_config_file_path.c_str(), strerror(errno));
+					}
 				}
-				else
-				{
-					openrasp_error(LEVEL_WARNING, HEARTBEAT_ERROR, _("Fail to write cloud config to %s, error %s."),
-								   cloud_config_file_path.c_str(), strerror(errno));
-				}
-				return;
 			}
 		}
-		return;
 	}
+	return result;
 }
 
 void HeartBeatAgent::write_pid_to_shm(pid_t agent_pid)
