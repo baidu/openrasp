@@ -481,7 +481,7 @@ public class Config extends FileScanListener {
      */
     public synchronized void setBodyMaxBytes(String bodyMaxBytes) {
         this.bodyMaxBytes = Integer.parseInt(bodyMaxBytes);
-        if (this.bodyMaxBytes < 0) {
+        if (this.bodyMaxBytes <= 0) {
             this.bodyMaxBytes = 4096;
         }
     }

@@ -246,37 +246,7 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
             LogLog.error("Failed to rename [" + fileName + "] to [" + scheduledFilename + "].");
         }
 
-        File parent = file.getParentFile();
-        LogLog.debug("roll over folder -> " + parent.getAbsolutePath());
-        final Date removeDate = new Date(rc.getRemoveMillis(now, maxBackupIndex));
-        String[] removedFiles = parent.list(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                String logFilename = file.getName();
-                if (name.startsWith(logFilename)) {
-                    String patternSuffix = name.substring(logFilename.length());
-                    try {
-                        Date parsedDate = sdf.parse(patternSuffix);
-                        if (!parsedDate.after(removeDate)
-                                && sdf.format(parsedDate).equals(patternSuffix)) {
-                            return true;
-                        }
-                    } catch (ParseException e) {
-                        //parse pattern suffix error
-                    }
-                }
-                return false;
-            }
-        });
-
-        for (int i = 0; i < removedFiles.length; ++i) {
-            File removeTarget = new File(parent, removedFiles[i]);
-            if (removeTarget.exists()) {
-                removeTarget.delete();
-                LogLog.debug("remove " + removedFiles[i]);
-            }
-        }
-
+        rollFiles(file);
         try {
             // This will also close the file. This is OK since multiple
             // close operations are safe.
@@ -310,6 +280,39 @@ public class OpenraspDailyRollingFileAppender extends FileAppender {
             }
         }
         super.subAppend(event);
+    }
+
+    public void rollFiles(final File file){
+        File parent = file.getParentFile();
+        LogLog.debug("roll over folder -> " + parent.getAbsolutePath());
+        final Date removeDate = new Date(rc.getRemoveMillis(now, maxBackupIndex));
+        String[] removedFiles = parent.list(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                String logFilename = file.getName();
+                if (name.startsWith(logFilename)) {
+                    String patternSuffix = name.substring(logFilename.length());
+                    try {
+                        Date parsedDate = sdf.parse(patternSuffix);
+                        if (!parsedDate.after(removeDate)
+                                && sdf.format(parsedDate).equals(patternSuffix)) {
+                            return true;
+                        }
+                    } catch (ParseException e) {
+                        //parse pattern suffix error
+                    }
+                }
+                return false;
+            }
+        });
+
+        for (int i = 0; i < removedFiles.length; ++i) {
+            File removeTarget = new File(parent, removedFiles[i]);
+            if (removeTarget.exists()) {
+                removeTarget.delete();
+                LogLog.debug("remove " + removedFiles[i]);
+            }
+        }
     }
 }
 
