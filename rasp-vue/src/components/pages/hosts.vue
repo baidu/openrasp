@@ -40,6 +40,10 @@
           <button class="btn btn-primary ml-2" @click="loadRaspList(1)">
             搜索
           </button>
+
+          <button class="btn btn-primary ml-2" @click="deleteExpired()">
+            清理
+          </button>
         </div>
       </div>
       <div class="card">
@@ -222,6 +226,22 @@ export default {
         app_id: this.current_app.id
       }
 
+      this.api_request('v1/api/rasp/delete', body, function(
+        data
+      ) {
+        self.loadRaspList(1)
+      })
+    },
+    deleteExpired: function() {
+      if (!confirm('删除离线超过7天的主机？')) {
+        return
+      }
+
+      var self = this
+      var body = {
+        app_id: this.current_app.id,
+        expire_time: 7 * 24 * 3600
+      }
       this.api_request('v1/api/rasp/delete', body, function(
         data
       ) {
