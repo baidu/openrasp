@@ -186,8 +186,8 @@ func RemoveRaspBySelector(selector map[string]interface{}, appId string) (int, e
 		offlineWhere = "this.last_heartbeat_time+this.heartbeat_interval+180 < " +
 			strconv.FormatInt(time.Now().Unix(), 10)
 	}
-	param := bson.M{"app_id": appId, "register_ip": selector["register_ip"], "$where": offlineWhere}
-	if selector["register_ip"] != "" {
+	param := bson.M{"app_id": appId, "$where": offlineWhere}
+	if selector["register_ip"] != nil && selector["register_ip"] != "" {
 		param["register_ip"] = selector["register_ip"]
 	}
 	info, err := mongo.RemoveAll(raspCollectionName, param)
