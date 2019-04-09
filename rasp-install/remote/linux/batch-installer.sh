@@ -115,7 +115,7 @@ EOF
 		fi
 
 		# 检查参数
-		if [[ -z "$java_path" ]] || [[ -z "$java_home" ]] || [[ -z "$java_version" ]] || [[ -z "$tomcat_home" ]] || [[ -z "$tomcat_version" ]]
+		if [[ -z "$java_path" ]] || [[ -z "$java_version" ]] || [[ -z "$tomcat_home" ]] || [[ -z "$tomcat_version" ]]
 		then
 			echo
 			echo Unsupported Java application server: not a Tomcat server.
