@@ -243,7 +243,7 @@ func TestDeleteRasp(t *testing.T) {
 				"id":     rasp.Id,
 				"app_id": rasp.AppId,
 			}))
-			So(r.Status, ShouldEqual, 0)
+			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
 		Convey("delete the rasp with register_ip", func() {
@@ -267,6 +267,7 @@ func TestDeleteRasp(t *testing.T) {
 			r := inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
 				"register_ip": rasp.RegisterIp,
 				"app_id":      rasp.AppId,
+				"expire_time": 10,
 			}))
 			So(r.Status, ShouldEqual, 0)
 		})
@@ -294,21 +295,27 @@ func TestDeleteRasp(t *testing.T) {
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
-		Convey("when the ip is valid", func() {
+		Convey("when the param is invalid", func() {
 			r := inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
 				"app_id":      start.TestApp.Id,
 				"register_ip": "173.2323",
 			}))
 			So(r.Status, ShouldBeGreaterThan, 0)
 
-			monkey.Patch(models.RemoveRaspByRegisterIp, func(ip string, appId string) (int, error) {
+			r = inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
+				"app_id":      start.TestApp.Id,
+				"expire_time": -100,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+
+			monkey.Patch(models.RemoveRaspBySelector, func(selector map[string]interface{}, appId string) (int, error) {
 				return 0, errors.New("")
 			})
 			r = inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
 				"app_id":      start.TestApp.Id,
 				"register_ip": "173.23.0.0",
 			}))
-			monkey.Unpatch(models.RemoveRaspByRegisterIp)
+			monkey.Unpatch(models.RemoveRaspBySelector)
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 	})
