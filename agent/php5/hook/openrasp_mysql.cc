@@ -23,9 +23,9 @@ extern "C"
 #include "zend_ini.h"
 }
 
-HOOK_FUNCTION(mysql_connect, DB_CONNECTION);
+POST_HOOK_FUNCTION(mysql_connect, DB_CONNECTION);
 POST_HOOK_FUNCTION(mysql_connect, SQL_ERROR);
-HOOK_FUNCTION(mysql_pconnect, DB_CONNECTION);
+POST_HOOK_FUNCTION(mysql_pconnect, DB_CONNECTION);
 POST_HOOK_FUNCTION(mysql_pconnect, SQL_ERROR);
 PRE_HOOK_FUNCTION(mysql_query, SQL);
 POST_HOOK_FUNCTION(mysql_query, SQL_ERROR);
@@ -149,20 +149,13 @@ static void mysql_connect_error_intercept(INTERNAL_FUNCTION_PARAMETERS, init_con
 }
 
 //mysql_connect
-void pre_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (UNLIKELY(OPENRASP_CONFIG(security.enforce_policy) &&
-                 check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry, 1)))
-    {
-        handle_block(TSRMLS_C);
-    }
-}
 void post_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (LIKELY(!OPENRASP_CONFIG(security.enforce_policy) &&
-               Z_TYPE_P(return_value) == IS_RESOURCE))
+    if (Z_TYPE_P(return_value) == IS_RESOURCE &&
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry,
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry, 0);
+        handle_block(TSRMLS_C);
     }
 }
 
@@ -175,20 +168,13 @@ void post_global_mysql_connect_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 }
 
 //mysql_pconnect
-void pre_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (UNLIKELY(OPENRASP_CONFIG(security.enforce_policy) &&
-                 check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry, 1)))
-    {
-        handle_block(TSRMLS_C);
-    }
-}
 void post_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (LIKELY(!OPENRASP_CONFIG(security.enforce_policy) &&
-               Z_TYPE_P(return_value) == IS_RESOURCE))
+    if (Z_TYPE_P(return_value) == IS_RESOURCE &&
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry,
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry, 0);
+        handle_block(TSRMLS_C);
     }
 }
 

@@ -24,15 +24,15 @@ extern "C"
 /**
  * mysqli相关hook点
  */
-HOOK_FUNCTION_EX(mysqli, mysqli, DB_CONNECTION);
+POST_HOOK_FUNCTION_EX(mysqli, mysqli, DB_CONNECTION);
 POST_HOOK_FUNCTION_EX(mysqli, mysqli, SQL_ERROR);
-HOOK_FUNCTION_EX(real_connect, mysqli, DB_CONNECTION);
+POST_HOOK_FUNCTION_EX(real_connect, mysqli, DB_CONNECTION);
 POST_HOOK_FUNCTION_EX(real_connect, mysqli, SQL_ERROR);
 PRE_HOOK_FUNCTION_EX(query, mysqli, SQL);
 POST_HOOK_FUNCTION_EX(query, mysqli, SQL_ERROR);
-HOOK_FUNCTION(mysqli_connect, DB_CONNECTION);
+POST_HOOK_FUNCTION(mysqli_connect, DB_CONNECTION);
 POST_HOOK_FUNCTION(mysqli_connect, SQL_ERROR);
-HOOK_FUNCTION(mysqli_real_connect, DB_CONNECTION);
+POST_HOOK_FUNCTION(mysqli_real_connect, DB_CONNECTION);
 POST_HOOK_FUNCTION(mysqli_real_connect, SQL_ERROR);
 PRE_HOOK_FUNCTION(mysqli_query, SQL);
 POST_HOOK_FUNCTION(mysqli_query, SQL_ERROR);
@@ -150,21 +150,13 @@ static void mysqli_connect_error_intercept(INTERNAL_FUNCTION_PARAMETERS, init_co
 }
 
 //mysqli::mysqli
-void pre_mysqli_mysqli_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (OPENRASP_CONFIG(security.enforce_policy))
-    {
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli__construct_conn_entry, 1))
-        {
-            handle_block(TSRMLS_C);
-        }
-    }
-}
 void post_mysqli_mysqli_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!OPENRASP_CONFIG(security.enforce_policy) && Z_TYPE_P(this_ptr) == IS_OBJECT)
+    if (Z_TYPE_P(this_ptr) == IS_OBJECT &&
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli__construct_conn_entry,
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli__construct_conn_entry, 0);
+        handle_block(TSRMLS_C);
     }
 }
 
@@ -178,21 +170,13 @@ void post_mysqli_mysqli_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 }
 
 //mysqli::real_connect
-void pre_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (OPENRASP_CONFIG(security.enforce_policy))
-    {
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_conn_entry, 1))
-        {
-            handle_block(TSRMLS_C);
-        }
-    }
-}
 void post_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!OPENRASP_CONFIG(security.enforce_policy) && Z_TYPE_P(this_ptr) == IS_OBJECT)
+    if (Z_TYPE_P(this_ptr) == IS_OBJECT &&
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_conn_entry,
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_conn_entry, 0);
+        handle_block(TSRMLS_C);
     }
 }
 
@@ -243,49 +227,33 @@ void post_mysqli_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 }
 
 //mysqli_connect
-void pre_global_mysqli_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (OPENRASP_CONFIG(security.enforce_policy))
-    {
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry, 1))
-        {
-            handle_block(TSRMLS_C);
-        }
-    }
-}
 void post_global_mysqli_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!OPENRASP_CONFIG(security.enforce_policy) && Z_TYPE_P(return_value) == IS_OBJECT)
+    if (Z_TYPE_P(return_value) == IS_OBJECT &&
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry,
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry, 0);
+        handle_block(TSRMLS_C);
     }
 }
 
 //mysqli_connect error
 void post_global_mysqli_connect_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-     if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
+    if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
     {
         mysqli_connect_error_intercept(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry);
     }
 }
 
 //mysqli_real_connect
-void pre_global_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (OPENRASP_CONFIG(security.enforce_policy))
-    {
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_real_connect_conn_entry, 1))
-        {
-            handle_block(TSRMLS_C);
-        }
-    }
-}
 void post_global_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!OPENRASP_CONFIG(security.enforce_policy) && Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value))
+    if (Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value) &&
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_real_connect_conn_entry,
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_real_connect_conn_entry, 0);
+        handle_block(TSRMLS_C);
     }
 }
 

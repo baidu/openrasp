@@ -17,8 +17,8 @@
 #include "openrasp_sql.h"
 #include "openrasp_hook.h"
 
-HOOK_FUNCTION(pg_connect, DB_CONNECTION);
-HOOK_FUNCTION(pg_pconnect, DB_CONNECTION);
+POST_HOOK_FUNCTION(pg_connect, DB_CONNECTION);
+POST_HOOK_FUNCTION(pg_pconnect, DB_CONNECTION);
 PRE_HOOK_FUNCTION(pg_query, SQL);
 PRE_HOOK_FUNCTION(pg_send_query, SQL);
 PRE_HOOK_FUNCTION(pg_prepare, SQL_PREPARED);
@@ -63,31 +63,19 @@ static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connectio
 /**
  * pg_connect
  */
-void pre_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (OPENRASP_CONFIG(security.enforce_policy))
-    {
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pg_connection_entry, 1))
-        {
-            handle_block(TSRMLS_C);
-        }
-    }
-}
 void post_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!OPENRASP_CONFIG(security.enforce_policy) && Z_TYPE_P(return_value) == IS_RESOURCE)
+    if (Z_TYPE_P(return_value) == IS_RESOURCE &&
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pg_connection_entry,
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pg_connection_entry, 0);
+        handle_block(TSRMLS_C);
     }
 }
 
 /**
  * pg_pconnect 
  */
-void pre_global_pg_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    pre_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
-}
 void post_global_pg_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     post_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
