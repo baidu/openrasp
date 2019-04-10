@@ -22,8 +22,7 @@ import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 
-import java.net.URL;
-
+import java.net.URI;
 
 /**
  * Created by lxk on 17-4-10.
@@ -49,7 +48,7 @@ public class LogConfig {
         if (Config.getConfig().getSyslogSwitch()) {
             String syslogUrl = Config.getConfig().getSyslogUrl();
             try {
-                URL url = new URL(syslogUrl);
+                URI url = new URI(syslogUrl);
                 String syslogAddress = url.getHost();
                 int syslogPort = url.getPort();
                 if (syslogAddress != null && !syslogAddress.trim().isEmpty() && syslogPort >= 0 && syslogPort <= 65535) {
