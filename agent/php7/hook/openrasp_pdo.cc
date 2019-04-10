@@ -24,7 +24,7 @@ extern "C"
 #include "Zend/zend_objects_API.h"
 }
 
-HOOK_FUNCTION_EX(__construct, pdo, DB_CONNECTION);
+POST_HOOK_FUNCTION_EX(__construct, pdo, DB_CONNECTION);
 POST_HOOK_FUNCTION_EX(__construct, pdo, SQL_ERROR);
 PRE_HOOK_FUNCTION_EX(query, pdo, SQL);
 POST_HOOK_FUNCTION_EX(query, pdo, SQL_ERROR);
@@ -238,20 +238,13 @@ void post_pdo_exec_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     post_pdo_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void pre_pdo___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (OPENRASP_CONFIG(security.enforce_policy) &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pdo_connection_entry, 1))
-    {
-        handle_block();
-    }
-}
-
 void post_pdo___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!OPENRASP_CONFIG(security.enforce_policy) && Z_TYPE_P(getThis()) == IS_OBJECT)
+    if (Z_TYPE_P(getThis()) == IS_OBJECT &&
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pdo_connection_entry,
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pdo_connection_entry, 0);
+        handle_block();
     }
 }
 
