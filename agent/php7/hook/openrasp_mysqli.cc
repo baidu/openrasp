@@ -47,7 +47,7 @@ POST_HOOK_FUNCTION_EX(prepare, mysqli, SQL_ERROR);
 static long fetch_mysqli_errno(const char *function_name, uint32_t param_count, zval params[]);
 static std::string fetch_mysqli_error(const char *function_name, uint32_t param_count, zval params[]);
 
-static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, zend_bool is_real_connect, zend_bool in_ctor)
+static bool init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, zend_bool is_real_connect, zend_bool in_ctor)
 {
     char *hostname = NULL, *username = NULL, *passwd = NULL, *dbname = NULL, *socket = NULL;
     size_t hostname_len = 0, username_len = 0, passwd_len = 0, dbname_len = 0, socket_len = 0;
@@ -70,7 +70,7 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
                                   &username_len, &passwd, &passwd_len, &dbname, &dbname_len, &port,
                                   &socket, &socket_len) == FAILURE)
         {
-            return;
+            return false;
         }
     }
     else
@@ -82,7 +82,7 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
                                       &dbname, &dbname_len, &port, &socket,
                                       &socket_len, &flags) == FAILURE)
             {
-                return;
+                return false;
             }
         }
         else
@@ -92,7 +92,7 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
                                              &dbname, &dbname_len, &port, &socket,
                                              &socket_len, &flags) == FAILURE)
             {
-                return;
+                return false;
             }
         }
     }
@@ -118,26 +118,27 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
     sql_connection_p->set_using_socket(nullptr == hostname || strcmp("localhost", hostname) == 0);
     sql_connection_p->set_socket(SAFE_STRING(socket));
     sql_connection_p->set_port(port);
+    return true;
 }
 
-static void init_global_mysqli_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static bool init_global_mysqli_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
-    init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 0, 0);
+    return init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 0, 0);
 }
 
-static void init_global_mysqli_real_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static bool init_global_mysqli_real_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
-    init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 1, 0);
+    return init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 1, 0);
 }
 
-static void init_mysqli__construct_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static bool init_mysqli__construct_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
-    init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 0, 1);
+    return init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 0, 1);
 }
 
-static void init_mysqli_real_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static bool init_mysqli_real_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
-    init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 1, 1);
+    return init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 1, 1);
 }
 
 static void mysqli_connect_error_intercept(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func)
@@ -156,7 +157,7 @@ static void mysqli_connect_error_intercept(INTERNAL_FUNCTION_PARAMETERS, init_co
 //mysqli::__construct
 void post_mysqli___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (Z_TYPE_P(getThis()) == IS_OBJECT &&
+    if (Z_TYPE_P(getThis()) == IS_OBJECT && 0 == fetch_mysqli_errno("mysqli_connect_errno", 0, nullptr) &&
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli__construct_conn_entry,
                                            OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
     {
@@ -177,7 +178,7 @@ void post_mysqli___construct_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void post_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (Z_TYPE_P(getThis()) == IS_OBJECT &&
+    if (Z_TYPE_P(return_value) == IS_TRUE &&
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_conn_entry,
                                            OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
     {
