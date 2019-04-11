@@ -41,7 +41,7 @@ public class SqlConnectionChecker extends PolicyChecker {
     private static final String DEFAULT_POSTGRESQL_PORT = "5432";
     private static final String DEFAULT_SQLSERVRE_PORT = "1433";
     private static final String[] WEAK_WORDS = new String[]{"root", "123", "123456", "a123456", "123456a", "111111",
-            "123123", "admin", "user", "mysql"};
+            "123123", "admin", "user", "mysql",""};
     public static HashMap<String, Long> alarmTimeCache = new HashMap<String, Long>();
 
     private boolean checkUser(String user, String sqlType) {
@@ -135,7 +135,9 @@ public class SqlConnectionChecker extends PolicyChecker {
             }
             alarmTimeCache.put(url, System.currentTimeMillis());
             String unsafeMessage = "Database security baseline - the password \"" + password + "\" is detected weak password combination , username is " + user;
-            infos = new LinkedList<EventInfo>();
+            if (infos == null) {
+                infos = new LinkedList<EventInfo>();
+            }
             HashMap<String, Object> params = new HashMap<String, Object>(4);
             params.put("server", sqlType != null ? sqlType : "");
             params.put("connectionString", urlWithoutParams != null ? urlWithoutParams : "");

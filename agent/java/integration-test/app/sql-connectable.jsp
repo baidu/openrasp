@@ -3,7 +3,7 @@
 <%@ page import="java.sql.*" %>
 <%
     Class.forName("com.mysql.jdbc.Driver");
-    Connection conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1", "root", "");
+    Connection conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1/mysql", "root", "");
     Statement stmt = conn.createStatement();
     String sql = "SELECT * FROM user";
     ResultSet rs = stmt.executeQuery(sql);
