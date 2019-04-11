@@ -177,7 +177,9 @@ func initApp() error {
 		if err != nil {
 			tools.Panic(tools.ErrCodeESInitFailed, "failed to init es index for app "+app.Name, err)
 		}
-		initPlugin(app)
+		if *conf.AppConfig.Flag.StartType != conf.StartTypeAgent {
+			initPlugin(app)
+		}
 	}
 	return nil
 }
