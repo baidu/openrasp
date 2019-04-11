@@ -41,6 +41,7 @@ import (
 	"net"
 	"rasp-cloud/conf"
 	"net/url"
+	"crypto/md5"
 )
 
 type App struct {
@@ -161,11 +162,11 @@ func init() {
 		go startAlarmTicker(time.Second * time.Duration(conf.AppConfig.AlarmCheckInterval))
 	}
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
-		initEsIndex()
+		initApp()
 	}
 }
 
-func initEsIndex() error {
+func initApp() error {
 	var apps []*App
 	_, err := mongo.FindAllWithoutLimit(appCollectionName, nil, &apps)
 	if err != nil {
@@ -176,8 +177,32 @@ func initEsIndex() error {
 		if err != nil {
 			tools.Panic(tools.ErrCodeESInitFailed, "failed to init es index for app "+app.Name, err)
 		}
+		initPlugin(app)
 	}
 	return nil
+}
+
+func initPlugin(app *App) {
+	_, plugins, err := GetPluginsByApp(app.Id, 0, conf.AppConfig.MaxPlugins)
+	if err != nil {
+		// do not exit here
+		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to init plugin for app ["+app.Name+"]", err)
+	}
+	content, err := getDefaultPluginContent()
+	if err != nil {
+		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to init plugin for app ["+app.Name+"]", err)
+	}
+	pluginMd5 := fmt.Sprintf("%x", md5.Sum(content))
+	isFound := false
+	for _, plugin := range plugins {
+		if plugin.Md5 == pluginMd5 {
+			isFound = true
+			break
+		}
+	}
+	if !isFound {
+		AddPlugin(content, app.Id)
+	}
 }
 
 func createEsIndexWithAppId(appId string) error {
@@ -263,14 +288,22 @@ func AddApp(app *App) (result *App, err error) {
 	return
 }
 
-func selectDefaultPlugin(app *App) {
+func getDefaultPluginContent() ([]byte, error) {
 	// if setting default plugin fails, continue to initialize
 	currentPath, err := tools.GetCurrentPath()
 	if err != nil {
-		beego.Warn("failed to create default plugin", err)
-		return
+		return nil, errors.New("failed to get get default plugin directory: " + err.Error())
 	}
 	content, err := ioutil.ReadFile(currentPath + "/resources/plugin.js")
+	if err != nil {
+		return nil, errors.New("failed to read default plugin content: " + err.Error())
+	}
+	return content, err
+}
+
+func selectDefaultPlugin(app *App) {
+	// if setting default plugin fails, continue to initialize
+	content, err := getDefaultPluginContent()
 	if err != nil {
 		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to get default plugin: "+err.Error())
 		return
