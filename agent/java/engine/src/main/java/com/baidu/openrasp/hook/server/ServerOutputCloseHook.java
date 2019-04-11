@@ -17,6 +17,8 @@
 package com.baidu.openrasp.hook.server;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.hook.server.weblogic.WeblogicHttpOutputHook;
@@ -109,7 +111,8 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                int errorCode = ErrorType.HOOK_ERROR.getCode();
+                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(e.getMessage(), errorCode), e);
             } finally {
                 HookHandler.enableCurrThreadHook();
             }

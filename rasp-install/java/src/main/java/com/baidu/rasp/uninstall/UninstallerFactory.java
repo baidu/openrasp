@@ -49,7 +49,7 @@ public abstract class UninstallerFactory {
             System.out.println("List of currently supported servers are:");
             System.out.println("- " + TOMCAT);
             System.out.println("- " + RESIN);
-            System.out.println("-" + WEBLOGIC);
+            System.out.println("- " + WEBLOGIC);
             System.out.println("- " + JBOSS + "\n");
             throw new RaspError(E10004 + serverRoot.getPath());
         }

@@ -1,4 +1,3 @@
-import com.baidu.rasp.App;
 import com.baidu.rasp.uninstall.BaseStandardUninstaller;
 import com.baidu.rasp.uninstall.linux.TomcatUninstaller;
 import org.junit.Test;
