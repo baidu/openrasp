@@ -29,7 +29,7 @@ function checkContext(context, paramInit, hookName) {
         assert(context.server);
         assert(context.url);
         assert(context.path);
-        if (paramInit === true) {
+        if (paramInit === true || context.server.server.indexOf('undertow') != -1) {
             assert(context.parameter.test[0] === 'a' && context.parameter.test[1] === 'b');
         } else {
             assert(JSON.stringify(context.parameter) === "{}");
