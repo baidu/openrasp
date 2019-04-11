@@ -85,7 +85,9 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
                 } else if ("weblogic/servlet/internal/ServletOutputStreamImpl".equals(WeblogicHttpOutputHook.clazzName)) {
                     isClosed = (Boolean) Reflection.getField(output, "commitCalled");
                 } else if (serverName.equals("undertow")) {
-                    isClosed = (Boolean) Reflection.getField(output, "closed");
+                    Object outputStream = Reflection.getField(output, "outputStream");
+                    int flag = (Integer) Reflection.getField(outputStream, "state");
+                    isClosed = flag == 1;
                 } else {
                     isClosed = (Boolean) Reflection.invokeMethod(output, "isClosed", new Class[]{});
                 }

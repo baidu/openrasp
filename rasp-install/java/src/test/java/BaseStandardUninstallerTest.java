@@ -35,7 +35,6 @@ public class BaseStandardUninstallerTest {
     @Test
     public void testUninstall() {
         try {
-            App.isAttach = true;
             BaseStandardUninstaller uninstaller = new TomcatUninstaller("Tomcat", "/Users/anyang/Desktop/jacoco/sum/apache-tomcat-8.5.30/");
             uninstaller.uninstall();
         } catch (Exception e) {
