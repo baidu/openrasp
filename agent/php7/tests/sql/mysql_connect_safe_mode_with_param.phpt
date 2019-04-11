@@ -14,7 +14,7 @@ sql.safe_mode = On
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-mysql_connect('127.0.0.1', 'root');
+mysql_connect('127.0.0.1', 'root', 'rasp#2019');
 ?>
 --EXPECTREGEX--
 .*Notice: mysql_connect\(\): SQL safe mode in effect.*

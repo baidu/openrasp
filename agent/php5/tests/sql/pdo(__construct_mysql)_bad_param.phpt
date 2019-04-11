@@ -16,4 +16,4 @@ openrasp.root_dir=/tmp/openrasp
 new PDO();
 ?>
 --EXPECTREGEX--
-Warning: PDO::__construct\(\) expects.*
+.*PDO::__construct\(\) expects.*

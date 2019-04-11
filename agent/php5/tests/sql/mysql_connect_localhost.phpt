@@ -13,7 +13,7 @@ if (!extension_loaded("mysql")) die("Skipped: mysql extension required.");
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-mysql_connect('localhost', 'root');
+mysql_connect('localhost', 'root', 'rasp#2019');
 ?>
 --EXPECTREGEX--
 <\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

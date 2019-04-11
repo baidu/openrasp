@@ -16,4 +16,4 @@ openrasp.root_dir=/tmp/openrasp
 mysql_connect(array());
 ?>
 --EXPECTREGEX--
-Warning: mysql_connect\(\) expects.*
+.*Warning: mysql_connect\(\) expects.*

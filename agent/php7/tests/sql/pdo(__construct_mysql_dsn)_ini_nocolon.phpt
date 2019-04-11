@@ -15,7 +15,7 @@ openrasp.root_dir=/tmp/openrasp
 pdo.dsn.openrasp=nocolon
 --FILE--
 <?php
-new PDO('openrasp.no', 'root');
+new PDO('openrasp.no', 'root', 'rasp#2019');
 ?>
 --EXPECTREGEX--
 Fatal error: Uncaught .*PDOException.*
