@@ -52,7 +52,7 @@ static char *dsn_from_uri(char *uri, char *buf, size_t buflen TSRMLS_DC)
     return dsn;
 }
 
-static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
     char *data_source;
     int data_source_len;
@@ -65,7 +65,7 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|s!s!a!", &data_source, &data_source_len,
                                          &username, &usernamelen, &password, &passwordlen, &options))
     {
-        return;
+        return false;
     }
     sql_connection_p->set_connection_string(data_source);
     /* parse the data source name */
@@ -79,7 +79,7 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
         snprintf(alt_dsn, sizeof(alt_dsn), "pdo.dsn.%s", data_source);
         if (FAILURE == cfg_get_string(alt_dsn, &ini_dsn))
         {
-            return;
+            return false;
         }
 
         data_source = ini_dsn;
@@ -87,7 +87,7 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
 
         if (!colon)
         {
-            return;
+            return false;
         }
     }
 
@@ -97,12 +97,12 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
         data_source = dsn_from_uri(data_source + sizeof("uri:") - 1, alt_dsn, sizeof(alt_dsn) TSRMLS_CC);
         if (!data_source)
         {
-            return;
+            return false;
         }
         colon = strchr(data_source, ':');
         if (!colon)
         {
-            return;
+            return false;
         }
     }
     static const char *server_names[] = {"mysql", "mssql", "oci", "pgsql"};
@@ -171,6 +171,7 @@ static void init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
     {
         //It is not supported at present
     }
+    return true;
 }
 
 void pre_pdo_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -255,7 +256,10 @@ void post_pdo___construct_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         instanceof_function(Z_OBJCE_P(EG(exception)), php_pdo_get_exception() TSRMLS_CC))
     {
         sql_connection_entry conn_entry;
-        init_pdo_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, &conn_entry);
+        if (!init_pdo_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, &conn_entry))
+        {
+            return;
+        }
         std::string error_code;
         std::string error_msg;
         fetch_pdo_exception_info(conn_entry.get_server().c_str(), EG(exception), error_code, error_msg TSRMLS_CC);

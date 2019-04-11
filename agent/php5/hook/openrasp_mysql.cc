@@ -33,7 +33,7 @@ POST_HOOK_FUNCTION(mysql_query, SQL_ERROR);
 static long fetch_mysql_errno(uint32_t param_count, zval *params[] TSRMLS_DC);
 static std::string fetch_mysql_error(uint32_t param_count, zval *params[] TSRMLS_DC);
 
-static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, int persistent)
+static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, int persistent)
 {
     char *user = NULL, *passwd = NULL, *host_and_port = NULL, *socket = NULL, *host = NULL, *tmp = NULL;
     int user_len = 0, passwd_len = 0, host_len = 0, port = MYSQL_PORT;
@@ -53,7 +53,7 @@ static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
     {
         if (ZEND_NUM_ARGS() > 0)
         {
-            return;
+            return false;
         }
         host_and_port = passwd = NULL;
         user = php_get_current_user(TSRMLS_C);
@@ -66,7 +66,7 @@ static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
                                       &user, &user_len, &passwd, &passwd_len,
                                       &client_flags) == FAILURE)
             {
-                return;
+                return false;
             }
         }
         else
@@ -75,7 +75,7 @@ static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
                                       &user, &user_len, &passwd, &passwd_len,
                                       &new_link, &client_flags) == FAILURE)
             {
-                return;
+                return false;
             }
         }
         if (!host_and_port)
@@ -123,16 +123,17 @@ static void init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
     sql_connection_p->set_using_socket(using_socket);
     sql_connection_p->set_socket(SAFE_STRING(socket));
     sql_connection_p->set_username(SAFE_STRING(user));
+    return true;
 }
 
-static inline void init_mysql_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static inline bool init_mysql_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
-    init_mysql_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 0);
+    return init_mysql_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 0);
 }
 
-static inline void init_mysql_pconnect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static inline bool init_mysql_pconnect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
-    init_mysql_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 1);
+    return init_mysql_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 1);
 }
 
 static void mysql_connect_error_intercept(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func)

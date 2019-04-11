@@ -31,7 +31,7 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
                       });
 }
 
-static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static bool init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
     char *host = NULL, *port = NULL, *options = NULL, *tty = NULL, *dbname = NULL, *connstring = NULL;
     zval **args[5];
@@ -40,7 +40,7 @@ static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connectio
 
     if (ZEND_NUM_ARGS() < 1 || ZEND_NUM_ARGS() > 5 || zend_get_parameters_array_ex(ZEND_NUM_ARGS(), args) == FAILURE)
     {
-        return;
+        return false;
     }
     sql_connection_p->set_server("pgsql");
     if (ZEND_NUM_ARGS() == 1)
@@ -58,6 +58,7 @@ static void init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connectio
         sql_connection_p->set_connection_string(connstring);
         parse_connection_string(connstring, sql_connection_p);
     }
+    return true;
 }
 
 /**
