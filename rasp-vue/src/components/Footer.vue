@@ -16,9 +16,22 @@
           </div>
         </div>
         <div class="col-12 col-lg-auto mt-3 mt-lg-0 text-center">
-          Copyright © 2017-2019 Baidu, Inc. 当前版本 1.0.0
+          Copyright © 2017-2019 Baidu, Inc. 当前版本 {{rasp_version}}
         </div>
       </div>
     </div>
   </footer>
 </template>
+
+<script>
+import { rasp_version } from '@/util'
+
+export default {
+  name: 'Footer',
+  data: function() {
+    return {
+      rasp_version: rasp_version
+    }
+  }
+}
+</script>
