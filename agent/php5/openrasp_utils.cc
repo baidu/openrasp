@@ -22,6 +22,7 @@
 #include <algorithm>
 #include "openrasp_log.h"
 #include "utils/debug_trace.h"
+#include <set>
 
 extern "C"
 {
@@ -325,4 +326,82 @@ bool openrasp_parse_url(const std::string &origin_url, std::string &scheme, std:
         return true;
     }
     return false;
+}
+
+bool make_openrasp_root_dir(const char *path TSRMLS_DC)
+{
+    if (!path)
+    {
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be an empty path"));
+        return false;
+    }
+    if (!IS_ABSOLUTE_PATH(path, strlen(path)))
+    {
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be a relative path"));
+        return false;
+    }
+    char expand_root_path[MAXPATHLEN];
+    expand_filepath(path, expand_root_path TSRMLS_CC);
+    if (!expand_root_path || strnlen(expand_root_path, 2) == 1)
+    {
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be a root path"));
+        return false;
+    }
+    std::string root_dir(expand_root_path);
+    std::string default_slash(1, DEFAULT_SLASH);
+    std::vector<std::string> sub_dir_list{
+        "assets",
+        "conf",
+        "plugins",
+        "locale",
+        "logs" + default_slash + ALARM_LOG_DIR_NAME,
+        "logs" + default_slash + POLICY_LOG_DIR_NAME,
+        "logs" + default_slash + PLUGIN_LOG_DIR_NAME,
+        "logs" + default_slash + RASP_LOG_DIR_NAME};
+    for (auto dir : sub_dir_list)
+    {
+        std::string sub_path(root_dir + DEFAULT_SLASH + dir);
+        if (!recursive_mkdir(sub_path.c_str(), sub_path.length(), 0777 TSRMLS_CC))
+        {
+            openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("openrasp.root_dir must be a writable path"));
+            return false;
+        }
+    }
+    return true;
+}
+
+void openrasp_set_locale(const char *locale, const char *locale_path)
+{
+#ifdef HAVE_GETTEXT
+    if (nullptr != setlocale(LC_ALL, locale ? locale : "C"))
+    {
+        if (!bindtextdomain(GETTEXT_PACKAGE, locale_path))
+        {
+            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("bindtextdomain() failed: %s"), strerror(errno));
+        }
+        if (!textdomain(GETTEXT_PACKAGE))
+        {
+            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("textdomain() failed: %s"), strerror(errno));
+        }
+    }
+    else
+    {
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Unable to set OpenRASP locale to %s"), locale);
+    }
+#endif
+}
+
+bool current_sapi_supported()
+{
+    const static std::set<std::string> supported_sapis =
+        {
+#ifdef HAVE_CLI_SUPPORT
+            "cli",
+#endif
+            "cli-server",
+            "cgi-fcgi",
+            "fpm-fcgi",
+            "apache2handler"};
+    auto iter = supported_sapis.find(std::string(sapi_module.name));
+    return iter != supported_sapis.end();
 }

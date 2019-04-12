@@ -40,7 +40,6 @@ extern "C"
 #include "openrasp_fswatch.h"
 #endif
 #include <new>
-#include <set>
 #include "agent/shared_config_manager.h"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"
@@ -52,10 +51,8 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
 bool is_initialized = false;
 bool remote_active = false;
-static bool make_openrasp_root_dir(TSRMLS_D);
 static bool update_config(openrasp::ConfigHolder *config TSRMLS_DC, ConfigHolder::FromType type = ConfigHolder::FromType::kYaml);
 static std::string get_config_abs_path(ConfigHolder::FromType type);
-static bool current_sapi_supported(TSRMLS_D);
 static void hook_without_params(OpenRASPCheckType check_type TSRMLS_DC);
 
 PHP_INI_BEGIN()
@@ -118,14 +115,16 @@ PHP_MINIT_FUNCTION(openrasp)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp, PHP_GINIT(openrasp), PHP_GSHUTDOWN(openrasp));
     REGISTER_INI_ENTRIES();
-    if (!current_sapi_supported(TSRMLS_C))
+    if (!current_sapi_supported())
     {
         return SUCCESS;
     }
-    if (!make_openrasp_root_dir(TSRMLS_C))
+    if (!make_openrasp_root_dir(openrasp_ini.root_dir TSRMLS_CC))
     {
         return SUCCESS;
     }
+    std::string locale_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + "locale" + DEFAULT_SLASH);
+    openrasp_set_locale(openrasp_ini.locale, locale_path.c_str());
     openrasp::scm.reset(new openrasp::SharedConfigManager());
     if (!openrasp::scm->startup())
     {
@@ -328,68 +327,6 @@ zend_module_entry openrasp_module_entry = {
 ZEND_GET_MODULE(openrasp)
 #endif
 
-static bool make_openrasp_root_dir(TSRMLS_D)
-{
-    char *path = openrasp_ini.root_dir;
-    if (!path)
-    {
-        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be an empty path"));
-        return false;
-    }
-    if (!IS_ABSOLUTE_PATH(path, strlen(path)))
-    {
-        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be a relative path"));
-        return false;
-    }
-    path = expand_filepath(path, nullptr TSRMLS_CC);
-    if (!path || strnlen(path, 2) == 1)
-    {
-        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be a root path"));
-        efree(path);
-        return false;
-    }
-    std::string root_dir(path);
-    std::string default_slash(1, DEFAULT_SLASH);
-    efree(path);
-    std::vector<std::string> sub_dir_list{
-        "assets",
-        "conf",
-        "plugins",
-        "locale",
-        "logs" + default_slash + ALARM_LOG_DIR_NAME,
-        "logs" + default_slash + POLICY_LOG_DIR_NAME,
-        "logs" + default_slash + PLUGIN_LOG_DIR_NAME,
-        "logs" + default_slash + RASP_LOG_DIR_NAME};
-    for (auto dir : sub_dir_list)
-    {
-        std::string path(root_dir + DEFAULT_SLASH + dir);
-        if (!recursive_mkdir(path.c_str(), path.length(), 0777 TSRMLS_CC))
-        {
-            openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("openrasp.root_dir must be a writable path"));
-            return false;
-        }
-    }
-#ifdef HAVE_GETTEXT
-    if (nullptr != setlocale(LC_ALL, openrasp_ini.locale ? openrasp_ini.locale : "C"))
-    {
-        std::string locale_path(root_dir + DEFAULT_SLASH + "locale" + DEFAULT_SLASH);
-        if (!bindtextdomain(GETTEXT_PACKAGE, locale_path.c_str()))
-        {
-            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("bindtextdomain() failed: %s"), strerror(errno));
-        }
-        if (!textdomain(GETTEXT_PACKAGE))
-        {
-            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("textdomain() failed: %s"), strerror(errno));
-        }
-    }
-    else
-    {
-        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Unable to set OpenRASP locale to %s"), openrasp_ini.locale);
-    }
-#endif
-    return true;
-}
-
 static std::string get_config_abs_path(ConfigHolder::FromType type)
 {
     std::string filename;
@@ -444,25 +381,6 @@ static bool update_config(openrasp::ConfigHolder *config TSRMLS_DC, ConfigHolder
         }
     }
     return false;
-}
-
-static bool current_sapi_supported(TSRMLS_D)
-{
-    const static std::set<std::string> supported_sapis =
-        {
-#ifdef HAVE_CLI_SUPPORT
-            "cli",
-#endif
-            "cli-server",
-            "cgi-fcgi",
-            "fpm-fcgi",
-            "apache2handler"};
-    auto iter = supported_sapis.find(std::string(sapi_module.name));
-    if (iter == supported_sapis.end())
-    {
-        return false;
-    }
-    return true;
 }
 
 static void hook_without_params(OpenRASPCheckType check_type TSRMLS_DC)
