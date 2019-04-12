@@ -28,7 +28,7 @@ static zend_free_op should_free;
 
 static bool echo_parameter_filter(const zval *inc_filename);
 
-int echo_handler(zend_execute_data *execute_data)
+int echo_print_handler(zend_execute_data *execute_data)
 {
     const zend_op *opline = EX(opline);
 #if (PHP_MINOR_VERSION < 3)
@@ -50,7 +50,9 @@ int echo_handler(zend_execute_data *execute_data)
         add_assoc_zval(&attack_params, "value", inc_filename);
         Z_TRY_ADDREF_P(inc_filename);
         zval plugin_message;
-        ZVAL_STR(&plugin_message, strpprintf(0, _("XSS activity - echo GET/POST/COOKIE parameter directly, parameter: $%s['%s']"), var_type.c_str(), name.c_str()));
+        std::string opname = (opline->extended_value == 0) ? "echo" : "print";
+        ZVAL_STR(&plugin_message, strpprintf(0, _("XSS activity - %s GET/POST/COOKIE parameter directly, parameter: $%s['%s']"),
+                                             opname.c_str(), var_type.c_str(), name.c_str()));
         OpenRASPActionType action = openrasp::scm->get_buildin_check_action(XSS_ECHO);
         openrasp_buildin_php_risk_handle(action, XSS_ECHO, 100, &attack_params, &plugin_message);
     }

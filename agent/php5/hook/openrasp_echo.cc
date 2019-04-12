@@ -20,7 +20,7 @@
 
 static bool echo_parameter_filter(const zval *inc_filename TSRMLS_DC);
 
-int echo_handler(ZEND_OPCODE_HANDLER_ARGS)
+int echo_print_handler(ZEND_OPCODE_HANDLER_ARGS)
 {
     zend_op *opline = execute_data->opline;
     std::string name;
@@ -40,7 +40,9 @@ int echo_handler(ZEND_OPCODE_HANDLER_ARGS)
         zval *plugin_message = NULL;
         MAKE_STD_ZVAL(plugin_message);
         char *message_str = NULL;
-        spprintf(&message_str, 0, _("XSS activity - echo GET/POST/COOKIE parameter directly, parameter: $%s['%s']"), var_type.c_str(), name.c_str());
+        std::string opname = (opline->opcode == ZEND_ECHO) ? "echo" : "print";
+        spprintf(&message_str, 0, _("XSS activity - %s GET/POST/COOKIE parameter directly, parameter: $%s['%s']"),
+                 opname.c_str(), var_type.c_str(), name.c_str());
         ZVAL_STRING(plugin_message, message_str, 1);
         efree(message_str);
         OpenRASPActionType action = openrasp::scm->get_buildin_check_action(XSS_ECHO);

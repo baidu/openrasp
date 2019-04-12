@@ -364,7 +364,7 @@ void handle_block()
 }
 
 extern int include_or_eval_handler(zend_execute_data *execute_data);
-extern int echo_handler(zend_execute_data *execute_data);
+extern int echo_print_handler(zend_execute_data *execute_data);
 
 PHP_GINIT_FUNCTION(openrasp_hook)
 {
@@ -392,7 +392,7 @@ PHP_MINIT_FUNCTION(openrasp_hook)
     }
 
     zend_set_user_opcode_handler(ZEND_INCLUDE_OR_EVAL, include_or_eval_handler);
-    zend_set_user_opcode_handler(ZEND_ECHO, echo_handler);
+    zend_set_user_opcode_handler(ZEND_ECHO, echo_print_handler);
     return SUCCESS;
 }
 
