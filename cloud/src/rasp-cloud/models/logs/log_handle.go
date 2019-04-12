@@ -277,6 +277,9 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 				shouldQueries = append(shouldQueries,
 					elastic.NewNestedQuery("server_nic",
 						elastic.NewWildcardQuery("server_nic.ip", "*"+fmt.Sprint(value)+"*")))
+			} else if key == "url" {
+				filterQueries = append(filterQueries,
+					elastic.NewWildcardQuery("url", "*"+fmt.Sprint(value)+"*"))
 			} else {
 				filterQueries = append(filterQueries, elastic.NewTermQuery(key, value))
 			}
