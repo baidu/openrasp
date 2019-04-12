@@ -193,7 +193,7 @@
                 {{ data.attack_params.url }}
             </p>
             <div class="h6">
-                IP 信息
+                目标 IP
             </div>
             <p>
                 {{ data.attack_params.ip.join(", ") }}

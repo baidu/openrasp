@@ -56,36 +56,47 @@ func (o *RaspController) Search() {
 
 // @router /delete [post]
 func (o *RaspController) Delete() {
-	var rasp = &models.Rasp{}
-	o.UnmarshalJson(rasp)
+	var rasp struct {
+		Id          string `json:"id"`
+		AppId       string `json:"app_id"`
+		RegisterIp  string `json:"register_ip"`
+		ExpiredTime int64  `json:"expire_time"`
+	}
+	o.UnmarshalJson(&rasp)
 	if rasp.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "the app_id can not be empty")
 	}
-	if rasp.Id == "" && rasp.RegisterIp == "" {
-		o.ServeError(http.StatusBadRequest, "the id and register_ip cannot be empty at the same time")
-	}
+
 	if rasp.Id != "" {
-		_, rasps, err := models.FindRasp(rasp, 1, 1)
+		err := models.RemoveRaspById(rasp.Id)
 		if err != nil {
-			o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
+			o.ServeError(http.StatusBadRequest, "failed to remove rasp by id", err)
 		}
-		if len(rasps) == 0 {
-			o.ServeError(http.StatusBadRequest, "can not find the rasp")
-		}
-		err = models.RemoveRaspById(rasp.Id)
-		if err != nil {
-			o.ServeError(http.StatusBadRequest, "failed to remove rasp", err)
-		}
-		models.AddOperation(rasp.AppId, models.OperationTypeDeleteRasp, o.Ctx.Input.IP(), "Deleted RASP agent: "+rasp.Id)
+		models.AddOperation(rasp.AppId, models.OperationTypeDeleteRasp, o.Ctx.Input.IP(),
+			"Deleted RASP agent by id: "+rasp.Id)
 		o.Serve(map[string]interface{}{
 			"count": 1,
 		})
-	} else if rasp.RegisterIp != "" {
-		valid := validation.Validation{}
-		if result := valid.IP(rasp.RegisterIp, "IP"); !result.Ok {
-			o.ServeError(http.StatusBadRequest, "rasp register_ip format error"+result.Error.Message)
+	} else {
+		selector := make(map[string]interface{})
+		if rasp.ExpiredTime == 0 && rasp.RegisterIp == "" {
+			o.ServeError(http.StatusBadRequest,
+				"expire_time and register ip can not be empty at the same time")
 		}
-		removedCount, err := models.RemoveRaspByRegisterIp(rasp.RegisterIp, rasp.AppId)
+		if rasp.RegisterIp != "" {
+			selector["register_ip"] = rasp.RegisterIp
+			valid := validation.Validation{}
+			if result := valid.IP(rasp.RegisterIp, "IP"); !result.Ok {
+				o.ServeError(http.StatusBadRequest, "rasp register_ip format error"+result.Error.Message)
+			}
+		}
+		if rasp.ExpiredTime != 0 {
+			selector["expire_time"] = rasp.ExpiredTime
+			if rasp.ExpiredTime < 0 {
+				o.ServeError(http.StatusBadRequest, "expire_time must be greater than 0")
+			}
+		}
+		removedCount, err := models.RemoveRaspBySelector(selector, rasp.AppId)
 		if err != nil {
 			o.ServeError(http.StatusBadRequest, "failed to remove rasp by register ip", err)
 		}
@@ -95,5 +106,4 @@ func (o *RaspController) Delete() {
 			"count": removedCount,
 		})
 	}
-
 }

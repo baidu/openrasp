@@ -61,7 +61,7 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model="srcip" type="text" class="form-control w-10" placeholder="攻击来源" @keyup.enter="loadEvents(1)">
+            <input v-model="url" type="text" class="form-control w-10" placeholder="目标URL" @keyup.enter="loadEvents(1)">
           </div>
           <button class="btn btn-primary ml-2" @click="loadEvents(1)">
             搜索
@@ -188,7 +188,7 @@ export default {
       data: [],
       loading: false,
       currentPage: 1,
-      srcip: '',
+      url: '',
       total: 0,
       attack_types,
       status_types,
@@ -231,7 +231,7 @@ export default {
           end_time: this.$refs.datePicker.end.valueOf(),
           attack_type: this.selected,
           intercept_state: this.selected_status,
-          attack_source: this.srcip,
+          url: this.url,
           app_id: this.current_app.id
         },
         page: page,
