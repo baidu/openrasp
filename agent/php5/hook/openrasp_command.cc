@@ -36,8 +36,8 @@ PRE_HOOK_FUNCTION(shell_exec, WEBSHELL_COMMAND);
 PRE_HOOK_FUNCTION(proc_open, WEBSHELL_COMMAND);
 PRE_HOOK_FUNCTION(popen, WEBSHELL_COMMAND);
 PRE_HOOK_FUNCTION(pcntl_exec, WEBSHELL_COMMAND);
-PRE_HOOK_FUNCTION(assert, WEBSHELL_EVAL);
 PRE_HOOK_FUNCTION(assert, EVAL);
+PRE_HOOK_FUNCTION(assert, WEBSHELL_EVAL);
 
 static void check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
@@ -269,8 +269,7 @@ void pre_global_assert_WEBSHELL_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         return;
     }
-
-    if (Z_TYPE_PP(assertion) == IS_STRING)
+    // if (Z_TYPE_PP(assertion) == IS_STRING)
     {
         if (openrasp_zval_in_request(*assertion TSRMLS_CC))
         {
@@ -315,7 +314,7 @@ void pre_global_assert_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             params->Set(openrasp::NewV8String(isolate, "stack"), stack);
             params->Set(openrasp::NewV8String(isolate, "code"), openrasp::NewV8String(isolate, Z_STRVAL_PP(assertion), Z_STRLEN_PP(assertion)));
             params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "assert"));
-            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(EVAL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (is_block)
         {
