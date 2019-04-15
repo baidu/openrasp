@@ -29,6 +29,7 @@ type HeartbeatController struct {
 
 type heartbeatParam struct {
 	RaspId        string `json:"rasp_id"`
+	PluginName    string `json:"plugin_name"`
 	PluginVersion string `json:"plugin_version"`
 	PluginMd5     string `json:"plugin_md5"`
 	ConfigTime    int64  `json:"config_time"`
@@ -44,6 +45,8 @@ func (o *HeartbeatController) Post() {
 	}
 	rasp.LastHeartbeatTime = time.Now().Unix()
 	rasp.PluginVersion = heartbeat.PluginVersion
+	rasp.PluginName = heartbeat.PluginName
+	rasp.PluginMd5 = heartbeat.PluginMd5
 	err = models.UpsertRaspById(heartbeat.RaspId, rasp)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update rasp", err)
