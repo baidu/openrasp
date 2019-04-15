@@ -35,6 +35,7 @@ typedef enum check_type_t
   RENAME,
   FILE_UPLOAD,
   INCLUDE,
+  EVAL,
   DB_CONNECTION,
   SQL,
   SQL_PREPARED,

@@ -55,7 +55,7 @@ const std::string get_check_type_name(OpenRASPCheckType type)
     return check_type_transfer->type_to_name(type);
 }
 
-std::string openrasp_real_path(char *filename, int filename_len, bool use_include_path, uint32_t w_op TSRMLS_DC)
+std::string openrasp_real_path(const char *filename, int filename_len, bool use_include_path, uint32_t w_op TSRMLS_DC)
 {
     std::string result;
     static const std::unordered_map<std::string, uint32_t> opMap = {

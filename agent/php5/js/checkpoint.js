@@ -218,6 +218,21 @@ Object.defineProperty(global, 'CheckPointInclude', {
     enumerable: true
 });
 
+const CheckPointEval = class {
+    constructor(data) {
+        this.code = data.code;
+        this.function = data.function;
+    }
+
+    static get name() {
+        return 'eval';
+    }
+};
+Object.defineProperty(global, 'CheckPointEval', {
+    value: CheckPointEval,
+    enumerable: true
+});
+
 const CheckPointCopy = class {
     constructor(data) {
         this.clazz = data.clazz;
