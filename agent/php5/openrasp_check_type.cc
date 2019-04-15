@@ -51,6 +51,7 @@ CheckTypeTransfer::CheckTypeTransfer()
   insert(WEBSHELL_LD_PRELOAD, "webshell_ld_preload", true);
   insert(REQUEST, "request");
   insert(REQUEST_END, "requestEnd");
+  insert(EVAL, "eval");
 }
 
 std::string CheckTypeTransfer::type_to_name(OpenRASPCheckType type) const

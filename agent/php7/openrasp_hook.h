@@ -289,7 +289,7 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_hook);
 
 typedef void (*fill_param_t)(HashTable *ht);
 
-std::string openrasp_real_path(char *filename, int length, bool use_include_path, uint32_t w_op);
+std::string openrasp_real_path(const char *filename, int length, bool use_include_path, uint32_t w_op);
 
 void register_hook_handler(hook_handler_t hook_handler);
 

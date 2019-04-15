@@ -37,6 +37,7 @@ PRE_HOOK_FUNCTION(proc_open, WEBSHELL_COMMAND);
 PRE_HOOK_FUNCTION(popen, WEBSHELL_COMMAND);
 PRE_HOOK_FUNCTION(pcntl_exec, WEBSHELL_COMMAND);
 PRE_HOOK_FUNCTION(assert, WEBSHELL_EVAL);
+PRE_HOOK_FUNCTION(assert, EVAL);
 
 static void check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
@@ -283,6 +284,42 @@ void pre_global_assert_WEBSHELL_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             ZVAL_STRING(plugin_message, _("WebShell activity - Detected China Chopper (assert method)"), 1);
             OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
             openrasp_buildin_php_risk_handle(action, check_type, 100, attack_params, plugin_message TSRMLS_CC);
+        }
+    }
+}
+
+void pre_global_assert_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    zval **assertion;
+    int description_len = 0;
+    char *description = NULL;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Z|s", &assertion, &description, &description_len) == FAILURE)
+    {
+        return;
+    }
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+    if (isolate && Z_TYPE_PP(assertion) == IS_STRING)
+    {
+        bool is_block = false;
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto arr = format_debug_backtrace_arr(TSRMLS_C);
+            size_t len = arr.size();
+            auto stack = v8::Array::New(isolate, len);
+            for (size_t i = 0; i < len; i++)
+            {
+                stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
+            }
+            auto params = v8::Object::New(isolate);
+            params->Set(openrasp::NewV8String(isolate, "stack"), stack);
+            params->Set(openrasp::NewV8String(isolate, "code"), openrasp::NewV8String(isolate, Z_STRVAL_PP(assertion), Z_STRLEN_PP(assertion)));
+            params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "assert"));
+            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(EVAL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+        }
+        if (is_block)
+        {
+            handle_block(TSRMLS_C);
         }
     }
 }

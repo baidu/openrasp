@@ -60,7 +60,7 @@ static void check_file_operation(OpenRASPCheckType type, const std::string &file
     openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (isolate)
     {
-        std::string real_path = openrasp_real_path(const_cast<char *>(filename.c_str()), filename.length(), use_include_path, (type == WRITE_FILE ? WRITING : READING) TSRMLS_CC);
+        std::string real_path = openrasp_real_path(filename.c_str(), filename.length(), use_include_path, (type == WRITE_FILE ? WRITING : READING) TSRMLS_CC);
         if (!real_path.empty())
         {
             const std::string realpath(real_path);
