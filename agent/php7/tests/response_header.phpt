@@ -9,6 +9,10 @@ plugin.register('command', params => {
     return block
 })
 EOF;
+$conf = <<<CONF
+inject.custom_headers:
+  X-Protected-By: OpenRASP
+CONF;
 include(__DIR__.'/skipif.inc');
 ?>
 --INI--
