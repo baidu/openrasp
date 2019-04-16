@@ -161,7 +161,8 @@ enum PATH_OPERATION
     READING = 1 << 3,
     WRITING = 1 << 4,
     APPENDING = 1 << 5,
-    SIMULTANEOUSRW = 1 << 6
+    SIMULTANEOUSRW = 1 << 6,
+    UNLINK = 1 << 7
 };
 
 typedef void (*hook_handler_t)();

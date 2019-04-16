@@ -62,6 +62,21 @@ Object.defineProperty(global, 'CheckPointReadFile', {
     enumerable: true
 });
 
+const CheckPointDeleteFile = class {
+    constructor(data) {
+        this.path = data.path;
+        this.realpath = data.realpath;
+    }
+
+    static get name() {
+        return 'deleteFile';
+    }
+};
+Object.defineProperty(global, 'CheckPointDeleteFile', {
+    value: CheckPointDeleteFile,
+    enumerable: true
+});
+
 const CheckPointRequest = class {
     constructor(data) {
         this.request = data.request;

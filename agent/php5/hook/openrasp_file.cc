@@ -31,6 +31,7 @@ PRE_HOOK_FUNCTION(fopen, READ_FILE);
 PRE_HOOK_FUNCTION(fopen, WRITE_FILE);
 PRE_HOOK_FUNCTION(copy, COPY);
 PRE_HOOK_FUNCTION(rename, RENAME);
+PRE_HOOK_FUNCTION(unlink, DELETE_FILE);
 
 PRE_HOOK_FUNCTION_EX(__construct, splfileobject, READ_FILE);
 PRE_HOOK_FUNCTION_EX(__construct, splfileobject, WRITE_FILE);
@@ -393,5 +394,47 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             }
             OPENRASP_HOOK_G(lru).set(cache_key, true);
         }
+    }
+}
+
+void pre_global_unlink_DELETE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    char *filename;
+    int filename_len;
+    zval *zcontext = NULL;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|r", &filename, &filename_len, &zcontext) == FAILURE)
+    {
+        return;
+    }
+
+    if (strlen(filename) != filename_len)
+    {
+        return;
+    }
+
+    std::string real_path = openrasp_real_path(filename, filename_len, false, UNLINK TSRMLS_CC);
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+    if (isolate && !real_path.empty())
+    {
+        const std::string type(get_check_type_name(check_type));
+        const std::string cache_key(type + real_path);
+        if (OPENRASP_HOOK_G(lru).contains(cache_key))
+        {
+            return;
+        }
+        bool is_block = false;
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto params = v8::Object::New(isolate);
+            params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, filename, filename_len));
+            params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
+            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+        }
+        if (is_block)
+        {
+            handle_block(TSRMLS_C);
+        }
+        OPENRASP_HOOK_G(lru).set(cache_key, true);
     }
 }

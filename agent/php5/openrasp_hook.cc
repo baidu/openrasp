@@ -102,6 +102,13 @@ std::string openrasp_real_path(const char *filename, int filename_len, bool use_
                         resolved_path = estrdup(filename);
                     }
                 }
+                else if (w_op & UNLINK)
+                {
+                    if (wrapper->wops->unlink)
+                    {
+                        resolved_path = estrdup(filename);
+                    }
+                }
                 else
                 {
                     std::string scheme(filename, p - filename);
@@ -124,7 +131,7 @@ std::string openrasp_real_path(const char *filename, int filename_len, bool use_
             expand_filepath(filename, expand_path TSRMLS_CC);
             if (VCWD_REALPATH(expand_path, real_path))
             {
-                if (w_op & (OPENDIR | RENAMESRC))
+                if (w_op & (OPENDIR | RENAMESRC | UNLINK))
                 {
                     //skip
                 }

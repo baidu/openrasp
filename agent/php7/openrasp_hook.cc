@@ -204,6 +204,13 @@ std::string openrasp_real_path(const char *filename, int length, bool use_includ
                         resolved_path = zend_string_init(filename, length, 0);
                     }
                 }
+                else if (w_op & UNLINK)
+                {
+                    if (wrapper->wops->unlink)
+                    {
+                        resolved_path = zend_string_init(filename, length, 0);
+                    }
+                }
                 else
                 {
                     std::string scheme(filename, p - filename);
@@ -226,7 +233,7 @@ std::string openrasp_real_path(const char *filename, int length, bool use_includ
             expand_filepath(filename, expand_path);
             if (VCWD_REALPATH(expand_path, real_path))
             {
-                if (w_op & (OPENDIR | RENAMESRC))
+                if (w_op & (OPENDIR | RENAMESRC | UNLINK))
                 {
                     //skip
                 }

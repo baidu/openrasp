@@ -31,6 +31,7 @@ typedef enum check_type_t
   DIRECTORY,
   READ_FILE,
   WRITE_FILE,
+  DELETE_FILE,
   COPY,
   RENAME,
   FILE_UPLOAD,

@@ -31,6 +31,7 @@ PRE_HOOK_FUNCTION(fopen, READ_FILE);
 PRE_HOOK_FUNCTION(fopen, WRITE_FILE);
 PRE_HOOK_FUNCTION(copy, COPY);
 PRE_HOOK_FUNCTION(rename, RENAME);
+PRE_HOOK_FUNCTION(unlink, DELETE_FILE);
 
 PRE_HOOK_FUNCTION_EX(__construct, splfileobject, READ_FILE);
 PRE_HOOK_FUNCTION_EX(__construct, splfileobject, WRITE_FILE);
@@ -176,7 +177,7 @@ void pre_global_file_put_contents_WEBSHELL_FILE_PUT_CONTENTS(OPENRASP_INTERNAL_F
             array_init(&attack_params);
             add_assoc_zval(&attack_params, "name", filename);
             Z_ADDREF_P(filename);
-            add_assoc_string(&attack_params, "realpath", const_cast<char*>(real_path.c_str()));
+            add_assoc_string(&attack_params, "realpath", const_cast<char *>(real_path.c_str()));
             zval plugin_message;
             ZVAL_STRING(&plugin_message, _("Webshell detected - File dropper backdoor"));
             OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
@@ -394,5 +395,41 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             }
             OPENRASP_HOOK_G(lru).set(cache_key, true);
         }
+    }
+}
+
+void pre_global_unlink_DELETE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    char *filename;
+    size_t filename_len;
+    zval *zcontext = NULL;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "p|r", &filename, &filename_len, &zcontext) == FAILURE)
+    {
+        return;
+    }
+    std::string real_path = openrasp_real_path(filename, filename_len, false, UNLINK);
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+    if (isolate && !real_path.empty())
+    {
+        std::string cache_key = std::string(get_check_type_name(check_type))
+                                    .append(real_path);
+        if (OPENRASP_HOOK_G(lru).contains(cache_key))
+        {
+            return;
+        }
+        bool is_block = false;
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto params = v8::Object::New(isolate);
+            params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, filename, filename_len));
+            params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
+            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+        }
+        if (is_block)
+        {
+            handle_block();
+        }
+        OPENRASP_HOOK_G(lru).set(cache_key, true);
     }
 }
