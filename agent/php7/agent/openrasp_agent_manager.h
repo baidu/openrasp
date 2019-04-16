@@ -48,6 +48,7 @@ class OpenraspAgentManager : public BaseManager
 {
 public:
   OpenraspAgentManager();
+  virtual ~OpenraspAgentManager();
   bool startup();
   bool shutdown();
   bool verify_ini_correct();
@@ -85,6 +86,8 @@ private:
   void check_work_processes_survival();
 
 private:
+  int meta_size;
+  ReadWriteLock *rwlock;
   OpenraspCtrlBlock *agent_ctrl_block;
   static const int task_interval = 300;
   char local_ip[64] = {0};
