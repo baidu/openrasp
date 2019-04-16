@@ -88,13 +88,6 @@ PHP_RINIT_FUNCTION(openrasp_inject)
         }
         efree(uuid_header);
     }
-    {
-        sapi_header_line header;
-        header.line = "X-Protected-By: OpenRASP";
-        header.line_len = sizeof("X-Protected-By: OpenRASP") - 1;
-        header.response_code = 0;
-        sapi_header_op(SAPI_HEADER_REPLACE, &header TSRMLS_CC);
-    }
     for (const auto &it : OPENRASP_CONFIG(inject.headers))
     {
         sapi_header_line header;
