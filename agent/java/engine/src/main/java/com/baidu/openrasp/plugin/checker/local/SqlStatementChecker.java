@@ -73,10 +73,9 @@ public class SqlStatementChecker extends ConfigurableChecker {
         String message = null;
         //检测sql执行报错注入
         if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
-            String query = (String) checkParameter.getParam("query");
             String sqlType = (String) checkParameter.getParam("server");
             String errorCode = (String) checkParameter.getParam("error_code");
-            if (query != null && sqlType != null && errorCode != null && sqlErrorCode.contains(errorCode)) {
+            if (sqlType != null && errorCode != null && sqlErrorCode.contains(errorCode)) {
                 message = (String) checkParameter.getParam("message");
             }
         }
@@ -290,7 +289,7 @@ public class SqlStatementChecker extends ConfigurableChecker {
             result.addAll(jsResults);
         }
         // 检测无威胁的sql加入sql缓存
-        if (result.isEmpty()) {
+        if ("sql".equals(checkParameter.getType().getName()) && result.isEmpty()) {
             if (Config.commonLRUCache.maxSize() != 0) {
                 String key = checkParameter.getParam("server").toString().trim() +
                         checkParameter.getParam("query").toString().trim();
