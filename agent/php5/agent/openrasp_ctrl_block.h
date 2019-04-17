@@ -25,6 +25,7 @@ class OpenraspCtrlBlock
 {
 private:
   static const int plugin_md5_size = 32;
+  static const int plugin_name_size = 50;
   static const int plugin_version_size = 50;
 
 public:
@@ -43,6 +44,9 @@ public:
   void set_plugin_version(const char *plugin_version);
   const char *get_plugin_version();
 
+  void set_plugin_name(const char *plugin_name);
+  const char *get_plugin_name();
+
   void set_plugin_md5(const char *plugin_md5);
   const char *get_plugin_md5();
 
@@ -56,6 +60,7 @@ private:
 
   long last_update_time = 0;
   char plugin_md5[OpenraspCtrlBlock::plugin_md5_size + 1] = {0};
+  char plugin_name[OpenraspCtrlBlock::plugin_name_size + 1] = {0};
   char plugin_version[OpenraspCtrlBlock::plugin_version_size + 1] = {0};
 };
 

@@ -470,7 +470,25 @@ const char *OpenraspAgentManager::get_plugin_version()
 		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_plugin_version();
 	}
-	return nullptr;
+	return "";
+}
+
+void OpenraspAgentManager::set_plugin_name(const char *plugin_name)
+{
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	{
+		WriteUnLocker auto_unlocker(rwlock);
+		agent_ctrl_block->set_plugin_name(plugin_name);
+	}
+}
+const char *OpenraspAgentManager::get_plugin_name()
+{
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	{
+		ReadUnLocker auto_unlocker(rwlock);
+		return agent_ctrl_block->get_plugin_name();
+	}
+	return "";
 }
 
 void OpenraspAgentManager::set_plugin_md5(const char *plugin_md5)
@@ -488,7 +506,7 @@ const char *OpenraspAgentManager::get_plugin_md5()
 		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_plugin_md5();
 	}
-	return nullptr;
+	return "";
 }
 
 long OpenraspAgentManager::get_plugin_update_timestamp()

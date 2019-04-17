@@ -75,6 +75,7 @@ bool HeartBeatAgent::do_heartbeat()
 	JsonReader json_reader;
 	json_reader.write_string({"rasp_id"}, scm->get_rasp_id());
 	json_reader.write_string({"plugin_md5"}, oam->get_plugin_md5());
+	json_reader.write_string({"plugin_name"}, oam->get_plugin_name());
 	json_reader.write_string({"plugin_version"}, oam->get_plugin_version());
 	json_reader.write_int64({"config_time"}, scm->get_config_last_update());
 	std::string json_content = json_reader.dump();
@@ -99,6 +100,7 @@ bool HeartBeatAgent::do_heartbeat()
 			if (plugin_update_pkg->build_snapshot())
 			{
 				oam->set_plugin_md5(plugin_update_pkg->get_md5().c_str());
+				oam->set_plugin_name(plugin_update_pkg->get_name().c_str());
 				oam->set_plugin_version(plugin_update_pkg->get_version().c_str());
 				openrasp_error(LEVEL_DEBUG, HEARTBEAT_ERROR, _("Successfully build snapshot, version: %s, md5: %s."),
 							   plugin_update_pkg->get_version().c_str(), plugin_update_pkg->get_md5().c_str());

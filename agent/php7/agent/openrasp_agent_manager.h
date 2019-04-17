@@ -71,6 +71,9 @@ public:
   void set_plugin_version(const char *plugin_version);
   const char *get_plugin_version();
 
+  void set_plugin_name(const char *plugin_name);
+  const char *get_plugin_name();
+
   void set_plugin_md5(const char *plugin_md5);
   const char *get_plugin_md5();
 
