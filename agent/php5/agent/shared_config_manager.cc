@@ -224,6 +224,7 @@ bool SharedConfigManager::shutdown()
             rwlock = nullptr;
         }
         BaseManager::sm.destroy(SHMEM_SEC_CONF_BLOCK);
+        shared_config_block = nullptr;
         initialized = false;
     }
     return true;
