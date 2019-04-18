@@ -462,10 +462,14 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     {
         std::string content_type_vlaue = std::string(Z_STRVAL_P(origin_zv));
         OpenRASPContentType::ContentType k_type = OpenRASPContentType::classify_content_type(content_type_vlaue);
-        if (OpenRASPContentType::ContentType::cApplicationJson == k_type)
+        zend_string *body = nullptr;
+        if (OpenRASPContentType::ContentType::cApplicationJson == k_type &&
+            (body = fetch_request_body(PHP_STREAM_COPY_ALL)) != nullptr)
         {
-            zend_string *body = fetch_request_body(PHP_STREAM_COPY_ALL);
-            complete_body = std::string(ZSTR_VAL(body));
+            if (ZSTR_LEN(body) > 0)
+            {
+                complete_body = std::string(ZSTR_VAL(body));
+            }
             zend_string_release(body);
         }
     }

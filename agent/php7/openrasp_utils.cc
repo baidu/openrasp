@@ -234,17 +234,16 @@ std::string json_encode_from_zval(zval *value)
 zend_string *fetch_request_body(size_t max_len)
 {
     php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, NULL);
-    if (!stream)
+    if (stream)
     {
-        return zend_string_init("", strlen(""), 0);
+        zend_string *buf = php_stream_copy_to_mem(stream, max_len, 0);
+        php_stream_close(stream);
+        if (buf)
+        {
+            return buf;
+        }
     }
-    zend_string *buf = php_stream_copy_to_mem(stream, max_len, 0);
-    php_stream_close(stream);
-    if (!buf)
-    {
-        return zend_string_init("", strlen(""), 0);
-    }
-    return buf;
+    return zend_string_init("", strlen(""), 0);
 }
 
 bool need_alloc_shm_current_sapi()
