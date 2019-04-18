@@ -16,6 +16,7 @@
 
 #include "openrasp_hook.h"
 #include "openrasp_v8.h"
+#include "utils/net.h"
 
 extern "C"
 {
@@ -107,21 +108,17 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
             params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "curl_exec"));
             params->Set(openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, host));
             params->Set(openrasp::NewV8String(isolate, "port"), openrasp::NewV8String(isolate, port));
+            std::vector<std::string> ips = openrasp::lookup_host(host);
             auto ip_arr = v8::Array::New(isolate);
-            struct hostent *hp = gethostbyname(host.c_str());
-            uint32_t ip_sum = 0;
-            if (hp && hp->h_addr_list)
+            std::string ip_sum;
+            for (int i = 0; i < ips.size(); ++i)
             {
-                for (int i = 0; hp->h_addr_list[i] != 0; i++)
-                {
-                    struct in_addr in = *(struct in_addr *)hp->h_addr_list[i];
-                    ip_sum += in.s_addr;
-                    ip_arr->Set(i, openrasp::NewV8String(isolate, inet_ntoa(in)));
-                }
+                ip_sum += ips[i];
+                ip_arr->Set(i, openrasp::NewV8String(isolate, ips[i]));
             }
             params->Set(openrasp::NewV8String(isolate, "ip"), ip_arr);
             {
-                cache_key = std::string(get_check_type_name(check_type) + std::string(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url)) + std::to_string(ip_sum));
+                cache_key = std::string(get_check_type_name(check_type) + std::string(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url)) + ip_sum);
                 if (OPENRASP_HOOK_G(lru).contains(cache_key))
                 {
                     return false;
