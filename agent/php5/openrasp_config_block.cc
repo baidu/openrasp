@@ -214,8 +214,8 @@ void CallableBlock::extract_callable_blacklist(Isolate *isolate)
 
 const int64_t XssBlock::default_min_param_length = 15;
 const int64_t XssBlock::default_max_detection_num = 10;
-const std::string XssBlock::default_filter_regex = "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]";
-const std::string XssBlock::default_echo_filter_regex = "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]";
+const std::string XssBlock::default_filter_regex = "<![\\\\-\\\\[A-Za-z]|<([A-Za-z]{1,12})[\\\\/ >]";
+const std::string XssBlock::default_echo_filter_regex = "<![\\\\-\\\\[A-Za-z]|<([A-Za-z]{1,12})[\\\\/ >]";
 
 void XssBlock::update()
 {

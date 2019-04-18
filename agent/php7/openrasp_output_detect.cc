@@ -95,7 +95,7 @@ static bool _gpc_parameter_filter(const zval *param)
 {
     if (Z_TYPE_P(param) == IS_STRING && Z_STRLEN_P(param) > OPENRASP_CONFIG(xss.min_param_length))
     {
-        if (openrasp::regex_match(Z_STRVAL_P(param), OPENRASP_CONFIG(xss.filter_regex).c_str()))
+        if (openrasp::regex_search(Z_STRVAL_P(param), OPENRASP_CONFIG(xss.filter_regex).c_str()))
         {
             return true;
         }

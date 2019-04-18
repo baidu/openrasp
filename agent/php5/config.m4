@@ -10,9 +10,6 @@ PHP_ARG_WITH(gettext, for gettext support,
 PHP_ARG_ENABLE(openrasp-remote-manager, whether to enable openrasp remote manager support,
 [  --enable-openrasp-remote-manager       Enable openrasp remote manager support (Linux Only)], no, no)
 
-PHP_ARG_WITH(pcre-regex, for pcre support,
-[  --with-pcre-regex=DIR   Include Perl Compatible Regular Expressions support], no, no)
-
 PHP_ARG_WITH(openssl, for openssl support,
 [  --with-openssl=DIR   Include openssl support], no, no)
 
@@ -276,56 +273,6 @@ if test "$PHP_OPENRASP" != "no"; then
         AC_DEFINE([HAVE_OPENRASP_REMOTE_MANAGER], [1], [Have openrasp remote manager support])
         ;;
     esac
-  fi
-
-  if test "$ext_shared" != "no"; then
-    if test "$PHP_PCRE_REGEX" != "no" && test -n "$PHP_PCRE_REGEX"; then
-      PCRE_SEARCH_PATH="$PHP_PCRE_REGEX"
-    else
-      PCRE_SEARCH_PATH="$SEARCH_PATH"
-    fi
-
-    AC_MSG_CHECKING([for PCRE headers location])
-    for i in $PCRE_SEARCH_PATH ; do
-      for j in $i $i/include $i/include/pcre $i/local/include; do
-        test -f $j/pcre.h && OPENRASP_PCRE_INCDIR=$j
-      done
-    done
-
-    if test -z "$OPENRASP_PCRE_INCDIR"; then
-      AC_MSG_ERROR([Could not find pcre.h in $PCRE_SEARCH_PATH])
-    fi
-    AC_MSG_RESULT([$OPENRASP_PCRE_INCDIR])
-    PHP_ADD_INCLUDE($OPENRASP_PCRE_INCDIR)
-
-    AC_MSG_CHECKING([for PCRE library location])
-    for i in $PCRE_SEARCH_PATH ; do
-      for j in $i $i/$PHP_LIBDIR $i/lib64 $i/lib/x86_64-linux-gnu; do
-        if test -f $j/libpcre.$SHLIB_SUFFIX_NAME;then
-          OPENRASP_PCRE_LIBDIR=$j
-          PHP_ADD_LIBRARY_WITH_PATH(pcre, $OPENRASP_PCRE_LIBDIR, OPENRASP_SHARED_LIBADD)
-        elif test -f $j/libpcre.a; then
-          OPENRASP_PCRE_LIBDIR=$j
-          SSL_LIBS="$OPENRASP_PCRE_LIBDIR/libpcre.a"
-          case $host_os in
-            darwin* )
-              OPENRASP_LIBS="-Wl,$SSL_LIBS $OPENRASP_LIBS"
-              ;;
-            * )
-              OPENRASP_LIBS="-Wl,--whole-archive -Wl,$SSL_LIBS -Wl,--no-whole-archive $OPENRASP_LIBS"
-              ;;
-          esac
-        fi
-        if test -n "$OPENRASP_PCRE_LIBDIR" ; then
-          break 2
-        fi
-      done
-    done
-
-    if test -z "$OPENRASP_PCRE_LIBDIR" ; then
-      AC_MSG_ERROR([Could not find libpcre.(a|$SHLIB_SUFFIX_NAME) in $PCRE_SEARCH_PATH])
-    fi
-    AC_MSG_RESULT([$OPENRASP_PCRE_LIBDIR])
   fi
 
   if test "$PHP_FSWATCH" != "no"; then

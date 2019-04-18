@@ -297,9 +297,8 @@ PHP_MINFO_FUNCTION(openrasp)
 zend_module_dep openrasp_deps[] = {
     ZEND_MOD_REQUIRED("standard")
         ZEND_MOD_REQUIRED("json")
-            ZEND_MOD_REQUIRED("pcre")
-                ZEND_MOD_CONFLICTS("xdebug")
-                    ZEND_MOD_END};
+            ZEND_MOD_CONFLICTS("xdebug")
+                ZEND_MOD_END};
 #endif
 
 zend_module_entry openrasp_module_entry = {
