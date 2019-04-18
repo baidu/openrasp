@@ -99,7 +99,7 @@ static void openrasp_clean_output_start(const char *name, size_t name_len TSRMLS
 {
     php_output_handler *h;
 
-    if (h = openrasp_output_handler_init(name, name_len, 0, PHP_OUTPUT_HANDLER_STDFLAGS TSRMLS_CC))
+    if ((h = openrasp_output_handler_init(name, name_len, 0, PHP_OUTPUT_HANDLER_STDFLAGS TSRMLS_CC)))
     {
         php_output_handler_start(h TSRMLS_CC);
     }
