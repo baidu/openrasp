@@ -248,18 +248,17 @@ std::string json_encode_from_zval(zval *value TSRMLS_DC)
 char *fetch_request_body(size_t max_len TSRMLS_DC)
 {
     php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, NULL);
-    if (!stream)
+    if (stream)
     {
-        return estrdup("");
+        char *buf = nullptr;
+        int len = php_stream_copy_to_mem(stream, &buf, max_len, 0);
+        php_stream_close(stream);
+        if (len > 0 && buf != nullptr)
+        {
+            return buf;
+        }
     }
-    char *buf = nullptr;
-    int len = php_stream_copy_to_mem(stream, &buf, max_len, 0);
-    php_stream_close(stream);
-    if (len <= 0 || !buf)
-    {
-        return estrdup("");
-    }
-    return buf;
+    return estrdup("");
 }
 
 bool need_alloc_shm_current_sapi()
