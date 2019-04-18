@@ -380,7 +380,7 @@ if test "$PHP_OPENRASP" != "no"; then
     CXXFLAGS=$old_CXXFLAGS
   ]);
 
-  EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS $ac_cv_narrowing -std=$ac_cv_cstd -Wno-deprecated-declarations -Wno-write-strings -Wno-deprecated-register"
+  EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS $ac_cv_narrowing -std=$ac_cv_cstd -Wno-deprecated-declarations -Wno-write-strings -Wno-deprecated-register -Wno-reserved-user-defined-literal"
   PHP_SUBST(EXTRA_CXXFLAGS)
 
   # AC_MSG_CHECKING([whether fully support regex])
