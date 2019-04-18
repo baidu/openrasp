@@ -39,7 +39,7 @@ cd php/build
 cmake -DCMAKE_CXX_COMPILER=clang++ ..
 make
 
-cd "$base_dir"
+cd "$script_base"
 
 # 确定编译目录
 output_base="$script_base/rasp-php-$(date +%Y-%m-%d)"
