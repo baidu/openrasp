@@ -206,7 +206,7 @@ void CallableBlock::extract_callable_blacklist(Isolate *isolate)
       {
         continue;
       }
-      v8::String::Utf8Value value(item);
+      v8::String::Utf8Value value(isolate, item);
       blacklist.push_back(std::string(*value, value.length()));
     }
   }
@@ -273,18 +273,18 @@ void XssBlock::extract_userinput_config(Isolate *isolate)
       v8::Local<v8::Value> item0;
       if (arr->Get(context, 0).ToLocal(&item0) && item0->IsString())
       {
-        v8::String::Utf8Value value(item0);
+        v8::String::Utf8Value value(isolate, item0);
         filter_regex = std::string(*value, value.length());
       }
       v8::Local<v8::Value> item1;
       if (arr->Get(context, 1).ToLocal(&item1) && item1->IsNumber())
       {
-        min_param_length = item1->IntegerValue();
+        min_param_length = item1->IntegerValue(context).FromJust();
       }
       v8::Local<v8::Value> item2;
       if (arr->Get(context, 2).ToLocal(&item2) && item2->IsNumber())
       {
-        max_detection_num = item2->IntegerValue();
+        max_detection_num = item2->IntegerValue(context).FromJust();
       }
     }
   }
@@ -314,7 +314,7 @@ void XssBlock::extract_echo_config(Isolate *isolate)
   {
     v8::HandleScope handle_scope(isolate);
     v8::Local<v8::String> v8_filter_regex = rst.ToLocalChecked().As<v8::String>();
-    v8::String::Utf8Value value(v8_filter_regex);
+    v8::String::Utf8Value value(isolate, v8_filter_regex);
     echo_filter_regex = std::string(*value, value.length());
   }
 }

@@ -124,7 +124,7 @@ void plugin_sql_check(char *query, int query_len, char *server TSRMLS_DC)
             auto params = v8::Object::New(isolate);
             params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len));
             params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server));
-            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(SQL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+            is_block = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(SQL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (is_block)
         {
