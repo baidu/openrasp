@@ -75,6 +75,7 @@ public class KeepAlive {
 
     private static void handleResponse(GenericResponse response) {
         long oldConfigTime = CloudCacheModel.getInstance().getConfigTime();
+        String oldPluginMd5 = CloudCacheModel.getInstance().getPluginMD5();
         Long deliveryTime = null;
         String version = null;
         String md5 = null;
@@ -98,8 +99,8 @@ public class KeepAlive {
         }
         if (configMap != null) {
             try {
-                Config.getConfig().loadConfigFromCloud(configMap, true);
                 if (deliveryTime != null) {
+                    Config.getConfig().loadConfigFromCloud(configMap, true);
                     CloudCacheModel.getInstance().setConfigTime(deliveryTime);
                 }
                 if (configMap.get("log.maxburst") != null) {
@@ -130,11 +131,12 @@ public class KeepAlive {
             }
         }
         if (version != null && md5 != null && pluginContext != null) {
-            JsPluginManager.updatePluginAsync(pluginContext, md5, version, deliveryTime);
+            JsPluginManager.updatePluginAsync(pluginContext, md5, version);
         }
         long newConfigTime = CloudCacheModel.getInstance().getConfigTime();
+        String newPluginMd5 = CloudCacheModel.getInstance().getPluginMD5();
         //更新成功之后立刻发送一次心跳
-        if (oldConfigTime != newConfigTime) {
+        if (oldConfigTime != newConfigTime || !oldPluginMd5.equals(newPluginMd5)) {
             String content = new Gson().toJson(GenerateParameters());
             String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
             new CloudHttp().commonRequest(url, content);
