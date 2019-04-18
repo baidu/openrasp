@@ -15,6 +15,7 @@
  */
 
 #include "os.h"
+#include <errno.h>
 
 namespace openrasp
 {
