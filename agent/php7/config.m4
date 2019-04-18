@@ -1,8 +1,8 @@
 PHP_ARG_ENABLE(openrasp, whether to enable openrasp support,
 [  --enable-openrasp       Enable openrasp support])
 
-PHP_ARG_WITH(v8, for v8 support,
-[  --with-v8=DIR           Set the path to v8], yes, no)
+PHP_ARG_WITH(openrasp-v8, for openrasp-v8 support,
+[  --with-openrasp-v8=DIR  Set the path to openrasp-v8], no, no)
 
 PHP_ARG_WITH(gettext, for gettext support,
 [  --with-gettext=DIR   Set the path to gettext], no, no)
@@ -31,59 +31,31 @@ if test "$PHP_OPENRASP" != "no"; then
     AC_MSG_ERROR([JSON is not enabled! Add --enable-json to your configure line.])
   fi
 
-  SEARCH_PATH="/usr/local /usr"
-
-  SEARCH_FOR="include/v8.h"
-  if test -r $PHP_V8/$SEARCH_FOR; then
-    V8_PATH=$PHP_V8
-  else
-    AC_MSG_CHECKING([for v8 files in default path])
-    for i in $SEARCH_PATH ; do
-      if test -r $i/$SEARCH_FOR; then
-        V8_PATH=$i
-        AC_MSG_RESULT(found in $i)
-      fi
-    done
-  fi
-
-  if test -z "$V8_PATH"; then
+  AC_MSG_CHECKING([for openrasp-v8 library])
+  if test $PHP_OPENRASP_V8 == "no"; then
     AC_MSG_RESULT([not found])
-    AC_MSG_ERROR([Please reinstall the v8 distribution])
+    AC_MSG_ERROR([Please set openrasp-v8 path with "--with-openrasp-v8"])
+  else
+    AC_MSG_RESULT([yes])
   fi
 
-  PHP_ADD_INCLUDE($V8_PATH/include)
-  V8_LIBS="$V8_PATH/lib/libv8_{base,libsampler,libbase,libplatform,snapshot}.a"
+  PHP_ADD_INCLUDE($PHP_OPENRASP_V8)
+  OPENRASP_LIBS="$OPENRASP_LIBS $PHP_OPENRASP_V8/php/build/libopenrasp_v8_php.a"
   case $host_os in
     darwin* )
-      OPENRASP_LIBS="-Wl,$V8_LIBS $OPENRASP_LIBS"
+      PHP_ADD_INCLUDE($PHP_OPENRASP_V8/vendors/libv8-7.2-darwin/include)
+      OPENRASP_LIBS="$OPENRASP_LIBS $PHP_OPENRASP_V8/vendors/libv8-7.2-darwin/lib/libv8_monolith.a"
       ;;
     * )
+      PHP_ADD_INCLUDE($PHP_OPENRASP_V8/vendors/libv8-7.2-linux/include)
+      PHP_ADD_INCLUDE($PHP_OPENRASP_V8/vendors/libc++-linux/include/c++/v1)
       PHP_ADD_LIBRARY(rt, , OPENRASP_SHARED_LIBADD)
       PHP_ADD_LIBRARY(dl, , OPENRASP_SHARED_LIBADD)
-      OPENRASP_LIBS="-Wl,--whole-archive -Wl,$V8_LIBS -Wl,--no-whole-archive -pthread $OPENRASP_LIBS"
+      OPENRASP_LIBS="$OPENRASP_LIBS $PHP_OPENRASP_V8/vendors/libv8-7.2-linux/lib/libv8_monolith.a -pthread -Wl,--whole-archive -Wl,$PHP_OPENRASP_V8/vendors/libc++-linux/lib/* -Wl,--no-whole-archive"
       ;;
   esac
 
-  AC_MSG_CHECKING([for xxd])
-  if command -v xxd >/dev/null 2>&1; then
-    AC_MSG_RESULT([found])
-  else
-    AC_MSG_RESULT([not found])
-    AC_MSG_ERROR([Please install xxd])
-  fi
-
-  OPENRASP_SRCDIR=[]PHP_EXT_SRCDIR([openrasp])
-  AC_CONFIG_COMMANDS([convert-*.js-to-openrasp_v8_js.h], [
-    pushd $builddir >/dev/null 2>&1
-    xxd -i console.js > openrasp_v8_js.h
-    xxd -i checkpoint.js >> openrasp_v8_js.h
-    xxd -i context.js >> openrasp_v8_js.h
-    xxd -i error.js >> openrasp_v8_js.h
-    xxd -i rasp.js >> openrasp_v8_js.h
-    xxd -i sql_tokenize.js >> openrasp_v8_js.h
-    xxd -i cmd_tokenize.js >> openrasp_v8_js.h
-    popd >/dev/null 2>&1
-  ], [builddir="$OPENRASP_SRCDIR/js"])
+  SEARCH_PATH="/usr/local /usr"
 
   if test "$PHP_GETTEXT" != "no"; then
     SEARCH_FOR="/include/libintl.h"
@@ -396,17 +368,6 @@ if test "$PHP_OPENRASP" != "no"; then
       ;;
   esac
 
-  AC_MSG_CHECKING([for static libstdc++ library])
-  STATIC_LIBSTDCXX=`$CXX -print-file-name=libstdc++.a`
-  if test $STATIC_LIBSTDCXX == "libstdc++.a"; then
-    OPENRASP_LIBS="$OPENRASP_LIBS -lstdc++"
-    AC_MSG_RESULT([no])
-    AC_MSG_NOTICE([porting to other system may fail])
-  else
-    OPENRASP_LIBS="$OPENRASP_LIBS -Wl,$STATIC_LIBSTDCXX"
-    AC_MSG_RESULT([yes])
-  fi
-
   EXTRA_LIBS="$OPENRASP_LIBS $EXTRA_LIBS"
   OPENRASP_SHARED_LIBADD="$OPENRASP_LIBS $OPENRASP_SHARED_LIBADD"
   PHP_SUBST(OPENRASP_SHARED_LIBADD)
@@ -469,7 +430,7 @@ int main() {
 ],dnl
   AC_DEFINE(HAVE_ISFINITE, 1, [Define if you have isfinite declared])
   msg=yes, msg=no, msg=no)
-	AC_LANG_POP([C++])
+    AC_LANG_POP([C++])
   AC_MSG_RESULT([$msg])
 
   AC_MSG_CHECKING(for mmap() using MAP_ANON shared memory support)
@@ -736,13 +697,8 @@ int main() {
     openrasp_log.cc \
     openrasp_error.cc \
     openrasp_v8.cc \
-    openrasp_v8_timeout_task.cc \
     openrasp_v8_request_context.cc \
     openrasp_v8_utils.cc \
-    openrasp_v8_snapshot.cc \
-    openrasp_v8_isolate.cc \
-    openrasp_v8_platform.cc \
-    openrasp_v8_exception.cc \
     openrasp_security_policy.cc \
     openrasp_ini.cc \
     utils/ReadWriteLock.cc \
@@ -770,3 +726,4 @@ int main() {
     PHP_ADD_EXTENSION_DEP(openrasp, json)
   ])
 fi
+
