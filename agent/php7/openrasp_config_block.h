@@ -22,7 +22,7 @@
 #include <cstdint>
 #include <memory>
 #include "utils/BaseReader.h"
-#include "openrasp_v8_bundle.h"
+#include "php/header.h"
 
 namespace openrasp
 {
