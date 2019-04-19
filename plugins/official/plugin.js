@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-const plugin_version = '2019-0308-0930'
-=======
 const plugin_version = '2019-0412-1200'
->>>>>>> master
 const plugin_name    = 'official'
 
 /*
