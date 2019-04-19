@@ -106,7 +106,7 @@ public class JSContextFactory extends ContextFactory {
         }
     }
 
-    public static void setCloudCheckScript(String plugin, String md5, String version, Long deliveryTime) {
+    public static void setCloudCheckScript(String plugin, String md5, String version, String name) {
         if (jsContextFactory != null) {
             try {
                 JSContext cx = (JSContext) JSContext.enter();
@@ -122,7 +122,7 @@ public class JSContextFactory extends ContextFactory {
                 CloudCacheModel.getInstance().setPlugin(plugin);
                 CloudCacheModel.getInstance().setPluginVersion(version);
                 CloudCacheModel.getInstance().setPluginMD5(md5);
-                CloudCacheModel.getInstance().setConfigTime(deliveryTime);
+                CloudCacheModel.getInstance().setPluginName(name);
                 globalScope = global;
                 RASP = tempRASP;
                 //插件更新成功后，清空全局的LRU缓存

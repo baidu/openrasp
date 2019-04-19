@@ -70,12 +70,15 @@ public class KeepAlive {
         params.put("plugin_version", CloudCacheModel.getInstance().getPluginVersion());
         params.put("config_time", CloudCacheModel.getInstance().getConfigTime());
         params.put("plugin_md5", CloudCacheModel.getInstance().getPluginMD5());
+        params.put("plugin_name", CloudCacheModel.getInstance().getPluginName());
         return params;
     }
 
     private static void handleResponse(GenericResponse response) {
         long oldConfigTime = CloudCacheModel.getInstance().getConfigTime();
+        String oldPluginMd5 = CloudCacheModel.getInstance().getPluginMD5();
         Long deliveryTime = null;
+        String name = null;
         String version = null;
         String md5 = null;
         String pluginContext = null;
@@ -95,11 +98,14 @@ public class KeepAlive {
             if (pluginMap.get("plugin") instanceof JsonPrimitive) {
                 pluginContext = ((JsonPrimitive) pluginMap.get("plugin")).getAsString();
             }
+            if (pluginMap.get("name") instanceof JsonPrimitive) {
+                name = ((JsonPrimitive) pluginMap.get("name")).getAsString();
+            }
         }
         if (configMap != null) {
             try {
-                Config.getConfig().loadConfigFromCloud(configMap, true);
                 if (deliveryTime != null) {
+                    Config.getConfig().loadConfigFromCloud(configMap, true);
                     CloudCacheModel.getInstance().setConfigTime(deliveryTime);
                 }
                 if (configMap.get("log.maxburst") != null) {
@@ -129,12 +135,13 @@ public class KeepAlive {
                 CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             }
         }
-        if (version != null && md5 != null && pluginContext != null) {
-            JsPluginManager.updatePluginAsync(pluginContext, md5, version, deliveryTime);
+        if (version != null && md5 != null && pluginContext != null && name != null) {
+            JsPluginManager.updatePluginAsync(pluginContext, md5, version, name);
         }
         long newConfigTime = CloudCacheModel.getInstance().getConfigTime();
-        //更新成功之后立刻发送一次心跳
-        if (oldConfigTime != newConfigTime) {
+        String newPluginMd5 = CloudCacheModel.getInstance().getPluginMD5();
+        if (oldConfigTime != newConfigTime || !newPluginMd5.equals(oldPluginMd5)) {
+            //更新成功之后立刻发送一次心跳
             String content = new Gson().toJson(GenerateParameters());
             String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
             new CloudHttp().commonRequest(url, content);

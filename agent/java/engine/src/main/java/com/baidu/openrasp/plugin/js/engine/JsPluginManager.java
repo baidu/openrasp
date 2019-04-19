@@ -149,11 +149,11 @@ public class JsPluginManager {
         HookHandler.enableHook.set(oldValue);
     }
 
-    private synchronized static void updatePlugin(String plugin, String md5, String version, Long deliveryTime) throws Exception {
+    private synchronized static void updatePlugin(String plugin, String md5, String version, String name) throws Exception {
         // 清空 algorithm.config 配置
         Config.getConfig().setAlgorithmConfig("{}");
         boolean oldValue = HookHandler.enableHook.getAndSet(false);
-        JSContextFactory.setCloudCheckScript(plugin, md5, version, deliveryTime);
+        JSContextFactory.setCloudCheckScript(plugin, md5, version, name);
         HookHandler.enableHook.set(oldValue);
     }
 
@@ -164,7 +164,8 @@ public class JsPluginManager {
      * <p>
      * 若产生抖动，可适量增大定时器延时
      */
-    public synchronized static void updatePluginAsync(final String plugin, final String md5, final String version, final Long deliveryTime) {
+    public synchronized static void updatePluginAsync(final String plugin, final String md5, final String version,
+                                                      final String name) {
         if (timer != null) {
             timer.cancel();
             timer = null;
@@ -175,7 +176,7 @@ public class JsPluginManager {
             public void run() {
                 try {
                     if (plugin != null && md5 != null && version != null) {
-                        updatePlugin(plugin, md5, version, deliveryTime);
+                        updatePlugin(plugin, md5, version, name);
                     } else {
                         updatePlugin();
                     }

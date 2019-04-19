@@ -307,3 +307,22 @@ Object.defineProperty(global, 'CheckPointRename', {
     value: CheckPointRename,
     enumerable: true
 });
+
+var CheckPointRequestEnd = function () {
+    function CheckPointRequestEnd(data) {
+        _classCallCheck(this, CheckPointRequestEnd);
+    }
+
+    _createClass(CheckPointRequestEnd, null, [{
+        key: 'name',
+        get: function get() {
+            return 'requestEnd';
+        }
+    }]);
+
+    return CheckPointRequestEnd;
+}();
+Object.defineProperty(global, 'CheckPointRequestEnd', {
+    value: CheckPointRequestEnd,
+    enumerable: true
+});
