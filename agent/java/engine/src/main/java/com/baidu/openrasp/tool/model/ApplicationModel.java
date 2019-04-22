@@ -53,6 +53,7 @@ public class ApplicationModel {
         applicationInfo.put("server", "");
         applicationInfo.put("version", "");
         applicationInfo.put("extra", "");
+        applicationInfo.put("StandardStart","false");
     }
 
     public static synchronized void setServerInfo(String serverName, String version) {
@@ -69,6 +70,10 @@ public class ApplicationModel {
         extraVersion = (extraVersion == null ? "" : extraVersion);
         applicationInfo.put("extraVersion", extraVersion);
         HookHandler.LOGGER.info("detect extra server info: " + extra);
+    }
+
+    public static synchronized void setStartUpInfo(String startUpInfo) {
+        applicationInfo.put("StandardStart", startUpInfo);
     }
 
     public static Map<String, String> getApplicationInfo() {
@@ -93,6 +98,11 @@ public class ApplicationModel {
             result = applicationInfo.get("extra");
         }
         return result;
+    }
+
+    public static boolean getStartUpInfo(){
+        String result = applicationInfo.get("StandardStart");
+        return Boolean.parseBoolean(result);
     }
 
 }

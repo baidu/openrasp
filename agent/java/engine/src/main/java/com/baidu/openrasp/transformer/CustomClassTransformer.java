@@ -20,6 +20,7 @@ import com.baidu.openrasp.ModuleLoader;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.dependency.DependencyFinder;
 import com.baidu.openrasp.detector.ServerDetectorManager;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.tool.annotation.AnnotationScanner;
@@ -123,6 +124,9 @@ public class CustomClassTransformer implements ClassFileTransformer {
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
                             ProtectionDomain domain, byte[] classfileBuffer) throws IllegalClassFormatException {
+        if (loader != null) {
+            DependencyFinder.classLoaderCache.add(loader);
+        }
         for (final AbstractClassHook hook : hooks) {
             if (hook.isClassMatched(className)) {
                 CtClass ctClass = null;

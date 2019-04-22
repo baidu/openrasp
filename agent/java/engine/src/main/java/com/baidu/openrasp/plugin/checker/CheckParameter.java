@@ -57,6 +57,7 @@ public class CheckParameter {
         INCLUDE("include", new JsChecker(), 1 << 13),
         SSRF("ssrf", new SSRFChecker(), 1 << 14),
         SQL_EXCEPTION("sql_exception", new SqlStatementChecker(), 1 << 15),
+        DELETEFILE("deleteFile", new JsChecker(), 1 << 18),
 
         // java本地检测
         XSS_USERINPUT("xss_userinput", new XssChecker(), 1 << 16),

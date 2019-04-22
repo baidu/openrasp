@@ -18,6 +18,7 @@ package com.baidu.openrasp.cloud;
 
 import com.baidu.openrasp.cloud.model.AppenderMappedLogger;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
+import com.baidu.openrasp.dependency.DependencyReport;
 import com.baidu.openrasp.detector.ServerDetector;
 import org.apache.log4j.Logger;
 
@@ -39,6 +40,7 @@ public class CloudManager {
         ServerDetector.checkServerPolicy();
         new KeepAlive();
         new StatisticsReport();
+        new DependencyReport();
     }
 
 }

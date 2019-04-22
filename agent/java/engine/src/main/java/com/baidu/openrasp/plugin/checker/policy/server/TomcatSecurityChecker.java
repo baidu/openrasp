@@ -58,7 +58,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
 
     @Override
     public void checkServer(CheckParameter checkParameter, List<EventInfo> infos) {
-        if ("tomcat".equals(ApplicationModel.getServerName())) {
+        if ("tomcat".equals(ApplicationModel.getServerName()) && ApplicationModel.getStartUpInfo()) {
             String tomcatBaseDir = System.getProperty("catalina.base");
             try {
                 if (tomcatBaseDir != null) {

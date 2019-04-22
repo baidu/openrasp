@@ -307,3 +307,26 @@ Object.defineProperty(global, 'CheckPointRename', {
     value: CheckPointRename,
     enumerable: true
 });
+
+var CheckPointDeleteFile = function () {
+    function CheckPointDeleteFile(data) {
+        _classCallCheck(this, CheckPointDeleteFile);
+
+        this.path = data.path;
+        this.realpath = data.realpath;
+    }
+
+    _createClass(CheckPointDeleteFile, null, [{
+        key: 'name',
+        get: function get() {
+            return 'deleteFile';
+        }
+    }]);
+
+    return CheckPointDeleteFile;
+}();
+Object.defineProperty(global, 'CheckPointDeleteFile', {
+    value: CheckPointDeleteFile,
+    enumerable: true
+});
+
