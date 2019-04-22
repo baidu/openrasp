@@ -206,6 +206,10 @@ void SqlConnectionEntry::set_name_value(const char *name, const char *val)
   {
     set_username(val);
   }
+  else if (strcmp(name, "password") == 0)
+  {
+    set_password(val);
+  }
   else if (strcmp(name, "host") == 0)
   {
     set_host(val);
