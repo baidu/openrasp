@@ -27,18 +27,22 @@ if (! empty ($open_basedir))
 	echo "         current value: $open_basedir\n";
 }
 
-if (file_exists("/selinux/enforce"))
+foreach (array('/sys/fs/selinux/enforce', '/selinux/enforce') as $selinux)
 {
-	$value = file_get_contents("/selinux/enforce");
-	echo $value;
-	if ($value == "1")
+	if (! file_exists($selinux))
+	{
+		continue;
+	}
+
+	if (@file_get_contents($selinux) == "1")
 	{
 		echo "ERROR: selinux is enabled, try disable it with 'setenforce 0'\n";
 		exit;
 	}
 }
 
-if (PHP_VERSION_ID < 50300) {
+if (PHP_VERSION_ID < 50300) 
+{
 	echo sprintf("Error: OpenRASP works on PHP 5.3 and onwards, version %s.%s is not supported\n", PHP_MAJOR_VERSION, PHP_MINOR_VERSION);
 	exit;
 }
