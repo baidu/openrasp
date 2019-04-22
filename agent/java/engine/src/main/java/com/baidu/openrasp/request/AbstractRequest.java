@@ -46,7 +46,7 @@ public abstract class AbstractRequest {
     protected int maxBodySize = 4096;
     protected String requestId;
     protected boolean canGetParameter = false;
-    protected HashMap<String, String[]> fileUploadCache = new HashMap<String, String[]>();
+    protected HashMap<String, String[]> fileUploadCache = null;
 
     /**
      * constructor
@@ -377,5 +377,9 @@ public abstract class AbstractRequest {
 
     public HashMap<String, String[]> getFileUploadCache() {
         return fileUploadCache;
+    }
+
+    public void setFileUploadCache(HashMap<String, String[]> cache) {
+        fileUploadCache = cache;
     }
 }

@@ -13,37 +13,37 @@ public class Context {
 
     public String getPath() {
         String path = request.getRequestURI();
-        return path == null ? "" : path;
+        return path == null ? null : path;
     }
 
     public String getMethod() {
         String method = request.getMethod();
-        return method == null ? "" : method.toLowerCase();
+        return method == null ? null : method.toLowerCase();
     }
 
     public String getUrl() {
         StringBuffer requestURL = request.getRequestURL();
-        return requestURL == null ? "" : requestURL.toString();
+        return requestURL == null ? null : requestURL.toString();
     }
 
     public String getQuerystring() {
         String query = request.getQueryString();
-        return query == null ? "" : query;
+        return query == null ? null : query;
     }
 
     public String getAppBasePath() {
         String appBasePath = request.getAppBasePath();
-        return appBasePath == null ? "" : appBasePath;
+        return appBasePath == null ? null : appBasePath;
     }
 
     public String getProtocol() {
         String proto = request.getProtocol();
-        return proto == null ? "" : proto.toLowerCase();
+        return proto == null ? null : proto.toLowerCase();
     }
 
     public String getRemoteAddr() {
         String remoteAddr = request.getRemoteAddr();
-        return remoteAddr == null ? "" : remoteAddr;
+        return remoteAddr == null ? null : remoteAddr;
     }
 
     public byte[] getBody(int[] size) {
@@ -58,23 +58,25 @@ public class Context {
 
     public String getJson() {
         String contentType = request.getContentType();
-        byte[] body = request.getBody();
-        if (contentType.contains("application/json") && body != null) {
-            return new String(body);
-        } else {
-            return null;
+        if (contentType != null && contentType.contains("application/json")) {
+            byte[] body = request.getBody();
+            if (body != null) {
+                return new String(body);
+            }
         }
+        return null;
     }
 
     public byte[] getHeader(int[] size) {
-        HashMap<String, String> headers = new HashMap<String, String>();
         Enumeration<String> headerNames = request.getHeaderNames();
-        if (headerNames != null) {
-            while (headerNames.hasMoreElements()) {
-                String key = headerNames.nextElement();
-                String value = request.getHeader(key);
-                headers.put(key.toLowerCase(), value);
-            }
+        if (headerNames == null || !headerNames.hasMoreElements()) {
+            return null;
+        }
+        HashMap<String, String> headers = new HashMap<String, String>();
+        while (headerNames.hasMoreElements()) {
+            String key = headerNames.nextElement();
+            String value = request.getHeader(key);
+            headers.put(key.toLowerCase(), value);
         }
         V8ByteArrayOutputStream out = new V8ByteArrayOutputStream();
         JsonStream.serialize(headers, out);
@@ -84,7 +86,7 @@ public class Context {
 
     public byte[] getParameter(int[] size) {
         Map<String, String[]> parameters = request.getParameterMap();
-        if (parameters == null) {
+        if (parameters == null || parameters.isEmpty()) {
             return null;
         }
         V8ByteArrayOutputStream out = new V8ByteArrayOutputStream();
