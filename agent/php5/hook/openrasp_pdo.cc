@@ -128,7 +128,14 @@ static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
         sql_connection_p->set_using_socket(nullptr == mysql_vars[2].optval || strcmp("localhost", mysql_vars[2].optval) == 0);
         sql_connection_p->set_port(atoi(mysql_vars[3].optval));
         sql_connection_p->set_socket(SAFE_STRING(mysql_vars[4].optval));
-        sql_connection_p->set_username(username);
+        if (username)
+        {
+            sql_connection_p->set_username(username);
+        }
+        if (password)
+        {
+            sql_connection_p->set_password(password);
+        }
         for (int i = 0; i < 5; i++)
         {
             if (mysql_vars[i].freeme)

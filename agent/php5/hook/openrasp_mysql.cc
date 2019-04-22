@@ -86,6 +86,10 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
         {
             user = default_user;
         }
+        if (!passwd)
+        {
+            passwd = default_password;
+        }
     }
     sql_connection_p->set_server("mysql");
     socket = default_socket;
@@ -123,6 +127,7 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
     sql_connection_p->set_using_socket(using_socket);
     sql_connection_p->set_socket(SAFE_STRING(socket));
     sql_connection_p->set_username(SAFE_STRING(user));
+    sql_connection_p->set_password(SAFE_STRING(passwd));
     return true;
 }
 
