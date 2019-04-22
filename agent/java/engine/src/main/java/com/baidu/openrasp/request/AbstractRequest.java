@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.CharArrayWriter;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -174,6 +175,11 @@ public abstract class AbstractRequest {
      */
     public abstract StringBuffer getRequestURL();
 
+    public String getRequestURLString() {
+        Object ret = getRequestURL();
+        return ret != null ? ret.toString() : null;
+    }
+
     /**
      * 获取服务器名称
      *
@@ -218,6 +224,20 @@ public abstract class AbstractRequest {
      * @return 请求头名称的枚举集合
      */
     public abstract Enumeration<String> getHeaderNames();
+
+    public String[] getHeadersArray() {
+        ArrayList<String> headers = new ArrayList<String>();
+        Enumeration<String> headerNames = getHeaderNames();
+        if (headerNames != null) {
+            while (headerNames.hasMoreElements()) {
+                String key = headerNames.nextElement();
+                String value = getHeader(key);
+                headers.add(key.toLowerCase());
+                headers.add(value);
+            }
+        }
+        return headers.toArray(new String[0]);
+    }
 
     /**
      * 获取请求的url中的 Query String 参数部分

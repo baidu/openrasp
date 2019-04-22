@@ -17,10 +17,8 @@
 package com.baidu.openrasp.hook.ssrf;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.google.gson.Gson;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -52,7 +50,7 @@ public abstract class AbstractSSRFHook extends AbstractClassHook {
      * @param hostName http 请求的 host
      * @param function http 请求的方式
      */
-    protected static void checkHttpUrl(String url, String hostName, String port,String function) {
+    protected static void checkHttpUrl(String url, String hostName, String port, String function) {
         HashMap<String, Object> params = new HashMap<String, Object>();
         params.put("url", url);
         params.put("hostname", hostName);
@@ -71,10 +69,7 @@ public abstract class AbstractSSRFHook extends AbstractClassHook {
         }
         Collections.sort(ip);
         params.put("ip", ip);
-        //如果在lru缓存中不进检测
-        if (!Config.commonLRUCache.isContainsKey(new Gson().toJson(params))) {
-            HookHandler.doCheck(CheckParameter.Type.SSRF, params);
-        }
+        HookHandler.doCheck(CheckParameter.Type.SSRF, params);
     }
 
 }

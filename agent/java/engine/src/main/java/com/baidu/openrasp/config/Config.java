@@ -119,7 +119,7 @@ public class Config extends FileScanListener {
     public static String baseDirectory;
     private static Integer watchId;
     //全局lru的缓存
-    public static LRUCache<String, String> commonLRUCache;
+    public static LRUCache<Object, String> commonLRUCache;
 
     private String configFileDir;
     private int pluginMaxStack;
@@ -166,7 +166,7 @@ public class Config extends FileScanListener {
             CustomResponseHtml.load(baseDirectory);
         }
         //初始化全局缓存
-        commonLRUCache = new LRUCache<String, String>(getConfig().getSqlCacheCapacity());
+        commonLRUCache = new LRUCache<Object, String>(getConfig().getSqlCacheCapacity());
         LOGGER.info("baseDirectory: " + baseDirectory);
     }
 
@@ -844,7 +844,7 @@ public class Config extends FileScanListener {
             this.sqlCacheCapacity = 1024;
         }
         if (Config.commonLRUCache == null || Config.commonLRUCache.maxSize() != this.sqlCacheCapacity) {
-            Config.commonLRUCache = new LRUCache<String, String>(this.sqlCacheCapacity);
+            Config.commonLRUCache = new LRUCache<Object, String>(this.sqlCacheCapacity);
         }
     }
 

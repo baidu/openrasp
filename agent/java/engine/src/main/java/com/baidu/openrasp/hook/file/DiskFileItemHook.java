@@ -21,14 +21,12 @@ import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import org.mozilla.javascript.Scriptable;
+import java.util.HashMap;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -75,9 +73,8 @@ public class DiskFileItemHook extends AbstractClassHook {
      */
     public static void checkFileUpload(String name, byte[] content, Object file) {
         if (name != null && content != null && file != null) {
-            JSContext cx = JSContextFactory.enterAndInitContext();
-            Scriptable params = cx.newObject(cx.getScope());
-            params.put("filename", params, name);
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("filename", name);
             try {
                 if (content.length > 4 * 1024) {
                     content = Arrays.copyOf(content, 4 * 1024);
@@ -89,17 +86,17 @@ public class DiskFileItemHook extends AbstractClassHook {
                         characterEncoding = encoding;
                     }
                 }
-                params.put("content", params, new String(content, characterEncoding));
+                params.put("content", new String(content, characterEncoding));
             } catch (Exception e) {
                 String message = e.getMessage();
                 int errorCode = ErrorType.HOOK_ERROR.getCode();
                 HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
-                params.put("content", params, "");
+                params.put("content", "");
             }
             boolean isFiled = (Boolean) Reflection.invokeMethod(file, "isFormField", new Class[]{});
             if (!isFiled) {
                 String fileName = Reflection.invokeStringMethod(file, "getFieldName", new Class[]{});
-                params.put("name", params, fileName != null ? fileName : "");
+                params.put("name", fileName != null ? fileName : "");
             }
 
             HookHandler.doCheck(CheckParameter.Type.FILEUPLOAD, params);

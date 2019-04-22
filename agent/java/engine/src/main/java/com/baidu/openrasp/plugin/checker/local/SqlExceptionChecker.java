@@ -22,7 +22,6 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.AttackInfo;
 import com.baidu.openrasp.plugin.info.EventInfo;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
 
 import java.util.*;
 
@@ -65,9 +64,7 @@ public class SqlExceptionChecker extends ConfigurableChecker {
                 }
             }
         } catch (Exception e) {
-            String message = "Exception while running builtin sql exception check";
-            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-            JSContext.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+
         }
         return result;
     }
