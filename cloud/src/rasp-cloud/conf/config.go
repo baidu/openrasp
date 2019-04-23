@@ -27,20 +27,22 @@ const (
 )
 
 type RaspAppConfig struct {
-	EsAddr             string
-	EsUser             string
-	EsPwd              string
-	MongoDBAddr        string
-	MongoDBUser        string
-	MongoDBPwd         string
-	MongoDBName        string
-	MongoDBPoolLimit   int
-	MaxPlugins         int
-	AlarmLogMode       string
-	AlarmBufferSize    int
-	AlarmCheckInterval int64
-	CookieLifeTime     int
-	Flag               *Flag
+	EsAddr                string
+	EsUser                string
+	EsPwd                 string
+	MongoDBAddr           string
+	MongoDBUser           string
+	MongoDBPwd            string
+	MongoDBName           string
+	MongoDBPoolLimit      int
+	MaxPlugins            int
+	AlarmLogMode          string
+	AlarmBufferSize       int
+	AlarmCheckInterval    int64
+	CookieLifeTime        int
+	RegisterCallbackUrl   string
+	RegisterCallbackToken string
+	Flag                  *Flag
 }
 
 type Flag struct {
@@ -68,6 +70,8 @@ func InitConfig(startFlag *Flag) {
 	AppConfig.AlarmBufferSize = beego.AppConfig.DefaultInt("AlarmBufferSize", 300)
 	AppConfig.AlarmCheckInterval = beego.AppConfig.DefaultInt64("AlarmCheckInterval", 120)
 	AppConfig.CookieLifeTime = beego.AppConfig.DefaultInt("CookieLifeTime", 7*24)
+	AppConfig.RegisterCallbackUrl = beego.AppConfig.DefaultString("RegisterCallbackUrl", "")
+	AppConfig.RegisterCallbackToken = beego.AppConfig.DefaultString("RegisterCallbackToken", "")
 	ValidRaspConf(AppConfig)
 }
 

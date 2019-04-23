@@ -20,6 +20,8 @@ import (
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
 	"time"
+	"rasp-cloud/conf"
+	"github.com/astaxie/beego"
 )
 
 type RaspController struct {
@@ -98,6 +100,13 @@ func (o *RaspController) Post() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to add rasp", err)
 	}
+	go func() {
+		err = models.RegisterCallback(conf.AppConfig.RegisterCallbackUrl, conf.AppConfig.RegisterCallbackToken, rasp)
+		if err != nil {
+			beego.Error("failed to send register callback to url: " +
+				conf.AppConfig.RegisterCallbackUrl + ", " + err.Error())
+		}
+	}()
 	models.AddOperation(rasp.AppId, models.OperationTypeRegisterRasp, o.Ctx.Input.IP(),
 		"New RASP agent registered from "+rasp.HostName+": "+rasp.Id, "")
 	o.Serve(rasp)
