@@ -17,6 +17,7 @@
 package com.baidu.openrasp.tool.decompile;
 
 import com.baidu.openrasp.tool.LRUCache;
+import com.baidu.openrasp.transformer.CustomClassTransformer;
 import com.strobel.assembler.metadata.ArrayTypeLoader;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeReference;
@@ -25,8 +26,8 @@ import com.strobel.decompiler.DecompilerSettings;
 import com.strobel.decompiler.languages.BytecodeOutputOptions;
 import com.strobel.decompiler.languages.java.JavaFormattingOptions;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -38,8 +39,6 @@ import java.util.regex.Pattern;
  * @create: 2018/10/18 20:50
  */
 public class Decompiler {
-    private static final Logger LOGGER = Logger.getLogger(Decompiler.class.getName());
-
     private static LRUCache<String, String> decompileCache = new LRUCache<String, String>(100);
 
     private static String getDecompilerString(InputStream in, String className) throws Exception {
@@ -79,26 +78,46 @@ public class Decompiler {
             String className = element.getClassName();
             int lineNumber = element.getLineNumber();
             String description = element.toString();
-            if (decompileCache.isContainsKey(description)) {
-                result.add(decompileCache.get(description));
-                continue;
-            }
             try {
                 String simpleName = className.substring(className.lastIndexOf(".") + 1) + ".class";
-                Class clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
-                String src = getDecompilerString(clazz.getResourceAsStream(simpleName), className);
-                if (!src.isEmpty()) {
-                    boolean isFind = false;
-                    for (String line : src.split(System.getProperty("line.separator"))) {
-                        String matched = Decompiler.matchStringByRegularExpression(line, lineNumber);
-                        if (!"".equals(matched)) {
-                            isFind = true;
-                            result.add(matched);
-                            decompileCache.put(description, matched);
-                            break;
-                        }
+                Class clazz = null;
+                try {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+                } catch (ClassNotFoundException e) {
+                    ClassLoader classLoader = CustomClassTransformer.jspClassLoaderCache.get(className).get();
+                    if (classLoader != null) {
+                        clazz = classLoader.loadClass(className);
                     }
-                    if (!isFind) {
+                }
+                if (clazz != null) {
+                    File file;
+                    try {
+                        file = new File(clazz.getResource(simpleName).getPath());
+                    } catch (Exception e) {
+                        file = null;
+                    }
+                    if (file != null && decompileCache.isContainsKey(description + file.lastModified())) {
+                        result.add(decompileCache.get(description + file.lastModified()));
+                        continue;
+                    }
+                    String src = getDecompilerString(clazz.getResourceAsStream(simpleName), className);
+                    if (!src.isEmpty()) {
+                        boolean isFind = false;
+                        for (String line : src.split(System.getProperty("line.separator"))) {
+                            String matched = Decompiler.matchStringByRegularExpression(line, lineNumber);
+                            if (!"".equals(matched)) {
+                                isFind = true;
+                                result.add(matched);
+                                if (file != null) {
+                                    decompileCache.put(description + file.lastModified(), matched);
+                                }
+                                break;
+                            }
+                        }
+                        if (!isFind) {
+                            result.add("");
+                        }
+                    } else {
                         result.add("");
                     }
                 } else {
@@ -107,6 +126,7 @@ public class Decompiler {
             } catch (Throwable e) {
                 result.add("");
             }
+
         }
         return result;
     }
