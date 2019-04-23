@@ -21,17 +21,15 @@ import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.HashMap;
 
 /**
  * Created by zhuming01 on 7/18/17.
@@ -169,14 +167,13 @@ public class SQLStatementHook extends AbstractSqlHook {
      */
     public static void checkSQL(String server, Object statement, String stmt) {
         if (stmt != null && !stmt.isEmpty() && !Config.commonLRUCache.isContainsKey(server.trim() + stmt.trim())) {
-            JSContext cx = JSContextFactory.enterAndInitContext();
-            Scriptable params = cx.newObject(cx.getScope());
+            HashMap<String, Object> params = new HashMap<String, Object>();
             String connectionId = getSqlConnectionId(server, statement);
             if (connectionId != null) {
-                params.put(server + "_connection_id", params, connectionId);
+                params.put(server + "_connection_id", connectionId);
             }
-            params.put("server", params, server);
-            params.put("query", params, stmt);
+            params.put("server", server);
+            params.put("query", stmt);
 
             HookHandler.doCheck(CheckParameter.Type.SQL, params);
         }
@@ -196,21 +193,20 @@ public class SQLStatementHook extends AbstractSqlHook {
             HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
             return;
         }
-        JSContext cx = JSContextFactory.enterAndInitContext();
-        Scriptable params = cx.newObject(cx.getScope());
-        params.put("server", params, server);
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put("server", server);
         try {
             if (object != null && object.length > 0) {
-                params.put("query", params, String.valueOf(object[0]));
+                params.put("query", String.valueOf(object[0]));
             } else {
-                params.put("query", params, "");
+                params.put("query", "");
             }
         } catch (Exception e1) {
-            params.put("query", params, "");
+            params.put("query", "");
         }
-        params.put("error_code", params, String.valueOf(e.getErrorCode()));
+        params.put("error_code", String.valueOf(e.getErrorCode()));
         String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
-        params.put("message", params, message);
+        params.put("message", message);
         HookHandler.doCheck(CheckParameter.Type.SQL_EXCEPTION, params);
     }
 }

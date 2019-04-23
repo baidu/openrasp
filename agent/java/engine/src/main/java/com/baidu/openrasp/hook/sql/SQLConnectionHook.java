@@ -21,12 +21,9 @@ import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.*;
 import org.apache.commons.lang3.StringUtils;
-import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -69,12 +66,11 @@ public class SQLConnectionHook extends AbstractClassHook {
     public static void checkSQLErrorCode(String server, SQLException e, Object[] object) {
         String errorCode = String.valueOf(e.getErrorCode());
         if (errorCode.equals("1045")) {
-            JSContext cx = JSContextFactory.enterAndInitContext();
-            Scriptable params = cx.newObject(cx.getScope());
-            params.put("server", params, server);
-            params.put("error_code", params, errorCode);
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("server", server);
+            params.put("error_code", errorCode);
             String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
-            params.put("message", params, message);
+            params.put("message", message);
             if (object != null && object.length >= 2) {
                 String url = String.valueOf(object[0]);
                 Properties properties = (Properties) object[1];
@@ -125,11 +121,11 @@ public class SQLConnectionHook extends AbstractClassHook {
                     int code = ErrorType.HOOK_ERROR.getCode();
                     HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(msg, code), e);
                 }
-                params.put("connectionString", params, connectionString != null ? connectionString : "");
-                params.put("username", params, username != null ? username : "");
-                params.put("hostname", params, host != null ? host : "");
-                params.put("port", params, port != null ? port : "");
-                params.put("socket", params, socket != null ? socket : "");
+                params.put("connectionString", connectionString != null ? connectionString : "");
+                params.put("username", username != null ? username : "");
+                params.put("hostname", host != null ? host : "");
+                params.put("port", port != null ? port : "");
+                params.put("socket", socket != null ? socket : "");
             }
             HookHandler.doCheckWithoutRequest(CheckParameter.Type.SQL_EXCEPTION, params);
         }
