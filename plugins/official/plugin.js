@@ -960,7 +960,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                     }
 
                     if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
-                        reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
+                        reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                         return true
                     }
                 }
