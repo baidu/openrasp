@@ -1,4 +1,4 @@
-const plugin_version = '2019-0412-1200'
+const plugin_version = '2019-0424-1100'
 const plugin_name    = 'official'
 
 /*
