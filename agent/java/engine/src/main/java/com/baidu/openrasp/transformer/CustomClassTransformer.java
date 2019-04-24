@@ -37,6 +37,7 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
+import java.lang.ref.WeakReference;
 import java.security.ProtectionDomain;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -125,7 +126,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
                             ProtectionDomain domain, byte[] classfileBuffer) throws IllegalClassFormatException {
         if (loader != null) {
-            DependencyFinder.classLoaderCache.add(loader);
+            DependencyFinder.classLoaderCache.add(new WeakReference<ClassLoader>(loader));
         }
         for (final AbstractClassHook hook : hooks) {
             if (hook.isClassMatched(className)) {

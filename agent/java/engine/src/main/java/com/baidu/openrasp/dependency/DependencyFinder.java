@@ -1,11 +1,13 @@
 package com.baidu.openrasp.dependency;
 
+import com.baidu.openrasp.ModuleLoader;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -22,24 +24,30 @@ import java.util.regex.Pattern;
 public class DependencyFinder {
     public static final Logger LOGGER = Logger.getLogger(DependencyFinder.class.getPackage().getName() + ".log");
 
-    public static HashSet<ClassLoader> classLoaderCache = new HashSet<ClassLoader>();
+    public static HashSet<WeakReference<ClassLoader>> classLoaderCache = new HashSet<WeakReference<ClassLoader>>();
     private static final Pattern REGEX = Pattern.compile(".+/([^/]+)-(\\d[^/-]+)(?:-(?:\\w+))?\\.jar!/META-INF/MANIFEST\\.MF$");
     private static final Pattern JAR_LOCATION_REGEX = Pattern.compile("(?:file:)?(.+\\.jar)!/META-INF/MANIFEST\\.MF");
 
     static {
-        classLoaderCache.add(ClassLoader.getSystemClassLoader());
+        classLoaderCache.add(new WeakReference<ClassLoader>(ModuleLoader.moduleClassLoader));
+        classLoaderCache.add(new WeakReference<ClassLoader>(ClassLoader.getSystemClassLoader()));
     }
 
     public static HashSet<Dependency> getDependencySet() {
         HashSet<Dependency> dependencyHashSet = new HashSet<Dependency>();
-        HashSet<ClassLoader> classLoaders = new HashSet<ClassLoader>(classLoaderCache);
-        for (ClassLoader classLoader : classLoaders) {
+        HashSet<WeakReference<ClassLoader>> classLoaders = new HashSet<WeakReference<ClassLoader>>(classLoaderCache);
+        for (WeakReference<ClassLoader> classLoaderRef : classLoaders) {
+            ClassLoader classLoader = classLoaderRef.get();
             Enumeration<URL> resources = null;
             try {
-                resources = classLoader.getResources("META-INF/MANIFEST.MF");
+                if (classLoader != null) {
+                    resources = classLoader.getResources("META-INF/MANIFEST.MF");
+                } else {
+                    classLoaderCache.remove(classLoaderRef);
+                }
             } catch (Throwable e) {
                 if (e instanceof IllegalStateException) {
-                    classLoaderCache.remove(classLoader);
+                    classLoaderCache.remove(classLoaderRef);
                 } else {
                     String message = "Could not find manifest";
                     int errorCode = ErrorType.DEPENDENCY_ERROR.getCode();

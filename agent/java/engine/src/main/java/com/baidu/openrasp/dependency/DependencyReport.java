@@ -22,7 +22,7 @@ public class DependencyReport {
             while (true){
                 HashSet<Dependency> dependencyHashSet=DependencyFinder.getDependencySet();
                 for (Dependency dependency : dependencyHashSet){
-                    //
+                    System.out.println(dependency.name+"===="+dependency.version+"====="+dependency.location);
                 }
                 try {
                     Thread.sleep(REGISTER_DELAY);
