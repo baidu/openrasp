@@ -785,7 +785,7 @@ function is_from_userinput(parameter, target)
 }
 
 // 检查SQL逻辑是否被用户参数所修改
-function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance) 
+function is_token_changed(raw_tokens, userinput_byte_idx, userinput_byte_length, distance) 
 {
     // 当用户输入穿越了多个token，就可以判定为代码注入，默认为2
     var start = -1, end = raw_tokens.length, distance = distance || 2
@@ -793,7 +793,7 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance)
     // 寻找 token 起始点，可以改为二分查找
     for (var i = 0; i < raw_tokens.length; i++)
     {
-        if (raw_tokens[i].stop >= userinput_idx)
+        if (raw_tokens[i].stop >= userinput_byte_idx)
         {
             start = i
             break
@@ -804,7 +804,7 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance)
     // 另外，最多需要遍历 distance 个 token
     for (var i = start; i < start + distance && i < raw_tokens.length; i++)
     {
-        if (raw_tokens[i].stop >= userinput_idx + userinput_length - 1)
+        if (raw_tokens[i].stop >= userinput_byte_idx + userinput_byte_length - 1)
         {
             end = i
             break
@@ -925,8 +925,8 @@ if (RASP.get_jsengine() !== 'v8') {
                 for(var i = 0, len = check_value.length; i < len; i++) {
                     value = check_value[i]
                 
-                    var userinput_idx = params.query.indexOf(value)
-                    if (userinput_idx == -1) {
+                    var userinput_byte_idx = Buffer.from(params.query, 'utf8').indexOf(value)
+                    if (userinput_byte_idx == -1) {
                         return false
                     }
 
@@ -946,7 +946,8 @@ if (RASP.get_jsengine() !== 'v8') {
                         raw_tokens = RASP.sql_tokenize(params.query, params.server)
                     }
 
-                    if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
+                    value_byte_length = Buffer.byteLength(value, 'utf8')
+                    if (is_token_changed(raw_tokens, userinput_byte_idx, value_byte_length)) {
                         reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
                         return true
                     }
@@ -1726,10 +1727,10 @@ plugin.register('command', function (params, context) {
                 if (value.length <= min_length) {
                     return false
                 }
-
+                
                 // 检查用户输入是否存在于命令中
-                var userinput_idx = cmd.indexOf(value)
-                if (userinput_idx == -1) {
+                var userinput_byte_idx = Buffer.from(cmd, 'utf8').indexOf(value)
+                if (userinput_byte_idx == -1) {
                     return false
                 }
 
@@ -1743,7 +1744,8 @@ plugin.register('command', function (params, context) {
                     raw_tokens = RASP.cmd_tokenize(cmd)
                 }
 
-                if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
+                value_byte_length = Buffer.byteLength(value, 'utf8')
+                if (is_token_changed(raw_tokens, userinput_byte_idx, value_byte_length)) {
                     reason = _("Command injection - command structure altered by user input, request parameter name: %1%", [name])
                     return true
                 }
