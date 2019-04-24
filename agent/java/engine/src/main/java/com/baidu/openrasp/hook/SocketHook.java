@@ -22,7 +22,6 @@ import com.baidu.openrasp.plugin.checker.CheckParameter;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;

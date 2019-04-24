@@ -19,7 +19,6 @@ package com.baidu.openrasp.hook.sql;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
@@ -166,15 +165,14 @@ public class SQLStatementHook extends AbstractSqlHook {
      * @param stmt sql语句
      */
     public static void checkSQL(String server, Object statement, String stmt) {
-        if (stmt != null && !stmt.isEmpty() && !Config.commonLRUCache.isContainsKey(server.trim() + stmt.trim())) {
+        if (stmt != null && !stmt.isEmpty()) {
             HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("server", server);
+            params.put("query", stmt);
             String connectionId = getSqlConnectionId(server, statement);
             if (connectionId != null) {
                 params.put(server + "_connection_id", connectionId);
             }
-            params.put("server", server);
-            params.put("query", stmt);
-
             HookHandler.doCheck(CheckParameter.Type.SQL, params);
         }
     }

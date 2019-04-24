@@ -21,21 +21,19 @@ import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
 import org.apache.commons.io.IOUtils;
-import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 /**
  * @description: Jersey 文件上传
@@ -68,23 +66,22 @@ public class JerseyMultipart extends AbstractClassHook {
                 Object contentDisposition = Reflection.invokeMethod(o, "getFormDataContentDisposition", new Class[]{});
                 String name = Reflection.invokeStringMethod(contentDisposition, "getFileName", new Class[]{});
                 if (name != null) {
-                    JSContext cx = JSContextFactory.enterAndInitContext();
-                    Scriptable params = cx.newObject(cx.getScope());
-                    params.put("filename", params, name);
+                    HashMap<String, Object> params = new HashMap<String, Object>();
+                    params.put("filename", name);
                     InputStream inputStream = (InputStream) Reflection.invokeMethod(o, "getValueAs", new Class[]{Class.class}, InputStream.class);
                     try {
                         byte[] content = IOUtils.toByteArray(inputStream);
                         if (content.length > 4 * 1024) {
                             content = Arrays.copyOf(content, 4 * 1024);
                         }
-                        params.put("content", params, new String(content));
+                        params.put("content", new String(content));
                     } catch (IOException e) {
                         String message = e.getMessage();
                         int errorCode = ErrorType.HOOK_ERROR.getCode();
                         HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
-                        params.put("content", params, "[rasp error:" + e.getMessage() + "]");
+                        params.put("content", "[rasp error:" + e.getMessage() + "]");
                     }
-                    params.put("name", params, "");
+                    params.put("name", "");
                     HookHandler.doCheck(CheckParameter.Type.FILEUPLOAD, params);
                 }
             }

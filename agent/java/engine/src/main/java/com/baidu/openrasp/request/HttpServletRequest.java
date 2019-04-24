@@ -190,7 +190,7 @@ public final class HttpServletRequest extends AbstractRequest {
             normalMap = (Map<String, String[]>) Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
         } else {
             if (!setCharacterEncodingFromConfig()) {
-                normalMap = EMPTY_PARAM;
+                normalMap = null;
             }
         }
         return getMergeMap(normalMap, fileUploadCache);
@@ -293,10 +293,10 @@ public final class HttpServletRequest extends AbstractRequest {
 
     private Map<String, String[]> getMergeMap(Map<String, String[]> map1, Map<String, String[]> map2) {
         Map<String, String[]> result = new HashMap<String, String[]>();
-        if (!map1.isEmpty()) {
+        if (map1 != null && !map1.isEmpty()) {
             mergeMap(map1, result);
         }
-        if (!map2.isEmpty()) {
+        if (map2 != null && !map2.isEmpty()) {
             mergeMap(map2, result);
         }
         return result;
