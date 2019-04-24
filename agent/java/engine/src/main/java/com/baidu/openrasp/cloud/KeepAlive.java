@@ -45,20 +45,23 @@ public class KeepAlive {
         @Override
         public void run() {
             while (true) {
-                String content = new Gson().toJson(GenerateParameters());
-                String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
-                GenericResponse response = new CloudHttp().commonRequest(url, content);
-                if (CloudUtils.checkRequestResult(response)) {
-                    handleResponse(response);
-                } else {
-                    String message = CloudUtils.handleError(ErrorType.HEARTBEAT_ERROR, response);
-                    int errorCode = ErrorType.HEARTBEAT_ERROR.getCode();
-                    CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
-                }
                 try {
+                    String content = new Gson().toJson(GenerateParameters());
+                    String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
+                    GenericResponse response = new CloudHttp().commonRequest(url, content);
+                    if (CloudUtils.checkRequestResult(response)) {
+                        handleResponse(response);
+                    } else {
+                        String message = CloudUtils.handleError(ErrorType.HEARTBEAT_ERROR, response);
+                        int errorCode = ErrorType.HEARTBEAT_ERROR.getCode();
+                        CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
+                    }
                     Thread.sleep(Config.getConfig().getHeartbeatInterval() * 1000);
-                } catch (Exception e) {
-                    //continue next loop
+
+                } catch (Throwable e) {
+                    String message = e.getMessage();
+                    int errorCode = ErrorType.HEARTBEAT_ERROR.getCode();
+                    CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
                 }
             }
         }
