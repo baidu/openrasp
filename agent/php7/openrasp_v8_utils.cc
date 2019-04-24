@@ -27,6 +27,51 @@ extern "C"
 
 namespace openrasp
 {
+bool Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout)
+{
+    IsolateData *data = isolate->GetData();
+    v8::Local<v8::Object> request_context;
+    if (data->request_context.IsEmpty())
+    {
+        request_context = data->request_context_templ.Get(isolate)->NewInstance();
+        data->request_context.Reset(isolate, request_context);
+    }
+    else
+    {
+        request_context = data->request_context.Get(isolate);
+    }
+    auto rst = isolate->Check(type, params, request_context, timeout);
+    auto len = rst->Length();
+    if (len == 0)
+    {
+        return false;
+    }
+    auto context = isolate->GetCurrentContext();
+    auto key_action = isolate->GetData()->key_action.Get(isolate);
+    auto action_hash_block = isolate->GetData()->action_hash_block;
+    auto needBlock = false;
+    for (int i = 0; i < len; i++)
+    {
+        v8::HandleScope handle_scope(isolate);
+        v8::Local<v8::Value> val;
+        if (!rst->Get(context, i).ToLocal(&val) || !val->IsObject())
+        {
+            continue;
+        }
+        auto obj = val.As<v8::Object>();
+        alarm_info(isolate, type, params, obj);
+        if (needBlock)
+        {
+            continue;
+        }
+        if (obj->Get(context, key_action).ToLocal(&val) && val->IsString())
+        {
+            needBlock = val.As<v8::String>()->GetIdentityHash() == action_hash_block;
+        }
+    }
+    return needBlock;
+}
+
 v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
 {
     v8::Local<v8::Value> rst = v8::Undefined(isolate);
@@ -117,9 +162,9 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
     return rst;
 }
 
-void plugin_info(const char *message, size_t length)
+void plugin_info(Isolate *isolate, const std::string &message)
 {
-    LOG_G(plugin_logger).log(LEVEL_INFO, message, length, false, true);
+    LOG_G(plugin_logger).log(LEVEL_INFO, message.c_str(), message.length(), false, true);
 }
 
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)
@@ -181,7 +226,7 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     v8::Local<v8::Value> val;
     if (v8::JSON::Stringify(isolate->GetCurrentContext(), obj).ToLocal(&val))
     {
-        v8::String::Utf8Value msg(val);
+        v8::String::Utf8Value msg(isolate, val);
         LOG_G(alarm_logger).log(LEVEL_INFO, *msg, msg.length(), true, false);
     }
 }
@@ -230,12 +275,13 @@ void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string>
 {
     v8::HandleScope handle_scope(isolate);
     auto context = isolate->GetCurrentContext();
+    // clang-format off
     auto rst = isolate->ExecScript(R"(
         Object.keys(RASP.algorithmConfig || {})
             .filter(key => typeof key === 'string' && typeof RASP.algorithmConfig[key] === 'object' && typeof RASP.algorithmConfig[key].action === 'string')
             .map(key => [key, RASP.algorithmConfig[key].action])
-    )",
-                                   "extract_buildin_action");
+    )", "extract_buildin_action");
+    // clang-format on
     if (rst.IsEmpty())
     {
         return;
@@ -250,8 +296,8 @@ void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string>
         {
             continue;
         }
-        v8::String::Utf8Value key(item.As<v8::Array>()->Get(0));
-        v8::String::Utf8Value value(item.As<v8::Array>()->Get(1));
+        v8::String::Utf8Value key(isolate, item.As<v8::Array>()->Get(0));
+        v8::String::Utf8Value value(isolate, item.As<v8::Array>()->Get(1));
         auto iter = buildin_action_map.find({*key, key.length()});
         if (iter != buildin_action_map.end())
         {

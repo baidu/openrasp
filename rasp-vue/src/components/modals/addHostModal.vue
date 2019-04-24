@@ -61,9 +61,9 @@
                   文档
                 </div>
                 <h4>1. 下载自动安装程序</h4>
-                <pre style="white-space: inherit; ">curl https://packages.baidu.com/app/openrasp/rasp-installer.sh -o rasp-installer.sh</pre>
+                <pre style="white-space: inherit; ">curl https://packages.baidu.com/app/openrasp/release/{{rasp_version}}/installer.sh -o installer.sh</pre>
                 <h4>2. 执行脚本</h4>
-                <pre style="white-space: inherit; ">bash rasp-installer.sh -i -a {{ current_app.id }} -b {{ current_app.secret }} -c {{ agent_urls[agent_url_id] }}</pre>
+                <pre style="white-space: inherit; ">bash installer.sh -i -a {{ current_app.id }} -b {{ current_app.secret }} -c {{ agent_urls[agent_url_id] }}</pre>
               </div>
               <div id="docker-tab" class="tab-pane fade">
                 <div class="alert alert-warning">
@@ -72,13 +72,13 @@
                   文档
                 </div>
                 <h4>Java 容器示例</h4>
-                <pre>ADD https://packages.baidu.com/app/openrasp/rasp-java.tar.gz /tmp
+                <pre>ADD https://packages.baidu.com/app/openrasp/release/{{rasp_version}}/rasp-java.tar.gz /tmp
 RUN cd /tmp \
     && tar -xf rasp-java.tar.* \
     && /jdk/bin/java -jar rasp-*/RaspInstall.jar -install /tomcat/ -appid {{ current_app.id }} -appsecret {{ current_app.secret }} -backendurl {{ agent_urls[agent_url_id] }} \
     && rm -rf rasp-*</pre>
                 <h4>PHP 容器示例</h4>
-                <pre>ADD https://packages.baidu.com/app/openrasp/rasp-php-linux.tar.bz2 /tmp/
+                <pre>ADD https://packages.baidu.com/app/openrasp/release/{{rasp_version}}/rasp-php-linux.tar.bz2 /tmp/
 RUN cd /tmp \
     && tar -xf rasp-php-linux.tar.bz2 \
     && php rasp-php-*/install.php -d /opt/rasp/ --backend-url {{ agent_urls[agent_url_id] }} --app-id {{ current_app.id }} --app-secret {{ current_app.secret }} \
@@ -86,7 +86,7 @@ RUN cd /tmp \
               </div>
               <div id="java-tab" class="tab-pane fade show active">
                 <h4>1. 下载 Java Agent 安装包</h4>
-                <pre style="white-space: inherit; ">curl https://packages.baidu.com/app/openrasp/rasp-java.tar.gz -o rasp-java.tar.gz<br>tar -xvf rasp-java.tar.gz<br>cd rasp-*/</pre>
+                <pre style="white-space: inherit; ">curl https://packages.baidu.com/app/openrasp/release/{{rasp_version}}/rasp-java.tar.gz -o rasp-java.tar.gz<br>tar -xvf rasp-java.tar.gz<br>cd rasp-*/</pre>
                 <h4>2. 执行 RaspInstall 进行安装</h4>
                 <pre style="white-space: inherit; ">java -jar RaspInstall.jar -install /path/to/tomcat -appid {{ current_app.id }} -appsecret {{ current_app.secret }} -backendurl {{ agent_urls[agent_url_id] }}</pre>
                 <h4>3. 重启 Tomcat/JBoss/SpringBoot 应用服务器</h4>
@@ -94,7 +94,7 @@ RUN cd /tmp \
               </div>
               <div id="php-tab" class="tab-pane fade">
                 <h4>1. 下载 PHP 安装包</h4>
-                <pre style="white-space: inherit; ">curl https://packages.baidu.com/app/openrasp/rasp-php-linux.tar.bz2 -o rasp-php-linux.tar.bz2<br>tar -xvf rasp-php-linux.tar.bz2<br>cd rasp-*/</pre>
+                <pre style="white-space: inherit; ">curl https://packages.baidu.com/app/openrasp/release/{{rasp_version}}/rasp-php-linux.tar.bz2 -o rasp-php-linux.tar.bz2<br>tar -xvf rasp-php-linux.tar.bz2<br>cd rasp-*/</pre>
                 <h4>2. 执行 install.php 进行安装</h4>
                 <pre style="white-space: inherit; ">php install.php -d /opt/rasp --app-id {{ current_app.id }} --app-secret {{ current_app.secret }} --backend-url {{ agent_urls[agent_url_id] }}</pre>
                 <h4>3. 重启 PHP-FPM 或者 Apache 服务器</h4>
@@ -120,6 +120,7 @@ RUN cd /tmp \
 
 <script>
 import { mapGetters } from 'vuex'
+import { rasp_version } from '@/util'
 
 export default {
   name: 'AddHostModal',
@@ -129,7 +130,8 @@ export default {
       location: location,
       agent_url_id: 0,
       agent_urls: [],
-      panel_url: ''
+      panel_url: '',
+      rasp_version: rasp_version
     }
   },
   computed: {

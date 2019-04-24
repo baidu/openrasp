@@ -21,6 +21,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"time"
 	"strconv"
+	"errors"
 )
 
 type Rasp struct {
@@ -165,13 +166,31 @@ func HandleRasp(rasp *Rasp) {
 }
 
 func RemoveRaspById(id string) (err error) {
+	rasp, err := GetRaspById(id)
+	if err != nil {
+		return err
+	}
+	if *rasp.Online {
+		return errors.New("unable to delete online rasp")
+	}
 	return mongo.RemoveId(raspCollectionName, id)
 }
 
-func RemoveRaspByRegisterIp(ip string, appId string) (int, error) {
-	offlineWhere := "this.last_heartbeat_time+this.heartbeat_interval+180 < " +
-		strconv.FormatInt(time.Now().Unix(), 10)
-	info, err := mongo.RemoveAll(raspCollectionName, bson.M{"app_id": appId, "register_ip": ip, "$where": offlineWhere})
+func RemoveRaspBySelector(selector map[string]interface{}, appId string) (int, error) {
+	offlineWhere := ""
+	if _, ok := selector["expire_time"]; ok {
+		expireTime := strconv.FormatInt(selector["expire_time"].(int64), 10)
+		offlineWhere = "this.last_heartbeat_time+this.heartbeat_interval+180+" + expireTime + "<" +
+			strconv.FormatInt(time.Now().Unix(), 10)
+	} else {
+		offlineWhere = "this.last_heartbeat_time+this.heartbeat_interval+180 < " +
+			strconv.FormatInt(time.Now().Unix(), 10)
+	}
+	param := bson.M{"app_id": appId, "$where": offlineWhere}
+	if selector["register_ip"] != nil && selector["register_ip"] != "" {
+		param["register_ip"] = selector["register_ip"]
+	}
+	info, err := mongo.RemoveAll(raspCollectionName, param)
 	if err != nil {
 		return 0, err
 	}

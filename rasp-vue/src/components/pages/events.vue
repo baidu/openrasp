@@ -118,13 +118,13 @@
                 </td>
                 <td style="max-width: 500px; ">
                   <a :href="row.url" target="_blank">
-                    {{ row.url }}
+                    {{ row.url ? row.url : '-' }}
                   </a>
                 </td>
 
                 <td nowrap>
                   <a target="_blank" :href="'https://www.virustotal.com/#/ip-address/' + (row.client_ip ? row.client_ip : row.attack_source)">
-                    {{ row.client_ip ? row.client_ip : row.attack_source }}
+                    {{ row.client_ip ? row.client_ip : (row.attack_source ? row.attack_source : '-') }}
                   </a>
                 </td>
                 <td nowrap>

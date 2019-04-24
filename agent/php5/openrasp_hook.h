@@ -297,7 +297,7 @@ void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckTy
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC);
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC);
 bool openrasp_zval_in_request(zval *item TSRMLS_DC);
-std::string fetch_name_in_request(zval *item TSRMLS_DC);
+std::string fetch_name_in_request(zval *item, std::string &var_type TSRMLS_DC);
 
 std::string openrasp_real_path(char *filename, int filename_len, bool use_include_path, uint32_t w_op TSRMLS_DC);
 

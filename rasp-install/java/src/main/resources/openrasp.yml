@@ -37,7 +37,7 @@
 #拦截攻击后，若期望响应类型不为JSON/XML，则根据此模板显示内容
 #block.content_html: "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>"
 
-# 基线配置
+# 基线配置，请参考 https://rasp.baidu.com/doc/setup/others.html#common-policy
 # security.enforce_policy: false
 
 # 云控配置

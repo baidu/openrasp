@@ -408,10 +408,6 @@ func (o *AppController) Delete() {
 func (o *AppController) validAppArrayParam(param []string, paramName string,
 	valid func(interface{}, string) *validation.Result) []string {
 	if param != nil {
-		if len(param) > 128 {
-			o.ServeError(http.StatusBadRequest,
-				"the count of "+paramName+" cannot be greater than 128")
-		}
 		for i, v := range param {
 			if len(v) > 256 {
 				o.ServeError(http.StatusBadRequest,
@@ -431,9 +427,6 @@ func (o *AppController) validAppArrayParam(param []string, paramName string,
 }
 
 func (o *AppController) validateAppConfig(config map[string]interface{}) {
-	if config == nil {
-		o.ServeError(http.StatusBadRequest, "the config cannot be nil")
-	}
 	for key, value := range config {
 		if value == nil {
 			o.ServeError(http.StatusBadRequest, "the value of "+key+" config cannot be nil")
@@ -456,9 +449,6 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 }
 
 func (o *AppController) validateWhiteListConfig(config []models.WhitelistConfigItem) {
-	if config == nil {
-		o.ServeError(http.StatusBadRequest, "the config cannot be nil")
-	}
 	if len(config) > 200 {
 		o.ServeError(http.StatusBadRequest,
 			"the count of whitelist config items must be between (0,200]")

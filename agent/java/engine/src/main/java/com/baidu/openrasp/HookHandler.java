@@ -24,7 +24,6 @@ import com.baidu.openrasp.exceptions.SecurityException;
 import com.baidu.openrasp.hook.XXEHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.request.DubboRequest;
 import com.baidu.openrasp.request.HttpServletRequest;
@@ -178,7 +177,7 @@ public class HookHandler {
             requestCache.set(requestContainer);
             responseCache.set(responseContainer);
             XXEHook.resetLocalExpandedSystemIds();
-            doCheck(CheckParameter.Type.REQUEST, JSContext.getUndefinedValue());
+            doCheck(CheckParameter.Type.REQUEST, new Object());
         }
     }
 
@@ -195,7 +194,7 @@ public class HookHandler {
             DubboRequest requestContainer = new DubboRequest(request);
             requestCache.set(requestContainer);
             XXEHook.resetLocalExpandedSystemIds();
-            doCheck(CheckParameter.Type.DUBBOREQUEST, JSContext.getUndefinedValue());
+            doCheck(CheckParameter.Type.REQUEST, new Object());
         }
     }
 

@@ -1,4 +1,4 @@
-const plugin_version = '2019-0308-0930'
+const plugin_version = '2019-0424-2100'
 const plugin_name    = 'official'
 
 /*
@@ -69,11 +69,11 @@ var algorithmConfig = {
 
         // 粗规则 - 为了减少 tokenize 次数，当SQL语句包含一定特征时才进入
         // 另外，我们只需要处理增删改查的语句，虽然 show 语句也可以报错注入，但是算法2没必要处理
-        pre_filter: '^(select|insert|update|delete).*(;|\\/\\*|(?:\\d{1,2}\\s*,\\s*){2}|(?:null\\s*,\\s*){2}|0x[\\da-f]{8}|\\b(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin))\\b',
+        pre_filter: ';|\\/\\*|(?:\\d{1,2}\\s*,\\s*){2}|(?:null\\s*,\\s*){2}|0x[\\da-f]{8}|\\W(information_schema|outfile|dumpfile|load_file|benchmark|pg_sleep|sleep|is_srvrolemember|updatexml|extractvalue|hex|char|chr|mid|ord|ascii|bin)\\W',
 
         feature: {
             // 是否禁止多语句执行，select ...; update ...;
-            stacked_query:      true,
+            stacked_query:      false,
 
             // 是否禁止16进制字符串，select 0x41424344
             no_hex:             true,
@@ -414,15 +414,6 @@ var algorithmConfig = {
 
 // END ALGORITHM CONFIG //
 
-// 将所有拦截开关设置为 log; 如果是单元测试模式，忽略此选项
-if (algorithmConfig.meta.all_log && ! RASP.is_unittest) {
-    Object.keys(algorithmConfig).forEach(function (name) {
-        if (algorithmConfig[name].action == 'block') {
-           algorithmConfig[name].action = 'log'
-        }
-    })
-}
-
 // 配置挂载到全局 RASP 变量
 RASP.algorithmConfig = algorithmConfig
 
@@ -505,10 +496,33 @@ var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter)
 // 命令执行探针 - 常用渗透命令
 var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern)
 
-// dev模式开启更多消耗性能的检测算法; 如果是单元测试模式，忽略此选项
-if (algorithmConfig.meta.is_dev && ! RASP.is_unittest) {
-    algorithmConfig.sql_userinput.pre_enable = false
-    commaNumRegex = /^$/
+if (! RASP.is_unittest)
+{
+   // 记录日志模式: 将所有 block 改为 log
+   if (algorithmConfig.meta.all_log)
+   {
+        Object.keys(algorithmConfig).forEach(function (name) {
+            if (algorithmConfig[name].action == 'block') 
+            {
+               algorithmConfig[name].action = 'log'
+            }
+        })
+    }
+
+    // 研发模式: 
+    // 1. 开启更多消耗性能的检测算法
+    // 2. 非攻击情况，检测到漏洞也报警
+    if (algorithmConfig.meta.is_dev) 
+    {
+        // 关闭 select 预过滤正则
+        algorithmConfig.sql_userinput.pre_enable = false
+
+        // 关闭 1,2,3 误报过滤
+        commaNumRegex = /^$/
+
+        // 关闭 xss_echo 非攻击过滤
+        algorithmConfig.xss_echo.filter_regex = ""
+    }
 }
 
 // 常用函数
@@ -882,11 +896,10 @@ function _(message, args)
 
 // 开始
 
-if (RASP.get_jsengine() !== 'v8') {
-    // 在java语言下面，为了提高性能，SQLi/SSRF检测逻辑改为java实现
-    // 所以，我们需要把一部分配置传递给java
-
-    // 1.0.0 RC2 会删除 RASP.config_set，统一在全局的 RASP.algorithmConfig 获取配置
+// 若开启「研发模式」，将只使用JS插件
+if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
+    // v1.1 之前的版本，SQL/SSRF 使用 java 原生实现，需要将插件配置传递给 java
+    // v1.0 RC1 之前仍然需要使用 RASP.config_set 传递配置
     if (RASP.config_set) {
         RASP.config_set('algorithm.config', JSON.stringify(algorithmConfig))
     }
@@ -894,11 +907,11 @@ if (RASP.get_jsengine() !== 'v8') {
     // 对于PHP + V8，性能还不错，我们保留JS检测逻辑
     plugin.register('sql', function (params, context) {
 
-        var reason     = false
-        var min_length = algorithmConfig.sql_userinput.min_length
-        var parameters = context.parameter || {}
+        var reason          = false
+        var min_length      = algorithmConfig.sql_userinput.min_length
+        var parameters      = context.parameter || {}
         var json_parameters = context.json || {}
-        var raw_tokens = []
+        var raw_tokens      = []
 
         function _run(values, name) {
             var reason = false
@@ -948,7 +961,7 @@ if (RASP.get_jsengine() !== 'v8') {
 
                     value_byte_length = Buffer.byteLength(value, 'utf8')
                     if (is_token_changed(raw_tokens, userinput_byte_idx, value_byte_length)) {
-                        reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
+                        reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                         return true
                     }
                 }
@@ -991,7 +1004,7 @@ if (RASP.get_jsengine() !== 'v8') {
                                 break;
                             }
                         }
-                        else if(typeof json_obj[item] == "object") {
+                        else if (typeof json_obj[item] == "object") {
                             jsons.push([json_obj[item], crt_json_key + "->" + item])
                         }
                     }
@@ -1144,12 +1157,6 @@ if (RASP.get_jsengine() !== 'v8') {
         var reason   = false
         var action   = 'ignore'
 
-        // 1.0 RC1 没有过滤 hostname 为空的情况，为了保证兼容性在这里加个判断
-        if (hostname.length === 0)
-        {
-            return clean
-        }
-
         // 算法1 - 当参数来自用户输入，且为内网IP，判定为SSRF攻击
         if (algorithmConfig.ssrf_userinput.action != 'ignore')
         {
@@ -1217,7 +1224,7 @@ if (RASP.get_jsengine() !== 'v8') {
         {
             var reason = false
 
-            if (!isNaN(hostname))
+            if (!isNaN(hostname) && hostname.length != 0)
             {
                 reason = _("SSRF - Requesting numeric IP address: %1%", [hostname])
             }
@@ -1746,7 +1753,7 @@ plugin.register('command', function (params, context) {
 
                 value_byte_length = Buffer.byteLength(value, 'utf8')
                 if (is_token_changed(raw_tokens, userinput_byte_idx, value_byte_length)) {
-                    reason = _("Command injection - command structure altered by user input, request parameter name: %1%", [name])
+                    reason = _("Command injection - command structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                     return true
                 }
             })

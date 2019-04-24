@@ -17,12 +17,15 @@
 package com.baidu.openrasp.hook.server;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.hook.server.weblogic.WeblogicHttpOutputHook;
 import com.baidu.openrasp.hook.server.websphere.WebsphereHttpOutputHook;
 import com.baidu.openrasp.response.HttpServletResponse;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -78,10 +81,15 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
             try {
                 HookHandler.disableCurrThreadHook();
                 Boolean isClosed;
+                String serverName = ApplicationModel.getServerName();
                 if ("com/ibm/ws/webcontainer/srt/SRTServletResponse".equals(WebsphereHttpOutputHook.clazzName)) {
                     isClosed = (Boolean) Reflection.getField(output, "writerClosed");
                 } else if ("weblogic/servlet/internal/ServletOutputStreamImpl".equals(WeblogicHttpOutputHook.clazzName)) {
                     isClosed = (Boolean) Reflection.getField(output, "commitCalled");
+                } else if (serverName.equals("undertow")) {
+                    Object outputStream = Reflection.getField(output, "outputStream");
+                    int flag = (Integer) Reflection.getField(outputStream, "state");
+                    isClosed = flag == 1;
                 } else {
                     isClosed = (Boolean) Reflection.invokeMethod(output, "isClosed", new Class[]{});
                 }
@@ -103,7 +111,8 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                int errorCode = ErrorType.HOOK_ERROR.getCode();
+                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(e.getMessage(), errorCode), e);
             } finally {
                 HookHandler.enableCurrThreadHook();
             }

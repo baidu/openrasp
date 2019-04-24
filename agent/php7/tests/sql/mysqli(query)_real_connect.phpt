@@ -14,7 +14,7 @@ security.enforce_policy: false
 CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("mysqli")) die("Skipped: mysqli extension required.");
-@$con = mysqli_connect('127.0.0.1', 'root');
+@$con = mysqli_connect('127.0.0.1', 'root', 'rasp#2019');
 if (mysqli_connect_errno()) die("Skipped: can not connect to MySQL " . mysqli_connect_error());
 mysqli_close($con);
 ?>
@@ -27,7 +27,7 @@ if (!$mysqli) {
     die('mysqli_init failed');
 }
 
-if (!$mysqli->real_connect('127.0.0.1', 'root')) {
+if (!$mysqli->real_connect('127.0.0.1', 'root', 'rasp#2019')) {
     die('Connect Error (' . mysqli_connect_errno() . ') '
             . mysqli_connect_error());
 }

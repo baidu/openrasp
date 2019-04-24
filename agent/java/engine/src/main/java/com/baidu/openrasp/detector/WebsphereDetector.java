@@ -62,7 +62,7 @@ public class WebsphereDetector extends ServerDetector {
                 }
             }
         } catch (Throwable t) {
-            logDetectError("handle webspere startup failed", t);
+            logDetectError("handle websphere startup failed", t);
         }
         ApplicationModel.setServerInfo("websphere", version);
         return true;
@@ -77,7 +77,7 @@ public class WebsphereDetector extends ServerDetector {
             builder.setEntityResolver(new IgnoreDTDEntityResolver());
             return builder.parse(new File(path));
         } catch (Exception e) {
-            e.printStackTrace();
+            logDetectError("parse websphere xml failed", e);
         }
         return null;
     }

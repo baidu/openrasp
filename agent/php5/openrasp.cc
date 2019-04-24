@@ -35,6 +35,7 @@ extern "C"
 #include "openrasp_inject.h"
 #include "openrasp_security_policy.h"
 #include "openrasp_output_detect.h"
+#include "openrasp_check_type.h"
 #ifdef HAVE_FSWATCH
 #include "openrasp_fswatch.h"
 #endif
@@ -55,6 +56,7 @@ static bool make_openrasp_root_dir(TSRMLS_D);
 static bool update_config(openrasp::ConfigHolder *config TSRMLS_DC, ConfigHolder::FromType type = ConfigHolder::FromType::kYaml);
 static std::string get_config_abs_path(ConfigHolder::FromType type);
 static bool current_sapi_supported(TSRMLS_D);
+static void hook_without_params(OpenRASPCheckType check_type TSRMLS_DC);
 
 PHP_INI_BEGIN()
 PHP_INI_ENTRY1("openrasp.root_dir", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.root_dir)
@@ -246,6 +248,7 @@ PHP_RINIT_FUNCTION(openrasp)
         result = PHP_RINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_v8)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_output_detect)(INIT_FUNC_ARGS_PASSTHRU);
+        hook_without_params(REQUEST TSRMLS_CC);
     }
     return SUCCESS;
 }
@@ -255,6 +258,7 @@ PHP_RSHUTDOWN_FUNCTION(openrasp)
     if (is_initialized)
     {
         int result;
+        hook_without_params(REQUEST_END TSRMLS_CC);
         result = PHP_RSHUTDOWN(openrasp_log)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_RSHUTDOWN(openrasp_inject)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
     }
@@ -275,14 +279,11 @@ PHP_MINFO_FUNCTION(openrasp)
     php_info_print_table_row(2, "Commit Id", "");
 #endif
     php_info_print_table_row(2, "V8 Version", ZEND_TOSTR(V8_MAJOR_VERSION) "." ZEND_TOSTR(V8_MINOR_VERSION));
-    php_info_print_table_row(2, "Antlr Version", "4.7.1 (JavaScript Runtime)");
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (remote_active && openrasp::oam)
     {
-        php_info_print_table_row(2, "Plugin Version",
-                                 openrasp::oam->agent_ctrl_block
-                                     ? openrasp::oam->agent_ctrl_block->get_plugin_version()
-                                     : "");
+        const char *plugin_version = openrasp::oam->get_plugin_version();
+        php_info_print_table_row(2, "Plugin Version", plugin_version ? plugin_version : "");
     }
 #endif
     php_info_print_table_end();
@@ -295,9 +296,8 @@ PHP_MINFO_FUNCTION(openrasp)
 zend_module_dep openrasp_deps[] = {
     ZEND_MOD_REQUIRED("standard")
         ZEND_MOD_REQUIRED("json")
-            ZEND_MOD_REQUIRED("pcre")
-                ZEND_MOD_CONFLICTS("xdebug")
-                    ZEND_MOD_END};
+            ZEND_MOD_CONFLICTS("xdebug")
+                ZEND_MOD_END};
 #endif
 
 zend_module_entry openrasp_module_entry = {
@@ -461,4 +461,30 @@ static bool current_sapi_supported(TSRMLS_D)
         return false;
     }
     return true;
+}
+
+static void hook_without_params(OpenRASPCheckType check_type TSRMLS_DC)
+{
+    bool type_ignored = openrasp_check_type_ignored(check_type TSRMLS_CC);
+    if (type_ignored)
+    {
+        return;
+    }
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+    if (!isolate)
+    {
+        return;
+    }
+    bool is_block = false;
+    {
+        v8::HandleScope handle_scope(isolate);
+
+        auto params = v8::Object::New(isolate);
+        is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params,
+                                  OPENRASP_CONFIG(plugin.timeout.millis));
+    }
+    if (is_block)
+    {
+        handle_block(TSRMLS_C);
+    }
 }

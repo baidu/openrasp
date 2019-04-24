@@ -296,7 +296,7 @@ void register_hook_handler(hook_handler_t hook_handler);
 const std::string get_check_type_name(OpenRASPCheckType type);
 
 bool openrasp_zval_in_request(zval *item);
-std::string fetch_name_in_request(zval *item);
+std::string fetch_name_in_request(zval *item, std::string &var_type);
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type);
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length);
 

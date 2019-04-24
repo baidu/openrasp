@@ -6,6 +6,9 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"time"
 	"rasp-cloud/tests/start"
+	"github.com/bouk/monkey"
+	"rasp-cloud/models"
+	"errors"
 )
 
 func TestPostReportData(t *testing.T) {
@@ -52,6 +55,34 @@ func TestPostReportData(t *testing.T) {
 				},
 			))
 			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the ES has errors", func() {
+			monkey.Patch(models.GetRaspById, func(string) (*models.Rasp, error) {
+				return nil, errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/agent/report", inits.GetJson(
+				map[string]interface{}{
+					"time":        time.Now().Nanosecond() / 1000000,
+					"request_sum": 1000,
+					"rasp_id":     start.TestRasp.Id,
+				},
+			))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.GetRaspById)
+
+			monkey.Patch(models.AddReportData, func(*models.ReportData, string) error {
+				return errors.New("")
+			})
+			r = inits.GetResponse("POST", "/v1/agent/report", inits.GetJson(
+				map[string]interface{}{
+					"time":        time.Now().Nanosecond() / 1000000,
+					"request_sum": 1000,
+					"rasp_id":     start.TestRasp.Id,
+				},
+			))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.AddReportData)
 		})
 	})
 }
@@ -171,6 +202,27 @@ func TestSearchReportData(t *testing.T) {
 			data["app_id"] = 123456
 			r := inits.GetResponse("POST", "/v1/api/report/dashboard", inits.GetJson(data))
 			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the db error", func() {
+			monkey.Patch(models.GetAppById, func(id string) (app *models.App, err error) {
+				return nil, errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/api/report/dashboard", inits.GetJson(
+				getValidReportSearchData(),
+			))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.GetAppById)
+
+			monkey.Patch(models.GetHistoryRequestSum, func(startTime int64, endTime int64, interval string, timeZone string,
+				appId string) (error, []map[string]interface{}) {
+				return errors.New(""), nil
+			})
+			r = inits.GetResponse("POST", "/v1/api/report/dashboard", inits.GetJson(
+				getValidReportSearchData(),
+			))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.GetHistoryRequestSum)
 		})
 	})
 }

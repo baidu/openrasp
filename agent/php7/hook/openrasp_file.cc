@@ -97,7 +97,7 @@ static void check_file_operation(OpenRASPCheckType type, char *filename, int fil
             }
             params->Set(openrasp::NewV8String(isolate, "stack"), stack);
         }
-        is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+        is_block = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
     }
     if (is_block)
     {
@@ -298,7 +298,7 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         auto params = v8::Object::New(isolate);
         params->Set(openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_real_path));
         params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, dest_real_path));
-        is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+        is_block = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
     }
     if (is_block)
     {
@@ -386,7 +386,7 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
                 auto params = v8::Object::New(isolate);
                 params->Set(openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_real_path));
                 params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, dest_real_path));
-                is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+                is_block = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
             if (is_block)
             {

@@ -31,78 +31,45 @@ extern "C"
 #endif
 }
 
-/**
- * sql connection alarm
- */
-static void connection_via_default_username_policy(sql_connection_entry *sql_connection_p)
+static bool sql_policy_alarm(sql_connection_entry *conn_entry, sql_connection_entry::connection_policy_type policy_type, int enforce_policy)
 {
-    zval policy_array;
-    array_init(&policy_array);
-    add_assoc_string(&policy_array, "message", (char *)sql_connection_p->build_policy_msg().c_str());
-    add_assoc_long(&policy_array, "policy_id", 3006);
-    zval connection_params;
-    array_init(&connection_params);
-    add_assoc_string(&connection_params, "server", (char *)sql_connection_p->get_server().c_str());
-    add_assoc_string(&connection_params, "hostname", (char *)sql_connection_p->get_host().c_str());
-    add_assoc_string(&connection_params, "username", (char *)sql_connection_p->get_username().c_str());
-    add_assoc_string(&connection_params, "socket", (char *)sql_connection_p->get_socket().c_str());
-    add_assoc_string(&connection_params, "connectionString", (char *)sql_connection_p->get_connection_string().c_str());
-    add_assoc_long(&connection_params, "port", sql_connection_p->get_port());
-    add_assoc_zval(&policy_array, "policy_params", &connection_params);
-    LOG_G(policy_logger).log(LEVEL_INFO, &policy_array);
-    zval_ptr_dtor(&policy_array);
+    bool result = false;
+    if (enforce_policy)
+    {
+        conn_entry->connection_entry_policy_log(policy_type);
+        result = true;
+    }
+    else
+    {
+        if (slm != nullptr)
+        {
+            ulong connection_hash = conn_entry->build_hash_code(policy_type);
+            long timestamp = (long)time(nullptr);
+            if (!slm->log_exist(timestamp, connection_hash))
+            {
+                conn_entry->connection_entry_policy_log(policy_type);
+            }
+        }
+    }
+#ifdef HAVE_LINE_COVERAGE
+    __gcov_flush();
+#endif
+    return result;
 }
 
-zend_bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy)
+bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy)
 {
-    static const std::multimap<std::string, std::string> database_username_blacklists = {
-        {"mysql", "root"},
-        {"mssql", "sa"},
-        {"pgsql", "postgres"},
-        {"oci", "dbsnmp"},
-        {"oci", "sysman"},
-        {"oci", "system"},
-        {"oci", "sys"}};
     sql_connection_entry conn_entry;
-    bool high_privileged_found = false;
-    zend_bool need_block = 0;
-    connection_init_func(INTERNAL_FUNCTION_PARAM_PASSTHRU, &conn_entry);
-    if (!conn_entry.get_server().empty() &&
-        !conn_entry.get_username().empty() &&
-        !conn_entry.get_host().empty())
+    bool need_block = false;
+    if (connection_init_func(INTERNAL_FUNCTION_PARAM_PASSTHRU, &conn_entry))
     {
-        auto pos = database_username_blacklists.equal_range(conn_entry.get_server());
-        while (pos.first != pos.second)
+        if (conn_entry.check_high_privileged())
         {
-            if (conn_entry.get_username() == pos.first->second)
-            {
-                high_privileged_found = true;
-                break;
-            }
-            pos.first++;
+            need_block = sql_policy_alarm(&conn_entry, sql_connection_entry::connection_policy_type::USER, enforce_policy);
         }
-        if (high_privileged_found)
+        if (conn_entry.check_weak_password())
         {
-            if (enforce_policy)
-            {
-                connection_via_default_username_policy(&conn_entry);
-                need_block = 1;
-            }
-            else
-            {
-                if (slm != nullptr)
-                {
-                    ulong connection_hash = conn_entry.build_hash_code();
-                    long timestamp = (long)time(nullptr);
-                    if (!slm->log_exist(timestamp, connection_hash))
-                    {
-                        connection_via_default_username_policy(&conn_entry);
-                    }
-                }
-            }
-#ifdef HAVE_LINE_COVERAGE
-            __gcov_flush();
-#endif
+            need_block = sql_policy_alarm(&conn_entry, sql_connection_entry::connection_policy_type::PASSWORD, enforce_policy);
         }
     }
     return need_block;
@@ -124,7 +91,7 @@ void plugin_sql_check(char *query, int query_len, const char *server)
             auto params = v8::Object::New(isolate);
             params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len));
             params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server));
-            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(SQL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+            is_block = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(SQL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (is_block)
         {
@@ -137,6 +104,7 @@ void plugin_sql_check(char *query, int query_len, const char *server)
 bool mysql_error_code_filtered(long err_code)
 {
     static const std::set<long> mysql_error_codes = {
+        1045,
         1060,
         1062,
         1064,
@@ -151,17 +119,36 @@ bool mysql_error_code_filtered(long err_code)
     return false;
 }
 
-void sql_error_alarm(char *server, char *query, const std::string &err_code, const std::string &err_msg)
+void sql_query_error_alarm(char *server, char *query, const std::string &err_code, const std::string &err_msg)
 {
     zval attack_params;
     array_init(&attack_params);
     add_assoc_string(&attack_params, "server", server);
     add_assoc_string(&attack_params, "query", query);
     add_assoc_string(&attack_params, "error_code", (char *)err_code.c_str());
-    // add_assoc_string(&attack_params, "error_msg", (char *)err_msg.c_str());
     zval plugin_message;
     ZVAL_STR(&plugin_message, strpprintf(0, _("%s error %s detected: %s."),
                                          server,
+                                         err_code.c_str(),
+                                         err_msg.c_str()));
+    OpenRASPActionType action = openrasp::scm->get_buildin_check_action(SQL_ERROR);
+    openrasp_buildin_php_risk_handle(action, SQL_ERROR, 100, &attack_params, &plugin_message);
+}
+
+void sql_connect_error_alarm(sql_connection_entry *sql_connection_p, const std::string &err_code, const std::string &err_msg)
+{
+    zval attack_params;
+    array_init(&attack_params);
+    add_assoc_string(&attack_params, "server", (char *)sql_connection_p->get_server().c_str());
+    add_assoc_string(&attack_params, "hostname", (char *)sql_connection_p->get_host().c_str());
+    add_assoc_string(&attack_params, "username", (char *)sql_connection_p->get_username().c_str());
+    add_assoc_string(&attack_params, "socket", (char *)sql_connection_p->get_socket().c_str());
+    add_assoc_string(&attack_params, "connectionString", (char *)sql_connection_p->get_connection_string().c_str());
+    add_assoc_long(&attack_params, "port", sql_connection_p->get_port());
+    add_assoc_string(&attack_params, "error_code", (char *)err_code.c_str());
+    zval plugin_message;
+    ZVAL_STR(&plugin_message, strpprintf(0, _("%s error %s detected: %s."),
+                                         sql_connection_p->get_server().c_str(),
                                          err_code.c_str(),
                                          err_msg.c_str()));
     OpenRASPActionType action = openrasp::scm->get_buildin_check_action(SQL_ERROR);

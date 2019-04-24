@@ -82,7 +82,9 @@ PHP_MINIT_FUNCTION(openrasp_v8)
     if (!process_globals.snapshot_blob)
     {
         Platform::Initialize();
-        Snapshot *snapshot = new Snapshot(process_globals.plugin_config, process_globals.plugin_src_list);
+        auto duration = std::chrono::system_clock::now().time_since_epoch();
+        auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+        Snapshot *snapshot = new Snapshot(process_globals.plugin_config, process_globals.plugin_src_list, millis, nullptr);
         if (!snapshot->IsOk())
         {
             delete snapshot;
@@ -93,7 +95,9 @@ PHP_MINIT_FUNCTION(openrasp_v8)
             process_globals.snapshot_blob = snapshot;
             std::map<OpenRASPCheckType, OpenRASPActionType> type_action_map;
             std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
-            Isolate *isolate = Isolate::New(snapshot);
+            auto duration = std::chrono::system_clock::now().time_since_epoch();
+            auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+            Isolate *isolate = Isolate::New(snapshot, millis);
             extract_buildin_action(isolate, buildin_action_map);
             isolate->Dispose();
             for (auto iter = buildin_action_map.begin(); iter != buildin_action_map.end(); iter++)

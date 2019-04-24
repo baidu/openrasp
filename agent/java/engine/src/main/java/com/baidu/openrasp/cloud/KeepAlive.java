@@ -21,7 +21,7 @@ import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.messaging.LogConfig;
-import com.baidu.openrasp.plugin.js.engine.JsPluginManager;
+import com.baidu.openrasp.plugin.v8.V8;
 import com.google.gson.Gson;
 import com.google.gson.JsonPrimitive;
 
@@ -74,6 +74,8 @@ public class KeepAlive {
     }
 
     private static void handleResponse(GenericResponse response) {
+        long oldConfigTime = CloudCacheModel.getInstance().getConfigTime();
+        String oldPluginMd5 = CloudCacheModel.getInstance().getPluginMD5();
         Long deliveryTime = null;
         String version = null;
         String md5 = null;
@@ -97,8 +99,8 @@ public class KeepAlive {
         }
         if (configMap != null) {
             try {
-                Config.getConfig().loadConfigFromCloud(configMap, true);
                 if (deliveryTime != null) {
+                    Config.getConfig().loadConfigFromCloud(configMap, true);
                     CloudCacheModel.getInstance().setConfigTime(deliveryTime);
                 }
                 if (configMap.get("log.maxburst") != null) {
@@ -129,7 +131,20 @@ public class KeepAlive {
             }
         }
         if (version != null && md5 != null && pluginContext != null) {
-            JsPluginManager.updatePluginAsync(pluginContext, md5, version, deliveryTime);
+            if (V8.UpdatePlugin("official.js", pluginContext)) {
+                CloudCacheModel.getInstance().setPlugin(pluginContext);
+                CloudCacheModel.getInstance().setPluginVersion(version);
+                CloudCacheModel.getInstance().setPluginMD5(md5);
+                CloudCacheModel.getInstance().setConfigTime(deliveryTime);
+            }
+        }
+        long newConfigTime = CloudCacheModel.getInstance().getConfigTime();
+        String newPluginMd5 = CloudCacheModel.getInstance().getPluginMD5();
+        //更新成功之后立刻发送一次心跳
+        if (oldConfigTime != newConfigTime || !oldPluginMd5.equals(newPluginMd5)) {
+            String content = new Gson().toJson(GenerateParameters());
+            String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
+            new CloudHttp().commonRequest(url, content);
         }
     }
 }

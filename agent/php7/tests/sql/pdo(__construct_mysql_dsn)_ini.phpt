@@ -15,6 +15,6 @@ openrasp.root_dir=/tmp/openrasp
 pdo.dsn.openrasp=uri:file:///tmp/openrasp/mysql_connect
 --FILE--
 <?php
-new PDO('openrasp', 'root');
+new PDO('openrasp', 'root', 'rasp#2019');
 ?>
 --EXPECTREGEX--

@@ -37,7 +37,7 @@ LogAgent::LogAgent()
 
 void LogAgent::write_pid_to_shm(pid_t agent_pid)
 {
-	oam->agent_ctrl_block->set_log_agent_id(agent_pid);
+	oam->set_log_agent_id(agent_pid);
 }
 
 void LogAgent::run()
@@ -96,7 +96,7 @@ void LogAgent::run()
 		for (long i = 0; i < current_interval; ++i)
 		{
 			sleep(1);
-			if (!pid_alive(std::to_string(oam->agent_ctrl_block->get_master_pid())) ||
+			if (!pid_alive(std::to_string(oam->get_master_pid())) ||
 				!pid_alive(std::to_string(supervisor_pid)) ||
 				LogAgent::signal_received == SIGTERM)
 			{

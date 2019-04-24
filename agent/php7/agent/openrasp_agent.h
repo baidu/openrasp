@@ -57,7 +57,7 @@ public:
   virtual void write_pid_to_shm(pid_t agent_pid);
 
 private:
-  void do_heartbeat();
+  bool do_heartbeat();
 };
 
 class LogAgent : public BaseAgent

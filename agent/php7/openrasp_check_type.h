@@ -46,6 +46,8 @@ typedef enum check_type_t
   WEBSHELL_LD_PRELOAD,
   XSS_ECHO,
   XSS_USER_INPUT,
+  REQUEST,
+  REQUEST_END,
   ALL_TYPE
 } OpenRASPCheckType;
 

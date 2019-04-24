@@ -19,7 +19,7 @@ package com.baidu.openrasp.plugin.checker.local;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.plugin.checker.AttackChecker;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
+import com.baidu.openrasp.plugin.v8.V8;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -72,6 +72,24 @@ public abstract class ConfigurableChecker extends AttackChecker {
         return result;
     }
 
+    protected HashMap<String, Integer> getJsonObjectAsIntMap(JsonObject config, String key, String subKey) {
+        HashMap<String, Integer> result = null;
+        try {
+            JsonElement value = getElement(config, key, subKey);
+            if (value != null) {
+                Gson gson = new Gson();
+                result = gson.fromJson(value, new TypeToken<HashMap<String, Integer>>() {
+                }.getType());
+            }
+        } catch (Exception e) {
+            logJsonError(e);
+        }
+        if (result == null) {
+            result = new HashMap<String, Integer>();
+        }
+        return result;
+    }
+
     protected String getStringElement(JsonObject config, String key, String subKey) {
         try {
             JsonElement value = getElement(config, key, subKey);
@@ -114,7 +132,7 @@ public abstract class ConfigurableChecker extends AttackChecker {
                 System.getProperty("line.separator") +
                 "        Please check algorithmConfig in js";
         int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-        JSContext.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+        V8.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
     }
 
 }

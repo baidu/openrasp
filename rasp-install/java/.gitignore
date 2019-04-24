@@ -66,3 +66,5 @@ buildNumber.properties
 
 .project
 bin/
+.settings/
+.classpath

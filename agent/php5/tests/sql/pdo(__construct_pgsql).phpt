@@ -13,7 +13,7 @@ if (!extension_loaded("pdo")) die("Skipped: pdo extension required.");
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-new PDO('pgsql:host=127.0.0.1;port=5432;user=postgres');
+new PDO('pgsql:host=127.0.0.1;port=5432;user=postgres;password=postgres');
 ?>
 --EXPECTREGEX--
 <\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

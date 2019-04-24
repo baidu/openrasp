@@ -183,6 +183,7 @@ public class DynamicConfigAppender {
                     if (appender != null) {
                         OpenraspDailyRollingFileAppender fileAppender = (OpenraspDailyRollingFileAppender) appender;
                         fileAppender.setMaxBackupIndex(logMaxBackup);
+                        fileAppenderRollFiles(fileAppender);
                     }
                 } else {
                     Logger logger = Logger.getLogger(type.getLogger());
@@ -190,9 +191,20 @@ public class DynamicConfigAppender {
                     if (appender != null) {
                         OpenraspDailyRollingFileAppender fileAppender = (OpenraspDailyRollingFileAppender) appender;
                         fileAppender.setMaxBackupIndex(logMaxBackup);
+                        fileAppenderRollFiles(fileAppender);
                     }
                 }
             }
+        }
+    }
+
+    //手动触发日志文件rotate
+    private static void fileAppenderRollFiles(OpenraspDailyRollingFileAppender fileAppender){
+        try {
+            String fileName = fileAppender.getFile();
+            fileAppender.rollFiles(new File(fileName));
+        } catch (Exception e) {
+            LogLog.warn("the appender " + fileAppender.getName() + " roll failed");
         }
     }
 }

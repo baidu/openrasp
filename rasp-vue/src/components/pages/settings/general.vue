@@ -57,6 +57,36 @@
           <textarea v-model="data['block.content_json']" type="text" class="form-control" />
         </div>
         <div class="form-group">
+          <label class="form-label">
+            最多读取 body 多少字节
+          </label>
+          <input v-model="data['body.maxbytes']" type="text" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            调试开关 [0表示关闭，1以上的值表示开启]
+          </label>
+          <input v-model="data['debug.level']" type="text" class="form-control" placeholder="0">
+        </div>        
+        <div class="form-group">
+          <label class="form-label">
+            [日志] 报警日志记录的最大堆栈深度
+          </label>
+          <input v-model="data['log.maxstack']" type="text" class="form-control" placeholder="50">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            [日志] 每个进程/线程每秒钟最大日志条数
+          </label>
+          <input v-model="data['log.maxburst']" type="text" class="form-control" placeholder="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            [日志] 最大备份天数
+          </label>
+          <input v-model="data['log.maxbackup']" type="text" class="form-control" placeholder="30">
+        </div>
+        <div class="form-group">
           <label class="custom-switch">
             <input v-model="data['decompile.enable']" type="checkbox" checked="data['decompile.enable']" class="custom-switch-input">
             <span class="custom-switch-indicator" />

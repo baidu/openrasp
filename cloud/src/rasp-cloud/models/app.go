@@ -41,6 +41,7 @@ import (
 	"net"
 	"rasp-cloud/conf"
 	"net/url"
+	"crypto/md5"
 )
 
 type App struct {
@@ -126,6 +127,8 @@ var (
 		"plugin.maxstack":           100,
 		"ognl.expression.minlength": 30,
 		"log.maxstack":              50,
+		"log.maxburst":              100,
+		"log.maxbackup":             30,
 		"syslog.tag":                "OpenRASP",
 		"syslog.url":                "",
 		"syslog.facility":           1,
@@ -139,18 +142,18 @@ func init() {
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get app collection count", err)
 	}
-	if count <= 0 {
-		index := &mgo.Index{
-			Key:        []string{"name"},
-			Unique:     true,
-			Background: true,
-			Name:       "app_name",
-		}
-		err = mongo.CreateIndex(appCollectionName, index)
-		if err != nil {
-			tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
-		}
+
+	index := &mgo.Index{
+		Key:        []string{"name"},
+		Unique:     true,
+		Background: true,
+		Name:       "app_name",
 	}
+	err = mongo.CreateIndex(appCollectionName, index)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
+	}
+
 	if *conf.AppConfig.Flag.StartType == conf.StartTypeDefault ||
 		*conf.AppConfig.Flag.StartType == conf.StartTypeForeground {
 		if count <= 0 {
@@ -159,11 +162,11 @@ func init() {
 		go startAlarmTicker(time.Second * time.Duration(conf.AppConfig.AlarmCheckInterval))
 	}
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
-		initEsIndex()
+		initApp()
 	}
 }
 
-func initEsIndex() error {
+func initApp() error {
 	var apps []*App
 	_, err := mongo.FindAllWithoutLimit(appCollectionName, nil, &apps)
 	if err != nil {
@@ -174,8 +177,34 @@ func initEsIndex() error {
 		if err != nil {
 			tools.Panic(tools.ErrCodeESInitFailed, "failed to init es index for app "+app.Name, err)
 		}
+		if *conf.AppConfig.Flag.StartType != conf.StartTypeAgent {
+			initPlugin(app)
+		}
 	}
 	return nil
+}
+
+func initPlugin(app *App) {
+	_, plugins, err := GetPluginsByApp(app.Id, 0, conf.AppConfig.MaxPlugins)
+	if err != nil {
+		// do not exit here
+		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to init plugin for app ["+app.Name+"]", err)
+	}
+	content, err := getDefaultPluginContent()
+	if err != nil {
+		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to init plugin for app ["+app.Name+"]", err)
+	}
+	pluginMd5 := fmt.Sprintf("%x", md5.Sum(content))
+	isFound := false
+	for _, plugin := range plugins {
+		if plugin.Md5 == pluginMd5 {
+			isFound = true
+			break
+		}
+	}
+	if !isFound {
+		AddPlugin(content, app.Id)
+	}
 }
 
 func createEsIndexWithAppId(appId string) error {
@@ -261,14 +290,22 @@ func AddApp(app *App) (result *App, err error) {
 	return
 }
 
-func selectDefaultPlugin(app *App) {
+func getDefaultPluginContent() ([]byte, error) {
 	// if setting default plugin fails, continue to initialize
 	currentPath, err := tools.GetCurrentPath()
 	if err != nil {
-		beego.Warn("failed to create default plugin", err)
-		return
+		return nil, errors.New("failed to get get default plugin directory: " + err.Error())
 	}
 	content, err := ioutil.ReadFile(currentPath + "/resources/plugin.js")
+	if err != nil {
+		return nil, errors.New("failed to read default plugin content: " + err.Error())
+	}
+	return content, err
+}
+
+func selectDefaultPlugin(app *App) {
+	// if setting default plugin fails, continue to initialize
+	content, err := getDefaultPluginContent()
 	if err != nil {
 		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to get default plugin: "+err.Error())
 		return
@@ -533,9 +570,8 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 		}
 		if emailConf.TlsEnable {
 			return sendEmailWithTls(emailConf, auth, msg)
-		} else {
-			return sendNormalEmail(emailConf, auth, msg)
 		}
+		return sendNormalEmail(emailConf, auth, msg)
 	} else {
 		beego.Error(
 			"failed to send email alarm: the email receiving address and email server address can not be empty", emailConf)

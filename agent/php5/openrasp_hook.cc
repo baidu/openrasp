@@ -152,10 +152,11 @@ std::string openrasp_real_path(char *filename, int filename_len, bool use_includ
 
 bool openrasp_zval_in_request(zval *item TSRMLS_DC)
 {
-    return !fetch_name_in_request(item TSRMLS_CC).empty();
+    std::string var_type;
+    return !fetch_name_in_request(item, var_type TSRMLS_CC).empty();
 }
 
-std::string fetch_name_in_request(zval *item TSRMLS_DC)
+std::string fetch_name_in_request(zval *item, std::string &var_type TSRMLS_DC)
 {
     std::string name;
     static const track_vars_pair pairs[] = {{TRACK_VARS_POST, "_POST"},
@@ -190,14 +191,19 @@ std::string fetch_name_in_request(zval *item TSRMLS_DC)
             {
                 if (type == HASH_KEY_IS_STRING)
                 {
-                    return std::string(key);
+                    name = std::string(key);
                 }
                 else if (type == HASH_KEY_IS_LONG)
                 {
                     long actual = idx;
-                    return std::to_string(actual);
+                    name = std::to_string(actual);
                 }
             }
+        }
+        if (!name.empty())
+        {
+            var_type = std::string(pairs[index].name);
+            return name;
         }
     }
     return name;

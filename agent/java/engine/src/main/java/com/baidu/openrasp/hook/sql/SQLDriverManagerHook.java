@@ -28,6 +28,7 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
@@ -80,7 +81,7 @@ public class SQLDriverManagerHook extends AbstractClassHook {
         String srcBefore = getInvokeStaticSrc(SQLDriverManagerHook.class, "checkSqlConnectionOnEnter",
                 "$1,$2", String.class, Properties.class);
         String srcAfter = getInvokeStaticSrc(SQLDriverManagerHook.class, "checkSqlConnectionOnExit",
-                "$1,$2", String.class, Properties.class);
+                "$_,$1,$2", Connection.class, String.class, Properties.class);
         String srcOnExit = getInvokeStaticSrc(SQLDriverManagerHook.class, "onConnectionExit", "");
         insertBefore(ctClass, "connect", null, srcBefore);
         insertAfter(ctClass, "connect", null, srcAfter, false);
@@ -94,9 +95,6 @@ public class SQLDriverManagerHook extends AbstractClassHook {
      * @param properties 连接属性
      */
     public static void checkSqlConnectionOnEnter(String url, Properties properties) {
-        if (Config.getConfig().getEnforcePolicy()) {
-            checkSqlConnection(url, properties);
-        }
         HookHandler.preShieldHook();
     }
 
@@ -106,12 +104,18 @@ public class SQLDriverManagerHook extends AbstractClassHook {
      * @param url        连接url
      * @param properties 连接属性
      */
-    public static void checkSqlConnectionOnExit(String url, Properties properties) {
+    public static void checkSqlConnectionOnExit(Connection connection, String url, Properties properties) {
+        //连接成功才检测
+        if (connection == null) {
+            return;
+        }
         if (!Config.getConfig().getEnforcePolicy()) {
             Long lastAlarmTime = SqlConnectionChecker.alarmTimeCache.get(url);
             if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
                 checkSqlConnection(url, properties);
             }
+        } else {
+            checkSqlConnection(url, properties);
         }
     }
 

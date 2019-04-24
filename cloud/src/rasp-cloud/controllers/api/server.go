@@ -32,6 +32,7 @@ func (o *ServerController) GetUrl() {
 	if err != nil {
 		if mgo.ErrNotFound == err {
 			o.Serve(models.ServerUrl{AgentUrls: []string{}})
+			return
 		}
 		o.ServeError(http.StatusBadRequest, "failed to get serverUrl", err)
 	}

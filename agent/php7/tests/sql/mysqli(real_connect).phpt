@@ -17,7 +17,7 @@ if (!$mysqli) {
     die('mysqli_init failed');
 }
 
-if (!$mysqli->real_connect('127.0.0.1', 'root')) {
+if (!$mysqli->real_connect('127.0.0.1', 'root', 'rasp#2019')) {
     die('Connect Error (' . mysqli_connect_errno() . ') '
             . mysqli_connect_error());
 }

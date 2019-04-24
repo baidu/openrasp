@@ -64,21 +64,24 @@
               <div class="h6">
                 请求编号
               </div>
-              <p>{{ data.request_id }}</p>
+              <p>
+                {{ data.request_id ? data.request_id : '-' }}
+              </p>
               <div class="h6">
                 请求 URL
               </div>
               <p style="word-break: break-all; ">
-                {{ data.request_method ? data.request_method.toUpperCase() : '' }} <a target="_blank" @href="data.url">
-                  {{ data.url }}
+                {{ data.request_method ? data.request_method.toUpperCase() : '' }} 
+                <a target="_blank" @href="data.url">
+                  {{ data.url ? data.url : '-' }}
                 </a>
               </p>
               <div class="h6">
                 请求来源
               </div>
               <p>
-                {{ data.attack_source }}
-                <span v-if="data.attack_location.location_zh_cn != '-'">
+                {{ data.attack_source ? data.attack_source : '-' }}
+                <span v-if="data.attack_location && data.attack_location.location_zh_cn != '-'">
                   {{ data.attack_location.location_zh_cn }}
                 </span>
               </p>
@@ -89,7 +92,7 @@
                 {{ data.client_ip }}
               </p>            
 
-              <div v-if="data.header">
+              <div v-if="data.header && Object.keys(data.header).length">
                 <div class="h6" v-if="data.header.referer">
                   请求 Referer
                 </div>
@@ -126,16 +129,21 @@
                 </p>
               </div>              
 
-              <div v-if="data.body" class="h6">
-                请求 BODY
+              <div v-if="data.body">
+                <div class="h6">
+                  请求 BODY
+                </div>
+                <pre style="word-break: break-all; ">{{ data.body }}</pre>
               </div>
-              <pre v-if="data.body" style="word-break: break-all; ">{{ data.body ? data.body : '-' }}</pre>
             </div>
             <div id="profile" class="tab-pane fade" role="tabpanel" aria-labelledby="profile-tab">
               <div class="h6">
                 主机名称
               </div>
-              <p>{{ data.server_hostname }}</p>
+              <p>
+                {{ data.server_hostname }}
+              </p>
+
               <div class="h6">
                 服务器 IP
               </div>
@@ -144,12 +152,15 @@
                   {{ nic.name }}: {{ nic.ip }}
                 </li>
               </ul>
-              <div class="h6">
-                应用版本
-              </div>
-              <p style="word-break: break-all; ">
-                {{ data.server_type }}/{{ data.server_version }}
-              </p>
+
+              <div v-if="data.server_type">
+                <div class="h6">
+                  应用版本
+                </div>
+                <p style="word-break: break-all; ">
+                  {{ data.server_type }}/{{ data.server_version }}
+                </p>
+              </div>            
             </div>
             <div id="contact" class="tab-pane fade" role="tabpanel" aria-labelledby="contact-tab">
               <fix_solutions ref="fix_solutions"></fix_solutions>

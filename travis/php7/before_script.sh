@@ -1,5 +1,13 @@
 #!/bin/bash
 set -ev
+#mysql
+mysql -e "CREATE USER 'openrasp'@'%' IDENTIFIED BY '123456'";
+mysql -e "USE mysql;UPDATE user SET password=PASSWORD('rasp#2019') WHERE user='root';FLUSH PRIVILEGES;";
+ln -s /run/mysqld/mysqld.sock /tmp/mysql.sock
+
+#pgsql
+psql -c "ALTER USER postgres WITH PASSWORD 'postgres';" -U postgres ;
+psql -c "CREATE USER openrasp WITH PASSWORD '123456'" -U postgres;
 
 pushd agent/$OPENRASP_LANG
 phpenv config-rm xdebug.ini || true
