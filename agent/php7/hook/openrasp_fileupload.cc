@@ -87,7 +87,7 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
                 params->Set(openrasp::NewV8String(isolate, "name"), openrasp::NewV8String(isolate, form_data_name));
                 params->Set(openrasp::NewV8String(isolate, "filename"), openrasp::NewV8String(isolate, Z_STRVAL_P(realname), Z_STRLEN_P(realname)));
                 params->Set(openrasp::NewV8String(isolate, "content"), openrasp::NewV8String(isolate, buffer->val, MIN(buffer->len, 4 * 1024)));
-                is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+                is_block = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
             zend_string_release(buffer);
             if (is_block)

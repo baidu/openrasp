@@ -19,7 +19,8 @@
 
 namespace openrasp
 {
-bool regex_match(const char *str, const char *regex, int options = 0);
+bool regex_match(const char *str, const char *regex);
+bool regex_search(const char *str, const char *regex);
 }
 
 #endif

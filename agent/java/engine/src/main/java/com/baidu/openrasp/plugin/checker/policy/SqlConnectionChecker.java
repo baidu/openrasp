@@ -90,13 +90,13 @@ public class SqlConnectionChecker extends PolicyChecker {
             Map<String, String> map = parseConnectionString(url);
             if (map != null) {
                 sqlType = map.get("type");
-                user = properties.getProperty(CONNECTION_USER_KEY);
+                user = map.get("user");
                 if (user == null) {
-                    user = map.get("user");
+                    user = properties.getProperty(CONNECTION_USER_KEY);
                 }
-                password = properties.getProperty("password");
+                password = map.get("password");
                 if (password == null) {
-                    password = map.get("password");
+                    password = properties.getProperty("password");
                 }
                 urlWithoutParams = map.get("urlWithoutParams");
                 socket = map.get("socket");

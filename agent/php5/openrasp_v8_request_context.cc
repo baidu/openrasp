@@ -19,8 +19,8 @@
 #include "openrasp_utils.h"
 #include "openrasp_content_type.h"
 
-namespace openrasp
-{
+using namespace openrasp;
+
 enum FieldIndex
 {
     kUrl = 0,
@@ -480,7 +480,7 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     if (v8_json_obj.IsEmpty())
     {
         v8::Local<v8::Value> exception = trycatch.Exception();
-        v8::String::Utf8Value exception_str(exception);
+        v8::String::Utf8Value exception_str(isolate, exception);
         openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("Fail to parse json body, cuz of %s."), *exception_str);
     }
     else
@@ -495,7 +495,7 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     self->SetInternalField(kJsonBody, obj);
 }
 
-v8::Local<v8::ObjectTemplate> NewRequestContextTemplate(v8::Isolate *isolate)
+v8::Local<v8::ObjectTemplate> openrasp::CreateRequestContextTemplate(Isolate *isolate)
 {
     auto obj_templ = v8::ObjectTemplate::New(isolate);
     obj_templ->SetAccessor(NewV8String(isolate, "url"), url_getter);
@@ -513,4 +513,3 @@ v8::Local<v8::ObjectTemplate> NewRequestContextTemplate(v8::Isolate *isolate)
     obj_templ->SetInternalFieldCount(kEndForCount);
     return obj_templ;
 }
-} // namespace openrasp

@@ -99,7 +99,7 @@ static void openrasp_clean_output_start(const char *name, size_t name_len TSRMLS
 {
     php_output_handler *h;
 
-    if (h = openrasp_output_handler_init(name, name_len, 0, PHP_OUTPUT_HANDLER_STDFLAGS TSRMLS_CC))
+    if ((h = openrasp_output_handler_init(name, name_len, 0, PHP_OUTPUT_HANDLER_STDFLAGS TSRMLS_CC)))
     {
         php_output_handler_start(h TSRMLS_CC);
     }
@@ -130,7 +130,7 @@ static bool _gpc_parameter_filter(const zval *param TSRMLS_DC)
 {
     if (Z_TYPE_P(param) == IS_STRING && Z_STRLEN_P(param) > OPENRASP_CONFIG(xss.min_param_length))
     {
-        if (openrasp::regex_match(Z_STRVAL_P(param), OPENRASP_CONFIG(xss.filter_regex).c_str()))
+        if (openrasp::regex_search(Z_STRVAL_P(param), OPENRASP_CONFIG(xss.filter_regex).c_str()))
         {
             return true;
         }

@@ -31,6 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
 /**
  * Created by tyy on 4/5/17.
  * All rights reserved
@@ -84,30 +85,28 @@ public class JsPluginManager {
             FileScanMonitor.removeMonitor(watchId);
             watchId = null;
         }
-        watchId = FileScanMonitor.addMonitor(
-                Config.getConfig().getScriptDirectory(),
-                new FileScanListener() {
-                    @Override
-                    public void onFileCreate(File file) {
-                        if (file.getName().endsWith(".js")) {
-                            updatePluginAsync(null, null, null, null);
-                        }
-                    }
+        watchId = FileScanMonitor.addMonitor(Config.getConfig().getScriptDirectory(), new FileScanListener() {
+            @Override
+            public void onFileCreate(File file) {
+                if (file.getName().endsWith(".js")) {
+                    updatePluginAsync(null, null, null, null);
+                }
+            }
 
-                    @Override
-                    public void onFileChange(File file) {
-                        if (file.getName().endsWith(".js")) {
-                            updatePluginAsync(null, null, null, null);
-                        }
-                    }
+            @Override
+            public void onFileChange(File file) {
+                if (file.getName().endsWith(".js")) {
+                    updatePluginAsync(null, null, null, null);
+                }
+            }
 
-                    @Override
-                    public void onFileDelete(File file) {
-                        if (file.getName().endsWith(".js")) {
-                            updatePluginAsync(null, null, null, null);
-                        }
-                    }
-                });
+            @Override
+            public void onFileDelete(File file) {
+                if (file.getName().endsWith(".js")) {
+                    updatePluginAsync(null, null, null, null);
+                }
+            }
+        });
         HookHandler.enableHook.set(oldValue);
     }
 
@@ -149,7 +148,8 @@ public class JsPluginManager {
         HookHandler.enableHook.set(oldValue);
     }
 
-    private synchronized static void updatePlugin(String plugin, String md5, String version, String name) throws Exception {
+    private synchronized static void updatePlugin(String plugin, String md5, String version, String name)
+            throws Exception {
         // 清空 algorithm.config 配置
         Config.getConfig().setAlgorithmConfig("{}");
         boolean oldValue = HookHandler.enableHook.getAndSet(false);
@@ -165,7 +165,7 @@ public class JsPluginManager {
      * 若产生抖动，可适量增大定时器延时
      */
     public synchronized static void updatePluginAsync(final String plugin, final String md5, final String version,
-                                                      final String name) {
+            final String name) {
         if (timer != null) {
             timer.cancel();
             timer = null;

@@ -134,7 +134,7 @@ long SqlConnectionEntry::get_type_id(SqlConnectionEntry::connection_policy_type 
     break;
   case connection_policy_type::PASSWORD:
   default:
-    return 3008;
+    return 3003;
     break;
   }
 }
@@ -205,6 +205,10 @@ void SqlConnectionEntry::set_name_value(const char *name, const char *val)
   if (strcmp(name, "user") == 0)
   {
     set_username(val);
+  }
+  else if (strcmp(name, "password") == 0)
+  {
+    set_password(val);
   }
   else if (strcmp(name, "host") == 0)
   {

@@ -196,7 +196,7 @@ int include_handler(zend_execute_data *execute_data)
                     break;
                 }
                 params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, function));
-                is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(INCLUDE)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+                is_block = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(INCLUDE)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
             if (is_block)
             {

@@ -73,7 +73,6 @@ public class SQLConnectionHook extends AbstractClassHook {
             Scriptable params = cx.newObject(cx.getScope());
             params.put("server", params, server);
             params.put("error_code", params, errorCode);
-            params.put("query", params, "");
             String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
             params.put("message", params, message);
             if (object != null && object.length >= 2) {

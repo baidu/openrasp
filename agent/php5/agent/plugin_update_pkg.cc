@@ -33,7 +33,7 @@ PluginUpdatePackage::PluginUpdatePackage(std::string content, std::string versio
 bool PluginUpdatePackage::build_snapshot()
 {
   Platform::Initialize();
-  Snapshot snapshot("", {active_plugin});
+  Snapshot snapshot("", {active_plugin}, 0);
   Platform::Shutdown();
   if (!snapshot.IsOk())
   {
@@ -55,7 +55,7 @@ bool PluginUpdatePackage::build_snapshot()
   }
   std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
   Platform::Initialize();
-  Isolate *isolate = Isolate::New(&snapshot);
+  Isolate *isolate = Isolate::New(&snapshot, 0);
   extract_buildin_action(isolate, buildin_action_map);
   isolate->Dispose();
   Platform::Shutdown();
