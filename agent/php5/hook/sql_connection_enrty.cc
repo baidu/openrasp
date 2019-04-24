@@ -134,7 +134,7 @@ long SqlConnectionEntry::get_type_id(SqlConnectionEntry::connection_policy_type 
     break;
   case connection_policy_type::PASSWORD:
   default:
-    return 3008;
+    return 3003;
     break;
   }
 }
