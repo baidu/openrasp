@@ -1751,7 +1751,7 @@ plugin.register('command', function (params, context) {
                 }
 
                 if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
-                    reason = _("Command injection - command structure altered by user input, request parameter name: %1%", [name])
+                    reason = _("Command injection - command structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                     return true
                 }
             })
