@@ -1,4 +1,4 @@
-const plugin_version = '2019-0425-1200'
+const plugin_version = '2019-0425-1400'
 const plugin_name    = 'official'
 
 /*
@@ -59,7 +59,10 @@ var algorithmConfig = {
         min_length: 8,
         pre_filter: 'select|file|from|;',
         pre_enable: false,
-        lcs_search: false
+        lcs_search: false,
+
+        // 是否允许数据库管理器 - 前端直接提交SQL语句
+        allow_full: true
     },
     
     // SQL注入算法#2 - 语句规范
@@ -908,6 +911,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
 
         var reason          = false
         var min_length      = algorithmConfig.sql_userinput.min_length
+        var allow_full      = algorithmConfig.sql_userinput.allow_full
         var parameters      = context.parameter || {}
         var json_parameters = context.json || {}
         var raw_tokens      = []
@@ -939,6 +943,12 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 
                     var userinput_idx = params.query.indexOf(value)
                     if (userinput_idx == -1) {
+                        return false
+                    }
+
+                    // 如果允许数据库管理器
+                    if (allow_full && params.query.length == value.length)
+                    {
                         return false
                     }
 
