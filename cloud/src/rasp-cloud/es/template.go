@@ -14,7 +14,10 @@
 
 package es
 
-import "rasp-cloud/conf"
+import (
+	"rasp-cloud/conf"
+	"rasp-cloud/tools"
+)
 
 var attackAlarmTemplate = `
 		{
@@ -374,9 +377,18 @@ var reportDataTemplate = `
 
 func init() {
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
-		CreateTemplate("report-data-template", reportDataTemplate)
-		CreateTemplate("error-alarm-template", errorAlarmTemplate)
-		CreateTemplate("attack-alarm-template", attackAlarmTemplate)
-		CreateTemplate("policy-alarm-template", policyAlarmTemplate)
+		templates := map[string]string{
+			"report-data-template":  reportDataTemplate,
+			"error-alarm-template":  errorAlarmTemplate,
+			"attack-alarm-template": attackAlarmTemplate,
+			"policy-alarm-template": policyAlarmTemplate,
+		}
+
+		for name, template := range templates {
+			err := CreateTemplate(name, template)
+			if err != nil {
+				tools.Panic(tools.ErrCodeESInitFailed, "failed to create es template: "+name, err)
+			}
+		}
 	}
 }
