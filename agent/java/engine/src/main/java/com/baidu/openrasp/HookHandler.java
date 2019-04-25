@@ -195,7 +195,7 @@ public class HookHandler {
             DubboRequest requestContainer = new DubboRequest(request);
             requestCache.set(requestContainer);
             XXEHook.resetLocalExpandedSystemIds();
-            doCheck(CheckParameter.Type.DUBBOREQUEST, JSContext.getUndefinedValue());
+            doCheck(CheckParameter.Type.REQUEST, JSContext.getUndefinedValue());
         }
     }
 

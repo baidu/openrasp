@@ -18,11 +18,16 @@ package com.baidu.openrasp.hook.dubbo;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.hook.server.ServerRequestHook;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
+import com.baidu.openrasp.plugin.js.engine.JSContext;
+import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
+import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -52,10 +57,11 @@ public class DubboRequestHook extends AbstractClassHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-
         String src = getInvokeStaticSrc(DubboRequestHook.class, "getDubboRpcRequestParameters",
                 "$2", Object.class);
+        String requestEndSrc = getInvokeStaticSrc(DubboRequestHook.class, "checkRequestEnd", "");
         insertBefore(ctClass, "invoke", null, src);
+        insertAfter(ctClass, "invoke", null, requestEndSrc, true);
     }
 
     public static void getDubboRpcRequestParameters(Object object) {
@@ -72,9 +78,13 @@ public class DubboRequestHook extends AbstractClassHook {
 
             }
         }
-
         HookHandler.checkDubboFilterRequest(map);
+    }
 
+    public static void checkRequestEnd() {
+        JSContext cx = JSContextFactory.enterAndInitContext();
+        Scriptable params = cx.newObject(cx.getScope());
+        HookHandler.doCheck(CheckParameter.Type.REQUESTEND, params);
     }
 
     public static boolean isWrapClass(Class clazz) {
