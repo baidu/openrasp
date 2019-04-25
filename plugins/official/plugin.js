@@ -1652,6 +1652,7 @@ plugin.register('command', function (params, context) {
                 'java.lang.reflect.Method.invoke':                                              _("Reflected command execution - Unknown vulnerability detected"),
                 'ognl.OgnlRuntime.invokeMethod':                                                _("Reflected command execution - Using OGNL library"),
                 'com.thoughtworks.xstream.XStream.unmarshal':                                   _("Reflected command execution - Using xstream library"),
+                'java.beans.XMLDecoder.readObject':                                             _("Reflected command execution - Using WebLogic XMLDecoder library"),
                 'org.apache.commons.collections4.functors.InvokerTransformer.transform':        _("Reflected command execution - Using Transformer library (v4)"),
                 'org.apache.commons.collections.functors.InvokerTransformer.transform':         _("Reflected command execution - Using Transformer library"),
                 'org.apache.commons.collections.functors.ChainedTransformer.transform':         _("Reflected command execution - Using Transformer library"),
