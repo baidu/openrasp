@@ -321,8 +321,7 @@ public final class HttpServletRequest extends AbstractRequest {
     }
 
     private String getRealPathForWeblogic() {
-        Object httpSession = Reflection.invokeMethod(request, "getSession", new Class[]{});
-        Object servletContext = Reflection.invokeMethod(httpSession, "getServletContext", new Class[]{});
+        Object servletContext = Reflection.invokeMethod(request, "getContext", new Class[]{});
         URL url = (URL) Reflection.invokeMethod(servletContext, "getResource", new Class[]{String.class}, "/");
         if (url != null) {
             return url.getPath();

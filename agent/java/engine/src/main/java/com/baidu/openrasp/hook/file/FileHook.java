@@ -84,8 +84,7 @@ public class FileHook extends AbstractClassHook {
             try {
                 params = new HashMap<String, Object>();
                 params.put("path", file.getPath());
-                List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
-                        Config.getConfig().getPluginMaxStack());
+                List<String> stackInfo = StackTrace.getStackTraceArray();
                 params.put("stack", stackInfo);
                 try {
                     params.put("realpath", file.getCanonicalPath());

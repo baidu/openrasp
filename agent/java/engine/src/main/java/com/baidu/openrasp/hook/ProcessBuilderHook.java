@@ -130,8 +130,7 @@ public class ProcessBuilderHook extends AbstractClassHook {
             try {
                 params = new HashMap<String, Object>();
                 params.put("command", StringUtils.join(command, " "));
-                List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
-                        Config.getConfig().getPluginMaxStack());
+                List<String> stackInfo = StackTrace.getStackTraceArray();
                 params.put("stack", stackInfo);
             } catch (Throwable t) {
                 String message = t.getMessage();

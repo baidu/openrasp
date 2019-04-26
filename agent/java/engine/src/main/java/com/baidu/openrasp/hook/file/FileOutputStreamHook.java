@@ -80,8 +80,7 @@ public class FileOutputStreamHook extends AbstractClassHook {
             HashMap<String, Object> params = new HashMap<String, Object>();
             params.put("path", file.getName());
             params.put("realpath", FileUtil.getRealPath(file));
-            List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
-                    Config.getConfig().getPluginMaxStack());
+            List<String> stackInfo = StackTrace.getStackTraceArray();
             params.put("stack", stackInfo);
             HookHandler.doCheck(CheckParameter.Type.WRITEFILE, params);
         }

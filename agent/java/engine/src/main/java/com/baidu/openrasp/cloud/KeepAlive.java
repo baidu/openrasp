@@ -135,7 +135,6 @@ public class KeepAlive {
                 CloudCacheModel.getInstance().setPlugin(pluginContext);
                 CloudCacheModel.getInstance().setPluginVersion(version);
                 CloudCacheModel.getInstance().setPluginMD5(md5);
-                CloudCacheModel.getInstance().setConfigTime(deliveryTime);
             }
         }
         long newConfigTime = CloudCacheModel.getInstance().getConfigTime();

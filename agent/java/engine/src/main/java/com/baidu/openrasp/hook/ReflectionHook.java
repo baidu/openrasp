@@ -86,8 +86,7 @@ public class ReflectionHook extends AbstractClassHook {
                 for (String monitorMethod : reflectMonitorMethod) {
                     if (monitorMethod.equals(absoluteMethodName)) {
                         params = new HashMap<String, Object>();
-                        List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
-                                Config.getConfig().getPluginMaxStack());
+                        List<String> stackInfo = StackTrace.getStackTraceArray();
                         params.put("clazz", reflectClassName);
                         params.put("method", reflectMethodName);
                         params.put("stack", stackInfo);
