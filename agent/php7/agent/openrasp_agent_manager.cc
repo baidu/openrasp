@@ -205,6 +205,7 @@ bool OpenraspAgentManager::process_agent_startup()
 {
 	agents.push_back(std::move((std::unique_ptr<BaseAgent>)new HeartBeatAgent()));
 	agents.push_back(std::move((std::unique_ptr<BaseAgent>)new LogAgent()));
+	agents.push_back(std::move((std::unique_ptr<BaseAgent>)new WebDirAgent()));
 	pid_t pid = fork();
 	if (pid < 0)
 	{
@@ -229,6 +230,11 @@ void OpenraspAgentManager::process_agent_shutdown()
 	if (log_agent_id > 0)
 	{
 		kill(log_agent_id, SIGNAL_KILL_AGENT);
+	}
+	pid_t webdir_agent_id = get_webdir_agent_id();
+	if (webdir_agent_id > 0)
+	{
+		kill(webdir_agent_id, SIGNAL_KILL_AGENT);
 	}
 	pid_t plugin_agent_id = get_plugin_agent_id();
 	if (plugin_agent_id > 0)
@@ -417,6 +423,25 @@ pid_t OpenraspAgentManager::get_plugin_agent_id()
 	return 0;
 }
 
+void OpenraspAgentManager::set_webdir_agent_id(pid_t webdir_agent_id)
+{
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	{
+		WriteUnLocker auto_unlocker(rwlock);
+		agent_ctrl_block->set_webdir_agent_id(webdir_agent_id);
+	}
+}
+
+pid_t OpenraspAgentManager::get_webdir_agent_id()
+{
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	{
+		ReadUnLocker auto_unlocker(rwlock);
+		return agent_ctrl_block->get_webdir_agent_id();
+	}
+	return 0;
+}
+
 void OpenraspAgentManager::set_log_agent_id(pid_t log_agent_id)
 {
 	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
@@ -517,6 +542,54 @@ long OpenraspAgentManager::get_plugin_update_timestamp()
 		return agent_ctrl_block->get_last_update_time();
 	}
 	return 0;
+}
+
+bool OpenraspAgentManager::path_writable()
+{
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	{
+		ReadUnLocker auto_unlocker(rwlock);
+		return strcmp(agent_ctrl_block->get_webroot_path(), "") == 0;
+	}
+	return false;
+}
+bool OpenraspAgentManager::path_exist(ulong hash)
+{
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	{
+		ReadUnLocker auto_unlocker(rwlock);
+		return agent_ctrl_block->webroot_found(hash);
+	}
+	return true;
+}
+
+void OpenraspAgentManager::write_webroot_path(const char *webroot_path)
+{
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	{
+		WriteUnLocker auto_unlocker(rwlock);
+		agent_ctrl_block->set_webroot_path(webroot_path);
+	}
+}
+
+bool OpenraspAgentManager::consume_webroot_path(std::string &webroot_path)
+{
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	{
+		WriteUnLocker auto_unlocker(rwlock);
+		const char *path = agent_ctrl_block->get_webroot_path();
+		if (strlen(path) > 0)
+		{
+			ulong webroot_hash = zend_inline_hash_func(path, strlen(path));
+			int count = agent_ctrl_block->get_webroot_count();
+			agent_ctrl_block->set_webroot_hash(count, webroot_hash);
+			agent_ctrl_block->set_webroot_count(count + 1);
+			webroot_path = std::string(path);
+			agent_ctrl_block->set_webroot_path("");
+			return true;
+		}
+	}
+	return false;
 }
 
 } // namespace openrasp

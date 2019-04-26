@@ -396,3 +396,21 @@ bool current_sapi_supported()
     auto iter = supported_sapis.find(std::string(sapi_module.name));
     return iter != supported_sapis.end();
 }
+
+zval *fetch_http_globals(int vars_id)
+{
+    static std::map<int, std::string> pairs = {{TRACK_VARS_POST, "_POST"},
+                                               {TRACK_VARS_GET, "_GET"},
+                                               {TRACK_VARS_SERVER, "_SERVER"},
+                                               {TRACK_VARS_COOKIE, "_COOKIE"}};
+    auto it = pairs.find(vars_id);
+    if (it != pairs.end())
+    {
+        if (Z_TYPE(PG(http_globals)[vars_id]) == IS_ARRAY ||
+            zend_is_auto_global_str(const_cast<char *>(it->second.c_str()), it->second.length()))
+        {
+            return &PG(http_globals)[TRACK_VARS_SERVER];
+        }
+    }
+    return nullptr;
+}

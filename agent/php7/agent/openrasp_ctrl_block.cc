@@ -45,6 +45,16 @@ pid_t OpenraspCtrlBlock::get_plugin_agent_id()
     return plugin_agent_id;
 }
 
+void OpenraspCtrlBlock::set_webdir_agent_id(pid_t webdir_agent_id)
+{
+    this->webdir_agent_id = webdir_agent_id;
+}
+
+pid_t OpenraspCtrlBlock::get_webdir_agent_id()
+{
+    return webdir_agent_id;
+}
+
 void OpenraspCtrlBlock::set_log_agent_id(pid_t log_agent_id)
 {
     this->log_agent_id = log_agent_id;
@@ -99,6 +109,47 @@ const char *OpenraspCtrlBlock::get_plugin_md5()
 long OpenraspCtrlBlock::get_last_update_time()
 {
     return last_update_time;
+}
+
+int OpenraspCtrlBlock::get_webroot_count()
+{
+    return webroot_count;
+}
+void OpenraspCtrlBlock::set_webroot_count(int webroot_count)
+{
+    if (webroot_count >= 0 && webroot_count < OpenraspCtrlBlock::webroot_max_size)
+    {
+        this->webroot_count = webroot_count;
+    }
+}
+
+bool OpenraspCtrlBlock::webroot_found(ulong hash)
+{
+    int size = MIN(this->webroot_count, OpenraspCtrlBlock::webroot_max_size);
+    for (int i = size - 1; i > 0; --i)
+    {
+        if (this->webroot_hash[i] == hash)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+void OpenraspCtrlBlock::set_webroot_hash(int index, ulong hash)
+{
+    if (index >= 0 && index < OpenraspCtrlBlock::webroot_max_size)
+    {
+        this->webroot_hash[index] = hash;
+    }
+}
+
+void OpenraspCtrlBlock::set_webroot_path(const char *webroot_path)
+{
+    strncpy(this->webroot_path, webroot_path, MAXPATHLEN - 1);
+}
+const char *OpenraspCtrlBlock::get_webroot_path()
+{
+    return webroot_path;
 }
 
 } // namespace openrasp

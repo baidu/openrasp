@@ -32,6 +32,7 @@
 #define AGENT_SET_PROC_NAME(name)
 #endif
 #define HEARTBEAT_AGENT_PR_NAME "rasp-heartbeat"
+#define WEBDIR_AGENT_PR_NAME "rasp-webdir"
 #define LOG_AGENT_PR_NAME "rasp-log"
 
 namespace openrasp
@@ -62,6 +63,9 @@ public:
   void set_plugin_agent_id(pid_t plugin_agent_id);
   pid_t get_plugin_agent_id();
 
+  void set_webdir_agent_id(pid_t webdir_agent_id);
+  pid_t get_webdir_agent_id();
+
   void set_log_agent_id(pid_t log_agent_id);
   pid_t get_log_agent_id();
 
@@ -76,6 +80,11 @@ public:
 
   void set_plugin_md5(const char *plugin_md5);
   const char *get_plugin_md5();
+
+  bool path_writable();
+  bool path_exist(ulong hash);
+  void write_webroot_path(const char *webroot_path);
+  bool consume_webroot_path(std::string &webroot_path);
 
 private:
   bool create_share_memory();

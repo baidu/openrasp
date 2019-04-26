@@ -247,6 +247,20 @@ PHP_RINIT_FUNCTION(openrasp)
         result = PHP_RINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_v8)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_output_detect)(INIT_FUNC_ARGS_PASSTHRU);
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+        if (remote_active && openrasp::oam)
+        {
+            zval *http_global_server = fetch_http_globals(TRACK_VARS_SERVER TSRMLS_CC);
+            if (http_global_server)
+            {
+                const char *webroot = fetch_outmost_string_from_ht(Z_ARRVAL_P(http_global_server), "DOCUMENT_ROOT");
+                if (webroot && openrasp::oam->path_writable() && !openrasp::oam->path_exist(zend_inline_hash_func(webroot, strlen(webroot))))
+                {
+                    openrasp::oam->write_webroot_path(webroot);
+                }
+            }
+        }
+#endif        
         hook_without_params(REQUEST TSRMLS_CC);
     }
     return SUCCESS;

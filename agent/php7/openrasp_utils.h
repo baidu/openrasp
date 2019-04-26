@@ -59,4 +59,6 @@ bool make_openrasp_root_dir(const char *path);
 void openrasp_set_locale(const char *locale, const char *locale_path);
 bool current_sapi_supported();
 
+zval* fetch_http_globals(int vars_id);
+
 #endif
