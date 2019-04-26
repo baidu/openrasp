@@ -120,7 +120,8 @@ export default {
           old_password: this.oldpass,
           new_password: this.newpass1
         }, function(data) {
-          alert('密码修改成功')
+          alert('密码修改成功，点击确认重新登录')
+          location.href = '/#/login'
         })
       } else {
         alert('两次密码输入不一致，请重新输入')

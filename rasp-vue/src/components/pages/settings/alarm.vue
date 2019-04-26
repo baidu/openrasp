@@ -28,6 +28,12 @@
         </div>
         <div class="form-group">
           <label class="form-label">
+            自定义 From 头信息
+          </label>
+          <input v-model="data.email_alarm_conf.from" type="text" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
             邮件服务器地址
           </label>
           <input v-model="data.email_alarm_conf.server_addr" type="text" class="form-control" placeholder="smtp.163.com:25">
