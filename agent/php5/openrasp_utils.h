@@ -26,7 +26,6 @@
 const char *fetch_url_scheme(const char *filename);
 
 int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC);
-bool get_entire_file_content(const char *file, std::string &content);
 void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins,
                       std::function<bool(const char *filename)> file_filter, bool use_abs_path = false);
 

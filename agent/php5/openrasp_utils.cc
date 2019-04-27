@@ -210,17 +210,6 @@ void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugi
     }
 }
 
-bool get_entire_file_content(const char *file, std::string &content)
-{
-    std::ifstream ifs(file, std::ifstream::in | std::ifstream::binary);
-    if (ifs.is_open() && ifs.good())
-    {
-        content = {std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
-        return true;
-    }
-    return false;
-}
-
 char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
 {
     zval **origin_zv;

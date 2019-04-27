@@ -16,6 +16,7 @@
 
 #include "utils/JsonReader.h"
 #include "utils/YamlReader.h"
+#include "utils/file.h"
 #include "openrasp.h"
 #include "openrasp_ini.h"
 
@@ -150,7 +151,7 @@ PHP_MINIT_FUNCTION(openrasp)
     {
         std::string config_file_path = get_config_abs_path(ConfigHolder::FromType::kYaml);
         std::string conf_contents;
-        if (get_entire_file_content(config_file_path.c_str(), conf_contents))
+        if (openrasp::read_entire_content(config_file_path, conf_contents))
         {
             openrasp::YamlReader yreader(conf_contents);
             std::vector<std::string> hook_white_key({"hook.white"});
@@ -342,7 +343,7 @@ static bool update_config(openrasp::ConfigHolder *config, ConfigHolder::FromType
     {
         std::string config_file_path = get_config_abs_path(type);
         std::string conf_contents;
-        if (get_entire_file_content(config_file_path.c_str(), conf_contents))
+        if (openrasp::read_entire_content(config_file_path, conf_contents))
         {
             std::shared_ptr<openrasp::BaseReader> config_reader = nullptr;
             switch (type)

@@ -39,6 +39,8 @@ public:
   virtual std::vector<std::string> fetch_object_keys(const std::vector<std::string> &keys);
   virtual std::vector<std::string> fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value);
   virtual void load(const std::string &content);
+
+  size_t get_array_size(const std::vector<std::string> &keys);
   //write op
   void erase(const std::vector<std::string> &keys);
   void write_int64(const std::vector<std::string> &keys, const int64_t &value);

@@ -56,7 +56,7 @@ LogCollectItem::LogCollectItem(int instance_id, bool collect_enable)
     if (file_exists(status_file_abs))
     {
         std::string status_json;
-        if (get_entire_file_content(status_file_abs.c_str(), status_json))
+        if (read_entire_content(status_file_abs, status_json))
         {
             JsonReader json_reader(status_json);
             fpos = json_reader.fetch_int64({"fpos"}, 0);

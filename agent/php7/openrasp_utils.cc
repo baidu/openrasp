@@ -210,17 +210,6 @@ char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
     return nullptr;
 }
 
-bool get_entire_file_content(const char *file, std::string &content)
-{
-    std::ifstream ifs(file, std::ifstream::in | std::ifstream::binary);
-    if (ifs.is_open() && ifs.good())
-    {
-        content = {std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
-        return true;
-    }
-    return false;
-}
-
 std::string json_encode_from_zval(zval *value)
 {
     smart_str buf_json = {0};
