@@ -358,6 +358,7 @@ PHP_RINIT_FUNCTION(openrasp_log)
     OPENRASP_LOG_G(plugin_logger).init(FSTREAM_APPENDER TSRMLS_CC);
     OPENRASP_LOG_G(policy_logger).init(FSTREAM_APPENDER TSRMLS_CC);
     OPENRASP_LOG_G(rasp_logger).init(FSTREAM_APPENDER TSRMLS_CC);
+    OPENRASP_LOG_G(rasp_logger).set_level(openrasp::scm->get_debug_level() != 0 ? LEVEL_DEBUG : LEVEL_INFO);
     return SUCCESS;
 }
 
