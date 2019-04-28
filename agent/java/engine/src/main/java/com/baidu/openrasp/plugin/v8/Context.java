@@ -12,94 +12,131 @@ public class Context {
     }
 
     public String getPath() {
-        String path = request.getRequestURI();
-        return path == null ? null : path;
+        try {
+            return request.getRequestURI();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public String getMethod() {
-        String method = request.getMethod();
-        return method == null ? null : method.toLowerCase();
+        try {
+            return request.getMethod().toLowerCase();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public String getUrl() {
-        StringBuffer requestURL = request.getRequestURL();
-        return requestURL == null ? null : requestURL.toString();
+        try {
+            return request.getRequestURL().toString();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public String getQuerystring() {
-        String query = request.getQueryString();
-        return query == null ? null : query;
+        try {
+            return request.getQueryString();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public String getAppBasePath() {
-        String appBasePath = request.getAppBasePath();
-        return appBasePath == null ? null : appBasePath;
+        try {
+            return request.getAppBasePath();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public String getProtocol() {
-        String proto = request.getProtocol();
-        return proto == null ? null : proto.toLowerCase();
+        try {
+            return request.getProtocol();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public String getRemoteAddr() {
-        String remoteAddr = request.getRemoteAddr();
-        return remoteAddr == null ? null : remoteAddr;
+        try {
+            return request.getRemoteAddr();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public byte[] getBody(int[] size) {
-        java.io.ByteArrayOutputStream body = request.getBodyStream();
-        if (body == null) {
-            return null;
-        } else {
+        try {
+            java.io.ByteArrayOutputStream body = request.getBodyStream();
             size[0] = body.size();
             return body.toByteArray();
+        } catch (Exception e) {
+            return null;
         }
     }
 
     public String getJson() {
-        String contentType = request.getContentType();
-        if (contentType != null && contentType.contains("application/json")) {
-            byte[] body = request.getBody();
-            if (body != null) {
-                return new String(body);
+        try {
+            String contentType = request.getContentType();
+            if (contentType != null && contentType.contains("application/json")) {
+                byte[] body = request.getBody();
+                if (body != null) {
+                    return new String(body);
+                }
             }
+            return null;
+        } catch (Exception e) {
+            return null;
         }
-        return null;
     }
 
     public byte[] getHeader(int[] size) {
-        Enumeration<String> headerNames = request.getHeaderNames();
-        if (headerNames == null || !headerNames.hasMoreElements()) {
+        try {
+            Enumeration<String> headerNames = request.getHeaderNames();
+            if (headerNames == null || !headerNames.hasMoreElements()) {
+                return null;
+            }
+            HashMap<String, String> headers = new HashMap<String, String>();
+            while (headerNames.hasMoreElements()) {
+                String key = headerNames.nextElement();
+                String value = request.getHeader(key);
+                headers.put(key.toLowerCase(), value);
+            }
+            V8ByteArrayOutputStream out = new V8ByteArrayOutputStream();
+            JsonStream.serialize(headers, out);
+            size[0] = out.size();
+            return out.getByteArray();
+        } catch (Exception e) {
             return null;
         }
-        HashMap<String, String> headers = new HashMap<String, String>();
-        while (headerNames.hasMoreElements()) {
-            String key = headerNames.nextElement();
-            String value = request.getHeader(key);
-            headers.put(key.toLowerCase(), value);
-        }
-        V8ByteArrayOutputStream out = new V8ByteArrayOutputStream();
-        JsonStream.serialize(headers, out);
-        size[0] = out.size();
-        return out.getByteArray();
     }
 
     public byte[] getParameter(int[] size) {
-        Map<String, String[]> parameters = request.getParameterMap();
-        if (parameters == null || parameters.isEmpty()) {
+        try {
+            Map<String, String[]> parameters = request.getParameterMap();
+            if (parameters == null || parameters.isEmpty()) {
+                return null;
+            }
+            V8ByteArrayOutputStream out = new V8ByteArrayOutputStream();
+            JsonStream.serialize(parameters, out);
+            size[0] = out.size();
+            return out.getByteArray();
+        } catch (Exception e) {
             return null;
         }
-        V8ByteArrayOutputStream out = new V8ByteArrayOutputStream();
-        JsonStream.serialize(parameters, out);
-        size[0] = out.size();
-        return out.getByteArray();
     }
 
     public byte[] getServer(int[] size) {
-        Map<String, String> server = request.getServerContext();
-        V8ByteArrayOutputStream out = new V8ByteArrayOutputStream();
-        JsonStream.serialize(server, out);
-        size[0] = out.size();
-        return out.getByteArray();
+        try {
+            Map<String, String> server = request.getServerContext();
+            V8ByteArrayOutputStream out = new V8ByteArrayOutputStream();
+            JsonStream.serialize(server, out);
+            size[0] = out.size();
+            return out.getByteArray();
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
