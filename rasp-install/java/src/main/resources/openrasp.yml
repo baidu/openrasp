@@ -1,8 +1,9 @@
 # Most of the configuration items below are ignored when remote management is enabled.
 # Please refer to the following document for details:
 # https://rasp.baidu.com/doc/setup/others.html#java-standalone
-# 
+ 
 # <general settings>
+# 
 # plugin.timeout.millis: 100
 # body.maxbytes: 4096
 # plugin.filter: true
