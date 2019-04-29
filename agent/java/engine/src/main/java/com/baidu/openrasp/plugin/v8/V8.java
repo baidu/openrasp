@@ -1,5 +1,8 @@
 package com.baidu.openrasp.plugin.v8;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.extra.Base64Support;
 import com.jsoniter.output.JsonStream;
@@ -151,8 +154,9 @@ public class V8 {
         boolean rst = CreateSnapshot("{}", scripts.toArray());
         if (rst) {
             try {
-                Config.getConfig().setAlgorithmConfig(
-                        ExecuteScript("JSON.stringify(RASP.algorithmConfig || {})", "get-algorithm-config.js"));
+                String jsonString = ExecuteScript("JSON.stringify(RASP.algorithmConfig || {})", "get-algorithm-config.js");
+                jsonString = new JsonParser().parse(jsonString).getAsString();
+                Config.getConfig().setConfig("algorithm.config", jsonString, true);
             } catch (Exception e) {
                 String message = e.getMessage();
                 int errorCode = ErrorType.PLUGIN_ERROR.getCode();
