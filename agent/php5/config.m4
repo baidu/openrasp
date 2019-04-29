@@ -278,28 +278,24 @@ if test "$PHP_OPENRASP" != "no"; then
     AC_DEFINE([HAVE_CLI_SUPPORT], [1], [Enable cli support])
   fi
 
-  YAML_CPP_SOURCE="third_party/yaml-cpp/src/binary.cpp \
-    third_party/yaml-cpp/src/contrib/graphbuilderadapter.cpp \
-    third_party/yaml-cpp/src/contrib/graphbuilder.cpp \
-    third_party/yaml-cpp/src/convert.cpp \
+  YAML_CPP_SOURCE="\
+    third_party/yaml-cpp/src/aliasmanager.cpp \
+    third_party/yaml-cpp/src/binary.cpp \
+    third_party/yaml-cpp/src/conversion.cpp \
     third_party/yaml-cpp/src/directives.cpp \
-    third_party/yaml-cpp/src/emit.cpp \
     third_party/yaml-cpp/src/emitfromevents.cpp \
     third_party/yaml-cpp/src/emitter.cpp \
     third_party/yaml-cpp/src/emitterstate.cpp \
     third_party/yaml-cpp/src/emitterutils.cpp \
-    third_party/yaml-cpp/src/exceptions.cpp \
     third_party/yaml-cpp/src/exp.cpp \
-    third_party/yaml-cpp/src/memory.cpp \
-    third_party/yaml-cpp/src/nodebuilder.cpp \
+    third_party/yaml-cpp/src/iterator.cpp \
     third_party/yaml-cpp/src/node.cpp \
-    third_party/yaml-cpp/src/node_data.cpp \
-    third_party/yaml-cpp/src/nodeevents.cpp \
+    third_party/yaml-cpp/src/nodebuilder.cpp \
+    third_party/yaml-cpp/src/nodeownership.cpp \
     third_party/yaml-cpp/src/null.cpp \
-    third_party/yaml-cpp/src/ostream_wrapper.cpp \
-    third_party/yaml-cpp/src/parse.cpp \
+    third_party/yaml-cpp/src/ostream.cpp \
     third_party/yaml-cpp/src/parser.cpp \
-    third_party/yaml-cpp/src/regex_yaml.cpp \
+    third_party/yaml-cpp/src/regex.cpp \
     third_party/yaml-cpp/src/scanner.cpp \
     third_party/yaml-cpp/src/scanscalar.cpp \
     third_party/yaml-cpp/src/scantag.cpp \
@@ -307,7 +303,10 @@ if test "$PHP_OPENRASP" != "no"; then
     third_party/yaml-cpp/src/simplekey.cpp \
     third_party/yaml-cpp/src/singledocparser.cpp \
     third_party/yaml-cpp/src/stream.cpp \
-    third_party/yaml-cpp/src/tag.cpp"
+    third_party/yaml-cpp/src/tag.cpp \
+    third_party/yaml-cpp/src/contrib/graphbuilder.cpp \
+    third_party/yaml-cpp/src/contrib/graphbuilderadapter.cpp \
+  "
   PHP_ADD_INCLUDE("PHP_EXT_BUILDDIR([openrasp])/third_party/yaml-cpp/include")
 
   case $host_os in

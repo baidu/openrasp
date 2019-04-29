@@ -23,12 +23,10 @@
 namespace openrasp
 {
 
-using Node = YAML::Node;
-
 class YamlReader : public BaseReader
 {
 private:
-  Node node;
+  YAML::Node doc;
 
 public:
   YamlReader();
