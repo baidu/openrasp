@@ -16,8 +16,6 @@
 
 package com.baidu.openrasp.plugin.checker.local;
 
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.AttackInfo;
@@ -27,7 +25,7 @@ import java.util.*;
 
 /**
  * Created by tyy on 17-12-20.
- *
+ * <p>
  * 检测 sql 语句的 java 版本
  */
 public class SqlExceptionChecker extends ConfigurableChecker {
@@ -49,22 +47,18 @@ public class SqlExceptionChecker extends ConfigurableChecker {
     @Override
     public List<EventInfo> checkParam(CheckParameter checkParameter) {
         List<EventInfo> result = new LinkedList<EventInfo>();
-        try {
-            String action = getActionElement(Config.getConfig().getAlgorithmConfig(), CONFIG_KEY_SQL_EXCEPTION);
-            // 检测sql执行报错注入
-            if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
-                String sqlType = (String) checkParameter.getParam("server");
-                String errorCode = (String) checkParameter.getParam("error_code");
-                if (sqlType != null && errorCode != null && sqlErrorCode.contains(errorCode)) {
-                    String message = (String) checkParameter.getParam("message");
-                    if (message != null) {
-                        result.add(
-                                AttackInfo.createLocalAttackInfo(checkParameter, action, message, "sql_exception", 90));
-                    }
+        String action = getActionElement(Config.getConfig().getAlgorithmConfig(), CONFIG_KEY_SQL_EXCEPTION);
+        // 检测sql执行报错注入
+        if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
+            String sqlType = (String) checkParameter.getParam("server");
+            String errorCode = (String) checkParameter.getParam("error_code");
+            if (sqlType != null && errorCode != null && sqlErrorCode.contains(errorCode)) {
+                String message = (String) checkParameter.getParam("message");
+                if (message != null) {
+                    result.add(
+                            AttackInfo.createLocalAttackInfo(checkParameter, action, message, "sql_exception", 90));
                 }
             }
-        } catch (Exception e) {
-
         }
         return result;
     }
