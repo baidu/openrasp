@@ -123,11 +123,7 @@ func registerAlarmInfo(info *AlarmLogInfo) {
 }
 
 func initAlarmFileLogger(dirName string, fileName string) *logs.BeeLogger {
-	currentPath, err := tools.GetCurrentPath()
-	if err != nil {
-		tools.Panic(tools.ErrCodeLogInitFailed, "failed to init alarm logger", err)
-	}
-	dirName = currentPath + dirName
+	dirName = tools.GetCurrentPathWithPanic() + dirName
 	if isExists, _ := tools.PathExists(dirName); !isExists {
 		err := os.MkdirAll(dirName, os.ModePerm)
 		if err != nil {
@@ -137,7 +133,7 @@ func initAlarmFileLogger(dirName string, fileName string) *logs.BeeLogger {
 
 	logger := logs.NewLogger()
 	logPath := path.Join(dirName, fileName)
-	err = logger.SetLogger(tools.AdapterAlarmFile,
+	err := logger.SetLogger(tools.AdapterAlarmFile,
 		`{"filename":"`+logPath+`", "daily":true, "maxdays":10, "perm":"0777"}`)
 	if err != nil {
 		tools.Panic(tools.ErrCodeLogInitFailed, "failed to init alarm logger", err)

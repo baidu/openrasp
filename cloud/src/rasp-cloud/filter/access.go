@@ -50,8 +50,9 @@ func formatTime(timestamp int64, format string) (times string) {
 }
 
 func initAccessLogger() {
-	if isExists, _ := tools.PathExists("logs/access"); !isExists {
-		err := os.MkdirAll("logs/access", os.ModePerm)
+	logPath := tools.GetCurrentPathWithPanic() + "/logs/access"
+	if isExists, _ := tools.PathExists(logPath); !isExists {
+		err := os.MkdirAll(logPath, os.ModePerm)
 		if err != nil {
 			tools.Panic(tools.ErrCodeLogInitFailed, "failed to create logs/access dir", err)
 		}
@@ -61,7 +62,7 @@ func initAccessLogger() {
 	accessLogger.EnableFuncCallDepth(true)
 	accessLogger.SetLogFuncCallDepth(4)
 	err := accessLogger.SetLogger(logs.AdapterFile,
-		`{"filename":"logs/access/access.log","daily":true,"maxdays":10,"perm":"0777"}`)
+		`{"filename":"`+logPath+`/access.log","daily":true,"maxdays":10,"perm":"0777"}`)
 	if err != nil {
 		tools.Panic(tools.ErrCodeLogInitFailed, "failed to init access log", err)
 	}

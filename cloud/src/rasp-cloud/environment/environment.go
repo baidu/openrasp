@@ -111,11 +111,7 @@ func fork() (err error) {
 }
 
 func initLogger() {
-	currentPath, err := tools.GetCurrentPath()
-	if err != nil {
-		tools.Panic(tools.ErrCodeLogInitFailed, "failed to get current path", err)
-	}
-	logPath := currentPath + "/logs/api"
+	logPath := tools.GetCurrentPathWithPanic() + "/logs/api"
 	if isExists, _ := tools.PathExists(logPath); !isExists {
 		err := os.MkdirAll(logPath, os.ModePerm)
 		if err != nil {
