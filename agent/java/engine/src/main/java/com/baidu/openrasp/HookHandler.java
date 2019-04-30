@@ -21,7 +21,7 @@ import com.baidu.openrasp.cloud.model.HookWhiteModel;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.exceptions.SecurityException;
-import com.baidu.openrasp.hook.XXEHook;
+import com.baidu.openrasp.hook.xxe.XXEHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
 import com.baidu.openrasp.request.AbstractRequest;

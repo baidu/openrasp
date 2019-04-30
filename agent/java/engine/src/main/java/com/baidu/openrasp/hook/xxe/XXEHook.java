@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook;
+package com.baidu.openrasp.hook.xxe;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
@@ -72,8 +73,7 @@ public class XXEHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "com/sun/org/apache/xerces/internal/util/XMLResourceIdentifierImpl".equals(className)
-                || "org/apache/xerces/util/XMLResourceIdentifierImpl".equals(className);
+        return "com/sun/org/apache/xerces/internal/impl/XMLEntityManager".equals(className);
     }
 
     /**
@@ -83,9 +83,8 @@ public class XXEHook extends AbstractClassHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(XXEHook.class, "checkXXE", "$4", String.class);
-        insertBefore(ctClass, "setValues",
-                "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", src);
+        String src = getInvokeStaticSrc(XXEHook.class, "checkXXE", "$1", String.class);
+        insertBefore(ctClass, "expandSystemId", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", src);
     }
 
     /**
@@ -97,7 +96,7 @@ public class XXEHook extends AbstractClassHook {
         if (expandedSystemId != null && !XXEHook.getLocalExpandedSystemIds().contains(expandedSystemId)) {
             XXEHook.getLocalExpandedSystemIds().add(expandedSystemId);
             HashMap<String, Object> params = new HashMap<String, Object>();
-            params.put("entity", expandedSystemId);
+            params.put("entity",expandedSystemId);
             HookHandler.doCheck(CheckParameter.Type.XXE, params);
         }
     }
