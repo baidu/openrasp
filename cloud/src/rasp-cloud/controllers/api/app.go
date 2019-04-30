@@ -310,7 +310,10 @@ func (o *AppController) validEmailConf(conf *models.EmailAlarmConf) {
 		o.ServeError(http.StatusBadRequest, "the email server_addr cannot be empty")
 	}
 	if len(conf.ServerAddr) > 256 {
-		o.ServeError(http.StatusBadRequest, "the length of email server_addr cannot be greater than 128")
+		o.ServeError(http.StatusBadRequest, "the length of email server_addr cannot be greater than 256")
+	}
+	if len(conf.From) > 256 {
+		o.ServeError(http.StatusBadRequest, "the length of from cannot be greater than 256")
 	}
 	if len(conf.Subject) > 256 {
 		o.ServeError(http.StatusBadRequest, "the length of email subject cannot be greater than 256")
