@@ -56,7 +56,7 @@ else
 	curl https://packages.baidu.com/app/openrasp/static-lib.tar.bz2 -o /tmp/static-lib.tar.bz2
 	tar -xf /tmp/static-lib.tar.bz2 -C /tmp/
 
-	CC=clang CXX=clang++ ./configure --with-openrasp-v8=/tmp/openrasp-v8/ --with-gettext --enable-openrasp-remote-manager \
+	./configure --with-openrasp-v8=/tmp/openrasp-v8/ --with-gettext --enable-openrasp-remote-manager \
 		--with-curl=/tmp/static-lib --with-openssl=/tmp/static-lib -q ${extra_config_opt}
 fi
 
