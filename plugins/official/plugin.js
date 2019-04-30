@@ -288,6 +288,27 @@ var algorithmConfig = {
         ]
     },
 
+    // XXE - 代码安全开关，通过调用相关函数直接禁止外部实体
+    xxe_disable_entity: {
+        action: 'ignore',
+        clazz:  {
+            // com/sun/org/apache/xerces/internal/jaxp/DocumentBuilderFactoryImpl
+            dom:   true,
+
+            // org/dom4j/io/SAXReader
+            dom4j: true,
+
+            // org/jdom/input/SAXBuilder,org/jdom2/input/SAXBuilder
+            jdom:  true,
+
+            // com/sun/org/apache/xerces/internal/jaxp/SAXParserFactoryImpl
+            sax:   true,
+
+            // javax/xml/stream/XMLInputFactory
+            stax:  true
+        }
+    },
+
     // XXE - 使用 gopher/ftp/dict/.. 等不常见协议访问外部实体
     xxe_protocol: {
         name:   '算法1 - 使用 ftp:// 等异常协议加载外部实体',
