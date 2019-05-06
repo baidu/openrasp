@@ -36,12 +36,12 @@ import java.io.IOException;
 public class DisableStaxXxeEntity extends DisableXxeEntity {
     @Override
     public boolean isClassMatched(String className) {
-        return "javax/xml/stream/XMLInputFactory".equals(className);
+        return "com/sun/xml/internal/stream/XMLInputFactoryImpl".equals(className);
     }
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(DisableSaxXxeEntity.class, "setFeature", "$0", Object.class);
+        String src = getInvokeStaticSrc(DisableStaxXxeEntity.class, "setFeature", "$0", Object.class);
         insertBefore(ctClass, "createXMLStreamReader", null, src);
     }
 
@@ -50,9 +50,9 @@ public class DisableStaxXxeEntity extends DisableXxeEntity {
             String action = getAction();
             if (BLOCK_XXE_DISABLE_ENTITY.equals(action)) {
                 try {
-                    String property = (String) Reflection.getField(factory, "SUPPORT_DTD");
+                    String property = (String) factory.getClass().getField("SUPPORT_DTD").get(null);
                     if (property != null) {
-                        Reflection.invokeMethod(factory, "setProperty", new Class[]{String.class, boolean.class}, property, false);
+                        Reflection.invokeMethod(factory, "setProperty", new Class[]{String.class, Object.class}, property, false);
                     }
                 } catch (Exception e) {
                     String message = "Stax close xxe entity failed";

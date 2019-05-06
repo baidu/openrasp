@@ -42,7 +42,7 @@ public class DisableJdomXxeEntity extends DisableXxeEntity {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(DisableDomXxeEntity.class, "setFeature", "$0", Object.class);
+        String src = getInvokeStaticSrc(DisableJdomXxeEntity.class, "setFeature", "$0", Object.class);
         insertBefore(ctClass, "build", null, src);
     }
 
