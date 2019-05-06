@@ -52,7 +52,7 @@ public class DisableStaxXxeEntity extends DisableXxeEntity {
                 try {
                     String property = (String) Reflection.getField(factory, "SUPPORT_DTD");
                     if (property != null) {
-                        Reflection.invokeMethod(factory, "setProperty", new Class[]{String.class, boolean.class}, property, true);
+                        Reflection.invokeMethod(factory, "setProperty", new Class[]{String.class, boolean.class}, property, false);
                     }
                 } catch (Exception e) {
                     String message = "Stax close xxe entity failed";
