@@ -293,19 +293,24 @@ var algorithmConfig = {
         action: 'ignore',
         clazz:  {
             // com/sun/org/apache/xerces/internal/jaxp/DocumentBuilderFactoryImpl
-            dom:   true,
+            java_dom:   true,
 
             // org/dom4j/io/SAXReader
-            dom4j: true,
+            java_dom4j: true,
 
             // org/jdom/input/SAXBuilder,org/jdom2/input/SAXBuilder
-            jdom:  true,
+            java_jdom:  true,
 
             // com/sun/org/apache/xerces/internal/jaxp/SAXParserFactoryImpl
-            sax:   true,
+            java_sax:   true,
 
             // javax/xml/stream/XMLInputFactory
-            stax:  true
+            java_stax:  true,
+
+            // php: simple xml loader (v1.2 支持)
+            php_simple: true,
+            // php: DOM (v1.2 支持)
+            php_dom:    true
         }
     },
 
