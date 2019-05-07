@@ -49,7 +49,7 @@ public class DisableJdomXxeEntity extends DisableXxeEntity {
     public static void setFeature(Object builder) {
         if (HookHandler.requestCache.get() != null) {
             String action = getAction();
-            if (BLOCK_XXE_DISABLE_ENTITY.equals(action)) {
+            if (BLOCK_XXE_DISABLE_ENTITY.equals(action) && getStatus("java_jdom")) {
                 try {
                     Reflection.invokeMethod(builder, "setFeature", new Class[]{String.class, boolean.class}, FEATURE, true);
                 } catch (Exception e) {

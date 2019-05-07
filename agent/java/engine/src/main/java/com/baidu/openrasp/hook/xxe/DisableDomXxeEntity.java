@@ -48,7 +48,7 @@ public class DisableDomXxeEntity extends DisableXxeEntity {
     public static void setFeature(Object factory) {
         if (HookHandler.requestCache.get() != null) {
             String action = getAction();
-            if (BLOCK_XXE_DISABLE_ENTITY.equals(action)) {
+            if (BLOCK_XXE_DISABLE_ENTITY.equals(action) && getStatus("java_dom")) {
                 try {
                     Reflection.invokeMethod(factory, "setFeature", new Class[]{String.class, boolean.class}, FEATURE, true);
                 } catch (Exception e) {
