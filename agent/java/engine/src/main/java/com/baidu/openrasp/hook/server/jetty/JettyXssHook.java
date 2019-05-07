@@ -75,20 +75,23 @@ public class JettyXssHook extends ServerXssHook {
     }
 
     public static void getJetty9OutputBuffer(char[] buffer, int offset, int length) {
-        if (buffer != null && length > 0) {
-            HashMap<String, Object> params = new HashMap<String, Object>();
-            try {
-                char[] temp = new char[length];
-                System.arraycopy(buffer, offset, temp, 0, length);
-                String content = new String(temp);
-                params.put("html_body", content);
-            } catch (Exception e) {
-                String message = ApplicationModel.getServerName() + " xss detectde failed";
-                int errorCode = ErrorType.HOOK_ERROR.getCode();
-                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
-            }
-            if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
-                HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+        if (HookHandler.isEnableXssHook()) {
+            HookHandler.disableBodyXssHook();
+            if (buffer != null && length > 0) {
+                HashMap<String, Object> params = new HashMap<String, Object>();
+                try {
+                    char[] temp = new char[length];
+                    System.arraycopy(buffer, offset, temp, 0, length);
+                    String content = new String(temp);
+                    params.put("html_body", content);
+                } catch (Exception e) {
+                    String message = ApplicationModel.getServerName() + " xss detectde failed";
+                    int errorCode = ErrorType.HOOK_ERROR.getCode();
+                    HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                }
+                if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
+                    HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+                }
             }
         }
     }

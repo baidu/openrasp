@@ -30,6 +30,7 @@ var (
 func init() {
 	initAccessLogger()
 	beego.InsertFilter("/*", beego.BeforeRouter, logAccess)
+	beego.InsertFilter("/", beego.BeforeStatic, handleStatic)
 }
 
 func logAccess(ctx *context.Context) {
@@ -41,6 +42,10 @@ func logAccess(ctx *context.Context) {
 	}
 
 	accessLogger.Info(cont)
+}
+
+func handleStatic(ctx *context.Context) {
+	ctx.Output.Header("Cache-Control", "no-cache, no-store, max-age=0")
 }
 
 func formatTime(timestamp int64, format string) (times string) {

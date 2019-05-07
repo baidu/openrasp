@@ -50,25 +50,28 @@ public class Register {
         @Override
         public void run() {
             while (!this.registerFlag) {
-                String content = new Gson().toJson(GenerateParameters());
-                String url = CloudRequestUrl.CLOUD_REGISTER_URL;
-                GenericResponse response = new CloudHttp().commonRequest(url, content);
-                if (CloudUtils.checkRequestResult(response)) {
-                    this.registerFlag = true;
-                    Config.getConfig().setHookWhiteAll("false");
-                    System.out.println("[OpenRASP] RASP agent successfully registered, enabling remote management, please refer to rasp logs for details");
-                    CloudManager.LOGGER.info("[OpenRASP] RASP agent successfully registered,registration details are as follows: \n" + content);
-                    CloudManager.init();
-                } else {
-                    System.out.println("[OpenRASP] Failed to register RASP agent, please refer to rasp logs for details");
-                    String message = CloudUtils.handleError(ErrorType.REGISTER_ERROR, response);
-                    int errorCode = ErrorType.REGISTER_ERROR.getCode();
-                    CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
-                }
                 try {
+                    String content = new Gson().toJson(GenerateParameters());
+                    String url = CloudRequestUrl.CLOUD_REGISTER_URL;
+                    GenericResponse response = new CloudHttp().commonRequest(url, content);
+                    if (CloudUtils.checkRequestResult(response)) {
+                        this.registerFlag = true;
+                        Config.getConfig().setHookWhiteAll("false");
+                        System.out.println("[OpenRASP] RASP agent successfully registered, enabling remote management, please refer to rasp logs for details");
+                        CloudManager.LOGGER.info("[OpenRASP] RASP agent successfully registered,registration details are as follows: \n" + content);
+                        CloudManager.init();
+                    } else {
+                        System.out.println("[OpenRASP] Failed to register RASP agent, please refer to rasp logs for details");
+                        String message = CloudUtils.handleError(ErrorType.REGISTER_ERROR, response);
+                        int errorCode = ErrorType.REGISTER_ERROR.getCode();
+                        CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
+                    }
                     Thread.sleep(REGISTER_DELAY);
-                } catch (InterruptedException e) {
-                    //continue next loop
+
+                } catch (Throwable e) {
+                    String message = e.getMessage();
+                    int errorCode = ErrorType.REGISTER_ERROR.getCode();
+                    CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
                 }
             }
         }

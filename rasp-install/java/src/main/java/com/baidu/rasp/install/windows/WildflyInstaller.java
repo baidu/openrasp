@@ -37,6 +37,7 @@ public class WildflyInstaller extends BaseStandardInstaller {
             "set \"JAVA_OPTS=%JAVA_OPTS% -Djava.util.logging.manager=org.jboss.logmanager.LogManager\"\n";
 
     private static final String JBOSS_LOGMANAGER = "\\modules\\system\\layers\\base\\org\\jboss\\logmanager\\main";
+    private static final String WILDFLY_COMMON = "\\modules\\system\\layers\\base\\org\\wildfly\\common\\main";
 
     public WildflyInstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
@@ -55,6 +56,11 @@ public class WildflyInstaller extends BaseStandardInstaller {
     @Override
     protected String modifyStartScript(String content) throws RaspError {
         String logConfig = "set \"JAVA_OPTS=%JAVA_OPTS% -Xbootclasspath/p:" + findFile(serverRoot + JBOSS_LOGMANAGER, "jboss-logmanager") + "\"\n";
+        String wildflyCommonConfig = null;
+        String wildflyCommonPath = findFile(serverRoot + WILDFLY_COMMON, "wildfly-common");
+        if (wildflyCommonPath != null) {
+            wildflyCommonConfig = "set \"JAVA_OPTS=%JAVA_OPTS% -Xbootclasspath/p:" + wildflyCommonPath + "\"\n";
+        }
         StringBuilder sb = new StringBuilder();
         Scanner scanner = new Scanner(content);
         int modifyConfigState = NOTFOUND;
@@ -65,6 +71,9 @@ public class WildflyInstaller extends BaseStandardInstaller {
                 sb.append(OPENRASP_START_TAG);
                 sb.append(OPENRASP_CONFIG);
                 sb.append(logConfig);
+                if (wildflyCommonConfig != null) {
+                    sb.append(wildflyCommonConfig);
+                }
                 sb.append(OPENRASP_END_TAG);
                 sb.append(line).append("\n");
                 modifyConfigState = DONE;

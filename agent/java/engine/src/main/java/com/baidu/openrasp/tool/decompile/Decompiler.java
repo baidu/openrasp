@@ -86,7 +86,11 @@ public class Decompiler {
                 } catch (ClassNotFoundException e) {
                     ClassLoader classLoader = CustomClassTransformer.jspClassLoaderCache.get(className).get();
                     if (classLoader != null) {
-                        clazz = classLoader.loadClass(className);
+                        try {
+                            clazz = classLoader.loadClass(className);
+                        } catch (Exception e1) {
+                            CustomClassTransformer.jspClassLoaderCache.remove(className);
+                        }
                     }
                 }
                 if (clazz != null) {
@@ -94,6 +98,7 @@ public class Decompiler {
                     try {
                         file = new File(clazz.getResource(simpleName).getPath());
                     } catch (Exception e) {
+                        CustomClassTransformer.jspClassLoaderCache.remove(className);
                         file = null;
                     }
                     if (file != null && decompileCache.isContainsKey(description + file.lastModified())) {

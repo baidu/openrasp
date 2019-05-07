@@ -53,7 +53,7 @@ public class Context {
 
     public String getProtocol() {
         try {
-            return request.getProtocol();
+            return request.getProtocol().toLowerCase();
         } catch (Exception e) {
             return null;
         }
