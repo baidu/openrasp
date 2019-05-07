@@ -80,21 +80,6 @@ private:
   bool post_logs_via_curl(std::string &log_arr, std::string &url_string);
 };
 
-class WebDirAgent : public BaseAgent
-{
-public:
-  static volatile int signal_received;
-
-public:
-  WebDirAgent();
-  virtual void run();
-  virtual void write_pid_to_shm(pid_t agent_pid);
-
-private:
-  std::set<std::string> webroots;
-  void collect_webroot_path();
-};
-
 } // namespace openrasp
 
 #endif

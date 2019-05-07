@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef OPENRASP_ERROR_H
-#define OPENRASP_ERROR_H
+#ifndef _OPENRASP_DEPENDENCY_WRITER_H_
+#define _OPENRASP_DEPENDENCY_WRITER_H_
 
-#include "openrasp.h"
+#include "utils/JsonReader.h"
+#include "dependency_item.h"
 
-typedef enum openrasp_error_code_t
+namespace openrasp
 {
-	FSWATCH_ERROR = 20001,
-	LOG_ERROR,
-	SHM_ERROR,
-	CONFIG_ERROR,
-	PLUGIN_ERROR,
-	RUNTIME_ERROR,
-	REGISTER_ERROR = 20008,
-	HEARTBEAT_ERROR,
-	LOGCOLLECT_ERROR,
-	DEPENDENCY_ERROR = 20015
-} openrasp_error_code;
 
-void openrasp_error(int type, openrasp_error_code code, const char *format, ...);
+class DependencyWriter : public JsonReader
+{
+
+public:
+  void write_dependencys(const std::vector<std::string> &keys, const std::vector<DependencyItem> &deps);
+};
+
+} // namespace openrasp
 
 #endif

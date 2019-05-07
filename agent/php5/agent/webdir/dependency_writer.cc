@@ -14,25 +14,28 @@
  * limitations under the License.
  */
 
-#ifndef OPENRASP_ERROR_H
-#define OPENRASP_ERROR_H
+#include "dependency_writer.h"
 
-#include "openrasp.h"
-
-typedef enum openrasp_error_code_t
+namespace openrasp
 {
-	FSWATCH_ERROR = 20001,
-	LOG_ERROR,
-	SHM_ERROR,
-	CONFIG_ERROR,
-	PLUGIN_ERROR,
-	RUNTIME_ERROR,
-	REGISTER_ERROR = 20008,
-	HEARTBEAT_ERROR,
-	LOGCOLLECT_ERROR,
-	DEPENDENCY_ERROR = 20015
-} openrasp_error_code;
 
-void openrasp_error(int type, openrasp_error_code code, const char *format, ...);
+void DependencyWriter::write_dependencys(const std::vector<std::string> &keys, const std::vector<DependencyItem> &deps)
+{
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
+  json array = json::array();
+  for (auto &dep : deps)
+  {
+    if (!dep.empty())
+    {
+      json item;
+      item["path"] = dep.path;
+      item["vendor"] = dep.vendor;
+      item["product"] = dep.product;
+      item["version"] = dep.version;
+      array.push_back(item);
+    }
+  }
+  j[ptr] = array;
+}
 
-#endif
+} // namespace openrasp

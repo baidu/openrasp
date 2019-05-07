@@ -16,7 +16,6 @@
 
 #include <sstream>
 #include "JsonReader.h"
-#include "utils/json.h"
 
 namespace openrasp
 {

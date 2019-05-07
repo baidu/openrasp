@@ -270,6 +270,7 @@ if test "$PHP_OPENRASP" != "no"; then
         agent/heartbeat_agent.cc \
         agent/webdir/webdir.cc \
         agent/webdir/webdir_agent.cc \
+        agent/webdir/webdir_utils.cc \
         agent/webdir/dependency_item.cc \
         agent/webdir/webdir_detector.cc \
         agent/webdir/dependency_writer.cc \

@@ -282,7 +282,7 @@ void LogCollectItem::cleanup_expired_logs() const
                          return !strncmp(filename, (log_name + ".log.").c_str(), (log_name + ".log.").size()) &&
                                 std::string(filename) < (log_name + ".log." + tobe_deleted_date_suffix);
                      },
-                     true);
+                     LONG_MAX, true);
     for (std::string delete_file : files_tobe_deleted)
     {
         unlink(delete_file.c_str());

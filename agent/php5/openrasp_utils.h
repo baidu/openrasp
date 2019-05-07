@@ -21,13 +21,10 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <functional>
 
 const char *fetch_url_scheme(const char *filename);
 
 int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC);
-void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins,
-                      std::function<bool(const char *filename)> file_filter, bool use_abs_path = false);
 
 std::vector<std::string> format_source_code_arr(TSRMLS_D);
 void format_source_code_arr(zval *source_code_arr TSRMLS_DC);
@@ -47,6 +44,6 @@ bool make_openrasp_root_dir(const char *path TSRMLS_DC);
 void openrasp_set_locale(const char *locale, const char *locale_path);
 bool current_sapi_supported();
 
-zval* fetch_http_globals(int vars_id TSRMLS_DC);
+zval *fetch_http_globals(int vars_id TSRMLS_DC);
 
 #endif

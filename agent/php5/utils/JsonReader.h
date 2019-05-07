@@ -18,6 +18,7 @@
 #define _OPENRASP_UTILS_JSON_READER_H_
 
 #include "BaseReader.h"
+#include "utils/json.h"
 #include "third_party/json/json.hpp"
 
 namespace openrasp
@@ -27,7 +28,7 @@ using json = nlohmann::json;
 
 class JsonReader : public BaseReader
 {
-private:
+protected:
   json j;
 
 public:
