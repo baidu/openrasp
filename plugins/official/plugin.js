@@ -290,6 +290,7 @@ var algorithmConfig = {
 
     // XXE - 代码安全开关，通过调用相关函数直接禁止外部实体
     xxe_disable_entity: {
+        name:   '算法1 - 代码安全开关，'
         action: 'ignore',
         clazz:  {
             // com/sun/org/apache/xerces/internal/jaxp/DocumentBuilderFactoryImpl
@@ -309,6 +310,7 @@ var algorithmConfig = {
 
             // php: simple xml loader (v1.2 支持)
             php_simple: true,
+            
             // php: DOM (v1.2 支持)
             php_dom:    true
         }
@@ -316,7 +318,7 @@ var algorithmConfig = {
 
     // XXE - 使用 gopher/ftp/dict/.. 等不常见协议访问外部实体
     xxe_protocol: {
-        name:   '算法1 - 使用 ftp:// 等异常协议加载外部实体',
+        name:   '算法2 - 使用 ftp:// 等异常协议加载外部实体',
         action: 'block',
         protocols: [
             'ftp',
@@ -328,7 +330,7 @@ var algorithmConfig = {
     },
     // XXE - 使用 file 协议读取内容，可能误报，默认 log
     xxe_file: {
-        name:      '算法2 - 使用 file:// 协议读取文件',
+        name:      '算法3 - 使用 file:// 协议读取文件',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#case-xxe',
         action:    'log',
     },
