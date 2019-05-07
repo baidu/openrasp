@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 Baidu Inc.
+ * Copyright 2017-2019 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-#ifndef OPENRASP_ERROR_H
-#define OPENRASP_ERROR_H
+#ifndef _OPENRASP_DEPENDENCY_ITEM_H_
+#define _OPENRASP_DEPENDENCY_ITEM_H_
 
-#include "openrasp.h"
+#include <string>
 
-typedef enum openrasp_error_code_t
+namespace openrasp
 {
-	FSWATCH_ERROR = 20001,
-	LOG_ERROR,
-	SHM_ERROR,
-	CONFIG_ERROR,
-	PLUGIN_ERROR,
-	RUNTIME_ERROR,
-	REGISTER_ERROR = 20008,
-	HEARTBEAT_ERROR,
-	LOGCOLLECT_ERROR,
-	DEPENDENCY_ERROR = 20015
-} openrasp_error_code;
 
-void openrasp_error(int type, openrasp_error_code code, const char *format, ...);
+class DependencyItem
+{
+public:
+  std::string path;
+  std::string vendor;
+  std::string product;
+  std::string version;
+  DependencyItem(std::string path, std::string name, std::string version);
+  bool empty() const;
+};
+
+} // namespace openrasp
 
 #endif

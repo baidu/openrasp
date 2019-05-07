@@ -21,7 +21,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <functional>
 #include <time.h>
 
 #ifdef __cplusplus
@@ -38,7 +37,6 @@ extern "C"
 const char *fetch_url_scheme(const char *filename);
 
 int recursive_mkdir(const char *path, int len, int mode);
-void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter, bool use_abs_path = false);
 
 std::vector<std::string> format_source_code_arr();
 void format_source_code_arr(zval *source_code_arr);
@@ -58,6 +56,6 @@ bool make_openrasp_root_dir(const char *path);
 void openrasp_set_locale(const char *locale, const char *locale_path);
 bool current_sapi_supported();
 
-zval* fetch_http_globals(int vars_id);
+zval *fetch_http_globals(int vars_id);
 
 #endif

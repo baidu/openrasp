@@ -123,6 +123,29 @@ void OpenraspCtrlBlock::set_webroot_count(int webroot_count)
     }
 }
 
+int OpenraspCtrlBlock::get_dependency_interval()
+{
+    return dependency_interval;
+}
+
+void OpenraspCtrlBlock::set_dependency_interval(int dependency_interval)
+{
+    this->dependency_interval = (dependency_interval >= OpenraspCtrlBlock::agent_min_interval &&
+                                 webroot_count <= OpenraspCtrlBlock::agent_max_interval)
+                                    ? dependency_interval
+                                    : OpenraspCtrlBlock::default_dependency_interval;
+}
+
+long OpenraspCtrlBlock::get_scan_limit()
+{
+    return scan_limit;
+}
+
+void OpenraspCtrlBlock::set_scan_limit(long scan_limit)
+{
+    this->scan_limit = (scan_limit >= 0) ? scan_limit : OpenraspCtrlBlock::default_scan_limit;
+}
+
 bool OpenraspCtrlBlock::webroot_found(ulong hash)
 {
     int size = MIN(this->webroot_count, OpenraspCtrlBlock::webroot_max_size);

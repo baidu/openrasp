@@ -178,27 +178,6 @@ const char *fetch_url_scheme(const char *filename)
     return nullptr;
 }
 
-void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter, bool use_abs_path)
-{
-    DIR *dir;
-    std::string result;
-    struct dirent *ent;
-    if ((dir = opendir(dir_abs.c_str())) != NULL)
-    {
-        while ((ent = readdir(dir)) != NULL)
-        {
-            if (file_filter)
-            {
-                if (file_filter(ent->d_name))
-                {
-                    plugins.push_back(use_abs_path ? (dir_abs + std::string(1, DEFAULT_SLASH) + std::string(ent->d_name)) : std::string(ent->d_name));
-                }
-            }
-        }
-        closedir(dir);
-    }
-}
-
 char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
 {
     zval *origin_zv;

@@ -86,6 +86,12 @@ public:
   void write_webroot_path(const char *webroot_path);
   bool consume_webroot_path(std::string &webroot_path);
 
+  int get_dependency_interval();
+  void set_dependency_interval(int dependency_interval);
+
+  long get_scan_limit();
+  void set_scan_limit(long scan_limit);
+
 private:
   bool create_share_memory();
   bool destroy_share_memory();

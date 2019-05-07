@@ -35,6 +35,7 @@
 #include "utils/net.h"
 #include "agent/utils/os.h"
 #include "openrasp_utils.h"
+#include "agent/webdir/webdir_agent.h"
 
 #ifdef HAVE_LINE_COVERAGE
 #define SIGNAL_KILL_AGENT SIGTERM
@@ -104,6 +105,8 @@ bool OpenraspAgentManager::startup()
 			return false;
 		}
 		set_master_pid(init_process_pid);
+		set_dependency_interval(OpenraspCtrlBlock::default_dependency_interval);
+		set_scan_limit(OpenraspCtrlBlock::default_scan_limit);
 		process_agent_startup();
 		initialized = true;
 	}
@@ -590,6 +593,44 @@ bool OpenraspAgentManager::consume_webroot_path(std::string &webroot_path)
 		}
 	}
 	return false;
+}
+
+int OpenraspAgentManager::get_dependency_interval()
+{
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	{
+		ReadUnLocker auto_unlocker(rwlock);
+		return agent_ctrl_block->get_dependency_interval();
+	}
+	return OpenraspCtrlBlock::default_dependency_interval;
+}
+
+void OpenraspAgentManager::set_dependency_interval(int dependency_interval)
+{
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	{
+		WriteUnLocker auto_unlocker(rwlock);
+		agent_ctrl_block->set_dependency_interval(dependency_interval);
+	}
+}
+
+long OpenraspAgentManager::get_scan_limit()
+{
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	{
+		ReadUnLocker auto_unlocker(rwlock);
+		return agent_ctrl_block->get_scan_limit();
+	}
+	return OpenraspCtrlBlock::default_scan_limit;
+}
+
+void OpenraspAgentManager::set_scan_limit(long scan_limit)
+{
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	{
+		WriteUnLocker auto_unlocker(rwlock);
+		agent_ctrl_block->set_scan_limit(scan_limit);
+	}
 }
 
 } // namespace openrasp

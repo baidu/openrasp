@@ -268,7 +268,11 @@ if test "$PHP_OPENRASP" != "no"; then
         agent/openrasp_ctrl_block.cc \
         agent/openrasp_agent.cc \
         agent/heartbeat_agent.cc \
-        agent/webdir_agent.cc \
+        agent/webdir/webdir.cc \
+        agent/webdir/webdir_agent.cc \
+        agent/webdir/dependency_item.cc \
+        agent/webdir/webdir_detector.cc \
+        agent/webdir/dependency_writer.cc \
         agent/log_agent.cc \
         agent/openrasp_agent_manager.cc \
         agent/log_collect_item.cc \

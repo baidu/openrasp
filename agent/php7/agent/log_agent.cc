@@ -18,7 +18,6 @@
 #include "openrasp_hook.h"
 #include <fstream>
 #include <sstream>
-#include <dirent.h>
 #include <algorithm>
 #include "shared_config_manager.h"
 #include "agent/utils/os.h"
