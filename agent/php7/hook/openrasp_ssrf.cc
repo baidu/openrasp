@@ -17,6 +17,7 @@
 #include "openrasp_hook.h"
 #include "openrasp_v8.h"
 #include "utils/net.h"
+#include "utils/url.h"
 
 extern "C"
 {
@@ -86,15 +87,10 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
         return true;
     }
     std::string url_string(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url));
-    std::string scheme;
-    std::string host;
-    std::string port;
-    if (!openrasp_parse_url(url_string, scheme, host, port) || scheme.empty())
+    openrasp::Url url(url_string);
+    if (url.has_error())
     {
-        if (!openrasp_parse_url("http://" + url_string, scheme, host, port))
-        {
-            return false;
-        }
+        return false;
     }
     openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (isolate)
@@ -106,9 +102,9 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
             auto params = v8::Object::New(isolate);
             params->Set(openrasp::NewV8String(isolate, "url"), openrasp::NewV8String(isolate, Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url)));
             params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "curl_exec"));
-            params->Set(openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, host));
-            params->Set(openrasp::NewV8String(isolate, "port"), openrasp::NewV8String(isolate, port));
-            std::vector<std::string> ips = openrasp::lookup_host(host);
+            params->Set(openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, url.get_host()));
+            params->Set(openrasp::NewV8String(isolate, "port"), openrasp::NewV8String(isolate, url.get_port()));
+            std::vector<std::string> ips = openrasp::lookup_host(url.get_host());
             auto ip_arr = v8::Array::New(isolate);
             std::string ip_sum;
             for (int i = 0; i < ips.size(); ++i)
