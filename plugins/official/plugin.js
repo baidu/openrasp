@@ -309,13 +309,7 @@ var algorithmConfig = {
             java_sax:   true,
 
             // javax/xml/stream/XMLInputFactory
-            java_stax:  true,
-
-            // php: simple xml loader (v1.2 支持)
-            php_simple: true,
-            
-            // php: DOM (v1.2 支持)
-            php_dom:    true
+            java_stax:  true
         }
     },
 
