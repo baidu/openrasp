@@ -14,6 +14,15 @@
 
 package environment
 
+/*
+const char* build_time(void)
+{
+static const char* psz_build_time = "["__DATE__ "  " __TIME__ "]";
+return psz_build_time;
+}
+*/
+import "C"
+
 import (
 	"flag"
 	"github.com/astaxie/beego"
@@ -29,8 +38,9 @@ import (
 	"bytes"
 )
 
-const (
-	Version = "1.0"
+var (
+	Version   = "1.1"
+	BuildTime = C.GoString(C.build_time())
 )
 
 func init() {
@@ -42,6 +52,7 @@ func init() {
 
 	if *StartFlag.Version {
 		fmt.Println(Version)
+		fmt.Println("Build Time: " + BuildTime)
 		os.Exit(0)
 	}
 	if *StartFlag.StartType == conf.StartTypeReset {

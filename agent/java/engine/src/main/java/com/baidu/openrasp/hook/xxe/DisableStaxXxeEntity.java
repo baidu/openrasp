@@ -48,7 +48,7 @@ public class DisableStaxXxeEntity extends DisableXxeEntity {
     public static void setFeature(Object factory) {
         if (HookHandler.requestCache.get() != null) {
             String action = getAction();
-            if (BLOCK_XXE_DISABLE_ENTITY.equals(action)) {
+            if (BLOCK_XXE_DISABLE_ENTITY.equals(action) && getStatus("java_stax")) {
                 try {
                     String property = (String) factory.getClass().getField("SUPPORT_DTD").get(null);
                     if (property != null) {

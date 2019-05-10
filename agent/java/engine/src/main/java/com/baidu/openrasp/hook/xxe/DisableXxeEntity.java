@@ -55,4 +55,25 @@ public abstract class DisableXxeEntity extends AbstractClassHook {
         }
         return DEFAULT_XXE_DISABLE_ENTITY;
     }
+
+    protected static boolean getStatus(String type) {
+        try {
+            JsonObject config = Config.getConfig().getAlgorithmConfig();
+            if (config != null) {
+                JsonElement jsonElement = config.get(XXE_DISABLE_ENTITY);
+                if (jsonElement != null) {
+                    JsonElement value = jsonElement.getAsJsonObject().get("clazz");
+                    if (value != null) {
+                        JsonElement status = value.getAsJsonObject().get(type);
+                        if (status != null) {
+                            return status.getAsBoolean();
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            return false;
+        }
+        return false;
+    }
 }
