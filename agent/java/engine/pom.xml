@@ -58,9 +58,9 @@
             <version>3.5</version>
         </dependency>
         <dependency>
-            <groupId>scijava</groupId>
-            <artifactId>native-lib-loader</artifactId>
-            <version>2.3.4</version>
+            <groupId>com.baidu.openrasp</groupId>
+            <artifactId>v8</artifactId>
+            <version>1</version>
         </dependency>
         <dependency>
             <groupId>com.jsoniter</groupId>

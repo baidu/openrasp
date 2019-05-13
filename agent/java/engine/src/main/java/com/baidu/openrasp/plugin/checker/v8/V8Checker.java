@@ -19,7 +19,7 @@ package com.baidu.openrasp.plugin.checker.v8;
 import com.baidu.openrasp.plugin.checker.AttackChecker;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
-import com.baidu.openrasp.plugin.v8.V8;
+import com.baidu.openrasp.plugin.js.JS;
 
 
 import java.util.List;
@@ -47,6 +47,6 @@ public class V8Checker extends AttackChecker {
      */
     @Override
     public List<EventInfo> checkParam(CheckParameter checkParameter) {
-        return V8.Check(checkParameter);
+        return JS.Check(checkParameter);
     }
 }
