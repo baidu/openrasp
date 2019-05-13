@@ -19,7 +19,7 @@ chai.expect();
 chai.should();
 axios.defaults.headers.common['Test-Test'] = 'Test-Test';
 axios.defaults.validateStatus = status => status !== undefined;
-axios.defaults.transformResponse = []
+axios.defaults.transformResponse = [];
 
 describe(process.env['SERVER'] || 'server', function () {
     before(function () {
@@ -55,48 +55,51 @@ describe(process.env['SERVER'] || 'server', function () {
         let timestamp = Date.now();
         let resData;
         fs.watchFile(POLICY_ALARM_FILE, watchFileOptions, () => {
+            fs.unwatchFile(POLICY_ALARM_FILE);
             let data = fs.readFileSync(POLICY_ALARM_FILE, {
                 encoding: 'utf8'
             });
-            data.should.equal(timestamp+'')
-            resData.should.not.contains('blocked')
+            data.should.equal(timestamp + '');
+            resData.should.not.contains('blocked');
             done();
         });
-        axios.get('sql-not-connectable.jsp').then(function(response){
-            resData = response.data
+        axios.get('sql-not-connectable.jsp').then(function (response) {
+            resData = response.data;
             fs.writeFileSync(POLICY_ALARM_FILE, timestamp);
-        })
+        });
     });
     it('should block when security.enforce_policy=true and request_url=http://127.0.0.1:8080/app/sql-connectable.jsp', function (done) {
         let resData;
         fs.watchFile(RASP_LOG_FILE, watchFileOptions, () => {
+            fs.unwatchFile(RASP_LOG_FILE);
             let data = fs.readFileSync(RASP_LOG_FILE, {
                 encoding: 'utf8'
             });
-            if(data.indexOf('configuration')>=0){
-                axios.get('sql-connectable.jsp').then(function(response){
-                    resData = response.data
-                    resData.should.contains('blocked')
-                    done()
-                })
+            if (data.indexOf('configuration') >= 0) {
+                axios.get('sql-connectable.jsp').then(function (response) {
+                    resData = response.data;
+                    resData.should.contains('blocked');
+                    done();
+                });
             }
         });
-        fs.writeFileSync(CONF_FILE,'\nsecurity.enforce_policy: true');
+        fs.writeFileSync(CONF_FILE, '\nsecurity.enforce_policy: true');
     });
     it('should not log and not block when security.enforce_policy=true and request_url=http://127.0.0.1:8080/app/sql-not-connectable.jsp and ', function (done) {
         let resData;
         fs.watchFile(RASP_LOG_FILE, watchFileOptions, () => {
+            fs.unwatchFile(RASP_LOG_FILE);
             let data = fs.readFileSync(RASP_LOG_FILE, {
                 encoding: 'utf8'
             });
-            if(data.indexOf('configuration')>=0){
-                axios.get('sql-not-connectable.jsp').then(function(response){
-                    resData = response.data
-                    resData.should.not.contains('blocked')
-                    done()
-                })
+            if (data.indexOf('configuration') >= 0) {
+                axios.get('sql-not-connectable.jsp').then(function (response) {
+                    resData = response.data;
+                    resData.should.not.contains('blocked');
+                    done();
+                });
             }
         });
-        fs.writeFileSync(CONF_FILE,'\nsecurity.enforce_policy: true');
+        fs.writeFileSync(CONF_FILE, '\nsecurity.enforce_policy: true');
     });
 });
