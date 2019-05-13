@@ -107,6 +107,21 @@ bool SharedConfigManager::build_check_type_white_array(std::map<std::string, std
     build_check_type_white_array(white_mask_map);
 }
 
+bool SharedConfigManager::build_check_type_white_array(BaseReader *br)
+{
+    std::vector<std::string> hook_white_key({"hook.white"});
+    std::map<std::string, std::vector<std::string>> hook_white_map;
+    std::vector<std::string> url_keys = br->fetch_object_keys(hook_white_key);
+    for (auto &key_item : url_keys)
+    {
+        hook_white_key.push_back(key_item);
+        std::vector<std::string> white_types = br->fetch_strings(hook_white_key, {});
+        hook_white_key.pop_back();
+        hook_white_map.insert({key_item, white_types});
+    }
+    return build_check_type_white_array(hook_white_map);
+}
+
 long SharedConfigManager::get_config_last_update()
 {
     if (rwlock != nullptr && rwlock->read_try_lock())

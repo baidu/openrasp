@@ -58,12 +58,10 @@ public:
   int64_t fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value = BackendResponse::default_int64);
   std::string fetch_string(const std::vector<std::string> &keys, const std::string &default_value = "");
   std::string stringify_object(const std::vector<std::string> &keys, bool pretty = false);
-  void erase_value(const std::vector<std::string> &keys);
 
   std::shared_ptr<PluginUpdatePackage> build_plugin_update_package();
   std::vector<std::string> fetch_object_keys(const std::vector<std::string> &keys);
   std::vector<std::string> fetch_string_array(const std::vector<std::string> &keys);
-  std::map<std::string, std::vector<std::string>> build_hook_white_map(const std::vector<std::string> &keys);
 };
 
 } // namespace openrasp

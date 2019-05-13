@@ -175,17 +175,7 @@ PHP_MINIT_FUNCTION(openrasp)
         if (openrasp::read_entire_content(config_file_path, conf_contents))
         {
             openrasp::YamlReader yreader(conf_contents);
-            std::vector<std::string> hook_white_key({"hook.white"});
-            std::map<std::string, std::vector<std::string>> hook_white_map;
-            std::vector<std::string> url_keys = yreader.fetch_object_keys(hook_white_key);
-            for (auto &key_item : url_keys)
-            {
-                hook_white_key.push_back(key_item);
-                std::vector<std::string> white_types = yreader.fetch_strings(hook_white_key, {});
-                hook_white_key.pop_back();
-                hook_white_map.insert({key_item, white_types});
-            }
-            openrasp::scm->build_check_type_white_array(hook_white_map);
+            openrasp::scm->build_check_type_white_array(&yreader);
         }
 #ifdef HAVE_FSWATCH
         result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);

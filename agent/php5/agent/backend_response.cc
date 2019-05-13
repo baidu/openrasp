@@ -97,11 +97,6 @@ std::string BackendResponse::stringify_object(const std::vector<std::string> &ke
     return json_reader.dump(keys, pretty);
 }
 
-void BackendResponse::erase_value(const std::vector<std::string> &keys)
-{
-    json_reader.erase(keys);
-}
-
 bool BackendResponse::verify(openrasp_error_code error_code)
 {
     if (has_error())
@@ -135,21 +130,6 @@ std::vector<std::string> BackendResponse::fetch_object_keys(const std::vector<st
 std::vector<std::string> BackendResponse::fetch_string_array(const std::vector<std::string> &keys)
 {
     return json_reader.fetch_strings(keys, {});
-}
-
-std::map<std::string, std::vector<std::string>> BackendResponse::build_hook_white_map(const std::vector<std::string> &keys)
-{
-    std::map<std::string, std::vector<std::string>> hook_white_map;
-    std::vector<std::string> url_keys = fetch_object_keys(keys);
-    std::vector<std::string> tmp_keys(keys);
-    for (auto &key_item : url_keys)
-    {
-        tmp_keys.push_back(key_item);
-        std::vector<std::string> white_types = fetch_string_array(tmp_keys);
-        tmp_keys.pop_back();
-        hook_white_map.insert({key_item, white_types});
-    }
-    return hook_white_map;
 }
 
 std::string BackendResponse::to_string() const

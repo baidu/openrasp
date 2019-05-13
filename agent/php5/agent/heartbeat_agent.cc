@@ -119,13 +119,12 @@ bool HeartBeatAgent::do_heartbeat()
 				scm->set_log_max_backup(log_max_backup > 0 ? log_max_backup : 30);
 				int64_t debug_level = res_info->fetch_int64({"data", "config", "debug.level"}, 0);
 				scm->set_debug_level(debug_level);
-				std::map<std::string, std::vector<std::string>> white_map = res_info->build_hook_white_map({"data", "config", "hook.white"});
-				scm->build_check_type_white_array(white_map);
-				res_info->erase_value({"data", "config", "hook.white"});
+				openrasp::JsonReader jreader(complete_config);
+				openrasp::scm->build_check_type_white_array(&jreader);
 
 				/************************************OPENRASP_G(config)************************************/
-				std::string exculde_hook_white_config = res_info->stringify_object({"data", "config"}, true);
-				if (!exculde_hook_white_config.empty())
+				std::string complete_config = res_info->stringify_object({"data", "config"}, true);
+				if (!complete_config.empty())
 				{
 					std::string cloud_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/cloud-config.json";
 #ifndef _WIN32
@@ -133,8 +132,8 @@ bool HeartBeatAgent::do_heartbeat()
 #endif
 					bool write_ok = write_string_to_file(cloud_config_file_path.c_str(),
 														 std::ofstream::in | std::ofstream::out | std::ofstream::trunc,
-														 exculde_hook_white_config.c_str(),
-														 exculde_hook_white_config.length());
+														 complete_config.c_str(),
+														 complete_config.length());
 #ifndef _WIN32
 					umask(oldmask);
 #endif
