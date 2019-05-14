@@ -94,7 +94,7 @@
               开启反汇编功能
               <a href="https://rasp.baidu.com/doc/setup/panel.html#decompiler" target="_blank">
                 [帮助文档]
-              </a>            
+              </a>
             </span>
           </label>
         </div>          
