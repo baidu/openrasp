@@ -30,7 +30,7 @@ import java.net.URL;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
-import com.baidu.openrasp.plugin.v8.*;
+import com.baidu.openrasp.plugin.js.*;
 /**
  * Created by tyy on 18-1-24.
  *
@@ -57,7 +57,7 @@ public class EngineBoot implements Module {
         }
         readVersion();
         // 初始化插件系统
-        V8.Init();
+        JS.Initialize();
         CheckerManager.init();
         initTransformer(inst);
         String message = "OpenRASP Engine Initialized [" + projectVersion + " (build: GitCommit=" + gitCommit + " date="
@@ -71,7 +71,7 @@ public class EngineBoot implements Module {
         if (transformer != null) {
             transformer.release();
         }
-        V8.Release();
+        JS.Dispose();
         CheckerManager.release();
         String message = "OpenRASP Engine Released [" + projectVersion + " (build: GitCommit=" + gitCommit + " date="
                 + buildTime + ")]";

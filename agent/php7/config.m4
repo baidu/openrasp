@@ -51,7 +51,9 @@ if test "$PHP_OPENRASP" != "no"; then
       PHP_ADD_INCLUDE($PHP_OPENRASP_V8/vendors/libc++-linux/include/c++/v1)
       PHP_ADD_LIBRARY(rt, , OPENRASP_SHARED_LIBADD)
       PHP_ADD_LIBRARY(dl, , OPENRASP_SHARED_LIBADD)
-      OPENRASP_LIBS="$OPENRASP_LIBS $PHP_OPENRASP_V8/vendors/libv8-7.2-linux/lib/libv8_monolith.a -pthread -Wl,--whole-archive -Wl,$PHP_OPENRASP_V8/vendors/libc++-linux/lib/* -Wl,--no-whole-archive"
+      CXXFLAGS="$CXXFLAGS -nostdinc++"
+      OPENRASP_LIBS="$OPENRASP_LIBS $PHP_OPENRASP_V8/vendors/libv8-7.2-linux/lib/libv8_monolith.a -Wl,--whole-archive -Wl,$PHP_OPENRASP_V8/vendors/libc++-linux/lib/* -Wl,--no-whole-archive"
+      OPENRASP_LIBS="$OPENRASP_LIBS -nodefaultlibs -lm -lc -lgcc_s -lrt -lpthread"
       ;;
   esac
 
