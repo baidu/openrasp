@@ -275,3 +275,20 @@ Object.defineProperty(global, 'CheckPointRename', {
     value: CheckPointRename,
     enumerable: true
 });
+
+const CheckPointMongo = class {
+    constructor(data) {
+        this.query = data.query;
+        this.class = data.class;
+        this.method = data.method;
+        this.server = data.server;
+    }
+
+    static get name() {
+        return 'mongo';
+    }
+};
+Object.defineProperty(global, 'CheckPointMongo', {
+    value: CheckPointMongo,
+    enumerable: true
+});

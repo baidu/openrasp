@@ -50,6 +50,7 @@ typedef enum check_type_t
   XSS_USER_INPUT,
   REQUEST,
   REQUEST_END,
+  MONGO,
   ALL_TYPE
 } OpenRASPCheckType;
 
