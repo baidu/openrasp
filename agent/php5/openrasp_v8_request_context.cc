@@ -482,7 +482,7 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     {
         v8::Local<v8::Value> exception = trycatch.Exception();
         v8::String::Utf8Value exception_str(isolate, exception);
-        openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("Fail to parse json body, cuz of %s."), *exception_str);
+        openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("Fail to parse json body, cuz of %s."), *exception_str);
     }
     else
     {
