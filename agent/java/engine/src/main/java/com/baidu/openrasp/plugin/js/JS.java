@@ -146,7 +146,6 @@ public class JS {
         if (rst) {
             try {
                 String jsonString = V8.ExecuteScript("JSON.stringify(RASP.algorithmConfig || {})", "get-algorithm-config.js");
-                jsonString = new JsonParser().parse(jsonString).getAsString();
                 Config.getConfig().setConfig("algorithm.config", jsonString, true);
             } catch (Exception e) {
                 String message = e.getMessage();
