@@ -23,7 +23,7 @@
                   忘记密码?
                 </a>
               </label>
-              <input v-model="password" type="password" class="form-control" placeholder="输入密码">
+              <input v-model="password" type="password" class="form-control" placeholder="输入密码" autocomplete="off">
             </div>
             <div class="form-footer">
               <button type="submit" class="btn btn-primary btn-block" :plain="true" @click.prevent="doLogin()">
