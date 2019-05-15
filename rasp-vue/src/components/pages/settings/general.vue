@@ -73,7 +73,7 @@
             [插件] 单个hook点最大执行时间（ms）
           </label>
           <input v-model.number="data['plugin.timeout.millis']" type="number" class="form-control" placeholder="100">
-        </div>            
+        </div>
         <div class="form-group">
           <label class="form-label">
             [日志] 报警日志记录的最大堆栈深度
