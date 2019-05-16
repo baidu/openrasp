@@ -167,7 +167,7 @@ func handleEsLogPush() {
 			alarm := <-AttackAlarmInfo.AlarmBuffer
 			alarms = append(alarms, alarm)
 		}
-		err := es.BulkInsert(AttackAlarmInfo.EsType, alarms)
+		err := es.BulkInsertAlarm(AttackAlarmInfo.EsType, alarms)
 		if err != nil {
 			beego.Error("failed to execute es bulk insert for attack alarm: " + err.Error())
 		}
@@ -178,7 +178,7 @@ func handleEsLogPush() {
 			alarm := <-PolicyAlarmInfo.AlarmBuffer
 			alarms = append(alarms, alarm)
 		}
-		err := es.BulkInsert(PolicyAlarmInfo.EsType, alarms)
+		err := es.BulkInsertAlarm(PolicyAlarmInfo.EsType, alarms)
 		if err != nil {
 			beego.Error("failed to execute es bulk insert for policy alarm: " + err.Error())
 		}
@@ -189,7 +189,7 @@ func handleEsLogPush() {
 			alarm := <-ErrorAlarmInfo.AlarmBuffer
 			alarms = append(alarms, alarm)
 		}
-		err := es.BulkInsert(ErrorAlarmInfo.EsType, alarms)
+		err := es.BulkInsertAlarm(ErrorAlarmInfo.EsType, alarms)
 		if err != nil {
 			beego.Error("failed to execute es bulk insert for error alarm: " + err.Error())
 		}
@@ -323,12 +323,7 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 				if err != nil {
 					return 0, nil, err
 				}
-				result[index]["id"] = item.Id
-				delete(result[index], "_@timestamp")
-				delete(result[index], "@timestamp")
-				delete(result[index], "@version")
-				delete(result[index], "tags")
-				delete(result[index], "host")
+				es.HandleSearchResult(result[index], item.Id)
 			}
 		}
 	} else {
@@ -351,8 +346,8 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 							if err != nil {
 								return 0, nil, err
 							}
-							value["id"] = hits[0].Id
 							value["attack_count"] = terms.Buckets[index].DocCount
+							es.HandleSearchResult(value, hits[0].Id)
 							result = append(result, value)
 						}
 					}

@@ -112,7 +112,7 @@ func CreateTemplate(name string, body string) error {
 	defer cancel()
 	_, err := elastic.NewIndicesPutTemplateService(ElasticClient).Name(name).BodyString(body).Do(ctx)
 	if err != nil {
-		return err
+		tools.Panic(tools.ErrCodeESInitFailed, "failed to create es template: "+name, err)
 	}
 	beego.Info("put es template: " + name)
 	return nil
@@ -132,7 +132,6 @@ func CreateEsIndex(index string) error {
 		}
 		logs.Info("create es index: " + createResult.Index)
 		if err != nil {
-			beego.Error("failed to create index with name " + index + ": " + err.Error())
 			return err
 		}
 	}
@@ -146,7 +145,7 @@ func Insert(index string, docType string, doc interface{}) (err error) {
 	return
 }
 
-func BulkInsert(docType string, docs []map[string]interface{}) (err error) {
+func BulkInsertAlarm(docType string, docs []map[string]interface{}) (err error) {
 	bulkService := ElasticClient.Bulk()
 	for _, doc := range docs {
 		if doc["app_id"] == nil {
@@ -178,4 +177,50 @@ func BulkInsert(docType string, docs []map[string]interface{}) (err error) {
 	defer cancel()
 	_, err = bulkService.Do(ctx)
 	return err
+}
+
+func BulkInsert(index string, docType string, docs []interface{}) (err error) {
+	bulkService := ElasticClient.Bulk()
+	for _, doc := range docs {
+		bulkService.Add(elastic.NewBulkIndexRequest().
+			Index(index).
+			Type(docType).
+			OpType("index").
+			Doc(doc))
+	}
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
+	defer cancel()
+	_, err = bulkService.Do(ctx)
+	return err
+}
+
+func DeleteIndex(indexName string) error {
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
+	defer cancel()
+	_, err := ElasticClient.DeleteIndex(indexName).Do(ctx)
+	return err
+}
+
+func DeleteByQuery(index string, docType string, query elastic.Query) error {
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
+	defer cancel()
+	res, err := ElasticClient.DeleteByQuery(index).Type(docType).Query(query).Do(ctx)
+	if err != nil {
+		beego.Error("failed to delete by query", res.Failures, err)
+		return err
+	}
+	return nil
+}
+
+func GetIndex(base string, appId string) string {
+	return base + "-" + appId
+}
+
+func HandleSearchResult(result map[string]interface{}, id string) {
+	result["id"] = id
+	delete(result, "_@timestamp")
+	delete(result, "@timestamp")
+	delete(result, "@version")
+	delete(result, "tags")
+	delete(result, "host")
 }

@@ -401,6 +401,10 @@ func (o *AppController) Delete() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to remove plugin by app_id", err)
 	}
+	err = models.RemoveDependencyByApp(app.Id)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to remove dependency data by app_id", err)
+	}
 	models.AddOperation(app.Id, models.OperationTypeDeleteApp, o.Ctx.Input.IP(), "Deleted app with name "+app.Name)
 	o.ServeWithEmptyData()
 }

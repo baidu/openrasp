@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	Version = "1.0.0-RC1"
+	Version = "1.3"
 )
 
 func init() {

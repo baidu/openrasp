@@ -175,7 +175,11 @@ func RemoveRaspById(id string) (err error) {
 	if *rasp.Online {
 		return errors.New("unable to delete online rasp")
 	}
-	return mongo.RemoveId(raspCollectionName, id)
+	err = mongo.RemoveId(raspCollectionName, id)
+	if err != nil {
+		return err
+	}
+	return RemoveDependencyByRasp(rasp.AppId, rasp.Id)
 }
 
 func RemoveRaspBySelector(selector map[string]interface{}, appId string) (int, error) {

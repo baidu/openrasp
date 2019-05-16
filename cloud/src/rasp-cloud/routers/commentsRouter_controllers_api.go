@@ -155,6 +155,24 @@ func init() {
             Filters: nil,
             Params: nil})
 
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:DependencyController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:DependencyController"],
+        beego.ControllerComments{
+            Method: "AggrWithSearch",
+            Router: `/aggr`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:DependencyController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:DependencyController"],
+        beego.ControllerComments{
+            Method: "Search",
+            Router: `/search`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
     beego.GlobalControllerRouter["rasp-cloud/controllers/api:OperationController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:OperationController"],
         beego.ControllerComments{
             Method: "Search",
