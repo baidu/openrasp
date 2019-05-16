@@ -16,6 +16,12 @@ const default_action = {
     confidence: 90
 }
 
+// BEGIN ALGORITHM CONFIG //
+
+var algorithmConfig = {}
+
+// END ALGORITHM CONFIG //
+
 plugin.register('sql', function (params, context) {
     return default_action
 })

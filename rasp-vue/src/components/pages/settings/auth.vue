@@ -13,19 +13,19 @@
           <label class="form-label">
             原密码
           </label>
-          <input v-model="oldpass" type="password" class="form-control">
+          <input v-model="oldpass" type="password" class="form-control" autocomplete="off">
         </div>
         <div class="form-group">
           <label class="form-label">
             新密码
           </label>
-          <input v-model="newpass1" type="password" class="form-control">
+          <input v-model="newpass1" type="password" class="form-control" autocomplete="off">
         </div>
         <div class="form-group">
           <label class="form-label">
             再次输入新密码
           </label>
-          <input v-model="newpass2" type="password" class="form-control">
+          <input v-model="newpass2" type="password" class="form-control" autocomplete="off">
         </div>
       </div>
       <div class="card-footer text-right">
