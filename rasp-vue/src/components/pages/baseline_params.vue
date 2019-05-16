@@ -65,26 +65,32 @@
         </div>
 
         <div v-if="data.policy_id == '3003'">
-            <div class="h6" v-if="data.policy_params.config_file">
-                配置文件路径
+            <div v-if="data.policy_params.config_file">
+                <div class="h6">
+                    配置文件路径
+                </div>
+                <p>
+                    {{ data.policy_params.config_file }}
+                </p>
             </div>
-            <p>
-                {{ data.policy_params.config_file }}
-            </p>
 
-            <div class="h6" v-if="data.policy_params.hostname && data.policy_params.port">
-                服务器信息
+            <div  v-if="data.policy_params.hostname && data.policy_params.port">
+                <div class="h6">
+                    服务器信息
+                </div>
+                <p>
+                    {{ data.policy_params.hostname }}:{{ data.policy_params.port }}
+                </p>
             </div>
-            <p>
-                {{ data.policy_params.hostname }}:{{ data.policy_params.port }}
-            </p>
 
-            <div class="h6" v-if="data.policy_params.socket">
-                服务器信息
-            </div>
-            <p>
-                {{ data.policy_params.socket }}
-            </p>            
+            <div v-if="data.policy_params.socket">
+                <div class="h6">
+                    服务器信息
+                </div>
+                <p>
+                    {{ data.policy_params.socket }}
+                </p>
+            </div>           
 
             <div class="h6">
                 弱口令
@@ -92,6 +98,7 @@
             <p>
                 {{ data.policy_params.username }}:{{ data.policy_params.password }}
             </p>
+            
             <div class="h6">
                 问题描述
             </div>
