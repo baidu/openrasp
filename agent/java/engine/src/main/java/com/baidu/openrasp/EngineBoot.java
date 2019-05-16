@@ -57,7 +57,9 @@ public class EngineBoot implements Module {
         }
         readVersion();
         // 初始化插件系统
-        JS.Initialize();
+        if (!JS.Initialize()) {
+            return;
+        }
         CheckerManager.init();
         initTransformer(inst);
         String message = "OpenRASP Engine Initialized [" + projectVersion + " (build: GitCommit=" + gitCommit + " date="
