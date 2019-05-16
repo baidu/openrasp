@@ -65,12 +65,26 @@
         </div>
 
         <div v-if="data.policy_id == '3003'">
-            <div class="h6">
+            <div class="h6" v-if="data.policy_params.config_file">
                 配置文件路径
             </div>
             <p>
                 {{ data.policy_params.config_file }}
             </p>
+
+            <div class="h6" v-if="data.policy_params.hostname && data.policy_params.port">
+                服务器信息
+            </div>
+            <p>
+                {{ data.policy_params.hostname }}:{{ data.policy_params.port }}
+            </p>
+
+            <div class="h6" v-if="data.policy_params.socket">
+                服务器信息
+            </div>
+            <p>
+                {{ data.policy_params.socket }}
+            </p>            
 
             <div class="h6">
                 弱口令
@@ -81,7 +95,15 @@
             <div class="h6">
                 问题描述
             </div>
-            <p>
+            <p v-if="data.policy_params.server == 'mysql'">
+                MySQL 存在弱口令，若账号被爆破会有数据泄露风险。
+                <a href="https://rasp.baidu.com/doc/usage/security_policy.html#3003" target="_blank">点击这里</a>了解更多。
+            </p>
+            <p v-else-if="data.policy_params.type">
+                {{ data.policy_params.type }} 存在弱口令。
+                <a href="https://rasp.baidu.com/doc/usage/security_policy.html#3003" target="_blank">点击这里</a>了解更多。
+            </p>
+            <p v-else>
                 Tomcat 管理后台存在弱口令，若管理后台对外暴露，会有被入侵的风险。
                 <a href="https://rasp.baidu.com/doc/usage/security_policy.html#3003" target="_blank">点击这里</a>了解更多。
             </p>            
