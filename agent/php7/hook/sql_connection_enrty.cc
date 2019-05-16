@@ -103,10 +103,10 @@ std::string SqlConnectionEntry::build_policy_msg(connection_policy_type type)
   }
   else if (connection_policy_type::PASSWORD == type)
   {
-    oss << "Database security baseline - the password "
-        << password
-        << " is detected weak password combination , username is: "
-        << username;
+    oss << "Database security baseline - weak password detected for "
+        << username
+        << " account, password is: "
+        << password;
   }
   return oss.str();
 }
