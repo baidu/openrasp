@@ -39,17 +39,25 @@ public class JS {
         Base64Support.enable();
     }
 
-    public synchronized static void Initialize() throws Exception {
-        V8.Initialize();
-        V8.SetPluginLogger(new com.baidu.openrasp.v8.Logger() {
-            @Override
-            public void log(String msg) {
-                PLUGIN_LOGGER.info(msg);
+    public synchronized static boolean Initialize() {
+        try {
+            if (!V8.Load() || !V8.Initialize()) {
+                return false;
             }
-        });
-        if (!CloudUtils.checkCloudControlEnter()) {
-            UpdatePlugin();
-            InitFileWatcher();
+            V8.SetPluginLogger(new com.baidu.openrasp.v8.Logger() {
+                @Override
+                public void log(String msg) {
+                    PLUGIN_LOGGER.info(msg);
+                }
+            });
+            if (!CloudUtils.checkCloudControlEnter()) {
+                UpdatePlugin();
+                InitFileWatcher();
+            }
+            return true;
+        } catch (Exception e) {
+            System.err.println(e);
+            return false;
         }
     }
 
@@ -101,8 +109,12 @@ public class JS {
         }
         ArrayList<EventInfo> attackInfos = new ArrayList<EventInfo>();
         for (Any rst : any.asList()) {
-            attackInfos.add(new AttackInfo(checkParameter, rst.toString("action"), rst.toString("message"),
+            if (rst.toString("action").equals("exception")) {
+                PLUGIN_LOGGER.info(rst.toString("message"));
+            } else {
+                attackInfos.add(new AttackInfo(checkParameter, rst.toString("action"), rst.toString("message"),
                     rst.toString("name"), rst.toString("algorithm"), rst.toInt("confidence")));
+            }
         }
         return attackInfos;
     }
