@@ -22,6 +22,12 @@
 
 namespace openrasp
 {
+enum CheckResult
+{
+  kCache,
+  kNoCache,
+  kBlock
+};
 class openrasp_v8_process_globals
 {
 public:
@@ -31,7 +37,7 @@ public:
   std::vector<PluginFile> plugin_src_list;
 };
 extern openrasp_v8_process_globals process_globals;
-bool Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout = 100);
+CheckResult Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout = 100);
 v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val);
 void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string> &buildin_action_map);
 void load_plugins();

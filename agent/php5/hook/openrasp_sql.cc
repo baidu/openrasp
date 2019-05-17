@@ -86,19 +86,22 @@ void plugin_sql_check(char *query, int query_len, char *server TSRMLS_DC)
         {
             return;
         }
-        bool is_block = false;
+        openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
         {
             v8::HandleScope handle_scope(isolate);
             auto params = v8::Object::New(isolate);
             params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len));
             params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server));
-            is_block = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(SQL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+            check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(SQL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
-        if (is_block)
+        if (check_result == openrasp::CheckResult::kCache)
+        {
+            OPENRASP_HOOK_G(lru).set(cache_key, true);
+        }
+        if (check_result == openrasp::CheckResult::kBlock)
         {
             handle_block(TSRMLS_C);
         }
-        OPENRASP_HOOK_G(lru).set(cache_key, true);
     }
 }
 
