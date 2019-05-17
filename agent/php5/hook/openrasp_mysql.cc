@@ -98,12 +98,15 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
         if (tmp[0] != '/')
         {
             port = atoi(tmp);
-            sql_connection_p->set_port(port);
             if ((tmp = strchr(tmp, ':')))
             {
                 tmp++;
                 socket = tmp;
                 using_socket = true;
+            }
+            else
+            {
+                sql_connection_p->append_host_port(host, port);
             }
         }
         else
@@ -111,14 +114,12 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
             socket = tmp;
             using_socket = true;
         }
-        sql_connection_p->set_host(host);
         using_socket = (strcmp("localhost", host) == 0);
     }
     else
     {
-        sql_connection_p->set_host(SAFE_STRING(host_and_port));
         using_socket = (host_and_port == nullptr || strncmp(host_and_port, "localhost", strlen("localhost")) == 0);
-        sql_connection_p->set_port(default_port);
+        sql_connection_p->append_host_port(SAFE_STRING(host_and_port), default_port);
     }
     sql_connection_p->set_using_socket(using_socket);
     sql_connection_p->set_socket(SAFE_STRING(socket));
@@ -152,9 +153,10 @@ static void mysql_connect_error_intercept(INTERNAL_FUNCTION_PARAMETERS, init_con
 //mysql_connect
 void post_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
+    sql_connection_entry conn_entry;
     if (Z_TYPE_P(return_value) == IS_RESOURCE &&
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &conn_entry))
     {
         handle_block(TSRMLS_C);
     }
@@ -171,9 +173,10 @@ void post_global_mysql_connect_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 //mysql_pconnect
 void post_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
+    sql_connection_entry conn_entry;
     if (Z_TYPE_P(return_value) == IS_RESOURCE &&
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &conn_entry))
     {
         handle_block(TSRMLS_C);
     }

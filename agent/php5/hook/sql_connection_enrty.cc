@@ -44,11 +44,6 @@ void SqlConnectionEntry::set_host(std::string host)
   this->host = host;
 }
 
-std::string SqlConnectionEntry::get_host() const
-{
-  return host;
-}
-
 void SqlConnectionEntry::set_username(std::string username)
 {
   this->username = username;
@@ -80,10 +75,6 @@ std::string SqlConnectionEntry::get_socket() const
 void SqlConnectionEntry::set_port(int port)
 {
   this->port = port;
-}
-int SqlConnectionEntry::get_port() const
-{
-  return port;
 }
 
 std::string SqlConnectionEntry::build_policy_msg(connection_policy_type type)
@@ -236,7 +227,6 @@ void SqlConnectionEntry::connection_entry_policy_log(connection_policy_type type
   MAKE_STD_ZVAL(connection_params);
   array_init(connection_params);
   add_assoc_string(connection_params, "server", (char *)get_server().c_str(), 1);
-  add_assoc_string(connection_params, "hostname", (char *)get_host().c_str(), 1);
   add_assoc_string(connection_params, "username", (char *)get_username().c_str(), 1);
   add_assoc_string(connection_params, "socket", (char *)get_socket().c_str(), 1);
   add_assoc_string(connection_params, "connectionString", (char *)get_connection_string().c_str(), 1);
@@ -244,9 +234,32 @@ void SqlConnectionEntry::connection_entry_policy_log(connection_policy_type type
   {
     add_assoc_string(connection_params, "password", (char *)get_password().c_str(), 1);
   }
-  add_assoc_long(connection_params, "port", get_port());
+  write_host_to_params(connection_params);
+  write_port_to_params(connection_params);
   add_assoc_zval(policy_array, "policy_params", connection_params);
   TSRMLS_FETCH();
   LOG_G(policy_logger).log(LEVEL_INFO, policy_array TSRMLS_CC);
   zval_ptr_dtor(&policy_array);
+}
+
+void SqlConnectionEntry::write_host_to_params(zval *params)
+{
+  if (params && Z_TYPE_P(params) == IS_ARRAY)
+  {
+    add_assoc_string(params, "hostname", (char *)host.c_str(), 1);
+  }
+}
+
+void SqlConnectionEntry::write_port_to_params(zval *params)
+{
+  if (params && Z_TYPE_P(params) == IS_ARRAY)
+  {
+    add_assoc_long(params, "port", port);
+  }
+}
+
+void SqlConnectionEntry::append_host_port(const std::string &host, int port)
+{
+  this->host = host;
+  this->port = port;
 }

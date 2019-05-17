@@ -124,9 +124,8 @@ static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
             {"unix_socket", NULL, 0},
         };
         php_pdo_parse_data_source(colon + 1, strlen(colon + 1), mysql_vars, 5);
-        sql_connection_p->set_host(mysql_vars[2].optval);
         sql_connection_p->set_using_socket(nullptr == mysql_vars[2].optval || strcmp("localhost", mysql_vars[2].optval) == 0);
-        sql_connection_p->set_port(atoi(mysql_vars[3].optval));
+        sql_connection_p->append_host_port(mysql_vars[2].optval, atoi(mysql_vars[3].optval));
         sql_connection_p->set_socket(SAFE_STRING(mysql_vars[4].optval));
         sql_connection_p->set_username(username);
         for (int i = 0; i < 5; i++)
@@ -241,9 +240,10 @@ void post_pdo_exec_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void post_pdo___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
+    sql_connection_entry conn_entry;
     if (Z_TYPE_P(this_ptr) == IS_OBJECT && !EG(exception) &&
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pdo_connection_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &conn_entry))
     {
         handle_block(TSRMLS_C);
     }

@@ -58,19 +58,19 @@ static bool sql_policy_alarm(sql_connection_entry *conn_entry, sql_connection_en
     return result;
 }
 
-bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy)
+bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func,
+                                        int enforce_policy, sql_connection_entry *conn_entry)
 {
-    sql_connection_entry conn_entry;
     bool need_block = false;
-    if (connection_init_func(INTERNAL_FUNCTION_PARAM_PASSTHRU, &conn_entry))
+    if (connection_init_func(INTERNAL_FUNCTION_PARAM_PASSTHRU, conn_entry))
     {
-        if (conn_entry.check_high_privileged())
+        if (conn_entry->check_high_privileged())
         {
-            need_block = sql_policy_alarm(&conn_entry, sql_connection_entry::connection_policy_type::USER, enforce_policy);
+            need_block = sql_policy_alarm(conn_entry, sql_connection_entry::connection_policy_type::USER, enforce_policy);
         }
-        if (conn_entry.check_weak_password())
+        if (conn_entry->check_weak_password())
         {
-            need_block = sql_policy_alarm(&conn_entry, sql_connection_entry::connection_policy_type::PASSWORD, enforce_policy);
+            need_block = sql_policy_alarm(conn_entry, sql_connection_entry::connection_policy_type::PASSWORD, enforce_policy);
         }
     }
     return need_block;
@@ -147,11 +147,11 @@ void sql_connect_error_alarm(sql_connection_entry *sql_connection_p, const std::
     MAKE_STD_ZVAL(attack_params);
     array_init(attack_params);
     add_assoc_string(attack_params, "server", (char *)sql_connection_p->get_server().c_str(), 1);
-    add_assoc_string(attack_params, "hostname", (char *)sql_connection_p->get_host().c_str(), 1);
     add_assoc_string(attack_params, "username", (char *)sql_connection_p->get_username().c_str(), 1);
     add_assoc_string(attack_params, "socket", (char *)sql_connection_p->get_socket().c_str(), 1);
     add_assoc_string(attack_params, "connectionString", (char *)sql_connection_p->get_connection_string().c_str(), 1);
-    add_assoc_long(attack_params, "port", sql_connection_p->get_port());
+    sql_connection_p->write_host_to_params(attack_params);
+    sql_connection_p->write_port_to_params(attack_params);
     add_assoc_string(attack_params, "error_code", (char *)err_code.c_str(), 1);
     zval *plugin_message = nullptr;
     MAKE_STD_ZVAL(plugin_message);
