@@ -74,7 +74,7 @@
                 </p>
             </div>
 
-            <div  v-if="data.policy_params.hostname && data.policy_params.port">
+            <div v-if="data.policy_params.hostname && data.policy_params.port">
                 <div class="h6">
                     服务器信息
                 </div>
@@ -98,7 +98,7 @@
             <p>
                 {{ data.policy_params.username }}:{{ data.policy_params.password }}
             </p>
-            
+
             <div class="h6">
                 问题描述
             </div>
@@ -240,6 +240,11 @@ export default {
     methods: {
         setData: function (data) {
             this.data = data
+
+            // v1.0 版本，weblogic 忘记增加 policy_params 字段，简单修复
+            if (! data['policy_params']) {
+                data['policy_params'] = {}
+            }
         }
     }
 }

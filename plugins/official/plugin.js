@@ -226,7 +226,7 @@ var algorithmConfig = {
     // 写文件操作 - 脚本文件
     // https://rasp.baidu.com/doc/dev/official.html#case-file-write
     writeFile_script: {
-        name:      '算法2 - 拦截所有 php/jsp 等脚本文件的写入操作',
+        name:      '算法2 - 拦截 php/jsp 等脚本文件的写入操作',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#case-file-write',
         action:    'ignore'
     },
@@ -293,7 +293,7 @@ var algorithmConfig = {
 
     // XXE - 代码安全开关，通过调用相关函数直接禁止外部实体
     xxe_disable_entity: {
-        name:   '算法1 - 代码安全开关，开启后直接禁止外部实体',
+        name:   '算法1 - 禁止外部实体加载（记录日志等同于完全忽略）',
         action: 'ignore',
         clazz:  {
             // com/sun/org/apache/xerces/internal/jaxp/DocumentBuilderFactoryImpl
@@ -527,6 +527,12 @@ if (! RASP.is_unittest)
    if (algorithmConfig.meta.all_log)
    {
         Object.keys(algorithmConfig).forEach(function (name) {
+            // XXE 外部实体开关不受影响
+            if (name == 'xxe_disable_entity')
+            {
+                continue
+            }
+
             if (algorithmConfig[name].action == 'block') 
             {
                algorithmConfig[name].action = 'log'
