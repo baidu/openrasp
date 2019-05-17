@@ -293,7 +293,7 @@ var algorithmConfig = {
 
     // XXE - 代码安全开关，通过调用相关函数直接禁止外部实体
     xxe_disable_entity: {
-        name:   '算法1 - 代码安全开关，开启后直接禁止外部实体',
+        name:   '算法1 - 完全禁止外部实体加载（拦截攻击、记录日志都表示算法开启）',
         action: 'ignore',
         clazz:  {
             // com/sun/org/apache/xerces/internal/jaxp/DocumentBuilderFactoryImpl
