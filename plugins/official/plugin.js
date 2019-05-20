@@ -528,14 +528,12 @@ if (! RASP.is_unittest)
    {
         Object.keys(algorithmConfig).forEach(function (name) {
             // XXE 外部实体开关不受影响
-            if (name == 'xxe_disable_entity')
+            if (name != 'xxe_disable_entity')
             {
-                continue
-            }
-
-            if (algorithmConfig[name].action == 'block') 
-            {
-               algorithmConfig[name].action = 'log'
+                if (algorithmConfig[name].action == 'block') 
+                {
+                    algorithmConfig[name].action = 'log'
+                }
             }
         })
     }
