@@ -16,6 +16,8 @@
 
 #include "openrasp_hook.h"
 #include "openrasp_v8.h"
+#include "openrasp_mongo_utils.h"
+#include "openrasp_mongo_entry.h"
 
 /**
  * mongo相关hook点
@@ -24,6 +26,58 @@ PRE_HOOK_FUNCTION_EX(insert, mongodb_0_driver_0_bulkwrite, MONGO);
 PRE_HOOK_FUNCTION_EX(update, mongodb_0_driver_0_bulkwrite, MONGO);
 PRE_HOOK_FUNCTION_EX(__construct, mongodb_0_driver_0_query, MONGO);
 PRE_HOOK_FUNCTION_EX(__construct, mongodb_0_driver_0_command, MONGO);
+
+POST_HOOK_FUNCTION_EX(__construct, mongodb_0_driver_0_manager, DB_CONNECTION);
+
+static void handle_mongo_uri_string(char *uri_string, size_t uri_string_len, sql_connection_entry *sql_connection_p)
+{
+    if (uri_string_len)
+    {
+        mongo_parse_connection_string(sql_connection_p, uri_string);
+    }
+    else
+    {
+        char *tmp;
+        spprintf(&tmp, 0, "localhost:27017");
+        mongo_parse_connection_string(sql_connection_p, tmp);
+        efree(tmp);
+    }
+}
+
+static void handle_mongo_options(HashTable *ht, sql_connection_entry *sql_connection_p)
+{
+    char *password = fetch_outmost_string_from_ht(ht, "password");
+    if (nullptr != password)
+    {
+        sql_connection_p->set_password(std::string(password));
+    }
+    char *username = fetch_outmost_string_from_ht(ht, "username");
+    if (nullptr != username)
+    {
+        sql_connection_p->set_username(std::string(username));
+    }
+}
+
+static bool init_mongodb_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+{
+    char *uri_string = NULL;
+    size_t uri_string_len = 0;
+    zval *options = NULL;
+    zval *driverOptions = NULL;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "|s!a/!a/!", &uri_string, &uri_string_len, &options, &driverOptions) == FAILURE)
+    {
+        return false;
+    }
+
+    handle_mongo_uri_string(uri_string, uri_string_len, sql_connection_p);
+    if (options && Z_TYPE_P(options) == IS_ARRAY)
+    {
+        handle_mongo_options(Z_ARRVAL_P(options), sql_connection_p);
+    }
+    sql_connection_p->set_server("mongodb");
+    return true;
+}
 
 static void mongo_plugin_check(const std::string &query_str, const std::string &classname, const std::string &method)
 {
@@ -47,7 +101,7 @@ static void mongo_plugin_check(const std::string &query_str, const std::string &
         }
         if (is_block)
         {
-            handle_block(TSRMLS_C);
+            handle_block();
         }
         OPENRASP_HOOK_G(lru).set(cache_key, true);
     }
@@ -133,4 +187,15 @@ void pre_mongodb_0_driver_0_command___construct_MONGO(OPENRASP_INTERNAL_FUNCTION
     }
 
     mongodb_plugin_check(document, "MongoDB\\Driver\\Command", "__construct");
+}
+
+void post_mongodb_0_driver_0_manager___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    MongoConnectionEntry mongo_entry;
+    if (Z_TYPE_P(getThis()) == IS_OBJECT && !EG(exception) &&
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mongodb_connection_entry,
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &mongo_entry))
+    {
+        handle_block();
+    }
 }

@@ -157,9 +157,10 @@ static void mysqli_connect_error_intercept(INTERNAL_FUNCTION_PARAMETERS, init_co
 //mysqli::__construct
 void post_mysqli___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
+    sql_connection_entry conn_entry;
     if (Z_TYPE_P(getThis()) == IS_OBJECT && 0 == fetch_mysqli_errno("mysqli_connect_errno", 0, nullptr) &&
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli__construct_conn_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &conn_entry))
     {
         handle_block();
     }
@@ -178,9 +179,10 @@ void post_mysqli___construct_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void post_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
+    sql_connection_entry conn_entry;
     if (Z_TYPE_P(return_value) == IS_TRUE &&
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_conn_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &conn_entry))
     {
         handle_block();
     }
@@ -233,9 +235,10 @@ void post_mysqli_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void post_global_mysqli_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
+    sql_connection_entry conn_entry;
     if (Z_TYPE_P(return_value) == IS_OBJECT &&
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &conn_entry))
     {
         handle_block();
     }
@@ -253,9 +256,10 @@ void post_global_mysqli_connect_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 //mysqli_real_connect
 void post_global_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
+    sql_connection_entry conn_entry;
     if (Z_TYPE_P(return_value) == IS_TRUE &&
         check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_real_connect_conn_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
+                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &conn_entry))
     {
         handle_block();
     }
