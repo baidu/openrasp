@@ -73,7 +73,8 @@ public class XXEHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "com/sun/org/apache/xerces/internal/impl/XMLEntityManager".equals(className);
+        return "com/sun/org/apache/xerces/internal/impl/XMLEntityManager".equals(className)||
+                "org/apache/xerces/impl/XMLEntityManager".equals(className);
     }
 
     /**
@@ -84,7 +85,7 @@ public class XXEHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(XXEHook.class, "checkXXE", "$1", String.class);
-        insertBefore(ctClass, "expandSystemId", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", src);
+        insertBefore(ctClass,"expandSystemId", "(Ljava/lang/String;Ljava/lang/String;Z)Ljava/lang/String;", src);
     }
 
     /**

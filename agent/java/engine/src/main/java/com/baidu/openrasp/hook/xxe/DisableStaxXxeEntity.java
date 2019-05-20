@@ -36,13 +36,15 @@ import java.io.IOException;
 public class DisableStaxXxeEntity extends DisableXxeEntity {
     @Override
     public boolean isClassMatched(String className) {
-        return "com/sun/xml/internal/stream/XMLInputFactoryImpl".equals(className);
+        return "com/sun/xml/internal/stream/XMLInputFactoryImpl".equals(className)||
+                "com/ctc/wstx/stax/WstxInputFactory".equals(className);
     }
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(DisableStaxXxeEntity.class, "setFeature", "$0", Object.class);
         insertBefore(ctClass, "createXMLStreamReader", null, src);
+        insertBefore(ctClass, "createXMLEventReader", null, src);
     }
 
     public static void setFeature(Object factory) {

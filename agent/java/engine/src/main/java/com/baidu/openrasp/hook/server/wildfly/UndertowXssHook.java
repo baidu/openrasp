@@ -77,7 +77,7 @@ public class UndertowXssHook extends ServerXssHook {
             if (buffer != null) {
                 HashMap<String, Object> params = new HashMap<String, Object>();
                 params.put("html_body", buffer);
-                if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
+                if (isCheckXss() && !params.isEmpty()) {
                     HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
                 }
             }

@@ -16,7 +16,9 @@
 
 package com.baidu.openrasp.hook.server;
 
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.response.HttpServletResponse;
 
 /**
  * @author anyang
@@ -27,5 +29,10 @@ public abstract class ServerXssHook extends AbstractClassHook {
     @Override
     public String getType() {
         return "xss";
+    }
+
+    protected static boolean isCheckXss() {
+        return HookHandler.requestCache.get() != null && HookHandler.responseCache.get() != null &&
+                HookHandler.responseCache.get().getContentType().startsWith(HttpServletResponse.CONTENT_TYPE_HTML_VALUE);
     }
 }
