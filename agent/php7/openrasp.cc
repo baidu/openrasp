@@ -129,6 +129,7 @@ PHP_MINIT_FUNCTION(openrasp)
     {
         std::shared_ptr<openrasp::BaseReader> conf_reader = get_conf_reader();
         OPENRASP_G(config).update(conf_reader.get());
+        openrasp::scm->build_check_type_white_array(conf_reader.get());
     }
 
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
@@ -149,19 +150,12 @@ PHP_MINIT_FUNCTION(openrasp)
         openrasp::oam->startup();
     }
 #endif
+#ifdef HAVE_FSWATCH
     if (!remote_active)
     {
-        std::string config_file_path = get_config_abs_path(ConfigHolder::FromType::kYaml);
-        std::string conf_contents;
-        if (openrasp::read_entire_content(config_file_path, conf_contents))
-        {
-            openrasp::YamlReader yreader(conf_contents);
-            openrasp::scm->build_check_type_white_array(&yreader);
-        }
-#ifdef HAVE_FSWATCH
         result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);
-#endif
     }
+#endif
 
     result = PHP_MINIT(openrasp_security_policy)(INIT_FUNC_ARGS_PASSTHRU);
     result = PHP_MINIT(openrasp_output_detect)(INIT_FUNC_ARGS_PASSTHRU);

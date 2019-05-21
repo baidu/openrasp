@@ -105,6 +105,10 @@ bool SharedConfigManager::build_check_type_white_array(std::map<std::string, std
 
 bool SharedConfigManager::build_check_type_white_array(BaseReader *br)
 {
+    if (!br || br->has_error())
+    {
+        return false;
+    }
     std::vector<std::string> hook_white_key({"hook.white"});
     std::map<std::string, std::vector<std::string>> hook_white_map;
     std::vector<std::string> url_keys = br->fetch_object_keys(hook_white_key);
