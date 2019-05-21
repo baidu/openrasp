@@ -36,7 +36,8 @@ import java.io.IOException;
 public class DisableDomXxeEntity extends DisableXxeEntity {
     @Override
     public boolean isClassMatched(String className) {
-        return "com/sun/org/apache/xerces/internal/jaxp/DocumentBuilderFactoryImpl".equals(className);
+        return "com/sun/org/apache/xerces/internal/jaxp/DocumentBuilderFactoryImpl".equals(className) ||
+                "org/apache/xerces/jaxp/DocumentBuilderFactoryImpl".equals(className);
     }
 
     @Override
