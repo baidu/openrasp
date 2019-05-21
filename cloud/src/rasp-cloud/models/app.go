@@ -216,6 +216,10 @@ func createEsIndexWithAppId(appId string) error {
 	if err != nil {
 		return errors.New("failed to create report data es index, " + err.Error())
 	}
+	err = CreateDependencyEsIndex(appId)
+	if err != nil {
+		return errors.New("failed to create dependency data es index, " + err.Error())
+	}
 	return nil
 }
 

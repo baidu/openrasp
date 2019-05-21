@@ -59,6 +59,11 @@ func InitRouter() {
 				&agent.ReportController{},
 			),
 		),
+		beego.NSNamespace("/dependency",
+			beego.NSInclude(
+				&agent.DependencyController{},
+			),
+		),
 	)
 	foregroudNS := beego.NewNamespace("/api",
 
@@ -112,6 +117,11 @@ func InitRouter() {
 		beego.NSNamespace("/server",
 			beego.NSInclude(
 				&api.ServerController{},
+			),
+		),
+		beego.NSNamespace("/dependency",
+			beego.NSInclude(
+				&api.DependencyController{},
 			),
 		),
 	)

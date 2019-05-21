@@ -27,7 +27,7 @@ var attackAlarmTemplate = `
 					"normalizer": {
 						"lowercase_normalizer": {
 							"type": "custom",
-							"filter": ["lowercase"]
+							"filter": ["lowercase","asciifolding"]
 						}
 					}     
 				}
@@ -194,7 +194,7 @@ var policyAlarmTemplate = `
 					"normalizer": {
 						"lowercase_normalizer": {
 							"type": "custom",
-							"filter": ["lowercase"]
+							"filter": ["lowercase","asciifolding"]
 						}
 					}
 				}
@@ -277,7 +277,7 @@ var errorAlarmTemplate = `{
 					"normalizer": {
 						"lowercase_normalizer": {
 							"type": "custom",
-							"filter": ["lowercase"]
+							"filter": ["lowercase","asciifolding"]
 						}
 					}     
 				}
@@ -372,11 +372,84 @@ var reportDataTemplate = `
 		}
 	`
 
+var dependencyDataTemplate = `
+		{
+			"template":"openrasp-dependency-data-*",
+			"aliases" : {
+        		"real-{index}" : {} 
+    		},
+			"settings": {
+				"analysis": {
+					"normalizer": {
+						"lowercase_normalizer": {
+							"type": "custom",
+							"filter": ["lowercase","asciifolding"]
+						}
+					}     
+				}
+			},
+			"mappings": {
+				"dependency": {
+					"_all": {
+						"enabled": false
+					},
+					"properties": {
+						"@timestamp":{
+							"type":"date"
+         				},
+						"app_id": {
+							"type": "keyword",
+							"ignore_above" : 256
+						},
+						"rasp_id": {
+							"type": "keyword",
+							"ignore_above" : 256
+						},
+						"register_ip": {
+							"type": "keyword",
+							"ignore_above": 128
+						},
+						"hostname": {
+							"type": "keyword",
+							"ignore_above" : 256,
+							"normalizer": "lowercase_normalizer"
+						},
+						"path": {
+							"type": "keyword",
+							"ignore_above" : 1024
+						},
+						"vendor": {
+							"type": "keyword",
+							"ignore_above" : 256
+						},
+						"product": {
+							"type": "keyword",
+							"ignore_above" : 256
+						},
+						"version": {
+							"type": "keyword",
+							"ignore_above" : 256
+						},
+						"tag": {
+							"type": "keyword",
+							"ignore_above" : 1024
+						},
+						"search_string": {
+							"type": "keyword",
+							"ignore_above" : 1024
+						}
+					}
+				}
+			}
+		}
+	`
+
 func init() {
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
 		CreateTemplate("report-data-template", reportDataTemplate)
 		CreateTemplate("error-alarm-template", errorAlarmTemplate)
 		CreateTemplate("attack-alarm-template", attackAlarmTemplate)
 		CreateTemplate("policy-alarm-template", policyAlarmTemplate)
+		CreateTemplate("dependency-data-template", dependencyDataTemplate)
 	}
 }
