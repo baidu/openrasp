@@ -53,7 +53,6 @@ extern "C"
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp)
 openrasp::ConfigHolder  config;
-zend_bool locked;
 ZEND_END_MODULE_GLOBALS(openrasp)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp)
