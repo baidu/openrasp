@@ -45,10 +45,16 @@ inline T *array_resize(T *ptr, size_t origin_size, size_t new_size, T default_va
 class DoubleArrayTrie
 {
   public:
-    struct result_pair_type
+    class result_pair_type
     {
+      public:
         int value;
         size_t length;
+        inline void set_result_pair(int value, size_t length)
+        {
+            this->value = value;
+            this->length = length;
+        }
     };
 
     struct unit_t
@@ -59,8 +65,6 @@ class DoubleArrayTrie
 
     explicit DoubleArrayTrie();
     virtual ~DoubleArrayTrie();
-    void set_result(int *x, int r, size_t) const;
-    void set_result(result_pair_type *x, int r, size_t l) const;
     void load_existing_array(void *ptr, size_t size = 0);
     void clear();
     size_t unit_size() const;
@@ -68,7 +72,8 @@ class DoubleArrayTrie
     size_t total_size() const;
     size_t nonzero_size() const;
     int build(size_t key_size, const std::vector<std::string> *key, const size_t *length = 0, const std::vector<int> *value = 0);
-    size_t prefix_search(const char *key, result_pair_type *result, size_t result_len, size_t len = 0, size_t node_pos = 0) const;
+    std::vector<DoubleArrayTrie::result_pair_type> prefix_search(const char *key, size_t len = 0, size_t node_pos = 0) const;
+    DoubleArrayTrie::result_pair_type match_search(const char *key, size_t len = 0, size_t node_pos = 0) const;
     const void *array() const;
 
   private:

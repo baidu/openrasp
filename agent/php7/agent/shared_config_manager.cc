@@ -41,20 +41,16 @@ SharedConfigManager::~SharedConfigManager()
 
 int SharedConfigManager::get_check_type_white_bit_mask(std::string url)
 {
-    DoubleArrayTrie::result_pair_type result_pair[ALL_TYPE];
     DoubleArrayTrie dat;
     int white_bit_mask = 0;
     if (rwlock != nullptr && rwlock->read_try_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
         dat.load_existing_array((void *)shared_config_block->get_check_type_white_array(), shared_config_block->get_white_array_size());
-        size_t num = dat.prefix_search(url.c_str(), result_pair, sizeof(result_pair));
-        if (num > 0)
+        std::vector<DoubleArrayTrie::result_pair_type> result_pairs = dat.prefix_search(url.c_str());
+        for (DoubleArrayTrie::result_pair_type result_pair : result_pairs)
         {
-            for (size_t i = 0; i < num; ++i)
-            {
-                white_bit_mask |= result_pair[i].value;
-            }
+            white_bit_mask |= result_pair.value;
         }
     }
     return white_bit_mask;
