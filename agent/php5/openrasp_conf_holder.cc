@@ -22,7 +22,7 @@ namespace openrasp
 
 bool ConfigHolder::update(BaseReader *reader)
 {
-  if (!reader)
+  if (!reader || reader->has_error())
   {
     return false;
   }

@@ -52,7 +52,7 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
 bool is_initialized = false;
 bool remote_active = false;
-static bool update_config(openrasp::ConfigHolder *config TSRMLS_DC, ConfigHolder::FromType type = ConfigHolder::FromType::kYaml);
+std::shared_ptr<openrasp::BaseReader> get_conf_reader(ConfigHolder::FromType type = ConfigHolder::FromType::kYaml);
 static std::string get_config_abs_path(ConfigHolder::FromType type);
 static void hook_without_params(OpenRASPCheckType check_type TSRMLS_DC);
 
@@ -94,13 +94,14 @@ PHP_GINIT_FUNCTION(openrasp)
 {
 #ifdef ZTS
     new (openrasp_globals) _zend_openrasp_globals;
+    std::shared_ptr<openrasp::BaseReader> conf_reader = get_conf_reader();
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (!openrasp::oam)
     {
-        update_config(&(openrasp_globals->config)TSRMLS_CC);
+        (openrasp_globals->config).update(conf_reader.get());
     }
 #else
-    update_config(&(openrasp_globals->config)TSRMLS_CC);
+    (openrasp_globals->config).update(conf_reader.get());
 #endif
 #endif
 }
@@ -146,7 +147,8 @@ PHP_MINIT_FUNCTION(openrasp)
 #endif
     if (!remote_active)
     {
-        update_config(&OPENRASP_G(config) TSRMLS_CC);
+        std::shared_ptr<openrasp::BaseReader> conf_reader = get_conf_reader();
+        OPENRASP_G(config).update(conf_reader.get());
     }
 
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
@@ -227,7 +229,8 @@ PHP_RINIT_FUNCTION(openrasp)
         long config_last_update = openrasp::scm->get_config_last_update();
         if (config_last_update && config_last_update > OPENRASP_G(config).GetLatestUpdateTime())
         {
-            if (update_config(&OPENRASP_G(config) TSRMLS_CC, ConfigHolder::FromType::kJson))
+            std::shared_ptr<openrasp::BaseReader> conf_reader = get_conf_reader(ConfigHolder::FromType::kJson);
+            if (OPENRASP_G(config).update(conf_reader.get()))
             {
                 OPENRASP_G(config).SetLatestUpdateTime(config_last_update);
             }
@@ -351,15 +354,15 @@ static std::string get_config_abs_path(ConfigHolder::FromType type)
            DEFAULT_SLASH + filename;
 }
 
-static bool update_config(openrasp::ConfigHolder *config TSRMLS_DC, ConfigHolder::FromType type)
+std::shared_ptr<openrasp::BaseReader> get_conf_reader(ConfigHolder::FromType type)
 {
+    std::shared_ptr<openrasp::BaseReader> config_reader = nullptr;
     if (nullptr != openrasp_ini.root_dir && strcmp(openrasp_ini.root_dir, "") != 0)
     {
         std::string config_file_path = get_config_abs_path(type);
         std::string conf_contents;
         if (openrasp::read_entire_content(config_file_path, conf_contents))
         {
-            std::shared_ptr<openrasp::BaseReader> config_reader = nullptr;
             switch (type)
             {
             case ConfigHolder::FromType::kJson:
@@ -378,14 +381,10 @@ static bool update_config(openrasp::ConfigHolder *config TSRMLS_DC, ConfigHolder
                     openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Fail to parse config, cuz of %s."),
                                    config_reader->get_error_msg().c_str());
                 }
-                else
-                {
-                    return config->update(config_reader.get());
-                }
             }
         }
     }
-    return false;
+    return config_reader;
 }
 
 static void hook_without_params(OpenRASPCheckType check_type TSRMLS_DC)
