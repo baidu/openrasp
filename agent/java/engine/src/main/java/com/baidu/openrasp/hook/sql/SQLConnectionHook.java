@@ -72,14 +72,15 @@ public class SQLConnectionHook extends AbstractClassHook {
             String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
             params.put("message", message);
             if (object != null && object.length >= 2) {
-                String url = String.valueOf(object[0]);
-                Properties properties = (Properties) object[1];
+                String username = null;
                 String host = null;
                 String port = null;
                 String connectionString = null;
                 String socket = null;
-                String username = properties.getProperty("user");
                 try {
+                    String url = (String) object[0];
+                    Properties properties = (Properties) object[1];
+                    username = properties.getProperty("user");
                     if (url != null && StringUtils.startsWithIgnoreCase(url, "jdbc:mysql://")) {
                         int pos1 = url.indexOf(':', 5);
                         int pos2 = url.indexOf('?', pos1);
