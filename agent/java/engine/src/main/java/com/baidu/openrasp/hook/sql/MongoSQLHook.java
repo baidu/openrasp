@@ -110,7 +110,6 @@ public class MongoSQLHook extends AbstractClassHook {
 
     public static void checkOperation(String server, String className, String methodName, Object operation) {
         String json = Reflection.invokeStringMethod(operation, "toJson", new Class[]{});
-        System.out.println(json + "***********");
         if (json != null) {
             checkSQL(server, className, methodName, json);
         }

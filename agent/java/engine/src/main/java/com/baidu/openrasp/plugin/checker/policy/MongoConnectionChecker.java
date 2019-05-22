@@ -19,12 +19,8 @@ package com.baidu.openrasp.plugin.checker.policy;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
-import org.apache.commons.lang3.StringUtils;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @description: mongo 数据库基线检测
@@ -32,21 +28,10 @@ import java.util.List;
  * @create: 2019/05/14 17:53
  */
 public class MongoConnectionChecker extends PolicyChecker {
-    private static final String[] adminUsers = new String[]{"admin"};
     private static final String[] WEAK_WORDS = new String[]{"root", "123", "123456", "a123456", "123456a", "111111",
-            "123123", "admin", "user", "mysql", ""};
+            "123123", "admin", "user", "mysql", "", "anyang"};
     private static final int ALARM_TIME_CACHE_MAX_SIZE = 5000;
     public static HashMap<String, Long> alarmTimeCache = new HashMap<String, Long>();
-
-    private boolean checkUser(String user) {
-        boolean isSafe = true;
-        if (!StringUtils.isEmpty(user)) {
-            if (Arrays.asList(adminUsers).contains(user)) {
-                isSafe = false;
-            }
-        }
-        return isSafe;
-    }
 
     private boolean checkPassword(String password) {
         List<String> checkList = Arrays.asList(WEAK_WORDS);
@@ -55,47 +40,29 @@ public class MongoConnectionChecker extends PolicyChecker {
 
     @Override
     public List<EventInfo> checkParam(CheckParameter checkParameter) {
+        LinkedList<EventInfo> infos = new LinkedList<EventInfo>();
         String connectionString = (String) checkParameter.getParam("connectionString");
-        LinkedList<EventInfo> infos = null;
         String user = (String) checkParameter.getParam("username");
         String password = (String) checkParameter.getParam("password");
         List<String> hosts = (List<String>) checkParameter.getParam("hosts");
-        List<String> ports = (List<String>) checkParameter.getParam("ports");
+        List<Integer> ports = (List<Integer>) checkParameter.getParam("ports");
         String url = (String) checkParameter.getParam("url");
-        boolean isSafe = checkUser(user);
-        if (!isSafe) {
-            if (alarmTimeCache.size() > ALARM_TIME_CACHE_MAX_SIZE) {
-                alarmTimeCache.clear();
-            }
-            alarmTimeCache.put(url, System.currentTimeMillis());
-            String unsafeMessage = "Database security baseline - Connecting to a mongo" +
-                    " instance with high privileged account " + user +
-                    ", connectionString is " + connectionString;
-            infos = new LinkedList<EventInfo>();
-            HashMap<String, Object> params = new HashMap<String, Object>(6);
-            params.put("server", "mongo");
-            params.put("connectionString", connectionString);
-            params.put("username", user);
-            params.put("hostname", hosts);
-            params.put("port", ports);
-            params.put("socket", "");
-            infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.SQL_CONNECTION, unsafeMessage, true, params));
-        }
-        isSafe = checkPassword(password);
+
+        boolean isSafe = checkPassword(password);
         if (!isSafe) {
             if (alarmTimeCache.size() > ALARM_TIME_CACHE_MAX_SIZE) {
                 alarmTimeCache.clear();
             }
             alarmTimeCache.put(url, System.currentTimeMillis());
             String unsafeMessage = "Database security baseline - the password \"" + password + "\" is detected weak password combination , username is " + user;
-            if (infos == null) {
-                infos = new LinkedList<EventInfo>();
-            }
-            HashMap<String, Object> params = new HashMap<String, Object>(4);
-            params.put("server", "mongo");
-            params.put("connectionString", connectionString);
-            params.put("username", user);
-            params.put("password", password);
+            HashMap<String, Object> params = new HashMap<String, Object>(7);
+            params.put("server", "mongodb");
+            params.put("connectionString", connectionString != null ? connectionString : "");
+            params.put("username", user != null ? user : "");
+            params.put("password", password != null ? password : "");
+            params.put("socket", "");
+            params.put("hostnames", hosts != null ? hosts : new ArrayList<String>());
+            params.put("ports", ports != null ? ports : new ArrayList<Integer>());
             infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.MANAGER_PASSWORD, unsafeMessage, true, params));
         }
         return infos;

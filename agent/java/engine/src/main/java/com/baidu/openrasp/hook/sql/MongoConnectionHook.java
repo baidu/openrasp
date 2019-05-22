@@ -41,7 +41,7 @@ import java.util.List;
  */
 @HookAnnotation
 public class MongoConnectionHook extends AbstractClassHook {
-    private static final String DEFAULT_MONGO_PORT = "27017";
+    private static final int DEFAULT_MONGO_PORT = 27017;
 
     @Override
     public boolean isClassMatched(String className) {
@@ -84,13 +84,13 @@ public class MongoConnectionHook extends AbstractClassHook {
             database = Reflection.invokeStringMethod(mongoCredential, "getSource", new Class[]{});
         }
         List<String> hosts = new ArrayList<String>();
-        List<String> ports = new ArrayList<String>();
+        List<Integer> ports = new ArrayList<Integer>();
         if (server != null) {
             String host = Reflection.invokeStringMethod(server, "getHost", new Class[]{});
             Integer port = (Integer) Reflection.invokeMethod(server, "getPort", new Class[]{});
             if (host != null && port != null) {
                 hosts.add(host);
-                ports.add(port + "");
+                ports.add(port);
             }
         }
         if (username != null && password != null) {
@@ -111,14 +111,14 @@ public class MongoConnectionHook extends AbstractClassHook {
             password = (char[]) Reflection.invokeMethod(mongoCredential, "getPassword", new Class[]{});
         }
         List<String> hosts = new ArrayList<String>();
-        List<String> ports = new ArrayList<String>();
+        List<Integer> ports = new ArrayList<Integer>();
         if (servers != null && !servers.isEmpty()) {
             for (Object server : servers) {
                 String host = Reflection.invokeStringMethod(server, "getHost", new Class[]{});
                 Integer port = (Integer) Reflection.invokeMethod(server, "getPort", new Class[]{});
                 if (host != null && port != null) {
                     hosts.add(host);
-                    ports.add(port + "");
+                    ports.add(port);
                 }
             }
         }
@@ -136,13 +136,13 @@ public class MongoConnectionHook extends AbstractClassHook {
             String connectionString = Reflection.invokeStringMethod(mongoURI, "getURI", new Class[]{});
             List<String> servers = (List<String>) Reflection.invokeMethod(mongoURI, "getHosts", new Class[]{});
             List<String> hosts = new ArrayList<String>();
-            List<String> ports = new ArrayList<String>();
+            List<Integer> ports = new ArrayList<Integer>();
             if (servers != null && !servers.isEmpty()) {
                 for (String server : servers) {
                     String[] temp = server.split(":");
                     hosts.add(temp[0]);
                     if (temp.length > 1) {
-                        ports.add(temp[1]);
+                        ports.add(Integer.parseInt(temp[1]));
                     } else {
                         ports.add(DEFAULT_MONGO_PORT);
                     }
@@ -154,7 +154,7 @@ public class MongoConnectionHook extends AbstractClassHook {
         }
     }
 
-    public static void check(String username, String password, List<String> hosts, List<String> ports, String connectionString, String url) {
+    public static void check(String username, String password, List<String> hosts, List<Integer> ports, String connectionString, String url) {
         if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
             return;
         }
@@ -168,10 +168,10 @@ public class MongoConnectionHook extends AbstractClassHook {
         if (!Config.getConfig().getEnforcePolicy()) {
             Long lastAlarmTime = MongoConnectionChecker.alarmTimeCache.get(url);
             if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
-                HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_MONGO_CONNECTION, params);
+                HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_MONGO_CONNECTION, params);
             }
         } else {
-            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_MONGO_CONNECTION, params);
+            HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_MONGO_CONNECTION, params);
         }
     }
 }
