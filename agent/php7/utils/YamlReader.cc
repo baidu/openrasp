@@ -48,6 +48,7 @@ std::string YamlReader::fetch_string(const std::vector<std::string> &keys, const
   std::vector<Node> nodes;
   try
   {
+    nodes.push_back(node);
     for (size_t i = 0; i < keys.size(); ++i)
     {
       if (0 == i)
@@ -56,10 +57,10 @@ std::string YamlReader::fetch_string(const std::vector<std::string> &keys, const
       }
       else
       {
-        nodes.push_back(nodes[i - 1][keys[i]]);
+        nodes.push_back(nodes[i][keys[i]]);
       }
     }
-    return nodes[keys.size() - 1].as<std::string>();
+    return nodes[keys.size()].as<std::string>();
   }
   catch (...)
   {
@@ -71,6 +72,7 @@ int64_t YamlReader::fetch_int64(const std::vector<std::string> &keys, const int6
   std::vector<Node> nodes;
   try
   {
+    nodes.push_back(node);
     for (size_t i = 0; i < keys.size(); ++i)
     {
       if (0 == i)
@@ -79,10 +81,10 @@ int64_t YamlReader::fetch_int64(const std::vector<std::string> &keys, const int6
       }
       else
       {
-        nodes.push_back(nodes[i - 1][keys[i]]);
+        nodes.push_back(nodes[i][keys[i]]);
       }
     }
-    return nodes[keys.size() - 1].as<int64_t>();
+    return nodes[keys.size()].as<int64_t>();
   }
   catch (...)
   {
@@ -94,6 +96,7 @@ bool YamlReader::fetch_bool(const std::vector<std::string> &keys, const bool &de
   std::vector<Node> nodes;
   try
   {
+    nodes.push_back(node);
     for (size_t i = 0; i < keys.size(); ++i)
     {
       if (0 == i)
@@ -102,10 +105,10 @@ bool YamlReader::fetch_bool(const std::vector<std::string> &keys, const bool &de
       }
       else
       {
-        nodes.push_back(nodes[i - 1][keys[i]]);
+        nodes.push_back(nodes[i][keys[i]]);
       }
     }
-    return nodes[keys.size() - 1].as<bool>();
+    return nodes[keys.size()].as<bool>();
   }
   catch (...)
   {
@@ -118,6 +121,7 @@ std::vector<std::string> YamlReader::fetch_object_keys(const std::vector<std::st
   std::vector<Node> nodes;
   try
   {
+    nodes.push_back(node);
     for (size_t i = 0; i < keys.size(); ++i)
     {
       if (0 == i)
@@ -126,12 +130,12 @@ std::vector<std::string> YamlReader::fetch_object_keys(const std::vector<std::st
       }
       else
       {
-        nodes.push_back(nodes[i - 1][keys[i]]);
+        nodes.push_back(nodes[i][keys[i]]);
       }
     }
-    if (nodes[keys.size() - 1].IsMap())
+    if (nodes[keys.size()].IsMap())
     {
-      for (YAML::const_iterator it = nodes[keys.size() - 1].begin(); it != nodes[keys.size() - 1].end(); ++it)
+      for (YAML::const_iterator it = nodes[keys.size()].begin(); it != nodes[keys.size()].end(); ++it)
       {
         result.push_back(it->first.as<std::string>());
       }
@@ -148,6 +152,7 @@ std::vector<std::string> YamlReader::fetch_strings(const std::vector<std::string
   try
   {
     std::vector<std::string> result;
+    nodes.push_back(node);
     for (size_t i = 0; i < keys.size(); ++i)
     {
       if (0 == i)
@@ -156,13 +161,13 @@ std::vector<std::string> YamlReader::fetch_strings(const std::vector<std::string
       }
       else
       {
-        nodes.push_back(nodes[i - 1][keys[i]]);
+        nodes.push_back(nodes[i][keys[i]]);
       }
     }
 
-    if (nodes[keys.size() - 1].IsSequence())
+    if (nodes[keys.size()].IsSequence())
     {
-      for (YAML::const_iterator it = nodes[keys.size() - 1].begin(); it != nodes[keys.size() - 1].end(); ++it)
+      for (YAML::const_iterator it = nodes[keys.size()].begin(); it != nodes[keys.size()].end(); ++it)
       {
         result.push_back(it->as<std::string>());
       }

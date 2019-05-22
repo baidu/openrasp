@@ -148,8 +148,25 @@ PHP_MINIT_FUNCTION(openrasp)
     if (!remote_active)
     {
         std::shared_ptr<openrasp::BaseReader> conf_reader = get_conf_reader();
-        OPENRASP_G(config).update(conf_reader.get());
-        openrasp::scm->build_check_type_white_array(conf_reader.get());
+        if (nullptr != conf_reader)
+        {
+            if (conf_reader->has_error())
+            {
+                openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Fail to parse config, cuz of %s."),
+                               conf_reader->get_error_msg().c_str());
+            }
+            else
+            {
+                std::string invalid_key = conf_reader->check_config_key({});
+                if (!invalid_key.empty())
+                {
+                    openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Unknown config key [%s] found in yml configuration."),
+                                   invalid_key.c_str());
+                }
+                OPENRASP_G(config).update(conf_reader.get());
+                openrasp::scm->build_check_type_white_array(conf_reader.get());
+            }
+        }
     }
 
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
@@ -370,11 +387,6 @@ std::shared_ptr<openrasp::BaseReader> get_conf_reader(ConfigHolder::FromType typ
             if (config_reader)
             {
                 config_reader->load(conf_contents);
-                if (config_reader->has_error())
-                {
-                    openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Fail to parse config, cuz of %s."),
-                                   config_reader->get_error_msg().c_str());
-                }
             }
         }
     }

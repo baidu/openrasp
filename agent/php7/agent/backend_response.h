@@ -32,7 +32,7 @@ class PluginUpdatePackage;
 class BackendResponse
 {
 
-public:
+protected:
   static const int64_t default_int64;
   bool parse_error = false;
   long response_code = 0;

@@ -771,6 +771,7 @@ int main() {
     utils/time.cc \
     utils/net.cc \
     utils/url.cc \
+    utils/BaseReader.cc \
     utils/JsonReader.cc \
     utils/YamlReader.cc \
     agent/base_manager.cc \

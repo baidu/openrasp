@@ -139,6 +139,16 @@ bool HeartBeatAgent::do_heartbeat()
 #endif
 					if (write_ok)
 					{
+						JsonReader json_reader(complete_config);
+						if (!json_reader.has_error())
+						{
+							std::string invalid_key = json_reader.check_config_key({});
+							if (!invalid_key.empty())
+							{
+								openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Unknown config key [%s] found in json configuration."),
+											   invalid_key.c_str());
+							}
+						}
 						scm->set_config_last_update(config_time);
 						openrasp_error(LEVEL_DEBUG, HEARTBEAT_ERROR, _("Successfully update config, config time: %ld."),
 									   config_time);
