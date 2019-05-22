@@ -67,7 +67,7 @@ public class CatalinaXssHook extends ServerXssHook {
                             params.put("html_body", content);
                         }
                     }
-                    if (params.isEmpty() && buffer != null) {
+                    if (params.isEmpty() && buffer != null && !isBuffer(buffer)) {
                         String content = getContentFromCharChunk(buffer);
                         if (!StringUtils.isEmpty(content)) {
                             params.put("html_body", content);
@@ -81,7 +81,7 @@ public class CatalinaXssHook extends ServerXssHook {
                                 params.put("html_body", content);
                             }
                         }
-                        if (params.isEmpty() && buffer != null) {
+                        if (params.isEmpty() && buffer != null && !isBuffer(buffer) ) {
                             String content = getContentFromByteChunk(buffer);
                             if (!StringUtils.isEmpty(content)) {
                                 params.put("html_body", content);
@@ -136,5 +136,9 @@ public class CatalinaXssHook extends ServerXssHook {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static boolean isBuffer(Object buffer) {
+        return buffer instanceof ByteBuffer || buffer instanceof CharBuffer;
     }
 }
