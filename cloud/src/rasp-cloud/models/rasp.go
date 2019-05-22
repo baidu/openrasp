@@ -43,6 +43,7 @@ type Rasp struct {
 	LastHeartbeatTime int64             `json:"last_heartbeat_time" bson:"last_heartbeat_time,omitempty"`
 	RegisterTime      int64             `json:"register_time" bson:"register_time,omitempty"`
 	Environ           map[string]string `json:"environ" bson:"environ,omitempty"`
+	Description       string            `json:"description" bson:"description,omitempty"`
 }
 
 const (
@@ -201,4 +202,8 @@ func RemoveRaspBySelector(selector map[string]interface{}, appId string) (int, e
 		return 0, err
 	}
 	return info.Removed, nil
+}
+
+func UpdateRaspDescription(raspId string, description string) error {
+	return mongo.UpdateId(raspCollectionName, raspId, bson.M{"description": description})
 }

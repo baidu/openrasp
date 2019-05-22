@@ -67,6 +67,9 @@ func (o *RaspController) Post() {
 	if len(rasp.ServerVersion) >= 50 {
 		o.ServeError(http.StatusBadRequest, "the length of rasp server version must be less than 50")
 	}
+	if len(rasp.Description) >= 1024 {
+		o.ServeError(http.StatusBadRequest, "the length of rasp description less than 1024")
+	}
 	if rasp.RegisterIp != "" {
 		valid := validation.Validation{}
 		if result := valid.IP(rasp.RegisterIp, "IP"); !result.Ok {
