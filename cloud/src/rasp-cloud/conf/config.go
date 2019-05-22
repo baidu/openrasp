@@ -66,6 +66,7 @@ func InitConfig(startFlag *Flag) {
 	AppConfig.MongoDBName = beego.AppConfig.DefaultString("MongoDBName", "openrasp")
 	AppConfig.MongoDBUser = beego.AppConfig.DefaultString("MongoDBUser", "")
 	AppConfig.MongoDBPwd = beego.AppConfig.DefaultString("MongoDBPwd", "")
+	AppConfig.MaxPlugins = beego.AppConfig.DefaultInt("MaxPlugins", 30)
 	AppConfig.AlarmLogMode = beego.AppConfig.DefaultString("AlarmLogMode", "file")
 	AppConfig.AlarmBufferSize = beego.AppConfig.DefaultInt("AlarmBufferSize", 300)
 	AppConfig.AlarmCheckInterval = beego.AppConfig.DefaultInt64("AlarmCheckInterval", 120)
@@ -82,20 +83,21 @@ func ValidRaspConf(config *RaspAppConfig) {
 	if config.MongoDBAddr == "" {
 		failLoadConfig("the 'MongoDBAddr' config item in app.conf can not be empty")
 	}
+
 	if config.MongoDBPoolLimit <= 0 {
 		failLoadConfig("the 'poolLimit' config must be greater than 0")
 	} else if config.MongoDBPoolLimit < 10 {
 		beego.Warning("the value of 'poolLimit' config is less than 10, it will be set to 10")
 		config.MongoDBPoolLimit = 10
 	}
-	if value, err := beego.AppConfig.Int("MaxPlugins"); err != nil || value <= 0 {
-		failLoadConfig("the 'AlarmBufferSize' config must be greater than 0")
-	} else if value < 10 {
+
+	if config.MaxPlugins <= 0 {
+		failLoadConfig("the 'MaxPlugins' config must be greater than 0")
+	} else if config.MaxPlugins < 10 {
 		beego.Warning("the value of 'MaxPlugins' config is less than 10, it will be set to 10")
 		config.MaxPlugins = 10
-	} else {
-		config.MaxPlugins = value
 	}
+
 	if config.AlarmBufferSize <= 0 {
 		failLoadConfig("the 'AlarmBufferSize' config must be greater than 0")
 	} else if config.AlarmBufferSize < 100 {
