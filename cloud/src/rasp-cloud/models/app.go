@@ -277,7 +277,10 @@ func AddApp(app *App) (result *App, err error) {
 	app.Id = generateAppId(app)
 	app.Secret = generateSecret(app)
 	app.CreateTime = time.Now().Unix()
-	if mongo.FindOne(appCollectionName, bson.M{"name": app.Name}, &App{}) != mgo.ErrNotFound {
+	if err := mongo.FindOne(appCollectionName, bson.M{"name": app.Name}, &App{}); err != mgo.ErrNotFound {
+		if err != nil {
+			return nil, err
+		}
 		return nil, errors.New("duplicate app name")
 	}
 	HandleApp(app, true)
@@ -510,7 +513,7 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 			msg       string
 			emailAddr = &mail.Address{Address: emailConf.UserName}
 		)
-		if emailConf.From == "" {
+		if emailConf.From != "" {
 			emailAddr.Name = emailConf.From
 		} else {
 			hostName, err := os.Hostname()
@@ -572,9 +575,9 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 			}
 		}
 		//host, _, err := net.SplitHostPort(emailConf.ServerAddr)
-		if err != nil {
-			return handleError("failed to get email serve host: " + err.Error())
-		}
+		//if err != nil {
+		//	return handleError("failed to get email serve host: " + err.Error())
+		//}
 		auth := tools.LoginAuth(emailConf.UserName, emailConf.Password)
 		//auth := smtp.PlainAuth("", emailConf.UserName, emailConf.Password, host)
 		//auth := smtp.CRAMMD5Auth(emailConf.UserName, emailConf.Password)

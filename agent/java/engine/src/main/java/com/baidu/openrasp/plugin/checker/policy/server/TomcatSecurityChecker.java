@@ -153,7 +153,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                                     String password = user.getAttribute("password");
                                     if (password == null || password.isEmpty()) {
                                         Map<String, Object> params = new HashMap<String, Object>();
-                                        params.put("config_file", userFile.getAbsolutePath());
+                                        params.put("type", ApplicationModel.getServerName());
                                         params.put("username", userName);
                                         params.put("password", password);
                                         infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD,
@@ -162,7 +162,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                                     }
                                     if (weakWords.contains(userName) && weakWords.contains(password)) {
                                         Map<String, Object> params = new HashMap<String, Object>();
-                                        params.put("config_file", userFile.getAbsolutePath());
+                                        params.put("type", ApplicationModel.getServerName());
                                         params.put("username", userName);
                                         params.put("password", password);
                                         infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD,

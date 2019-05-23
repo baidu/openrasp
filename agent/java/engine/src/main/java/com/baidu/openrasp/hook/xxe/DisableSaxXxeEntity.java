@@ -36,7 +36,8 @@ import java.io.IOException;
 public class DisableSaxXxeEntity extends DisableXxeEntity {
     @Override
     public boolean isClassMatched(String className) {
-        return "com/sun/org/apache/xerces/internal/jaxp/SAXParserFactoryImpl".equals(className);
+        return "com/sun/org/apache/xerces/internal/jaxp/SAXParserFactoryImpl".equals(className) ||
+                "org/apache/xerces/jaxp/SAXParserFactoryImpl".equals(className);
     }
 
     @Override

@@ -25,9 +25,11 @@ import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -184,27 +186,17 @@ public class SQLStatementHook extends AbstractSqlHook {
      * @param e      sql执行抛出的异常
      */
     public static void checkSQLErrorCode(String server, SQLException e, Object[] object) {
-        //检测获取errorcode 获取异常的时候，打日志
-        if (e.getErrorCode() == 0) {
-            String message = "Get error code exceptions,check mysql version and database driver compatibility issues.";
-            int errorCode = ErrorType.HOOK_ERROR.getCode();
-            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
-            return;
-        }
-        HashMap<String, Object> params = new HashMap<String, Object>();
-        params.put("server", server);
-        try {
-            if (object != null && object.length > 0) {
-                params.put("query", String.valueOf(object[0]));
-            } else {
-                params.put("query", "");
+        if (object != null && object.length > 0 && !StringUtils.isEmpty((String) object[0])) {
+            if (checkSqlErrorCode(e)) {
+                return;
             }
-        } catch (Exception e1) {
-            params.put("query", "");
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("server", server);
+            params.put("query", String.valueOf(object[0]));
+            params.put("error_code", String.valueOf(e.getErrorCode()));
+            String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
+            params.put("message", message);
+            HookHandler.doCheck(CheckParameter.Type.SQL_EXCEPTION, params);
         }
-        params.put("error_code", String.valueOf(e.getErrorCode()));
-        String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
-        params.put("message", message);
-        HookHandler.doCheck(CheckParameter.Type.SQL_EXCEPTION, params);
     }
 }

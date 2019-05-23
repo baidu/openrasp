@@ -32,7 +32,10 @@ public abstract class ServerXssHook extends AbstractClassHook {
     }
 
     protected static boolean isCheckXss() {
-        return HookHandler.requestCache.get() != null && HookHandler.responseCache.get() != null &&
-                HookHandler.responseCache.get().getContentType().startsWith(HttpServletResponse.CONTENT_TYPE_HTML_VALUE);
+        if (HookHandler.requestCache.get() != null && HookHandler.responseCache.get() != null) {
+            String contentType = HookHandler.responseCache.get().getContentType();
+            return contentType == null || contentType.startsWith(HttpServletResponse.CONTENT_TYPE_HTML_VALUE);
+        }
+        return false;
     }
 }
