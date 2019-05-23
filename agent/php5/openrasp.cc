@@ -52,6 +52,7 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
 bool is_initialized = false;
 bool remote_active = false;
+std::string openrasp_status = "Protected";
 std::shared_ptr<openrasp::BaseReader> get_conf_reader(ConfigHolder::FromType type = ConfigHolder::FromType::kYaml);
 static std::string get_config_abs_path(ConfigHolder::FromType type);
 static void hook_without_params(OpenRASPCheckType check_type TSRMLS_DC);
@@ -119,10 +120,12 @@ PHP_MINIT_FUNCTION(openrasp)
     REGISTER_INI_ENTRIES();
     if (!current_sapi_supported())
     {
+        openrasp_status = "Unprotected (unsupported SAPI)";
         return SUCCESS;
     }
     if (!make_openrasp_root_dir(openrasp_ini.root_dir TSRMLS_CC))
     {
+        openrasp_status = "Unprotected ('openrasp.root_dir' initialization failed)";
         return SUCCESS;
     }
     std::string locale_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + "locale" + DEFAULT_SLASH);
@@ -131,6 +134,7 @@ PHP_MINIT_FUNCTION(openrasp)
     if (!openrasp::scm->startup())
     {
         openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("Fail to startup SharedConfigManager."));
+        openrasp_status = "Unprotected (shared memory application failed)";
         return SUCCESS;
     }
 
@@ -140,6 +144,7 @@ PHP_MINIT_FUNCTION(openrasp)
         openrasp::oam.reset(new openrasp::OpenraspAgentManager());
         if (!openrasp::oam->verify_ini_correct())
         {
+            openrasp_status = "Unprotected (ini configuration error)";
             return SUCCESS;
         }
         remote_active = true;
@@ -171,10 +176,12 @@ PHP_MINIT_FUNCTION(openrasp)
 
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
     {
+        openrasp_status = "Unprotected (log module initialization failed)";
         return SUCCESS;
     }
     if (PHP_MINIT(openrasp_v8)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
     {
+        openrasp_status = "Unprotected (v8 module initialization failed)";
         return SUCCESS;
     }
     int result;
@@ -286,7 +293,7 @@ PHP_RSHUTDOWN_FUNCTION(openrasp)
 PHP_MINFO_FUNCTION(openrasp)
 {
     php_info_print_table_start();
-    php_info_print_table_row(2, "Status", is_initialized ? "Protected" : "Unprotected, Initialization Failed");
+    php_info_print_table_row(2, "Status", openrasp_status.c_str());
     php_info_print_table_row(2, "Version", PHP_OPENRASP_VERSION);
 #ifdef OPENRASP_BUILD_TIME
     php_info_print_table_row(2, "Build Time", OPENRASP_BUILD_TIME);
