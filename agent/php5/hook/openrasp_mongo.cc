@@ -37,7 +37,8 @@ PRE_HOOK_FUNCTION_EX(__construct, mongodb_0_driver_0_command, MONGO);
 POST_HOOK_FUNCTION_EX(__construct, mongoclient, DB_CONNECTION);
 POST_HOOK_FUNCTION_EX(__construct, mongodb_0_driver_0_manager, DB_CONNECTION);
 
-static void handle_mongo_uri_string(char *uri_string, int uri_string_len, sql_connection_entry *sql_connection_p)
+static void handle_mongo_uri_string(char *uri_string, int uri_string_len, sql_connection_entry *sql_connection_p,
+                                    std::string const &default_uri = "mongodb://127.0.0.1/")
 {
     if (uri_string_len)
     {
@@ -45,8 +46,7 @@ static void handle_mongo_uri_string(char *uri_string, int uri_string_len, sql_co
     }
     else
     {
-        char *tmp;
-        spprintf(&tmp, 0, "localhost:27017");
+        char *tmp = estrdup(default_uri.c_str());
         mongo_parse_connection_string(sql_connection_p, tmp);
         efree(tmp);
     }
@@ -77,7 +77,10 @@ static bool init_mongo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
     {
         return false;
     }
-    handle_mongo_uri_string(server, server_len, sql_connection_p);
+    static char *default_host = INI_STR("mongo.default_host");
+    static long default_port = INI_INT("mongo.default_port");
+    std::string default_uri = "mongodb://" + std::string(default_host) + "/" + std::to_string(default_port);
+    handle_mongo_uri_string(server, server_len, sql_connection_p, default_uri);
     if (options && Z_TYPE_P(options) == IS_ARRAY)
     {
         handle_mongo_options(Z_ARRVAL_P(options), sql_connection_p);

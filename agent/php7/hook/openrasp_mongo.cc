@@ -29,7 +29,8 @@ PRE_HOOK_FUNCTION_EX(__construct, mongodb_0_driver_0_command, MONGO);
 
 POST_HOOK_FUNCTION_EX(__construct, mongodb_0_driver_0_manager, DB_CONNECTION);
 
-static void handle_mongo_uri_string(char *uri_string, size_t uri_string_len, sql_connection_entry *sql_connection_p)
+static void handle_mongo_uri_string(char *uri_string, size_t uri_string_len, sql_connection_entry *sql_connection_p,
+                                    std::string const &default_uri = "mongodb://127.0.0.1/")
 {
     if (uri_string_len)
     {
@@ -37,8 +38,7 @@ static void handle_mongo_uri_string(char *uri_string, size_t uri_string_len, sql
     }
     else
     {
-        char *tmp;
-        spprintf(&tmp, 0, "localhost:27017");
+        char *tmp = estrdup(default_uri.c_str());
         mongo_parse_connection_string(sql_connection_p, tmp);
         efree(tmp);
     }
@@ -168,7 +168,7 @@ void pre_mongodb_0_driver_0_query___construct_MONGO(OPENRASP_INTERNAL_FUNCTION_P
 {
     zval *filter;
     zval *options = NULL;
-    
+
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "A|a!", &filter, &options) == FAILURE)
     {
         return;
