@@ -96,7 +96,7 @@ static void mongo_plugin_check(const std::string &query_str, const std::string &
             params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query_str));
             params->Set(openrasp::NewV8String(isolate, "class"), openrasp::NewV8String(isolate, classname));
             params->Set(openrasp::NewV8String(isolate, "method"), openrasp::NewV8String(isolate, method));
-            params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, "mongo"));
+            params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, "mongodb"));
             is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(MONGO)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (is_block)
