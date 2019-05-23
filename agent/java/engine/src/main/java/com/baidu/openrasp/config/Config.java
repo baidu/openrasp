@@ -41,6 +41,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 
@@ -203,6 +204,15 @@ public class Config extends FileScanListener {
             if (file.exists()) {
                 Yaml yaml = new Yaml();
                 properties = yaml.loadAs(new FileInputStream(file), Map.class);
+                if (properties != null) {
+                    for (String key : properties.keySet()) {
+                        if (!checkConfigKey(key)) {
+                            String message = "Unknown config key [" + key + "] found in yml configuration";
+                            int errorCode = ErrorType.CONFIG_ERROR.getCode();
+                            LOGGER.info(CloudUtils.getExceptionObject(message, errorCode));
+                        }
+                    }
+                }
             }
         } catch (Exception e) {
             String message = "openrasp.yml parsing failed";
@@ -244,6 +254,11 @@ public class Config extends FileScanListener {
     public synchronized void loadConfigFromCloud(Map<String, Object> configMap, boolean isInit) {
         TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
         for (Map.Entry<String, Object> entry : configMap.entrySet()) {
+            if (!checkConfigKey(entry.getKey())) {
+                String message = "Unknown config key [" + entry.getKey() + "] found in yml configuration";
+                int errorCode = ErrorType.CONFIG_ERROR.getCode();
+                LOGGER.info(CloudUtils.getExceptionObject(message, errorCode));
+            }
             //开启云控必须参数不能云控
             if (entry.getKey().startsWith("cloud.")) {
                 continue;
@@ -1203,8 +1218,6 @@ public class Config extends FileScanListener {
                 setSyslogFacility(value);
             } else if (Item.SYSLOG_RECONNECT_INTERVAL.key.equals(key)) {
                 setSyslogReconnectInterval(value);
-            } else if (Item.HOOK_WHITE_ALL.key.equals(key)) {
-                setHookWhiteAll(value);
             } else if (Item.LOG_MAXBURST.key.equals(key)) {
                 setLogMaxBurst(value);
             } else if (Item.HEARTBEAT_INTERVAL.key.equals(key)) {
@@ -1280,5 +1293,20 @@ public class Config extends FileScanListener {
             }
         }
         return temp;
+    }
+
+    //config项赋值前检测key是否是rasp规定的字段
+    public boolean checkConfigKey(String key) {
+        if (!StringUtils.isEmpty(key)) {
+            boolean isMatched = false;
+            for (Item item : Item.values()) {
+                if (item.key.equals(key)) {
+                    isMatched = true;
+                    break;
+                }
+            }
+            return isMatched;
+        }
+        return false;
     }
 }

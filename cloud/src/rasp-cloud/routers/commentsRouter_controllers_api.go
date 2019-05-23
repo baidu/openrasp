@@ -247,6 +247,15 @@ func init() {
 
     beego.GlobalControllerRouter["rasp-cloud/controllers/api:RaspController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:RaspController"],
         beego.ControllerComments{
+            Method: "Describe",
+            Router: `/describe`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:RaspController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:RaspController"],
+        beego.ControllerComments{
             Method: "Search",
             Router: `/search`,
             AllowHTTPMethods: []string{"post"},

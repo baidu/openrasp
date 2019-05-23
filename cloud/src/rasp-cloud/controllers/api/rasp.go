@@ -107,3 +107,34 @@ func (o *RaspController) Delete() {
 		})
 	}
 }
+
+// @router /describe [post]
+func (o *RaspController) Describe() {
+	var param struct {
+		Id          string `json:"id"`
+		Description string `json:"description"`
+	}
+	o.UnmarshalJson(&param)
+	if param.Id == "" {
+		o.ServeError(http.StatusBadRequest, "rasp id can not be empty")
+	}
+
+	if len(param.Id) > 256 {
+		o.ServeError(http.StatusBadRequest, "the length of rasp id can not be greater than 256")
+	}
+
+	if param.Description == "" {
+		o.ServeError(http.StatusBadRequest, "description can not be empty")
+	}
+
+	if len(param.Description) > 1024 {
+		o.ServeError(http.StatusBadRequest, "the length of description can not be greater than 1024")
+	}
+
+	err := models.UpdateRaspDescription(param.Id, param.Description)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to update description for rasp", err)
+	}
+
+	o.ServeWithEmptyData()
+}

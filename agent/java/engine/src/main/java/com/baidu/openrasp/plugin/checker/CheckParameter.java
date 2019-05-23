@@ -22,6 +22,7 @@ import com.baidu.openrasp.plugin.checker.local.SSRFChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlStatementChecker;
 import com.baidu.openrasp.plugin.checker.local.XssChecker;
+import com.baidu.openrasp.plugin.checker.policy.MongoConnectionChecker;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
 import com.baidu.openrasp.plugin.checker.policy.server.*;
 import com.baidu.openrasp.request.AbstractRequest;
@@ -58,6 +59,7 @@ public class CheckParameter {
         SSRF("ssrf", new SSRFChecker(), 1 << 14),
         SQL_EXCEPTION("sql_exception", new SqlStatementChecker(), 1 << 15),
         DELETEFILE("deleteFile", new JsChecker(), 1 << 18),
+        MONGO("mongo", new JsChecker(), 1 << 19),
 
         // java本地检测
         XSS_USERINPUT("xss_userinput", new XssChecker(), 1 << 16),
@@ -65,6 +67,7 @@ public class CheckParameter {
 
         // 安全基线检测
         POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker(), 0),
+        POLICY_MONGO_CONNECTION("mongoConnection", new MongoConnectionChecker(), 0),
         POLICY_SERVER_TOMCAT("tomcatServer", new TomcatSecurityChecker(false), 0),
         POLICY_SERVER_JBOSS("jbossServer", new JBossSecurityChecker(false), 0),
         POLICY_SERVER_JBOSSEAP("jbossEAPServer", new JBossEAPSecurityChecker(false), 0),
