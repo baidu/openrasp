@@ -90,7 +90,7 @@
             <p>
                 {{ data.attack_params.url }}
             </p>
-            <div class="h6">
+            <div class="h6" v-if="data.attack_params.realpath">
                 要包含的文件 - 真实路径
             </div>
             <p>
