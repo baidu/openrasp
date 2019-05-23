@@ -227,7 +227,7 @@ void pre_mongocollection_findandmodify_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETE
         return;
     }
 
-    mongo_plugin_check(query, "MongoCollection", "findandmodify" TSRMLS_CC);
+    mongo_plugin_check(query, "MongoCollection", "findAndModify" TSRMLS_CC);
 }
 
 void pre_mongocollection_remove_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
