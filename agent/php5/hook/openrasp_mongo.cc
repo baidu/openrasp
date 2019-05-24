@@ -29,7 +29,7 @@ PRE_HOOK_FUNCTION_EX(remove, mongocollection, MONGO);
 PRE_HOOK_FUNCTION_EX(update, mongocollection, MONGO);
 PRE_HOOK_FUNCTION_EX(execute, mongodb, MONGO);
 PRE_HOOK_FUNCTION_EX(__construct, mongocode, MONGO);
-PRE_HOOK_FUNCTION_EX(insert, mongodb_0_driver_0_bulkwrite, MONGO);
+PRE_HOOK_FUNCTION_EX(delete, mongodb_0_driver_0_bulkwrite, MONGO);
 PRE_HOOK_FUNCTION_EX(update, mongodb_0_driver_0_bulkwrite, MONGO);
 PRE_HOOK_FUNCTION_EX(__construct, mongodb_0_driver_0_query, MONGO);
 PRE_HOOK_FUNCTION_EX(__construct, mongodb_0_driver_0_command, MONGO);
@@ -286,14 +286,14 @@ void pre_mongocode___construct_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void pre_mongodb_0_driver_0_bulkwrite_insert_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_mongodb_0_driver_0_bulkwrite_delete_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *zquery, *zoptions = NULL;
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "A|a!", &zquery, &zoptions) == FAILURE)
     {
         return;
     }
-    mongodb_plugin_check(zquery, "MongoDB\\Driver\\Bulkwrite", "dalete" TSRMLS_CC);
+    mongodb_plugin_check(zquery, "MongoDB\\Driver\\Bulkwrite", "delete" TSRMLS_CC);
 }
 
 void pre_mongodb_0_driver_0_bulkwrite_update_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)

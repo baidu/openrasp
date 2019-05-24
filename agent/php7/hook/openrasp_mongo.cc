@@ -22,7 +22,7 @@
 /**
  * mongo相关hook点
  */
-PRE_HOOK_FUNCTION_EX(insert, mongodb_0_driver_0_bulkwrite, MONGO);
+PRE_HOOK_FUNCTION_EX(delete, mongodb_0_driver_0_bulkwrite, MONGO);
 PRE_HOOK_FUNCTION_EX(update, mongodb_0_driver_0_bulkwrite, MONGO);
 PRE_HOOK_FUNCTION_EX(__construct, mongodb_0_driver_0_query, MONGO);
 PRE_HOOK_FUNCTION_EX(__construct, mongodb_0_driver_0_command, MONGO);
@@ -142,14 +142,14 @@ static void mongodb_plugin_check(zval *query, const std::string &classname, cons
     mongo_plugin_check(query_json, classname, method);
 }
 
-void pre_mongodb_0_driver_0_bulkwrite_insert_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_mongodb_0_driver_0_bulkwrite_delete_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *zquery, *zoptions = NULL;
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "A|a!", &zquery, &zoptions) == FAILURE)
     {
         return;
     }
-    mongodb_plugin_check(zquery, "MongoDB\\Driver\\Bulkwrite", "dalete");
+    mongodb_plugin_check(zquery, "MongoDB\\Driver\\Bulkwrite", "delete");
 }
 
 void pre_mongodb_0_driver_0_bulkwrite_update_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
