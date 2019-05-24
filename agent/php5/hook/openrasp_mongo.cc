@@ -269,7 +269,7 @@ void pre_mongocdb_execute_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     }
 }
 
-void pre_mongoccode___construct_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_mongocode___construct_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     char *code;
     int code_len;
