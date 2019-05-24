@@ -2,6 +2,7 @@
 hook MongoDB\Driver\Command::__construct
 --SKIPIF--
 <?php
+if (PHP_VERSION_ID < 50500) die('Skipped: not supported (version < 5.5.0)');
 $plugin = <<<EOF
 plugin.register('mongo', params => {
     assert(params.query == '{"buildinfo":1}')

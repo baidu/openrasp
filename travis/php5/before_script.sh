@@ -24,15 +24,19 @@ echo "extension=mongo.so" >> `php --ini | grep "Loaded Configuration" | sed -e "
 popd
 
 #mongo-php-driver
-git clone https://github.com/mongodb/mongo-php-driver.git
-pushd mongo-php-driver
-git submodule update --init
-phpize
-./configure
-make all
-sudo make install
-echo "extension=mongodb.so" >> `php --ini | grep "Loaded Configuration" | sed -e "s|.*:\s*||"`
-popd
+pv=`php -r "echo PHP_VERSION_ID;"`
+if test "$pv" -ge "50500"
+then
+    git clone https://github.com/mongodb/mongo-php-driver.git
+    pushd mongo-php-driver
+    git submodule update --init
+    phpize
+    ./configure
+    make all
+    sudo make install
+    echo "extension=mongodb.so" >> `php --ini | grep "Loaded Configuration" | sed -e "s|.*:\s*||"`
+    popd
+fi
 
 pushd agent/$OPENRASP_LANG
 phpenv config-rm xdebug.ini || true
