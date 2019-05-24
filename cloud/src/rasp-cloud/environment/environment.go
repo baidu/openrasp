@@ -53,6 +53,9 @@ func init() {
 	if *StartFlag.Version {
 		fmt.Println(Version)
 		fmt.Println("Build Time: " + BuildTime)
+		if tools.CommitID != "" {
+			fmt.Println("Git Commit ID: " + tools.CommitID)
+		}
 		os.Exit(0)
 	}
 	if *StartFlag.StartType == conf.StartTypeReset {
