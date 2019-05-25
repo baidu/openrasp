@@ -8,6 +8,12 @@ var clean  = {
   confidence: 0
 }
 
+// BEGIN ALGORITHM CONFIG //
+
+var algorithmConfig = {}
+
+// END ALGORITHM CONFIG //
+
 plugin.register('request', function(params, context) {
   // 已知的扫描器识别
   var foundScanner = false

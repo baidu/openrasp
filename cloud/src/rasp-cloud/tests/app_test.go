@@ -12,6 +12,7 @@ import (
 	"rasp-cloud/tests/start"
 	"rasp-cloud/mongo"
 	"gopkg.in/mgo.v2"
+	"rasp-cloud/models/logs"
 )
 
 func getValidApp() map[string]interface{} {
@@ -114,13 +115,49 @@ func TestHandleApp(t *testing.T) {
 		})
 
 		Convey("when mongodb has error", func() {
+			monkey.Patch(mongo.FindOne, func(collection string, query interface{}, result interface{}) error {
+				return nil
+			})
+			app := getValidApp()
+			app["whitelist_config"] = nil
+			r := inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(mongo.FindOne)
+
+			monkey.Patch(mongo.FindOne, func(string, interface{}, interface{}) error {
+				return errors.New("")
+			})
+			app = getValidApp()
+			app["whitelist_config"] = nil
+			r = inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(mongo.FindOne)
+
+			monkey.Patch(logs.CreateAlarmEsIndex, func(string) (err error) {
+				return errors.New("")
+			})
+			app = getValidApp()
+			app["whitelist_config"] = nil
+			r = inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(logs.CreateAlarmEsIndex)
+
+			monkey.Patch(mongo.Insert, func(string, interface{}) error {
+				return errors.New("")
+			})
+			app = getValidApp()
+			app["whitelist_config"] = nil
+			r = inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(mongo.Insert)
+
 			monkey.Patch(models.AddApp, func(app *models.App) (result *models.App, err error) {
 				return nil, errors.New("test error")
 			})
 			defer monkey.Unpatch(models.AddApp)
-			app := getValidApp()
+			app = getValidApp()
 			app["whitelist_config"] = nil
-			r := inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
+			r = inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
@@ -526,6 +563,7 @@ func TestConfigAlarm(t *testing.T) {
 					"subject":     "openrasp",
 					"recv_addr":   []string{"j524697@sina.cn"},
 					"tls_enable":  true,
+					"from":        "openrasp",
 				},
 				"ding_alarm_conf": map[string]interface{}{
 					"enable":      true,
@@ -703,6 +741,23 @@ func TestConfigAlarm(t *testing.T) {
 					"subject":     "alarm",
 					"recv_addr":   []string{"asd.com"},
 					"tls_enable":  true,
+				},
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when length of email from is greater than 256", func() {
+			r := inits.GetResponse("POST", "/v1/api/app/alarm/config", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+				"email_alarm_conf": map[string]interface{}{
+					"enable":      true,
+					"server_addr": "smtp.sina.com:456",
+					"username":    "j524697@sina.cn",
+					"password":    "************",
+					"subject":     "alarm",
+					"recv_addr":   []string{"j524697@sina.cn"},
+					"tls_enable":  true,
+					"from":        inits.GetLongString(257),
 				},
 			}))
 			So(r.Status, ShouldBeGreaterThan, 0)

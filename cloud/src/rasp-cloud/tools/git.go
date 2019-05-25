@@ -1,0 +1,3 @@
+package tools
+
+var CommitID = ""

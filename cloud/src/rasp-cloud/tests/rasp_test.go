@@ -10,6 +10,7 @@ import (
 	"rasp-cloud/tests/start"
 	"rasp-cloud/models"
 	"errors"
+	"rasp-cloud/conf"
 )
 
 func TestRaspRegister(t *testing.T) {
@@ -154,6 +155,13 @@ func TestRaspRegister(t *testing.T) {
 			rasp.Environ = map[string]string{"123": inits.GetLongString(4097)}
 			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(rasp))
 			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the register callback url is invalid", func() {
+			conf.AppConfig.RegisterCallbackUrl = "xxxxx.xxxx.xxxx.xxxx"
+			rasp := *start.TestRasp
+			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(rasp))
+			So(r.Status, ShouldEqual, 0)
 		})
 	})
 }

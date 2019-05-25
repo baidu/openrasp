@@ -167,7 +167,7 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
             default:
                 break;
             }
-            bool is_block = false;
+            openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
             {
                 v8::HandleScope handle_scope(isolate);
                 auto params = v8::Object::New(isolate);
@@ -176,9 +176,9 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
                 zval_ptr_dtor(&path);
                 params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
                 params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, function));
-                is_block = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(INCLUDE)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+                check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(INCLUDE)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
-            if (is_block)
+            if (check_result == openrasp::CheckResult::kBlock)
             {
                 handle_block(TSRMLS_C);
             }

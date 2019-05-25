@@ -3,7 +3,7 @@
 # https://rasp.baidu.com/doc/hacking/compile/php.html
 
 set -ex
-script_base="$(readlink -f $(dirname "$0"))"
+script_base="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd "$script_base"
 
 # PHP 版本和架构
@@ -25,18 +25,11 @@ case "$(uname -s)" in
 		;;
 esac
 
-# 下载 libv8
-if [[ ! -d /tmp/openrasp-v8 ]]; then
-	git clone https://github.com/baidu-security/openrasp-v8.git /tmp/openrasp-v8
-fi
-
 # 编译 openrasp-v8
-cd /tmp/openrasp-v8
-git pull
-
-mkdir -p php/build
-cd php/build
-cmake -DCMAKE_CXX_COMPILER=clang++ ..
+git submodule update --init --recursive
+mkdir -p openrasp-v8/php/build
+cd openrasp-v8/php/build
+cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
 make
 
 cd "$script_base"
@@ -51,12 +44,12 @@ phpize --clean
 phpize
 
 if [[ $php_os == "macos" ]]; then
-	./configure --with-openrasp-v8=/tmp/openrasp-v8/ --with-gettext=/usr/local/homebrew/opt/gettext -q ${extra_config_opt}
+	./configure --with-openrasp-v8=${script_base}/openrasp-v8/ --with-gettext=/usr/local/homebrew/opt/gettext -q ${extra_config_opt}
 else
 	curl https://packages.baidu.com/app/openrasp/static-lib.tar.bz2 -o /tmp/static-lib.tar.bz2
 	tar -xf /tmp/static-lib.tar.bz2 -C /tmp/
 
-	CC=clang CXX=clang++ ./configure --with-openrasp-v8=/tmp/openrasp-v8/ --with-gettext --enable-openrasp-remote-manager \
+	./configure --with-openrasp-v8=${script_base}/openrasp-v8/ --with-gettext --enable-openrasp-remote-manager \
 		--with-curl=/tmp/static-lib --with-openssl=/tmp/static-lib -q ${extra_config_opt}
 fi
 

@@ -39,7 +39,10 @@ func init() {
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
 		esAddr := conf.AppConfig.EsAddr
 		client, err := elastic.NewSimpleClient(elastic.SetURL(esAddr),
-			elastic.SetBasicAuth(conf.AppConfig.EsUser, conf.AppConfig.EsPwd))
+			elastic.SetBasicAuth(conf.AppConfig.EsUser, conf.AppConfig.EsPwd),
+			elastic.SetSnifferTimeoutStartup(5*time.Second),
+			elastic.SetSnifferTimeout(5*time.Second),
+			elastic.SetSnifferInterval(30*time.Minute))
 		if err != nil {
 			tools.Panic(tools.ErrCodeESInitFailed, "init ES failed", err)
 		}

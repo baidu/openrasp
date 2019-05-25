@@ -143,7 +143,7 @@ public class SqlConnectionChecker extends PolicyChecker {
             params.put("connectionString", urlWithoutParams != null ? urlWithoutParams : "");
             params.put("username", user != null ? user : "");
             params.put("password", password);
-            infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.SQL_CONNECTION, unsafeMessage, true, params));
+            infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.MANAGER_PASSWORD, unsafeMessage, true, params));
         }
         return infos;
     }

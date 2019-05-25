@@ -18,6 +18,7 @@
 #include "openrasp_log.h"
 #include "openrasp_utils.h"
 #include "openrasp_content_type.h"
+#include "openrasp_inject.h"
 
 using namespace openrasp;
 
@@ -461,6 +462,8 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
          zend_hash_find(SERVER, ZEND_STRS("CONTENT_TYPE"), (void **)&origin_zv) == SUCCESS) &&
         Z_TYPE_PP(origin_zv) == IS_STRING)
     {
+        openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("Content-type of request (%s) is %s."),
+                       OPENRASP_INJECT_G(request_id), Z_STRVAL_PP(origin_zv));
         std::string content_type_vlaue = std::string(Z_STRVAL_PP(origin_zv));
         OpenRASPContentType::ContentType k_type = OpenRASPContentType::classify_content_type(content_type_vlaue);
         if (OpenRASPContentType::ContentType::cApplicationJson == k_type)
@@ -470,6 +473,8 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
             efree(body);
         }
     }
+    openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("Complete body of request (%s) is %s."),
+                   OPENRASP_INJECT_G(request_id), complete_body.c_str());
     v8::TryCatch trycatch(isolate);
     auto v8_body = NewV8String(isolate, complete_body);
     auto v8_json_obj = v8::JSON::Parse(isolate->GetCurrentContext(), v8_body);
@@ -477,7 +482,7 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     {
         v8::Local<v8::Value> exception = trycatch.Exception();
         v8::String::Utf8Value exception_str(isolate, exception);
-        openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("Fail to parse json body, cuz of %s."), *exception_str);
+        openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("Fail to parse json body, cuz of %s."), *exception_str);
     }
     else
     {

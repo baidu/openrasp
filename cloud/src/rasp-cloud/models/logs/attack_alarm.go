@@ -72,12 +72,9 @@ var (
 )
 
 func init() {
+	var err error
 	registerAlarmInfo(&AttackAlarmInfo)
-	currentPath, err := tools.GetCurrentPath()
-	if err != nil {
-		tools.Panic(tools.ErrCodeLogInitFailed, "failed to get current directory path", err)
-	}
-	geoIpDbPath = currentPath + "/geoip/GeoLite2-City.mmdb"
+	geoIpDbPath = tools.GetCurrentPathWithPanic() + "/geoip/GeoLite2-City.mmdb"
 	geoIpDb, err = geoip2.Open(geoIpDbPath)
 	if err != nil {
 		tools.Panic(tools.ErrCodeGeoipInit, "failed to open geoip database", err)

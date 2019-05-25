@@ -56,7 +56,11 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
             return false;
         }
         host_and_port = passwd = NULL;
+#if (PHP_MINOR_VERSION == 3)
+        user = php_get_current_user();
+#else
         user = php_get_current_user(TSRMLS_C);
+#endif
     }
     else
     {

@@ -1,4 +1,4 @@
-const plugin_version = '2019-0412-1200'
+const plugin_version = '2019-0425-1400'
 const plugin_name    = 'official'
 
 /*
@@ -59,7 +59,10 @@ var algorithmConfig = {
         min_length: 8,
         pre_filter: 'select|file|from|;',
         pre_enable: false,
-        lcs_search: false
+        lcs_search: false,
+
+        // 是否允许数据库管理器 - 前端直接提交SQL语句
+        allow_full: true
     },
     
     // SQL注入算法#2 - 语句规范
@@ -227,7 +230,7 @@ var algorithmConfig = {
     // 写文件操作 - 脚本文件
     // https://rasp.baidu.com/doc/dev/official.html#case-file-write
     writeFile_script: {
-        name:      '算法2 - 拦截所有 php/jsp 等脚本文件的写入操作',
+        name:      '算法2 - 拦截 php/jsp 等脚本文件的写入操作',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#case-file-write',
         action:    'ignore'
     },
@@ -292,9 +295,31 @@ var algorithmConfig = {
         ]
     },
 
+    // XXE - 代码安全开关，通过调用相关函数直接禁止外部实体
+    xxe_disable_entity: {
+        name:   '算法1 - 禁止外部实体加载（记录日志等同于完全忽略）',
+        action: 'ignore',
+        clazz:  {
+            // com/sun/org/apache/xerces/internal/jaxp/DocumentBuilderFactoryImpl
+            java_dom:   true,
+
+            // org/dom4j/io/SAXReader
+            java_dom4j: true,
+
+            // org/jdom/input/SAXBuilder,org/jdom2/input/SAXBuilder
+            java_jdom:  true,
+
+            // com/sun/org/apache/xerces/internal/jaxp/SAXParserFactoryImpl
+            java_sax:   true,
+
+            // javax/xml/stream/XMLInputFactory
+            java_stax:  true
+        }
+    },
+
     // XXE - 使用 gopher/ftp/dict/.. 等不常见协议访问外部实体
     xxe_protocol: {
-        name:   '算法1 - 使用 ftp:// 等异常协议加载外部实体',
+        name:   '算法2 - 使用 ftp:// 等异常协议加载外部实体',
         action: 'block',
         protocols: [
             'ftp',
@@ -306,7 +331,7 @@ var algorithmConfig = {
     },
     // XXE - 使用 file 协议读取内容，可能误报，默认 log
     xxe_file: {
-        name:      '算法2 - 使用 file:// 协议读取文件',
+        name:      '算法3 - 使用 file:// 协议读取文件',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#case-xxe',
         action:    'log',
     },
@@ -506,9 +531,13 @@ if (! RASP.is_unittest)
    if (algorithmConfig.meta.all_log)
    {
         Object.keys(algorithmConfig).forEach(function (name) {
-            if (algorithmConfig[name].action == 'block') 
+            // XXE 外部实体开关不受影响
+            if (name != 'xxe_disable_entity')
             {
-               algorithmConfig[name].action = 'log'
+                if (algorithmConfig[name].action == 'block') 
+                {
+                    algorithmConfig[name].action = 'log'
+                }
             }
         })
     }
@@ -811,7 +840,7 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance)
     // 寻找 token 起始点，可以改为二分查找
     for (var i = 0; i < raw_tokens.length; i++)
     {
-        if (raw_tokens[i].stop >= userinput_idx)
+        if (raw_tokens[i].stop > userinput_idx)
         {
             start = i
             break
@@ -822,7 +851,7 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance)
     // 另外，最多需要遍历 distance 个 token
     for (var i = start; i < start + distance && i < raw_tokens.length; i++)
     {
-        if (raw_tokens[i].stop >= userinput_idx + userinput_length - 1)
+        if (raw_tokens[i].stop >= userinput_idx + userinput_length )
         {
             end = i
             break
@@ -913,6 +942,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
 
         var reason          = false
         var min_length      = algorithmConfig.sql_userinput.min_length
+        var allow_full      = algorithmConfig.sql_userinput.allow_full
         var parameters      = context.parameter || {}
         var json_parameters = context.json || {}
         var raw_tokens      = []
@@ -944,6 +974,12 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 
                     var userinput_idx = params.query.indexOf(value)
                     if (userinput_idx == -1) {
+                        return false
+                    }
+
+                    // 如果允许数据库管理器
+                    if (allow_full && params.query.length == value.length)
+                    {
                         return false
                     }
 
@@ -1655,6 +1691,7 @@ plugin.register('command', function (params, context) {
                 'java.lang.reflect.Method.invoke':                                              _("Reflected command execution - Unknown vulnerability detected"),
                 'ognl.OgnlRuntime.invokeMethod':                                                _("Reflected command execution - Using OGNL library"),
                 'com.thoughtworks.xstream.XStream.unmarshal':                                   _("Reflected command execution - Using xstream library"),
+                'java.beans.XMLDecoder.readObject':                                             _("Reflected command execution - Using WebLogic XMLDecoder library"),
                 'org.apache.commons.collections4.functors.InvokerTransformer.transform':        _("Reflected command execution - Using Transformer library (v4)"),
                 'org.apache.commons.collections.functors.InvokerTransformer.transform':         _("Reflected command execution - Using Transformer library"),
                 'org.apache.commons.collections.functors.ChainedTransformer.transform':         _("Reflected command execution - Using Transformer library"),
@@ -1755,7 +1792,7 @@ plugin.register('command', function (params, context) {
                 }
 
                 if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
-                    reason = _("Command injection - command structure altered by user input, request parameter name: %1%", [name])
+                    reason = _("Command injection - command structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                     return true
                 }
             })

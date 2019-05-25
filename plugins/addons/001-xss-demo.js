@@ -13,6 +13,12 @@ var clean  = {
     confidence: 0
 }
 
+// BEGIN ALGORITHM CONFIG //
+
+var algorithmConfig = {}
+
+// END ALGORITHM CONFIG //
+
 plugin.register('request', function(params, context) {
 
     // XSS 检测 DEMO

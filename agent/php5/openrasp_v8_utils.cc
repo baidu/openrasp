@@ -25,7 +25,7 @@ extern "C"
 
 namespace openrasp
 {
-bool Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout)
+CheckResult Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout)
 {
     IsolateData *data = isolate->GetData();
     v8::Local<v8::Object> request_context;
@@ -42,12 +42,12 @@ bool Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> p
     auto len = rst->Length();
     if (len == 0)
     {
-        return false;
+        return CheckResult::kCache;
     }
     auto context = isolate->GetCurrentContext();
     auto key_action = isolate->GetData()->key_action.Get(isolate);
-    auto action_hash_block = isolate->GetData()->action_hash_block;
-    auto need_block = false;
+    auto key_message = isolate->GetData()->key_message.Get(isolate);
+    CheckResult check_result = CheckResult::kNoCache;
     for (int i = 0; i < len; i++)
     {
         v8::HandleScope handle_scope(isolate);
@@ -57,17 +57,28 @@ bool Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> p
             continue;
         }
         auto obj = val.As<v8::Object>();
-        alarm_info(isolate, type, params, obj);
-        if (need_block)
+        auto action = obj->Get(context, key_action).FromMaybe(v8::Local<v8::Value>());
+        if (action.IsEmpty() || !action->IsString())
         {
             continue;
         }
-        if (obj->Get(context, key_action).ToLocal(&val) && val->IsString())
+        std::string str = *v8::String::Utf8Value(isolate, action);
+        if (str == "exception")
         {
-            need_block = val.As<v8::String>()->GetIdentityHash() == action_hash_block;
+            auto message = obj->Get(context, key_message).FromMaybe(v8::Local<v8::Value>());
+            if (!message.IsEmpty() && message->IsString())
+            {
+                plugin_info(isolate, std::string(*v8::String::Utf8Value(isolate, message)) + "\n");
+            }
+            continue;
         }
+        if (str == "block")
+        {
+            check_result = CheckResult::kBlock;
+        }
+        alarm_info(isolate, type, params, obj);
     }
-    return need_block;
+    return check_result;
 }
 
 v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)

@@ -451,14 +451,14 @@ static void hook_without_params(OpenRASPCheckType check_type)
     {
         return;
     }
-    bool is_block = false;
+    openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
     {
         v8::HandleScope handle_scope(isolate);
         auto params = v8::Object::New(isolate);
-        is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params,
+        check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params,
                                   OPENRASP_CONFIG(plugin.timeout.millis));
     }
-    if (is_block)
+    if (check_result == openrasp::CheckResult::kBlock)
     {
         handle_block();
     }

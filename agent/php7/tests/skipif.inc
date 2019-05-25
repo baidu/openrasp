@@ -5,7 +5,11 @@ $js_file = ini_get("openrasp.root_dir") . "/plugins/test.js";
 $plugin_header = <<<EOF
 const plugin = new RASP('test')
 const block = {action: 'block'}
-const assert = console.assert
+const assert = function(f) {
+  if (!f) {
+    throw new Error()
+  }
+}
 
 EOF;
 if (!file_put_contents($js_file, $plugin_header)) die("Skipped: can not create " . $js_file);

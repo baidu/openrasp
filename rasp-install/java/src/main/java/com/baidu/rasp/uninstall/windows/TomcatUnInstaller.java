@@ -36,24 +36,7 @@ public class TomcatUnInstaller extends BaseStandardUninstaller {
 
     @Override
     protected String recoverStartScript(String content) {
-        StringBuilder sb = new StringBuilder();
-        boolean isDelete = false;
-        Scanner scanner = new Scanner(content);
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-            if (line.contains("BEGIN OPENRASP")) {
-                isDelete = true;
-                continue;
-            }
-            if (line.contains("END OPENRASP")) {
-                isDelete = false;
-                continue;
-            }
-            if (!isDelete) {
-                sb.append(line).append(LINE_SEP);
-            }
-        }
-        return sb.toString();
+        return getUninstallContent(content);
     }
 
     @Override

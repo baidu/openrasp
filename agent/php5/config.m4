@@ -51,7 +51,9 @@ if test "$PHP_OPENRASP" != "no"; then
       PHP_ADD_INCLUDE($PHP_OPENRASP_V8/vendors/libc++-linux/include/c++/v1)
       PHP_ADD_LIBRARY(rt, , OPENRASP_SHARED_LIBADD)
       PHP_ADD_LIBRARY(dl, , OPENRASP_SHARED_LIBADD)
-      OPENRASP_LIBS="$OPENRASP_LIBS $PHP_OPENRASP_V8/vendors/libv8-7.2-linux/lib/libv8_monolith.a -pthread -Wl,--whole-archive -Wl,$PHP_OPENRASP_V8/vendors/libc++-linux/lib/* -Wl,--no-whole-archive"
+      CXXFLAGS="$CXXFLAGS -nostdinc++"
+      OPENRASP_LIBS="$OPENRASP_LIBS $PHP_OPENRASP_V8/vendors/libv8-7.2-linux/lib/libv8_monolith.a -Wl,--whole-archive -Wl,$PHP_OPENRASP_V8/vendors/libc++-linux/lib/* -Wl,--no-whole-archive"
+      OPENRASP_LIBS="$OPENRASP_LIBS -nodefaultlibs -lm -lc -lgcc_s -lrt -lpthread"
       ;;
   esac
 
@@ -278,28 +280,24 @@ if test "$PHP_OPENRASP" != "no"; then
     AC_DEFINE([HAVE_CLI_SUPPORT], [1], [Enable cli support])
   fi
 
-  YAML_CPP_SOURCE="third_party/yaml-cpp/src/binary.cpp \
-    third_party/yaml-cpp/src/contrib/graphbuilderadapter.cpp \
-    third_party/yaml-cpp/src/contrib/graphbuilder.cpp \
-    third_party/yaml-cpp/src/convert.cpp \
+  YAML_CPP_SOURCE="\
+    third_party/yaml-cpp/src/aliasmanager.cpp \
+    third_party/yaml-cpp/src/binary.cpp \
+    third_party/yaml-cpp/src/conversion.cpp \
     third_party/yaml-cpp/src/directives.cpp \
-    third_party/yaml-cpp/src/emit.cpp \
     third_party/yaml-cpp/src/emitfromevents.cpp \
     third_party/yaml-cpp/src/emitter.cpp \
     third_party/yaml-cpp/src/emitterstate.cpp \
     third_party/yaml-cpp/src/emitterutils.cpp \
-    third_party/yaml-cpp/src/exceptions.cpp \
     third_party/yaml-cpp/src/exp.cpp \
-    third_party/yaml-cpp/src/memory.cpp \
-    third_party/yaml-cpp/src/nodebuilder.cpp \
+    third_party/yaml-cpp/src/iterator.cpp \
     third_party/yaml-cpp/src/node.cpp \
-    third_party/yaml-cpp/src/node_data.cpp \
-    third_party/yaml-cpp/src/nodeevents.cpp \
+    third_party/yaml-cpp/src/nodebuilder.cpp \
+    third_party/yaml-cpp/src/nodeownership.cpp \
     third_party/yaml-cpp/src/null.cpp \
-    third_party/yaml-cpp/src/ostream_wrapper.cpp \
-    third_party/yaml-cpp/src/parse.cpp \
+    third_party/yaml-cpp/src/ostream.cpp \
     third_party/yaml-cpp/src/parser.cpp \
-    third_party/yaml-cpp/src/regex_yaml.cpp \
+    third_party/yaml-cpp/src/regex.cpp \
     third_party/yaml-cpp/src/scanner.cpp \
     third_party/yaml-cpp/src/scanscalar.cpp \
     third_party/yaml-cpp/src/scantag.cpp \
@@ -307,7 +305,10 @@ if test "$PHP_OPENRASP" != "no"; then
     third_party/yaml-cpp/src/simplekey.cpp \
     third_party/yaml-cpp/src/singledocparser.cpp \
     third_party/yaml-cpp/src/stream.cpp \
-    third_party/yaml-cpp/src/tag.cpp"
+    third_party/yaml-cpp/src/tag.cpp \
+    third_party/yaml-cpp/src/contrib/graphbuilder.cpp \
+    third_party/yaml-cpp/src/contrib/graphbuilderadapter.cpp \
+  "
   PHP_ADD_INCLUDE("PHP_EXT_BUILDDIR([openrasp])/third_party/yaml-cpp/include")
 
   case $host_os in
@@ -317,17 +318,6 @@ if test "$PHP_OPENRASP" != "no"; then
     * )
       ;;
   esac
-
-  AC_MSG_CHECKING([for static libstdc++ library])
-  STATIC_LIBSTDCXX=`$CXX -print-file-name=libstdc++.a`
-  if test $STATIC_LIBSTDCXX == "libstdc++.a"; then
-    OPENRASP_LIBS="$OPENRASP_LIBS -lstdc++"
-    AC_MSG_RESULT([no])
-    AC_MSG_NOTICE([porting to other system may fail])
-  else
-    OPENRASP_LIBS="$OPENRASP_LIBS -Wl,$STATIC_LIBSTDCXX"
-    AC_MSG_RESULT([yes])
-  fi
 
   if test "$PHP_LINE_COVERAGE" != "no"; then
     CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"

@@ -318,7 +318,7 @@ void pre_global_mysqli_real_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *mysql_link;
     char *query = NULL;
-    int query_len;
+    size_t query_len;
 
     if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "os", &mysql_link, &query, &query_len) == FAILURE)
     {

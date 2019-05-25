@@ -20,6 +20,7 @@ import (
 	"rasp-cloud/tools"
 	"gopkg.in/mgo.v2"
 	"rasp-cloud/conf"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type Cookie struct {
@@ -60,4 +61,9 @@ func HasCookie(id string) (bool, error) {
 
 func RemoveCookie(id string) error {
 	return mongo.RemoveId(cookieCollectionName, id)
+}
+
+func RemoveAllCookie() error {
+	_, err := mongo.RemoveAll(cookieCollectionName, bson.M{})
+	return err
 }

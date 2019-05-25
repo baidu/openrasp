@@ -99,7 +99,7 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
     if (isolate)
     {
         std::string cache_key;
-        bool is_block = false;
+        openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
         {
             v8::HandleScope handle_scope(isolate);
             auto params = v8::Object::New(isolate);
@@ -127,13 +127,16 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
                     return false;
                 }
             }
-            is_block = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+            check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
-        if (is_block)
+        if (check_result == openrasp::CheckResult::kCache)
+        {
+            OPENRASP_HOOK_G(lru).set(cache_key, true);
+        }
+        if (check_result == openrasp::CheckResult::kBlock)
         {
             handle_block(TSRMLS_C);
         }
-        OPENRASP_HOOK_G(lru).set(cache_key, true);
     }
     return false;
 }

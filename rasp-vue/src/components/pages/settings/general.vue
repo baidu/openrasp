@@ -21,7 +21,7 @@
           <label class="form-label">
             自定义拦截状态码
           </label>
-          <b-form-select v-model="data['block.status_code']" :options="[200, 302, 403, 404, 500]" />
+          <b-form-select v-model.number="data['block.status_code']" :options="[200, 302, 403, 404, 500]" />
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -60,31 +60,37 @@
           <label class="form-label">
             最多读取 body 多少字节
           </label>
-          <input v-model="data['body.maxbytes']" type="text" class="form-control">
+          <input v-model.number="data['body.maxbytes']" type="number" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             调试开关 [0表示关闭，1以上的值表示开启]
           </label>
-          <input v-model="data['debug.level']" type="text" class="form-control" placeholder="0">
-        </div>        
+          <input v-model.number="data['debug.level']" type="number" class="form-control" placeholder="0">
+        </div>    
+        <div class="form-group">
+          <label class="form-label">
+            [插件] 单个hook点最大执行时间（ms）
+          </label>
+          <input v-model.number="data['plugin.timeout.millis']" type="number" class="form-control" placeholder="100">
+        </div>
         <div class="form-group">
           <label class="form-label">
             [日志] 报警日志记录的最大堆栈深度
           </label>
-          <input v-model="data['log.maxstack']" type="text" class="form-control" placeholder="50">
+          <input v-model.number="data['log.maxstack']" type="number" class="form-control" placeholder="50">
         </div>
         <div class="form-group">
           <label class="form-label">
             [日志] 每个进程/线程每秒钟最大日志条数
           </label>
-          <input v-model="data['log.maxburst']" type="text" class="form-control" placeholder="100">
+          <input v-model.number="data['log.maxburst']" type="number" class="form-control" placeholder="100">
         </div>
         <div class="form-group">
           <label class="form-label">
             [日志] 最大备份天数
           </label>
-          <input v-model="data['log.maxbackup']" type="text" class="form-control" placeholder="30">
+          <input v-model.number="data['log.maxbackup']" type="number" class="form-control" placeholder="30">
         </div>
         <div class="form-group">
           <label class="custom-switch">
@@ -94,7 +100,7 @@
               开启反汇编功能
               <a href="https://rasp.baidu.com/doc/setup/panel.html#decompiler" target="_blank">
                 [帮助文档]
-              </a>            
+              </a>
             </span>
           </label>
         </div>          

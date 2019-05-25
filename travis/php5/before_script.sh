@@ -9,10 +9,16 @@ ln -s /run/mysqld/mysqld.sock /tmp/mysql.sock
 psql -c "ALTER USER postgres WITH PASSWORD 'postgres';" -U postgres ;
 psql -c "CREATE USER openrasp WITH PASSWORD '123456'" -U postgres;
 
+#openrasp-v8
+mkdir -p $TRAVIS_BUILD_DIR/openrasp-v8/php/build
+pushd $TRAVIS_BUILD_DIR/openrasp-v8/php/build
+cmake ..
+make -j2 --quiet
+popd
+
+#openrasp
 pushd agent/$OPENRASP_LANG
 phpenv config-rm xdebug.ini || true
 phpenv config-rm ext-opcache.ini || true
-wget -N https://packages.baidu.com/app/openrasp/libv8-5.9-linux.tar.gz -P ~/cache
-tar -zxf ~/cache/libv8-5.9-linux.tar.gz
-phpize && ./configure --with-v8=./libv8-5.9-linux --with-gettext --enable-openrasp-remote-manager --enable-cli-support && make -j2 --quiet
+phpize && ./configure --with-openrasp-v8=$TRAVIS_BUILD_DIR/openrasp-v8 --with-gettext --enable-openrasp-remote-manager --enable-cli-support && make -j2
 popd

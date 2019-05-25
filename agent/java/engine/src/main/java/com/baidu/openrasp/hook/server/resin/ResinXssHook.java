@@ -51,20 +51,23 @@ public class ResinXssHook extends ServerXssHook {
     }
 
     public static void getResinOutputBuffer(char[] buffer, int len, boolean isOutputStreamOnly) {
-        if (len > 0 && !isOutputStreamOnly) {
-            HashMap<String, Object> params = new HashMap<String, Object>();
-            try {
-                char[] temp = new char[len];
-                System.arraycopy(buffer, 0, temp, 0, len);
-                String content = new String(temp);
-                params.put("html_body", content);
-            } catch (Exception e) {
-                String message = ApplicationModel.getServerName() + " xss detectde failed";
-                int errorCode = ErrorType.HOOK_ERROR.getCode();
-                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
-            }
-            if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
-                HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+        if (HookHandler.isEnableXssHook()) {
+            HookHandler.disableBodyXssHook();
+            if (len > 0 && !isOutputStreamOnly) {
+                HashMap<String, Object> params = new HashMap<String, Object>();
+                try {
+                    char[] temp = new char[len];
+                    System.arraycopy(buffer, 0, temp, 0, len);
+                    String content = new String(temp);
+                    params.put("html_body", content);
+                } catch (Exception e) {
+                    String message = ApplicationModel.getServerName() + " xss detectde failed";
+                    int errorCode = ErrorType.HOOK_ERROR.getCode();
+                    HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                }
+                if (isCheckXss() && !params.isEmpty()) {
+                    HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+                }
             }
         }
     }

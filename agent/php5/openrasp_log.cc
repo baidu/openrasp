@@ -204,8 +204,7 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
     {
         char *tmp_clientip_header = estrdup(OPENRASP_CONFIG(clientip.header).c_str());
         char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
-        const char *server_global_hey = ("HTTP_" + std::string(uch)).c_str();
-        total_filters.push_back({server_global_hey, "client_ip", nullptr});
+        total_filters.push_back({("HTTP_" + std::string(uch)), "client_ip", nullptr});
         efree(tmp_clientip_header);
     }
     zval **origin_zv;
@@ -358,6 +357,7 @@ PHP_RINIT_FUNCTION(openrasp_log)
     OPENRASP_LOG_G(plugin_logger).init(FSTREAM_APPENDER TSRMLS_CC);
     OPENRASP_LOG_G(policy_logger).init(FSTREAM_APPENDER TSRMLS_CC);
     OPENRASP_LOG_G(rasp_logger).init(FSTREAM_APPENDER TSRMLS_CC);
+    OPENRASP_LOG_G(rasp_logger).set_level(openrasp::scm->get_debug_level() != 0 ? LEVEL_DEBUG : LEVEL_INFO);
     return SUCCESS;
 }
 

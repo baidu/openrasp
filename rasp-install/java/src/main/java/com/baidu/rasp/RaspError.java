@@ -28,6 +28,7 @@ public class RaspError extends Exception {
     public static String E10004 = "[ERROR 10004] Unable to determine application server type in: ";
     public static String E10005 = "[ERROR 10005] Console arguments error: ";
     public static String E10006 = "[ERROR 10006] Attach rasp failed: ";
+    public static String E10007 = "[ERROR 10007] Not support the application server type: ";
 
     public RaspError(String message) {
         super(message);
