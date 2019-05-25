@@ -169,6 +169,10 @@ var algorithmConfig = {
             'file',
             'gopher',
 
+            // python specific
+            'local_file',
+            'local-file',
+
             // java specific
             'jar',
             'netdoc',
