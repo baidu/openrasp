@@ -75,7 +75,9 @@ tar xvf locale.tar && rm -f locale.tar
 
 # 打包
 cd "$script_base"
-tar --numeric-owner --group=0 --owner=0 -cjvf "$script_base/rasp-php.tar.bz2" "$(basename "$output_base")"
+if [[ -z "$NO_TAR" ]]; then
+	tar --numeric-owner --group=0 --owner=0 -cjvf "$script_base/rasp-php.tar.bz2" "$(basename "$output_base")"
+fi
 
 
 
