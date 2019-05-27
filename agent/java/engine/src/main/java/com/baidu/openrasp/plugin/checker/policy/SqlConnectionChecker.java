@@ -134,7 +134,7 @@ public class SqlConnectionChecker extends PolicyChecker {
                 alarmTimeCache.clear();
             }
             alarmTimeCache.put(url, System.currentTimeMillis());
-            String unsafeMessage = "Database security baseline - the password \"" + password + "\" is detected weak password combination , username is " + user;
+            String unsafeMessage = "Database security baseline - detected weak password for \"" + user + "\" account, password is \"" + password + "\"";
             if (infos == null) {
                 infos = new LinkedList<EventInfo>();
             }
