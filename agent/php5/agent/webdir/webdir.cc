@@ -57,15 +57,15 @@ std::string WebDir::get_composer_lock_path() const
   return this->abs_path + "/composer.lock";
 }
 
-std::vector<std::string> WebDir::get_compressed_files(long scan_limit) const
+std::vector<std::string> WebDir::get_sensitive_files(long scan_limit) const
 {
-  std::vector<std::string> compressions;
-  openrasp_scandir(abs_path, compressions,
+  std::vector<std::string> sensitive_files;
+  openrasp_scandir(abs_path, sensitive_files,
                    [](const char *filename) {
-                     return is_compression_file(filename);
+                     return is_sensitive_file(filename);
                    },
                    scan_limit);
-  return compressions;
+  return sensitive_files;
 }
 
 std::string WebDir::get_abs_path() const

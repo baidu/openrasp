@@ -59,15 +59,15 @@ std::vector<DependencyItem> WebDirDetector::dependency_detect()
   return all_deps;
 }
 
-std::map<std::string, std::vector<std::string>> WebDirDetector::compressed_file_detect(long scan_limit)
+std::map<std::string, std::vector<std::string>> WebDirDetector::sensitive_file_detect(long scan_limit)
 {
   std::map<std::string, std::vector<std::string>> result;
   for (const WebDir &dir : webdirs)
   {
-    std::vector<std::string> compressions = dir.get_compressed_files(scan_limit);
-    if (compressions.size() > 0)
+    std::vector<std::string> sensitive_files = dir.get_sensitive_files(scan_limit);
+    if (sensitive_files.size() > 0)
     {
-      result.insert({dir.get_abs_path(), compressions});
+      result.insert({dir.get_abs_path(), sensitive_files});
     }
   }
   return result;

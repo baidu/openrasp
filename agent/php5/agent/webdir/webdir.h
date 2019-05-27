@@ -37,7 +37,7 @@ public:
   WebDir(std::string abs_path);
   bool operator<(const WebDir &rhs) const;
   bool is_composer_lock_modified() const;
-  std::vector<std::string> get_compressed_files(long scan_limit) const;
+  std::vector<std::string> get_sensitive_files(long scan_limit) const;
   std::string get_abs_path() const;
   std::vector<DependencyItem> get_dependency() const;
 };

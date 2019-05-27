@@ -21,7 +21,7 @@
 
 namespace openrasp
 {
-void compressed_files_policy_alarm(std::map<std::string, std::vector<std::string>> &compression_map);
+void sensitive_files_policy_alarm(std::map<std::string, std::vector<std::string>> &compression_map);
 
 } // namespace openrasp
 

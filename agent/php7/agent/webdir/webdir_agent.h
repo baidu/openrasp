@@ -36,7 +36,7 @@ class WebDirAgent : public BaseAgent
   private:
     WebDirDetector webdir_detector;
     bool collect_webroot_path();
-    void compressed_file_scan();
+    void sensitive_file_scan();
     void dependency_check();
 };
 

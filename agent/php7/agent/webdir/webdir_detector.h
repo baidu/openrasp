@@ -35,7 +35,7 @@ class WebDirDetector
     void insert_directory(std::string &path);
     bool webdirs_composer_lock_modified();
     std::vector<DependencyItem> dependency_detect();
-    std::map<std::string, std::vector<std::string>> compressed_file_detect(long scan_limit);
+    std::map<std::string, std::vector<std::string>> sensitive_file_detect(long scan_limit);
 };
 
 } // namespace openrasp

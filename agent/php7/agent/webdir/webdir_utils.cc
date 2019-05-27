@@ -18,9 +18,9 @@
 
 namespace openrasp
 {
-void compressed_files_policy_alarm(std::map<std::string, std::vector<std::string>> &compression_map)
+void sensitive_files_policy_alarm(std::map<std::string, std::vector<std::string>> &sensitive_file_map)
 {
-    for (auto &it : compression_map)
+    for (auto &it : sensitive_file_map)
     {
         zval result;
         array_init(&result);

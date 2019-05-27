@@ -57,7 +57,7 @@ void WebDirAgent::run()
 				break;
 			}
 		}
-		compressed_file_scan();
+		sensitive_file_scan();
 		dependency_check();
 	}
 }
@@ -79,10 +79,10 @@ bool WebDirAgent::collect_webroot_path()
 	return result;
 }
 
-void WebDirAgent::compressed_file_scan()
+void WebDirAgent::sensitive_file_scan()
 {
-	std::map<std::string, std::vector<std::string>> compression_map = webdir_detector.compressed_file_detect(oam->get_scan_limit());
-	compressed_files_policy_alarm(compression_map);
+	std::map<std::string, std::vector<std::string>> sensitive_file_map = webdir_detector.sensitive_file_detect(oam->get_scan_limit());
+	sensitive_files_policy_alarm(sensitive_file_map);
 }
 
 void WebDirAgent::dependency_check()

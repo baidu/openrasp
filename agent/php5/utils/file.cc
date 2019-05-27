@@ -109,16 +109,19 @@ time_t get_last_modified(const std::string &file_path)
     return last_modified;
 }
 
-bool is_compression_file(const std::string &file)
+bool is_sensitive_file(const std::string &file)
 {
     static std::set<std::string> extensions = {
-        ".tar.gz",
+        ".gz",
         ".tgz",
-        ".tar.Z",
-        ".tar.bz2",
+        ".7z",
+        ".bz2",
         ".tbz2",
-        ".tar.lzma",
-        ".tar.xz",
+        ".tar",
+        ".xz",
+        ".rar",
+        ".sql",
+        ".db",
         "zip"};
     for (const std::string &ext : extensions)
     {
