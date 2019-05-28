@@ -23,6 +23,7 @@ import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
+
 import java.util.HashMap;
 
 import java.io.IOException;
@@ -73,8 +74,9 @@ public class XXEHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "com/sun/org/apache/xerces/internal/impl/XMLEntityManager".equals(className)||
-                "org/apache/xerces/impl/XMLEntityManager".equals(className);
+        return "com/sun/org/apache/xerces/internal/impl/XMLEntityManager".equals(className) ||
+                "org/apache/xerces/impl/XMLEntityManager".equals(className) ||
+                "org/apache/xerces/util/XMLEntityDescriptionImpl".equals(className);
     }
 
     /**
@@ -85,7 +87,10 @@ public class XXEHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(XXEHook.class, "checkXXE", "$1", String.class);
-        insertBefore(ctClass,"expandSystemId", "(Ljava/lang/String;Ljava/lang/String;Z)Ljava/lang/String;", src);
+        String src1 = getInvokeStaticSrc(XXEHook.class, "checkXXE", "$5", String.class);
+        insertBefore(ctClass, "expandSystemId", "(Ljava/lang/String;Ljava/lang/String;Z)Ljava/lang/String;", src);
+        insertBefore(ctClass, "setDescription", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;" +
+                "Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", src1);
     }
 
     /**
@@ -97,7 +102,7 @@ public class XXEHook extends AbstractClassHook {
         if (expandedSystemId != null && !XXEHook.getLocalExpandedSystemIds().contains(expandedSystemId)) {
             XXEHook.getLocalExpandedSystemIds().add(expandedSystemId);
             HashMap<String, Object> params = new HashMap<String, Object>();
-            params.put("entity",expandedSystemId);
+            params.put("entity", expandedSystemId);
             HookHandler.doCheck(CheckParameter.Type.XXE, params);
         }
     }

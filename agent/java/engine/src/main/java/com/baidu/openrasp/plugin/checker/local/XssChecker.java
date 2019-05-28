@@ -21,6 +21,8 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.AttackInfo;
 import com.baidu.openrasp.plugin.info.EventInfo;
+import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 import com.google.gson.JsonObject;
 
 import java.util.LinkedList;
@@ -69,6 +71,9 @@ public class XssChecker extends ConfigurableChecker {
                         if (value.length() >= xssParameterLength && isMatch) {
                             count++;
                             if (content.contains(value)) {
+                                if ("websphere".equals(ApplicationModel.getServerName())) {
+                                    Reflection.invokeMethod(HookHandler.responseCache.get(), "resetBuffer", new Class[]{});
+                                }
                                 String message = "Reflected XSS attack detected, parameter name: " + entry.getKey();
                                 Map<String, Object> params = (Map<String, Object>) checkParameter.getParams();
                                 params.remove("html_body");

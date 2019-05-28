@@ -1203,8 +1203,6 @@ public class Config extends FileScanListener {
                 setSyslogFacility(value);
             } else if (Item.SYSLOG_RECONNECT_INTERVAL.key.equals(key)) {
                 setSyslogReconnectInterval(value);
-            } else if (Item.HOOK_WHITE_ALL.key.equals(key)) {
-                setHookWhiteAll(value);
             } else if (Item.LOG_MAXBURST.key.equals(key)) {
                 setLogMaxBurst(value);
             } else if (Item.HEARTBEAT_INTERVAL.key.equals(key)) {

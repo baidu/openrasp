@@ -28,6 +28,13 @@ import org.apache.log4j.Logger;
 import java.util.*;
 
 public class SqlConnectionChecker extends PolicyChecker {
+    public SqlConnectionChecker() {
+        super();
+    }
+
+    public SqlConnectionChecker(boolean canBlock) {
+        super(canBlock);
+    }
 
     private static final String SQL_TYPE_SQLSERVRE = "sqlserver";
     private static final String SQL_TYPE_ORACLE = "oracle";
@@ -41,7 +48,7 @@ public class SqlConnectionChecker extends PolicyChecker {
     private static final String DEFAULT_POSTGRESQL_PORT = "5432";
     private static final String DEFAULT_SQLSERVRE_PORT = "1433";
     private static final String[] WEAK_WORDS = new String[]{"root", "123", "123456", "a123456", "123456a", "111111",
-            "123123", "admin", "user", "mysql",""};
+            "123123", "admin", "user", "mysql", ""};
     public static HashMap<String, Long> alarmTimeCache = new HashMap<String, Long>();
 
     private boolean checkUser(String user, String sqlType) {
@@ -134,7 +141,7 @@ public class SqlConnectionChecker extends PolicyChecker {
                 alarmTimeCache.clear();
             }
             alarmTimeCache.put(url, System.currentTimeMillis());
-            String unsafeMessage = "Database security baseline - the password \"" + password + "\" is detected weak password combination , username is " + user;
+            String unsafeMessage = "Database security baseline - detected weak password for \"" + user + "\" account, password is \"" + password + "\"";
             if (infos == null) {
                 infos = new LinkedList<EventInfo>();
             }

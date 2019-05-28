@@ -71,8 +71,9 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
                 params.put("type", ApplicationModel.getServerName());
                 params.put("username", decryptedUserName);
                 params.put("password", decryptedPassword);
-                infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.MANAGER_PASSWORD, "Weblogic security baseline - the password \"" +
-                        decryptedPassword + "\" is detected weak password combination in " + paths.get(0), true, params));
+                params.put("config_file", paths.get(0));
+                infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.MANAGER_PASSWORD, "Weblogic security baseline - detected weak password \"" +
+                        decryptedPassword + "\" in config file: " + paths.get(0), true, params));
             }
         }
     }
