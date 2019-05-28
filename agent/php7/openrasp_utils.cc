@@ -266,22 +266,34 @@ bool need_alloc_shm_current_sapi()
 
 std::string convert_to_header_key(char *key, size_t length)
 {
-    if (key == nullptr ||
-        strncmp(key, "HTTP_", 5) != 0)
+    std::string result;
+    if (nullptr == key)
     {
-        return "";
+        return result;
     }
-    std::string result(key + 5, length - 5);
-    for (auto &ch : result)
+    if (strcmp("HTTP_CONTENT_TYPE", key) == 0 || strcmp("CONTENT_TYPE", key) == 0)
     {
-        if (ch == '_')
+        result = "content-type";
+    }
+    else if (strcmp("HTTP_CONTENT_LENGTH", key) == 0 || strcmp("CONTENT_LENGTH", key) == 0)
+    {
+        result = "content-length";
+    }
+    else if (strncmp(key, "HTTP_", 5) == 0)
+    {
+        std::string http_header(key + 5, length - 5);
+        for (auto &ch : http_header)
         {
-            ch = '-';
+            if (ch == '_')
+            {
+                ch = '-';
+            }
+            else
+            {
+                ch = std::tolower(ch);
+            }
         }
-        else
-        {
-            ch = std::tolower(ch);
-        }
+        result = http_header;
     }
     return result;
 }
