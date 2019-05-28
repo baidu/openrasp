@@ -48,6 +48,7 @@ public class App {
     public static int pid;
     public static boolean isAttach = false;
     public static boolean keepConfig = false;
+    public static boolean noDetect = false;
 
     public static final String REGEX_APPID = "^[a-z0-9]{40,40}$";
     public static final String REGEX_APPSECRET = "^[a-zA-Z0-9_-]{43,45}$";
@@ -70,19 +71,21 @@ public class App {
 
     private static void argsParser(String[] args) throws ParseException, RaspError {
         Options options = new Options();
-        options.addOption("install", true, "specify application server path");
-        options.addOption("uninstall", true, "specify application server path");
+        options.addOption("install", true, "Specify application server path");
+        options.addOption("uninstall", true, "Specify application server path");
         options.addOption("appid", true, "Value of cloud.appid");
         options.addOption("appsecret", true, "Value of cloud.appsecret");
         options.addOption("backendurl", true, "Value of cloud.backendurl");
         options.addOption("keepconf", false, "If the parameter exists, reserved openrasp.yml");
-        options.addOption("help", false, "print options information");
-        options.addOption("h", false, "print options information");
-        options.addOption("pid", true, "specify the pid that the rasp attach to");
+        options.addOption("h", "help", false, "Print options information");
+        options.addOption("pid", true, "Specify the pid that the rasp attach to");
+        options.addOption("nodetect", false, "Disable the automatic detection for server type " +
+                "and will not modify the jvm option in the script");
+
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, args);
         if (cmd.hasOption("help") || cmd.hasOption("h")) {
-            showHelp();
+            showHelp(options);
         } else {
             if (cmd.hasOption("install") && cmd.hasOption("uninstall")) {
                 throw new RaspError(E10005 + "Can't use -install and -uninstall simultaneously");
@@ -96,6 +99,8 @@ public class App {
                 } else {
                     throw new RaspError(E10005 + "One of -install and -uninstall must be specified");
                 }
+
+                noDetect = cmd.hasOption("nodetect");
 
                 if (cmd.hasOption("pid")) {
                     isAttach = true;
@@ -157,20 +162,9 @@ public class App {
         System.out.println(notice);
     }
 
-    private static void showHelp() {
-        String helpMsg = "Usage: \n" +
-                "  java -jar RaspInstall.jar -install /tomcat/\n" +
-                "  java -jar RaspInstall.jar -uninstall /tomcat/\n" +
-                "\n" +
-                "Additional command line arguments: \n" +
-                "  -install      Install OpenRASP\n" +
-                "  -uninstall    Uninstall OpenRASP\n" +
-                "  -appid        Value of cloud.appid\n" +
-                "  -backendurl   Value of cloud.address\n" +
-                "  -appsecret    Value of cloud.appsecret\n" +
-                "  -keepconf     Do not overwrite openrasp.yml\n" +
-                "  -help/-h      Show this dialog\n";
-        System.out.println(helpMsg);
+    private static void showHelp(Options opts) {
+        HelpFormatter help = new HelpFormatter();
+        help.printHelp("java -jar RaspInstall.jar", opts);
     }
 
     public static void operateServer(String[] args) throws RaspError, ParseException, IOException {
@@ -180,7 +174,7 @@ public class App {
         if ("install".equals(install)) {
             File serverRoot = new File(baseDir);
             InstallerFactory factory = newInstallerFactory();
-            Installer installer = factory.getInstaller(serverRoot);
+            Installer installer = factory.getInstaller(serverRoot, noDetect);
             installer.install();
         } else if ("uninstall".equals(install)) {
             File serverRoot = new File(baseDir);
