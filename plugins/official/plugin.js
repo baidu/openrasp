@@ -156,7 +156,8 @@ var algorithmConfig = {
             'sslip.io',
             '.nip.io',
             '.burpcollaborator.net',
-            '.tu4.org'
+            '.tu4.org',
+            '.2xss.cc'
         ]
     },
     // SSRF - 是否允许访问混淆后的IP地址
