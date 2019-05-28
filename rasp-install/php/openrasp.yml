@@ -47,9 +47,6 @@ body.maxbytes: 4096
 #XFF header name
 clientip.header: ""
 
-#当服务器不满足安全配置规范，是否拦截(sql连接)
-security.enforce_policy: false
-
 #正常攻击LRU缓存最大容量
 lru.max_size: 1024
 

@@ -35,9 +35,6 @@
 # block.content_xml: "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"
 # block.content_html: "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>"
 
-# Reference https://rasp.baidu.com/doc/setup/others.html#common-policy
-# security.enforce_policy: false
-
 # <remote management>
 #
 # cloud.enable: true
