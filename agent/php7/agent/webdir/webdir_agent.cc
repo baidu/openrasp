@@ -39,26 +39,39 @@ void WebDirAgent::run()
 		[](int signal_no) {
 			WebDirAgent::signal_received = signal_no;
 		});
-	std::ofstream out("/tmp/a.log", std::ios::app);
+	long start = (long)time(nullptr);
+	long last_dependency_check_time = start;
+	long last_sensitive_file_scan_time = start;
 	while (true)
 	{
 		update_log_level();
-		for (int i = 0; i < oam->get_dependency_interval(); ++i)
+		sleep(1);
+		if (!pid_alive(std::to_string(oam->get_master_pid())) ||
+			!pid_alive(std::to_string(supervisor_pid)) ||
+			WebDirAgent::signal_received == SIGTERM)
 		{
-			sleep(1);
-			if (!pid_alive(std::to_string(oam->get_master_pid())) ||
-				!pid_alive(std::to_string(supervisor_pid)) ||
-				WebDirAgent::signal_received == SIGTERM)
-			{
-				exit(0);
-			}
-			if (collect_webroot_path())
-			{
-				break;
-			}
+			exit(0);
 		}
-		sensitive_file_scan();
-		dependency_check();
+		bool force = false;
+		if (collect_webroot_path())
+		{
+			force = true;
+		}
+		long now = (long)time(nullptr);
+		if (force ||
+			now <= last_sensitive_file_scan_time ||
+			now - last_sensitive_file_scan_time >= oam->get_webdir_scan_interval())
+		{
+			sensitive_file_scan();
+			last_sensitive_file_scan_time = now;
+		}
+		if (force ||
+			now < last_dependency_check_time ||
+			now - last_dependency_check_time >= oam->get_dependency_interval())
+		{
+			dependency_check();
+			last_dependency_check_time = now;
+		}
 	}
 }
 
@@ -81,8 +94,8 @@ bool WebDirAgent::collect_webroot_path()
 
 void WebDirAgent::sensitive_file_scan()
 {
-	std::map<std::string, std::vector<std::string>> compression_map = webdir_detector.sensitive_file_detect(oam->get_scan_limit());
-	sensitive_files_policy_alarm(compression_map);
+	std::map<std::string, std::vector<std::string>> sensitive_file_map = webdir_detector.sensitive_file_detect(oam->get_scan_limit());
+	sensitive_files_policy_alarm(sensitive_file_map);
 }
 
 void WebDirAgent::dependency_check()
@@ -104,13 +117,15 @@ void WebDirAgent::dependency_check()
 			openrasp_error(LEVEL_WARNING, DEPENDENCY_ERROR, _("CURL error: %s (%d), url: %s"),
 						   backend_request.get_curl_err_msg(), backend_request.get_curl_code(),
 						   url_string.c_str());
-			return;
 		}
-		openrasp_error(LEVEL_DEBUG, DEPENDENCY_ERROR, _("%s"), res_info->to_string().c_str());
-		if (!res_info->http_code_ok())
+		else
 		{
-			openrasp_error(LEVEL_WARNING, DEPENDENCY_ERROR, _("Unexpected http response code: %ld, url: %s."),
-						   res_info->get_http_code(), url_string.c_str());
+			openrasp_error(LEVEL_DEBUG, DEPENDENCY_ERROR, _("%s"), res_info->to_string().c_str());
+			if (!res_info->http_code_ok())
+			{
+				openrasp_error(LEVEL_WARNING, DEPENDENCY_ERROR, _("Unexpected http response code: %ld, url: %s."),
+							   res_info->get_http_code(), url_string.c_str());
+			}
 		}
 	}
 }

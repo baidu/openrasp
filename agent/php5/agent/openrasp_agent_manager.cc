@@ -106,6 +106,7 @@ bool OpenraspAgentManager::startup()
 		}
 		set_master_pid(init_process_pid);
 		set_dependency_interval(OpenraspCtrlBlock::default_dependency_interval);
+		set_webdir_scan_interval(OpenraspCtrlBlock::default_webdir_scan_interval);
 		set_scan_limit(OpenraspCtrlBlock::default_scan_limit);
 		process_agent_startup();
 		initialized = true;
@@ -611,6 +612,25 @@ void OpenraspAgentManager::set_dependency_interval(int dependency_interval)
 	{
 		WriteUnLocker auto_unlocker(rwlock);
 		agent_ctrl_block->set_dependency_interval(dependency_interval);
+	}
+}
+
+int OpenraspAgentManager::get_webdir_scan_interval()
+{
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	{
+		ReadUnLocker auto_unlocker(rwlock);
+		return agent_ctrl_block->get_webdir_scan_interval();
+	}
+	return OpenraspCtrlBlock::default_webdir_scan_interval;
+}
+
+void OpenraspAgentManager::set_webdir_scan_interval(int webdir_scan_interval)
+{
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	{
+		WriteUnLocker auto_unlocker(rwlock);
+		agent_ctrl_block->set_webdir_scan_interval(webdir_scan_interval);
 	}
 }
 

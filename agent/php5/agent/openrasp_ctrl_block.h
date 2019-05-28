@@ -30,11 +30,12 @@ private:
   static const int plugin_name_size = 50;
   static const int plugin_version_size = 50;
   static const int webroot_max_size = 1 << 8;
-  static const int agent_min_interval = 10;
+  static const int agent_min_interval = 60;
   static const int agent_max_interval = 24 * 60 * 60;
 
 public:
   static const int default_dependency_interval = 6 * 60 * 60;
+  static const int default_webdir_scan_interval = 6 * 60 * 60;
   static const long default_scan_limit;
 
   void set_supervisor_id(pid_t supervisor_id);
@@ -75,6 +76,9 @@ public:
   int get_dependency_interval();
   void set_dependency_interval(int dependency_interval);
 
+  int get_webdir_scan_interval();
+  void set_webdir_scan_interval(int webdir_scan_interval);
+
   long get_scan_limit();
   void set_scan_limit(long scan_limit);
 
@@ -89,6 +93,7 @@ private:
 
   long scan_limit = OpenraspCtrlBlock::default_scan_limit;
   int dependency_interval = OpenraspCtrlBlock::default_dependency_interval;
+  int webdir_scan_interval = OpenraspCtrlBlock::default_webdir_scan_interval;
   int webroot_count = 0;
   ulong webroot_hash[OpenraspCtrlBlock::webroot_max_size];
   char webroot_path[MAXPATHLEN] = {0};

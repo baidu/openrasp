@@ -89,6 +89,9 @@ public:
   int get_dependency_interval();
   void set_dependency_interval(int dependency_interval);
 
+  int get_webdir_scan_interval();
+  void set_webdir_scan_interval(int webdir_scan_interval);
+
   long get_scan_limit();
   void set_scan_limit(long scan_limit);
 

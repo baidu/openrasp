@@ -40,6 +40,8 @@ public:
   std::vector<std::string> get_sensitive_files(long scan_limit) const;
   std::string get_abs_path() const;
   std::vector<DependencyItem> get_dependency() const;
+  bool update_composer_lock_status();
+  friend bool operator==(const WebDir &left, const WebDir &right);
 };
 
 } // namespace openrasp

@@ -24,6 +24,7 @@ extern "C"
 
 namespace openrasp
 {
+
 const long OpenraspCtrlBlock::default_scan_limit = 100l;
 
 void OpenraspCtrlBlock::set_supervisor_id(pid_t supervisor_id)
@@ -132,9 +133,22 @@ int OpenraspCtrlBlock::get_dependency_interval()
 void OpenraspCtrlBlock::set_dependency_interval(int dependency_interval)
 {
     this->dependency_interval = (dependency_interval >= OpenraspCtrlBlock::agent_min_interval &&
-                                 webroot_count <= OpenraspCtrlBlock::agent_max_interval)
+                                 dependency_interval <= OpenraspCtrlBlock::agent_max_interval)
                                     ? dependency_interval
                                     : OpenraspCtrlBlock::default_dependency_interval;
+}
+
+int OpenraspCtrlBlock::get_webdir_scan_interval()
+{
+    return webdir_scan_interval;
+}
+
+void OpenraspCtrlBlock::set_webdir_scan_interval(int webdir_scan_interval)
+{
+    this->webdir_scan_interval = (webdir_scan_interval >= OpenraspCtrlBlock::agent_min_interval &&
+                                  webdir_scan_interval <= OpenraspCtrlBlock::agent_max_interval)
+                                     ? webdir_scan_interval
+                                     : OpenraspCtrlBlock::default_webdir_scan_interval;
 }
 
 long OpenraspCtrlBlock::get_scan_limit()

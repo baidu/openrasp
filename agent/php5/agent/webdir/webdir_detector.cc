@@ -15,24 +15,25 @@
  */
 
 #include "webdir_detector.h"
+#include <algorithm>
 
 namespace openrasp
 {
 
 void WebDirDetector::insert_directory(std::string &path)
 {
+  std::lock_guard<std::mutex> lock(wdd_mutex);
   WebDir dir(path);
-  auto it = webdirs.find(dir);
-  if (it == webdirs.end())
+  if (std::find(webdirs.begin(), webdirs.end(), dir) != webdirs.end())
   {
-    webdirs.insert(dir);
-    has_inserted = true;
+    webdirs.push_back(dir);
   }
 }
 
 bool WebDirDetector::webdirs_composer_lock_modified()
 {
-  bool result = has_inserted;
+  std::lock_guard<std::mutex> lock(wdd_mutex);
+  bool result = false;
   for (const WebDir &dir : webdirs)
   {
     if (dir.is_composer_lock_modified())
@@ -46,21 +47,23 @@ bool WebDirDetector::webdirs_composer_lock_modified()
 
 std::vector<DependencyItem> WebDirDetector::dependency_detect()
 {
+  std::lock_guard<std::mutex> lock(wdd_mutex);
   std::vector<DependencyItem> all_deps;
-  for (const WebDir &dir : webdirs)
+  for (WebDir &dir : webdirs)
   {
     std::vector<DependencyItem> deps = dir.get_dependency();
     if (deps.size() > 0)
     {
       all_deps.insert(all_deps.end(), deps.begin(), deps.end());
     }
+    dir.update_composer_lock_status();
   }
-  has_inserted = false;
   return all_deps;
 }
 
 std::map<std::string, std::vector<std::string>> WebDirDetector::sensitive_file_detect(long scan_limit)
 {
+  std::lock_guard<std::mutex> lock(wdd_mutex);
   std::map<std::string, std::vector<std::string>> result;
   for (const WebDir &dir : webdirs)
   {

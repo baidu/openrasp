@@ -23,8 +23,6 @@ namespace openrasp
 WebDir::WebDir(std::string abs_path)
 {
   this->abs_path = abs_path;
-  this->composer_lock_last_modified = get_last_modified(get_composer_lock_path());
-  this->composer_lock_hash = get_composer_lock_hash();
 }
 
 bool WebDir::operator<(const WebDir &rhs) const
@@ -91,6 +89,17 @@ std::vector<DependencyItem> WebDir::get_dependency() const
     }
   }
   return deps;
+}
+
+bool WebDir::update_composer_lock_status()
+{
+  this->composer_lock_last_modified != get_last_modified(get_composer_lock_path());
+  this->composer_lock_hash != get_composer_lock_hash();
+}
+
+bool operator==(const WebDir &left, const WebDir &right)
+{
+  return left.get_abs_path() == right.get_abs_path();
 }
 
 } // namespace openrasp

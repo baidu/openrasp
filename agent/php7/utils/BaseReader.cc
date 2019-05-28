@@ -51,6 +51,7 @@ const std::set<std::string> BaseReader::valid_keys = {
     "ognl.expression.minlength", //used for java only
     "dependency_check.interval",
     "webroot_scan.scan_limit",
+    "webroot_scan.interval",
     "decompile.enable"};
 
 std::string BaseReader::check_config_key(const std::vector<std::string> &keys)

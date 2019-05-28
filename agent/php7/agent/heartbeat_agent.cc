@@ -127,6 +127,10 @@ bool HeartBeatAgent::do_heartbeat()
 				int64_t dependency_interval = res_info->fetch_int64({"data", "config", "dependency_check.interval"}, OpenraspCtrlBlock::default_dependency_interval);
 				oam->set_dependency_interval(dependency_interval);
 
+				//webdir scan check
+				int64_t webdir_scan_interval = res_info->fetch_int64({"data", "config", "webroot_scan.interval"}, OpenraspCtrlBlock::default_webdir_scan_interval);
+				oam->set_webdir_scan_interval(webdir_scan_interval);
+
 				//webdie scan
 				int64_t scan_limit = res_info->fetch_int64({"data", "config", "webroot_scan.scan_limit"}, OpenraspCtrlBlock::default_scan_limit);
 				oam->set_scan_limit(scan_limit);

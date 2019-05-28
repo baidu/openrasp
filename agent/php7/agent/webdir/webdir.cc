@@ -23,8 +23,6 @@ namespace openrasp
 WebDir::WebDir(std::string abs_path)
 {
   this->abs_path = abs_path;
-  this->composer_lock_last_modified = get_last_modified(get_composer_lock_path());
-  this->composer_lock_hash = get_composer_lock_hash();
 }
 
 bool WebDir::operator<(const WebDir &rhs) const
@@ -59,13 +57,13 @@ std::string WebDir::get_composer_lock_path() const
 
 std::vector<std::string> WebDir::get_sensitive_files(long scan_limit) const
 {
-  std::vector<std::string> compressions;
-  openrasp_scandir(abs_path, compressions,
+  std::vector<std::string> sensitive_files;
+  openrasp_scandir(abs_path, sensitive_files,
                    [](const char *filename) {
                      return is_sensitive_file(filename);
                    },
                    scan_limit);
-  return compressions;
+  return sensitive_files;
 }
 
 std::string WebDir::get_abs_path() const
@@ -91,6 +89,17 @@ std::vector<DependencyItem> WebDir::get_dependency() const
     }
   }
   return deps;
+}
+
+bool WebDir::update_composer_lock_status()
+{
+  this->composer_lock_last_modified != get_last_modified(get_composer_lock_path());
+  this->composer_lock_hash != get_composer_lock_hash();
+}
+
+bool operator==(const WebDir &left, const WebDir &right)
+{
+  return left.get_abs_path() == right.get_abs_path();
 }
 
 } // namespace openrasp

@@ -18,24 +18,25 @@
 #define _OPENRASP_WEBDIR_DETECTOR_H_
 
 #include <string>
-#include <set>
+#include <vector>
 #include <map>
 #include "webdir.h"
+#include <mutex>
 
 namespace openrasp
 {
 
 class WebDirDetector
 {
-  private:
-    std::set<WebDir> webdirs;
-    bool has_inserted = false;
+private:
+  std::vector<WebDir> webdirs;
+  std::mutex wdd_mutex;
 
-  public:
-    void insert_directory(std::string &path);
-    bool webdirs_composer_lock_modified();
-    std::vector<DependencyItem> dependency_detect();
-    std::map<std::string, std::vector<std::string>> sensitive_file_detect(long scan_limit);
+public:
+  void insert_directory(std::string &path);
+  bool webdirs_composer_lock_modified();
+  std::vector<DependencyItem> dependency_detect();
+  std::map<std::string, std::vector<std::string>> sensitive_file_detect(long scan_limit);
 };
 
 } // namespace openrasp
