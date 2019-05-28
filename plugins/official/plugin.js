@@ -1,4 +1,4 @@
-const plugin_version = '2019-0425-1400'
+const plugin_version = '2019-0528-1500'
 const plugin_name    = 'official'
 
 /*
@@ -715,8 +715,7 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows, is_
 
     Object.keys(parameter).some(function (key) {
         // 只处理非数组、hash情况
-        var values = parameter[key]
-        Object.values(values).some(function(value){
+        Object.values(parameter[key]).some(function (value){
             // 只处理字符串类型的
             if (typeof value != 'string') {
                 return
@@ -764,11 +763,11 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows, is_
                     return true
                 }
             }
-        }) 
-
-        
+        })
+        if (verdict){
+            return true
+        }
     })
-
     return verdict
 }
 
@@ -814,6 +813,9 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
                 }
             }
         })
+        if (verdict){
+            return true
+        }
     })
     return verdict
 }
@@ -1021,11 +1023,11 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 // ?id=XXXX
                 // ?data[key1][key2]=XXX
                 var value_list = []
-                Object.values(parameters[name]).some(function (value){
+                Object.values(parameters[name]).forEach(function (value){
                     if (typeof value == 'string') {
                         value_list.push(value)
                     } else {
-                        Object.values(value).some(function (v){value_list.push(v)})
+                        value_list = value_list.concat(Object.values(value))
                     }
                 })
 
@@ -1811,14 +1813,13 @@ plugin.register('command', function (params, context) {
             // ?id=XXXX
             // ?data[key1][key2]=XXX
             var value_list = []
-            Object.values(parameters[name]).some(function (value){
+            Object.values(parameters[name]).forEach(function (value){
                 if (typeof value == 'string') {
                     value_list.push(value)
                 } else {
-                    Object.values(value).some(function (v){value_list.push(v)})
+                    value_list = value_list.concat(Object.values(value))
                 }
             })
-
             reason = _run(value_list, name)
             if (reason) {
                 return true
