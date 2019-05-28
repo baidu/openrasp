@@ -17,7 +17,7 @@ package environment
 /*
 const char* build_time(void)
 {
-static const char* psz_build_time = "["__DATE__ "  " __TIME__ "]";
+static const char* psz_build_time = __DATE__ " " __TIME__;
 return psz_build_time;
 }
 */
@@ -51,8 +51,8 @@ func init() {
 	flag.Parse()
 
 	if *StartFlag.Version {
-		fmt.Println(Version)
-		fmt.Println("Build Time: " + BuildTime)
+		fmt.Println("Version:       " + Version)
+		fmt.Println("Build Time:    " + BuildTime)
 		if tools.CommitID != "" {
 			fmt.Println("Git Commit ID: " + tools.CommitID)
 		}
