@@ -35,7 +35,7 @@ private:
 
 public:
   static const int default_dependency_interval = 6 * 60 * 60;
-  static const long default_scan_limit = 100l;
+  static const long default_scan_limit;
 
   void set_supervisor_id(pid_t supervisor_id);
   pid_t get_supervisor_id();

@@ -121,6 +121,15 @@ bool HeartBeatAgent::do_heartbeat()
 				scm->set_debug_level(debug_level);
 				openrasp::JsonReader jreader(complete_config);
 				openrasp::scm->build_check_type_white_array(&jreader);
+				openrasp::scm->build_weak_password_array(&jreader);
+
+				//dependency check
+				int64_t dependency_interval = res_info->fetch_int64({"data", "config", "dependency_check.interval"}, OpenraspCtrlBlock::default_dependency_interval);
+				oam->set_dependency_interval(dependency_interval);
+
+				//webdie scan
+				int64_t scan_limit = res_info->fetch_int64({"data", "config", "webroot_scan.scan_limit"}, OpenraspCtrlBlock::default_scan_limit);
+				oam->set_scan_limit(scan_limit);
 
 				/************************************OPENRASP_G(config)************************************/
 				std::string complete_config = res_info->stringify_object({"data", "config"}, true);

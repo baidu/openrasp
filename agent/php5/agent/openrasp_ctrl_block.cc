@@ -25,6 +25,8 @@ extern "C"
 namespace openrasp
 {
 
+const long OpenraspCtrlBlock::default_scan_limit = 100l;
+
 void OpenraspCtrlBlock::set_supervisor_id(pid_t supervisor_id)
 {
     this->supervisor_id = supervisor_id;

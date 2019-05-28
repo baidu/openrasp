@@ -23,11 +23,12 @@
 
 namespace openrasp
 {
-#define WRITE_ARRAY_MAX_LENGTH (ALL_TYPE * 10 * 200 + 128 * 2)
-
 class SharedConfigBlock
 {
 public:
+  static const int white_array_max_size = (200 * 200 * sizeof(DoubleArrayTrie::unit_t) * 2);
+  static const int weak_password_array_max_size = (200 * 16 * sizeof(DoubleArrayTrie::unit_t) * 2);
+
   inline openrasp::DoubleArrayTrie::unit_t *get_check_type_white_array()
   {
     return check_type_white_array;
@@ -40,13 +41,35 @@ public:
 
   inline bool reset_white_array(const void *source, size_t num)
   {
-    if (num > WRITE_ARRAY_MAX_LENGTH)
+    if (num > white_array_max_size)
     {
       return false;
     }
     memset(&check_type_white_array, 0, sizeof(check_type_white_array));
     memcpy((void *)&check_type_white_array, source, num);
     white_array_size = num;
+    return true;
+  }
+
+  inline openrasp::DoubleArrayTrie::unit_t *get_weak_password_array()
+  {
+    return weak_password_array;
+  }
+
+  inline size_t get_weak_password_array_size()
+  {
+    return weak_password_array_size;
+  }
+
+  inline bool reset_weak_password_array(const void *source, size_t num)
+  {
+    if (num > weak_password_array_max_size)
+    {
+      return false;
+    }
+    memset(&weak_password_array, 0, sizeof(weak_password_array));
+    memcpy((void *)&weak_password_array, source, num);
+    weak_password_array_size = num;
     return true;
   }
 
@@ -103,8 +126,10 @@ private:
   long log_max_backup = 0;
   long debug_level = 0;
   size_t white_array_size;
+  openrasp::DoubleArrayTrie::unit_t check_type_white_array[white_array_max_size + 1];
   OpenRASPActionType actions[ALL_TYPE] = {AC_LOG};
-  openrasp::DoubleArrayTrie::unit_t check_type_white_array[WRITE_ARRAY_MAX_LENGTH + 1];
+  size_t weak_password_array_size;
+  openrasp::DoubleArrayTrie::unit_t weak_password_array[weak_password_array_max_size + 1];
 };
 
 } // namespace openrasp

@@ -170,6 +170,7 @@ PHP_MINIT_FUNCTION(openrasp)
                 }
                 OPENRASP_G(config).update(conf_reader.get());
                 openrasp::scm->build_check_type_white_array(conf_reader.get());
+                openrasp::scm->build_weak_password_array(conf_reader.get());
             }
         }
     }

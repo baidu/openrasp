@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "agent/shared_config_manager.h"
 
 void SqlConnectionEntry::set_connection_string(std::string connection_string)
 {
@@ -157,20 +158,7 @@ bool SqlConnectionEntry::check_high_privileged()
 
 bool SqlConnectionEntry::check_weak_password()
 {
-  static const std::set<std::string> database_weak_password = {
-      "",
-      "root",
-      "123",
-      "123456",
-      "a123456",
-      "123456a",
-      "111111",
-      "123123",
-      "admin",
-      "user",
-      "mysql"};
-  auto find = database_weak_password.find(get_password());
-  return find != database_weak_password.end();
+  return openrasp::scm->is_password_weak(get_password());
 }
 
 ulong SqlConnectionEntry::build_hash_code(connection_policy_type type)

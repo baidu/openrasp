@@ -5,6 +5,18 @@ hook MongoDB\Driver\Manager::__construct
 if (PHP_VERSION_ID < 50500) die('Skipped: not supported (version < 5.5.0)');
 $conf = <<<CONF
 security.enforce_policy: true
+security.weak_passwords:
+  - ""
+  - "root"
+  - "123"
+  - "123456"
+  - "a123456"
+  - "123456a"
+  - "111111"
+  - "123123"
+  - "admin"
+  - "user"
+  - "mysql"
 CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("mongodb")) die("Skipped: mongodb extension required.");
