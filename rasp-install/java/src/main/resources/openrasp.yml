@@ -16,6 +16,8 @@
 # log.maxburst: 100
 # log.maxbackup: 30
 # decompile.enable: false
+# block.status_code: 302
+# request.param_encoding:
 # hooks.ignore: http_output
 # debug.level: 0
 #hook.white:
@@ -45,9 +47,9 @@
 
 # <syslog configuration>
 #
-# syslog.enable: true
-# syslog.url: http://172.24.180.174:8848
-# syslog.tag: OPENRASP
+# syslog.enable: false
+# syslog.url:
+# syslog.tag: OpenRASP
 # syslog.reconnect_interval: 300000
 # syslog.facility: 1
 

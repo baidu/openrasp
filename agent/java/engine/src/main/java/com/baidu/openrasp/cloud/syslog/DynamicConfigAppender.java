@@ -124,14 +124,14 @@ public class DynamicConfigAppender {
             if (type.ordinal() <= 3) {
                 if ("root".equals(type.getLogger())) {
                     Appender appender = Logger.getRootLogger().getAppender(type.getAppender());
-                    if (appender != null) {
+                    if (appender instanceof FileAppender) {
                         appender.clearFilters();
                         appender.addFilter(createBurstFilter());
                     }
                 } else {
                     Logger logger = Logger.getLogger(type.getLogger());
                     Appender appender = logger.getAppender(type.getAppender());
-                    if (appender != null) {
+                    if (appender instanceof FileAppender) {
                         appender.clearFilters();
                         appender.addFilter(createBurstFilter());
                     }
@@ -186,7 +186,7 @@ public class DynamicConfigAppender {
             if (type.ordinal() <= 3) {
                 if ("root".equals(type.getLogger())) {
                     Appender appender = Logger.getRootLogger().getAppender(type.getAppender());
-                    if (appender != null) {
+                    if (appender instanceof FileAppender) {
                         OpenraspDailyRollingFileAppender fileAppender = (OpenraspDailyRollingFileAppender) appender;
                         fileAppender.setMaxBackupIndex(logMaxBackup);
                         fileAppenderRollFiles(fileAppender);
@@ -194,7 +194,7 @@ public class DynamicConfigAppender {
                 } else {
                     Logger logger = Logger.getLogger(type.getLogger());
                     Appender appender = logger.getAppender(type.getAppender());
-                    if (appender != null) {
+                    if (appender instanceof FileAppender) {
                         OpenraspDailyRollingFileAppender fileAppender = (OpenraspDailyRollingFileAppender) appender;
                         fileAppender.setMaxBackupIndex(logMaxBackup);
                         fileAppenderRollFiles(fileAppender);
