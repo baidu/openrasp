@@ -710,56 +710,58 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows, is_
 
     Object.keys(parameter).some(function (key) {
         // 只处理非数组、hash情况
-        var value = parameter[key]
-            value = value[0]
-
-        // 只处理字符串类型的
-        if (typeof value != 'string') {
-            return
-        }
-        // 如果应用做了特殊处理， 比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
-        if (value.startsWith('file://') && 
-            is_absolute_path(target, is_windows) && 
-            value.endsWith(target)) 
-        {
-            verdict = true
-            return true
-        }
-
-        // 去除多余/ 和 \ 的路径
-        var simplifiedValue
-        var simplifiedTarget
-
-        // Windows 下面
-        // 传入 ../../../conf/tomcat-users.xml
-        // 看到 c:\tomcat\webapps\root\..\..\conf\tomcat-users.xml
-        if (is_windows) {
-            value = value.replaceAll('/', '\\')
-            target = target.replaceAll('/', '\\')
-            realpath = realpath.replaceAll('/', '\\')
-            simplifiedTarget = target.replaceAll('\\\\','\\')
-            simplifiedValue = value.replaceAll('\\\\','\\')
-        } else{
-            simplifiedTarget = target.replaceAll('//','/')
-            simplifiedValue = value.replaceAll('//','/')
-        }
-        var simplifiedValues
-        if ( is_lcs_search ) {
-            simplifiedValues = lcs_search( simplifiedValue, simplifiedTarget )
-        }
-        else {
-            simplifiedValues = [simplifiedValue]
-        }
-        for(var i = 0, len = simplifiedValues.length; i < len; i++) {
-            simplifiedValue = simplifiedValues[i]
-            // 参数必须有跳出目录，或者是绝对路径
-            if ((target.endsWith(value) || simplifiedTarget.endsWith(simplifiedValue))
-                && (has_traversal(value) || value == realpath || simplifiedValue == realpath))
+        var values = parameter[key]
+        Object.values(values).some(function(value){
+            // 只处理字符串类型的
+            if (typeof value != 'string') {
+                return
+            }
+            // 如果应用做了特殊处理， 比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
+            if (value.startsWith('file://') && 
+                is_absolute_path(target, is_windows) && 
+                value.endsWith(target)) 
             {
                 verdict = true
                 return true
             }
-        }
+
+            // 去除多余/ 和 \ 的路径
+            var simplifiedValue
+            var simplifiedTarget
+
+            // Windows 下面
+            // 传入 ../../../conf/tomcat-users.xml
+            // 看到 c:\tomcat\webapps\root\..\..\conf\tomcat-users.xml
+            if (is_windows) {
+                value = value.replaceAll('/', '\\')
+                target = target.replaceAll('/', '\\')
+                realpath = realpath.replaceAll('/', '\\')
+                simplifiedTarget = target.replaceAll('\\\\','\\')
+                simplifiedValue = value.replaceAll('\\\\','\\')
+            } else{
+                simplifiedTarget = target.replaceAll('//','/')
+                simplifiedValue = value.replaceAll('//','/')
+            }
+            var simplifiedValues
+            if ( is_lcs_search ) {
+                simplifiedValues = lcs_search( simplifiedValue, simplifiedTarget )
+            }
+            else {
+                simplifiedValues = [simplifiedValue]
+            }
+            for(var i = 0, len = simplifiedValues.length; i < len; i++) {
+                simplifiedValue = simplifiedValues[i]
+                // 参数必须有跳出目录，或者是绝对路径
+                if ((target.endsWith(value) || simplifiedTarget.endsWith(simplifiedValue))
+                    && (has_traversal(value) || value == realpath || simplifiedValue == realpath))
+                {
+                    verdict = true
+                    return true
+                }
+            }
+        }) 
+
+        
     })
 
     return verdict
@@ -771,43 +773,42 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
     var verdict = false
 
     Object.keys(parameter).some(function (key) {
-        var value = parameter[key]
-            value = value[0]
-
-        // 只处理字符串类型的
-        if (typeof value != 'string') {
-            return
-        }
-
-        if (is_windows) {
-            value = value.replaceAll('/', '\\')
-            value = value.replaceAll('\\\\', '\\')
-            target = target.replaceAll('/', '\\')
-            target = target.replaceAll('\\\\', '\\')
-        }
-        else {
-            value = value.replaceAll('//', '/')
-            target = target.replaceAll('//', '/')
-        }
-        var values
-        if (is_lcs_search) {
-            values = lcs_search(value, target)
-        }
-        else {
-            // java 下面，传入 /usr/ 会变成 /usr，所以少匹配一个字符
-            if ( value.charAt(value.length - 1) == "/" || 
-                 value.charAt(value.length - 1) == "\\" ) {
-                value = value.substr(0, value.length - 1)
+        var values = parameter[key]
+        Object.values(values).some(function(value){
+            // 只处理字符串类型的
+            if (typeof value != 'string') {
+                return
             }
-            values = [value]
-        }
-        for(var i = 0, len = values.length; i < len; i++) {
-            // 只处理非数组、hash情况
-            if (has_traversal(values[i]) && target.indexOf(values[i]) != -1) {
-                verdict = true
-                return true
+            if (is_windows) {
+                value = value.replaceAll('/', '\\')
+                value = value.replaceAll('\\\\', '\\')
+                target = target.replaceAll('/', '\\')
+                target = target.replaceAll('\\\\', '\\')
             }
-        }
+            else {
+                value = value.replaceAll('//', '/')
+                target = target.replaceAll('//', '/')
+            }
+            var values
+            if (is_lcs_search) {
+                values = lcs_search(value, target)
+            }
+            else {
+                // java 下面，传入 /usr/ 会变成 /usr，所以少匹配一个字符
+                if ( value.charAt(value.length - 1) == "/" || 
+                    value.charAt(value.length - 1) == "\\" ) {
+                    value = value.substr(0, value.length - 1)
+                }
+                values = [value]
+            }
+            for(var i = 0, len = values.length; i < len; i++) {
+                // 只处理非数组、hash情况
+                if (has_traversal(values[i]) && target.indexOf(values[i]) != -1) {
+                    verdict = true
+                    return true
+                }
+            }
+        })
     })
     return verdict
 }
@@ -817,12 +818,14 @@ function is_from_userinput(parameter, target)
 {
     var verdict = false
     Object.keys(parameter).some(function (key) {
-        var value = parameter[key]
-        // 只处理非数组、hash情况
-        if (value[0] == target) {
-            verdict = true
-            return true
-        }
+        var values = parameter[key]
+        Object.values(values).some(function(value){
+            // 只处理非数组、hash情况
+            if (value == target) {
+                verdict = true
+                return true
+            }
+        })
     })
     return verdict
 }
@@ -1012,13 +1015,14 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 // 覆盖场景，后者仅PHP支持
                 // ?id=XXXX
                 // ?data[key1][key2]=XXX
-                var value_list
-
-                if (typeof parameters[name][0] == 'string') {
-                    value_list = parameters[name]
-                } else {
-                    value_list = Object.values(parameters[name][0])
-                }
+                var value_list = []
+                Object.values(parameters[name]).some(function (value){
+                    if (typeof value == 'string') {
+                        value_list.push(value)
+                    } else {
+                        Object.values(value).some(function (v){value_list.push(v)})
+                    }
+                })
 
                 reason = _run(value_list, name)
                 if (reason) {
@@ -1801,12 +1805,15 @@ plugin.register('command', function (params, context) {
             // 覆盖场景，后者仅PHP支持
             // ?id=XXXX
             // ?data[key1][key2]=XXX
-            var value_list
-            if (typeof parameters[name][0] == 'string') {
-                value_list = parameters[name]
-            } else {
-                value_list = Object.values(parameters[name][0])
-            }                
+            var value_list = []
+            Object.values(parameters[name]).some(function (value){
+                if (typeof value == 'string') {
+                    value_list.push(value)
+                } else {
+                    Object.values(value).some(function (v){value_list.push(v)})
+                }
+            })
+
             reason = _run(value_list, name)
             if (reason) {
                 return true
