@@ -19,6 +19,7 @@ package com.baidu.openrasp.plugin.checker.policy.server;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
@@ -148,7 +149,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                             List<String> managerList = Arrays.asList(TOMCAT_MANAGER_ROLES);
                             for (int j = 0; j < roles.length; j++) {
                                 if (managerList.contains(roles[j].trim())) {
-                                    List<String> weakWords = Arrays.asList(WEAK_WORDS);
+                                    List<String> weakWords = Arrays.asList(getSecurityWeakPasswords());
                                     String userName = user.getAttribute("username");
                                     String password = user.getAttribute("password");
                                     if (password == null || password.isEmpty()) {
@@ -288,6 +289,14 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
             params.put("apps", apps);
             infos.add(new SecurityPolicyInfo(Type.DEFAULT_APP, message.substring(0, message.length() - 2), true, params));
         }
+    }
+
+    /**
+     * 从配置获取弱口令列表
+     */
+    public String[] getSecurityWeakPasswords() {
+        String[] securityWeakPasswords = Config.getConfig().getSecurityWeakPasswords();
+        return securityWeakPasswords != null ? securityWeakPasswords : WEAK_WORDS;
     }
 
     private void handleException(Exception e) {

@@ -14,10 +14,12 @@
 # inject.urlprefix:
 # log.maxburst: 100
 # log.maxbackup: 30
+# log.path:
 # decompile.enable: false
 # hook 点配置
 # hooks.ignore: http_output
 # debug.level: 0
+# dependency_check.interval: 21600
 #hook.white:
 #  "localhost:8080/vulns/011-ssrf-commons-httpclient.jsp":
 #    - "sql"

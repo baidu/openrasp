@@ -123,6 +123,13 @@ public class KeepAlive {
                 if (configMap.get("log.maxbackup") != null) {
                     DynamicConfigAppender.setLogMaxBackup();
                 }
+                //更新log4j appender 打印日志的路径
+                if (configMap.get("log.path") != null) {
+                    String log4jPath = (String) configMap.get("log.path");
+                    DynamicConfigAppender.updateLog4jPath(true, log4jPath);
+                    DynamicConfigAppender.setLogMaxBackup();
+                    DynamicConfigAppender.fileAppenderAddBurstFilter();
+                }
             } catch (Throwable e) {
                 String message = "config update failed";
                 int errorCode = ErrorType.CONFIG_ERROR.getCode();

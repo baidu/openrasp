@@ -23,6 +23,7 @@ import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.config.Config;
 import com.google.gson.Gson;
 
 import java.util.HashMap;
@@ -35,7 +36,6 @@ import java.util.Map;
  * @create: 2019/04/19 16:07
  */
 public class DependencyReport {
-    private static final int REGISTER_DELAY = 60 * 1000;
 
     public DependencyReport() {
         Thread thread = new Thread(new DependencyThread());
@@ -59,7 +59,7 @@ public class DependencyReport {
                         int errorCode = ErrorType.REGISTER_ERROR.getCode();
                         CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
                     }
-                    Thread.sleep(REGISTER_DELAY);
+                    Thread.sleep(Config.getConfig().getDependencyCheckInterval()*1000);
                 } catch (Exception e) {
                     String message = e.getMessage();
                     int errorCode = ErrorType.REGISTER_ERROR.getCode();

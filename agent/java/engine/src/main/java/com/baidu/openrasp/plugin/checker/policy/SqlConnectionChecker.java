@@ -19,6 +19,7 @@ package com.baidu.openrasp.plugin.checker.policy;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
@@ -41,7 +42,7 @@ public class SqlConnectionChecker extends PolicyChecker {
     private static final String DEFAULT_POSTGRESQL_PORT = "5432";
     private static final String DEFAULT_SQLSERVRE_PORT = "1433";
     private static final String[] WEAK_WORDS = new String[]{"root", "123", "123456", "a123456", "123456a", "111111",
-            "123123", "admin", "user", "mysql",""};
+            "123123", "admin", "user", "mysql", ""};
     public static HashMap<String, Long> alarmTimeCache = new HashMap<String, Long>();
 
     private boolean checkUser(String user, String sqlType) {
@@ -69,7 +70,7 @@ public class SqlConnectionChecker extends PolicyChecker {
     }
 
     private boolean checkPassword(String password) {
-        List<String> checkList = Arrays.asList(WEAK_WORDS);
+        List<String> checkList = Arrays.asList(getSecurityWeakPasswords());
         return !checkList.contains(password);
     }
 
@@ -292,4 +293,11 @@ public class SqlConnectionChecker extends PolicyChecker {
         }
     }
 
+    /**
+     * 从配置获取弱口令列表
+     */
+    public String[] getSecurityWeakPasswords() {
+        String[] securityWeakPasswords = Config.getConfig().getSecurityWeakPasswords();
+        return securityWeakPasswords != null ? securityWeakPasswords : WEAK_WORDS;
+    }
 }

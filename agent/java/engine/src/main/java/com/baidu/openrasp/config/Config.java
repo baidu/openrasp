@@ -39,10 +39,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 
 /**
@@ -88,7 +85,9 @@ public class Config extends FileScanListener {
         HOOK_WHITE("hook.white", ""),
         HOOK_WHITE_ALL("hook.white.ALL", "true"),
         DECOMPILE_ENABLE("decompile.enable", "false"),
-        RESPONSE_HEADERS("inject.custom_headers", "");
+        RESPONSE_HEADERS("inject.custom_headers", ""),
+        DEPENDENCY_CHECK_INTERVAL("dependency_check.interval", "21600"),
+        SECURITY_WEAK_PASSWORDS("security.weak_passwords", "");
 
 
         Item(String key, String defaultValue) {
@@ -159,6 +158,8 @@ public class Config extends FileScanListener {
     private boolean decompileEnable;
     private Map<String, String> responseHeaders;
     private int logMaxBackUp;
+    private int dependencyCheckInterval;
+    private String[] securityWeakPasswords;
 
 
     static {
@@ -243,6 +244,17 @@ public class Config extends FileScanListener {
                     }
                     continue;
                 }
+                if (item.key.equals(Item.SECURITY_WEAK_PASSWORDS.key)) {
+                    if (properties != null) {
+                        Object object = properties.get(item.key);
+                        if (object instanceof List) {
+                            List<String> weakPasswords = (List<String>) object;
+                            String[] array = new String[weakPasswords.size()];
+                            setSecurityWeakPasswords(weakPasswords.toArray(array));
+                        }
+                    }
+                    continue;
+                }
                 if (item.isProperties) {
                     setConfigFromProperties(item, properties, isInit);
                 }
@@ -273,6 +285,12 @@ public class Config extends FileScanListener {
                     Map<String, String> headers = CloudUtils.getMapGsonObject().fromJson((JsonObject) entry.getValue(), Map.class);
                     setResponseHeaders(headers);
                 }
+            } else if (entry.getKey().equals(Item.SECURITY_WEAK_PASSWORDS.key)) {
+                if (entry.getValue() instanceof List) {
+                    List<String> weakPasswords = (List<String>) entry.getValue();
+                    String[] array = new String[weakPasswords.size()];
+                    setSecurityWeakPasswords(weakPasswords.toArray(array));
+                }
             } else {
                 if (entry.getValue() instanceof JsonPrimitive) {
                     setConfig(entry.getKey(), ((JsonPrimitive) entry.getValue()).getAsString(), isInit);
@@ -294,6 +312,8 @@ public class Config extends FileScanListener {
                     DynamicConfigAppender.updateSyslogTag();
                     //是否开启log4j的debug
                     DynamicConfigAppender.enableDebug();
+                    //更新log4j appender 打印日志的路径
+                    DynamicConfigAppender.updateLog4jPath(false, null);
                     //更新log4j的日志限速
                     DynamicConfigAppender.fileAppenderAddBurstFilter();
                     //更新log4j的日志最大备份天数
@@ -1141,11 +1161,40 @@ public class Config extends FileScanListener {
      *
      * @param logMaxBackUp log4j最大日志备份天数
      */
-    public void setLogMaxBackUp(String logMaxBackUp) {
+    public synchronized void setLogMaxBackUp(String logMaxBackUp) {
         this.logMaxBackUp = Integer.parseInt(logMaxBackUp);
         if (this.logMaxBackUp <= 0) {
             this.logMaxBackUp = 30;
         }
+    }
+
+    /**
+     * 获取dependencyChecker的上报时间间隔
+     *
+     * @return dependencyChecker的上报时间间隔
+     */
+    public int getDependencyCheckInterval() {
+        return dependencyCheckInterval;
+    }
+
+    /**
+     * 设置dependencyChecker的上报时间间隔
+     *
+     * @param dependencyCheckInterval dependencyChecker的上报时间间隔
+     */
+    public synchronized void setDependencyCheckInterval(String dependencyCheckInterval) {
+        this.dependencyCheckInterval = Integer.parseInt(dependencyCheckInterval);
+        if (!(this.dependencyCheckInterval >= 60 && this.dependencyCheckInterval <= 24 * 3600)) {
+            this.dependencyCheckInterval = 6 * 3600;
+        }
+    }
+
+    public String[] getSecurityWeakPasswords() {
+        return securityWeakPasswords;
+    }
+
+    public void setSecurityWeakPasswords(String[] securityWeakPasswords) {
+        this.securityWeakPasswords = securityWeakPasswords;
     }
 
     //--------------------------统一的配置处理------------------------------------
@@ -1226,6 +1275,8 @@ public class Config extends FileScanListener {
                 setDecompileEnable(value);
             } else if (Item.LOG_MAX_BACKUP.key.equals(key)) {
                 setLogMaxBackUp(value);
+            } else if (Item.DEPENDENCY_CHECK_INTERVAL.key.equals(key)) {
+                setDependencyCheckInterval(value);
             } else {
                 isHit = false;
             }
