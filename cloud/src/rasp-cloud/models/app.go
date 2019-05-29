@@ -134,6 +134,9 @@ var (
 		"syslog.facility":           1,
 		"syslog.enable":             false,
 		"decompile.enable":          false,
+		"security.weak_passwords":   []string{},
+		"dependency_check.interval": 12 * 3600,
+		"webroot_scan.scan_limit":   100,
 	}
 )
 
