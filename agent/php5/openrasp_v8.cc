@@ -68,6 +68,7 @@ PHP_MINIT_FUNCTION(openrasp_v8)
 
     // It can be called multiple times,
     // but intern code initializes v8 only once
+    v8::V8::InitializePlatform(Platform::New(1));
     v8::V8::Initialize();
 
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
@@ -81,7 +82,7 @@ PHP_MINIT_FUNCTION(openrasp_v8)
 
     if (!process_globals.snapshot_blob)
     {
-        Platform::Initialize();
+        Platform::Get()->Startup();
         auto duration = std::chrono::system_clock::now().time_since_epoch();
         auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
         Snapshot *snapshot = new Snapshot(process_globals.plugin_config, process_globals.plugin_src_list, millis, nullptr);
@@ -106,7 +107,7 @@ PHP_MINIT_FUNCTION(openrasp_v8)
             }
             openrasp::scm->set_buildin_check_action(type_action_map);
         }
-        Platform::Shutdown();
+        Platform::Get()->Shutdown();
     }
     return SUCCESS;
 }
@@ -119,7 +120,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
     // it should generally not be necessary to dispose v8 before exiting a process,
     // so skip this step for module graceful reload
     // v8::V8::Dispose();
-    Platform::Shutdown();
+    Platform::Get()->Shutdown();
     delete process_globals.snapshot_blob;
     process_globals.snapshot_blob = nullptr;
 
@@ -168,7 +169,7 @@ PHP_RINIT_FUNCTION(openrasp_v8)
                 {
                     OPENRASP_V8_G(isolate)->Dispose();
                 }
-                Platform::Initialize();
+                Platform::Get()->Startup();
                 OPENRASP_V8_G(isolate) = Isolate::New(process_globals.snapshot_blob, process_globals.snapshot_blob->timestamp);
                 OPENRASP_G(config).updateAlgorithmConfig();
             }

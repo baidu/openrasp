@@ -31,9 +31,9 @@ PluginUpdatePackage::PluginUpdatePackage(std::string content, std::string versio
 
 bool PluginUpdatePackage::build_snapshot()
 {
-  Platform::Initialize();
+  Platform::Get()->Startup();
   Snapshot snapshot("", {active_plugin}, 0);
-  Platform::Shutdown();
+  Platform::Get()->Shutdown();
   if (!snapshot.IsOk())
   {
     openrasp_error(LEVEL_WARNING, PLUGIN_ERROR, _("Fail to initialize builtin js code, error %s."), strerror(errno));
@@ -53,11 +53,11 @@ bool PluginUpdatePackage::build_snapshot()
                    snapshot_abs_path.c_str(), strerror(errno));
   }
   std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
-  Platform::Initialize();
+  Platform::Get()->Startup();
   Isolate *isolate = Isolate::New(&snapshot, 0);
   extract_buildin_action(isolate, buildin_action_map);
   isolate->Dispose();
-  Platform::Shutdown();
+  Platform::Get()->Shutdown();
   std::map<OpenRASPCheckType, OpenRASPActionType> type_action_map;
   for (auto iter = buildin_action_map.begin(); iter != buildin_action_map.end(); iter++)
   {

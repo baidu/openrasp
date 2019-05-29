@@ -43,17 +43,17 @@ if test "$PHP_OPENRASP" != "no"; then
   OPENRASP_LIBS="$OPENRASP_LIBS $PHP_OPENRASP_V8/php/build/libopenrasp_v8_php.a"
   case $host_os in
     darwin* )
-      PHP_ADD_INCLUDE($PHP_OPENRASP_V8/vendors/libv8-7.2-darwin/include)
-      OPENRASP_LIBS="$OPENRASP_LIBS $PHP_OPENRASP_V8/vendors/libv8-7.2-darwin/lib/libv8_monolith.a"
+      PREBUILTS_ROOT="$PHP_OPENRASP_V8/prebuilts/darwin"
+      PHP_ADD_INCLUDE($PREBUILTS_ROOT/include)
+      OPENRASP_LIBS="$OPENRASP_LIBS -L$PREBUILTS_ROOT/lib64 -lv8_monolith"
       ;;
     * )
-      PHP_ADD_INCLUDE($PHP_OPENRASP_V8/vendors/libv8-7.2-linux/include)
-      PHP_ADD_INCLUDE($PHP_OPENRASP_V8/vendors/libc++-linux/include/c++/v1)
-      PHP_ADD_LIBRARY(rt, , OPENRASP_SHARED_LIBADD)
-      PHP_ADD_LIBRARY(dl, , OPENRASP_SHARED_LIBADD)
+      PREBUILTS_ROOT="$PHP_OPENRASP_V8/prebuilts/linux"
+      PHP_ADD_INCLUDE($PREBUILTS_ROOT/include)
+      PHP_ADD_INCLUDE($PREBUILTS_ROOT/include/c++/v1)
       CXXFLAGS="$CXXFLAGS -nostdinc++"
-      OPENRASP_LIBS="$OPENRASP_LIBS $PHP_OPENRASP_V8/vendors/libv8-7.2-linux/lib/libv8_monolith.a -Wl,--whole-archive -Wl,$PHP_OPENRASP_V8/vendors/libc++-linux/lib/* -Wl,--no-whole-archive"
-      OPENRASP_LIBS="$OPENRASP_LIBS -nodefaultlibs -lm -lc -lgcc_s -lrt -lpthread"
+      OPENRASP_LIBS="$OPENRASP_LIBS -L$PREBUILTS_ROOT/lib64 -Wl,-Bstatic -lv8_monolith -lc++ -lc++abi -Wl,-Bdynamic"
+      OPENRASP_LIBS="$OPENRASP_LIBS -nodefaultlibs -lm -lc -lrt -lgcc_s -ldl -lpthread"
       ;;
   esac
 
