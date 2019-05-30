@@ -24,7 +24,7 @@ void WebDirDetector::insert_directory(std::string &path)
 {
   std::lock_guard<std::mutex> lock(wdd_mutex);
   WebDir dir(path);
-  if (std::find(webdirs.begin(), webdirs.end(), dir) != webdirs.end())
+  if (std::find(webdirs.begin(), webdirs.end(), dir) == webdirs.end())
   {
     webdirs.push_back(dir);
   }

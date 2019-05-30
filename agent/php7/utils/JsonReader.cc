@@ -85,12 +85,6 @@ bool JsonReader::fetch_bool(const std::vector<std::string> &keys, const bool &de
   }
 }
 
-void JsonReader::erase(const std::vector<std::string> &keys)
-{
-  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
-  j.erase(ptr);
-}
-
 std::vector<std::string> JsonReader::fetch_object_keys(const std::vector<std::string> &keys)
 {
   std::vector<std::string> result;
