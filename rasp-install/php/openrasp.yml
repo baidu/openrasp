@@ -3,7 +3,7 @@
 #插件获取堆栈的最大深度
 plugin.maxstack: 100
 #文件存在验证开关，切换至扫描器模式
-plugin.filter: false
+plugin.filter: true
 #对于单次HOOK点检测，JS插件整体超时时间（毫秒）
 plugin.timeout.millis: 100
 

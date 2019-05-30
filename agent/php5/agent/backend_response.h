@@ -60,7 +60,7 @@ public:
   std::string stringify_object(const std::vector<std::string> &keys, bool pretty = false);
   void erase_value(const std::vector<std::string> &keys);
 
-  std::shared_ptr<PluginUpdatePackage> build_plugin_update_package();
+  std::shared_ptr<PluginUpdatePackage> build_plugin_update_package(const std::string &local_md5);
   std::vector<std::string> fetch_object_keys(const std::vector<std::string> &keys);
   std::vector<std::string> fetch_string_array(const std::vector<std::string> &keys);
   std::map<std::string, std::vector<std::string>> build_hook_white_map(const std::vector<std::string> &keys);

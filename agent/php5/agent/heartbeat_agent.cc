@@ -72,11 +72,14 @@ bool HeartBeatAgent::do_heartbeat()
 	bool result = false;
 	std::string url_string = std::string(openrasp_ini.backend_url) + heartbeat_url_path;
 
+	std::string local_md5(oam->get_plugin_md5());
+	long local_config_time = scm->get_config_last_update();
+
 	JsonReader json_reader;
 	json_reader.write_string({"rasp_id"}, scm->get_rasp_id());
-	json_reader.write_string({"plugin_md5"}, oam->get_plugin_md5());
+	json_reader.write_string({"plugin_md5"}, local_md5);
 	json_reader.write_string({"plugin_version"}, oam->get_plugin_version());
-	json_reader.write_int64({"config_time"}, scm->get_config_last_update());
+	json_reader.write_int64({"config_time"}, local_config_time);
 	std::string json_content = json_reader.dump();
 
 	BackendRequest backend_request(url_string, json_content.c_str());
@@ -93,7 +96,7 @@ bool HeartBeatAgent::do_heartbeat()
 	if (res_info->verify(HEARTBEAT_ERROR))
 	{
 		/************************************plugin update************************************/
-		std::shared_ptr<PluginUpdatePackage> plugin_update_pkg = res_info->build_plugin_update_package();
+		std::shared_ptr<PluginUpdatePackage> plugin_update_pkg = res_info->build_plugin_update_package(local_md5);
 		if (plugin_update_pkg)
 		{
 			if (plugin_update_pkg->build_snapshot())
@@ -107,7 +110,8 @@ bool HeartBeatAgent::do_heartbeat()
 		}
 		/************************************config update************************************/
 		int64_t config_time = res_info->fetch_int64({"data", "config_time"});
-		if (config_time >= 0) //timestamp should not less than zero
+		//timestamp should 1, greater than zero; 2, different from local config_time
+		if (config_time >= 0 && local_config_time != config_time)
 		{
 			std::string complete_config = res_info->stringify_object({"data", "config"}, true);
 			if (!complete_config.empty())
