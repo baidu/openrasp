@@ -141,7 +141,7 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
     }
     case IS_STRING:
     {
-        bool avoidwarning = v8::String::NewFromOneByte(isolate, (uint8_t *)Z_STRVAL_P(val), v8::NewStringType::kNormal, Z_STRLEN_P(val)).ToLocal(&rst);
+        bool avoidwarning = v8::String::NewFromUtf8(isolate, Z_STRVAL_P(val), v8::NewStringType::kNormal, Z_STRLEN_P(val)).ToLocal(&rst);
         break;
     }
     case IS_LONG:
