@@ -51,7 +51,7 @@ public class Register {
         public void run() {
             while (!this.registerFlag) {
                 try {
-                    String content = new Gson().toJson(GenerateParameters());
+                    String content = new Gson().toJson(generateParameters());
                     String url = CloudRequestUrl.CLOUD_REGISTER_URL;
                     GenericResponse response = new CloudHttp().commonRequest(url, content);
                     if (CloudUtils.checkRequestResult(response)) {
@@ -77,7 +77,7 @@ public class Register {
         }
     }
 
-    private static Map<String, Object> GenerateParameters() {
+    private static Map<String, Object> generateParameters() {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("id", CloudCacheModel.getInstance().getRaspId());
         params.put("version", BuildRASPModel.getRaspVersion());

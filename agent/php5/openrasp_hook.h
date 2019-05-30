@@ -299,7 +299,7 @@ bool openrasp_check_callable_black(const char *item_name, uint item_name_length 
 bool openrasp_zval_in_request(zval *item TSRMLS_DC);
 std::string fetch_name_in_request(zval *item, std::string &var_type TSRMLS_DC);
 
-std::string openrasp_real_path(char *filename, int filename_len, bool use_include_path, uint32_t w_op TSRMLS_DC);
+std::string openrasp_real_path(const char *filename, int filename_len, bool use_include_path, uint32_t w_op TSRMLS_DC);
 
 OpenRASPActionType string_to_action(std::string action_string);
 std::string action_to_string(OpenRASPActionType type);

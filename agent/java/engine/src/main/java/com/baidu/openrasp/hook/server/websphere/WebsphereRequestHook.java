@@ -34,13 +34,15 @@ public class WebsphereRequestHook extends ServerRequestHook {
 
     @Override
     public boolean isClassMatched(String className) {
-        return "com/ibm/ws/webcontainer/filter/WebAppFilterManager".equals(className);
+        return "com/ibm/ws/webcontainer/webapp/WebApp".equals(className);
     }
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
                 "$0,$1,$2", Object.class, Object.class, Object.class);
-        insertBefore(ctClass, "invokeFilters", null, src);
+        String requestEndSrc = getInvokeStaticSrc(ServerRequestHook.class, "checkRequestEnd", "");
+        insertBefore(ctClass, "handleRequest", null, src);
+        insertAfter(ctClass, "handleRequest", null, requestEndSrc, true);
     }
 }

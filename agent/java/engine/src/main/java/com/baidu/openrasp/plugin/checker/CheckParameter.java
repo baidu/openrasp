@@ -43,7 +43,7 @@ public class CheckParameter {
         COMMAND("command", new V8Checker(), 1 << 1),
         DIRECTORY("directory", new V8Checker(), 1 << 2),
         REQUEST("request", new V8Checker(), 1 << 3),
-        // DUBBOREQUEST("dubboRequest", new V8Checker(), 1 << 4),
+        DUBBOREQUEST("dubboRequest", new V8Checker(), 1 << 4),
         READFILE("readFile", new V8Checker(), 1 << 5),
         WRITEFILE("writeFile", new V8Checker(), 1 << 6),
         FILEUPLOAD("fileUpload", new V8Checker(), 1 << 7),
@@ -56,6 +56,7 @@ public class CheckParameter {
         INCLUDE("include", new V8Checker(), 1 << 13),
         SSRF("ssrf", new V8Checker(), 1 << 14),
         SQL_EXCEPTION("sql_exception", new SqlExceptionChecker(), 1 << 15),
+        REQUESTEND("requestEnd", new V8Checker(), 1 << 17),
 
         // java本地检测
         XSS_USERINPUT("xss_userinput", new XssChecker(), 1 << 16),

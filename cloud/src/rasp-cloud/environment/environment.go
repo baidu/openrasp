@@ -24,22 +24,23 @@ return psz_build_time;
 import "C"
 
 import (
+	"bytes"
 	"flag"
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/logs"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
-	"rasp-cloud/tools"
 	"rasp-cloud/conf"
-	"fmt"
-	"golang.org/x/crypto/ssh/terminal"
+	"rasp-cloud/tools"
 	"syscall"
-	"bytes"
+
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 var (
-	Version   = "1.1"
+	Version   = "1.2"
 	BuildTime = C.GoString(C.build_time())
 )
 

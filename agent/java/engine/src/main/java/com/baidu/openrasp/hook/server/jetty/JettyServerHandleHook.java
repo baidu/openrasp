@@ -56,7 +56,9 @@ public class JettyServerHandleHook extends ServerRequestHook {
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
                 "$0,$3,$4", Object.class, Object.class, Object.class);
+        String requestEndSrc = getInvokeStaticSrc(ServerRequestHook.class, "checkRequestEnd", "");
         insertBefore(ctClass, "handle", null, src);
+        insertAfter(ctClass,"handle",null,requestEndSrc,true);
     }
 
 }

@@ -37,6 +37,7 @@ import static com.baidu.rasp.RaspError.E10003;
 public abstract class BaseStandardInstaller implements Installer {
     private String serverName;
     protected String serverRoot;
+    protected boolean needModifyScript = true;
     public static String resinPath;
     public static int NOTFOUND = 0;
     public static int FOUND = 1;
@@ -84,8 +85,23 @@ public abstract class BaseStandardInstaller implements Installer {
             System.exit(1);
         }
 
+        if (needModifyScript) {
+            generateStartScript(installDir.getPath());
+            if (App.isAttach) {
+                System.out.println("\nAttach the rasp to process: " + App.pid);
+                new Attacher(App.pid + "", App.baseDir).doAttach(Attacher.MODE_INSTALL);
+            }
+
+            System.out.println("\nInstallation completed without errors.");
+            if (!App.isAttach) {
+                System.out.println("Please restart application server to take effect.");
+            }
+        }
+    }
+
+    private void generateStartScript(String installPath) throws RaspError, IOException {
         // 找到要修改的启动脚本
-        File script = new File(getScript(installDir.getPath()));
+        File script = new File(getScript(installPath));
         if (!script.exists()) {
             throw new RaspError(E10003 + script.getAbsolutePath());
         }
@@ -95,16 +111,6 @@ public abstract class BaseStandardInstaller implements Installer {
         String original = read(script);
         String modified = modifyStartScript(original);
         write(script, modified);
-
-        if (App.isAttach) {
-            System.out.println("\nAttach the rasp to process: " + App.pid);
-            new Attacher(App.pid + "", App.baseDir).doAttach(Attacher.MODE_INSTALL);
-        }
-
-        System.out.println("\nInstallation completed without errors.");
-        if (!App.isAttach) {
-            System.out.println("Please restart application server to take effect.");
-        }
     }
 
     private boolean generateConfig(String dir, boolean firstInstall) {

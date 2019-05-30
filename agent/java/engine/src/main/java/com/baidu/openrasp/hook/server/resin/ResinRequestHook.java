@@ -52,12 +52,17 @@ public class ResinRequestHook extends ServerRequestHook {
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
                 "$0,$1,$2", Object.class, Object.class, Object.class);
+        String requestEndSrc = getInvokeStaticSrc(ServerRequestHook.class, "checkRequestEnd", "");
         // resin3.x
         insertBefore(ctClass, "service",
                 "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)V", src);
+        insertAfter(ctClass, "service",
+                "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)V", requestEndSrc, true);
         // resin4.x
         insertBefore(ctClass, "doResume",
                 "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)Z", src);
+        insertAfter(ctClass, "doResume",
+                "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)Z", requestEndSrc, true);
     }
 
 }

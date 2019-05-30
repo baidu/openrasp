@@ -69,6 +69,7 @@ public class KeepAlive extends CloudTimerTask {
         params.put("plugin_version", CloudCacheModel.getInstance().getPluginVersion());
         params.put("config_time", CloudCacheModel.getInstance().getConfigTime());
         params.put("plugin_md5", CloudCacheModel.getInstance().getPluginMD5());
+        params.put("plugin_name", CloudCacheModel.getInstance().getPluginName());
         return params;
     }
 
@@ -76,6 +77,7 @@ public class KeepAlive extends CloudTimerTask {
         long oldConfigTime = CloudCacheModel.getInstance().getConfigTime();
         String oldPluginMd5 = CloudCacheModel.getInstance().getPluginMD5();
         Long deliveryTime = null;
+        String name = null;
         String version = null;
         String md5 = null;
         String pluginContext = null;
@@ -94,6 +96,9 @@ public class KeepAlive extends CloudTimerTask {
             }
             if (pluginMap.get("plugin") instanceof JsonPrimitive) {
                 pluginContext = ((JsonPrimitive) pluginMap.get("plugin")).getAsString();
+            }
+            if (pluginMap.get("name") instanceof JsonPrimitive) {
+                name = ((JsonPrimitive) pluginMap.get("name")).getAsString();
             }
         }
         if (configMap != null) {
@@ -129,17 +134,18 @@ public class KeepAlive extends CloudTimerTask {
                 CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             }
         }
-        if (version != null && md5 != null && pluginContext != null) {
+        if (version != null && md5 != null && pluginContext != null && name != null) {
             if (JS.UpdatePlugin("official.js", pluginContext)) {
                 CloudCacheModel.getInstance().setPlugin(pluginContext);
                 CloudCacheModel.getInstance().setPluginVersion(version);
                 CloudCacheModel.getInstance().setPluginMD5(md5);
+                CloudCacheModel.getInstance().setPluginName(name);
             }
         }
         long newConfigTime = CloudCacheModel.getInstance().getConfigTime();
         String newPluginMd5 = CloudCacheModel.getInstance().getPluginMD5();
-        //更新成功之后立刻发送一次心跳
-        if (oldConfigTime != newConfigTime || !oldPluginMd5.equals(newPluginMd5)) {
+        if (oldConfigTime != newConfigTime || !newPluginMd5.equals(oldPluginMd5)) {
+            //更新成功之后立刻发送一次心跳
             String content = new Gson().toJson(generateParameters());
             String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
             new CloudHttp().commonRequest(url, content);

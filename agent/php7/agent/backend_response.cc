@@ -72,11 +72,12 @@ std::shared_ptr<PluginUpdatePackage> BackendResponse::build_plugin_update_packag
             return nullptr;
         }
         std::string version = fetch_string({"data", "plugin", "version"}, "");
-        if (version.empty())
+        std::string name = fetch_string({"data", "plugin", "name"}, "");
+        if (version.empty() || name.empty())
         {
             return nullptr;
         }
-        result = make_shared<PluginUpdatePackage>(plugin, version, md5);
+        result = make_shared<PluginUpdatePackage>(plugin, version, name, md5);
     }
     return result;
 }

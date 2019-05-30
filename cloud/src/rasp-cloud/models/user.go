@@ -26,6 +26,8 @@ import (
 	"rasp-cloud/tools"
 	"regexp"
 	"rasp-cloud/conf"
+	"math/rand"
+	"time"
 )
 
 const (
@@ -59,8 +61,9 @@ func init() {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create name index for user collection", err)
 	}
 	if count <= 0 {
-
-		hash, err := generateHashedPassword("admin@123")
+		initPassword := generateRandomPassword(15, 20)
+		beego.Info("Initial password: " + initPassword)
+		hash, err := generateHashedPassword(initPassword)
 		if err != nil {
 			tools.Panic(tools.ErrCodeGeneratePasswdFailed, "failed to generate the default hashed password", err)
 		}
@@ -117,6 +120,23 @@ func generateHashedPassword(password string) (string, error) {
 		return "", err
 	}
 	return string(hash), nil
+}
+
+func generateRandomPassword(minLength int, maxLength int) string {
+	random := rand.New(rand.NewSource(time.Now().UnixNano()))
+	length := minLength + random.Intn(maxLength-minLength+1)
+	result := make([]byte, length)
+	alphaNumeric := "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "abcdefghijklmnopqrstuvxyz"
+	characters := "%@$!&#*"
+	for i := 0; i < length; i++ {
+		result[i] = alphaNumeric[random.Intn(len(alphaNumeric))]
+	}
+	for i := 0; i < length/4; i++ {
+		character := characters[random.Intn(len(characters))]
+		index := random.Intn(length)
+		result[index] = character
+	}
+	return string(result)
 }
 
 func ComparePassword(hashedPassword string, password string) error {

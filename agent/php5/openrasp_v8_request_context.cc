@@ -466,10 +466,14 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
                        OPENRASP_INJECT_G(request_id), Z_STRVAL_PP(origin_zv));
         std::string content_type_vlaue = std::string(Z_STRVAL_PP(origin_zv));
         OpenRASPContentType::ContentType k_type = OpenRASPContentType::classify_content_type(content_type_vlaue);
-        if (OpenRASPContentType::ContentType::cApplicationJson == k_type)
+        char *body = nullptr;
+        if (OpenRASPContentType::ContentType::cApplicationJson == k_type &&
+            (body = fetch_request_body(PHP_STREAM_COPY_ALL TSRMLS_CC)) != nullptr)
         {
-            char *body = fetch_request_body(PHP_STREAM_COPY_ALL TSRMLS_CC);
-            complete_body = std::string(body);
+            if (strcmp(body, "") != 0)
+            {
+                complete_body = std::string(body);
+            }
             efree(body);
         }
     }

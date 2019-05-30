@@ -37,6 +37,8 @@ type Rasp struct {
 	ServerVersion     string            `json:"server_version" bson:"server_version,omitempty"`
 	RaspHome          string            `json:"rasp_home" bson:"rasp_home,omitempty"`
 	PluginVersion     string            `json:"plugin_version" bson:"plugin_version,omitempty"`
+	PluginName        string            `json:"plugin_name" bson:"plugin_name,omitempty"`
+	PluginMd5         string            `json:"plugin_md5" bson:"plugin_md5,omitempty"`
 	HeartbeatInterval int64             `json:"heartbeat_interval" bson:"heartbeat_interval,omitempty"`
 	Online            *bool             `json:"online" bson:"online,omitempty"`
 	LastHeartbeatTime int64             `json:"last_heartbeat_time" bson:"last_heartbeat_time,omitempty"`

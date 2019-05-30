@@ -232,17 +232,16 @@ std::string json_encode_from_zval(zval *value)
 zend_string *fetch_request_body(size_t max_len)
 {
     php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, NULL);
-    if (!stream)
+    if (stream)
     {
-        return zend_string_init("", strlen(""), 0);
+        zend_string *buf = php_stream_copy_to_mem(stream, max_len, 0);
+        php_stream_close(stream);
+        if (buf)
+        {
+            return buf;
+        }
     }
-    zend_string *buf = php_stream_copy_to_mem(stream, max_len, 0);
-    php_stream_close(stream);
-    if (!buf)
-    {
-        return zend_string_init("", strlen(""), 0);
-    }
-    return buf;
+    return zend_string_init("", strlen(""), 0);
 }
 
 bool need_alloc_shm_current_sapi()
@@ -267,22 +266,34 @@ bool need_alloc_shm_current_sapi()
 
 std::string convert_to_header_key(char *key, size_t length)
 {
-    if (key == nullptr ||
-        strncmp(key, "HTTP_", 5) != 0)
+    std::string result;
+    if (nullptr == key)
     {
-        return "";
+        return result;
     }
-    std::string result(key + 5, length - 5);
-    for (auto &ch : result)
+    if (strcmp("HTTP_CONTENT_TYPE", key) == 0 || strcmp("CONTENT_TYPE", key) == 0)
     {
-        if (ch == '_')
+        result = "content-type";
+    }
+    else if (strcmp("HTTP_CONTENT_LENGTH", key) == 0 || strcmp("CONTENT_LENGTH", key) == 0)
+    {
+        result = "content-length";
+    }
+    else if (strncmp(key, "HTTP_", 5) == 0)
+    {
+        std::string http_header(key + 5, length - 5);
+        for (auto &ch : http_header)
         {
-            ch = '-';
+            if (ch == '_')
+            {
+                ch = '-';
+            }
+            else
+            {
+                ch = std::tolower(ch);
+            }
         }
-        else
-        {
-            ch = std::tolower(ch);
-        }
+        result = http_header;
     }
     return result;
 }

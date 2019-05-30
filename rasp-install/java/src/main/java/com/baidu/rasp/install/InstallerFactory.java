@@ -19,7 +19,8 @@ package com.baidu.rasp.install;
 import com.baidu.rasp.RaspError;
 import org.apache.commons.io.IOUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 
 import static com.baidu.rasp.RaspError.E10002;
 import static com.baidu.rasp.RaspError.E10004;
@@ -35,14 +36,18 @@ public abstract class InstallerFactory {
     protected static final String WEBLOGIC = "Weblogic";
     protected static final String JBOSSEAP = "JbossEAP";
     protected static final String WILDFLY = "Wildfly";
+    protected static final String GENERIC = "Generate";
 
     protected abstract Installer getInstaller(String serverName, String serverRoot);
 
-    public Installer getInstaller(File serverRoot) throws RaspError {
+    public Installer getInstaller(File serverRoot, boolean noDetect) throws RaspError {
         if (!serverRoot.exists()) {
             throw new RaspError(E10002 + serverRoot.getPath());
         }
 
+        if (noDetect) {
+            return new GenericInstaller(GENERIC, serverRoot.getAbsolutePath());
+        }
         String serverName = detectServerName(serverRoot.getAbsolutePath());
         if (serverName == null) {
             System.out.println("List of currently supported servers are:");
@@ -59,7 +64,7 @@ public abstract class InstallerFactory {
         return getInstaller(serverName, serverRoot.getAbsolutePath());
     }
 
-    public static String detectServerName(String serverRoot) {
+    public static String detectServerName(String serverRoot) throws RaspError {
         if (new File(serverRoot, "bin/catalina.sh").exists()
                 || new File(serverRoot, "bin/catalina.bat").exists()) {
             return TOMCAT;

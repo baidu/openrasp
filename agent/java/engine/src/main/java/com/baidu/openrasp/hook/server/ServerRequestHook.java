@@ -18,6 +18,7 @@ package com.baidu.openrasp.hook.server;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 
 /**
@@ -69,4 +70,7 @@ public abstract class ServerRequestHook extends AbstractClassHook {
         }
     }
 
+    public static void checkRequestEnd() {
+        HookHandler.doCheck(CheckParameter.Type.REQUESTEND, new Object());
+    }
 }

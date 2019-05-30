@@ -157,7 +157,7 @@ bool openrasp_check_callable_black(const char *item_name, uint item_name_length)
                      std::string(item_name, item_name_length)) != callable_blacklist.end();
 }
 
-std::string openrasp_real_path(char *filename, int length, bool use_include_path, uint32_t w_op)
+std::string openrasp_real_path(const char *filename, int length, bool use_include_path, uint32_t w_op)
 {
     std::string result;
     static const std::unordered_map<std::string, uint32_t> opMap = {

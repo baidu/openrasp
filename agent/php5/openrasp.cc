@@ -186,6 +186,8 @@ PHP_MINIT_FUNCTION(openrasp)
                 hook_white_map.insert({key_item, white_types});
             }
             openrasp::scm->build_check_type_white_array(hook_white_map);
+            int64_t debug_level = yreader.fetch_int64({"debug.level"}, 0);
+            openrasp::scm->set_debug_level(debug_level);
         }
 #ifdef HAVE_FSWATCH
         result = PHP_MINIT(openrasp_fswatch)(INIT_FUNC_ARGS_PASSTHRU);

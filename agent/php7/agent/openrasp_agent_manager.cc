@@ -80,8 +80,18 @@ static void supervisor_sigchld_handler(int signal_no)
 }
 
 OpenraspAgentManager::OpenraspAgentManager()
-	: agent_ctrl_block(nullptr)
+	: agent_ctrl_block(nullptr), rwlock(nullptr)
 {
+	meta_size = ROUNDUP(sizeof(pthread_rwlock_t), 1 << 3);
+}
+
+OpenraspAgentManager::~OpenraspAgentManager()
+{
+	if (rwlock != nullptr)
+	{
+		delete rwlock;
+		rwlock = nullptr;
+	}
 }
 
 bool OpenraspAgentManager::startup()
@@ -164,9 +174,15 @@ bool OpenraspAgentManager::verify_ini_correct()
 
 bool OpenraspAgentManager::create_share_memory()
 {
-	char *shm_block = BaseManager::sm.create(SHMEM_SEC_CTRL_BLOCK, sizeof(OpenraspCtrlBlock));
-	if (shm_block && (agent_ctrl_block = reinterpret_cast<OpenraspCtrlBlock *>(shm_block)))
+	size_t total_size = meta_size + sizeof(OpenraspCtrlBlock);
+	char *shm_block = BaseManager::sm.create(SHMEM_SEC_CTRL_BLOCK, total_size);
+	if (shm_block)
 	{
+		memset(shm_block, 0, total_size);
+		rwlock = new ReadWriteLock((pthread_rwlock_t *)shm_block, LOCK_PROCESS);
+		char *shm_ctrl_block = shm_block + meta_size;
+		agent_ctrl_block = reinterpret_cast<OpenraspCtrlBlock *>(shm_ctrl_block);
+		initialized = true;
 		return true;
 	}
 	return false;
@@ -174,8 +190,14 @@ bool OpenraspAgentManager::create_share_memory()
 
 bool OpenraspAgentManager::destroy_share_memory()
 {
+	if (rwlock != nullptr)
+	{
+		delete rwlock;
+		rwlock = nullptr;
+	}
 	agent_ctrl_block = nullptr;
-	BaseManager::sm.destroy(SHMEM_SEC_CTRL_BLOCK);
+	BaseManager::sm.destroy(SHMEM_SEC_CONF_BLOCK);
+	initialized = false;
 	return true;
 }
 
@@ -359,16 +381,18 @@ pid_t OpenraspAgentManager::search_fpm_master_pid()
 
 void OpenraspAgentManager::set_supervisor_id(pid_t supervisor_id)
 {
-	if (agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
 	{
+		WriteUnLocker auto_unlocker(rwlock);
 		agent_ctrl_block->set_supervisor_id(supervisor_id);
 	}
 }
 
 pid_t OpenraspAgentManager::get_supervisor_id()
 {
-	if (agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
 	{
+		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_supervisor_id();
 	}
 	return 0;
@@ -376,16 +400,18 @@ pid_t OpenraspAgentManager::get_supervisor_id()
 
 void OpenraspAgentManager::set_plugin_agent_id(pid_t plugin_agent_id)
 {
-	if (agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
 	{
+		WriteUnLocker auto_unlocker(rwlock);
 		agent_ctrl_block->set_plugin_agent_id(plugin_agent_id);
 	}
 }
 
 pid_t OpenraspAgentManager::get_plugin_agent_id()
 {
-	if (agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
 	{
+		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_plugin_agent_id();
 	}
 	return 0;
@@ -393,16 +419,18 @@ pid_t OpenraspAgentManager::get_plugin_agent_id()
 
 void OpenraspAgentManager::set_log_agent_id(pid_t log_agent_id)
 {
-	if (agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
 	{
+		WriteUnLocker auto_unlocker(rwlock);
 		agent_ctrl_block->set_log_agent_id(log_agent_id);
 	}
 }
 
 pid_t OpenraspAgentManager::get_log_agent_id()
 {
-	if (agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
 	{
+		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_log_agent_id();
 	}
 	return 0;
@@ -410,16 +438,18 @@ pid_t OpenraspAgentManager::get_log_agent_id()
 
 void OpenraspAgentManager::set_master_pid(pid_t master_pid)
 {
-	if (agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
 	{
+		WriteUnLocker auto_unlocker(rwlock);
 		agent_ctrl_block->set_master_pid(master_pid);
 	}
 }
 
 pid_t OpenraspAgentManager::get_master_pid()
 {
-	if (agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
 	{
+		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_master_pid();
 	}
 	return 0;
@@ -427,39 +457,66 @@ pid_t OpenraspAgentManager::get_master_pid()
 
 void OpenraspAgentManager::set_plugin_version(const char *plugin_version)
 {
-	if (agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
 	{
+		WriteUnLocker auto_unlocker(rwlock);
 		agent_ctrl_block->set_plugin_version(plugin_version);
 	}
 }
 const char *OpenraspAgentManager::get_plugin_version()
 {
-	if (agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
 	{
+		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_plugin_version();
 	}
-	return nullptr;
+	return "";
+}
+
+void OpenraspAgentManager::set_plugin_name(const char *plugin_name)
+{
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	{
+		WriteUnLocker auto_unlocker(rwlock);
+		agent_ctrl_block->set_plugin_name(plugin_name);
+	}
+}
+const char *OpenraspAgentManager::get_plugin_name()
+{
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	{
+		ReadUnLocker auto_unlocker(rwlock);
+		return agent_ctrl_block->get_plugin_name();
+	}
+	return "";
 }
 
 void OpenraspAgentManager::set_plugin_md5(const char *plugin_md5)
 {
-	if (agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
 	{
+		WriteUnLocker auto_unlocker(rwlock);
 		agent_ctrl_block->set_plugin_md5(plugin_md5);
 	}
 }
 const char *OpenraspAgentManager::get_plugin_md5()
 {
-	if (agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
 	{
+		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_plugin_md5();
 	}
-	return nullptr;
+	return "";
 }
 
 long OpenraspAgentManager::get_plugin_update_timestamp()
 {
-	return (!initialized || nullptr == agent_ctrl_block) ? 0 : agent_ctrl_block->get_last_update_time();
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	{
+		ReadUnLocker auto_unlocker(rwlock);
+		return agent_ctrl_block->get_last_update_time();
+	}
+	return 0;
 }
 
 } // namespace openrasp

@@ -77,6 +77,16 @@ const char *OpenraspCtrlBlock::get_plugin_version()
     return plugin_version;
 }
 
+void OpenraspCtrlBlock::set_plugin_name(const char *plugin_name)
+{
+    strncpy(this->plugin_name, plugin_name, OpenraspCtrlBlock::plugin_name_size);
+}
+
+const char *OpenraspCtrlBlock::get_plugin_name()
+{
+    return plugin_name;
+}
+
 void OpenraspCtrlBlock::set_plugin_md5(const char *plugin_md5)
 {
     strncpy(this->plugin_md5, plugin_md5, OpenraspCtrlBlock::plugin_md5_size);
