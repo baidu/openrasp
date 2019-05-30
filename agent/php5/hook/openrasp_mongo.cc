@@ -254,7 +254,7 @@ void pre_mongocollection_update_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     mongo_plugin_check(criteria, "MongoCollection", "update" TSRMLS_CC);
 }
 
-void pre_mongocdb_execute_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_mongodb_execute_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *code = NULL, *args = NULL, *options = NULL;
 
