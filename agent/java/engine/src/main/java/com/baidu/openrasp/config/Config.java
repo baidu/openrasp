@@ -844,7 +844,12 @@ public class Config extends FileScanListener {
             this.sqlCacheCapacity = 1024;
         }
         if (Config.commonLRUCache == null || Config.commonLRUCache.maxSize() != this.sqlCacheCapacity) {
-            Config.commonLRUCache = new LRUCache<Object, String>(this.sqlCacheCapacity);
+            if (Config.commonLRUCache == null) {
+                Config.commonLRUCache = new LRUCache<Object, String>(this.sqlCacheCapacity);
+            } else {
+                Config.commonLRUCache.clear();
+                Config.commonLRUCache = new LRUCache<Object, String>(this.sqlCacheCapacity);
+            }
         }
     }
 
