@@ -76,7 +76,7 @@ public class JS {
         JsonStream.serialize(checkParameter.getParams(), params);
 
         int hashcode = 0;
-        if (type == Type.DIRECTORY || type == Type.READFILE || type == Type.WRITEFILE || type == Type.SQL) {
+        if (type == Type.DIRECTORY || type == Type.READFILE || type == Type.WRITEFILE || type == Type.SQL || type == Type.SSRF) {
             hashcode = ByteBuffer.wrap(params.getByteArray()).hashCode();
         }
         if (hashcode != 0) {
