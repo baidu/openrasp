@@ -214,20 +214,34 @@ void SqlConnectionEntry::connection_entry_policy_log(connection_policy_type type
   zval *connection_params = nullptr;
   MAKE_STD_ZVAL(connection_params);
   array_init(connection_params);
-  add_assoc_string(connection_params, "server", (char *)get_server().c_str(), 1);
-  add_assoc_string(connection_params, "username", (char *)get_username().c_str(), 1);
-  add_assoc_string(connection_params, "socket", (char *)get_socket().c_str(), 1);
-  add_assoc_string(connection_params, "connectionString", (char *)get_connection_string().c_str(), 1);
-  if (connection_policy_type::PASSWORD == type)
-  {
-    add_assoc_string(connection_params, "password", (char *)get_password().c_str(), 1);
-  }
-  write_host_to_params(connection_params);
-  write_port_to_params(connection_params);
+  build_connection_params(connection_params, type);
   add_assoc_zval(policy_array, "policy_params", connection_params);
   TSRMLS_FETCH();
   LOG_G(policy_logger).log(LEVEL_INFO, policy_array TSRMLS_CC);
   zval_ptr_dtor(&policy_array);
+}
+
+void SqlConnectionEntry::append_host_port(const std::string &host, int port)
+{
+  this->host = host;
+  this->port = port;
+}
+
+void SqlConnectionEntry::build_connection_params(zval *params, connection_policy_type type)
+{
+  if (params && Z_TYPE_P(params) == IS_ARRAY)
+  {
+    write_host_to_params(params);
+    write_port_to_params(params);
+    write_socket_to_params(params);
+    add_assoc_string(params, "server", (char *)get_server().c_str(), 1);
+    add_assoc_string(params, "username", (char *)get_username().c_str(), 1);
+    add_assoc_string(params, "connectionString", (char *)get_connection_string().c_str(), 1);
+    if (connection_policy_type::PASSWORD == type)
+    {
+      add_assoc_string(params, "password", (char *)get_password().c_str(), 1);
+    }
+  }
 }
 
 void SqlConnectionEntry::write_host_to_params(zval *params)
@@ -246,8 +260,15 @@ void SqlConnectionEntry::write_port_to_params(zval *params)
   }
 }
 
-void SqlConnectionEntry::append_host_port(const std::string &host, int port)
+void SqlConnectionEntry::write_socket_to_params(zval *params)
 {
-  this->host = host;
-  this->port = port;
+  if (params && Z_TYPE_P(params) == IS_ARRAY)
+  {
+    add_assoc_string(params, "socket", (char *)socket.c_str(), 1);
+  }
+}
+
+bool SqlConnectionEntry::parse(std::string uri)
+{
+  return true;
 }

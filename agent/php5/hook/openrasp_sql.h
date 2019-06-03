@@ -73,9 +73,12 @@ public:
   bool check_high_privileged();
   bool check_weak_password();
 
+  virtual bool parse(std::string uri);
   virtual void append_host_port(const std::string &host, int port);
+  virtual void build_connection_params(zval *params, connection_policy_type type);
   virtual void write_host_to_params(zval *params);
   virtual void write_port_to_params(zval *params);
+  virtual void write_socket_to_params(zval *params);
 };
 
 typedef SqlConnectionEntry sql_connection_entry;

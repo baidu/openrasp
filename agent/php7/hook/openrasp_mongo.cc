@@ -16,7 +16,6 @@
 
 #include "openrasp_hook.h"
 #include "openrasp_v8.h"
-#include "openrasp_mongo_utils.h"
 #include "openrasp_mongo_entry.h"
 
 /**
@@ -32,16 +31,12 @@ POST_HOOK_FUNCTION_EX(__construct, mongodb_0_driver_0_manager, DB_CONNECTION);
 static void handle_mongo_uri_string(char *uri_string, size_t uri_string_len, sql_connection_entry *sql_connection_p,
                                     std::string const &default_uri = "mongodb://127.0.0.1/")
 {
+    std::string uri_tb_be_parsed = default_uri;
     if (uri_string_len)
     {
-        mongo_parse_connection_string(sql_connection_p, uri_string);
+        uri_tb_be_parsed = std::string(uri_string, uri_string_len);
     }
-    else
-    {
-        char *tmp = estrdup(default_uri.c_str());
-        mongo_parse_connection_string(sql_connection_p, tmp);
-        efree(tmp);
-    }
+    sql_connection_p->parse(uri_tb_be_parsed);
 }
 
 static void handle_mongo_options(HashTable *ht, sql_connection_entry *sql_connection_p)
@@ -75,7 +70,6 @@ static bool init_mongodb_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conn
     {
         handle_mongo_options(Z_ARRVAL_P(options), sql_connection_p);
     }
-    sql_connection_p->set_server("mongodb");
     return true;
 }
 

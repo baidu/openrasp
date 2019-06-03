@@ -745,7 +745,6 @@ int main() {
     hook/openrasp_ssrf.cc \
     hook/openrasp_putenv.cc \
     hook/openrasp_mongo.cc \
-    hook/openrasp_mongo_utils.cc \
     hook/openrasp_mongo_entry.cc \
     openrasp_output_detect.cc \
     hook/sql_connection_enrty.cc \
