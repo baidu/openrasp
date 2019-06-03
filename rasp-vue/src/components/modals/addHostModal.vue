@@ -78,7 +78,7 @@ RUN cd /tmp \
     && /jdk/bin/java -jar rasp-*/RaspInstall.jar -install /tomcat/ -appid {{ current_app.id }} -appsecret {{ current_app.secret }} -backendurl {{ agent_urls[agent_url_id] }} \
     && rm -rf rasp-*</pre>
                 <h4>Java SpringBoot 容器示例</h4>
-                <pre>ADD https://packages.baidu.com/app/openrasp/rasp-java.tar.gz /tmp
+                <pre>ADD https://packages.baidu.com/app/openrasp/release/{{rasp_version}/rasp-java.tar.gz /tmp
 RUN cd /tmp \
     && tar -xf rasp-java.tar.* \
     && mv rasp-*/ /rasp/ \
