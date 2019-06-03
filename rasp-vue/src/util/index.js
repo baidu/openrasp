@@ -50,7 +50,7 @@ export var browser_headers = [
       },
       {
         name: '开启',
-        value: 'nosiff'
+        value: 'nosniff'
       }
     ]
   },
