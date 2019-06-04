@@ -18,7 +18,7 @@
 # decompile.enable: false
 # block.status_code: 302
 # request.param_encoding:
-# hooks.ignore: http_output
+hooks.ignore: http_output
 # debug.level: 0
 #hook.white:
 #  "localhost:8080/vulns/011-ssrf-commons-httpclient.jsp":

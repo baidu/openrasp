@@ -17,10 +17,7 @@
 package com.baidu.openrasp.hook.sql;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -29,7 +26,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -143,24 +139,6 @@ public class SQLStatementHook extends AbstractSqlHook {
         addCatch(ctClass, "addBatch", null);
     }
 
-    public static String getSqlConnectionId(String type, Object statement) {
-        String id = null;
-        try {
-            if (type.equals(SQLStatementHook.SQL_TYPE_MYSQL)) {
-                id = Reflection.getField(statement, "connectionId").toString();
-            } else if (type.equals(SQLStatementHook.SQL_TYPE_ORACLE)) {
-                Object connection = Reflection.getField(statement, "connection");
-                id = Reflection.getField(connection, "ociConnectionPoolConnID").toString();
-            } else if (type.equals(SQLStatementHook.SQL_TYPE_SQLSERVER)) {
-                Object connection = Reflection.invokeMethod(statement, "getConnection", new Class[]{});
-                id = Reflection.getField(connection, "clientConnectionId").toString();
-            }
-            return id;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     /**
      * SQL语句检测
      *
@@ -171,10 +149,6 @@ public class SQLStatementHook extends AbstractSqlHook {
             HashMap<String, Object> params = new HashMap<String, Object>();
             params.put("server", server);
             params.put("query", stmt);
-            String connectionId = getSqlConnectionId(server, statement);
-            if (connectionId != null) {
-                params.put(server + "_connection_id", connectionId);
-            }
             HookHandler.doCheck(CheckParameter.Type.SQL, params);
         }
     }

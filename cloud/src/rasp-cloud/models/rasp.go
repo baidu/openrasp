@@ -179,6 +179,20 @@ func RemoveRaspById(id string) (err error) {
 	return mongo.RemoveId(raspCollectionName, id)
 }
 
+func RemoveRaspByIds(appId string, ids []string) (int, error) {
+	selector := bson.M{
+		"_id":    bson.M{"$in": ids},
+		"app_id": appId,
+		"$where": "this.last_heartbeat_time+this.heartbeat_interval+180 < " +
+			strconv.FormatInt(time.Now().Unix(), 10),
+	}
+	info, err := mongo.RemoveAll(raspCollectionName, selector)
+	if err != nil {
+		return 0, err
+	}
+	return info.Removed, nil
+}
+
 func RemoveRaspBySelector(selector map[string]interface{}, appId string) (int, error) {
 	offlineWhere := ""
 	if _, ok := selector["expire_time"]; ok {

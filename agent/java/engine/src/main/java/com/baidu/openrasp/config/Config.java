@@ -83,7 +83,7 @@ public class Config extends FileScanListener {
         SYSLOG_FACILITY("syslog.facility", "1"),
         SYSLOG_RECONNECT_INTERVAL("syslog.reconnect_interval", "300000"),
         LOG_MAXBURST("log.maxburst", "100"),
-        HEARTBEAT_INTERVAL("cloud.heartbeat_interval", "180"),
+        HEARTBEAT_INTERVAL("cloud.heartbeat_interval", "90"),
         HOOK_WHITE("hook.white", ""),
         HOOK_WHITE_ALL("hook.white.ALL", "true"),
         DECOMPILE_ENABLE("decompile.enable", "false"),
@@ -844,7 +844,12 @@ public class Config extends FileScanListener {
             this.sqlCacheCapacity = 1024;
         }
         if (Config.commonLRUCache == null || Config.commonLRUCache.maxSize() != this.sqlCacheCapacity) {
-            Config.commonLRUCache = new LRUCache<Object, String>(this.sqlCacheCapacity);
+            if (Config.commonLRUCache == null) {
+                Config.commonLRUCache = new LRUCache<Object, String>(this.sqlCacheCapacity);
+            } else {
+                Config.commonLRUCache.clear();
+                Config.commonLRUCache = new LRUCache<Object, String>(this.sqlCacheCapacity);
+            }
         }
     }
 

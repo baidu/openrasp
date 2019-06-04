@@ -178,7 +178,7 @@ func AggregationAttackWithUserAgent(startTime int64, endTime int64, size int,
 	appId string) ([][]interface{}, error) {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(10*time.Second))
 	defer cancel()
-	uaAggr := elastic.NewTermsAggregation().Field("user_agent").Size(size).OrderByCount(false)
+	uaAggr := elastic.NewTermsAggregation().Field("header.user-agent.keyword").Size(size).OrderByCount(false)
 	timeQuery := elastic.NewRangeQuery("event_time").Gte(startTime).Lte(endTime)
 	aggrName := "aggr_ua"
 	aggrResult, err := es.ElasticClient.Search(AttackAlarmInfo.EsAliasIndex + "-" + appId).

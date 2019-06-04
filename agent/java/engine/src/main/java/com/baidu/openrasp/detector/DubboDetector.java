@@ -25,6 +25,7 @@ import java.security.ProtectionDomain;
  * Created by tyy on 19-3-18.
  */
 public class DubboDetector extends ServerDetector {
+
     @Override
     public boolean isClassMatched(String className) {
         return "com/alibaba/dubbo/rpc/filter/GenericFilter".equals(className);

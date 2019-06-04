@@ -22,6 +22,7 @@
 #include <map>
 #include <set>
 #include "agent/shared_config_manager.h"
+#include "utils/utf.h"
 
 extern "C"
 {
@@ -134,10 +135,11 @@ void sql_query_error_alarm(char *server, char *query, const std::string &err_cod
     zval *plugin_message = nullptr;
     MAKE_STD_ZVAL(plugin_message);
     char *message_str = nullptr;
+    std::string utf8_err_msg = openrasp::replace_invalid_utf8(err_msg);
     spprintf(&message_str, 0, _("%s error %s detected: %s."),
              server,
              err_code.c_str(),
-             err_msg.c_str());
+             utf8_err_msg.c_str());
     ZVAL_STRING(plugin_message, message_str, 1);
     efree(message_str);
     OpenRASPActionType action = openrasp::scm->get_buildin_check_action(SQL_ERROR);
@@ -159,10 +161,11 @@ void sql_connect_error_alarm(sql_connection_entry *sql_connection_p, const std::
     zval *plugin_message = nullptr;
     MAKE_STD_ZVAL(plugin_message);
     char *message_str = nullptr;
+    std::string utf8_err_msg = openrasp::replace_invalid_utf8(err_msg);
     spprintf(&message_str, 0, _("%s error %s detected: %s."),
              sql_connection_p->get_server().c_str(),
              err_code.c_str(),
-             err_msg.c_str());
+             utf8_err_msg.c_str());
     ZVAL_STRING(plugin_message, message_str, 1);
     efree(message_str);
     OpenRASPActionType action = openrasp::scm->get_buildin_check_action(SQL_ERROR);
