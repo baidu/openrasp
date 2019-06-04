@@ -10,9 +10,9 @@ psql -c "ALTER USER postgres WITH PASSWORD 'postgres';" -U postgres ;
 psql -c "CREATE USER openrasp WITH PASSWORD '123456'" -U postgres;
 
 #openrasp-v8
-mkdir -p $TRAVIS_BUILD_DIR/openrasp-v8/php/build
-pushd $TRAVIS_BUILD_DIR/openrasp-v8/php/build
-cmake ..
+mkdir -p $TRAVIS_BUILD_DIR/openrasp-v8/build
+pushd $TRAVIS_BUILD_DIR/openrasp-v8/build
+cmake -DENABLE_LANGUAGES=php ..
 make -j2 --quiet
 popd
 
