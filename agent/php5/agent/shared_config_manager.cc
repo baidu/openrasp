@@ -312,9 +312,22 @@ bool SharedConfigManager::build_weak_password_array(BaseReader *br)
     {
         return false;
     }
+    const static std::vector<std::string> dafault_weak_passwords =
+        {
+            "",
+            "root",
+            "123",
+            "123456",
+            "a123456",
+            "123456a",
+            "111111",
+            "123123",
+            "admin",
+            "user",
+            "mysql"};
     std::vector<std::string> hook_white_key({"security.weak_passwords"});
-    std::vector<std::string> weak_passwords = br->fetch_strings(hook_white_key, {});
-     std::sort(weak_passwords.begin(), weak_passwords.end());
+    std::vector<std::string> weak_passwords = br->fetch_strings(hook_white_key, dafault_weak_passwords);
+    std::sort(weak_passwords.begin(), weak_passwords.end());
     return build_weak_password_array(weak_passwords);
 }
 
