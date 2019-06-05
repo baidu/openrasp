@@ -12,9 +12,10 @@ psql -c "CREATE USER openrasp WITH PASSWORD '123456'" -U postgres;
 #mongo
 sleep 15
 mongo test --eval 'db.createUser({user:"openrasp",pwd:"rasp#2019",roles:["readWrite"]});'
-mkdir -p /tmp/mongodb/rs0-0  /tmp/mongodb/rs0-1
+mkdir -p /tmp/mongodb/rs0-0  /tmp/mongodb/rs0-1 /tmp/mongodb/ipv6
 mongod --replSet rs0 --port 27018 --bind_ip localhost --dbpath /tmp/mongodb/rs0-0 --smallfiles --oplogSize 128 &
 mongod --replSet rs0 --port 27019 --bind_ip localhost --dbpath /tmp/mongodb/rs0-1 --smallfiles --oplogSize 128 &
+mongod --ipv6 --port 27015 --bind_ip ::1 --dbpath /tmp/mongodb/ipv6 --smallfiles --oplogSize 128 &
 sleep 10
 mongo --port 27018 --eval 'rs.initiate({_id: "rs0",members: [{_id: 0,host: "localhost:27018"},{_id: 1,host: "localhost:27019"}]})'
 

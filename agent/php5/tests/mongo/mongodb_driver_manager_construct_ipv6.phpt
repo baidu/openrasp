@@ -25,7 +25,7 @@ if (!extension_loaded("mongodb")) die("Skipped: mongodb extension required.");
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-$manager = new MongoDB\Driver\Manager("mongodb://[::1]:27017");
+$manager = new MongoDB\Driver\Manager("mongodb://[::1]:27015");
 ?>
 --EXPECTREGEX--
 <\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>
