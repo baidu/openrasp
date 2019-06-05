@@ -51,9 +51,7 @@ public class WeblogicRequestHook extends ServerRequestHook {
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String srcBefore = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
                 "$0,$1,$2", Object.class, Object.class, Object.class);
-        String requestEndSrc = getInvokeStaticSrc(ServerRequestHook.class, "checkRequestEnd", "");
         insertBefore(ctClass, "securedExecute", null, srcBefore);
-        insertAfter(ctClass, "securedExecute", null, requestEndSrc, true);
     }
 
 }

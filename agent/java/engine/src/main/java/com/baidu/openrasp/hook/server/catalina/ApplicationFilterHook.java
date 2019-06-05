@@ -50,9 +50,7 @@ public class ApplicationFilterHook extends ServerRequestHook {
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
                 "$0,$1,$2", Object.class, Object.class, Object.class);
-        String requestEndSrc = getInvokeStaticSrc(ServerRequestHook.class, "checkRequestEnd", "");
         insertBefore(ctClass, "doFilter", null, src);
-        insertAfter(ctClass, "doFilter", null, requestEndSrc, true);
     }
 
 }
