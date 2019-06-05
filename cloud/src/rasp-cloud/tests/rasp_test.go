@@ -236,8 +236,8 @@ func TestDeleteRasp(t *testing.T) {
 			monkey.Unpatch(models.FindRasp)
 			So(r.Status, ShouldBeGreaterThan, 0)
 
-			monkey.Patch(models.RemoveRaspById, func(id string) (err error) {
-				return errors.New("")
+			monkey.Patch(models.RemoveRaspById, func(id []string) (int, error) {
+				return 0, errors.New("")
 			})
 			r = inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
 				"id":     rasp.Id,

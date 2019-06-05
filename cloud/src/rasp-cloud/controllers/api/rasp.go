@@ -20,6 +20,7 @@ import (
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
 	"github.com/astaxie/beego/validation"
+	"fmt"
 )
 
 type RaspController struct {
@@ -106,4 +107,40 @@ func (o *RaspController) Delete() {
 			"count": removedCount,
 		})
 	}
+}
+
+// @router /batch_delete [post]
+func (o *RaspController) BatchDelete() {
+	var param struct {
+		AppId string   `json:"app_id"`
+		Ids   []string `json:"ids"`
+	}
+	o.UnmarshalJson(&param)
+
+	if param.AppId == "" {
+		o.ServeError(http.StatusBadRequest, "the app_id can not be empty")
+	}
+	if len(param.Ids) == 0 {
+		o.ServeError(http.StatusBadRequest, "the id array can not be empty")
+	}
+	if len(param.Ids) > 512 {
+		o.ServeError(http.StatusBadRequest, "the length of ids array can not be greater than 512")
+	}
+
+	for _, id := range param.Ids {
+		if len(id) > 512 {
+			o.ServeError(http.StatusBadRequest, "the length of id can not be greater than 512")
+		}
+	}
+
+	count, err := models.RemoveRaspByIds(param.AppId, param.Ids)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to remove rasp", err)
+	}
+
+	models.AddOperation(param.AppId, models.OperationTypeDeleteRasp, o.Ctx.Input.IP(),
+		"Batch deleted RASP agent by rasp id: "+fmt.Sprintf("%v", param.Ids))
+	o.Serve(map[string]interface{}{
+		"count": count,
+	})
 }

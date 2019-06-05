@@ -668,6 +668,7 @@ int main() {
     utils/net.cc \
     utils/JsonReader.cc \
     utils/YamlReader.cc \
+    utils/utf.cc \
     agent/base_manager.cc \
     agent/shared_log_manager.cc \
     agent/shared_config_manager.cc \

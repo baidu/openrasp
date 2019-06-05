@@ -95,7 +95,7 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
      */
     public static boolean checkSqlErrorCode(SQLException e) {
         if (e != null && e.getErrorCode() == 0) {
-            String message = "Get error code exceptions,check mysql version and database driver compatibility issues.";
+            String message = "Unable to derive error code from SQL exceptions. Please refer to https://rasp.baidu.com/doc/usage/exception.html#faq-errorcode for details.";
             int errorCode = ErrorType.HOOK_ERROR.getCode();
             HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
             return true;

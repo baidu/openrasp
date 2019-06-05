@@ -220,6 +220,15 @@ func init() {
 
     beego.GlobalControllerRouter["rasp-cloud/controllers/api:RaspController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:RaspController"],
         beego.ControllerComments{
+            Method: "BatchDelete",
+            Router: `/batch_delete`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:RaspController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:RaspController"],
+        beego.ControllerComments{
             Method: "Delete",
             Router: `/delete`,
             AllowHTTPMethods: []string{"post"},
