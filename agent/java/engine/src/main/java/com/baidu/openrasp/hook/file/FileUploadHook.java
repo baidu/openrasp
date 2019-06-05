@@ -17,14 +17,19 @@
 package com.baidu.openrasp.hook.file;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -43,7 +48,7 @@ public class FileUploadHook extends AbstractClassHook {
 
     @Override
     public String getType() {
-        return "Multipart";
+        return "fileUpload";
     }
 
     @Override
@@ -56,18 +61,51 @@ public class FileUploadHook extends AbstractClassHook {
 
     public static void cacheFileUploadParam(Object object) {
         List<Object> list = (List<Object>) object;
-        if (!list.isEmpty()) {
-            HashMap<String, String[]> fileUploadCache = HookHandler.requestCache.get().getFileUploadCache();
+        if (list != null && !list.isEmpty()) {
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            HashMap<String, String[]> fileUploadCache = new HashMap<String, String[]>();
             for (Object o : list) {
                 boolean isFormField = (Boolean) Reflection.invokeMethod(o, "isFormField", new Class[]{});
-                //只获取multipart中的非文件字段值
                 if (isFormField) {
                     String fieldName = Reflection.invokeStringMethod(o, "getFieldName", new Class[]{});
                     String fieldValue = Reflection.invokeStringMethod(o, "getString", new Class[]{});
                     fileUploadCache.put(fieldName, new String[]{fieldValue});
+                } else {
+                    String name = Reflection.invokeStringMethod(o, "getFieldName", new Class[]{});
+                    params.put("name", name != null ? name : "");
+                    String filename = Reflection.invokeStringMethod(o, "getName", new Class[]{});
+                    params.put("filename", filename);
+                    byte[] content = (byte[]) Reflection.invokeMethod(o, "get", new Class[]{});
+                    if (content.length > 4 * 1024) {
+                        content = Arrays.copyOf(content, 4 * 1024);
+                    }
+                    try {
+                        params.put("content", new String(content, getCharSet(o)));
+                    } catch (Exception e) {
+                        params.put("content", new String(content));
+                        String message = e.getMessage();
+                        int errorCode = ErrorType.HOOK_ERROR.getCode();
+                        HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                    }
                 }
             }
+            //只缓存multipart中的非文件字段值
+            HookHandler.requestCache.get().setFileUploadCache(fileUploadCache);
+            if (!params.isEmpty()) {
+                HookHandler.doCheck(CheckParameter.Type.FILEUPLOAD, params);
+            }
         }
+    }
 
+    private static String getCharSet(Object fileItem) {
+        String charSet = Reflection.invokeStringMethod(fileItem, "getCharSet", new Class[]{});
+        if (charSet == null) {
+            charSet = HookHandler.requestCache.get().getCharacterEncoding();
+        }
+        if (!StringUtils.isEmpty(charSet)) {
+            return charSet;
+        } else {
+            return "UTF-8";
+        }
     }
 }

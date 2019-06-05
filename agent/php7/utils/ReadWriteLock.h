@@ -34,11 +34,9 @@ public:
   ReadWriteLock(pthread_rwlock_t *rwlock, enum LOCK_TYPE lock_type);
   ~ReadWriteLock();
 
-  bool read_lock();
   bool read_unlock();
   bool read_try_lock();
 
-  bool write_lock();
   bool write_unlock();
   bool write_try_lock();
 

@@ -82,7 +82,7 @@ bool SharedConfigManager::build_check_type_white_array(std::map<std::string, int
     }
     DoubleArrayTrie dat;
     dat.build(urls.size(), &urls, 0, &values);
-    write_check_type_white_array_to_shm(dat.array(), dat.total_size());
+    return write_check_type_white_array_to_shm(dat.array(), dat.total_size());
 }
 
 bool SharedConfigManager::build_check_type_white_array(std::map<std::string, std::vector<std::string>> &url_type_map)
@@ -104,7 +104,7 @@ bool SharedConfigManager::build_check_type_white_array(std::map<std::string, std
         }
         white_mask_map.insert({(white_item.first == "*") ? "" : white_item.first, bit_mask});
     }
-    build_check_type_white_array(white_mask_map);
+    return build_check_type_white_array(white_mask_map);
 }
 
 long SharedConfigManager::get_config_last_update()
@@ -236,10 +236,12 @@ bool SharedConfigManager::build_hostname()
     if (!gethostname(host_name, sizeof(host_name) - 1))
     {
         hostname = std::string(host_name);
+        return true;
     }
     else
     {
         openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("gethostname error: %s"), strerror(errno));
+        return false;
     }
 }
 

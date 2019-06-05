@@ -143,15 +143,6 @@ std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D)
     return array;
 }
 
-void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC)
-{
-    auto array = format_debug_backtrace_arr(TSRMLS_C);
-    for (auto &str : array)
-    {
-        add_next_index_stringl(backtrace_arr, str.c_str(), str.length(), 1);
-    }
-}
-
 int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC)
 {
     struct stat sb;

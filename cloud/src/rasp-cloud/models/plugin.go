@@ -42,6 +42,7 @@ type Plugin struct {
 	UploadTime             int64                  `json:"upload_time" bson:"upload_time"`
 	Version                string                 `json:"version" bson:"version"`
 	Md5                    string                 `json:"md5" bson:"md5"`
+	OriginContent          string                 `json:"origin_content" bson:"origin_content"`
 	Content                string                 `json:"plugin,omitempty" bson:"content"`
 	DefaultAlgorithmConfig map[string]interface{} `json:"-" bson:"default_algorithm_config"`
 	AlgorithmConfig        map[string]interface{} `json:"algorithm_config" bson:"algorithm_config"`
@@ -81,7 +82,18 @@ func init() {
 }
 
 func AddPlugin(pluginContent []byte, appId string) (plugin *Plugin, err error) {
+	plugin, err = generatePlugin(pluginContent, appId)
+	if err != nil {
+		return
+	}
+	err = addPluginToDb(plugin)
+	if err != nil {
+		return nil, err
+	}
+	return
+}
 
+func generatePlugin(pluginContent []byte, appId string) (plugin *Plugin, err error) {
 	pluginReader := bufio.NewReader(bytes.NewReader(pluginContent))
 	firstLine, err := pluginReader.ReadString('\n')
 	if err != nil {
@@ -127,32 +139,31 @@ func AddPlugin(pluginContent []byte, appId string) (plugin *Plugin, err error) {
 	if err != nil {
 		return nil, errors.New("failed to unmarshal algorithm json data: " + err.Error())
 	}
-	return addPluginToDb(newVersion, newPluginName, pluginContent, appId, algorithmData)
-
-}
-
-func addPluginToDb(version string, name string, content []byte, appId string,
-	defaultAlgorithmConfig map[string]interface{}) (plugin *Plugin, err error) {
-	newMd5 := fmt.Sprintf("%x", md5.Sum(content))
+	newMd5 := fmt.Sprintf("%x", md5.Sum(pluginContent))
 	plugin = &Plugin{
 		Id:                     generatePluginId(appId),
-		Version:                version,
-		Name:                   name,
+		Version:                newVersion,
+		Name:                   newPluginName,
 		Md5:                    newMd5,
-		Content:                string(content),
+		OriginContent:          string(pluginContent),
+		Content:                string(pluginContent),
 		UploadTime:             time.Now().UnixNano() / 1000000,
 		AppId:                  appId,
-		DefaultAlgorithmConfig: defaultAlgorithmConfig,
-		AlgorithmConfig:        defaultAlgorithmConfig,
+		DefaultAlgorithmConfig: algorithmData,
+		AlgorithmConfig:        algorithmData,
 	}
+	return plugin, nil
+}
+
+func addPluginToDb(plugin *Plugin) (err error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
 	var count int
 	if conf.AppConfig.MaxPlugins > 0 {
-		_, oldPlugins, err := GetPluginsByApp(appId, conf.AppConfig.MaxPlugins-1, 0)
+		_, oldPlugins, err := GetPluginsByApp(plugin.AppId, conf.AppConfig.MaxPlugins-1, 0)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		count = len(oldPlugins)
 		if count > 0 {
@@ -160,14 +171,14 @@ func addPluginToDb(version string, name string, content []byte, appId string,
 				app := &App{}
 				err = mongo.FindOne("app", bson.M{"selected_plugin_id": oldPlugin.Id}, app)
 				if err != nil && err != mgo.ErrNotFound {
-					return nil, err
+					return err
 				}
 				if app != nil {
 					continue
 				}
 				err = mongo.RemoveId(pluginCollectionName, oldPlugin.Id)
 				if err != nil {
-					return nil, err
+					return err
 				}
 			}
 		}

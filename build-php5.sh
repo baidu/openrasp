@@ -2,10 +2,9 @@
 # 中文 PHP 扩展编译说明
 # https://rasp.baidu.com/doc/hacking/compile/php.html
 
-cd "$(dirname "$0")"
-
 set -ex
-script_base="$(readlink -f $(dirname "$0"))"
+script_base="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd "$script_base"
 
 # PHP 版本和架构
 php_version=$(php -r 'echo PHP_MAJOR_VERSION, ".", PHP_MINOR_VERSION;')
@@ -26,9 +25,14 @@ case "$(uname -s)" in
 		;;
 esac
 
-# 下载 libv8
-curl https://packages.baidu.com/app/openrasp/libv8-5.9-"$php_os".tar.gz -o /tmp/libv8-5.9.tar.gz
-tar -xf /tmp/libv8-5.9.tar.gz -C /tmp/
+# 编译 openrasp-v8
+git submodule update --init --recursive
+mkdir -p openrasp-v8/php/build
+cd openrasp-v8/php/build
+cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+make
+
+cd "$script_base"
 
 # 确定编译目录
 output_base="$script_base/rasp-php-$(date +%Y-%m-%d)"
@@ -38,14 +42,15 @@ output_ext="$output_base/php${php_zts}/${php_os}-php${php_version}-${php_arch}"
 cd agent/php5
 phpize --clean
 phpize
+
 if [[ $php_os == "macos" ]]; then
-	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext=/usr/local/homebrew/opt/gettext -q ${extra_config_opt}
+	./configure --with-openrasp-v8=${script_base}/openrasp-v8/ --with-gettext=/usr/local/homebrew/opt/gettext -q ${extra_config_opt}
 else
 	curl https://packages.baidu.com/app/openrasp/static-lib.tar.bz2 -o /tmp/static-lib.tar.bz2
 	tar -xf /tmp/static-lib.tar.bz2 -C /tmp/
 
-	./configure --with-v8=/tmp/libv8-5.9-${php_os}/ --with-gettext --enable-openrasp-remote-manager \
-		--with-curl=/tmp/static-lib --with-openssl=/tmp/static-lib --with-pcre-regex=/tmp/static-lib -q ${extra_config_opt}
+	./configure --with-openrasp-v8=${script_base}/openrasp-v8/ --with-gettext --enable-openrasp-remote-manager \
+		--with-curl=/tmp/static-lib --with-openssl=/tmp/static-lib -q ${extra_config_opt}
 fi
 
 make
@@ -70,7 +75,9 @@ tar xvf locale.tar && rm -f locale.tar
 
 # 打包
 cd "$script_base"
-tar --numeric-owner --group=0 --owner=0 -cjvf "$script_base/rasp-php.tar.bz2" "$(basename "$output_base")"
+if [[ -z "$NO_TAR" ]]; then
+	tar --numeric-owner --group=0 --owner=0 -cjvf "$script_base/rasp-php.tar.bz2" "$(basename "$output_base")"
+fi
 
 
 

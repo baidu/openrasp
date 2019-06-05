@@ -83,7 +83,7 @@ public class Config extends FileScanListener {
         SYSLOG_FACILITY("syslog.facility", "1"),
         SYSLOG_RECONNECT_INTERVAL("syslog.reconnect_interval", "300000"),
         LOG_MAXBURST("log.maxburst", "100"),
-        HEARTBEAT_INTERVAL("cloud.heartbeat_interval", "180"),
+        HEARTBEAT_INTERVAL("cloud.heartbeat_interval", "90"),
         HOOK_WHITE("hook.white", ""),
         HOOK_WHITE_ALL("hook.white.ALL", "true"),
         DECOMPILE_ENABLE("decompile.enable", "false"),
@@ -119,7 +119,7 @@ public class Config extends FileScanListener {
     public static String baseDirectory;
     private static Integer watchId;
     //全局lru的缓存
-    public static LRUCache<String, String> commonLRUCache;
+    public static LRUCache<Object, String> commonLRUCache;
 
     private String configFileDir;
     private int pluginMaxStack;
@@ -166,7 +166,7 @@ public class Config extends FileScanListener {
             CustomResponseHtml.load(baseDirectory);
         }
         //初始化全局缓存
-        commonLRUCache = new LRUCache<String, String>(getConfig().getSqlCacheCapacity());
+        commonLRUCache = new LRUCache<Object, String>(getConfig().getSqlCacheCapacity());
         LOGGER.info("baseDirectory: " + baseDirectory);
     }
 
@@ -427,7 +427,7 @@ public class Config extends FileScanListener {
      *
      * @return 超时时间
      */
-    public synchronized long getPluginTimeout() {
+    public long getPluginTimeout() {
         return pluginTimeout;
     }
 
@@ -448,7 +448,7 @@ public class Config extends FileScanListener {
      *
      * @return 页面path前缀
      */
-    public synchronized String getInjectUrlPrefix() {
+    public String getInjectUrlPrefix() {
         return injectUrlPrefix;
     }
 
@@ -470,7 +470,7 @@ public class Config extends FileScanListener {
      *
      * @return 最大长度
      */
-    public synchronized int getBodyMaxBytes() {
+    public int getBodyMaxBytes() {
         return bodyMaxBytes;
     }
 
@@ -486,7 +486,7 @@ public class Config extends FileScanListener {
         }
     }
 
-    public synchronized int getSqlSlowQueryMinCount() {
+    public int getSqlSlowQueryMinCount() {
         return sqlSlowQueryMinCount;
     }
 
@@ -502,7 +502,7 @@ public class Config extends FileScanListener {
      *
      * @return 需要忽略的挂钩点列表
      */
-    public synchronized String[] getIgnoreHooks() {
+    public String[] getIgnoreHooks() {
         return this.ignoreHooks;
     }
 
@@ -520,7 +520,7 @@ public class Config extends FileScanListener {
      *
      * @return 栈信息最大深度
      */
-    public synchronized int getPluginMaxStack() {
+    public int getPluginMaxStack() {
         return pluginMaxStack;
     }
 
@@ -541,7 +541,7 @@ public class Config extends FileScanListener {
      *
      * @return 需要监控的反射方法
      */
-    public synchronized String[] getReflectionMonitorMethod() {
+    public String[] getReflectionMonitorMethod() {
         return reflectionMonitorMethod;
     }
 
@@ -559,7 +559,7 @@ public class Config extends FileScanListener {
      *
      * @return 拦截页面url
      */
-    public synchronized String getBlockUrl() {
+    public String getBlockUrl() {
         return blockUrl;
     }
 
@@ -577,7 +577,7 @@ public class Config extends FileScanListener {
      *
      * @return
      */
-    public synchronized int getLogMaxStackSize() {
+    public int getLogMaxStackSize() {
         return logMaxStackSize;
     }
 
@@ -598,7 +598,7 @@ public class Config extends FileScanListener {
      *
      * @return ognl表达式最短长度
      */
-    public synchronized int getOgnlMinLength() {
+    public int getOgnlMinLength() {
         return ognlMinLength;
     }
 
@@ -621,7 +621,7 @@ public class Config extends FileScanListener {
      *
      * @return true开启，false关闭
      */
-    public synchronized boolean getEnforcePolicy() {
+    public boolean getEnforcePolicy() {
         return enforcePolicy;
     }
 
@@ -639,7 +639,7 @@ public class Config extends FileScanListener {
      *
      * @return 状态码
      */
-    public synchronized int getBlockStatusCode() {
+    public int getBlockStatusCode() {
         return blockStatusCode;
     }
 
@@ -661,7 +661,7 @@ public class Config extends FileScanListener {
      *
      * @return debugLevel 级别
      */
-    public synchronized int getDebugLevel() {
+    public int getDebugLevel() {
         return debugLevel;
     }
 
@@ -695,7 +695,7 @@ public class Config extends FileScanListener {
      *
      * @return 配置的 json 对象
      */
-    public synchronized JsonObject getAlgorithmConfig() {
+    public JsonObject getAlgorithmConfig() {
         return algorithmConfig;
     }
 
@@ -713,7 +713,7 @@ public class Config extends FileScanListener {
      *
      * @return 请求参数编码
      */
-    public synchronized String getRequestParamEncoding() {
+    public String getRequestParamEncoding() {
         return requestParamEncoding;
     }
 
@@ -735,7 +735,7 @@ public class Config extends FileScanListener {
      *
      * @return 返回contentType类型
      */
-    public synchronized String getBlockJson() {
+    public String getBlockJson() {
         return blockJson;
     }
 
@@ -754,7 +754,7 @@ public class Config extends FileScanListener {
      *
      * @return 返回contentType类型
      */
-    public synchronized String getBlockXml() {
+    public String getBlockXml() {
         return blockXml;
     }
 
@@ -773,7 +773,7 @@ public class Config extends FileScanListener {
      *
      * @return 返回contentType类型
      */
-    public synchronized String getBlockHtml() {
+    public String getBlockHtml() {
         return blockHtml;
     }
 
@@ -792,7 +792,7 @@ public class Config extends FileScanListener {
      *
      * @return 返回是否进入插件
      */
-    public synchronized boolean getPluginFilter() {
+    public boolean getPluginFilter() {
         return pluginFilter;
     }
 
@@ -811,7 +811,7 @@ public class Config extends FileScanListener {
      *
      * @return 返回请求头
      */
-    public synchronized String getClientIp() {
+    public String getClientIp() {
         return clientIp;
     }
 
@@ -829,7 +829,7 @@ public class Config extends FileScanListener {
      *
      * @return 缓存的大小
      */
-    public synchronized int getSqlCacheCapacity() {
+    public int getSqlCacheCapacity() {
         return sqlCacheCapacity;
     }
 
@@ -844,7 +844,12 @@ public class Config extends FileScanListener {
             this.sqlCacheCapacity = 1024;
         }
         if (Config.commonLRUCache == null || Config.commonLRUCache.maxSize() != this.sqlCacheCapacity) {
-            Config.commonLRUCache = new LRUCache<String, String>(this.sqlCacheCapacity);
+            if (Config.commonLRUCache == null) {
+                Config.commonLRUCache = new LRUCache<Object, String>(this.sqlCacheCapacity);
+            } else {
+                Config.commonLRUCache.clear();
+                Config.commonLRUCache = new LRUCache<Object, String>(this.sqlCacheCapacity);
+            }
         }
     }
 
@@ -853,7 +858,7 @@ public class Config extends FileScanListener {
      *
      * @return syslog开关状态
      */
-    public synchronized boolean getSyslogSwitch() {
+    public boolean getSyslogSwitch() {
         return syslogSwitch;
     }
 
@@ -871,7 +876,7 @@ public class Config extends FileScanListener {
      *
      * @return syslog上传日志的地址
      */
-    public synchronized String getSyslogUrl() {
+    public String getSyslogUrl() {
         return syslogUrl;
     }
 
@@ -889,7 +894,7 @@ public class Config extends FileScanListener {
      *
      * @return syslog的layout中的tag字段信息
      */
-    public synchronized String getSyslogTag() {
+    public String getSyslogTag() {
         return syslogTag;
     }
 
@@ -907,7 +912,7 @@ public class Config extends FileScanListener {
      *
      * @return syslog的facility字段信息
      */
-    public synchronized int getSyslogFacility() {
+    public int getSyslogFacility() {
         return syslogFacility;
     }
 
@@ -928,7 +933,7 @@ public class Config extends FileScanListener {
      *
      * @return syslog的重连时间
      */
-    public synchronized int getSyslogReconnectInterval() {
+    public int getSyslogReconnectInterval() {
         return syslogReconnectInterval;
     }
 
@@ -949,7 +954,7 @@ public class Config extends FileScanListener {
      *
      * @return 日志每分钟上传的条数
      */
-    public synchronized int getLogMaxBurst() {
+    public int getLogMaxBurst() {
         return logMaxBurst;
     }
 
@@ -970,7 +975,7 @@ public class Config extends FileScanListener {
      *
      * @return 是否禁用全部hook点
      */
-    public synchronized boolean getHookWhiteAll() {
+    public boolean getHookWhiteAll() {
         return hookWhiteAll;
     }
 
@@ -988,7 +993,7 @@ public class Config extends FileScanListener {
      *
      * @return 云控开关状态
      */
-    public synchronized boolean getCloudSwitch() {
+    public boolean getCloudSwitch() {
         return cloudSwitch;
     }
 
@@ -1006,7 +1011,7 @@ public class Config extends FileScanListener {
      *
      * @return 返回云控地址
      */
-    public synchronized String getCloudAddress() {
+    public String getCloudAddress() {
         return cloudAddress;
     }
 
@@ -1024,7 +1029,7 @@ public class Config extends FileScanListener {
      *
      * @return 云控的请求的appid
      */
-    public synchronized String getCloudAppId() {
+    public String getCloudAppId() {
         return cloudAppId;
     }
 
@@ -1042,7 +1047,7 @@ public class Config extends FileScanListener {
      *
      * @return 云控的请求的appSecret
      */
-    public synchronized String getCloudAppSecret() {
+    public String getCloudAppSecret() {
         return cloudAppSecret;
     }
 
@@ -1060,7 +1065,7 @@ public class Config extends FileScanListener {
      *
      * @return 云控的心跳请求间隔
      */
-    public synchronized int getHeartbeatInterval() {
+    public int getHeartbeatInterval() {
         return heartbeatInterval;
     }
 
@@ -1081,7 +1086,7 @@ public class Config extends FileScanListener {
      *
      * @return java反编译的开关状态
      */
-    public synchronized boolean getDecompileEnable() {
+    public boolean getDecompileEnable() {
         return decompileEnable;
     }
 
@@ -1099,7 +1104,7 @@ public class Config extends FileScanListener {
      *
      * @return response header数组
      */
-    public synchronized Map<String, String> getResponseHeaders() {
+    public Map<String, String> getResponseHeaders() {
         return responseHeaders;
     }
 
@@ -1117,7 +1122,7 @@ public class Config extends FileScanListener {
      *
      * @return log4j最大日志备份天数
      */
-    public synchronized int getLogMaxBackUp() {
+    public int getLogMaxBackUp() {
         return logMaxBackUp;
     }
 
@@ -1126,8 +1131,8 @@ public class Config extends FileScanListener {
      *
      * @param logMaxBackUp log4j最大日志备份天数
      */
-    public void setLogMaxBackUp(String logMaxBackUp) {
-        this.logMaxBackUp = Integer.parseInt(logMaxBackUp);
+    public synchronized void setLogMaxBackUp(String logMaxBackUp) {
+        this.logMaxBackUp = Integer.parseInt(logMaxBackUp) + 1;
         if (this.logMaxBackUp <= 0) {
             this.logMaxBackUp = 30;
         }
@@ -1203,8 +1208,6 @@ public class Config extends FileScanListener {
                 setSyslogFacility(value);
             } else if (Item.SYSLOG_RECONNECT_INTERVAL.key.equals(key)) {
                 setSyslogReconnectInterval(value);
-            } else if (Item.HOOK_WHITE_ALL.key.equals(key)) {
-                setHookWhiteAll(value);
             } else if (Item.LOG_MAXBURST.key.equals(key)) {
                 setLogMaxBurst(value);
             } else if (Item.HEARTBEAT_INTERVAL.key.equals(key)) {

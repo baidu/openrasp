@@ -24,14 +24,14 @@ import java.util.Scanner;
 import static com.baidu.rasp.RaspError.E10001;
 
 /**
- * @description: jbossEPA自动化安装
+ * @description: jbossEAP自动化安装
  * @author: anyang
  * @create: 2019/03/16 21:03
  */
 public class JbossEAPInstaller extends BaseStandardInstaller {
-    private static String OPENRASP_START_TAG = "### BEGIN OPENRASP - DO NOT MODIFY ###\n";
-    private static String OPENRASP_END_TAG = "### END OPENRASP ###\n";
-    private static String OPENRASP_CONFIG = "\tJAVA_OPTS=\"${JAVA_OPTS} -javaagent:${JBOSS_HOME}/rasp/rasp.jar\"\n" +
+    private static final String OPENRASP_START_TAG = "### BEGIN OPENRASP - DO NOT MODIFY ###\n";
+    private static final String OPENRASP_END_TAG = "### END OPENRASP ###\n";
+    private static final String OPENRASP_CONFIG = "\tJAVA_OPTS=\"${JAVA_OPTS} -javaagent:${JBOSS_HOME}/rasp/rasp.jar\"\n" +
             "\tJAVA_OPTS=\"$JAVA_OPTS -Djboss.modules.system.pkgs=org.jboss.byteman,org.jboss.logmanager,com.baidu.openrasp\"\n" +
             "\tJAVA_OPTS=\"$JAVA_OPTS -Djava.util.logging.manager=org.jboss.logmanager.LogManager\"\n";
 

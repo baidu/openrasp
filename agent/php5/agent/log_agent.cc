@@ -22,6 +22,7 @@
 #include <algorithm>
 #include "shared_config_manager.h"
 #include "agent/utils/os.h"
+#include "utils/file.h"
 
 namespace openrasp
 {
@@ -36,7 +37,7 @@ LogAgent::LogAgent()
 
 void LogAgent::write_pid_to_shm(pid_t agent_pid)
 {
-	oam->agent_ctrl_block->set_log_agent_id(agent_pid);
+	oam->set_log_agent_id(agent_pid);
 }
 
 void LogAgent::run()
@@ -56,7 +57,7 @@ void LogAgent::run()
 	std::vector<LogCollectItem *> log_dirs{&alarm_dir_info, &policy_dir_info, &plugin_dir_info, &rasp_dir_info};
 	sleep(1);
 
-	long current_interval = LogAgent::log_push_interval;
+	unsigned long current_interval = LogAgent::log_push_interval;
 	while (true)
 	{
 		update_log_level();
@@ -69,7 +70,7 @@ void LogAgent::run()
 			}
 			bool file_rotate = ldi->need_rotate();
 			if (ldi->get_collect_enable() &&
-				access(ldi->get_active_log_file().c_str(), F_OK) == 0)
+				file_exists(ldi->get_active_log_file()))
 			{
 				ldi->determine_fpos();
 				std::string post_body;
@@ -83,9 +84,10 @@ void LogAgent::run()
 						ldi->update_last_post_time();
 						ldi->save_status_snapshot();
 					}
-					current_interval = result
-										   ? LogAgent::log_push_interval
-										   : increase_interval_by_factor(current_interval, LogAgent::factor, LogAgent::max_interval);
+					current_interval =
+						result
+							? LogAgent::log_push_interval
+							: increase_interval_by_factor(current_interval, LogAgent::factor, LogAgent::max_interval);
 				}
 			}
 			ldi->handle_rotate(file_rotate);
@@ -94,7 +96,7 @@ void LogAgent::run()
 		for (long i = 0; i < current_interval; ++i)
 		{
 			sleep(1);
-			if (!pid_alive(std::to_string(oam->agent_ctrl_block->get_master_pid())) ||
+			if (!pid_alive(std::to_string(oam->get_master_pid())) ||
 				!pid_alive(std::to_string(supervisor_pid)) ||
 				LogAgent::signal_received == SIGTERM)
 			{

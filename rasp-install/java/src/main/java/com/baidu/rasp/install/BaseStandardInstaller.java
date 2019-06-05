@@ -135,11 +135,11 @@ public abstract class BaseStandardInstaller implements Installer {
                 target.getParentFile().mkdir();
                 target.createNewFile();
             }
-            FileWriter writer = new FileWriter(target);
+            FileOutputStream outputStream = new FileOutputStream(target);
             InputStream is = this.getClass().getResourceAsStream("/openrasp.yml");
-            IOUtils.copy(is, writer, "UTF-8");
+            IOUtils.copy(is, outputStream);
             is.close();
-            writer.close();
+            outputStream.close();
 
             //配置云控参数
             setCloudArgs(App.url, App.appId, App.appSecret);
@@ -207,9 +207,9 @@ public abstract class BaseStandardInstaller implements Installer {
                     map.put("cloud.backend_url", url);
                     map.put("cloud.app_id", appId);
                     map.put("cloud.app_secret", appSecret);
-                    FileWriter writer = new FileWriter(yamlFile, true);
+                    BufferedWriter writer = new BufferedWriter (new OutputStreamWriter (new FileOutputStream (yamlFile,true),"UTF-8"));
                     writer.write(LINE_SEP);
-                    writer.write("#云控配置");
+                    writer.write("# <remote management>");
                     writer.write(LINE_SEP);
                     DumperOptions options = new DumperOptions();
                     options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);

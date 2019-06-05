@@ -15,7 +15,7 @@ CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("mysqli")) die("Skipped: mysqli extension required.");
 if (!extension_loaded("pdo")) die("Skipped: pdo extension required.");
-@$con = mysqli_connect('127.0.0.1', 'root');
+@$con = mysqli_connect('127.0.0.1', 'root', 'rasp#2019');
 if (mysqli_connect_errno()) die("Skipped: can not connect to MySQL " . mysqli_connect_error());
 mysqli_close($con);
 ?>
@@ -23,7 +23,7 @@ mysqli_close($con);
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-$con = new PDO('mysql:host=127.0.0.1;port=3306', 'root');
+include('pdo_mysql.inc');
 $con->exec("select GeometryCollection((select 1 from (select * from (select user())a)b))");
 ?>
 --EXPECTREGEX--

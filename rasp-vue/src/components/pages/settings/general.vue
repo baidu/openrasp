@@ -67,7 +67,13 @@
             调试开关 [0表示关闭，1以上的值表示开启]
           </label>
           <input v-model.number="data['debug.level']" type="number" class="form-control" placeholder="0">
-        </div>        
+        </div>    
+        <div class="form-group">
+          <label class="form-label">
+            [插件] 单个hook点最大执行时间（ms）
+          </label>
+          <input v-model.number="data['plugin.timeout.millis']" type="number" class="form-control" placeholder="100">
+        </div>
         <div class="form-group">
           <label class="form-label">
             [日志] 报警日志记录的最大堆栈深度
@@ -94,7 +100,7 @@
               开启反汇编功能
               <a href="https://rasp.baidu.com/doc/setup/panel.html#decompiler" target="_blank">
                 [帮助文档]
-              </a>            
+              </a>
             </span>
           </label>
         </div>          

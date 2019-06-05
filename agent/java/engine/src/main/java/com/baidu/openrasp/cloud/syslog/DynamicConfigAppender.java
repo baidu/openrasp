@@ -123,12 +123,18 @@ public class DynamicConfigAppender {
         for (AppenderMappedLogger type : AppenderMappedLogger.values()) {
             if (type.ordinal() <= 3) {
                 if ("root".equals(type.getLogger())) {
-                    Logger.getRootLogger().getAppender(type.getAppender()).clearFilters();
-                    Logger.getRootLogger().getAppender(type.getAppender()).addFilter(createBurstFilter());
+                    Appender appender = Logger.getRootLogger().getAppender(type.getAppender());
+                    if (appender instanceof FileAppender) {
+                        appender.clearFilters();
+                        appender.addFilter(createBurstFilter());
+                    }
                 } else {
                     Logger logger = Logger.getLogger(type.getLogger());
-                    logger.getAppender(type.getAppender()).clearFilters();
-                    logger.getAppender(type.getAppender()).addFilter(createBurstFilter());
+                    Appender appender = logger.getAppender(type.getAppender());
+                    if (appender instanceof FileAppender) {
+                        appender.clearFilters();
+                        appender.addFilter(createBurstFilter());
+                    }
                 }
             }
         }
@@ -180,7 +186,7 @@ public class DynamicConfigAppender {
             if (type.ordinal() <= 3) {
                 if ("root".equals(type.getLogger())) {
                     Appender appender = Logger.getRootLogger().getAppender(type.getAppender());
-                    if (appender != null) {
+                    if (appender instanceof FileAppender) {
                         OpenraspDailyRollingFileAppender fileAppender = (OpenraspDailyRollingFileAppender) appender;
                         fileAppender.setMaxBackupIndex(logMaxBackup);
                         fileAppenderRollFiles(fileAppender);
@@ -188,7 +194,7 @@ public class DynamicConfigAppender {
                 } else {
                     Logger logger = Logger.getLogger(type.getLogger());
                     Appender appender = logger.getAppender(type.getAppender());
-                    if (appender != null) {
+                    if (appender instanceof FileAppender) {
                         OpenraspDailyRollingFileAppender fileAppender = (OpenraspDailyRollingFileAppender) appender;
                         fileAppender.setMaxBackupIndex(logMaxBackup);
                         fileAppenderRollFiles(fileAppender);
@@ -199,7 +205,7 @@ public class DynamicConfigAppender {
     }
 
     //手动触发日志文件rotate
-    private static void fileAppenderRollFiles(OpenraspDailyRollingFileAppender fileAppender){
+    private static void fileAppenderRollFiles(OpenraspDailyRollingFileAppender fileAppender) {
         try {
             String fileName = fileAppender.getFile();
             fileAppender.rollFiles(new File(fileName));

@@ -49,6 +49,8 @@ CheckTypeTransfer::CheckTypeTransfer()
   insert(XSS_USER_INPUT, "xss_userinput", true);
   insert(SQL_ERROR, "sql_exception", true);
   insert(WEBSHELL_LD_PRELOAD, "webshell_ld_preload", true);
+  insert(REQUEST, "request");
+  insert(REQUEST_END, "requestEnd");
 }
 
 std::string CheckTypeTransfer::type_to_name(OpenRASPCheckType type) const

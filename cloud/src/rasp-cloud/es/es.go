@@ -32,6 +32,7 @@ var (
 	Version       string
 	ttlIndexes    = make(chan map[string]time.Duration, 1)
 	minEsVersion  = "5.6.0"
+	maxEsVersion  = "7.0.0"
 )
 
 func init() {
@@ -39,7 +40,10 @@ func init() {
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
 		esAddr := conf.AppConfig.EsAddr
 		client, err := elastic.NewSimpleClient(elastic.SetURL(esAddr),
-			elastic.SetBasicAuth(conf.AppConfig.EsUser, conf.AppConfig.EsPwd))
+			elastic.SetBasicAuth(conf.AppConfig.EsUser, conf.AppConfig.EsPwd),
+			elastic.SetSnifferTimeoutStartup(5*time.Second),
+			elastic.SetSnifferTimeout(5*time.Second),
+			elastic.SetSnifferInterval(30*time.Minute))
 		if err != nil {
 			tools.Panic(tools.ErrCodeESInitFailed, "init ES failed", err)
 		}
@@ -53,6 +57,11 @@ func init() {
 		if strings.Compare(Version, minEsVersion) < 0 {
 			tools.Panic(tools.ErrCodeESInitFailed, "unable to support the ElasticSearch with a version lower than "+
 				minEsVersion+ ","+ " the current version is "+ Version, nil)
+		}
+		if strings.Compare(Version, maxEsVersion) >= 0 {
+			tools.Panic(tools.ErrCodeESInitFailed,
+				"unable to support the ElasticSearch with a version greater than or equal to "+
+					maxEsVersion+ ","+ " the current version is "+ Version, nil)
 		}
 		ElasticClient = client
 	}

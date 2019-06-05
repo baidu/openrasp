@@ -22,6 +22,7 @@ import (
 	"time"
 	"strconv"
 	"errors"
+	"github.com/astaxie/beego/httplib"
 )
 
 type Rasp struct {
@@ -176,6 +177,20 @@ func RemoveRaspById(id string) (err error) {
 	return mongo.RemoveId(raspCollectionName, id)
 }
 
+func RemoveRaspByIds(appId string, ids []string) (int, error) {
+	selector := bson.M{
+		"_id":    bson.M{"$in": ids},
+		"app_id": appId,
+		"$where": "this.last_heartbeat_time+this.heartbeat_interval+180 < " +
+			strconv.FormatInt(time.Now().Unix(), 10),
+	}
+	info, err := mongo.RemoveAll(raspCollectionName, selector)
+	if err != nil {
+		return 0, err
+	}
+	return info.Removed, nil
+}
+
 func RemoveRaspBySelector(selector map[string]interface{}, appId string) (int, error) {
 	offlineWhere := ""
 	if _, ok := selector["expire_time"]; ok {
@@ -195,4 +210,32 @@ func RemoveRaspBySelector(selector map[string]interface{}, appId string) (int, e
 		return 0, err
 	}
 	return info.Removed, nil
+}
+
+func RegisterCallback(url string, token string, rasp *Rasp) error {
+	var resBody struct {
+		Msg string `json:"message"`
+	}
+	request, err := httplib.Post(url).
+		JSONBody(rasp)
+	if err != nil {
+		return err
+	}
+	response, err := request.Header("openrasp-token", token).
+		SetTimeout(10*time.Second, 10*time.Second).
+		Response()
+	if err != nil {
+		return err
+	}
+	if response.StatusCode != 200 {
+		return errors.New("the status code is error: " + response.Status)
+	}
+	err = request.ToJSON(&resBody)
+	if err != nil {
+		return errors.New("response body is invalid: " + err.Error())
+	}
+	if resBody.Msg != "ok" {
+		return errors.New("the message of response body is not ok: " + resBody.Msg)
+	}
+	return nil
 }

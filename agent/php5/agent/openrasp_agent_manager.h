@@ -46,22 +46,32 @@ class LogCollectItem;
 
 class OpenraspAgentManager : public BaseManager
 {
-
-public:
-  OpenraspCtrlBlock *agent_ctrl_block;
-
 public:
   OpenraspAgentManager();
   bool startup();
   bool shutdown();
   bool verify_ini_correct();
   bool agent_remote_register();
+
+  long get_plugin_update_timestamp();
+
+  void set_supervisor_id(pid_t supervisor_id);
+  pid_t get_supervisor_id();
+
+  void set_plugin_agent_id(pid_t plugin_agent_id);
+  pid_t get_plugin_agent_id();
+
+  void set_log_agent_id(pid_t log_agent_id);
+  pid_t get_log_agent_id();
+
+  void set_master_pid(pid_t master_pid);
   pid_t get_master_pid();
 
-  long get_plugin_update_timestamp()
-  {
-    return (!initialized || nullptr == agent_ctrl_block) ? 0 : agent_ctrl_block->get_last_update_time();
-  }
+  void set_plugin_version(const char *plugin_version);
+  const char *get_plugin_version();
+
+  void set_plugin_md5(const char *plugin_md5);
+  const char *get_plugin_md5();
 
 private:
   bool create_share_memory();
@@ -75,6 +85,7 @@ private:
   void check_work_processes_survival();
 
 private:
+  OpenraspCtrlBlock *agent_ctrl_block;
   static const int task_interval = 300;
   char local_ip[64] = {0};
   pid_t init_process_pid;

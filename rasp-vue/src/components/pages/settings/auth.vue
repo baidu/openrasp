@@ -13,19 +13,19 @@
           <label class="form-label">
             原密码
           </label>
-          <input v-model="oldpass" type="password" class="form-control">
+          <input v-model="oldpass" type="password" class="form-control" autocomplete="off">
         </div>
         <div class="form-group">
           <label class="form-label">
             新密码
           </label>
-          <input v-model="newpass1" type="password" class="form-control">
+          <input v-model="newpass1" type="password" class="form-control" autocomplete="off">
         </div>
         <div class="form-group">
           <label class="form-label">
             再次输入新密码
           </label>
-          <input v-model="newpass2" type="password" class="form-control">
+          <input v-model="newpass2" type="password" class="form-control" autocomplete="off">
         </div>
       </div>
       <div class="card-footer text-right">
@@ -120,7 +120,8 @@ export default {
           old_password: this.oldpass,
           new_password: this.newpass1
         }, function(data) {
-          alert('密码修改成功')
+          alert('密码修改成功，点击确认重新登录')
+          location.href = '/#/login'
         })
       } else {
         alert('两次密码输入不一致，请重新输入')

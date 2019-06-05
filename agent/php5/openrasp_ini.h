@@ -29,7 +29,7 @@ class Openrasp_ini
 public:
   char *root_dir;
   char *locale;
-  unsigned int heartbeat_interval = 180;
+  unsigned int heartbeat_interval = 90;
   char *backend_url;
   char *app_id;
   char *app_secret;

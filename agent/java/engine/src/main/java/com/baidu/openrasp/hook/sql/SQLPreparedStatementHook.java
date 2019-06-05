@@ -16,16 +16,21 @@
 
 package com.baidu.openrasp.hook.sql;
 
+import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
+import java.sql.SQLException;
+import java.util.HashMap;
 
 /**
  * Created by tyy on 18-4-28.
- *
+ * <p>
  * sql Prepare 查询 hook 点
  */
 @HookAnnotation
@@ -138,18 +143,40 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
             } catch (CannotCompileException e) {
                 insertBefore(ctClass, "executeBatchInternal", null, checkSqlSrc);
             }
-            addCatch(ctClass, "execute", null);
-            addCatch(ctClass, "executeUpdate", null);
-            addCatch(ctClass, "executeQuery", null);
+            addCatch(ctClass, "execute", null, originalSqlCode);
+            addCatch(ctClass, "executeUpdate", null, originalSqlCode);
+            addCatch(ctClass, "executeQuery", null, originalSqlCode);
             try {
-                addCatch(ctClass, "executeBatch", null);
+                addCatch(ctClass, "executeBatch", null, originalSqlCode);
             } catch (CannotCompileException e) {
-                addCatch(ctClass, "executeBatchInternal", null);
+                addCatch(ctClass, "executeBatchInternal", null, originalSqlCode);
             }
         } else if (SQL_TYPE_DB2.equals(this.type)) {
             checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
                     "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
             insertBefore(ctClass, "prepareStatement", null, checkSqlSrc);
+        }
+    }
+
+    /**
+     * SQL执行异常检测
+     *
+     * @param server 数据库类型
+     * @param e      sql执行抛出的异常
+     * @param query  sql语句
+     */
+    public static void checkSQLErrorCode(String server, SQLException e, String query) {
+        if (!StringUtils.isEmpty(query)) {
+            if (checkSqlErrorCode(e)) {
+                return;
+            }
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("server", server);
+            params.put("query", query);
+            params.put("error_code", String.valueOf(e.getErrorCode()));
+            String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
+            params.put("message", message);
+            HookHandler.doCheck(CheckParameter.Type.SQL_EXCEPTION, params);
         }
     }
 

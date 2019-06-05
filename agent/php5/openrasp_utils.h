@@ -33,7 +33,6 @@ void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugi
 std::vector<std::string> format_source_code_arr(TSRMLS_D);
 void format_source_code_arr(zval *source_code_arr TSRMLS_DC);
 std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D);
-void format_debug_backtrace_arr(zval *backtrace_arr TSRMLS_DC);
 std::string format_debug_backtrace_str(TSRMLS_D);
 void format_debug_backtrace_str(zval *backtrace_str TSRMLS_DC);
 

@@ -25,7 +25,6 @@ extern "C"
 #include "php_main.h"
 #include "php_streams.h"
 #include "zend_smart_str.h"
-#include "ext/pcre/php_pcre.h"
 #include "ext/standard/url.h"
 #include "ext/standard/file.h"
 #include "ext/json/php_json.h"
@@ -130,15 +129,6 @@ std::vector<std::string> format_debug_backtrace_arr()
         array.push_back(item.to_plugin_string());
     }
     return array;
-}
-
-void format_debug_backtrace_arr(zval *backtrace_arr)
-{
-    auto array = format_debug_backtrace_arr();
-    for (auto &str : array)
-    {
-        add_next_index_stringl(backtrace_arr, str.c_str(), str.length());
-    }
 }
 
 int recursive_mkdir(const char *path, int len, int mode)

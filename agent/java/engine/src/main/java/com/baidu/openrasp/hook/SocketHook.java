@@ -19,16 +19,13 @@ package com.baidu.openrasp.hook;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import org.mozilla.javascript.Scriptable;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.HashMap;
 
 /**
  * Created by tyy on 17-11-17.
@@ -76,10 +73,9 @@ public class SocketHook extends AbstractClassHook {
     public static void checkSocketHost(SocketAddress address) {
         try {
             if (address != null && address instanceof InetSocketAddress) {
+                HashMap<String, Object> params = new HashMap<String, Object>();
                 String hostName = ((InetSocketAddress) address).getHostName();
-                JSContext cx = JSContextFactory.enterAndInitContext();
-                Scriptable params = cx.newObject(cx.getScope());
-                params.put("hostname", params, hostName);
+                params.put("hostname", hostName);
                 HookHandler.doCheck(CheckParameter.Type.SSRF, params);
             }
         } catch (Exception e) {

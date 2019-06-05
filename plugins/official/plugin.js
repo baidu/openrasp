@@ -1,4 +1,4 @@
-const plugin_version = '2019-0425-1400'
+const plugin_version = '2019-0528-1500'
 const plugin_name    = 'official'
 
 /*
@@ -87,6 +87,9 @@ var algorithmConfig = {
             // 函数黑名单，具体列表见下方，select load_file(...)
             function_blacklist: true,
 
+            // 敏感函数频次， 具体列表见下方，select chr(123)||chr(123)||chr(123)=chr(123)||chr(123)||chr(123)
+            function_count:     true,
+
             // 拦截 union select NULL,NULL 或者 union select 1,2,3,4
             union_null:         true,
 
@@ -120,8 +123,6 @@ var algorithmConfig = {
             bin:              true
         },
         function_count: {
-            // 敏感函数频次，e.g chr(13) 出现一次可能是误报，但是多次就不太可能了
-            // select chr(123)||chr(123)||chr(123)=chr(123)||chr(123)||chr(123)
             chr:              5,
             char:             5
         }
@@ -155,7 +156,8 @@ var algorithmConfig = {
             'sslip.io',
             '.nip.io',
             '.burpcollaborator.net',
-            '.tu4.org'
+            '.tu4.org',
+            '.2xss.cc'
         ]
     },
     // SSRF - 是否允许访问混淆后的IP地址
@@ -170,6 +172,10 @@ var algorithmConfig = {
         protocols: [
             'file',
             'gopher',
+
+            // python specific
+            'local_file',
+            'local-file',
 
             // java specific
             'jar',
@@ -225,7 +231,7 @@ var algorithmConfig = {
     // 写文件操作 - 脚本文件
     // https://rasp.baidu.com/doc/dev/official.html#case-file-write
     writeFile_script: {
-        name:      '算法2 - 拦截所有 php/jsp 等脚本文件的写入操作',
+        name:      '算法2 - 拦截 php/jsp 等脚本文件的写入操作',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#case-file-write',
         action:    'ignore'
     },
@@ -242,8 +248,8 @@ var algorithmConfig = {
 
     // 文件管理器 - 用户输入匹配，仅当直接读取绝对路径时才检测
     directory_userinput: {
-        name:       '算法1 - 用户输入匹配算法',
-        action:     'block',
+        name:   '算法1 - 用户输入匹配算法',
+        action: 'block',
         lcs_search: false
     },
     // 文件管理器 - 反射方式列目录
@@ -259,8 +265,8 @@ var algorithmConfig = {
 
     // 文件包含 - 用户输入匹配
     include_userinput: {
-        name:       '算法1 - 用户输入匹配算法',
-        action:     'block',
+        name:   '算法1 - 用户输入匹配算法',
+        action: 'block',
         lcs_search: false
     },
     // 文件包含 - 特殊协议
@@ -290,9 +296,31 @@ var algorithmConfig = {
         ]
     },
 
+    // XXE - 代码安全开关，通过调用相关函数直接禁止外部实体
+    xxe_disable_entity: {
+        name:   '算法1 - 禁止外部实体加载（记录日志等同于完全忽略）',
+        action: 'ignore',
+        clazz:  {
+            // com/sun/org/apache/xerces/internal/jaxp/DocumentBuilderFactoryImpl
+            java_dom:   true,
+
+            // org/dom4j/io/SAXReader
+            java_dom4j: true,
+
+            // org/jdom/input/SAXBuilder,org/jdom2/input/SAXBuilder
+            java_jdom:  true,
+
+            // com/sun/org/apache/xerces/internal/jaxp/SAXParserFactoryImpl
+            java_sax:   true,
+
+            // javax/xml/stream/XMLInputFactory
+            java_stax:  true
+        }
+    },
+
     // XXE - 使用 gopher/ftp/dict/.. 等不常见协议访问外部实体
     xxe_protocol: {
-        name:   '算法1 - 使用 ftp:// 等异常协议加载外部实体',
+        name:   '算法2 - 使用 ftp:// 等异常协议加载外部实体',
         action: 'block',
         protocols: [
             'ftp',
@@ -304,7 +332,7 @@ var algorithmConfig = {
     },
     // XXE - 使用 file 协议读取内容，可能误报，默认 log
     xxe_file: {
-        name:      '算法2 - 使用 file:// 协议读取文件',
+        name:      '算法3 - 使用 file:// 协议读取文件',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#case-xxe',
         action:    'log',
     },
@@ -504,9 +532,13 @@ if (! RASP.is_unittest)
    if (algorithmConfig.meta.all_log)
    {
         Object.keys(algorithmConfig).forEach(function (name) {
-            if (algorithmConfig[name].action == 'block') 
+            // XXE 外部实体开关不受影响
+            if (name != 'xxe_disable_entity')
             {
-               algorithmConfig[name].action = 'log'
+                if (algorithmConfig[name].action == 'block') 
+                {
+                    algorithmConfig[name].action = 'log'
+                }
             }
         })
     }
@@ -683,58 +715,59 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows, is_
 
     Object.keys(parameter).some(function (key) {
         // 只处理非数组、hash情况
-        var value = parameter[key]
-            value = value[0]
-
-        // 只处理字符串类型的
-        if (typeof value != 'string') {
-            return
-        }
-        // 如果应用做了特殊处理， 比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
-        if (value.startsWith('file://') && 
-            is_absolute_path(target, is_windows) && 
-            value.endsWith(target)) 
-        {
-            verdict = true
-            return true
-        }
-
-        // 去除多余/ 和 \ 的路径
-        var simplifiedValue
-        var simplifiedTarget
-
-        // Windows 下面
-        // 传入 ../../../conf/tomcat-users.xml
-        // 看到 c:\tomcat\webapps\root\..\..\conf\tomcat-users.xml
-        if (is_windows) {
-            value = value.replaceAll('/', '\\')
-            target = target.replaceAll('/', '\\')
-            realpath = realpath.replaceAll('/', '\\')
-            simplifiedTarget = target.replaceAll('\\\\','\\')
-            simplifiedValue = value.replaceAll('\\\\','\\')
-        } else{
-            simplifiedTarget = target.replaceAll('//','/')
-            simplifiedValue = value.replaceAll('//','/')
-        }
-        var simplifiedValues
-        if (is_lcs_search) {
-            simplifiedValues = lcs_search(simplifiedValue, simplifiedTarget)
-        }
-        else {
-            simplifiedValues = [simplifiedValue]
-        }
-        for (var i = 0, len = simplifiedValues.length; i < len; i++) {
-            simplifiedValue = simplifiedValues[i]
-            // 参数必须有跳出目录，或者是绝对路径
-            if ((target.endsWith(value) || simplifiedTarget.endsWith(simplifiedValue))
-                && (has_traversal(value) || value == realpath || simplifiedValue == realpath))
+        Object.values(parameter[key]).some(function (value){
+            // 只处理字符串类型的
+            if (typeof value != 'string') {
+                return
+            }
+            // 如果应用做了特殊处理， 比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
+            if (value.startsWith('file://') && 
+                is_absolute_path(target, is_windows) && 
+                value.endsWith(target)) 
             {
                 verdict = true
                 return true
             }
+
+            // 去除多余/ 和 \ 的路径
+            var simplifiedValue
+            var simplifiedTarget
+
+            // Windows 下面
+            // 传入 ../../../conf/tomcat-users.xml
+            // 看到 c:\tomcat\webapps\root\..\..\conf\tomcat-users.xml
+            if (is_windows) {
+                value = value.replaceAll('/', '\\')
+                target = target.replaceAll('/', '\\')
+                realpath = realpath.replaceAll('/', '\\')
+                simplifiedTarget = target.replaceAll('\\\\','\\')
+                simplifiedValue = value.replaceAll('\\\\','\\')
+            } else{
+                simplifiedTarget = target.replaceAll('//','/')
+                simplifiedValue = value.replaceAll('//','/')
+            }
+            var simplifiedValues
+            if ( is_lcs_search ) {
+                simplifiedValues = lcs_search( simplifiedValue, simplifiedTarget )
+            }
+            else {
+                simplifiedValues = [simplifiedValue]
+            }
+            for(var i = 0, len = simplifiedValues.length; i < len; i++) {
+                simplifiedValue = simplifiedValues[i]
+                // 参数必须有跳出目录，或者是绝对路径
+                if ((target.endsWith(value) || simplifiedTarget.endsWith(simplifiedValue))
+                    && (has_traversal(value) || value == realpath || simplifiedValue == realpath))
+                {
+                    verdict = true
+                    return true
+                }
+            }
+        })
+        if (verdict){
+            return true
         }
     })
-
     return verdict
 }
 
@@ -744,42 +777,44 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
     var verdict = false
 
     Object.keys(parameter).some(function (key) {
-        var value = parameter[key]
-            value = value[0]
-
-        // 只处理字符串类型的
-        if (typeof value != 'string') {
-            return
-        }
-
-        if (is_windows) {
-            value = value.replaceAll('/', '\\')
-            value = value.replaceAll('\\\\', '\\')
-            target = target.replaceAll('/', '\\')
-            target = target.replaceAll('\\\\', '\\')
-        }
-        else {
-            value = value.replaceAll('//', '/')
-            target = target.replaceAll('//', '/')
-        }
-        var values
-        if (is_lcs_search) {
-            values = lcs_search(value, target)
-        }
-        else {
-            // java 下面，传入 /usr/ 会变成 /usr，所以少匹配一个字符
-            if ( value.charAt(value.length - 1) == "/" || 
-                 value.charAt(value.length - 1) == "\\" ) {
-                value = value.substr(0, value.length - 1)
+        var values = parameter[key]
+        Object.values(values).some(function(value){
+            // 只处理字符串类型的
+            if (typeof value != 'string') {
+                return
             }
-            values = [value]
-        }
-        for (var i = 0, len = values.length; i < len; i++) {
-            // 只处理非数组、hash情况
-            if (has_traversal(values[i]) && target.indexOf(values[i]) != -1) {
-                verdict = true
-                return true
+            if (is_windows) {
+                value = value.replaceAll('/', '\\')
+                value = value.replaceAll('\\\\', '\\')
+                target = target.replaceAll('/', '\\')
+                target = target.replaceAll('\\\\', '\\')
             }
+            else {
+                value = value.replaceAll('//', '/')
+                target = target.replaceAll('//', '/')
+            }
+            var values
+            if (is_lcs_search) {
+                values = lcs_search(value, target)
+            }
+            else {
+                // java 下面，传入 /usr/ 会变成 /usr，所以少匹配一个字符
+                if ( value.charAt(value.length - 1) == "/" || 
+                    value.charAt(value.length - 1) == "\\" ) {
+                    value = value.substr(0, value.length - 1)
+                }
+                values = [value]
+            }
+            for(var i = 0, len = values.length; i < len; i++) {
+                // 只处理非数组、hash情况
+                if (has_traversal(values[i]) && target.indexOf(values[i]) != -1) {
+                    verdict = true
+                    return true
+                }
+            }
+        })
+        if (verdict){
+            return true
         }
     })
     return verdict
@@ -790,12 +825,14 @@ function is_from_userinput(parameter, target)
 {
     var verdict = false
     Object.keys(parameter).some(function (key) {
-        var value = parameter[key]
-        // 只处理非数组、hash情况
-        if (value[0] == target) {
-            verdict = true
-            return true
-        }
+        var values = parameter[key]
+        Object.values(values).some(function(value){
+            // 只处理非数组、hash情况
+            if (value == target) {
+                verdict = true
+                return true
+            }
+        })
     })
     return verdict
 }
@@ -809,7 +846,7 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance)
     // 寻找 token 起始点，可以改为二分查找
     for (var i = 0; i < raw_tokens.length; i++)
     {
-        if (raw_tokens[i].stop >= userinput_idx)
+        if (raw_tokens[i].stop > userinput_idx)
         {
             start = i
             break
@@ -820,7 +857,7 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance)
     // 另外，最多需要遍历 distance 个 token
     for (var i = start; i < start + distance && i < raw_tokens.length; i++)
     {
-        if (raw_tokens[i].stop >= userinput_idx + userinput_length - 1)
+        if (raw_tokens[i].stop >= userinput_idx + userinput_length )
         {
             end = i
             break
@@ -882,7 +919,7 @@ function lcs_search(str1, str2){
     return Array.from(result_str)
 }
 
-// 报警格式化函数
+// 下个版本将会支持翻译，目前还需要暴露一个 getText 接口给插件
 function _(message, args) 
 {
     args = args || []
@@ -938,7 +975,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 }
 
                 // 检查用户输入是否存在于SQL中
-                for (var i = 0, len = check_value.length; i < len; i++) {
+                for(var i = 0, len = check_value.length; i < len; i++) {
                     value = check_value[i]
                 
                     var userinput_idx = params.query.indexOf(value)
@@ -969,7 +1006,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                     }
 
                     if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
-                        reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
+                        reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                         return true
                     }
                 }
@@ -985,13 +1022,14 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 // 覆盖场景，后者仅PHP支持
                 // ?id=XXXX
                 // ?data[key1][key2]=XXX
-                var value_list
-
-                if (typeof parameters[name][0] == 'string') {
-                    value_list = parameters[name]
-                } else {
-                    value_list = Object.values(parameters[name][0])
-                }
+                var value_list = []
+                Object.values(parameters[name]).forEach(function (value){
+                    if (typeof value == 'string') {
+                        value_list.push(value)
+                    } else {
+                        value_list = value_list.concat(Object.values(value))
+                    }
+                })
 
                 reason = _run(value_list, name)
                 if (reason) {
@@ -1102,8 +1140,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                         break
                     }
 
-                    // 黑名单函数 - 计数算法
-                    if (func_count_list[func_name])
+                    if (features['function_count'] && func_count_list[func_name])
                     {
                         if (! func_count_arr[func_name])
                         {
@@ -1136,8 +1173,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                     // information_schema  .tables
                     var part1 = tokens_lc[i + 1].replaceAll('`', '')
                     var part2 = tokens_lc[i + 3].replaceAll('`', '')
-
-                    if (part1 == 'information_schema' && part2 == 'tables')
+                    if (part1 == 'information_schema' && part2 == 'tables' )
                     {
                         reason = _("SQLi - Detected access to MySQL information_schema.tables table")
                         break
@@ -1763,7 +1799,7 @@ plugin.register('command', function (params, context) {
                 }
 
                 if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
-                    reason = _("Command injection - command structure altered by user input, request parameter name: %1%", [name])
+                    reason = _("Command injection - command structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                     return true
                 }
             })
@@ -1776,12 +1812,14 @@ plugin.register('command', function (params, context) {
             // 覆盖场景，后者仅PHP支持
             // ?id=XXXX
             // ?data[key1][key2]=XXX
-            var value_list
-            if (typeof parameters[name][0] == 'string') {
-                value_list = parameters[name]
-            } else {
-                value_list = Object.values(parameters[name][0])
-            }                
+            var value_list = []
+            Object.values(parameters[name]).forEach(function (value){
+                if (typeof value == 'string') {
+                    value_list.push(value)
+                } else {
+                    value_list = value_list.concat(Object.values(value))
+                }
+            })
             reason = _run(value_list, name)
             if (reason) {
                 return true

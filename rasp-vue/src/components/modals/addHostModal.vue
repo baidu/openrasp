@@ -71,12 +71,20 @@
                   <a target="_blank" href="https://rasp.baidu.com/doc/install/deploy.html#container" class="active router-link-active">大规模部署</a>
                   文档
                 </div>
-                <h4>Java 容器示例</h4>
+                <h4>Java Tomcat 容器示例</h4>
                 <pre>ADD https://packages.baidu.com/app/openrasp/release/{{rasp_version}}/rasp-java.tar.gz /tmp
 RUN cd /tmp \
     && tar -xf rasp-java.tar.* \
     && /jdk/bin/java -jar rasp-*/RaspInstall.jar -install /tomcat/ -appid {{ current_app.id }} -appsecret {{ current_app.secret }} -backendurl {{ agent_urls[agent_url_id] }} \
     && rm -rf rasp-*</pre>
+                <h4>Java SpringBoot 容器示例</h4>
+                <pre>ADD https://packages.baidu.com/app/openrasp/release/{{rasp_version}}/rasp-java.tar.gz /tmp
+RUN cd /tmp \
+    && tar -xf rasp-java.tar.* \
+    && mv rasp-*/ /rasp/ \
+    && rm -f rasp-java.tar.gz
+RUN java -javaagent:"/rasp/rasp.jar" -appid {{ current_app.id }} -appsecret {{ current_app.secret }} -backendurl {{ agent_urls[agent_url_id] }} -jar /springboot.jar</pre>
+
                 <h4>PHP 容器示例</h4>
                 <pre>ADD https://packages.baidu.com/app/openrasp/release/{{rasp_version}}/rasp-php-linux.tar.bz2 /tmp/
 RUN cd /tmp \

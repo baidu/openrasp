@@ -21,6 +21,8 @@ import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.detector.ServerDetector;
 import org.apache.log4j.Logger;
 
+import java.util.LinkedList;
+
 /**
  * @description: 初始化云控配置
  * @author: anyang
@@ -28,6 +30,8 @@ import org.apache.log4j.Logger;
  */
 public class CloudManager {
     public static final Logger LOGGER = Logger.getLogger(CloudManager.class.getPackage().getName() + ".log");
+
+    private static LinkedList<CloudTimerTask> tasks = new LinkedList<CloudTimerTask>();
 
     public static void init() {
         //注册成功之后初始化创建http appender
@@ -37,8 +41,17 @@ public class CloudManager {
         DynamicConfigAppender.createHttpAppender(AppenderMappedLogger.HTTP_POLICY_ALARM.getLogger(),
                 AppenderMappedLogger.HTTP_POLICY_ALARM.getAppender());
         ServerDetector.checkServerPolicy();
-        new KeepAlive();
-        new StatisticsReport();
+        tasks.add(new KeepAlive());
+        tasks.add(new StatisticsReport());
+        for (CloudTimerTask task : tasks) {
+            task.start();
+        }
+    }
+
+    public static void stop() {
+        for (CloudTimerTask task : tasks) {
+            task.stop();
+        }
     }
 
 }

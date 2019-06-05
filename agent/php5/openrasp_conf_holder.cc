@@ -53,6 +53,7 @@ bool ConfigHolder::updateAlgorithmConfig()
 {
   webshell_callable.update();
   xss.update();
+  return true;
 }
 
 } // namespace openrasp

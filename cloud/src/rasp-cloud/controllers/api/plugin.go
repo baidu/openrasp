@@ -93,7 +93,11 @@ func (o *PluginController) Download() {
 		plugin.Name = "plugin"
 	}
 	o.Ctx.Output.Header("Content-Disposition", "attachment;filename="+plugin.Name+"-"+plugin.Version+".js")
-	o.Ctx.Output.Body([]byte(plugin.Content))
+	if len(plugin.OriginContent) != 0 {
+		o.Ctx.Output.Body([]byte(plugin.OriginContent))
+	} else {
+		o.Ctx.Output.Body([]byte(plugin.Content))
+	}
 }
 
 // @router /algorithm/config [post]

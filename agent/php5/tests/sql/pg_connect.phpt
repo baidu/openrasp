@@ -12,7 +12,7 @@ if (!extension_loaded("pgsql")) die("Skipped: pgsql extension required.");
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-pg_connect('host=127.0.0.1 port=5432 dbname=test user=postgres');
+pg_connect('host=127.0.0.1 port=5432 user=postgres password=postgres');
 ?>
 --EXPECTREGEX--
 <\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

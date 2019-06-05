@@ -54,7 +54,7 @@ public class LogConfig {
                 if (syslogAddress != null && !syslogAddress.trim().isEmpty() && syslogPort >= 0 && syslogPort <= 65535) {
                     DynamicConfigAppender.createSyslogAppender(syslogAddress, syslogPort);
                 } else {
-                    String message = "syslog url: " + syslogUrl + " is error";
+                    String message = "syslog url: " + syslogUrl + " is invalid";
                     int errorCode = ErrorType.CONFIG_ERROR.getCode();
                     CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
                 }

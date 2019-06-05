@@ -65,12 +65,32 @@
         </div>
 
         <div v-if="data.policy_id == '3003'">
-            <div class="h6">
-                配置文件路径
+            <div v-if="data.policy_params.config_file">
+                <div class="h6">
+                    配置文件路径
+                </div>
+                <p>
+                    {{ data.policy_params.config_file }}
+                </p>
             </div>
-            <p>
-                {{ data.policy_params.config_file }}
-            </p>
+
+            <div v-if="data.policy_params.hostname && data.policy_params.port">
+                <div class="h6">
+                    服务器信息
+                </div>
+                <p>
+                    {{ data.policy_params.hostname }}:{{ data.policy_params.port }}
+                </p>
+            </div>
+
+            <div v-if="data.policy_params.socket">
+                <div class="h6">
+                    服务器信息
+                </div>
+                <p>
+                    {{ data.policy_params.socket }}
+                </p>
+            </div>           
 
             <div class="h6">
                 弱口令
@@ -78,10 +98,19 @@
             <p>
                 {{ data.policy_params.username }}:{{ data.policy_params.password }}
             </p>
+
             <div class="h6">
                 问题描述
             </div>
-            <p>
+            <p v-if="data.policy_params.server == 'mysql'">
+                MySQL 存在弱口令，若账号被爆破会有数据泄露风险。
+                <a href="https://rasp.baidu.com/doc/usage/security_policy.html#3003" target="_blank">点击这里</a>了解更多。
+            </p>
+            <p v-else-if="data.policy_params.type">
+                {{ data.policy_params.type }} 存在弱口令。
+                <a href="https://rasp.baidu.com/doc/usage/security_policy.html#3003" target="_blank">点击这里</a>了解更多。
+            </p>
+            <p v-else>
                 Tomcat 管理后台存在弱口令，若管理后台对外暴露，会有被入侵的风险。
                 <a href="https://rasp.baidu.com/doc/usage/security_policy.html#3003" target="_blank">点击这里</a>了解更多。
             </p>            
@@ -211,6 +240,11 @@ export default {
     methods: {
         setData: function (data) {
             this.data = data
+
+            // v1.0 版本，weblogic 忘记增加 policy_params 字段，简单修复
+            if (! data['policy_params']) {
+                data['policy_params'] = {}
+            }
         }
     }
 }

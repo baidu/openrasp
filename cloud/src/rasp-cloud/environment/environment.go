@@ -14,6 +14,15 @@
 
 package environment
 
+/*
+const char* build_time(void)
+{
+static const char* psz_build_time = __DATE__ " " __TIME__;
+return psz_build_time;
+}
+*/
+import "C"
+
 import (
 	"flag"
 	"github.com/astaxie/beego"
@@ -29,8 +38,9 @@ import (
 	"bytes"
 )
 
-const (
-	Version = "1.0"
+var (
+	Version   = "1.1"
+	BuildTime = C.GoString(C.build_time())
 )
 
 func init() {
@@ -41,7 +51,11 @@ func init() {
 	flag.Parse()
 
 	if *StartFlag.Version {
-		fmt.Println(Version)
+		fmt.Println("Version:       " + Version)
+		fmt.Println("Build Time:    " + BuildTime)
+		if tools.CommitID != "" {
+			fmt.Println("Git Commit ID: " + tools.CommitID)
+		}
 		os.Exit(0)
 	}
 	if *StartFlag.StartType == conf.StartTypeReset {
@@ -111,11 +125,7 @@ func fork() (err error) {
 }
 
 func initLogger() {
-	currentPath, err := tools.GetCurrentPath()
-	if err != nil {
-		tools.Panic(tools.ErrCodeLogInitFailed, "failed to get current path", err)
-	}
-	logPath := currentPath + "/logs/api"
+	logPath := tools.GetCurrentPathWithPanic() + "/logs/api"
 	if isExists, _ := tools.PathExists(logPath); !isExists {
 		err := os.MkdirAll(logPath, os.ModePerm)
 		if err != nil {

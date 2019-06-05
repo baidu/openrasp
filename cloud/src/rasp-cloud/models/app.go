@@ -41,7 +41,6 @@ import (
 	"net"
 	"rasp-cloud/conf"
 	"net/url"
-	"crypto/md5"
 )
 
 type App struct {
@@ -68,6 +67,7 @@ type WhitelistConfigItem struct {
 
 type EmailAlarmConf struct {
 	Enable     bool     `json:"enable" bson:"enable"`
+	From       string   `json:"from" bson:"from"`
 	ServerAddr string   `json:"server_addr" bson:"server_addr"`
 	UserName   string   `json:"username" bson:"username"`
 	Password   string   `json:"password" bson:"password"`
@@ -178,33 +178,39 @@ func initApp() error {
 			tools.Panic(tools.ErrCodeESInitFailed, "failed to init es index for app "+app.Name, err)
 		}
 		if *conf.AppConfig.Flag.StartType != conf.StartTypeAgent {
-			initPlugin(app)
+			err := initPlugin(app)
+			if err != nil {
+				beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to init plugin for app ["+app.Name+"]", err)
+			}
 		}
 	}
 	return nil
 }
 
-func initPlugin(app *App) {
-	_, plugins, err := GetPluginsByApp(app.Id, 0, conf.AppConfig.MaxPlugins)
-	if err != nil {
-		// do not exit here
-		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to init plugin for app ["+app.Name+"]", err)
-	}
+func initPlugin(app *App) error {
 	content, err := getDefaultPluginContent()
 	if err != nil {
-		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to init plugin for app ["+app.Name+"]", err)
+		return err
 	}
-	pluginMd5 := fmt.Sprintf("%x", md5.Sum(content))
-	isFound := false
-	for _, plugin := range plugins {
-		if plugin.Md5 == pluginMd5 {
-			isFound = true
-			break
+	plugin, err := generatePlugin(content, app.Id)
+	if err != nil {
+		return err
+	}
+	err = mongo.FindOne(pluginCollectionName, bson.M{
+		"name":    plugin.Name,
+		"version": plugin.Version,
+		"app_id":  plugin.AppId}, plugin)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			err = addPluginToDb(plugin)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
 		}
 	}
-	if !isFound {
-		AddPlugin(content, app.Id)
-	}
+	return nil
 }
 
 func createEsIndexWithAppId(appId string) error {
@@ -271,7 +277,10 @@ func AddApp(app *App) (result *App, err error) {
 	app.Id = generateAppId(app)
 	app.Secret = generateSecret(app)
 	app.CreateTime = time.Now().Unix()
-	if mongo.FindOne(appCollectionName, bson.M{"name": app.Name}, &App{}) != mgo.ErrNotFound {
+	if err := mongo.FindOne(appCollectionName, bson.M{"name": app.Name}, &App{}); err != mgo.ErrNotFound {
+		if err != nil {
+			return nil, err
+		}
 		return nil, errors.New("duplicate app name")
 	}
 	HandleApp(app, true)
@@ -491,6 +500,7 @@ func getTestAlarmData() []map[string]interface{} {
 			"attack_type":     "command",
 			"intercept_state": "log",
 			"url":             "http://www.example.com/login.php?id=2",
+			"client_ip":       "220.22.13.3",
 		},
 	}
 }
@@ -503,11 +513,15 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 			msg       string
 			emailAddr = &mail.Address{Address: emailConf.UserName}
 		)
-		hostName, err := os.Hostname()
-		if err == nil {
-			emailAddr.Name = hostName
+		if emailConf.From != "" {
+			emailAddr.Name = emailConf.From
 		} else {
-			emailAddr.Name = "OpenRASP"
+			hostName, err := os.Hostname()
+			if err == nil {
+				emailAddr.Name = hostName
+			} else {
+				emailAddr.Name = "OpenRASP"
+			}
 		}
 		if emailConf.Subject == "" {
 			subject = "OpenRASP alarm"
@@ -520,7 +534,7 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 			total = int64(len(alarms))
 		}
 		head := map[string]string{
-			"from":              emailAddr.String(),
+			"From":              emailAddr.String(),
 			"To":                strings.Join(emailConf.RecvAddr, ","),
 			"Subject":           subject,
 			"Content-Type":      "text/html; charset=UTF-8",
@@ -560,11 +574,13 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 				emailConf.ServerAddr += ":25"
 			}
 		}
-		host, _, err := net.SplitHostPort(emailConf.ServerAddr)
-		if err != nil {
-			return handleError("failed to get email serve host: " + err.Error())
-		}
-		auth := smtp.PlainAuth("", emailConf.UserName, emailConf.Password, host)
+		//host, _, err := net.SplitHostPort(emailConf.ServerAddr)
+		//if err != nil {
+		//	return handleError("failed to get email serve host: " + err.Error())
+		//}
+		auth := tools.LoginAuth(emailConf.UserName, emailConf.Password)
+		//auth := smtp.PlainAuth("", emailConf.UserName, emailConf.Password, host)
+		//auth := smtp.CRAMMD5Auth(emailConf.UserName, emailConf.Password)
 		if emailConf.Password == "" {
 			auth = nil
 		}
@@ -598,6 +614,12 @@ func handleAlarms(alarms []map[string]interface{}) {
 				if err == nil {
 					alarm["domain"] = attackUrl.Host
 				}
+			}
+		}
+
+		if alarm["client_ip"] != nil {
+			if clientIp, ok := alarm["client_ip"].(string); ok && clientIp != "" {
+				alarm["attack_source"] = clientIp
 			}
 		}
 	}
@@ -680,7 +702,8 @@ func smtpTlsDial(addr string) (*smtp.Client, error) {
 	if err != nil {
 		return nil, handleError("failed to get email serve host: " + err.Error())
 	}
-	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: time.Second * 5}, "tcp", addr, nil)
+	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: time.Second * 5}, "tcp",
+		addr, &tls.Config{InsecureSkipVerify: true})
 	if err != nil {
 		return nil, handleError("smtp dialing error: " + err.Error())
 	}

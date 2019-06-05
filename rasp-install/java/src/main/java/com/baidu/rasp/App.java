@@ -35,6 +35,7 @@ import java.net.URLDecoder;
 import java.util.regex.Pattern;
 
 import static com.baidu.rasp.RaspError.E10005;
+import static com.baidu.rasp.RaspError.E10007;
 
 /**
  * Created by OpenRASP on 5/11/17.
@@ -181,12 +182,21 @@ public class App {
             File serverRoot = new File(baseDir);
             InstallerFactory factory = newInstallerFactory();
             Installer installer = factory.getInstaller(serverRoot);
-            installer.install();
+            if (installer != null) {
+                installer.install();
+            } else {
+                throw new RaspError(E10007);
+            }
+
         } else if ("uninstall".equals(install)) {
             File serverRoot = new File(baseDir);
             UninstallerFactory factory = newUninstallerFactory();
             Uninstaller uninstaller = factory.getUninstaller(serverRoot);
-            uninstaller.uninstall();
+            if (uninstaller != null) {
+                uninstaller.uninstall();
+            } else {
+                throw new RaspError(E10007);
+            }
         }
     }
 

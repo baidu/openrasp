@@ -25,6 +25,62 @@ extern "C"
 
 namespace openrasp
 {
+CheckResult Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout)
+{
+    IsolateData *data = isolate->GetData();
+    v8::Local<v8::Object> request_context;
+    if (data->request_context.IsEmpty())
+    {
+        request_context = data->request_context_templ.Get(isolate)->NewInstance();
+        data->request_context.Reset(isolate, request_context);
+    }
+    else
+    {
+        request_context = data->request_context.Get(isolate);
+    }
+    auto rst = isolate->Check(type, params, request_context, timeout);
+    auto len = rst->Length();
+    if (len == 0)
+    {
+        return CheckResult::kCache;
+    }
+    auto context = isolate->GetCurrentContext();
+    auto key_action = isolate->GetData()->key_action.Get(isolate);
+    auto key_message = isolate->GetData()->key_message.Get(isolate);
+    CheckResult check_result = CheckResult::kNoCache;
+    for (int i = 0; i < len; i++)
+    {
+        v8::HandleScope handle_scope(isolate);
+        v8::Local<v8::Value> val;
+        if (!rst->Get(context, i).ToLocal(&val) || !val->IsObject())
+        {
+            continue;
+        }
+        auto obj = val.As<v8::Object>();
+        auto action = obj->Get(context, key_action).FromMaybe(v8::Local<v8::Value>());
+        if (action.IsEmpty() || !action->IsString())
+        {
+            continue;
+        }
+        std::string str = *v8::String::Utf8Value(isolate, action);
+        if (str == "exception")
+        {
+            auto message = obj->Get(context, key_message).FromMaybe(v8::Local<v8::Value>());
+            if (!message.IsEmpty() && message->IsString())
+            {
+                plugin_info(isolate, std::string(*v8::String::Utf8Value(isolate, message)) + "\n");
+            }
+            continue;
+        }
+        if (str == "block")
+        {
+            check_result = CheckResult::kBlock;
+        }
+        alarm_info(isolate, type, params, obj);
+    }
+    return check_result;
+}
+
 v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
 {
     v8::Local<v8::Value> rst = v8::Undefined(isolate);
@@ -103,7 +159,7 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
     }
     case IS_STRING:
     {
-        bool avoidwarning = v8::String::NewFromOneByte(isolate, (uint8_t *)Z_STRVAL_P(val), v8::NewStringType::kNormal, Z_STRLEN_P(val)).ToLocal(&rst);
+        bool avoidwarning = v8::String::NewFromUtf8(isolate, Z_STRVAL_P(val), v8::NewStringType::kNormal, Z_STRLEN_P(val)).ToLocal(&rst);
         break;
     }
     case IS_LONG:
@@ -132,10 +188,10 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
     return rst;
 }
 
-void plugin_info(const char *message, size_t length)
+void plugin_info(Isolate *isolate, const std::string &message)
 {
     TSRMLS_FETCH();
-    LOG_G(plugin_logger).log(LEVEL_INFO, message, length TSRMLS_CC, false, true);
+    LOG_G(plugin_logger).log(LEVEL_INFO, message.c_str(), message.length() TSRMLS_CC, false, true);
 }
 
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)
@@ -203,7 +259,7 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     v8::Local<v8::String> val;
     if (v8::JSON::Stringify(isolate->GetCurrentContext(), obj).ToLocal(&val))
     {
-        v8::String::Utf8Value msg(val);
+        v8::String::Utf8Value msg(isolate, val);
         LOG_G(alarm_logger).log(LEVEL_INFO, *msg, msg.length() TSRMLS_CC, true, false);
     }
 }
@@ -273,8 +329,8 @@ void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string>
         {
             continue;
         }
-        v8::String::Utf8Value key(item.As<v8::Array>()->Get(0));
-        v8::String::Utf8Value value(item.As<v8::Array>()->Get(1));
+        v8::String::Utf8Value key(isolate, item.As<v8::Array>()->Get(0));
+        v8::String::Utf8Value value(isolate, item.As<v8::Array>()->Get(1));
         auto iter = buildin_action_map.find({*key, key.length()});
         if (iter != buildin_action_map.end())
         {

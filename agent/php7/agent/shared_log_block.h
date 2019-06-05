@@ -71,7 +71,7 @@ public:
   }
 
 private:
-  static const long hash_array_size = 32;
+  static const long hash_array_size = 64;
   static const long day_seconds = 24 * 60 * 60;
 
   size_t size;
