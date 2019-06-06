@@ -151,7 +151,7 @@ std::vector<std::string> YamlReader::fetch_strings(const std::vector<std::string
   std::vector<Node> nodes;
   try
   {
-    std::vector<std::string> result;
+    std::vector<std::string> result = default_value;
     nodes.push_back(node);
     for (size_t i = 0; i < keys.size(); ++i)
     {
@@ -167,6 +167,7 @@ std::vector<std::string> YamlReader::fetch_strings(const std::vector<std::string
 
     if (nodes[keys.size()].IsSequence())
     {
+      result.clear();
       for (YAML::const_iterator it = nodes[keys.size()].begin(); it != nodes[keys.size()].end(); ++it)
       {
         result.push_back(it->as<std::string>());
