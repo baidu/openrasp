@@ -1,4 +1,4 @@
-const plugin_version = '2019-0528-1500'
+const plugin_version = '2019-0606-1800'
 const plugin_name    = 'official'
 
 /*
@@ -1693,7 +1693,6 @@ plugin.register('command', function (params, context) {
     if (algorithmConfig.command_reflect.action != 'ignore') {
         // Java 检测逻辑
         if (server.language == 'java') {
-            var userCode = false
             var known    = {
                 'java.lang.reflect.Method.invoke':                                              _("Reflected command execution - Unknown vulnerability detected"),
                 'ognl.OgnlRuntime.invokeMethod':                                                _("Reflected command execution - Using OGNL library"),
@@ -1723,19 +1722,18 @@ plugin.register('command', function (params, context) {
                     break
                 }
 
-                // 仅当命令本身来自反射调用才拦截
-                // 如果某个类是反射调用，这个类再主动执行命令，则忽略
-                if (! method.startsWith('java.') && ! method.startsWith('sun.') && !method.startsWith('com.sun.')) {
-                    userCode = true
-                }
-
                 if (known[method]) {
-                    // 同上，如果反射调用和命令执行之间，包含用户代码，则不认为是反射调用
-                    if (userCode && method == 'java.lang.reflect.Method.invoke') {
-                        continue
+                    // 仅当命令本身来自反射调用才拦截
+                    // 如果某个类是反射调用，这个类再主动执行命令，则忽略
+                    var last_method = params.stack[i-1]
+                    if (method == 'java.lang.reflect.Method.invoke' && !( 
+                            last_method.startsWith('java.lang.UNIXProcess') || 
+                            last_method.startsWith('java.lang.Process') || 
+                            last_method.startsWith('java.lang.Runtime.exec'))
+                        ) {
+                    } else {
+                        message = known[method]
                     }
-
-                    message = known[method]
                     // break
                 }
             }
