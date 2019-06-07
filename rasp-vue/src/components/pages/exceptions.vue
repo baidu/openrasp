@@ -51,6 +51,11 @@
               {{ scope.item.server_hostname }}<br/>
               <span v-for="nic in scope.item.server_nic" :key="nic.name">{{ nic.name }}: {{ nic.ip }}<br/></span>
             </template>
+            <template slot="button" slot-scope="scope">
+              <a href="javascript:" @click="showExceptionDetail(scope.item)">
+                查看详情
+              </a>
+            </template>
           </b-table>
 
           <p v-if="! loading && total == 0" class="text-center">暂无数据</p>
@@ -70,14 +75,14 @@
       </div>
     </div>
 
-    <EventDetailModal ref="showEventDetail" />
+    <ExceptionDetailModal ref="showExceptionDetail" />
   </div>
 </template>
 
 <script>
 import EventDetailModal from '@/components/modals/eventDetailModal'
+import ExceptionDetailModal from '@/components/modals/exceptionDetailModal'
 import DatePicker from '@/components/DatePicker'
-import { attack_type2name, block_status2name, attack_types } from '@/util'
 import { mapGetters } from 'vuex'
 import isIp from 'is-ip'
 
@@ -85,6 +90,7 @@ export default {
   name: 'Exceptions',
   components: {
     EventDetailModal,
+    ExceptionDetailModal,
     DatePicker
   },
   data() {
@@ -95,11 +101,12 @@ export default {
       hostname: '',
       total: 0,
       fields: [
-        { key: 'event_time', label: '异常时间', class: 'text-nowrap' },
-        { key: 'error_code', label: '异常编号', class: 'text-nowrap' },
+        { key: 'event_time',      label: '异常时间', class: 'text-nowrap' },
+        { key: 'error_code',      label: '异常编号', class: 'text-nowrap' },
         // { key: 'level', label: '级别', class: 'text-nowrap' },
         { key: 'server_hostname', label: '主机信息' },
-        { key: 'message', label: '内容' }
+        { key: 'message',         label: '内容' },
+        { key: 'button',          label: '查看详情', class: 'text-nowrap' }
       ]
     }
   },
@@ -136,7 +143,10 @@ export default {
           this.total = res.total
           this.loading = false
         })
-    }
+    },
+    showExceptionDetail(data) {
+      this.$refs.showExceptionDetail.showModal(data)
+    },
   }
 }
 </script>
