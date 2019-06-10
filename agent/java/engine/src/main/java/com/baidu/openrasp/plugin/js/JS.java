@@ -40,8 +40,9 @@ public class JS {
 
     public synchronized static boolean Initialize() {
         try {
-            if (!V8.Load() || !V8.Initialize()) {
-                return false;
+            V8.Load();
+            if (!V8.Initialize()) {
+                throw new Exception("V8 Worker threads do not started");
             }
             V8.SetPluginLogger(new com.baidu.openrasp.v8.Logger() {
                 @Override
@@ -56,6 +57,7 @@ public class JS {
             return true;
         } catch (Exception e) {
             System.err.println(e);
+            LOGGER.error(e);
             return false;
         }
     }
@@ -102,20 +104,25 @@ public class JS {
             return null;
         }
 
-        Any any = JsonIterator.deserialize(results.getBytes("UTF-8"));
-        if (any == null) {
+        try {
+            Any any = JsonIterator.deserialize(results.getBytes("UTF-8"));
+            if (any == null) {
+                return null;
+            }
+            ArrayList<EventInfo> attackInfos = new ArrayList<EventInfo>();
+            for (Any rst : any.asList()) {
+                if (rst.toString("action").equals("exception")) {
+                    PLUGIN_LOGGER.info(rst.toString("message"));
+                } else {
+                    attackInfos.add(new AttackInfo(checkParameter, rst.toString("action"), rst.toString("message"),
+                        rst.toString("name"), rst.toString("algorithm"), rst.toInt("confidence")));
+                }
+            }
+            return attackInfos;
+        } catch (Exception e) {
+            LOGGER.warn(e);
             return null;
         }
-        ArrayList<EventInfo> attackInfos = new ArrayList<EventInfo>();
-        for (Any rst : any.asList()) {
-            if (rst.toString("action").equals("exception")) {
-                PLUGIN_LOGGER.info(rst.toString("message"));
-            } else {
-                attackInfos.add(new AttackInfo(checkParameter, rst.toString("action"), rst.toString("message"),
-                    rst.toString("name"), rst.toString("algorithm"), rst.toInt("confidence")));
-            }
-        }
-        return attackInfos;
     }
 
     public synchronized static boolean UpdatePlugin() {
