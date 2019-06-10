@@ -204,6 +204,25 @@ if test "$PHP_OPENRASP" != "no"; then
           AC_MSG_RESULT([$OPENRASP_CURL_INCDIR])
           PHP_ADD_INCLUDE($OPENRASP_CURL_INCDIR)
 
+          CURL_CONFIG="curl-config"
+          AC_MSG_CHECKING(for cURL 7.10.5 or greater)
+
+          if ${OPENRASP_CURL_INCDIR}/bin/curl-config --libs > /dev/null 2>&1; then
+            CURL_CONFIG=${OPENRASP_CURL_INCDIR}/bin/curl-config
+          else
+            if ${OPENRASP_CURL_INCDIR}/curl-config --libs > /dev/null 2>&1; then
+              CURL_CONFIG=${OPENRASP_CURL_INCDIR}/curl-config
+            fi
+          fi
+
+          curl_version_full=`$CURL_CONFIG --version`
+          curl_version=`echo ${curl_version_full} | sed -e 's/libcurl //' | $AWK 'BEGIN { FS = "."; } { printf "%d", ($1 * 1000 + $2) * 1000 + $3;}'`
+          if test "$curl_version" -ge 7010005; then
+            AC_MSG_RESULT($curl_version_full)
+          else
+            AC_MSG_ERROR(cURL version 7.10.5 or later is required to compile openrasp)
+          fi
+
           AC_MSG_CHECKING([for curl library location])
           
           for i in $CURL_SEARCH_PATH ; do
