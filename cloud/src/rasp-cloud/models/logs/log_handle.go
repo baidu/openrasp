@@ -96,7 +96,6 @@ type AlarmLogInfo struct {
 	EsType       string
 	EsIndex      string
 	EsAliasIndex string
-	TtlTime      time.Duration
 	FileLogger   *logs.BeeLogger
 	AlarmBuffer  chan map[string]interface{}
 }
@@ -119,7 +118,7 @@ func init() {
 
 func registerAlarmInfo(info *AlarmLogInfo) {
 	alarmInfos[info.EsType] = info
-	es.RegisterTTL(info.TtlTime, info.EsAliasIndex+"-*")
+	es.RegisterTTL(24*time.Duration(conf.AppConfig.EsTTL)*time.Hour, info.EsAliasIndex+"-*")
 }
 
 func initAlarmFileLogger(dirName string, fileName string) *logs.BeeLogger {

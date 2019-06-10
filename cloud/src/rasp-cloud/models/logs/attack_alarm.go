@@ -34,7 +34,6 @@ var (
 		EsType:       "attack-alarm",
 		EsIndex:      "openrasp-attack-alarm",
 		EsAliasIndex: "real-openrasp-attack-alarm",
-		TtlTime:      24 * 365 * time.Hour,
 		AlarmBuffer:  make(chan map[string]interface{}, conf.AppConfig.AlarmBufferSize),
 		FileLogger:   initAlarmFileLogger("/openrasp-logs/attack-alarm", "attack.log"),
 	}
