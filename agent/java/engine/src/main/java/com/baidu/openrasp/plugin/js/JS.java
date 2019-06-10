@@ -35,7 +35,6 @@ public class JS {
     public static Integer watchId = null;
 
     static {
-        JsoniterSpi.setDefaultConfig(new com.jsoniter.spi.Config.Builder().escapeUnicode(false).build());
         Base64Support.enable();
     }
 
@@ -103,7 +102,7 @@ public class JS {
             return null;
         }
 
-        Any any = JsonIterator.deserialize(results);
+        Any any = JsonIterator.deserialize(results.getBytes("UTF-8"));
         if (any == null) {
             return null;
         }
