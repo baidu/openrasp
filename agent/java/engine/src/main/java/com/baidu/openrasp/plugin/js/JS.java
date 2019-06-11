@@ -18,6 +18,7 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.io.FileUtils;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.plugin.info.AttackInfo;
@@ -89,7 +90,7 @@ public class JS {
         String results = null;
         try {
             results = V8.Check(type.getName(), params.getByteArray(), params.size(),
-            new Context(checkParameter.getRequest()), type == Type.REQUEST);
+                new Context(checkParameter.getRequest()), type == Type.REQUEST, (int)Config.getConfig().getPluginTimeout());
         } catch (Exception e) {
             String message = e.getMessage();
             int errorCode = ErrorType.PLUGIN_ERROR.getCode();
