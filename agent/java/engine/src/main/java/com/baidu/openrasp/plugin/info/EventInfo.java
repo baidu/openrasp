@@ -70,12 +70,13 @@ public abstract class EventInfo {
     }
 
     protected StackTraceElement[] filter(StackTraceElement[] trace) {
-        int i = trace.length - 1;
+        int i = 0;
         // 去除插件本身调用栈
-        while (i >= 0 && !trace[i].getClassName().startsWith("com.baidu.openrasp")) {
-            i--;
+        while (i < trace.length && (trace[i].getClassName().startsWith("com.baidu.openrasp")
+                || trace[i].getClassName().contains("reflect"))) {
+            i++;
         }
-        return Arrays.copyOfRange(trace, i + 1, Math.min(i + 1 + Config.getConfig().getLogMaxStackSize(), trace.length));
+        return Arrays.copyOfRange(trace, i, Math.min(i + Config.getConfig().getLogMaxStackSize(), trace.length));
     }
 
     protected String stringify(StackTraceElement[] trace) {
