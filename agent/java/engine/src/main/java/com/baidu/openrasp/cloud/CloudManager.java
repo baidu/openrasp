@@ -47,14 +47,12 @@ public class CloudManager {
         for (CloudTimerTask task : tasks) {
             task.start();
         }
-        CpuMonitorManager.start();
     }
 
     public static void stop() {
         for (CloudTimerTask task : tasks) {
             task.stop();
         }
-        CpuMonitorManager.stop();
     }
 
 }
