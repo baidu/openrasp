@@ -88,7 +88,7 @@ public class Config extends FileScanListener {
         HOOK_WHITE_ALL("hook.white.ALL", "true"),
         DECOMPILE_ENABLE("decompile.enable", "false"),
         RESPONSE_HEADERS("inject.custom_headers", ""),
-        CPU_USAGE_INTERVAL("cpu.usage.interval", "2"),
+        CPU_USAGE_PERCENT("cpu.usage.percent", "2"),
         CPU_USAGE_ENABLE("cpu.usage.enable", "false");
 
 
@@ -162,7 +162,7 @@ public class Config extends FileScanListener {
     private int logMaxBackUp;
     private boolean disableHooks;
     private boolean cpuUsageEnable;
-    private int cpuUsageInterval;
+    private float cpuUsagePercent;
 
 
     static {
@@ -1179,26 +1179,25 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取agent采集cpu的使用率的时间间隔
+     * 获取cpu的使用率的百分比
      *
-     * @return agent采集cpu的使用率的时间间隔
+     * @return cpu的使用率的百分比
      */
-    public int getCpuUsageInterval() {
-        return cpuUsageInterval;
+    public float getCpuUsagePercent() {
+        return cpuUsagePercent;
     }
 
     /**
-     * 设置agent采集cpu的使用率的时间间隔
+     * 设置cpu的使用率的百分比
      *
-     * @param cpuUsageInterval agent采集cpu的使用率的时间间隔
+     * @param cpuUsagePercent cpu的使用率的百分比
      */
-    public void setCpuUsageInterval(String cpuUsageInterval) {
-        this.cpuUsageInterval = Integer.parseInt(cpuUsageInterval);
-        if (!(this.cpuUsageInterval >= 1 && this.cpuUsageInterval <= 5)) {
-            this.cpuUsageInterval = 2;
+    public void setCpuUsagePercent(String cpuUsagePercent) {
+        this.cpuUsagePercent = Float.parseFloat(cpuUsagePercent);
+        if (!(this.cpuUsagePercent >= 0.3 && this.cpuUsagePercent <= 0.9)) {
+            this.cpuUsagePercent = 0.9f;
         }
     }
-
     //--------------------------统一的配置处理------------------------------------
 
     /**
@@ -1279,8 +1278,8 @@ public class Config extends FileScanListener {
                 setLogMaxBackUp(value);
             } else if (Item.CPU_USAGE_ENABLE.key.equals(key)) {
                 setCpuUsageEnable(value);
-            } else if (Item.CPU_USAGE_INTERVAL.key.equals(key)) {
-                setCpuUsageInterval(value);
+            } else if (Item.CPU_USAGE_PERCENT.key.equals(key)) {
+                setCpuUsagePercent(value);
             } else {
                 isHit = false;
             }

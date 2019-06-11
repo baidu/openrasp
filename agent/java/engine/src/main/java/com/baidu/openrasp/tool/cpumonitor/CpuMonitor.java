@@ -34,27 +34,30 @@ import java.util.ArrayList;
 public class CpuMonitor {
     private static final String CPUS_ALLOWED_LIST = "Cpus_allowed_list";
     private static final String PROCESS_STATUS = "/proc/%d/status";
+    private static final int SAMPLE_INTERVAL = 5;
     private static ArrayList<Float> cpuUsageList = new ArrayList<Float>(3);
 
     private boolean isAlive = true;
+    private long lastTotalCpuTime;
+    private long lastProcessCpuTime;
 
-    private static float getCpuUsage() {
+    CpuMonitor() {
+        String pid = getPid();
+        this.lastTotalCpuTime = System.currentTimeMillis();
+        ProcCpuProcess processcpu = new ProcCpuProcess(pid);
+        this.lastProcessCpuTime = processcpu.getProcessTotalCpuTime();
+    }
+
+    private float getCpuUsage() {
         float totalUsage = 0;
-        int sampleInterval = 3000;
         try {
             String pid = getPid();
-            long initialTotalCpuTime = System.currentTimeMillis();
-            ProcCpuProcess processcpu = new ProcCpuProcess(pid);
-            long initialProcessCpuTime = processcpu.getProcessTotalCpuTime();
-            try {
-                Thread.sleep(sampleInterval);
-            } catch (InterruptedException e) {
-                //
-            }
             long currentTotalCpuTime = System.currentTimeMillis();
-            processcpu = new ProcCpuProcess(pid);
+            ProcCpuProcess processcpu = new ProcCpuProcess(pid);
             long currentProcessCpuTime = processcpu.getProcessTotalCpuTime();
-            totalUsage = (float) (currentProcessCpuTime - initialProcessCpuTime) * 10 * 100 / (float) (currentTotalCpuTime - initialTotalCpuTime);
+            totalUsage = (float) (currentProcessCpuTime - this.lastProcessCpuTime) * 10 * 100 / (float) (currentTotalCpuTime - this.lastTotalCpuTime);
+            this.lastTotalCpuTime = currentTotalCpuTime;
+            this.lastProcessCpuTime = currentProcessCpuTime;
         } catch (Exception e) {
             String msg = "count cpu usage failed";
             int code = ErrorType.CPU_ERROR.getCode();
@@ -63,12 +66,12 @@ public class CpuMonitor {
         return totalUsage;
     }
 
-    private static String getPid() {
+    private String getPid() {
         String name = ManagementFactory.getRuntimeMXBean().getName();
         return name.split("@")[0];
     }
 
-    private static float getCpuUsageUpper(String pid) {
+    private float getCpuUsageUpper(String pid) {
         int totalCpuNum = 0;
         try {
             String path = PROCESS_STATUS.replace("%d", pid);
@@ -94,10 +97,10 @@ public class CpuMonitor {
             int code = ErrorType.CPU_ERROR.getCode();
             HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(msg, code), e);
         }
-        return (float) (totalCpuNum * 100 * 0.9);
+        return totalCpuNum * 100 * Config.getConfig().getCpuUsagePercent();
     }
 
-    private static void checkCpuUsage() {
+    private void checkCpuUsage() {
         float totalCpuUsage = getCpuUsage();
         float cpuUsageUpper = getCpuUsageUpper(getPid());
         if (totalCpuUsage > cpuUsageUpper) {
@@ -128,8 +131,8 @@ public class CpuMonitor {
         public void run() {
             while (isAlive) {
                 try {
+                    Thread.sleep(SAMPLE_INTERVAL * 1000);
                     checkCpuUsage();
-                    Thread.sleep(2 * 1000);
                 } catch (Throwable e) {
                     String message = e.getMessage();
                     int errorCode = ErrorType.CPU_ERROR.getCode();
