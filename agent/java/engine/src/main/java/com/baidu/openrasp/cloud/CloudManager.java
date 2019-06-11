@@ -19,7 +19,7 @@ package com.baidu.openrasp.cloud;
 import com.baidu.openrasp.cloud.model.AppenderMappedLogger;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.detector.ServerDetector;
-import com.baidu.openrasp.tool.cpumonitor.CpuMonitor;
+import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
 import org.apache.log4j.Logger;
 
 import java.util.LinkedList;
@@ -47,25 +47,14 @@ public class CloudManager {
         for (CloudTimerTask task : tasks) {
             task.start();
         }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true){
-                    System.out.println(CpuMonitor.getCpuUsage()+"########");
-                    try {
-                        Thread.sleep(5000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }).start();
+        CpuMonitorManager.start();
     }
 
     public static void stop() {
         for (CloudTimerTask task : tasks) {
             task.stop();
         }
+        CpuMonitorManager.stop();
     }
 
 }

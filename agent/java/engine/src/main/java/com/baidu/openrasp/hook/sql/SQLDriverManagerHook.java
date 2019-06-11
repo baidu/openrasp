@@ -133,6 +133,11 @@ public class SQLDriverManagerHook extends AbstractClassHook {
      * @param properties 连接属性
      */
     public static void checkSqlConnection(String url, Properties properties) {
+        //当服务器的cpu使用率超过90%，禁用全部hook点
+        if (Config.getConfig().getDisableHooks()){
+            return;
+        }
+        //当云控注册成功之前，不进入任何hoo点
         if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
             return;
         }

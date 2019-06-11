@@ -347,6 +347,11 @@ public class HookHandler {
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
     public static void doCheckWithoutRequest(CheckParameter.Type type, Object params) {
+        //当服务器的cpu使用率超过90%，禁用全部hook点
+        if (Config.getConfig().getDisableHooks()) {
+            return;
+        }
+        //当云控注册成功之前，不进入任何hoo点
         if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
             return;
         }

@@ -87,7 +87,9 @@ public class Config extends FileScanListener {
         HOOK_WHITE("hook.white", ""),
         HOOK_WHITE_ALL("hook.white.ALL", "true"),
         DECOMPILE_ENABLE("decompile.enable", "false"),
-        RESPONSE_HEADERS("inject.custom_headers", "");
+        RESPONSE_HEADERS("inject.custom_headers", ""),
+        CPU_USAGE_INTERVAL("cpu.usage.interval", "2"),
+        CPU_USAGE_ENABLE("cpu.usage.enable", "false");
 
 
         Item(String key, String defaultValue) {
@@ -158,6 +160,9 @@ public class Config extends FileScanListener {
     private boolean decompileEnable;
     private Map<String, String> responseHeaders;
     private int logMaxBackUp;
+    private boolean disableHooks;
+    private boolean cpuUsageEnable;
+    private int cpuUsageInterval;
 
 
     static {
@@ -338,7 +343,6 @@ public class Config extends FileScanListener {
     private void handleException(String message, Exception e) {
         int errorCode = ErrorType.CONFIG_ERROR.getCode();
         LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
-        System.out.println(message);
     }
 
     private static class ConfigHolder {
@@ -989,6 +993,24 @@ public class Config extends FileScanListener {
     }
 
     /**
+     * 获取是否禁用全部hook点，
+     *
+     * @return 是否禁用全部hook点
+     */
+    public boolean getDisableHooks() {
+        return disableHooks;
+    }
+
+    /**
+     * 设置是否禁用全部hook点，
+     *
+     * @param disableHooks 是否禁用全部hook点
+     */
+    public synchronized void setDisableHooks(String disableHooks) {
+        this.disableHooks = Boolean.parseBoolean(disableHooks);
+    }
+
+    /**
      * 获取云控的开关状态，
      *
      * @return 云控开关状态
@@ -1138,6 +1160,45 @@ public class Config extends FileScanListener {
         }
     }
 
+    /**
+     * 获取agent是否开启cpu熔断策略
+     *
+     * @return 是否开启cpu熔断策略
+     */
+    public boolean getCpuUsageEnable() {
+        return cpuUsageEnable;
+    }
+
+    /**
+     * 设置agent是否开启cpu熔断策略
+     *
+     * @param cpuUsageEnable agent是否开启cpu熔断策略
+     */
+    public synchronized void setCpuUsageEnable(String cpuUsageEnable) {
+        this.cpuUsageEnable = Boolean.parseBoolean(cpuUsageEnable);
+    }
+
+    /**
+     * 获取agent采集cpu的使用率的时间间隔
+     *
+     * @return agent采集cpu的使用率的时间间隔
+     */
+    public int getCpuUsageInterval() {
+        return cpuUsageInterval;
+    }
+
+    /**
+     * 设置agent采集cpu的使用率的时间间隔
+     *
+     * @param cpuUsageInterval agent采集cpu的使用率的时间间隔
+     */
+    public void setCpuUsageInterval(String cpuUsageInterval) {
+        this.cpuUsageInterval = Integer.parseInt(cpuUsageInterval);
+        if (!(this.cpuUsageInterval >= 1 && this.cpuUsageInterval <= 5)) {
+            this.cpuUsageInterval = 2;
+        }
+    }
+
     //--------------------------统一的配置处理------------------------------------
 
     /**
@@ -1216,6 +1277,10 @@ public class Config extends FileScanListener {
                 setDecompileEnable(value);
             } else if (Item.LOG_MAX_BACKUP.key.equals(key)) {
                 setLogMaxBackUp(value);
+            } else if (Item.CPU_USAGE_ENABLE.key.equals(key)) {
+                setCpuUsageEnable(value);
+            } else if (Item.CPU_USAGE_INTERVAL.key.equals(key)) {
+                setCpuUsageInterval(value);
             } else {
                 isHit = false;
             }
