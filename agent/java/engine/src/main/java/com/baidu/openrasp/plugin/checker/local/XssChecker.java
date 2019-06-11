@@ -33,11 +33,9 @@ import java.util.regex.Pattern;
 
 public class XssChecker extends ConfigurableChecker {
     private static final String CONFIG_KEY_XSS_USER_INPUT = "xss_userinput";
-    private static final String EXCEED_LENGTH_COUNT = "max_detection_num";
     private static final String XSS_PARAMETER_LENGTH = "min_length";
     private static final String XSS_REGEX = "filter_regex";
     private static final int DEFAULT_MIN_LENGTH = 15;
-    private static final int DEFAULT_MAX_DETECTION_NUM = 10;
     private static final String DEFAULT_XSS_REGEX = "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]";
 
     @Override
@@ -59,17 +57,11 @@ public class XssChecker extends ConfigurableChecker {
                 if (xssParameterLength < 0) {
                     xssParameterLength = DEFAULT_MIN_LENGTH;
                 }
-                int exceedLengthCount = getIntElement(config, CONFIG_KEY_XSS_USER_INPUT, EXCEED_LENGTH_COUNT);
-                if (exceedLengthCount < 0) {
-                    exceedLengthCount = DEFAULT_MAX_DETECTION_NUM;
-                }
-                int count = 0;
                 for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
                     for (String value : entry.getValue()) {
                         Matcher matcher = pattern.matcher(value);
                         boolean isMatch = matcher.find();
                         if (value.length() >= xssParameterLength && isMatch) {
-                            count++;
                             if (content.contains(value)) {
                                 if ("websphere".equals(ApplicationModel.getServerName())) {
                                     Reflection.invokeMethod(HookHandler.responseCache.get(), "resetBuffer", new Class[]{});
@@ -79,15 +71,6 @@ public class XssChecker extends ConfigurableChecker {
                                 params.remove("html_body");
                                 params.put("name", entry.getKey());
                                 params.put("value", value);
-                                result.add(AttackInfo.createLocalAttackInfo(checkParameter, action, message, CONFIG_KEY_XSS_USER_INPUT));
-                                return result;
-                            }
-                            if (count > exceedLengthCount) {
-                                String message = "Reflected XSS attack detected: more than " + exceedLengthCount + " html tags detected in userinput";
-                                Map<String, Object> params = (Map<String, Object>) checkParameter.getParams();
-                                params.remove("html_body");
-                                params.put("name", "");
-                                params.put("value", "");
                                 result.add(AttackInfo.createLocalAttackInfo(checkParameter, action, message, CONFIG_KEY_XSS_USER_INPUT));
                                 return result;
                             }
