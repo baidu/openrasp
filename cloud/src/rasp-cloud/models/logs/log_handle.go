@@ -58,6 +58,7 @@ type SearchAttackParam struct {
 		AttackUrl      string    `json:"url,omitempty"`
 		LocalIp        string    `json:"local_ip,omitempty"`
 		StackMd5       string    `json:"stack_md5,omitempty"`
+		RequestId      string    `json:"request_id,omitempty"`
 		AttackType     *[]string `json:"attack_type,omitempty"`
 		InterceptState *[]string `json:"intercept_state,omitempty"`
 	} `json:"data"`
@@ -89,6 +90,7 @@ type SearchErrorParam struct {
 		RaspId    string `json:"rasp_id,omitempty"`
 		HostName  string `json:"server_hostname,omitempty"`
 		LocalIp   string `json:"local_ip,omitempty"`
+		Message   string `json:"message,omitempty"`
 	} `json:"data"`
 }
 
@@ -264,7 +266,7 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 			} else if key == "local_ip" {
 				filterQueries = append(filterQueries,
 					elastic.NewNestedQuery("server_nic", elastic.NewTermQuery("server_nic.ip", value)))
-			} else if key == "attack_source" {
+			} else if key == "attack_source" || key == "url" || key == "message" {
 				filterQueries = append(filterQueries, elastic.NewWildcardQuery(key, "*"+fmt.Sprint(value)+"*"))
 			} else if key == "server_hostname" {
 				shouldQueries = append(shouldQueries,
@@ -272,9 +274,6 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 				shouldQueries = append(shouldQueries,
 					elastic.NewNestedQuery("server_nic",
 						elastic.NewWildcardQuery("server_nic.ip", "*"+fmt.Sprint(value)+"*")))
-			} else if key == "url" {
-				filterQueries = append(filterQueries,
-					elastic.NewWildcardQuery("url", "*"+fmt.Sprint(value)+"*"))
 			} else {
 				filterQueries = append(filterQueries, elastic.NewTermQuery(key, value))
 			}
