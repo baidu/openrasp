@@ -673,7 +673,6 @@ func (o *AppController) CheckPluginLatest(config map[string]interface{}) {
 	if appId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id cannot be empty")
 	}
-	isLatest := true
 	latestVersion := ""
 	currentVersion := ""
 	app, err := models.GetAppById(appId)
@@ -685,6 +684,12 @@ func (o *AppController) CheckPluginLatest(config map[string]interface{}) {
 		o.ServeError(http.StatusBadRequest, "failed to get the app", err)
 	}
 	if selectedPlugin != nil {
+		if selectedPlugin.Name != "official" {
+			o.Serve(map[string]interface{}{
+				"is_latest": true,
+			})
+			return
+		}
 		currentVersion = selectedPlugin.Version
 	}
 
@@ -696,13 +701,16 @@ func (o *AppController) CheckPluginLatest(config map[string]interface{}) {
 	if len(latestPlugins) > 0 {
 		latestVersion = latestPlugins[0].Version
 		if selectedPlugin == nil || strings.Compare(selectedPlugin.Version, latestPlugins[0].Version) < 0 {
-			isLatest = false
+			o.Serve(map[string]interface{}{
+				"is_latest":        false,
+				"selected_version": currentVersion,
+				"latest_version":   latestVersion,
+			})
+			return
 		}
 	}
 
 	o.Serve(map[string]interface{}{
-		"is_latest":       isLatest,
-		"current_version": currentVersion,
-		"latest_version":  latestVersion,
+		"is_latest": true,
 	})
 }
