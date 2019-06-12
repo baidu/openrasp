@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"strings"
 )
 
 // Operations about app
@@ -542,7 +543,8 @@ func (o *AppController) GetPlugins() {
 		o.ServeError(http.StatusBadRequest, "the app doesn't exist")
 	}
 	var result = make(map[string]interface{})
-	total, plugins, err := models.GetPluginsByApp(param.AppId, (param.Page-1)*param.Perpage, param.Perpage)
+	total, plugins, err := models.GetPluginsByApp(param.AppId, (param.Page-1)*param.Perpage,
+		param.Perpage, "-upload_time")
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get plugins", err)
 	}
@@ -661,4 +663,46 @@ func (o *AppController) TestHttp(config map[string]interface{}) {
 		o.ServeError(http.StatusBadRequest, "failed to test http alarm", err)
 	}
 	o.ServeWithEmptyData()
+}
+
+// @router /plugin/latest [post]
+func (o *AppController) CheckPluginLatest(config map[string]interface{}) {
+	var param map[string]string
+	o.UnmarshalJson(&param)
+	appId := param["app_id"]
+	if appId == "" {
+		o.ServeError(http.StatusBadRequest, "app_id cannot be empty")
+	}
+	isLatest := true
+	latestVersion := ""
+	currentVersion := ""
+	app, err := models.GetAppById(appId)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to get the app", err)
+	}
+	selectedPlugin, err := models.GetPluginById(app.SelectedPluginId, false)
+	if err != nil && err != mgo.ErrNotFound {
+		o.ServeError(http.StatusBadRequest, "failed to get the app", err)
+	}
+	if selectedPlugin != nil {
+		currentVersion = selectedPlugin.Version
+	}
+
+	latestPlugins, err := models.SearchPlugins(bson.M{"app_id": appId, "name": "official"},
+		0, 1, "-version")
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to get plugins for app: "+appId, err)
+	}
+	if len(latestPlugins) > 0 {
+		latestVersion = latestPlugins[0].Version
+		if selectedPlugin == nil || strings.Compare(selectedPlugin.Version, latestPlugins[0].Version) < 0 {
+			isLatest = false
+		}
+	}
+
+	o.Serve(map[string]interface{}{
+		"is_latest":       isLatest,
+		"current_version": currentVersion,
+		"latest_version":  latestVersion,
+	})
 }

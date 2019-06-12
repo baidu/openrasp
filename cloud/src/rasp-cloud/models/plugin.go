@@ -77,7 +77,7 @@ func init() {
 	err = mongo.CreateIndex(pluginCollectionName, index)
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed,
-			"failed to create upload_time index for plugin collection", err)
+			"failed to create the upload_time index for plugin collection", err)
 	}
 }
 
@@ -161,7 +161,7 @@ func addPluginToDb(plugin *Plugin) (err error) {
 
 	var count int
 	if conf.AppConfig.MaxPlugins > 0 {
-		_, oldPlugins, err := GetPluginsByApp(plugin.AppId, conf.AppConfig.MaxPlugins-1, 0)
+		_, oldPlugins, err := GetPluginsByApp(plugin.AppId, conf.AppConfig.MaxPlugins-1, 0, "-upload_time")
 		if err != nil {
 			return err
 		}
@@ -283,7 +283,7 @@ func GetPluginById(id string, hasContent bool) (plugin *Plugin, err error) {
 	return
 }
 
-func GetPluginsByApp(appId string, skip int, limit int) (total int, plugins []Plugin, err error) {
+func GetPluginsByApp(appId string, skip int, limit int, sortField string) (total int, plugins []Plugin, err error) {
 	newSession := mongo.NewSession()
 	defer newSession.Close()
 	total, err = newSession.DB(mongo.DbName).C(pluginCollectionName).Find(bson.M{"app_id": appId}).Count()
@@ -291,7 +291,18 @@ func GetPluginsByApp(appId string, skip int, limit int) (total int, plugins []Pl
 		return
 	}
 	err = newSession.DB(mongo.DbName).C(pluginCollectionName).Find(bson.M{"app_id": appId}).Select(bson.M{"content": 0}).
-		Sort("-upload_time").Skip(skip).Limit(limit).All(&plugins)
+		Sort(sortField).Skip(skip).Limit(limit).All(&plugins)
+	if plugins == nil {
+		plugins = make([]Plugin, 0)
+	}
+	return
+}
+
+func SearchPlugins(selector bson.M, skip int, limit int, sortField string) (plugins []Plugin, err error) {
+	newSession := mongo.NewSession()
+	defer newSession.Close()
+	err = newSession.DB(mongo.DbName).C(pluginCollectionName).Find(selector).Select(bson.M{"content": 0}).
+		Sort(sortField).Skip(skip).Limit(limit).All(&plugins)
 	if plugins == nil {
 		plugins = make([]Plugin, 0)
 	}
