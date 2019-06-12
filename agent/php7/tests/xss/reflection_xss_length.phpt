@@ -7,7 +7,8 @@ RASP.algorithmConfig = {
      xss_userinput: {
         action: 'block',
         filter_regex: "<![\\\\-\\\\[A-Za-z]|<([A-Za-z]{1,12})[\\\\/ >]",
-        min_length: 50
+        min_length: 50,
+        max_detection_num: 10
     }
 }
 EOF;
