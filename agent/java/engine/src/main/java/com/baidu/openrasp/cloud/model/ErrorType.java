@@ -27,8 +27,9 @@ public enum ErrorType {
     HEARTBEAT_ERROR(20009, "Cloud Control Send HeartBeat Failed"),
     STATISTICSREPORT_ERROR(20010, "Cloud Control Statistics,Report Failed"),
     HTTPAPPENDER_ERROR(20011, "Cloud Control Log Upload Failed"),
-    DETECT_SERVER_ERROR(20012, "detect server Error"),
-    REFLECTION_ERROR(20013, "Reflex Failed");
+    DETECT_SERVER_ERROR(20012, "Detect Server Error"),
+    REFLECTION_ERROR(20013, "Reflex Failed"),
+    CPU_ERROR(20014, "Count Cpu Usage Failed");
     private int code;
     private String message;
 
