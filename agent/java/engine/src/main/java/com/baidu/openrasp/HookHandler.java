@@ -171,7 +171,6 @@ public class HookHandler {
             enableBodyXssHook();
             HttpServletRequest requestContainer = new HttpServletRequest(request);
             HttpServletResponse responseContainer = new HttpServletResponse(response);
-            responseContainer.setHeader(OPEN_RASP_HEADER_KEY, OPEN_RASP_HEADER_VALUE);
             responseContainer.setHeader(REQUEST_ID_HEADER_KEY, requestContainer.getRequestId());
             //设置响应的用户自定义头部
             setUserDefinedResponseHeader(responseContainer);
