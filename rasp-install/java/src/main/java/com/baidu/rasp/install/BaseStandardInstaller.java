@@ -25,6 +25,8 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.*;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,7 +55,7 @@ public abstract class BaseStandardInstaller implements Installer {
     @Override
     public void install() throws RaspError, IOException {
         boolean firstInstall = false;
-        String jarPath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+        String jarPath = getLocalJarPath();
         File srcDir = new File(new File(jarPath).getParent() + File.separator + "rasp");
         if (!(srcDir.exists() && srcDir.isDirectory())) {
             srcDir.mkdirs();
@@ -250,6 +252,12 @@ public abstract class BaseStandardInstaller implements Installer {
             }
         }
         return null;
+    }
+
+    //获取当前所在jar包的路径
+    public String getLocalJarPath() throws UnsupportedEncodingException {
+        URL localUrl = getClass().getProtectionDomain().getCodeSource().getLocation();
+        return URLDecoder.decode(localUrl.getFile().replace("+", "%2B"), "UTF-8");
     }
 
     protected abstract String getInstallPath(String serverRoot);

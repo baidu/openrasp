@@ -130,6 +130,12 @@ export default {
           alert('URL 无需以 http/https 开头，请删除')
           return
         }
+
+        let hookSelected = Object.values(this.modalData.hook).indexOf(true)
+        if (hookSelected < 0) {
+          alert('请至少选择一个 hook 点来加白名单')
+          return
+        }
         this.$set(this.data, this.index, this.modalData)
       }
       this.modalData = { url: '', hook: {}}

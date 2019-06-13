@@ -1154,7 +1154,7 @@ public class Config extends FileScanListener {
      * @param logMaxBackUp log4j最大日志备份天数
      */
     public synchronized void setLogMaxBackUp(String logMaxBackUp) {
-        this.logMaxBackUp = Integer.parseInt(logMaxBackUp);
+        this.logMaxBackUp = Integer.parseInt(logMaxBackUp) + 1;
         if (this.logMaxBackUp <= 0) {
             this.logMaxBackUp = 30;
         }

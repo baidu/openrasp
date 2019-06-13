@@ -10,3 +10,7 @@ td {
     white-space: normal; 
     word-break: break-all;
 }
+
+.custom-switch {
+    padding-left: 0;
+}
