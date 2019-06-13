@@ -137,7 +137,7 @@ PHP_MINIT_FUNCTION(openrasp)
     if (need_alloc_shm_current_sapi() && openrasp_ini.remote_management_enable)
     {
         openrasp::oam.reset(new openrasp::OpenraspAgentManager());
-        if (!openrasp::oam->verify_ini_correct())
+        if (!verify_remote_management_ini())
         {
             return SUCCESS;
         }

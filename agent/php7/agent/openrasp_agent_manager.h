@@ -51,7 +51,6 @@ public:
   virtual ~OpenraspAgentManager();
   bool startup();
   bool shutdown();
-  bool verify_ini_correct();
   bool agent_remote_register();
 
   long get_plugin_update_timestamp();

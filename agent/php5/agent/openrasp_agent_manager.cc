@@ -30,7 +30,6 @@
 #include <vector>
 #include <iostream>
 #include "openrasp_ini.h"
-#include "utils/regex.h"
 #include "utils/file.h"
 #include "utils/net.h"
 #include "agent/utils/os.h"
@@ -133,45 +132,6 @@ bool OpenraspAgentManager::shutdown()
 	return true;
 }
 
-bool OpenraspAgentManager::verify_ini_correct()
-{
-	if (openrasp_ini.remote_management_enable && need_alloc_shm_current_sapi())
-	{
-		if (nullptr == openrasp_ini.backend_url || strcmp(openrasp_ini.backend_url, "") == 0)
-		{
-			openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.backend_url is required when remote management is enabled."));
-			return false;
-		}
-		if (nullptr == openrasp_ini.app_id || strcmp(openrasp_ini.app_id, "") == 0)
-		{
-			openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_id is required when remote management is enabled."));
-			return false;
-		}
-		else
-		{
-			if (!regex_match(openrasp_ini.app_id, "^[0-9a-fA-F]{40}$"))
-			{
-				openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_id must be exactly 40 characters long."));
-				return false;
-			}
-		}
-		if (nullptr == openrasp_ini.app_secret || strcmp(openrasp_ini.app_secret, "") == 0)
-		{
-			openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_secret is required when remote management is enabled."));
-			return false;
-		}
-		else
-		{
-			if (!regex_match(openrasp_ini.app_secret, "^[0-9a-zA-Z_-]{43,45}"))
-			{
-				openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_secret configuration format is incorrect."));
-				return false;
-			}
-		}
-	}
-	return true;
-}
-
 bool OpenraspAgentManager::create_share_memory()
 {
 	size_t total_size = meta_size + sizeof(OpenraspCtrlBlock);
@@ -212,6 +172,12 @@ bool OpenraspAgentManager::process_agent_startup()
 	}
 	else if (pid == 0)
 	{
+		int fd;
+		if (-1 != (fd = open("/dev/null", O_RDONLY))) {
+			close(STDIN_FILENO);
+			dup2(fd, STDIN_FILENO);
+			close(fd);
+		}		
 		setsid();
 		supervisor_run();
 	}
