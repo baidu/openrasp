@@ -16,7 +16,13 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <b-form-input v-model="hostname" type="text" class="form-control w-10" placeholder="搜索主机或者IP" @keyup.enter="fetchData(1)" />
+            <b-form-input v-model="hostname" type="text" class="form-control" placeholder="搜索主机或者IP" @keyup.enter="fetchData(1)" />
+          </div>
+          <div class="input-icon ml-2">
+            <span class="input-icon-addon">
+              <i class="fe fe-search" />
+            </span>
+            <b-form-input v-model="message" type="text" class="form-control" placeholder="搜索消息" @keyup.enter="fetchData(1)" />
           </div>
           <button class="btn btn-primary ml-2" @click="fetchData(1)">
             搜索
@@ -131,7 +137,8 @@ export default {
           start_time: this.$refs.datePicker.start.valueOf(),
           end_time: this.$refs.datePicker.end.valueOf(),
           app_id: this.current_app.id,
-          server_hostname: this.hostname || undefined
+          server_hostname: this.hostname || undefined,
+          message: this.message || undefined
         },
         page: page,
         perpage: 10
