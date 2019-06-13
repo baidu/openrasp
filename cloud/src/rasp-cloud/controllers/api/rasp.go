@@ -19,8 +19,9 @@ import (
 	"net/http"
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
-	"github.com/astaxie/beego/validation"
 	"fmt"
+	"encoding/json"
+	"github.com/astaxie/beego/validation"
 )
 
 type RaspController struct {
@@ -58,10 +59,11 @@ func (o *RaspController) Search() {
 // @router /delete [post]
 func (o *RaspController) Delete() {
 	var rasp struct {
-		Id          string `json:"id"`
-		AppId       string `json:"app_id"`
-		RegisterIp  string `json:"register_ip"`
-		ExpiredTime int64  `json:"expire_time"`
+		Id          string `json:"id,omitempty"`
+		AppId       string `json:"app_id,omitempty"`
+		RegisterIp  string `json:"register_ip,omitempty"`
+		ExpiredTime int64  `json:"expire_time,omitempty"`
+		HostType    string `json:"host_type,omitempty"`
 	}
 	o.UnmarshalJson(&rasp)
 	if rasp.AppId == "" {
@@ -80,9 +82,8 @@ func (o *RaspController) Delete() {
 		})
 	} else {
 		selector := make(map[string]interface{})
-		if rasp.ExpiredTime == 0 && rasp.RegisterIp == "" {
-			o.ServeError(http.StatusBadRequest,
-				"expire_time and register ip can not be empty at the same time")
+		if rasp.ExpiredTime < 0 {
+			o.ServeError(http.StatusBadRequest, "expire_time must be greater than 0")
 		}
 		if rasp.RegisterIp != "" {
 			selector["register_ip"] = rasp.RegisterIp
@@ -91,18 +92,20 @@ func (o *RaspController) Delete() {
 				o.ServeError(http.StatusBadRequest, "rasp register_ip format error"+result.Error.Message)
 			}
 		}
-		if rasp.ExpiredTime != 0 {
-			selector["expire_time"] = rasp.ExpiredTime
-			if rasp.ExpiredTime < 0 {
-				o.ServeError(http.StatusBadRequest, "expire_time must be greater than 0")
-			}
+		data, err := json.Marshal(rasp)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "marshal search param error", err)
+		}
+		err = json.Unmarshal(data, &selector)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "unmarshal search param error", err)
 		}
 		removedCount, err := models.RemoveRaspBySelector(selector, rasp.AppId)
 		if err != nil {
 			o.ServeError(http.StatusBadRequest, "failed to remove rasp by register ip", err)
 		}
 		models.AddOperation(rasp.AppId, models.OperationTypeDeleteRasp, o.Ctx.Input.IP(),
-			"Deleted RASP agent by register ip: "+rasp.RegisterIp)
+			"Deleted RASP agent by selector: "+fmt.Sprintf("%+v", selector))
 		o.Serve(map[string]interface{}{
 			"count": removedCount,
 		})

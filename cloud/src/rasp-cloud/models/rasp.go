@@ -37,6 +37,7 @@ type Rasp struct {
 	ServerVersion     string            `json:"server_version" bson:"server_version,omitempty"`
 	RaspHome          string            `json:"rasp_home" bson:"rasp_home,omitempty"`
 	PluginVersion     string            `json:"plugin_version" bson:"plugin_version,omitempty"`
+	HostType          string            `json:"host_type" bson:"host_type,omitempty"`
 	HeartbeatInterval int64             `json:"heartbeat_interval" bson:"heartbeat_interval,omitempty"`
 	Online            *bool             `json:"online" bson:"online,omitempty"`
 	LastHeartbeatTime int64             `json:"last_heartbeat_time" bson:"last_heartbeat_time,omitempty"`
@@ -194,7 +195,7 @@ func RemoveRaspByIds(appId string, ids []string) (int, error) {
 func RemoveRaspBySelector(selector map[string]interface{}, appId string) (int, error) {
 	offlineWhere := ""
 	if _, ok := selector["expire_time"]; ok {
-		expireTime := strconv.FormatInt(selector["expire_time"].(int64), 10)
+		expireTime := strconv.FormatInt(int64(selector["expire_time"].(float64)), 10)
 		offlineWhere = "this.last_heartbeat_time+this.heartbeat_interval+180+" + expireTime + "<" +
 			strconv.FormatInt(time.Now().Unix(), 10)
 	} else {
@@ -204,6 +205,9 @@ func RemoveRaspBySelector(selector map[string]interface{}, appId string) (int, e
 	param := bson.M{"app_id": appId, "$where": offlineWhere}
 	if selector["register_ip"] != nil && selector["register_ip"] != "" {
 		param["register_ip"] = selector["register_ip"]
+	}
+	if selector["host_type"] != nil && selector["host_type"] != "" {
+		param["host_type"] = selector["host_type"]
 	}
 	info, err := mongo.RemoveAll(raspCollectionName, param)
 	if err != nil {
