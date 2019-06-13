@@ -33,6 +33,15 @@ function buildRaspInstall {
 	rm -rf $BASE_DIR/rasp-install/java/target
 }
 
+# 编译 openrasp-v8
+function buildOpenraspV8 {
+	cd $BASE_DIR
+	git submodule update --init --recursive --depth=1
+	cd openrasp-v8/java
+	mvn clean install -Drelease.tag=$(git describe --tag --abbrev=0)
+	cd $BASE_DIR
+}
+
 # 编译Rasp
 function buildRasp {
 	cd $BASE_DIR/agent/java || exit 1
@@ -60,7 +69,10 @@ buildPlugin
 log "[3] copy rasp.yaml"
 copyConf
 
-log "[4] build OpenRASP"
+log "[4] build openrasp-v8"
+buildOpenraspV8
+
+log "[5] build OpenRASP"
 buildRasp
 
 cd $OUTPUT_ROOT/..

@@ -18,14 +18,6 @@
     <version>1.1.0</version>
     <packaging>jar</packaging>
 
-    <repositories>
-        <repository>
-            <id>in-project</id>
-            <name>In Project Repo</name>
-            <url>file://${project.basedir}/lib</url>
-        </repository>
-    </repositories>
-
     <dependencies>
         <dependency>
             <groupId>com.baidu.openrasp</groupId>

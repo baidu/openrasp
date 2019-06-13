@@ -87,7 +87,7 @@ public class JS {
             }
         }
 
-        String results = null;
+        byte[] results = null;
         try {
             results = V8.Check(type.getName(), params.getByteArray(), params.size(),
                 new Context(checkParameter.getRequest()), type == Type.REQUEST, (int)Config.getConfig().getPluginTimeout());
@@ -106,7 +106,7 @@ public class JS {
         }
 
         try {
-            Any any = JsonIterator.deserialize(results.getBytes("UTF-8"));
+            Any any = JsonIterator.deserialize(results);
             if (any == null) {
                 return null;
             }
