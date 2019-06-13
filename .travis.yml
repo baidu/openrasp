@@ -119,7 +119,7 @@ matrix:
     - env: OPENRASP_LANG=java SERVER=dubbo
       language: java
       jdk: openjdk7
-    - env: OPENRASP_LANG=java SERVER=tomcat8-jdk11
+    - env: OPENRASP_LANG=java SERVER=tomcat8
       language: java
       jdk: oraclejdk11
     - env: OPENRASP_LANG=java SERVER=jboss7
