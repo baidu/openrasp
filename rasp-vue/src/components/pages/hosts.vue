@@ -90,7 +90,7 @@
             <tbody>
               <tr v-for="row in data" :key="row.id">
                 <td>
-                  {{ row.hostname }}
+                  <a href="javascript:" @click="showHostDetail(row)">{{ row.hostname }}</a>
                 </td>
                 <td nowrap>
                   {{ row.register_ip }}
@@ -114,7 +114,7 @@
                     正常
                   </span>
                 </td>
-                <td nowrap>
+                <td nowrap>                  
                   <a href="javascript:" @click="doDelete(row)" v-if="! row.online">
                     删除
                   </a>
@@ -140,12 +140,15 @@
         </div>
       </div>
     </div>
+
+    <HostDetailModal ref="showHostDetail" />
   </div>
 </template>
 
 <script>
 import isIp from 'is-ip'
 import { mapGetters, mapActions, mapMutations } from "vuex";
+import HostDetailModal from '@/components/modals/HostDetailModal'
 
 export default {
   name: 'Hosts',
@@ -161,6 +164,9 @@ export default {
         offline: true
       }
     }
+  },
+  components: {
+    HostDetailModal
   },
   computed: {
     ...mapGetters(['current_app'])
@@ -180,6 +186,9 @@ export default {
   },
   methods: {
     ceil: Math.ceil,
+    showHostDetail(data) {
+      this.$refs.showHostDetail.showModal(data)
+    },
     loadRaspList(page) {
       if (!this.filter.online && !this.filter.offline) {
         this.currentPage = page
