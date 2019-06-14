@@ -76,6 +76,7 @@ type SearchPolicyParam struct {
 		RaspId    string    `json:"rasp_id,omitempty"`
 		HostName  string    `json:"server_hostname,omitempty"`
 		LocalIp   string    `json:"local_ip,omitempty"`
+		Message   string    `json:"message,omitempty"`
 		PolicyId  *[]string `json:"policy_id,omitempty"`
 	} `json:"data"`
 }
