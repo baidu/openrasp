@@ -134,6 +134,12 @@ var algorithmConfig = {
         reference: 'https://rasp.baidu.com/doc/dev/official.html#sql-exception'
     },
 
+    sql_regex: {
+        name:      '算法4 - 正则表达式算法',
+        action:    'log',
+        regex:     'union.*select.*from.*information_schema'
+    },
+
     // SSRF - 来自用户输入，且为内网地址就拦截
     ssrf_userinput: {
         name:   '算法1 - 用户输入匹配算法',
@@ -1188,6 +1194,20 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                     message:    reason,
                     confidence: 100,
                     algorithm:  'sql_policy'
+                }
+            }
+        }
+
+        // 算法4: SQL正则表达式
+        if (algorithmConfig.sql_regex.action != 'ignore') {
+            var regex_filter = new RegExp(algorithmConfig.sql_regex.regex, 'i')
+            
+            if (regex_filter.test(params.query)) {
+                return {
+                    action:     algorithmConfig.sql_regex.action,
+                    confidence: 60,
+                    message:    reason,
+                    algorithm:  'sql_regex'
                 }
             }
         }
