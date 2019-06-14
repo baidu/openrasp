@@ -46,7 +46,7 @@
               <div class="h6">
                 Agent 版本
               </div>
-              <pre>{{ row.language }}/{{ row.version }}</pre>
+              <pre>{{ data.language }}/{{ data.version }}</pre>
 
               <div class="h6">
                 插件版本
