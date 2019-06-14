@@ -17,8 +17,13 @@
 package com.baidu.openrasp.tool.model;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,6 +37,8 @@ public class ApplicationModel {
     private static Map<String, String> applicationInfo;
 
     private static Map<String, String> systemEnvInfo;
+
+    private static final String SERVER_TYPE_PATH = "/proc/self/cgroup";
 
     static {
         systemEnvInfo = System.getenv();
@@ -93,6 +100,31 @@ public class ApplicationModel {
             result = applicationInfo.get("extra");
         }
         return result;
+    }
+
+    public static String getVMType() {
+        String type = null;
+        if (isLinux()) {
+            File file = new File(SERVER_TYPE_PATH);
+            if (file.exists() && file.isFile() && file.canRead()) {
+                try {
+                    String content = FileUtils.readFileToString(file);
+                    if (StringUtils.contains(content, "docker")) {
+                        type = "docker";
+                    }
+                } catch (IOException e) {
+                    String msg = "get VM type failed";
+                    int code = ErrorType.DETECT_SERVER_ERROR.getCode();
+                    HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(msg, code), e);
+                }
+            }
+        }
+        return type;
+    }
+
+    private static boolean isLinux() {
+        String serverName = System.getProperty("os.name");
+        return StringUtils.startsWith(serverName, "Linux");
     }
 
 }
