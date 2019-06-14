@@ -90,6 +90,10 @@ public class Register {
         params.put("register_ip", CloudCacheModel.getInstance().getMasterIp());
         params.put("heartbeat_interval", Config.getConfig().getHeartbeatInterval());
         params.put("environ", ApplicationModel.getSystemEnv());
+        String VMType = ApplicationModel.getVMType();
+        if (VMType != null) {
+            params.put("host_type", VMType);
+        }
         return params;
     }
 }

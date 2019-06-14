@@ -17,6 +17,7 @@
 package com.baidu.openrasp.tool.cpumonitor;
 
 import com.baidu.openrasp.config.Config;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @description: cpu监控管理类
@@ -27,15 +28,20 @@ public class CpuMonitorManager {
     private static CpuMonitor cpuMonitor;
 
     public static void start() {
-        if (Config.getConfig().getCpuUsageEnable()) {
+        if (Config.getConfig().getCpuUsageEnable() && isLinux()) {
             cpuMonitor = new CpuMonitor();
             cpuMonitor.start();
         }
     }
 
     public static void stop() {
-        if (Config.getConfig().getCpuUsageEnable() && cpuMonitor != null) {
+        if (Config.getConfig().getCpuUsageEnable() && isLinux() && cpuMonitor != null) {
             cpuMonitor.stop();
         }
+    }
+
+    private static boolean isLinux() {
+        String serverName = System.getProperty("os.name");
+        return StringUtils.startsWith(serverName, "Linux");
     }
 }
