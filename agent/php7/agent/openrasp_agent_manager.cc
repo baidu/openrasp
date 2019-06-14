@@ -287,6 +287,8 @@ bool OpenraspAgentManager::agent_remote_register()
 	{
 		json_reader.write_string({"host_type"}, "docker");
 	}
+	std::map<std::string, std::string> env_map = get_env_map();
+	json_reader.write_map({"environ"}, env_map);	
 	std::string json_content = json_reader.dump();
 
 	BackendRequest backend_request(url_string, json_content.c_str());

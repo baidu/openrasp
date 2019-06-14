@@ -368,7 +368,7 @@ bool verify_remote_management_ini()
 		}
 		else
 		{
-			if (!openrasp::regex_match(openrasp_ini.app_secret, "^[0-9a-zA-Z_-]{44}"))
+			if (!openrasp::regex_match(openrasp_ini.app_secret, "^[0-9a-zA-Z_-]{43,45}"))
 			{
 				openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_secret configuration format is incorrect."));
 				return false;
@@ -376,4 +376,22 @@ bool verify_remote_management_ini()
 		}
 	}
 	return true;
+}
+
+std::map<std::string, std::string> get_env_map()
+{
+    std::map<std::string, std::string> result;
+    char **env;
+    for (env = environ; env != NULL && *env != NULL; env++)
+    {
+        std::string item(*env);
+        std::size_t found = item.find("=");
+        if (found != std::string::npos)
+        {
+            std::string key = item.substr(0, found);
+            std::string value = item.substr(found + 1);
+            result.insert({key, value});
+        }
+    }
+    return result;
 }
