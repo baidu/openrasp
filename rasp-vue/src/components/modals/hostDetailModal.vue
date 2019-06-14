@@ -34,10 +34,12 @@
               <p style="word-break: break-all; ">
                 {{ data.register_ip }}
               </p>
-              <div class="h6">
-                环境变量
+              <div v-if="data.environ">
+                <div class="h6">
+                  环境变量
+                </div>
+                <pre>{{ env2str(data.environ) }}</pre>
               </div>
-              <pre>{{ env2str(data.environ) }}</pre>
             </div>
 
             <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
