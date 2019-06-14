@@ -281,6 +281,12 @@ bool OpenraspAgentManager::agent_remote_register()
 	json_reader.write_string({"register_ip"}, local_ip);
 	json_reader.write_string({"version"}, PHP_OPENRASP_VERSION);
 	json_reader.write_int64({"heartbeat_interval"}, openrasp_ini.heartbeat_interval);
+	std::string cgroup_first_line = get_line_content("/proc/self/cgroup", 1);
+	std::size_t found = cgroup_first_line.find(":/docker/");
+	if (found != std::string::npos)
+	{
+		json_reader.write_string({"host_type"}, "docker");
+	}
 	std::string json_content = json_reader.dump();
 
 	BackendRequest backend_request(url_string, json_content.c_str());
