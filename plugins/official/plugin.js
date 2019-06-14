@@ -157,7 +157,8 @@ var algorithmConfig = {
             '.nip.io',
             '.burpcollaborator.net',
             '.tu4.org',
-            '.2xss.cc'
+            '.2xss.cc',
+            '.bxss.me'
         ]
     },
     // SSRF - 是否允许访问混淆后的IP地址
