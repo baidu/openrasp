@@ -135,8 +135,8 @@ var algorithmConfig = {
     },
 
     sql_regex: {
-        name:      '算法4 - 正则表达式算法',
-        action:    'log',
+        name:      '算法4 - 正则表达式算法（请修改插件）',
+        action:    'ignore',
         regex:     'union.*select.*from.*information_schema'
     },
 
