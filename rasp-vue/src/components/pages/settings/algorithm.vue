@@ -122,7 +122,7 @@
       </div>
       <div
         v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length"
-        class="card-footer" ref="cardFooter" style="position: sticky; bottom: 0; background: white; z-index: 9999"
+        class="card-footer" style="position: sticky; bottom: 0; background: white; z-index: 9999"
       >
         <button
           type="submit"
