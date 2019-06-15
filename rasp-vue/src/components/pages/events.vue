@@ -1,71 +1,73 @@
 <template>
   <div class="my-3 my-md-5">
     <div class="container">
-      <div class="page-header">
-        <h1 class="page-title">
-          攻击事件
-        </h1>
-        <div class="page-options d-flex">
-          <b-dropdown text="拦截状态" class="ml-2" right>
-            <b-container style="width: 250px;">
-              <b-form-row>
-                <template v-for="(value, key) in status_types">
-                  <b-col :key="key">
+      <div class="page-header" style="flex-direction: column; display: flex; ">
+        <div style="display: flex; flex-direction: row; justify-content: flex-start; width: 100%;">
+          <h1 class="page-title">
+            攻击事件
+          </h1>
+          <div class="page-options d-flex">
+            <b-dropdown text="拦截状态" class="ml-2" right>
+              <b-container style="width: 250px;">
+                <b-form-row>
+                  <template v-for="(value, key) in status_types">
+                    <b-col :key="key">
+                      <label class="custom-switch">
+                        <input v-model="selected_status" type="checkbox" class="custom-switch-input" :value="key">
+                        <span class="custom-switch-indicator" />
+                        <span class="custom-switch-description">
+                          {{ value }}
+                        </span>
+                      </label>
+                    </b-col>
+                  </template>
+                </b-form-row>
+              </b-container>
+            </b-dropdown>          
+            <b-dropdown text="攻击类型" class="ml-2" right>
+              <b-container style="width: 500px;">
+                <b-form-row>
+                  <b-col>
                     <label class="custom-switch">
-                      <input v-model="selected_status" type="checkbox" class="custom-switch-input" :value="key">
+                      <input type="checkbox" class="custom-switch-input" checked @change="selectAll">
                       <span class="custom-switch-indicator" />
                       <span class="custom-switch-description">
-                        {{ value }}
+                        全选
                       </span>
                     </label>
                   </b-col>
-                </template>
-              </b-form-row>
-            </b-container>
-          </b-dropdown>          
-          <b-dropdown text="攻击类型" class="ml-2" right>
-            <b-container style="width: 500px;">
-              <b-form-row>
-                <b-col>
-                  <label class="custom-switch">
-                    <input type="checkbox" class="custom-switch-input" checked @change="selectAll">
-                    <span class="custom-switch-indicator" />
-                    <span class="custom-switch-description">
-                      全选
-                    </span>
-                  </label>
-                </b-col>
-                <div class="w-100" />
-                <template v-for="(value, key, index) in attack_types">
-                  <b-col :key="key">
-                    <label class="custom-switch">
-                      <input v-model="selected" type="checkbox" class="custom-switch-input" :value="key">
-                      <span class="custom-switch-indicator" />
-                      <span class="custom-switch-description">
-                        {{ value }}
-                      </span>
-                    </label>
-                  </b-col>
-                  <div v-if="index % 2 === 1" class="w-100" />
-                </template>
-              </b-form-row>
-            </b-container>
-          </b-dropdown>
-          <div class="input-icon ml-2">
-            <span class="input-icon-addon">
-              <i class="fe fe-calendar" />
-            </span>
-            <DatePicker ref="datePicker" @selected="loadEvents(1)" />
+                  <div class="w-100" />
+                  <template v-for="(value, key, index) in attack_types">
+                    <b-col :key="key">
+                      <label class="custom-switch">
+                        <input v-model="selected" type="checkbox" class="custom-switch-input" :value="key">
+                        <span class="custom-switch-indicator" />
+                        <span class="custom-switch-description">
+                          {{ value }}
+                        </span>
+                      </label>
+                    </b-col>
+                    <div v-if="index % 2 === 1" class="w-100" />
+                  </template>
+                </b-form-row>
+              </b-container>
+            </b-dropdown>
+            <div class="input-icon ml-2">
+              <span class="input-icon-addon">
+                <i class="fe fe-calendar" />
+              </span>
+              <DatePicker ref="datePicker" @selected="loadEvents(1)" />
+            </div>
+            <div class="input-icon ml-2">
+              <span class="input-icon-addon">
+                <i class="fe fe-search" />
+              </span>
+              <input v-model="srcip" type="text" class="form-control w-10" placeholder="攻击来源" @keyup.enter="loadEvents(1)" style="width: 210px">
+            </div>
+            <!-- <button class="btn btn-primary ml-2" @click="loadEvents(1)" style="width: 3.3rem">
+              搜索
+            </button> -->
           </div>
-          <div class="input-icon ml-2">
-            <span class="input-icon-addon">
-              <i class="fe fe-search" />
-            </span>
-            <input v-model="srcip" type="text" class="form-control w-10" placeholder="攻击来源" @keyup.enter="loadEvents(1)" style="width: 210px">
-          </div>
-          <!-- <button class="btn btn-primary ml-2" @click="loadEvents(1)" style="width: 3.3rem">
-            搜索
-          </button> -->
         </div>
         <div class="page-options d-flex" style="margin-top: 5px;">
           <div class="input-icon ml-2">

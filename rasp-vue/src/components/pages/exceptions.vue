@@ -105,6 +105,7 @@ export default {
       loading: false,
       currentPage: 1,
       hostname: '',
+      message: '',
       total: 0,
       fields: [
         { key: 'event_time',      label: '异常时间', class: 'text-nowrap' },

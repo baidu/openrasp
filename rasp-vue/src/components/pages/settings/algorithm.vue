@@ -122,7 +122,7 @@
       </div>
       <div
         v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length"
-        class="card-footer"
+        class="card-footer" ref="cardFooter" style="position: sticky; bottom: 0; background: white; z-index: 9999"
       >
         <button
           type="submit"
@@ -175,7 +175,7 @@ export default {
     if (!this.current_app.id) {
       return
     }
-    this.loadConfig()
+    this.loadConfig()    
   },
   methods: {
     ...mapActions(["loadAppList"]),
