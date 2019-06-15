@@ -255,8 +255,8 @@ var algorithmConfig = {
 
     // 文件管理器 - 用户输入匹配，仅当直接读取绝对路径时才检测
     directory_userinput: {
-        name:   '算法1 - 用户输入匹配算法',
-        action: 'block',
+        name:       '算法1 - 用户输入匹配算法',
+        action:     'block',
         lcs_search: false
     },
     // 文件管理器 - 反射方式列目录
@@ -346,22 +346,22 @@ var algorithmConfig = {
 
     // 文件上传 - COPY/MOVE 方式，仅适合 tomcat
     fileUpload_webdav: {
-        name:   '算法1 - MOVE 方式文件上传脚本文件',
+        name:   '算法1 - MOVE 方式上传脚本文件',
         action: 'block'
     },
     // 文件上传 - Multipart 方式上传脚本文件
     fileUpload_multipart_script: {
-        name:   '算法2 - Multipart 方式文件上传 PHP/JSP 等脚本文件',
+        name:   '算法2 - Multipart 方式上传 PHP/JSP 等脚本文件',
         action: 'block'
     },
     // 文件上传 - Multipart 方式上传 HTML/JS 等文件
     fileUpload_multipart_html: {
-        name:   '算法3 - Multipart 方式文件上传 HTML/JS 等文件',
+        name:   '算法3 - Multipart 方式上传 HTML/JS 等文件',
         action: 'ignore'
     },
     // 文件上传 - Multipart 方式上传 DLL/EXE 等文件
     fileUpload_multipart_exe: {
-        name:   '算法3 - Multipart 方式文件上传 DLL/EXE 等文件',
+        name:   '算法3 - Multipart 方式上传 DLL/EXE 等文件',
         action: 'ignore'
     },    
 
