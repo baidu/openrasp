@@ -22,12 +22,14 @@
             <p>
                 {{ data.attack_params.server }}
             </p>            
-            <div class="h6">
-                执行的SQL语句
+            <div v-if="data.attack_params.query">
+                <div class="h6">
+                    执行的SQL语句
+                </div>
+                <p>
+                    {{ data.attack_params.query }}
+                </p>
             </div>
-            <p>
-                {{ data.attack_params.query }}
-            </p>
             <!--
             <div class="h6">
                 错误信息

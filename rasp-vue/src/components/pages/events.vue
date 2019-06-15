@@ -6,12 +6,6 @@
           攻击事件
         </h1>
         <div class="page-options d-flex">
-          <div class="input-icon ml-2">
-            <span class="input-icon-addon">
-              <i class="fe fe-calendar" />
-            </span>
-            <DatePicker ref="datePicker" @selected="loadEvents(1)" />
-          </div>
           <b-dropdown text="拦截状态" class="ml-2" right>
             <b-container style="width: 250px;">
               <b-form-row>
@@ -59,14 +53,35 @@
           </b-dropdown>
           <div class="input-icon ml-2">
             <span class="input-icon-addon">
+              <i class="fe fe-calendar" />
+            </span>
+            <DatePicker ref="datePicker" @selected="loadEvents(1)" />
+          </div>
+          <div class="input-icon ml-2">
+            <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model="srcip" type="text" class="form-control w-10" placeholder="攻击来源" @keyup.enter="loadEvents(1)">
+            <input v-model="srcip" type="text" class="form-control w-10" placeholder="攻击来源" @keyup.enter="loadEvents(1)" style="width: 210px">
           </div>
-          <button class="btn btn-primary ml-2" @click="loadEvents(1)">
+          <!-- <button class="btn btn-primary ml-2" @click="loadEvents(1)" style="width: 3.3rem">
             搜索
-          </button>
+          </button> -->
         </div>
+        <div class="page-options d-flex" style="margin-top: 5px;">
+          <div class="input-icon ml-2">
+            <span class="input-icon-addon">
+              <i class="fe fe-search" />
+            </span>
+            <input v-model="request_id" type="text" class="form-control w-10" placeholder="请求 ID" @keyup.enter="loadEvents(1)" style="width: 210px">
+          </div>      
+          <div class="input-icon ml-2">
+            <span class="input-icon-addon">
+              <i class="fe fe-search" />
+            </span>
+            <input v-model="url" type="text" class="form-control w-10" placeholder="目标 URL" @keyup.enter="loadEvents(1)" style="width: 210px">
+          </div>
+        </div>
+       
       </div>
       <div class="card">
         <div class="card-body">
@@ -185,6 +200,8 @@ export default {
       loading: false,
       currentPage: 1,
       srcip: '',
+      url: '',
+      request_id: '',
       total: 0,
       attack_types,
       status_types,
@@ -239,6 +256,8 @@ export default {
           attack_type: this.selected,
           attack_source: this.srcip,
           app_id: this.current_app.id,
+          url: this.url,
+          request_id: this.request_id,
           intercept_state: this.selected_status
         },
         page: page,
