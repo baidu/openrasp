@@ -14,3 +14,10 @@ td {
 .custom-switch {
     padding-left: 0;
 }
+
+.sticky-card-footer {
+    position: sticky; 
+    bottom: 0; 
+    background: white; 
+    z-index: 9999
+}
