@@ -83,7 +83,10 @@ export default {
     showModal(key, data) {
       this.key  = key
       this.data = JSON.parse(JSON.stringify(data))
-      $('#appEditModal').modal()
+      $('#appEditModal').modal({
+        backdrop: 'static',
+        keyboard: false
+      })
     },
     saveConfig: function() {
       var body = {
