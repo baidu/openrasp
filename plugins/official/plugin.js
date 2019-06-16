@@ -272,8 +272,8 @@ var algorithmConfig = {
 
     // 文件包含 - 用户输入匹配
     include_userinput: {
-        name:   '算法1 - 用户输入匹配算法',
-        action: 'block',
+        name:       '算法1 - 用户输入匹配算法',
+        action:     'block',
         lcs_search: false
     },
     // 文件包含 - 特殊协议
