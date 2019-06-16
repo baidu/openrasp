@@ -1,5 +1,5 @@
 <template>
-  <div id="appEditModal" class="modal no-fade" tabindex="-1" role="dialog">
+  <div id="algorithmConfigModal" class="modal no-fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -45,10 +45,10 @@
 
         </div>
         <div class="modal-footer">
-          <button class="btn btn-primary mr-auto" data-dismiss="modal" @click="saveConfig(true)" :disabled="sql_regex_error">
+          <button class="btn btn-primary mr-auto" data-dismiss="modal" @click="saveConfig()" :disabled="sql_regex_error">
             确定
           </button>
-          <button class="btn btn-info" data-dismiss="modal" @click="saveConfig()">
+          <button class="btn btn-info" data-dismiss="modal">
             取消
           </button>
         </div>
@@ -64,6 +64,7 @@ export default {
     return {
       key: '',
       data: {},
+      shouldSave: false,
       sql_regex_error: false,
       sql_policy_keys: [
         {
@@ -106,6 +107,13 @@ export default {
       this.validateRegex(newval)
     }
   },
+  mounted: function() {
+    var self = this
+
+    $('#algorithmConfigModal').on('hidden.bs.modal', function () {
+      self.$emit('save')
+    })
+  },
   methods: {
     validateRegex: function(value) {
       var error = false
@@ -120,18 +128,18 @@ export default {
     showModal(key, data) {
       this.key  = key
       this.data = JSON.parse(JSON.stringify(data))
-      $('#appEditModal').modal({
-        backdrop: 'static',
-        keyboard: false
+      $('#algorithmConfigModal').modal({
+        // backdrop: 'static',
+        // keyboard: false
       })
     },
-    saveConfig: function(save) {
+    saveConfig() {
       var body = {
         key:  this.key,
         data: this.data,
       }
 
-      this.$emit('save', save ? body : undefined)
+      this.$emit('save', body)
     }
   }
 }
