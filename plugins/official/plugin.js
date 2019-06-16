@@ -1,4 +1,4 @@
-const plugin_version = '2019-0616-0830'
+const plugin_version = '2019-0616-1530'
 const plugin_name    = 'official'
 
 /*
@@ -129,7 +129,7 @@ var algorithmConfig = {
     },
 
     sql_exception: {
-        name:      '算法3 - 检测SQL语句异常',
+        name:      '算法3 - 记录数据库异常',
         action:    'log',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#sql-exception'
     },

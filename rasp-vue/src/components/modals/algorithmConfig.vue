@@ -25,11 +25,14 @@
           </div>
 
           <div v-if="key == 'sql_policy'">
-            <label class="custom-switch m-0">
-              <input type="checkbox" v-model="data.feature.information_schema" class="custom-switch-input">
-              <span class="custom-switch-indicator" @click="data.feature.information_schema = !data.feature.information_schema"></span>
-              <span class="custom-switch-description">拦截 information_schema 相关操作</span>              
-            </label>
+            <div v-for="row in sql_policy_keys" :key="row.key">
+              <label class="custom-switch m-0">
+                <input type="checkbox" v-model="data.feature[row.key]" class="custom-switch-input">
+                <span class="custom-switch-indicator" @click="data.feature[row.key] = !data.feature[row.key]"></span>
+                <span class="custom-switch-description">{{row.descr}}</span>              
+              </label>
+              <br>
+            </div>            
           </div>
 
           <div v-if="key == 'sql_regex'">
@@ -42,11 +45,11 @@
 
         </div>
         <div class="modal-footer">
-          <button class="btn btn-primary mr-auto" data-dismiss="modal" @click="saveConfig()" :disabled="sql_regex_error">
-            保存
+          <button class="btn btn-primary mr-auto" data-dismiss="modal" @click="saveConfig(true)" :disabled="sql_regex_error">
+            确定
           </button>
           <button class="btn btn-info" data-dismiss="modal" @click="saveConfig()">
-            关闭
+            取消
           </button>
         </div>
       </div>
@@ -61,7 +64,41 @@ export default {
     return {
       key: '',
       data: {},
-      sql_regex_error: false
+      sql_regex_error: false,
+      sql_policy_keys: [
+        {
+          key:   'stacked_query',
+          descr: '拦截多语句执行，如 select ...; update ...',
+        },
+        {
+          key:   'no_hex',
+          descr: '拦截16进制字符串，如 0x41424344',
+        },
+        {
+          key:   'version_comment',
+          descr: '拦截版本号注释，如 select/*!500001,2,*/3',
+        },
+        {
+          key:   'function_blacklist',
+          descr: '拦截黑名单函数，如 load_file、sleep、updatexml',
+        },
+        {
+          key:   'function_count',
+          descr: '函数频次算法，如 chr(123)||chr(123)||chr(123)',
+        },
+        {
+          key:   'union_null',
+          descr: '拦截连续3个NULL或者数字，如 select NULL,NULL,NULL',
+        },
+        {
+          key:   'into_outfile',
+          descr: '拦截 into outfile 写文件操作',
+        },
+        {
+          key:   'information_schema',
+          descr: '拦截 information_schema 相关操作'
+        }
+      ]
     }
   },
   watch: {
@@ -88,13 +125,13 @@ export default {
         keyboard: false
       })
     },
-    saveConfig: function() {
+    saveConfig: function(save) {
       var body = {
         key:  this.key,
         data: this.data,
       }
 
-      this.$emit('save', body)
+      this.$emit('save', save ? body : undefined)
     }
   }
 }

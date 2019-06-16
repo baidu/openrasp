@@ -105,6 +105,7 @@
                 </a>
 
                 <a
+                  style="color: #B22222"
                   v-if="hasAdvancedConfig[item.key]"
                   href="javascript:"
                   @click="showAdvancedConfig(item.key, data[item.key])"
