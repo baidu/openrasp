@@ -567,17 +567,20 @@ if (! RASP.is_unittest)
 }
 
 // 校验 sql_regex 正则是否合法
-if (! algorithmConfig.sql_regex.regex.trim()) {
-    plugin.log ("algorithmConfig.sql_regex.regex is empty, algorithm disabled")
-    algorithmConfig.sql_regex.action = 'ignore'
-} else {
-    try {
-        new RegExp(algorithmConfig.sql_regex)
-    } catch (e) {
-        plugin.log ("Invalid regex in algorithmConfig.sql_regex.regex: ", e)
+if (algorithmConfig.sql_regex.action != 'ignore') {
+    if (! algorithmConfig.sql_regex.regex.trim()) {
+        plugin.log ("algorithmConfig.sql_regex.regex is empty, algorithm disabled")
         algorithmConfig.sql_regex.action = 'ignore'
-    } 
+    } else {
+        try {
+            new RegExp(algorithmConfig.sql_regex)
+        } catch (e) {
+            plugin.log ("Invalid regex in algorithmConfig.sql_regex.regex: ", e)
+            algorithmConfig.sql_regex.action = 'ignore'
+        } 
+    }
 }
+
 
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue) {
