@@ -1,4 +1,4 @@
-const plugin_version = '2019-0614-1900'
+const plugin_version = '2019-0616-0830'
 const plugin_name    = 'official'
 
 /*
@@ -567,7 +567,7 @@ if (! RASP.is_unittest)
 }
 
 // 校验 sql_regex 正则是否合法
-if (! algorithmConfig.sql_regex.trim()) {
+if (! algorithmConfig.sql_regex.regex.trim()) {
     plugin.log ("algorithmConfig.sql_regex.regex is empty, algorithm disabled")
     algorithmConfig.sql_regex.action = 'ignore'
 } else {
