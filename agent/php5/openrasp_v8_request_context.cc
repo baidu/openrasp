@@ -502,6 +502,7 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
 }
 static void request_id_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
+    TSRMLS_FETCH();
     auto self = info.Holder();
     auto cache = self->GetInternalField(kRequestId);
     if (!cache->IsUndefined())
