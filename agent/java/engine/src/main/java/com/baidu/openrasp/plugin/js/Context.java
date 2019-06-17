@@ -68,6 +68,14 @@ public class Context implements com.baidu.openrasp.v8.Context {
         }
     }
 
+    public String getRequestId() {
+        try {
+            return request.getRequestId();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public byte[] getBody(int[] size) {
         try {
             java.io.ByteArrayOutputStream body = request.getBodyStream();
