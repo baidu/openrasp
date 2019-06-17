@@ -13,13 +13,13 @@ public class InstallerFactoryTest {
     public void testGetInstaller() {
         try {
             InstallerFactory factory = new LinuxInstallerFactory();
-            factory.getInstaller(new File("/tmp"));
+            factory.getInstaller(new File("/tmp"), false);
         } catch (Exception e) {
             //
         }
         try {
             InstallerFactory factory = new LinuxInstallerFactory();
-            factory.getInstaller(new File("/xxxys"));
+            factory.getInstaller(new File("/xxxys"), false);
         } catch (Exception e) {
             //
         }

@@ -39,10 +39,8 @@ import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.lang.ref.WeakReference;
 import java.security.ProtectionDomain;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 自定义类字节码转换器，用于hook类德 方法
@@ -50,11 +48,19 @@ import java.util.Set;
 public class CustomClassTransformer implements ClassFileTransformer {
     public static final Logger LOGGER = Logger.getLogger(CustomClassTransformer.class.getName());
     private static final String SCAN_ANNOTATION_PACKAGE = "com.baidu.openrasp.hook";
-    private static HashMap<String, ClassLoader> classLoaderCache = new HashMap<String, ClassLoader>();
+    private static HashSet<String> jspClassLoaderNames = new HashSet<String>();
+    public static ConcurrentHashMap<String, WeakReference<ClassLoader>> jspClassLoaderCache = new ConcurrentHashMap<String, WeakReference<ClassLoader>>();
 
     private Instrumentation inst;
     private HashSet<AbstractClassHook> hooks = new HashSet<AbstractClassHook>();
     private ServerDetectorManager serverDetector = ServerDetectorManager.getInstance();
+
+    static {
+        jspClassLoaderNames.add("org.apache.jasper.servlet.JasperLoader");
+        jspClassLoaderNames.add("com.caucho.loader.DynamicClassLoader");
+        jspClassLoaderNames.add("com.ibm.ws.jsp.webcontainerext.JSPExtensionClassLoader");
+        jspClassLoaderNames.add("weblogic.servlet.jsp.JspClassLoader");
+    }
 
     public CustomClassTransformer(Instrumentation inst) {
         this.inst = inst;
@@ -127,6 +133,9 @@ public class CustomClassTransformer implements ClassFileTransformer {
                             ProtectionDomain domain, byte[] classfileBuffer) throws IllegalClassFormatException {
         if (loader != null) {
             DependencyFinder.classLoaderCache.add(new WeakReference<ClassLoader>(loader));
+        }
+        if (loader != null && jspClassLoaderNames.contains(loader.getClass().getName())) {
+            jspClassLoaderCache.put(className.replace("/", "."), new WeakReference<ClassLoader>(loader));
         }
         for (final AbstractClassHook hook : hooks) {
             if (hook.isClassMatched(className)) {

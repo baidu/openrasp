@@ -56,7 +56,7 @@ static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
                 return;
             }
 #endif
-            bool is_block = false;
+            openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
             {
                 v8::HandleScope handle_scope(isolate);
                 auto arr = format_debug_backtrace_arr(TSRMLS_C);
@@ -70,9 +70,9 @@ static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
                 params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, Z_STRVAL_PP(path), Z_STRLEN_PP(path)));
                 params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, resolved_path));
                 params->Set(openrasp::NewV8String(isolate, "stack"), stack);
-                is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+                check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
-            if (is_block)
+            if (check_result == openrasp::CheckResult::kBlock)
             {
                 handle_block(TSRMLS_C);
             }

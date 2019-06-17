@@ -63,7 +63,7 @@ static void plugin_command_check(const char *command TSRMLS_DC)
     openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
     if (isolate)
     {
-        bool is_block = false;
+        openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
         {
             v8::HandleScope handle_scope(isolate);
             auto arr = format_debug_backtrace_arr(TSRMLS_C);
@@ -76,9 +76,9 @@ static void plugin_command_check(const char *command TSRMLS_DC)
             auto params = v8::Object::New(isolate);
             params->Set(openrasp::NewV8String(isolate, "command"), openrasp::NewV8String(isolate, command));
             params->Set(openrasp::NewV8String(isolate, "stack"), stack);
-            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(COMMAND)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+            check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(COMMAND)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
-        if (is_block)
+        if (check_result == openrasp::CheckResult::kBlock)
         {
             handle_block(TSRMLS_C);
         }
@@ -314,7 +314,7 @@ void pre_global_assert_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             params->Set(openrasp::NewV8String(isolate, "stack"), stack);
             params->Set(openrasp::NewV8String(isolate, "code"), openrasp::NewV8String(isolate, Z_STRVAL_PP(assertion), Z_STRLEN_PP(assertion)));
             params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "assert"));
-            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+            is_block = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (is_block)
         {

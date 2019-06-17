@@ -100,6 +100,10 @@ static bool init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
     {
         username = default_user;
     }
+    if (!passwd)
+    {
+        passwd = default_password;
+    }
     if (!port)
     {
         port = default_port;
@@ -114,6 +118,7 @@ static bool init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
     }
     sql_connection_p->set_server("mysql");
     sql_connection_p->set_username(SAFE_STRING(username));
+    sql_connection_p->set_password(SAFE_STRING(passwd));
     sql_connection_p->set_host(SAFE_STRING(hostname));
     sql_connection_p->set_using_socket(nullptr == hostname || strcmp("localhost", hostname) == 0);
     sql_connection_p->set_socket(SAFE_STRING(socket));
@@ -317,7 +322,7 @@ void pre_global_mysqli_real_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *mysql_link;
     char *query = NULL;
-    int query_len;
+    size_t query_len;
 
     if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "os", &mysql_link, &query, &query_len) == FAILURE)
     {

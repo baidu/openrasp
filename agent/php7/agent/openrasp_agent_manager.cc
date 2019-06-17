@@ -30,7 +30,6 @@
 #include <vector>
 #include <iostream>
 #include "openrasp_ini.h"
-#include "utils/regex.h"
 #include "utils/file.h"
 #include "utils/net.h"
 #include "agent/utils/os.h"
@@ -137,45 +136,6 @@ bool OpenraspAgentManager::shutdown()
 	return true;
 }
 
-bool OpenraspAgentManager::verify_ini_correct()
-{
-	if (openrasp_ini.remote_management_enable && need_alloc_shm_current_sapi())
-	{
-		if (nullptr == openrasp_ini.backend_url || strcmp(openrasp_ini.backend_url, "") == 0)
-		{
-			openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.backend_url is required when remote management is enabled."));
-			return false;
-		}
-		if (nullptr == openrasp_ini.app_id || strcmp(openrasp_ini.app_id, "") == 0)
-		{
-			openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_id is required when remote management is enabled."));
-			return false;
-		}
-		else
-		{
-			if (!regex_match(openrasp_ini.app_id, "^[0-9a-fA-F]{40}$"))
-			{
-				openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_id must be exactly 40 characters long."));
-				return false;
-			}
-		}
-		if (nullptr == openrasp_ini.app_secret || strcmp(openrasp_ini.app_secret, "") == 0)
-		{
-			openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_secret is required when remote management is enabled."));
-			return false;
-		}
-		else
-		{
-			if (!regex_match(openrasp_ini.app_secret, "^[0-9a-zA-Z_-]{43,45}"))
-			{
-				openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_secret configuration format is incorrect."));
-				return false;
-			}
-		}
-	}
-	return true;
-}
-
 bool OpenraspAgentManager::create_share_memory()
 {
 	size_t total_size = meta_size + sizeof(OpenraspCtrlBlock);
@@ -217,6 +177,12 @@ bool OpenraspAgentManager::process_agent_startup()
 	}
 	else if (pid == 0)
 	{
+		int fd;
+		if (-1 != (fd = open("/dev/null", O_RDONLY))) {
+			close(STDIN_FILENO);
+			dup2(fd, STDIN_FILENO);
+			close(fd);
+		}
 		setsid();
 		supervisor_run();
 	}
@@ -325,6 +291,14 @@ bool OpenraspAgentManager::agent_remote_register()
 	json_reader.write_string({"register_ip"}, local_ip);
 	json_reader.write_string({"version"}, PHP_OPENRASP_VERSION);
 	json_reader.write_int64({"heartbeat_interval"}, openrasp_ini.heartbeat_interval);
+	std::string cgroup_first_line = get_line_content("/proc/self/cgroup", 1);
+	std::size_t found = cgroup_first_line.find(":/docker/");
+	if (found != std::string::npos)
+	{
+		json_reader.write_string({"host_type"}, "docker");
+	}
+	std::map<std::string, std::string> env_map = get_env_map();
+	json_reader.write_map({"environ"}, env_map);	
 	std::string json_content = json_reader.dump();
 
 	BackendRequest backend_request(url_string, json_content.c_str());

@@ -91,7 +91,11 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
                     int flag = (Integer) Reflection.getField(outputStream, "state");
                     isClosed = flag == 1;
                 } else {
-                    isClosed = (Boolean) Reflection.invokeMethod(output, "isClosed", new Class[]{});
+                    if (serverName.equals("tomcat") && ApplicationModel.getVersion().compareTo("6") < 0) {
+                        isClosed = (Boolean) Reflection.getField(output, "closed");
+                    } else {
+                        isClosed = (Boolean) Reflection.invokeMethod(output, "isClosed", new Class[]{});
+                    }
                 }
                 if (isClosed != null && !isClosed) {
                     HttpServletResponse response = HookHandler.responseCache.get();
@@ -110,9 +114,9 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
                         }
                     }
                 }
-            } catch (Exception e) {
+            } catch (Throwable t) {
                 int errorCode = ErrorType.HOOK_ERROR.getCode();
-                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(e.getMessage(), errorCode), e);
+                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(t.getMessage(), errorCode), t);
             } finally {
                 HookHandler.enableCurrThreadHook();
             }

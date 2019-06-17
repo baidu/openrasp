@@ -1,8 +1,9 @@
-# 若开启远程管理，只会使用部分本地配置，请知晓
+# Most of the configuration items below are ignored when remote management is enabled.
+# Please refer to the following document for details:
 # https://rasp.baidu.com/doc/setup/others.html#java-standalone
+ 
+# <general settings>
 # 
-# 
-# 插件配置
 # plugin.timeout.millis: 100
 # body.maxbytes: 4096
 # plugin.filter: true
@@ -16,8 +17,11 @@
 # log.maxbackup: 30
 # log.path:
 # decompile.enable: false
-# hook 点配置
-# hooks.ignore: http_output
+# block.status_code: 302
+# request.param_encoding:
+# cpu.usage.percent: 0.9
+# cpu.usage.enable: false
+hooks.ignore: http_output
 # debug.level: 0
 # dependency_check.interval: 21600
 #hook.white:
@@ -29,30 +33,27 @@
 #    - "ssrf"
 #inject.custom_headers:
 #   X-Content-Type-Options: nosniff
-# 拦截相关配置
-#拦截攻击后，跳转到这个URL
-#block.redirect_url: "https://rasp.baidu.com/blocked/?request_id=%request_id%"
-#拦截攻击后，若期望响应类型为JSON，则根据此模板显示内容
-#block.content_json: "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"
-#拦截攻击后，若期望响应类型为XML，则根据此模板显示内容
-#block.content_xml: "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"
-#拦截攻击后，若期望响应类型不为JSON/XML，则根据此模板显示内容
-#block.content_html: "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>"
 
-# 基线配置
-# security.enforce_policy: false
+# <response to malicious requests>
+# 
+# block.redirect_url: "https://rasp.baidu.com/blocked/?request_id=%request_id%"
+# block.content_json: "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"
+# block.content_xml: "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"
+# block.content_html: "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>"
 
-# 云控配置
+# <remote management>
+#
 # cloud.enable: true
 # cloud.backend_url: http://172.23.232.4:8080
 # cloud.app_id: 428e953b270ffb772fa5331ab994695c7b363028
 # cloud.app_secret: J8zjAdW-k5peQu2pM6-cLbVfDcVWMrfIiqBBERgKKJM
 # cloud.heartbeat_interval: 180
 
-# syslog配置
-# syslog.enable: true
-# syslog.url: http://172.24.180.174:8848
-# syslog.tag: OPENRASP
+# <syslog configuration>
+#
+# syslog.enable: false
+# syslog.url:
+# syslog.tag: OpenRASP
 # syslog.reconnect_interval: 300000
 # syslog.facility: 1
 

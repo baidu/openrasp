@@ -15,7 +15,7 @@
  */
 
 #include "YamlReader.h"
-#include <fstream>
+#include <sstream>
 
 namespace openrasp
 {
@@ -25,160 +25,131 @@ YamlReader::YamlReader()
 
 YamlReader::YamlReader(const std::string &yaml_str)
 {
-  load(yaml_str);
+    load(yaml_str);
 }
 
 void YamlReader::load(const std::string &content)
 {
-  try
-  {
-    node = YAML::Load(content);
-  }
-  catch (YAML::ParserException &e)
-  {
-    error = true;
-    std::ostringstream oss;
-    oss << "message: " << e.what();
-    error_msg = oss.str();
-  }
+    try
+    {
+        std::stringstream ss(content);
+        YAML::Parser parser(ss);
+        parser.GetNextDocument(doc);
+    }
+    catch (YAML::ParserException &e)
+    {
+        error = true;
+        std::ostringstream oss;
+        oss << "message: " << e.what();
+        error_msg = oss.str();
+    }
 }
 
 std::string YamlReader::fetch_string(const std::vector<std::string> &keys, const std::string &default_value)
 {
-  std::vector<Node> nodes;
-  try
-  {
-    nodes.push_back(node);
-    for (size_t i = 0; i < keys.size(); ++i)
+    try
     {
-      if (0 == i)
-      {
-        nodes.push_back(node[keys[i]]);
-      }
-      else
-      {
-        nodes.push_back(nodes[i][keys[i]]);
-      }
+        const YAML::Node *node = &doc;
+        for (auto key : keys)
+        {
+            node = &(*node)[key];
+        }
+        std::string rst;
+        *node >> rst;
+        return rst;
     }
-    return nodes[keys.size()].as<std::string>();
-  }
-  catch (...)
-  {
-    return default_value;
-  }
+    catch (...)
+    {
+        return default_value;
+    }
 }
 int64_t YamlReader::fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value)
 {
-  std::vector<Node> nodes;
-  try
-  {
-    nodes.push_back(node);
-    for (size_t i = 0; i < keys.size(); ++i)
+    try
     {
-      if (0 == i)
-      {
-        nodes.push_back(node[keys[i]]);
-      }
-      else
-      {
-        nodes.push_back(nodes[i][keys[i]]);
-      }
+        const YAML::Node *node = &doc;
+        for (auto key : keys)
+        {
+            node = &(*node)[key];
+        }
+        int64_t rst;
+        *node >> rst;
+        return rst;
     }
-    return nodes[keys.size()].as<int64_t>();
-  }
-  catch (...)
-  {
-    return default_value;
-  }
+    catch (...)
+    {
+        return default_value;
+    }
 }
 bool YamlReader::fetch_bool(const std::vector<std::string> &keys, const bool &default_value)
 {
-  std::vector<Node> nodes;
-  try
-  {
-    nodes.push_back(node);
-    for (size_t i = 0; i < keys.size(); ++i)
+    try
     {
-      if (0 == i)
-      {
-        nodes.push_back(node[keys[i]]);
-      }
-      else
-      {
-        nodes.push_back(nodes[i][keys[i]]);
-      }
+        const YAML::Node *node = &doc;
+        for (auto key : keys)
+        {
+            node = &(*node)[key];
+        }
+        bool rst;
+        *node >> rst;
+        return rst;
     }
-    return nodes[keys.size()].as<bool>();
-  }
-  catch (...)
-  {
-    return default_value;
-  }
+    catch (...)
+    {
+        return default_value;
+    }
 }
 std::vector<std::string> YamlReader::fetch_object_keys(const std::vector<std::string> &keys)
 {
-  std::vector<std::string> result;
-  std::vector<Node> nodes;
-  try
-  {
-    nodes.push_back(node);
-    for (size_t i = 0; i < keys.size(); ++i)
+    try
     {
-      if (0 == i)
-      {
-        nodes.push_back(node[keys[i]]);
-      }
-      else
-      {
-        nodes.push_back(nodes[i][keys[i]]);
-      }
+        std::vector<std::string> rst;
+        const YAML::Node *node = &doc;
+        for (auto key : keys)
+        {
+            node = &(*node)[key];
+        }
+        if (node->Type() == YAML::NodeType::Map)
+        {
+            for (YAML::Iterator it = node->begin(); it != node->end(); ++it)
+            {
+                std::string key;
+                it.first() >> key;
+                rst.push_back(key);
+            }
+        }
+        return rst;
     }
-    if (nodes[keys.size()].IsMap())
+    catch (...)
     {
-      for (YAML::const_iterator it = nodes[keys.size()].begin(); it != nodes[keys.size()].end(); ++it)
-      {
-        result.push_back(it->first.as<std::string>());
-      }
+        return {};
     }
-  }
-  catch (...)
-  {
-  }
-  return result;
 }
 std::vector<std::string> YamlReader::fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value)
 {
-  std::vector<Node> nodes;
-  try
-  {
-    std::vector<std::string> result = default_value;
-    nodes.push_back(node);
-    for (size_t i = 0; i < keys.size(); ++i)
+    try
     {
-      if (0 == i)
-      {
-        nodes.push_back(node[keys[i]]);
-      }
-      else
-      {
-        nodes.push_back(nodes[i][keys[i]]);
-      }
+        std::vector<std::string> rst;
+        const YAML::Node *node = &doc;
+        for (auto key : keys)
+        {
+            node = &(*node)[key];
+        }
+        if (node->Type() == YAML::NodeType::Sequence)
+        {
+            for (YAML::Iterator it = node->begin(); it != node->end(); ++it)
+            {
+                std::string val;
+                *it >> val;
+                rst.push_back(val);
+            }
+        }
+        return rst;
     }
-
-    if (nodes[keys.size()].IsSequence())
+    catch (...)
     {
-      result.clear();
-      for (YAML::const_iterator it = nodes[keys.size()].begin(); it != nodes[keys.size()].end(); ++it)
-      {
-        result.push_back(it->as<std::string>());
-      }
+        return default_value;
     }
-    return result;
-  }
-  catch (...)
-  {
-    return default_value;
-  }
 }
 
 } // namespace openrasp

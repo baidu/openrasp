@@ -19,16 +19,14 @@ package com.baidu.openrasp.hook.sql;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
 import org.apache.commons.lang3.StringUtils;
-import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * @description: hibernate hql 检测hook点
@@ -56,10 +54,9 @@ public class HQLHook extends AbstractClassHook {
 
     public static void checkHQL(String query) {
         if (!StringUtils.isEmpty(query)) {
-            JSContext cx = JSContextFactory.enterAndInitContext();
-            Scriptable params = cx.newObject(cx.getScope());
-            params.put("query", params, query);
-            params.put("server", params, "hibernate");
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("query", query);
+            params.put("server", "hibernate");
             HookHandler.doCheck(CheckParameter.Type.SQL, params);
         }
     }

@@ -5,7 +5,7 @@ public enum AppenderMappedLogger {
     ROOT("root", "RASP", "/logs/rasp/rasp.log"),
     ALARM("com.baidu.openrasp.plugin.checker.alarm", "ALARM", "/logs/alarm/alarm.log"),
     POLICY_ALARM("com.baidu.openrasp.plugin.checker.policy_alarm", "POLICY_ALARM", "/logs/policy_alarm/policy_alarm.log"),
-    JS("com.baidu.openrasp.plugin.js.engine.log", "PLUGIN", "/logs/plugin/plugin.log"),
+    JS("com.baidu.openrasp.plugin.js.log", "PLUGIN", "/logs/plugin/plugin.log"),
     HTTP_ROOT("root", "HTTPEXCEPTIONAPPENDER", ""),
     HTTP_ALARM("com.baidu.openrasp.plugin.checker.alarm", "HTTPALARMAPPENDER", ""),
     HTTP_POLICY_ALARM("com.baidu.openrasp.plugin.checker.policy_alarm", "HTTPPOLICYAPPENDER", "");

@@ -30,8 +30,8 @@ public enum ErrorType {
     DETECT_SERVER_ERROR(20012, "Detect Server Error"),
     REFLECTION_ERROR(20013, "Reflex Failed"),
     DEPENDENCY_ERROR(20014,"Find Dependency Information Failed"),
-    DEPENDENCY_REPORT_ERROR(20015,"Dependency Report Failed");
-
+    DEPENDENCY_REPORT_ERROR(20015,"Dependency Report Failed"),
+    CPU_ERROR(20014, "Count Cpu Usage Failed");
     private int code;
     private String message;
 

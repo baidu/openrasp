@@ -21,16 +21,14 @@ import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.google.gson.Gson;
 import javassist.*;
-import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 
 /**
  * @description: MongoDB的增删改查hook点
@@ -140,12 +138,11 @@ public class MongoSQLHook extends AbstractClassHook {
     }
 
     public static void checkSQL(String server, String className, String methodName, String query) {
-        JSContext cx = JSContextFactory.enterAndInitContext();
-        Scriptable params = cx.newObject(cx.getScope());
-        params.put("server", params, server);
-        params.put("query", params, query);
-        params.put("class", params, className);
-        params.put("method", params, methodName);
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put("server", server);
+        params.put("query", query);
+        params.put("class", className);
+        params.put("method", methodName);
         HookHandler.doCheck(CheckParameter.Type.MONGO, params);
     }
 

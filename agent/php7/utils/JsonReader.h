@@ -45,7 +45,7 @@ public:
   //write op
   void write_int64(const std::vector<std::string> &keys, const int64_t &value);
   void write_string(const std::vector<std::string> &keys, const std::string &value);
-
+  void write_map(const std::vector<std::string> &keys, const std::map<std::string, std::string> &value);
   void write_map_to_array(const std::vector<std::string> &keys, const std::string fkey, const std::string skey,
                           const std::map<std::string, std::string> &value);
   //Serialization

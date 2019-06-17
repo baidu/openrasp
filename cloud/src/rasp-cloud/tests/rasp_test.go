@@ -10,6 +10,7 @@ import (
 	"rasp-cloud/tests/start"
 	"rasp-cloud/models"
 	"errors"
+	"rasp-cloud/conf"
 )
 
 func TestRaspRegister(t *testing.T) {
@@ -155,6 +156,13 @@ func TestRaspRegister(t *testing.T) {
 			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(rasp))
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
+
+		Convey("when the register callback url is invalid", func() {
+			conf.AppConfig.RegisterCallbackUrl = "xxxxx.xxxx.xxxx.xxxx"
+			rasp := *start.TestRasp
+			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(rasp))
+			So(r.Status, ShouldEqual, 0)
+		})
 	})
 }
 
@@ -228,8 +236,8 @@ func TestDeleteRasp(t *testing.T) {
 			monkey.Unpatch(models.FindRasp)
 			So(r.Status, ShouldBeGreaterThan, 0)
 
-			monkey.Patch(models.RemoveRaspById, func(id string) (err error) {
-				return errors.New("")
+			monkey.Patch(models.RemoveRaspById, func(id []string) (int, error) {
+				return 0, errors.New("")
 			})
 			r = inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
 				"id":     rasp.Id,

@@ -95,10 +95,11 @@ std::string SqlConnectionEntry::build_policy_msg(connection_policy_type type)
   }
   else if (connection_policy_type::PASSWORD == type)
   {
-    oss << "Database security baseline - the password "
+    oss << "Database security baseline - weak password detected for \""
+        << username
+        << "\" account, password is: \""
         << password
-        << " is detected weak password combination , username is: "
-        << username;
+        << "\"";
   }
   return oss.str();
 }
@@ -126,7 +127,7 @@ long SqlConnectionEntry::get_type_id(SqlConnectionEntry::connection_policy_type 
     break;
   case connection_policy_type::PASSWORD:
   default:
-    return 3008;
+    return 3003;
     break;
   }
 }
@@ -184,6 +185,10 @@ void SqlConnectionEntry::set_name_value(const char *name, const char *val)
   if (strcmp(name, "user") == 0)
   {
     set_username(val);
+  }
+  else if (strcmp(name, "password") == 0)
+  {
+    set_password(val);
   }
   else if (strcmp(name, "host") == 0)
   {

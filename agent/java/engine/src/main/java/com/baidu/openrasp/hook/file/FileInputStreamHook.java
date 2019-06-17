@@ -20,22 +20,18 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.FileUtil;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
-import com.google.gson.Gson;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import org.mozilla.javascript.Scriptable;
+import java.util.HashMap;
 
 import java.io.File;
 import java.io.IOException;
 
 /**
- * Created by zhuming01 on 5/31/17.
- * All rights reserved
+ * Created by zhuming01 on 5/31/17. All rights reserved
  */
 @HookAnnotation
 public class FileInputStreamHook extends AbstractClassHook {
@@ -78,9 +74,8 @@ public class FileInputStreamHook extends AbstractClassHook {
     public static void checkReadFile(File file) {
         boolean checkSwitch = Config.getConfig().getPluginFilter();
         if (file != null) {
-            JSContext cx = JSContextFactory.enterAndInitContext();
-            Scriptable params = cx.newObject(cx.getScope());
-            params.put("path", params, file.getPath());
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("path", file.getPath());
 
             String path;
             try {
@@ -91,13 +86,9 @@ public class FileInputStreamHook extends AbstractClassHook {
             if (path.endsWith(".class") || !file.exists() && checkSwitch) {
                 return;
             }
-            params.put("realpath", params, FileUtil.getRealPath(file));
+            params.put("realpath", FileUtil.getRealPath(file));
 
-            String hookType = CheckParameter.Type.READFILE.getName();
-            //如果在lru缓存中不进检测
-            if (!Config.commonLRUCache.isContainsKey(hookType + new Gson().toJson(params))) {
-                HookHandler.doCheck(CheckParameter.Type.READFILE, params);
-            }
+            HookHandler.doCheck(CheckParameter.Type.READFILE, params);
         }
     }
 }

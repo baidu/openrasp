@@ -16,10 +16,12 @@
 
 package com.baidu.openrasp;
 
+import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
-import com.baidu.openrasp.plugin.js.engine.JsPluginManager;
+import com.baidu.openrasp.plugin.js.JS;
+import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
 import com.baidu.openrasp.tool.model.BuildRASPModel;
 import com.baidu.openrasp.transformer.CustomClassTransformer;
 import org.apache.log4j.Logger;
@@ -57,9 +59,12 @@ public class EngineBoot implements Module {
         }
         readVersion();
         // 初始化插件系统
-        JsPluginManager.init();
+        if (!JS.Initialize()) {
+            return;
+        }
         CheckerManager.init();
         initTransformer(inst);
+        CpuMonitorManager.start();
         String message = "OpenRASP Engine Initialized [" + projectVersion + " (build: GitCommit=" + gitCommit + " date="
                 + buildTime + ")]";
         System.out.println(message);
@@ -68,10 +73,12 @@ public class EngineBoot implements Module {
 
     @Override
     public void release(String mode) {
+        CloudManager.stop();
+        CpuMonitorManager.stop();
         if (transformer != null) {
             transformer.release();
         }
-        JsPluginManager.release();
+        JS.Dispose();
         CheckerManager.release();
         String message = "OpenRASP Engine Released [" + projectVersion + " (build: GitCommit=" + gitCommit + " date="
                 + buildTime + ")]";

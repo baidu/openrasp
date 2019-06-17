@@ -16,14 +16,18 @@
 
 package com.baidu.openrasp.hook.sql;
 
+import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import javassist.*;
 
+import java.sql.SQLException;
 import java.util.LinkedList;
 
 /**
  * Created by tyy on 17-11-6.
- *
+ * <p>
  * sql相关hook点的基类
  */
 public abstract class AbstractSqlHook extends AbstractClassHook {
@@ -51,7 +55,7 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
     }
 
     /**
-     * 捕捉hook method抛出的异常
+     * 捕捉sql statement抛出的异常
      */
     public void addCatch(CtClass ctClass, String methodName, String desc) throws NotFoundException, CannotCompileException {
         //目前只支持对mysql的执行异常检测
@@ -66,5 +70,36 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
                 }
             }
         }
+    }
+
+    /**
+     * 捕捉sql preparedStatement抛出的异常
+     */
+    public void addCatch(CtClass ctClass, String methodName, String desc, String query) throws NotFoundException, CannotCompileException {
+        //目前只支持对mysql的执行异常检测
+        if ("mysql".equals(type)) {
+            LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc);
+            if (methods != null && methods.size() > 0) {
+                for (CtBehavior method : methods) {
+                    if (method != null) {
+                        String errorSrc = "com.baidu.openrasp.hook.sql.SQLPreparedStatementHook.checkSQLErrorCode(" + "\"" + type + "\"" + ",$e," + query + ");";
+                        method.addCatch("{" + errorSrc + " throw $e;}", ClassPool.getDefault().get("java.sql.SQLException"));
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 检测获取errorcode 获取异常的时候，打日志
+     */
+    public static boolean checkSqlErrorCode(SQLException e) {
+        if (e != null && e.getErrorCode() == 0) {
+            String message = "Unable to derive error code from SQL exceptions. Please refer to https://rasp.baidu.com/doc/usage/exception.html#faq-errorcode for details.";
+            int errorCode = ErrorType.HOOK_ERROR.getCode();
+            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
+            return true;
+        }
+        return false;
     }
 }

@@ -310,7 +310,10 @@ func (o *AppController) validEmailConf(conf *models.EmailAlarmConf) {
 		o.ServeError(http.StatusBadRequest, "the email server_addr cannot be empty")
 	}
 	if len(conf.ServerAddr) > 256 {
-		o.ServeError(http.StatusBadRequest, "the length of email server_addr cannot be greater than 128")
+		o.ServeError(http.StatusBadRequest, "the length of email server_addr cannot be greater than 256")
+	}
+	if len(conf.From) > 256 {
+		o.ServeError(http.StatusBadRequest, "the length of from cannot be greater than 256")
 	}
 	if len(conf.Subject) > 256 {
 		o.ServeError(http.StatusBadRequest, "the length of email subject cannot be greater than 256")
@@ -389,17 +392,25 @@ func (o *AppController) Delete() {
 	if count <= 1 {
 		o.ServeError(http.StatusBadRequest, "failed to remove app: keep at least one app")
 	}
+	online := true
+	raspCount, _, err := models.FindRasp(&models.Rasp{AppId: app.Id, Online: &online}, 1, 1)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to find rasps for this app")
+	}
+	if raspCount > 0 {
+		o.ServeError(http.StatusBadRequest, "failed to remove this app, it also has online rasps")
+	}
 	app, err = models.RemoveAppById(app.Id)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to remove app", err)
+		o.ServeError(http.StatusBadRequest, "failed to remove this app", err)
 	}
 	err = models.RemoveRaspByAppId(app.Id)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to remove rasp by app_id", err)
+		o.ServeError(http.StatusBadRequest, "failed to remove rasps by app_id", err)
 	}
 	err = models.RemovePluginByAppId(app.Id)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to remove plugin by app_id", err)
+		o.ServeError(http.StatusBadRequest, "failed to remove plugins by app_id", err)
 	}
 	err = models.RemoveDependencyByApp(app.Id)
 	if err != nil {

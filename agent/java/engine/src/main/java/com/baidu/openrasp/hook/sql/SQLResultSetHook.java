@@ -139,11 +139,10 @@ public class SQLResultSetHook extends AbstractSqlHook {
      * @param sqlResultSet 数据库查询结果
      */
     public static void checkSqlQueryResult(String server, Object sqlResultSet) {
-        HashMap<String, Object> params = null;
+        HashMap<String, Object> params = new HashMap<String, Object>();
         try {
             ResultSet resultSet = (ResultSet) sqlResultSet;
             int queryCount = resultSet.getRow();
-            params = new HashMap<String, Object>(4);
             params.put("query_count", queryCount);
             params.put("server", server);
         } catch (Exception e) {

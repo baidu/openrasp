@@ -24,3 +24,4 @@
 /dist/
 rasp-cloud*
 lastupdate.tmp
+/tools/git.go

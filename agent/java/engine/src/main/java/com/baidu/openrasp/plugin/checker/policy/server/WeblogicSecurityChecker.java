@@ -24,6 +24,7 @@ import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -65,7 +66,15 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
             String decryptedPassword = decrypt(encryptedPassword, domainPath);
             List<String> checkList = Arrays.asList(getSecurityWeakPasswords());
             if (checkList.contains(decryptedPassword)) {
-                infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.MANAGER_PASSWORD, "Weblogic security baseline - the password \"" + decryptedPassword + "\" is detected weak password combination in " + paths.get(0), true));
+                String encryptedUserName = getProperties(bootProperties, "username");
+                String decryptedUserName = decrypt(encryptedUserName, domainPath);
+                Map<String, Object> params = new HashMap<String, Object>();
+                params.put("type", ApplicationModel.getServerName());
+                params.put("username", decryptedUserName);
+                params.put("password", decryptedPassword);
+                params.put("config_file", paths.get(0));
+                infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.MANAGER_PASSWORD, "Weblogic security baseline - detected weak password \"" +
+                        decryptedPassword + "\" in config file: " + paths.get(0), true, params));
             }
         }
     }

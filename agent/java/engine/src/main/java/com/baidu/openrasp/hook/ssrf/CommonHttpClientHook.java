@@ -69,7 +69,7 @@ public class CommonHttpClientHook extends AbstractSSRFHook {
                 }
             }
         } catch (Throwable t) {
-            String message = t.getMessage();
+            String message = "parse url " + url + "failed";
             int errorCode = ErrorType.HOOK_ERROR.getCode();
             HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), t);
         }

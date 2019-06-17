@@ -25,6 +25,8 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.*;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,6 +39,7 @@ import static com.baidu.rasp.RaspError.E10003;
 public abstract class BaseStandardInstaller implements Installer {
     private String serverName;
     protected String serverRoot;
+    protected boolean needModifyScript = true;
     public static String resinPath;
     public static int NOTFOUND = 0;
     public static int FOUND = 1;
@@ -52,7 +55,7 @@ public abstract class BaseStandardInstaller implements Installer {
     @Override
     public void install() throws RaspError, IOException {
         boolean firstInstall = false;
-        String jarPath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+        String jarPath = getLocalJarPath();
         File srcDir = new File(new File(jarPath).getParent() + File.separator + "rasp");
         if (!(srcDir.exists() && srcDir.isDirectory())) {
             srcDir.mkdirs();
@@ -84,8 +87,23 @@ public abstract class BaseStandardInstaller implements Installer {
             System.exit(1);
         }
 
+        if (needModifyScript) {
+            generateStartScript(installDir.getPath());
+            if (App.isAttach) {
+                System.out.println("\nAttach the rasp to process: " + App.pid);
+                new Attacher(App.pid + "", App.baseDir).doAttach(Attacher.MODE_INSTALL);
+            }
+
+            System.out.println("\nInstallation completed without errors.");
+            if (!App.isAttach) {
+                System.out.println("Please restart application server to take effect.");
+            }
+        }
+    }
+
+    private void generateStartScript(String installPath) throws RaspError, IOException {
         // 找到要修改的启动脚本
-        File script = new File(getScript(installDir.getPath()));
+        File script = new File(getScript(installPath));
         if (!script.exists()) {
             throw new RaspError(E10003 + script.getAbsolutePath());
         }
@@ -95,16 +113,6 @@ public abstract class BaseStandardInstaller implements Installer {
         String original = read(script);
         String modified = modifyStartScript(original);
         write(script, modified);
-
-        if (App.isAttach) {
-            System.out.println("\nAttach the rasp to process: " + App.pid);
-            new Attacher(App.pid + "", App.baseDir).doAttach(Attacher.MODE_INSTALL);
-        }
-
-        System.out.println("\nInstallation completed without errors.");
-        if (!App.isAttach) {
-            System.out.println("Please restart application server to take effect.");
-        }
     }
 
     private boolean generateConfig(String dir, boolean firstInstall) {
@@ -133,11 +141,11 @@ public abstract class BaseStandardInstaller implements Installer {
                 target.getParentFile().mkdir();
                 target.createNewFile();
             }
-            FileWriter writer = new FileWriter(target);
+            FileOutputStream outputStream = new FileOutputStream(target);
             InputStream is = this.getClass().getResourceAsStream("/openrasp.yml");
-            IOUtils.copy(is, writer, "UTF-8");
+            IOUtils.copy(is, outputStream);
             is.close();
-            writer.close();
+            outputStream.close();
 
             //配置云控参数
             setCloudArgs(App.url, App.appId, App.appSecret);
@@ -205,9 +213,9 @@ public abstract class BaseStandardInstaller implements Installer {
                     map.put("cloud.backend_url", url);
                     map.put("cloud.app_id", appId);
                     map.put("cloud.app_secret", appSecret);
-                    FileWriter writer = new FileWriter(yamlFile, true);
+                    BufferedWriter writer = new BufferedWriter (new OutputStreamWriter (new FileOutputStream (yamlFile,true),"UTF-8"));
                     writer.write(LINE_SEP);
-                    writer.write("#云控配置");
+                    writer.write("# <remote management>");
                     writer.write(LINE_SEP);
                     DumperOptions options = new DumperOptions();
                     options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
@@ -244,6 +252,12 @@ public abstract class BaseStandardInstaller implements Installer {
             }
         }
         return null;
+    }
+
+    //获取当前所在jar包的路径
+    public String getLocalJarPath() throws UnsupportedEncodingException {
+        URL localUrl = getClass().getProtectionDomain().getCodeSource().getLocation();
+        return URLDecoder.decode(localUrl.getFile().replace("+", "%2B"), "UTF-8");
     }
 
     protected abstract String getInstallPath(String serverRoot);

@@ -17,9 +17,12 @@
 package com.baidu.openrasp.plugin.checker;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.plugin.checker.js.JsChecker;
 import com.baidu.openrasp.plugin.checker.local.*;
 import com.baidu.openrasp.plugin.checker.policy.MongoConnectionChecker;
+import com.baidu.openrasp.plugin.checker.v8.V8Checker;
+import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
+import com.baidu.openrasp.plugin.checker.local.SqlExceptionChecker;
+import com.baidu.openrasp.plugin.checker.local.XssChecker;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
 import com.baidu.openrasp.plugin.checker.policy.server.*;
 import com.baidu.openrasp.request.AbstractRequest;
@@ -38,25 +41,25 @@ public class CheckParameter {
 
     public enum Type {
         // js插件检测
-        SQL("sql", new SqlStatementChecker(), 1),
-        COMMAND("command", new JsChecker(), 1 << 1),
-        DIRECTORY("directory", new JsChecker(), 1 << 2),
-        REQUEST("request", new JsChecker(), 1 << 3),
-        DUBBOREQUEST("dubboRequest", new JsChecker(), 1 << 4),
-        READFILE("readFile", new JsChecker(), 1 << 5),
-        WRITEFILE("writeFile", new JsChecker(), 1 << 6),
-        FILEUPLOAD("fileUpload", new JsChecker(), 1 << 7),
-        RENAME("rename", new JsChecker(), 1 << 8),
-        XXE("xxe", new JsChecker(), 1 << 9),
-        OGNL("ognl", new JsChecker(), 1 << 10),
-        DESERIALIZATION("deserialization", new JsChecker(), 1 << 11),
-        //        REFLECTION("reflection", new JsChecker()),
-        WEBDAV("webdav", new JsChecker(), 1 << 12),
-        INCLUDE("include", new JsChecker(), 1 << 13),
-        SSRF("ssrf", new SSRFChecker(), 1 << 14),
-        SQL_EXCEPTION("sql_exception", new SqlStatementChecker(), 1 << 15),
-        DELETEFILE("deleteFile", new JsChecker(), 1 << 18),
-        MONGO("mongo", new JsChecker(), 1 << 19),
+        SQL("sql", new V8Checker(), 1),
+        COMMAND("command", new V8Checker(), 1 << 1),
+        DIRECTORY("directory", new V8Checker(), 1 << 2),
+        REQUEST("request", new V8Checker(), 1 << 3),
+        READFILE("readFile", new V8Checker(), 1 << 5),
+        WRITEFILE("writeFile", new V8Checker(), 1 << 6),
+        FILEUPLOAD("fileUpload", new V8Checker(), 1 << 7),
+        RENAME("rename", new V8Checker(), 1 << 8),
+        XXE("xxe", new V8Checker(), 1 << 9),
+        OGNL("ognl", new V8Checker(), 1 << 10),
+        DESERIALIZATION("deserialization", new V8Checker(), 1 << 11),
+        //        REFLECTION("reflection", new V8Checker()),
+        WEBDAV("webdav", new V8Checker(), 1 << 12),
+        INCLUDE("include", new V8Checker(), 1 << 13),
+        SSRF("ssrf", new V8Checker(), 1 << 14),
+        SQL_EXCEPTION("sql_exception", new SqlExceptionChecker(), 1 << 15),
+        REQUESTEND("requestEnd", new V8Checker(), 1 << 17),
+        DELETEFILE("deleteFile", new V8Checker(), 1 << 18),
+        MONGO("mongo", new V8Checker(), 1 << 19),
 
         // java本地检测
         XSS_USERINPUT("xss_userinput", new XssChecker(), 1 << 16),
@@ -64,8 +67,8 @@ public class CheckParameter {
         SQL_SLOW_QUERY("sqlSlowQuery", new SqlResultChecker(false), 0),
 
         // 安全基线检测
-        POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker(), 0),
         POLICY_MONGO_CONNECTION("mongoConnection", new MongoConnectionChecker(), 0),
+        POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker(false), 0),
         POLICY_SERVER_TOMCAT("tomcatServer", new TomcatSecurityChecker(false), 0),
         POLICY_SERVER_JBOSS("jbossServer", new JBossSecurityChecker(false), 0),
         POLICY_SERVER_JBOSSEAP("jbossEAPServer", new JBossEAPSecurityChecker(false), 0),

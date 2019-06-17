@@ -16,6 +16,9 @@
 
 package com.baidu.openrasp.tool;
 
+import com.baidu.openrasp.config.Config;
+
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -57,22 +60,28 @@ public class StackTrace {
      *
      * @return 原始栈
      */
-    public static List<String> getStackTraceArray(int startIndex, int depth) {
-
+    public static List<String> getStackTraceArray() {
         LinkedList<String> stackTrace = new LinkedList<String>();
         Throwable throwable = new Throwable();
         StackTraceElement[] stackTraceElements = throwable.getStackTrace();
-
         if (stackTraceElements != null) {
-            for (int i = startIndex; i < stackTraceElements.length; i++) {
-                if (i > startIndex + depth) {
-                    break;
-                }
-                stackTrace.add(stackTraceElements[i].getClassName() + "." + stackTraceElements[i].getMethodName());
+            StackTraceElement[] stack = filter(stackTraceElements);
+            for (int i = 0; i < stack.length; i++) {
+                stackTrace.add(stack[i].getClassName() + "." + stack[i].getMethodName());
             }
         }
 
         return stackTrace;
+    }
+
+    //去掉包含rasp的堆栈
+    private static StackTraceElement[] filter(StackTraceElement[] trace) {
+        int i = trace.length - 1;
+        // 去除插件本身调用栈
+        while (i >= 0 && !trace[i].getClassName().startsWith("com.baidu.openrasp")) {
+            i--;
+        }
+        return Arrays.copyOfRange(trace, i + 1, Math.min(i + 1 + Config.getConfig().getPluginMaxStack(), trace.length));
     }
 
 }

@@ -1,4 +1,4 @@
-const plugin_version = '2019-0412-1200'
+const plugin_version = '2019-0606-1800'
 const plugin_name    = 'official'
 
 /*
@@ -59,7 +59,10 @@ var algorithmConfig = {
         min_length: 8,
         pre_filter: 'select|file|from|;',
         pre_enable: false,
-        lcs_search: false
+        lcs_search: false,
+
+        // 是否允许数据库管理器 - 前端直接提交SQL语句
+        allow_full: true
     },
     
     // SQL注入算法#2 - 语句规范
@@ -153,7 +156,8 @@ var algorithmConfig = {
             'sslip.io',
             '.nip.io',
             '.burpcollaborator.net',
-            '.tu4.org'
+            '.tu4.org',
+            '.2xss.cc'
         ]
     },
     // SSRF - 是否允许访问混淆后的IP地址
@@ -168,6 +172,10 @@ var algorithmConfig = {
         protocols: [
             'file',
             'gopher',
+
+            // python specific
+            'local_file',
+            'local-file',
 
             // java specific
             'jar',
@@ -223,7 +231,7 @@ var algorithmConfig = {
     // 写文件操作 - 脚本文件
     // https://rasp.baidu.com/doc/dev/official.html#case-file-write
     writeFile_script: {
-        name:      '算法2 - 拦截所有 php/jsp 等脚本文件的写入操作',
+        name:      '算法2 - 拦截 php/jsp 等脚本文件的写入操作',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#case-file-write',
         action:    'ignore'
     },
@@ -288,9 +296,31 @@ var algorithmConfig = {
         ]
     },
 
+    // XXE - 代码安全开关，通过调用相关函数直接禁止外部实体
+    xxe_disable_entity: {
+        name:   '算法1 - 禁止外部实体加载（记录日志等同于完全忽略）',
+        action: 'ignore',
+        clazz:  {
+            // com/sun/org/apache/xerces/internal/jaxp/DocumentBuilderFactoryImpl
+            java_dom:   true,
+
+            // org/dom4j/io/SAXReader
+            java_dom4j: true,
+
+            // org/jdom/input/SAXBuilder,org/jdom2/input/SAXBuilder
+            java_jdom:  true,
+
+            // com/sun/org/apache/xerces/internal/jaxp/SAXParserFactoryImpl
+            java_sax:   true,
+
+            // javax/xml/stream/XMLInputFactory
+            java_stax:  true
+        }
+    },
+
     // XXE - 使用 gopher/ftp/dict/.. 等不常见协议访问外部实体
     xxe_protocol: {
-        name:   '算法1 - 使用 ftp:// 等异常协议加载外部实体',
+        name:   '算法2 - 使用 ftp:// 等异常协议加载外部实体',
         action: 'block',
         protocols: [
             'ftp',
@@ -302,7 +332,7 @@ var algorithmConfig = {
     },
     // XXE - 使用 file 协议读取内容，可能误报，默认 log
     xxe_file: {
-        name:      '算法2 - 使用 file:// 协议读取文件',
+        name:      '算法3 - 使用 file:// 协议读取文件',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#case-xxe',
         action:    'log',
     },
@@ -502,9 +532,13 @@ if (! RASP.is_unittest)
    if (algorithmConfig.meta.all_log)
    {
         Object.keys(algorithmConfig).forEach(function (name) {
-            if (algorithmConfig[name].action == 'block') 
+            // XXE 外部实体开关不受影响
+            if (name != 'xxe_disable_entity')
             {
-               algorithmConfig[name].action = 'log'
+                if (algorithmConfig[name].action == 'block') 
+                {
+                    algorithmConfig[name].action = 'log'
+                }
             }
         })
     }
@@ -681,58 +715,59 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows, is_
 
     Object.keys(parameter).some(function (key) {
         // 只处理非数组、hash情况
-        var value = parameter[key]
-            value = value[0]
-
-        // 只处理字符串类型的
-        if (typeof value != 'string') {
-            return
-        }
-        // 如果应用做了特殊处理， 比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
-        if (value.startsWith('file://') && 
-            is_absolute_path(target, is_windows) && 
-            value.endsWith(target)) 
-        {
-            verdict = true
-            return true
-        }
-
-        // 去除多余/ 和 \ 的路径
-        var simplifiedValue
-        var simplifiedTarget
-
-        // Windows 下面
-        // 传入 ../../../conf/tomcat-users.xml
-        // 看到 c:\tomcat\webapps\root\..\..\conf\tomcat-users.xml
-        if (is_windows) {
-            value = value.replaceAll('/', '\\')
-            target = target.replaceAll('/', '\\')
-            realpath = realpath.replaceAll('/', '\\')
-            simplifiedTarget = target.replaceAll('\\\\','\\')
-            simplifiedValue = value.replaceAll('\\\\','\\')
-        } else{
-            simplifiedTarget = target.replaceAll('//','/')
-            simplifiedValue = value.replaceAll('//','/')
-        }
-        var simplifiedValues
-        if ( is_lcs_search ) {
-            simplifiedValues = lcs_search( simplifiedValue, simplifiedTarget )
-        }
-        else {
-            simplifiedValues = [simplifiedValue]
-        }
-        for(var i = 0, len = simplifiedValues.length; i < len; i++) {
-            simplifiedValue = simplifiedValues[i]
-            // 参数必须有跳出目录，或者是绝对路径
-            if ((target.endsWith(value) || simplifiedTarget.endsWith(simplifiedValue))
-                && (has_traversal(value) || value == realpath || simplifiedValue == realpath))
+        Object.values(parameter[key]).some(function (value){
+            // 只处理字符串类型的
+            if (typeof value != 'string') {
+                return
+            }
+            // 如果应用做了特殊处理， 比如传入 file:///etc/passwd，实际看到的是 /etc/passwd
+            if (value.startsWith('file://') && 
+                is_absolute_path(target, is_windows) && 
+                value.endsWith(target)) 
             {
                 verdict = true
                 return true
             }
+
+            // 去除多余/ 和 \ 的路径
+            var simplifiedValue
+            var simplifiedTarget
+
+            // Windows 下面
+            // 传入 ../../../conf/tomcat-users.xml
+            // 看到 c:\tomcat\webapps\root\..\..\conf\tomcat-users.xml
+            if (is_windows) {
+                value = value.replaceAll('/', '\\')
+                target = target.replaceAll('/', '\\')
+                realpath = realpath.replaceAll('/', '\\')
+                simplifiedTarget = target.replaceAll('\\\\','\\')
+                simplifiedValue = value.replaceAll('\\\\','\\')
+            } else{
+                simplifiedTarget = target.replaceAll('//','/')
+                simplifiedValue = value.replaceAll('//','/')
+            }
+            var simplifiedValues
+            if ( is_lcs_search ) {
+                simplifiedValues = lcs_search( simplifiedValue, simplifiedTarget )
+            }
+            else {
+                simplifiedValues = [simplifiedValue]
+            }
+            for(var i = 0, len = simplifiedValues.length; i < len; i++) {
+                simplifiedValue = simplifiedValues[i]
+                // 参数必须有跳出目录，或者是绝对路径
+                if ((target.endsWith(value) || simplifiedTarget.endsWith(simplifiedValue))
+                    && (has_traversal(value) || value == realpath || simplifiedValue == realpath))
+                {
+                    verdict = true
+                    return true
+                }
+            }
+        })
+        if (verdict){
+            return true
         }
     })
-
     return verdict
 }
 
@@ -742,42 +777,44 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
     var verdict = false
 
     Object.keys(parameter).some(function (key) {
-        var value = parameter[key]
-            value = value[0]
-
-        // 只处理字符串类型的
-        if (typeof value != 'string') {
-            return
-        }
-
-        if (is_windows) {
-            value = value.replaceAll('/', '\\')
-            value = value.replaceAll('\\\\', '\\')
-            target = target.replaceAll('/', '\\')
-            target = target.replaceAll('\\\\', '\\')
-        }
-        else {
-            value = value.replaceAll('//', '/')
-            target = target.replaceAll('//', '/')
-        }
-        var values
-        if (is_lcs_search) {
-            values = lcs_search(value, target)
-        }
-        else {
-            // java 下面，传入 /usr/ 会变成 /usr，所以少匹配一个字符
-            if ( value.charAt(value.length - 1) == "/" || 
-                 value.charAt(value.length - 1) == "\\" ) {
-                value = value.substr(0, value.length - 1)
+        var values = parameter[key]
+        Object.values(values).some(function(value){
+            // 只处理字符串类型的
+            if (typeof value != 'string') {
+                return
             }
-            values = [value]
-        }
-        for(var i = 0, len = values.length; i < len; i++) {
-            // 只处理非数组、hash情况
-            if (has_traversal(values[i]) && target.indexOf(values[i]) != -1) {
-                verdict = true
-                return true
+            if (is_windows) {
+                value = value.replaceAll('/', '\\')
+                value = value.replaceAll('\\\\', '\\')
+                target = target.replaceAll('/', '\\')
+                target = target.replaceAll('\\\\', '\\')
             }
+            else {
+                value = value.replaceAll('//', '/')
+                target = target.replaceAll('//', '/')
+            }
+            var values
+            if (is_lcs_search) {
+                values = lcs_search(value, target)
+            }
+            else {
+                // java 下面，传入 /usr/ 会变成 /usr，所以少匹配一个字符
+                if ( value.charAt(value.length - 1) == "/" || 
+                    value.charAt(value.length - 1) == "\\" ) {
+                    value = value.substr(0, value.length - 1)
+                }
+                values = [value]
+            }
+            for(var i = 0, len = values.length; i < len; i++) {
+                // 只处理非数组、hash情况
+                if (has_traversal(values[i]) && target.indexOf(values[i]) != -1) {
+                    verdict = true
+                    return true
+                }
+            }
+        })
+        if (verdict){
+            return true
         }
     })
     return verdict
@@ -788,12 +825,14 @@ function is_from_userinput(parameter, target)
 {
     var verdict = false
     Object.keys(parameter).some(function (key) {
-        var value = parameter[key]
-        // 只处理非数组、hash情况
-        if (value[0] == target) {
-            verdict = true
-            return true
-        }
+        var values = parameter[key]
+        Object.values(values).some(function(value){
+            // 只处理非数组、hash情况
+            if (value == target) {
+                verdict = true
+                return true
+            }
+        })
     })
     return verdict
 }
@@ -807,7 +846,7 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance)
     // 寻找 token 起始点，可以改为二分查找
     for (var i = 0; i < raw_tokens.length; i++)
     {
-        if (raw_tokens[i].stop >= userinput_idx)
+        if (raw_tokens[i].stop > userinput_idx)
         {
             start = i
             break
@@ -818,7 +857,7 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance)
     // 另外，最多需要遍历 distance 个 token
     for (var i = start; i < start + distance && i < raw_tokens.length; i++)
     {
-        if (raw_tokens[i].stop >= userinput_idx + userinput_length - 1)
+        if (raw_tokens[i].stop >= userinput_idx + userinput_length )
         {
             end = i
             break
@@ -909,6 +948,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
 
         var reason          = false
         var min_length      = algorithmConfig.sql_userinput.min_length
+        var allow_full      = algorithmConfig.sql_userinput.allow_full
         var parameters      = context.parameter || {}
         var json_parameters = context.json || {}
         var raw_tokens      = []
@@ -943,6 +983,12 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                         return false
                     }
 
+                    // 如果允许数据库管理器
+                    if (allow_full && params.query.length == value.length)
+                    {
+                        return false
+                    }
+
                     // 过滤已知误报
                     // 1,2,3,4,5 -> IN(1,2,3,4,5)
                     if (commaNumRegex.test(value)) {
@@ -960,7 +1006,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                     }
 
                     if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
-                        reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%", [name])
+                        reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                         return true
                     }
                 }
@@ -976,13 +1022,14 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 // 覆盖场景，后者仅PHP支持
                 // ?id=XXXX
                 // ?data[key1][key2]=XXX
-                var value_list
-
-                if (typeof parameters[name][0] == 'string') {
-                    value_list = parameters[name]
-                } else {
-                    value_list = Object.values(parameters[name][0])
-                }
+                var value_list = []
+                Object.values(parameters[name]).forEach(function (value){
+                    if (typeof value == 'string') {
+                        value_list.push(value)
+                    } else {
+                        value_list = value_list.concat(Object.values(value))
+                    }
+                })
 
                 reason = _run(value_list, name)
                 if (reason) {
@@ -1646,11 +1693,11 @@ plugin.register('command', function (params, context) {
     if (algorithmConfig.command_reflect.action != 'ignore') {
         // Java 检测逻辑
         if (server.language == 'java') {
-            var userCode = false
             var known    = {
                 'java.lang.reflect.Method.invoke':                                              _("Reflected command execution - Unknown vulnerability detected"),
                 'ognl.OgnlRuntime.invokeMethod':                                                _("Reflected command execution - Using OGNL library"),
                 'com.thoughtworks.xstream.XStream.unmarshal':                                   _("Reflected command execution - Using xstream library"),
+                'java.beans.XMLDecoder.readObject':                                             _("Reflected command execution - Using WebLogic XMLDecoder library"),
                 'org.apache.commons.collections4.functors.InvokerTransformer.transform':        _("Reflected command execution - Using Transformer library (v4)"),
                 'org.apache.commons.collections.functors.InvokerTransformer.transform':         _("Reflected command execution - Using Transformer library"),
                 'org.apache.commons.collections.functors.ChainedTransformer.transform':         _("Reflected command execution - Using Transformer library"),
@@ -1675,19 +1722,18 @@ plugin.register('command', function (params, context) {
                     break
                 }
 
-                // 仅当命令本身来自反射调用才拦截
-                // 如果某个类是反射调用，这个类再主动执行命令，则忽略
-                if (! method.startsWith('java.') && ! method.startsWith('sun.') && !method.startsWith('com.sun.')) {
-                    userCode = true
-                }
-
                 if (known[method]) {
-                    // 同上，如果反射调用和命令执行之间，包含用户代码，则不认为是反射调用
-                    if (userCode && method == 'java.lang.reflect.Method.invoke') {
-                        continue
+                    // 仅当命令本身来自反射调用才拦截
+                    // 如果某个类是反射调用，这个类再主动执行命令，则忽略
+                    var last_method = params.stack[i-1]
+                    if (method == 'java.lang.reflect.Method.invoke' && !( 
+                            last_method.startsWith('java.lang.UNIXProcess') || 
+                            last_method.startsWith('java.lang.Process') || 
+                            last_method.startsWith('java.lang.Runtime.exec'))
+                        ) {
+                    } else {
+                        message = known[method]
                     }
-
-                    message = known[method]
                     // break
                 }
             }
@@ -1751,7 +1797,7 @@ plugin.register('command', function (params, context) {
                 }
 
                 if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
-                    reason = _("Command injection - command structure altered by user input, request parameter name: %1%", [name])
+                    reason = _("Command injection - command structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                     return true
                 }
             })
@@ -1764,12 +1810,14 @@ plugin.register('command', function (params, context) {
             // 覆盖场景，后者仅PHP支持
             // ?id=XXXX
             // ?data[key1][key2]=XXX
-            var value_list
-            if (typeof parameters[name][0] == 'string') {
-                value_list = parameters[name]
-            } else {
-                value_list = Object.values(parameters[name][0])
-            }                
+            var value_list = []
+            Object.values(parameters[name]).forEach(function (value){
+                if (typeof value == 'string') {
+                    value_list.push(value)
+                } else {
+                    value_list = value_list.concat(Object.values(value))
+                }
+            })
             reason = _run(value_list, name)
             if (reason) {
                 return true

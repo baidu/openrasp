@@ -18,9 +18,10 @@
 #include "openrasp_log.h"
 #include "openrasp_utils.h"
 #include "openrasp_content_type.h"
+#include "openrasp_inject.h"
 
-namespace openrasp
-{
+using namespace openrasp;
+
 enum FieldIndex
 {
     kUrl = 0,
@@ -460,6 +461,8 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
          (origin_zv = zend_hash_str_find(_SERVER, ZEND_STRL("CONTENT_TYPE"))) != nullptr) &&
         Z_TYPE_P(origin_zv) == IS_STRING)
     {
+        openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("Content-type of request (%s) is %s."),
+                       OPENRASP_INJECT_G(request_id), Z_STRVAL_P(origin_zv));
         std::string content_type_vlaue = std::string(Z_STRVAL_P(origin_zv));
         OpenRASPContentType::ContentType k_type = OpenRASPContentType::classify_content_type(content_type_vlaue);
         zend_string *body = nullptr;
@@ -473,14 +476,16 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
             zend_string_release(body);
         }
     }
+    openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("Complete body of request (%s) is %s."),
+                   OPENRASP_INJECT_G(request_id), complete_body.c_str());
     v8::TryCatch trycatch(isolate);
     auto v8_body = NewV8String(isolate, complete_body);
     auto v8_json_obj = v8::JSON::Parse(isolate->GetCurrentContext(), v8_body);
     if (v8_json_obj.IsEmpty())
     {
         v8::Local<v8::Value> exception = trycatch.Exception();
-        v8::String::Utf8Value exception_str(exception);
-        openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("Fail to parse json body, cuz of %s."), *exception_str);
+        v8::String::Utf8Value exception_str(isolate, exception);
+        openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("Fail to parse json body, cuz of %s."), *exception_str);
     }
     else
     {
@@ -494,7 +499,7 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     self->SetInternalField(kJsonBody, obj);
 }
 
-v8::Local<v8::ObjectTemplate> NewRequestContextTemplate(v8::Isolate *isolate)
+v8::Local<v8::ObjectTemplate> openrasp::CreateRequestContextTemplate(Isolate *isolate)
 {
     auto obj_templ = v8::ObjectTemplate::New(isolate);
     obj_templ->SetAccessor(NewV8String(isolate, "url"), url_getter);
@@ -512,4 +517,3 @@ v8::Local<v8::ObjectTemplate> NewRequestContextTemplate(v8::Isolate *isolate)
     obj_templ->SetInternalFieldCount(kEndForCount);
     return obj_templ;
 }
-} // namespace openrasp

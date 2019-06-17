@@ -28,21 +28,27 @@
         </div>
         <div class="form-group">
           <label class="form-label">
+            自定义 From 头信息
+          </label>
+          <input v-model="data.email_alarm_conf.from" type="text" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
             邮件服务器地址
           </label>
-          <input v-model="data.email_alarm_conf.server_addr" type="text" class="form-control" placeholder="smtp.163.com:25">
+          <input v-model="data.email_alarm_conf.server_addr" type="text" class="form-control" placeholder="smtp.163.com:25" autocomplete="off">
         </div>
         <div class="form-group">
           <label class="form-label">
             邮箱账号
           </label>
-          <input v-model="data.email_alarm_conf.username" type="email" class="form-control" placeholder="hello@163.com">
+          <input v-model="data.email_alarm_conf.username" type="email" class="form-control" placeholder="hello@163.com" autocomplete="off">
         </div>
         <div class="form-group">
           <label class="form-label">
             邮箱密码
           </label>
-          <input v-model="data.email_alarm_conf.password" type="password" class="form-control">
+          <input v-model="data.email_alarm_conf.password" type="password" class="form-control" autocomplete="off">
         </div>
         <div class="form-group">
           <label class="custom-switch">

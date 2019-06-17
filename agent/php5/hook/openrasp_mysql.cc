@@ -56,7 +56,11 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
             return false;
         }
         host_and_port = passwd = NULL;
+#if (PHP_MINOR_VERSION == 3)
+        user = php_get_current_user();
+#else
         user = php_get_current_user(TSRMLS_C);
+#endif
     }
     else
     {
@@ -85,6 +89,10 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
         if (!user)
         {
             user = default_user;
+        }
+        if (!passwd)
+        {
+            passwd = default_password;
         }
     }
     sql_connection_p->set_server("mysql");
@@ -124,6 +132,7 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
     sql_connection_p->set_using_socket(using_socket);
     sql_connection_p->set_socket(SAFE_STRING(socket));
     sql_connection_p->set_username(SAFE_STRING(user));
+    sql_connection_p->set_password(SAFE_STRING(passwd));
     return true;
 }
 

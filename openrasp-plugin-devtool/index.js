@@ -1,4 +1,0 @@
-/**
- * @file
- */
-require('./lib/buildenv');

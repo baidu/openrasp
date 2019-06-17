@@ -39,6 +39,8 @@ char *fetch_request_body(size_t max_len TSRMLS_DC);
 bool need_alloc_shm_current_sapi();
 std::string convert_to_header_key(char *key, size_t length);
 bool openrasp_parse_url(const std::string &origin_url, std::string &scheme, std::string &host, std::string &port);
+bool verify_remote_management_ini();
+std::map<std::string, std::string> get_env_map();
 
 bool make_openrasp_root_dir(const char *path TSRMLS_DC);
 void openrasp_set_locale(const char *locale, const char *locale_path);

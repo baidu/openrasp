@@ -18,6 +18,7 @@ package com.baidu.openrasp.dependency;
 
 import com.baidu.openrasp.cloud.CloudHttp;
 import com.baidu.openrasp.cloud.CloudManager;
+import com.baidu.openrasp.cloud.CloudTimerTask;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.ErrorType;
@@ -35,37 +36,31 @@ import java.util.Map;
  * @author: anyang
  * @create: 2019/04/19 16:07
  */
-public class DependencyReport {
+public class DependencyReport extends CloudTimerTask {
 
     public DependencyReport() {
-        Thread thread = new Thread(new DependencyThread());
-        thread.setDaemon(true);
-        thread.start();
+        super(Config.getConfig().getDependencyCheckInterval());
     }
 
-    class DependencyThread implements Runnable {
-        @Override
-        public void run() {
-            while (true) {
-                try {
-                    HashSet<Dependency> dependencyHashSet = DependencyFinder.getDependencySet();
-                    Map<String, Object> parameters = new HashMap<String, Object>();
-                    parameters.put("rasp_id", CloudCacheModel.getInstance().getRaspId());
-                    parameters.put("dependency", dependencyHashSet);
-                    String url = CloudRequestUrl.CLOUD_DEPENDENCY_REPORT_URL;
-                    GenericResponse response = new CloudHttp().commonRequest(url, new Gson().toJson(parameters));
-                    if (!CloudUtils.checkRequestResult(response)) {
-                        String message = CloudUtils.handleError(ErrorType.DEPENDENCY_REPORT_ERROR, response);
-                        int errorCode = ErrorType.REGISTER_ERROR.getCode();
-                        CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
-                    }
-                    Thread.sleep(Config.getConfig().getDependencyCheckInterval()*1000);
-                } catch (Exception e) {
-                    String message = e.getMessage();
-                    int errorCode = ErrorType.REGISTER_ERROR.getCode();
-                    CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
-                }
-            }
+    @Override
+    public void execute() {
+        HashSet<Dependency> dependencyHashSet = DependencyFinder.getDependencySet();
+        Map<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("rasp_id", CloudCacheModel.getInstance().getRaspId());
+        parameters.put("dependency", dependencyHashSet);
+        String url = CloudRequestUrl.CLOUD_DEPENDENCY_REPORT_URL;
+        GenericResponse response = new CloudHttp().commonRequest(url, new Gson().toJson(parameters));
+        if (!CloudUtils.checkRequestResult(response)) {
+            String message = CloudUtils.handleError(ErrorType.DEPENDENCY_REPORT_ERROR, response);
+            int errorCode = ErrorType.REGISTER_ERROR.getCode();
+            CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
         }
+    }
+
+    @Override
+    public void handleError(Throwable t) {
+        String message = t.getMessage();
+        int errorCode = ErrorType.REGISTER_ERROR.getCode();
+        CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
     }
 }

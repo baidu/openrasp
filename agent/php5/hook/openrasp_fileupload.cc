@@ -84,7 +84,7 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
             php_stream_close(stream);
             if (len > 0)
             {
-                bool is_block = false;
+                openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
                 openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
                 if (isolate)
                 {
@@ -93,10 +93,10 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
                     params->Set(openrasp::NewV8String(isolate, "name"), openrasp::NewV8String(isolate, form_data_name));
                     params->Set(openrasp::NewV8String(isolate, "filename"), openrasp::NewV8String(isolate, Z_STRVAL_PP(realname), Z_STRLEN_PP(realname)));
                     params->Set(openrasp::NewV8String(isolate, "content"), openrasp::NewV8String(isolate, contents, MIN(len, 4 * 1024)));
-                    is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+                    check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
                 }
                 efree(contents);
-                if (is_block)
+                if (check_result == openrasp::CheckResult::kBlock)
                 {
                     handle_block(TSRMLS_C);
                 }

@@ -19,16 +19,14 @@ package com.baidu.openrasp.hook.file;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import org.mozilla.javascript.Scriptable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * @description: 任意文件删除hook点
@@ -55,14 +53,13 @@ public class FileDeleteHook extends AbstractClassHook {
 
     public static void checkDeleteFile(File file) {
         if (file != null) {
-            JSContext cx = JSContextFactory.enterAndInitContext();
-            Scriptable params = cx.newObject(cx.getScope());
+            HashMap<String, Object> params = new HashMap<String, Object>();
             String path = file.getPath();
-            params.put("path", params, path);
+            params.put("path", path);
             try {
-                params.put("realpath", params, file.getCanonicalPath());
+                params.put("realpath", file.getCanonicalPath());
             } catch (IOException e) {
-                params.put("realpath", params, file.getAbsolutePath());
+                params.put("realpath", file.getAbsolutePath());
             }
             HookHandler.doCheck(CheckParameter.Type.DELETEFILE, params);
         }

@@ -170,13 +170,13 @@ public class HttpServletResponse {
                     script = Config.getConfig().getBlockHtml().replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId);
                 }
                 if (!isCommitted) {
+                    resetBuffer();
                     Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, statusCode);
                     if (statusCode >= 300 && statusCode <= 399) {
                         setHeader("Location", blockUrl.replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId));
                     }
                     setIntHeader(CONTENT_LENGTH_HEADER_KEY, script.getBytes().length);
                 }
-                resetBuffer();
                 sendContent(script, true);
             } catch (Exception e) {
                 //ignore

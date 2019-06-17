@@ -4,6 +4,7 @@
 <%@ page import="org.apache.commons.fileupload.servlet.ServletFileUpload" %>
 <%@ page import="java.util.List" %>
 <%
+  out.println(request.getParameter("test"));
 	Boolean isMultipart = ServletFileUpload.isMultipartContent(request);
 	if (isMultipart) {
 		request.getParameter("test");

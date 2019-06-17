@@ -176,4 +176,11 @@ size_t JsonReader::get_array_size(const std::vector<std::string> &keys)
   return result;
 }
 
+void JsonReader::write_map(const std::vector<std::string> &keys, const std::map<std::string, std::string> &value)
+{
+  json j_map(value);
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
+  j[ptr] = j_map;
+}
+
 } // namespace openrasp

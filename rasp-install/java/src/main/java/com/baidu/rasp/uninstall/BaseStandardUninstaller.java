@@ -23,6 +23,7 @@ import com.baidu.rasp.install.BaseStandardInstaller;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Scanner;
 
 import static com.baidu.rasp.RaspError.E10002;
 import static com.baidu.rasp.RaspError.E10003;
@@ -109,6 +110,27 @@ public abstract class BaseStandardUninstaller implements Uninstaller {
         String javaVersion = System.getProperty("java.version");
         return javaVersion != null && (javaVersion.startsWith("1.9") || javaVersion.startsWith("10.")
                 || javaVersion.startsWith("11."));
+    }
+
+    protected String getUninstallContent(String content) {
+        StringBuilder sb = new StringBuilder();
+        boolean isDelete = false;
+        Scanner scanner = new Scanner(content);
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            if (line.contains("BEGIN OPENRASP")) {
+                isDelete = true;
+                continue;
+            }
+            if (line.contains("END OPENRASP")) {
+                isDelete = false;
+                continue;
+            }
+            if (!isDelete) {
+                sb.append(line).append(LINE_SEP);
+            }
+        }
+        return sb.toString();
     }
 
     protected abstract String getInstallPath(String serverRoot);

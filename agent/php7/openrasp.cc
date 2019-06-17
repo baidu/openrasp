@@ -122,7 +122,7 @@ PHP_MINIT_FUNCTION(openrasp)
     if (need_alloc_shm_current_sapi() && openrasp_ini.remote_management_enable)
     {
         openrasp::oam.reset(new openrasp::OpenraspAgentManager());
-        if (!openrasp::oam->verify_ini_correct())
+        if (!verify_remote_management_ini())
         {
             openrasp_status = "Unprotected (ini configuration error)";
             return SUCCESS;
@@ -151,6 +151,8 @@ PHP_MINIT_FUNCTION(openrasp)
                 OPENRASP_G(config).update(conf_reader.get());
                 openrasp::scm->build_check_type_white_array(conf_reader.get());
                 openrasp::scm->build_weak_password_array(conf_reader.get());
+                int64_t debug_level = conf_reader.get()->fetch_int64({"debug.level"}, 0);
+                openrasp::scm->set_debug_level(debug_level);
             }
         }
     }
@@ -286,7 +288,6 @@ PHP_MINFO_FUNCTION(openrasp)
     php_info_print_table_row(2, "Commit Id", "");
 #endif
     php_info_print_table_row(2, "V8 Version", ZEND_TOSTR(V8_MAJOR_VERSION) "." ZEND_TOSTR(V8_MINOR_VERSION));
-    php_info_print_table_row(2, "Antlr Version", "4.7.1 (JavaScript Runtime)");
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (remote_active && openrasp::oam)
     {
@@ -389,14 +390,14 @@ static void hook_without_params(OpenRASPCheckType check_type)
     {
         return;
     }
-    bool is_block = false;
+    openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
     {
         v8::HandleScope handle_scope(isolate);
         auto params = v8::Object::New(isolate);
-        is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params,
+        check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params,
                                   OPENRASP_CONFIG(plugin.timeout.millis));
     }
-    if (is_block)
+    if (check_result == openrasp::CheckResult::kBlock)
     {
         handle_block();
     }

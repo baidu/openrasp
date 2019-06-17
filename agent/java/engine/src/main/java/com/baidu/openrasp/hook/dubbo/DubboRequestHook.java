@@ -18,6 +18,8 @@ package com.baidu.openrasp.hook.dubbo;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.hook.server.ServerRequestHook;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
@@ -55,7 +57,9 @@ public class DubboRequestHook extends AbstractClassHook {
 
         String src = getInvokeStaticSrc(DubboRequestHook.class, "getDubboRpcRequestParameters",
                 "$2", Object.class);
+        String requestEndSrc = getInvokeStaticSrc(DubboRequestHook.class, "checkRequestEnd", "");
         insertBefore(ctClass, "invoke", null, src);
+        insertAfter(ctClass, "invoke", null, requestEndSrc, true);
     }
 
     public static void getDubboRpcRequestParameters(Object object) {
@@ -74,7 +78,10 @@ public class DubboRequestHook extends AbstractClassHook {
         }
 
         HookHandler.checkDubboFilterRequest(map);
+    }
 
+    public static void checkRequestEnd() {
+        HookHandler.doCheck(CheckParameter.Type.REQUESTEND, new Object());
     }
 
     public static boolean isWrapClass(Class clazz) {

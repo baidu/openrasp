@@ -49,16 +49,22 @@ public class WeblogicUDDIHook extends AbstractSSRFHook {
     public static void getURL(String weblogicURL) {
         if (weblogicURL != null) {
             URL url = null;
+            String host = null;
+            String port = "";
             try {
                 url = new URL(weblogicURL);
+                host = url.getHost();
+                int temp = url.getPort();
+                if (temp > 0) {
+                    port = temp + "";
+                }
             } catch (Exception e) {
-                String message = e.getMessage();
+                String message = url != null ? ("parse url " + url + "failed") : e.getMessage();
                 int errorCode = ErrorType.HOOK_ERROR.getCode();
                 HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             }
-            if (url != null) {
-                int port = url.getPort();
-                checkHttpUrl(weblogicURL, url.getHost(), port > 0 ? ("" + port) : "", "weblogic_UDDI");
+            if (url != null && host != null) {
+                checkHttpUrl(weblogicURL, host, port, "weblogic_UDDI");
             }
         }
     }

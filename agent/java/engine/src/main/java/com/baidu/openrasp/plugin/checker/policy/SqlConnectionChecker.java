@@ -29,6 +29,13 @@ import org.apache.log4j.Logger;
 import java.util.*;
 
 public class SqlConnectionChecker extends PolicyChecker {
+    public SqlConnectionChecker() {
+        super();
+    }
+
+    public SqlConnectionChecker(boolean canBlock) {
+        super(canBlock);
+    }
 
     private static final String SQL_TYPE_SQLSERVRE = "sqlserver";
     private static final String SQL_TYPE_ORACLE = "oracle";
@@ -91,13 +98,13 @@ public class SqlConnectionChecker extends PolicyChecker {
             Map<String, String> map = parseConnectionString(url);
             if (map != null) {
                 sqlType = map.get("type");
-                user = properties.getProperty(CONNECTION_USER_KEY);
+                user = map.get("user");
                 if (user == null) {
-                    user = map.get("user");
+                    user = properties.getProperty(CONNECTION_USER_KEY);
                 }
-                password = properties.getProperty("password");
+                password = map.get("password");
                 if (password == null) {
-                    password = map.get("password");
+                    password = properties.getProperty("password");
                 }
                 urlWithoutParams = map.get("urlWithoutParams");
                 socket = map.get("socket");
@@ -135,7 +142,7 @@ public class SqlConnectionChecker extends PolicyChecker {
                 alarmTimeCache.clear();
             }
             alarmTimeCache.put(url, System.currentTimeMillis());
-            String unsafeMessage = "Database security baseline - the password \"" + password + "\" is detected weak password combination , username is " + user;
+            String unsafeMessage = "Database security baseline - detected weak password for \"" + user + "\" account, password is \"" + password + "\"";
             if (infos == null) {
                 infos = new LinkedList<EventInfo>();
             }
@@ -144,7 +151,7 @@ public class SqlConnectionChecker extends PolicyChecker {
             params.put("connectionString", urlWithoutParams != null ? urlWithoutParams : "");
             params.put("username", user != null ? user : "");
             params.put("password", password);
-            infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.SQL_CONNECTION, unsafeMessage, true, params));
+            infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.MANAGER_PASSWORD, unsafeMessage, true, params));
         }
         return infos;
     }

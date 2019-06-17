@@ -56,7 +56,7 @@ public class CloudUtils {
             jsonString = new String(outputStream.toByteArray(), "UTF-8");
             inputStream.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            CloudManager.LOGGER.info("convert inputStream to json string failed");
         }
         return jsonString;
     }

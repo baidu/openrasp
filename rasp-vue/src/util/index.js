@@ -1,7 +1,7 @@
 import axios from 'axios'
 import Cookie from 'js-cookie'
 
-export var rasp_version = '1.0'
+export var rasp_version = '1.1'
 
 // 起始 type_id: 1001
 export var audit_types = {
@@ -50,7 +50,7 @@ export var browser_headers = [
       },
       {
         name: '开启',
-        value: 'nosiff'
+        value: 'nosniff'
       }
     ]
   },
