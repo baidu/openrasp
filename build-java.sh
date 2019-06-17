@@ -36,9 +36,10 @@ function buildRaspInstall {
 # 编译 openrasp-v8
 function buildOpenraspV8 {
 	cd $BASE_DIR
-	git submodule update --init --recursive --depth=1
+	GIT_LFS_SKIP_SMUDGE=1 git submodule update --init --recursive --depth=1
 	cd openrasp-v8/java
-	mvn clean install -Drelease.tag=$(git describe --tag --abbrev=0)
+	./fetch_native_libraries.sh
+	mvn clean install
 	cd $BASE_DIR
 }
 
