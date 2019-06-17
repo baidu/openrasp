@@ -148,7 +148,7 @@
 <script>
 import isIp from 'is-ip'
 import { mapGetters, mapActions, mapMutations } from "vuex";
-import HostDetailModal from '@/components/modals/HostDetailModal'
+import HostDetailModal from '@/components/modals/hostDetailModal'
 
 export default {
   name: 'Hosts',
