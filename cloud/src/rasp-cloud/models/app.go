@@ -54,10 +54,12 @@ type App struct {
 	GeneralConfig    map[string]interface{} `json:"general_config"  bson:"general_config"`
 	WhitelistConfig  []WhitelistConfigItem  `json:"whitelist_config"  bson:"whitelist_config"`
 	SelectedPluginId string                 `json:"selected_plugin_id" bson:"selected_plugin_id"`
-	EmailAlarmConf   EmailAlarmConf         `json:"email_alarm_conf" bson:"email_alarm_conf"`
-	DingAlarmConf    DingAlarmConf          `json:"ding_alarm_conf" bson:"ding_alarm_conf"`
-	HttpAlarmConf    HttpAlarmConf          `json:"http_alarm_conf" bson:"http_alarm_conf"`
-	AlgorithmConfig  map[string]interface{} `json:"algorithm_config"`
+	// AttackTypeAlarmConf 该字段为了兼容之前没该字段的问题，该字段为 nil 的情况下代表所有攻击类型都选中所有报警类型
+	AttackTypeAlarmConf *map[string][]string   `json:"attack_type_alarm_conf" bson:"attack_type_alarm_conf"`
+	EmailAlarmConf      EmailAlarmConf         `json:"email_alarm_conf" bson:"email_alarm_conf"`
+	DingAlarmConf       DingAlarmConf          `json:"ding_alarm_conf" bson:"ding_alarm_conf"`
+	HttpAlarmConf       HttpAlarmConf          `json:"http_alarm_conf" bson:"http_alarm_conf"`
+	AlgorithmConfig     map[string]interface{} `json:"algorithm_config"`
 }
 
 type WhitelistConfigItem struct {
@@ -103,6 +105,8 @@ type dingResponse struct {
 	ErrMsg      string `json:"errmsg"`
 	AccessToken string `json:"access_token"`
 }
+
+var AlarmTypes = []string{"email", "ding", "http"}
 
 const (
 	appCollectionName = "app"
@@ -260,17 +264,41 @@ func HandleAttackAlarm() {
 	}
 	now := time.Now().UnixNano() / 1000000
 	for _, app := range apps {
-		total, result, err := logs.SearchLogs(lastAlarmTime, now, false, nil, "event_time",
-			1, 10, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+app.Id)
-		if err != nil {
-			beego.Error("failed to get alarm from es: " + err.Error())
-			continue
+		if app.AttackTypeAlarmConf != nil {
+			attackConf := map[string][]interface{}{}
+			for k, v := range *app.AttackTypeAlarmConf {
+				for _, item := range v {
+					if attackConf[item] == nil {
+						attackConf[item] = make([]interface{}, 0)
+					}
+					attackConf[item] = append(attackConf[item], k)
+				}
+			}
+			for k, v := range attackConf {
+				query := map[string]interface{}{"attack_type": v}
+				total, result, err := logs.SearchLogs(lastAlarmTime, now, false, query, "event_time",
+					1, 10, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+app.Id)
+				if err != nil {
+					beego.Error("failed to get alarm from es for alarm type " + k + ": " + err.Error())
+					continue
+				}
+				if total > 0 {
+					PushAttackAlarm(&app, total, result, false, k)
+				}
+			}
+		} else {
+			total, result, err := logs.SearchLogs(lastAlarmTime, now, false, nil, "event_time",
+				1, 10, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+app.Id)
+			if err != nil {
+				beego.Error("failed to get alarm from es: " + err.Error())
+				continue
+			}
+			if total > 0 {
+				PushAttackAlarm(&app, total, result, false)
+			}
 		}
-		if total > 0 {
-			PushAttackAlarm(&app, total, result, false)
-		}
+		lastAlarmTime = now + 1
 	}
-	lastAlarmTime = now + 1
 }
 
 func AddApp(app *App) (result *App, err error) {
@@ -471,15 +499,15 @@ func GetAppCount() (count int, err error) {
 	return mongo.Count(appCollectionName)
 }
 
-func PushAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isTest bool) {
+func PushAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isTest bool, alarmType ...string) {
 	if app != nil {
-		if app.DingAlarmConf.Enable {
+		if (len(alarmType) == 0 || alarmType[0] == "ding") && app.DingAlarmConf.Enable {
 			PushDingAttackAlarm(app, total, alarms, isTest)
 		}
-		if app.EmailAlarmConf.Enable {
+		if (len(alarmType) == 0 || alarmType[0] == "email") && app.EmailAlarmConf.Enable {
 			PushEmailAttackAlarm(app, total, alarms, isTest)
 		}
-		if app.HttpAlarmConf.Enable {
+		if (len(alarmType) == 0 || alarmType[0] == "http") && app.HttpAlarmConf.Enable {
 			PushHttpAttackAlarm(app, total, alarms, isTest)
 		}
 	}
