@@ -64,9 +64,6 @@
               </span>
               <input v-model="srcip" type="text" class="form-control w-10" placeholder="攻击来源" @keyup.enter="loadEvents(1)" style="width: 210px">
             </div>
-            <!-- <button class="btn btn-primary ml-2" @click="loadEvents(1)" style="width: 3.3rem">
-              搜索
-            </button> -->
           </div>
         </div>
         <div class="page-options d-flex" style="margin-top: 5px;">
@@ -81,7 +78,12 @@
               <i class="fe fe-search" />
             </span>
             <input v-model="url" type="text" class="form-control w-10" placeholder="目标 URL" @keyup.enter="loadEvents(1)" style="width: 210px">
-          </div>
+          </div>          
+        </div>
+        <div class="page-options d-flex" style="margin-top: 5px;">
+          <button class="btn btn-primary ml-2" @click="loadEvents(1)" style="height: 38px">
+            搜索
+          </button>
         </div>
        
       </div>
