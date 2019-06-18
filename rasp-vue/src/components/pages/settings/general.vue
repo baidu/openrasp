@@ -105,7 +105,7 @@
           </label>
         </div>          
       </div>
-      <div class="card-footer text-right">
+      <div class="card-footer text-right sticky-card-footer">
         <div class="d-flex">
           <button type="submit" class="btn btn-primary" @click="doSave()">
             保存

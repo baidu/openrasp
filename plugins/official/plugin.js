@@ -1,4 +1,4 @@
-const plugin_version = '2019-0614-1900'
+const plugin_version = '2019-0616-1530'
 const plugin_name    = 'official'
 
 /*
@@ -129,13 +129,13 @@ var algorithmConfig = {
     },
 
     sql_exception: {
-        name:      '算法3 - 检测SQL语句异常',
+        name:      '算法3 - 记录数据库异常',
         action:    'log',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#sql-exception'
     },
 
     sql_regex: {
-        name:      '算法4 - 正则表达式算法（请修改插件）',
+        name:      '算法4 - 正则表达式算法',
         action:    'ignore',
         regex:     'union.*select.*from.*information_schema'
     },
@@ -159,7 +159,7 @@ var algorithmConfig = {
             '.vcap.me',
             '.xip.name',
             '.xip.io',
-            'sslip.io',
+            '.sslip.io',
             '.nip.io',
             '.burpcollaborator.net',
             '.tu4.org',
@@ -255,8 +255,8 @@ var algorithmConfig = {
 
     // 文件管理器 - 用户输入匹配，仅当直接读取绝对路径时才检测
     directory_userinput: {
-        name:   '算法1 - 用户输入匹配算法',
-        action: 'block',
+        name:       '算法1 - 用户输入匹配算法',
+        action:     'block',
         lcs_search: false
     },
     // 文件管理器 - 反射方式列目录
@@ -272,8 +272,8 @@ var algorithmConfig = {
 
     // 文件包含 - 用户输入匹配
     include_userinput: {
-        name:   '算法1 - 用户输入匹配算法',
-        action: 'block',
+        name:       '算法1 - 用户输入匹配算法',
+        action:     'block',
         lcs_search: false
     },
     // 文件包含 - 特殊协议
@@ -346,22 +346,22 @@ var algorithmConfig = {
 
     // 文件上传 - COPY/MOVE 方式，仅适合 tomcat
     fileUpload_webdav: {
-        name:   '算法1 - MOVE 方式文件上传脚本文件',
+        name:   '算法1 - MOVE 方式上传脚本文件',
         action: 'block'
     },
     // 文件上传 - Multipart 方式上传脚本文件
     fileUpload_multipart_script: {
-        name:   '算法2 - Multipart 方式文件上传 PHP/JSP 等脚本文件',
+        name:   '算法2 - Multipart 方式上传 PHP/JSP 等脚本文件',
         action: 'block'
     },
     // 文件上传 - Multipart 方式上传 HTML/JS 等文件
     fileUpload_multipart_html: {
-        name:   '算法3 - Multipart 方式文件上传 HTML/JS 等文件',
+        name:   '算法3 - Multipart 方式上传 HTML/JS 等文件',
         action: 'ignore'
     },
     // 文件上传 - Multipart 方式上传 DLL/EXE 等文件
     fileUpload_multipart_exe: {
-        name:   '算法3 - Multipart 方式文件上传 DLL/EXE 等文件',
+        name:   '算法3 - Multipart 方式上传 DLL/EXE 等文件',
         action: 'ignore'
     },    
 
@@ -565,6 +565,22 @@ if (! RASP.is_unittest)
         algorithmConfig.xss_echo.filter_regex = ""
     }
 }
+
+// 校验 sql_regex 正则是否合法
+if (algorithmConfig.sql_regex.action != 'ignore') {
+    if (! algorithmConfig.sql_regex.regex.trim()) {
+        plugin.log ("algorithmConfig.sql_regex.regex is empty, algorithm disabled")
+        algorithmConfig.sql_regex.action = 'ignore'
+    } else {
+        try {
+            new RegExp(algorithmConfig.sql_regex)
+        } catch (e) {
+            plugin.log ("Invalid regex in algorithmConfig.sql_regex.regex: ", e)
+            algorithmConfig.sql_regex.action = 'ignore'
+        } 
+    }
+}
+
 
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue) {

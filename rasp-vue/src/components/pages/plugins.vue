@@ -158,7 +158,7 @@ export default {
       })
     },
     doSelect: function(row) {
-      if (!confirm('确认下发?')) {
+      if (!confirm('确认下发? 一个心跳周期后生效')) {
         return
       }
 
