@@ -57,6 +57,7 @@ type SearchAttackParam struct {
 		AttackSource   string    `json:"attack_source,omitempty"`
 		AttackUrl      string    `json:"url,omitempty"`
 		LocalIp        string    `json:"local_ip,omitempty"`
+		ClientIp       string    `json:"client_ip,omitempty"`
 		StackMd5       string    `json:"stack_md5,omitempty"`
 		RequestId      string    `json:"request_id,omitempty"`
 		PluginMessage  string    `json:"plugin_message,omitempty"`
@@ -268,7 +269,8 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 			} else if key == "local_ip" {
 				filterQueries = append(filterQueries,
 					elastic.NewNestedQuery("server_nic", elastic.NewTermQuery("server_nic.ip", value)))
-			} else if key == "attack_source" || key == "url" || key == "message" || key == "plugin_message" {
+			} else if key == "attack_source" || key == "url" ||
+				key == "message" || key == "plugin_message" || key == "client_ip" {
 				filterQueries = append(filterQueries, elastic.NewWildcardQuery(key, "*"+fmt.Sprint(value)+"*"))
 			} else if key == "server_hostname" {
 				shouldQueries = append(shouldQueries,
