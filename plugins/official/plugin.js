@@ -159,7 +159,7 @@ var algorithmConfig = {
             '.vcap.me',
             '.xip.name',
             '.xip.io',
-            'sslip.io',
+            '.sslip.io',
             '.nip.io',
             '.burpcollaborator.net',
             '.tu4.org',
