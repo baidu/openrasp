@@ -41,9 +41,9 @@
             搜索
           </button>
 
-          <button class="btn btn-primary ml-2" @click="exportCSV()">
+          <a class="btn btn-primary ml-2" v-bind:href="'/v1/api/rasp/csv?app_id=' + current_app.id" target="_blank">
             导出
-          </button>
+          </a>
 
           <button class="btn btn-info ml-2" @click="deleteExpired()">
             清理
@@ -192,15 +192,6 @@ export default {
     ceil: Math.ceil,
     showHostDetail(data) {
       this.$refs.showHostDetail.showModal(data)
-    },
-    exportCSV: function() {
-      var body = {
-        app_id: this.current_app.id
-      }
-
-      return this.request.post('v1/api/rasp/csv', body).then(res => {
-
-      })
     },
     loadRaspList(page) {
       if (!this.filter.online && !this.filter.offline) {

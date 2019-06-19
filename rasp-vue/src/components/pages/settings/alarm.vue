@@ -44,7 +44,7 @@
         </div>        
       </div>
       
-      <div class="card-footer">
+      <div class="card-footer sticky-card-footer">
         <button type="submit" class="btn btn-primary" @click="saveAlarmMethods()">
           保存
         </button>
@@ -310,8 +310,9 @@ export default {
       var self = this
       var conf = self.data.attack_type_alarm_conf
 
+      // 没配置等于全开
       if (! conf) {
-        this.resetAlarmMethods()
+        this.resetAlarmMethods(true)
         return
       }
 
