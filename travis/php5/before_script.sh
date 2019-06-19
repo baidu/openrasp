@@ -9,7 +9,6 @@ ln -s /run/mysqld/mysqld.sock /tmp/mysql.sock
 psql -c "ALTER USER postgres WITH PASSWORD 'postgres';" -U postgres ;
 psql -c "CREATE USER openrasp WITH PASSWORD '123456'" -U postgres;
 
-<<<<<<< HEAD
 #mongo
 sleep 15
 mongo test --eval 'db.createUser({user:"openrasp",pwd:"rasp#2019",roles:["readWrite"]});'
@@ -45,7 +44,6 @@ then
     popd
 fi
 
-=======
 #cmake
 wget -N https://cmake.org/files/v3.14/cmake-3.14.5-Linux-x86_64.tar.gz -P $HOME/cache
 tar zxf $HOME/cache/cmake-3.14.5-Linux-x86_64.tar.gz -C /tmp
@@ -59,7 +57,6 @@ make -j2 --quiet
 popd
 
 #openrasp
->>>>>>> origin/1.2
 pushd agent/$OPENRASP_LANG
 phpenv config-rm xdebug.ini || true
 phpenv config-rm ext-opcache.ini || true
