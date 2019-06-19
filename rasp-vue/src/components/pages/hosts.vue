@@ -41,7 +41,11 @@
             搜索
           </button>
 
-          <button class="btn btn-primary ml-2" @click="deleteExpired()">
+          <button class="btn btn-primary ml-2" @click="exportCSV()">
+            导出
+          </button>
+
+          <button class="btn btn-info ml-2" @click="deleteExpired()">
             清理
           </button>
         </div>
@@ -188,6 +192,15 @@ export default {
     ceil: Math.ceil,
     showHostDetail(data) {
       this.$refs.showHostDetail.showModal(data)
+    },
+    exportCSV: function() {
+      var body = {
+        app_id: this.current_app.id
+      }
+
+      return this.request.post('v1/api/rasp/csv', body).then(res => {
+
+      })
     },
     loadRaspList(page) {
       if (!this.filter.online && !this.filter.offline) {

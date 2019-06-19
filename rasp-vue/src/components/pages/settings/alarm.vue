@@ -1,5 +1,60 @@
 <template>
   <div>
+    <!-- begin alarm methods -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          报警类型配置
+        </h3>
+        <div class="card-options">
+          <!-- <label class="custom-switch m-0">
+            <input type="checkbox" value="1" class="custom-switch-input">
+            <span class="custom-switch-indicator"></span>
+          </label> -->
+        </div>
+      </div>
+      <div class="card-body">
+        <div v-for="(descr, name) in attack_types" :key="name">
+          <div class="row" style="margin-top: 3px">
+            <div class="col">
+              <label style="min-width: 220px;">{{ descr }}</label>
+            </div>
+            <div class="col">
+              <label class="custom-switch m-0">
+                <input type="checkbox" value="1" class="custom-switch-input">
+                <span class="custom-switch-indicator"></span>
+                <span class="custom-switch-description">邮件报警</span>
+              </label>
+            </div>
+            <div class="col">
+              <label class="custom-switch m-0">
+                <input type="checkbox" value="1" class="custom-switch-input">
+                <span class="custom-switch-indicator"></span>
+                <span class="custom-switch-description">钉钉报警</span>
+              </label>
+            </div>
+            <div class="col">
+              <label class="custom-switch m-0">
+                <input type="checkbox" value="1" class="custom-switch-input">
+                <span class="custom-switch-indicator"></span>
+                <span class="custom-switch-description">HTTP 推送</span>
+              </label>
+            </div>
+          </div>
+        </div>        
+      </div>
+      
+      <div class="card-footer">
+        <button type="submit" class="btn btn-primary" @click="saveSettings('email')">
+          保存
+        </button>
+        <button type="submit" class="btn btn-info pull-right" @click="testSettings('email')">
+          重置
+        </button>
+      </div>
+    </div>
+    <!-- end alarm methods -->
+
     <!-- begin alarm settings -->
     <div class="card">
       <div class="card-header">
@@ -221,7 +276,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { getDefaultConfig } from '@/util'
+import { getDefaultConfig, attack_types } from '@/util'
 
 export default {
   name: 'AlarmSettings',
@@ -234,7 +289,9 @@ export default {
     }
   },
   data: function() {
-    return {}
+    return {
+      attack_types: attack_types
+    }
   },
   computed: {
     ...mapGetters(['current_app'])
