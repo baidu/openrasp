@@ -21,21 +21,21 @@
             </div>
             <div class="col">
               <label class="custom-switch m-0">
-                <input type="checkbox" value="1" class="custom-switch-input">
+                <input type="checkbox" value="1" class="custom-switch-input" v-model="sendMethods[name].email">
                 <span class="custom-switch-indicator"></span>
                 <span class="custom-switch-description">邮件报警</span>
               </label>
             </div>
             <div class="col">
               <label class="custom-switch m-0">
-                <input type="checkbox" value="1" class="custom-switch-input">
+                <input type="checkbox" value="1" class="custom-switch-input" v-model="sendMethods[name].ding">
                 <span class="custom-switch-indicator"></span>
                 <span class="custom-switch-description">钉钉报警</span>
               </label>
             </div>
             <div class="col">
               <label class="custom-switch m-0">
-                <input type="checkbox" value="1" class="custom-switch-input">
+                <input type="checkbox" value="1" class="custom-switch-input" v-model="sendMethods[name].http">
                 <span class="custom-switch-indicator"></span>
                 <span class="custom-switch-description">HTTP 推送</span>
               </label>
@@ -45,10 +45,10 @@
       </div>
       
       <div class="card-footer">
-        <button type="submit" class="btn btn-primary" @click="saveSettings('email')">
+        <button type="submit" class="btn btn-primary" @click="saveAlarmMethods()">
           保存
         </button>
-        <button type="submit" class="btn btn-info pull-right" @click="testSettings('email')">
+        <button type="submit" class="btn btn-info pull-right" @click="resetAlarmMethods(true)">
           重置
         </button>
       </div>
@@ -290,13 +290,79 @@ export default {
   },
   data: function() {
     return {
-      attack_types: attack_types
+      attack_types: attack_types,
+      sendMethods: {}
     }
   },
   computed: {
     ...mapGetters(['current_app'])
   },
+  watch: {
+    data: function(newVal, oldVal) {
+      this.loadAlarmMethod()
+    }
+  },
+  beforeMount: function () {
+    this.resetAlarmMethods(false)
+  },
   methods: {
+    loadAlarmMethod: function() {
+      var self = this
+      var conf = self.data.attack_type_alarm_conf
+
+      if (! conf) {
+        this.resetAlarmMethods()
+        return
+      }
+
+      // 转换
+      Object.keys(conf).forEach(function (name) {
+        self.sendMethods[name] = {
+          ding: false,
+          http: false,
+          email: false
+        }
+
+        conf[name].forEach(function (method) {
+          self.sendMethods[name][method] = true
+        })
+      })
+    },
+    resetAlarmMethods: function(value) {
+      var self = this
+      Object.keys(this.attack_types).forEach(function (name) {
+        if (! self.sendMethods[name]) {
+          self.sendMethods[name] = {}
+        }
+        
+        ['email', 'ding', 'http'].forEach(function (key) {
+          self.sendMethods[name][key] = value
+        })
+      })
+    },
+    saveAlarmMethods: function(data) {
+      var self = this
+      var body = { 
+        app_id: self.current_app.id,
+        attack_type_alarm_conf: {} 
+      }
+
+      Object.keys(self.sendMethods).forEach(function (name) {
+        var tmp = self.sendMethods[name]
+        body['attack_type_alarm_conf'][name] = []
+
+        Object.keys(tmp).forEach(function (method) {
+          if (tmp[method]) {
+            body['attack_type_alarm_conf'][name].push(method)
+          }
+        })
+      })
+
+      this.request.post('v1/api/app/alarm/config', body)
+        .then(() => {
+          alert('报警方式保存成功')
+        })
+    },    
     saveSettings: function(type) {
       if (type === 'syslog') {
         try {
