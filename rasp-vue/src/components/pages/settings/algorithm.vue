@@ -272,7 +272,7 @@ export default {
 
       this.api_request('v1/api/plugin/algorithm/config', body, function(data) {
         self.loadAppList(self.current_app.id);
-        alert('保存成功')
+        alert('保存成功，请等待一个心跳周期生效（3分钟以内）')
       })
     },
     resetConfig: function() {
