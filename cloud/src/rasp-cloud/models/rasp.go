@@ -23,6 +23,8 @@ import (
 	"strconv"
 	"errors"
 	"github.com/astaxie/beego/httplib"
+	"strings"
+	"fmt"
 )
 
 type Rasp struct {
@@ -105,16 +107,17 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 		return
 	}
 	if bsonModel["hostname"] != nil {
+		realHostname := strings.TrimSpace(fmt.Sprint(bsonModel["hostname"]))
 		bsonModel["$or"] = []bson.M{
 			{
 				"hostname": bson.M{
-					"$regex":   bsonModel["hostname"],
+					"$regex":   realHostname,
 					"$options": "$i",
 				},
 			},
 			{
 				"register_ip": bson.M{
-					"$regex":   bsonModel["hostname"],
+					"$regex":   realHostname,
 					"$options": "$i",
 				},
 			},
