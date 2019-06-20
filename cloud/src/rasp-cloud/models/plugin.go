@@ -290,7 +290,8 @@ func GetPluginsByApp(appId string, skip int, limit int, sortField string) (total
 	if err != nil {
 		return
 	}
-	err = newSession.DB(mongo.DbName).C(pluginCollectionName).Find(bson.M{"app_id": appId}).Select(bson.M{"content": 0}).
+	err = newSession.DB(mongo.DbName).C(pluginCollectionName).Find(bson.M{"app_id": appId}).
+		Select(bson.M{"content": 0, "origin_content": 0}).
 		Sort(sortField).Skip(skip).Limit(limit).All(&plugins)
 	if plugins == nil {
 		plugins = make([]Plugin, 0)
@@ -301,7 +302,7 @@ func GetPluginsByApp(appId string, skip int, limit int, sortField string) (total
 func SearchPlugins(selector bson.M, skip int, limit int, sortField string) (plugins []Plugin, err error) {
 	newSession := mongo.NewSession()
 	defer newSession.Close()
-	err = newSession.DB(mongo.DbName).C(pluginCollectionName).Find(selector).Select(bson.M{"content": 0}).
+	err = newSession.DB(mongo.DbName).C(pluginCollectionName).Find(selector).Select(bson.M{"content": 0, "origin_content": 0}).
 		Sort(sortField).Skip(skip).Limit(limit).All(&plugins)
 	if plugins == nil {
 		plugins = make([]Plugin, 0)
