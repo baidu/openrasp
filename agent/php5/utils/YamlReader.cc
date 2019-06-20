@@ -129,7 +129,7 @@ std::vector<std::string> YamlReader::fetch_strings(const std::vector<std::string
 {
     try
     {
-        std::vector<std::string> rst;
+        std::vector<std::string> rst = default_value;
         const YAML::Node *node = &doc;
         for (auto key : keys)
         {
@@ -137,6 +137,7 @@ std::vector<std::string> YamlReader::fetch_strings(const std::vector<std::string
         }
         if (node->Type() == YAML::NodeType::Sequence)
         {
+            rst.clear();
             for (YAML::Iterator it = node->begin(); it != node->end(); ++it)
             {
                 std::string val;
