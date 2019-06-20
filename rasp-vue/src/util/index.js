@@ -178,6 +178,19 @@ export function attack_type2name(id) {
   return attack_types[id] || id
 }
 
+export function DeepTrim(obj) {
+  for (var prop in obj) {
+      var value = obj[prop], type = typeof value;
+      if (value != null && (type == "string" || type == "object") && obj.hasOwnProperty(prop)) {
+          if (type == "object") {
+              DeepTrim(obj[prop]);
+          } else {
+              obj[prop] = obj[prop].trim();
+          }
+      }
+  }
+}
+
 export function api_request(url, data, cb, err_cb) {
   var prefix = '/'
 
@@ -188,6 +201,8 @@ export function api_request(url, data, cb, err_cb) {
     axios.defaults.headers['X-OpenRASP-Token'] =
       '9256a3555fbd4f24f7a2ba915a32261ab4c720fc'
   }
+
+  DeepTrim(data)
 
   axios
     .post(prefix + url, data)
