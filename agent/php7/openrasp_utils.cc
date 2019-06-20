@@ -389,7 +389,7 @@ zval *fetch_http_globals(int vars_id)
         if (Z_TYPE(PG(http_globals)[vars_id]) == IS_ARRAY ||
             zend_is_auto_global_str(const_cast<char *>(it->second.c_str()), it->second.length()))
         {
-            return &PG(http_globals)[TRACK_VARS_SERVER];
+            return &PG(http_globals)[it->first];
         }
     }
     return nullptr;

@@ -398,7 +398,7 @@ zval *fetch_http_globals(int vars_id TSRMLS_DC)
         if ((PG(http_globals)[vars_id] && Z_TYPE_P(PG(http_globals)[vars_id]) == IS_ARRAY) ||
             zend_is_auto_global(const_cast<char *>(it->second.c_str()), it->second.length() TSRMLS_CC))
         {
-            return PG(http_globals)[TRACK_VARS_SERVER];
+            return PG(http_globals)[it->first];
         }
     }
     return nullptr;
