@@ -34,7 +34,7 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model="hostname" type="text" class="form-control w-10" placeholder="搜索主机或者IP" @keyup.enter="loadRaspList(1)">
+            <input v-model.trim="hostname" type="text" class="form-control w-10" placeholder="搜索主机或者IP" @keyup.enter="loadRaspList(1)">
           </div>
 
           <button class="btn btn-primary ml-2" @click="loadRaspList(1)">
@@ -114,8 +114,8 @@
                     正常
                   </span>
                 </td>
-                <td nowrap>                  
-                  <a href="javascript:" @click="doDelete(row)" v-if="! row.online">
+                <td nowrap>
+                  <a href="javascript:" v-if="! row.online" @click="doDelete(row)">
                     删除
                   </a>
                   <span v-if="row.online">-</span>
@@ -123,8 +123,10 @@
               </tr>
             </tbody>
           </table>
-          
-          <p v-if="! loading && total == 0" class="text-center">暂无数据</p>
+
+          <p v-if="! loading && total == 0" class="text-center">
+暂无数据
+</p>
 
           <nav v-if="! loading && total > 10">
             <ul class="pagination pull-left">
@@ -136,8 +138,7 @@
             </ul>
             <b-pagination v-model="currentPage" align="right" :total-rows="total" :per-page="10" @change="loadRaspList($event)" />
           </nav>
-
-        </div>
+</div>
       </div>
     </div>
 
@@ -147,11 +148,14 @@
 
 <script>
 import isIp from 'is-ip'
-import { mapGetters, mapActions, mapMutations } from "vuex";
+import { mapGetters, mapActions, mapMutations } from 'vuex';
 import HostDetailModal from '@/components/modals/hostDetailModal'
 
 export default {
   name: 'Hosts',
+  components: {
+    HostDetailModal
+  },
   data: function() {
     return {
       data: [],
@@ -164,9 +168,6 @@ export default {
         offline: true
       }
     }
-  },
-  components: {
-    HostDetailModal
   },
   computed: {
     ...mapGetters(['current_app'])

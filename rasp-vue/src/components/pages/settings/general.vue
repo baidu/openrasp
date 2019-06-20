@@ -15,7 +15,7 @@
               [帮助文档]
             </a>
           </label>
-          <input v-model="data['clientip.header']" type="text" class="form-control">
+          <input v-model.trim="data['clientip.header']" type="text" class="form-control">
         </div>      
         <div class="form-group">
           <label class="form-label">
@@ -27,7 +27,7 @@
           <label class="form-label">
             自定义拦截跳转页面 [仅自定义拦截状态码为302生效]
           </label>
-          <input v-model="data['block.redirect_url']" type="text" class="form-control">
+          <input v-model.trim="data['block.redirect_url']" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -36,7 +36,7 @@
               [帮助文档]
             </a>
           </label>
-          <textarea v-model="data['block.content_html']" type="text" class="form-control" />
+          <textarea v-model.trim="data['block.content_html']" type="text" class="form-control" />
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -45,7 +45,7 @@
               [帮助文档]
             </a>
           </label>
-          <textarea v-model="data['block.content_xml']" type="text" class="form-control" />
+          <textarea v-model.trim="data['block.content_xml']" type="text" class="form-control" />
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -54,7 +54,7 @@
               [帮助文档]
             </a>
           </label>
-          <textarea v-model="data['block.content_json']" type="text" class="form-control" />
+          <textarea v-model.trim="data['block.content_json']" type="text" class="form-control" />
         </div>
         <div class="form-group">
           <label class="form-label">

@@ -47,13 +47,13 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model="hostname" type="text" class="form-control w-10" placeholder="搜索主机或者IP" @keyup.enter="loadEvents(1)">
+            <input v-model.trim="hostname" type="text" class="form-control w-10" placeholder="搜索主机或者IP" @keyup.enter="loadEvents(1)">
           </div>
           <div class="input-icon ml-2">
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model="message" type="text" class="form-control w-10" placeholder="过滤消息" @keyup.enter="loadEvents(1)">
+            <input v-model.trim="message" type="text" class="form-control w-10" placeholder="过滤消息" @keyup.enter="loadEvents(1)">
           </div>
           <button class="btn btn-primary ml-2" @click="loadEvents(1)">
             搜索

@@ -14,7 +14,7 @@
               <label class="form-label">
                 用户名
               </label>
-              <input v-model="username" type="text" class="form-control">
+              <input v-model.trim="username" type="text" class="form-control">
             </div>
             <div class="form-group">
               <label class="form-label">
