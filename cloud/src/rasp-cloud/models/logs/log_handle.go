@@ -27,6 +27,7 @@ import (
 	"rasp-cloud/tools"
 	"time"
 	"rasp-cloud/conf"
+	"strings"
 )
 
 type AggrTimeParam struct {
@@ -271,13 +272,15 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 					elastic.NewNestedQuery("server_nic", elastic.NewTermQuery("server_nic.ip", value)))
 			} else if key == "attack_source" || key == "url" ||
 				key == "message" || key == "plugin_message" || key == "client_ip" {
-				filterQueries = append(filterQueries, elastic.NewWildcardQuery(key, "*"+fmt.Sprint(value)+"*"))
+				realValue := strings.TrimSpace(fmt.Sprint(value))
+				filterQueries = append(filterQueries, elastic.NewWildcardQuery(key, "*"+realValue+"*"))
 			} else if key == "server_hostname" {
+				realValue := strings.TrimSpace(fmt.Sprint(value))
 				shouldQueries = append(shouldQueries,
-					elastic.NewWildcardQuery("server_hostname", "*"+fmt.Sprint(value)+"*"))
+					elastic.NewWildcardQuery("server_hostname", "*"+realValue+"*"))
 				shouldQueries = append(shouldQueries,
 					elastic.NewNestedQuery("server_nic",
-						elastic.NewWildcardQuery("server_nic.ip", "*"+fmt.Sprint(value)+"*")))
+						elastic.NewWildcardQuery("server_nic.ip", "*"+realValue+"*")))
 			} else {
 				filterQueries = append(filterQueries, elastic.NewTermQuery(key, value))
 			}
