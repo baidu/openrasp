@@ -33,6 +33,7 @@ import (
 	"bytes"
 	"github.com/robertkrimen/otto"
 	"rasp-cloud/conf"
+	"strings"
 )
 
 type Plugin struct {
@@ -41,6 +42,7 @@ type Plugin struct {
 	Name                   string                 `json:"name" bson:"name"`
 	UploadTime             int64                  `json:"upload_time" bson:"upload_time"`
 	Version                string                 `json:"version" bson:"version"`
+	Description            string                 `json:"description" bson:"description"`
 	Md5                    string                 `json:"md5" bson:"md5"`
 	OriginContent          string                 `json:"origin_content" bson:"origin_content"`
 	Content                string                 `json:"plugin,omitempty" bson:"content"`
@@ -95,24 +97,32 @@ func AddPlugin(pluginContent []byte, appId string) (plugin *Plugin, err error) {
 
 func generatePlugin(pluginContent []byte, appId string) (plugin *Plugin, err error) {
 	pluginReader := bufio.NewReader(bytes.NewReader(pluginContent))
-	firstLine, err := pluginReader.ReadString('\n')
-	if err != nil {
-		return nil, errors.New("failed to read the plugin file: " + err.Error())
-	}
-	secondLine, err := pluginReader.ReadString('\n')
-	if err != nil {
-		return nil, errors.New("failed to read the plugin file: " + err.Error())
-	}
 	var newVersion string
 	var newPluginName string
-	if newVersion = regexp.MustCompile(`'.+'|".+"`).FindString(firstLine); newVersion == "" {
-		return nil, errors.New("failed to find the plugin version")
+	var newPluginDesc string
+	for i := 0; i < 3; i++ {
+		var lineValue string
+		var lineSep []string
+		line, err := pluginReader.ReadString('\n')
+		if err != nil {
+			return nil, errors.New("failed to read the plugin file: " + err.Error())
+		}
+		if lineValue = regexp.MustCompile(`'.+'|".+"`).FindString(line); lineValue == "" {
+			continue
+		}
+		if lineSep = strings.Split(line, "="); len(lineSep) >= 2 {
+			if strings.Contains(lineSep[0], "plugin_version") {
+				newVersion = lineValue[1 : len(lineValue)-1]
+			} else if strings.Contains(lineSep[0], "plugin_name") {
+				newPluginName = lineValue[1 : len(lineValue)-1]
+			} else if strings.Contains(lineSep[0], "plugin_desc") {
+				newPluginDesc = lineValue[1 : len(lineValue)-1]
+			}
+		}
 	}
-	newVersion = newVersion[1 : len(newVersion)-1]
-	if newPluginName = regexp.MustCompile(`'.+'|".+"`).FindString(secondLine); newPluginName == "" {
-		return nil, errors.New("failed to find the plugin name")
+	if newVersion == "" || newPluginName == "" {
+		return nil, errors.New("the plugin name and plugin version can not be empty")
 	}
-	newPluginName = newPluginName[1 : len(newPluginName)-1]
 	algorithmStartMsg := "// BEGIN ALGORITHM CONFIG //"
 	algorithmEndMsg := "// END ALGORITHM CONFIG //"
 	algorithmStart := bytes.Index(pluginContent, []byte(algorithmStartMsg))
@@ -144,6 +154,7 @@ func generatePlugin(pluginContent []byte, appId string) (plugin *Plugin, err err
 		Id:                     generatePluginId(appId),
 		Version:                newVersion,
 		Name:                   newPluginName,
+		Description:            newPluginDesc,
 		Md5:                    newMd5,
 		OriginContent:          string(pluginContent),
 		Content:                string(pluginContent),
