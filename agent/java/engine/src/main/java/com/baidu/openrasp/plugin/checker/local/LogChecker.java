@@ -42,6 +42,15 @@ import java.util.regex.Pattern;
 public class LogChecker extends ConfigurableChecker {
     private static final String LOG_REGEX = "log_regex";
     private static final String ACTION = "log";
+    private static JsonArray defaultRegex;
+
+    static {
+        defaultRegex = new JsonArray();
+        JsonObject object = new JsonObject();
+        object.addProperty("name", "身份证");
+        object.addProperty("value", "(\\d{14}[0-9a-zA-Z])|(\\d{17}[0-9a-zA-Z])");
+        defaultRegex.add(object);
+    }
 
     private static LRUCache<String, Object> logCache = new LRUCache<String, Object>(100);
 
@@ -53,6 +62,9 @@ public class LogChecker extends ConfigurableChecker {
         if (logMessage != null) {
             try {
                 JsonArray regexs = getJsonObjectAsArray(config, LOG_REGEX, "regex");
+                if (regexs == null) {
+                    regexs = defaultRegex;
+                }
                 if (regexs != null) {
                     for (JsonElement element : regexs) {
                         JsonObject jsonObject = element.getAsJsonObject();

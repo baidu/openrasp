@@ -77,6 +77,9 @@ public class LogHook extends AbstractClassHook {
             }
             if (logMessage != null) {
                 HashMap<String, Object> params = new HashMap<String, Object>();
+                if (!(logMessage instanceof String)) {
+                    logMessage = logMessage.toString();
+                }
                 params.put("message", logMessage);
                 HookHandler.doCheck(CheckParameter.Type.LOG, params);
             }

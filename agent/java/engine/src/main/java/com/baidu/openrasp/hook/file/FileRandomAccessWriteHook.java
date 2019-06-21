@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook.file;
 
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -29,7 +30,8 @@ import java.io.IOException;
  * @author: anyang
  * @create: 2019/05/28 17:23
  */
-public class FileRandomAccessFileWriteHook extends AbstractClassHook {
+@HookAnnotation
+public class FileRandomAccessWriteHook extends AbstractClassHook {
     @Override
     public boolean isClassMatched(String className) {
         return "java/io/RandomAccessFile".equals(className);
@@ -42,7 +44,7 @@ public class FileRandomAccessFileWriteHook extends AbstractClassHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String writeSrc = getInvokeStaticSrc(FileRandomAccessReadHook.class, "checkWriteFile", "$1", File.class);
+        String writeSrc = getInvokeStaticSrc(FileRandomAccessWriteHook.class, "checkWriteFile", "$1", File.class);
         insertBefore(ctClass.getConstructor("(Ljava/io/File;Ljava/lang/String;)V"), writeSrc);
     }
 

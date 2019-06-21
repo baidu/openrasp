@@ -100,7 +100,9 @@ public class FileUploadHook extends AbstractClassHook {
     private static String getCharSet(Object fileItem) {
         String charSet = Reflection.invokeStringMethod(fileItem, "getCharSet", new Class[]{});
         if (charSet == null) {
-            charSet = HookHandler.requestCache.get().getCharacterEncoding();
+            if (HookHandler.requestCache.get() != null) {
+                charSet = HookHandler.requestCache.get().getCharacterEncoding();
+            }
         }
         if (!StringUtils.isEmpty(charSet)) {
             return charSet;
