@@ -1,5 +1,6 @@
-const plugin_version = '2019-0616-1530'
+const plugin_version = '2019-0621-1400'
 const plugin_name    = 'official'
+const plugin_desc    = '官方插件'
 
 /*
  * Copyright 2017-2019 Baidu Inc.
