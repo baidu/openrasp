@@ -61,7 +61,7 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model="url" type="text" class="form-control w-10" placeholder="目标URL" @keyup.enter="loadEvents(1)">
+            <input v-model.trim="url" type="text" class="form-control w-10" placeholder="目标URL" @keyup.enter="loadEvents(1)">
           </div>
           <button class="btn btn-primary ml-2" @click="loadEvents(1)">
             搜索

@@ -17,7 +17,7 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model="ip" type="text" class="form-control w-10" placeholder="搜索IP" @keyup.enter="loadAudit(1)">
+            <input v-model.trim="ip" type="text" class="form-control w-10" placeholder="搜索IP" @keyup.enter="loadAudit(1)">
           </div>
           <button class="btn btn-primary ml-2" @click="loadAudit(1)">
             搜索
@@ -54,7 +54,9 @@
                 <td nowrap>
                   {{ moment(row.time).format('YYYY-MM-DD HH:mm:ss') }}
                 </td>
-                <td nowrap>{{ audit_types[row.type_id] }}</td>
+                <td nowrap>
+{{ audit_types[row.type_id] }}
+</td>
                 <td>{{ row.content }}</td>
                 <td nowrap>
                   {{ row.user.length ? row.user : '-' }}
@@ -65,8 +67,10 @@
               </tr>
             </tbody>
           </table>
-          
-          <p v-if="! loading && total == 0" class="text-center">暂无数据</p>
+
+          <p v-if="! loading && total == 0" class="text-center">
+暂无数据
+</p>
 
           <nav v-if="! loading && total > 10">
             <ul class="pagination pull-left">
@@ -78,8 +82,7 @@
             </ul>
             <b-pagination v-model="currentPage" align="right" :total-rows="total" :per-page="10" @change="loadAudit($event)" />
           </nav>
-
-        </div>
+</div>
       </div>
     </div>
   </div>

@@ -38,7 +38,7 @@
           <div v-if="key == 'sql_regex'">
             <label>SQL语句正则表达式</label>
             <div v-bind:class="{'form-group': true, 'has-error': sql_regex_error}">
-              <input type="text" v-model="data.regex" class="form-control">
+              <input type="text" v-model.trim="data.regex" class="form-control">
             </div>
             <span class="text-danger" v-if="sql_regex_error">{{sql_regex_error }}</span>
           </div>

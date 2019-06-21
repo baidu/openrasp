@@ -73,25 +73,25 @@
           <label class="form-label">
             推送邮箱地址 - 逗号或者分号分隔
           </label>
-          <input v-model="data.email_alarm_conf.recv_addr" type="text" class="form-control" placeholder="user1@example.com; user2@example.com">
+          <input v-model.trim="data.email_alarm_conf.recv_addr" type="text" class="form-control" placeholder="user1@example.com; user2@example.com">
         </div>
         <div class="form-group">
           <label class="form-label">
             报警标题
           </label>
-          <input v-model="data.email_alarm_conf.subject" type="text" class="form-control">
+          <input v-model.trim="data.email_alarm_conf.subject" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             自定义 From 头信息
           </label>
-          <input v-model="data.email_alarm_conf.from" type="text" class="form-control">
+          <input v-model.trim="data.email_alarm_conf.from" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             邮件服务器地址
           </label>
-          <input v-model="data.email_alarm_conf.server_addr" type="text" class="form-control" placeholder="smtp.163.com:25" autocomplete="off">
+          <input v-model.trim="data.email_alarm_conf.server_addr" type="text" class="form-control" placeholder="smtp.163.com:25" autocomplete="off">
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -145,7 +145,7 @@
           <label class="form-label">
             HTTP/HTTPS URL
           </label>
-          <input v-model="data.http_alarm_conf.recv_addr" type="text" class="form-control" placeholder="http://myserver/myurl">
+          <input v-model.trim="data.http_alarm_conf.recv_addr" type="text" class="form-control" placeholder="http://myserver/myurl">
         </div>
         <div class="form-group">
           <label class="custom-switch">
@@ -180,31 +180,31 @@
               [帮助文档]
             </a>
           </label>
-          <input v-model="data.ding_alarm_conf.recv_user" type="text" class="form-control">
+          <input v-model.trim="data.ding_alarm_conf.recv_user" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             推送部门列表
           </label>
-          <input v-model="data.ding_alarm_conf.recv_party" type="text" class="form-control">
+          <input v-model.trim="data.ding_alarm_conf.recv_party" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             Corp ID
           </label>
-          <input v-model="data.ding_alarm_conf.corp_id" type="text" class="form-control">
+          <input v-model.trim="data.ding_alarm_conf.corp_id" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             Corp Secret
           </label>
-          <input v-model="data.ding_alarm_conf.corp_secret" type="text" class="form-control">
+          <input v-model.trim="data.ding_alarm_conf.corp_secret" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             Agent ID
           </label>
-          <input v-model="data.ding_alarm_conf.agent_id" type="text" class="form-control">
+          <input v-model.trim="data.ding_alarm_conf.agent_id" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="custom-switch">
@@ -240,7 +240,7 @@
               [帮助文档]
             </a>
           </label>
-          <input v-model="data.general_config['syslog.url']" type="text" class="form-control" placeholder="tcp://1.1.1.1:6666">
+          <input v-model.trim="data.general_config['syslog.url']" type="text" class="form-control" placeholder="tcp://1.1.1.1:6666">
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -252,7 +252,7 @@
           <label class="form-label">
             Tag
           </label>
-          <input v-model="data.general_config['syslog.tag']" type="text" class="form-control">
+          <input v-model.trim="data.general_config['syslog.tag']" type="text" class="form-control">
         </div>
         <div class="form-group">
           <label class="custom-switch">

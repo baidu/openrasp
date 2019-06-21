@@ -62,7 +62,7 @@
               <span class="input-icon-addon">
                 <i class="fe fe-search" />
               </span>
-              <input v-model="srcip" type="text" class="form-control w-10" placeholder="攻击来源" @keyup.enter="loadEvents(1)" style="width: 210px">
+              <input v-model.trim="srcip" type="text" class="form-control w-10" placeholder="攻击来源" @keyup.enter="loadEvents(1)" style="width: 210px">
             </div>
           </div>
         </div>
@@ -71,13 +71,13 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model="request_id" type="text" class="form-control w-10" placeholder="请求 ID" @keyup.enter="loadEvents(1)" style="width: 210px">
+            <input v-model.trim="request_id" type="text" class="form-control w-10" placeholder="请求 ID" @keyup.enter="loadEvents(1)" style="width: 210px">
           </div>      
           <div class="input-icon ml-2">
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model="url" type="text" class="form-control w-10" placeholder="目标 URL" @keyup.enter="loadEvents(1)" style="width: 210px">
+            <input v-model.trim="url" type="text" class="form-control w-10" placeholder="目标 URL" @keyup.enter="loadEvents(1)" style="width: 210px">
           </div>          
         </div>
         <div class="page-options d-flex" style="margin-top: 5px;">
