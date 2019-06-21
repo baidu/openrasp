@@ -40,6 +40,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -196,7 +197,7 @@ public class Config extends FileScanListener {
             handleException("Could not find openrasp.yml, using default settings: " + e.getMessage(), e);
         } catch (JNotifyException e) {
             handleException("add listener on " + configFileDir + " failed because:" + e.getMessage(), e);
-        } catch (IOException e) {
+        } catch (Exception e) {
             handleException("cannot load properties file: " + e.getMessage(), e);
         }
     }
@@ -289,7 +290,7 @@ public class Config extends FileScanListener {
                     //更新log4j的日志最大备份天数
                     DynamicConfigAppender.setLogMaxBackup();
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 String message = "update openrasp.yml failed";
                 int errorCode = ErrorType.CONFIG_ERROR.getCode();
                 LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
@@ -1210,84 +1211,123 @@ public class Config extends FileScanListener {
     public boolean setConfig(String key, String value, boolean isInit) {
         try {
             boolean isHit = true;
+            Object currentValue = null;
             if (Item.BLOCK_REDIRECT_URL.key.equals(key)) {
                 setBlockUrl(value);
+                currentValue = getBlockUrl();
             } else if (Item.BODY_MAX_BYTES.key.equals(key)) {
                 setBodyMaxBytes(value);
+                currentValue = getBodyMaxBytes();
             } else if (Item.HOOKS_IGNORE.key.equals(key)) {
                 setIgnoreHooks(value);
+                currentValue = Arrays.toString(getIgnoreHooks());
             } else if (Item.INJECT_URL_PREFIX.key.equals(key)) {
                 setInjectUrlPrefix(value);
+                currentValue = getInjectUrlPrefix();
             } else if (Item.LOG_MAX_STACK.key.equals(key)) {
                 setLogMaxStackSize(value);
+                currentValue = getLogMaxStackSize();
             } else if (Item.OGNL_EXPRESSION_MIN_LENGTH.key.equals(key)) {
                 setOgnlMinLength(value);
+                currentValue = getOgnlMinLength();
             } else if (Item.PLUGIN_TIMEOUT_MILLIS.key.equals(key)) {
                 setPluginTimeout(value);
+                currentValue = getPluginTimeout();
             } else if (Item.REFLECTION_MAX_STACK.key.equals(key)) {
                 setPluginMaxStack(value);
+                currentValue = getPluginMaxStack();
             } else if (Item.SECURITY_ENFORCE_POLICY.key.equals((key))) {
                 setEnforcePolicy(value);
+                currentValue = getEnforcePolicy();
             } else if (Item.SQL_SLOW_QUERY_MIN_ROWS.key.equals(key)) {
                 setSqlSlowQueryMinCount(value);
+                currentValue = getSqlSlowQueryMinCount();
             } else if (Item.BLOCK_STATUS_CODE.key.equals(key)) {
                 setBlockStatusCode(value);
+                currentValue = getBlockStatusCode();
             } else if (Item.DEBUG.key.equals(key)) {
                 setDebugLevel(value);
+                currentValue = getDebugLevel();
             } else if (Item.ALGORITHM_CONFIG.key.equals(key)) {
                 setAlgorithmConfig(value);
+                currentValue = value;
             } else if (Item.REQUEST_PARAM_ENCODING.key.equals(key)) {
                 setRequestParamEncoding(value);
+                currentValue = getRequestParamEncoding();
             } else if (Item.BLOCK_JSON.key.equals(key)) {
                 setBlockJson(value);
+                currentValue = getBlockJson();
             } else if (Item.BLOCK_XML.key.equals(key)) {
                 setBlockXml(value);
+                currentValue = getBlockXml();
             } else if (Item.BLOCK_HTML.key.equals(key)) {
                 setBlockHtml(value);
+                currentValue = getBlockHtml();
             } else if (Item.PLUGIN_FILTER.key.equals(key)) {
                 setPluginFilter(value);
+                currentValue = getPluginFilter();
             } else if (Item.CLIENT_IP_HEADER.key.equals(key)) {
                 setClientIp(value);
+                currentValue = getClientIp();
             } else if (Item.CLOUD_SWITCH.key.equals(key)) {
                 setCloudSwitch(value);
+                currentValue = getCloudSwitch();
             } else if (Item.CLOUD_ADDRESS.key.equals(key)) {
                 setCloudAddress(value);
+                currentValue = getCloudAddress();
             } else if (Item.CLOUD_APPID.key.equals(key)) {
                 setCloudAppId(value);
+                currentValue = getCloudAppId();
             } else if (Item.CLOUD_APPSECRET.key.equals(key)) {
                 setCloudAppSecret(value);
+                currentValue = getCloudAppSecret();
             } else if (Item.SQL_CACHE_CAPACITY.key.equals(key)) {
                 setSqlCacheCapacity(value);
+                currentValue = getSqlCacheCapacity();
             } else if (Item.SYSLOG_ENABLE.key.equals(key)) {
                 setSyslogSwitch(value);
+                currentValue = getSyslogSwitch();
             } else if (Item.SYSLOG_URL.key.equals(key)) {
                 setSyslogUrl(value);
+                currentValue = getSyslogUrl();
             } else if (Item.SYSLOG_TAG.key.equals(key)) {
                 setSyslogTag(value);
+                currentValue = getSyslogTag();
             } else if (Item.SYSLOG_FACILITY.key.equals(key)) {
                 setSyslogFacility(value);
+                currentValue = getSyslogFacility();
             } else if (Item.SYSLOG_RECONNECT_INTERVAL.key.equals(key)) {
                 setSyslogReconnectInterval(value);
+                currentValue = getSyslogReconnectInterval();
             } else if (Item.LOG_MAXBURST.key.equals(key)) {
                 setLogMaxBurst(value);
+                currentValue = getLogMaxBurst();
             } else if (Item.HEARTBEAT_INTERVAL.key.equals(key)) {
                 setHeartbeatInterval(value);
+                currentValue = getHeartbeatInterval();
             } else if (Item.DECOMPILE_ENABLE.key.equals(key)) {
                 setDecompileEnable(value);
+                currentValue = getDecompileEnable();
             } else if (Item.LOG_MAX_BACKUP.key.equals(key)) {
                 setLogMaxBackUp(value);
+                currentValue = getLogMaxBackUp();
             } else if (Item.CPU_USAGE_ENABLE.key.equals(key)) {
                 setCpuUsageEnable(value);
+                currentValue = getCpuUsageEnable();
             } else if (Item.CPU_USAGE_PERCENT.key.equals(key)) {
                 setCpuUsagePercent(value);
+                currentValue = getCpuUsagePercent();
             } else {
                 isHit = false;
             }
             if (isHit) {
+                if (currentValue == null) {
+                    currentValue = value;
+                }
                 if (isInit) {
-                    LOGGER.info(key + ": " + value);
+                    LOGGER.info(key + ": " + currentValue);
                 } else {
-                    LOGGER.info("configuration item \"" + key + "\" changed to \"" + value + "\"");
+                    LOGGER.info("configuration item \"" + key + "\" changed to \"" + currentValue + "\"");
                 }
             } else {
                 LOGGER.info("configuration item \"" + key + "\" doesn't exist");
