@@ -81,7 +81,7 @@ RUN cd /tmp \
                 <pre>ADD https://packages.baidu.com/app/openrasp/release/{{rasp_version}}/rasp-java.tar.gz /tmp
 RUN cd /tmp \
     && tar -xf rasp-java.tar.* \
-    && mv rasp-*/ /rasp/ \
+    && mv rasp-*/rasp/ /rasp/ \
     && rm -f rasp-java.tar.gz
 
 RUN echo "cloud.enable: true" >> /rasp/conf/openrasp.yml \
