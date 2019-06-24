@@ -1195,9 +1195,8 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 {
                     // `information_schema`.tables
                     // information_schema  .tables
-                    var part1 = tokens_lc[i + 1].replaceAll('`', '')
-                    var part2 = tokens_lc[i + 3].replaceAll('`', '')
-                    if (part1 == 'information_schema' && part2 == 'tables' )
+                    var part = tokens_lc[i + 1].replaceAll('`', '')
+                    if (part == 'information_schema.tables' )
                     {
                         reason = _("SQLi - Detected access to MySQL information_schema.tables table")
                         break
