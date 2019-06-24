@@ -861,7 +861,7 @@ function is_from_userinput(parameter, target)
     return verdict
 }
 
-// 检查SQL逻辑是否被用户参数所修改
+// 检查逻辑是否被用户参数所修改
 function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance) 
 {
     // 当用户输入穿越了多个token，就可以判定为代码注入，默认为2
@@ -1029,7 +1029,12 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                         raw_tokens = RASP.sql_tokenize(params.query, params.server)
                     }
 
-                    if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
+                    //distance用来屏蔽identifier token解析误报 `dbname`.`table`，请在1.2版本后删除
+                    var distance = 3
+                    if (value.length > 20) {
+                        distance = 2
+                    }
+                    if (is_token_changed(raw_tokens, userinput_idx, value.length, distance)) {
                         reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                         return true
                     }
