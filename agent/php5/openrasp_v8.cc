@@ -68,7 +68,10 @@ PHP_MINIT_FUNCTION(openrasp_v8)
 
     // It can be called multiple times,
     // but intern code initializes v8 only once
-    v8::V8::InitializePlatform(Platform::New(1));
+    if (Platform::Get() == nullptr)
+    {
+        v8::V8::InitializePlatform(Platform::New(2));
+    }
     v8::V8::Initialize();
 
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
@@ -120,7 +123,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
     // it should generally not be necessary to dispose v8 before exiting a process,
     // so skip this step for module graceful reload
     // v8::V8::Dispose();
-    Platform::Get()->Shutdown();
+    // Platform::Get()->Shutdown();
     delete process_globals.snapshot_blob;
     process_globals.snapshot_blob = nullptr;
 

@@ -57,7 +57,7 @@ public class JS {
             }
             return true;
         } catch (Exception e) {
-            System.err.println(e);
+            e.printStackTrace();
             LOGGER.error(e);
             return false;
         }
