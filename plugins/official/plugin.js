@@ -1196,10 +1196,20 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                     // `information_schema`.tables
                     // information_schema  .tables
                     var part = tokens_lc[i + 1].replaceAll('`', '')
+                    // 正常的antlr和flex返回1个token
                     if (part == 'information_schema.tables' )
                     {
                         reason = _("SQLi - Detected access to MySQL information_schema.tables table")
                         break
+                    }
+                    // flex在1.1.2以前会产生3个token
+                    else if(part == 'information_schema' && i < tokens_lc.length - 3){
+                        part2 = tokens_lc[i + 3].replaceAll('`', '')
+                        if (part2 == "tables")
+                        {
+                            reason = _("SQLi - Detected access to MySQL information_schema.tables table")
+                            break
+                        }
                     }
                 }
             }
