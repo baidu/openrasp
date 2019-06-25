@@ -43,7 +43,7 @@ public class JS {
         try {
             V8.Load();
             if (!V8.Initialize()) {
-                throw new Exception("V8 Worker threads do not started");
+                throw new Exception("[OpenRASP] Failed to initialize V8 worker threads");
             }
             V8.SetPluginLogger(new com.baidu.openrasp.v8.Logger() {
                 @Override
@@ -57,6 +57,7 @@ public class JS {
             }
             return true;
         } catch (Exception e) {
+            System.out.println("[OpenRASP] Failed to load V8 library, please refer to https://rasp.baidu.com/doc/install/software.html#faq-v8-load for possible solutions.");
             e.printStackTrace();
             LOGGER.error(e);
             return false;
