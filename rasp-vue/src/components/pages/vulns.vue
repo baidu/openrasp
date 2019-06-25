@@ -89,7 +89,7 @@
                 <th>
                   最后发现
                 </th>
-                <th>
+                <th style="min-width: 150px; ">
                   URL
                 </th>
                 <th>
@@ -116,7 +116,7 @@
                   <br>
                   {{ moment(row.event_time).format('HH:mm:ss') }}
                 </td>
-                <td style="max-width: 500px; ">
+                <td style="max-width: 500px; word-break: break-word; ">
                   <a :href="row.url" target="_blank">
                     {{ displayURL(row) }}
                   </a>
