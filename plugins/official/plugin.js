@@ -89,7 +89,7 @@ var algorithmConfig = {
             function_blacklist: true,
 
             // 敏感函数频次， 具体列表见下方，select chr(123)||chr(123)||chr(123)=chr(123)||chr(123)||chr(123)
-            function_count:     true,
+            function_count:     false,
 
             // 拦截 union select NULL,NULL 或者 union select 1,2,3,4
             union_null:         true,
