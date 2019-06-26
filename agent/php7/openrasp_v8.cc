@@ -54,6 +54,7 @@ PHP_GSHUTDOWN_FUNCTION(openrasp_v8)
 {
     if (openrasp_v8_globals->isolate)
     {
+        Platform::Get()->Startup();
         openrasp_v8_globals->isolate->Dispose();
         openrasp_v8_globals->isolate = nullptr;
     }
@@ -66,13 +67,11 @@ PHP_MINIT_FUNCTION(openrasp_v8)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp_v8, PHP_GINIT(openrasp_v8), PHP_GSHUTDOWN(openrasp_v8));
 
-    // It can be called multiple times,
-    // but intern code initializes v8 only once
-    if (Platform::Get() == nullptr)
-    {
+    // initializes v8 only once
+    std::call_once(process_globals.init_v8_once, []() {
         v8::V8::InitializePlatform(Platform::New(2));
-    }
-    v8::V8::Initialize();
+        v8::V8::Initialize();
+    });
 
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (openrasp_ini.remote_management_enable && oam != nullptr)

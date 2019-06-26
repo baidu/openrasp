@@ -35,6 +35,7 @@ public:
   std::mutex mtx;
   std::string plugin_config;
   std::vector<PluginFile> plugin_src_list;
+  std::once_flag init_v8_once;
 };
 extern openrasp_v8_process_globals process_globals;
 CheckResult Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout = 100);
