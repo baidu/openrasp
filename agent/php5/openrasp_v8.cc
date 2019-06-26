@@ -165,12 +165,15 @@ PHP_RINIT_FUNCTION(openrasp_v8)
             std::unique_lock<std::mutex> lock(process_globals.mtx, std::try_to_lock);
             if (lock)
             {
+                Platform::Get()->Startup();
                 if (OPENRASP_V8_G(isolate))
                 {
                     OPENRASP_V8_G(isolate)->Dispose();
                 }
-                Platform::Get()->Startup();
-                OPENRASP_V8_G(isolate) = Isolate::New(process_globals.snapshot_blob, process_globals.snapshot_blob->timestamp);
+                auto isolate = Isolate::New(process_globals.snapshot_blob, process_globals.snapshot_blob->timestamp);
+                v8::HandleScope handle_scope(isolate);
+                isolate->GetData()->request_context_templ.Reset(isolate, CreateRequestContextTemplate(isolate));
+                OPENRASP_V8_G(isolate) = isolate;
                 OPENRASP_G(config).updateAlgorithmConfig();
             }
         }
