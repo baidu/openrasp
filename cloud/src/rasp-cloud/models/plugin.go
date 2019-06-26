@@ -44,7 +44,7 @@ type Plugin struct {
 	Version                string                 `json:"version" bson:"version"`
 	Description            string                 `json:"description" bson:"description"`
 	Md5                    string                 `json:"md5" bson:"md5"`
-	OriginContent          string                 `json:"origin_content" bson:"origin_content"`
+	OriginContent          string                 `json:"origin_content,omitempty" bson:"origin_content"`
 	Content                string                 `json:"plugin,omitempty" bson:"content"`
 	DefaultAlgorithmConfig map[string]interface{} `json:"-" bson:"default_algorithm_config"`
 	AlgorithmConfig        map[string]interface{} `json:"algorithm_config" bson:"algorithm_config"`
