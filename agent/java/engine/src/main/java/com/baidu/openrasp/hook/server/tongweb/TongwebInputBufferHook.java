@@ -40,14 +40,6 @@ public class TongwebInputBufferHook extends ServerInputHook {
         insertAfter(ctClass, "readByte", "()I", readByteSrc);        
         String readSrc = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
                 "$_,$0,$1,$2,$3", int.class, Object.class, byte[].class, int.class, int.class);
-        insertAfter(ctClass, "read", "([BII)I", readSrc);
-        //
-//        String readCharSrc1 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
-//                "$_,$0", int.class, Object.class);
-        insertAfter(ctClass, "read", "()I", "\nSystem.out.println(\"======= InputBuffer.read()I ========\");");        
-
-//        String readCharSrc2 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
-//                "$_,$0,$1,$2,$3", int.class, Object.class, char[].class, int.class, int.class);
-        insertAfter(ctClass, "read", "([CII)I", "\nSystem.out.println(\"======= InputBuffer.read([CII)I ========\");");        
+        insertAfter(ctClass, "read", "([BII)I", readSrc);       
     }
 }

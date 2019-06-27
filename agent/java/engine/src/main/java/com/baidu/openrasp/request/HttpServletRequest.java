@@ -186,7 +186,7 @@ public final class HttpServletRequest extends AbstractRequest {
     @Override
     public Map<String, String[]> getParameterMap() {
         Map<String, String[]> normalMap = new HashMap<String, String[]>();
-        if (ApplicationModel.getServerName().equals("undertow") || ApplicationModel.getServerName().equals("tongweb") || canGetParameter) {
+        if (ApplicationModel.getServerName().equals("undertow") || canGetParameter) {
             normalMap = (Map<String, String[]>) Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
         } else {
             if (!setCharacterEncodingFromConfig()) {

@@ -22,12 +22,12 @@ public class TongwebRequestHook extends ServerParamHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "com/tongweb/web/thor/connector/Request".equals(className);
+        return "com/tongweb/web/oro/Request".equals(className);
     }
 
     @Override
     protected void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException {
-        insertBefore(ctClass, "parseParameters", "()V", src);
+        insertBefore(ctClass, "getParameters", null, src);
     }
 
 }
