@@ -71,6 +71,12 @@ func (o *ReportController) Search() {
 	if !ok {
 		o.ServeError(http.StatusBadRequest, "time_zone must be string")
 	}
+	if timeZone == "" {
+		o.ServeError(http.StatusBadRequest, "time_zone cannot be empty")
+	}
+	if len(timeZone) > 32 {
+		o.ServeError(http.StatusBadRequest, "the length of time_zone cannot be greater than 32")
+	}
 	isValidInterval := false
 	for index := range intervals {
 		if interval == intervals[index] {
@@ -78,7 +84,7 @@ func (o *ReportController) Search() {
 		}
 	}
 	if !isValidInterval {
-		o.ServeError(http.StatusBadRequest, "the interval must be in"+fmt.Sprintf("%v", intervals))
+		o.ServeError(http.StatusBadRequest, "the interval must be in "+fmt.Sprintf("%v", intervals))
 	}
 	appIdParam := query["app_id"]
 	appId := "*"
