@@ -211,4 +211,8 @@ func (o *AttackAlarmController) validFieldAggrParam(param *logs.AggrFieldParam) 
 	if param.Size <= 0 {
 		o.ServeError(http.StatusBadRequest, "size must be greater than 0")
 	}
+
+	if param.Size > 1024 {
+		o.ServeError(http.StatusBadRequest, "size can not be greater than 1024")
+	}
 }

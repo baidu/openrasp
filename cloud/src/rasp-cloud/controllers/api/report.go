@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
+	"time"
 )
 
 type ReportController struct {
@@ -49,6 +50,10 @@ func (o *ReportController) Search() {
 		o.ServeError(http.StatusBadRequest, "end_time cannot be empty")
 	}
 	endTime, ok := endTimeParam.(float64)
+	duration := time.Duration(endTime-startTime) * time.Millisecond
+	if duration > 366*24*time.Hour {
+		o.ServeError(http.StatusBadRequest, "time duration can not be greater than 366 days")
+	}
 	if !ok {
 		o.ServeError(http.StatusBadRequest, "end_time must be number")
 	}
