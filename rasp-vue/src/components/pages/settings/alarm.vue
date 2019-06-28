@@ -41,10 +41,10 @@
               </label>
             </div>
           </div>
-        </div>        
+        </div>
       </div>
       
-      <div class="card-footer sticky-card-footer">
+      <div v-bind:class="{'card-footer': true, 'sticky-card-footer': sticky}">
         <button type="submit" class="btn btn-primary" @click="saveAlarmMethods()">
           保存
         </button>
@@ -278,7 +278,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions, mapMutations } from "vuex";
 import { getDefaultConfig, attack_types } from '@/util'
 
 export default {
@@ -298,7 +298,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['current_app'])
+    ...mapGetters(['current_app', 'sticky'])
   },
   watch: {
     data: function(newVal, oldVal) {
