@@ -43,7 +43,7 @@ public class StatisticsReport extends CloudTimerTask {
     @Override
     public void execute() {
         TreeMap<Long, Long> temp = new TreeMap<Long, Long>();
-        temp.put(System.currentTimeMillis(), HookHandler.TOTAL_REQUEST_NUM.longValue());
+        temp.put(System.currentTimeMillis(), HookHandler.requestSum.getAndSet(0));
         if (CloudCacheModel.reportCache.realSize() != 0) {
             for (Map.Entry<Long, Long> entry : CloudCacheModel.reportCache.getEntrySet()) {
                 temp.put(entry.getKey(), entry.getValue());
