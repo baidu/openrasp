@@ -49,11 +49,9 @@
           保存
         </button>
 
-        <!--
         <button type="submit" class="btn btn-info pull-right" @click="resetAlarmMethods(true)">
           重置
         </button>
-        -->
       </div>
     </div>
     <!-- end alarm methods -->
@@ -343,6 +341,8 @@ export default {
           self.sendMethods[name][key] = value
         })
       })
+
+      self.sendMethods = Object.assign({}, self.sendMethods)
     },
     saveAlarmMethods: function(data) {
       var self = this
