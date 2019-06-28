@@ -48,9 +48,12 @@
         <button type="submit" class="btn btn-primary" @click="saveAlarmMethods()">
           保存
         </button>
+
+        <!--
         <button type="submit" class="btn btn-info pull-right" @click="resetAlarmMethods(true)">
           重置
         </button>
+        -->
       </div>
     </div>
     <!-- end alarm methods -->

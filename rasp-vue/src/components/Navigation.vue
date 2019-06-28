@@ -183,7 +183,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['current_app', 'app_list']),
+    ...mapGetters(['current_app', 'app_list', 'sticky']),
     app_list_filtered: function() {
       var keyword = this.keyword.toLowerCase()
       return this.app_list.filter(function(app) {
@@ -212,6 +212,7 @@ export default {
   methods: {
     ...mapActions(['loadAppList']),
     ...mapMutations(['setCurrentApp']),
+    ...mapMutations(['setSticky']),
     showAddHostModal() {
       this.$refs.addHost.showModal()
     },

@@ -58,6 +58,8 @@
 </template>
 
 <script>
+import { mapGetters, mapActions, mapMutations } from 'vuex'
+
 export default {
   name: 'AlgorithmConfigModal',
   data: function() {
@@ -107,14 +109,18 @@ export default {
       this.validateRegex(newval)
     }
   },
+  computed: {
+    ...mapGetters(['current_app', 'app_list', 'sticky']),
+  },
   mounted: function() {
     var self = this
 
     $('#algorithmConfigModal').on('hidden.bs.modal', function () {
-      self.$emit('save')
+      self.setSticky(true)
     })
   },
   methods: {
+    ...mapMutations(['setSticky']),
     validateRegex: function(value) {
       var error = false
       try {
@@ -126,6 +132,8 @@ export default {
       this.sql_regex_error = error
     },
     showModal(key, data) {
+      this.setSticky(false)
+
       this.key  = key
       this.data = JSON.parse(JSON.stringify(data))
       $('#algorithmConfigModal').modal({

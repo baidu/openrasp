@@ -105,7 +105,7 @@
           </label>
         </div>          
       </div>
-      <div class="card-footer text-right sticky-card-footer">
+      <div v-bind:class="{'card-footer': true, 'sticky-card-footer': sticky}">
         <div class="d-flex">
           <button type="submit" class="btn btn-primary" @click="doSave()">
             保存
@@ -118,7 +118,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions, mapMutations } from "vuex";
 
 export default {
   name: 'GeneralSettings',
@@ -129,10 +129,11 @@ export default {
       }
     }
   },
-  computed: {
-    ...mapGetters(['current_app'])
+  computed: {    
+    ...mapGetters(['current_app', 'sticky'])
   },
   methods: {
+    ...mapMutations(["setCurrentApp"]),
     setData: function(data) {
       this.data = data
     },
