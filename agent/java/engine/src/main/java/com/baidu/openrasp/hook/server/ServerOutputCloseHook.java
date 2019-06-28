@@ -97,12 +97,9 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
                         isClosed = (Boolean) Reflection.invokeMethod(output, "isClosed", new Class[]{});
                     }
                 }
-                if (isClosed != null && !isClosed) {
-                    HttpServletResponse response = HookHandler.responseCache.get();
-                    String contentType = null;
-                    if (response != null) {
-                        contentType = response.getContentType();
-                    }
+                HttpServletResponse response = HookHandler.responseCache.get();
+                if (isClosed != null && !isClosed && response != null) {
+                    String contentType = response.getContentType();
                     if (contentType != null && contentType.contains(HttpServletResponse.CONTENT_TYPE_HTML_VALUE)) {
                         String injectPathPrefix = Config.getConfig().getInjectUrlPrefix();
                         if (!StringUtils.isEmpty(injectPathPrefix) &&

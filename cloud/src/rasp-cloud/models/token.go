@@ -43,12 +43,20 @@ func HasToken(token string) (bool, error) {
 }
 
 func AddToken(token *Token) (result *Token, err error) {
-	if token.Token == "" {
-		token.Token = generateOperationId()
+	token.Token = generateOperationId()
+	err = mongo.Insert(tokenCollectionName, token)
+	if err != nil {
+		return
 	}
-	err = mongo.UpsertId(tokenCollectionName, token.Token, token)
-	result = token
-	return
+	return token, err
+}
+
+func UpdateToken(token *Token) (result *Token, err error) {
+	err = mongo.UpdateId(tokenCollectionName, token.Token, token)
+	if err != nil {
+		return
+	}
+	return token, err
 }
 
 func RemoveToken(tokenId string) (token *Token, err error) {

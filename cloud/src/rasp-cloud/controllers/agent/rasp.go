@@ -104,6 +104,8 @@ func (o *RaspController) Post() {
 		}
 		environ[k] = v
 	}
+	online := true
+	rasp.Online = &online
 	rasp.Environ = environ
 	rasp.LastHeartbeatTime = time.Now().Unix()
 	rasp.RegisterTime = time.Now().Unix()
