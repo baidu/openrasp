@@ -115,7 +115,7 @@ export default {
   mounted: function() {
     var self = this
 
-    $('#algorithmConfigModal').on('hidden.bs.modal', function () {
+    $('#algorithmConfigModal').on('hidden.bs.modal', function () {      
       self.setSticky(true)
     })
   },

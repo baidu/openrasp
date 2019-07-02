@@ -40,7 +40,7 @@
       </div>
     </div>
 
-    <b-modal ref="modal" title="添加/编辑 白名单" size="lg" hide-header-close @hidden="hideModal()" @shown="$refs.focus.focus()">
+    <b-modal id="whitelistEditModal" ref="modal" title="添加/编辑 白名单" size="lg" hide-header-close @hide="onModalHide()" @hidden="hideModal()" @shown="$refs.focus.focus()">
       <div class="form-group">
         <label>URL - 不区分 http/https，格式如 <span class="text-danger">rasp.baidu.com/phpmyadmin/</span></label>
         <input ref="focus" v-model.trim="modalData.url" maxlength="200" type="text" class="form-control" maxlen="200">
@@ -105,19 +105,27 @@ export default {
   computed: {
     ...mapGetters(['current_app', 'sticky'])
   },
+  mounted: function() {
+
+  },
   methods: {
+    ...mapMutations(["setSticky"]),
     whitelist2str(row) {
       return Object.keys(row).filter(key => row[key]).map(key => attack_type2name(key)).join(', ')
     },
     setData: function(data) {
       this.data = data
     },
+    onModalHide() {
+      this.setSticky(true)
+    },
     showModal(index) {
-      console.log (this.data)
       if (index === undefined && this.data.length >= 200) {
         alert('为了保证性能，白名单最多支持 200 条')
         return
       }
+
+      this.setSticky(false)
       this.index = index
       Object.assign(this.modalData, JSON.parse(JSON.stringify(this.data[index] || {})))
       this.$refs.modal.show()
