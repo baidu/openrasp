@@ -9,7 +9,7 @@
       <div class="card-body">
         <p>最多允许200个URL，单条URL长度限制为200字符</p>
         <b-table hover bordered :items="data" :fields="fields">
-          <template slot="index" slot-scope="scope">
+          <template slot="index" slot-scope="scope" nowrap>
             {{ scope.index + 1 }}
           </template>
           <template slot="hook" slot-scope="scope">
@@ -43,7 +43,7 @@
     <b-modal ref="modal" title="添加/编辑 白名单" size="lg" hide-header-close @hidden="hideModal()" @shown="$refs.focus.focus()">
       <div class="form-group">
         <label>URL - 不区分 http/https，格式如 <span class="text-danger">rasp.baidu.com/phpmyadmin/</span></label>
-        <input ref="focus" v-model.trim="modalData.url" type="text" class="form-control" maxlen="200">
+        <input ref="focus" v-model.trim="modalData.url" maxlength="200" type="text" class="form-control" maxlen="200">
       </div>
       <div class="form-group">
         <label>检测点</label>
@@ -75,7 +75,7 @@
           关闭
         </b-button>
         <b-button class="float-right ml-2" variant="primary" @click="hideModal(true)">
-          保存
+          确定
         </b-button>
       </div>
     </b-modal>
@@ -93,10 +93,10 @@ export default {
       data: [],
       index: 0,
       fields: [
-        { key: 'index', label: '#' },
+        { key: 'index', label: '#', tdAttr: {'nowrap': ''} },
         { key: 'url', label: 'URL' },
-        { key: 'hook', label: '检测点' },
-        { key: 'command', label: '操作' }
+        { key: 'hook', label: '检测点', tdAttr: {'style': 'min-width: 150px; '} },
+        { key: 'command', label: '操作', tdAttr: {'nowrap': ''} }
       ],
       modalData: { url: '', hook: {}},
       attack_types
@@ -123,7 +123,8 @@ export default {
     },
     hideModal(save) {
       if (save === true) {
-        if (!this.modalData.url) {
+        if (!this.modalData.url || this.modalData.url.trim().length == 0) {
+          alert('URL 未填写')
           return
         }
         if (this.modalData.url.startsWith('http://') || this.modalData.url.startsWith('https://')) {
