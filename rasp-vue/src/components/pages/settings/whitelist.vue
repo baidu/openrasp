@@ -71,8 +71,8 @@
         </div>
       </div>
       <div slot="modal-footer" class="w-100">
-        <b-button class="float-right ml-2" variant="default" @click="hideModal()">
-          关闭
+        <b-button class="float-right ml-2 btn-info" variant="default" @click="hideModal()">
+          取消
         </b-button>
         <b-button class="float-right ml-2" variant="primary" @click="hideModal(true)">
           确定
