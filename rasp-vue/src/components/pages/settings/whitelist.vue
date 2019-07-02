@@ -30,8 +30,8 @@
           </template>
         </b-table>
       </div>
-      <div class="card-footer">
-        <button class="btn btn-info" @click="showModal(data.length)">
+      <div v-bind:class="{'card-footer': true, 'sticky-card-footer': sticky}">
+        <button class="btn btn-info" @click="showModal()">
           添加
         </button>
         <button class="btn btn-primary pull-right" @click="doSave()">
@@ -83,7 +83,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions, mapMutations } from "vuex";
 import { attack_type2name, attack_types } from '@/util/'
 
 export default {
@@ -103,7 +103,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['current_app'])
+    ...mapGetters(['current_app', 'sticky'])
   },
   methods: {
     whitelist2str(row) {
@@ -113,6 +113,7 @@ export default {
       this.data = data
     },
     showModal(index) {
+      console.log (this.data)
       if (index === undefined && this.data.length >= 200) {
         alert('为了保证性能，白名单最多支持 200 条')
         return
