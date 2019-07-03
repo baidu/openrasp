@@ -117,7 +117,7 @@ export default {
       this.data = data
     },
     showModal(index) {
-      if (index === undefined && this.data.length >= 200) {
+      if (index === -1 && this.data.length >= 200) {
         alert('为了保证性能，白名单最多支持 200 条')
         return
       }
