@@ -502,7 +502,7 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 				o.ServeError(http.StatusBadRequest,
 					"the value of config item '"+key+"' can not be less than 0")
 			} else if key == "plugin.timeout.millis" || key == "body.maxbytes" || key == "syslog.reconnect_interval" ||
-				key == "ognl.expression.minlength" || key == "" {
+				key == "ognl.expression.minlength"{
 				if v == 0 {
 					o.ServeError(http.StatusBadRequest,
 						"the value of config item '"+key+"' must be greater than 0")
