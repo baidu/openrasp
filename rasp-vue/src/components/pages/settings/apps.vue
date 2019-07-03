@@ -27,16 +27,16 @@
           </thead>
           <tbody>
             <tr v-for="row in data" :key="row.id">
-              <td>
+              <td style="min-width: 100px;">
                 {{ row.name }}
               </td>
-              <td>
+              <td nowrap>
                 {{ row.language }}
               </td>
               <td>
                 {{ row.description }}
               </td>
-              <td>
+              <td nowrap>
                 <a href="javascript:" @click.prevent="setCurrentApp(row)">
                   切换
                 </a>

@@ -111,7 +111,7 @@ export default {
         { key: 'event_time',      label: '异常时间', class: 'text-nowrap' },
         { key: 'error_code',      label: '异常编号', class: 'text-nowrap' },
         // { key: 'level', label: '级别', class: 'text-nowrap' },
-        { key: 'server_hostname', label: '主机信息' },
+        { key: 'server_hostname', label: '主机信息', tdAttr: { 'style': 'min-width: 150px;' } },
         { key: 'message',         label: '内容' },
         { key: 'button',          label: '查看详情', class: 'text-nowrap' }
       ]
