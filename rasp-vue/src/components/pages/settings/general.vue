@@ -60,37 +60,37 @@
           <label class="form-label">
             最多读取 body 多少字节
           </label>
-          <input v-model.number="data['body.maxbytes']" type="number" class="form-control">
+          <input v-model.number="data['body.maxbytes']" type="number" min="0" class="form-control">
         </div>
         <div class="form-group">
           <label class="form-label">
             调试开关 [0表示关闭，1以上的值表示开启]
           </label>
-          <input v-model.number="data['debug.level']" type="number" class="form-control" placeholder="0">
+          <input v-model.number="data['debug.level']" type="number" min="0" class="form-control" placeholder="0">
         </div>    
         <div class="form-group">
           <label class="form-label">
             [插件] 单个hook点最大执行时间（ms）
           </label>
-          <input v-model.number="data['plugin.timeout.millis']" type="number" class="form-control" placeholder="100">
+          <input v-model.number="data['plugin.timeout.millis']" min="0" type="number" class="form-control" placeholder="100">
         </div>
         <div class="form-group">
           <label class="form-label">
             [日志] 报警日志记录的最大堆栈深度
           </label>
-          <input v-model.number="data['log.maxstack']" type="number" class="form-control" placeholder="50">
+          <input v-model.number="data['log.maxstack']" type="number" min="0" class="form-control" placeholder="50">
         </div>
         <div class="form-group">
           <label class="form-label">
             [日志] 每个进程/线程每秒钟最大日志条数
           </label>
-          <input v-model.number="data['log.maxburst']" type="number" class="form-control" placeholder="100">
+          <input v-model.number="data['log.maxburst']" type="number" min="0" class="form-control" placeholder="100">
         </div>
         <div class="form-group">
           <label class="form-label">
             [日志] 最大备份天数
           </label>
-          <input v-model.number="data['log.maxbackup']" type="number" class="form-control" placeholder="30">
+          <input v-model.number="data['log.maxbackup']" type="number" min="0" class="form-control" placeholder="30">
         </div>
         <div class="form-group">
           <label class="custom-switch">
@@ -105,7 +105,7 @@
           </label>
         </div>          
       </div>
-      <div class="card-footer text-right sticky-card-footer">
+      <div v-bind:class="{'card-footer': true, 'sticky-card-footer': sticky}">
         <div class="d-flex">
           <button type="submit" class="btn btn-primary" @click="doSave()">
             保存
@@ -118,7 +118,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions, mapMutations } from "vuex";
 
 export default {
   name: 'GeneralSettings',
@@ -129,10 +129,11 @@ export default {
       }
     }
   },
-  computed: {
-    ...mapGetters(['current_app'])
+  computed: {    
+    ...mapGetters(['current_app', 'sticky'])
   },
   methods: {
+    ...mapMutations(["setCurrentApp"]),
     setData: function(data) {
       this.data = data
     },

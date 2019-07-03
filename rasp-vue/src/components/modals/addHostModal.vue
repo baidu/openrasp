@@ -81,7 +81,7 @@ RUN cd /tmp \
                 <pre>ADD https://packages.baidu.com/app/openrasp/release/{{rasp_version}}/rasp-java.tar.gz /tmp
 RUN cd /tmp \
     && tar -xf rasp-java.tar.* \
-    && mv rasp-*/ /rasp/ \
+    && mv rasp-*/rasp/ /rasp/ \
     && rm -f rasp-java.tar.gz
 
 RUN echo "cloud.enable: true" >> /rasp/conf/openrasp.yml \
@@ -133,7 +133,7 @@ RUN cd /tmp \
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions, mapMutations } from "vuex";
 import { rasp_version } from '@/util'
 
 export default {
@@ -149,14 +149,23 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['current_app'])
+    ...mapGetters(['current_app', 'sticky'])
+  },
+  mounted: function() {
+    var self = this
+
+    $('#addHostModal').on('hidden.bs.modal', function () {
+      self.setSticky(true)
+    })
   },
   methods: {
+    ...mapMutations(['setSticky']),
     showModal(data) {
       return this.request.post('v1/api/server/url/get', {})
         .then(res => {
           this.agent_urls = res.agent_urls
           this.panel_url = res.panel_url
+          this.setSticky(false)
           $('#addHostModal').modal()
         })
     }

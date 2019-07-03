@@ -56,9 +56,17 @@ func (o *TokenController) Post() {
 	if len(token.Description) > 1024 {
 		o.ServeError(http.StatusBadRequest, "the length of the token description must be less than 1024")
 	}
-	token, err := models.AddToken(token)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to create new token", err)
+	var err error
+	if token.Token == "" {
+		token, err = models.AddToken(token)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "failed to create token", err)
+		}
+	} else {
+		token, err = models.UpdateToken(token)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "failed to update token", err)
+		}
 	}
 	o.Serve(token)
 }

@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	Version   = "1.1"
+	Version   = "1.1.2"
 	BuildTime = C.GoString(C.build_time())
 )
 

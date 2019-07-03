@@ -27,6 +27,7 @@ import (
 	"sync"
 	"time"
 	"strings"
+	"fmt"
 )
 
 // Operations about app
@@ -223,6 +224,10 @@ func (o *AppController) Post() {
 	if len(app.SelectedPluginId) > 1024 {
 		o.ServeError(http.StatusBadRequest, "the length of the app selected_plugin_id can not be greater than 1024")
 	}
+
+	if app.AttackTypeAlarmConf != nil {
+		o.validAttackTypeAlarmConf(app.AttackTypeAlarmConf)
+	}
 	if app.EmailAlarmConf.Enable {
 		o.validEmailConf(&app.EmailAlarmConf)
 	}
@@ -376,6 +381,41 @@ func (o *AppController) validHttpAlarm(conf *models.HttpAlarmConf) {
 	conf.RecvAddr = o.validAppArrayParam(conf.RecvAddr, "http recv_addr", nil)
 }
 
+func (o *AppController) validAttackTypeAlarmConf(conf *map[string][]string) {
+	if conf != nil {
+		for k, v := range *conf {
+			if k == "" {
+				o.ServeError(http.StatusBadRequest, "the attack type can not be empty")
+			}
+			if len(k) > 128 {
+				o.ServeError(http.StatusBadRequest, "the length of attack type can not be greater than 128")
+			}
+			if len(v) > 0 {
+				if len(v) > 64 {
+					o.ServeError(http.StatusBadRequest,
+						"the length of alarm array can not be greater than 64")
+				}
+				for _, item := range v {
+					if item == "" {
+						o.ServeError(http.StatusBadRequest, "the alarm type can not be empty")
+					}
+					found := false
+					for _, alarmType := range models.AlarmTypes {
+						if item == alarmType {
+							found = true
+						}
+					}
+					if !found {
+						o.ServeError(http.StatusBadRequest, "the alarm type must be in: "+
+							fmt.Sprintf("%v", models.AlarmTypes))
+					}
+				}
+			}
+
+		}
+	}
+}
+
 // @router /delete [post]
 func (o *AppController) Delete() {
 	var app = &models.App{}
@@ -482,10 +522,11 @@ func (o *AppController) validateWhiteListConfig(config []models.WhitelistConfigI
 // @router /alarm/config [post]
 func (o *AppController) ConfigAlarm() {
 	var param struct {
-		AppId          string                 `json:"app_id"`
-		EmailAlarmConf *models.EmailAlarmConf `json:"email_alarm_conf,omitempty"`
-		DingAlarmConf  *models.DingAlarmConf  `json:"ding_alarm_conf,omitempty"`
-		HttpAlarmConf  *models.HttpAlarmConf  `json:"http_alarm_conf,omitempty"`
+		AppId               string                 `json:"app_id"`
+		AttackTypeAlarmConf *map[string][]string   `json:"attack_type_alarm_conf,omitempty"`
+		EmailAlarmConf      *models.EmailAlarmConf `json:"email_alarm_conf,omitempty"`
+		DingAlarmConf       *models.DingAlarmConf  `json:"ding_alarm_conf,omitempty"`
+		HttpAlarmConf       *models.HttpAlarmConf  `json:"http_alarm_conf,omitempty"`
 	}
 	o.UnmarshalJson(&param)
 
@@ -511,6 +552,9 @@ func (o *AppController) ConfigAlarm() {
 			param.DingAlarmConf.CorpSecret = app.DingAlarmConf.CorpSecret
 		}
 		o.validDingConf(param.DingAlarmConf)
+	}
+	if param.AttackTypeAlarmConf != nil {
+		o.validAttackTypeAlarmConf(param.AttackTypeAlarmConf)
 	}
 	content, err := json.Marshal(param)
 	if err != nil {

@@ -27,6 +27,7 @@ import (
 	"rasp-cloud/tools"
 	"time"
 	"rasp-cloud/conf"
+	"strings"
 )
 
 type AggrTimeParam struct {
@@ -57,6 +58,7 @@ type SearchAttackParam struct {
 		AttackSource   string    `json:"attack_source,omitempty"`
 		AttackUrl      string    `json:"url,omitempty"`
 		LocalIp        string    `json:"local_ip,omitempty"`
+		ClientIp       string    `json:"client_ip,omitempty"`
 		StackMd5       string    `json:"stack_md5,omitempty"`
 		RequestId      string    `json:"request_id,omitempty"`
 		PluginMessage  string    `json:"plugin_message,omitempty"`
@@ -268,14 +270,17 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 			} else if key == "local_ip" {
 				filterQueries = append(filterQueries,
 					elastic.NewNestedQuery("server_nic", elastic.NewTermQuery("server_nic.ip", value)))
-			} else if key == "attack_source" || key == "url" || key == "message" || key == "plugin_message" {
-				filterQueries = append(filterQueries, elastic.NewWildcardQuery(key, "*"+fmt.Sprint(value)+"*"))
+			} else if key == "attack_source" || key == "url" ||
+				key == "message" || key == "plugin_message" || key == "client_ip" {
+				realValue := strings.TrimSpace(fmt.Sprint(value))
+				filterQueries = append(filterQueries, elastic.NewWildcardQuery(key, "*"+realValue+"*"))
 			} else if key == "server_hostname" {
+				realValue := strings.TrimSpace(fmt.Sprint(value))
 				shouldQueries = append(shouldQueries,
-					elastic.NewWildcardQuery("server_hostname", "*"+fmt.Sprint(value)+"*"))
+					elastic.NewWildcardQuery("server_hostname", "*"+realValue+"*"))
 				shouldQueries = append(shouldQueries,
 					elastic.NewNestedQuery("server_nic",
-						elastic.NewWildcardQuery("server_nic.ip", "*"+fmt.Sprint(value)+"*")))
+						elastic.NewWildcardQuery("server_nic.ip", "*"+realValue+"*")))
 			} else {
 				filterQueries = append(filterQueries, elastic.NewTermQuery(key, value))
 			}

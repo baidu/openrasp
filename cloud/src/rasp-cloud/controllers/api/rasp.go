@@ -22,6 +22,9 @@ import (
 	"fmt"
 	"encoding/json"
 	"github.com/astaxie/beego/validation"
+	"encoding/csv"
+	"bytes"
+	"time"
 )
 
 type RaspController struct {
@@ -54,6 +57,33 @@ func (o *RaspController) Search() {
 	result["perpage"] = param.Perpage
 	result["data"] = rasps
 	o.Serve(result)
+}
+
+// @router /csv [get]
+func (o *RaspController) GeneralCsv() {
+	appId := o.GetString("app_id")
+	if appId == "" {
+		o.ServeError(http.StatusBadRequest, "the app_id can not be empty")
+	}
+	_, rasps, err := models.FindRasp(&models.Rasp{AppId: appId}, 0, 0)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
+	}
+	o.Ctx.Output.Header("Content-Type", "text/plain")
+	o.Ctx.Output.Header("Content-Disposition", "attachment;filename=rasp.csv")
+	writer := &bytes.Buffer{}
+	csvWriter := csv.NewWriter(writer)
+	csvWriter.Write([]string{"hostname", "register ip", "version", "rasp home", "last heartbeat time", "status"})
+	for _, rasp := range rasps {
+		onlineMsg := "online"
+		if !*rasp.Online {
+			onlineMsg = "offline"
+		}
+		lastTime := time.Unix(rasp.LastHeartbeatTime, 0).Format(time.RFC3339)
+		csvWriter.Write([]string{rasp.HostName, rasp.RegisterIp, rasp.Version, rasp.RaspHome, lastTime, onlineMsg})
+	}
+	csvWriter.Flush()
+	o.Ctx.Output.Body(writer.Bytes())
 }
 
 // @router /delete [post]

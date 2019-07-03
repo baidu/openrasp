@@ -31,7 +31,7 @@ public class UndertowParamHook extends ServerParamHook {
 
     @Override
     public boolean isClassMatched(String className) {
-        return "io/undertow/server/protocol/http/HttpRequestParser".equals(className);
+        return "io/undertow/server/HttpServerExchange".equals(className);
     }
 
     /**
@@ -42,6 +42,6 @@ public class UndertowParamHook extends ServerParamHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException {
-        insertBefore(ctClass, "handle", null, src);
+        insertBefore(ctClass, "getQueryParameters", null, src);
     }
 }

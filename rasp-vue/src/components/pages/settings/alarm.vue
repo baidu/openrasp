@@ -1,5 +1,61 @@
 <template>
   <div>
+    <!-- begin alarm methods -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          报警类型配置
+        </h3>
+        <div class="card-options">
+          <!-- <label class="custom-switch m-0">
+            <input type="checkbox" value="1" class="custom-switch-input">
+            <span class="custom-switch-indicator"></span>
+          </label> -->
+        </div>
+      </div>
+      <div class="card-body">
+        <div v-for="(descr, name) in attack_types" :key="name">
+          <div class="row" style="margin-top: 3px">
+            <div class="col">
+              <label style="min-width: 220px;">{{ descr }}</label>
+            </div>
+            <div class="col">
+              <label class="custom-switch m-0">
+                <input type="checkbox" value="1" class="custom-switch-input" v-model="sendMethods[name].email">
+                <span class="custom-switch-indicator"></span>
+                <span class="custom-switch-description">邮件报警</span>
+              </label>
+            </div>
+            <div class="col">
+              <label class="custom-switch m-0">
+                <input type="checkbox" value="1" class="custom-switch-input" v-model="sendMethods[name].ding">
+                <span class="custom-switch-indicator"></span>
+                <span class="custom-switch-description">钉钉报警</span>
+              </label>
+            </div>
+            <div class="col">
+              <label class="custom-switch m-0">
+                <input type="checkbox" value="1" class="custom-switch-input" v-model="sendMethods[name].http">
+                <span class="custom-switch-indicator"></span>
+                <span class="custom-switch-description">HTTP 推送</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div v-bind:class="{'card-footer': true, 'sticky-card-footer': sticky}">
+        <button type="submit" class="btn btn-primary" @click="saveAlarmMethods()">
+          保存
+        </button>
+
+        <button type="submit" class="btn btn-info pull-right" @click="resetAlarmMethods(true, true);">
+          重置
+        </button>
+      </div>
+    </div>
+    <!-- end alarm methods -->
+
     <!-- begin alarm settings -->
     <div class="card">
       <div class="card-header">
@@ -220,8 +276,8 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-import { getDefaultConfig } from '@/util'
+import { mapGetters, mapActions, mapMutations } from "vuex";
+import { getDefaultConfig, attack_types } from '@/util'
 
 export default {
   name: 'AlarmSettings',
@@ -234,12 +290,88 @@ export default {
     }
   },
   data: function() {
-    return {}
+    return {
+      attack_types: attack_types,
+      sendMethods: {}
+    }
   },
   computed: {
-    ...mapGetters(['current_app'])
+    ...mapGetters(['current_app', 'sticky'])
+  },
+  watch: {
+    data: function(newVal, oldVal) {
+      this.loadAlarmMethod()
+    }
+  },
+  beforeMount: function () {
+    this.resetAlarmMethods(false)
   },
   methods: {
+    loadAlarmMethod: function() {
+      var self = this
+      var conf = self.data.attack_type_alarm_conf
+
+      // 没配置等于全开
+      if (! conf) {
+        this.resetAlarmMethods(true)
+        return
+      }
+
+      // 转换
+      Object.keys(conf).forEach(function (name) {
+        self.sendMethods[name] = {
+          ding: false,
+          http: false,
+          email: false
+        }
+
+        conf[name].forEach(function (method) {
+          self.sendMethods[name][method] = true
+        })
+      })
+    },
+    resetAlarmMethods: function(value, save) {
+      var self = this
+      Object.keys(this.attack_types).forEach(function (name) {
+        if (! self.sendMethods[name]) {
+          self.sendMethods[name] = {}
+        }
+        
+        ['email', 'ding', 'http'].forEach(function (key) {
+          self.sendMethods[name][key] = value
+        })
+      })
+
+      self.sendMethods = Object.assign({}, self.sendMethods)
+
+      // 重置时保存
+      if (save) {
+        self.saveAlarmMethods()
+      }
+    },
+    saveAlarmMethods: function(data) {
+      var self = this
+      var body = { 
+        app_id: self.current_app.id,
+        attack_type_alarm_conf: {} 
+      }
+
+      Object.keys(self.sendMethods).forEach(function (name) {
+        var tmp = self.sendMethods[name]
+        body['attack_type_alarm_conf'][name] = []
+
+        Object.keys(tmp).forEach(function (method) {
+          if (tmp[method]) {
+            body['attack_type_alarm_conf'][name].push(method)
+          }
+        })
+      })
+
+      this.request.post('v1/api/app/alarm/config', body)
+        .then(() => {
+          alert('报警方式保存成功')
+        })
+    },    
     saveSettings: function(type) {
       if (type === 'syslog') {
         try {

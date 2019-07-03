@@ -1,5 +1,6 @@
-const plugin_version = '2019-0616-1530'
+const plugin_version = '2019-0621-1400'
 const plugin_name    = 'official'
+const plugin_desc    = '官方插件'
 
 /*
  * Copyright 2017-2019 Baidu Inc.
@@ -88,7 +89,7 @@ var algorithmConfig = {
             function_blacklist: true,
 
             // 敏感函数频次， 具体列表见下方，select chr(123)||chr(123)||chr(123)=chr(123)||chr(123)||chr(123)
-            function_count:     true,
+            function_count:     false,
 
             // 拦截 union select NULL,NULL 或者 union select 1,2,3,4
             union_null:         true,
@@ -860,7 +861,7 @@ function is_from_userinput(parameter, target)
     return verdict
 }
 
-// 检查SQL逻辑是否被用户参数所修改
+// 检查逻辑是否被用户参数所修改
 function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance) 
 {
     // 当用户输入穿越了多个token，就可以判定为代码注入，默认为2
@@ -1028,7 +1029,12 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                         raw_tokens = RASP.sql_tokenize(params.query, params.server)
                     }
 
-                    if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
+                    //distance用来屏蔽identifier token解析误报 `dbname`.`table`，请在1.2版本后删除
+                    var distance = 3
+                    if (value.length > 20) {
+                        distance = 2
+                    }
+                    if (is_token_changed(raw_tokens, userinput_idx, value.length, distance)) {
                         reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                         return true
                     }
@@ -1194,17 +1200,28 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 {
                     // `information_schema`.tables
                     // information_schema  .tables
-                    var part1 = tokens_lc[i + 1].replaceAll('`', '')
-                    var part2 = tokens_lc[i + 3].replaceAll('`', '')
-                    if (part1 == 'information_schema' && part2 == 'tables' )
+                    var part = tokens_lc[i + 1].replaceAll('`', '')
+                    // 正常的antlr和flex返回1个token
+                    if (part == 'information_schema.tables')
                     {
                         reason = _("SQLi - Detected access to MySQL information_schema.tables table")
                         break
                     }
+                    // flex在1.1.2以前会产生3个token
+                    else if (part == 'information_schema' && i < tokens_lc.length - 3)
+                    {
+                        var part2 = tokens_lc[i + 3].replaceAll('`', '')
+                        if (part2 == "tables")
+                        {
+                            reason = _("SQLi - Detected access to MySQL information_schema.tables table")
+                            break
+                        }
+                    }
                 }
             }
 
-            if (reason !== false) {
+            if (reason !== false) 
+            {
                 return {
                     action:     algorithmConfig.sql_policy.action,
                     message:    reason,

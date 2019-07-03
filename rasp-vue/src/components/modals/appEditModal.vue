@@ -33,7 +33,7 @@
           <button class="btn btn-primary" data-dismiss="modal" @click="saveApp()">
             保存
           </button>
-          <button class="btn btn-default" data-dismiss="modal">
+          <button class="btn btn-info" data-dismiss="modal">
             关闭
           </button>
         </div>

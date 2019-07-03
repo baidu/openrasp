@@ -41,7 +41,11 @@
             搜索
           </button>
 
-          <button class="btn btn-primary ml-2" @click="deleteExpired()">
+          <a class="btn btn-primary ml-2" v-bind:href="'/v1/api/rasp/csv?app_id=' + current_app.id" target="_blank">
+            导出
+          </a>
+
+          <button class="btn btn-info ml-2" @click="deleteExpired()">
             清理
           </button>
         </div>

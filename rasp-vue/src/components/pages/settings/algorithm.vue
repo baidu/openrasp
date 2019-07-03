@@ -172,7 +172,6 @@ export default {
       data: {
         meta: {}
       },
-      sticky: true,
       hasAdvancedConfig: {
         'sql_userinput': true,
         'sql_policy': true,
@@ -185,7 +184,7 @@ export default {
     AlgorithmConfigModal
   },
   computed: {
-    ...mapGetters(['current_app'])
+    ...mapGetters(['current_app', 'sticky'])
   },
   watch: {
     current_app() {
@@ -203,11 +202,9 @@ export default {
     ...mapMutations(["setCurrentApp"]),
     attack_type2name: attack_type2name,
     showAdvancedConfig: function(key, value) {
-      this.sticky = false
       this.$refs.algorithmConfigModal.showModal(key, value)
     },
     applyAdvancedConfig: function(data) {
-      this.sticky = true
       if (! data) {
         return
       }
@@ -272,7 +269,7 @@ export default {
 
       this.api_request('v1/api/plugin/algorithm/config', body, function(data) {
         self.loadAppList(self.current_app.id);
-        alert('保存成功')
+        alert('保存成功，请等待一个心跳周期生效（3分钟以内）')
       })
     },
     resetConfig: function() {

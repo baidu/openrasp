@@ -7,7 +7,8 @@ Vue.use(Vuex)
 const store = new Vuex.Store({
   state: {
     app_list: [],
-    current_app: {}
+    current_app: {},
+    sticky: true
   },
   mutations: {
     setCurrentApp(state, data) {
@@ -15,6 +16,9 @@ const store = new Vuex.Store({
     },
     setAppList(state, data) {
       this.state.app_list = data
+    },
+    setSticky(state, data) {
+      this.state.sticky = data
     }
   },
   actions: {
@@ -41,7 +45,8 @@ const store = new Vuex.Store({
   },
   getters: {
     app_list: state => state.app_list,
-    current_app: state => state.current_app
+    current_app: state => state.current_app,
+    sticky: state => state.sticky
   }
 })
 
