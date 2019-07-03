@@ -49,7 +49,7 @@
           保存
         </button>
 
-        <button type="submit" class="btn btn-info pull-right" @click="resetAlarmMethods(true)">
+        <button type="submit" class="btn btn-info pull-right" @click="resetAlarmMethods(true, true);">
           重置
         </button>
       </div>
@@ -330,7 +330,7 @@ export default {
         })
       })
     },
-    resetAlarmMethods: function(value) {
+    resetAlarmMethods: function(value, save) {
       var self = this
       Object.keys(this.attack_types).forEach(function (name) {
         if (! self.sendMethods[name]) {
@@ -343,6 +343,11 @@ export default {
       })
 
       self.sendMethods = Object.assign({}, self.sendMethods)
+
+      // 重置时保存
+      if (save) {
+        self.saveAlarmMethods()
+      }
     },
     saveAlarmMethods: function(data) {
       var self = this

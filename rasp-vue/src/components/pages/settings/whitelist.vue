@@ -31,7 +31,7 @@
         </b-table>
       </div>
       <div v-bind:class="{'card-footer': true, 'sticky-card-footer': sticky}">
-        <button class="btn btn-info" @click="showModal()">
+        <button class="btn btn-info" @click="showModal(-1)">
           添加
         </button>
         <button class="btn btn-primary pull-right" @click="doSave()">
@@ -40,7 +40,7 @@
       </div>
     </div>
 
-    <b-modal id="whitelistEditModal" ref="modal" title="添加/编辑 白名单" size="lg" hide-header-close @hide="onModalHide()" @hidden="hideModal()" @shown="$refs.focus.focus()">
+    <b-modal id="whitelistEditModal" ref="modal" title="添加/编辑 白名单" size="lg" hide-header-close @hidden="hideModal()" @shown="$refs.focus.focus()">
       <div class="form-group">
         <label>URL - 不区分 http/https，格式如 <span class="text-danger">rasp.baidu.com/phpmyadmin/</span></label>
         <input ref="focus" v-model.trim="modalData.url" maxlength="200" type="text" class="form-control" maxlen="200">
@@ -116,9 +116,6 @@ export default {
     setData: function(data) {
       this.data = data
     },
-    onModalHide() {
-      this.setSticky(true)
-    },
     showModal(index) {
       if (index === undefined && this.data.length >= 200) {
         alert('为了保证性能，白名单最多支持 200 条')
@@ -146,13 +143,20 @@ export default {
           alert('请至少选择一个 hook 点来加白名单')
           return
         }
+
+        if (this.index == -1) {
+          this.index = this.data.length
+        }
+
         this.$set(this.data, this.index, this.modalData)
+        console.log (this.index, this.data)
       }
       this.modalData = { url: '', hook: {}}
       this.$refs.modal.hide()
+      this.setSticky(true)
     },
     deleteItem: function(index) {
-      if (!confirm('确认删除')) {
+      if (!confirm('确认删除?')) {
         return
       }
       this.data.splice(index, 1)
