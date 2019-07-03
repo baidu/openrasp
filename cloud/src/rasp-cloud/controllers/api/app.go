@@ -494,7 +494,19 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 		if v, ok := value.(string); ok {
 			if len(v) >= 2048 {
 				o.ServeError(http.StatusBadRequest,
-					"the value's length of config key '"+key+"' must be less than 2048")
+					"the value's length of config item '"+key+"' must be less than 2048")
+			}
+		}
+		if v, ok := value.(float64); ok {
+			if v < 0 {
+				o.ServeError(http.StatusBadRequest,
+					"the value of config item '"+key+"' can not be less than 0")
+			} else if key == "plugin.timeout.millis" || key == "body.maxbytes" || key == "syslog.reconnect_interval" ||
+				key == "ognl.expression.minlength" || key == "" {
+				if v == 0 {
+					o.ServeError(http.StatusBadRequest,
+						"the value of config item '"+key+"' must be greater than 0")
+				}
 			}
 		}
 	}
