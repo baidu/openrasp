@@ -38,8 +38,11 @@ function repack()
     mkdir tmp/resources
     rm -rf tmp/dist
 
-    cp "$git_root"/plugins/official/plugin.js tmp/resources
-    mv "$git_root"/rasp-vue/dist tmp
+    cp -R "$git_root"/plugins/official/plugin.js tmp/resources
+    cp -R "$git_root"/rasp-vue/dist tmp
+
+    # 去掉一部分调试信息
+    strip tmp/rasp-cloud
 
     mv tmp "$name"
     tar --numeric-owner --owner=0 --group=0 -czf "$output" "$name"
@@ -69,9 +72,13 @@ var CommitID = "${commit}"
 EOF
     fi
 
-    bee pack -exr=vendor
-
+    # linux
+    GOOS=linux bee pack -exr=vendor
     repack rasp-cloud.tar.gz rasp-cloud-$(date +%Y-%m-%d) ../../../rasp-cloud.tar.gz
+
+    # mac
+    GOOS=darwin bee pack -exr=vendor
+    repack rasp-cloud.tar.gz rasp-cloud-$(date +%Y-%m-%d) ../../../rasp-cloud-mac.tar.gz
 }
 
 function build_vue()
