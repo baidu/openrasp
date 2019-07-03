@@ -179,8 +179,8 @@ func addPluginToDb(plugin *Plugin) (err error) {
 		count = len(oldPlugins)
 		if count > 0 {
 			for _, oldPlugin := range oldPlugins {
-				app := &App{}
-				err = mongo.FindOne("app", bson.M{"selected_plugin_id": oldPlugin.Id}, app)
+				var app *App
+				err = mongo.FindOne(appCollectionName, bson.M{"selected_plugin_id": oldPlugin.Id}, app)
 				if err != nil && err != mgo.ErrNotFound {
 					return err
 				}
