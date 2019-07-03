@@ -41,9 +41,6 @@ function repack()
     cp -R "$git_root"/plugins/official/plugin.js tmp/resources
     cp -R "$git_root"/rasp-vue/dist tmp
 
-    # 去掉一部分调试信息
-    strip tmp/rasp-cloud
-
     mv tmp "$name"
     tar --numeric-owner --owner=0 --group=0 -czf "$output" "$name"
 
@@ -65,10 +62,13 @@ function build_cloud()
     cd src/rasp-cloud
 
     commit=$(git rev-parse HEAD 2>/dev/null)
+    build_time=$(date "+%Y-%m-%d %H:%M:%S" 2>/dev/null)
     if [[ $? -eq 0 ]]; then
-        cat > tools/git.go << EOF
+        cat > tools/info.go << EOF
 package tools
+
 var CommitID = "${commit}"
+var BuildTime = "${build_time}"
 EOF
     fi
 
