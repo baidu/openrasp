@@ -14,15 +14,6 @@
 
 package environment
 
-/*
-const char* build_time(void)
-{
-static const char* psz_build_time = __DATE__ " " __TIME__;
-return psz_build_time;
-}
-*/
-import "C"
-
 import (
 	"flag"
 	"github.com/astaxie/beego"
@@ -39,8 +30,7 @@ import (
 )
 
 var (
-	Version   = "1.1.2"
-	BuildTime = C.GoString(C.build_time())
+	Version = "1.1.2"
 )
 
 func init() {
@@ -52,7 +42,9 @@ func init() {
 
 	if *StartFlag.Version {
 		fmt.Println("Version:       " + Version)
-		fmt.Println("Build Time:    " + BuildTime)
+		if tools.BuildTime != "" {
+			fmt.Println("Build Time:    " + tools.BuildTime)
+		}
 		if tools.CommitID != "" {
 			fmt.Println("Git Commit ID: " + tools.CommitID)
 		}
