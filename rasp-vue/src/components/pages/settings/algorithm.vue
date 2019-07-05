@@ -173,6 +173,7 @@ export default {
         meta: {}
       },
       hasAdvancedConfig: {
+        'command_common': true,
         'sql_userinput': true,
         'sql_policy': true,
         'sql_regex': true

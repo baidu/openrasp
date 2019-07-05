@@ -526,13 +526,13 @@ var ntfsRegex       = /::\$(DATA|INDEX)$/i
 var commaNumRegex   = /^[0-9, ]+$/
 
 // SQL注入算法1 - 预过滤正则
-var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter)
+var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter, 'i')
 
 // SQL注入算法2 - 预过滤正则
-var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter)
+var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter, 'i')
 
 // 命令执行探针 - 常用渗透命令
-var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern)
+var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern, 'i')
 
 if (! RASP.is_unittest)
 {

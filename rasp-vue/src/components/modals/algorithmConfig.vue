@@ -43,9 +43,17 @@
             <span class="text-danger" v-if="sql_regex_error">{{sql_regex_error }}</span>
           </div>
 
+          <div v-if="key == 'command_common'">
+            <label>渗透命令探针 - 正则表达式</label>
+            <div v-bind:class="{'form-group': true, 'has-error': command_common_error}">
+              <input type="text" v-model.trim="data.pattern" class="form-control">
+            </div>
+            <span class="text-danger" v-if="command_common_error">{{command_common_error }}</span>
+          </div>
+
         </div>
         <div class="modal-footer">
-          <button class="btn btn-primary mr-auto" data-dismiss="modal" @click="saveConfig()" :disabled="sql_regex_error">
+          <button class="btn btn-primary mr-auto" data-dismiss="modal" @click="saveConfig()" :disabled="sql_regex_error || command_common_error">
             确定
           </button>
           <button class="btn btn-info" data-dismiss="modal">
@@ -67,6 +75,7 @@ export default {
       key: '',
       data: {},
       shouldSave: false,
+      command_common_error: false,
       sql_regex_error: false,
       sql_policy_keys: [
         {
@@ -106,7 +115,13 @@ export default {
   },
   watch: {
     'data.regex': function(newval, oldval) {
-      this.validateRegex(newval)
+      if (this.key == 'sql_regex')
+        this.sql_regex_error = this.validateRegex(newval)
+    },
+    // 以前的版本插件写错了，没有统一命名为 `regex`，为了兼容只能先这样了
+    'data.pattern': function(newval, oldval) {
+      if (this.key == 'command_common')
+        this.command_common_error = this.validateRegex(newval)
     }
   },
   computed: {
@@ -129,7 +144,7 @@ export default {
         error = '正则表达式错误:' + e.toString()
       }
 
-      this.sql_regex_error = error
+      return error
     },
     showModal(key, data) {
       this.setSticky(false)
