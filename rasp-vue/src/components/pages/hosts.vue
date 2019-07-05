@@ -101,7 +101,7 @@
                 </td>
                 <td nowrap>
                   {{ row.language }}/{{ row.version }} <br>
-                  official/{{ row.plugin_version }}
+                  {{ row.plugin_name ? row.plugin_name : 'official' }}/{{ row.plugin_version }}
                 </td>
                 <td>
                   {{ row.rasp_home }}
