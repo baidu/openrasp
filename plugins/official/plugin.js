@@ -223,7 +223,7 @@ var algorithmConfig = {
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
     readFile_unwanted: {
         name:   '算法5 - 文件探针算法',
-        action: 'block'
+        action: 'log'
     },
 
     // 写文件操作 - NTFS 流
