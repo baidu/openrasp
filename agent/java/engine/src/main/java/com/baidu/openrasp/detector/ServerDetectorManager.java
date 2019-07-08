@@ -43,6 +43,7 @@ public class ServerDetectorManager {
         detectors.add(new WebsphereDetector());
         detectors.add(new UndertowDetector());
         detectors.add(new DubboDetector());
+        detectors.add(new TongWebDetector());
     }
 
     public static ServerDetectorManager getInstance() {
