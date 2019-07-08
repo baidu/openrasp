@@ -1,14 +1,13 @@
 package com.baidu.openrasp.hook.server.tongweb;
 
-import java.io.IOException;
-
+import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.hook.server.ServerInputHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
 
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.hook.server.ServerInputHook;
-import com.baidu.openrasp.tool.annotation.HookAnnotation;
+import java.io.IOException;
 
 /**
  * @description: 插入Tongweb获取请求body处理hook
@@ -37,9 +36,9 @@ public class TongwebInputBufferHook extends ServerInputHook {
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String readByteSrc = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
                 "$_,$0", int.class, Object.class);
-        insertAfter(ctClass, "readByte", "()I", readByteSrc);        
+        insertAfter(ctClass, "readByte", "()I", readByteSrc);
         String readSrc = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
                 "$_,$0,$1,$2,$3", int.class, Object.class, byte[].class, int.class, int.class);
-        insertAfter(ctClass, "read", "([BII)I", readSrc);       
+        insertAfter(ctClass, "read", "([BII)I", readSrc);
     }
 }

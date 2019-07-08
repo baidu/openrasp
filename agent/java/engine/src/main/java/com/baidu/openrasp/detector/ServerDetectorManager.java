@@ -21,7 +21,6 @@ import org.apache.log4j.Logger;
 
 import java.security.ProtectionDomain;
 import java.util.HashSet;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by tyy on 19-2-12.

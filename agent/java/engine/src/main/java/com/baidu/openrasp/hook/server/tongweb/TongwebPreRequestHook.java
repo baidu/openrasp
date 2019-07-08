@@ -1,11 +1,10 @@
 package com.baidu.openrasp.hook.server.tongweb;
 
+import com.baidu.openrasp.hook.server.ServerPreRequestHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-
-import com.baidu.openrasp.hook.server.ServerPreRequestHook;
-import com.baidu.openrasp.tool.annotation.HookAnnotation;
 
 /**
  * @description: Tongweb ServerPreRequestHook 处理hook，会执行onParseParameters 进行预处理

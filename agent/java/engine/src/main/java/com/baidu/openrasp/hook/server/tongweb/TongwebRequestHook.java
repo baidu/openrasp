@@ -1,11 +1,10 @@
 package com.baidu.openrasp.hook.server.tongweb;
 
+import com.baidu.openrasp.hook.server.ServerParamHook;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-
-import com.baidu.openrasp.hook.server.ServerParamHook;
-import com.baidu.openrasp.tool.annotation.HookAnnotation;
 
 /**
  * @description: 插入Tongweb获取request请求处理hook

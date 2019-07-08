@@ -133,7 +133,7 @@ public abstract class ServerDetector {
                     }
                 });
                 return files != null && files.length > 0;
-            }else {
+            } else {
                 return detectWildfly(homeFile.getCanonicalPath());
             }
         } catch (Exception e) {

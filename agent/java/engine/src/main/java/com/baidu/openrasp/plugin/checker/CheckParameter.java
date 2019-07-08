@@ -17,12 +17,12 @@
 package com.baidu.openrasp.plugin.checker;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.plugin.checker.v8.V8Checker;
-import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlExceptionChecker;
+import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.XssChecker;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
 import com.baidu.openrasp.plugin.checker.policy.server.*;
+import com.baidu.openrasp.plugin.checker.v8.V8Checker;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.google.gson.Gson;
 
