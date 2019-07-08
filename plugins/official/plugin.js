@@ -1,4 +1,4 @@
-const plugin_version = '2019-0708-1200'
+const plugin_version = '2019-0708-1800'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1431,10 +1431,13 @@ plugin.register('readFile', function (params, context) {
     var parameter = context.parameter
     var is_win    = server.os.indexOf('Windows') != -1
 
-    // weblogic 下面，所有war包读取操作全部忽略
-    if (server['server'] === 'weblogic' && params.realpath.endsWith('.war'))
+    // weblogic/tongweb 下面，所有war包读取操作全部忽略
+    if (server['server'] === 'weblogic' || server['server'] == 'tongweb')
     {
-        return clean
+        if (params.realpath.endsWith('.war'))
+        {
+            return clean;
+        }
     }
 
     //
