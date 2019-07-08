@@ -268,7 +268,7 @@ var algorithmConfig = {
     // 文件管理器 - 查看敏感目录
     directory_unwanted: {
         name:   '算法3 - 尝试查看敏感目录',
-        action: 'block'
+        action: 'log'
     },
 
     // 文件包含 - 用户输入匹配
