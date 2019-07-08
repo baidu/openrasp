@@ -34,6 +34,11 @@ function repack()
     mkdir tmp
     tar xf "$tar" -C tmp
 
+    # 仅在 Linux 编译环境下 strip 二进制包
+    if [[ $(uname -s) == "Linux" ]] && file tmp/rasp-cloud | grep -q 'ELF 64-bit'; then
+        strip -s tmp/rasp-cloud
+    fi
+
     # 安装默认插件
     mkdir tmp/resources
     rm -rf tmp/dist
