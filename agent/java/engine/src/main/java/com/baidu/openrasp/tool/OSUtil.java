@@ -16,6 +16,7 @@
 
 package com.baidu.openrasp.tool;
 
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.model.NicModel;
 import org.apache.commons.io.IOUtils;
@@ -163,10 +164,13 @@ public class OSUtil {
 
     private static String execReadToString() {
         try {
+            HookHandler.enableCmdHook.set(false);
             InputStream in = Runtime.getRuntime().exec("hostname").getInputStream();
             return IOUtils.toString(in);
         } catch (Exception e) {
             return "im-not-resolvable";
+        } finally {
+            HookHandler.enableCmdHook.set(true);
         }
     }
 

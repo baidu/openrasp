@@ -85,6 +85,14 @@ public class HookHandler {
             return true;
         }
     };
+
+    public static ThreadLocal<Boolean> enableCmdHook = new ThreadLocal<Boolean>() {
+        @Override
+        protected Boolean initialValue() {
+            return true;
+        }
+    };
+
     private static final Map<String, Object> EMPTY_MAP = new HashMap<String, Object>();
 
     /**
