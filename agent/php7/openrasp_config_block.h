@@ -112,13 +112,6 @@ public:
   void update(BaseReader *reader);
 };
 
-class SecurityBlock
-{
-public:
-  bool enforce_policy = false;
-  void update(BaseReader *reader);
-};
-
 class LruBlock
 {
 public:

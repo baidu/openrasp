@@ -331,8 +331,7 @@ void post_mongoclient___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAM
 {
     MongoConnectionEntry mongo_entry;
     if (Z_TYPE_P(this_ptr) == IS_OBJECT && !EG(exception) &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mongo_connection_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &mongo_entry))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mongo_connection_entry, &mongo_entry))
     {
         handle_block(TSRMLS_C);
     }
@@ -342,8 +341,7 @@ void post_mongodb_0_driver_0_manager___construct_DB_CONNECTION(OPENRASP_INTERNAL
 {
     MongoConnectionEntry mongo_entry;
     if (Z_TYPE_P(this_ptr) == IS_OBJECT && !EG(exception) &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mongodb_connection_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &mongo_entry))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mongodb_connection_entry, &mongo_entry))
     {
         handle_block(TSRMLS_C);
     }

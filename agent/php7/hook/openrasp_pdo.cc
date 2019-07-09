@@ -250,8 +250,7 @@ void post_pdo___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     sql_connection_entry conn_entry;
     if (Z_TYPE_P(getThis()) == IS_OBJECT && !EG(exception) &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pdo_connection_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &conn_entry))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pdo_connection_entry, &conn_entry))
     {
         handle_block();
     }

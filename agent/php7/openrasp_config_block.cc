@@ -136,11 +136,6 @@ void ClientipBlock::update(BaseReader *reader)
   header = reader->fetch_string({"clientip.header"}, std::string(""));
 };
 
-void SecurityBlock::update(BaseReader *reader)
-{
-  enforce_policy = reader->fetch_bool({"security.enforce_policy"}, false);
-};
-
 const int64_t LruBlock::default_max_size = 1024;
 
 void LruBlock::update(BaseReader *reader)
