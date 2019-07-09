@@ -51,7 +51,6 @@ public:
   InjectBlock inject;
   BodyBlock body;
   ClientipBlock clientip;
-  SecurityBlock security;
   LruBlock lru;
   DecompileBlock decompile;
 

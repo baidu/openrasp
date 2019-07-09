@@ -33,15 +33,9 @@ extern "C"
 #endif
 }
 
-static bool sql_policy_alarm(sql_connection_entry *conn_entry, sql_connection_entry::connection_policy_type policy_type, int enforce_policy)
+static bool sql_policy_alarm(sql_connection_entry *conn_entry, sql_connection_entry::connection_policy_type policy_type)
 {
     bool result = false;
-    if (enforce_policy)
-    {
-        conn_entry->connection_entry_policy_log(policy_type);
-        result = true;
-    }
-    else
     {
         if (slm != nullptr)
         {
@@ -52,6 +46,11 @@ static bool sql_policy_alarm(sql_connection_entry *conn_entry, sql_connection_en
                 conn_entry->connection_entry_policy_log(policy_type);
             }
         }
+        else
+        {
+            conn_entry->connection_entry_policy_log(policy_type);
+        }
+        
     }
 #ifdef HAVE_LINE_COVERAGE
     __gcov_flush();
@@ -59,7 +58,7 @@ static bool sql_policy_alarm(sql_connection_entry *conn_entry, sql_connection_en
     return result;
 }
 
-bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, int enforce_policy)
+bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func)
 {
     sql_connection_entry conn_entry;
     bool need_block = false;
@@ -67,11 +66,11 @@ bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_conne
     {
         if (conn_entry.check_high_privileged())
         {
-            need_block = sql_policy_alarm(&conn_entry, sql_connection_entry::connection_policy_type::USER, enforce_policy);
+            need_block = sql_policy_alarm(&conn_entry, sql_connection_entry::connection_policy_type::USER);
         }
         if (conn_entry.check_weak_password())
         {
-            need_block = sql_policy_alarm(&conn_entry, sql_connection_entry::connection_policy_type::PASSWORD, enforce_policy);
+            need_block = sql_policy_alarm(&conn_entry, sql_connection_entry::connection_policy_type::PASSWORD);
         }
     }
     return need_block;

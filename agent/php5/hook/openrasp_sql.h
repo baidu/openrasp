@@ -81,8 +81,7 @@ typedef SqlConnectionEntry sql_connection_entry;
 typedef bool (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
 
 void plugin_sql_check(char *query, int query_len, char *server TSRMLS_DC);
-bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func,
-                                        int enforce_policy);
+bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func);
 bool mysql_error_code_filtered(long err_code);
 void sql_query_error_alarm(char *server, char *query, const std::string &err_code, const std::string &err_msg TSRMLS_DC);
 void sql_connect_error_alarm(sql_connection_entry *sql_connection_p, const std::string &err_code, const std::string &err_msg TSRMLS_DC);

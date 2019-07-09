@@ -67,8 +67,7 @@ static bool init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connectio
 void post_global_pg_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (Z_TYPE_P(return_value) == IS_RESOURCE &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pg_connection_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pg_connection_entry))
     {
         handle_block(TSRMLS_C);
     }

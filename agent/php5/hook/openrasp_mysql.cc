@@ -101,7 +101,7 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
 
     if (host_and_port && (tmp = strchr(host_and_port, ':')))
     {
-        host = estrndup(host_and_port, tmp - host_and_port);
+        std::string host_str = std::string(host_and_port, tmp - host_and_port);
         tmp++;
         if (tmp[0] != '/')
         {
@@ -119,8 +119,8 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
             socket = tmp;
             using_socket = true;
         }
-        sql_connection_p->set_host(host);
-        using_socket = (strcmp("localhost", host) == 0);
+        sql_connection_p->set_host(host_str);
+        using_socket = ("localhost" == host_str);
     }
     else
     {
@@ -162,8 +162,7 @@ static void mysql_connect_error_intercept(INTERNAL_FUNCTION_PARAMETERS, init_con
 void post_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (Z_TYPE_P(return_value) == IS_RESOURCE &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry))
     {
         handle_block(TSRMLS_C);
     }
@@ -181,8 +180,7 @@ void post_global_mysql_connect_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 void post_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (Z_TYPE_P(return_value) == IS_RESOURCE &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry))
     {
         handle_block(TSRMLS_C);
     }
