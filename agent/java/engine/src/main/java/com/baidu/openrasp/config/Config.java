@@ -1269,9 +1269,11 @@ public class Config extends FileScanListener {
                             Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
                             codeSum = codeSum + code;
                         } catch (Exception e) {
-                            String message = "Hook type " + s + " does not exist";
-                            int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                            if (Config.getConfig().isDebugEnabled()) {
+                                String message = "Hook type " + s + " does not exist";
+                                int errorCode = ErrorType.CONFIG_ERROR.getCode();
+                                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                            }
                         }
                     }
                     if (hook.getKey().equals("*")) {
