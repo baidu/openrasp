@@ -11,7 +11,7 @@ var (
 		EsIndex:      "openrasp-error-alarm",
 		EsAliasIndex: "real-openrasp-error-alarm",
 		AlarmBuffer:  make(chan map[string]interface{}, conf.AppConfig.AlarmBufferSize),
-		FileLogger:   initAlarmFileLogger("/openrasp-logs/error-alarm", "error.log"),
+		FileLogger:   initAlarmFileLogger("openrasp-logs/error-alarm", "error.log"),
 	}
 )
 

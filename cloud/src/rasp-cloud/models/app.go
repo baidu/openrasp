@@ -329,11 +329,7 @@ func AddApp(app *App) (result *App, err error) {
 
 func getDefaultPluginContent() ([]byte, error) {
 	// if setting default plugin fails, continue to initialize
-	currentPath, err := tools.GetCurrentPath()
-	if err != nil {
-		return nil, errors.New("failed to get get default plugin directory: " + err.Error())
-	}
-	content, err := ioutil.ReadFile(currentPath + "/resources/plugin.js")
+	content, err := ioutil.ReadFile("resources/plugin.js")
 	if err != nil {
 		return nil, errors.New("failed to read default plugin content: " + err.Error())
 	}
