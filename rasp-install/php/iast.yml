@@ -1,0 +1,71 @@
+# OpenRASP IAST configuration
+
+#插件获取堆栈的最大深度
+plugin.maxstack: 100
+#文件存在验证开关，切换至扫描器模式
+plugin.filter: false
+#对于单次HOOK点检测，JS插件整体超时时间（毫秒）
+plugin.timeout.millis: 15000
+
+#每个进程/线程每秒钟最大日志条数
+log.maxburst: 100
+#报警日志记录的最大堆栈深度
+log.maxstack: 50
+
+#报警是否开启 syslog
+syslog.enable: false
+#syslog tag
+syslog.tag: "OpenRASP"
+#syslog server url
+syslog.url: "tcp://127.0.0.1:514"
+#syslog facility
+syslog.facility: 1
+#syslog连接超时时间(毫秒)
+syslog.connection_timeout: 50
+#syslog读超时时间(毫秒)
+syslog.read_timeout: 10
+#syslog重连时间间隔(秒)
+syslog.reconnect_interval: 300
+
+#拦截攻击后，状态码
+block.status_code: 302
+#拦截攻击后，跳转到这个URL
+block.redirect_url: "https://rasp.baidu.com/blocked/?request_id=%request_id%"
+#拦截攻击后，若期望响应类型为JSON，则根据此模板显示内容
+block.content_json: "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"
+#拦截攻击后，若期望响应类型为XML，则根据此模板显示内容
+block.content_xml: "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"
+#拦截攻击后，若期望响应类型不为JSON/XML，则根据此模板显示内容
+block.content_html: "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>"
+
+#对于以下URL，修改响应并注入HTML
+inject.urlprefix: ""
+
+#最多读取body的前多少字节
+body.maxbytes: 8192
+
+#开启反向代理时，真实IP头
+clientip.header: ""
+
+#正常攻击LRU缓存最大容量
+lru.max_size: 0
+
+#是否开启源码溯源
+decompile.enable: false
+
+hook.white:
+# white url list for each check type  
+# url format: start from host and must match with url in alarm.log
+# "*" means for all url
+# "all" means for all check type
+# format as follow:
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# "*":
+#   - "sql"
+#   - "ssrf"
+#   - "command"
+# "www.baidu.com":
+#   - "all"
+# "127.0.0.1/index.php":
+#   - "webshell_callable"
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
