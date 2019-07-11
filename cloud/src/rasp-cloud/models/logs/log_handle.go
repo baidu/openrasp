@@ -128,7 +128,6 @@ func registerAlarmInfo(info *AlarmLogInfo) {
 }
 
 func initAlarmFileLogger(dirName string, fileName string) *logs.BeeLogger {
-	dirName = tools.GetCurrentPathWithPanic() + dirName
 	if isExists, _ := tools.PathExists(dirName); !isExists {
 		err := os.MkdirAll(dirName, os.ModePerm)
 		if err != nil {

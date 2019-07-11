@@ -27,7 +27,7 @@ var (
 		EsIndex:      "openrasp-policy-alarm",
 		EsAliasIndex: "real-openrasp-policy-alarm",
 		AlarmBuffer:  make(chan map[string]interface{}, conf.AppConfig.AlarmBufferSize),
-		FileLogger:   initAlarmFileLogger("/openrasp-logs/policy-alarm", "policy.log"),
+		FileLogger:   initAlarmFileLogger("openrasp-logs/policy-alarm", "policy.log"),
 	}
 )
 
