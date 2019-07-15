@@ -21,6 +21,7 @@
 #include "utils/regex.h"
 #include "utils/time.h"
 #include "utils/net.h"
+#include "utils/hostname.h"
 #include <map>
 #include <vector>
 #include <string>
@@ -638,7 +639,7 @@ bool RaspLoggerEntry::raw_log(severity_level level_int, const char *message, int
             syslog_info_len = spprintf(&syslog_info, 0, "<%d>%s %s %s[%d]: %s",
                                        priority,
                                        syslog_time.c_str(),
-                                       openrasp::scm->get_hostname().c_str(),
+                                       openrasp::get_hostname().c_str(),
                                        tag.c_str(),
                                        getpid(),
                                        message);
@@ -774,7 +775,7 @@ void RaspLoggerEntry::update_common_info()
         }
         migrate_hash_values(&common_info, migrate_src, alarm_filters);
         add_assoc_string(&common_info, "event_type", "attack");
-        add_assoc_string(&common_info, "server_hostname", (char *)openrasp::scm->get_hostname().c_str());
+        add_assoc_string(&common_info, "server_hostname", (char *)openrasp::get_hostname().c_str());
         add_assoc_string(&common_info, "server_type", "php");
         add_assoc_string(&common_info, "server_version", OPENRASP_PHP_VERSION);
         add_assoc_string(&common_info, "request_id", OPENRASP_INJECT_G(request_id));
@@ -810,7 +811,7 @@ void RaspLoggerEntry::update_common_info()
              (appender & appender_mask))
     {
         add_assoc_string(&common_info, "event_type", "security_policy");
-        add_assoc_string(&common_info, "server_hostname", (char *)openrasp::scm->get_hostname().c_str());
+        add_assoc_string(&common_info, "server_hostname", (char *)openrasp::get_hostname().c_str());
         add_assoc_string(&common_info, "server_type", "php");
         add_assoc_string(&common_info, "server_version", OPENRASP_PHP_VERSION);
         add_assoc_string(&common_info, "rasp_id", (char *)openrasp::scm->get_rasp_id().c_str());
