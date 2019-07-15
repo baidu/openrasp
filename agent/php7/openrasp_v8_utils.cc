@@ -203,9 +203,9 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     obj->Set(NewV8String(isolate, "attack_params"), params);
     obj->Set(NewV8String(isolate, "intercept_state"), result->Get(NewV8String(isolate, "action")));
     obj->Set(NewV8String(isolate, "plugin_message"), result->Get(NewV8String(isolate, "message")));
-    obj->Set(NewV8String(isolate, "plugin_confidence"), NewV8String(isolate, "confidence"));
-    obj->Set(NewV8String(isolate, "plugin_algorithm"), NewV8String(isolate, "algorithm"));
-    obj->Set(NewV8String(isolate, "plugin_name"), NewV8String(isolate, "name"));
+    obj->Set(NewV8String(isolate, "plugin_confidence"), result->Get(NewV8String(isolate, "confidence")));
+    obj->Set(NewV8String(isolate, "plugin_algorithm"), result->Get(NewV8String(isolate, "algorithm")));
+    obj->Set(NewV8String(isolate, "plugin_name"), result->Get(NewV8String(isolate, "name")));
     obj->Set(NewV8String(isolate, "stack_trace"), stack_trace);
     obj->Set(NewV8String(isolate, "event_time"), event_time);
     {
