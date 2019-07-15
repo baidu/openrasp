@@ -153,7 +153,7 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public String getParameter(String key) {
-        if (!(ApplicationModel.getServerName().equals("undertow") || canGetParameter)) {
+        if (!canGetParameter) {
             if (!setCharacterEncodingFromConfig()) {
                 return null;
             }
@@ -168,8 +168,7 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Enumeration<String> getParameterNames() {
-
-        if (!(ApplicationModel.getServerName().equals("undertow") || canGetParameter)) {
+        if (!canGetParameter) {
             if (!setCharacterEncodingFromConfig()) {
                 return null;
             }
@@ -185,13 +184,9 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public Map<String, String[]> getParameterMap() {
-        Map<String, String[]> normalMap = new HashMap<String, String[]>();
-        if (ApplicationModel.getServerName().equals("undertow") || canGetParameter) {
+        Map<String, String[]> normalMap = null;
+        if (canGetParameter || setCharacterEncodingFromConfig()) {
             normalMap = (Map<String, String[]>) Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
-        } else {
-            if (!setCharacterEncodingFromConfig()) {
-                normalMap = null;
-            }
         }
         return getMergeMap(normalMap, fileUploadCache);
     }
@@ -292,6 +287,9 @@ public final class HttpServletRequest extends AbstractRequest {
     }
 
     private Map<String, String[]> getMergeMap(Map<String, String[]> map1, Map<String, String[]> map2) {
+        if (map1 == null && map2 == null) {
+            return null;
+        }
         Map<String, String[]> result = new HashMap<String, String[]>();
         if (map1 != null && !map1.isEmpty()) {
             mergeMap(map1, result);

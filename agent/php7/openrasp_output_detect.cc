@@ -122,15 +122,7 @@ static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionT
         {
             if (++count > OPENRASP_CONFIG(xss.max_detection_num))
             {
-                zval attack_params;
-                array_init(&attack_params);
-                add_assoc_string(&attack_params, "type", "");
-                add_assoc_string(&attack_params, "name", "");
-                add_assoc_string(&attack_params, "value", "");
-                zval plugin_message;
-                 ZVAL_STR(&plugin_message, strpprintf(0, _("Reflected XSS attack detected: more than %ld html tags detected in userinput"), OPENRASP_CONFIG(xss.max_detection_num)));
-                openrasp_buildin_php_risk_handle(action, XSS_USER_INPUT, 100, &attack_params, &plugin_message);
-                return SUCCESS;
+                continue;
             }
             if (NULL != strstr(param, Z_STRVAL_P(val)))
             {

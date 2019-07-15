@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
+	"time"
 )
 
 type ReportController struct {
@@ -49,6 +50,10 @@ func (o *ReportController) Search() {
 		o.ServeError(http.StatusBadRequest, "end_time cannot be empty")
 	}
 	endTime, ok := endTimeParam.(float64)
+	duration := time.Duration(endTime-startTime) * time.Millisecond
+	if duration > 366*24*time.Hour {
+		o.ServeError(http.StatusBadRequest, "time duration can not be greater than 366 days")
+	}
 	if !ok {
 		o.ServeError(http.StatusBadRequest, "end_time must be number")
 	}
@@ -71,6 +76,12 @@ func (o *ReportController) Search() {
 	if !ok {
 		o.ServeError(http.StatusBadRequest, "time_zone must be string")
 	}
+	if timeZone == "" {
+		o.ServeError(http.StatusBadRequest, "time_zone cannot be empty")
+	}
+	if len(timeZone) > 32 {
+		o.ServeError(http.StatusBadRequest, "the length of time_zone cannot be greater than 32")
+	}
 	isValidInterval := false
 	for index := range intervals {
 		if interval == intervals[index] {
@@ -78,7 +89,7 @@ func (o *ReportController) Search() {
 		}
 	}
 	if !isValidInterval {
-		o.ServeError(http.StatusBadRequest, "the interval must be in"+fmt.Sprintf("%v", intervals))
+		o.ServeError(http.StatusBadRequest, "the interval must be in "+fmt.Sprintf("%v", intervals))
 	}
 	appIdParam := query["app_id"]
 	appId := "*"

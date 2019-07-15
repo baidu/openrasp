@@ -103,6 +103,15 @@
                 >
                   [帮助文档]
                 </a>
+
+                <a
+                  style="color: #B22222"
+                  v-if="hasAdvancedConfig[item.key]"
+                  href="javascript:"
+                  @click="showAdvancedConfig(item.key, data[item.key])"
+                >
+                  [高级选项]
+                </a>
               </p>
             </form>
 
@@ -122,7 +131,7 @@
       </div>
       <div
         v-if="current_app.selected_plugin_id && current_app.selected_plugin_id.length"
-        class="card-footer"
+        v-bind:class="{'card-footer': true, 'sticky-card-footer': sticky}"
       >
         <button
           type="submit"
@@ -141,6 +150,8 @@
       </div>
     </div>
     <!-- end algorithm settings -->
+
+    <AlgorithmConfigModal ref="algorithmConfigModal" @save="applyAdvancedConfig"></AlgorithmConfigModal>
   </div>
 </template>
 
@@ -151,6 +162,7 @@ import {
   browser_headers
 } from '../../../util'
 import { mapGetters, mapActions, mapMutations } from "vuex";
+import AlgorithmConfigModal from "@/components/modals/algorithmConfig"
 
 export default {
   name: 'AlgorithmSettings',
@@ -160,11 +172,20 @@ export default {
       data: {
         meta: {}
       },
+      hasAdvancedConfig: {
+        'command_common': true,
+        'sql_userinput': true,
+        'sql_policy': true,
+        'sql_regex': true
+      },
       browser_headers: browser_headers
     }
   },
+  components: {
+    AlgorithmConfigModal
+  },
   computed: {
-    ...mapGetters(['current_app'])
+    ...mapGetters(['current_app', 'sticky'])
   },
   watch: {
     current_app() {
@@ -175,12 +196,25 @@ export default {
     if (!this.current_app.id) {
       return
     }
-    this.loadConfig()
+    this.loadConfig()    
   },
   methods: {
     ...mapActions(["loadAppList"]),
     ...mapMutations(["setCurrentApp"]),
     attack_type2name: attack_type2name,
+    showAdvancedConfig: function(key, value) {
+      this.$refs.algorithmConfigModal.showModal(key, value)
+    },
+    applyAdvancedConfig: function(data) {
+      if (! data) {
+        return
+      }
+
+      var key  = data.key
+      var data = data.data
+
+      this.data[key] = data
+    },
     loadConfig: function() {
       if (!this.current_app.selected_plugin_id.length) {
         return
@@ -236,7 +270,7 @@ export default {
 
       this.api_request('v1/api/plugin/algorithm/config', body, function(data) {
         self.loadAppList(self.current_app.id);
-        alert('保存成功')
+        alert('保存成功，请等待一个心跳周期生效（3分钟以内）')
       })
     },
     resetConfig: function() {

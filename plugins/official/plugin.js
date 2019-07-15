@@ -1,5 +1,6 @@
-const plugin_version = '2019-0606-1800'
+const plugin_version = '2019-0708-1800'
 const plugin_name    = 'official'
+const plugin_desc    = '官方插件'
 
 /*
  * Copyright 2017-2019 Baidu Inc.
@@ -88,7 +89,7 @@ var algorithmConfig = {
             function_blacklist: true,
 
             // 敏感函数频次， 具体列表见下方，select chr(123)||chr(123)||chr(123)=chr(123)||chr(123)||chr(123)
-            function_count:     true,
+            function_count:     false,
 
             // 拦截 union select NULL,NULL 或者 union select 1,2,3,4
             union_null:         true,
@@ -129,9 +130,15 @@ var algorithmConfig = {
     },
 
     sql_exception: {
-        name:      '算法3 - 检测SQL语句异常',
+        name:      '算法3 - 记录数据库异常',
         action:    'log',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#sql-exception'
+    },
+
+    sql_regex: {
+        name:      '算法4 - 正则表达式算法',
+        action:    'ignore',
+        regex:     'union.*select.*from.*information_schema'
     },
 
     // SSRF - 来自用户输入，且为内网地址就拦截
@@ -153,11 +160,12 @@ var algorithmConfig = {
             '.vcap.me',
             '.xip.name',
             '.xip.io',
-            'sslip.io',
+            '.sslip.io',
             '.nip.io',
             '.burpcollaborator.net',
             '.tu4.org',
-            '.2xss.cc'
+            '.2xss.cc',
+            '.bxss.me'
         ]
     },
     // SSRF - 是否允许访问混淆后的IP地址
@@ -215,7 +223,7 @@ var algorithmConfig = {
     // 任意文件下载防护 - 读取敏感文件，最后一道防线
     readFile_unwanted: {
         name:   '算法5 - 文件探针算法',
-        action: 'block'
+        action: 'log'
     },
 
     // 写文件操作 - NTFS 流
@@ -248,8 +256,8 @@ var algorithmConfig = {
 
     // 文件管理器 - 用户输入匹配，仅当直接读取绝对路径时才检测
     directory_userinput: {
-        name:   '算法1 - 用户输入匹配算法',
-        action: 'block',
+        name:       '算法1 - 用户输入匹配算法',
+        action:     'block',
         lcs_search: false
     },
     // 文件管理器 - 反射方式列目录
@@ -260,13 +268,13 @@ var algorithmConfig = {
     // 文件管理器 - 查看敏感目录
     directory_unwanted: {
         name:   '算法3 - 尝试查看敏感目录',
-        action: 'block'
+        action: 'log'
     },
 
     // 文件包含 - 用户输入匹配
     include_userinput: {
-        name:   '算法1 - 用户输入匹配算法',
-        action: 'block',
+        name:       '算法1 - 用户输入匹配算法',
+        action:     'block',
         lcs_search: false
     },
     // 文件包含 - 特殊协议
@@ -339,22 +347,22 @@ var algorithmConfig = {
 
     // 文件上传 - COPY/MOVE 方式，仅适合 tomcat
     fileUpload_webdav: {
-        name:   '算法1 - MOVE 方式文件上传脚本文件',
+        name:   '算法1 - MOVE 方式上传脚本文件',
         action: 'block'
     },
     // 文件上传 - Multipart 方式上传脚本文件
     fileUpload_multipart_script: {
-        name:   '算法2 - Multipart 方式文件上传 PHP/JSP 等脚本文件',
+        name:   '算法2 - Multipart 方式上传 PHP/JSP 等脚本文件',
         action: 'block'
     },
     // 文件上传 - Multipart 方式上传 HTML/JS 等文件
     fileUpload_multipart_html: {
-        name:   '算法3 - Multipart 方式文件上传 HTML/JS 等文件',
+        name:   '算法3 - Multipart 方式上传 HTML/JS 等文件',
         action: 'ignore'
     },
     // 文件上传 - Multipart 方式上传 DLL/EXE 等文件
     fileUpload_multipart_exe: {
-        name:   '算法3 - Multipart 方式文件上传 DLL/EXE 等文件',
+        name:   '算法3 - Multipart 方式上传 DLL/EXE 等文件',
         action: 'ignore'
     },    
 
@@ -518,13 +526,13 @@ var ntfsRegex       = /::\$(DATA|INDEX)$/i
 var commaNumRegex   = /^[0-9, ]+$/
 
 // SQL注入算法1 - 预过滤正则
-var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter)
+var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter, 'i')
 
 // SQL注入算法2 - 预过滤正则
-var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter)
+var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter, 'i')
 
 // 命令执行探针 - 常用渗透命令
-var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern)
+var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern, 'i')
 
 if (! RASP.is_unittest)
 {
@@ -558,6 +566,22 @@ if (! RASP.is_unittest)
         algorithmConfig.xss_echo.filter_regex = ""
     }
 }
+
+// 校验 sql_regex 正则是否合法
+if (algorithmConfig.sql_regex.action != 'ignore') {
+    if (! algorithmConfig.sql_regex.regex.trim()) {
+        plugin.log ("algorithmConfig.sql_regex.regex is empty, algorithm disabled")
+        algorithmConfig.sql_regex.action = 'ignore'
+    } else {
+        try {
+            new RegExp(algorithmConfig.sql_regex)
+        } catch (e) {
+            plugin.log ("Invalid regex in algorithmConfig.sql_regex.regex: ", e)
+            algorithmConfig.sql_regex.action = 'ignore'
+        } 
+    }
+}
+
 
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue) {
@@ -837,7 +861,7 @@ function is_from_userinput(parameter, target)
     return verdict
 }
 
-// 检查SQL逻辑是否被用户参数所修改
+// 检查逻辑是否被用户参数所修改
 function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance) 
 {
     // 当用户输入穿越了多个token，就可以判定为代码注入，默认为2
@@ -1005,7 +1029,12 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                         raw_tokens = RASP.sql_tokenize(params.query, params.server)
                     }
 
-                    if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
+                    //distance用来屏蔽identifier token解析误报 `dbname`.`table`，请在1.2版本后删除
+                    var distance = 3
+                    if (value.length > 20) {
+                        distance = 2
+                    }
+                    if (is_token_changed(raw_tokens, userinput_idx, value.length, distance)) {
                         reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                         return true
                     }
@@ -1171,22 +1200,47 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 {
                     // `information_schema`.tables
                     // information_schema  .tables
-                    var part1 = tokens_lc[i + 1].replaceAll('`', '')
-                    var part2 = tokens_lc[i + 3].replaceAll('`', '')
-                    if (part1 == 'information_schema' && part2 == 'tables' )
+                    var part = tokens_lc[i + 1].replaceAll('`', '')
+                    // 正常的antlr和flex返回1个token
+                    if (part == 'information_schema.tables')
                     {
                         reason = _("SQLi - Detected access to MySQL information_schema.tables table")
                         break
                     }
+                    // flex在1.1.2以前会产生3个token
+                    else if (part == 'information_schema' && i < tokens_lc.length - 3)
+                    {
+                        var part2 = tokens_lc[i + 3].replaceAll('`', '')
+                        if (part2 == "tables")
+                        {
+                            reason = _("SQLi - Detected access to MySQL information_schema.tables table")
+                            break
+                        }
+                    }
                 }
             }
 
-            if (reason !== false) {
+            if (reason !== false) 
+            {
                 return {
                     action:     algorithmConfig.sql_policy.action,
                     message:    reason,
                     confidence: 100,
                     algorithm:  'sql_policy'
+                }
+            }
+        }
+
+        // 算法4: SQL正则表达式
+        if (algorithmConfig.sql_regex.action != 'ignore') {
+            var regex_filter = new RegExp(algorithmConfig.sql_regex.regex, 'i')
+            
+            if (regex_filter.test(params.query)) {
+                return {
+                    action:     algorithmConfig.sql_regex.action,
+                    confidence: 60,
+                    message:    reason,
+                    algorithm:  'sql_regex'
                 }
             }
         }
@@ -1377,10 +1431,13 @@ plugin.register('readFile', function (params, context) {
     var parameter = context.parameter
     var is_win    = server.os.indexOf('Windows') != -1
 
-    // weblogic 下面，所有war包读取操作全部忽略
-    if (server['server'] === 'weblogic' && params.realpath.endsWith('.war'))
+    // weblogic/tongweb 下面，所有war包读取操作全部忽略
+    if (server['server'] === 'weblogic' || server['server'] == 'tongweb')
     {
-        return clean
+        if (params.realpath.endsWith('.war'))
+        {
+            return clean;
+        }
     }
 
     //
@@ -1707,6 +1764,7 @@ plugin.register('command', function (params, context) {
                 'freemarker.template.utility.Execute.exec':                                     _("Reflected command execution - Using FreeMarker template"),
                 'org.jboss.el.util.ReflectionUtil.invokeMethod':                                _("Reflected command execution - Using JBoss EL method"),
                 'com.sun.jndi.rmi.registry.RegistryContext.lookup':                             _("Reflected command execution - Using JNDI registry service"),
+                'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                _("Reflected command execution - Using BeHinder defineClass webshell"),
             }
 
             for (var i = 2; i < params.stack.length; i ++) {

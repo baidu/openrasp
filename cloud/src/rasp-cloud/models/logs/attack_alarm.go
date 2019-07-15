@@ -34,9 +34,8 @@ var (
 		EsType:       "attack-alarm",
 		EsIndex:      "openrasp-attack-alarm",
 		EsAliasIndex: "real-openrasp-attack-alarm",
-		TtlTime:      24 * 365 * time.Hour,
 		AlarmBuffer:  make(chan map[string]interface{}, conf.AppConfig.AlarmBufferSize),
-		FileLogger:   initAlarmFileLogger("/openrasp-logs/attack-alarm", "attack.log"),
+		FileLogger:   initAlarmFileLogger("openrasp-logs/attack-alarm", "attack.log"),
 	}
 	geoIpDbPath string
 	geoIpDb     *geoip2.Reader
@@ -74,7 +73,7 @@ var (
 func init() {
 	var err error
 	registerAlarmInfo(&AttackAlarmInfo)
-	geoIpDbPath = tools.GetCurrentPathWithPanic() + "/geoip/GeoLite2-City.mmdb"
+	geoIpDbPath = "geoip/GeoLite2-City.mmdb"
 	geoIpDb, err = geoip2.Open(geoIpDbPath)
 	if err != nil {
 		tools.Panic(tools.ErrCodeGeoipInit, "failed to open geoip database", err)

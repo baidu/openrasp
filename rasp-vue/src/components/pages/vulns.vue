@@ -61,7 +61,7 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model="url" type="text" class="form-control w-10" placeholder="目标URL" @keyup.enter="loadEvents(1)">
+            <input v-model.trim="url" type="text" class="form-control w-10" placeholder="目标URL" @keyup.enter="loadEvents(1)">
           </div>
           <button class="btn btn-primary ml-2" @click="loadEvents(1)">
             搜索
@@ -89,7 +89,7 @@
                 <th>
                   最后发现
                 </th>
-                <th>
+                <th style="min-width: 150px; ">
                   URL
                 </th>
                 <th>
@@ -116,7 +116,7 @@
                   <br>
                   {{ moment(row.event_time).format('HH:mm:ss') }}
                 </td>
-                <td style="max-width: 500px; ">
+                <td style="max-width: 500px; word-break: break-word; ">
                   <a :href="row.url" target="_blank">
                     {{ displayURL(row) }}
                   </a>

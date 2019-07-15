@@ -1,7 +1,7 @@
 import axios from 'axios'
 import Cookie from 'js-cookie'
 
-export var rasp_version = '1.1'
+export var rasp_version = '1.1.2'
 
 // 起始 type_id: 1001
 export var audit_types = {

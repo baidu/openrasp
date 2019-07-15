@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.zip.GZIPInputStream;
 
 /**
  * @description: 云控http请求
@@ -63,7 +64,7 @@ public class CloudHttp implements Request {
         }
     }
 
-    public GenericResponse request(String url, String content) throws Exception{
+    public GenericResponse request(String url, String content) throws Exception {
         DataOutputStream out = null;
         InputStream in = null;
         String jsonString = null;
@@ -77,6 +78,7 @@ public class CloudHttp implements Request {
             httpUrlConnection.setRequestProperty("X-OpenRASP-AppID", appId);
             String appSecret = Config.getConfig().getCloudAppSecret();
             httpUrlConnection.setRequestProperty("X-OpenRASP-AppSecret", appSecret);
+            httpUrlConnection.setRequestProperty("Accept-Encoding", "gzip");
             httpUrlConnection.setConnectTimeout(DEFAULT_CONNECTION_TIMEOUT);
             httpUrlConnection.setReadTimeout(DEFAULT_READ_TIMEOUT);
             httpUrlConnection.setRequestMethod("POST");
@@ -89,6 +91,10 @@ public class CloudHttp implements Request {
             httpUrlConnection.connect();
             responseCode = httpUrlConnection.getResponseCode();
             in = httpUrlConnection.getInputStream();
+            String encoding = httpUrlConnection.getContentEncoding();
+            if (encoding != null && encoding.contains("gzip")) {
+                in = new GZIPInputStream(httpUrlConnection.getInputStream());
+            }
             jsonString = CloudUtils.convertInputStreamToJsonString(in);
         } finally {
             if (out != null) {

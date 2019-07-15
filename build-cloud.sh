@@ -34,12 +34,17 @@ function repack()
     mkdir tmp
     tar xf "$tar" -C tmp
 
+    # 仅在 Linux 编译环境下 strip 二进制包
+    if [[ $(uname -s) == "Linux" ]] && file tmp/rasp-cloud | grep -q 'ELF 64-bit'; then
+        strip -s tmp/rasp-cloud
+    fi
+
     # 安装默认插件
     mkdir tmp/resources
     rm -rf tmp/dist
 
-    cp "$git_root"/plugins/official/plugin.js tmp/resources
-    mv "$git_root"/rasp-vue/dist tmp
+    cp -R "$git_root"/plugins/official/plugin.js tmp/resources
+    cp -R "$git_root"/rasp-vue/dist tmp
 
     mv tmp "$name"
     tar --numeric-owner --owner=0 --group=0 -czf "$output" "$name"
@@ -62,16 +67,23 @@ function build_cloud()
     cd src/rasp-cloud
 
     commit=$(git rev-parse HEAD 2>/dev/null)
+    build_time=$(date "+%Y-%m-%d %H:%M:%S" 2>/dev/null)
     if [[ $? -eq 0 ]]; then
-        cat > tools/git.go << EOF
+        cat > tools/info.go << EOF
 package tools
+
 var CommitID = "${commit}"
+var BuildTime = "${build_time}"
 EOF
     fi
 
-    bee pack -exr=vendor
-
+    # linux
+    GOOS=linux bee pack -exr=vendor
     repack rasp-cloud.tar.gz rasp-cloud-$(date +%Y-%m-%d) ../../../rasp-cloud.tar.gz
+
+    # mac
+    GOOS=darwin bee pack -exr=vendor
+    repack rasp-cloud.tar.gz rasp-cloud-$(date +%Y-%m-%d) ../../../rasp-cloud-mac.tar.gz
 }
 
 function build_vue()

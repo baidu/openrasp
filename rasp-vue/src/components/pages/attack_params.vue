@@ -9,9 +9,15 @@
             </p>
             <div class="h6">
                 执行的SQL语句
+                <!--
+                <a href="javascript:" style="color: #467fcf"
+                    v-clipboard:copy="data.attack_params.query"
+                    v-clipboard:success="onCopySucc"
+                    v-clipboard:error="onCopyError">[复制]</a> 
+                -->
             </div>
             <p>
-                {{ data.attack_params.query }}
+                {{ data.attack_params.query.length > 10000 ? data.attack_params.query + ' ...' : data.attack_params.query }}                
             </p>
         </div>
 
@@ -22,12 +28,22 @@
             <p>
                 {{ data.attack_params.server }}
             </p>            
-            <div class="h6">
-                执行的SQL语句
+            <div v-if="data.attack_params.query">
+                <div class="h6">
+                    执行的SQL语句 
+
+                    <!--
+                    <a href="javascript:" 
+                        style="color: #467fcf" 
+                        v-clipboard:copy="data.attack_params.query"
+                        v-clipboard:success="onCopySucc"
+                        v-clipboard:error="onCopyError">复制</a>
+                    -->
+                </div>
+                <p>
+                    {{ data.attack_params.query.length > 10000 ? data.attack_params.query + ' ...' : data.attack_params.query }}
+                </p>
             </div>
-            <p>
-                {{ data.attack_params.query }}
-            </p>
             <!--
             <div class="h6">
                 错误信息
@@ -271,6 +287,7 @@ export default {
     data: function () {
         return {
             data: {
+                message: 'wtf',
                 attack_params: {}
             }
         }
@@ -278,6 +295,12 @@ export default {
     methods: {
         setData: function (data) {
             this.data = data
+        },
+        onCopySucc: function(e) {
+            console.log('succ')
+        },
+        onCopyError: function(e) {
+            console.log('fail', e)
         }
     }
 }

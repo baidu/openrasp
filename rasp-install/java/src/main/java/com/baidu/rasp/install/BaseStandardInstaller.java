@@ -196,7 +196,7 @@ public abstract class BaseStandardInstaller implements Installer {
             // System.out.println(res);
         } else {
             if (System.getProperty("user.name").equals("root")) {
-                runCommand(new String[]{"chmod", "-R", "o+w", folderPath});
+                runCommand(new String[]{"chmod", "-R", "go+w", folderPath});
             }
         }
     }

@@ -27,6 +27,7 @@ import (
 	"rasp-cloud/tools"
 	"time"
 	"rasp-cloud/conf"
+	"strings"
 )
 
 type AggrTimeParam struct {
@@ -57,7 +58,10 @@ type SearchAttackParam struct {
 		AttackSource   string    `json:"attack_source,omitempty"`
 		AttackUrl      string    `json:"url,omitempty"`
 		LocalIp        string    `json:"local_ip,omitempty"`
+		ClientIp       string    `json:"client_ip,omitempty"`
 		StackMd5       string    `json:"stack_md5,omitempty"`
+		RequestId      string    `json:"request_id,omitempty"`
+		PluginMessage  string    `json:"plugin_message,omitempty"`
 		AttackType     *[]string `json:"attack_type,omitempty"`
 		InterceptState *[]string `json:"intercept_state,omitempty"`
 	} `json:"data"`
@@ -74,6 +78,7 @@ type SearchPolicyParam struct {
 		RaspId    string    `json:"rasp_id,omitempty"`
 		HostName  string    `json:"server_hostname,omitempty"`
 		LocalIp   string    `json:"local_ip,omitempty"`
+		Message   string    `json:"message,omitempty"`
 		PolicyId  *[]string `json:"policy_id,omitempty"`
 	} `json:"data"`
 }
@@ -89,6 +94,7 @@ type SearchErrorParam struct {
 		RaspId    string `json:"rasp_id,omitempty"`
 		HostName  string `json:"server_hostname,omitempty"`
 		LocalIp   string `json:"local_ip,omitempty"`
+		Message   string `json:"message,omitempty"`
 	} `json:"data"`
 }
 
@@ -96,7 +102,6 @@ type AlarmLogInfo struct {
 	EsType       string
 	EsIndex      string
 	EsAliasIndex string
-	TtlTime      time.Duration
 	FileLogger   *logs.BeeLogger
 	AlarmBuffer  chan map[string]interface{}
 }
@@ -119,11 +124,10 @@ func init() {
 
 func registerAlarmInfo(info *AlarmLogInfo) {
 	alarmInfos[info.EsType] = info
-	es.RegisterTTL(info.TtlTime, info.EsAliasIndex+"-*")
+	es.RegisterTTL(24*time.Duration(conf.AppConfig.EsTTL)*time.Hour, info.EsAliasIndex+"-*")
 }
 
 func initAlarmFileLogger(dirName string, fileName string) *logs.BeeLogger {
-	dirName = tools.GetCurrentPathWithPanic() + dirName
 	if isExists, _ := tools.PathExists(dirName); !isExists {
 		err := os.MkdirAll(dirName, os.ModePerm)
 		if err != nil {
@@ -265,17 +269,17 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 			} else if key == "local_ip" {
 				filterQueries = append(filterQueries,
 					elastic.NewNestedQuery("server_nic", elastic.NewTermQuery("server_nic.ip", value)))
-			} else if key == "attack_source" {
-				filterQueries = append(filterQueries, elastic.NewWildcardQuery(key, "*"+fmt.Sprint(value)+"*"))
+			} else if key == "attack_source" || key == "url" ||
+				key == "message" || key == "plugin_message" || key == "client_ip" {
+				realValue := strings.TrimSpace(fmt.Sprint(value))
+				filterQueries = append(filterQueries, elastic.NewWildcardQuery(key, "*"+realValue+"*"))
 			} else if key == "server_hostname" {
+				realValue := strings.TrimSpace(fmt.Sprint(value))
 				shouldQueries = append(shouldQueries,
-					elastic.NewWildcardQuery("server_hostname", "*"+fmt.Sprint(value)+"*"))
+					elastic.NewWildcardQuery("server_hostname", "*"+realValue+"*"))
 				shouldQueries = append(shouldQueries,
 					elastic.NewNestedQuery("server_nic",
-						elastic.NewWildcardQuery("server_nic.ip", "*"+fmt.Sprint(value)+"*")))
-			} else if key == "url" {
-				filterQueries = append(filterQueries,
-					elastic.NewWildcardQuery("url", "*"+fmt.Sprint(value)+"*"))
+						elastic.NewWildcardQuery("server_nic.ip", "*"+realValue+"*")))
 			} else {
 				filterQueries = append(filterQueries, elastic.NewTermQuery(key, value))
 			}

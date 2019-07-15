@@ -34,7 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by zhuming01 on 5/16/17.
@@ -46,7 +46,7 @@ public class HookHandler {
     public static final String OPEN_RASP_HEADER_KEY = "X-Protected-By";
     public static final String OPEN_RASP_HEADER_VALUE = "OpenRASP";
     public static final String REQUEST_ID_HEADER_KEY = "X-Request-ID";
-    public static AtomicInteger TOTAL_REQUEST_NUM = new AtomicInteger(0);
+    public static AtomicLong requestSum = new AtomicLong(0);
     public static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
     // 全局开关
     public static AtomicBoolean enableHook = new AtomicBoolean(false);
@@ -85,6 +85,14 @@ public class HookHandler {
             return true;
         }
     };
+
+    public static ThreadLocal<Boolean> enableCmdHook = new ThreadLocal<Boolean>() {
+        @Override
+        protected Boolean initialValue() {
+            return true;
+        }
+    };
+
     private static final Map<String, Object> EMPTY_MAP = new HashMap<String, Object>();
 
     /**
@@ -224,7 +232,7 @@ public class HookHandler {
      * @param response 响应实体
      */
     public static void checkFilterRequest(Object filter, Object request, Object response) {
-        TOTAL_REQUEST_NUM.incrementAndGet();
+        requestSum.incrementAndGet();
         checkRequest(filter, request, response);
     }
 

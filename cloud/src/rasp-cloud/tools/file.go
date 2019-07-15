@@ -22,14 +22,6 @@ import (
 	"errors"
 )
 
-func GetCurrentPathWithPanic() string {
-	currentPath, err := GetCurrentPath()
-	if err != nil {
-		Panic(ErrCodeLogInitFailed, "failed to get current path", err)
-	}
-	return currentPath
-}
-
 func GetCurrentPath() (string, error) {
 	file, err := exec.LookPath(os.Args[0])
 	if err != nil {

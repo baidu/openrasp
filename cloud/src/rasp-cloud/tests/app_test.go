@@ -1196,7 +1196,7 @@ func TestGetPlugins(t *testing.T) {
 			So(r.Status, ShouldBeGreaterThan, 0)
 			monkey.Unpatch(models.GetAppById)
 
-			monkey.Patch(models.GetPluginsByApp, func(string, int, int) (int, []models.Plugin, error) {
+			monkey.Patch(models.GetPluginsByApp, func(string, int, int, string) (int, []models.Plugin, error) {
 				return 0, nil, errors.New("")
 			})
 			r = inits.GetResponse("POST", "/v1/api/app/plugin/get", inits.GetJson(map[string]interface{}{
