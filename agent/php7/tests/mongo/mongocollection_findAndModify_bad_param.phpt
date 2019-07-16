@@ -12,9 +12,6 @@ plugin.register('mongo', params => {
     return block
 })
 EOF;
-$conf = <<<CONF
-security.enforce_policy: true
-CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("mongo")) die("Skipped: mongo extension required.");
 ?>

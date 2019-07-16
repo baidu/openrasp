@@ -4,7 +4,6 @@ hook MongoClient::__construct options
 <?php
 if (PHP_MAJOR_VERSION >= 7) die('Skipped: no mongo extension in PHP7.');
 $conf = <<<CONF
-security.enforce_policy: true
 security.weak_passwords:
   - ""
   - "root"
