@@ -22,7 +22,6 @@ import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,7 +60,7 @@ public class SecurityPolicyInfo extends EventInfo {
         this.policy = policy;
         this.message = message;
         this.params = params;
-        setBlock(isBlock && Config.getConfig().getEnforcePolicy());
+        setBlock(false);
     }
 
     public SecurityPolicyInfo(Type policy, String message, boolean isBlock) {

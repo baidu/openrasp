@@ -109,12 +109,8 @@ public class SQLDriverManagerHook extends AbstractClassHook {
         if (connection == null) {
             return;
         }
-        if (!Config.getConfig().getEnforcePolicy()) {
-            Long lastAlarmTime = SqlConnectionChecker.alarmTimeCache.get(url);
-            if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
-                checkSqlConnection(url, properties);
-            }
-        } else {
+        Long lastAlarmTime = SqlConnectionChecker.alarmTimeCache.get(url);
+        if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
             checkSqlConnection(url, properties);
         }
     }
@@ -134,7 +130,7 @@ public class SQLDriverManagerHook extends AbstractClassHook {
      */
     public static void checkSqlConnection(String url, Properties properties) {
         //当服务器的cpu使用率超过90%，禁用全部hook点
-        if (Config.getConfig().getDisableHooks()){
+        if (Config.getConfig().getDisableHooks()) {
             return;
         }
         //当云控注册成功之前，不进入任何hoo点

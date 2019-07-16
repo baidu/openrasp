@@ -17,6 +17,7 @@
 package com.baidu.openrasp;
 
 import com.baidu.openrasp.cloud.CloudManager;
+import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
@@ -89,6 +90,8 @@ public class EngineBoot implements Module {
         //单机模式下动态添加获取删除syslog
         if (!CloudUtils.checkCloudControlEnter()) {
             LogConfig.syslogManager();
+        } else {
+            System.out.println("RASP ID: " + CloudCacheModel.getInstance().getRaspId());
         }
         return true;
     }

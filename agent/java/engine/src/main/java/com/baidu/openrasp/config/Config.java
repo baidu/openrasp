@@ -62,7 +62,6 @@ public class Config extends FileScanListener {
         LOG_MAX_BACKUP("log.maxbackup", "30"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
         SQL_CACHE_CAPACITY("lru.max_size", "1024"),
-        SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
         PLUGIN_FILTER("plugin.filter", "true"),
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
         SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
@@ -130,7 +129,6 @@ public class Config extends FileScanListener {
     private int bodyMaxBytes;
     private int sqlSlowQueryMinCount;
     private String[] ignoreHooks;
-    private boolean enforcePolicy;
     private String[] reflectionMonitorMethod;
     private int logMaxStackSize;
     private String blockUrl;
@@ -617,26 +615,6 @@ public class Config extends FileScanListener {
         if (this.ognlMinLength <= 0) {
             this.ognlMinLength = 30;
         }
-    }
-
-    /**
-     * 是否开启强制安全规范
-     * 如果开启检测有安全风险的情况下将会禁止服务器启动
-     * 如果关闭当有安全风险的情况下通过日志警告
-     *
-     * @return true开启，false关闭
-     */
-    public boolean getEnforcePolicy() {
-        return enforcePolicy;
-    }
-
-    /**
-     * 配置是否开启强制安全规范
-     *
-     * @return true开启，false关闭
-     */
-    public synchronized void setEnforcePolicy(String enforcePolicy) {
-        this.enforcePolicy = Boolean.parseBoolean(enforcePolicy);
     }
 
     /**
@@ -1236,9 +1214,6 @@ public class Config extends FileScanListener {
             } else if (Item.REFLECTION_MAX_STACK.key.equals(key)) {
                 setPluginMaxStack(value);
                 currentValue = getPluginMaxStack();
-            } else if (Item.SECURITY_ENFORCE_POLICY.key.equals((key))) {
-                setEnforcePolicy(value);
-                currentValue = getEnforcePolicy();
             } else if (Item.SQL_SLOW_QUERY_MIN_ROWS.key.equals(key)) {
                 setSqlSlowQueryMinCount(value);
                 currentValue = getSqlSlowQueryMinCount();
