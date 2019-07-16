@@ -4,7 +4,6 @@ hook MongoDB\Driver\Manager::__construct options
 <?php
 if (PHP_VERSION_ID < 50500) die('Skipped: not supported (version < 5.5.0)');
 $conf = <<<CONF
-security.enforce_policy: true
 security.weak_passwords:
   - ""
   - "root"

@@ -4,7 +4,6 @@ hook MongoClient::__construct replica set
 <?php
 if (PHP_MAJOR_VERSION >= 7) die('Skipped: no mongo extension in PHP7.');
 $conf = <<<CONF
-security.enforce_policy: true
 security.weak_passwords:
   - ""
   - "root"
@@ -25,7 +24,9 @@ if (!extension_loaded("mongo")) die("Skipped: mongo extension required.");
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
+include(__DIR__.'/../timezone.inc');
 $m = new MongoClient("mongodb://localhost:27018,localhost:27019");
+passthru('tail -n 1 /tmp/openrasp/logs/policy/policy.log.'.date("Y-m-d"));
 ?>
 --EXPECTREGEX--
-<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>
+.*weak password detected.*

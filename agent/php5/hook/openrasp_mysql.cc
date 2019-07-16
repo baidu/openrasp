@@ -114,7 +114,7 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
             }
             else
             {
-                sql_connection_p->append_host_port(host, port);
+                sql_connection_p->append_host_port(host_str, port);
             }
         }
         else
@@ -122,7 +122,6 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
             socket = tmp;
             using_socket = true;
         }
-        sql_connection_p->set_host(host_str);
         using_socket = ("localhost" == host_str);
     }
     else
