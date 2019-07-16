@@ -59,7 +59,7 @@ public class EngineBoot implements Module {
         }
         CheckerManager.init();
         initTransformer(inst);
-        String message = "OpenRASP Engine Initialized [" + Agent.projectVersion + " (build: GitCommit="
+        String message = "[OpenRASP] Engine Initialized [" + Agent.projectVersion + " (build: GitCommit="
                 + Agent.gitCommit + " date=" + Agent.buildTime + ")]";
         System.out.println(message);
         Logger.getLogger(EngineBoot.class.getName()).info(message);
@@ -74,7 +74,7 @@ public class EngineBoot implements Module {
         }
         JS.Dispose();
         CheckerManager.release();
-        String message = "OpenRASP Engine Released [" + Agent.projectVersion + " (build: GitCommit="
+        String message = "[OpenRASP] Engine Released [" + Agent.projectVersion + " (build: GitCommit="
                 + Agent.gitCommit + " date=" + Agent.buildTime + ")]";
         System.out.println(message);
     }
