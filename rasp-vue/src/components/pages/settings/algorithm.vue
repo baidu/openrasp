@@ -12,8 +12,21 @@
           你还没有选择插件，请在「插件管理」中进行设置
         </p>
       </div>
-      <div class="card-body" v-else>        
-        <div class="form-group">
+      <div class="card-body" v-else>
+        <!-- IAST设置 -->
+        <div class="form-group" v-if="data.iast">
+          <label for="">Fuzz 服务器地址</label>
+          <input type="text" class="form-control" v-model="data.iast.fuzz_server">
+        </div>
+
+        <div class="form-group" v-if="data.iast">
+          <label for="">Fuzz 服务器连接超时（毫秒）</label>
+          <input type="number" class="form-control" v-model="data.iast.request_timeout">
+        </div>
+        <!-- 结束 IAST设置 -->
+
+        <!-- 快速设置 -->
+        <div class="form-group" v-if="data.meta">
           <div class="form-label">
             快速设置
           </div>
@@ -43,6 +56,8 @@
             </span>
           </label>
         </div>
+        <!-- 结束 快速设置 -->
+
         <div
           v-for="row in items"
           :key="row.name"
