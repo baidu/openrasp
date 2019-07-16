@@ -26,7 +26,7 @@ case "$(uname -s)" in
 esac
 
 # 编译 openrasp-v8
-git submodule update --init --recursive --depth=1
+git submodule update --init
 rm -rf openrasp-v8/build
 mkdir -p openrasp-v8/build
 cd openrasp-v8/build
