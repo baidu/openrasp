@@ -496,6 +496,7 @@ var forcefulBrowsing = {
 
     // 文件探针 - webshell 查看频次最高的文件
     absolutePaths: [
+	    '/etc/issue',
         '/etc/shadow',
         '/etc/passwd',
         '/etc/hosts',
@@ -508,10 +509,10 @@ var forcefulBrowsing = {
 }
 
 // 如果你配置了非常规的扩展名映射，比如让 .abc 当做PHP脚本执行，那你可能需要增加更多扩展名
-var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml)\.?$/i
+var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml|sh|py|pl|rb)\.?$/i
 
 // 正常文件
-var cleanFileRegex = /\.(jpg|jpeg|png|gif|bmp|txt|rar|zip)$/i
+var cleanFileRegex  = /\.(jpg|jpeg|png|gif|bmp|txt|rar|zip)$/i
 
 // 匹配 HTML/JS 等可以用于钓鱼、domain-fronting 的文件
 var htmlFileRegex   = /\.(htm|html|js)$/i
@@ -520,7 +521,7 @@ var htmlFileRegex   = /\.(htm|html|js)$/i
 var exeFileRegex    = /\.(exe|dll|scr|vbs|cmd|bat|jar)$/i
 
 // 其他的 stream 都没啥用
-var ntfsRegex       = /::\$(DATA|INDEX)$/i
+var ntfsRegex       = /::\$(DATA|INDEX)$/
 
 // 已知用户输入匹配算法误报: 传入 1,2,3,4 -> IN(1,2,3,4)
 var commaNumRegex   = /^[0-9, ]+$/
