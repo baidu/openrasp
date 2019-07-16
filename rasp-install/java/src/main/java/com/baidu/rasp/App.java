@@ -197,7 +197,7 @@ public class App {
         try {
             operateServer(args);
         } catch (Exception e) {
-            if (e instanceof RaspError) {
+            if (e instanceof RaspError || e instanceof UnrecognizedOptionException) {
                 System.out.println(e.getMessage());
             } else {
                 e.printStackTrace();
