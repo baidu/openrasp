@@ -1251,17 +1251,18 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
     })
 
     plugin.register('ssrf', function (params, context) {
-        var hostname = params.hostname
-        var url      = params.url
-        var ip       = params.ip
+        var parameter = context.parameter || {}
+        var hostname  = params.hostname
+        var url       = params.url
+        var ip        = params.ip
 
-        var reason   = false
-        var action   = 'ignore'
+        var reason    = false
+        var action    = 'ignore'
 
         // 算法1 - 当参数来自用户输入，且为内网IP，判定为SSRF攻击
         if (algorithmConfig.ssrf_userinput.action != 'ignore')
         {
-            if (is_from_userinput(context.parameter, url))
+            if (is_from_userinput(parameter, url))
             {
                 if (ip.length && /^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(ip[0]))
                 {
@@ -1374,7 +1375,7 @@ plugin.register('directory', function (params, context) {
     var realpath    = params.realpath
     var appBasePath = context.appBasePath
     var server      = context.server
-    var parameter   = context.parameter
+    var parameter   = context.parameter || {}
 
     var is_windows  = server.os.indexOf('Windows') != -1
     var language    = server.language
@@ -1429,7 +1430,7 @@ plugin.register('directory', function (params, context) {
 
 plugin.register('readFile', function (params, context) {
     var server    = context.server
-    var parameter = context.parameter
+    var parameter = context.parameter || {}
     var is_win    = server.os.indexOf('Windows') != -1
 
     // weblogic/tongweb 下面，所有war包读取操作全部忽略
@@ -1542,7 +1543,7 @@ plugin.register('readFile', function (params, context) {
 plugin.register('include', function (params, context) {
     var url       = params.url
     var server    = context.server
-    var parameter = context.parameter
+    var parameter = context.parameter || {}
     var is_win    = server.os.indexOf('Windows') != -1
     var realpath  = params.realpath
 
