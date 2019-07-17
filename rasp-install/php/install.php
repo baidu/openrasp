@@ -152,8 +152,6 @@ Options:
 
     --without-plugin        Do not install the official javascript plugin
 
-    --iast                  Enable iast 
-
     -h, --help              Show help messages
 
 HELP;
