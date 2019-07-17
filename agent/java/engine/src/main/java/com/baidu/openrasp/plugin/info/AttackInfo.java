@@ -149,6 +149,8 @@ public class AttackInfo extends EventInfo {
             //Java反编译开关打开时，启用
             if (Config.getConfig().getDecompileEnable() && checkTomcatVersion()) {
                 info.put("source_code", Decompiler.getAlarmPoint(trace));
+            } else {
+                info.put("source_code", "");
             }
         }
 
