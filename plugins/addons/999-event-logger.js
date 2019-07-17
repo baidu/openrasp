@@ -1,5 +1,6 @@
 const plugin_version = '2018-1000-1000'
 const plugin_name    = 'event-logger'
+const plugin_desc    = '事件记录器插件'
 
 //
 // OpenRASP plugin: event logger
