@@ -2013,7 +2013,7 @@ plugin.register('xxe', function (params, context) {
 if (algorithmConfig.eval_regex.action != 'ignore')
 {
 	// 算法1: 正则表达式
-    if (algorithmConfig.eval_regex.action != 'ignore') {
+    plugin.register('eval', function(params, context) {
         var regex_filter = new RegExp(algorithmConfig.eval_regex.regex, 'i')
             
         if (regex_filter.test(params.code)) {
@@ -2024,7 +2024,7 @@ if (algorithmConfig.eval_regex.action != 'ignore')
                 algorithm:  'eval_regex'
             }
         }
-    }
+    })
 }
 
 if (algorithmConfig.ognl_exec.action != 'ignore')
