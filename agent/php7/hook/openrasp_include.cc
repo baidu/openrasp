@@ -67,7 +67,7 @@ int eval_handler(zend_execute_data *execute_data)
     if (!openrasp_check_type_ignored(EVAL) && !param.empty())
     {
         openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-        bool is_block = false;
+        openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
         if (isolate)
         {
             v8::HandleScope handle_scope(isolate);
@@ -82,9 +82,9 @@ int eval_handler(zend_execute_data *execute_data)
             params->Set(openrasp::NewV8String(isolate, "stack"), stack);
             params->Set(openrasp::NewV8String(isolate, "code"), openrasp::NewV8String(isolate, param));
             params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "eval"));
-            is_block = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(EVAL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+            check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(EVAL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
-        if (is_block)
+        if (check_result == openrasp::CheckResult::kBlock)
         {
             handle_block();
         }
@@ -167,7 +167,7 @@ int include_handler(zend_execute_data *execute_data)
                 }
             }
             openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-            bool is_block = false;
+            openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
             if (send_to_plugin && isolate)
             {
                 v8::HandleScope handle_scope(isolate);
@@ -196,9 +196,9 @@ int include_handler(zend_execute_data *execute_data)
                     break;
                 }
                 params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, function));
-                is_block = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(INCLUDE)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+                check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(INCLUDE)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
-            if (is_block)
+            if (check_result == openrasp::CheckResult::kBlock)
             {
                 handle_block();
             }
