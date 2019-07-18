@@ -191,7 +191,8 @@ export default {
         'command_common': true,
         'sql_userinput': true,
         'sql_policy': true,
-        'sql_regex': true
+        'sql_regex': true,
+        'eval_regex': true
       },
       browser_headers: browser_headers
     }

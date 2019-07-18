@@ -35,6 +35,14 @@
             </div>            
           </div>
 
+          <div v-if="key == 'eval_regex'">
+            <label>EVAL 语句正则表达式</label>
+            <div v-bind:class="{'form-group': true, 'has-error': eval_regex_error}">
+              <input type="text" v-model.trim="data.regex" class="form-control">
+            </div>
+            <span class="text-danger" v-if="eval_regex_error">{{eval_regex_error }}</span>
+          </div>          
+
           <div v-if="key == 'sql_regex'">
             <label>SQL语句正则表达式</label>
             <div v-bind:class="{'form-group': true, 'has-error': sql_regex_error}">
@@ -77,6 +85,7 @@ export default {
       shouldSave: false,
       command_common_error: false,
       sql_regex_error: false,
+      eval_regex_error: false,
       sql_policy_keys: [
         {
           key:   'stacked_query',
