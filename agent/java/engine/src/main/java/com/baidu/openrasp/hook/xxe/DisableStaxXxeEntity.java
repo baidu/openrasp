@@ -36,7 +36,7 @@ import java.io.IOException;
 public class DisableStaxXxeEntity extends DisableXxeEntity {
     @Override
     public boolean isClassMatched(String className) {
-        return "com/sun/xml/internal/stream/XMLInputFactoryImpl".equals(className)||
+        return "com/sun/xml/internal/stream/XMLInputFactoryImpl".equals(className) ||
                 "com/ctc/wstx/stax/WstxInputFactory".equals(className);
     }
 
@@ -48,7 +48,7 @@ public class DisableStaxXxeEntity extends DisableXxeEntity {
     }
 
     public static void setFeature(Object factory) {
-        if (HookHandler.requestCache.get() != null) {
+        if (HookHandler.isEnableCurrThreadHook()) {
             String action = getAction();
             if (BLOCK_XXE_DISABLE_ENTITY.equals(action) && getStatus("java_stax")) {
                 try {

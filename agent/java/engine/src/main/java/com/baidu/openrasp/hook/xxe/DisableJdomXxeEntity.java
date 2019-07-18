@@ -47,7 +47,7 @@ public class DisableJdomXxeEntity extends DisableXxeEntity {
     }
 
     public static void setFeature(Object builder) {
-        if (HookHandler.requestCache.get() != null) {
+        if (HookHandler.isEnableCurrThreadHook()) {
             String action = getAction();
             if (BLOCK_XXE_DISABLE_ENTITY.equals(action) && getStatus("java_jdom")) {
                 try {

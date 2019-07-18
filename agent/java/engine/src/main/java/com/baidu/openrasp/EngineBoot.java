@@ -91,7 +91,7 @@ public class EngineBoot implements Module {
         if (!CloudUtils.checkCloudControlEnter()) {
             LogConfig.syslogManager();
         } else {
-            System.out.println("RASP ID: " + CloudCacheModel.getInstance().getRaspId());
+            System.out.println("[OpenRASP] RASP ID: " + CloudCacheModel.getInstance().getRaspId());
         }
         return true;
     }

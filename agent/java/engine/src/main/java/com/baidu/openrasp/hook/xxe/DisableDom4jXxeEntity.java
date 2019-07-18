@@ -46,7 +46,7 @@ public class DisableDom4jXxeEntity extends DisableXxeEntity {
     }
 
     public static void setFeature(Object reader) {
-        if (HookHandler.requestCache.get() != null) {
+        if (HookHandler.isEnableCurrThreadHook()) {
             String action = getAction();
             if (BLOCK_XXE_DISABLE_ENTITY.equals(action) && getStatus("java_dom4j")) {
                 try {
