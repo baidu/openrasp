@@ -195,8 +195,10 @@ void plugin_info(Isolate *isolate, const std::string &message)
 
 v8::Local<v8::Array> get_stack(Isolate *isolate)
 {
+    TSRMLS_FETCH();
+
     v8::EscapableHandleScope handle_scope(isolate);
-    auto arr = format_debug_backtrace_arr();
+    auto arr = format_debug_backtrace_arr(TSRMLS_C);
     size_t len = arr.size();
     auto stack = v8::Array::New(isolate, len);
     for (size_t i = 0; i < len; i++)
