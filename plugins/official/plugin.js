@@ -451,7 +451,7 @@ var algorithmConfig = {
 
     eval_regex: {
         name:   '算法1 - 正则表达式',
-        action: 'ignore',
+        action: 'log',
         regex:  'base64_decode|gzuncompress|create_function'
     },
 }
@@ -1927,7 +1927,7 @@ plugin.register('command', function (params, context) {
                 message:    _("Webshell detected - Executing potentially dangerous command, command is %1%", [cmd]),
                 confidence: 95,
                 algorithm:  'command_common'
-            }    
+            }
         }     
     }
 
@@ -2010,6 +2010,7 @@ plugin.register('xxe', function (params, context) {
     return clean
 })
 
+
 if (algorithmConfig.eval_regex.action != 'ignore')
 {
 	// 算法1: 正则表达式
@@ -2017,6 +2018,8 @@ if (algorithmConfig.eval_regex.action != 'ignore')
         var regex_filter = new RegExp(algorithmConfig.eval_regex.regex, 'i')
             
         if (regex_filter.test(params.code)) {
+
+        	// 避免 message 太长
         	var code = params.code.substr(0, 50)
         	if (params.code.length > 50)
         	{
@@ -2037,6 +2040,7 @@ if (algorithmConfig.ognl_exec.action != 'ignore')
 {
     // 默认情况下，当OGNL表达式长度超过30才会进入检测点，此长度可配置
     plugin.register('ognl', function (params, context) {
+
         // 常见 struts payload 语句特征
         var ognlPayloads = [
             'ognl.OgnlContext',
@@ -2075,6 +2079,7 @@ if (algorithmConfig.ognl_exec.action != 'ignore')
 }
 
 if (algorithmConfig.deserialization_transformer.action != 'ignore') {
+
     plugin.register('deserialization', function (params, context) {
         var deserializationInvalidClazz = [
             'org.apache.commons.collections.functors.ChainedTransformer.transform',
