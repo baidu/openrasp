@@ -17,8 +17,7 @@
 package com.baidu.openrasp.hook.xxe;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
@@ -53,10 +52,8 @@ public class DisableDomXxeEntity extends DisableXxeEntity {
                 try {
                     Reflection.invokeMethod(parser, "setFeature",
                             new Class[]{String.class, boolean.class}, FEATURE, true);
-                } catch (Exception e) {
-                    String message = "Dom close xxe entity failed";
-                    int errorCode = ErrorType.HOOK_ERROR.getCode();
-                    HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                } catch (Throwable t) {
+                    LogTool.traceHookWarn("Dom close xxe entity failed: " + t.getMessage(), t);
                 }
             }
         }

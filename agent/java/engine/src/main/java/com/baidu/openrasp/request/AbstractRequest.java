@@ -16,20 +16,15 @@
 
 package com.baidu.openrasp.request;
 
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.Reflection;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.CharArrayWriter;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Created by zhuming01 on 6/23/17.
@@ -368,9 +363,7 @@ public abstract class AbstractRequest {
                 return true;
             }
         } catch (Exception e) {
-            String message = "set character encoding failed";
-            int errorCode = ErrorType.RUNTIME_ERROR.getCode();
-            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.warn(ErrorType.RUNTIME_ERROR, "set character encoding failed: " + e.getMessage(), e);
         }
         return false;
     }

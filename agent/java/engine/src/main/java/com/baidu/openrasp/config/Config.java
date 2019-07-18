@@ -16,12 +16,13 @@
 
 package com.baidu.openrasp.config;
 
-import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.HookWhiteModel;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.exceptions.ConfigLoadException;
+import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogConfig;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.FileUtil;
 import com.baidu.openrasp.tool.LRUCache;
@@ -209,9 +210,7 @@ public class Config extends FileScanListener {
                 properties = yaml.loadAs(new FileInputStream(file), Map.class);
             }
         } catch (Exception e) {
-            String message = "openrasp.yml parsing failed";
-            int errorCode = ErrorType.CONFIG_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.warn(ErrorType.CONFIG_ERROR, "openrasp.yml parsing failed: " + e.getMessage(), e);
         } finally {
             TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
             // 出现解析问题使用默认值
@@ -289,9 +288,7 @@ public class Config extends FileScanListener {
                     DynamicConfigAppender.setLogMaxBackup();
                 }
             } catch (Exception e) {
-                String message = "update openrasp.yml failed";
-                int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                LogTool.warn(ErrorType.CONFIG_ERROR, "update openrasp.yml failed: " + e.getMessage(), e);
             }
         }
     }
@@ -331,17 +328,14 @@ public class Config extends FileScanListener {
             setConfig(key, value, isInit);
         } catch (Exception e) {
             // 出现解析问题使用默认值
-            value = item.defaultValue;
             setConfig(key, item.defaultValue, false);
             String message = "set config " + item.key + " failed, use default value : " + value;
-            int errorCode = ErrorType.CONFIG_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.warn(ErrorType.CONFIG_ERROR, message + ": " + e.getMessage(), e);
         }
     }
 
     private void handleException(String message, Exception e) {
-        int errorCode = ErrorType.CONFIG_ERROR.getCode();
-        LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+        LogTool.warn(ErrorType.CONFIG_ERROR, message, e);
     }
 
     private static class ConfigHolder {
@@ -417,9 +411,8 @@ public class Config extends FileScanListener {
                 reloadConfig(new File(configFileDir + File.separator + CONFIG_FILE_NAME));
             }
         } catch (Exception e) {
-            String message = "update " + directory.getAbsolutePath() + " failed";
-            int errorCode = ErrorType.CONFIG_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.warn(ErrorType.CONFIG_ERROR, "update " + directory.getAbsolutePath() +
+                    " failed: " + e.getMessage(), e);
         }
     }
 
@@ -1348,11 +1341,7 @@ public class Config extends FileScanListener {
                             Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
                             codeSum = codeSum + code;
                         } catch (Exception e) {
-                            if (Config.getConfig().isDebugEnabled()) {
-                                String message = "Hook type " + s + " does not exist";
-                                int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
-                            }
+                            LogTool.traceWarn(ErrorType.CONFIG_ERROR, "Hook type " + s + " does not exist", e);
                         }
                     }
                     if (hook.getKey().equals("*")) {

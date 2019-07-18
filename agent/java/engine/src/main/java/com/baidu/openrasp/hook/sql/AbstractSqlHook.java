@@ -16,10 +16,8 @@
 
 package com.baidu.openrasp.hook.sql;
 
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.messaging.LogTool;
 import javassist.*;
 
 import java.sql.SQLException;
@@ -95,9 +93,9 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
      */
     public static boolean checkSqlErrorCode(SQLException e) {
         if (e != null && e.getErrorCode() == 0) {
-            String message = "Unable to derive error code from SQL exceptions. Please refer to https://rasp.baidu.com/doc/usage/exception.html#faq-errorcode for details.";
-            int errorCode = ErrorType.HOOK_ERROR.getCode();
-            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
+            String message = "Unable to derive error code from SQL exceptions, error message: " + e.getMessage() + "." +
+                    "Please refer to https://rasp.baidu.com/doc/usage/exception.html#faq-errorcode for details.";
+            LogTool.traceHookWarn(message, e);
             return true;
         }
         return false;

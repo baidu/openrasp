@@ -16,8 +16,8 @@
 
 package com.baidu.openrasp.tool.filemonitor;
 
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.fuxi.javaagent.contentobjects.jnotify.Observer;
 import org.apache.log4j.Logger;
 
@@ -34,8 +34,6 @@ public class JnotifyWatcher implements Observer {
     @Override
     public void update(String s) {
         this.message = s;
-        String message = "JNotify encounters an internal error";
-        int errorCode = ErrorType.FSWATCH_ERROR.getCode();
-        LOGGER.error(CloudUtils.getExceptionObject(message, errorCode));
+        LogTool.error(ErrorType.FSWATCH_ERROR, "JNotify encounters an internal error: " + s);
     }
 }

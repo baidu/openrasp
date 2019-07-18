@@ -16,13 +16,13 @@
 
 package com.baidu.openrasp.cloud;
 
-import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.apache.log4j.helpers.LogLog;
 
 import java.io.DataOutputStream;
 import java.io.InputStream;
@@ -45,9 +45,7 @@ public class CloudHttp implements Request {
         try {
             return request(url, content);
         } catch (Exception e) {
-            String message = "HTTP request to " + url + " failed";
-            int errorCode = ErrorType.REQUEST_ERROR.getCode();
-            CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.warn(ErrorType.REQUEST_ERROR, "HTTP request to " + url + " failed: " + e.getMessage(), e);
             return null;
         }
     }
@@ -57,9 +55,7 @@ public class CloudHttp implements Request {
         try {
             return request(url, content);
         } catch (Exception e) {
-            String message = "HTTP request to " + url + " failed";
-            int errorCode = ErrorType.REQUEST_ERROR.getCode();
-            LogLog.warn(CloudUtils.getExceptionObject(message, errorCode).toString(), e);
+            LogTool.warn(ErrorType.REQUEST_ERROR, "HTTP request to " + url + " failed: " + e.getMessage(), e);
             return null;
         }
     }

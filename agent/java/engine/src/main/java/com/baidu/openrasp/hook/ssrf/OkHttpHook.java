@@ -17,9 +17,7 @@
 
 package com.baidu.openrasp.hook.ssrf;
 
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
@@ -55,14 +53,12 @@ public class OkHttpHook extends AbstractSSRFHook {
         if (httpUrl != null) {
             try {
                 host = Reflection.invokeStringMethod(httpUrl, "host", new Class[]{});
-                Integer object = (Integer)Reflection.invokeMethod(httpUrl, "port", new Class[]{});
+                Integer object = (Integer) Reflection.invokeMethod(httpUrl, "port", new Class[]{});
                 if (object != null && object > 0) {
                     port = String.valueOf(object);
                 }
-            } catch (Exception e) {
-                String message = url != null ? ("parse url " + url + "failed") : e.getMessage();
-                int errorCode = ErrorType.HOOK_ERROR.getCode();
-                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            } catch (Throwable t) {
+                LogTool.traceHookWarn("parse url " + url + " failed: " + t.getMessage(), t);
             }
         }
         if (host != null) {

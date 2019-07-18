@@ -16,14 +16,15 @@
 
 package com.baidu.openrasp.tool.cpumonitor;
 
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.CloudManager;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 
-import java.io.*;
-import java.lang.management.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 
 /**
@@ -59,9 +60,7 @@ public class CpuMonitor {
             this.lastTotalCpuTime = currentTotalCpuTime;
             this.lastProcessCpuTime = currentProcessCpuTime;
         } catch (Exception e) {
-            String msg = "count cpu usage failed";
-            int code = ErrorType.CPU_ERROR.getCode();
-            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(msg, code), e);
+            LogTool.warn(ErrorType.CPU_ERROR, "count cpu usage failed: " + e.getMessage(), e);
         }
         return totalUsage;
     }
@@ -93,9 +92,7 @@ public class CpuMonitor {
                 }
             }
         } catch (Exception e) {
-            String msg = "get server occupied cpu number failed";
-            int code = ErrorType.CPU_ERROR.getCode();
-            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(msg, code), e);
+            LogTool.warn(ErrorType.CPU_ERROR, "get server occupied cpu number failed: " + e.getMessage(), e);
         }
         return totalCpuNum * 100 * Config.getConfig().getCpuUsagePercent();
     }
@@ -134,9 +131,7 @@ public class CpuMonitor {
                     Thread.sleep(SAMPLE_INTERVAL * 1000);
                     checkCpuUsage();
                 } catch (Throwable e) {
-                    String message = e.getMessage();
-                    int errorCode = ErrorType.CPU_ERROR.getCode();
-                    CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                    LogTool.warn(ErrorType.CPU_ERROR, e.getMessage(), e);
                 }
             }
         }
