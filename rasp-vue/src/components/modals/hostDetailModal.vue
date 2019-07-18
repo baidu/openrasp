@@ -28,6 +28,14 @@
                 主机名称
               </div>
               <p>{{ data.hostname }}</p>
+              
+              <div v-if="data.host_type">
+                <div class="h6">
+                  容器类型
+                </div>
+                <p>{{ data.host_type }}</p>
+              </div>
+
               <div class="h6">
                 注册 IP
               </div>
