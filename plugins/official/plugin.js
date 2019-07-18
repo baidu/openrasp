@@ -1,4 +1,4 @@
-const plugin_version = '2019-0708-1800'
+const plugin_version = '2019-0718-1200'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -447,7 +447,13 @@ var algorithmConfig = {
     webshell_ld_preload: {
         name:   '算法5 - 拦截基于 LD_PRELOAD 的后门',
         action: 'block'
-    }
+    },
+
+    eval_regex: {
+        name:   '算法1 - 正则表达式',
+        action: 'ignore',
+        regex:  'base64_decode|gzuncompress|create_function'
+    },
 }
 
 // END ALGORITHM CONFIG //
@@ -579,6 +585,21 @@ if (algorithmConfig.sql_regex.action != 'ignore') {
         } catch (e) {
             plugin.log ("Invalid regex in algorithmConfig.sql_regex.regex: ", e)
             algorithmConfig.sql_regex.action = 'ignore'
+        } 
+    }
+}
+
+// 校验 eval_regex 正则是否合法
+if (algorithmConfig.eval_regex.action != 'ignore') {
+    if (! algorithmConfig.eval_regex.regex.trim()) {
+        plugin.log ("algorithmConfig.eval_regex.regex is empty, algorithm disabled")
+        algorithmConfig.eval_regex.action = 'ignore'
+    } else {
+        try {
+            new RegExp(algorithmConfig.eval_regex)
+        } catch (e) {
+            plugin.log ("Invalid regex in algorithmConfig.eval_regex.regex: ", e)
+            algorithmConfig.eval_regex.action = 'ignore'
         } 
     }
 }
@@ -1988,6 +2009,23 @@ plugin.register('xxe', function (params, context) {
     }
     return clean
 })
+
+if (algorithmConfig.eval_regex.action != 'ignore')
+{
+	// 算法1: 正则表达式
+    if (algorithmConfig.eval_regex.action != 'ignore') {
+        var regex_filter = new RegExp(algorithmConfig.eval_regex.regex, 'i')
+            
+        if (regex_filter.test(params.code)) {
+            return {
+                action:     algorithmConfig.eval_regex.action,
+                confidence: 60,
+                message:    reason,
+                algorithm:  'eval_regex'
+            }
+        }
+    }
+}
 
 if (algorithmConfig.ognl_exec.action != 'ignore')
 {
