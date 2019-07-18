@@ -2017,10 +2017,16 @@ if (algorithmConfig.eval_regex.action != 'ignore')
         var regex_filter = new RegExp(algorithmConfig.eval_regex.regex, 'i')
             
         if (regex_filter.test(params.code)) {
+        	var code = params.code.substr(0, 50)
+        	if (params.code.length > 50)
+        	{
+        		code = code + ' ...'
+        	}
+
             return {
                 action:     algorithmConfig.eval_regex.action,
                 confidence: 60,
-                message:    _("Code Execution - Running %1% with %2%", [params.code, params.function]),
+                message:    _("Code Execution - Running %1% with %2%() function", [code, params.function]),
                 algorithm:  'eval_regex'
             }
         }
