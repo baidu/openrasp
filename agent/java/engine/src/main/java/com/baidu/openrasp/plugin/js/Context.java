@@ -56,8 +56,6 @@ public class Context extends com.baidu.openrasp.v8.Context {
     }
 
     public byte[] getObject(String key) {
-        if (key.equals("body"))
-            return getBody();
         if (key.equals("json"))
             return getJson();
         if (key.equals("header"))
@@ -77,65 +75,65 @@ public class Context extends com.baidu.openrasp.v8.Context {
 
     public String getPath() {
         try {
-            return request.getRequestURI();
+            return request.getRequestURI().toString();
         } catch (Exception e) {
-            return null;
+            return "";
         }
     }
 
     public String getMethod() {
         try {
-            return request.getMethod().toLowerCase();
+            return request.getMethod().toLowerCase().toString();
         } catch (Exception e) {
-            return null;
+            return "";
         }
     }
 
     public String getUrl() {
         try {
-            return request.getRequestURL().toString();
+            return request.getRequestURL().toString().toString();
         } catch (Exception e) {
-            return null;
+            return "";
         }
     }
 
     public String getQuerystring() {
         try {
-            return request.getQueryString();
+            return request.getQueryString().toString();
         } catch (Exception e) {
-            return null;
+            return "";
         }
     }
 
     public String getAppBasePath() {
         try {
-            return request.getAppBasePath();
+            return request.getAppBasePath().toString();
         } catch (Exception e) {
-            return null;
+            return "";
         }
     }
 
     public String getProtocol() {
         try {
-            return request.getProtocol().toLowerCase();
+            return request.getProtocol().toLowerCase().toString();
         } catch (Exception e) {
-            return null;
+            return "";
         }
     }
 
     public String getRemoteAddr() {
         try {
-            return request.getRemoteAddr();
+            return request.getRemoteAddr().toString();
         } catch (Exception e) {
-            return null;
+            return "";
         }
     }
 
     public String getRequestId() {
         try {
-            return request.getRequestId();
+            return request.getRequestId().toString();
         } catch (Exception e) {
-            return null;
+            return "";
         }
     }
 
@@ -176,7 +174,7 @@ public class Context extends com.baidu.openrasp.v8.Context {
             out.write(0);
             return out.getByteArray();
         } catch (Exception e) {
-            return null;
+            return "{}".getBytes();
         }
     }
 
@@ -203,7 +201,7 @@ public class Context extends com.baidu.openrasp.v8.Context {
             out.write(0);
             return out.getByteArray();
         } catch (Exception e) {
-            return null;
+            return "{}".getBytes();
         }
     }
 }
