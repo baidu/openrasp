@@ -9,7 +9,7 @@ plugin.register('command', (params, context) => {
     let str = JSON.stringify(context)
     assert(/"requestId":"\w+"/.test(str))
     assert(str.includes('"language":"php"'))
-    assert(str.includes('"name":"PHP"'))
+    assert(str.includes('"server":"PHP"'))
     assert(str.includes('"appBasePath":"/tmp/openrasp"'))
     assert(str.includes('"remoteAddr":"127.0.0.1"'))
     assert(str.includes('"protocol":"http"'))
