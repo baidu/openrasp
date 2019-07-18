@@ -2020,7 +2020,7 @@ if (algorithmConfig.eval_regex.action != 'ignore')
             return {
                 action:     algorithmConfig.eval_regex.action,
                 confidence: 60,
-                message:    reason,
+                message:    _("Code Execution - Running %1% with %2%", [params.code, params.function]),,
                 algorithm:  'eval_regex'
             }
         }
