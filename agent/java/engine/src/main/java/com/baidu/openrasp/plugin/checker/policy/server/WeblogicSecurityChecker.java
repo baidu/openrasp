@@ -19,10 +19,12 @@ package com.baidu.openrasp.plugin.checker.policy.server;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -62,9 +64,17 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
             }
             String encryptedPassword = getProperties(bootProperties, "password");
             String decryptedPassword = decrypt(encryptedPassword, domainPath);
-            List<String> checkList = Arrays.asList(WEAK_WORDS);
+            List<String> checkList = Arrays.asList(getSecurityWeakPasswords());
             if (checkList.contains(decryptedPassword)) {
-                infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.MANAGER_PASSWORD, "Weblogic security baseline - the password \"" + decryptedPassword + "\" is detected weak password combination in " + paths.get(0), true));
+                String encryptedUserName = getProperties(bootProperties, "username");
+                String decryptedUserName = decrypt(encryptedUserName, domainPath);
+                Map<String, Object> params = new HashMap<String, Object>();
+                params.put("type", ApplicationModel.getServerName());
+                params.put("username", decryptedUserName);
+                params.put("password", decryptedPassword);
+                params.put("config_file", paths.get(0));
+                infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.MANAGER_PASSWORD, "Weblogic security baseline - detected weak password \"" +
+                        decryptedPassword + "\" in config file: " + paths.get(0), true, params));
             }
         }
     }
@@ -121,5 +131,13 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
             }
         }
         return result;
+    }
+
+    /**
+     * 从配置获取弱口令列表
+     */
+    public String[] getSecurityWeakPasswords() {
+        String[] securityWeakPasswords = Config.getConfig().getSecurityWeakPasswords();
+        return securityWeakPasswords != null ? securityWeakPasswords : WEAK_WORDS;
     }
 }

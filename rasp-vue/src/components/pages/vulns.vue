@@ -118,7 +118,7 @@
                 </td>
                 <td style="max-width: 500px; ">
                   <a :href="row.url" target="_blank">
-                    {{ row.url ? row.url : '-' }}
+                    {{ displayURL(row) }}
                   </a>
                 </td>
 
@@ -212,6 +212,17 @@ export default {
   },
   methods: {
     ceil: Math.ceil,
+    displayURL(row) {
+      if (! row.url) {
+        return '-'
+      }
+
+      if (row.url.length > 100) {
+        return row.url.substring(0, 100) + ' ...'
+      }
+
+      return row.url
+    },
     selectAllStatus({ target }) {
       this.selected_status = target.checked ? Object.keys(this.status_types) : []
     },    

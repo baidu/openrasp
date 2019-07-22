@@ -33,7 +33,6 @@ bool ConfigHolder::update(BaseReader *reader)
   inject.update(reader);
   body.update(reader);
   clientip.update(reader);
-  security.update(reader);
   lru.update(reader);
   decompile.update(reader);
   return true;
@@ -53,6 +52,7 @@ bool ConfigHolder::updateAlgorithmConfig()
 {
   webshell_callable.update();
   xss.update();
+  return true;
 }
 
 } // namespace openrasp

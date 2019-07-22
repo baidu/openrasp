@@ -18,10 +18,15 @@
 #define OPENRASP_V8_H
 
 #include "openrasp.h"
-#include "openrasp_v8_bundle.h"
+#include "php/header.h"
 
 namespace openrasp
 {
+enum CheckResult {
+  kCache,
+  kNoCache,
+  kBlock
+};
 class openrasp_v8_process_globals
 {
 public:
@@ -29,9 +34,13 @@ public:
   std::mutex mtx;
   std::string plugin_config;
   std::vector<PluginFile> plugin_src_list;
+  std::once_flag init_v8_once;
 };
 extern openrasp_v8_process_globals process_globals;
+CheckResult Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout = 100);
 v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val);
+v8::Local<v8::ObjectTemplate> CreateRequestContextTemplate(Isolate *isolate);
+void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string> &buildin_action_map);
 void load_plugins();
 } // namespace openrasp
 

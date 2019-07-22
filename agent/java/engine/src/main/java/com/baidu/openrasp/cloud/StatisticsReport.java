@@ -19,6 +19,7 @@ package com.baidu.openrasp.cloud;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
+import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.google.gson.Gson;
@@ -32,47 +33,46 @@ import java.util.TreeMap;
  * @author: anyang
  * @create: 2018/09/28 11:21
  */
-public class StatisticsReport {
-    private static final int STATISTICS_REPORT_INTERVAL = 3600 * 1000;
+public class StatisticsReport extends CloudTimerTask {
+    private static final int STATISTICS_REPORT_INTERVAL = 3600;
 
     public StatisticsReport() {
-        Thread thread = new Thread(new StatisticsReportThread());
-        thread.setDaemon(true);
-        thread.start();
+        super(STATISTICS_REPORT_INTERVAL);
     }
 
-    class StatisticsReportThread implements Runnable {
-        @Override
-        public void run() {
-            while (true) {
-                TreeMap<Long, Long> temp = new TreeMap<Long, Long>();
-                temp.put(System.currentTimeMillis(), HookHandler.TOTAL_REQUEST_NUM.longValue());
-                if (CloudCacheModel.reportCache.realSize() != 0) {
-                    for (Map.Entry<Long, Long> entry : CloudCacheModel.reportCache.getEntrySet()) {
-                        temp.put(entry.getKey(), entry.getValue());
-                    }
-                }
-                for (Map.Entry<Long, Long> entry : temp.entrySet()) {
-                    Map<String, Object> params = new HashMap<String, Object>();
-                    params.put("rasp_id", CloudCacheModel.getInstance().raspId);
-                    params.put("time", entry.getKey());
-                    params.put("request_sum", entry.getValue());
-                    String content = new Gson().toJson(params);
-                    String url = CloudRequestUrl.CLOUD_STATISTICS_REPORT_URL;
-                    GenericResponse response = new CloudHttp().commonRequest(url, content);
-                    Integer responseCode = response.getResponseCode();
-                    if (responseCode != null && responseCode >= 200 && responseCode < 300) {
-                        CloudCacheModel.reportCache.remove(entry.getKey());
-                    } else {
-                        CloudCacheModel.reportCache.put(entry.getKey(), entry.getValue());
-                    }
-                }
-                try {
-                    Thread.sleep(STATISTICS_REPORT_INTERVAL);
-                } catch (InterruptedException e) {
-                    //next loop
+    @Override
+    public void execute() {
+        TreeMap<Long, Long> temp = new TreeMap<Long, Long>();
+        temp.put(System.currentTimeMillis(), HookHandler.TOTAL_REQUEST_NUM.longValue());
+        if (CloudCacheModel.reportCache.realSize() != 0) {
+            for (Map.Entry<Long, Long> entry : CloudCacheModel.reportCache.getEntrySet()) {
+                temp.put(entry.getKey(), entry.getValue());
+            }
+        }
+        for (Map.Entry<Long, Long> entry : temp.entrySet()) {
+            Map<String, Object> params = new HashMap<String, Object>();
+            params.put("rasp_id", CloudCacheModel.getInstance().raspId);
+            params.put("time", entry.getKey());
+            params.put("request_sum", entry.getValue());
+            String content = new Gson().toJson(params);
+            String url = CloudRequestUrl.CLOUD_STATISTICS_REPORT_URL;
+            GenericResponse response = new CloudHttp().commonRequest(url, content);
+            if (response != null) {
+                Integer responseCode = response.getResponseCode();
+                if (responseCode != null && responseCode >= 200 && responseCode < 300) {
+                    CloudCacheModel.reportCache.remove(entry.getKey());
+                } else {
+                    CloudCacheModel.reportCache.put(entry.getKey(), entry.getValue());
                 }
             }
         }
     }
+
+    @Override
+    public void handleError(Throwable t) {
+        String message = t.getMessage();
+        int errorCode = ErrorType.STATISTICSREPORT_ERROR.getCode();
+        CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), t);
+    }
+
 }

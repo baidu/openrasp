@@ -58,12 +58,12 @@ std::string BackendResponse::fetch_description()
     return json_reader.fetch_string({"description"}, "");
 }
 
-std::shared_ptr<PluginUpdatePackage> BackendResponse::build_plugin_update_package()
+std::shared_ptr<PluginUpdatePackage> BackendResponse::build_plugin_update_package(const std::string &local_md5)
 {
     std::shared_ptr<PluginUpdatePackage> result = nullptr;
     std::string plugin = fetch_string({"data", "plugin", "plugin"}, "");
     std::string md5 = fetch_string({"data", "plugin", "md5"}, "");
-    if (!plugin.empty() && !md5.empty())
+    if (!plugin.empty() && !md5.empty() && md5 != local_md5)
     {
         std::string cal_md5 =
             md5sum(static_cast<const void *>(plugin.c_str()), plugin.length());

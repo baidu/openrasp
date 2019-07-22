@@ -73,7 +73,11 @@ func (o *UserController) Update() {
 	if param.NewPwd == "" {
 		o.ServeError(http.StatusBadRequest, "new_password can not be empty")
 	}
-	err := models.UpdatePassword(param.OldPwd, param.NewPwd)
+	err := models.RemoveAllCookie()
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, err.Error())
+	}
+	err = models.UpdatePassword(param.OldPwd, param.NewPwd)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, err.Error())
 	}

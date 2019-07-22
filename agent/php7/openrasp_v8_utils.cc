@@ -27,6 +27,61 @@ extern "C"
 
 namespace openrasp
 {
+void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result);
+CheckResult Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout)
+{
+    IsolateData *data = isolate->GetData();
+    v8::Local<v8::Object> request_context;
+    if (data->request_context.IsEmpty())
+    {
+        request_context = data->request_context_templ.Get(isolate)->NewInstance();
+        data->request_context.Reset(isolate, request_context);
+    }
+    else
+    {
+        request_context = data->request_context.Get(isolate);
+    }
+    auto rst = isolate->Check(type, params, request_context, timeout);
+    auto len = rst->Length();
+    if (len == 0)
+    {
+        return CheckResult::kCache;
+    }
+    auto context = isolate->GetCurrentContext();
+    CheckResult check_result = CheckResult::kNoCache;
+    for (int i = 0; i < len; i++)
+    {
+        v8::HandleScope handle_scope(isolate);
+        v8::Local<v8::Value> val;
+        if (!rst->Get(context, i).ToLocal(&val) || !val->IsObject())
+        {
+            continue;
+        }
+        auto obj = val.As<v8::Object>();
+        auto action = obj->Get(context, NewV8String(isolate, "action")).FromMaybe(v8::Local<v8::Value>());
+        if (action.IsEmpty() || !action->IsString())
+        {
+            continue;
+        }
+        std::string str = *v8::String::Utf8Value(isolate, action);
+        if (str == "exception")
+        {
+            auto message = obj->Get(context, NewV8String(isolate, "message")).FromMaybe(v8::Local<v8::Value>());
+            if (!message.IsEmpty() && message->IsString())
+            {
+                plugin_info(isolate, std::string(*v8::String::Utf8Value(isolate, message)) + "\n");
+            }
+            continue;
+        }
+        if (str == "block")
+        {
+            check_result = CheckResult::kBlock;
+        }
+        alarm_info(isolate, type, params, obj);
+    }
+    return check_result;
+}
+
 v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
 {
     v8::Local<v8::Value> rst = v8::Undefined(isolate);
@@ -85,7 +140,7 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
     }
     case IS_STRING:
     {
-        bool avoidwarning = v8::String::NewFromOneByte(isolate, (uint8_t *)Z_STRVAL_P(val), v8::NewStringType::kNormal, Z_STRLEN_P(val)).ToLocal(&rst);
+        rst = NewV8String(isolate, Z_STRVAL_P(val), Z_STRLEN_P(val));
         break;
     }
     case IS_LONG:
@@ -117,19 +172,25 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
     return rst;
 }
 
-void plugin_info(const char *message, size_t length)
+void plugin_info(Isolate *isolate, const std::string &message)
 {
-    LOG_G(plugin_logger).log(LEVEL_INFO, message, length, false, true);
+    LOG_G(plugin_logger).log(LEVEL_INFO, message.c_str(), message.length(), false, true);
+}
+
+v8::Local<v8::Array> get_stack(Isolate *isolate) {
+    v8::EscapableHandleScope handle_scope(isolate);
+    auto arr = format_debug_backtrace_arr();
+    size_t len = arr.size();
+    auto stack = v8::Array::New(isolate, len);
+    for (size_t i = 0; i < len; i++)
+    {
+        stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
+    }
+    return handle_scope.Escape(stack);
 }
 
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)
 {
-    auto key_action = isolate->GetData()->key_action.Get(isolate);
-    auto key_message = isolate->GetData()->key_message.Get(isolate);
-    auto key_confidence = isolate->GetData()->key_confidence.Get(isolate);
-    auto key_algorithm = isolate->GetData()->key_algorithm.Get(isolate);
-    auto key_name = isolate->GetData()->key_name.Get(isolate);
-
     auto stack_trace = NewV8String(isolate, format_debug_backtrace_str());
 
     std::time_t t = std::time(nullptr);
@@ -140,11 +201,11 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     auto obj = v8::Object::New(isolate);
     obj->Set(NewV8String(isolate, "attack_type"), type);
     obj->Set(NewV8String(isolate, "attack_params"), params);
-    obj->Set(NewV8String(isolate, "intercept_state"), result->Get(key_action));
-    obj->Set(NewV8String(isolate, "plugin_message"), result->Get(key_message));
-    obj->Set(NewV8String(isolate, "plugin_confidence"), result->Get(key_confidence));
-    obj->Set(NewV8String(isolate, "plugin_algorithm"), result->Get(key_algorithm));
-    obj->Set(NewV8String(isolate, "plugin_name"), result->Get(key_name));
+    obj->Set(NewV8String(isolate, "intercept_state"), result->Get(NewV8String(isolate, "action")));
+    obj->Set(NewV8String(isolate, "plugin_message"), result->Get(NewV8String(isolate, "message")));
+    obj->Set(NewV8String(isolate, "plugin_confidence"), result->Get(NewV8String(isolate, "confidence")));
+    obj->Set(NewV8String(isolate, "plugin_algorithm"), result->Get(NewV8String(isolate, "algorithm")));
+    obj->Set(NewV8String(isolate, "plugin_name"), result->Get(NewV8String(isolate, "name")));
     obj->Set(NewV8String(isolate, "stack_trace"), stack_trace);
     obj->Set(NewV8String(isolate, "event_time"), event_time);
     {
@@ -181,7 +242,7 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     v8::Local<v8::Value> val;
     if (v8::JSON::Stringify(isolate->GetCurrentContext(), obj).ToLocal(&val))
     {
-        v8::String::Utf8Value msg(val);
+        v8::String::Utf8Value msg(isolate, val);
         LOG_G(alarm_logger).log(LEVEL_INFO, *msg, msg.length(), true, false);
     }
 }
@@ -230,12 +291,13 @@ void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string>
 {
     v8::HandleScope handle_scope(isolate);
     auto context = isolate->GetCurrentContext();
+    // clang-format off
     auto rst = isolate->ExecScript(R"(
         Object.keys(RASP.algorithmConfig || {})
             .filter(key => typeof key === 'string' && typeof RASP.algorithmConfig[key] === 'object' && typeof RASP.algorithmConfig[key].action === 'string')
             .map(key => [key, RASP.algorithmConfig[key].action])
-    )",
-                                   "extract_buildin_action");
+    )", "extract_buildin_action");
+    // clang-format on
     if (rst.IsEmpty())
     {
         return;
@@ -250,8 +312,8 @@ void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string>
         {
             continue;
         }
-        v8::String::Utf8Value key(item.As<v8::Array>()->Get(0));
-        v8::String::Utf8Value value(item.As<v8::Array>()->Get(1));
+        v8::String::Utf8Value key(isolate, item.As<v8::Array>()->Get(0));
+        v8::String::Utf8Value value(isolate, item.As<v8::Array>()->Get(1));
         auto iter = buildin_action_map.find({*key, key.length()});
         if (iter != buildin_action_map.end())
         {

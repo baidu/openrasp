@@ -72,12 +72,9 @@ var (
 )
 
 func init() {
+	var err error
 	registerAlarmInfo(&AttackAlarmInfo)
-	currentPath, err := tools.GetCurrentPath()
-	if err != nil {
-		tools.Panic(tools.ErrCodeLogInitFailed, "failed to get current directory path", err)
-	}
-	geoIpDbPath = currentPath + "/geoip/GeoLite2-City.mmdb"
+	geoIpDbPath = tools.GetCurrentPathWithPanic() + "/geoip/GeoLite2-City.mmdb"
 	geoIpDb, err = geoip2.Open(geoIpDbPath)
 	if err != nil {
 		tools.Panic(tools.ErrCodeGeoipInit, "failed to open geoip database", err)
@@ -181,7 +178,7 @@ func AggregationAttackWithUserAgent(startTime int64, endTime int64, size int,
 	appId string) ([][]interface{}, error) {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(10*time.Second))
 	defer cancel()
-	uaAggr := elastic.NewTermsAggregation().Field("user_agent").Size(size).OrderByCount(false)
+	uaAggr := elastic.NewTermsAggregation().Field("header.user-agent.keyword").Size(size).OrderByCount(false)
 	timeQuery := elastic.NewRangeQuery("event_time").Gte(startTime).Lte(endTime)
 	aggrName := "aggr_ua"
 	aggrResult, err := es.ElasticClient.Search(AttackAlarmInfo.EsAliasIndex + "-" + appId).

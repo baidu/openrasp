@@ -68,5 +68,4 @@ public abstract class ServerRequestHook extends AbstractClassHook {
             HookHandler.LOGGER.warn("handle undertow request failed", e);
         }
     }
-
 }

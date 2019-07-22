@@ -73,9 +73,12 @@ public:
   bool check_high_privileged();
   bool check_weak_password();
 
+  virtual bool parse(std::string uri);
   virtual void append_host_port(const std::string &host, int port);
+  virtual void build_connection_params(zval *params, connection_policy_type type);
   virtual void write_host_to_params(zval *params);
   virtual void write_port_to_params(zval *params);
+  virtual void write_socket_to_params(zval *params);
 };
 
 typedef SqlConnectionEntry sql_connection_entry;
@@ -83,8 +86,7 @@ typedef SqlConnectionEntry sql_connection_entry;
 typedef bool (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
 
 void plugin_sql_check(char *query, int query_len, char *server TSRMLS_DC);
-bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func,
-                                        int enforce_policy, sql_connection_entry *conn_entry);
+bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, sql_connection_entry *conn_entry);
 bool mysql_error_code_filtered(long err_code);
 void sql_query_error_alarm(char *server, char *query, const std::string &err_code, const std::string &err_msg TSRMLS_DC);
 void sql_connect_error_alarm(sql_connection_entry *sql_connection_p, const std::string &err_code, const std::string &err_msg TSRMLS_DC);

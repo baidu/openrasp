@@ -16,7 +16,6 @@
 
 #include "openrasp_hook.h"
 #include "openrasp_v8.h"
-#include "openrasp_mongo_utils.h"
 #include "openrasp_mongo_entry.h"
 
 /**
@@ -40,16 +39,12 @@ POST_HOOK_FUNCTION_EX(__construct, mongodb_0_driver_0_manager, DB_CONNECTION);
 static void handle_mongo_uri_string(char *uri_string, int uri_string_len, sql_connection_entry *sql_connection_p,
                                     std::string const &default_uri = "mongodb://127.0.0.1/")
 {
+    std::string uri_tb_be_parsed = default_uri;
     if (uri_string_len)
     {
-        mongo_parse_connection_string(sql_connection_p, uri_string);
+        uri_tb_be_parsed = std::string(uri_string, uri_string_len);
     }
-    else
-    {
-        char *tmp = estrdup(default_uri.c_str());
-        mongo_parse_connection_string(sql_connection_p, tmp);
-        efree(tmp);
-    }
+    sql_connection_p->parse(uri_tb_be_parsed);
 }
 
 static void handle_mongo_options(HashTable *ht, sql_connection_entry *sql_connection_p)
@@ -106,7 +101,6 @@ static bool init_mongodb_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conn
     {
         handle_mongo_options(Z_ARRVAL_P(options), sql_connection_p);
     }
-    sql_connection_p->set_server("mongodb");
     return true;
 }
 
@@ -128,7 +122,7 @@ static void mongo_plugin_check(const std::string &query_str, const std::string &
             params->Set(openrasp::NewV8String(isolate, "class"), openrasp::NewV8String(isolate, classname));
             params->Set(openrasp::NewV8String(isolate, "method"), openrasp::NewV8String(isolate, method));
             params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, "mongodb"));
-            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(MONGO)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+            is_block = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(MONGO)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (is_block)
         {
@@ -254,7 +248,7 @@ void pre_mongocollection_update_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     mongo_plugin_check(criteria, "MongoCollection", "update" TSRMLS_CC);
 }
 
-void pre_mongocdb_execute_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_mongodb_execute_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *code = NULL, *args = NULL, *options = NULL;
 
@@ -337,8 +331,7 @@ void post_mongoclient___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAM
 {
     MongoConnectionEntry mongo_entry;
     if (Z_TYPE_P(this_ptr) == IS_OBJECT && !EG(exception) &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mongo_connection_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &mongo_entry))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mongo_connection_entry, &mongo_entry))
     {
         handle_block(TSRMLS_C);
     }
@@ -348,8 +341,7 @@ void post_mongodb_0_driver_0_manager___construct_DB_CONNECTION(OPENRASP_INTERNAL
 {
     MongoConnectionEntry mongo_entry;
     if (Z_TYPE_P(this_ptr) == IS_OBJECT && !EG(exception) &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mongodb_connection_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &mongo_entry))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mongodb_connection_entry, &mongo_entry))
     {
         handle_block(TSRMLS_C);
     }

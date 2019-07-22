@@ -129,7 +129,14 @@ static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
         sql_connection_p->set_using_socket(nullptr == mysql_vars[2].optval || strcmp("localhost", mysql_vars[2].optval) == 0);
         sql_connection_p->set_port(atoi(mysql_vars[3].optval));
         sql_connection_p->set_socket(SAFE_STRING(mysql_vars[4].optval));
-        sql_connection_p->set_username(username);
+        if (username)
+        {
+            sql_connection_p->set_username(username);
+        }
+        if (password)
+        {
+            sql_connection_p->set_password(password);
+        }
         for (int i = 0; i < 5; i++)
         {
             if (mysql_vars[i].freeme)
@@ -243,8 +250,7 @@ void post_pdo___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     sql_connection_entry conn_entry;
     if (Z_TYPE_P(getThis()) == IS_OBJECT && !EG(exception) &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pdo_connection_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &conn_entry))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pdo_connection_entry, &conn_entry))
     {
         handle_block();
     }

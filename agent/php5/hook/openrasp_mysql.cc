@@ -56,7 +56,11 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
             return false;
         }
         host_and_port = passwd = NULL;
+#if (PHP_MINOR_VERSION == 3)
+        user = php_get_current_user();
+#else
         user = php_get_current_user(TSRMLS_C);
+#endif
     }
     else
     {
@@ -86,6 +90,10 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
         {
             user = default_user;
         }
+        if (!passwd)
+        {
+            passwd = default_password;
+        }
     }
     sql_connection_p->set_server("mysql");
     socket = default_socket;
@@ -93,7 +101,7 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
 
     if (host_and_port && (tmp = strchr(host_and_port, ':')))
     {
-        host = estrndup(host_and_port, tmp - host_and_port);
+        std::string host_str = std::string(host_and_port, tmp - host_and_port);
         tmp++;
         if (tmp[0] != '/')
         {
@@ -106,7 +114,7 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
             }
             else
             {
-                sql_connection_p->append_host_port(host, port);
+                sql_connection_p->append_host_port(host_str, port);
             }
         }
         else
@@ -114,7 +122,7 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
             socket = tmp;
             using_socket = true;
         }
-        using_socket = (strcmp("localhost", host) == 0);
+        using_socket = ("localhost" == host_str);
     }
     else
     {
@@ -124,6 +132,7 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
     sql_connection_p->set_using_socket(using_socket);
     sql_connection_p->set_socket(SAFE_STRING(socket));
     sql_connection_p->set_username(SAFE_STRING(user));
+    sql_connection_p->set_password(SAFE_STRING(passwd));
     return true;
 }
 
@@ -155,8 +164,7 @@ void post_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETE
 {
     sql_connection_entry conn_entry;
     if (Z_TYPE_P(return_value) == IS_RESOURCE &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &conn_entry))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry, &conn_entry))
     {
         handle_block(TSRMLS_C);
     }
@@ -175,8 +183,7 @@ void post_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMET
 {
     sql_connection_entry conn_entry;
     if (Z_TYPE_P(return_value) == IS_RESOURCE &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &conn_entry))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry, &conn_entry))
     {
         handle_block(TSRMLS_C);
     }

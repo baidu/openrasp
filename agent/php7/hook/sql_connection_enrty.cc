@@ -95,10 +95,11 @@ std::string SqlConnectionEntry::build_policy_msg(connection_policy_type type)
   }
   else if (connection_policy_type::PASSWORD == type)
   {
-    oss << "Database security baseline - the password "
+    oss << "Database security baseline - weak password detected for \""
+        << username
+        << "\" account, password is: \""
         << password
-        << " is detected weak password combination , username is: "
-        << username;
+        << "\"";
   }
   return oss.str();
 }
@@ -126,7 +127,7 @@ long SqlConnectionEntry::get_type_id(SqlConnectionEntry::connection_policy_type 
     break;
   case connection_policy_type::PASSWORD:
   default:
-    return 3008;
+    return 3003;
     break;
   }
 }
@@ -185,6 +186,10 @@ void SqlConnectionEntry::set_name_value(const char *name, const char *val)
   {
     set_username(val);
   }
+  else if (strcmp(name, "password") == 0)
+  {
+    set_password(val);
+  }
   else if (strcmp(name, "host") == 0)
   {
     set_host(val);
@@ -212,16 +217,7 @@ void SqlConnectionEntry::connection_entry_policy_log(connection_policy_type type
   add_assoc_long(&policy_array, "policy_id", get_type_id(type));
   zval connection_params;
   array_init(&connection_params);
-  add_assoc_string(&connection_params, "server", (char *)get_server().c_str());
-  add_assoc_string(&connection_params, "username", (char *)get_username().c_str());
-  add_assoc_string(&connection_params, "socket", (char *)get_socket().c_str());
-  add_assoc_string(&connection_params, "connectionString", (char *)get_connection_string().c_str());
-  if (connection_policy_type::PASSWORD == type)
-  {
-    add_assoc_string(&connection_params, "password", (char *)get_password().c_str());
-  }
-  write_host_to_params(&connection_params);
-  write_port_to_params(&connection_params);
+  build_connection_params(&connection_params, type);
   add_assoc_zval(&policy_array, "policy_params", &connection_params);
   LOG_G(policy_logger).log(LEVEL_INFO, &policy_array);
   zval_ptr_dtor(&policy_array);
@@ -247,4 +243,34 @@ void SqlConnectionEntry::append_host_port(const std::string &host, int port)
 {
   this->host = host;
   this->port = port;
+}
+
+void SqlConnectionEntry::build_connection_params(zval *params, connection_policy_type type)
+{
+  if (params && Z_TYPE_P(params) == IS_ARRAY)
+  {
+    write_host_to_params(params);
+    write_port_to_params(params);
+    write_socket_to_params(params);
+    add_assoc_string(params, "server", (char *)get_server().c_str());
+    add_assoc_string(params, "username", (char *)get_username().c_str());
+    add_assoc_string(params, "connectionString", (char *)get_connection_string().c_str());
+    if (connection_policy_type::PASSWORD == type)
+    {
+      add_assoc_string(params, "password", (char *)get_password().c_str());
+    }
+  }
+}
+
+void SqlConnectionEntry::write_socket_to_params(zval *params)
+{
+  if (params && Z_TYPE_P(params) == IS_ARRAY)
+  {
+    add_assoc_string(params, "socket", (char *)socket.c_str());
+  }
+}
+
+bool SqlConnectionEntry::parse(std::string uri)
+{
+  return true;
 }

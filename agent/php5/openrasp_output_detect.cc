@@ -99,7 +99,7 @@ static void openrasp_clean_output_start(const char *name, size_t name_len TSRMLS
 {
     php_output_handler *h;
 
-    if (h = openrasp_output_handler_init(name, name_len, 0, PHP_OUTPUT_HANDLER_STDFLAGS TSRMLS_CC))
+    if ((h = openrasp_output_handler_init(name, name_len, 0, PHP_OUTPUT_HANDLER_STDFLAGS TSRMLS_CC)))
     {
         php_output_handler_start(h TSRMLS_CC);
     }
@@ -130,7 +130,7 @@ static bool _gpc_parameter_filter(const zval *param TSRMLS_DC)
 {
     if (Z_TYPE_P(param) == IS_STRING && Z_STRLEN_P(param) > OPENRASP_CONFIG(xss.min_param_length))
     {
-        if (openrasp::regex_match(Z_STRVAL_P(param), OPENRASP_CONFIG(xss.filter_regex).c_str()))
+        if (openrasp::regex_search(Z_STRVAL_P(param), OPENRASP_CONFIG(xss.filter_regex).c_str()))
         {
             return true;
         }
@@ -170,20 +170,7 @@ static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionT
         {
             if (++count > OPENRASP_CONFIG(xss.max_detection_num))
             {
-                zval *attack_params = NULL;
-                MAKE_STD_ZVAL(attack_params);
-                array_init(attack_params);
-                add_assoc_string(attack_params, "type", "", 1);
-                add_assoc_string(attack_params, "name", "", 1);
-                add_assoc_string(attack_params, "value", "", 1);
-                zval *plugin_message = NULL;
-                MAKE_STD_ZVAL(plugin_message);
-                char *message_str = NULL;
-                spprintf(&message_str, 0, _("Reflected XSS attack detected: more than %ld html tags detected in userinput"), OPENRASP_CONFIG(xss.max_detection_num));
-                ZVAL_STRING(plugin_message, message_str, 1);
-                efree(message_str);
-                openrasp_buildin_php_risk_handle(action, XSS_USER_INPUT, 100, attack_params, plugin_message TSRMLS_CC);
-                return SUCCESS;
+                continue;
             }
             if (NULL != strstr(param, Z_STRVAL_PP(ele_value)))
             {

@@ -24,11 +24,24 @@ class MongoConnectionEntry : public SqlConnectionEntry
 protected:
   std::vector<std::string> hosts;
   std::vector<int> ports;
+  std::vector<std::string> sockets;
+  std::string dns;
+  bool srv = false;
 
 public:
   virtual void append_host_port(const std::string &host, int port);
+  virtual void append_socket(const std::string &socket);
+  virtual void build_connection_params(zval *params, connection_policy_type type);
   virtual void write_host_to_params(zval *params);
   virtual void write_port_to_params(zval *params);
+  virtual void write_socket_to_params(zval *params);
+  virtual void set_srv(bool srv);
+  virtual bool get_srv();
+  virtual void set_dns(std::string dns);
+  virtual std::string get_dns();
+  virtual bool parse(std::string uri);
+  virtual bool parse_username_password(std::string &usernamePassword);
+  virtual bool parse_host_list(std::string &host_list);
 };
 
 #endif

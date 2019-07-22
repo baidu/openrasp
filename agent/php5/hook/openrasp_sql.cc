@@ -22,6 +22,7 @@
 #include <map>
 #include <set>
 #include "agent/shared_config_manager.h"
+#include "utils/utf.h"
 
 extern "C"
 {
@@ -32,15 +33,9 @@ extern "C"
 #endif
 }
 
-static bool sql_policy_alarm(sql_connection_entry *conn_entry, sql_connection_entry::connection_policy_type policy_type, int enforce_policy)
+static bool sql_policy_alarm(sql_connection_entry *conn_entry, sql_connection_entry::connection_policy_type policy_type)
 {
     bool result = false;
-    if (enforce_policy)
-    {
-        conn_entry->connection_entry_policy_log(policy_type);
-        result = true;
-    }
-    else
     {
         if (slm != nullptr)
         {
@@ -51,6 +46,11 @@ static bool sql_policy_alarm(sql_connection_entry *conn_entry, sql_connection_en
                 conn_entry->connection_entry_policy_log(policy_type);
             }
         }
+        else
+        {
+            conn_entry->connection_entry_policy_log(policy_type);
+        }
+        
     }
 #ifdef HAVE_LINE_COVERAGE
     __gcov_flush();
@@ -58,19 +58,18 @@ static bool sql_policy_alarm(sql_connection_entry *conn_entry, sql_connection_en
     return result;
 }
 
-bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func,
-                                        int enforce_policy, sql_connection_entry *conn_entry)
+bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, sql_connection_entry *conn_entry)
 {
     bool need_block = false;
     if (connection_init_func(INTERNAL_FUNCTION_PARAM_PASSTHRU, conn_entry))
     {
         if (conn_entry->check_high_privileged())
         {
-            need_block = sql_policy_alarm(conn_entry, sql_connection_entry::connection_policy_type::USER, enforce_policy);
+            need_block = sql_policy_alarm(conn_entry, sql_connection_entry::connection_policy_type::USER);
         }
         if (conn_entry->check_weak_password())
         {
-            need_block = sql_policy_alarm(conn_entry, sql_connection_entry::connection_policy_type::PASSWORD, enforce_policy);
+            need_block = sql_policy_alarm(conn_entry, sql_connection_entry::connection_policy_type::PASSWORD);
         }
     }
     return need_block;
@@ -86,19 +85,22 @@ void plugin_sql_check(char *query, int query_len, char *server TSRMLS_DC)
         {
             return;
         }
-        bool is_block = false;
+        openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
         {
             v8::HandleScope handle_scope(isolate);
             auto params = v8::Object::New(isolate);
             params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len));
             params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server));
-            is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(SQL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+            check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(SQL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
-        if (is_block)
+        if (check_result == openrasp::CheckResult::kCache)
+        {
+            OPENRASP_HOOK_G(lru).set(cache_key, true);
+        }
+        if (check_result == openrasp::CheckResult::kBlock)
         {
             handle_block(TSRMLS_C);
         }
-        OPENRASP_HOOK_G(lru).set(cache_key, true);
     }
 }
 
@@ -131,10 +133,11 @@ void sql_query_error_alarm(char *server, char *query, const std::string &err_cod
     zval *plugin_message = nullptr;
     MAKE_STD_ZVAL(plugin_message);
     char *message_str = nullptr;
+    std::string utf8_err_msg = openrasp::replace_invalid_utf8(err_msg);
     spprintf(&message_str, 0, _("%s error %s detected: %s."),
              server,
              err_code.c_str(),
-             err_msg.c_str());
+             utf8_err_msg.c_str());
     ZVAL_STRING(plugin_message, message_str, 1);
     efree(message_str);
     OpenRASPActionType action = openrasp::scm->get_buildin_check_action(SQL_ERROR);
@@ -156,10 +159,11 @@ void sql_connect_error_alarm(sql_connection_entry *sql_connection_p, const std::
     zval *plugin_message = nullptr;
     MAKE_STD_ZVAL(plugin_message);
     char *message_str = nullptr;
+    std::string utf8_err_msg = openrasp::replace_invalid_utf8(err_msg);
     spprintf(&message_str, 0, _("%s error %s detected: %s."),
              sql_connection_p->get_server().c_str(),
              err_code.c_str(),
-             err_msg.c_str());
+             utf8_err_msg.c_str());
     ZVAL_STRING(plugin_message, message_str, 1);
     efree(message_str);
     OpenRASPActionType action = openrasp::scm->get_buildin_check_action(SQL_ERROR);

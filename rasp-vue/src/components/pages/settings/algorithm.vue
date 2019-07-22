@@ -26,7 +26,7 @@
             >
             <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
-              将所有算法设置为「记录日志」模式
+              将所有算法设置为「记录日志」模式（"XXE 禁止外部实体加载" 算法除外）
             </span>
           </label>
           <br>

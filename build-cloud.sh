@@ -60,6 +60,15 @@ function build_cloud()
     fi
 
     cd src/rasp-cloud
+
+    commit=$(git rev-parse HEAD 2>/dev/null)
+    if [[ $? -eq 0 ]]; then
+        cat > tools/git.go << EOF
+package tools
+var CommitID = "${commit}"
+EOF
+    fi
+
     bee pack -exr=vendor
 
     repack rasp-cloud.tar.gz rasp-cloud-$(date +%Y-%m-%d) ../../../rasp-cloud.tar.gz

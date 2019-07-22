@@ -19,10 +19,10 @@ package com.baidu.rasp.install;
 import com.baidu.rasp.RaspError;
 import org.apache.commons.io.IOUtils;
 
-import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 import static com.baidu.rasp.RaspError.E10002;
 import static com.baidu.rasp.RaspError.E10004;
@@ -38,14 +38,18 @@ public abstract class InstallerFactory {
     protected static final String WEBLOGIC = "Weblogic";
     protected static final String JBOSSEAP = "JbossEAP";
     protected static final String WILDFLY = "Wildfly";
+    protected static final String GENERIC = "Generate";
 
     protected abstract Installer getInstaller(String serverName, String serverRoot);
 
-    public Installer getInstaller(File serverRoot) throws RaspError {
+    public Installer getInstaller(File serverRoot, boolean noDetect) throws RaspError {
         if (!serverRoot.exists()) {
             throw new RaspError(E10002 + serverRoot.getPath());
         }
 
+        if (noDetect) {
+            return new GenericInstaller(GENERIC, serverRoot.getAbsolutePath());
+        }
         String serverName = detectServerName(serverRoot.getAbsolutePath());
         if (serverName == null) {
             System.out.println("List of currently supported servers are:");
@@ -62,7 +66,7 @@ public abstract class InstallerFactory {
         return getInstaller(serverName, serverRoot.getAbsolutePath());
     }
 
-    public static String detectServerName(String serverRoot) throws RaspError{
+    public static String detectServerName(String serverRoot) throws RaspError {
         if (new File(serverRoot, "bin/catalina.sh").exists()
                 || new File(serverRoot, "bin/catalina.bat").exists()) {
             return TOMCAT;
@@ -83,28 +87,41 @@ public abstract class InstallerFactory {
         }
         if (new File(serverRoot, "bin/standalone.sh").exists()
                 || new File(serverRoot, "bin/standalone.bat").exists()) {
-            if (detectWildfly(serverRoot)) {
-                return WILDFLY;
-            } else {
-                return JBOSSEAP;
+            try {
+                return isWildfly(serverRoot) ? WILDFLY : JBOSSEAP;
+            } catch (Exception e) {
+                return null;
             }
         }
         return null;
     }
 
-    private static boolean detectWildfly(String severRoot) throws RaspError {
-        String command = "./standalone.sh -v";
-        File file = new File(severRoot + File.separator + "bin");
-        if (file.exists() && file.isDirectory()) {
-            try {
-                Process p = Runtime.getRuntime().exec(command, null, file);
-                String result = IOUtils.toString(p.getInputStream(), "UTF-8");
-                if (result != null && result.toLowerCase().contains("wildfly")) {
-                    return true;
+    public static boolean isWildfly(String serverRoot) throws Exception {
+        File dir = new File(serverRoot + File.separator + "bin" + File.separator + "init.d");
+        if (dir.exists() && dir.isDirectory()) {
+            File[] files = dir.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File file) {
+                    return file.getName().contains("wildfly");
                 }
+            });
+            return files != null && files.length > 0;
+        } else {
+            return detectWildfly(serverRoot);
+        }
+    }
+
+    private static boolean detectWildfly(String severRoot) throws Exception {
+        File baseDir = new File(severRoot);
+        if (baseDir.exists() && baseDir.isDirectory()) {
+            String path;
+            try {
+                path = baseDir.getCanonicalPath() + File.separator + "README.txt";
             } catch (IOException e) {
-                throw new RaspError(E10004 + severRoot);
+                path = baseDir.getAbsolutePath() + File.separator + "README.txt";
             }
+            String content = IOUtils.toString(new FileReader(new File(path)));
+            return content != null && content.toLowerCase().contains("wildfly");
         }
         return false;
     }

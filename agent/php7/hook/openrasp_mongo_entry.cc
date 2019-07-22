@@ -15,6 +15,8 @@
  */
 
 #include "openrasp_mongo_entry.h"
+#include "utils/string.h"
+#include <sstream>
 
 void MongoConnectionEntry::append_host_port(const std::string &host, int port)
 {
@@ -22,24 +24,187 @@ void MongoConnectionEntry::append_host_port(const std::string &host, int port)
   ports.push_back(port);
 }
 
+void MongoConnectionEntry::set_dns(std::string dns)
+{
+  this->dns = dns;
+}
+
+std::string MongoConnectionEntry::get_dns()
+{
+  return dns;
+}
+
+void MongoConnectionEntry::build_connection_params(zval *params, connection_policy_type type)
+{
+  SqlConnectionEntry::build_connection_params(params, type);
+  if (params && Z_TYPE_P(params) == IS_ARRAY && get_srv())
+  {
+    add_assoc_string(params, "dns", (char *)get_dns().c_str());
+  }
+}
+
 void MongoConnectionEntry::write_host_to_params(zval *params)
 {
-  zval host_arr;
-  array_init(&host_arr);
-  for (auto host : hosts)
+  if (params && Z_TYPE_P(params) == IS_ARRAY)
   {
-    add_next_index_string(&host_arr, (char *)host.c_str());
+    zval host_arr;
+    array_init(&host_arr);
+    for (auto host : hosts)
+    {
+      add_next_index_string(&host_arr, (char *)host.c_str());
+    }
+    add_assoc_zval(params, "hostnames", &host_arr);
   }
-  add_assoc_zval(params, "hostnames", &host_arr);
 }
 
 void MongoConnectionEntry::write_port_to_params(zval *params)
 {
-  zval port_arr;
-  array_init(&port_arr);
-  for (int port : ports)
+  if (params && Z_TYPE_P(params) == IS_ARRAY)
   {
-    add_next_index_long(&port_arr, port);
+    zval port_arr;
+    array_init(&port_arr);
+    for (int port : ports)
+    {
+      add_next_index_long(&port_arr, port);
+    }
+    add_assoc_zval(params, "ports", &port_arr);
   }
-  add_assoc_zval(params, "ports", &port_arr);
+}
+
+void MongoConnectionEntry::append_socket(const std::string &socket)
+{
+  sockets.push_back(socket);
+}
+
+void MongoConnectionEntry::write_socket_to_params(zval *params)
+{
+  if (params && Z_TYPE_P(params) == IS_ARRAY)
+  {
+    zval socket_arr;
+    array_init(&socket_arr);
+    for (auto socket : sockets)
+    {
+      add_next_index_string(&socket_arr, (char *)socket.c_str());
+    }
+    add_assoc_zval(params, "sockets", &socket_arr);
+  }
+}
+
+void MongoConnectionEntry::set_srv(bool srv)
+{
+  this->srv = srv;
+}
+
+bool MongoConnectionEntry::get_srv()
+{
+  return srv;
+}
+
+//the uri format must be correct cuz of successful connection
+bool MongoConnectionEntry::parse(std::string uri)
+{
+  set_server("mongodb");
+  static const std::string scheme = "mongodb://";
+  std::size_t scheme_found = uri.find(scheme);
+  if (scheme_found != std::string::npos)
+  {
+    uri.erase(0, scheme.length());
+  }
+  static const std::string scheme_srv = "mongodb+srv://";
+  std::size_t scheme_srv_found = uri.find(scheme);
+  if (scheme_srv_found != std::string::npos)
+  {
+    uri.erase(0, scheme_srv.length());
+    set_srv(true);
+  }
+  std::string uph;
+  std::size_t last_slash = uri.find_last_of("/");
+  if (last_slash != std::string::npos)
+  {
+    uph = uri.substr(0, last_slash);
+  }
+  else
+  {
+    uph = uri;
+  }
+  std::string host_list;
+  std::size_t at = uph.find_last_of("@");
+  if (at != std::string::npos)
+  {
+    std::string up = uph.substr(0, at);
+    parse_username_password(up);
+    host_list = uph.substr(at + 1);
+  }
+  else
+  {
+    host_list = uph;
+  }
+  if (get_srv())
+  {
+    set_dns(host_list);
+  }
+  else
+  {
+    parse_host_list(host_list);
+  }
+  return true;
+}
+
+bool MongoConnectionEntry::parse_username_password(std::string &usernamePassword)
+{
+  std::size_t colon = usernamePassword.find(":");
+  if (colon != std::string::npos)
+  {
+    set_username(usernamePassword.substr(0, colon));
+    set_password(usernamePassword.substr(colon));
+  }
+  return true;
+}
+
+bool MongoConnectionEntry::parse_host_list(std::string &host_list)
+{
+  std::istringstream iss(host_list);
+  std::string host_item;
+  while (getline(iss, host_item, ','))
+  {
+    if (openrasp::end_with(host_item, ".sock"))
+    {
+      append_socket(host_item);
+    }
+    else
+    {
+      std::string host;
+      int port = 27017;
+      std::size_t open_bracket = host_item.find("[");
+      std::size_t close_bracket = host_item.find("]");
+      if (open_bracket != std::string::npos &&
+          close_bracket != std::string::npos)
+      {
+        std::size_t colon = host_item.find(":", close_bracket);
+        if (colon != std::string::npos)
+        {
+          port = std::stoi(host_item.substr(colon + 1));
+        }
+        host = host_item.substr(1, close_bracket - open_bracket - 1);
+      }
+      else
+      {
+        std::size_t colon = host_item.find_last_of(":");
+        if (colon != std::string::npos)
+        {
+          if ((colon + 1) < host_item.size())
+          {
+            host = host_item.substr(0, colon);
+            port = std::stoi(host_item.substr(colon + 1));
+          }
+        }
+        else
+        {
+          host = host_item;
+        }
+      }
+      append_host_port(host, port);
+    }
+  }
+  return true;
 }

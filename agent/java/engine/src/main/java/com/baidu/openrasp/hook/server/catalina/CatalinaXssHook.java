@@ -21,14 +21,18 @@ import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.server.ServerXssHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
+import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.util.HashMap;
 
 /**
@@ -46,53 +50,95 @@ public class CatalinaXssHook extends ServerXssHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src1 = getInvokeStaticSrc(CatalinaXssHook.class, "getBufferFromByteArray", "$1,$2,$3", byte[].class, int.class, int.class);
-        String src2 = getInvokeStaticSrc(CatalinaXssHook.class, "getBufferFromByteBuffer", "$1", ByteBuffer.class);
-        insertBefore(ctClass, "realWriteBytes", "([BII)V", src1);
-        insertBefore(ctClass, "realWriteBytes", "(Ljava/nio/ByteBuffer;)V", src2);
+        String src = getInvokeStaticSrc(CatalinaXssHook.class, "getBuffer", "$0", Object.class);
+        insertBefore(ctClass, "close", "()V", src);
     }
 
-    public static void getBufferFromByteArray(byte[] buf, int off, int cnt) {
+    public static void getBuffer(Object out) {
         if (HookHandler.isEnableXssHook()) {
             HookHandler.disableBodyXssHook();
-            HashMap<String, Object> params = new HashMap<String, Object>();
-            if (buf != null && cnt > 0) {
-                try {
-                    byte[] temp = new byte[cnt + 1];
-                    System.arraycopy(buf, off, temp, 0, cnt);
-                    String content = new String(temp);
-                    params.put("html_body", content);
-
-                } catch (Exception e) {
-                    String message = ApplicationModel.getServerName() + " xss detectde failed";
-                    int errorCode = ErrorType.HOOK_ERROR.getCode();
-                    HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
-                }
-                if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
-                    HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
-                }
-            }
-        }
-    }
-
-    public static void getBufferFromByteBuffer(ByteBuffer buffer) {
-        if (HookHandler.isEnableXssHook()) {
-            HookHandler.disableBodyXssHook();
-            if (buffer != null) {
+            if (out != null) {
                 HashMap<String, Object> params = new HashMap<String, Object>();
                 try {
-                    byte[] bytes = buffer.array();
-                    String content = new String(bytes);
-                    params.put("html_body", content);
+                    Object buffer = getField(out, "cb");
+                    if (buffer instanceof CharBuffer) {
+                        String content = getContentFromCharBuffer(buffer);
+                        if (!StringUtils.isEmpty(content)) {
+                            params.put("html_body", content);
+                        }
+                    }
+                    if (params.isEmpty() && buffer != null && !isBuffer(buffer)) {
+                        String content = getContentFromCharChunk(buffer);
+                        if (!StringUtils.isEmpty(content)) {
+                            params.put("html_body", content);
+                        }
+                    }
+                    if (params.isEmpty()) {
+                        buffer = getField(out, "bb");
+                        if (buffer instanceof ByteBuffer) {
+                            String content = getContentFromByteBuffer(buffer);
+                            if (!StringUtils.isEmpty(content)) {
+                                params.put("html_body", content);
+                            }
+                        }
+                        if (params.isEmpty() && buffer != null && !isBuffer(buffer) ) {
+                            String content = getContentFromByteChunk(buffer);
+                            if (!StringUtils.isEmpty(content)) {
+                                params.put("html_body", content);
+                            }
+                        }
+                    }
                 } catch (Exception e) {
                     String message = ApplicationModel.getServerName() + " xss detectde failed";
                     int errorCode = ErrorType.HOOK_ERROR.getCode();
                     HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
                 }
-                if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
+                if (isCheckXss() && !params.isEmpty()) {
                     HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
                 }
             }
         }
+
+    }
+
+    public static String getContentFromCharBuffer(Object buffer) {
+        return ((CharBuffer) buffer).toString();
+    }
+
+    public static String getContentFromByteBuffer(Object buffer) {
+        byte[] bytes = ((ByteBuffer) buffer).array();
+        return new String(bytes);
+    }
+
+    public static String getContentFromByteChunk(Object buffer) {
+        byte[] bytes = (byte[]) Reflection.invokeMethod(buffer, "getBuffer", new Class[]{});
+        int start = (Integer) Reflection.invokeMethod(buffer, "getOffset", new Class[]{});
+        int len = (Integer) Reflection.invokeMethod(buffer, "getLength", new Class[]{});
+        byte[] temp = new byte[len + 1];
+        System.arraycopy(bytes, start, temp, 0, len);
+        return new String(temp);
+    }
+
+    public static String getContentFromCharChunk(Object buffer) {
+        char[] chars = (char[]) Reflection.invokeMethod(buffer, "getBuffer", new Class[]{});
+        int start = (Integer) Reflection.invokeMethod(buffer, "getOffset", new Class[]{});
+        int len = (Integer) Reflection.invokeMethod(buffer, "getLength", new Class[]{});
+        char[] temp = new char[len + 1];
+        System.arraycopy(chars, start, temp, 0, len);
+        return new String(temp);
+    }
+
+    public static Object getField(Object object, String fieldName) {
+        try {
+            Field field = object.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return field.get(object);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static boolean isBuffer(Object buffer) {
+        return buffer instanceof ByteBuffer || buffer instanceof CharBuffer;
     }
 }

@@ -21,10 +21,9 @@ import com.baidu.openrasp.cloud.model.HookWhiteModel;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.exceptions.SecurityException;
-import com.baidu.openrasp.hook.XXEHook;
+import com.baidu.openrasp.hook.xxe.XXEHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.request.DubboRequest;
 import com.baidu.openrasp.request.HttpServletRequest;
@@ -171,14 +170,13 @@ public class HookHandler {
             enableBodyXssHook();
             HttpServletRequest requestContainer = new HttpServletRequest(request);
             HttpServletResponse responseContainer = new HttpServletResponse(response);
-            responseContainer.setHeader(OPEN_RASP_HEADER_KEY, OPEN_RASP_HEADER_VALUE);
             responseContainer.setHeader(REQUEST_ID_HEADER_KEY, requestContainer.getRequestId());
             //设置响应的用户自定义头部
             setUserDefinedResponseHeader(responseContainer);
             requestCache.set(requestContainer);
             responseCache.set(responseContainer);
             XXEHook.resetLocalExpandedSystemIds();
-            doCheck(CheckParameter.Type.REQUEST, JSContext.getUndefinedValue());
+            doCheck(CheckParameter.Type.REQUEST, new Object());
         }
     }
 
@@ -195,7 +193,7 @@ public class HookHandler {
             DubboRequest requestContainer = new DubboRequest(request);
             requestCache.set(requestContainer);
             XXEHook.resetLocalExpandedSystemIds();
-            doCheck(CheckParameter.Type.DUBBOREQUEST, JSContext.getUndefinedValue());
+            doCheck(CheckParameter.Type.REQUEST, new Object());
         }
     }
 
@@ -348,6 +346,11 @@ public class HookHandler {
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
     public static void doCheckWithoutRequest(CheckParameter.Type type, Object params) {
+        //当服务器的cpu使用率超过90%，禁用全部hook点
+        if (Config.getConfig().getDisableHooks()) {
+            return;
+        }
+        //当云控注册成功之前，不进入任何hoo点
         if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
             return;
         }

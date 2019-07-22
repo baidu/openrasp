@@ -6,9 +6,21 @@ $plugin = <<<EOF
 plugin.register('command', (params, context) => {
     assert(params.command == 'echo test')
     assert(params.stack[0].endsWith('exec'))
-    for (let k in context) {
-        assert(!!context[k])
-    }
+    let str = JSON.stringify(context)
+    assert(/"requestId":"\w+"/.test(str))
+    assert(str.includes('"language":"php"'))
+    assert(str.includes('"server":"PHP"'))
+    assert(str.includes('"appBasePath":"/tmp/openrasp"'))
+    assert(str.includes('"remoteAddr":"127.0.0.1"'))
+    assert(str.includes('"protocol":"http"'))
+    assert(str.includes('"method":"post"'))
+    assert(str.includes('"querystring":"a[]=1&b=2"'))
+    assert(str.includes('"path":"/index.php"'))
+    assert(str.includes('"parameter":{"a":["1","2"],"b":["2"],"c":["1"],"d":["2"]}'))
+    assert(str.includes('"host":"rasp.baidu.com"'))
+    assert(str.includes('"content-length":"13"'))
+    assert(str.includes('"content-type":"application/x-www-form-urlencoded"'))
+    assert(str.includes('"url":"http://rasp.baidu.com/index.php"'))
     assert(String.fromCharCode.apply(this, new Uint8Array(context.body)) == 'c=1&d=2&a[]=2')
     return block
 })

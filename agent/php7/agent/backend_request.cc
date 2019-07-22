@@ -68,6 +68,11 @@ std::shared_ptr<BackendResponse> BackendRequest::curl_perform()
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunction);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &(response_string));
         curl_easy_setopt(curl, CURLOPT_HEADERDATA, &(header_string));
+#if LIBCURL_VERSION_NUM < 0x071506
+        curl_easy_setopt(curl, CURLOPT_ENCODING, "");
+#else
+        curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
+#endif
         curl_code = curl_easy_perform(curl);
         if (CURLE_OK == curl_code)
         {

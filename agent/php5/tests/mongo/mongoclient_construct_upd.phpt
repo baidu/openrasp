@@ -3,9 +3,6 @@ hook MongoClient::__construct username password database
 --SKIPIF--
 <?php
 if (PHP_MAJOR_VERSION >= 7) die('Skipped: no mongo extension in PHP7.');
-$conf = <<<CONF
-security.enforce_policy: true
-CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("mongo")) die("Skipped: mongo extension required.");
 ?>

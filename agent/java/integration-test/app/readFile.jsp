@@ -1,6 +1,7 @@
 <%@ page import="java.io.*" %>
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%
+    out.println(request.getParameter("test"));
     String filename = "/etc/passwd";
 
     FileInputStream fileIn = new FileInputStream(filename);

@@ -330,3 +330,27 @@ Object.defineProperty(global, 'CheckPointDeleteFile', {
     enumerable: true
 });
 
+var CheckPointMongo = function () {
+    function CheckPointMongo(data) {
+        _classCallCheck(this, CheckPointMongo);
+
+        this.server = data.server;
+        this.query = data.query;
+        this.class = data.class;
+        this.method = data.method;
+    }
+
+    _createClass(CheckPointMongo, null, [{
+        key: 'name',
+        get: function get() {
+            return 'mongo';
+        }
+    }]);
+
+    return CheckPointMongo;
+}();
+Object.defineProperty(global, 'CheckPointMongo', {
+    value: CheckPointMongo,
+    enumerable: true
+});
+

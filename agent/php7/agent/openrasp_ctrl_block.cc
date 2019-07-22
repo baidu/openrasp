@@ -20,6 +20,7 @@ extern "C"
 }
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 #include "openrasp_ctrl_block.h"
 
 namespace openrasp

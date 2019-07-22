@@ -22,7 +22,7 @@
 #include <cstdint>
 #include <memory>
 #include "utils/BaseReader.h"
-#include "openrasp_v8_bundle.h"
+#include "php/header.h"
 
 namespace openrasp
 {
@@ -109,13 +109,6 @@ class ClientipBlock
 {
 public:
   string header;
-  void update(BaseReader *reader);
-};
-
-class SecurityBlock
-{
-public:
-  bool enforce_policy = false;
   void update(BaseReader *reader);
 };
 

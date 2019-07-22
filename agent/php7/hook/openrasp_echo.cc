@@ -63,7 +63,7 @@ static bool echo_parameter_filter(const zval *inc_filename)
 {
     if (Z_TYPE_P(inc_filename) == IS_STRING &&
         (OPENRASP_CONFIG(xss.echo_filter_regex).empty() ||
-         openrasp::regex_match(Z_STRVAL_P(inc_filename), OPENRASP_CONFIG(xss.echo_filter_regex).c_str())))
+         openrasp::regex_search(Z_STRVAL_P(inc_filename), OPENRASP_CONFIG(xss.echo_filter_regex).c_str())))
     {
         return true;
     }

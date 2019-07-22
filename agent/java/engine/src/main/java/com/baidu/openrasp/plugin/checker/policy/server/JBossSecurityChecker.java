@@ -140,7 +140,6 @@ public class JBossSecurityChecker extends ServerPolicyChecker {
             DocumentBuilder builder = factory.newDocumentBuilder();
             return builder.parse(file);
         } catch (Exception e) {
-            e.printStackTrace();
             String message = JBOSS_SECURITY_CHECK_ERROR + ": " + e.getMessage();
             int errorCode = ErrorType.PLUGIN_ERROR.getCode();
             LOGGER.error(CloudUtils.getExceptionObject(message, errorCode), e);

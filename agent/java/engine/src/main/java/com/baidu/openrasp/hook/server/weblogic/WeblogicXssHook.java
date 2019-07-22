@@ -63,7 +63,7 @@ public class WeblogicXssHook extends ServerXssHook {
                 int errorCode = ErrorType.HOOK_ERROR.getCode();
                 HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
             }
-            if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
+            if (isCheckXss() && !params.isEmpty()) {
                 HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
             }
         }

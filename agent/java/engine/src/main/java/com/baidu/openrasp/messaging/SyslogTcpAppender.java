@@ -750,7 +750,7 @@ public class SyslogTcpAppender extends AppenderSkeleton {
      * @author Ceki G&uuml;lc&uuml;
      * @since 0.8.4
      */
-    class Connector extends Thread {
+    public class Connector extends Thread {
 
         boolean interrupted = false;
 

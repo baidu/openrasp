@@ -85,12 +85,6 @@ bool JsonReader::fetch_bool(const std::vector<std::string> &keys, const bool &de
   }
 }
 
-void JsonReader::erase(const std::vector<std::string> &keys)
-{
-  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
-  j.erase(ptr);
-}
-
 std::vector<std::string> JsonReader::fetch_object_keys(const std::vector<std::string> &keys)
 {
   std::vector<std::string> result;
@@ -180,6 +174,13 @@ size_t JsonReader::get_array_size(const std::vector<std::string> &keys)
   {
   }
   return result;
+}
+
+void JsonReader::write_map(const std::vector<std::string> &keys, const std::map<std::string, std::string> &value)
+{
+  json j_map(value);
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
+  j[ptr] = j_map;
 }
 
 } // namespace openrasp

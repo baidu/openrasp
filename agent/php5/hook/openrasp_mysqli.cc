@@ -96,6 +96,10 @@ static bool init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
     {
         username = default_user;
     }
+    if (!passwd)
+    {
+        passwd = default_password;
+    }
     if (!port)
     {
         port = default_port;
@@ -110,6 +114,7 @@ static bool init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
     }
     sql_connection_p->set_server("mysql");
     sql_connection_p->set_username(SAFE_STRING(username));
+    sql_connection_p->set_password(SAFE_STRING(passwd));
     sql_connection_p->set_using_socket(nullptr == hostname || strcmp("localhost", hostname) == 0);
     sql_connection_p->set_socket(SAFE_STRING(socket));
     sql_connection_p->append_host_port(SAFE_STRING(hostname), port);
@@ -154,8 +159,7 @@ void post_mysqli_mysqli_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     sql_connection_entry conn_entry;
     if (Z_TYPE_P(this_ptr) == IS_OBJECT && 0 == fetch_mysqli_errno("mysqli_connect_errno", 0, nullptr TSRMLS_CC) &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli__construct_conn_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &conn_entry))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli__construct_conn_entry, &conn_entry))
     {
         handle_block(TSRMLS_C);
     }
@@ -175,8 +179,7 @@ void post_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETER
 {
     sql_connection_entry conn_entry;
     if (Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value) &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_conn_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &conn_entry))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_conn_entry, &conn_entry))
     {
         handle_block(TSRMLS_C);
     }
@@ -233,8 +236,7 @@ void post_global_mysqli_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMET
 {
     sql_connection_entry conn_entry;
     if (Z_TYPE_P(return_value) == IS_OBJECT && 0 == fetch_mysqli_errno("mysqli_connect_errno", 0, nullptr TSRMLS_CC) &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &conn_entry))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry, &conn_entry))
     {
         handle_block(TSRMLS_C);
     }
@@ -254,8 +256,7 @@ void post_global_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PA
 {
     sql_connection_entry conn_entry;
     if (Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value) &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_real_connect_conn_entry,
-                                           OPENRASP_CONFIG(security.enforce_policy) ? 1 : 0, &conn_entry))
+        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_real_connect_conn_entry, &conn_entry))
     {
         handle_block(TSRMLS_C);
     }

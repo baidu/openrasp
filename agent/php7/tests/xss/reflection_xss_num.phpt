@@ -22,11 +22,10 @@ include(__DIR__.'/../skipif.inc');
 openrasp.root_dir=/tmp/openrasp
 --CGI--
 --GET--
-a=<script>alert("xss")</script>&b=<script>alert("xss")</script>
+a=<script>alert("xss")</script>&b=<script>alert("xss")</script>&c=<script>alert("xss")</script>
 --FILE--
 <?php
 echo '<pre>just kidding</pre>';
 ?>
---EXPECTHEADERS--
-Location: /block?request_id=
 --EXPECT--
+<pre>just kidding</pre>

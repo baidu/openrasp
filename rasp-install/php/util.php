@@ -180,6 +180,6 @@ $ini_loaded_file 	= php_ini_loaded_file();
 $ini_scanned_path 	= get_ini_scanned_path();
 //make sure loaded after json and pdo
 $ini_scanned_file 	= 'z_openrasp.ini';
-$openrasp_work_sub_folders = array('conf'=>0755, 'assets'=>0755, 'logs'=>0777, 'locale'=>0755, 'plugins'=>0777);
+$openrasp_work_sub_folders = array('conf'=>0777, 'assets'=>0755, 'logs'=>0777, 'locale'=>0755, 'plugins'=>0777);
 
 ?>

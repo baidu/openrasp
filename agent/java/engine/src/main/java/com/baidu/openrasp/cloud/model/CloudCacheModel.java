@@ -34,6 +34,7 @@ public class CloudCacheModel {
     public String algorithmConfig;
     public String raspId;
     public String masterIp = "";
+    public String pluginName = "";
     public static LRUCache<Long, Long> reportCache = new LRUCache<Long, Long>(CACHE_SIZE);
 
     private CloudCacheModel() {
@@ -97,6 +98,14 @@ public class CloudCacheModel {
 
     public void setMasterIp(String masterIp) {
         this.masterIp = masterIp;
+    }
+
+    public String getPluginName() {
+        return pluginName;
+    }
+
+    public void setPluginName(String pluginName) {
+        this.pluginName = pluginName;
     }
 
     public static CloudCacheModel getInstance() {

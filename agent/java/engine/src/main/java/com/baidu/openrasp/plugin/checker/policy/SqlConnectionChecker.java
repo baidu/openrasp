@@ -19,6 +19,7 @@ package com.baidu.openrasp.plugin.checker.policy;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
@@ -28,6 +29,13 @@ import org.apache.log4j.Logger;
 import java.util.*;
 
 public class SqlConnectionChecker extends PolicyChecker {
+    public SqlConnectionChecker() {
+        super();
+    }
+
+    public SqlConnectionChecker(boolean canBlock) {
+        super(canBlock);
+    }
 
     private static final String SQL_TYPE_SQLSERVRE = "sqlserver";
     private static final String SQL_TYPE_ORACLE = "oracle";
@@ -41,7 +49,7 @@ public class SqlConnectionChecker extends PolicyChecker {
     private static final String DEFAULT_POSTGRESQL_PORT = "5432";
     private static final String DEFAULT_SQLSERVRE_PORT = "1433";
     private static final String[] WEAK_WORDS = new String[]{"root", "123", "123456", "a123456", "123456a", "111111",
-            "123123", "admin", "user", "mysql",""};
+            "123123", "admin", "user", "mysql", ""};
     public static HashMap<String, Long> alarmTimeCache = new HashMap<String, Long>();
 
     private boolean checkUser(String user, String sqlType) {
@@ -69,7 +77,7 @@ public class SqlConnectionChecker extends PolicyChecker {
     }
 
     private boolean checkPassword(String password) {
-        List<String> checkList = Arrays.asList(WEAK_WORDS);
+        List<String> checkList = Arrays.asList(getSecurityWeakPasswords());
         return !checkList.contains(password);
     }
 
@@ -90,13 +98,13 @@ public class SqlConnectionChecker extends PolicyChecker {
             Map<String, String> map = parseConnectionString(url);
             if (map != null) {
                 sqlType = map.get("type");
-                user = properties.getProperty(CONNECTION_USER_KEY);
+                user = map.get("user");
                 if (user == null) {
-                    user = map.get("user");
+                    user = properties.getProperty(CONNECTION_USER_KEY);
                 }
-                password = properties.getProperty("password");
+                password = map.get("password");
                 if (password == null) {
-                    password = map.get("password");
+                    password = properties.getProperty("password");
                 }
                 urlWithoutParams = map.get("urlWithoutParams");
                 socket = map.get("socket");
@@ -134,7 +142,7 @@ public class SqlConnectionChecker extends PolicyChecker {
                 alarmTimeCache.clear();
             }
             alarmTimeCache.put(url, System.currentTimeMillis());
-            String unsafeMessage = "Database security baseline - the password \"" + password + "\" is detected weak password combination , username is " + user;
+            String unsafeMessage = "Database security baseline - detected weak password for \"" + user + "\" account, password is \"" + password + "\"";
             if (infos == null) {
                 infos = new LinkedList<EventInfo>();
             }
@@ -143,7 +151,7 @@ public class SqlConnectionChecker extends PolicyChecker {
             params.put("connectionString", urlWithoutParams != null ? urlWithoutParams : "");
             params.put("username", user != null ? user : "");
             params.put("password", password);
-            infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.SQL_CONNECTION, unsafeMessage, true, params));
+            infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.MANAGER_PASSWORD, unsafeMessage, true, params));
         }
         return infos;
     }
@@ -292,4 +300,11 @@ public class SqlConnectionChecker extends PolicyChecker {
         }
     }
 
+    /**
+     * 从配置获取弱口令列表
+     */
+    public String[] getSecurityWeakPasswords() {
+        String[] securityWeakPasswords = Config.getConfig().getSecurityWeakPasswords();
+        return securityWeakPasswords != null ? securityWeakPasswords : WEAK_WORDS;
+    }
 }

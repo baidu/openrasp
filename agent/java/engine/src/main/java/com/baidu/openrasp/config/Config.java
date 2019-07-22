@@ -39,10 +39,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 
 /**
@@ -84,11 +81,15 @@ public class Config extends FileScanListener {
         SYSLOG_FACILITY("syslog.facility", "1"),
         SYSLOG_RECONNECT_INTERVAL("syslog.reconnect_interval", "300000"),
         LOG_MAXBURST("log.maxburst", "100"),
-        HEARTBEAT_INTERVAL("cloud.heartbeat_interval", "180"),
+        HEARTBEAT_INTERVAL("cloud.heartbeat_interval", "90"),
         HOOK_WHITE("hook.white", ""),
         HOOK_WHITE_ALL("hook.white.ALL", "true"),
         DECOMPILE_ENABLE("decompile.enable", "false"),
-        RESPONSE_HEADERS("inject.custom_headers", "");
+        RESPONSE_HEADERS("inject.custom_headers", ""),
+        DEPENDENCY_CHECK_INTERVAL("dependency_check.interval", "21600"),
+        SECURITY_WEAK_PASSWORDS("security.weak_passwords", ""),
+        CPU_USAGE_PERCENT("cpu.usage.percent", "0.9"),
+        CPU_USAGE_ENABLE("cpu.usage.enable", "false");
 
 
         Item(String key, String defaultValue) {
@@ -120,7 +121,7 @@ public class Config extends FileScanListener {
     public static String baseDirectory;
     private static Integer watchId;
     //全局lru的缓存
-    public static LRUCache<String, String> commonLRUCache;
+    public static LRUCache<Object, String> commonLRUCache;
 
     private String configFileDir;
     private int pluginMaxStack;
@@ -159,6 +160,11 @@ public class Config extends FileScanListener {
     private boolean decompileEnable;
     private Map<String, String> responseHeaders;
     private int logMaxBackUp;
+    private int dependencyCheckInterval;
+    private String[] securityWeakPasswords;
+    private boolean disableHooks;
+    private boolean cpuUsageEnable;
+    private float cpuUsagePercent;
 
 
     static {
@@ -167,7 +173,7 @@ public class Config extends FileScanListener {
             CustomResponseHtml.load(baseDirectory);
         }
         //初始化全局缓存
-        commonLRUCache = new LRUCache<String, String>(getConfig().getSqlCacheCapacity());
+        commonLRUCache = new LRUCache<Object, String>(getConfig().getSqlCacheCapacity());
         LOGGER.info("baseDirectory: " + baseDirectory);
     }
 
@@ -243,6 +249,17 @@ public class Config extends FileScanListener {
                     }
                     continue;
                 }
+                if (item.key.equals(Item.SECURITY_WEAK_PASSWORDS.key)) {
+                    if (properties != null) {
+                        Object object = properties.get(item.key);
+                        if (object instanceof List) {
+                            List<String> weakPasswords = (List<String>) object;
+                            String[] array = new String[weakPasswords.size()];
+                            setSecurityWeakPasswords(weakPasswords.toArray(array));
+                        }
+                    }
+                    continue;
+                }
                 if (item.isProperties) {
                     setConfigFromProperties(item, properties, isInit);
                 }
@@ -273,6 +290,12 @@ public class Config extends FileScanListener {
                     Map<String, String> headers = CloudUtils.getMapGsonObject().fromJson((JsonObject) entry.getValue(), Map.class);
                     setResponseHeaders(headers);
                 }
+            } else if (entry.getKey().equals(Item.SECURITY_WEAK_PASSWORDS.key)) {
+                if (entry.getValue() instanceof List) {
+                    List<String> weakPasswords = (List<String>) entry.getValue();
+                    String[] array = new String[weakPasswords.size()];
+                    setSecurityWeakPasswords(weakPasswords.toArray(array));
+                }
             } else {
                 if (entry.getValue() instanceof JsonPrimitive) {
                     setConfig(entry.getKey(), ((JsonPrimitive) entry.getValue()).getAsString(), isInit);
@@ -294,6 +317,8 @@ public class Config extends FileScanListener {
                     DynamicConfigAppender.updateSyslogTag();
                     //是否开启log4j的debug
                     DynamicConfigAppender.enableDebug();
+                    //更新log4j appender 打印日志的路径
+                    DynamicConfigAppender.updateLog4jPath(false, null);
                     //更新log4j的日志限速
                     DynamicConfigAppender.fileAppenderAddBurstFilter();
                     //更新log4j的日志最大备份天数
@@ -353,7 +378,6 @@ public class Config extends FileScanListener {
     private void handleException(String message, Exception e) {
         int errorCode = ErrorType.CONFIG_ERROR.getCode();
         LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
-        System.out.println(message);
     }
 
     private static class ConfigHolder {
@@ -859,7 +883,12 @@ public class Config extends FileScanListener {
             this.sqlCacheCapacity = 1024;
         }
         if (Config.commonLRUCache == null || Config.commonLRUCache.maxSize() != this.sqlCacheCapacity) {
-            Config.commonLRUCache = new LRUCache<String, String>(this.sqlCacheCapacity);
+            if (Config.commonLRUCache == null) {
+                Config.commonLRUCache = new LRUCache<Object, String>(this.sqlCacheCapacity);
+            } else {
+                Config.commonLRUCache.clear();
+                Config.commonLRUCache = new LRUCache<Object, String>(this.sqlCacheCapacity);
+            }
         }
     }
 
@@ -996,6 +1025,24 @@ public class Config extends FileScanListener {
      */
     public synchronized void setHookWhiteAll(String hookWhiteAll) {
         this.hookWhiteAll = Boolean.parseBoolean(hookWhiteAll);
+    }
+
+    /**
+     * 获取是否禁用全部hook点，
+     *
+     * @return 是否禁用全部hook点
+     */
+    public boolean getDisableHooks() {
+        return disableHooks;
+    }
+
+    /**
+     * 设置是否禁用全部hook点，
+     *
+     * @param disableHooks 是否禁用全部hook点
+     */
+    public synchronized void setDisableHooks(String disableHooks) {
+        this.disableHooks = Boolean.parseBoolean(disableHooks);
     }
 
     /**
@@ -1141,13 +1188,80 @@ public class Config extends FileScanListener {
      *
      * @param logMaxBackUp log4j最大日志备份天数
      */
-    public void setLogMaxBackUp(String logMaxBackUp) {
-        this.logMaxBackUp = Integer.parseInt(logMaxBackUp);
+    public synchronized void setLogMaxBackUp(String logMaxBackUp) {
+        this.logMaxBackUp = Integer.parseInt(logMaxBackUp) + 1;
         if (this.logMaxBackUp <= 0) {
             this.logMaxBackUp = 30;
         }
     }
 
+    /**
+     * 获取dependencyChecker的上报时间间隔
+     *
+     * @return dependencyChecker的上报时间间隔
+     */
+    public int getDependencyCheckInterval() {
+        return dependencyCheckInterval;
+    }
+
+    /**
+     * 设置dependencyChecker的上报时间间隔
+     *
+     * @param dependencyCheckInterval dependencyChecker的上报时间间隔
+     */
+    public synchronized void setDependencyCheckInterval(String dependencyCheckInterval) {
+        this.dependencyCheckInterval = Integer.parseInt(dependencyCheckInterval);
+        if (!(this.dependencyCheckInterval >= 60 && this.dependencyCheckInterval <= 24 * 3600)) {
+            this.dependencyCheckInterval = 6 * 3600;
+        }
+    }
+
+    public String[] getSecurityWeakPasswords() {
+        return securityWeakPasswords;
+    }
+
+    public synchronized void setSecurityWeakPasswords(String[] securityWeakPasswords) {
+        this.securityWeakPasswords = securityWeakPasswords;
+    }
+
+    /**
+     * 获取agent是否开启cpu熔断策略
+     *
+     * @return 是否开启cpu熔断策略
+     */
+    public boolean getCpuUsageEnable() {
+        return cpuUsageEnable;
+    }
+
+    /**
+     * 设置agent是否开启cpu熔断策略
+     *
+     * @param cpuUsageEnable agent是否开启cpu熔断策略
+     */
+    public synchronized void setCpuUsageEnable(String cpuUsageEnable) {
+        this.cpuUsageEnable = Boolean.parseBoolean(cpuUsageEnable);
+    }
+
+    /**
+     * 获取cpu的使用率的百分比
+     *
+     * @return cpu的使用率的百分比
+     */
+    public float getCpuUsagePercent() {
+        return cpuUsagePercent;
+    }
+
+    /**
+     * 设置cpu的使用率的百分比
+     *
+     * @param cpuUsagePercent cpu的使用率的百分比
+     */
+    public void setCpuUsagePercent(String cpuUsagePercent) {
+        this.cpuUsagePercent = Float.parseFloat(cpuUsagePercent);
+        if (!(this.cpuUsagePercent >= 0.3 && this.cpuUsagePercent <= 0.9)) {
+            this.cpuUsagePercent = 0.9f;
+        }
+    }
     //--------------------------统一的配置处理------------------------------------
 
     /**
@@ -1226,6 +1340,12 @@ public class Config extends FileScanListener {
                 setDecompileEnable(value);
             } else if (Item.LOG_MAX_BACKUP.key.equals(key)) {
                 setLogMaxBackUp(value);
+            } else if (Item.DEPENDENCY_CHECK_INTERVAL.key.equals(key)) {
+                setDependencyCheckInterval(value);
+            } else if (Item.CPU_USAGE_ENABLE.key.equals(key)) {
+                setCpuUsageEnable(value);
+            } else if (Item.CPU_USAGE_PERCENT.key.equals(key)) {
+                setCpuUsagePercent(value);
             } else {
                 isHit = false;
             }

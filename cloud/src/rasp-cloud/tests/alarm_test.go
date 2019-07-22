@@ -20,6 +20,8 @@ import (
 	"rasp-cloud/models/logs"
 	"errors"
 	"rasp-cloud/mongo"
+	"os"
+	"html/template"
 )
 
 type writerCloser struct {
@@ -146,14 +148,35 @@ func TestAttackAlarmPush(t *testing.T) {
 
 		Convey("when the email start with tls", func() {
 			start.TestApp.EmailAlarmConf.TlsEnable = true
+			start.TestApp.EmailAlarmConf.ServerAddr = "smtp.rasp.com"
 			err := models.PushEmailAttackAlarm(start.TestApp, 1, alarms, false)
 			So(err, ShouldEqual, nil)
+		})
+
+		Convey("when then the func of get hostname has errors", func() {
+			start.TestApp.EmailAlarmConf.From = ""
+			monkey.Patch(os.Hostname, func() (name string, err error) {
+				return "", errors.New("")
+			})
+			defer monkey.Unpatch(os.Hostname)
+			err := models.PushEmailAttackAlarm(start.TestApp, 1, alarms, false)
+			So(err, ShouldEqual, nil)
+		})
+
+		Convey("when the email subject is empty", func() {
+			start.TestApp.EmailAlarmConf.Subject = ""
+			start.TestApp.EmailAlarmConf.ServerAddr = "smtp.rasp.com"
+			start.TestApp.EmailAlarmConf.Password = ""
+			err := models.PushEmailAttackAlarm(start.TestApp, 1, alarms, false)
+			So(err, ShouldEqual, nil)
+			start.TestApp.EmailAlarmConf.Subject = "openrasp"
 		})
 
 		Convey("when tls dialog has errors", func() {
 			monkey.Patch(tls.DialWithDialer, func(*net.Dialer, string, string, *tls.Config) (*tls.Conn, error) {
 				return &tls.Conn{}, errors.New("")
 			})
+			defer monkey.Unpatch(tls.DialWithDialer)
 			start.TestApp.EmailAlarmConf.TlsEnable = true
 			err := models.PushEmailAttackAlarm(start.TestApp, 1, alarms, false)
 			So(err, ShouldNotEqual, nil)
@@ -163,6 +186,7 @@ func TestAttackAlarmPush(t *testing.T) {
 			monkey.Patch(smtp.NewClient, func(conn net.Conn, host string) (*smtp.Client, error) {
 				return &smtp.Client{}, errors.New("")
 			})
+			defer monkey.Unpatch(smtp.NewClient)
 			start.TestApp.EmailAlarmConf.TlsEnable = true
 			err := models.PushEmailAttackAlarm(start.TestApp, 1, alarms, false)
 			So(err, ShouldNotEqual, nil)
@@ -174,6 +198,7 @@ func TestAttackAlarmPush(t *testing.T) {
 					return errors.New("")
 				},
 			)
+			defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&smtp.Client{}), "Auth")
 			start.TestApp.EmailAlarmConf.TlsEnable = true
 			err := models.PushEmailAttackAlarm(start.TestApp, 1, alarms, false)
 			So(err, ShouldNotEqual, nil)
@@ -185,6 +210,7 @@ func TestAttackAlarmPush(t *testing.T) {
 					return errors.New("")
 				},
 			)
+			defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&smtp.Client{}), "Mail")
 			start.TestApp.EmailAlarmConf.TlsEnable = true
 			err := models.PushEmailAttackAlarm(start.TestApp, 1, alarms, false)
 			So(err, ShouldNotEqual, nil)
@@ -196,6 +222,7 @@ func TestAttackAlarmPush(t *testing.T) {
 					return errors.New("")
 				},
 			)
+			defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&smtp.Client{}), "Rcpt")
 			start.TestApp.EmailAlarmConf.TlsEnable = true
 			err := models.PushEmailAttackAlarm(start.TestApp, 1, alarms, false)
 			So(err, ShouldNotEqual, nil)
@@ -207,6 +234,7 @@ func TestAttackAlarmPush(t *testing.T) {
 					return &writerCloser{}, errors.New("")
 				},
 			)
+			defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&smtp.Client{}), "Data")
 			start.TestApp.EmailAlarmConf.TlsEnable = true
 			err := models.PushEmailAttackAlarm(start.TestApp, 1, alarms, false)
 			So(err, ShouldNotEqual, nil)
@@ -216,8 +244,39 @@ func TestAttackAlarmPush(t *testing.T) {
 			monkey.Patch(smtp.SendMail, func(string, smtp.Auth, string, []string, []byte) error {
 				return errors.New("")
 			})
+			defer monkey.Unpatch(smtp.SendMail)
 			start.TestApp.EmailAlarmConf.TlsEnable = false
 			err := models.PushEmailAttackAlarm(start.TestApp, 1, alarms, false)
+			So(err, ShouldNotEqual, nil)
+		})
+
+		Convey("when html template error ", func() {
+			monkey.Patch(template.ParseFiles, func(filenames ...string) (*template.Template, error) {
+				return nil, errors.New("")
+			})
+			defer monkey.Unpatch(template.ParseFiles)
+			start.TestApp.EmailAlarmConf.TlsEnable = false
+			err := models.PushEmailAttackAlarm(start.TestApp, 1, alarms, false)
+			So(err, ShouldNotEqual, nil)
+		})
+
+		Convey("when template render has error ", func() {
+			monkey.PatchInstanceMethod(reflect.TypeOf(&template.Template{}), "Execute",
+				func(*template.Template, io.Writer, interface{}) error {
+					return errors.New("")
+				},
+			)
+			defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&template.Template{}), "Execute")
+			start.TestApp.EmailAlarmConf.TlsEnable = false
+			err := models.PushEmailAttackAlarm(start.TestApp, 1, alarms, false)
+			So(err, ShouldNotEqual, nil)
+		})
+
+		Convey("when the email server address is empty", func() {
+			start.TestApp.EmailAlarmConf.TlsEnable = false
+			start.TestApp.EmailAlarmConf.ServerAddr = ""
+			err := models.PushEmailAttackAlarm(start.TestApp, 1, alarms, false)
+			start.TestApp.EmailAlarmConf.ServerAddr = "smtp.rasp.com"
 			So(err, ShouldNotEqual, nil)
 		})
 

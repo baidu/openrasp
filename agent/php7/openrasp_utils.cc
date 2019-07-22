@@ -21,13 +21,13 @@
 #include "utils/debug_trace.h"
 #include <string>
 #include <set>
+#include "utils/regex.h"
 extern "C"
 {
 #include "php_ini.h"
 #include "php_main.h"
 #include "php_streams.h"
 #include "zend_smart_str.h"
-#include "ext/pcre/php_pcre.h"
 #include "ext/standard/url.h"
 #include "ext/standard/file.h"
 #include "ext/json/php_json.h"
@@ -124,7 +124,12 @@ void format_source_code_arr(zval *source_code_arr)
 
 std::vector<std::string> format_debug_backtrace_arr()
 {
-    std::vector<DebugTrace> trace = build_debug_trace(OPENRASP_CONFIG(plugin.maxstack));
+    return format_debug_backtrace_arr(OPENRASP_CONFIG(plugin.maxstack));
+}
+
+std::vector<std::string> format_debug_backtrace_arr(long limit)
+{
+    std::vector<DebugTrace> trace = build_debug_trace(limit);
     std::vector<std::string> array;
     for (DebugTrace &item : trace)
     {
@@ -236,22 +241,34 @@ bool need_alloc_shm_current_sapi()
 
 std::string convert_to_header_key(char *key, size_t length)
 {
-    if (key == nullptr ||
-        strncmp(key, "HTTP_", 5) != 0)
+    std::string result;
+    if (nullptr == key)
     {
-        return "";
+        return result;
     }
-    std::string result(key + 5, length - 5);
-    for (auto &ch : result)
+    if (strcmp("HTTP_CONTENT_TYPE", key) == 0 || strcmp("CONTENT_TYPE", key) == 0)
     {
-        if (ch == '_')
+        result = "content-type";
+    }
+    else if (strcmp("HTTP_CONTENT_LENGTH", key) == 0 || strcmp("CONTENT_LENGTH", key) == 0)
+    {
+        result = "content-length";
+    }
+    else if (strncmp(key, "HTTP_", 5) == 0)
+    {
+        std::string http_header(key + 5, length - 5);
+        for (auto &ch : http_header)
         {
-            ch = '-';
+            if (ch == '_')
+            {
+                ch = '-';
+            }
+            else
+            {
+                ch = std::tolower(ch);
+            }
         }
-        else
-        {
-            ch = std::tolower(ch);
-        }
+        result = http_header;
     }
     return result;
 }
@@ -377,8 +394,65 @@ zval *fetch_http_globals(int vars_id)
         if (Z_TYPE(PG(http_globals)[vars_id]) == IS_ARRAY ||
             zend_is_auto_global_str(const_cast<char *>(it->second.c_str()), it->second.length()))
         {
-            return &PG(http_globals)[TRACK_VARS_SERVER];
+            return &PG(http_globals)[it->first];
         }
     }
     return nullptr;
+}
+
+bool verify_remote_management_ini()
+{
+    if (openrasp_ini.remote_management_enable && need_alloc_shm_current_sapi())
+    {
+        if (nullptr == openrasp_ini.backend_url || strcmp(openrasp_ini.backend_url, "") == 0)
+        {
+            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.backend_url is required when remote management is enabled."));
+            return false;
+        }
+        if (nullptr == openrasp_ini.app_id || strcmp(openrasp_ini.app_id, "") == 0)
+        {
+            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_id is required when remote management is enabled."));
+            return false;
+        }
+        else
+        {
+            if (!openrasp::regex_match(openrasp_ini.app_id, "^[0-9a-fA-F]{40}$"))
+            {
+                openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_id must be exactly 40 characters long."));
+                return false;
+            }
+        }
+        if (nullptr == openrasp_ini.app_secret || strcmp(openrasp_ini.app_secret, "") == 0)
+        {
+            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_secret is required when remote management is enabled."));
+            return false;
+        }
+        else
+        {
+            if (!openrasp::regex_match(openrasp_ini.app_secret, "^[0-9a-zA-Z_-]{43,45}"))
+            {
+                openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.app_secret configuration format is incorrect."));
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+std::map<std::string, std::string> get_env_map()
+{
+    std::map<std::string, std::string> result;
+    char **env;
+    for (env = environ; env != NULL && *env != NULL; env++)
+    {
+        std::string item(*env);
+        std::size_t found = item.find("=");
+        if (found != std::string::npos)
+        {
+            std::string key = item.substr(0, found);
+            std::string value = item.substr(found + 1);
+            result.insert({key, value});
+        }
+    }
+    return result;
 }

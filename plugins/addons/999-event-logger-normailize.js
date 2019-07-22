@@ -14,6 +14,12 @@ const clean = {
     confidence: 0
 }
 
+// BEGIN ALGORITHM CONFIG //
+
+var algorithmConfig = {}
+
+// END ALGORITHM CONFIG //
+
 plugin.register('directory', function (params, context) {
     plugin.log('Listing directory content: ' + params.realpath)
     return clean
