@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"crypto/md5"
 	"github.com/astaxie/beego"
-	"time"
 	"rasp-cloud/conf"
 )
 
@@ -27,9 +26,8 @@ var (
 		EsType:       "policy-alarm",
 		EsIndex:      "openrasp-policy-alarm",
 		EsAliasIndex: "real-openrasp-policy-alarm",
-		TtlTime:      24 * 365 * time.Hour,
 		AlarmBuffer:  make(chan map[string]interface{}, conf.AppConfig.AlarmBufferSize),
-		FileLogger:   initAlarmFileLogger("/openrasp-logs/policy-alarm", "policy.log"),
+		FileLogger:   initAlarmFileLogger("openrasp-logs/policy-alarm", "policy.log"),
 	}
 )
 

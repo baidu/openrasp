@@ -140,7 +140,7 @@ func InitRouter() {
 		tools.Panic(tools.ErrCodeStartTypeNotSupport, "The start type is not supported: "+startType, nil)
 	}
 	if startType == conf.StartTypeForeground || startType == conf.StartTypeDefault {
-		beego.SetStaticPath("//", tools.GetCurrentPathWithPanic()+"/dist")
+		beego.SetStaticPath("//", "dist")
 	}
 	beego.AddNamespace(ns)
 }

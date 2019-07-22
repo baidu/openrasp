@@ -49,47 +49,43 @@ public class XssChecker extends ConfigurableChecker {
         if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
             if (HookHandler.requestCache.get() != null && content != null) {
                 Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
-                String regex = getStringElement(config, CONFIG_KEY_XSS_USER_INPUT, XSS_REGEX);
-                if (regex == null) {
-                    regex = DEFAULT_XSS_REGEX;
-                }
-                Pattern pattern = Pattern.compile(regex);
+                if (parameterMap != null) {
+                    String regex = getStringElement(config, CONFIG_KEY_XSS_USER_INPUT, XSS_REGEX);
+                    if (regex == null) {
+                        regex = DEFAULT_XSS_REGEX;
+                    }
+                    Pattern pattern = Pattern.compile(regex);
 
-                int xssParameterLength = getIntElement(config, CONFIG_KEY_XSS_USER_INPUT, XSS_PARAMETER_LENGTH);
-                if (xssParameterLength < 0) {
-                    xssParameterLength = DEFAULT_MIN_LENGTH;
-                }
-                int exceedLengthCount = getIntElement(config, CONFIG_KEY_XSS_USER_INPUT, EXCEED_LENGTH_COUNT);
-                if (exceedLengthCount < 0) {
-                    exceedLengthCount = DEFAULT_MAX_DETECTION_NUM;
-                }
-                int count = 0;
-                for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
-                    for (String value : entry.getValue()) {
-                        Matcher matcher = pattern.matcher(value);
-                        boolean isMatch = matcher.find();
-                        if (value.length() >= xssParameterLength && isMatch) {
-                            count++;
-                            if (content.contains(value)) {
-                                if ("websphere".equals(ApplicationModel.getServerName())) {
-                                    Reflection.invokeMethod(HookHandler.responseCache.get(), "resetBuffer", new Class[]{});
+                    int xssParameterLength = getIntElement(config, CONFIG_KEY_XSS_USER_INPUT, XSS_PARAMETER_LENGTH);
+                    if (xssParameterLength < 0) {
+                        xssParameterLength = DEFAULT_MIN_LENGTH;
+                    }
+                    int exceedLengthCount = getIntElement(config, CONFIG_KEY_XSS_USER_INPUT, EXCEED_LENGTH_COUNT);
+                    if (exceedLengthCount < 0) {
+                        exceedLengthCount = DEFAULT_MAX_DETECTION_NUM;
+                    }
+                    int count = 0;
+                    for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+                        for (String value : entry.getValue()) {
+                            Matcher matcher = pattern.matcher(value);
+                            boolean isMatch = matcher.find();
+                            if (value.length() >= xssParameterLength && isMatch) {
+                                count++;
+                                if (content.contains(value)) {
+                                    if ("websphere".equals(ApplicationModel.getServerName())) {
+                                        Reflection.invokeMethod(HookHandler.responseCache.get(), "resetBuffer", new Class[]{});
+                                    }
+                                    String message = "Reflected XSS attack detected, parameter name: " + entry.getKey();
+                                    Map<String, Object> params = (Map<String, Object>) checkParameter.getParams();
+                                    params.remove("html_body");
+                                    params.put("name", entry.getKey());
+                                    params.put("value", value);
+                                    result.add(AttackInfo.createLocalAttackInfo(checkParameter, action, message, CONFIG_KEY_XSS_USER_INPUT));
+                                    return result;
                                 }
-                                String message = "Reflected XSS attack detected, parameter name: " + entry.getKey();
-                                Map<String, Object> params = (Map<String, Object>) checkParameter.getParams();
-                                params.remove("html_body");
-                                params.put("name", entry.getKey());
-                                params.put("value", value);
-                                result.add(AttackInfo.createLocalAttackInfo(checkParameter, action, message, CONFIG_KEY_XSS_USER_INPUT));
-                                return result;
-                            }
-                            if (count > exceedLengthCount) {
-                                String message = "Reflected XSS attack detected: more than " + exceedLengthCount + " html tags detected in userinput";
-                                Map<String, Object> params = (Map<String, Object>) checkParameter.getParams();
-                                params.remove("html_body");
-                                params.put("name", "");
-                                params.put("value", "");
-                                result.add(AttackInfo.createLocalAttackInfo(checkParameter, action, message, CONFIG_KEY_XSS_USER_INPUT));
-                                return result;
+                                if (count > exceedLengthCount) {
+                                    return result;
+                                }
                             }
                         }
                     }

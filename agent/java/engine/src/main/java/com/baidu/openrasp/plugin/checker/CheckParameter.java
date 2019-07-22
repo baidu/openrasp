@@ -52,7 +52,6 @@ public class CheckParameter {
         XXE("xxe", new V8Checker(), 1 << 9),
         OGNL("ognl", new V8Checker(), 1 << 10),
         DESERIALIZATION("deserialization", new V8Checker(), 1 << 11),
-        //        REFLECTION("reflection", new V8Checker()),
         WEBDAV("webdav", new V8Checker(), 1 << 12),
         INCLUDE("include", new V8Checker(), 1 << 13),
         SSRF("ssrf", new V8Checker(), 1 << 14),

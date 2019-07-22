@@ -17,12 +17,12 @@
 package com.baidu.openrasp.transformer;
 
 import com.baidu.openrasp.ModuleLoader;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.dependency.DependencyFinder;
 import com.baidu.openrasp.detector.ServerDetectorManager;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.annotation.AnnotationScanner;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.ClassClassPath;
@@ -39,7 +39,9 @@ import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.lang.ref.WeakReference;
 import java.security.ProtectionDomain;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -73,8 +75,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
         try {
             retransform();
         } catch (UnmodifiableClassException e) {
-            int errorCode = ErrorType.HOOK_ERROR.getCode();
-            LOGGER.error(CloudUtils.getExceptionObject("retransform classes failed", errorCode), e);
+            LogTool.error(ErrorType.HOOK_ERROR, "retransform classes failed: " + e.getMessage(), e);
         }
     }
 
@@ -116,9 +117,8 @@ public class CustomClassTransformer implements ClassFileTransformer {
                     addHook((AbstractClassHook) object, clazz.getName());
                 }
             } catch (Exception e) {
+                LogTool.error(ErrorType.HOOK_ERROR, "add hook failed: " + e.getMessage(), e);
                 String message = "add hook failed";
-                int errorCode = ErrorType.HOOK_ERROR.getCode();
-                LOGGER.error(CloudUtils.getExceptionObject(message, errorCode), e);
             }
         }
     }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.cloud.model;
+package com.baidu.openrasp.messaging;
 
 public enum ErrorType {
     FSWATCH_ERROR(20001, "File Watch Error"),

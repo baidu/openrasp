@@ -16,13 +16,13 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <b-form-input v-model="hostname" type="text" class="form-control" placeholder="搜索主机或者IP" @keyup.enter="fetchData(1)" />
+            <b-form-input v-model.trim="hostname" type="text" class="form-control" placeholder="搜索主机或者IP" @keyup.enter="fetchData(1)" />
           </div>
           <div class="input-icon ml-2">
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <b-form-input v-model="message" type="text" class="form-control" placeholder="搜索消息" @keyup.enter="fetchData(1)" />
+            <b-form-input v-model.trim="message" type="text" class="form-control" placeholder="搜索消息" @keyup.enter="fetchData(1)" />
           </div>
           <button class="btn btn-primary ml-2" @click="fetchData(1)">
             搜索
@@ -105,12 +105,13 @@ export default {
       loading: false,
       currentPage: 1,
       hostname: '',
+      message: '',
       total: 0,
       fields: [
         { key: 'event_time',      label: '异常时间', class: 'text-nowrap' },
         { key: 'error_code',      label: '异常编号', class: 'text-nowrap' },
         // { key: 'level', label: '级别', class: 'text-nowrap' },
-        { key: 'server_hostname', label: '主机信息' },
+        { key: 'server_hostname', label: '主机信息', tdAttr: { 'style': 'min-width: 150px;' } },
         { key: 'message',         label: '内容' },
         { key: 'button',          label: '查看详情', class: 'text-nowrap' }
       ]

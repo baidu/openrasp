@@ -17,14 +17,16 @@
 package com.baidu.openrasp.cloud.httpappender;
 
 import com.baidu.openrasp.cloud.CloudHttp;
-import com.baidu.openrasp.cloud.CloudHttpPool;
+import com.baidu.openrasp.cloud.ThreadPool;
 import com.baidu.openrasp.cloud.model.AppenderCache;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
-import com.baidu.openrasp.cloud.model.ExceptionModel;
 import com.baidu.openrasp.cloud.model.GenericResponse;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.ExceptionModel;
 import com.baidu.openrasp.plugin.info.ExceptInfo;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
 import org.apache.log4j.helpers.LogLog;
@@ -42,14 +44,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @create: 2018/09/20 09:53
  */
 public class HttpAppender extends AppenderSkeleton {
-    private CloudHttp cloudHttp;
+    private ThreadPool threadPool;
 
     public HttpAppender() {
-        this.cloudHttp = new CloudHttpPool();
+        this.threadPool = new ThreadPool();
     }
 
     private boolean checkEntryConditions() {
-        if (cloudHttp == null) {
+        if (threadPool == null) {
             LogLog.warn("Http need to be initialized.");
             return false;
 
@@ -67,7 +69,8 @@ public class HttpAppender extends AppenderSkeleton {
             String logger = getLogger(loggingEvent.getLoggerName());
             JsonElement jsonElement = null;
             if ("root".equals(logger)) {
-                if ((loggingEvent.getLevel().equals(Level.WARN) || loggingEvent.getLevel().equals(Level.ERROR))) {
+                if ((loggingEvent.getLevel().equals(Level.WARN) || loggingEvent.getLevel().equals(Level.ERROR))
+                        && loggingEvent.getMessage() instanceof ExceptionModel) {
                     jsonElement = new JsonParser().parse(generateJson(loggingEvent));
                 }
             } else {
@@ -78,18 +81,28 @@ public class HttpAppender extends AppenderSkeleton {
                 if (logger != null) {
                     String requestUrl = getUrl(logger);
                     if (requestUrl != null) {
-                        GenericResponse response = cloudHttp.logRequest(requestUrl, new Gson().toJson(jsonArray));
-                        if (response != null) {
-                            Integer responseCode = response.getResponseCode();
-                            if (responseCode != null && responseCode >= 200 && responseCode < 300) {
-                                return;
-                            }
-                        }
-                        AppenderCache.setCache(logger, jsonElement);
+                        Runnable runnable = createTask(requestUrl, new Gson().toJson(jsonArray), logger, jsonElement);
+                        threadPool.getThreadPool().execute(runnable);
                     }
                 }
             }
         }
+    }
+
+    private Runnable createTask(final String url, final String content, final String loggerName, final JsonElement currentLog) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                GenericResponse response = new CloudHttp().logRequest(url, content);
+                if (response != null) {
+                    Integer responseCode = response.getResponseCode();
+                    if (responseCode != null && responseCode >= 200 && responseCode < 300) {
+                        return;
+                    }
+                }
+                AppenderCache.setCache(loggerName, currentLog);
+            }
+        };
     }
 
     private JsonArray mergeFromAppenderCache(String loggerName, JsonElement currnetLog) {
@@ -148,7 +161,7 @@ public class HttpAppender extends AppenderSkeleton {
         String level = loggingEvent.getLevel().toString();
         ExceptionModel model = (ExceptionModel) loggingEvent.getMessage();
         String message = model.getMessage();
-        int errorCode = model.getErrorCode();
+        int errorCode = model.getErrorType().getCode();
         ThrowableInformation information = loggingEvent.getThrowableInformation();
         Throwable t = information != null ? information.getThrowable() : null;
         StackTraceElement[] traceElements = t != null ? t.getStackTrace() : new StackTraceElement[]{};

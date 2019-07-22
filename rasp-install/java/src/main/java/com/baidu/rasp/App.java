@@ -77,11 +77,11 @@ public class App {
         options.addOption("appid", true, "Value of cloud.appid");
         options.addOption("appsecret", true, "Value of cloud.appsecret");
         options.addOption("backendurl", true, "Value of cloud.backendurl");
-        options.addOption("keepconf", false, "If the parameter exists, reserved openrasp.yml");
-        options.addOption("h", "help", false, "Print options information");
-        options.addOption("pid", true, "Specify the pid that the rasp attach to");
-        options.addOption("nodetect", false, "Disable the automatic detection for server type " +
-                "and will not modify the jvm option in the script");
+        options.addOption("keepconf", false, "Do not override openrasp.yml");
+        options.addOption("h", "help", false, "You're reading this!");
+        options.addOption("pid", true, "Specify the pid of Java server to attach");
+        options.addOption("nodetect", false, "Install without updating startup scripts, " +
+                "useful for standalone Java servers like SpringBoot");
 
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, args);
@@ -197,7 +197,7 @@ public class App {
         try {
             operateServer(args);
         } catch (Exception e) {
-            if (e instanceof RaspError) {
+            if (e instanceof RaspError || e instanceof UnrecognizedOptionException) {
                 System.out.println(e.getMessage());
             } else {
                 e.printStackTrace();

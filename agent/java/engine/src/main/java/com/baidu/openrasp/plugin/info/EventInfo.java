@@ -16,10 +16,9 @@
 
 package com.baidu.openrasp.plugin.info;
 
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.google.gson.Gson;
 
@@ -61,21 +60,20 @@ public abstract class EventInfo {
                 json = new Gson().toJson(info);
             }
             return json;
-        } catch (Exception e) {
-            String message = "failed to print event log";
-            int errorCode = ErrorType.HOOK_ERROR.getCode();
-            HookHandler.LOGGER.error(CloudUtils.getExceptionObject(message, errorCode), e);
+        } catch (Throwable t) {
+            LogTool.error(ErrorType.HOOK_ERROR, "failed to print event log: " + t.getMessage(), t);
             return null;
         }
     }
 
     protected StackTraceElement[] filter(StackTraceElement[] trace) {
-        int i = trace.length - 1;
+        int i = 0;
         // 去除插件本身调用栈
-        while (i >= 0 && !trace[i].getClassName().startsWith("com.baidu.openrasp")) {
-            i--;
+        while (i < trace.length && (trace[i].getClassName().startsWith("com.baidu.openrasp")
+                || trace[i].getClassName().contains("reflect"))) {
+            i++;
         }
-        return Arrays.copyOfRange(trace, i + 1, Math.min(i + 1 + Config.getConfig().getLogMaxStackSize(), trace.length));
+        return Arrays.copyOfRange(trace, i, Math.min(i + Config.getConfig().getLogMaxStackSize(), trace.length));
     }
 
     protected String stringify(StackTraceElement[] trace) {

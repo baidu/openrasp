@@ -17,8 +17,7 @@
 package com.baidu.openrasp.hook.xxe;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
@@ -36,7 +35,7 @@ import java.io.IOException;
 public class DisableStaxXxeEntity extends DisableXxeEntity {
     @Override
     public boolean isClassMatched(String className) {
-        return "com/sun/xml/internal/stream/XMLInputFactoryImpl".equals(className)||
+        return "com/sun/xml/internal/stream/XMLInputFactoryImpl".equals(className) ||
                 "com/ctc/wstx/stax/WstxInputFactory".equals(className);
     }
 
@@ -48,7 +47,7 @@ public class DisableStaxXxeEntity extends DisableXxeEntity {
     }
 
     public static void setFeature(Object factory) {
-        if (HookHandler.requestCache.get() != null) {
+        if (HookHandler.isEnableCurrThreadHook()) {
             String action = getAction();
             if (BLOCK_XXE_DISABLE_ENTITY.equals(action) && getStatus("java_stax")) {
                 try {
@@ -56,10 +55,8 @@ public class DisableStaxXxeEntity extends DisableXxeEntity {
                     if (property != null) {
                         Reflection.invokeMethod(factory, "setProperty", new Class[]{String.class, Object.class}, property, false);
                     }
-                } catch (Exception e) {
-                    String message = "Stax close xxe entity failed";
-                    int errorCode = ErrorType.HOOK_ERROR.getCode();
-                    HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                } catch (Throwable t) {
+                    LogTool.traceHookWarn("Stax close xxe entity failed: " + t.getMessage(), t);
                 }
             }
         }

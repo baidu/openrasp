@@ -17,8 +17,8 @@
 package com.baidu.openrasp.plugin.checker.policy.server;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
@@ -75,9 +75,7 @@ public class JBossSecurityChecker extends ServerPolicyChecker {
                 jbossWebXmlPath = jbossBaseDir + File.separator + "common" + File.separator + jbossWebXmlPath;
                 webXmlPath = jbossBaseDir + File.separator + "common" + File.separator + webXmlPath;
             } else {
-                String message = JBOSS_SECURITY_CHECK_ERROR + " :" + "JBoss supported 4.x-6.x";
-                int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-                LOGGER.error(CloudUtils.getExceptionObject(message, errorCode));
+                LogTool.warn(ErrorType.PLUGIN_ERROR, JBOSS_SECURITY_CHECK_ERROR + " :" + "JBoss supported 4.x-6.x");
             }
             checkJBossWebXml(jbossWebXmlPath, infos);
             checkWebXml(webXmlPath, infos);
@@ -92,7 +90,7 @@ public class JBossSecurityChecker extends ServerPolicyChecker {
         if (root != null) {
             NodeList list = root.getElementsByTagName(SECURITY_DOMAIN);
             if (list.getLength() == 0) {
-                handleError(SECURITY_DOMAIN, path, infos,SECURITY_DOMAIN);
+                handleError(SECURITY_DOMAIN, path, infos, SECURITY_DOMAIN);
             }
         }
     }
@@ -111,20 +109,20 @@ public class JBossSecurityChecker extends ServerPolicyChecker {
                     NodeList webResource = element.getElementsByTagName(WEB_RESOURCE_COLLECTION);
                     if (webResource.getLength() > 0) {
                         Element subElement = (Element) list.item(i);
-                        checkXmlElement(subElement, WEB_RESOURCE_NAME, Arrays.asList(WEB_RESOURCE_NAME_VALUES), infos, path,WEB_RESOURCE_NAME);
-                        checkXmlElement(subElement, URL_PATTERN, Arrays.asList(URL_PATTERN_VALUES), infos, path,URL_PATTERN);
+                        checkXmlElement(subElement, WEB_RESOURCE_NAME, Arrays.asList(WEB_RESOURCE_NAME_VALUES), infos, path, WEB_RESOURCE_NAME);
+                        checkXmlElement(subElement, URL_PATTERN, Arrays.asList(URL_PATTERN_VALUES), infos, path, URL_PATTERN);
                     } else {
-                        handleError(WEB_RESOURCE_COLLECTION, path, infos,WEB_RESOURCE_COLLECTION);
+                        handleError(WEB_RESOURCE_COLLECTION, path, infos, WEB_RESOURCE_COLLECTION);
                     }
 
                     NodeList authConstraint = element.getElementsByTagName("auth-constraint");
                     if (authConstraint.getLength() == 0) {
-                        handleError(AUTH_CONSTRAINT, path, infos,AUTH_CONSTRAINT);
+                        handleError(AUTH_CONSTRAINT, path, infos, AUTH_CONSTRAINT);
                     }
                 }
 
             } else {
-                handleError(SECURITY_CONSTRAINT, path, infos,SECURITY_CONSTRAINT);
+                handleError(SECURITY_CONSTRAINT, path, infos, SECURITY_CONSTRAINT);
             }
         }
     }
@@ -140,9 +138,7 @@ public class JBossSecurityChecker extends ServerPolicyChecker {
             DocumentBuilder builder = factory.newDocumentBuilder();
             return builder.parse(file);
         } catch (Exception e) {
-            String message = JBOSS_SECURITY_CHECK_ERROR + ": " + e.getMessage();
-            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-            LOGGER.error(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.warn(ErrorType.PLUGIN_ERROR, JBOSS_SECURITY_CHECK_ERROR + ": " + e.getMessage(), e);
         }
         return null;
     }
@@ -164,7 +160,7 @@ public class JBossSecurityChecker extends ServerPolicyChecker {
     public void handleError(String tagName, String path, List<EventInfo> infos, String type) {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("config_file", path);
-        params.put("type",type);
+        params.put("type", type);
         infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.JBOSS_JMX_CONSOLE, "JBoss security baseline - Auth constraint " +
                 "for /jmx-console/HTMLAdaptor is not enabled in " + path + "(" + tagName + " is missing or wrong)", true, params));
     }

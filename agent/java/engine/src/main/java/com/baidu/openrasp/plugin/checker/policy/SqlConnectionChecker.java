@@ -17,9 +17,9 @@
 package com.baidu.openrasp.plugin.checker.policy;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
@@ -112,9 +112,7 @@ public class SqlConnectionChecker extends PolicyChecker {
                 port = map.get("port");
             }
         } catch (Exception e) {
-            String message = "check sql connection fail";
-            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.warn(ErrorType.PLUGIN_ERROR, "check sql connection failed: " + e.getMessage(), e);
         }
 
         boolean isSafe = checkUser(user, sqlType);

@@ -17,9 +17,8 @@
 package com.baidu.openrasp.hook.server.websphere;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.server.ServerXssHook;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
@@ -50,7 +49,7 @@ public class WebsphereXssHook extends ServerXssHook {
     }
 
     public static void getWebsphereOutputBuffer(Object object) {
-        if (HookHandler.isEnableXssHook()){
+        if (HookHandler.isEnableXssHook()) {
             HookHandler.disableBodyXssHook();
             HashMap<String, Object> params = new HashMap<String, Object>();
             try {
@@ -63,9 +62,8 @@ public class WebsphereXssHook extends ServerXssHook {
                     params.put("html_body", content);
                 }
             } catch (Exception e) {
-                String message = ApplicationModel.getServerName() + " xss detectde failed";
-                int errorCode = ErrorType.HOOK_ERROR.getCode();
-                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
+                        e.getMessage(), e);
             }
             if (isCheckXss() && !params.isEmpty()) {
                 HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);

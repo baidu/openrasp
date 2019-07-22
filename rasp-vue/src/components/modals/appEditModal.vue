@@ -11,11 +11,11 @@
         <div class="modal-body">
           <div class="form-group">
             <label>应用名称</label>
-            <input ref="name" v-model="data.name" type="text" class="form-control">
+            <input ref="name" v-model.trim="data.name" type="text" class="form-control">
           </div>
           <div class="form-group">
             <label>应用备注</label>
-            <input v-model="data.description" type="text" class="form-control">
+            <input v-model.trim="data.description" type="text" class="form-control">
           </div>
           <div class="form-group">
             <label>应用语言</label>
@@ -33,7 +33,7 @@
           <button class="btn btn-primary" data-dismiss="modal" @click="saveApp()">
             保存
           </button>
-          <button class="btn btn-default" data-dismiss="modal">
+          <button class="btn btn-info" data-dismiss="modal">
             关闭
           </button>
         </div>

@@ -17,8 +17,9 @@
 package com.baidu.openrasp.hook.xxe;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
+import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
@@ -36,27 +37,24 @@ import java.io.IOException;
 public class DisableSaxXxeEntity extends DisableXxeEntity {
     @Override
     public boolean isClassMatched(String className) {
-        return "com/sun/org/apache/xerces/internal/jaxp/SAXParserFactoryImpl".equals(className) ||
-                "org/apache/xerces/jaxp/SAXParserFactoryImpl".equals(className);
+        return "com/sun/org/apache/xerces/internal/jaxp/SAXParserImpl$JAXPSAXParser".equals(className) ||
+                "org/apache/xerces/jaxp/SAXParserImpl$JAXPSAXParser".equals(className);
     }
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(DisableSaxXxeEntity.class, "setFeature", "$0", Object.class);
-        insertBefore(ctClass, "newSAXParser", null, src);
-        insertBefore(ctClass, "newSAXParserImpl", null, src);
+        insertBefore(ctClass, "parse", null, src);
     }
 
     public static void setFeature(Object factory) {
-        if (HookHandler.requestCache.get() != null) {
+        if (HookHandler.isEnableCurrThreadHook()) {
             String action = getAction();
             if (BLOCK_XXE_DISABLE_ENTITY.equals(action) && getStatus("java_sax")) {
                 try {
                     Reflection.invokeMethod(factory, "setFeature", new Class[]{String.class, boolean.class}, FEATURE, true);
-                } catch (Exception e) {
-                    String message = "Sax close xxe entity failed";
-                    int errorCode = ErrorType.HOOK_ERROR.getCode();
-                    HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                } catch (Throwable t) {
+                    LogTool.traceHookWarn("Sax close xxe entity failed: " + t.getMessage(), t);
                 }
             }
         }

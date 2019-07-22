@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.baidu.openrasp</groupId>
         <artifactId>openrasp</artifactId>
-        <version>1.3.0</version>
+        <version>${rasp.version}</version>
     </parent>
 
     <properties>
@@ -15,7 +15,7 @@
     </properties>
 
     <artifactId>rasp-engine</artifactId>
-    <version>1.3.0</version>
+    <version>${rasp.version}</version>
     <packaging>jar</packaging>
 
     <dependencies>

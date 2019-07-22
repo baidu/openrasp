@@ -16,10 +16,7 @@
 
 package com.baidu.openrasp.messaging;
 
-import com.baidu.openrasp.cloud.CloudManager;
-import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 
 import java.net.URI;
@@ -54,14 +51,11 @@ public class LogConfig {
                 if (syslogAddress != null && !syslogAddress.trim().isEmpty() && syslogPort >= 0 && syslogPort <= 65535) {
                     DynamicConfigAppender.createSyslogAppender(syslogAddress, syslogPort);
                 } else {
-                    String message = "syslog url: " + syslogUrl + " is invalid";
-                    int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                    CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
+                    LogTool.warn(ErrorType.CONFIG_ERROR, "syslog url: " + syslogUrl + " is invalid");
                 }
-            } catch (Exception e) {
-                String message = "syslog url: " + syslogUrl + " parsed error";
-                int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            } catch (Throwable t) {
+                LogTool.warn(ErrorType.CONFIG_ERROR, "syslog url: " +
+                        syslogUrl + " is invalid: " + t.getMessage(), t);
             }
 
         } else {

@@ -17,9 +17,8 @@
 package com.baidu.openrasp.hook.file;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
@@ -83,9 +82,7 @@ public class FileUploadHook extends AbstractClassHook {
                         params.put("content", new String(content, getCharSet(o)));
                     } catch (Exception e) {
                         params.put("content", new String(content));
-                        String message = e.getMessage();
-                        int errorCode = ErrorType.HOOK_ERROR.getCode();
-                        HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                        LogTool.traceHookWarn(e.getMessage(), e);
                     }
                 }
             }

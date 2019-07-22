@@ -26,7 +26,7 @@ case "$(uname -s)" in
 esac
 
 # 编译 openrasp-v8
-git submodule update --init --recursive --depth=1
+git submodule update --init
 rm -rf openrasp-v8/build
 mkdir -p openrasp-v8/build
 cd openrasp-v8/build
@@ -63,6 +63,7 @@ mkdir -p "$output_base"/{conf,assets,logs,locale,plugins}
 cp ../../plugins/official/plugin.js "$output_base"/plugins/official.js
 cp ../../rasp-install/php/*.php "$output_base"
 cp ../../rasp-install/php/openrasp.yml "$output_base"/conf/openrasp.yml
+cp ../../rasp-install/php/iast.yml "$output_base"/conf/iast.yml
 
 # 生成并拷贝mo文件
 ./scripts/locale.sh

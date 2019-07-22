@@ -55,7 +55,7 @@ func formatTime(timestamp int64, format string) (times string) {
 }
 
 func initAccessLogger() {
-	logPath := tools.GetCurrentPathWithPanic() + "/logs/access"
+	logPath := "logs/access"
 	if isExists, _ := tools.PathExists(logPath); !isExists {
 		err := os.MkdirAll(logPath, os.ModePerm)
 		if err != nil {

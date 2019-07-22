@@ -18,12 +18,13 @@ package com.baidu.openrasp.cloud;
 
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
-import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogConfig;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.js.JS;
 import com.google.gson.Gson;
 import com.google.gson.JsonPrimitive;
@@ -51,16 +52,13 @@ public class KeepAlive extends CloudTimerTask {
             handleResponse(response);
         } else {
             String message = CloudUtils.handleError(ErrorType.HEARTBEAT_ERROR, response);
-            int errorCode = ErrorType.HEARTBEAT_ERROR.getCode();
-            CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
+            LogTool.warn(ErrorType.HEARTBEAT_ERROR, message);
         }
     }
 
     @Override
     public void handleError(Throwable t) {
-        String message = t.getMessage();
-        int errorCode = ErrorType.HEARTBEAT_ERROR.getCode();
-        CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), t);
+        LogTool.warn(ErrorType.HEARTBEAT_ERROR, t.getMessage(), t);
     }
 
     public static Map<String, Object> generateParameters() {
@@ -136,9 +134,7 @@ public class KeepAlive extends CloudTimerTask {
                     DynamicConfigAppender.fileAppenderAddBurstFilter();
                 }
             } catch (Throwable e) {
-                String message = "config update failed";
-                int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                LogTool.warn(ErrorType.CONFIG_ERROR, "config update failed: "+e.getMessage(), e);
             }
         }
         if (version != null && md5 != null && pluginContext != null && name != null) {

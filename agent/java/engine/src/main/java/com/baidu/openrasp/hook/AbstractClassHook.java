@@ -17,9 +17,9 @@
 package com.baidu.openrasp.hook;
 
 
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import javassist.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -270,9 +270,8 @@ public abstract class AbstractClassHook {
             method.insertAfter(src, asFinally);
             LOGGER.info("insert after method: " + method.getLongName());
         } catch (CannotCompileException e) {
-            String message = "insert after method " + method.getLongName() + " failed";
-            int errorCode = ErrorType.HOOK_ERROR.getCode();
-            LOGGER.error(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.error(ErrorType.HOOK_ERROR,
+                    "insert after method " + method.getLongName() + " failed: " + e.getMessage(), e);
             throw e;
         }
     }

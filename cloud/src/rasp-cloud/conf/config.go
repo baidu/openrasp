@@ -30,6 +30,7 @@ type RaspAppConfig struct {
 	EsAddr                string
 	EsUser                string
 	EsPwd                 string
+	EsTTL                 int64
 	MongoDBAddr           string
 	MongoDBUser           string
 	MongoDBPwd            string
@@ -57,10 +58,12 @@ var (
 )
 
 func InitConfig(startFlag *Flag) {
+	initConstConfig()
 	AppConfig.Flag = startFlag
 	AppConfig.EsAddr = beego.AppConfig.String("EsAddr")
 	AppConfig.EsUser = beego.AppConfig.DefaultString("EsUser", "")
 	AppConfig.EsPwd = beego.AppConfig.DefaultString("EsPwd", "")
+	AppConfig.EsTTL = beego.AppConfig.DefaultInt64("EsTTL", 365)
 	AppConfig.MongoDBAddr = beego.AppConfig.DefaultString("MongoDBAddr", "")
 	AppConfig.MongoDBPoolLimit = beego.AppConfig.DefaultInt("MongoDBPoolLimit", 1024)
 	AppConfig.MongoDBName = beego.AppConfig.DefaultString("MongoDBName", "openrasp")
@@ -76,6 +79,11 @@ func InitConfig(startFlag *Flag) {
 	ValidRaspConf(AppConfig)
 }
 
+func initConstConfig() {
+	beego.AppConfig.Set("gzipCompressLevel", "2")
+	beego.AppConfig.Set("includedMethods", "GET;POST")
+}
+
 func ValidRaspConf(config *RaspAppConfig) {
 	if config.EsAddr == "" {
 		failLoadConfig("the 'EsAddr' config item in app.conf can not be empty")
@@ -89,6 +97,10 @@ func ValidRaspConf(config *RaspAppConfig) {
 	} else if config.MongoDBPoolLimit < 10 {
 		beego.Warning("the value of 'poolLimit' config is less than 10, it will be set to 10")
 		config.MongoDBPoolLimit = 10
+	}
+
+	if config.EsTTL <= 0 {
+		failLoadConfig("the 'EsTTL' config must be greater than 0")
 	}
 
 	if config.MaxPlugins <= 0 {

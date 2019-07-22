@@ -16,12 +16,13 @@
 
 package com.baidu.openrasp.config;
 
-import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.HookWhiteModel;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.exceptions.ConfigLoadException;
+import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogConfig;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.FileUtil;
 import com.baidu.openrasp.tool.LRUCache;
@@ -59,7 +60,6 @@ public class Config extends FileScanListener {
         LOG_MAX_BACKUP("log.maxbackup", "30"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
         SQL_CACHE_CAPACITY("lru.max_size", "1024"),
-        SECURITY_ENFORCE_POLICY("security.enforce_policy", "false"),
         PLUGIN_FILTER("plugin.filter", "true"),
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
         SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
@@ -129,7 +129,6 @@ public class Config extends FileScanListener {
     private int bodyMaxBytes;
     private int sqlSlowQueryMinCount;
     private String[] ignoreHooks;
-    private boolean enforcePolicy;
     private String[] reflectionMonitorMethod;
     private int logMaxStackSize;
     private String blockUrl;
@@ -198,7 +197,7 @@ public class Config extends FileScanListener {
             handleException("Could not find openrasp.yml, using default settings: " + e.getMessage(), e);
         } catch (JNotifyException e) {
             handleException("add listener on " + configFileDir + " failed because:" + e.getMessage(), e);
-        } catch (IOException e) {
+        } catch (Exception e) {
             handleException("cannot load properties file: " + e.getMessage(), e);
         }
     }
@@ -221,9 +220,7 @@ public class Config extends FileScanListener {
                 }
             }
         } catch (Exception e) {
-            String message = "openrasp.yml parsing failed";
-            int errorCode = ErrorType.CONFIG_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.warn(ErrorType.CONFIG_ERROR, "openrasp.yml parsing failed: " + e.getMessage(), e);
         } finally {
             TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
             // 出现解析问题使用默认值
@@ -324,10 +321,8 @@ public class Config extends FileScanListener {
                     //更新log4j的日志最大备份天数
                     DynamicConfigAppender.setLogMaxBackup();
                 }
-            } catch (IOException e) {
-                String message = "update openrasp.yml failed";
-                int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            } catch (Exception e) {
+                LogTool.warn(ErrorType.CONFIG_ERROR, "update openrasp.yml failed: " + e.getMessage(), e);
             }
         }
     }
@@ -367,17 +362,14 @@ public class Config extends FileScanListener {
             setConfig(key, value, isInit);
         } catch (Exception e) {
             // 出现解析问题使用默认值
-            value = item.defaultValue;
             setConfig(key, item.defaultValue, false);
             String message = "set config " + item.key + " failed, use default value : " + value;
-            int errorCode = ErrorType.CONFIG_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.warn(ErrorType.CONFIG_ERROR, message + ": " + e.getMessage(), e);
         }
     }
 
     private void handleException(String message, Exception e) {
-        int errorCode = ErrorType.CONFIG_ERROR.getCode();
-        LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+        LogTool.warn(ErrorType.CONFIG_ERROR, message, e);
     }
 
     private static class ConfigHolder {
@@ -453,9 +445,8 @@ public class Config extends FileScanListener {
                 reloadConfig(new File(configFileDir + File.separator + CONFIG_FILE_NAME));
             }
         } catch (Exception e) {
-            String message = "update " + directory.getAbsolutePath() + " failed";
-            int errorCode = ErrorType.CONFIG_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.warn(ErrorType.CONFIG_ERROR, "update " + directory.getAbsolutePath() +
+                    " failed: " + e.getMessage(), e);
         }
     }
 
@@ -651,26 +642,6 @@ public class Config extends FileScanListener {
         if (this.ognlMinLength <= 0) {
             this.ognlMinLength = 30;
         }
-    }
-
-    /**
-     * 是否开启强制安全规范
-     * 如果开启检测有安全风险的情况下将会禁止服务器启动
-     * 如果关闭当有安全风险的情况下通过日志警告
-     *
-     * @return true开启，false关闭
-     */
-    public boolean getEnforcePolicy() {
-        return enforcePolicy;
-    }
-
-    /**
-     * 配置是否开启强制安全规范
-     *
-     * @return true开启，false关闭
-     */
-    public synchronized void setEnforcePolicy(String enforcePolicy) {
-        this.enforcePolicy = Boolean.parseBoolean(enforcePolicy);
     }
 
     /**
@@ -1274,86 +1245,123 @@ public class Config extends FileScanListener {
     public boolean setConfig(String key, String value, boolean isInit) {
         try {
             boolean isHit = true;
+            Object currentValue = null;
             if (Item.BLOCK_REDIRECT_URL.key.equals(key)) {
                 setBlockUrl(value);
+                currentValue = getBlockUrl();
             } else if (Item.BODY_MAX_BYTES.key.equals(key)) {
                 setBodyMaxBytes(value);
+                currentValue = getBodyMaxBytes();
             } else if (Item.HOOKS_IGNORE.key.equals(key)) {
                 setIgnoreHooks(value);
+                currentValue = Arrays.toString(getIgnoreHooks());
             } else if (Item.INJECT_URL_PREFIX.key.equals(key)) {
                 setInjectUrlPrefix(value);
+                currentValue = getInjectUrlPrefix();
             } else if (Item.LOG_MAX_STACK.key.equals(key)) {
                 setLogMaxStackSize(value);
+                currentValue = getLogMaxStackSize();
             } else if (Item.OGNL_EXPRESSION_MIN_LENGTH.key.equals(key)) {
                 setOgnlMinLength(value);
+                currentValue = getOgnlMinLength();
             } else if (Item.PLUGIN_TIMEOUT_MILLIS.key.equals(key)) {
                 setPluginTimeout(value);
+                currentValue = getPluginTimeout();
             } else if (Item.REFLECTION_MAX_STACK.key.equals(key)) {
                 setPluginMaxStack(value);
-            } else if (Item.SECURITY_ENFORCE_POLICY.key.equals((key))) {
-                setEnforcePolicy(value);
+                currentValue = getPluginMaxStack();
             } else if (Item.SQL_SLOW_QUERY_MIN_ROWS.key.equals(key)) {
                 setSqlSlowQueryMinCount(value);
+                currentValue = getSqlSlowQueryMinCount();
             } else if (Item.BLOCK_STATUS_CODE.key.equals(key)) {
                 setBlockStatusCode(value);
+                currentValue = getBlockStatusCode();
             } else if (Item.DEBUG.key.equals(key)) {
                 setDebugLevel(value);
+                currentValue = getDebugLevel();
             } else if (Item.ALGORITHM_CONFIG.key.equals(key)) {
                 setAlgorithmConfig(value);
+                currentValue = value;
             } else if (Item.REQUEST_PARAM_ENCODING.key.equals(key)) {
                 setRequestParamEncoding(value);
+                currentValue = getRequestParamEncoding();
             } else if (Item.BLOCK_JSON.key.equals(key)) {
                 setBlockJson(value);
+                currentValue = getBlockJson();
             } else if (Item.BLOCK_XML.key.equals(key)) {
                 setBlockXml(value);
+                currentValue = getBlockXml();
             } else if (Item.BLOCK_HTML.key.equals(key)) {
                 setBlockHtml(value);
+                currentValue = getBlockHtml();
             } else if (Item.PLUGIN_FILTER.key.equals(key)) {
                 setPluginFilter(value);
+                currentValue = getPluginFilter();
             } else if (Item.CLIENT_IP_HEADER.key.equals(key)) {
                 setClientIp(value);
+                currentValue = getClientIp();
             } else if (Item.CLOUD_SWITCH.key.equals(key)) {
                 setCloudSwitch(value);
+                currentValue = getCloudSwitch();
             } else if (Item.CLOUD_ADDRESS.key.equals(key)) {
                 setCloudAddress(value);
+                currentValue = getCloudAddress();
             } else if (Item.CLOUD_APPID.key.equals(key)) {
                 setCloudAppId(value);
+                currentValue = getCloudAppId();
             } else if (Item.CLOUD_APPSECRET.key.equals(key)) {
                 setCloudAppSecret(value);
+                currentValue = getCloudAppSecret();
             } else if (Item.SQL_CACHE_CAPACITY.key.equals(key)) {
                 setSqlCacheCapacity(value);
+                currentValue = getSqlCacheCapacity();
             } else if (Item.SYSLOG_ENABLE.key.equals(key)) {
                 setSyslogSwitch(value);
+                currentValue = getSyslogSwitch();
             } else if (Item.SYSLOG_URL.key.equals(key)) {
                 setSyslogUrl(value);
+                currentValue = getSyslogUrl();
             } else if (Item.SYSLOG_TAG.key.equals(key)) {
                 setSyslogTag(value);
+                currentValue = getSyslogTag();
             } else if (Item.SYSLOG_FACILITY.key.equals(key)) {
                 setSyslogFacility(value);
+                currentValue = getSyslogFacility();
             } else if (Item.SYSLOG_RECONNECT_INTERVAL.key.equals(key)) {
                 setSyslogReconnectInterval(value);
+                currentValue = getSyslogReconnectInterval();
             } else if (Item.LOG_MAXBURST.key.equals(key)) {
                 setLogMaxBurst(value);
+                currentValue = getLogMaxBurst();
             } else if (Item.HEARTBEAT_INTERVAL.key.equals(key)) {
                 setHeartbeatInterval(value);
+                currentValue = getHeartbeatInterval();
             } else if (Item.DECOMPILE_ENABLE.key.equals(key)) {
                 setDecompileEnable(value);
+                currentValue = getDecompileEnable();
             } else if (Item.LOG_MAX_BACKUP.key.equals(key)) {
                 setLogMaxBackUp(value);
+                currentValue = getLogMaxBackUp();
             } else if (Item.DEPENDENCY_CHECK_INTERVAL.key.equals(key)) {
                 setDependencyCheckInterval(value);
+                currentValue = getDependencyCheckInterval();
             } else if (Item.CPU_USAGE_ENABLE.key.equals(key)) {
                 setCpuUsageEnable(value);
+                currentValue = getCpuUsageEnable();
             } else if (Item.CPU_USAGE_PERCENT.key.equals(key)) {
                 setCpuUsagePercent(value);
+                currentValue = getCpuUsagePercent();
             } else {
                 isHit = false;
             }
             if (isHit) {
+                if (currentValue == null) {
+                    currentValue = value;
+                }
                 if (isInit) {
-                    LOGGER.info(key + ": " + value);
+                    LOGGER.info(key + ": " + currentValue);
                 } else {
-                    LOGGER.info("configuration item \"" + key + "\" changed to \"" + value + "\"");
+                    LOGGER.info("configuration item \"" + key + "\" changed to \"" + currentValue + "\"");
                 }
             } else {
                 LOGGER.info("configuration item \"" + key + "\" doesn't exist");
@@ -1399,9 +1407,7 @@ public class Config extends FileScanListener {
                             Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
                             codeSum = codeSum + code;
                         } catch (Exception e) {
-                            String message = "Hook type " + s + " does not exist";
-                            int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                            LogTool.traceWarn(ErrorType.CONFIG_ERROR, "Hook type " + s + " does not exist", e);
                         }
                     }
                     if (hook.getKey().equals("*")) {

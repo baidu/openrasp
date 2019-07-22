@@ -17,20 +17,19 @@
 package com.baidu.openrasp.hook.file;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.StackTrace;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import java.util.HashMap;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -92,9 +91,7 @@ public class FileHook extends AbstractClassHook {
                     params.put("realpath", file.getAbsolutePath());
                 }
             } catch (Throwable t) {
-                String message = t.getMessage();
-                int errorCode = ErrorType.HOOK_ERROR.getCode();
-                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), t);
+                LogTool.traceHookWarn(t.getMessage(), t);
             }
             HookHandler.doCheck(CheckParameter.Type.DIRECTORY, params);
         }

@@ -19,9 +19,10 @@ package com.baidu.openrasp.detector;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.Register;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
-import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.tool.model.ApplicationModel;
@@ -69,9 +70,7 @@ public abstract class ServerDetector {
             try {
                 CloudCacheModel.getInstance().setMasterIp(OSUtil.getMasterIp(cloudAddress));
             } catch (Exception e) {
-                String message = "get local ip failed";
-                int errorCode = ErrorType.REGISTER_ERROR.getCode();
-                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                LogTool.warn(ErrorType.REGISTER_ERROR, "get local ip failed: " + e.getMessage(), e);
             }
             new Register();
         } else {
@@ -112,8 +111,7 @@ public abstract class ServerDetector {
     }
 
     public void logDetectError(String message, Throwable t) {
-        int errorCode = ErrorType.DETECT_SERVER_ERROR.getCode();
-        HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), t);
+        LogTool.warn(ErrorType.DETECT_SERVER_ERROR, message, t);
     }
 
     public boolean isWildfly(ProtectionDomain domain) {
@@ -131,7 +129,7 @@ public abstract class ServerDetector {
                     }
                 });
                 return files != null && files.length > 0;
-            }else {
+            } else {
                 return detectWildfly(homeFile.getCanonicalPath());
             }
         } catch (Exception e) {

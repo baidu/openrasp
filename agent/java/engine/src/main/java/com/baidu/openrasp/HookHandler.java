@@ -16,12 +16,12 @@
 
 package com.baidu.openrasp;
 
-import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.HookWhiteModel;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.exceptions.SecurityException;
 import com.baidu.openrasp.hook.xxe.XXEHook;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
 import com.baidu.openrasp.request.AbstractRequest;
@@ -34,7 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by zhuming01 on 5/16/17.
@@ -46,7 +46,7 @@ public class HookHandler {
     public static final String OPEN_RASP_HEADER_KEY = "X-Protected-By";
     public static final String OPEN_RASP_HEADER_VALUE = "OpenRASP";
     public static final String REQUEST_ID_HEADER_KEY = "X-Request-ID";
-    public static AtomicInteger TOTAL_REQUEST_NUM = new AtomicInteger(0);
+    public static AtomicLong requestSum = new AtomicLong(0);
     public static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
     // 全局开关
     public static AtomicBoolean enableHook = new AtomicBoolean(false);
@@ -55,6 +55,13 @@ public class HookHandler {
         @Override
         protected Boolean initialValue() {
             return false;
+        }
+    };
+
+    public static ThreadLocal<Boolean> enableEnd = new ThreadLocal<Boolean>() {
+        @Override
+        protected Boolean initialValue() {
+            return true;
         }
     };
 
@@ -85,6 +92,14 @@ public class HookHandler {
             return true;
         }
     };
+
+    public static ThreadLocal<Boolean> enableCmdHook = new ThreadLocal<Boolean>() {
+        @Override
+        protected Boolean initialValue() {
+            return true;
+        }
+    };
+
     private static final Map<String, Object> EMPTY_MAP = new HashMap<String, Object>();
 
     /**
@@ -165,6 +180,7 @@ public class HookHandler {
     public static void checkRequest(Object servlet, Object request, Object response) {
         if (servlet != null && request != null && !enableCurrThreadHook.get()) {
             // 默认是关闭hook的，只有处理过HTTP request的线程才打开
+            enableEnd.set(true);
             enableCurrThreadHook.set(true);
             //新的请求开启body xss hook点
             enableBodyXssHook();
@@ -223,7 +239,7 @@ public class HookHandler {
      * @param response 响应实体
      */
     public static void checkFilterRequest(Object filter, Object request, Object response) {
-        TOTAL_REQUEST_NUM.incrementAndGet();
+        requestSum.incrementAndGet();
         checkRequest(filter, request, response);
     }
 
@@ -322,9 +338,8 @@ public class HookHandler {
             CheckParameter parameter = new CheckParameter(type, params);
             isBlock = CheckerManager.check(type, parameter);
         } catch (Exception e) {
-            String message = "plugin check error: " + e.getClass().getName() + " because: " + e.getMessage();
-            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.error(ErrorType.PLUGIN_ERROR,
+                    "plugin check error: " + e.getClass().getName() + " because: " + e.getMessage(), e);
         } finally {
             enableCurrThreadHook.set(enableHookCache);
         }

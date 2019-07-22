@@ -16,10 +16,8 @@
 
 package com.baidu.openrasp.tool;
 
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.baidu.openrasp.tool.model.ApplicationModel;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.Field;
@@ -87,9 +85,7 @@ public class Reflection {
             field.setAccessible(true);
             object = field.get(paramClass);
         } catch (Exception e) {
-            String message = e.getMessage();
-            int errorCode = ErrorType.RUNTIME_ERROR.getCode();
-            LOGGER.error(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.traceError(ErrorType.RUNTIME_ERROR, e.getMessage(), e);
         }
         return object;
     }
@@ -120,8 +116,11 @@ public class Reflection {
             }
             return method.invoke(object, parameters);
         } catch (Exception e) {
-            int errorCode = ErrorType.REFLECTION_ERROR.getCode();
-            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject("reflection call failed", errorCode), e);
+            String message = "Reflection call " + methodName + " failed: " + e.getMessage();
+            if (clazz != null) {
+                message = "Reflection call " + clazz.getName() + "." + methodName + " failed: " + e.getMessage();
+            }
+            LogTool.traceError(ErrorType.RUNTIME_ERROR, message, e);
             return null;
         }
     }

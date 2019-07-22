@@ -22,6 +22,7 @@ import (
 	"rasp-cloud/models/logs"
 	"math"
 	"time"
+	"fmt"
 )
 
 // Operations about attack alarm message
@@ -62,6 +63,16 @@ func (o *AttackAlarmController) AggregationWithTime() {
 	}
 	if len(param.Interval) > 32 {
 		o.ServeError(http.StatusBadRequest, "the length of interval cannot be greater than 32")
+	}
+	intervals := [...]string{"hour", "day", "month"}
+	isValidInterval := false
+	for index := range intervals {
+		if param.Interval == intervals[index] {
+			isValidInterval = true
+		}
+	}
+	if !isValidInterval {
+		o.ServeError(http.StatusBadRequest, "the interval must be in "+fmt.Sprintf("%v", intervals))
 	}
 	if len(param.TimeZone) > 32 {
 		o.ServeError(http.StatusBadRequest, "the length of time_zone cannot be greater than 32")
@@ -199,5 +210,9 @@ func (o *AttackAlarmController) validFieldAggrParam(param *logs.AggrFieldParam) 
 	}
 	if param.Size <= 0 {
 		o.ServeError(http.StatusBadRequest, "size must be greater than 0")
+	}
+
+	if param.Size > 1024 {
+		o.ServeError(http.StatusBadRequest, "size can not be greater than 1024")
 	}
 }

@@ -60,7 +60,7 @@ public class SecurityPolicyInfo extends EventInfo {
         this.policy = policy;
         this.message = message;
         this.params = params;
-        setBlock(isBlock && Config.getConfig().getEnforcePolicy());
+        setBlock(false);
     }
 
     public SecurityPolicyInfo(Type policy, String message, boolean isBlock) {
@@ -95,7 +95,7 @@ public class SecurityPolicyInfo extends EventInfo {
             info.put("policy_params", params);
         }
         // 攻击调用栈
-        StackTraceElement[] trace = filter(new Throwable().getStackTrace());
+        StackTraceElement[] trace = new Throwable().getStackTrace();
         info.put("stack_trace", stringify(trace));
         if (Config.getConfig().getCloudSwitch()) {
             // raspId

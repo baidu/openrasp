@@ -17,8 +17,8 @@
 package com.baidu.openrasp.tool.model;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -124,9 +124,7 @@ public class ApplicationModel {
                         type = "docker";
                     }
                 } catch (IOException e) {
-                    String msg = "get VM type failed";
-                    int code = ErrorType.DETECT_SERVER_ERROR.getCode();
-                    HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(msg, code), e);
+                    LogTool.warn(ErrorType.DETECT_SERVER_ERROR, "get VM type failed: " + e.getMessage(), e);
                 }
             }
         }

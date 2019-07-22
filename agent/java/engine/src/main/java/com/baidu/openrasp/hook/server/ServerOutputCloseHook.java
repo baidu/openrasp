@@ -17,12 +17,11 @@
 package com.baidu.openrasp.hook.server;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.hook.server.weblogic.WeblogicHttpOutputHook;
 import com.baidu.openrasp.hook.server.websphere.WebsphereHttpOutputHook;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.response.HttpServletResponse;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.model.ApplicationModel;
@@ -97,12 +96,9 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
                         isClosed = (Boolean) Reflection.invokeMethod(output, "isClosed", new Class[]{});
                     }
                 }
-                if (isClosed != null && !isClosed) {
-                    HttpServletResponse response = HookHandler.responseCache.get();
-                    String contentType = null;
-                    if (response != null) {
-                        contentType = response.getContentType();
-                    }
+                HttpServletResponse response = HookHandler.responseCache.get();
+                if (isClosed != null && !isClosed && response != null) {
+                    String contentType = response.getContentType();
                     if (contentType != null && contentType.contains(HttpServletResponse.CONTENT_TYPE_HTML_VALUE)) {
                         String injectPathPrefix = Config.getConfig().getInjectUrlPrefix();
                         if (!StringUtils.isEmpty(injectPathPrefix) &&
@@ -115,8 +111,7 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
                     }
                 }
             } catch (Throwable t) {
-                int errorCode = ErrorType.HOOK_ERROR.getCode();
-                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(t.getMessage(), errorCode), t);
+                LogTool.traceHookWarn(t.getMessage(), t);
             } finally {
                 HookHandler.enableCurrThreadHook();
             }

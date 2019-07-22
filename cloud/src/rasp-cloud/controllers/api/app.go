@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"strings"
+	"fmt"
 )
 
 // Operations about app
@@ -222,6 +224,10 @@ func (o *AppController) Post() {
 	if len(app.SelectedPluginId) > 1024 {
 		o.ServeError(http.StatusBadRequest, "the length of the app selected_plugin_id can not be greater than 1024")
 	}
+
+	if app.AttackTypeAlarmConf != nil {
+		o.validAttackTypeAlarmConf(app.AttackTypeAlarmConf)
+	}
 	if app.EmailAlarmConf.Enable {
 		o.validEmailConf(&app.EmailAlarmConf)
 	}
@@ -375,6 +381,41 @@ func (o *AppController) validHttpAlarm(conf *models.HttpAlarmConf) {
 	conf.RecvAddr = o.validAppArrayParam(conf.RecvAddr, "http recv_addr", nil)
 }
 
+func (o *AppController) validAttackTypeAlarmConf(conf *map[string][]string) {
+	if conf != nil {
+		for k, v := range *conf {
+			if k == "" {
+				o.ServeError(http.StatusBadRequest, "the attack type can not be empty")
+			}
+			if len(k) > 128 {
+				o.ServeError(http.StatusBadRequest, "the length of attack type can not be greater than 128")
+			}
+			if len(v) > 0 {
+				if len(v) > 64 {
+					o.ServeError(http.StatusBadRequest,
+						"the length of alarm array can not be greater than 64")
+				}
+				for _, item := range v {
+					if item == "" {
+						o.ServeError(http.StatusBadRequest, "the alarm type can not be empty")
+					}
+					found := false
+					for _, alarmType := range models.AlarmTypes {
+						if item == alarmType {
+							found = true
+						}
+					}
+					if !found {
+						o.ServeError(http.StatusBadRequest, "the alarm type must be in: "+
+							fmt.Sprintf("%v", models.AlarmTypes))
+					}
+				}
+			}
+
+		}
+	}
+}
+
 // @router /delete [post]
 func (o *AppController) Delete() {
 	var app = &models.App{}
@@ -457,7 +498,19 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 		if v, ok := value.(string); ok {
 			if len(v) >= 2048 {
 				o.ServeError(http.StatusBadRequest,
-					"the value's length of config key '"+key+"' must be less than 2048")
+					"the value's length of config item '"+key+"' must be less than 2048")
+			}
+		}
+		if v, ok := value.(float64); ok {
+			if v < 0 {
+				o.ServeError(http.StatusBadRequest,
+					"the value of config item '"+key+"' can not be less than 0")
+			} else if key == "plugin.timeout.millis" || key == "body.maxbytes" || key == "syslog.reconnect_interval" ||
+				key == "ognl.expression.minlength"{
+				if v == 0 {
+					o.ServeError(http.StatusBadRequest,
+						"the value of config item '"+key+"' must be greater than 0")
+				}
 			}
 		}
 	}
@@ -485,10 +538,11 @@ func (o *AppController) validateWhiteListConfig(config []models.WhitelistConfigI
 // @router /alarm/config [post]
 func (o *AppController) ConfigAlarm() {
 	var param struct {
-		AppId          string                 `json:"app_id"`
-		EmailAlarmConf *models.EmailAlarmConf `json:"email_alarm_conf,omitempty"`
-		DingAlarmConf  *models.DingAlarmConf  `json:"ding_alarm_conf,omitempty"`
-		HttpAlarmConf  *models.HttpAlarmConf  `json:"http_alarm_conf,omitempty"`
+		AppId               string                 `json:"app_id"`
+		AttackTypeAlarmConf *map[string][]string   `json:"attack_type_alarm_conf,omitempty"`
+		EmailAlarmConf      *models.EmailAlarmConf `json:"email_alarm_conf,omitempty"`
+		DingAlarmConf       *models.DingAlarmConf  `json:"ding_alarm_conf,omitempty"`
+		HttpAlarmConf       *models.HttpAlarmConf  `json:"http_alarm_conf,omitempty"`
 	}
 	o.UnmarshalJson(&param)
 
@@ -514,6 +568,9 @@ func (o *AppController) ConfigAlarm() {
 			param.DingAlarmConf.CorpSecret = app.DingAlarmConf.CorpSecret
 		}
 		o.validDingConf(param.DingAlarmConf)
+	}
+	if param.AttackTypeAlarmConf != nil {
+		o.validAttackTypeAlarmConf(param.AttackTypeAlarmConf)
 	}
 	content, err := json.Marshal(param)
 	if err != nil {
@@ -546,7 +603,8 @@ func (o *AppController) GetPlugins() {
 		o.ServeError(http.StatusBadRequest, "the app doesn't exist")
 	}
 	var result = make(map[string]interface{})
-	total, plugins, err := models.GetPluginsByApp(param.AppId, (param.Page-1)*param.Perpage, param.Perpage)
+	total, plugins, err := models.GetPluginsByApp(param.AppId, (param.Page-1)*param.Perpage,
+		param.Perpage, "-upload_time")
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get plugins", err)
 	}
@@ -665,4 +723,54 @@ func (o *AppController) TestHttp(config map[string]interface{}) {
 		o.ServeError(http.StatusBadRequest, "failed to test http alarm", err)
 	}
 	o.ServeWithEmptyData()
+}
+
+// @router /plugin/latest [post]
+func (o *AppController) CheckPluginLatest(config map[string]interface{}) {
+	var param map[string]string
+	o.UnmarshalJson(&param)
+	appId := param["app_id"]
+	if appId == "" {
+		o.ServeError(http.StatusBadRequest, "app_id cannot be empty")
+	}
+	latestVersion := ""
+	currentVersion := ""
+	app, err := models.GetAppById(appId)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to get the app", err)
+	}
+	selectedPlugin, err := models.GetPluginById(app.SelectedPluginId, false)
+	if err != nil && err != mgo.ErrNotFound {
+		o.ServeError(http.StatusBadRequest, "failed to get the app", err)
+	}
+	if selectedPlugin != nil {
+		if selectedPlugin.Name != "official" {
+			o.Serve(map[string]interface{}{
+				"is_latest": true,
+			})
+			return
+		}
+		currentVersion = selectedPlugin.Version
+	}
+
+	latestPlugins, err := models.SearchPlugins(bson.M{"app_id": appId, "name": "official"},
+		0, 1, "-version")
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to get plugins for app: "+appId, err)
+	}
+	if len(latestPlugins) > 0 {
+		latestVersion = latestPlugins[0].Version
+		if selectedPlugin == nil || strings.Compare(selectedPlugin.Version, latestPlugins[0].Version) < 0 {
+			o.Serve(map[string]interface{}{
+				"is_latest":        false,
+				"selected_version": currentVersion,
+				"latest_version":   latestVersion,
+			})
+			return
+		}
+	}
+
+	o.Serve(map[string]interface{}{
+		"is_latest": true,
+	})
 }

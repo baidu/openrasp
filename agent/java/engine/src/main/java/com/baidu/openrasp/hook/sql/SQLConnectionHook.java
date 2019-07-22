@@ -17,10 +17,9 @@
 package com.baidu.openrasp.hook.sql;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.*;
@@ -28,7 +27,10 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Properties;
+import java.util.StringTokenizer;
 
 /**
  * @description: 检测mysql的access deny异常的hook点
@@ -66,7 +68,7 @@ public class SQLConnectionHook extends AbstractClassHook {
      */
     public static void checkSQLErrorCode(String server, SQLException e, Object[] object) {
         //当服务器的cpu使用率超过90%，禁用全部hook点
-        if (Config.getConfig().getDisableHooks()){
+        if (Config.getConfig().getDisableHooks()) {
             return;
         }
         //当云控注册成功之前，不进入任何hoo点
@@ -127,9 +129,7 @@ public class SQLConnectionHook extends AbstractClassHook {
                         connectionString = url.substring(0, pos2);
                     }
                 } catch (Exception e1) {
-                    String msg = "parse connection string fail";
-                    int code = ErrorType.HOOK_ERROR.getCode();
-                    HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(msg, code), e);
+                    LogTool.traceHookWarn("parse connection string failed: " + e.getMessage(), e);
                 }
                 params.put("connectionString", connectionString != null ? connectionString : "");
                 params.put("username", username != null ? username : "");

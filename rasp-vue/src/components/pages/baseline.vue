@@ -14,7 +14,7 @@
             <DatePicker ref="datePicker" @selected="loadEvents(1)" />
           </div>
 
-          <b-dropdown text="基线类型" class="ml-2" right>
+          <b-dropdown text="基线类型" class="ml-2" left>
             <b-container style="width: 500px;">
               <b-form-row>
                 <b-col>
@@ -47,7 +47,13 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model="hostname" type="text" class="form-control w-10" placeholder="搜索主机或者IP" @keyup.enter="loadEvents(1)">
+            <input v-model.trim="hostname" type="text" class="form-control w-10" placeholder="搜索主机或者IP" @keyup.enter="loadEvents(1)">
+          </div>
+          <div class="input-icon ml-2">
+            <span class="input-icon-addon">
+              <i class="fe fe-search" />
+            </span>
+            <input v-model.trim="message" type="text" class="form-control w-10" placeholder="过滤消息" @keyup.enter="loadEvents(1)">
           </div>
           <button class="btn btn-primary ml-2" @click="loadEvents(1)">
             搜索
@@ -155,6 +161,7 @@ export default {
       hostname: '',
       total: 0,
       baseline_types,
+      message: '',
       selected: Object.keys(baseline_types)
     }
   },
@@ -186,6 +193,7 @@ export default {
           start_time: this.$refs.datePicker.start.valueOf(),
           end_time: this.$refs.datePicker.end.valueOf(),
           policy_id: this.selected,
+          message: this.message
         },
         page: page,
         perpage: 10

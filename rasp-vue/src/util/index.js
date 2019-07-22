@@ -1,7 +1,7 @@
 import axios from 'axios'
 import Cookie from 'js-cookie'
 
-export var rasp_version = '1.1'
+export var rasp_version = '1.2.0'
 
 // 起始 type_id: 1001
 export var audit_types = {
@@ -116,6 +116,7 @@ export var baseline_types = {
 export var attack_types = {
   sql: 'SQL 注入',
   sql_exception: 'SQL 语句异常',
+  eval: 'EVAL 代码执行',
   command: '命令执行',
   xxe: 'XXE 外部实体加载',
   directory: '目录遍历',

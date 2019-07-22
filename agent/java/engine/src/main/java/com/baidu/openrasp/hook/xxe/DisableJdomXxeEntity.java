@@ -17,8 +17,7 @@
 package com.baidu.openrasp.hook.xxe;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
@@ -47,15 +46,13 @@ public class DisableJdomXxeEntity extends DisableXxeEntity {
     }
 
     public static void setFeature(Object builder) {
-        if (HookHandler.requestCache.get() != null) {
+        if (HookHandler.isEnableCurrThreadHook()) {
             String action = getAction();
             if (BLOCK_XXE_DISABLE_ENTITY.equals(action) && getStatus("java_jdom")) {
                 try {
                     Reflection.invokeMethod(builder, "setFeature", new Class[]{String.class, boolean.class}, FEATURE, true);
-                } catch (Exception e) {
-                    String message = "Jdom close xxe entity failed";
-                    int errorCode = ErrorType.HOOK_ERROR.getCode();
-                    HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                } catch (Throwable t) {
+                    LogTool.traceHookWarn("JDom close xxe entity failed: " + t.getMessage(), t);
                 }
             }
         }

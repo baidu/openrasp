@@ -15,13 +15,14 @@
 package agent
 
 import (
-	"github.com/astaxie/beego/validation"
 	"net/http"
+	"rasp-cloud/conf"
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
 	"time"
-	"rasp-cloud/conf"
+
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/validation"
 )
 
 type RaspController struct {
@@ -63,20 +64,32 @@ func (o *RaspController) Post() {
 	if len(rasp.Language) >= 50 {
 		o.ServeError(http.StatusBadRequest, "the length of rasp language must be less than 50")
 	}
+	if rasp.ServerType == "" {
+		o.ServeError(http.StatusBadRequest, "the server_type can not be empty")
+	}
 	if len(rasp.ServerType) >= 256 {
 		o.ServeError(http.StatusBadRequest, "the length of rasp server type must be less than 256")
+	}
+	if rasp.ServerVersion == "" {
+		o.ServeError(http.StatusBadRequest, "the server version can not be empty")
 	}
 	if len(rasp.ServerVersion) >= 50 {
 		o.ServeError(http.StatusBadRequest, "the length of rasp server version must be less than 50")
 	}
+
 	if len(rasp.Description) >= 1024 {
 		o.ServeError(http.StatusBadRequest, "the length of rasp description less than 1024")
 	}
-	if rasp.RegisterIp != "" {
-		valid := validation.Validation{}
-		if result := valid.IP(rasp.RegisterIp, "IP"); !result.Ok {
-			o.ServeError(http.StatusBadRequest, "rasp register_ip format error: "+result.Error.Message)
-		}
+	if len(rasp.HostType) >= 256 {
+		o.ServeError(http.StatusBadRequest, "the length of host type must be less than 256")
+	}
+	if rasp.RegisterIp == "" {
+		o.ServeError(http.StatusBadRequest, "the register ip can not be empty")
+	}
+	valid := validation.Validation{}
+	if result := valid.IP(rasp.RegisterIp, "IP"); !result.Ok {
+		o.ServeError(http.StatusBadRequest, "rasp register_ip format error: "+result.Error.Message)
+
 	}
 	if rasp.HeartbeatInterval <= 0 {
 		o.ServeError(http.StatusBadRequest, "heartbeat_interval must be greater than 0")
@@ -86,17 +99,27 @@ func (o *RaspController) Post() {
 		rasp.Environ = map[string]string{}
 	}
 
+	envTotal := 0
+	environ := map[string]string{}
+	isWarnEnv := false
 	for k, v := range rasp.Environ {
-		if len(k) > 4096 {
-			o.ServeError(http.StatusBadRequest,
-				"the length of environ key cannot be greater than 4096")
+		envTotal += len(k)
+		envTotal += len(v)
+		if envTotal > 100000 {
+			if !isWarnEnv {
+				beego.Warn("the total length of environment variable is greater than 100000, " +
+					"can not store all environment variable for rasp: " + rasp.HostName + " (" + rasp.RaspHome + ")")
+				isWarnEnv = true
+			}
+			envTotal -= len(k)
+			envTotal -= len(v)
+			continue
 		}
-		if len(v) > 4096 {
-			o.ServeError(http.StatusBadRequest,
-				"the length of environ value cannot be greater than 4096")
-		}
+		environ[k] = v
 	}
-
+	online := true
+	rasp.Online = &online
+	rasp.Environ = environ
 	rasp.LastHeartbeatTime = time.Now().Unix()
 	rasp.RegisterTime = time.Now().Unix()
 	err := models.UpsertRaspById(rasp.Id, rasp)

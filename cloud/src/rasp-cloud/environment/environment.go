@@ -14,15 +14,6 @@
 
 package environment
 
-/*
-const char* build_time(void)
-{
-static const char* psz_build_time = __DATE__ " " __TIME__;
-return psz_build_time;
-}
-*/
-import "C"
-
 import (
 	"bytes"
 	"flag"
@@ -40,11 +31,11 @@ import (
 )
 
 var (
-	Version   = "1.3"
-	BuildTime = C.GoString(C.build_time())
+	Version = "1.3"
 )
 
 func init() {
+	chdir()
 	StartFlag := &conf.Flag{}
 	StartFlag.StartType = flag.String("type", "", "use to provide different routers")
 	StartFlag.Daemon = flag.Bool("d", false, "use to run as daemon process")
@@ -53,7 +44,9 @@ func init() {
 
 	if *StartFlag.Version {
 		fmt.Println("Version:       " + Version)
-		fmt.Println("Build Time:    " + BuildTime)
+		if tools.BuildTime != "" {
+			fmt.Println("Build Time:    " + tools.BuildTime)
+		}
 		if tools.CommitID != "" {
 			fmt.Println("Git Commit ID: " + tools.CommitID)
 		}
@@ -73,6 +66,18 @@ func init() {
 	}
 	conf.InitConfig(StartFlag)
 	beego.Info("===== start type: " + *StartFlag.StartType + " =====")
+}
+
+func chdir() {
+	path, err := tools.GetCurrentPath()
+	if err != nil {
+		tools.Panic(tools.ErrCodeChDirFailed, "failed to get current dir", err)
+	}
+	fmt.Println(path)
+	err = os.Chdir(path)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to change dir to "+path, err)
+	}
 }
 
 func HandleReset(startFlag *conf.Flag) {
@@ -126,7 +131,7 @@ func fork() (err error) {
 }
 
 func initLogger() {
-	logPath := tools.GetCurrentPathWithPanic() + "/logs/api"
+	logPath := "logs/api"
 	if isExists, _ := tools.PathExists(logPath); !isExists {
 		err := os.MkdirAll(logPath, os.ModePerm)
 		if err != nil {

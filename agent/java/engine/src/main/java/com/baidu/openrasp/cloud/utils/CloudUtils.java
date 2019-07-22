@@ -18,10 +18,10 @@ package com.baidu.openrasp.cloud.utils;
 
 import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.model.ExceptionModel;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.OSUtil;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
@@ -33,7 +33,6 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -118,9 +117,7 @@ public class CloudUtils {
             try {
                 CloudCacheModel.getInstance().setRaspId(OSUtil.getRaspId());
             } catch (Exception e) {
-                String message = "Unable to generate unique rasp_id";
-                int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                LogTool.warn(ErrorType.CONFIG_ERROR, "Unable to generate unique rasp_id: " + e.getMessage(), e);
                 return false;
             }
 
@@ -128,21 +125,18 @@ public class CloudUtils {
             String cloudAppId = Config.getConfig().getCloudAppId();
             String cloudAppSecret = Config.getConfig().getCloudAppSecret();
             if (cloudAddress == null || cloudAddress.trim().isEmpty()) {
-                String message = "Cloud control configuration error: cloud.address is not configured";
-                int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
+                LogTool.warn(ErrorType.CONFIG_ERROR,
+                        "Cloud control configuration error: cloud.address is not configured");
                 return false;
             }
             if (cloudAppId == null || cloudAppId.trim().isEmpty()) {
-                String message = "Cloud control configuration error: cloud.appid is not configured";
-                int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
+                LogTool.warn(ErrorType.CONFIG_ERROR,
+                        "Cloud control configuration error: cloud.appid is not configured");
                 return false;
             }
             if (cloudAppSecret == null || cloudAppSecret.trim().isEmpty()) {
-                String message = "Cloud control configuration error: cloud.appsecret is not configured";
-                int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
+                LogTool.warn(ErrorType.CONFIG_ERROR,
+                        "Cloud control configuration error: cloud.appsecret is not configured");
                 return false;
             }
             return true;
@@ -210,10 +204,4 @@ public class CloudUtils {
         return result.trim();
     }
 
-    public static ExceptionModel getExceptionObject(String message, int errorCode) {
-        ExceptionModel model = new ExceptionModel();
-        model.setMessage(message);
-        model.setErrorCode(errorCode);
-        return model;
-    }
 }

@@ -16,19 +16,20 @@
 
 package com.baidu.openrasp.cloud;
 
-import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.apache.log4j.helpers.LogLog;
 
 import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.zip.GZIPInputStream;
 
 /**
  * @description: 云控http请求
@@ -44,9 +45,7 @@ public class CloudHttp implements Request {
         try {
             return request(url, content);
         } catch (Exception e) {
-            String message = "HTTP request to " + url + " failed";
-            int errorCode = ErrorType.REQUEST_ERROR.getCode();
-            CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.warn(ErrorType.REQUEST_ERROR, "HTTP request to " + url + " failed: " + e.getMessage(), e);
             return null;
         }
     }
@@ -56,14 +55,12 @@ public class CloudHttp implements Request {
         try {
             return request(url, content);
         } catch (Exception e) {
-            String message = "HTTP request to " + url + " failed";
-            int errorCode = ErrorType.REQUEST_ERROR.getCode();
-            LogLog.warn(CloudUtils.getExceptionObject(message, errorCode).toString(), e);
+            LogTool.warn(ErrorType.REQUEST_ERROR, "HTTP request to " + url + " failed: " + e.getMessage(), e);
             return null;
         }
     }
 
-    public GenericResponse request(String url, String content) throws Exception{
+    public GenericResponse request(String url, String content) throws Exception {
         DataOutputStream out = null;
         InputStream in = null;
         String jsonString = null;
@@ -77,6 +74,7 @@ public class CloudHttp implements Request {
             httpUrlConnection.setRequestProperty("X-OpenRASP-AppID", appId);
             String appSecret = Config.getConfig().getCloudAppSecret();
             httpUrlConnection.setRequestProperty("X-OpenRASP-AppSecret", appSecret);
+            httpUrlConnection.setRequestProperty("Accept-Encoding", "gzip");
             httpUrlConnection.setConnectTimeout(DEFAULT_CONNECTION_TIMEOUT);
             httpUrlConnection.setReadTimeout(DEFAULT_READ_TIMEOUT);
             httpUrlConnection.setRequestMethod("POST");
@@ -89,6 +87,10 @@ public class CloudHttp implements Request {
             httpUrlConnection.connect();
             responseCode = httpUrlConnection.getResponseCode();
             in = httpUrlConnection.getInputStream();
+            String encoding = httpUrlConnection.getContentEncoding();
+            if (encoding != null && encoding.contains("gzip")) {
+                in = new GZIPInputStream(httpUrlConnection.getInputStream());
+            }
             jsonString = CloudUtils.convertInputStreamToJsonString(in);
         } finally {
             if (out != null) {

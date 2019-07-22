@@ -17,9 +17,9 @@
 package com.baidu.openrasp.plugin.checker.policy.server;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
@@ -58,9 +58,8 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
         if (paths.size() > 0) {
             File bootProperties = new File(paths.get(0));
             if (!(bootProperties.exists() && bootProperties.canRead())) {
-                String message = WEBLOGIC_CHECK_ERROR_LOG_CHANNEL + ": can not load file " + paths.get(0);
-                int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-                LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
+                LogTool.warn(ErrorType.PLUGIN_ERROR,
+                        WEBLOGIC_CHECK_ERROR_LOG_CHANNEL + ": can not load file " + paths.get(0));
             }
             String encryptedPassword = getProperties(bootProperties, "password");
             String decryptedPassword = decrypt(encryptedPassword, domainPath);
@@ -87,9 +86,8 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
             prop.load(InputStream);
             value = prop.getProperty(keyWord);
         } catch (Exception e) {
-            String message = WEBLOGIC_CHECK_ERROR_LOG_CHANNEL + ": can not find " + keyWord;
-            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.warn(ErrorType.PLUGIN_ERROR,
+                    WEBLOGIC_CHECK_ERROR_LOG_CHANNEL + ": can not find " + keyWord);
         }
         return value != null ? value : "";
     }
@@ -104,9 +102,8 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
                 decryptedString = Reflection.invokeStringMethod(clearOrEncryptedService, "decrypt", new Class[]{String.class}, decrypted);
             }
         } catch (Exception e) {
-            String message = WEBLOGIC_CHECK_ERROR_LOG_CHANNEL + ": can not decrypt the encryptedString";
-            int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.warn(ErrorType.PLUGIN_ERROR,
+                    WEBLOGIC_CHECK_ERROR_LOG_CHANNEL + ": can not decrypt the encryptedString");
         }
         return decryptedString != null ? decryptedString : "";
     }

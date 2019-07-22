@@ -158,7 +158,7 @@ HELP;
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 参数解析 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 $shortopts = "d:h";
-$longopts = array("without-plugin", "keep-ini", "keep-plugin", "keep-conf", "app-id:", "app-secret:", "backend-url:", "help");
+$longopts = array("iast", "without-plugin", "keep-ini", "keep-plugin", "keep-conf", "app-id:", "app-secret:", "backend-url:", "help");
 $options = getopt($shortopts, $longopts);
 if (array_key_exists("h", $options) || array_key_exists("help", $options)) {
 	show_help($install_help_msg);
@@ -418,12 +418,13 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 				major_tips("Skipped update of openrasp config since '--keep-conf' is set");
 			} else {
 				major_tips('Updating the openrasp config');
+				$conf_filename = array_key_exists("iast", $options) ? "iast.yml" : "openrasp.yml";
 				$conf_dir = __DIR__ . DIRECTORY_SEPARATOR . $key;
 				if (file_exists($conf_dir)) {
-					update_file_if_need($conf_dir . DIRECTORY_SEPARATOR . "openrasp.yml",
-						$sub_item . DIRECTORY_SEPARATOR . "openrasp.yml", "openrasp config");
+					update_file_if_need($conf_dir . DIRECTORY_SEPARATOR . $conf_filename,
+						$sub_item . DIRECTORY_SEPARATOR . "openrasp.yml", "openrasp config (" . $conf_filename .")");
 				}
-			}
+			}			
 		}
 	} else {
 		$old_mask = umask(0);
@@ -433,7 +434,13 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 			log_tips(ERROR, "Unable to create directory: $sub_item");
 		}
 		if (file_exists(__DIR__ . DIRECTORY_SEPARATOR . $key)) {
-			recurse_copy(__DIR__ . DIRECTORY_SEPARATOR . $key, $sub_item);
+			if ($key === "conf") {
+				$conf_filename = array_key_exists("iast", $options) ? "iast.yml" : "openrasp.yml";
+				update_file_if_need(__DIR__ . DIRECTORY_SEPARATOR . $key . DIRECTORY_SEPARATOR . $conf_filename,
+							$sub_item . DIRECTORY_SEPARATOR . "openrasp.yml", "openrasp config (" . $conf_filename .")");
+			} else {
+				recurse_copy(__DIR__ . DIRECTORY_SEPARATOR . $key, $sub_item);
+			}
 		}
 	}
 	if ($key === "plugins") {
