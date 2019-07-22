@@ -18,6 +18,7 @@
 #include "shared_config_block.h"
 #include "utils/digest.h"
 #include "utils/net.h"
+#include "utils/hostname.h"
 #include <algorithm>
 
 namespace openrasp
@@ -221,7 +222,6 @@ bool SharedConfigManager::startup()
         shared_config_block = reinterpret_cast<SharedConfigBlock *>(shm_config_block);
         std::map<std::string, int> all_type_white{{"", ~0}};
         build_check_type_white_array(all_type_white);
-        build_hostname();
         build_rasp_id();
         initialized = true;
         return true;
@@ -245,21 +245,6 @@ bool SharedConfigManager::shutdown()
     return true;
 }
 
-bool SharedConfigManager::build_hostname()
-{
-    char host_name[255] = {0};
-    if (!gethostname(host_name, sizeof(host_name) - 1))
-    {
-        hostname = std::string(host_name);
-        return true;
-    }
-    else
-    {
-        openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("gethostname error: %s"), strerror(errno));
-        return false;
-    }
-}
-
 bool SharedConfigManager::build_rasp_id()
 {
     std::vector<std::string> hw_addrs;
@@ -273,7 +258,7 @@ bool SharedConfigManager::build_rasp_id()
     {
         buf += hw_addr;
     }
-    buf.append(hostname)
+    buf.append(get_hostname())
         .append(openrasp_ini.root_dir ? openrasp_ini.root_dir : "")
         .append(sapi_module.name ? sapi_module.name : "");
     this->rasp_id = md5sum(static_cast<const void *>(buf.c_str()), buf.length());
@@ -283,11 +268,6 @@ bool SharedConfigManager::build_rasp_id()
 std::string SharedConfigManager::get_rasp_id() const
 {
     return this->rasp_id;
-}
-
-std::string SharedConfigManager::get_hostname() const
-{
-    return this->hostname;
 }
 
 bool SharedConfigManager::write_weak_password_array_to_shm(const void *source, size_t num)

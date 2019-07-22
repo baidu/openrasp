@@ -36,6 +36,8 @@ enum FieldIndex
     kBody,
     kServer,
     kJsonBody,
+    kRequestId,
+    kLogInfo,
     kEndForCount
 };
 static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
@@ -417,7 +419,7 @@ static void server_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::Object> server = v8::Object::New(isolate);
     server->Set(NewV8String(isolate, "language"), NewV8String(isolate, "php"));
-    server->Set(NewV8String(isolate, "name"), NewV8String(isolate, "PHP"));
+    server->Set(NewV8String(isolate, "server"), NewV8String(isolate, "PHP"));
     server->Set(NewV8String(isolate, "version"), NewV8String(isolate, OPENRASP_PHP_VERSION));
 #ifdef PHP_WIN32
     server->Set(NewV8String(isolate, "os"), NewV8String(isolate, "Windows"));
@@ -499,7 +501,33 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     info.GetReturnValue().Set(obj);
     self->SetInternalField(kJsonBody, obj);
 }
-
+static void request_id_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
+{
+    TSRMLS_FETCH();
+    auto self = info.Holder();
+    auto cache = self->GetInternalField(kRequestId);
+    if (!cache->IsUndefined())
+    {
+        info.GetReturnValue().Set(cache);
+        return;
+    }
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_INJECT_G(request_id));
+    info.GetReturnValue().Set(obj);
+    self->SetInternalField(kRequestId, obj);
+}
+static void logInfo_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
+{
+    TSRMLS_FETCH();
+    auto isolate = info.GetIsolate();
+    auto log_info = LOG_G(alarm_logger).get_common_info(TSRMLS_C);
+    if (log_info == nullptr)
+    {
+        info.GetReturnValue().Set(v8::Object::New(isolate));
+        return;
+    }
+    auto obj = NewV8ValueFromZval(isolate, log_info);
+    info.GetReturnValue().Set(obj);
+}
 v8::Local<v8::ObjectTemplate> openrasp::CreateRequestContextTemplate(Isolate *isolate)
 {
     auto obj_templ = v8::ObjectTemplate::New(isolate);
@@ -515,6 +543,8 @@ v8::Local<v8::ObjectTemplate> openrasp::CreateRequestContextTemplate(Isolate *is
     obj_templ->SetAccessor(NewV8String(isolate, "body"), body_getter);
     obj_templ->SetAccessor(NewV8String(isolate, "server"), server_getter);
     obj_templ->SetAccessor(NewV8String(isolate, "json"), json_body_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "requestId"), request_id_getter);
+    obj_templ->SetAccessor(NewV8String(isolate, "logInfo"), logInfo_getter);
     obj_templ->SetInternalFieldCount(kEndForCount);
     return obj_templ;
 }

@@ -54,6 +54,7 @@ PHP_GSHUTDOWN_FUNCTION(openrasp_v8)
 {
     if (openrasp_v8_globals->isolate)
     {
+        Platform::Get()->Startup();
         openrasp_v8_globals->isolate->Dispose();
         openrasp_v8_globals->isolate = nullptr;
     }
@@ -66,10 +67,11 @@ PHP_MINIT_FUNCTION(openrasp_v8)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp_v8, PHP_GINIT(openrasp_v8), PHP_GSHUTDOWN(openrasp_v8));
 
-    // It can be called multiple times,
-    // but intern code initializes v8 only once
-    v8::V8::InitializePlatform(Platform::New(1));
-    v8::V8::Initialize();
+    // initializes v8 only once
+    std::call_once(process_globals.init_v8_once, []() {
+        v8::V8::InitializePlatform(Platform::New(2));
+        v8::V8::Initialize();
+    });
 
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (openrasp_ini.remote_management_enable && oam != nullptr)
@@ -120,7 +122,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
     // it should generally not be necessary to dispose v8 before exiting a process,
     // so skip this step for module graceful reload
     // v8::V8::Dispose();
-    Platform::Get()->Shutdown();
+    // Platform::Get()->Shutdown();
     delete process_globals.snapshot_blob;
     process_globals.snapshot_blob = nullptr;
 
@@ -165,12 +167,15 @@ PHP_RINIT_FUNCTION(openrasp_v8)
             std::unique_lock<std::mutex> lock(process_globals.mtx, std::try_to_lock);
             if (lock)
             {
+                Platform::Get()->Startup();
                 if (OPENRASP_V8_G(isolate))
                 {
                     OPENRASP_V8_G(isolate)->Dispose();
                 }
-                Platform::Get()->Startup();
-                OPENRASP_V8_G(isolate) = Isolate::New(process_globals.snapshot_blob, process_globals.snapshot_blob->timestamp);
+                auto isolate = Isolate::New(process_globals.snapshot_blob, process_globals.snapshot_blob->timestamp);
+                v8::HandleScope handle_scope(isolate);
+                isolate->GetData()->request_context_templ.Reset(isolate, CreateRequestContextTemplate(isolate));
+                OPENRASP_V8_G(isolate) = isolate;
                 OPENRASP_G(config).updateAlgorithmConfig();
             }
         }

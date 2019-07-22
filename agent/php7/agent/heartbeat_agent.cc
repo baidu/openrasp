@@ -19,6 +19,7 @@
 #include "openrasp_agent.h"
 #include "openrasp_hook.h"
 #include "utils/digest.h"
+#include "utils/hostname.h"
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -76,6 +77,7 @@ bool HeartBeatAgent::do_heartbeat()
 
 	JsonReader json_reader;
 	json_reader.write_string({"rasp_id"}, scm->get_rasp_id());
+	json_reader.write_string({"hostname"}, get_hostname());
 	json_reader.write_string({"plugin_md5"}, oam->get_plugin_md5());
 	json_reader.write_string({"plugin_name"}, oam->get_plugin_name());
 	json_reader.write_string({"plugin_version"}, oam->get_plugin_version());

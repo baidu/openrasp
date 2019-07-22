@@ -32,6 +32,7 @@
 #include "openrasp_ini.h"
 #include "utils/file.h"
 #include "utils/net.h"
+#include "utils/hostname.h"
 #include "agent/utils/os.h"
 #include "openrasp_utils.h"
 #include "agent/webdir/webdir_agent.h"
@@ -182,7 +183,7 @@ bool OpenraspAgentManager::process_agent_startup()
 			close(STDIN_FILENO);
 			dup2(fd, STDIN_FILENO);
 			close(fd);
-		}
+		}		
 		setsid();
 		supervisor_run();
 	}
@@ -282,7 +283,7 @@ bool OpenraspAgentManager::agent_remote_register()
 
 	JsonReader json_reader;
 	json_reader.write_string({"id"}, scm->get_rasp_id());
-	json_reader.write_string({"hostname"}, scm->get_hostname());
+	json_reader.write_string({"hostname"}, get_hostname());
 	json_reader.write_string({"language"}, "php");
 	json_reader.write_string({"language_version"}, OPENRASP_PHP_VERSION);
 	json_reader.write_string({"server_type"}, sapi_module.name);
@@ -298,7 +299,7 @@ bool OpenraspAgentManager::agent_remote_register()
 		json_reader.write_string({"host_type"}, "docker");
 	}
 	std::map<std::string, std::string> env_map = get_env_map();
-	json_reader.write_map({"environ"}, env_map);	
+	json_reader.write_map({"environ"}, env_map);
 	std::string json_content = json_reader.dump();
 
 	BackendRequest backend_request(url_string, json_content.c_str());

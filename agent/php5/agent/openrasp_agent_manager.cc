@@ -32,6 +32,7 @@
 #include "openrasp_ini.h"
 #include "utils/file.h"
 #include "utils/net.h"
+#include "utils/hostname.h"
 #include "agent/utils/os.h"
 #include "openrasp_utils.h"
 #include "agent/webdir/webdir_agent.h"
@@ -282,7 +283,7 @@ bool OpenraspAgentManager::agent_remote_register()
 
 	JsonReader json_reader;
 	json_reader.write_string({"id"}, scm->get_rasp_id());
-	json_reader.write_string({"hostname"}, scm->get_hostname());
+	json_reader.write_string({"hostname"}, get_hostname());
 	json_reader.write_string({"language"}, "php");
 	json_reader.write_string({"language_version"}, OPENRASP_PHP_VERSION);
 	json_reader.write_string({"server_type"}, sapi_module.name);

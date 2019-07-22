@@ -36,7 +36,7 @@ extern "C"
   extern zend_module_entry openrasp_module_entry;
 #define phpext_openrasp_ptr &openrasp_module_entry
 
-#define PHP_OPENRASP_VERSION "1.1" /* Replace with version number for your extension */
+#define PHP_OPENRASP_VERSION "1.2.0" /* Replace with version number for your extension */
 #define OPENRASP_PHP_VERSION ZEND_TOSTR(PHP_MAJOR_VERSION.PHP_MINOR_VERSION.PHP_RELEASE_VERSION)
 
 #ifdef PHP_WIN32

@@ -55,7 +55,6 @@ public:
   bool is_password_weak(std::string password);
 
   std::string get_rasp_id() const;
-  std::string get_hostname() const;
 
   bool set_buildin_check_action(std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map);
   OpenRASPActionType get_buildin_check_action(OpenRASPCheckType check_type);
@@ -65,11 +64,9 @@ private:
   ReadWriteLock *rwlock;
   SharedConfigBlock *shared_config_block;
   std::string rasp_id;
-  std::string hostname;
 
   bool write_check_type_white_array_to_shm(const void *source, size_t num);
   bool write_weak_password_array_to_shm(const void *source, size_t num);
-  bool build_hostname();
   bool build_rasp_id();
 };
 
