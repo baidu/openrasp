@@ -20,14 +20,19 @@ import java.util.*;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.jsoniter.output.JsonStream;
 import com.baidu.openrasp.v8.ByteArrayOutputStream;
+import com.baidu.openrasp.tool.OSUtil;
+import com.baidu.openrasp.cloud.model.CloudCacheModel;
+import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.tool.model.NicModel;
 
 public class Context extends com.baidu.openrasp.v8.Context {
-    
+
     public AbstractRequest request = null;
 
     public static void setKeys() {
-        setStringKeys(new String[] { "path", "method", "url", "querystring", "protocol", "remoteAddr", "appBasePath", "requestId" });
-        setObjectKeys(new String[] { "json", "server", "parameter", "header" });
+        setStringKeys(new String[] { "path", "method", "url", "querystring", "protocol", "remoteAddr", "appBasePath",
+                "requestId", "appId", "raspId", "hostname", "source", "target", "clientIp" });
+        setObjectKeys(new String[] { "json", "server", "parameter", "header", "nic" });
         setBufferKeys(new String[] { "body" });
     }
 
@@ -52,6 +57,18 @@ public class Context extends com.baidu.openrasp.v8.Context {
             return getRemoteAddr();
         if (key.equals("requestId"))
             return getRequestId();
+        if (key.equals("appId"))
+            return getAppId();
+        if (key.equals("raspId"))
+            return getRaspId();
+        if (key.equals("hostname"))
+            return getHostname();
+        if (key.equals("source"))
+            return getSource();
+        if (key.equals("target"))
+            return getTarget();
+        if (key.equals("clientIp"))
+            return getClientIp();
         return null;
     }
 
@@ -64,6 +81,8 @@ public class Context extends com.baidu.openrasp.v8.Context {
             return getParameter();
         if (key.equals("server"))
             return getServer();
+        if (key.equals("nic"))
+            return getNic();
         return null;
     }
 
@@ -202,6 +221,66 @@ public class Context extends com.baidu.openrasp.v8.Context {
             return out.getByteArray();
         } catch (Exception e) {
             return "{}".getBytes();
+        }
+    }
+
+    public String getAppId() {
+        try {
+            return Config.getConfig().getCloudAppId();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public String getRaspId() {
+        try {
+            return CloudCacheModel.getInstance().getRaspId() != null ? CloudCacheModel.getInstance().getRaspId() : "";
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public String getHostname() {
+        try {
+            return OSUtil.getHostName();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public byte[] getNic() {
+        try {
+            List<NicModel> nic = OSUtil.getIpAddress();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            JsonStream.serialize(nic, out);
+            out.write(0);
+            return out.getByteArray();
+        } catch (Exception e) {
+            return "{}".getBytes();
+        }
+    }
+
+    public String getSource() {
+        try {
+            return request.getRemoteAddr();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public String getTarget() {
+        try {
+            return request.getLocalAddr();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public String getClientIp() {
+        try {
+            return request.getClinetIp();
+        } catch (Exception e) {
+            return "";
         }
     }
 }
