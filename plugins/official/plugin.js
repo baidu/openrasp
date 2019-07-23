@@ -2046,7 +2046,7 @@ if (algorithmConfig.eval_regex.action != 'ignore')
 if (algorithmConfig.loadlibrary_unc.action != 'ignore')
 {
     // 算法1: 正则表达式
-    plugin.register('loadlibrary', function(params, context) {
+    plugin.register('loadLibrary', function(params, context) {
             
         if (params.path.startsWith('\\\\')) {
             return {
