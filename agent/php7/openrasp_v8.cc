@@ -87,7 +87,7 @@ PHP_MINIT_FUNCTION(openrasp_v8)
         Platform::Get()->Startup();
         auto duration = std::chrono::system_clock::now().time_since_epoch();
         auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-        Snapshot *snapshot = new Snapshot(process_globals.plugin_config, process_globals.plugin_src_list, millis, nullptr);
+        Snapshot *snapshot = new Snapshot(process_globals.plugin_config, process_globals.plugin_src_list, PHP_OPENRASP_VERSION, millis, nullptr);
         if (!snapshot->IsOk())
         {
             delete snapshot;

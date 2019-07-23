@@ -28,9 +28,12 @@ extern "C"
 namespace openrasp
 {
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result);
+void get_stack(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info);
 CheckResult Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout)
 {
-    IsolateData *data = isolate->GetData();
+    auto context = isolate->GetCurrentContext();
+    auto data = isolate->GetData();
+    params->SetLazyDataProperty(context, NewV8String(isolate, "stack", 5), get_stack).FromJust();
     v8::Local<v8::Object> request_context;
     if (data->request_context.IsEmpty())
     {
@@ -47,7 +50,6 @@ CheckResult Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Ob
     {
         return CheckResult::kCache;
     }
-    auto context = isolate->GetCurrentContext();
     CheckResult check_result = CheckResult::kNoCache;
     for (int i = 0; i < len; i++)
     {
@@ -177,8 +179,10 @@ void plugin_info(Isolate *isolate, const std::string &message)
     LOG_G(plugin_logger).log(LEVEL_INFO, message.c_str(), message.length(), false, true);
 }
 
-v8::Local<v8::Array> get_stack(Isolate *isolate) {
-    v8::EscapableHandleScope handle_scope(isolate);
+void get_stack(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
+{
+    auto isolate = info.GetIsolate();
+    v8::HandleScope handle_scope(isolate);
     auto arr = format_debug_backtrace_arr();
     size_t len = arr.size();
     auto stack = v8::Array::New(isolate, len);
@@ -186,7 +190,7 @@ v8::Local<v8::Array> get_stack(Isolate *isolate) {
     {
         stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
     }
-    return handle_scope.Escape(stack);
+    info.GetReturnValue().Set(stack);
 }
 
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)

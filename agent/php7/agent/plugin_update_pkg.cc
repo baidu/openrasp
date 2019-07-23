@@ -33,7 +33,7 @@ PluginUpdatePackage::PluginUpdatePackage(std::string content, std::string versio
 bool PluginUpdatePackage::build_snapshot()
 {
   Platform::Get()->Startup();
-  Snapshot snapshot("", {active_plugin}, 0);
+  Snapshot snapshot("", {active_plugin}, PHP_OPENRASP_VERSION, 0);
   Platform::Get()->Shutdown();
   if (!snapshot.IsOk())
   {

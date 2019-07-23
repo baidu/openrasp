@@ -30,6 +30,7 @@ import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
 import com.baidu.openrasp.v8.ByteArrayOutputStream;
 import com.baidu.openrasp.v8.V8;
+import com.baidu.openrasp.tool.model.BuildRASPModel;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
 import com.jsoniter.extra.Base64Support;
@@ -186,7 +187,7 @@ public class JS {
     }
 
     public synchronized static boolean UpdatePlugin(List<String[]> scripts) {
-        boolean rst = V8.CreateSnapshot("{}", scripts.toArray());
+        boolean rst = V8.CreateSnapshot("{}", scripts.toArray(), BuildRASPModel.getRaspVersion());
         if (rst) {
             try {
                 String jsonString = V8.ExecuteScript("JSON.stringify(RASP.algorithmConfig || {})", "get-algorithm-config.js");
