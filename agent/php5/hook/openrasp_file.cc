@@ -77,17 +77,6 @@ static void check_file_operation(OpenRASPCheckType type, const std::string &file
                 auto params = v8::Object::New(isolate);
                 params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, filename));
                 params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, realpath));
-                if (type == WRITE_FILE)
-                {
-                    auto arr = format_debug_backtrace_arr(TSRMLS_C);
-                    size_t len = arr.size();
-                    auto stack = v8::Array::New(isolate, len);
-                    for (size_t i = 0; i < len; i++)
-                    {
-                        stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
-                    }
-                    params->Set(openrasp::NewV8String(isolate, "stack"), stack);
-                }
                 check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
             if (check_result == openrasp::CheckResult::kCache)

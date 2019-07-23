@@ -201,13 +201,15 @@ static void build_complete_url(zval *items, zval *new_zv TSRMLS_DC)
 static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_filter> &filters TSRMLS_DC)
 {
     std::vector<keys_filter> total_filters(filters);
+    std::string clientip_origin_key;
     if (!OPENRASP_CONFIG(clientip.header).empty())
     {
         char *tmp_clientip_header = estrdup(OPENRASP_CONFIG(clientip.header).c_str());
         char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
-        total_filters.push_back({("HTTP_" + std::string(uch)), "client_ip", nullptr});
+        clientip_origin_key = "HTTP_" + std::string(uch);
         efree(tmp_clientip_header);
     }
+    total_filters.push_back({clientip_origin_key, "client_ip", nullptr});
     zval **origin_zv;
     for (keys_filter filter : total_filters)
     {
@@ -241,7 +243,8 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
             }
             else
             {
-                if (zend_hash_find(Z_ARRVAL_P(src), filter.origin_key_str.c_str(), filter.origin_key_str.size() + 1, (void **)&origin_zv) == SUCCESS &&
+                if (!filter.origin_key_str.empty() &&
+                    zend_hash_find(Z_ARRVAL_P(src), filter.origin_key_str.c_str(), filter.origin_key_str.size() + 1, (void **)&origin_zv) == SUCCESS &&
                     Z_TYPE_PP(origin_zv) == IS_STRING)
                 {
                     if (filter.value_filter)

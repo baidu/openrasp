@@ -34,6 +34,7 @@ public:
   char *app_id;
   char *app_secret;
   bool remote_management_enable = true;
+  bool ssl_verifypeer = false;
 };
 
 extern Openrasp_ini openrasp_ini;
