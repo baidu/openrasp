@@ -69,16 +69,8 @@ static inline void plugin_command_check(const zend_string *command, OpenRASPChec
     openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
     {
         v8::HandleScope handle_scope(isolate);
-        auto arr = format_debug_backtrace_arr();
-        size_t len = arr.size();
-        auto stack = v8::Array::New(isolate, len);
-        for (size_t i = 0; i < len; i++)
-        {
-            stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
-        }
         auto params = v8::Object::New(isolate);
         params->Set(openrasp::NewV8String(isolate, "command"), openrasp::NewV8String(isolate, command->val, command->len));
-        params->Set(openrasp::NewV8String(isolate, "stack"), stack);
         check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
     }
     if (check_result == openrasp::CheckResult::kBlock)
