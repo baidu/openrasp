@@ -1070,7 +1070,7 @@ public class Config extends FileScanListener {
      */
     public synchronized void setHeartbeatInterval(String heartbeatInterval) {
         this.heartbeatInterval = Integer.parseInt(heartbeatInterval);
-        if (!(this.heartbeatInterval >= 60 && this.heartbeatInterval <= 1800)) {
+        if (!(this.heartbeatInterval >= 10 && this.heartbeatInterval <= 1800)) {
             this.heartbeatInterval = 180;
         }
     }
