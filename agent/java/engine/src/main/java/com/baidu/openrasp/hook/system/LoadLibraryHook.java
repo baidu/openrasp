@@ -51,7 +51,6 @@ public abstract class LoadLibraryHook extends AbstractClassHook {
             params.put("function", "ClassLoader$NativeLibrary.init");
             params.put("path", libFile.getPath());
             params.put("realpath", realPath);
-            System.out.println("skjhdfksjhfdkjsdf" + realPath);
         } catch (Throwable t) {
             LogTool.traceHookWarn("system load hook check failed: " + t.getMessage(), t);
         }
@@ -61,7 +60,6 @@ public abstract class LoadLibraryHook extends AbstractClassHook {
     }
 
     public static void checkSystemLoadPath(String libPath) {
-        new Exception().printStackTrace();
         if (!isLoadingLibrary.get()) {
             HashMap<String, Object> params = null;
             try {

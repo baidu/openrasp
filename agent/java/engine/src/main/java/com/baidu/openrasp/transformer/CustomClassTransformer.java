@@ -16,8 +16,10 @@
 
 package com.baidu.openrasp.transformer;
 
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.ModuleLoader;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.detector.ServerDetector;
 import com.baidu.openrasp.detector.ServerDetectorManager;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.messaging.ErrorType;
@@ -42,6 +44,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * 自定义类字节码转换器，用于hook类德 方法
@@ -50,6 +53,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
     public static final Logger LOGGER = Logger.getLogger(CustomClassTransformer.class.getName());
     private static final String SCAN_ANNOTATION_PACKAGE = "com.baidu.openrasp.hook";
     private static HashSet<String> jspClassLoaderNames = new HashSet<String>();
+    private static ConcurrentSkipListSet<String> necessaryHookType = new ConcurrentSkipListSet<String>();
     public static ConcurrentHashMap<String, WeakReference<ClassLoader>> jspClassLoaderCache = new ConcurrentHashMap<String, WeakReference<ClassLoader>>();
 
     private Instrumentation inst;
@@ -97,6 +101,9 @@ public class CustomClassTransformer implements ClassFileTransformer {
     }
 
     private void addHook(AbstractClassHook hook, String className) {
+        if (hook.isNecessary()) {
+            necessaryHookType.add(hook.getType());
+        }
         String[] ignore = Config.getConfig().getIgnoreHooks();
         for (String s : ignore) {
             if (hook.couldIgnore() && (s.equals("all") || s.equals(hook.getType()))) {
@@ -144,6 +151,9 @@ public class CustomClassTransformer implements ClassFileTransformer {
                         hook.setLoadedByBootstrapLoader(true);
                     }
                     classfileBuffer = hook.transformClass(ctClass);
+                    if (classfileBuffer != null) {
+                        checkNecessaryHookType(hook.getType());
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
@@ -156,6 +166,18 @@ public class CustomClassTransformer implements ClassFileTransformer {
 
         serverDetector.detectServer(className, loader, domain);
         return classfileBuffer;
+    }
+
+    private void checkNecessaryHookType(String type) {
+        if (!HookHandler.enableHook.get()) {
+            if (necessaryHookType.contains(type)) {
+                System.out.println(type);
+                necessaryHookType.remove(type);
+                if (necessaryHookType.isEmpty() && ServerDetector.isServerDetected()) {
+                    HookHandler.enableHook.set(true);
+                }
+            }
+        }
     }
 
     public boolean isClassMatched(String className) {

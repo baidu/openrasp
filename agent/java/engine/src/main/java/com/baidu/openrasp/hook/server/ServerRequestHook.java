@@ -27,6 +27,10 @@ import com.baidu.openrasp.tool.Reflection;
  */
 public abstract class ServerRequestHook extends AbstractClassHook {
 
+    public ServerRequestHook() {
+        isNecessary = true;
+    }
+
     /**
      * (none-javadoc)
      * tyy
