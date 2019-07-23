@@ -1411,17 +1411,17 @@ plugin.register('directory', function (params, context) {
     var is_windows  = server.os.indexOf('Windows') != -1
     var language    = server.language
 
-    // 算法1 - 读取敏感目录
-    if (algorithmConfig.directory_unwanted.action != 'ignore')
+    // 算法3 - 检查PHP菜刀等后门
+    if (algorithmConfig.directory_reflect.action != 'ignore')
     {
-        for (var i = 0; i < forcefulBrowsing.unwantedDirectory.length; i ++) {
-            if (realpath == forcefulBrowsing.unwantedDirectory[i]) {
-                return {
-                    action:     algorithmConfig.directory_unwanted.action,
-                    message:    _("WebShell activity - Accessing sensitive folder: %1%", [realpath]),
-                    confidence: 100,
-                    algorithm:  'directory_unwanted'
-                }
+        // 目前，只有 PHP 支持通过堆栈方式，拦截列目录功能
+        if (language == 'php' && validate_stack_php(params.stack))
+        {
+            return {
+                action:     algorithmConfig.directory_reflect.action,
+                message:    _("WebShell activity - Using file manager function with China Chopper WebShell"),
+                confidence: 90,
+                algorithm:  'directory_reflect'
             }
         }
     }
@@ -1440,17 +1440,17 @@ plugin.register('directory', function (params, context) {
         }
     }
 
-    // 算法3 - 检查PHP菜刀等后门
-    if (algorithmConfig.directory_reflect.action != 'ignore')
+    // 算法1 - 读取敏感目录
+    if (algorithmConfig.directory_unwanted.action != 'ignore')
     {
-        // 目前，只有 PHP 支持通过堆栈方式，拦截列目录功能
-        if (language == 'php' && validate_stack_php(params.stack))
-        {
-            return {
-                action:     algorithmConfig.directory_reflect.action,
-                message:    _("WebShell activity - Using file manager function with China Chopper WebShell"),
-                confidence: 90,
-                algorithm:  'directory_reflect'
+        for (var i = 0; i < forcefulBrowsing.unwantedDirectory.length; i ++) {
+            if (realpath == forcefulBrowsing.unwantedDirectory[i]) {
+                return {
+                    action:     algorithmConfig.directory_unwanted.action,
+                    message:    _("WebShell activity - Accessing sensitive folder: %1%", [realpath]),
+                    confidence: 100,
+                    algorithm:  'directory_unwanted'
+                }
             }
         }
     }
