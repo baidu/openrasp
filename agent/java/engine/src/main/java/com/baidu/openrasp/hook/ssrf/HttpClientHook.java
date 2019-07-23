@@ -16,9 +16,7 @@
 
 package com.baidu.openrasp.hook.ssrf;
 
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -71,9 +69,7 @@ public class HttpClientHook extends AbstractSSRFHook {
                 }
             }
         } catch (Throwable t) {
-            String message = url != null ? ("parse url " + url + "failed") : t.getMessage();
-            int errorCode = ErrorType.HOOK_ERROR.getCode();
-            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), t);
+            LogTool.traceHookWarn("parse url " + url + " failed: " + t.getMessage(), t);
         }
         if (hostName != null) {
             checkHttpUrl(url, hostName, port, "httpclient");

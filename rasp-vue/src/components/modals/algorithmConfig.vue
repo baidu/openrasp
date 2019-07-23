@@ -32,7 +32,7 @@
                 <span class="custom-switch-description">{{row.descr}}</span>              
               </label>
               <br>
-            </div>            
+            </div>
           </div>
 
           <div v-if="key == 'eval_regex'">
@@ -75,6 +75,7 @@
 
 <script>
 import { mapGetters, mapActions, mapMutations } from 'vuex'
+import { validateRegex } from "@/util"
 
 export default {
   name: 'AlgorithmConfigModal',
@@ -145,16 +146,7 @@ export default {
   },
   methods: {
     ...mapMutations(['setSticky']),
-    validateRegex: function(value) {
-      var error = false
-      try {
-        new RegExp(value)
-      } catch (e) {
-        error = '正则表达式错误:' + e.toString()
-      }
-
-      return error
-    },
+    validateRegex,
     showModal(key, data) {
       this.setSticky(false)
 

@@ -20,10 +20,13 @@ import com.baidu.openrasp.cloud.CloudHttp;
 import com.baidu.openrasp.cloud.ThreadPool;
 import com.baidu.openrasp.cloud.model.AppenderCache;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
-import com.baidu.openrasp.cloud.model.ExceptionModel;
 import com.baidu.openrasp.cloud.model.GenericResponse;
+import com.baidu.openrasp.messaging.ExceptionModel;
 import com.baidu.openrasp.plugin.info.ExceptInfo;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
 import org.apache.log4j.helpers.LogLog;
@@ -66,7 +69,8 @@ public class HttpAppender extends AppenderSkeleton {
             String logger = getLogger(loggingEvent.getLoggerName());
             JsonElement jsonElement = null;
             if ("root".equals(logger)) {
-                if ((loggingEvent.getLevel().equals(Level.WARN) || loggingEvent.getLevel().equals(Level.ERROR))) {
+                if ((loggingEvent.getLevel().equals(Level.WARN) || loggingEvent.getLevel().equals(Level.ERROR))
+                        && loggingEvent.getMessage() instanceof ExceptionModel) {
                     jsonElement = new JsonParser().parse(generateJson(loggingEvent));
                 }
             } else {
@@ -157,7 +161,7 @@ public class HttpAppender extends AppenderSkeleton {
         String level = loggingEvent.getLevel().toString();
         ExceptionModel model = (ExceptionModel) loggingEvent.getMessage();
         String message = model.getMessage();
-        int errorCode = model.getErrorCode();
+        int errorCode = model.getErrorType().getCode();
         ThrowableInformation information = loggingEvent.getThrowableInformation();
         Throwable t = information != null ? information.getThrowable() : null;
         StackTraceElement[] traceElements = t != null ? t.getStackTrace() : new StackTraceElement[]{};

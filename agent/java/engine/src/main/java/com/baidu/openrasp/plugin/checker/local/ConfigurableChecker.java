@@ -16,10 +16,9 @@
 
 package com.baidu.openrasp.plugin.checker.local;
 
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.AttackChecker;
-import com.baidu.openrasp.plugin.js.JS;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -131,8 +130,7 @@ public abstract class ConfigurableChecker extends AttackChecker {
         String message = "Parse json failed because: " + e.getMessage() +
                 System.getProperty("line.separator") +
                 "        Please check algorithmConfig in js";
-        int errorCode = ErrorType.PLUGIN_ERROR.getCode();
-        JS.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+        LogTool.warn(ErrorType.PLUGIN_ERROR, message, e);
     }
 
 }

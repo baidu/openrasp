@@ -16,9 +16,8 @@
 
 package com.baidu.openrasp.tool.cpumonitor;
 
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -47,9 +46,7 @@ public class ProcCpuProcess {
                 this.cutime = Long.parseLong(fields[15]);
                 this.cstime = Long.parseLong(fields[16]);
             } catch (Exception e) {
-                String msg = "get server process cpu usage failed";
-                int code = ErrorType.CPU_ERROR.getCode();
-                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(msg, code), e);
+                LogTool.warn(ErrorType.CPU_ERROR, "get server process cpu usage failed: " + e.getMessage(), e);
             }
         }
     }

@@ -17,9 +17,8 @@
 package com.baidu.openrasp.hook.file;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
@@ -31,9 +30,9 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * @description: Jersey 文件上传
@@ -76,9 +75,7 @@ public class JerseyMultipart extends AbstractClassHook {
                         }
                         params.put("content", new String(content));
                     } catch (IOException e) {
-                        String message = e.getMessage();
-                        int errorCode = ErrorType.HOOK_ERROR.getCode();
-                        HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                        LogTool.traceHookWarn(e.getMessage(), e);
                         params.put("content", "[rasp error:" + e.getMessage() + "]");
                     }
                     params.put("name", "");

@@ -17,8 +17,7 @@
 package com.baidu.openrasp.hook;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.tool.StackTrace;
@@ -132,9 +131,7 @@ public class ProcessBuilderHook extends AbstractClassHook {
                 List<String> stackInfo = StackTrace.getStackTraceArray();
                 params.put("stack", stackInfo);
             } catch (Throwable t) {
-                String message = t.getMessage();
-                int errorCode = ErrorType.HOOK_ERROR.getCode();
-                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), t);
+                LogTool.traceHookWarn(t.getMessage(), t);
             }
             if (params != null) {
                 HookHandler.doCheckWithoutRequest(CheckParameter.Type.COMMAND, params);

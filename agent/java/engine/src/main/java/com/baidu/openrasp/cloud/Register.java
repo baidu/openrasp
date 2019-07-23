@@ -18,10 +18,11 @@ package com.baidu.openrasp.cloud;
 
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
-import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import com.baidu.openrasp.tool.model.BuildRASPModel;
@@ -63,15 +64,12 @@ public class Register {
                     } else {
                         System.out.println("[OpenRASP] Failed to register RASP agent, please refer to rasp logs for details");
                         String message = CloudUtils.handleError(ErrorType.REGISTER_ERROR, response);
-                        int errorCode = ErrorType.REGISTER_ERROR.getCode();
-                        CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
+                        LogTool.warn(ErrorType.REGISTER_ERROR, message);
                     }
                     Thread.sleep(REGISTER_DELAY);
 
                 } catch (Throwable e) {
-                    String message = e.getMessage();
-                    int errorCode = ErrorType.REGISTER_ERROR.getCode();
-                    CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                    LogTool.warn(ErrorType.REGISTER_ERROR, e.getMessage(), e);
                 }
             }
         }

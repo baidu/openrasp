@@ -203,13 +203,15 @@ static void build_complete_url(zval *items, zval *new_zv)
 static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_filter> &filters)
 {
     std::vector<keys_filter> total_filters(filters);
+    std::string clientip_origin_key;
     if (!OPENRASP_CONFIG(clientip.header).empty())
     {
         char *tmp_clientip_header = estrdup(OPENRASP_CONFIG(clientip.header).c_str());
         char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
-        total_filters.push_back({("HTTP_" + std::string(uch)), "client_ip", nullptr});
+        clientip_origin_key = "HTTP_" + std::string(uch);
         efree(tmp_clientip_header);
     }
+    total_filters.push_back({clientip_origin_key, "client_ip", nullptr});
     zval *origin_zv;
     for (keys_filter filter : total_filters)
     {
@@ -241,7 +243,8 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
             }
             else
             {
-                if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(src), filter.origin_key_str.c_str(), filter.origin_key_str.length())) != nullptr &&
+                if (!filter.origin_key_str.empty() &&
+                    (origin_zv = zend_hash_str_find(Z_ARRVAL_P(src), filter.origin_key_str.c_str(), filter.origin_key_str.length())) != nullptr &&
                     Z_TYPE_P(origin_zv) == IS_STRING)
                 {
                     if (filter.value_filter)

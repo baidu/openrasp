@@ -403,13 +403,15 @@ var algorithmConfig = {
 
     // xss 用户输入匹配算法
     // 1. 当用户输入长度超过15，匹配上标签正则，且出现在响应里，直接拦截
-    // 2. 当用户输入长度超过15，匹配上标签正则这样的参数个数超过 10，判定为扫描攻击，直接拦截
+    // 2. 当用户输入长度超过15，匹配上标签正则这样的参数个数超过 10，判定为扫描攻击，直接拦截（v1.1.2 之后废弃）
     xss_userinput: {
         name:   '算法2 - 拦截输出在响应里的反射 XSS',
         action: 'log',
 
         filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]",
-        min_length: 15,
+        min_length:   15,
+
+        // v1.1.2 之后废弃
         max_detection_num: 10
     },
 
@@ -454,6 +456,11 @@ var algorithmConfig = {
         action: 'ignore',
         regex:  'base64_decode|gzuncompress|create_function'
     },
+
+    loadlibrary_unc: {
+        name:   '算法1 - 拦截 UNC 路径类库加载',
+        action: 'block'
+    }
 }
 
 // END ALGORITHM CONFIG //
@@ -2034,6 +2041,22 @@ if (algorithmConfig.eval_regex.action != 'ignore')
                 confidence: 60,
                 message:    _("Code Execution - Running %1% with %2%() function", [code, params.function]),
                 algorithm:  'eval_regex'
+            }
+        }
+    })
+}
+
+if (algorithmConfig.loadlibrary_unc.action != 'ignore')
+{
+    // 算法1: 正则表达式
+    plugin.register('loadlibrary', function(params, context) {
+            
+        if (params.path.startsWith('\\\\')) {
+            return {
+                action:     algorithmConfig.loadlibrary_unc.action,
+                confidence: 60,
+                message:    _("Load Library in UNC path - loading %1% with %2%() function", [params.path, params.function]),
+                algorithm:  'loadlibrary_unc'
             }
         }
     })

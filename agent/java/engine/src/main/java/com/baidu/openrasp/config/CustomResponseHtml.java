@@ -16,9 +16,9 @@
 
 package com.baidu.openrasp.config;
 
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.exceptions.ConfigLoadException;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
 import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
@@ -132,9 +132,8 @@ public class CustomResponseHtml extends FileScanListener {
                 try {
                     setContent(FileUtils.readFileToString(file));
                 } catch (IOException e) {
-                    String message = file.getAbsoluteFile() + " update fail";
-                    int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                    Config.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                    LogTool.warn(ErrorType.CONFIG_ERROR,
+                            file.getAbsoluteFile() + " update failed: " + e.getMessage(), e);
                 }
             } else {
                 setContent("");

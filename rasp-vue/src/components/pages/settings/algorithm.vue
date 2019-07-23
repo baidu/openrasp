@@ -14,19 +14,27 @@
       </div>
       <div class="card-body" v-else>
         <!-- IAST设置 -->
-        <div class="form-group" v-if="data.iast">
-          <label for="">Fuzz 服务器地址</label>
-          <input type="text" class="form-control" v-model="data.iast.fuzz_server">
-        </div>
+        <div v-if="data.iast">
+          <div class="form-group">
+            <label for="">Fuzz 服务器地址</label>
+            <input type="text" class="form-control" v-model="data.iast.fuzz_server">
+          </div>
 
-        <div class="form-group" v-if="data.iast">
-          <label for="">Fuzz 服务器连接超时（毫秒）</label>
-          <input type="number" class="form-control" v-model="data.iast.request_timeout">
+          <div class="form-group">
+            <label for="">Fuzz 服务器连接超时（毫秒）</label>
+            <input type="number" class="form-control" v-model="data.iast.request_timeout">
+          </div>
+
+          <div v-bind:class="{'form-group': true, 'has-error': byhost_regex_error}">
+            <label for="">使用 HOST 直接访问的服务（正则）<a href="javascript:">[帮助文档]</a></label>
+            <input type="text" class="form-control" v-model="data.iast.byhost_regex">
+            <span class="text-danger" style="margin-top: 5px; display: block" v-if="byhost_regex_error">{{byhost_regex_error }}</span>
+          </div>
         </div>
         <!-- 结束 IAST设置 -->
 
         <!-- 快速设置 -->
-        <div class="form-group" v-if="data.meta">
+        <div class="form-group" v-if="data.meta && ! data.iast">
           <div class="form-label">
             快速设置
           </div>
@@ -152,6 +160,7 @@
           type="submit"
           class="btn btn-primary"
           @click="saveConfig()"
+          :disabled="byhost_regex_error"
         >
           保存
         </button>
@@ -174,8 +183,9 @@
 import {
   attack_type2name,
   block_status2name,
-  browser_headers
-} from '../../../util'
+  browser_headers,
+  validateRegex
+} from '@/util'
 import { mapGetters, mapActions, mapMutations } from "vuex";
 import AlgorithmConfigModal from "@/components/modals/algorithmConfig"
 
@@ -185,8 +195,9 @@ export default {
     return {
       items: {},
       data: {
-        meta: {}
+        meta: {},
       },
+      byhost_regex_error: false,
       hasAdvancedConfig: {
         'command_common': true,
         'sql_userinput': true,
@@ -206,6 +217,9 @@ export default {
   watch: {
     current_app() {
       this.loadConfig()
+    },
+    'data.iast.byhost_regex': function(newVal, oldVal) {
+      this.byhost_regex_error = this.validateRegex(newVal)
     }
   },
   mounted() {
@@ -217,7 +231,8 @@ export default {
   methods: {
     ...mapActions(["loadAppList"]),
     ...mapMutations(["setCurrentApp"]),
-    attack_type2name: attack_type2name,
+    attack_type2name,
+    validateRegex,
     showAdvancedConfig: function(key, value) {
       this.$refs.algorithmConfigModal.showModal(key, value)
     },

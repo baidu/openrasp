@@ -17,17 +17,16 @@
 package com.baidu.openrasp.hook;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import java.util.HashMap;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * Created by lxk on 10/12/17.
@@ -82,10 +81,8 @@ public class WebDAVCopyResourceHook extends AbstractClassHook {
                 Object servletContext = Reflection.invokeMethod(webdavServlet, "getServletContext", new Class[]{});
                 realPath = Reflection.invokeStringMethod(servletContext, "getRealPath", new Class[]{String.class}, "/");
                 realPath = realPath.endsWith(System.getProperty("file.separator")) ? realPath.substring(0, realPath.length() - 1) : realPath;
-            } catch (Exception e) {
-                String message = e.getMessage();
-                int errorCode = ErrorType.HOOK_ERROR.getCode();
-                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            } catch (Throwable t) {
+                LogTool.traceHookWarn(t.getMessage(), t);
             }
             if (realPath != null) {
                 HashMap<String, Object> params = new HashMap<String, Object>();

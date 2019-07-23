@@ -19,9 +19,9 @@ package com.baidu.openrasp.cloud;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
-import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.GenericResponse;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.google.gson.Gson;
 
 import java.util.HashMap;
@@ -70,9 +70,7 @@ public class StatisticsReport extends CloudTimerTask {
 
     @Override
     public void handleError(Throwable t) {
-        String message = t.getMessage();
-        int errorCode = ErrorType.STATISTICSREPORT_ERROR.getCode();
-        CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), t);
+        LogTool.warn(ErrorType.STATISTICSREPORT_ERROR, t.getMessage(), t);
     }
 
 }
