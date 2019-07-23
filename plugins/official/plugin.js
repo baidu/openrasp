@@ -2050,7 +2050,13 @@ if (algorithmConfig.loadLibrary_unc.action != 'ignore')
 {
     // 算法1: 正则表达式
     plugin.register('loadLibrary', function(params, context) {
-            
+
+        // 仅 windows 需要检查
+        var is_windows = server.os.indexOf('Windows') != -1
+        if (! is_windows) {
+            return clean
+        }
+
         if (params.path.startsWith('\\\\')) {
             return {
                 action:     algorithmConfig.loadLibrary_unc.action,
