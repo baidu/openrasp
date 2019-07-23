@@ -18,11 +18,7 @@
 #include <regex>
 #include <limits>
 
-#ifdef PHP_DEBUG
 #define MIN_HEARTBEAT_INTERVAL (10)
-#else
-#define MIN_HEARTBEAT_INTERVAL (60)
-#endif
 
 Openrasp_ini openrasp_ini;
 
