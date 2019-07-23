@@ -60,7 +60,7 @@ std::shared_ptr<BackendResponse> BackendRequest::curl_perform()
         curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
         curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 50L);
         curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, (openrasp_ini.ssl_verifypeer ? 1L : 0L));
         if (post_data)
         {
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);

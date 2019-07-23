@@ -123,6 +123,9 @@ openrasp.remote_management_enable=$remote_enable
 
 ;心跳时间间隔
 openrasp.heartbeat_interval=180
+
+;SSL证书验证开关
+openrasp.ssl_verifypeer=false
 	
 ;OPENRASP END
 
