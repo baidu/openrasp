@@ -453,7 +453,7 @@ var algorithmConfig = {
 
     eval_regex: {
         name:   '算法1 - 正则表达式',
-        action: 'log',
+        action: 'ignore',
         regex:  'base64_decode|gzuncompress|create_function'
     },
 
@@ -579,6 +579,9 @@ if (! RASP.is_unittest)
         // 关闭 xss_echo 非攻击过滤
         algorithmConfig.xss_echo.filter_regex = ""
     }
+}
+else {
+    algorithmConfig.eval_regex.action = "log"
 }
 
 // 校验 sql_regex 正则是否合法
