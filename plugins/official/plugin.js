@@ -457,7 +457,7 @@ var algorithmConfig = {
         regex:  'base64_decode|gzuncompress|create_function'
     },
 
-    loadlibrary_unc: {
+    loadLibrary_unc: {
         name:   '算法1 - 拦截 UNC 路径类库加载',
         action: 'block'
     }
@@ -2043,17 +2043,17 @@ if (algorithmConfig.eval_regex.action != 'ignore')
     })
 }
 
-if (algorithmConfig.loadlibrary_unc.action != 'ignore')
+if (algorithmConfig.loadLibrary_unc.action != 'ignore')
 {
     // 算法1: 正则表达式
     plugin.register('loadLibrary', function(params, context) {
             
         if (params.path.startsWith('\\\\')) {
             return {
-                action:     algorithmConfig.loadlibrary_unc.action,
+                action:     algorithmConfig.loadLibrary_unc.action,
                 confidence: 60,
                 message:    _("Load Library in UNC path - loading %1% with %2%() function", [params.path, params.function]),
-                algorithm:  'loadlibrary_unc'
+                algorithm:  'loadLibrary_unc'
             }
         }
     })
