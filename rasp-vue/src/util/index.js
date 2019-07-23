@@ -144,6 +144,7 @@ export var status_types = {
   // ignore: '忽略放行'
 }
 
+
 export function getDefaultConfig() {
   return {
     general_config: {
@@ -161,6 +162,17 @@ export function getDefaultConfig() {
       recv_addr: []
     }
   }
+}
+
+export function validateRegex(value) {
+  var error = false
+  try {
+    new RegExp(value)
+  } catch (e) {
+    error = '正则表达式错误:' + e.toString()
+  }
+
+  return error
 }
 
 export function block_status2name(status) {
