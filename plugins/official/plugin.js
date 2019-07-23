@@ -2052,12 +2052,12 @@ if (algorithmConfig.loadLibrary_unc.action != 'ignore')
     plugin.register('loadLibrary', function(params, context) {
 
         // 仅 windows 需要检查
-        var is_windows = server.os.indexOf('Windows') != -1
+        var is_windows = context.server.os.indexOf('Windows') != -1
         if (! is_windows) {
             return clean
         }
 
-        if (params.path.startsWith('\\\\')) {
+        if (params.path.startsWith('\\\\') || params.path.startsWith('//')) {
             return {
                 action:     algorithmConfig.loadLibrary_unc.action,
                 confidence: 60,
