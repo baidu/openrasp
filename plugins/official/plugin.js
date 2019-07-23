@@ -1,4 +1,4 @@
-const plugin_version = '2019-0718-1200'
+const plugin_version = '2019-0723-1800'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1411,7 +1411,7 @@ plugin.register('directory', function (params, context) {
     var is_windows  = server.os.indexOf('Windows') != -1
     var language    = server.language
 
-    // 算法3 - 检查PHP菜刀等后门
+    // 算法2 - 检查PHP菜刀等后门
     if (algorithmConfig.directory_reflect.action != 'ignore')
     {
         // 目前，只有 PHP 支持通过堆栈方式，拦截列目录功能
@@ -1426,7 +1426,7 @@ plugin.register('directory', function (params, context) {
         }
     }
 
-    // 算法2 - 用户输入匹配。
+    // 算法1 - 用户输入匹配。
     if (algorithmConfig.directory_userinput.action != 'ignore')
     {
         if (is_path_containing_userinput(parameter, params.path, is_windows, algorithmConfig.directory_userinput.lcs_search))
@@ -1440,7 +1440,7 @@ plugin.register('directory', function (params, context) {
         }
     }
 
-    // 算法1 - 读取敏感目录
+    // 算法3 - 读取敏感目录
     if (algorithmConfig.directory_unwanted.action != 'ignore')
     {
         for (var i = 0; i < forcefulBrowsing.unwantedDirectory.length; i ++) {
