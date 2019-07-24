@@ -29,6 +29,10 @@ POST_HOOK_FUNCTION(mysql_pconnect, DB_CONNECTION);
 POST_HOOK_FUNCTION(mysql_pconnect, SQL_ERROR);
 PRE_HOOK_FUNCTION(mysql_query, SQL);
 POST_HOOK_FUNCTION(mysql_query, SQL_ERROR);
+PRE_HOOK_FUNCTION(mysql_db_query, SQL);
+POST_HOOK_FUNCTION(mysql_db_query, SQL_ERROR);
+PRE_HOOK_FUNCTION(mysql_unbuffered_query, SQL);
+POST_HOOK_FUNCTION(mysql_unbuffered_query, SQL_ERROR);
 
 static long fetch_mysql_errno(uint32_t param_count, zval *params[] TSRMLS_DC);
 static std::string fetch_mysql_error(uint32_t param_count, zval *params[] TSRMLS_DC);
@@ -269,4 +273,58 @@ static std::string fetch_mysql_error(uint32_t param_count, zval *params[] TSRMLS
         zval_dtor(&retval);
     }
     return error_msg;
+}
+
+void pre_global_mysql_db_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    char *db, *query;
+    int db_len, query_len;
+    zval *mysql_link = NULL;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|r", &db, &db_len, &query, &query_len, &mysql_link) == FAILURE)
+    {
+        return;
+    }
+
+    plugin_sql_check(query, query_len, "mysql" TSRMLS_CC);
+}
+
+void post_global_mysql_db_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
+    {
+        char *db, *query;
+        int db_len, query_len;
+        zval *mysql_link = NULL;
+
+        if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|r", &db, &db_len, &query, &query_len, &mysql_link) == FAILURE)
+        {
+            return;
+        }
+
+        zval *args[1];
+        int param_num = 0;
+        if (nullptr != mysql_link)
+        {
+            args[0] = mysql_link;
+            param_num = 1;
+        }
+        long error_code = fetch_mysql_errno(param_num, args TSRMLS_CC);
+        if (!mysql_error_code_filtered(error_code))
+        {
+            return;
+        }
+        std::string error_msg = fetch_mysql_error(param_num, args TSRMLS_CC);
+        sql_query_error_alarm("mysql", query, std::to_string(error_code), error_msg TSRMLS_CC);
+    }
+}
+
+void pre_global_mysql_unbuffered_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    pre_global_mysql_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+void post_global_mysql_unbuffered_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    post_global_mysql_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
