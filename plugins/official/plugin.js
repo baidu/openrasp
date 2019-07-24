@@ -1,4 +1,4 @@
-const plugin_version = '2019-0724-1400'
+const plugin_version = '2019-0723-1800'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -460,11 +460,6 @@ var algorithmConfig = {
     loadLibrary_unc: {
         name:   '算法1 - 拦截 UNC 路径类库加载',
         action: 'block'
-    },
-
-    loadLibrary_other: {
-        name:   '算法2 - 记录或者拦截所有类库加载',
-        action: 'ignore'
     }
 }
 
@@ -662,6 +657,18 @@ function has_traversal (path) {
     return false
 }
 
+// 判断参数是否包含路径穿越，比path更严格
+function param_has_traversal (param) {
+    // 左右斜杠，一视同仁
+    var path = "/" + param.replaceAll('\\', '/') + "/"
+
+    if (path.indexOf("/../") != -1)
+    {
+        return true
+    }
+    return false
+}
+
 function is_hostname_dnslog(hostname) {
     var domains = algorithmConfig.ssrf_common.domains
 
@@ -818,7 +825,7 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows, is_
                 simplifiedValue = simplifiedValues[i]
                 // 参数必须有跳出目录，或者是绝对路径
                 if ((target.endsWith(value) || simplifiedTarget.endsWith(simplifiedValue))
-                    && (has_traversal(value) || value == realpath || simplifiedValue == realpath))
+                    && (param_has_traversal(value) || value == realpath || simplifiedValue == realpath))
                 {
                     verdict = true
                     return true
@@ -868,7 +875,7 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
             }
             for(var i = 0, len = values.length; i < len; i++) {
                 // 只处理非数组、hash情况
-                if (has_traversal(values[i]) && target.indexOf(values[i]) != -1) {
+                if (param_has_traversal(values[i]) && target.indexOf(values[i]) != -1) {
                     verdict = true
                     return true
                 }
@@ -2051,37 +2058,27 @@ if (algorithmConfig.eval_regex.action != 'ignore')
     })
 }
 
-// 算法1: 正则表达式
-plugin.register('loadLibrary', function(params, context) {
+if (algorithmConfig.loadLibrary_unc.action != 'ignore')
+{
+    // 算法1: 正则表达式
+    plugin.register('loadLibrary', function(params, context) {
 
-    if (algorithmConfig.loadLibrary_unc.action != 'ignore') {
-
-        // 仅 windows 需要检查 UNC
+        // 仅 windows 需要检查
         var is_windows = context.server.os.indexOf('Windows') != -1
-        if (is_windows) {
-            if (params.path.startsWith('\\\\') || params.path.startsWith('//')) {
-                return {
-                    action:     algorithmConfig.loadLibrary_unc.action,
-                    confidence: 60,
-                    message:    _("Load library in UNC path - loading %1% with %2%() function", [params.path, params.function]),
-                    algorithm:  'loadLibrary_unc'
-                }
-            }    
+        if (! is_windows) {
+            return clean
         }
-    }
 
-    if (algorithmConfig.loadLibrary_other.action != 'ignore') {
-        return {
-            action:     algorithmConfig.loadLibrary_other.action,
-            confidence: 60,
-            message:    _("Load library - logging all by default, library path is %1%", [params.function]),
-            algorithm:  'loadLibrary_other'
-        }     
-    }
-
-
-    return clean
-})
+        if (params.path.startsWith('\\\\') || params.path.startsWith('//')) {
+            return {
+                action:     algorithmConfig.loadLibrary_unc.action,
+                confidence: 60,
+                message:    _("Load Library in UNC path - loading %1% with %2%() function", [params.path, params.function]),
+                algorithm:  'loadLibrary_unc'
+            }
+        }
+    })
+}
 
 if (algorithmConfig.ognl_exec.action != 'ignore')
 {
