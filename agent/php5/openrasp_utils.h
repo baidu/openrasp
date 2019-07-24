@@ -28,7 +28,6 @@ int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC);
 
 std::vector<std::string> format_source_code_arr(TSRMLS_D);
 void format_source_code_arr(zval *source_code_arr TSRMLS_DC);
-std::vector<std::string> format_debug_backtrace_arr();
 std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D);
 std::vector<std::string> format_debug_backtrace_arr(long limit TSRMLS_DC);
 std::string format_debug_backtrace_str(TSRMLS_D);

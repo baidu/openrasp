@@ -134,12 +134,6 @@ void format_source_code_arr(zval *source_code_arr TSRMLS_DC)
     }
 }
 
-std::vector<std::string> format_debug_backtrace_arr()
-{
-    TSRMLS_FETCH();
-    return format_debug_backtrace_arr(TSRMLS_C);
-}
-
 std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D)
 {
     return format_debug_backtrace_arr(OPENRASP_CONFIG(plugin.maxstack) TSRMLS_CC);
