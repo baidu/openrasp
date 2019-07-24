@@ -36,7 +36,6 @@ public class SqlExceptionChecker extends ConfigurableChecker {
 
     static {
         sqlErrorCode.add("1060");// Duplicate column name '%s'
-        sqlErrorCode.add("1062");// Duplicate entry '%s' for key %d
         sqlErrorCode.add("1105");// Unknown error
         sqlErrorCode.add("1367");// Illegal non geometric
         sqlErrorCode.add("1690");// BIGINT UNSIGNED value is out of range

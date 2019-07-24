@@ -16,6 +16,7 @@
 
 package com.baidu.rasp.install.linux;
 
+import com.baidu.rasp.App;
 import com.baidu.rasp.RaspError;
 import com.baidu.rasp.install.BaseStandardInstaller;
 
@@ -31,6 +32,7 @@ public class TomcatInstaller extends BaseStandardInstaller {
     private static String OPENRASP_START_TAG = "### BEGIN OPENRASP - DO NOT MODIFY ###\n";
     private static String OPENRASP_END_TAG = "### END OPENRASP ###\n";
     private static String JAVA_AGENT_CONFIG = "\tJAVA_OPTS=\"-javaagent:${CATALINA_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"\n";
+    private static String PREPEND_JAVA_AGENT_CONFIG = "\tJAVA_OPTS=\"${JAVA_OPTS} -javaagent:${CATALINA_HOME}/rasp/rasp.jar\"\n";
     private static String JDK_JAVA_OPTIONS =
             "JDK_JAVA_OPTIONS=\"$JDK_JAVA_OPTIONS --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED\"\n" +
                     "export JDK_JAVA_OPTIONS\n";
@@ -76,7 +78,11 @@ public class TomcatInstaller extends BaseStandardInstaller {
                 modifyConfigState = FOUND;
                 sb.append(line).append("\n");
                 sb.append(OPENRASP_START_TAG);
-                sb.append(JAVA_AGENT_CONFIG);
+                if (App.isPrepend) {
+                    sb.append(PREPEND_JAVA_AGENT_CONFIG);
+                } else {
+                    sb.append(JAVA_AGENT_CONFIG);
+                }
                 //jdk版本8以上插入依赖包
                 if (versionFlag) {
                     sb.append(JDK_JAVA_OPTIONS);

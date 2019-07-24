@@ -49,7 +49,7 @@ public class HookHandler {
     public static AtomicLong requestSum = new AtomicLong(0);
     public static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
     // 全局开关
-    public static AtomicBoolean enableHook = new AtomicBoolean(false);
+    public static final AtomicBoolean enableHook = new AtomicBoolean(false);
     // 当前线程开关
     private static ThreadLocal<Boolean> enableCurrThreadHook = new ThreadLocal<Boolean>() {
         @Override

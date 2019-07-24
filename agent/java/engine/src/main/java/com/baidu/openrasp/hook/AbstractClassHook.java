@@ -43,6 +43,12 @@ public abstract class AbstractClassHook {
 
     private boolean isLoadedByBootstrapLoader = false;
 
+    protected boolean isNecessary = false;
+
+    public boolean isNecessary() {
+        return isNecessary;
+    }
+
     /**
      * 用于判断类名与当前需要hook的类是否相同
      *

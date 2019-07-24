@@ -31,6 +31,10 @@ import java.io.IOException;
  */
 public abstract class ServerParamHook extends AbstractClassHook {
 
+    public ServerParamHook() {
+        isNecessary = true;
+    }
+
     /**
      * (none-javadoc)
      *
