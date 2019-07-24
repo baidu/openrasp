@@ -95,6 +95,11 @@ plugin.register('sql', function (params, context) {
     return clean
 })
 
+plugin.register('requestEnd', function (params, context) {
+    plugin.log('At requestEnd')
+    return clean
+})
+
 plugin.log('999-event-logger: plugin loaded')
 
 
