@@ -460,7 +460,12 @@ var algorithmConfig = {
     loadLibrary_unc: {
         name:   '算法1 - 拦截 UNC 路径类库加载',
         action: 'block'
-    }
+    },
+
+    loadLibrary_other: {
+        name:   '算法2 - 记录或者拦截所有类库加载',
+        action: 'ignore'
+    }    
 }
 
 // END ALGORITHM CONFIG //
@@ -2058,27 +2063,37 @@ if (algorithmConfig.eval_regex.action != 'ignore')
     })
 }
 
-if (algorithmConfig.loadLibrary_unc.action != 'ignore')
-{
-    // 算法1: 正则表达式
-    plugin.register('loadLibrary', function(params, context) {
+plugin.register('loadLibrary', function(params, context) {
 
-        // 仅 windows 需要检查
+    if (algorithmConfig.loadLibrary_unc.action != 'ignore') {
+
+        // 仅 windows 需要检查 UNC
         var is_windows = context.server.os.indexOf('Windows') != -1
-        if (! is_windows) {
-            return clean
+        if (is_windows) {
+            if (params.path.startsWith('\\\\') || params.path.startsWith('//')) {
+                return {
+                    action:     algorithmConfig.loadLibrary_unc.action,
+                    confidence: 60,
+                    message:    _("Load library in UNC path - loading %1% with %2%() function", [params.path, params.function]),
+                    algorithm:  'loadLibrary_unc'
+                }
+            }    
         }
+        
+    }
 
-        if (params.path.startsWith('\\\\') || params.path.startsWith('//')) {
-            return {
-                action:     algorithmConfig.loadLibrary_unc.action,
-                confidence: 60,
-                message:    _("Load Library in UNC path - loading %1% with %2%() function", [params.path, params.function]),
-                algorithm:  'loadLibrary_unc'
-            }
-        }
-    })
-}
+    if (algorithmConfig.loadLibrary_other.action != 'ignore') {
+        return {
+            action:     algorithmConfig.loadLibrary_other.action,
+            confidence: 60,
+            message:    _("Load library - logging all by default, library path is %1%", [params.function]),
+            algorithm:  'loadLibrary_other'
+        }     
+    }
+
+
+    return clean
+})
 
 if (algorithmConfig.ognl_exec.action != 'ignore')
 {
