@@ -171,7 +171,6 @@ public class CustomClassTransformer implements ClassFileTransformer {
     private void checkNecessaryHookType(String type) {
         if (!HookHandler.enableHook.get()) {
             if (necessaryHookType.contains(type)) {
-                System.out.println(type);
                 necessaryHookType.remove(type);
                 if (necessaryHookType.isEmpty() && ServerDetector.isServerDetected()) {
                     HookHandler.enableHook.set(true);

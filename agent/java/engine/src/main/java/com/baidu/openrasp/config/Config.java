@@ -90,7 +90,8 @@ public class Config extends FileScanListener {
         DECOMPILE_ENABLE("decompile.enable", "false"),
         RESPONSE_HEADERS("inject.custom_headers", ""),
         CPU_USAGE_PERCENT("cpu.usage.percent", "2"),
-        CPU_USAGE_ENABLE("cpu.usage.enable", "false");
+        CPU_USAGE_ENABLE("cpu.usage.enable", "false"),
+        HTTPS_VERIFY_SSL("openrasp.ssl_verifypeer", "false");
 
 
         Item(String key, String defaultValue) {
@@ -163,6 +164,7 @@ public class Config extends FileScanListener {
     private boolean disableHooks;
     private boolean cpuUsageEnable;
     private float cpuUsagePercent;
+    private boolean isHttpsVirifyPeer;
 
 
     static {
@@ -1170,6 +1172,24 @@ public class Config extends FileScanListener {
             this.cpuUsagePercent = 0.9f;
         }
     }
+
+    /**
+     * 获取是否进行 https 证书验证
+     *
+     * @return 是否进行 https 证书验证
+     */
+    public boolean isHttpsVerifyPeer() {
+        return isHttpsVirifyPeer;
+    }
+
+    /**
+     * 设置是否进行 https 证书验证
+     *
+     * @param httpsVerifyPeer agent是否开启cpu熔断策略
+     */
+    public synchronized void setHttpsVerifyPeer(String httpsVerifyPeer) {
+        this.isHttpsVirifyPeer = Boolean.parseBoolean(httpsVerifyPeer);
+    }
     //--------------------------统一的配置处理------------------------------------
 
     /**
@@ -1285,6 +1305,9 @@ public class Config extends FileScanListener {
             } else if (Item.CPU_USAGE_PERCENT.key.equals(key)) {
                 setCpuUsagePercent(value);
                 currentValue = getCpuUsagePercent();
+            } else if (Item.HTTPS_VERIFY_SSL.key.equals(key)) {
+                setHttpsVerifyPeer(value);
+                currentValue = isHttpsVerifyPeer();
             } else {
                 isHit = false;
             }

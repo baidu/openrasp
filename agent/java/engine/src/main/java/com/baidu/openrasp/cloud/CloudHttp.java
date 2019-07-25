@@ -24,11 +24,18 @@ import com.baidu.openrasp.messaging.LogTool;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import javax.net.ssl.*;
 import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -68,6 +75,9 @@ public class CloudHttp implements Request {
         try {
             URL realUrl = new URL(url);
             URLConnection conn = realUrl.openConnection();
+            if (conn instanceof HttpsURLConnection && !Config.getConfig().isHttpsVerifyPeer()) {
+                skipSSL((HttpsURLConnection) conn);
+            }
             HttpURLConnection httpUrlConnection = (HttpURLConnection) conn;
             httpUrlConnection.setRequestProperty("Content-Type", "application/json");
             String appId = Config.getConfig().getCloudAppId();
@@ -81,6 +91,7 @@ public class CloudHttp implements Request {
             httpUrlConnection.setUseCaches(false);
             httpUrlConnection.setDoOutput(true);
             httpUrlConnection.setDoInput(true);
+
             out = new DataOutputStream(httpUrlConnection.getOutputStream());
             out.write(content.getBytes("UTF-8"));
             out.flush();
@@ -105,5 +116,31 @@ public class CloudHttp implements Request {
         }.getType());
         response.setResponseCode(responseCode);
         return response;
+    }
+
+    public static void skipSSL(HttpsURLConnection conn) throws NoSuchProviderException, NoSuchAlgorithmException,
+            KeyManagementException, MalformedURLException {
+        SSLContext sslcontext = SSLContext.getInstance("SSL", "SunJSSE");
+        sslcontext.init(null, new TrustManager[]{new X509TrustManager() {
+            @Override
+            public void checkClientTrusted(X509Certificate certificates[], String authType) throws CertificateException {
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] ax509certificate, String s) throws CertificateException {
+            }
+
+            @Override
+            public X509Certificate[] getAcceptedIssuers() {
+                return null;
+            }
+        }}, new java.security.SecureRandom());
+        HostnameVerifier ignoreHostnameVerifier = new HostnameVerifier() {
+            public boolean verify(String s, SSLSession sslsession) {
+                return true;
+            }
+        };
+        conn.setHostnameVerifier(ignoreHostnameVerifier);
+        conn.setSSLSocketFactory(sslcontext.getSocketFactory());
     }
 }
