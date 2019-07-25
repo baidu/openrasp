@@ -28,6 +28,7 @@ import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.request.DubboRequest;
 import com.baidu.openrasp.request.HttpServletRequest;
 import com.baidu.openrasp.response.HttpServletResponse;
+import com.baidu.openrasp.transformer.CustomClassTransformer;
 import org.apache.log4j.Logger;
 
 import java.util.Arrays;
@@ -389,7 +390,7 @@ public class HookHandler {
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
     public static void doCheck(CheckParameter.Type type, Object params) {
-        if (enableCurrThreadHook.get()) {
+        if (enableCurrThreadHook.get() && CustomClassTransformer.isNecessaryHookComplete) {
             doCheckWithoutRequest(type, params);
         }
     }

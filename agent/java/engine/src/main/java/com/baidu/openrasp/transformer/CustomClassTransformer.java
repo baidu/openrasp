@@ -16,10 +16,8 @@
 
 package com.baidu.openrasp.transformer;
 
-import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.ModuleLoader;
 import com.baidu.openrasp.config.Config;
-import com.baidu.openrasp.detector.ServerDetector;
 import com.baidu.openrasp.detector.ServerDetectorManager;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.messaging.ErrorType;
@@ -59,6 +57,8 @@ public class CustomClassTransformer implements ClassFileTransformer {
     private Instrumentation inst;
     private HashSet<AbstractClassHook> hooks = new HashSet<AbstractClassHook>();
     private ServerDetectorManager serverDetector = ServerDetectorManager.getInstance();
+
+    public static volatile boolean isNecessaryHookComplete = false;
 
     static {
         jspClassLoaderNames.add("org.apache.jasper.servlet.JasperLoader");
@@ -169,11 +169,11 @@ public class CustomClassTransformer implements ClassFileTransformer {
     }
 
     private void checkNecessaryHookType(String type) {
-        if (!HookHandler.enableHook.get()) {
+        if (!isNecessaryHookComplete) {
             if (necessaryHookType.contains(type)) {
                 necessaryHookType.remove(type);
-                if (necessaryHookType.isEmpty() && ServerDetector.isServerDetected()) {
-                    HookHandler.enableHook.set(true);
+                if (necessaryHookType.isEmpty()) {
+                    isNecessaryHookComplete = true;
                 }
             }
         }
