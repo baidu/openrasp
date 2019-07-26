@@ -36,7 +36,6 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
     static final String SQL_TYPE_SQLSERVER = "sqlserver";
     static final String SQL_TYPE_PGSQL = "pgsql";
     static final String SQL_TYPE_DB2 = "db2";
-    private static final int[] ignoreSqlErrorCodes = new int[]{1045};
 
     protected String type;
     protected String[] exceptions;
@@ -99,11 +98,6 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
                     "Please refer to https://rasp.baidu.com/doc/usage/exception.html#faq-errorcode for details.";
             LogTool.traceHookWarn(message, e);
             return true;
-        }
-        for (int code : ignoreSqlErrorCodes) {
-            if (code == errCode) {
-                return true;
-            }
         }
         return false;
     }
