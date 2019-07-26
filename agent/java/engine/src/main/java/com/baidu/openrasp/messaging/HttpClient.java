@@ -16,6 +16,10 @@
 
 package com.baidu.openrasp.messaging;
 
+import com.baidu.openrasp.cloud.CloudHttp;
+import com.baidu.openrasp.config.Config;
+
+import javax.net.ssl.HttpsURLConnection;
 import java.io.DataOutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -45,6 +49,9 @@ public class HttpClient {
         try {
             URL url = new URL(requestUrl);
             httpURLConnection = (HttpURLConnection) url.openConnection();
+            if (httpURLConnection instanceof HttpsURLConnection && !Config.getConfig().isHttpsVerifyPeer()) {
+                CloudHttp.skipSSL((HttpsURLConnection) httpURLConnection);
+            }
             httpURLConnection.setConnectTimeout(connectionTimeout);
             httpURLConnection.setReadTimeout(readTimeout);
             httpURLConnection.setUseCaches(false);

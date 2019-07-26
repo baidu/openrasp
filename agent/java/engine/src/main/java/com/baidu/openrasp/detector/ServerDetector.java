@@ -43,11 +43,6 @@ import java.security.ProtectionDomain;
 public abstract class ServerDetector {
 
     private static final Logger LOGGER = Logger.getLogger(ServerDetector.class.getName());
-    private static boolean isServerDetected = false;
-
-    public static boolean isServerDetected() {
-        return isServerDetected;
-    }
 
     /**
      * 探测该类是否为服务器标志类
@@ -58,7 +53,7 @@ public abstract class ServerDetector {
     public boolean handleServer(String className, ClassLoader classLoader, ProtectionDomain domain) {
         boolean isDetected = handleServerInfo(classLoader, domain);
         if (isDetected) {
-            isServerDetected = true;
+            HookHandler.enableHook.set(true);
             sendRegister();
         }
         return isDetected;
