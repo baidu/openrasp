@@ -1,4 +1,4 @@
-const plugin_version = '2019-0723-1800'
+const plugin_version = '2019-0726-1200'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1814,7 +1814,7 @@ plugin.register('command', function (params, context) {
                 'freemarker.template.utility.Execute.exec':                                     _("Reflected command execution - Using FreeMarker template"),
                 'org.jboss.el.util.ReflectionUtil.invokeMethod':                                _("Reflected command execution - Using JBoss EL method"),
                 'com.sun.jndi.rmi.registry.RegistryContext.lookup':                             _("Reflected command execution - Using JNDI registry service"),
-                'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                _("Reflected command execution - Using BeHinder defineClass webshell"),
+                'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                _("Reflected command execution - Using BeHinder defineClass webshell")
             }
 
             for (var i = 2; i < params.stack.length; i ++) {
@@ -1822,6 +1822,11 @@ plugin.register('command', function (params, context) {
 
                 if (method.startsWith('ysoserial.Pwner')) {
                     message = _("Reflected command execution - Using YsoSerial tool")
+                    break
+                }
+
+                if (method.startsWith('com.fasterxml.jackson.databind')) {
+                    message = _("Reflected command execution - Using Jackson deserialze method")
                     break
                 }
 
