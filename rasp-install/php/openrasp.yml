@@ -41,6 +41,10 @@ block.content_html: "</script><script>location.href=\"https://rasp.baidu.com/blo
 #对于以下URL，修改响应并注入HTML
 inject.urlprefix: ""
 
+#自定义header
+inject.custom_headers:
+#  X-Content-Type-Options: nosniff
+
 #最多读取body的前多少字节
 body.maxbytes: 4096
 
