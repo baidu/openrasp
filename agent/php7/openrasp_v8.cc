@@ -76,6 +76,7 @@ PHP_MINIT_FUNCTION(openrasp_v8)
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (openrasp_ini.remote_management_enable && oam != nullptr)
     {
+        Platform::Get()->Shutdown();
         return SUCCESS;
     }
 #endif
