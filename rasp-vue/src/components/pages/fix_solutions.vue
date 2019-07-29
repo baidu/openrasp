@@ -83,6 +83,14 @@
             检查应用是否直接输出了用户传入的参数，可以考虑使用 ESAPI 进行转义
         </div>
 
+        <div v-if="data.attack_type == 'eval'">
+            避免使用 eval/assert 函数
+        </div>  
+
+        <div v-if="data.attack_type == 'loadLibrary'">
+            检查目标文件是否为后门
+        </div> 
+
     </div>
 
 </template>
