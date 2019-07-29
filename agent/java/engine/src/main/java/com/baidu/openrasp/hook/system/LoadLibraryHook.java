@@ -55,7 +55,7 @@ public abstract class LoadLibraryHook extends AbstractClassHook {
             LogTool.traceHookWarn("system load hook check failed: " + t.getMessage(), t);
         }
         if (params != null) {
-            HookHandler.doCheckWithoutRequest(CheckParameter.Type.SYSTEMLOAD, params);
+            HookHandler.doCheck(CheckParameter.Type.SYSTEMLOAD, params);
         }
     }
 
@@ -71,7 +71,7 @@ public abstract class LoadLibraryHook extends AbstractClassHook {
                 LogTool.traceHookWarn("system load hook check failed: " + t.getMessage(), t);
             }
             if (params != null) {
-                HookHandler.doCheckWithoutRequest(CheckParameter.Type.SYSTEMLOAD, params);
+                HookHandler.doCheck(CheckParameter.Type.SYSTEMLOAD, params);
             }
         }
     }
