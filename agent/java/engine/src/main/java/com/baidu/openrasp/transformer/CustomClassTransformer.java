@@ -24,6 +24,7 @@ import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.annotation.AnnotationScanner;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.ClassClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -52,6 +53,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
     private static final String SCAN_ANNOTATION_PACKAGE = "com.baidu.openrasp.hook";
     private static HashSet<String> jspClassLoaderNames = new HashSet<String>();
     private static ConcurrentSkipListSet<String> necessaryHookType = new ConcurrentSkipListSet<String>();
+    private static ConcurrentSkipListSet<String> dubboNecessaryHookType = new ConcurrentSkipListSet<String>();
     public static ConcurrentHashMap<String, WeakReference<ClassLoader>> jspClassLoaderCache = new ConcurrentHashMap<String, WeakReference<ClassLoader>>();
 
     private Instrumentation inst;
@@ -59,12 +61,15 @@ public class CustomClassTransformer implements ClassFileTransformer {
     private ServerDetectorManager serverDetector = ServerDetectorManager.getInstance();
 
     public static volatile boolean isNecessaryHookComplete = false;
+    public static volatile boolean isDubboNecessaryHookComplete = false;
 
     static {
         jspClassLoaderNames.add("org.apache.jasper.servlet.JasperLoader");
         jspClassLoaderNames.add("com.caucho.loader.DynamicClassLoader");
         jspClassLoaderNames.add("com.ibm.ws.jsp.webcontainerext.JSPExtensionClassLoader");
         jspClassLoaderNames.add("weblogic.servlet.jsp.JspClassLoader");
+        dubboNecessaryHookType.add("dubboNecessaryHookType");
+        dubboNecessaryHookType.add("dubboRequest");
     }
 
     public CustomClassTransformer(Instrumentation inst) {
@@ -169,15 +174,22 @@ public class CustomClassTransformer implements ClassFileTransformer {
     }
 
     private void checkNecessaryHookType(String type) {
-        if (!isNecessaryHookComplete) {
-            if (necessaryHookType.contains(type)) {
-                necessaryHookType.remove(type);
-                if (necessaryHookType.isEmpty()) {
-                    isNecessaryHookComplete = true;
-                }
+        if (!isNecessaryHookComplete && necessaryHookType.contains(type)) {
+            necessaryHookType.remove(type);
+            if (necessaryHookType.isEmpty()) {
+                isNecessaryHookComplete = true;
+            }
+        }
+
+        if (ApplicationModel.getServerName() != null && ApplicationModel.getServerName().contains("dubbo")
+                && !isDubboNecessaryHookComplete && dubboNecessaryHookType.contains(type)) {
+            dubboNecessaryHookType.remove(type);
+            if (dubboNecessaryHookType.isEmpty()) {
+                isDubboNecessaryHookComplete = true;
             }
         }
     }
+
 
     public boolean isClassMatched(String className) {
         for (final AbstractClassHook hook : getHooks()) {

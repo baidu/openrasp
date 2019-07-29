@@ -30,12 +30,12 @@ import java.util.LinkedList;
  */
 public abstract class AbstractSqlHook extends AbstractClassHook {
 
-    public static final String SQL_TYPE_MYSQL = "mysql";
-    public static final String SQL_TYPE_SQLITE = "sqlite";
-    public static final String SQL_TYPE_ORACLE = "oracle";
-    public static final String SQL_TYPE_SQLSERVER = "sqlserver";
-    public static final String SQL_TYPE_PGSQL = "pgsql";
-    public static final String SQL_TYPE_DB2 = "db2";
+    static final String SQL_TYPE_MYSQL = "mysql";
+    static final String SQL_TYPE_SQLITE = "sqlite";
+    static final String SQL_TYPE_ORACLE = "oracle";
+    static final String SQL_TYPE_SQLSERVER = "sqlserver";
+    static final String SQL_TYPE_PGSQL = "pgsql";
+    static final String SQL_TYPE_DB2 = "db2";
 
     protected String type;
     protected String[] exceptions;
@@ -92,7 +92,8 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
      * 检测获取errorcode 获取异常的时候，打日志
      */
     public static boolean checkSqlErrorCode(SQLException e) {
-        if (e != null && e.getErrorCode() == 0) {
+        int errCode = e.getErrorCode();
+        if (e != null && errCode == 0) {
             String message = "Unable to derive error code from SQL exceptions, error message: " + e.getMessage() + "." +
                     "Please refer to https://rasp.baidu.com/doc/usage/exception.html#faq-errorcode for details.";
             LogTool.traceHookWarn(message, e);

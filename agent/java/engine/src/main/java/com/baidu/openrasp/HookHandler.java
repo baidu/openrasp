@@ -179,7 +179,8 @@ public class HookHandler {
      * @param response 响应实体
      */
     public static void checkRequest(Object servlet, Object request, Object response) {
-        if (servlet != null && request != null && !enableCurrThreadHook.get()) {
+        if (servlet != null && request != null && !enableCurrThreadHook.get()
+                && CustomClassTransformer.isNecessaryHookComplete) {
             // 默认是关闭hook的，只有处理过HTTP request的线程才打开
             enableEnd.set(true);
             enableCurrThreadHook.set(true);
@@ -204,7 +205,7 @@ public class HookHandler {
      * @param request 请求实体
      */
     public static void checkDubboRequest(Object request) {
-        if (request != null && !enableCurrThreadHook.get()) {
+        if (request != null && !enableCurrThreadHook.get() && CustomClassTransformer.isDubboNecessaryHookComplete) {
             enableCurrThreadHook.set(true);
             //新的请求开启body xss hook点
             enableBodyXssHook();
@@ -390,7 +391,7 @@ public class HookHandler {
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
     public static void doCheck(CheckParameter.Type type, Object params) {
-        if (enableCurrThreadHook.get() && CustomClassTransformer.isNecessaryHookComplete) {
+        if (enableCurrThreadHook.get()) {
             doCheckWithoutRequest(type, params);
         }
     }
