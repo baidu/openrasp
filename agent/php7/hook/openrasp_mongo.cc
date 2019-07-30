@@ -83,7 +83,7 @@ static void mongo_plugin_check(const std::string &query_str, const std::string &
         {
             return;
         }
-        bool is_block = false;
+        openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
         {
             v8::HandleScope handle_scope(isolate);
             auto params = v8::Object::New(isolate);
@@ -91,13 +91,16 @@ static void mongo_plugin_check(const std::string &query_str, const std::string &
             params->Set(openrasp::NewV8String(isolate, "class"), openrasp::NewV8String(isolate, classname));
             params->Set(openrasp::NewV8String(isolate, "method"), openrasp::NewV8String(isolate, method));
             params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, "mongodb"));
-            is_block = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(MONGO)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+            check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(MONGO)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
-        if (is_block)
+        if (check_result == openrasp::CheckResult::kCache)
+        {
+            OPENRASP_HOOK_G(lru).set(cache_key, true);
+        }
+        if (check_result == openrasp::CheckResult::kBlock)
         {
             handle_block();
         }
-        OPENRASP_HOOK_G(lru).set(cache_key, true);
     }
 }
 
