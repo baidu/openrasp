@@ -69,8 +69,7 @@ PHP_MINIT_FUNCTION(openrasp_v8)
 
     // initializes v8 only once
     std::call_once(process_globals.init_v8_once, []() {
-        v8::V8::InitializePlatform(Platform::New(2));
-        v8::V8::Initialize();
+        Initialize(1);
     });
 
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
