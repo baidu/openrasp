@@ -247,9 +247,8 @@ public abstract class AbstractClassHook {
             method.insertBefore(src);
             LOGGER.info("insert before method " + method.getLongName());
         } catch (CannotCompileException e) {
-            if (Config.getConfig().isDebugEnabled()) {
-                LOGGER.info("insert before method " + method.getLongName() + " failed", e);
-            }
+            LogTool.error(ErrorType.HOOK_ERROR,
+                    "insert before method " + method.getLongName() + " failed: " + e.getMessage(), e);
             throw e;
         }
     }

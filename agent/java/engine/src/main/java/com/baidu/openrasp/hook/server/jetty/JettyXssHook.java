@@ -73,7 +73,7 @@ public class JettyXssHook extends ServerXssHook {
     }
 
     public static void getJetty9OutputBuffer(char[] buffer, int offset, int length) {
-        if (HookHandler.isEnableXssHook()) {
+        if (HookHandler.isEnableXssHook() && isCheckXss()) {
             HookHandler.disableBodyXssHook();
             if (buffer != null && length > 0) {
                 HashMap<String, Object> params = new HashMap<String, Object>();
@@ -86,7 +86,7 @@ public class JettyXssHook extends ServerXssHook {
                     LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
                             e.getMessage(), e);
                 }
-                if (isCheckXss() && !params.isEmpty()) {
+                if (!params.isEmpty()) {
                     HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
                 }
             }

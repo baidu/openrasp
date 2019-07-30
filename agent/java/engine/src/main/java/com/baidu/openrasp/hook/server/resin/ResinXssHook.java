@@ -50,7 +50,7 @@ public class ResinXssHook extends ServerXssHook {
     }
 
     public static void getResinOutputBuffer(char[] buffer, int len, boolean isOutputStreamOnly) {
-        if (HookHandler.isEnableXssHook()) {
+        if (HookHandler.isEnableXssHook() && isCheckXss()) {
             HookHandler.disableBodyXssHook();
             if (len > 0 && !isOutputStreamOnly) {
                 HashMap<String, Object> params = new HashMap<String, Object>();
@@ -63,7 +63,7 @@ public class ResinXssHook extends ServerXssHook {
                     LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
                             e.getMessage(), e);
                 }
-                if (isCheckXss() && !params.isEmpty()) {
+                if (!params.isEmpty()) {
                     HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
                 }
             }
