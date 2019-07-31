@@ -43,6 +43,8 @@ var (
 	AttackTypeMap = map[interface{}]string{
 		"sql":                        "SQL 注入",
 		"sql_exception":              "SQL 语句异常",
+		"eval":                       "EVAL 代码执行",
+		"loadLibrary":                "类库加载",
 		"command":                    "命令执行",
 		"xxe":                        "XXE 外部实体加载",
 		"directory":                  "目录遍历",

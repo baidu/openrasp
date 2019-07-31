@@ -641,8 +641,6 @@ func handleAlarms(alarms []map[string]interface{}) {
 
 		if attackType, ok := logs.AttackTypeMap[alarm["attack_type"]]; ok {
 			alarm["attack_type"] = attackType
-		} else {
-			alarm["attack_type"] = "其他类型"
 		}
 
 		if alarm["url"] != nil {

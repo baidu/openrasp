@@ -368,7 +368,7 @@ public class HookHandler {
         if (Config.getConfig().getDisableHooks()) {
             return;
         }
-        //当云控注册成功之前，不进入任何hoo点
+        //当云控注册成功之前，不进入任何hook点
         if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
             return;
         }
