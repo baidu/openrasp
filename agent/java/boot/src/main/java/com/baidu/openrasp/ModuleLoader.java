@@ -125,12 +125,31 @@ public class ModuleLoader {
             if (classLoader.startsWith("com.oracle") && classLoader.contains("weblogic")) {
                 return true;
             }
-            String javaVersion = System.getProperty("java.version");
-            return javaVersion != null && (javaVersion.startsWith("1.9") || javaVersion.startsWith("10.")
-                    || javaVersion.startsWith("11."));
+            return isModularityJdk();
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private static boolean isModularityJdk() {
+        String javaVersion = System.getProperty("java.version");
+        String[] version = javaVersion.split("\\.");
+        if (version.length >= 2) {
+            int major;
+            int minor;
+            try {
+                major = Integer.parseInt(version[0]);
+                minor = Integer.parseInt(version[1]);
+            } catch (NumberFormatException e) {
+                return false;
+            }
+            if (major == 1) {
+                return minor >= 9;
+            } else if (major >= 9) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }
