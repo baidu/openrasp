@@ -20,6 +20,8 @@ import com.baidu.rasp.uninstall.Uninstaller;
 import com.baidu.rasp.uninstall.UninstallerFactory;
 import com.baidu.rasp.uninstall.windows.ResinUninstaller;
 
+import static com.baidu.rasp.App.*;
+
 /**
  * @author anyang
  * @Description:

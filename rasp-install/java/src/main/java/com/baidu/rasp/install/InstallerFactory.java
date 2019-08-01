@@ -16,6 +16,7 @@
 
 package com.baidu.rasp.install;
 
+import com.baidu.rasp.App;
 import com.baidu.rasp.RaspError;
 import org.apache.commons.io.IOUtils;
 
@@ -24,21 +25,16 @@ import java.io.FileFilter;
 import java.io.FileReader;
 import java.io.IOException;
 
+import static com.baidu.rasp.App.*;
 import static com.baidu.rasp.RaspError.E10002;
-import static com.baidu.rasp.RaspError.E10004;
 
 /**
  * Created by OpenRASP on 5/19/17.
  * All rights reserved
  */
 public abstract class InstallerFactory {
-    protected static final String TOMCAT = "Tomcat";
-    protected static final String JBOSS = "JBoss 4-6";
-    protected static final String RESIN = "Resin";
-    protected static final String WEBLOGIC = "Weblogic";
-    protected static final String JBOSSEAP = "JbossEAP";
-    protected static final String WILDFLY = "Wildfly";
-    protected static final String GENERIC = "Generate";
+
+    private static final String GENERIC = "Generate";
 
     protected abstract Installer getInstaller(String serverName, String serverRoot);
 
@@ -52,16 +48,9 @@ public abstract class InstallerFactory {
         }
         String serverName = detectServerName(serverRoot.getAbsolutePath());
         if (serverName == null) {
-            System.out.println("List of currently supported servers are:");
-            System.out.println("- " + TOMCAT);
-            System.out.println("- " + RESIN);
-            System.out.println("- " + WEBLOGIC);
-            System.out.println("- " + JBOSSEAP);
-            System.out.println("- " + WILDFLY);
-            System.out.println("- " + JBOSS + "\n");
-            throw new RaspError(E10004 + serverRoot.getPath());
+            App.listServerSupport(serverRoot.getPath());
         }
-
+        System.out.println("Detected JDK version: " + System.getProperty("java.version"));
         System.out.println("Detected application server type: " + serverName);
         return getInstaller(serverName, serverRoot.getAbsolutePath());
     }

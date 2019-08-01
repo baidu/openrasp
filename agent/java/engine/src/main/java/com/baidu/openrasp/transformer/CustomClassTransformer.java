@@ -68,7 +68,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
         jspClassLoaderNames.add("com.caucho.loader.DynamicClassLoader");
         jspClassLoaderNames.add("com.ibm.ws.jsp.webcontainerext.JSPExtensionClassLoader");
         jspClassLoaderNames.add("weblogic.servlet.jsp.JspClassLoader");
-        dubboNecessaryHookType.add("dubboNecessaryHookType");
+        dubboNecessaryHookType.add("dubbo_preRequest");
         dubboNecessaryHookType.add("dubboRequest");
     }
 
