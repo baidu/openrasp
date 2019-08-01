@@ -2,7 +2,7 @@
 set -ev
 #mysql
 mysql -e "CREATE USER 'openrasp'@'%' IDENTIFIED BY '123456'";
-mysql -e "USE mysql;UPDATE user SET password=PASSWORD('rasp#2019') WHERE user='root';FLUSH PRIVILEGES;";
+mysql -e "USE mysql;UPDATE user SET authentication_string=PASSWORD('rasp#2019') WHERE user='root';FLUSH PRIVILEGES;";
 ln -s /run/mysqld/mysqld.sock /tmp/mysql.sock
 
 #pgsql
