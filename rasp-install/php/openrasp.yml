@@ -41,7 +41,10 @@ inject.urlprefix: ""
 
 #自定义header
 inject.custom_headers:
-#  X-Content-Type-Options: nosniff
+#   X-Content-Type-Options: nosniff
+#   X-Frame-Options: deny
+#   X-XSS-Protection: 1; mode=block
+#   X-Download-Options: noopen
 
 #最多读取body的前多少字节
 body.maxbytes: 4096
