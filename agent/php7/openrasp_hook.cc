@@ -112,6 +112,16 @@ void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckTy
     {
         return;
     }
+    {
+        zval stack;
+        array_init(&stack);
+        std::vector<std::string> arr = format_debug_backtrace_arr();
+        for (const std::string &item : arr)
+        {
+            add_next_index_stringl(&stack, item.c_str(), item.length());
+        }
+        add_assoc_zval(params, "stack", &stack);
+    }
     zval params_result;
     array_init(&params_result);
     add_assoc_zval(&params_result, "attack_params", params);

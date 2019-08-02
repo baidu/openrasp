@@ -60,15 +60,11 @@ void PluginBlock::update(BaseReader *reader)
 };
 
 const int64_t LogBlock::default_maxburst = 100;
-const int64_t LogBlock::default_maxstack = 50;
 
 void LogBlock::update(BaseReader *reader)
 {
   maxburst = reader->fetch_int64({"log.maxburst"}, LogBlock::default_maxburst);
   ge_zero_filter(maxburst, LogBlock::default_maxburst);
-
-  maxstack = reader->fetch_int64({"log.maxstack"}, LogBlock::default_maxstack);
-  ge_zero_filter(maxstack, LogBlock::default_maxstack);
 };
 
 const std::string SyslogBlock::default_tag = "OpenRASP";

@@ -81,30 +81,9 @@ static std::vector<DebugTrace> build_debug_trace(long limit)
     return array;
 }
 
-std::string format_debug_backtrace_str()
-{
-    std::vector<DebugTrace> trace = build_debug_trace(OPENRASP_CONFIG(log.maxstack));
-    std::string buffer;
-    for (DebugTrace &item : trace)
-    {
-        buffer.append(item.to_log_string() + "\n");
-    }
-    if (buffer.length() > 0)
-    {
-        buffer.pop_back();
-    }
-    return buffer;
-}
-
-void format_debug_backtrace_str(zval *backtrace_str)
-{
-    auto trace = format_debug_backtrace_str();
-    ZVAL_STRINGL(backtrace_str, trace.c_str(), trace.length());
-}
-
 std::vector<std::string> format_source_code_arr()
 {
-    std::vector<DebugTrace> trace = build_debug_trace(OPENRASP_CONFIG(log.maxstack));
+    std::vector<DebugTrace> trace = build_debug_trace(OPENRASP_CONFIG(plugin.maxstack));
     std::vector<std::string> array;
     for (DebugTrace &item : trace)
     {
