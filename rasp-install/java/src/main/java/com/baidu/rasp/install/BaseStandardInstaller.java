@@ -232,7 +232,6 @@ public abstract class BaseStandardInstaller implements Installer {
     //判断tomcat的版本是否大于8
     protected boolean checkTomcatVersion() {
         String javaVersion = System.getProperty("java.version");
-        System.out.println("JDK Version: " + javaVersion);
         String[] version = javaVersion.split("\\.");
         if (version.length >= 2) {
             int major;

@@ -54,7 +54,8 @@ public class CatalinaXssHook extends ServerXssHook {
     }
 
     public static void getBuffer(Object trunk) {
-        if (isCheckXss() && trunk != null) {
+        if (HookHandler.isEnableXssHook() && isCheckXss() && trunk != null) {
+            HookHandler.disableBodyXssHook();
             HashMap<String, Object> params = new HashMap<String, Object>();
             try {
                 HttpServletResponse res = HookHandler.responseCache.get();
@@ -63,7 +64,6 @@ public class CatalinaXssHook extends ServerXssHook {
                     enc = res.getCharacterEncoding();
                 }
                 if (enc != null) {
-                    String content;
                     if (trunk instanceof ByteBuffer) {
                         params.put("html_body", getContentFromByteBuffer((ByteBuffer) trunk, enc));
                     } else {

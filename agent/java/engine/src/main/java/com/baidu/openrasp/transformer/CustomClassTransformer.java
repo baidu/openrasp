@@ -24,7 +24,6 @@ import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.annotation.AnnotationScanner;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
-import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.ClassClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -68,7 +67,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
         jspClassLoaderNames.add("com.caucho.loader.DynamicClassLoader");
         jspClassLoaderNames.add("com.ibm.ws.jsp.webcontainerext.JSPExtensionClassLoader");
         jspClassLoaderNames.add("weblogic.servlet.jsp.JspClassLoader");
-        dubboNecessaryHookType.add("dubboNecessaryHookType");
+        dubboNecessaryHookType.add("dubbo_preRequest");
         dubboNecessaryHookType.add("dubboRequest");
     }
 
@@ -181,8 +180,8 @@ public class CustomClassTransformer implements ClassFileTransformer {
             }
         }
 
-        if (ApplicationModel.getServerName() != null && ApplicationModel.getServerName().contains("dubbo")
-                && !isDubboNecessaryHookComplete && dubboNecessaryHookType.contains(type)) {
+        if (!isDubboNecessaryHookComplete && dubboNecessaryHookType.contains(type)) {
+            System.out.println(type);
             dubboNecessaryHookType.remove(type);
             if (dubboNecessaryHookType.isEmpty()) {
                 isDubboNecessaryHookComplete = true;
