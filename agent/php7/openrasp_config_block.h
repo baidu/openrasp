@@ -52,9 +52,7 @@ class LogBlock
 {
 public:
   const static int64_t default_maxburst;
-  const static int64_t default_maxstack;
   int64_t maxburst = 100;
-  int64_t maxstack = 10;
   void update(BaseReader *reader);
 };
 

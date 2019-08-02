@@ -718,18 +718,6 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message)
                                              strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
         add_assoc_string(&common_info, "event_time", const_cast<char *>(event_time.c_str()));
     }
-    {
-        zval trace;
-        if (in_request)
-        {
-            format_debug_backtrace_str(&trace);
-        }
-        else
-        {
-            ZVAL_STRING(&trace, "");
-        }
-        add_assoc_zval(&common_info, "stack_trace", &trace);
-    }
     zval source_code_arr;
     array_init(&source_code_arr);
     if (OPENRASP_CONFIG(decompile.enable) && in_request)
@@ -752,7 +740,6 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message)
     {
         zend_hash_str_del(Z_ARRVAL(common_info), ZEND_STRL("source_code"));
     }
-    zend_hash_str_del(Z_ARRVAL(common_info), ZEND_STRL("stack_trace"));
     zend_hash_str_del(Z_ARRVAL(common_info), ZEND_STRL("event_time"));
     if (!in_request) //out of request
     {
