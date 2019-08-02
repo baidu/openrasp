@@ -45,7 +45,7 @@
               </li>
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#iast-tab">
-                  IAST 工具安装
+                  Fuzz 工具安装
                 </a>
               </li>
             </ul>
