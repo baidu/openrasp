@@ -148,7 +148,7 @@ var algorithmConfig = {
     },
     // SSRF - 是否允许访问 aws metadata
     ssrf_aws: {
-        name:   '算法2 - 拦截 AWS/Aliyun metadata 访问',
+        name:   '算法2 - 拦截 AWS/Aliyun/GCP metadata 访问',
         action: 'block'
     },
     // SSRF - 是否允许访问 dnslog 地址
