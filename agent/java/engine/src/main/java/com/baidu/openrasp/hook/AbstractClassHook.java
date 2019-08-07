@@ -43,6 +43,12 @@ public abstract class AbstractClassHook {
 
     private boolean isLoadedByBootstrapLoader = false;
 
+    protected boolean isNecessary = false;
+
+    public boolean isNecessary() {
+        return isNecessary;
+    }
+
     /**
      * 用于判断类名与当前需要hook的类是否相同
      *
@@ -241,9 +247,8 @@ public abstract class AbstractClassHook {
             method.insertBefore(src);
             LOGGER.info("insert before method " + method.getLongName());
         } catch (CannotCompileException e) {
-            if (Config.getConfig().isDebugEnabled()) {
-                LOGGER.info("insert before method " + method.getLongName() + " failed", e);
-            }
+            LogTool.error(ErrorType.HOOK_ERROR,
+                    "insert before method " + method.getLongName() + " failed: " + e.getMessage(), e);
             throw e;
         }
     }

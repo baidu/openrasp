@@ -70,12 +70,12 @@ public class UndertowXssHook extends ServerXssHook {
     }
 
     public static void getUndertowOutputBuffer(String buffer, int off, int len) {
-        if (HookHandler.isEnableXssHook()) {
+        if (HookHandler.isEnableXssHook() && isCheckXss()) {
             HookHandler.disableBodyXssHook();
             if (buffer != null) {
                 HashMap<String, Object> params = new HashMap<String, Object>();
                 params.put("html_body", buffer);
-                if (isCheckXss() && !params.isEmpty()) {
+                if (!params.isEmpty()) {
                     HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
                 }
             }

@@ -108,7 +108,6 @@ bool mysql_error_code_filtered(long err_code)
     static const std::set<long> mysql_error_codes = {
         1045,
         1060,
-        1062,
         1064,
         1105,
         1367,

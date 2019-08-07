@@ -1,4 +1,4 @@
-const plugin_version = '2019-0718-1200'
+const plugin_version = '2019-0805-1100'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -148,7 +148,7 @@ var algorithmConfig = {
     },
     // SSRF - 是否允许访问 aws metadata
     ssrf_aws: {
-        name:   '算法2 - 拦截 AWS/Aliyun metadata 访问',
+        name:   '算法2 - 拦截 AWS/Aliyun/GCP metadata 访问',
         action: 'block'
     },
     // SSRF - 是否允许访问 dnslog 地址
@@ -453,9 +453,19 @@ var algorithmConfig = {
 
     eval_regex: {
         name:   '算法1 - 正则表达式',
-        action: 'log',
+        action: 'ignore',
         regex:  'base64_decode|gzuncompress|create_function'
     },
+
+    loadLibrary_unc: {
+        name:   '算法1 - 拦截 UNC 路径类库加载',
+        action: 'block'
+    },
+
+    loadLibrary_other: {
+        name:   '算法2 - 记录或者拦截所有类库加载',
+        action: 'ignore'
+    }    
 }
 
 // END ALGORITHM CONFIG //
@@ -575,6 +585,9 @@ if (! RASP.is_unittest)
         algorithmConfig.xss_echo.filter_regex = ""
     }
 }
+else {
+    algorithmConfig.eval_regex.action = "log"
+}
 
 // 校验 sql_regex 正则是否合法
 if (algorithmConfig.sql_regex.action != 'ignore') {
@@ -646,6 +659,18 @@ function has_traversal (path) {
         return true
     }
 
+    return false
+}
+
+// 判断参数是否包含路径穿越，比path更严格
+function param_has_traversal (param) {
+    // 左右斜杠，一视同仁
+    var path = "/" + param.replaceAll('\\', '/') + "/"
+
+    if (path.indexOf("/../") != -1)
+    {
+        return true
+    }
     return false
 }
 
@@ -805,7 +830,7 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows, is_
                 simplifiedValue = simplifiedValues[i]
                 // 参数必须有跳出目录，或者是绝对路径
                 if ((target.endsWith(value) || simplifiedTarget.endsWith(simplifiedValue))
-                    && (has_traversal(value) || value == realpath || simplifiedValue == realpath))
+                    && (param_has_traversal(value) || value == realpath || simplifiedValue == realpath))
                 {
                     verdict = true
                     return true
@@ -855,7 +880,7 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
             }
             for(var i = 0, len = values.length; i < len; i++) {
                 // 只处理非数组、hash情况
-                if (has_traversal(values[i]) && target.indexOf(values[i]) != -1) {
+                if (param_has_traversal(values[i]) && target.indexOf(values[i]) != -1) {
                     verdict = true
                     return true
                 }
@@ -1296,7 +1321,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                         algorithm:  'ssrf_userinput'
                     }
                 }
-                else if (hostname == '[::]') 
+                else if (hostname == '[::]' || hostname == '0.0.0.0') 
                 {
                     return {
                         action:     algorithmConfig.ssrf_userinput.action,
@@ -1403,22 +1428,22 @@ plugin.register('directory', function (params, context) {
     var is_windows  = server.os.indexOf('Windows') != -1
     var language    = server.language
 
-    // 算法1 - 读取敏感目录
-    if (algorithmConfig.directory_unwanted.action != 'ignore')
+    // 算法2 - 检查PHP菜刀等后门
+    if (algorithmConfig.directory_reflect.action != 'ignore')
     {
-        for (var i = 0; i < forcefulBrowsing.unwantedDirectory.length; i ++) {
-            if (realpath == forcefulBrowsing.unwantedDirectory[i]) {
-                return {
-                    action:     algorithmConfig.directory_unwanted.action,
-                    message:    _("WebShell activity - Accessing sensitive folder: %1%", [realpath]),
-                    confidence: 100,
-                    algorithm:  'directory_unwanted'
-                }
+        // 目前，只有 PHP 支持通过堆栈方式，拦截列目录功能
+        if (language == 'php' && validate_stack_php(params.stack))
+        {
+            return {
+                action:     algorithmConfig.directory_reflect.action,
+                message:    _("WebShell activity - Using file manager function with China Chopper WebShell"),
+                confidence: 90,
+                algorithm:  'directory_reflect'
             }
         }
     }
 
-    // 算法2 - 用户输入匹配。
+    // 算法1 - 用户输入匹配。
     if (algorithmConfig.directory_userinput.action != 'ignore')
     {
         if (is_path_containing_userinput(parameter, params.path, is_windows, algorithmConfig.directory_userinput.lcs_search))
@@ -1432,17 +1457,17 @@ plugin.register('directory', function (params, context) {
         }
     }
 
-    // 算法3 - 检查PHP菜刀等后门
-    if (algorithmConfig.directory_reflect.action != 'ignore')
+    // 算法3 - 读取敏感目录
+    if (algorithmConfig.directory_unwanted.action != 'ignore')
     {
-        // 目前，只有 PHP 支持通过堆栈方式，拦截列目录功能
-        if (language == 'php' && validate_stack_php(params.stack))
-        {
-            return {
-                action:     algorithmConfig.directory_reflect.action,
-                message:    _("WebShell activity - Using file manager function with China Chopper WebShell"),
-                confidence: 90,
-                algorithm:  'directory_reflect'
+        for (var i = 0; i < forcefulBrowsing.unwantedDirectory.length; i ++) {
+            if (realpath == forcefulBrowsing.unwantedDirectory[i]) {
+                return {
+                    action:     algorithmConfig.directory_unwanted.action,
+                    message:    _("WebShell activity - Accessing sensitive folder: %1%", [realpath]),
+                    confidence: 100,
+                    algorithm:  'directory_unwanted'
+                }
             }
         }
     }
@@ -1789,7 +1814,7 @@ plugin.register('command', function (params, context) {
                 'freemarker.template.utility.Execute.exec':                                     _("Reflected command execution - Using FreeMarker template"),
                 'org.jboss.el.util.ReflectionUtil.invokeMethod':                                _("Reflected command execution - Using JBoss EL method"),
                 'com.sun.jndi.rmi.registry.RegistryContext.lookup':                             _("Reflected command execution - Using JNDI registry service"),
-                'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                _("Reflected command execution - Using BeHinder defineClass webshell"),
+                'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                _("Reflected command execution - Using BeHinder defineClass webshell")
             }
 
             for (var i = 2; i < params.stack.length; i ++) {
@@ -1797,6 +1822,11 @@ plugin.register('command', function (params, context) {
 
                 if (method.startsWith('ysoserial.Pwner')) {
                     message = _("Reflected command execution - Using YsoSerial tool")
+                    break
+                }
+
+                if (method.startsWith('com.fasterxml.jackson.databind')) {
+                    message = _("Reflected command execution - Using Jackson deserialze method")
                     break
                 }
 
@@ -2037,6 +2067,38 @@ if (algorithmConfig.eval_regex.action != 'ignore')
         }
     })
 }
+
+plugin.register('loadLibrary', function(params, context) {
+
+    if (algorithmConfig.loadLibrary_unc.action != 'ignore') {
+
+        // 仅 windows 需要检查 UNC
+        var is_windows = context.server.os.indexOf('Windows') != -1
+        if (is_windows) {
+            if (params.path.startsWith('\\\\') || params.path.startsWith('//')) {
+                return {
+                    action:     algorithmConfig.loadLibrary_unc.action,
+                    confidence: 60,
+                    message:    _("Load library in UNC path - loading %1% with %2%() function", [params.path, params.function]),
+                    algorithm:  'loadLibrary_unc'
+                }
+            }    
+        }
+        
+    }
+
+    if (algorithmConfig.loadLibrary_other.action != 'ignore') {
+        return {
+            action:     algorithmConfig.loadLibrary_other.action,
+            confidence: 60,
+            message:    _("Load library - logging all by default, library path is %1%", [params.function]),
+            algorithm:  'loadLibrary_other'
+        }     
+    }
+
+
+    return clean
+})
 
 if (algorithmConfig.ognl_exec.action != 'ignore')
 {

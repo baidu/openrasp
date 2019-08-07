@@ -19,6 +19,8 @@ package com.baidu.rasp.uninstall.windows;
 import com.baidu.rasp.uninstall.Uninstaller;
 import com.baidu.rasp.uninstall.UninstallerFactory;
 
+import static com.baidu.rasp.App.*;
+
 /**
  * @author anyang
  * @Description:

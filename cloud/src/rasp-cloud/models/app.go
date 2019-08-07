@@ -112,6 +112,8 @@ const (
 	appCollectionName = "app"
 	defaultAppName    = "PHP 示例应用"
 	SecreteMask       = "************"
+	DefalutPluginName = "plugin.js"
+	IastPluginName    = "iast.js"
 )
 
 var (
@@ -185,17 +187,21 @@ func initApp() error {
 			tools.Panic(tools.ErrCodeESInitFailed, "failed to init es index for app "+app.Name, err)
 		}
 		if *conf.AppConfig.Flag.StartType != conf.StartTypeAgent {
-			err := initPlugin(app)
+			err := initPlugin(app, DefalutPluginName)
 			if err != nil {
-				beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to init plugin for app ["+app.Name+"]", err)
+				beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to init plugin.js for app ["+app.Name+"]", err)
+			}
+			err = initPlugin(app, IastPluginName)
+			if err != nil {
+				beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to init iast.js for app ["+app.Name+"]", err)
 			}
 		}
 	}
 	return nil
 }
 
-func initPlugin(app *App) error {
-	content, err := getDefaultPluginContent()
+func initPlugin(app *App, pluginName string) error {
+	content, err := getDefaultPluginContent(pluginName)
 	if err != nil {
 		return err
 	}
@@ -334,18 +340,19 @@ func AddApp(app *App) (result *App, err error) {
 	return
 }
 
-func getDefaultPluginContent() ([]byte, error) {
+func getDefaultPluginContent(pluginName string) ([]byte, error) {
 	// if setting default plugin fails, continue to initialize
-	content, err := ioutil.ReadFile("resources/plugin.js")
+	pluginPath := "resources/" + pluginName
+	content, err := ioutil.ReadFile(pluginPath)
 	if err != nil {
-		return nil, errors.New("failed to read default plugin content: " + err.Error())
+		return nil, errors.New("failed to read " + pluginPath + ": " + err.Error())
 	}
 	return content, err
 }
 
 func selectDefaultPlugin(app *App) {
 	// if setting default plugin fails, continue to initialize
-	content, err := getDefaultPluginContent()
+	content, err := getDefaultPluginContent(DefalutPluginName)
 	if err != nil {
 		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to get default plugin: "+err.Error())
 		return
@@ -358,6 +365,12 @@ func selectDefaultPlugin(app *App) {
 	_, err = SetSelectedPlugin(app.Id, plugin.Id)
 	if err != nil {
 		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to select default plugin for app: " + err.Error()+
+			", app_id: "+ app.Id+ ", plugin_id: "+ plugin.Id)
+		return
+	}
+	err = initPlugin(app, IastPluginName)
+	if err != nil {
+		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to init iast plugin: " + err.Error()+
 			", app_id: "+ app.Id+ ", plugin_id: "+ plugin.Id)
 		return
 	}
@@ -635,8 +648,6 @@ func handleAlarms(alarms []map[string]interface{}) {
 
 		if attackType, ok := logs.AttackTypeMap[alarm["attack_type"]]; ok {
 			alarm["attack_type"] = attackType
-		} else {
-			alarm["attack_type"] = "其他类型"
 		}
 
 		if alarm["url"] != nil {

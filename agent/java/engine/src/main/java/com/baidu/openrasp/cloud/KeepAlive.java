@@ -26,6 +26,7 @@ import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.js.JS;
+import com.baidu.openrasp.tool.OSUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonPrimitive;
 
@@ -68,6 +69,7 @@ public class KeepAlive extends CloudTimerTask {
         params.put("config_time", CloudCacheModel.getInstance().getConfigTime());
         params.put("plugin_md5", CloudCacheModel.getInstance().getPluginMD5());
         params.put("plugin_name", CloudCacheModel.getInstance().getPluginName());
+        params.put("hostname", OSUtil.getHostName());
         return params;
     }
 
@@ -134,7 +136,7 @@ public class KeepAlive extends CloudTimerTask {
                     DynamicConfigAppender.fileAppenderAddBurstFilter();
                 }
             } catch (Throwable e) {
-                LogTool.warn(ErrorType.CONFIG_ERROR, "config update failed: "+e.getMessage(), e);
+                LogTool.warn(ErrorType.CONFIG_ERROR, "config update failed: " + e.getMessage(), e);
             }
         }
         if (version != null && md5 != null && pluginContext != null && name != null) {

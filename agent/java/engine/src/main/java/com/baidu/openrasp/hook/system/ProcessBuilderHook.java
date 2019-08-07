@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook;
+package com.baidu.openrasp.hook.system;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.OSUtil;

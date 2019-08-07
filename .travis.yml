@@ -10,6 +10,7 @@ services:
 matrix:
   include:
     - env: OPENRASP_LANG=php5 CC=gcc-4.9 CXX=g++-4.9 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
+      dist: trusty
       language: php
       php: 5.4
       addons:
@@ -24,6 +25,7 @@ matrix:
             - libcurl4-openssl-dev
             - libpcre3-dev
     - env: OPENRASP_LANG=php5 CC=gcc-5 CXX=g++-5 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
+      dist: trusty
       language: php
       php: 5.6
       addons:
@@ -97,42 +99,53 @@ matrix:
       language: java
       jdk: openjdk8
     - env: OPENRASP_LANG=java SERVER=jetty9
+      dist: trusty
       language: java
       jdk: oraclejdk8
     - env: OPENRASP_LANG=java SERVER=tomcat6
+      dist: trusty
       language: java
       jdk: openjdk7
     - env: OPENRASP_LANG=java SERVER=tomcat7
+      dist: trusty
       language: java
       jdk: openjdk7
     - env: OPENRASP_LANG=java SERVER=jboss4
+      dist: trusty
       language: java
       jdk: openjdk7
     - env: OPENRASP_LANG=java SERVER=jboss5
+      dist: trusty
       language: java
       jdk: openjdk7
     - env: OPENRASP_LANG=java SERVER=jboss6
+      dist: trusty
       language: java
       jdk: openjdk7
     - env: OPENRASP_LANG=java SERVER=springboot
+      dist: trusty
       language: java
       jdk: openjdk7
     - env: OPENRASP_LANG=java SERVER=dubbo
+      dist: trusty
       language: java
       jdk: openjdk7
     - env: OPENRASP_LANG=java SERVER=tomcat8
       language: java
       jdk: oraclejdk11
     - env: OPENRASP_LANG=java SERVER=jboss7
+      dist: trusty
       language: java
       jdk: openjdk7
     - env: OPENRASP_LANG=java SERVER=wildfly8
+      dist: trusty
       language: java
       jdk: openjdk7
     - env: OPENRASP_LANG=java SERVER=wildfly10
       language: java
       jdk: openjdk8
     - env: OPENRASP_LANG=java SERVER=resin4
+      dist: trusty
       language: java
       jdk: openjdk7
 before_script:

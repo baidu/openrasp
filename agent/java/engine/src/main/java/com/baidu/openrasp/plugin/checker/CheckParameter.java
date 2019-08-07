@@ -22,9 +22,11 @@ import com.baidu.openrasp.plugin.checker.policy.MongoConnectionChecker;
 import com.baidu.openrasp.plugin.checker.v8.V8Checker;
 import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlExceptionChecker;
+import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.XssChecker;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
 import com.baidu.openrasp.plugin.checker.policy.server.*;
+import com.baidu.openrasp.plugin.checker.v8.V8Checker;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.google.gson.Gson;
 
@@ -59,6 +61,7 @@ public class CheckParameter {
         REQUESTEND("requestEnd", new V8Checker(), 1 << 17),
         DELETEFILE("deleteFile", new V8Checker(), 1 << 18),
         MONGO("mongo", new V8Checker(), 1 << 19),
+        SYSTEMLOAD("loadLibrary", new V8Checker(), 1 << 20),
 
         // java本地检测
         XSS_USERINPUT("xss_userinput", new XssChecker(), 1 << 16),

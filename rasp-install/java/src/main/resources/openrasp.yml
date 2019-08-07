@@ -33,6 +33,9 @@ hooks.ignore: http_output
 #    - "ssrf"
 #inject.custom_headers:
 #   X-Content-Type-Options: nosniff
+#   X-Frame-Options: deny
+#   X-XSS-Protection: 1; mode=block
+#   X-Download-Options: noopen
 
 # <response to malicious requests>
 # 

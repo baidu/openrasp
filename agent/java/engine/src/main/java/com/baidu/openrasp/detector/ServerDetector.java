@@ -42,7 +42,7 @@ import java.security.ProtectionDomain;
  */
 public abstract class ServerDetector {
 
-    public static final Logger LOGGER = Logger.getLogger(ServerDetector.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ServerDetector.class.getName());
 
     /**
      * 探测该类是否为服务器标志类

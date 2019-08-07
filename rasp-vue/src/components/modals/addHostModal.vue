@@ -43,6 +43,11 @@
                   PHP 服务器
                 </a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#iast-tab">
+                  Fuzz 工具安装
+                </a>
+              </li>
             </ul>
             <br>
             <div id="myTabContent" class="tab-content">
@@ -115,7 +120,23 @@ RUN cd /tmp \
                 <pre style="white-space: inherit; ">service php-fpm restart</pre>
                 <p>-或者-</p>
                 <pre style="white-space: inherit; ">apachectl -k restart</pre>
-              </div>          
+              </div>
+              <div id="iast-tab" class="tab-pane fade">
+                <h4>1. 下载 Fuzz 工具</h4>
+                <pre style="white-space: inherit; ">pip install git+https://github.com/baidu-security/openrasp-iast</pre>
+                <h4>2. 配置 MySQL 服务器 - 使用 MySQL root 账号执行以下命令授权</h4>
+                <pre>DROP DATABASE IF EXISTS openrasp;
+CREATE DATABASE openrasp;
+grant all privileges on openrasp.* to 'rasp'@'%' identified by 'rasp123';
+grant all privileges on openrasp.* to 'rasp'@'localhost' identified by 'rasp123';
+</pre>
+                <h4>3. 配置 Fuzz 工具 - 请修正 MySQL 服务器地址</h4>
+                <pre style="white-space: inherit; ">openrasp-iast config -o -a {{ current_app.id }} -b {{ current_app.secret }} -c {{ agent_urls[agent_url_id] }} -m mysql://rasp:rasp123@127.0.0.1/openrasp</pre>
+                <h4>4. 启动 Fuzz 工具</h4>
+                <pre style="white-space: inherit; ">openrasp-iast start -f</pre>
+                <p>-或者后台启动-</p>
+                <pre style="white-space: inherit; ">openrasp-iast start</pre>
+              </div>
             </div>
           </div>
         </div>

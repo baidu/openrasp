@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * 自定义类字节码转换器，用于hook类德 方法
@@ -51,17 +52,24 @@ public class CustomClassTransformer implements ClassFileTransformer {
     public static final Logger LOGGER = Logger.getLogger(CustomClassTransformer.class.getName());
     private static final String SCAN_ANNOTATION_PACKAGE = "com.baidu.openrasp.hook";
     private static HashSet<String> jspClassLoaderNames = new HashSet<String>();
+    private static ConcurrentSkipListSet<String> necessaryHookType = new ConcurrentSkipListSet<String>();
+    private static ConcurrentSkipListSet<String> dubboNecessaryHookType = new ConcurrentSkipListSet<String>();
     public static ConcurrentHashMap<String, WeakReference<ClassLoader>> jspClassLoaderCache = new ConcurrentHashMap<String, WeakReference<ClassLoader>>();
 
     private Instrumentation inst;
     private HashSet<AbstractClassHook> hooks = new HashSet<AbstractClassHook>();
     private ServerDetectorManager serverDetector = ServerDetectorManager.getInstance();
 
+    public static volatile boolean isNecessaryHookComplete = false;
+    public static volatile boolean isDubboNecessaryHookComplete = false;
+
     static {
         jspClassLoaderNames.add("org.apache.jasper.servlet.JasperLoader");
         jspClassLoaderNames.add("com.caucho.loader.DynamicClassLoader");
         jspClassLoaderNames.add("com.ibm.ws.jsp.webcontainerext.JSPExtensionClassLoader");
         jspClassLoaderNames.add("weblogic.servlet.jsp.JspClassLoader");
+        dubboNecessaryHookType.add("dubbo_preRequest");
+        dubboNecessaryHookType.add("dubboRequest");
     }
 
     public CustomClassTransformer(Instrumentation inst) {
@@ -98,6 +106,9 @@ public class CustomClassTransformer implements ClassFileTransformer {
     }
 
     private void addHook(AbstractClassHook hook, String className) {
+        if (hook.isNecessary()) {
+            necessaryHookType.add(hook.getType());
+        }
         String[] ignore = Config.getConfig().getIgnoreHooks();
         for (String s : ignore) {
             if (hook.couldIgnore() && (s.equals("all") || s.equals(hook.getType()))) {
@@ -148,6 +159,9 @@ public class CustomClassTransformer implements ClassFileTransformer {
                         hook.setLoadedByBootstrapLoader(true);
                     }
                     classfileBuffer = hook.transformClass(ctClass);
+                    if (classfileBuffer != null) {
+                        checkNecessaryHookType(hook.getType());
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
@@ -161,6 +175,24 @@ public class CustomClassTransformer implements ClassFileTransformer {
         serverDetector.detectServer(className, loader, domain);
         return classfileBuffer;
     }
+
+    private void checkNecessaryHookType(String type) {
+        if (!isNecessaryHookComplete && necessaryHookType.contains(type)) {
+            necessaryHookType.remove(type);
+            if (necessaryHookType.isEmpty()) {
+                isNecessaryHookComplete = true;
+            }
+        }
+
+        if (!isDubboNecessaryHookComplete && dubboNecessaryHookType.contains(type)) {
+            System.out.println(type);
+            dubboNecessaryHookType.remove(type);
+            if (dubboNecessaryHookType.isEmpty()) {
+                isDubboNecessaryHookComplete = true;
+            }
+        }
+    }
+
 
     public boolean isClassMatched(String className) {
         for (final AbstractClassHook hook : getHooks()) {

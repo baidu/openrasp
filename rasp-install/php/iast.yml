@@ -9,8 +9,6 @@ plugin.timeout.millis: 15000
 
 #每个进程/线程每秒钟最大日志条数
 log.maxburst: 100
-#报警日志记录的最大堆栈深度
-log.maxstack: 50
 
 #报警是否开启 syslog
 syslog.enable: false
@@ -41,6 +39,10 @@ block.content_html: "</script><script>location.href=\"https://rasp.baidu.com/blo
 #对于以下URL，修改响应并注入HTML
 inject.urlprefix: ""
 
+#自定义header
+inject.custom_headers:
+#  X-Content-Type-Options: nosniff
+
 #最多读取body的前多少字节
 body.maxbytes: 8192
 
@@ -52,6 +54,9 @@ lru.max_size: 0
 
 #是否开启源码溯源
 decompile.enable: false
+
+#是否开启debug模式 0：关闭；非0：开启
+debug.level: 0
 
 hook.white:
 # white url list for each check type  

@@ -20,18 +20,17 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.server.ServerXssHook;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
+import com.baidu.openrasp.response.HttpServletResponse;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.util.HashMap;
 
 /**
@@ -44,99 +43,61 @@ public class CatalinaXssHook extends ServerXssHook {
 
     @Override
     public boolean isClassMatched(String className) {
-        return "org/apache/catalina/connector/OutputBuffer".equals(className);
+        return "org/apache/coyote/Response".equals(className);
     }
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(CatalinaXssHook.class, "getBuffer", "$0", Object.class);
-        insertBefore(ctClass, "close", "()V", src);
+        String src = getInvokeStaticSrc(CatalinaXssHook.class, "getBuffer", "$1", Object.class);
+        insertBefore(ctClass, "doWrite", "(Lorg/apache/tomcat/util/buf/ByteChunk;)V", src);
+        insertBefore(ctClass, "doWrite", "(Ljava/nio/ByteBuffer;)V", src);
     }
 
-    public static void getBuffer(Object out) {
-        if (HookHandler.isEnableXssHook()) {
+    public static void getBuffer(Object trunk) {
+        if (HookHandler.isEnableXssHook() && isCheckXss() && trunk != null) {
             HookHandler.disableBodyXssHook();
-            if (out != null) {
-                HashMap<String, Object> params = new HashMap<String, Object>();
-                try {
-                    Object buffer = getField(out, "cb");
-                    if (buffer instanceof CharBuffer) {
-                        String content = getContentFromCharBuffer(buffer);
-                        if (!StringUtils.isEmpty(content)) {
-                            params.put("html_body", content);
-                        }
-                    }
-                    if (params.isEmpty() && buffer != null && !isBuffer(buffer)) {
-                        String content = getContentFromCharChunk(buffer);
-                        if (!StringUtils.isEmpty(content)) {
-                            params.put("html_body", content);
-                        }
-                    }
-                    if (params.isEmpty()) {
-                        buffer = getField(out, "bb");
-                        if (buffer instanceof ByteBuffer) {
-                            String content = getContentFromByteBuffer(buffer);
-                            if (!StringUtils.isEmpty(content)) {
-                                params.put("html_body", content);
-                            }
-                        }
-                        if (params.isEmpty() && buffer != null && !isBuffer(buffer)) {
-                            String content = getContentFromByteChunk(buffer);
-                            if (!StringUtils.isEmpty(content)) {
-                                params.put("html_body", content);
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
-                            e.getMessage(), e);
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            try {
+                HttpServletResponse res = HookHandler.responseCache.get();
+                String enc = null;
+                if (res != null) {
+                    enc = res.getCharacterEncoding();
                 }
-                if (isCheckXss() && !params.isEmpty()) {
-                    HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+                if (enc != null) {
+                    if (trunk instanceof ByteBuffer) {
+                        params.put("html_body", getContentFromByteBuffer((ByteBuffer) trunk, enc));
+                    } else {
+                        params.put("html_body", getContentFromByteTrunk(trunk, enc));
+                    }
                 }
+            } catch (Exception e) {
+                LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
+                        e.getMessage(), e);
+                return;
             }
-        }
+            if (!params.isEmpty()) {
+                HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+            }
 
-    }
-
-    public static String getContentFromCharBuffer(Object buffer) {
-        return ((CharBuffer) buffer).toString();
-    }
-
-    public static String getContentFromByteBuffer(Object buffer) {
-        byte[] bytes = ((ByteBuffer) buffer).array();
-        return new String(bytes);
-    }
-
-    public static String getContentFromByteChunk(Object buffer) {
-        byte[] bytes = (byte[]) Reflection.invokeMethod(buffer, "getBuffer", new Class[]{});
-        int start = (Integer) Reflection.invokeMethod(buffer, "getOffset", new Class[]{});
-        int len = (Integer) Reflection.invokeMethod(buffer, "getLength", new Class[]{});
-        byte[] temp = new byte[len + 1];
-        System.arraycopy(bytes, start, temp, 0, len);
-        return new String(temp);
-    }
-
-    public static String getContentFromCharChunk(Object buffer) {
-        char[] chars = (char[]) Reflection.invokeMethod(buffer, "getBuffer", new Class[]{});
-        int start = (Integer) Reflection.invokeMethod(buffer, "getOffset", new Class[]{});
-        int len = (Integer) Reflection.invokeMethod(buffer, "getLength", new Class[]{});
-        char[] temp = new char[len + 1];
-        System.arraycopy(chars, start, temp, 0, len);
-        return new String(temp);
-    }
-
-    public static Object getField(Object object, String fieldName) {
-        try {
-            Field field = object.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            return field.get(object);
-        } catch (Exception e) {
-            return null;
         }
     }
 
-    public static boolean isBuffer(Object buffer) {
-        return buffer instanceof ByteBuffer || buffer instanceof CharBuffer;
+    private static String getContentFromByteBuffer(ByteBuffer trunk, String enc) throws UnsupportedEncodingException {
+        byte[] bytes = trunk.array();
+        int end = trunk.limit();
+        int start = trunk.position();
+        byte[] tmp = new byte[end - start];
+        System.arraycopy(bytes, start, tmp, 0, end - start);
+        return new String(tmp, enc);
     }
+
+    private static String getContentFromByteTrunk(Object trunk, String enc) throws UnsupportedEncodingException {
+        byte[] bytes = (byte[]) Reflection.invokeMethod(trunk, "getBuffer", new Class[]{});
+        int start = (Integer) Reflection.invokeMethod(trunk, "getStart", new Class[]{});
+        int end = (Integer) Reflection.invokeMethod(trunk, "getEnd", new Class[]{});
+        byte[] tmp = new byte[end - start];
+        System.arraycopy(bytes, start, tmp, 0, end - start);
+        return new String(tmp, enc);
+    }
+
 }

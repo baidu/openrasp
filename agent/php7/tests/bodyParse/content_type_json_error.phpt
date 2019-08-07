@@ -8,6 +8,9 @@ plugin.register('command', (params, context) => {
     return {action: 'ignore'}
 })
 EOF;
+$conf = <<<CONF
+debug.level: 1
+CONF;
 include(__DIR__.'/../skipif.inc');
 ?>
 --INI--

@@ -42,8 +42,6 @@ std::vector<std::string> format_source_code_arr();
 void format_source_code_arr(zval *source_code_arr);
 std::vector<std::string> format_debug_backtrace_arr();
 std::vector<std::string> format_debug_backtrace_arr(long limit);
-std::string format_debug_backtrace_str();
-void format_debug_backtrace_str(zval *backtrace_str);
 std::string json_encode_from_zval(zval *value);
 
 char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);

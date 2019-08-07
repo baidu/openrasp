@@ -117,6 +117,7 @@ export var attack_types = {
   sql: 'SQL 注入',
   sql_exception: 'SQL 语句异常',
   eval: 'EVAL 代码执行',
+  loadLibrary: '类库加载',
   command: '命令执行',
   xxe: 'XXE 外部实体加载',
   directory: '目录遍历',
@@ -144,6 +145,7 @@ export var status_types = {
   // ignore: '忽略放行'
 }
 
+
 export function getDefaultConfig() {
   return {
     general_config: {
@@ -161,6 +163,17 @@ export function getDefaultConfig() {
       recv_addr: []
     }
   }
+}
+
+export function validateRegex(value) {
+  var error = false
+  try {
+    new RegExp(value)
+  } catch (e) {
+    error = '正则表达式错误:' + e.toString()
+  }
+
+  return error
 }
 
 export function block_status2name(status) {

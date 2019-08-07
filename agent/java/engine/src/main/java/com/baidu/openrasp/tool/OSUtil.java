@@ -19,6 +19,7 @@ package com.baidu.openrasp.tool;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.model.NicModel;
+import com.baidu.openrasp.NativePatches;
 import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
@@ -51,27 +52,39 @@ public class OSUtil {
     public static LinkedList<NicModel> getIpAddress() {
         LinkedList<NicModel> ipList = new LinkedList<NicModel>();
         try {
-            if (inetAddress == null) {
-                inetAddress = InetAddress.getLocalHost();
-            }
-            Enumeration allNetInterfaces = null;
-            allNetInterfaces = NetworkInterface.getNetworkInterfaces();
+            if (isLinux() && System.getProperty("java.version").startsWith("1.6")) {
+                String[] ifs = NativePatches.GetNetworkInterfaces();
+                for (int i = 0; i < ifs.length; i += 4) {
+                    String ip = ifs[i + 2];
+                    if (ip != null && !ip.equals("0.0.0.0") && !ip.equals("127.0.0.1")) {
+                        ipList.add(new NicModel(ifs[0], ip));
+                    }
+                }
+            } else {
+                if (inetAddress == null) {
+                    inetAddress = InetAddress.getLocalHost();
+                }
+                Enumeration allNetInterfaces = null;
+                allNetInterfaces = NetworkInterface.getNetworkInterfaces();
 
-            if (allNetInterfaces != null) {
-                InetAddress ipAddress = null;
-                while (allNetInterfaces.hasMoreElements()) {
-                    NetworkInterface netInterface = (NetworkInterface) allNetInterfaces.nextElement();
-                    Enumeration addresses = netInterface.getInetAddresses();
-                    while (addresses.hasMoreElements()) {
-                        ipAddress = (InetAddress) addresses.nextElement();
-                        if (ipAddress != null && ipAddress instanceof Inet4Address && !ipAddress.isLoopbackAddress()) {
-                            String ip = ipAddress.getHostAddress();
-                            if (!ip.equals("0.0.0.0")) {
-                                ipList.add(new NicModel(netInterface.getName(), ipAddress.getHostAddress()));
+                if (allNetInterfaces != null) {
+                    InetAddress ipAddress = null;
+                    while (allNetInterfaces.hasMoreElements()) {
+                        NetworkInterface netInterface = (NetworkInterface) allNetInterfaces.nextElement();
+                        Enumeration addresses = netInterface.getInetAddresses();
+                        while (addresses.hasMoreElements()) {
+                            ipAddress = (InetAddress) addresses.nextElement();
+                            if (ipAddress != null && ipAddress instanceof Inet4Address
+                                    && !ipAddress.isLoopbackAddress()) {
+                                String ip = ipAddress.getHostAddress();
+                                if (!ip.equals("0.0.0.0")) {
+                                    ipList.add(new NicModel(netInterface.getName(), ipAddress.getHostAddress()));
+                                }
                             }
                         }
                     }
                 }
+
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -107,18 +120,28 @@ public class OSUtil {
 
     private static LinkedList<String> getMacAddress() throws Exception {
         LinkedList<String> macs = new LinkedList<String>();
-        Enumeration<NetworkInterface> el = NetworkInterface.getNetworkInterfaces();
-        while (el.hasMoreElements()) {
-            NetworkInterface netInterface = el.nextElement();
-            if (!netInterface.isLoopback()) {
-                byte[] mac = netInterface.getHardwareAddress();
-                if (mac == null)
-                    continue;
-                String macString = "";
-                for (byte b : mac) {
-                    macString += (hexByte(b) + "-");
+        if (isLinux() && System.getProperty("java.version").startsWith("1.6")) {
+            String[] ifs = NativePatches.GetNetworkInterfaces();
+            for (int i = 0; i < ifs.length; i += 4) {
+                String ip = ifs[i + 2];
+                if (ip == null || (!ip.equals("0.0.0.0") && !ip.equals("127.0.0.1"))) {
+                    macs.add(ifs[i + 1]);
                 }
-                macs.add(macString.substring(0, macString.length() - 1));
+            }
+        } else {
+            Enumeration<NetworkInterface> el = NetworkInterface.getNetworkInterfaces();
+            while (el.hasMoreElements()) {
+                NetworkInterface netInterface = el.nextElement();
+                if (!netInterface.isLoopback()) {
+                    byte[] mac = netInterface.getHardwareAddress();
+                    if (mac == null)
+                        continue;
+                    String macString = "";
+                    for (byte b : mac) {
+                        macString += (hexByte(b) + "-");
+                    }
+                    macs.add(macString.substring(0, macString.length() - 1));
+                }
             }
         }
         Collections.sort(macs);

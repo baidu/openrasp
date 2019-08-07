@@ -34,8 +34,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.regex.Pattern;
 
-import static com.baidu.rasp.RaspError.E10005;
-import static com.baidu.rasp.RaspError.E10007;
+import static com.baidu.rasp.RaspError.*;
 
 /**
  * Created by OpenRASP on 5/11/17.
@@ -50,9 +49,17 @@ public class App {
     public static boolean isAttach = false;
     public static boolean keepConfig = false;
     public static boolean noDetect = false;
+    public static boolean isPrepend = false;
 
     public static final String REGEX_APPID = "^[a-z0-9]{40,40}$";
     public static final String REGEX_APPSECRET = "^[a-zA-Z0-9_-]{43,45}$";
+
+    public static final String TOMCAT = "Tomcat";
+    public static final String JBOSS = "JBoss 4-6";
+    public static final String RESIN = "Resin";
+    public static final String WEBLOGIC = "Weblogic";
+    public static final String JBOSSEAP = "JbossEAP";
+    public static final String WILDFLY = "Wildfly";
 
     private static InstallerFactory newInstallerFactory() {
         if (System.getProperty("os.name").startsWith("Windows")) {
@@ -82,6 +89,7 @@ public class App {
         options.addOption("pid", true, "Specify the pid of Java server to attach");
         options.addOption("nodetect", false, "Install without updating startup scripts, " +
                 "useful for standalone Java servers like SpringBoot");
+        options.addOption("prepend", false, "Prepend the origin java options");
 
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, args);
@@ -102,6 +110,7 @@ public class App {
                 }
 
                 noDetect = cmd.hasOption("nodetect");
+                isPrepend = cmd.hasOption("prepend");
 
                 if (cmd.hasOption("pid")) {
                     isAttach = true;
@@ -191,6 +200,17 @@ public class App {
                 throw new RaspError(E10007);
             }
         }
+    }
+
+    public static void listServerSupport(String serverRoot) throws RaspError {
+        System.out.println("List of currently supported servers are:");
+        System.out.println("- " + TOMCAT);
+        System.out.println("- " + RESIN);
+        System.out.println("- " + WEBLOGIC);
+        System.out.println("- " + JBOSSEAP);
+        System.out.println("- " + WILDFLY);
+        System.out.println("- " + JBOSS + "\n");
+        throw new RaspError(E10004 + serverRoot);
     }
 
     public static void main(String[] args) {

@@ -49,7 +49,7 @@ public class WeblogicXssHook extends ServerXssHook {
     }
 
     public static void getWeblogicOutputBuffer(CharBuffer buffer) {
-        if (HookHandler.isEnableXssHook()) {
+        if (HookHandler.isEnableXssHook() && isCheckXss()) {
             HookHandler.disableBodyXssHook();
             HashMap<String, Object> params = new HashMap<String, Object>();
             try {
@@ -61,7 +61,7 @@ public class WeblogicXssHook extends ServerXssHook {
                 LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
                         e.getMessage(), e);
             }
-            if (isCheckXss() && !params.isEmpty()) {
+            if (!params.isEmpty()) {
                 HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
             }
         }

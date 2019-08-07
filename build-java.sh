@@ -71,7 +71,11 @@ log "[3] copy rasp.yaml"
 copyConf
 
 log "[4] build openrasp-v8"
-buildOpenraspV8
+if [[ ! -z $SKIP_V8 ]]; then
+	echo Skipped buildOpenraspV8
+else
+	buildOpenraspV8
+fi
 
 log "[5] build OpenRASP"
 buildRasp

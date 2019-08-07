@@ -203,6 +203,13 @@ export default {
     attack_type2name: attack_type2name,
     showModal(data) {
       this.data = data
+
+      // v1.2 之后，删除外面的字符串堆栈，改用 params.stack 数组
+      if (! data.stack_trace && data.attack_params.stack)
+      {
+        data.stack_trace = data.attack_params.stack.join("\n")
+      }
+
       this.$refs.attack_params.setData(data)
       this.$refs.fix_solutions.setData(data)
       this.mergeStackAndSource(data)
@@ -221,7 +228,7 @@ export default {
       if (! data.source_code || ! data.source_code.length) {
         return
       }
-      
+
       let stack_trace = data.stack_trace.trim().split("\n")
       if (stack_trace.length != data.source_code.length) {
         console.error("Error: stack_trace size '" + stack_trace.length + "' is different from source_code size '" + data.source_code.length + "', skipped")

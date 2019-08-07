@@ -28,6 +28,7 @@ import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.request.DubboRequest;
 import com.baidu.openrasp.request.HttpServletRequest;
 import com.baidu.openrasp.response.HttpServletResponse;
+import com.baidu.openrasp.transformer.CustomClassTransformer;
 import org.apache.log4j.Logger;
 
 import java.util.Arrays;
@@ -49,7 +50,7 @@ public class HookHandler {
     public static AtomicLong requestSum = new AtomicLong(0);
     public static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
     // 全局开关
-    public static AtomicBoolean enableHook = new AtomicBoolean(false);
+    public static final AtomicBoolean enableHook = new AtomicBoolean(false);
     // 当前线程开关
     private static ThreadLocal<Boolean> enableCurrThreadHook = new ThreadLocal<Boolean>() {
         @Override
@@ -178,7 +179,8 @@ public class HookHandler {
      * @param response 响应实体
      */
     public static void checkRequest(Object servlet, Object request, Object response) {
-        if (servlet != null && request != null && !enableCurrThreadHook.get()) {
+        if (servlet != null && request != null && !enableCurrThreadHook.get()
+                && CustomClassTransformer.isNecessaryHookComplete) {
             // 默认是关闭hook的，只有处理过HTTP request的线程才打开
             enableEnd.set(true);
             enableCurrThreadHook.set(true);
@@ -202,7 +204,7 @@ public class HookHandler {
      * @param request 请求实体
      */
     public static void checkDubboRequest(Object request) {
-        if (request != null && !enableCurrThreadHook.get()) {
+        if (request != null && !enableCurrThreadHook.get() && CustomClassTransformer.isDubboNecessaryHookComplete) {
             enableCurrThreadHook.set(true);
             //新的请求开启body xss hook点
             enableBodyXssHook();
@@ -365,7 +367,7 @@ public class HookHandler {
         if (Config.getConfig().getDisableHooks()) {
             return;
         }
-        //当云控注册成功之前，不进入任何hoo点
+        //当云控注册成功之前，不进入任何hook点
         if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
             return;
         }

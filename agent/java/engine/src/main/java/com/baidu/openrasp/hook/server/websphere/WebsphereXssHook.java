@@ -49,7 +49,7 @@ public class WebsphereXssHook extends ServerXssHook {
     }
 
     public static void getWebsphereOutputBuffer(Object object) {
-        if (HookHandler.isEnableXssHook()) {
+        if (HookHandler.isEnableXssHook() && isCheckXss()) {
             HookHandler.disableBodyXssHook();
             HashMap<String, Object> params = new HashMap<String, Object>();
             try {
@@ -65,7 +65,7 @@ public class WebsphereXssHook extends ServerXssHook {
                 LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
                         e.getMessage(), e);
             }
-            if (isCheckXss() && !params.isEmpty()) {
+            if (!params.isEmpty()) {
                 HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
             }
         }

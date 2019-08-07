@@ -31,6 +31,10 @@ import java.io.IOException;
  */
 public abstract class ServerPreRequestHook extends AbstractClassHook {
 
+    public ServerPreRequestHook() {
+        isNecessary = true;
+    }
+
     /**
      * (none-javadoc)
      *

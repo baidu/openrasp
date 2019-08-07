@@ -213,7 +213,7 @@ public abstract class BaseStandardInstaller implements Installer {
                     map.put("cloud.backend_url", url);
                     map.put("cloud.app_id", appId);
                     map.put("cloud.app_secret", appSecret);
-                    BufferedWriter writer = new BufferedWriter (new OutputStreamWriter (new FileOutputStream (yamlFile,true),"UTF-8"));
+                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(yamlFile, true), "UTF-8"));
                     writer.write(LINE_SEP);
                     writer.write("# <remote management>");
                     writer.write(LINE_SEP);
@@ -232,8 +232,23 @@ public abstract class BaseStandardInstaller implements Installer {
     //判断tomcat的版本是否大于8
     protected boolean checkTomcatVersion() {
         String javaVersion = System.getProperty("java.version");
-        return javaVersion != null && (javaVersion.startsWith("1.9") || javaVersion.startsWith("10.")
-                || javaVersion.startsWith("11."));
+        String[] version = javaVersion.split("\\.");
+        if (version.length >= 2) {
+            int major;
+            int minor;
+            try {
+                major = Integer.parseInt(version[0]);
+                minor = Integer.parseInt(version[1]);
+            } catch (Exception e) {
+                return false;
+            }
+            if (major == 1) {
+                return minor >= 9;
+            } else if (major >= 9) {
+                return true;
+            }
+        }
+        return false;
     }
 
     //获取指定目录下指定前缀的jar文件

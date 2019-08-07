@@ -137,7 +137,7 @@ public class SQLConnectionHook extends AbstractClassHook {
                 params.put("port", port != null ? port : "");
                 params.put("socket", socket != null ? socket : "");
             }
-            HookHandler.doCheckWithoutRequest(CheckParameter.Type.SQL_EXCEPTION, params);
+            HookHandler.doCheck(CheckParameter.Type.SQL_EXCEPTION, params);
         }
     }
 

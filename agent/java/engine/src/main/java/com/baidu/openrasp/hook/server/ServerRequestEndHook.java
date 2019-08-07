@@ -27,6 +27,10 @@ import com.baidu.openrasp.plugin.checker.CheckParameter;
  */
 public abstract class ServerRequestEndHook extends AbstractClassHook {
 
+    public ServerRequestEndHook() {
+        isNecessary = true;
+    }
+
     @Override
     public String getType() {
         return "requestEnd";

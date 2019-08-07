@@ -214,8 +214,6 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
 {
     TSRMLS_FETCH();
 
-    auto stack_trace = NewV8String(isolate, format_debug_backtrace_str(TSRMLS_C));
-
     std::time_t t = std::time(nullptr);
     char buffer[100] = {0};
     size_t size = std::strftime(buffer, sizeof(buffer), RaspLoggerEntry::rasp_rfc3339_format, std::localtime(&t));
@@ -229,7 +227,6 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     obj->Set(NewV8String(isolate, "plugin_confidence"), result->Get(NewV8String(isolate, "confidence")));
     obj->Set(NewV8String(isolate, "plugin_algorithm"), result->Get(NewV8String(isolate, "algorithm")));
     obj->Set(NewV8String(isolate, "plugin_name"), result->Get(NewV8String(isolate, "name")));
-    obj->Set(NewV8String(isolate, "stack_trace"), stack_trace);
     obj->Set(NewV8String(isolate, "event_time"), event_time);
     {
         auto source_code = v8::Array::New(isolate);

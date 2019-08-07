@@ -106,6 +106,16 @@ public class HttpServletResponse {
         return null;
     }
 
+    public String getCharacterEncoding() {
+        if (response != null) {
+            Object enc = Reflection.invokeMethod(response, "getCharacterEncoding", new Class[]{});
+            if (enc != null) {
+                return enc.toString();
+            }
+        }
+        return null;
+    }
+
     public String getContentType() {
         if (response != null) {
             Object contentType = Reflection.invokeMethod(response, "getContentType", new Class[]{});
