@@ -15,8 +15,6 @@
 package logs
 
 import (
-	"crypto/md5"
-	"fmt"
 	"rasp-cloud/es"
 	"github.com/olivere/elastic"
 	"time"
@@ -27,6 +25,8 @@ import (
 	"rasp-cloud/tools"
 	"encoding/json"
 	"rasp-cloud/conf"
+	"fmt"
+	"crypto/md5"
 )
 
 var (
@@ -88,14 +88,31 @@ func AddAttackAlarm(alarm map[string]interface{}) error {
 			beego.Error("failed to add attack alarm: ", r)
 		}
 	}()
+	putStackMd5(alarm)
+	setAlarmLocation(alarm)
+	return AddAlarmFunc(AttackAlarmInfo.EsType, alarm)
+}
+
+func putStackMd5(alarm map[string]interface{}) {
+	var stackValue string
+	if alarm["attack_params"] != nil {
+		if param, ok := alarm["attack_params"].(map[string]interface{}); ok && len(param) > 0 && param["stack"] != nil {
+			if stack, ok := param["stack"].([]interface{}); ok && len(stack) > 0 {
+				for _, item := range stack {
+					stackValue += fmt.Sprint(item)
+					stackValue += "\n"
+				}
+				alarm["stack_md5"] = fmt.Sprintf("%x", md5.Sum([]byte(stackValue)))
+				return
+			}
+		}
+	}
 	if stack, ok := alarm["stack_trace"]; ok && stack != nil && stack != "" {
 		_, ok = stack.(string)
 		if ok {
-			alarm["stack_md5"] = fmt.Sprintf("%x", md5.Sum([]byte(stack.(string))))
+			alarm["stack_md5"] = fmt.Sprintf("%x", md5.Sum([]byte(stackValue)))
 		}
 	}
-	setAlarmLocation(alarm)
-	return AddAlarmFunc(AttackAlarmInfo.EsType, alarm)
 }
 
 func setAlarmLocation(alarm map[string]interface{}) {
