@@ -1,4 +1,4 @@
-const plugin_version = '2019-0726-1200'
+const plugin_version = '2019-0805-1100'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -148,7 +148,7 @@ var algorithmConfig = {
     },
     // SSRF - 是否允许访问 aws metadata
     ssrf_aws: {
-        name:   '算法2 - 拦截 AWS/Aliyun metadata 访问',
+        name:   '算法2 - 拦截 AWS/Aliyun/GCP metadata 访问',
         action: 'block'
     },
     // SSRF - 是否允许访问 dnslog 地址
@@ -1321,7 +1321,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                         algorithm:  'ssrf_userinput'
                     }
                 }
-                else if (hostname == '[::]') 
+                else if (hostname == '[::]' || hostname == '0.0.0.0') 
                 {
                     return {
                         action:     algorithmConfig.ssrf_userinput.action,
