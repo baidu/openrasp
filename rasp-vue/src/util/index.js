@@ -192,43 +192,6 @@ export function attack_type2name(id) {
   return attack_types[id] || id
 }
 
-export function api_request(url, data, cb, err_cb) {
-  var prefix = '/'
-
-  // 本地开发
-  if (process.env.NODE_ENV !== 'production') {
-    prefix = 'http://scloud.baidu.com:8090/'
-
-    axios.defaults.headers['X-OpenRASP-Token'] =
-      '9256a3555fbd4f24f7a2ba915a32261ab4c720fc'
-  }
-
-  axios
-    .post(prefix + url, data)
-    .then(function(response) {
-      if (response.status != 200) {
-        alert('HTTP 请求出错: 响应码 ' + response.status)
-      } else if (response.data.status != 0) {
-        if (err_cb) {
-          err_cb(response.data.status, response.data.description)
-        } else {
-          alert(
-            'API 接口出错: ' +
-              response.data.status +
-              ' - ' +
-              response.data.description
-          )
-        }
-      } else {
-        console.log(url, response.data.data)
-        cb(response.data.data)
-      }
-    })
-    .catch(function(error) {
-      console.log('axios 错误: ', url, error)
-    })
-}
-
 export const request = axios.create({
   baseURL:
     process.env.NODE_ENV === 'production'

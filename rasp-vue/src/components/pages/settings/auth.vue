@@ -116,10 +116,10 @@ export default {
   methods: {
     changePass: function() {
       if (this.oldpass.length > 0 && this.newpass1.length > 0 && this.newpass1 == this.newpass2) {
-        this.api_request('v1/user/update', {
+        this.request.post('v1/user/update', {
           old_password: this.oldpass,
           new_password: this.newpass1
-        }, function(data) {
+        }).then(() => {
           alert('密码修改成功，点击确认重新登录')
           location.href = '/#/login'
         })
@@ -128,27 +128,25 @@ export default {
       }
     },
     createToken: function() {
-      var self = this
       var descr = prompt('请输入备注信息')
 
       if (descr && descr.length) {
-        self.api_request('v1/api/token', {
+        this.request.post('v1/api/token', {
           description: descr
-        }, function(data) {
-          self.loadTokens(1)
+        }).then(() => {
+          this.loadTokens(1)
         })
       }
     },
     editToken: function(data) {
-      var self = this
       var descr = prompt('请输入新的备注信息')
       if (!descr) { return }
 
-      this.api_request('v1/api/token', {
+      this.request.post('v1/api/token', {
         description: descr,
         token: data.token
-      }, function(data) {
-        self.loadTokens(1)
+      }).then(() => {
+        this.loadTokens(1)
       })
     },
     deleteToken: function(data) {
@@ -156,13 +154,12 @@ export default {
         return
       }
 
-      var self = this
       var body = {
         token: data.token
       }
 
-      this.api_request('v1/api/token/delete', body, function(data) {
-        self.loadTokens(1)
+      this.request.post('v1/api/token/delete', body).then(() => {
+        this.loadTokens(1)
       })
     },
     loadTokens(page) {
