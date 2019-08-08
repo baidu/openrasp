@@ -260,7 +260,7 @@ export default {
         return a.name.localeCompare(b.name)
       }
 
-      this.api_request('v1/api/plugin/get', body, function(data) {
+      this.request.post('v1/api/plugin/get', body).then(data => {
         var tmp = data.algorithm_config
         var hooks = {}
         self.data = data.algorithm_config
@@ -293,14 +293,13 @@ export default {
       })
     },
     saveConfig: function() {
-      var self = this
       var body = {
         id: this.current_app.selected_plugin_id,
         config: this.data
       }
 
-      this.api_request('v1/api/plugin/algorithm/config', body, function(data) {
-        self.loadAppList(self.current_app.id);
+      this.request.post('v1/api/plugin/algorithm/config', body).then(() => {
+        this.loadAppList(this.current_app.id)
         alert('保存成功，请等待一个心跳周期生效（3分钟以内）')
       })
     },
@@ -309,14 +308,13 @@ export default {
         return
       }
 
-      var self = this
       var body = {
         id: this.current_app.selected_plugin_id
       }
 
-      self.api_request('v1/api/plugin/algorithm/restore', body, function(data) {
-        self.loadAppList(self.current_app.id);
-        self.loadConfig()
+      this.request.post('v1/api/plugin/algorithm/restore', body).then(() => {
+        this.loadAppList(this.current_app.id)
+        this.loadConfig()
         alert('恢复成功')
       })
     }

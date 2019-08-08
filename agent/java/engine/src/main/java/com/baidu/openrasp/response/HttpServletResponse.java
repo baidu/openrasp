@@ -18,6 +18,9 @@ package com.baidu.openrasp.response;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.hook.server.catalina.CatalinaXssHook;
+import com.baidu.openrasp.messaging.LogTool;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 
 /**
@@ -163,7 +166,7 @@ public class HttpServletResponse {
     /**
      * 返回异常信息
      */
-    public void sendError() {
+    public void sendError(CheckParameter parameter) {
         if (response != null) {
             try {
                 int statusCode = Config.getConfig().getBlockStatusCode();
@@ -179,17 +182,21 @@ public class HttpServletResponse {
                 } else {
                     script = Config.getConfig().getBlockHtml().replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId);
                 }
-                if (!isCommitted) {
-                    resetBuffer();
-                    Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, statusCode);
-                    if (statusCode >= 300 && statusCode <= 399) {
-                        setHeader("Location", blockUrl.replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId));
+                if (parameter.getType().equals(CheckParameter.Type.XSS_USERINPUT)) {
+                    CatalinaXssHook.handleXssBlockBuffer(parameter, script);
+                } else {
+                    if (!isCommitted) {
+                        resetBuffer();
+                        Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, statusCode);
+                        if (statusCode >= 300 && statusCode <= 399) {
+                            setHeader("Location", blockUrl.replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId));
+                        }
+                        setIntHeader(CONTENT_LENGTH_HEADER_KEY, script.getBytes().length);
                     }
-                    setIntHeader(CONTENT_LENGTH_HEADER_KEY, script.getBytes().length);
+                    sendContent(script, true);
                 }
-                sendContent(script, true);
             } catch (Exception e) {
-                //ignore
+                LogTool.traceHookWarn("failed to handle block body: " + e.getMessage(), e);
             }
         }
     }

@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import moment from 'moment'
 import { VueLoading } from 'vue-loading-template'
-import { api_request, request } from '../util'
+import { request } from '../util'
 
 Vue.mixin({
   filters: {
@@ -27,7 +27,6 @@ Vue.mixin({
   methods: {
     moment: function(...a) {
       return moment(...a)
-    },
-    api_request: api_request
+    }
   }
 })

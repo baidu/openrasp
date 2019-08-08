@@ -48,12 +48,12 @@ public class CatalinaXssHook extends ServerXssHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(CatalinaXssHook.class, "getBuffer", "$1", Object.class);
+        String src = getInvokeStaticSrc(CatalinaXssHook.class, "getBuffer", "$0,$1", Object.class);
         insertBefore(ctClass, "doWrite", "(Lorg/apache/tomcat/util/buf/ByteChunk;)V", src);
         insertBefore(ctClass, "doWrite", "(Ljava/nio/ByteBuffer;)V", src);
     }
 
-    public static void getBuffer(Object trunk) {
+    public static void getBuffer(Object response, Object trunk) {
         if (HookHandler.isEnableXssHook() && isCheckXss() && trunk != null) {
             HookHandler.disableBodyXssHook();
             HashMap<String, Object> params = new HashMap<String, Object>();
@@ -64,19 +64,22 @@ public class CatalinaXssHook extends ServerXssHook {
                     enc = res.getCharacterEncoding();
                 }
                 if (enc != null) {
+                    params.put("buffer", trunk);
+                    params.put("content_length", Reflection.invokeMethod(response, "getContentLength", new Class[]{}));
+                    params.put("encoding", enc);
                     if (trunk instanceof ByteBuffer) {
                         params.put("html_body", getContentFromByteBuffer((ByteBuffer) trunk, enc));
                     } else {
                         params.put("html_body", getContentFromByteTrunk(trunk, enc));
                     }
+                    // 该处检测添加到 try catch 来捕捉拦截异常，XSS 检测不应该使用异常拦截，容易造成死循环
+                    HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
                 }
             } catch (Exception e) {
                 LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
                         e.getMessage(), e);
-                return;
-            }
-            if (!params.isEmpty()) {
-                HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+            } finally {
+                HookHandler.enableBodyXssHook();
             }
 
         }
@@ -98,6 +101,43 @@ public class CatalinaXssHook extends ServerXssHook {
         byte[] tmp = new byte[end - start];
         System.arraycopy(bytes, start, tmp, 0, end - start);
         return new String(tmp, enc);
+    }
+
+
+    public static void handleXssBlockBuffer(CheckParameter parameter, String script) throws UnsupportedEncodingException {
+        int contentLength = (Integer) parameter.getParam("content_length");
+        Object buffer = parameter.getParam("buffer");
+        byte[] content = script.getBytes(parameter.getParam("encoding").toString());
+        if (buffer instanceof ByteBuffer) {
+            ((ByteBuffer) buffer).clear();
+        } else {
+            Reflection.invokeMethod(buffer, "recycle", new Class[]{});
+        }
+        if (contentLength >= 0) {
+            byte[] fullContent = new byte[contentLength];
+            if (contentLength >= content.length) {
+                for (int i = 0; i < content.length; i++) {
+                    fullContent[i] = content[i];
+                }
+            }
+            for (int i = content.length; i < contentLength; i++) {
+                fullContent[i] = ' ';
+            }
+            writeContentToBuffer(buffer, fullContent);
+        } else {
+            writeContentToBuffer(buffer, content);
+        }
+    }
+
+    private static void writeContentToBuffer(Object buffer, byte[] content) throws UnsupportedEncodingException {
+        if (buffer instanceof ByteBuffer) {
+            ByteBuffer b = (ByteBuffer) buffer;
+            b.put(content, 0, content.length);
+            b.flip();
+        } else {
+            Reflection.invokeMethod(buffer, "setBytes", new Class[]{byte[].class, int.class, int.class},
+                    content, 0, content.length);
+        }
     }
 
 }

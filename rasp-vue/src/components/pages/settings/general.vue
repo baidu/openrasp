@@ -147,13 +147,12 @@ export default {
       this.data = data
     },
     doSave: function() {
-      var self = this
       var body = {
         app_id: this.current_app.id,
         config: self.data
       }
 
-      this.api_request('v1/api/app/general/config', body, function(data) {
+      this.request.post('v1/api/app/general/config', body).then(() => {
         alert('保存成功')
       })
     }

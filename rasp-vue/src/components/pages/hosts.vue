@@ -234,33 +234,27 @@ export default {
       if (!confirm('确认删除? 删除前请先在主机端卸载 OpenRASP agent')) {
         return
       }
-      var self = this
       var body = {
         id: data.id,
         app_id: this.current_app.id
       }
 
-      this.api_request('v1/api/rasp/delete', body, function(
-        data
-      ) {
-        self.loadRaspList(1)
-      })
+      this.request
+        .post('v1/api/rasp/delete', body)
+        .then(() => this.loadRaspList(1))
     },
     deleteExpired: function() {
       if (!confirm('删除离线超过7天的主机？')) {
         return
       }
 
-      var self = this
       var body = {
         app_id: this.current_app.id,
         expire_time: 7 * 24 * 3600
       }
-      this.api_request('v1/api/rasp/delete', body, function(
-        data
-      ) {
-        self.loadRaspList(1)
-      })
+      this.request
+        .post('v1/api/rasp/delete', body)
+        .then(() => this.loadRaspList(1))
     }
   }
 }

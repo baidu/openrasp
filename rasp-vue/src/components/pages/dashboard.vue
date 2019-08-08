@@ -177,7 +177,6 @@ export default {
   },
   methods: {
     loadChartData: function() {
-      var self = this
       var body = {
         app_id: this.current_app.id,
         size: 10,
@@ -187,16 +186,16 @@ export default {
         time_zone: '+08:00'
       }
 
-      this.api_request('v1/api/log/attack/aggr/type', body, function(data) {
-        self.$refs.top_attack_type.setData(data)
+      this.request.post('v1/api/log/attack/aggr/type', body).then(data => {
+        this.$refs.top_attack_type.setData(data)
       })
 
-      this.api_request('v1/api/log/attack/aggr/ua', body, function(data) {
-        self.$refs.top_attack_ua.setData(data)
+      this.request.post('v1/api/log/attack/aggr/ua', body).then(data => {
+        this.$refs.top_attack_ua.setData(data)
       })
 
-      this.api_request('v1/api/log/attack/aggr/time', body, function(data) {
-        self.$refs.event_trend.setData(data)
+      this.request.post('v1/api/log/attack/aggr/time', body).then(data => {
+        this.$refs.event_trend.setData(data)
       })
     }
   }
