@@ -53,10 +53,8 @@ export default {
   },
   methods: {
     doLogin: function() {
-      var next = undefined
-      if (this.$route.query.next) {
-        next = this.$route.query.next
-      }
+      var next = this.$route.query.next
+      console.log (this.$route.query)
 
       return request.post('v1/user/login', {
         username: this.username,
@@ -64,9 +62,9 @@ export default {
       }).then(res => {
         // 如果有跳转地址
         if (next) {
-          // console.log('redirect to', next)
-          // location.href = next
-          // return
+          console.log('redirect to', next)
+          location.href = next
+          return
         }
 
         this.$router.replace({

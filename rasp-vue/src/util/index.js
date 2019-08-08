@@ -215,16 +215,17 @@ request.interceptors.request.use(
 )
 request.interceptors.response.use(
   response => {
-    var next = location.href
-    if (response.config.url.indexOf('/v1/user/login') != -1) {
-      next = undefined
-    } else {
-      console.log('set next', next)
-    }
-
     const res = response.data
     if (res.status !== 0) {
       if (res.status === 401) {
+        // 设置登录回跳地址
+        var next = location.href
+        if (location.hash.indexOf('#/login') != -1) {
+          next = undefined
+        } else {
+          console.log('set next', response.config.url, next)
+        }
+
         Cookie.set('RASP_AUTH_ID', null)
         router.push({ name: 'login', query: { next: next } })
         return Promise.reject(res)
