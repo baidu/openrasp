@@ -48,12 +48,27 @@ export default {
       password: ''
     }
   },
+  mounted: function() {
+
+  },
   methods: {
     doLogin: function() {
+      var next = undefined
+      if (this.$route.query.next) {
+        next = this.$route.query.next
+      }
+
       return request.post('v1/user/login', {
         username: this.username,
         password: this.password
       }).then(res => {
+        // 如果有跳转地址
+        if (next) {
+          // console.log('redirect to', next)
+          // location.href = next
+          // return
+        }
+
         this.$router.replace({
           name: 'dashboard'
         })

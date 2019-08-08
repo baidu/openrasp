@@ -28,7 +28,7 @@ const router = new Router({
       path: '/',
       beforeEnter(to, from, next) {
         if (!Cookie.get('RASP_AUTH_ID') && process.env.NODE_ENV === 'production') {
-          next({ name: 'login' })
+          next({ name: 'login', query: { next: location.href } })
         } else {
           store.dispatch('loadAppList', to.params.app_id)
             .then(() => next())

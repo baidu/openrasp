@@ -1,5 +1,6 @@
 import axios from 'axios'
 import Cookie from 'js-cookie'
+import router from '@/router'
 
 export var rasp_version = '1.2.0'
 
@@ -251,14 +252,21 @@ request.interceptors.request.use(
 )
 request.interceptors.response.use(
   response => {
+    var next = location.href
+    if (response.config.url.indexOf('/v1/user/login') != -1) {
+      next = undefined
+    } else {
+      console.log('set next', next)
+    }
+
     const res = response.data
     if (res.status !== 0) {
       if (res.status === 401) {
         Cookie.set('RASP_AUTH_ID', null)
-        location.href = '/#/login'
-        return
+        router.push({ name: 'login', query: { next: next } })
+        return Promise.reject(res)
       }
-      alert('API 接口出错: ' + res.status + ' - ' + res.description)
+      alert(response.config.url + ' 接口出错: ' + res.status + ' - ' + res.description)
       return Promise.reject(res)
     } else {
       return res.data

@@ -226,6 +226,11 @@ export default {
   },
   mounted: function() {
     this.request.post('v1/api/server/url/get', {}).then(res => {
+      // TODO: logout 接口返回的是 200，所以没有 reject promise
+      if (! res) {
+        return
+      }
+
       if (!res.panel_url) {
         console.log('panel_url not set, initializing')
         var current_url = location.href.split(/\?|#/)[0]
