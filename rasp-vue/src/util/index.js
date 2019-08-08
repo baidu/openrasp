@@ -22,81 +22,76 @@ export var audit_types = {
   1015: '重置插件配置'
 }
 
-export var browser_headers = [
-  {
-    name: 'X-Frame-Options',
-    descr: '点击劫持防护',
-    options: [
-      {
-        name: '不开启',
-        value: undefined
-      },
-      {
-        name: '拒绝 (deny)',
-        value: 'deny'
-      },
-      {
-        name: '只允许同源 (sameorigin)',
-        value: 'sameorigin'
-      }
-    ]
+export var browser_headers = [{
+  name: 'X-Frame-Options',
+  descr: '点击劫持防护',
+  options: [{
+    name: '不开启',
+    value: undefined
   },
   {
-    name: 'X-Content-Type-Options',
-    descr: 'MIME 嗅探防护',
-    options: [
-      {
-        name: '不开启',
-        value: undefined
-      },
-      {
-        name: '开启',
-        value: 'nosniff'
-      }
-    ]
+    name: '拒绝 (deny)',
+    value: 'deny'
   },
   {
-    name: 'X-XSS-Protection',
-    descr: 'XSS Auditor 防护',
-    options: [
-      {
-        name: '不开启',
-        value: undefined
-      },
-      {
-        name: '拦截模式',
-        value: '1; mode=block'
-      }
-    ]
-  },
-  // {
-  //   name: "X-Referrer-Policy",
-  //   descr: "Referrer 保护",
-  //   options: [
-  //     "no-referrer",
-  //     "no-referrer-when-downgrade",
-  //     "same-origin",
-  //     "origin",
-  //     "strict-origin",
-  //     "origin-when-cross-origin",
-  //     "strict-origin-when-cross-origin",
-  //     "unsafe-url"
-  //   ]
-  // },
-  {
-    name: 'X-Download-Options',
-    descr: '文件下载防护',
-    options: [
-      {
-        name: '不开启',
-        value: undefined
-      },
-      {
-        name: '关闭自动运行 (noopen)',
-        value: 'noopen'
-      }
-    ]
+    name: '只允许同源 (sameorigin)',
+    value: 'sameorigin'
   }
+  ]
+},
+{
+  name: 'X-Content-Type-Options',
+  descr: 'MIME 嗅探防护',
+  options: [{
+    name: '不开启',
+    value: undefined
+  },
+  {
+    name: '开启',
+    value: 'nosniff'
+  }
+  ]
+},
+{
+  name: 'X-XSS-Protection',
+  descr: 'XSS Auditor 防护',
+  options: [{
+    name: '不开启',
+    value: undefined
+  },
+  {
+    name: '拦截模式',
+    value: '1; mode=block'
+  }
+  ]
+},
+// {
+//   name: "X-Referrer-Policy",
+//   descr: "Referrer 保护",
+//   options: [
+//     "no-referrer",
+//     "no-referrer-when-downgrade",
+//     "same-origin",
+//     "origin",
+//     "strict-origin",
+//     "origin-when-cross-origin",
+//     "strict-origin-when-cross-origin",
+//     "unsafe-url"
+//   ]
+// },
+{
+  name: 'X-Download-Options',
+  descr: '文件下载防护',
+  options: [{
+    name: '不开启',
+    value: undefined
+  },
+  {
+    name: '关闭自动运行 (noopen)',
+    value: 'noopen'
+  }
+  ]
+}
 ]
 
 export var baseline_types = {
@@ -142,10 +137,9 @@ export var attack_types = {
 
 export var status_types = {
   block: '拦截请求',
-  log: '记录日志',
+  log: '记录日志'
   // ignore: '忽略放行'
 }
-
 
 export function getDefaultConfig() {
   return {
@@ -218,19 +212,18 @@ request.interceptors.response.use(
     const res = response.data
     if (res.status !== 0) {
       if (res.status === 401) {
-        // 设置登录回跳地址
-        var next = location.href
-        if (location.hash.indexOf('#/login') != -1) {
-          next = undefined
-        } else {
-          console.log('set next', response.config.url, next)
-        }
-
         Cookie.set('RASP_AUTH_ID', null)
-        router.push({ name: 'login', query: { next: next } })
-        return Promise.reject(res)
+        if (router.currentRoute.name !== 'login') {
+          router.push({
+            name: 'login',
+            query: {
+              redirect: location.href
+            }
+          })
+        }
+      } else {
+        alert(response.config.url + ' 接口出错: ' + res.status + ' - ' + res.description)
       }
-      alert(response.config.url + ' 接口出错: ' + res.status + ' - ' + res.description)
       return Promise.reject(res)
     } else {
       return res.data

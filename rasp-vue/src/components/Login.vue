@@ -53,23 +53,17 @@ export default {
   },
   methods: {
     doLogin: function() {
-      var next = this.$route.query.next
-      console.log (this.$route.query)
-
       return request.post('v1/user/login', {
         username: this.username,
         password: this.password
       }).then(res => {
-        // 如果有跳转地址
-        if (next) {
-          console.log('redirect to', next)
-          location.href = next
-          return
+        if (this.$route.query.redirect) {
+          location.href = this.$route.query.redirect
+        } else {
+          this.$router.replace({
+            name: 'dashboard'
+          })
         }
-
-        this.$router.replace({
-          name: 'dashboard'
-        })
       })
     }
   }
