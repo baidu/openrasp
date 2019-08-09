@@ -131,7 +131,7 @@ grant all privileges on openrasp.* to 'rasp'@'%' identified by 'rasp123';
 grant all privileges on openrasp.* to 'rasp'@'localhost' identified by 'rasp123';
 </pre>
                 <h4>3. 配置 Fuzz 工具 - 请修正 MySQL 服务器地址</h4>
-                <pre style="white-space: inherit; ">openrasp-iast config -o -a {{ current_app.id }} -b {{ current_app.secret }} -c {{ agent_urls[agent_url_id] }} -m mysql://rasp:rasp123@127.0.0.1/openrasp</pre>
+                <pre style="white-space: inherit; ">openrasp-iast config -a {{ current_app.id }} -b {{ current_app.secret }} -c {{ agent_urls[agent_url_id] }} -m mysql://rasp:rasp123@127.0.0.1/openrasp</pre>
                 <h4>4. 启动 Fuzz 工具</h4>
                 <pre style="white-space: inherit; ">openrasp-iast start -f</pre>
                 <p>-或者后台启动-</p>

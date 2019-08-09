@@ -126,25 +126,19 @@ export default {
       })
     },
     doUpload: function() {
-      var self = this
       var file = this.$refs.fileUpload.file
 
       if (file) {
         var data = new FormData()
         data.append('plugin', file)
 
-        this.api_request(
-          'v1/api/plugin?app_id=' + self.current_app.id,
-          data,
-          function(data) {
-            self.loadPluginList(1)
-            self.$refs.fileUpload.clear()
-          }
-        )
+        this.request.post('v1/api/plugin?app_id=' + this.current_app.id, data).then(() => {
+          this.loadPluginList(1)
+          this.$refs.fileUpload.clear()
+        })
       }
     },
     doDelete: function(row) {
-      var self = this
       var body = {
         id: row.id
       }
@@ -153,24 +147,21 @@ export default {
         return
       }
 
-      this.api_request('v1/api/plugin/delete', body, function(data) {
-        self.loadPluginList(1)
-      })
+      this.request.post('v1/api/plugin/delete', body)
+        .then(() => this.loadPluginList(1))
     },
     doSelect: function(row) {
       if (!confirm('确认下发? 一个心跳周期后生效')) {
         return
       }
 
-      var self = this
       var body = {
-        app_id: self.current_app.id,
+        app_id: this.current_app.id,
         plugin_id: row.id
       }
 
-      self.api_request('v1/api/app/plugin/select', body, function(data) {
-        self.loadAppList(self.current_app.id)
-      })
+      this.request.post('v1/api/app/plugin/select', body)
+        .then(() => this.loadAppList(this.current_app.id))
     }
   },
   components: {

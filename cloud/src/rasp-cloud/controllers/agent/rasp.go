@@ -139,3 +139,8 @@ func (o *RaspController) Post() {
 		"New RASP agent registered from "+rasp.HostName+": "+rasp.Id, "")
 	o.Serve(rasp)
 }
+
+// @router /auth [post]
+func (o *RaspController) Auth() {
+	o.ServeWithEmptyData()
+}

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import Cookie from 'js-cookie'
+import router from '@/router'
 
 export var rasp_version = '1.2.0'
 
@@ -21,81 +22,76 @@ export var audit_types = {
   1015: '重置插件配置'
 }
 
-export var browser_headers = [
-  {
-    name: 'X-Frame-Options',
-    descr: '点击劫持防护',
-    options: [
-      {
-        name: '不开启',
-        value: undefined
-      },
-      {
-        name: '拒绝 (deny)',
-        value: 'deny'
-      },
-      {
-        name: '只允许同源 (sameorigin)',
-        value: 'sameorigin'
-      }
-    ]
+export var browser_headers = [{
+  name: 'X-Frame-Options',
+  descr: '点击劫持防护',
+  options: [{
+    name: '不开启',
+    value: undefined
   },
   {
-    name: 'X-Content-Type-Options',
-    descr: 'MIME 嗅探防护',
-    options: [
-      {
-        name: '不开启',
-        value: undefined
-      },
-      {
-        name: '开启',
-        value: 'nosniff'
-      }
-    ]
+    name: '拒绝 (deny)',
+    value: 'deny'
   },
   {
-    name: 'X-XSS-Protection',
-    descr: 'XSS Auditor 防护',
-    options: [
-      {
-        name: '不开启',
-        value: undefined
-      },
-      {
-        name: '拦截模式',
-        value: '1; mode=block'
-      }
-    ]
-  },
-  // {
-  //   name: "X-Referrer-Policy",
-  //   descr: "Referrer 保护",
-  //   options: [
-  //     "no-referrer",
-  //     "no-referrer-when-downgrade",
-  //     "same-origin",
-  //     "origin",
-  //     "strict-origin",
-  //     "origin-when-cross-origin",
-  //     "strict-origin-when-cross-origin",
-  //     "unsafe-url"
-  //   ]
-  // },
-  {
-    name: 'X-Download-Options',
-    descr: '文件下载防护',
-    options: [
-      {
-        name: '不开启',
-        value: undefined
-      },
-      {
-        name: '关闭自动运行 (noopen)',
-        value: 'noopen'
-      }
-    ]
+    name: '只允许同源 (sameorigin)',
+    value: 'sameorigin'
   }
+  ]
+},
+{
+  name: 'X-Content-Type-Options',
+  descr: 'MIME 嗅探防护',
+  options: [{
+    name: '不开启',
+    value: undefined
+  },
+  {
+    name: '开启',
+    value: 'nosniff'
+  }
+  ]
+},
+{
+  name: 'X-XSS-Protection',
+  descr: 'XSS Auditor 防护',
+  options: [{
+    name: '不开启',
+    value: undefined
+  },
+  {
+    name: '拦截模式',
+    value: '1; mode=block'
+  }
+  ]
+},
+// {
+//   name: "X-Referrer-Policy",
+//   descr: "Referrer 保护",
+//   options: [
+//     "no-referrer",
+//     "no-referrer-when-downgrade",
+//     "same-origin",
+//     "origin",
+//     "strict-origin",
+//     "origin-when-cross-origin",
+//     "strict-origin-when-cross-origin",
+//     "unsafe-url"
+//   ]
+// },
+{
+  name: 'X-Download-Options',
+  descr: '文件下载防护',
+  options: [{
+    name: '不开启',
+    value: undefined
+  },
+  {
+    name: '关闭自动运行 (noopen)',
+    value: 'noopen'
+  }
+  ]
+}
 ]
 
 export var baseline_types = {
@@ -141,10 +137,9 @@ export var attack_types = {
 
 export var status_types = {
   block: '拦截请求',
-  log: '记录日志',
+  log: '记录日志'
   // ignore: '忽略放行'
 }
-
 
 export function getDefaultConfig() {
   return {
@@ -192,43 +187,6 @@ export function attack_type2name(id) {
   return attack_types[id] || id
 }
 
-export function api_request(url, data, cb, err_cb) {
-  var prefix = '/'
-
-  // 本地开发
-  if (process.env.NODE_ENV !== 'production') {
-    prefix = 'http://scloud.baidu.com:8090/'
-
-    axios.defaults.headers['X-OpenRASP-Token'] =
-      '9256a3555fbd4f24f7a2ba915a32261ab4c720fc'
-  }
-
-  axios
-    .post(prefix + url, data)
-    .then(function(response) {
-      if (response.status != 200) {
-        alert('HTTP 请求出错: 响应码 ' + response.status)
-      } else if (response.data.status != 0) {
-        if (err_cb) {
-          err_cb(response.data.status, response.data.description)
-        } else {
-          alert(
-            'API 接口出错: ' +
-              response.data.status +
-              ' - ' +
-              response.data.description
-          )
-        }
-      } else {
-        console.log(url, response.data.data)
-        cb(response.data.data)
-      }
-    })
-    .catch(function(error) {
-      console.log('axios 错误: ', url, error)
-    })
-}
-
 export const request = axios.create({
   baseURL:
     process.env.NODE_ENV === 'production'
@@ -255,10 +213,17 @@ request.interceptors.response.use(
     if (res.status !== 0) {
       if (res.status === 401) {
         Cookie.set('RASP_AUTH_ID', null)
-        location.href = '/#/login'
-        return
+        if (router.currentRoute.name !== 'login') {
+          router.push({
+            name: 'login',
+            query: {
+              redirect: location.href
+            }
+          })
+        }
+      } else {
+        alert(response.config.url + ' 接口出错: ' + res.status + ' - ' + res.description)
       }
-      alert('API 接口出错: ' + res.status + ' - ' + res.description)
       return Promise.reject(res)
     } else {
       return res.data

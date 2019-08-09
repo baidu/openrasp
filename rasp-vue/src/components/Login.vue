@@ -48,15 +48,22 @@ export default {
       password: ''
     }
   },
+  mounted: function() {
+
+  },
   methods: {
     doLogin: function() {
       return request.post('v1/user/login', {
         username: this.username,
         password: this.password
       }).then(res => {
-        this.$router.replace({
-          name: 'dashboard'
-        })
+        if (this.$route.query.redirect) {
+          location.href = this.$route.query.redirect
+        } else {
+          this.$router.replace({
+            name: 'dashboard'
+          })
+        }
       })
     }
   }

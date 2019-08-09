@@ -506,7 +506,7 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 				o.ServeError(http.StatusBadRequest,
 					"the value of config item '"+key+"' can not be less than 0")
 			} else if key == "plugin.timeout.millis" || key == "body.maxbytes" || key == "syslog.reconnect_interval" ||
-				key == "ognl.expression.minlength"{
+				key == "ognl.expression.minlength" {
 				if v == 0 {
 					o.ServeError(http.StatusBadRequest,
 						"the value of config item '"+key+"' must be greater than 0")
@@ -682,7 +682,7 @@ func (o *AppController) TestEmail() {
 }
 
 // @router /ding/test [post]
-func (o *AppController) TestDing(config map[string]interface{}) {
+func (o *AppController) TestDing() {
 	var param map[string]string
 	o.UnmarshalJson(&param)
 	appId := param["app_id"]
@@ -704,7 +704,7 @@ func (o *AppController) TestDing(config map[string]interface{}) {
 }
 
 // @router /http/test [post]
-func (o *AppController) TestHttp(config map[string]interface{}) {
+func (o *AppController) TestHttp() {
 	var param map[string]string
 	o.UnmarshalJson(&param)
 	appId := param["app_id"]
@@ -726,7 +726,7 @@ func (o *AppController) TestHttp(config map[string]interface{}) {
 }
 
 // @router /plugin/latest [post]
-func (o *AppController) CheckPluginLatest(config map[string]interface{}) {
+func (o *AppController) CheckPluginLatest() {
 	var param map[string]string
 	o.UnmarshalJson(&param)
 	appId := param["app_id"]

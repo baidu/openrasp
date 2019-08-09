@@ -129,7 +129,6 @@ public class CustomClassTransformer implements ClassFileTransformer {
                 }
             } catch (Exception e) {
                 LogTool.error(ErrorType.HOOK_ERROR, "add hook failed: " + e.getMessage(), e);
-                String message = "add hook failed";
             }
         }
     }
@@ -185,7 +184,6 @@ public class CustomClassTransformer implements ClassFileTransformer {
         }
 
         if (!isDubboNecessaryHookComplete && dubboNecessaryHookType.contains(type)) {
-            System.out.println(type);
             dubboNecessaryHookType.remove(type);
             if (dubboNecessaryHookType.isEmpty()) {
                 isDubboNecessaryHookComplete = true;

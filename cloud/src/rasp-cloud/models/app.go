@@ -693,8 +693,19 @@ func sendNormalEmail(emailConf EmailAlarmConf, auth smtp.Auth, msg string) (err 
 
 func sendEmailWithTls(emailConf EmailAlarmConf, auth smtp.Auth, msg string) error {
 	client, err := smtpTlsDial(emailConf.ServerAddr)
+	if err != nil && !strings.Contains(err.Error(), "timeout") {
+		conn, err := net.DialTimeout("tcp", emailConf.ServerAddr, time.Second*5)
+		if err != nil {
+			return handleError("failed to dial with email server: " + err.Error())
+		}
+		host, _, _ := net.SplitHostPort(emailConf.ServerAddr)
+		client, err = smtp.NewClient(conn, host)
+		if err != nil {
+			return handleError("failed to dial with email server: " + err.Error())
+		}
+	}
 	if err != nil {
-		return handleError("failed to start tls: " + err.Error())
+		return handleError("failed to start tls dial: " + err.Error())
 	}
 	if client.Text != nil {
 		defer client.Close()

@@ -24,18 +24,23 @@ PRE_HOOK_FUNCTION(move_uploaded_file, FILE_UPLOAD);
 
 void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval **name, **dest;
-    int argc = MIN(2, ZEND_NUM_ARGS());
-    if (argc == 2 &&
-        SG(rfc1867_uploaded_files) != NULL &&
-        zend_get_parameters_ex(argc, &name, &dest) == SUCCESS &&
-        Z_TYPE_PP(name) == IS_STRING &&
-        Z_TYPE_PP(dest) == IS_STRING &&
-        zend_hash_exists(SG(rfc1867_uploaded_files), Z_STRVAL_PP(name), Z_STRLEN_PP(name) + 1) &&
+    char *path, *new_path;
+    int path_len, new_path_len;
+
+    if (!SG(rfc1867_uploaded_files))
+    {
+        return;
+    }
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &new_path, &new_path_len) == FAILURE)
+    {
+        return;
+    }
+    if (zend_hash_exists(SG(rfc1867_uploaded_files), path, path_len + 1) &&
         (PG(http_globals)[TRACK_VARS_FILES] || zend_is_auto_global(ZEND_STRL("_FILES") TSRMLS_CC)))
     {
         zval **realname = nullptr;
         std::string form_data_name;
+        std::string realname_str;
         HashTable *ht = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_FILES]);
         for (zend_hash_internal_pointer_reset(ht);
              zend_hash_has_more_elements(ht) == SUCCESS;
@@ -54,12 +59,14 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
                 Z_TYPE_PP(file) != IS_ARRAY ||
                 zend_hash_find(Z_ARRVAL_PP(file), ZEND_STRS("tmp_name"), (void **)&tmp_name) != SUCCESS ||
                 Z_TYPE_PP(tmp_name) != IS_STRING ||
-                zend_binary_strcmp(Z_STRVAL_PP(tmp_name), Z_STRLEN_PP(tmp_name), Z_STRVAL_PP(name), Z_STRLEN_PP(name)) != 0)
+                zend_binary_strcmp(Z_STRVAL_PP(tmp_name), Z_STRLEN_PP(tmp_name), path, path_len) != 0)
             {
                 continue;
             }
-            if (zend_hash_find(Z_ARRVAL_PP(file), ZEND_STRS("name"), (void **)&realname) == SUCCESS)
+            if (zend_hash_find(Z_ARRVAL_PP(file), ZEND_STRS("name"), (void **)&realname) == SUCCESS &&
+                IS_STRING == Z_TYPE_PP(realname))
             {
+                realname_str = std::string(Z_STRVAL_PP(realname), Z_STRLEN_PP(realname));
                 if (type == HASH_KEY_IS_STRING)
                 {
                     form_data_name = std::string(key);
@@ -72,11 +79,7 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
                 break;
             }
         }
-        if (!realname)
-        {
-            realname = dest;
-        }
-        php_stream *stream = php_stream_open_wrapper(Z_STRVAL_PP(name), "rb", 0, NULL);
+        php_stream *stream = php_stream_open_wrapper(path, "rb", 0, NULL);
         if (stream)
         {
             char *contents;
@@ -86,12 +89,15 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
             {
                 openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
                 openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+                std::string real_dest = openrasp_real_path(new_path, new_path_len, 0, WRITING TSRMLS_CC);
                 if (isolate)
                 {
                     v8::HandleScope handle_scope(isolate);
                     auto params = v8::Object::New(isolate);
                     params->Set(openrasp::NewV8String(isolate, "name"), openrasp::NewV8String(isolate, form_data_name));
-                    params->Set(openrasp::NewV8String(isolate, "filename"), openrasp::NewV8String(isolate, Z_STRVAL_PP(realname), Z_STRLEN_PP(realname)));
+                    params->Set(openrasp::NewV8String(isolate, "filename"), openrasp::NewV8String(isolate, realname_str));
+                    params->Set(openrasp::NewV8String(isolate, "dest_path"), openrasp::NewV8String(isolate, new_path, new_path_len));
+                    params->Set(openrasp::NewV8String(isolate, "dest_realpath"), openrasp::NewV8String(isolate, real_dest));
                     params->Set(openrasp::NewV8String(isolate, "content"), openrasp::NewV8String(isolate, contents, MIN(len, 4 * 1024)));
                     check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
                 }

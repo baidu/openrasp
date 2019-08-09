@@ -7,6 +7,8 @@ $plugin = <<<EOF
 plugin.register('fileUpload', params => {
     assert(params.name == 'pics')
     assert(params.filename == 'file1.txt')
+    assert(params.dest_path == '/tmp/openrasp/file1.txt')
+    assert(params.dest_realpath == '/tmp/openrasp/file1.txt')
     assert(params.content == 'abcdef123456789')
     return block
 })

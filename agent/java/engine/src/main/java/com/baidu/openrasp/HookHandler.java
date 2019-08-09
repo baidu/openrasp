@@ -297,10 +297,10 @@ public class HookHandler {
         }
     }
 
-    private static void handleBlock() {
+    private static void handleBlock(CheckParameter parameter) {
         SecurityException securityException = new SecurityException("Request blocked by OpenRASP");
         if (responseCache.get() != null) {
-            responseCache.get().sendError();
+            responseCache.get().sendError(parameter);
         }
         throw securityException;
     }
@@ -335,9 +335,9 @@ public class HookHandler {
         }
         boolean enableHookCache = enableCurrThreadHook.get();
         boolean isBlock = false;
+        CheckParameter parameter = new CheckParameter(type, params);
         try {
             enableCurrThreadHook.set(false);
-            CheckParameter parameter = new CheckParameter(type, params);
             isBlock = CheckerManager.check(type, parameter);
         } catch (Exception e) {
             LogTool.error(ErrorType.PLUGIN_ERROR,
@@ -352,7 +352,7 @@ public class HookHandler {
             }
         }
         if (isBlock) {
-            handleBlock();
+            handleBlock(parameter);
         }
     }
 

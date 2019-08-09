@@ -48,9 +48,7 @@ func init() {
             Method: "TestDing",
             Router: `/ding/test`,
             AllowHTTPMethods: []string{"post"},
-            MethodParams: param.Make(
-				param.New("config"),
-			),
+            MethodParams: param.Make(),
             Filters: nil,
             Params: nil})
 
@@ -86,9 +84,7 @@ func init() {
             Method: "TestHttp",
             Router: `/http/test`,
             AllowHTTPMethods: []string{"post"},
-            MethodParams: param.Make(
-				param.New("config"),
-			),
+            MethodParams: param.Make(),
             Filters: nil,
             Params: nil})
 
@@ -106,9 +102,7 @@ func init() {
             Method: "CheckPluginLatest",
             Router: `/plugin/latest`,
             AllowHTTPMethods: []string{"post"},
-            MethodParams: param.Make(
-				param.New("config"),
-			),
+            MethodParams: param.Make(),
             Filters: nil,
             Params: nil})
 
