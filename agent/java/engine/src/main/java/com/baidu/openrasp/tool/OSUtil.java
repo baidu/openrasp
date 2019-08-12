@@ -17,9 +17,9 @@
 package com.baidu.openrasp.tool;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.NativePatches;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.model.NicModel;
-import com.baidu.openrasp.NativePatches;
 import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
@@ -32,13 +32,10 @@ import java.util.LinkedList;
 
 public class OSUtil {
 
-    private static InetAddress inetAddress;
-
     public static String getHostName() {
+        InetAddress inetAddress;
         try {
-            if (inetAddress == null) {
-                inetAddress = InetAddress.getLocalHost();
-            }
+            inetAddress = InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
             inetAddress = null;
         }
@@ -61,9 +58,6 @@ public class OSUtil {
                     }
                 }
             } else {
-                if (inetAddress == null) {
-                    inetAddress = InetAddress.getLocalHost();
-                }
                 Enumeration allNetInterfaces = null;
                 allNetInterfaces = NetworkInterface.getNetworkInterfaces();
 
