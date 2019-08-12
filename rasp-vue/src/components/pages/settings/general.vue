@@ -152,6 +152,10 @@ export default {
         config: self.data
       }
 
+      // v1.2 之后，agent 删除 log.maxstack 配置
+      // 为了让 v1.2 之后的后台兼容 v1.2 之前的 agent，前端来同步两个配置
+      self.data['log.maxstack'] = self.data['plugin.maxstack']
+
       this.request.post('v1/api/app/general/config', body).then(() => {
         alert('保存成功')
       })
