@@ -53,6 +53,7 @@ function add_hook(hook_type, params, context) {
     }
 
     params.hook_type = hook_type
+    params.stack = params.stack
     cache[request_id].push(params)
 }
 
