@@ -9,7 +9,6 @@
 # plugin.filter: true
 # plugin.maxstack: 100
 # ognl.expression.minlength: 30
-# log.maxstack: 10
 # clientip.header: ClientIP
 # lru.max_size: 100
 # inject.urlprefix:

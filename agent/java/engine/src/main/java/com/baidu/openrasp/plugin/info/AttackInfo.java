@@ -21,6 +21,7 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.tool.OSUtil;
+import com.baidu.openrasp.tool.StackTrace;
 import com.baidu.openrasp.tool.decompile.Decompiler;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 
@@ -96,7 +97,7 @@ public class AttackInfo extends EventInfo {
         // 攻击参数
         info.put("attack_params", parameter.getParams());
         // 攻击调用栈
-        StackTraceElement[] trace = filter(new Throwable().getStackTrace());
+        StackTraceElement[] trace = StackTrace.filter(new Throwable().getStackTrace());
         info.put("stack_trace", stringify(trace) != null ? stringify(trace).trim() : null);
         // 检测插件
         info.put("plugin_name", this.pluginName);
