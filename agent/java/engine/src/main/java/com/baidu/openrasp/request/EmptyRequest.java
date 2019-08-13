@@ -115,7 +115,7 @@ public class EmptyRequest extends AbstractRequest {
     }
 
     @Override
-    public String getClinetIp() {
+    public String getClientIp() {
         return null;
     }
 

@@ -275,10 +275,10 @@ public class CoyoteRequest extends AbstractRequest {
     /**
      * (none-javadoc)
      *
-     * @see AbstractRequest#getClinetIp()
+     * @see AbstractRequest#getClientIp()
      */
     @Override
-    public String getClinetIp() {
+    public String getClientIp() {
         return null;
     }
 

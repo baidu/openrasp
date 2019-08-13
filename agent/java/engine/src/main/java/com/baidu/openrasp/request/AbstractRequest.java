@@ -268,7 +268,7 @@ public abstract class AbstractRequest {
      *
      * @return 自定义的clientip
      */
-    public abstract String getClinetIp();
+    public abstract String getClientIp();
 
     /**
      * 返回HTTP request body

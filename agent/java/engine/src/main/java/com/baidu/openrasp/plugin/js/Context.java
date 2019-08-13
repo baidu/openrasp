@@ -278,7 +278,7 @@ public class Context extends com.baidu.openrasp.v8.Context {
 
     public String getClientIp() {
         try {
-            return request.getClinetIp();
+            return request.getClientIp();
         } catch (Exception e) {
             return "";
         }

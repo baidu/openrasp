@@ -224,7 +224,7 @@ public class Config extends FileScanListener {
                             temp.putAll(parseHookWhite(hooks));
                         }
                     }
-                    HookWhiteModel.init(temp);
+                    setHooksWhite(temp);
                     continue;
                 }
                 if (item.key.equals(RESPONSE_HEADERS)) {
@@ -268,7 +268,7 @@ public class Config extends FileScanListener {
                 }
             }
         }
-        HookWhiteModel.init(temp);
+        setHooksWhite(temp);
     }
 
     private void reloadConfig(File file) {
@@ -1088,6 +1088,12 @@ public class Config extends FileScanListener {
      */
     public synchronized void setResponseHeaders(Map<String, String> responseHeaders) {
         this.responseHeaders = responseHeaders;
+        LOGGER.info(RESPONSE_HEADERS + ": " + responseHeaders);
+    }
+
+    public synchronized void setHooksWhite(TreeMap<String, Integer> whiteList) {
+        HookWhiteModel.init(whiteList);
+        LOGGER.info(HOOKS_WHITE + ": " + whiteList);
     }
 
     /**

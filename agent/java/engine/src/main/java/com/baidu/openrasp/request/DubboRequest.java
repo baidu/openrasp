@@ -124,7 +124,7 @@ public class DubboRequest extends AbstractRequest {
     }
 
     @Override
-    public String getClinetIp() {
+    public String getClientIp() {
         return null;
     }
 

@@ -121,7 +121,7 @@ public class AttackInfo extends EventInfo {
             // 攻击来源IP
             info.put("attack_source", request.getRemoteAddr());
             // 攻击真实IP
-            info.put("client_ip", request.getClinetIp());
+            info.put("client_ip", request.getClientIp());
             // 服务器ip
             info.put("server_nic", OSUtil.getIpAddress());
             // 被攻击目标域名
