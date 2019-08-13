@@ -38,6 +38,7 @@ function buildOpenraspV8 {
 	cd $BASE_DIR
 	GIT_LFS_SKIP_SMUDGE=1 git submodule update --init
 	cd openrasp-v8/java
+	git fetch --tags
 	./fetch_native_libraries.sh
 	mvn clean install
 	cd $BASE_DIR
