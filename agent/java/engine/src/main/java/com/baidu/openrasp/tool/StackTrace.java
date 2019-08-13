@@ -75,7 +75,7 @@ public class StackTrace {
     }
 
     //去掉包含rasp的堆栈
-    private static StackTraceElement[] filter(StackTraceElement[] trace) {
+    public static StackTraceElement[] filter(StackTraceElement[] trace) {
         int i = 0;
         // 去除插件本身调用栈
         while (i < trace.length && (trace[i].getClassName().startsWith("com.baidu.openrasp")

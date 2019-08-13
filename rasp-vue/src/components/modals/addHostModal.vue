@@ -123,7 +123,7 @@ RUN cd /tmp \
               </div>
               <div id="iast-tab" class="tab-pane fade">
                 <h4>1. 下载 Fuzz 工具</h4>
-                <pre style="white-space: inherit; ">pip install git+https://github.com/baidu-security/openrasp-iast</pre>
+                <pre style="white-space: inherit; ">pip3 install git+https://github.com/baidu-security/openrasp-iast</pre>
                 <h4>2. 配置 MySQL 服务器 - 使用 MySQL root 账号执行以下命令授权</h4>
                 <pre>DROP DATABASE IF EXISTS openrasp;
 CREATE DATABASE openrasp;

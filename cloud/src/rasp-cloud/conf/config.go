@@ -17,6 +17,7 @@ package conf
 import (
 	"rasp-cloud/tools"
 	"github.com/astaxie/beego"
+	"strings"
 )
 
 const (
@@ -27,11 +28,11 @@ const (
 )
 
 type RaspAppConfig struct {
-	EsAddr                string
+	EsAddr                []string
 	EsUser                string
 	EsPwd                 string
 	EsTTL                 int64
-	MongoDBAddr           string
+	MongoDBAddr           []string
 	MongoDBUser           string
 	MongoDBPwd            string
 	MongoDBName           string
@@ -60,11 +61,11 @@ var (
 func InitConfig(startFlag *Flag) {
 	initConstConfig()
 	AppConfig.Flag = startFlag
-	AppConfig.EsAddr = beego.AppConfig.String("EsAddr")
+	AppConfig.EsAddr = initArrayConfig(strings.Split(beego.AppConfig.String("EsAddr"), ","))
 	AppConfig.EsUser = beego.AppConfig.DefaultString("EsUser", "")
 	AppConfig.EsPwd = beego.AppConfig.DefaultString("EsPwd", "")
 	AppConfig.EsTTL = beego.AppConfig.DefaultInt64("EsTTL", 365)
-	AppConfig.MongoDBAddr = beego.AppConfig.DefaultString("MongoDBAddr", "")
+	AppConfig.MongoDBAddr = initArrayConfig(strings.Split(beego.AppConfig.String("MongoDBAddr"), ","))
 	AppConfig.MongoDBPoolLimit = beego.AppConfig.DefaultInt("MongoDBPoolLimit", 1024)
 	AppConfig.MongoDBName = beego.AppConfig.DefaultString("MongoDBName", "openrasp")
 	AppConfig.MongoDBUser = beego.AppConfig.DefaultString("MongoDBUser", "")
@@ -79,16 +80,23 @@ func InitConfig(startFlag *Flag) {
 	ValidRaspConf(AppConfig)
 }
 
+func initArrayConfig(config []string) []string {
+	for i, item := range config {
+		config[i] = strings.TrimSpace(item)
+	}
+	return config
+}
+
 func initConstConfig() {
 	beego.AppConfig.Set("gzipCompressLevel", "2")
 	beego.AppConfig.Set("includedMethods", "GET;POST")
 }
 
 func ValidRaspConf(config *RaspAppConfig) {
-	if config.EsAddr == "" {
+	if len(config.EsAddr) == 0 {
 		failLoadConfig("the 'EsAddr' config item in app.conf can not be empty")
 	}
-	if config.MongoDBAddr == "" {
+	if len(config.MongoDBAddr) == 0 {
 		failLoadConfig("the 'MongoDBAddr' config item in app.conf can not be empty")
 	}
 
