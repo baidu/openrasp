@@ -723,7 +723,6 @@ public class Config extends FileScanListener {
         this.blockXml = blockXml;
     }
 
-
     /**
      * 获取响应的contentType类型
      *

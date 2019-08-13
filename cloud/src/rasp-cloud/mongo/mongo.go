@@ -37,7 +37,7 @@ var (
 func init() {
 	var err error
 	dialInfo := &mgo.DialInfo{
-		Addrs:     []string{conf.AppConfig.MongoDBAddr},
+		Addrs:     conf.AppConfig.MongoDBAddr,
 		Username:  conf.AppConfig.MongoDBUser,
 		Password:  conf.AppConfig.MongoDBPwd,
 		Direct:    false,
