@@ -20,6 +20,11 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.lang.instrument.Instrumentation;
 import java.net.URLDecoder;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.lang.reflect.Method;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
 
 /**
  * Created by tyy on 18-1-23.
@@ -70,6 +75,10 @@ public class ModuleLoader {
      * @param inst {@link java.lang.instrument.Instrumentation}
      */
     private ModuleLoader(String mode, Instrumentation inst) throws Throwable {
+
+        if(Module.START_MODE_NORMAL == mode) {
+            setStarupOptionForJboss();
+        }
         engineContainer = new ModuleContainer(ENGINE_JAR);
         engineContainer.start(mode, inst);
     }
@@ -132,5 +141,163 @@ public class ModuleLoader {
             return false;
         }
     }
+
+
+    /**
+     *判断当前进程是否为jboss7 版本，并设置相关属性和预加载包
+     */
+    public static void setStarupOptionForJboss(){
+        String jbossHome = "";
+        boolean isJboss = false;
+        String splitChar = System.getProperty("path.separator") == null ? ";" : System.getProperty("path.separator");
+        String jarPaths[] = System.getProperty("java.class.path").split(splitChar) ;
+        for(int i=0; i<jarPaths.length; ++i)
+        {
+            if(jarPaths[i].endsWith("jboss-modules.jar"))
+            {
+                File jarFile = new File(jarPaths[i]);
+                if(null != jarFile) {
+                    jbossHome = jarFile.getParent();
+                }
+                isJboss = true;
+                break;
+            }
+        }
+
+        if(isJboss) {
+            String moduleBaseDir = "";
+            File moduleBase = new File(jbossHome + "/modules/system/layers/base");
+            if (null != moduleBase && moduleBase.isDirectory()) {
+                moduleBaseDir = jbossHome + "/modules/system/layers/base";
+            } else {
+                moduleBaseDir = jbossHome + "/modules";
+            }
+            setSystemProperty(moduleBaseDir);
+        }
+    }
+
+    /**
+     * 设置jboss的jboss.modules.system.pkgs，java.util.logging.manager，以及对logmanager的预加载项
+     * @param moduleBaseDir
+     */
+    public static void setSystemProperty(String moduleBaseDir) {
+
+        String pkgs = System.getProperty("jboss.modules.system.pkgs");
+        if(null != pkgs && false == pkgs.contains("baidu.openrasp")) {
+            pkgs = System.setProperty("jboss.modules.system.pkgs", pkgs + ",org.jboss.logmanager,com.baidu.openrasp,com.sdwaf,javax.servlet,javax.el");
+            System.out.println("default pkgs = " + pkgs);
+        }
+
+        String logManager = System.getProperty("java.util.logging.manager");
+        if(null == logManager || logManager.isEmpty()) {
+            System.setProperty("java.util.logging.manager","org.jboss.logmanager.LogManager");
+        }else if(false == logManager.contains("org.jboss.logmanager.LogManager")) {
+            System.setProperty("java.util.logging.manager",logManager + ",org.jboss.logmanager.LogManager");
+            System.out.println("add logmanager on old value="+logManager);
+        }
+
+        String logBootPath = ""; 
+	String splitChar = System.getProperty("path.separator") == null ? ";" : System.getProperty("path.separator");
+        logBootPath = apendPathAfterLoadJar(logBootPath, moduleBaseDir + "/org/jboss/logmanager/main/", "jboss-logmanager-");
+        logBootPath = apendPathAfterLoadJar(logBootPath, moduleBaseDir + "/org/jboss/log4j/logmanager/main/", "jboss-logmanager-");//wildfly8+ 
+        logBootPath = apendPathAfterLoadJar(logBootPath, moduleBaseDir + "/org/jboss/logmanager/log4j/main/", "jboss-logmanager-");//jboss-as7
+        logBootPath = apendPathAfterLoadJar(logBootPath, moduleBaseDir + "/org//apache//log4j/main/","log4j-");//jboss-as7
+        logBootPath = apendPathAfterLoadJar(logBootPath, moduleBaseDir + "/org/wildfly/common/main/","wildfly-common-");//wildfly16
+        String bootClasspath = System.getProperty("sun.boot.class.path");
+        if(null == bootClasspath || bootClasspath.isEmpty()) {
+            System.setProperty("sun.boot.class.path",logBootPath);
+        }else if(false == bootClasspath.contains("jboss-logmanager")) {
+            logBootPath = logBootPath + splitChar + bootClasspath;
+            System.setProperty("sun.boot.class.path",logBootPath);
+            System.out.println("add boot classpath on value="+logBootPath);
+        }
+	
+	loadJarFromPath(moduleBaseDir+"/javax/servlet/jsp/api/main/","jsp-api");
+    	loadJarFromPath(moduleBaseDir+"/javax/servlet/jstl/api/main/","jstl-api");
+        loadJarFromPath(moduleBaseDir+"/javax/servlet/jstl/api/main/","taglibs-standard-");//wildfly16
+    	loadJarFromPath(moduleBaseDir+"/javax/el/api/main/","el-api");
+    	loadJarFromPath(moduleBaseDir+"/javax/servlet/api/main/","servlet-api");
+    }
+
+    public static String apendPathAfterLoadJar(String oldPath, String libPath, String jarName){
+        String newPath = oldPath;
+        String splitChar = System.getProperty("path.separator") == null ? ";" : System.getProperty("path.separator");
+        String jarPath = loadJarFromPath( libPath,jarName);
+        if(false == jarPath.isEmpty()) {
+            newPath = oldPath.isEmpty() ? jarPath : jarPath + splitChar + oldPath;
+        }
+        return newPath;
+    }
+    /*
+    *从路径加载文件名称匹配项
+     */
+    public static String loadJarFromPath(String libPath,String jarName)
+    {
+        //boolean bLoaded = false;
+        String jarPath = "";
+        File libDir = new File(libPath);
+        if(false == libDir.isDirectory()) {
+            System.out.println("library path:"+libPath+" is not directory.");
+            return jarPath;
+        }
+        File[] jarFiles = libDir.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return (name.endsWith(".jar"));
+            }
+        });
+        for (File file : jarFiles) {
+            String filePath = file.getAbsolutePath();
+            if (filePath != null) {
+                if (filePath.contains(jarName)) {
+                    loadJar(file);
+                    jarPath = file.getAbsolutePath();
+                }
+            }
+        }
+        return jarPath;
+    }
+
+    public static boolean loadJar(File file){
+        Boolean loadResult = true;
+        try {
+            Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[] { URL.class });
+            boolean accessible = method.isAccessible();
+            try {
+                if (!accessible) {
+                    method.setAccessible(true);
+                }
+                try {
+                    URL url = file.toURI().toURL();
+                    if(moduleClassLoader instanceof URLClassLoader) {
+                        method.invoke(moduleClassLoader, new Object[] { url });
+                    } else if (ModuleLoader.isCustomClassloader()) {
+                        moduleClassLoader = ClassLoader.getSystemClassLoader();
+                        method = moduleClassLoader.getClass().getDeclaredMethod("appendToClassPathForInstrumentation", String.class);
+                        method.setAccessible(true);
+                        try {
+                            method.invoke(moduleClassLoader, file.getCanonicalPath());
+                        } catch (Exception e) {
+                            method.invoke(moduleClassLoader, file.getAbsolutePath());
+                        }
+                    }
+                } catch (Exception localException) {
+                    loadResult = false;
+                    localException.printStackTrace();
+                }
+
+            } finally {
+                method.setAccessible(accessible);
+            }
+        } catch (NoSuchMethodException e1) {
+            loadResult = false;
+            e1.printStackTrace();
+        } catch (SecurityException e1) {
+            loadResult = false;
+            e1.printStackTrace();
+        }
+        //System.out.println("Load jar path:"+file.getAbsolutePath()+", return:"+loadResult);
+        return loadResult;
+    }
+
 
 }
