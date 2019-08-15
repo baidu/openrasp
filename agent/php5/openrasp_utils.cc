@@ -36,6 +36,7 @@ extern "C"
 #include "ext/standard/php_string.h"
 #include "ext/standard/php_smart_str.h"
 #include "Zend/zend_builtin_functions.h"
+#include "zend_extensions.h"
 }
 
 using openrasp::DebugTrace;
@@ -391,4 +392,11 @@ std::string get_phpversion()
         zval_dtor(&retval);
     }
     return version;
+}
+
+void openrasp_zend_activate()
+{
+    TSRMLS_FETCH();
+    zend_llist_clean(&zend_extensions);
+    zend_activate(TSRMLS_C);
 }

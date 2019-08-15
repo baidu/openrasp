@@ -174,11 +174,12 @@ bool OpenraspAgentManager::process_agent_startup()
 	else if (pid == 0)
 	{
 		int fd;
-		if (-1 != (fd = open("/dev/null", O_RDONLY))) {
+		if (-1 != (fd = open("/dev/null", O_RDONLY)))
+		{
 			close(STDIN_FILENO);
 			dup2(fd, STDIN_FILENO);
 			close(fd);
-		}		
+		}
 		setsid();
 		supervisor_run();
 	}
@@ -218,7 +219,7 @@ void OpenraspAgentManager::supervisor_run()
 	sigaction(SIGCHLD, &sa_usr, NULL);
 
 	super_install_signal_handler();
-	zend_activate();
+	openrasp_zend_activate();
 	while (true)
 	{
 		update_log_level();
