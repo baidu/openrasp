@@ -37,6 +37,7 @@ extern "C"
 #include "ext/standard/php_string.h"
 #include "ext/standard/php_smart_str.h"
 #include "Zend/zend_builtin_functions.h"
+#include "zend_extensions.h"
 }
 
 using openrasp::DebugTrace;
@@ -443,4 +444,29 @@ std::map<std::string, std::string> get_env_map()
         }
     }
     return result;
+}
+
+std::string get_phpversion()
+{
+    std::string version;
+    TSRMLS_FETCH();
+    zval function_name, retval;
+    INIT_ZVAL(function_name);
+    ZVAL_STRING(&function_name, "phpversion", 0);
+    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, 0, nullptr TSRMLS_CC) == SUCCESS)
+    {
+        if (Z_TYPE(retval) == IS_STRING)
+        {
+            version = std::string(Z_STRVAL(retval), Z_STRLEN(retval));
+        }
+        zval_dtor(&retval);
+    }
+    return version;
+}
+
+void openrasp_zend_activate()
+{
+    TSRMLS_FETCH();
+    zend_llist_clean(&zend_extensions);
+    zend_activate(TSRMLS_C);
 }

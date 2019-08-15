@@ -39,7 +39,7 @@ func init() {
 	ttlIndexes <- make(map[string]time.Duration)
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
 		esAddr := conf.AppConfig.EsAddr
-		client, err := elastic.NewSimpleClient(elastic.SetURL(esAddr),
+		client, err := elastic.NewSimpleClient(elastic.SetURL(esAddr...),
 			elastic.SetBasicAuth(conf.AppConfig.EsUser, conf.AppConfig.EsPwd),
 			elastic.SetSnifferTimeoutStartup(5*time.Second),
 			elastic.SetSnifferTimeout(5*time.Second),
@@ -49,7 +49,7 @@ func init() {
 		}
 		go startTTL(24 * time.Hour)
 
-		Version, err = client.ElasticsearchVersion(esAddr)
+		Version, err = client.ElasticsearchVersion(esAddr[0])
 		if err != nil {
 			tools.Panic(tools.ErrCodeESInitFailed, "failed to get es version", err)
 		}

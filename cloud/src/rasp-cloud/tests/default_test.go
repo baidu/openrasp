@@ -123,13 +123,13 @@ func TestAppConfigValidation(t *testing.T) {
 	Convey("Subject: Test App Config Init\n", t, func() {
 		Convey("when the es addr is empty", func() {
 			config := *conf.AppConfig
-			config.EsAddr = ""
+			config.EsAddr = []string{}
 			conf.ValidRaspConf(&config)
 		})
 
 		Convey("when the mongodb addr is empty", func() {
 			config := *conf.AppConfig
-			config.MongoDBAddr = ""
+			config.MongoDBAddr = []string{}
 			conf.ValidRaspConf(&config)
 		})
 

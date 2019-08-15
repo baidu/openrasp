@@ -96,9 +96,15 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
         String decryptedString = null;
         try {
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-            Object encryptionService = Reflection.invokeStaticMethod("weblogic.security.internal.SerializedSystemIni", "getEncryptionService", new Class[]{String.class}, path);
+            Class clazz = classLoader.loadClass("weblogic.security.internal.SerializedSystemIni");
+            Object encryptionService = Reflection.invokeMethod(null, clazz,
+                    "getEncryptionService", new Class[]{String.class}, path);
             if (encryptionService != null) {
-                Object clearOrEncryptedService = classLoader.loadClass("weblogic.security.internal.encryption.ClearOrEncryptedService").getDeclaredConstructor(classLoader.loadClass("weblogic.security.internal.encryption.EncryptionService")).newInstance(encryptionService);
+                clazz = classLoader.loadClass("weblogic.security.internal.encryption.EncryptionService");
+                Object clearOrEncryptedService = classLoader.
+                        loadClass("weblogic.security.internal.encryption.ClearOrEncryptedService").
+                        getDeclaredConstructor(clazz).
+                        newInstance(encryptionService);
                 decryptedString = Reflection.invokeStringMethod(clearOrEncryptedService, "decrypt", new Class[]{String.class}, decrypted);
             }
         } catch (Exception e) {

@@ -32,6 +32,7 @@ extern "C"
 #include "ext/standard/file.h"
 #include "ext/json/php_json.h"
 #include "Zend/zend_builtin_functions.h"
+#include "zend_extensions.h"
 }
 
 using openrasp::DebugTrace;
@@ -434,4 +435,27 @@ std::map<std::string, std::string> get_env_map()
         }
     }
     return result;
+}
+
+std::string get_phpversion()
+{
+    std::string version;
+    zval function_name, retval;
+    ZVAL_STRING(&function_name, "phpversion");
+    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, 0, nullptr) == SUCCESS)
+    {
+        if (Z_TYPE(retval) == IS_STRING)
+        {
+            version = std::string(Z_STRVAL(retval), Z_STRLEN(retval));
+        }
+        zval_ptr_dtor(&retval);
+    }
+    zval_ptr_dtor(&function_name);
+    return version;
+}
+
+void openrasp_zend_activate()
+{
+    zend_llist_clean(&zend_extensions);
+    zend_activate();
 }

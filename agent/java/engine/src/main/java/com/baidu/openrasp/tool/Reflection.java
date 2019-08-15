@@ -104,6 +104,7 @@ public class Reflection {
             Class clazz = Class.forName(className);
             return invokeMethod(null, clazz, methodName, paramTypes, parameters);
         } catch (Exception e) {
+            LogTool.traceError(ErrorType.RUNTIME_ERROR, "failed to invoke static method: " + e.getMessage(), e);
             return null;
         }
     }

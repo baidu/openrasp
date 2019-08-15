@@ -314,7 +314,7 @@ static void server_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
     v8::Local<v8::Object> server = v8::Object::New(isolate);
     server->Set(NewV8String(isolate, "language"), NewV8String(isolate, "php"));
     server->Set(NewV8String(isolate, "server"), NewV8String(isolate, "PHP"));
-    server->Set(NewV8String(isolate, "version"), NewV8String(isolate, OPENRASP_PHP_VERSION));
+    server->Set(NewV8String(isolate, "version"), NewV8String(isolate, get_phpversion()));
 #ifdef PHP_WIN32
     server->Set(NewV8String(isolate, "os"), NewV8String(isolate, "Windows"));
 #else

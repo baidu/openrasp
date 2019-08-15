@@ -280,7 +280,7 @@ public final class HttpServletRequest extends AbstractRequest {
     }
 
     @Override
-    public String getClinetIp() {
+    public String getClientIp() {
         String clientIp = Config.getConfig().getClientIp();
         String realIp = getHeader(clientIp);
         return realIp != null ? realIp : "";

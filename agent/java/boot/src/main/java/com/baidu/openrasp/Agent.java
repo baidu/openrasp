@@ -71,7 +71,7 @@ public class Agent {
     }
 
     /**
-     * attack 机制加载 agent
+     * attach 机制加载 agent
      *
      * @param agentArg 启动参数
      * @param inst     {@link Instrumentation}

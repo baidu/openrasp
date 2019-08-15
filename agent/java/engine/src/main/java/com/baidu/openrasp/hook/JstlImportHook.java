@@ -17,14 +17,17 @@
 package com.baidu.openrasp.hook;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import java.util.HashMap;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.util.HashMap;
 
 /**
  * Created by lanyuhang on 10/19/17.
@@ -73,6 +76,19 @@ public class JstlImportHook extends AbstractClassHook {
         if (url != null && !url.startsWith("/") && url.contains("://")) {
             HashMap<String, Object> params = new HashMap<String, Object>();
             params.put("url", url);
+            params.put("realpath", url);
+            try {
+                if (url.startsWith("file://")) {
+                    File realFile = new File(new URI(url));
+                    try {
+                        params.put("realpath", realFile.getCanonicalPath());
+                    } catch (Exception e) {
+                        params.put("realpath", realFile.getAbsolutePath());
+                    }
+                }
+            } catch (Exception e) {
+                LogTool.traceHookWarn("Jstl hook check failed: " + e.getMessage(), e);
+            }
             params.put("function", "jstl_import");
             HookHandler.doCheck(CheckParameter.Type.INCLUDE, params);
         }

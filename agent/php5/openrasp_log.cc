@@ -752,6 +752,7 @@ void RaspLoggerEntry::update_common_info(TSRMLS_D)
     {
         return;
     }
+    std::string php_version = get_phpversion();
     MAKE_STD_ZVAL(common_info);
     array_init(common_info);
     if (strcmp(name, ALARM_LOG_DIR_NAME) == 0 &&
@@ -766,7 +767,7 @@ void RaspLoggerEntry::update_common_info(TSRMLS_D)
         add_assoc_string(common_info, "event_type", "attack", 1);
         add_assoc_string(common_info, "server_hostname", (char *)openrasp::get_hostname().c_str(), 1);
         add_assoc_string(common_info, "server_type", "php", 1);
-        add_assoc_string(common_info, "server_version", OPENRASP_PHP_VERSION, 1);
+        add_assoc_string(common_info, "server_version", (char *)php_version.c_str(), 1);
         add_assoc_string(common_info, "request_id", OPENRASP_INJECT_G(request_id), 1);
         add_assoc_string(common_info, "body", fetch_request_body(OPENRASP_CONFIG(body.maxbytes) TSRMLS_CC), 0);
         add_assoc_zval(common_info, "server_nic", _get_ifaddr_zval());
@@ -809,7 +810,7 @@ void RaspLoggerEntry::update_common_info(TSRMLS_D)
         add_assoc_string(common_info, "event_type", "security_policy", 1);
         add_assoc_string(common_info, "server_hostname", (char *)openrasp::get_hostname().c_str(), 1);
         add_assoc_string(common_info, "server_type", "php", 1);
-        add_assoc_string(common_info, "server_version", OPENRASP_PHP_VERSION, 1);
+        add_assoc_string(common_info, "server_version", (char *)php_version.c_str(), 1);
         add_assoc_zval(common_info, "server_nic", _get_ifaddr_zval());
         add_assoc_string(common_info, "rasp_id", (char *)openrasp::scm->get_rasp_id().c_str(), 1);
         if (openrasp_ini.app_id)

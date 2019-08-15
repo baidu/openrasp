@@ -22,9 +22,6 @@ const plugin_desc    = 'IAST Fuzz 插件'
 'use strict'
 var plugin = new RASP(plugin_name)
 
-// 仅在 golang 下面会缓存多个请求信息，其他语言不受影响
-var cache  = {}
-
 // BEGIN ALGORITHM CONFIG //
 
 var algorithmConfig = {
@@ -46,29 +43,17 @@ function bufferToHex (buffer) {
 }
 
 function add_hook(hook_type, params, context) {
-    var request_id = context.requestId
-
-    if (! cache[request_id]) {
-        cache[request_id] = []
+    if (context.hook_info == undefined) {
+        context.hook_info = []
     }
-
     params.hook_type = hook_type
-    cache[request_id].push(params)
+    params.stack = params.stack
+    context.hook_info.push(params)
 }
 
 function send_rasp_result(context) {
 
-    var request_id = context.requestId
-    var hook_info  = cache[request_id] || []
-    delete cache[request_id]
-
-    var default_port
-    if (context.url.toLowerCase().startsWith("https")) {
-        default_port = 443
-    }
-    else {
-        default_port = 80
-    }
+    var hook_info  = context.hook_info || []
 
     // 不检测不包含hook_info的请求, xml类型除外
     if (hook_info.length == 0 && 
@@ -76,6 +61,14 @@ function send_rasp_result(context) {
         context.header["content-type"] != undefined &&
         context.header["content-type"].indexOf("application/xml") < 0) {
         return
+    }
+
+    var default_port
+    if (context.url.toLowerCase().startsWith("https")) {
+        default_port = 443
+    }
+    else {
+        default_port = 80
     }
 
     // 构建 context

@@ -4,8 +4,8 @@ const plugin_name    = '888-block-all'
 // 本插件用于测试拦截效果
 // 
 // 这个插件的逻辑是，不管请求是否正常，一律拦截
-// 若要开启这个插件，请先删除下面的 return :-)
-return
+// 若要开启这个插件，请先删除下面的 throw :-)
+throw new Error("本插件会拦截所有操作，为了防止误操作，请请删掉这一行")
 
 'use strict'
 var plugin  = new RASP('block-all-test')

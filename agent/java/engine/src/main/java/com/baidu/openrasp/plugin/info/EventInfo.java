@@ -66,16 +66,6 @@ public abstract class EventInfo {
         }
     }
 
-    protected StackTraceElement[] filter(StackTraceElement[] trace) {
-        int i = 0;
-        // 去除插件本身调用栈
-        while (i < trace.length && (trace[i].getClassName().startsWith("com.baidu.openrasp")
-                || trace[i].getClassName().contains("reflect"))) {
-            i++;
-        }
-        return Arrays.copyOfRange(trace, i, Math.min(i + Config.getConfig().getLogMaxStackSize(), trace.length));
-    }
-
     protected String stringify(StackTraceElement[] trace) {
         StringBuilder ret = new StringBuilder();
         for (int i = 0; i < trace.length; i++) {

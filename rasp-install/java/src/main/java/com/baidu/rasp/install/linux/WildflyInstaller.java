@@ -33,7 +33,7 @@ public class WildflyInstaller extends BaseStandardInstaller {
     private static final String OPENRASP_START_TAG = "### BEGIN OPENRASP - DO NOT MODIFY ###\n";
     private static final String OPENRASP_END_TAG = "### END OPENRASP ###\n";
     private static final String OPENRASP_CONFIG = "\tJAVA_OPTS=\"${JAVA_OPTS} -javaagent:${JBOSS_HOME}/rasp/rasp.jar\"\n" +
-            "\tJAVA_OPTS=\"$JAVA_OPTS -Djboss.modules.system.pkgs=org.jboss.byteman,org.jboss.logmanager,com.baidu.openrasp\"\n" +
+            "\tJAVA_OPTS=\"$JAVA_OPTS -Djboss.modules.system.pkgs=org.jboss.byteman,org.wildfly.common,org.jboss.logmanager,com.baidu.openrasp\"\n" +
             "\tJAVA_OPTS=\"$JAVA_OPTS -Djava.util.logging.manager=org.jboss.logmanager.LogManager\"\n";
 
     private static final String JBOSS_LOGMANAGER = "/modules/system/layers/base/org/jboss/logmanager/main";

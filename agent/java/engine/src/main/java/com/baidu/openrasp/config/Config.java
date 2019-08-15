@@ -56,7 +56,6 @@ public class Config extends FileScanListener {
         INJECT_URL_PREFIX("inject.urlprefix", ""),
         REQUEST_PARAM_ENCODING("request.param_encoding", ""),
         BODY_MAX_BYTES("body.maxbytes", "4096"),
-        LOG_MAX_STACK("log.maxstack", "50"),
         LOG_MAX_BACKUP("log.maxbackup", "30"),
         REFLECTION_MAX_STACK("plugin.maxstack", "100"),
         SQL_CACHE_CAPACITY("lru.max_size", "1024"),
@@ -235,7 +234,7 @@ public class Config extends FileScanListener {
                             temp.putAll(parseHookWhite(hooks));
                         }
                     }
-                    HookWhiteModel.init(temp);
+                    setHooksWhite(temp);
                     continue;
                 }
                 if (item.key.equals(RESPONSE_HEADERS)) {
@@ -301,7 +300,7 @@ public class Config extends FileScanListener {
                 }
             }
         }
-        HookWhiteModel.init(temp);
+        setHooksWhite(temp);
     }
 
     private void reloadConfig(File file) {
@@ -605,27 +604,6 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取报警日志最大输出栈深度
-     *
-     * @return
-     */
-    public int getLogMaxStackSize() {
-        return logMaxStackSize;
-    }
-
-    /**
-     * 配置报警日志最大输出栈深度
-     *
-     * @param logMaxStackSize
-     */
-    public synchronized void setLogMaxStackSize(String logMaxStackSize) {
-        this.logMaxStackSize = Integer.parseInt(logMaxStackSize);
-        if (this.logMaxStackSize < 0) {
-            this.logMaxStackSize = 50;
-        }
-    }
-
-    /**
      * 获取允许传入插件的ognl表达式的最短长度
      *
      * @return ognl表达式最短长度
@@ -778,7 +756,6 @@ public class Config extends FileScanListener {
     public synchronized void setBlockXml(String blockXml) {
         this.blockXml = blockXml;
     }
-
 
     /**
      * 获取响应的contentType类型
@@ -1145,6 +1122,12 @@ public class Config extends FileScanListener {
      */
     public synchronized void setResponseHeaders(Map<String, String> responseHeaders) {
         this.responseHeaders = responseHeaders;
+        LOGGER.info(RESPONSE_HEADERS + ": " + responseHeaders);
+    }
+
+    public synchronized void setHooksWhite(TreeMap<String, Integer> whiteList) {
+        HookWhiteModel.init(whiteList);
+        LOGGER.info(HOOKS_WHITE + ": " + whiteList);
     }
 
     /**
@@ -1278,9 +1261,6 @@ public class Config extends FileScanListener {
             } else if (Item.INJECT_URL_PREFIX.key.equals(key)) {
                 setInjectUrlPrefix(value);
                 currentValue = getInjectUrlPrefix();
-            } else if (Item.LOG_MAX_STACK.key.equals(key)) {
-                setLogMaxStackSize(value);
-                currentValue = getLogMaxStackSize();
             } else if (Item.OGNL_EXPRESSION_MIN_LENGTH.key.equals(key)) {
                 setOgnlMinLength(value);
                 currentValue = getOgnlMinLength();

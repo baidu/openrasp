@@ -21,6 +21,7 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.tool.OSUtil;
+import com.baidu.openrasp.tool.StackTrace;
 import com.baidu.openrasp.tool.decompile.Decompiler;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 
@@ -96,7 +97,7 @@ public class AttackInfo extends EventInfo {
         // 攻击参数
         info.put("attack_params", parameter.getParams());
         // 攻击调用栈
-        StackTraceElement[] trace = filter(new Throwable().getStackTrace());
+        StackTraceElement[] trace = StackTrace.filter(new Throwable().getStackTrace());
         info.put("stack_trace", stringify(trace) != null ? stringify(trace).trim() : null);
         // 检测插件
         info.put("plugin_name", this.pluginName);
@@ -120,7 +121,7 @@ public class AttackInfo extends EventInfo {
             // 攻击来源IP
             info.put("attack_source", request.getRemoteAddr());
             // 攻击真实IP
-            info.put("client_ip", request.getClinetIp());
+            info.put("client_ip", request.getClientIp());
             // 服务器ip
             info.put("server_nic", OSUtil.getIpAddress());
             // 被攻击目标域名

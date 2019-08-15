@@ -179,11 +179,12 @@ bool OpenraspAgentManager::process_agent_startup()
 	else if (pid == 0)
 	{
 		int fd;
-		if (-1 != (fd = open("/dev/null", O_RDONLY))) {
+		if (-1 != (fd = open("/dev/null", O_RDONLY)))
+		{
 			close(STDIN_FILENO);
 			dup2(fd, STDIN_FILENO);
 			close(fd);
-		}		
+		}
 		setsid();
 		supervisor_run();
 	}
@@ -228,6 +229,7 @@ void OpenraspAgentManager::supervisor_run()
 	sigaction(SIGCHLD, &sa_usr, NULL);
 
 	super_install_signal_handler();
+	openrasp_zend_activate();
 	while (true)
 	{
 		update_log_level();
@@ -280,14 +282,15 @@ bool OpenraspAgentManager::agent_remote_register()
 	}
 
 	std::string url_string = std::string(openrasp_ini.backend_url) + register_url_path;
+	std::string php_version = get_phpversion();
 
 	JsonReader json_reader;
 	json_reader.write_string({"id"}, scm->get_rasp_id());
 	json_reader.write_string({"hostname"}, get_hostname());
 	json_reader.write_string({"language"}, "php");
-	json_reader.write_string({"language_version"}, OPENRASP_PHP_VERSION);
+	json_reader.write_string({"language_version"}, php_version);
 	json_reader.write_string({"server_type"}, sapi_module.name);
-	json_reader.write_string({"server_version"}, OPENRASP_PHP_VERSION);
+	json_reader.write_string({"server_version"}, php_version);
 	json_reader.write_string({"rasp_home"}, openrasp_ini.root_dir);
 	json_reader.write_string({"register_ip"}, local_ip);
 	json_reader.write_string({"version"}, PHP_OPENRASP_VERSION);

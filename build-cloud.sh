@@ -44,6 +44,7 @@ function repack()
     rm -rf tmp/dist
 
     cp -R "$git_root"/plugins/official/plugin.js tmp/resources
+    cp -R "$git_root"/plugins/iast/plugin.js tmp/resources/iast.js
     cp -R "$git_root"/rasp-vue/dist tmp
 
     mv tmp "$name"
