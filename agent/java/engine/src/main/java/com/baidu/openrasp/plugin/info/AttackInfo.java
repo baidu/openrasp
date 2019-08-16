@@ -146,6 +146,8 @@ public class AttackInfo extends EventInfo {
             info.put("request_method", method != null ? method.toLowerCase() : null);
             //Java反编译开关打开时，启用
             if (Config.getConfig().getDecompileEnable() && checkTomcatVersion()) {
+                // 攻击调用栈
+                StackTraceElement[] trace = StackTrace.filter(new Throwable().getStackTrace());
                 info.put("source_code", Decompiler.getAlarmPoint(trace));
             } else {
                 info.put("source_code", "");
