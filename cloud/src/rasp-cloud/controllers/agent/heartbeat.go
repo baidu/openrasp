@@ -49,6 +49,9 @@ func (o *HeartbeatController) Post() {
 	rasp.PluginName = heartbeat.PluginName
 	rasp.PluginMd5 = heartbeat.PluginMd5
 	if heartbeat.HostName != "" {
+		if len(heartbeat.HostName) >= 1024 {
+			o.ServeError(http.StatusBadRequest, "the length of rasp hostname must be less than 1024")
+		}
 		rasp.HostName = heartbeat.HostName
 	}
 	err = models.UpsertRaspById(heartbeat.RaspId, rasp)

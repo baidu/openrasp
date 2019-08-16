@@ -17,7 +17,6 @@
 package com.baidu.openrasp.plugin.checker.policy.server;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -85,9 +84,7 @@ public abstract class ServerPolicyChecker extends PolicyChecker {
                     }
                 }
             } catch (Throwable t) {
-                if (Config.getConfig().isDebugEnabled()) {
-                    LOGGER.info(SERVER_CHECK_ERROR_LOG_CHANNEL + " :" + t.getMessage(), t);
-                }
+                LogTool.traceWarn(ErrorType.RUNTIME_ERROR, SERVER_CHECK_ERROR_LOG_CHANNEL + " :" + t.getMessage(), t);
             }
         }
     }
