@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
-import java.lang.instrument.UnmodifiableClassException;
 import java.lang.ref.WeakReference;
 import java.security.ProtectionDomain;
 import java.util.HashSet;
@@ -80,28 +79,24 @@ public class CustomClassTransformer implements ClassFileTransformer {
 
     public void release() {
         inst.removeTransformer(this);
-        try {
-            retransform();
-        } catch (UnmodifiableClassException e) {
-            LogTool.error(ErrorType.HOOK_ERROR, "retransform classes failed: " + e.getMessage(), e);
-        }
+        retransform();
     }
 
-    public void retransform() throws UnmodifiableClassException {
+    public void retransform() {
         LinkedList<Class> retransformClasses = new LinkedList<Class>();
         Class[] loadedClasses = inst.getAllLoadedClasses();
         for (Class clazz : loadedClasses) {
             if (isClassMatched(clazz.getName().replace(".", "/"))) {
                 if (inst.isModifiableClass(clazz) && !clazz.getName().startsWith("java.lang.invoke.LambdaForm")) {
-                    retransformClasses.add(clazz);
+                    try {
+                        // hook已经加载的类，或者是回滚已经加载的类
+                        inst.retransformClasses(clazz);
+                    } catch (Throwable t) {
+                        LogTool.error(ErrorType.HOOK_ERROR,
+                                "failed to retransform class " + clazz.getName() + ": " + t.getMessage(), t);
+                    }
                 }
             }
-        }
-        // hook已经加载的类，或者是回滚已经加载的类
-        Class[] classes = new Class[retransformClasses.size()];
-        retransformClasses.toArray(classes);
-        if (classes.length > 0) {
-            inst.retransformClasses(classes);
         }
     }
 

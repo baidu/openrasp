@@ -450,23 +450,11 @@ std::string get_phpversion()
 {
     std::string version;
     TSRMLS_FETCH();
-    zval function_name, retval;
-    INIT_ZVAL(function_name);
-    ZVAL_STRING(&function_name, "phpversion", 0);
-    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, 0, nullptr TSRMLS_CC) == SUCCESS)
+    zval z_version;
+    if (zend_get_constant("PHP_VERSION", sizeof("PHP_VERSION") - 1, &z_version TSRMLS_CC) &&
+        Z_TYPE(z_version) == IS_STRING)
     {
-        if (Z_TYPE(retval) == IS_STRING)
-        {
-            version = std::string(Z_STRVAL(retval), Z_STRLEN(retval));
-        }
-        zval_dtor(&retval);
+        version = std::string(Z_STRVAL(z_version), Z_STRLEN(z_version));
     }
     return version;
-}
-
-void openrasp_zend_activate()
-{
-    TSRMLS_FETCH();
-    zend_llist_clean(&zend_extensions);
-    zend_activate(TSRMLS_C);
 }

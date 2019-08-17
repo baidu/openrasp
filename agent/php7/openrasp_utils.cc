@@ -440,22 +440,11 @@ std::map<std::string, std::string> get_env_map()
 std::string get_phpversion()
 {
     std::string version;
-    zval function_name, retval;
-    ZVAL_STRING(&function_name, "phpversion");
-    if (call_user_function(EG(function_table), nullptr, &function_name, &retval, 0, nullptr) == SUCCESS)
+    zval *z_version;
+    if ((z_version = zend_get_constant_str("PHP_VERSION", sizeof("PHP_VERSION") - 1)) != nullptr &&
+        Z_TYPE_P(z_version) == IS_STRING)
     {
-        if (Z_TYPE(retval) == IS_STRING)
-        {
-            version = std::string(Z_STRVAL(retval), Z_STRLEN(retval));
-        }
-        zval_ptr_dtor(&retval);
+        version = std::string(Z_STRVAL_P(z_version), Z_STRLEN_P(z_version));
     }
-    zval_ptr_dtor(&function_name);
     return version;
-}
-
-void openrasp_zend_activate()
-{
-    zend_llist_clean(&zend_extensions);
-    zend_activate();
 }

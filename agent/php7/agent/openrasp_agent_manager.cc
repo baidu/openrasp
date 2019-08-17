@@ -229,7 +229,6 @@ void OpenraspAgentManager::supervisor_run()
 	sigaction(SIGCHLD, &sa_usr, NULL);
 
 	super_install_signal_handler();
-	openrasp_zend_activate();
 	while (true)
 	{
 		update_log_level();

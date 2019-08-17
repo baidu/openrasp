@@ -41,7 +41,6 @@ bool openrasp_parse_url(const std::string &origin_url, std::string &scheme, std:
 bool verify_remote_management_ini();
 std::map<std::string, std::string> get_env_map();
 std::string get_phpversion();
-void openrasp_zend_activate();
 
 bool make_openrasp_root_dir(const char *path TSRMLS_DC);
 void openrasp_set_locale(const char *locale, const char *locale_path);
