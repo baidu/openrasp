@@ -451,10 +451,13 @@ std::string get_phpversion()
     std::string version;
     TSRMLS_FETCH();
     zval z_version;
-    if (zend_get_constant("PHP_VERSION", sizeof("PHP_VERSION") - 1, &z_version TSRMLS_CC) &&
-        Z_TYPE(z_version) == IS_STRING)
+    if (zend_get_constant("PHP_VERSION", sizeof("PHP_VERSION") - 1, &z_version TSRMLS_CC))
     {
-        version = std::string(Z_STRVAL(z_version), Z_STRLEN(z_version));
+        if (Z_TYPE(z_version) == IS_STRING)
+        {
+            version = std::string(Z_STRVAL(z_version), Z_STRLEN(z_version));
+        }
+        zval_dtor(&z_version);
     }
     return version;
 }
