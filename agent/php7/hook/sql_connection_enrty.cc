@@ -248,6 +248,7 @@ void SqlConnectionEntry::connection_entry_policy_log(connection_policy_type type
     add_assoc_string(&connection_params, "password", (char *)get_password().c_str());
   }
   add_assoc_long(&connection_params, "port", get_port());
+  add_stack_to_params(&connection_params);
   add_assoc_zval(&policy_array, "policy_params", &connection_params);
   LOG_G(policy_logger).log(LEVEL_INFO, &policy_array);
   zval_ptr_dtor(&policy_array);

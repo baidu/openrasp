@@ -16,6 +16,7 @@
 
 #include "openrasp_security_policy.h"
 #include "openrasp_ini.h"
+#include "openrasp_utils.h"
 #include <string>
 static void security_check(bool flag, int id, const char *msg);
 #define SECURITY_CHECK(flag, id, msg) security_check(flag, id, msg)
@@ -44,6 +45,7 @@ static void security_check(bool flag, int id, const char *msg)
         array_init(&policy_params);
         add_assoc_long(&policy_params, "pid", getpid());
         add_assoc_string(&policy_params, "sapi", const_cast<char *>(sapi_module.name ? sapi_module.name : ""));
+        add_stack_to_params(&policy_params);
         add_assoc_zval(&result, "policy_params", &policy_params);
         add_assoc_string(&result, "message", const_cast<char *>(msg));
         LOG_G(policy_logger).log(LEVEL_INFO, &result);

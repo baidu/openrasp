@@ -113,6 +113,21 @@ std::vector<std::string> format_debug_backtrace_arr()
     return array;
 }
 
+void add_stack_to_params(zval *params)
+{
+    if (params && Z_TYPE_P(params) == IS_ARRAY)
+    {
+        zval stack;
+        array_init(&stack);
+        std::vector<std::string> arr = format_debug_backtrace_arr();
+        for (const std::string &item : arr)
+        {
+            add_next_index_stringl(&stack, item.c_str(), item.length());
+        }
+        add_assoc_zval(params, "stack", &stack);
+    }
+}
+
 int recursive_mkdir(const char *path, int len, int mode)
 {
     struct stat sb;
@@ -373,7 +388,7 @@ std::string get_phpversion()
     std::string version;
     zval *z_version;
     if ((z_version = zend_get_constant_str("PHP_VERSION", sizeof("PHP_VERSION") - 1)) != nullptr &&
-            Z_TYPE_P(z_version) == IS_STRING)
+        Z_TYPE_P(z_version) == IS_STRING)
     {
         version = std::string(Z_STRVAL_P(z_version), Z_STRLEN_P(z_version));
     }

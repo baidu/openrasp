@@ -44,6 +44,7 @@ void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugi
 std::vector<std::string> format_source_code_arr();
 void format_source_code_arr(zval *source_code_arr);
 std::vector<std::string> format_debug_backtrace_arr();
+void add_stack_to_params(zval *params);
 std::string json_encode_from_zval(zval *value);
 
 char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
