@@ -218,6 +218,7 @@ void SqlConnectionEntry::connection_entry_policy_log(connection_policy_type type
   zval connection_params;
   array_init(&connection_params);
   build_connection_params(&connection_params, type);
+  add_stack_to_params(&connection_params);
   add_assoc_zval(&policy_array, "policy_params", &connection_params);
   LOG_G(policy_logger).log(LEVEL_INFO, &policy_array);
   zval_ptr_dtor(&policy_array);

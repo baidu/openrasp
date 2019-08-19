@@ -211,6 +211,7 @@ void SqlConnectionEntry::set_name_value(const char *name, const char *val)
 
 void SqlConnectionEntry::connection_entry_policy_log(connection_policy_type type)
 {
+  TSRMLS_FETCH();
   zval *policy_array = nullptr;
   MAKE_STD_ZVAL(policy_array);
   array_init(policy_array);
@@ -220,8 +221,8 @@ void SqlConnectionEntry::connection_entry_policy_log(connection_policy_type type
   MAKE_STD_ZVAL(connection_params);
   array_init(connection_params);
   build_connection_params(connection_params, type);
+  add_stack_to_params(connection_params TSRMLS_CC);
   add_assoc_zval(policy_array, "policy_params", connection_params);
-  TSRMLS_FETCH();
   LOG_G(policy_logger).log(LEVEL_INFO, policy_array TSRMLS_CC);
   zval_ptr_dtor(&policy_array);
 }

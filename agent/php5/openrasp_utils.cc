@@ -130,6 +130,22 @@ std::vector<std::string> format_debug_backtrace_arr(long limit TSRMLS_DC)
     return array;
 }
 
+void add_stack_to_params(zval *params TSRMLS_DC)
+{
+    if (params && Z_TYPE_P(params) == IS_ARRAY)
+    {
+        zval *stack = nullptr;
+        MAKE_STD_ZVAL(stack);
+        array_init(stack);
+        std::vector<std::string> arr = format_debug_backtrace_arr(TSRMLS_C);
+        for (const std::string &item : arr)
+        {
+            add_next_index_stringl(stack, item.c_str(), item.length(), 1);
+        }
+        add_assoc_zval(params, "stack", stack);
+    }
+}
+
 int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC)
 {
     struct stat sb;

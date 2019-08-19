@@ -16,6 +16,8 @@
 
 #include "openrasp_security_policy.h"
 #include "openrasp_ini.h"
+#include "openrasp_utils.h"
+
 static void security_check(bool flag, int id, const char *msg TSRMLS_DC);
 #define SECURITY_CHECK(flag, id, msg) security_check(flag, id, msg TSRMLS_CC)
 #define STRTOBOOL strtobool
@@ -54,6 +56,7 @@ static void security_check(bool flag, int id, const char *msg TSRMLS_DC)
         array_init(policy_params);
         add_assoc_long(policy_params, "pid", getpid());
         add_assoc_string(policy_params, "sapi", const_cast<char *>(sapi_module.name ? sapi_module.name : ""), 1);
+        add_stack_to_params(policy_params TSRMLS_CC);
         add_assoc_zval(&result, "policy_params", policy_params);
         add_assoc_zval(&result, "message", &message);
         LOG_G(policy_logger).log(LEVEL_INFO, &result TSRMLS_CC);

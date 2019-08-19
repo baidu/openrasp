@@ -223,17 +223,7 @@ void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckTy
     {
         return;
     }
-    {
-        zval *stack = nullptr;
-        MAKE_STD_ZVAL(stack);
-        array_init(stack);
-        std::vector<std::string> arr = format_debug_backtrace_arr(TSRMLS_C);
-        for (const std::string &item : arr)
-        {
-            add_next_index_stringl(stack, item.c_str(), item.length(), 1);
-        }
-        add_assoc_zval(params, "stack", stack);
-    }
+    add_stack_to_params(params TSRMLS_CC);
     zval *params_result = nullptr;
     MAKE_STD_ZVAL(params_result);
     array_init(params_result);
