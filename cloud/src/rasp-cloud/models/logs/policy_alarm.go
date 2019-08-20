@@ -41,12 +41,7 @@ func AddPolicyAlarm(alarm map[string]interface{}) error {
 			beego.Error("failed to add policy alarm: ", r)
 		}
 	}()
-	if stack, ok := alarm["stack_trace"]; ok && stack != nil && stack != "" {
-		_, ok = stack.(string)
-		if ok {
-			alarm["stack_md5"] = fmt.Sprintf("%x", md5.Sum([]byte(stack.(string))))
-		}
-	}
+	putStackMd5(alarm, "policy_params")
 	idContent := ""
 	idContent += fmt.Sprint(alarm["rasp_id"])
 	idContent += fmt.Sprint(alarm["policy_id"])
