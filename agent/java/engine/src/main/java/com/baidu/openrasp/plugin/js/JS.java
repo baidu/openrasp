@@ -86,7 +86,6 @@ public class JS {
             }
             return true;
         } catch (Exception e) {
-            System.out.println("[OpenRASP] Failed to load V8 library, please refer to https://rasp.baidu.com/doc/install/software.html#faq-v8-load for possible solutions.");
             e.printStackTrace();
             LOGGER.error(e);
             return false;
