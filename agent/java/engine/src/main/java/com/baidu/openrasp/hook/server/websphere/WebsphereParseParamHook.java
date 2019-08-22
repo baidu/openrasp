@@ -37,6 +37,6 @@ public class WebsphereParseParamHook extends ServerParamHook {
 
     @Override
     protected void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException {
-        insertBefore(ctClass, "parseParameters", "()V", src);
+        insertAfter(ctClass, "parseParameters", "()V", src);
     }
 }
