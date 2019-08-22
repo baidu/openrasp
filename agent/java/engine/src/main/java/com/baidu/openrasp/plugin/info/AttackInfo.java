@@ -97,8 +97,7 @@ public class AttackInfo extends EventInfo {
         // 攻击参数
         Map params = (Map) parameter.getParams();
         if (params != null && params.get("stack") == null) {
-            StackTraceElement[] trace = StackTrace.filter(new Throwable().getStackTrace());
-            params.put("stack", trace);
+            params.put("stack", StackTrace.getStackTraceArray(true));
         }
         info.put("attack_params", params);
         // 检测插件

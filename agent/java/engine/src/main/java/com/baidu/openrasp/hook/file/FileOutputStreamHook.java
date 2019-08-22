@@ -17,7 +17,6 @@
 package com.baidu.openrasp.hook.file;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.FileUtil;
@@ -26,10 +25,10 @@ import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import java.util.HashMap;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -80,7 +79,7 @@ public class FileOutputStreamHook extends AbstractClassHook {
             HashMap<String, Object> params = new HashMap<String, Object>();
             params.put("path", file.getName());
             params.put("realpath", FileUtil.getRealPath(file));
-            List<String> stackInfo = StackTrace.getStackTraceArray();
+            List<String> stackInfo = StackTrace.getStackTraceArray(true);
             params.put("stack", stackInfo);
             HookHandler.doCheck(CheckParameter.Type.WRITEFILE, params);
         }
