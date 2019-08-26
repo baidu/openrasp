@@ -41,16 +41,15 @@ func init() {
 	StartFlag.Daemon = flag.Bool("d", false, "use to run as daemon process")
 	StartFlag.Version = flag.Bool("version", false, "use to get version")
 	flag.Parse()
-
 	if *StartFlag.Version {
-		fmt.Println("Version:       " + Version)
-		if tools.BuildTime != "" {
-			fmt.Println("Build Time:    " + tools.BuildTime)
-		}
-		if tools.CommitID != "" {
-			fmt.Println("Git Commit ID: " + tools.CommitID)
-		}
-		os.Exit(0)
+		handleVersionFlag()
+	}
+	beego.Info("Version: " + Version)
+	if tools.BuildTime != "" {
+		beego.Info("Build Time: " + tools.BuildTime)
+	}
+	if tools.CommitID != "" {
+		beego.Info("Git Commit ID: " + tools.CommitID)
 	}
 	if *StartFlag.StartType == conf.StartTypeReset {
 		HandleReset(StartFlag)
@@ -66,6 +65,17 @@ func init() {
 	}
 	conf.InitConfig(StartFlag)
 	beego.Info("===== start type: " + *StartFlag.StartType + " =====")
+}
+
+func handleVersionFlag() {
+	fmt.Println("Version:       " + Version)
+	if tools.BuildTime != "" {
+		fmt.Println("Build Time:    " + tools.BuildTime)
+	}
+	if tools.CommitID != "" {
+		fmt.Println("Git Commit ID: " + tools.CommitID)
+	}
+	os.Exit(0)
 }
 
 func chdir() {
