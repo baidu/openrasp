@@ -303,8 +303,8 @@ func HandleAttackAlarm() {
 				PushAttackAlarm(&app, total, result, false)
 			}
 		}
-		lastAlarmTime = now + 1
 	}
+	lastAlarmTime = now + 1
 }
 
 func AddApp(app *App) (result *App, err error) {
