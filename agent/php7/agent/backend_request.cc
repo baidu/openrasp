@@ -55,16 +55,18 @@ std::shared_ptr<BackendResponse> BackendRequest::curl_perform()
         chunk = curl_slist_append(chunk, auth_header_id.c_str());
         std::string auth_header_secret = "X-OpenRASP-AppSecret: " + std::string(openrasp_ini.app_secret);
         chunk = curl_slist_append(chunk, auth_header_secret.c_str());
+        if (post_data)
+        {
+            chunk = curl_slist_append(chunk, "Content-Type: application/json");
+            chunk = curl_slist_append(chunk, "charsets: utf-8");
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
+        }
         curl_code = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
         curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 50L);
         curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, (openrasp_ini.ssl_verifypeer ? 1L : 0L));
-        if (post_data)
-        {
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
-        }
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunction);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &(response_string));
         curl_easy_setopt(curl, CURLOPT_HEADERDATA, &(header_string));
