@@ -44,3 +44,4 @@ test.db
 !tests/include/
 !third_party/yaml-cpp/include/
 output
+test.shm.*
