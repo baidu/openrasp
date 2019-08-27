@@ -18,7 +18,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">
-          Agent 服务器列表 [用于生成 "添加主机" 里的安装命令]
+          Agent 服务器列表 [用于生成 "添加主机" 里的安装命令，一行一个]
         </label>
         <textarea
           type="text"
