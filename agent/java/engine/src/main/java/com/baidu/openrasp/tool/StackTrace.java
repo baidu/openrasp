@@ -60,14 +60,16 @@ public class StackTrace {
      *
      * @return 原始栈
      */
-    public static List<String> getStackTraceArray() {
+    public static List<String> getStackTraceArray(boolean isFilter) {
         LinkedList<String> stackTrace = new LinkedList<String>();
         Throwable throwable = new Throwable();
-        StackTraceElement[] stackTraceElements = throwable.getStackTrace();
-        if (stackTraceElements != null) {
-            StackTraceElement[] stack = filter(stackTraceElements);
+        StackTraceElement[] stack = throwable.getStackTrace();
+        if (stack != null) {
+            if (isFilter) {
+                stack = filter(stack);
+            }
             for (int i = 0; i < stack.length; i++) {
-                stackTrace.add(stack[i].getClassName() + "." + stack[i].getMethodName());
+                stackTrace.add(stack[i].toString());
             }
         }
 

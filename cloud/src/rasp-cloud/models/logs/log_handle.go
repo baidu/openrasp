@@ -28,6 +28,7 @@ import (
 	"time"
 	"rasp-cloud/conf"
 	"strings"
+	"crypto/md5"
 )
 
 type AggrTimeParam struct {
@@ -368,4 +369,26 @@ func CreateAlarmEsIndex(appId string) (err error) {
 		}
 	}
 	return
+}
+
+func putStackMd5(alarm map[string]interface{}, paramKey string) {
+	var stackValue string
+	if alarm[paramKey] != nil {
+		if param, ok := alarm[paramKey].(map[string]interface{}); ok && len(param) > 0 && param["stack"] != nil {
+			if stack, ok := param["stack"].([]interface{}); ok && len(stack) > 0 {
+				for _, item := range stack {
+					stackValue += fmt.Sprint(item)
+					stackValue += "\n"
+				}
+				alarm["stack_md5"] = fmt.Sprintf("%x", md5.Sum([]byte(stackValue)))
+				return
+			}
+		}
+	}
+	if stack, ok := alarm["stack_trace"]; ok && stack != nil && stack != "" {
+		_, ok = stack.(string)
+		if ok {
+			alarm["stack_md5"] = fmt.Sprintf("%x", md5.Sum([]byte(stackValue)))
+		}
+	}
 }

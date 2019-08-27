@@ -42,6 +42,6 @@ public class UndertowParamHook extends ServerParamHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException {
-        insertBefore(ctClass, "getQueryParameters", null, src);
+        insertAfter(ctClass, "getQueryParameters", null, src);
     }
 }

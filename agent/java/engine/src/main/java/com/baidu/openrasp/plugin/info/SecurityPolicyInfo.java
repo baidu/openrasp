@@ -19,6 +19,7 @@ package com.baidu.openrasp.plugin.info;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.OSUtil;
+import com.baidu.openrasp.tool.StackTrace;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 
 import java.text.SimpleDateFormat;
@@ -92,11 +93,9 @@ public class SecurityPolicyInfo extends EventInfo {
         info.put("message", message);
         // 检测参数信息
         if (params != null) {
+            params.put("stack", StackTrace.getStackTraceArray(false));
             info.put("policy_params", params);
         }
-        // 攻击调用栈
-        StackTraceElement[] trace = new Throwable().getStackTrace();
-        info.put("stack_trace", stringify(trace));
         if (Config.getConfig().getCloudSwitch()) {
             // raspId
             info.put("rasp_id", CloudCacheModel.getInstance().getRaspId());

@@ -1,4 +1,4 @@
-const plugin_version = '2019-0805-1100'
+const plugin_version = '2019-0820-1800'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -157,6 +157,7 @@ var algorithmConfig = {
         action:  'block',
         domains: [
             '.ceye.io',
+            '.exeye.io',
             '.vcap.me',
             '.xip.name',
             '.xip.io',

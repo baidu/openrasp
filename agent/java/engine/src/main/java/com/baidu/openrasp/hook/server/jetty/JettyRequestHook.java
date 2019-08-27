@@ -43,8 +43,8 @@ public class JettyRequestHook extends ServerParamHook {
 
     @Override
     protected void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException {
-        insertBefore(ctClass, "extractParameters", null, src);
-        insertBefore(ctClass, "extractContentParameters", null, src);
+        insertAfter(ctClass, "extractParameters", null, src);
+        insertAfter(ctClass, "extractContentParameters", null, src);
     }
 
 }

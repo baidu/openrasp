@@ -45,9 +45,9 @@ public class ResinParseParamHook extends ServerParamHook {
     @Override
     protected void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException {
         // resin3.x
-        insertBefore(ctClass, "parseQuery", null, src);
+        insertAfter(ctClass, "parseQuery", null, src);
         // resin4.x
-        insertBefore(ctClass, "parseQueryImpl", null, src);
+        insertAfter(ctClass, "parseQueryImpl", null, src);
     }
 
 }

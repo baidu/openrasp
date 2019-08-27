@@ -28,9 +28,9 @@ import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.tool.StackTrace;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
+import com.baidu.openrasp.tool.model.BuildRASPModel;
 import com.baidu.openrasp.v8.ByteArrayOutputStream;
 import com.baidu.openrasp.v8.V8;
-import com.baidu.openrasp.tool.model.BuildRASPModel;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
 import com.jsoniter.extra.Base64Support;
@@ -71,7 +71,7 @@ public class JS {
                 public byte[] get() {
                     try {
                         ByteArrayOutputStream stack = new ByteArrayOutputStream();
-                        JsonStream.serialize(StackTrace.getStackTraceArray(), stack);
+                        JsonStream.serialize(StackTrace.getStackTraceArray(true), stack);
                         stack.write(0);
                         return stack.getByteArray();
                     } catch (Exception e) {
@@ -86,7 +86,6 @@ public class JS {
             }
             return true;
         } catch (Exception e) {
-            System.out.println("[OpenRASP] Failed to load V8 library, please refer to https://rasp.baidu.com/doc/install/software.html#faq-v8-load for possible solutions.");
             e.printStackTrace();
             LOGGER.error(e);
             return false;

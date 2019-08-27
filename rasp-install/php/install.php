@@ -155,6 +155,8 @@ Options:
 
     --without-plugin        Do not install the official javascript plugin
 
+	--iast                  Enable IAST mode
+
     -h, --help              Show help messages
 
 HELP;
