@@ -32,7 +32,8 @@ import (
 
 const (
 	userCollectionName = "user"
-	userName           = "openrasp"
+	defaultUserName    = "openrasp"
+	defaultPassword    = "admin@123"
 )
 
 type User struct {
@@ -61,16 +62,15 @@ func init() {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create name index for user collection", err)
 	}
 	if count <= 0 {
-		initPassword := generateRandomPassword(15, 20)
-		beego.Info("Initial password: " + initPassword)
-		hash, err := generateHashedPassword(initPassword)
+		//initPassword := generateRandomPassword(15, 20)
+		hash, err := generateHashedPassword(defaultPassword)
 		if err != nil {
 			tools.Panic(tools.ErrCodeGeneratePasswdFailed, "failed to generate the default hashed password", err)
 		}
 		userId = mongo.GenerateObjectId()
 		user := User{
 			Id:       userId,
-			Name:     userName,
+			Name:     defaultUserName,
 			Password: hash,
 		}
 		err = mongo.Insert(userCollectionName, user)
@@ -109,7 +109,7 @@ func ResetUser(newPwd string) error {
 	if err != nil {
 		return errors.New("failed to generate password: " + err.Error())
 	}
-	err = mongo.UpdateId(userCollectionName, userId, bson.M{"password": pwd, "name": userName})
+	err = mongo.UpdateId(userCollectionName, userId, bson.M{"password": pwd, "name": defaultUserName})
 	return err
 }
 
@@ -165,6 +165,36 @@ func GetLoginUserName() (userName string, err error) {
 	return user.Name, nil
 }
 
+func CheckDefaultPasswordWithDefaultUser() (result bool, err error) {
+	return checkDefaultPasswordWithUser(defaultUserName)
+}
+
+func CheckDefaultPassword(cookie string) (result bool, err error) {
+	var user *User
+	var cookieObject *Cookie
+	err = mongo.FindId(cookieCollectionName, cookie, &cookieObject)
+	if err != nil || cookieObject == nil {
+		return false, errors.New("failed to find cookie: " + err.Error())
+	}
+	// 旧版本还没有把 user id 绑定到 cookie，所以此处需要判断兼容一下
+	if cookieObject.UserId == "" {
+		return false, nil
+	}
+	err = mongo.FindId(userCollectionName, cookieObject.UserId, &user)
+	if err != nil {
+		return false, errors.New("failed to find user: " + err.Error())
+	}
+	return checkDefaultPasswordWithUser(user.Name)
+}
+
+func checkDefaultPasswordWithUser(userName string) (result bool, err error) {
+	_, err = VerifyUser(userName, defaultPassword)
+	if err != nil {
+		return false, nil
+	}
+	return true, nil
+}
+
 //func GetHashedLoginPassword() (pwd string, err error) {
 //	var user *User
 //	err = mongo.FindId(userCollectionName, userId, &user)
@@ -174,20 +204,24 @@ func GetLoginUserName() (userName string, err error) {
 //	return user.Password, nil
 //}
 
-func VerifyUser(userName string, pwd string) error {
+func VerifyUser(userName string, pwd string) (*User, error) {
 	var user *User
 	err := mongo.FindId(userCollectionName, userId, &user)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if userName != user.Name {
-		return errors.New("username is incorrect")
+		return nil, errors.New("username is incorrect")
 	}
-	return ComparePassword(user.Password, pwd)
+	err = ComparePassword(user.Password, pwd)
+	if err != nil {
+		return nil, err
+	}
+	return user, err
 }
 
 func UpdatePassword(oldPwd string, newPwd string) error {
-	err := VerifyUser(userName, oldPwd)
+	_, err := VerifyUser(defaultUserName, oldPwd)
 	if err != nil {
 		return errors.New("old password is incorrect")
 	}

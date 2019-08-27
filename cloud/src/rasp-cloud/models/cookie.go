@@ -24,8 +24,9 @@ import (
 )
 
 type Cookie struct {
-	Id   string    `json:"id" bson:"_id"`
-	Time time.Time `json:"time" bson:"time"`
+	Id     string    `json:"id" bson:"_id"`
+	UserId string    `json:"user_id" bson:"user_id"`
+	Time   time.Time `json:"time" bson:"time"`
 }
 
 const (
@@ -46,8 +47,8 @@ func init() {
 	}
 }
 
-func NewCookie(id string) error {
-	return mongo.Insert(cookieCollectionName, &Cookie{Id: id, Time: time.Now()})
+func NewCookie(id string, userId string) error {
+	return mongo.Insert(cookieCollectionName, &Cookie{Id: id, UserId: userId, Time: time.Now()})
 }
 
 func HasCookie(id string) (bool, error) {
