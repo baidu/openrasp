@@ -33,13 +33,17 @@ extern "C"
 }
 using openrasp::OpenRASPContentType;
 
-static hook_handler_t global_hook_handlers[512];
-static size_t global_hook_handlers_len = 0;
+static const int hookHandlerSize = 256;
+static hook_handler_t global_hook_handlers[PriorityType::pTotal][hookHandlerSize] = {0};
+static size_t global_hook_handlers_len[PriorityType::pTotal] = {0};
 static const std::string COLON_TWO_SLASHES = "://";
 
-void register_hook_handler(hook_handler_t hook_handler)
+void register_hook_handler(hook_handler_t hook_handler, OpenRASPCheckType type, PriorityType::HookPriority hp)
 {
-    global_hook_handlers[global_hook_handlers_len++] = hook_handler;
+    if (hp < PriorityType::pTotal && global_hook_handlers_len[hp] < hookHandlerSize)
+    {
+        global_hook_handlers[hp][(global_hook_handlers_len[hp])++] = hook_handler;
+    }
 }
 
 typedef struct _track_vars_pair_t
@@ -413,10 +417,13 @@ PHP_GSHUTDOWN_FUNCTION(openrasp_hook)
 PHP_MINIT_FUNCTION(openrasp_hook)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp_hook, PHP_GINIT(openrasp_hook), PHP_GSHUTDOWN(openrasp_hook));
-
-    for (size_t i = 0; i < global_hook_handlers_len; i++)
+    
+    for (size_t i = 0; i < PriorityType::pTotal; ++i)
     {
-        global_hook_handlers[i](TSRMLS_C);
+        for (size_t j = 0; j < global_hook_handlers_len[i]; ++j)
+        {
+            global_hook_handlers[i][j](TSRMLS_C);
+        }
     }
 
     zend_set_user_opcode_handler(ZEND_INCLUDE_OR_EVAL, include_or_eval_handler);

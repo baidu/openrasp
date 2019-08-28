@@ -43,7 +43,7 @@ extern "C"
  */
 bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args);
 void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval **args);
-OPENRASP_HOOK_FUNCTION(curl_exec, ssrf)
+OPENRASP_HOOK_FUNCTION(curl_exec, SSRF)
 {
     bool type_ignored = openrasp_check_type_ignored(SSRF TSRMLS_CC);
     zval function_name, opt, origin_url, *args[2];

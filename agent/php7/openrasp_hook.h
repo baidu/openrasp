@@ -148,6 +148,17 @@ extern "C"
 #define SAFE_STRING(a) ((a) ? a : "")
 #define BACKSLASH_IN_CLASS _0_
 
+namespace PriorityType
+{
+enum HookPriority
+{
+    pZero = 0,
+    pFirst = 1,
+    pNormal = 2,
+    pTotal = 3
+};
+}
+
 typedef enum action_type_t
 {
     AC_IGNORE = 0,
@@ -179,6 +190,7 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
  * @param scope 函数所属 class，全局函数的 scope 为 global
  */
 #define DEFINE_HOOK_HANDLER_EX(name, scope, type)                                                                         \
+    void scope##_##name##_##type##_handler()                                                                              \
     {                                                                                                                     \
         HashTable *ht = nullptr;                                                                                          \
         zend_function *function;                                                                                          \
@@ -206,24 +218,30 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
         }                                                                                                                 \
     }
 
-#define OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                                             \
+#define OPENRASP_HOOK_FUNCTION_PRIORITY_EX(name, scope, type, priority)                                          \
     php_function origin_##scope##_##name##_##type = nullptr;                                                     \
     inline void hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function); \
     void hook_##scope##_##name##_##type(INTERNAL_FUNCTION_PARAMETERS)                                            \
     {                                                                                                            \
         hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAM_PASSTHRU, origin_##scope##_##name##_##type); \
     }                                                                                                            \
-    void scope##_##name##_##type##_handler()                                                                     \
-        DEFINE_HOOK_HANDLER_EX(name, scope, type) int scope##_##name##_##type = []() {register_hook_handler(scope##_##name##_##type##_handler);return 0; }();                      \
+    DEFINE_HOOK_HANDLER_EX(name, scope, type);                                                                   \
+    int scope##_##name##_##type = []() {register_hook_handler(scope##_##name##_##type##_handler, type, priority);return 0; }();                                                                    \
     inline void hook_##scope##_##name##_##type##_ex(INTERNAL_FUNCTION_PARAMETERS, php_function origin_function)
 
-#define OPENRASP_HOOK_FUNCTION(name, type) \
-    OPENRASP_HOOK_FUNCTION_EX(name, global, type)
+#define OPENRASP_HOOK_FUNCTION_EX(name, scope, type) \
+    OPENRASP_HOOK_FUNCTION_PRIORITY_EX(name, scope, type, PriorityType::pNormal)
 
-#define HOOK_FUNCTION_EX(name, scope, type)                                           \
+#define OPENRASP_HOOK_FUNCTION_PRIORITY(name, type, priority) \
+    OPENRASP_HOOK_FUNCTION_PRIORITY_EX(name, global, type, priority)
+
+#define OPENRASP_HOOK_FUNCTION(name, type) \
+    OPENRASP_HOOK_FUNCTION_PRIORITY(name, type, PriorityType::pNormal)
+
+#define HOOK_FUNCTION_PRIORITY_EX(name, scope, type, priority)                        \
     void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);        \
     void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);       \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                      \
+    OPENRASP_HOOK_FUNCTION_PRIORITY_EX(name, scope, type, priority)                   \
     {                                                                                 \
         bool pre_type_ignored = openrasp_check_type_ignored(type);                    \
         if (!pre_type_ignored)                                                        \
@@ -238,12 +256,18 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
         }                                                                             \
     }
 
-#define HOOK_FUNCTION(name, type) \
-    HOOK_FUNCTION_EX(name, global, type)
+#define HOOK_FUNCTION_EX(name, scope, type) \
+    HOOK_FUNCTION_PRIORITY_EX(name, scope, type, PriorityType::pNormal)
 
-#define PRE_HOOK_FUNCTION_EX(name, scope, type)                                      \
+#define HOOK_FUNCTION_PRIORITY(name, type, priority) \
+    HOOK_FUNCTION_PRIORITY_EX(name, global, type, priority)
+
+#define HOOK_FUNCTION(name, type) \
+    HOOK_FUNCTION_PRIORITY(name, type, PriorityType::pNormal)
+
+#define PRE_HOOK_FUNCTION_PRIORITY_EX(name, scope, type, priority)                   \
     void pre_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);       \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                     \
+    OPENRASP_HOOK_FUNCTION_PRIORITY_EX(name, scope, type, priority)                  \
     {                                                                                \
         bool type_ignored = openrasp_check_type_ignored(type);                       \
         if (!type_ignored)                                                           \
@@ -253,12 +277,18 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
         origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                           \
     }
 
-#define PRE_HOOK_FUNCTION(name, type) \
-    PRE_HOOK_FUNCTION_EX(name, global, type)
+#define PRE_HOOK_FUNCTION_EX(name, scope, type) \
+    PRE_HOOK_FUNCTION_PRIORITY_EX(name, scope, type, PriorityType::pNormal)
 
-#define POST_HOOK_FUNCTION_EX(name, scope, type)                                      \
+#define PRE_HOOK_FUNCTION_PRIORITY(name, type, priority) \
+    PRE_HOOK_FUNCTION_PRIORITY_EX(name, global, type, priority)
+
+#define PRE_HOOK_FUNCTION(name, type) \
+    PRE_HOOK_FUNCTION_PRIORITY(name, type, PriorityType::pNormal)
+
+#define POST_HOOK_FUNCTION_PRIORITY_EX(name, scope, type, priority)                   \
     void post_##scope##_##name##_##type(OPENRASP_INTERNAL_FUNCTION_PARAMETERS);       \
-    OPENRASP_HOOK_FUNCTION_EX(name, scope, type)                                      \
+    OPENRASP_HOOK_FUNCTION_PRIORITY_EX(name, scope, type, priority)                   \
     {                                                                                 \
         origin_function(INTERNAL_FUNCTION_PARAM_PASSTHRU);                            \
         bool type_ignored = openrasp_check_type_ignored(type);                        \
@@ -268,8 +298,14 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
         }                                                                             \
     }
 
+#define POST_HOOK_FUNCTION_EX(name, scope, type) \
+    POST_HOOK_FUNCTION_PRIORITY_EX(name, scope, type, PriorityType::pNormal)
+
+#define POST_HOOK_FUNCTION_PRIORITY(name, type, priority) \
+    POST_HOOK_FUNCTION_PRIORITY_EX(name, global, type, priority)
+
 #define POST_HOOK_FUNCTION(name, type) \
-    POST_HOOK_FUNCTION_EX(name, global, type)
+    POST_HOOK_FUNCTION_PRIORITY(name, type, PriorityType::pNormal)
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_hook)
 int check_type_white_bit_mask;
@@ -297,7 +333,7 @@ typedef void (*fill_param_t)(HashTable *ht);
 
 std::string openrasp_real_path(const char *filename, int length, bool use_include_path, uint32_t w_op);
 
-void register_hook_handler(hook_handler_t hook_handler);
+void register_hook_handler(hook_handler_t hook_handler, OpenRASPCheckType type, PriorityType::HookPriority hp = PriorityType::pNormal);
 
 const std::string get_check_type_name(OpenRASPCheckType type);
 
