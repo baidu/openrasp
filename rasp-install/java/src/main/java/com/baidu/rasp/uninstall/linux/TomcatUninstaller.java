@@ -16,10 +16,10 @@
 
 package com.baidu.rasp.uninstall.linux;
 
+import com.baidu.rasp.install.linux.TomcatInstaller;
 import com.baidu.rasp.uninstall.BaseStandardUninstaller;
 
 import java.io.File;
-import java.util.Scanner;
 
 /**
  * @author anyang
@@ -34,13 +34,12 @@ public class TomcatUninstaller extends BaseStandardUninstaller {
 
     @Override
     protected String getInstallPath(String serverRoot) {
-        return serverRoot + "/rasp/";
+        return serverRoot + "/rasp";
     }
 
     @Override
     protected String getScript(String installPath) {
-
-        return new File(installPath).getParent() + File.separator + "bin" + File.separator + "catalina.sh";
+        return TomcatInstaller.foundScriptPath(installPath);
     }
 
     @Override
