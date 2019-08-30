@@ -67,6 +67,12 @@
             调试开关 [0表示关闭，1以上的值表示开启]
           </label>
           <input v-model.number="data['debug.level']" type="number" min="0" class="form-control" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            LRU 大小 [默认1000，若要关闭写 0]
+          </label>
+          <input v-model.number="data['lru.max_size']" type="number" min="0" class="form-control" placeholder="1000">
         </div>    
         <div class="form-group">
           <label class="form-label">

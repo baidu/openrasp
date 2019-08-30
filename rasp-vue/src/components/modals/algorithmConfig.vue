@@ -35,6 +35,12 @@
             </div>
           </div>
 
+          <div v-if="key.endsWith('_protocol')">
+            <label>禁止加载的协议列表，逗号分隔</label>
+            <textarea class="form-control" autocomplete="off" autocorrect="off"
+              autocapitalize="off" spellcheck="false" v-model.trim="protocol_concat"></textarea>            
+          </div>
+
           <div v-if="key == 'eval_regex'">
             <label>EVAL 语句正则表达式</label>
             <div v-bind:class="{'form-group': true, 'has-error': eval_regex_error}">
@@ -87,6 +93,7 @@ export default {
       command_common_error: false,
       sql_regex_error: false,
       eval_regex_error: false,
+      protocol_concat: '',
       sql_policy_keys: [
         {
           key:   'stacked_query',
@@ -152,12 +159,26 @@ export default {
 
       this.key  = key
       this.data = JSON.parse(JSON.stringify(data))
+
+      if (this.key.endsWith('_protocol')) {
+        this.protocol_concat = this.data.protocols.join(',')
+      }
+
       $('#algorithmConfigModal').modal({
         // backdrop: 'static',
         // keyboard: false
       })
     },
     saveConfig() {
+
+      if (this.key.endsWith('_protocol')) {
+        // 删除空格
+        this.data.protocols = this.protocol_concat.replace(/\s/g, '').split(',')
+
+        // 清理 null, undefined 和空字符串
+        this.data.protocols = this.data.protocols.filter(a=>a)
+      }
+
       var body = {
         key:  this.key,
         data: this.data,
