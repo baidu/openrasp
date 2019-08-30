@@ -108,7 +108,7 @@ std::vector<std::string> format_debug_backtrace_arr()
     std::vector<std::string> array;
     for (DebugTrace &item : trace)
     {
-        array.push_back(item.to_plugin_string());
+        array.push_back(item.to_log_string());
     }
     return array;
 }
