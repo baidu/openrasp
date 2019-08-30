@@ -1,4 +1,4 @@
-const plugin_version = '2019-0820-1800'
+const plugin_version = '2019-0828-1100'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2092,7 +2092,7 @@ plugin.register('loadLibrary', function(params, context) {
         return {
             action:     algorithmConfig.loadLibrary_other.action,
             confidence: 60,
-            message:    _("Load library - logging all by default, library path is %1%", [params.function]),
+            message:    _("Load library - logging all by default, library path is %1%", [params.path]),
             algorithm:  'loadLibrary_other'
         }     
     }

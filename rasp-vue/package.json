@@ -17,6 +17,7 @@
     "bootstrap-vue": "^2.0.0-rc.22",
     "c3": "^0.6.10",
     "daterangepicker": "^3.0.3",
+    "eslint-utils": "^1.4.2",
     "is-ip": "^2.0.0",
     "jquery": "^3.4.1",
     "js-cookie": "^2.2.0",
@@ -24,6 +25,7 @@
     "lodash": "^4.17.13",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.mergewith": "^4.6.2",
+    "mem": "^5.1.1",
     "moment": "^2.22.2",
     "node-sass": "^4.10.0",
     "sass-loader": "^7.1.0",
@@ -48,7 +50,7 @@
     "chalk": "^2.0.1",
     "copy-webpack-plugin": "^4.0.1",
     "css-loader": "^0.28.0",
-    "eslint": "^5.9.0",
+    "eslint": "^6.2.2",
     "eslint-friendly-formatter": "^4.0.1",
     "eslint-loader": "^2.1.1",
     "eslint-plugin-vue": "^5.0.0",
@@ -74,7 +76,7 @@
     "vue-template-compiler": "^2.5.2",
     "webpack": "^3.6.0",
     "webpack-bundle-analyzer": "^2.13.1",
-    "webpack-dev-server": "^2.9.1",
+    "webpack-dev-server": "^2.11.5",
     "webpack-merge": "^4.1.0"
   },
   "peerDependencies": {

@@ -57,7 +57,9 @@ public abstract class InstallerFactory {
 
     public static String detectServerName(String serverRoot) throws RaspError {
         if (new File(serverRoot, "bin/catalina.sh").exists()
-                || new File(serverRoot, "bin/catalina.bat").exists()) {
+                || new File(serverRoot, "bin/catalina.bat").exists()
+                || new File(serverRoot, "conf/catalina.properties").exists()
+                || new File(serverRoot, "conf/catalina.policy").exists()) {
             return TOMCAT;
         }
         if (new File(serverRoot, "bin/probe.sh").exists()

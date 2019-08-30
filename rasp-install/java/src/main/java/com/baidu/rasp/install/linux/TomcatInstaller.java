@@ -20,6 +20,7 @@ import com.baidu.rasp.App;
 import com.baidu.rasp.RaspError;
 import com.baidu.rasp.install.BaseStandardInstaller;
 
+import java.io.File;
 import java.util.Scanner;
 
 import static com.baidu.rasp.RaspError.E10001;
@@ -36,6 +37,8 @@ public class TomcatInstaller extends BaseStandardInstaller {
     private static String JDK_JAVA_OPTIONS =
             "JDK_JAVA_OPTIONS=\"$JDK_JAVA_OPTIONS --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED\"\n" +
                     "export JDK_JAVA_OPTIONS\n";
+
+    private boolean isYum = false;
 
     public TomcatInstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
@@ -59,7 +62,30 @@ public class TomcatInstaller extends BaseStandardInstaller {
 
     @Override
     protected String getScript(String installDir) {
-        return installDir + "/../bin/catalina.sh";
+        return foundScriptPath(installDir);
+    }
+
+    public static String foundScriptPath(String installDir) {
+        String scriptPath = installDir + "/../bin/catalina.sh";
+        if (new File(scriptPath).exists()) {
+            return scriptPath;
+        } else {
+            // 支持 yum 安装 tomcat
+            String scriptDir = installDir + "/../conf";
+            File scriptDirFile = new File(scriptDir);
+            if (scriptDirFile.exists() && scriptDirFile.isDirectory()) {
+                String[] files = scriptDirFile.list();
+                if (files != null) {
+                    for (String file : files) {
+                        if (file.endsWith(".conf")) {
+                            System.out.println("Found the tomcat installed by yum.");
+                            return scriptDir + File.separator + file;
+                        }
+                    }
+                }
+            }
+        }
+        return "";
     }
 
     @Override
@@ -77,17 +103,7 @@ public class TomcatInstaller extends BaseStandardInstaller {
             if (!line.startsWith("#") && (line.contains("\"$1\" = \"start\"") || line.contains("\"$1\" = \"run\""))) {
                 modifyConfigState = FOUND;
                 sb.append(line).append("\n");
-                sb.append(OPENRASP_START_TAG);
-                if (App.isPrepend) {
-                    sb.append(PREPEND_JAVA_AGENT_CONFIG);
-                } else {
-                    sb.append(JAVA_AGENT_CONFIG);
-                }
-                //jdk版本8以上插入依赖包
-                if (versionFlag) {
-                    sb.append(JDK_JAVA_OPTIONS);
-                }
-                sb.append(OPENRASP_END_TAG);
+                buildStartupScript(sb, versionFlag);
                 continue;
             }
 
@@ -104,10 +120,31 @@ public class TomcatInstaller extends BaseStandardInstaller {
             }
         }
 
+        if (NOTFOUND == modifyConfigState
+                && (sb.indexOf("CATALINA_BASE") >= 0 || sb.indexOf("CATALINA_HOME") >= 0)) {
+            modifyConfigState = FOUND;
+            buildStartupScript(sb, versionFlag);
+        }
+
         if (NOTFOUND == modifyConfigState) {
             throw new RaspError(E10001 + "[\"$1\" = \"start\"] or [\"$1\" = \"run\"]");
         }
         return sb.toString();
+    }
+
+    private StringBuilder buildStartupScript(StringBuilder sb, boolean versionFlag) {
+        sb.append(OPENRASP_START_TAG);
+        if (App.isPrepend) {
+            sb.append(PREPEND_JAVA_AGENT_CONFIG);
+        } else {
+            sb.append(JAVA_AGENT_CONFIG);
+        }
+        //jdk版本8以上插入依赖包
+        if (versionFlag) {
+            sb.append(JDK_JAVA_OPTIONS);
+        }
+        sb.append(OPENRASP_END_TAG);
+        return sb;
     }
 
 }

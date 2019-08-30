@@ -146,6 +146,14 @@
       </div>
     </div>
 
+    <div v-if="is_default_password" class="alert alert-warning" style="margin-bottom: 0">
+      <div class="container">
+        你还没有修改默认的后台密码，可前往 <router-link :to="{name: 'settings', params: {setting_tab: 'auth'}}">
+登录认证
+</router-link> 设置
+      </div>
+    </div> 
+
     <div v-if="no_plugin" class="alert alert-warning">
       <div class="container">
         <strong>注意!</strong> 当前应用没有配置任何检测插件，请前往 <router-link :to="{name: 'plugins'}">
@@ -161,6 +169,7 @@
 </router-link> 关闭
       </div>
     </div>
+ 
 
     <AddHostModal ref="addHost" />
   </div>
@@ -179,7 +188,8 @@ export default {
     return {
       keyword: '',
       no_plugin: false,
-      all_log: false
+      all_log: false,
+      is_default_password: false
     }
   },
   computed: {
@@ -242,6 +252,14 @@ export default {
       } else {
         console.log('panel_url already configured')
       }
+    })
+
+    this.request.post('/v1/user/default', {}).then(res => {
+      if (! res) {
+        return
+      }
+
+      this.is_default_password = res.is_default
     })
   }
 }
