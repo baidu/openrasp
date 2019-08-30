@@ -93,7 +93,7 @@ public class SecurityPolicyInfo extends EventInfo {
         info.put("message", message);
         // 检测参数信息
         if (params != null) {
-            params.put("stack", StackTrace.getStackTraceArray(false));
+            params.put("stack", StackTrace.getStackTraceArray(false, true));
             info.put("policy_params", params);
         }
         if (Config.getConfig().getCloudSwitch()) {

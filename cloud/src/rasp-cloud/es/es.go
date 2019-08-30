@@ -162,8 +162,7 @@ func BulkInsert(docType string, docs []map[string]interface{}) (err error) {
 			beego.Error("failed to get app_id param from alarm: " + fmt.Sprintf("%+v", doc))
 		}
 		if appId, ok := doc["app_id"].(string); ok {
-			if docType == "policy-alarm" {
-
+			if docType == "policy-alarm" || docType == "error-alarm" {
 				bulkService.Add(elastic.NewBulkUpdateRequest().
 					Index("real-openrasp-" + docType + "-" + appId).
 					Type(docType).

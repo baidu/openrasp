@@ -60,7 +60,7 @@ public class StackTrace {
      *
      * @return 原始栈
      */
-    public static List<String> getStackTraceArray(boolean isFilter) {
+    public static List<String> getStackTraceArray(boolean isFilter, boolean hasLineNumber) {
         LinkedList<String> stackTrace = new LinkedList<String>();
         Throwable throwable = new Throwable();
         StackTraceElement[] stack = throwable.getStackTrace();
@@ -69,11 +69,24 @@ public class StackTrace {
                 stack = filter(stack);
             }
             for (int i = 0; i < stack.length; i++) {
-                stackTrace.add(stack[i].toString());
+                if (hasLineNumber) {
+                    stackTrace.add(stack[i].toString());
+                } else {
+                    stackTrace.add(stack[i].getClassName() + "." + stack[i].getMethodName());
+                }
             }
         }
 
         return stackTrace;
+    }
+
+    /**
+     * hook 点参数获取原始栈
+     *
+     * @return 原始栈
+     */
+    public static List<String> getParamStackTraceArray() {
+        return getStackTraceArray(true, false);
     }
 
     //去掉包含rasp的堆栈
