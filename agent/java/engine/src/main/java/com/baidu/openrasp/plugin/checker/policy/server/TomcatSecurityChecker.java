@@ -290,7 +290,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
     }
 
     private void handleException(Exception e) {
-        LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL, e.getMessage()));
+        LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL, e.getMessage()), e);
     }
 
     private String getFormattedMessage(String title, String message) {

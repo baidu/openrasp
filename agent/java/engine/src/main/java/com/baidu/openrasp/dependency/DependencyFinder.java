@@ -17,8 +17,7 @@
 package com.baidu.openrasp.dependency;
 
 import com.baidu.openrasp.ModuleLoader;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.messaging.LogTool;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -34,6 +33,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import static com.baidu.openrasp.messaging.ErrorType.DEPENDENCY_ERROR;
 
 /**
  * @description: 收集服务器部署项目的依赖信息
@@ -90,9 +91,9 @@ public class DependencyFinder {
                                 }
                             }
                         } catch (Exception e) {
-                            String message = "find dependency information failed from jar path " + location;
-                            int errorCode = ErrorType.DEPENDENCY_ERROR.getCode();
-                            LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+                            LogTool.warn(DEPENDENCY_ERROR,
+                                    "find dependency information failed from jar path " +
+                                            location + ": " + e.getMessage());
                         }
                     }
                 }

@@ -17,14 +17,14 @@
 package com.baidu.openrasp.dependency;
 
 import com.baidu.openrasp.cloud.CloudHttp;
-import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.CloudTimerTask;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
-import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.google.gson.Gson;
 
 import java.util.HashMap;
@@ -51,16 +51,12 @@ public class DependencyReport extends CloudTimerTask {
         String url = CloudRequestUrl.CLOUD_DEPENDENCY_REPORT_URL;
         GenericResponse response = new CloudHttp().commonRequest(url, new Gson().toJson(parameters));
         if (!CloudUtils.checkRequestResult(response)) {
-            String message = CloudUtils.handleError(ErrorType.DEPENDENCY_REPORT_ERROR, response);
-            int errorCode = ErrorType.REGISTER_ERROR.getCode();
-            CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
+            LogTool.warn(ErrorType.REGISTER_ERROR, CloudUtils.handleError(ErrorType.DEPENDENCY_REPORT_ERROR, response));
         }
     }
 
     @Override
     public void handleError(Throwable t) {
-        String message = t.getMessage();
-        int errorCode = ErrorType.REGISTER_ERROR.getCode();
-        CloudManager.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode));
+        LogTool.warn(ErrorType.REGISTER_ERROR, "heartbeat failed: " + t.getMessage(), t);
     }
 }

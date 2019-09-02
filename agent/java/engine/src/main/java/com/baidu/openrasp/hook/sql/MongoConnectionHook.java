@@ -165,12 +165,8 @@ public class MongoConnectionHook extends AbstractClassHook {
         params.put("ports", ports);
         params.put("connectionString", connectionString);
         params.put("url", url);
-        if (!Config.getConfig().getEnforcePolicy()) {
-            Long lastAlarmTime = MongoConnectionChecker.alarmTimeCache.get(url);
-            if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
-                HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_MONGO_CONNECTION, params);
-            }
-        } else {
+        Long lastAlarmTime = MongoConnectionChecker.alarmTimeCache.get(url);
+        if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
             HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_MONGO_CONNECTION, params);
         }
     }

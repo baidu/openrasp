@@ -17,14 +17,15 @@
 package com.baidu.openrasp.hook.sql;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.google.gson.Gson;
-import javassist.*;
+import javassist.CannotCompileException;
+import javassist.CtClass;
+import javassist.NotFoundException;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -124,9 +125,7 @@ public class MongoSQLHook extends AbstractClassHook {
                 checkSQL(server, className, methodName, json);
             }
         } catch (Exception e) {
-            String message = "get mongo update query failed";
-            int errorCode = ErrorType.HOOK_ERROR.getCode();
-            HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(message, errorCode), e);
+            LogTool.traceHookWarn("get mongo update query failed: " + e.getMessage(), e);
         }
     }
 

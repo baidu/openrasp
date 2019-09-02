@@ -16,10 +16,9 @@
 
 package com.baidu.openrasp.plugin.checker.local;
 
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.model.ErrorType;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.AttackInfo;
 import com.baidu.openrasp.plugin.info.EventInfo;
@@ -89,9 +88,7 @@ public class LogChecker extends ConfigurableChecker {
                     }
                 }
             } catch (Exception e) {
-                String msg = "log message detected failed";
-                int code = ErrorType.PLUGIN_ERROR.getCode();
-                HookHandler.LOGGER.warn(CloudUtils.getExceptionObject(msg, code), e);
+                LogTool.warn(ErrorType.PLUGIN_ERROR, "log message detected failed: " + e.getMessage(), e);
             }
 
         }

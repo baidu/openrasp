@@ -88,7 +88,7 @@ public class Config extends FileScanListener {
         DEPENDENCY_CHECK_INTERVAL("dependency_check.interval", "21600"),
         SECURITY_WEAK_PASSWORDS("security.weak_passwords", ""),
         CPU_USAGE_PERCENT("cpu.usage.percent", "0.9"),
-        CPU_USAGE_ENABLE("cpu.usage.enable", "false");
+        CPU_USAGE_ENABLE("cpu.usage.enable", "false"),
         HTTPS_VERIFY_SSL("openrasp.ssl_verifypeer", "false");
 
 
@@ -213,9 +213,8 @@ public class Config extends FileScanListener {
                 if (properties != null) {
                     for (String key : properties.keySet()) {
                         if (!checkConfigKey(key)) {
-                            String message = "Unknown config key [" + key + "] found in yml configuration";
-                            int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                            LOGGER.info(CloudUtils.getExceptionObject(message, errorCode));
+                            LogTool.warn(ErrorType.CONFIG_ERROR,
+                                    "Unknown config key [" + key + "] found in yml configuration");
                         }
                     }
                 }
@@ -270,9 +269,8 @@ public class Config extends FileScanListener {
         TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
         for (Map.Entry<String, Object> entry : configMap.entrySet()) {
             if (!checkConfigKey(entry.getKey())) {
-                String message = "Unknown config key [" + entry.getKey() + "] found in yml configuration";
-                int errorCode = ErrorType.CONFIG_ERROR.getCode();
-                LOGGER.info(CloudUtils.getExceptionObject(message, errorCode));
+                LogTool.warn(ErrorType.CONFIG_ERROR,
+                        "Unknown config key [" + entry.getKey() + "] found in yml configuration");
             }
             //开启云控必须参数不能云控
             if (entry.getKey().startsWith("cloud.")) {
