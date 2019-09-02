@@ -5,7 +5,7 @@ hook popen
 $plugin = <<<EOF
 plugin.register('command', params => {
     assert(params.command == 'cd')
-    assert(params.stack[0].endsWith('popen'))
+    assert(params.stack[0].indexOf('popen') != -1)
     return block
 })
 EOF;

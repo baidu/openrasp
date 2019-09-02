@@ -7,7 +7,7 @@ plugin.register('directory', params => {
     console.log(params)
     assert(params.path == 'file:///tmp/openrasp')
     assert(params.realpath.endsWith('/tmp/openrasp'))
-    assert(params.stack[0].endsWith('opendir'))
+    assert(params.stack[0].indexOf('opendir') != -1)
     return block
 })
 EOF;

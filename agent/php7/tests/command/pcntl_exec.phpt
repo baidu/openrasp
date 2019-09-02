@@ -6,7 +6,7 @@ if (!function_exists("pcntl_exec")) die("Skipped: pcntl is disabled.");
 $plugin = <<<EOF
 plugin.register('command', params => {
     assert(params.command == 'cd / &')
-    assert(params.stack[0].endsWith('pcntl_exec'))
+    assert(params.stack[0].indexOf('pcntl_exec') != -1)
     return block
 })
 EOF;

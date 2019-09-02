@@ -7,7 +7,7 @@ $plugin = <<<EOF
 plugin.register('writeFile', params => {
     assert(params.path.endsWith('/tmp/openrasp/tmpfile'))
     assert(params.realpath.endsWith('/tmp/openrasp/tmpfile'))
-    assert(params.stack[0].endsWith('file_put_contents'))
+    assert(params.stack[0].indexOf('file_put_contents') != -1)
     return block
 })
 EOF;
