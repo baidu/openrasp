@@ -5,7 +5,7 @@ block redirect url
 $plugin = <<<EOF
 plugin.register('command', params => {
     assert(params.command == 'echo test')
-    assert(params.stack[0].endsWith('exec'))
+    assert(params.stack[0].indexOf('exec') != -1)
     return block
 })
 EOF;

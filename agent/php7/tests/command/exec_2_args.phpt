@@ -6,9 +6,9 @@ if (PHP_VERSION_ID < 50400) die("Skipped: before 5.4 output should be passed by 
 $plugin = <<<EOF
 plugin.register('command', params => {
     assert(params.command == 'cd')
-    assert(params.stack[0].endsWith('exec'))
-    assert(params.stack[1].endsWith('test_stack_1'))
-    assert(params.stack[2].endsWith('test_stack_2'))
+    assert(params.stack[0].indexOf('exec') != -1)
+    assert(params.stack[1].indexOf('test_stack_1') != -1)
+    assert(params.stack[2].indexOf('test_stack_2') != -1)
     return block
 })
 EOF;

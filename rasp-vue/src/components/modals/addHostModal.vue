@@ -126,7 +126,7 @@ RUN cd /tmp \
                 <pre style="white-space: inherit; ">pip3 install git+https://github.com/baidu-security/openrasp-iast</pre>
                 <h4>2. 配置 MySQL 服务器 - 使用 MySQL root 账号执行以下命令授权</h4>
                 <pre>DROP DATABASE IF EXISTS openrasp;
-CREATE DATABASE openrasp;
+CREATE DATABASE openrasp default charset utf8mb4 COLLATE utf8mb4_general_ci;
 grant all privileges on openrasp.* to 'rasp'@'%' identified by 'rasp123';
 grant all privileges on openrasp.* to 'rasp'@'localhost' identified by 'rasp123';
 </pre>

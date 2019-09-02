@@ -96,9 +96,7 @@ public class AttackInfo extends EventInfo {
         info.put("attack_type", parameter.getType().toString());
         // 攻击参数
         Map params = (Map) parameter.getParams();
-        if (params != null && params.get("stack") == null) {
-            params.put("stack", StackTrace.getStackTraceArray(true));
-        }
+        params.put("stack", StackTrace.getStackTraceArray(true, true));
         info.put("attack_params", params);
         // 检测插件
         info.put("plugin_name", this.pluginName);

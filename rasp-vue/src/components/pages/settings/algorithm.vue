@@ -203,7 +203,10 @@ export default {
         'sql_userinput': true,
         'sql_policy': true,
         'sql_regex': true,
-        'eval_regex': true
+        'eval_regex': true,
+        'include_protocol': true,
+        'xxe_protocol': true,
+        'ssrf_protocol': true
       },
       browser_headers: browser_headers
     }

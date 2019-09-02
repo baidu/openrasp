@@ -71,7 +71,7 @@ public class JS {
                 public byte[] get() {
                     try {
                         ByteArrayOutputStream stack = new ByteArrayOutputStream();
-                        JsonStream.serialize(StackTrace.getStackTraceArray(true), stack);
+                        JsonStream.serialize(StackTrace.getParamStackTraceArray(), stack);
                         stack.write(0);
                         return stack.getByteArray();
                     } catch (Exception e) {

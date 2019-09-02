@@ -342,6 +342,15 @@ func init() {
 
     beego.GlobalControllerRouter["rasp-cloud/controllers/api:UserController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:UserController"],
         beego.ControllerComments{
+            Method: "CheckDefault",
+            Router: `/default`,
+            AllowHTTPMethods: []string{"get","post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:UserController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:UserController"],
+        beego.ControllerComments{
             Method: "IsLogin",
             Router: `/islogin`,
             AllowHTTPMethods: []string{"get","post"},

@@ -5,7 +5,7 @@ source code disable
 $plugin = <<<EOF
 plugin.register('command', params => {
     assert(params.command == 'cd')
-    assert(params.stack[0].endsWith('system'))
+    assert(params.stack[0].indexOf('system') != -1)
     return {action: 'log'}
 })
 EOF;

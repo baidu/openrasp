@@ -37,7 +37,7 @@ void DebugTrace::set_line(long line)
 
 std::string DebugTrace::to_log_string() const
 {
-    return file + '(' + function + ':' + std::to_string(line) + ')';
+    return file + '@' + function + ':' + std::to_string(line);
 }
 
 std::string DebugTrace::to_plugin_string() const

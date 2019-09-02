@@ -3,6 +3,8 @@ package logs
 import (
 	"github.com/astaxie/beego"
 	"rasp-cloud/conf"
+	"fmt"
+	"crypto/md5"
 )
 
 var (
@@ -25,5 +27,11 @@ func AddErrorAlarm(alarm map[string]interface{}) error {
 			beego.Error("failed to add error alarm: ", r)
 		}
 	}()
+	idContent := ""
+	idContent += fmt.Sprint(alarm["rasp_id"])
+	idContent += fmt.Sprint(alarm["error_code"])
+	idContent += fmt.Sprint(alarm["message"])
+	idContent += fmt.Sprint(alarm["stack_trace"])
+	alarm["upsert_id"] = fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
 	return AddAlarmFunc(ErrorAlarmInfo.EsType, alarm)
 }

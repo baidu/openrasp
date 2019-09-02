@@ -51,8 +51,6 @@ public abstract class BaseStandardUninstaller implements Uninstaller {
             System.out.println("Attach the rasp to process with pid " + App.pid);
             new Attacher(App.pid + "", App.baseDir).doAttach(Attacher.MODE_UNINSTALL);
         }
-        // 删除文件
-        delRaspFolder(getInstallPath(serverRoot));
         // 找到要修改的启动脚本
         File script = new File(getScript(installDir.getPath()));
         if (!script.exists()) {
@@ -64,6 +62,9 @@ public abstract class BaseStandardUninstaller implements Uninstaller {
         String original = BaseStandardInstaller.read(script);
         String modified = recoverStartScript(original);
         BaseStandardInstaller.write(script, modified);
+
+        // 删除文件
+        delRaspFolder(getInstallPath(serverRoot));
 
         if (!App.isAttach) {
             System.out.println("\nUninstallation completed without errors.\nPlease restart application server to take effect.");

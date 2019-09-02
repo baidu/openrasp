@@ -6,7 +6,7 @@ $plugin = <<<EOF
 plugin.register('directory', params => {
     assert(params.path == 'tests')
     assert(params.realpath.endsWith('tests'))
-    assert(params.stack[0].endsWith('dir'))
+    assert(params.stack[0].indexOf('dir') != -1)
     return block
 })
 EOF;

@@ -5,7 +5,7 @@ request context
 $plugin = <<<EOF
 plugin.register('command', (params, context) => {
     assert(params.command == 'echo test')
-    assert(params.stack[0].endsWith('exec'))
+    assert(params.stack[0].indexOf('exec') != -1)
     let str = JSON.stringify(context)
     assert(/"requestId":"\w+"/.test(str))
     assert(str.includes('"language":"php"'))
