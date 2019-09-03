@@ -144,7 +144,7 @@ func ComparePassword(hashedPassword string, password string) error {
 	if err != nil && err != bcrypt.ErrMismatchedHashAndPassword {
 		logs.Error("CompareHashAndPassword function error: " + err.Error())
 	}
-	return err
+	return errors.New("username or password is incorrect")
 }
 
 func validPassword(password string) error {
@@ -208,10 +208,10 @@ func VerifyUser(userName string, pwd string) (*User, error) {
 	var user *User
 	err := mongo.FindId(userCollectionName, userId, &user)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("mongodb has error, " + err.Error())
 	}
 	if userName != user.Name {
-		return nil, errors.New("username is incorrect")
+		return nil, errors.New("username or password is incorrect")
 	}
 	err = ComparePassword(user.Password, pwd)
 	if err != nil {
