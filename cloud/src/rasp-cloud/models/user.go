@@ -144,7 +144,10 @@ func ComparePassword(hashedPassword string, password string) error {
 	if err != nil && err != bcrypt.ErrMismatchedHashAndPassword {
 		logs.Error("CompareHashAndPassword function error: " + err.Error())
 	}
-	return errors.New("username or password is incorrect")
+	if err != nil {
+		return errors.New("username or password is incorrect")
+	}
+	return nil
 }
 
 func validPassword(password string) error {
