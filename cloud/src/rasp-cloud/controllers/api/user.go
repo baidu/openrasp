@@ -43,7 +43,7 @@ func (o *UserController) Login() {
 	}
 	user, err := models.VerifyUser(logUser, logPasswd)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "username or password is incorrect", err)
+		o.ServeError(http.StatusBadRequest, "login failed", err)
 	}
 	cookie := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(10000)) + logUser + "openrasp"+
 		strconv.FormatInt(time.Now().UnixNano(), 10))))
