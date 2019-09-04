@@ -21,7 +21,7 @@
 #include "base_manager.h"
 #include <memory>
 #include <map>
-#include "utils/ReadWriteLock.h"
+#include "utils/read_write_lock.h"
 #include "shared_log_block.h"
 
 namespace openrasp

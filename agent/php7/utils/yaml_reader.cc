@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "YamlReader.h"
+#include "yaml_reader.h"
 #include <sstream>
 
 namespace openrasp

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "DoubleArrayTrie.h"
+#include "double_array_trie.h"
 
 namespace openrasp
 {
