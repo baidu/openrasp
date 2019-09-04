@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "BaseReader.h"
+#include "base_reader.h"
 #include <algorithm>
 
 namespace openrasp
@@ -48,7 +48,7 @@ const std::set<std::string> BaseReader::valid_keys = {
     "lru.max_size",
     "debug.level",
     "hook.white",
-    "ognl.expression.minlength",//used for java only
+    "ognl.expression.minlength", //used for java only
     "dependency_check.interval",
     "webroot_scan.scan_limit",
     "webroot_scan.interval",

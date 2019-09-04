@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "utils/JsonReader.h"
+#include "utils/json_reader.h"
 #include "utils/file.h"
 #include "log_collect_item.h"
 #include "openrasp_utils.h"

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "utils/JsonReader.h"
-#include "utils/YamlReader.h"
+#include "utils/json_reader.h"
+#include "utils/yaml_reader.h"
 #include "utils/file.h"
 #include "openrasp.h"
 #include "openrasp_ini.h"

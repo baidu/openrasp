@@ -17,7 +17,7 @@
 #ifndef _OPENRASP_DEPENDENCY_WRITER_H_
 #define _OPENRASP_DEPENDENCY_WRITER_H_
 
-#include "utils/JsonReader.h"
+#include "utils/json_reader.h"
 #include "dependency_item.h"
 
 namespace openrasp

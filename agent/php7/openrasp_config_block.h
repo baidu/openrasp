@@ -21,7 +21,7 @@
 #include <unordered_set>
 #include <cstdint>
 #include <memory>
-#include "utils/BaseReader.h"
+#include "utils/base_reader.h"
 #include "php/header.h"
 
 namespace openrasp

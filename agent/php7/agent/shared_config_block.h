@@ -18,7 +18,7 @@
 
 #include "openrasp.h"
 #include "openrasp_hook.h"
-#include "utils/DoubleArrayTrie.h"
+#include "utils/double_array_trie.h"
 #include <string>
 
 namespace openrasp

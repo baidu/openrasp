@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "ReadWriteLock.h"
+#include "read_write_lock.h"
 
 namespace openrasp
 {

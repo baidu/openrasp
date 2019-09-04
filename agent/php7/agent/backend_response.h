@@ -16,7 +16,7 @@
 
 #ifndef _OPENRASP_CURL_RESPONSE_H_
 #define _OPENRASP_CURL_RESPONSE_H_
-#include "utils/JsonReader.h"
+#include "utils/json_reader.h"
 #include <string>
 #include <memory>
 #include <curl/curl.h>

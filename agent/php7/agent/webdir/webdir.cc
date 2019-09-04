@@ -16,7 +16,7 @@
 
 #include "webdir.h"
 #include "utils/file.h"
-#include "utils/JsonReader.h"
+#include "utils/json_reader.h"
 
 namespace openrasp
 {

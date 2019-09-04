@@ -513,8 +513,8 @@ int main() {
     openrasp_v8_utils.cc \
     openrasp_security_policy.cc \
     openrasp_ini.cc \
-    utils/ReadWriteLock.cc \
-    utils/DoubleArrayTrie.cc \
+    utils/read_write_lock.cc \
+    utils/double_array_trie.cc \
     utils/string.cc \
     utils/digest.cc \
     utils/regex.cc \
@@ -523,9 +523,9 @@ int main() {
     utils/time.cc \
     utils/net.cc \
     utils/url.cc \
-    utils/BaseReader.cc \
-    utils/JsonReader.cc \
-    utils/YamlReader.cc \
+    utils/base_reader.cc \
+    utils/json_reader.cc \
+    utils/yaml_reader.cc \
     utils/utf.cc \
     utils/hostname.cc \
     agent/base_manager.cc \
