@@ -249,9 +249,9 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
          zend_hash_has_more_elements(ht) == SUCCESS;
          zend_hash_move_forward(ht))
     {
-        char *key;
+        char *key = nullptr;
         ulong idx;
-        int type;
+        int type = 0;
         zval **value;
         type = zend_hash_get_current_key(ht, &key, &idx, 0);
         if (type != HASH_KEY_IS_STRING ||

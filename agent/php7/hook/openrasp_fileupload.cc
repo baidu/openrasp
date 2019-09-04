@@ -23,8 +23,10 @@ PRE_HOOK_FUNCTION(move_uploaded_file, FILE_UPLOAD);
 
 void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *path, *new_path;
-    size_t path_len, new_path_len;
+    char *path = nullptr;
+    char *new_path = nullptr;
+    size_t path_len = 0;
+    size_t new_path_len = 0;
     if (!SG(rfc1867_uploaded_files))
     {
         return;
@@ -41,22 +43,23 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
         return;
     }
 
-    zval *realname = nullptr, *file;
-    zend_string *key;
+    zval *realname = nullptr;
+    zval *file = nullptr;
+    zend_string *key = nullptr;
     std::string form_data_name;
     std::string realname_str;
     zend_ulong idx;
     ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL(PG(http_globals)[TRACK_VARS_FILES]), idx, key, file)
     {
-        zval *tmp_name = NULL;
+        zval *tmp_name = nullptr;
         if (Z_TYPE_P(file) != IS_ARRAY ||
-            (tmp_name = zend_hash_str_find(Z_ARRVAL_P(file), ZEND_STRL("tmp_name"))) == NULL ||
+            (tmp_name = zend_hash_str_find(Z_ARRVAL_P(file), ZEND_STRL("tmp_name"))) == nullptr ||
             Z_TYPE_P(tmp_name) != IS_STRING ||
             zend_binary_strcmp(Z_STRVAL_P(tmp_name), Z_STRLEN_P(tmp_name), path, path_len) != 0)
         {
             continue;
         }
-        if ((realname = zend_hash_str_find(Z_ARRVAL_P(file), ZEND_STRL("name"))) != NULL &&
+        if ((realname = zend_hash_str_find(Z_ARRVAL_P(file), ZEND_STRL("name"))) != nullptr &&
             IS_STRING == Z_TYPE_P(realname))
         {
             realname_str = std::string(Z_STRVAL_P(realname), Z_STRLEN_P(realname));
@@ -73,7 +76,7 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
         }
     }
     ZEND_HASH_FOREACH_END();
-    php_stream *stream = php_stream_open_wrapper(path, "rb", 0, NULL);
+    php_stream *stream = php_stream_open_wrapper(path, "rb", 0, nullptr);
     if (stream)
     {
         zend_string *buffer = php_stream_copy_to_mem(stream, 4 * 1024, 0);

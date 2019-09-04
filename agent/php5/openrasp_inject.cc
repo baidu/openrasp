@@ -28,7 +28,7 @@ std::vector<char> inject_html;
 void openrasp_load_inject_html(TSRMLS_D)
 {
     std::vector<char> inject;
-    char *path;
+    char *path = nullptr;
     spprintf(&path, 0, "%s%cassets%cinject.html", openrasp_ini.root_dir, DEFAULT_SLASH, DEFAULT_SLASH);
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     efree(path);

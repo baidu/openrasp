@@ -90,7 +90,7 @@ bool YamlReader::fetch_bool(const std::vector<std::string> &keys, const bool &de
         {
             node = &(*node)[key];
         }
-        bool rst;
+        bool rst = false;
         *node >> rst;
         return rst;
     }

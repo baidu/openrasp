@@ -46,7 +46,7 @@ static std::vector<DebugTrace> build_debug_trace(long limit)
     {
         int i = 0;
         HashTable *hash_arr = Z_ARRVAL(trace_arr);
-        zval *ele_value = NULL;
+        zval *ele_value = nullptr;
         ZEND_HASH_FOREACH_VAL(hash_arr, ele_value)
         {
             if (++i > limit)
@@ -59,17 +59,17 @@ static std::vector<DebugTrace> build_debug_trace(long limit)
             }
             DebugTrace trace_item;
             zval *trace_ele;
-            if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("file"))) != NULL &&
+            if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("file"))) != nullptr &&
                 Z_TYPE_P(trace_ele) == IS_STRING)
             {
                 trace_item.set_file(Z_STRVAL_P(trace_ele));
             }
-            if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("function"))) != NULL &&
+            if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("function"))) != nullptr &&
                 Z_TYPE_P(trace_ele) == IS_STRING)
             {
                 trace_item.set_function(Z_STRVAL_P(trace_ele));
             }
-            if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("line"))) != NULL &&
+            if ((trace_ele = zend_hash_str_find(Z_ARRVAL_P(ele_value), ZEND_STRL("line"))) != nullptr &&
                 Z_TYPE_P(trace_ele) == IS_LONG)
             {
                 trace_item.set_line(Z_LVAL_P(trace_ele));
@@ -175,12 +175,12 @@ const char *fetch_url_scheme(const char *filename)
 
 void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter, bool use_abs_path)
 {
-    DIR *dir;
+    DIR *dir = nullptr;
     std::string result;
     struct dirent *ent;
-    if ((dir = opendir(dir_abs.c_str())) != NULL)
+    if ((dir = opendir(dir_abs.c_str())) != nullptr)
     {
-        while ((ent = readdir(dir)) != NULL)
+        while ((ent = readdir(dir)) != nullptr)
         {
             if (file_filter)
             {
@@ -196,7 +196,7 @@ void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugi
 
 char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
 {
-    zval *origin_zv;
+    zval *origin_zv = nullptr;
     if ((origin_zv = zend_hash_str_find(ht, arKey, strlen(arKey))) != nullptr &&
         Z_TYPE_P(origin_zv) == IS_STRING)
     {
@@ -228,7 +228,7 @@ std::string json_encode_from_zval(zval *value)
 
 zend_string *fetch_request_body(size_t max_len)
 {
-    php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, NULL);
+    php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, nullptr);
     if (stream)
     {
         zend_string *buf = php_stream_copy_to_mem(stream, max_len, 0);
@@ -246,7 +246,7 @@ bool need_alloc_shm_current_sapi()
     static const char *supported_sapis[] = {
         "fpm-fcgi",
         "apache2handler",
-        NULL};
+        nullptr};
     const char **sapi_name;
     if (sapi_module.name)
     {
@@ -369,7 +369,7 @@ std::map<std::string, std::string> get_env_map()
 {
     std::map<std::string, std::string> result;
     char **env;
-    for (env = environ; env != NULL && *env != NULL; env++)
+    for (env = environ; env != nullptr && *env != nullptr; env++)
     {
         std::string item(*env);
         std::size_t found = item.find("=");
@@ -386,7 +386,7 @@ std::map<std::string, std::string> get_env_map()
 std::string get_phpversion()
 {
     std::string version;
-    zval *z_version;
+    zval *z_version = nullptr;
     if ((z_version = zend_get_constant_str("PHP_VERSION", sizeof("PHP_VERSION") - 1)) != nullptr &&
         Z_TYPE_P(z_version) == IS_STRING)
     {

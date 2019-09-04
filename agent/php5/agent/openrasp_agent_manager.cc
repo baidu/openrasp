@@ -65,7 +65,7 @@ static void super_install_signal_handler()
 static void supervisor_sigchld_handler(int signal_no)
 {
 	pid_t p;
-	int status;
+	int status = 0;
 	while ((p = waitpid(-1, &status, WNOHANG)) > 0)
 	{
 		for (int i = 0; i < agents.size(); ++i)
@@ -173,7 +173,7 @@ bool OpenraspAgentManager::process_agent_startup()
 	}
 	else if (pid == 0)
 	{
-		int fd;
+		int fd = 0;
 		if (-1 != (fd = open("/dev/null", O_RDONLY)))
 		{
 			close(STDIN_FILENO);

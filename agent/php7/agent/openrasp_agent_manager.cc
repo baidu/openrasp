@@ -59,13 +59,13 @@ static void super_install_signal_handler()
 	struct sigaction sa_usr = {0};
 	sa_usr.sa_flags = 0;
 	sa_usr.sa_handler = super_signal_handler;
-	sigaction(SIGTERM, &sa_usr, NULL);
+	sigaction(SIGTERM, &sa_usr, nullptr);
 }
 
 static void supervisor_sigchld_handler(int signal_no)
 {
 	pid_t p;
-	int status;
+	int status = 0;
 	while ((p = waitpid(-1, &status, WNOHANG)) > 0)
 	{
 		for (int i = 0; i < agents.size(); ++i)
@@ -173,7 +173,7 @@ bool OpenraspAgentManager::process_agent_startup()
 	}
 	else if (pid == 0)
 	{
-		int fd;
+		int fd = 0;
 		if (-1 != (fd = open("/dev/null", O_RDONLY)))
 		{
 			close(STDIN_FILENO);
@@ -216,7 +216,7 @@ void OpenraspAgentManager::supervisor_run()
 	struct sigaction sa_usr = {0};
 	sa_usr.sa_flags = 0;
 	sa_usr.sa_handler = supervisor_sigchld_handler;
-	sigaction(SIGCHLD, &sa_usr, NULL);
+	sigaction(SIGCHLD, &sa_usr, nullptr);
 
 	super_install_signal_handler();
 	while (true)

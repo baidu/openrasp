@@ -41,7 +41,7 @@ static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         if (!resolved_path.empty())
         {
 #if PHP_API_VERSION < 20100412
-            if (PG(safe_mode) && (!php_checkuid(resolved_path.c_str(), NULL, CHECKUID_CHECK_FILE_AND_DIR)))
+            if (PG(safe_mode) && (!php_checkuid(resolved_path.c_str(), nullptr, CHECKUID_CHECK_FILE_AND_DIR)))
             {
                 return;
             }

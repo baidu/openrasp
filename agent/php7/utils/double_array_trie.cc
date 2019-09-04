@@ -134,8 +134,8 @@ size_t DoubleArrayTrie::prefix_search(const char *key, result_pair_type *result,
 
     register int b = array_[node_pos].base;
     register size_t num = 0;
-    register int n;
-    register unsigned int p;
+    register int n = 0;
+    register unsigned int p = 0;
 
     for (register size_t i = 0; i < len; ++i)
     {

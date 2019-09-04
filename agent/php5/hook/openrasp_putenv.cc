@@ -21,8 +21,8 @@ PRE_HOOK_FUNCTION(putenv, WEBSHELL_LD_PRELOAD);
 
 void pre_global_putenv_WEBSHELL_LD_PRELOAD(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *env;
-    size_t env_len;
+    char *env = nullptr;
+    size_t env_len = 0;
     if (zend_parse_parameters(MIN(1, ZEND_NUM_ARGS()) TSRMLS_CC, "s", &env, &env_len) == FAILURE)
     {
         return;
@@ -31,11 +31,11 @@ void pre_global_putenv_WEBSHELL_LD_PRELOAD(OPENRASP_INTERNAL_FUNCTION_PARAMETERS
         env != nullptr &&
         strncmp(env, "LD_PRELOAD=", sizeof("LD_PRELOAD=") - 1) == 0)
     {
-        zval *attack_params = NULL;
+        zval *attack_params = nullptr;
         MAKE_STD_ZVAL(attack_params);
         array_init(attack_params);
         add_assoc_stringl(attack_params, "env", env, env_len, 1);
-        zval *plugin_message = NULL;
+        zval *plugin_message = nullptr;
         MAKE_STD_ZVAL(plugin_message);
         ZVAL_STRING(plugin_message, _("WebShell activity - Detected LD_PRELOAD"), 1);
         OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);

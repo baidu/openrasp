@@ -47,7 +47,7 @@ std::shared_ptr<BackendResponse> BackendRequest::curl_perform()
 {
     if (curl)
     {
-        long response_code;
+        long response_code = 0;
         std::string header_string;
         std::string response_string;
         struct curl_slist *chunk = nullptr;

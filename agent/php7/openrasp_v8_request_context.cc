@@ -25,7 +25,7 @@ using namespace openrasp;
 static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv;
+    zval *origin_zv = nullptr;
     zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
     if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
         (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("url"))) != nullptr)
@@ -167,8 +167,8 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::Object> obj = v8::Object::New(isolate);
 
-    zval *value;
-    zend_string *key;
+    zval *value = nullptr;
+    zend_string *key = nullptr;
     zend_ulong idx;
     ZEND_HASH_FOREACH_KEY_VAL(_GET, idx, key, value)
     {
@@ -252,8 +252,8 @@ static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::Object> obj = v8::Object::New(isolate);
 
-    zval *value;
-    zend_string *key;
+    zval *value = nullptr;
+    zend_string *key = nullptr;
     ZEND_HASH_FOREACH_STR_KEY_VAL(_SERVER, key, value)
     {
         std::string tmp = convert_to_header_key(key->val, key->len);
@@ -270,7 +270,7 @@ static void body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo
 {
     info.GetReturnValue().Set(v8::ArrayBuffer::New(info.GetIsolate(), nullptr, 0, v8::ArrayBufferCreationMode::kInternalized));
 
-    php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, NULL);
+    php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, nullptr);
     if (!stream)
     {
         return;
@@ -345,7 +345,7 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     v8::Local<v8::Object> obj = v8::Object::New(isolate);
 
     std::string complete_body = "{}";
-    zval *origin_zv;
+    zval *origin_zv = nullptr;
     if (((origin_zv = zend_hash_str_find(_SERVER, ZEND_STRL("HTTP_CONTENT_TYPE"))) != nullptr ||
          (origin_zv = zend_hash_str_find(_SERVER, ZEND_STRL("CONTENT_TYPE"))) != nullptr) &&
         Z_TYPE_P(origin_zv) == IS_STRING)
@@ -394,7 +394,7 @@ static void requestId_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
 static void raspId_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv;
+    zval *origin_zv = nullptr;
     zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
     if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
         (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("rasp_id"))) != nullptr)
@@ -407,7 +407,7 @@ static void raspId_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
 static void appId_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv;
+    zval *origin_zv = nullptr;
     zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
     if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
         (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("app_id"))) != nullptr)
@@ -420,7 +420,7 @@ static void appId_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInf
 static void hostname_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv;
+    zval *origin_zv = nullptr;
     zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
     if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
         (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("server_hostname"))) != nullptr)
@@ -433,7 +433,7 @@ static void hostname_getter(v8::Local<v8::Name> name, const v8::PropertyCallback
 static void nic_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv;
+    zval *origin_zv = nullptr;
     zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
     if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
         (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("server_nic"))) != nullptr)
@@ -446,7 +446,7 @@ static void nic_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<
 static void source_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv;
+    zval *origin_zv = nullptr;
     zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
     if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
         (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("attack_source"))) != nullptr)
@@ -459,7 +459,7 @@ static void source_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
 static void target_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv;
+    zval *origin_zv = nullptr;
     zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
     if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
         (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("server_ip"))) != nullptr)
@@ -472,7 +472,7 @@ static void target_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
 static void clientIp_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv;
+    zval *origin_zv = nullptr;
     zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
     if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
         (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("client_ip"))) != nullptr)

@@ -35,7 +35,7 @@ static std::string fetch_mysql_error(uint32_t param_count, zval *params[] TSRMLS
 
 static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, int persistent)
 {
-    char *user = NULL, *passwd = NULL, *host_and_port = NULL, *socket = NULL, *host = NULL, *tmp = NULL;
+    char *user = nullptr, *passwd = nullptr, *host_and_port = nullptr, *socket = nullptr, *host = nullptr, *tmp = nullptr;
     int user_len = 0, passwd_len = 0, host_len = 0, port = MYSQL_PORT;
     long client_flags = 0;
     zend_bool new_link = 0;
@@ -55,7 +55,7 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
         {
             return false;
         }
-        host_and_port = passwd = NULL;
+        host_and_port = passwd = nullptr;
 #if (PHP_MINOR_VERSION == 3)
         user = php_get_current_user();
 #else
@@ -197,9 +197,9 @@ void post_global_mysql_pconnect_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 //mysql_query
 void pre_global_mysql_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *query;
-    int query_len;
-    zval *mysql_link = NULL;
+    char *query = nullptr;
+    int query_len = 0;
+    zval *mysql_link = nullptr;
 
     if (UNLIKELY(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|r", &query, &query_len, &mysql_link) == FAILURE))
     {
@@ -213,8 +213,8 @@ void post_global_mysql_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
     {
-        char *query;
-        int query_len;
+        char *query = nullptr;
+        int query_len = 0;
         zval *mysql_link = nullptr;
         if (UNLIKELY(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|r", &query, &query_len, &mysql_link) == FAILURE))
         {

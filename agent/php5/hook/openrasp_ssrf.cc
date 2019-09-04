@@ -85,7 +85,7 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
     }
     args[0] = *zid;
     args[1] = opt;
-    if (call_user_function(EG(function_table), NULL, function_name, origin_url, 2, args TSRMLS_CC) != SUCCESS ||
+    if (call_user_function(EG(function_table), nullptr, function_name, origin_url, 2, args TSRMLS_CC) != SUCCESS ||
         Z_TYPE_P(origin_url) != IS_STRING)
     {
         return true;
@@ -151,18 +151,18 @@ void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *fun
 {
     zval effective_url;
     INIT_ZVAL(effective_url);
-    if (call_user_function(EG(function_table), NULL, function_name, &effective_url, 2, args TSRMLS_CC) != SUCCESS &&
+    if (call_user_function(EG(function_table), nullptr, function_name, &effective_url, 2, args TSRMLS_CC) != SUCCESS &&
         Z_TYPE(effective_url) != IS_STRING &&
         (strncasecmp(Z_STRVAL(effective_url), "file", 4) == 0 || strncasecmp(Z_STRVAL(effective_url), "scp", 3) == 0) &&
         strcmp(Z_STRVAL(effective_url), Z_STRVAL_P(origin_url)) != 0)
     {
-        zval *attack_params = NULL;
+        zval *attack_params = nullptr;
         MAKE_STD_ZVAL(attack_params);
         array_init(attack_params);
         add_assoc_string(attack_params, "url", Z_STRVAL(effective_url), 1);
-        zval *plugin_message = NULL;
+        zval *plugin_message = nullptr;
         MAKE_STD_ZVAL(plugin_message);
-        char *message_str = NULL;
+        char *message_str = nullptr;
         spprintf(&message_str, 0, _("SSRF - Detected SSRF via 302 redirect, current effective url is %s"), Z_STRVAL(effective_url));
         ZVAL_STRING(plugin_message, message_str, 1);
         efree(message_str);

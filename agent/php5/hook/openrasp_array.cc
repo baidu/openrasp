@@ -37,13 +37,13 @@ static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
     {
         if (openrasp_check_callable_black(Z_STRVAL_P(function_name), Z_STRLEN_P(function_name) TSRMLS_CC))
         {
-            zval *attack_params = NULL;
+            zval *attack_params = nullptr;
             MAKE_STD_ZVAL(attack_params);
             array_init(attack_params);
             add_assoc_string(attack_params, "function", Z_STRVAL_P(function_name), 1);
-            zval *plugin_message = NULL;
+            zval *plugin_message = nullptr;
             MAKE_STD_ZVAL(plugin_message);
-            char *message_str = NULL;
+            char *message_str = nullptr;
             spprintf(&message_str, 0, _("WebShell activity - Using dangerous callback method %s()"), Z_STRVAL_P(function_name));
             ZVAL_STRING(plugin_message, message_str, 1);
             efree(message_str);
@@ -55,7 +55,7 @@ static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
 
 void pre_global_array_filter_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *array;
+    zval *array = nullptr;
     long use_type = 0;
     zend_fcall_info fci = empty_fcall_info;
     zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
@@ -72,7 +72,7 @@ void pre_global_array_filter_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_array_map_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval ***arrays = NULL;
+    zval ***arrays = nullptr;
     int n_arrays = 0;
     zend_fcall_info fci = empty_fcall_info;
     zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
@@ -87,8 +87,8 @@ void pre_global_array_map_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_array_walk_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    HashTable *array;
-    zval *userdata = NULL;
+    HashTable *array = nullptr;
+    zval *userdata = nullptr;
     zend_fcall_info fci;
     zend_fcall_info_cache fci_cache;
 
@@ -101,12 +101,12 @@ void pre_global_array_walk_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_reflectionfunction___construct_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *name;
-    zval *closure = NULL;
-    char *lcname;
-    zend_function *fptr;
-    char *name_str;
-    int name_len;
+    zval *name = nullptr;
+    zval *closure = nullptr;
+    char *lcname = nullptr;
+    zend_function *fptr = nullptr;
+    char *name_str = nullptr;
+    int name_len = 0;
 
     if (zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, ZEND_NUM_ARGS() TSRMLS_CC, "o", &closure) == SUCCESS)
     {
@@ -114,7 +114,7 @@ void pre_reflectionfunction___construct_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARA
     }
     else if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &name_str, &name_len) == SUCCESS)
     {
-        char *nsname;
+        char *nsname = nullptr;
 
         lcname = zend_str_tolower_dup(name_str, name_len);
 
@@ -133,13 +133,13 @@ void pre_reflectionfunction___construct_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARA
         }
         if (openrasp_check_callable_black(nsname, name_len TSRMLS_CC))
         {
-            zval *attack_params = NULL;
+            zval *attack_params = nullptr;
             MAKE_STD_ZVAL(attack_params);
             array_init(attack_params);
             add_assoc_string(attack_params, "function", nsname, 1);
-            zval *plugin_message = NULL;
+            zval *plugin_message = nullptr;
             MAKE_STD_ZVAL(plugin_message);
-            char *message_str = NULL;
+            char *message_str = nullptr;
             spprintf(&message_str, 0, _("Webshell detected: using '%s' function"), nsname);
             ZVAL_STRING(plugin_message, message_str, 1);
             efree(message_str);

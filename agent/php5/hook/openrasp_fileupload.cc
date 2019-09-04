@@ -24,8 +24,10 @@ PRE_HOOK_FUNCTION(move_uploaded_file, FILE_UPLOAD);
 
 void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *path, *new_path;
-    int path_len, new_path_len;
+    char *path = nullptr;
+    char *new_path = nullptr;
+    int path_len = 0;
+    int new_path_len = 0;
 
     if (!SG(rfc1867_uploaded_files))
     {
@@ -46,9 +48,9 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
              zend_hash_has_more_elements(ht) == SUCCESS;
              zend_hash_move_forward(ht))
         {
-            char *key;
+            char *key = nullptr;
             ulong idx;
-            int type;
+            int type = 0;
             zval **file, **tmp_name;
             type = zend_hash_get_current_key(ht, &key, &idx, 0);
             if (type == HASH_KEY_NON_EXISTENT)
@@ -79,10 +81,10 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
                 break;
             }
         }
-        php_stream *stream = php_stream_open_wrapper(path, "rb", 0, NULL);
+        php_stream *stream = php_stream_open_wrapper(path, "rb", 0, nullptr);
         if (stream)
         {
-            char *contents;
+            char *contents = nullptr;
             int len = php_stream_copy_to_mem(stream, &contents, 4 * 1024, 0);
             php_stream_close(stream);
             if (len > 0)

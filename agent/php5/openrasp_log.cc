@@ -99,7 +99,7 @@ static void delete_merged_array_keys(HashTable *dest, HashTable *src)
          zend_hash_has_more_elements(src) == SUCCESS;
          zend_hash_move_forward(src))
     {
-        char *key;
+        char *key = nullptr;
         uint keylen;
         ulong idx;
         int type = zend_hash_get_current_key_ex(src, &key, &keylen, &idx, 0, NULL);
@@ -786,9 +786,9 @@ void RaspLoggerEntry::update_common_info(TSRMLS_D)
                  zend_hash_has_more_elements(Z_ARRVAL_P(migrate_src)) == SUCCESS;
                  zend_hash_move_forward(Z_ARRVAL_P(migrate_src)))
             {
-                char *key;
+                char *key = nullptr;
                 ulong idx;
-                int type;
+                int type = 0;
                 zval **value;
                 std::string header_key;
                 type = zend_hash_get_current_key(Z_ARRVAL_P(migrate_src), &key, &idx, 0);

@@ -24,8 +24,8 @@ PRE_HOOK_FUNCTION_EX(querysingle, sqlite3, SQL);
 //sqlite3::exec
 void pre_sqlite3_exec_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-	char *sql;
-	int sql_len;
+	char *sql = nullptr;
+	int sql_len = 0;
 
 	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &sql, &sql_len))
 	{
@@ -43,8 +43,8 @@ void pre_sqlite3_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 //sqlite3::querySingle
 void pre_sqlite3_querysingle_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-	char *sql;
-	int sql_len;
+	char *sql = nullptr;
+	int sql_len = 0;
 	zend_bool entire_row = 0;
 	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|b", &sql, &sql_len, &entire_row))
 	{

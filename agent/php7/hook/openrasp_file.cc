@@ -100,7 +100,7 @@ static void check_file_operation(OpenRASPCheckType type, char *filename, int fil
 
 void pre_global_file_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zend_string *filename;
+    zend_string *filename = nullptr;
     zend_long flags;
 
     // ZEND_PARSE_PARAMETERS_START(1, 2)
@@ -119,7 +119,7 @@ void pre_global_file_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_readfile_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zend_string *filename;
+    zend_string *filename = nullptr;
     zend_bool use_include_path;
 
     // ZEND_PARSE_PARAMETERS_START(1, 2)
@@ -143,7 +143,8 @@ void pre_global_file_get_contents_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETER
 
 void pre_global_file_put_contents_WEBSHELL_FILE_PUT_CONTENTS(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *filename, *data;
+    zval *filename = nullptr;
+    zval *data = nullptr;
     zend_long flags;
 
     // ZEND_PARSE_PARAMETERS_START(2, 3)
@@ -168,7 +169,7 @@ void pre_global_file_put_contents_WEBSHELL_FILE_PUT_CONTENTS(OPENRASP_INTERNAL_F
             array_init(&attack_params);
             add_assoc_zval(&attack_params, "name", filename);
             Z_ADDREF_P(filename);
-            add_assoc_string(&attack_params, "realpath", const_cast<char*>(real_path.c_str()));
+            add_assoc_string(&attack_params, "realpath", const_cast<char *>(real_path.c_str()));
             zval plugin_message;
             ZVAL_STRING(&plugin_message, _("Webshell detected - File dropper backdoor"));
             OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
@@ -179,8 +180,8 @@ void pre_global_file_put_contents_WEBSHELL_FILE_PUT_CONTENTS(OPENRASP_INTERNAL_F
 
 void pre_global_file_put_contents_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zend_string *filename;
-    zval *data;
+    zend_string *filename = nullptr;
+    zval *data = nullptr;
     zend_long flags;
 
     // ZEND_PARSE_PARAMETERS_START(2, 3)
@@ -199,7 +200,8 @@ void pre_global_file_put_contents_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETE
 }
 static inline void fopen_common_handler(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zend_string *filename, *mode;
+    zend_string *filename = nullptr;
+    zend_string *mode = nullptr;
     zend_bool use_include_path;
     mode = nullptr;
 
@@ -255,7 +257,8 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         return;
     }
-    zend_string *source, *dest;
+    zend_string *source = nullptr;
+    zend_string *dest = nullptr;
 
     // ZEND_PARSE_PARAMETERS_START(2, 2)
     // Z_PARAM_STR(source)
@@ -309,7 +312,8 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         return;
     }
-    zend_string *source, *dest;
+    zend_string *source = nullptr;
+    zend_string *dest = nullptr;
 
     // ZEND_PARSE_PARAMETERS_START(2, 2)
     // Z_PARAM_STR(source)
