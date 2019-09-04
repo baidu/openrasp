@@ -35,6 +35,7 @@ POST_HOOK_FUNCTION_EX(prepare, pdo, SQL_ERROR);
 
 static void fetch_pdo_error_info(const char *driver_name, zval *statement, std::string &error_code, std::string &errro_msg);
 static void fetch_pdo_exception_info(const char *driver_name, zval *object, std::string &error_code, std::string &errro_msg);
+static void parse_error_info(const char *driver_name, zval *error_info, std::string &error_code, std::string &errro_msg);
 
 extern void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p);
 
@@ -296,50 +297,73 @@ void post_pdo_prepare_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     post_pdo_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-static void fetch_pdo_error_info(const char *driver_name, zval *statement, std::string &error_code, std::string &errro_msg)
+void fetch_pdo_error_info(const char *driver_name, zval *statement, std::string &error_code, std::string &errro_msg)
 {
     zval function_name, retval;
     ZVAL_STRING(&function_name, "errorinfo");
     if (call_user_function(EG(function_table), statement, &function_name, &retval, 0, nullptr) == SUCCESS)
     {
-        if (Z_TYPE(retval) == IS_ARRAY)
-        {
-            zval *tmp = nullptr;
-            if ((tmp = zend_hash_index_find(Z_ARRVAL(retval), 2)) != nullptr &&
-                Z_TYPE_P(tmp) == IS_STRING)
-            {
-                errro_msg = std::string(Z_STRVAL_P(tmp));
-            }
-            if ((tmp = zend_hash_index_find(Z_ARRVAL(retval), 1)) != nullptr)
-            {
-                if (0 == strcmp(driver_name, "mysql") &&
-                    Z_TYPE_P(tmp) == IS_LONG &&
-                    mysql_error_code_filtered(Z_LVAL_P(tmp)))
-                {
-                    error_code = std::to_string(Z_LVAL_P(tmp));
-                }
-            }
-        }
+        parse_error_info(driver_name, &retval, error_code, errro_msg);
         zval_ptr_dtor(&retval);
     }
     zval_ptr_dtor(&function_name);
 }
 
-static void fetch_pdo_exception_info(const char *driver_name, zval *object, std::string &error_code, std::string &errro_msg)
+void fetch_pdo_exception_info(const char *driver_name, zval *object, std::string &error_code, std::string &errro_msg)
 {
     zval rv;
-    zval *code = zend_read_property(php_pdo_get_exception(), object, "code", sizeof("code") - 1, 1, &rv);
-    if (Z_TYPE_P(code) == IS_LONG)
+    zval *error_info = zend_read_property(php_pdo_get_exception(), object, "errorInfo", sizeof("errorInfo") - 1, 1, &rv);
+    if (nullptr != error_info && Z_TYPE_P(error_info) == IS_ARRAY)
     {
-        error_code = std::to_string(Z_LVAL_P(code));
+        parse_error_info(driver_name, error_info, error_code, errro_msg);
     }
-    else if (Z_TYPE_P(code) == IS_STRING)
+    else
     {
-        error_code = std::string(Z_STRVAL_P(code));
+        zval *code = zend_read_property(php_pdo_get_exception(), object, "code", sizeof("code") - 1, 1, &rv);
+        if (nullptr == code)
+        {
+            return;
+        }
+        long error_code_num = 0;
+        if (Z_TYPE_P(code) == IS_LONG)
+        {
+            error_code_num = Z_LVAL_P(code);
+        }
+        else if (Z_TYPE_P(code) == IS_STRING)
+        {
+            error_code_num = atol(Z_STRVAL_P(code));
+        }
+        if (!is_mysql_error_code_monitored(error_code_num))
+        {
+            return;
+        }
+        error_code = std::to_string(error_code_num);
+        zval *message = zend_read_property(php_pdo_get_exception(), object, "message", sizeof("message") - 1, 1, &rv);
+        if (Z_TYPE_P(message) == IS_STRING)
+        {
+            errro_msg = std::string(Z_STRVAL_P(message));
+        }
     }
-    zval *message = zend_read_property(php_pdo_get_exception(), object, "message", sizeof("message") - 1, 1, &rv);
-    if (Z_TYPE_P(message) == IS_STRING)
+}
+
+void parse_error_info(const char *driver_name, zval *error_info, std::string &error_code, std::string &errro_msg)
+{
+    if (nullptr != error_info && Z_TYPE_P(error_info) == IS_ARRAY)
     {
-        errro_msg = std::string(Z_STRVAL_P(message));
+        zval *tmp = nullptr;
+        if ((tmp = zend_hash_index_find(Z_ARRVAL_P(error_info), 2)) != nullptr &&
+            Z_TYPE_P(tmp) == IS_STRING)
+        {
+            errro_msg = std::string(Z_STRVAL_P(tmp));
+        }
+        if ((tmp = zend_hash_index_find(Z_ARRVAL_P(error_info), 1)) != nullptr)
+        {
+            if (0 == strcmp(driver_name, "mysql") &&
+                Z_TYPE_P(tmp) == IS_LONG &&
+                is_mysql_error_code_monitored(Z_LVAL_P(tmp)))
+            {
+                error_code = std::to_string(Z_LVAL_P(tmp));
+            }
+        }
     }
 }

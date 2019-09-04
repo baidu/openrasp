@@ -104,7 +104,7 @@ void plugin_sql_check(char *query, int query_len, const char *server)
     }
 }
 
-bool mysql_error_code_filtered(long err_code)
+bool is_mysql_error_code_monitored(long err_code)
 {
     static const std::set<long> mysql_error_codes = {
         1045,

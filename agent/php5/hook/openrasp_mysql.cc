@@ -148,7 +148,7 @@ static inline bool init_mysql_pconnect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, 
 static void mysql_connect_error_intercept(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func)
 {
     long error_code = fetch_mysql_errno(0, nullptr TSRMLS_CC);
-    if (!mysql_error_code_filtered(error_code))
+    if (!is_mysql_error_code_monitored(error_code))
     {
         return;
     }
@@ -228,7 +228,7 @@ void post_global_mysql_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             param_num = 1;
         }
         long error_code = fetch_mysql_errno(param_num, args TSRMLS_CC);
-        if (!mysql_error_code_filtered(error_code))
+        if (!is_mysql_error_code_monitored(error_code))
         {
             return;
         }
