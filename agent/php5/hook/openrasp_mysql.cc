@@ -310,7 +310,7 @@ void post_global_mysql_db_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             param_num = 1;
         }
         long error_code = fetch_mysql_errno(param_num, args TSRMLS_CC);
-        if (!mysql_error_code_filtered(error_code))
+        if (!is_mysql_error_code_monitored(error_code))
         {
             return;
         }
