@@ -27,7 +27,7 @@ import java.security.ProtectionDomain;
 public class WeblogicDetector extends ServerDetector {
     @Override
     public boolean isClassMatched(String className) {
-        return "weblogic/t3/srvr/T3Srvr".equals(className);
+        return "weblogic/servlet/internal/WebAppServletContext".equals(className);
     }
 
     @Override
