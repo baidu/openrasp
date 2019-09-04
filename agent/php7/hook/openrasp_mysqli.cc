@@ -149,7 +149,7 @@ static bool init_mysqli_real_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sq
 static void mysqli_connect_error_intercept(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func)
 {
     long error_code = fetch_mysqli_errno("mysqli_connect_errno", 0, nullptr);
-    if (!mysql_error_code_filtered(error_code))
+    if (!is_mysql_error_code_monitored(error_code))
     {
         return;
     }
@@ -225,7 +225,7 @@ void post_mysqli_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             return;
         }
         long error_code = fetch_mysqli_errno("mysqli_errno", 1, getThis());
-        if (!mysql_error_code_filtered(error_code))
+        if (!is_mysql_error_code_monitored(error_code))
         {
             return;
         }
@@ -304,7 +304,7 @@ void post_global_mysqli_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             return;
         }
         long error_code = fetch_mysqli_errno("mysqli_errno", 1, mysql_link);
-        if (!mysql_error_code_filtered(error_code))
+        if (!is_mysql_error_code_monitored(error_code))
         {
             return;
         }

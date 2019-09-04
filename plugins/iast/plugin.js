@@ -110,7 +110,7 @@ function send_rasp_result(context) {
         },        
     }
     // console.log("send to:", algorithmConfig['iast']['fuzz_server'])
-    RASP.request(request_config)
+    RASP.request(request_config).catch(console.log)
 }
 
 plugin.register('sql', function (params, context) {

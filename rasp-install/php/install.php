@@ -240,7 +240,9 @@ if (!check_dep_exts_installed($dep_exts)) {
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 拷贝动态库 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 major_tips('Installing OpenRASP PHP extension');
 if (!file_exists($extension_dir)) {
-	log_tips(ERROR, "Extension directory '$extension_dir' does not exist");
+	if (!mkdir($extension_dir, 0777, TRUE)) {
+		log_tips(ERROR, 'Unable to create extension directory: ' . $extension_dir);
+	}
 }
 if (!is_writable($extension_dir)) {
 	log_tips(ERROR, "Extension directory '$extension_dir' is not writable, make sure you have write permissions");
