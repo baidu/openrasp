@@ -53,9 +53,8 @@ using openrasp::same_day_in_current_timezone;
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 
 #define RASP_LOG_FILE_MODE (mode_t)0666
-#define RASP_LOG_TOKEN_REFILL_INTERVAL 60000
-#define RASP_STREAM_WRITE_RETRY_NUMBER 1
 
+static const int RASP_LOG_TOKEN_REFILL_INTERVAL = 60000;
 std::unique_ptr<openrasp::SharedLogManager> slm = nullptr;
 
 static bool verify_syslog_address_format();
@@ -117,18 +116,6 @@ static void _get_ifaddr_zval(zval *z_ifaddr)
         add_assoc_str(&ifa_addr_item, "ip", zend_string_init(iter->second.c_str(), iter->second.length(), 0));
         zend_hash_next_index_insert(Z_ARRVAL_P(z_ifaddr), &ifa_addr_item);
     }
-}
-
-static std::string fetch_last_clientip(const std::string &s)
-{
-    std::stringstream ip_list_ss(s);
-    std::string item;
-    while (std::getline(ip_list_ss, item, ','))
-        ;
-    std::stringstream ip_ss(item);
-    while (std::getline(ip_ss, item, ' '))
-        ;
-    return item;
 }
 
 static void request_uri_path_filter(zval *origin_zv, zval *new_zv)
@@ -328,10 +315,21 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
     {
         alarm_appender = static_cast<log_appender>(alarm_appender | SYSLOG_APPENDER);
     }
-    openrasp_log_globals->alarm_logger = std::move(RaspLoggerEntry(ALARM_LOG_DIR_NAME, LEVEL_INFO, alarm_appender, static_cast<log_appender>(FSTREAM_APPENDER | SYSLOG_APPENDER)));
-    openrasp_log_globals->policy_logger = std::move(RaspLoggerEntry(POLICY_LOG_DIR_NAME, LEVEL_INFO, FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
-    openrasp_log_globals->plugin_logger = std::move(RaspLoggerEntry(PLUGIN_LOG_DIR_NAME, LEVEL_INFO, FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
-    openrasp_log_globals->rasp_logger = std::move(RaspLoggerEntry(RASP_LOG_DIR_NAME, LEVEL_INFO, FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
+    openrasp_log_globals->alarm_logger =
+        std::move(RaspLoggerEntry(RaspLoggerEntry::ALARM_LOG_DIR_NAME, LEVEL_INFO,
+                                  alarm_appender, static_cast<log_appender>(FSTREAM_APPENDER | SYSLOG_APPENDER)));
+
+    openrasp_log_globals->policy_logger =
+        std::move(RaspLoggerEntry(RaspLoggerEntry::POLICY_LOG_DIR_NAME, LEVEL_INFO,
+                                  FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
+
+    openrasp_log_globals->plugin_logger =
+        std::move(RaspLoggerEntry(RaspLoggerEntry::PLUGIN_LOG_DIR_NAME, LEVEL_INFO,
+                                  FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
+
+    openrasp_log_globals->rasp_logger =
+        std::move(RaspLoggerEntry(RaspLoggerEntry::RASP_LOG_DIR_NAME, LEVEL_INFO,
+                                  FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
 }
 
 PHP_MINIT_FUNCTION(openrasp_log)
@@ -381,6 +379,10 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_log)
 const char *RaspLoggerEntry::default_log_suffix = "%Y-%m-%d";
 const char *RaspLoggerEntry::rasp_rfc3339_format = "%Y-%m-%dT%H:%M:%S%z";
 const char *RaspLoggerEntry::syslog_time_format = "%b %d %H:%M:%S";
+const char *RaspLoggerEntry::ALARM_LOG_DIR_NAME = "alarm";
+const char *RaspLoggerEntry::POLICY_LOG_DIR_NAME = "policy";
+const char *RaspLoggerEntry::PLUGIN_LOG_DIR_NAME = "plugin";
+const char *RaspLoggerEntry::RASP_LOG_DIR_NAME = "rasp";
 
 RaspLoggerEntry::RaspLoggerEntry()
     : name("invalid")
@@ -756,7 +758,7 @@ void RaspLoggerEntry::update_common_info()
     }
     std::string php_version = get_phpversion();
     array_init(&common_info);
-    if (strcmp(name, ALARM_LOG_DIR_NAME) == 0 &&
+    if (strcmp(name, RaspLoggerEntry::ALARM_LOG_DIR_NAME) == 0 &&
         (appender & appender_mask))
     {
         zval *migrate_src = nullptr;
@@ -798,7 +800,7 @@ void RaspLoggerEntry::update_common_info()
         }
         add_assoc_zval(&common_info, "header", &z_header);
     }
-    else if (strcmp(name, POLICY_LOG_DIR_NAME) == 0 &&
+    else if (strcmp(name, RaspLoggerEntry::POLICY_LOG_DIR_NAME) == 0 &&
              (appender & appender_mask))
     {
         add_assoc_string(&common_info, "event_type", "security_policy");

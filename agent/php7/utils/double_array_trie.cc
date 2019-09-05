@@ -73,7 +73,9 @@ size_t DoubleArrayTrie::nonzero_size() const
     for (size_t i = 0; i < size_; ++i)
     {
         if (array_[i].check)
+        {
             ++result;
+        }
     }
     return result;
 }
@@ -225,8 +227,10 @@ size_t DoubleArrayTrie::fetch(const node_t &parent, std::vector<node_t> &sibling
 
         unsigned int cur = 0;
         if ((length_ ? length_[i] : key_->at(i).length()) != parent.depth)
+        {
             cur = (unsigned int)tmp[parent.depth] + 1;
-
+        }
+            
         if (prev > cur)
         {
             error_ = -3;
@@ -261,7 +265,9 @@ size_t DoubleArrayTrie::fetch(const node_t &parent, std::vector<node_t> &sibling
 size_t DoubleArrayTrie::insert(const std::vector<node_t> &siblings)
 {
     if (error_ < 0)
+    {
         return 0;
+    }
 
     size_t begin = 0;
     size_t pos = max((size_t)siblings[0].code + 1, next_check_pos_) - 1;
@@ -296,20 +302,31 @@ size_t DoubleArrayTrie::insert(const std::vector<node_t> &siblings)
 
         begin = pos - siblings[0].code;
         if (alloc_size_ <= (begin + siblings[siblings.size() - 1].code))
+        {
             resize(static_cast<size_t>(alloc_size_ * max(1.05, 1.0 * key_size_ / progress_)));
+        }
 
         if (used_[begin])
+        {
             continue;
+        }
 
         for (size_t i = 1; i < siblings.size(); ++i)
+        {
             if (array_[begin + siblings[i].code].check != 0)
+            {
                 goto next;
+            }
+        }
 
         break;
     }
 
     if (1.0 * nonzero_num / (pos - next_check_pos_ + 1) >= 0.95)
+    {
         next_check_pos_ = pos;
+    }
+        
 
     used_[begin] = 1;
     size_ = max(size_, begin + static_cast<size_t>(siblings[siblings.size() - 1].code + 1));

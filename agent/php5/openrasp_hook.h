@@ -78,41 +78,6 @@ extern "C"
 #define OPENRASP_INTERNAL_FUNCTION_PARAMETERS INTERNAL_FUNCTION_PARAMETERS, OpenRASPCheckType check_type
 #define OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU INTERNAL_FUNCTION_PARAM_PASSTHRU, check_type
 
-/* {{{ defines */
-#define EXTR_OVERWRITE 0
-#define EXTR_SKIP 1
-#define EXTR_PREFIX_SAME 2
-#define EXTR_PREFIX_ALL 3
-#define EXTR_PREFIX_INVALID 4
-#define EXTR_PREFIX_IF_EXISTS 5
-#define EXTR_IF_EXISTS 6
-
-#define EXTR_REFS 0x100
-
-#define CASE_LOWER 0
-#define CASE_UPPER 1
-
-#define DIFF_NORMAL 1
-#define DIFF_KEY 2
-#define DIFF_ASSOC 6
-#define DIFF_COMP_DATA_NONE -1
-#define DIFF_COMP_DATA_INTERNAL 0
-#define DIFF_COMP_DATA_USER 1
-#define DIFF_COMP_KEY_INTERNAL 0
-#define DIFF_COMP_KEY_USER 1
-
-#define INTERSECT_NORMAL 1
-#define INTERSECT_KEY 2
-#define INTERSECT_ASSOC 6
-#define INTERSECT_COMP_DATA_NONE -1
-#define INTERSECT_COMP_DATA_INTERNAL 0
-#define INTERSECT_COMP_DATA_USER 1
-#define INTERSECT_COMP_KEY_INTERNAL 0
-#define INTERSECT_COMP_KEY_USER 1
-
-#define DOUBLE_DRIFT_FIX 0.000000000000001
-/* }}} */
-
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4)
 #define OPENRASP_OP1_TYPE(n) ((n)->op1.op_type)
 #define OPENRASP_OP2_TYPE(n) ((n)->op2.op_type)
@@ -141,9 +106,6 @@ extern "C"
 #define OPENRASP_CV_OF(i) (*EX_CV_NUM(EG(current_execute_data), i))
 #endif
 
-#define MYSQLI_STORE_RESULT 0
-#define MYSQLI_USE_RESULT 1
-#define MYSQL_PORT 3306
 #define SAFE_STRING(a) ((a) ? a : "")
 #define BACKSLASH_IN_CLASS _0_
 
@@ -157,15 +119,18 @@ enum HookPriority
     pTotal = 3
 };
 }
+static const int MYSQLI_STORE_RESULT = 0;
+static const int MYSQLI_USE_RESULT = 1;
+static const int MYSQL_PORT = 3306;
 
-typedef enum action_type_t
+enum OpenRASPActionType
 {
     AC_IGNORE = 0,
     AC_LOG = 1 << 0,
     AC_BLOCK = 1 << 1
-} OpenRASPActionType;
+};
 
-enum PATH_OPERATION
+enum PathOperation
 {
     OPENDIR = 1 << 0,
     RENAMESRC = 1 << 1,

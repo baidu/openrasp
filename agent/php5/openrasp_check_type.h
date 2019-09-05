@@ -23,7 +23,7 @@
 #include <set>
 #include <map>
 
-typedef enum check_type_t
+enum OpenRASPCheckType
 {
   INVALID_TYPE = 0,
   CALLABLE,
@@ -52,7 +52,7 @@ typedef enum check_type_t
   REQUEST_END,
   MONGO,
   ALL_TYPE
-} OpenRASPCheckType;
+};
 
 class CheckTypeTransfer
 {

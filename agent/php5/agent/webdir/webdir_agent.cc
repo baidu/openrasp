@@ -24,6 +24,7 @@ namespace openrasp
 {
 
 static const std::string dependency_url_path = "/v1/agent/dependency";
+static const std::string WEBDIR_AGENT_PR_NAME = "rasp-webdir";
 volatile int WebDirAgent::signal_received = 0;
 
 WebDirAgent::WebDirAgent()

@@ -55,11 +55,9 @@ std::unique_ptr<openrasp::SharedLogManager> slm = nullptr;
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_log)
 
 #define RASP_LOG_FILE_MODE (mode_t)0666
-#define RASP_LOG_TOKEN_REFILL_INTERVAL 60000
-#define RASP_STREAM_WRITE_RETRY_NUMBER 1
 
+static const int RASP_LOG_TOKEN_REFILL_INTERVAL = 60000;
 static bool verify_syslog_address_format(TSRMLS_D);
-
 typedef void (*value_filter_t)(zval *origin_zv, zval *new_zv TSRMLS_DC);
 
 typedef struct keys_filter_t
@@ -316,10 +314,21 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
     {
         alarm_appender = static_cast<log_appender>(alarm_appender | SYSLOG_APPENDER);
     }
-    openrasp_log_globals->alarm_logger = std::move(RaspLoggerEntry(ALARM_LOG_DIR_NAME, LEVEL_INFO, alarm_appender, static_cast<log_appender>(FSTREAM_APPENDER | SYSLOG_APPENDER)));
-    openrasp_log_globals->policy_logger = std::move(RaspLoggerEntry(POLICY_LOG_DIR_NAME, LEVEL_INFO, FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
-    openrasp_log_globals->plugin_logger = std::move(RaspLoggerEntry(PLUGIN_LOG_DIR_NAME, LEVEL_INFO, FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
-    openrasp_log_globals->rasp_logger = std::move(RaspLoggerEntry(RASP_LOG_DIR_NAME, LEVEL_INFO, FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
+    openrasp_log_globals->alarm_logger =
+        std::move(RaspLoggerEntry(RaspLoggerEntry::ALARM_LOG_DIR_NAME, LEVEL_INFO,
+                                  alarm_appender, static_cast<log_appender>(FSTREAM_APPENDER | SYSLOG_APPENDER)));
+
+    openrasp_log_globals->policy_logger =
+        std::move(RaspLoggerEntry(RaspLoggerEntry::POLICY_LOG_DIR_NAME, LEVEL_INFO,
+                                  FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
+
+    openrasp_log_globals->plugin_logger =
+        std::move(RaspLoggerEntry(RaspLoggerEntry::PLUGIN_LOG_DIR_NAME, LEVEL_INFO,
+                                  FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
+
+    openrasp_log_globals->rasp_logger =
+        std::move(RaspLoggerEntry(RaspLoggerEntry::RASP_LOG_DIR_NAME, LEVEL_INFO,
+                                  FSTREAM_APPENDER, static_cast<log_appender>(FSTREAM_APPENDER | FILE_APPENDER)));
 }
 
 static void openrasp_log_shutdown_globals(zend_openrasp_log_globals *openrasp_log_globals TSRMLS_DC)
@@ -378,6 +387,10 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_log)
 const char *RaspLoggerEntry::default_log_suffix = "%Y-%m-%d";
 const char *RaspLoggerEntry::rasp_rfc3339_format = "%Y-%m-%dT%H:%M:%S%z";
 const char *RaspLoggerEntry::syslog_time_format = "%b %d %H:%M:%S";
+const char *RaspLoggerEntry::ALARM_LOG_DIR_NAME = "alarm";
+const char *RaspLoggerEntry::POLICY_LOG_DIR_NAME = "policy";
+const char *RaspLoggerEntry::PLUGIN_LOG_DIR_NAME = "plugin";
+const char *RaspLoggerEntry::RASP_LOG_DIR_NAME = "rasp";
 
 RaspLoggerEntry::RaspLoggerEntry()
     : name("invalid")
@@ -755,7 +768,7 @@ void RaspLoggerEntry::update_common_info(TSRMLS_D)
     std::string php_version = get_phpversion();
     MAKE_STD_ZVAL(common_info);
     array_init(common_info);
-    if (strcmp(name, ALARM_LOG_DIR_NAME) == 0 &&
+    if (strcmp(name, RaspLoggerEntry::ALARM_LOG_DIR_NAME) == 0 &&
         (appender & appender_mask))
     {
         zval *migrate_src = nullptr;
@@ -804,7 +817,7 @@ void RaspLoggerEntry::update_common_info(TSRMLS_D)
         }
         add_assoc_zval(common_info, "header", z_header);
     }
-    else if (strcmp(name, POLICY_LOG_DIR_NAME) == 0 &&
+    else if (strcmp(name, RaspLoggerEntry::POLICY_LOG_DIR_NAME) == 0 &&
              (appender & appender_mask))
     {
         add_assoc_string(common_info, "event_type", "security_policy", 1);

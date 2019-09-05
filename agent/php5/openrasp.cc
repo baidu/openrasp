@@ -50,6 +50,7 @@ using openrasp::ConfigHolder;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
+const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.2.0";
 bool is_initialized = false;
 bool remote_active = false;
 std::string openrasp_status = "Protected";
@@ -297,8 +298,13 @@ PHP_RSHUTDOWN_FUNCTION(openrasp)
 PHP_MINFO_FUNCTION(openrasp)
 {
     php_info_print_table_start();
+<<<<<<< HEAD
     php_info_print_table_row(2, "Status", openrasp_status.c_str());
     php_info_print_table_row(2, "Version", PHP_OPENRASP_VERSION);
+=======
+    php_info_print_table_row(2, "Status", is_initialized ? "Protected" : "Unprotected, Initialization Failed");
+    php_info_print_table_row(2, "Version", OpenRASPInfo::PHP_OPENRASP_VERSION);
+>>>>>>> 1.2.1
 #ifdef OPENRASP_BUILD_TIME
     php_info_print_table_row(2, "Build Time", OPENRASP_BUILD_TIME);
 #endif
@@ -348,7 +354,7 @@ zend_module_entry openrasp_module_entry = {
     PHP_RINIT(openrasp),
     PHP_RSHUTDOWN(openrasp),
     PHP_MINFO(openrasp),
-    PHP_OPENRASP_VERSION,
+    OpenRASPInfo::PHP_OPENRASP_VERSION,
     STANDARD_MODULE_PROPERTIES};
 
 #ifdef COMPILE_DL_OPENRASP
@@ -420,7 +426,7 @@ static void hook_without_params(OpenRASPCheckType check_type TSRMLS_DC)
 
         auto params = v8::Object::New(isolate);
         check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params,
-                                  OPENRASP_CONFIG(plugin.timeout.millis));
+                             OPENRASP_CONFIG(plugin.timeout.millis));
     }
     if (check_result == openrasp::CheckResult::kBlock)
     {

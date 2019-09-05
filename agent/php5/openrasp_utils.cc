@@ -183,7 +183,9 @@ const char *fetch_url_scheme(const char *filename)
     }
     const char *p;
     for (p = filename; isalnum((int)*p) || *p == '+' || *p == '-' || *p == '.'; p++)
-        ;
+    {
+        //skip number "+" "-" "."
+    }
     if ((*p == ':') && (p - filename > 1) && (p[1] == '/') && (p[2] == '/'))
     {
         return p;
@@ -335,10 +337,10 @@ bool make_openrasp_root_dir(const char *path TSRMLS_DC)
         "conf",
         "plugins",
         "locale",
-        "logs" + default_slash + ALARM_LOG_DIR_NAME,
-        "logs" + default_slash + POLICY_LOG_DIR_NAME,
-        "logs" + default_slash + PLUGIN_LOG_DIR_NAME,
-        "logs" + default_slash + RASP_LOG_DIR_NAME};
+        "logs" + default_slash + RaspLoggerEntry::ALARM_LOG_DIR_NAME,
+        "logs" + default_slash + RaspLoggerEntry::POLICY_LOG_DIR_NAME,
+        "logs" + default_slash + RaspLoggerEntry::PLUGIN_LOG_DIR_NAME,
+        "logs" + default_slash + RaspLoggerEntry::RASP_LOG_DIR_NAME};
     for (auto dir : sub_dir_list)
     {
         std::string sub_path(root_dir + DEFAULT_SLASH + dir);
@@ -354,6 +356,7 @@ bool make_openrasp_root_dir(const char *path TSRMLS_DC)
 void openrasp_set_locale(const char *locale, const char *locale_path)
 {
 #ifdef HAVE_GETTEXT
+    static const char *GETTEXT_PACKAGE = "openrasp";
     if (nullptr != setlocale(LC_ALL, locale ? locale : "C"))
     {
         if (!bindtextdomain(GETTEXT_PACKAGE, locale_path))

@@ -23,11 +23,11 @@
 class SqlConnectionEntry
 {
 public:
-  typedef enum connection_policy_type_t
+  enum connection_policy_type
   {
     USER,
     PASSWORD
-  } connection_policy_type;
+  };
 
 protected:
   std::string connection_string;

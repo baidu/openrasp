@@ -31,9 +31,6 @@
 #else
 #define AGENT_SET_PROC_NAME(name)
 #endif
-#define HEARTBEAT_AGENT_PR_NAME "rasp-heartbeat"
-#define WEBDIR_AGENT_PR_NAME "rasp-webdir"
-#define LOG_AGENT_PR_NAME "rasp-log"
 
 namespace openrasp
 {
