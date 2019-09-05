@@ -16,6 +16,7 @@
 
 #include "shared_config_manager.h"
 #include "shared_config_block.h"
+#include "utils/string.h"
 #include "utils/digest.h"
 #include "utils/net.h"
 #include "utils/hostname.h"
@@ -232,21 +233,29 @@ bool SharedConfigManager::shutdown()
 
 bool SharedConfigManager::build_rasp_id()
 {
-    std::vector<std::string> hw_addrs;
-    fetch_hw_addrs(hw_addrs);
-    if (hw_addrs.empty())
+    if (empty(openrasp_ini.rasp_id))
     {
-        return false;
+        std::vector<std::string> hw_addrs;
+        fetch_hw_addrs(hw_addrs);
+        if (hw_addrs.empty())
+        {
+            return false;
+        }
+        std::string buf;
+        for (auto hw_addr : hw_addrs)
+        {
+            buf += hw_addr;
+        }
+        buf.append(get_hostname())
+            .append(openrasp_ini.root_dir ? openrasp_ini.root_dir : "")
+            .append(sapi_module.name ? sapi_module.name : "");
+        this->rasp_id = md5sum(static_cast<const void *>(buf.c_str()), buf.length());
     }
-    std::string buf;
-    for (auto hw_addr : hw_addrs)
+    else
     {
-        buf += hw_addr;
+        this->rasp_id = std::string(openrasp_ini.rasp_id);
     }
-    buf.append(get_hostname())
-        .append(openrasp_ini.root_dir ? openrasp_ini.root_dir : "")
-        .append(sapi_module.name ? sapi_module.name : "");
-    this->rasp_id = md5sum(static_cast<const void *>(buf.c_str()), buf.length());
+
     return true;
 }
 

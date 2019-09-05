@@ -109,6 +109,11 @@ PHP_MINIT_FUNCTION(openrasp)
     {
         return SUCCESS;
     }
+    if (!openrasp_ini.verify_rasp_id())
+    {
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.rasp_id can only contain alphanumeric characters and is between 16 and 512 in length."));
+        return SUCCESS;
+    }
     openrasp::scm.reset(new openrasp::SharedConfigManager());
     if (!openrasp::scm->startup())
     {

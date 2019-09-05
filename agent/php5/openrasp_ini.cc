@@ -23,16 +23,16 @@ Openrasp_ini openrasp_ini;
 
 static const int MIN_HEARTBEAT_INTERVAL = 10;
 const char *Openrasp_ini::APPID_REGEX = "^[0-9a-fA-F]{40}$";
-const char *Openrasp_ini::APPSECRET_REGEX = "^[0-9a-zA-Z_-]{43,45}";
+const char *Openrasp_ini::APPSECRET_REGEX = "^[0-9a-zA-Z_-]{43,45}$";
+const char *Openrasp_ini::RASPID_REGEX = "^[0-9a-fA-F]{16,512}$";
 
 bool Openrasp_ini::verify_remote_management_ini(std::string &error)
 {
-    if (nullptr == openrasp_ini.backend_url || strcmp(openrasp_ini.backend_url, "") == 0)
-        if (openrasp::empty(backend_url))
-        {
-            error = std::string(_("openrasp.backend_url is required when remote management is enabled."));
-            return false;
-        }
+    if (openrasp::empty(backend_url))
+    {
+        error = std::string(_("openrasp.backend_url is required when remote management is enabled."));
+        return false;
+    }
     if (openrasp::empty(app_id))
     {
         error = std::string(_("openrasp.app_id is required when remote management is enabled."));
@@ -58,6 +58,15 @@ bool Openrasp_ini::verify_remote_management_ini(std::string &error)
             error = std::string(_("openrasp.app_secret configuration format is incorrect."));
             return false;
         }
+    }
+    return true;
+}
+
+bool Openrasp_ini::verify_rasp_id()
+{
+    if (!openrasp::empty(rasp_id))
+    {
+        return openrasp::regex_match(rasp_id, Openrasp_ini::RASPID_REGEX);
     }
     return true;
 }

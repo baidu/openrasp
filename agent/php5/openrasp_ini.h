@@ -39,7 +39,9 @@ public:
 
   static const char* APPID_REGEX;
   static const char* APPSECRET_REGEX;
+  static const char* RASPID_REGEX;
   bool verify_remote_management_ini(std::string &error);
+  bool verify_rasp_id();
 };
 
 extern Openrasp_ini openrasp_ini;
