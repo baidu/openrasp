@@ -50,6 +50,7 @@ using openrasp::ConfigHolder;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
+const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.2.0";
 bool is_initialized = false;
 bool remote_active = false;
 static bool make_openrasp_root_dir(TSRMLS_D);
@@ -272,7 +273,7 @@ PHP_MINFO_FUNCTION(openrasp)
 {
     php_info_print_table_start();
     php_info_print_table_row(2, "Status", is_initialized ? "Protected" : "Unprotected, Initialization Failed");
-    php_info_print_table_row(2, "Version", PHP_OPENRASP_VERSION);
+    php_info_print_table_row(2, "Version", OpenRASPInfo::PHP_OPENRASP_VERSION);
 #ifdef OPENRASP_BUILD_TIME
     php_info_print_table_row(2, "Build Time", OPENRASP_BUILD_TIME);
 #endif
@@ -322,7 +323,7 @@ zend_module_entry openrasp_module_entry = {
     PHP_RINIT(openrasp),
     PHP_RSHUTDOWN(openrasp),
     PHP_MINFO(openrasp),
-    PHP_OPENRASP_VERSION,
+    OpenRASPInfo::PHP_OPENRASP_VERSION,
     STANDARD_MODULE_PROPERTIES};
 
 #ifdef COMPILE_DL_OPENRASP
@@ -357,10 +358,10 @@ static bool make_openrasp_root_dir(TSRMLS_D)
         "conf",
         "plugins",
         "locale",
-        "logs" + default_slash + ALARM_LOG_DIR_NAME,
-        "logs" + default_slash + POLICY_LOG_DIR_NAME,
-        "logs" + default_slash + PLUGIN_LOG_DIR_NAME,
-        "logs" + default_slash + RASP_LOG_DIR_NAME};
+        "logs" + default_slash + RaspLoggerEntry::ALARM_LOG_DIR_NAME,
+        "logs" + default_slash + RaspLoggerEntry::POLICY_LOG_DIR_NAME,
+        "logs" + default_slash + RaspLoggerEntry::PLUGIN_LOG_DIR_NAME,
+        "logs" + default_slash + RaspLoggerEntry::RASP_LOG_DIR_NAME};
     for (auto dir : sub_dir_list)
     {
         std::string path(root_dir + DEFAULT_SLASH + dir);
@@ -371,6 +372,7 @@ static bool make_openrasp_root_dir(TSRMLS_D)
         }
     }
 #ifdef HAVE_GETTEXT
+    static const char *GETTEXT_PACKAGE = "openrasp";
     if (nullptr != setlocale(LC_ALL, openrasp_ini.locale ? openrasp_ini.locale : "C"))
     {
         std::string locale_path(root_dir + DEFAULT_SLASH + "locale" + DEFAULT_SLASH);
@@ -484,7 +486,7 @@ static void hook_without_params(OpenRASPCheckType check_type TSRMLS_DC)
 
         auto params = v8::Object::New(isolate);
         check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params,
-                                  OPENRASP_CONFIG(plugin.timeout.millis));
+                             OPENRASP_CONFIG(plugin.timeout.millis));
     }
     if (check_result == openrasp::CheckResult::kBlock)
     {

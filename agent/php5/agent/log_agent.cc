@@ -29,6 +29,7 @@ namespace openrasp
 
 volatile int LogAgent::signal_received = 0;
 const double LogAgent::factor = 2.0;
+static const std::string LOG_AGENT_PR_NAME = "rasp-log";
 
 LogAgent::LogAgent()
 	: BaseAgent(LOG_AGENT_PR_NAME)

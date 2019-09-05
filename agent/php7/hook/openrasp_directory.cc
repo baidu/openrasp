@@ -44,7 +44,7 @@ static inline void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	}
 
 	php_stream *dirp;
-	dirp = php_stream_opendir(ZSTR_VAL(dirname), IGNORE_PATH, NULL);
+	dirp = php_stream_opendir(ZSTR_VAL(dirname), IGNORE_PATH, nullptr);
 	if (!dirp)
 	{
 		return;

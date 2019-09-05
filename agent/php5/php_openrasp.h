@@ -27,8 +27,6 @@ extern "C"
 extern zend_module_entry openrasp_module_entry;
 #define phpext_openrasp_ptr &openrasp_module_entry
 
-#define PHP_OPENRASP_VERSION "1.2.0" /* Replace with version number for your extension */
-
 #ifdef PHP_WIN32
 #	define PHP_OPENRASP_API __declspec(dllexport)
 #elif defined(__GNUC__) && __GNUC__ >= 4

@@ -38,10 +38,10 @@ const std::map<int, const std::string> LogCollectItem::instance_url_map =
 
 const std::map<int, const std::string> LogCollectItem::instance_name_map =
     {
-        {ALARM_LOGGER, ALARM_LOG_DIR_NAME},
-        {POLICY_LOGGER, POLICY_LOG_DIR_NAME},
-        {PLUGIN_LOGGER, PLUGIN_LOG_DIR_NAME},
-        {RASP_LOGGER, RASP_LOG_DIR_NAME}};
+        {ALARM_LOGGER, RaspLoggerEntry::ALARM_LOG_DIR_NAME},
+        {POLICY_LOGGER, RaspLoggerEntry::POLICY_LOG_DIR_NAME},
+        {PLUGIN_LOGGER, RaspLoggerEntry::PLUGIN_LOG_DIR_NAME},
+        {RASP_LOGGER, RaspLoggerEntry::RASP_LOG_DIR_NAME}};
 
 LogCollectItem::LogCollectItem(int instance_id, bool collect_enable)
     : instance_id(instance_id),

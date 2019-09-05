@@ -32,6 +32,7 @@ namespace openrasp
 
 volatile int HeartBeatAgent::signal_received = 0;
 static const std::string heartbeat_url_path = "/v1/agent/heartbeat";
+static const std::string HEARTBEAT_AGENT_PR_NAME = "rasp-heartbeat";
 
 HeartBeatAgent::HeartBeatAgent()
 	: BaseAgent(HEARTBEAT_AGENT_PR_NAME)

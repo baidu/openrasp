@@ -28,7 +28,6 @@ extern "C"
 #ifdef HAVE_GETTEXT
 #include <libintl.h>
 #include <locale.h>
-#define GETTEXT_PACKAGE "openrasp"
 #define _(STRING) gettext(STRING)
 #else
 #define _(STRING) (STRING)
@@ -83,5 +82,10 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp)
 #define UNLIKELY(condition) (condition)
 #define LIKELY(condition) (condition)
 #endif
+
+struct OpenRASPInfo
+{
+	static const char *PHP_OPENRASP_VERSION; /* Replace with version number for your extension */
+};
 
 #endif

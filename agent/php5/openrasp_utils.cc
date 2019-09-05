@@ -177,7 +177,9 @@ const char *fetch_url_scheme(const char *filename)
     }
     const char *p;
     for (p = filename; isalnum((int)*p) || *p == '+' || *p == '-' || *p == '.'; p++)
-        ;
+    {
+        //skip number "+" "-" "."
+    }
     if ((*p == ':') && (p - filename > 1) && (p[1] == '/') && (p[2] == '/'))
     {
         return p;

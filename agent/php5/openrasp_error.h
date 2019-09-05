@@ -19,7 +19,7 @@
 
 #include "openrasp.h"
 
-typedef enum openrasp_error_code_t
+enum openrasp_error_code
 {
 	FSWATCH_ERROR = 20001,
 	LOG_ERROR,
@@ -30,7 +30,7 @@ typedef enum openrasp_error_code_t
 	REGISTER_ERROR = 20008,
 	HEARTBEAT_ERROR,
 	LOGCOLLECT_ERROR
-} openrasp_error_code;
+};
 
 void openrasp_error(int type, openrasp_error_code code, const char *format, ...);
 
