@@ -16,6 +16,7 @@
 
 #include "utils/json_reader.h"
 #include "utils/yaml_reader.h"
+#include "utils/string.h"
 #include "openrasp.h"
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
@@ -67,6 +68,7 @@ PHP_INI_ENTRY1("openrasp.locale", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCStri
 PHP_INI_ENTRY1("openrasp.backend_url", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.backend_url)
 PHP_INI_ENTRY1("openrasp.app_id", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.app_id)
 PHP_INI_ENTRY1("openrasp.app_secret", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.app_secret)
+PHP_INI_ENTRY1("openrasp.rasp_id", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.rasp_id)
 PHP_INI_ENTRY1("openrasp.remote_management_enable", "0", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.remote_management_enable)
 PHP_INI_ENTRY1("openrasp.heartbeat_interval", "180", PHP_INI_SYSTEM, OnUpdateOpenraspHeartbeatInterval, &openrasp_ini.heartbeat_interval)
 PHP_INI_ENTRY1("openrasp.ssl_verifypeer", "0", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.ssl_verifypeer)
@@ -139,8 +141,10 @@ PHP_MINIT_FUNCTION(openrasp)
     if (need_alloc_shm_current_sapi() && openrasp_ini.remote_management_enable)
     {
         openrasp::oam.reset(new openrasp::OpenraspAgentManager());
-        if (!verify_remote_management_ini())
+        std::string error_msg;
+        if (!openrasp_ini.verify_remote_management_ini(error_msg))
         {
+            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, error_msg.c_str());
             return SUCCESS;
         }
         remote_active = true;
@@ -414,7 +418,7 @@ static std::string get_config_abs_path(ConfigHolder::FromType type)
 
 static bool update_config(openrasp::ConfigHolder *config TSRMLS_DC, ConfigHolder::FromType type)
 {
-    if (nullptr != openrasp_ini.root_dir && strcmp(openrasp_ini.root_dir, "") != 0)
+    if (!openrasp::empty(openrasp_ini.root_dir))
     {
         std::string config_file_path = get_config_abs_path(type);
         std::string conf_contents;

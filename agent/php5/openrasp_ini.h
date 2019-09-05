@@ -33,8 +33,13 @@ public:
   char *backend_url;
   char *app_id;
   char *app_secret;
+  char *rasp_id;
   bool remote_management_enable = true;
   bool ssl_verifypeer = false;
+
+  static const char* APPID_REGEX;
+  static const char* APPSECRET_REGEX;
+  bool verify_remote_management_ini(std::string &error);
 };
 
 extern Openrasp_ini openrasp_ini;
