@@ -3,11 +3,12 @@ hook PDO::exec error
 --SKIPIF--
 <?php
 $plugin = <<<EOF
-RASP.algorithmConfig = {
-     sql_exception: {
-        action: 'block'
-    }
-}
+plugin.register('sql_exception', params => {
+    assert(params.server == 'mysql')
+    assert(params.query == 'select GeometryCollection((select 1 from (select * from (select user())a)b))')
+    assert(params.error_code == '1367')
+    return block
+})
 EOF;
 $conf = <<<CONF
 security.enforce_policy: false

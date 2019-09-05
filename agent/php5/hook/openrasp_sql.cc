@@ -50,7 +50,6 @@ static bool sql_policy_alarm(sql_connection_entry *conn_entry, sql_connection_en
         {
             conn_entry->connection_entry_policy_log(policy_type);
         }
-        
     }
 #ifdef HAVE_LINE_COVERAGE
     __gcov_flush();
@@ -124,48 +123,50 @@ bool is_mysql_error_code_monitored(long err_code)
 
 void sql_query_error_alarm(char *server, char *query, const std::string &err_code, const std::string &err_msg TSRMLS_DC)
 {
-    zval *attack_params = nullptr;
-    MAKE_STD_ZVAL(attack_params);
-    array_init(attack_params);
-    add_assoc_string(attack_params, "server", server, 1);
-    add_assoc_string(attack_params, "query", query, 1);
-    add_assoc_string(attack_params, "error_code", (char *)err_code.c_str(), 1);
-    zval *plugin_message = nullptr;
-    MAKE_STD_ZVAL(plugin_message);
-    char *message_str = nullptr;
-    std::string utf8_err_msg = openrasp::replace_invalid_utf8(err_msg);
-    spprintf(&message_str, 0, _("%s error %s detected: %s."),
-             server,
-             err_code.c_str(),
-             utf8_err_msg.c_str());
-    ZVAL_STRING(plugin_message, message_str, 1);
-    efree(message_str);
-    OpenRASPActionType action = openrasp::scm->get_buildin_check_action(SQL_ERROR);
-    openrasp_buildin_php_risk_handle(action, SQL_ERROR, 100, attack_params, plugin_message TSRMLS_CC);
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+    if (isolate && server && query)
+    {
+        openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto params = v8::Object::New(isolate);
+            params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, strlen(query)));
+            params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server));
+            params->Set(openrasp::NewV8String(isolate, "error_code"), openrasp::NewV8String(isolate, err_code));
+            std::string utf8_err_msg = openrasp::replace_invalid_utf8(err_msg);
+            params->Set(openrasp::NewV8String(isolate, "error_msg"), openrasp::NewV8String(isolate, utf8_err_msg));
+            check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(SQL_ERROR)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+        }
+        if (check_result == openrasp::CheckResult::kBlock)
+        {
+            handle_block(TSRMLS_C);
+        }
+    }
 }
 
 void sql_connect_error_alarm(sql_connection_entry *sql_connection_p, const std::string &err_code, const std::string &err_msg TSRMLS_DC)
 {
-    zval *attack_params = nullptr;
-    MAKE_STD_ZVAL(attack_params);
-    array_init(attack_params);
-    add_assoc_string(attack_params, "server", (char *)sql_connection_p->get_server().c_str(), 1);
-    add_assoc_string(attack_params, "hostname", (char *)sql_connection_p->get_host().c_str(), 1);
-    add_assoc_string(attack_params, "username", (char *)sql_connection_p->get_username().c_str(), 1);
-    add_assoc_string(attack_params, "socket", (char *)sql_connection_p->get_socket().c_str(), 1);
-    add_assoc_string(attack_params, "connectionString", (char *)sql_connection_p->get_connection_string().c_str(), 1);
-    add_assoc_long(attack_params, "port", sql_connection_p->get_port());
-    add_assoc_string(attack_params, "error_code", (char *)err_code.c_str(), 1);
-    zval *plugin_message = nullptr;
-    MAKE_STD_ZVAL(plugin_message);
-    char *message_str = nullptr;
-    std::string utf8_err_msg = openrasp::replace_invalid_utf8(err_msg);
-    spprintf(&message_str, 0, _("%s error %s detected: %s."),
-             sql_connection_p->get_server().c_str(),
-             err_code.c_str(),
-             utf8_err_msg.c_str());
-    ZVAL_STRING(plugin_message, message_str, 1);
-    efree(message_str);
-    OpenRASPActionType action = openrasp::scm->get_buildin_check_action(SQL_ERROR);
-    openrasp_buildin_php_risk_handle(action, SQL_ERROR, 100, attack_params, plugin_message TSRMLS_CC);
+    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
+    if (isolate && sql_connection_p)
+    {
+        openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto params = v8::Object::New(isolate);
+            params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, sql_connection_p->get_server()));
+            params->Set(openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, sql_connection_p->get_host()));
+            params->Set(openrasp::NewV8String(isolate, "username"), openrasp::NewV8String(isolate, sql_connection_p->get_username()));
+            params->Set(openrasp::NewV8String(isolate, "socket"), openrasp::NewV8String(isolate, sql_connection_p->get_socket()));
+            params->Set(openrasp::NewV8String(isolate, "connectionString"), openrasp::NewV8String(isolate, sql_connection_p->get_connection_string()));
+            params->Set(openrasp::NewV8String(isolate, "port"), v8::Integer::New(isolate, sql_connection_p->get_port()));
+            params->Set(openrasp::NewV8String(isolate, "error_code"), openrasp::NewV8String(isolate, err_code));
+            std::string utf8_err_msg = openrasp::replace_invalid_utf8(err_msg);
+            params->Set(openrasp::NewV8String(isolate, "error_msg"), openrasp::NewV8String(isolate, utf8_err_msg));
+            check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(SQL_ERROR)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+        }
+        if (check_result == openrasp::CheckResult::kBlock)
+        {
+            handle_block(TSRMLS_C);
+        }
+    }
 }

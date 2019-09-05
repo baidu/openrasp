@@ -3,11 +3,12 @@ hook mysqli::__construct error
 --SKIPIF--
 <?php
 $plugin = <<<EOF
-RASP.algorithmConfig = {
-     sql_exception: {
-        action: 'block'
-    }
-}
+plugin.register('sql_exception', params => {
+    assert(params.hostname == '127.0.0.1')
+    assert(params.username == 'nonexistentusername')
+    assert(params.error_code == '1045')
+    return block
+})
 EOF;
 $conf = <<<CONF
 security.enforce_policy: false

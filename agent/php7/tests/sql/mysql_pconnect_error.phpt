@@ -4,11 +4,12 @@ hook mysql_pconnect error
 <?php
 if (PHP_MAJOR_VERSION >= 7) die('Skipped: no mysql extension in PHP7.');
 $plugin = <<<EOF
-RASP.algorithmConfig = {
-     sql_exception: {
-        action: 'block'
-    }
-}
+plugin.register('sql_exception', params => {
+    assert(params.hostname == '127.0.0.1')
+    assert(params.username == 'nonexistentusername')
+    assert(params.error_code == '1045')
+    return block
+})
 EOF;
 $conf = <<<CONF
 security.enforce_policy: false

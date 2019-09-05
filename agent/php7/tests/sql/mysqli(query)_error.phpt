@@ -3,11 +3,12 @@ hook mysqli::query error
 --SKIPIF--
 <?php
 $plugin = <<<EOF
-RASP.algorithmConfig = {
-     sql_exception: {
-        action: 'block'
-    }
-}
+plugin.register('sql_exception', params => {
+    assert(params.server == 'mysql')
+    assert(params.query == 'select exp(~(select*from(select user())x))')
+    assert(params.error_code == '1690')
+    return block
+})
 EOF;
 $conf = <<<CONF
 security.enforce_policy: false
