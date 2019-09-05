@@ -77,7 +77,7 @@ static std::map<std::string, std::string> _if_addr_map;
 static long get_millisecond()
 {
     struct timeval tp = {0};
-    gettimeofday(&tp, NULL);
+    gettimeofday(&tp, nullptr);
     return (long)(tp.tv_sec * 1000 + tp.tv_usec / 1000);
 }
 
@@ -95,7 +95,7 @@ static int openrasp_log_files_mkdir(char *path)
 
 static void delete_merged_array_keys(HashTable *dest, const HashTable *src)
 {
-    zend_string *skey;
+    zend_string *skey = nullptr;
     ZEND_HASH_FOREACH_STR_KEY(dest, skey)
     {
         if (zend_hash_exists(src, skey))
@@ -156,7 +156,7 @@ static void request_method_to_lower(zval *origin_zv, zval *new_zv)
 static void build_complete_url(zval *items, zval *new_zv)
 {
     assert(Z_TYPE_P(items) == IS_ARRAY);
-    zval *origin_zv;
+    zval *origin_zv = nullptr;
     std::string buffer;
     char *request_scheme = fetch_outmost_string_from_ht(Z_ARRVAL_P(items), "REQUEST_SCHEME");
     if (request_scheme)
@@ -212,7 +212,7 @@ static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_fi
         efree(tmp_clientip_header);
     }
     total_filters.push_back({clientip_origin_key, "client_ip", nullptr});
-    zval *origin_zv;
+    zval *origin_zv = nullptr;
     for (keys_filter filter : total_filters)
     {
         if (src && Z_TYPE_P(src) == IS_ARRAY)
@@ -336,7 +336,7 @@ static void openrasp_log_init_globals(zend_openrasp_log_globals *openrasp_log_gl
 
 PHP_MINIT_FUNCTION(openrasp_log)
 {
-    ZEND_INIT_MODULE_GLOBALS(openrasp_log, openrasp_log_init_globals, NULL);
+    ZEND_INIT_MODULE_GLOBALS(openrasp_log, openrasp_log_init_globals, nullptr);
     if (need_alloc_shm_current_sapi())
     {
         slm.reset(new openrasp::SharedLogManager());
@@ -434,7 +434,7 @@ void RaspLoggerEntry::update_formatted_date_suffix()
 {
     if (FSTREAM_APPENDER & appender)
     {
-        long now = (long)time(NULL);
+        long now = (long)time(nullptr);
         if (formatted_date_suffix != nullptr)
         {
             efree(formatted_date_suffix);
@@ -540,7 +540,7 @@ bool RaspLoggerEntry::openrasp_log_stream_available(log_appender appender_int)
                 tv.tv_usec = OPENRASP_CONFIG(syslog.connection_timeout) * 1000;
                 res_len = spprintf(&res, 0, "%s", OPENRASP_CONFIG(syslog.url).c_str());
                 stream = php_stream_xport_create(res, res_len, REPORT_ERRORS,
-                                                 STREAM_XPORT_CLIENT | STREAM_XPORT_CONNECT, 0, &tv, NULL, NULL, NULL);
+                                                 STREAM_XPORT_CLIENT | STREAM_XPORT_CONNECT, 0, &tv, nullptr, nullptr, nullptr);
                 if (stream)
                 {
                     tv.tv_sec = 0;
@@ -617,7 +617,7 @@ bool RaspLoggerEntry::raw_log(severity_level level_int, const char *message, int
 
     if (appender & FSTREAM_APPENDER)
     {
-        long now = (long)time(NULL);
+        long now = (long)time(nullptr);
         if (if_need_update_formatted_file_suffix(now))
         {
             update_formatted_date_suffix();
@@ -632,10 +632,10 @@ bool RaspLoggerEntry::raw_log(severity_level level_int, const char *message, int
     {
         if (openrasp_log_stream_available(SYSLOG_APPENDER))
         {
-            char *syslog_info = NULL;
+            char *syslog_info = nullptr;
             int syslog_info_len = 0;
 
-            long now = (long)time(NULL);
+            long now = (long)time(nullptr);
             std::string syslog_time = format_time(RaspLoggerEntry::syslog_time_format, strlen(RaspLoggerEntry::syslog_time_format), now);
             int priority = OPENRASP_CONFIG(syslog.facility) * 8 + level_int;
             std::string tag = OPENRASP_CONFIG(syslog.tag);
@@ -653,9 +653,9 @@ bool RaspLoggerEntry::raw_log(severity_level level_int, const char *message, int
 
     if (appender & FILE_APPENDER)
     {
-        char *file_path = NULL;
+        char *file_path = nullptr;
         std::string tmp_formatted_date_suffix = format_time(RaspLoggerEntry::default_log_suffix,
-                                                            strlen(RaspLoggerEntry::default_log_suffix), (long)time(NULL));
+                                                            strlen(RaspLoggerEntry::default_log_suffix), (long)time(nullptr));
         spprintf(&file_path, 0, "%s%clogs%c%s%c%s.log.%s", openrasp_ini.root_dir, DEFAULT_SLASH, DEFAULT_SLASH,
                  name, DEFAULT_SLASH, name, tmp_formatted_date_suffix.c_str());
 #ifndef _WIN32
@@ -688,7 +688,7 @@ bool RaspLoggerEntry::log(severity_level level_int, const char *message, int mes
     if (detail)
     {
         std::string time_RFC3339 = format_time(RaspLoggerEntry::rasp_rfc3339_format,
-                                               strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
+                                               strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(nullptr));
         complete_log.append(time_RFC3339 + " ");
     }
     complete_log.append(message);
@@ -715,7 +715,7 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message)
     bool log_result = false;
     {
         std::string event_time = format_time(RaspLoggerEntry::rasp_rfc3339_format,
-                                             strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
+                                             strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(nullptr));
         add_assoc_string(&common_info, "event_time", const_cast<char *>(event_time.c_str()));
     }
     zval source_code_arr;
@@ -783,8 +783,8 @@ void RaspLoggerEntry::update_common_info()
         array_init(&z_header);
         if (migrate_src)
         {
-            zval *value;
-            zend_string *key;
+            zval *value = nullptr;
+            zend_string *key = nullptr;
             ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(migrate_src), key, value)
             {
                 std::string header_key = convert_to_header_key(key->val, key->len);

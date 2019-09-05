@@ -33,8 +33,8 @@ void parse_connection_string(char *connstring, sql_connection_entry *sql_connect
 
 static bool init_pg_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
-    char *host = NULL, *port = NULL, *options = NULL, *tty = NULL, *dbname = NULL, *connstring = NULL;
-    zval *args;
+    char *host = nullptr, *port = nullptr, *options = nullptr, *tty = nullptr, *dbname = nullptr, *connstring = nullptr;
+    zval *args = nullptr;
     int connect_type = 0;
     args = (zval *)safe_emalloc(ZEND_NUM_ARGS(), sizeof(zval), 0);
     if (ZEND_NUM_ARGS() < 1 || ZEND_NUM_ARGS() > 5 ||
@@ -90,9 +90,10 @@ void post_global_pg_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS
  */
 void pre_global_pg_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *pgsql_link = NULL;
-    char *query;
-    size_t query_len, argc = ZEND_NUM_ARGS();
+    zval *pgsql_link = nullptr;
+    char *query = nullptr;
+    size_t query_len = 0;
+    size_t argc = ZEND_NUM_ARGS();
 
     if (argc == 1)
     {
@@ -122,9 +123,12 @@ void pre_global_pg_send_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_pg_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *pgsql_link = NULL;
-    char *query, *stmtname;
-    size_t query_len, stmtname_len, argc = ZEND_NUM_ARGS();
+    zval *pgsql_link = nullptr;
+    char *query = nullptr;
+    char *stmtname = nullptr;
+    size_t query_len = 0;
+    size_t stmtname_len = 0;
+    size_t argc = ZEND_NUM_ARGS();
 
     if (argc == 2)
     {

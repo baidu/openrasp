@@ -81,7 +81,7 @@ OPENRASP_HOOK_FUNCTION(curl_exec, SSRF)
 
 bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *function_name, zval *opt, zval *origin_url, zval args[])
 {
-    if (call_user_function(EG(function_table), NULL, function_name, origin_url, 2, args) != SUCCESS ||
+    if (call_user_function(EG(function_table), nullptr, function_name, origin_url, 2, args) != SUCCESS ||
         Z_TYPE_P(origin_url) != IS_STRING)
     {
         return true;
@@ -138,7 +138,7 @@ void post_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *fun
 {
     zval effective_url;
     ZVAL_NULL(&effective_url);
-    if (call_user_function(EG(function_table), NULL, function_name, &effective_url, 2, args) != SUCCESS &&
+    if (call_user_function(EG(function_table), nullptr, function_name, &effective_url, 2, args) != SUCCESS &&
         Z_TYPE(effective_url) != IS_STRING &&
         (strncasecmp(Z_STRVAL(effective_url), "file", 4) == 0 || strncasecmp(Z_STRVAL(effective_url), "scp", 3) == 0) &&
         strcmp(Z_STRVAL(effective_url), Z_STRVAL_P(origin_url)) != 0)

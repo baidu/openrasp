@@ -41,13 +41,13 @@ extern void parse_connection_string(char *connstring, sql_connection_entry *sql_
 
 static char *dsn_from_uri(char *uri, char *buf, size_t buflen TSRMLS_DC)
 {
-    php_stream *stream;
-    char *dsn = NULL;
+    php_stream *stream = nullptr;
+    char *dsn = nullptr;
 
-    stream = php_stream_open_wrapper(uri, "rb", REPORT_ERRORS, NULL);
+    stream = php_stream_open_wrapper(uri, "rb", REPORT_ERRORS, nullptr);
     if (stream)
     {
-        dsn = php_stream_get_line(stream, buf, buflen, NULL);
+        dsn = php_stream_get_line(stream, buf, buflen, nullptr);
         php_stream_close(stream);
     }
     return dsn;
@@ -55,12 +55,13 @@ static char *dsn_from_uri(char *uri, char *buf, size_t buflen TSRMLS_DC)
 
 static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
 {
-    char *data_source;
-    int data_source_len;
-    char *colon;
-    char *username = NULL, *password = NULL;
-    int usernamelen, passwordlen;
-    zval *options = NULL;
+    char *data_source = nullptr;
+    int data_source_len = 0;
+    char *colon = nullptr;
+    char *username = nullptr, *password = nullptr;
+    int usernamelen = 0;
+    int passwordlen = 0;
+    zval *options = nullptr;
     char alt_dsn[512];
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|s!s!a!", &data_source, &data_source_len,
@@ -75,7 +76,7 @@ static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
     if (!colon)
     {
         /* let's see if this string has a matching dsn in the php.ini */
-        char *ini_dsn = NULL;
+        char *ini_dsn = nullptr;
 
         snprintf(alt_dsn, sizeof(alt_dsn), "pdo.dsn.%s", data_source);
         if (FAILURE == cfg_get_string(alt_dsn, &ini_dsn))
@@ -118,11 +119,11 @@ static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
     if (sql_connection_p->get_server() == "mysql")
     {
         struct pdo_data_src_parser mysql_vars[] = {
-            {"charset", NULL, 0},
+            {"charset", nullptr, 0},
             {"dbname", "", 0},
             {"host", "localhost", 0},
             {"port", "3306", 0},
-            {"unix_socket", NULL, 0},
+            {"unix_socket", nullptr, 0},
         };
         php_pdo_parse_data_source(colon + 1, strlen(colon + 1), mysql_vars, 5);
         sql_connection_p->set_using_socket(nullptr == mysql_vars[2].optval || strcmp("localhost", mysql_vars[2].optval) == 0);
@@ -146,7 +147,9 @@ static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
     }
     else if (sql_connection_p->get_server() == "pgsql")
     {
-        char *e, *p, *conn_str = nullptr;
+        char *e = nullptr;
+        char *p = nullptr;
+        char *conn_str = nullptr;
         char *dhn_data_source = estrdup(colon + 1);
         e = (char *)dhn_data_source + strlen(dhn_data_source);
         p = (char *)dhn_data_source;
@@ -184,8 +187,8 @@ static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
 void pre_pdo_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pdo_dbh_t *dbh = reinterpret_cast<pdo_dbh_t *>(zend_object_store_get_object(getThis() TSRMLS_CC));
-    char *statement;
-    int statement_len;
+    char *statement = nullptr;
+    int statement_len = 0;
 
     if (!ZEND_NUM_ARGS() ||
         FAILURE == zend_parse_parameters(1 TSRMLS_CC, "s", &statement, &statement_len))
@@ -203,8 +206,8 @@ void post_pdo_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         return;
     }
-    char *statement;
-    int statement_len;
+    char *statement = nullptr;
+    int statement_len = 0;
 
     if (!ZEND_NUM_ARGS() ||
         FAILURE == zend_parse_parameters(1 TSRMLS_CC, "s", &statement, &statement_len))
@@ -280,9 +283,9 @@ void post_pdo___construct_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 void pre_pdo_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pdo_dbh_t *dbh = reinterpret_cast<pdo_dbh_t *>(zend_object_store_get_object(getThis() TSRMLS_CC));
-    char *statement;
-    int statement_len;
-    zval *options = NULL;
+    char *statement = nullptr;
+    int statement_len = 0;
+    zval *options = nullptr;
 
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|a", &statement,
                                          &statement_len, &options))

@@ -40,12 +40,12 @@ int eval_handler(ZEND_OPCODE_HANDLER_ARGS)
         OPENRASP_OP1_TYPE(opline) == IS_VAR &&
         openrasp_zval_in_request(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC))
     {
-        zval *attack_params;
+        zval *attack_params = nullptr;
         MAKE_STD_ZVAL(attack_params);
         array_init(attack_params);
         add_assoc_zval(attack_params, "eval", OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr);
         Z_ADDREF_P(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr);
-        zval *plugin_message = NULL;
+        zval *plugin_message = nullptr;
         MAKE_STD_ZVAL(plugin_message);
         ZVAL_STRING(plugin_message, _("WebShell activity - Detected China Chopper webshell (eval method)"), 1);
         OpenRASPActionType action = openrasp::scm->get_buildin_check_action(WEBSHELL_EVAL);
@@ -118,7 +118,7 @@ static std::string parse_parameter_to_string(ZEND_OPCODE_HANDLER_ARGS)
         return param;
     }
     }
-    zval *z_param;
+    zval *z_param = nullptr;
     MAKE_STD_ZVAL(z_param);
     MAKE_COPY_ZVAL(&op1, z_param);
     convert_to_string(z_param);

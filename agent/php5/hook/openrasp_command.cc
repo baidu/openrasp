@@ -45,12 +45,12 @@ static void check_command_in_gpc(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     int argc = MIN(1, ZEND_NUM_ARGS());
     if (argc == 1 && zend_get_parameters_ex(argc, &command) == SUCCESS && openrasp_zval_in_request(*command TSRMLS_CC))
     {
-        zval *attack_params = NULL;
+        zval *attack_params = nullptr;
         MAKE_STD_ZVAL(attack_params);
         array_init(attack_params);
         add_assoc_zval(attack_params, "command", *command);
         Z_ADDREF_PP(command);
-        zval *plugin_message = NULL;
+        zval *plugin_message = nullptr;
         MAKE_STD_ZVAL(plugin_message);
         ZVAL_STRING(plugin_message, _("WebShell activity - Detected command execution backdoor"), 1);
         OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
@@ -79,10 +79,10 @@ static void plugin_command_check(const char *command TSRMLS_DC)
 
 static void openrasp_exec_ex(INTERNAL_FUNCTION_PARAMETERS, int mode)
 {
-    char *cmd;
-    int cmd_len;
-    zval *ret_code = NULL, *ret_array = NULL;
-    int ret;
+    char *cmd = nullptr;
+    int cmd_len = 0;
+    zval *ret_code = nullptr, *ret_array = nullptr;
+    int ret = 0;
     if (mode)
     {
         if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|z/", &cmd, &cmd_len, &ret_code) == FAILURE)
@@ -141,8 +141,8 @@ void pre_global_shell_exec_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETER
 
 void pre_global_shell_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *command;
-    int command_len;
+    char *command = nullptr;
+    int command_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &command, &command_len) == FAILURE)
     {
@@ -162,13 +162,13 @@ void pre_global_proc_open_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS
 
 void pre_global_proc_open_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *command;
+    char *command = nullptr;
     int command_len = 0;
     zval *descriptorspec;
-    zval *pipes;
-    zval *cwd = NULL;
-    zval *environment = NULL;
-    zval *other_options = NULL;
+    zval *pipes = nullptr;
+    zval *cwd = nullptr;
+    zval *environment = nullptr;
+    zval *other_options = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "saz|z!z!z!", &command,
                               &command_len, &descriptorspec, &pipes, &cwd, &environment,
@@ -190,8 +190,10 @@ void pre_global_popen_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_popen_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *command, *mode;
-    int command_len, mode_len;
+    char *command = nullptr;
+    char *mode = nullptr;
+    int command_len = 0;
+    int mode_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &command, &command_len, &mode, &mode_len) == FAILURE)
     {
@@ -211,14 +213,14 @@ void pre_global_pcntl_exec_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETER
 
 void pre_global_pcntl_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *args = NULL, *envs = NULL;
+    zval *args = nullptr, *envs = nullptr;
     zval **element;
-    HashTable *args_hash;
+    HashTable *args_hash = nullptr;
     int argc = 0, argi = 0;
-    char **argv = NULL;
+    char **argv = nullptr;
     char **current_arg;
-    char *path;
-    int path_len;
+    char *path = nullptr;
+    int path_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|aa", &path, &path_len, &args, &envs) == FAILURE)
     {
@@ -233,9 +235,9 @@ void pre_global_pcntl_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
              zend_hash_has_more_elements(ht) == SUCCESS;
              zend_hash_move_forward(ht))
         {
-            char *key;
+            char *key = nullptr;
             ulong idx;
-            int type;
+            int type = 0;
             zval **value;
             type = zend_hash_get_current_key(ht, &key, &idx, 0);
             if (type == HASH_KEY_IS_STRING ||
@@ -255,7 +257,7 @@ void pre_global_assert_WEBSHELL_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **assertion;
     int description_len = 0;
-    char *description = NULL;
+    char *description = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Z|s", &assertion, &description, &description_len) == FAILURE)
     {
@@ -265,12 +267,12 @@ void pre_global_assert_WEBSHELL_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         if (openrasp_zval_in_request(*assertion TSRMLS_CC))
         {
-            zval *attack_params;
+            zval *attack_params = nullptr;
             MAKE_STD_ZVAL(attack_params);
             array_init(attack_params);
             add_assoc_zval(attack_params, "eval", *assertion);
             Z_ADDREF_PP(assertion);
-            zval *plugin_message = NULL;
+            zval *plugin_message = nullptr;
             MAKE_STD_ZVAL(plugin_message);
             ZVAL_STRING(plugin_message, _("WebShell activity - Detected China Chopper (assert method)"), 1);
             OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
@@ -283,7 +285,7 @@ void pre_global_assert_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval **assertion;
     int description_len = 0;
-    char *description = NULL;
+    char *description = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Z|s", &assertion, &description, &description_len) == FAILURE)
     {

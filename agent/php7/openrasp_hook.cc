@@ -82,8 +82,8 @@ std::string fetch_name_in_request(zval *item, std::string &var_type)
         {
             return name;
         }
-        zval *val;
-        zend_string *key;
+        zval *val = nullptr;
+        zend_string *key = nullptr;
         zend_ulong idx;
         ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(global), idx, key, val)
         {
@@ -191,7 +191,7 @@ std::string openrasp_real_path(const char *filename, int length, bool use_includ
         const char *p = fetch_url_scheme(filename);
         if (nullptr != p)
         {
-            php_stream_wrapper *wrapper;
+            php_stream_wrapper *wrapper = nullptr;
             wrapper = php_stream_locate_url_wrapper(filename, nullptr, STREAM_LOCATE_WRAPPERS_ONLY);
             if (wrapper && wrapper->wops)
             {

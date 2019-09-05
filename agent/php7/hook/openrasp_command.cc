@@ -38,7 +38,7 @@ PRE_HOOK_FUNCTION(pcntl_exec, WEBSHELL_COMMAND);
 
 static inline void openrasp_webshell_command_common(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *command;
+    zval *command = nullptr;
 
     if (zend_parse_parameters(MIN(1, ZEND_NUM_ARGS()), "z", &command) != SUCCESS ||
         Z_TYPE_P(command) != IS_STRING)
@@ -81,7 +81,7 @@ static inline void plugin_command_check(const zend_string *command, OpenRASPChec
 
 static inline void openrasp_command_common(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zend_string *command;
+    zend_string *command = nullptr;
 
     if (zend_parse_parameters(MIN(1, ZEND_NUM_ARGS()), "S", &command) != SUCCESS)
     {
@@ -158,8 +158,8 @@ void pre_global_pcntl_exec_WEBSHELL_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETER
 
 void pre_global_pcntl_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zend_string *command;
-    zval *args;
+    zend_string *command = nullptr;
+    zval *args = nullptr;
 
     if (zend_parse_parameters(MIN(2, ZEND_NUM_ARGS()), "S|a", &command, &args) != SUCCESS)
     {

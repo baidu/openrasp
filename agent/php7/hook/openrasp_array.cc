@@ -57,7 +57,7 @@ void pre_global_array_filter_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
 	if (ZEND_NUM_ARGS() > 1)
 	{
-		zval *array;
+		zval *array = nullptr;
 		zend_fcall_info fci = empty_fcall_info;
 		zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
 
@@ -94,11 +94,12 @@ void pre_global_array_map_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_reflectionfunction___construct_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-	zval *closure = NULL;
-	char *lcname, *nsname;
-	zend_function *fptr;
-	char *name_str;
-	size_t name_len;
+	zval *closure = nullptr;
+	char *lcname = nullptr;
+	char *nsname = nullptr;
+	zend_function *fptr = nullptr;
+	char *name_str = nullptr;
+	size_t name_len = 0;
 
 	if (zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, ZEND_NUM_ARGS(), "o", &closure) == SUCCESS)
 	{
@@ -121,7 +122,7 @@ void pre_reflectionfunction___construct_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARA
 			name_len--;
 		}
 
-		if ((fptr = static_cast<zend_function *>(zend_hash_str_find_ptr(EG(function_table), nsname, name_len))) == NULL)
+		if ((fptr = static_cast<zend_function *>(zend_hash_str_find_ptr(EG(function_table), nsname, name_len))) == nullptr)
 		{
 			efree(lcname);
 			return;

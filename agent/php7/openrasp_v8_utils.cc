@@ -224,8 +224,8 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
         obj->Set(NewV8String(isolate, "source_code"), source_code);
     }
 
-    zval *value;
-    zend_string *key;
+    zval *value = nullptr;
+    zend_string *key = nullptr;
     zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
     ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(alarm_common_info), key, value)
     {

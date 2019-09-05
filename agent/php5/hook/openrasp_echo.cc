@@ -30,16 +30,16 @@ int echo_print_handler(ZEND_OPCODE_HANDLER_ARGS)
         !(name = fetch_name_in_request(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr, var_type TSRMLS_CC)).empty() &&
         echo_parameter_filter(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr TSRMLS_CC))
     {
-        zval *attack_params;
+        zval *attack_params = nullptr;
         MAKE_STD_ZVAL(attack_params);
         array_init(attack_params);
         add_assoc_string(attack_params, "type", const_cast<char *>(var_type.c_str()), 1);
         add_assoc_string(attack_params, "name", const_cast<char *>(name.c_str()), 1);
         add_assoc_zval(attack_params, "value", OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr);
         Z_ADDREF_P(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr);
-        zval *plugin_message = NULL;
+        zval *plugin_message = nullptr;
         MAKE_STD_ZVAL(plugin_message);
-        char *message_str = NULL;
+        char *message_str = nullptr;
         std::string opname = (opline->opcode == ZEND_ECHO) ? "echo" : "print";
         spprintf(&message_str, 0, _("XSS activity - %s GET/POST/COOKIE parameter directly, parameter: $%s['%s']"),
                  opname.c_str(), var_type.c_str(), name.c_str());

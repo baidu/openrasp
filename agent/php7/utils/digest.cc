@@ -16,10 +16,10 @@
 
 #include <cstring>
 
-
 #include "digest.h"
 
-namespace openrasp {
+namespace openrasp
+{
 
 /*
  * This is an OpenSSL-compatible implementation of the RSA Data Security, Inc.
@@ -27,19 +27,20 @@ namespace openrasp {
  * Homepage: http://openwall.info/wiki/people/solar/software/public-domain-source-code/md5
  * The implementation of MD5 has no copyright claimed, for more details to see above link.
  */
- 
+
 #ifndef HAVE_OPENSSL
- 
+
 /* Any 32-bit or wider unsigned integer data type will do */
 typedef unsigned int MD5_u32plus;
- 
-typedef struct {
+
+typedef struct
+{
     MD5_u32plus lo, hi;
     MD5_u32plus a, b, c, d;
     unsigned char buffer[64];
     MD5_u32plus block[16];
 } MD5_CTX;
- 
+
 static void MD5_Init(MD5_CTX *ctx);
 static void MD5_Update(MD5_CTX *ctx, const void *data, unsigned long size);
 static void MD5_Final(unsigned char *result, MD5_CTX *ctx);
@@ -51,19 +52,19 @@ static void MD5_Final(unsigned char *result, MD5_CTX *ctx);
  * architectures that lack an AND-NOT instruction, just like in Colin Plumb's
  * implementation.
  */
-#define F(x, y, z)          ((z) ^ ((x) & ((y) ^ (z))))
-#define G(x, y, z)          ((y) ^ ((z) & ((x) ^ (y))))
-#define H(x, y, z)          ((x) ^ (y) ^ (z))
-#define I(x, y, z)          ((y) ^ ((x) | ~(z)))
- 
+#define F(x, y, z) ((z) ^ ((x) & ((y) ^ (z))))
+#define G(x, y, z) ((y) ^ ((z) & ((x) ^ (y))))
+#define H(x, y, z) ((x) ^ (y) ^ (z))
+#define I(x, y, z) ((y) ^ ((x) | ~(z)))
+
 /*
  * The MD5 transformation for all four rounds.
  */
-#define STEP(f, a, b, c, d, x, t, s) \
-    (a) += f((b), (c), (d)) + (x) + (t); \
-    (a) = (((a) << (s)) | (((a) & 0xffffffff) >> (32 - (s)))); \
+#define STEP(f, a, b, c, d, x, t, s)                         \
+    (a) += f((b), (c), (d)) + (x) + (t);                     \
+    (a) = (((a) << (s)) | (((a)&0xffffffff) >> (32 - (s)))); \
     (a) += (b);
- 
+
 /*
  * SET reads 4 input bytes in little-endian byte order and stores them
  * in a properly aligned word in host byte order.
@@ -74,20 +75,20 @@ static void MD5_Final(unsigned char *result, MD5_CTX *ctx);
  */
 #if defined(__i386__) || defined(__x86_64__) || defined(__vax__)
 #define SET(n) \
-    (*(MD5_u32plus *)&ptr[(n) * 4])
+    (*(MD5_u32plus *)&ptr[(n)*4])
 #define GET(n) \
     SET(n)
 #else
-#define SET(n) \
-    (ctx->block[(n)] = \
-    (MD5_u32plus)ptr[(n) * 4] | \
-    ((MD5_u32plus)ptr[(n) * 4 + 1] << 8) | \
-    ((MD5_u32plus)ptr[(n) * 4 + 2] << 16) | \
-    ((MD5_u32plus)ptr[(n) * 4 + 3] << 24))
+#define SET(n)                                 \
+    (ctx->block[(n)] =                         \
+         (MD5_u32plus)ptr[(n)*4] |             \
+         ((MD5_u32plus)ptr[(n)*4 + 1] << 8) |  \
+         ((MD5_u32plus)ptr[(n)*4 + 2] << 16) | \
+         ((MD5_u32plus)ptr[(n)*4 + 3] << 24))
 #define GET(n) \
     (ctx->block[(n)])
 #endif
- 
+
 /*
  * This processes one or more 64-byte data blocks, but does NOT update
  * the bit counters.  There are no alignment requirements.
@@ -95,23 +96,30 @@ static void MD5_Final(unsigned char *result, MD5_CTX *ctx);
 static const void *body(MD5_CTX *ctx, const void *data, unsigned long size)
 {
     const unsigned char *ptr;
-    MD5_u32plus a, b, c, d;
-    MD5_u32plus saved_a, saved_b, saved_c, saved_d;
- 
-    ptr = (const unsigned char*)data;
- 
+    MD5_u32plus a = 0;
+    MD5_u32plus b = 0;
+    MD5_u32plus c = 0;
+    MD5_u32plus d = 0;
+    MD5_u32plus saved_a = 0;
+    MD5_u32plus saved_b = 0;
+    MD5_u32plus saved_c = 0;
+    MD5_u32plus saved_d = 0;
+
+    ptr = (const unsigned char *)data;
+
     a = ctx->a;
     b = ctx->b;
     c = ctx->c;
     d = ctx->d;
- 
-    do {
+
+    do
+    {
         saved_a = a;
         saved_b = b;
         saved_c = c;
         saved_d = d;
- 
-/* Round 1 */
+
+        /* Round 1 */
         STEP(F, a, b, c, d, SET(0), 0xd76aa478, 7)
         STEP(F, d, a, b, c, SET(1), 0xe8c7b756, 12)
         STEP(F, c, d, a, b, SET(2), 0x242070db, 17)
@@ -128,8 +136,8 @@ static const void *body(MD5_CTX *ctx, const void *data, unsigned long size)
         STEP(F, d, a, b, c, SET(13), 0xfd987193, 12)
         STEP(F, c, d, a, b, SET(14), 0xa679438e, 17)
         STEP(F, b, c, d, a, SET(15), 0x49b40821, 22)
- 
-/* Round 2 */
+
+        /* Round 2 */
         STEP(G, a, b, c, d, GET(1), 0xf61e2562, 5)
         STEP(G, d, a, b, c, GET(6), 0xc040b340, 9)
         STEP(G, c, d, a, b, GET(11), 0x265e5a51, 14)
@@ -146,8 +154,8 @@ static const void *body(MD5_CTX *ctx, const void *data, unsigned long size)
         STEP(G, d, a, b, c, GET(2), 0xfcefa3f8, 9)
         STEP(G, c, d, a, b, GET(7), 0x676f02d9, 14)
         STEP(G, b, c, d, a, GET(12), 0x8d2a4c8a, 20)
- 
-/* Round 3 */
+
+        /* Round 3 */
         STEP(H, a, b, c, d, GET(5), 0xfffa3942, 4)
         STEP(H, d, a, b, c, GET(8), 0x8771f681, 11)
         STEP(H, c, d, a, b, GET(11), 0x6d9d6122, 16)
@@ -164,8 +172,8 @@ static const void *body(MD5_CTX *ctx, const void *data, unsigned long size)
         STEP(H, d, a, b, c, GET(12), 0xe6db99e5, 11)
         STEP(H, c, d, a, b, GET(15), 0x1fa27cf8, 16)
         STEP(H, b, c, d, a, GET(2), 0xc4ac5665, 23)
- 
-/* Round 4 */
+
+        /* Round 4 */
         STEP(I, a, b, c, d, GET(0), 0xf4292244, 6)
         STEP(I, d, a, b, c, GET(7), 0x432aff97, 10)
         STEP(I, c, d, a, b, GET(14), 0xab9423a7, 15)
@@ -182,87 +190,93 @@ static const void *body(MD5_CTX *ctx, const void *data, unsigned long size)
         STEP(I, d, a, b, c, GET(11), 0xbd3af235, 10)
         STEP(I, c, d, a, b, GET(2), 0x2ad7d2bb, 15)
         STEP(I, b, c, d, a, GET(9), 0xeb86d391, 21)
- 
+
         a += saved_a;
         b += saved_b;
         c += saved_c;
         d += saved_d;
- 
+
         ptr += 64;
     } while (size -= 64);
- 
+
     ctx->a = a;
     ctx->b = b;
     ctx->c = c;
     ctx->d = d;
- 
+
     return ptr;
 }
- 
+
 void MD5_Init(MD5_CTX *ctx)
 {
     ctx->a = 0x67452301;
     ctx->b = 0xefcdab89;
     ctx->c = 0x98badcfe;
     ctx->d = 0x10325476;
- 
+
     ctx->lo = 0;
     ctx->hi = 0;
 }
- 
+
 void MD5_Update(MD5_CTX *ctx, const void *data, unsigned long size)
 {
-    MD5_u32plus saved_lo;
-    unsigned long used, free;
- 
+    MD5_u32plus saved_lo = 0;
+    unsigned long used = 0;
+    unsigned long free = 0;
+
     saved_lo = ctx->lo;
     if ((ctx->lo = (saved_lo + size) & 0x1fffffff) < saved_lo)
         ctx->hi++; //~ cov
     ctx->hi += size >> 29;
- 
+
     used = saved_lo & 0x3f;
- 
-    if (used) { //~{ not reached
+
+    if (used)
+    { //~{ not reached
         free = 64 - used;
- 
-        if (size < free) {
+
+        if (size < free)
+        {
             memcpy(&ctx->buffer[used], data, size);
             return;
         }
- 
+
         memcpy(&ctx->buffer[used], data, free);
         data = (unsigned char *)data + free;
         size -= free;
         body(ctx, ctx->buffer, 64);
     } //~}
- 
-    if (size >= 64) {
+
+    if (size >= 64)
+    {
         data = body(ctx, data, size & ~(unsigned long)0x3f);
         size &= 0x3f;
     }
- 
+
     memcpy(ctx->buffer, data, size);
 }
- 
+
 void MD5_Final(unsigned char *result, MD5_CTX *ctx)
 {
-    unsigned long used, free;
- 
+    unsigned long used = 0;
+    unsigned long free = 0;
+
     used = ctx->lo & 0x3f;
- 
+
     ctx->buffer[used++] = 0x80;
- 
+
     free = 64 - used;
- 
-    if (free < 8) {
+
+    if (free < 8)
+    {
         memset(&ctx->buffer[used], 0, free);
         body(ctx, ctx->buffer, 64);
         used = 0;
         free = 64;
     }
- 
+
     memset(&ctx->buffer[used], 0, free - 8);
- 
+
     ctx->lo <<= 3;
     ctx->buffer[56] = ctx->lo;
     ctx->buffer[57] = ctx->lo >> 8;
@@ -272,9 +286,9 @@ void MD5_Final(unsigned char *result, MD5_CTX *ctx)
     ctx->buffer[61] = ctx->hi >> 8;
     ctx->buffer[62] = ctx->hi >> 16;
     ctx->buffer[63] = ctx->hi >> 24;
- 
+
     body(ctx, ctx->buffer, 64);
- 
+
     result[0] = ctx->a;
     result[1] = ctx->a >> 8;
     result[2] = ctx->a >> 16;
@@ -291,29 +305,30 @@ void MD5_Final(unsigned char *result, MD5_CTX *ctx)
     result[13] = ctx->d >> 8;
     result[14] = ctx->d >> 16;
     result[15] = ctx->d >> 24;
- 
+
     memset(ctx, 0, sizeof(*ctx));
 }
 #else
 #include <openssl/md5.h>
 #endif
 
-
 using namespace std;
-
 
 // half byte to hex
 // @hb Only use low 4 bits
-static char hb2hex(unsigned char hb) {
+static char hb2hex(unsigned char hb)
+{
     hb = hb & 0xF;
     return hb < 10 ? '0' + hb : hb - 10 + 'a';
 }
 
-std::string md5sum(const void * dat, size_t len) {
+std::string md5sum(const void *dat, size_t len)
+{
     std::string res;
     unsigned char out[100];
     md5bin(dat, len, out);
-    for(size_t i = 0; i < 16; ++ i) {
+    for (size_t i = 0; i < 16; ++i)
+    {
         res.push_back(hb2hex(out[i] >> 4));
         res.push_back(hb2hex(out[i]));
     }
@@ -321,11 +336,12 @@ std::string md5sum(const void * dat, size_t len) {
     return res;
 }
 
-void md5bin(const void * dat, size_t len, unsigned char out[100]) {
+void md5bin(const void *dat, size_t len, unsigned char out[100])
+{
     MD5_CTX c;
     MD5_Init(&c);
     MD5_Update(&c, dat, len);
     MD5_Final(out, &c);
 }
 
-} /* namespace ral */
+} // namespace openrasp

@@ -93,11 +93,11 @@ static void check_file_operation(OpenRASPCheckType type, const std::string &file
 
 void pre_global_file_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *filename;
-    int filename_len;
+    char *filename = nullptr;
+    int filename_len = 0;
     long flags = 0;
     zend_bool use_include_path;
-    zval *zcontext = NULL;
+    zval *zcontext = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|lr!", &filename, &filename_len, &flags, &zcontext) == FAILURE)
     {
@@ -109,10 +109,10 @@ void pre_global_file_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_readfile_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *filename;
-    int filename_len;
+    char *filename = nullptr;
+    int filename_len = 0;
     zend_bool use_include_path = 0;
-    zval *zcontext = NULL;
+    zval *zcontext = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|br!", &filename, &filename_len, &use_include_path, &zcontext) == FAILURE)
     {
@@ -123,12 +123,12 @@ void pre_global_readfile_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_file_get_contents_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *filename;
-    int filename_len;
+    char *filename = nullptr;
+    int filename_len = 0;
     zend_bool use_include_path = 0;
     long offset = -1;
     long maxlen = PHP_STREAM_COPY_ALL;
-    zval *zcontext = NULL;
+    zval *zcontext = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|br!ll", &filename, &filename_len, &use_include_path, &zcontext, &offset, &maxlen) == FAILURE)
     {
@@ -148,13 +148,13 @@ void pre_global_file_put_contents_WEBSHELL_FILE_PUT_CONTENTS(OPENRASP_INTERNAL_F
                                                    WRITING TSRMLS_CC);
         if (!real_path.empty())
         {
-            zval *attack_params = NULL;
+            zval *attack_params = nullptr;
             MAKE_STD_ZVAL(attack_params);
             array_init(attack_params);
             add_assoc_zval(attack_params, "name", *path);
             Z_ADDREF_P(*path);
             add_assoc_string(attack_params, "realpath", const_cast<char *>(real_path.c_str()), 1);
-            zval *plugin_message = NULL;
+            zval *plugin_message = nullptr;
             MAKE_STD_ZVAL(plugin_message);
             ZVAL_STRING(plugin_message, _("WebShell activity - Detected file dropper backdoor"), 1);
             OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
@@ -165,12 +165,12 @@ void pre_global_file_put_contents_WEBSHELL_FILE_PUT_CONTENTS(OPENRASP_INTERNAL_F
 
 void pre_global_file_put_contents_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *filename;
-    int filename_len;
-    zval *data;
+    char *filename = nullptr;
+    int filename_len = 0;
+    zval *data = nullptr;
     int numbytes = 0;
     long flags = 0;
-    zval *zcontext = NULL;
+    zval *zcontext = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz/|lr!", &filename, &filename_len, &data, &flags, &zcontext) == FAILURE)
     {
@@ -187,12 +187,14 @@ void pre_global_file_put_contents_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETE
 
 void pre_global_fopen_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *filename, *mode;
-    int filename_len, mode_len;
+    char *filename = nullptr;
+    char *mode = nullptr;
+    int filename_len = 0;
+    int mode_len = 0;
     zend_bool use_include_path = 0;
-    zval *zcontext = NULL;
+    zval *zcontext = nullptr;
     bool file_exist = false;
-    int open_flags;
+    int open_flags = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|br", &filename, &filename_len, &mode, &mode_len, &use_include_path, &zcontext) == FAILURE)
     {
@@ -221,12 +223,14 @@ void pre_global_fopen_READ_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_splfileobject___construct_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *filename, *mode;
-    int filename_len, mode_len;
+    char *filename = nullptr;
+    char *mode = nullptr;
+    int filename_len = 0;
+    int mode_len = 0;
     zend_bool use_include_path = 0;
-    zval *zcontext = NULL;
+    zval *zcontext = nullptr;
     bool file_exist = false;
-    int open_flags;
+    int open_flags = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|sbr", &filename, &filename_len, &mode, &mode_len, &use_include_path, &zcontext) == FAILURE)
     {
@@ -260,9 +264,11 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         return;
     }
-    char *source, *target;
-    int source_len, target_len;
-    zval *zcontext = NULL;
+    char *source = nullptr;
+    char *target = nullptr;
+    int source_len = 0;
+    int target_len = 0;
+    zval *zcontext = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|r", &source, &source_len, &target, &target_len, &zcontext) == FAILURE)
     {
@@ -308,9 +314,11 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         return;
     }
-    char *source, *target;
-    int source_len, target_len;
-    zval *zcontext = NULL;
+    char *source = nullptr;
+    char *target = nullptr;
+    int source_len = 0;
+    int target_len = 0;
+    zval *zcontext = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|r", &source, &source_len, &target, &target_len, &zcontext) == FAILURE)
     {

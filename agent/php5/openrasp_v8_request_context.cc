@@ -180,9 +180,9 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     HashTable *GET = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_GET]);
     for (zend_hash_internal_pointer_reset(GET); zend_hash_has_more_elements(GET) == SUCCESS; zend_hash_move_forward(GET))
     {
-        char *key;
+        char *key = nullptr;
         ulong idx;
-        int type;
+        int type = 0;
         zval **value;
         type = zend_hash_get_current_key(GET, &key, &idx, 0);
         if (type == HASH_KEY_NON_EXISTENT ||
@@ -211,9 +211,9 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
     HashTable *POST = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_POST]);
     for (zend_hash_internal_pointer_reset(POST); zend_hash_has_more_elements(POST) == SUCCESS; zend_hash_move_forward(POST))
     {
-        char *key;
+        char *key = nullptr;
         ulong idx;
-        int type;
+        int type = 0;
         zval **value;
         type = zend_hash_get_current_key(POST, &key, &idx, 0);
         if (type == HASH_KEY_NON_EXISTENT ||
@@ -272,9 +272,9 @@ static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
     HashTable *SERVER = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]);
     for (zend_hash_internal_pointer_reset(SERVER); zend_hash_has_more_elements(SERVER) == SUCCESS; zend_hash_move_forward(SERVER))
     {
-        char *key;
+        char *key = nullptr;
         ulong idx;
-        int type;
+        int type = 0;
         zval **value;
         std::string header_key;
         type = zend_hash_get_current_key(SERVER, &key, &idx, 0);
@@ -292,7 +292,7 @@ static void body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo
 {
     info.GetReturnValue().Set(v8::ArrayBuffer::New(info.GetIsolate(), nullptr, 0, v8::ArrayBufferCreationMode::kInternalized));
     TSRMLS_FETCH();
-    php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, NULL);
+    php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, nullptr);
     if (!stream)
     {
         return;

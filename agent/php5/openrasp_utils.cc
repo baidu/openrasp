@@ -218,7 +218,7 @@ std::string json_encode_from_zval(zval *value TSRMLS_DC)
 
 char *fetch_request_body(size_t max_len TSRMLS_DC)
 {
-    php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, NULL);
+    php_stream *stream = php_stream_open_wrapper("php://input", "rb", 0, nullptr);
     if (stream)
     {
         char *buf = nullptr;
@@ -237,7 +237,7 @@ bool need_alloc_shm_current_sapi()
     static const char *supported_sapis[] = {
         "fpm-fcgi",
         "apache2handler",
-        NULL};
+        nullptr};
     const char **sapi_name;
     if (sapi_module.name)
     {
@@ -448,7 +448,7 @@ std::map<std::string, std::string> get_env_map()
 {
     std::map<std::string, std::string> result;
     char **env;
-    for (env = environ; env != NULL && *env != NULL; env++)
+    for (env = environ; env != nullptr && *env != nullptr; env++)
     {
         std::string item(*env);
         std::size_t found = item.find("=");

@@ -161,8 +161,8 @@ std::vector<DoubleArrayTrie::result_pair_type> DoubleArrayTrie::prefix_search(co
     }
 
     register int b = array_[node_pos].base;
-    register int n;
-    register unsigned int p;
+    register int n = 0;
+    register unsigned int p = 0;
 
     for (register size_t i = 0; i < len; ++i)
     {

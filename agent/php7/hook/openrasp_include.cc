@@ -88,7 +88,8 @@ static std::string parse_parameter_to_string(zend_execute_data *execute_data)
 {
     std::string param;
     const zend_op *opline = EX(opline);
-    zval tmp_inc_filename, *inc_filename;
+    zval tmp_inc_filename;
+    zval *inc_filename = nullptr;
     ZVAL_NULL(&tmp_inc_filename);
 #if (PHP_MINOR_VERSION < 3)
     inc_filename = zend_get_zval_ptr(opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
@@ -119,7 +120,8 @@ int include_handler(zend_execute_data *execute_data)
     {
         return ZEND_USER_OPCODE_DISPATCH;
     }
-    zval params, *document_root;
+    zval params;
+    zval *document_root = nullptr;
     std::string real_path;
     const char *scheme_end = nullptr;
     bool send_to_plugin = false;

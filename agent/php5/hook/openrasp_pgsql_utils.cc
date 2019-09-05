@@ -19,11 +19,11 @@
 
 void pg_conninfo_parse(char *connstring, std::function<void(const char *pname, const char *pval)> info_store_func)
 {
-    char *buf = NULL;
-    char *cp = NULL;
-    char *cp2 = NULL;
-    char *pname = NULL;
-    char *pval = NULL;
+    char *buf = nullptr;
+    char *cp = nullptr;
+    char *cp2 = nullptr;
+    char *pname = nullptr;
+    char *pval = nullptr;
     if (connstring)
     {
         buf = estrdup(connstring);

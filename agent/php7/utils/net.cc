@@ -110,7 +110,8 @@ void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)
     }
     else
     {
-        int n, s;
+        int n = 0;
+        int s = 0;
         char host[NI_MAXHOST];
         for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, n++)
         {
