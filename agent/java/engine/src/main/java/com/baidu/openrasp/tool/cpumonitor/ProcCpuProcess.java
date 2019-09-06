@@ -51,7 +51,6 @@ public class ProcCpuProcess {
         }
     }
 
-
     public long getProcessTotalCpuTime() {
         if (utime != null && stime != null && cutime != null && cstime != null) {
             return utime + stime + cutime + cstime;

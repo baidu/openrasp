@@ -91,6 +91,13 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
             return true;
         }
 
+         /* HSqlDB */
+        if ("org/hsqldb/jdbc/JDBCPreparedStatement".equals(className)) {
+            this.type = SQL_TYPE_HSQL;
+            this.exceptions = new String[]{"java/sql/SQLException"};
+            return true;
+        }
+
         return false;
     }
 
@@ -119,7 +126,8 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
         String checkSqlSrc = null;
         if (SQL_TYPE_MYSQL.equals(this.type)) {
             originalSqlCode = "originalSql";
-        } else if (SQL_TYPE_SQLITE.equals(this.type)) {
+        } else if (SQL_TYPE_SQLITE.equals(this.type)
+                || SQL_TYPE_HSQL.equals(this.type)) {
             originalSqlCode = "this.sql";
         } else if (SQL_TYPE_SQLSERVER.equals(this.type)) {
             originalSqlCode = "preparedSQL";

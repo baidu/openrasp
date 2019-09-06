@@ -163,7 +163,7 @@ public class Config extends FileScanListener {
     private boolean disableHooks;
     private boolean cpuUsageEnable;
     private float cpuUsagePercent;
-    private boolean isHttpsVirifyPeer;
+    private boolean isHttpsVerifyPeer;
 
 
     static {
@@ -1162,7 +1162,7 @@ public class Config extends FileScanListener {
      * @return 是否进行 https 证书验证
      */
     public boolean isHttpsVerifyPeer() {
-        return isHttpsVirifyPeer;
+        return isHttpsVerifyPeer;
     }
 
     /**
@@ -1171,7 +1171,7 @@ public class Config extends FileScanListener {
      * @param httpsVerifyPeer agent是否开启cpu熔断策略
      */
     public synchronized void setHttpsVerifyPeer(String httpsVerifyPeer) {
-        this.isHttpsVirifyPeer = Boolean.parseBoolean(httpsVerifyPeer);
+        this.isHttpsVerifyPeer = Boolean.parseBoolean(httpsVerifyPeer);
     }
     //--------------------------统一的配置处理------------------------------------
 
