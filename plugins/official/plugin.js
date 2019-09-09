@@ -156,6 +156,7 @@ var algorithmConfig = {
         name:    '算法3 - 拦截常见 dnslog 地址',
         action:  'block',
         domains: [
+        	'.vuleye.pw',
             '.ceye.io',
             '.exeye.io',
             '.vcap.me',
