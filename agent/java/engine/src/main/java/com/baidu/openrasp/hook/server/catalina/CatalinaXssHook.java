@@ -132,7 +132,11 @@ public class CatalinaXssHook extends ServerXssHook {
     private static void writeContentToBuffer(Object buffer, byte[] content) throws UnsupportedEncodingException {
         if (buffer instanceof ByteBuffer) {
             ByteBuffer b = (ByteBuffer) buffer;
-            b.put(content, 0, content.length);
+            if (content.length > b.remaining() && b.remaining() > 0) {
+                b.put((byte) ' ');
+            } else {
+                b.put(content, 0, content.length);
+            }
             b.flip();
         } else {
             Reflection.invokeMethod(buffer, "setBytes", new Class[]{byte[].class, int.class, int.class},
