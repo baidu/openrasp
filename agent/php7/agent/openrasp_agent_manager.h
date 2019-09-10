@@ -49,7 +49,7 @@ public:
   virtual ~OpenraspAgentManager();
   bool startup();
   bool shutdown();
-  bool agent_remote_register();
+  void agent_remote_register();
 
   long get_plugin_update_timestamp();
 
@@ -74,25 +74,28 @@ public:
   void set_plugin_md5(const char *plugin_md5);
   const char *get_plugin_md5();
 
+  void set_registered(bool registered);
+  bool get_registered();
+
 private:
   bool create_share_memory();
   bool destroy_share_memory();
 
-  bool process_agent_startup();
-  void process_agent_shutdown();
+  bool supervisor_startup();
+  void supervisor_shutdown();
 
   void supervisor_run();
   pid_t search_fpm_master_pid();
-  void check_work_processes_survival();
+  void ensure_agent_processes_survival();
+  void kill_agent_processes();
 
 private:
   int meta_size;
   ReadWriteLock *rwlock;
   OpenraspCtrlBlock *agent_ctrl_block;
-  static const int task_interval = 300;
+  static const int register_interval = 300;
   char local_ip[64] = {0};
   pid_t init_process_pid;
-  bool has_registered = false;
 };
 
 extern std::unique_ptr<OpenraspAgentManager> oam;

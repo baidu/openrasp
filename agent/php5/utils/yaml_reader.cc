@@ -152,4 +152,31 @@ std::vector<std::string> YamlReader::fetch_strings(const std::vector<std::string
     }
 }
 
+std::string YamlReader::dump(const std::vector<std::string> &keys, bool pretty)
+{
+    std::string result;
+    try
+    {
+        std::vector<std::string> rst;
+        const YAML::Node *node = &doc;
+        for (auto key : keys)
+        {
+            node = &(*node)[key];
+        }
+        YAML::Emitter emitter;
+        emitter << *node;
+        result = std::string(emitter.c_str());
+        return result;
+    }
+    catch (...)
+    {
+        return result;
+    }
+}
+
+std::string YamlReader::dump(bool pretty)
+{
+    return dump({}, pretty);
+}
+
 } // namespace openrasp

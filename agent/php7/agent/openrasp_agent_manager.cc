@@ -59,7 +59,7 @@ static void super_install_signal_handler()
 	struct sigaction sa_usr = {0};
 	sa_usr.sa_flags = 0;
 	sa_usr.sa_handler = super_signal_handler;
-	sigaction(SIGTERM, &sa_usr, nullptr);
+	sigaction(SIGTERM, &sa_usr, NULL);
 }
 
 static void supervisor_sigchld_handler(int signal_no)
@@ -71,9 +71,9 @@ static void supervisor_sigchld_handler(int signal_no)
 		for (int i = 0; i < agents.size(); ++i)
 		{
 			std::unique_ptr<BaseAgent> &agent_ptr = agents[i];
-			if (p == agent_ptr->agent_pid)
+			if (p == agent_ptr->get_pid_from_shm())
 			{
-				agent_ptr->is_alive = false;
+				agent_ptr->write_pid_to_shm(0);
 			}
 		}
 	}
@@ -104,7 +104,7 @@ bool OpenraspAgentManager::startup()
 			return false;
 		}
 		set_master_pid(init_process_pid);
-		process_agent_startup();
+		supervisor_startup();
 		initialized = true;
 	}
 	return true;
@@ -126,7 +126,7 @@ bool OpenraspAgentManager::shutdown()
 		{
 			return true;
 		}
-		process_agent_shutdown();
+		supervisor_shutdown();
 		destroy_share_memory();
 		initialized = false;
 	}
@@ -162,7 +162,7 @@ bool OpenraspAgentManager::destroy_share_memory()
 	return true;
 }
 
-bool OpenraspAgentManager::process_agent_startup()
+bool OpenraspAgentManager::supervisor_startup()
 {
 	agents.push_back(std::move((std::unique_ptr<BaseAgent>)new HeartBeatAgent()));
 	agents.push_back(std::move((std::unique_ptr<BaseAgent>)new LogAgent()));
@@ -190,19 +190,10 @@ bool OpenraspAgentManager::process_agent_startup()
 	return true;
 }
 
-void OpenraspAgentManager::process_agent_shutdown()
+void OpenraspAgentManager::supervisor_shutdown()
 {
+	kill_agent_processes();
 	agents.clear();
-	pid_t log_agent_id = get_log_agent_id();
-	if (log_agent_id > 0)
-	{
-		kill(log_agent_id, SIGNAL_KILL_AGENT);
-	}
-	pid_t plugin_agent_id = get_plugin_agent_id();
-	if (plugin_agent_id > 0)
-	{
-		kill(plugin_agent_id, SIGNAL_KILL_AGENT);
-	}
 	pid_t supervisor_id = get_supervisor_id();
 	if (supervisor_id > 0)
 	{
@@ -216,37 +207,44 @@ void OpenraspAgentManager::supervisor_run()
 	struct sigaction sa_usr = {0};
 	sa_usr.sa_flags = 0;
 	sa_usr.sa_handler = supervisor_sigchld_handler;
-	sigaction(SIGCHLD, &sa_usr, nullptr);
+	sigaction(SIGCHLD, &sa_usr, NULL);
 
 	super_install_signal_handler();
+	int second_remain_to_register = 0;
+	int second_remain_to_check_work_process = 0;
 	while (true)
 	{
 		update_log_level();
-		for (int i = 0; i < task_interval; ++i)
+		if (!get_registered())
 		{
-			if (i % task_interval == 0 && !has_registered)
+			if ((--second_remain_to_register) <= 0)
 			{
-				has_registered = agent_remote_register();
+				agent_remote_register();
+				second_remain_to_register = register_interval;
 			}
-			if (i % 10 == 0 && has_registered)
+		}
+		else
+		{
+			if ((--second_remain_to_check_work_process) <= 0)
 			{
-				check_work_processes_survival();
+				ensure_agent_processes_survival();
+				second_remain_to_check_work_process = 10;
 			}
-			sleep(1);
-			if (!pid_alive(std::to_string(get_master_pid())))
-			{
-				process_agent_shutdown();
-			}
+		}
+		sleep(1);
+		if (!pid_alive(std::to_string(get_master_pid())))
+		{
+			supervisor_shutdown();
 		}
 	}
 }
 
-void OpenraspAgentManager::check_work_processes_survival()
+void OpenraspAgentManager::ensure_agent_processes_survival()
 {
 	for (int i = 0; i < agents.size(); ++i)
 	{
 		std::unique_ptr<BaseAgent> &agent_ptr = agents[i];
-		if (!agent_ptr->is_alive)
+		if (0 == agent_ptr->get_pid_from_shm())
 		{
 			pid_t pid = fork();
 			if (pid == 0)
@@ -255,15 +253,26 @@ void OpenraspAgentManager::check_work_processes_survival()
 			}
 			else if (pid > 0)
 			{
-				agent_ptr->is_alive = true;
-				agent_ptr->agent_pid = pid;
 				agent_ptr->write_pid_to_shm(pid);
 			}
 		}
 	}
 }
 
-bool OpenraspAgentManager::agent_remote_register()
+void OpenraspAgentManager::kill_agent_processes()
+{
+	for (int i = 0; i < agents.size(); ++i)
+	{
+		std::unique_ptr<BaseAgent> &agent_ptr = agents[i];
+		pid_t pid = agent_ptr->get_pid_from_shm();
+		if (pid > 0)
+		{
+			kill(pid, SIGNAL_KILL_AGENT);
+		}
+	}
+}
+
+void OpenraspAgentManager::agent_remote_register()
 {
 	if (!fetch_source_in_ip_packets(local_ip, sizeof(local_ip), openrasp_ini.backend_url))
 	{
@@ -302,10 +311,37 @@ bool OpenraspAgentManager::agent_remote_register()
 		openrasp_error(LEVEL_WARNING, REGISTER_ERROR, _("CURL error: %s (%d), url: %s"),
 					   backend_request.get_curl_err_msg(), backend_request.get_curl_code(),
 					   url_string.c_str());
-		return false;
+		return;
 	}
 	openrasp_error(LEVEL_DEBUG, REGISTER_ERROR, _("%s"), res_info->to_string().c_str());
-	return res_info->verify(REGISTER_ERROR);
+	if (res_info->has_error())
+	{
+		openrasp_error(LEVEL_WARNING, REGISTER_ERROR, _("Fail to parse response body, error message %s."),
+					   res_info->get_error_msg().c_str());
+		return;
+	}
+	if (!res_info->http_code_ok())
+	{
+		openrasp_error(LEVEL_WARNING, REGISTER_ERROR, _("Unexpected http response code: %ld."),
+					   res_info->get_http_code());
+		return;
+	}
+	BaseReader *body_reader = res_info->get_body_reader();
+	if (nullptr != body_reader)
+	{
+		int64_t status = body_reader->fetch_int64({"status"}, BackendResponse::default_int64);
+		std::string description = body_reader->fetch_string({"description"}, "");
+		if (0 != status)
+		{
+			openrasp_error(LEVEL_WARNING, REGISTER_ERROR, _("API error: %ld, description: %s"),
+						   status, description.c_str());
+			return;
+		}
+		else
+		{
+			set_registered(true);
+		}
+	}
 }
 
 pid_t OpenraspAgentManager::search_fpm_master_pid()
@@ -494,6 +530,25 @@ long OpenraspAgentManager::get_plugin_update_timestamp()
 		return agent_ctrl_block->get_last_update_time();
 	}
 	return 0;
+}
+
+void OpenraspAgentManager::set_registered(bool registered)
+{
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	{
+		WriteUnLocker auto_unlocker(rwlock);
+		agent_ctrl_block->set_registered(registered);
+	}
+}
+
+bool OpenraspAgentManager::get_registered()
+{
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	{
+		ReadUnLocker auto_unlocker(rwlock);
+		return agent_ctrl_block->get_registered();
+	}
+	return false;
 }
 
 } // namespace openrasp

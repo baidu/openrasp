@@ -39,6 +39,9 @@ public:
   virtual std::vector<std::string> fetch_object_keys(const std::vector<std::string> &keys);
   virtual std::vector<std::string> fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value);
   virtual void load(const std::string &content);
+  //Serialization
+  virtual std::string dump(const std::vector<std::string> &keys, bool pretty = false);
+  virtual std::string dump(bool pretty = false);
   //write op
   void erase(const std::vector<std::string> &keys);
   void write_int64(const std::vector<std::string> &keys, const int64_t &value);
@@ -46,9 +49,6 @@ public:
   void write_map(const std::vector<std::string> &keys, const std::map<std::string, std::string> &value);
   void write_map_to_array(const std::vector<std::string> &keys, const std::string fkey, const std::string skey,
                           const std::map<std::string, std::string> &value);
-  //Serialization
-  std::string dump(const std::vector<std::string> &keys, bool pretty = false);
-  std::string dump(bool pretty = false);
 };
 
 } // namespace openrasp

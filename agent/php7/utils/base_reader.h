@@ -36,6 +36,8 @@ public:
   virtual std::vector<std::string> fetch_object_keys(const std::vector<std::string> &keys) = 0;
   virtual std::vector<std::string> fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value = std::vector<std::string>()) = 0;
   virtual void load(const std::string &content) = 0;
+  virtual std::string dump(const std::vector<std::string> &keys, bool pretty = false) = 0;
+  virtual std::string dump(bool pretty = false) = 0;
   inline bool has_error() const
   {
     return error;

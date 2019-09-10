@@ -23,7 +23,6 @@ BaseAgent::BaseAgent(std::string name)
 	: default_slash(1, DEFAULT_SLASH)
 {
 	this->name = name;
-	this->is_alive = false;
 }
 
 void BaseAgent::install_signal_handler(sighandler_t signal_handler)

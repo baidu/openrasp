@@ -52,11 +52,15 @@ public:
 
   long get_last_update_time();
 
+  void set_registered(bool registered);
+  bool get_registered();
+
 private:
   pid_t supervisor_id = 0;
   pid_t log_agent_id = 0;
   pid_t master_pid = 0;
   pid_t plugin_agent_id = 0;
+  bool registered = false;
 
   long last_update_time = 0;
   char plugin_md5[OpenraspCtrlBlock::plugin_md5_size + 1] = {0};

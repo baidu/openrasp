@@ -41,6 +41,11 @@ void LogAgent::write_pid_to_shm(pid_t agent_pid)
 	oam->set_log_agent_id(agent_pid);
 }
 
+pid_t LogAgent::get_pid_from_shm()
+{
+	return oam->get_log_agent_id();
+}
+
 void LogAgent::run()
 {
 	pid_t supervisor_pid = getppid();
@@ -120,6 +125,12 @@ bool LogAgent::post_logs_via_curl(std::string &log_arr, std::string &url_string)
 		return false;
 	}
 	openrasp_error(LEVEL_DEBUG, LOGCOLLECT_ERROR, _("%s"), res_info->to_string().c_str());
+	if (res_info->has_error())
+	{
+		openrasp_error(LEVEL_WARNING, LOGCOLLECT_ERROR, _("Fail to parse response body, error message %s."),
+					   res_info->get_error_msg().c_str());
+		return false;
+	}
 	if (!res_info->http_code_ok())
 	{
 		openrasp_error(LEVEL_WARNING, LOGCOLLECT_ERROR, _("Unexpected http response code: %ld, url: %s."),

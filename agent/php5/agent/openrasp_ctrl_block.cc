@@ -102,4 +102,14 @@ long OpenraspCtrlBlock::get_last_update_time()
     return last_update_time;
 }
 
+void OpenraspCtrlBlock::set_registered(bool registered)
+{
+    this->registered = registered;
+}
+
+bool OpenraspCtrlBlock::get_registered()
+{
+    return registered;
+}
+
 } // namespace openrasp
