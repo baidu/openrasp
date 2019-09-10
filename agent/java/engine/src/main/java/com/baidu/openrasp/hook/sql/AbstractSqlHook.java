@@ -36,6 +36,7 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
     static final String SQL_TYPE_SQLSERVER = "sqlserver";
     static final String SQL_TYPE_PGSQL = "pgsql";
     static final String SQL_TYPE_DB2 = "db2";
+    static final String SQL_TYPE_HSQL = "hsql";
 
     protected String type;
     protected String[] exceptions;

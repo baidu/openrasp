@@ -96,6 +96,13 @@ public class SQLStatementHook extends AbstractSqlHook {
             return true;
         }
 
+        /* HSqlDB */
+        if ("org/hsqldb/jdbc/JDBCStatement".equals(className)) {
+            this.type = SQL_TYPE_HSQL;
+            this.exceptions = new String[]{"java/sql/SQLException"};
+            return true;
+        }
+
         return false;
     }
 

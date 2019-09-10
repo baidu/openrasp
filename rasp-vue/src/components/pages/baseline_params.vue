@@ -7,6 +7,7 @@
             <p>
                 {{ data.policy_params.config_file }}
             </p>
+            
             <div class="h6">
                 问题描述
             </div>
@@ -100,6 +101,11 @@
             </p>
 
             <div class="h6">
+                应用堆栈
+            </div>
+            <pre>{{ data.stack_trace }}</pre>            
+
+            <div class="h6">
                 问题描述
             </div>
             <p v-if="data.policy_params.server == 'mysql'">
@@ -172,6 +178,7 @@
                 应用堆栈
             </div>
             <pre>{{ data.stack_trace }}</pre>
+
             <div class="h6">
                 问题描述
             </div>
