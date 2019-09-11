@@ -20,6 +20,8 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 
+import java.util.HashMap;
+
 /**
  * @description: 服务器的request end hook点
  * @author: anyang
@@ -38,7 +40,7 @@ public abstract class ServerRequestEndHook extends AbstractClassHook {
 
     public static void checkRequestEnd() {
         if (HookHandler.enableEnd.get()) {
-            HookHandler.doCheck(CheckParameter.Type.REQUESTEND, new Object());
+            HookHandler.doCheck(CheckParameter.Type.REQUESTEND, new HashMap<String, Object>());
             HookHandler.enableEnd.set(false);
         }
     }

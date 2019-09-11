@@ -18,7 +18,6 @@ package com.baidu.openrasp.hook.dubbo;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
-import com.baidu.openrasp.hook.server.ServerRequestHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
@@ -81,7 +80,7 @@ public class DubboRequestHook extends AbstractClassHook {
     }
 
     public static void checkRequestEnd() {
-        HookHandler.doCheck(CheckParameter.Type.REQUESTEND, new Object());
+        HookHandler.doCheck(CheckParameter.Type.REQUESTEND, new HashMap<String, Object>());
     }
 
     public static boolean isWrapClass(Class clazz) {

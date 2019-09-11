@@ -102,12 +102,12 @@ public class CheckParameter {
     }
 
     private final Type type;
-    private final Object params;
+    private final Map params;
     private final AbstractRequest request;
     private final long createTime;
 
 
-    public CheckParameter(Type type, Object params) {
+    public CheckParameter(Type type, Map params) {
         this.type = type;
         this.params = params;
         this.request = HookHandler.requestCache.get();
@@ -117,7 +117,7 @@ public class CheckParameter {
     /**
      * 用于单元测试的构造函数
      */
-    public CheckParameter(Type type, Object params, AbstractRequest request) {
+    public CheckParameter(Type type, Map params, AbstractRequest request) {
         this.type = type;
         this.params = params;
         this.request = request;
@@ -132,7 +132,7 @@ public class CheckParameter {
         return type;
     }
 
-    public Object getParams() {
+    public Map getParams() {
         return params;
     }
 
