@@ -115,6 +115,7 @@ int DoubleArrayTrie::build(size_t key_size, const std::vector<std::string> *key,
     next_check_pos_ = 0;
 
     node_t root_node;
+    root_node.code = 0;
     root_node.left = 0;
     root_node.right = key_size;
     root_node.depth = 0;
@@ -226,6 +227,7 @@ size_t DoubleArrayTrie::fetch(const node_t &parent, std::vector<node_t> &sibling
             tmp_node.depth = parent.depth + 1;
             tmp_node.code = cur;
             tmp_node.left = i;
+            tmp_node.right = i;
             if (!siblings.empty())
             {
                 siblings[siblings.size() - 1].right = i;

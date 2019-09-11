@@ -71,7 +71,7 @@ extern "C"
 #endif
 #else
 #ifndef MAXPATHLEN
-#define MAXPATHLEN 4096
+#define MAXPATHLEN (4096)
 #endif
 #endif
 
