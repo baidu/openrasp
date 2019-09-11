@@ -21,6 +21,7 @@ import com.baidu.openrasp.NativePatches;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.tool.model.NicModel;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -101,6 +102,9 @@ public class OSUtil {
     }
 
     public static String getRaspId() throws Exception {
+        if (!StringUtils.isEmpty(Config.getConfig().getRaspId())) {
+            return Config.getConfig().getRaspId();
+        }
         LinkedList<String> macs = OSUtil.getMacAddress();
         String macString = "";
         for (String mac : macs) {

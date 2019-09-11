@@ -43,6 +43,7 @@ public class App {
     public static String install;
     public static String appId;
     public static String appSecret;
+    public static String raspId;
     public static String baseDir;
     public static String url;
     public static int pid;
@@ -83,6 +84,7 @@ public class App {
         options.addOption("uninstall", true, "Specify application server path");
         options.addOption("appid", true, "Value of cloud.appid");
         options.addOption("appsecret", true, "Value of cloud.appsecret");
+        options.addOption("raspid", true, "Value of rasp.id");
         options.addOption("backendurl", true, "Value of cloud.backendurl");
         options.addOption("keepconf", false, "Do not override openrasp.yml");
         options.addOption("h", "help", false, "You're reading this!");
@@ -125,6 +127,7 @@ public class App {
             keepConfig = cmd.hasOption("keepconf");
             appId = cmd.getOptionValue("appid");
             appSecret = cmd.getOptionValue("appsecret");
+            raspId = cmd.getOptionValue("raspid");
             url = cmd.getOptionValue("backendurl");
             if (!(appId != null && appSecret != null && url != null || appId == null && appSecret == null && url == null)) {
                 throw new RaspError(E10005 + "-backendurl, -appid and -appsecret must be set simultaneously");
@@ -143,6 +146,11 @@ public class App {
             Pattern pattern = Pattern.compile(REGEX_APPSECRET);
             if (!pattern.matcher(appSecret).matches()) {
                 throw new RaspError(E10005 + "appsecret must have 43~45 characters");
+            }
+        }
+        if (raspId != null) {
+            if (raspId.length() > 128 || raspId.length() < 1) {
+                throw new RaspError(E10005 + "appsecret must have 1~128 characters");
             }
         }
         if (url != null) {

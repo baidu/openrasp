@@ -147,8 +147,14 @@ public abstract class BaseStandardInstaller implements Installer {
             is.close();
             outputStream.close();
 
-            //配置云控参数
-            setCloudArgs(App.url, App.appId, App.appSecret);
+            // 配置云控
+            setCloudConf();
+            // 配置其它选项
+            Map<String, Object> ymlData = new HashMap<String, Object>();
+            ymlData.put("rasp.id", App.raspId);
+            if (!ymlData.isEmpty()) {
+                setRaspConf(ymlData, "# <rasp id>");
+            }
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -201,31 +207,34 @@ public abstract class BaseStandardInstaller implements Installer {
         }
     }
 
-    private void setCloudArgs(String url, String appId, String appSecret) {
+    private void setCloudConf() {
+        if (App.url != null) {
+            Map<String, Object> cloudData = new HashMap<String, Object>();
+            cloudData.put("cloud.enable", true);
+            cloudData.put("cloud.backend_url", App.url);
+            cloudData.put("cloud.app_id", App.appId);
+            cloudData.put("cloud.app_secret", App.appSecret);
+            setRaspConf(cloudData, "# <remote management>");
+        }
+    }
 
+    private void setRaspConf(Map<String, Object> ymlData, String comment) {
         try {
-            if (url != null && appId != null && appSecret != null) {
-                String path = getInstallPath(serverRoot) + File.separator + "conf" + File.separator + "openrasp.yml";
-                File yamlFile = new File(path);
-                if (yamlFile.exists()) {
-                    Map<String, Object> map = new HashMap<String, Object>();
-                    map.put("cloud.enable", true);
-                    map.put("cloud.backend_url", url);
-                    map.put("cloud.app_id", appId);
-                    map.put("cloud.app_secret", appSecret);
-                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(yamlFile, true), "UTF-8"));
-                    writer.write(LINE_SEP);
-                    writer.write("# <remote management>");
-                    writer.write(LINE_SEP);
-                    DumperOptions options = new DumperOptions();
-                    options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-                    options.setPrettyFlow(true);
-                    Yaml yaml = new Yaml(options);
-                    yaml.dump(map, writer);
-                }
+            String path = getInstallPath(serverRoot) + File.separator + "conf" + File.separator + "openrasp.yml";
+            File yamlFile = new File(path);
+            if (yamlFile.exists()) {
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(yamlFile, true), "UTF-8"));
+                writer.write(LINE_SEP);
+                writer.write(comment);
+                writer.write(LINE_SEP);
+                DumperOptions options = new DumperOptions();
+                options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+                options.setPrettyFlow(true);
+                Yaml yaml = new Yaml(options);
+                yaml.dump(ymlData, writer);
             }
         } catch (Exception e) {
-            System.out.println("Unable to update openrasp.yml: failed to add cloud control settings: " + e.getMessage());
+            System.out.println("Unable to update openrasp.yml: failed to set openrasp configuration: " + e.getMessage());
         }
     }
 

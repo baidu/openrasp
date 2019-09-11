@@ -77,6 +77,7 @@ public class Config extends FileScanListener {
         CLOUD_ADDRESS("cloud.backend_url", ""),
         CLOUD_APPID("cloud.app_id", ""),
         CLOUD_APPSECRET("cloud.app_secret", ""),
+        RASP_ID("rasp.id", ""),
         SYSLOG_ENABLE("syslog.enable", "false"),
         SYSLOG_URL("syslog.url", ""),
         SYSLOG_TAG("syslog.tag", "OPENRASP"),
@@ -164,6 +165,7 @@ public class Config extends FileScanListener {
     private boolean cpuUsageEnable;
     private float cpuUsagePercent;
     private boolean isHttpsVerifyPeer;
+    private String raspId;
 
 
     static {
@@ -549,6 +551,24 @@ public class Config extends FileScanListener {
      */
     public synchronized void setReflectionMonitorMethod(String reflectionMonitorMethod) {
         this.reflectionMonitorMethod = reflectionMonitorMethod.replace(" ", "").split(",");
+    }
+
+    /**
+     * 获取 rasp id
+     *
+     * @return rasp id
+     */
+    public String getRaspId() {
+        return raspId;
+    }
+
+    /**
+     * 设置 rasp id
+     *
+     * @param raspId rasp id
+     */
+    public synchronized void setRaspId(String raspId) {
+        this.raspId = raspId;
     }
 
     /**
@@ -1288,6 +1308,9 @@ public class Config extends FileScanListener {
             } else if (Item.HTTPS_VERIFY_SSL.key.equals(key)) {
                 setHttpsVerifyPeer(value);
                 currentValue = isHttpsVerifyPeer();
+            } else if (Item.RASP_ID.key.equals(key)) {
+                setRaspId(value);
+                currentValue = getRaspId();
             } else {
                 isHit = false;
             }
