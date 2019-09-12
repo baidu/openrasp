@@ -83,7 +83,9 @@ bool HeartBeatAgent::do_heartbeat()
 	json_reader.write_int64({"config_time"}, scm->get_config_last_update());
 	std::string json_content = json_reader.dump();
 
-	BackendRequest backend_request(url_string, json_content.c_str());
+	BackendRequest backend_request;
+	backend_request.set_url(url_string);
+	backend_request.add_post_fields(json_content);
 	openrasp_error(LEVEL_DEBUG, HEARTBEAT_ERROR, _("url:%s body:%s"), url_string.c_str(), json_content.c_str());
 	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)

@@ -114,7 +114,9 @@ void LogAgent::run()
 
 bool LogAgent::post_logs_via_curl(std::string &log_arr, std::string &url_string)
 {
-	BackendRequest backend_request(url_string, log_arr.c_str());
+	BackendRequest backend_request;
+	backend_request.set_url(url_string);
+	backend_request.add_post_fields(log_arr);
 	openrasp_error(LEVEL_DEBUG, LOGCOLLECT_ERROR, _("url:%s body:%s"), url_string.c_str(), log_arr.c_str());
 	std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 	if (!res_info)
