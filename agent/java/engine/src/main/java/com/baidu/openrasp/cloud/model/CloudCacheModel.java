@@ -16,7 +16,12 @@
 
 package com.baidu.openrasp.cloud.model;
 
+import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.LRUCache;
+import com.baidu.openrasp.tool.OSUtil;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @description: 缓存云控数据
@@ -33,7 +38,6 @@ public class CloudCacheModel {
     public long configTime = 0;
     public String algorithmConfig;
     public String raspId;
-    public String masterIp = "";
     public String pluginName = "";
     public static LRUCache<Long, Long> reportCache = new LRUCache<Long, Long>(CACHE_SIZE);
 
@@ -93,11 +97,16 @@ public class CloudCacheModel {
     }
 
     public String getMasterIp() {
-        return masterIp;
-    }
-
-    public void setMasterIp(String masterIp) {
-        this.masterIp = masterIp;
+        String ip = "";
+        try {
+            ip = OSUtil.getMasterIp(Config.getConfig().getCloudAddress());
+        } catch (Exception e) {
+            LogTool.warn(ErrorType.REGISTER_ERROR, "get local ip failed: " + e.getMessage(), e);
+        }
+        if (StringUtils.isEmpty(ip)) {
+            LogTool.warn(ErrorType.REGISTER_ERROR, "get local ip failed, the local ip is empty");
+        }
+        return ip;
     }
 
     public String getPluginName() {

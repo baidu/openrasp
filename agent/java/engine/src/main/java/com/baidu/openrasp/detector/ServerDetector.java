@@ -18,13 +18,10 @@ package com.baidu.openrasp.detector;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.Register;
-import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -66,12 +63,6 @@ public abstract class ServerDetector {
 
     protected void sendRegister() {
         if (CloudUtils.checkCloudControlEnter()) {
-            String cloudAddress = Config.getConfig().getCloudAddress();
-            try {
-                CloudCacheModel.getInstance().setMasterIp(OSUtil.getMasterIp(cloudAddress));
-            } catch (Exception e) {
-                LogTool.warn(ErrorType.REGISTER_ERROR, "get local ip failed: " + e.getMessage(), e);
-            }
             new Register();
         } else {
             // 避免基线检测在 transformer 线程中造成提前加载需要 hook 的类
