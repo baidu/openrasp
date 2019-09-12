@@ -70,6 +70,7 @@ PHP_INI_ENTRY1("openrasp.rasp_id", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, 
 PHP_INI_ENTRY1("openrasp.remote_management_enable", "off", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.remote_management_enable)
 PHP_INI_ENTRY1("openrasp.heartbeat_interval", "180", PHP_INI_SYSTEM, OnUpdateOpenraspHeartbeatInterval, &openrasp_ini.heartbeat_interval)
 PHP_INI_ENTRY1("openrasp.ssl_verifypeer", "off", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.ssl_verifypeer)
+PHP_INI_ENTRY1("openrasp.iast_enable", "off", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.iast_enable)
 PHP_INI_END()
 
 PHP_GINIT_FUNCTION(openrasp)

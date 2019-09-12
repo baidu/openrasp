@@ -107,10 +107,12 @@ class IniConfig
 	var $app_secret;
 	var $rasp_id;
 	var $remote_management_enable;
+	var $iast_enable;
 
 	function __construct($extension) {
 		$this->extension=$extension;
 		$this->remote_management_enable = "0";
+		$this->iast_enable = "0";
     }
 
 	public function setRootDir($root_dir)
@@ -201,6 +203,16 @@ class IniConfig
 		}
 	}
 
+	public function enableIast()
+	{
+		$this->iast_enable = "1";
+	}
+
+	public function isIastEnable()
+	{
+		return $this->iast_enable === "1";
+	}
+
 	public function initializeRootDir()
 	{
 		if (file_exists($this->root_dir)) {
@@ -245,6 +257,9 @@ openrasp.heartbeat_interval=180
 
 ;SSL证书验证开关
 openrasp.ssl_verifypeer=0
+
+;IAST开关
+openrasp.iast_enable=$this->iast_enable
 	
 ;OPENRASP END
 
@@ -317,6 +332,11 @@ if (array_key_exists("app-secret", $options)) {
 
 if (array_key_exists("rasp-id", $options)) {
 	$iniConfig->setRaspId($options["rasp-id"]);
+}
+
+if (array_key_exists("iast", $options))
+{
+	$iniConfig->enableIast();
 }
 
 $iniConfig->generateRemoteManagementEnable();
@@ -508,7 +528,7 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 				major_tips("Skipped update of openrasp config since '--keep-conf' is set");
 			} else {
 				major_tips('Updating the openrasp config');
-				$conf_filename = array_key_exists("iast", $options) ? "iast.yml" : "openrasp.yml";
+				$conf_filename = $iniConfig->isIastEnable() ? "iast.yml" : "openrasp.yml";
 				$conf_dir = __DIR__ . DIRECTORY_SEPARATOR . $key;
 				if (file_exists($conf_dir)) {
 					update_file_if_need($conf_dir . DIRECTORY_SEPARATOR . $conf_filename,
@@ -525,7 +545,7 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 		}
 		if (file_exists(__DIR__ . DIRECTORY_SEPARATOR . $key)) {
 			if ($key === "conf") {
-				$conf_filename = array_key_exists("iast", $options) ? "iast.yml" : "openrasp.yml";
+				$conf_filename = $iniConfig->isIastEnable() ? "iast.yml" : "openrasp.yml";
 				update_file_if_need(__DIR__ . DIRECTORY_SEPARATOR . $key . DIRECTORY_SEPARATOR . $conf_filename,
 					$sub_item . DIRECTORY_SEPARATOR . "openrasp.yml", "openrasp config (" . $conf_filename . ")");
 			} else {

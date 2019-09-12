@@ -36,6 +36,7 @@ public:
   char *rasp_id;
   bool remote_management_enable = true;
   bool ssl_verifypeer = false;
+  bool iast_enable = false;
 
   static const char* APPID_REGEX;
   static const char* APPSECRET_REGEX;
