@@ -348,8 +348,11 @@ public class HookHandler {
         }
         if (a > 0) {
             long t = System.currentTimeMillis() - a;
+            String message = "type=" + type.getName() + " " + "time=" + t;
             if (requestCache.get() != null) {
-                LOGGER.info("request_id=" + requestCache.get().getRequestId() + " " + "type=" + type.getName() + " " + "time=" + t);
+                LOGGER.info("request_id=" + requestCache.get().getRequestId() + " " + message);
+            } else {
+                LOGGER.info(message);
             }
         }
         if (isBlock) {
