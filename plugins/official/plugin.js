@@ -298,7 +298,7 @@ var algorithmConfig = {
             // php specific
             'dict',
             'php',
-            'phar',
+            // 'phar',
             'compress.zlib',
             'compress.bzip2',
             'zip',
