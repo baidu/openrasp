@@ -1,4 +1,4 @@
-const plugin_version = '2019-0723-1700'
+const plugin_version = '2019-0016-1500'
 const plugin_name    = 'iast'
 const plugin_desc    = 'IAST Fuzz 插件'
 
@@ -30,13 +30,16 @@ var algorithmConfig = {
     iast: {
         fuzz_server:     'http://127.0.0.1:25931/openrasp-result',
         request_timeout: 5000,
-        byhost_regex:    ''  
+        byhost_regex:    ''
     }
 }
 
 // END ALGORITHM CONFIG //
 
-var byhost_regex = new RegExp(algorithmConfig.iast.byhost_regex)
+var byhost_regex
+if (algorithmConfig.iast.byhost_regex.length > 0){
+    byhost_regex = new RegExp(byhost_regex)
+}
 
 function bufferToHex (buffer) {
     return Array.from (new Uint8Array (buffer)).map (b => b.toString (16).padStart (2, "0")).join ("");
@@ -81,7 +84,7 @@ function send_rasp_result(context) {
 
     var web_server = {}
     var server_host = new_context.header.host || "unknow_server_addr"
-    if (byhost_regex.test(server_host)) {
+    if (byhost_regex && byhost_regex.test(server_host)) {
         server_host = server_host.split(":")
         web_server.host = server_host[0]
         web_server.port = parseInt(server_host[1]) || default_port
