@@ -1,4 +1,4 @@
-const plugin_version = '2019-0828-1100'
+const plugin_version = '2019-0916-0000'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -156,6 +156,7 @@ var algorithmConfig = {
         name:    '算法3 - 拦截常见 dnslog 地址',
         action:  'block',
         domains: [
+        	'.vuleye.pw',
             '.ceye.io',
             '.exeye.io',
             '.vcap.me',
@@ -297,7 +298,7 @@ var algorithmConfig = {
             // php specific
             'dict',
             'php',
-            'phar',
+            // 'phar',
             'compress.zlib',
             'compress.bzip2',
             'zip',
@@ -1957,7 +1958,7 @@ plugin.register('command', function (params, context) {
         {           
             return {
                 action:     algorithmConfig.command_common.action,
-                message:    _("Webshell detected - Executing potentially dangerous command, command is %1%", [cmd]),
+                message:    _("Webshell detected - Executing potentially dangerous command, command is %1%", [params.command]),
                 confidence: 95,
                 algorithm:  'command_common'
             }
@@ -1969,7 +1970,7 @@ plugin.register('command', function (params, context) {
     {
         return {
             action:     algorithmConfig.command_other.action,
-            message:    _("Command execution - Logging all command execution by default, command is %1%", [cmd]),
+            message:    _("Command execution - Logging all command execution by default, command is %1%", [params.command]),
             confidence: 90,
             algorithm:  'command_other'
         }
