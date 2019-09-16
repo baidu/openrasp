@@ -91,7 +91,7 @@ function send_rasp_result(context) {
     }
     else {
         server_host = server_host.split(":")
-        web_server.host = context.nic.ip
+        web_server.host = context.nic[0].ip || "unknow_nic_addr"
         web_server.port = parseInt(server_host[1]) || default_port
     }
 
