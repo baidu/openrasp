@@ -1,4 +1,4 @@
-const plugin_version = '2019-0908-1100'
+const plugin_version = '2019-0916-0000'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -298,7 +298,7 @@ var algorithmConfig = {
             // php specific
             'dict',
             'php',
-            'phar',
+            // 'phar',
             'compress.zlib',
             'compress.bzip2',
             'zip',
