@@ -1,4 +1,4 @@
-const plugin_version = '2019-0016-1500'
+const plugin_version = '2019-0916-1500'
 const plugin_name    = 'iast'
 const plugin_desc    = 'IAST Fuzz 插件'
 
