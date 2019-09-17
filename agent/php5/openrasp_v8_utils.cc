@@ -347,4 +347,39 @@ void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string>
     }
 }
 
+void extract_sql_error_codes(Isolate *isolate, std::vector<long> &sql_error_codes, int limit)
+{
+    std::string script = R"(
+    (function () {
+        var sql_error_codes = [];
+        try {
+                sql_error_codes = RASP.algorithmConfig.sql_exception.error_code.filter((key, value) => typeof value === 'number');
+            } catch (_) {
+            }
+            return sql_error_codes
+        })()
+    )";
+    v8::HandleScope handle_scope(isolate);
+    auto context = isolate->GetCurrentContext();
+    auto rst = isolate->ExecScript(script, "extract_sql_error_codes");
+    if (rst.IsEmpty())
+    {
+        return;
+    }
+    auto arr = rst.ToLocalChecked().As<v8::Array>();
+    auto len = arr->Length();
+    if (len > limit)
+    {
+        openrasp_error(LEVEL_WARNING, PLUGIN_ERROR,
+                       _("Size of RASP.algorithmConfig.sql_exception.error_code must <= %d."), limit);
+    }
+    for (size_t i = 0; i < len; i++)
+    {
+        v8::HandleScope handle_scope(isolate);
+        v8::Local<v8::Integer> err_code_local = arr->Get(context, i).ToLocalChecked().As<v8::Integer>();
+        int64_t err_code = err_code_local->Value();
+        sql_error_codes.push_back(err_code);
+    }
+}
+
 } // namespace openrasp

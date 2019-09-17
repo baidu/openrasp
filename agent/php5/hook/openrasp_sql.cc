@@ -106,15 +106,7 @@ void plugin_sql_check(char *query, int query_len, char *server TSRMLS_DC)
 
 bool is_mysql_error_code_monitored(long err_code)
 {
-    static const std::set<long> mysql_error_codes = {
-        1045,
-        1060,
-        1064,
-        1105,
-        1367,
-        1690};
-    auto it = mysql_error_codes.find(err_code);
-    if (it != mysql_error_codes.end())
+    if (openrasp::scm->sql_error_code_exist(err_code))
     {
         return true;
     }

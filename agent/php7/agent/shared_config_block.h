@@ -28,6 +28,8 @@ namespace openrasp
 class SharedConfigBlock
 {
 public:
+  static const int SQL_ERROR_CODE_MAX_SIZE = 100;
+
   inline openrasp::DoubleArrayTrie::unit_t *get_check_type_white_array()
   {
     return check_type_white_array;
@@ -98,12 +100,43 @@ public:
     return action_type;
   }
 
+  inline void set_sql_error_codes(std::vector<long> error_codes)
+  {
+    size_t err_size = error_codes.size();
+    if (err_size >= 0 && err_size <= SQL_ERROR_CODE_MAX_SIZE)
+    {
+      for (int i = 0; i < err_size; ++i)
+      {
+        sql_error_codes[i] = error_codes[i];
+      }
+      sql_error_codes_size = err_size;
+    }
+    else
+    {
+      sql_error_codes_size = 0;
+    }
+  }
+
+  inline bool sql_error_code_exist(long err_code) const
+  {
+    for (int i = 0; i < sql_error_codes_size; ++i)
+    {
+      if (sql_error_codes[i] == err_code)
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
 private:
   long config_update_time = 0;
   long log_max_backup = 0;
   long debug_level = 0;
   size_t white_array_size;
   OpenRASPActionType actions[ALL_TYPE] = {AC_LOG};
+  int sql_error_codes_size = 0;
+  long sql_error_codes[SQL_ERROR_CODE_MAX_SIZE] = {0};
   openrasp::DoubleArrayTrie::unit_t check_type_white_array[WRITE_ARRAY_MAX_LENGTH + 1];
 };
 

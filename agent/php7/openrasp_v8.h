@@ -41,6 +41,7 @@ CheckResult Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Ob
 v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val);
 v8::Local<v8::ObjectTemplate> CreateRequestContextTemplate(Isolate *isolate);
 void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string> &buildin_action_map);
+void extract_sql_error_codes(Isolate *isolate, std::vector<long> &sql_error_codes, int limit);
 void load_plugins();
 void plugin_log(const std::string &message);
 } // namespace openrasp

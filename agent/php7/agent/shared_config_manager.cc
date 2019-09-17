@@ -264,4 +264,23 @@ std::string SharedConfigManager::get_rasp_id() const
     return this->rasp_id;
 }
 
+void SharedConfigManager::set_sql_error_codes(std::vector<long> error_codes)
+{
+    if (rwlock != nullptr && rwlock->write_try_lock())
+    {
+        WriteUnLocker auto_unlocker(rwlock);
+        shared_config_block->set_sql_error_codes(error_codes);
+    }
+}
+
+bool SharedConfigManager::sql_error_code_exist(long err_code)
+{
+    if (rwlock != nullptr && rwlock->read_try_lock())
+    {
+        ReadUnLocker auto_unlocker(rwlock);
+        return shared_config_block->sql_error_code_exist(err_code);
+    }
+    return false;
+}
+
 } // namespace openrasp
