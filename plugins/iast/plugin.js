@@ -83,7 +83,7 @@ function send_rasp_result(context) {
     new_context.body            = bufferToHex(context.body)
 
     var web_server = {}
-    var server_host = new_context.header.host || "unknow_server_addr"
+    var server_host = new_context.header.host || "unknown-server-addr"
     if (byhost_regex && byhost_regex.test(server_host)) {
         server_host = server_host.split(":")
         web_server.host = server_host[0]
@@ -91,7 +91,7 @@ function send_rasp_result(context) {
     }
     else {
         server_host = server_host.split(":")
-        web_server.host = context.nic[0].ip || "unknow_nic_addr"
+        web_server.host = context.nic[0].ip || "unknown-nic-addr"
         web_server.port = parseInt(server_host[1]) || default_port
     }
 
