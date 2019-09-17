@@ -144,7 +144,7 @@ public class CloudUtils {
         return false;
     }
 
-    public static boolean checkRequestResult(GenericResponse response) {
+    public static boolean checkResponse(GenericResponse response) {
         if (response != null) {
             if (Config.getConfig().isDebugEnabled()) {
                 CloudManager.LOGGER.info(response.toString());

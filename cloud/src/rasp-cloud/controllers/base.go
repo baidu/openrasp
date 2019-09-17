@@ -39,18 +39,26 @@ func (o *BaseController) ServeError(code int, description string, err ...error) 
 	if len(err) > 0 && err[0] != nil {
 		description = description + ": " + err[0].Error()
 	}
-	o.ServeStatusCode(code, description)
+	o.ServeStatusCode(code, code, description)
 	panic(description)
 }
 
-func (o *BaseController) ServeStatusCode(code int, description ...string) {
+func (o *BaseController) ServeErrorWithStatusCode(code int, status int, description string, err ...error) {
+	if len(err) > 0 && err[0] != nil {
+		description = description + ": " + err[0].Error()
+	}
+	o.ServeStatusCode(code, status, description)
+	panic(description)
+}
+
+func (o *BaseController) ServeStatusCode(code int, status int, description ...string) {
 	var des string
 	if len(description) == 0 {
 		des = http.StatusText(code)
 	} else {
 		des = description[0]
 	}
-	o.Data["json"] = map[string]interface{}{"status": code, "description": des}
+	o.Data["json"] = map[string]interface{}{"status": status, "description": des}
 	o.ServeJSON()
 }
 

@@ -21,6 +21,7 @@ import (
 )
 
 const (
+	// init error
 	ErrCodeLogInitFailed          = 30001 + iota
 	ErrCodeMongoInitFailed
 	ErrCodeESInitFailed
@@ -32,6 +33,11 @@ const (
 	ErrCodeInitDefaultAppFailed
 	ErrCodeInitChildProcessFailed
 	ErrCodeChDirFailed
+)
+
+const (
+	// api error
+	ErrRaspNotFound = 4001 + iota
 )
 
 func Panic(errCode int, message string, err error) {

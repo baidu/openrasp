@@ -29,9 +29,14 @@ public abstract class CloudTimerTask implements Runnable {
         while (isAlive) {
             try {
                 execute();
-                Thread.sleep(sleepTime * 1000);
             } catch (Throwable t) {
                 handleError(t);
+            }
+            try {
+                // 和上面分开处理，避免心跳失败不走 sleep,不能放到 execute 之前，会导致第一次心跳不能马上运行
+                Thread.sleep(sleepTime * 1000);
+            } catch (InterruptedException e) {
+                handleError(e);
             }
         }
     }

@@ -20,6 +20,7 @@ import (
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
 	"time"
+	"rasp-cloud/tools"
 )
 
 // Operations about plugin
@@ -42,7 +43,12 @@ func (o *HeartbeatController) Post() {
 	o.UnmarshalJson(&heartbeat)
 	rasp, err := models.GetRaspById(heartbeat.RaspId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
+		if err == mgo.ErrNotFound {
+			o.ServeErrorWithStatusCode(http.StatusBadRequest,
+				tools.ErrRaspNotFound, "can not found the rasp", err)
+		} else {
+			o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
+		}
 	}
 	rasp.LastHeartbeatTime = time.Now().Unix()
 	rasp.PluginVersion = heartbeat.PluginVersion

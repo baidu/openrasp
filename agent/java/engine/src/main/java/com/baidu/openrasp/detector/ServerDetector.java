@@ -17,6 +17,7 @@
 package com.baidu.openrasp.detector;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.Register;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.messaging.ErrorType;
@@ -63,7 +64,12 @@ public abstract class ServerDetector {
 
     protected void sendRegister() {
         if (CloudUtils.checkCloudControlEnter()) {
-            new Register();
+            new Register(new Register.RegisterCallback() {
+                @Override
+                public void call() {
+                    CloudManager.init();
+                }
+            });
         } else {
             // 避免基线检测在 transformer 线程中造成提前加载需要 hook 的类
             Thread policyThread = new Thread() {

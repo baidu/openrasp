@@ -38,11 +38,17 @@ import java.util.Map;
  */
 public class Register {
     private static final int REGISTER_DELAY = 300 * 1000;
+    private RegisterCallback callback;
 
-    public Register() {
+    public Register(RegisterCallback callback) {
+        this.callback = callback;
         Thread thread = new Thread(new RegisterThread());
         thread.setDaemon(true);
         thread.start();
+    }
+
+    public static interface RegisterCallback {
+        void call();
     }
 
     class RegisterThread implements Runnable {
@@ -55,12 +61,12 @@ public class Register {
                     String content = new Gson().toJson(generateParameters());
                     String url = CloudRequestUrl.CLOUD_REGISTER_URL;
                     GenericResponse response = new CloudHttp().commonRequest(url, content);
-                    if (CloudUtils.checkRequestResult(response)) {
+                    if (CloudUtils.checkResponse(response)) {
                         this.registerFlag = true;
                         Config.getConfig().setHookWhiteAll("false");
                         System.out.println("[OpenRASP] RASP agent successfully registered, enabling remote management, please refer to rasp logs for details");
                         CloudManager.LOGGER.info("[OpenRASP] RASP agent successfully registered,registration details are as follows: \n" + content);
-                        CloudManager.init();
+                        callback.call();
                     } else {
                         System.out.println("[OpenRASP] Failed to register RASP agent, please refer to rasp logs for details");
                         String message = CloudUtils.handleError(ErrorType.REGISTER_ERROR, response);
