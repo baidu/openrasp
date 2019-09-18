@@ -1,4 +1,4 @@
-const plugin_version = '2019-0916-1400'
+const plugin_version = '2019-0918-1200'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -546,7 +546,7 @@ var cleanFileRegex  = /\.(jpg|jpeg|png|gif|bmp|txt|rar|zip)$/i
 var htmlFileRegex   = /\.(htm|html|js)$/i
 
 // 匹配 EXE/DLL 等可以执行的文件
-var exeFileRegex    = /\.(exe|dll|scr|vbs|cmd|bat|jar)$/i
+var exeFileRegex    = /\.(exe|dll|scr|vbs|cmd|bat)$/i
 
 // 其他的 stream 都没啥用
 var ntfsRegex       = /::\$(DATA|INDEX)$/
@@ -1431,7 +1431,7 @@ plugin.register('sql_exception', function(params, context) {
     var message = _("%1% error %2% detected: %3%", [params.server, params.error_code, params.error_msg])
 
     return {
-        action:     'log',
+        action:     algorithmConfig.sql_exception.action,
         message:    message,
         confidence: 70,
         algorithm:  'sql_exception'

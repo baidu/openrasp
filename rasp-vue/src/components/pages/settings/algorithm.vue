@@ -202,6 +202,7 @@ export default {
         'command_common': true,
         'sql_userinput': true,
         'sql_policy': true,
+        'sql_exception': true,
         'sql_regex': true,
         'eval_regex': true,
         'include_protocol': true,
@@ -293,6 +294,11 @@ export default {
         })
 
         self.items = Object.values(hooks)
+
+        // 老版本的官方插件，sql_exception.error_code 字段不存在，不要展示高级配置
+        if (! data.algorithm_config.sql_exception.error_code) {
+          self.hasAdvancedConfig['sql_exception'] = false
+        }
       })
     },
     saveConfig: function() {

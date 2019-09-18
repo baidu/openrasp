@@ -141,6 +141,12 @@ export var status_types = {
   // ignore: '忽略放行'
 }
 
+// 去除空格、换行，按照指定的分隔符分隔，最后删掉 null/undefined/空字符串
+export function trimSplit(data, sep) {
+  var tmp = data.replace(/\s/g, '').split(sep)
+  return tmp.filter(a => a)
+}
+
 export function getDefaultConfig() {
   return {
     general_config: {
