@@ -28,9 +28,9 @@ var algorithmConfig = {
     // 防止前端报错
     meta: {},
     iast: {
-        fuzz_server:     'http://127.0.0.1:25931/openrasp-result',
+        fuzz_server:     'http://1727.0.0.1:25931/openrasp-result',
         request_timeout: 5000,
-        byhost_regex:    ''
+        byhost_regex:    '.*'
     }
 }
 
@@ -83,23 +83,44 @@ function send_rasp_result(context) {
     new_context.body            = bufferToHex(context.body)
 
     var web_server = {}
-    var server_host = new_context.header.host || "unknown-server-addr"
-    if (byhost_regex && byhost_regex.test(server_host)) {
-        server_host = server_host.split(":")
-        web_server.host = server_host[0]
-        web_server.port = parseInt(server_host[1]) || default_port
+    var server_host = new_context.header.host
+    if (!server_host) {
+        msg = "Agent with rasp id:" + context.raspId + " get host from http header failed! "
+        plugin.log(msg)
+        return
     }
     else {
-        server_host = server_host.split(":")
-        web_server.host = context.nic[0].ip || "unknown-nic-addr"
-        web_server.port = parseInt(server_host[1]) || default_port
+        if (byhost_regex && byhost_regex.test(server_host)) {
+            server_host = server_host.split(":")
+            web_server.host = server_host[0]
+            web_server.port = parseInt(server_host[1]) || default_port
+        }
+        else {
+            server_host = server_host.split(":")
+            for (var i in context.nic) {
+                if (context.nic[i].ip && context.nic[i].ip != "127.0.0.1") {
+                    web_server.host = context.nic[i].ip
+                    break
+                }
+            }
+            if (!web_server.host) {
+                msg = "Agent with rasp id:" + context.raspId + " get ip failed! "
+                plugin.log(msg)
+                return
+            }
+            else {
+                web_server.port = parseInt(server_host[1]) || default_port
+            }
+            
+        }
     }
 
     // 将hook点信息发送给扫描服务器
     var data = {
-        "web_server":   web_server,
-        "context":      new_context,
-        "hook_info":    hook_info
+        "web_server":     web_server,
+        "context":        new_context,
+        "hook_info":      hook_info,
+        "plugin_version": plugin_version
     }
 
     var request_config = {
