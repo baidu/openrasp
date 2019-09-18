@@ -77,10 +77,9 @@ function send_rasp_result(context) {
     // 构建 context
     var new_context             = Object.assign({}, context)
     new_context.json            = new_context.json || {}
-    new_context.body            = new_context.body || ""
     new_context.parameter       = new_context.parameter || {}
     new_context.querystring     = new_context.querystring || ""
-    new_context.body            = bufferToHex(context.body)
+    new_context.body            = bufferToHex(context.body).substr(0, 200)
 
     var web_server = {}
     var server_host = new_context.header.host
