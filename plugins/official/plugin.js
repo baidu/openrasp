@@ -132,7 +132,7 @@ var algorithmConfig = {
     sql_exception: {
         name:      '算法3 - 记录数据库异常',
         action:    'log',
-        reference: 'https://rasp.baidu.com/doc/dev/official.html#sql-exception'
+        reference: 'https://rasp.baidu.com/doc/dev/official.html#sql-exception',
         error_code: [
             1045, // Access denied for user 'bae'@'10.10.1.1'
             1060, // Duplicate column name '5.5.60-0ubuntu0.14.04.1'
@@ -1426,6 +1426,17 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
 
 }
 
+plugin.register('sql_exception', function(params, context) {
+    // mysql error 1367 detected: XXX
+    var message = _("%1% error %2% detected: %3%", [params.server, params.error_code, params.error_msg])
+
+    return {
+        action:     'log',
+        message:    message,
+        confidence: 70,
+        algorithm:  'sql_exception'
+    }
+})
 
 plugin.register('directory', function (params, context) {
 
