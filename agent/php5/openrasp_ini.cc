@@ -24,7 +24,7 @@ Openrasp_ini openrasp_ini;
 static const int MIN_HEARTBEAT_INTERVAL = 10;
 const char *Openrasp_ini::APPID_REGEX = "^[0-9a-fA-F]{40}$";
 const char *Openrasp_ini::APPSECRET_REGEX = "^[0-9a-zA-Z_-]{43,45}$";
-const char *Openrasp_ini::RASPID_REGEX = "^[0-9a-fA-F]{16,512}$";
+const char *Openrasp_ini::RASPID_REGEX = "^[0-9a-zA-Z]{16,512}$";
 
 bool Openrasp_ini::verify_remote_management_ini(std::string &error)
 {

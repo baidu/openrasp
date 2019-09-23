@@ -178,7 +178,7 @@ class IniConfig
 	{
 		if (!empty($rasp_id))
 		{
-			if (preg_match("/^[0-9a-fA-F]{16,512}$/", $rasp_id) != 0) {
+			if (preg_match("/^[0-9a-zA-Z]{16,512}$/", $rasp_id) != 0) {
 				log_tips(INFO, "openrasp.rasp_id => " . $rasp_id);
 				$this->rasp_id = $rasp_id;
 			} else {

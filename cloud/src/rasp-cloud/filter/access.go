@@ -41,6 +41,8 @@ func logAccess(ctx *context.Context) {
 		cont += "[F]" + ctx.Input.Referer()
 	}
 
+	body := ctx.Input.RequestBody
+	cont += " - [B]" + string(body)
 	accessLogger.Info(cont)
 }
 
