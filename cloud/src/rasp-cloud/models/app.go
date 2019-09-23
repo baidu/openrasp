@@ -41,6 +41,7 @@ import (
 	"net"
 	"rasp-cloud/conf"
 	"net/url"
+	"log"
 )
 
 type App struct {
@@ -273,6 +274,7 @@ func HandleAttackAlarm() {
 	_, err := mongo.FindAllWithSelect(appCollectionName, nil, &apps, bson.M{"plugin": 0}, 0, 0)
 	if err != nil {
 		beego.Error("failed to get apps for the alarm: " + err.Error())
+		log.Println("failed to get apps for the alarm: " + err.Error())
 		return
 	}
 	now := time.Now().UnixNano() / 1000000
@@ -304,6 +306,7 @@ func HandleAttackAlarm() {
 				1, 10, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+app.Id)
 			if err != nil {
 				beego.Error("failed to get alarm from es: " + err.Error())
+				log.Println("failed to get alarm from es: " + err.Error())
 				continue
 			}
 			if total > 0 {

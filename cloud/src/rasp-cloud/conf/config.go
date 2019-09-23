@@ -25,6 +25,8 @@ const (
 	StartTypeAgent      = "agent"
 	StartTypeReset      = "reset"
 	StartTypeDefault    = "default"
+	RestartOperation 	= "restart"
+	StopOperation 		= "stop"
 )
 
 type RaspAppConfig struct {
@@ -32,6 +34,9 @@ type RaspAppConfig struct {
 	EsUser                string
 	EsPwd                 string
 	EsTTL                 int64
+	KafkaAddr             string
+	KafkaUser             string
+	KafkaPwd              string
 	MongoDBAddr           []string
 	MongoDBUser           string
 	MongoDBPwd            string
@@ -52,6 +57,7 @@ type Flag struct {
 	Password  *string
 	Daemon    *bool
 	Version   *bool
+	Operation *string
 }
 
 var (
@@ -65,6 +71,9 @@ func InitConfig(startFlag *Flag) {
 	AppConfig.EsUser = beego.AppConfig.DefaultString("EsUser", "")
 	AppConfig.EsPwd = beego.AppConfig.DefaultString("EsPwd", "")
 	AppConfig.EsTTL = beego.AppConfig.DefaultInt64("EsTTL", 365)
+	AppConfig.KafkaAddr = beego.AppConfig.String("KafkaAddr")
+	AppConfig.KafkaUser = beego.AppConfig.DefaultString("KafkaUser", "")
+	AppConfig.KafkaPwd = beego.AppConfig.DefaultString("KafkaPwd", "")
 	AppConfig.MongoDBAddr = initArrayConfig(strings.Split(beego.AppConfig.String("MongoDBAddr"), ","))
 	AppConfig.MongoDBPoolLimit = beego.AppConfig.DefaultInt("MongoDBPoolLimit", 1024)
 	AppConfig.MongoDBName = beego.AppConfig.DefaultString("MongoDBName", "openrasp")

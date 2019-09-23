@@ -50,6 +50,11 @@ type Rasp struct {
 	Description       string            `json:"description" bson:"description,omitempty"`
 }
 
+type RecordCount struct {
+	Id                string            `json:"id" bson:"_id"`
+	Count             int64    			`json:"count" bson:"count"`
+}
+
 const (
 	raspCollectionName = "rasp"
 )
@@ -124,6 +129,12 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 					"$options": "$i",
 				},
 			},
+			{
+				"version": bson.M{
+					"$regex":   realHostname,
+					"$options": "$i",
+				},
+			},
 		}
 		delete(bsonModel, "hostname")
 	}
@@ -147,6 +158,45 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 				HandleRasp(rasp)
 			}
 		}
+	}
+	return
+}
+
+func FindRaspVersion(selector *Rasp) (result []*RecordCount, err error) {
+	var bsonContent []byte
+	bsonContent, err = bson.Marshal(selector)
+	if err != nil {
+		return
+	}
+	bsonModel := bson.M{}
+	err = bson.Unmarshal(bsonContent, &bsonModel)
+	if err != nil {
+		return
+	}
+	if bsonModel["app_id"] != nil {
+		app_id := strings.TrimSpace(fmt.Sprint(bsonModel["app_id"]))
+		Operations := []bson.M{
+			{
+				"$match": bson.M{"app_id": app_id},
+			},
+			{
+				"$group": bson.M{
+					"_id":   "$version",
+					"count": bson.M{"$sum": 1},
+				},
+			},
+			{
+				"$match": bson.M{
+					"count": bson.M{"$gt": 0 }},
+			},
+			{
+				"$sort": bson.M{
+					"_id": -1,
+				},
+			},
+		}
+		err = mongo.FindSelectWithAggregation(raspCollectionName, Operations, &result)
+		return
 	}
 	return
 }

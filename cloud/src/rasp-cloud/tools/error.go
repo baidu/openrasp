@@ -32,6 +32,7 @@ const (
 	ErrCodeInitDefaultAppFailed
 	ErrCodeInitChildProcessFailed
 	ErrCodeChDirFailed
+	ErrCodeReadPidFileFailed
 )
 
 func Panic(errCode int, message string, err error) {

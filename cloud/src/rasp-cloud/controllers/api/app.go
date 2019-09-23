@@ -28,6 +28,7 @@ import (
 	"time"
 	"strings"
 	"fmt"
+	"reflect"
 )
 
 // Operations about app
@@ -181,6 +182,7 @@ func (o *AppController) UpdateAppWhiteListConfig() {
 		o.ServeError(http.StatusBadRequest, "config can not be empty")
 	}
 	o.validateWhiteListConfig(param.Config)
+	param.Config = o.RemoveDupWhitelistConfigItem(param.Config)
 	app, err := models.UpdateWhiteListConfig(param.AppId, param.Config)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update app whitelist config", err)
@@ -514,6 +516,23 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 			}
 		}
 	}
+}
+
+func (o *AppController) RemoveDupWhitelistConfigItem(a []models.WhitelistConfigItem) (ret []models.WhitelistConfigItem){
+	n := len(a)
+	for i:=0; i < n; i++{
+		state := false
+		for j := i+1 ; j < n; j++{
+			if (j > 0 && reflect.DeepEqual(a[i],a[j])){
+				state = true
+				break
+			}
+		}
+		if !state {
+			ret = append(ret, a[i])
+		}
+	}
+	return
 }
 
 func (o *AppController) validateWhiteListConfig(config []models.WhitelistConfigItem) {

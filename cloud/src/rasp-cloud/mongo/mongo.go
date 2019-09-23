@@ -16,6 +16,9 @@ package mongo
 
 import (
 	"gopkg.in/mgo.v2"
+	"log"
+	"os"
+	"rasp-cloud/environment"
 	"time"
 	"github.com/astaxie/beego"
 	"rasp-cloud/tools"
@@ -29,7 +32,6 @@ import (
 )
 
 var (
-	minMongoVersion = "3.6.0"
 	session         *mgo.Session
 	DbName          = conf.AppConfig.MongoDBName
 )
@@ -55,9 +57,10 @@ func init() {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get MongoDB version", err)
 	}
 	beego.Info("MongoDB version: " + info.Version)
-	if strings.Compare(info.Version, minMongoVersion) < 0 {
+	initMongoLogger(environment.MongoFileName, info.Version)
+	if strings.Compare(info.Version, environment.MinMongoVersion) < 0 {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "unable to support the MongoDB with a version lower than "+
-			minMongoVersion+ ","+ " the current version is "+ info.Version, nil)
+			environment.MinMongoVersion+ ","+ " the current version is "+ info.Version, nil)
 	}
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "init MongoDB failed", err)
@@ -131,6 +134,12 @@ func FindAllWithSelect(collection string, query interface{}, result interface{},
 	return
 }
 
+func FindSelectWithAggregation(collection string, query interface{}, result interface{}) (err error) {
+	newSession := NewSession()
+	defer newSession.Close()
+	return newSession.DB(DbName).C(collection).Pipe(query).All(result)
+}
+
 func FindId(collection string, id string, result interface{}) error {
 	newSession := NewSession()
 	defer newSession.Close()
@@ -176,4 +185,14 @@ func GenerateObjectId() string {
 	random := string(bson.NewObjectId()) +
 		strconv.FormatInt(time.Now().UnixNano(), 10) + strconv.Itoa(rand.Intn(10000))
 	return fmt.Sprintf("%x", sha1.Sum([]byte(random)))
+}
+
+func initMongoLogger(mongoFileName string, version string){
+	logFile, err := os.Create(mongoFileName)
+	defer logFile.Close()
+	if err != nil {
+		log.Fatalln("open mongo.pid error")
+	}
+	pidLog := log.New(logFile, "[Info]", log.Llongfile)
+	pidLog.Printf("version:%s", version)
 }

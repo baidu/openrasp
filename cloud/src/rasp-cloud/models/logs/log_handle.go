@@ -245,6 +245,7 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 	var total int64
 	var attackAggrName = "attack_aggr"
 	var attackTimeTopHitName = "attack_time_top_hit"
+	var typeIndex string
 	filterQueries := make([]elastic.Query, 0, len(query)+1)
 	shouldQueries := make([]elastic.Query, 0, len(query)+1)
 	if query != nil {
@@ -323,6 +324,13 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 				err := json.Unmarshal(*item.Source, &result[index])
 				if err != nil {
 					return 0, nil, err
+				}
+				if typeIndex == "attack"{
+					requestId := result[index]["request_id"].(string)
+					stackMd5 := result[index]["stack_md5"].(string)
+					attackType := result[index]["attack_type"].(string)
+					filterId := requestId + stackMd5 + attackType
+					result[index]["filter_id"] = filterId
 				}
 				es.HandleSearchResult(result[index], item.Id)
 			}
