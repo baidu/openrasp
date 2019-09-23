@@ -134,7 +134,7 @@ var algorithmConfig = {
         action:    'log',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#sql-exception',
         error_code: [
-            1045, // Access denied for user 'bae'@'10.10.1.1'
+            // 1045, // Access denied for user 'bae'@'10.10.1.1'
             1060, // Duplicate column name '5.5.60-0ubuntu0.14.04.1'
             1064, // You have an error in your SQL syntax
             1105, // XPATH syntax error: '~root@localhost~'
