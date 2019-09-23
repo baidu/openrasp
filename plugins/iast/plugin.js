@@ -41,6 +41,8 @@ if (algorithmConfig.iast.byhost_regex.length > 0){
     byhost_regex = new RegExp(byhost_regex)
 }
 
+var ip_regex = new RegExp(String.raw`^(\d{1,3}\.){3}\d{1,3}$`)
+
 function bufferToHex (buffer) {
     return Array.from (new Uint8Array (buffer)).map (b => b.toString (16).padStart (2, "0")).join ("");
 }
@@ -79,7 +81,13 @@ function send_rasp_result(context) {
     new_context.json            = new_context.json || {}
     new_context.parameter       = new_context.parameter || {}
     new_context.querystring     = new_context.querystring || ""
-    new_context.body            = bufferToHex(context.body).substr(0, 200)
+
+    if (context.header["scan-request-id"] === undefined) {
+        new_context.body = bufferToHex(context.body).substr(0, 200)
+    }
+    else{
+        new_context.body = ""
+    }
 
     var web_server = {}
     var server_host = new_context.header.host
@@ -97,7 +105,10 @@ function send_rasp_result(context) {
         else {
             server_host = server_host.split(":")
             for (var i in context.nic) {
-                if (context.nic[i].ip && context.nic[i].ip != "127.0.0.1") {
+                if (context.nic[i].ip && 
+                    ip_regex.test(context.nic[i].ip) && 
+                    context.nic[i].ip != "127.0.0.1") 
+                {
                     web_server.host = context.nic[i].ip
                     break
                 }
