@@ -24,14 +24,13 @@ import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
+import com.baidu.openrasp.plugin.checker.local.ConfigurableChecker;
 import com.baidu.openrasp.tool.FileUtil;
 import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
 import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
+import com.google.gson.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.yaml.snakeyaml.Yaml;
@@ -39,11 +38,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 
 /**
@@ -60,7 +55,7 @@ public class Config extends FileScanListener {
         REQUEST_PARAM_ENCODING("request.param_encoding", ""),
         BODY_MAX_BYTES("body.maxbytes", "4096"),
         LOG_MAX_BACKUP("log.maxbackup", "30"),
-        REFLECTION_MAX_STACK("plugin.maxstack", "100"),
+        PLUGIN_MAX_STACK("plugin.maxstack", "100"),
         SQL_CACHE_CAPACITY("lru.max_size", "1024"),
         PLUGIN_FILTER("plugin.filter", "true"),
         OGNL_EXPRESSION_MIN_LENGTH("ognl.expression.minlength", "30"),
@@ -89,8 +84,9 @@ public class Config extends FileScanListener {
         HOOK_WHITE_ALL("hook.white.ALL", "true"),
         DECOMPILE_ENABLE("decompile.enable", "false"),
         RESPONSE_HEADERS("inject.custom_headers", ""),
-        CPU_USAGE_PERCENT("cpu.usage.percent", "2"),
+        CPU_USAGE_PERCENT("cpu.usage.percent", "90"),
         CPU_USAGE_ENABLE("cpu.usage.enable", "false"),
+        CPU_USAGE_INTERVAL("cpu.usage.interval", "5"),
         HTTPS_VERIFY_SSL("openrasp.ssl_verifypeer", "false");
 
 
@@ -114,6 +110,7 @@ public class Config extends FileScanListener {
         }
     }
 
+    private static final int MAX_SQL_EXCEPTION_CODES_CONUT = 100;
     private static final String HOOKS_WHITE = "hook.white";
     private static final String RESPONSE_HEADERS = "inject.custom_headers";
     private static final String CONFIG_DIR_NAME = "conf";
@@ -163,9 +160,11 @@ public class Config extends FileScanListener {
     private int logMaxBackUp;
     private boolean disableHooks;
     private boolean cpuUsageEnable;
-    private float cpuUsagePercent;
+    private int cpuUsagePercent;
+    private int cpuUsageCheckInterval;
     private boolean isHttpsVerifyPeer;
     private String raspId;
+    private HashSet<Integer> sqlErrorCodes = new HashSet<Integer>();
 
 
     static {
@@ -205,7 +204,7 @@ public class Config extends FileScanListener {
     }
 
     @SuppressWarnings({"unchecked"})
-    private synchronized void loadConfigFromFile(File file, boolean isInit) throws IOException {
+    private synchronized void loadConfigFromFile(File file, boolean isInit) throws Exception {
         Map<String, Object> properties = null;
         try {
             if (file.exists()) {
@@ -247,13 +246,14 @@ public class Config extends FileScanListener {
     }
 
     @SuppressWarnings("unchecked")
-    public synchronized void loadConfigFromCloud(Map<String, Object> configMap, boolean isInit) {
+    public synchronized void loadConfigFromCloud(Map<String, Object> configMap, boolean isInit) throws Exception {
         TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
         for (Map.Entry<String, Object> entry : configMap.entrySet()) {
             //开启云控必须参数不能云控
-            if (entry.getKey().startsWith("cloud.")) {
+            if (entry.getKey().startsWith("cloud.") || entry.getKey().equals("rasp.id")) {
                 continue;
             }
+
             if (entry.getKey().equals(HOOKS_WHITE)) {
                 if (entry.getValue() instanceof JsonObject) {
                     Map<String, Object> hooks = CloudUtils.getMapGsonObject().fromJson((JsonObject) entry.getValue(), Map.class);
@@ -265,10 +265,23 @@ public class Config extends FileScanListener {
                     setResponseHeaders(headers);
                 }
             } else {
-                if (entry.getValue() instanceof JsonPrimitive) {
-                    setConfig(entry.getKey(), ((JsonPrimitive) entry.getValue()).getAsString(), isInit);
+                try {
+                    if (entry.getValue() instanceof JsonPrimitive) {
+                        setConfig(entry.getKey(), ((JsonPrimitive) entry.getValue()).getAsString(), isInit);
+                    }
+                } catch (Exception e) {
+                    // 出现解析问题使用默认值
+                    for (Config.Item item : Config.Item.values()) {
+                        if (item.key.equals(entry.getKey())) {
+                            setConfig(item.key, item.defaultValue, isInit);
+                            String message = "set config " + entry.getKey() + " from cloud failed with value "
+                                    + entry.getValue() + ", use default value : " + item.defaultValue;
+                            LogTool.warn(ErrorType.CONFIG_ERROR, message + ", because: " + e.getMessage(), e);
+                        }
+                    }
                 }
             }
+
         }
         setHooksWhite(temp);
     }
@@ -318,7 +331,7 @@ public class Config extends FileScanListener {
         });
     }
 
-    private void setConfigFromProperties(Config.Item item, Map<String, Object> properties, boolean isInit) {
+    private void setConfigFromProperties(Config.Item item, Map<String, Object> properties, boolean isInit) throws Exception {
         String key = item.key;
         String value = item.defaultValue;
         if (properties != null) {
@@ -332,8 +345,8 @@ public class Config extends FileScanListener {
         } catch (Exception e) {
             // 出现解析问题使用默认值
             setConfig(key, item.defaultValue, false);
-            String message = "set config " + item.key + " failed, use default value : " + value;
-            LogTool.warn(ErrorType.CONFIG_ERROR, message + ": " + e.getMessage(), e);
+            String message = "set config " + item.key + " failed, use default value: " + item.defaultValue;
+            LogTool.warn(ErrorType.CONFIG_ERROR, message + ", because: " + e.getMessage(), e);
         }
     }
 
@@ -438,7 +451,7 @@ public class Config extends FileScanListener {
     public synchronized void setPluginTimeout(String pluginTimeout) {
         this.pluginTimeout = Long.parseLong(pluginTimeout);
         if (this.pluginTimeout <= 0) {
-            this.pluginTimeout = 100;
+            throw new ConfigLoadException(Item.PLUGIN_TIMEOUT_MILLIS.name() + " must be greater than 0");
         }
     }
 
@@ -481,7 +494,7 @@ public class Config extends FileScanListener {
     public synchronized void setBodyMaxBytes(String bodyMaxBytes) {
         this.bodyMaxBytes = Integer.parseInt(bodyMaxBytes);
         if (this.bodyMaxBytes <= 0) {
-            this.bodyMaxBytes = 4096;
+            throw new ConfigLoadException(Item.BODY_MAX_BYTES.name() + " must be greater than 0");
         }
     }
 
@@ -492,7 +505,7 @@ public class Config extends FileScanListener {
     public synchronized void setSqlSlowQueryMinCount(String sqlSlowQueryMinCount) {
         this.sqlSlowQueryMinCount = Integer.parseInt(sqlSlowQueryMinCount);
         if (this.sqlSlowQueryMinCount < 0) {
-            this.sqlSlowQueryMinCount = 0;
+            throw new ConfigLoadException(Item.SQL_SLOW_QUERY_MIN_ROWS.name() + " can not be less than 0");
         }
     }
 
@@ -531,7 +544,7 @@ public class Config extends FileScanListener {
     public synchronized void setPluginMaxStack(String pluginMaxStack) {
         this.pluginMaxStack = Integer.parseInt(pluginMaxStack);
         if (this.pluginMaxStack < 0) {
-            this.pluginMaxStack = 100;
+            throw new ConfigLoadException(Item.PLUGIN_MAX_STACK.name() + " can not be less than 0");
         }
     }
 
@@ -606,7 +619,7 @@ public class Config extends FileScanListener {
     public synchronized void setOgnlMinLength(String ognlMinLength) {
         this.ognlMinLength = Integer.parseInt(ognlMinLength);
         if (this.ognlMinLength <= 0) {
-            this.ognlMinLength = 30;
+            throw new ConfigLoadException(Item.OGNL_EXPRESSION_MIN_LENGTH.name() + " must be greater than 0");
         }
     }
 
@@ -627,7 +640,7 @@ public class Config extends FileScanListener {
     public synchronized void setBlockStatusCode(String blockStatusCode) {
         this.blockStatusCode = Integer.parseInt(blockStatusCode);
         if (this.blockStatusCode < 100 || this.blockStatusCode > 999) {
-            this.blockStatusCode = 302;
+            throw new ConfigLoadException(Item.BLOCK_STATUS_CODE.name() + " must be between [100,999]");
         }
     }
 
@@ -682,6 +695,32 @@ public class Config extends FileScanListener {
      */
     public synchronized void setAlgorithmConfig(String json) {
         this.algorithmConfig = new JsonParser().parse(json).getAsJsonObject();
+        JsonArray result = ConfigurableChecker.getJsonObjectAsArray(algorithmConfig,
+                "sql_exception", "error_code");
+        if (result != null) {
+            if (result.size() > MAX_SQL_EXCEPTION_CODES_CONUT) {
+                LOGGER.warn("size of RASP.algorithmConfig.sql_exception.error_code can not be greater than "
+                        + MAX_SQL_EXCEPTION_CODES_CONUT);
+            }
+            for (JsonElement element : result) {
+                try {
+                    this.sqlErrorCodes.add(element.getAsInt());
+                } catch (Exception e) {
+                    LOGGER.warn("failed to add a json error code element: "
+                            + element.toString() + ", " + e.getMessage(), e);
+                }
+            }
+        }
+        LOGGER.info("sql error codes: " + this.sqlErrorCodes.toString());
+    }
+
+    /**
+     * 获取 sql 异常检测过滤的 sql 错误码
+     *
+     * @return sql 错误码列表
+     */
+    public HashSet<Integer> getSqlErrorCodes() {
+        return sqlErrorCodes;
     }
 
     /**
@@ -816,7 +855,7 @@ public class Config extends FileScanListener {
     public synchronized void setSqlCacheCapacity(String sqlCacheCapacity) {
         this.sqlCacheCapacity = Integer.parseInt(sqlCacheCapacity);
         if (this.sqlCacheCapacity < 0) {
-            this.sqlCacheCapacity = 1024;
+            throw new ConfigLoadException(Item.SQL_CACHE_CAPACITY.name() + " can not be less than 0");
         }
         if (Config.commonLRUCache == null || Config.commonLRUCache.maxSize() != this.sqlCacheCapacity) {
             if (Config.commonLRUCache == null) {
@@ -899,7 +938,7 @@ public class Config extends FileScanListener {
     public synchronized void setSyslogFacility(String syslogFacility) {
         this.syslogFacility = Integer.parseInt(syslogFacility);
         if (!(this.syslogFacility >= 0 && this.syslogFacility <= 23)) {
-            this.syslogFacility = 1;
+            throw new ConfigLoadException(Item.SYSLOG_FACILITY.name() + " must be between [0,23]");
         }
     }
 
@@ -920,7 +959,7 @@ public class Config extends FileScanListener {
     public synchronized void setSyslogReconnectInterval(String syslogReconnectInterval) {
         this.syslogReconnectInterval = Integer.parseInt(syslogReconnectInterval);
         if (this.syslogReconnectInterval <= 0) {
-            this.syslogReconnectInterval = 300000;
+            throw new ConfigLoadException(Item.SYSLOG_RECONNECT_INTERVAL.name() + " must be greater than 0");
         }
     }
 
@@ -941,7 +980,7 @@ public class Config extends FileScanListener {
     public synchronized void setLogMaxBurst(String logMaxBurst) {
         this.logMaxBurst = Integer.parseInt(logMaxBurst);
         if (this.logMaxBurst < 0) {
-            this.logMaxBurst = 100;
+            throw new ConfigLoadException(Item.LOG_MAXBURST.name() + " can not be less than 0");
         }
     }
 
@@ -1070,7 +1109,7 @@ public class Config extends FileScanListener {
     public synchronized void setHeartbeatInterval(String heartbeatInterval) {
         this.heartbeatInterval = Integer.parseInt(heartbeatInterval);
         if (!(this.heartbeatInterval >= 10 && this.heartbeatInterval <= 1800)) {
-            this.heartbeatInterval = 180;
+            throw new ConfigLoadException(Item.HEARTBEAT_INTERVAL.name() + " must be between [10,1800]");
         }
     }
 
@@ -1133,7 +1172,7 @@ public class Config extends FileScanListener {
     public synchronized void setLogMaxBackUp(String logMaxBackUp) {
         this.logMaxBackUp = Integer.parseInt(logMaxBackUp) + 1;
         if (this.logMaxBackUp <= 0) {
-            this.logMaxBackUp = 30;
+            throw new ConfigLoadException(Item.LOG_MAX_BACKUP.name() + " can not be less than 0");
         }
     }
 
@@ -1156,11 +1195,33 @@ public class Config extends FileScanListener {
     }
 
     /**
+     * 获取熔断检测时间间隔，单位/秒
+     *
+     * @return 时间间隔
+     */
+    public int getCpuUsageCheckInterval() {
+        return cpuUsageCheckInterval;
+    }
+
+    /**
+     * 设置熔断检测时间间隔，单位/秒
+     *
+     * @param cpuUsageCheckInterval 时间间隔
+     */
+    public synchronized void setCpuUsageCheckInterval(String cpuUsageCheckInterval) {
+        int interval = Integer.parseInt(cpuUsageCheckInterval);
+        if (interval > 1800 || interval < 1) {
+            throw new ConfigLoadException("cpu.usage.interval must be between [1,1800]");
+        }
+        this.cpuUsageCheckInterval = interval;
+    }
+
+    /**
      * 获取cpu的使用率的百分比
      *
      * @return cpu的使用率的百分比
      */
-    public float getCpuUsagePercent() {
+    public int getCpuUsagePercent() {
         return cpuUsagePercent;
     }
 
@@ -1170,9 +1231,9 @@ public class Config extends FileScanListener {
      * @param cpuUsagePercent cpu的使用率的百分比
      */
     public void setCpuUsagePercent(String cpuUsagePercent) {
-        this.cpuUsagePercent = Float.parseFloat(cpuUsagePercent);
-        if (!(this.cpuUsagePercent >= 0.3 && this.cpuUsagePercent <= 0.9)) {
-            this.cpuUsagePercent = 0.9f;
+        this.cpuUsagePercent = Integer.parseInt(cpuUsagePercent);
+        if (!(this.cpuUsagePercent >= 30 && this.cpuUsagePercent <= 100)) {
+            throw new ConfigLoadException(Item.CPU_USAGE_PERCENT.name() + " must be between [30,100]");
         }
     }
 
@@ -1202,7 +1263,7 @@ public class Config extends FileScanListener {
      * @param value 配置值
      * @return 是否配置成功
      */
-    public boolean setConfig(String key, String value, boolean isInit) {
+    public boolean setConfig(String key, String value, boolean isInit) throws Exception {
         try {
             boolean isHit = true;
             Object currentValue = null;
@@ -1224,7 +1285,7 @@ public class Config extends FileScanListener {
             } else if (Item.PLUGIN_TIMEOUT_MILLIS.key.equals(key)) {
                 setPluginTimeout(value);
                 currentValue = getPluginTimeout();
-            } else if (Item.REFLECTION_MAX_STACK.key.equals(key)) {
+            } else if (Item.PLUGIN_MAX_STACK.key.equals(key)) {
                 setPluginMaxStack(value);
                 currentValue = getPluginMaxStack();
             } else if (Item.SQL_SLOW_QUERY_MIN_ROWS.key.equals(key)) {
@@ -1311,6 +1372,9 @@ public class Config extends FileScanListener {
             } else if (Item.RASP_ID.key.equals(key)) {
                 setRaspId(value);
                 currentValue = getRaspId();
+            } else if (Item.CPU_USAGE_INTERVAL.key.equals(key)) {
+                setCpuUsageCheckInterval(value);
+                currentValue = getCpuUsageCheckInterval();
             } else {
                 isHit = false;
             }
@@ -1330,9 +1394,12 @@ public class Config extends FileScanListener {
         } catch (Exception e) {
             if (isInit) {
                 // 初始化配置过程中,如果报错需要继续使用默认值执行
-                throw new ConfigLoadException(e);
+                if (!(e instanceof ConfigLoadException)) {
+                    throw new ConfigLoadException(e);
+                }
+                throw e;
             }
-            LOGGER.info("configuration item \"" + key + "\" failed to change to \"" + value + "\"" + " because:" + e.getMessage());
+            LOGGER.warn("configuration item \"" + key + "\" failed to change to \"" + value + "\"" + " because:" + e.getMessage());
             return false;
         }
         return true;

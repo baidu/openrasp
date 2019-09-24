@@ -17,7 +17,6 @@
 package com.baidu.openrasp.plugin.checker;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.plugin.checker.local.SqlExceptionChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.XssChecker;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
@@ -54,7 +53,7 @@ public class CheckParameter {
         WEBDAV("webdav", new V8Checker(), 1 << 12),
         INCLUDE("include", new V8Checker(), 1 << 13),
         SSRF("ssrf", new V8Checker(), 1 << 14),
-        SQL_EXCEPTION("sql_exception", new SqlExceptionChecker(), 1 << 15),
+        SQL_EXCEPTION("sql_exception", new V8Checker(), 1 << 15),
         REQUESTEND("requestEnd", new V8Checker(), 1 << 17),
         SYSTEMLOAD("loadLibrary", new V8Checker(), 1 << 18),
 
