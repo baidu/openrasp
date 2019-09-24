@@ -697,6 +697,7 @@ public class Config extends FileScanListener {
         this.algorithmConfig = new JsonParser().parse(json).getAsJsonObject();
         JsonArray result = ConfigurableChecker.getJsonObjectAsArray(algorithmConfig,
                 "sql_exception", "error_code");
+        HashSet<Integer> errorCodes = new HashSet<Integer>();
         if (result != null) {
             if (result.size() > MAX_SQL_EXCEPTION_CODES_CONUT) {
                 LOGGER.warn("size of RASP.algorithmConfig.sql_exception.error_code can not be greater than "
@@ -704,13 +705,14 @@ public class Config extends FileScanListener {
             }
             for (JsonElement element : result) {
                 try {
-                    this.sqlErrorCodes.add(element.getAsInt());
+                    errorCodes.add(element.getAsInt());
                 } catch (Exception e) {
                     LOGGER.warn("failed to add a json error code element: "
                             + element.toString() + ", " + e.getMessage(), e);
                 }
             }
         }
+        this.sqlErrorCodes = errorCodes;
         LOGGER.info("sql error codes: " + this.sqlErrorCodes.toString());
     }
 

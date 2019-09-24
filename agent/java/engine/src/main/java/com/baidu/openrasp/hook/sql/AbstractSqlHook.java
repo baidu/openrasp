@@ -129,7 +129,7 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
             params.put("query", query);
             params.put("error_code", e.getErrorCode());
             String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
-            params.put("message", message);
+            params.put("error_msg", message);
             HookHandler.doCheck(CheckParameter.Type.SQL_EXCEPTION, params);
         }
     }
