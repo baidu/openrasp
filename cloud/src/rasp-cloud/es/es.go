@@ -108,6 +108,28 @@ func DeleteExpiredData() {
 	}
 }
 
+func DeleteLogs(index string) (err error) {
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second))
+	expiredTime := strconv.FormatInt((time.Now().UnixNano())/1000000, 10)
+	//r, err := ElasticClient.Delete().Index(index).Type(docType).Id("*").Do(ctx)
+	r, err := ElasticClient.DeleteByQuery(index).QueryString("@timestamp:<" + expiredTime).Do(ctx)
+	if err != nil {
+		if r != nil && r.Failures != nil {
+			beego.Error(r.Failures)
+		}
+		beego.Error("failed to delete expired data for index " + index + ": " + err.Error())
+	} else {
+		var deleteNum int64
+		if r != nil {
+			deleteNum = r.Deleted
+		}
+		beego.Info("delete expired data successfully for index " + index + ", total: " +
+			strconv.FormatInt(deleteNum, 10))
+	}
+	cancel()
+	return err
+}
+
 func RegisterTTL(duration time.Duration, index string) {
 	ttls := <-ttlIndexes
 	defer func() {
