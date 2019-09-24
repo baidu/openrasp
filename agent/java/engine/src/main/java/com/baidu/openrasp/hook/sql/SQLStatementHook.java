@@ -22,10 +22,8 @@ import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.HashMap;
 
 /**
@@ -128,22 +126,27 @@ public class SQLStatementHook extends AbstractSqlHook {
     }
 
     private void hookSqlStatementMethod(CtClass ctClass) throws NotFoundException, CannotCompileException {
+        String[] executeFuncDescs = new String[]{"(Ljava/lang/String;)Z", "(Ljava/lang/String;I)Z",
+                "(Ljava/lang/String;[I)Z", "(Ljava/lang/String;[Ljava/lang/String;)Z"};
+
+        String[] executeUpdateFuncDescs = new String[]{"(Ljava/lang/String;)I", "(Ljava/lang/String;I)I",
+                "(Ljava/lang/String;[I)I", "(Ljava/lang/String;[Ljava/lang/String;)I"};
+
+        String executeQueryFuncDesc = "(Ljava/lang/String;)Ljava/sql/ResultSet;";
+
+        String addBatchFuncDesc = "(Ljava/lang/String;)V";
+
         String checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
                 "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
-        insertBefore(ctClass, "execute", checkSqlSrc,
-                new String[]{"(Ljava/lang/String;)Z", "(Ljava/lang/String;I)Z",
-                        "(Ljava/lang/String;[I)Z", "(Ljava/lang/String;[Ljava/lang/String;)Z"});
-        insertBefore(ctClass, "executeUpdate", checkSqlSrc,
-                new String[]{"(Ljava/lang/String;)I", "(Ljava/lang/String;I)I",
-                        "(Ljava/lang/String;[I)I", "(Ljava/lang/String;[Ljava/lang/String;)I"});
-        insertBefore(ctClass, "executeQuery",
-                "(Ljava/lang/String;)Ljava/sql/ResultSet;", checkSqlSrc);
-        insertBefore(ctClass, "addBatch",
-                "(Ljava/lang/String;)V", checkSqlSrc);
-        addCatch(ctClass, "execute", null);
-        addCatch(ctClass, "executeUpdate", null);
-        addCatch(ctClass, "executeQuery", null);
-        addCatch(ctClass, "addBatch", null);
+        insertBefore(ctClass, "execute", checkSqlSrc, executeFuncDescs);
+        insertBefore(ctClass, "executeUpdate", checkSqlSrc, executeUpdateFuncDescs);
+        insertBefore(ctClass, "executeQuery", executeQueryFuncDesc, checkSqlSrc);
+        insertBefore(ctClass, "addBatch", addBatchFuncDesc, checkSqlSrc);
+
+        addCatch(ctClass, "execute", executeFuncDescs);
+        addCatch(ctClass, "executeUpdate", executeUpdateFuncDescs);
+        addCatch(ctClass, "executeQuery", new String[]{executeQueryFuncDesc});
+        addCatch(ctClass, "addBatch", new String[]{addBatchFuncDesc});
     }
 
     /**
@@ -151,33 +154,13 @@ public class SQLStatementHook extends AbstractSqlHook {
      *
      * @param stmt sql语句
      */
+
     public static void checkSQL(String server, Object statement, String stmt) {
         if (stmt != null && !stmt.isEmpty()) {
             HashMap<String, Object> params = new HashMap<String, Object>();
             params.put("server", server);
             params.put("query", stmt);
             HookHandler.doCheck(CheckParameter.Type.SQL, params);
-        }
-    }
-
-    /**
-     * SQL执行异常检测
-     *
-     * @param server 数据库类型
-     * @param e      sql执行抛出的异常
-     */
-    public static void checkSQLErrorCode(String server, SQLException e, Object[] object) {
-        if (object != null && object.length > 0 && !StringUtils.isEmpty((String) object[0])) {
-            if (checkSqlErrorCode(e)) {
-                return;
-            }
-            HashMap<String, Object> params = new HashMap<String, Object>();
-            params.put("server", server);
-            params.put("query", String.valueOf(object[0]));
-            params.put("error_code", String.valueOf(e.getErrorCode()));
-            String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
-            params.put("message", message);
-            HookHandler.doCheck(CheckParameter.Type.SQL_EXCEPTION, params);
         }
     }
 }

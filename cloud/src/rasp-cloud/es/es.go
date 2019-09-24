@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"strings"
 	"rasp-cloud/conf"
+	"errors"
 )
 
 var (
@@ -206,6 +207,9 @@ func BulkInsert(docType string, docs []map[string]interface{}) (err error) {
 	}
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
 	defer cancel()
-	_, err = bulkService.Do(ctx)
+	response, err := bulkService.Do(ctx)
+	if response.Errors {
+		return errors.New("ES bulk has errors: " + fmt.Sprintf("%+v", response.Failed()))
+	}
 	return err
 }

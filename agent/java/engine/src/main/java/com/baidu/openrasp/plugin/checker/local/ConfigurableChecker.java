@@ -36,11 +36,11 @@ public abstract class ConfigurableChecker extends AttackChecker {
 
     private static final int DEFAULT_MIN_LENGTH = -1;
 
-    protected String getActionElement(JsonObject config, String key) {
+    public static String getActionElement(JsonObject config, String key) {
         return getStringElement(config, key, "action");
     }
 
-    protected JsonArray getJsonObjectAsArray(JsonObject config, String key, String subKey) {
+    public static JsonArray getJsonObjectAsArray(JsonObject config, String key, String subKey) {
         JsonArray result = null;
         try {
             JsonElement value = getElement(config, key, subKey);
@@ -53,7 +53,7 @@ public abstract class ConfigurableChecker extends AttackChecker {
         return result;
     }
 
-    protected HashMap<String, Boolean> getJsonObjectAsMap(JsonObject config, String key, String subKey) {
+    public static HashMap<String, Boolean> getJsonObjectAsMap(JsonObject config, String key, String subKey) {
         HashMap<String, Boolean> result = null;
         try {
             JsonElement value = getElement(config, key, subKey);
@@ -71,7 +71,7 @@ public abstract class ConfigurableChecker extends AttackChecker {
         return result;
     }
 
-    protected HashMap<String, Integer> getJsonObjectAsIntMap(JsonObject config, String key, String subKey) {
+    public static HashMap<String, Integer> getJsonObjectAsIntMap(JsonObject config, String key, String subKey) {
         HashMap<String, Integer> result = null;
         try {
             JsonElement value = getElement(config, key, subKey);
@@ -89,7 +89,7 @@ public abstract class ConfigurableChecker extends AttackChecker {
         return result;
     }
 
-    protected String getStringElement(JsonObject config, String key, String subKey) {
+    public static String getStringElement(JsonObject config, String key, String subKey) {
         try {
             JsonElement value = getElement(config, key, subKey);
             if (value != null) {
@@ -101,7 +101,7 @@ public abstract class ConfigurableChecker extends AttackChecker {
         return null;
     }
 
-    private JsonElement getElement(JsonObject config, String key, String subKey) {
+    public static JsonElement getElement(JsonObject config, String key, String subKey) {
         if (config != null) {
             JsonElement jsonElement = config.get(key);
             if (jsonElement != null) {
@@ -114,7 +114,7 @@ public abstract class ConfigurableChecker extends AttackChecker {
         return null;
     }
 
-    protected int getIntElement(JsonObject config, String key, String subKey) {
+    public static int getIntElement(JsonObject config, String key, String subKey) {
 
         try {
             JsonElement element = getElement(config, key, subKey);
@@ -126,7 +126,7 @@ public abstract class ConfigurableChecker extends AttackChecker {
     }
 
 
-    private void logJsonError(Exception e) {
+    public static void logJsonError(Exception e) {
         String message = "Parse json failed because: " + e.getMessage() +
                 System.getProperty("line.separator") +
                 "        Please check algorithmConfig in js";

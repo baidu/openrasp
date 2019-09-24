@@ -35,7 +35,6 @@ import java.util.ArrayList;
 public class CpuMonitor {
     private static final String CPUS_ALLOWED_LIST = "Cpus_allowed_list";
     private static final String PROCESS_STATUS = "/proc/%d/status";
-    private static final int SAMPLE_INTERVAL = 5;
     private static ArrayList<Float> cpuUsageList = new ArrayList<Float>(3);
 
     private boolean isAlive = true;
@@ -49,7 +48,7 @@ public class CpuMonitor {
         this.lastProcessCpuTime = processcpu.getProcessTotalCpuTime();
     }
 
-    private float getCpuUsage() {
+    private int getCpuUsage() {
         float totalUsage = 0;
         try {
             String pid = getPid();
@@ -62,7 +61,7 @@ public class CpuMonitor {
         } catch (Exception e) {
             LogTool.warn(ErrorType.CPU_ERROR, "count cpu usage failed: " + e.getMessage(), e);
         }
-        return totalUsage;
+        return (int) totalUsage;
     }
 
     private String getPid() {
@@ -70,7 +69,7 @@ public class CpuMonitor {
         return name.split("@")[0];
     }
 
-    private float getCpuUsageUpper(String pid) {
+    private int getCpuUsageUpper(String pid) {
         int totalCpuNum = 0;
         try {
             String path = PROCESS_STATUS.replace("%d", pid);
@@ -94,7 +93,7 @@ public class CpuMonitor {
         } catch (Exception e) {
             LogTool.warn(ErrorType.CPU_ERROR, "get server occupied cpu number failed: " + e.getMessage(), e);
         }
-        return totalCpuNum * 100 * Config.getConfig().getCpuUsagePercent();
+        return totalCpuNum * Config.getConfig().getCpuUsagePercent();
     }
 
     private void checkCpuUsage() {
@@ -128,7 +127,7 @@ public class CpuMonitor {
         public void run() {
             while (isAlive) {
                 try {
-                    Thread.sleep(SAMPLE_INTERVAL * 1000);
+                    Thread.sleep(Config.getConfig().getCpuUsageCheckInterval() * 1000);
                     checkCpuUsage();
                 } catch (Throwable e) {
                     LogTool.warn(ErrorType.CPU_ERROR, e.getMessage(), e);

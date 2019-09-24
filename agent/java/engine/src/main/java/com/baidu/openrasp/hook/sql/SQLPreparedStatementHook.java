@@ -166,26 +166,4 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
         }
     }
 
-    /**
-     * SQL执行异常检测
-     *
-     * @param server 数据库类型
-     * @param e      sql执行抛出的异常
-     * @param query  sql语句
-     */
-    public static void checkSQLErrorCode(String server, SQLException e, String query) {
-        if (!StringUtils.isEmpty(query)) {
-            if (checkSqlErrorCode(e)) {
-                return;
-            }
-            HashMap<String, Object> params = new HashMap<String, Object>();
-            params.put("server", server);
-            params.put("query", query);
-            params.put("error_code", String.valueOf(e.getErrorCode()));
-            String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
-            params.put("message", message);
-            HookHandler.doCheck(CheckParameter.Type.SQL_EXCEPTION, params);
-        }
-    }
-
 }
