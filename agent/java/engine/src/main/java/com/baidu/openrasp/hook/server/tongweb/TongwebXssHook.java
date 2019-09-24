@@ -4,14 +4,11 @@
 package com.baidu.openrasp.hook.server.tongweb;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.hook.server.ServerXssHook;
-import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.model.ApplicationModel;
-
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
