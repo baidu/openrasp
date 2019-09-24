@@ -104,6 +104,8 @@ public abstract class ServerDetector {
             HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WILDFLY, CheckParameter.EMPTY_MAP);
         } else if ("jboss eap".equals(serverName)) {
             HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_JBOSSEAP, CheckParameter.EMPTY_MAP);
+        } else if ("tongweb".equals(serverName)) {
+            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_TONGWEB, CheckParameter.EMPTY_MAP);
         }
     }
 
