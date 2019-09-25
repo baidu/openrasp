@@ -136,6 +136,7 @@ var algorithmConfig = {
         error_code: [
             // 1045, // Access denied for user 'bae'@'10.10.1.1'
             1060, // Duplicate column name '5.5.60-0ubuntu0.14.04.1'
+            1062, // Duplicate entry '::root@localhost::1' for key 'group_key'
             1064, // You have an error in your SQL syntax
             1105, // XPATH syntax error: '~root@localhost~'
             1367, // Illegal non geometric 'user()' value found during parsing
@@ -1428,13 +1429,22 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
 
 plugin.register('sql_exception', function(params, context) {
     // mysql error 1367 detected: XXX
-    var message = _("%1% error %2% detected: %3%", [params.server, params.error_code, params.error_msg])
+    var message
+    var error_code = parseInt(params.error_code)
+    
+    if ( algorithmConfig.sql_exception.error_code.indexOf(error_code) != -1 ) {
+        if (!(error_code == 1062 && params.query.search("rand") == -1)){
+            message = _("%1% error %2% detected: %3%", [params.server, params.error_code, params.error_msg])
+        }
+    }
 
-    return {
-        action:     algorithmConfig.sql_exception.action,
-        message:    message,
-        confidence: 70,
-        algorithm:  'sql_exception'
+    if (message) {
+        return {
+            action:     algorithmConfig.sql_exception.action,
+            message:    message,
+            confidence: 70,
+            algorithm:  'sql_exception'
+        }
     }
 })
 
