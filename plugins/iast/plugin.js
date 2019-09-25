@@ -1,4 +1,4 @@
-const plugin_version = '2019-0916-1500'
+const plugin_version = '2019-0925-1200'
 const plugin_name    = 'iast'
 const plugin_desc    = 'IAST Fuzz 插件'
 
@@ -28,7 +28,7 @@ var algorithmConfig = {
     // 防止前端报错
     meta: {},
     iast: {
-        fuzz_server:     'http://1727.0.0.1:25931/openrasp-result',
+        fuzz_server:     'http://127.0.0.1:25931/openrasp-result',
         request_timeout: 5000,
         byhost_regex:    '.*'
     }
