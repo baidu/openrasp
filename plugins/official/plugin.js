@@ -1152,12 +1152,9 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
         if (algorithmConfig.sql_policy.action != 'ignore') {
 
             // 懒加载，需要时才处理
-            if (raw_tokens.length == 0) {
-                var query_lc = params.query.toLowerCase().trim()
-
-                if (sqliPrefilter2.test(query_lc)) {
-                    raw_tokens = RASP.sql_tokenize(params.query, params.server)
-                }
+            if ((raw_tokens.length == 0) && 
+                (sqliPrefilter2.test(params.query))) {
+                raw_tokens = RASP.sql_tokenize(params.query, params.server)
             }
 
             var features        = algorithmConfig.sql_policy.feature
