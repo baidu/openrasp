@@ -581,6 +581,9 @@ public class Config extends FileScanListener {
      * @param raspId rasp id
      */
     public synchronized void setRaspId(String raspId) {
+        if (raspId.length() != 0 && (raspId.length() < 16 || raspId.length() > 512)) {
+            throw new ConfigLoadException("the length of rasp.id must be between[16,512]");
+        }
         this.raspId = raspId;
     }
 
