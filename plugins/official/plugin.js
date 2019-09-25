@@ -1166,7 +1166,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
 
             // 转换小写，避免大小写绕过
             var tokens_lc = raw_tokens.map(function(v) {
-                return v.text.toLowerCase()
+                return v.text.substr(0, 50).toLowerCase()
             })
 
             for (var i = 1; i < tokens_lc.length; i ++)
