@@ -23,6 +23,7 @@ import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
+import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -53,6 +54,7 @@ public abstract class ServerDetector {
         if (isDetected) {
             HookHandler.enableHook.set(true);
             sendRegister();
+            CpuMonitorManager.start();
         }
         return isDetected;
     }

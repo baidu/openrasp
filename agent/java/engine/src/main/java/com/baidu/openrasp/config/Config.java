@@ -27,6 +27,7 @@ import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.local.ConfigurableChecker;
 import com.baidu.openrasp.tool.FileUtil;
 import com.baidu.openrasp.tool.LRUCache;
+import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
 import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
@@ -1197,6 +1198,11 @@ public class Config extends FileScanListener {
      */
     public synchronized void setCpuUsageEnable(String cpuUsageEnable) {
         this.cpuUsageEnable = Boolean.parseBoolean(cpuUsageEnable);
+        try {
+            CpuMonitorManager.resume(this.cpuUsageEnable);
+        }catch (Throwable t){
+            // ignore 避免发生异常造成死循环
+        }
     }
 
     /**
