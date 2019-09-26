@@ -298,13 +298,8 @@ PHP_RSHUTDOWN_FUNCTION(openrasp)
 PHP_MINFO_FUNCTION(openrasp)
 {
     php_info_print_table_start();
-<<<<<<< HEAD
     php_info_print_table_row(2, "Status", openrasp_status.c_str());
-    php_info_print_table_row(2, "Version", PHP_OPENRASP_VERSION);
-=======
-    php_info_print_table_row(2, "Status", is_initialized ? "Protected" : "Unprotected, Initialization Failed");
     php_info_print_table_row(2, "Version", OpenRASPInfo::PHP_OPENRASP_VERSION);
->>>>>>> 1.2.1
 #ifdef OPENRASP_BUILD_TIME
     php_info_print_table_row(2, "Build Time", OPENRASP_BUILD_TIME);
 #endif
