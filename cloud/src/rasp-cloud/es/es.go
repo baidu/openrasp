@@ -110,7 +110,8 @@ func DeleteExpiredData() {
 }
 
 func DeleteLogs(index string) (err error) {
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second))
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(30*time.Second))
+	defer cancel()
 	expiredTime := strconv.FormatInt((time.Now().UnixNano())/1000000, 10)
 	//r, err := ElasticClient.Delete().Index(index).Type(docType).Id("*").Do(ctx)
 	r, err := ElasticClient.DeleteByQuery(index).QueryString("@timestamp:<" + expiredTime).Do(ctx)
@@ -127,7 +128,6 @@ func DeleteLogs(index string) (err error) {
 		beego.Info("delete expired data successfully for index " + index + ", total: " +
 			strconv.FormatInt(deleteNum, 10))
 	}
-	cancel()
 	return err
 }
 

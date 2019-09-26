@@ -17,7 +17,9 @@
 package com.baidu.openrasp.tool.cpumonitor;
 
 import com.baidu.openrasp.config.Config;
-import org.apache.commons.lang3.StringUtils;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
+import com.baidu.openrasp.tool.OSUtil;
 
 /**
  * @description: cpu监控管理类
@@ -25,23 +27,31 @@ import org.apache.commons.lang3.StringUtils;
  * @create: 2019/06/10 20:07
  */
 public class CpuMonitorManager {
-    private static CpuMonitor cpuMonitor;
+    static final CpuMonitor cpuMonitor = new CpuMonitor();
 
     public static void start() {
-        if (Config.getConfig().getCpuUsageEnable() && isLinux()) {
-            cpuMonitor = new CpuMonitor();
-            cpuMonitor.start();
+        if (Config.getConfig().getCpuUsageEnable()) {
+            if (OSUtil.isLinux()) {
+                cpuMonitor.start();
+            } else {
+                LogTool.warn(ErrorType.CPU_ERROR, "only support the cpu monitor in linux OS");
+            }
         }
     }
 
-    public static void stop() {
-        if (Config.getConfig().getCpuUsageEnable() && isLinux() && cpuMonitor != null) {
+    public static void resume(boolean isEnable) {
+        if (OSUtil.isLinux()) {
+            synchronized (cpuMonitor) {
+                if (isEnable) {
+                    cpuMonitor.notify();
+                }
+            }
+        }
+    }
+
+    public static void release() {
+        if (Config.getConfig().getCpuUsageEnable() && OSUtil.isLinux()) {
             cpuMonitor.stop();
         }
-    }
-
-    private static boolean isLinux() {
-        String serverName = System.getProperty("os.name");
-        return StringUtils.startsWith(serverName, "Linux");
     }
 }

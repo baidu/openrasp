@@ -89,16 +89,14 @@ func (o *ServerController) ClearLogs() {
 	}
 
 	for _, docType := range docTypeList{
-		index := "openrasp-" + docType + "-" + param.AppId
+		index := "real-openrasp-" + docType + "-" + param.AppId
 		err := es.DeleteLogs(index)
 		if err != nil {
 			o.ServeError(http.StatusBadRequest, err.Error())
 		}
 	}
 
-	o.Serve(map[string]int{
-		"status": 0,
-	})
+	o.ServeWithEmptyData()
 }
 
 func validHttpUrl(url string) bool {

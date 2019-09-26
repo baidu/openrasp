@@ -67,16 +67,12 @@ public class SQLConnectionHook extends AbstractClassHook {
      * @param e      sql执行抛出的异常
      */
     public static void checkSQLErrorCode(String server, SQLException e, Object[] object) {
-        //当服务器的cpu使用率超过90%，禁用全部hook点
-        if (Config.getConfig().getDisableHooks()) {
-            return;
-        }
         //当云控注册成功之前，不进入任何hoo点
         if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
             return;
         }
         String errorCode = String.valueOf(e.getErrorCode());
-        if (errorCode.equals("1045")) {
+        if (Config.getConfig().getSqlErrorCodes().contains(errorCode)) {
             HashMap<String, Object> params = new HashMap<String, Object>();
             params.put("server", server);
             params.put("error_code", errorCode);
