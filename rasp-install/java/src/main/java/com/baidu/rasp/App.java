@@ -135,6 +135,19 @@ public class App {
         }
     }
 
+    private static String checkRaspId(String raspId) {
+        if (raspId.length() < 16 || raspId.length() > 512) {
+            return "the length of -raspid must be between [16,512]";
+        }
+        for (int i = 0; i < raspId.length(); i++) {
+            char a = raspId.charAt(i);
+            if (!((a >= 'a' && a <= 'z') || (a >= '0' && a <= '9') || (a >= 'A' && a <= 'Z'))) {
+                return "the -raspid param can only contain letters and numbers";
+            }
+        }
+        return null;
+    }
+
     private static void checkArgs() throws RaspError {
         if (appId != null) {
             Pattern pattern = Pattern.compile(REGEX_APPID);
@@ -149,8 +162,9 @@ public class App {
             }
         }
         if (raspId != null) {
-            if (raspId.length() > 128 || raspId.length() < 1) {
-                throw new RaspError(E10005 + "appsecret must have 1~128 characters");
+            String invalidMsg = checkRaspId(raspId);
+            if (invalidMsg != null) {
+                throw new RaspError(E10005 + invalidMsg);
             }
         }
         if (url != null) {

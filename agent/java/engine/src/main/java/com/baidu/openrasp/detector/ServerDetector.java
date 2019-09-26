@@ -20,12 +20,14 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.Register;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -62,7 +64,6 @@ public abstract class ServerDetector {
     public abstract boolean isClassMatched(String className);
 
     public abstract boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain);
-
 
     protected void sendRegister() {
         if (CloudUtils.checkCloudControlEnter()) {

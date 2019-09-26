@@ -25,8 +25,8 @@ import com.baidu.openrasp.plugin.js.JS;
 import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
 import com.baidu.openrasp.tool.model.BuildRASPModel;
 import com.baidu.openrasp.transformer.CustomClassTransformer;
-import org.apache.log4j.Logger;
 import com.baidu.openrasp.v8.V8;
+import org.apache.log4j.Logger;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;

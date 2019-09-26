@@ -202,6 +202,29 @@ public class Config extends FileScanListener {
         } catch (Exception e) {
             handleException("cannot load properties file: " + e.getMessage(), e);
         }
+        String configValidMsg = checkMajorConfig();
+        if (configValidMsg != null) {
+            LogTool.error(ErrorType.CONFIG_ERROR, configValidMsg);
+            throw new ConfigLoadException(configValidMsg);
+        }
+    }
+
+    /**
+     * 检查关键配置选项
+     */
+    private String checkMajorConfig() {
+        if (!StringUtils.isEmpty(raspId)) {
+            if ((raspId.length() < 16 || raspId.length() > 512)) {
+                return "the length of rasp.id must be between [16,512]";
+            }
+            for (int i = 0; i < raspId.length(); i++) {
+                char a = raspId.charAt(i);
+                if (!((a >= 'a' && a <= 'z') || (a >= '0' && a <= '9') || (a >= 'A' && a <= 'Z'))) {
+                    return "the rasp.id can only contain letters and numbers";
+                }
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings({"unchecked"})
@@ -582,9 +605,6 @@ public class Config extends FileScanListener {
      * @param raspId rasp id
      */
     public synchronized void setRaspId(String raspId) {
-        if (raspId.length() != 0 && (raspId.length() < 16 || raspId.length() > 512)) {
-            throw new ConfigLoadException("the length of rasp.id must be between[16,512]");
-        }
         this.raspId = raspId;
     }
 
@@ -1200,7 +1220,7 @@ public class Config extends FileScanListener {
         this.cpuUsageEnable = Boolean.parseBoolean(cpuUsageEnable);
         try {
             CpuMonitorManager.resume(this.cpuUsageEnable);
-        }catch (Throwable t){
+        } catch (Throwable t) {
             // ignore 避免发生异常造成死循环
         }
     }
@@ -1381,8 +1401,13 @@ public class Config extends FileScanListener {
                 setHttpsVerifyPeer(value);
                 currentValue = isHttpsVerifyPeer();
             } else if (Item.RASP_ID.key.equals(key)) {
-                setRaspId(value);
-                currentValue = getRaspId();
+                if (!isInit && !value.equals(raspId)) {
+                    LOGGER.info("can not update the value of rasp.id at runtime");
+                    return false;
+                } else {
+                    setRaspId(value);
+                    currentValue = getRaspId();
+                }
             } else if (Item.CPU_USAGE_INTERVAL.key.equals(key)) {
                 setCpuUsageCheckInterval(value);
                 currentValue = getCpuUsageCheckInterval();
