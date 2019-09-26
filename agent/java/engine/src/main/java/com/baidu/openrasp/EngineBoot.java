@@ -77,7 +77,7 @@ public class EngineBoot implements Module {
     @Override
     public void release(String mode) {
         CloudManager.stop();
-        CpuMonitorManager.stop();
+        CpuMonitorManager.release();
         if (transformer != null) {
             transformer.release();
         }
