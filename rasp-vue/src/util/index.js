@@ -147,6 +147,15 @@ export function trimSplit(data, sep) {
   return tmp.filter(a => a)
 }
 
+export function convertToInt(data) {
+  var tmp = []
+  data.forEach (function (row) {
+    tmp.push(parseInt(row))
+  })
+
+  return tmp.filter(a => a)
+}
+
 export function getDefaultConfig() {
   return {
     general_config: {

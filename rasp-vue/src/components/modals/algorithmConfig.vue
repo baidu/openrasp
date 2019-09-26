@@ -88,7 +88,7 @@
 
 <script>
 import { mapGetters, mapActions, mapMutations } from 'vuex'
-import { validateRegex, trimSplit } from "@/util"
+import { validateRegex, trimSplit, convertToInt } from "@/util"
 
 export default {
   name: 'AlgorithmConfigModal',
@@ -184,11 +184,11 @@ export default {
     saveConfig() {
 
       if (this.key == 'sql_exception') {
-        this.data.error_code = trimSplit(this.data.error_code_concat)
+        this.data.error_code = convertToInt(trimSplit(this.error_code_concat, ','))
       }
 
       if (this.key.endsWith('_protocol')) {
-        this.data.protocols = trimSplit(this.protocol_concat)
+        this.data.protocols = trimSplit(this.protocol_concat, ',')
       }
 
       var body = {
