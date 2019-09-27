@@ -1,4 +1,4 @@
-const plugin_version = '2019-0723-1700'
+const plugin_version = '2019-0925-1200'
 const plugin_name    = 'iast'
 const plugin_desc    = 'IAST Fuzz 插件'
 
@@ -30,13 +30,18 @@ var algorithmConfig = {
     iast: {
         fuzz_server:     'http://127.0.0.1:25931/openrasp-result',
         request_timeout: 5000,
-        byhost_regex:    ''  
+        byhost_regex:    '.*'
     }
 }
 
 // END ALGORITHM CONFIG //
 
-var byhost_regex = new RegExp(algorithmConfig.iast.byhost_regex)
+var byhost_regex
+if (algorithmConfig.iast.byhost_regex.length > 0){
+    byhost_regex = new RegExp(byhost_regex)
+}
+
+var ip_regex = new RegExp(String.raw`^(\d{1,3}\.){3}\d{1,3}$`)
 
 function bufferToHex (buffer) {
     return Array.from (new Uint8Array (buffer)).map (b => b.toString (16).padStart (2, "0")).join ("");
@@ -74,29 +79,58 @@ function send_rasp_result(context) {
     // 构建 context
     var new_context             = Object.assign({}, context)
     new_context.json            = new_context.json || {}
-    new_context.body            = new_context.body || ""
     new_context.parameter       = new_context.parameter || {}
     new_context.querystring     = new_context.querystring || ""
-    new_context.body            = bufferToHex(context.body)
+
+    if (context.header["scan-request-id"] === undefined) {
+        new_context.body = bufferToHex(context.body).substr(0, 200)
+    }
+    else{
+        new_context.body = ""
+    }
 
     var web_server = {}
-    var server_host = new_context.header.host || "unknow_server_addr"
-    if (byhost_regex.test(server_host)) {
-        server_host = server_host.split(":")
-        web_server.host = server_host[0]
-        web_server.port = parseInt(server_host[1]) || default_port
+    var server_host = new_context.header.host
+    if (!server_host) {
+        msg = "Agent with rasp id:" + context.raspId + " get host from http header failed! "
+        plugin.log(msg)
+        return
     }
     else {
-        server_host = server_host.split(":")
-        web_server.host = context.nic.ip
-        web_server.port = parseInt(server_host[1]) || default_port
+        if (byhost_regex && byhost_regex.test(server_host)) {
+            server_host = server_host.split(":")
+            web_server.host = server_host[0]
+            web_server.port = parseInt(server_host[1]) || default_port
+        }
+        else {
+            server_host = server_host.split(":")
+            for (var i in context.nic) {
+                if (context.nic[i].ip && 
+                    ip_regex.test(context.nic[i].ip) && 
+                    context.nic[i].ip != "127.0.0.1") 
+                {
+                    web_server.host = context.nic[i].ip
+                    break
+                }
+            }
+            if (!web_server.host) {
+                msg = "Agent with rasp id:" + context.raspId + " get ip failed! "
+                plugin.log(msg)
+                return
+            }
+            else {
+                web_server.port = parseInt(server_host[1]) || default_port
+            }
+            
+        }
     }
 
     // 将hook点信息发送给扫描服务器
     var data = {
-        "web_server":   web_server,
-        "context":      new_context,
-        "hook_info":    hook_info
+        "web_server":     web_server,
+        "context":        new_context,
+        "hook_info":      hook_info,
+        "plugin_version": plugin_version
     }
 
     var request_config = {
