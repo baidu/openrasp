@@ -1839,7 +1839,6 @@ plugin.register('command', function (params, context) {
                 'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':                   _("Reflected command execution - Using JNDI library (JSR 160)"),
                 'com.sun.jndi.rmi.registry.RegistryContext.lookup':                             _("Reflected command execution - Using JNDI registry service"),
                 'com.sun.jndi.url.ldap.ldapURLContext.lookup':                                  _("Reflected command execution - Using LDAP factory service"),
-                'com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze':     _("Reflected command execution - Using fastjson library"),
                 'com.alibaba.fastjson.JSON.parseObject':                                        _("Reflected command execution - Using fastjson library"),
                 'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': _("Reflected command execution - Using SpEL expressions"),
                 'freemarker.template.utility.Execute.exec':                                     _("Reflected command execution - Using FreeMarker template"),
