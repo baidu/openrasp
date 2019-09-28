@@ -1426,22 +1426,23 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
 
 plugin.register('sql_exception', function(params, context) {
     // mysql error 1367 detected: XXX
-    var message
     var error_code = parseInt(params.error_code)
-    
-    if ( algorithmConfig.sql_exception.error_code.indexOf(error_code) != -1 ) {
-        if (!(error_code == 1062 && params.query.search("rand") == -1)){
-            message = _("%1% error %2% detected: %3%", [params.server, params.error_code, params.error_msg])
+    var message    = _("%1% error %2% detected: %3%", [params.server, params.error_code, params.error_msg])
+
+    // 1062 Duplicated key 错误会有大量误报问题，仅当语句里包含 rand 字样报警
+    if (error_code == 1062)
+    {
+        if (params.query.indexOf("rand") < 0)
+        {
+            return clean
         }
     }
-
-    if (message) {
-        return {
-            action:     algorithmConfig.sql_exception.action,
-            message:    message,
-            confidence: 70,
-            algorithm:  'sql_exception'
-        }
+    
+    return {
+        action:     algorithmConfig.sql_exception.action,
+        message:    message,
+        confidence: 70,
+        algorithm:  'sql_exception'
     }
 })
 
