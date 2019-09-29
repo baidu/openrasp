@@ -1434,7 +1434,7 @@ plugin.register('sql_exception', function(params, context) {
     if (error_code == 1062)
     {
         // 忽略大小写匹配
-        if (/rand/i.test(params.query))
+        if ( !/rand/i.test(params.query))
         {
             return clean
         }
