@@ -47,10 +47,10 @@ hooks.ignore: http_output
 # cloud.app_secret: J8zjAdW-k5peQu2pM6-cLbVfDcVWMrfIiqBBERgKKJM
 # cloud.heartbeat_interval: 180
 
-# <syslog configuration>
+# <syslog tcp configuration>
 #
 # syslog.enable: false
-# syslog.url:
+# syslog.url: tcp://1.1.1.1:514
 # syslog.tag: OpenRASP
 # syslog.reconnect_interval: 300000
 # syslog.facility: 1
