@@ -1,4 +1,4 @@
-const plugin_version = '2019-0928-2300'
+const plugin_version = '2019-0929-0800'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1425,6 +1425,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
 }
 
 plugin.register('sql_exception', function(params, context) {
+    // 为了提高效率，异常代码在 agent 端过滤，插件仅负责过滤掉可能的误报和拼接消息，e.g
     // mysql error 1367 detected: XXX
     var error_code = parseInt(params.error_code)
     var message    = _("%1% error %2% detected: %3%", [params.server, params.error_code, params.error_msg])
@@ -1432,7 +1433,8 @@ plugin.register('sql_exception', function(params, context) {
     // 1062 Duplicated key 错误会有大量误报问题，仅当语句里包含 rand 字样报警
     if (error_code == 1062)
     {
-        if (params.query.indexOf("rand") < 0)
+        // 忽略大小写匹配
+        if (/rand/i.test(params.query))
         {
             return clean
         }
