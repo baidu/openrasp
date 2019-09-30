@@ -1,4 +1,4 @@
-const plugin_version = '2019-0929-0800'
+const plugin_version = '2019-0930-1730'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1832,8 +1832,6 @@ plugin.register('command', function (params, context) {
         // Java 检测逻辑
         if (server.language == 'java') {
             var known    = {
-                'java.lang.reflect.Method.invoke':                                              _("Reflected command execution - Unknown vulnerability detected"),
-                'ognl.OgnlRuntime.invokeMethod':                                                _("Reflected command execution - Using OGNL library"),
                 'com.thoughtworks.xstream.XStream.unmarshal':                                   _("Reflected command execution - Using xstream library"),
                 'java.beans.XMLDecoder.readObject':                                             _("Reflected command execution - Using WebLogic XMLDecoder library"),
                 'org.apache.commons.collections4.functors.InvokerTransformer.transform':        _("Reflected command execution - Using Transformer library (v4)"),
@@ -1846,11 +1844,40 @@ plugin.register('command', function (params, context) {
                 'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': _("Reflected command execution - Using SpEL expressions"),
                 'freemarker.template.utility.Execute.exec':                                     _("Reflected command execution - Using FreeMarker template"),
                 'org.jboss.el.util.ReflectionUtil.invokeMethod':                                _("Reflected command execution - Using JBoss EL method"),
-                'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                _("Reflected command execution - Using BeHinder defineClass webshell")
+                'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                _("Reflected command execution - Using BeHinder defineClass webshell"),
+                'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute':                     _("Reflected command execution - Using Groovy library")
             }
 
-            for (var i = 2; i < params.stack.length; i ++) {
-                var method = params.stack[i]
+            var userCode = false, reachedInvoke = false, i = 0
+
+            // v1.1.1 要求在堆栈里过滤 com.baidu.openrasp 相关的类，因为没有实现正确而产生了多余的反射堆栈，这里需要兼容下防止误报
+            // v1.1.2 修复了这个问题，即堆栈顶部为命令执行的方法
+            if (params.stack.length > 3 
+                && params.stack[0] == 'sun.reflect.GeneratedMethodAccessor181.invoke'
+                && params.stack[1] == 'sun.reflect.GeneratedMethodAccessorImpl.invoke'
+                && params.stack[2] == 'java.lang.reflect.Method.invoke')
+            {
+                i = 3
+            }
+
+            for (; i < params.stack.length; i ++) {
+                var method = params.stack[i]                
+
+                // 检查反射调用 -> 命令执行之间，是否包含用户代码
+                if (! reachedInvoke) {
+                    if (method == 'java.lang.reflect.Method.invoke') {
+                        reachedInvoke = true
+                    }
+
+                    // 用户代码，即非 JDK、com.baidu.openrasp 相关的函数
+                    if (! method.startsWith('java.') 
+                        && ! method.startsWith('sun.') 
+                        && !method.startsWith('com.sun.') 
+                        && !method.startsWith('com.baidu.openrasp.')) 
+                    {
+                        userCode = true
+                    }
+                }
 
                 if (method.startsWith('ysoserial.Pwner')) {
                     message = _("Reflected command execution - Using YsoSerial tool")
@@ -1862,24 +1889,21 @@ plugin.register('command', function (params, context) {
                     break
                 }
 
-                if (method == 'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute') {
-                    message = _("Reflected command execution - Using Groovy library")
-                    break
-                }
-
-                if (known[method]) {
-                    // 仅当命令本身来自反射调用才拦截
-                    // 如果某个类是反射调用，这个类再主动执行命令，则忽略
-                    var last_method = params.stack[i-1]
-                    if (method == 'java.lang.reflect.Method.invoke' && !( 
-                            last_method.startsWith('java.lang.UNIXProcess') || 
-                            last_method.startsWith('java.lang.Process') || 
-                            last_method.startsWith('java.lang.Runtime.exec'))
-                        ) {
-                    } else {
-                        message = known[method]
+                // 对于如下类型的反射调用:
+                // 1. 仅当命令直接来自反射调用才拦截
+                // 2. 如果某个类是反射生成，这个类再主动执行命令，则忽略
+                if (! userCode) {
+                    if (method == 'ognl.OgnlRuntime.invokeMethod') {
+                        message = _("Reflected command execution - Using OGNL library")
+                        break
+                    }  else if (method == 'java.lang.reflect.Method.invoke') {
+                        message = _("Reflected command execution - Unknown vulnerability detected")
+                        break
                     }
-                    // break
+                }                                       
+                
+                if (known[method]) {
+                    message = known[method]
                 }
             }
         }
