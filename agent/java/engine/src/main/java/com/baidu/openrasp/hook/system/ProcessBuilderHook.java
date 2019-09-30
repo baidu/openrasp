@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook.system;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.ModuleLoader;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -55,7 +56,7 @@ public class ProcessBuilderHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        if (getJdkVersion()) {
+        if (ModuleLoader.isModularityJdk()) {
             return "java/lang/ProcessImpl".equals(className);
         } else {
             if (OSUtil.isLinux() || OSUtil.isMacOS()) {
@@ -75,23 +76,23 @@ public class ProcessBuilderHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         if (ctClass.getName().contains("ProcessImpl")) {
-            if (getJdkVersion()) {
+            if (ModuleLoader.isModularityJdk()) {
                 String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
-                        "$1,$2", byte[].class, byte[].class);
+                        "$1,$2,$4", byte[].class, byte[].class, byte[].class);
                 insertBefore(ctClass, "<init>", null, src);
             } else {
                 String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
-                        "$1", String[].class);
+                        "$1,$2", String[].class, String.class);
                 insertBefore(ctClass, "<init>", null, src);
             }
         } else if (ctClass.getName().contains("UNIXProcess")) {
             String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
-                    "$1,$2", byte[].class, byte[].class);
+                    "$1,$2,$4", byte[].class, byte[].class, byte[].class);
             insertBefore(ctClass, "<init>", null, src);
         }
     }
 
-    public static void checkCommand(byte[] command, byte[] args) {
+    public static void checkCommand(byte[] command, byte[] args, final byte[] envBlock) {
         if (HookHandler.enableCmdHook.get()) {
             LinkedList<String> commands = new LinkedList<String>();
             if (command != null && command.length > 0) {
@@ -106,15 +107,41 @@ public class ProcessBuilderHook extends AbstractClassHook {
                     }
                 }
             }
-            checkCommand(commands);
+            LinkedList<String> envList = new LinkedList<String>();
+            if (envBlock != null) {
+                int index = -1;
+                for (int i = 0; i < envBlock.length; i++) {
+                    if (envBlock[i] == '\0') {
+                        String envItem = new String(envBlock, index + 1, i - index - 1);
+                        if (envItem.length() > 0) {
+                            envList.add(envItem);
+                        }
+                        index = i;
+                    }
+                }
+            }
+            checkCommand(commands, envList);
         }
     }
 
-    public static void checkCommand(String[] commnad) {
+    public static void checkCommand(String[] command, String envBlock) {
         if (HookHandler.enableCmdHook.get()) {
             LinkedList<String> commands = new LinkedList<String>();
-            Collections.addAll(commands, commnad);
-            checkCommand(commands);
+            Collections.addAll(commands, command);
+            LinkedList<String> envList = new LinkedList<String>();
+            if (envBlock != null) {
+                int index = -1;
+                for (int i = 0; i < envBlock.length(); i++) {
+                    if (envBlock.charAt(i) == '\0') {
+                        String envItem = envBlock.substring(index + 1, i);
+                        if (envItem.length() > 0) {
+                            envList.add(envItem);
+                        }
+                        index = i;
+                    }
+                }
+            }
+            checkCommand(commands, envList);
         }
     }
 
@@ -123,12 +150,13 @@ public class ProcessBuilderHook extends AbstractClassHook {
      *
      * @param command 命令列表
      */
-    public static void checkCommand(List<String> command) {
+    public static void checkCommand(List<String> command, List<String> env) {
         if (command != null && !command.isEmpty()) {
             HashMap<String, Object> params = null;
             try {
                 params = new HashMap<String, Object>();
                 params.put("command", StringUtils.join(command, " "));
+                params.put("env", env);
                 List<String> stackInfo = StackTrace.getParamStackTraceArray();
                 params.put("stack", stackInfo);
             } catch (Throwable t) {
@@ -140,11 +168,4 @@ public class ProcessBuilderHook extends AbstractClassHook {
         }
     }
 
-    /**
-     * 判断jdk的版本是否大于8
-     */
-    private boolean getJdkVersion() {
-        String javaVersion = System.getProperty("java.version");
-        return javaVersion.startsWith("1.9") || javaVersion.startsWith("10.") || javaVersion.startsWith("11.");
-    }
 }
