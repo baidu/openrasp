@@ -76,7 +76,7 @@ public class ModuleLoader {
     private ModuleLoader(String mode, Instrumentation inst) throws Throwable {
 
         if (Module.START_MODE_NORMAL == mode) {
-            setStarupOptionForJboss();
+            setStartupOptionForJboss();
         }
         engineContainer = new ModuleContainer(ENGINE_JAR);
         engineContainer.start(mode, inst);
@@ -139,7 +139,7 @@ public class ModuleLoader {
         }
     }
 
-    private static boolean isModularityJdk() {
+    public static boolean isModularityJdk() {
         String javaVersion = System.getProperty("java.version");
         String[] version = javaVersion.split("\\.");
         if (version.length >= 2) {
@@ -163,7 +163,7 @@ public class ModuleLoader {
     /**
      * 判断当前进程是否为jboss7 版本，并设置相关属性和预加载包
      */
-    public static void setStarupOptionForJboss() {
+    public static void setStartupOptionForJboss() {
         String jbossHome = "";
         boolean isJboss = false;
         String splitChar = System.getProperty("path.separator") == null ? ";" : System.getProperty("path.separator");
@@ -214,11 +214,11 @@ public class ModuleLoader {
 
         String logBootPath = "";
         String splitChar = System.getProperty("path.separator") == null ? ";" : System.getProperty("path.separator");
-        logBootPath = apendPathAfterLoadJar(logBootPath, moduleBaseDir + "/org/jboss/logmanager/main/", "jboss-logmanager-");
-        logBootPath = apendPathAfterLoadJar(logBootPath, moduleBaseDir + "/org/jboss/log4j/logmanager/main/", "jboss-logmanager-");//wildfly8+ 
-        logBootPath = apendPathAfterLoadJar(logBootPath, moduleBaseDir + "/org/jboss/logmanager/log4j/main/", "jboss-logmanager-");//jboss-as7
-        logBootPath = apendPathAfterLoadJar(logBootPath, moduleBaseDir + "/org//apache//log4j/main/", "log4j-");//jboss-as7
-        logBootPath = apendPathAfterLoadJar(logBootPath, moduleBaseDir + "/org/wildfly/common/main/", "wildfly-common-");//wildfly16
+        logBootPath = appendPathAfterLoadJar(logBootPath, moduleBaseDir + "/org/jboss/logmanager/main/", "jboss-logmanager-");
+        logBootPath = appendPathAfterLoadJar(logBootPath, moduleBaseDir + "/org/jboss/log4j/logmanager/main/", "jboss-logmanager-");//wildfly8+
+        logBootPath = appendPathAfterLoadJar(logBootPath, moduleBaseDir + "/org/jboss/logmanager/log4j/main/", "jboss-logmanager-");//jboss-as7
+        logBootPath = appendPathAfterLoadJar(logBootPath, moduleBaseDir + "/org//apache//log4j/main/", "log4j-");//jboss-as7
+        logBootPath = appendPathAfterLoadJar(logBootPath, moduleBaseDir + "/org/wildfly/common/main/", "wildfly-common-");//wildfly16
         String bootClasspath = System.getProperty("sun.boot.class.path");
         if (null == bootClasspath || bootClasspath.isEmpty()) {
             System.setProperty("sun.boot.class.path", logBootPath);
@@ -235,7 +235,7 @@ public class ModuleLoader {
         loadJarFromPath(moduleBaseDir + "/javax/servlet/api/main/", "servlet-api");
     }
 
-    public static String apendPathAfterLoadJar(String oldPath, String libPath, String jarName) {
+    public static String appendPathAfterLoadJar(String oldPath, String libPath, String jarName) {
         String newPath = oldPath;
         String splitChar = System.getProperty("path.separator") == null ? ";" : System.getProperty("path.separator");
         String jarPath = loadJarFromPath(libPath, jarName);
