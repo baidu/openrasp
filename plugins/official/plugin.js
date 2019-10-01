@@ -1884,7 +1884,7 @@ plugin.register('command', function (params, context) {
                     break
                 }
 
-                if (method.startsWith('com.fasterxml.jackson.databind')) {
+                if (method.startsWith('com.fasterxml.jackson.databind.')) {
                     message = _("Reflected command execution - Using Jackson deserialze method")
                     break
                 }
