@@ -1,4 +1,4 @@
-const plugin_version = '2019-0930-1730'
+const plugin_version = '2019-1008-1500'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -133,15 +133,18 @@ var algorithmConfig = {
         name:      '算法3 - 记录数据库异常',
         action:    'log',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#sql-exception',
-        error_code: [
-            // 1045, // Access denied for user 'bae'@'10.10.1.1'
-            1060, // Duplicate column name '5.5.60-0ubuntu0.14.04.1'
-            1062, // Duplicate entry '::root@localhost::1' for key 'group_key'
-            1064, // You have an error in your SQL syntax
-            1105, // XPATH syntax error: '~root@localhost~'
-            1367, // Illegal non geometric 'user()' value found during parsing
-            1690  // DOUBLE value is out of range in 'exp(~((select 'root@localhost' from dual)))'
-        ]
+
+        mysql: {
+	        error_code: [
+	            // 1045, // Access denied for user 'bae'@'10.10.1.1'
+	            1060, // Duplicate column name '5.5.60-0ubuntu0.14.04.1'
+	            1062, // Duplicate entry '::root@localhost::1' for key 'group_key'
+	            1064, // You have an error in your SQL syntax
+	            1105, // XPATH syntax error: '~root@localhost~'
+	            1367, // Illegal non geometric 'user()' value found during parsing
+	            1690  // DOUBLE value is out of range in 'exp(~((select 'root@localhost' from dual)))'
+	        ]
+	    }
     },
 
     sql_regex: {
