@@ -329,7 +329,7 @@ void extract_sql_error_codes(Isolate *isolate, std::vector<long> &sql_error_code
     (function () {
         var sql_error_codes = [];
         try {
-                sql_error_codes = RASP.algorithmConfig.sql_exception.error_code.filter((key, value) => typeof value === 'number');
+                sql_error_codes = RASP.algorithmConfig.sql_exception.mysql.error_code.filter((key, value) => typeof value === 'number');
             } catch (_) {
             }
             return sql_error_codes
