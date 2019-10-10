@@ -39,6 +39,14 @@ import java.util.Properties;
  */
 @HookAnnotation
 public class SQLDriverManagerHook extends AbstractClassHook {
+
+    private static ThreadLocal<Boolean> enableSqlConnectHook = new ThreadLocal<Boolean>() {
+        @Override
+        protected Boolean initialValue() {
+            return true;
+        }
+    };
+
     private static ArrayList<String> classList = new ArrayList<String>();
 
     static {
@@ -95,7 +103,10 @@ public class SQLDriverManagerHook extends AbstractClassHook {
      * @param properties 连接属性
      */
     public static void checkSqlConnectionOnEnter(String url, Properties properties) {
-        HookHandler.preShieldHook();
+        if (enableSqlConnectHook.get()) {
+            HookHandler.preShieldHook();
+            enableSqlConnectHook.set(false);
+        }
     }
 
     /**
@@ -120,6 +131,7 @@ public class SQLDriverManagerHook extends AbstractClassHook {
      */
     public static void onConnectionExit() {
         HookHandler.postShieldHook();
+        enableSqlConnectHook.set(true);
     }
 
     /**

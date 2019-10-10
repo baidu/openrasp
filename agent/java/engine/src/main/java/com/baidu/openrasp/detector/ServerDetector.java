@@ -51,7 +51,7 @@ public abstract class ServerDetector {
      * @param className   类名
      * @param classLoader 类的加载器
      */
-    public boolean handleServer(String className, ClassLoader classLoader, ProtectionDomain domain) {
+    public synchronized boolean handleServer(String className, ClassLoader classLoader, ProtectionDomain domain) {
         boolean isDetected = handleServerInfo(classLoader, domain);
         if (isDetected) {
             HookHandler.enableHook.set(true);
