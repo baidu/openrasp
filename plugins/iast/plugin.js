@@ -1,4 +1,4 @@
-const plugin_version = '2019-0925-1200'
+const plugin_version = '2019-1010-1640'
 const plugin_name    = 'iast'
 const plugin_desc    = 'IAST Fuzz 插件'
 
@@ -185,12 +185,10 @@ plugin.register('rename', function (params, context) {
 })
 
 plugin.register('command', function (params, context) {
-    if (! context.url) {
-        return clean
+    if (context.url) {
+        params.tokens = RASP.cmd_tokenize(params.command)
+        add_hook('command', params, context)
     }
-
-    params.tokens = RASP.cmd_tokenize(params.command)
-    add_hook('command', params, context)
 })
 
 plugin.register('xxe', function (params, context) {
