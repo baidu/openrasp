@@ -140,7 +140,7 @@ public class CpuMonitor {
                     synchronized (CpuMonitorManager.cpuMonitor) {
                         while (!Config.getConfig().getCpuUsageEnable()) {
                             cpuUsageList.clear();
-                            Config.getConfig().setDisableHooks("true");
+                            Config.getConfig().setDisableHooks("false");
                             CpuMonitorManager.cpuMonitor.wait();
                         }
                     }

@@ -16,17 +16,12 @@
 
 package com.baidu.openrasp.hook.sql;
 
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.HashMap;
 
 /**
  * Created by tyy on 18-4-28.
@@ -84,13 +79,6 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
             return true;
         }
 
-        /* DB2 */
-        if ("com/ibm/db2/jcc/am/Connection".equals(className)) {
-            this.type = SQL_TYPE_DB2;
-            this.exceptions = new String[]{"java/sql/SQLException"};
-            return true;
-        }
-
          /* HSqlDB */
         if ("org/hsqldb/jdbc/JDBCPreparedStatement".equals(className)) {
             this.type = SQL_TYPE_HSQL;
@@ -123,7 +111,7 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
 
     private void hookSqlPreparedStatementMethod(CtClass ctClass) throws NotFoundException, CannotCompileException {
         String originalSqlCode = null;
-        String checkSqlSrc = null;
+//        String checkSqlSrc = null;
         if (SQL_TYPE_MYSQL.equals(this.type)) {
             originalSqlCode = "originalSql";
         } else if (SQL_TYPE_SQLITE.equals(this.type)
@@ -141,16 +129,16 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
             originalSqlCode = "this.sqlObject.getOriginalSql()";
         }
         if (originalSqlCode != null) {
-            checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
-                    "\"" + type + "\"" + ",$0," + originalSqlCode, String.class, Object.class, String.class);
-            insertBefore(ctClass, "execute", "()Z", checkSqlSrc);
-            insertBefore(ctClass, "executeUpdate", "()I", checkSqlSrc);
-            insertBefore(ctClass, "executeQuery", "()Ljava/sql/ResultSet;", checkSqlSrc);
-            try {
-                insertBefore(ctClass, "executeBatch", "()[I", checkSqlSrc);
-            } catch (CannotCompileException e) {
-                insertBefore(ctClass, "executeBatchInternal", null, checkSqlSrc);
-            }
+//            checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
+//                    "\"" + type + "\"" + ",$0," + originalSqlCode, String.class, Object.class, String.class);
+//            insertBefore(ctClass, "execute", "()Z", checkSqlSrc);
+//            insertBefore(ctClass, "executeUpdate", "()I", checkSqlSrc);
+//            insertBefore(ctClass, "executeQuery", "()Ljava/sql/ResultSet;", checkSqlSrc);
+//            try {
+//                insertBefore(ctClass, "executeBatch", "()[I", checkSqlSrc);
+//            } catch (CannotCompileException e) {
+//                insertBefore(ctClass, "executeBatchInternal", null, checkSqlSrc);
+//            }
             addCatch(ctClass, "execute", null, originalSqlCode);
             addCatch(ctClass, "executeUpdate", null, originalSqlCode);
             addCatch(ctClass, "executeQuery", null, originalSqlCode);
@@ -159,11 +147,12 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
             } catch (CannotCompileException e) {
                 addCatch(ctClass, "executeBatchInternal", null, originalSqlCode);
             }
-        } else if (SQL_TYPE_DB2.equals(this.type)) {
-            checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
-                    "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
-            insertBefore(ctClass, "prepareStatement", null, checkSqlSrc);
         }
+//        else if (SQL_TYPE_DB2.equals(this.type)) {
+//            checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
+//                    "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
+//            insertBefore(ctClass, "prepareStatement", null, checkSqlSrc);
+//        }
     }
 
 }
