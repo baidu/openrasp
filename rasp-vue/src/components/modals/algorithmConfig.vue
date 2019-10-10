@@ -173,7 +173,7 @@ export default {
       }
 
       if (this.key == 'sql_exception') {
-        this.error_code_concat = this.data.error_code.join(',')
+        this.error_code_concat = this.data.mysql.error_code.join(',')
       }
 
       $('#algorithmConfigModal').modal({
@@ -184,7 +184,7 @@ export default {
     saveConfig() {
 
       if (this.key == 'sql_exception') {
-        this.data.error_code = convertToInt(trimSplit(this.error_code_concat, ','))
+        this.data.mysql.error_code = convertToInt(trimSplit(this.error_code_concat, ','))
       }
 
       if (this.key.endsWith('_protocol')) {
