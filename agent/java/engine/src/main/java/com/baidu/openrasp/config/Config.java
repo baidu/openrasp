@@ -719,25 +719,38 @@ public class Config extends FileScanListener {
      */
     public synchronized void setAlgorithmConfig(String json) {
         this.algorithmConfig = new JsonParser().parse(json).getAsJsonObject();
-        JsonArray result = ConfigurableChecker.getJsonObjectAsArray(algorithmConfig,
-                "sql_exception", "error_code");
-        HashSet<Integer> errorCodes = new HashSet<Integer>();
-        if (result != null) {
-            if (result.size() > MAX_SQL_EXCEPTION_CODES_CONUT) {
-                LOGGER.warn("size of RASP.algorithmConfig.sql_exception.error_code can not be greater than "
-                        + MAX_SQL_EXCEPTION_CODES_CONUT);
-            }
-            for (JsonElement element : result) {
-                try {
-                    errorCodes.add(element.getAsInt());
-                } catch (Exception e) {
-                    LOGGER.warn("failed to add a json error code element: "
-                            + element.toString() + ", " + e.getMessage(), e);
+        try {
+            JsonArray result = null;
+            JsonElement elements = ConfigurableChecker.getElement(algorithmConfig,
+                    "sql_exception", "mysql");
+            if (elements != null) {
+                JsonElement e = elements.getAsJsonObject().get("error_code");
+                if (e != null) {
+                    result = e.getAsJsonArray();
                 }
             }
+            HashSet<Integer> errorCodes = new HashSet<Integer>();
+            if (result != null) {
+                if (result.size() > MAX_SQL_EXCEPTION_CODES_CONUT) {
+                    LOGGER.warn("size of RASP.algorithmConfig.sql_exception.error_code can not be greater than "
+                            + MAX_SQL_EXCEPTION_CODES_CONUT);
+                }
+                for (JsonElement element : result) {
+                    try {
+                        errorCodes.add(element.getAsInt());
+                    } catch (Exception e) {
+                        LOGGER.warn("failed to add a json error code element: "
+                                + element.toString() + ", " + e.getMessage(), e);
+                    }
+                }
+            } else {
+                LOGGER.warn("failed to get sql_exception.${DB_TYPE}.error_code from algorithm config");
+            }
+            this.sqlErrorCodes = errorCodes;
+            LOGGER.info("mysql sql error codes: " + this.sqlErrorCodes.toString());
+        } catch (Exception e) {
+            LOGGER.warn("failed to get json error code element: " + e.getMessage(), e);
         }
-        this.sqlErrorCodes = errorCodes;
-        LOGGER.info("sql error codes: " + this.sqlErrorCodes.toString());
     }
 
     /**
@@ -847,7 +860,7 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取自定义的请求头，
+     * 获取自定义的请求头
      *
      * @return 返回请求头
      */
@@ -856,7 +869,7 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 设置自定义的请求头，
+     * 设置自定义的请求头
      *
      * @param clientIp 待设置的请求头信息
      */
@@ -865,7 +878,7 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取sql的lruCache的大小，
+     * 获取sql的lruCache的大小
      *
      * @return 缓存的大小
      */
@@ -874,7 +887,7 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 设置sql的lruCache的大小，
+     * 设置sql的lruCache的大小
      *
      * @param sqlCacheCapacity 待设置的缓存大小，默认大小为100
      */
@@ -894,7 +907,7 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取是否启用syslog开关状态，
+     * 获取是否启用syslog开关状态
      *
      * @return syslog开关状态
      */
@@ -903,7 +916,7 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 设置syslog开关状态，
+     * 设置syslog开关状态
      *
      * @param syslogSwitch 待设置的syslog开关状态
      */
@@ -912,7 +925,7 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取syslog上传日志的地址，
+     * 获取syslog上传日志的地址
      *
      * @return syslog上传日志的地址
      */
@@ -921,7 +934,7 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 设置syslog上传日志的地址，
+     * 设置syslog上传日志的地址
      *
      * @param syslogUrl 待设置的syslog上传日志的地址
      */
@@ -930,7 +943,7 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取syslog的layout中的tag字段信息，
+     * 获取syslog的layout中的tag字段信息
      *
      * @return syslog的layout中的tag字段信息
      */
@@ -939,27 +952,27 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 设置syslog的layout中的tag字段信息，
+     * 设置 syslog 的 layout 中的 tag 字段信息
      *
-     * @param syslogTag 待设置syslog的layout中的tag字段信息
+     * @param syslogTag 待设置 syslog 的 layout 中的 tag 字段信息
      */
     public synchronized void setSyslogTag(String syslogTag) {
         this.syslogTag = syslogTag;
     }
 
     /**
-     * 获取syslog的facility字段信息
+     * 获取 syslog 的 facility 字段信息
      *
-     * @return syslog的facility字段信息
+     * @return syslog 的 facility 字段信息
      */
     public int getSyslogFacility() {
         return syslogFacility;
     }
 
     /**
-     * 设置syslog的facility字段信息，
+     * 设置 syslog 的 facility 字段信息
      *
-     * @param syslogFacility 待设置syslog的facility字段信息
+     * @param syslogFacility 待设置 syslog 的 facility 字段信息
      */
     public synchronized void setSyslogFacility(String syslogFacility) {
         this.syslogFacility = Integer.parseInt(syslogFacility);
@@ -969,18 +982,18 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取syslog的重连时间，
+     * 获取 syslog 的重连时间
      *
-     * @return syslog的重连时间
+     * @return syslog 的重连时间
      */
     public int getSyslogReconnectInterval() {
         return syslogReconnectInterval;
     }
 
     /**
-     * 设置syslog的重连时间，
+     * 设置 syslog 的重连时间
      *
-     * @param syslogReconnectInterval 待设置syslog的重连时间
+     * @param syslogReconnectInterval 待设置 syslog 的重连时间
      */
     public synchronized void setSyslogReconnectInterval(String syslogReconnectInterval) {
         this.syslogReconnectInterval = Integer.parseInt(syslogReconnectInterval);
@@ -990,7 +1003,7 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取日志每分钟上传的条数，
+     * 获取日志每分钟上传的条数
      *
      * @return 日志每分钟上传的条数
      */
@@ -999,7 +1012,7 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 设置日志每分钟上传的条数，
+     * 设置日志每分钟上传的条数
      *
      * @param logMaxBurst 待设置日志每分钟上传的条数
      */
@@ -1011,16 +1024,16 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取是否禁用全部hook点，
+     * 获取是否禁用全部 hook 点
      *
-     * @return 是否禁用全部hook点
+     * @return 是否禁用全部 hook 点
      */
     public boolean getHookWhiteAll() {
         return hookWhiteAll;
     }
 
     /**
-     * 设置是否禁用全部hook点，
+     * 设置是否禁用全部 hook 点
      *
      * @param hookWhiteAll 是否禁用全部hook点
      */
@@ -1029,9 +1042,9 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取是否禁用全部hook点，
+     * 获取是否禁用全部 hook 点
      *
-     * @return 是否禁用全部hook点
+     * @return 是否禁用全部 hook 点
      */
     public boolean getDisableHooks() {
         return disableHooks;
@@ -1047,7 +1060,7 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取云控的开关状态，
+     * 获取云控的开关状态
      *
      * @return 云控开关状态
      */
@@ -1056,7 +1069,7 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 设置云控的开关状态，
+     * 设置云控的开关状态
      *
      * @param cloudSwitch 待设置的云控开关状态
      */
@@ -1065,7 +1078,7 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取云控地址，
+     * 获取云控地址
      *
      * @return 返回云控地址
      */
@@ -1083,36 +1096,36 @@ public class Config extends FileScanListener {
     }
 
     /**
-     * 获取云控的请求的appid，
+     * 获取云控的请求的 appid
      *
-     * @return 云控的请求的appid
+     * @return 云控的请求的 appid
      */
     public String getCloudAppId() {
         return cloudAppId;
     }
 
     /**
-     * 设置云控的appid，
+     * 设置云控的 appid
      *
-     * @param cloudAppId 待设置的云控的appid
+     * @param cloudAppId 待设置的云控的 appid
      */
     public synchronized void setCloudAppId(String cloudAppId) {
         this.cloudAppId = cloudAppId;
     }
 
     /**
-     * 获取云控的请求的appSecret，
+     * 获取云控的请求的 appSecret
      *
-     * @return 云控的请求的appSecret
+     * @return 云控的请求的 appSecret
      */
     public String getCloudAppSecret() {
         return cloudAppSecret;
     }
 
     /**
-     * 设置云控的appSecret，
+     * 设置云控的 appSecret
      *
-     * @param cloudAppSecret 待设置的云控的appSecret
+     * @param cloudAppSecret 待设置的云控的 appSecret
      */
     public synchronized void setCloudAppSecret(String cloudAppSecret) {
         this.cloudAppSecret = cloudAppSecret;

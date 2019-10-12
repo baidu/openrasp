@@ -105,10 +105,7 @@ public abstract class ConfigurableChecker extends AttackChecker {
         if (config != null) {
             JsonElement jsonElement = config.get(key);
             if (jsonElement != null) {
-                JsonElement value = jsonElement.getAsJsonObject().get(subKey);
-                if (value != null) {
-                    return value;
-                }
+                return jsonElement.getAsJsonObject().get(subKey);
             }
         }
         return null;
