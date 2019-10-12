@@ -64,6 +64,15 @@
         </div>
         <div class="form-group">
           <label class="form-label">
+            设置请求编码
+            <a href="https://rasp.baidu.com/doc/setup/others.html#common-others" target="_blank">
+              [帮助文档]
+            </a>
+          </label>
+          <input v-model.number="data['request.param_encoding']" min="0" class="form-control" placeholder="UTF-8">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
             调试开关 [0表示关闭，1以上的值表示开启]
           </label>
           <input v-model.number="data['debug.level']" type="number" min="0" class="form-control" placeholder="0">
