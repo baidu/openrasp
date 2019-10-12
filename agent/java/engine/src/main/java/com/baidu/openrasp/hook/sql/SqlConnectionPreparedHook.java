@@ -61,7 +61,8 @@ public class SqlConnectionPreparedHook extends AbstractSqlHook {
         }
 
          /* HSqlDB */
-        if ("org/hsqldb/jdbc/JDBCConnection".equals(className)) {
+        if ("org/hsqldb/jdbc/JDBCConnection".equals(className)
+                || "org/hsqldb/jdbc/jdbcConnection".equals(className)) {
             this.type = SQL_TYPE_HSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
@@ -77,24 +78,23 @@ public class SqlConnectionPreparedHook extends AbstractSqlHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
+        String checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
+                "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
         if (this.type.equals(SQL_TYPE_MYSQL)) {
-            String checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
-                    "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
             insertBeforeAndAddCatch(ctClass, "prepareStatement",
                     "(Ljava/lang/String;II)Ljava/sql/PreparedStatement;", checkSqlSrc);
+            insertBeforeAndAddCatch(ctClass, "prepareCall",
+                    "(Ljava/lang/String;II)Ljava/sql/CallableStatement;", checkSqlSrc);
         } else if (this.type.equals(SQL_TYPE_SQLITE)) {
-            String checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
-                    "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
+            // SQLite does not support Stored Procedures
             insertBeforeAndAddCatch(ctClass, "prepareStatement",
                     "(Ljava/lang/String;III)Ljava/sql/PreparedStatement;", checkSqlSrc);
         } else if (this.type.equals(SQL_TYPE_ORACLE)) {
-            String checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
-                    "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
             insertBeforeAndAddCatch(ctClass, "prepareStatement",
                     "(Ljava/lang/String;II)Ljava/sql/PreparedStatement;", checkSqlSrc);
+            insertBeforeAndAddCatch(ctClass, "prepareCall",
+                    "(Ljava/lang/String;II)Ljava/sql/CallableStatement;", checkSqlSrc);
         } else if (this.type.equals(SQL_TYPE_SQLSERVER)) {
-            String checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
-                    "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
             insertBeforeAndAddCatch(ctClass, "prepareStatement",
                     "(Ljava/lang/String;II)Ljava/sql/PreparedStatement;", checkSqlSrc);
             insertBeforeAndAddCatch(ctClass, "prepareStatement",
@@ -103,19 +103,22 @@ public class SqlConnectionPreparedHook extends AbstractSqlHook {
             insertBeforeAndAddCatch(ctClass, "prepareStatement",
                     "(Ljava/lang/String;IIILcom/microsoft/sqlserver/jdbc/SQLServerStatementColumnEncryptionSetting;)" +
                             "Ljava/sql/PreparedStatement;", checkSqlSrc);
+            insertBeforeAndAddCatch(ctClass, "prepareCall", "(Ljava/lang/String;II)" +
+                    "Ljava/sql/CallableStatement;", checkSqlSrc);
+            insertBeforeAndAddCatch(ctClass, "prepareCall",
+                    "(Ljava/lang/String;IIILcom/microsoft/sqlserver/jdbc/SQLServerStatementColumnEncryptionSetting;)" +
+                            "Ljava/sql/CallableStatement;", checkSqlSrc);
         } else if (this.type.equals(SQL_TYPE_PGSQL)) {
-            String checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
-                    "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
             insertBeforeAndAddCatch(ctClass, "prepareStatement",
                     "(Ljava/lang/String;III)Ljava/sql/PreparedStatement;", checkSqlSrc);
+            insertBeforeAndAddCatch(ctClass, "prepareCall",
+                    "(Ljava/lang/String;III)Ljava/sql/CallableStatement;", checkSqlSrc);
         } else if (this.type.equals(SQL_TYPE_DB2)) {
-            String checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
-                    "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
             insertBeforeAndAddCatch(ctClass, "prepareStatement", null, checkSqlSrc);
+            insertBeforeAndAddCatch(ctClass, "prepareCall", null, checkSqlSrc);
         } else if (this.type.equals(SQL_TYPE_HSQL)) {
-            String checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
-                    "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
             insertBeforeAndAddCatch(ctClass, "prepareStatement", null, checkSqlSrc);
+            insertBeforeAndAddCatch(ctClass, "prepareCall", null, checkSqlSrc);
         }
     }
 

@@ -1483,7 +1483,7 @@ public class Config extends FileScanListener {
                             Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
                             codeSum = codeSum + code;
                         } catch (Exception e) {
-                            LogTool.traceWarn(ErrorType.CONFIG_ERROR, "Hook type " + s + " does not exist", e);
+//                            LogTool.traceWarn(ErrorType.CONFIG_ERROR, "Hook type " + s + " does not exist", e);
                         }
                     }
                     if (hook.getKey().equals("*")) {

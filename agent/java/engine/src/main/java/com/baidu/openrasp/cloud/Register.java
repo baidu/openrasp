@@ -72,9 +72,13 @@ public class Register {
                         String message = CloudUtils.handleError(ErrorType.REGISTER_ERROR, response);
                         LogTool.warn(ErrorType.REGISTER_ERROR, message);
                     }
-                    Thread.sleep(REGISTER_DELAY);
-
                 } catch (Throwable e) {
+                    LogTool.warn(ErrorType.REGISTER_ERROR, e.getMessage(), e);
+                }
+
+                try {
+                    Thread.sleep(REGISTER_DELAY);
+                } catch (InterruptedException e) {
                     LogTool.warn(ErrorType.REGISTER_ERROR, e.getMessage(), e);
                 }
             }
