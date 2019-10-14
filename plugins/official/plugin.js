@@ -956,7 +956,7 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance,
         }
     }
 
-    var diff = end - start
+    var diff = end - start + 1
     if (diff >= distance) {
         if (is_sql && algorithmConfig.sql_userinput.anti_detect_enable && diff < 10) {
             var non_kw = 0
@@ -1962,7 +1962,7 @@ plugin.register('command', function (params, context) {
         function _run(values, name)
         {
             var reason = false
-
+            
             values.some(function (value) {
                 if (value.length <= min_length) {
                     return false
@@ -1978,7 +1978,7 @@ plugin.register('command', function (params, context) {
                     reason = _("WebShell detected - Executing command: %1%", [cmd])
                     return true
                 }
-
+                
                 // 懒加载，需要的时候初始化 token
                 if (raw_tokens.length == 0) {
                     raw_tokens = RASP.cmd_tokenize(cmd)
