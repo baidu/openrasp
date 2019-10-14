@@ -37,6 +37,7 @@ public class CpuMonitor {
     private static final Logger LOGGER = Logger.getLogger(CpuMonitor.class.getName());
     private static final String CPUS_ALLOWED_LIST = "Cpus_allowed_list";
     private static final String PROCESS_STATUS = "/proc/%d/status";
+    private static final int MIN_CPU_DEBUG_LEVEL = 1000;
     private static ArrayList<String> cpuUsageList = new ArrayList<String>(3);
 
     private boolean isAlive = true;
@@ -81,12 +82,17 @@ public class CpuMonitor {
                 if (line.startsWith(CPUS_ALLOWED_LIST)) {
                     line = line.trim();
                     String[] temp = line.split("\\s+");
-                    for (String s : temp[1].split(",")) {
-                        if (s.contains("-")) {
-                            String[] num = s.split("-");
-                            totalCpuNum += (Integer.parseInt(num[1]) - Integer.parseInt(num[0]) + 1);
-                        } else {
-                            totalCpuNum++;
+                    if (temp.length >= 2) {
+                        if (Config.getConfig().getDebugLevel() > MIN_CPU_DEBUG_LEVEL) {
+                            LOGGER.info(line);
+                        }
+                        for (String s : temp[1].split(",")) {
+                            if (s.contains("-")) {
+                                String[] num = s.split("-");
+                                totalCpuNum += (Integer.parseInt(num[1]) - Integer.parseInt(num[0]) + 1);
+                            } else {
+                                totalCpuNum++;
+                            }
                         }
                     }
                     break;
@@ -102,6 +108,9 @@ public class CpuMonitor {
         float totalCpuUsage = getCpuUsage();
         int cpuUsageNum = getCpuUsageNumber(getPid());
         float cpuUsageUpper = cpuUsageNum * Config.getConfig().getCpuUsagePercent();
+        if (Config.getConfig().getDebugLevel() > MIN_CPU_DEBUG_LEVEL) {
+            LOGGER.info("current cpu usage: " + totalCpuUsage);
+        }
         if (totalCpuUsage > cpuUsageUpper) {
             if (!Config.getConfig().getDisableHooks()) {
                 cpuUsageList.add(totalCpuUsage + "%");

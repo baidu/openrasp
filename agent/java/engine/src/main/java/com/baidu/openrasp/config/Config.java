@@ -473,10 +473,11 @@ public class Config extends FileScanListener {
      * @param pluginTimeout 超时时间
      */
     public synchronized void setPluginTimeout(String pluginTimeout) {
-        this.pluginTimeout = Long.parseLong(pluginTimeout);
-        if (this.pluginTimeout <= 0) {
+        long value = Long.parseLong(pluginTimeout);
+        if (value <= 0) {
             throw new ConfigLoadException(Item.PLUGIN_TIMEOUT_MILLIS.name() + " must be greater than 0");
         }
+        this.pluginTimeout = value;
     }
 
     /**
@@ -516,10 +517,11 @@ public class Config extends FileScanListener {
      * @param bodyMaxBytes
      */
     public synchronized void setBodyMaxBytes(String bodyMaxBytes) {
-        this.bodyMaxBytes = Integer.parseInt(bodyMaxBytes);
-        if (this.bodyMaxBytes <= 0) {
+        int value = Integer.parseInt(bodyMaxBytes);
+        if (value <= 0) {
             throw new ConfigLoadException(Item.BODY_MAX_BYTES.name() + " must be greater than 0");
         }
+        this.bodyMaxBytes = value;
     }
 
     public int getSqlSlowQueryMinCount() {
@@ -527,10 +529,11 @@ public class Config extends FileScanListener {
     }
 
     public synchronized void setSqlSlowQueryMinCount(String sqlSlowQueryMinCount) {
-        this.sqlSlowQueryMinCount = Integer.parseInt(sqlSlowQueryMinCount);
-        if (this.sqlSlowQueryMinCount < 0) {
+        int value = Integer.parseInt(sqlSlowQueryMinCount);
+        if (value < 0) {
             throw new ConfigLoadException(Item.SQL_SLOW_QUERY_MIN_ROWS.name() + " can not be less than 0");
         }
+        this.sqlSlowQueryMinCount = value;
     }
 
     /**
@@ -566,10 +569,11 @@ public class Config extends FileScanListener {
      * @param pluginMaxStack 栈信息最大深度
      */
     public synchronized void setPluginMaxStack(String pluginMaxStack) {
-        this.pluginMaxStack = Integer.parseInt(pluginMaxStack);
-        if (this.pluginMaxStack < 0) {
+        int value = Integer.parseInt(pluginMaxStack);
+        if (value < 0) {
             throw new ConfigLoadException(Item.PLUGIN_MAX_STACK.name() + " can not be less than 0");
         }
+        this.pluginMaxStack = value;
     }
 
     /**
@@ -641,10 +645,11 @@ public class Config extends FileScanListener {
      * @param ognlMinLength ognl表达式最短长度
      */
     public synchronized void setOgnlMinLength(String ognlMinLength) {
-        this.ognlMinLength = Integer.parseInt(ognlMinLength);
-        if (this.ognlMinLength <= 0) {
+        int value = Integer.parseInt(ognlMinLength);
+        if (value <= 0) {
             throw new ConfigLoadException(Item.OGNL_EXPRESSION_MIN_LENGTH.name() + " must be greater than 0");
         }
+        this.ognlMinLength = value;
     }
 
     /**
@@ -662,10 +667,11 @@ public class Config extends FileScanListener {
      * @param blockStatusCode 状态码
      */
     public synchronized void setBlockStatusCode(String blockStatusCode) {
-        this.blockStatusCode = Integer.parseInt(blockStatusCode);
-        if (this.blockStatusCode < 100 || this.blockStatusCode > 999) {
+        int value = Integer.parseInt(blockStatusCode);
+        if (value < 100 || value > 999) {
             throw new ConfigLoadException(Item.BLOCK_STATUS_CODE.name() + " must be between [100,999]");
         }
+        this.blockStatusCode = value;
     }
 
     /**
@@ -892,10 +898,11 @@ public class Config extends FileScanListener {
      * @param sqlCacheCapacity 待设置的缓存大小，默认大小为100
      */
     public synchronized void setSqlCacheCapacity(String sqlCacheCapacity) {
-        this.sqlCacheCapacity = Integer.parseInt(sqlCacheCapacity);
-        if (this.sqlCacheCapacity < 0) {
+        int value = Integer.parseInt(sqlCacheCapacity);
+        if (value < 0) {
             throw new ConfigLoadException(Item.SQL_CACHE_CAPACITY.name() + " can not be less than 0");
         }
+        this.sqlCacheCapacity = value;
         if (Config.commonLRUCache == null || Config.commonLRUCache.maxSize() != this.sqlCacheCapacity) {
             if (Config.commonLRUCache == null) {
                 Config.commonLRUCache = new LRUCache<Object, String>(this.sqlCacheCapacity);
@@ -975,10 +982,11 @@ public class Config extends FileScanListener {
      * @param syslogFacility 待设置 syslog 的 facility 字段信息
      */
     public synchronized void setSyslogFacility(String syslogFacility) {
-        this.syslogFacility = Integer.parseInt(syslogFacility);
-        if (!(this.syslogFacility >= 0 && this.syslogFacility <= 23)) {
+        int value = Integer.parseInt(syslogFacility);
+        if (!(value >= 0 && value <= 23)) {
             throw new ConfigLoadException(Item.SYSLOG_FACILITY.name() + " must be between [0,23]");
         }
+        this.syslogFacility = value;
     }
 
     /**
@@ -996,10 +1004,11 @@ public class Config extends FileScanListener {
      * @param syslogReconnectInterval 待设置 syslog 的重连时间
      */
     public synchronized void setSyslogReconnectInterval(String syslogReconnectInterval) {
-        this.syslogReconnectInterval = Integer.parseInt(syslogReconnectInterval);
-        if (this.syslogReconnectInterval <= 0) {
+        int value = Integer.parseInt(syslogReconnectInterval);
+        if (value <= 0) {
             throw new ConfigLoadException(Item.SYSLOG_RECONNECT_INTERVAL.name() + " must be greater than 0");
         }
+        this.syslogReconnectInterval = value;
     }
 
     /**
@@ -1017,10 +1026,11 @@ public class Config extends FileScanListener {
      * @param logMaxBurst 待设置日志每分钟上传的条数
      */
     public synchronized void setLogMaxBurst(String logMaxBurst) {
-        this.logMaxBurst = Integer.parseInt(logMaxBurst);
-        if (this.logMaxBurst < 0) {
+        int value = Integer.parseInt(logMaxBurst);
+        if (value < 0) {
             throw new ConfigLoadException(Item.LOG_MAXBURST.name() + " can not be less than 0");
         }
+        this.logMaxBurst = value;
     }
 
     /**
@@ -1146,10 +1156,11 @@ public class Config extends FileScanListener {
      * @param heartbeatInterval 待设置的云控心跳请求间隔
      */
     public synchronized void setHeartbeatInterval(String heartbeatInterval) {
-        this.heartbeatInterval = Integer.parseInt(heartbeatInterval);
-        if (!(this.heartbeatInterval >= 10 && this.heartbeatInterval <= 1800)) {
+        int value = Integer.parseInt(heartbeatInterval);
+        if (!(value >= 10 && value <= 1800)) {
             throw new ConfigLoadException(Item.HEARTBEAT_INTERVAL.name() + " must be between [10,1800]");
         }
+        this.heartbeatInterval = value;
     }
 
     /**
@@ -1209,10 +1220,11 @@ public class Config extends FileScanListener {
      * @param logMaxBackUp log4j最大日志备份天数
      */
     public synchronized void setLogMaxBackUp(String logMaxBackUp) {
-        this.logMaxBackUp = Integer.parseInt(logMaxBackUp) + 1;
-        if (this.logMaxBackUp <= 0) {
+        int value = Integer.parseInt(logMaxBackUp) + 1;
+        if (value <= 0) {
             throw new ConfigLoadException(Item.LOG_MAX_BACKUP.name() + " can not be less than 0");
         }
+        this.logMaxBackUp = value;
     }
 
     /**
@@ -1275,10 +1287,11 @@ public class Config extends FileScanListener {
      * @param cpuUsagePercent cpu的使用率的百分比
      */
     public void setCpuUsagePercent(String cpuUsagePercent) {
-        this.cpuUsagePercent = Integer.parseInt(cpuUsagePercent);
-        if (!(this.cpuUsagePercent >= 30 && this.cpuUsagePercent <= 100)) {
+        int value = Integer.parseInt(cpuUsagePercent);
+        if (!(value >= 30 && value <= 100)) {
             throw new ConfigLoadException(Item.CPU_USAGE_PERCENT.name() + " must be between [30,100]");
         }
+        this.cpuUsagePercent = value;
     }
 
     /**
