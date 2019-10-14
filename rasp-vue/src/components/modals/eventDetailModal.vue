@@ -101,9 +101,9 @@
                 <div class="h6" v-if="data.header.referer">
                   请求 Referer
                 </div>
-                <p style="white-space: normal; word-break: break-all; " v-if="data.header.referer">
+                <p><a target="_blank" :href="data.header.referer" v-if="data.header.referer">
                   {{ data.header.referer }}
-                </p>
+                </a></p>
 
                 <div class="h6" v-if="data.header.user_agent">
                   请求 UA
