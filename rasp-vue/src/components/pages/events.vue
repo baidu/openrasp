@@ -71,15 +71,30 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
+            <input v-model.trim="url" type="text" class="form-control w-10" placeholder="目标 URL" @keyup.enter="loadEvents(1)" style="width: 210px">
+          </div>      
+          <div class="input-icon ml-2">
+            <span class="input-icon-addon">
+              <i class="fe fe-search" />
+            </span>
+            <input v-model.trim="plugin_message" type="text" class="form-control w-10" placeholder="报警消息" @keyup.enter="loadEvents(1)" style="width: 210px">
+          </div>
+        </div>
+        <div class="page-options d-flex" style="margin-top: 5px;">
+          <div class="input-icon ml-2">
+            <span class="input-icon-addon">
+              <i class="fe fe-search" />
+            </span>
             <input v-model.trim="request_id" type="text" class="form-control w-10" placeholder="请求 ID" @keyup.enter="loadEvents(1)" style="width: 210px">
           </div>      
           <div class="input-icon ml-2">
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model.trim="url" type="text" class="form-control w-10" placeholder="目标 URL" @keyup.enter="loadEvents(1)" style="width: 210px">
-          </div>          
+            <input v-model.trim="stack_md5" type="text" class="form-control w-10" placeholder="堆栈 MD5" @keyup.enter="loadEvents(1)" style="width: 210px">
+          </div>
         </div>
+
         <div class="page-options d-flex" style="margin-top: 5px;">
           <button class="btn btn-primary ml-2" @click="loadEvents(1)" style="height: 38px">
             搜索
@@ -206,6 +221,7 @@ export default {
       srcip: '',
       url: '',
       request_id: '',
+      plugin_message: '',
       total: 0,
       attack_types,
       status_types,
@@ -262,7 +278,8 @@ export default {
           app_id: this.current_app.id,
           url: this.url,
           request_id: this.request_id,
-          intercept_state: this.selected_status
+          intercept_state: this.selected_status,
+          plugin_message: this.plugin_message
         },
         page: page,
         perpage: 10
