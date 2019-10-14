@@ -7,7 +7,7 @@
         </h1>
         <div class="page-options d-flex">
           <div>
-            <b-dropdown text="主机状态" class="">
+            <b-dropdown :text="'主机状态' + toHostStatus()" class="">
               <div class="row px-2">
                 <div class="col-6">
                   <label class="custom-switch">
@@ -177,20 +177,49 @@ export default {
     ...mapGetters(['current_app'])
   },
   watch: {
-    current_app() { this.loadRaspList(1) },
+    current_app() { 
+      this.loadRaspList(1) 
+    },
     filter: {
-      handler() { this.loadRaspList(1) },
+      handler() { 
+        this.loadRaspList(1)
+        localStorage.setItem('host_filter_status', JSON.stringify(this.filter))
+      },
       deep: true
     }
   },
   mounted() {
-    if (!this.current_app.id) {
-      return
+    // 记住主机状态
+    // TODO: 改为类库实现
+    console.log('load filter')
+    try {
+      let filter = JSON.parse(localStorage.getItem('host_filter_status'))
+      if (typeof(filter.online) == 'boolean' && typeof(filter.offline) == 'boolean') {
+        this.filter = filter
+      }
+    } catch (e) {}
+
+    // 加载信息
+    if (this.current_app.id) {
+      this.loadRaspList(1)
     }
-    this.loadRaspList(1)
   },
   methods: {
     ceil: Math.ceil,
+    toHostStatus() {
+      if (this.filter.online && this.filter.offline) {
+        return ': 全部'
+      }
+      if (! this.filter.online && ! this.filter.offline) {
+        return ''
+      }
+
+      if (this.filter.online) {
+        return ': 仅在线'
+      } else {
+        return ': 仅离线'
+      }      
+    },
     showHostDetail(data) {
       this.$refs.showHostDetail.showModal(data)
     },
@@ -229,9 +258,9 @@ export default {
         this.total = res.total
         this.loading = false
       })
-    },
+    },    
     doDelete: function(data) {
-      if (!confirm('确认删除? 删除前请先在主机端卸载 OpenRASP agent')) {
+      if (!confirm('确认删除? 删除前请先在主机端卸载 OpenRASP Agent')) {
         return
       }
       var body = {
