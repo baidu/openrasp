@@ -60,6 +60,8 @@ var algorithmConfig = {
         min_length: 8,
         pre_filter: 'select|file|from|;',
         pre_enable: false,
+        anti_detect_filter: 'add|all|alter|analyze|and|any|as|asc|avg|begin|between|by|case|create|count|delete|desc|do|dumpfile|else|elseif|end|exists|false|file|float|flush|follows|from|group|having|identified|if|in|insert|interval|into|join|last|like|limit|loop|not|null|on|or|order|procedure|regexp|return|rlike|select|then|true|union|update|values|xor',
+        anti_detect_enable: true,
         lcs_search: false,
 
         // 是否允许数据库管理器 - 前端直接提交SQL语句
@@ -561,6 +563,9 @@ var commaNumRegex   = /^[0-9, ]+$/
 // SQL注入算法1 - 预过滤正则
 var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter, 'i')
 
+// SQL注入算法1 - 反探测正则
+var sqliAntiDetect = new RegExp(algorithmConfig.sql_userinput.anti_detect_filter, 'i')
+
 // SQL注入算法2 - 预过滤正则
 var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter, 'i')
 
@@ -925,7 +930,7 @@ function is_from_userinput(parameter, target)
 }
 
 // 检查逻辑是否被用户参数所修改
-function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance) 
+function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance, is_sql=false)
 {
     // 当用户输入穿越了多个token，就可以判定为代码注入，默认为2
     var start = -1, end = raw_tokens.length, distance = distance || 2
@@ -941,17 +946,28 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance)
     }
 
     // 寻找 token 结束点
-    // 另外，最多需要遍历 distance 个 token
-    for (var i = start; i < start + distance && i < raw_tokens.length; i++)
+    // 需要返回真实distance, 删除 最多需要遍历 distance 个 token  i < start + distance 条件
+    for (var i = start; i < raw_tokens.length; i++)
     {
-        if (raw_tokens[i].stop >= userinput_idx + userinput_length )
+        if (raw_tokens[i].stop >= userinput_idx + userinput_length)
         {
             end = i
             break
         }
     }
 
-    if (end - start > distance) {
+    var diff = end - start
+    if (diff >= distance) {
+        if (is_sql && algorithmConfig.sql_userinput.anti_detect_enable && diff < 10) {
+            var non_kw = 0
+            for (var i = start; i <= end; i++) {
+                sqliAntiDetect.test(raw_tokens[i].text) || non_kw ++
+                if (non_kw >= 2) {
+                    return true
+                }
+            }
+            return false
+        }
         return true
     }
     return false
@@ -1093,11 +1109,11 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                     }
 
                     //distance用来屏蔽identifier token解析误报 `dbname`.`table`，请在1.2版本后删除
-                    var distance = 3
+                    var distance = 2
                     if (value.length > 20) {
-                        distance = 2
+                        distance = 3
                     }
-                    if (is_token_changed(raw_tokens, userinput_idx, value.length, distance)) {
+                    if (is_token_changed(raw_tokens, userinput_idx, value.length, distance, is_sql=true)) {
                         reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                         return true
                     }

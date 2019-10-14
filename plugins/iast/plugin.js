@@ -1,4 +1,4 @@
-const plugin_version = '2019-0925-1200'
+const plugin_version = '2019-1010-1640'
 const plugin_name    = 'iast'
 const plugin_desc    = 'IAST Fuzz 插件'
 
@@ -59,6 +59,7 @@ function add_hook(hook_type, params, context) {
 function send_rasp_result(context) {
 
     var hook_info  = context.hook_info || []
+    delete context.hook_info
 
     // 不检测不包含hook_info的请求, xml类型除外
     if (hook_info.length == 0 && 
@@ -185,12 +186,10 @@ plugin.register('rename', function (params, context) {
 })
 
 plugin.register('command', function (params, context) {
-    if (! context.url) {
-        return clean
+    if (context.url) {
+        params.tokens = RASP.cmd_tokenize(params.command)
+        add_hook('command', params, context)
     }
-
-    params.tokens = RASP.cmd_tokenize(params.command)
-    add_hook('command', params, context)
 })
 
 plugin.register('xxe', function (params, context) {
