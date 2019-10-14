@@ -867,6 +867,13 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows, is_
 function is_path_containing_userinput(parameter, target, is_windows, is_lcs_search)
 {
     var verdict = false
+    if (is_windows) {
+        target = target.replaceAll('/', '\\')
+        target = target.replaceAll('\\\\', '\\')
+    }
+    else{
+        target = target.replaceAll('//', '/')
+    }
 
     Object.keys(parameter).some(function (key) {
         var values = parameter[key]
@@ -878,12 +885,9 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
             if (is_windows) {
                 value = value.replaceAll('/', '\\')
                 value = value.replaceAll('\\\\', '\\')
-                target = target.replaceAll('/', '\\')
-                target = target.replaceAll('\\\\', '\\')
             }
             else {
                 value = value.replaceAll('//', '/')
-                target = target.replaceAll('//', '/')
             }
             var values
             if (is_lcs_search) {
@@ -1962,7 +1966,7 @@ plugin.register('command', function (params, context) {
         function _run(values, name)
         {
             var reason = false
-            
+
             values.some(function (value) {
                 if (value.length <= min_length) {
                     return false
