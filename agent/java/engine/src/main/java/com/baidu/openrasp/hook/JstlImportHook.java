@@ -17,6 +17,7 @@
 package com.baidu.openrasp.hook;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
@@ -80,6 +81,10 @@ public class JstlImportHook extends AbstractClassHook {
             try {
                 if (url.startsWith("file://")) {
                     File realFile = new File(new URI(url));
+                    boolean checkSwitch = Config.getConfig().getPluginFilter();
+                    if (checkSwitch && !realFile.exists()) {
+                        return;
+                    }
                     try {
                         params.put("realpath", realFile.getCanonicalPath());
                     } catch (Exception e) {

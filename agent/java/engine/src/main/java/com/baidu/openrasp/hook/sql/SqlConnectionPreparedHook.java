@@ -46,7 +46,8 @@ public class SqlConnectionPreparedHook extends AbstractSqlHook {
         }
 
         /* PostgreSQL */
-        if ("org/postgresql/jdbc3/Jdbc3Connection".equals(className)
+        if ("org/postgresql/jdbc/PgConnection".equals(className)
+                || "org/postgresql/jdbc3/Jdbc3Connection".equals(className)
                 || "org/postgresql/jdbc4/Jdbc4Connection".equals(className)) {
             this.type = SQL_TYPE_PGSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
@@ -111,6 +112,8 @@ public class SqlConnectionPreparedHook extends AbstractSqlHook {
         } else if (this.type.equals(SQL_TYPE_PGSQL)) {
             insertBeforeAndAddCatch(ctClass, "prepareStatement",
                     "(Ljava/lang/String;III)Ljava/sql/PreparedStatement;", checkSqlSrc);
+//            insertBeforeAndAddCatch(ctClass, "prepareStatement",
+//                    "(Ljava/lang/String;[Ljava/lang/String;)Ljava/sql/PreparedStatement;", checkSqlSrc);
             insertBeforeAndAddCatch(ctClass, "prepareCall",
                     "(Ljava/lang/String;III)Ljava/sql/CallableStatement;", checkSqlSrc);
         } else if (this.type.equals(SQL_TYPE_DB2)) {
