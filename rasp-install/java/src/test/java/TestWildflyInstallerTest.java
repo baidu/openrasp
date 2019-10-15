@@ -1,4 +1,4 @@
-import com.baidu.rasp.install.linux.WildflyInstaller;
+import com.baidu.rasp.install.linux.JbossEAPInstaller;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
@@ -15,7 +15,7 @@ public class TestWildflyInstallerTest {
         try {
             InputStream is = this.getClass().getResourceAsStream("/startWebLogic.sh");
             String content = IOUtils.toString(is, "UTF-8");
-            Class clazz = WildflyInstaller.class;
+            Class clazz = JbossEAPInstaller.class;
             Constructor constructor = clazz.getConstructor(String.class, String.class);
             Object installer = constructor.newInstance("Tomcat", "/Users/anyang/Desktop/jacoco/sum/apache-tomcat-8.5.30/");
             Utils.invokeStringMethod(installer, "modifyStartScript", new Class[]{String.class}, content);

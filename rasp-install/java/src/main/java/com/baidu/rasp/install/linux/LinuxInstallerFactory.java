@@ -41,7 +41,7 @@ public class LinuxInstallerFactory extends InstallerFactory {
             return new WeblogicInstaller(serverName, serverRoot);
         }
         if (serverName.equals(WILDFLY)) {
-            return new WildflyInstaller(serverName, serverRoot);
+            return new JbossEAPInstaller(serverName, serverRoot);
         }
         if (serverName.equals(JBOSSEAP)) {
             return new JbossEAPInstaller(serverName, serverRoot);
