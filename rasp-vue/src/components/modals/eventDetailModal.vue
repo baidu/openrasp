@@ -46,6 +46,11 @@
               </p>
               <attack_params ref="attack_params" />
 
+              <div class="h6" v-if="data.stack_md5">
+                应用堆栈 MD5
+              </div>
+              <p v-if="data.stack_md5">{{ data.stack_md5 }}</p>
+
               <div class="h6" v-if="data.stack_trace">
                 应用堆栈
               </div>
@@ -72,7 +77,7 @@
               </div>
               <p style="word-break: break-all; ">
                 {{ data.request_method ? data.request_method.toUpperCase() : '' }} 
-                <a target="_blank" @href="data.url">
+                <a target="_blank" :href="data.url">
                   {{ data.url ? data.url : '-' }}
                 </a>
               </p>
@@ -96,8 +101,10 @@
                 <div class="h6" v-if="data.header.referer">
                   请求 Referer
                 </div>
-                <p style="white-space: normal; word-break: break-all; " v-if="data.header.referer">
-                  {{ data.header.referer }}
+                <p v-if="data.header.referer">
+                  <a target="_blank" :href="data.header.referer">
+                    {{ data.header.referer }}
+                  </a>
                 </p>
 
                 <div class="h6" v-if="data.header.user_agent">

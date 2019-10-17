@@ -47,6 +47,12 @@ public class AppenderCache {
         }
     }
 
+    public static void clearCache(String key) {
+        if (appenderCache.containsKey(key)) {
+            appenderCache.get(key).clear();
+        }
+    }
+
     public static ConcurrentLinkedQueue<JsonElement> getCache(String key) {
         if (appenderCache.containsKey(key)) {
             return appenderCache.get(key);

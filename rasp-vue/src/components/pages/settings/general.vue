@@ -64,6 +64,15 @@
         </div>
         <div class="form-group">
           <label class="form-label">
+            设置请求编码
+            <a href="https://rasp.baidu.com/doc/setup/others.html#common-others" target="_blank">
+              [帮助文档]
+            </a>
+          </label>
+          <input v-model.number="data['request.param_encoding']" min="0" class="form-control" placeholder="UTF-8">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
             调试开关 [0表示关闭，1以上的值表示开启]
           </label>
           <input v-model.number="data['debug.level']" type="number" min="0" class="form-control" placeholder="0">
@@ -100,6 +109,28 @@
         </div>
 
         <div class="form-group">
+          <label class="form-label">
+            [熔断] 单核CPU占用率采集间隔（秒），范围 1-1800
+          </label>
+          <input v-model.number="data['cpu.usage.interval']" type="number" min="1" max="1800" class="form-control" placeholder="5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            [熔断] 单核CPU占用率阈值（百分比），范围 30-100
+          </label>
+          <input v-model.number="data['cpu.usage.percent']" type="number" min="30" max="100" class="form-control" placeholder="90">
+        </div>        
+
+        <div class="form-group">
+          <label class="custom-switch">
+            <input v-model="data['cpu.usage.enable']" type="checkbox" checked="data['cpu.usage.enable']" class="custom-switch-input">
+            <span class="custom-switch-indicator" />
+            <span class="custom-switch-description">
+              开启熔断保护:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 当CPU占用持续超过某个值，关闭所有防护（仅 Java 版本支持）
+            </span>
+          </label>
+          <br>
+
           <label class="custom-switch">
             <input v-model="data['plugin.filter']" type="checkbox" checked="data['plugin.filter']" class="custom-switch-input">
             <span class="custom-switch-indicator" />

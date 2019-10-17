@@ -57,28 +57,83 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
             {
                 continue;
             }
-            if (zend_hash_get_current_data(ht, (void **)&file) != SUCCESS ||
-                Z_TYPE_PP(file) != IS_ARRAY ||
-                zend_hash_find(Z_ARRVAL_PP(file), ZEND_STRS("tmp_name"), (void **)&tmp_name) != SUCCESS ||
-                Z_TYPE_PP(tmp_name) != IS_STRING ||
-                zend_binary_strcmp(Z_STRVAL_PP(tmp_name), Z_STRLEN_PP(tmp_name), path, path_len) != 0)
+            else if (type == HASH_KEY_IS_STRING)
             {
-                continue;
+                form_data_name = std::string(key);
             }
-            if (zend_hash_find(Z_ARRVAL_PP(file), ZEND_STRS("name"), (void **)&realname) == SUCCESS &&
-                IS_STRING == Z_TYPE_PP(realname))
+            else if (type == HASH_KEY_IS_LONG)
             {
-                realname_str = std::string(Z_STRVAL_PP(realname), Z_STRLEN_PP(realname));
-                if (type == HASH_KEY_IS_STRING)
+                long actual = idx;
+                form_data_name = std::to_string(actual);
+            }
+            if (zend_hash_get_current_data(ht, (void **)&file) == SUCCESS &&
+                Z_TYPE_PP(file) == IS_ARRAY &&
+                zend_hash_find(Z_ARRVAL_PP(file), ZEND_STRS("tmp_name"), (void **)&tmp_name) == SUCCESS)
+            {
+                if (Z_TYPE_PP(tmp_name) == IS_STRING)
                 {
-                    form_data_name = std::string(key);
+                    if (zend_binary_strcmp(Z_STRVAL_PP(tmp_name), Z_STRLEN_PP(tmp_name), path, path_len) == 0)
+                    {
+                        if (zend_hash_find(Z_ARRVAL_PP(file), ZEND_STRS("name"), (void **)&realname) == SUCCESS &&
+                            IS_STRING == Z_TYPE_PP(realname))
+                        {
+                            realname_str = std::string(Z_STRVAL_PP(realname), Z_STRLEN_PP(realname));
+                            break;
+                        }
+                    }
                 }
-                else if (type == HASH_KEY_IS_LONG)
+                else if (Z_TYPE_PP(tmp_name) == IS_ARRAY)
                 {
-                    long actual = idx;
-                    form_data_name = std::to_string(actual);
+                    char *tmp_name_key = nullptr;
+                    ulong tmp_name_idx;
+                    int tmp_name_type = 0;
+                    bool found = false;
+                    HashTable *tmp_name_ht = Z_ARRVAL_PP(tmp_name);
+                    for (zend_hash_internal_pointer_reset(tmp_name_ht);
+                         zend_hash_has_more_elements(tmp_name_ht) == SUCCESS;
+                         zend_hash_move_forward(tmp_name_ht))
+                    {
+                        tmp_name_type = zend_hash_get_current_key(tmp_name_ht, &tmp_name_key, &tmp_name_idx, 0);
+                        if (tmp_name_type == HASH_KEY_NON_EXISTENT)
+                        {
+                            continue;
+                        }
+                        zval **tmp_name_file;
+                        if (zend_hash_get_current_data(tmp_name_ht, (void **)&tmp_name_file) == SUCCESS &&
+                            Z_TYPE_PP(tmp_name_file) == IS_STRING &&
+                            zend_binary_strcmp(Z_STRVAL_PP(tmp_name_file), Z_STRLEN_PP(tmp_name_file), path, path_len) == 0)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found)
+                    {
+                        if (zend_hash_find(Z_ARRVAL_PP(file), ZEND_STRS("name"), (void **)&realname) == SUCCESS &&
+                            IS_ARRAY == Z_TYPE_PP(realname))
+                        {
+                            zval **realname_item = nullptr;
+                            if (tmp_name_type == HASH_KEY_IS_STRING)
+                            {
+                                if (zend_hash_find(Z_ARRVAL_PP(realname), tmp_name_key, strlen(tmp_name_key) + 1, (void **)&realname_item) == SUCCESS &&
+                                    IS_STRING == Z_TYPE_PP(realname_item))
+                                {
+                                    realname_str = std::string(Z_STRVAL_PP(realname_item), Z_STRLEN_PP(realname_item));
+                                    break;
+                                }
+                            }
+                            else if (tmp_name_type == HASH_KEY_IS_LONG)
+                            {
+                                if (zend_hash_index_find(Z_ARRVAL_PP(realname), tmp_name_idx, (void **)&realname_item) == SUCCESS &&
+                                    IS_STRING == Z_TYPE_PP(realname_item))
+                                {
+                                    realname_str = std::string(Z_STRVAL_PP(realname_item), Z_STRLEN_PP(realname_item));
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
-                break;
             }
         }
         php_stream *stream = php_stream_open_wrapper(path, "rb", 0, nullptr);

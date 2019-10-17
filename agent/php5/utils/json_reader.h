@@ -42,15 +42,15 @@ public:
   virtual void load(const std::string &content);
 
   size_t get_array_size(const std::vector<std::string> &keys);
+  //Serialization
+  virtual std::string dump(const std::vector<std::string> &keys, bool pretty = false);
+  virtual std::string dump(bool pretty = false);
   //write op
   void write_int64(const std::vector<std::string> &keys, const int64_t &value);
   void write_string(const std::vector<std::string> &keys, const std::string &value);
   void write_map(const std::vector<std::string> &keys, const std::map<std::string, std::string> &value);
   void write_map_to_array(const std::vector<std::string> &keys, const std::string fkey, const std::string skey,
                           const std::map<std::string, std::string> &value);
-  //Serialization
-  std::string dump(const std::vector<std::string> &keys, bool pretty = false);
-  std::string dump(bool pretty = false);
 };
 
 } // namespace openrasp

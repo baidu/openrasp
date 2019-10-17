@@ -1,4 +1,4 @@
-const plugin_version = '2019-0828-1100'
+const plugin_version = '2019-1008-1500'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -60,6 +60,8 @@ var algorithmConfig = {
         min_length: 8,
         pre_filter: 'select|file|from|;',
         pre_enable: false,
+        anti_detect_filter: 'add|all|alter|analyze|and|any|as|asc|avg|begin|between|by|case|create|count|delete|desc|do|dumpfile|else|elseif|end|exists|false|file|float|flush|follows|from|group|having|identified|if|in|insert|interval|into|join|last|like|limit|loop|not|null|on|or|order|procedure|regexp|return|rlike|select|then|true|union|update|values|xor',
+        anti_detect_enable: true,
         lcs_search: false,
 
         // 是否允许数据库管理器 - 前端直接提交SQL语句
@@ -132,7 +134,19 @@ var algorithmConfig = {
     sql_exception: {
         name:      '算法3 - 记录数据库异常',
         action:    'log',
-        reference: 'https://rasp.baidu.com/doc/dev/official.html#sql-exception'
+        reference: 'https://rasp.baidu.com/doc/dev/official.html#sql-exception',
+
+        mysql: {
+	        error_code: [
+	            // 1045, // Access denied for user 'bae'@'10.10.1.1'
+	            1060, // Duplicate column name '5.5.60-0ubuntu0.14.04.1'
+	            1062, // Duplicate entry '::root@localhost::1' for key 'group_key'
+	            1064, // You have an error in your SQL syntax
+	            1105, // XPATH syntax error: '~root@localhost~'
+	            1367, // Illegal non geometric 'user()' value found during parsing
+	            1690  // DOUBLE value is out of range in 'exp(~((select 'root@localhost' from dual)))'
+	        ]
+	    }
     },
 
     sql_regex: {
@@ -156,6 +170,7 @@ var algorithmConfig = {
         name:    '算法3 - 拦截常见 dnslog 地址',
         action:  'block',
         domains: [
+        	'.vuleye.pw',
             '.ceye.io',
             '.exeye.io',
             '.vcap.me',
@@ -297,7 +312,7 @@ var algorithmConfig = {
             // php specific
             'dict',
             'php',
-            'phar',
+            // 'phar',
             'compress.zlib',
             'compress.bzip2',
             'zip',
@@ -537,7 +552,7 @@ var cleanFileRegex  = /\.(jpg|jpeg|png|gif|bmp|txt|rar|zip)$/i
 var htmlFileRegex   = /\.(htm|html|js)$/i
 
 // 匹配 EXE/DLL 等可以执行的文件
-var exeFileRegex    = /\.(exe|dll|scr|vbs|cmd|bat|jar)$/i
+var exeFileRegex    = /\.(exe|dll|scr|vbs|cmd|bat)$/i
 
 // 其他的 stream 都没啥用
 var ntfsRegex       = /::\$(DATA|INDEX)$/
@@ -547,6 +562,9 @@ var commaNumRegex   = /^[0-9, ]+$/
 
 // SQL注入算法1 - 预过滤正则
 var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter, 'i')
+
+// SQL注入算法1 - 反探测正则
+var sqliAntiDetect = new RegExp(algorithmConfig.sql_userinput.anti_detect_filter, 'i')
 
 // SQL注入算法2 - 预过滤正则
 var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter, 'i')
@@ -849,6 +867,13 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows, is_
 function is_path_containing_userinput(parameter, target, is_windows, is_lcs_search)
 {
     var verdict = false
+    if (is_windows) {
+        target = target.replaceAll('/', '\\')
+        target = target.replaceAll('\\\\', '\\')
+    }
+    else{
+        target = target.replaceAll('//', '/')
+    }
 
     Object.keys(parameter).some(function (key) {
         var values = parameter[key]
@@ -860,12 +885,9 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
             if (is_windows) {
                 value = value.replaceAll('/', '\\')
                 value = value.replaceAll('\\\\', '\\')
-                target = target.replaceAll('/', '\\')
-                target = target.replaceAll('\\\\', '\\')
             }
             else {
                 value = value.replaceAll('//', '/')
-                target = target.replaceAll('//', '/')
             }
             var values
             if (is_lcs_search) {
@@ -912,7 +934,7 @@ function is_from_userinput(parameter, target)
 }
 
 // 检查逻辑是否被用户参数所修改
-function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance) 
+function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance, is_sql=false)
 {
     // 当用户输入穿越了多个token，就可以判定为代码注入，默认为2
     var start = -1, end = raw_tokens.length, distance = distance || 2
@@ -928,17 +950,28 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance)
     }
 
     // 寻找 token 结束点
-    // 另外，最多需要遍历 distance 个 token
-    for (var i = start; i < start + distance && i < raw_tokens.length; i++)
+    // 需要返回真实distance, 删除 最多需要遍历 distance 个 token  i < start + distance 条件
+    for (var i = start; i < raw_tokens.length; i++)
     {
-        if (raw_tokens[i].stop >= userinput_idx + userinput_length )
+        if (raw_tokens[i].stop >= userinput_idx + userinput_length)
         {
             end = i
             break
         }
     }
 
-    if (end - start > distance) {
+    var diff = end - start + 1
+    if (diff >= distance) {
+        if (is_sql && algorithmConfig.sql_userinput.anti_detect_enable && diff < 10) {
+            var non_kw = 0
+            for (var i = start; i <= end; i++) {
+                sqliAntiDetect.test(raw_tokens[i].text) || non_kw ++
+                if (non_kw >= 2) {
+                    return true
+                }
+            }
+            return false
+        }
         return true
     }
     return false
@@ -1080,11 +1113,11 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                     }
 
                     //distance用来屏蔽identifier token解析误报 `dbname`.`table`，请在1.2版本后删除
-                    var distance = 3
+                    var distance = 2
                     if (value.length > 20) {
-                        distance = 2
+                        distance = 3
                     }
-                    if (is_token_changed(raw_tokens, userinput_idx, value.length, distance)) {
+                    if (is_token_changed(raw_tokens, userinput_idx, value.length, distance, is_sql=true)) {
                         reason = _("SQLi - SQL query structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                         return true
                     }
@@ -1151,12 +1184,9 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
         if (algorithmConfig.sql_policy.action != 'ignore') {
 
             // 懒加载，需要时才处理
-            if (raw_tokens.length == 0) {
-                var query_lc = params.query.toLowerCase().trim()
-
-                if (sqliPrefilter2.test(query_lc)) {
-                    raw_tokens = RASP.sql_tokenize(params.query, params.server)
-                }
+            if ((raw_tokens.length == 0) && 
+                (sqliPrefilter2.test(params.query))) {
+                raw_tokens = RASP.sql_tokenize(params.query, params.server)
             }
 
             var features        = algorithmConfig.sql_policy.feature
@@ -1168,7 +1198,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
 
             // 转换小写，避免大小写绕过
             var tokens_lc = raw_tokens.map(function(v) {
-                return v.text.toLowerCase()
+                return v.text.substr(0, 50).toLowerCase()
             })
 
             for (var i = 1; i < tokens_lc.length; i ++)
@@ -1417,6 +1447,29 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
 
 }
 
+plugin.register('sql_exception', function(params, context) {
+    // 为了提高效率，异常代码在 agent 端过滤，插件仅负责过滤掉可能的误报和拼接消息，e.g
+    // mysql error 1367 detected: XXX
+    var error_code = parseInt(params.error_code)
+    var message    = _("%1% error %2% detected: %3%", [params.server, params.error_code, params.error_msg])
+
+    // 1062 Duplicated key 错误会有大量误报问题，仅当语句里包含 rand 字样报警
+    if (error_code == 1062)
+    {
+        // 忽略大小写匹配
+        if ( !/rand/i.test(params.query))
+        {
+            return clean
+        }
+    }
+    
+    return {
+        action:     algorithmConfig.sql_exception.action,
+        message:    message,
+        confidence: 70,
+        algorithm:  'sql_exception'
+    }
+})
 
 plugin.register('directory', function (params, context) {
 
@@ -1802,53 +1855,78 @@ plugin.register('command', function (params, context) {
         // Java 检测逻辑
         if (server.language == 'java') {
             var known    = {
-                'java.lang.reflect.Method.invoke':                                              _("Reflected command execution - Unknown vulnerability detected"),
-                'ognl.OgnlRuntime.invokeMethod':                                                _("Reflected command execution - Using OGNL library"),
                 'com.thoughtworks.xstream.XStream.unmarshal':                                   _("Reflected command execution - Using xstream library"),
                 'java.beans.XMLDecoder.readObject':                                             _("Reflected command execution - Using WebLogic XMLDecoder library"),
                 'org.apache.commons.collections4.functors.InvokerTransformer.transform':        _("Reflected command execution - Using Transformer library (v4)"),
                 'org.apache.commons.collections.functors.InvokerTransformer.transform':         _("Reflected command execution - Using Transformer library"),
                 'org.apache.commons.collections.functors.ChainedTransformer.transform':         _("Reflected command execution - Using Transformer library"),
-                'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':                   _("Reflected command execution - Using JNDI library"),
-                'com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer.deserialze':     _("Reflected command execution - Using fastjson library"),
+                'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':                   _("Reflected command execution - Using JNDI library (JSR 160)"),
+                'com.sun.jndi.rmi.registry.RegistryContext.lookup':                             _("Reflected command execution - Using JNDI registry service"),
+                'com.sun.jndi.url.ldap.ldapURLContext.lookup':                                  _("Reflected command execution - Using LDAP factory service"),
+                'com.alibaba.fastjson.JSON.parseObject':                                        _("Reflected command execution - Using fastjson library"),
                 'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': _("Reflected command execution - Using SpEL expressions"),
                 'freemarker.template.utility.Execute.exec':                                     _("Reflected command execution - Using FreeMarker template"),
                 'org.jboss.el.util.ReflectionUtil.invokeMethod':                                _("Reflected command execution - Using JBoss EL method"),
-                'com.sun.jndi.rmi.registry.RegistryContext.lookup':                             _("Reflected command execution - Using JNDI registry service"),
-                'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                _("Reflected command execution - Using BeHinder defineClass webshell")
+                'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                _("Reflected command execution - Using BeHinder defineClass webshell"),
+                'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute':                     _("Reflected command execution - Using Groovy library")
             }
 
-            for (var i = 2; i < params.stack.length; i ++) {
-                var method = params.stack[i]
+            var userCode = false, reachedInvoke = false, i = 0
+
+            // v1.1.1 要求在堆栈里过滤 com.baidu.openrasp 相关的类，因为没有实现正确而产生了多余的反射堆栈，这里需要兼容下防止误报
+            // v1.1.2 修复了这个问题，即堆栈顶部为命令执行的方法
+            if (params.stack.length > 3 
+                && params.stack[0] == 'sun.reflect.GeneratedMethodAccessor181.invoke'
+                && params.stack[1] == 'sun.reflect.GeneratedMethodAccessorImpl.invoke'
+                && params.stack[2] == 'java.lang.reflect.Method.invoke')
+            {
+                i = 3
+            }
+
+            for (; i < params.stack.length; i ++) {
+                var method = params.stack[i]                
+
+                // 检查反射调用 -> 命令执行之间，是否包含用户代码
+                if (! reachedInvoke) {
+                    if (method == 'java.lang.reflect.Method.invoke') {
+                        reachedInvoke = true
+                    }
+
+                    // 用户代码，即非 JDK、com.baidu.openrasp 相关的函数
+                    if (! method.startsWith('java.') 
+                        && ! method.startsWith('sun.') 
+                        && !method.startsWith('com.sun.') 
+                        && !method.startsWith('com.baidu.openrasp.')) 
+                    {
+                        userCode = true
+                    }
+                }
 
                 if (method.startsWith('ysoserial.Pwner')) {
                     message = _("Reflected command execution - Using YsoSerial tool")
                     break
                 }
 
-                if (method.startsWith('com.fasterxml.jackson.databind')) {
+                if (method.startsWith('com.fasterxml.jackson.databind.')) {
                     message = _("Reflected command execution - Using Jackson deserialze method")
                     break
                 }
 
-                if (method == 'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute') {
-                    message = _("Reflected command execution - Using Groovy library")
-                    break
-                }
-
-                if (known[method]) {
-                    // 仅当命令本身来自反射调用才拦截
-                    // 如果某个类是反射调用，这个类再主动执行命令，则忽略
-                    var last_method = params.stack[i-1]
-                    if (method == 'java.lang.reflect.Method.invoke' && !( 
-                            last_method.startsWith('java.lang.UNIXProcess') || 
-                            last_method.startsWith('java.lang.Process') || 
-                            last_method.startsWith('java.lang.Runtime.exec'))
-                        ) {
-                    } else {
-                        message = known[method]
+                // 对于如下类型的反射调用:
+                // 1. 仅当命令直接来自反射调用才拦截
+                // 2. 如果某个类是反射生成，这个类再主动执行命令，则忽略
+                if (! userCode) {
+                    if (method == 'ognl.OgnlRuntime.invokeMethod') {
+                        message = _("Reflected command execution - Using OGNL library")
+                        break
+                    }  else if (method == 'java.lang.reflect.Method.invoke') {
+                        message = _("Reflected command execution - Unknown vulnerability detected")
+                        break
                     }
-                    // break
+                }                                       
+                
+                if (known[method]) {
+                    message = known[method]
                 }
             }
         }
@@ -1904,7 +1982,7 @@ plugin.register('command', function (params, context) {
                     reason = _("WebShell detected - Executing command: %1%", [cmd])
                     return true
                 }
-
+                
                 // 懒加载，需要的时候初始化 token
                 if (raw_tokens.length == 0) {
                     raw_tokens = RASP.cmd_tokenize(cmd)
@@ -1957,7 +2035,7 @@ plugin.register('command', function (params, context) {
         {           
             return {
                 action:     algorithmConfig.command_common.action,
-                message:    _("Webshell detected - Executing potentially dangerous command, command is %1%", [cmd]),
+                message:    _("Webshell detected - Executing potentially dangerous command, command is %1%", [params.command]),
                 confidence: 95,
                 algorithm:  'command_common'
             }
@@ -1969,7 +2047,7 @@ plugin.register('command', function (params, context) {
     {
         return {
             action:     algorithmConfig.command_other.action,
-            message:    _("Command execution - Logging all command execution by default, command is %1%", [cmd]),
+            message:    _("Command execution - Logging all command execution by default, command is %1%", [params.command]),
             confidence: 90,
             algorithm:  'command_other'
         }

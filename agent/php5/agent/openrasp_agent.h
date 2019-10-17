@@ -24,6 +24,7 @@
 #include "backend_response.h"
 #include <signal.h>
 #include "utils/time.h"
+#include "plugin_update_pkg.h"
 
 namespace openrasp
 {
@@ -32,13 +33,11 @@ class LogCollectItem;
 class BaseAgent
 {
 public:
-  bool is_alive;
-  pid_t agent_pid;
-
   BaseAgent(std::string name);
 
   virtual void run() = 0;
   virtual void write_pid_to_shm(pid_t agent_pid) = 0;
+  virtual pid_t get_pid_from_shm() = 0;
   virtual void install_signal_handler(__sighandler_t signal_handler);
 
 protected:
@@ -55,6 +54,9 @@ public:
   HeartBeatAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);
+  virtual pid_t get_pid_from_shm();
+  virtual std::shared_ptr<PluginUpdatePackage> build_plugin_update_package(BaseReader *body_reader);
+  virtual std::map<std::string, std::vector<std::string>> build_hook_white_map(const std::vector<std::string> &keys, BaseReader *body_reader);
 
 private:
   bool do_heartbeat();
@@ -70,6 +72,7 @@ public:
   LogAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);
+  virtual pid_t get_pid_from_shm();
 
 private:
   static const unsigned long log_push_interval = 15;

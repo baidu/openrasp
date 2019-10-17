@@ -97,6 +97,7 @@ public class HttpAppender extends AppenderSkeleton {
                 if (response != null) {
                     Integer responseCode = response.getResponseCode();
                     if (responseCode != null && responseCode >= 200 && responseCode < 300) {
+                        AppenderCache.clearCache(loggerName);
                         return;
                     }
                 }
@@ -105,9 +106,9 @@ public class HttpAppender extends AppenderSkeleton {
         };
     }
 
-    private JsonArray mergeFromAppenderCache(String loggerName, JsonElement currnetLog) {
+    private JsonArray mergeFromAppenderCache(String loggerName, JsonElement currentLog) {
         Set<JsonElement> sets = new HashSet<JsonElement>();
-        sets.add(currnetLog);
+        sets.add(currentLog);
         ConcurrentLinkedQueue<JsonElement> queue = AppenderCache.getCache(getLogger(loggerName));
         if (queue != null && !queue.isEmpty()) {
             sets.addAll(queue);

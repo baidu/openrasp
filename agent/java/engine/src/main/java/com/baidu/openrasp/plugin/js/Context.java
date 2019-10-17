@@ -18,6 +18,7 @@ package com.baidu.openrasp.plugin.js;
 
 import java.util.*;
 import com.baidu.openrasp.request.AbstractRequest;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 import com.jsoniter.output.JsonStream;
 import com.baidu.openrasp.v8.ByteArrayOutputStream;
 import com.baidu.openrasp.tool.OSUtil;
@@ -214,7 +215,7 @@ public class Context extends com.baidu.openrasp.v8.Context {
 
     public byte[] getServer() {
         try {
-            Map<String, String> server = request.getServerContext();
+            Map<String, String> server = ApplicationModel.getApplicationInfo();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             JsonStream.serialize(server, out);
             out.write(0);

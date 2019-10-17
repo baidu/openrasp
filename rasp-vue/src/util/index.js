@@ -2,7 +2,7 @@ import axios from 'axios'
 import Cookie from 'js-cookie'
 import router from '@/router'
 
-export var rasp_version = '1.2.0'
+export var rasp_version = '1.2.1'
 
 // 起始 type_id: 1001
 export var audit_types = {
@@ -141,6 +141,21 @@ export var status_types = {
   // ignore: '忽略放行'
 }
 
+// 去除空格、换行，按照指定的分隔符分隔，最后删掉 null/undefined/空字符串
+export function trimSplit(data, sep) {
+  var tmp = data.replace(/\s/g, '').split(sep)
+  return tmp.filter(a => a)
+}
+
+export function convertToInt(data) {
+  var tmp = []
+  data.forEach (function (row) {
+    tmp.push(parseInt(row))
+  })
+
+  return tmp.filter(a => a)
+}
+
 export function getDefaultConfig() {
   return {
     general_config: {
@@ -191,7 +206,7 @@ export const request = axios.create({
   baseURL:
     process.env.NODE_ENV === 'production'
       ? '/'
-      : 'http://scloud.baidu.com:8090/',
+      : 'http://scloud.baidu.com:8080/',
   timeout: 8000
 })
 request.interceptors.request.use(

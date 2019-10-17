@@ -164,7 +164,7 @@ void pre_global_proc_open_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     char *command = nullptr;
     int command_len = 0;
-    zval *descriptorspec;
+    zval *descriptorspec = nullptr;
     zval *pipes = nullptr;
     zval *cwd = nullptr;
     zval *environment = nullptr;

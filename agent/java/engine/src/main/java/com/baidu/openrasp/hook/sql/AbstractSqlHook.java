@@ -16,11 +16,17 @@
 
 package com.baidu.openrasp.hook.sql;
 
+import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
 import javassist.*;
+import org.apache.commons.lang3.StringUtils;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 /**
@@ -36,6 +42,7 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
     static final String SQL_TYPE_SQLSERVER = "sqlserver";
     static final String SQL_TYPE_PGSQL = "pgsql";
     static final String SQL_TYPE_DB2 = "db2";
+    static final String SQL_TYPE_HSQL = "hsql";
 
     protected String type;
     protected String[] exceptions;
@@ -55,15 +62,20 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
     /**
      * 捕捉sql statement抛出的异常
      */
-    public void addCatch(CtClass ctClass, String methodName, String desc) throws NotFoundException, CannotCompileException {
+    public void addCatch(CtClass ctClass, String methodName, String[] descs) throws NotFoundException, CannotCompileException {
         //目前只支持对mysql的执行异常检测
         if ("mysql".equals(type)) {
-            LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc);
-            if (methods != null && methods.size() > 0) {
-                for (CtBehavior method : methods) {
-                    if (method != null) {
-                        String errorSrc = "com.baidu.openrasp.hook.sql.SQLStatementHook.checkSQLErrorCode(" + "\"" + type + "\"" + ",$e,$args);";
-                        method.addCatch("{" + errorSrc + " throw $e;}", ClassPool.getDefault().get("java.sql.SQLException"));
+            for (String desc : descs) {
+                LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc);
+                if (methods != null && methods.size() > 0) {
+                    for (CtBehavior method : methods) {
+                        try {
+                            String errorSrc = "com.baidu.openrasp.hook.sql.AbstractSqlHook.checkSQLErrorCode(" + "\"" + type + "\"" + ",$e,$1);";
+                            method.addCatch("{" + errorSrc + " throw $e;}", ClassPool.getDefault().get("java.sql.SQLException"));
+                            HookHandler.LOGGER.info("add catch to method: " + method.getLongName());
+                        } catch (Throwable t) {
+                            LogTool.error(ErrorType.HOOK_ERROR, "failed to add catch to method: " + method.getLongName(), t);
+                        }
                     }
                 }
             }
@@ -80,7 +92,7 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
             if (methods != null && methods.size() > 0) {
                 for (CtBehavior method : methods) {
                     if (method != null) {
-                        String errorSrc = "com.baidu.openrasp.hook.sql.SQLPreparedStatementHook.checkSQLErrorCode(" + "\"" + type + "\"" + ",$e," + query + ");";
+                        String errorSrc = "com.baidu.openrasp.hook.sql.AbstractSqlHook.checkSQLErrorCode(" + "\"" + type + "\"" + ",$e," + query + ");";
                         method.addCatch("{" + errorSrc + " throw $e;}", ClassPool.getDefault().get("java.sql.SQLException"));
                     }
                 }
@@ -89,9 +101,9 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
     }
 
     /**
-     * 检测获取errorcode 获取异常的时候，打日志
+     * 检测 error code 合法性
      */
-    public static boolean checkSqlErrorCode(SQLException e) {
+    public static boolean checkSqlException(SQLException e) {
         int errCode = e.getErrorCode();
         if (e != null && errCode == 0) {
             String message = "Unable to derive error code from SQL exceptions, error message: " + e.getMessage() + "." +
@@ -100,5 +112,25 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
             return true;
         }
         return false;
+    }
+
+    /**
+     * SQL执行异常检测
+     *
+     * @param server 数据库类型
+     * @param e      sql执行抛出的异常
+     * @param query  sql语句
+     */
+    public static void checkSQLErrorCode(String server, SQLException e, String query) {
+        if (Config.getConfig().getSqlErrorCodes().contains(e.getErrorCode())
+                && !StringUtils.isEmpty(query) && !checkSqlException(e)) {
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("server", server);
+            params.put("query", query);
+            params.put("error_code", e.getErrorCode());
+            String message = e.getMessage();
+            params.put("error_msg", message);
+            HookHandler.doCheck(CheckParameter.Type.SQL_EXCEPTION, params);
+        }
     }
 }

@@ -227,7 +227,7 @@ public abstract class AbstractClassHook {
             try {
                 CtMethod ctMethod = ctClass.getMethod(methodName, desc);
                 if (ctMethod != null && !ctMethod.isEmpty()) {
-                    methods.add(ctClass.getMethod(methodName, desc));
+                    methods.add(ctMethod);
                 }
             } catch (NotFoundException e) {
                 // ignore

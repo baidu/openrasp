@@ -32,6 +32,7 @@ class WebDirAgent : public BaseAgent
     WebDirAgent();
     virtual void run();
     virtual void write_pid_to_shm(pid_t agent_pid);
+    virtual pid_t get_pid_from_shm();
 
   private:
     WebDirDetector webdir_detector;

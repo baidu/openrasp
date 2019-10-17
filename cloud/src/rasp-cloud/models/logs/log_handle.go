@@ -399,4 +399,8 @@ func putStackMd5(alarm map[string]interface{}, paramKey string) {
 			alarm["stack_md5"] = fmt.Sprintf("%x", md5.Sum([]byte(stackValue)))
 		}
 	}
+	if alarm["stack_md5"] == nil {
+		stackValue = fmt.Sprint(alarm["rasp_id"]) + fmt.Sprint(alarm["plugin_algorithm"]) + fmt.Sprint(alarm["attack_type"])
+		alarm["stack_md5"] = fmt.Sprintf("%x", md5.Sum([]byte(stackValue)))
+	}
 }

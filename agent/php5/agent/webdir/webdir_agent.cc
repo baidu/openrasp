@@ -81,6 +81,11 @@ void WebDirAgent::write_pid_to_shm(pid_t agent_pid)
 	oam->set_webdir_agent_id(agent_pid);
 }
 
+pid_t WebDirAgent::get_pid_from_shm()
+{
+	return oam->get_webdir_agent_id();
+}
+
 bool WebDirAgent::collect_webroot_path()
 {
 	bool result = false;
@@ -110,7 +115,9 @@ void WebDirAgent::dependency_check()
 
 		std::string url_string = std::string(openrasp_ini.backend_url) + dependency_url_path;
 		std::string dep_body = dep_writer.dump();
-		BackendRequest backend_request(url_string, dep_body.c_str());
+		BackendRequest backend_request;
+		backend_request.set_url(url_string);
+		backend_request.add_post_fields(dep_body);
 		openrasp_error(LEVEL_DEBUG, DEPENDENCY_ERROR, _("url:%s body:%s"), url_string.c_str(), dep_body.c_str());
 		std::shared_ptr<BackendResponse> res_info = backend_request.curl_perform();
 		if (!res_info)

@@ -15,12 +15,61 @@
  */
 
 #include "openrasp_ini.h"
-#include <regex>
 #include <limits>
-
-#define MIN_HEARTBEAT_INTERVAL (10)
+#include "utils/string.h"
+#include "utils/regex.h"
 
 Openrasp_ini openrasp_ini;
+
+static const int MIN_HEARTBEAT_INTERVAL = 10;
+const char *Openrasp_ini::APPID_REGEX = "^[0-9a-fA-F]{40}$";
+const char *Openrasp_ini::APPSECRET_REGEX = "^[0-9a-zA-Z_-]{43,45}$";
+const char *Openrasp_ini::RASPID_REGEX = "^[0-9a-zA-Z]{16,512}$";
+
+bool Openrasp_ini::verify_remote_management_ini(std::string &error)
+{
+    if (openrasp::empty(backend_url))
+    {
+        error = std::string(_("openrasp.backend_url is required when remote management is enabled."));
+        return false;
+    }
+    if (openrasp::empty(app_id))
+    {
+        error = std::string(_("openrasp.app_id is required when remote management is enabled."));
+        return false;
+    }
+    else
+    {
+        if (!openrasp::regex_match(app_id, Openrasp_ini::APPID_REGEX))
+        {
+            error = std::string(_("openrasp.app_id must be exactly 40 characters long."));
+            return false;
+        }
+    }
+    if (openrasp::empty(app_secret))
+    {
+        error = std::string(_("openrasp.app_secret is required when remote management is enabled."));
+        return false;
+    }
+    else
+    {
+        if (!openrasp::regex_match(app_secret, Openrasp_ini::APPSECRET_REGEX))
+        {
+            error = std::string(_("openrasp.app_secret configuration format is incorrect."));
+            return false;
+        }
+    }
+    return true;
+}
+
+bool Openrasp_ini::verify_rasp_id()
+{
+    if (!openrasp::empty(rasp_id))
+    {
+        return openrasp::regex_match(rasp_id, Openrasp_ini::RASPID_REGEX);
+    }
+    return true;
+}
 
 ZEND_INI_MH(OnUpdateOpenraspCString)
 {
@@ -48,5 +97,5 @@ ZEND_INI_MH(OnUpdateOpenraspHeartbeatInterval)
 
 bool strtobool(const char *str, int len)
 {
-     return atoi(str);
+    return atoi(str);
 }

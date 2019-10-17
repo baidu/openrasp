@@ -191,4 +191,14 @@ const char *OpenraspCtrlBlock::get_webroot_path()
     return webroot_path;
 }
 
+void OpenraspCtrlBlock::set_registered(bool registered)
+{
+    this->registered = registered;
+}
+
+bool OpenraspCtrlBlock::get_registered()
+{
+    return registered;
+}
+
 } // namespace openrasp

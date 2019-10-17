@@ -122,8 +122,8 @@ RUN cd /tmp \
                 <pre style="white-space: inherit; ">apachectl -k restart</pre>
               </div>
               <div id="iast-tab" class="tab-pane fade">
-                <h4>1. 下载 Fuzz 工具</h4>
-                <pre style="white-space: inherit; ">pip3 install git+https://github.com/baidu-security/openrasp-iast</pre>
+                <h4>1. 下载或者升级 Fuzz 工具</h4>
+                <pre style="white-space: inherit; ">pip3 install --upgrade git+https://github.com/baidu-security/openrasp-iast</pre>
                 <h4>2. 配置 MySQL 服务器 - 使用 MySQL root 账号执行以下命令授权</h4>
                 <pre>DROP DATABASE IF EXISTS openrasp;
 CREATE DATABASE openrasp default charset utf8mb4 COLLATE utf8mb4_general_ci;

@@ -20,8 +20,7 @@ import com.baidu.openrasp.HookHandler;
 import org.apache.log4j.Logger;
 
 import java.security.ProtectionDomain;
-import java.util.HashSet;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.ArrayList;
 
 /**
  * Created by tyy on 19-2-12.
@@ -31,7 +30,7 @@ public class ServerDetectorManager {
     private static final Logger LOGGER = Logger.getLogger(ServerDetectorManager.class.getName());
 
     private static final ServerDetectorManager instance = new ServerDetectorManager();
-    private HashSet<ServerDetector> detectors = new HashSet<ServerDetector>();
+    private ArrayList<ServerDetector> detectors = new ArrayList<ServerDetector>();
 
     private ServerDetectorManager() {
         detectors.add(new TomcatDetector());
@@ -44,6 +43,7 @@ public class ServerDetectorManager {
         detectors.add(new UndertowDetector());
         detectors.add(new DubboDetector());
         detectors.add(new SpringbootDetector());
+        detectors.add(new TongWebDetector());
     }
 
     public static ServerDetectorManager getInstance() {
@@ -56,7 +56,7 @@ public class ServerDetectorManager {
      * @param className   类名
      * @param classLoader 该类的加载器
      */
-    public synchronized void detectServer(String className, ClassLoader classLoader, ProtectionDomain domain) {
+    public void detectServer(String className, ClassLoader classLoader, ProtectionDomain domain) {
         try {
             for (ServerDetector detector : detectors) {
                 if (detector.isClassMatched(className) && detector.handleServer(className, classLoader, domain)) {

@@ -177,7 +177,7 @@ void pre_global_file_put_contents_WRITE_FILE(OPENRASP_INTERNAL_FUNCTION_PARAMETE
         return;
     }
 
-    if (strlen(filename) != filename_len)
+    if (nullptr == filename || strlen(filename) != filename_len)
     {
         return;
     }

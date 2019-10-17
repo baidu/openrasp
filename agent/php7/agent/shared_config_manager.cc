@@ -16,6 +16,7 @@
 
 #include "shared_config_manager.h"
 #include "shared_config_block.h"
+#include "utils/string.h"
 #include "utils/digest.h"
 #include "utils/net.h"
 #include "utils/hostname.h"
@@ -247,21 +248,29 @@ bool SharedConfigManager::shutdown()
 
 bool SharedConfigManager::build_rasp_id()
 {
-    std::vector<std::string> hw_addrs;
-    fetch_hw_addrs(hw_addrs);
-    if (hw_addrs.empty())
+    if (empty(openrasp_ini.rasp_id))
     {
-        return false;
+        std::vector<std::string> hw_addrs;
+        fetch_hw_addrs(hw_addrs);
+        if (hw_addrs.empty())
+        {
+            return false;
+        }
+        std::string buf;
+        for (auto hw_addr : hw_addrs)
+        {
+            buf += hw_addr;
+        }
+        buf.append(get_hostname())
+            .append(openrasp_ini.root_dir ? openrasp_ini.root_dir : "")
+            .append(sapi_module.name ? sapi_module.name : "");
+        this->rasp_id = md5sum(static_cast<const void *>(buf.c_str()), buf.length());
     }
-    std::string buf;
-    for (auto hw_addr : hw_addrs)
+    else
     {
-        buf += hw_addr;
+        this->rasp_id = std::string(openrasp_ini.rasp_id);
     }
-    buf.append(get_hostname())
-        .append(openrasp_ini.root_dir ? openrasp_ini.root_dir : "")
-        .append(sapi_module.name ? sapi_module.name : "");
-    this->rasp_id = md5sum(static_cast<const void *>(buf.c_str()), buf.length());
+
     return true;
 }
 
@@ -271,10 +280,12 @@ std::string SharedConfigManager::get_rasp_id() const
 }
 
 bool SharedConfigManager::write_weak_password_array_to_shm(const void *source, size_t num)
+
 {
     if (rwlock != nullptr && rwlock->write_try_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
+
         shared_config_block->reset_weak_password_array(source, num);
         return true;
     }
@@ -307,7 +318,7 @@ bool SharedConfigManager::build_weak_password_array(BaseReader *br)
             "admin",
             "user",
             "mysql"};
-    std::vector<std::string> hook_white_key({"security.weak_passwords"});
+    std::vector<std::string> hook_white_key({"data", "config", "security.weak_passwords"});
     std::vector<std::string> weak_passwords = br->fetch_strings(hook_white_key, dafault_weak_passwords);
     std::sort(weak_passwords.begin(), weak_passwords.end());
     return build_weak_password_array(weak_passwords);
@@ -325,6 +336,25 @@ bool SharedConfigManager::is_password_weak(std::string password)
         return result_pair.value != -1;
     }
     return is_weak;
+}
+
+void SharedConfigManager::set_sql_error_codes(std::vector<long> error_codes)
+{
+    if (rwlock != nullptr && rwlock->write_try_lock())
+    {
+        WriteUnLocker auto_unlocker(rwlock);
+        shared_config_block->set_sql_error_codes(error_codes);
+    }
+}
+
+bool SharedConfigManager::sql_error_code_exist(long err_code)
+{
+    if (rwlock != nullptr && rwlock->read_try_lock())
+    {
+        ReadUnLocker auto_unlocker(rwlock);
+        return shared_config_block->sql_error_code_exist(err_code);
+    }
+    return false;
 }
 
 } // namespace openrasp

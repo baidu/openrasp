@@ -16,6 +16,7 @@
 
 package com.baidu.openrasp.cloud;
 
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
@@ -49,12 +50,28 @@ public class KeepAlive extends CloudTimerTask {
         String content = new Gson().toJson(generateParameters());
         String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
         GenericResponse response = new CloudHttp().commonRequest(url, content);
-        if (CloudUtils.checkRequestResult(response)) {
+        if (CloudUtils.checkResponse(response)) {
             handleResponse(response);
         } else {
+            if (response != null && response.getStatus() == GenericResponse.ERROR_CODE_RASP_NOT_FOUND) {
+                handleRaspNotFound();
+            }
             String message = CloudUtils.handleError(ErrorType.HEARTBEAT_ERROR, response);
             LogTool.warn(ErrorType.HEARTBEAT_ERROR, message);
         }
+    }
+
+    private void handleRaspNotFound() {
+        // 关闭心跳和所有 hook 点，并且开始重新注册
+        stop();
+        HookHandler.enableHook.getAndSet(false);
+        new Register(new Register.RegisterCallback() {
+            @Override
+            public void call() {
+                HookHandler.enableHook.getAndSet(true);
+                setAlive(true);
+            }
+        });
     }
 
     @Override

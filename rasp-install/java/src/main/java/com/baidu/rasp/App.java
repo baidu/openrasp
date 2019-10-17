@@ -43,6 +43,7 @@ public class App {
     public static String install;
     public static String appId;
     public static String appSecret;
+    public static String raspId;
     public static String baseDir;
     public static String url;
     public static int pid;
@@ -83,6 +84,7 @@ public class App {
         options.addOption("uninstall", true, "Specify application server path");
         options.addOption("appid", true, "Value of cloud.appid");
         options.addOption("appsecret", true, "Value of cloud.appsecret");
+        options.addOption("raspid", true, "Value of rasp.id");
         options.addOption("backendurl", true, "Value of cloud.backendurl");
         options.addOption("keepconf", false, "Do not override openrasp.yml");
         options.addOption("h", "help", false, "You're reading this!");
@@ -125,11 +127,25 @@ public class App {
             keepConfig = cmd.hasOption("keepconf");
             appId = cmd.getOptionValue("appid");
             appSecret = cmd.getOptionValue("appsecret");
+            raspId = cmd.getOptionValue("raspid");
             url = cmd.getOptionValue("backendurl");
             if (!(appId != null && appSecret != null && url != null || appId == null && appSecret == null && url == null)) {
                 throw new RaspError(E10005 + "-backendurl, -appid and -appsecret must be set simultaneously");
             }
         }
+    }
+
+    private static String checkRaspId(String raspId) {
+        if (raspId.length() < 16 || raspId.length() > 512) {
+            return "the length of -raspid must be between [16,512]";
+        }
+        for (int i = 0; i < raspId.length(); i++) {
+            char a = raspId.charAt(i);
+            if (!((a >= 'a' && a <= 'z') || (a >= '0' && a <= '9') || (a >= 'A' && a <= 'Z'))) {
+                return "the -raspid param can only contain letters and numbers";
+            }
+        }
+        return null;
     }
 
     private static void checkArgs() throws RaspError {
@@ -143,6 +159,12 @@ public class App {
             Pattern pattern = Pattern.compile(REGEX_APPSECRET);
             if (!pattern.matcher(appSecret).matches()) {
                 throw new RaspError(E10005 + "appsecret must have 43~45 characters");
+            }
+        }
+        if (raspId != null) {
+            String invalidMsg = checkRaspId(raspId);
+            if (invalidMsg != null) {
+                throw new RaspError(E10005 + invalidMsg);
             }
         }
         if (url != null) {

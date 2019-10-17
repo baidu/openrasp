@@ -171,7 +171,6 @@ function show_help($help_msg) {
 
 //通用全局变量
 $index 				= 1;
-$root_dir 			= null;
 $current_os 		= get_OS();
 $supported_sapi 	= array('apache2', 'cli', 'fpm');
 $lib_filename 		= $current_os == OS_WIN ? 'php_openrasp.dll' : 'openrasp.so';

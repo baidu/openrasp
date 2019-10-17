@@ -49,7 +49,7 @@ public class Agent {
                 readVersion();
                 System.out.println("Version:       " + projectVersion + "\n" +
                         "Build Time:    " + buildTime + "\n" +
-                        "Git Commit ID: " + gitCommit);
+                        "Git Commit ID: " + gitCommit);
             } else if (cmd.hasOption("h")) {
                 helpFormatter.printHelp("java -jar rasp.jar", options, true);
             } else {

@@ -16,6 +16,7 @@
 
 package com.baidu.openrasp.cloud;
 
+import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
@@ -62,7 +63,9 @@ public class CloudHttp implements Request {
         try {
             return request(url, content);
         } catch (Exception e) {
-            LogTool.warn(ErrorType.REQUEST_ERROR, "HTTP request to " + url + " failed: " + e.getMessage(), e);
+            if (!CloudRequestUrl.CLOUD_EXCEPTION_HTTP_APPENDER_URL.equals(url)) {
+                LogTool.warn(ErrorType.REQUEST_ERROR, "HTTP request to " + url + " failed: " + e.getMessage(), e);
+            }
             return null;
         }
     }

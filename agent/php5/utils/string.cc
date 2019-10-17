@@ -50,4 +50,13 @@ void string_replace(std::string &str, const std::string &from, const std::string
     }
 }
 
+bool empty(const char *str)
+{
+    if (nullptr == str || strcmp(str, "") == 0)
+    {
+        return true;
+    }
+    return false;
+}
+
 } // namespace openrasp

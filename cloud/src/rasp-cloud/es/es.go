@@ -29,6 +29,7 @@ import (
 	"rasp-cloud/conf"
 	"rasp-cloud/environment"
 	"rasp-cloud/kafka"
+	"errors"
 )
 
 var (
@@ -123,6 +124,28 @@ func DeleteExpiredData() {
 	}
 }
 
+func DeleteLogs(index string) (err error) {
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(30*time.Second))
+	defer cancel()
+	expiredTime := strconv.FormatInt((time.Now().UnixNano())/1000000, 10)
+	//r, err := ElasticClient.Delete().Index(index).Type(docType).Id("*").Do(ctx)
+	r, err := ElasticClient.DeleteByQuery(index).QueryString("@timestamp:<" + expiredTime).Do(ctx)
+	if err != nil {
+		if r != nil && r.Failures != nil {
+			beego.Error(r.Failures)
+		}
+		beego.Error("failed to delete expired data for index " + index + ": " + err.Error())
+	} else {
+		var deleteNum int64
+		if r != nil {
+			deleteNum = r.Deleted
+		}
+		beego.Info("delete expired data successfully for index " + index + ", total: " +
+			strconv.FormatInt(deleteNum, 10))
+	}
+	return err
+}
+
 func RegisterTTL(duration time.Duration, index string) {
 	ttls := <-ttlIndexes
 	defer func() {
@@ -178,7 +201,8 @@ func BulkInsertAlarm(docType string, docs []map[string]interface{}) (err error) 
 			beego.Error("failed to get app_id param from alarm: " + fmt.Sprintf("%+v", doc))
 		}
 		if appId, ok := doc["app_id"].(string); ok {
-			if docType == "policy-alarm" || docType == "error-alarm" {
+			if docType == "policy-alarm" || docType == "error-alarm" || docType == "attack-alarm" {
+				fmt.Println(doc["upsert_id"])
 				bulkService.Add(elastic.NewBulkUpdateRequest().
 					Index("real-openrasp-" + docType + "-" + appId).
 					Type(docType).
@@ -204,9 +228,12 @@ func BulkInsertAlarm(docType string, docs []map[string]interface{}) (err error) 
 	}
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
 	defer cancel()
-	_, err = bulkService.Do(ctx)
+	response, err := bulkService.Do(ctx)
 	if err != nil {
 		return err
+	}
+	if response != nil && response.Errors {
+		return errors.New("ES bulk has errors: " + fmt.Sprintf("%+v", response.Failed()))
 	}
 	for idx, key := range kafkaKeys{
 		kafka.SendMessage(key, key, docs[idx])

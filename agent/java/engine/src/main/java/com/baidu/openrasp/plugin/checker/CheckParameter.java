@@ -57,7 +57,7 @@ public class CheckParameter {
         WEBDAV("webdav", new V8Checker(), 1 << 12),
         INCLUDE("include", new V8Checker(), 1 << 13),
         SSRF("ssrf", new V8Checker(), 1 << 14),
-        SQL_EXCEPTION("sql_exception", new SqlExceptionChecker(), 1 << 15),
+        SQL_EXCEPTION("sql_exception", new V8Checker(), 1 << 15),
         REQUESTEND("requestEnd", new V8Checker(), 1 << 17),
         DELETEFILE("deleteFile", new V8Checker(), 1 << 18),
         MONGO("mongo", new V8Checker(), 1 << 19),
@@ -78,7 +78,8 @@ public class CheckParameter {
         POLICY_SERVER_RESIN("resinServer", new ResinSecurityChecker(false), 0),
         POLICY_SERVER_WEBSPHERE("websphereServer", new WebsphereSecurityChecker(false), 0),
         POLICY_SERVER_WEBLOGIC("weblogicServer", new WeblogicSecurityChecker(false), 0),
-        POLICY_SERVER_WILDFLY("wildflyServer", new WildflySecurityChecker(false), 0);
+        POLICY_SERVER_WILDFLY("wildflyServer", new WildflySecurityChecker(false), 0),
+        POLICY_SERVER_TONGWEB("tongwebServer", new TongwebSecurityChecker(false), 0);
 
         String name;
         Checker checker;
@@ -109,12 +110,12 @@ public class CheckParameter {
     }
 
     private final Type type;
-    private final Object params;
+    private final Map params;
     private final AbstractRequest request;
     private final long createTime;
 
 
-    public CheckParameter(Type type, Object params) {
+    public CheckParameter(Type type, Map params) {
         this.type = type;
         this.params = params;
         this.request = HookHandler.requestCache.get();
@@ -124,7 +125,7 @@ public class CheckParameter {
     /**
      * 用于单元测试的构造函数
      */
-    public CheckParameter(Type type, Object params, AbstractRequest request) {
+    public CheckParameter(Type type, Map params, AbstractRequest request) {
         this.type = type;
         this.params = params;
         this.request = request;
@@ -139,7 +140,7 @@ public class CheckParameter {
         return type;
     }
 
-    public Object getParams() {
+    public Map getParams() {
         return params;
     }
 

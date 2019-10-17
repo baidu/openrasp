@@ -81,6 +81,8 @@ public:
 
   long get_scan_limit();
   void set_scan_limit(long scan_limit);
+  void set_registered(bool registered);
+  bool get_registered();
 
 private:
   pid_t supervisor_id = 0;
@@ -88,6 +90,7 @@ private:
   pid_t master_pid = 0;
   pid_t plugin_agent_id = 0;
   pid_t webdir_agent_id = 0;
+  bool registered = false;
 
   long last_update_time = 0;
 

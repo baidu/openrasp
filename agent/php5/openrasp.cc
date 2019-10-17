@@ -17,6 +17,7 @@
 #include "utils/json_reader.h"
 #include "utils/yaml_reader.h"
 #include "utils/file.h"
+#include "utils/string.h"
 #include "openrasp.h"
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
@@ -50,7 +51,7 @@ using openrasp::ConfigHolder;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
-const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.2.0";
+const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.2.1";
 bool is_initialized = false;
 bool remote_active = false;
 std::string openrasp_status = "Protected";
@@ -66,9 +67,11 @@ PHP_INI_ENTRY1("openrasp.locale", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCStri
 PHP_INI_ENTRY1("openrasp.backend_url", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.backend_url)
 PHP_INI_ENTRY1("openrasp.app_id", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.app_id)
 PHP_INI_ENTRY1("openrasp.app_secret", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.app_secret)
+PHP_INI_ENTRY1("openrasp.rasp_id", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.rasp_id)
 PHP_INI_ENTRY1("openrasp.remote_management_enable", "0", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.remote_management_enable)
 PHP_INI_ENTRY1("openrasp.heartbeat_interval", "180", PHP_INI_SYSTEM, OnUpdateOpenraspHeartbeatInterval, &openrasp_ini.heartbeat_interval)
 PHP_INI_ENTRY1("openrasp.ssl_verifypeer", "0", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.ssl_verifypeer)
+PHP_INI_ENTRY1("openrasp.iast_enable", "0", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.iast_enable)
 PHP_INI_END()
 
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION <= 3)
@@ -132,6 +135,12 @@ PHP_MINIT_FUNCTION(openrasp)
     }
     std::string locale_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + "locale" + DEFAULT_SLASH);
     openrasp_set_locale(openrasp_ini.locale, locale_path.c_str());
+    if (!openrasp_ini.verify_rasp_id())
+    {
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.rasp_id can only contain alphanumeric characters and is between 16 and 512 in length."));
+        openrasp_status = "openrasp.rasp_id can only contain alphanumeric characters and is between 16 and 512 in length.";
+        return SUCCESS;
+    }
     openrasp::scm.reset(new openrasp::SharedConfigManager());
     if (!openrasp::scm->startup())
     {
@@ -144,9 +153,11 @@ PHP_MINIT_FUNCTION(openrasp)
     if (need_alloc_shm_current_sapi() && openrasp_ini.remote_management_enable)
     {
         openrasp::oam.reset(new openrasp::OpenraspAgentManager());
-        if (!verify_remote_management_ini())
+        std::string error_msg;
+        if (!openrasp_ini.verify_remote_management_ini(error_msg))
         {
-            openrasp_status = "Unprotected (ini configuration error)";
+            openrasp_status = error_msg;
+            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, error_msg.c_str());
             return SUCCESS;
         }
         remote_active = true;
@@ -378,7 +389,7 @@ static std::string get_config_abs_path(ConfigHolder::FromType type)
 std::shared_ptr<openrasp::BaseReader> get_conf_reader(ConfigHolder::FromType type)
 {
     std::shared_ptr<openrasp::BaseReader> config_reader = nullptr;
-    if (nullptr != openrasp_ini.root_dir && strcmp(openrasp_ini.root_dir, "") != 0)
+    if (!openrasp::empty(openrasp_ini.root_dir))
     {
         std::string config_file_path = get_config_abs_path(type);
         std::string conf_contents;

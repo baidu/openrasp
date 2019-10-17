@@ -25,19 +25,20 @@ namespace openrasp
 
 class WebDirAgent : public BaseAgent
 {
-  public:
-    static volatile int signal_received;
+public:
+  static volatile int signal_received;
 
-  public:
-    WebDirAgent();
-    virtual void run();
-    virtual void write_pid_to_shm(pid_t agent_pid);
+public:
+  WebDirAgent();
+  virtual void run();
+  virtual void write_pid_to_shm(pid_t agent_pid);
+  virtual pid_t get_pid_from_shm();
 
-  private:
-    WebDirDetector webdir_detector;
-    bool collect_webroot_path();
-    void sensitive_file_scan();
-    void dependency_check();
+private:
+  WebDirDetector webdir_detector;
+  bool collect_webroot_path();
+  void sensitive_file_scan();
+  void dependency_check();
 };
 
 } // namespace openrasp

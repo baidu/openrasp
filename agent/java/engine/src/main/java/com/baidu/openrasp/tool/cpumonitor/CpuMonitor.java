@@ -19,6 +19,7 @@ package com.baidu.openrasp.tool.cpumonitor;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
+import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -33,10 +34,11 @@ import java.util.ArrayList;
  * @create: 2019/06/03 15:38
  */
 public class CpuMonitor {
+    private static final Logger LOGGER = Logger.getLogger(CpuMonitor.class.getName());
     private static final String CPUS_ALLOWED_LIST = "Cpus_allowed_list";
     private static final String PROCESS_STATUS = "/proc/%d/status";
-    private static final int SAMPLE_INTERVAL = 5;
-    private static ArrayList<Float> cpuUsageList = new ArrayList<Float>(3);
+    private static final int MIN_CPU_DEBUG_LEVEL = 1000;
+    private static ArrayList<String> cpuUsageList = new ArrayList<String>(3);
 
     private boolean isAlive = true;
     private long lastTotalCpuTime;
@@ -54,8 +56,8 @@ public class CpuMonitor {
         try {
             String pid = getPid();
             long currentTotalCpuTime = System.currentTimeMillis();
-            ProcCpuProcess processcpu = new ProcCpuProcess(pid);
-            long currentProcessCpuTime = processcpu.getProcessTotalCpuTime();
+            ProcCpuProcess cupProcess = new ProcCpuProcess(pid);
+            long currentProcessCpuTime = cupProcess.getProcessTotalCpuTime();
             totalUsage = (float) (currentProcessCpuTime - this.lastProcessCpuTime) * 10 * 100 / (float) (currentTotalCpuTime - this.lastTotalCpuTime);
             this.lastTotalCpuTime = currentTotalCpuTime;
             this.lastProcessCpuTime = currentProcessCpuTime;
@@ -70,7 +72,7 @@ public class CpuMonitor {
         return name.split("@")[0];
     }
 
-    private float getCpuUsageUpper(String pid) {
+    private int getCpuUsageNumber(String pid) {
         int totalCpuNum = 0;
         try {
             String path = PROCESS_STATUS.replace("%d", pid);
@@ -80,12 +82,17 @@ public class CpuMonitor {
                 if (line.startsWith(CPUS_ALLOWED_LIST)) {
                     line = line.trim();
                     String[] temp = line.split("\\s+");
-                    for (String s : temp[1].split(",")) {
-                        if (s.contains("-")) {
-                            String[] num = s.split("-");
-                            totalCpuNum += (Integer.parseInt(num[1]) - Integer.parseInt(num[0]) + 1);
-                        } else {
-                            totalCpuNum++;
+                    if (temp.length >= 2) {
+                        if (Config.getConfig().getDebugLevel() > MIN_CPU_DEBUG_LEVEL) {
+                            LOGGER.info(line);
+                        }
+                        for (String s : temp[1].split(",")) {
+                            if (s.contains("-")) {
+                                String[] num = s.split("-");
+                                totalCpuNum += (Integer.parseInt(num[1]) - Integer.parseInt(num[0]) + 1);
+                            } else {
+                                totalCpuNum++;
+                            }
                         }
                     }
                     break;
@@ -94,21 +101,31 @@ public class CpuMonitor {
         } catch (Exception e) {
             LogTool.warn(ErrorType.CPU_ERROR, "get server occupied cpu number failed: " + e.getMessage(), e);
         }
-        return totalCpuNum * 100 * Config.getConfig().getCpuUsagePercent();
+        return totalCpuNum;
     }
 
     private void checkCpuUsage() {
         float totalCpuUsage = getCpuUsage();
-        float cpuUsageUpper = getCpuUsageUpper(getPid());
+        int cpuUsageNum = getCpuUsageNumber(getPid());
+        float cpuUsageUpper = cpuUsageNum * Config.getConfig().getCpuUsagePercent();
+        if (Config.getConfig().getDebugLevel() > MIN_CPU_DEBUG_LEVEL) {
+            LOGGER.info("current cpu usage: " + totalCpuUsage);
+        }
         if (totalCpuUsage > cpuUsageUpper) {
             if (!Config.getConfig().getDisableHooks()) {
-                cpuUsageList.add(totalCpuUsage);
-            }
-            if (cpuUsageList.size() >= 3) {
-                Config.getConfig().setDisableHooks("true");
+                cpuUsageList.add(totalCpuUsage + "%");
+                if (cpuUsageList.size() >= 3) {
+                    Config.getConfig().setDisableHooks("true");
+                    LOGGER.info("the last three time cpu usages are " + cpuUsageList.toString() + " with "
+                            + cpuUsageNum + " cores, " + "already disabled the rasp");
+                }
             }
         } else {
             Config.getConfig().setDisableHooks("false");
+            if (cpuUsageList.size() >= 3) {
+                LOGGER.info("the last cpu usage is " + totalCpuUsage + " with "
+                        + cpuUsageNum + " cores, " + "already enable the rasp again");
+            }
             cpuUsageList.clear();
         }
     }
@@ -128,7 +145,15 @@ public class CpuMonitor {
         public void run() {
             while (isAlive) {
                 try {
-                    Thread.sleep(SAMPLE_INTERVAL * 1000);
+                    // 如果关闭了 cpu 监控功能，开启 hook 点开关，清除 cpu 监控缓存，并挂起该线程
+                    synchronized (CpuMonitorManager.cpuMonitor) {
+                        while (!Config.getConfig().getCpuUsageEnable()) {
+                            cpuUsageList.clear();
+                            Config.getConfig().setDisableHooks("false");
+                            CpuMonitorManager.cpuMonitor.wait();
+                        }
+                    }
+                    Thread.sleep(Config.getConfig().getCpuUsageCheckInterval() * 1000);
                     checkCpuUsage();
                 } catch (Throwable e) {
                     LogTool.warn(ErrorType.CPU_ERROR, e.getMessage(), e);
@@ -136,4 +161,5 @@ public class CpuMonitor {
             }
         }
     }
+
 }

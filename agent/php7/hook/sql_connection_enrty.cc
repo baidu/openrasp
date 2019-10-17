@@ -45,6 +45,11 @@ void SqlConnectionEntry::set_host(std::string host)
   this->host = host;
 }
 
+std::string SqlConnectionEntry::get_host() const
+{
+  return host;
+}
+
 void SqlConnectionEntry::set_username(std::string username)
 {
   this->username = username;
@@ -76,6 +81,11 @@ std::string SqlConnectionEntry::get_socket() const
 void SqlConnectionEntry::set_port(int port)
 {
   this->port = port;
+}
+
+int SqlConnectionEntry::get_port() const
+{
+  return port;
 }
 
 std::string SqlConnectionEntry::build_policy_msg(connection_policy_type type)
@@ -224,22 +234,6 @@ void SqlConnectionEntry::connection_entry_policy_log(connection_policy_type type
   zval_ptr_dtor(&policy_array);
 }
 
-void SqlConnectionEntry::write_host_to_params(zval *params)
-{
-  if (params && Z_TYPE_P(params) == IS_ARRAY)
-  {
-    add_assoc_string(params, "hostname", (char *)host.c_str());
-  }
-}
-
-void SqlConnectionEntry::write_port_to_params(zval *params)
-{
-  if (params && Z_TYPE_P(params) == IS_ARRAY)
-  {
-    add_assoc_long(params, "port", port);
-  }
-}
-
 void SqlConnectionEntry::append_host_port(const std::string &host, int port)
 {
   this->host = host;
@@ -250,12 +244,12 @@ void SqlConnectionEntry::build_connection_params(zval *params, connection_policy
 {
   if (params && Z_TYPE_P(params) == IS_ARRAY)
   {
-    write_host_to_params(params);
-    write_port_to_params(params);
-    write_socket_to_params(params);
     add_assoc_string(params, "server", (char *)get_server().c_str());
+    add_assoc_string(params, "hostname", (char *)host.c_str());
+    add_assoc_string(params, "socket", (char *)socket.c_str());
     add_assoc_string(params, "username", (char *)get_username().c_str());
     add_assoc_string(params, "connectionString", (char *)get_connection_string().c_str());
+    add_assoc_long(params, "port", port);
     if (connection_policy_type::PASSWORD == type)
     {
       add_assoc_string(params, "password", (char *)get_password().c_str());
@@ -263,12 +257,14 @@ void SqlConnectionEntry::build_connection_params(zval *params, connection_policy
   }
 }
 
-void SqlConnectionEntry::write_socket_to_params(zval *params)
+void SqlConnectionEntry::build_exception_params(openrasp::Isolate *isolate, v8::Local<v8::Object> &params)
 {
-  if (params && Z_TYPE_P(params) == IS_ARRAY)
-  {
-    add_assoc_string(params, "socket", (char *)socket.c_str());
-  }
+  params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, get_server()));
+  params->Set(openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, get_host()));
+  params->Set(openrasp::NewV8String(isolate, "username"), openrasp::NewV8String(isolate, get_username()));
+  params->Set(openrasp::NewV8String(isolate, "socket"), openrasp::NewV8String(isolate, get_socket()));
+  params->Set(openrasp::NewV8String(isolate, "connectionString"), openrasp::NewV8String(isolate, get_connection_string()));
+  params->Set(openrasp::NewV8String(isolate, "port"), v8::Integer::New(isolate, get_port()));
 }
 
 bool SqlConnectionEntry::parse(std::string uri)

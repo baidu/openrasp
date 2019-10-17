@@ -24,6 +24,8 @@ import java.util.Map;
  * @create: 2018/09/17 17:56
  */
 public class GenericResponse {
+
+    public static final int ERROR_CODE_RASP_NOT_FOUND = 4001;
     private Integer responseCode;
     private Integer status;
     private String description;

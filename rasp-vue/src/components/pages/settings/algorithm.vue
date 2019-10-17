@@ -26,7 +26,7 @@
           </div>
 
           <div v-bind:class="{'form-group': true, 'has-error': byhost_regex_error}">
-            <label for="">使用 HOST 直接访问的服务（正则）<a href="javascript:">[帮助文档]</a></label>
+            <label for="">使用 HOST 直接访问的服务（正则）<a target="_blank" href="https://rasp.baidu.com/doc/install/iast.html#faq-no-task">[帮助文档]</a></label>
             <input type="text" class="form-control" v-model="data.iast.byhost_regex">
             <span class="text-danger" style="margin-top: 5px; display: block" v-if="byhost_regex_error">{{byhost_regex_error }}</span>
           </div>
@@ -202,6 +202,7 @@ export default {
         'command_common': true,
         'sql_userinput': true,
         'sql_policy': true,
+        'sql_exception': true,
         'sql_regex': true,
         'eval_regex': true,
         'include_protocol': true,
@@ -293,6 +294,11 @@ export default {
         })
 
         self.items = Object.values(hooks)
+
+        // 老版本的官方插件，sql_exception.X.error_code 字段不存在，不要展示高级配置
+        if (! data.algorithm_config.sql_exception.mysql) {
+          self.hasAdvancedConfig['sql_exception'] = false
+        }
       })
     },
     saveConfig: function() {

@@ -36,58 +36,52 @@ std::string MongoConnectionEntry::get_dns()
 
 void MongoConnectionEntry::build_connection_params(zval *params, connection_policy_type type)
 {
-  SqlConnectionEntry::build_connection_params(params, type);
-  if (params && Z_TYPE_P(params) == IS_ARRAY && get_srv())
-  {
-    add_assoc_string(params, "dns", (char *)get_dns().c_str());
-  }
-}
-
-void MongoConnectionEntry::write_host_to_params(zval *params)
-{
   if (params && Z_TYPE_P(params) == IS_ARRAY)
   {
-    zval host_arr;
-    array_init(&host_arr);
-    for (auto host : hosts)
+    add_assoc_string(params, "server", (char *)get_server().c_str());
     {
-      add_next_index_string(&host_arr, (char *)host.c_str());
+      zval host_arr;
+      array_init(&host_arr);
+      for (auto host : hosts)
+      {
+        add_next_index_string(&host_arr, (char *)host.c_str());
+      }
+      add_assoc_zval(params, "hostnames", &host_arr);
     }
-    add_assoc_zval(params, "hostnames", &host_arr);
-  }
-}
-
-void MongoConnectionEntry::write_port_to_params(zval *params)
-{
-  if (params && Z_TYPE_P(params) == IS_ARRAY)
-  {
-    zval port_arr;
-    array_init(&port_arr);
-    for (int port : ports)
     {
-      add_next_index_long(&port_arr, port);
+      zval socket_arr;
+      array_init(&socket_arr);
+      for (auto socket : sockets)
+      {
+        add_next_index_string(&socket_arr, (char *)socket.c_str());
+      }
+      add_assoc_zval(params, "sockets", &socket_arr);
     }
-    add_assoc_zval(params, "ports", &port_arr);
+    add_assoc_string(params, "username", (char *)get_username().c_str());
+    add_assoc_string(params, "connectionString", (char *)get_connection_string().c_str());
+    {
+      zval port_arr;
+      array_init(&port_arr);
+      for (int port : ports)
+      {
+        add_next_index_long(&port_arr, port);
+      }
+      add_assoc_zval(params, "ports", &port_arr);
+    }
+    if (connection_policy_type::PASSWORD == type)
+    {
+      add_assoc_string(params, "password", (char *)get_password().c_str());
+    }
+    if (get_srv())
+    {
+      add_assoc_string(params, "dns", (char *)get_dns().c_str());
+    }
   }
 }
 
 void MongoConnectionEntry::append_socket(const std::string &socket)
 {
   sockets.push_back(socket);
-}
-
-void MongoConnectionEntry::write_socket_to_params(zval *params)
-{
-  if (params && Z_TYPE_P(params) == IS_ARRAY)
-  {
-    zval socket_arr;
-    array_init(&socket_arr);
-    for (auto socket : sockets)
-    {
-      add_next_index_string(&socket_arr, (char *)socket.c_str());
-    }
-    add_assoc_zval(params, "sockets", &socket_arr);
-  }
 }
 
 void MongoConnectionEntry::set_srv(bool srv)

@@ -31,13 +31,7 @@ import static com.baidu.rasp.RaspError.E10001;
 public class JbossEAPInstaller extends BaseStandardInstaller {
     private static final String OPENRASP_START_TAG = "rem BEGIN OPENRASP - DO NOT MODIFY\n";
     private static final String OPENRASP_END_TAG = "rem END OPENRASP\n";
-    private static final String OPENRASP_CONFIG = "set \"JAVA_OPTS=%JAVA_OPTS% -javaagent:%JBOSS_HOME%\\rasp\\rasp.jar\"\n" +
-            "set \"JAVA_OPTS=%JAVA_OPTS% -Djboss.modules.system.pkgs=org.jboss.byteman,org.jboss.logmanager,com.baidu.openrasp\"\n" +
-            "set \"JAVA_OPTS=%JAVA_OPTS% -Djava.util.logging.manager=org.jboss.logmanager.LogManager\"\n";
-
-    private static final String JBOSS_LOGMANAGER = "\\modules\\org\\jboss\\logmanager\\main";
-    private static final String JBOSS_LOGMANAGER_LOG4J = "\\modules\\org\\jboss\\logmanager\\log4j\\main";
-    private static final String APACHE_LOG4J = "\\modules\\org\\apache\\log4j\\main";
+    private static final String OPENRASP_CONFIG = "set \"JAVA_OPTS=%JAVA_OPTS% -javaagent:%JBOSS_HOME%\\rasp\\rasp.jar\"\n";
 
     public JbossEAPInstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
@@ -55,9 +49,6 @@ public class JbossEAPInstaller extends BaseStandardInstaller {
 
     @Override
     protected String modifyStartScript(String content) throws RaspError {
-        String logManager = "set \"JAVA_OPTS=%JAVA_OPTS% -Xbootclasspath/p:" + findFile(serverRoot + JBOSS_LOGMANAGER, "jboss-logmanager") + "\"\n";
-        String logManager_log4j = "set \"JAVA_OPTS=%JAVA_OPTS% -Xbootclasspath/p:" + findFile(serverRoot + JBOSS_LOGMANAGER_LOG4J, "jboss-logmanager-log4j") + "\"\n";
-        String log4j = "set \"JAVA_OPTS=%JAVA_OPTS% -Xbootclasspath/p:" + findFile(serverRoot + APACHE_LOG4J, "log4j") + "\"\n";
         StringBuilder sb = new StringBuilder();
         Scanner scanner = new Scanner(content);
         int modifyConfigState = NOTFOUND;
@@ -68,9 +59,6 @@ public class JbossEAPInstaller extends BaseStandardInstaller {
             if (FOUND == modifyConfigState) {
                 sb.append(OPENRASP_START_TAG);
                 sb.append(OPENRASP_CONFIG);
-                sb.append(logManager);
-                sb.append(logManager_log4j);
-                sb.append(log4j);
                 sb.append(OPENRASP_END_TAG);
                 sb.append(line).append("\n");
                 modifyConfigState = DONE;

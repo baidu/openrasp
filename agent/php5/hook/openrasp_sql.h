@@ -17,7 +17,7 @@
 #ifndef OPENRASP_SQL_H
 #define OPENRASP_SQL_H
 
-#include "openrasp.h"
+#include "openrasp_v8.h"
 #include "openrasp_utils.h"
 
 class SqlConnectionEntry
@@ -49,6 +49,7 @@ public:
   std::string get_server() const;
 
   void set_host(std::string host);
+  std::string get_host() const;
 
   void set_username(std::string username);
   std::string get_username() const;
@@ -60,6 +61,7 @@ public:
   std::string get_socket() const;
 
   void set_port(int port);
+  int get_port() const;
 
   std::string build_policy_msg(connection_policy_type type);
   ulong build_hash_code(connection_policy_type type);
@@ -76,9 +78,7 @@ public:
   virtual bool parse(std::string uri);
   virtual void append_host_port(const std::string &host, int port);
   virtual void build_connection_params(zval *params, connection_policy_type type);
-  virtual void write_host_to_params(zval *params);
-  virtual void write_port_to_params(zval *params);
-  virtual void write_socket_to_params(zval *params);
+  virtual void build_exception_params(openrasp::Isolate *isolate, v8::Local<v8::Object> &params);
 };
 
 typedef SqlConnectionEntry sql_connection_entry;

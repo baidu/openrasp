@@ -57,6 +57,13 @@
             <span class="text-danger" v-if="sql_regex_error">{{sql_regex_error }}</span>
           </div>
 
+          <div v-if="key == 'sql_exception'">
+            <label>SQL异常代码（逗号分隔；v1.2.1 之前不支持自定义错误代码）</label>
+            <div class="form-group">
+              <input type="text" v-model.trim="error_code_concat" class="form-control">
+            </div>
+          </div>          
+
           <div v-if="key == 'command_common'">
             <label>渗透命令探针 - 正则表达式</label>
             <div v-bind:class="{'form-group': true, 'has-error': command_common_error}">
@@ -81,7 +88,7 @@
 
 <script>
 import { mapGetters, mapActions, mapMutations } from 'vuex'
-import { validateRegex } from "@/util"
+import { validateRegex, trimSplit, convertToInt } from "@/util"
 
 export default {
   name: 'AlgorithmConfigModal',
@@ -94,6 +101,7 @@ export default {
       sql_regex_error: false,
       eval_regex_error: false,
       protocol_concat: '',
+      error_code_concat: '',
       sql_policy_keys: [
         {
           key:   'stacked_query',
@@ -164,6 +172,10 @@ export default {
         this.protocol_concat = this.data.protocols.join(',')
       }
 
+      if (this.key == 'sql_exception') {
+        this.error_code_concat = this.data.mysql.error_code.join(',')
+      }
+
       $('#algorithmConfigModal').modal({
         // backdrop: 'static',
         // keyboard: false
@@ -171,12 +183,12 @@ export default {
     },
     saveConfig() {
 
-      if (this.key.endsWith('_protocol')) {
-        // 删除空格
-        this.data.protocols = this.protocol_concat.replace(/\s/g, '').split(',')
+      if (this.key == 'sql_exception') {
+        this.data.mysql.error_code = convertToInt(trimSplit(this.error_code_concat, ','))
+      }
 
-        // 清理 null, undefined 和空字符串
-        this.data.protocols = this.data.protocols.filter(a=>a)
+      if (this.key.endsWith('_protocol')) {
+        this.data.protocols = trimSplit(this.protocol_concat, ',')
       }
 
       var body = {

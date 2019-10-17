@@ -16,17 +16,12 @@
 
 package com.baidu.openrasp.hook.sql;
 
-import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.HashMap;
 
 /**
  * Created by tyy on 18-4-28.
@@ -84,9 +79,9 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
             return true;
         }
 
-        /* DB2 */
-        if ("com/ibm/db2/jcc/am/Connection".equals(className)) {
-            this.type = SQL_TYPE_DB2;
+         /* HSqlDB */
+        if ("org/hsqldb/jdbc/JDBCPreparedStatement".equals(className)) {
+            this.type = SQL_TYPE_HSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
@@ -116,10 +111,11 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
 
     private void hookSqlPreparedStatementMethod(CtClass ctClass) throws NotFoundException, CannotCompileException {
         String originalSqlCode = null;
-        String checkSqlSrc = null;
+//        String checkSqlSrc = null;
         if (SQL_TYPE_MYSQL.equals(this.type)) {
             originalSqlCode = "originalSql";
-        } else if (SQL_TYPE_SQLITE.equals(this.type)) {
+        } else if (SQL_TYPE_SQLITE.equals(this.type)
+                || SQL_TYPE_HSQL.equals(this.type)) {
             originalSqlCode = "this.sql";
         } else if (SQL_TYPE_SQLSERVER.equals(this.type)) {
             originalSqlCode = "preparedSQL";
@@ -133,16 +129,16 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
             originalSqlCode = "this.sqlObject.getOriginalSql()";
         }
         if (originalSqlCode != null) {
-            checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
-                    "\"" + type + "\"" + ",$0," + originalSqlCode, String.class, Object.class, String.class);
-            insertBefore(ctClass, "execute", "()Z", checkSqlSrc);
-            insertBefore(ctClass, "executeUpdate", "()I", checkSqlSrc);
-            insertBefore(ctClass, "executeQuery", "()Ljava/sql/ResultSet;", checkSqlSrc);
-            try {
-                insertBefore(ctClass, "executeBatch", "()[I", checkSqlSrc);
-            } catch (CannotCompileException e) {
-                insertBefore(ctClass, "executeBatchInternal", null, checkSqlSrc);
-            }
+//            checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
+//                    "\"" + type + "\"" + ",$0," + originalSqlCode, String.class, Object.class, String.class);
+//            insertBefore(ctClass, "execute", "()Z", checkSqlSrc);
+//            insertBefore(ctClass, "executeUpdate", "()I", checkSqlSrc);
+//            insertBefore(ctClass, "executeQuery", "()Ljava/sql/ResultSet;", checkSqlSrc);
+//            try {
+//                insertBefore(ctClass, "executeBatch", "()[I", checkSqlSrc);
+//            } catch (CannotCompileException e) {
+//                insertBefore(ctClass, "executeBatchInternal", null, checkSqlSrc);
+//            }
             addCatch(ctClass, "execute", null, originalSqlCode);
             addCatch(ctClass, "executeUpdate", null, originalSqlCode);
             addCatch(ctClass, "executeQuery", null, originalSqlCode);
@@ -151,33 +147,12 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
             } catch (CannotCompileException e) {
                 addCatch(ctClass, "executeBatchInternal", null, originalSqlCode);
             }
-        } else if (SQL_TYPE_DB2.equals(this.type)) {
-            checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
-                    "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
-            insertBefore(ctClass, "prepareStatement", null, checkSqlSrc);
         }
-    }
-
-    /**
-     * SQL执行异常检测
-     *
-     * @param server 数据库类型
-     * @param e      sql执行抛出的异常
-     * @param query  sql语句
-     */
-    public static void checkSQLErrorCode(String server, SQLException e, String query) {
-        if (!StringUtils.isEmpty(query)) {
-            if (checkSqlErrorCode(e)) {
-                return;
-            }
-            HashMap<String, Object> params = new HashMap<String, Object>();
-            params.put("server", server);
-            params.put("query", query);
-            params.put("error_code", String.valueOf(e.getErrorCode()));
-            String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
-            params.put("message", message);
-            HookHandler.doCheck(CheckParameter.Type.SQL_EXCEPTION, params);
-        }
+//        else if (SQL_TYPE_DB2.equals(this.type)) {
+//            checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
+//                    "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
+//            insertBefore(ctClass, "prepareStatement", null, checkSqlSrc);
+//        }
     }
 
 }

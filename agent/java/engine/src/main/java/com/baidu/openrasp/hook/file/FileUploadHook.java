@@ -18,8 +18,6 @@ package com.baidu.openrasp.hook.file;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
-import com.baidu.openrasp.messaging.LogTool;
-import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
@@ -28,7 +26,6 @@ import javassist.NotFoundException;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -47,7 +44,7 @@ public class FileUploadHook extends AbstractClassHook {
 
     @Override
     public String getType() {
-        return "fileUpload";
+        return "fileUploadParam";
     }
 
     @Override
@@ -61,36 +58,17 @@ public class FileUploadHook extends AbstractClassHook {
     public static void cacheFileUploadParam(Object object) {
         List<Object> list = (List<Object>) object;
         if (list != null && !list.isEmpty()) {
-            HashMap<String, Object> params = new HashMap<String, Object>();
             HashMap<String, String[]> fileUploadCache = new HashMap<String, String[]>();
-            for (Object o : list) {
-                boolean isFormField = (Boolean) Reflection.invokeMethod(o, "isFormField", new Class[]{});
+            for (Object item : list) {
+                boolean isFormField = (Boolean) Reflection.invokeMethod(item, "isFormField", new Class[]{});
                 if (isFormField) {
-                    String fieldName = Reflection.invokeStringMethod(o, "getFieldName", new Class[]{});
-                    String fieldValue = Reflection.invokeStringMethod(o, "getString", new Class[]{});
+                    String fieldName = Reflection.invokeStringMethod(item, "getFieldName", new Class[]{});
+                    String fieldValue = Reflection.invokeStringMethod(item, "getString", new Class[]{});
                     fileUploadCache.put(fieldName, new String[]{fieldValue});
-                } else {
-                    String name = Reflection.invokeStringMethod(o, "getFieldName", new Class[]{});
-                    params.put("name", name != null ? name : "");
-                    String filename = Reflection.invokeStringMethod(o, "getName", new Class[]{});
-                    params.put("filename", filename);
-                    byte[] content = (byte[]) Reflection.invokeMethod(o, "get", new Class[]{});
-                    if (content.length > 4 * 1024) {
-                        content = Arrays.copyOf(content, 4 * 1024);
-                    }
-                    try {
-                        params.put("content", new String(content, getCharSet(o)));
-                    } catch (Exception e) {
-                        params.put("content", new String(content));
-                        LogTool.traceHookWarn(e.getMessage(), e);
-                    }
                 }
             }
             //只缓存multipart中的非文件字段值
             HookHandler.requestCache.get().setFileUploadCache(fileUploadCache);
-            if (!params.isEmpty()) {
-                HookHandler.doCheck(CheckParameter.Type.FILEUPLOAD, params);
-            }
         }
     }
 
