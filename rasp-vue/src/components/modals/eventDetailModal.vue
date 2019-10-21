@@ -10,30 +10,15 @@
         </div>
         <div class="modal-body" style="padding-top: 0">
           <ul id="myTab" class="nav nav-tabs" role="tablist">
-            <li class="nav-item">
-              <a id="home-tab" class="nav-link active" data-toggle="tab" href="#vuln">
-                漏洞详情
-              </a>
-            </li>
-            <li class="nav-item">
-              <a id="home-tab" class="nav-link" data-toggle="tab" href="#home">
-                请求信息
-              </a>
-            </li>
-            <li class="nav-item">
-              <a id="profile-tab" class="nav-link" data-toggle="tab" href="#profile" role="tab">
-                资产信息
-              </a>
-            </li>
-            <li class="nav-item">
-              <a id="contact-tab" class="nav-link" data-toggle="tab" href="#contact" role="tab">
-                修复建议
+            <li class="nav-item" v-for="(tab, index) in tabs" :key="index">
+              <a href="javascript:" :class="{'nav-link': true, 'active': tabIndex == index}" @click="tabIndex = index">
+                {{ tab }}
               </a>
             </li>
           </ul>
           <br>
           <div id="myTabContent" class="tab-content">
-            <div id="vuln" class="tab-pane fade show active" role="tabpanel" aria-labelledby="home-tab">
+            <div id="vuln" :class="{'tab-pane': true, 'fade': true, 'show': tabIndex == 0, 'active': tabIndex == 0}">
               <div class="h6">
                 报警时间
               </div>
@@ -65,7 +50,7 @@
               </div>
 
             </div>
-            <div id="home" class="tab-pane fade" role="tabpanel" aria-labelledby="home-tab">
+            <div id="home" :class="{'tab-pane': true, 'fade': true, 'show': tabIndex == 1, 'active': tabIndex == 1}">
               <div class="h6">
                 请求编号
               </div>
@@ -143,7 +128,7 @@
                 <pre style="word-break: break-all; ">{{ data.body }}</pre>
               </div>
             </div>
-            <div id="profile" class="tab-pane fade" role="tabpanel" aria-labelledby="profile-tab">
+            <div id="profile" :class="{'tab-pane': true, 'fade': true, 'show': tabIndex == 2, 'active': tabIndex == 2}">
               <div class="h6">
                 主机名称
               </div>
@@ -169,7 +154,7 @@
                 </p>
               </div>            
             </div>
-            <div id="contact" class="tab-pane fade" role="tabpanel" aria-labelledby="contact-tab">
+            <div id="contact" :class="{'tab-pane': true, 'fade': true, 'show': tabIndex == 3, 'active': tabIndex == 3}">
               <fix_solutions ref="fix_solutions"></fix_solutions>
             </div>
           </div>
@@ -197,6 +182,8 @@ export default {
   },
   data: function() {
     return {
+      tabIndex: 0,
+      tabs: ['漏洞详情', '请求信息', '资产信息', '修复建议'],
       data: {
         url: '',
         attack_location: {},
@@ -209,6 +196,7 @@ export default {
   methods: {
     attack_type2name: attack_type2name,
     showModal(data) {
+      this.tabIndex = 0
       this.data = data
 
       // v1.2 之后，删除外面的字符串堆栈，改用 params.stack 数组
