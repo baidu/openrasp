@@ -85,9 +85,9 @@
         </div>  
         <div class="form-group">
           <label class="form-label">
-            [基线] 弱口令列表，适用于数据库、Tomcat管理后台等等；上限200个，逗号分隔
+            [基线] 弱口令列表，适用于数据库、Tomcat管理后台等等；上限200个，单个最长16，逗号分隔
           </label>
-          <textarea v-model.trim="data['security.weak_passwords']" type="text" class="form-control" placeholder="root,admin,123456,tomcat" />
+          <textarea v-model.trim="weak_password_list" type="text" class="form-control" placeholder="111111,123,123123,123456,123456a,a123456,admin,both,manager,mysql,root,rootweblogic,tomcat,user,weblogic1,weblogic123,welcome1" />
         </div>           
         <div class="form-group">
           <label class="form-label">
@@ -177,6 +177,7 @@ export default {
   name: 'GeneralSettings',
   data: function() {
     return {
+      weak_password_list: '',
       data: {
         rasp_config: {}
       }
@@ -191,16 +192,18 @@ export default {
       this.data = data
 
       if (this.data['security.weak_password']) {
-        this.data['security.weak_password'] = trimSplit(this.data['security.weak_password'], ',')
+        this.weak_password_list = this.data['security.weak_password'].join(',')
       }
     },
     doSave: function() {
       // v1.2 之后，agent 删除 log.maxstack 配置
       // 为了让 v1.2 之后的后台兼容 v1.2 之前的 agent，前端来同步两个配置
       this.data['log.maxstack'] = this.data['plugin.maxstack']
+      this.data['security.weak_password'] = trimSplit(this.weak_password_list, ',')
 
-      if (this.data['security.weak_password']) {
-        this.data['security.weak_password'] = this.data['security.weak_password'].join(',')
+      if (this.data['security.weak_password'].length > 200) {
+        alert('为了降低内存占用，弱口令最多允许200条，当前数量 ' + this.data['security.weak_password'].length + '条')
+        return
       }
 
       var body = {
