@@ -66,8 +66,9 @@ static void plugin_command_check(const char *command TSRMLS_DC)
         openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
         {
             v8::HandleScope handle_scope(isolate);
+            auto context = isolate->GetCurrentContext();
             auto params = v8::Object::New(isolate);
-            params->Set(openrasp::NewV8String(isolate, "command"), openrasp::NewV8String(isolate, command));
+            params->Set(context, openrasp::NewV8String(isolate, "command"), openrasp::NewV8String(isolate, command)).IsJust();
             check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(COMMAND)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (check_result == openrasp::CheckResult::kBlock)
@@ -297,9 +298,10 @@ void pre_global_assert_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
         {
             v8::HandleScope handle_scope(isolate);
+            auto context = isolate->GetCurrentContext();
             auto params = v8::Object::New(isolate);
-            params->Set(openrasp::NewV8String(isolate, "code"), openrasp::NewV8String(isolate, Z_STRVAL_PP(assertion), Z_STRLEN_PP(assertion)));
-            params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "assert"));
+            params->Set(context, openrasp::NewV8String(isolate, "code"), openrasp::NewV8String(isolate, Z_STRVAL_PP(assertion), Z_STRLEN_PP(assertion))).IsJust();
+            params->Set(context, openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "assert")).IsJust();
             check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (check_result == openrasp::CheckResult::kBlock)

@@ -176,6 +176,7 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
         return;
     }
     v8::Isolate *isolate = info.GetIsolate();
+    auto context = isolate->GetCurrentContext();
     v8::Local<v8::Object> obj = v8::Object::New(isolate);
     HashTable *GET = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_GET]);
     for (zend_hash_internal_pointer_reset(GET); zend_hash_has_more_elements(GET) == SUCCESS; zend_hash_move_forward(GET))
@@ -194,7 +195,7 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
         if (!v8_value->IsArray())
         {
             v8::Local<v8::Array> v8_arr = v8::Array::New(isolate);
-            v8_arr->Set(0, v8_value);
+            v8_arr->Set(context, 0, v8_value).IsJust();
             v8_value = v8_arr;
         }
         v8::Local<v8::Value> v8_key;
@@ -206,7 +207,7 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
         {
             v8_key = v8::Uint32::New(isolate, idx);
         }
-        obj->Set(v8_key, v8_value);
+        obj->Set(context, v8_key, v8_value).IsJust();
     }
     HashTable *POST = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_POST]);
     for (zend_hash_internal_pointer_reset(POST); zend_hash_has_more_elements(POST) == SUCCESS; zend_hash_move_forward(POST))
@@ -225,7 +226,7 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
         if (!v8_value->IsArray())
         {
             v8::Local<v8::Array> v8_arr = v8::Array::New(isolate);
-            v8_arr->Set(0, v8_value);
+            v8_arr->Set(context, 0, v8_value).IsJust();
             v8_value = v8_arr;
         }
         v8::Local<v8::Value> v8_key;
@@ -237,7 +238,7 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
         {
             v8_key = v8::Uint32::New(isolate, idx);
         }
-        v8::Local<v8::Value> v8_existed_value = obj->Get(v8_key);
+        v8::Local<v8::Value> v8_existed_value = obj->Get(context, v8_key).ToLocalChecked();
         if (!v8_existed_value.IsEmpty() &&
             v8_existed_value->IsArray())
         {
@@ -248,15 +249,15 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
             v8::Local<v8::Array> v8_arr = v8::Array::New(isolate, v8_arr1_len + v8_arr2_len);
             for (int i = 0; i < v8_arr1_len; i++)
             {
-                v8_arr->Set(i, v8_arr1->Get(i));
+                v8_arr->Set(context, i, v8_arr1->Get(context, i).ToLocalChecked()).IsJust();
             }
             for (int i = 0; i < v8_arr2_len; i++)
             {
-                v8_arr->Set(v8_arr1_len + i, v8_arr2->Get(i));
+                v8_arr->Set(context, v8_arr1_len + i, v8_arr2->Get(context, i).ToLocalChecked()).IsJust();
             }
             v8_value = v8_arr;
         }
-        obj->Set(v8_key, v8_value);
+        obj->Set(context, v8_key, v8_value).IsJust();
     }
     info.GetReturnValue().Set(obj);
 }
@@ -268,6 +269,7 @@ static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
         return;
     }
     v8::Isolate *isolate = info.GetIsolate();
+    auto context = isolate->GetCurrentContext();
     v8::Local<v8::Object> obj = v8::Object::New(isolate);
     HashTable *SERVER = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]);
     for (zend_hash_internal_pointer_reset(SERVER); zend_hash_has_more_elements(SERVER) == SUCCESS; zend_hash_move_forward(SERVER))
@@ -283,7 +285,7 @@ static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
             zend_hash_get_current_data(SERVER, (void **)&value) == SUCCESS &&
             Z_TYPE_PP(value) == IS_STRING)
         {
-            obj->Set(NewV8String(isolate, header_key), NewV8ValueFromZval(isolate, *value));
+            obj->Set(context, NewV8String(isolate, header_key), NewV8ValueFromZval(isolate, *value)).IsJust();
         }
     }
     info.GetReturnValue().Set(obj);
@@ -312,24 +314,25 @@ static void server_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
 {
     TSRMLS_FETCH();
     v8::Isolate *isolate = info.GetIsolate();
+    auto context = isolate->GetCurrentContext();
     v8::Local<v8::Object> server = v8::Object::New(isolate);
-    server->Set(NewV8String(isolate, "language"), NewV8String(isolate, "php"));
-    server->Set(NewV8String(isolate, "server"), NewV8String(isolate, "PHP"));
-    server->Set(NewV8String(isolate, "version"), NewV8String(isolate, get_phpversion()));
+    server->Set(context, NewV8String(isolate, "language"), NewV8String(isolate, "php")).IsJust();
+    server->Set(context, NewV8String(isolate, "server"), NewV8String(isolate, "PHP")).IsJust();
+    server->Set(context, NewV8String(isolate, "version"), NewV8String(isolate, get_phpversion())).IsJust();
 #ifdef PHP_WIN32
-    server->Set(NewV8String(isolate, "os"), NewV8String(isolate, "Windows"));
+    server->Set(context, NewV8String(isolate, "os"), NewV8String(isolate, "Windows")).IsJust();
 #else
     if (strstr(PHP_OS, "Darwin"))
     {
-        server->Set(NewV8String(isolate, "os"), NewV8String(isolate, "Mac"));
+        server->Set(context, NewV8String(isolate, "os"), NewV8String(isolate, "Mac")).IsJust();
     }
     else if (strstr(PHP_OS, "Linux"))
     {
-        server->Set(NewV8String(isolate, "os"), NewV8String(isolate, "Linux"));
+        server->Set(context, NewV8String(isolate, "os"), NewV8String(isolate, "Linux")).IsJust();
     }
     else
     {
-        server->Set(NewV8String(isolate, "os"), NewV8String(isolate, PHP_OS));
+        server->Set(context, NewV8String(isolate, "os"), NewV8String(isolate, PHP_OS)).IsJust();
     }
 #endif
     info.GetReturnValue().Set(server);

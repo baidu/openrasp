@@ -71,9 +71,10 @@ int eval_handler(zend_execute_data *execute_data)
         if (isolate)
         {
             v8::HandleScope handle_scope(isolate);
+            auto context = isolate->GetCurrentContext();
             auto params = v8::Object::New(isolate);
-            params->Set(openrasp::NewV8String(isolate, "code"), openrasp::NewV8String(isolate, param));
-            params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "eval"));
+            params->Set(context, openrasp::NewV8String(isolate, "code"), openrasp::NewV8String(isolate, param)).IsJust();
+            params->Set(context, openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "eval")).IsJust();
             check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(EVAL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (check_result == openrasp::CheckResult::kBlock)
@@ -165,11 +166,12 @@ int include_handler(zend_execute_data *execute_data)
             if (send_to_plugin && isolate)
             {
                 v8::HandleScope handle_scope(isolate);
+                auto context = isolate->GetCurrentContext();
                 auto params = v8::Object::New(isolate);
                 auto path = openrasp::NewV8String(isolate, param);
-                params->Set(openrasp::NewV8String(isolate, "path"), path);
-                params->Set(openrasp::NewV8String(isolate, "url"), path);
-                params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
+                params->Set(context, openrasp::NewV8String(isolate, "path"), path).IsJust();
+                params->Set(context, openrasp::NewV8String(isolate, "url"), path).IsJust();
+                params->Set(context, openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path)).IsJust();
                 std::string function;
                 const zend_op *opline = EX(opline);
                 switch (opline->extended_value)
@@ -189,7 +191,7 @@ int include_handler(zend_execute_data *execute_data)
                 default:
                     break;
                 }
-                params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, function));
+                params->Set(context, openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, function)).IsJust();
                 check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(INCLUDE)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
             if (check_result == openrasp::CheckResult::kBlock)

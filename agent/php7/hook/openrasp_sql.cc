@@ -87,9 +87,10 @@ void plugin_sql_check(char *query, int query_len, const char *server)
         openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
         {
             v8::HandleScope handle_scope(isolate);
+            auto context = isolate->GetCurrentContext();
             auto params = v8::Object::New(isolate);
-            params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len));
-            params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server));
+            params->Set(context, openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len)).IsJust();
+            params->Set(context, openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server)).IsJust();
             check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(SQL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (check_result == openrasp::CheckResult::kCache)

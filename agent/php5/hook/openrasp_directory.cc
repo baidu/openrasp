@@ -59,9 +59,10 @@ static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
             {
                 v8::HandleScope handle_scope(isolate);
+                auto context = isolate->GetCurrentContext();
                 auto params = v8::Object::New(isolate);
-                params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, Z_STRVAL_PP(path), Z_STRLEN_PP(path)));
-                params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, resolved_path));
+                params->Set(context, openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, Z_STRVAL_PP(path), Z_STRLEN_PP(path))).IsJust();
+                params->Set(context, openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, resolved_path)).IsJust();
                 check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
             if (check_result == openrasp::CheckResult::kBlock)
