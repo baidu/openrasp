@@ -136,6 +136,7 @@ var algorithmConfig = {
         action:    'log',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#sql-exception',
 
+        // error_code 最多允许 100 个，超过直接清空
         mysql: {
 	        error_code: [
 	            // 1045, // Access denied for user 'bae'@'10.10.1.1'
