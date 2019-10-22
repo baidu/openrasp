@@ -252,6 +252,12 @@ export default {
             if (! data['policy_params']) {
                 data['policy_params'] = {}
             }
+
+            // v1.2 之后，删除外面的字符串堆栈，改用 params.stack 数组
+            if (! data.stack_trace && data['policy_params'].stack)
+            {
+                data.stack_trace = data['policy_params'].stack.join("\n")
+            }
         }
     }
 }
