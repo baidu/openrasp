@@ -82,7 +82,13 @@
             LRU 大小 [默认1000，若要关闭写 0]
           </label>
           <input v-model.number="data['lru.max_size']" type="number" min="0" class="form-control" placeholder="1000">
-        </div>    
+        </div>  
+        <div class="form-group">
+          <label class="form-label">
+            [基线] 弱口令列表，适用于数据库、Tomcat管理后台等等；上限200个，逗号分隔
+          </label>
+          <textarea v-model.trim="data['security.weak_passwords']" type="text" class="form-control" placeholder="root,admin,123456,tomcat" />
+        </div>           
         <div class="form-group">
           <label class="form-label">
             [插件] 单个hook点最大执行时间（ms）
@@ -165,6 +171,7 @@
 
 <script>
 import { mapGetters, mapActions, mapMutations } from "vuex";
+import { validateRegex, trimSplit, convertToInt } from "@/util"
 
 export default {
   name: 'GeneralSettings',
@@ -182,11 +189,19 @@ export default {
     ...mapMutations(["setCurrentApp"]),
     setData: function(data) {
       this.data = data
+
+      if (this.data['security.weak_password']) {
+        this.data['security.weak_password'] = trimSplit(this.data['security.weak_password'], ',')
+      }
     },
     doSave: function() {
       // v1.2 之后，agent 删除 log.maxstack 配置
       // 为了让 v1.2 之后的后台兼容 v1.2 之前的 agent，前端来同步两个配置
       this.data['log.maxstack'] = this.data['plugin.maxstack']
+
+      if (this.data['security.weak_password']) {
+        this.data['security.weak_password'] = this.data['security.weak_password'].join(',')
+      }
 
       var body = {
         app_id: this.current_app.id,

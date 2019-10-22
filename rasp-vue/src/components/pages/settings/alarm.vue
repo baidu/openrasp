@@ -271,6 +271,45 @@
         </button>
       </div>
     </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          Kafka 报警推送
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">
+            服务器地址
+            <a href="javascript:" target="_blank">
+              [帮助文档]
+            </a>
+          </label>
+          <input v-model.trim="data.kafka_alarm_conf['url']" type="text" class="form-control" placeholder="1.1.1.1:6666">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            Topic
+          </label>
+          <b-form-input v-model="data.kafka_alarm_conf['topic']" type="number" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label class="custom-switch">
+            <input v-model="data.kafka_alarm_conf['enable']" type="checkbox" checked="data.general_config['syslog.enable']" class="custom-switch-input">
+            <span class="custom-switch-indicator" />
+            <span class="custom-switch-description">
+              开启 Kafka 日志推送
+            </span>
+          </label>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button type="submit" class="btn btn-primary" @click="saveSettings('kafka')">
+          保存
+        </button>
+      </div>
+    </div>    
     <!-- end alarm settings -->
   </div>
 </template>
@@ -419,6 +458,12 @@ export default {
           }
 
           msg = 'HTTP 推送设置保存成功'
+          break
+
+        case 'kafka':
+          body['kafka_alarm_conf'] = this.data.kafka_alarm_conf
+
+          msg = 'Kafka 推送设置保存成功'
           break
       }
 
