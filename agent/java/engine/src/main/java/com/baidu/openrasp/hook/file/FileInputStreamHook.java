@@ -25,10 +25,10 @@ import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import java.util.HashMap;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * Created by zhuming01 on 5/31/17. All rights reserved
@@ -74,6 +74,9 @@ public class FileInputStreamHook extends AbstractClassHook {
     public static void checkReadFile(File file) {
         boolean checkSwitch = Config.getConfig().getPluginFilter();
         if (file != null) {
+            if (checkSwitch && !file.exists()) {
+                return;
+            }
             HashMap<String, Object> params = new HashMap<String, Object>();
             params.put("path", file.getPath());
 
@@ -83,7 +86,7 @@ public class FileInputStreamHook extends AbstractClassHook {
             } catch (Exception e) {
                 path = file.getAbsolutePath();
             }
-            if (path.endsWith(".class") || !file.exists() && checkSwitch) {
+            if (path.endsWith(".class")) {
                 return;
             }
             params.put("realpath", FileUtil.getRealPath(file));
