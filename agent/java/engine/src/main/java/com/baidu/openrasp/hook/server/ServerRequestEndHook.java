@@ -39,10 +39,8 @@ public abstract class ServerRequestEndHook extends AbstractClassHook {
     }
 
     public static void checkRequestEnd() {
-        if (HookHandler.enableEnd.get()) {
-            HookHandler.doCheck(CheckParameter.Type.REQUESTEND, new HashMap<String, Object>());
-            HookHandler.enableEnd.set(false);
-        }
+        HookHandler.doCheck(CheckParameter.Type.REQUESTEND, new HashMap<String, Object>());
+        HookHandler.onServiceExit();
     }
 
 }

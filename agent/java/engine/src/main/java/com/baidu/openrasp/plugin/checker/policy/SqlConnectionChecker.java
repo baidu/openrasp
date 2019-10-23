@@ -77,7 +77,7 @@ public class SqlConnectionChecker extends PolicyChecker {
     }
 
     private boolean checkPassword(String password) {
-        List<String> checkList = Arrays.asList(getSecurityWeakPasswords());
+        List<String> checkList = getSecurityWeakPasswords();
         return !checkList.contains(password);
     }
 
@@ -301,8 +301,8 @@ public class SqlConnectionChecker extends PolicyChecker {
     /**
      * 从配置获取弱口令列表
      */
-    public String[] getSecurityWeakPasswords() {
-        String[] securityWeakPasswords = Config.getConfig().getSecurityWeakPasswords();
-        return securityWeakPasswords != null ? securityWeakPasswords : WEAK_WORDS;
+    public List<String> getSecurityWeakPasswords() {
+        List<String> securityWeakPasswords = Config.getConfig().getSecurityWeakPasswords();
+        return securityWeakPasswords != null ? securityWeakPasswords : Arrays.asList(WEAK_WORDS);
     }
 }

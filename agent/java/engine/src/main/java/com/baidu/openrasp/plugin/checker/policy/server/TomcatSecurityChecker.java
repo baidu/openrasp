@@ -141,7 +141,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                             List<String> managerList = Arrays.asList(TOMCAT_MANAGER_ROLES);
                             for (int j = 0; j < roles.length; j++) {
                                 if (managerList.contains(roles[j].trim())) {
-                                    List<String> weakWords = Arrays.asList(getSecurityWeakPasswords());
+                                    List<String> weakWords = getSecurityWeakPasswords();
                                     String userName = user.getAttribute("username");
                                     String password = user.getAttribute("password");
                                     if (password == null || password.isEmpty()) {
@@ -284,9 +284,9 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
     /**
      * 从配置获取弱口令列表
      */
-    public String[] getSecurityWeakPasswords() {
-        String[] securityWeakPasswords = Config.getConfig().getSecurityWeakPasswords();
-        return securityWeakPasswords != null ? securityWeakPasswords : WEAK_WORDS;
+    public List<String> getSecurityWeakPasswords() {
+        List<String> securityWeakPasswords = Config.getConfig().getSecurityWeakPasswords();
+        return securityWeakPasswords != null ? securityWeakPasswords : Arrays.asList(WEAK_WORDS);
     }
 
     private void handleException(Exception e) {

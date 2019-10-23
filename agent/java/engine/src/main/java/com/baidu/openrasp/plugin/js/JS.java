@@ -19,6 +19,7 @@ package com.baidu.openrasp.plugin.js;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.config.ConfigItem;
 import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -190,7 +191,7 @@ public class JS {
         if (rst) {
             try {
                 String jsonString = V8.ExecuteScript("JSON.stringify(RASP.algorithmConfig || {})", "get-algorithm-config.js");
-                Config.getConfig().setConfig("algorithm.config", jsonString, true);
+                Config.getConfig().setConfig(ConfigItem.ALGORITHM_CONFIG, jsonString, true);
             } catch (Exception e) {
                 LogTool.error(ErrorType.PLUGIN_ERROR, e.getMessage(), e);
             }

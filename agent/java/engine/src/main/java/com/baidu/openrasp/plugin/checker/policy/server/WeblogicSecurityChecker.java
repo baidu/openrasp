@@ -63,7 +63,7 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
             }
             String encryptedPassword = getProperties(bootProperties, "password");
             String decryptedPassword = decrypt(encryptedPassword, domainPath);
-            List<String> checkList = Arrays.asList(getSecurityWeakPasswords());
+            List<String> checkList = getSecurityWeakPasswords();
             if (checkList.contains(decryptedPassword)) {
                 String encryptedUserName = getProperties(bootProperties, "username");
                 String decryptedUserName = decrypt(encryptedUserName, domainPath);
@@ -139,8 +139,8 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
     /**
      * 从配置获取弱口令列表
      */
-    public String[] getSecurityWeakPasswords() {
-        String[] securityWeakPasswords = Config.getConfig().getSecurityWeakPasswords();
-        return securityWeakPasswords != null ? securityWeakPasswords : WEAK_WORDS;
+    public List<String> getSecurityWeakPasswords() {
+        List<String> securityWeakPasswords = Config.getConfig().getSecurityWeakPasswords();
+        return securityWeakPasswords != null ? securityWeakPasswords : Arrays.asList(WEAK_WORDS);
     }
 }

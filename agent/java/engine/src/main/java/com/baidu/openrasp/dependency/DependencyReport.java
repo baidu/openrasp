@@ -50,7 +50,7 @@ public class DependencyReport extends CloudTimerTask {
         parameters.put("dependency", dependencyHashSet);
         String url = CloudRequestUrl.CLOUD_DEPENDENCY_REPORT_URL;
         GenericResponse response = new CloudHttp().commonRequest(url, new Gson().toJson(parameters));
-        if (!CloudUtils.checkRequestResult(response)) {
+        if (!CloudUtils.checkResponse(response)) {
             LogTool.warn(ErrorType.REGISTER_ERROR, CloudUtils.handleError(ErrorType.DEPENDENCY_REPORT_ERROR, response));
         }
     }

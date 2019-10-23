@@ -498,9 +498,9 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 				"the length of config key '"+key+"' must be less than 512")
 		}
 		if v, ok := value.(string); ok {
-			if len(v) >= 2048 {
+			if len(v) >= 4096 {
 				o.ServeError(http.StatusBadRequest,
-					"the value's length of config item '"+key+"' must be less than 2048")
+					"the value's length of config item '"+key+"' must be less than 4096")
 			}
 		}
 		if v, ok := value.(float64); ok {

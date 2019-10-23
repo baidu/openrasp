@@ -281,7 +281,6 @@ func GetIndex(base string, appId string) string {
 func HandleSearchResult(result map[string]interface{}, id string) {
 	result["id"] = id
 	delete(result, "_@timestamp")
-	delete(result, "@timestamp")
 	delete(result, "@version")
 	delete(result, "tags")
 	delete(result, "host")

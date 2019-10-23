@@ -28,7 +28,6 @@ import javassist.NotFoundException;
  * @Description: websphere请求预处理hook点
  * @date 2018/8/13 15:13
  */
-@HookAnnotation
 public class WebspherePreRequestHook extends ServerPreRequestHook {
 
     public WebspherePreRequestHook() {

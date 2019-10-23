@@ -59,13 +59,6 @@ public class HookHandler {
         }
     };
 
-    public static ThreadLocal<Boolean> enableEnd = new ThreadLocal<Boolean>() {
-        @Override
-        protected Boolean initialValue() {
-            return true;
-        }
-    };
-
     private static ThreadLocal<Boolean> tmpEnableCurrThreadHook = new ThreadLocal<Boolean>() {
         @Override
         protected Boolean initialValue() {
@@ -181,8 +174,7 @@ public class HookHandler {
     public static void checkRequest(Object servlet, Object request, Object response) {
         if (servlet != null && request != null && !enableCurrThreadHook.get()
                 && CustomClassTransformer.isNecessaryHookComplete) {
-            // 默认是关闭hook的，只有处理过HTTP request的线程才打开
-            enableEnd.set(true);
+            // 默认是关闭hook的，只有处理过HTTP requesst的线程才打开
             enableCurrThreadHook.set(true);
             //新的请求开启body xss hook点
             enableBodyXssHook();

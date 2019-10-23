@@ -23,7 +23,6 @@ import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
 
-@HookAnnotation
 public class JettyServerHook extends ServerPreRequestHook {
 
     public JettyServerHook() {

@@ -27,7 +27,6 @@ import javassist.NotFoundException;
  * <p>
  * wildfly 请求预处理hook点
  */
-@HookAnnotation
 public class UndertowPreRequestHook extends ServerPreRequestHook {
 
     /**

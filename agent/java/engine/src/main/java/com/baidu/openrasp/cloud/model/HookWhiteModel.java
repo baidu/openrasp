@@ -17,6 +17,7 @@
 package com.baidu.openrasp.cloud.model;
 
 import com.baidu.openrasp.cloud.utils.DoubleArrayTrie;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,5 +73,48 @@ public class HookWhiteModel {
             }
         }
         return false;
+    }
+
+    public static TreeMap<String, Integer> parseHookWhite(Map<String, Object> hooks) {
+        TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
+        for (Map.Entry<String, Object> hook : hooks.entrySet()) {
+            int codeSum = 0;
+            if (hook.getValue() instanceof ArrayList) {
+                @SuppressWarnings("unchecked")
+                ArrayList<String> types = (ArrayList<String>) hook.getValue();
+                if (hook.getKey().equals("*") && types.contains("all")) {
+                    for (CheckParameter.Type type : CheckParameter.Type.values()) {
+                        if (type.getCode() != 0) {
+                            codeSum = codeSum + type.getCode();
+                        }
+                    }
+                    temp.put("", codeSum);
+                    return temp;
+                } else if (types.contains("all")) {
+                    for (CheckParameter.Type type : CheckParameter.Type.values()) {
+                        if (type.getCode() != 0) {
+                            codeSum = codeSum + type.getCode();
+                        }
+                    }
+                    temp.put(hook.getKey(), codeSum);
+                } else {
+                    for (String s : types) {
+                        String hooksType = s.toUpperCase();
+                        try {
+                            Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
+                            codeSum = codeSum + code;
+                        } catch (Exception e) {
+//                            LogTool.traceWarn(ErrorType.CONFIG_ERROR, "Hook type " + s + " does not exist", e);
+                        }
+                    }
+                    if (hook.getKey().equals("*")) {
+                        temp.put("", codeSum);
+                    } else {
+                        temp.put(hook.getKey(), codeSum);
+                    }
+                }
+            }
+        }
+        return temp;
     }
 }
