@@ -310,10 +310,15 @@ if (array_key_exists("h", $options) || array_key_exists("help", $options)) {
 } 
 if (array_key_exists("d", $options) && !empty($options["d"])) {
 	// 创建目录
-	if (! file_exists($options["d"])) {
-    	mkdir($options["d"], 0777, true);
+	if (is_string($options["d"]))
+	{
+		if (! file_exists($options["d"])) {
+			mkdir($options["d"], 0777, true);
+		}
+		$iniConfig->setRootDir($options["d"]);
+	} else {
+		log_tips(ERROR, "openrasp.root_dir must be string, please make sure all option names are correct");
 	}
-	$iniConfig->setRootDir($options["d"]);
 } else {
 	log_tips(ERROR, "openrasp.root_dir must be specified via option \"-d\"");
 }
