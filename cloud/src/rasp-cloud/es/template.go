@@ -166,7 +166,8 @@ var attackAlarmTemplate = `
 							"enabled":"false"
 						},
 						"plugin_message": {
-							"type": "keyword"
+							"type": "keyword",
+							"normalizer": "lowercase_normalizer"
 						},
 						"server_nic": {
 							"type": "nested",
@@ -375,6 +376,9 @@ var reportDataTemplate = `
 		}
 	`
 
+var UpdateMappingConfig map[string]interface{}
+var OldTemplateBackUp map[string]interface{}
+
 func init() {
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
 		templates := map[string]string{
@@ -383,11 +387,18 @@ func init() {
 			"attack-alarm-template": attackAlarmTemplate,
 			"policy-alarm-template": policyAlarmTemplate,
 		}
-
+		UpdateMappingConfig = make(map[string]interface{})
+		OldTemplateBackUp = make(map[string]interface{})
 		for name, template := range templates {
-			err := CreateTemplate(name, template)
+			oldTemplate, res, err := CreateTemplate(name, template)
 			if err != nil {
 				tools.Panic(tools.ErrCodeESInitFailed, "failed to create es template: "+name, err)
+			}
+			if !res {
+				UpdateMappingConfig[name] = true
+			}
+			if len(oldTemplate) != 0 {
+				OldTemplateBackUp[name] = oldTemplate[name]
 			}
 		}
 	}
