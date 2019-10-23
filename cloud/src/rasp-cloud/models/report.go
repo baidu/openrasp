@@ -40,7 +40,7 @@ func init() {
 
 func CreateReportDataEsIndex(appId string) error {
 	return es.CreateEsIndex(ReportIndexName + "-" + appId,
-		AliasReportIndexName + "-" + appId, reportType + "-template", true)
+		AliasReportIndexName + "-" + appId, reportType + "-template")
 }
 
 func AddReportData(reportData *ReportData, appId string) error {

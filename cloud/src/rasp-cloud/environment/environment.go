@@ -24,7 +24,6 @@ import (
 	"rasp-cloud/conf"
 	"rasp-cloud/tools"
 	"syscall"
-
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"golang.org/x/crypto/ssh/terminal"
@@ -32,6 +31,8 @@ import (
 
 var (
 	Version = "1.2"
+	UpdateMappingConfig map[string]interface{}
+	StartBeego = true
 )
 
 func init() {
@@ -40,6 +41,7 @@ func init() {
 	StartFlag.StartType = flag.String("type", "", "use to provide different routers")
 	StartFlag.Daemon = flag.Bool("d", false, "use to run as daemon process")
 	StartFlag.Version = flag.Bool("version", false, "use to get version")
+	StartFlag.Upgrade = flag.String("upgrade", "", "send upgrade flag")
 	flag.Parse()
 	if *StartFlag.Version {
 		handleVersionFlag()
@@ -50,6 +52,10 @@ func init() {
 	}
 	if tools.CommitID != "" {
 		beego.Info("Git Commit ID: " + tools.CommitID)
+	}
+	if *StartFlag.Upgrade != "" {
+		StartBeego = false
+		HandleUpgrade(*StartFlag.Upgrade)
 	}
 	if *StartFlag.StartType == conf.StartTypeReset {
 		HandleReset(StartFlag)
@@ -87,6 +93,18 @@ func chdir() {
 	err = os.Chdir(path)
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to change dir to "+path, err)
+	}
+}
+
+func HandleUpgrade(flag string) {
+	UpdateMappingConfig = make(map[string]interface{})
+	switch flag {
+	case "120to121":
+		UpdateMappingConfig["attack-alarm-template"] = "120to121"
+		UpdateMappingConfig["policy-alarm-template"] = "120to121"
+		UpdateMappingConfig["error-alarm-template"] = "120to121"
+	default:
+		log.Println("unknown operation!")
 	}
 }
 

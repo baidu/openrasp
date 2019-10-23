@@ -256,7 +256,8 @@ var policyAlarmTemplate = `
 							"type": "long"
 						},
 						"message": {
-							"type": "keyword"
+							"type": "keyword",
+							"normalizer": "lowercase_normalizer"
 						},
 						"stack_md5": {
 							"type": "keyword",
@@ -304,7 +305,8 @@ var errorAlarmTemplate = `{
 							"ignore_above": 256
 						},
 						"message": {
-							"type": "keyword"
+							"type": "keyword",
+							"normalizer": "lowercase_normalizer"
 						},
 						"level": {
 							"type": "keyword",
@@ -376,9 +378,6 @@ var reportDataTemplate = `
 		}
 	`
 
-var UpdateMappingConfig map[string]interface{}
-var OldTemplateBackUp map[string]interface{}
-
 func init() {
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
 		templates := map[string]string{
@@ -387,18 +386,10 @@ func init() {
 			"attack-alarm-template": attackAlarmTemplate,
 			"policy-alarm-template": policyAlarmTemplate,
 		}
-		UpdateMappingConfig = make(map[string]interface{})
-		OldTemplateBackUp = make(map[string]interface{})
 		for name, template := range templates {
-			oldTemplate, res, err := CreateTemplate(name, template)
+			err := CreateTemplate(name, template)
 			if err != nil {
 				tools.Panic(tools.ErrCodeESInitFailed, "failed to create es template: "+name, err)
-			}
-			if !res {
-				UpdateMappingConfig[name] = true
-			}
-			if len(oldTemplate) != 0 {
-				OldTemplateBackUp[name] = oldTemplate[name]
 			}
 		}
 	}

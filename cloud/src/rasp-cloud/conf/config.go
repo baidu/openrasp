@@ -52,6 +52,7 @@ type Flag struct {
 	Password  *string
 	Daemon    *bool
 	Version   *bool
+	Upgrade   *string
 }
 
 var (

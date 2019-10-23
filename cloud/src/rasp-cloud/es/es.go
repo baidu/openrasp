@@ -27,7 +27,6 @@ import (
 	"rasp-cloud/conf"
 	"errors"
 	"rasp-cloud/environment"
-	"reflect"
 )
 
 var (
@@ -141,33 +140,18 @@ func RegisterTTL(duration time.Duration, index string) {
 	ttls[index] = duration
 }
 
-func CreateTemplate(name string, body string) (map[string]*elastic.IndicesGetTemplateResponse, bool, error) {
+func CreateTemplate(name string, body string) error {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
 	defer cancel()
-	templateMappingOld, err := ElasticClient.IndexGetTemplate(name).Do(ctx)
-
-	_, err = elastic.NewIndicesPutTemplateService(ElasticClient).Name(name).BodyString(body).Do(ctx)
+	_, err := elastic.NewIndicesPutTemplateService(ElasticClient).Name(name).BodyString(body).Do(ctx)
 	if err != nil {
-		return templateMappingOld, true, err
+		tools.Panic(tools.ErrCodeESInitFailed, "failed to create es template: "+name, err)
 	}
-	templateMappingNew, err := ElasticClient.IndexGetTemplate(name).Do(ctx)
-	if err != nil {
-		e := RollbackTemplate(name, OldTemplateBackUp[name])
-		if e != nil {
-			beego.Error(e)
-		}
-		return templateMappingOld, true, err
-	}
-
 	beego.Info("put es template: " + name)
-	if !reflect.DeepEqual(templateMappingOld, templateMappingNew) && len(templateMappingOld) != 0{
-		beego.Info("template:", name, "has changed! Ready to Update Index Now!")
-		return templateMappingOld, false, nil
-	}
-	return templateMappingOld, true, nil
+	return nil
 }
 
-func CreateEsIndex(index string, alias string, template string, flag bool) error {
+func CreateEsIndex(index string, alias string, template string) error {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
 	defer cancel()
 	exists, err := ElasticClient.IndexExists(index).Do(ctx)
@@ -185,18 +169,16 @@ func CreateEsIndex(index string, alias string, template string, flag bool) error
 			return err
 		}
 	} else {
-		if UpdateMappingConfig[template] != nil && flag{
+		if environment.UpdateMappingConfig[template] != nil {
 			beego.Info("updating template name:", template, "alias:", alias)
-			err := UpdateMapping(index, alias, template, ctx)
+			destIndex := index + "-" + environment.UpdateMappingConfig[template].(string)
+			err := UpdateMapping(destIndex, alias, template, ctx)
 			if err != nil {
-				e := RollbackTemplate(template, OldTemplateBackUp[template])
-				if e != nil {
-					beego.Error(e)
-				}
 				return err
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -244,97 +226,56 @@ func BulkInsert(docType string, docs []map[string]interface{}) (err error) {
 	return err
 }
 
-func UpdateMapping (index string, alias string, template string, ctx context.Context) error {
+func UpdateMapping (destIndex string, alias string, template string, ctx context.Context) error {
+	// 获取alias对应的index
 	res, err := ElasticClient.Aliases().Index(alias).Do(ctx)
 	if err != nil {
-		e := RollbackTemplate(template, OldTemplateBackUp[template])
-		if e != nil {
-			beego.Error(e)
-		}
 		return err
 	}
+	// 当前alias有且只有一个index与之对应
 	if len(res.IndicesByAlias(alias)) != 1 {
-		e := RollbackTemplate(template, OldTemplateBackUp[template])
-		if e != nil {
-			beego.Error(e)
-		}
 		return errors.New("find duplicate alias:" + fmt.Sprintf("%s", res))
 	}
-
+	if len(res.IndicesByAlias(alias)) == 0 {
+		return errors.New("alias:" + fmt.Sprintf("%s", res) + "is not exist!" )
+	}
 	oldIndexFromEs := res.IndicesByAlias(alias)[0]
-	versionToEs := strings.Replace(environment.Version, ".", "", -1)
-	newIndex := index + "-vidx-" + versionToEs
-	oldIndexSplit := strings.Split(oldIndexFromEs, "-")
-	if strings.Index(oldIndexFromEs, "-vidx") == -1 || oldIndexSplit[len(oldIndexSplit) - 2] != versionToEs {
-		newIndex += "-0"
-	} else if len(oldIndexSplit[len(oldIndexSplit) - 1]) == 1 {
-		atoi, err := strconv.Atoi(oldIndexSplit[len(oldIndexSplit) - 1])
+	exists, err := ElasticClient.IndexExists(destIndex).Do(ctx)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		// 创建新索引
+		err = CreateEsIndex(destIndex, alias, template)
 		if err != nil {
 			return err
 		}
-		atoi += 1
-		newIndex = newIndex + "-" + strconv.Itoa(atoi)
-	}
-	beego.Info("newIndex:", newIndex)
-	err = CreateEsIndex(newIndex, alias, template, false)
-	if err != nil {
-		e := RollbackTemplate(template, OldTemplateBackUp[template])
-		if e != nil {
-			beego.Error(e)
+		res, err = ElasticClient.Aliases().Index(destIndex).Do(ctx)
+		if err != nil {
+			return err
 		}
-		return err
-	}
-	res, err = ElasticClient.Aliases().Index(newIndex).Do(ctx)
-	if err != nil {
-		e := RollbackTemplate(template, OldTemplateBackUp[template])
-		if e != nil {
-			beego.Error(e)
+		aliases := ElasticClient.Alias()
+		//beego.Info("res.Indices:", res.Indices)
+		//beego.Info("res.Indices[newIndex]:", res.Indices[newIndex])
+		//beego.Info("Aliases[0]:", res.Indices[newIndex].Aliases[0])
+		//beego.Info("AliasName:", res.Indices[newIndex].Aliases[0].AliasName)
+		// 去掉新建索引中的模版索引，换成原索引的模版索引
+		aliasName := res.Indices[destIndex].Aliases[0].AliasName
+		_, err = aliases.Add(destIndex, alias).Remove(destIndex, aliasName).Do(ctx)
+		if err != nil {
+			return err
 		}
-		return err
-	}
-
-	aliases := ElasticClient.Alias()
-	beego.Info("res.Indices:", res.Indices)
-	beego.Info("res.Indices[newIndex]:", res.Indices[newIndex])
-	beego.Info("Aliases[0]:", res.Indices[newIndex].Aliases[0])
-	beego.Info("AliasName:", res.Indices[newIndex].Aliases[0].AliasName)
-	// 去掉新建索引中的模版索引，换成原索引的模版索引
-	aliasName := res.Indices[newIndex].Aliases[0].AliasName
-	_, err = aliases.Add(newIndex, alias).Remove(newIndex, aliasName).Do(ctx)
-	if err != nil {
-		e := RollbackTemplate(template, OldTemplateBackUp[template])
-		if e != nil {
-			beego.Error(e)
+		_, err = ElasticClient.Reindex().SourceIndex(oldIndexFromEs).DestinationIndex(destIndex).
+			ProceedOnVersionConflict().Do(ctx)
+		if err != nil {
+			return err
 		}
-		return err
-	}
-	_, err = ElasticClient.Reindex().SourceIndex(index).DestinationIndex(newIndex).ProceedOnVersionConflict().Do(ctx)
-	if err != nil {
-		e := RollbackTemplate(template, OldTemplateBackUp[template])
-		if e != nil {
-			beego.Error(e)
+		_, err = ElasticClient.Alias().Remove(oldIndexFromEs, alias).Do(ctx)
+		if err != nil {
+			return err
 		}
-		return err
-	}
-
-	_, err = ElasticClient.Alias().Add(newIndex, alias).Remove(oldIndexFromEs, alias).Do(ctx)
-	if err != nil {
-		e := RollbackTemplate(template, OldTemplateBackUp[template])
-		if e != nil {
-			beego.Error(e)
-		}
-		return err
-	}
-	return nil
-}
-
-func RollbackTemplate(name string, body interface{}) error {
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
-	defer cancel()
-	beego.Info("recover old env for template!")
-	_, err := elastic.NewIndicesPutTemplateService(ElasticClient).Name(name).BodyJson(body).Do(ctx)
-	if err != nil {
-		return err
+		beego.Info("upgrade index success! newIndex:", destIndex, "oldIndex:", oldIndexFromEs)
+		return nil
 	}
 	return nil
 }
