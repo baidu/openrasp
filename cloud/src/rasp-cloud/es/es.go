@@ -73,7 +73,7 @@ func init() {
 	}
 }
 
-func initESLogger(esFileName string){
+func initESLogger(esFileName string) {
 	logFile, err := os.Create(esFileName)
 	defer logFile.Close()
 	if err != nil {
@@ -209,7 +209,7 @@ func BulkInsertAlarm(docType string, docs []map[string]interface{}) (err error) 
 					Id(fmt.Sprint(doc["upsert_id"])).
 					DocAsUpsert(true).
 					Doc(doc))
-				kafkaKeys = append(kafkaKeys, "real-openrasp-" + docType + "-" + appId)
+				kafkaKeys = append(kafkaKeys, "real-openrasp-"+docType+"-"+appId)
 				docsTemp = append(docsTemp, doc)
 			} else {
 				if appId, ok := doc["app_id"].(string); ok {
@@ -218,7 +218,7 @@ func BulkInsertAlarm(docType string, docs []map[string]interface{}) (err error) 
 						Type(docType).
 						OpType("index").
 						Doc(doc))
-					kafkaKeys = append(kafkaKeys, "real-openrasp-" + docType + "-" + appId)
+					kafkaKeys = append(kafkaKeys, "real-openrasp-"+docType+"-"+appId)
 					docsTemp = append(docsTemp, doc)
 				}
 			}
@@ -235,7 +235,7 @@ func BulkInsertAlarm(docType string, docs []map[string]interface{}) (err error) 
 	if response != nil && response.Errors {
 		return errors.New("ES bulk has errors: " + fmt.Sprintf("%+v", response.Failed()))
 	}
-	for idx, key := range kafkaKeys{
+	for idx, key := range kafkaKeys {
 		kafka.SendMessage(key, key, docs[idx])
 	}
 	return err

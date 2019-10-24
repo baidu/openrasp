@@ -423,11 +423,13 @@ var dependencyDataTemplate = `
 						},
 						"vendor": {
 							"type": "keyword",
-							"ignore_above" : 256
+							"ignore_above" : 256,
+							"normalizer": "lowercase_normalizer"
 						},
 						"product": {
 							"type": "keyword",
-							"ignore_above" : 256
+							"ignore_above" : 256,
+							"normalizer": "lowercase_normalizer"
 						},
 						"version": {
 							"type": "keyword",
@@ -435,11 +437,13 @@ var dependencyDataTemplate = `
 						},
 						"tag": {
 							"type": "keyword",
-							"ignore_above" : 1024
+							"ignore_above" : 1024,
+							"normalizer": "lowercase_normalizer"
 						},
 						"search_string": {
 							"type": "keyword",
-							"ignore_above" : 1024
+							"ignore_above" : 1024,
+							"normalizer": "lowercase_normalizer"
 						}
 					}
 				}

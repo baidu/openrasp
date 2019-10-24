@@ -106,8 +106,12 @@ func AggrDependencyByQuery(appId string, param *SearchDependencyParam) (int64, [
 	aggrName := "dependency_aggr"
 	aggr := elastic.NewTermsAggregation().
 		Field("tag").
-		Size(10000).
-		OrderByKeyAsc()
+		Size(10000)
+	if strings.Compare(es.Version[0:1], "5") > 0 {
+		aggr.OrderByKeyAsc()
+	} else {
+		aggr.OrderByTermAsc()
+	}
 	queryResult, err := es.ElasticClient.Search(index).
 		Query(query).
 		Size(0).
