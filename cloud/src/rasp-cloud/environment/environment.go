@@ -18,30 +18,30 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
+	"golang.org/x/crypto/ssh/terminal"
 	"log"
 	"os"
 	"os/exec"
 	"rasp-cloud/conf"
 	"rasp-cloud/tools"
 	"syscall"
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/logs"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 var (
-	Version = "1.2"
+	Version             = "1.2"
 	UpdateMappingConfig map[string]interface{}
-	StartBeego = true
+	StartBeego          = true
 )
 
 func init() {
 	chdir()
 	StartFlag := &conf.Flag{}
-	StartFlag.StartType = flag.String("type", "", "use to provide different routers")
-	StartFlag.Daemon = flag.Bool("d", false, "use to run as daemon process")
-	StartFlag.Version = flag.Bool("version", false, "use to get version")
-	StartFlag.Upgrade = flag.String("upgrade", "", "send upgrade flag")
+	StartFlag.StartType = flag.String("type", "", "Specify startup type")
+	StartFlag.Daemon = flag.Bool("d", false, "Run program in background")
+	StartFlag.Version = flag.Bool("version", false, "Print program version")
+	StartFlag.Upgrade = flag.String("upgrade", "", "Execute upgrade job, e.g update ElasticSearch mapping")
 	flag.Parse()
 	if *StartFlag.Version {
 		handleVersionFlag()
@@ -70,7 +70,7 @@ func init() {
 		StartFlag.StartType = &allType
 	}
 	conf.InitConfig(StartFlag)
-	beego.Info("===== start type: " + *StartFlag.StartType + " =====")
+	beego.Info("===== Startup type: " + *StartFlag.StartType + " =====")
 }
 
 func handleVersionFlag() {
@@ -100,11 +100,13 @@ func HandleUpgrade(flag string) {
 	UpdateMappingConfig = make(map[string]interface{})
 	switch flag {
 	case "120to121":
+		log.Println("Going to update ElasticSearch mapping")
+
 		UpdateMappingConfig["attack-alarm-template"] = "120to121"
 		UpdateMappingConfig["policy-alarm-template"] = "120to121"
 		UpdateMappingConfig["error-alarm-template"] = "120to121"
 	default:
-		log.Println("unknown operation!")
+		log.Println("Unknown upgrade job specified: " + flag)
 	}
 }
 
@@ -137,7 +139,7 @@ func HandleDaemon() {
 	if err != nil {
 		tools.Panic(tools.ErrCodeInitChildProcessFailed, "failed to launch child process, error", err)
 	}
-	log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
+	log.Println("rasp-cloud started successfully, for details please refer to 'logs/api/agent-cloud.log'")
 	os.Exit(0)
 }
 
