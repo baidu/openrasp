@@ -88,7 +88,19 @@
             [基线] 弱口令列表，适用于数据库、Tomcat管理后台等等；上限200个，单个最长16，逗号分隔
           </label>
           <textarea v-model.trim="weak_password_list" type="text" class="form-control" placeholder="111111,123,123123,123456,123456a,a123456,admin,both,manager,mysql,root,rootweblogic,tomcat,user,weblogic1,weblogic123,welcome1" />
-        </div>           
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            [基线] [Web根目录敏感文件检查] 文件名正则，仅PHP支持，最长100字符
+          </label>
+          <textarea v-model.trim="data['fileleak.name']" type="text" class="form-control" maxlen="100" placeholder="\.(git|svn|tar|gz|rar|zip|sql|log)$" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            [基线] [Web根目录敏感文件检查] 扫描间隔（小时）
+          </label>
+          <input v-model.trim="data['fileleak.scan_interval']" type="number" class="form-control" placeholder="3" min="1" />
+        </div>
         <div class="form-group">
           <label class="form-label">
             [插件] 单个hook点最大执行时间（ms）
