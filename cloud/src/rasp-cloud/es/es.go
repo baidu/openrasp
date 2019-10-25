@@ -232,14 +232,21 @@ func UpdateMapping (destIndex string, alias string, template string, ctx context
 	if err != nil {
 		return err
 	}
-	// 当前alias有且只有一个index与之对应
-	if len(res.IndicesByAlias(alias)) != 1 {
-		return errors.New("find duplicate alias:" + fmt.Sprintf("%s", res))
-	}
+
 	if len(res.IndicesByAlias(alias)) == 0 {
 		return errors.New("alias:" + fmt.Sprintf("%s", res) + "is not exist!" )
 	}
+	if len(res.IndicesByAlias(alias)) > 2 {
+		return errors.New("find duplicate alias:" + fmt.Sprintf("%s", res.IndicesByAlias(alias)))
+	}
+
 	oldIndexFromEs := res.IndicesByAlias(alias)[0]
+	if len(res.IndicesByAlias(alias)) == 2 {
+			if oldIndexFromEs == destIndex{
+				oldIndexFromEs = res.IndicesByAlias(alias)[1]
+			}
+	}
+
 	exists, err := ElasticClient.IndexExists(destIndex).Do(ctx)
 	if err != nil {
 		return err
@@ -250,27 +257,26 @@ func UpdateMapping (destIndex string, alias string, template string, ctx context
 		if err != nil {
 			return err
 		}
-		res, err = ElasticClient.Aliases().Index(destIndex).Do(ctx)
-		if err != nil {
-			return err
-		}
-		aliases := ElasticClient.Alias()
-		//beego.Info("res.Indices:", res.Indices)
-		//beego.Info("res.Indices[newIndex]:", res.Indices[newIndex])
-		//beego.Info("Aliases[0]:", res.Indices[newIndex].Aliases[0])
-		//beego.Info("AliasName:", res.Indices[newIndex].Aliases[0].AliasName)
+
+		//aliases := ElasticClient.Alias()
 		// 去掉新建索引中的模版索引，换成原索引的模版索引
-		aliasName := res.Indices[destIndex].Aliases[0].AliasName
-		_, err = aliases.Add(destIndex, alias).Remove(destIndex, aliasName).Do(ctx)
-		if err != nil {
-			return err
-		}
+		//aliasName := res.Indices[destIndex].Aliases[0].AliasName
+		//_, err = aliases.Add(destIndex, alias).Remove(destIndex, aliasName).Do(ctx)
+		//if err != nil {
+		//	return err
+		//}
 		_, err = ElasticClient.Reindex().SourceIndex(oldIndexFromEs).DestinationIndex(destIndex).
 			ProceedOnVersionConflict().Do(ctx)
 		if err != nil {
 			return err
 		}
-		_, err = ElasticClient.Alias().Remove(oldIndexFromEs, alias).Do(ctx)
+		destIndexAlias, err := ElasticClient.Aliases().Index(destIndex).Do(ctx)
+		if err != nil {
+			return err
+		}
+		destIndexAliasName := destIndexAlias.Indices[destIndex].Aliases[0].AliasName
+		_, err = ElasticClient.Alias().Remove(oldIndexFromEs, alias).Add(destIndex, alias).
+			Remove(destIndex, destIndexAliasName).Do(ctx)
 		if err != nil {
 			return err
 		}
