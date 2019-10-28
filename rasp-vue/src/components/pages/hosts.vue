@@ -93,8 +93,9 @@
             </thead>
             <tbody>
               <tr v-for="row in data" :key="row.id">
-                <td>
+                <td style="min-width: 100px; ">
                   <a href="javascript:" @click="showHostDetail(row)">{{ row.hostname }}</a>
+                  <span v-if="row.description"><br>[{{ row.description }}]</span>
                 </td>
                 <td nowrap>
                   {{ row.register_ip }}
@@ -119,18 +120,18 @@
                   </span>
                 </td>
                 <td nowrap>
+                  <a href="javascript:" @click="setComment(row)">
+                    备注
+                  </a>
                   <a href="javascript:" v-if="! row.online" @click="doDelete(row)">
                     删除
                   </a>
-                  <span v-if="row.online">-</span>
                 </td>
               </tr>
             </tbody>
           </table>
 
-          <p v-if="! loading && total == 0" class="text-center">
-暂无数据
-</p>
+          <p v-if="! loading && total == 0" class="text-center">暂无数据</p>
 
           <nav v-if="! loading && total > 10">
             <ul class="pagination pull-left">
@@ -142,7 +143,7 @@
             </ul>
             <b-pagination v-model="currentPage" align="right" :total-rows="total" :per-page="10" @change="loadRaspList($event)" />
           </nav>
-</div>
+        </div>
       </div>
     </div>
 
@@ -191,7 +192,7 @@ export default {
   mounted() {
     // 记住主机状态
     // TODO: 改为类库实现
-    console.log('load filter')
+    // console.log('load filter')
     try {
       let filter = JSON.parse(localStorage.getItem('host_filter_status'))
       if (typeof(filter.online) == 'boolean' && typeof(filter.offline) == 'boolean') {
@@ -258,7 +259,21 @@ export default {
         this.total = res.total
         this.loading = false
       })
-    },    
+    },
+    setComment: function(data) {
+      var oldVal = data.description
+      var newVal = prompt('输入新的备注', oldVal)
+      if (! newVal) {
+        return
+      }
+
+      this.request.post('v1/api/rasp/describe', {
+        id: data.id,
+        description: newVal
+      }).then(res => {
+        this.loadRaspList(this.currentPage)
+      })
+    },
     doDelete: function(data) {
       if (!confirm('确认删除? 删除前请先在主机端卸载 OpenRASP Agent')) {
         return
