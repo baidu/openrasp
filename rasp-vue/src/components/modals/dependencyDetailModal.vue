@@ -1,6 +1,6 @@
 <template>
   <div id="showDependencyDetailModal" class="modal no-fade" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog" role="document" style="max-width: 90%">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
