@@ -48,7 +48,7 @@
 
           <b-table hover bordered :items="data" :fields="fields">
             <template slot="button" slot-scope="scope">
-              <a href="javascript:" @click="showExceptionDetail(scope.item)">
+              <a href="javascript:" @click="showDependencyDetail(scope.item)">
                 查看详情
               </a>
             </template>
@@ -71,13 +71,12 @@
       </div>
     </div>
 
-    <ExceptionDetailModal ref="showExceptionDetail" />
+    <DependencyDetailModal ref="dependencyDetailModal" />
   </div>
 </template>
 
 <script>
-import EventDetailModal from '@/components/modals/eventDetailModal'
-import ExceptionDetailModal from '@/components/modals/exceptionDetailModal'
+import DependencyDetailModal from '@/components/modals/dependencyDetailModal'
 import DatePicker from '@/components/DatePicker'
 import { mapGetters } from 'vuex'
 import isIp from 'is-ip'
@@ -85,8 +84,7 @@ import isIp from 'is-ip'
 export default {
   name: 'Dependency',
   components: {
-    EventDetailModal,
-    ExceptionDetailModal,
+    DependencyDetailModal,
     DatePicker
   },
   data() {
@@ -101,7 +99,7 @@ export default {
         { key: 'vendor',     label: '厂商',    class: 'text-nowrap' },
         { key: 'product',    label: '产品',    class: 'text-nowrap' },
         { key: 'version',    label: '版本号',   tdAttr: { 'style': 'min-width: 150px;' } },
-        { key: 'rasp_count', label: '受影响主机' },
+        { key: 'rasp_count', label: '影响主机' },
         { key: 'button',     label: '查看详情', class: 'text-nowrap' }
       ]
     }
@@ -139,8 +137,12 @@ export default {
           this.loading = false
         })
     },
-    showExceptionDetail(data) {
-      this.$refs.showExceptionDetail.showModal(data)
+    showDependencyDetail(data) {
+      this.$refs.dependencyDetailModal.search_data = {
+        app_id: this.current_app.id,
+        tag: data.tag,
+      }
+      this.$refs.dependencyDetailModal.showModal()      
     },
   }
 }
