@@ -23,22 +23,24 @@ import java.util.Arrays;
  * @author: anyang
  * @create: 2019/04/19 12:03
  */
-public class Dependency{
+public class Dependency {
     public final String product;
     public final String version;
     public final String vendor;
     public final String path;
+    public final String source;
 
-    public Dependency(String product, String version,String vendor ,String path) {
+    public Dependency(String product, String version, String vendor, String path, String source) {
         this.product = product;
         this.version = version;
         this.vendor = vendor;
         this.path = path;
+        this.source = source;
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(new Object[]{this.product, this.version,this.vendor, this.path});
+        return Arrays.hashCode(new Object[]{this.product, this.version, this.vendor, this.path});
     }
 
     @Override

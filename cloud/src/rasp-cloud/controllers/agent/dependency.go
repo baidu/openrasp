@@ -24,6 +24,7 @@ type dependencyParamItem struct {
 	Vendor  string `json:"vendor"`
 	Product string `json:"product"`
 	Version string `json:"version"`
+	Source  string `json:"source"`
 }
 
 // @router / [post]
@@ -45,7 +46,8 @@ func (o *DependencyController) Post() {
 				beego.Error("failed to add dependency for rasp: "+rasp.Id, errMsg)
 				continue
 			}
-			md5Value := fmt.Sprintf("%x", md5.Sum([]byte(item.Vendor+":"+item.Product+":"+item.Version)))
+			md5Value := fmt.Sprintf("%x",
+				md5.Sum([]byte(item.Vendor+":"+item.Product+":"+item.Version+":"+item.Source)))
 			if value, ok := dependencyMap[md5Value]; ok {
 				value.Path = append(value.Path, item.Path)
 			} else {
@@ -54,6 +56,7 @@ func (o *DependencyController) Post() {
 					Version: item.Version,
 					Product: item.Product,
 					Vendor:  item.Vendor,
+					Source:  item.Source,
 				}
 				dependencyMap[md5Value] = model
 				dependencies = append(dependencies, model)
@@ -97,6 +100,9 @@ func (o *DependencyController) checkDependencyParamItem(item *dependencyParamIte
 	}
 	if len(item.Path) > 1024 {
 		return false, "the length of path can not be greater than 1024"
+	}
+	if len(item.Source) > 1024 {
+		return false, "the length of source can not be greater than 1024"
 	}
 	return true, ""
 }

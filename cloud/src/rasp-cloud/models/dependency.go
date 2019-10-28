@@ -22,6 +22,7 @@ type Dependency struct {
 	Version      string   `json:"version"`
 	Tag          string   `json:"tag"`
 	SearchString string   `json:"search_string"`
+	Source       string   `json:"source"`
 }
 
 type SearchDependencyParam struct {
@@ -34,6 +35,7 @@ type SearchDependencyParam struct {
 		HostnameOrIp string `json:"hostname,omitempty" valid:"MaxSize(1024)"`
 		Tag          string `json:"tag,omitempty" valid:"MaxSize(1024)"`
 		KeyWord      string `json:"key_word,omitempty" valid:"MaxSize(1024)"`
+		Source       string `json:"source,omitempty" valid:"MaxSize(1024)"`
 	} `json:"data" valid:"Required"`
 }
 

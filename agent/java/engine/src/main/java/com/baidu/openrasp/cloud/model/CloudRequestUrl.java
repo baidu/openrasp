@@ -27,5 +27,5 @@ public interface CloudRequestUrl {
     String CLOUD_PLUGIN_HTTP_APPENDER_URL = cloudAddress + "/v1/agent/log/plugin";
     String CLOUD_EXCEPTION_HTTP_APPENDER_URL = cloudAddress + "/v1/agent/log/error";
     String CLOUD_STATISTICS_REPORT_URL = cloudAddress + "/v1/agent/report";
-    String CLOUD_DEPENDENCY_REPORT_URL = cloudAddress + "v1/agent/dependency";
+    String CLOUD_DEPENDENCY_REPORT_URL = cloudAddress + "/v1/agent/dependency";
 }
