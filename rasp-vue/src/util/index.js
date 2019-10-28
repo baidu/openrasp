@@ -185,7 +185,10 @@ export function getDefaultConfig() {
       recv_addr: []
     },
     kafka_alarm_conf: {
-
+      
+    },
+    general_alarm_conf: {
+      interval: 120
     }
   }
 }
