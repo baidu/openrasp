@@ -1,5 +1,5 @@
 [Unit]
-Description=Openrasp panel daemon
+Description=OpenRASP panel daemon
 
 [Service]
 Type=notify
@@ -13,4 +13,4 @@ Restart=on-failure
 RestartSec=10s
 
 [Install]
-WantedBy=openrasp.target
+WantedBy=OpenRASP.target
