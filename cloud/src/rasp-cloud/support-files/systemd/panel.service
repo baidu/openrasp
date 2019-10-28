@@ -1,0 +1,16 @@
+[Unit]
+Description=OpenRASP panel daemon
+
+[Service]
+Type=notify
+EnvironmentFile=/home/work/rasp-cloud/conf/app.conf
+ExecStart=/home/work/rasp-cloud/rasp-cloud -type=panel -d
+ExecReload=/home/work/rasp-cloud/rasp-cloud -s restart
+ExecStop=/home/work/rasp-cloud/rasp-cloud -s stop
+RemainAfterExit=yes
+KillMode=mixed
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=OpenRASP.target

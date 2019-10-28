@@ -5,7 +5,18 @@
         <h1 class="page-title">
           Agent 管理
         </h1>
-        <div class="page-options d-flex">
+        <div class="page-options d-flex" style="margin-top: 5px;">
+            <select v-model="currentVersion" class="form-control">
+              <option value="">
+                客户端版本: 全部
+              </option>
+              <option :value="v.version" v-for="v in agent_versions" :key="v.version">
+                客户端版本: {{v.version}} ({{ v.count }})
+              </option>
+            </select>
+        </div>
+
+        <div class="page-options d-flex" style="margin-top: 5px; margin-left: 10px; ">
           <div>
             <b-dropdown :text="'主机状态' + toHostStatus()" class="">
               <div class="row px-2">
@@ -93,8 +104,9 @@
             </thead>
             <tbody>
               <tr v-for="row in data" :key="row.id">
-                <td>
+                <td style="min-width: 100px; ">
                   <a href="javascript:" @click="showHostDetail(row)">{{ row.hostname }}</a>
+                  <span v-if="row.description"><br>[{{ row.description }}]</span>
                 </td>
                 <td nowrap>
                   {{ row.register_ip }}
@@ -119,18 +131,18 @@
                   </span>
                 </td>
                 <td nowrap>
+                  <a href="javascript:" @click="setComment(row)">
+                    备注
+                  </a>
                   <a href="javascript:" v-if="! row.online" @click="doDelete(row)">
                     删除
                   </a>
-                  <span v-if="row.online">-</span>
                 </td>
               </tr>
             </tbody>
           </table>
 
-          <p v-if="! loading && total == 0" class="text-center">
-暂无数据
-</p>
+          <p v-if="! loading && total == 0" class="text-center">暂无数据</p>
 
           <nav v-if="! loading && total > 10">
             <ul class="pagination pull-left">
@@ -142,7 +154,7 @@
             </ul>
             <b-pagination v-model="currentPage" align="right" :total-rows="total" :per-page="10" @change="loadRaspList($event)" />
           </nav>
-</div>
+        </div>
       </div>
     </div>
 
@@ -164,6 +176,8 @@ export default {
     return {
       data: [],
       loading: false,
+      currentVersion: '',
+      agent_versions: [],
       currentPage: 1,
       total: 0,
       hostname: '',
@@ -180,6 +194,9 @@ export default {
     current_app() { 
       this.loadRaspList(1) 
     },
+    currentVersion() {
+      this.loadRaspList(1)
+    },
     filter: {
       handler() { 
         this.loadRaspList(1)
@@ -191,7 +208,7 @@ export default {
   mounted() {
     // 记住主机状态
     // TODO: 改为类库实现
-    console.log('load filter')
+    // console.log('load filter')
     try {
       let filter = JSON.parse(localStorage.getItem('host_filter_status'))
       if (typeof(filter.online) == 'boolean' && typeof(filter.offline) == 'boolean') {
@@ -206,6 +223,17 @@ export default {
   },
   methods: {
     ceil: Math.ceil,
+    enumAgentVersion() {
+      this.request.post('v1/api/rasp/search/version', {
+        data: {
+          app_id: this.current_app.id
+        },
+        page: 1,
+        perpage: 100
+      }).then(res => {
+        this.agent_versions = res.data
+      })
+    },
     toHostStatus() {
       if (this.filter.online && this.filter.offline) {
         return ': 全部'
@@ -231,6 +259,10 @@ export default {
         this.loading = false
         return
       }
+
+      // 每次搜索 rasp，都应该触发一次版本聚合
+      this.enumAgentVersion()
+
       const body = {
         data: {
           app_id: this.current_app.id
@@ -238,6 +270,11 @@ export default {
         page: page,
         perpage: 10
       }
+
+      if (this.currentVersion) {
+        body.data.version = this.currentVersion
+      }
+
       if (this.hostname) {
         body.data.hostname = this.hostname
         // if (isIp(this.hostname)) {
@@ -258,7 +295,21 @@ export default {
         this.total = res.total
         this.loading = false
       })
-    },    
+    },
+    setComment: function(data) {
+      var oldVal = data.description
+      var newVal = prompt('输入新的备注', oldVal)
+      if (! newVal) {
+        return
+      }
+
+      this.request.post('v1/api/rasp/describe', {
+        id: data.id,
+        description: newVal
+      }).then(res => {
+        this.loadRaspList(this.currentPage)
+      })
+    },
     doDelete: function(data) {
       if (!confirm('确认删除? 删除前请先在主机端卸载 OpenRASP Agent')) {
         return

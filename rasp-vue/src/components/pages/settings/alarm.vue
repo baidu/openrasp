@@ -56,6 +56,31 @@
     </div>
     <!-- end alarm methods -->
 
+    <!-- begin general alarm settings -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          报警通用配置
+        </h3>
+        <div class="card-options">
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">
+            每隔多少秒发送一次报警（报警并非实时发送，而是每隔一段建检查ES里是否有新报警）
+          </label>
+          <input v-model.trim="data.general_alarm_conf.interval" type="number" class="form-control" placeholder="120">
+        </div>
+      </div>
+      <div class="card-footer">
+        <button type="submit" class="btn btn-primary" @click="saveSettings('general')">
+          保存
+        </button>
+      </div>
+    </div>
+    <!-- end general alarm settings -->    
+
     <!-- begin alarm settings -->
     <div class="card">
       <div class="card-header">
@@ -167,6 +192,7 @@
         </button>
       </div>
     </div>
+
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">
@@ -464,6 +490,12 @@ export default {
           body['kafka_alarm_conf'] = this.data.kafka_alarm_conf
 
           msg = 'Kafka 推送设置保存成功'
+          break
+        
+        case 'general':
+          body['general_alarm_conf'] = this.data.general_alarm_conf
+
+          msg = '通用报警设置保存成功'
           break
       }
 
