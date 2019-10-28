@@ -51,7 +51,7 @@ type Rasp struct {
 }
 
 type RecordCount struct {
-	Id                string            `json:"id" bson:"_id"`
+	Id                string            `json:"version" bson:"_id"`
 	Count             int64    			`json:"count" bson:"count"`
 }
 
