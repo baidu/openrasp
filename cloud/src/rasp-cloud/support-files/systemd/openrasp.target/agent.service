@@ -1,0 +1,16 @@
+[Unit]
+Description=Openrasp agent daemon
+
+[Service]
+Type=notify
+EnvironmentFile=/home/work/rasp-cloud-agent/conf/app.conf
+ExecStart=/home/work/rasp-cloud-agent -type=agent -d
+ExecReload=/home/work/rasp-cloud-agent -s restart
+ExecStop=/home/work/rasp-cloud-agent -s stop
+RemainAfterExit=yes
+KillMode=mixed
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=openrasp.target
