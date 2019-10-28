@@ -444,6 +444,11 @@ var dependencyDataTemplate = `
 							"type": "keyword",
 							"ignore_above" : 1024,
 							"normalizer": "lowercase_normalizer"
+						},
+						"source": {
+							"type": "keyword",
+							"ignore_above" : 1024,
+							"normalizer": "lowercase_normalizer"
 						}
 					}
 				}
@@ -455,11 +460,11 @@ func init() {
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
 
 		templates := map[string]string{
-			"report-data-template":  reportDataTemplate,
-			"error-alarm-template":  errorAlarmTemplate,
-			"attack-alarm-template": attackAlarmTemplate,
-			"policy-alarm-template": policyAlarmTemplate,
-			"dependency-data-template":dependencyDataTemplate,
+			"report-data-template":     reportDataTemplate,
+			"error-alarm-template":     errorAlarmTemplate,
+			"attack-alarm-template":    attackAlarmTemplate,
+			"policy-alarm-template":    policyAlarmTemplate,
+			"dependency-data-template": dependencyDataTemplate,
 		}
 
 		for name, template := range templates {

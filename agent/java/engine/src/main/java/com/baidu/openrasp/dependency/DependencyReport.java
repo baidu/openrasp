@@ -51,12 +51,13 @@ public class DependencyReport extends CloudTimerTask {
         String url = CloudRequestUrl.CLOUD_DEPENDENCY_REPORT_URL;
         GenericResponse response = new CloudHttp().commonRequest(url, new Gson().toJson(parameters));
         if (!CloudUtils.checkResponse(response)) {
-            LogTool.warn(ErrorType.REGISTER_ERROR, CloudUtils.handleError(ErrorType.DEPENDENCY_REPORT_ERROR, response));
+            LogTool.warn(ErrorType.DEPENDENCY_REPORT_ERROR,
+                    CloudUtils.handleError(ErrorType.DEPENDENCY_REPORT_ERROR, response));
         }
     }
 
     @Override
     public void handleError(Throwable t) {
-        LogTool.warn(ErrorType.REGISTER_ERROR, "heartbeat failed: " + t.getMessage(), t);
+        LogTool.warn(ErrorType.REGISTER_ERROR, "dependency report failed: " + t.getMessage(), t);
     }
 }

@@ -36,7 +36,7 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.security.ProtectionDomain;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -53,7 +53,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
     private static HashSet<String> jspClassLoaderNames = new HashSet<String>();
     private static ConcurrentSkipListSet<String> necessaryHookType = new ConcurrentSkipListSet<String>();
     private static ConcurrentSkipListSet<String> dubboNecessaryHookType = new ConcurrentSkipListSet<String>();
-    public static ConcurrentHashMap<String, WeakReference<ClassLoader>> jspClassLoaderCache = new ConcurrentHashMap<String, WeakReference<ClassLoader>>();
+    public static ConcurrentHashMap<String, SoftReference<ClassLoader>> jspClassLoaderCache = new ConcurrentHashMap<String, SoftReference<ClassLoader>>();
 
     private Instrumentation inst;
     private HashSet<AbstractClassHook> hooks = new HashSet<AbstractClassHook>();
@@ -137,10 +137,10 @@ public class CustomClassTransformer implements ClassFileTransformer {
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
                             ProtectionDomain domain, byte[] classfileBuffer) throws IllegalClassFormatException {
         if (loader != null) {
-            DependencyFinder.classLoaderCache.add(new WeakReference<ClassLoader>(loader));
+            DependencyFinder.addJarPath(domain);
         }
         if (loader != null && jspClassLoaderNames.contains(loader.getClass().getName())) {
-            jspClassLoaderCache.put(className.replace("/", "."), new WeakReference<ClassLoader>(loader));
+            jspClassLoaderCache.put(className.replace("/", "."), new SoftReference<ClassLoader>(loader));
         }
         for (final AbstractClassHook hook : hooks) {
             if (hook.isClassMatched(className)) {
