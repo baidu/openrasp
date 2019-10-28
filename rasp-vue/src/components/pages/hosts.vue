@@ -5,7 +5,18 @@
         <h1 class="page-title">
           Agent 管理
         </h1>
-        <div class="page-options d-flex">
+        <div class="page-options d-flex" style="margin-top: 5px;">
+            <select v-model="currentVersion" class="form-control">
+              <option value="">
+                客户端版本: 全部
+              </option>
+              <option :value="v.version" v-for="v in agent_versions" :key="v.version">
+                客户端版本: {{v.version}} ({{ v.count }})
+              </option>
+            </select>
+        </div>
+
+        <div class="page-options d-flex" style="margin-top: 5px; margin-left: 10px; ">
           <div>
             <b-dropdown :text="'主机状态' + toHostStatus()" class="">
               <div class="row px-2">
@@ -165,6 +176,8 @@ export default {
     return {
       data: [],
       loading: false,
+      currentVersion: '',
+      agent_versions: [],
       currentPage: 1,
       total: 0,
       hostname: '',
@@ -180,6 +193,9 @@ export default {
   watch: {
     current_app() { 
       this.loadRaspList(1) 
+    },
+    currentVersion() {
+      this.loadRaspList(1)
     },
     filter: {
       handler() { 
@@ -207,6 +223,17 @@ export default {
   },
   methods: {
     ceil: Math.ceil,
+    enumAgentVersion() {
+      this.request.post('v1/api/rasp/search/version', {
+        data: {
+          app_id: this.current_app.id
+        },
+        page: 1,
+        perpage: 100
+      }).then(res => {
+        this.agent_versions = res.data
+      })
+    },
     toHostStatus() {
       if (this.filter.online && this.filter.offline) {
         return ': 全部'
@@ -232,6 +259,10 @@ export default {
         this.loading = false
         return
       }
+
+      // 每次搜索 rasp，都应该触发一次版本聚合
+      this.enumAgentVersion()
+
       const body = {
         data: {
           app_id: this.current_app.id
@@ -239,6 +270,11 @@ export default {
         page: page,
         perpage: 10
       }
+
+      if (this.currentVersion) {
+        body.data.version = this.currentVersion
+      }
+
       if (this.hostname) {
         body.data.hostname = this.hostname
         // if (isIp(this.hostname)) {
