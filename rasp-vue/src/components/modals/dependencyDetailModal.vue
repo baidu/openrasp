@@ -4,72 +4,39 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
-            依赖详情
+            依赖详情: {{ search_data.tag }}
           </h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close" />
         </div>
-        <div class="modal-body" style="padding-top: 0">
-          <ul id="myTab" class="nav nav-tabs" role="tablist">
-            <li class="nav-item">
-              <a id="home-tab" class="nav-link active" data-toggle="tab" href="#exception">
-                依赖信息
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab">资产信息</a>
-            </li>
+        <div class="modal-body">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>主机名</th>
+                <th>网络信息</th>
+                <th>路径列表</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in data" :key="row.id">
+                <td nowrap>{{ row.hostname }}</td>
+                <td nowrap>{{ row.register_ip }}</td>
+                <td>
+                  {{ row.path.join(', ') }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <ul class="pagination pull-left">
+              <li class="active">
+                <span style="margin-top: 0.5em; display: block; ">
+                  <strong>{{ total }}</strong> 结果，显示 {{ currentPage }} / {{ ceil(total / 10) }} 页
+                </span>
+              </li>
           </ul>
-          <br>
-          <div id="myTabContent" class="tab-content">
-            <div id="exception" class="tab-pane fade show active" role="tabpanel" aria-labelledby="home-tab">
-              <div class="h6">
-                受影响主机
-              </div>
-              <p>{{ moment(data.event_time).format('YYYY-MM-DD HH:mm:ss') }}</p>
-              <div class="h6">
-                报警消息
-              </div>
-              <p style="word-break: break-all; ">
-                [{{ data.error_code }}] {{ data.message }}
-              </p>
-
-              <div v-if="data.pid">
-                <div class="h6">
-                  PID
-                </div>
-                <p style="word-break: break-all; ">
-                  {{ data.pid }}
-                </p>
-              </div>
-
-              <div v-if="data.path">
-                <div class="h6">
-                  日志路径
-                </div>
-                <p style="word-break: break-all; ">
-                  {{ data.path }}
-                </p>
-              </div>
-
-              <div class="h6" v-if="data.stack_trace">
-                堆栈信息
-              </div>
-              <pre v-if="data.stack_trace">{{ data.stack_trace }}</pre>
-            </div>
-
-            <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-              <div class="h6">
-                主机名称
-              </div>
-              <p>{{ data.server_hostname }}</p>
-              <div class="h6">
-                服务器 IP
-              </div>
-              <ul>
-                <li v-for="nic in data.server_nic" :key="nic.name">{{ nic.name }}: {{ nic.ip }}</li>
-              </ul>
-            </div>
-          </div>
+          <b-pagination v-model="currentPage" align="right" :total-rows="total" :per-page="10" @change="fetchData" />
+          
         </div>
         <div class="modal-footer">
           <button class="btn btn-primary" data-dismiss="modal">
@@ -88,14 +55,28 @@ export default {
   name: 'DependencyDetailModal',
   data: function() {
     return {
-      data: {
-      }
+      loading: false,
+      total: 0,
+      currentPage: 1,
+      data: {},
+      search_data: {}
     }
   },
   methods: {
-    showModal(data) {
-      this.data = data
+    ceil: Math.ceil,
+    fetchData(page) {
+      this.request.post('v1/api/dependency/search', {
+        data: this.search_data,
+        page: page,
+        perpage: 10
+      }).then(res => {
+        this.data = res.data
+        this.total = res.total
+      })
+    },
 
+    showModal(data) {
+      this.fetchData(1)
       $('#showDependencyDetailModal').modal()
     }
   }
