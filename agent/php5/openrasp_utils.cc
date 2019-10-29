@@ -219,15 +219,16 @@ bool get_entire_file_content(const char *file, std::string &content)
     return false;
 }
 
-char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
+std::string fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
 {
+    std::string result;
     zval **origin_zv;
     if (zend_hash_find(ht, arKey, strlen(arKey) + 1, (void **)&origin_zv) == SUCCESS &&
         Z_TYPE_PP(origin_zv) == IS_STRING)
     {
-        return Z_STRVAL_PP(origin_zv);
+        result = std::string(Z_STRVAL_PP(origin_zv), Z_STRLEN_PP(origin_zv));
     }
-    return nullptr;
+    return result;
 }
 
 std::string json_encode_from_zval(zval *value TSRMLS_DC)
@@ -369,4 +370,34 @@ std::string get_phpversion()
         zval_dtor(&z_version);
     }
     return version;
+}
+
+zval *fetch_http_globals(int vars_id TSRMLS_DC)
+{
+    static std::map<int, std::string> pairs = {{TRACK_VARS_POST, "_POST"},
+                                               {TRACK_VARS_GET, "_GET"},
+                                               {TRACK_VARS_SERVER, "_SERVER"},
+                                               {TRACK_VARS_COOKIE, "_COOKIE"},
+                                               {TRACK_VARS_FILES, "_FILES"}};
+    auto it = pairs.find(vars_id);
+    if (it != pairs.end())
+    {
+        if ((PG(http_globals)[vars_id] && Z_TYPE_P(PG(http_globals)[vars_id]) == IS_ARRAY) ||
+            zend_is_auto_global(const_cast<char *>(it->second.c_str()), it->second.length() TSRMLS_CC))
+        {
+            return PG(http_globals)[it->first];
+        }
+    }
+    return nullptr;
+}
+
+std::map<std::string, std::string> restore_multipart_files(zval *http_files)
+{
+    std::map<std::string, std::string> result;
+    if (http_files)
+    {
+
+    }
+    return result;
+
 }

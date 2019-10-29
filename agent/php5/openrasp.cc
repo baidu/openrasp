@@ -247,6 +247,44 @@ PHP_RINIT_FUNCTION(openrasp)
 {
     if (is_initialized)
     {
+        zval *http_server = fetch_http_globals(TRACK_VARS_SERVER TSRMLS_CC);
+        OPENRASP_G(request).update_id();
+        if (nullptr != http_server && Z_TYPE_P(http_server) == IS_ARRAY)
+        {
+            OPENRASP_G(request).url.set_request_scheme(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "REQUEST_SCHEME"));
+            OPENRASP_G(request).url.set_http_host(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "HTTP_HOST"));
+            OPENRASP_G(request).url.set_server_name(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "SERVER_NAME"));
+            OPENRASP_G(request).url.set_server_addr(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "SERVER_ADDR"));
+            OPENRASP_G(request).url.set_request_uri(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "REQUEST_URI"));
+            OPENRASP_G(request).url.set_query_string(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "QUERY_STRING"));
+            OPENRASP_G(request).url.set_port(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "SERVER_PORT"));
+
+            OPENRASP_G(request).set_method(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "REQUEST_METHOD"));
+            OPENRASP_G(request).set_remote_addr(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "REMOTE_ADDR"));
+            OPENRASP_G(request).set_document_root(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "DOCUMENT_ROOT"));
+            
+            std::map<std::string, std::string> header;
+            for (zend_hash_internal_pointer_reset(Z_ARRVAL_P(http_server));
+                 zend_hash_has_more_elements(Z_ARRVAL_P(http_server)) == SUCCESS;
+                 zend_hash_move_forward(Z_ARRVAL_P(http_server)))
+            {
+                char *key = nullptr;
+                ulong idx;
+                int type = 0;
+                zval **value;
+                std::string header_key;
+                type = zend_hash_get_current_key(Z_ARRVAL_P(http_server), &key, &idx, 0);
+                if (type == HASH_KEY_IS_STRING &&
+                    !(header_key = convert_to_header_key(key, strlen(key))).empty() &&
+                    zend_hash_get_current_data(Z_ARRVAL_P(http_server), (void **)&value) == SUCCESS &&
+                    Z_TYPE_PP(value) == IS_STRING)
+                {
+                    header[header_key] = std::string(Z_STRVAL_PP(value), Z_STRLEN_PP(value));
+                }
+            }
+            OPENRASP_G(request).set_header(header);
+
+        }
         int result;
         long config_last_update = openrasp::scm->get_config_last_update();
         if (config_last_update && config_last_update > OPENRASP_G(config).GetLatestUpdateTime())
@@ -256,6 +294,7 @@ PHP_RINIT_FUNCTION(openrasp)
                 OPENRASP_G(config).SetLatestUpdateTime(config_last_update);
             }
         }
+        OPENRASP_G(request).set_body_length(OPENRASP_CONFIG(body.maxbytes));
         // openrasp_inject must be called before openrasp_log cuz of request_id
         result = PHP_RINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU);
@@ -275,6 +314,7 @@ PHP_RSHUTDOWN_FUNCTION(openrasp)
         hook_without_params(REQUEST_END TSRMLS_CC);
         result = PHP_RSHUTDOWN(openrasp_log)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_RSHUTDOWN(openrasp_inject)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
+        OPENRASP_G(request).clear();
     }
     return SUCCESS;
 }

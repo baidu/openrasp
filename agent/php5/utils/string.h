@@ -26,6 +26,7 @@ bool start_with(const std::string &str, const std::string &prefix);
 bool end_with(const std::string &str, const std::string &suffix);
 void string_replace(std::string &str, const std::string &from, const std::string &to);
 bool empty(const char *str);
+bool case_insens_equal(std::string &str1, std::string &str2);
 
 } // namespace openrasp
 

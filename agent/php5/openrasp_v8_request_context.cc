@@ -19,6 +19,8 @@
 #include "openrasp_utils.h"
 #include "openrasp_content_type.h"
 #include "openrasp_inject.h"
+#include "agent/shared_config_manager.h"
+#include "utils/hostname.h"
 
 using namespace openrasp;
 
@@ -26,145 +28,56 @@ static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    zval **origin_zv;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info(TSRMLS_C);
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        zend_hash_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRS("url"), (void **)&origin_zv) == SUCCESS)
-    {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, *origin_zv);
-        info.GetReturnValue().Set(obj);
-    }
+    v8::Isolate *isolate = info.GetIsolate();
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).url.get_complete_url());
+    info.GetReturnValue().Set(obj);
 }
 static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    static const char REQUEST_METHOD[] = "REQUEST_METHOD";
-    static const ulong REQUEST_METHOD_HASH = zend_get_hash_value(ZEND_STRS(REQUEST_METHOD));
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
-    {
-        return;
-    }
-    zval **value;
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_METHOD), REQUEST_METHOD_HASH, (void **)&value) != SUCCESS ||
-        Z_TYPE_PP(value) != IS_STRING)
-    {
-        return;
-    }
     v8::Isolate *isolate = info.GetIsolate();
-    char *str = estrndup(Z_STRVAL_PP(value), Z_STRLEN_PP(value));
-    if (!str)
-    {
-        return;
-    }
-    char *p = str;
-    while (*p)
-    {
-        *p = tolower(*p);
-        p++;
-    }
-    auto obj = NewV8String(isolate, str);
-    efree(str);
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_method());
     info.GetReturnValue().Set(obj);
 }
 static void querystring_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    static const char QUERY_STRING[] = "QUERY_STRING";
-    static const ulong QUERY_STRING_HASH = zend_get_hash_value(ZEND_STRS(QUERY_STRING));
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
-    {
-        return;
-    }
-    zval **value;
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(QUERY_STRING), QUERY_STRING_HASH, (void **)&value) != SUCCESS ||
-        Z_TYPE_PP(value) != IS_STRING)
-    {
-        return;
-    }
-    auto obj = NewV8ValueFromZval(info.GetIsolate(), *value);
+    v8::Isolate *isolate = info.GetIsolate();
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).url.get_query_string());
     info.GetReturnValue().Set(obj);
 }
 static void appBasePath_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    static const char DOCUMENT_ROOT[] = "DOCUMENT_ROOT";
-    static const ulong DOCUMENT_ROOT_HASH = zend_get_hash_value(ZEND_STRS(DOCUMENT_ROOT));
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
-    {
-        return;
-    }
-    zval **value;
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(DOCUMENT_ROOT), DOCUMENT_ROOT_HASH, (void **)&value) != SUCCESS ||
-        Z_TYPE_PP(value) != IS_STRING)
-    {
-        return;
-    }
-    auto obj = NewV8ValueFromZval(info.GetIsolate(), *value);
+    v8::Isolate *isolate = info.GetIsolate();
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_document_root());
     info.GetReturnValue().Set(obj);
 }
 static void protocol_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    static const char REQUEST_SCHEME[] = "REQUEST_SCHEME";
-    static const ulong REQUEST_SCHEME_HASH = zend_get_hash_value(ZEND_STRS(REQUEST_SCHEME));
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
-    {
-        return;
-    }
-    zval **value;
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_SCHEME), REQUEST_SCHEME_HASH, (void **)&value) != SUCCESS ||
-        Z_TYPE_PP(value) != IS_STRING)
-    {
-        return;
-    }
-    auto obj = NewV8ValueFromZval(info.GetIsolate(), *value);
+    v8::Isolate *isolate = info.GetIsolate();
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).url.get_request_scheme());
     info.GetReturnValue().Set(obj);
 }
 static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    static const char REMOTE_ADDR[] = "REMOTE_ADDR";
-    static const ulong REMOTE_ADDR_HASH = zend_get_hash_value(ZEND_STRS(REMOTE_ADDR));
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
-    {
-        return;
-    }
-    zval **value;
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REMOTE_ADDR), REMOTE_ADDR_HASH, (void **)&value) != SUCCESS ||
-        Z_TYPE_PP(value) != IS_STRING)
-    {
-        return;
-    }
-    auto obj = NewV8ValueFromZval(info.GetIsolate(), *value);
+    v8::Isolate *isolate = info.GetIsolate();
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_remote_addr());
     info.GetReturnValue().Set(obj);
 }
 static void path_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    static const char REQUEST_URI[] = "REQUEST_URI";
-    static const ulong REQUEST_URI_HASH = zend_get_hash_value(ZEND_STRS(REQUEST_URI));
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
-    {
-        return;
-    }
-    zval **value;
-    if (zend_hash_quick_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), ZEND_STRS(REQUEST_URI), REQUEST_URI_HASH, (void **)&value) != SUCCESS ||
-        Z_TYPE_PP(value) != IS_STRING)
-    {
-        return;
-    }
     v8::Isolate *isolate = info.GetIsolate();
-    char *str = Z_STRVAL_PP(value);
-    char *p = strchr(str, '?');
-    int len = p == nullptr ? Z_STRLEN_PP(value) : p - str;
-    auto obj = NewV8String(isolate, str, len);
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).url.get_path());
     info.GetReturnValue().Set(obj);
 }
 static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
@@ -263,28 +176,12 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
 static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     TSRMLS_FETCH();
-    if (!PG(http_globals)[TRACK_VARS_SERVER] && !zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC))
-    {
-        return;
-    }
     v8::Isolate *isolate = info.GetIsolate();
+    std::map<std::string, std::string> headers = OPENRASP_G(request).get_header();
     v8::Local<v8::Object> obj = v8::Object::New(isolate);
-    HashTable *SERVER = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]);
-    for (zend_hash_internal_pointer_reset(SERVER); zend_hash_has_more_elements(SERVER) == SUCCESS; zend_hash_move_forward(SERVER))
+    for (auto iter = headers.begin(); iter != headers.end(); iter++)
     {
-        char *key = nullptr;
-        ulong idx;
-        int type = 0;
-        zval **value;
-        std::string header_key;
-        type = zend_hash_get_current_key(SERVER, &key, &idx, 0);
-        if (type == HASH_KEY_IS_STRING &&
-            !(header_key = convert_to_header_key(key, strlen(key))).empty() &&
-            zend_hash_get_current_data(SERVER, (void **)&value) == SUCCESS &&
-            Z_TYPE_PP(value) == IS_STRING)
-        {
-            obj->Set(NewV8String(isolate, header_key), NewV8ValueFromZval(isolate, *value));
-        }
+        obj->Set(NewV8String(isolate, iter->first), NewV8String(isolate, iter->second));
     }
     info.GetReturnValue().Set(obj);
 }
@@ -352,7 +249,7 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
         Z_TYPE_PP(origin_zv) == IS_STRING)
     {
         openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("Content-type of request (%s) is %s."),
-                       OPENRASP_INJECT_G(request_id), Z_STRVAL_PP(origin_zv));
+                OPENRASP_G(request).get_id().c_str(), Z_STRVAL_PP(origin_zv));
         std::string content_type_vlaue = std::string(Z_STRVAL_PP(origin_zv));
         OpenRASPContentType::ContentType k_type = OpenRASPContentType::classify_content_type(content_type_vlaue);
         char *body = nullptr;
@@ -367,7 +264,7 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
         }
     }
     openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("Complete body of request (%s) is %s."),
-                   OPENRASP_INJECT_G(request_id), complete_body.c_str());
+                   OPENRASP_G(request).get_id().c_str(), complete_body.c_str());
     v8::TryCatch trycatch(isolate);
     auto v8_body = NewV8String(isolate, complete_body);
     auto v8_json_obj = v8::JSON::Parse(isolate->GetCurrentContext(), v8_body);
@@ -390,106 +287,77 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
 static void requestId_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     TSRMLS_FETCH();
-    auto obj = NewV8String(info.GetIsolate(), OPENRASP_INJECT_G(request_id));
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_id().c_str());
     info.GetReturnValue().Set(obj);
 }
 static void raspId_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    zval **origin_zv;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info(TSRMLS_C);
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        zend_hash_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRS("rasp_id"), (void **)&origin_zv) == SUCCESS)
-    {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, *origin_zv);
-        info.GetReturnValue().Set(obj);
-    }
+    v8::Isolate *isolate = info.GetIsolate();
+    auto obj = NewV8String(info.GetIsolate(), openrasp::scm->get_rasp_id());
+    info.GetReturnValue().Set(obj);
 }
 static void appId_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    zval **origin_zv;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info(TSRMLS_C);
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        zend_hash_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRS("app_id"), (void **)&origin_zv) == SUCCESS)
-    {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, *origin_zv);
-        info.GetReturnValue().Set(obj);
-    }
+    v8::Isolate *isolate = info.GetIsolate();
+    auto obj = NewV8String(info.GetIsolate(), (openrasp_ini.app_id ? openrasp_ini.app_id : ""));
+    info.GetReturnValue().Set(obj);
 }
 static void hostname_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    zval **origin_zv;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info(TSRMLS_C);
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        zend_hash_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRS("server_hostname"), (void **)&origin_zv) == SUCCESS)
-    {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, *origin_zv);
-        info.GetReturnValue().Set(obj);
-    }
+    v8::Isolate *isolate = info.GetIsolate();
+    auto obj = NewV8String(info.GetIsolate(), openrasp::get_hostname());
+    info.GetReturnValue().Set(obj);
 }
 static void nic_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    zval **origin_zv;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info(TSRMLS_C);
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        zend_hash_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRS("server_nic"), (void **)&origin_zv) == SUCCESS)
+    std::map<std::string, std::string> if_addr_map = get_if_addr_map();
+    v8::Isolate *isolate = info.GetIsolate();
+    int num = if_addr_map.size();
+    v8::Local<v8::Object> obj;
+    v8::Local<v8::Array> arr = v8::Array::New(isolate, num);
+    int index = 0;
+    for (auto iter = if_addr_map.begin(); iter != if_addr_map.end(); iter++)
     {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, *origin_zv);
-        info.GetReturnValue().Set(obj);
+        v8::Local<v8::Object> pair_obj = v8::Object::New(isolate);
+        pair_obj->Set(NewV8String(isolate, "name"), NewV8String(isolate, iter->first));
+        pair_obj->Set(NewV8String(isolate, "ip"), NewV8String(isolate, iter->second));
+        arr->Set(index++, pair_obj);
     }
+    info.GetReturnValue().Set(obj);
 }
 static void source_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    zval **origin_zv;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info(TSRMLS_C);
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        zend_hash_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRS("attack_source"), (void **)&origin_zv) == SUCCESS)
-    {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, *origin_zv);
-        info.GetReturnValue().Set(obj);
-    }
+    v8::Isolate *isolate = info.GetIsolate();
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_remote_addr());
+    info.GetReturnValue().Set(obj);
 }
 static void target_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    zval **origin_zv;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info(TSRMLS_C);
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        zend_hash_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRS("server_ip"), (void **)&origin_zv) == SUCCESS)
-    {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, *origin_zv);
-        info.GetReturnValue().Set(obj);
-    }
+    v8::Isolate *isolate = info.GetIsolate();
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).url.get_server_addr());
+    info.GetReturnValue().Set(obj);
 }
 static void clientIp_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    zval **origin_zv;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info(TSRMLS_C);
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        zend_hash_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRS("client_ip"), (void **)&origin_zv) == SUCCESS)
-    {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, *origin_zv);
-        info.GetReturnValue().Set(obj);
-    }
+    std::string clientip_header = OPENRASP_CONFIG(clientip.header);
+    std::transform(clientip_header.begin(), clientip_header.end(), clientip_header.begin(), ::tolower);
+    v8::Isolate *isolate = info.GetIsolate();
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_header(clientip_header));
+    info.GetReturnValue().Set(obj);
 }
 v8::Local<v8::ObjectTemplate> openrasp::CreateRequestContextTemplate(Isolate *isolate)
 {

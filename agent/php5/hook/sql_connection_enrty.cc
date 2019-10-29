@@ -253,6 +253,11 @@ void SqlConnectionEntry::connection_entry_policy_log(connection_policy_type type
   add_assoc_long(connection_params, "port", get_port());
   add_stack_to_params(connection_params TSRMLS_CC);
   add_assoc_zval(policy_array, "policy_params", connection_params);
-  LOG_G(policy_logger).log(LEVEL_INFO, policy_array TSRMLS_CC);
+  std::string base_str = json_encode_from_zval(policy_array TSRMLS_CC);
   zval_ptr_dtor(&policy_array);
+  openrasp::JsonReader base_json(base_str);
+  if (!base_json.has_error())
+  {
+    LOG_G(policy_logger).log(LEVEL_INFO, base_json TSRMLS_CC);
+  }
 }
