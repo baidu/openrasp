@@ -49,7 +49,7 @@ using openrasp::ConfigHolder;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
-const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.2.1";
+const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.2.2";
 bool is_initialized = false;
 bool remote_active = false;
 static bool make_openrasp_root_dir();
