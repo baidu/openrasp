@@ -26,6 +26,7 @@ import (
 	"strings"
 	"rasp-cloud/conf"
 	"errors"
+	"encoding/json"
 )
 
 var (
@@ -186,7 +187,6 @@ func BulkInsert(docType string, docs []map[string]interface{}) (err error) {
 		}
 		if appId, ok := doc["app_id"].(string); ok {
 			if docType == "policy-alarm" || docType == "error-alarm" || docType == "attack-alarm" {
-				fmt.Println(doc["upsert_id"])
 				bulkService.Add(elastic.NewBulkUpdateRequest().
 					Index("real-openrasp-" + docType + "-" + appId).
 					Type(docType).
@@ -210,7 +210,10 @@ func BulkInsert(docType string, docs []map[string]interface{}) (err error) {
 	defer cancel()
 	response, err := bulkService.Do(ctx)
 	if response.Errors {
-		return errors.New("ES bulk has errors: " + fmt.Sprintf("%+v", response.Failed()))
+		errContent, err := json.Marshal(response.Failed())
+		if err == nil {
+			return errors.New("ES bulk has errors: " + string(errContent))
+		}
 	}
 	return err
 }

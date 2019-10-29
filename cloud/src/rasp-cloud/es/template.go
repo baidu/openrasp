@@ -107,7 +107,8 @@ var attackAlarmTemplate = `
 							"ignore_above": 256
 						},
 						"body": {
-							"type": "keyword"
+							"type": "keyword",
+							"index": false
 						},
 						"app_id": {
 							"type": "keyword",
@@ -167,6 +168,23 @@ var attackAlarmTemplate = `
 						},
 						"plugin_message": {
 							"type": "keyword"
+						},
+						"parameter": {
+							"type": "object",
+							"properties": {
+								"form":{
+									"type": "keyword",
+									"index":false
+								},
+								"json":{
+									"type": "keyword",
+									"index":false
+								},
+								"multipart":{
+									"type": "keyword",
+									"index":false
+								}
+							}
 						},
 						"server_nic": {
 							"type": "nested",
