@@ -41,7 +41,8 @@ public abstract class AbstractRequest {
     protected int maxBodySize = 4096;
     protected String requestId;
     protected boolean canGetParameter = false;
-    protected HashMap<String, String[]> fileUploadCache = null;
+    protected HashMap<String, String[]> formItemCache = null;
+    protected LinkedList<RequestFileItem> fileParamCache = null;
 
     /**
      * constructor
@@ -368,11 +369,19 @@ public abstract class AbstractRequest {
         return false;
     }
 
-    public HashMap<String, String[]> getFileUploadCache() {
-        return fileUploadCache;
+    public HashMap<String, String[]> getFormItemCache() {
+        return formItemCache;
     }
 
-    public void setFileUploadCache(HashMap<String, String[]> cache) {
-        fileUploadCache = cache;
+    public void setFormItemCache(HashMap<String, String[]> cache) {
+        formItemCache = cache;
+    }
+
+    public LinkedList<RequestFileItem> getFileParamCache() {
+        return fileParamCache;
+    }
+
+    public void setFileParamCache(LinkedList<RequestFileItem> fileParamCache) {
+        this.fileParamCache = fileParamCache;
     }
 }
