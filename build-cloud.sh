@@ -4,6 +4,18 @@
 # Output to rasp-cloud.tar.gz
 #
 
+# Mac 下面需要用 coreutils/gnu-tar 编译
+if [[ $(uname -s) == "Darwin" ]]; then
+    if [[ $(which readlink) == "/usr/bin/readlink" ]] || [[ $(which tar) == "/usr/bin/tar" ]]; then
+        echo "The release script is supposed to run on Linux server only."
+        echo "Both coreutils and gnu-tar is required to build on Mac OS."
+        echo "Try execute the following commands and add \$HOMEBREW_HOME/bin to \$PATH"
+        echo
+        echo "brew install gnu-tar coreutils && brew link coreutils"
+        exit
+    fi
+fi
+
 set -ex
 
 function check_prerequisite()
