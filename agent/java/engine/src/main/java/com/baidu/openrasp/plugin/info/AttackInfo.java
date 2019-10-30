@@ -27,7 +27,6 @@ import com.baidu.openrasp.tool.model.ApplicationModel;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -144,7 +143,11 @@ public class AttackInfo extends EventInfo {
                     || !(request.getContentType().contains("application/json")
                     || request.getContentType().contains("multipart/form-data")
                     || request.getContentType().contains("application/x-www-form-urlencoded"))) {
-                info.put("body", getEncodingBody(request));
+                String body = request.getStringBody();
+                if (body == null) {
+                    body = "";
+                }
+                info.put("body", body);
             }
             // 被攻击URL
             StringBuffer requestURL = request.getRequestURL();
@@ -174,7 +177,11 @@ public class AttackInfo extends EventInfo {
         parameters.put("json", "{}");
         parameters.put("multipart", "[]");
         if (request.getContentType() != null && request.getContentType().contains("application/json")) {
-            parameters.put("json", getEncodingBody(request));
+            String body = request.getStringBody();
+            if (StringUtils.isEmpty(body)) {
+                body = "{}";
+            }
+            parameters.put("json", body);
         } else {
             List fileItems = request.getFileParamCache();
             if (fileItems != null) {
@@ -186,23 +193,6 @@ public class AttackInfo extends EventInfo {
             parameters.put("form", new Gson().toJson(formMap));
         }
         return parameters;
-    }
-
-    private String getEncodingBody(AbstractRequest request) {
-        byte[] body = request.getBody();
-        if (body != null) {
-            String encoding = request.getCharacterEncoding();
-            if (!StringUtils.isEmpty(encoding)) {
-                try {
-                    return new String(body, encoding);
-                } catch (UnsupportedEncodingException e) {
-                    return new String(body);
-                }
-            } else {
-                return new String(body);
-            }
-        }
-        return "";
     }
 
     private boolean checkTomcatVersion() {

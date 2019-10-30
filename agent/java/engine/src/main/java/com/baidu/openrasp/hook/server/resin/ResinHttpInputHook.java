@@ -47,11 +47,11 @@ public class ResinHttpInputHook extends ServerInputHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String srcRead1 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
+        String srcRead1 = getInvokeStaticSrc(ServerInputHook.class, "onInputStreamRead",
                 "$_,$0", int.class, Object.class);
         insertAfter(ctClass, "read", "()I", srcRead1);
-        String src2Read2 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
-                "$_,$0,$1,$2,$3", int.class, Object.class, byte[].class, int.class, int.class);
+        String src2Read2 = getInvokeStaticSrc(ServerInputHook.class, "onInputStreamRead",
+                "$_,$0,$1,$2", int.class, Object.class, byte[].class, int.class);
         insertAfter(ctClass, "read", "([BII)I", src2Read2);
     }
 
