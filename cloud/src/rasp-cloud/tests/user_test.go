@@ -4,10 +4,13 @@ import (
 	"testing"
 	. "github.com/smartystreets/goconvey/convey"
 	"rasp-cloud/tests/inits"
+	_ "rasp-cloud/tests/start"
 	"rasp-cloud/models"
 	"github.com/bouk/monkey"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/astaxie/beego/context"
+	"reflect"
 	"rasp-cloud/mongo"
 )
 
@@ -22,7 +25,7 @@ func TestUserLogin(t *testing.T) {
 		})
 
 		Convey("when the mongodb has errors", func() {
-			monkey.Patch(models.NewCookie, func(id string) error {
+			monkey.Patch(models.NewCookie, func(id string, userId string) error {
 				return errors.New("")
 			})
 			r := inits.GetResponse("POST", "/v1/user/login", inits.GetJson(map[string]interface{}{
@@ -107,6 +110,19 @@ func TestUserUpdate(t *testing.T) {
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
+		Convey("when mongo has errors", func() {
+			monkey.Patch(models.RemoveAllCookie, func() (error) {
+				return errors.New("")
+			})
+			defer monkey.Unpatch(models.RemoveAllCookie)
+
+			r := inits.GetResponse("POST", "/v1/user/update", inits.GetJson(map[string]interface{}{
+				"old_password": "admin@123",
+				"new_password": "admin@123",
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
 		Convey("test reset user", func() {
 			err := models.ResetUser("admin@123")
 			So(err, ShouldEqual, nil)
@@ -132,7 +148,7 @@ func TestUserUpdate(t *testing.T) {
 			})
 			_, err = models.GetLoginUserName()
 			So(err, ShouldNotEqual, nil)
-			err = models.VerifyUser("openrasp", "admin@123")
+			_, err = models.VerifyUser("openrasp", "admin@123")
 			So(err, ShouldNotEqual, nil)
 			err = models.UpdatePassword("admin@123", "admin@123")
 			So(err, ShouldNotEqual, nil)
@@ -143,5 +159,52 @@ func TestUserUpdate(t *testing.T) {
 			monkey.Unpatch(bcrypt.GenerateFromPassword)
 		})
 
+	})
+}
+
+func TestCheckDefault(t *testing.T)  {
+	Convey("Subject: Test Check Default Api\n", t, func() {
+		Convey("when the param is valid", func() {
+			r := inits.GetResponse("POST", "/v1/user/default", inits.GetJson(map[string]interface{}{}))
+			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when mongo has errors", func() {
+			monkey.Patch(models.CheckDefaultPasswordWithDefaultUser, func() (result bool, err error) {
+				return false, errors.New("")
+			})
+			defer monkey.Unpatch(models.CheckDefaultPasswordWithDefaultUser)
+
+			monkey.Patch(models.CheckDefaultPassword, func(cookie string) (result bool, err error) {
+				return false, errors.New("")
+			})
+			defer monkey.Unpatch(models.CheckDefaultPassword)
+
+			r := inits.GetResponse("POST", "/v1/user/default", inits.GetJson(map[string]interface{}{}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when cookie is not null", func() {
+			monkey.PatchInstanceMethod(reflect.TypeOf(&context.Context{}), "GetCookie",
+				func(*context.Context, string) string {
+					return "111111"
+				})
+			defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&context.Context{}), "GetCookie")
+
+			r := inits.GetResponse("POST", "/v1/user/default", inits.GetJson(map[string]interface{}{}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+	})
+}
+
+func TestCheckUserCount(t *testing.T) {
+	Convey("Subject: Test Check User Count Api:", t, func() {
+		Convey("when User Count equals 0", func() {
+			monkey.Patch(mongo.Insert, func(collection string, doc interface{}) (error) {
+				return nil
+			})
+			defer monkey.Unpatch(mongo.Insert)
+			models.CheckUserCount(0)
+		})
 	})
 }

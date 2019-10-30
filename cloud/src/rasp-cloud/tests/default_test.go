@@ -4,6 +4,7 @@ import (
 	"testing"
 	. "github.com/smartystreets/goconvey/convey"
 	"rasp-cloud/tests/inits"
+	_ "rasp-cloud/tests/start"
 	"rasp-cloud/tools"
 	"golang.org/x/crypto/ssh/terminal"
 	"github.com/bouk/monkey"
@@ -17,6 +18,10 @@ import (
 	"rasp-cloud/models/logs"
 	"time"
 	"rasp-cloud/controllers"
+	"bytes"
+	"io/ioutil"
+	"strconv"
+	"syscall"
 )
 
 func Test404(t *testing.T) {
@@ -30,7 +35,7 @@ func TestError(t *testing.T) {
 	Convey("Subject: Test 500\n", t, func() {
 		c := &controllers.ErrorController{}
 		monkey.PatchInstanceMethod(reflect.TypeOf(&controllers.BaseController{}), "ServeStatusCode",
-			func(*controllers.BaseController, int, ...string) {
+			func(*controllers.BaseController, int, int, ...string) {
 				return
 			},
 		)
@@ -89,6 +94,32 @@ func TestEnvironment(t *testing.T) {
 			defer monkey.Unpatch(terminal.ReadPassword)
 			environment.HandleReset(&conf.Flag{})
 		})
+		Convey("failed to read password from terminal", func() {
+			monkey.Patch(terminal.ReadPassword, func(fd int) ([]byte, error) {
+				return []byte{}, errors.New("")
+			})
+			defer monkey.Unpatch(terminal.ReadPassword)
+			monkey.Patch(os.Exit, func(fd int) {
+				return
+			})
+			defer monkey.Unpatch(os.Exit)
+			environment.HandleReset(&conf.Flag{})
+		})
+		Convey("test reset user password when passwords do not match", func() {
+			monkey.Patch(terminal.ReadPassword, func(fd int) ([]byte, error) {
+				return []byte{}, nil
+			})
+			defer monkey.Unpatch(terminal.ReadPassword)
+			monkey.Patch(bytes.Compare, func(a, b []byte) (int){
+				return 1
+			})
+			defer monkey.Unpatch(bytes.Compare)
+			monkey.Patch(os.Exit, func(fd int) {
+				return
+			})
+			defer monkey.Unpatch(os.Exit)
+			environment.HandleReset(&conf.Flag{})
+		})
 		Convey("test fork process", func() {
 			monkey.PatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start", func(cmd2 *exec.Cmd) (error) {
 				return nil
@@ -99,6 +130,168 @@ func TestEnvironment(t *testing.T) {
 			})
 			defer monkey.Unpatch(os.Exit)
 			environment.HandleDaemon()
+		})
+		Convey("test fork process when start successfully", func() {
+			monkey.PatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start", func(cmd2 *exec.Cmd) (error) {
+				return nil
+			})
+			defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start")
+			monkey.Patch(os.Exit, func(fd int) {
+				return
+			})
+			defer monkey.Unpatch(os.Exit)
+			monkey.Patch(environment.CheckPIDAlreadyRunning, func(path string) (bool) {
+				return false
+			})
+			defer monkey.Unpatch(environment.CheckPIDAlreadyRunning)
+			environment.HandleDaemon()
+		})
+		Convey("test stop process", func() {
+			monkey.PatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start", func(cmd2 *exec.Cmd) (error) {
+				return nil
+			})
+			defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start")
+			monkey.Patch(os.Exit, func(fd int) {
+				return
+			})
+			defer monkey.Unpatch(os.Exit)
+			monkey.Patch(syscall.Kill, func(pid int, signum syscall.Signal) (error) {
+				return nil
+			})
+			defer monkey.Unpatch(syscall.Kill)
+			environment.HandleOperation("stop")
+		})
+		Convey("test stop process when atoi has errors", func() {
+			monkey.PatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start", func(cmd2 *exec.Cmd) (error) {
+				return nil
+			})
+			defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start")
+			monkey.Patch(os.Exit, func(fd int) {
+				return
+			})
+			defer monkey.Unpatch(os.Exit)
+			monkey.Patch(syscall.Kill, func(pid int, signum syscall.Signal) (error) {
+				return nil
+			})
+			defer monkey.Unpatch(syscall.Kill)
+			monkey.Patch(strconv.Atoi, func(s string) (int, error) {
+				return 0, errors.New("")
+			})
+			defer monkey.Unpatch(strconv.Atoi)
+			environment.HandleOperation("stop")
+		})
+		Convey("test stop process when process id is not exists", func() {
+			monkey.PatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start", func(cmd2 *exec.Cmd) (error) {
+				return nil
+			})
+			defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start")
+			monkey.Patch(os.Exit, func(fd int) {
+				return
+			})
+			defer monkey.Unpatch(os.Exit)
+			monkey.Patch(syscall.Kill, func(pid int, signum syscall.Signal) (error) {
+				return nil
+			})
+			defer monkey.Unpatch(syscall.Kill)
+			monkey.Patch(environment.CheckPIDAlreadyRunning, func(path string) (bool) {
+				return false
+			})
+			defer monkey.Unpatch(environment.CheckPIDAlreadyRunning)
+			environment.HandleOperation("stop")
+		})
+		Convey("test unknown process", func() {
+			environment.HandleOperation("u")
+		})
+		Convey("test restart process", func() {
+			monkey.PatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start", func(cmd2 *exec.Cmd) (error) {
+				return nil
+			})
+			defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start")
+			monkey.Patch(os.Exit, func(fd int) {
+				return
+			})
+			defer monkey.Unpatch(os.Exit)
+			monkey.Patch(syscall.Kill, func(pid int, signum syscall.Signal) (error) {
+				return nil
+			})
+			defer monkey.Unpatch(syscall.Kill)
+			environment.HandleOperation("restart")
+		})
+		Convey("test restart process when atoi has errors", func() {
+			monkey.PatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start", func(cmd2 *exec.Cmd) (error) {
+				return nil
+			})
+			defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start")
+			monkey.Patch(os.Exit, func(fd int) {
+				return
+			})
+			defer monkey.Unpatch(os.Exit)
+			monkey.Patch(syscall.Kill, func(pid int, signum syscall.Signal) (error) {
+				return nil
+			})
+			defer monkey.Unpatch(syscall.Kill)
+			monkey.Patch(strconv.Atoi, func(s string) (int, error) {
+				return 0, errors.New("")
+			})
+			defer monkey.Unpatch(strconv.Atoi)
+			environment.HandleOperation("restart")
+		})
+		Convey("test restart process when process id is not exists", func() {
+			monkey.PatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start", func(cmd2 *exec.Cmd) (error) {
+				return nil
+			})
+			defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start")
+			monkey.Patch(os.Exit, func(fd int) {
+				return
+			})
+			defer monkey.Unpatch(os.Exit)
+			monkey.Patch(syscall.Kill, func(pid int, signum syscall.Signal) (error) {
+				return nil
+			})
+			defer monkey.Unpatch(syscall.Kill)
+			monkey.Patch(environment.CheckPIDAlreadyRunning, func(path string) (bool) {
+				return false
+			})
+			defer monkey.Unpatch(environment.CheckPIDAlreadyRunning)
+			environment.HandleOperation("restart")
+		})
+		Convey("test check pid already running when err is not nil", func() {
+			monkey.PatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start", func(cmd2 *exec.Cmd) (error) {
+				return nil
+			})
+			defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&exec.Cmd{}), "Start")
+			monkey.Patch(os.Stat, func(name string) (os.FileInfo, error) {
+				return nil, errors.New("")
+			})
+			defer monkey.Unpatch(os.Stat)
+			monkey.Patch(os.Getwd, func() (dir string, err error) {
+				return "/home/jdk", errors.New("")
+			})
+			defer monkey.Unpatch(os.Getwd)
+			environment.CheckPIDAlreadyRunning("/home/jdk")
+		})
+		Convey("test MkdirAll occurs errors", func() {
+			monkey.Patch(os.MkdirAll, func(path string, perm os.FileMode) (error) {
+				return errors.New("")
+			})
+			defer monkey.Unpatch(os.MkdirAll)
+
+			monkey.Patch(os.Exit, func(fd int) {
+				return
+			})
+			defer monkey.Unpatch(os.Exit)
+			environment.CheckForkStatus(true)
+		})
+		Convey("test WriteFile occurs errors 2", func() {
+			monkey.Patch(ioutil.WriteFile, func(filename string, data []byte, perm os.FileMode) (error){
+				return errors.New("")
+			})
+			defer monkey.Unpatch(ioutil.WriteFile)
+			monkey.Patch(os.Exit, func(fd int) {
+				return
+			})
+			defer monkey.Unpatch(os.Exit)
+			environment.CheckForkStatus(true)
 		})
 	})
 }

@@ -3,6 +3,7 @@ package test
 import (
 	"testing"
 	. "github.com/smartystreets/goconvey/convey"
+	_ "rasp-cloud/tests/start"
 	"rasp-cloud/models"
 )
 
@@ -10,7 +11,7 @@ var cookie = "******************"
 
 func init() {
 	if ok, _ := models.HasCookie(cookie); !ok {
-		models.NewCookie(cookie)
+		models.NewCookie(cookie, "1111")
 	}
 }
 

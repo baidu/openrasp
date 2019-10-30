@@ -3,6 +3,7 @@ package test
 import (
 	"testing"
 	"rasp-cloud/tests/inits"
+	_ "rasp-cloud/tests/start"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/bouk/monkey"
 	"rasp-cloud/models"
@@ -52,9 +53,10 @@ func TestPostToken(t *testing.T) {
 	Convey("Subject: Test Post Token Api\n", t, func() {
 		Convey("when the param is valid", func() {
 			r := inits.GetResponse("POST", "/v1/api/token", inits.GetJson(map[string]interface{}{
+				"token":"1234567890",
 				"description": "token 1",
 			}))
-			So(r.Status, ShouldEqual, 0)
+			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
 		Convey("when the mongo has errors", func() {

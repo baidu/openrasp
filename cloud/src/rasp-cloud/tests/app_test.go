@@ -13,6 +13,7 @@ import (
 	"rasp-cloud/mongo"
 	"gopkg.in/mgo.v2"
 	"rasp-cloud/models/logs"
+	"gopkg.in/mgo.v2/bson"
 )
 
 func getValidApp() map[string]interface{} {
@@ -44,6 +45,10 @@ func getValidApp() map[string]interface{} {
 			"enable":    true,
 			"recv_addr": []string{"http://172.23.22.14:8088/upload"},
 		},
+		"attack_type_alarm_conf": map[string]interface{}{
+			"sql":[]string{"email","ding","http"},
+			"xxe":[]string{"email"},
+		},
 	}
 }
 
@@ -59,6 +64,57 @@ func TestHandleApp(t *testing.T) {
 		})
 
 		Convey("app name can not be empty", func() {
+			app := getValidApp()
+			app["attack_type_alarm_conf"] = map[string]interface{}{
+				"":[]string{"email","ding","http"},
+			}
+			r := inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the length of attack type can not be greater than 128", func() {
+			app := getValidApp()
+			app["attack_type_alarm_conf"] = map[string]interface{}{
+				inits.GetLongString(129): []string{"email","ding","http"},
+			}
+			r := inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the length of alarm array can not be greater than 64", func() {
+			app := getValidApp()
+			app["attack_type_alarm_conf"] = map[string]interface{}{
+				"sql": inits.GetLongStringArray(65),
+			}
+			r := inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when failed to remove this app, it also has online rasps", func() {
+			app := getValidApp()
+			monkey.Patch(models.GetAppCount, func() (count int, err error) {
+				return 2, nil
+			})
+			defer monkey.Unpatch(models.GetAppCount)
+			monkey.Patch(models.FindRasp, func(selector *models.Rasp, page int,
+				perpage int) (count int, result []*models.Rasp, err error) {
+				return 1, nil, nil
+			})
+			defer monkey.Unpatch(models.FindRasp)
+			r := inits.GetResponse("POST", "/v1/api/app/delete", inits.GetJson(app))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the alarm type can not be empty", func() {
+			app := getValidApp()
+			app["attack_type_alarm_conf"] = map[string]interface{}{
+				"sql": []string{""},
+			}
+			r := inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("the attack type can not be empty", func() {
 			app := getValidApp()
 			app["name"] = ""
 			r := inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
@@ -339,6 +395,16 @@ func TestConfigGenerate(t *testing.T) {
 				"app_id": start.TestApp.Id,
 				"config": map[string]interface{}{
 					"clientip.header": "ClientIP",
+					"block.status_code": 403,
+					"body.maxbytes": 4096,
+					"ognl.expression.minlength": 30,
+					"plugin.filter": true,
+					"plugin.maxstack": 100,
+					"plugin.timeout.millis": 100,
+					"syslog.tag":    "OpenRASP",
+					"syslog.url":     "",
+					"syslog.facility":  1,
+					"syslog.enable":  false,
 				},
 			}))
 			So(r.Status, ShouldEqual, 0)
@@ -436,6 +502,37 @@ func TestConfigWhitelist(t *testing.T) {
 						"url": "http://127.0.0.1:8086/path",
 						"hook": map[string]bool{
 							"sql": true,
+						},
+					},
+				},
+			}))
+			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when the whitelist is repeated", func() {
+			r := inits.GetResponse("POST", "/v1/api/app/whitelist/config", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+				"config": []map[string]interface{}{
+					{
+						"url": "http://127.0.0.1:8086/path",
+						"hook": map[string]bool{
+							"sql": true,
+						},
+					},
+					{
+						"url":"rasp.baidu.com/phpmyadmin/",
+						"hook": map[string]bool{
+							"ognl":true,
+							"readFile":true,
+							"writeFile":true,
+						},
+					},
+					{
+						"url":"rasp.baidu.com/phpmyadmin/",
+						"hook": map[string]bool{
+							"ognl":true,
+							"readFile":true,
+							"writeFile":true,
 						},
 					},
 				},
@@ -577,6 +674,10 @@ func TestConfigAlarm(t *testing.T) {
 					"enable":    true,
 					"recv_addr": []string{"http://172.23.22.14:8088/upload"},
 				},
+				"attack_type_alarm_conf": map[string]interface{}{
+					"sql":[]string{"email","ding","http"},
+					"xxe":[]string{"email"},
+				},
 			}))
 			So(r.Status, ShouldEqual, 0)
 		})
@@ -608,6 +709,17 @@ func TestConfigAlarm(t *testing.T) {
 		})
 
 		Convey("when app_id does not exist", func() {
+			r := inits.GetResponse("POST", "/v1/api/app/alarm/config", inits.GetJson(map[string]interface{}{
+				"app_id": "000000000000000000000",
+				"http_alarm_conf": map[string]interface{}{
+					"enable":    true,
+					"recv_addr": []string{"http://172.23.232.144:8088/upload"},
+				},
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when param is not invalid", func() {
 			r := inits.GetResponse("POST", "/v1/api/app/alarm/config", inits.GetJson(map[string]interface{}{
 				"app_id": "000000000000000000000",
 				"http_alarm_conf": map[string]interface{}{
@@ -1084,7 +1196,7 @@ func TestDeleteApp(t *testing.T) {
 			r := inits.GetResponse("POST", "/v1/api/app/delete", inits.GetJson(map[string]interface{}{
 				"id": deleteAppId,
 			}))
-			So(r.Status, ShouldEqual, 0)
+			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
 		Convey("when the mongodb has errors", func() {
@@ -1149,6 +1261,24 @@ func TestDeleteApp(t *testing.T) {
 			So(r.Status, ShouldBeGreaterThan, 0)
 			monkey.Unpatch(models.RemoveAppById)
 
+			monkey.Patch(models.FindRasp, func(selector *models.Rasp, page int, perpage int) (count int,
+				result []*models.Rasp, err error) {
+				return 1, nil, errors.New("")
+			})
+			r = inits.GetResponse("POST", "/v1/api/app/delete", inits.GetJson(map[string]interface{}{
+				"id": deleteAppId,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.FindRasp)
+
+			monkey.Patch(models.RemoveDependencyByApp, func(id string) (err error) {
+				return errors.New("")
+			})
+			r = inits.GetResponse("POST", "/v1/api/app/delete", inits.GetJson(map[string]interface{}{
+				"id": deleteAppId,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.RemoveDependencyByApp)
 		})
 
 	})
@@ -1439,6 +1569,69 @@ func TestTestHttp(t *testing.T) {
 			}))
 			So(r.Status, ShouldBeGreaterThan, 0)
 			monkey.Unpatch(models.GetAppByIdWithoutMask)
+		})
+
+		Convey("when the http has errors", func() {
+			monkey.Patch(models.PushHttpAttackAlarm, func(*models.App, int64, []map[string]interface{}, bool) error {
+				return errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/api/app/http/test", inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.PushHttpAttackAlarm)
+		})
+
+	})
+}
+
+func TestCheckPluginLatest(t *testing.T) {
+	Convey("Subject: Test check plugin latest Api\n", t, func() {
+		Convey("when param is valid", func() {
+			path := "/v1/api/app/plugin/latest"
+			r := inits.GetResponse("POST", path, inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+			}))
+			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when app_id is empty", func() {
+			path := "/v1/api/app/plugin/latest"
+			r := inits.GetResponse("POST", path, inits.GetJson(map[string]interface{}{
+				"app_id": "",
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when mongodb has error", func() {
+			path := "/v1/api/app/plugin/latest"
+			monkey.Patch(models.GetAppById, func(id string) (app *models.App, err error) {
+				return nil, errors.New("")
+			})
+			r := inits.GetResponse("POST", path, inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.GetAppById)
+
+			monkey.Patch(models.GetPluginById, func(id string, hasContent bool) (plugin *models.Plugin, err error) {
+				return nil, errors.New("")
+			})
+			r = inits.GetResponse("POST", path, inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.GetPluginById)
+
+			monkey.Patch(models.SearchPlugins, func(selector bson.M, skip int, limit int,
+				sortField string) (plugins []models.Plugin, err error) {
+				return nil, errors.New("")
+			})
+			r = inits.GetResponse("POST", path, inits.GetJson(map[string]interface{}{
+				"app_id": start.TestApp.Id,
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.SearchPlugins)
 		})
 
 		Convey("when the http has errors", func() {

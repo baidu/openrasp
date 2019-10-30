@@ -164,7 +164,14 @@ func TestSearchReportData(t *testing.T) {
 
 		Convey("when the time_zone is empty", func() {
 			data := getValidReportSearchData()
-			data["time_zone"] = 132456
+			data["time_zone"] = ""
+			r := inits.GetResponse("POST", "/v1/api/report/dashboard", inits.GetJson(data))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the length of time_zone is greater than 32", func() {
+			data := getValidReportSearchData()
+			data["time_zone"] = inits.GetLongString(33)
 			r := inits.GetResponse("POST", "/v1/api/report/dashboard", inits.GetJson(data))
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
