@@ -122,8 +122,13 @@ void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckTy
     add_assoc_string(&params_result, "plugin_algorithm", const_cast<char *>(get_check_type_name(type).c_str()));
     add_assoc_string(&params_result, "intercept_state", const_cast<char *>(action_to_string(action).c_str()));
     add_assoc_string(&params_result, "plugin_name", const_cast<char *>("php_builtin_plugin"));
-    LOG_G(alarm_logger).log(LEVEL_INFO, &params_result);
+    std::string base_str = json_encode_from_zval(&params_result TSRMLS_CC);
     zval_ptr_dtor(&params_result);
+    openrasp::JsonReader base_json(base_str);
+    if (!base_json.has_error())
+    {
+        LOG_G(alarm_logger).log(LEVEL_INFO, base_json);
+    }
     if (AC_BLOCK == action)
     {
         handle_block();
@@ -256,7 +261,7 @@ std::string openrasp_real_path(const char *filename, int length, bool use_includ
 static std::string resolve_request_id(std::string str)
 {
     static std::string placeholder = "%request_id%";
-    std::string request_id = OPENRASP_INJECT_G(request_id);
+    std::string request_id = OPENRASP_G(request).get_id();
     size_t start_pos = 0;
     while ((start_pos = str.find(placeholder, start_pos)) != std::string::npos)
     {
@@ -407,14 +412,13 @@ PHP_RINIT_FUNCTION(openrasp_hook)
 {
     if (openrasp::scm != nullptr)
     {
-        char *url = fetch_outmost_string_from_ht(Z_ARRVAL_P(LOG_G(alarm_logger).get_common_info()), "url");
-        if (url)
+        std::string url = OPENRASP_G(request).url.get_complete_url();
+        if (!url.empty())
         {
-            std::string url_str(url);
-            std::size_t found = url_str.find(COLON_TWO_SLASHES);
+            std::size_t found = url.find(COLON_TWO_SLASHES);
             if (found != std::string::npos)
             {
-                OPENRASP_HOOK_G(check_type_white_bit_mask) = openrasp::scm->get_check_type_white_bit_mask(url_str.substr(found + COLON_TWO_SLASHES.size()));
+                OPENRASP_HOOK_G(check_type_white_bit_mask) = openrasp::scm->get_check_type_white_bit_mask(url.substr(found + COLON_TWO_SLASHES.size()));
             }
         }
         if (OPENRASP_HOOK_G(lru).max_size() != OPENRASP_CONFIG(lru.max_size))

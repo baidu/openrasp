@@ -28,7 +28,6 @@ static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    v8::Isolate *isolate = info.GetIsolate();
     auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).url.get_complete_url());
     info.GetReturnValue().Set(obj);
 }
@@ -36,7 +35,6 @@ static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    v8::Isolate *isolate = info.GetIsolate();
     auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_method());
     info.GetReturnValue().Set(obj);
 }
@@ -44,7 +42,6 @@ static void querystring_getter(v8::Local<v8::Name> name, const v8::PropertyCallb
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    v8::Isolate *isolate = info.GetIsolate();
     auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).url.get_query_string());
     info.GetReturnValue().Set(obj);
 }
@@ -52,7 +49,6 @@ static void appBasePath_getter(v8::Local<v8::Name> name, const v8::PropertyCallb
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    v8::Isolate *isolate = info.GetIsolate();
     auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_document_root());
     info.GetReturnValue().Set(obj);
 }
@@ -60,7 +56,6 @@ static void protocol_getter(v8::Local<v8::Name> name, const v8::PropertyCallback
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    v8::Isolate *isolate = info.GetIsolate();
     auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).url.get_request_scheme());
     info.GetReturnValue().Set(obj);
 }
@@ -68,7 +63,6 @@ static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallba
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    v8::Isolate *isolate = info.GetIsolate();
     auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_remote_addr());
     info.GetReturnValue().Set(obj);
 }
@@ -76,7 +70,6 @@ static void path_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    v8::Isolate *isolate = info.GetIsolate();
     auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).url.get_path());
     info.GetReturnValue().Set(obj);
 }
@@ -294,7 +287,6 @@ static void raspId_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    v8::Isolate *isolate = info.GetIsolate();
     auto obj = NewV8String(info.GetIsolate(), openrasp::scm->get_rasp_id());
     info.GetReturnValue().Set(obj);
 }
@@ -302,7 +294,6 @@ static void appId_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInf
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    v8::Isolate *isolate = info.GetIsolate();
     auto obj = NewV8String(info.GetIsolate(), (openrasp_ini.app_id ? openrasp_ini.app_id : ""));
     info.GetReturnValue().Set(obj);
 }
@@ -310,7 +301,6 @@ static void hostname_getter(v8::Local<v8::Name> name, const v8::PropertyCallback
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    v8::Isolate *isolate = info.GetIsolate();
     auto obj = NewV8String(info.GetIsolate(), openrasp::get_hostname());
     info.GetReturnValue().Set(obj);
 }
@@ -337,7 +327,6 @@ static void source_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    v8::Isolate *isolate = info.GetIsolate();
     auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_remote_addr());
     info.GetReturnValue().Set(obj);
 }
@@ -345,7 +334,6 @@ static void target_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackIn
 {
     info.GetReturnValue().SetEmptyString();
     TSRMLS_FETCH();
-    v8::Isolate *isolate = info.GetIsolate();
     auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).url.get_server_addr());
     info.GetReturnValue().Set(obj);
 }
@@ -355,7 +343,6 @@ static void clientIp_getter(v8::Local<v8::Name> name, const v8::PropertyCallback
     TSRMLS_FETCH();
     std::string clientip_header = OPENRASP_CONFIG(clientip.header);
     std::transform(clientip_header.begin(), clientip_header.end(), clientip_header.begin(), ::tolower);
-    v8::Isolate *isolate = info.GetIsolate();
     auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_header(clientip_header));
     info.GetReturnValue().Set(obj);
 }

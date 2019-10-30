@@ -19,139 +19,51 @@
 #include "openrasp_utils.h"
 #include "openrasp_content_type.h"
 #include "openrasp_inject.h"
+#include "agent/shared_config_manager.h"
+#include "utils/hostname.h"
 
 using namespace openrasp;
 
 static void url_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv = nullptr;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("url"))) != nullptr)
-    {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, origin_zv);
-        info.GetReturnValue().Set(obj);
-    }
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).url.get_complete_url());
+    info.GetReturnValue().Set(obj);
 }
 static void method_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-
-    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
-    {
-        return;
-    }
-    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
-
-    zval *REQUEST_METHOD = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_METHOD"));
-
-    if (!REQUEST_METHOD)
-    {
-        return;
-    }
-
-    std::string method(Z_STRVAL_P(REQUEST_METHOD), Z_STRLEN_P(REQUEST_METHOD));
-    for (auto &ch : method)
-    {
-        ch = std::tolower(ch);
-    }
-
-    v8::Isolate *isolate = info.GetIsolate();
-    auto obj = NewV8String(isolate, method);
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_method());
     info.GetReturnValue().Set(obj);
 }
 static void querystring_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-
-    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
-    {
-        return;
-    }
-    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
-
-    zval *QUERY_STRING = zend_hash_str_find(_SERVER, ZEND_STRL("QUERY_STRING"));
-    if (QUERY_STRING)
-    {
-        auto obj = NewV8ValueFromZval(info.GetIsolate(), QUERY_STRING);
-        info.GetReturnValue().Set(obj);
-    }
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).url.get_query_string());
+    info.GetReturnValue().Set(obj);
 }
 static void appBasePath_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-
-    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
-    {
-        return;
-    }
-    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
-
-    zval *DOCUMENT_ROOT = zend_hash_str_find(_SERVER, ZEND_STRL("DOCUMENT_ROOT"));
-    if (DOCUMENT_ROOT)
-    {
-        auto obj = NewV8ValueFromZval(info.GetIsolate(), DOCUMENT_ROOT);
-        info.GetReturnValue().Set(obj);
-    }
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_document_root());
+    info.GetReturnValue().Set(obj);
 }
 static void protocol_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-
-    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
-    {
-        return;
-    }
-    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
-
-    zval *REQUEST_SCHEME = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_SCHEME"));
-    if (REQUEST_SCHEME)
-    {
-        auto obj = NewV8ValueFromZval(info.GetIsolate(), REQUEST_SCHEME);
-        info.GetReturnValue().Set(obj);
-    }
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).url.get_request_scheme());
+    info.GetReturnValue().Set(obj);
 }
 static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-
-    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
-    {
-        return;
-    }
-    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
-
-    zval *REMOTE_ADDR = zend_hash_str_find(_SERVER, ZEND_STRL("REMOTE_ADDR"));
-    if (REMOTE_ADDR)
-    {
-        auto obj = NewV8ValueFromZval(info.GetIsolate(), REMOTE_ADDR);
-        info.GetReturnValue().Set(obj);
-    }
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_remote_addr());
+    info.GetReturnValue().Set(obj);
 }
 static void path_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-
-    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
-    {
-        return;
-    }
-    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
-
-    zval *REQUEST_URI = zend_hash_str_find(_SERVER, ZEND_STRL("REQUEST_URI"));
-
-    if (!REQUEST_URI)
-    {
-        return;
-    }
-
-    std::string path(Z_STRVAL_P(REQUEST_URI), Z_STRLEN_P(REQUEST_URI));
-    size_t len = path.find_first_of('?');
-
-    v8::Isolate *isolate = info.GetIsolate();
-    auto obj = NewV8String(isolate, path.c_str(), len != std::string::npos ? len : path.length());
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).url.get_path());
     info.GetReturnValue().Set(obj);
 }
 static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
@@ -243,27 +155,13 @@ static void parameter_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
 }
 static void header_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
-    if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) != IS_ARRAY && !zend_is_auto_global_str(ZEND_STRL("_SERVER")))
-    {
-        return;
-    }
-    HashTable *_SERVER = Z_ARRVAL(PG(http_globals)[TRACK_VARS_SERVER]);
-
     v8::Isolate *isolate = info.GetIsolate();
+    std::map<std::string, std::string> headers = OPENRASP_G(request).get_header();
     v8::Local<v8::Object> obj = v8::Object::New(isolate);
-
-    zval *value = nullptr;
-    zend_string *key = nullptr;
-    ZEND_HASH_FOREACH_STR_KEY_VAL(_SERVER, key, value)
+    for (auto iter = headers.begin(); iter != headers.end(); iter++)
     {
-        std::string tmp = convert_to_header_key(key->val, key->len);
-        if (!tmp.empty())
-        {
-            obj->Set(NewV8String(isolate, tmp), NewV8ValueFromZval(isolate, value));
-        }
+        obj->Set(NewV8String(isolate, iter->first), NewV8String(isolate, iter->second));
     }
-    ZEND_HASH_FOREACH_END();
-
     info.GetReturnValue().Set(obj);
 }
 static void body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
@@ -351,7 +249,7 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
         Z_TYPE_P(origin_zv) == IS_STRING)
     {
         openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("Content-type of request (%s) is %s."),
-                       OPENRASP_INJECT_G(request_id), Z_STRVAL_P(origin_zv));
+                       OPENRASP_G(request).get_id().c_str(), Z_STRVAL_P(origin_zv));
         std::string content_type_vlaue = std::string(Z_STRVAL_P(origin_zv));
         OpenRASPContentType::ContentType k_type = OpenRASPContentType::classify_content_type(content_type_vlaue);
         zend_string *body = nullptr;
@@ -366,7 +264,7 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
         }
     }
     openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("Complete body of request (%s) is %s."),
-                   OPENRASP_INJECT_G(request_id), complete_body.c_str());
+                   OPENRASP_G(request).get_id().c_str(), complete_body.c_str());
     v8::TryCatch trycatch(isolate);
     auto v8_body = NewV8String(isolate, complete_body);
     auto v8_json_obj = v8::JSON::Parse(isolate->GetCurrentContext(), v8_body);
@@ -388,99 +286,64 @@ static void json_body_getter(v8::Local<v8::Name> name, const v8::PropertyCallbac
 }
 static void requestId_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
-    auto obj = NewV8String(info.GetIsolate(), OPENRASP_INJECT_G(request_id));
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_id().c_str());
     info.GetReturnValue().Set(obj);
 }
 static void raspId_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv = nullptr;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("rasp_id"))) != nullptr)
-    {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, origin_zv);
-        info.GetReturnValue().Set(obj);
-    }
+    auto obj = NewV8String(info.GetIsolate(), openrasp::scm->get_rasp_id());
+    info.GetReturnValue().Set(obj);
 }
 static void appId_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv = nullptr;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("app_id"))) != nullptr)
-    {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, origin_zv);
-        info.GetReturnValue().Set(obj);
-    }
+    auto obj = NewV8String(info.GetIsolate(), (openrasp_ini.app_id ? openrasp_ini.app_id : ""));
+    info.GetReturnValue().Set(obj);
 }
 static void hostname_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv = nullptr;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("server_hostname"))) != nullptr)
-    {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, origin_zv);
-        info.GetReturnValue().Set(obj);
-    }
+    auto obj = NewV8String(info.GetIsolate(), openrasp::get_hostname());
+    info.GetReturnValue().Set(obj);
 }
 static void nic_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv = nullptr;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("server_nic"))) != nullptr)
+    std::map<std::string, std::string> if_addr_map = get_if_addr_map();
+    v8::Isolate *isolate = info.GetIsolate();
+    int num = if_addr_map.size();
+    v8::Local<v8::Object> obj;
+    v8::Local<v8::Array> arr = v8::Array::New(isolate, num);
+    int index = 0;
+    for (auto iter = if_addr_map.begin(); iter != if_addr_map.end(); iter++)
     {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, origin_zv);
-        info.GetReturnValue().Set(obj);
+        v8::Local<v8::Object> pair_obj = v8::Object::New(isolate);
+        pair_obj->Set(NewV8String(isolate, "name"), NewV8String(isolate, iter->first));
+        pair_obj->Set(NewV8String(isolate, "ip"), NewV8String(isolate, iter->second));
+        arr->Set(index++, pair_obj);
     }
+    info.GetReturnValue().Set(obj);
 }
 static void source_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv = nullptr;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("attack_source"))) != nullptr)
-    {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, origin_zv);
-        info.GetReturnValue().Set(obj);
-    }
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_remote_addr());
+    info.GetReturnValue().Set(obj);
 }
 static void target_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv = nullptr;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("server_ip"))) != nullptr)
-    {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, origin_zv);
-        info.GetReturnValue().Set(obj);
-    }
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).url.get_server_addr());
+    info.GetReturnValue().Set(obj);
 }
 static void clientIp_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
-    zval *origin_zv = nullptr;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
-    if (Z_TYPE_P(alarm_common_info) == IS_ARRAY &&
-        (origin_zv = zend_hash_str_find(Z_ARRVAL_P(alarm_common_info), ZEND_STRL("client_ip"))) != nullptr)
-    {
-        v8::Isolate *isolate = info.GetIsolate();
-        auto obj = NewV8ValueFromZval(isolate, origin_zv);
-        info.GetReturnValue().Set(obj);
-    }
+    std::string clientip_header = OPENRASP_CONFIG(clientip.header);
+    std::transform(clientip_header.begin(), clientip_header.end(), clientip_header.begin(), ::tolower);
+    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_header(clientip_header));
+    info.GetReturnValue().Set(obj);
 }
 v8::Local<v8::ObjectTemplate> openrasp::CreateRequestContextTemplate(Isolate *isolate)
 {

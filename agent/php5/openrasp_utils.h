@@ -45,6 +45,5 @@ bool openrasp_parse_url(const std::string &origin_url, std::string &scheme, std:
 std::map<std::string, std::string> get_env_map();
 std::string get_phpversion();
 zval *fetch_http_globals(int vars_id TSRMLS_DC);
-std::map<std::string, std::string> restore_multipart_files();
 
 #endif

@@ -33,7 +33,6 @@ abcdef123456789
 --AaB03x--
 --FILE--
 <?php
-var_dump($_FILES);
 $uploads_dir = '/tmp/openrasp';
 if ($_FILES[-1]["error"] == UPLOAD_ERR_OK) {
     $tmp_name = $_FILES[-1]["tmp_name"];

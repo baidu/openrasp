@@ -136,98 +136,86 @@ void Parameter::clear()
 //the functions below is different in PHP5 and PHP7
 void Parameter::update_body_str(size_t body_len)
 {
-    TSRMLS_FETCH();
-    char *body = nullptr;
-    if ((body = fetch_request_body(body_len TSRMLS_CC)) != nullptr)
+    zend_string *body = nullptr;
+    if ((body = fetch_request_body(body_len)) != nullptr)
     {
-        body_str = std::string(body);
-        efree(body);
+        if (ZSTR_LEN(body) > 0)
+        {
+            body_str = std::string(ZSTR_VAL(body), ZSTR_LEN(body));
+        }
+        zend_string_release(body);
     }
 }
 
 void Parameter::update_json_str()
 {
-    TSRMLS_FETCH();
     json_str = "{}";
-    char *body = nullptr;
-    if ((body = fetch_request_body(PHP_STREAM_COPY_ALL TSRMLS_CC)) != nullptr)
+    zend_string *body = nullptr;
+    if ((body = fetch_request_body(PHP_STREAM_COPY_ALL)) != nullptr)
     {
-        if (strcmp(body, "") != 0)
+        if (ZSTR_LEN(body) > 0)
         {
-            JsonReader json_body(body);
+            std::string body_str = std::string(ZSTR_VAL(body), ZSTR_LEN(body));
+            JsonReader json_body(body_str);
             if (!json_body.has_error())
             {
-                json_str = std::string(body);
+                json_str = body_str;
             }
         }
-        efree(body);
+        zend_string_release(body);
     }
 }
 
 void Parameter::update_form_str()
 {
-    TSRMLS_FETCH();
-    zval *http_post = fetch_http_globals(TRACK_VARS_POST TSRMLS_CC);
+    zval *http_post = fetch_http_globals(TRACK_VARS_POST);
     if (http_post &&
         IS_ARRAY == Z_TYPE_P(http_post) &&
         zend_hash_num_elements(Z_ARRVAL_P(http_post)) > 0)
     {
-        form_str = json_encode_from_zval(http_post TSRMLS_CC);
+        form_str = json_encode_from_zval(http_post);
     }
 }
 
 void Parameter::update_multipart_files()
 {
-    TSRMLS_FETCH();
-    zval *http_files = fetch_http_globals(TRACK_VARS_FILES TSRMLS_CC);
+    zval *http_files = fetch_http_globals(TRACK_VARS_FILES);
     if (http_files &&
         IS_ARRAY == Z_TYPE_P(http_files) &&
         zend_hash_num_elements(Z_ARRVAL_P(http_files)) > 0)
     {
         std::vector<std::string> keys;
-        HashTable *ht = Z_ARRVAL_P(http_files);
-        for (zend_hash_internal_pointer_reset(ht);
-             zend_hash_has_more_elements(ht) == SUCCESS;
-             zend_hash_move_forward(ht))
+        zval *file_value = nullptr;
+        zend_string *key = nullptr;
+        zend_ulong idx;
+        ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(http_files), idx, key, file_value)
         {
-            char *key;
-            ulong idx;
-            int type;
-            type = zend_hash_get_current_key(ht, &key, &idx, 0);
-            if (type == HASH_KEY_NON_EXISTENT)
+            zval *name_value = nullptr;
+            zval *tmp_name_value = nullptr;
+            if (Z_TYPE_P(file_value) != IS_ARRAY)
             {
                 continue;
             }
-            zval **file_value;
-            zval **name_value;
-            zval **tmp_name_value;
-            if (zend_hash_get_current_data(ht, (void **)&file_value) != SUCCESS)
+            if ((name_value = zend_hash_str_find(Z_ARRVAL_P(file_value), ZEND_STRL("name"))) != nullptr &&
+                (tmp_name_value = zend_hash_str_find(Z_ARRVAL_P(file_value), ZEND_STRL("tmp_name"))) != nullptr &&
+                Z_TYPE_P(name_value) == Z_TYPE_P(tmp_name_value))
             {
-                continue;
-            }
-            if (Z_TYPE_PP(file_value) != IS_ARRAY)
-            {
-                continue;
-            }
-            if (zend_hash_find(Z_ARRVAL_PP(file_value), ZEND_STRS("name"), (void **)&name_value) == SUCCESS &&
-                zend_hash_find(Z_ARRVAL_PP(file_value), ZEND_STRS("tmp_name"), (void **)&tmp_name_value) == SUCCESS &&
-                Z_TYPE_PP(name_value) == Z_TYPE_PP(tmp_name_value))
-            {
-                if (type == HASH_KEY_IS_STRING)
+                if (key != nullptr)
                 {
-                    keys.push_back(std::string(key));
-                    recursive_restore_files(keys, *name_value, *tmp_name_value);
+                    keys.push_back(std::string(ZSTR_VAL(key)));
+                    recursive_restore_files(keys, name_value, tmp_name_value);
                     keys.pop_back();
                 }
-                else if (type == HASH_KEY_IS_LONG)
+                else
                 {
                     long actual = idx;
                     keys.push_back(std::to_string(actual));
-                    recursive_restore_files(keys, *name_value, *tmp_name_value);
+                    recursive_restore_files(keys, name_value, tmp_name_value);
                     keys.pop_back();
                 }
             }
         }
+        ZEND_HASH_FOREACH_END();
     }
 }
 
@@ -245,47 +233,35 @@ void Parameter::recursive_restore_files(std::vector<std::string> &keys, zval *na
     {
         if (zend_hash_num_elements(Z_ARRVAL_P(name)) > 0)
         {
-            HashTable *ht = Z_ARRVAL_P(name);
-            for (zend_hash_internal_pointer_reset(ht);
-                 zend_hash_has_more_elements(ht) == SUCCESS;
-                 zend_hash_move_forward(ht))
+            zval *name_value = nullptr;
+            zend_string *key = nullptr;
+            zend_ulong idx;
+            ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(name), idx, key, name_value)
             {
-                char *key;
-                ulong idx;
-                int type;
-                type = zend_hash_get_current_key(ht, &key, &idx, 0);
-                if (type == HASH_KEY_NON_EXISTENT)
+                zval *tmp_name_value = nullptr;
+                if (key != nullptr)
                 {
-                    continue;
-                }
-                zval **name_value;
-                zval **tmp_name_value;
-                if (zend_hash_get_current_data(ht, (void **)&name_value) != SUCCESS)
-                {
-                    continue;
-                }
-                if (type == HASH_KEY_IS_STRING)
-                {
-                    if (zend_hash_find(Z_ARRVAL_P(tmp_name), key, strlen(key) + 1, (void **)&tmp_name_value) == SUCCESS &&
-                        Z_TYPE_PP(name_value) == Z_TYPE_PP(tmp_name_value))
+                    if ((tmp_name_value = zend_hash_find(Z_ARRVAL_P(tmp_name), key)) != nullptr &&
+                        Z_TYPE_P(name_value) == Z_TYPE_P(tmp_name_value))
                     {
-                        keys.push_back("[" + std::string(key) + "]");
-                        recursive_restore_files(keys, *name_value, *tmp_name_value);
+                        keys.push_back("[" + std::string(ZSTR_VAL(key)) + "]");
+                        recursive_restore_files(keys, name_value, tmp_name_value);
                         keys.pop_back();
                     }
                 }
-                else if (type == HASH_KEY_IS_LONG)
+                else
                 {
-                    if (zend_hash_index_find(Z_ARRVAL_P(tmp_name), idx, (void **)&tmp_name_value) == SUCCESS &&
-                        Z_TYPE_PP(name_value) == Z_TYPE_PP(tmp_name_value))
+                    if ((tmp_name_value = zend_hash_index_find(Z_ARRVAL_P(tmp_name), idx)) != nullptr &&
+                        Z_TYPE_P(name_value) == Z_TYPE_P(tmp_name_value))
                     {
                         long actual = idx;
                         keys.push_back("[" + std::to_string(actual) + "]");
-                        recursive_restore_files(keys, *name_value, *tmp_name_value);
+                        recursive_restore_files(keys, name_value, tmp_name_value);
                         keys.pop_back();
                     }
                 }
             }
+            ZEND_HASH_FOREACH_END();
         }
     }
 }

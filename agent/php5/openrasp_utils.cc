@@ -390,14 +390,3 @@ zval *fetch_http_globals(int vars_id TSRMLS_DC)
     }
     return nullptr;
 }
-
-std::map<std::string, std::string> restore_multipart_files(zval *http_files)
-{
-    std::map<std::string, std::string> result;
-    if (http_files)
-    {
-
-    }
-    return result;
-
-}

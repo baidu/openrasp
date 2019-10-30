@@ -24,7 +24,6 @@ extern "C"
 {
 #endif
 
-
 #ifdef HAVE_GETTEXT
 #include <libintl.h>
 #include <locale.h>
@@ -39,6 +38,7 @@ extern "C"
 
 #include "openrasp_conf_holder.h"
 #include "openrasp_error.h"
+#include "model/request.h"
 
 #ifndef ZEND_SHUTDOWN_MODULE_GLOBALS
 #ifdef ZTS
@@ -51,7 +51,8 @@ extern "C"
 #endif
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp)
-openrasp::ConfigHolder  config;
+openrasp::ConfigHolder config;
+openrasp::Request request;
 zend_bool locked;
 ZEND_END_MODULE_GLOBALS(openrasp)
 

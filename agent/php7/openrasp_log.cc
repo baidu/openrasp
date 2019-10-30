@@ -59,15 +59,6 @@ std::unique_ptr<openrasp::SharedLogManager> slm = nullptr;
 
 static bool verify_syslog_address_format();
 
-typedef void (*value_filter_t)(zval *origin_zv, zval *new_zv);
-
-typedef struct keys_filter_t
-{
-    const std::string origin_key_str;
-    const char *new_key_str;
-    value_filter_t value_filter;
-} keys_filter;
-
 static bool is_initialized = false;
 static std::map<std::string, std::string> _if_addr_map;
 
@@ -91,182 +82,6 @@ static int openrasp_log_files_mkdir(char *path)
     zend_bool mkdir_result = recursive_mkdir(path, strlen(path), 0777);
     return mkdir_result ? SUCCESS : FAILURE;
 }
-
-static void delete_merged_array_keys(HashTable *dest, const HashTable *src)
-{
-    zend_string *skey = nullptr;
-    ZEND_HASH_FOREACH_STR_KEY(dest, skey)
-    {
-        if (zend_hash_exists(src, skey))
-        {
-            zend_hash_del(dest, skey);
-        }
-    }
-    ZEND_HASH_FOREACH_END();
-}
-
-static void _get_ifaddr_zval(zval *z_ifaddr)
-{
-    array_init(z_ifaddr);
-    for (auto iter = _if_addr_map.cbegin(); iter != _if_addr_map.cend(); ++iter)
-    {
-        zval ifa_addr_item;
-        array_init(&ifa_addr_item);
-        add_assoc_str(&ifa_addr_item, "name", zend_string_init(iter->first.c_str(), iter->first.length(), 0));
-        add_assoc_str(&ifa_addr_item, "ip", zend_string_init(iter->second.c_str(), iter->second.length(), 0));
-        zend_hash_next_index_insert(Z_ARRVAL_P(z_ifaddr), &ifa_addr_item);
-    }
-}
-
-static void request_uri_path_filter(zval *origin_zv, zval *new_zv)
-{
-    char *haystack = Z_STRVAL_P(origin_zv);
-    int haystack_len = Z_STRLEN_P(origin_zv);
-    const char *found = php_memnstr(haystack, "?", 1, haystack + haystack_len);
-    if (found)
-    {
-        ZVAL_STRINGL(new_zv, haystack, found - haystack);
-    }
-    else
-    {
-        ZVAL_STRING(new_zv, haystack);
-    }
-}
-
-static void request_method_to_lower(zval *origin_zv, zval *new_zv)
-{
-    zend_string *origin_request_method = Z_STR_P(origin_zv);
-    zend_string *new_request_method = php_string_tolower(origin_request_method);
-    ZVAL_STR(new_zv, new_request_method);
-}
-
-static void build_complete_url(zval *items, zval *new_zv)
-{
-    assert(Z_TYPE_P(items) == IS_ARRAY);
-    zval *origin_zv = nullptr;
-    std::string buffer;
-    char *request_scheme = fetch_outmost_string_from_ht(Z_ARRVAL_P(items), "REQUEST_SCHEME");
-    if (request_scheme)
-    {
-        buffer.append(request_scheme);
-    }
-    else
-    {
-        buffer.append(ZEND_STRL("http"));
-    }
-    buffer.append(ZEND_STRL("://"));
-    char *http_host = fetch_outmost_string_from_ht(Z_ARRVAL_P(items), "HTTP_HOST");
-    if (http_host)
-    {
-        buffer.append(http_host);
-    }
-    else
-    {
-        char *server_name = fetch_outmost_string_from_ht(Z_ARRVAL_P(items), "SERVER_NAME");
-        char *server_addr = fetch_outmost_string_from_ht(Z_ARRVAL_P(items), "SERVER_ADDR");
-        if (server_name)
-        {
-            buffer.append(server_name);
-        }
-        else if (server_addr)
-        {
-            buffer.append(server_addr);
-        }
-        char *server_port = fetch_outmost_string_from_ht(Z_ARRVAL_P(items), "SERVER_PORT");
-        if (server_port && strncmp(server_port, "80", 2) != 0)
-        {
-            buffer.push_back(':');
-            buffer.append(server_port);
-        }
-    }
-    char *request_uri = fetch_outmost_string_from_ht(Z_ARRVAL_P(items), "REQUEST_URI");
-    if (request_uri)
-    {
-        buffer.append(request_uri);
-    }
-    ZVAL_STRINGL(new_zv, buffer.c_str(), buffer.length());
-}
-
-static void migrate_hash_values(zval *dest, const zval *src, std::vector<keys_filter> &filters)
-{
-    std::vector<keys_filter> total_filters(filters);
-    std::string clientip_origin_key;
-    if (!OPENRASP_CONFIG(clientip.header).empty())
-    {
-        char *tmp_clientip_header = estrdup(OPENRASP_CONFIG(clientip.header).c_str());
-        char *uch = php_strtoupper(tmp_clientip_header, strlen(tmp_clientip_header));
-        clientip_origin_key = "HTTP_" + std::string(uch);
-        efree(tmp_clientip_header);
-    }
-    total_filters.push_back({clientip_origin_key, "client_ip", nullptr});
-    zval *origin_zv = nullptr;
-    for (keys_filter filter : total_filters)
-    {
-        if (src && Z_TYPE_P(src) == IS_ARRAY)
-        {
-            if (filter.origin_key_str.find(" ") != std::string::npos)
-            {
-                zval items;
-                array_init(&items);
-                std::istringstream iss(filter.origin_key_str);
-                std::vector<std::string> tokens{std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{}};
-                for (std::string item : tokens)
-                {
-                    if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(src), item.c_str(), item.length())) != nullptr &&
-                        Z_TYPE_P(origin_zv) == IS_STRING)
-                    {
-                        add_assoc_zval(&items, item.c_str(), origin_zv);
-                        Z_ADDREF_P(origin_zv);
-                    }
-                }
-                assert(filter.value_filter != nullptr);
-                if (filter.value_filter)
-                {
-                    zval new_zv;
-                    filter.value_filter(&items, &new_zv);
-                    add_assoc_zval(dest, filter.new_key_str, &new_zv);
-                    zval_ptr_dtor(&items);
-                }
-            }
-            else
-            {
-                if (!filter.origin_key_str.empty() &&
-                    (origin_zv = zend_hash_str_find(Z_ARRVAL_P(src), filter.origin_key_str.c_str(), filter.origin_key_str.length())) != nullptr &&
-                    Z_TYPE_P(origin_zv) == IS_STRING)
-                {
-                    if (filter.value_filter)
-                    {
-                        zval new_zv;
-                        filter.value_filter(origin_zv, &new_zv);
-                        add_assoc_zval(dest, filter.new_key_str, &new_zv);
-                    }
-                    else
-                    {
-                        add_assoc_zval(dest, filter.new_key_str, origin_zv);
-                        Z_TRY_ADDREF_P(origin_zv);
-                    }
-                }
-                else
-                {
-                    add_assoc_string(dest, filter.new_key_str, "");
-                }
-            }
-        }
-        if ((origin_zv = zend_hash_str_find(Z_ARRVAL_P(dest), filter.new_key_str, strlen(filter.new_key_str))) == nullptr)
-        {
-            add_assoc_string(dest, filter.new_key_str, "");
-        }
-    }
-}
-
-static std::vector<keys_filter> alarm_filters =
-    {
-        {"REQUEST_METHOD", "request_method", request_method_to_lower},
-        {"SERVER_NAME", "target", nullptr},
-        {"SERVER_ADDR", "server_ip", nullptr},
-        {"REMOTE_ADDR", "attack_source", nullptr},
-        {"REQUEST_URI", "path", request_uri_path_filter},
-        {"REQUEST_SCHEME HTTP_HOST SERVER_NAME SERVER_ADDR SERVER_PORT REQUEST_URI", "url", build_complete_url}};
 
 static bool verify_syslog_address_format()
 {
@@ -396,7 +211,6 @@ RaspLoggerEntry::RaspLoggerEntry(const char *name, severity_level level, log_app
       appender_mask(appender_mask)
 {
     syslog_reconnect_time = 0;
-    ZVAL_NULL(&common_info);
 }
 
 void RaspLoggerEntry::init(log_appender appender_int)
@@ -422,13 +236,11 @@ void RaspLoggerEntry::init(log_appender appender_int)
         }
     }
     update_formatted_date_suffix();
-    update_common_info();
 }
 
 void RaspLoggerEntry::clear()
 {
     close_streams();
-    clear_common_info();
     clear_formatted_date_suffix();
 }
 
@@ -706,43 +518,60 @@ bool RaspLoggerEntry::log(severity_level level_int, const char *message, int mes
     return log_result;
 }
 
-bool RaspLoggerEntry::log(severity_level level_int, zval *z_message)
+bool RaspLoggerEntry::log(severity_level level_int, openrasp::JsonReader &base_json)
 {
-    assert(Z_TYPE_P(z_message) == IS_ARRAY);
     bool in_request = OPENRASP_LOG_G(in_request_process);
     if (!in_request) //out of request
     {
         init(FILE_APPENDER);
     }
     bool log_result = false;
+    if (openrasp_ini.app_id)
     {
-        std::string event_time = format_time(RaspLoggerEntry::rasp_rfc3339_format,
-                                             strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(nullptr));
-        add_assoc_string(&common_info, "event_time", const_cast<char *>(event_time.c_str()));
+        base_json.write_string({"app_id"}, openrasp_ini.app_id);
     }
-    zval source_code_arr;
-    array_init(&source_code_arr);
-    if (OPENRASP_CONFIG(decompile.enable) && in_request)
-    {
-        format_source_code_arr(&source_code_arr);
-    }
-    add_assoc_zval(&common_info, "source_code", &source_code_arr);
-    if (php_array_merge(Z_ARRVAL(common_info), Z_ARRVAL_P(z_message)))
-    {
-        std::string str_message = json_encode_from_zval(&common_info);
-        str_message.push_back('\n');
-        log_result = raw_log(level_int, str_message.c_str(), str_message.length());
-        delete_merged_array_keys(Z_ARRVAL(common_info), Z_ARRVAL_P(z_message));
-    }
-    else
-    {
-        RaspLoggerEntry::inner_error(E_WARNING, LOG_ERROR, _("Fail to merge request parameters during %s logging."), name);
-    }
+    base_json.write_string({"server_hostname"}, openrasp::get_hostname());
+    base_json.write_string({"server_type"}, "php");
+    base_json.write_string({"server_version"}, get_phpversion());
+    base_json.write_string({"rasp_id"}, openrasp::scm->get_rasp_id());
+    base_json.write_map_to_array({"server_nic"}, "name", "ip", _if_addr_map);
+    std::string event_time = format_time(RaspLoggerEntry::rasp_rfc3339_format,
+                                         strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
+    base_json.write_string({"event_time"}, event_time);
+    std::vector<std::string> source_code_vec;
     if (OPENRASP_CONFIG(decompile.enable))
     {
-        zend_hash_str_del(Z_ARRVAL(common_info), ZEND_STRL("source_code"));
+        source_code_vec = format_source_code_arr(TSRMLS_C);
     }
-    zend_hash_str_del(Z_ARRVAL(common_info), ZEND_STRL("event_time"));
+    base_json.write_vector({"source_code"}, source_code_vec);
+    if (strcmp(name, RaspLoggerEntry::ALARM_LOG_DIR_NAME) == 0 &&
+        (appender & appender_mask))
+    {
+        base_json.write_string({"event_type"}, "attack");
+        base_json.write_string({"request_id"}, OPENRASP_G(request).get_id());
+        base_json.write_string({"request_method"}, OPENRASP_G(request).get_method());
+        base_json.write_string({"target"}, OPENRASP_G(request).url.get_server_name());
+        base_json.write_string({"server_ip"}, OPENRASP_G(request).url.get_server_addr());
+        base_json.write_string({"path"}, OPENRASP_G(request).url.get_path());
+        base_json.write_string({"url"}, OPENRASP_G(request).url.get_complete_url());
+        base_json.write_string({"attack_source"}, OPENRASP_G(request).get_remote_addr());
+        base_json.write_map({"header"}, OPENRASP_G(request).get_header());
+        std::string clientip_header = OPENRASP_CONFIG(clientip.header);
+        std::transform(clientip_header.begin(), clientip_header.end(), clientip_header.begin(), ::tolower);
+        base_json.write_string({"client_ip"}, OPENRASP_G(request).get_header(clientip_header));
+        base_json.write_string({"body"}, OPENRASP_G(request).get_parameter().get_body());
+        base_json.write_string({"parameter", "form"}, OPENRASP_G(request).get_parameter().get_form_str());
+        base_json.write_string({"parameter", "json"}, OPENRASP_G(request).get_parameter().get_json_str());
+        base_json.write_string({"parameter", "multipart"}, OPENRASP_G(request).get_parameter().get_multipart_str());
+    }
+    else if (strcmp(name, RaspLoggerEntry::POLICY_LOG_DIR_NAME) == 0 &&
+             (appender & appender_mask))
+    {
+        base_json.write_string({"event_type"}, "security_policy");
+    }
+    std::string str_message = base_json.dump();
+    str_message.push_back('\n');
+    log_result = raw_log(level_int, str_message.c_str(), str_message.length());
     if (!in_request) //out of request
     {
         clear();
@@ -750,91 +579,9 @@ bool RaspLoggerEntry::log(severity_level level_int, zval *z_message)
     return log_result;
 }
 
-void RaspLoggerEntry::update_common_info()
-{
-    if (Z_TYPE(common_info) != IS_NULL)
-    {
-        return;
-    }
-    std::string php_version = get_phpversion();
-    array_init(&common_info);
-    if (strcmp(name, RaspLoggerEntry::ALARM_LOG_DIR_NAME) == 0 &&
-        (appender & appender_mask))
-    {
-        zval *migrate_src = nullptr;
-        if (Z_TYPE(PG(http_globals)[TRACK_VARS_SERVER]) == IS_ARRAY || zend_is_auto_global_str(ZEND_STRL("_SERVER")))
-        {
-            migrate_src = &PG(http_globals)[TRACK_VARS_SERVER];
-        }
-        migrate_hash_values(&common_info, migrate_src, alarm_filters);
-        add_assoc_string(&common_info, "event_type", "attack");
-        add_assoc_string(&common_info, "server_hostname", (char *)openrasp::get_hostname().c_str());
-        add_assoc_string(&common_info, "server_type", "php");
-        add_assoc_string(&common_info, "server_version", (char *)php_version.c_str());
-        add_assoc_string(&common_info, "request_id", OPENRASP_INJECT_G(request_id));
-        add_assoc_str(&common_info, "body", fetch_request_body(OPENRASP_CONFIG(body.maxbytes)));
-        add_assoc_string(&common_info, "rasp_id", (char *)openrasp::scm->get_rasp_id().c_str());
-        zval ifaddr;
-        _get_ifaddr_zval(&ifaddr);
-        add_assoc_zval(&common_info, "server_nic", &ifaddr);
-        if (openrasp_ini.app_id)
-        {
-            add_assoc_string(&common_info, "app_id", openrasp_ini.app_id);
-        }
-        zval z_header;
-        array_init(&z_header);
-        if (migrate_src)
-        {
-            zval *value = nullptr;
-            zend_string *key = nullptr;
-            ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(migrate_src), key, value)
-            {
-                std::string header_key = convert_to_header_key(key->val, key->len);
-                if (!header_key.empty())
-                {
-                    add_assoc_zval(&z_header, header_key.c_str(), value);
-                    Z_TRY_ADDREF_P(value);
-                }
-            }
-            ZEND_HASH_FOREACH_END();
-        }
-        add_assoc_zval(&common_info, "header", &z_header);
-    }
-    else if (strcmp(name, RaspLoggerEntry::POLICY_LOG_DIR_NAME) == 0 &&
-             (appender & appender_mask))
-    {
-        add_assoc_string(&common_info, "event_type", "security_policy");
-        add_assoc_string(&common_info, "server_hostname", (char *)openrasp::get_hostname().c_str());
-        add_assoc_string(&common_info, "server_type", "php");
-        add_assoc_string(&common_info, "server_version", (char *)php_version.c_str());
-        add_assoc_string(&common_info, "rasp_id", (char *)openrasp::scm->get_rasp_id().c_str());
-        zval ifaddr;
-        _get_ifaddr_zval(&ifaddr);
-        add_assoc_zval(&common_info, "server_nic", &ifaddr);
-        if (openrasp_ini.app_id)
-        {
-            add_assoc_string(&common_info, "app_id", openrasp_ini.app_id);
-        }
-    }
-}
-
-void RaspLoggerEntry::clear_common_info()
-{
-    if (Z_TYPE(common_info) != IS_NULL)
-    {
-        zval_ptr_dtor(&common_info);
-        ZVAL_NULL(&common_info);
-    }
-}
-
 char *RaspLoggerEntry::get_formatted_date_suffix() const
 {
     return formatted_date_suffix;
-}
-
-zval *RaspLoggerEntry::get_common_info()
-{
-    return &common_info;
 }
 
 void RaspLoggerEntry::set_level(severity_level level)

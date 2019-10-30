@@ -195,11 +195,6 @@ void get_stack(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Valu
 
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)
 {
-    std::time_t t = std::time(nullptr);
-    char buffer[100] = {0};
-    size_t size = std::strftime(buffer, sizeof(buffer), RaspLoggerEntry::rasp_rfc3339_format, std::localtime(&t));
-    auto event_time = NewV8String(isolate, buffer, size);
-
     auto obj = v8::Object::New(isolate);
     obj->Set(NewV8String(isolate, "attack_type"), type);
     obj->Set(NewV8String(isolate, "attack_params"), params);
@@ -208,43 +203,16 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     obj->Set(NewV8String(isolate, "plugin_confidence"), result->Get(NewV8String(isolate, "confidence")));
     obj->Set(NewV8String(isolate, "plugin_algorithm"), result->Get(NewV8String(isolate, "algorithm")));
     obj->Set(NewV8String(isolate, "plugin_name"), result->Get(NewV8String(isolate, "name")));
-    obj->Set(NewV8String(isolate, "event_time"), event_time);
-    {
-        auto source_code = v8::Array::New(isolate);
-        if (OPENRASP_CONFIG(decompile.enable))
-        {
-            auto src = format_source_code_arr(TSRMLS_C);
-            size_t len = src.size();
-            source_code = v8::Array::New(isolate, len);
-            for (size_t i = 0; i < len; i++)
-            {
-                source_code->Set(i, openrasp::NewV8String(isolate, src[i]));
-            }
-        }
-        obj->Set(NewV8String(isolate, "source_code"), source_code);
-    }
-
-    zval *value = nullptr;
-    zend_string *key = nullptr;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
-    ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(alarm_common_info), key, value)
-    {
-        if (key == nullptr ||
-            (Z_TYPE_P(value) != IS_STRING &&
-             Z_TYPE_P(value) != IS_LONG &&
-             Z_TYPE_P(value) != IS_ARRAY))
-        {
-            continue;
-        }
-        obj->Set(NewV8String(isolate, key->val, key->len), NewV8ValueFromZval(isolate, value));
-    }
-    ZEND_HASH_FOREACH_END();
 
     v8::Local<v8::Value> val;
     if (v8::JSON::Stringify(isolate->GetCurrentContext(), obj).ToLocal(&val))
     {
         v8::String::Utf8Value msg(isolate, val);
-        LOG_G(alarm_logger).log(LEVEL_INFO, *msg, msg.length(), true, false);
+        openrasp::JsonReader base_json(*msg);
+        if (!base_json.has_error())
+        {
+            LOG_G(alarm_logger).log(LEVEL_INFO, base_json);
+        }
     }
 }
 
