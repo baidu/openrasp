@@ -27,6 +27,7 @@ import (
 	"rasp-cloud/conf"
 	"errors"
 	"encoding/json"
+	"rasp-cloud/environment"
 )
 
 var (
@@ -145,13 +146,13 @@ func CreateTemplate(name string, body string) error {
 	defer cancel()
 	_, err := elastic.NewIndicesPutTemplateService(ElasticClient).Name(name).BodyString(body).Do(ctx)
 	if err != nil {
-		return err
+		tools.Panic(tools.ErrCodeESInitFailed, "failed to create es template: "+name, err)
 	}
 	beego.Info("put es template: " + name)
 	return nil
 }
 
-func CreateEsIndex(index string) error {
+func CreateEsIndex(index string, alias string, template string) error {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
 	defer cancel()
 	exists, err := ElasticClient.IndexExists(index).Do(ctx)
@@ -168,7 +169,17 @@ func CreateEsIndex(index string) error {
 			beego.Error("failed to create index with name " + index + ": " + err.Error())
 			return err
 		}
+	} else {
+		if environment.UpdateMappingConfig[template] != nil {
+			beego.Info("updating template name:", template, "alias:", alias)
+			destIndex := index + "-" + environment.UpdateMappingConfig[template].(string)
+			err := UpdateMapping(destIndex, alias, template, ctx)
+			if err != nil {
+				return err
+			}
+		}
 	}
+
 	return nil
 }
 
@@ -216,4 +227,64 @@ func BulkInsert(docType string, docs []map[string]interface{}) (err error) {
 		}
 	}
 	return err
+}
+
+func UpdateMapping (destIndex string, alias string, template string, ctx context.Context) error {
+	// 获取alias对应的index
+	res, err := ElasticClient.Aliases().Index(alias).Do(ctx)
+	if err != nil {
+		return err
+	}
+
+	if len(res.IndicesByAlias(alias)) == 0 {
+		return errors.New("alias:" + fmt.Sprintf("%s", res) + "is not exist!" )
+	}
+	if len(res.IndicesByAlias(alias)) > 2 {
+		return errors.New("find duplicate alias:" + fmt.Sprintf("%s", res.IndicesByAlias(alias)))
+	}
+
+	oldIndexFromEs := res.IndicesByAlias(alias)[0]
+	if len(res.IndicesByAlias(alias)) == 2 {
+			if oldIndexFromEs == destIndex{
+				oldIndexFromEs = res.IndicesByAlias(alias)[1]
+			}
+	}
+
+	exists, err := ElasticClient.IndexExists(destIndex).Do(ctx)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		// 创建新索引
+		err = CreateEsIndex(destIndex, alias, template)
+		if err != nil {
+			return err
+		}
+
+		//aliases := ElasticClient.Alias()
+		// 去掉新建索引中的模版索引，换成原索引的模版索引
+		//aliasName := res.Indices[destIndex].Aliases[0].AliasName
+		//_, err = aliases.Add(destIndex, alias).Remove(destIndex, aliasName).Do(ctx)
+		//if err != nil {
+		//	return err
+		//}
+		_, err = ElasticClient.Reindex().SourceIndex(oldIndexFromEs).DestinationIndex(destIndex).
+			ProceedOnVersionConflict().Do(ctx)
+		if err != nil {
+			return err
+		}
+		destIndexAlias, err := ElasticClient.Aliases().Index(destIndex).Do(ctx)
+		if err != nil {
+			return err
+		}
+		destIndexAliasName := destIndexAlias.Indices[destIndex].Aliases[0].AliasName
+		_, err = ElasticClient.Alias().Remove(oldIndexFromEs, alias).Add(destIndex, alias).
+			Remove(destIndex, destIndexAliasName).Do(ctx)
+		if err != nil {
+			return err
+		}
+		beego.Info("upgrade index success! newIndex:", destIndex, "oldIndex:", oldIndexFromEs)
+		return nil
+	}
+	return nil
 }

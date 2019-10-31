@@ -136,6 +136,7 @@ var algorithmConfig = {
         action:    'log',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#sql-exception',
 
+        // error_code 最多允许 100 个，超过直接清空
         mysql: {
 	        error_code: [
 	            // 1045, // Access denied for user 'bae'@'10.10.1.1'
@@ -257,7 +258,9 @@ var algorithmConfig = {
     writeFile_script: {
         name:      '算法2 - 拦截 php/jsp 等脚本文件的写入操作',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#case-file-write',
-        action:    'ignore'
+        action:    'block',
+        userinput:  true,
+        lcs_search: false
     },
 
     // 重命名监控 - 将普通文件重命名为webshell，
@@ -1724,13 +1727,20 @@ plugin.register('writeFile', function (params, context) {
     // https://rasp.baidu.com/doc/dev/official.html#case-file-write
     if (algorithmConfig.writeFile_script.action != 'ignore')
     {
+        var parameter = context.parameter || {}
+        var is_win    = context.server.os.indexOf('Windows') != -1
         if (scriptFileRegex.test(params.realpath))
         {
-            return {
-                action:     algorithmConfig.writeFile_script.action,
-                message:    _("File write - Creating or appending to a server-side script file, file is %1%", [params.realpath]),
-                confidence: 85,
-                algorithm:  'writeFile_script'
+            if (!(algorithmConfig.writeFile_script.userinput) ||
+                ((algorithmConfig.writeFile_script.userinput) &&
+                (is_path_endswith_userinput(parameter, params.path, params.realpath, is_win, algorithmConfig.writeFile_script.lcs_search)))
+            ) {
+                return {
+                    action:     algorithmConfig.writeFile_script.action,
+                    message:    _("File write - Creating or appending to a server-side script file, file is %1%", [params.realpath]),
+                    confidence: 85,
+                    algorithm:  'writeFile_script'
+                }
             }
         }
     }

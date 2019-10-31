@@ -167,7 +167,8 @@ var attackAlarmTemplate = `
 							"enabled":"false"
 						},
 						"plugin_message": {
-							"type": "keyword"
+							"type": "keyword",
+							"normalizer": "lowercase_normalizer"
 						},
 						"parameter": {
 							"type": "object",
@@ -273,7 +274,8 @@ var policyAlarmTemplate = `
 							"type": "long"
 						},
 						"message": {
-							"type": "keyword"
+							"type": "keyword",
+							"normalizer": "lowercase_normalizer"
 						},
 						"stack_md5": {
 							"type": "keyword",
@@ -321,7 +323,8 @@ var errorAlarmTemplate = `{
 							"ignore_above": 256
 						},
 						"message": {
-							"type": "keyword"
+							"type": "keyword",
+							"normalizer": "lowercase_normalizer"
 						},
 						"level": {
 							"type": "keyword",
@@ -401,7 +404,6 @@ func init() {
 			"attack-alarm-template": attackAlarmTemplate,
 			"policy-alarm-template": policyAlarmTemplate,
 		}
-
 		for name, template := range templates {
 			err := CreateTemplate(name, template)
 			if err != nil {

@@ -108,11 +108,12 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
         openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
         {
             v8::HandleScope handle_scope(isolate);
+            auto context = isolate->GetCurrentContext();
             auto params = v8::Object::New(isolate);
-            params->Set(openrasp::NewV8String(isolate, "url"), openrasp::NewV8String(isolate, Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url)));
-            params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "curl_exec"));
-            params->Set(openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, host));
-            params->Set(openrasp::NewV8String(isolate, "port"), openrasp::NewV8String(isolate, port));
+            params->Set(context, openrasp::NewV8String(isolate, "url"), openrasp::NewV8String(isolate, Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url))).IsJust();
+            params->Set(context, openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "curl_exec")).IsJust();
+            params->Set(context, openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, host)).IsJust();
+            params->Set(context, openrasp::NewV8String(isolate, "port"), openrasp::NewV8String(isolate, port)).IsJust();
             auto ip_arr = v8::Array::New(isolate);
             struct hostent *hp = gethostbyname(host.c_str());
             uint32_t ip_sum = 0;
@@ -122,10 +123,10 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
                 {
                     struct in_addr in = *(struct in_addr *)hp->h_addr_list[i];
                     ip_sum += in.s_addr;
-                    ip_arr->Set(i, openrasp::NewV8String(isolate, inet_ntoa(in)));
+                    ip_arr->Set(context, i, openrasp::NewV8String(isolate, inet_ntoa(in))).IsJust();
                 }
             }
-            params->Set(openrasp::NewV8String(isolate, "ip"), ip_arr);
+            params->Set(context, openrasp::NewV8String(isolate, "ip"), ip_arr).IsJust();
             {
                 cache_key = std::string(get_check_type_name(check_type) + std::string(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url)) + std::to_string(ip_sum));
                 if (OPENRASP_HOOK_G(lru).contains(cache_key))
