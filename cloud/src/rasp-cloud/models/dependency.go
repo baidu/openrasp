@@ -2,6 +2,7 @@ package models
 
 import (
 	"rasp-cloud/es"
+	"rasp-cloud/models/logs"
 	"time"
 	"github.com/olivere/elastic"
 	"encoding/json"
@@ -56,6 +57,10 @@ func AddDependency(rasp *Rasp, dependencies []*Dependency) error {
 		dependency.Tag = dependency.Vendor + ":" + dependency.Product + ":" + dependency.Version
 		dependency.SearchString = dependency.Product + dependency.Version
 		docs = append(docs, dependency)
+	}
+	err := logs.AddLogsWithKafka("dependency-data", rasp.AppId, docs)
+	if err != nil {
+		return err
 	}
 	return es.BulkInsert(es.GetIndex(AliasDependencyIndexName, rasp.AppId), dependencyType, docs)
 }

@@ -61,5 +61,9 @@ func AddPolicyAlarm(alarm map[string]interface{}) error {
 		}
 	}
 	alarm["upsert_id"] = fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
+	err := AddLogWithKafka(AttackAlarmInfo.EsType, alarm)
+	if err != nil {
+		return err
+	}
 	return AddAlarmFunc(PolicyAlarmInfo.EsType, alarm)
 }

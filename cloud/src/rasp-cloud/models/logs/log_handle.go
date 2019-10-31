@@ -29,6 +29,7 @@ import (
 	"rasp-cloud/conf"
 	"strings"
 	"crypto/md5"
+	"rasp-cloud/kafka"
 )
 
 type AggrTimeParam struct {
@@ -210,6 +211,27 @@ func AddLogWithFile(alarmType string, alarm map[string]interface{}) error {
 		}
 	} else {
 		logs.Error("failed to write rasp log, unrecognized log type: " + alarmType)
+	}
+	return nil
+}
+
+func AddLogWithKafka(alarmType string, log map[string]interface{}) error {
+	if appId, ok := log["app_id"].(string); ok {
+		kafkaIndex := "real-openrasp-" + alarmType + "-" + appId
+		beego.Info("index:", kafkaIndex, "alarm:", log)
+		err := kafka.SendMessage(kafkaIndex, kafkaIndex, log)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func AddLogsWithKafka(alarmType string, appId string, logs []interface{}) error {
+	kafkaIndex := "real-openrasp-" + alarmType + "-" + appId
+	err := kafka.SendMessages(kafkaIndex, kafkaIndex, logs)
+	if err != nil {
+		return err
 	}
 	return nil
 }
