@@ -135,6 +135,12 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 					"$options": "$i",
 				},
 			},
+			{
+				"description": bson.M{
+					"$regex":   realHostname,
+					"$options": "$i",
+				},
+			},
 		}
 		delete(bsonModel, "hostname")
 	}
