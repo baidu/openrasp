@@ -20,15 +20,11 @@ import (
 	"context"
 	"github.com/astaxie/beego/logs"
 	"strconv"
-	"log"
-	"os"
 	"github.com/astaxie/beego"
 	"rasp-cloud/tools"
 	"fmt"
 	"strings"
 	"rasp-cloud/conf"
-	"rasp-cloud/environment"
-	"rasp-cloud/kafka"
 	"errors"
 )
 
@@ -55,7 +51,6 @@ func init() {
 		go startTTL(24 * time.Hour)
 
 		Version, err = client.ElasticsearchVersion(esAddr[0])
-		initESLogger(environment.EsFileName)
 		if err != nil {
 			tools.Panic(tools.ErrCodeESInitFailed, "failed to get es version", err)
 		}
@@ -71,16 +66,6 @@ func init() {
 		}
 		ElasticClient = client
 	}
-}
-
-func initESLogger(esFileName string) {
-	logFile, err := os.Create(esFileName)
-	defer logFile.Close()
-	if err != nil {
-		log.Fatalln("open es.pid error")
-	}
-	pidLog := log.New(logFile, "[Info]", log.Llongfile)
-	pidLog.Printf("version:%s", Version)
 }
 
 func startTTL(duration time.Duration) {
@@ -194,8 +179,6 @@ func Insert(index string, docType string, doc interface{}) (err error) {
 
 func BulkInsertAlarm(docType string, docs []map[string]interface{}) (err error) {
 	bulkService := ElasticClient.Bulk()
-	var kafkaKeys []string
-	var docsTemp []map[string]interface{}
 	for _, doc := range docs {
 		if doc["app_id"] == nil {
 			beego.Error("failed to get app_id param from alarm: " + fmt.Sprintf("%+v", doc))
@@ -209,8 +192,6 @@ func BulkInsertAlarm(docType string, docs []map[string]interface{}) (err error) 
 					Id(fmt.Sprint(doc["upsert_id"])).
 					DocAsUpsert(true).
 					Doc(doc))
-				kafkaKeys = append(kafkaKeys, "real-openrasp-"+docType+"-"+appId)
-				docsTemp = append(docsTemp, doc)
 			} else {
 				if appId, ok := doc["app_id"].(string); ok {
 					bulkService.Add(elastic.NewBulkIndexRequest().
@@ -218,8 +199,6 @@ func BulkInsertAlarm(docType string, docs []map[string]interface{}) (err error) 
 						Type(docType).
 						OpType("index").
 						Doc(doc))
-					kafkaKeys = append(kafkaKeys, "real-openrasp-"+docType+"-"+appId)
-					docsTemp = append(docsTemp, doc)
 				}
 			}
 		} else {
@@ -234,9 +213,6 @@ func BulkInsertAlarm(docType string, docs []map[string]interface{}) (err error) 
 	}
 	if response != nil && response.Errors {
 		return errors.New("ES bulk has errors: " + fmt.Sprintf("%+v", response.Failed()))
-	}
-	for idx, key := range kafkaKeys {
-		kafka.SendMessage(key, key, docs[idx])
 	}
 	return err
 }
