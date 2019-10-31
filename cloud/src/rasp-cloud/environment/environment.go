@@ -24,7 +24,6 @@ import (
 	"rasp-cloud/conf"
 	"rasp-cloud/tools"
 	"syscall"
-	"sync"
 	"strconv"
 	"strings"
 	"github.com/astaxie/beego"
@@ -32,17 +31,18 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 	"time"
 	"io/ioutil"
+	"net"
+	"path/filepath"
 )
+
+type PIDFile struct {
+	path string
+}
 
 var (
 	Version = "1.3"
 	LogPath = "logs/"
-	EsFileName = LogPath + "es.pid"
-	MongoFileName = LogPath + "mongo.pid"
-	MinMongoVersion = "3.6.0"
-	MinEsVersion  = "5.6.0"
-	MaxEsVersion  = "7.0.0"
-	lock sync.Mutex
+	PidFileName = LogPath + "pid.file"
 )
 
 func init() {
@@ -57,6 +57,7 @@ func init() {
 		handleVersionFlag()
 	}
 	beego.Info("Version: " + Version)
+
 	if tools.BuildTime != "" {
 		beego.Info("Build Time: " + tools.BuildTime)
 	}
@@ -64,7 +65,7 @@ func init() {
 		beego.Info("Git Commit ID: " + tools.CommitID)
 	}
 	if *StartFlag.Operation != "" {
-		parseOperation(*StartFlag.Operation)
+		HandleOperation(*StartFlag.Operation)
 	}
 	if *StartFlag.StartType == conf.StartTypeReset {
 		HandleReset(StartFlag)
@@ -79,6 +80,11 @@ func init() {
 		StartFlag.StartType = &allType
 	}
 	conf.InitConfig(StartFlag)
+	if *StartFlag.Operation != "" {
+		CheckForkStatus(true)
+	} else {
+		CheckForkStatus(false)
+	}
 	beego.Info("===== start type: " + *StartFlag.StartType + " =====")
 }
 
@@ -93,11 +99,11 @@ func handleVersionFlag() {
 	os.Exit(0)
 }
 
-func parseOperation(operation string)  {
+func HandleOperation(operation string)  {
 	switch operation {
-	case "restart":
+	case conf.RestartOperation:
 		restart()
-	case "stop":
+	case conf.StopOperation:
 		stop()
 	default:
 		log.Println("unknown operation!")
@@ -105,29 +111,41 @@ func parseOperation(operation string)  {
 }
 
 func restart() {
-	lock.Lock()
-	defer lock.Unlock()
-	port := beego.AppConfig.DefaultInt("httpport", 8080)
-	pid := readNetstat(port,  "restart")
-	log.Println("restarting........")
-	c := "kill -HUP " + pid
-	cmd := exec.Command("/bin/sh", "-c", c)
-	err := cmd.Start()
-	if err == nil {
-		log.Println("restart ok!")
+	oldPid := readPIDFILE(PidFileName)
+	pid, err := strconv.Atoi(oldPid)
+	if CheckPIDAlreadyRunning(PidFileName) {
+		log.Println("restarting........")
+		if err != nil {
+			tools.Panic(tools.ErrCodeGetPidFailed, "failed to get pid", err)
+		}
+		err = syscall.Kill(pid, syscall.SIGHUP)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		time.Sleep(5 * time.Second)
+		log.Println("restart success!")
+	} else {
+		log.Printf("the process id:%s is not exists!", oldPid)
 	}
 	os.Exit(0)
 }
 
 func stop()  {
-	port := beego.AppConfig.DefaultInt("httpport", 8080)
-	pid := readNetstat(port,  "stop")
-	log.Println("stopping........")
-	c := "kill -QUIT " + pid
-	cmd := exec.Command("/bin/sh", "-c", c)
-	err := cmd.Start()
-	if err == nil {
-		log.Println("stop success!")
+	oldPid := readPIDFILE(PidFileName)
+	pid, err := strconv.Atoi(oldPid)
+	if CheckPIDAlreadyRunning(PidFileName) {
+		log.Println("stopping........")
+		if err != nil {
+			tools.Panic(tools.ErrCodeGetPidFailed, "failed to get pid", err)
+		}else {
+			err = syscall.Kill(pid, syscall.SIGQUIT)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			log.Println("stop ok!")
+		}
+	} else {
+		log.Printf("the process id:%s is not exists!", oldPid)
 	}
 	os.Exit(0)
 }
@@ -173,18 +191,24 @@ func HandleDaemon() {
 	if err != nil {
 		tools.Panic(tools.ErrCodeInitChildProcessFailed, "failed to launch child process, error", err)
 	}
-	checkForkStatus()
-	log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
+	if CheckPIDAlreadyRunning(PidFileName) {
+		log.Fatal("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
+	}else {
+		port := beego.AppConfig.DefaultInt("httpport", 8080)
+		res := CheckPort(port)
+		if res == false {
+			log.Fatal("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
+		}
+		log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
+	}
 	os.Exit(0)
 }
 
-func checkForkStatus() {
-	port := beego.AppConfig.DefaultInt("httpport", 8080)
-	pid := readNetstat(port, "")
-	log.Println("current_pid: ", pid)
-	readEsFile(EsFileName, "version")
-	readMongoFile(MongoFileName, "version")
-	//initPidLogger(pid)
+func CheckForkStatus(remove bool) {
+	f, ret := newPIDFile(PidFileName, remove)
+	if ret == false && f == nil{
+		log.Fatalf("create %s error, for details please check the log in 'logs/api/agent-cloud.log'", PidFileName)
+	}
 }
 
 func fork() (err error) {
@@ -228,96 +252,97 @@ func initEnvConf() {
 	}
 }
 
-//func initPidLogger(pid string) {
-//	logFile, err := os.Create(pidFileName)
-//	defer logFile.Close()
-//	if err != nil {
-//		log.Fatalln("open rasp-cloud.pid error")
-//	}
-//	pidLog := log.New(logFile, "[Info]", log.Llongfile)
-//	pidLog.Printf("pid:%s", pid)
-//}
-
-func readEsFile(fileName string, keyword string) {
-	contentBytes, err := ioutil.ReadFile(fileName)
-	if err != nil{
-		tools.Panic(tools.ErrCodeReadPidFileFailed, "fail to read es file", err)
+func processExists(pid string) bool {
+	if _, err := os.Stat(filepath.Join("/proc", pid)); err == nil {
+		return true
 	}
-	logContent := string(contentBytes[:])
-	if strings.Contains(logContent, keyword + ":") {
-		startIndex := strings.Index(logContent, keyword+":")
-		length := len(logContent)
-		version := logContent[startIndex + len(keyword) + 1 : length]
-		if version != "" {
-			if strings.Compare(version, MinEsVersion) < 0 {
-				log.Println("unable to support the ElasticSearch with a version lower than "+
-					MinEsVersion+ ","+ " the current version is "+ version)
-				os.Exit(-1)
-			}
-			if strings.Compare(version, MaxEsVersion) >= 0 {
-				log.Println("unable to support the ElasticSearch with a version greater than or equal to "+
-					MaxEsVersion+ ","+ " the current version is "+ version)
-				os.Exit(-1)
-			}
-		}else {
-			log.Println("fail to start process, for details please check the log in 'logs/api/agent-cloud.log'")
-			os.Exit(-1)
-		}
-	}
+	return false
 }
 
-func readMongoFile(fileName string, keyword string) {
-	contentBytes, err := ioutil.ReadFile(fileName)
-	if err != nil{
-		tools.Panic(tools.ErrCodeReadPidFileFailed, "fail to read mongo.pid", err)
+func checkPIDAlreadyExists(path string, remove bool) bool {
+	pid := readPIDFILE(path)
+	if processExists(pid) && pid != " "{
+		log.Printf("the main process %s has already exist!", pid)
+		return true
 	}
-	logContent := string(contentBytes[:])
-	if strings.Contains(logContent, keyword + ":") {
-		startIndex := strings.Index(logContent, keyword+":")
-		length := len(logContent)
-		version := logContent[startIndex + len(keyword) + 1 : length]
-		if version != "" {
-			if strings.Compare(version, MinMongoVersion) < 0 {
-				log.Println("unable to support the MongoDB with a version lower than "+
-					MinMongoVersion+ ","+ " the current version is "+ version)
-			}
-		}else {
-			log.Println("fail to start process, for details please check the log in 'logs/api/agent-cloud.log'")
-			os.Exit(-1)
-		}
+	if remove {
+		removePIDFile()
 	}
+	return false
 }
 
-func readNetstat(port int, operation string) (pid string){
-	portStr := strconv.Itoa(port)
-	if portStr != "" {
-		c := "netstat -tunpl|grep " + portStr
-		cmd := exec.Command("/bin/sh", "-c", c)
-		out, _ := cmd.Output()
-		idx := strings.Index(string(out),"rasp-cloud")
-		if idx == -1 || operation != "" {
-			if operation != "stop" {
-				time.Sleep(5 * time.Second)
-			}
-			cmd := exec.Command("/bin/sh", "-c", c)
-			out, _ = cmd.Output()
-			if len(string(out)) != 0 {
-				idx = strings.Index(string(out),"rasp-cloud")
-				firstSplit := strings.Split(string(out),"/./")[0]
-				secondSplit := strings.Split(firstSplit, " ")
-				pid := secondSplit[len(secondSplit) - 1]
-				if idx != -1{
-					log.Println("httpport status ok!")
-					return pid
-				}
-			}else {
-				log.Println("fail to start process, for details please check the log in 'logs/api/agent-cloud.log'")
-				os.Exit(-1)
-			}
-		}else {
-			log.Println("fail to start process, for details please check the log in 'logs/api/agent-cloud.log'")
-			os.Exit(-1)
+func CheckPIDAlreadyRunning(path string) bool {
+	pid := readPIDFILE(path)
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Println("getwd error:", err)
+	}
+	ret := pidFileExists(filepath.Join(cwd, path))
+	if ret == false {
+		return false
+	}
+
+	if processExists(pid) && pid != ""{
+		return true
+	}
+	return false
+}
+
+func pidFileExists(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsExist(err) {
+			return true
+		}
+		return false
+	}
+	return true
+}
+
+func readPIDFILE(path string) string {
+	if pidByte, err := ioutil.ReadFile(path); err == nil {
+		pid := strings.TrimSpace(string(pidByte))
+		if pid != "" {
+			return pid
 		}
 	}
-	return
+	return " "
+}
+
+func newPIDFile(path string, remove bool) (*PIDFile, bool) {
+	if ret := checkPIDAlreadyExists(path, remove); ret == false {
+		log.Println("start new pid file!")
+	}
+
+	if err := os.MkdirAll(filepath.Dir(path), os.FileMode(0755)); err != nil {
+		log.Println("Mkdir error:", err)
+		return nil, false
+	}
+	if err := ioutil.WriteFile(path, []byte(fmt.Sprintf("%d", os.Getpid())), 0644); err != nil {
+		log.Println("WriteFile error:", err)
+		return nil, false
+	}
+	return &PIDFile{path: path}, true
+}
+
+func removePIDFile() error {
+	return os.Remove(PidFileName)
+}
+
+func CheckPort(port int) bool {
+	tcpAddress, err := net.ResolveTCPAddr("tcp", ":" + strconv.Itoa(port))
+	if err != nil {
+		log.Fatal(err)
+		return false
+	}
+
+	time.Sleep(5 * time.Second)
+	listener, err := net.ListenTCP("tcp", tcpAddress)
+	if err != nil {
+		return true
+	} else {
+		listener.Close()
+		return false
+	}
+	return true
 }
