@@ -22,6 +22,7 @@ import (
 	"math"
 	"net/http"
 	"rasp-cloud/controllers"
+	"rasp-cloud/kafka"
 	"rasp-cloud/models"
 	"strconv"
 	"sync"
@@ -244,7 +245,6 @@ func (o *AppController) Post() {
 		configTime := time.Now().UnixNano()
 		app.ConfigTime = configTime
 	}
-
 	if app.WhitelistConfig != nil {
 		o.validateWhiteListConfig(app.WhitelistConfig)
 		configTime := time.Now().UnixNano()
@@ -418,6 +418,12 @@ func (o *AppController) validAttackTypeAlarmConf(conf *map[string][]string) {
 	}
 }
 
+func (o *AppController) validKafkaConf(conf *kafka.Kafka) {
+	if len(conf.KafkaAddr) == 0 {
+		o.ServeError(http.StatusBadRequest, "the kafka addr cannot be empty")
+	}
+}
+
 // @router /delete [post]
 func (o *AppController) Delete() {
 	var app = &models.App{}
@@ -562,6 +568,7 @@ func (o *AppController) ConfigAlarm() {
 		EmailAlarmConf      *models.EmailAlarmConf `json:"email_alarm_conf,omitempty"`
 		DingAlarmConf       *models.DingAlarmConf  `json:"ding_alarm_conf,omitempty"`
 		HttpAlarmConf       *models.HttpAlarmConf  `json:"http_alarm_conf,omitempty"`
+		KafkaConf           *kafka.Kafka           `json:"kafka_conf,omitempty"`
 	}
 	o.UnmarshalJson(&param)
 
@@ -591,6 +598,9 @@ func (o *AppController) ConfigAlarm() {
 	if param.AttackTypeAlarmConf != nil {
 		o.validAttackTypeAlarmConf(param.AttackTypeAlarmConf)
 	}
+	if param.KafkaConf != nil {
+		o.validKafkaConf(param.KafkaConf)
+	}
 	content, err := json.Marshal(param)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to encode param to json", err)
@@ -602,6 +612,10 @@ func (o *AppController) ConfigAlarm() {
 	app, err = models.UpdateAppById(param.AppId, updateData)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update alarm config", err)
+	}
+	err = kafka.PutKafkaConfig(param.KafkaConf)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to put kafka config", err)
 	}
 	models.AddOperation(app.Id, models.OperationTypeUpdateAlarmConfig, o.Ctx.Input.IP(),
 		"Alarm configuration updated for "+param.AppId)

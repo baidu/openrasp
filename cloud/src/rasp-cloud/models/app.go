@@ -61,11 +61,16 @@ type App struct {
 	DingAlarmConf       DingAlarmConf          `json:"ding_alarm_conf" bson:"ding_alarm_conf"`
 	HttpAlarmConf       HttpAlarmConf          `json:"http_alarm_conf" bson:"http_alarm_conf"`
 	AlgorithmConfig     map[string]interface{} `json:"algorithm_config"`
+	GeneralAlarmConf    GeneralAlarmConf       `json:"general_alarm_conf" bson:"general_alarm_conf"`
 }
 
 type WhitelistConfigItem struct {
 	Url  string          `json:"url" bson:"url"`
 	Hook map[string]bool `json:"hook" bson:"hook"`
+}
+
+type GeneralAlarmConf struct {
+	AlarmCheckInterval  string                 `json:"alarm_check_interval" bson:"alarm_check_interval"`
 }
 
 type EmailAlarmConf struct {
@@ -475,7 +480,9 @@ func HandleApp(app *App, isCreate bool) error {
 	if app.GeneralConfig == nil {
 		app.GeneralConfig = make(map[string]interface{})
 	}
-
+	if app.GeneralAlarmConf == nil {
+		app.GeneralAlarmConf = make(map[string]interface{})
+	}
 	app.AlgorithmConfig = make(map[string]interface{})
 	plugin, err := GetSelectedPlugin(app.Id, false)
 	if err != nil {
