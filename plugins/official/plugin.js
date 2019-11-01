@@ -1,4 +1,4 @@
-const plugin_version = '2019-1008-1500'
+const plugin_version = '2019-1101-0900'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1355,7 +1355,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                         algorithm:  'ssrf_userinput'
                     }
                 }
-                else if (hostname == '[::]' || hostname == '0.0.0.0') 
+                else if (hostname == '[::]' || hostname == '::1' || hostname == '0.0.0.0') 
                 {
                     return {
                         action:     algorithmConfig.ssrf_userinput.action,
