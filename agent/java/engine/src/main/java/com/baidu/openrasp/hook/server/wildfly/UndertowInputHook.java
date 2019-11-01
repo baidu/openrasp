@@ -15,7 +15,6 @@
  */
 package com.baidu.openrasp.hook.server.wildfly;
 
-import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.server.ServerInputHook;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
@@ -50,10 +49,6 @@ public class UndertowInputHook extends ServerInputHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String readByteSrc = getInvokeStaticSrc(ServerInputHook.class, "onInputStreamRead",
-                "$_,$0", int.class, Object.class);
-        insertAfter(ctClass, "read", "()I", readByteSrc);
-
         String readSrc = getInvokeStaticSrc(ServerInputHook.class, "onInputStreamRead",
                 "$_,$0,$1,$2", int.class, Object.class, byte[].class, int.class);
         insertAfter(ctClass, "read", "([BII)I", readSrc);

@@ -55,7 +55,7 @@ public class CheckParameter {
         SSRF("ssrf", new V8Checker(), 1 << 14),
         SQL_EXCEPTION("sql_exception", new V8Checker(), 1 << 15),
         REQUESTEND("requestEnd", new V8Checker(), 1 << 17),
-        SYSTEMLOAD("loadLibrary", new V8Checker(), 1 << 18),
+        LOADLIBRARY("loadLibrary", new V8Checker(), 1 << 18),
 
         // java本地检测
         XSS_USERINPUT("xss_userinput", new XssChecker(), 1 << 16),

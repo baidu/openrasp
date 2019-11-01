@@ -73,6 +73,18 @@ public abstract class ServerInputHook extends AbstractClassHook {
         }
     }
 
+    public static void onCharReadLine(String line, Object reader) {
+        if (line != null && HookHandler.requestCache.get() != null) {
+            AbstractRequest request = HookHandler.requestCache.get();
+            if (request.getCharReader() == null) {
+                request.setCharReader(reader);
+            }
+            if (request.getCharReader() == reader) {
+                request.appendBody((line + "\n").toCharArray(), 0, line.length() + 1);
+            }
+        }
+    }
+
     public static void onInputStreamRead(int ret, Object inputStream) {
         if (ret != -1 && HookHandler.requestCache.get() != null) {
             AbstractRequest request = HookHandler.requestCache.get();
