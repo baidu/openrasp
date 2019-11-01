@@ -97,14 +97,14 @@ PHP_MINIT_FUNCTION(openrasp_v8)
         {
             process_globals.snapshot_blob = snapshot;
             std::map<OpenRASPCheckType, OpenRASPActionType> type_action_map;
-            std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
+            std::map<std::string, std::string> buildin_action_map = CheckTypeTransfer::instance().get_buildin_action_map();
             auto duration = std::chrono::system_clock::now().time_since_epoch();
             auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
             Isolate *isolate = Isolate::New(snapshot, millis);
             extract_buildin_action(isolate, buildin_action_map);
             for (auto iter = buildin_action_map.begin(); iter != buildin_action_map.end(); iter++)
             {
-                type_action_map.insert({check_type_transfer->name_to_type(iter->first), string_to_action(iter->second)});
+                type_action_map.insert({CheckTypeTransfer::instance().name_to_type(iter->first), string_to_action(iter->second)});
             }
             openrasp::scm->set_buildin_check_action(type_action_map);
             std::vector<long> sql_error_codes;

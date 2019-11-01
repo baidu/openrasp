@@ -101,7 +101,7 @@ bool SharedConfigManager::build_check_type_white_array(std::map<std::string, std
         {
             for (auto &type_name : white_item.second)
             {
-                bit_mask |= (1 << check_type_transfer->name_to_type(type_name));
+                bit_mask |= (1 << CheckTypeTransfer::instance().name_to_type(type_name));
             }
         }
         white_mask_map.insert({(white_item.first == "*") ? "" : white_item.first, bit_mask});

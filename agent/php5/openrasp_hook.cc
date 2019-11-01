@@ -52,7 +52,7 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp_hook)
 
 const std::string get_check_type_name(OpenRASPCheckType type)
 {
-    return check_type_transfer->type_to_name(type);
+    return CheckTypeTransfer::instance().type_to_name(type);
 }
 
 std::string openrasp_real_path(const char *filename, int filename_len, bool use_include_path, uint32_t w_op TSRMLS_DC)
@@ -250,7 +250,7 @@ bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC)
     {
         return true;
     }
-    if (check_type_transfer->is_buildin_check_type(check_type) &&
+    if (CheckTypeTransfer::instance().is_buildin_check_type(check_type) &&
         openrasp::scm->get_buildin_check_action(check_type) == AC_IGNORE)
     {
         return true;

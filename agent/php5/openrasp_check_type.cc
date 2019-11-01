@@ -54,6 +54,10 @@ CheckTypeTransfer::CheckTypeTransfer()
   insert(EVAL, "eval");
 }
 
+CheckTypeTransfer::~CheckTypeTransfer()
+{
+}
+
 std::string CheckTypeTransfer::type_to_name(OpenRASPCheckType type) const
 {
   auto it = check_type_to_name.find(type);
@@ -99,4 +103,8 @@ bool CheckTypeTransfer::is_buildin_check_type(OpenRASPCheckType type) const
   return false;
 }
 
-std::unique_ptr<CheckTypeTransfer> check_type_transfer(new CheckTypeTransfer());
+CheckTypeTransfer &CheckTypeTransfer::instance()
+{
+  static CheckTypeTransfer ctt;
+  return ctt;
+}
