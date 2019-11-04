@@ -54,8 +54,7 @@ const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.2.1";
 bool is_initialized = false;
 bool remote_active = false;
 std::string openrasp_status = "Protected";
-static std::string get_config_abs_path(ConfigHolder::FromType type);
-std::shared_ptr<openrasp::BaseReader> get_conf_reader(ConfigHolder::FromType type = ConfigHolder::FromType::kYaml);
+static std::string get_complete_config_content(ConfigHolder::FromType type);
 static void hook_without_params(OpenRASPCheckType check_type);
 
 PHP_INI_BEGIN()
@@ -80,14 +79,14 @@ PHP_GINIT_FUNCTION(openrasp)
 #endif
 #ifdef ZTS
     new (openrasp_globals) _zend_openrasp_globals;
-    std::shared_ptr<openrasp::BaseReader> conf_reader = get_conf_reader();
+    openrasp::YamlReader yaml_reader(get_complete_config_content(ConfigHolder::FromType::kYaml));
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (!openrasp::oam)
     {
-        (openrasp_globals->config).update(conf_reader.get());
+        (openrasp_globals->config).update(&yaml_reader);
     }
 #else
-    (openrasp_globals->config).update(conf_reader.get());
+    (openrasp_globals->config).update(&yaml_reader);
 #endif
 #endif
 }
@@ -143,30 +142,24 @@ PHP_MINIT_FUNCTION(openrasp)
         remote_active = true;
     }
 #endif
+    std::string unknown_yaml_keys;
     if (!remote_active)
     {
-        std::shared_ptr<openrasp::BaseReader> conf_reader = get_conf_reader();
-        if (nullptr != conf_reader)
+        openrasp::YamlReader yaml_reader(get_complete_config_content(ConfigHolder::FromType::kYaml));
+        if (yaml_reader.has_error())
         {
-            if (conf_reader->has_error())
-            {
-                openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Fail to parse config, cuz of %s."),
-                               conf_reader->get_error_msg().c_str());
-            }
-            else
-            {
-                std::string invalid_key = conf_reader->check_config_key({});
-                if (!invalid_key.empty())
-                {
-                    openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Unknown config key [%s] found in yml configuration."),
-                                   invalid_key.c_str());
-                }
-                OPENRASP_G(config).update(conf_reader.get());
-                openrasp::scm->build_check_type_white_array(conf_reader.get());
-                openrasp::scm->build_weak_password_array(conf_reader.get());
-                int64_t debug_level = conf_reader.get()->fetch_int64({"debug.level"}, 0);
-                openrasp::scm->set_debug_level(debug_level);
-            }
+            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Fail to parse config, cuz of %s."),
+                           yaml_reader.get_error_msg().c_str());
+        }
+        else
+        {
+            unknown_yaml_keys = yaml_reader.detect_unknown_config_key({});
+            int64_t debug_level = yaml_reader.fetch_int64({"debug.level"}, 0);
+            openrasp::scm->set_debug_level(debug_level);
+
+            OPENRASP_G(config).update(&yaml_reader);
+            openrasp::scm->build_check_type_white_array(&yaml_reader);
+            openrasp::scm->build_weak_password_array(&yaml_reader);
         }
     }
 
@@ -174,6 +167,11 @@ PHP_MINIT_FUNCTION(openrasp)
     {
         openrasp_status = "Unprotected (log module initialization failed)";
         return SUCCESS;
+    }
+    if (!unknown_yaml_keys.empty())
+    {
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Unknown config key [%s] found in yml configuration."),
+                       unknown_yaml_keys.c_str());
     }
     if (PHP_MINIT(openrasp_v8)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
     {
@@ -244,8 +242,8 @@ PHP_RINIT_FUNCTION(openrasp)
         long config_last_update = openrasp::scm->get_config_last_update();
         if (config_last_update && config_last_update > OPENRASP_G(config).GetLatestUpdateTime())
         {
-            std::shared_ptr<openrasp::BaseReader> conf_reader = get_conf_reader(ConfigHolder::FromType::kJson);
-            if (OPENRASP_G(config).update(conf_reader.get()))
+            openrasp::JsonReader json_reader(get_complete_config_content(ConfigHolder::FromType::kJson));
+            if (OPENRASP_G(config).update(&json_reader))
             {
                 OPENRASP_G(config).SetLatestUpdateTime(config_last_update);
             }
@@ -344,51 +342,19 @@ zend_module_entry openrasp_module_entry = {
 ZEND_GET_MODULE(openrasp)
 #endif
 
-static std::string get_config_abs_path(ConfigHolder::FromType type)
+static std::string get_complete_config_content(ConfigHolder::FromType type)
 {
-    std::string filename;
-    switch (type)
+    std::string conf_content;
+    if (openrasp_ini.root_dir)
     {
-    case ConfigHolder::FromType::kJson:
-        filename = "cloud-config.json";
-        break;
-    case ConfigHolder::FromType::kYaml:
-    default:
-        filename = "openrasp.yml";
-        break;
+        std::string abs_path = std::string(openrasp_ini.root_dir) +
+                               DEFAULT_SLASH +
+                               "conf" +
+                               DEFAULT_SLASH +
+                               (ConfigHolder::FromType::kJson == type ? "cloud-config.json" : "openrasp.yml");
+        openrasp::read_entire_content(abs_path.c_str(), conf_content);
     }
-    return std::string(openrasp_ini.root_dir) +
-           DEFAULT_SLASH +
-           "conf" +
-           DEFAULT_SLASH + filename;
-}
-
-std::shared_ptr<openrasp::BaseReader> get_conf_reader(ConfigHolder::FromType type)
-{
-    std::shared_ptr<openrasp::BaseReader> config_reader = nullptr;
-    if (!openrasp::empty(openrasp_ini.root_dir))
-    {
-        std::string config_file_path = get_config_abs_path(type);
-        std::string conf_contents;
-        if (openrasp::read_entire_content(config_file_path, conf_contents))
-        {
-            switch (type)
-            {
-            case ConfigHolder::FromType::kJson:
-                config_reader.reset(new openrasp::JsonReader());
-                break;
-            case ConfigHolder::FromType::kYaml:
-            default:
-                config_reader.reset(new openrasp::YamlReader());
-                break;
-            }
-            if (config_reader)
-            {
-                config_reader->load(conf_contents);
-            }
-        }
-    }
-    return config_reader;
+    return conf_content;
 }
 
 static void hook_without_params(OpenRASPCheckType check_type)

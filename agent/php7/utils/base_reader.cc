@@ -20,51 +20,8 @@
 namespace openrasp
 {
 
-const std::set<std::string> BaseReader::valid_keys = {
-    "plugin.timeout.millis",
-    "plugin.maxstack",
-    "plugin.filter",
-    "log.maxburst",
-    "log.maxstack",
-    "log.maxbackup",
-    "syslog.enable",
-    "syslog.tag",
-    "syslog.url",
-    "syslog.facility",
-    "syslog.connection_timeout",
-    "syslog.read_timeout",
-    "syslog.reconnect_interval",
-    "block.status_code",
-    "block.redirect_url",
-    "block.content_json",
-    "block.content_xml",
-    "block.content_html",
-    "inject.urlprefix",
-    "inject.custom_headers",
-    "body.maxbytes",
-    "clientip.header",
-    "security.enforce_policy",
-    "security.weak_passwords",
-    "lru.max_size",
-    "debug.level",
-    "hook.white",
-    "ognl.expression.minlength", //used for java only
-    "dependency_check.interval",
-    "webroot_scan.scan_limit",
-    "webroot_scan.interval",
-    "decompile.enable"};
-
-std::string BaseReader::check_config_key(const std::vector<std::string> &keys)
+std::string BaseReader::detect_unknown_config_key(const std::vector<std::string> &keys)
 {
-  std::vector<std::string> found_keys = fetch_object_keys(keys);
-  for (auto &key : found_keys)
-  {
-    auto found = valid_keys.find(key);
-    if (found == valid_keys.end())
-    {
-      return key;
-    }
-  }
   return "";
 }
 

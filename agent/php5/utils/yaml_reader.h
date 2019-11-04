@@ -39,6 +39,7 @@ public:
   virtual std::vector<std::string> fetch_object_keys(const std::vector<std::string> &keys);
   virtual std::vector<std::string> fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value);
   virtual void load(const std::string &content);
+  virtual std::string detect_unknown_config_key(const std::vector<std::string> &keys);
   //Serialization
   virtual std::string dump(const std::vector<std::string> &keys, bool pretty = false);
   virtual std::string dump(bool pretty = false);

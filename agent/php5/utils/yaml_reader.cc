@@ -180,4 +180,49 @@ std::string YamlReader::dump(bool pretty)
     return dump({}, pretty);
 }
 
+std::string YamlReader::detect_unknown_config_key(const std::vector<std::string> &keys)
+{
+    static const std::set<std::string> php_known_keys = {
+        "plugin.timeout.millis",
+        "plugin.maxstack",
+        "plugin.filter",
+        "log.maxburst",
+        "log.maxstack",
+        "log.maxbackup",
+        "syslog.enable",
+        "syslog.tag",
+        "syslog.url",
+        "syslog.facility",
+        "syslog.connection_timeout",
+        "syslog.read_timeout",
+        "syslog.reconnect_interval",
+        "block.status_code",
+        "block.redirect_url",
+        "block.content_json",
+        "block.content_xml",
+        "block.content_html",
+        "inject.urlprefix",
+        "inject.custom_headers",
+        "body.maxbytes",
+        "clientip.header",
+        "security.weak_passwords",
+        "lru.max_size",
+        "debug.level",
+        "hook.white",
+        "dependency_check.interval",
+        "webroot_scan.scan_limit",
+        "webroot_scan.interval",
+        "decompile.enable"};
+    std::vector<std::string> found_keys = fetch_object_keys(keys);
+    for (auto &key : found_keys)
+    {
+        auto found = php_known_keys.find(key);
+        if (found == php_known_keys.end())
+        {
+            return key;
+        }
+    }
+    return "";
+}
+
 } // namespace openrasp
