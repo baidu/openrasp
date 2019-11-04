@@ -40,22 +40,15 @@ static inline void hook_directory(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         std::string resolved_path = openrasp_real_path(Z_STRVAL_PP(path), Z_STRLEN_PP(path), false, OPENDIR TSRMLS_CC);
         if (!resolved_path.empty())
         {
+            if (OPENRASP_CONFIG(plugin.filter))
+            {
 #if PHP_API_VERSION < 20100412
-            if (PG(safe_mode) && (!php_checkuid(resolved_path.c_str(), nullptr, CHECKUID_CHECK_FILE_AND_DIR)))
-            {
-                return;
-            }
+                if (PG(safe_mode) && (!php_checkuid(resolved_path.c_str(), nullptr, CHECKUID_CHECK_FILE_AND_DIR)))
+                {
+                    return;
+                }
 #endif
-            if (php_check_open_basedir(resolved_path.c_str() TSRMLS_CC))
-            {
-                return;
             }
-#ifdef ZTS
-            if (VCWD_ACCESS(resolved_path.c_str(), F_OK))
-            {
-                return;
-            }
-#endif
             openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
             {
                 v8::HandleScope handle_scope(isolate);

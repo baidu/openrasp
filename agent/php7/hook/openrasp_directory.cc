@@ -43,30 +43,21 @@ static inline void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 		return;
 	}
 
-	php_stream *dirp;
-	dirp = php_stream_opendir(ZSTR_VAL(dirname), IGNORE_PATH, nullptr);
-	if (!dirp)
-	{
-		return;
-	}
-	php_stream_close(dirp);
 	std::string real_path = openrasp_real_path(ZSTR_VAL(dirname), ZSTR_LEN(dirname), false, OPENDIR);
-	if (real_path.empty())
+	if (!real_path.empty())
 	{
-		return;
-	}
-
-	openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
-	{
-		v8::HandleScope handle_scope(isolate);
-		auto params = v8::Object::New(isolate);
-		params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, dirname->val, dirname->len));
-		params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
-		check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
-	}
-	if (check_result == openrasp::CheckResult::kBlock)
-	{
-		handle_block();
+		openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
+		{
+			v8::HandleScope handle_scope(isolate);
+			auto params = v8::Object::New(isolate);
+			params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, dirname->val, dirname->len));
+			params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
+			check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
+		}
+		if (check_result == openrasp::CheckResult::kBlock)
+		{
+			handle_block();
+		}
 	}
 }
 

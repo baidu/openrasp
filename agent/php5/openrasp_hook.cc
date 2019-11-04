@@ -153,6 +153,18 @@ std::string openrasp_real_path(const char *filename, int filename_len, bool use_
             }
         }
     }
+    else
+    {
+        if (OPENRASP_CONFIG(plugin.filter))
+        {
+            if (php_check_open_basedir(resolved_path TSRMLS_CC))
+            {
+                efree(resolved_path);
+                resolved_path = nullptr;
+            }
+        }
+    }
+
     if (resolved_path)
     {
         result = std::string(resolved_path);
@@ -417,7 +429,7 @@ PHP_GSHUTDOWN_FUNCTION(openrasp_hook)
 PHP_MINIT_FUNCTION(openrasp_hook)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp_hook, PHP_GINIT(openrasp_hook), PHP_GSHUTDOWN(openrasp_hook));
-    
+
     for (size_t i = 0; i < PriorityType::pTotal; ++i)
     {
         for (size_t j = 0; j < global_hook_handlers_len[i]; ++j)

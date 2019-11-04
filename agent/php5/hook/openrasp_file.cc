@@ -346,26 +346,29 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
         }
         else if (!src_scheme && !tgt_scheme)
         {
-            struct stat src_sb;
-            if (VCWD_STAT(source_real_path.c_str(), &src_sb) == 0 && (src_sb.st_mode & S_IFDIR) != 0)
+            if (OPENRASP_CONFIG(plugin.filter))
             {
-                skip = true;
-            }
-            else
-            {
-                struct stat tgt_sb;
-                if (VCWD_STAT(target_real_path.c_str(), &tgt_sb) == 0)
+                struct stat src_sb;
+                if (VCWD_STAT(source_real_path.c_str(), &src_sb) == 0 && (src_sb.st_mode & S_IFDIR) != 0)
                 {
-                    if ((tgt_sb.st_mode & S_IFDIR) != 0)
-                    {
-                        skip = true;
-                    }
+                    skip = true;
                 }
                 else
                 {
-                    if (end_with(target_real_path, std::string(1, DEFAULT_SLASH)))
+                    struct stat tgt_sb;
+                    if (VCWD_STAT(target_real_path.c_str(), &tgt_sb) == 0)
                     {
-                        skip = true;
+                        if ((tgt_sb.st_mode & S_IFDIR) != 0)
+                        {
+                            skip = true;
+                        }
+                    }
+                    else
+                    {
+                        if (end_with(target_real_path, std::string(1, DEFAULT_SLASH)))
+                        {
+                            skip = true;
+                        }
                     }
                 }
             }

@@ -256,6 +256,17 @@ std::string openrasp_real_path(const char *filename, int length, bool use_includ
             }
         }
     }
+    else
+    {
+        if (OPENRASP_CONFIG(plugin.filter))
+        {
+            if (php_check_open_basedir(ZSTR_VAL(resolved_path)))
+            {
+                zend_string_release(resolved_path);
+                resolved_path = nullptr;
+            }
+        }
+    }
     if (resolved_path)
     {
         result = std::string(ZSTR_VAL(resolved_path), ZSTR_LEN(resolved_path));
