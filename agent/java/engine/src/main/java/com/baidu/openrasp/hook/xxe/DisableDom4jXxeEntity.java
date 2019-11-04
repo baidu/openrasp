@@ -17,8 +17,6 @@
 package com.baidu.openrasp.hook.xxe;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
