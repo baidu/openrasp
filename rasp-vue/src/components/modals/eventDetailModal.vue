@@ -227,9 +227,13 @@ export default {
     },
     decodeMultipartFile(data) {
       var tmp = []
-      JSON.parse(data).forEach(function (row) {
-        tmp.push("name=" + row.name + "; filename=" + row.filename)
-      })
+      try {
+        JSON.parse(data).forEach(function (row) {
+          tmp.push("name=" + row.name + "; filename=" + row.filename)
+        })
+      } catch (e) {
+        return "解析 Multipart File 参数出现异常，请加入QQ群联系群主: " + e
+      }
 
       return tmp.join("\n")
     },
@@ -255,7 +259,7 @@ export default {
           }
         })
       } catch (e) {
-        return "解析参数出现异常，请加入QQ群联系群主: " + e
+        return "解析 Multipart Form 参数出现异常，请加入QQ群联系群主: " + e
       }
 
       return tmp.join('&')
