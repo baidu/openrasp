@@ -241,16 +241,18 @@ export default {
         Object.keys(items).forEach(function (key) {
           var value = items[key]
 
-          // Java 总是数组，PHP 总是字典
+          // Java 总是数组，PHP 是字典或者字符串
           if (value.constructor == Array) {
             value.forEach(function (row) {
               tmp.push(key + '=' + row)
             })
-          } else {
+          } else if (value.constructor == Object) {
             Object.keys(value).forEach(function (row) {
               tmp.push(key + '[' + row + ']=' + value[row])
             })
-          }          
+          } else {
+            tmp.push(key + '=' + value)
+          }
         })
       } catch (e) {
         return "解析参数出现异常，请加入QQ群联系群主: " + e
