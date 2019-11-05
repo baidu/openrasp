@@ -7,19 +7,19 @@ package com.baidu.openrasp.request;
 public class RequestFileItem {
 
     private final String name;
-    private final String fileName;
+    private final String filename;
 
     public RequestFileItem(String name, String fileName) {
         this.name = name;
-        this.fileName = fileName;
+        this.filename = fileName;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getFileName() {
-        return fileName;
+    public String getFilename() {
+        return filename;
     }
 
 }
