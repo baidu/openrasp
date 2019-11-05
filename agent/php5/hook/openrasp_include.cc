@@ -60,9 +60,10 @@ int eval_handler(ZEND_OPCODE_HANDLER_ARGS)
             openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
             {
                 v8::HandleScope handle_scope(isolate);
+                auto context = isolate->GetCurrentContext();
                 auto params = v8::Object::New(isolate);
-                params->Set(openrasp::NewV8String(isolate, "code"), openrasp::NewV8String(isolate, param));
-                params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "eval"));
+                params->Set(context, openrasp::NewV8String(isolate, "code"), openrasp::NewV8String(isolate, param)).IsJust();
+                params->Set(context, openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "eval")).IsJust();
                 check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(EVAL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
             if (check_result == openrasp::CheckResult::kBlock)
@@ -206,11 +207,12 @@ int include_handler(ZEND_OPCODE_HANDLER_ARGS)
             openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
             {
                 v8::HandleScope handle_scope(isolate);
+                auto context = isolate->GetCurrentContext();
                 auto params = v8::Object::New(isolate);
-                params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, param));
-                params->Set(openrasp::NewV8String(isolate, "url"), openrasp::NewV8String(isolate, param));
-                params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
-                params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, function));
+                params->Set(context, openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, param)).IsJust();
+                params->Set(context, openrasp::NewV8String(isolate, "url"), openrasp::NewV8String(isolate, param)).IsJust();
+                params->Set(context, openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path)).IsJust();
+                params->Set(context, openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, function)).IsJust();
                 check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(INCLUDE)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
             if (check_result == openrasp::CheckResult::kBlock)

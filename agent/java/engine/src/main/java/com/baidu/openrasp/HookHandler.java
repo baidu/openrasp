@@ -255,42 +255,6 @@ public class HookHandler {
         checkDubboRequest(request);
     }
 
-    public static void onInputStreamRead(int ret, Object inputStream) {
-        if (ret != -1 && requestCache.get() != null) {
-            AbstractRequest request = requestCache.get();
-            if (request.getInputStream() == null) {
-                request.setInputStream(inputStream);
-            }
-            if (request.getInputStream() == inputStream) {
-                request.appendBody(ret);
-            }
-        }
-    }
-
-    public static void onInputStreamRead(int ret, Object inputStream, byte[] bytes) {
-        if (ret != -1 && requestCache.get() != null) {
-            AbstractRequest request = requestCache.get();
-            if (request.getInputStream() == null) {
-                request.setInputStream(inputStream);
-            }
-            if (request.getInputStream() == inputStream) {
-                request.appendBody(bytes, 0, ret);
-            }
-        }
-    }
-
-    public static void onInputStreamRead(int ret, Object inputStream, byte[] bytes, int offset, int len) {
-        if (ret != -1 && requestCache.get() != null) {
-            AbstractRequest request = requestCache.get();
-            if (request.getInputStream() == null) {
-                request.setInputStream(inputStream);
-            }
-            if (request.getInputStream() == inputStream) {
-                request.appendBody(bytes, offset, ret);
-            }
-        }
-    }
-
     public static void onParseParameters() {
         AbstractRequest request = requestCache.get();
         if (request != null) {

@@ -191,7 +191,7 @@ export default {
   mounted() {
     // 记住主机状态
     // TODO: 改为类库实现
-    console.log('load filter')
+    // console.log('load filter')
     try {
       let filter = JSON.parse(localStorage.getItem('host_filter_status'))
       if (typeof(filter.online) == 'boolean' && typeof(filter.offline) == 'boolean') {

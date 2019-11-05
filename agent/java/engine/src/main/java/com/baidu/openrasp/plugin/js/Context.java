@@ -16,25 +16,29 @@
 
 package com.baidu.openrasp.plugin.js;
 
-import java.util.*;
-import com.baidu.openrasp.request.AbstractRequest;
-import com.baidu.openrasp.tool.model.ApplicationModel;
-import com.jsoniter.output.JsonStream;
-import com.baidu.openrasp.v8.ByteArrayOutputStream;
-import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.request.AbstractRequest;
+import com.baidu.openrasp.tool.OSUtil;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 import com.baidu.openrasp.tool.model.NicModel;
+import com.baidu.openrasp.v8.ByteArrayOutputStream;
+import com.jsoniter.output.JsonStream;
+
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Context extends com.baidu.openrasp.v8.Context {
 
     public AbstractRequest request = null;
 
     public static void setKeys() {
-        setStringKeys(new String[] { "path", "method", "url", "querystring", "protocol", "remoteAddr", "appBasePath",
-                "requestId", "appId", "raspId", "hostname", "source", "target", "clientIp" });
-        setObjectKeys(new String[] { "json", "server", "parameter", "header", "nic" });
-        setBufferKeys(new String[] { "body" });
+        setStringKeys(new String[]{"path", "method", "url", "querystring", "protocol", "remoteAddr", "appBasePath",
+                "requestId", "appId", "raspId", "hostname", "source", "target", "clientIp"});
+        setObjectKeys(new String[]{"json", "server", "parameter", "header", "nic"});
+        setBufferKeys(new String[]{"body"});
     }
 
     public Context(AbstractRequest request) {
@@ -154,6 +158,26 @@ public class Context extends com.baidu.openrasp.v8.Context {
             return request.getRequestId().toString();
         } catch (Exception e) {
             return "";
+        }
+    }
+
+    public String getStringBody() {
+        try {
+            return request.getStringBody();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public String getStringJson() {
+        try {
+            String contentType = request.getContentType();
+            if (contentType != null && contentType.contains("application/json")) {
+                return getStringBody();
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
         }
     }
 

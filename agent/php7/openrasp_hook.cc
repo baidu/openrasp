@@ -54,7 +54,7 @@ void register_hook_handler(hook_handler_t hook_handler)
 
 const std::string get_check_type_name(OpenRASPCheckType type)
 {
-    return check_type_transfer->type_to_name(type);
+    return CheckTypeTransfer::instance().type_to_name(type);
 }
 
 bool openrasp_zval_in_request(zval *item)
@@ -145,7 +145,7 @@ bool openrasp_check_type_ignored(OpenRASPCheckType check_type)
     {
         return true;
     }
-    if (check_type_transfer->is_buildin_check_type(check_type) &&
+    if (CheckTypeTransfer::instance().is_buildin_check_type(check_type) &&
         openrasp::scm->get_buildin_check_action(check_type) == AC_IGNORE)
     {
         return true;

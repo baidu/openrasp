@@ -128,7 +128,7 @@ var (
 			"location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>",
 		"block.content_json":        `{"error":true,"reason": "Request blocked by OpenRASP","request_id": "%request_id%"}`,
 		"plugin.timeout.millis":     100,
-		"body.maxbytes":             4096,
+		"body.maxbytes":             12288,
 		"plugin.filter":             true,
 		"plugin.maxstack":           100,
 		"ognl.expression.minlength": 30,

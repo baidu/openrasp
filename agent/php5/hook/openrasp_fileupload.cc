@@ -57,12 +57,13 @@ void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAME
                     if (isolate)
                     {
                         v8::HandleScope handle_scope(isolate);
+                        auto context = isolate->GetCurrentContext();
                         auto params = v8::Object::New(isolate);
-                        params->Set(openrasp::NewV8String(isolate, "name"), openrasp::NewV8String(isolate, name));
-                        params->Set(openrasp::NewV8String(isolate, "filename"), openrasp::NewV8String(isolate, filename));
-                        params->Set(openrasp::NewV8String(isolate, "dest_path"), openrasp::NewV8String(isolate, new_path, new_path_len));
-                        params->Set(openrasp::NewV8String(isolate, "dest_realpath"), openrasp::NewV8String(isolate, real_dest));
-                        params->Set(openrasp::NewV8String(isolate, "content"), openrasp::NewV8String(isolate, contents, MIN(len, 4 * 1024)));
+                        params->Set(context, openrasp::NewV8String(isolate, "name"), openrasp::NewV8String(isolate, name)).IsJust();
+                        params->Set(context, openrasp::NewV8String(isolate, "filename"), openrasp::NewV8String(isolate, filename)).IsJust();
+                        params->Set(context, openrasp::NewV8String(isolate, "dest_path"), openrasp::NewV8String(isolate, new_path, new_path_len)).IsJust();
+                        params->Set(context, openrasp::NewV8String(isolate, "dest_realpath"), openrasp::NewV8String(isolate, real_dest)).IsJust();
+                        params->Set(context, openrasp::NewV8String(isolate, "content"), openrasp::NewV8String(isolate, contents, MIN(len, 4 * 1024))).IsJust();
                         check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
                     }
                     efree(contents);
