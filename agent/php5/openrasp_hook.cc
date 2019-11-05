@@ -469,6 +469,7 @@ PHP_RINIT_FUNCTION(openrasp_hook)
             OPENRASP_HOOK_G(lru).reset(OPENRASP_CONFIG(lru.max_size));
         }
     }
+    OPENRASP_HOOK_G(origin_pg_error_verbos) = -1;
     return SUCCESS;
 }
 PHP_RSHUTDOWN_FUNCTION(openrasp_hook);

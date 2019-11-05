@@ -47,5 +47,8 @@ void openrasp_set_locale(const char *locale, const char *locale_path);
 bool current_sapi_supported();
 
 zval *fetch_http_globals(int vars_id TSRMLS_DC);
+bool openrasp_call_user_function(HashTable *function_table, zval **object_pp, const std::string &function_name,
+                                 zval *retval_ptr, zend_uint param_count, zval *params[] TSRMLS_DC);
+bool get_long_constant(const std::string &key, long &value);
 
 #endif

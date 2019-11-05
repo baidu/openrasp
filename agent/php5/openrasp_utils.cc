@@ -441,3 +441,37 @@ std::string get_phpversion()
     }
     return version;
 }
+
+bool openrasp_call_user_function(HashTable *function_table, zval **object_pp, const std::string &function_name,
+                                 zval *retval_ptr, zend_uint param_count, zval *params[] TSRMLS_DC)
+{
+    zval z_function_name;
+    INIT_ZVAL(z_function_name);
+    ZVAL_STRING(&z_function_name, function_name.c_str(), 0);
+    if (call_user_function(EG(function_table), nullptr, &z_function_name, retval_ptr,
+                           param_count, params TSRMLS_CC) == SUCCESS)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool get_long_constant(const std::string &key, long &value)
+{
+    TSRMLS_FETCH();
+    bool found = false;
+    zval z_result;
+    if (zend_get_constant(key.c_str(), key.length(), &z_result TSRMLS_CC))
+    {
+        if (Z_TYPE(z_result) == IS_LONG)
+        {
+            value = Z_LVAL(z_result);
+            found = true;
+        }
+        zval_dtor(&z_result);
+    }
+    return found;
+}
