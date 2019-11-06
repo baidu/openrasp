@@ -24,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.CharArrayWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 /**
@@ -36,12 +37,14 @@ public abstract class AbstractRequest {
     protected static final Class[] STRING_CLASS = new Class[]{String.class};
     protected Object request;
     protected Object inputStream = null;
+    protected Object charReader = null;
     protected ByteArrayOutputStream bodyOutputStream = null;
-    protected CharArrayWriter bodyCharWriter = null;
+    protected CharArrayWriter bodyWriter = null;
     protected int maxBodySize = 4096;
     protected String requestId;
     protected boolean canGetParameter = false;
-    protected HashMap<String, String[]> fileUploadCache = null;
+    protected HashMap<String, String[]> formItemCache = null;
+    protected LinkedList<RequestFileItem> fileParamCache = null;
 
     /**
      * constructor
@@ -280,6 +283,33 @@ public abstract class AbstractRequest {
     }
 
     /**
+     * 返回HTTP request body
+     *
+     * @return request body, can be null
+     */
+    public String getStringBody() {
+        if (bodyOutputStream != null) {
+            byte[] body = bodyOutputStream.toByteArray();
+            if (body != null) {
+                String encoding = getCharacterEncoding();
+                if (!StringUtils.isEmpty(encoding)) {
+                    try {
+                        return new String(body, encoding);
+                    } catch (UnsupportedEncodingException e) {
+                        return new String(body);
+                    }
+                } else {
+                    return new String(body);
+                }
+            }
+            return null;
+        } else if (bodyWriter != null) {
+            return bodyWriter.toString();
+        }
+        return null;
+    }
+
+    /**
      * 返回HTTP request body stream
      *
      * @return request body, can be null
@@ -307,11 +337,29 @@ public abstract class AbstractRequest {
     }
 
     /**
-     * 添加HTTP request body
+     * 返回字符输入流
+     *
+     * @return 字符输入流
+     */
+    public Object getCharReader() {
+        return charReader;
+    }
+
+    /**
+     * 设置字符输入流
+     *
+     * @param charReader 字符输入流
+     */
+    public void setCharReader(Object charReader) {
+        this.charReader = charReader;
+    }
+
+    /**
+     * 添加 HTTP request body
      *
      * @param b 要添加的字节
      */
-    public void appendBody(int b) {
+    public void appendByteBody(int b) {
         if (bodyOutputStream == null) {
             bodyOutputStream = new ByteArrayOutputStream();
         }
@@ -322,16 +370,7 @@ public abstract class AbstractRequest {
     }
 
     /**
-     * 添加HTTP request body
-     *
-     * @param bytes 要添加的字节数组
-     */
-    public void appendBody(byte[] bytes) {
-        appendBody(bytes, 0, bytes.length);
-    }
-
-    /**
-     * 添加HTTP request body
+     * 添加 HTTP request body
      *
      * @param bytes  字节数组
      * @param offset 要添加的起始偏移量
@@ -345,6 +384,39 @@ public abstract class AbstractRequest {
         len = Math.min(len, maxBodySize - bodyOutputStream.size());
         if (len > 0) {
             bodyOutputStream.write(bytes, offset, len);
+        }
+    }
+
+    /**
+     * 添加 HTTP request body
+     *
+     * @param cbuf   字符数组
+     * @param offset 要添加的起始偏移量
+     * @param len    要添加的长度
+     */
+    public void appendBody(char[] cbuf, int offset, int len) {
+        if (bodyWriter == null) {
+            bodyWriter = new CharArrayWriter();
+        }
+
+        len = Math.min(len, maxBodySize / 2 - bodyWriter.size());
+        if (len > 0) {
+            bodyWriter.write(cbuf, offset, len);
+        }
+    }
+
+    /**
+     * 添加 HTTP request body
+     *
+     * @param b 要添加的字符
+     */
+    public void appendCharBody(int b) {
+        if (bodyWriter == null) {
+            bodyWriter = new CharArrayWriter();
+        }
+
+        if (bodyWriter.size() < (maxBodySize / 2)) {
+            bodyWriter.write(b);
         }
     }
 
@@ -368,11 +440,19 @@ public abstract class AbstractRequest {
         return false;
     }
 
-    public HashMap<String, String[]> getFileUploadCache() {
-        return fileUploadCache;
+    public HashMap<String, String[]> getFormItemCache() {
+        return formItemCache;
     }
 
-    public void setFileUploadCache(HashMap<String, String[]> cache) {
-        fileUploadCache = cache;
+    public void setFormItemCache(HashMap<String, String[]> cache) {
+        formItemCache = cache;
+    }
+
+    public LinkedList<RequestFileItem> getFileParamCache() {
+        return fileParamCache;
+    }
+
+    public void setFileParamCache(LinkedList<RequestFileItem> fileParamCache) {
+        this.fileParamCache = fileParamCache;
     }
 }

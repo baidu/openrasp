@@ -129,7 +129,7 @@ void BodyBlock::update(BaseReader *reader)
 
 void ClientipBlock::update(BaseReader *reader)
 {
-  header = reader->fetch_string({"clientip.header"}, std::string(""));
+  header = reader->fetch_string({"clientip.header"}, std::string("ClientIP"));
 };
 
 const int64_t LruBlock::default_max_size = 1024;

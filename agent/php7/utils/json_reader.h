@@ -51,6 +51,8 @@ public:
   void write_map(const std::vector<std::string> &keys, const std::map<std::string, std::string> &value);
   void write_map_to_array(const std::vector<std::string> &keys, const std::string fkey, const std::string skey,
                           const std::map<std::string, std::string> &value);
+  void write_vector(const std::vector<std::string> &keys, const std::vector<std::string> &value);
+  void merge(const JsonReader &patch);
 };
 
 } // namespace openrasp

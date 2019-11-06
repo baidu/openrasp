@@ -62,14 +62,18 @@ private:
   std::vector<OpenRASPCheckType> buildin_check_type;
   void insert(OpenRASPCheckType type, const std::string &name, bool is_buildin = false);
 
-public:
   CheckTypeTransfer();
+  virtual ~CheckTypeTransfer();
+  CheckTypeTransfer(const CheckTypeTransfer &) = delete;
+  CheckTypeTransfer &operator=(const CheckTypeTransfer &) = delete;
+
+public:
+  static CheckTypeTransfer &instance();
+  //only read op
   std::string type_to_name(OpenRASPCheckType type) const;
   OpenRASPCheckType name_to_type(const std::string &name) const;
   std::map<std::string, std::string> get_buildin_action_map() const;
   bool is_buildin_check_type(OpenRASPCheckType type) const;
 };
-
-extern std::unique_ptr<CheckTypeTransfer> check_type_transfer;
 
 #endif

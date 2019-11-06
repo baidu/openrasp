@@ -48,7 +48,12 @@ static void security_check(bool flag, int id, const char *msg)
         add_stack_to_params(&policy_params);
         add_assoc_zval(&result, "policy_params", &policy_params);
         add_assoc_string(&result, "message", const_cast<char *>(msg));
-        LOG_G(policy_logger).log(LEVEL_INFO, &result);
+        std::string base_str = json_encode_from_zval(&result TSRMLS_CC);
         zval_dtor(&result);
+        openrasp::JsonReader base_json(base_str);
+        if (!base_json.has_error())
+        {
+            LOG_G(policy_logger).log(LEVEL_INFO, base_json);
+        }
     }
 }

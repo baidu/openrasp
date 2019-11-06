@@ -5,7 +5,7 @@ hook move_uploaded_file file array
 if (php_sapi_name()=='cli') die('skip:  forces the use of the CGI binary');
 $plugin = <<<EOF
 plugin.register('fileUpload', params => {
-    assert(params.name == 'file')
+    assert(params.name == 'file[0]')
     assert(params.filename == 'file1.txt')
     assert(params.dest_path == '/tmp/openrasp/file1.txt')
     assert(params.dest_realpath == '/tmp/openrasp/file1.txt')

@@ -1,4 +1,4 @@
-const plugin_version = '2019-1008-1500'
+const plugin_version = '2019-1101-0900'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -258,7 +258,9 @@ var algorithmConfig = {
     writeFile_script: {
         name:      '算法2 - 拦截 php/jsp 等脚本文件的写入操作',
         reference: 'https://rasp.baidu.com/doc/dev/official.html#case-file-write',
-        action:    'ignore'
+        action:    'block',
+        userinput:  true,
+        lcs_search: false
     },
 
     // 重命名监控 - 将普通文件重命名为webshell，
@@ -1353,7 +1355,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                         algorithm:  'ssrf_userinput'
                     }
                 }
-                else if (hostname == '[::]' || hostname == '0.0.0.0') 
+                else if (hostname == '[::]' || hostname == '::1' || hostname == '0.0.0.0') 
                 {
                     return {
                         action:     algorithmConfig.ssrf_userinput.action,
@@ -1725,13 +1727,20 @@ plugin.register('writeFile', function (params, context) {
     // https://rasp.baidu.com/doc/dev/official.html#case-file-write
     if (algorithmConfig.writeFile_script.action != 'ignore')
     {
+        var parameter = context.parameter || {}
+        var is_win    = context.server.os.indexOf('Windows') != -1
         if (scriptFileRegex.test(params.realpath))
         {
-            return {
-                action:     algorithmConfig.writeFile_script.action,
-                message:    _("File write - Creating or appending to a server-side script file, file is %1%", [params.realpath]),
-                confidence: 85,
-                algorithm:  'writeFile_script'
+            if (!(algorithmConfig.writeFile_script.userinput) ||
+                ((algorithmConfig.writeFile_script.userinput) &&
+                (is_path_endswith_userinput(parameter, params.path, params.realpath, is_win, algorithmConfig.writeFile_script.lcs_search)))
+            ) {
+                return {
+                    action:     algorithmConfig.writeFile_script.action,
+                    message:    _("File write - Creating or appending to a server-side script file, file is %1%", [params.realpath]),
+                    confidence: 85,
+                    algorithm:  'writeFile_script'
+                }
             }
         }
     }
@@ -1869,7 +1878,9 @@ plugin.register('command', function (params, context) {
                 'freemarker.template.utility.Execute.exec':                                     _("Reflected command execution - Using FreeMarker template"),
                 'org.jboss.el.util.ReflectionUtil.invokeMethod':                                _("Reflected command execution - Using JBoss EL method"),
                 'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                _("Reflected command execution - Using BeHinder defineClass webshell"),
-                'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute':                     _("Reflected command execution - Using Groovy library")
+                'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute':                     _("Reflected command execution - Using Groovy library"),
+                'bsh.Reflect.invokeMethod':                                                     _("Reflected command execution - Using Beanshell"),
+                'jdk.scripting.nashorn/jdk.nashorn.internal.runtime.ScriptFunction.invoke':     _("Command execution - Using apache solr")
             }
 
             var userCode = false, reachedInvoke = false, i = 0

@@ -103,6 +103,20 @@
                   完整 Header 信息
                 </div>
                 <pre>{{mergeHeaders(data.header)}}</pre>
+
+                <div v-if="data.parameter && data.parameter.multipart != '{}'">
+                  <div class="h6">
+                    Multipart 文件参数
+                  </div>
+                  <pre>{{decodeMultipartFile(data.parameter.multipart)}}</pre>
+                </div>
+
+                <div v-if="data.parameter && data.parameter.form != '{}'">
+                  <div class="h6">
+                    Multipart Form 参数
+                  </div>
+                  <pre>{{decodeMultipartForm(data.parameter.form)}}</pre>
+                </div>
               </div>
 
               <!-- 兼容没有 header 字段的老版本 -->
@@ -210,6 +224,45 @@ export default {
       this.mergeStackAndSource(data)
 
       $('#showEventDetailModal').modal()
+    },
+    decodeMultipartFile(data) {
+      var tmp = []
+      try {
+        JSON.parse(data).forEach(function (row) {
+          tmp.push("name=" + row.name + "; filename=" + row.filename)
+        })
+      } catch (e) {
+        return "解析 Multipart File 参数出现异常，请加入QQ群联系群主: " + e
+      }
+
+      return tmp.join("\n")
+    },
+    decodeMultipartForm(data) {
+      var tmp   = []    
+      var items = JSON.parse(data)
+      
+      try {
+        Object.keys(items).forEach(function (key) {
+          var value = items[key]
+
+          // Java 总是数组，PHP 是字典或者字符串
+          if (value.constructor == Array) {
+            value.forEach(function (row) {
+              tmp.push(key + '=' + row)
+            })
+          } else if (value.constructor == Object) {
+            Object.keys(value).forEach(function (row) {
+              tmp.push(key + '[' + row + ']=' + value[row])
+            })
+          } else {
+            tmp.push(key + '=' + value)
+          }
+        })
+      } catch (e) {
+        return "解析 Multipart Form 参数出现异常，请加入QQ群联系群主: " + e
+      }
+
+      return tmp.join('&')
     },
     mergeHeaders(data) {
       var result = ''

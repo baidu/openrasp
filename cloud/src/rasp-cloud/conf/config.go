@@ -58,6 +58,7 @@ type Flag struct {
 	Daemon    *bool
 	Version   *bool
 	Operation *string
+	Upgrade   *string
 }
 
 var (

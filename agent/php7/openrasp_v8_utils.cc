@@ -37,7 +37,7 @@ CheckResult Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Ob
     v8::Local<v8::Object> request_context;
     if (data->request_context.IsEmpty())
     {
-        request_context = data->request_context_templ.Get(isolate)->NewInstance();
+        request_context = data->request_context_templ.Get(isolate)->NewInstance(context).ToLocalChecked();
         data->request_context.Reset(isolate, request_context);
     }
     else
@@ -86,6 +86,7 @@ CheckResult Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Ob
 
 v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
 {
+    auto context = isolate->GetCurrentContext();
     v8::Local<v8::Value> rst = v8::Undefined(isolate);
     switch (Z_TYPE_P(val))
     {
@@ -113,7 +114,7 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
             {
                 if (index == idx)
                 {
-                    arr->Set(index++, v8_value);
+                    arr->Set(context, index++, v8_value).IsJust();
                 }
                 else
                 {
@@ -121,7 +122,7 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
                     rst = obj = v8::Object::New(isolate);
                     for (int i = 0; i < index; i++)
                     {
-                        obj->Set(i, arr->Get(i));
+                        obj->Set(context, i, arr->Get(context, i).ToLocalChecked()).IsJust();
                     }
                 }
             }
@@ -129,11 +130,11 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
             {
                 if (!key)
                 {
-                    obj->Set(idx, v8_value);
+                    obj->Set(context, idx, v8_value).IsJust();
                 }
                 else
                 {
-                    obj->Set(NewV8String(isolate, key->val, key->len), v8_value);
+                    obj->Set(context, NewV8String(isolate, key->val, key->len), v8_value).IsJust();
                 }
             }
         }
@@ -182,69 +183,40 @@ void plugin_log(const std::string &message)
 void get_stack(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     auto isolate = info.GetIsolate();
+    auto context = isolate->GetCurrentContext();
     v8::HandleScope handle_scope(isolate);
     auto arr = format_debug_backtrace_arr();
     size_t len = arr.size();
     auto stack = v8::Array::New(isolate, len);
     for (size_t i = 0; i < len; i++)
     {
-        stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
+        stack->Set(context, i, openrasp::NewV8String(isolate, arr[i])).IsJust();
     }
     info.GetReturnValue().Set(stack);
 }
 
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)
 {
-    std::time_t t = std::time(nullptr);
-    char buffer[100] = {0};
-    size_t size = std::strftime(buffer, sizeof(buffer), RaspLoggerEntry::rasp_rfc3339_format, std::localtime(&t));
-    auto event_time = NewV8String(isolate, buffer, size);
-
+    v8::HandleScope handle_scope(isolate);
+    auto context = isolate->GetCurrentContext();
     auto obj = v8::Object::New(isolate);
-    obj->Set(NewV8String(isolate, "attack_type"), type);
-    obj->Set(NewV8String(isolate, "attack_params"), params);
-    obj->Set(NewV8String(isolate, "intercept_state"), result->Get(NewV8String(isolate, "action")));
-    obj->Set(NewV8String(isolate, "plugin_message"), result->Get(NewV8String(isolate, "message")));
-    obj->Set(NewV8String(isolate, "plugin_confidence"), result->Get(NewV8String(isolate, "confidence")));
-    obj->Set(NewV8String(isolate, "plugin_algorithm"), result->Get(NewV8String(isolate, "algorithm")));
-    obj->Set(NewV8String(isolate, "plugin_name"), result->Get(NewV8String(isolate, "name")));
-    obj->Set(NewV8String(isolate, "event_time"), event_time);
-    {
-        auto source_code = v8::Array::New(isolate);
-        if (OPENRASP_CONFIG(decompile.enable))
-        {
-            auto src = format_source_code_arr(TSRMLS_C);
-            size_t len = src.size();
-            source_code = v8::Array::New(isolate, len);
-            for (size_t i = 0; i < len; i++)
-            {
-                source_code->Set(i, openrasp::NewV8String(isolate, src[i]));
-            }
-        }
-        obj->Set(NewV8String(isolate, "source_code"), source_code);
-    }
-
-    zval *value = nullptr;
-    zend_string *key = nullptr;
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info();
-    ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(alarm_common_info), key, value)
-    {
-        if (key == nullptr ||
-            (Z_TYPE_P(value) != IS_STRING &&
-             Z_TYPE_P(value) != IS_LONG &&
-             Z_TYPE_P(value) != IS_ARRAY))
-        {
-            continue;
-        }
-        obj->Set(NewV8String(isolate, key->val, key->len), NewV8ValueFromZval(isolate, value));
-    }
-    ZEND_HASH_FOREACH_END();
+    obj->Set(context, NewV8String(isolate, "attack_type"), type).IsJust();
+    obj->Set(context, NewV8String(isolate, "attack_params"), params).IsJust();
+    obj->Set(context, NewV8String(isolate, "intercept_state"), result->Get(context, NewV8String(isolate, "action")).ToLocalChecked()).IsJust();
+    obj->Set(context, NewV8String(isolate, "plugin_message"), result->Get(context, NewV8String(isolate, "message")).ToLocalChecked()).IsJust();
+    obj->Set(context, NewV8String(isolate, "plugin_confidence"), result->Get(context, NewV8String(isolate, "confidence")).ToLocalChecked()).IsJust();
+    obj->Set(context, NewV8String(isolate, "plugin_algorithm"), result->Get(context, NewV8String(isolate, "algorithm")).ToLocalChecked()).IsJust();
+    obj->Set(context, NewV8String(isolate, "plugin_name"), result->Get(context, NewV8String(isolate, "name")).ToLocalChecked()).IsJust();
 
     v8::Local<v8::Value> val;
     if (v8::JSON::Stringify(isolate->GetCurrentContext(), obj).ToLocal(&val))
     {
         v8::String::Utf8Value msg(isolate, val);
-        LOG_G(alarm_logger).log(LEVEL_INFO, *msg, msg.length(), true, false);
+        openrasp::JsonReader base_json(*msg);
+        if (!base_json.has_error())
+        {
+            LOG_G(alarm_logger).log(LEVEL_INFO, base_json);
+        }
     }
 }
 
@@ -313,8 +285,8 @@ void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string>
         {
             continue;
         }
-        v8::String::Utf8Value key(isolate, item.As<v8::Array>()->Get(0));
-        v8::String::Utf8Value value(isolate, item.As<v8::Array>()->Get(1));
+        v8::String::Utf8Value key(isolate, item.As<v8::Array>()->Get(context, 0).ToLocalChecked());
+        v8::String::Utf8Value value(isolate, item.As<v8::Array>()->Get(context, 1).ToLocalChecked());
         auto iter = buildin_action_map.find({*key, key.length()});
         if (iter != buildin_action_map.end())
         {

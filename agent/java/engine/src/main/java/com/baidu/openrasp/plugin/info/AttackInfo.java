@@ -24,10 +24,13 @@ import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.tool.StackTrace;
 import com.baidu.openrasp.tool.decompile.Decompiler;
 import com.baidu.openrasp.tool.model.ApplicationModel;
+import com.google.gson.Gson;
+import org.apache.commons.lang3.StringUtils;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -130,23 +133,32 @@ public class AttackInfo extends EventInfo {
             // 被攻击目标服务器类型和版本
             info.put("server_type", ApplicationModel.getServerName());
             info.put("server_version", ApplicationModel.getVersion());
-            //请求header
+            // 请求 header
             info.put("header", getRequestHeader(request));
+            // 请求参数
+            info.put("parameter", getLogRequestParameter(request));
+            // 请求体
+            info.put("body", "");
+            if (request.getContentType() == null
+                    || !(request.getContentType().contains("application/json")
+                    || request.getContentType().contains("multipart/form-data")
+                    || request.getContentType().contains("application/x-www-form-urlencoded"))) {
+                String body = request.getStringBody();
+                if (body == null) {
+                    body = "";
+                }
+                info.put("body", body);
+            }
             // 被攻击URL
             StringBuffer requestURL = request.getRequestURL();
             String queryString = request.getQueryString();
             info.put("url", requestURL == null ? "" : (queryString != null ? requestURL + "?" + queryString : requestURL));
-            // 请求体
-            byte[] requestBody = request.getBody();
-            if (requestBody != null) {
-                info.put("body", new String(requestBody));
-            }
             // 被攻击PATH
             info.put("path", request.getRequestURI());
-            //请求方法
+            // 请求方法
             String method = request.getMethod();
             info.put("request_method", method != null ? method.toLowerCase() : null);
-            //Java反编译开关打开时，启用
+            // Java反编译开关打开时，启用
             if (Config.getConfig().getDecompileEnable() && checkTomcatVersion()) {
                 // 攻击调用栈
                 StackTraceElement[] trace = StackTrace.filter(new Throwable().getStackTrace());
@@ -157,6 +169,30 @@ public class AttackInfo extends EventInfo {
         }
 
         return info;
+    }
+
+    private Map<String, String> getLogRequestParameter(AbstractRequest request) {
+        Map<String, String> parameters = new HashMap<String, String>();
+        parameters.put("form", "{}");
+        parameters.put("json", "{}");
+        parameters.put("multipart", "[]");
+        if (request.getContentType() != null && request.getContentType().contains("application/json")) {
+            String body = request.getStringBody();
+            if (StringUtils.isEmpty(body)) {
+                body = "{}";
+            }
+            parameters.put("json", body);
+        } else {
+            List fileItems = request.getFileParamCache();
+            if (fileItems != null) {
+                parameters.put("multipart", new Gson().toJson(fileItems));
+            }
+        }
+        Map formMap = request.getParameterMap();
+        if (formMap != null) {
+            parameters.put("form", new Gson().toJson(formMap));
+        }
+        return parameters;
     }
 
     private boolean checkTomcatVersion() {

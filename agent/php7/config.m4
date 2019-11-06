@@ -531,6 +531,9 @@ int main() {
     utils/yaml_reader.cc \
     utils/utf.cc \
     utils/hostname.cc \
+    model/url.cc \
+    model/request.cc \
+    model/parameter.cc \
     agent/base_manager.cc \
     agent/shared_log_manager.cc \
     agent/shared_config_manager.cc \

@@ -178,15 +178,16 @@ const char *fetch_url_scheme(const char *filename)
     return nullptr;
 }
 
-char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
+std::string fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
 {
+    std::string result;
     zval *origin_zv = nullptr;
     if ((origin_zv = zend_hash_str_find(ht, arKey, strlen(arKey))) != nullptr &&
         Z_TYPE_P(origin_zv) == IS_STRING)
     {
-        return Z_STRVAL_P(origin_zv);
+        result = std::string(Z_STRVAL_P(origin_zv), Z_STRLEN_P(origin_zv));
     }
-    return nullptr;
+    return result;
 }
 
 std::string json_encode_from_zval(zval *value)
@@ -453,4 +454,23 @@ bool get_long_constant(const std::string &key, long &value)
         }
     }
     return found;
+}
+
+zval *fetch_http_globals(int vars_id)
+{
+    static std::map<int, std::string> pairs = {{TRACK_VARS_POST, "_POST"},
+                                               {TRACK_VARS_GET, "_GET"},
+                                               {TRACK_VARS_SERVER, "_SERVER"},
+                                               {TRACK_VARS_COOKIE, "_COOKIE"},
+                                               {TRACK_VARS_FILES, "_FILES"}};
+    auto it = pairs.find(vars_id);
+    if (it != pairs.end())
+    {
+        if (Z_TYPE(PG(http_globals)[vars_id]) == IS_ARRAY ||
+            zend_is_auto_global_str(const_cast<char *>(it->second.c_str()), it->second.length()))
+        {
+            return &PG(http_globals)[it->first];
+        }
+    }
+    return nullptr;
 }

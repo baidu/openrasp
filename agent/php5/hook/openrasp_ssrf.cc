@@ -105,20 +105,21 @@ bool pre_global_curl_exec_ssrf(OPENRASP_INTERNAL_FUNCTION_PARAMETERS, zval *func
         openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
         {
             v8::HandleScope handle_scope(isolate);
+            auto context = isolate->GetCurrentContext();
             auto params = v8::Object::New(isolate);
-            params->Set(openrasp::NewV8String(isolate, "url"), openrasp::NewV8String(isolate, Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url)));
-            params->Set(openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "curl_exec"));
-            params->Set(openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, url.get_host()));
-            params->Set(openrasp::NewV8String(isolate, "port"), openrasp::NewV8String(isolate, url.get_port()));
+            params->Set(context, openrasp::NewV8String(isolate, "url"), openrasp::NewV8String(isolate, Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url))).IsJust();
+            params->Set(context, openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "curl_exec")).IsJust();
+            params->Set(context, openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, url.get_host())).IsJust();
+            params->Set(context, openrasp::NewV8String(isolate, "port"), openrasp::NewV8String(isolate, url.get_port())).IsJust();
             std::vector<std::string> ips = openrasp::lookup_host(url.get_host());
             auto ip_arr = v8::Array::New(isolate);
             std::string ip_sum;
             for (int i = 0; i < ips.size(); ++i)
             {
                 ip_sum += ips[i];
-                ip_arr->Set(i, openrasp::NewV8String(isolate, ips[i]));
+                ip_arr->Set(context, i, openrasp::NewV8String(isolate, ips[i])).IsJust();
             }
-            params->Set(openrasp::NewV8String(isolate, "ip"), ip_arr);
+            params->Set(context, openrasp::NewV8String(isolate, "ip"), ip_arr).IsJust();
             {
                 cache_key = std::string(get_check_type_name(check_type) + std::string(Z_STRVAL_P(origin_url), Z_STRLEN_P(origin_url)) + ip_sum);
                 if (OPENRASP_HOOK_G(lru).contains(cache_key))

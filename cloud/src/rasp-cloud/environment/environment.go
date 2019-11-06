@@ -18,21 +18,21 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+	"io/ioutil"
+	"net"
+	"path/filepath"
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
+	"golang.org/x/crypto/ssh/terminal"
 	"log"
 	"os"
 	"os/exec"
 	"rasp-cloud/conf"
 	"rasp-cloud/tools"
 	"syscall"
-	"strconv"
-	"strings"
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/logs"
-	"golang.org/x/crypto/ssh/terminal"
-	"time"
-	"io/ioutil"
-	"net"
-	"path/filepath"
 )
 
 type PIDFile struct {
@@ -40,9 +40,11 @@ type PIDFile struct {
 }
 
 var (
-	Version = "1.3"
-	LogPath = "logs/"
-	PidFileName = LogPath + "pid.file"
+	UpdateMappingConfig map[string]interface{}
+	StartBeego          = true
+	Version             = "1.3"
+	LogPath             = "logs/"
+	PidFileName         = LogPath + "pid.file"
 )
 
 func init() {
@@ -52,6 +54,7 @@ func init() {
 	StartFlag.Daemon = flag.Bool("d", false, "use to run as daemon process")
 	StartFlag.Version = flag.Bool("version", false, "use to get version")
 	StartFlag.Operation = flag.String("s", "", "send signal to a master process: stop, restart")
+	StartFlag.Upgrade = flag.String("upgrade", "", "Execute upgrade job, e.g update ElasticSearch mapping")
 	flag.Parse()
 	if *StartFlag.Version {
 		handleVersionFlag()
@@ -66,6 +69,9 @@ func init() {
 	}
 	if *StartFlag.Operation != "" {
 		HandleOperation(*StartFlag.Operation)
+	if *StartFlag.Upgrade != "" {
+		StartBeego = false
+		HandleUpgrade(*StartFlag.Upgrade)
 	}
 	if *StartFlag.StartType == conf.StartTypeReset {
 		HandleReset(StartFlag)
@@ -85,7 +91,7 @@ func init() {
 	} else {
 		CheckForkStatus(false)
 	}
-	beego.Info("===== start type: " + *StartFlag.StartType + " =====")
+	beego.Info("===== startup type: " + *StartFlag.StartType + " =====")
 }
 
 func handleVersionFlag() {
@@ -159,6 +165,20 @@ func chdir() {
 	err = os.Chdir(path)
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to change dir to "+path, err)
+	}
+}
+
+func HandleUpgrade(flag string) {
+	UpdateMappingConfig = make(map[string]interface{})
+	switch flag {
+	case "120to121":
+		log.Println("Going to update ElasticSearch mapping")
+
+		UpdateMappingConfig["attack-alarm-template"] = "120to121"
+		UpdateMappingConfig["policy-alarm-template"] = "120to121"
+		UpdateMappingConfig["error-alarm-template"] = "120to121"
+	default:
+		log.Println("Unknown upgrade job specified: " + flag)
 	}
 }
 

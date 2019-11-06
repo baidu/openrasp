@@ -84,9 +84,10 @@ static void check_file_operation(OpenRASPCheckType type, char *filename, int fil
     openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
     {
         v8::HandleScope handle_scope(isolate);
+        auto context = isolate->GetCurrentContext();
         auto params = v8::Object::New(isolate);
-        params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, filename, filename_len));
-        params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
+        params->Set(context, openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, filename, filename_len)).IsJust();
+        params->Set(context, openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path)).IsJust();
         check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
     }
     if (check_result == openrasp::CheckResult::kCache)
@@ -291,9 +292,10 @@ void pre_global_copy_COPY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
     {
         v8::HandleScope handle_scope(isolate);
+        auto context = isolate->GetCurrentContext();
         auto params = v8::Object::New(isolate);
-        params->Set(openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_real_path));
-        params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, dest_real_path));
+        params->Set(context, openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_real_path)).IsJust();
+        params->Set(context, openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, dest_real_path)).IsJust();
         check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
     }
     if (check_result == openrasp::CheckResult::kCache)
@@ -386,9 +388,10 @@ void pre_global_rename_RENAME(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
             {
                 v8::HandleScope handle_scope(isolate);
+                auto context = isolate->GetCurrentContext();
                 auto params = v8::Object::New(isolate);
-                params->Set(openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_real_path));
-                params->Set(openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, dest_real_path));
+                params->Set(context, openrasp::NewV8String(isolate, "source"), openrasp::NewV8String(isolate, source_real_path)).IsJust();
+                params->Set(context, openrasp::NewV8String(isolate, "dest"), openrasp::NewV8String(isolate, dest_real_path)).IsJust();
                 check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
             }
             if (check_result == openrasp::CheckResult::kCache)

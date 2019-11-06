@@ -184,4 +184,16 @@ void JsonReader::write_map(const std::vector<std::string> &keys, const std::map<
   j[ptr] = j_map;
 }
 
+void JsonReader::write_vector(const std::vector<std::string> &keys, const std::vector<std::string> &value)
+{
+  json j_vec(value);
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
+  j[ptr] = j_vec;
+}
+
+void JsonReader::merge(const JsonReader &patch)
+{
+  j.merge_patch(patch.j);
+}
+
 } // namespace openrasp

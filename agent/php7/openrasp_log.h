@@ -19,6 +19,7 @@
 
 #include "openrasp.h"
 #include "agent/shared_log_manager.h"
+#include "utils/json_reader.h"
 #include <map>
 
 #ifdef __cplusplus
@@ -90,14 +91,11 @@ private:
   char *formatted_date_suffix = nullptr;
 
   long syslog_reconnect_time;
-  zval common_info;
   php_stream *stream_log = nullptr;
   php_stream *syslog_stream = nullptr;
 
 private:
-  void update_common_info();
   void close_streams();
-  void clear_common_info();
   void update_formatted_date_suffix();
   void clear_formatted_date_suffix();
   bool comsume_token_if_available();
@@ -122,9 +120,8 @@ public:
   void init(log_appender appender_int);
   void clear();
   bool log(severity_level level_int, const char *message, int message_len, bool separate = true, bool detail = true);
-  bool log(severity_level level_int, zval *params_result);
+  bool log(severity_level level_int,  openrasp::JsonReader &base_json);
   char *get_formatted_date_suffix() const;
-  zval *get_common_info();
   void set_level(severity_level level);
 
   static std::string level_to_name(severity_level level);

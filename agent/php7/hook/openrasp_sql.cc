@@ -86,9 +86,10 @@ void plugin_sql_check(char *query, int query_len, const char *server)
         openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
         {
             v8::HandleScope handle_scope(isolate);
+            auto context = isolate->GetCurrentContext();
             auto params = v8::Object::New(isolate);
-            params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len));
-            params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server));
+            params->Set(context, openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len)).IsJust();
+            params->Set(context, openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server)).IsJust();
             check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(SQL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (check_result == openrasp::CheckResult::kCache)
@@ -119,12 +120,13 @@ void sql_query_error_alarm(char *server, char *query, const std::string &err_cod
         openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
         {
             v8::HandleScope handle_scope(isolate);
+            auto context = isolate->GetCurrentContext();
             auto params = v8::Object::New(isolate);
-            params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, strlen(query)));
-            params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server));
-            params->Set(openrasp::NewV8String(isolate, "error_code"), openrasp::NewV8String(isolate, err_code));
+            params->Set(context, openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, strlen(query))).IsJust();
+            params->Set(context, openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server)).IsJust();
+            params->Set(context, openrasp::NewV8String(isolate, "error_code"), openrasp::NewV8String(isolate, err_code)).IsJust();
             std::string utf8_err_msg = openrasp::replace_invalid_utf8(err_msg);
-            params->Set(openrasp::NewV8String(isolate, "error_msg"), openrasp::NewV8String(isolate, utf8_err_msg));
+            params->Set(context, openrasp::NewV8String(isolate, "error_msg"), openrasp::NewV8String(isolate, utf8_err_msg)).IsJust();
             check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(SQL_ERROR)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (check_result == openrasp::CheckResult::kBlock)
@@ -142,11 +144,12 @@ void sql_connect_error_alarm(sql_connection_entry *sql_connection_p, const std::
         openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
         {
             v8::HandleScope handle_scope(isolate);
+            auto context = isolate->GetCurrentContext();
             auto params = v8::Object::New(isolate);
             sql_connection_p->build_exception_params(isolate, params);
-            params->Set(openrasp::NewV8String(isolate, "error_code"), openrasp::NewV8String(isolate, err_code));
+            params->Set(context, openrasp::NewV8String(isolate, "error_code"), openrasp::NewV8String(isolate, err_code)).IsJust();
             std::string utf8_err_msg = openrasp::replace_invalid_utf8(err_msg);
-            params->Set(openrasp::NewV8String(isolate, "error_msg"), openrasp::NewV8String(isolate, utf8_err_msg));
+            params->Set(context, openrasp::NewV8String(isolate, "error_msg"), openrasp::NewV8String(isolate, utf8_err_msg)).IsJust();
             check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(SQL_ERROR)), params, OPENRASP_CONFIG(plugin.timeout.millis));
         }
         if (check_result == openrasp::CheckResult::kBlock)

@@ -230,8 +230,13 @@ void SqlConnectionEntry::connection_entry_policy_log(connection_policy_type type
   build_connection_params(&connection_params, type);
   add_stack_to_params(&connection_params);
   add_assoc_zval(&policy_array, "policy_params", &connection_params);
-  LOG_G(policy_logger).log(LEVEL_INFO, &policy_array);
+  std::string base_str = json_encode_from_zval(&policy_array);
   zval_ptr_dtor(&policy_array);
+  openrasp::JsonReader base_json(base_str);
+  if (!base_json.has_error())
+  {
+    LOG_G(policy_logger).log(LEVEL_INFO, base_json);
+  }
 }
 
 void SqlConnectionEntry::append_host_port(const std::string &host, int port)
@@ -259,12 +264,13 @@ void SqlConnectionEntry::build_connection_params(zval *params, connection_policy
 
 void SqlConnectionEntry::build_exception_params(openrasp::Isolate *isolate, v8::Local<v8::Object> &params)
 {
-  params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, get_server()));
-  params->Set(openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, get_host()));
-  params->Set(openrasp::NewV8String(isolate, "username"), openrasp::NewV8String(isolate, get_username()));
-  params->Set(openrasp::NewV8String(isolate, "socket"), openrasp::NewV8String(isolate, get_socket()));
-  params->Set(openrasp::NewV8String(isolate, "connectionString"), openrasp::NewV8String(isolate, get_connection_string()));
-  params->Set(openrasp::NewV8String(isolate, "port"), v8::Integer::New(isolate, get_port()));
+  auto context = isolate->GetCurrentContext();
+  params->Set(context, openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, get_server())).IsJust();
+  params->Set(context, openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, get_host())).IsJust();
+  params->Set(context, openrasp::NewV8String(isolate, "username"), openrasp::NewV8String(isolate, get_username())).IsJust();
+  params->Set(context, openrasp::NewV8String(isolate, "socket"), openrasp::NewV8String(isolate, get_socket())).IsJust();
+  params->Set(context, openrasp::NewV8String(isolate, "connectionString"), openrasp::NewV8String(isolate, get_connection_string())).IsJust();
+  params->Set(context, openrasp::NewV8String(isolate, "port"), v8::Integer::New(isolate, get_port())).IsJust();
 }
 
 bool SqlConnectionEntry::parse(std::string uri)

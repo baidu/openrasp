@@ -188,7 +188,7 @@ public final class HttpServletRequest extends AbstractRequest {
         if (canGetParameter || setCharacterEncodingFromConfig()) {
             normalMap = (Map<String, String[]>) Reflection.invokeMethod(request, "getParameterMap", EMPTY_CLASS);
         }
-        return getMergeMap(normalMap, fileUploadCache);
+        return getMergeMap(normalMap, formItemCache);
     }
 
     /**

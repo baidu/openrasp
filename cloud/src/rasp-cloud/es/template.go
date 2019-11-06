@@ -107,7 +107,8 @@ var attackAlarmTemplate = `
 							"ignore_above": 256
 						},
 						"body": {
-							"type": "keyword"
+							"type": "keyword",
+							"index": false
 						},
 						"app_id": {
 							"type": "keyword",
@@ -166,7 +167,25 @@ var attackAlarmTemplate = `
 							"enabled":"false"
 						},
 						"plugin_message": {
-							"type": "keyword"
+							"type": "keyword",
+							"normalizer": "lowercase_normalizer"
+						},
+						"parameter": {
+							"type": "object",
+							"properties": {
+								"form":{
+									"type": "keyword",
+									"index":false
+								},
+								"json":{
+									"type": "keyword",
+									"index":false
+								},
+								"multipart":{
+									"type": "keyword",
+									"index":false
+								}
+							}
 						},
 						"server_nic": {
 							"type": "nested",
@@ -255,7 +274,8 @@ var policyAlarmTemplate = `
 							"type": "long"
 						},
 						"message": {
-							"type": "keyword"
+							"type": "keyword",
+							"normalizer": "lowercase_normalizer"
 						},
 						"stack_md5": {
 							"type": "keyword",
@@ -303,7 +323,8 @@ var errorAlarmTemplate = `{
 							"ignore_above": 256
 						},
 						"message": {
-							"type": "keyword"
+							"type": "keyword",
+							"normalizer": "lowercase_normalizer"
 						},
 						"level": {
 							"type": "keyword",
@@ -466,7 +487,6 @@ func init() {
 			"policy-alarm-template":    policyAlarmTemplate,
 			"dependency-data-template": dependencyDataTemplate,
 		}
-
 		for name, template := range templates {
 			err := CreateTemplate(name, template)
 			if err != nil {

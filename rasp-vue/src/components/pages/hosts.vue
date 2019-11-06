@@ -198,7 +198,10 @@ export default {
       this.loadRaspList(1)
     },
     filter: {
-      handler() { 
+      handler() {
+        if (!this.current_app.id) {
+          return
+        }
         this.loadRaspList(1)
         localStorage.setItem('host_filter_status', JSON.stringify(this.filter))
       },

@@ -45,7 +45,7 @@ std::vector<std::string> format_debug_backtrace_arr(long limit);
 void add_stack_to_params(zval *params);
 std::string json_encode_from_zval(zval *value);
 
-char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
+std::string fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
 
 zend_string *fetch_request_body(size_t max_len);
 bool need_alloc_shm_current_sapi();

@@ -16,7 +16,6 @@
 
 package com.baidu.openrasp.hook.server.resin;
 
-import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.hook.server.ServerInputHook;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
@@ -42,17 +41,30 @@ public class ResinHttpInputHook extends ServerInputHook {
     @Override
     public boolean isClassMatched(String className) {
         return className.equals("com/caucho/server/connection/ServletInputStreamImpl")
-                || className.equals("com/caucho/server/http/ServletInputStreamImpl");
+                || className.equals("com/caucho/server/http/ServletInputStreamImpl")
+                || className.equals("com/caucho/vfs/BufferedReaderAdapter");
     }
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String srcRead1 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
-                "$_,$0", int.class, Object.class);
-        insertAfter(ctClass, "read", "()I", srcRead1);
-        String src2Read2 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
-                "$_,$0,$1,$2,$3", int.class, Object.class, byte[].class, int.class, int.class);
-        insertAfter(ctClass, "read", "([BII)I", src2Read2);
+        if (ctClass.getName().contains("BufferedReaderAdapter")) {
+            String src = getInvokeStaticSrc(ServerInputHook.class, "onCharRead",
+                    "$_,$0", int.class, Object.class);
+            insertAfter(ctClass, "read", "()I", src);
+            src = getInvokeStaticSrc(ServerInputHook.class, "onCharRead",
+                    "$_,$0,$1,$2", int.class, Object.class, char[].class, int.class);
+            insertAfter(ctClass, "read", "([CII)I", src);
+            src = getInvokeStaticSrc(ServerInputHook.class, "onCharReadLine",
+                    "$_,$0", String.class, Object.class);
+            insertAfter(ctClass, "readLine", "()Ljava/lang/String;", src);
+        } else {
+            String src = getInvokeStaticSrc(ServerInputHook.class, "onInputStreamRead",
+                    "$_,$0", int.class, Object.class);
+            insertAfter(ctClass, "read", "()I", src);
+            src = getInvokeStaticSrc(ServerInputHook.class, "onInputStreamRead",
+                    "$_,$0,$1,$2", int.class, Object.class, byte[].class, int.class);
+            insertAfter(ctClass, "read", "([BII)I", src);
+        }
     }
 
 }

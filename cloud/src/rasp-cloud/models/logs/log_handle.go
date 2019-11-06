@@ -393,7 +393,8 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 
 func CreateAlarmEsIndex(appId string) (err error) {
 	for _, alarmInfo := range alarmInfos {
-		err = es.CreateEsIndex(alarmInfo.EsIndex + "-" + appId)
+		err = es.CreateEsIndex(alarmInfo.EsIndex + "-" + appId,
+			alarmInfo.EsAliasIndex + "-" + appId, alarmInfo.EsType + "-template")
 		if err != nil {
 			return
 		}

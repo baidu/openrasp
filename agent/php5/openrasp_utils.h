@@ -32,7 +32,7 @@ std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D);
 std::vector<std::string> format_debug_backtrace_arr(long limit TSRMLS_DC);
 void add_stack_to_params(zval *params TSRMLS_DC);
 
-char *fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
+std::string fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
 std::string json_encode_from_zval(zval *value TSRMLS_DC);
 
 char *fetch_request_body(size_t max_len TSRMLS_DC);
@@ -41,6 +41,7 @@ std::string convert_to_header_key(char *key, size_t length);
 bool openrasp_parse_url(const std::string &origin_url, std::string &scheme, std::string &host, std::string &port);
 std::map<std::string, std::string> get_env_map();
 std::string get_phpversion();
+zval *fetch_http_globals(int vars_id TSRMLS_DC);
 
 bool make_openrasp_root_dir(const char *path TSRMLS_DC);
 void openrasp_set_locale(const char *locale, const char *locale_path);

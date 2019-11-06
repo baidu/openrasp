@@ -41,15 +41,15 @@ static void handle_mongo_uri_string(char *uri_string, size_t uri_string_len, sql
 
 static void handle_mongo_options(HashTable *ht, sql_connection_entry *sql_connection_p)
 {
-    char *password = fetch_outmost_string_from_ht(ht, "password");
-    if (nullptr != password)
+    std::string password = fetch_outmost_string_from_ht(ht, "password");
+    if (!password.empty())
     {
-        sql_connection_p->set_password(std::string(password));
+        sql_connection_p->set_password(password);
     }
-    char *username = fetch_outmost_string_from_ht(ht, "username");
-    if (nullptr != username)
+    std::string username = fetch_outmost_string_from_ht(ht, "username");
+    if (!username.empty())
     {
-        sql_connection_p->set_username(std::string(username));
+        sql_connection_p->set_username(username);
     }
 }
 

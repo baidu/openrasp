@@ -85,7 +85,7 @@ public enum ConfigItem {
 
         @Override
         public String getDefaultValue() {
-            return "4096";
+            return "12288";
         }
     }),
 

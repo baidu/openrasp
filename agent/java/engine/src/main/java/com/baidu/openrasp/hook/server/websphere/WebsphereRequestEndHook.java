@@ -33,12 +33,19 @@ import java.io.IOException;
 public class WebsphereRequestEndHook extends ServerRequestEndHook {
     @Override
     public boolean isClassMatched(String className) {
-        return "com/ibm/ws/webcontainer/filter/WebAppFilterManager".equals(className);
+        return "com/ibm/ws/webcontainer/filter/WebAppFilterManager".equals(className)
+                || "com/ibm/ws/webcontainer/webapp/WebApp".equals(className)
+                || "com/ibm/ws/webcontainer/servlet/CacheServletWrapper".equals(className);
     }
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String requestEndSrc = getInvokeStaticSrc(ServerRequestEndHook.class, "checkRequestEnd", "");
-        insertAfter(ctClass, "invokeFilters", null, requestEndSrc, true);
+        if (ctClass.getName().contains("WebAppFilterManager")) {
+            String requestEndSrc = getInvokeStaticSrc(ServerRequestEndHook.class, "checkRequestEnd", "");
+            insertAfter(ctClass, "invokeFilters", null, requestEndSrc, true);
+        } else {
+            String requestEndSrc = getInvokeStaticSrc(ServerRequestEndHook.class, "checkRequestEnd", "");
+            insertAfter(ctClass, "handleRequest", null, requestEndSrc, true);
+        }
     }
 }
