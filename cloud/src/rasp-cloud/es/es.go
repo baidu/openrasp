@@ -271,6 +271,8 @@ func HandleSearchResult(result map[string]interface{}, id string) {
 	delete(result, "@version")
 	delete(result, "tags")
 	delete(result, "host")
+}
+
 func UpdateMapping (destIndex string, alias string, template string, ctx context.Context) error {
 	// 获取alias对应的index
 	res, err := ElasticClient.Aliases().Index(alias).Do(ctx)

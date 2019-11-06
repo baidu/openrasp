@@ -69,6 +69,7 @@ func init() {
 	}
 	if *StartFlag.Operation != "" {
 		HandleOperation(*StartFlag.Operation)
+	}
 	if *StartFlag.Upgrade != "" {
 		StartBeego = false
 		HandleUpgrade(*StartFlag.Upgrade)
