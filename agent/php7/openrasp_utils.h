@@ -59,5 +59,8 @@ void openrasp_set_locale(const char *locale, const char *locale_path);
 bool current_sapi_supported();
 
 zval *fetch_http_globals(int vars_id);
+bool openrasp_call_user_function(HashTable *function_table, zval *object, const std::string &function_name,
+                                 zval *retval_ptr, uint32_t param_count, zval params[]);
+bool get_long_constant(const std::string &key, long &value);
 
 #endif

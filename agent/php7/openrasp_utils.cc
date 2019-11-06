@@ -425,3 +425,32 @@ std::string get_phpversion()
     }
     return version;
 }
+
+bool openrasp_call_user_function(HashTable *function_table, zval *object, const std::string &function_name,
+                                 zval *retval_ptr, uint32_t param_count, zval params[])
+{
+    bool result = false;
+    zval function;
+    ZVAL_STRING(&function, function_name.c_str());
+    if (call_user_function(EG(function_table), object, &function, retval_ptr, param_count, params) == SUCCESS)
+    {
+        result = true;
+    }
+    zval_ptr_dtor(&function);
+    return result;
+}
+
+bool get_long_constant(const std::string &key, long &value)
+{
+    bool found = false;
+    zval *z_result = nullptr;
+    if ((z_result = zend_get_constant_str(key.c_str(), key.length())) != nullptr)
+    {
+        if (Z_TYPE_P(z_result) == IS_LONG)
+        {
+            value = Z_LVAL_P(z_result);
+            found = true;
+        }
+    }
+    return found;
+}
