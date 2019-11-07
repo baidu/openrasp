@@ -1,4 +1,4 @@
-const plugin_version = '2019-1101-0900'
+const plugin_version = '2019-1107-1500'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1879,8 +1879,8 @@ plugin.register('command', function (params, context) {
                 'org.jboss.el.util.ReflectionUtil.invokeMethod':                                _("Reflected command execution - Using JBoss EL method"),
                 'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                _("Reflected command execution - Using BeHinder defineClass webshell"),
                 'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute':                     _("Reflected command execution - Using Groovy library"),
-                'bsh.Reflect.invokeMethod':                                                     _("Reflected command execution - Using Beanshell"),
-                'jdk.scripting.nashorn/jdk.nashorn.internal.runtime.ScriptFunction.invoke':     _("Command execution - Using apache solr")
+                'bsh.Reflect.invokeMethod':                                                     _("Reflected command execution - Using BeanShell library"),
+                'jdk.scripting.nashorn/jdk.nashorn.internal.runtime.ScriptFunction.invoke':     _("Reflected Command execution - Using Nashorn engine")
             }
 
             var userCode = false, reachedInvoke = false, i = 0
