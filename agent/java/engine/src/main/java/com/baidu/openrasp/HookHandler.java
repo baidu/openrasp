@@ -331,12 +331,16 @@ public class HookHandler {
             return;
         }
         if (requestCache.get() != null) {
-            StringBuffer sb = requestCache.get().getRequestURL();
-            if (sb != null) {
-                String url = sb.substring(sb.indexOf("://") + 3);
-                if (HookWhiteModel.isContainURL(type.getCode(), url)) {
-                    return;
+            try {
+                StringBuffer sb = requestCache.get().getRequestURL();
+                if (sb != null) {
+                    String url = sb.substring(sb.indexOf("://") + 3);
+                    if (HookWhiteModel.isContainURL(type.getCode(), url)) {
+                        return;
+                    }
                 }
+            } catch (Exception e) {
+                LogTool.traceWarn(ErrorType.HOOK_ERROR, "white list check has failed: " + e.getMessage(), e);
             }
         }
         doRealCheckWithoutRequest(type, params);

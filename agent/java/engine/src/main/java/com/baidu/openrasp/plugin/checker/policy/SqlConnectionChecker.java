@@ -16,7 +16,6 @@
 
 package com.baidu.openrasp.plugin.checker.policy;
 
-import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
@@ -24,14 +23,10 @@ import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 
 import java.util.*;
 
 public class SqlConnectionChecker extends PolicyChecker {
-    public SqlConnectionChecker() {
-        super();
-    }
 
     public SqlConnectionChecker(boolean canBlock) {
         super(canBlock);
@@ -41,7 +36,6 @@ public class SqlConnectionChecker extends PolicyChecker {
     private static final String SQL_TYPE_ORACLE = "oracle";
     private static final String SQL_TYPE_POSTGRESQL = "postgresql";
     private static final String SQL_TYPE_MYSQL = "mysql";
-    private static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
     private static final String CONNECTION_USER_KEY = "user";
     private static final int ALARM_TIME_CACHE_MAX_SIZE = 5000;
     private static final String DEFAULT_MYSQL_PORT = "3306";

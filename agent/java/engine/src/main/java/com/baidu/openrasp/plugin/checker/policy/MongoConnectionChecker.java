@@ -33,6 +33,10 @@ public class MongoConnectionChecker extends PolicyChecker {
     private static final int ALARM_TIME_CACHE_MAX_SIZE = 5000;
     public static HashMap<String, Long> alarmTimeCache = new HashMap<String, Long>();
 
+    public MongoConnectionChecker(boolean canBlock) {
+        super(canBlock);
+    }
+
     private boolean checkPassword(String password) {
         List<String> checkList = Arrays.asList(WEAK_WORDS);
         return !checkList.contains(password);

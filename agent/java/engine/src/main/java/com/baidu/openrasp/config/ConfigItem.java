@@ -3,15 +3,15 @@ package com.baidu.openrasp.config;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.HookWhiteModel;
 import com.baidu.openrasp.exceptions.ConfigLoadException;
-import com.baidu.openrasp.plugin.checker.local.ConfigurableChecker;
 import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Created by tyy on 19-10-22.
@@ -229,37 +229,17 @@ public enum ConfigItem {
         public synchronized void setValue(String json) {
             Config.getConfig().algorithmConfig = new JsonParser().parse(json).getAsJsonObject();
             try {
-                JsonArray result = null;
-                JsonElement elements = ConfigurableChecker.getElement(Config.getConfig().algorithmConfig,
-                        "sql_exception", "mysql");
-                if (elements != null) {
-                    JsonElement e = elements.getAsJsonObject().get("error_code");
-                    if (e != null) {
-                        result = e.getAsJsonArray();
-                    }
-                }
-                HashSet<Integer> errorCodes = new HashSet<Integer>();
-                if (result != null) {
-                    if (result.size() > Config.MAX_SQL_EXCEPTION_CODES_CONUT) {
-                        Config.LOGGER.warn("size of RASP.algorithmConfig.sql_exception.error_code can not be greater than "
-                                + Config.MAX_SQL_EXCEPTION_CODES_CONUT);
-                    } else {
-                        for (JsonElement element : result) {
-                            try {
-                                errorCodes.add(element.getAsInt());
-                            } catch (Exception e) {
-                                Config.LOGGER.warn("failed to add a json error code element: "
-                                        + element.toString() + ", " + e.getMessage(), e);
-                            }
-                        }
-                    }
-                } else {
-                    Config.LOGGER.warn("failed to get sql_exception.${DB_TYPE}.error_code from algorithm config");
-                }
-                Config.getConfig().sqlErrorCodes = errorCodes;
-                Config.LOGGER.info("mysql sql error codes: " + Config.getConfig().sqlErrorCodes.toString());
+                AlgorithmConfigUtil.setSqlErrorCodes();
             } catch (Exception e) {
-                Config.LOGGER.warn("failed to get json error code element: " + e.getMessage(), e);
+                Config.LOGGER.warn(
+                        "failed to get the error_code element from algorithm config: " + e.getMessage(), e);
+            }
+
+            try {
+                AlgorithmConfigUtil.setLogRegexes();
+            } catch (Exception e) {
+                Config.LOGGER.warn(
+                        "failed to get the log_regex element from algorithm config: " + e.getMessage(), e);
             }
         }
 
@@ -664,4 +644,5 @@ public enum ConfigItem {
     public String toString() {
         return setter.itemName;
     }
+
 }
