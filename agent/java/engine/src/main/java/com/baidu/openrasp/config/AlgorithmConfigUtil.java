@@ -1,5 +1,6 @@
 package com.baidu.openrasp.config;
 
+import com.baidu.openrasp.hook.sql.AbstractSqlHook;
 import com.baidu.openrasp.plugin.checker.local.ConfigurableChecker;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -8,6 +9,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static com.baidu.openrasp.config.Config.MAX_LOG_REGEX_LENGTH;
 
@@ -71,36 +74,62 @@ public class AlgorithmConfigUtil {
     }
 
     static void setSqlErrorCodes() {
-        JsonArray result = null;
-        JsonElement elements = ConfigurableChecker.getElement(Config.getConfig().algorithmConfig,
-                "sql_exception", "mysql");
+        Map<String, Set<String>> errorCodes = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> errorStates = new HashMap<String, Set<String>>();
+        JsonElement elements = Config.getConfig().algorithmConfig.get("sql_exception");
         if (elements != null) {
-            JsonElement e = elements.getAsJsonObject().get("error_code");
-            if (e != null) {
-                result = e.getAsJsonArray();
-            }
-        }
-        HashSet<Integer> errorCodes = new HashSet<Integer>();
-        if (result != null) {
-            if (result.size() > Config.MAX_SQL_EXCEPTION_CODES_COUNT) {
-                Config.LOGGER.warn("size of RASP.algorithmConfig.sql_exception.error_code can not be greater than "
-                        + Config.MAX_SQL_EXCEPTION_CODES_COUNT);
-            } else {
-                for (JsonElement element : result) {
-                    try {
-                        errorCodes.add(element.getAsInt());
-                    } catch (Exception e) {
-                        Config.LOGGER.warn("failed to add a json error code element: "
-                                + element.toString() + ", " + e.getMessage(), e);
+            JsonObject sqlExceptionObject = elements.getAsJsonObject();
+            for (AbstractSqlHook.SqlType sqlType : AbstractSqlHook.SqlType.values()) {
+                JsonElement sqlElement = sqlExceptionObject.get(sqlType.name);
+                if (sqlElement != null) {
+                    Set<String> codes = getErrorsFromJson(sqlElement, "error_code", sqlType.name);
+                    if (codes != null) {
+                        errorCodes.put(sqlType.name, codes);
+                    }
+                    Set<String> states = getErrorsFromJson(sqlElement, "error_state", sqlType.name);
+                    if (states != null) {
+                        errorStates.put(sqlType.name, states);
                     }
                 }
             }
-        } else {
-            Config.LOGGER.warn(
-                    "failed to get the sql_exception.${DB_TYPE}.error_code element from algorithm config");
         }
         Config.getConfig().sqlErrorCodes = errorCodes;
+        Config.getConfig().sqlErrorStates = errorStates;
         Config.LOGGER.info("sql error codes: " + Config.getConfig().sqlErrorCodes.toString());
+        Config.LOGGER.info("sql error states: " + Config.getConfig().sqlErrorStates.toString());
+    }
+
+    private static HashSet<String> getErrorsFromJson(JsonElement sqlElement, String property, String sqlType) {
+        HashSet<String> codes = null;
+        JsonObject sqlObject = sqlElement.getAsJsonObject();
+        JsonElement errorElement = sqlObject.get(property);
+        if (errorElement != null) {
+            JsonArray errorArray = errorElement.getAsJsonArray();
+            if (errorArray.size() > Config.MAX_SQL_EXCEPTION_CODES_COUNT) {
+                Config.LOGGER.warn("size of sql_exception." + sqlType +
+                        ".error_code can not be greater than " + Config.MAX_SQL_EXCEPTION_CODES_COUNT);
+            } else {
+                codes = new HashSet<String>();
+                for (JsonElement element : errorArray) {
+                    try {
+                        String code = element.getAsString();
+                        if (StringUtils.isEmpty(code) || code.length() > 200) {
+                            Config.LOGGER.warn("the each element's length of sql_exception." +
+                                    sqlType + ".error_code must be between [1,200]");
+                        } else {
+                            codes.add(element.getAsString());
+                        }
+                    } catch (Exception e) {
+                        Config.LOGGER.warn("failed to add a json error code element: " +
+                                element.toString() + ", " + e.getMessage(), e);
+                    }
+                }
+
+            }
+        } else {
+            Config.LOGGER.warn("the value of sql_exception." + sqlType + ".error_code is null");
+        }
+        return codes;
     }
 
 }

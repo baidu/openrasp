@@ -18,7 +18,7 @@ public class SqlConnectionPreparedHook extends AbstractSqlHook {
         /* MySQL */
         if ("com/mysql/jdbc/ConnectionImpl".equals(className)
                 || "com/mysql/cj/jdbc/ConnectionImpl".equals(className)) {
-            this.type = SQL_TYPE_MYSQL;
+            this.type = SqlType.MYSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
@@ -26,21 +26,21 @@ public class SqlConnectionPreparedHook extends AbstractSqlHook {
         /* SQLite */
         if ("org/sqlite/Conn".equals(className)
                 || "org/sqlite/jdbc4/JDBC4Connection".equals(className)) {
-            this.type = SQL_TYPE_SQLITE;
+            this.type = SqlType.SQLITE;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
 
         /* Oracle */
         if ("oracle/jdbc/driver/PhysicalConnection".equals(className)) {
-            this.type = SQL_TYPE_ORACLE;
+            this.type = SqlType.ORACLE;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
 
         /* SQL Server */
         if ("com/microsoft/sqlserver/jdbc/SQLServerConnection".equals(className)) {
-            this.type = SQL_TYPE_SQLSERVER;
+            this.type = SqlType.SQLSERVER;
             this.exceptions = new String[]{"com/microsoft/sqlserver/jdbc/SQLServerException"};
             return true;
         }
@@ -49,14 +49,14 @@ public class SqlConnectionPreparedHook extends AbstractSqlHook {
         if ("org/postgresql/jdbc/PgConnection".equals(className)
                 || "org/postgresql/jdbc3/Jdbc3Connection".equals(className)
                 || "org/postgresql/jdbc4/Jdbc4Connection".equals(className)) {
-            this.type = SQL_TYPE_PGSQL;
+            this.type = SqlType.PGSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
 
         /* DB2 */
         if ("com/ibm/db2/jcc/am/Connection".equals(className)) {
-            this.type = SQL_TYPE_DB2;
+            this.type = SqlType.DB2;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
@@ -64,7 +64,7 @@ public class SqlConnectionPreparedHook extends AbstractSqlHook {
          /* HSqlDB */
         if ("org/hsqldb/jdbc/JDBCConnection".equals(className)
                 || "org/hsqldb/jdbc/jdbcConnection".equals(className)) {
-            this.type = SQL_TYPE_HSQL;
+            this.type = SqlType.HSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
@@ -80,22 +80,22 @@ public class SqlConnectionPreparedHook extends AbstractSqlHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
-                "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
-        if (this.type.equals(SQL_TYPE_MYSQL)) {
+                "\"" + type.name + "\"" + ",$0,$1", String.class, Object.class, String.class);
+        if (this.type.equals(SqlType.MYSQL)) {
             insertBeforeAndAddCatch(ctClass, "prepareStatement",
                     "(Ljava/lang/String;II)Ljava/sql/PreparedStatement;", checkSqlSrc);
             insertBeforeAndAddCatch(ctClass, "prepareCall",
                     "(Ljava/lang/String;II)Ljava/sql/CallableStatement;", checkSqlSrc);
-        } else if (this.type.equals(SQL_TYPE_SQLITE)) {
+        } else if (this.type.equals(SqlType.SQLITE)) {
             // SQLite does not support Stored Procedures
             insertBeforeAndAddCatch(ctClass, "prepareStatement",
                     "(Ljava/lang/String;III)Ljava/sql/PreparedStatement;", checkSqlSrc);
-        } else if (this.type.equals(SQL_TYPE_ORACLE)) {
+        } else if (this.type.equals(SqlType.ORACLE)) {
             insertBeforeAndAddCatch(ctClass, "prepareStatement",
                     "(Ljava/lang/String;II)Ljava/sql/PreparedStatement;", checkSqlSrc);
             insertBeforeAndAddCatch(ctClass, "prepareCall",
                     "(Ljava/lang/String;II)Ljava/sql/CallableStatement;", checkSqlSrc);
-        } else if (this.type.equals(SQL_TYPE_SQLSERVER)) {
+        } else if (this.type.equals(SqlType.SQLSERVER)) {
             insertBeforeAndAddCatch(ctClass, "prepareStatement",
                     "(Ljava/lang/String;II)Ljava/sql/PreparedStatement;", checkSqlSrc);
             insertBeforeAndAddCatch(ctClass, "prepareStatement",
@@ -109,17 +109,17 @@ public class SqlConnectionPreparedHook extends AbstractSqlHook {
             insertBeforeAndAddCatch(ctClass, "prepareCall",
                     "(Ljava/lang/String;IIILcom/microsoft/sqlserver/jdbc/SQLServerStatementColumnEncryptionSetting;)" +
                             "Ljava/sql/CallableStatement;", checkSqlSrc);
-        } else if (this.type.equals(SQL_TYPE_PGSQL)) {
+        } else if (this.type.equals(SqlType.PGSQL)) {
             insertBeforeAndAddCatch(ctClass, "prepareStatement",
                     "(Ljava/lang/String;III)Ljava/sql/PreparedStatement;", checkSqlSrc);
 //            insertBeforeAndAddCatch(ctClass, "prepareStatement",
 //                    "(Ljava/lang/String;[Ljava/lang/String;)Ljava/sql/PreparedStatement;", checkSqlSrc);
             insertBeforeAndAddCatch(ctClass, "prepareCall",
                     "(Ljava/lang/String;III)Ljava/sql/CallableStatement;", checkSqlSrc);
-        } else if (this.type.equals(SQL_TYPE_DB2)) {
+        } else if (this.type.equals(SqlType.DB2)) {
             insertBeforeAndAddCatch(ctClass, "prepareStatement", null, checkSqlSrc);
             insertBeforeAndAddCatch(ctClass, "prepareCall", null, checkSqlSrc);
-        } else if (this.type.equals(SQL_TYPE_HSQL)) {
+        } else if (this.type.equals(SqlType.HSQL)) {
             insertBeforeAndAddCatch(ctClass, "prepareStatement", null, checkSqlSrc);
             insertBeforeAndAddCatch(ctClass, "prepareCall", null, checkSqlSrc);
         }

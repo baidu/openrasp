@@ -36,9 +36,9 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -102,7 +102,8 @@ public class Config extends FileScanListener {
     int cpuUsageCheckInterval;
     boolean isHttpsVerifyPeer;
     String raspId;
-    HashSet<Integer> sqlErrorCodes = new HashSet<Integer>();
+    Map<String, Set<String>> sqlErrorCodes;
+    Map<String, Set<String>> sqlErrorStates;
     Map<String, String> logSensitiveRegex;
     static Config instance;
 
@@ -533,8 +534,17 @@ public class Config extends FileScanListener {
      *
      * @return sql 错误码列表
      */
-    public HashSet<Integer> getSqlErrorCodes() {
+    public Map<String, Set<String>> getSqlErrorCodes() {
         return sqlErrorCodes;
+    }
+
+    /**
+     * 获取 sql 异常检测过滤的 sql 状态码
+     *
+     * @return sql 状态码列表
+     */
+    public Map<String, Set<String>> getSqlErrorStates() {
+        return sqlErrorStates;
     }
 
     /**
