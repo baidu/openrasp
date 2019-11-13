@@ -643,9 +643,9 @@ if (algorithmConfig.eval_regex.action != 'ignore') {
 
 
 // 常用函数
-String.prototype.replaceAll = function(token, tokenValue) {
+String.prototype.replaceAll = function(token, tokenValue, maxLength=4096) {
     // 空值判断，防止死循环
-    if (! token || token.length == 0) {
+    if (! token || token.length == 0 || this.length > maxLength) {
         return this
     }
 
@@ -1283,7 +1283,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 {
                     // `information_schema`.tables
                     // information_schema  .tables
-                    var part = tokens_lc[i + 1].replaceAll('`', '')
+                    var part = tokens_lc[i + 1].replaceAll('`', '', 40)
                     // 正常的antlr和flex返回1个token
                     if (part == 'information_schema.tables')
                     {
@@ -1293,7 +1293,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                     // flex在1.1.2以前会产生3个token
                     else if (part == 'information_schema' && i < tokens_lc.length - 3)
                     {
-                        var part2 = tokens_lc[i + 3].replaceAll('`', '')
+                        var part2 = tokens_lc[i + 3].replaceAll('`', '', 10)
                         if (part2 == "tables")
                         {
                             reason = _("SQLi - Detected access to MySQL information_schema.tables table")
