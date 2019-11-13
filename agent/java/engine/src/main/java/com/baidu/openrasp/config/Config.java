@@ -1454,15 +1454,14 @@ public class Config extends FileScanListener {
                 return false;
             }
         } catch (Exception e) {
-            if (isInit) {
-                // 初始化配置过程中,如果报错需要继续使用默认值执行
-                if (!(e instanceof ConfigLoadException)) {
-                    throw new ConfigLoadException(e);
-                }
-                throw e;
+            if (!isInit) {
+                LOGGER.warn("configuration item \"" + key + "\" failed to change to \"" + value + "\"" + " because:" + e.getMessage());
             }
-            LOGGER.warn("configuration item \"" + key + "\" failed to change to \"" + value + "\"" + " because:" + e.getMessage());
-            return false;
+            // 初始化配置过程中,如果报错需要继续使用默认值执行
+            if (!(e instanceof ConfigLoadException)) {
+                throw new ConfigLoadException(e);
+            }
+            throw e;
         }
         return true;
     }
