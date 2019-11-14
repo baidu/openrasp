@@ -427,7 +427,7 @@ var algorithmConfig = {
         name:   '算法2 - 拦截输出在响应里的反射 XSS',
         action: 'log',
 
-        filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/>\x00-\x20]",
+        filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/>\\x00-\\x20]",
         min_length:   15,
 
         // v1.1.2 之后废弃
@@ -439,7 +439,7 @@ var algorithmConfig = {
         name:   '算法1 - PHP: 禁止直接输出 GPC 参数',
         action: 'log',
 
-        filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/>\x00-\x20]"
+        filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/>\\x00-\\x20]"
     },    
 
     webshell_eval: {
