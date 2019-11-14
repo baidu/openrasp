@@ -1,4 +1,4 @@
-const plugin_version = '2019-1114-1500'
+const plugin_version = '2019-1107-1500'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -213,10 +213,6 @@ var algorithmConfig = {
             'compress.zlib',
             'compress.bzip2'
         ]
-    },
-    ssrf_redirect_protocol: {
-        name:   '算法6 - 拦截 cURL 跳转至 file:// 协议',
-        action: 'block'
     },
 
     // 任意文件下载防护 - 来自用户输入
@@ -647,7 +643,10 @@ if (algorithmConfig.eval_regex.action != 'ignore') {
 
 
 // 常用函数
-String.prototype.replaceAll = function(token, tokenValue, maxLength=4096) {
+String.prototype.replaceAll = function(token, tokenValue, maxLength) {
+    if (maxLength === undefined) {
+        maxLength = 4096
+    }
     // 空值判断，防止死循环
     if (! token || token.length == 0 || this.length > maxLength) {
         return this
