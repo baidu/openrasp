@@ -38,7 +38,7 @@ public class XssChecker extends ConfigurableChecker {
     private static final String XSS_REGEX = "filter_regex";
     private static final int DEFAULT_MIN_LENGTH = 15;
     private static final int DEFAULT_MAX_DETECTION_NUM = 10;
-    private static final String DEFAULT_XSS_REGEX = "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]";
+    private static final String DEFAULT_XSS_REGEX = "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/\\x00-\\x20>]";
 
     @Override
     public List<EventInfo> checkParam(CheckParameter checkParameter) {
