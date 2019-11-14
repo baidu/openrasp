@@ -548,6 +548,24 @@ const char *OpenraspAgentManager::get_plugin_md5()
 	return "";
 }
 
+void OpenraspAgentManager::set_webdir_scan_regex(const char *webdir_scan_regex)
+{
+	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	{
+		WriteUnLocker auto_unlocker(rwlock);
+		agent_ctrl_block->set_webdir_scan_regex(webdir_scan_regex);
+	}
+}
+  const char *OpenraspAgentManager::get_webdir_scan_regex()
+  {
+	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	{
+		ReadUnLocker auto_unlocker(rwlock);
+		return agent_ctrl_block->get_webdir_scan_regex();
+	}
+	return "";
+  }
+
 long OpenraspAgentManager::get_plugin_update_timestamp()
 {
 	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)

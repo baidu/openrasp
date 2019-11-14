@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_hook.h"
+#include "openrasp_log.h"
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
 #include "openrasp_inject.h"
@@ -59,8 +60,9 @@ const std::string get_check_type_name(OpenRASPCheckType type)
     return CheckTypeTransfer::instance().type_to_name(type);
 }
 
-std::string openrasp_real_path(const char *filename, int filename_len, bool use_include_path, uint32_t w_op TSRMLS_DC)
+std::string openrasp_real_path(const char *filename, int filename_len, bool use_include_path, uint32_t w_op)
 {
+    TSRMLS_FETCH();
     std::string result;
     static const std::unordered_map<std::string, uint32_t> opMap = {
         {"http", READING},
@@ -85,7 +87,7 @@ std::string openrasp_real_path(const char *filename, int filename_len, bool use_
     resolved_path = php_resolve_path(filename, filename_len, use_include_path ? PG(include_path) : nullptr TSRMLS_CC);
     if (nullptr == resolved_path)
     {
-        const char *p = fetch_url_scheme(filename);
+        const char *p = determine_scheme_pos(filename);
         if (nullptr != p)
         {
             php_stream_wrapper *wrapper;
@@ -162,6 +164,15 @@ std::string openrasp_real_path(const char *filename, int filename_len, bool use_
                 efree(resolved_path);
                 resolved_path = nullptr;
             }
+#if PHP_API_VERSION < 20100412
+            if (w_op & OPENDIR &&
+                PG(safe_mode) &&
+                (!php_checkuid(resolved_path.c_str(), nullptr, CHECKUID_CHECK_FILE_AND_DIR)))
+            {
+                efree(resolved_path);
+                resolved_path = nullptr;
+            }
+#endif
         }
     }
 
@@ -173,14 +184,16 @@ std::string openrasp_real_path(const char *filename, int filename_len, bool use_
     return result;
 }
 
-bool openrasp_zval_in_request(zval *item TSRMLS_DC)
+bool openrasp_zval_in_request(zval *item)
 {
+    TSRMLS_FETCH();
     std::string var_type;
-    return !fetch_name_in_request(item, var_type TSRMLS_CC).empty();
+    return !fetch_name_in_request(item, var_type).empty();
 }
 
-std::string fetch_name_in_request(zval *item, std::string &var_type TSRMLS_DC)
+std::string fetch_name_in_request(zval *item, std::string &var_type)
 {
+    TSRMLS_FETCH();
     std::string name;
     static const track_vars_pair pairs[] = {{TRACK_VARS_POST, "_POST"},
                                             {TRACK_VARS_GET, "_GET"},
@@ -321,6 +334,12 @@ void reset_response(TSRMLS_D)
     {
         set_location_header(response_code TSRMLS_CC);
     }
+}
+
+void block_handle()
+{
+    TSRMLS_FETCH();
+    handle_block(TSRMLS_C);
 }
 
 void handle_block(TSRMLS_D)

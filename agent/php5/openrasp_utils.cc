@@ -175,7 +175,7 @@ int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC)
     return 0;
 }
 
-const char *fetch_url_scheme(const char *filename)
+const char *determine_scheme_pos(const char *filename)
 {
     if (nullptr == filename)
     {
@@ -191,6 +191,17 @@ const char *fetch_url_scheme(const char *filename)
         return p;
     }
     return nullptr;
+}
+
+std::string fetch_possible_protocol(const char *filename)
+{
+    std::string protocol;
+    const char *scheme_pos = determine_scheme_pos(filename);
+    if (nullptr != scheme_pos)
+    {
+        protocol = std::string(filename, scheme_pos - filename);
+    }
+    return protocol;
 }
 
 std::string fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
@@ -289,22 +300,30 @@ std::string convert_to_header_key(char *key, size_t length)
     return result;
 }
 
-bool openrasp_parse_url(const std::string &origin_url, std::string &scheme, std::string &host, std::string &port)
+bool openrasp_parse_url(const std::string &origin_url, openrasp::Url &openrasp_url)
 {
     php_url *url = php_url_parse_ex(origin_url.c_str(), origin_url.length());
     if (url)
     {
         if (url->scheme)
         {
-            scheme = std::string(url->scheme);
+            openrasp_url.set_scheme(url->scheme);
         }
         if (url->host)
         {
-            host = std::string(url->host);
+            openrasp_url.set_host(url->host);
         }
         if (url->port)
         {
-            port = std::to_string(url->port);
+            openrasp_url.set_port(std::to_string(url->port));
+        }
+        if (url->path)
+        {
+            openrasp_url.set_path(url->path);
+        }
+        if (url->query)
+        {
+            openrasp_url.set_query(url->query);
         }
         php_url_free(url);
         return true;
@@ -391,24 +410,6 @@ bool current_sapi_supported()
     return iter != supported_sapis.end();
 }
 
-zval *fetch_http_globals(int vars_id TSRMLS_DC)
-{
-    static std::map<int, std::string> pairs = {{TRACK_VARS_POST, "_POST"},
-                                               {TRACK_VARS_GET, "_GET"},
-                                               {TRACK_VARS_SERVER, "_SERVER"},
-                                               {TRACK_VARS_COOKIE, "_COOKIE"}};
-    auto it = pairs.find(vars_id);
-    if (it != pairs.end())
-    {
-        if ((PG(http_globals)[vars_id] && Z_TYPE_P(PG(http_globals)[vars_id]) == IS_ARRAY) ||
-            zend_is_auto_global(const_cast<char *>(it->second.c_str()), it->second.length() TSRMLS_CC))
-        {
-            return PG(http_globals)[it->first];
-        }
-    }
-    return nullptr;
-}
-
 std::map<std::string, std::string> get_env_map()
 {
     std::map<std::string, std::string> result;
@@ -449,7 +450,7 @@ bool openrasp_call_user_function(HashTable *function_table, zval **object_pp, co
     zval z_function_name;
     INIT_ZVAL(z_function_name);
     ZVAL_STRING(&z_function_name, function_name.c_str(), 0);
-    if (call_user_function(EG(function_table), nullptr, &z_function_name, retval_ptr,
+    if (call_user_function(EG(function_table), object_pp, &z_function_name, retval_ptr,
                            param_count, params TSRMLS_CC) == SUCCESS)
     {
         return true;
@@ -494,4 +495,23 @@ zval *fetch_http_globals(int vars_id TSRMLS_DC)
         }
     }
     return nullptr;
+}
+
+bool maybe_ssrf_vulnerability(zval *file)
+{
+    if (nullptr != file &&
+        Z_TYPE_P(file) == IS_STRING &&
+        Z_STRLEN_P(file) > 0)
+    {
+        std::string protocol = fetch_possible_protocol(Z_STRVAL_P(file));
+        for (auto &ch : protocol)
+        {
+            ch = std::tolower(ch);
+        }
+        if (protocol == "http" || protocol == "ftp")
+        {
+            return true;
+        }
+    }
+    return false;
 }

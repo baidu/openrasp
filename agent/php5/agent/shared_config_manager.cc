@@ -20,6 +20,7 @@
 #include "utils/digest.h"
 #include "utils/net.h"
 #include "utils/hostname.h"
+#include "openrasp_v8.h"
 #include <algorithm>
 
 namespace openrasp
@@ -280,14 +281,11 @@ std::string SharedConfigManager::get_rasp_id() const
 }
 
 bool SharedConfigManager::write_weak_password_array_to_shm(const void *source, size_t num)
-
 {
     if (rwlock != nullptr && rwlock->write_try_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
-
-        shared_config_block->reset_weak_password_array(source, num);
-        return true;
+        return shared_config_block->reset_weak_password_array(source, num);
     }
     return false;
 }
@@ -295,8 +293,9 @@ bool SharedConfigManager::write_weak_password_array_to_shm(const void *source, s
 bool SharedConfigManager::build_weak_password_array(std::vector<std::string> &weak_passwords)
 {
     DoubleArrayTrie dat;
+    std::sort(weak_passwords.begin(), weak_passwords.end());
     dat.build(weak_passwords.size(), &weak_passwords, 0, 0);
-    write_weak_password_array_to_shm(dat.array(), dat.total_size());
+    return write_weak_password_array_to_shm(dat.array(), dat.total_size());
 }
 
 bool SharedConfigManager::build_weak_password_array(BaseReader *br)
@@ -305,7 +304,7 @@ bool SharedConfigManager::build_weak_password_array(BaseReader *br)
     {
         return false;
     }
-    const static std::vector<std::string> dafault_weak_passwords =
+    static std::vector<std::string> dafault_weak_passwords =
         {
             "",
             "root",
@@ -320,14 +319,16 @@ bool SharedConfigManager::build_weak_password_array(BaseReader *br)
             "mysql"};
     std::vector<std::string> hook_white_key({"data", "config", "security.weak_passwords"});
     std::vector<std::string> weak_passwords = br->fetch_strings(hook_white_key, dafault_weak_passwords);
-    std::sort(weak_passwords.begin(), weak_passwords.end());
-    return build_weak_password_array(weak_passwords);
+    if (!build_weak_password_array(weak_passwords))
+    {
+        return build_weak_password_array(dafault_weak_passwords);
+    }
+    return true;
 }
 
 bool SharedConfigManager::is_password_weak(std::string password)
 {
     DoubleArrayTrie dat;
-    bool is_weak = false;
     if (rwlock != nullptr && rwlock->read_try_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
@@ -335,24 +336,85 @@ bool SharedConfigManager::is_password_weak(std::string password)
         DoubleArrayTrie::result_pair_type result_pair = dat.match_search(password.c_str());
         return result_pair.value != -1;
     }
-    return is_weak;
+    return false;
 }
 
-void SharedConfigManager::set_sql_error_codes(std::vector<long> error_codes)
+void SharedConfigManager::set_mysql_error_codes(std::vector<long> error_codes)
 {
     if (rwlock != nullptr && rwlock->write_try_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
-        shared_config_block->set_sql_error_codes(error_codes);
+        shared_config_block->set_mysql_error_codes(error_codes);
     }
 }
 
-bool SharedConfigManager::sql_error_code_exist(long err_code)
+bool SharedConfigManager::mysql_error_code_exist(long err_code)
 {
     if (rwlock != nullptr && rwlock->read_try_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
-        return shared_config_block->sql_error_code_exist(err_code);
+        return shared_config_block->mysql_error_code_exist(err_code);
+    }
+    return false;
+}
+
+void SharedConfigManager::set_sqlite_error_codes(std::vector<long> error_codes)
+{
+    if (rwlock != nullptr && rwlock->write_try_lock())
+    {
+        WriteUnLocker auto_unlocker(rwlock);
+        shared_config_block->set_sqlite_error_codes(error_codes);
+    }
+}
+
+bool SharedConfigManager::sqlite_error_code_exist(long err_code)
+{
+    if (rwlock != nullptr && rwlock->read_try_lock())
+    {
+        ReadUnLocker auto_unlocker(rwlock);
+        return shared_config_block->sqlite_error_code_exist(err_code);
+    }
+    return false;
+}
+
+bool SharedConfigManager::write_pg_error_array_to_shm(const void *source, size_t num)
+{
+    if (rwlock != nullptr && rwlock->write_try_lock())
+    {
+        WriteUnLocker auto_unlocker(rwlock);
+        return shared_config_block->reset_pg_error_array(source, num);
+    }
+    return false;
+}
+
+bool SharedConfigManager::build_pg_error_array(std::vector<std::string> &pg_errors)
+{
+    DoubleArrayTrie dat;
+    std::sort(pg_errors.begin(), pg_errors.end());
+    dat.build(pg_errors.size(), &pg_errors, 0, 0);
+    return write_pg_error_array_to_shm(dat.array(), dat.total_size());
+}
+
+bool SharedConfigManager::build_pg_error_array(Isolate *isolate)
+{
+    if (!isolate)
+    {
+        return false;
+    }
+    std::vector<std::string> pg_errors;
+    extract_pg_error_codes(isolate, pg_errors, SharedConfigBlock::PGSQL_ERROR_CODE_MAX_SIZE);
+    return build_pg_error_array(pg_errors);
+}
+
+bool SharedConfigManager::pg_error_filtered(std::string error)
+{
+    DoubleArrayTrie dat;
+    if (rwlock != nullptr && rwlock->read_try_lock())
+    {
+        ReadUnLocker auto_unlocker(rwlock);
+        dat.load_existing_array((void *)shared_config_block->get_pg_error_array(), shared_config_block->get_pg_error_array_size());
+        DoubleArrayTrie::result_pair_type result_pair = dat.match_search(error.c_str());
+        return result_pair.value != -1;
     }
     return false;
 }

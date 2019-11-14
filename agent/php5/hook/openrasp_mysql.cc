@@ -16,7 +16,9 @@
 
 #include "openrasp_sql.h"
 #include "openrasp_hook.h"
-#include <string>
+#include "hook/data/sql_error_object.h"
+#include "hook/checker/v8_detector.h"
+#include "hook/data/sql_object.h"
 
 extern "C"
 {
@@ -37,7 +39,7 @@ POST_HOOK_FUNCTION(mysql_unbuffered_query, SQL_ERROR);
 static long fetch_mysql_errno(uint32_t param_count, zval *params[] TSRMLS_DC);
 static std::string fetch_mysql_error(uint32_t param_count, zval *params[] TSRMLS_DC);
 
-static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, int persistent)
+static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, openrasp::data::SqlConnectionObject &sql_connection_obj, int persistent)
 {
     char *user = nullptr, *passwd = nullptr, *host_and_port = nullptr, *socket = nullptr, *host = nullptr, *tmp = nullptr;
     int user_len = 0, passwd_len = 0, host_len = 0, port = MYSQL_PORT;
@@ -99,7 +101,7 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
             passwd = default_password;
         }
     }
-    sql_connection_p->set_server("mysql");
+    sql_connection_obj.set_server("mysql");
     socket = default_socket;
     bool using_socket = false;
 
@@ -118,7 +120,8 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
             }
             else
             {
-                sql_connection_p->append_host_port(host_str, port);
+                sql_connection_obj.set_host(host_str);
+                sql_connection_obj.set_port(port);
             }
         }
         else
@@ -131,46 +134,44 @@ static bool init_mysql_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connec
     else
     {
         using_socket = (host_and_port == nullptr || strncmp(host_and_port, "localhost", strlen("localhost")) == 0);
-        sql_connection_p->append_host_port(SAFE_STRING(host_and_port), default_port);
+        sql_connection_obj.set_host(SAFE_STRING(host_and_port));
+        sql_connection_obj.set_port(default_port);
     }
-    sql_connection_p->set_using_socket(using_socket);
-    sql_connection_p->set_socket(SAFE_STRING(socket));
-    sql_connection_p->set_username(SAFE_STRING(user));
-    sql_connection_p->set_password(SAFE_STRING(passwd));
+    sql_connection_obj.set_using_socket(using_socket);
+    sql_connection_obj.set_socket(SAFE_STRING(socket));
+    sql_connection_obj.set_username(SAFE_STRING(user));
+    sql_connection_obj.set_password(SAFE_STRING(passwd));
     return true;
 }
 
-static inline bool init_mysql_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static inline bool init_mysql_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, openrasp::data::SqlConnectionObject &sql_connection_obj)
 {
-    return init_mysql_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 0);
+    return init_mysql_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_obj, 0);
 }
 
-static inline bool init_mysql_pconnect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static inline bool init_mysql_pconnect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, openrasp::data::SqlConnectionObject &sql_connection_obj)
 {
-    return init_mysql_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 1);
+    return init_mysql_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_obj, 1);
 }
 
-static void mysql_connect_error_intercept(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func)
+static void mysql_connect_error_intercept(INTERNAL_FUNCTION_PARAMETERS, init_sql_connection_t connection_init_func)
 {
     long error_code = fetch_mysql_errno(0, nullptr TSRMLS_CC);
-    if (!is_mysql_error_code_monitored(error_code))
-    {
-        return;
-    }
     std::string error_msg = fetch_mysql_error(0, nullptr TSRMLS_CC);
-    sql_connection_entry conn_entry;
-    connection_init_func(INTERNAL_FUNCTION_PARAM_PASSTHRU, &conn_entry);
-    sql_connect_error_alarm(&conn_entry, std::to_string(error_code), error_msg TSRMLS_CC);
+    openrasp::data::SqlConnectionObject sco;
+    connection_init_func(INTERNAL_FUNCTION_PARAM_PASSTHRU, sco);
+    openrasp::data::SqlErrorObject seo(sco, "mysql", error_code, error_msg);
+    openrasp::checker::V8Detector error_checker(seo, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+    error_checker.run();
 }
 
 //mysql_connect
 void post_global_mysql_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    sql_connection_entry conn_entry;
-    if (Z_TYPE_P(return_value) == IS_RESOURCE &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry, &conn_entry))
+    if (Z_TYPE_P(return_value) == IS_RESOURCE)
     {
-        handle_block(TSRMLS_C);
+        openrasp::data::SqlConnectionObject sco;
+        sql_connection_policy_check(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_connect_conn_entry, sco);
     }
 }
 
@@ -185,11 +186,10 @@ void post_global_mysql_connect_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 //mysql_pconnect
 void post_global_mysql_pconnect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    sql_connection_entry conn_entry;
-    if (Z_TYPE_P(return_value) == IS_RESOURCE &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry, &conn_entry))
+    if (Z_TYPE_P(return_value) == IS_RESOURCE)
     {
-        handle_block(TSRMLS_C);
+        openrasp::data::SqlConnectionObject sco;
+        sql_connection_policy_check(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysql_pconnect_conn_entry, sco);
     }
 }
 
@@ -204,26 +204,24 @@ void post_global_mysql_pconnect_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 //mysql_query
 void pre_global_mysql_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *query = nullptr;
-    int query_len = 0;
+    zval *query = nullptr;
     zval *mysql_link = nullptr;
 
-    if (UNLIKELY(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|r", &query, &query_len, &mysql_link) == FAILURE))
+    if (UNLIKELY(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|r", &query, &mysql_link) == FAILURE))
     {
         return;
     }
 
-    plugin_sql_check(query, query_len, "mysql" TSRMLS_CC);
+    plugin_sql_check(query, "mysql" TSRMLS_CC);
 }
 
 void post_global_mysql_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
     {
-        char *query = nullptr;
-        int query_len = 0;
+        zval *query = nullptr;
         zval *mysql_link = nullptr;
-        if (UNLIKELY(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|r", &query, &query_len, &mysql_link) == FAILURE))
+        if (UNLIKELY(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|r", &query, &mysql_link) == FAILURE))
         {
             return;
         }
@@ -235,12 +233,10 @@ void post_global_mysql_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             param_num = 1;
         }
         long error_code = fetch_mysql_errno(param_num, args TSRMLS_CC);
-        if (!is_mysql_error_code_monitored(error_code))
-        {
-            return;
-        }
         std::string error_msg = fetch_mysql_error(param_num, args TSRMLS_CC);
-        sql_query_error_alarm("mysql", query, std::to_string(error_code), error_msg TSRMLS_CC);
+        openrasp::data::SqlErrorObject seo(openrasp::data::SqlObject("mysql", query), "mysql", error_code, error_msg);
+        openrasp::checker::V8Detector v8_detector(seo, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+        v8_detector.run();
     }
 }
 
@@ -277,31 +273,29 @@ static std::string fetch_mysql_error(uint32_t param_count, zval *params[] TSRMLS
 
 void pre_global_mysql_db_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *db, *query;
-    int db_len, query_len;
+    zval *db = nullptr;
+    zval *query = nullptr;
     zval *mysql_link = NULL;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|r", &db, &db_len, &query, &query_len, &mysql_link) == FAILURE)
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz|r", &db, &query, &mysql_link) == FAILURE)
     {
         return;
     }
 
-    plugin_sql_check(query, query_len, "mysql" TSRMLS_CC);
+    plugin_sql_check(query, "mysql" TSRMLS_CC);
 }
 
 void post_global_mysql_db_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
     {
-        char *db, *query;
-        int db_len, query_len;
-        zval *mysql_link = NULL;
-
-        if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|r", &db, &db_len, &query, &query_len, &mysql_link) == FAILURE)
+        zval *db = nullptr;
+        zval *query = nullptr;
+        zval *mysql_link = nullptr;
+        if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz|r", &db, &query, &mysql_link) == FAILURE)
         {
             return;
         }
-
         zval *args[1];
         int param_num = 0;
         if (nullptr != mysql_link)
@@ -310,12 +304,10 @@ void post_global_mysql_db_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             param_num = 1;
         }
         long error_code = fetch_mysql_errno(param_num, args TSRMLS_CC);
-        if (!is_mysql_error_code_monitored(error_code))
-        {
-            return;
-        }
         std::string error_msg = fetch_mysql_error(param_num, args TSRMLS_CC);
-        sql_query_error_alarm("mysql", query, std::to_string(error_code), error_msg TSRMLS_CC);
+        openrasp::data::SqlErrorObject seo(openrasp::data::SqlObject("mysql", query), "mysql", error_code, error_msg);
+        openrasp::checker::V8Detector v8_detector(seo, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+        v8_detector.run();
     }
 }
 

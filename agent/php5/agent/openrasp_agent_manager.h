@@ -77,6 +77,9 @@ public:
   void set_plugin_md5(const char *plugin_md5);
   const char *get_plugin_md5();
 
+  void set_webdir_scan_regex(const char *webdir_scan_regex);
+  const char *get_webdir_scan_regex();
+
   bool path_writable();
   bool path_exist(ulong hash);
   void write_webroot_path(const char *webroot_path);

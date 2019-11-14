@@ -23,7 +23,8 @@
 
 namespace openrasp
 {
-
+namespace request
+{
 class Request
 {
 private:
@@ -59,5 +60,6 @@ public:
 
     void clear();
 };
+} // namespace request
 
 } // namespace openrasp

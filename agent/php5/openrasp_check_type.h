@@ -51,6 +51,7 @@ enum OpenRASPCheckType
   REQUEST,
   REQUEST_END,
   MONGO,
+  SSRF_REDIRECT,
   ALL_TYPE
 };
 

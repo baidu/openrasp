@@ -16,7 +16,9 @@
 
 #include "webdir.h"
 #include "utils/file.h"
+#include "utils/regex.h"
 #include "utils/json_reader.h"
+#include "agent/openrasp_agent_manager.h"
 
 namespace openrasp
 {
@@ -60,7 +62,7 @@ std::vector<std::string> WebDir::get_sensitive_files(long scan_limit) const
   std::vector<std::string> sensitive_files;
   openrasp_scandir(abs_path, sensitive_files,
                    [](const char *filename) {
-                     return is_sensitive_file(filename);
+                     return regex_search(filename, oam->get_webdir_scan_regex());
                    },
                    scan_limit);
   return sensitive_files;
@@ -91,7 +93,7 @@ std::vector<DependencyItem> WebDir::get_dependency() const
   return deps;
 }
 
-bool WebDir::update_composer_lock_status()
+void WebDir::update_composer_lock_status()
 {
   this->composer_lock_last_modified != get_last_modified(get_composer_lock_path());
   this->composer_lock_hash != get_composer_lock_hash();

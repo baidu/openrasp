@@ -273,7 +273,7 @@ PHP_RINIT_FUNCTION(openrasp)
             OPENRASP_G(request).set_method(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "REQUEST_METHOD"));
             OPENRASP_G(request).set_remote_addr(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "REMOTE_ADDR"));
             OPENRASP_G(request).set_document_root(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "DOCUMENT_ROOT"));
-            
+
             std::map<std::string, std::string> header;
             for (zend_hash_internal_pointer_reset(Z_ARRVAL_P(http_server));
                  zend_hash_has_more_elements(Z_ARRVAL_P(http_server)) == SUCCESS;
@@ -294,7 +294,6 @@ PHP_RINIT_FUNCTION(openrasp)
                 }
             }
             OPENRASP_G(request).set_header(header);
-
         }
         int result;
         long config_last_update = openrasp::scm->get_config_last_update();
@@ -319,10 +318,12 @@ PHP_RINIT_FUNCTION(openrasp)
             zval *http_global_server = fetch_http_globals(TRACK_VARS_SERVER TSRMLS_CC);
             if (http_global_server)
             {
-                const char *webroot = fetch_outmost_string_from_ht(Z_ARRVAL_P(http_global_server), "DOCUMENT_ROOT");
-                if (webroot && openrasp::oam->path_writable() && !openrasp::oam->path_exist(zend_inline_hash_func(webroot, strlen(webroot))))
+                const std::string webroot = fetch_outmost_string_from_ht(Z_ARRVAL_P(http_global_server), "DOCUMENT_ROOT");
+                if (!webroot.empty() &&
+                    openrasp::oam->path_writable() &&
+                    !openrasp::oam->path_exist(zend_inline_hash_func(webroot.c_str(), webroot.length())))
                 {
-                    openrasp::oam->write_webroot_path(webroot);
+                    openrasp::oam->write_webroot_path(webroot.c_str());
                 }
             }
         }

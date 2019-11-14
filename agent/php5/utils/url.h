@@ -24,17 +24,31 @@ namespace openrasp
 
 class Url
 {
-  private:
-    std::string scheme;
-    std::string host;
-    std::string port;
-    bool parse_error = false;
+private:
+  std::string scheme;
+  std::string host;
+  std::string port;
+  std::string path;
+  std::string query;
+  bool parse_error = true;
 
-  public:
-    Url(std::string url_string);
-    bool has_error() const;
-    std::string get_host() const;
-    std::string get_port() const;
+public:
+  Url();
+  Url(const std::string &url_string);
+  virtual void parse(const std::string &url_string);
+  virtual bool has_error() const;
+  virtual std::string get_scheme() const;
+  virtual std::string get_host() const;
+  virtual std::string get_port() const;
+  virtual std::string get_path() const;
+  virtual std::string get_query() const;
+  virtual void set_scheme(const std::string &scheme);
+  virtual void set_host(const std::string &host);
+  virtual void set_port(const std::string &port);
+  virtual void set_path(const std::string &path);
+  virtual void set_query(const std::string &query);
+
+  friend bool operator==(const openrasp::Url &lhs, const openrasp::Url &rhs);
 };
 
 } // namespace openrasp

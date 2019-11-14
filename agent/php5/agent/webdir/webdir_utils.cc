@@ -15,6 +15,7 @@
  */
 
 #include "webdir_utils.h"
+#include "utils/json_reader.h"
 
 namespace openrasp
 {
@@ -22,28 +23,13 @@ void sensitive_files_policy_alarm(std::map<std::string, std::vector<std::string>
 {
     for (auto &it : sensitive_file_map)
     {
+        openrasp::JsonReader j;
+        j.write_int64({"policy_id"}, 3008);
+        j.write_string({"policy_params", "webroot"}, it.first);
+        j.write_vector({"policy_params", "sensitive_files"}, it.second);
+        j.write_string({"message"}, "Sensitive files found in webroot path:" + it.first);
         TSRMLS_FETCH();
-        zval *result = nullptr;
-        MAKE_STD_ZVAL(result);
-        array_init(result);
-        add_assoc_long(result, "policy_id", 3008);
-        zval *policy_params = nullptr;
-        MAKE_STD_ZVAL(policy_params);
-        array_init(policy_params);
-        add_assoc_string(policy_params, "webroot", const_cast<char *>(it.first.c_str()), 1);
-        zval *z_sensitive_files = nullptr;
-        MAKE_STD_ZVAL(z_sensitive_files);
-        array_init(z_sensitive_files);
-        for (auto &file : it.second)
-        {
-            add_next_index_string(z_sensitive_files, const_cast<char *>(file.c_str()), 1);
-        }
-        add_assoc_zval(policy_params, "sensitive_files", z_sensitive_files);
-        add_stack_to_params(policy_params TSRMLS_CC);
-        add_assoc_zval(result, "policy_params", policy_params);
-        add_assoc_string(result, "message", const_cast<char *>(("Sensitive files found in webroot path:" + it.first).c_str()), 1);
-        LOG_G(policy_logger).log(LEVEL_INFO, result TSRMLS_CC);
-        zval_ptr_dtor(&result);
+        LOG_G(alarm_logger).log(LEVEL_INFO, j TSRMLS_CC);
     }
 }
 

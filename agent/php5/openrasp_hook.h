@@ -18,7 +18,6 @@
 #define OPENRASP_HOOK_H
 
 #include "openrasp.h"
-#include "openrasp_log.h"
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
 #include "openrasp_lru.h"
@@ -125,9 +124,9 @@ static const int MYSQL_PORT = 3306;
 
 enum OpenRASPActionType
 {
-    AC_IGNORE = 0,
-    AC_LOG = 1 << 0,
-    AC_BLOCK = 1 << 1
+    AC_IGNORE = 1,
+    AC_LOG = 2,
+    AC_BLOCK = 3
 };
 
 enum PathOperation
@@ -298,18 +297,20 @@ void register_hook_handler(hook_handler_t hook_handler, OpenRASPCheckType type, 
 const std::string get_check_type_name(OpenRASPCheckType check_type);
 
 void handle_block(TSRMLS_D);
+void block_handle();
 void reset_response(TSRMLS_D);
 void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckType type, int confidence,
                                       zval *params, zval *message TSRMLS_DC);
 
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC);
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC);
-bool openrasp_zval_in_request(zval *item TSRMLS_DC);
-std::string fetch_name_in_request(zval *item, std::string &var_type TSRMLS_DC);
+bool openrasp_zval_in_request(zval *item);
+std::string fetch_name_in_request(zval *item, std::string &var_type);
 
-std::string openrasp_real_path(const char *filename, int filename_len, bool use_include_path, uint32_t w_op TSRMLS_DC);
+std::string openrasp_real_path(const char *filename, int filename_len, bool use_include_path, uint32_t w_op);
 
 OpenRASPActionType string_to_action(std::string action_string);
 std::string action_to_string(OpenRASPActionType type);
+void plugin_ssrf_check(zval *file, const std::string &funtion_name TSRMLS_DC);
 
 #endif

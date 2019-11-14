@@ -18,7 +18,7 @@ include(__DIR__.'/../skipif.inc');
 --INI--
 openrasp.root_dir=/tmp/openrasp
 --GET--
-url=http://requestb.in
+url=http://www.example.com
 --FILE--
 <?php 
 	$url = @$_GET['url'];

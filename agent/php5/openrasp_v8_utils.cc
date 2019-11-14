@@ -314,13 +314,14 @@ void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string>
     }
 }
 
-void extract_sql_error_codes(Isolate *isolate, std::vector<long> &sql_error_codes, int limit)
+void extract_sql_error_codes(Isolate *isolate, std::vector<long> &sql_error_codes, const std::string &sql_name, int limit)
 {
     std::string script = R"(
     (function () {
         var sql_error_codes = [];
         try {
-                sql_error_codes = RASP.algorithmConfig.sql_exception.mysql.error_code.filter((key, value) => typeof value === 'number');
+                sql_error_codes = RASP.algorithmConfig.sql_exception.)" +
+                         sql_name + R"(.error_code.filter(value => typeof value === 'number');
             } catch (_) {
             }
             return sql_error_codes
@@ -328,7 +329,7 @@ void extract_sql_error_codes(Isolate *isolate, std::vector<long> &sql_error_code
     )";
     v8::HandleScope handle_scope(isolate);
     auto context = isolate->GetCurrentContext();
-    auto rst = isolate->ExecScript(script, "extract_sql_error_codes");
+    auto rst = isolate->ExecScript(script, "extract_" + sql_name + "_error_codes");
     if (rst.IsEmpty())
     {
         return;
@@ -338,7 +339,7 @@ void extract_sql_error_codes(Isolate *isolate, std::vector<long> &sql_error_code
     if (len > limit)
     {
         openrasp_error(LEVEL_WARNING, PLUGIN_ERROR,
-                       _("Size of RASP.algorithmConfig.sql_exception.error_code must <= %d."), limit);
+                       _("Size of RASP.algorithmConfig.sql_exception.%s.error_code must <= %d."), sql_name.c_str(), limit);
     }
     for (size_t i = 0; i < len; i++)
     {
@@ -346,6 +347,41 @@ void extract_sql_error_codes(Isolate *isolate, std::vector<long> &sql_error_code
         v8::Local<v8::Integer> err_code_local = arr->Get(context, i).ToLocalChecked().As<v8::Integer>();
         int64_t err_code = err_code_local->Value();
         sql_error_codes.push_back(err_code);
+    }
+}
+
+void extract_pg_error_codes(Isolate *isolate, std::vector<std::string> &sql_error_codes, int limit)
+{
+    std::string script = R"(
+    (function () {
+        var sql_error_codes = [];
+        try {
+                sql_error_codes = RASP.algorithmConfig.sql_exception.pgsql.error_code.filter(value => typeof value === 'string');
+            } catch (_) {
+            }
+            return sql_error_codes
+        })()
+    )";
+    v8::HandleScope handle_scope(isolate);
+    auto context = isolate->GetCurrentContext();
+    auto rst = isolate->ExecScript(script, "extract_pg_error_codes");
+    if (rst.IsEmpty())
+    {
+        return;
+    }
+    auto arr = rst.ToLocalChecked().As<v8::Array>();
+    auto len = arr->Length();
+    if (len > limit)
+    {
+        openrasp_error(LEVEL_WARNING, PLUGIN_ERROR,
+                       _("Size of RASP.algorithmConfig.sql_exception.pgsql.error_code must <= %d."), limit);
+    }
+    for (size_t i = 0; i < len; i++)
+    {
+        v8::HandleScope handle_scope(isolate);
+        v8::Local<v8::String> err_code_local = arr->Get(context, i).ToLocalChecked().As<v8::String>();
+        v8::String::Utf8Value err_code(isolate, err_code_local);
+        sql_error_codes.push_back(*err_code);
     }
 }
 

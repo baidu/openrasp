@@ -6,9 +6,11 @@ url http://www.example.com/
 --SKIPIF--
 <?php
 $plugin = <<<EOF
-plugin.register('readFile', params => {
-    assert(params.path == 'http://www.example.com/')
-    assert(params.realpath == 'http://www.example.com/')
+plugin.register('ssrf', params => {
+    assert(params.url == 'http://www.example.com/')
+    assert(params.function == 'file')
+    assert(params.hostname == 'www.example.com')
+    assert(Array.isArray(params.ip))
     return block
 })
 EOF;
