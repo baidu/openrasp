@@ -157,7 +157,7 @@ public class Config extends FileScanListener {
     private int heartbeatInterval;
     private int syslogFacility;
     private boolean decompileEnable;
-    private Map<String, String> responseHeaders;
+    private Map<Object, Object> responseHeaders;
     private int logMaxBackUp;
     private boolean disableHooks;
     private boolean cpuUsageEnable;
@@ -245,7 +245,7 @@ public class Config extends FileScanListener {
                     if (properties != null) {
                         Object object = properties.get(item.key);
                         if (object instanceof Map) {
-                            Map<String, Object> hooks = (Map<String, Object>) object;
+                            Map<Object, Object> hooks = (Map<Object, Object>) object;
                             temp.putAll(parseHookWhite(hooks));
                         }
                     }
@@ -256,7 +256,7 @@ public class Config extends FileScanListener {
                     if (properties != null) {
                         Object object = properties.get(item.key);
                         if (object instanceof Map) {
-                            Map<String, String> headers = (Map<String, String>) object;
+                            Map<Object, Object> headers = (Map<Object, Object>) object;
                             setResponseHeaders(headers);
                         }
                     }
@@ -280,12 +280,12 @@ public class Config extends FileScanListener {
 
             if (entry.getKey().equals(HOOKS_WHITE)) {
                 if (entry.getValue() instanceof JsonObject) {
-                    Map<String, Object> hooks = CloudUtils.getMapGsonObject().fromJson((JsonObject) entry.getValue(), Map.class);
+                    Map<Object, Object> hooks = CloudUtils.getMapGsonObject().fromJson((JsonObject) entry.getValue(), Map.class);
                     temp.putAll(parseHookWhite(hooks));
                 }
             } else if (entry.getKey().equals(RESPONSE_HEADERS)) {
                 if (entry.getValue() instanceof JsonObject) {
-                    Map<String, String> headers = CloudUtils.getMapGsonObject().fromJson((JsonObject) entry.getValue(), Map.class);
+                    Map<Object, Object> headers = CloudUtils.getMapGsonObject().fromJson((JsonObject) entry.getValue(), Map.class);
                     setResponseHeaders(headers);
                 }
             } else {
@@ -1186,7 +1186,7 @@ public class Config extends FileScanListener {
      *
      * @return response header数组
      */
-    public Map<String, String> getResponseHeaders() {
+    public Map<Object, Object> getResponseHeaders() {
         return responseHeaders;
     }
 
@@ -1195,7 +1195,7 @@ public class Config extends FileScanListener {
      *
      * @param responseHeaders 待设置response header数组
      */
-    public synchronized void setResponseHeaders(Map<String, String> responseHeaders) {
+    public synchronized void setResponseHeaders(Map<Object, Object> responseHeaders) {
         this.responseHeaders = responseHeaders;
         LOGGER.info(RESPONSE_HEADERS + ": " + responseHeaders);
     }
@@ -1454,22 +1454,21 @@ public class Config extends FileScanListener {
                 return false;
             }
         } catch (Exception e) {
-            if (isInit) {
-                // 初始化配置过程中,如果报错需要继续使用默认值执行
-                if (!(e instanceof ConfigLoadException)) {
-                    throw new ConfigLoadException(e);
-                }
-                throw e;
+            if (!isInit) {
+                LOGGER.warn("configuration item \"" + key + "\" failed to change to \"" + value + "\"" + " because:" + e.getMessage());
             }
-            LOGGER.warn("configuration item \"" + key + "\" failed to change to \"" + value + "\"" + " because:" + e.getMessage());
-            return false;
+            // 初始化配置过程中,如果报错需要继续使用默认值执行
+            if (!(e instanceof ConfigLoadException)) {
+                throw new ConfigLoadException(e);
+            }
+            throw e;
         }
         return true;
     }
 
-    private TreeMap<String, Integer> parseHookWhite(Map<String, Object> hooks) {
+    private TreeMap<String, Integer> parseHookWhite(Map<Object, Object> hooks) {
         TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
-        for (Map.Entry<String, Object> hook : hooks.entrySet()) {
+        for (Map.Entry<Object, Object> hook : hooks.entrySet()) {
             int codeSum = 0;
             if (hook.getValue() instanceof ArrayList) {
                 @SuppressWarnings("unchecked")
@@ -1488,7 +1487,7 @@ public class Config extends FileScanListener {
                             codeSum = codeSum + type.getCode();
                         }
                     }
-                    temp.put(hook.getKey(), codeSum);
+                    temp.put(hook.getKey().toString(), codeSum);
                 } else {
                     for (String s : types) {
                         String hooksType = s.toUpperCase();
@@ -1502,7 +1501,7 @@ public class Config extends FileScanListener {
                     if (hook.getKey().equals("*")) {
                         temp.put("", codeSum);
                     } else {
-                        temp.put(hook.getKey(), codeSum);
+                        temp.put(hook.getKey().toString(), codeSum);
                     }
                 }
             }

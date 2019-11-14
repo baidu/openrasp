@@ -71,11 +71,10 @@ public class SQLConnectionHook extends AbstractClassHook {
         if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
             return;
         }
-        String errorCode = String.valueOf(e.getErrorCode());
-        if (Config.getConfig().getSqlErrorCodes().contains(errorCode)) {
+        if (Config.getConfig().getSqlErrorCodes().contains(e.getErrorCode())) {
             HashMap<String, Object> params = new HashMap<String, Object>();
             params.put("server", server);
-            params.put("error_code", errorCode);
+            params.put("error_code", e.getErrorCode());
             String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
             params.put("message", message);
             if (object != null && object.length >= 2) {
