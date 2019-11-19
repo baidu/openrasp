@@ -193,15 +193,11 @@ class IniConfig
 
 	public function setHeartbeatInterval($heartbeat_interval)
 	{
-		if (!empty($heartbeat_interval)) {
-			if (is_numeric($heartbeat_interval) && (int)$heartbeat_interval >= 10 && (int)$heartbeat_interval <= 1800) {
-				log_tips(INFO, "openrasp.heartbeat_interval => " . $heartbeat_interval);
-				$this->heartbeat_interval = $heartbeat_interval;
-			} else {
-				log_tips(ERROR, "heartbeat option must be numeric and between 10 and 1800.");
-			}
+		if (is_numeric($heartbeat_interval) && (int)$heartbeat_interval >= 10 && (int)$heartbeat_interval <= 1800) {
+			log_tips(INFO, "openrasp.heartbeat_interval => " . $heartbeat_interval);
+			$this->heartbeat_interval = $heartbeat_interval;
 		} else {
-			log_tips(ERROR, "heartbeat option cannot be empty.");
+			log_tips(ERROR, "heartbeat option must be numeric and between 10 and 1800.");
 		}
 	}
 
