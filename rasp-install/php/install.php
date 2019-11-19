@@ -108,11 +108,13 @@ class IniConfig
 	var $rasp_id;
 	var $remote_management_enable;
 	var $iast_enable;
+	var $heartbeat_interval;
 
 	function __construct($extension) {
-		$this->extension=$extension;
+		$this->extension = $extension;
 		$this->remote_management_enable = "0";
 		$this->iast_enable = "0";
+		$this->heartbeat_interval = 180;
     }
 
 	public function setRootDir($root_dir)
@@ -189,6 +191,20 @@ class IniConfig
 		}
 	}
 
+	public function setHeartbeatInterval($heartbeat_interval)
+	{
+		if (!empty($heartbeat_interval)) {
+			if (is_numeric($heartbeat_interval) && (int)$heartbeat_interval >= 10 && (int)$heartbeat_interval <= 1800) {
+				log_tips(INFO, "openrasp.heartbeat_interval => " . $heartbeat_interval);
+				$this->heartbeat_interval = $heartbeat_interval;
+			} else {
+				log_tips(ERROR, "heartbeat option must be numeric and between 10 and 1800.");
+			}
+		} else {
+			log_tips(ERROR, "heartbeat option cannot be empty.");
+		}
+	}
+
 	public function isRemoteManagementEnable()
 	{
 		return $this->remote_management_enable === "1" ;
@@ -253,7 +269,7 @@ openrasp.rasp_id=$this->rasp_id
 openrasp.remote_management_enable=$this->remote_management_enable
 
 ;心跳时间间隔
-openrasp.heartbeat_interval=180
+openrasp.heartbeat_interval=$this->heartbeat_interval
 
 ;SSL证书验证开关
 openrasp.ssl_verifypeer=0
@@ -286,6 +302,8 @@ Options:
 
     --rasp-id <id>          Value of rasp_id (if not set, it will be generated at runtime)
 
+    --heartbeat             Value of heartbeat interval (10 - 1800)
+
     --keep-ini              Do not update PHP ini entries
 
     --keep-plugin           Do not update the official javascript plugin (higher priority than --without-plugin)
@@ -302,7 +320,7 @@ HELP;
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 参数解析 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 $shortopts = "d:h";
-$longopts = array("iast", "without-plugin", "keep-ini", "keep-plugin", "keep-conf", "app-id:", "app-secret:", "rasp-id:", "backend-url:", "help");
+$longopts = array("iast", "without-plugin", "keep-ini", "keep-plugin", "keep-conf", "app-id:", "app-secret:", "rasp-id:", "backend-url:", "heartbeat:", "help");
 $options = getopt($shortopts, $longopts);
 
 if (array_key_exists("h", $options) || array_key_exists("help", $options)) {
@@ -337,6 +355,10 @@ if (array_key_exists("app-secret", $options)) {
 
 if (array_key_exists("rasp-id", $options)) {
 	$iniConfig->setRaspId($options["rasp-id"]);
+}
+
+if (array_key_exists("heartbeat", $options)) {
+	$iniConfig->setHeartbeatInterval($options["heartbeat"]);
 }
 
 if (array_key_exists("iast", $options))
