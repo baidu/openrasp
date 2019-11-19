@@ -161,29 +161,10 @@ public class Context extends com.baidu.openrasp.v8.Context {
         }
     }
 
-    public String getStringBody() {
-        try {
-            return request.getStringBody();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    public String getStringJson() {
-        try {
-            String contentType = request.getContentType();
-            if (contentType != null && contentType.contains("application/json")) {
-                return getStringBody();
-            }
-            return null;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
+    // TODO: update openrasp-v8, accept string body
     public byte[] getBody() {
         try {
-            return request.getBody();
+            return request.getStringBody().getBytes("UTF-8");
         } catch (Exception e) {
             return null;
         }
