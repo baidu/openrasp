@@ -129,6 +129,9 @@ var (
 		"block.content_json":        `{"error":true,"reason": "Request blocked by OpenRASP","request_id": "%request_id%"}`,
 		"plugin.timeout.millis":     100,
 		"body.maxbytes":             12288,
+		"inject.custom_headers":     map[string]interface{}{
+			"X-Protected-By":        "openRASP",
+		},
 		"plugin.filter":             true,
 		"plugin.maxstack":           100,
 		"ognl.expression.minlength": 30,
@@ -159,7 +162,12 @@ func init() {
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
 	}
-
+	if *conf.AppConfig.Flag.Upgrade == "121to122" {
+		err := UpdateAppConfig(*conf.AppConfig.Flag.Upgrade)
+		if err != nil {
+			beego.Error("failed to update App config")
+		}
+	}
 	if *conf.AppConfig.Flag.StartType == conf.StartTypeDefault ||
 		*conf.AppConfig.Flag.StartType == conf.StartTypeForeground {
 		if count <= 0 {
@@ -494,6 +502,51 @@ func UpdateGeneralConfig(appId string, config map[string]interface{}) (*App, err
 
 func UpdateWhiteListConfig(appId string, config []WhitelistConfigItem) (app *App, err error) {
 	return UpdateAppById(appId, bson.M{"whitelist_config": config, "config_time": time.Now().UnixNano()})
+}
+
+func UpdateAppConfig(version string) error{
+	if version == "121to122" {
+		page := 1
+		perPage := 10
+		for {
+			_, apps, err := GetAllApp(page, perPage, true)
+			if err != nil {
+				beego.Error("failed to update App config", err)
+				return err
+			}
+			if apps == nil {
+				apps = make([]*App, 0)
+			}
+			for _, app := range apps {
+				appId := app.Id
+				maxBytes := app.GeneralConfig["body.maxbytes"]
+				switch maxBytes.(type) {
+				case float64:
+					if uint64(maxBytes.(float64)) == 4096 {
+						maxBytes = 12288
+					}
+				case int:
+					if maxBytes == 4096 {
+						maxBytes = 12288
+					}
+				}
+				app.GeneralConfig["inject.custom_headers"] = map[string]interface{}{
+					"X-Protected-By":     "openRASP",
+				}
+				_, err := UpdateGeneralConfig(appId, app.GeneralConfig)
+				if err != nil {
+					beego.Error("failed to update app general config after update", err)
+					return err
+				}
+			}
+			if len(apps) < perPage {
+				break;
+			}
+			page++
+		}
+		beego.Info("update 121to122 success!")
+	}
+	return nil
 }
 
 func RemoveAppById(id string) (app *App, err error) {
