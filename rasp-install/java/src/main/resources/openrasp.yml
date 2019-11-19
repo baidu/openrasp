@@ -5,7 +5,7 @@
 # <general settings>
 # 
 # plugin.timeout.millis: 100
-# body.maxbytes: 4096
+# body.maxbytes: 12288
 # plugin.filter: true
 # plugin.maxstack: 100
 # ognl.expression.minlength: 30
