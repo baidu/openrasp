@@ -136,36 +136,3 @@ func TestClearLogs(t *testing.T) {
 		})
 	})
 }
-
-func TestPutKafka(t *testing.T) {
-	Convey("Subject: Test Put Kafka Api\n", t, func() {
-		Convey("when the param is valid", func() {
-			path := "/v1/api/server/kafka"
-			r := inits.GetResponse("POST", path, inits.GetJson(getValidKafkaConfig()))
-			So(r.Status, ShouldEqual, 0)
-		})
-
-		Convey("when the count of kafka record is greater than 1024", func() {
-			data := getValidKafkaConfig()
-			data.KafkaAddr = inits.GetLongStringArray(1025)
-			r := inits.GetResponse("POST", "/v1/api/server/kafka", inits.GetJson(data))
-			So(r.Status, ShouldBeGreaterThan, 0)
-		})
-
-		Convey("when the length of kafka record is greater than 512", func() {
-			data := getValidKafkaConfig()
-			data.KafkaAddr[0] = inits.GetLongString(513)
-			r := inits.GetResponse("POST", "/v1/api/server/kafka", inits.GetJson(data))
-			So(r.Status, ShouldBeGreaterThan, 0)
-		})
-		Convey("when failed to put kafka", func() {
-			monkey.Patch(kafka.PutKafkaConfig, func(*kafka.Kafka) (error) {
-				return mgo.ErrNotFound
-			})
-			defer monkey.Unpatch(kafka.PutKafkaConfig)
-			body := inits.GetJson(getValidKafkaConfig())
-			r := inits.GetResponse("POST", "/v1/api/server/kafka", body)
-			So(r.Status, ShouldBeGreaterThan, 0)
-		})
-	})
-}

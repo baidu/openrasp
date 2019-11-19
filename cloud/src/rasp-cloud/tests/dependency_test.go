@@ -1,13 +1,13 @@
 package test
 
 import (
+	"testing"
+	"rasp-cloud/tests/inits"
+	"rasp-cloud/tests/start"
 	"github.com/bouk/monkey"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 	"rasp-cloud/models"
-	"rasp-cloud/tests/inits"
-	"rasp-cloud/tests/start"
-	"testing"
 )
 
 func getValidDependency() map[string]interface{} {

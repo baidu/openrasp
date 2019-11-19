@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"testing"
 	. "github.com/smartystreets/goconvey/convey"
 	"rasp-cloud/tests/inits"
@@ -191,6 +192,7 @@ func TestLogSearch(t *testing.T) {
 		Convey("when log type is attack", func() {
 			r := inits.GetResponse("POST", "/v1/api/log/attack/search",
 				inits.GetJson(getAttackLogSearchData()))
+			fmt.Println("r:", r.Desc)
 			So(r.Status, ShouldEqual, 0)
 		})
 

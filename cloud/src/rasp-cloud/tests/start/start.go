@@ -21,6 +21,7 @@ var TestApp = &models.App{
 var online = false
 var TestRasp = &models.Rasp{
 	Id:                "1234567890abc121321354545135135",
+	StrategyId:        "8941b1b41fde71ea76e5f3a88de7f4024b432169",
 	ServerVersion:     "7.0.78.0",
 	Language:          "java",
 	Version:           "1.3",

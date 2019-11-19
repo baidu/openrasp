@@ -62,6 +62,10 @@ func TestAttackAlarmPush(t *testing.T) {
 			RecvParty:  []string{"92843"},
 		}
 
+		start.TestApp.GeneralAlarmConf = models.GeneralAlarmConf{
+			AlarmCheckInterval:     120,
+		}
+
 		alarms := []map[string]interface{}{
 			{
 				"attack_type": "sql",

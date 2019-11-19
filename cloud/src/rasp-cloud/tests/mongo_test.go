@@ -35,7 +35,7 @@ func TestMongoErr(t *testing.T) {
 			&map[string]interface{}{}, "name")
 		So(err, ShouldNotEqual, nil)
 
-		_, err = models.SetSelectedPlugin("sssssss", "sssssss")
+		_, err = models.SetSelectedPlugin("sssssss", "sssssss", "")
 		So(err, ShouldNotEqual, nil)
 
 		monkey.Patch(models.GetLoginUserName, func() (userName string, err error) {

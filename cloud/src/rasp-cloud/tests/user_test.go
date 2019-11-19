@@ -196,15 +196,3 @@ func TestCheckDefault(t *testing.T)  {
 		})
 	})
 }
-
-func TestCheckUserCount(t *testing.T) {
-	Convey("Subject: Test Check User Count Api:", t, func() {
-		Convey("when User Count equals 0", func() {
-			monkey.Patch(mongo.Insert, func(collection string, doc interface{}) (error) {
-				return nil
-			})
-			defer monkey.Unpatch(mongo.Insert)
-			models.CheckUserCount(0)
-		})
-	})
-}
