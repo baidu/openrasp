@@ -296,7 +296,7 @@ export default {
         self.items = Object.values(hooks)
 
         // 老版本的官方插件，sql_exception.X.error_code 字段不存在，不要展示高级配置
-        if (! data.algorithm_config.sql_exception.mysql) {
+        if (! data.algorithm_config.sql_exception || ! data.algorithm_config.sql_exception.mysql) {
           self.hasAdvancedConfig['sql_exception'] = false
         }
       })

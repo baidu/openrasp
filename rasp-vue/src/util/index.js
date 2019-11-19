@@ -22,7 +22,8 @@ export var audit_types = {
   1015: '重置插件配置'
 }
 
-export var browser_headers = [{
+export var browser_headers = [
+  {
   name: 'X-Frame-Options',
   descr: '点击劫持防护',
   options: [{
