@@ -25,7 +25,6 @@ exec('echo test');
 ?>
 ok
 --EXPECTHEADERS--
-X-Protected-By: OpenRASP
 X-Request-ID: 001ae04bbf142185000147562aecaebe
 --EXPECTREGEX--
 <\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>
