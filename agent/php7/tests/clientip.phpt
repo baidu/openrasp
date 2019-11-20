@@ -9,7 +9,7 @@ plugin.register('command', (params, context) => {
 })
 EOF;
 $conf = <<<CONF
-clientip.header: "clientip"
+clientip.header: "X-Forwarded-For"
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>
@@ -20,7 +20,7 @@ openrasp.root_dir=/tmp/openrasp
 return <<<END
 REQUEST_SCHEME=http
 HTTP_HOST=rasp.baidu.com
-HTTP_CLIENTIP=1.1.1.1, 2.2.2.2, 3.3.3.3
+HTTP_X_FORWARDED_FOR=1.1.1.1, 2.2.2.2, 3.3.3.3
 REMOTE_ADDR=127.0.0.1
 DOCUMENT_ROOT=/tmp/openrasp
 REQUEST_URI=/index.php
