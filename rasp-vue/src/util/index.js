@@ -133,7 +133,9 @@ export var attack_types = {
   webshell_eval: 'WebShell - 中国菜刀',
   webshell_command: 'WebShell - 命令执行',
   webshell_file_put_contents: 'WebShell - 后门上传',
-  webshell_ld_preload: 'WebShell - LD_PRELOAD 后门'
+  webshell_ld_preload: 'WebShell - LD_PRELOAD 后门',
+  request: '请求起始',
+  requestEnd: '请求结束',
 }
 
 export var status_types = {
