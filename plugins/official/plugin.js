@@ -1349,7 +1349,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
         {
             if (is_from_userinput(parameter, url))
             {
-                if (ip.length && /^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(ip[0]))
+                if (ip.length && /^(0|127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(ip[0]))
                 {
                     return {
                         action:     algorithmConfig.ssrf_userinput.action,
@@ -1387,7 +1387,8 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
         // 算法3 - 检测 AWS/Aliyun/GoogleCloud 私有地址
         if (algorithmConfig.ssrf_aws.action != 'ignore')
         {
-            if (hostname == '169.254.169.254' || hostname == '100.100.100.200' || hostname == 'metadata.google.internal')
+            if (ip == '169.254.169.254' || ip == '100.100.100.200'
+                || hostname == '169.254.169.254' || hostname == '100.100.100.200' || hostname == 'metadata.google.internal')
             {
                 return {
                     action:     algorithmConfig.ssrf_aws.action,
@@ -2091,7 +2092,7 @@ plugin.register('xxe', function (params, context) {
     }
 
     if (items.length >= 2) {
-        var protocol = items[0]
+        var protocol = items[0].toLowerCase()
         var address  = items[1]
 
         // 拒绝特殊协议
@@ -2117,10 +2118,10 @@ plugin.register('xxe', function (params, context) {
             if (address.length > 0 && protocol === 'file' && is_absolute_path(address, is_win) )
             {
                 var address_lc = address.toLowerCase()
-
+                var urlObj = new URL(address_lc)
                 // 过滤掉 xml、dtd
-                if (! address_lc.endsWith('.xml') &&
-                    ! address_lc.endsWith('.dtd'))
+                if (! urlObj.pathname.endsWith('.xml') &&
+                    ! urlObj.pathname.endsWith('.dtd'))
                 {
                     return {
                         action:     algorithmConfig.xxe_file.action,
