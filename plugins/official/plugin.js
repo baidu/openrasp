@@ -2110,6 +2110,7 @@ plugin.register('xxe', function (params, context) {
 
         // file 协议 + 绝对路径, e.g
         // file:///etc/passwd
+        // file:///etc/passwd?a=1#b=2 (仅Java支持)
         //
         // 相对路径容易误报, e.g
         // file://xwork.dtd
@@ -2117,8 +2118,6 @@ plugin.register('xxe', function (params, context) {
         {
             if (address.length > 0 && protocol === 'file' && is_absolute_path(address, is_win) )
             {
-                // PHP 不允许使用 fragment，无论是 XXE 还是 stream
-                // Java 支持 # ? 等方式
                 var address_lc = address.toLowerCase()
                 
                 // 1.0 Rhino 引擎不支持URL对象，考虑到 1.0 用户不多，先简单处理下
