@@ -42,6 +42,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.FileFilter;
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,6 +53,39 @@ public class JS {
 
     static {
         Base64Support.enable();
+    }
+
+    static class ByteArrayWrapper {
+        private byte[] bytes;
+        private ByteArrayWrapper(byte[] bytes) {
+            if (bytes == null) {
+                this.bytes = new byte[]{};
+            } else {
+                this.bytes = bytes;
+            }
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof ByteArrayWrapper)) {
+                return false;
+            }
+            byte[] byteArray = ((ByteArrayWrapper) o).bytes;
+            if (byteArray.length != this.bytes.length) {
+                return false;
+            }
+            for (int i = 0; i < this.bytes.length; ++i) {
+                if (byteArray[i] != this.bytes[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            return ByteBuffer.wrap(this.bytes).hashCode();
+        }
     }
 
     public synchronized static boolean Initialize() {
@@ -106,12 +140,12 @@ public class JS {
         ByteArrayOutputStream params = new ByteArrayOutputStream();
         JsonStream.serialize(checkParameter.getParams(), params);
 
-        int hashcode = 0;
+        ByteArrayWrapper byteArrayWrapper = null;
         if (type == Type.DIRECTORY || type == Type.READFILE || type == Type.WRITEFILE || type == Type.SQL || type == Type.SSRF) {
-            hashcode = ByteBuffer.wrap(params.getByteArray()).hashCode();
+            byteArrayWrapper = new ByteArrayWrapper(params.getByteArray());
         }
-        if (hashcode != 0) {
-            if (Config.commonLRUCache.isContainsKey(hashcode)) {
+        if (byteArrayWrapper != null) {
+            if (Config.commonLRUCache.isContainsKey(byteArrayWrapper)) {
                 return null;
             }
         }
@@ -126,8 +160,8 @@ public class JS {
         }
 
         if (results == null) {
-            if (hashcode != 0 && Config.commonLRUCache.maxSize() != 0) {
-                Config.commonLRUCache.put(hashcode, null);
+            if (byteArrayWrapper != null && Config.commonLRUCache.maxSize() != 0) {
+                Config.commonLRUCache.put(byteArrayWrapper, null);
             }
             return null;
         }
