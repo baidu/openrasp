@@ -940,8 +940,11 @@ function is_from_userinput(parameter, target)
 }
 
 // 检查逻辑是否被用户参数所修改
-function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance, is_sql=false)
+function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance, is_sql)
 {
+    if (is_sql === undefined) {
+        is_sql = false
+    }
     // 当用户输入穿越了多个token，就可以判定为代码注入，默认为2
     var start = -1, end = raw_tokens.length, distance = distance || 2
 
@@ -2126,7 +2129,7 @@ plugin.register('xxe', function (params, context) {
                     var urlObj = new URL(address_lc)
                     address_lc = urlObj.pathname
                 }
-                catch {}
+                catch (e) {}
 
                 // 过滤掉 xml、dtd
                 if (! address_lc.endsWith('.xml') &&
