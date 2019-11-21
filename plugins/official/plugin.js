@@ -1349,7 +1349,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
         {
             if (is_from_userinput(parameter, url))
             {
-                if (ip.length && /^(0|127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(ip[0]))
+                if (ip.length && /^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(ip[0]))
                 {
                     return {
                         action:     algorithmConfig.ssrf_userinput.action,
@@ -1384,7 +1384,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
             }
         }
 
-        // 算法3 - 检测 AWS/Aliyun/GoogleCloud 私有地址
+        // 算法3 - 检测 AWS/Aliyun/GoogleCloud 私有地址: 拦截IP访问、绑定域名访问两种方式
         if (algorithmConfig.ssrf_aws.action != 'ignore')
         {
             if (ip == '169.254.169.254' || ip == '100.100.100.200'
@@ -2117,11 +2117,21 @@ plugin.register('xxe', function (params, context) {
         {
             if (address.length > 0 && protocol === 'file' && is_absolute_path(address, is_win) )
             {
+                // PHP 不允许使用 fragment，无论是 XXE 还是 stream
+                // Java 支持 # ? 等方式
                 var address_lc = address.toLowerCase()
-                var urlObj = new URL(address_lc)
+                
+                // 1.0 Rhino 引擎不支持URL对象，考虑到 1.0 用户不多，先简单处理下
+                try
+                {
+                    var urlObj = new URL(address_lc)
+                    address_lc = urlObj.pathname
+                }
+                catch {}
+
                 // 过滤掉 xml、dtd
-                if (! urlObj.pathname.endsWith('.xml') &&
-                    ! urlObj.pathname.endsWith('.dtd'))
+                if (! address_lc.endsWith('.xml') &&
+                    ! address_lc.endsWith('.dtd'))
                 {
                     return {
                         action:     algorithmConfig.xxe_file.action,
