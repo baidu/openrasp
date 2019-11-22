@@ -11,6 +11,8 @@
 # ognl.expression.minlength: 30
 # clientip.header: ClientIP
 # lru.max_size: 100
+# lru.compare_enable: false
+# lru.compare_limit: 10240
 # inject.urlprefix:
 # log.maxburst: 100
 # log.maxbackup: 30

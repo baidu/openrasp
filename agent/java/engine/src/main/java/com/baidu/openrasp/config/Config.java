@@ -88,7 +88,9 @@ public class Config extends FileScanListener {
         CPU_USAGE_PERCENT("cpu.usage.percent", "90"),
         CPU_USAGE_ENABLE("cpu.usage.enable", "false"),
         CPU_USAGE_INTERVAL("cpu.usage.interval", "5"),
-        HTTPS_VERIFY_SSL("openrasp.ssl_verifypeer", "false");
+        HTTPS_VERIFY_SSL("openrasp.ssl_verifypeer", "false"),
+        LRU_COMPARE_ENABLE("lru.compare_enable", "false"),
+        LRU_COMPARE_LIMIT("lru.compare_limit", "10240");
 
 
         Item(String key, String defaultValue) {
@@ -166,6 +168,8 @@ public class Config extends FileScanListener {
     private boolean isHttpsVerifyPeer;
     private String raspId;
     private HashSet<Integer> sqlErrorCodes = new HashSet<Integer>();
+    private boolean lruCompareEnable;
+    private int lruCompareLimit;
 
 
     static {
@@ -682,6 +686,53 @@ public class Config extends FileScanListener {
      */
     public int getDebugLevel() {
         return debugLevel;
+    }
+
+    /**
+     * 设置 LRU 内容匹配开关
+     *
+     * @param lruCompareEnable lru 匹配开关
+     */
+    public synchronized void setLruCompareEnable(String lruCompareEnable) {
+        boolean value = Boolean.parseBoolean(lruCompareEnable);
+        if (value != this.lruCompareEnable) {
+            this.lruCompareEnable = value;
+            commonLRUCache.clear();
+        }
+    }
+
+    /**
+     * 获取 LRU 内容匹配开关
+     *
+     * @return LRU 内容匹配开关
+     */
+    public boolean getLruCompareEnable() {
+        return lruCompareEnable;
+    }
+
+    /**
+     * 设置 LRU 匹配最长字节
+     *
+     * @param lruCompareLimit LRU 匹配最长字节
+     */
+    public synchronized void setLruCompareLimit(String lruCompareLimit) {
+        int value = Integer.parseInt(lruCompareLimit);
+        if (value <= 0 || value > 102400) {
+            throw new ConfigLoadException(Item.LRU_COMPARE_LIMIT.name() + " must be between [1,102400]");
+        }
+        if (value < this.lruCompareLimit) {
+            commonLRUCache.clear();
+        }
+        this.lruCompareLimit = value;
+    }
+
+    /**
+     * 获取 LRU 匹配最长字节
+     *
+     * @return LRU 匹配最长字节
+     */
+    public int getLruCompareLimit() {
+        return lruCompareLimit;
     }
 
     /**
@@ -1437,6 +1488,12 @@ public class Config extends FileScanListener {
             } else if (Item.CPU_USAGE_INTERVAL.key.equals(key)) {
                 setCpuUsageCheckInterval(value);
                 currentValue = getCpuUsageCheckInterval();
+            } else if (Item.LRU_COMPARE_ENABLE.key.equals(key)) {
+                setLruCompareEnable(value);
+                currentValue = getLruCompareEnable();
+            } else if (Item.LRU_COMPARE_LIMIT.key.equals(key)) {
+                setLruCompareLimit(value);
+                currentValue = getLruCompareLimit();
             } else {
                 isHit = false;
             }
