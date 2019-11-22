@@ -67,6 +67,17 @@ public abstract class AbstractRequest {
     }
 
     /**
+     * constructor
+     *
+     * @param request 请求实体
+     */
+    public AbstractRequest(Object request, String requestId) {
+        this.request = request;
+        this.requestId = requestId;
+        this.maxBodySize = Config.getConfig().getBodyMaxBytes();
+    }
+
+    /**
      * constructor 测试时使用的构造函数
      */
     public AbstractRequest(int request) {

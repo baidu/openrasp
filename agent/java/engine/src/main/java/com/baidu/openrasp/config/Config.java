@@ -36,9 +36,9 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -48,7 +48,9 @@ import java.util.Map;
  */
 public class Config extends FileScanListener {
 
-    static final int MAX_SQL_EXCEPTION_CODES_CONUT = 100;
+    static final int MAX_SQL_EXCEPTION_CODES_COUNT = 100;
+    static final int MAX_LOG_REGEX_COUNT = 20;
+    static final int MAX_LOG_REGEX_LENGTH = 200;
     static final String CONFIG_DIR_NAME = "conf";
     static final String CONFIG_FILE_NAME = "openrasp.yml";
     public static final Logger LOGGER = Logger.getLogger(Config.class.getName());
@@ -100,8 +102,11 @@ public class Config extends FileScanListener {
     int cpuUsageCheckInterval;
     boolean isHttpsVerifyPeer;
     String raspId;
-    HashSet<Integer> sqlErrorCodes = new HashSet<Integer>();
+    Map<String, Set<String>> sqlErrorCodes;
+    Map<String, Set<String>> sqlErrorStates;
+    Map<String, String> logSensitiveRegex;
     static Config instance;
+
 
     static {
         baseDirectory = FileUtil.getBaseDir();
@@ -452,6 +457,15 @@ public class Config extends FileScanListener {
     }
 
     /**
+     * 获取敏感日志检测正则
+     *
+     * @return 正则信息
+     */
+    public Map<String, String> getLogSensitiveRegex() {
+        return logSensitiveRegex;
+    }
+
+    /**
      * 获取 rasp id
      *
      * @return rasp id
@@ -520,8 +534,17 @@ public class Config extends FileScanListener {
      *
      * @return sql 错误码列表
      */
-    public HashSet<Integer> getSqlErrorCodes() {
+    public Map<String, Set<String>> getSqlErrorCodes() {
         return sqlErrorCodes;
+    }
+
+    /**
+     * 获取 sql 异常检测过滤的 sql 状态码
+     *
+     * @return sql 状态码列表
+     */
+    public Map<String, Set<String>> getSqlErrorStates() {
+        return sqlErrorStates;
     }
 
     /**

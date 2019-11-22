@@ -14,15 +14,6 @@ import (
 
 func TestSendMessage(t *testing.T) {
 	Convey("Subject: Test Kafka interface\n", t, func() {
-		Convey("when GetKafkaConfig occurs error", func() {
-			monkey.Patch(kafka.GetKafkaConfig, func() (kafka *kafka.Kafka, err error){
-				return nil, errors.New("")
-			})
-			defer monkey.Unpatch(kafka.GetKafkaConfig)
-			err := kafka.SendMessage("test", "test", map[string]interface{}{})
-			So(err, ShouldNotBeNil)
-		})
-
 		Convey("when NewSyncProducer occurs error", func() {
 			monkey.Patch(kafka.GetKafkaConfig, func() (kafkaClient *kafka.Kafka, err error){
 				return &kafka.Kafka{KafkaEnable:true}, nil
@@ -43,12 +34,6 @@ func TestSendMessage(t *testing.T) {
 				return &kafka.Kafka{KafkaEnable:true}, nil
 			})
 			defer monkey.Unpatch(kafka.GetKafkaConfig)
-
-			monkey.Patch(sarama.NewAsyncProducer,
-				func(addrs []string, conf *sarama.Config) (sarama.AsyncProducer, error){
-					return nil, nil
-				})
-			defer monkey.Unpatch(sarama.NewAsyncProducer)
 			err := kafka.SendMessage("test", "test", map[string]interface{}{})
 			So(err, ShouldNotBeNil)
 		})
@@ -64,6 +49,34 @@ func TestGetKafkaConfig(t *testing.T) {
 			monkey.Unpatch(mongo.FindId)
 			_, err := kafka.GetKafkaConfig()
 			So(err, ShouldEqual, nil)
+		})
+	})
+}
+
+func TestSendMessages(t *testing.T) {
+	Convey("Subject: Test Kafka interface\n", t, func() {
+		Convey("when NewSyncProducer occurs error", func() {
+			monkey.Patch(kafka.GetKafkaConfig, func() (kafkaClient *kafka.Kafka, err error){
+				return &kafka.Kafka{KafkaEnable:true}, nil
+			})
+			defer monkey.Unpatch(kafka.GetKafkaConfig)
+
+			monkey.Patch(sarama.NewAsyncProducer,
+				func(addrs []string, conf *sarama.Config) (sarama.AsyncProducer, error){
+					return nil, errors.New("")
+				})
+			defer monkey.Unpatch(sarama.NewAsyncProducer)
+			err := kafka.SendMessages("test", "test", []interface{}{})
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("when producer SendMessage occurs error", func() {
+			monkey.Patch(kafka.GetKafkaConfig, func() (kafkaClient *kafka.Kafka, err error){
+				return &kafka.Kafka{KafkaEnable:true}, nil
+			})
+			defer monkey.Unpatch(kafka.GetKafkaConfig)
+			err := kafka.SendMessages("test", "test", []interface{}{})
+			So(err, ShouldNotBeNil)
 		})
 	})
 }

@@ -17,9 +17,9 @@
 package com.baidu.openrasp.plugin.checker;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.plugin.checker.local.LogChecker;
 import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.XssChecker;
+import com.baidu.openrasp.plugin.checker.policy.LogChecker;
 import com.baidu.openrasp.plugin.checker.policy.MongoConnectionChecker;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
 import com.baidu.openrasp.plugin.checker.policy.server.*;
@@ -62,11 +62,11 @@ public class CheckParameter {
 
         // java本地检测
         XSS_USERINPUT("xss_userinput", new XssChecker(), 1 << 16),
-        LOG("log", new LogChecker(), 1 << 17),
         SQL_SLOW_QUERY("sqlSlowQuery", new SqlResultChecker(false), 0),
 
         // 安全基线检测
-        POLICY_MONGO_CONNECTION("mongoConnection", new MongoConnectionChecker(), 0),
+        POLICY_LOG("log", new LogChecker(false), 0),
+        POLICY_MONGO_CONNECTION("mongoConnection", new MongoConnectionChecker(false), 0),
         POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker(false), 0),
         POLICY_SERVER_TOMCAT("tomcatServer", new TomcatSecurityChecker(false), 0),
         POLICY_SERVER_JBOSS("jbossServer", new JBossSecurityChecker(false), 0),

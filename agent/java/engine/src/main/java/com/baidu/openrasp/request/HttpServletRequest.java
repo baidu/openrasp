@@ -46,6 +46,15 @@ public final class HttpServletRequest extends AbstractRequest {
     }
 
     /**
+     * 请求实体
+     *
+     * @param request 类型为javax.servlet.http.HttpServletRequest的请求实体
+     */
+    public HttpServletRequest(Object request, String requestId) {
+        super(request, requestId);
+    }
+
+    /**
      * (none-javadoc)
      *
      * @see AbstractRequest#getLocalAddr()

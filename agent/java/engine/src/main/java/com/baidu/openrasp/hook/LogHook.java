@@ -62,11 +62,17 @@ public class LogHook extends AbstractClassHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src1 = getInvokeStaticSrc(LogHook.class, "checkLogMessage", "\"" + type + "\"" + ",$3", String.class, Object.class);
-        String src2 = getInvokeStaticSrc(LogHook.class, "checkLogMessage", "\"" + type + "\"" + ",$4", String.class, Object.class);
-        insertBefore(ctClass, "forcedLog", null, src1);
-        insertBefore(ctClass, "logMessageSafely", null, src2);
-        insertBefore(ctClass, "buildLoggingEventAndAppend", null, src2);
+        String src1 = getInvokeStaticSrc(LogHook.class, "checkLogMessage",
+                "\"" + type + "\"" + ",$3", String.class, Object.class);
+        String src2 = getInvokeStaticSrc(LogHook.class, "checkLogMessage",
+                "\"" + type + "\"" + ",$4", String.class, Object.class);
+        if (this.type.equals(LOG4J)) {
+            insertBefore(ctClass, "forcedLog", null, src1);
+        } else if (this.type.equals(LOG4J2)) {
+            insertBefore(ctClass, "logMessageSafely", null, src2);
+        } else if (this.type.equals(LOGBACK)) {
+            insertBefore(ctClass, "buildLoggingEventAndAppend", null, src2);
+        }
     }
 
     public static void checkLogMessage(String type, Object message) {
@@ -81,7 +87,7 @@ public class LogHook extends AbstractClassHook {
                     logMessage = logMessage.toString();
                 }
                 params.put("message", logMessage);
-                HookHandler.doCheck(CheckParameter.Type.LOG, params);
+                HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_LOG, params);
             }
         }
     }

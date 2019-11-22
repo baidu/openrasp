@@ -49,6 +49,12 @@ func getValidApp() map[string]interface{} {
 			"sql":[]string{"email","ding","http"},
 			"xxe":[]string{"email"},
 		},
+		"kafka_conf": map[string]interface{}{
+			"kafka_addr":[]string{"127.0.0.1:8090"},
+			"kafka_user":"",
+			"kafka_pwd":"",
+			"kafka_enable":true,
+		},
 	}
 }
 
@@ -454,11 +460,11 @@ func TestConfigGenerate(t *testing.T) {
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
-		Convey("when length of config value is greater than 2048", func() {
+		Convey("when length of config value is greater than 4097", func() {
 			r := inits.GetResponse("POST", "/v1/api/app/general/config", inits.GetJson(map[string]interface{}{
 				"app_id": start.TestApp.Id,
 				"config": map[string]interface{}{
-					"clientip.header": inits.GetLongString(2049),
+					"clientip.header": inits.GetLongString(4097),
 				},
 			}))
 			So(r.Status, ShouldBeGreaterThan, 0)
