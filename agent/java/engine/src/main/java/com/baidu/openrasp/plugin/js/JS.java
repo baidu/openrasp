@@ -55,39 +55,6 @@ public class JS {
         Base64Support.enable();
     }
 
-    static class ByteArrayWrapper {
-        private byte[] bytes;
-        private ByteArrayWrapper(byte[] bytes) {
-            if (bytes == null) {
-                this.bytes = new byte[]{};
-            } else {
-                this.bytes = bytes;
-            }
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (!(o instanceof ByteArrayWrapper)) {
-                return false;
-            }
-            byte[] byteArray = ((ByteArrayWrapper) o).bytes;
-            if (byteArray.length != this.bytes.length) {
-                return false;
-            }
-            for (int i = 0; i < this.bytes.length; ++i) {
-                if (byteArray[i] != this.bytes[i]) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            return ByteBuffer.wrap(this.bytes).hashCode();
-        }
-    }
-
     public synchronized static boolean Initialize() {
         try {
             V8.Load();
@@ -140,12 +107,13 @@ public class JS {
         ByteArrayOutputStream params = new ByteArrayOutputStream();
         JsonStream.serialize(checkParameter.getParams(), params);
 
-        ByteArrayWrapper byteArrayWrapper = null;
-        if (type == Type.DIRECTORY || type == Type.READFILE || type == Type.WRITEFILE || type == Type.SQL || type == Type.SSRF) {
-            byteArrayWrapper = new ByteArrayWrapper(params.getByteArray());
+        ByteBuffer byteBuffer = null;
+        if ((type == Type.DIRECTORY || type == Type.READFILE || type == Type.WRITEFILE || type == Type.SQL || type == Type.SSRF)
+                && params.getByteArray().length < 1000) {
+            byteBuffer = ByteBuffer.wrap(params.getByteArray());
         }
-        if (byteArrayWrapper != null) {
-            if (Config.commonLRUCache.isContainsKey(byteArrayWrapper)) {
+        if (byteBuffer != null) {
+            if (Config.commonLRUCache.isContainsKey(byteBuffer)) {
                 return null;
             }
         }
@@ -160,8 +128,8 @@ public class JS {
         }
 
         if (results == null) {
-            if (byteArrayWrapper != null && Config.commonLRUCache.maxSize() != 0) {
-                Config.commonLRUCache.put(byteArrayWrapper, null);
+            if (byteBuffer != null && Config.commonLRUCache.maxSize() != 0) {
+                Config.commonLRUCache.put(byteBuffer, null);
             }
             return null;
         }
