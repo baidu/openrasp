@@ -54,6 +54,11 @@ func InitRouter() {
 				&agent.RaspController{},
 			),
 		),
+		beego.NSNamespace("/iast",
+			beego.NSInclude(
+				&agent.WebsocketController{},
+			),
+		),
 		beego.NSNamespace("/report",
 			beego.NSInclude(
 				&agent.ReportController{},
@@ -97,6 +102,11 @@ func InitRouter() {
 		beego.NSNamespace("/rasp",
 			beego.NSInclude(
 				&api.RaspController{},
+			),
+		),
+		beego.NSNamespace("/strategy",
+			beego.NSInclude(
+				&api.StrategyController{},
 			),
 		),
 		beego.NSNamespace("/token",

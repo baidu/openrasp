@@ -306,6 +306,15 @@ func init() {
 
     beego.GlobalControllerRouter["rasp-cloud/controllers/api:ServerController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:ServerController"],
         beego.ControllerComments{
+            Method: "ClearLogs",
+            Router: `/clear_logs`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:ServerController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:ServerController"],
+        beego.ControllerComments{
             Method: "PutUrl",
             Router: `/url`,
             AllowHTTPMethods: []string{"post"},
@@ -322,10 +331,46 @@ func init() {
             Filters: nil,
             Params: nil})
 
-    beego.GlobalControllerRouter["rasp-cloud/controllers/api:ServerController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:ServerController"],
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:StrategyController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:StrategyController"],
         beego.ControllerComments{
-            Method: "ClearLogs",
-            Router: `/clear_logs`,
+            Method: "Post",
+            Router: `/`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:StrategyController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:StrategyController"],
+        beego.ControllerComments{
+            Method: "ConfigStrategy",
+            Router: `/config`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:StrategyController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:StrategyController"],
+        beego.ControllerComments{
+            Method: "Delete",
+            Router: `/delete`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:StrategyController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:StrategyController"],
+        beego.ControllerComments{
+            Method: "Search",
+            Router: `/search`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:StrategyController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:StrategyController"],
+        beego.ControllerComments{
+            Method: "Select",
+            Router: `/select`,
             AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,
@@ -398,6 +443,24 @@ func init() {
         beego.ControllerComments{
             Method: "Update",
             Router: `/update`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:WebsocketController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:WebsocketController"],
+        beego.ControllerComments{
+            Method: "Get",
+            Router: `/`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:WebsocketController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:WebsocketController"],
+        beego.ControllerComments{
+            Method: "Post",
+            Router: `/`,
             AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,
