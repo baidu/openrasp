@@ -132,7 +132,7 @@
             <input v-model="data['cpu.usage.enable']" type="checkbox" checked="data['cpu.usage.enable']" class="custom-switch-input">
             <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
-              开启熔断保护:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 当CPU占用持续超过某个值，关闭所有防护（仅Java支持）
+              开启熔断保护:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 当CPU占用持续超过某个值，关闭所有防护（仅 Java >= 1.2.1 支持）
             </span>
           </label>
           <br>
@@ -160,7 +160,7 @@
             <input v-model="data['lru.compare_enable']" type="checkbox" checked="data['lru.compare_enable']" class="custom-switch-input">
             <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
-              开启 LRU 原始字符串比较（仅Java支持）
+              开启 LRU 原始字符串比较（仅 Java >= 1.2.2 支持）
             </span>
           </label>
         </div>          
