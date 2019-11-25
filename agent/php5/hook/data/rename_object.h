@@ -37,7 +37,6 @@ private:
 
 public:
     RenameObject(zval *source, zval *target, bool plugin_filter);
-    virtual ~RenameObject(){};
     virtual bool is_valid() const;
 
     //v8

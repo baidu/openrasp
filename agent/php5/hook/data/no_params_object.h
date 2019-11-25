@@ -24,15 +24,13 @@ namespace openrasp
 namespace data
 {
 
-class SqlObject : public V8Material
+class NoParamsObject : public V8Material
 {
 private:
-    //do not efree here
-    zval *query = nullptr;
-    std::string server;
+    OpenRASPCheckType check_type;
 
 public:
-    SqlObject(const std::string &server, zval *query);
+    NoParamsObject(const OpenRASPCheckType check_type);
     virtual std::string build_lru_key() const;
     virtual OpenRASPCheckType get_v8_check_type() const;
     virtual bool is_valid() const;

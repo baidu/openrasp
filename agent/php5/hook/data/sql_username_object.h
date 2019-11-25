@@ -29,7 +29,6 @@ private:
 
 public:
     SqlUsernameObject(const SqlConnectionObject &sql_connection_object);
-    virtual ~SqlUsernameObject(){};
 
     virtual bool is_valid() const;
 

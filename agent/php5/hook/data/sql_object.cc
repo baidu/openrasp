@@ -27,10 +27,6 @@ SqlObject::SqlObject(const std::string &server, zval *query)
     this->query = query;
 }
 
-SqlObject::~SqlObject()
-{
-}
-
 bool SqlObject::is_valid() const
 {
     return nullptr != query &&

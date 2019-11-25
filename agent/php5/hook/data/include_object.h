@@ -36,7 +36,6 @@ private:
 
 public:
     IncludeObject(zval *filename, const std::string &document_root, const std::string &function, bool plugin_filter);
-    virtual ~IncludeObject(){};
     virtual std::string build_lru_key() const;
     virtual OpenRASPCheckType get_v8_check_type() const;
     virtual bool is_valid() const;

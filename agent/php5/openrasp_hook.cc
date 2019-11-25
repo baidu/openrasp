@@ -245,37 +245,6 @@ std::string fetch_name_in_request(zval *item, std::string &var_type)
     return name;
 }
 
-void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckType type, int confidence, zval *params,
-                                      zval *message TSRMLS_DC)
-{
-    if (AC_IGNORE == action)
-    {
-        return;
-    }
-    add_stack_to_params(params TSRMLS_CC);
-    zval *params_result = nullptr;
-    MAKE_STD_ZVAL(params_result);
-    array_init(params_result);
-    add_assoc_string(params_result, "intercept_state", const_cast<char *>(action_to_string(action).c_str()), 1);
-    add_assoc_string(params_result, "attack_type", const_cast<char *>(get_check_type_name(type).c_str()), 1);
-    add_assoc_string(params_result, "plugin_algorithm", const_cast<char *>(get_check_type_name(type).c_str()), 1);
-    add_assoc_string(params_result, "plugin_name", const_cast<char *>("php_builtin_plugin"), 1);
-    add_assoc_long(params_result, "plugin_confidence", confidence);
-    add_assoc_zval(params_result, "attack_params", params);
-    add_assoc_zval(params_result, "plugin_message", message);
-    std::string base_str = json_encode_from_zval(params_result TSRMLS_CC);
-    zval_ptr_dtor(&params_result);
-    openrasp::JsonReader base_json(base_str);
-    if (!base_json.has_error())
-    {
-        LOG_G(alarm_logger).log(LEVEL_INFO, base_json TSRMLS_CC);
-    }
-    if (AC_BLOCK == action)
-    {
-        handle_block(TSRMLS_C);
-    }
-}
-
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC)
 {
     if (!LOG_G(in_request_process))
@@ -339,11 +308,6 @@ void reset_response(TSRMLS_D)
 void block_handle()
 {
     TSRMLS_FETCH();
-    handle_block(TSRMLS_C);
-}
-
-void handle_block(TSRMLS_D)
-{
     if (OUTPUT_G(output_detect))
     {
         return;

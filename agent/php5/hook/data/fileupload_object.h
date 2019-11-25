@@ -38,7 +38,6 @@ private:
 
 public:
     FileuploadObject(const openrasp::request::Parameter &parameter, zval *path, zval *dest, const std::string &content);
-    virtual ~FileuploadObject(){};
     virtual std::string build_lru_key() const;
     virtual OpenRASPCheckType get_v8_check_type() const;
     virtual bool is_valid() const;

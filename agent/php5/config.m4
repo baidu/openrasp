@@ -503,6 +503,8 @@ int main() {
     hook/data/include_object.cc \
     hook/data/eval_object.cc \
     hook/data/putenv_object.cc \
+    hook/data/no_params_object.cc \
+    hook/data/xss_userinput_object.cc \
     hook/checker/policy_detector.cc \
     hook/checker/builtin_detector.cc \
     hook/checker/v8_detector.cc \

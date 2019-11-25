@@ -33,7 +33,6 @@ private:
 
 public:
     FilePutWebshellObject(zval *file, zval *content, bool use_include_path);
-    virtual ~FilePutWebshellObject(){};
     virtual bool is_valid() const;
     virtual OpenRASPCheckType get_builtin_check_type() const;
     virtual void fill_json_with_params(JsonReader &j) const;

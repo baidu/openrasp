@@ -31,7 +31,6 @@ protected:
 
 public:
     MongoConnectionObject() = default;
-    virtual ~MongoConnectionObject(){};
 
     virtual bool is_valid() const;
 

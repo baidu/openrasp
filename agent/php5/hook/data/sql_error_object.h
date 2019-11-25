@@ -36,7 +36,6 @@ protected:
 public:
     SqlErrorObject(const V8Material &v8_material, const std::string &sql_type, const std::string &str_code, const std::string &error_msg);
     SqlErrorObject(const V8Material &v8_material, const std::string &sql_type, long num_code, const std::string &error_msg);
-    virtual ~SqlErrorObject(){};
 
     virtual bool is_valid() const;
 

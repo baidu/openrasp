@@ -33,7 +33,6 @@ private:
 
 public:
     CommandObject(zval *command);
-    virtual ~CommandObject(){};
 
     virtual bool is_valid() const;
 

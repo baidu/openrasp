@@ -24,9 +24,6 @@ namespace data
 SqlConnectionObject::SqlConnectionObject()
 {
 }
-SqlConnectionObject::~SqlConnectionObject()
-{
-}
 
 bool SqlConnectionObject::is_valid() const
 {

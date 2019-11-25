@@ -29,7 +29,6 @@ private:
 
 public:
     SqlPasswordObject(const SqlConnectionObject &sql_connection_object);
-    virtual ~SqlPasswordObject(){};
 
     virtual bool is_valid() const;
 

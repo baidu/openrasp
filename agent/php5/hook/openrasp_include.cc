@@ -150,21 +150,9 @@ void pre_global_assert_WEBSHELL_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         return;
     }
-    {
-        if (openrasp_zval_in_request(*assertion))
-        {
-            zval *attack_params = nullptr;
-            MAKE_STD_ZVAL(attack_params);
-            array_init(attack_params);
-            add_assoc_zval(attack_params, "eval", *assertion);
-            Z_ADDREF_PP(assertion);
-            zval *plugin_message = nullptr;
-            MAKE_STD_ZVAL(plugin_message);
-            ZVAL_STRING(plugin_message, _("WebShell activity - Detected China Chopper (assert method)"), 1);
-            OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
-            openrasp_buildin_php_risk_handle(action, check_type, 100, attack_params, plugin_message TSRMLS_CC);
-        }
-    }
+    openrasp::data::EvalObject eval_obj(*assertion, "assert");
+    openrasp::checker::BuiltinDetector builtin_detector(eval_obj);
+    builtin_detector.run();
 }
 
 void pre_global_assert_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -177,21 +165,8 @@ void pre_global_assert_EVAL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     {
         return;
     }
-    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-    if (isolate && Z_TYPE_PP(assertion) == IS_STRING)
-    {
-        openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
-        {
-            v8::HandleScope handle_scope(isolate);
-            auto context = isolate->GetCurrentContext();
-            auto params = v8::Object::New(isolate);
-            params->Set(context, openrasp::NewV8String(isolate, "code"), openrasp::NewV8String(isolate, Z_STRVAL_PP(assertion), Z_STRLEN_PP(assertion))).IsJust();
-            params->Set(context, openrasp::NewV8String(isolate, "function"), openrasp::NewV8String(isolate, "assert")).IsJust();
-            check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
-        }
-        if (check_result == openrasp::CheckResult::kBlock)
-        {
-            handle_block(TSRMLS_C);
-        }
-    }
+
+    openrasp::data::EvalObject eval_obj(*assertion, "assert");
+    openrasp::checker::V8Detector v8_detector(eval_obj, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+    v8_detector.run();
 }

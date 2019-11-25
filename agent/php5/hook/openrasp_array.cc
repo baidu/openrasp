@@ -88,10 +88,7 @@ void pre_global_array_walk_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_reflectionfunction___construct_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *name = nullptr;
     zval *closure = nullptr;
-    char *lcname = nullptr;
-    zend_function *fptr = nullptr;
     zval *name_str = nullptr;
 
     if (zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, ZEND_NUM_ARGS() TSRMLS_CC, "o", &closure) == SUCCESS)

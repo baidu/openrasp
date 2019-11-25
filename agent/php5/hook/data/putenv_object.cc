@@ -33,7 +33,8 @@ bool PutenvObject::is_valid() const
 }
 void PutenvObject::fill_json_with_params(JsonReader &j) const
 {
-    j.write_string({"attack_params", "url"}, std::string(Z_STRVAL_P(env), Z_STRLEN_P(env)));
+    j.write_string({"attack_params", "env"}, std::string(Z_STRVAL_P(env), Z_STRLEN_P(env)));
+    j.write_string({"plugin_message"}, "WebShell activity - Detected LD_PRELOAD");
 }
 
 OpenRASPCheckType PutenvObject::get_builtin_check_type() const

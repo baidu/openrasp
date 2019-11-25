@@ -37,7 +37,6 @@ protected:
 
 public:
     SqlConnectionObject();
-    virtual ~SqlConnectionObject();
 
     virtual bool is_valid() const;
 

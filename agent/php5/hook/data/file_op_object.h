@@ -36,7 +36,6 @@ private:
 
 public:
     FileOpObject(zval *file, PathOperation w_op, bool use_include_path = false);
-    virtual ~FileOpObject(){};
     virtual bool is_valid() const;
 
     //v8

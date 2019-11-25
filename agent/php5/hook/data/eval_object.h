@@ -34,7 +34,6 @@ private:
 
 public:
     EvalObject(zval *code, const std::string &function);
-    virtual ~EvalObject(){};
 
     virtual bool is_valid() const;
 

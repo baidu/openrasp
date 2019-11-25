@@ -39,7 +39,6 @@ private:
 
 public:
     SsrfRedirectObject(zval *origin_url, zval *effective_url, const std::string &function, int curl_error, int http_status);
-    virtual ~SsrfRedirectObject(){};
     virtual std::string build_lru_key() const;
     virtual OpenRASPCheckType get_v8_check_type() const;
     virtual bool is_valid() const;

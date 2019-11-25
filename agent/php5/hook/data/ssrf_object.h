@@ -35,7 +35,6 @@ private:
 
 public:
     SsrfObject(const std::string &function_name, zval *origin_url);
-    virtual ~SsrfObject(){};
     virtual std::string build_lru_key() const;
     virtual OpenRASPCheckType get_v8_check_type() const;
     virtual bool is_valid() const;

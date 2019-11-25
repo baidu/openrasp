@@ -36,7 +36,6 @@ private:
 
 public:
     CopyObject(zval *source, zval *target);
-    virtual ~CopyObject(){};
     virtual bool is_valid() const;
 
     //v8

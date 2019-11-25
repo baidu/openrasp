@@ -14,30 +14,33 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include "php_openrasp.h"
-#include "v8_material.h"
+#include "no_params_object.h"
 
 namespace openrasp
 {
 namespace data
 {
 
-class SqlObject : public V8Material
+NoParamsObject::NoParamsObject(const OpenRASPCheckType check_type)
 {
-private:
-    //do not efree here
-    zval *query = nullptr;
-    std::string server;
-
-public:
-    SqlObject(const std::string &server, zval *query);
-    virtual std::string build_lru_key() const;
-    virtual OpenRASPCheckType get_v8_check_type() const;
-    virtual bool is_valid() const;
-    virtual void fill_object_2b_checked(Isolate *isolate, v8::Local<v8::Object> params) const;
-};
+    this->check_type = check_type;
+}
+std::string NoParamsObject::build_lru_key() const
+{
+    return "";
+}
+OpenRASPCheckType NoParamsObject::get_v8_check_type() const
+{
+    return check_type;
+}
+bool NoParamsObject::is_valid() const
+{
+    return true;
+}
+void NoParamsObject::fill_object_2b_checked(Isolate *isolate, v8::Local<v8::Object> params) const
+{
+    return;
+}
 
 } // namespace data
 

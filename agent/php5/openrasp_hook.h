@@ -296,11 +296,8 @@ void register_hook_handler(hook_handler_t hook_handler, OpenRASPCheckType type, 
 
 const std::string get_check_type_name(OpenRASPCheckType check_type);
 
-void handle_block(TSRMLS_D);
 void block_handle();
 void reset_response(TSRMLS_D);
-void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckType type, int confidence,
-                                      zval *params, zval *message TSRMLS_DC);
 
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC);
 bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC);
