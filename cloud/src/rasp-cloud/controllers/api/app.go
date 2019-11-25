@@ -492,6 +492,10 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 				"the length of config key '"+key+"' must be less than 512")
 		}
 		if v, ok := value.(string); ok {
+			if key == "inject.custom_headers" && len(v) > 200{
+				o.ServeError(http.StatusBadRequest,
+					"the value's length of config item '"+key+"' must be less than 200")
+			}
 			if len(v) >= 2048 {
 				o.ServeError(http.StatusBadRequest,
 					"the value's length of config item '"+key+"' must be less than 2048")
