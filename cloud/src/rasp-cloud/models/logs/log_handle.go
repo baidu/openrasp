@@ -218,7 +218,6 @@ func AddLogWithFile(alarmType string, alarm map[string]interface{}) error {
 func AddLogWithKafka(alarmType string, log map[string]interface{}) error {
 	if appId, ok := log["app_id"].(string); ok {
 		kafkaIndex := "real-openrasp-" + alarmType + "-" + appId
-		beego.Info("index:", kafkaIndex, "alarm:", log)
 		err := kafka.SendMessage(kafkaIndex, kafkaIndex, log)
 		if err != nil {
 			return err
