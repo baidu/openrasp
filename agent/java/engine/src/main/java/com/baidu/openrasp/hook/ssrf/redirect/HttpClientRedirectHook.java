@@ -14,43 +14,46 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook.file;
+package com.baidu.openrasp.hook.ssrf.redirect;
 
-import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
 
-import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 
 /**
- * @description: RandomAccessFile 读文件 hook点
- * @author: anyang
- * @create: 2019/05/28 17:08
+ * Created by tyy on 19-11-25.
  */
 @HookAnnotation
-public class FileRandomAccessReadHook extends AbstractClassHook {
-    @Override
-    public boolean isClassMatched(String className) {
-        return "java/io/RandomAccessFile".equals(className);
-    }
+public class HttpClientRedirectHook extends AbstractRedirectHook {
+
+    public static ThreadLocal<URI> uriCache = new ThreadLocal<URI>() {
+        @Override
+        protected URI initialValue() {
+            return null;
+        }
+    };
 
     @Override
-    public String getType() {
-        return "readFile";
+    public boolean isClassMatched(String className) {
+        return "org/apache/http/impl/client/DefaultRedirectStrategy".equals(className)
+                || "org/apache/http/impl/client/DefaultRedirectHandler".equals(className);
     }
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String readSrc = getInvokeStaticSrc(FileRandomAccessReadHook.class, "checkReadFile", "$1", File.class);
-        insertBefore(ctClass.getConstructor("(Ljava/io/File;Ljava/lang/String;)V"), readSrc);
+        String src = getInvokeStaticSrc(HttpClientRedirectHook.class, "cacheHttpRedirect",
+                "$_", Object.class);
+        insertAfter(ctClass, "getLocationURI", null, src);
     }
 
-    public static void checkReadFile(File file) {
-        if (file != null && !file.getName().endsWith(".jar")) {
-            FileInputStreamHook.checkReadFile(file);
+    public static void cacheHttpRedirect(Object uri) {
+        if (uri instanceof URI) {
+            uriCache.set((URI) uri);
         }
     }
+
 }

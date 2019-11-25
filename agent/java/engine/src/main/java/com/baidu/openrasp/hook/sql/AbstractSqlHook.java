@@ -75,7 +75,7 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
     public void addCatch(CtClass ctClass, String methodName, String[] descs) throws NotFoundException, CannotCompileException {
         //目前只支持对mysql的执行异常检测
         for (String desc : descs) {
-            LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc);
+            LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc, null);
             if (methods != null && methods.size() > 0) {
                 for (CtBehavior method : methods) {
                     try {
@@ -95,7 +95,7 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
      */
     public void addCatch(CtClass ctClass, String methodName, String desc, String query) throws NotFoundException, CannotCompileException {
         //目前只支持对mysql的执行异常检测
-        LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc);
+        LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc, null);
         if (methods != null && methods.size() > 0) {
             for (CtBehavior method : methods) {
                 if (method != null) {
