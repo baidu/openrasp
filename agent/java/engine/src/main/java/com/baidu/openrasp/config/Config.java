@@ -1247,6 +1247,18 @@ public class Config extends FileScanListener {
      * @param responseHeaders 待设置response header数组
      */
     public synchronized void setResponseHeaders(Map<Object, Object> responseHeaders) {
+        for (Map.Entry<Object, Object> entry : responseHeaders.entrySet()) {
+            String key = entry.getKey().toString();
+            String value = entry.getValue().toString();
+            if (key.length() == 0 || key.length() > 200) {
+                throw new ConfigLoadException("the length of " + Item.RESPONSE_HEADERS.name() +
+                        "'s key must be between [1,200]");
+            }
+            if (value.length() == 0 || value.length() > 200) {
+                throw new ConfigLoadException("the length of " + Item.RESPONSE_HEADERS.name() +
+                        "'s value must be between [1,200]");
+            }
+        }
         this.responseHeaders = responseHeaders;
         LOGGER.info(RESPONSE_HEADERS + ": " + responseHeaders);
     }
