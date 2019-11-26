@@ -52,12 +52,15 @@ std::string JsonReader::fetch_string(const std::vector<std::string> &keys, const
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
-    return j.at(ptr);
+    if (j.at(ptr).type() == nlohmann::detail::value_t::string)
+    {
+      return j.at(ptr);
+    }
   }
   catch (...)
   {
-    return default_value;
   }
+  return default_value;
 }
 
 int64_t JsonReader::fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value)
@@ -65,12 +68,15 @@ int64_t JsonReader::fetch_int64(const std::vector<std::string> &keys, const int6
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
-    return j.at(ptr);
+    if (j.at(ptr).type() == nlohmann::detail::value_t::number_integer)
+    {
+      return j.at(ptr);
+    }
   }
   catch (...)
   {
-    return default_value;
   }
+  return default_value;
 }
 
 bool JsonReader::fetch_bool(const std::vector<std::string> &keys, const bool &default_value)
@@ -78,12 +84,15 @@ bool JsonReader::fetch_bool(const std::vector<std::string> &keys, const bool &de
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
-    return j.at(ptr);
+    if (j.at(ptr).type() == nlohmann::detail::value_t::boolean)
+    {
+      return j.at(ptr);
+    }
   }
   catch (...)
   {
-    return default_value;
   }
+  return default_value;
 }
 
 void JsonReader::erase(const std::vector<std::string> &keys)
@@ -99,9 +108,12 @@ std::vector<std::string> JsonReader::fetch_object_keys(const std::vector<std::st
   try
   {
     json::reference ref = j.at(ptr);
-    for (json::iterator it = ref.begin(); it != ref.end(); ++it)
+    if (j.at(ptr).type() == nlohmann::detail::value_t::object)
     {
-      result.push_back(it.key());
+      for (json::iterator it = ref.begin(); it != ref.end(); ++it)
+      {
+        result.push_back(it.key());
+      }
     }
   }
   catch (...)
@@ -115,12 +127,15 @@ std::vector<std::string> JsonReader::fetch_strings(const std::vector<std::string
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
-    return j.at(ptr);
+    if (j.at(ptr).type() == nlohmann::detail::value_t::array)
+    {
+      return j.at(ptr);
+    }
   }
   catch (...)
   {
-    return default_value;
   }
+  return default_value;
 }
 
 std::string JsonReader::dump(const std::vector<std::string> &keys, bool pretty)
@@ -133,8 +148,8 @@ std::string JsonReader::dump(const std::vector<std::string> &keys, bool pretty)
   }
   catch (...)
   {
-    return "";
   }
+  return "";
 }
 
 std::string JsonReader::dump(bool pretty)
