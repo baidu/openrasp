@@ -116,7 +116,7 @@ void InjectBlock::update(BaseReader *reader)
   {
     if (!key.empty() && key.length() <= 200)
     {
-      const std::string &value = reader->fetch_string({"inject.custom_headers", key});
+      const std::string value = reader->fetch_string({"inject.custom_headers", key});
       if (!value.empty() && value.length() <= 200)
       {
         headers.emplace_back(key + ": " + value);

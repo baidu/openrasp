@@ -15,6 +15,7 @@
  */
 
 #include <sstream>
+#include <cstdlib>
 #include "json_reader.h"
 #include "utils/json.h"
 
@@ -52,9 +53,13 @@ std::string JsonReader::fetch_string(const std::vector<std::string> &keys, const
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
-    if (j.at(ptr).type() == nlohmann::detail::value_t::string)
+    if (j.at(ptr).is_string())
     {
-      return j.at(ptr);
+      return j.at(ptr).get<std::string>();
+    }
+    else if (j.at(ptr).is_number())
+    {
+      return std::to_string(j.at(ptr).get<int64_t>());
     }
   }
   catch (...)
@@ -68,9 +73,13 @@ int64_t JsonReader::fetch_int64(const std::vector<std::string> &keys, const int6
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
-    if (j.at(ptr).type() == nlohmann::detail::value_t::number_integer)
+    if (j.at(ptr).is_number())
     {
-      return j.at(ptr);
+      return j.at(ptr).get<int64_t>();
+    }
+    else if (j.at(ptr).is_string())
+    {
+      return atoi(j.at(ptr).get<std::string>().c_str());
     }
   }
   catch (...)
@@ -84,7 +93,7 @@ bool JsonReader::fetch_bool(const std::vector<std::string> &keys, const bool &de
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
-    if (j.at(ptr).type() == nlohmann::detail::value_t::boolean)
+    if (j.at(ptr).is_boolean())
     {
       return j.at(ptr);
     }
@@ -108,7 +117,7 @@ std::vector<std::string> JsonReader::fetch_object_keys(const std::vector<std::st
   try
   {
     json::reference ref = j.at(ptr);
-    if (j.at(ptr).type() == nlohmann::detail::value_t::object)
+    if (j.at(ptr).is_object())
     {
       for (json::iterator it = ref.begin(); it != ref.end(); ++it)
       {
@@ -127,7 +136,7 @@ std::vector<std::string> JsonReader::fetch_strings(const std::vector<std::string
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
-    if (j.at(ptr).type() == nlohmann::detail::value_t::array)
+    if (j.at(ptr).is_array())
     {
       return j.at(ptr);
     }
