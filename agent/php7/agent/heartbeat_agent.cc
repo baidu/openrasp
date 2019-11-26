@@ -165,12 +165,20 @@ bool HeartBeatAgent::do_heartbeat()
 				oam->set_dependency_interval(dependency_interval);
 
 				//webdir scan check
-				int64_t webdir_scan_interval = body_reader->fetch_int64({"data", "config", "webroot_scan.interval"}, OpenraspCtrlBlock::default_webdir_scan_interval);
+				int64_t webdir_scan_interval = body_reader->fetch_int64({"data", "config", "fileleak_scan.interval"}, OpenraspCtrlBlock::default_webdir_scan_interval);
 				oam->set_webdir_scan_interval(webdir_scan_interval);
 
-				//webdie scan
-				int64_t scan_limit = body_reader->fetch_int64({"data", "config", "webroot_scan.scan_limit"}, OpenraspCtrlBlock::default_scan_limit);
+				//webdir scan
+				int64_t scan_limit = body_reader->fetch_int64({"data", "config", "fileleak_scan.limit"}, OpenraspCtrlBlock::default_scan_limit);
 				oam->set_scan_limit(scan_limit);
+
+				//webdir scan regex
+				std::string scan_regex = body_reader->fetch_string({"data", "config", "fileleak_scan.name"}, "");
+				if (scan_regex.empty() || scan_regex.length() > 100)
+				{
+					scan_regex = OpenraspCtrlBlock::default_scan_regex;
+				}
+				oam->set_webdir_scan_regex(scan_regex.c_str());
 
 				scm->build_weak_password_array(body_reader);
 

@@ -3,6 +3,18 @@ hook pg_query error
 --SKIPIF--
 <?php
 $plugin = <<<EOF
+RASP.algorithmConfig = {
+    sql_exception: {
+        name:      '算法3 - 记录数据库异常',
+        action:    'log',
+        reference: 'https://rasp.baidu.com/doc/dev/official.html#sql-exception',
+        pgsql: {
+            error_code: [
+                '42P01'
+            ]
+        }
+    }
+}
 plugin.register('sql_exception', params => {
     plugin.log(params)
     assert(params.server == 'pgsql')

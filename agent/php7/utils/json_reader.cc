@@ -191,6 +191,13 @@ void JsonReader::write_vector(const std::vector<std::string> &keys, const std::v
   j[ptr] = j_vec;
 }
 
+void JsonReader::write_int64_vector(const std::vector<std::string> &keys, const std::vector<int> &value)
+{
+  json j_vec(value);
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
+  j[ptr] = j_vec;
+}
+
 void JsonReader::merge(const JsonReader &patch)
 {
   j.merge_patch(patch.j);

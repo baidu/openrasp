@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_hook.h"
+#include "openrasp_log.h"
 #include "openrasp_ini.h"
 #include "openrasp_inject.h"
 #include "openrasp_v8.h"
@@ -54,11 +55,6 @@ void register_hook_handler(hook_handler_t hook_handler, OpenRASPCheckType type, 
     {
         global_hook_handlers[hp][(global_hook_handlers_len[hp])++] = hook_handler;
     }
-}
-
-const std::string get_check_type_name(OpenRASPCheckType type)
-{
-    return CheckTypeTransfer::instance().type_to_name(type);
 }
 
 bool openrasp_zval_in_request(zval *item)
@@ -110,35 +106,6 @@ std::string fetch_name_in_request(zval *item, std::string &var_type)
     return name;
 }
 
-void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckType type, int confidence, zval *params, zval *message)
-{
-    if (AC_IGNORE == action)
-    {
-        return;
-    }
-    add_stack_to_params(params);
-    zval params_result;
-    array_init(&params_result);
-    add_assoc_zval(&params_result, "attack_params", params);
-    add_assoc_zval(&params_result, "plugin_message", message);
-    add_assoc_long(&params_result, "plugin_confidence", confidence);
-    add_assoc_string(&params_result, "attack_type", const_cast<char *>(get_check_type_name(type).c_str()));
-    add_assoc_string(&params_result, "plugin_algorithm", const_cast<char *>(get_check_type_name(type).c_str()));
-    add_assoc_string(&params_result, "intercept_state", const_cast<char *>(action_to_string(action).c_str()));
-    add_assoc_string(&params_result, "plugin_name", const_cast<char *>("php_builtin_plugin"));
-    std::string base_str = json_encode_from_zval(&params_result TSRMLS_CC);
-    zval_ptr_dtor(&params_result);
-    openrasp::JsonReader base_json(base_str);
-    if (!base_json.has_error())
-    {
-        LOG_G(alarm_logger).log(LEVEL_INFO, base_json);
-    }
-    if (AC_BLOCK == action)
-    {
-        handle_block();
-    }
-}
-
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type)
 {
     if (!LOG_G(in_request_process))
@@ -155,16 +122,6 @@ bool openrasp_check_type_ignored(OpenRASPCheckType check_type)
         return true;
     }
     return false;
-}
-
-bool openrasp_check_callable_black(const char *item_name, uint item_name_length)
-{
-    std::vector<std::string> callable_blacklist =
-        OPENRASP_CONFIG(webshell_callable.blacklist);
-
-    return std::find(callable_blacklist.begin(),
-                     callable_blacklist.end(),
-                     std::string(item_name, item_name_length)) != callable_blacklist.end();
 }
 
 std::string openrasp_real_path(const char *filename, int length, bool use_include_path, uint32_t w_op)
@@ -193,7 +150,7 @@ std::string openrasp_real_path(const char *filename, int length, bool use_includ
     resolved_path = php_resolve_path(filename, length, use_include_path ? PG(include_path) : nullptr);
     if (nullptr == resolved_path)
     {
-        const char *p = fetch_url_scheme(filename);
+        const char *p = determine_scheme_pos(filename);
         if (nullptr != p)
         {
             php_stream_wrapper *wrapper = nullptr;
@@ -316,7 +273,7 @@ void reset_response()
     }
 }
 
-void handle_block()
+void block_handle()
 {
     if (OUTPUT_G(output_detect))
     {

@@ -20,6 +20,8 @@
 
 namespace openrasp
 {
+namespace request
+{
 class Url
 {
 private:
@@ -55,4 +57,6 @@ public:
     std::string get_path() const;
     int get_port() const;
 };
+} // namespace request
+
 } // namespace openrasp

@@ -21,7 +21,17 @@
 namespace openrasp
 {
 
-Url::Url(std::string url_string)
+Url::Url()
+{
+  parse_error = true;
+}
+
+Url::Url(const std::string &url_string)
+{
+  parse(url_string);
+}
+
+void Url::parse(const std::string &url_string)
 {
 #if (LIBCURL_VERSION_MAJOR >= 7) && (LIBCURL_VERSION_MINOR >= 62)
   CURLUcode rc;
@@ -53,20 +63,39 @@ Url::Url(std::string url_string)
       curl_free(libcurl_port);
     }
 
+    char *libcurl_path;
+    rc = curl_url_get(url, CURLUPART_PATH, &libcurl_path, 0);
+    if (!rc)
+    {
+      path = std::string(libcurl_path);
+      curl_free(libcurl_path);
+    }
+
+    char *libcurl_query;
+    rc = curl_url_get(url, CURLUPART_QUERY, &libcurl_query, 0);
+    if (!rc)
+    {
+      path = std::string(libcurl_query);
+      curl_free(libcurl_query);
+    }
+
     curl_url_cleanup(url);
+    parse_error = false;
   }
   else
   {
     parse_error = true;
   }
 #else
-  if (!openrasp_parse_url(url_string, scheme, host, port) || scheme.empty())
+  if (!openrasp_parse_url(url_string, *this) || scheme.empty())
   {
-    if (!openrasp_parse_url("http://" + url_string, scheme, host, port))
+    if (!openrasp_parse_url("http://" + url_string, *this))
     {
       parse_error = true;
+      return;
     }
   }
+  parse_error = false;
 #endif
 }
 
@@ -75,6 +104,10 @@ bool Url::has_error() const
   return parse_error;
 }
 
+std::string Url::get_scheme() const
+{
+  return scheme;
+}
 std::string Url::get_host() const
 {
   return host;
@@ -83,6 +116,44 @@ std::string Url::get_host() const
 std::string Url::get_port() const
 {
   return port;
+}
+
+std::string Url::get_path() const
+{
+  return path;
+}
+std::string Url::get_query() const
+{
+  return query;
+}
+void Url::set_scheme(const std::string &scheme)
+{
+  this->scheme = scheme;
+}
+void Url::set_host(const std::string &host)
+{
+  this->host = host;
+}
+void Url::set_port(const std::string &port)
+{
+  this->port = port;
+}
+void Url::set_path(const std::string &path)
+{
+  this->path = path;
+}
+void Url::set_query(const std::string &query)
+{
+  this->query = query;
+}
+
+bool operator==(const openrasp::Url &lhs, const openrasp::Url &rhs)
+{
+  return lhs.get_scheme() == rhs.get_scheme() &&
+         lhs.get_host() == rhs.get_host() &&
+         lhs.get_port() == rhs.get_port() &&
+         lhs.get_path() == rhs.get_path() &&
+         lhs.get_query() == rhs.get_query();
 }
 
 } // namespace openrasp

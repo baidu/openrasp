@@ -55,11 +55,6 @@ typedef struct _track_vars_pair_t
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_hook)
 
-const std::string get_check_type_name(OpenRASPCheckType type)
-{
-    return CheckTypeTransfer::instance().type_to_name(type);
-}
-
 std::string openrasp_real_path(const char *filename, int filename_len, bool use_include_path, uint32_t w_op)
 {
     TSRMLS_FETCH();

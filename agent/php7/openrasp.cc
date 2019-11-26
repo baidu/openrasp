@@ -20,6 +20,8 @@
 #include "utils/string.h"
 #include "openrasp.h"
 #include "openrasp_ini.h"
+#include "hook/checker/v8_detector.h"
+#include "hook/data/no_params_object.h"
 
 extern "C"
 {
@@ -291,10 +293,12 @@ PHP_RINIT_FUNCTION(openrasp)
             zval *http_global_server = fetch_http_globals(TRACK_VARS_SERVER);
             if (http_global_server)
             {
-                const char *webroot = fetch_outmost_string_from_ht(Z_ARRVAL_P(http_global_server), "DOCUMENT_ROOT");
-                if (webroot && openrasp::oam->path_writable() && !openrasp::oam->path_exist(zend_inline_hash_func(webroot, strlen(webroot))))
+                const std::string webroot = fetch_outmost_string_from_ht(Z_ARRVAL_P(http_global_server), "DOCUMENT_ROOT");
+                if (!webroot.empty() &&
+                    openrasp::oam->path_writable() &&
+                    !openrasp::oam->path_exist(zend_inline_hash_func(webroot.c_str(), webroot.length())))
                 {
-                    openrasp::oam->write_webroot_path(webroot);
+                    openrasp::oam->write_webroot_path(webroot.c_str());
                 }
             }
         }
@@ -396,20 +400,7 @@ static void hook_without_params(OpenRASPCheckType check_type)
     {
         return;
     }
-    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-    if (!isolate)
-    {
-        return;
-    }
-    openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
-    {
-        v8::HandleScope handle_scope(isolate);
-        auto params = v8::Object::New(isolate);
-        check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(check_type)), params,
-                             OPENRASP_CONFIG(plugin.timeout.millis));
-    }
-    if (check_result == openrasp::CheckResult::kBlock)
-    {
-        handle_block();
-    }
+    openrasp::data::NoParamsObject no_params_obj(check_type);
+    openrasp::checker::V8Detector v8_detector(no_params_obj, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+    v8_detector.run();
 }

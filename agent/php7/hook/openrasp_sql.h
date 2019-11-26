@@ -17,81 +17,14 @@
 #ifndef OPENRASP_SQL_H
 #define OPENRASP_SQL_H
 
+#include "hook/data/sql_connection_object.h"
 #include "openrasp_v8.h"
 #include "openrasp_utils.h"
 
-class SqlConnectionEntry
-{
-public:
-  enum connection_policy_type
-  {
-    USER,
-    PASSWORD
-  };
+typedef bool (*init_sql_connection_t)(INTERNAL_FUNCTION_PARAMETERS, openrasp::data::SqlConnectionObject &sql_connection_obj);
 
-protected:
-  std::string connection_string;
-  std::string server;
-  std::string host;
-  std::string username;
-  std::string socket;
-  std::string password;
-  int port = 0;
-  bool using_socket = true;
-  std::string get_type_name(SqlConnectionEntry::connection_policy_type type);
-  long get_type_id(SqlConnectionEntry::connection_policy_type type);
-
-public:
-  void set_connection_string(std::string connection_string);
-  std::string get_connection_string() const;
-
-  void set_server(std::string server);
-  std::string get_server() const;
-
-  void set_host(std::string host);
-  std::string get_host() const;
-
-  void set_username(std::string username);
-  std::string get_username() const;
-
-  void set_password(std::string password);
-  std::string get_password() const;
-
-  void set_socket(std::string socket);
-  std::string get_socket() const;
-
-  void set_port(int port);
-  int get_port() const;
-
-  std::string build_policy_msg(connection_policy_type type);
-  ulong build_hash_code(connection_policy_type type);
-
-  void set_using_socket(bool using_socket);
-  bool get_using_socket() const;
-
-  void set_name_value(const char *name, const char *val);
-
-  void connection_entry_policy_log(connection_policy_type type);
-  bool check_high_privileged();
-  bool check_weak_password();
-
-  virtual bool parse(std::string uri);
-  virtual void append_host_port(const std::string &host, int port);
-  virtual void build_connection_params(zval *params, connection_policy_type type);
-  virtual void build_exception_params(openrasp::Isolate *isolate, v8::Local<v8::Object> &params);
-};
-
-typedef SqlConnectionEntry sql_connection_entry;
-
-typedef bool (*init_connection_t)(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p);
-
-void plugin_sql_check(char *query, int query_len, const char *server);
-bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func, sql_connection_entry *conn_entry);
-
-bool is_mysql_error_code_monitored(long err_code);
-void sql_query_error_alarm(char *server, char *query, const std::string &err_code, const std::string &err_msg);
-void sql_connect_error_alarm(sql_connection_entry *conn_entry, const std::string &err_code, const std::string &err_msg);
-
+void plugin_sql_check(zval *query, const std::string &server);
+void sql_connection_policy_check(INTERNAL_FUNCTION_PARAMETERS, init_sql_connection_t connection_init_func, openrasp::data::SqlConnectionObject &sql_connection_obj);
 void pg_conninfo_parse(char *connstring, std::function<void(const char *pname, const char *pval)> info_store_func);
 
 #endif

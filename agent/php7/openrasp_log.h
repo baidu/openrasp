@@ -17,9 +17,9 @@
 #ifndef OPENRASP_LOG_H
 #define OPENRASP_LOG_H
 
+#include "utils/json_reader.h"
 #include "openrasp.h"
 #include "agent/shared_log_manager.h"
-#include "utils/json_reader.h"
 #include <map>
 
 #ifdef __cplusplus

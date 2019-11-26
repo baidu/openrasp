@@ -23,7 +23,8 @@
 
 namespace openrasp
 {
-
+namespace request
+{
 class Parameter
 {
 public:
@@ -69,5 +70,6 @@ public:
     void clear();
     void recursive_restore_files(std::vector<std::string> &keys, zval *name, zval *tmp_name);
 };
+} // namespace request
 
 } // namespace openrasp

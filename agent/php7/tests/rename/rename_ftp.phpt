@@ -5,8 +5,8 @@ hook rename
 $dir = __DIR__;
 $plugin = <<<EOF
 plugin.register('rename', params => {
-    assert(params.source == 'ftp://name:password@ftp.example.com/test.html')
-    assert(params.dest == 'ftp://name:password@ftp.example.com/test.html')
+    assert(params.source == 'ftp://name:password@ftp.example.com/src.html')
+    assert(params.dest == 'ftp://name:password@ftp.example.com/dest.html')
     return block
 })
 EOF;
@@ -16,7 +16,7 @@ include(__DIR__.'/../skipif.inc');
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-rename('ftp://name:password@ftp.example.com/test.html', 'ftp://name:password@ftp.example.com/test.html');
+rename('ftp://name:password@ftp.example.com/src.html', 'ftp://name:password@ftp.example.com/dest.html');
 echo 'no check';
 ?>
 --EXPECTREGEX--

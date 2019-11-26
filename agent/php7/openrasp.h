@@ -52,7 +52,7 @@ extern "C"
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp)
 openrasp::ConfigHolder config;
-openrasp::Request request;
+openrasp::request::Request request;
 ZEND_END_MODULE_GLOBALS(openrasp)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp)

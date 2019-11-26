@@ -61,12 +61,3 @@ void plugin_sql_check(zval *query, const std::string &server TSRMLS_DC)
     openrasp::checker::V8Detector v8_detector(sql_obj, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
     v8_detector.run();
 }
-
-bool is_mysql_error_code_monitored(long err_code)
-{
-    if (openrasp::scm->mysql_error_code_exist(err_code))
-    {
-        return true;
-    }
-    return false;
-}

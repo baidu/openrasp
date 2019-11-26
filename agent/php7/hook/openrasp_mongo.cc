@@ -16,7 +16,12 @@
 
 #include "openrasp_hook.h"
 #include "openrasp_v8.h"
-#include "openrasp_mongo_entry.h"
+#include "openrasp_sql.h"
+#include "hook/checker/v8_detector.h"
+#include "hook/data/mongo_object.h"
+#include "hook/checker/policy_detector.h"
+#include "hook/data/mongo_connection_object.h"
+#include "hook/data/sql_password_object.h"
 
 /**
  * mongo相关hook点
@@ -28,32 +33,37 @@ PRE_HOOK_FUNCTION_EX(__construct, mongodb_0_driver_0_command, MONGO);
 
 POST_HOOK_FUNCTION_EX(__construct, mongodb_0_driver_0_manager, DB_CONNECTION);
 
-static void handle_mongo_uri_string(char *uri_string, size_t uri_string_len, sql_connection_entry *sql_connection_p,
-                                    std::string const &default_uri = "mongodb://127.0.0.1/")
+static void handle_mongo_uri_string(char *uri_string, size_t uri_string_len, openrasp::data::SqlConnectionObject &sql_connection_obj,
+                                    std::string const &default_uri = "mongodb://127.0.0.1/");
+static void mongo_connection_policy_check(INTERNAL_FUNCTION_PARAMETERS, init_sql_connection_t connection_init_func,
+                                          openrasp::data::SqlConnectionObject &sql_connection_obj);
+
+void handle_mongo_uri_string(char *uri_string, size_t uri_string_len, openrasp::data::SqlConnectionObject &sql_connection_obj,
+                             std::string const &default_uri)
 {
     std::string uri_tb_be_parsed = default_uri;
     if (uri_string_len)
     {
         uri_tb_be_parsed = std::string(uri_string, uri_string_len);
     }
-    sql_connection_p->parse(uri_tb_be_parsed);
+    sql_connection_obj.parse(uri_tb_be_parsed);
 }
 
-static void handle_mongo_options(HashTable *ht, sql_connection_entry *sql_connection_p)
+static void handle_mongo_options(HashTable *ht, openrasp::data::SqlConnectionObject &sql_connection_obj)
 {
     std::string password = fetch_outmost_string_from_ht(ht, "password");
     if (!password.empty())
     {
-        sql_connection_p->set_password(password);
+        sql_connection_obj.set_password(password);
     }
     std::string username = fetch_outmost_string_from_ht(ht, "username");
     if (!username.empty())
     {
-        sql_connection_p->set_username(username);
+        sql_connection_obj.set_username(username);
     }
 }
 
-static bool init_mongodb_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static bool init_mongodb_connection_entry(INTERNAL_FUNCTION_PARAMETERS, openrasp::data::SqlConnectionObject &sql_connection_obj)
 {
     char *uri_string = NULL;
     size_t uri_string_len = 0;
@@ -65,43 +75,20 @@ static bool init_mongodb_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conn
         return false;
     }
 
-    handle_mongo_uri_string(uri_string, uri_string_len, sql_connection_p);
+    handle_mongo_uri_string(uri_string, uri_string_len, sql_connection_obj);
     if (options && Z_TYPE_P(options) == IS_ARRAY)
     {
-        handle_mongo_options(Z_ARRVAL_P(options), sql_connection_p);
+        handle_mongo_options(Z_ARRVAL_P(options), sql_connection_obj);
     }
+    sql_connection_obj.set_server("mongodb");
     return true;
 }
 
 static void mongo_plugin_check(const std::string &query_str, const std::string &classname, const std::string &method)
 {
-    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-    if (isolate && !query_str.empty() && !classname.empty() && !method.empty())
-    {
-        std::string cache_key = std::string(get_check_type_name(MONGO)).append(classname).append(method).append(query_str);
-        if (OPENRASP_HOOK_G(lru).contains(cache_key))
-        {
-            return;
-        }
-        openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
-        {
-            v8::HandleScope handle_scope(isolate);
-            auto params = v8::Object::New(isolate);
-            params->Set(openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query_str));
-            params->Set(openrasp::NewV8String(isolate, "class"), openrasp::NewV8String(isolate, classname));
-            params->Set(openrasp::NewV8String(isolate, "method"), openrasp::NewV8String(isolate, method));
-            params->Set(openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, "mongodb"));
-            check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(MONGO)), params, OPENRASP_CONFIG(plugin.timeout.millis));
-        }
-        if (check_result == openrasp::CheckResult::kCache)
-        {
-            OPENRASP_HOOK_G(lru).set(cache_key, true);
-        }
-        if (check_result == openrasp::CheckResult::kBlock)
-        {
-            handle_block();
-        }
-    }
+    openrasp::data::MongoObject mongo_obj("mongodb", query_str, classname, method);
+    openrasp::checker::V8Detector v8_detector(mongo_obj, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+    v8_detector.run();
 }
 
 //for mongodb extension
@@ -188,10 +175,22 @@ void pre_mongodb_0_driver_0_command___construct_MONGO(OPENRASP_INTERNAL_FUNCTION
 
 void post_mongodb_0_driver_0_manager___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    MongoConnectionEntry mongo_entry;
-    if (Z_TYPE_P(getThis()) == IS_OBJECT && !EG(exception) &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mongodb_connection_entry, &mongo_entry))
+    if (Z_TYPE_P(getThis()) == IS_OBJECT && !EG(exception))
     {
-        handle_block();
+        openrasp::data::MongoConnectionObject mongo_connection_obj;
+        mongo_connection_policy_check(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mongodb_connection_entry, mongo_connection_obj);
+    }
+}
+
+void mongo_connection_policy_check(INTERNAL_FUNCTION_PARAMETERS, init_sql_connection_t connection_init_func, openrasp::data::SqlConnectionObject &sql_connection_obj)
+{
+    if (connection_init_func)
+    {
+        if (connection_init_func(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_obj))
+        {
+            openrasp::data::SqlPasswordObject spo(sql_connection_obj);
+            openrasp::checker::PolicyDetector weak_passwd_detector(spo);
+            weak_passwd_detector.run();
+        }
     }
 }

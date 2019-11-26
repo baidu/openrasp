@@ -27,6 +27,7 @@ namespace openrasp
 {
 
 const long OpenraspCtrlBlock::default_scan_limit = 100l;
+const std::string OpenraspCtrlBlock::default_scan_regex = "\\.(git|svn|tar|gz|rar|zip|sql|log)$";
 
 void OpenraspCtrlBlock::set_supervisor_id(pid_t supervisor_id)
 {
@@ -107,6 +108,16 @@ void OpenraspCtrlBlock::set_plugin_md5(const char *plugin_md5)
 const char *OpenraspCtrlBlock::get_plugin_md5()
 {
     return plugin_md5;
+}
+
+void OpenraspCtrlBlock::set_webdir_scan_regex(const char *webdir_scan_regex)
+{
+    strncpy(this->webdir_scan_regex, webdir_scan_regex, OpenraspCtrlBlock::webdir_scan_regex_size);
+}
+
+const char *OpenraspCtrlBlock::get_webdir_scan_regex()
+{
+    return webdir_scan_regex;
 }
 
 long OpenraspCtrlBlock::get_last_update_time()

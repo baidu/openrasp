@@ -294,8 +294,6 @@ typedef void (*fill_param_t)(HashTable *ht);
 
 void register_hook_handler(hook_handler_t hook_handler, OpenRASPCheckType type, PriorityType::HookPriority hp = PriorityType::pNormal);
 
-const std::string get_check_type_name(OpenRASPCheckType check_type);
-
 void block_handle();
 void reset_response(TSRMLS_D);
 

@@ -29,6 +29,7 @@ private:
   static const int plugin_md5_size = 32;
   static const int plugin_name_size = 50;
   static const int plugin_version_size = 50;
+  static const int webdir_scan_regex_size = 100;
   static const int webroot_max_size = 1 << 8;
   static const int agent_min_interval = 60;
   static const int agent_max_interval = 24 * 60 * 60;
@@ -37,6 +38,7 @@ public:
   static const int default_dependency_interval = 6 * 60 * 60;
   static const int default_webdir_scan_interval = 6 * 60 * 60;
   static const long default_scan_limit;
+  static const std::string default_scan_regex;
 
   void set_supervisor_id(pid_t supervisor_id);
   pid_t get_supervisor_id();
@@ -61,6 +63,9 @@ public:
 
   void set_plugin_md5(const char *plugin_md5);
   const char *get_plugin_md5();
+
+  void set_webdir_scan_regex(const char *webdir_scan_regex);
+  const char *get_webdir_scan_regex();
 
   long get_last_update_time();
 
@@ -104,6 +109,7 @@ private:
   char plugin_md5[OpenraspCtrlBlock::plugin_md5_size + 1] = {0};
   char plugin_name[OpenraspCtrlBlock::plugin_name_size + 1] = {0};
   char plugin_version[OpenraspCtrlBlock::plugin_version_size + 1] = {0};
+  char webdir_scan_regex[OpenraspCtrlBlock::webdir_scan_regex_size + 1] = {0};
 };
 
 } // namespace openrasp

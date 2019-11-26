@@ -487,6 +487,33 @@ int main() {
     openrasp_content_type.cc \
     openrasp_utils.cc \
     openrasp_hook.cc \
+    hook/data/sql_object.cc \
+    hook/data/mongo_object.cc \
+    hook/data/copy_object.cc \
+    hook/data/rename_object.cc \
+    hook/data/file_op_object.cc \
+    hook/data/fileupload_object.cc \
+    hook/data/file_put_webshell_object.cc \
+    hook/data/ssrf_object.cc \
+    hook/data/ssrf_redirect_object.cc \
+    hook/data/echo_object.cc \
+    hook/data/sql_error_object.cc \
+    hook/data/sql_connection_object.cc \
+    hook/data/mongo_connection_object.cc \
+    hook/data/sql_username_object.cc \
+    hook/data/sql_password_object.cc \
+    hook/data/callable_object.cc \
+    hook/data/command_object.cc \
+    hook/data/include_object.cc \
+    hook/data/eval_object.cc \
+    hook/data/putenv_object.cc \
+    hook/data/no_params_object.cc \
+    hook/data/xss_userinput_object.cc \
+    hook/checker/policy_detector.cc \
+    hook/checker/builtin_detector.cc \
+    hook/checker/v8_detector.cc \
+    hook/checker/check_result.cc \
+    hook/checker/check_utils.cc \
     hook/openrasp_directory.cc \
     hook/openrasp_fileupload.cc \
     hook/openrasp_include.cc \ 
@@ -502,9 +529,7 @@ int main() {
     hook/openrasp_ssrf.cc \
     hook/openrasp_putenv.cc \
     hook/openrasp_mongo.cc \
-    hook/openrasp_mongo_entry.cc \
     openrasp_output_detect.cc \
-    hook/sql_connection_enrty.cc \
     hook/openrasp_echo.cc \
     openrasp_conf_holder.cc \
     openrasp_config_block.cc \

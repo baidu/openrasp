@@ -191,12 +191,7 @@ void pre_global_pcntl_exec_COMMAND(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     std::string command(path, path_len);
     if (nullptr != args)
     {
-        if (IS_STRING == Z_TYPE_P(args) &&
-            Z_STRLEN_P(args))
-        {
-            command.append(Z_STRVAL_P(args), Z_STRLEN_P(args));
-        }
-        else if (IS_ARRAY == Z_TYPE_P(args))
+        if (IS_ARRAY == Z_TYPE_P(args))
         {
             zval retval;
             zval *z_glue = nullptr;

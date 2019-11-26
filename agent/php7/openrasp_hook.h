@@ -18,7 +18,6 @@
 #define OPENRASP_HOOK_H
 
 #include "openrasp.h"
-#include "openrasp_log.h"
 #include "openrasp_ini.h"
 #include "openrasp_v8.h"
 #include "openrasp_utils.h"
@@ -126,9 +125,9 @@ static const int MYSQL_PORT = 3306;
 
 enum OpenRASPActionType
 {
-    AC_IGNORE = 0,
-    AC_LOG = 1 << 0,
-    AC_BLOCK = 1 << 1
+    AC_IGNORE = 1,
+    AC_LOG = 2,
+    AC_BLOCK = 3
 };
 
 enum PathOperation
@@ -301,18 +300,15 @@ std::string openrasp_real_path(const char *filename, int length, bool use_includ
 
 void register_hook_handler(hook_handler_t hook_handler, OpenRASPCheckType type, PriorityType::HookPriority hp = PriorityType::pNormal);
 
-const std::string get_check_type_name(OpenRASPCheckType type);
-
 bool openrasp_zval_in_request(zval *item);
 std::string fetch_name_in_request(zval *item, std::string &var_type);
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type);
-bool openrasp_check_callable_black(const char *item_name, uint item_name_length);
 
-void openrasp_buildin_php_risk_handle(OpenRASPActionType action, OpenRASPCheckType type, int confidence, zval *params, zval *message);
-void handle_block();
+void block_handle();
 void reset_response();
 
 OpenRASPActionType string_to_action(std::string action_string);
 std::string action_to_string(OpenRASPActionType type);
+void plugin_ssrf_check(zval *file, const std::string &funtion_name);
 
 #endif

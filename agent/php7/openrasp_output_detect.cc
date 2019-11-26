@@ -19,6 +19,8 @@
 #include "openrasp_ini.h"
 #include "agent/shared_config_manager.h"
 #include "utils/regex.h"
+#include "hook/checker/builtin_detector.h"
+#include "hook/data/xss_userinput_object.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_output_detect)
 
@@ -136,14 +138,9 @@ static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionT
                     zend_long actual = idx;
                     name = std::to_string(actual);
                 }
-                zval attack_params;
-                array_init(&attack_params);
-                add_assoc_string(&attack_params, "type", "_GET");
-                add_assoc_string(&attack_params, "name", const_cast<char *>(name.c_str()));
-                add_assoc_string(&attack_params, "value", Z_STRVAL_P(val));
-                zval plugin_message;
-                ZVAL_STR(&plugin_message, strpprintf(0, _("Reflected XSS attack detected: parameter: $_GET['%s']"), name.c_str()));
-                openrasp_buildin_php_risk_handle(action, XSS_USER_INPUT, 100, &attack_params, &plugin_message);
+                openrasp::data::XssUserInputObject xss_obj(name, val);
+                openrasp::checker::BuiltinDetector builtin_detector(xss_obj);
+                builtin_detector.run();
                 return SUCCESS;
             }
         }

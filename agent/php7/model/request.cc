@@ -22,7 +22,8 @@
 
 namespace openrasp
 {
-
+namespace request
+{
 Request::Request(/* args */)
 {
 }
@@ -143,5 +144,6 @@ void Request::clear()
     url.clear();
     parameter.clear();
 }
+} // namespace request
 
 } // namespace openrasp

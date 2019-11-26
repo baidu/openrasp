@@ -25,7 +25,6 @@ typedef bool (*init_sql_connection_t)(INTERNAL_FUNCTION_PARAMETERS, openrasp::da
 
 void plugin_sql_check(zval *query, const std::string &server TSRMLS_DC);
 void sql_connection_policy_check(INTERNAL_FUNCTION_PARAMETERS, init_sql_connection_t connection_init_func, openrasp::data::SqlConnectionObject &sql_connection_obj);
-bool is_mysql_error_code_monitored(long err_code);
 void pg_conninfo_parse(char *connstring, std::function<void(const char *pname, const char *pval)> info_store_func);
 
 #endif
