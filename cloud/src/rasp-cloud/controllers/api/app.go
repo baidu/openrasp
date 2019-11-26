@@ -508,6 +508,9 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 						o.ServeError(http.StatusBadRequest,
 							"the value's length of config item '"+hv+"' must be less than 200")
 					}
+				} else {
+					o.ServeError(http.StatusBadRequest,
+						"the inject.custom_headers's value cannot convert to type string")
 				}
 			}
 		}
