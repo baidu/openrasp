@@ -30,6 +30,7 @@ import (
 type Rasp struct {
 	Id                string            `json:"id" bson:"_id,omitempty"`
 	AppId             string            `json:"app_id" bson:"app_id,omitempty"`
+	StrategyId		  string			`json:"strategy_id" bson:"strategy_id,omitempty"`
 	Version           string            `json:"version" bson:"version,omitempty"`
 	HostName          string            `json:"hostname" bson:"hostname,omitempty"`
 	RegisterIp        string            `json:"register_ip" bson:"register_ip,omitempty"`
@@ -281,7 +282,6 @@ func RemoveRaspBySelector(selector map[string]interface{}, appId string) (int, e
 	}
 	return info.Removed, nil
 }
-
 
 func UpdateRaspDescription(raspId string, description string) error {
 	return mongo.UpdateId(raspCollectionName, raspId, bson.M{"description": description})

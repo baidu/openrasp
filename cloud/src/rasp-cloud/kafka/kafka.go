@@ -29,12 +29,8 @@ func init() {
 }
 
 func SendMessage(topic string, key string, val map[string]interface{}) error {
-	kafka, err := GetKafkaConfig()
-	if err != nil {
-		beego.Error(err)
-		return err
-	}
-	if kafka.KafkaEnable{
+	kafka, _ := GetKafkaConfig()
+	if kafka.KafkaEnable {
 		producer, err := sarama.NewSyncProducer(kafka.KafkaAddr, config)
 		if err != nil {
 			beego.Error(err)
@@ -55,24 +51,17 @@ func SendMessage(topic string, key string, val map[string]interface{}) error {
 			Topic:     topic,
 		}
 		_, _, err = producer.SendMessage(msg)
-
 		if err != nil {
 			beego.Error("Send message Fail")
 			return err
 		}
-	} else {
-		beego.Error("kafka is not enabled!")
 	}
 	return nil
 }
 
 func SendMessages(topic string, key string, valMaps []interface{}) error {
 	var msgs []*sarama.ProducerMessage
-	kafka, err := GetKafkaConfig()
-	if err != nil {
-		beego.Error(err)
-		return err
-	}
+	kafka, _ := GetKafkaConfig()
 	if kafka.KafkaEnable{
 		producer, err := sarama.NewSyncProducer(kafka.KafkaAddr, config)
 		if err != nil {
@@ -110,11 +99,15 @@ func SendMessages(topic string, key string, valMaps []interface{}) error {
 
 func GetKafkaConfig() (kafka *Kafka, err error) {
 	err = mongo.FindId(kafkaAddrCollectionName, kafkaAddrId, &kafka)
-	if err == nil && kafka.KafkaAddr == nil {
-		kafka.KafkaAddr = []string{}
-		kafka.KafkaEnable = false
+	if err != nil {
+		kafka = &Kafka{
+			KafkaAddr:   []string{},
+			KafkaUser:   "",
+			KafkaPwd:    "",
+			KafkaEnable: false,
+		}
 	}
-	return
+	return kafka, err
 }
 
 func PutKafkaConfig(kafka *Kafka) error {

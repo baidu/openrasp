@@ -44,7 +44,8 @@ func CreateReportDataEsIndex(appId string) error {
 }
 
 func CreateDependencyEsIndex(appId string) error {
-	return es.CreateEsIndex(DependencyIndexName + "-" + appId)
+	return es.CreateEsIndex(DependencyIndexName + "-" + appId,
+		AliasDependencyIndexName + "-" + appId,"dependency-data-template")
 }
 
 func AddReportData(reportData *ReportData, appId string) error {

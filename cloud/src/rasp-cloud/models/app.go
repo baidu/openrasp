@@ -70,7 +70,7 @@ type WhitelistConfigItem struct {
 }
 
 type GeneralAlarmConf struct {
-	AlarmCheckInterval  string                 `json:"alarm_check_interval" bson:"alarm_check_interval"`
+	AlarmCheckInterval  int64                 `json:"alarm_check_interval" bson:"alarm_check_interval"`
 }
 
 type EmailAlarmConf struct {
@@ -370,7 +370,7 @@ func selectDefaultPlugin(app *App) {
 		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to insert default plugin: "+err.Error())
 		return
 	}
-	_, err = SetSelectedPlugin(app.Id, plugin.Id)
+	_, err = SetSelectedPlugin(app.Id, plugin.Id, "")
 	if err != nil {
 		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to select default plugin for app: " + err.Error()+
 			", app_id: "+ app.Id+ ", plugin_id: "+ plugin.Id)
@@ -479,9 +479,6 @@ func HandleApp(app *App, isCreate bool) error {
 	}
 	if app.GeneralConfig == nil {
 		app.GeneralConfig = make(map[string]interface{})
-	}
-	if app.GeneralAlarmConf == nil {
-		app.GeneralAlarmConf = make(map[string]interface{})
 	}
 	app.AlgorithmConfig = make(map[string]interface{})
 	plugin, err := GetSelectedPlugin(app.Id, false)

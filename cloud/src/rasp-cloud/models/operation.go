@@ -55,6 +55,10 @@ const (
 	OperationTypeDeleteApp
 	OperationTypeEditApp
 	OperationTypeRestorePlugin
+	OperationTypeAddStrategy
+	OperationTypeDeleteStrategy
+	OperationTypeEditStrategy
+	OperationTypeSelectStrategy
 )
 
 func init() {

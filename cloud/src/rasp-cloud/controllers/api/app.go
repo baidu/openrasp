@@ -147,8 +147,9 @@ func (o *AppController) RegenerateAppSecret() {
 // @router /general/config [post]
 func (o *AppController) UpdateAppGeneralConfig() {
 	var param struct {
-		AppId  string                 `json:"app_id"`
-		Config map[string]interface{} `json:"config"`
+		StrategyId	string		           `json:"strategy_id"`
+		AppId       string                 `json:"app_id"`
+		Config      map[string]interface{} `json:"config"`
 	}
 	o.UnmarshalJson(&param)
 
@@ -158,10 +159,17 @@ func (o *AppController) UpdateAppGeneralConfig() {
 	if param.Config == nil {
 		o.ServeError(http.StatusBadRequest, "config can not be empty")
 	}
+	if param.StrategyId == "" {
+		o.ServeError(http.StatusBadRequest, "strategy_id can not be empty")
+	}
 	o.validateAppConfig(param.Config)
 	app, err := models.UpdateGeneralConfig(param.AppId, param.Config)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update app general config", err)
+	}
+	_, err = models.UpdateGeneralConfigForStrategy(param.StrategyId, param.AppId, param.Config)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to update strategy general config", err)
 	}
 	models.AddOperation(param.AppId, models.OperationTypeUpdateGenerateConfig,
 		o.Ctx.Input.IP(), "Updated general config of "+param.AppId)
@@ -171,8 +179,9 @@ func (o *AppController) UpdateAppGeneralConfig() {
 // @router /whitelist/config [post]
 func (o *AppController) UpdateAppWhiteListConfig() {
 	var param struct {
-		AppId  string                       `json:"app_id"`
-		Config []models.WhitelistConfigItem `json:"config"`
+		StrategyId	string					     `json:"strategy_id"`
+		AppId       string                       `json:"app_id"`
+		Config      []models.WhitelistConfigItem `json:"config"`
 	}
 	o.UnmarshalJson(&param)
 
@@ -183,10 +192,17 @@ func (o *AppController) UpdateAppWhiteListConfig() {
 		o.ServeError(http.StatusBadRequest, "config can not be empty")
 	}
 	o.validateWhiteListConfig(param.Config)
+	if param.StrategyId == ""{
+		o.ServeError(http.StatusBadRequest, "strategy_id can not be empty")
+	}
 	param.Config = o.RemoveDupWhitelistConfigItem(param.Config)
 	app, err := models.UpdateWhiteListConfig(param.AppId, param.Config)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update app whitelist config", err)
+	}
+	_, err = models.UpdateWhiteListConfigForStrategy(param.StrategyId, param.AppId, param.Config)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to update app general config", err)
 	}
 	models.AddOperation(param.AppId, models.OperationTypeUpdateWhitelistConfig,
 		o.Ctx.Input.IP(), "Updated whitelist config of "+param.AppId)
@@ -683,7 +699,7 @@ func (o *AppController) SetSelectedPlugin() {
 	if pluginId == "" {
 		o.ServeError(http.StatusBadRequest, "plugin_id cannot be empty")
 	}
-	plugin, err := models.SetSelectedPlugin(appId, pluginId)
+	plugin, err := models.SetSelectedPlugin(appId, pluginId, "")
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to set selected plugin", err)
 	}
