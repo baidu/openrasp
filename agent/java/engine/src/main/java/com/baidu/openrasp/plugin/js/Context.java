@@ -25,6 +25,7 @@ import com.baidu.openrasp.tool.model.NicModel;
 import com.baidu.openrasp.v8.ByteArrayOutputStream;
 import com.jsoniter.output.JsonStream;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -164,7 +165,7 @@ public class Context extends com.baidu.openrasp.v8.Context {
     // TODO: update openrasp-v8, accept string body
     public byte[] getBody() {
         try {
-            return request.getStringBody().getBytes("UTF-8");
+            return escape(request.getStringBody());
         } catch (Exception e) {
             return null;
         }
@@ -180,6 +181,21 @@ public class Context extends com.baidu.openrasp.v8.Context {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public byte[] escape(String src) throws UnsupportedEncodingException {
+        char j;
+        StringBuilder tmp = new StringBuilder();
+        for (int i = 0; i < src.length(); i++) {
+            j = src.charAt(i);
+            if (j < 256)
+                tmp.append(j);
+            else {
+                tmp.append("\\u");
+                tmp.append(Integer.toString(j, 16));
+            }
+        }
+        return tmp.toString().getBytes("UTF-8");
     }
 
     public byte[] getHeader() {
