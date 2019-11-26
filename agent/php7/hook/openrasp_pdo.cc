@@ -37,7 +37,7 @@ POST_HOOK_FUNCTION_EX(exec, pdo, SQL_ERROR);
 PRE_HOOK_FUNCTION_EX(prepare, pdo, SQL_PREPARED);
 POST_HOOK_FUNCTION_EX(prepare, pdo, SQL_ERROR);
 
-const static std::set<std::string> supported_server = {"mysql", "pgsql"};
+const static std::set<std::string> supported_server = {"mysql", "pgsql", "sqlite"};
 
 static void error_info_check(const openrasp::data::V8Material &v8_material, const std::string &driver_name, zval *error_info);
 static void pdo_exception_intercept(const openrasp::data::V8Material &v8_material, const std::string &driver_name, zval *object);
@@ -347,7 +347,8 @@ static void pdo_exception_intercept(const openrasp::data::V8Material &v8_materia
     }
     else
     {
-        if (driver_name == "mysql")
+        if (driver_name == "mysql" ||
+            driver_name == "sqlite")
         {
             zval *code = zend_read_property(php_pdo_get_exception(), object, "code", sizeof("code") - 1, 1, &rv);
             if (nullptr == code)
