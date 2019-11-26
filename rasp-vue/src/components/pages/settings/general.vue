@@ -15,7 +15,7 @@
               [帮助文档]
             </a>
           </label>
-          <input v-model.trim="data['clientip.header']" type="text" class="form-control">
+          <input v-model.trim="data['clientip.header']" type="text" class="form-control" maxlength="100">
         </div>      
         <div class="form-group">
           <label class="form-label">
