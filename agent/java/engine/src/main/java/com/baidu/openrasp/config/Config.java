@@ -479,7 +479,7 @@ public class Config extends FileScanListener {
     public synchronized void setPluginTimeout(String pluginTimeout) {
         long value = Long.parseLong(pluginTimeout);
         if (value <= 0) {
-            throw new ConfigLoadException(Item.PLUGIN_TIMEOUT_MILLIS.name() + " must be greater than 0");
+            throw new ConfigLoadException(Item.PLUGIN_TIMEOUT_MILLIS.toString() + " must be greater than 0");
         }
         this.pluginTimeout = value;
     }
@@ -523,7 +523,7 @@ public class Config extends FileScanListener {
     public synchronized void setBodyMaxBytes(String bodyMaxBytes) {
         int value = Integer.parseInt(bodyMaxBytes);
         if (value <= 0) {
-            throw new ConfigLoadException(Item.BODY_MAX_BYTES.name() + " must be greater than 0");
+            throw new ConfigLoadException(Item.BODY_MAX_BYTES.toString() + " must be greater than 0");
         }
         this.bodyMaxBytes = value;
     }
@@ -535,7 +535,7 @@ public class Config extends FileScanListener {
     public synchronized void setSqlSlowQueryMinCount(String sqlSlowQueryMinCount) {
         int value = Integer.parseInt(sqlSlowQueryMinCount);
         if (value < 0) {
-            throw new ConfigLoadException(Item.SQL_SLOW_QUERY_MIN_ROWS.name() + " can not be less than 0");
+            throw new ConfigLoadException(Item.SQL_SLOW_QUERY_MIN_ROWS.toString() + " can not be less than 0");
         }
         this.sqlSlowQueryMinCount = value;
     }
@@ -575,7 +575,7 @@ public class Config extends FileScanListener {
     public synchronized void setPluginMaxStack(String pluginMaxStack) {
         int value = Integer.parseInt(pluginMaxStack);
         if (value < 0) {
-            throw new ConfigLoadException(Item.PLUGIN_MAX_STACK.name() + " can not be less than 0");
+            throw new ConfigLoadException(Item.PLUGIN_MAX_STACK.toString() + " can not be less than 0");
         }
         this.pluginMaxStack = value;
     }
@@ -651,7 +651,7 @@ public class Config extends FileScanListener {
     public synchronized void setOgnlMinLength(String ognlMinLength) {
         int value = Integer.parseInt(ognlMinLength);
         if (value <= 0) {
-            throw new ConfigLoadException(Item.OGNL_EXPRESSION_MIN_LENGTH.name() + " must be greater than 0");
+            throw new ConfigLoadException(Item.OGNL_EXPRESSION_MIN_LENGTH.toString() + " must be greater than 0");
         }
         this.ognlMinLength = value;
     }
@@ -673,7 +673,7 @@ public class Config extends FileScanListener {
     public synchronized void setBlockStatusCode(String blockStatusCode) {
         int value = Integer.parseInt(blockStatusCode);
         if (value < 100 || value > 999) {
-            throw new ConfigLoadException(Item.BLOCK_STATUS_CODE.name() + " must be between [100,999]");
+            throw new ConfigLoadException(Item.BLOCK_STATUS_CODE.toString() + " must be between [100,999]");
         }
         this.blockStatusCode = value;
     }
@@ -718,7 +718,7 @@ public class Config extends FileScanListener {
     public synchronized void setLruCompareLimit(String lruCompareLimit) {
         int value = Integer.parseInt(lruCompareLimit);
         if (value <= 0 || value > 102400) {
-            throw new ConfigLoadException(Item.LRU_COMPARE_LIMIT.name() + " must be between [1,102400]");
+            throw new ConfigLoadException(Item.LRU_COMPARE_LIMIT.toString() + " must be between [1,102400]");
         }
         if (value < this.lruCompareLimit) {
             commonLRUCache.clear();
@@ -951,7 +951,7 @@ public class Config extends FileScanListener {
     public synchronized void setSqlCacheCapacity(String sqlCacheCapacity) {
         int value = Integer.parseInt(sqlCacheCapacity);
         if (value < 0) {
-            throw new ConfigLoadException(Item.SQL_CACHE_CAPACITY.name() + " can not be less than 0");
+            throw new ConfigLoadException(Item.SQL_CACHE_CAPACITY.toString() + " can not be less than 0");
         }
         this.sqlCacheCapacity = value;
         if (Config.commonLRUCache == null || Config.commonLRUCache.maxSize() != this.sqlCacheCapacity) {
@@ -1035,7 +1035,7 @@ public class Config extends FileScanListener {
     public synchronized void setSyslogFacility(String syslogFacility) {
         int value = Integer.parseInt(syslogFacility);
         if (!(value >= 0 && value <= 23)) {
-            throw new ConfigLoadException(Item.SYSLOG_FACILITY.name() + " must be between [0,23]");
+            throw new ConfigLoadException(Item.SYSLOG_FACILITY.toString() + " must be between [0,23]");
         }
         this.syslogFacility = value;
     }
@@ -1057,7 +1057,7 @@ public class Config extends FileScanListener {
     public synchronized void setSyslogReconnectInterval(String syslogReconnectInterval) {
         int value = Integer.parseInt(syslogReconnectInterval);
         if (value <= 0) {
-            throw new ConfigLoadException(Item.SYSLOG_RECONNECT_INTERVAL.name() + " must be greater than 0");
+            throw new ConfigLoadException(Item.SYSLOG_RECONNECT_INTERVAL.toString() + " must be greater than 0");
         }
         this.syslogReconnectInterval = value;
     }
@@ -1079,7 +1079,7 @@ public class Config extends FileScanListener {
     public synchronized void setLogMaxBurst(String logMaxBurst) {
         int value = Integer.parseInt(logMaxBurst);
         if (value < 0) {
-            throw new ConfigLoadException(Item.LOG_MAXBURST.name() + " can not be less than 0");
+            throw new ConfigLoadException(Item.LOG_MAXBURST.toString() + " can not be less than 0");
         }
         this.logMaxBurst = value;
     }
@@ -1209,7 +1209,7 @@ public class Config extends FileScanListener {
     public synchronized void setHeartbeatInterval(String heartbeatInterval) {
         int value = Integer.parseInt(heartbeatInterval);
         if (!(value >= 10 && value <= 1800)) {
-            throw new ConfigLoadException(Item.HEARTBEAT_INTERVAL.name() + " must be between [10,1800]");
+            throw new ConfigLoadException(Item.HEARTBEAT_INTERVAL.toString() + " must be between [10,1800]");
         }
         this.heartbeatInterval = value;
     }
@@ -1248,14 +1248,24 @@ public class Config extends FileScanListener {
      */
     public synchronized void setResponseHeaders(Map<Object, Object> responseHeaders) {
         for (Map.Entry<Object, Object> entry : responseHeaders.entrySet()) {
-            String key = entry.getKey().toString();
-            String value = entry.getValue().toString();
+            Object k = entry.getKey();
+            Object v = entry.getValue();
+            if (k == null || v == null) {
+                throw new ConfigLoadException("the value of " + Item.RESPONSE_HEADERS.toString() +
+                        "'s key and value can not be null");
+            }
+            if (!v.getClass().isPrimitive() && !(v instanceof String)) {
+                throw new ConfigLoadException("the type of " + Item.RESPONSE_HEADERS.toString() +
+                        "'s value must be primitive type, can not be " + v.getClass().getName());
+            }
+            String key = v.toString();
+            String value = v.toString();
             if (key.length() == 0 || key.length() > 200) {
-                throw new ConfigLoadException("the length of " + Item.RESPONSE_HEADERS.name() +
+                throw new ConfigLoadException("the length of " + Item.RESPONSE_HEADERS.toString() +
                         "'s key must be between [1,200]");
             }
             if (value.length() == 0 || value.length() > 200) {
-                throw new ConfigLoadException("the length of " + Item.RESPONSE_HEADERS.name() +
+                throw new ConfigLoadException("the length of " + Item.RESPONSE_HEADERS.toString() +
                         "'s value must be between [1,200]");
             }
         }
@@ -1285,7 +1295,7 @@ public class Config extends FileScanListener {
     public synchronized void setLogMaxBackUp(String logMaxBackUp) {
         int value = Integer.parseInt(logMaxBackUp) + 1;
         if (value <= 0) {
-            throw new ConfigLoadException(Item.LOG_MAX_BACKUP.name() + " can not be less than 0");
+            throw new ConfigLoadException(Item.LOG_MAX_BACKUP.toString() + " can not be less than 0");
         }
         this.logMaxBackUp = value;
     }
@@ -1352,7 +1362,7 @@ public class Config extends FileScanListener {
     public void setCpuUsagePercent(String cpuUsagePercent) {
         int value = Integer.parseInt(cpuUsagePercent);
         if (!(value >= 30 && value <= 100)) {
-            throw new ConfigLoadException(Item.CPU_USAGE_PERCENT.name() + " must be between [30,100]");
+            throw new ConfigLoadException(Item.CPU_USAGE_PERCENT.toString() + " must be between [30,100]");
         }
         this.cpuUsagePercent = value;
     }
