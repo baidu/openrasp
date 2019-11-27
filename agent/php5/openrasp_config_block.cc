@@ -145,64 +145,6 @@ void DecompileBlock::update(BaseReader *reader)
   enable = reader->fetch_bool({"decompile.enable"}, false);
 };
 
-const vector<string> CallableBlock::default_blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
-
-void CallableBlock::update()
-{
-  blacklist = CallableBlock::default_blacklist;
-  TSRMLS_FETCH();
-  if (nullptr != OPENRASP_V8_G(isolate))
-  {
-    extract_callable_blacklist(OPENRASP_V8_G(isolate));
-  }
-}
-
-void CallableBlock::extract_callable_blacklist(Isolate *isolate)
-{
-  std::string blacklist_strings;
-  blacklist_strings.append("[");
-  for (const auto &item : CallableBlock::default_blacklist)
-  {
-    blacklist_strings.append("\"").append(item).append("\",");
-  }
-  blacklist_strings.append("]");
-  std::string script;
-  script.append(R"( (function () {
-            var blacklist
-            try {
-                blacklist = RASP.algorithmConfig.webshell_callable.functions
-            } catch (_) {
-
-            }
-            if (blacklist === undefined || !Array.isArray(blacklist)) {
-                blacklist = )")
-      .append(blacklist_strings)
-      .append(R"(
-            }
-            return blacklist
-        })())");
-  v8::HandleScope handle_scope(isolate);
-  auto context = isolate->GetCurrentContext();
-  auto rst = isolate->ExecScript(script, "extract_callable_blacklist");
-  if (!rst.IsEmpty())
-  {
-    blacklist.clear();
-    auto arr = rst.ToLocalChecked().As<v8::Array>();
-    auto len = arr->Length();
-    for (size_t i = 0; i < len; i++)
-    {
-      v8::HandleScope handle_scope(isolate);
-      v8::Local<v8::Value> item;
-      if (!arr->Get(context, i).ToLocal(&item) || !item->IsString())
-      {
-        continue;
-      }
-      v8::String::Utf8Value value(isolate, item);
-      blacklist.push_back(std::string(*value, value.length()));
-    }
-  }
-}
-
 const int64_t XssBlock::default_min_param_length = 15;
 const int64_t XssBlock::default_max_detection_num = 10;
 const std::string XssBlock::default_filter_regex = "<![\\\\-\\\\[A-Za-z]|<([A-Za-z]{1,12})[\\\\/ >]";

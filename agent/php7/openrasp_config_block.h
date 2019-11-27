@@ -125,18 +125,6 @@ public:
   void update(BaseReader *reader);
 };
 
-//read from plugin
-class CallableBlock
-{
-public:
-  const static vector<string> default_blacklist;
-  vector<string> blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
-  void update();
-
-private:
-  void extract_callable_blacklist(Isolate *isolate);
-};
-
 // xss
 class XssBlock
 {

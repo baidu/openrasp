@@ -107,14 +107,8 @@ PHP_MINIT_FUNCTION(openrasp_v8)
                 type_action_map.insert({CheckTypeTransfer::instance().name_to_type(iter->first), string_to_action(iter->second)});
             }
             openrasp::scm->set_buildin_check_action(type_action_map);
-            std::vector<long> mysql_error_codes;
-            extract_sql_error_codes(isolate, mysql_error_codes, "mysql", SharedConfigBlock::MYSQL_ERROR_CODE_MAX_SIZE);
-            openrasp::scm->set_mysql_error_codes(mysql_error_codes);
-
-            std::vector<long> sqlite_error_codes;
-            extract_sql_error_codes(isolate, sqlite_error_codes, "sqlite", SharedConfigBlock::SQLITE_ERROR_CODE_MAX_SIZE);
-            openrasp::scm->set_sqlite_error_codes(sqlite_error_codes);
-
+            openrasp::scm->set_mysql_error_codes(extract_int64_array(isolate, "RASP.algorithmConfig.sql_exception.mysql.error_code", SharedConfigBlock::MYSQL_ERROR_CODE_MAX_SIZE));
+            openrasp::scm->set_sqlite_error_codes(extract_int64_array(isolate, "RASP.algorithmConfig.sql_exception.sqlite.error_code", SharedConfigBlock::SQLITE_ERROR_CODE_MAX_SIZE));
             openrasp::scm->build_pg_error_array(isolate);
             isolate->Dispose();
         }
@@ -185,6 +179,8 @@ PHP_RINIT_FUNCTION(openrasp_v8)
                 v8::HandleScope handle_scope(isolate);
                 isolate->GetData()->request_context_templ.Reset(isolate, CreateRequestContextTemplate(isolate));
                 OPENRASP_V8_G(isolate) = isolate;
+                static const std::vector<std::string> default_callable_blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
+                OPENRASP_HOOK_G(callable_blacklist) = extract_string_array(isolate, "RASP.algorithmConfig.webshell_callable.functions", 100, default_callable_blacklist);
                 OPENRASP_G(config).updateAlgorithmConfig();
             }
         }

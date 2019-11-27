@@ -258,12 +258,6 @@ bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC)
     return false;
 }
 
-bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC)
-{
-    std::vector<std::string> callable_blacklist = OPENRASP_CONFIG(webshell_callable.blacklist);
-    return std::find(callable_blacklist.begin(), callable_blacklist.end(), std::string(item_name, item_name_length)) != callable_blacklist.end();
-}
-
 static std::string resolve_request_id(std::string str TSRMLS_DC)
 {
     static std::string placeholder = "%request_id%";

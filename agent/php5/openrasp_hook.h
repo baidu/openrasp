@@ -275,6 +275,7 @@ ZEND_BEGIN_MODULE_GLOBALS(openrasp_hook)
 int check_type_white_bit_mask;
 openrasp::LRU<std::string, bool> lru;
 long origin_pg_error_verbos;
+std::vector<std::string> callable_blacklist;
 ZEND_END_MODULE_GLOBALS(openrasp_hook)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp_hook);
@@ -298,7 +299,6 @@ void block_handle();
 void reset_response(TSRMLS_D);
 
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type TSRMLS_DC);
-bool openrasp_check_callable_black(const char *item_name, uint item_name_length TSRMLS_DC);
 bool openrasp_zval_in_request(zval *item);
 std::string fetch_name_in_request(zval *item, std::string &var_type);
 

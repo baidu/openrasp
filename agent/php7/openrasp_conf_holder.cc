@@ -50,7 +50,6 @@ void ConfigHolder::SetLatestUpdateTime(long latestUpdateTime)
 
 bool ConfigHolder::updateAlgorithmConfig()
 {
-  webshell_callable.update();
   xss.update();
   return true;
 }

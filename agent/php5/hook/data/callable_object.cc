@@ -22,7 +22,7 @@ namespace data
 {
 
 CallableObject::CallableObject(zval *function, const std::vector<std::string> &callable_blacklist)
-    : CallableMaterial(callable_blacklist)
+    : callable_blacklist(callable_blacklist)
 {
     this->function = function;
 }
@@ -41,13 +41,32 @@ OpenRASPCheckType CallableObject::get_builtin_check_type() const
 
 void CallableObject::fill_json_with_params(JsonReader &j) const
 {
-    j.write_string({"attack_params", "function"}, get_function_name());
-    j.write_string({"plugin_message"}, "WebShell activity - Using dangerous callback method: " + get_function_name());
+    std::string function_name = std::string(Z_STRVAL_P(function), Z_STRLEN_P(function));
+    j.write_string({"attack_params", "function"}, function_name);
+    j.write_string({"plugin_message"}, "WebShell activity - Using dangerous callback method: " + function_name);
 }
 
-std::string CallableObject::get_function_name() const
+bool CallableObject::builtin_check(JsonReader &j) const
 {
-    return std::string(Z_STRVAL_P(function), Z_STRLEN_P(function));
+    bool result = false;
+    std::string function_name = std::string(Z_STRVAL_P(function), Z_STRLEN_P(function));
+    for (auto &ch : function_name)
+    {
+        ch = std::tolower(ch);
+    }
+    if (function_name.length() > 0)
+    {
+        if (function_name[0] == '\\')
+        {
+            function_name = function_name.substr(1);
+        }
+        result = std::find(
+                     callable_blacklist.begin(),
+                     callable_blacklist.end(),
+                     function_name) !=
+                 callable_blacklist.end();
+    }
+    return result;
 }
 
 } // namespace data

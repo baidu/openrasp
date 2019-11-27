@@ -17,6 +17,7 @@
 #include "hook/checker/builtin_detector.h"
 #include "hook/data/callable_object.h"
 #include "openrasp_hook.h"
+#include "openrasp_v8.h"
 #include "agent/shared_config_manager.h"
 
 /**
@@ -35,7 +36,7 @@ static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
         return;
     }
     zval *function_name = fci.function_name;
-    openrasp::data::CallableObject callable_obj(function_name, OPENRASP_CONFIG(webshell_callable.blacklist));
+    openrasp::data::CallableObject callable_obj(function_name, OPENRASP_HOOK_G(callable_blacklist));
     openrasp::checker::BuiltinDetector builtin_detector(callable_obj);
     builtin_detector.run();
 }
@@ -97,7 +98,7 @@ void pre_reflectionfunction___construct_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARA
     }
     else if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &name_str) == SUCCESS)
     {
-        openrasp::data::CallableObject callable_obj(name_str, OPENRASP_CONFIG(webshell_callable.blacklist));
+        openrasp::data::CallableObject callable_obj(name_str, OPENRASP_HOOK_G(callable_blacklist));
         openrasp::checker::BuiltinDetector builtin_detector(callable_obj);
         builtin_detector.run();
     }

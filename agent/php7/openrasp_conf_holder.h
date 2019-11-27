@@ -55,7 +55,6 @@ public:
   DecompileBlock decompile;
 
   //plugin come from config
-  CallableBlock webshell_callable;
   XssBlock xss;
 
 private:

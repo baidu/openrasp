@@ -411,9 +411,8 @@ bool SharedConfigManager::build_pg_error_array(Isolate *isolate)
     {
         return false;
     }
-    std::vector<std::string> pg_errors;
-    extract_pg_error_codes(isolate, pg_errors, SharedConfigBlock::PGSQL_ERROR_CODE_MAX_SIZE);
-    return build_pg_error_array(pg_errors);
+    std::vector<std::string> pg_errs = extract_string_array(isolate, "RASP.algorithmConfig.sql_exception.pgsql.error_code", SharedConfigBlock::PGSQL_ERROR_CODE_MAX_SIZE);
+    return build_pg_error_array(pg_errs);
 }
 
 bool SharedConfigManager::pg_error_filtered(std::string error)

@@ -16,24 +16,25 @@
 
 #pragma once
 
-#include "callable_material.h"
+#include "builtin_material.h"
 
 namespace openrasp
 {
 namespace data
 {
-class CallableObject : public CallableMaterial
+class CallableObject : public BuiltinMaterial
 {
 protected:
     //do not efree here
     zval *function = nullptr;
+    const std::vector<std::string> callable_blacklist;
 
 public:
     CallableObject(zval *function, const std::vector<std::string> &callable_blacklist);
     virtual bool is_valid() const;
     virtual OpenRASPCheckType get_builtin_check_type() const;
     virtual void fill_json_with_params(JsonReader &j) const;
-    virtual std::string get_function_name() const;
+    virtual bool builtin_check(JsonReader &j) const;
 };
 
 } // namespace data
