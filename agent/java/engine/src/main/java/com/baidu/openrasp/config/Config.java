@@ -27,6 +27,7 @@ import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.local.ConfigurableChecker;
 import com.baidu.openrasp.tool.FileUtil;
 import com.baidu.openrasp.tool.LRUCache;
+import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
@@ -1254,9 +1255,9 @@ public class Config extends FileScanListener {
                 throw new ConfigLoadException("the value of " + Item.RESPONSE_HEADERS.toString() +
                         "'s key and value can not be null");
             }
-            if (!v.getClass().isPrimitive() && !(v instanceof String)) {
+            if (!Reflection.isPrimitiveType(v) && !(v instanceof String)) {
                 throw new ConfigLoadException("the type of " + Item.RESPONSE_HEADERS.toString() +
-                        "'s value must be primitive type, can not be " + v.getClass().getName());
+                        "'s value must be primitive type or String, can not be " + v.getClass().getName());
             }
             String key = v.toString();
             String value = v.toString();
