@@ -30,20 +30,40 @@ BackendResponse::BackendResponse(long response_code, std::string header_string, 
     this->response_code = response_code;
     this->header_string = header_string;
     this->response_string = response_string;
-    parse_header();
-    auto found = header_map.find("Content-Type");
-    if (found != header_map.end())
+
     {
-        if (OpenRASPContentType::classify_content_type(found->second) != OpenRASPContentType::ContentType::cApplicationJson)
+        std::istringstream iss(header_string);
+        std::string line;
+        while (std::getline(iss, line))
         {
-            this->parse_error = true;
-            this->error_msg = "Only application/json supported, current Content-Type is " + found->second;
-        }
-        else
-        {
-            parse_body();
+            std::size_t found = line.find(':');
+            if (found != std::string::npos && found + 1 < line.length())
+            {
+                std::string key = line.substr(0, found);
+                for (auto &ch : key)
+                {
+                    ch = std::tolower(ch);
+                }
+                std::string value = line.substr(found + 1);
+                header_map[key] = value;
+            }
         }
     }
+
+    auto found = header_map.find("content-type");
+    if (found != header_map.end())
+    {
+        if (OpenRASPContentType::classify_content_type(found->second) == OpenRASPContentType::ContentType::cApplicationJson)
+        {
+            body_reader = new JsonReader();
+            body_reader->load(response_string.c_str());
+            parse_error = body_reader->has_error();
+            error_msg = body_reader->get_error_msg();
+            return;
+        }
+    }
+    this->error_msg = "Only application/json supported.";
+    this->parse_error = true;
 }
 
 BackendResponse::~BackendResponse()
@@ -72,30 +92,6 @@ bool BackendResponse::http_code_ok() const
 std::string BackendResponse::to_string() const
 {
     return "Response_code: " + std::to_string(response_code) + "\nheader_string: " + header_string + "body:" + response_string;
-}
-
-void BackendResponse::parse_header()
-{
-    std::istringstream iss(header_string);
-    std::string line;
-    while (std::getline(iss, line))
-    {
-        std::size_t found = line.find(':');
-        if (found != std::string::npos && found + 1 < line.length())
-        {
-            std::string key = line.substr(0, found);
-            std::string value = line.substr(found + 1);
-            header_map[key] = value;
-        }
-    }
-}
-
-void BackendResponse::parse_body()
-{
-    body_reader = new JsonReader();
-    body_reader->load(response_string.c_str());
-    parse_error = body_reader->has_error();
-    error_msg = body_reader->get_error_msg();
 }
 
 BaseReader *BackendResponse::get_body_reader()

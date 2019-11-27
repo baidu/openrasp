@@ -188,6 +188,16 @@ bool SharedConfigManager::set_debug_level(long debug_level)
     return false;
 }
 
+bool SharedConfigManager::set_debug_level(BaseReader *br)
+{
+    if (!br || br->has_error())
+    {
+        return false;
+    }
+    long debug_level = br->fetch_int64({"debug.level"}, 0);
+    return set_debug_level(debug_level);
+}
+
 bool SharedConfigManager::set_buildin_check_action(std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map)
 {
     if (rwlock != nullptr && rwlock->write_try_lock())
@@ -317,7 +327,7 @@ bool SharedConfigManager::build_weak_password_array(BaseReader *br)
             "admin",
             "user",
             "mysql"};
-    std::vector<std::string> hook_white_key({"data", "config", "security.weak_passwords"});
+    std::vector<std::string> hook_white_key({"security.weak_passwords"});
     std::vector<std::string> weak_passwords = br->fetch_strings(hook_white_key, dafault_weak_passwords);
     if (!build_weak_password_array(weak_passwords))
     {

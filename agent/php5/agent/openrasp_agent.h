@@ -56,7 +56,6 @@ public:
   virtual void write_pid_to_shm(pid_t agent_pid);
   virtual pid_t get_pid_from_shm();
   virtual std::shared_ptr<PluginUpdatePackage> build_plugin_update_package(BaseReader *body_reader);
-  virtual std::map<std::string, std::vector<std::string>> build_hook_white_map(const std::vector<std::string> &keys, BaseReader *body_reader);
 
 private:
   bool do_heartbeat();

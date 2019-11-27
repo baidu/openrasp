@@ -177,12 +177,10 @@ PHP_MINIT_FUNCTION(openrasp)
         else
         {
             unknown_yaml_keys = yaml_reader.detect_unknown_config_key({});
-            int64_t debug_level = yaml_reader.fetch_int64({"debug.level"}, 0);
-            openrasp::scm->set_debug_level(debug_level);
-
-            OPENRASP_G(config).update(&yaml_reader);
+            openrasp::scm->set_debug_level(&yaml_reader);
             openrasp::scm->build_check_type_white_array(&yaml_reader);
             openrasp::scm->build_weak_password_array(&yaml_reader);
+            OPENRASP_G(config).update(&yaml_reader);
         }
     }
 

@@ -153,37 +153,37 @@ bool HeartBeatAgent::do_heartbeat()
 			std::string complete_config = body_reader->dump({"data", "config"}, true);
 			if (!complete_config.empty())
 			{
+				openrasp::JsonReader config_reader(complete_config);
 				/************************************shm config************************************/
-				//update log_max_backup only its value greater than zero
-				int64_t log_max_backup = body_reader->fetch_int64({"data", "config", "log.maxbackup"});
-				scm->set_log_max_backup(log_max_backup > 0 ? log_max_backup : 30);
-				int64_t debug_level = body_reader->fetch_int64({"data", "config", "debug.level"}, 0);
-				scm->set_debug_level(debug_level);
-				
-				//dependency check
-				int64_t dependency_interval = body_reader->fetch_int64({"data", "config", "dependency_check.interval"}, OpenraspCtrlBlock::default_dependency_interval);
-				oam->set_dependency_interval(dependency_interval);
+				scm->set_debug_level(&config_reader);
+				scm->build_weak_password_array(&config_reader);
+				scm->build_check_type_white_array(&config_reader);
 
-				//webdir scan check
-				int64_t webdir_scan_interval = body_reader->fetch_int64({"data", "config", "fileleak_scan.interval"}, OpenraspCtrlBlock::default_webdir_scan_interval);
-				oam->set_webdir_scan_interval(webdir_scan_interval);
-
-				//webdir scan
-				int64_t scan_limit = body_reader->fetch_int64({"data", "config", "fileleak_scan.limit"}, OpenraspCtrlBlock::default_scan_limit);
-				oam->set_scan_limit(scan_limit);
-
-				//webdir scan regex
-				std::string scan_regex = body_reader->fetch_string({"data", "config", "fileleak_scan.name"}, "");
-				if (scan_regex.empty() || scan_regex.length() > 100)
 				{
-					scan_regex = OpenraspCtrlBlock::default_scan_regex;
+					//update log_max_backup only its value greater than zero
+					int64_t log_max_backup = config_reader.fetch_int64({"log.maxbackup"});
+					scm->set_log_max_backup(log_max_backup > 0 ? log_max_backup : 30);
+
+					//dependency check
+					int64_t dependency_interval = config_reader.fetch_int64({"dependency_check.interval"}, OpenraspCtrlBlock::default_dependency_interval);
+					oam->set_dependency_interval(dependency_interval);
+
+					//webdir scan check
+					int64_t webdir_scan_interval = config_reader.fetch_int64({"fileleak_scan.interval"}, OpenraspCtrlBlock::default_webdir_scan_interval);
+					oam->set_webdir_scan_interval(webdir_scan_interval);
+
+					//webdir scan
+					int64_t scan_limit = config_reader.fetch_int64({"fileleak_scan.limit"}, OpenraspCtrlBlock::default_scan_limit);
+					oam->set_scan_limit(scan_limit);
+
+					//webdir scan regex
+					std::string scan_regex = config_reader.fetch_string({"fileleak_scan.name"}, "");
+					if (scan_regex.empty() || scan_regex.length() > 100)
+					{
+						scan_regex = OpenraspCtrlBlock::default_scan_regex;
+					}
+					oam->set_webdir_scan_regex(scan_regex.c_str());
 				}
-				oam->set_webdir_scan_regex(scan_regex.c_str());
-
-				scm->build_weak_password_array(body_reader);
-
-				std::map<std::string, std::vector<std::string>> white_map = build_hook_white_map({"data", "config", "hook.white"}, body_reader);
-				scm->build_check_type_white_array(white_map);
 
 				/************************************OPENRASP_G(config)************************************/
 				std::string cloud_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/cloud-config.json";
@@ -250,24 +250,6 @@ std::shared_ptr<PluginUpdatePackage> HeartBeatAgent::build_plugin_update_package
 		}
 	}
 	return result;
-}
-
-std::map<std::string, std::vector<std::string>> HeartBeatAgent::build_hook_white_map(const std::vector<std::string> &keys, BaseReader *body_reader)
-{
-	std::map<std::string, std::vector<std::string>> hook_white_map;
-	if (nullptr != body_reader)
-	{
-		std::vector<std::string> url_keys = body_reader->fetch_object_keys(keys);
-		std::vector<std::string> tmp_keys(keys);
-		for (auto &key_item : url_keys)
-		{
-			tmp_keys.push_back(key_item);
-			std::vector<std::string> white_types = body_reader->fetch_strings(tmp_keys);
-			tmp_keys.pop_back();
-			hook_white_map.insert({key_item, white_types});
-		}
-	}
-	return hook_white_map;
 }
 
 } // namespace openrasp

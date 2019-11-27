@@ -42,9 +42,6 @@ protected:
   BaseReader *body_reader = nullptr;
   std::map<std::string, std::string> header_map;
 
-  virtual void parse_header();
-  virtual void parse_body();
-
 public:
   static const int64_t default_int64;
 

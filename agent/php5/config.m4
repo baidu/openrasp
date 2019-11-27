@@ -548,7 +548,6 @@ int main() {
     utils/time.cc \
     utils/net.cc \
     utils/url.cc \
-    utils/base_reader.cc \
     utils/json_reader.cc \
     utils/yaml_reader.cc \
     utils/utf.cc \

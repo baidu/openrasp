@@ -43,14 +43,11 @@ public:
   bool set_log_max_backup(long log_max_backup);
 
   long get_debug_level();
-  bool set_debug_level(long debug_level);
+  bool set_debug_level(BaseReader *br);
 
   int get_check_type_white_bit_mask(std::string url);
-  bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
-  bool build_check_type_white_array(std::map<std::string, std::vector<std::string>> &url_type_map);
   bool build_check_type_white_array(BaseReader *br);
 
-  bool build_weak_password_array(std::vector<std::string> &weak_passwords);
   bool build_weak_password_array(BaseReader *br);
   bool is_password_weak(std::string password);
 
@@ -74,6 +71,13 @@ private:
   ReadWriteLock *rwlock;
   SharedConfigBlock *shared_config_block;
   std::string rasp_id;
+
+  bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
+  bool build_check_type_white_array(std::map<std::string, std::vector<std::string>> &url_type_map);
+
+  bool build_weak_password_array(std::vector<std::string> &weak_passwords);
+
+  bool set_debug_level(long debug_level);
 
   bool write_check_type_white_array_to_shm(const void *source, size_t num);
   bool write_weak_password_array_to_shm(const void *source, size_t num);
