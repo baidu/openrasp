@@ -1058,6 +1058,14 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
     if (RASP.config_set) {
         RASP.config_set('algorithm.config', JSON.stringify(algorithmConfig))
     }
+    // 用于 v1.0 rhino 
+    Object.values = function (obj){
+        var result = Array()
+        for (key in obj) {
+            result.push(obj[key])
+        }
+        return result
+    }
 } else {
     // 对于PHP + V8，性能还不错，我们保留JS检测逻辑
     plugin.register('sql', function (params, context) {
