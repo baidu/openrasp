@@ -54,14 +54,17 @@ std::string YamlReader::fetch_string(const std::vector<std::string> &keys, const
         {
             node = &(*node)[key];
         }
-        std::string rst;
-        *node >> rst;
-        return rst;
+        if (node->Type() == YAML::NodeType::Scalar)
+        {
+            std::string rst;
+            *node >> rst;
+            return rst;
+        }
     }
     catch (...)
     {
-        return default_value;
     }
+    return default_value;
 }
 int64_t YamlReader::fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value)
 {
@@ -72,14 +75,17 @@ int64_t YamlReader::fetch_int64(const std::vector<std::string> &keys, const int6
         {
             node = &(*node)[key];
         }
-        int64_t rst;
-        *node >> rst;
-        return rst;
+        if (node->Type() == YAML::NodeType::Scalar)
+        {
+            int64_t rst;
+            *node >> rst;
+            return rst;
+        }
     }
     catch (...)
     {
-        return default_value;
     }
+    return default_value;
 }
 bool YamlReader::fetch_bool(const std::vector<std::string> &keys, const bool &default_value)
 {
@@ -90,14 +96,17 @@ bool YamlReader::fetch_bool(const std::vector<std::string> &keys, const bool &de
         {
             node = &(*node)[key];
         }
-        bool rst = false;
-        *node >> rst;
-        return rst;
+        if (node->Type() == YAML::NodeType::Scalar)
+        {
+            bool rst = false;
+            *node >> rst;
+            return rst;
+        }
     }
     catch (...)
     {
-        return default_value;
     }
+    return default_value;
 }
 std::vector<std::string> YamlReader::fetch_object_keys(const std::vector<std::string> &keys)
 {
@@ -122,8 +131,8 @@ std::vector<std::string> YamlReader::fetch_object_keys(const std::vector<std::st
     }
     catch (...)
     {
-        return {};
     }
+    return {};
 }
 std::vector<std::string> YamlReader::fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value)
 {
@@ -148,8 +157,8 @@ std::vector<std::string> YamlReader::fetch_strings(const std::vector<std::string
     }
     catch (...)
     {
-        return default_value;
     }
+    return default_value;
 }
 
 std::string YamlReader::dump(const std::vector<std::string> &keys, bool pretty)
@@ -170,8 +179,8 @@ std::string YamlReader::dump(const std::vector<std::string> &keys, bool pretty)
     }
     catch (...)
     {
-        return result;
     }
+    return result;
 }
 
 std::string YamlReader::dump(bool pretty)

@@ -15,6 +15,7 @@
  */
 
 #include <sstream>
+#include <cstdlib>
 #include "json_reader.h"
 #include "utils/json.h"
 
@@ -52,12 +53,19 @@ std::string JsonReader::fetch_string(const std::vector<std::string> &keys, const
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
-    return j.at(ptr);
+    if (j.at(ptr).is_string())
+    {
+      return j.at(ptr).get<std::string>();
+    }
+    else if (j.at(ptr).is_number())
+    {
+      return std::to_string(j.at(ptr).get<int64_t>());
+    }
   }
   catch (...)
   {
-    return default_value;
   }
+  return default_value;
 }
 
 int64_t JsonReader::fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value)
@@ -65,12 +73,19 @@ int64_t JsonReader::fetch_int64(const std::vector<std::string> &keys, const int6
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
-    return j.at(ptr);
+    if (j.at(ptr).is_number())
+    {
+      return j.at(ptr).get<int64_t>();
+    }
+    else if (j.at(ptr).is_string())
+    {
+      return atoi(j.at(ptr).get<std::string>().c_str());
+    }
   }
   catch (...)
   {
-    return default_value;
   }
+  return default_value;
 }
 
 bool JsonReader::fetch_bool(const std::vector<std::string> &keys, const bool &default_value)
@@ -78,12 +93,15 @@ bool JsonReader::fetch_bool(const std::vector<std::string> &keys, const bool &de
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
-    return j.at(ptr);
+    if (j.at(ptr).is_boolean())
+    {
+      return j.at(ptr);
+    }
   }
   catch (...)
   {
-    return default_value;
   }
+  return default_value;
 }
 
 void JsonReader::erase(const std::vector<std::string> &keys)
@@ -99,9 +117,12 @@ std::vector<std::string> JsonReader::fetch_object_keys(const std::vector<std::st
   try
   {
     json::reference ref = j.at(ptr);
-    for (json::iterator it = ref.begin(); it != ref.end(); ++it)
+    if (j.at(ptr).is_object())
     {
-      result.push_back(it.key());
+      for (json::iterator it = ref.begin(); it != ref.end(); ++it)
+      {
+        result.push_back(it.key());
+      }
     }
   }
   catch (...)
@@ -115,12 +136,15 @@ std::vector<std::string> JsonReader::fetch_strings(const std::vector<std::string
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
-    return j.at(ptr);
+    if (j.at(ptr).is_array())
+    {
+      return j.at(ptr);
+    }
   }
   catch (...)
   {
-    return default_value;
   }
+  return default_value;
 }
 
 std::string JsonReader::dump(const std::vector<std::string> &keys, bool pretty)
@@ -133,8 +157,8 @@ std::string JsonReader::dump(const std::vector<std::string> &keys, bool pretty)
   }
   catch (...)
   {
-    return "";
   }
+  return "";
 }
 
 std::string JsonReader::dump(bool pretty)

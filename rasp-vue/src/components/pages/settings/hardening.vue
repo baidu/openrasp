@@ -39,7 +39,7 @@
             [帮助文档]
           </a>
         </label>
-        <input type="text" class="form-control" v-model="data['inject.custom_headers']['X-Protected-By']">
+        <input type="text" class="form-control" v-model="data['inject.custom_headers']['X-Protected-By']" maxlength="200">
       </div>
 
       <div slot="footer">

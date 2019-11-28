@@ -15,7 +15,7 @@
               [帮助文档]
             </a>
           </label>
-          <input v-model.trim="data['clientip.header']" type="text" class="form-control">
+          <input v-model.trim="data['clientip.header']" type="text" class="form-control" maxlength="100">
         </div>      
         <div class="form-group">
           <label class="form-label">
@@ -82,7 +82,13 @@
             LRU 大小 [默认1000，若要关闭写 0]
           </label>
           <input v-model.number="data['lru.max_size']" type="number" min="0" class="form-control" placeholder="1000">
-        </div>    
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            LRU 原始字符串上限 [若开启原始字符串比较，超过上限直接进入插件检测；默认只存储哈希]
+          </label>
+          <input v-model.number="data['lru.compare_limit']" type="number" min="0" class="form-control" placeholder="10240">
+        </div>
         <div class="form-group">
           <label class="form-label">
             [插件] 单个hook点最大执行时间（ms）
@@ -126,7 +132,7 @@
             <input v-model="data['cpu.usage.enable']" type="checkbox" checked="data['cpu.usage.enable']" class="custom-switch-input">
             <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
-              开启熔断保护:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 当CPU占用持续超过某个值，关闭所有防护（仅 Java 版本支持）
+              开启熔断保护:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 当CPU占用持续超过某个值，关闭所有防护（仅 Java >= 1.2.1 支持）
             </span>
           </label>
           <br>
@@ -147,6 +153,14 @@
               <a href="https://rasp.baidu.com/doc/setup/panel.html#decompiler" target="_blank">
                 [帮助文档]
               </a>
+            </span>
+          </label>
+          <br>
+          <label class="custom-switch">
+            <input v-model="data['lru.compare_enable']" type="checkbox" checked="data['lru.compare_enable']" class="custom-switch-input">
+            <span class="custom-switch-indicator" />
+            <span class="custom-switch-description">
+              开启 LRU 原始字符串比较（仅 Java >= 1.2.2 支持）
             </span>
           </label>
         </div>          
