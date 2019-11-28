@@ -1,4 +1,4 @@
-const plugin_version = '2019-1101-0900'
+const plugin_version = '2019-1107-1500'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -427,7 +427,7 @@ var algorithmConfig = {
         name:   '算法2 - 拦截输出在响应里的反射 XSS',
         action: 'log',
 
-        filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]",
+        filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/>\\x00-\\x20]",
         min_length:   15,
 
         // v1.1.2 之后废弃
@@ -439,7 +439,7 @@ var algorithmConfig = {
         name:   '算法1 - PHP: 禁止直接输出 GPC 参数',
         action: 'log',
 
-        filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/ >]"
+        filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/>\\x00-\\x20]"
     },    
 
     webshell_eval: {
@@ -545,6 +545,9 @@ var forcefulBrowsing = {
     ]
 }
 
+// 指定检测header注入时检测的header名, 统一使用小写
+var headerInjection = ["user-agent", "referer", "x-forwarded-for"]
+
 // 如果你配置了非常规的扩展名映射，比如让 .abc 当做PHP脚本执行，那你可能需要增加更多扩展名
 var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml|sh|py|pl|rb)\.?$/i
 
@@ -643,9 +646,12 @@ if (algorithmConfig.eval_regex.action != 'ignore') {
 
 
 // 常用函数
-String.prototype.replaceAll = function(token, tokenValue) {
+String.prototype.replaceAll = function(token, tokenValue, maxLength) {
+    if (maxLength === undefined) {
+        maxLength = 4096
+    }
     // 空值判断，防止死循环
-    if (! token || token.length == 0) {
+    if (! token || token.length == 0 || this.length > maxLength) {
         return this
     }
 
@@ -937,8 +943,11 @@ function is_from_userinput(parameter, target)
 }
 
 // 检查逻辑是否被用户参数所修改
-function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance, is_sql=false)
+function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance, is_sql)
 {
+    if (is_sql === undefined) {
+        is_sql = false
+    }
     // 当用户输入穿越了多个token，就可以判定为代码注入，默认为2
     var start = -1, end = raw_tokens.length, distance = distance || 2
 
@@ -1027,6 +1036,54 @@ function lcs_search(str1, str2){
         result_str.add(str1.substr(item, result))
     }
     return Array.from(result_str)
+}
+
+// 从字符串中解析cookie
+function get_cookies(cookie_str) {
+    cookie_items = cookie_str.split(';')
+    var result = {}
+    for(i = 0; i < cookie_items.length; i++) {
+        item = cookie_items[i].trim()
+        if (item.length == 0) {
+            continue
+        }
+        else {
+            key_len = item.indexOf("=")
+            if (key_len <= 0) {
+                continue
+            }
+            key = unescape(item.substr(0, key_len))
+            value = unescape(item.substr(key_len + 1))
+            result[key] = value
+        }
+    }
+    return result
+}
+
+// 合并header、cookie、parameter参数， header、cookie的key会被重命名
+function get_all_parameter(context) {
+    var key_num = 0
+    var parameter = context.parameter || {}
+    if ( context.header != null) {
+        for (name in context.header) {
+            if ( name.toLowerCase() == "cookie") {
+                var cookies = get_cookies(context.header.cookie)
+                for (name in cookies) {
+                    while("c" + key_num in parameter) {
+                        key_num ++
+                    }
+                    parameter["c" + key_num] = [cookies[name]]
+                }
+            }
+            else if ( headerInjection.indexOf(name.toLowerCase()) != -1) {
+                while("h" + key_num in parameter) {
+                    key_num ++
+                }
+                parameter["h" + key_num] = [context.header[name]]
+            }
+        }
+    }
+    return parameter
 }
 
 // 下个版本将会支持翻译，目前还需要暴露一个 getText 接口给插件
@@ -1145,13 +1202,35 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                         value_list = value_list.concat(Object.values(value))
                     }
                 })
-
                 reason = _run(value_list, name)
                 if (reason) {
                     return true
                 }
             })
 
+            // 匹配 header 参数
+            if ( context.header != null) {
+                Object.keys(context.header).some(function (name) {
+                    if ( name.toLowerCase() == "cookie") {
+                        var cookies = get_cookies(context.header.cookie)
+                        for (name in cookies) {
+                            reason = _run([cookies[name]], "cookie:" + name)
+                            if (reason) {
+                                return true
+                            }
+                        }
+                    }
+                    else if ( headerInjection.indexOf(name.toLowerCase()) != -1) {
+                        reason = _run([context.header[name]], "header:" + name)
+                        if (reason) {
+                            return true
+                        }
+                    }
+                    
+                })
+            }
+
+            // 匹配json参数
             if (Object.keys(json_parameters).length > 0) {
                 var jsons = [ [json_parameters, "input_json"] ]
                 while (jsons.length > 0 && reason === false) {
@@ -1172,8 +1251,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 }
             }
 
-            if (reason !== false)
-            {
+            if (reason !== false) {
                 return {
                     action:     algorithmConfig.sql_userinput.action,
                     confidence: 90,
@@ -1283,7 +1361,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 {
                     // `information_schema`.tables
                     // information_schema  .tables
-                    var part = tokens_lc[i + 1].replaceAll('`', '')
+                    var part = tokens_lc[i + 1].replaceAll('`', '', 40)
                     // 正常的antlr和flex返回1个token
                     if (part == 'information_schema.tables')
                     {
@@ -1293,7 +1371,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                     // flex在1.1.2以前会产生3个token
                     else if (part == 'information_schema' && i < tokens_lc.length - 3)
                     {
-                        var part2 = tokens_lc[i + 3].replaceAll('`', '')
+                        var part2 = tokens_lc[i + 3].replaceAll('`', '', 10)
                         if (part2 == "tables")
                         {
                             reason = _("SQLi - Detected access to MySQL information_schema.tables table")
@@ -1333,18 +1411,17 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
     })
 
     plugin.register('ssrf', function (params, context) {
-        var parameter = context.parameter || {}
         var hostname  = params.hostname
         var url       = params.url
         var ip        = params.ip
 
         var reason    = false
-        var action    = 'ignore'
 
         // 算法1 - 当参数来自用户输入，且为内网IP，判定为SSRF攻击
         if (algorithmConfig.ssrf_userinput.action != 'ignore')
         {
-            if (is_from_userinput(parameter, url))
+            var all_parameter = get_all_parameter(context)
+            if (is_from_userinput(all_parameter, url))
             {
                 if (ip.length && /^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(ip[0]))
                 {
@@ -1381,10 +1458,11 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
             }
         }
 
-        // 算法3 - 检测 AWS/Aliyun/GoogleCloud 私有地址
+        // 算法3 - 检测 AWS/Aliyun/GoogleCloud 私有地址: 拦截IP访问、绑定域名访问两种方式
         if (algorithmConfig.ssrf_aws.action != 'ignore')
         {
-            if (hostname == '169.254.169.254' || hostname == '100.100.100.200' || hostname == 'metadata.google.internal')
+            if (ip == '169.254.169.254' || ip == '100.100.100.200'
+                || hostname == '169.254.169.254' || hostname == '100.100.100.200' || hostname == 'metadata.google.internal')
             {
                 return {
                     action:     algorithmConfig.ssrf_aws.action,
@@ -1476,11 +1554,8 @@ plugin.register('sql_exception', function(params, context) {
 
 plugin.register('directory', function (params, context) {
 
-    var path        = params.path
     var realpath    = params.realpath
-    var appBasePath = context.appBasePath
     var server      = context.server
-    var parameter   = context.parameter || {}
 
     var is_windows  = server.os.indexOf('Windows') != -1
     var language    = server.language
@@ -1503,7 +1578,9 @@ plugin.register('directory', function (params, context) {
     // 算法1 - 用户输入匹配。
     if (algorithmConfig.directory_userinput.action != 'ignore')
     {
-        if (is_path_containing_userinput(parameter, params.path, is_windows, algorithmConfig.directory_userinput.lcs_search))
+       var all_parameter = get_all_parameter(context)
+
+        if (is_path_containing_userinput(all_parameter, params.path, is_windows, algorithmConfig.directory_userinput.lcs_search))
         {
             return {
                 action:     algorithmConfig.directory_userinput.action,
@@ -1535,7 +1612,6 @@ plugin.register('directory', function (params, context) {
 
 plugin.register('readFile', function (params, context) {
     var server    = context.server
-    var parameter = context.parameter || {}
     var is_win    = server.os.indexOf('Windows') != -1
 
     // weblogic/tongweb 下面，所有war包读取操作全部忽略
@@ -1555,9 +1631,11 @@ plugin.register('readFile', function (params, context) {
     //
     if (algorithmConfig.readFile_userinput.action != 'ignore')
     {
+        var all_parameter = get_all_parameter(context)
+
         // ?path=/etc/./hosts
         // ?path=../../../etc/passwd
-        if (is_path_endswith_userinput(parameter, params.path, params.realpath, is_win, algorithmConfig.readFile_userinput.lcs_search))
+        if (is_path_endswith_userinput(all_parameter, params.path, params.realpath, is_win, algorithmConfig.readFile_userinput.lcs_search))
         {
             return {
                 action:     algorithmConfig.readFile_userinput.action,
@@ -1567,7 +1645,7 @@ plugin.register('readFile', function (params, context) {
             }
         }
         // @FIXME: 用户输入匹配了两次，需要提高效率
-        if (is_from_userinput(parameter, params.path))
+        if (is_from_userinput(all_parameter, params.path))
         {
             // 获取协议，如果有
             var proto = params.path.split('://')[0].toLowerCase()
@@ -1648,7 +1726,6 @@ plugin.register('readFile', function (params, context) {
 plugin.register('include', function (params, context) {
     var url       = params.url
     var server    = context.server
-    var parameter = context.parameter || {}
     var is_win    = server.os.indexOf('Windows') != -1
     var realpath  = params.realpath
 
@@ -1657,7 +1734,9 @@ plugin.register('include', function (params, context) {
     // ?file=../../../../../var/log/httpd/error.log
     if (algorithmConfig.include_userinput.action != 'ignore')
     {
-        if (is_path_endswith_userinput(parameter, url, realpath, is_win, algorithmConfig.include_userinput.lcs_search))
+        var all_parameter = get_all_parameter(context)
+
+        if (is_path_endswith_userinput(all_parameter, url, realpath, is_win, algorithmConfig.include_userinput.lcs_search))
         {
             return {
                 action:     algorithmConfig.include_userinput.action,
@@ -1727,13 +1806,13 @@ plugin.register('writeFile', function (params, context) {
     // https://rasp.baidu.com/doc/dev/official.html#case-file-write
     if (algorithmConfig.writeFile_script.action != 'ignore')
     {
-        var parameter = context.parameter || {}
+        var all_parameter = get_all_parameter(context)
         var is_win    = context.server.os.indexOf('Windows') != -1
         if (scriptFileRegex.test(params.realpath))
         {
             if (!(algorithmConfig.writeFile_script.userinput) ||
                 ((algorithmConfig.writeFile_script.userinput) &&
-                (is_path_endswith_userinput(parameter, params.path, params.realpath, is_win, algorithmConfig.writeFile_script.lcs_search)))
+                (is_path_endswith_userinput(all_parameter, params.path, params.realpath, is_win, algorithmConfig.writeFile_script.lcs_search)))
             ) {
                 return {
                     action:     algorithmConfig.writeFile_script.action,
@@ -1879,8 +1958,8 @@ plugin.register('command', function (params, context) {
                 'org.jboss.el.util.ReflectionUtil.invokeMethod':                                _("Reflected command execution - Using JBoss EL method"),
                 'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                _("Reflected command execution - Using BeHinder defineClass webshell"),
                 'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute':                     _("Reflected command execution - Using Groovy library"),
-                'bsh.Reflect.invokeMethod':                                                     _("Reflected command execution - Using Beanshell"),
-                'jdk.scripting.nashorn/jdk.nashorn.internal.runtime.ScriptFunction.invoke':     _("Command execution - Using apache solr")
+                'bsh.Reflect.invokeMethod':                                                     _("Reflected command execution - Using BeanShell library"),
+                'jdk.scripting.nashorn/jdk.nashorn.internal.runtime.ScriptFunction.invoke':     _("Reflected Command execution - Using Nashorn engine")
             }
 
             var userCode = false, reachedInvoke = false, i = 0
@@ -1973,6 +2052,7 @@ plugin.register('command', function (params, context) {
         var min_length = algorithmConfig.command_userinput.min_length
         var parameters = context.parameter || {}
         var raw_tokens = []
+        var json_parameters = context.json || {}
 
         // 检查命令逻辑是否被用户参数所修改
         function _run(values, name)
@@ -2027,6 +2107,49 @@ plugin.register('command', function (params, context) {
                 return true
             }
         })
+
+        // 匹配 header 参数
+        if ( context.header != null) {
+            Object.keys(context.header).some(function (name) {
+                if ( name.toLowerCase() == "cookie") {
+                    var cookies = get_cookies(context.header.cookie)
+                    for (name in cookies) {
+                        reason = _run([cookies[name]], "cookie:" + name)
+                        if (reason) {
+                            return true
+                        }
+                    }
+                }
+                else if ( headerInjection.indexOf(name.toLowerCase()) != -1) {
+                    reason = _run([context.header[name]], "header:" + name)
+                    if (reason) {
+                        return true
+                    }
+                }
+                
+            })
+        }
+
+        // 匹配json参数
+        if (Object.keys(json_parameters).length > 0) {
+            var jsons = [ [json_parameters, "input_json"] ]
+            while (jsons.length > 0 && reason === false) {
+                var json_arr = jsons.pop()
+                var crt_json_key = json_arr[1]
+                var json_obj = json_arr[0]
+                for (item in json_obj) {
+                    if (typeof json_obj[item] == "string") {
+                        reason = _run([json_obj[item]], crt_json_key + "->" + item)
+                        if(reason !== false) {
+                            break;
+                        }
+                    }
+                    else if (typeof json_obj[item] == "object") {
+                        jsons.push([json_obj[item], crt_json_key + "->" + item])
+                    }
+                }
+            }
+        }
 
         if (reason !== false)
         {
@@ -2088,7 +2211,7 @@ plugin.register('xxe', function (params, context) {
     }
 
     if (items.length >= 2) {
-        var protocol = items[0]
+        var protocol = items[0].toLowerCase()
         var address  = items[1]
 
         // 拒绝特殊协议
@@ -2106,6 +2229,7 @@ plugin.register('xxe', function (params, context) {
 
         // file 协议 + 绝对路径, e.g
         // file:///etc/passwd
+        // file:///etc/passwd?a=1#b=2 (仅Java支持)
         //
         // 相对路径容易误报, e.g
         // file://xwork.dtd
@@ -2114,6 +2238,14 @@ plugin.register('xxe', function (params, context) {
             if (address.length > 0 && protocol === 'file' && is_absolute_path(address, is_win) )
             {
                 var address_lc = address.toLowerCase()
+                
+                // 1.0 Rhino 引擎不支持URL对象，考虑到 1.0 用户不多，先简单处理下
+                try
+                {
+                    var urlObj = new URL(address_lc)
+                    address_lc = urlObj.pathname
+                }
+                catch (e) {}
 
                 // 过滤掉 xml、dtd
                 if (! address_lc.endsWith('.xml') &&
