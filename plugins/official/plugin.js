@@ -1,4 +1,4 @@
-const plugin_version = '2019-1107-1500'
+const plugin_version = '2019-1121-1500'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
