@@ -263,6 +263,13 @@ var algorithmConfig = {
         lcs_search: false
     },
 
+    // 任意文件删除 - 使用 ../跳出目录
+    deleteFile_userinput: {
+        name:      '算法1 - 用户输入匹配，禁止使用 ../ 删除文件',
+        action:    'block',
+        lcs_search: false
+    },
+
     // 重命名监控 - 将普通文件重命名为webshell，
     // 案例有 MOVE 方式上传后门、CVE-2018-9134 dedecms v5.7 后台重命名 getshell
     rename_webshell: {
@@ -1807,7 +1814,7 @@ plugin.register('writeFile', function (params, context) {
     if (algorithmConfig.writeFile_script.action != 'ignore')
     {
         var all_parameter = get_all_parameter(context)
-        var is_win    = context.server.os.indexOf('Windows') != -1
+        var is_win = context.server.os.indexOf('Windows') != -1
         if (scriptFileRegex.test(params.realpath))
         {
             if (!(algorithmConfig.writeFile_script.userinput) ||
@@ -1827,6 +1834,23 @@ plugin.register('writeFile', function (params, context) {
     return clean
 })
 
+plugin.register('deleteFile', function (params, context) {
+
+    if (algorithmConfig.deleteFile_userinput.action != 'ignore')
+    {
+        var all_parameter = get_all_parameter(context)
+        var is_win = context.server.os.indexOf('Windows') != -1
+        if (is_path_endswith_userinput(all_parameter, params.path, params.realpath, is_win, algorithmConfig.deleteFile_userinput.lcs_search)) {
+            return {
+                action:     algorithmConfig.deleteFile_userinput.action,
+                message:    _("File delete - Deleting files specified by userinput, file is %1%", [params.realpath]),
+                confidence: 85,
+                algorithm:  'deleteFile_userinput'
+            }
+        }
+    }
+    return clean
+})
 
 
 plugin.register('fileUpload', function (params, context) {
