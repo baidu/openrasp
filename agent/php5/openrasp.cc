@@ -37,6 +37,7 @@ extern "C"
 #include "openrasp_security_policy.h"
 #include "openrasp_output_detect.h"
 #include "openrasp_check_type.h"
+#include "openrasp_signal.h"
 #ifdef HAVE_FSWATCH
 #include "openrasp_fswatch.h"
 #endif
@@ -301,6 +302,7 @@ PHP_RINIT_FUNCTION(openrasp)
         result = PHP_RINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_v8)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_output_detect)(INIT_FUNC_ARGS_PASSTHRU);
+        result = PHP_RINIT(openrasp_signal)(INIT_FUNC_ARGS_PASSTHRU);
         hook_without_params(REQUEST TSRMLS_CC);
     }
     return SUCCESS;
