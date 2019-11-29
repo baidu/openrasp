@@ -43,7 +43,7 @@ struct sigaction old_acts[SIGUSR2];
 bool is_set_handler = false;
 std::mutex mtx;
 
-bool fork_and_exec(const char *cmd)
+int fork_and_exec(const char *cmd)
 {
     const char *argv[4] = {"sh", "-c", cmd, nullptr};
 
@@ -52,7 +52,7 @@ bool fork_and_exec(const char *cmd)
     if (pid < 0)
     {
         // fork failed
-        return false;
+        return -1;
     }
     else if (pid == 0)
     {
@@ -77,11 +77,11 @@ bool fork_and_exec(const char *cmd)
             switch (errno)
             {
             case ECHILD:
-                return true;
+                return 0;
             case EINTR:
                 break;
             default:
-                return false;
+                return -1;
             }
         }
 
@@ -114,9 +114,9 @@ void report_crash_log(int sig)
     log << "Worker " << getpid() << " received signal: " << sig << std::endl;
     log << "PHP version: " << get_phpversion()
 #ifdef ZTS
-           << " (ZTS)"
+        << " (ZTS)"
 #endif
-           << std::endl;
+        << std::endl;
     log << "OpenRASP version: " << OpenRASPInfo::PHP_OPENRASP_VERSION << std::endl;
     log << "V8 version: " << ZEND_TOSTR(V8_MAJOR_VERSION) "." ZEND_TOSTR(V8_MINOR_VERSION) << std::endl;
 #ifdef OPENRASP_BUILD_TIME
@@ -156,9 +156,9 @@ void report_crash_log(int sig)
     }
     char cmd[4 * 1024];
     snprintf(cmd, 4 * 1024, "cd %s && sh crash.sh %s", openrasp_ini.root_dir, log_path.c_str());
-    if (!fork_and_exec(cmd))
+    if (fork_and_exec(cmd) != 0)
     {
-        std::cout << "failed to report crash log" << std::endl;
+        log << "\nfailed to report crash log" << std::endl;
     }
 }
 
@@ -221,7 +221,7 @@ int set_signal_handler(int sig, sa_sigaction_t handler)
     sigfillset(&(act.sa_mask));
     act.sa_handler = SIG_DFL;
     act.sa_sigaction = handler;
-    act.sa_flags = SA_SIGINFO;
+    act.sa_flags = SA_SIGINFO | SA_RESETHAND;
     return sigaction(sig, &act, &old_acts[sig]);
 }
 
@@ -234,11 +234,9 @@ PHP_RINIT_FUNCTION(openrasp_signal)
         {
             is_set_handler = true;
             set_signal_handler(SIGSEGV, signal_handler);
-            set_signal_handler(SIGPIPE, signal_handler);
             set_signal_handler(SIGBUS, signal_handler);
             set_signal_handler(SIGILL, signal_handler);
             set_signal_handler(SIGFPE, signal_handler);
-            set_signal_handler(SIGXFSZ, signal_handler);
         }
     }
     return SUCCESS;
