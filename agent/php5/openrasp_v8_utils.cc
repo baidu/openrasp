@@ -319,14 +319,13 @@ std::vector<int64_t> extract_int64_array(Isolate *isolate, const std::string &va
     if (nullptr != isolate)
     {
         std::string script = R"(
-        (function () {
-            var result = undefined
+        (function () 
+        {
             try {
-                    result = )" +
+                    return )" +
                              value + R"(.filter(value => typeof value === 'number');
                 } catch (_) {}
-                return result
-            })()
+        })()
         )";
         v8::HandleScope handle_scope(isolate);
         auto context = isolate->GetCurrentContext();
@@ -334,21 +333,29 @@ std::vector<int64_t> extract_int64_array(Isolate *isolate, const std::string &va
         if (!rst.IsEmpty())
         {
             std::vector<int64_t> result;
-            auto arr = rst.ToLocalChecked().As<v8::Array>();
-            auto len = arr->Length();
-            if (len > limit)
+            auto v8_arr = rst.ToLocalChecked();
+            if (!v8_arr.IsEmpty() && v8_arr->IsArray())
             {
-                openrasp_error(LEVEL_WARNING, PLUGIN_ERROR,
-                               _("Size of %s must <= %d."), value.c_str(), limit);
+                auto arr = v8_arr.As<v8::Array>();
+                auto len = arr->Length();
+                if (len > limit)
+                {
+                    openrasp_error(LEVEL_WARNING, PLUGIN_ERROR,
+                                   _("Size of %s must <= %d."), value.c_str(), limit);
+                }
+                for (size_t i = 0; i < len; i++)
+                {
+                    v8::HandleScope handle_scope(isolate);
+                    auto item = arr->Get(context, i).ToLocalChecked();
+                    if (!item.IsEmpty() && item->IsInt32())
+                    {
+                        v8::Local<v8::Integer> err_code_local = item.As<v8::Integer>();
+                        int64_t err_code = err_code_local->Value();
+                        result.push_back(err_code);
+                    }
+                }
+                return result;
             }
-            for (size_t i = 0; i < len; i++)
-            {
-                v8::HandleScope handle_scope(isolate);
-                v8::Local<v8::Integer> err_code_local = arr->Get(context, i).ToLocalChecked().As<v8::Integer>();
-                int64_t err_code = err_code_local->Value();
-                result.push_back(err_code);
-            }
-            return result;
         }
     }
     return default_value;
@@ -359,40 +366,114 @@ std::vector<std::string> extract_string_array(Isolate *isolate, const std::strin
     if (nullptr != isolate)
     {
         std::string script;
-        script.append(R"( (function () {
-            var result = undefined
+        script.append(R"( 
+        (function () 
+        {
             try {
-                result = )")
+                return )")
             .append(value)
             .append(R"(.filter(value => typeof value === 'string')
             } catch (_) {}
-            return result
-        })())");
+        })()
+        )");
         v8::HandleScope handle_scope(isolate);
         auto context = isolate->GetCurrentContext();
         auto rst = isolate->ExecScript(script, "extract_string_array_" + value);
         if (!rst.IsEmpty())
         {
             std::vector<std::string> result;
-            auto arr = rst.ToLocalChecked().As<v8::Array>();
-            auto len = arr->Length();
-            if (len > limit)
+            auto v8_arr = rst.ToLocalChecked();
+            if (!v8_arr.IsEmpty() && v8_arr->IsArray())
             {
-                openrasp_error(LEVEL_WARNING, PLUGIN_ERROR,
-                               _("Size of %s must <= %d."), value.c_str(), limit);
-            }
-            for (size_t i = 0; i < len; i++)
-            {
-                v8::HandleScope handle_scope(isolate);
-                v8::Local<v8::Value> item;
-                if (!arr->Get(context, i).ToLocal(&item) || !item->IsString())
+                auto arr = v8_arr.As<v8::Array>();
+                auto len = arr->Length();
+                if (len > limit)
                 {
-                    continue;
+                    openrasp_error(LEVEL_WARNING, PLUGIN_ERROR,
+                                   _("Size of %s must <= %d."), value.c_str(), limit);
                 }
-                v8::String::Utf8Value value(isolate, item);
-                result.push_back(std::string(*value, value.length()));
+                for (size_t i = 0; i < len; i++)
+                {
+                    v8::HandleScope handle_scope(isolate);
+                    v8::Local<v8::Value> item;
+                    if (!arr->Get(context, i).ToLocal(&item) || !item->IsString())
+                    {
+                        continue;
+                    }
+                    v8::String::Utf8Value value(isolate, item);
+                    result.push_back(std::string(*value, value.length()));
+                }
+                return result;
             }
-            return result;
+        }
+    }
+    return default_value;
+}
+
+int64_t extract_int64(Isolate *isolate, const std::string &value, const int64_t &default_value)
+{
+    if (nullptr != isolate)
+    {
+        std::string script = R"(
+        (function () 
+        {
+            try {
+                    if (Number.isInteger()" +
+                             value + R"())
+                    {
+                        return )" +
+                             value + R"(
+                    }
+                } catch (_) {}
+        })()
+        )";
+        v8::HandleScope handle_scope(isolate);
+        auto context = isolate->GetCurrentContext();
+        auto rst = isolate->ExecScript(script, "extract_int64_" + value);
+        if (!rst.IsEmpty())
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto v8_value = rst.ToLocalChecked();
+            if (!v8_value.IsEmpty() && v8_value->IsInt32())
+            {
+                v8::Local<v8::Integer> v8_result = v8_value.As<v8::Integer>();
+                return v8_result->Value();
+            }
+        }
+    }
+    return default_value;
+}
+
+std::string extract_string(Isolate *isolate, const std::string &value, const std::string &default_value)
+{
+    if (nullptr != isolate)
+    {
+        std::string script = R"(
+        (function () 
+        {
+            try {
+                    if (typeof )" +
+                             value + R"( === 'string')
+                    {
+                        return )" +
+                             value + R"(
+                    }
+                } catch (_) {}
+        })()
+        )";
+        v8::HandleScope handle_scope(isolate);
+        auto context = isolate->GetCurrentContext();
+        auto rst = isolate->ExecScript(script, "extract_string_" + value);
+        if (!rst.IsEmpty())
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto v8_value = rst.ToLocalChecked();
+            if (!v8_value.IsEmpty() && v8_value->IsString())
+            {
+                v8::Local<v8::String> v8_result = v8_value.As<v8::String>();
+                v8::String::Utf8Value value(isolate, v8_result);
+                return std::string(*value, value.length());
+            }
         }
     }
     return default_value;

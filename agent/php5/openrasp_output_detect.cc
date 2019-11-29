@@ -130,9 +130,9 @@ static void _check_header_content_type_if_html(void *data, void *arg TSRMLS_DC)
 
 static bool _gpc_parameter_filter(const zval *param TSRMLS_DC)
 {
-    if (Z_TYPE_P(param) == IS_STRING && Z_STRLEN_P(param) > OPENRASP_CONFIG(xss.min_param_length))
+    if (Z_TYPE_P(param) == IS_STRING && Z_STRLEN_P(param) > OUTPUT_G(min_param_length))
     {
-        if (openrasp::regex_search(Z_STRVAL_P(param), OPENRASP_CONFIG(xss.filter_regex).c_str()))
+        if (openrasp::regex_search(Z_STRVAL_P(param), OUTPUT_G(filter_regex).c_str()))
         {
             return true;
         }
@@ -170,7 +170,7 @@ static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionT
         }
         if (_gpc_parameter_filter(*ele_value TSRMLS_CC))
         {
-            if (++count > OPENRASP_CONFIG(xss.max_detection_num))
+            if (++count > OUTPUT_G(max_detection_num))
             {
                 continue;
             }

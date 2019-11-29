@@ -48,10 +48,4 @@ void ConfigHolder::SetLatestUpdateTime(long latestUpdateTime)
   this->latestUpdateTime = latestUpdateTime;
 }
 
-bool ConfigHolder::updateAlgorithmConfig()
-{
-  xss.update();
-  return true;
-}
-
 } // namespace openrasp

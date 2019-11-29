@@ -42,7 +42,7 @@ int echo_print_handler(zend_execute_data *execute_data)
         !openrasp_check_type_ignored(XSS_ECHO))
     {
         std::string opname = (opline->extended_value == 0) ? "echo" : "print";
-        openrasp::data::EchoObject echo_obj(inc_filename, opname, OPENRASP_CONFIG(xss.echo_filter_regex));
+        openrasp::data::EchoObject echo_obj(inc_filename, opname, OPENRASP_HOOK_G(echo_filter_regex));
         openrasp::checker::BuiltinDetector builtin_detector(echo_obj);
         builtin_detector.run();
     }

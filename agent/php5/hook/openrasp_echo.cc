@@ -26,7 +26,7 @@ int echo_print_handler(ZEND_OPCODE_HANDLER_ARGS)
         OPENRASP_OP1_TYPE(opline) == IS_VAR)
     {
         std::string opname = (opline->opcode == ZEND_ECHO) ? "echo" : "print";
-        openrasp::data::EchoObject echo_obj(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr, opname, OPENRASP_CONFIG(xss.echo_filter_regex));
+        openrasp::data::EchoObject echo_obj(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr, opname, OPENRASP_HOOK_G(echo_filter_regex));
         openrasp::checker::BuiltinDetector builtin_detector(echo_obj);
         builtin_detector.run();
     }

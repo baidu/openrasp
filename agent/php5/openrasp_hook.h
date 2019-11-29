@@ -276,6 +276,7 @@ int check_type_white_bit_mask;
 openrasp::LRU<std::string, bool> lru;
 long origin_pg_error_verbos;
 std::vector<std::string> callable_blacklist;
+std::string echo_filter_regex;
 ZEND_END_MODULE_GLOBALS(openrasp_hook)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp_hook);
