@@ -22,6 +22,7 @@ extern "C"
 {
 #include "php.h"
 }
+#include "openrasp.h"
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
 #include "agent/shared_config_manager.h"
@@ -30,6 +31,9 @@ extern "C"
 #endif
 #include <execinfo.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #include <iostream>
 #include <fstream>
 
@@ -122,7 +126,7 @@ void report_crash_log(int sig)
     log << "Commit ID: " << OPENRASP_COMMIT_ID << std::endl;
 #endif
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
-    if (remote_active && openrasp::oam)
+    if (openrasp::oam)
     {
         const char *plugin_version = openrasp::oam->get_plugin_version();
         log << "Plugin version: " << std::string(plugin_version ? plugin_version : "") << std::endl;
@@ -146,21 +150,12 @@ void report_crash_log(int sig)
             {
                 log << strings[i] << std::endl;
             }
-            log << std::endl;
             free(strings);
-        }
-    }
-    {
-        log << "PHP stacks: " << std::endl;
-        auto arr = format_debug_backtrace_arr();
-        for (auto &i : arr)
-        {
-            log << i << std::endl;
         }
         log << std::endl;
     }
     char cmd[4 * 1024];
-    snprintf(cmd, 4 * 1024, "cd %s && sh report.sh %s", openrasp_ini.root_dir, log_path.c_str());
+    snprintf(cmd, 4 * 1024, "cd %s && sh crash.sh %s", openrasp_ini.root_dir, log_path.c_str());
     if (!fork_and_exec(cmd))
     {
         std::cout << "failed to report crash log" << std::endl;
