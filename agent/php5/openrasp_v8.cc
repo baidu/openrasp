@@ -29,6 +29,7 @@ extern "C"
 #include "openrasp_v8.h"
 #include "openrasp_hook.h"
 #include "openrasp_ini.h"
+#include "openrasp_output_detect.h"
 #include "agent/shared_config_manager.h"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"
@@ -179,9 +180,20 @@ PHP_RINIT_FUNCTION(openrasp_v8)
                 v8::HandleScope handle_scope(isolate);
                 isolate->GetData()->request_context_templ.Reset(isolate, CreateRequestContextTemplate(isolate));
                 OPENRASP_V8_G(isolate) = isolate;
-                static const std::vector<std::string> default_callable_blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
-                OPENRASP_HOOK_G(callable_blacklist) = extract_string_array(isolate, "RASP.algorithmConfig.webshell_callable.functions", 100, default_callable_blacklist);
-                OPENRASP_G(config).updateAlgorithmConfig();
+
+                {
+                    static const std::vector<std::string> default_callable_blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
+                    static const std::string default_echo_filter_regex = "<![\\\\-\\\\[A-Za-z]|<([A-Za-z]{1,12})[\\\\/ >]";
+                    static const std::string default_filter_regex = "<![\\\\-\\\\[A-Za-z]|<([A-Za-z]{1,12})[\\\\/ >]";
+                    static const int64_t default_min_param_length = 15;
+                    static const int64_t default_max_detection_num = 10;
+
+                    OPENRASP_HOOK_G(callable_blacklist) = extract_string_array(isolate, "RASP.algorithmConfig.webshell_callable.functions", 100, default_callable_blacklist);
+                    OPENRASP_HOOK_G(echo_filter_regex) = extract_string(isolate, "RASP.algorithmConfig.xss_echo.filter_regex", default_echo_filter_regex);
+                    OUTPUT_G(filter_regex) = extract_string(isolate, "RASP.algorithmConfig.xss_userinput.filter_regex", default_filter_regex);
+                    OUTPUT_G(min_param_length) = extract_int64(isolate, "RASP.algorithmConfig.xss_userinput.min_length", default_min_param_length);
+                    OUTPUT_G(max_detection_num) = extract_int64(isolate, "RASP.algorithmConfig.xss_userinput.max_detection_num", default_max_detection_num);
+                }
             }
         }
     }
