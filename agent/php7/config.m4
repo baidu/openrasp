@@ -508,6 +508,7 @@ int main() {
     openrasp_v8_utils.cc \
     openrasp_security_policy.cc \
     openrasp_ini.cc \
+    openrasp_signal.cc \
     utils/read_write_lock.cc \
     utils/double_array_trie.cc \
     utils/string.cc \
