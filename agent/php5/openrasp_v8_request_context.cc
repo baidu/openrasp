@@ -315,7 +315,6 @@ static void nic_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<
     v8::Isolate *isolate = info.GetIsolate();
     auto context = isolate->GetCurrentContext();
     int num = if_addr_map.size();
-    v8::Local<v8::Object> obj;
     v8::Local<v8::Array> arr = v8::Array::New(isolate, num);
     int index = 0;
     for (auto iter = if_addr_map.begin(); iter != if_addr_map.end(); iter++)
@@ -325,7 +324,7 @@ static void nic_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<
         pair_obj->Set(context, NewV8String(isolate, "ip"), NewV8String(isolate, iter->second)).IsJust();
         arr->Set(context, index++, pair_obj).IsJust();
     }
-    info.GetReturnValue().Set(obj);
+    info.GetReturnValue().Set(arr);
 }
 static void source_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {

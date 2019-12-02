@@ -25,6 +25,7 @@ import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SqlConnectionChecker extends PolicyChecker {
 
@@ -44,7 +45,7 @@ public class SqlConnectionChecker extends PolicyChecker {
     private static final String DEFAULT_SQLSERVRE_PORT = "1433";
     private static final String[] WEAK_WORDS = new String[]{"root", "123", "123456", "a123456", "123456a", "111111",
             "123123", "admin", "user", "mysql", ""};
-    public static HashMap<String, Long> alarmTimeCache = new HashMap<String, Long>();
+    public static ConcurrentHashMap<String, Long> alarmTimeCache = new ConcurrentHashMap<String, Long>();
 
     private boolean checkUser(String user, String sqlType) {
         boolean isSafe = true;
