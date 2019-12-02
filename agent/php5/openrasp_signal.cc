@@ -234,6 +234,7 @@ PHP_RINIT_FUNCTION(openrasp_signal)
         {
             is_set_handler = true;
             set_signal_handler(SIGSEGV, signal_handler);
+            set_signal_handler(SIGABRT, signal_handler);
             set_signal_handler(SIGBUS, signal_handler);
             set_signal_handler(SIGILL, signal_handler);
             set_signal_handler(SIGFPE, signal_handler);
