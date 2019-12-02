@@ -31,7 +31,8 @@ public class TomcatInstaller extends BaseStandardInstaller {
 
     private static String OPENRASP_START_TAG = "rem BEGIN OPENRASP - DO NOT MODIFY" + LINE_SEP;
     private static String OPENRASP_END_TAG = "rem END OPENRASP" + LINE_SEP;
-    private static String OPENRASP_CONFIG = "if \"%ACTION%\" == \"start\" set JAVA_OPTS=\"-javaagent:%CATALINA_HOME%\\rasp\\rasp.jar -XX:OnError=\\\"cmd -c %CATALINA_HOME%\\\\rasp\\\\crash.cmd\\\" \" %JAVA_OPTS%" + LINE_SEP;
+    private static String OPENRASP_CONFIG = "if \"%ACTION%\" == \"start\" set JAVA_OPTS=\"-javaagent:%CATALINA_HOME%\\rasp\\rasp.jar " +
+            "-XX:OnError='cmd /c powershell -ep bypass -file \\\"%CATALINA_HOME%\\\\rasp\\\\crash.ps1\\\" -crashFile \\\"%cd%\\\\hs_err_pid%p.log\\\"' \" %JAVA_OPTS%" + LINE_SEP;
     private static String JDK_JAVA_OPTIONS = "set \"JDK_JAVA_OPTIONS=%JDK_JAVA_OPTIONS% --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED\"" + LINE_SEP;
 
     private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*\\\\rasp\\\\).*");

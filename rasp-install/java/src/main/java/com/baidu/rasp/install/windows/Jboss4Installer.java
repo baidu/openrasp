@@ -31,7 +31,8 @@ public class Jboss4Installer extends BaseStandardInstaller {
 
     private static String OPENRASP_CONFIG =
             "rem BEGIN OPENRASP - DO NOT MODIFY" + LINE_SEP +
-                    "set JAVA_OPTS=-javaagent:%JBOSS_HOME%\\rasp\\rasp.jar -XX:OnError=\"cmd -c %JBOSS_HOME\\\\rasp\\\\crash.cmd\" %JAVA_OPTS%" + LINE_SEP +
+                    "set JAVA_OPTS=-javaagent:%JBOSS_HOME%\\rasp\\rasp.jar " +
+                    "-XX:OnError='cmd /c powershell -ep bypass -file \"%JBOSS_HOME%\\rasp\\crash.ps1\" -crashFile \"%cd%\\hs_err_pid%p.log\"' %JAVA_OPTS%" + LINE_SEP +
                     "rem END OPENRASP" + LINE_SEP;
     private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*\\\\rasp\\\\).*");
 
