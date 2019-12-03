@@ -28,7 +28,6 @@ import java.util.HashMap;
  */
 public abstract class AbstractRedirectHook extends AbstractClassHook {
 
-
     /**
      * (none-javadoc)
      *
@@ -39,21 +38,47 @@ public abstract class AbstractRedirectHook extends AbstractClassHook {
         return "ssrf_redirect";
     }
 
-    public static void checkHttpRedirect(HashMap<String, Object> params,
-                                         HashMap<String, Object> redirectParams, Object response) {
+    public static void checkHttpClientRedirect(HashMap<String, Object> params,
+                                               HashMap<String, Object> redirectParams, Object response) {
         params.put("url2", redirectParams.get("url"));
         params.put("hostname2", redirectParams.get("hostname"));
         params.put("port2", redirectParams.get("port"));
         params.put("ip2", redirectParams.get("ip"));
-        Object statusLine = Reflection.invokeMethod(response, "setStatusLine", new Class[]{});
+        Object statusLine = Reflection.invokeMethod(response, "getStatusLine", new Class[]{});
         if (statusLine != null) {
-            String statusMsg = Reflection.invokeStringMethod(response, "getReasonPhrase", new Class[]{});
+            String statusMsg = Reflection.invokeStringMethod(statusLine, "getReasonPhrase", new Class[]{});
             statusMsg = statusMsg == null ? "" : statusMsg;
             params.put("http_message", statusMsg);
-            int statusCode = (Integer) Reflection.invokeMethod(response, "getStatusCode", new Class[]{});
+            int statusCode = (Integer) Reflection.invokeMethod(statusLine, "getStatusCode", new Class[]{});
             statusCode = statusCode < 0 ? 0 : statusCode;
             params.put("http_status", statusCode);
         }
+        HookHandler.doCheck(CheckParameter.Type.SSRF_REDIRECT, params);
+    }
+
+    public static void checkUrlConnHttpRedirect(HashMap<String, Object> params,
+                                                HashMap<String, Object> redirectParams, Object response) {
+        Object statusLine = Reflection.invokeMethod(response, "getStatusLine", new Class[]{});
+        String statusMsg = "";
+        int statusCode = 0;
+        if (statusLine != null) {
+            statusMsg = Reflection.invokeStringMethod(statusLine, "getReasonPhrase", new Class[]{});
+            statusMsg = statusMsg == null ? "" : statusMsg;
+            statusCode = (Integer) Reflection.invokeMethod(statusLine, "getStatusCode", new Class[]{});
+            statusCode = statusCode < 0 ? 0 : statusCode;
+        }
+        checkRedirect(params, redirectParams, statusMsg, statusCode);
+    }
+
+    public static void checkRedirect(HashMap<String, Object> params,
+                                     HashMap<String, Object> redirectParams, String statusMsg, int statusCode) {
+        params.put("url2", redirectParams.get("url"));
+        params.put("hostname2", redirectParams.get("hostname"));
+        params.put("port2", redirectParams.get("port"));
+        params.put("ip2", redirectParams.get("ip"));
+        params.put("http_message", statusMsg);
+        statusCode = statusCode < 0 ? 0 : statusCode;
+        params.put("http_status", statusCode);
         HookHandler.doCheck(CheckParameter.Type.SSRF_REDIRECT, params);
     }
 

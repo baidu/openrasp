@@ -104,7 +104,7 @@ public class HttpClientHook extends AbstractSSRFHook {
                     if (params != null) {
                         HashMap<String, Object> redirectParams = getSsrfParamFromURI(redirectUri);
                         if (redirectParams != null) {
-                            AbstractRedirectHook.checkHttpRedirect(params, redirectParams, response);
+                            AbstractRedirectHook.checkHttpClientRedirect(params, redirectParams, response);
                         }
                     }
                 }
@@ -119,12 +119,12 @@ public class HttpClientHook extends AbstractSSRFHook {
         if (value.getClass().getName().contains("HttpHost")) {
             return getSsrfParamFromHostValue(value);
         } else {
-            return getSsrfParamFromURI(value);
+            URI uri = (URI) Reflection.invokeMethod(value, "getURI", new Class[]{});
+            return getSsrfParamFromURI(uri);
         }
     }
 
-    private static HashMap<String, Object> getSsrfParamFromURI(Object uriValue) {
-        URI uri = (URI) Reflection.invokeMethod(uriValue, "getURI", new Class[]{});
+    private static HashMap<String, Object> getSsrfParamFromURI(URI uri) {
         if (uri != null) {
             String url = null;
             String hostName = null;
@@ -148,14 +148,18 @@ public class HttpClientHook extends AbstractSSRFHook {
     }
 
     private static HashMap<String, Object> getSsrfParamFromHostValue(Object host) {
-        String hostname = Reflection.invokeStringMethod(host, "getHostName", new Class[]{});
-        String port = "";
-        Integer portValue = (Integer) Reflection.invokeMethod(host, "getPort", new Class[]{});
-        if (portValue != null && portValue > 0) {
-            port = portValue.toString();
-        }
-        if (hostname != null) {
-            return getSsrfParam(host.toString(), hostname, port, "httpclient");
+        try {
+            String hostname = Reflection.invokeStringMethod(host, "getHostName", new Class[]{});
+            String port = "";
+            Integer portValue = (Integer) Reflection.invokeMethod(host, "getPort", new Class[]{});
+            if (portValue != null && portValue > 0) {
+                port = portValue.toString();
+            }
+            if (hostname != null) {
+                return getSsrfParam(host.toString(), hostname, port, "httpclient");
+            }
+        } catch (Exception e) {
+            return null;
         }
         return null;
     }
@@ -170,7 +174,8 @@ public class HttpClientHook extends AbstractSSRFHook {
     public static void checkHttpUri(Object uriValue) {
         if (!isChecking.get() && uriValue != null) {
             isChecking.set(true);
-            checkHttpUrl(getSsrfParamFromURI(uriValue));
+            URI uri = (URI) Reflection.invokeMethod(uriValue, "getURI", new Class[]{});
+            checkHttpUrl(getSsrfParamFromURI(uri));
         }
     }
 
