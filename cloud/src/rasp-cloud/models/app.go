@@ -130,7 +130,7 @@ var (
 		"plugin.timeout.millis":     100,
 		"body.maxbytes":             12288,
 		"inject.custom_headers":     map[string]interface{}{
-			"X-Protected-By":        "openRASP",
+			"X-Protected-By":        "OpenRASP",
 		},
 		"plugin.filter":             true,
 		"plugin.maxstack":           100,
@@ -531,7 +531,7 @@ func UpdateAppConfig(version string) error{
 					}
 				}
 				app.GeneralConfig["inject.custom_headers"] = map[string]interface{}{
-					"X-Protected-By":     "openRASP",
+					"X-Protected-By":     "OpenRASP",
 				}
 				_, err := UpdateGeneralConfig(appId, app.GeneralConfig)
 				if err != nil {
