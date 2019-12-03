@@ -156,14 +156,23 @@ static bool _is_content_type_html()
     return is_html;
 }
 
-static void openrasp_output_detect_init_globals(zend_openrasp_output_detect_globals *openrasp_output_detect_globals)
+PHP_GINIT_FUNCTION(openrasp_output_detect)
 {
-    openrasp_output_detect_globals->output_detect = false;
+#ifdef ZTS
+    new (openrasp_output_detect_globals) _zend_openrasp_output_detect_globals;
+#endif
+}
+
+PHP_GSHUTDOWN_FUNCTION(openrasp_output_detect)
+{
+#ifdef ZTS
+    openrasp_output_detect_globals->~_zend_openrasp_output_detect_globals();
+#endif
 }
 
 PHP_MINIT_FUNCTION(openrasp_output_detect)
 {
-    ZEND_INIT_MODULE_GLOBALS(openrasp_output_detect, openrasp_output_detect_init_globals, nullptr);
+    ZEND_INIT_MODULE_GLOBALS(openrasp_output_detect,  PHP_GINIT(openrasp_output_detect), PHP_GSHUTDOWN(openrasp_output_detect));
     php_output_handler_alias_register(ZEND_STRL("openrasp_ob_handler"), openrasp_output_handler_init);
     return SUCCESS;
 }
