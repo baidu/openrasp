@@ -381,7 +381,8 @@ static bool make_openrasp_root_dir()
         "logs" + default_slash + RaspLoggerEntry::ALARM_LOG_DIR_NAME,
         "logs" + default_slash + RaspLoggerEntry::POLICY_LOG_DIR_NAME,
         "logs" + default_slash + RaspLoggerEntry::PLUGIN_LOG_DIR_NAME,
-        "logs" + default_slash + RaspLoggerEntry::RASP_LOG_DIR_NAME};
+        "logs" + default_slash + RaspLoggerEntry::RASP_LOG_DIR_NAME,
+        "logs" + default_slash + "crash"};
     for (auto dir : sub_dir_list)
     {
         std::string path(root_dir + DEFAULT_SLASH + dir);
