@@ -109,7 +109,10 @@ int fork_and_exec(const char *cmd)
 
 void report_crash_log(int sig)
 {
-    std::string log_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("crash_") + std::to_string(getpid()) + ".log");
+    std::string log_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("crash-") +
+                         (sapi_module.name ? std::string(sapi_module.name) : "unknown-sapi") + "-" +
+                         std::to_string(getpid()) +
+                         ".log");
     std::ofstream log(log_path);
     log << "Worker " << getpid() << " received signal: " << sig << std::endl;
     log << "PHP version: " << get_phpversion()
@@ -225,6 +228,15 @@ int set_signal_handler(int sig, sa_sigaction_t handler)
     return sigaction(sig, &act, &old_acts[sig]);
 }
 
+void general_signal_hook()
+{
+    set_signal_handler(SIGSEGV, signal_handler);
+    set_signal_handler(SIGABRT, signal_handler);
+    set_signal_handler(SIGBUS, signal_handler);
+    set_signal_handler(SIGILL, signal_handler);
+    set_signal_handler(SIGFPE, signal_handler);
+}
+
 PHP_RINIT_FUNCTION(openrasp_signal)
 {
     if (!is_set_handler)
@@ -233,11 +245,7 @@ PHP_RINIT_FUNCTION(openrasp_signal)
         if (!is_set_handler)
         {
             is_set_handler = true;
-            set_signal_handler(SIGSEGV, signal_handler);
-            set_signal_handler(SIGABRT, signal_handler);
-            set_signal_handler(SIGBUS, signal_handler);
-            set_signal_handler(SIGILL, signal_handler);
-            set_signal_handler(SIGFPE, signal_handler);
+            general_signal_hook();
         }
     }
     return SUCCESS;

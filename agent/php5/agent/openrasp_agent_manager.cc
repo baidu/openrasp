@@ -35,6 +35,7 @@
 #include "utils/hostname.h"
 #include "agent/utils/os.h"
 #include "openrasp_utils.h"
+#include "openrasp_signal.h"
 
 #ifdef HAVE_LINE_COVERAGE
 #define SIGNAL_KILL_AGENT SIGTERM
@@ -210,6 +211,8 @@ void OpenraspAgentManager::supervisor_run()
 	sigaction(SIGCHLD, &sa_usr, NULL);
 
 	super_install_signal_handler();
+	general_signal_hook();
+
 	int second_remain_to_register = 0;
 	int second_remain_to_check_work_process = 0;
 	while (true)
