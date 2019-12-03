@@ -415,9 +415,14 @@ var algorithmConfig = {
         action:  'log',
         pattern: 'cat.*/etc/passwd|nc.{1,30}-e.{1,100}/bin/(?:ba)?sh|bash\\s-.{0,4}i.{1,20}/dev/tcp/|subprocess.call\\(.{0,6}/bin/(?:ba)?sh|fsockopen\\(.{1,50}/bin/(?:ba)?sh|perl.{1,80}socket.{1,120}open.{1,80}exec\\(.{1,5}/bin/(?:ba)?sh|([\\|\\&`;\\x0d\\x0a]|$\\([^\\(]).{0,3}(ping|nslookup|curl|wget|mail).{1,10}[a-zA-Z0-9_\\-]{1,15}\\.[a-zA-Z0-9_\\-]{1,15}'
     },
+    // 命令执行 - 语法错误和敏感操作
+    command_error: {
+        name:   '算法4 - 查找语法错误和敏感操作',
+        action: 'log'
+    },
     // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
     command_other: {
-        name:   '算法4 - 记录或者拦截所有命令执行操作',
+        name:   '算法5 - 记录或者拦截所有命令执行操作',
         action: 'ignore'
     },
 
@@ -1958,8 +1963,11 @@ if (algorithmConfig.rename_webshell.action != 'ignore')
 
 
 plugin.register('command', function (params, context) {
-    var server  = context.server
-    var message = undefined
+    var cmd        = params.command
+    var server     = context.server
+    var message    = undefined
+    var raw_tokens = []
+
 
     // 算法1: 根据堆栈，检查是否为反序列化攻击。
     // 理论上，此算法不存在误报
@@ -2071,11 +2079,9 @@ plugin.register('command', function (params, context) {
 
     // 算法2: 检测命令注入，或者命令执行后门
     if (algorithmConfig.command_userinput.action != 'ignore') {
-        var cmd        = params.command
         var reason     = false
         var min_length = algorithmConfig.command_userinput.min_length
         var parameters = context.parameter || {}
-        var raw_tokens = []
         var json_parameters = context.json || {}
 
         // 检查命令逻辑是否被用户参数所修改
@@ -2201,7 +2207,58 @@ plugin.register('command', function (params, context) {
         }     
     }
 
-    // 算法4: 记录所有的命令执行
+    // 算法4: 查找语法错误和敏感操作
+    if (algorithmConfig.command_error.action != 'ignore') {
+        if (raw_tokens.length == 0) {
+            raw_tokens = RASP.cmd_tokenize(cmd)
+        }
+        var concat_char = Array("&", "|", ";")
+        var sensitive_cmd = Array("curl", "bash", "cat")
+        var alarm_token = Array("$IFS", "$9", "'")
+        var double_quote = 0
+        var ticks = 0
+        for (var i=0; i<raw_tokens.length; i++) {
+            if (alarm_token.indexOf(raw_tokens[i].text) != -1) {
+                if ( !(i > 0 && i < raw_tokens.length-1 && raw_tokens[i-1].text == '"' && raw_tokens[i+1].text == '"')) {
+                    return {
+                        action:     algorithmConfig.command_error.action,
+                        confidence: 90,
+                        message:    _("Command execution - Sensitive command token detect: %1%", [raw_tokens[i].text]),
+                        algorithm:  'command_error'
+                    }
+                }
+            }
+
+            if (raw_tokens[i+1] !== undefined &&
+                concat_char.indexOf(raw_tokens[i].text) != -1 &&
+                sensitive_cmd.indexOf(raw_tokens[i+1].text) != -1) {
+                console.log("2353")
+                return {
+                    action:     algorithmConfig.command_error.action,
+                    confidence: 70,
+                    message:    _("Command execution - Sensitive command concat detect: %1% %2%", [raw_tokens[i].text], raw_tokens[i+1].text),
+                    algorithm:  'command_error'
+                }
+            }
+            if (raw_tokens[i].text == "\"") {
+                double_quote ++
+            }
+            else if (raw_tokens[i].text == "`") {
+                ticks ++
+            }
+        }
+        if (double_quote % 2 != 0 || ticks % 2 != 0) {
+            console.log("2333")
+            return {
+                action:     algorithmConfig.command_error.action,
+                confidence: 70,
+                message:    _("Command execution - Syntax error found in command!"),
+                algorithm:  'command_error'
+            }
+        }
+    }
+
+    // 算法5: 记录所有的命令执行
     if (algorithmConfig.command_other.action != 'ignore') 
     {
         return {

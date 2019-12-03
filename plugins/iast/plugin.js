@@ -1,4 +1,4 @@
-const plugin_version = '2019-1010-1640'
+const plugin_version = '2019-1202-1840'
 const plugin_name    = 'iast'
 const plugin_desc    = 'IAST Fuzz 插件'
 
@@ -137,13 +137,19 @@ function send_rasp_result(context) {
     var request_config = {
         "method":       "post",
         "data":         data,
-        "url":          algorithmConfig['iast']['fuzz_server'],
         "timeout":      algorithmConfig['iast']['timeout'],
         "maxRedirects": 0,
         "headers": {
             "content-type": "application/json"
         },        
     }
+    if (context.header["scan-request-server"] !== undefined) {
+        request_config.url = context.header["scan-request-server"]
+    }
+    else {
+        request_config.url = algorithmConfig['iast']['fuzz_server']
+    }
+
     // console.log("send to:", algorithmConfig['iast']['fuzz_server'])
     RASP.request(request_config).catch(console.log)
 }
