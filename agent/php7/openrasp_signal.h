@@ -22,6 +22,8 @@
 
 PHP_RINIT_FUNCTION(openrasp_signal);
 
+void general_signal_hook();
+
 #endif /* OPENRASP_signal_H */
 
 /*

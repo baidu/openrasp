@@ -51,7 +51,7 @@ void LogAgent::run()
 	pid_t supervisor_pid = getppid();
 	AGENT_SET_PROC_NAME(this->name.c_str());
 
-	install_signal_handler(
+	install_sigterm_handler(
 		[](int signal_no) {
 			LogAgent::signal_received = signal_no;
 		});
