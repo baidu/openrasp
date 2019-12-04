@@ -114,8 +114,14 @@ void InjectBlock::update(BaseReader *reader)
   headers.clear();
   for (const auto &key : custom_headers_keys)
   {
-    const auto &value = reader->fetch_string({"inject.custom_headers", key});
-    headers.emplace_back(key + ": " + value);
+    if (!key.empty() && key.length() <= 200)
+    {
+      const std::string value = reader->fetch_string({"inject.custom_headers", key});
+      if (!value.empty() && value.length() <= 200)
+      {
+        headers.emplace_back(key + ": " + value);
+      }
+    }
   }
 };
 
@@ -145,4 +151,170 @@ void DecompileBlock::update(BaseReader *reader)
   enable = reader->fetch_bool({"decompile.enable"}, false);
 };
 
+<<<<<<< HEAD
+=======
+const vector<string> CallableBlock::default_blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
+
+void CallableBlock::update()
+{
+  blacklist = CallableBlock::default_blacklist;
+  if (nullptr != OPENRASP_V8_G(isolate))
+  {
+    extract_callable_blacklist(OPENRASP_V8_G(isolate));
+  }
+}
+
+void CallableBlock::extract_callable_blacklist(Isolate *isolate)
+{
+  std::string blacklist_strings;
+  blacklist_strings.append("[");
+  for (const auto &item : CallableBlock::default_blacklist)
+  {
+    blacklist_strings.append("\"").append(item).append("\",");
+  }
+  blacklist_strings.append("]");
+  std::string script;
+  script.append(R"( (function () {
+            var blacklist
+            try {
+                blacklist = RASP.algorithmConfig.webshell_callable.functions
+            } catch (_) {
+
+            }
+            if (blacklist === undefined || !Array.isArray(blacklist)) {
+                blacklist = )")
+      .append(blacklist_strings)
+      .append(R"(
+            }
+            return blacklist
+        })())");
+  v8::HandleScope handle_scope(isolate);
+  auto context = isolate->GetCurrentContext();
+  auto rst = isolate->ExecScript(script, "extract_callable_blacklist");
+  if (!rst.IsEmpty())
+  {
+    blacklist.clear();
+    auto arr = rst.ToLocalChecked().As<v8::Array>();
+    auto len = arr->Length();
+    for (size_t i = 0; i < len; i++)
+    {
+      v8::HandleScope handle_scope(isolate);
+      v8::Local<v8::Value> item;
+      if (!arr->Get(context, i).ToLocal(&item) || !item->IsString())
+      {
+        continue;
+      }
+      v8::String::Utf8Value value(isolate, item);
+      blacklist.push_back(std::string(*value, value.length()));
+    }
+  }
+}
+
+const int64_t XssBlock::default_min_param_length = 15;
+const int64_t XssBlock::default_max_detection_num = 10;
+const std::string XssBlock::default_filter_regex = "<![\\\\-\\\\[A-Za-z]|<([A-Za-z]{1,12})[\\\\/\\\\x00-\\\\x20>]";
+const std::string XssBlock::default_echo_filter_regex = "<![\\\\-\\\\[A-Za-z]|<([A-Za-z]{1,12})[\\\\/\\\\x00-\\\\x20>]";
+
+void XssBlock::update()
+{
+  echo_filter_regex = XssBlock::default_echo_filter_regex;
+  filter_regex = XssBlock::default_filter_regex;
+  min_param_length = XssBlock::default_min_param_length;
+  max_detection_num = XssBlock::default_max_detection_num;
+  if (nullptr != OPENRASP_V8_G(isolate))
+  {
+    extract_userinput_config(OPENRASP_V8_G(isolate));
+    extract_echo_config(OPENRASP_V8_G(isolate));
+  }
+}
+
+void XssBlock::extract_userinput_config(Isolate *isolate)
+{
+  std::string script;
+  script.append(R"((function () {
+            var filter_regex = ")")
+      .append(XssBlock::default_filter_regex)
+      .append(R"("
+            var min_length = )")
+      .append(std::to_string(XssBlock::default_min_param_length))
+      .append(R"(
+            var max_detection_num = )")
+      .append(std::to_string(XssBlock::default_max_detection_num))
+      .append(R"(
+            try {
+                var xss_userinput = RASP.algorithmConfig.xss_userinput
+                if (typeof xss_userinput.filter_regex === 'string') {
+                    filter_regex = xss_userinput.filter_regex
+                }
+                if (Number.isInteger(xss_userinput.min_length)) {
+                    min_length = xss_userinput.min_length
+                }
+                if (Number.isInteger(xss_userinput.max_detection_num)) {
+                    max_detection_num = xss_userinput.max_detection_num
+                }
+            } catch (_) {
+
+            }
+            return [filter_regex, min_length, max_detection_num]
+        })())");
+  v8::HandleScope handle_scope(isolate);
+  auto context = isolate->GetCurrentContext();
+  auto rst = isolate->ExecScript(script, "extract_userinput_config");
+  if (!rst.IsEmpty())
+  {
+    auto arr = rst.ToLocalChecked().As<v8::Array>();
+    auto len = arr->Length();
+    if (3 == len)
+    {
+      v8::HandleScope handle_scope(isolate);
+      v8::Local<v8::Value> item0;
+      if (arr->Get(context, 0).ToLocal(&item0) && item0->IsString())
+      {
+        v8::String::Utf8Value value(isolate, item0);
+        filter_regex = std::string(*value, value.length());
+      }
+      v8::Local<v8::Value> item1;
+      if (arr->Get(context, 1).ToLocal(&item1) && item1->IsNumber())
+      {
+        min_param_length = item1->IntegerValue(context).FromJust();
+      }
+      v8::Local<v8::Value> item2;
+      if (arr->Get(context, 2).ToLocal(&item2) && item2->IsNumber())
+      {
+        max_detection_num = item2->IntegerValue(context).FromJust();
+      }
+    }
+  }
+}
+
+void XssBlock::extract_echo_config(Isolate *isolate)
+{
+  std::string script;
+  script.append(R"((function () {
+            var filter_regex = ")")
+      .append(XssBlock::default_echo_filter_regex)
+      .append(R"("
+            try {
+                var xss_echo = RASP.algorithmConfig.xss_echo
+                if (typeof xss_echo.filter_regex === 'string') {
+                    filter_regex = xss_echo.filter_regex
+                }
+            } catch (_) {
+
+            }
+            return filter_regex
+        })())");
+  v8::HandleScope handle_scope(isolate);
+  auto context = isolate->GetCurrentContext();
+  auto rst = isolate->ExecScript(script, "extract_echo_config");
+  if (!rst.IsEmpty())
+  {
+    v8::HandleScope handle_scope(isolate);
+    v8::Local<v8::String> v8_filter_regex = rst.ToLocalChecked().As<v8::String>();
+    v8::String::Utf8Value value(isolate, v8_filter_regex);
+    echo_filter_regex = std::string(*value, value.length());
+  }
+}
+
+>>>>>>> master
 } // namespace openrasp

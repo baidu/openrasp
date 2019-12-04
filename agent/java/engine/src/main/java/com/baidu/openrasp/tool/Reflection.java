@@ -125,4 +125,13 @@ public class Reflection {
             return null;
         }
     }
+
+    public static boolean isPrimitiveType(Object object) {
+        try {
+            return ((Class<?>) object.getClass().getField("TYPE").get(null)).isPrimitive();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }

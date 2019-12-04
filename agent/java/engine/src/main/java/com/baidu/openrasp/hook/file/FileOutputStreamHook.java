@@ -77,7 +77,7 @@ public class FileOutputStreamHook extends AbstractClassHook {
     public static void checkWriteFile(File file) {
         if (file != null) {
             HashMap<String, Object> params = new HashMap<String, Object>();
-            params.put("path", file.getName());
+            params.put("path", file.getPath());
             params.put("realpath", FileUtil.getRealPath(file));
             List<String> stackInfo = StackTrace.getParamStackTraceArray();
             params.put("stack", stackInfo);

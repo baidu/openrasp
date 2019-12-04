@@ -151,7 +151,9 @@ public abstract class BaseStandardInstaller implements Installer {
             setCloudConf();
             // 配置其它选项
             Map<String, Object> ymlData = new HashMap<String, Object>();
-            ymlData.put("rasp.id", App.raspId);
+            if (App.raspId != null) {
+                ymlData.put("rasp.id", App.raspId);
+            }
             if (!ymlData.isEmpty()) {
                 setRaspConf(ymlData, "# <rasp id>");
             }
@@ -214,6 +216,9 @@ public abstract class BaseStandardInstaller implements Installer {
             cloudData.put("cloud.backend_url", App.url);
             cloudData.put("cloud.app_id", App.appId);
             cloudData.put("cloud.app_secret", App.appSecret);
+            if (App.heartbeatInterval != null) {
+                cloudData.put("cloud.heartbeat_interval", App.heartbeatInterval);
+            }
             setRaspConf(cloudData, "# <remote management>");
         }
     }

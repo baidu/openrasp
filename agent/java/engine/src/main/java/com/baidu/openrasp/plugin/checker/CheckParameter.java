@@ -58,7 +58,8 @@ public class CheckParameter {
         REQUESTEND("requestEnd", new V8Checker(), 1 << 17),
         DELETEFILE("deleteFile", new V8Checker(), 1 << 18),
         MONGO("mongo", new V8Checker(), 1 << 19),
-        LOADLIBRARY("loadLibrary", new V8Checker(), 1 << 18),
+        LOADLIBRARY("loadLibrary", new V8Checker(), 1 << 20),
+        SSRF_REDIRECT("ssrf_redirect", new V8Checker(), 1 << 21),
 
         // java本地检测
         XSS_USERINPUT("xss_userinput", new XssChecker(), 1 << 16),

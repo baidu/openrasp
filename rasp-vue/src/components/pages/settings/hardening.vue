@@ -20,7 +20,7 @@
             class="selectgroup-item"
           >
             <input
-              v-model="custom_headers[row.name]"
+              v-model="data['inject.custom_headers'][row.name]"
               type="radio"
               class="selectgroup-input"
               :name="row.name"
@@ -32,6 +32,16 @@
           </label>
         </div>
       </div>
+
+      <div class="form-group">
+        <label class="form-label">自定义 X-Protected-By 头（要求 Agent 版本 >= 1.2.2，留空则不展示）
+          <a href="https://rasp.baidu.com/doc/usage/hardening.html#X-Protected-By" target="_blank">
+            [帮助文档]
+          </a>
+        </label>
+        <input type="text" class="form-control" v-model="data['inject.custom_headers']['X-Protected-By']" maxlength="200">
+      </div>
+
       <div slot="footer">
         <b-button
           variant="primary"
@@ -52,15 +62,14 @@ export default {
   name: 'HardeningSettings',
   data() {
     return {
-      data: { custom_headers: {}},
+      data: { 
+        'inject.custom_headers': {}
+      },
       browser_headers
     }
   },
   computed: {
     ...mapGetters(['current_app']),
-    custom_headers() {
-      return this.data['inject.custom_headers'] || {}
-    }
   },
   methods: {
     setData(data) {
@@ -76,6 +85,15 @@ export default {
       this.data = data
     },
     saveData: function() {
+      var data = Object.assign(this.data)
+
+      // 避免下发空的配置
+      if (typeof data['inject.custom_headers']['X-Protected-By'] === 'string') {
+        data['inject.custom_headers']['X-Protected-By'] = data['inject.custom_headers']['X-Protected-By'].trim()
+        if (data['inject.custom_headers']['X-Protected-By'].length == 0)
+          data['inject.custom_headers']['X-Protected-By'] = undefined
+      }
+
       return this.request.post('v1/api/app/general/config', {
         app_id: this.current_app.id,
         config: this.data

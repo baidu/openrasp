@@ -41,6 +41,7 @@ inject.urlprefix: ""
 
 #自定义header
 inject.custom_headers:
+  X-Protected-By: OpenRASP
 #   X-Content-Type-Options: nosniff
 #   X-Frame-Options: deny
 #   X-XSS-Protection: 1; mode=block

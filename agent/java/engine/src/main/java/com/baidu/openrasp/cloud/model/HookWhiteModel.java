@@ -75,12 +75,11 @@ public class HookWhiteModel {
         return false;
     }
 
-    public static TreeMap<String, Integer> parseHookWhite(Map<String, Object> hooks) {
+    public static TreeMap<String, Integer> parseHookWhite(Map<Object, Object> hooks) {
         TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
-        for (Map.Entry<String, Object> hook : hooks.entrySet()) {
+        for (Map.Entry<Object, Object> hook : hooks.entrySet()) {
             int codeSum = 0;
             if (hook.getValue() instanceof ArrayList) {
-                @SuppressWarnings("unchecked")
                 ArrayList<String> types = (ArrayList<String>) hook.getValue();
                 if (hook.getKey().equals("*") && types.contains("all")) {
                     for (CheckParameter.Type type : CheckParameter.Type.values()) {
@@ -96,7 +95,7 @@ public class HookWhiteModel {
                             codeSum = codeSum + type.getCode();
                         }
                     }
-                    temp.put(hook.getKey(), codeSum);
+                    temp.put(hook.getKey().toString(), codeSum);
                 } else {
                     for (String s : types) {
                         String hooksType = s.toUpperCase();
@@ -110,7 +109,7 @@ public class HookWhiteModel {
                     if (hook.getKey().equals("*")) {
                         temp.put("", codeSum);
                     } else {
-                        temp.put(hook.getKey(), codeSum);
+                        temp.put(hook.getKey().toString(), codeSum);
                     }
                 }
             }

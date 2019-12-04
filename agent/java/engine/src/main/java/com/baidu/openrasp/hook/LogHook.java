@@ -87,7 +87,7 @@ public class LogHook extends AbstractClassHook {
                     logMessage = logMessage.toString();
                 }
                 params.put("message", logMessage);
-                HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_LOG, params);
+                HookHandler.doCheck(CheckParameter.Type.POLICY_LOG, params);
             }
         }
     }

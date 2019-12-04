@@ -1,9 +1,26 @@
+/*
+ * Copyright 2017-2019 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.baidu.openrasp.config;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.HookWhiteModel;
 import com.baidu.openrasp.exceptions.ConfigLoadException;
 import com.baidu.openrasp.tool.LRUCache;
+import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
@@ -476,17 +493,17 @@ public enum ConfigItem {
         }
     }),
 
-    HOOK_WHITE(new ConfigSetter<Map<String, Object>>("hook.white") {
+    HOOK_WHITE(new ConfigSetter<Map<Object, Object>>("hook.white") {
         @Override
-        public synchronized void setValue(Map<String, Object> heartbeatInterval) {
+        public synchronized void setValue(Map<Object, Object> hookWhite) {
             TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
-            temp.putAll(HookWhiteModel.parseHookWhite(heartbeatInterval));
+            temp.putAll(HookWhiteModel.parseHookWhite(hookWhite));
             HookWhiteModel.init(temp);
         }
 
         @Override
-        public Map<String, Object> getDefaultValue() {
-            return new HashMap<String, Object>();
+        public Map<Object, Object> getDefaultValue() {
+            return new HashMap<Object, Object>();
         }
     }),
 
@@ -514,15 +531,37 @@ public enum ConfigItem {
         }
     }),
 
-    RESPONSE_HEADERS(new ConfigSetter<HashMap<String, String>>("inject.custom_headers") {
+    RESPONSE_HEADERS(new ConfigSetter<HashMap<Object, Object>>("inject.custom_headers") {
         @Override
-        public synchronized void setValue(HashMap<String, String> responseHeaders) {
+        public synchronized void setValue(HashMap<Object, Object> responseHeaders) {
+            for (Map.Entry<Object, Object> entry : responseHeaders.entrySet()) {
+                Object k = entry.getKey();
+                Object v = entry.getValue();
+                if (k == null || v == null) {
+                    throw new ConfigLoadException("the value of " + itemName +
+                            "'s key and value can not be null");
+                }
+                if (!Reflection.isPrimitiveType(v) && !(v instanceof String)) {
+                    throw new ConfigLoadException("the type of " + itemName +
+                            "'s value must be primitive type or String, can not be " + v.getClass().getName());
+                }
+                String key = v.toString();
+                String value = v.toString();
+                if (key.length() == 0 || key.length() > 200) {
+                    throw new ConfigLoadException("the length of " + itemName +
+                            "'s key must be between [1,200]");
+                }
+                if (value.length() == 0 || value.length() > 200) {
+                    throw new ConfigLoadException("the length of " + itemName +
+                            "'s value must be between [1,200]");
+                }
+            }
             Config.getConfig().responseHeaders = responseHeaders;
         }
 
         @Override
-        public HashMap<String, String> getDefaultValue() {
-            HashMap<String, String> headers = new HashMap<String, String>();
+        public HashMap<Object, Object> getDefaultValue() {
+            HashMap<Object, Object> headers = new HashMap<Object, Object>();
             headers.put(HookHandler.OPEN_RASP_HEADER_KEY, HookHandler.OPEN_RASP_HEADER_VALUE);
             return headers;
         }
@@ -625,6 +664,41 @@ public enum ConfigItem {
         @Override
         public String getDefaultValue() {
             return "false";
+        }
+    }),
+
+    LRU_COMPARE_ENABLE(new ConfigSetter<String>("lru.compare_enable") {
+        @Override
+        public synchronized void setValue(String lruCompareEnable) {
+            boolean value = Boolean.parseBoolean(lruCompareEnable);
+            if (value != Config.getConfig().lruCompareEnable) {
+                Config.getConfig().lruCompareEnable = value;
+                Config.commonLRUCache.clear();
+            }
+        }
+
+        @Override
+        public String getDefaultValue() {
+            return "false";
+        }
+    }),
+
+    LRU_COMPARE_LIMIT(new ConfigSetter<String>("lru.compare_limit") {
+        @Override
+        public synchronized void setValue(String lruCompareLimit) {
+            int value = Integer.parseInt(lruCompareLimit);
+            if (value <= 0 || value > 102400) {
+                throw new ConfigLoadException(itemName + " must be between [1,102400]");
+            }
+            if (value < Config.getConfig().lruCompareLimit) {
+                Config.commonLRUCache.clear();
+            }
+            Config.getConfig().lruCompareLimit = value;
+        }
+
+        @Override
+        public String getDefaultValue() {
+            return "10240";
         }
     });
 

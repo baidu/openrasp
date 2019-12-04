@@ -141,7 +141,7 @@ public class SQLConnectionHook extends AbstractClassHook {
      * 捕捉hook method抛出的异常
      */
     public void addCatch(CtClass ctClass, String methodName, String desc) throws NotFoundException, CannotCompileException {
-        LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc);
+        LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc, null);
         if (methods != null && methods.size() > 0) {
             for (CtBehavior method : methods) {
                 if (method != null) {

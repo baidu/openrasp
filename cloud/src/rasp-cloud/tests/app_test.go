@@ -1653,3 +1653,49 @@ func TestCheckPluginLatest(t *testing.T) {
 
 	})
 }
+
+func TestUpgradeApp(t *testing.T) {
+	Convey("Subject: Test App Upgrade Api\n", t, func() {
+		apps := make([]*models.App, 0)
+		apps = append(apps, &models.App{
+			Id:                   start.TestApp.Id,
+			GeneralConfig:        map[string]interface{}{
+				"body.maxbytes":             4096,
+			},
+		})
+		Convey("when param is valid", func() {
+			monkey.Patch(models.GetAllApp, func(page int, perpage int, mask bool) (count int,
+				result []*models.App, err error) {
+				return 0, apps, nil
+			})
+			defer monkey.Unpatch(models.GetAllApp)
+			monkey.Patch(models.UpdateGeneralConfig, func(appId string, config map[string]interface{}) (
+				*models.App, error) {
+				return nil, nil
+			})
+			defer monkey.Unpatch(models.UpdateGeneralConfig)
+			So(models.UpdateAppConfig("121to122"), ShouldBeNil)
+		})
+		Convey("when failed to update App config", func() {
+			monkey.Patch(models.GetAllApp, func(page int, perpage int, mask bool) (count int,
+				result []*models.App, err error) {
+				return 0, nil, errors.New("")
+			})
+			defer monkey.Unpatch(models.GetAllApp)
+			So(models.UpdateAppConfig("121to122"), ShouldNotBeNil)
+		})
+		Convey("when failed to update app general config after update", func() {
+			monkey.Patch(models.GetAllApp, func(page int, perpage int, mask bool) (count int,
+				result []*models.App, err error) {
+				return 0, apps, nil
+			})
+			defer monkey.Unpatch(models.GetAllApp)
+			monkey.Patch(models.UpdateGeneralConfig, func(appId string, config map[string]interface{}) (
+				*models.App, error) {
+				return nil, errors.New("")
+			})
+			defer monkey.Unpatch(models.UpdateGeneralConfig)
+			So(models.UpdateAppConfig("121to122"), ShouldNotBeNil)
+		})
+	})
+}
