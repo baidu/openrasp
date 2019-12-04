@@ -1,4 +1,4 @@
-const plugin_version = '2019-1107-1500'
+const plugin_version = '2019-1203-1600'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1098,6 +1098,120 @@ function get_all_parameter(context) {
     return parameter
 }
 
+function check_ssrf(params, context) {
+    var hostname  = params.hostname
+    var url       = params.url
+    var ip        = params.ip
+    var reason    = false
+
+    // 算法1 - 当参数来自用户输入，且为内网IP，判定为SSRF攻击
+    if (algorithmConfig.ssrf_userinput.action != 'ignore')
+    {
+        var all_parameter = get_all_parameter(context)
+        if (is_from_userinput(all_parameter, url))
+        {
+            if (ip.length && /^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(ip[0]))
+            {
+                return {
+                    action:     algorithmConfig.ssrf_userinput.action,
+                    message:    _("SSRF - Requesting intranet address: %1%", [ ip[0] ]),
+                    confidence: 100,
+                    algorithm:  'ssrf_userinput'
+                }
+            }
+            else if (hostname == '[::]' || hostname == '::1' || hostname == '0.0.0.0') 
+            {
+                return {
+                    action:     algorithmConfig.ssrf_userinput.action,
+                    message:    _("SSRF - Requesting intranet address: %1%", [ hostname ]),
+                    confidence: 100,
+                    algorithm:  'ssrf_userinput'
+                }
+            }
+        }
+    }
+
+    // 算法2 - 检查常见探测域名
+    if (algorithmConfig.ssrf_common.action != 'ignore')
+    {
+        if (is_hostname_dnslog(hostname))
+        {
+            return {
+                action:     algorithmConfig.ssrf_common.action,
+                message:    _("SSRF - Requesting known DNSLOG address: %1%", [hostname]),
+                confidence: 100,
+                algorithm:  'ssrf_common'
+            }
+        }
+    }
+
+    // 算法3 - 检测 AWS/Aliyun/GoogleCloud 私有地址: 拦截IP访问、绑定域名访问两种方式
+    if (algorithmConfig.ssrf_aws.action != 'ignore')
+    {
+        if (ip == '169.254.169.254' || ip == '100.100.100.200'
+            || hostname == '169.254.169.254' || hostname == '100.100.100.200' || hostname == 'metadata.google.internal')
+        {
+            return {
+                action:     algorithmConfig.ssrf_aws.action,
+                message:    _("SSRF - Requesting AWS metadata address"),
+                confidence: 100,
+                algorithm:  'ssrf_aws'
+            }
+        }
+    }
+
+    // 算法4 - ssrf_obfuscate
+    //
+    // 检查混淆:
+    // http://2130706433
+    // http://0x7f001
+    //
+    // 以下混淆方式没有检测，容易误报
+    // http://0x7f.0x0.0x0.0x1
+    // http://0x7f.0.0.0
+    if (algorithmConfig.ssrf_obfuscate.action != 'ignore')
+    {
+        var reason = false
+
+        if (!isNaN(hostname) && hostname.length != 0)
+        {
+            reason = _("SSRF - Requesting numeric IP address: %1%", [hostname])
+        }
+        // else if (hostname.startsWith('0x') && hostname.indexOf('.') === -1)
+        // {
+        //     reason = _("SSRF - Requesting hexadecimal IP address: %1%", [hostname])
+        // }
+
+        if (reason)
+        {
+            return {
+                action:     algorithmConfig.ssrf_obfuscate.action,
+                message:    reason,
+                confidence: 100,
+                algorithm:  'ssrf_obfuscate'
+            }
+        }
+    }
+
+    // 算法5 - 特殊协议检查
+    if (algorithmConfig.ssrf_protocol.action != 'ignore')
+    {
+        // 获取协议
+        var proto = url.split(':')[0].toLowerCase()
+
+        if (algorithmConfig.ssrf_protocol.protocols.indexOf(proto) != -1)
+        {
+            return {
+                action:     algorithmConfig.ssrf_protocol.action,
+                message:    _("SSRF - Using dangerous protocol: %1%://", [proto]),
+                confidence: 100,
+                algorithm:  'ssrf_protocol'
+            }
+        }
+    }
+    return False
+}
+
 // 下个版本将会支持翻译，目前还需要暴露一个 getText 接口给插件
 function _(message, args) 
 {
@@ -1422,122 +1536,31 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
         return clean
     })
 
-    plugin.register('ssrf', function (params, context) {
-        var hostname  = params.hostname
-        var url       = params.url
-        var ip        = params.ip
-
-        var reason    = false
-
-        // 算法1 - 当参数来自用户输入，且为内网IP，判定为SSRF攻击
-        if (algorithmConfig.ssrf_userinput.action != 'ignore')
-        {
-            var all_parameter = get_all_parameter(context)
-            if (is_from_userinput(all_parameter, url))
-            {
-                if (ip.length && /^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(ip[0]))
-                {
-                    return {
-                        action:     algorithmConfig.ssrf_userinput.action,
-                        message:    _("SSRF - Requesting intranet address: %1%", [ ip[0] ]),
-                        confidence: 100,
-                        algorithm:  'ssrf_userinput'
-                    }
-                }
-                else if (hostname == '[::]' || hostname == '::1' || hostname == '0.0.0.0') 
-                {
-                    return {
-                        action:     algorithmConfig.ssrf_userinput.action,
-                        message:    _("SSRF - Requesting intranet address: %1%", [ hostname ]),
-                        confidence: 100,
-                        algorithm:  'ssrf_userinput'
-                    }
-                }
-            }
+    plugin.register('ssrf', function(params, context) {
+        var ret = check_ssrf(params, context)
+        if (ret !== False) {
+            return ret
         }
-
-        // 算法2 - 检查常见探测域名
-        if (algorithmConfig.ssrf_common.action != 'ignore')
-        {
-            if (is_hostname_dnslog(hostname))
-            {
-                return {
-                    action:     algorithmConfig.ssrf_common.action,
-                    message:    _("SSRF - Requesting known DNSLOG address: %1%", [hostname]),
-                    confidence: 100,
-                    algorithm:  'ssrf_common'
-                }
-            }
-        }
-
-        // 算法3 - 检测 AWS/Aliyun/GoogleCloud 私有地址: 拦截IP访问、绑定域名访问两种方式
-        if (algorithmConfig.ssrf_aws.action != 'ignore')
-        {
-            if (ip == '169.254.169.254' || ip == '100.100.100.200'
-                || hostname == '169.254.169.254' || hostname == '100.100.100.200' || hostname == 'metadata.google.internal')
-            {
-                return {
-                    action:     algorithmConfig.ssrf_aws.action,
-                    message:    _("SSRF - Requesting AWS metadata address"),
-                    confidence: 100,
-                    algorithm:  'ssrf_aws'
-                }
-            }
-        }
-
-        // 算法4 - ssrf_obfuscate
-        //
-        // 检查混淆:
-        // http://2130706433
-        // http://0x7f001
-        //
-        // 以下混淆方式没有检测，容易误报
-        // http://0x7f.0x0.0x0.0x1
-        // http://0x7f.0.0.0
-        if (algorithmConfig.ssrf_obfuscate.action != 'ignore')
-        {
-            var reason = false
-
-            if (!isNaN(hostname) && hostname.length != 0)
-            {
-                reason = _("SSRF - Requesting numeric IP address: %1%", [hostname])
-            }
-            // else if (hostname.startsWith('0x') && hostname.indexOf('.') === -1)
-            // {
-            //     reason = _("SSRF - Requesting hexadecimal IP address: %1%", [hostname])
-            // }
-
-            if (reason)
-            {
-                return {
-                    action:     algorithmConfig.ssrf_obfuscate.action,
-                    message:    reason,
-                    confidence: 100,
-                    algorithm:  'ssrf_obfuscate'
-                }
-            }
-        }
-
-        // 算法5 - 特殊协议检查
-        if (algorithmConfig.ssrf_protocol.action != 'ignore')
-        {
-            // 获取协议
-            var proto = url.split(':')[0].toLowerCase()
-
-            if (algorithmConfig.ssrf_protocol.protocols.indexOf(proto) != -1)
-            {
-                return {
-                    action:     algorithmConfig.ssrf_protocol.action,
-                    message:    _("SSRF - Using dangerous protocol: %1%://", [proto]),
-                    confidence: 100,
-                    algorithm:  'ssrf_protocol'
-                }
-            }
-        }
-
         return clean
     })
 
+    plugin.register('ssrf_redirect', function(params, context) {
+        params2 = {
+            url: params.url2,
+            hostname: params.hostname2,
+            ip: params.ip2,
+            port: params.port2,
+            function: params.function
+        }
+        var ret2 = check_ssrf(params2, context)
+        if (ret2 !== False) {
+            ret = check_ssrf(params, context)
+            if (ret === False) {
+                return ret
+            }
+        }
+        return clean
+    })
 }
 
 plugin.register('sql_exception', function(params, context) {
