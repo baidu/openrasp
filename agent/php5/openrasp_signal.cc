@@ -109,10 +109,9 @@ int fork_and_exec(const char *cmd)
 
 void report_crash_log(int sig)
 {
-    std::string log_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + std::string("crash-") +
-                         (sapi_module.name ? std::string(sapi_module.name) : "unknown-sapi") + "-" +
-                         std::to_string(getpid()) +
-                         ".log");
+    std::string log_path(std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + "logs" + DEFAULT_SLASH + "crash" + DEFAULT_SLASH +
+                         std::string("crash-") + (sapi_module.name ? std::string(sapi_module.name) : "unknown-sapi") + "-" +
+                         std::to_string(getpid()) + ".log");
     std::ofstream log(log_path);
     log << "Worker " << getpid() << " received signal: " << sig << std::endl;
     log << "PHP version: " << get_phpversion()
