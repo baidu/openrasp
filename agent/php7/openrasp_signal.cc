@@ -209,6 +209,15 @@ void call_old_signal_handler(struct sigaction *old_act, int sig, siginfo_t *info
         // restore the signal mask
         pthread_sigmask(SIG_SETMASK, &oset, 0);
     }
+    else if (old_act->sa_handler == SIG_DFL)
+    {
+        bool siginfo_flag_set = (old_act->sa_flags & SA_SIGINFO) != 0;
+        if ((old_act->sa_flags & SA_SIGINFO) == 0)
+        {
+            sa_handler_t hand = old_act->sa_handler;
+            (*hand)(sig);
+        }
+    }
 }
 
 void signal_handler(int sig, siginfo_t *info, void *ctx)
