@@ -33,9 +33,9 @@ public class TomcatInstaller extends BaseStandardInstaller {
     private static String OPENRASP_START_TAG = "### BEGIN OPENRASP - DO NOT MODIFY ###\n";
     private static String OPENRASP_END_TAG = "### END OPENRASP ###\n";
     private static String JAVA_AGENT_CONFIG = "\tJAVA_OPTS=\"-javaagent:${CATALINA_HOME}/rasp/rasp.jar " +
-            "-XX:OnError='sh \\\"${CATALINA_HOME}/rasp/crash.sh\\\" \\\"\\$(pwd)/hs_err_pid%p.log\\\"' ${JAVA_OPTS}\"\n";
+            "-XX:OnError='sh \\\"${CATALINA_HOME}/rasp/crash.sh\\\" -l java -f \\\"\\$(pwd)/hs_err_pid%p.log\\\"' ${JAVA_OPTS}\"\n";
     private static String PREPEND_JAVA_AGENT_CONFIG = "\tJAVA_OPTS=\"${JAVA_OPTS} -javaagent:${CATALINA_HOME}/rasp/rasp.jar " +
-            "-XX:OnError='sh \\\"${CATALINA_HOME}/rasp/crash.sh\\\" \\\"\\$(pwd)/hs_err_pid%p.log\\\"' ${JAVA_OPTS}\"\n";
+            "-XX:OnError='sh \\\"${CATALINA_HOME}/rasp/crash.sh\\\" -l java -f \\\"\\$(pwd)/hs_err_pid%p.log\\\"' ${JAVA_OPTS}\"\n";
     private static String JDK_JAVA_OPTIONS =
             "JDK_JAVA_OPTIONS=\"$JDK_JAVA_OPTIONS --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED\"\n" +
                     "export JDK_JAVA_OPTIONS\n";

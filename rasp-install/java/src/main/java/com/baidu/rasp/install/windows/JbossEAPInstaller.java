@@ -31,8 +31,7 @@ import static com.baidu.rasp.RaspError.E10001;
 public class JbossEAPInstaller extends BaseStandardInstaller {
     private static final String OPENRASP_START_TAG = "rem BEGIN OPENRASP - DO NOT MODIFY\n";
     private static final String OPENRASP_END_TAG = "rem END OPENRASP\n";
-    private static final String OPENRASP_CONFIG = "set \"JAVA_OPTS=%JAVA_OPTS% -javaagent:%JBOSS_HOME%\\rasp\\rasp.jar " +
-            "-XX:OnError='cmd /c powershell -ep bypass -file \\\"%CATALINA_HOME%\\\\rasp\\\\crash.ps1\\\" -crashFile \\\"%cd%\\\\hs_err_pid%p.log\\\"' \"\n";
+    private static final String OPENRASP_CONFIG = "set \"JAVA_OPTS=%JAVA_OPTS% -javaagent:%JBOSS_HOME%\\rasp\\rasp.jar\"\n";
 
     public JbossEAPInstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
