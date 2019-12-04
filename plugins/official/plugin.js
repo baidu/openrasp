@@ -1209,7 +1209,7 @@ function check_ssrf(params, context) {
             }
         }
     }
-    return False
+    return false
 }
 
 // 下个版本将会支持翻译，目前还需要暴露一个 getText 接口给插件
@@ -1546,7 +1546,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
 
     plugin.register('ssrf', function(params, context) {
         var ret = check_ssrf(params, context)
-        if (ret !== False) {
+        if (ret !== false) {
             return ret
         }
         return clean
@@ -1561,9 +1561,9 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
             function: params.function
         }
         var ret2 = check_ssrf(params2, context)
-        if (ret2 !== False) {
+        if (ret2 !== false) {
             ret = check_ssrf(params, context)
-            if (ret === False) {
+            if (ret === false) {
                 return ret
             }
         }
