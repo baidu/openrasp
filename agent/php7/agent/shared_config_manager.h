@@ -60,11 +60,11 @@ public:
   bool set_buildin_check_action(std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map);
   OpenRASPActionType get_buildin_check_action(OpenRASPCheckType check_type);
 
-  void set_mysql_error_codes(std::vector<long> error_codes);
-  bool mysql_error_code_exist(long err_code);
+  void set_mysql_error_codes(std::vector<int64_t> error_codes);
+  bool mysql_error_code_exist(int64_t err_code);
 
-  void set_sqlite_error_codes(std::vector<long> error_codes);
-  bool sqlite_error_code_exist(long err_code);
+  void set_sqlite_error_codes(std::vector<int64_t> error_codes);
+  bool sqlite_error_code_exist(int64_t err_code);
 
 private:
   int meta_size;

@@ -349,7 +349,7 @@ bool SharedConfigManager::is_password_weak(std::string password)
     return false;
 }
 
-void SharedConfigManager::set_mysql_error_codes(std::vector<long> error_codes)
+void SharedConfigManager::set_mysql_error_codes(std::vector<int64_t> error_codes)
 {
     if (rwlock != nullptr && rwlock->write_try_lock())
     {
@@ -358,7 +358,7 @@ void SharedConfigManager::set_mysql_error_codes(std::vector<long> error_codes)
     }
 }
 
-bool SharedConfigManager::mysql_error_code_exist(long err_code)
+bool SharedConfigManager::mysql_error_code_exist(int64_t err_code)
 {
     if (rwlock != nullptr && rwlock->read_try_lock())
     {
@@ -368,7 +368,7 @@ bool SharedConfigManager::mysql_error_code_exist(long err_code)
     return false;
 }
 
-void SharedConfigManager::set_sqlite_error_codes(std::vector<long> error_codes)
+void SharedConfigManager::set_sqlite_error_codes(std::vector<int64_t> error_codes)
 {
     if (rwlock != nullptr && rwlock->write_try_lock())
     {
@@ -377,7 +377,7 @@ void SharedConfigManager::set_sqlite_error_codes(std::vector<long> error_codes)
     }
 }
 
-bool SharedConfigManager::sqlite_error_code_exist(long err_code)
+bool SharedConfigManager::sqlite_error_code_exist(int64_t err_code)
 {
     if (rwlock != nullptr && rwlock->read_try_lock())
     {
