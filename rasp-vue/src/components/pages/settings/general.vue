@@ -15,8 +15,8 @@
               [帮助文档]
             </a>
           </label>
-          <input v-model.trim="data['clientip.header']" type="text" class="form-control">
-        </div>      
+          <input v-model.trim="data['clientip.header']" type="text" class="form-control" maxlength="100">
+        </div>
         <div class="form-group">
           <label class="form-label">
             自定义拦截状态码
@@ -82,7 +82,7 @@
             LRU 大小 [默认1000，若要关闭写 0]
           </label>
           <input v-model.number="data['lru.max_size']" type="number" min="0" class="form-control" placeholder="1000">
-        </div>  
+        </div>
         <div class="form-group">
           <label class="form-label">
             [基线] 弱口令列表，适用于数据库、Tomcat管理后台等等；上限200个，单个最长16，逗号分隔
@@ -100,6 +100,12 @@
             [基线] [Web根目录敏感文件检查] 扫描间隔（小时）
           </label>
           <input v-model.trim="data['fileleak.scan_interval']" type="number" class="form-control" placeholder="3" min="1" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            LRU 原始字符串上限 [若开启原始字符串比较，超过上限直接进入插件检测；默认只存储哈希]
+          </label>
+          <input v-model.number="data['lru.compare_limit']" type="number" min="0" class="form-control" placeholder="10240">
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -137,14 +143,14 @@
             [熔断] 单核CPU占用率阈值（百分比），范围 30-100
           </label>
           <input v-model.number="data['cpu.usage.percent']" type="number" min="30" max="100" class="form-control" placeholder="90">
-        </div>        
+        </div>
 
         <div class="form-group">
           <label class="custom-switch">
             <input v-model="data['cpu.usage.enable']" type="checkbox" checked="data['cpu.usage.enable']" class="custom-switch-input">
             <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
-              开启熔断保护:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 当CPU占用持续超过某个值，关闭所有防护（仅 Java 版本支持）
+              开启熔断保护:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 当CPU占用持续超过某个值，关闭所有防护（仅 Java >= 1.2.1 支持）
             </span>
           </label>
           <br>
@@ -167,7 +173,15 @@
               </a>
             </span>
           </label>
-        </div>          
+          <br>
+          <label class="custom-switch">
+            <input v-model="data['lru.compare_enable']" type="checkbox" checked="data['lru.compare_enable']" class="custom-switch-input">
+            <span class="custom-switch-indicator" />
+            <span class="custom-switch-description">
+              开启 LRU 原始字符串比较（仅 Java >= 1.2.2 支持）
+            </span>
+          </label>
+        </div>
       </div>
       <div v-bind:class="{'card-footer': true, 'sticky-card-footer': sticky}">
         <div class="d-flex">
@@ -195,7 +209,7 @@ export default {
       }
     }
   },
-  computed: {    
+  computed: {
     ...mapGetters(['current_app', 'sticky'])
   },
   methods: {
@@ -222,7 +236,7 @@ export default {
         app_id: this.current_app.id,
         config: this.data
       }
-      
+
       this.request.post('v1/api/app/general/config', body).then(() => {
         alert('保存成功')
       })

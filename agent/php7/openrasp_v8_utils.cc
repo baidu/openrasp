@@ -297,6 +297,7 @@ void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string>
 
 std::vector<int64_t> extract_int64_array(Isolate *isolate, const std::string &value, int limit, const std::vector<long> &default_value)
 {
+<<<<<<< HEAD
     if (nullptr != isolate)
     {
         std::string script = R"(
@@ -306,6 +307,16 @@ std::vector<int64_t> extract_int64_array(Isolate *isolate, const std::string &va
                     return )" +
                              value + R"(.filter(value => typeof value === 'number');
                 } catch (_) {}
+=======
+    std::string script = R"(
+    (function () {
+        var sql_error_codes = [];
+        try {
+                sql_error_codes = RASP.algorithmConfig.sql_exception.mysql.error_code.filter(value => typeof value === 'number');
+            } catch (_) {
+            }
+            return sql_error_codes
+>>>>>>> master
         })()
         )";
         v8::HandleScope handle_scope(isolate);

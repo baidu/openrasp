@@ -1,4 +1,4 @@
-const plugin_version = '2019-1107-1500'
+const plugin_version = '2019-1203-1400'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1116,6 +1116,14 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
     if (RASP.config_set) {
         RASP.config_set('algorithm.config', JSON.stringify(algorithmConfig))
     }
+    // 用于 v1.0 rhino 
+    Object.values = function (obj){
+        var result = Array()
+        for (key in obj) {
+            result.push(obj[key])
+        }
+        return result
+    }
 } else {
     // 对于PHP + V8，性能还不错，我们保留JS检测逻辑
     plugin.register('sql', function (params, context) {
@@ -1990,8 +1998,8 @@ plugin.register('command', function (params, context) {
 
             // v1.1.1 要求在堆栈里过滤 com.baidu.openrasp 相关的类，因为没有实现正确而产生了多余的反射堆栈，这里需要兼容下防止误报
             // v1.1.2 修复了这个问题，即堆栈顶部为命令执行的方法
-            if (params.stack.length > 3 
-                && params.stack[0] == 'sun.reflect.GeneratedMethodAccessor181.invoke'
+            if (params.stack.length > 3
+                && params.stack[0].startsWith('sun.reflect.GeneratedMethodAccessor')
                 && params.stack[1] == 'sun.reflect.GeneratedMethodAccessorImpl.invoke'
                 && params.stack[2] == 'java.lang.reflect.Method.invoke')
             {

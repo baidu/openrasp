@@ -107,12 +107,15 @@ public class JS {
         ByteArrayOutputStream params = new ByteArrayOutputStream();
         JsonStream.serialize(checkParameter.getParams(), params);
 
-        int hashcode = 0;
+        Object hashData = null;
         if (type == Type.DIRECTORY || type == Type.READFILE || type == Type.WRITEFILE || type == Type.SQL || type == Type.SSRF) {
-            hashcode = ByteBuffer.wrap(params.getByteArray()).hashCode();
-        }
-        if (hashcode != 0) {
-            if (Config.commonLRUCache.isContainsKey(hashcode)) {
+            byte[] paramData = params.getByteArray();
+            if (!Config.getConfig().getLruCompareEnable()) {
+                hashData = ByteBuffer.wrap(paramData).hashCode();
+            } else if (paramData.length <= Config.getConfig().getLruCompareLimit()) {
+                hashData = ByteBuffer.wrap(paramData);
+            }
+            if (Config.commonLRUCache.isContainsKey(hashData)) {
                 return null;
             }
         }
@@ -127,8 +130,8 @@ public class JS {
         }
 
         if (results == null) {
-            if (hashcode != 0 && Config.commonLRUCache.maxSize() != 0) {
-                Config.commonLRUCache.put(hashcode, null);
+            if (hashData != null && Config.commonLRUCache.maxSize() != 0) {
+                Config.commonLRUCache.put(hashData, null);
             }
             return null;
         }

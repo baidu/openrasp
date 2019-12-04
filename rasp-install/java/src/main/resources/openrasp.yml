@@ -5,12 +5,14 @@
 # <general settings>
 # 
 # plugin.timeout.millis: 100
-# body.maxbytes: 4096
+# body.maxbytes: 12288
 # plugin.filter: true
 # plugin.maxstack: 100
 # ognl.expression.minlength: 30
 # clientip.header: ClientIP
 # lru.max_size: 100
+# lru.compare_enable: false
+# lru.compare_limit: 10240
 # inject.urlprefix:
 # log.maxburst: 100
 # log.maxbackup: 30
@@ -30,7 +32,8 @@ hooks.ignore: http_output
 #  "www.test.com/test2":
 #    - "sql"
 #    - "ssrf"
-#inject.custom_headers:
+inject.custom_headers:
+  X-Protectd-By: OpenRASP
 #   X-Content-Type-Options: nosniff
 #   X-Frame-Options: deny
 #   X-XSS-Protection: 1; mode=block

@@ -43,6 +43,7 @@ public class App {
     public static String install;
     public static String appId;
     public static String appSecret;
+    public static Integer heartbeatInterval;
     public static String raspId;
     public static String baseDir;
     public static String url;
@@ -84,6 +85,7 @@ public class App {
         options.addOption("uninstall", true, "Specify application server path");
         options.addOption("appid", true, "Value of cloud.appid");
         options.addOption("appsecret", true, "Value of cloud.appsecret");
+        options.addOption("heartbeat", true, "Value of cloud.heartbeat_interval");
         options.addOption("raspid", true, "Value of rasp.id");
         options.addOption("backendurl", true, "Value of cloud.backendurl");
         options.addOption("keepconf", false, "Do not override openrasp.yml");
@@ -116,22 +118,29 @@ public class App {
 
                 if (cmd.hasOption("pid")) {
                     isAttach = true;
-                    try {
-                        pid = Integer.parseInt(cmd.getOptionValue("pid"));
-                    } catch (NumberFormatException e) {
-                        throw new RaspError(E10005 + "The -pid parameter must have a integer value");
-                    }
+                    pid = getIntegerParam(cmd, "pid");
                 }
             }
 
             keepConfig = cmd.hasOption("keepconf");
             appId = cmd.getOptionValue("appid");
             appSecret = cmd.getOptionValue("appsecret");
+            if (cmd.hasOption("heartbeat")) {
+                heartbeatInterval = getIntegerParam(cmd, "heartbeat");
+            }
             raspId = cmd.getOptionValue("raspid");
             url = cmd.getOptionValue("backendurl");
             if (!(appId != null && appSecret != null && url != null || appId == null && appSecret == null && url == null)) {
                 throw new RaspError(E10005 + "-backendurl, -appid and -appsecret must be set simultaneously");
             }
+        }
+    }
+
+    private static int getIntegerParam(CommandLine cmd, String param) throws RaspError {
+        try {
+            return Integer.parseInt(cmd.getOptionValue(param));
+        } catch (NumberFormatException e) {
+            throw new RaspError(E10005 + "The -" + param + " parameter must have a integer value");
         }
     }
 
@@ -172,6 +181,11 @@ public class App {
                 new URL(url);
             } catch (MalformedURLException e) {
                 throw new RaspError(E10005 + "backendurl must be a valid URL, e.g http://192.168.1.1");
+            }
+        }
+        if (heartbeatInterval != null) {
+            if (heartbeatInterval < 10 || heartbeatInterval > 1800) {
+                throw new RaspError(E10005 + "heartbeat must be between [10,1800]");
             }
         }
     }

@@ -267,10 +267,10 @@ public class HookHandler {
      * @param response http请求的response
      */
     private static void setUserDefinedResponseHeader(HttpServletResponse response) {
-        Map<String, String> headers = Config.getConfig().getResponseHeaders();
+        Map<Object, Object> headers = Config.getConfig().getResponseHeaders();
         if (headers != null && !headers.isEmpty()) {
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
-                response.setHeader(entry.getKey(), entry.getValue());
+            for (Map.Entry<Object, Object> entry : headers.entrySet()) {
+                response.setHeader(entry.getKey().toString(), entry.getValue().toString());
             }
         }
     }

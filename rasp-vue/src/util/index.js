@@ -22,19 +22,8 @@ export var audit_types = {
   1015: '重置插件配置'
 }
 
-export var browser_headers = [{
-  name: 'X-Protected-By',
-  descr: 'OpenRASP 特征信息展示',
-  options: [{
-    name: '不开启',
-    value: undefined
-  },
+export var browser_headers = [
   {
-    name: '开启',
-    value: 'OpenRASP'
-  }
-  ]
-}, {
   name: 'X-Frame-Options',
   descr: '点击劫持防护',
   options: [{
@@ -144,7 +133,9 @@ export var attack_types = {
   webshell_eval: 'WebShell - 中国菜刀',
   webshell_command: 'WebShell - 命令执行',
   webshell_file_put_contents: 'WebShell - 后门上传',
-  webshell_ld_preload: 'WebShell - LD_PRELOAD 后门'
+  webshell_ld_preload: 'WebShell - LD_PRELOAD 后门',
+  request: '请求起始',
+  requestEnd: '请求结束',
 }
 
 export var status_types = {

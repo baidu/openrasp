@@ -92,7 +92,7 @@ public class Config extends FileScanListener {
     int heartbeatInterval;
     int syslogFacility;
     boolean decompileEnable;
-    Map<String, String> responseHeaders;
+    Map<Object, Object> responseHeaders;
     int logMaxBackUp;
     int dependencyCheckInterval;
     List<String> securityWeakPasswords;
@@ -105,6 +105,8 @@ public class Config extends FileScanListener {
     Map<String, Set<String>> sqlErrorCodes;
     Map<String, Set<String>> sqlErrorStates;
     Map<String, String> logSensitiveRegex;
+    boolean lruCompareEnable;
+    int lruCompareLimit;
     static Config instance;
 
 
@@ -512,6 +514,24 @@ public class Config extends FileScanListener {
     }
 
     /**
+     * 获取 LRU 内容匹配开关
+     *
+     * @return LRU 内容匹配开关
+     */
+    public boolean getLruCompareEnable() {
+        return lruCompareEnable;
+    }
+
+    /**
+     * 获取 LRU 匹配最长字节
+     *
+     * @return LRU 匹配最长字节
+     */
+    public int getLruCompareLimit() {
+        return lruCompareLimit;
+    }
+
+    /**
      * 是否开启调试
      *
      * @return true 代表开启
@@ -760,7 +780,7 @@ public class Config extends FileScanListener {
      *
      * @return response header数组
      */
-    public Map<String, String> getResponseHeaders() {
+    public Map<Object, Object> getResponseHeaders() {
         return responseHeaders;
     }
 
@@ -849,16 +869,14 @@ public class Config extends FileScanListener {
                         "\" changed to \"" + String.valueOf(value) + "\"");
             }
         } catch (Exception e) {
-            if (isInit) {
-                // 初始化配置过程中,如果报错需要继续使用默认值执行
-                if (!(e instanceof ConfigLoadException)) {
-                    throw new ConfigLoadException(e);
-                }
-                throw e;
+            if (!isInit) {
+                LOGGER.warn("configuration item \"" + item.toString() + "\" failed to change to \"" + value + "\"" + " because:" + e.getMessage());
             }
-            LOGGER.warn("configuration item \"" + item.toString() + "\" failed to change to \""
-                    + value + "\"" + " because:" + e.getMessage());
-            return false;
+            // 初始化配置过程中,如果报错需要继续使用默认值执行
+            if (!(e instanceof ConfigLoadException)) {
+                throw new ConfigLoadException(e);
+            }
+            throw e;
         }
         return true;
     }
