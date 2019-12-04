@@ -157,7 +157,7 @@ void report_crash_log(int sig)
         log << std::endl;
     }
     char cmd[4 * 1024];
-    snprintf(cmd, 4 * 1024, "cd %s && sh crash.sh %s", openrasp_ini.root_dir, log_path.c_str());
+    snprintf(cmd, 4 * 1024, "cd %s && sh crash.sh -l php -f %s", openrasp_ini.root_dir, log_path.c_str());
     if (fork_and_exec(cmd) != 0)
     {
         log << "\nfailed to report crash log" << std::endl;
