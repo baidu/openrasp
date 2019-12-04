@@ -53,8 +53,8 @@ CheckTypeTransfer::CheckTypeTransfer()
   insert(REQUEST_END, "requestEnd");
   insert(EVAL, "eval");
   insert(DELETE_FILE, "deleteFile");
-  insert(MONGO, "mongo");
-  insert(SSRF_REDIRECT, "ssrf_redirect");
+  insert(MONGO, "mongodb");
+  insert(SSRF_REDIRECT, "ssrfRedirect");
 }
 
 CheckTypeTransfer::~CheckTypeTransfer()

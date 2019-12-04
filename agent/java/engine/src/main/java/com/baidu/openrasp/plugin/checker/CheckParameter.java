@@ -57,9 +57,9 @@ public class CheckParameter {
         SQL_EXCEPTION("sql_exception", new V8Checker(), 1 << 15),
         REQUESTEND("requestEnd", new V8Checker(), 1 << 17),
         DELETEFILE("deleteFile", new V8Checker(), 1 << 18),
-        MONGO("mongo", new V8Checker(), 1 << 19),
+        MONGO("mongodb", new V8Checker(), 1 << 19),
         LOADLIBRARY("loadLibrary", new V8Checker(), 1 << 20),
-        SSRF_REDIRECT("ssrf_redirect", new V8Checker(), 1 << 21),
+        SSRF_REDIRECT("ssrfRedirect", new V8Checker(), 1 << 21),
 
         // java本地检测
         XSS_USERINPUT("xss_userinput", new XssChecker(), 1 << 16),

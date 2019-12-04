@@ -51,6 +51,8 @@ public class JS {
     public static final Logger LOGGER = Logger.getLogger(JS.class.getPackage().getName());
     public static Integer watchId = null;
 
+    private static String pluginConfig = "global.checkPoints=['command','directory','fileUpload','readFile','request','requestEnd','sql','sql_exception','writeFile','xxe','ognl','deserialization','reflection','webdav','ssrf','include','eval','copy','rename','loadLibrary','ssrfRedirect','deleteFile','mongodb'];";
+
     static {
         Base64Support.enable();
     }
@@ -190,7 +192,7 @@ public class JS {
     }
 
     public synchronized static boolean UpdatePlugin(List<String[]> scripts) {
-        boolean rst = V8.CreateSnapshot("{}", scripts.toArray(), BuildRASPModel.getRaspVersion());
+        boolean rst = V8.CreateSnapshot(pluginConfig, scripts.toArray(), BuildRASPModel.getRaspVersion());
         if (rst) {
             try {
                 String jsonString = V8.ExecuteScript("JSON.stringify(RASP.algorithmConfig || {})", "get-algorithm-config.js");

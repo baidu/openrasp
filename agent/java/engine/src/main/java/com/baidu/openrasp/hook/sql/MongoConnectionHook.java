@@ -50,7 +50,7 @@ public class MongoConnectionHook extends AbstractClassHook {
 
     @Override
     public String getType() {
-        return "mongo";
+        return "mongodb";
     }
 
     @Override

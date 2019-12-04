@@ -38,7 +38,7 @@ import java.util.HashMap;
  */
 @HookAnnotation
 public class MongoSQLHook extends AbstractClassHook {
-    private static final String SQL_TYPE_MONGODB = "mongo";
+    private static final String SQL_TYPE_MONGODB = "mongodb";
     private String className;
     private String type;
 
@@ -54,7 +54,7 @@ public class MongoSQLHook extends AbstractClassHook {
 
     @Override
     public String getType() {
-        return "mongo";
+        return "mongodb";
     }
 
     @Override

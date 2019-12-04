@@ -35,7 +35,7 @@ public abstract class AbstractRedirectHook extends AbstractClassHook {
      */
     @Override
     public String getType() {
-        return "ssrf_redirect";
+        return "ssrfRedirect";
     }
 
     public static void checkHttpClientRedirect(HashMap<String, Object> params,
