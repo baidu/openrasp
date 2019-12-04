@@ -125,7 +125,7 @@ public:
     return action_type;
   }
 
-  inline void set_mysql_error_codes(std::vector<long> error_codes)
+  inline void set_mysql_error_codes(std::vector<int64_t> error_codes)
   {
     size_t err_size = error_codes.size();
     if (err_size >= 0 && err_size <= MYSQL_ERROR_CODE_MAX_SIZE)
@@ -142,7 +142,7 @@ public:
     }
   }
 
-  inline bool mysql_error_code_exist(long err_code) const
+  inline bool mysql_error_code_exist(int64_t err_code) const
   {
     for (int i = 0; i < mysql_error_codes_size; ++i)
     {
@@ -154,7 +154,7 @@ public:
     return false;
   }
 
-  inline void set_sqlite_error_codes(std::vector<long> error_codes)
+  inline void set_sqlite_error_codes(std::vector<int64_t> error_codes)
   {
     size_t err_size = error_codes.size();
     if (err_size >= 0 && err_size <= SQLITE_ERROR_CODE_MAX_SIZE)
@@ -171,7 +171,7 @@ public:
     }
   }
 
-  inline bool sqlite_error_code_exist(long err_code) const
+  inline bool sqlite_error_code_exist(int64_t err_code) const
   {
     for (int i = 0; i < sqlite_error_codes_size; ++i)
     {
